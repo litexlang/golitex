@@ -15,15 +15,16 @@ const codes: string[] = [
   //   in(x,s)
   // }
   // `,
-  `
-know eql in(x,s) {
-  isIn(x,s)
-};
-`,
-  `def every_set_is_an_object(s: set(s)) {
-    object(s)
-  }`,
-  `have s: set(s) ;`,
+  //   `
+  // know eql in(x,s) {
+  //   isIn(x,s)
+  // };
+  // `,
+  //   `def every_set_is_an_object(s: set(s)) {
+  //     object(s)
+  //   }`,
+  //   `have s: set(s) ;`,
+  "every_set_is_an_object(s) ; ",
 ];
 
 function testLexer() {

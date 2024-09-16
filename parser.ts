@@ -1,6 +1,7 @@
 import {
   CallOptEqlNode,
   CallOptNode,
+  CheckNode,
   DefNode,
   HaveNode,
   KnowNode,
@@ -19,19 +20,24 @@ function handleParseError(env: LiTeXEnv, message: string) {
 }
 
 const keywords: { [key: string]: Function } = {
-  ";": () => {},
-  "\n": () => {},
+  ";": (env: LiTeXEnv, tokens: string[]) => {
+    tokens.shift();
+  },
   def: defParse,
   know: knowParse,
   have: haveParse,
 };
 
-export function LiTeXParse(env: LiTeXEnv, tokens: string[]): Node[] | null {
-  const result: Node[] = [];
+export function LiTeXParse(
+  env: LiTeXEnv,
+  tokens: string[]
+): LiTeXNode[] | null {
+  const result: LiTeXNode[] = [];
 
   while (tokens[0] !== "_EOF") {
     const func = keywords[tokens[0]];
     if (func) result.push(func(env, tokens));
+    else result.push(checkParse(env, tokens));
   }
   return result;
 }
@@ -211,6 +217,26 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
     return new HaveNode(node);
   } catch (error) {
     handleParseError(env, "have");
+    throw error;
+  }
+}
+
+function checkParse(env: LiTeXEnv, tokens: string[]): CheckNode {
+  try {
+    const opts: CallOptNode[] = [];
+    if (!isExprEnding(tokens[0])) {
+      while (1) {
+        opts.push(callOptParse(env, tokens));
+
+        if (tokens[0] === ",") tokens.shift();
+        if (isExprEnding(tokens[0])) break;
+        else throw Error("check");
+      }
+    }
+    tokens.shift();
+    return new CheckNode(opts);
+  } catch (error) {
+    handleParseError(env, "check");
     throw error;
   }
 }

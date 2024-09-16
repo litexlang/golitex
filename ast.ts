@@ -70,3 +70,11 @@ export class ParamsColonFactExprsNode extends LiTeXNode {
     this.properties = properties;
   }
 }
+
+export class CheckNode extends LiTeXNode {
+  callOpts: CallOptNode[] = [];
+  constructor(callOpts: CallOptNode[]) {
+    super();
+    this.callOpts = callOpts;
+  }
+}
