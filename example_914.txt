@@ -1,0 +1,72 @@
+def object(x) {}
+know object // 表示任何满足object的参数的条件的元素代入进去都能正确
+// 以上两行等价于 truth object(x) {} 等价于 know def object(x) {}
+// 或者用! 表示同时声明 fef 和让他正确： def! exist!, 同时 def!等价于 truth
+
+def set(x) {}
+
+def in(x,s: set(s)) {
+  isIn(x,s)
+}
+def isIn(x,s: set(s)) {
+  in(x,s)
+}
+eql in isIn //这是一个需要check的表达式
+
+def every_set_is_an_object(s: set(s)) {
+  object(s)
+}
+have s: set(s)  // 环境里多出s，s性质set(s)
+every_set_is_an_object(s) // 环境里多出 object(s)
+
+def = (x,y: set(x), set(y)) {
+  know def p1(x:in(x,A)) {in(x,B)}, def p2(x:in(x,B))  {in(x,A)}
+}
+have x,y: set(x), set(y)
+know =(x,y)  // 检查x,y是否是 set，在环境里emit正确的表达式 =::p1(x,y)
+
+def empty_set(s:set(s)) {
+  know def p1(x)  {not(in(x,s))}
+  know iff p1 empty_set // 这表示 empty_set(s) 等价于 empty_set::p1(s)
+}
+
+have EMPTY_SET: empty_set(EMPTY_SET)
+
+extra = (x,y){
+  know def p3(x: not(in(x,A)))  {not(in(x,B))}
+  know def p4(x: not(in(x,B)))  {not(in(x,A))}
+}
+
+// know def : 先声明函数，再让这个函数正确
+know def axiom2(a) {
+  know def fck()  {know exist S(s: set(s), in(a,s), know def p(x:in(x,s)) {=(x,a)} ) }
+}
+
+def subset(A,B: set(A), set(B)) {
+  know def p(in(x,a)) {in(x,B)}
+}
+know A,B: subset(A,B)
+know x: in(x,a)
+subset::p(A,B)(x) // 生成 in(x,B)
+
+// 用 truth 表示 know def，作为语法糖
+truth AxiomN(A,P: set(A), isdef(P)) {
+  def Q(s) {
+    set(s), truth Prop(in(x,A), P(x))
+  }
+  know exist S(s: Q(s))
+}
+
+// 用 exist! 代替 know exist
+
+truth AxiomM(A:set(A)) {
+  truth QQ(x,y,P: in(x,A), isdef(P), truth PP(y,y2: P(x,y), P(x,y2)){eq(y,y2)} ) {
+    exist! EEE s: set(s), truth HHH(z :in(z,s)) {
+      exist! ZZZ(x: in(x,A), P(x,z))
+    }
+  }
+}
+
+truth AxiomX(A: set(A), not(eq(EMPTY_SET, A))) {
+  exist! EEE(x: in(x,A), or(not(set(x)), (set(x), truth PP(y:in(y,x)) {not(in(y,A))} ) ))
+}
