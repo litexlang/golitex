@@ -16,13 +16,19 @@ export class CallOptNode extends LiTeXNode {
 export class DefNode extends LiTeXNode {
   declOptName: string;
   params: string[];
+  requirements: CallOptNode[] = [];
   onlyIfExprs: CallOptNode[] = [];
   iffExprs: CallOptNode[] = [];
 
-  constructor(declOptName: string, params: string[]) {
+  constructor(
+    declOptName: string,
+    params: string[],
+    requirements: CallOptNode[]
+  ) {
     super();
     this.declOptName = declOptName;
     this.params = params;
+    this.requirements = requirements;
   }
 }
 

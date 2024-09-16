@@ -7,6 +7,14 @@ const codes: string[] = [
   "def object(x) {object(x), object2(x)}",
   "know object;",
   "def set(x) {}",
+  "def in(x,s: set(s)) {\
+  isIn(x,s)\
+}",
+  `
+def isIn(x,s: set(s)) {
+  in(x,s)
+}
+  `,
 ];
 
 function testLexer() {

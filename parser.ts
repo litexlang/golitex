@@ -51,17 +51,30 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
     tokens.shift(); // skip '('
 
     const params: string[] = [];
+    const requirements: CallOptNode[] = [];
     if (tokens[0] !== ")") {
       while (1) {
         params.push(tokens.shift() as string);
         if (tokens[0] === ",") tokens.shift();
+        else if (tokens[0] === ":") break;
         else if (tokens[0] === ")") break;
         else throw Error("def parameters");
+      }
+      if (tokens[0] !== ")") {
+        tokens.shift(); // skip :
+        while (1) {
+          const node = callOptParse(env, tokens);
+          requirements.push(node);
+
+          if (tokens[0] === ",") tokens.shift();
+          else if (tokens[0] === ")") break;
+          else throw Error("def block parse");
+        }
       }
     }
     tokens.shift(); // skip ;
 
-    const result = new DefNode(declOptName, params);
+    const result = new DefNode(declOptName, params, requirements);
 
     defBlockParse(env, tokens, result);
 
