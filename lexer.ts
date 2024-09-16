@@ -43,5 +43,7 @@ export function scan(text: string): string[] {
     tokens.push(currentToken);
   }
 
+  tokens.push("_EOF");
+
   return tokens;
 }
