@@ -2,7 +2,7 @@ export class LiTeXNode {
   constructor() {}
 }
 
-export class callOptNode extends LiTeXNode {
+export class CallOptNode extends LiTeXNode {
   optName: string;
   calledParams: string[];
 
@@ -16,20 +16,16 @@ export class callOptNode extends LiTeXNode {
 export class DefNode extends LiTeXNode {
   declOptName: string;
   params: string[];
-  onlyIfExprs: callOptNode[] = [];
-  iffExprs: callOptNode[] = [];
+  onlyIfExprs: CallOptNode[] = [];
+  iffExprs: CallOptNode[] = [];
 
   constructor(declOptName: string, params: string[]) {
     super();
     this.declOptName = declOptName;
     this.params = params;
   }
+}
 
-  pushOnlyIf(optName: string, calledParams: string[]) {
-    this.onlyIfExprs.push(new callOptNode(optName, calledParams));
-  }
-
-  pushIff(optName: string, calledParams: string[]) {
-    this.iffExprs.push(new callOptNode(optName, calledParams));
-  }
+export class KnowNode extends LiTeXNode {
+  callNodes: CallOptNode[] = [];
 }

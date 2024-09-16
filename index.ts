@@ -3,7 +3,10 @@ import { scan } from "./lexer";
 import { LiTeXEnv } from "./env";
 import { LiTeXParse } from "./parser";
 
-const codes: string[] = ["def object(x) {}"];
+const codes: string[] = [
+  // "def object(x) {object(x), object2(x)}",
+  "know object;",
+];
 
 function testLexer() {
   const fileContent: string = readFileSync("example_914.txt", "utf-8");
