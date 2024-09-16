@@ -11,7 +11,9 @@ def in(x,s: set(s)) {
 def isIn(x,s: set(s)) {
   in(x,s)
 }
-eql in isIn //这是一个需要check的表达式
+know eql in(x,s) {
+  isIn(x,s)
+}; //这是一个需要check的表达式
 
 def every_set_is_an_object(s: set(s)) {
   object(s)

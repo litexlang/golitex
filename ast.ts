@@ -13,12 +13,25 @@ export class CallOptNode extends LiTeXNode {
   }
 }
 
+export class CallOptEqlNode extends CallOptNode {
+  eqlNodes: CallOptNode[];
+
+  constructor(
+    optName: string,
+    calledParams: string[],
+    eqlNodes: CallOptNode[]
+  ) {
+    super(optName, calledParams);
+    this.eqlNodes = eqlNodes;
+  }
+}
+
 export class DefNode extends LiTeXNode {
   declOptName: string;
   params: string[];
   requirements: CallOptNode[] = [];
   onlyIfExprs: CallOptNode[] = [];
-  iffExprs: CallOptNode[] = [];
+  iffExprs: CallOptNode[][] = [];
 
   constructor(
     declOptName: string,

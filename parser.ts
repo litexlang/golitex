@@ -1,4 +1,10 @@
-import { CallOptNode, DefNode, KnowNode, LiTeXNode } from "./ast";
+import {
+  CallOptEqlNode,
+  CallOptNode,
+  DefNode,
+  KnowNode,
+  LiTeXNode,
+} from "./ast";
 import { LiTeXEnv } from "./env";
 
 function handleParseError(env: LiTeXEnv, message: string) {
@@ -107,9 +113,14 @@ function defBlockParse(env: LiTeXEnv, tokens: string[], defNode: DefNode) {
 
 function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
   try {
+    if (tokens[0] === "eql") {
+      return callOptEqlParse(env, tokens);
+    }
+
     const optName = tokens.shift() as string;
     const calledParams: string[] = [];
     const temp = tokens[0];
+
     if (temp === "(") {
       // temp !== '(' means no parameter, which means this expression over
       // all variables that satisfy requirement are valid
@@ -128,6 +139,35 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
     return new CallOptNode(optName, calledParams);
   } catch (error) {
     handleParseError(env, "call opt");
+    throw error;
+  }
+}
+
+function callOptEqlParse(env: LiTeXEnv, tokens: string[]): CallOptEqlNode {
+  try {
+    tokens.shift(); // skip eql
+    const leftCallNode = callOptParse(env, tokens);
+    tokens.shift(); // skip {
+    const rightCallNodes: CallOptNode[] = [];
+    while (1) {
+      const opt = callOptParse(env, tokens);
+      rightCallNodes.push(opt);
+
+      if (tokens[0] === ",") tokens.shift();
+      else if (tokens[0] === "}") break;
+      else {
+        throw Error("eql");
+      }
+    }
+    tokens.shift(); // skip }
+
+    return new CallOptEqlNode(
+      leftCallNode.optName,
+      leftCallNode.calledParams,
+      rightCallNodes
+    );
+  } catch (error) {
+    handleParseError(env, "eql");
     throw error;
   }
 }
