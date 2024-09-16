@@ -18,8 +18,8 @@ know eql in(x,s) {
 def every_set_is_an_object(s: set(s)) {
   object(s)
 }
-have s: set(s)  // 环境里多出s，s性质set(s)
-every_set_is_an_object(s) // 环境里多出 object(s)
+have s: set(s) ; // 环境里多出s，s性质set(s)
+every_set_is_an_object(s) ; // 环境里多出 object(s)
 
 def = (x,y: set(x), set(y)) {
   know def p1(x:in(x,A)) {in(x,B)}, def p2(x:in(x,B))  {in(x,A)}

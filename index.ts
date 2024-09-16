@@ -20,6 +20,10 @@ know eql in(x,s) {
   isIn(x,s)
 };
 `,
+  `def every_set_is_an_object(s: set(s)) {
+  object(s)
+}`,
+  `have s: set(s) ;`,
 ];
 
 function testLexer() {

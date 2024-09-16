@@ -2,8 +2,10 @@ import {
   CallOptEqlNode,
   CallOptNode,
   DefNode,
+  HaveNode,
   KnowNode,
   LiTeXNode,
+  ParamsColonFactExprsNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 
@@ -15,13 +17,15 @@ const keywords: { [key: string]: Function } = {
   ";": () => {},
   def: defParse,
   know: knowParse,
+  have: haveParse,
 };
 
 export function LiTeXParse(env: LiTeXEnv, tokens: string[]): Node[] | null {
   const result: Node[] = [];
 
   while (tokens[0] !== "_EOF") {
-    result.push(keywords[tokens[0]](env, tokens));
+    const func = keywords[tokens[0]];
+    if (func) result.push(func(env, tokens));
   }
   return result;
 }
@@ -56,31 +60,19 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
     const declOptName = tokens.shift() as string;
     tokens.shift(); // skip '('
 
-    const params: string[] = [];
-    const requirements: CallOptNode[] = [];
-    if (tokens[0] !== ")") {
-      while (1) {
-        params.push(tokens.shift() as string);
-        if (tokens[0] === ",") tokens.shift();
-        else if (tokens[0] === ":") break;
-        else if (tokens[0] === ")") break;
-        else throw Error("def parameters");
-      }
-      if (tokens[0] !== ")") {
-        tokens.shift(); // skip :
-        while (1) {
-          const node = callOptParse(env, tokens);
-          requirements.push(node);
+    const paramsColonFactExprsNode = paramsColonFactExprsParse(
+      env,
+      tokens,
+      ")"
+    );
 
-          if (tokens[0] === ",") tokens.shift();
-          else if (tokens[0] === ")") break;
-          else throw Error("def block parse");
-        }
-      }
-    }
-    tokens.shift(); // skip ;
+    tokens.shift();
 
-    const result = new DefNode(declOptName, params, requirements);
+    const result = new DefNode(
+      declOptName,
+      paramsColonFactExprsNode.params,
+      paramsColonFactExprsNode.properties
+    );
 
     defBlockParse(env, tokens, result);
 
@@ -89,6 +81,37 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
     handleParseError(env, "def");
     throw error;
   }
+}
+
+function paramsColonFactExprsParse(
+  env: LiTeXEnv,
+  tokens: string[],
+  end: string
+): ParamsColonFactExprsNode {
+  const params: string[] = [];
+  const requirements: CallOptNode[] = [];
+  if (tokens[0] !== end) {
+    while (1) {
+      params.push(tokens.shift() as string);
+      if (tokens[0] === ",") tokens.shift();
+      else if (tokens[0] === ":") break;
+      else if (tokens[0] === end) break;
+      else throw Error("def parameters");
+    }
+    if (tokens[0] !== end) {
+      tokens.shift(); // skip :
+      while (1) {
+        const node = callOptParse(env, tokens);
+        requirements.push(node);
+
+        if (tokens[0] === ",") tokens.shift();
+        else if (tokens[0] === end) break;
+        else throw Error("def block parse");
+      }
+    }
+  }
+
+  return new ParamsColonFactExprsNode(params, requirements);
 }
 
 function defBlockParse(env: LiTeXEnv, tokens: string[], defNode: DefNode) {
@@ -168,6 +191,18 @@ function callOptEqlParse(env: LiTeXEnv, tokens: string[]): CallOptEqlNode {
     );
   } catch (error) {
     handleParseError(env, "eql");
+    throw error;
+  }
+}
+
+function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
+  try {
+    tokens.shift();
+    const node = paramsColonFactExprsParse(env, tokens, ";");
+    tokens.shift(); // skip ;
+    return new HaveNode(node);
+  } catch (error) {
+    handleParseError(env, "have");
     throw error;
   }
 }

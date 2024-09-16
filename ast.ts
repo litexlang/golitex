@@ -48,3 +48,25 @@ export class DefNode extends LiTeXNode {
 export class KnowNode extends LiTeXNode {
   callNodes: CallOptNode[] = [];
 }
+
+export class HaveNode extends LiTeXNode {
+  params: string[];
+  properties: CallOptNode[];
+
+  constructor(node: ParamsColonFactExprsNode) {
+    super();
+    this.params = node.params;
+    this.properties = node.properties;
+  }
+}
+
+export class ParamsColonFactExprsNode extends LiTeXNode {
+  params: string[];
+  properties: CallOptNode[];
+
+  constructor(params: string[], properties: CallOptNode[]) {
+    super();
+    this.params = params;
+    this.properties = properties;
+  }
+}
