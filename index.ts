@@ -4,8 +4,9 @@ import { LiTeXEnv } from "./env";
 import { LiTeXParse } from "./parser";
 
 const codes: string[] = [
-  // "def object(x) {object(x), object2(x)}",
+  "def object(x) {object(x), object2(x)}",
   "know object;",
+  "def set(x) {}",
 ];
 
 function testLexer() {

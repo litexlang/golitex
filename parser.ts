@@ -34,8 +34,8 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
         else if (tokens[0] === ";") break;
         else throw Error("know parse");
       }
-      tokens.shift();
     }
+    tokens.shift(); // skip ;
 
     return knowNode;
   } catch (error) {
@@ -51,14 +51,16 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
     tokens.shift(); // skip '('
 
     const params: string[] = [];
-    while (tokens[0] !== ")") {
-      if (tokens[0] === ",") {
-        tokens.shift();
-      } else {
+    if (tokens[0] !== ")") {
+      while (1) {
         params.push(tokens.shift() as string);
+        if (tokens[0] === ",") tokens.shift();
+        else if (tokens[0] === ")") break;
+        else throw Error("def parameters");
       }
     }
-    tokens.shift(); // skip ')'
+    tokens.shift(); // skip ;
+
     const result = new DefNode(declOptName, params);
 
     defBlockParse(env, tokens, result);
@@ -82,8 +84,8 @@ function defBlockParse(env: LiTeXEnv, tokens: string[], defNode: DefNode) {
         else if (tokens[0] === "}") break;
         else throw Error("def block parse");
       }
-      tokens.shift(); // skip }
     }
+    tokens.shift(); // skip }
   } catch (error) {
     handleParseError(env, "def: def block parse");
     throw error;
@@ -105,9 +107,9 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
           if (tokens[0] === ",") tokens.shift();
           else if (tokens[0] === ")") break;
           else throw Error("call opt parameter should be followed by , or )");
-          tokens.shift(); // skip )
         }
       }
+      tokens.shift(); // skip )
     }
 
     return new CallOptNode(optName, calledParams);
