@@ -30,11 +30,12 @@ const codes: string[] = [
   // }`,
   //   `have x,y: set(x), set(y);`,
   // `know =(x,y);`,
+  "p1;",
   `def empty_set(s:set(s)) {
-  // know def p1(x)  {in(x,s)};
-  iff p1 empty_set(s) ;
-}
-`,
+    know def p1(x)  {in(x,s)};
+    iff p1 empty_set(s) ;
+  }
+  `,
 ];
 
 function testLexer() {

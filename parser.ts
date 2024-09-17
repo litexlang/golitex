@@ -150,15 +150,13 @@ function defBlockParse(env: LiTeXEnv, tokens: string[], defNode: DefNode) {
         if (tokens[0] === "know") {
           const node = knowParse(env, tokens);
           defNode.onlyIfExprs.push(node);
-          if (isCurToken(";", tokens)) tokens.shift();
-          else if (isCurToken("}", tokens)) break;
-          else throw Error("def block parse");
+          if (isCurToken("}", tokens)) break;
+          else continue;
         } else if (tokens[0] === "iff") {
           const node = iffParse(env, tokens);
           defNode.iffExprs.push(node);
-          if (isCurToken(";", tokens)) tokens.shift();
-          else if (isCurToken("}", tokens)) break;
-          else throw Error("def block parse");
+          if (isCurToken("}", tokens)) break;
+          else continue;
         } else {
           const node = callOptParse(env, tokens);
           defNode.onlyIfExprs.push(node);
@@ -182,6 +180,7 @@ function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
     const left = callOptParse(env, tokens);
     const right = callOptParse(env, tokens);
     const result = new IffNode(left, right);
+    tokens.shift(); // skip ;
     return result;
   } catch (error) {
     handleParseError(env, "iff");
