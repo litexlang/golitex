@@ -41,7 +41,7 @@ const keywords: { [key: string]: Function } = {
   exist: existParse,
 };
 
-export function LiTeXParse(
+export function LiTeXStmtsParse(
   env: LiTeXEnv,
   tokens: string[]
 ): LiTeXNode[] | null {
@@ -59,14 +59,41 @@ export function LiTeXParse(
   }
 }
 
+export function LiTexStmtParse(env: LiTeXEnv, tokens: string[]): LiTeXNode {
+  try {
+    if (tokens[0] !== "_EOF") {
+      const func = keywords[tokens[0]];
+      if (func) return func(env, tokens);
+      else return checkParse(env, tokens);
+    } else {
+      throw Error("EOF");
+    }
+  } catch (error) {
+    handleParseError(env, "Stmt");
+    throw error;
+  }
+}
+
 function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
   try {
     const knowNode: KnowNode = new KnowNode();
 
     tokens.shift(); // skip know
     while (!isCurToken(";", tokens)) {
-      const node = factExprParse(env, tokens);
-      knowNode.facts.push(node);
+      if (tokens[0] === "def") {
+        const node: DefNode = defParse(env, tokens);
+        knowNode.facts.push(node);
+      } else if (tokens[0] === "exist") {
+        const node: ExistNode = existParse(env, tokens);
+        knowNode.facts.push(node);
+      } else if (tokens[0] === "iff") {
+        const node: IffNode = iffParse(env, tokens);
+        knowNode.facts.push(node);
+      } else {
+        const node = factExprParse(env, tokens);
+        knowNode.facts.push(node);
+      }
+
       if (tokens[0] === ",") tokens.shift();
       else if (isExprEnding(tokens[0])) break;
       else throw Error("know parse");
@@ -94,7 +121,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
       }
     );
 
-    tokens.shift();
+    tokens.shift(); // skip ")"
 
     const result = new DefNode(
       declOptName,
@@ -102,7 +129,10 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
       paramsColonFactExprsNode.properties
     );
 
-    blockParse(env, tokens, result);
+    const block = blockParse(env, tokens);
+    for (let i = 0; i < block.length; i++) {
+      result.onlyIfExprs.push(block[i]);
+    }
 
     return result;
   } catch (error) {
@@ -154,26 +184,19 @@ function factExprParse(env: LiTeXEnv, tokens: string[]): FactExprNode {
   }
 }
 
-function blockParse(
-  env: LiTeXEnv,
-  tokens: string[],
-  fatherNode: DefNode | PropertyNode
-) {
+function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
   try {
+    const result: LiTeXNode[] = [];
     tokens.shift(); // skip {
 
     while (!isCurToken("}", tokens)) {
       const node = factExprParse(env, tokens);
-      switch (node.type) {
-        case LiTexNodeType.IffNode:
-          fatherNode.iffExprs.push(node as IffNode);
-          break;
-        default:
-          fatherNode.onlyIfExprs.push(node);
-      }
+      result.push(node);
     }
 
     tokens.shift(); // skip }
+
+    return result;
   } catch (error) {
     handleParseError(env, "def: def block parse");
     throw error;
@@ -303,7 +326,10 @@ function propertyParse(env: LiTeXEnv, tokens: string[]): PropertyNode {
     }
     tokens.shift();
     const result = new PropertyNode(declOptName, calledParams);
-    blockParse(env, tokens, result);
+    const block = blockParse(env, tokens);
+    for (let i = 0; i < block.length; i++) {
+      result.onlyIfExprs.push(block[i]);
+    }
 
     return result;
   } catch (error) {
@@ -336,7 +362,7 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
 
     return result;
   } catch (error) {
-    handleParseError(env, "def");
+    handleParseError(env, "exist");
     throw error;
   }
 }

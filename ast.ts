@@ -11,6 +11,7 @@ export class LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.Node;
   constructor() {}
 }
+const NullNode = new LiTeXNode();
 
 export class CallOptNode extends LiTeXNode {
   optName: string;
@@ -43,8 +44,7 @@ export class DefNode extends LiTeXNode {
   declOptName: string;
   params: string[];
   requirements: FactExprNode[] = [];
-  onlyIfExprs: FactExprNode[] = [];
-  iffExprs: IffNode[] = [];
+  onlyIfExprs: LiTeXNode[] = [];
 
   constructor(
     declOptName: string,
@@ -61,9 +61,6 @@ export class DefNode extends LiTeXNode {
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
   facts: FactExprNode[] = [];
-  callNodes: FactExprNode[] = [];
-  defNodes: DefNode[] = [];
-  existNodes: ExistNode[] = [];
 }
 
 export class HaveNode extends LiTeXNode {
@@ -111,8 +108,7 @@ export class IffNode extends LiTeXNode {
 export class PropertyNode extends LiTeXNode {
   optName: string;
   calledParams: string[];
-  onlyIfExprs: FactExprNode[] = [];
-  iffExprs: IffNode[] = [];
+  onlyIfExprs: LiTeXNode[] = [];
 
   constructor(optName: string, calledParams: string[]) {
     super();

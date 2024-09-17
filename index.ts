@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { scan } from "./lexer";
 import { LiTeXEnv } from "./env";
-import { LiTeXParse } from "./parser";
+import { LiTeXStmtsParse } from "./parser";
 
 const codes: string[] = [
   //   "def object(x) {object(x), object2(x)}",
@@ -44,14 +44,32 @@ const codes: string[] = [
   //   know def p4(x: not_in(x,B))  {not_in(x,A)};
   // }`,
   // "know def P(s) {};",
+  //! know should have different kinds of endings
   // `know
   // def axiom2(a) {
   //   know def fck()  {
-  //     know exist S(s: set(s), in(a,s), know def p(x:in(x,s)) {=(x,a)})
+  //     know exist S(s: set(s), in(a,s), know def p(x:in(x,s)) {=(x,a)};, in(a,s));
   //   };
   // };
   // `,
-  "know exist S(s: set(s));",
+  // "know exist S(s: set(s));",
+  //   `
+  // def subset(A,B: set(A), set(B)) {
+  //   know def p(x:in(x,a)) {in(x,B)};
+  // }`,
+  // "know subset(A,B);",
+  // "know in(x,a);",
+  //! should able to call subset::p(A,B)(x)
+  `    def Q(s) {
+      set(s), know def Prop(x: in(x,A), P(x)) {};
+    }`,
+  //   `know def AxiomN(A,P: set(A), isdef(P)) {
+  //     def Q(s) {
+  //       set(s), know def Prop(in(x,A), P(x)) {};
+  //     },
+  //     know exist S(s: Q(s));
+  // };
+  // `,
 ];
 
 function testLexer() {
@@ -64,7 +82,7 @@ function testParser() {
   const env = new LiTeXEnv();
   for (let i = 0; i < codes.length; i++) {
     const tokens = scan(codes[i]);
-    const result = LiTeXParse(env, tokens);
+    const result = LiTeXStmtsParse(env, tokens);
     if (result === null) {
       for (let i = 0; i < env.errors.length; i++) {
         console.log(env.errors[i]);
