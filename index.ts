@@ -24,7 +24,17 @@ const codes: string[] = [
   //     object(s)
   //   }`,
   //   `have s: set(s) ;`,
-  "every_set_is_an_object(s) ; ",
+  //   "every_set_is_an_object(s) ; ",
+  //   `def = (x,y: set(x), set(y)) {
+  //   know def p1(x:in(x,A)) {in(x,B)}, def  p2(x:in(x,B))  {in(x,A)};
+  // }`,
+  //   `have x,y: set(x), set(y);`,
+  // `know =(x,y);`,
+  `def empty_set(s:set(s)) {
+  // know def p1(x)  {in(x,s)};
+  iff p1 empty_set(s) ;
+}
+`,
 ];
 
 function testLexer() {
@@ -37,7 +47,14 @@ function testParser() {
   const env = new LiTeXEnv();
   for (let i = 0; i < codes.length; i++) {
     const tokens = scan(codes[i]);
-    console.log(LiTeXParse(env, tokens));
+    const result = LiTeXParse(env, tokens);
+    if (result === null) {
+      for (let i = 0; i < env.errors.length; i++) {
+        console.log(env.errors[i]);
+      }
+    } else {
+      console.log(result);
+    }
   }
 }
 

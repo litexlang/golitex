@@ -28,8 +28,8 @@ have x,y: set(x), set(y)
 know =(x,y)  // 检查x,y是否是 set，在环境里emit正确的表达式 =::p1(x,y)
 
 def empty_set(s:set(s)) {
-  know def p1(x)  {not(in(x,s))}
-  know iff p1 empty_set // 这表示 empty_set(s) 等价于 empty_set::p1(s)
+  know def p1(x)  {not(in(x,s))};
+  iff p1 empty_set // 这表示 empty_set(s) 等价于 empty_set::p1(s)
 }
 
 have EMPTY_SET: empty_set(EMPTY_SET)
@@ -47,7 +47,7 @@ know def axiom2(a) {
 def subset(A,B: set(A), set(B)) {
   know def p(in(x,a)) {in(x,B)}
 }
-know A,B: subset(A,B)
+know subset(A,B)
 know x: in(x,a)
 subset::p(A,B)(x) // 生成 in(x,B)
 

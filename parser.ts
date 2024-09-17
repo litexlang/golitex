@@ -1,9 +1,11 @@
+import { resourceLimits } from "worker_threads";
 import {
   CallOptEqlNode,
   CallOptNode,
   CheckNode,
   DefNode,
   HaveNode,
+  IffNode,
   KnowNode,
   LiTeXNode,
   ParamsColonFactExprsNode,
@@ -15,8 +17,12 @@ function isExprEnding(s: string) {
   return ExprEndings.includes(s);
 }
 
+function isCurToken(s: string, tokens: string[]) {
+  return s === tokens[0];
+}
+
 function handleParseError(env: LiTeXEnv, message: string) {
-  env.pushErrorMessage(message);
+  env.pushErrorMessage("parsing error: " + message);
 }
 
 const keywords: { [key: string]: Function } = {
@@ -32,14 +38,18 @@ export function LiTeXParse(
   env: LiTeXEnv,
   tokens: string[]
 ): LiTeXNode[] | null {
-  const result: LiTeXNode[] = [];
+  try {
+    const result: LiTeXNode[] = [];
 
-  while (tokens[0] !== "_EOF") {
-    const func = keywords[tokens[0]];
-    if (func) result.push(func(env, tokens));
-    else result.push(checkParse(env, tokens));
+    while (tokens[0] !== "_EOF") {
+      const func = keywords[tokens[0]];
+      if (func) result.push(func(env, tokens));
+      else result.push(checkParse(env, tokens));
+    }
+    return result;
+  } catch (error) {
+    return null;
   }
-  return result;
 }
 
 function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
@@ -49,9 +59,13 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
     tokens.shift(); // skip know
     if (!isExprEnding(tokens[0])) {
       while (1) {
-        const node = callOptParse(env, tokens);
-        knowNode.callNodes.push(node);
-
+        if (tokens[0] === "def") {
+          const defNode = defParse(env, tokens);
+          knowNode.defNodes.push(defNode);
+        } else {
+          const node = callOptParse(env, tokens);
+          knowNode.callNodes.push(node);
+        }
         if (tokens[0] === ",") tokens.shift();
         else if (isExprEnding(tokens[0])) break;
         else throw Error("know parse");
@@ -133,17 +147,44 @@ function defBlockParse(env: LiTeXEnv, tokens: string[], defNode: DefNode) {
     tokens.shift(); // skip {
     if (tokens[0] !== "}") {
       while (1) {
-        const node = callOptParse(env, tokens);
-        defNode.onlyIfExprs.push(node);
-
-        if (tokens[0] === ",") tokens.shift();
-        else if (tokens[0] === "}") break;
-        else throw Error("def block parse");
+        if (tokens[0] === "know") {
+          const node = knowParse(env, tokens);
+          defNode.onlyIfExprs.push(node);
+          if (isCurToken(";", tokens)) tokens.shift();
+          else if (isCurToken("}", tokens)) break;
+          else throw Error("def block parse");
+        } else if (tokens[0] === "iff") {
+          const node = iffParse(env, tokens);
+          defNode.iffExprs.push(node);
+          if (isCurToken(";", tokens)) tokens.shift();
+          else if (isCurToken("}", tokens)) break;
+          else throw Error("def block parse");
+        } else {
+          const node = callOptParse(env, tokens);
+          defNode.onlyIfExprs.push(node);
+          if (tokens[0] === ",") tokens.shift();
+          else if (tokens[0] === ";") tokens.shift();
+          else if (tokens[0] === "}") break;
+          else throw Error("def block parse");
+        }
       }
     }
     tokens.shift(); // skip }
   } catch (error) {
     handleParseError(env, "def: def block parse");
+    throw error;
+  }
+}
+
+function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
+  try {
+    tokens.shift();
+    const left = callOptParse(env, tokens);
+    const right = callOptParse(env, tokens);
+    const result = new IffNode(left, right);
+    return result;
+  } catch (error) {
+    handleParseError(env, "iff");
     throw error;
   }
 }

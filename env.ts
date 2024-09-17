@@ -3,6 +3,6 @@ export class LiTeXEnv {
   constructor() {}
 
   pushErrorMessage(s: string) {
-    this.errors.push("Error: " + "s");
+    this.errors.push(s);
   }
 }
