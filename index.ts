@@ -30,12 +30,18 @@ const codes: string[] = [
   // }`,
   //   `have x,y: set(x), set(y);`,
   // `know =(x,y);`,
-  "p1;",
-  `def empty_set(s:set(s)) {
-    know def p1(x)  {in(x,s)};
-    iff p1 empty_set(s) ;
-  }
-  `,
+  // "p1;",
+  // `def empty_set(s:set(s)) {
+  //   know def p1(x)  {in(x,s)};
+  //   iff p1 empty_set(s) ;
+  // }
+  // `,
+  // `have EMPTY_SET: empty_set(EMPTY_SET);`,
+  `
+  property = (x,y){
+    know def p3(x: not_in(x,A))  {not_in(x,B)};
+    know def p4(x: not_in(x,B))  {not_in(x,A)};
+  }`,
 ];
 
 function testLexer() {

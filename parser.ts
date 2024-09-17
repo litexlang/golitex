@@ -9,8 +9,10 @@ import {
   KnowNode,
   LiTeXNode,
   ParamsColonFactExprsNode,
+  PropertyNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
+import { property } from "lodash";
 
 const ExprEndings = [";"];
 function isExprEnding(s: string) {
@@ -32,6 +34,7 @@ const keywords: { [key: string]: Function } = {
   def: defParse,
   know: knowParse,
   have: haveParse,
+  property: propertyParse,
 };
 
 export function LiTeXParse(
@@ -102,7 +105,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
       paramsColonFactExprsNode.properties
     );
 
-    defBlockParse(env, tokens, result);
+    blockParse(env, tokens, result);
 
     return result;
   } catch (error) {
@@ -142,7 +145,11 @@ function paramsColonFactExprsParse(
   return new ParamsColonFactExprsNode(params, requirements);
 }
 
-function defBlockParse(env: LiTeXEnv, tokens: string[], defNode: DefNode) {
+function blockParse(
+  env: LiTeXEnv,
+  tokens: string[],
+  defNode: DefNode | PropertyNode
+) {
   try {
     tokens.shift(); // skip {
     if (tokens[0] !== "}") {
@@ -277,6 +284,31 @@ function checkParse(env: LiTeXEnv, tokens: string[]): CheckNode {
     return new CheckNode(opts);
   } catch (error) {
     handleParseError(env, "check");
+    throw error;
+  }
+}
+
+function propertyParse(env: LiTeXEnv, tokens: string[]): PropertyNode {
+  try {
+    tokens.shift(); // skip "property"
+    const declOptName = tokens.shift() as string;
+    tokens.shift(); // skip '('
+
+    const calledParams: string[] = [];
+    if (!isCurToken(")", tokens)) {
+      while (1) {
+        calledParams.push(tokens.shift() as string);
+        if (isCurToken(",", tokens)) tokens.shift();
+        else if (isCurToken(")", tokens)) break;
+      }
+    }
+    tokens.shift();
+    const result = new PropertyNode(declOptName, calledParams);
+    blockParse(env, tokens, result);
+
+    return result;
+  } catch (error) {
+    handleParseError(env, "property");
     throw error;
   }
 }

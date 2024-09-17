@@ -26,19 +26,19 @@ export class CallOptEqlNode extends CallOptNode {
   }
 }
 
-type PropertyNode = CallOptNode | IffNode | KnowNode;
+type FactExprNode = CallOptNode | IffNode | KnowNode;
 
 export class DefNode extends LiTeXNode {
   declOptName: string;
   params: string[];
-  requirements: PropertyNode[] = [];
-  onlyIfExprs: PropertyNode[] = [];
-  iffExprs: PropertyNode[] = [];
+  requirements: FactExprNode[] = [];
+  onlyIfExprs: FactExprNode[] = [];
+  iffExprs: FactExprNode[] = [];
 
   constructor(
     declOptName: string,
     params: string[],
-    requirements: PropertyNode[]
+    requirements: FactExprNode[]
   ) {
     super();
     this.declOptName = declOptName;
@@ -48,13 +48,13 @@ export class DefNode extends LiTeXNode {
 }
 
 export class KnowNode extends LiTeXNode {
-  callNodes: PropertyNode[] = [];
+  callNodes: FactExprNode[] = [];
   defNodes: DefNode[] = [];
 }
 
 export class HaveNode extends LiTeXNode {
   params: string[];
-  properties: PropertyNode[];
+  properties: FactExprNode[];
 
   constructor(node: ParamsColonFactExprsNode) {
     super();
@@ -90,5 +90,18 @@ export class IffNode extends LiTeXNode {
     super();
     this.left = left;
     this.right = right;
+  }
+}
+
+export class PropertyNode extends LiTeXNode {
+  optName: string;
+  calledParams: string[];
+  onlyIfExprs: FactExprNode[] = [];
+  iffExprs: FactExprNode[] = [];
+
+  constructor(optName: string, calledParams: string[]) {
+    super();
+    this.optName = optName;
+    this.calledParams = calledParams;
   }
 }
