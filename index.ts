@@ -69,7 +69,8 @@ const codes: string[] = [
   //     }
   //         know exist S(s: Q(s));
   // };
-  // `,
+  //,
+  //! know def when used as para, there are so many ; needs refactor
   //   `know def AxiomM(A:set(A)) {
   //   know def QQ(x,y,P: in(x,A), isdef(P), know def PP(y,y2: P(x,y), P(x,y2)) {eq(y,y2);}; ) {
   //     know exist EEE (s: set(s), know def HHH(z :in(z,s)) {
@@ -77,6 +78,13 @@ const codes: string[] = [
   // };);
   //   };
   // };`,
+  //! or
+  `know def AxiomX(A: set(A), not_eq(EMPTY_SET, A)) {
+  know exist EEE (x: 
+    in(x,A), or1_not_set(x), or2_set(x), 
+    know def PP(y:in(y,x)) {not_in(y,A);};
+  );
+};`,
 ];
 
 function testLexer() {
