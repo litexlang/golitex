@@ -1,3 +1,4 @@
+// There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
 export class LiTeXNode {
   constructor() {}
 }
@@ -103,5 +104,18 @@ export class PropertyNode extends LiTeXNode {
     super();
     this.optName = optName;
     this.calledParams = calledParams;
+  }
+}
+
+// Exist: means both var decl and know callOpt
+export class ExistNode extends LiTeXNode {
+  declOptName: string = "";
+  params: string[] = [];
+  requirements: FactExprNode[] = [];
+  onlyIfExprs: FactExprNode[] = [];
+  iffExprs: FactExprNode[] = [];
+
+  constructor() {
+    super();
   }
 }

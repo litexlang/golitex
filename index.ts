@@ -37,11 +37,13 @@ const codes: string[] = [
   // }
   // `,
   // `have EMPTY_SET: empty_set(EMPTY_SET);`,
-  `
-  property = (x,y){
-    know def p3(x: not_in(x,A))  {not_in(x,B)};
-    know def p4(x: not_in(x,B))  {not_in(x,A)};
-  }`,
+  //! not should be used like a keyword instead of a prefix
+  // `
+  // property = (x,y){
+  //   know def p3(x: not_in(x,A))  {not_in(x,B)};
+  //   know def p4(x: not_in(x,B))  {not_in(x,A)};
+  // }`,
+  "know def P(s) {};",
 ];
 
 function testLexer() {

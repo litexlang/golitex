@@ -4,6 +4,7 @@ import {
   CallOptNode,
   CheckNode,
   DefNode,
+  ExistNode,
   HaveNode,
   IffNode,
   KnowNode,
@@ -312,3 +313,5 @@ function propertyParse(env: LiTeXEnv, tokens: string[]): PropertyNode {
     throw error;
   }
 }
+
+// function existParse(env: LiTeXEnv, tokens: string[]):  {}
