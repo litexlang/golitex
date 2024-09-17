@@ -1,5 +1,14 @@
 // There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
+export enum LiTexNodeType {
+  Node,
+  CallOptNode,
+  KnowNode,
+  ExistNode,
+  IffNode,
+}
+
 export class LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.Node;
   constructor() {}
 }
 
@@ -15,6 +24,7 @@ export class CallOptNode extends LiTeXNode {
 }
 
 export class CallOptEqlNode extends CallOptNode {
+  type: LiTexNodeType = LiTexNodeType.CallOptNode;
   eqlNodes: CallOptNode[];
 
   constructor(
@@ -27,14 +37,14 @@ export class CallOptEqlNode extends CallOptNode {
   }
 }
 
-type FactExprNode = CallOptNode | IffNode | KnowNode;
+export type FactExprNode = CallOptNode | KnowNode | ExistNode | IffNode;
 
 export class DefNode extends LiTeXNode {
   declOptName: string;
   params: string[];
   requirements: FactExprNode[] = [];
   onlyIfExprs: FactExprNode[] = [];
-  iffExprs: FactExprNode[] = [];
+  iffExprs: IffNode[] = [];
 
   constructor(
     declOptName: string,
@@ -49,8 +59,11 @@ export class DefNode extends LiTeXNode {
 }
 
 export class KnowNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.KnowNode;
+  facts: FactExprNode[] = [];
   callNodes: FactExprNode[] = [];
   defNodes: DefNode[] = [];
+  existNodes: ExistNode[] = [];
 }
 
 export class HaveNode extends LiTeXNode {
@@ -66,9 +79,9 @@ export class HaveNode extends LiTeXNode {
 
 export class ParamsColonFactExprsNode extends LiTeXNode {
   params: string[];
-  properties: CallOptNode[];
+  properties: FactExprNode[];
 
-  constructor(params: string[], properties: CallOptNode[]) {
+  constructor(params: string[], properties: FactExprNode[]) {
     super();
     this.params = params;
     this.properties = properties;
@@ -84,6 +97,7 @@ export class CheckNode extends LiTeXNode {
 }
 
 export class IffNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.IffNode;
   left: CallOptNode;
   right: CallOptNode;
 
@@ -98,7 +112,7 @@ export class PropertyNode extends LiTeXNode {
   optName: string;
   calledParams: string[];
   onlyIfExprs: FactExprNode[] = [];
-  iffExprs: FactExprNode[] = [];
+  iffExprs: IffNode[] = [];
 
   constructor(optName: string, calledParams: string[]) {
     super();
@@ -107,15 +121,21 @@ export class PropertyNode extends LiTeXNode {
   }
 }
 
-// Exist: means both var decl and know callOpt
+// Exist: means 2 things happen at the same time: var decl and know callOpt
 export class ExistNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.ExistNode;
   declOptName: string = "";
   params: string[] = [];
   requirements: FactExprNode[] = [];
-  onlyIfExprs: FactExprNode[] = [];
-  iffExprs: FactExprNode[] = [];
 
-  constructor() {
+  constructor(
+    declOptName: string,
+    params: string[],
+    requirements: FactExprNode[]
+  ) {
     super();
+    this.declOptName = declOptName;
+    this.params = params;
+    this.requirements = requirements;
   }
 }

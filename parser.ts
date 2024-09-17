@@ -5,10 +5,12 @@ import {
   CheckNode,
   DefNode,
   ExistNode,
+  FactExprNode,
   HaveNode,
   IffNode,
   KnowNode,
   LiTeXNode,
+  LiTexNodeType,
   ParamsColonFactExprsNode,
   PropertyNode,
 } from "./ast";
@@ -36,6 +38,7 @@ const keywords: { [key: string]: Function } = {
   know: knowParse,
   have: haveParse,
   property: propertyParse,
+  exist: existParse,
 };
 
 export function LiTeXParse(
@@ -61,19 +64,12 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
     const knowNode: KnowNode = new KnowNode();
 
     tokens.shift(); // skip know
-    if (!isExprEnding(tokens[0])) {
-      while (1) {
-        if (tokens[0] === "def") {
-          const defNode = defParse(env, tokens);
-          knowNode.defNodes.push(defNode);
-        } else {
-          const node = callOptParse(env, tokens);
-          knowNode.callNodes.push(node);
-        }
-        if (tokens[0] === ",") tokens.shift();
-        else if (isExprEnding(tokens[0])) break;
-        else throw Error("know parse");
-      }
+    while (!isCurToken(";", tokens)) {
+      const node = factExprParse(env, tokens);
+      knowNode.facts.push(node);
+      if (tokens[0] === ",") tokens.shift();
+      else if (isExprEnding(tokens[0])) break;
+      else throw Error("know parse");
     }
     tokens.shift(); // skip ;
 
@@ -121,7 +117,7 @@ function paramsColonFactExprsParse(
   isEnd: (s: string) => Boolean
 ): ParamsColonFactExprsNode {
   const params: string[] = [];
-  const requirements: CallOptNode[] = [];
+  const requirements: FactExprNode[] = [];
   if (!isEnd(tokens[0])) {
     while (1) {
       params.push(tokens.shift() as string);
@@ -132,8 +128,8 @@ function paramsColonFactExprsParse(
     }
     if (!isEnd(tokens[0])) {
       tokens.shift(); // skip :
-      while (1) {
-        const node = callOptParse(env, tokens);
+      while (!isEnd(tokens[0])) {
+        const node = factExprParse(env, tokens);
         requirements.push(node);
 
         if (tokens[0] === ",") tokens.shift();
@@ -146,35 +142,37 @@ function paramsColonFactExprsParse(
   return new ParamsColonFactExprsNode(params, requirements);
 }
 
+function factExprParse(env: LiTeXEnv, tokens: string[]): FactExprNode {
+  if (tokens[0] === "iff") {
+    return iffParse(env, tokens);
+  } else if (tokens[0] === "know") {
+    return knowParse(env, tokens);
+  } else if (tokens[0] === "exist") {
+    return existParse(env, tokens);
+  } else {
+    return callOptParse(env, tokens);
+  }
+}
+
 function blockParse(
   env: LiTeXEnv,
   tokens: string[],
-  defNode: DefNode | PropertyNode
+  fatherNode: DefNode | PropertyNode
 ) {
   try {
     tokens.shift(); // skip {
-    if (tokens[0] !== "}") {
-      while (1) {
-        if (tokens[0] === "know") {
-          const node = knowParse(env, tokens);
-          defNode.onlyIfExprs.push(node);
-          if (isCurToken("}", tokens)) break;
-          else continue;
-        } else if (tokens[0] === "iff") {
-          const node = iffParse(env, tokens);
-          defNode.iffExprs.push(node);
-          if (isCurToken("}", tokens)) break;
-          else continue;
-        } else {
-          const node = callOptParse(env, tokens);
-          defNode.onlyIfExprs.push(node);
-          if (tokens[0] === ",") tokens.shift();
-          else if (tokens[0] === ";") tokens.shift();
-          else if (tokens[0] === "}") break;
-          else throw Error("def block parse");
-        }
+
+    while (!isCurToken("}", tokens)) {
+      const node = factExprParse(env, tokens);
+      switch (node.type) {
+        case LiTexNodeType.IffNode:
+          fatherNode.iffExprs.push(node as IffNode);
+          break;
+        default:
+          fatherNode.onlyIfExprs.push(node);
       }
     }
+
     tokens.shift(); // skip }
   } catch (error) {
     handleParseError(env, "def: def block parse");
@@ -314,4 +312,31 @@ function propertyParse(env: LiTeXEnv, tokens: string[]): PropertyNode {
   }
 }
 
-// function existParse(env: LiTeXEnv, tokens: string[]):  {}
+function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
+  try {
+    tokens.shift();
+    const declOptName = tokens.shift() as string;
+    tokens.shift(); // skip '('
+
+    const paramsColonFactExprsNode = paramsColonFactExprsParse(
+      env,
+      tokens,
+      (s: string) => {
+        return s === ")";
+      }
+    );
+
+    tokens.shift();
+
+    const result = new ExistNode(
+      declOptName,
+      paramsColonFactExprsNode.params,
+      paramsColonFactExprsNode.properties
+    );
+
+    return result;
+  } catch (error) {
+    handleParseError(env, "def");
+    throw error;
+  }
+}
