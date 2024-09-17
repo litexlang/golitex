@@ -190,7 +190,7 @@ function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
     tokens.shift(); // skip {
 
     while (!isCurToken("}", tokens)) {
-      const node = factExprParse(env, tokens);
+      const node = LiTexStmtParse(env, tokens);
       result.push(node);
     }
 

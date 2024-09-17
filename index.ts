@@ -60,16 +60,23 @@ const codes: string[] = [
   // "know subset(A,B);",
   // "know in(x,a);",
   //! should able to call subset::p(A,B)(x)
-  `    def Q(s) {
-      set(s), know def Prop(x: in(x,A), P(x)) {};
-    }`,
-  //   `know def AxiomN(A,P: set(A), isdef(P)) {
+  // `    def Q(s) {
+  //     set(s), know def Prop(x: in(x,A), P(x)) {};
+  //   }`,
+  // `know def AxiomN(A,P: set(A), isdef(P)) {
   //     def Q(s) {
-  //       set(s), know def Prop(in(x,A), P(x)) {};
-  //     },
-  //     know exist S(s: Q(s));
+  //       set(s); know def Prop(x:in(x,A), P(x)) {};
+  //     }
+  //         know exist S(s: Q(s));
   // };
   // `,
+  //   `know def AxiomM(A:set(A)) {
+  //   know def QQ(x,y,P: in(x,A), isdef(P), know def PP(y,y2: P(x,y), P(x,y2)) {eq(y,y2);}; ) {
+  //     know exist EEE (s: set(s), know def HHH(z :in(z,s)) {
+  //       know exist ZZZ(x: in(x,A), P(x,z));
+  // };);
+  //   };
+  // };`,
 ];
 
 function testLexer() {
