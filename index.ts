@@ -37,7 +37,7 @@ const codes: string[] = [
   //   iff p1 empty_set(s) ;
   // }
   // // `,
-  // `have EMPTY_SET: empty_set(EMPTY_SET);`,
+  `have (EMPTY_SET: empty_set(EMPTY_SET) );`,
   //! not should be used like a keyword instead of a prefix
   // `
   // property = (x,y){
@@ -49,44 +49,64 @@ const codes: string[] = [
   // `know
   // def axiom2(a) {
   //   know def fck()  {
-  //     know exist S(s: set(s), in(a,s), know def p(x:in(x,s)) {=(x,a)};, in(a,s));
+  //     know exist S(s: set(s), in(a,s); know def p(x:in(x,s)) {=(x,a);}; in(a,s););
   //   };
   // };
   // `,
-  // "know exist S(s: set(s));",
-  //   `
+  // `
   // def subset(A,B: set(A), set(B)) {
-  //   know def p(x:in(x,a)) {in(x,B)};
+  //   know def p(x:in(x,a)) {in(x,B);};
   // }`,
   // "know subset(A,B);",
   // "know in(x,a);",
+  // "know exist S(s: set(s));",
   //! should able to call subset::p(A,B)(x)
-  // `    def Q(s) {
-  //     set(s), know def Prop(x: in(x,A), P(x)) {};
-  //   }`,
   // `know def AxiomN(A,P: set(A), isdef(P)) {
   //     def Q(s) {
   //       set(s); know def Prop(x:in(x,A), P(x)) {};
   //     }
   //         know exist S(s: Q(s));
-  // };
-  //,
+  // };`,
   //! know def when used as para, there are so many ; needs refactor
-  //   `know def AxiomM(A:set(A)) {
-  //   know def QQ(x,y,P: in(x,A), isdef(P), know def PP(y,y2: P(x,y), P(x,y2)) {eq(y,y2);}; ) {
-  //     know exist EEE (s: set(s), know def HHH(z :in(z,s)) {
-  //       know exist ZZZ(x: in(x,A), P(x,z));
-  // };);
+  // `know def AxiomM(A:set(A)) {
+  //   know def
+  //     QQ(x,y,P: in(x,A), isdef(P)
+  //     )
+  //     {
+  //  know
+  //     exist EEE (s: set(s);
+  //       know def HHH(z :in(z,s)) {
+  //         know exist ZZZ(x: in(x,A), P(x,z));
+  //       };
+  //     );
   //   };
   // };`,
-  //   `know def AxiomX(A: set(A), not_eq(EMPTY_SET, A)) {
+  // ` know
+  //     exist EEE (s: set(s);
+  //       know def HHH(z :in(z,s)) {
+  //         know exist ZZZ(x: in(x,A), P(x,z));
+  //       };
+  //     );`,
+  // `    know exist EEE (x:
+  //     in(x,A), or1_not_set(x), or2_set(x);
+  //     know def PP(y:in(y,x)) {not_in(y,A);};
+  //   );`,
+  // `know def AxiomX(A: set(A), not_eq(EMPTY_SET, A)) {
   //   know exist EEE (x:
   //     in(x,A), or1_not_set(x), or2_set(x),
   //     know def PP(y:in(y,x)) {not_in(y,A);};
   //   );
   // };`,
-  "not {set(s); know def p(x:set(s)) {} ; def s(x: set(x)) {}};",
-  "or {set(s); }{know def p(x:set(s)) {},  def s(x: set(x)) {};};",
+  // "not {set(s);  know def p(x:set(s)) {} ; def s(x: set(x)) {}};",
+  // "or {set(s); }{know def p(x:set(s)) {};  def s(x: set(x)) {};;;;};",
+  // "set(s);",
+  // "know def p(x: set(S)) {};",
+  // ";;;",
+  // "set(s), set(a);",
+  // `exist EEE (x: know def PP(y: in(y,x)){}; ) ;`,
+  // `    def Q(s) {
+  //   set(s); know def Prop(x: in(x,A), P(x)) {};
+  // }`,
 ];
 
 function testLexer() {

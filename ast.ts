@@ -41,7 +41,14 @@ export class CallOptEqlNode extends CallOptNode {
 }
 
 // when parsing FactExprNode, need to pass in isEnd
-export type FactExprNode = KnowNode | CallOptNode | OrNode | NotNode | IffNode;
+export type FactExprNode =
+  | KnowNode
+  | CallOptNode
+  | OrNode
+  | NotNode
+  | IffNode
+  | CallOptsNode;
+export const FactExprNodeNames: string[] = ["know", "or", "not", "iff"];
 
 export type CanBeKnownNode =
   | DefNode
@@ -69,13 +76,13 @@ export class FactsNode extends LiTeXNode {
 export class DefNode extends LiTeXNode {
   declOptName: string;
   params: string[];
-  requirements: FactExprNode[] = [];
+  requirements: LiTeXNode[] = [];
   onlyIfExprs: LiTeXNode[] = [];
 
   constructor(
     declOptName: string,
     params: string[],
-    requirements: FactExprNode[]
+    requirements: LiTeXNode[]
   ) {
     super();
     this.declOptName = declOptName;
@@ -91,7 +98,7 @@ export class KnowNode extends LiTeXNode {
 
 export class HaveNode extends LiTeXNode {
   params: string[];
-  properties: FactExprNode[];
+  properties: LiTeXNode[];
 
   constructor(node: ParamsColonFactExprsNode) {
     super();
@@ -102,9 +109,9 @@ export class HaveNode extends LiTeXNode {
 
 export class ParamsColonFactExprsNode extends LiTeXNode {
   params: string[];
-  properties: FactExprNode[];
+  properties: LiTeXNode[];
 
-  constructor(params: string[], properties: FactExprNode[]) {
+  constructor(params: string[], properties: LiTeXNode[]) {
     super();
     this.params = params;
     this.properties = properties;
@@ -148,12 +155,12 @@ export class ExistNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.ExistNode;
   declOptName: string = "";
   params: string[] = [];
-  requirements: FactExprNode[] = [];
+  requirements: LiTeXNode[] = [];
 
   constructor(
     declOptName: string,
     params: string[],
-    requirements: FactExprNode[]
+    requirements: LiTeXNode[]
   ) {
     super();
     this.declOptName = declOptName;
@@ -173,4 +180,12 @@ export class NotNode extends LiTeXNode {
 
 export class OrNode extends LiTeXNode {
   blocks: LiTeXNode[][] = [];
+}
+
+export class CallOptsNode extends LiTeXNode {
+  nodes: CallOptNode[] = [];
+  constructor(nodes: CallOptNode[]) {
+    super();
+    this.nodes = nodes;
+  }
 }

@@ -2,6 +2,7 @@ import { resourceLimits } from "worker_threads";
 import {
   CallOptEqlNode,
   CallOptNode,
+  CallOptsNode,
   CanBeKnownNode,
   canBeKnownNodeNames,
   CheckNode,
@@ -18,6 +19,7 @@ import {
   OrNode,
   ParamsColonFactExprsNode,
   PropertyNode,
+  FactExprNodeNames,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { property } from "lodash";
@@ -53,6 +55,7 @@ const stmtKeywords: { [key: string]: Function } = {
   exist: existParse,
   not: notParse,
   or: orParse,
+  iff: iffParse,
 };
 
 export function LiTeXStmtsParse(
@@ -63,7 +66,10 @@ export function LiTeXStmtsParse(
     const result: LiTeXNode[] = [];
 
     while (tokens[0] !== "_EOF") {
-      result.push(LiTexStmtParse(env, tokens));
+      const node = LiTexStmtParse(env, tokens);
+      if (node) {
+        result.push(node);
+      }
     }
     return result;
   } catch (error) {
@@ -71,19 +77,24 @@ export function LiTeXStmtsParse(
   }
 }
 
-const needsSkipSemiColon: string[] = ["know", "or", "not", "iff"];
-export function LiTexStmtParse(env: LiTeXEnv, tokens: string[]): LiTeXNode {
+export function LiTexStmtParse(
+  env: LiTeXEnv,
+  tokens: string[]
+): LiTeXNode | null {
   try {
     const func = stmtKeywords[tokens[0]];
     const funcName = tokens[0];
     if (func) {
       const node = func(env, tokens);
-      if (needsSkipSemiColon.includes(funcName)) {
-        tokens.shift(); // skip ;
-      }
-      return node;
+      // if (FactExprNodeNames.includes(funcName)) {
+      //   tokens.shift(); // skip ;
+      // }
+      if (node) return node;
+      else return null;
     } else {
-      return checkParse(env, tokens);
+      const node = callOptsParse(env, tokens);
+      // tokens.shift();
+      return node;
     }
   } catch (error) {
     handleParseError(env, "Stmt");
@@ -117,6 +128,8 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
         );
     }
 
+    tokens.shift();
+
     return knowNode;
   } catch (error) {
     catchParseError(env, error, "know");
@@ -130,13 +143,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
     const declOptName = tokens.shift() as string;
     tokens.shift(); // skip '('
 
-    const paramsColonFactExprsNode = paramsColonFactExprsParse(
-      env,
-      tokens,
-      (s: string) => {
-        return s === ")";
-      }
-    );
+    const paramsColonFactExprsNode = paramsColonFactExprsParse(env, tokens);
 
     tokens.shift(); // skip ")"
 
@@ -160,28 +167,26 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
 
 function paramsColonFactExprsParse(
   env: LiTeXEnv,
-  tokens: string[],
-  isEnd: (s: string) => Boolean
+  tokens: string[]
 ): ParamsColonFactExprsNode {
   const params: string[] = [];
-  const requirements: FactExprNode[] = [];
-  if (!isEnd(tokens[0])) {
+  const requirements: LiTeXNode[] = [];
+  if (!(tokens[0] === ")")) {
     while (1) {
       params.push(tokens.shift() as string);
       if (tokens[0] === ",") tokens.shift();
       else if (tokens[0] === ":") break;
-      else if (isEnd(tokens[0])) break;
+      else if (tokens[0] === ")") break;
       else throw Error("def parameters");
     }
-    if (!isEnd(tokens[0])) {
+    if (!(tokens[0] === ")")) {
       tokens.shift(); // skip :
-      while (!isEnd(tokens[0])) {
-        const node = factExprParse(env, tokens);
-        requirements.push(node);
+      while (!(tokens[0] === ")")) {
+        const node = LiTexStmtParse(env, tokens);
+        if (node) requirements.push(node as LiTeXNode);
 
-        if (tokens[0] === ",") tokens.shift();
-        else if (isEnd(tokens[0])) break;
-        else throw Error("def block parse");
+        // if (tokens[0] === ",") tokens.shift();
+        if (tokens[0] === ")") break;
       }
     }
   }
@@ -190,12 +195,11 @@ function paramsColonFactExprsParse(
 }
 
 function factExprParse(env: LiTeXEnv, tokens: string[]): FactExprNode {
-  if (tokens[0] === "know") {
-    return knowParse(env, tokens);
-  } else if (tokens[0] === "not") {
-    return notParse(env, tokens);
+  if (FactExprNodeNames.includes(tokens[0])) {
+    return stmtKeywords[tokens[0]](env, tokens);
   } else {
-    return callOptParse(env, tokens);
+    const node = callOptsParse(env, tokens);
+    return node;
   }
 }
 
@@ -206,7 +210,7 @@ function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
 
     while (!isCurToken("}", tokens)) {
       const node = LiTexStmtParse(env, tokens);
-      result.push(node);
+      if (node) result.push(node);
     }
 
     tokens.shift(); // skip }
@@ -263,7 +267,9 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
 function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   try {
     tokens.shift();
-    const node = paramsColonFactExprsParse(env, tokens, isExprEnding);
+    // ! needs to put the following shift into paramsColonParse
+    tokens.shift(); // skip ()
+    const node = paramsColonFactExprsParse(env, tokens);
     tokens.shift(); // skip ;
     return new HaveNode(node);
   } catch (error) {
@@ -272,25 +278,25 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   }
 }
 
-function checkParse(env: LiTeXEnv, tokens: string[]): CheckNode {
-  try {
-    const opts: CallOptNode[] = [];
-    if (!isExprEnding(tokens[0])) {
-      while (1) {
-        opts.push(callOptParse(env, tokens));
+// function checkParse(env: LiTeXEnv, tokens: string[]): CheckNode {
+//   try {
+//     const opts: CallOptNode[] = [];
+//     if (!isExprEnding(tokens[0])) {
+//       while (1) {
+//         opts.push(callOptParse(env, tokens));
 
-        if (tokens[0] === ",") tokens.shift();
-        if (isExprEnding(tokens[0])) break;
-        else throw Error("check");
-      }
-    }
-    tokens.shift();
-    return new CheckNode(opts);
-  } catch (error) {
-    handleParseError(env, "check");
-    throw error;
-  }
-}
+//         if (tokens[0] === ",") tokens.shift();
+//         if (isExprEnding(tokens[0])) break;
+//         else throw Error("check");
+//       }
+//     }
+//     tokens.shift();
+//     return new CheckNode(opts);
+//   } catch (error) {
+//     handleParseError(env, "check");
+//     throw error;
+//   }
+// }
 
 function propertyParse(env: LiTeXEnv, tokens: string[]): PropertyNode {
   try {
@@ -326,15 +332,9 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
     const declOptName = tokens.shift() as string;
     tokens.shift(); // skip '('
 
-    const paramsColonFactExprsNode = paramsColonFactExprsParse(
-      env,
-      tokens,
-      (s: string) => {
-        return s === ")";
-      }
-    );
+    const paramsColonFactExprsNode = paramsColonFactExprsParse(env, tokens);
 
-    tokens.shift();
+    tokens.shift(); // skip )
 
     const result = new ExistNode(
       declOptName,
@@ -360,17 +360,21 @@ function notParse(env: LiTeXEnv, tokens: string[]): NotNode {
   }
 }
 
-function factsParse(
-  env: LiTeXEnv,
-  tokens: string[],
-  isEnd: (s: string) => Boolean
-): FactsNode {
+function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
   try {
-    const factsNode = new FactsNode([]);
-    while (!isEnd(tokens[0])) {
-      factsNode.facts.push(factExprParse(env, tokens));
+    const callOpts: CallOptNode[] = [];
+
+    while (1) {
+      callOpts.push(callOptParse(env, tokens));
+      if (tokens[0] !== ",") {
+        // tokens.shift();
+        break;
+      } else {
+        tokens.shift();
+      }
     }
-    return factsNode;
+
+    return new CallOptsNode(callOpts);
   } catch (error) {
     catchParseError(env, error, "facts");
     throw error;
