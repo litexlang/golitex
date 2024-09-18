@@ -41,7 +41,7 @@ export class CallOptEqlNode extends CallOptNode {
 }
 
 // when parsing FactExprNode, need to pass in isEnd
-export type FactExprNode = KnowNode | CallOptNode | OrNode | NotNode;
+export type FactExprNode = KnowNode | CallOptNode | OrNode | NotNode | IffNode;
 
 export type CanBeKnownNode =
   | DefNode

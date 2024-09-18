@@ -71,13 +71,14 @@ export function LiTeXStmtsParse(
   }
 }
 
+const needsSkipSemiColon: string[] = ["know", "or", "not", "iff"];
 export function LiTexStmtParse(env: LiTeXEnv, tokens: string[]): LiTeXNode {
   try {
     const func = stmtKeywords[tokens[0]];
     const funcName = tokens[0];
     if (func) {
       const node = func(env, tokens);
-      if (funcName === "know") {
+      if (needsSkipSemiColon.includes(funcName)) {
         tokens.shift(); // skip ;
       }
       return node;
