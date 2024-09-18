@@ -50,6 +50,13 @@ export type CanBeKnownNode =
   | CallOptNode
   | OrNode
   | NotNode;
+export const canBeKnownNodeNames: string[] = [
+  "def",
+  "exist",
+  "iff",
+  "not",
+  "or",
+];
 
 export class FactsNode extends LiTeXNode {
   facts: FactExprNode[] = [];

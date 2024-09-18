@@ -3,6 +3,7 @@ import {
   CallOptEqlNode,
   CallOptNode,
   CanBeKnownNode,
+  canBeKnownNodeNames,
   CheckNode,
   DefNode,
   ExistNode,
@@ -62,14 +63,7 @@ export function LiTeXStmtsParse(
     const result: LiTeXNode[] = [];
 
     while (tokens[0] !== "_EOF") {
-      const func = stmtKeywords[tokens[0]];
-      const funcName = tokens[0];
-      if (func) {
-        result.push(func(env, tokens));
-        if (funcName === "know") {
-          tokens.shift(); // skip ';'
-        }
-      } else result.push(checkParse(env, tokens));
+      result.push(LiTexStmtParse(env, tokens));
     }
     return result;
   } catch (error) {
@@ -79,20 +73,16 @@ export function LiTeXStmtsParse(
 
 export function LiTexStmtParse(env: LiTeXEnv, tokens: string[]): LiTeXNode {
   try {
-    if (tokens[0] !== "_EOF") {
-      const func = stmtKeywords[tokens[0]];
-      const funcName = tokens[0];
-      if (func) {
-        const node = func(env, tokens);
-        if (funcName === "know") {
-          tokens.shift();
-        }
-        return node;
-      } else {
-        return checkParse(env, tokens);
+    const func = stmtKeywords[tokens[0]];
+    const funcName = tokens[0];
+    if (func) {
+      const node = func(env, tokens);
+      if (funcName === "know") {
+        tokens.shift(); // skip ;
       }
+      return node;
     } else {
-      throw Error("EOF");
+      return checkParse(env, tokens);
     }
   } catch (error) {
     handleParseError(env, "Stmt");
@@ -106,18 +96,8 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 
     tokens.shift(); // skip know
     while (!isCurToken(";", tokens)) {
-      if (tokens[0] === "def") {
-        const node: DefNode = defParse(env, tokens);
-        knowNode.facts.push(node);
-      } else if (tokens[0] === "exist") {
-        const node: ExistNode = existParse(env, tokens);
-        knowNode.facts.push(node);
-      } else if (tokens[0] === "iff") {
-        const node: IffNode = iffParse(env, tokens);
-        knowNode.facts.push(node);
-      } else if (tokens[0] === "not") {
-        const node: NotNode = notParse(env, tokens);
-        knowNode.facts.push(node);
+      if (canBeKnownNodeNames.includes(tokens[0])) {
+        knowNode.facts.push(stmtKeywords[tokens[0]](env, tokens));
       } else {
         const node = factExprParse(env, tokens);
         if (node.type === LiTexNodeType.KnowNode) {

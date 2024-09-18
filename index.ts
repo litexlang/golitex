@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import { scan } from "./lexer";
 import { LiTeXEnv } from "./env";
 import { LiTeXStmtsParse } from "./parser";
+import { LiTeXNode } from "./ast";
 
 const codes: string[] = [
   //   "def object(x) {object(x), object2(x)}",
@@ -104,7 +105,9 @@ function testParser() {
         console.log(env.errors[i]);
       }
     } else {
-      console.log(result);
+      for (let i = 0; i < result.length; i++) {
+        console.log(result[i]);
+      }
     }
   }
 }
