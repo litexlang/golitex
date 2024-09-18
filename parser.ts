@@ -228,7 +228,7 @@ function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
     const left = callOptParse(env, tokens);
     const right = callOptParse(env, tokens);
     const result = new IffNode(left, right);
-    tokens.shift(); // skip ;
+    // tokens.shift(); // skip ;
     return result;
   } catch (error) {
     handleParseError(env, "iff");
