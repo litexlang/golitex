@@ -79,12 +79,13 @@ const codes: string[] = [
   //   };
   // };`,
   //! or
-  `know def AxiomX(A: set(A), not_eq(EMPTY_SET, A)) {
-  know exist EEE (x: 
-    in(x,A), or1_not_set(x), or2_set(x), 
-    know def PP(y:in(y,x)) {not_in(y,A);};
-  );
-};`,
+  //   `know def AxiomX(A: set(A), not_eq(EMPTY_SET, A)) {
+  //   know exist EEE (x:
+  //     in(x,A), or1_not_set(x), or2_set(x),
+  //     know def PP(y:in(y,x)) {not_in(y,A);};
+  //   );
+  // };`,
+  "not {set(s); know def p(x:set(s)) {};  def s(x: set(x)) {}}",
 ];
 
 function testLexer() {

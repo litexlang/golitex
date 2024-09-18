@@ -2,6 +2,7 @@ import { resourceLimits } from "worker_threads";
 import {
   CallOptEqlNode,
   CallOptNode,
+  CanBeKnownNode,
   CheckNode,
   DefNode,
   ExistNode,
@@ -11,6 +12,7 @@ import {
   KnowNode,
   LiTeXNode,
   LiTexNodeType,
+  NotNode,
   ParamsColonFactExprsNode,
   PropertyNode,
 } from "./ast";
@@ -26,6 +28,13 @@ function isCurToken(s: string, tokens: string[]) {
   return s === tokens[0];
 }
 
+function catchParseError(env: LiTeXEnv, err: any, m: string) {
+  if (err instanceof Error) {
+    if (err.message) handleParseError(env, err.message);
+  }
+  handleParseError(env, m);
+}
+
 function handleParseError(env: LiTeXEnv, message: string) {
   env.pushErrorMessage("parsing error: " + message);
 }
@@ -39,6 +48,7 @@ const keywords: { [key: string]: Function } = {
   have: haveParse,
   property: propertyParse,
   exist: existParse,
+  not: notParse,
 };
 
 export function LiTeXStmtsParse(
@@ -64,7 +74,9 @@ export function LiTexStmtParse(env: LiTeXEnv, tokens: string[]): LiTeXNode {
     if (tokens[0] !== "_EOF") {
       const func = keywords[tokens[0]];
       if (func) return func(env, tokens);
-      else return checkParse(env, tokens);
+      else {
+        return checkParse(env, tokens);
+      }
     } else {
       throw Error("EOF");
     }
@@ -91,18 +103,26 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
         knowNode.facts.push(node);
       } else {
         const node = factExprParse(env, tokens);
-        knowNode.facts.push(node);
+        if (node.type === LiTexNodeType.KnowNode) {
+          throw Error("know can not be followed by know");
+        }
+        knowNode.facts.push(node as CanBeKnownNode);
       }
 
       if (tokens[0] === ",") tokens.shift();
       else if (isExprEnding(tokens[0])) break;
-      else throw Error("know parse");
+      else
+        throw Error(
+          "separation mark in know expression should be ',' , get '" +
+            tokens[0] +
+            "' instead."
+        );
     }
     tokens.shift(); // skip ;
 
     return knowNode;
   } catch (error) {
-    handleParseError(env, "know");
+    catchParseError(env, error, "know");
     throw error;
   }
 }
@@ -173,12 +193,13 @@ function paramsColonFactExprsParse(
 }
 
 function factExprParse(env: LiTeXEnv, tokens: string[]): FactExprNode {
-  if (tokens[0] === "iff") {
-    return iffParse(env, tokens);
-  } else if (tokens[0] === "know") {
+  // if (tokens[0] === "iff") {
+  //   return iffParse(env, tokens);
+  // } else
+  if (tokens[0] === "know") {
     return knowParse(env, tokens);
-  } else if (tokens[0] === "exist") {
-    return existParse(env, tokens);
+  } else if (tokens[0] === "not") {
+    return notParse(env, tokens);
   } else {
     return callOptParse(env, tokens);
   }
@@ -363,6 +384,17 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
     return result;
   } catch (error) {
     handleParseError(env, "exist");
+    throw error;
+  }
+}
+
+function notParse(env: LiTeXEnv, tokens: string[]): NotNode {
+  try {
+    tokens.shift();
+    const block: LiTeXNode[] = blockParse(env, tokens);
+    return new NotNode(block);
+  } catch (error) {
+    handleParseError(env, "not");
     throw error;
   }
 }

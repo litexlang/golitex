@@ -1,3 +1,5 @@
+import exp from "constants";
+
 // There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
 export enum LiTexNodeType {
   Node,
@@ -38,7 +40,19 @@ export class CallOptEqlNode extends CallOptNode {
   }
 }
 
-export type FactExprNode = CallOptNode | KnowNode | ExistNode | IffNode;
+export type FactExprNode =
+  | CallOptNode
+  | KnowNode
+  // | ExistNode
+  // | IffNode
+  | NotNode;
+
+export type CanBeKnownNode =
+  | DefNode
+  | ExistNode
+  | NotNode
+  | CallOptNode
+  | IffNode;
 
 export class DefNode extends LiTeXNode {
   declOptName: string;
@@ -60,7 +74,7 @@ export class DefNode extends LiTeXNode {
 
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
-  facts: FactExprNode[] = [];
+  facts: CanBeKnownNode[] = [];
 }
 
 export class HaveNode extends LiTeXNode {
@@ -133,5 +147,14 @@ export class ExistNode extends LiTeXNode {
     this.declOptName = declOptName;
     this.params = params;
     this.requirements = requirements;
+  }
+}
+
+export class NotNode extends LiTeXNode {
+  exprs: LiTeXNode[] = [];
+
+  constructor(exprs: LiTeXNode[]) {
+    super();
+    this.exprs = exprs;
   }
 }
