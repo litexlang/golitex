@@ -63,8 +63,13 @@ export function LiTeXStmtsParse(
 
     while (tokens[0] !== "_EOF") {
       const func = stmtKeywords[tokens[0]];
-      if (func) result.push(func(env, tokens));
-      else result.push(checkParse(env, tokens));
+      const funcName = tokens[0];
+      if (func) {
+        result.push(func(env, tokens));
+        // if (funcName === "know") {
+        //   tokens.shift(); // skip ';'
+        // }
+      } else result.push(checkParse(env, tokens));
     }
     return result;
   } catch (error) {
