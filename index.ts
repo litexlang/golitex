@@ -84,8 +84,8 @@ const codes: string[] = [
   //     know def PP(y:in(y,x)) {not_in(y,A);};
   //   );
   // };`,
-  // "not {set(s); know def p(x:set(s)) {};  def s(x: set(x)) {}}",
-  // "or {set(s); }{know def p(x:set(s)) {};  def s(x: set(x)) {}}",
+  "not {set(s); know def p(x:set(s)) {} ; def s(x: set(x)) {}}",
+  // "or {set(s); }{know def p(x:set(s)) {},  def s(x: set(x)) {};}",
 ];
 
 function testLexer() {

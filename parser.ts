@@ -66,9 +66,9 @@ export function LiTeXStmtsParse(
       const funcName = tokens[0];
       if (func) {
         result.push(func(env, tokens));
-        // if (funcName === "know") {
-        //   tokens.shift(); // skip ';'
-        // }
+        if (funcName === "know") {
+          tokens.shift(); // skip ';'
+        }
       } else result.push(checkParse(env, tokens));
     }
     return result;
@@ -81,8 +81,14 @@ export function LiTexStmtParse(env: LiTeXEnv, tokens: string[]): LiTeXNode {
   try {
     if (tokens[0] !== "_EOF") {
       const func = stmtKeywords[tokens[0]];
-      if (func) return func(env, tokens);
-      else {
+      const funcName = tokens[0];
+      if (func) {
+        const node = func(env, tokens);
+        if (funcName === "know") {
+          tokens.shift();
+        }
+        return node;
+      } else {
         return checkParse(env, tokens);
       }
     } else {
@@ -129,7 +135,6 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
             "' instead."
         );
     }
-    tokens.shift(); // skip ;
 
     return knowNode;
   } catch (error) {
