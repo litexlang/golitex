@@ -40,19 +40,24 @@ export class CallOptEqlNode extends CallOptNode {
   }
 }
 
-export type FactExprNode =
-  | CallOptNode
-  | KnowNode
-  // | ExistNode
-  // | IffNode
-  | NotNode;
+// when parsing FactExprNode, need to pass in isEnd
+export type FactExprNode = KnowNode | CallOptNode | OrNode | NotNode;
 
 export type CanBeKnownNode =
   | DefNode
   | ExistNode
-  | NotNode
+  | IffNode
   | CallOptNode
-  | IffNode;
+  | OrNode
+  | NotNode;
+
+export class FactsNode extends LiTeXNode {
+  facts: FactExprNode[] = [];
+  constructor(facts: FactExprNode[]) {
+    super();
+    this.facts = facts;
+  }
+}
 
 export class DefNode extends LiTeXNode {
   declOptName: string;
@@ -157,4 +162,8 @@ export class NotNode extends LiTeXNode {
     super();
     this.exprs = exprs;
   }
+}
+
+export class OrNode extends LiTeXNode {
+  blocks: LiTeXNode[][] = [];
 }
