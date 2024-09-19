@@ -23,10 +23,20 @@ export function handleRuntimeError(env: LiTeXEnv, message: string) {
 export function nodeExec(env: LiTeXEnv, node: LiTeXNode) {
   switch (node.type) {
     case LiTexNodeType.DefNode:
-      defExec(env, node as DefNode);
+      return defExec(env, node as DefNode);
     case LiTexNodeType.KnowNode:
-      knowExec(env, node as KnowNode);
+      return knowExec(env, node as KnowNode);
+    case LiTexNodeType.CallOptsNode:
+      return callOptsExec(env, node as CallOptsNode);
   }
+}
+
+function callOptsExec(env: LiTeXEnv, node: CallOptsNode) {
+  for (let i = 0; i < node.nodes.length; i++) {
+    if (!env.isFact(node.nodes[i])) return false;
+  }
+
+  return true;
 }
 
 function defExec(env: LiTeXEnv, node: DefNode) {
@@ -48,7 +58,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode) {
         defExec(env, curNode as DefNode);
       case LiTexNodeType.ExistNode:
         existExec(env, curNode as ExistNode);
-      case LiTexNodeType.CallOptsNode:
+      case LiTexNodeType.CallOptNode:
         knowCallOptParse(env, curNode as CallOptNode);
     }
   }

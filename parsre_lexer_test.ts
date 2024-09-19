@@ -7,6 +7,7 @@ import { LiTeXNode } from "./ast";
 // ! know should have different kinds of endings
 // ! should able to call subset::p(A,B)(x)
 //   ! know def when used as para, there are so many ; needs refactor
+// !
 const codes: string[] = [
   // "set(a)::set(b);",
   // "set(a), set(b);", //! strange but works
