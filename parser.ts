@@ -240,11 +240,13 @@ function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
   }
 }
 
-function onlyIfParse(env: LiTeXEnv, tokens: string[]): IffNode {
+function onlyIfParse(env: LiTeXEnv, tokens: string[]): OnlyIfNode {
   try {
     tokens.shift();
     const left = callOptParse(env, tokens);
-    const right = callOptParse(env, tokens);
+
+    const right = blockParse(env, tokens);
+
     const result = new OnlyIfNode(left, right);
     // tokens.shift(); // skip ;
     return result;
@@ -254,10 +256,10 @@ function onlyIfParse(env: LiTeXEnv, tokens: string[]): IffNode {
   }
 }
 
-function ifParse(env: LiTeXEnv, tokens: string[]): IffNode {
+function ifParse(env: LiTeXEnv, tokens: string[]): IfNode {
   try {
     tokens.shift();
-    const left = callOptParse(env, tokens);
+    const left = blockParse(env, tokens);
     const right = callOptParse(env, tokens);
     const result = new IfNode(left, right);
     // tokens.shift(); // skip ;

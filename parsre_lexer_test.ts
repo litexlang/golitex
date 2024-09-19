@@ -17,9 +17,9 @@ const codes: string[] = [
   // "know object(#);",
   // "def set(x) {}",
   "def eql(x,y) {}",
-  "know onlyif eql(x,y) strEql(x,y);",
-  "know if eql(x,y) strEql(x,y);",
-  "know iff eql(x,y) strEql(x,y);;",
+  "know onlyif eql(x,y) {strEql(x,y);};",
+  "know if {eql(x,y);}strEql(x,y) ;",
+  "know iff eql(x,y) strEql(x,y);",
   // "def in(x,s: set(s)) {\
   //   isIn(x,s);\
   // }",

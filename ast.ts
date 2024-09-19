@@ -150,9 +150,9 @@ export class IffNode extends LiTeXNode {
 export class OnlyIfNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.OnlyIfNode;
   left: CallOptNode;
-  right: CallOptNode;
+  right: LiTeXNode[];
 
-  constructor(left: CallOptNode, right: CallOptNode) {
+  constructor(left: CallOptNode, right: LiTeXNode[]) {
     super();
     this.left = left;
     this.right = right;
@@ -161,10 +161,10 @@ export class OnlyIfNode extends LiTeXNode {
 
 export class IfNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.IfNode;
-  left: CallOptNode;
+  left: LiTeXNode[];
   right: CallOptNode;
 
-  constructor(left: CallOptNode, right: CallOptNode) {
+  constructor(left: LiTeXNode[], right: CallOptNode) {
     super();
     this.left = left;
     this.right = right;
