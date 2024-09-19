@@ -44,10 +44,6 @@ function shiftVar(tokens: string[]): string {
   return token;
 }
 
-function isExprEnding(s: string) {
-  return ExprEndings.includes(s);
-}
-
 function isCurToken(s: string, tokens: string[]) {
   return s === tokens[0];
 }
@@ -74,9 +70,9 @@ const stmtKeywords: { [key: string]: Function } = {
   exist: existParse,
   not: notParse,
   or: orParse,
-  iff: iffParse,
-  onlyif: onlyIfParse,
-  if: ifParse,
+  "<=>": iffParse,
+  "=>": onlyIfParse,
+  "<=": ifParse,
 };
 
 export function LiTeXStmtsParse(
@@ -235,7 +231,7 @@ function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
     // tokens.shift(); // skip ;
     return result;
   } catch (error) {
-    handleParseError(env, "iff");
+    handleParseError(env, "<=>");
     throw error;
   }
 }
@@ -251,7 +247,7 @@ function onlyIfParse(env: LiTeXEnv, tokens: string[]): OnlyIfNode {
     // tokens.shift(); // skip ;
     return result;
   } catch (error) {
-    handleParseError(env, "iff");
+    handleParseError(env, "=>");
     throw error;
   }
 }
@@ -265,7 +261,7 @@ function ifParse(env: LiTeXEnv, tokens: string[]): IfNode {
     // tokens.shift(); // skip ;
     return result;
   } catch (error) {
-    handleParseError(env, "iff");
+    handleParseError(env, "<=");
     throw error;
   }
 }

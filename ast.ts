@@ -47,9 +47,9 @@ export const FactExprNodeNames: string[] = [
   "know",
   "or",
   "not",
-  "iff",
-  "if",
-  "onlyif",
+  "<=>",
+  "<=",
+  "=>",
 ];
 
 export type CanBeKnownNode =
@@ -62,11 +62,11 @@ export type CanBeKnownNode =
 export const canBeKnownNodeNames: string[] = [
   "def",
   "exist",
-  "iff",
+  "<=>",
   "not",
   "or",
-  "if",
-  "onlyif",
+  "<=",
+  "=>",
 ];
 
 export class FactsNode extends LiTeXNode {
