@@ -8,8 +8,8 @@ import { LiTeXNode } from "./ast";
 // ! should able to call subset::p(A,B)(x)
 //   ! know def when used as para, there are so many ; needs refactor
 const codes: string[] = [
-  "set(a) set(b)",
-  "def p(x: string(x)) {}",
+  "set(a) set(b)", //! strange but works
+  "def p(x: string(x)) {}", //! I think () here is unnecessary. if I abandon it, I no longer have to adopt sophisticated isEnd
   "know def p(x: string(x)) {}, set(a);",
   "def object(x) {object(x), object2(x);}",
   "know object;",

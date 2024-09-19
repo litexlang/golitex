@@ -1,4 +1,4 @@
-// ! TODO: 1. based on situations, know might not end with ; 2. introduce @def @exist as syntactic sugar of know def 3. iff should be iff(p(...), q(...)) 4. better callOpts
+// ! TODO: 1. based on situations, know might not end with ; 2. introduce @def @exist as syntactic sugar of know def 3. iff should be iff(p(...), q(...)) 4. better callOpts 5. FATAL: know in (:) consumes ',' and (:) itself consumes ','
 import {
   CallOptNode,
   CallOptsNode,
