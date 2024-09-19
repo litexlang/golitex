@@ -23,6 +23,17 @@ export function scan(text: string): string[] {
       continue;
     }
 
+    // 检查 :: 分隔符
+    if (char === ":" && text[i + 1] === ":") {
+      if (currentToken) {
+        tokens.push(currentToken);
+        currentToken = "";
+      }
+      tokens.push("::");
+      i++; // 跳过下一个 ":"
+      continue;
+    }
+
     if (specialChars.includes(char)) {
       if (currentToken) {
         tokens.push(currentToken);

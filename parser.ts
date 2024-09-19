@@ -220,26 +220,9 @@ function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
 
 function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
   try {
-    const optName = tokens.shift() as string;
-    const calledParams: string[] = [];
-    const temp = tokens[0];
-
-    if (temp === "(") {
-      // temp !== '(' means no parameter, which means this expression over
-      // all variables that satisfy requirement are valid
-      tokens.shift(); // skip (
-      if (tokens[0] !== ")") {
-        while (1) {
-          calledParams.push(tokens.shift() as string);
-          if (tokens[0] === ",") tokens.shift();
-          else if (tokens[0] === ")") break;
-          else throw Error("call opt parameter should be followed by , or )");
-        }
-      }
-      tokens.shift(); // skip )
-    }
-
-    return new CallOptNode(optName, calledParams);
+    const optNames: string[] = [];
+    // while (1) {}
+    throw Error("");
   } catch (error) {
     handleParseError(env, "call opt");
     throw error;

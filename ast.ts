@@ -14,6 +14,7 @@ export enum LiTexNodeType {
   ParamsColonFactExprsNode,
   PropertyNode,
   CheckNode,
+  CallOptWithColonColonNode,
 }
 
 export class LiTeXNode {
@@ -24,13 +25,13 @@ const NullNode = new LiTeXNode();
 
 export class CallOptNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptNode;
-  optName: string;
-  calledParams: string[];
+  optNames: string[];
+  calledParamsList: string[][];
 
-  constructor(optName: string, calledParams: string[]) {
+  constructor(optNames: string[], calledParamsList: string[][]) {
     super();
-    this.optName = optName;
-    this.calledParams = calledParams;
+    this.optNames = optNames;
+    this.calledParamsList = calledParamsList;
   }
 }
 
