@@ -85,9 +85,9 @@ export function LiTexStmtParse(
     const funcName = tokens[0];
     if (func) {
       const node = func(env, tokens);
-      // if (FactExprNodeNames.includes(funcName)) {
-      //   tokens.shift(); // skip ;
-      // }
+      if (funcName === "know") {
+        tokens.shift(); // skip ;
+      }
       if (node) return node;
       else return null;
     } else {
@@ -106,28 +106,18 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
     const knowNode: KnowNode = new KnowNode();
 
     tokens.shift(); // skip know
-    while (!isCurToken(";", tokens)) {
+    while (1) {
       if (canBeKnownNodeNames.includes(tokens[0])) {
         knowNode.facts.push(stmtKeywords[tokens[0]](env, tokens));
       } else {
-        const node = factExprParse(env, tokens);
-        if (node.type === LiTexNodeType.KnowNode) {
-          throw Error("know can not be followed by know");
-        }
-        knowNode.facts.push(node as CanBeKnownNode);
+        // called by know
+        const node = callOptParse(env, tokens);
+        knowNode.facts.push(node as CallOptNode);
       }
 
       if (tokens[0] === ",") tokens.shift();
-      else if (isExprEnding(tokens[0])) break;
-      else
-        throw Error(
-          "separation mark in know expression should be ',' , get '" +
-            tokens[0] +
-            "' instead."
-        );
+      else break;
     }
-
-    tokens.shift();
 
     return knowNode;
   } catch (error) {
@@ -193,14 +183,7 @@ function paramsColonFactExprsParse(
   return new ParamsColonFactExprsNode(params, requirements);
 }
 
-function factExprParse(env: LiTeXEnv, tokens: string[]): FactExprNode {
-  if (FactExprNodeNames.includes(tokens[0])) {
-    return stmtKeywords[tokens[0]](env, tokens);
-  } else {
-    const node = callOptsParse(env, tokens);
-    return node;
-  }
-}
+// called by know
 
 function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
   try {

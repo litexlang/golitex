@@ -8,6 +8,8 @@ import { LiTeXNode } from "./ast";
 // ! should able to call subset::p(A,B)(x)
 //   ! know def when used as para, there are so many ; needs refactor
 const codes: string[] = [
+  "def p(x: string(x)) {}",
+  "know def p(x: string(x)) {}, set(a);",
   "def object(x) {object(x), object2(x)}",
   "know object;",
   "def set(x) {}",
@@ -27,7 +29,7 @@ const codes: string[] = [
     }`,
   `have (s: set(s)) ;`,
   "every_set_is_an_object(s) ; ",
-  `def = (x,y: set(x), set(y)) {
+  `def = (x,y: set(x), set(y), know def p1(x:in(x,A)) {in(x,B)}) {
     know def p1(x:in(x,A)) {in(x,B)}, def  p2(x:in(x,B))  {in(x,A)};
   }`,
   `have (x,y: set(x), set(y));`,
@@ -39,14 +41,12 @@ const codes: string[] = [
   }
   `,
   `have (EMPTY_SET: empty_set(EMPTY_SET) );`,
-
   `
   property = (x,y){
     know def p3(x: not_in(x,A))  {not_in(x,B)};
     know def p4(x: not_in(x,B))  {not_in(x,A)};
   }`,
   "know def P(s) {};",
-
   `know
   def axiom2(a) {
     know def fck()  {
@@ -61,14 +61,12 @@ const codes: string[] = [
   "know subset(A,B);",
   "know in(x,a);",
   "know exist S(s: set(s));",
-
   `know def AxiomN(A,P: set(A), isdef(P)) {
       def Q(s) {
         set(s); know def Prop(x:in(x,A), P(x)) {};
       }
           know exist S(s: Q(s));
   };`,
-
   `know def AxiomM(A:set(A)) {
     know def
       QQ(x,y,P: in(x,A), isdef(P)
