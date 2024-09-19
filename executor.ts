@@ -6,8 +6,16 @@ import {
   KnowNode,
   LiTeXNode,
   LiTexNodeType,
+  OnlyIfNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
+
+enum ResultType {
+  True,
+  False,
+  Unknown,
+  Error,
+}
 
 function catchRuntimeError(env: LiTeXEnv, err: any, m: string) {
   if (err instanceof Error) {
@@ -20,7 +28,7 @@ export function handleRuntimeError(env: LiTeXEnv, message: string) {
   env.pushErrorMessage("Runtime error: " + message);
 }
 
-export function nodeExec(env: LiTeXEnv, node: LiTeXNode): Boolean {
+export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ResultType {
   switch (node.type) {
     case LiTexNodeType.DefNode:
       return defExec(env, node as DefNode);
@@ -30,33 +38,56 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): Boolean {
       return callOptsExec(env, node as CallOptsNode);
   }
 
-  return false;
+  return ResultType.Error;
 }
 
-function callOptsExec(env: LiTeXEnv, node: CallOptsNode): Boolean {
+function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
   for (let i = 0; i < node.nodes.length; i++) {
-    if (!env.isFact(node.nodes[i])) return false;
+    if (!env.isFact(node.nodes[i])) return ResultType.Unknown;
   }
 
-  return true;
+  return ResultType.True;
 }
 
-function defExec(env: LiTeXEnv, node: DefNode): Boolean {
+function defExec(
+  env: LiTeXEnv,
+  node: DefNode,
+  fatherName: string = ""
+): ResultType {
   try {
     if (env.keyInDefs(node.declOptName)) {
       throw Error(node.declOptName + " has already been declared.");
     }
-    env.defs.set(node.declOptName, node);
+    let sonNamePrefix: string = "";
+    if (fatherName === "") {
+      sonNamePrefix = node.declOptName + "::";
+      env.defs.set(node.declOptName, node);
+    } else {
+      sonNamePrefix = fatherName + node.declOptName + "::";
+      env.defs.set(fatherName + node.declOptName, node);
+    }
 
-    return true;
+    for (const item of node.onlyIfExprs) {
+      if (item.type === LiTexNodeType.DefNode) {
+        defExec(env, item as DefNode, sonNamePrefix);
+      } else if (item.type === LiTexNodeType.KnowNode) {
+        for (const subitem of (item as KnowNode).facts) {
+          if (subitem.type === LiTexNodeType.DefNode) {
+            defExec(env, subitem as DefNode, sonNamePrefix);
+          }
+        }
+      }
+    }
+
+    return ResultType.True;
   } catch (error) {
     catchRuntimeError(env, error, "def");
-    return false;
+    return ResultType.Unknown;
   }
 }
 
 // The interesting part: Even if you don't declare opt, you can still know facts about that opt. That means we don't need to claim what "set" or "number" means, and directly 'know set(a)' when necessary
-function knowExec(env: LiTeXEnv, node: KnowNode): Boolean {
+function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
   for (let i = 0; i < node.facts.length; i++) {
     const curNode = node.facts[i];
     switch (curNode.type) {
@@ -66,13 +97,19 @@ function knowExec(env: LiTeXEnv, node: KnowNode): Boolean {
         existExec(env, curNode as ExistNode);
       case LiTexNodeType.CallOptNode:
         knowCallOptParse(env, curNode as CallOptNode);
+      case LiTexNodeType.OnlyIfNode:
+        knowOnlyIfNodeParse(env, curNode as OnlyIfNode);
     }
   }
-  return true;
+  return ResultType.True;
 }
 
 function existExec(env: LiTeXEnv, node: ExistNode) {}
 
 function knowCallOptParse(env: LiTeXEnv, node: CallOptNode) {
   env.newFact(node);
+}
+
+function knowOnlyIfNodeParse(env: LiTeXEnv, node: OnlyIfNode) {
+  // const node = env.defs.get(node.left.)
 }

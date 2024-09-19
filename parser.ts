@@ -26,38 +26,6 @@ import { LiTeXEnv } from "./env";
 import { property } from "lodash";
 
 const ExprEndings = [";"];
-function skip(tokens: string[], s: string = "") {
-  if (s === "") {
-    return tokens.shift();
-  } else if (s === tokens[0]) {
-    return tokens.shift();
-  } else {
-    throw Error("");
-  }
-}
-
-function shiftVar(tokens: string[]): string {
-  const token = tokens.shift();
-  if (typeof token !== "string") {
-    throw new Error("No more tokens");
-  }
-  return token;
-}
-
-function isCurToken(s: string, tokens: string[]) {
-  return s === tokens[0];
-}
-
-function catchParseError(env: LiTeXEnv, err: any, m: string) {
-  if (err instanceof Error) {
-    if (err.message) handleParseError(env, err.message);
-  }
-  handleParseError(env, m);
-}
-
-function handleParseError(env: LiTeXEnv, message: string) {
-  env.pushErrorMessage("parsing error: " + message);
-}
 
 const stmtKeywords: { [key: string]: Function } = {
   ";": (env: LiTeXEnv, tokens: string[]) => {
@@ -430,4 +398,37 @@ function orParse(env: LiTeXEnv, tokens: string[]) {
     catchParseError(env, error, "or");
     throw error;
   }
+}
+
+function skip(tokens: string[], s: string = "") {
+  if (s === "") {
+    return tokens.shift();
+  } else if (s === tokens[0]) {
+    return tokens.shift();
+  } else {
+    throw Error("");
+  }
+}
+
+function shiftVar(tokens: string[]): string {
+  const token = tokens.shift();
+  if (typeof token !== "string") {
+    throw new Error("No more tokens");
+  }
+  return token;
+}
+
+function isCurToken(s: string, tokens: string[]) {
+  return s === tokens[0];
+}
+
+function catchParseError(env: LiTeXEnv, err: any, m: string) {
+  if (err instanceof Error) {
+    if (err.message) handleParseError(env, err.message);
+  }
+  handleParseError(env, m);
+}
+
+function handleParseError(env: LiTeXEnv, message: string) {
+  env.pushErrorMessage("parsing error: " + message);
 }

@@ -42,6 +42,8 @@ export type FactExprNode =
   | OrNode
   | NotNode
   | IffNode
+  | OnlyIfNode
+  | IfNode
   | CallOptsNode;
 export const FactExprNodeNames: string[] = [
   "know",
@@ -56,6 +58,8 @@ export type CanBeKnownNode =
   | DefNode
   | ExistNode
   | IffNode
+  | OnlyIfNode
+  | IfNode
   | CallOptNode
   | OrNode
   | NotNode;

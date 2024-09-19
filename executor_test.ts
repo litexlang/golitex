@@ -7,13 +7,19 @@ import { LiTeXStmtsParse } from "./parser";
 const env: LiTeXEnv = new LiTeXEnv();
 
 const codes: string[] = [
-  "set(a)::set(b);",
-  "know set(a)::set(b);",
-  "set(a)::set(b);",
-  "set(c)::set(d);",
-  "know set(1);",
-  "set(1), set(2);",
-  "set(1);",
+  // "set(a)::set(b);",
+  // "know set(a)::set(b);",
+  // "set(a)::set(b);",
+  // "set(c)::set(d);",
+  // "know set(1);",
+  // "set(1), set(2);",
+  // "set(1);",
+  // "know set(a), set(b);",
+  // "set(a);",
+  // "set(c);",
+  "",
+  "def p(x) {def q(y) {def qq (x) {}} }",
+  // "know => p(x,y):pp(z) {p1(x)::pp1(z, #), p2(y); p3(x);}",
 ];
 
 function callOptsExecTest() {
@@ -33,6 +39,7 @@ function callOptsExecTest() {
       }
     }
   }
+  console.log(env.defs);
 }
 
 callOptsExecTest();

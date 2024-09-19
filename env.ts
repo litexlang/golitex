@@ -20,6 +20,7 @@ export class LiTeXEnv {
     this.facts.push(optNode);
   }
 
+  //! has not introduce # here.
   isFact(optNode: CallOptNode): Boolean {
     for (let i = 0; i < this.facts.length; i++) {
       const length = this.facts[i].opts.length;

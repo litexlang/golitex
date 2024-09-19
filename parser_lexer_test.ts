@@ -17,9 +17,10 @@ const codes: string[] = [
   // "know object(#);",
   // "def set(x) {}",
   // "def eql(x,y) {}",
-  "know => eql(x,y) {strEql(x,y);};",
-  "know <= {eql(x,y);} strEql(x,y) ;",
-  "know <=> eql(x,y) strEql(x,y);",
+  // "know => eql(x,y) {strEql(x,y);};",
+  // "know <= {eql(x,y);} strEql(x,y) ;",
+  // "know <=> eql(x,y) strEql(x,y);",
+  "<=> set(a) set2(a);",
   // "def in(x,s: set(s)) {\
   //   isIn(x,s);\
   // }",
