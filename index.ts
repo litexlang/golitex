@@ -8,13 +8,14 @@ import { LiTeXNode } from "./ast";
 // ! should able to call subset::p(A,B)(x)
 //   ! know def when used as para, there are so many ; needs refactor
 const codes: string[] = [
+  "set(a) set(b)",
   "def p(x: string(x)) {}",
   "know def p(x: string(x)) {}, set(a);",
-  "def object(x) {object(x), object2(x)}",
+  "def object(x) {object(x), object2(x);}",
   "know object;",
   "def set(x) {}",
   "def in(x,s: set(s)) {\
-    isIn(x,s)\
+    isIn(x,s);\
   }",
   `
   def isIn(x,s: set(s)) {
@@ -30,13 +31,13 @@ const codes: string[] = [
   `have (s: set(s)) ;`,
   "every_set_is_an_object(s) ; ",
   `def = (x,y: set(x), set(y), know def p1(x:in(x,A)) {in(x,B)}) {
-    know def p1(x:in(x,A)) {in(x,B)}, def  p2(x:in(x,B))  {in(x,A)};
+    know def p1(x:in(x,A)) {in(x,B)}, def  p2(x:in(x,B))  {in(x,A);};
   }`,
   `have (x,y: set(x), set(y));`,
   `know =(x,y);`,
   "p1;",
   `def empty_set(s:set(s)) {
-    know def p1(x)  {in(x,s)};
+    know def p1(x)  {in(x,s);};
     iff p1 empty_set(s) ;
   }
   `,
