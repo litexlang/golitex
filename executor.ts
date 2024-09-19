@@ -67,6 +67,18 @@ function defExec(
       env.defs.set(fatherName + node.declOptName, node);
     }
 
+    for (const item of node.requirements) {
+      if (item.type === LiTexNodeType.DefNode) {
+        defExec(env, item as DefNode, sonNamePrefix);
+      } else if (item.type === LiTexNodeType.KnowNode) {
+        for (const subitem of (item as KnowNode).facts) {
+          if (subitem.type === LiTexNodeType.DefNode) {
+            defExec(env, subitem as DefNode, sonNamePrefix);
+          }
+        }
+      }
+    }
+
     for (const item of node.onlyIfExprs) {
       if (item.type === LiTexNodeType.DefNode) {
         defExec(env, item as DefNode, sonNamePrefix);

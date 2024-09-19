@@ -18,7 +18,7 @@ const codes: string[] = [
   // "set(a);",
   // "set(c);",
   "",
-  "def p(x) {def q(y) {def qq (x) {}} }",
+  "def p(x: def xx(y) {def yyy () {}}) {def q(y) {def qq (x) {}} }",
   // "know => p(x,y):pp(z) {p1(x)::pp1(z, #), p2(y); p3(x);}",
 ];
 
