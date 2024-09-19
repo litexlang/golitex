@@ -1,4 +1,12 @@
-import { DefNode, KnowNode, LiTeXNode, LiTexNodeType } from "./ast";
+import {
+  CallOptNode,
+  CallOptsNode,
+  DefNode,
+  ExistNode,
+  KnowNode,
+  LiTeXNode,
+  LiTexNodeType,
+} from "./ast";
 import { LiTeXEnv } from "./env";
 
 function catchRuntimeError(env: LiTeXEnv, err: any, m: string) {
@@ -21,7 +29,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode) {
   }
 }
 
-export function defExec(env: LiTeXEnv, node: DefNode) {
+function defExec(env: LiTeXEnv, node: DefNode) {
   try {
     if (env.keyInDefs(node.declOptName)) {
       throw Error(node.declOptName + " has already been declared.");
@@ -32,13 +40,22 @@ export function defExec(env: LiTeXEnv, node: DefNode) {
   }
 }
 
-export function knowExec(env: LiTeXEnv, node: KnowNode) {
+function knowExec(env: LiTeXEnv, node: KnowNode) {
   for (let i = 0; i < node.facts.length; i++) {
     const curNode = node.facts[i];
     switch (curNode.type) {
       case LiTexNodeType.DefNode:
         defExec(env, curNode as DefNode);
       case LiTexNodeType.ExistNode:
+        existExec(env, curNode as ExistNode);
+      case LiTexNodeType.CallOptsNode:
+        knowCallOptParse(env, curNode as CallOptNode);
     }
   }
+}
+
+function existExec(env: LiTeXEnv, node: ExistNode) {}
+
+function knowCallOptParse(env: LiTeXEnv, node: CallOptNode) {
+  env.newFact(node);
 }
