@@ -1,12 +1,19 @@
-import exp from "constants";
-
 // There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
 export enum LiTexNodeType {
   Node,
+  NotNode,
+  OrNode,
   CallOptNode,
+  CallOptsNode,
   KnowNode,
   ExistNode,
   IffNode,
+  FactsNode,
+  DefNode,
+  HaveNode,
+  ParamsColonFactExprsNode,
+  PropertyNode,
+  CheckNode,
 }
 
 export class LiTeXNode {
@@ -16,6 +23,7 @@ export class LiTeXNode {
 const NullNode = new LiTeXNode();
 
 export class CallOptNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.CallOptNode;
   optName: string;
   calledParams: string[];
 
@@ -23,20 +31,6 @@ export class CallOptNode extends LiTeXNode {
     super();
     this.optName = optName;
     this.calledParams = calledParams;
-  }
-}
-
-export class CallOptEqlNode extends CallOptNode {
-  type: LiTexNodeType = LiTexNodeType.CallOptNode;
-  eqlNodes: CallOptNode[];
-
-  constructor(
-    optName: string,
-    calledParams: string[],
-    eqlNodes: CallOptNode[]
-  ) {
-    super(optName, calledParams);
-    this.eqlNodes = eqlNodes;
   }
 }
 
@@ -66,6 +60,7 @@ export const canBeKnownNodeNames: string[] = [
 ];
 
 export class FactsNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.FactsNode;
   facts: FactExprNode[] = [];
   constructor(facts: FactExprNode[]) {
     super();
@@ -74,6 +69,7 @@ export class FactsNode extends LiTeXNode {
 }
 
 export class DefNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.DefNode;
   declOptName: string;
   params: string[];
   requirements: LiTeXNode[] = [];
@@ -97,6 +93,7 @@ export class KnowNode extends LiTeXNode {
 }
 
 export class HaveNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.HaveNode;
   params: string[];
   properties: LiTeXNode[];
 
@@ -108,6 +105,7 @@ export class HaveNode extends LiTeXNode {
 }
 
 export class ParamsColonFactExprsNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.ParamsColonFactExprsNode;
   params: string[];
   properties: LiTeXNode[];
 
@@ -119,6 +117,7 @@ export class ParamsColonFactExprsNode extends LiTeXNode {
 }
 
 export class CheckNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.CheckNode;
   callOpts: CallOptNode[] = [];
   constructor(callOpts: CallOptNode[]) {
     super();
@@ -139,6 +138,7 @@ export class IffNode extends LiTeXNode {
 }
 
 export class PropertyNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.PropertyNode;
   optName: string;
   calledParams: string[];
   onlyIfExprs: LiTeXNode[] = [];
@@ -170,6 +170,7 @@ export class ExistNode extends LiTeXNode {
 }
 
 export class NotNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.NotNode;
   exprs: LiTeXNode[] = [];
 
   constructor(exprs: LiTeXNode[]) {
@@ -179,10 +180,12 @@ export class NotNode extends LiTeXNode {
 }
 
 export class OrNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.OrNode;
   blocks: LiTeXNode[][] = [];
 }
 
 export class CallOptsNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.CallOptsNode;
   nodes: CallOptNode[] = [];
   constructor(nodes: CallOptNode[]) {
     super();
