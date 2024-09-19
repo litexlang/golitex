@@ -19,11 +19,31 @@ import {
   ParamsColonFactExprsNode,
   PropertyNode,
   FactExprNodeNames,
+  OnlyIfNode,
+  IfNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { property } from "lodash";
 
 const ExprEndings = [";"];
+function skip(tokens: string[], s: string = "") {
+  if (s === "") {
+    return tokens.shift();
+  } else if (s === tokens[0]) {
+    return tokens.shift();
+  } else {
+    throw Error("");
+  }
+}
+
+function shiftVar(tokens: string[]): string {
+  const token = tokens.shift();
+  if (typeof token !== "string") {
+    throw new Error("No more tokens");
+  }
+  return token;
+}
+
 function isExprEnding(s: string) {
   return ExprEndings.includes(s);
 }
@@ -55,6 +75,8 @@ const stmtKeywords: { [key: string]: Function } = {
   not: notParse,
   or: orParse,
   iff: iffParse,
+  onlyif: onlyIfParse,
+  if: ifParse,
 };
 
 export function LiTeXStmtsParse(
@@ -218,11 +240,60 @@ function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
   }
 }
 
+function onlyIfParse(env: LiTeXEnv, tokens: string[]): IffNode {
+  try {
+    tokens.shift();
+    const left = callOptParse(env, tokens);
+    const right = callOptParse(env, tokens);
+    const result = new OnlyIfNode(left, right);
+    // tokens.shift(); // skip ;
+    return result;
+  } catch (error) {
+    handleParseError(env, "iff");
+    throw error;
+  }
+}
+
+function ifParse(env: LiTeXEnv, tokens: string[]): IffNode {
+  try {
+    tokens.shift();
+    const left = callOptParse(env, tokens);
+    const right = callOptParse(env, tokens);
+    const result = new IfNode(left, right);
+    // tokens.shift(); // skip ;
+    return result;
+  } catch (error) {
+    handleParseError(env, "iff");
+    throw error;
+  }
+}
+
 function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
   try {
-    const optNames: string[] = [];
-    // while (1) {}
-    throw Error("");
+    const opts: [string, string[]][] = [];
+    while (1) {
+      const name = shiftVar(tokens) as string;
+      const params: string[] = [];
+      skip(tokens, "(");
+      while (1) {
+        params.push(shiftVar(tokens));
+        if (isCurToken(",", tokens)) skip(tokens, ",");
+        else if (isCurToken(")", tokens)) {
+          skip(tokens, ")");
+          break;
+        } else throw Error("");
+      }
+
+      opts.push([name, params]);
+
+      if (isCurToken("::", tokens)) {
+        skip(tokens, "::");
+      } else {
+        break;
+      }
+    }
+
+    return new CallOptNode(opts);
   } catch (error) {
     handleParseError(env, "call opt");
     throw error;
@@ -338,6 +409,9 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
         tokens.shift();
       }
     }
+
+    // in current version, callOpt must end with ;
+    skip(tokens, ";");
 
     return new CallOptsNode(callOpts);
   } catch (error) {

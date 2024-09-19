@@ -15,6 +15,8 @@ export enum LiTexNodeType {
   PropertyNode,
   CheckNode,
   CallOptWithColonColonNode,
+  OnlyIfNode,
+  IfNode,
 }
 
 export class LiTeXNode {
@@ -25,13 +27,11 @@ const NullNode = new LiTeXNode();
 
 export class CallOptNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptNode;
-  optNames: string[];
-  calledParamsList: string[][];
+  opts: [string, string[]][];
 
-  constructor(optNames: string[], calledParamsList: string[][]) {
+  constructor(opts: [string, string[]][]) {
     super();
-    this.optNames = optNames;
-    this.calledParamsList = calledParamsList;
+    this.opts = opts;
   }
 }
 
@@ -43,7 +43,14 @@ export type FactExprNode =
   | NotNode
   | IffNode
   | CallOptsNode;
-export const FactExprNodeNames: string[] = ["know", "or", "not", "iff"];
+export const FactExprNodeNames: string[] = [
+  "know",
+  "or",
+  "not",
+  "iff",
+  "if",
+  "onlyif",
+];
 
 export type CanBeKnownNode =
   | DefNode
@@ -58,6 +65,8 @@ export const canBeKnownNodeNames: string[] = [
   "iff",
   "not",
   "or",
+  "if",
+  "onlyif",
 ];
 
 export class FactsNode extends LiTeXNode {
@@ -128,6 +137,30 @@ export class CheckNode extends LiTeXNode {
 
 export class IffNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.IffNode;
+  left: CallOptNode;
+  right: CallOptNode;
+
+  constructor(left: CallOptNode, right: CallOptNode) {
+    super();
+    this.left = left;
+    this.right = right;
+  }
+}
+
+export class OnlyIfNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.OnlyIfNode;
+  left: CallOptNode;
+  right: CallOptNode;
+
+  constructor(left: CallOptNode, right: CallOptNode) {
+    super();
+    this.left = left;
+    this.right = right;
+  }
+}
+
+export class IfNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.IfNode;
   left: CallOptNode;
   right: CallOptNode;
 
