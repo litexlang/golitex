@@ -9,7 +9,7 @@ export class LiTeXEnv {
     this.errors.push(s);
   }
 
-  inDefs(s: string) {
+  keyInDefs(s: string) {
     return this.defs.has(s);
   }
 }
