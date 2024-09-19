@@ -20,7 +20,7 @@ export function handleRuntimeError(env: LiTeXEnv, message: string) {
   env.pushErrorMessage("Runtime error: " + message);
 }
 
-export function nodeExec(env: LiTeXEnv, node: LiTeXNode) {
+export function nodeExec(env: LiTeXEnv, node: LiTeXNode): Boolean {
   switch (node.type) {
     case LiTexNodeType.DefNode:
       return defExec(env, node as DefNode);
@@ -29,9 +29,11 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode) {
     case LiTexNodeType.CallOptsNode:
       return callOptsExec(env, node as CallOptsNode);
   }
+
+  return false;
 }
 
-function callOptsExec(env: LiTeXEnv, node: CallOptsNode) {
+function callOptsExec(env: LiTeXEnv, node: CallOptsNode): Boolean {
   for (let i = 0; i < node.nodes.length; i++) {
     if (!env.isFact(node.nodes[i])) return false;
   }
@@ -39,18 +41,22 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode) {
   return true;
 }
 
-function defExec(env: LiTeXEnv, node: DefNode) {
+function defExec(env: LiTeXEnv, node: DefNode): Boolean {
   try {
     if (env.keyInDefs(node.declOptName)) {
       throw Error(node.declOptName + " has already been declared.");
     }
     env.defs.set(node.declOptName, node);
+
+    return true;
   } catch (error) {
     catchRuntimeError(env, error, "def");
+    return false;
   }
 }
 
-function knowExec(env: LiTeXEnv, node: KnowNode) {
+// The interesting part: Even if you don't declare opt, you can still know facts about that opt. That means we don't need to claim what "set" or "number" means, and directly 'know set(a)' when necessary
+function knowExec(env: LiTeXEnv, node: KnowNode): Boolean {
   for (let i = 0; i < node.facts.length; i++) {
     const curNode = node.facts[i];
     switch (curNode.type) {
@@ -62,6 +68,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode) {
         knowCallOptParse(env, curNode as CallOptNode);
     }
   }
+  return true;
 }
 
 function existExec(env: LiTeXEnv, node: ExistNode) {}

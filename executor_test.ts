@@ -11,6 +11,9 @@ const codes: string[] = [
   "know set(a)::set(b);",
   "set(a)::set(b);",
   "set(c)::set(d);",
+  "know set(1);",
+  "set(1), set(2);",
+  "set(1);",
 ];
 
 function callOptsExecTest() {

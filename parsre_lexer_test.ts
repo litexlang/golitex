@@ -49,7 +49,7 @@ const codes: string[] = [
   // `,
   // `have (EMPTY_SET: empty_set(EMPTY_SET) );`,
   // `
-  // property = (x,y){
+  // know onlyif = (x,y){
   //   know def p3(x: not_in(x,A))  {not_in(x,B)};
   //   know def p4(x: not_in(x,B))  {not_in(x,A)};
   // }`,
