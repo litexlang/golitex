@@ -230,28 +230,3 @@ export class CallOptsNode extends LiTeXNode {
     this.nodes = nodes;
   }
 }
-
-export function replaceFreeVarInCallOptOfDefNode(
-  node: CallOptNode,
-  freeVars: string[],
-  fixedVars: string[]
-): CallOptNode {
-  let newNodes: [string, string[]][] = [];
-
-  for (let item of node.opts) {
-    let curParams: [string, string[]] = [item[0], []];
-
-    for (let variable of item[1]) {
-      let index = freeVars.indexOf(variable);
-      if (index !== -1) {
-        curParams[1].push(fixedVars[index]);
-      } else {
-        curParams[1].push(freeVars[index]);
-      }
-    }
-
-    newNodes.push(curParams);
-  }
-
-  return new CallOptNode(newNodes);
-}

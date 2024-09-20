@@ -7,7 +7,6 @@ import {
   LiTeXNode,
   LiTexNodeType,
   OnlyIfNode,
-  replaceFreeVarInCallOptOfDefNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 
@@ -139,6 +138,7 @@ function emitCallOptDescendants(env: LiTeXEnv, node: CallOptNode) {
     return;
   }
 
+  const fixedVars: string[][] = node.opts.map((e) => e[1]);
   const freeVars: string[][] = defNode.params;
 
   for (const item of defNode.onlyIfExprs) {
@@ -146,7 +146,6 @@ function emitCallOptDescendants(env: LiTeXEnv, node: CallOptNode) {
       //! If I put knowCallOptExec here, chain reaction will happen, and there will be more and more new facts generated.
       for (const callOpt of (item as CallOptsNode).nodes) {
         // const callOpt = replaceFreeVarInCallOptOfDefNode(freeCallOpt);
-        const fixedVars: string[][] = callOpt.opts.map((s) => s[1]);
 
         const fixedNode = freeVarsToFixedVars(callOpt, fixedVars, freeVars);
 
@@ -167,13 +166,18 @@ function freeVarsToFixedVars(
     const newOpt: [string, string[]] = [node.opts[index][0], []];
 
     for (const variable of opt[1] as string[]) {
+      let hasDefined = false;
       for (let i = freeVars.length - 1; i >= 0; i--) {
         for (let j = 0; j < freeVars[i].length; j++) {
           if (variable === freeVars[i][j]) {
             newOpt[1].push(fixedVars[i][j]);
+            hasDefined = true;
+            break;
           }
         }
+        if (hasDefined) break;
       }
+      if (!hasDefined) newOpt[1].push(variable);
     }
 
     fixedNode.opts.push(newOpt);

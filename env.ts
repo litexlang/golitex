@@ -84,6 +84,15 @@ export class LiTeXEnv {
 
     return false;
   }
+
+  printCallOptFacts() {
+    for (const [key, value] of this.callOptFacts) {
+      console.log(key);
+      for (const item of value) {
+        console.log(item);
+      }
+    }
+  }
 }
 
 function strListEql(lst1: string[], lst2: string[]): Boolean {

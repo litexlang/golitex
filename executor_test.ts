@@ -1,3 +1,4 @@
+import { result } from "lodash";
 import { LiTeXNode } from "./ast";
 import { LiTeXEnv } from "./env";
 import { nodeExec } from "./executor";
@@ -26,7 +27,9 @@ const codes: string[] = [
   // "a(b);",
   // "def a(x) {def b(y) {set(x,y);} }",
   // "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
-  "set(a)::set(x,y);",
+  // "set(a)::set(x,y);",
+  "def a(x) {def b(y) {p(x,EMPTY);}}",
+  "know a(1)::b(3);",
 ];
 
 function callOptsExecTest() {
@@ -47,11 +50,7 @@ function callOptsExecTest() {
     }
   }
   console.log(env.defs);
-  console.log(env.callOptFacts);
+  env.printCallOptFacts();
 }
 
-function freeVarsToFixedVarsTest() {
-  const code = "set(a,b)::set2(c);";
-}
-
-// callOptsExecTest();
+callOptsExecTest();
