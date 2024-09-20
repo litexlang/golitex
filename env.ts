@@ -4,7 +4,7 @@ export class LiTeXEnv {
   errors: string[] = [];
   defs: Map<string, DefNode> = new Map<string, DefNode>();
   //! string[] will be symbols[] because $$
-  callOptFacts: CallOptNode[] = [];
+  callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
 
   constructor() {}
 
@@ -16,31 +16,49 @@ export class LiTeXEnv {
     return this.defs.has(s);
   }
 
-  newFact(optNode: CallOptNode) {
-    this.callOptFacts.push(optNode);
+  callOptNodeName(optNode: CallOptNode) {
+    return optNode.opts.map((e) => e[0]).join("::");
+  }
+
+  getFromCallOptFacts(optNode: CallOptNode) {
+    const optName: string = optNode.opts.map((e) => e[0]).join("::");
+    const validParamsLst = this.callOptFacts.get(optName);
+    return validParamsLst;
+  }
+
+  newFact(node: CallOptNode) {
+    // check whether it's truly a new fact
+    if (this.isCallOptFact(node)) {
+      return;
+    } else {
+      if (!this.getFromCallOptFacts(node)) {
+        this.callOptFacts.set(this.callOptNodeName(node), [
+          node.opts.map((e) => e[1]),
+        ]);
+      } else {
+        this.callOptFacts
+          .get(this.callOptNodeName(node))
+          ?.push(node.opts.map((e) => e[1]));
+      }
+    }
   }
 
   //! has not introduce # here.
   isCallOptFact(optNode: CallOptNode): Boolean {
-    for (let i = 0; i < this.callOptFacts.length; i++) {
-      const length = this.callOptFacts[i].opts.length;
-      if (length !== optNode.opts.length) continue;
+    const validParamsLst = this.getFromCallOptFacts(optNode);
+    if (!validParamsLst) return false;
 
-      let indeedFact = 1;
-      for (let j = 0; j < length; j++) {
-        const targetNode = this.callOptFacts[i].opts[j];
-        if (targetNode[0] !== optNode.opts[j][0]) {
-          indeedFact = 0;
-          break;
-        }
-        if (!strListEql(targetNode[1], optNode.opts[j][1])) {
-          indeedFact = 0;
+    for (const item of validParamsLst) {
+      let sig = true;
+      for (let i = 0; i < item.length; i++) {
+        if (!strListEql(item[i], optNode.opts[i][1])) {
+          sig = false;
           break;
         }
       }
-
-      if (indeedFact) return true;
+      if (sig) return true;
     }
+
     return false;
   }
 }

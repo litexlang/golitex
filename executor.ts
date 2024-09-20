@@ -46,7 +46,7 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
     if (!env.isCallOptFact(node.nodes[i])) {
       return ResultType.Unknown;
     } else {
-      emitNewCallOptFact(env, node.nodes[i]);
+      emitCallOptDescendants(env, node.nodes[i]);
     }
   }
 
@@ -124,15 +124,14 @@ function existExec(env: LiTeXEnv, node: ExistNode) {}
 
 function knowCallOptExec(env: LiTeXEnv, node: CallOptNode) {
   env.newFact(node);
-  // ! Should if emit callOpt here?
-  // emitNewCallOptFact(env, node);
+  emitCallOptDescendants(env, node);
 }
 
 function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {
   // const node = env.defs.get(node.left.)
 }
 
-function emitNewCallOptFact(env: LiTeXEnv, node: CallOptNode) {
+function emitCallOptDescendants(env: LiTeXEnv, node: CallOptNode) {
   const optName: string = node.opts.map((e) => e[0]).join("::");
   const defNode: DefNode | undefined = env.defs.get(optName);
   if (defNode === undefined) {

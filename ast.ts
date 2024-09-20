@@ -28,6 +28,7 @@ const NullNode = new LiTeXNode();
 export class CallOptNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptNode;
   opts: [string, string[]][];
+  hasEmitted: Boolean = false;
 
   constructor(opts: [string, string[]][]) {
     super();

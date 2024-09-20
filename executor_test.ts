@@ -22,6 +22,8 @@ const codes: string[] = [
   // "know => p(x,y):pp(z) {p1(x)::pp1(z, #), p2(y); p3(x);}",
   "def a(x) {set(x);};",
   "know a(b);",
+  "know a(c);",
+
   "a(b);",
 ];
 
