@@ -170,7 +170,6 @@ function freeVarsToFixedVars(
       for (let i = freeVars.length - 1; i >= 0; i--) {
         for (let j = 0; j < freeVars[i].length; j++) {
           if (variable === freeVars[i][j]) {
-            newOpt[1].push(fixedVars[i][j]);
             hasDefined = true;
             break;
           }

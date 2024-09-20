@@ -28,8 +28,16 @@ const codes: string[] = [
   // "def a(x) {def b(y) {set(x,y);} }",
   // "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
   // "set(a)::set(x,y);",
-  "def a(x) {def b(y) {p(x,EMPTY);}}",
-  "know a(1)::b(3);",
+  // "def a(x) {def b(y) {p(y,x);}}",
+  // "know a(1)::b(3);",
+  // "a(1)::b(3);",
+  // "a(2)::b(3);",
+  `know >(a,1);`,
+  `know >(1,0);`,
+  `def transitivity_of_inequality(x,y,z: >(x,y), >(y,z);) {
+    >(x,z);
+  }`,
+  `know transitivity_of_inequality(#,#,#);`,
 ];
 
 function callOptsExecTest() {
