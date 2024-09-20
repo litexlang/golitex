@@ -23,8 +23,8 @@ const codes: string[] = [
   "def a(x) {set(x);};",
   "know a(b);",
   "know a(c);",
-
   "a(b);",
+  // "def a(x) {def b(y) {set(x,y);} }",
 ];
 
 function callOptsExecTest() {

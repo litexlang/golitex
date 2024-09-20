@@ -9,6 +9,7 @@ import { LiTeXNode } from "./ast";
 //   ! know def when used as para, there are so many ; needs refactor
 // !
 const codes: string[] = [
+  "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  }) {}",
   // "set(a)::set(b);",
   // "set(a), set(b);", //! strange but works
   // "def p(x: string(x);) {}", //! I think () here is unnecessary. if I abandon it, I no longer have to adopt sophisticated isEnd
@@ -20,7 +21,7 @@ const codes: string[] = [
   // "know => eql(x,y) {strEql(x,y);};",
   // "know <= {eql(x,y);} strEql(x,y) ;",
   // "know <=> eql(x,y) strEql(x,y);",
-  "<=> set(a) set2(a);",
+  // "<=> set(a) set2(a);",
   // "def in(x,s: set(s)) {\
   //   isIn(x,s);\
   // }",

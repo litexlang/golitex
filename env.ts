@@ -5,6 +5,28 @@ export class LiTeXEnv {
   defs: Map<string, DefNode> = new Map<string, DefNode>();
   //! string[] will be symbols[] because $$
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
+  fatherFreeVars: string[][] = [];
+  defDepth = 0;
+  snapShot = { defDepth: 0, fatherFreeVars: [] as string[][] };
+
+  isDefMode() {
+    return this.defDepth !== 0;
+  }
+
+  clearUpSnapShot() {
+    return { defDepth: 0, fatherFreeVars: [] as string[][] };
+  }
+
+  setSnapShot() {
+    this.snapShot.defDepth = this.defDepth;
+    this.snapShot.fatherFreeVars = [...this.fatherFreeVars];
+  }
+
+  returnToSnapShot() {
+    this.defDepth = this.snapShot.defDepth;
+    this.fatherFreeVars = this.snapShot.fatherFreeVars;
+    this.clearUpSnapShot();
+  }
 
   constructor() {}
 

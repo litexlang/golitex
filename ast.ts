@@ -28,7 +28,6 @@ const NullNode = new LiTeXNode();
 export class CallOptNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptNode;
   opts: [string, string[]][];
-  hasEmitted: Boolean = false;
 
   constructor(opts: [string, string[]][]) {
     super();
@@ -86,13 +85,13 @@ export class FactsNode extends LiTeXNode {
 export class DefNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.DefNode;
   declOptName: string;
-  params: string[];
+  params: string[][];
   requirements: LiTeXNode[] = [];
   onlyIfExprs: LiTeXNode[] = [];
 
   constructor(
     declOptName: string,
-    params: string[],
+    params: string[][],
     requirements: LiTeXNode[]
   ) {
     super();
@@ -230,4 +229,29 @@ export class CallOptsNode extends LiTeXNode {
     super();
     this.nodes = nodes;
   }
+}
+
+export function replaceFreeVarInCallOptOfDefNode(
+  node: CallOptNode,
+  freeVars: string[],
+  fixedVars: string[]
+): CallOptNode {
+  let newNodes: [string, string[]][] = [];
+
+  for (let item of node.opts) {
+    let curParams: [string, string[]] = [item[0], []];
+
+    for (let variable of item[1]) {
+      let index = freeVars.indexOf(variable);
+      if (index !== -1) {
+        curParams[1].push(fixedVars[index]);
+      } else {
+        curParams[1].push(freeVars[index]);
+      }
+    }
+
+    newNodes.push(curParams);
+  }
+
+  return new CallOptNode(newNodes);
 }

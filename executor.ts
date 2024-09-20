@@ -7,6 +7,7 @@ import {
   LiTeXNode,
   LiTexNodeType,
   OnlyIfNode,
+  replaceFreeVarInCallOptOfDefNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 
@@ -142,6 +143,7 @@ function emitCallOptDescendants(env: LiTeXEnv, node: CallOptNode) {
     if (item.type === LiTexNodeType.CallOptsNode) {
       //! If I put knowCallOptExec here, chain reaction will happen, and there will be more and more new facts generated.
       for (const callOpt of (item as CallOptsNode).nodes) {
+        // const callOpt = replaceFreeVarInCallOptOfDefNode(freeCallOpt);
         env.newFact(callOpt as CallOptNode);
       }
     }

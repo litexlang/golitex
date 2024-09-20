@@ -66,6 +66,8 @@ export function LiTexStmtParse(
   env: LiTeXEnv,
   tokens: string[]
 ): LiTeXNode | null {
+  env.setSnapShot();
+
   try {
     const func = stmtKeywords[tokens[0]];
     const funcName = tokens[0];
@@ -74,11 +76,18 @@ export function LiTexStmtParse(
       if (funcName === "know") {
         tokens.shift(); // skip ;
       }
-      if (node) return node;
-      else return null;
+      if (node) {
+        env.returnToSnapShot();
+        return node;
+      } else {
+        env.returnToSnapShot();
+        return null;
+      }
     } else {
       const node = callOptsParse(env, tokens);
       // tokens.shift();
+
+      env.returnToSnapShot();
       return node;
     }
   } catch (error) {
@@ -113,7 +122,11 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 }
 
 function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
+  env.setSnapShot();
+
   try {
+    env.defDepth++;
+
     tokens.shift(); // skip "def"
     const declOptName = tokens.shift() as string;
     tokens.shift(); // skip '('
@@ -122,9 +135,13 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
 
     tokens.shift(); // skip ")"
 
+    env.fatherFreeVars = env.fatherFreeVars.concat(
+      paramsColonFactExprsNode.params
+    );
+
     const result = new DefNode(
       declOptName,
-      paramsColonFactExprsNode.params,
+      [...env.fatherFreeVars],
       paramsColonFactExprsNode.properties
     );
 
@@ -133,9 +150,11 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
       result.onlyIfExprs.push(block[i]);
     }
 
+    env.defDepth--;
     return result;
   } catch (error) {
     handleParseError(env, "def");
+    env.returnToSnapShot();
     throw error;
   }
 }
