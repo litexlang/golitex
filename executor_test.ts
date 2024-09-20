@@ -25,7 +25,8 @@ const codes: string[] = [
   // "know a(c);",
   // "a(b);",
   // "def a(x) {def b(y) {set(x,y);} }",
-  "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
+  // "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
+  "set(a)::set(x,y);",
 ];
 
 function callOptsExecTest() {
@@ -49,4 +50,8 @@ function callOptsExecTest() {
   console.log(env.callOptFacts);
 }
 
-callOptsExecTest();
+function freeVarsToFixedVarsTest() {
+  const code = "set(a,b)::set2(c);";
+}
+
+// callOptsExecTest();

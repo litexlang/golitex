@@ -7,6 +7,7 @@ export class LiTeXEnv {
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
   fatherFreeVars: string[][] = [];
   defDepth = 0; //! I guess it's unnecessary
+  // ! THE ONLY SETBACK OF USING SNAPSHOT IS THAT NOW WE SORT OF PARSE AND EXECUTE AT THE SAME TIME.
   snapShot = { defDepth: 0, fatherFreeVars: [] as string[][] };
 
   isDefMode() {

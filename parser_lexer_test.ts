@@ -9,7 +9,8 @@ import { LiTeXNode } from "./ast";
 //   ! know def when used as para, there are so many ; needs refactor
 // !
 const codes: string[] = [
-  "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
+  "set(a)::set(b);",
+  // "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
   // "def a(x: set(x);) {}",
   // "set(a)::set(b);",
   // "set(a), set(b);", //! strange but works

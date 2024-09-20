@@ -139,13 +139,45 @@ function emitCallOptDescendants(env: LiTeXEnv, node: CallOptNode) {
     return;
   }
 
+  const freeVars: string[][] = defNode.params;
+
   for (const item of defNode.onlyIfExprs) {
     if (item.type === LiTexNodeType.CallOptsNode) {
       //! If I put knowCallOptExec here, chain reaction will happen, and there will be more and more new facts generated.
       for (const callOpt of (item as CallOptsNode).nodes) {
         // const callOpt = replaceFreeVarInCallOptOfDefNode(freeCallOpt);
-        env.newFact(callOpt as CallOptNode);
+        const fixedVars: string[][] = callOpt.opts.map((s) => s[1]);
+
+        const fixedNode = freeVarsToFixedVars(callOpt, fixedVars, freeVars);
+
+        env.newFact(fixedNode as CallOptNode);
       }
     }
   }
+}
+
+function freeVarsToFixedVars(
+  node: CallOptNode,
+  fixedVars: string[][],
+  freeVars: string[][]
+) {
+  const fixedNode = new CallOptNode([]);
+
+  for (const [index, opt] of (node.opts as [string, string[]][]).entries()) {
+    const newOpt: [string, string[]] = [node.opts[index][0], []];
+
+    for (const variable of opt[1] as string[]) {
+      for (let i = freeVars.length - 1; i >= 0; i--) {
+        for (let j = 0; j < freeVars[i].length; j++) {
+          if (variable === freeVars[i][j]) {
+            newOpt[1].push(fixedVars[i][j]);
+          }
+        }
+      }
+    }
+
+    fixedNode.opts.push(newOpt);
+  }
+
+  return fixedNode;
 }
