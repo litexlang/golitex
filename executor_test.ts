@@ -20,11 +20,12 @@ const codes: string[] = [
   "",
   // "def p(x: def xx(y) {def yyy () {}}) {def q(y) {def qq (x) {}} }",
   // "know => p(x,y):pp(z) {p1(x)::pp1(z, #), p2(y); p3(x);}",
-  "def a(x) {set(x);};",
-  "know a(b);",
-  "know a(c);",
-  "a(b);",
+  // "def a(x) {set(x);};",
+  // "know a(b);",
+  // "know a(c);",
+  // "a(b);",
   // "def a(x) {def b(y) {set(x,y);} }",
+  "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
 ];
 
 function callOptsExecTest() {

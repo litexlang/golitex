@@ -9,7 +9,8 @@ import { LiTeXNode } from "./ast";
 //   ! know def when used as para, there are so many ; needs refactor
 // !
 const codes: string[] = [
-  "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  }) {}",
+  "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
+  // "def a(x: set(x);) {}",
   // "set(a)::set(b);",
   // "set(a), set(b);", //! strange but works
   // "def p(x: string(x);) {}", //! I think () here is unnecessary. if I abandon it, I no longer have to adopt sophisticated isEnd

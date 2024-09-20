@@ -66,7 +66,7 @@ export function LiTexStmtParse(
   env: LiTeXEnv,
   tokens: string[]
 ): LiTeXNode | null {
-  env.setSnapShot();
+  // env.setSnapShot();
 
   try {
     const func = stmtKeywords[tokens[0]];
@@ -77,17 +77,17 @@ export function LiTexStmtParse(
         tokens.shift(); // skip ;
       }
       if (node) {
-        env.returnToSnapShot();
+        // env.returnToSnapShot();
         return node;
       } else {
-        env.returnToSnapShot();
+        // env.returnToSnapShot();
         return null;
       }
     } else {
       const node = callOptsParse(env, tokens);
       // tokens.shift();
 
-      env.returnToSnapShot();
+      // env.returnToSnapShot();
       return node;
     }
   } catch (error) {
@@ -121,27 +121,38 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
   }
 }
 
+function getParams(tokens: string[]): string[] {
+  const params: string[] = [];
+  if (!(tokens[0] === ")")) {
+    for (let i = 0; i < tokens.length; i++) {
+      params.push(tokens[i] as string);
+      if (tokens[i + 1] === ",") i++;
+      else if (tokens[i + 1] === ":") break;
+      else if (tokens[i + 1] === ")") break;
+      else throw Error("def parameters");
+    }
+  }
+  return params;
+}
+
 function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
   env.setSnapShot();
 
   try {
-    env.defDepth++;
-
     tokens.shift(); // skip "def"
     const declOptName = tokens.shift() as string;
     tokens.shift(); // skip '('
+
+    const curFreeVars = [...env.fatherFreeVars, getParams(tokens)];
+    env.fatherFreeVars = curFreeVars;
 
     const paramsColonFactExprsNode = paramsColonFactExprsParse(env, tokens);
 
     tokens.shift(); // skip ")"
 
-    env.fatherFreeVars = env.fatherFreeVars.concat(
-      paramsColonFactExprsNode.params
-    );
-
     const result = new DefNode(
       declOptName,
-      [...env.fatherFreeVars],
+      curFreeVars,
       paramsColonFactExprsNode.properties
     );
 
@@ -150,7 +161,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
       result.onlyIfExprs.push(block[i]);
     }
 
-    env.defDepth--;
+    env.returnToSnapShot();
     return result;
   } catch (error) {
     handleParseError(env, "def");

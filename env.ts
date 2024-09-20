@@ -6,7 +6,7 @@ export class LiTeXEnv {
   //! string[] will be symbols[] because $$
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
   fatherFreeVars: string[][] = [];
-  defDepth = 0;
+  defDepth = 0; //! I guess it's unnecessary
   snapShot = { defDepth: 0, fatherFreeVars: [] as string[][] };
 
   isDefMode() {
