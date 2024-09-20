@@ -43,7 +43,11 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ResultType {
 
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
   for (let i = 0; i < node.nodes.length; i++) {
-    if (!env.isFact(node.nodes[i])) return ResultType.Unknown;
+    if (!env.isCallOptFact(node.nodes[i])) {
+      return ResultType.Unknown;
+    } else {
+      emitNewCallOptFact(env, node.nodes[i]);
+    }
   }
 
   return ResultType.True;
@@ -108,9 +112,9 @@ function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
       case LiTexNodeType.ExistNode:
         existExec(env, curNode as ExistNode);
       case LiTexNodeType.CallOptNode:
-        knowCallOptParse(env, curNode as CallOptNode);
+        knowCallOptExec(env, curNode as CallOptNode);
       case LiTexNodeType.OnlyIfNode:
-        knowOnlyIfNodeParse(env, curNode as OnlyIfNode);
+        knowOnlyIfNodeExec(env, curNode as OnlyIfNode);
     }
   }
   return ResultType.True;
@@ -118,10 +122,29 @@ function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
 
 function existExec(env: LiTeXEnv, node: ExistNode) {}
 
-function knowCallOptParse(env: LiTeXEnv, node: CallOptNode) {
+function knowCallOptExec(env: LiTeXEnv, node: CallOptNode) {
   env.newFact(node);
+  // ! Should if emit callOpt here?
+  // emitNewCallOptFact(env, node);
 }
 
-function knowOnlyIfNodeParse(env: LiTeXEnv, node: OnlyIfNode) {
+function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {
   // const node = env.defs.get(node.left.)
+}
+
+function emitNewCallOptFact(env: LiTeXEnv, node: CallOptNode) {
+  const optName: string = node.opts.map((e) => e[0]).join("::");
+  const defNode: DefNode | undefined = env.defs.get(optName);
+  if (defNode === undefined) {
+    return;
+  }
+
+  for (const item of defNode.onlyIfExprs) {
+    if (item.type === LiTexNodeType.CallOptsNode) {
+      //! If I put knowCallOptExec here, chain reaction will happen, and there will be more and more new facts generated.
+      for (const callOpt of (item as CallOptsNode).nodes) {
+        env.newFact(callOpt as CallOptNode);
+      }
+    }
+  }
 }

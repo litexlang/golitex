@@ -4,7 +4,7 @@ export class LiTeXEnv {
   errors: string[] = [];
   defs: Map<string, DefNode> = new Map<string, DefNode>();
   //! string[] will be symbols[] because $$
-  facts: CallOptNode[] = [];
+  callOptFacts: CallOptNode[] = [];
 
   constructor() {}
 
@@ -17,18 +17,18 @@ export class LiTeXEnv {
   }
 
   newFact(optNode: CallOptNode) {
-    this.facts.push(optNode);
+    this.callOptFacts.push(optNode);
   }
 
   //! has not introduce # here.
-  isFact(optNode: CallOptNode): Boolean {
-    for (let i = 0; i < this.facts.length; i++) {
-      const length = this.facts[i].opts.length;
+  isCallOptFact(optNode: CallOptNode): Boolean {
+    for (let i = 0; i < this.callOptFacts.length; i++) {
+      const length = this.callOptFacts[i].opts.length;
       if (length !== optNode.opts.length) continue;
 
       let indeedFact = 1;
       for (let j = 0; j < length; j++) {
-        const targetNode = this.facts[i].opts[j];
+        const targetNode = this.callOptFacts[i].opts[j];
         if (targetNode[0] !== optNode.opts[j][0]) {
           indeedFact = 0;
           break;

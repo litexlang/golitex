@@ -12,7 +12,7 @@ function test_is_fact() {
     [">", ["21", "2", "3"]],
   ]);
   env.newFact(callOptNode);
-  console.log(env.isFact(callOptNode2));
+  console.log(env.isCallOptFact(callOptNode2));
 }
 
 test_is_fact();

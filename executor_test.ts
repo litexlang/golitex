@@ -18,8 +18,11 @@ const codes: string[] = [
   // "set(a);",
   // "set(c);",
   "",
-  "def p(x: def xx(y) {def yyy () {}}) {def q(y) {def qq (x) {}} }",
+  // "def p(x: def xx(y) {def yyy () {}}) {def q(y) {def qq (x) {}} }",
   // "know => p(x,y):pp(z) {p1(x)::pp1(z, #), p2(y); p3(x);}",
+  "def a(x) {set(x);};",
+  "know a(b);",
+  "a(b);",
 ];
 
 function callOptsExecTest() {
@@ -40,6 +43,7 @@ function callOptsExecTest() {
     }
   }
   console.log(env.defs);
+  console.log(env.callOptFacts);
 }
 
 callOptsExecTest();
