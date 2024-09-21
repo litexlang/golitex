@@ -136,7 +136,7 @@ function getParams(tokens: string[]): string[] {
 }
 
 function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
-  env.setSnapShot();
+  const snapShot = env.getSnapShot();
 
   try {
     tokens.shift(); // skip "def"
@@ -161,11 +161,11 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
       result.onlyIfExprs.push(block[i]);
     }
 
-    env.returnToSnapShot();
+    env.returnToSnapShot(snapShot);
     return result;
   } catch (error) {
     handleParseError(env, "def");
-    env.returnToSnapShot();
+    env.returnToSnapShot(snapShot);
     throw error;
   }
 }

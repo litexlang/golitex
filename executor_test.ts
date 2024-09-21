@@ -28,10 +28,10 @@ const codes: string[] = [
   // "def a(x) {def b(y) {set(x,y);} }",
   // "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
   // "set(a)::set(x,y);",
-  "def a(x) {def b(y: def suby(x) {}) {p(y,x);}}",
-  "know a(1)::b(3);",
-  "a(1)::b(3);",
-  "a(2)::b(3);",
+  // "def a(x) {def b(y: def suby(x) {}) {p(y,x);}}",
+  // "know a(1)::b(3);",
+  // "a(1)::b(3);",
+  // "a(2)::b(3);",
   // ">(2,1);",
   // `know >(a,1);`,
   // `know >(1,0);`,
@@ -40,6 +40,9 @@ const codes: string[] = [
   // }`,
   // `know transitivity_of_inequality(#,#,#);`,
   // ">(a,1);",
+  "def p(x) {def q(y) {} } ",
+  "def a(x) {def b(y) {} }",
+  // "know <=> p(1)::q(2) a(3)::b(y);",
 ];
 
 function callOptsExecTest() {
@@ -55,12 +58,12 @@ function callOptsExecTest() {
     } else {
       for (let i = 0; i < result.length; i++) {
         const res = nodeExec(env, result[i]);
-        console.log(res);
+        // console.log(res);
       }
     }
   }
-  console.log(env.defs);
   env.printCallOptFacts();
+  env.printDefs();
 }
 
 callOptsExecTest();

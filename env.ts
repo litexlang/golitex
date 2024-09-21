@@ -1,32 +1,20 @@
 import { CallOptNode, DefNode } from "./ast";
 
+type SnapShot = { fatherFreeVars: string[][] };
+
 export class LiTeXEnv {
   errors: string[] = [];
   defs: Map<string, DefNode> = new Map<string, DefNode>();
   //! string[] will be symbols[] because $$
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
   fatherFreeVars: string[][] = [];
-  defDepth = 0; //! I guess it's unnecessary
-  // ! THE ONLY SETBACK OF USING SNAPSHOT IS THAT NOW WE SORT OF PARSE AND EXECUTE AT THE SAME TIME.
-  snapShot = { defDepth: 0, fatherFreeVars: [] as string[][] };
 
-  isDefMode() {
-    return this.defDepth !== 0;
+  returnToSnapShot(original: SnapShot) {
+    this.fatherFreeVars = original.fatherFreeVars;
   }
 
-  clearUpSnapShot() {
-    return { defDepth: 0, fatherFreeVars: [] as string[][] };
-  }
-
-  setSnapShot() {
-    this.snapShot.defDepth = this.defDepth;
-    this.snapShot.fatherFreeVars = [...this.fatherFreeVars];
-  }
-
-  returnToSnapShot() {
-    this.defDepth = this.snapShot.defDepth;
-    this.fatherFreeVars = this.snapShot.fatherFreeVars;
-    this.clearUpSnapShot();
+  getSnapShot(): SnapShot {
+    return { fatherFreeVars: [...this.fatherFreeVars] };
   }
 
   constructor() {}
@@ -89,6 +77,19 @@ export class LiTeXEnv {
     for (const [key, value] of this.callOptFacts) {
       console.log(key);
       for (const item of value) {
+        console.log(item);
+      }
+    }
+  }
+
+  printDefs() {
+    for (const [key, value] of this.defs) {
+      console.log(key);
+      console.log(value.params);
+      for (const item of value.requirements) {
+        console.log(item);
+      }
+      for (const item of value.onlyIfExprs) {
         console.log(item);
       }
     }
