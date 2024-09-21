@@ -17,6 +17,7 @@ export enum LiTexNodeType {
   CallOptWithColonColonNode,
   OnlyIfNode,
   IfNode,
+  InheritNode,
 }
 
 export class LiTeXNode {
@@ -92,6 +93,7 @@ export class DefNode extends LiTeXNode {
   params: string[][];
   requirements: LiTeXNode[] = [];
   onlyIfExprs: LiTeXNode[] = [];
+  father: string = "";
 
   constructor(
     declOptName: string,

@@ -41,6 +41,7 @@ const stmtKeywords: { [key: string]: Function } = {
   "<=>": iffParse,
   "=>": onlyIfParse,
   "<=": ifParse,
+  inherit: inheritParse,
 };
 
 export function LiTeXStmtsParse(
@@ -139,7 +140,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
   const snapShot = env.getSnapShot();
 
   try {
-    tokens.shift(); // skip "def"
+    tokens.shift(); // skip "def" or fatherDefName
     const declOptName = tokens.shift() as string;
     tokens.shift(); // skip '('
 
@@ -427,6 +428,20 @@ function orParse(env: LiTeXEnv, tokens: string[]) {
     return orNode;
   } catch (error) {
     catchParseError(env, error, "or");
+    throw error;
+  }
+}
+
+function inheritParse(env: LiTeXEnv, tokens: string[]): DefNode {
+  try {
+    skip(tokens, "inherit");
+    const father = tokens[0];
+    const result = defParse(env, tokens);
+    result.father = father;
+
+    return result;
+  } catch (error) {
+    catchParseError(env, error, "inherit");
     throw error;
   }
 }

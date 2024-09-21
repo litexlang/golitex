@@ -9,7 +9,7 @@ import { LiTeXNode } from "./ast";
 //   ! know def when used as para, there are so many ; needs refactor
 // !
 const codes: string[] = [
-  "set(a)::set(b);",
+  // "set(a)::set(b);",
   // "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
   // "def a(x: set(x);) {}",
   // "set(a)::set(b);",
@@ -117,6 +117,8 @@ const codes: string[] = [
   // `    def Q(s) {
   //   set(s); know def Prop(x: in(x,A), P(x)) {};
   // }`,
+  "def p(x) {}",
+  "inherit p son(z: set(z);) {ha(z);}",
 ];
 
 function testLexer() {

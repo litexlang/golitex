@@ -43,8 +43,9 @@ const codes: string[] = [
   "def p(x) {def q(y) {} } ",
   "def a(x) {def b(y) {} }",
   // "know <=> p(x)::q(y) a(y)::b(x); ;",
-  "know => p(a)::q(b) {a(b), a(b)::b(a);}; ;",
-  "know <= {a(b), a(b)::b(a);} p(a)::q(b) ;;",
+  // "know => p(a)::q(b) {a(b), a(b)::b(a);}; ;",
+  // "know <= {a(b), a(b)::b(a);} p(a)::q(b) ;;",
+  "inherit p son(z: set(z)) {ha(z);}",
 ];
 
 function callOptsExecTest() {
