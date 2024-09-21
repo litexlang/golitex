@@ -92,6 +92,7 @@ export class LiTeXEnv {
       for (const item of value.onlyIfExprs) {
         console.log(item);
       }
+      console.log("-----------------");
     }
   }
 }
