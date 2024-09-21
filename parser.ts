@@ -242,7 +242,7 @@ function onlyIfParse(env: LiTeXEnv, tokens: string[]): OnlyIfNode {
 
     const right = blockParse(env, tokens);
 
-    const result = new OnlyIfNode(left, right);
+    const result = new OnlyIfNode(left, right as CallOptsNode[]);
     // tokens.shift(); // skip ;
     return result;
   } catch (error) {
@@ -256,7 +256,7 @@ function ifParse(env: LiTeXEnv, tokens: string[]): IfNode {
     tokens.shift();
     const left = blockParse(env, tokens);
     const right = callOptParse(env, tokens);
-    const result = new IfNode(left, right);
+    const result = new IfNode(left as CallOptsNode[], right);
     // tokens.shift(); // skip ;
     return result;
   } catch (error) {

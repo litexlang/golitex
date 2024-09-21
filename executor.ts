@@ -4,6 +4,7 @@ import {
   DefNode,
   ExistNode,
   IffNode,
+  IfNode,
   IndexOfGivenSymbol,
   KnowNode,
   LiTeXNode,
@@ -139,7 +140,56 @@ function addNewOnlyIfsToDefs(
   }
 }
 
+function knowIfExec(env: LiTeXEnv, node: IfNode): ResultType {
+  //? Unfinished: might introduce repeated facts
+  try {
+    const key: string = node.right.opts.map((e) => e[0]).join("::");
+    if (!env.keyInDefs(key)) return ResultType.Unknown;
+    const defNode = env.defs.get(key);
+
+    for (const item of node.left as CallOptsNode[]) {
+      for (const subitem of item.nodes as CallOptNode[])
+        addNewOnlyIfsToDefs(
+          env,
+          defNode as DefNode,
+          node.right,
+          subitem as CallOptNode
+        );
+    }
+
+    return ResultType.True;
+  } catch (error) {
+    catchRuntimeError(env, error, "if");
+    return ResultType.Error;
+  }
+}
+
+function knowOnlyIfExec(env: LiTeXEnv, node: OnlyIfNode): ResultType {
+  //? Unfinished: might introduce repeated facts
+  try {
+    const key: string = node.left.opts.map((e) => e[0]).join("::");
+    if (!env.keyInDefs(key)) return ResultType.Unknown;
+    const defNode = env.defs.get(key);
+
+    for (const item of node.right as CallOptsNode[]) {
+      for (const subitem of item.nodes as CallOptNode[])
+        addNewOnlyIfsToDefs(
+          env,
+          defNode as DefNode,
+          node.left,
+          subitem as CallOptNode
+        );
+    }
+
+    return ResultType.True;
+  } catch (error) {
+    catchRuntimeError(env, error, "if");
+    return ResultType.Error;
+  }
+}
+
 function knowIffExec(env: LiTeXEnv, node: IffNode): ResultType {
+  //? Unfinished: might introduce repeated facts
   try {
     const leftKey: string = node.left.opts.map((e) => e[0]).join("::");
     if (!env.keyInDefs(leftKey)) return ResultType.Unknown;
@@ -166,14 +216,25 @@ function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
     switch (curNode.type) {
       case LiTexNodeType.DefNode:
         defExec(env, curNode as DefNode);
+        break;
       case LiTexNodeType.ExistNode:
         existExec(env, curNode as ExistNode);
+        break;
       case LiTexNodeType.CallOptNode:
         knowCallOptExec(env, curNode as CallOptNode);
+        break;
       case LiTexNodeType.OnlyIfNode:
         knowOnlyIfNodeExec(env, curNode as OnlyIfNode);
+        break;
       case LiTexNodeType.IffNode:
         knowIffExec(env, curNode as IffNode);
+        break;
+      case LiTexNodeType.IfNode:
+        knowIfExec(env, curNode as IfNode);
+        break;
+      case LiTexNodeType.OnlyIfNode:
+        knowOnlyIfExec(env, curNode as OnlyIfNode);
+        break;
     }
   }
   return ResultType.True;

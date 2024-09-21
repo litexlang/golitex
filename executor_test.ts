@@ -42,7 +42,9 @@ const codes: string[] = [
   // ">(a,1);",
   "def p(x) {def q(y) {} } ",
   "def a(x) {def b(y) {} }",
-  "know <=> p(x)::q(y) a(y)::b(x);",
+  // "know <=> p(x)::q(y) a(y)::b(x); ;",
+  "know => p(a)::q(b) {a(b), a(b)::b(a);}; ;",
+  "know <= {a(b), a(b)::b(a);} p(a)::q(b) ;;",
 ];
 
 function callOptsExecTest() {
@@ -51,7 +53,6 @@ function callOptsExecTest() {
     const result = LiTeXStmtsParse(env, tokens);
     if (result === null) {
       for (let i = 0; i < env.errors.length; i++) {
-        console.log("parse error: ___________");
         console.log(env.errors[i]);
         console.log("parse error: ___________");
       }
