@@ -54,15 +54,26 @@ export class LiTeXEnv {
     }
   }
 
-  //! has not introduce # here.
   isCallOptFact(optNode: CallOptNode): Boolean {
+    function paramsIsValid(lst1: string[], lst2: string[]): Boolean {
+      if (lst1.length !== lst2.length) {
+        return false;
+      }
+      for (let i = 0; i < lst1.length; i++) {
+        if (lst1[i] !== lst2[i] && lst1[i] !== "#") {
+          return false;
+        }
+      }
+      return true;
+    }
+
     const validParamsLst = this.getFromCallOptFacts(optNode);
     if (!validParamsLst) return false;
 
     for (const item of validParamsLst) {
       let sig = true;
       for (let i = 0; i < item.length; i++) {
-        if (!strListEql(item[i], optNode.opts[i][1])) {
+        if (!paramsIsValid(item[i], optNode.opts[i][1])) {
           sig = false;
           break;
         }
@@ -78,6 +89,7 @@ export class LiTeXEnv {
       console.log(key);
       for (const item of value) {
         console.log(item);
+        console.log("----callOpt------");
       }
     }
   }
@@ -92,12 +104,12 @@ export class LiTeXEnv {
       for (const item of value.onlyIfExprs) {
         console.log(item);
       }
-      console.log("-----------------");
+      console.log("------def---------");
     }
   }
 }
 
-function strListEql(lst1: string[], lst2: string[]): Boolean {
+function strLstEql(lst1: string[], lst2: string[]): Boolean {
   if (lst1.length !== lst2.length) {
     return false;
   }

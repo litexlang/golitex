@@ -13,7 +13,7 @@ import {
 } from "./ast";
 import { LiTeXEnv } from "./env";
 
-enum ResultType {
+export enum ResultType {
   True,
   False,
   Unknown,

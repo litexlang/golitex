@@ -1,7 +1,7 @@
 import { result } from "lodash";
 import { LiTeXNode } from "./ast";
 import { LiTeXEnv } from "./env";
-import { nodeExec } from "./executor";
+import { nodeExec, ResultType } from "./executor";
 import { scan } from "./lexer";
 import { LiTeXStmtsParse } from "./parser";
 
@@ -40,14 +40,16 @@ const codes: string[] = [
   // }`,
   // `know transitivity_of_inequality(#,#,#);`,
   // ">(a,1);",
-  "def p(x) {def q(y) {} } ",
-  "def a(x) {def b(y) {} }",
+  // "def p(x) {def q(y) {} } ",
+  // "def a(x) {def b(y) {} }",
   // "know <=> p(x)::q(y) a(y)::b(x); ;",
   // "know => p(a)::q(b) {a(b), a(b)::b(a);}; ;",
   // "know <= {a(b), a(b)::b(a);} p(a)::q(b) ;;",
-  "inherit p son(z: set(z);) {ha(z);}",
-  // "def P(x) {}",
-  // "inherit P son(x: >(x,0)) {}",
+  // "inherit p son(z: set(z);) {ha(z);}",
+  "def P(x) {}",
+  // "inherit P son(x: >(x,0);) {}",
+  "know P(#);",
+  "P(1);",
 ];
 
 function callOptsExecTest() {
@@ -61,8 +63,8 @@ function callOptsExecTest() {
       }
     } else {
       for (let i = 0; i < result.length; i++) {
-        const res = nodeExec(env, result[i]);
-        // console.log(res);
+        const res: ResultType = nodeExec(env, result[i]);
+        console.log(res);
       }
     }
   }
