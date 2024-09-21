@@ -33,6 +33,10 @@ export class CallOptNode extends LiTeXNode {
     super();
     this.opts = opts;
   }
+
+  paramsLst() {
+    return this.opts.map((e) => e[1]);
+  }
 }
 
 // when parsing FactExprNode, need to pass in isEnd
@@ -229,4 +233,19 @@ export class CallOptsNode extends LiTeXNode {
     super();
     this.nodes = nodes;
   }
+}
+
+export function IndexOfGivenSymbol(
+  node: CallOptNode,
+  s: string
+): [number, number] | undefined {
+  for (let i = 0; i < node.paramsLst().length; i++) {
+    for (let j = 0; j < node.paramsLst()[i].length; j++) {
+      if (s === node.paramsLst()[i][j]) {
+        return [i, j];
+      }
+    }
+  }
+
+  return undefined;
 }

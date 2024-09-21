@@ -4,6 +4,12 @@
 2. onlyif: parse like iff
 
 9.20
+还缺了 or ,not
+还缺 => <= <=>
+还缺 #
+根据字面量 自动绑定性质
+
+如何让下面自动化
 `know >(a,1);`,
 `know >(1,0);`,
 `def transitivity_of_inequality(x,y,z: >(x,y), >(y,z);) {

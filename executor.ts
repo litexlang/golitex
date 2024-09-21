@@ -3,6 +3,8 @@ import {
   CallOptsNode,
   DefNode,
   ExistNode,
+  IffNode,
+  IndexOfGivenSymbol,
   KnowNode,
   LiTeXNode,
   LiTexNodeType,
@@ -102,6 +104,57 @@ function defExec(
   }
 }
 
+function addNewOnlyIfsToDefs(
+  env: LiTeXEnv,
+  leftDef: DefNode,
+  left: CallOptNode,
+  right: CallOptNode
+): ResultType {
+  try {
+    let params: string[][] = [];
+    let optNames: string[] = right.opts.map((e) => e[0]);
+    for (let i = 0; i < right.paramsLst().length; i++) {
+      for (let j = 0; j < right.paramsLst()[i].length; j++) {
+        const index = IndexOfGivenSymbol(left, right.paramsLst()[i][j]);
+        if (!index) params[i][j] = right.paramsLst()[i][j];
+        else {
+          params[i][j] = leftDef.params[i][j];
+        }
+      }
+    }
+    let optParamsLst: [string, string[]][] = optNames.map((e, index) => [
+      e,
+      params[index],
+    ]);
+    leftDef.onlyIfExprs.push(new CallOptsNode([new CallOptNode(optParamsLst)]));
+
+    return ResultType.True;
+  } catch (error) {
+    catchRuntimeError(env, error, "onlyIf/Iff/If");
+    return ResultType.Error;
+  }
+}
+
+function knowIffExec(env: LiTeXEnv, node: IffNode): ResultType {
+  try {
+    const leftKey: string = node.left.opts.map((e) => e[0]).join("::");
+    if (!env.keyInDefs(leftKey)) return ResultType.Unknown;
+    const leftDefNode = env.defs.get(leftKey);
+
+    const rightKey: string = node.right.opts.map((e) => e[0]).join("::");
+    if (!env.keyInDefs(rightKey)) return ResultType.Unknown;
+    const rightDefNode = env.defs.get(rightKey);
+
+    addNewOnlyIfsToDefs(env, leftDefNode as DefNode, node.left, node.right);
+    addNewOnlyIfsToDefs(env, rightDefNode as DefNode, node.right, node.left);
+
+    return ResultType.True;
+  } catch (error) {
+    catchRuntimeError(env, error, "iff");
+    return ResultType.Error;
+  }
+}
+
 // The interesting part: Even if you don't declare opt, you can still know facts about that opt. That means we don't need to claim what "set" or "number" means, and directly 'know set(a)' when necessary
 function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
   for (let i = 0; i < node.facts.length; i++) {
@@ -115,6 +168,8 @@ function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
         knowCallOptExec(env, curNode as CallOptNode);
       case LiTexNodeType.OnlyIfNode:
         knowOnlyIfNodeExec(env, curNode as OnlyIfNode);
+      case LiTexNodeType.IfNode:
+        knowIffExec(env, curNode as IffNode);
     }
   }
   return ResultType.True;

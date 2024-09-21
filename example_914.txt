@@ -1,5 +1,5 @@
 def object(x) {}
-know object; // 表示任何满足object的参数的条件的元素代入进去都能正确
+know object(#); // 表示任何满足object的参数的条件的元素代入进去都能正确
 // 以上两行等价于 truth object(x) {} 等价于 know def object(x) {}
 // 或者用! 表示同时声明 fef 和让他正确： def! exist!, 同时 def!等价于 truth
 
