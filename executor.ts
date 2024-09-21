@@ -12,6 +12,7 @@ import {
   OnlyIfNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
+import { builtInCallOptNames } from "./executor_builtins";
 
 export enum ResultType {
   True,
@@ -20,7 +21,7 @@ export enum ResultType {
   Error,
 }
 
-function catchRuntimeError(env: LiTeXEnv, err: any, m: string) {
+export function catchRuntimeError(env: LiTeXEnv, err: any, m: string) {
   if (err instanceof Error) {
     if (err.message) handleRuntimeError(env, err.message);
   }
@@ -46,10 +47,18 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ResultType {
 
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
   for (let i = 0; i < node.nodes.length; i++) {
+    const nodeName: string = node.nodes[i].opts.map((e) => e[0]).join("::");
+    if (nodeName in builtInCallOptNames) {
+      const result = builtInCallOptNames[nodeName](env, node.nodes[i]);
+      if (result !== ResultType.True) {
+        return result;
+      }
+    }
+
     if (!env.isCallOptFact(node.nodes[i])) {
       return ResultType.Unknown;
     } else {
-      emitCallOptDescendants(env, node.nodes[i]);
+      callOptExec(env, node.nodes[i]);
     }
   }
 
@@ -244,14 +253,14 @@ function existExec(env: LiTeXEnv, node: ExistNode) {}
 
 function knowCallOptExec(env: LiTeXEnv, node: CallOptNode) {
   env.newFact(node);
-  emitCallOptDescendants(env, node);
+  callOptExec(env, node);
 }
 
 function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {
   // const node = env.defs.get(node.left.)
 }
 
-function emitCallOptDescendants(env: LiTeXEnv, node: CallOptNode) {
+function callOptExec(env: LiTeXEnv, node: CallOptNode) {
   const optName: string = node.opts.map((e) => e[0]).join("::");
   const defNode: DefNode | undefined = env.defs.get(optName);
   if (defNode === undefined) {

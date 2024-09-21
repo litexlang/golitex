@@ -46,10 +46,13 @@ const codes: string[] = [
   // "know => p(a)::q(b) {a(b), a(b)::b(a);}; ;",
   // "know <= {a(b), a(b)::b(a);} p(a)::q(b) ;;",
   // "inherit p son(z: set(z);) {ha(z);}",
-  "def P(x) {}",
+  // "def P(x) {}",
   // "inherit P son(x: >(x,0);) {}",
   "know P(#);",
-  "P(1);",
+  // "P(1);",
+  // "isDef(P);",
+  "isDef(a);",
+  "isDef(P);",
 ];
 
 function callOptsExecTest() {
