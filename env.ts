@@ -60,7 +60,8 @@ export class LiTeXEnv {
         return false;
       }
       for (let i = 0; i < lst1.length; i++) {
-        if (lst1[i] !== lst2[i] && lst1[i] !== "#") {
+        // The reason why [0] exists in lst1[i][0] is that user sometimes want to specify sequence of given parameter
+        if (lst1[i] !== lst2[i] && lst1[i][0] !== "#") {
           return false;
         }
       }
