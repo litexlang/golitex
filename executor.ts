@@ -112,13 +112,17 @@ function addNewOnlyIfsToDefs(
 ): ResultType {
   try {
     let params: string[][] = [];
+    for (let i = 0; i < right.paramsLst().length; i++) {
+      params.push([]);
+    }
+
     let optNames: string[] = right.opts.map((e) => e[0]);
     for (let i = 0; i < right.paramsLst().length; i++) {
       for (let j = 0; j < right.paramsLst()[i].length; j++) {
         const index = IndexOfGivenSymbol(left, right.paramsLst()[i][j]);
         if (!index) params[i][j] = right.paramsLst()[i][j];
         else {
-          params[i][j] = leftDef.params[i][j];
+          params[i].push(leftDef.params[index[0]][index[1]]);
         }
       }
     }
@@ -168,7 +172,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
         knowCallOptExec(env, curNode as CallOptNode);
       case LiTexNodeType.OnlyIfNode:
         knowOnlyIfNodeExec(env, curNode as OnlyIfNode);
-      case LiTexNodeType.IfNode:
+      case LiTexNodeType.IffNode:
         knowIffExec(env, curNode as IffNode);
     }
   }

@@ -42,7 +42,7 @@ const codes: string[] = [
   // ">(a,1);",
   "def p(x) {def q(y) {} } ",
   "def a(x) {def b(y) {} }",
-  // "know <=> p(1)::q(2) a(3)::b(y);",
+  "know <=> p(x)::q(y) a(y)::b(x);",
 ];
 
 function callOptsExecTest() {
