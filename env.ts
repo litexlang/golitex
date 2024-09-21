@@ -28,11 +28,11 @@ export class LiTeXEnv {
   }
 
   callOptNodeName(optNode: CallOptNode) {
-    return optNode.opts.map((e) => e[0]).join("::");
+    return optNode.optName;
   }
 
   getFromCallOptFacts(optNode: CallOptNode) {
-    const optName: string = optNode.opts.map((e) => e[0]).join("::");
+    const optName: string = optNode.optName;
     const validParamsLst = this.callOptFacts.get(optName);
     return validParamsLst;
   }
@@ -43,13 +43,9 @@ export class LiTeXEnv {
       return;
     } else {
       if (!this.getFromCallOptFacts(node)) {
-        this.callOptFacts.set(this.callOptNodeName(node), [
-          node.opts.map((e) => e[1]),
-        ]);
+        this.callOptFacts.set(this.callOptNodeName(node), [node.optParams]);
       } else {
-        this.callOptFacts
-          .get(this.callOptNodeName(node))
-          ?.push(node.opts.map((e) => e[1]));
+        this.callOptFacts.get(this.callOptNodeName(node))?.push(node.optParams);
       }
     }
   }
@@ -74,7 +70,7 @@ export class LiTeXEnv {
     for (const item of validParamsLst) {
       let sig = true;
       for (let i = 0; i < item.length; i++) {
-        if (!paramsIsValid(item[i], optNode.opts[i][1])) {
+        if (!paramsIsValid(item[i], optNode.optParams[i])) {
           sig = false;
           break;
         }

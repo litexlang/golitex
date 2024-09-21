@@ -28,15 +28,35 @@ const NullNode = new LiTeXNode();
 
 export class CallOptNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptNode;
-  opts: [string, string[]][];
+  optName: string = "";
+  optParams: string[][] = [];
 
   constructor(opts: [string, string[]][]) {
     super();
-    this.opts = opts;
+    this.optName = opts.map((e) => e[0]).join("::");
+    this.optParams = opts.map((e) => e[1]);
   }
 
-  paramsLst() {
-    return this.opts.map((e) => e[1]);
+  getParaNames() {
+    return this.optName.split("::");
+  }
+
+  getOptNameParamsPairs(): [string, string[]][] {
+    const optNames = this.getParaNames();
+    return optNames.map((v, i) => {
+      return [this.optName, this.optParams[i]];
+    });
+  }
+
+  paramsLst(): string[] {
+    return this.optName.split("::");
+  }
+
+  pushNewNameParamsPair(pair: [string, string[]]) {
+    if (this.optName !== "") this.optName += "::" + pair[0];
+    else this.optName += pair[0];
+
+    this.optParams.push(pair[1]);
   }
 }
 

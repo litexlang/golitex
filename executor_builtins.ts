@@ -8,11 +8,11 @@ export const builtInCallOptNames: { [key: string]: Function } = {
 
 export function isDefFunc(env: LiTeXEnv, node: CallOptNode): ResultType {
   try {
-    if (node.opts[0][1].length !== 1) {
+    if (node.optParams[0].length !== 1) {
       throw new Error("isDef has one parameter, get too many inputs");
     }
 
-    const name: string = node.opts[0][1][0];
+    const name: string = node.optParams[0][0];
     if (env.keyInDefs(name)) {
       return ResultType.True;
     } else {

@@ -47,7 +47,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ResultType {
 
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
   for (let i = 0; i < node.nodes.length; i++) {
-    const nodeName: string = node.nodes[i].opts.map((e) => e[0]).join("::");
+    const nodeName: string = node.nodes[i].optName;
     if (nodeName in builtInCallOptNames) {
       const result = builtInCallOptNames[nodeName](env, node.nodes[i]);
       if (result !== ResultType.True) {
@@ -126,7 +126,7 @@ function addNewOnlyIfsToDefs(
       params.push([]);
     }
 
-    let optNames: string[] = right.opts.map((e) => e[0]);
+    let optNames: string[] = right.paramsLst();
     for (let i = 0; i < right.paramsLst().length; i++) {
       for (let j = 0; j < right.paramsLst()[i].length; j++) {
         const index = IndexOfGivenSymbol(left, right.paramsLst()[i][j]);
@@ -152,7 +152,7 @@ function addNewOnlyIfsToDefs(
 function knowIfExec(env: LiTeXEnv, node: IfNode): ResultType {
   //? Unfinished: might introduce repeated facts
   try {
-    const key: string = node.right.opts.map((e) => e[0]).join("::");
+    const key: string = node.right.optName;
     if (!env.keyInDefs(key)) return ResultType.Unknown;
     const defNode = env.defs.get(key);
 
@@ -176,7 +176,7 @@ function knowIfExec(env: LiTeXEnv, node: IfNode): ResultType {
 function knowOnlyIfExec(env: LiTeXEnv, node: OnlyIfNode): ResultType {
   //? Unfinished: might introduce repeated facts
   try {
-    const key: string = node.left.opts.map((e) => e[0]).join("::");
+    const key: string = node.left.optName;
     if (!env.keyInDefs(key)) return ResultType.Unknown;
     const defNode = env.defs.get(key);
 
@@ -200,11 +200,11 @@ function knowOnlyIfExec(env: LiTeXEnv, node: OnlyIfNode): ResultType {
 function knowIffExec(env: LiTeXEnv, node: IffNode): ResultType {
   //? Unfinished: might introduce repeated facts
   try {
-    const leftKey: string = node.left.opts.map((e) => e[0]).join("::");
+    const leftKey: string = node.left.optName;
     if (!env.keyInDefs(leftKey)) return ResultType.Unknown;
     const leftDefNode = env.defs.get(leftKey);
 
-    const rightKey: string = node.right.opts.map((e) => e[0]).join("::");
+    const rightKey: string = node.right.optName;
     if (!env.keyInDefs(rightKey)) return ResultType.Unknown;
     const rightDefNode = env.defs.get(rightKey);
 
@@ -261,13 +261,13 @@ function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {
 }
 
 function callOptExec(env: LiTeXEnv, node: CallOptNode) {
-  const optName: string = node.opts.map((e) => e[0]).join("::");
+  const optName: string = node.optName;
   const defNode: DefNode | undefined = env.defs.get(optName);
   if (defNode === undefined) {
     return;
   }
 
-  const fixedVars: string[][] = node.opts.map((e) => e[1]);
+  const fixedVars: string[][] = node.optParams;
   const freeVars: string[][] = defNode.params;
 
   for (const item of defNode.onlyIfExprs) {
@@ -291,8 +291,8 @@ function freeVarsToFixedVars(
 ) {
   const fixedNode = new CallOptNode([]);
 
-  for (const [index, opt] of (node.opts as [string, string[]][]).entries()) {
-    const newOpt: [string, string[]] = [node.opts[index][0], []];
+  for (const [index, opt] of node.getOptNameParamsPairs().entries()) {
+    const newOpt: [string, string[]] = [node.getParaNames()[index], []];
 
     for (const variable of opt[1] as string[]) {
       let hasDefined = false;
@@ -308,7 +308,7 @@ function freeVarsToFixedVars(
       if (!hasDefined) newOpt[1].push(variable);
     }
 
-    fixedNode.opts.push(newOpt);
+    fixedNode.pushNewNameParamsPair(newOpt);
   }
 
   return fixedNode;
