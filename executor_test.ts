@@ -54,11 +54,12 @@ const codes: string[] = [
   // "is_infer(a);",
   // "is_infer(P);",
   // "is_infer(2);",
-  // "let (x: set(x););",
+  "let (x: set(x););",
   "let (y : set(y););",
   "set(x);",
   "let (x: set(x););",
   "set(x);",
+  "def fun(x: set(x), >(x,0););",
 ];
 
 function callOptsExecTest() {

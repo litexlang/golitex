@@ -19,6 +19,7 @@ export enum LiTexNodeType {
   IfNode,
   InheritNode,
   LetNode,
+  DefNode,
 }
 
 export class LiTeXNode {
@@ -271,17 +272,22 @@ export class LetNode extends LiTeXNode {
   }
 }
 
-export function IndexOfGivenSymbol(
-  node: CallOptNode,
-  s: string
-): [number, number] | undefined {
-  for (let i = 0; i < node.paramsLst().length; i++) {
-    for (let j = 0; j < node.paramsLst()[i].length; j++) {
-      if (s === node.paramsLst()[i][j]) {
-        return [i, j];
-      }
-    }
-  }
+export class DefNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.DefNode;
+  declOptName: string;
+  params: string[][];
+  requirements: LiTeXNode[] = [];
+  onlyIfExprs: LiTeXNode[] = [];
+  father: string = "";
 
-  return undefined;
+  constructor(
+    declOptName: string,
+    params: string[][],
+    requirements: LiTeXNode[]
+  ) {
+    super();
+    this.declOptName = declOptName;
+    this.params = params;
+    this.requirements = requirements;
+  }
 }

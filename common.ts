@@ -29,3 +29,18 @@ export function freeVarsToFixedVars(
 
   return fixedNode;
 }
+
+export function IndexOfGivenSymbol(
+  node: CallOptNode,
+  s: string
+): [number, number] | undefined {
+  for (let i = 0; i < node.paramsLst().length; i++) {
+    for (let j = 0; j < node.paramsLst()[i].length; j++) {
+      if (s === node.paramsLst()[i][j]) {
+        return [i, j];
+      }
+    }
+  }
+
+  return undefined;
+}

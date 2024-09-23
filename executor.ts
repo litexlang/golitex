@@ -5,7 +5,6 @@ import {
   ExistNode,
   IffNode,
   IfNode,
-  IndexOfGivenSymbol,
   KnowNode,
   LiTeXNode,
   LiTexNodeType,
@@ -16,6 +15,7 @@ import {
 import { LiTeXEnv } from "./env";
 import { builtInCallOptNames } from "./executor_builtins";
 import { freeVarsToFixedVars } from "./common";
+import { IndexOfGivenSymbol } from "./common";
 
 export enum ResultType {
   True,

@@ -119,9 +119,10 @@ const codes: string[] = [
   // }`,
   // "infer p(x) {}",
   // "inherit p son(z: set(z);) {ha(z);}",
-  "let (x: set(x););",
-  "set(x);",
-  "let (x: asf(x););",
+  // "let (x: set(x););",
+  // "set(x);",
+  // "let (x: asf(x););",
+  "def bundle(x: set(x), >(x,0));",
 ];
 
 function testLexer() {
