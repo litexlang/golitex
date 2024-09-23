@@ -1,4 +1,4 @@
-import { CallOptNode, InferNode, DefNode } from "./ast";
+import { CallOptNode, InferNode, DefNode, LiTexNodeType } from "./ast";
 
 type SnapShot = { fatherFreeVars: string[][] };
 
@@ -10,6 +10,14 @@ export class LiTeXEnv {
   fatherFreeVars: string[][] = [];
   declaredVars: string[] = [];
   defs: Map<string, DefNode> = new Map<string, DefNode>();
+
+  optType(s: string) {
+    let node = this.infers.get(s);
+    if (node) return LiTexNodeType.InferNode;
+    node = this.defs.get(s);
+    if (node) return LiTexNodeType.DefNode;
+    return LiTexNodeType.Error;
+  }
 
   returnToSnapShot(original: SnapShot) {
     this.fatherFreeVars = original.fatherFreeVars;

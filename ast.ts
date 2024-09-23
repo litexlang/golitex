@@ -1,5 +1,6 @@
 // There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
 export enum LiTexNodeType {
+  Error,
   Node,
   NotNode,
   OrNode,
