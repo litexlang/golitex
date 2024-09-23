@@ -117,8 +117,11 @@ const codes: string[] = [
   // `    infer Q(s) {
   //   set(s); know infer Prop(x: in(x,A), P(x)) {};
   // }`,
-  "infer p(x) {}",
-  "inherit p son(z: set(z);) {ha(z);}",
+  // "infer p(x) {}",
+  // "inherit p son(z: set(z);) {ha(z);}",
+  "let (x: set(x););",
+  "set(x);",
+  "let (x: asf(x););",
 ];
 
 function testLexer() {

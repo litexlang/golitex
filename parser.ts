@@ -21,6 +21,7 @@ import {
   FactExprNodeNames,
   OnlyIfNode,
   IfNode,
+  LetNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { property } from "lodash";
@@ -177,7 +178,7 @@ function paramsColonFactExprsParse(
   tokens: string[]
 ): ParamsColonFactExprsNode {
   const params: string[] = [];
-  const requirements: LiTeXNode[] = [];
+  const requirements: CanBeKnownNode[] = [];
   if (!(tokens[0] === ")")) {
     while (1) {
       params.push(tokens.shift() as string);
@@ -190,7 +191,7 @@ function paramsColonFactExprsParse(
       tokens.shift(); // skip :
       while (!(tokens[0] === ")")) {
         const node = LiTexStmtParse(env, tokens);
-        if (node) requirements.push(node as LiTeXNode);
+        if (node) requirements.push(node as CanBeKnownNode);
 
         // if (tokens[0] === ",") tokens.shift();
         if (tokens[0] === ")") break;
@@ -315,12 +316,11 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
 
 function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   try {
-    tokens.shift();
-    // ! needs to put the following shift into paramsColonParse
-    tokens.shift(); // skip ()
+    skip(tokens, "let");
+    skip(tokens, "(");
     const node = paramsColonFactExprsParse(env, tokens);
     tokens.shift(); // skip ;
-    return new HaveNode(node);
+    return new LetNode(node);
   } catch (error) {
     handleParseError(env, "let");
     throw error;

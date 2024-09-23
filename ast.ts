@@ -88,7 +88,8 @@ export type CanBeKnownNode =
   | IfNode
   | CallOptNode
   | OrNode
-  | NotNode;
+  | NotNode
+  | CallOptsNode;
 export const canBeKnownNodeNames: string[] = [
   "infer",
   "exist",
@@ -148,9 +149,9 @@ export class HaveNode extends LiTeXNode {
 export class ParamsColonFactExprsNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.ParamsColonFactExprsNode;
   params: string[];
-  properties: LiTeXNode[];
+  properties: CanBeKnownNode[];
 
-  constructor(params: string[], properties: LiTeXNode[]) {
+  constructor(params: string[], properties: CanBeKnownNode[]) {
     super();
     this.params = params;
     this.properties = properties;
@@ -259,9 +260,9 @@ export class CallOptsNode extends LiTeXNode {
 }
 
 export class LetNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.HaveNode;
+  type: LiTexNodeType = LiTexNodeType.LetNode;
   params: string[];
-  properties: LiTeXNode[];
+  properties: CanBeKnownNode[];
 
   constructor(node: ParamsColonFactExprsNode) {
     super();

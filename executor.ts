@@ -10,9 +10,12 @@ import {
   LiTeXNode,
   LiTexNodeType,
   OnlyIfNode,
+  LetNode,
+  CanBeKnownNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { builtInCallOptNames } from "./executor_builtins";
+import { freeVarsToFixedVars } from "./common";
 
 export enum ResultType {
   True,
@@ -40,6 +43,8 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ResultType {
       return knowExec(env, node as KnowNode);
     case LiTexNodeType.CallOptsNode:
       return callOptsExec(env, node as CallOptsNode);
+    case LiTexNodeType.LetNode:
+      return letExec(env, node as LetNode);
   }
 
   return ResultType.Error;
@@ -221,9 +226,16 @@ function knowIffExec(env: LiTeXEnv, node: IffNode): ResultType {
 }
 
 // The interesting part: Even if you don't declare opt, you can still know facts about that opt. That means we don't need to claim what "set" or "number" means, and directly 'know set(a)' when necessary
-function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
-  for (let i = 0; i < node.facts.length; i++) {
-    const curNode = node.facts[i];
+function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
+  let facts: CanBeKnownNode[] = [];
+  if (node.type === LiTexNodeType.KnowNode) {
+    facts = (node as KnowNode).facts;
+  } else if (node.type === LiTexNodeType.LetNode) {
+    facts = (node as LetNode).properties;
+  }
+
+  for (let i = 0; i < facts.length; i++) {
+    const curNode = facts[i];
     switch (curNode.type) {
       case LiTexNodeType.InferNode:
         inferExec(env, curNode as InferNode);
@@ -245,6 +257,11 @@ function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
         break;
       case LiTexNodeType.OnlyIfNode:
         knowOnlyIfExec(env, curNode as OnlyIfNode);
+        break;
+      case LiTexNodeType.CallOptsNode:
+        for (const item of (curNode as CallOptsNode).nodes) {
+          knowCallOptExec(env, item as CallOptNode);
+        }
         break;
     }
   }
@@ -286,32 +303,19 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode) {
   }
 }
 
-function freeVarsToFixedVars(
-  node: CallOptNode,
-  fixedVars: string[][],
-  freeVars: string[][]
-) {
-  const fixedNode = new CallOptNode([]);
-
-  for (const [index, opt] of node.getOptNameParamsPairs().entries()) {
-    const newOpt: [string, string[]] = [node.getParaNames()[index], []];
-
-    for (const variable of opt[1] as string[]) {
-      let hasDefined = false;
-      for (let i = freeVars.length - 1; i >= 0; i--) {
-        for (let j = 0; j < freeVars[i].length; j++) {
-          if (variable === freeVars[i][j]) {
-            hasDefined = true;
-            break;
-          }
-        }
-        if (hasDefined) break;
+function letExec(env: LiTeXEnv, node: LetNode): ResultType {
+  try {
+    for (const item of node.params) {
+      if (env.declaredVars.includes(item)) {
+        throw Error(item + "has already been declared");
       }
-      if (!hasDefined) newOpt[1].push(variable);
     }
 
-    fixedNode.pushNewNameParamsPair(newOpt);
-  }
+    env.declaredVars = [...env.declaredVars, ...node.params];
 
-  return fixedNode;
+    return knowExec(env, node);
+  } catch (error) {
+    catchRuntimeError(env, error, "let");
+    return ResultType.Error;
+  }
 }

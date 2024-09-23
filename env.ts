@@ -8,6 +8,7 @@ export class LiTeXEnv {
   //! string[] will be symbols[] because $$
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
   fatherFreeVars: string[][] = [];
+  declaredVars: string[] = [];
 
   returnToSnapShot(original: SnapShot) {
     this.fatherFreeVars = original.fatherFreeVars;
