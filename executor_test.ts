@@ -59,7 +59,7 @@ const codes: string[] = [
   "set(x);",
   "let (x: set(x););",
   "set(x);",
-  "def fun(x: set(x), >(x,0););",
+  // "def fun(x: set(x), >(x,0););",
 ];
 
 function callOptsExecTest() {

@@ -122,7 +122,8 @@ const codes: string[] = [
   // "let (x: set(x););",
   // "set(x);",
   // "let (x: asf(x););",
-  "def bundle(x: set(x), >(x,0));",
+  "set(x), >(x,0);",
+  "def bundle(x: set(x), >(x,0););",
 ];
 
 function testLexer() {
@@ -138,11 +139,11 @@ function testParser() {
     const tokens = scan(codes[i]);
     const result = LiTeXStmtsParse(env, tokens);
     if (result === null) {
+      console.log("_____________");
       for (let i = 0; i < env.errors.length; i++) {
-        console.log("_____________");
         console.log(env.errors[i]);
-        console.log("_____________");
       }
+      console.log("_____________");
     } else {
       for (let i = 0; i < result.length; i++) {
         console.log(result[i]);
