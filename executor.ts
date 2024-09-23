@@ -1,7 +1,7 @@
 import {
   CallOptNode,
   CallOptsNode,
-  DefNode,
+  InferNode,
   ExistNode,
   IffNode,
   IfNode,
@@ -34,8 +34,8 @@ export function handleRuntimeError(env: LiTeXEnv, message: string) {
 
 export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ResultType {
   switch (node.type) {
-    case LiTexNodeType.DefNode:
-      return defExec(env, node as DefNode);
+    case LiTexNodeType.InferNode:
+      return defExec(env, node as InferNode);
     case LiTexNodeType.KnowNode:
       return knowExec(env, node as KnowNode);
     case LiTexNodeType.CallOptsNode:
@@ -52,6 +52,8 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
       const result = builtInCallOptNames[nodeName](env, node.nodes[i]);
       if (result !== ResultType.True) {
         return result;
+      } else {
+        continue;
       }
     }
 
@@ -67,7 +69,7 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
 
 function defExec(
   env: LiTeXEnv,
-  node: DefNode,
+  node: InferNode,
   fatherName: string = ""
 ): ResultType {
   try {
@@ -84,24 +86,24 @@ function defExec(
     }
 
     for (const item of node.requirements) {
-      if (item.type === LiTexNodeType.DefNode) {
-        defExec(env, item as DefNode, sonNamePrefix);
+      if (item.type === LiTexNodeType.InferNode) {
+        defExec(env, item as InferNode, sonNamePrefix);
       } else if (item.type === LiTexNodeType.KnowNode) {
         for (const subitem of (item as KnowNode).facts) {
-          if (subitem.type === LiTexNodeType.DefNode) {
-            defExec(env, subitem as DefNode, sonNamePrefix);
+          if (subitem.type === LiTexNodeType.InferNode) {
+            defExec(env, subitem as InferNode, sonNamePrefix);
           }
         }
       }
     }
 
     for (const item of node.onlyIfExprs) {
-      if (item.type === LiTexNodeType.DefNode) {
-        defExec(env, item as DefNode, sonNamePrefix);
+      if (item.type === LiTexNodeType.InferNode) {
+        defExec(env, item as InferNode, sonNamePrefix);
       } else if (item.type === LiTexNodeType.KnowNode) {
         for (const subitem of (item as KnowNode).facts) {
-          if (subitem.type === LiTexNodeType.DefNode) {
-            defExec(env, subitem as DefNode, sonNamePrefix);
+          if (subitem.type === LiTexNodeType.InferNode) {
+            defExec(env, subitem as InferNode, sonNamePrefix);
           }
         }
       }
@@ -116,7 +118,7 @@ function defExec(
 
 function addNewOnlyIfsToDefs(
   env: LiTeXEnv,
-  leftDef: DefNode,
+  leftDef: InferNode,
   left: CallOptNode,
   right: CallOptNode
 ): ResultType {
@@ -160,7 +162,7 @@ function knowIfExec(env: LiTeXEnv, node: IfNode): ResultType {
       for (const subitem of item.nodes as CallOptNode[])
         addNewOnlyIfsToDefs(
           env,
-          defNode as DefNode,
+          defNode as InferNode,
           node.right,
           subitem as CallOptNode
         );
@@ -184,7 +186,7 @@ function knowOnlyIfExec(env: LiTeXEnv, node: OnlyIfNode): ResultType {
       for (const subitem of item.nodes as CallOptNode[])
         addNewOnlyIfsToDefs(
           env,
-          defNode as DefNode,
+          defNode as InferNode,
           node.left,
           subitem as CallOptNode
         );
@@ -208,8 +210,8 @@ function knowIffExec(env: LiTeXEnv, node: IffNode): ResultType {
     if (!env.keyInDefs(rightKey)) return ResultType.Unknown;
     const rightDefNode = env.defs.get(rightKey);
 
-    addNewOnlyIfsToDefs(env, leftDefNode as DefNode, node.left, node.right);
-    addNewOnlyIfsToDefs(env, rightDefNode as DefNode, node.right, node.left);
+    addNewOnlyIfsToDefs(env, leftDefNode as InferNode, node.left, node.right);
+    addNewOnlyIfsToDefs(env, rightDefNode as InferNode, node.right, node.left);
 
     return ResultType.True;
   } catch (error) {
@@ -223,8 +225,8 @@ function knowExec(env: LiTeXEnv, node: KnowNode): ResultType {
   for (let i = 0; i < node.facts.length; i++) {
     const curNode = node.facts[i];
     switch (curNode.type) {
-      case LiTexNodeType.DefNode:
-        defExec(env, curNode as DefNode);
+      case LiTexNodeType.InferNode:
+        defExec(env, curNode as InferNode);
         break;
       case LiTexNodeType.ExistNode:
         existExec(env, curNode as ExistNode);
@@ -262,7 +264,7 @@ function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {
 
 function callOptExec(env: LiTeXEnv, node: CallOptNode) {
   const optName: string = node.optName;
-  const defNode: DefNode | undefined = env.defs.get(optName);
+  const defNode: InferNode | undefined = env.defs.get(optName);
   if (defNode === undefined) {
     return;
   }

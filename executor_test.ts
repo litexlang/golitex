@@ -48,11 +48,12 @@ const codes: string[] = [
   "inherit p son(z: set(z);) {ha(z);}",
   "def P(x) {}",
   "inherit P son(x: >(x,0);) {}",
-  "know P(#);",
+  "know P(#0);",
   "P(1);",
   "isDef(P);",
   "isDef(a);",
   "isDef(P);",
+  "isDef(2);",
 ];
 
 function callOptsExecTest() {
@@ -67,12 +68,25 @@ function callOptsExecTest() {
     } else {
       for (let i = 0; i < result.length; i++) {
         const res: ResultType = nodeExec(env, result[i]);
-        console.log(res);
+        console.log(resultTypeToString(res));
       }
     }
   }
   env.printCallOptFacts();
   env.printDefs();
+}
+
+function resultTypeToString(res: ResultType): string {
+  switch (res) {
+    case ResultType.Error:
+      return "error";
+    case ResultType.False:
+      return "false";
+    case ResultType.True:
+      return "true";
+    case ResultType.Unknown:
+      return "unknown";
+  }
 }
 
 callOptsExecTest();

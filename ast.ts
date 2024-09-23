@@ -9,7 +9,7 @@ export enum LiTexNodeType {
   ExistNode,
   IffNode,
   FactsNode,
-  DefNode,
+  InferNode,
   HaveNode,
   ParamsColonFactExprsNode,
   PropertyNode,
@@ -18,6 +18,7 @@ export enum LiTexNodeType {
   OnlyIfNode,
   IfNode,
   InheritNode,
+  LetNode,
 }
 
 export class LiTeXNode {
@@ -80,7 +81,7 @@ export const FactExprNodeNames: string[] = [
 ];
 
 export type CanBeKnownNode =
-  | DefNode
+  | InferNode
   | ExistNode
   | IffNode
   | OnlyIfNode
@@ -107,8 +108,8 @@ export class FactsNode extends LiTeXNode {
   }
 }
 
-export class DefNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.DefNode;
+export class InferNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.InferNode;
   declOptName: string;
   params: string[][];
   requirements: LiTeXNode[] = [];
@@ -254,6 +255,18 @@ export class CallOptsNode extends LiTeXNode {
   constructor(nodes: CallOptNode[]) {
     super();
     this.nodes = nodes;
+  }
+}
+
+export class LetNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.HaveNode;
+  params: string[];
+  properties: LiTeXNode[];
+
+  constructor(node: ParamsColonFactExprsNode) {
+    super();
+    this.params = node.params;
+    this.properties = node.properties;
   }
 }
 

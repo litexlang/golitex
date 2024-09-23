@@ -1,10 +1,10 @@
-import { CallOptNode, DefNode } from "./ast";
+import { CallOptNode, InferNode } from "./ast";
 
 type SnapShot = { fatherFreeVars: string[][] };
 
 export class LiTeXEnv {
   errors: string[] = [];
-  defs: Map<string, DefNode> = new Map<string, DefNode>();
+  defs: Map<string, InferNode> = new Map<string, InferNode>();
   //! string[] will be symbols[] because $$
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
   fatherFreeVars: string[][] = [];

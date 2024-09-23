@@ -1,11 +1,11 @@
-// ! TODO: 1. based on situations, know might not end with ; 2. introduce @def @exist as syntactic sugar of know def 3. iff should be iff(p(...), q(...)) 4. better callOpts 5. FATAL: know in (:) consumes ',' and (:) itself consumes ','
+// ! TODO: 1. based on situations, know might not end with ; 2. introduce @infer @exist as syntactic sugar of know infer 3. iff should be iff(p(...), q(...)) 4. better callOpts 5. FATAL: know in (:) consumes ',' and (:) itself consumes ','
 import {
   CallOptNode,
   CallOptsNode,
   CanBeKnownNode,
   canBeKnownNodeNames,
   CheckNode,
-  DefNode,
+  InferNode,
   ExistNode,
   FactExprNode,
   FactsNode,
@@ -31,7 +31,7 @@ const stmtKeywords: { [key: string]: Function } = {
   ";": (env: LiTeXEnv, tokens: string[]) => {
     tokens.shift();
   },
-  def: defParse,
+  def: inferParse,
   know: knowParse,
   have: haveParse,
   property: propertyParse,
@@ -42,6 +42,7 @@ const stmtKeywords: { [key: string]: Function } = {
   "=>": onlyIfParse,
   "<=": ifParse,
   inherit: inheritParse,
+  let: letParse,
 };
 
 export function LiTeXStmtsParse(
@@ -130,17 +131,17 @@ function getParams(tokens: string[]): string[] {
       if (tokens[i + 1] === ",") i++;
       else if (tokens[i + 1] === ":") break;
       else if (tokens[i + 1] === ")") break;
-      else throw Error("def parameters");
+      else throw Error("infer parameters");
     }
   }
   return params;
 }
 
-function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
+function inferParse(env: LiTeXEnv, tokens: string[]): InferNode {
   const snapShot = env.getSnapShot();
 
   try {
-    tokens.shift(); // skip "def" or fatherDefName
+    tokens.shift(); // skip "infer" or fatherDefName
     const declOptName = tokens.shift() as string;
     tokens.shift(); // skip '('
 
@@ -151,7 +152,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
 
     tokens.shift(); // skip ")"
 
-    const result = new DefNode(
+    const result = new InferNode(
       declOptName,
       curFreeVars,
       paramsColonFactExprsNode.properties
@@ -165,7 +166,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
     env.returnToSnapShot(snapShot);
     return result;
   } catch (error) {
-    handleParseError(env, "def");
+    handleParseError(env, "infer");
     env.returnToSnapShot(snapShot);
     throw error;
   }
@@ -183,7 +184,7 @@ function paramsColonFactExprsParse(
       if (tokens[0] === ",") tokens.shift();
       else if (tokens[0] === ":") break;
       else if (tokens[0] === ")") break;
-      else throw Error("def parameters");
+      else throw Error("infer parameters");
     }
     if (!(tokens[0] === ")")) {
       tokens.shift(); // skip :
@@ -216,7 +217,7 @@ function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
 
     return result;
   } catch (error) {
-    handleParseError(env, "def: def block parse");
+    handleParseError(env, "infer: infer block parse");
     throw error;
   }
 }
@@ -312,25 +313,19 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   }
 }
 
-// function checkParse(env: LiTeXEnv, tokens: string[]): CheckNode {
-//   try {
-//     const opts: CallOptNode[] = [];
-//     if (!isExprEnding(tokens[0])) {
-//       while (1) {
-//         opts.push(callOptParse(env, tokens));
-
-//         if (tokens[0] === ",") tokens.shift();
-//         if (isExprEnding(tokens[0])) break;
-//         else throw Error("check");
-//       }
-//     }
-//     tokens.shift();
-//     return new CheckNode(opts);
-//   } catch (error) {
-//     handleParseError(env, "check");
-//     throw error;
-//   }
-// }
+function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
+  try {
+    tokens.shift();
+    // ! needs to put the following shift into paramsColonParse
+    tokens.shift(); // skip ()
+    const node = paramsColonFactExprsParse(env, tokens);
+    tokens.shift(); // skip ;
+    return new HaveNode(node);
+  } catch (error) {
+    handleParseError(env, "let");
+    throw error;
+  }
+}
 
 function propertyParse(env: LiTeXEnv, tokens: string[]): PropertyNode {
   try {
@@ -432,11 +427,11 @@ function orParse(env: LiTeXEnv, tokens: string[]) {
   }
 }
 
-function inheritParse(env: LiTeXEnv, tokens: string[]): DefNode {
+function inheritParse(env: LiTeXEnv, tokens: string[]): InferNode {
   try {
     skip(tokens, "inherit");
     const father = tokens[0];
-    const result = defParse(env, tokens);
+    const result = inferParse(env, tokens);
     result.father = father;
 
     return result;
