@@ -31,7 +31,7 @@ const stmtKeywords: { [key: string]: Function } = {
   ";": (env: LiTeXEnv, tokens: string[]) => {
     tokens.shift();
   },
-  def: inferParse,
+  infer: inferParse,
   know: knowParse,
   have: haveParse,
   property: propertyParse,

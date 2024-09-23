@@ -90,7 +90,7 @@ export type CanBeKnownNode =
   | OrNode
   | NotNode;
 export const canBeKnownNodeNames: string[] = [
-  "def",
+  "infer",
   "exist",
   "<=>",
   "not",

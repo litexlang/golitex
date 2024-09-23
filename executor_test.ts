@@ -19,34 +19,34 @@ const codes: string[] = [
   // "set(a);",
   // "set(c);",
   "",
-  // "def p(x: def xx(y) {def yyy () {}}) {def q(y) {def qq (x) {}} }",
+  // "infer p(x: infer xx(y) {infer yyy () {}}) {infer q(y) {infer qq (x) {}} }",
   // "know => p(x,y):pp(z) {p1(x)::pp1(z, #), p2(y); p3(x);}",
-  // "def a(x) {set(x);};",
+  // "infer a(x) {set(x);};",
   // "know a(b);",
   // "know a(c);",
   // "a(b);",
-  // "def a(x) {def b(y) {set(x,y);} }",
-  // "def a(x: def p(y: set(s);) {  def p2(yy: set(yy);) {}  } ) {}",
+  // "infer a(x) {infer b(y) {set(x,y);} }",
+  // "infer a(x: infer p(y: set(s);) {  infer p2(yy: set(yy);) {}  } ) {}",
   // "set(a)::set(x,y);",
-  // "def a(x) {def b(y: def suby(x) {}) {p(y,x);}}",
+  // "infer a(x) {infer b(y: infer suby(x) {}) {p(y,x);}}",
   // "know a(1)::b(3);",
   // "a(1)::b(3);",
   // "a(2)::b(3);",
   // ">(2,1);",
   // `know >(a,1);`,
   // `know >(1,0);`,
-  // `def transitivity_of_inequality(x,y,z: >(x,y), >(y,z);) {
+  // `infer transitivity_of_inequality(x,y,z: >(x,y), >(y,z);) {
   //   >(x,z);
   // }`,
   // `know transitivity_of_inequality(#,#,#);`,
   // ">(a,1);",
-  "def p(x) {def q(y) {} } ",
-  "def a(x) {def b(y) {} }",
+  "infer p(x) {infer q(y) {} } ",
+  "infer a(x) {infer b(y) {} }",
   "know <=> p(x)::q(y) a(y)::b(x); ;",
   "know => p(a)::q(b) {a(b), a(b)::b(a);}; ;",
   "know <= {a(b), a(b)::b(a);} p(a)::q(b) ;;",
   "inherit p son(z: set(z);) {ha(z);}",
-  "def P(x) {}",
+  "infer P(x) {}",
   "inherit P son(x: >(x,0);) {}",
   "know P(#0);",
   "P(1);",
@@ -73,7 +73,7 @@ function callOptsExecTest() {
     }
   }
   env.printCallOptFacts();
-  env.printDefs();
+  env.printInfers();
 }
 
 function resultTypeToString(res: ResultType): string {

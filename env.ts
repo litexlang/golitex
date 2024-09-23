@@ -4,7 +4,7 @@ type SnapShot = { fatherFreeVars: string[][] };
 
 export class LiTeXEnv {
   errors: string[] = [];
-  defs: Map<string, InferNode> = new Map<string, InferNode>();
+  infers: Map<string, InferNode> = new Map<string, InferNode>();
   //! string[] will be symbols[] because $$
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
   fatherFreeVars: string[][] = [];
@@ -24,7 +24,7 @@ export class LiTeXEnv {
   }
 
   keyInDefs(s: string) {
-    return this.defs.has(s);
+    return this.infers.has(s);
   }
 
   callOptNodeName(optNode: CallOptNode) {
@@ -91,8 +91,8 @@ export class LiTeXEnv {
     }
   }
 
-  printDefs() {
-    for (const [key, value] of this.defs) {
+  printInfers() {
+    for (const [key, value] of this.infers) {
       console.log(key);
       console.log(value.params);
       for (const item of value.requirements) {
@@ -101,7 +101,7 @@ export class LiTeXEnv {
       for (const item of value.onlyIfExprs) {
         console.log(item);
       }
-      console.log("------def---------");
+      console.log("------infer-------");
     }
   }
 }
