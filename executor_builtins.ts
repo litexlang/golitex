@@ -3,10 +3,10 @@ import { LiTeXEnv } from "./env";
 import { catchRuntimeError, ResultType } from "./executor";
 
 export const builtInCallOptNames: { [key: string]: Function } = {
-  isDef: isDefFunc,
+  is_infer: isInferFunc,
 };
 
-export function isDefFunc(env: LiTeXEnv, node: CallOptNode): ResultType {
+export function isInferFunc(env: LiTeXEnv, node: CallOptNode): ResultType {
   try {
     if (node.optParams[0].length !== 1) {
       throw new Error("isDef has one parameter, get too many inputs");
@@ -19,7 +19,7 @@ export function isDefFunc(env: LiTeXEnv, node: CallOptNode): ResultType {
       return ResultType.False;
     }
   } catch (error) {
-    catchRuntimeError(env, error, "isDef");
+    catchRuntimeError(env, error, "is_infer");
     return ResultType.Error;
   }
 }

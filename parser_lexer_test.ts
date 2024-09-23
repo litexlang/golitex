@@ -72,7 +72,7 @@ const codes: string[] = [
   // "know subset(A,B);",
   // "know in(x,a);",
   // "know exist S(s: set(s));",
-  // `know infer AxiomN(A,P: set(A), isdef(P)) {
+  // `know infer AxiomN(A,P: set(A), isProperty(P)) {
   //     infer Q(s) {
   //       set(s); know infer Prop(x:in(x,A), P(x)) {};
   //     }
@@ -80,7 +80,7 @@ const codes: string[] = [
   // };`,
   // `know infer AxiomM(A:set(A)) {
   //   know infer
-  //     QQ(x,y,P: in(x,A), isdef(P)
+  //     QQ(x,y,P: in(x,A), isProperty(P)
   //     )
   //     {
   //  know

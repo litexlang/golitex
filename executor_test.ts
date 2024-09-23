@@ -50,10 +50,10 @@ const codes: string[] = [
   "inherit P son(x: >(x,0);) {}",
   "know P(#0);",
   "P(1);",
-  "isDef(P);",
-  "isDef(a);",
-  "isDef(P);",
-  "isDef(2);",
+  "is_infer(P);",
+  "is_infer(a);",
+  "is_infer(P);",
+  "is_infer(2);",
 ];
 
 function callOptsExecTest() {

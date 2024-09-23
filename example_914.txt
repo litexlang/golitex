@@ -52,7 +52,7 @@ know x: in(x,a)
 subset::p(A,B)(x) // 生成 in(x,B)
 
 // 用 truth 表示 know def，作为语法糖
-truth AxiomN(A,P: set(A), isdef(P)) {
+truth AxiomN(A,P: set(A), isProperty(P)) {
   infer Q(s) {
     set(s), truth Prop(in(x,A), P(x))
   }
@@ -62,7 +62,7 @@ truth AxiomN(A,P: set(A), isdef(P)) {
 // 用 exist! 代替 know exist
 
 truth AxiomM(A:set(A)) {
-  truth QQ(x,y,P: in(x,A), isdef(P), truth PP(y,y2: P(x,y), P(x,y2)){eq(y,y2)} ) {
+  truth QQ(x,y,P: in(x,A), isProperty(P), truth PP(y,y2: P(x,y), P(x,y2)){eq(y,y2)} ) {
     exist! EEE s: set(s), truth HHH(z :in(z,s)) {
       exist! ZZZ(x: in(x,A), P(x,z))
     }
