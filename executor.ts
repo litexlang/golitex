@@ -11,6 +11,7 @@ import {
   OnlyIfNode,
   LetNode,
   CanBeKnownNode,
+  DefNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { builtInCallOptNames } from "./executor_builtins";
@@ -45,6 +46,8 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ResultType {
       return callOptsExec(env, node as CallOptsNode);
     case LiTexNodeType.LetNode:
       return letExec(env, node as LetNode);
+    case LiTexNodeType.DefNode:
+      return defExec(env, node as DefNode);
   }
 
   return ResultType.Error;
@@ -281,15 +284,15 @@ function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {
 
 function callOptExec(env: LiTeXEnv, node: CallOptNode) {
   const optName: string = node.optName;
-  const InferNode: InferNode | undefined = env.infers.get(optName);
-  if (InferNode === undefined) {
+  const DefNode: DefNode | undefined = env.infers.get(optName);
+  if (DefNode === undefined) {
     return;
   }
 
   const fixedVars: string[][] = node.optParams;
-  const freeVars: string[][] = InferNode.params;
+  const freeVars: string[][] = DefNode.params;
 
-  for (const item of InferNode.onlyIfExprs) {
+  for (const item of DefNode.onlyIfExprs) {
     if (item.type === LiTexNodeType.CallOptsNode) {
       //! If I put knowCallOptExec here, chain reaction will happen, and there will be more and more new facts generated.
       for (const callOpt of (item as CallOptsNode).nodes) {
@@ -316,6 +319,16 @@ function letExec(env: LiTeXEnv, node: LetNode): ResultType {
     return knowExec(env, node);
   } catch (error) {
     catchRuntimeError(env, error, "let");
+    return ResultType.Error;
+  }
+}
+
+function defExec(env: LiTeXEnv, node: DefNode): ResultType {
+  try {
+    env.defs.set(node.declOptName, node);
+    return ResultType.True;
+  } catch (error) {
+    catchRuntimeError(env, error, "def");
     return ResultType.Error;
   }
 }

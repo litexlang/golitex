@@ -123,7 +123,7 @@ const codes: string[] = [
   // "set(x);",
   // "let (x: asf(x););",
   "set(x), >(x,0);",
-  "def bundle(x: set(x), >(x,0););",
+  "def bundle(x: set(x), >(x,0));",
 ];
 
 function testLexer() {

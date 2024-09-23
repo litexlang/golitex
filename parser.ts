@@ -50,15 +50,17 @@ function isCurToken(s: string, tokens: string[]) {
   return s === tokens[0];
 }
 
-function catchParseError(env: LiTeXEnv, err: any, m: string) {
+function catchParseError(tokens: string[], env: LiTeXEnv, err: any, m: string) {
   if (err instanceof Error) {
-    if (err.message) handleParseError(env, err.message);
+    if (err.message) handleParseError(tokens, env, err.message);
   }
-  handleParseError(env, m);
+  handleParseError(tokens, env, m);
 }
 
-function handleParseError(env: LiTeXEnv, message: string) {
-  env.pushErrorMessage("parsing error: " + message);
+function handleParseError(tokens: string[], env: LiTeXEnv, message: string) {
+  env.pushErrorMessage(
+    "parsing error: " + message + ' in "' + tokens.slice(0, 5).join(" ") + '"'
+  );
 }
 
 const ExprEndings = [";"];
@@ -130,7 +132,7 @@ export function LiTexStmtParse(
       return node;
     }
   } catch (error) {
-    handleParseError(env, "Stmt");
+    handleParseError(tokens, env, "Stmt");
     throw error;
   }
 }
@@ -155,7 +157,7 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 
     return knowNode;
   } catch (error) {
-    catchParseError(env, error, "know");
+    catchParseError(tokens, env, error, "know");
     throw error;
   }
 }
@@ -203,7 +205,7 @@ function inferParse(env: LiTeXEnv, tokens: string[]): InferNode {
     env.returnToSnapShot(snapShot);
     return result;
   } catch (error) {
-    handleParseError(env, "infer");
+    handleParseError(tokens, env, "infer");
     env.returnToSnapShot(snapShot);
     throw error;
   }
@@ -254,7 +256,7 @@ function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
 
     return result;
   } catch (error) {
-    handleParseError(env, "infer: infer block parse");
+    handleParseError(tokens, env, "infer: infer block parse");
     throw error;
   }
 }
@@ -269,7 +271,7 @@ function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
     // tokens.shift(); // skip ;
     return result;
   } catch (error) {
-    handleParseError(env, "<=>");
+    handleParseError(tokens, env, "<=>");
     throw error;
   }
 }
@@ -285,7 +287,7 @@ function onlyIfParse(env: LiTeXEnv, tokens: string[]): OnlyIfNode {
     // tokens.shift(); // skip ;
     return result;
   } catch (error) {
-    handleParseError(env, "=>");
+    handleParseError(tokens, env, "=>");
     throw error;
   }
 }
@@ -299,7 +301,7 @@ function ifParse(env: LiTeXEnv, tokens: string[]): IfNode {
     // tokens.shift(); // skip ;
     return result;
   } catch (error) {
-    handleParseError(env, "<=");
+    handleParseError(tokens, env, "<=");
     throw error;
   }
 }
@@ -331,7 +333,7 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
 
     return new CallOptNode(opts);
   } catch (error) {
-    handleParseError(env, "call opt");
+    handleParseError(tokens, env, "call opt");
     throw error;
   }
 }
@@ -346,7 +348,7 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
     skip(tokens, ";");
     return new HaveNode(node);
   } catch (error) {
-    handleParseError(env, "have");
+    handleParseError(tokens, env, "have");
     throw error;
   }
 }
@@ -360,7 +362,7 @@ function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
     skip(tokens, ";");
     return new LetNode(node);
   } catch (error) {
-    handleParseError(env, "let");
+    handleParseError(tokens, env, "let");
     throw error;
   }
 }
@@ -388,7 +390,7 @@ function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
 
 //     return result;
 //   } catch (error) {
-//     handleParseError(env, "property");
+//     handleParseError(tokens, env, "property");
 //     throw error;
 //   }
 // }
@@ -411,7 +413,7 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
 
     return result;
   } catch (error) {
-    handleParseError(env, "exist");
+    handleParseError(tokens, env, "exist");
     throw error;
   }
 }
@@ -422,7 +424,7 @@ function notParse(env: LiTeXEnv, tokens: string[]): NotNode {
     const block: LiTeXNode[] = blockParse(env, tokens);
     return new NotNode(block);
   } catch (error) {
-    handleParseError(env, "not");
+    handleParseError(tokens, env, "not");
     throw error;
   }
 }
@@ -450,7 +452,7 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
 
     return new CallOptsNode(callOpts);
   } catch (error) {
-    catchParseError(env, error, "facts");
+    catchParseError(tokens, env, error, "facts");
     throw error;
   }
 }
@@ -464,7 +466,7 @@ function orParse(env: LiTeXEnv, tokens: string[]) {
     }
     return orNode;
   } catch (error) {
-    catchParseError(env, error, "or");
+    catchParseError(tokens, env, error, "or");
     throw error;
   }
 }
@@ -478,7 +480,7 @@ function inheritParse(env: LiTeXEnv, tokens: string[]): InferNode {
 
     return result;
   } catch (error) {
-    catchParseError(env, error, "inherit");
+    catchParseError(tokens, env, error, "inherit");
     throw error;
   }
 }
@@ -507,7 +509,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
     env.returnToSnapShot(snapShot);
     return result;
   } catch (error) {
-    handleParseError(env, "def");
+    handleParseError(tokens, env, "def");
     env.returnToSnapShot(snapShot);
     throw error;
   }
