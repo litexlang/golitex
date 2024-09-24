@@ -241,6 +241,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
 
   for (let i = 0; i < facts.length; i++) {
     const curNode = facts[i];
+    let result: ResultType = ResultType.Unknown;
     switch (curNode.type) {
       case LiTexNodeType.InferNode:
         inferExec(env, curNode as InferNode);
@@ -249,7 +250,8 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
         existExec(env, curNode as ExistNode);
         break;
       case LiTexNodeType.CallOptNode:
-        knowCallOptExec(env, curNode as CallOptNode);
+        result = knowCallOptExec(env, curNode as CallOptNode);
+        if (result !== ResultType.True) return result;
         break;
       case LiTexNodeType.OnlyIfNode:
         knowOnlyIfNodeExec(env, curNode as OnlyIfNode);
@@ -265,7 +267,8 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
         break;
       case LiTexNodeType.CallOptsNode:
         for (const item of (curNode as CallOptsNode).nodes) {
-          knowCallOptExec(env, item as CallOptNode);
+          result = knowCallOptExec(env, item as CallOptNode);
+          if (result !== ResultType.True) return result;
         }
         break;
     }
@@ -275,18 +278,37 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
 
 function existExec(env: LiTeXEnv, node: ExistNode) {}
 
-function knowCallOptExec(env: LiTeXEnv, node: CallOptNode) {
+function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
   switch (env.optType(node.optName)) {
     case LiTexNodeType.InferNode:
-      knowInferCallOptExec(env, node);
+      const result = knowInferCallOptExec(env, node);
+      if (result === ResultType.Unknown) return ResultType.Unknown;
       break;
   }
   env.newFact(node);
+  return ResultType.True;
 }
 
 function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
   try {
     const relatedInferNode = env.infers.get(node.optName) as InferNode;
+
+    // check whether requirements are satisfied
+    for (const item of relatedInferNode.requirements) {
+      if (item.type === LiTexNodeType.CallOptsNode) {
+        for (const callOpt of (item as CallOptsNode).nodes) {
+          const isFact: Boolean = env.isCallOptFact(
+            relatedInferNode.getFixedNodeFromFreeNode(
+              node.optParams,
+              callOpt as CallOptNode
+            )
+          );
+          if (!isFact) {
+            return ResultType.Unknown;
+          }
+        }
+      }
+    }
 
     // emit onlyIfs of InferNode
     for (const item of relatedInferNode.onlyIfExprs) {

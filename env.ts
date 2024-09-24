@@ -85,14 +85,11 @@ export class LiTeXEnv {
     if (!validParamsLst) return false;
 
     for (const item of validParamsLst) {
-      let sig = true;
       for (let i = 0; i < item.length; i++) {
-        if (!paramsIsValid(item[i], optNode.optParams[i])) {
-          sig = false;
-          break;
+        if (paramsIsValid(item[i], optNode.optParams[i])) {
+          return true;
         }
       }
-      if (sig) return true;
     }
 
     return false;

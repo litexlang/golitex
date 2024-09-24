@@ -93,6 +93,7 @@ const codes: string[] = [
   "know F1(P), F2(Q);",
   "know IF-THEN(Q,P);",
   "F1(Q);",
+  "know IF-THEN(2,1);",
 ];
 
 function callOptsExecTest() {

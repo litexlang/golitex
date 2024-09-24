@@ -42,7 +42,7 @@ export function relationBetweenStrArrArrays(
   const result = new Map<string, string>();
 
   for (let i = 0; i < usedAsKey.length; i++) {
-    for (let j = 0; j < usedAsValue.length; j++) {
+    for (let j = 0; j < usedAsValue[i].length; j++) {
       result.set(usedAsKey[i][j], usedAsValue[i][j]);
     }
   }
