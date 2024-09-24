@@ -1,4 +1,10 @@
-import { CallOptNode, InferNode, DefNode, LiTexNodeType } from "./ast";
+import {
+  CallOptNode,
+  InferNode,
+  DefNode,
+  LiTexNodeType,
+  LiTeXNode,
+} from "./ast";
 
 type SnapShot = { fatherFreeVars: string[][] };
 
@@ -12,9 +18,9 @@ export class LiTeXEnv {
   defs: Map<string, DefNode> = new Map<string, DefNode>();
 
   optType(s: string) {
-    let node = this.infers.get(s);
+    let node: LiTeXNode = this.infers.get(s) as LiTeXNode;
     if (node) return LiTexNodeType.InferNode;
-    node = this.defs.get(s);
+    node = this.defs.get(s) as LiTeXNode;
     if (node) return LiTexNodeType.DefNode;
     return LiTexNodeType.Error;
   }
@@ -49,9 +55,10 @@ export class LiTeXEnv {
 
   newFact(node: CallOptNode) {
     // check whether it's truly a new fact
-    if (this.isCallOptFact(node)) {
-      return;
-    } else {
+    // if (this.isCallOptFact(node)) {
+    //   return;
+    // } else
+    {
       if (!this.getFromCallOptFacts(node)) {
         this.callOptFacts.set(this.callOptNodeName(node), [node.optParams]);
       } else {

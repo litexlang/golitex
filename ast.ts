@@ -1,4 +1,8 @@
-import { freeVarsToFixedVars, relationBetweenStrArrArrays } from "./common";
+import {
+  areStrArrStructureEqual,
+  freeVarsToFixedVars,
+  relationBetweenStrArrArrays,
+} from "./common";
 
 // There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
 export enum LiTexNodeType {
@@ -45,17 +49,6 @@ export class CallOptNode extends LiTeXNode {
 
   deepCopy() {
     return new CallOptNode(this.getOptNameParamsPairs());
-  }
-
-  getFixedNodeFromFreeNode(newOptParams: string[][]): CallOptNode {
-    const node = new CallOptNode([]);
-    node.optName = this.optName;
-    const relation: Map<string, string> = relationBetweenStrArrArrays(
-      this.optParams,
-      newOptParams
-    );
-    node.optParams = freeVarsToFixedVars(this.optParams, relation);
-    return node;
   }
 
   getParaNames() {
@@ -146,6 +139,27 @@ export class InferNode extends LiTeXNode {
     this.declOptName = declOptName;
     this.params = params;
     this.requirements = requirements;
+  }
+
+  getFixedNodeFromFreeNode(
+    newOptParams: string[][],
+    freeCallOpt: CallOptNode
+  ): CallOptNode {
+    try {
+      const node = new CallOptNode([]);
+      node.optName = freeCallOpt.optName;
+      if (!areStrArrStructureEqual(this.params, newOptParams)) {
+        throw Error("Invalid number of given arguments.");
+      }
+      const relation: Map<string, string> = relationBetweenStrArrArrays(
+        this.params,
+        newOptParams
+      );
+      node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, relation);
+      return node;
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

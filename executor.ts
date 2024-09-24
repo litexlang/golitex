@@ -286,38 +286,20 @@ function knowCallOptExec(env: LiTeXEnv, node: CallOptNode) {
 
 function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
   try {
-    // const optNamesList = node.getParaNames();
-    // for (let i = 0, s = ""; i < optNamesList.length; i++) {
-    //   s += optNamesList[i];
-    //   if (env.optType(s) === LiTexNodeType.InferNode) {
-    //     const inferNode: InferNode = env.infers.get(s) as InferNode;
-    //     if (!areStrArrStructureEqual(inferNode.params, node.optParams)) {
-    //       throw Error("Invalid number of given arguments.");
-    //     }
-    //     for (let item of inferNode.requirements) {
-    //       if (item.type === LiTexNodeType.CallOptNode) {
-    //         const fixedNode = (item as CallOptNode).getFixedNodeFromFreeNode(
-    //           node.optParams[i]
-    //         );
-    //       }
-    //     }
-    //   }
-    //   s += "::";
-    // }
-    // // onlyIfs of this callOpt is correct
-    // const inferNode = env.infers.get(node.optName) as InferNode;
-    // const relation = relationBetweenStrArrArrays(
-    //   inferNode.params,
-    //   node.optParams
-    // );
-    // for (const item of inferNode.onlyIfExprs) {
-    //   if (item.type === LiTexNodeType.CallOptNode) {
-    //     const newNode = (item as CallOptNode).deepCopy();
-    //     newNode.pa;
-    //   }
-    // }
-    // this callOpt is correct
-    // env.newFact(node);
+    const relatedInferNode = env.infers.get(node.optName) as InferNode;
+
+    // emit onlyIfs of InferNode
+    for (const item of relatedInferNode.onlyIfExprs) {
+      if (item.type === LiTexNodeType.CallOptsNode) {
+        for (const callOpt of (item as CallOptsNode).nodes) {
+          const fixedOnlyIfNode = relatedInferNode.getFixedNodeFromFreeNode(
+            node.optParams,
+            callOpt as CallOptNode
+          );
+          env.newFact(fixedOnlyIfNode);
+        }
+      }
+    }
   } catch (error) {
     catchRuntimeError(env, error, "know infer");
     return ResultType.Error;
