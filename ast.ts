@@ -143,48 +143,26 @@ export class InferNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
-  getFixedNodeFromFreeNode(
-    newOptParams: string[][],
-    freeCallOpt: CallOptNode
-  ): CallOptNode {
-    try {
-      const node = new CallOptNode([]);
-      node.optName = freeCallOpt.optName;
-      if (!areStrArrStructureEqual(this.params, newOptParams)) {
-        throw Error("Invalid number of given arguments.");
-      }
-      const relation: Map<string, string> = relationBetweenStrArrArrays(
-        this.params,
-        newOptParams
-      );
-      node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, relation);
-      return node;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  emitOnlyIfs(env: LiTeXEnv, fixedOptNode: CallOptNode) {
+  emitOnlyIfs(env: LiTeXEnv, freeToFixedMap: Map<string, string>) {
     for (const defSubNode of this.onlyIfExprs) {
       if (defSubNode.type === LiTexNodeType.CallOptsNode) {
         for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
-          env.newFact(
-            this.getFixedNodeFromFreeNode(
-              fixedOptNode.optParams,
-              freeCallOpt as CallOptNode
-            )
-          );
+          env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
         }
       }
     }
   }
 
-  checkRequirements(env: LiTeXEnv, fixedOpt: CallOptNode): ResultType {
+  checkRequirements(
+    env: LiTeXEnv,
+    freeToFixedMap: Map<string, string>
+  ): ResultType {
     for (const req of this.requirements) {
       if (req.type === LiTexNodeType.CallOptsNode) {
         for (const freeOpt of (req as CallOptsNode).nodes) {
           const isFact: Boolean = env.isCallOptFact(
-            this.getFixedNodeFromFreeNode(fixedOpt.optParams, freeOpt)
+            // this.getFixedNodeFromFreeNode(fixedOpt.optParams, freeOpt)
+            getFixedNodeFromFreeFixMap(freeToFixedMap, freeOpt)
           );
           if (!isFact) {
             return ResultType.Unknown;
@@ -358,37 +336,32 @@ export class DefNode extends LiTeXNode {
   }
 
   // replace free variables with fixed variables
-  getFixedNodeFromFreeNode(
-    newOptParams: string[][],
-    freeCallOpt: CallOptNode
-  ): CallOptNode {
-    try {
-      const node = new CallOptNode([]);
-      node.optName = freeCallOpt.optName;
-      if (!areStrArrStructureEqual(this.params, newOptParams)) {
-        throw Error("Invalid number of given arguments.");
-      }
-      const relation: Map<string, string> = relationBetweenStrArrArrays(
-        this.params,
-        newOptParams
-      );
-      node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, relation);
-      return node;
-    } catch (error) {
-      throw error;
-    }
-  }
+  // getFixedNodeFromFreeNode(
+  //   newOptParams: string[][],
+  //   freeCallOpt: CallOptNode
+  // ): CallOptNode {
+  //   try {
+  //     const node = new CallOptNode([]);
+  //     node.optName = freeCallOpt.optName;
+  //     if (!areStrArrStructureEqual(this.params, newOptParams)) {
+  //       throw Error("Invalid number of given arguments.");
+  //     }
+  //     const relation: Map<string, string> = relationBetweenStrArrArrays(
+  //       this.params,
+  //       newOptParams
+  //     );
+  //     node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, relation);
+  //     return node;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
-  emitOnlyIfs(env: LiTeXEnv, fixedOptNode: CallOptNode) {
+  emitOnlyIfs(env: LiTeXEnv, freeToFixedMap: Map<string, string>) {
     for (const defSubNode of this.requirements) {
       if (defSubNode.type === LiTexNodeType.CallOptsNode) {
         for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
-          env.newFact(
-            this.getFixedNodeFromFreeNode(
-              fixedOptNode.optParams,
-              freeCallOpt as CallOptNode
-            )
-          );
+          env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
         }
       }
     }
@@ -396,14 +369,36 @@ export class DefNode extends LiTeXNode {
     for (const defSubNode of this.onlyIfExprs) {
       if (defSubNode.type === LiTexNodeType.CallOptsNode) {
         for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
-          env.newFact(
-            this.getFixedNodeFromFreeNode(
-              fixedOptNode.optParams,
-              freeCallOpt as CallOptNode
-            )
-          );
+          env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
         }
       }
     }
   }
+}
+
+export function getFreeToFixedMap(
+  templateNode: DefNode | InferNode,
+  calledOpt: CallOptNode
+): Map<string, string> {
+  try {
+    if (!areStrArrStructureEqual(templateNode.params, calledOpt.optParams)) {
+      throw Error("Invalid number of given arguments.");
+    }
+    return relationBetweenStrArrArrays(
+      templateNode.params,
+      calledOpt.optParams
+    );
+  } catch (error) {
+    throw error;
+  }
+}
+
+export function getFixedNodeFromFreeFixMap(
+  freeToFixedMap: Map<string, string>,
+  freeCallOpt: CallOptNode
+): CallOptNode {
+  const node = new CallOptNode([]);
+  node.optName = freeCallOpt.optName;
+  node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, freeToFixedMap);
+  return node;
 }

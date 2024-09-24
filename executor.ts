@@ -12,6 +12,7 @@ import {
   LetNode,
   CanBeKnownNode,
   DefNode,
+  getFreeToFixedMap,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { builtInCallOptNames } from "./executor_builtins";
@@ -295,18 +296,23 @@ function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
 function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
   try {
     const relatedInferNode = env.infers.get(node.optName) as InferNode;
+    const freeVarsToFixedVars: Map<string, string> = getFreeToFixedMap(
+      relatedInferNode,
+      node
+    );
 
     // check whether requirements are satisfied
     const checkResult: ResultType = relatedInferNode.checkRequirements(
       env,
-      node
+      freeVarsToFixedVars
     );
     if (!(checkResult === ResultType.True)) {
       return checkResult;
     }
 
     // emit onlyIfs of InferNode
-    relatedInferNode.emitOnlyIfs(env, node);
+
+    relatedInferNode.emitOnlyIfs(env, freeVarsToFixedVars);
   } catch (error) {
     catchRuntimeError(env, error, "know infer");
     return ResultType.Error;
@@ -347,6 +353,7 @@ function defExec(env: LiTeXEnv, node: DefNode): ResultType {
 function knowDefCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
   const defNode = env.defs.get(node.optName) as DefNode;
 
-  defNode.emitOnlyIfs(env, node);
+  const freeToFixedMap: Map<string, string> = getFreeToFixedMap(defNode, node);
+  defNode.emitOnlyIfs(env, freeToFixedMap);
   return ResultType.True;
 }
