@@ -297,34 +297,16 @@ function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
     const relatedInferNode = env.infers.get(node.optName) as InferNode;
 
     // check whether requirements are satisfied
-    for (const item of relatedInferNode.requirements) {
-      if (item.type === LiTexNodeType.CallOptsNode) {
-        for (const callOpt of (item as CallOptsNode).nodes) {
-          const isFact: Boolean = env.isCallOptFact(
-            relatedInferNode.getFixedNodeFromFreeNode(
-              node.optParams,
-              callOpt as CallOptNode
-            )
-          );
-          if (!isFact) {
-            return ResultType.Unknown;
-          }
-        }
-      }
+    const checkResult: ResultType = relatedInferNode.checkRequirements(
+      env,
+      node
+    );
+    if (!(checkResult === ResultType.True)) {
+      return checkResult;
     }
 
     // emit onlyIfs of InferNode
-    for (const item of relatedInferNode.onlyIfExprs) {
-      if (item.type === LiTexNodeType.CallOptsNode) {
-        for (const callOpt of (item as CallOptsNode).nodes) {
-          const fixedOnlyIfNode = relatedInferNode.getFixedNodeFromFreeNode(
-            node.optParams,
-            callOpt as CallOptNode
-          );
-          env.newFact(fixedOnlyIfNode);
-        }
-      }
-    }
+    relatedInferNode.emitOnlyIfs(env, node);
   } catch (error) {
     catchRuntimeError(env, error, "know infer");
     return ResultType.Error;
@@ -365,17 +347,6 @@ function defExec(env: LiTeXEnv, node: DefNode): ResultType {
 function knowDefCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
   const defNode = env.defs.get(node.optName) as DefNode;
 
-  for (const [i, value] of defNode?.requirements.entries()) {
-    if (value.type === LiTexNodeType.CallOptsNode) {
-      for (const [j, callOpt] of (value as CallOptsNode).nodes.entries())
-        env.newFact(
-          defNode.getFixedNodeFromFreeNode(
-            node.optParams,
-            callOpt as CallOptNode
-          )
-        );
-    }
-  }
-
+  defNode.emitOnlyIfs(env, node);
   return ResultType.True;
 }

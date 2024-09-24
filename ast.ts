@@ -3,6 +3,8 @@ import {
   freeVarsToFixedVars,
   relationBetweenStrArrArrays,
 } from "./common";
+import { LiTeXEnv } from "./env";
+import { ResultType } from "./executor";
 
 // There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
 export enum LiTexNodeType {
@@ -160,6 +162,37 @@ export class InferNode extends LiTeXNode {
     } catch (error) {
       throw error;
     }
+  }
+
+  emitOnlyIfs(env: LiTeXEnv, fixedOptNode: CallOptNode) {
+    for (const defSubNode of this.onlyIfExprs) {
+      if (defSubNode.type === LiTexNodeType.CallOptsNode) {
+        for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
+          env.newFact(
+            this.getFixedNodeFromFreeNode(
+              fixedOptNode.optParams,
+              freeCallOpt as CallOptNode
+            )
+          );
+        }
+      }
+    }
+  }
+
+  checkRequirements(env: LiTeXEnv, fixedOpt: CallOptNode): ResultType {
+    for (const req of this.requirements) {
+      if (req.type === LiTexNodeType.CallOptsNode) {
+        for (const freeOpt of (req as CallOptsNode).nodes) {
+          const isFact: Boolean = env.isCallOptFact(
+            this.getFixedNodeFromFreeNode(fixedOpt.optParams, freeOpt)
+          );
+          if (!isFact) {
+            return ResultType.Unknown;
+          }
+        }
+      }
+    }
+    return ResultType.True;
   }
 }
 
@@ -324,6 +357,7 @@ export class DefNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
+  // replace free variables with fixed variables
   getFixedNodeFromFreeNode(
     newOptParams: string[][],
     freeCallOpt: CallOptNode
@@ -342,6 +376,34 @@ export class DefNode extends LiTeXNode {
       return node;
     } catch (error) {
       throw error;
+    }
+  }
+
+  emitOnlyIfs(env: LiTeXEnv, fixedOptNode: CallOptNode) {
+    for (const defSubNode of this.requirements) {
+      if (defSubNode.type === LiTexNodeType.CallOptsNode) {
+        for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
+          env.newFact(
+            this.getFixedNodeFromFreeNode(
+              fixedOptNode.optParams,
+              freeCallOpt as CallOptNode
+            )
+          );
+        }
+      }
+    }
+
+    for (const defSubNode of this.onlyIfExprs) {
+      if (defSubNode.type === LiTexNodeType.CallOptsNode) {
+        for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
+          env.newFact(
+            this.getFixedNodeFromFreeNode(
+              fixedOptNode.optParams,
+              freeCallOpt as CallOptNode
+            )
+          );
+        }
+      }
     }
   }
 }
