@@ -18,7 +18,11 @@ export class LiTeXEnv {
   declaredVars: string[] = [];
   defs: Map<string, DefNode> = new Map<string, DefNode>();
 
-  optType(s: string) {
+  callOptType(node: CallOptNode) {
+    return this.optType(node.optName);
+  }
+
+  optType(s: string): LiTexNodeType {
     let node: LiTeXNode = this.infers.get(s) as LiTeXNode;
     if (node) return LiTexNodeType.InferNode;
     node = this.defs.get(s) as LiTeXNode;

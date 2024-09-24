@@ -73,6 +73,15 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
     if (!env.isCallOptFact(node.nodes[i])) {
       return ResultType.Unknown;
     }
+
+    switch (env.optType(node.nodes[i].optName)) {
+      case LiTexNodeType.DefNode:
+        knowDefCallOptExec(env, node.nodes[i]);
+        break;
+      case LiTexNodeType.InferNode:
+        knowInferCallOptExec(env, node.nodes[i]);
+        break;
+    }
   }
 
   return ResultType.True;
@@ -254,9 +263,9 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
         result = knowCallOptExec(env, curNode as CallOptNode);
         if (result !== ResultType.True) return result;
         break;
-      case LiTexNodeType.OnlyIfNode:
-        knowOnlyIfNodeExec(env, curNode as OnlyIfNode);
-        break;
+      // case LiTexNodeType.OnlyIfNode:
+      //   knowOnlyIfNodeExec(env, curNode as OnlyIfNode);
+      //   break;
       case LiTexNodeType.IffNode:
         knowIffExec(env, curNode as IffNode);
         break;
@@ -296,31 +305,24 @@ function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
 function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
   try {
     const relatedInferNode = env.infers.get(node.optName) as InferNode;
-    const freeVarsToFixedVars: Map<string, string> = getFreeToFixedMap(
+    const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
       relatedInferNode,
       node
     );
 
-    // check whether requirements are satisfied
     const checkResult: ResultType = relatedInferNode.checkRequirements(
       env,
-      freeVarsToFixedVars
+      freeToFixedMap
     );
     if (!(checkResult === ResultType.True)) {
       return checkResult;
     }
 
-    // emit onlyIfs of InferNode
-
-    relatedInferNode.emitOnlyIfs(env, freeVarsToFixedVars);
+    relatedInferNode.emitOnlyIfs(env, freeToFixedMap);
   } catch (error) {
     catchRuntimeError(env, error, "know infer");
     return ResultType.Error;
   }
-}
-
-function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {
-  // const node = env.defs.get(node.left.)
 }
 
 function letExec(env: LiTeXEnv, node: LetNode): ResultType {
