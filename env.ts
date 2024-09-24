@@ -4,6 +4,7 @@ import {
   DefNode,
   LiTexNodeType,
   LiTeXNode,
+  CallOptsNode,
 } from "./ast";
 
 type SnapShot = { fatherFreeVars: string[][] };
@@ -121,6 +122,14 @@ export class LiTeXEnv {
       }
     }
     console.log("");
+  }
+
+  newFacts(node: LiTeXNode) {
+    if (node.type === LiTexNodeType.CallOptsNode) {
+      for (const [j, callOptNode] of (node as CallOptsNode).nodes.entries()) {
+        this.newFact(callOptNode);
+      }
+    }
   }
 }
 

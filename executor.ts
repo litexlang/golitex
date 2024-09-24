@@ -284,6 +284,9 @@ function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
       const result = knowInferCallOptExec(env, node);
       if (result === ResultType.Unknown) return ResultType.Unknown;
       break;
+    case LiTexNodeType.DefNode:
+      knowDefCallOptExec(env, node);
+      break;
   }
   env.newFact(node);
   return ResultType.True;
@@ -357,4 +360,22 @@ function defExec(env: LiTeXEnv, node: DefNode): ResultType {
     catchRuntimeError(env, error, "def");
     return ResultType.Error;
   }
+}
+
+function knowDefCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
+  const defNode = env.defs.get(node.optName) as DefNode;
+
+  for (const [i, value] of defNode?.requirements.entries()) {
+    if (value.type === LiTexNodeType.CallOptsNode) {
+      for (const [j, callOpt] of (value as CallOptsNode).nodes.entries())
+        env.newFact(
+          defNode.getFixedNodeFromFreeNode(
+            node.optParams,
+            callOpt as CallOptNode
+          )
+        );
+    }
+  }
+
+  return ResultType.True;
 }

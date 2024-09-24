@@ -323,4 +323,25 @@ export class DefNode extends LiTeXNode {
     this.params = params;
     this.requirements = requirements;
   }
+
+  getFixedNodeFromFreeNode(
+    newOptParams: string[][],
+    freeCallOpt: CallOptNode
+  ): CallOptNode {
+    try {
+      const node = new CallOptNode([]);
+      node.optName = freeCallOpt.optName;
+      if (!areStrArrStructureEqual(this.params, newOptParams)) {
+        throw Error("Invalid number of given arguments.");
+      }
+      const relation: Map<string, string> = relationBetweenStrArrArrays(
+        this.params,
+        newOptParams
+      );
+      node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, relation);
+      return node;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

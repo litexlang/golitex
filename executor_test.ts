@@ -89,11 +89,18 @@ const codes: string[] = [
   // "proof Prove(x,y: cond(x,y);) => {goal(x,y), goal2(x);} {...; ; }",
   // "by Prove(x,y) => next_is_right()",
   // "or set-or-number x: set(x), number(x);",
-  "infer IF-THEN(Q, P: F1(P), F2(Q);) {F1(Q);}",
-  "know F1(P), F2(Q);",
-  "know IF-THEN(Q,P);",
-  "F1(Q);",
-  "know IF-THEN(2,1);",
+  // "// Test code for infer, know infer",
+  // "infer IF-THEN(Q, P: F1(P), F2(Q);) {F1(Q);}",
+  // "know F1(P), F2(Q);",
+  // "know IF-THEN(Q,P);",
+  // "F1(Q);",
+  // "know IF-THEN(2,1);",
+  // "// Test code for prove",
+  // "prove IF-THEN(#1, FixedVar) {know F1(#1);}",
+  "def bundle(x,y: P(x), Q(y););",
+  "know bundle(1,2);",
+  "bundle(1,2);",
+  "P(1);",
 ];
 
 function callOptsExecTest() {
