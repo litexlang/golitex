@@ -286,26 +286,38 @@ function knowCallOptExec(env: LiTeXEnv, node: CallOptNode) {
 
 function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
   try {
-    const optNamesList = node.getParaNames();
-    for (let i = 0, s = ""; i < optNamesList.length; i++) {
-      s += optNamesList[i];
-      if (env.optType(s) === LiTexNodeType.InferNode) {
-        const inferNode: InferNode = env.infers.get(s) as InferNode;
-        if (!areStrArrStructureEqual(inferNode.params, node.optParams)) {
-          throw Error("Invalid number of given arguments.");
-        }
-        const relation: Map<string, string> = relationBetweenStrArrArrays(
-          inferNode.params,
-          node.optParams
-        );
-        for (let item of inferNode.requirements) {
-          if (item.type === LiTexNodeType.CallOptNode) {
-            item = item as CallOptNode;
-          }
-        }
-      }
-      s += "::";
-    }
+    // const optNamesList = node.getParaNames();
+    // for (let i = 0, s = ""; i < optNamesList.length; i++) {
+    //   s += optNamesList[i];
+    //   if (env.optType(s) === LiTexNodeType.InferNode) {
+    //     const inferNode: InferNode = env.infers.get(s) as InferNode;
+    //     if (!areStrArrStructureEqual(inferNode.params, node.optParams)) {
+    //       throw Error("Invalid number of given arguments.");
+    //     }
+    //     for (let item of inferNode.requirements) {
+    //       if (item.type === LiTexNodeType.CallOptNode) {
+    //         const fixedNode = (item as CallOptNode).getFixedNodeFromFreeNode(
+    //           node.optParams[i]
+    //         );
+    //       }
+    //     }
+    //   }
+    //   s += "::";
+    // }
+    // // onlyIfs of this callOpt is correct
+    // const inferNode = env.infers.get(node.optName) as InferNode;
+    // const relation = relationBetweenStrArrArrays(
+    //   inferNode.params,
+    //   node.optParams
+    // );
+    // for (const item of inferNode.onlyIfExprs) {
+    //   if (item.type === LiTexNodeType.CallOptNode) {
+    //     const newNode = (item as CallOptNode).deepCopy();
+    //     newNode.pa;
+    //   }
+    // }
+    // this callOpt is correct
+    // env.newFact(node);
   } catch (error) {
     catchRuntimeError(env, error, "know infer");
     return ResultType.Error;
@@ -315,54 +327,6 @@ function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
 function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {
   // const node = env.defs.get(node.left.)
 }
-
-function callKnowDefOptExec(env: LiTeXEnv, node: CallOptNode) {
-  const optName: string = node.optName;
-  const DefNode: DefNode | undefined = env.defs.get(optName);
-  if (DefNode === undefined) {
-    return;
-  }
-
-  const fixedVars: string[][] = node.optParams;
-  const freeVars: string[][] = DefNode.params;
-
-  for (const item of DefNode.onlyIfExprs) {
-    if (item.type === LiTexNodeType.CallOptsNode) {
-      //! If I put knowCallOptExec here, chain reaction will happen, and there will be more and more new facts generated.
-      for (const callOpt of (item as CallOptsNode).nodes) {
-        // const callOpt = replaceFreeVarInCallOptOfDefNode(freeCallOpt);
-
-        const fixedNode = freeVarsToFixedVars(callOpt, fixedVars, freeVars);
-
-        env.newFact(fixedNode as CallOptNode);
-      }
-    }
-  }
-}
-
-// function callInferDefOptExec(env: LiTeXEnv, node: CallOptNode) {
-//   const optName: string = node.optName;
-//   const inferNode: InferNode | undefined = env.infers.get(optName);
-//   if (inferNode === undefined) {
-//     return;
-//   }
-
-//   const fixedVars: string[][] = node.optParams;
-//   const freeVars: string[][] = inferNode.params;
-
-//   for (const item of inferNode.onlyIfExprs) {
-//     if (item.type === LiTexNodeType.CallOptsNode) {
-//       //! If I put knowCallOptExec here, chain reaction will happen, and there will be more and more new facts generated.
-//       for (const callOpt of (item as CallOptsNode).nodes) {
-//         // const callOpt = replaceFreeVarInCallOptOfDefNode(freeCallOpt);
-
-//         const fixedNode = freeVarsToFixedVars(callOpt, fixedVars, freeVars);
-
-//         env.newFact(fixedNode as CallOptNode);
-//       }
-//     }
-//   }
-// }
 
 function letExec(env: LiTeXEnv, node: LetNode): ResultType {
   try {

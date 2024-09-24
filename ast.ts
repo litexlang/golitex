@@ -1,3 +1,5 @@
+import { freeVarsToFixedVars, relationBetweenStrArrArrays } from "./common";
+
 // There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
 export enum LiTexNodeType {
   Error,
@@ -39,6 +41,21 @@ export class CallOptNode extends LiTeXNode {
     super();
     this.optName = opts.map((e) => e[0]).join("::");
     this.optParams = opts.map((e) => e[1]);
+  }
+
+  deepCopy() {
+    return new CallOptNode(this.getOptNameParamsPairs());
+  }
+
+  getFixedNodeFromFreeNode(newOptParams: string[][]): CallOptNode {
+    const node = new CallOptNode([]);
+    node.optName = this.optName;
+    const relation: Map<string, string> = relationBetweenStrArrArrays(
+      this.optParams,
+      newOptParams
+    );
+    node.optParams = freeVarsToFixedVars(this.optParams, relation);
+    return node;
   }
 
   getParaNames() {
