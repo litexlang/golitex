@@ -92,27 +92,31 @@ export class LiTeXEnv {
   }
 
   printCallOptFacts() {
+    console.log("----callOpt------\n");
     for (const [key, value] of this.callOptFacts) {
-      console.log(key);
+      console.log("[opt]  " + key);
       for (const item of value) {
         console.log(item);
-        console.log("----callOpt------");
       }
     }
+    console.log("");
   }
 
   printInfers() {
+    console.log("------infer-------\n");
     for (const [key, value] of this.infers) {
-      console.log(key);
+      console.log("[infer]  " + key);
       console.log(value.params);
+      console.log("requirements:");
       for (const item of value.requirements) {
         console.log(item);
       }
+      console.log("onlyIfs:");
       for (const item of value.onlyIfExprs) {
         console.log(item);
       }
-      console.log("------infer-------");
     }
+    console.log("");
   }
 }
 

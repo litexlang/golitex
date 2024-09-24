@@ -89,13 +89,14 @@ const codes: string[] = [
   // "proof Prove(x,y: cond(x,y);) => {goal(x,y), goal2(x);} {...; ; }",
   // "by Prove(x,y) => next_is_right()",
   // "or set-or-number x: set(x), number(x);",
-  "infer IF-THEN(Q, P: F1(P), F2(Q)) {F1(Q);}",
+  "infer IF-THEN(Q, P: F1(P), F2(Q);) {F1(Q);}",
   "know F1(P), F2(Q);",
   "know IF-THEN(Q,P);",
   "F1(Q);",
 ];
 
 function callOptsExecTest() {
+  console.log("\n----results------\n");
   for (const item of codes) {
     const tokens = scan(item);
     const result = LiTeXStmtsParse(env, tokens);
@@ -111,6 +112,7 @@ function callOptsExecTest() {
       }
     }
   }
+  console.log("");
   env.printCallOptFacts();
   env.printInfers();
 }
