@@ -15,6 +15,7 @@ export function scan(text: string): string[] {
       continue;
     }
 
+    // use // as comment
     if (char === "/" && text[i + 1] === "/") {
       inComment = true;
       if (currentToken) {

@@ -67,14 +67,6 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
 
     if (!env.isCallOptFact(node.nodes[i])) {
       return ResultType.Unknown;
-    } else {
-      switch (env.optType(node.nodes[i].optName)) {
-        case LiTexNodeType.DefNode:
-        // callOptExec(env, node.nodes[i]);
-        case LiTexNodeType.InferNode:
-        case LiTexNodeType.Error:
-          throw Error("undefined operator.");
-      }
     }
   }
 
@@ -281,14 +273,6 @@ function existExec(env: LiTeXEnv, node: ExistNode) {}
 
 function knowCallOptExec(env: LiTeXEnv, node: CallOptNode) {
   env.newFact(node);
-  switch (env.optType(node.optName)) {
-    case LiTexNodeType.DefNode:
-      callKnowDefOptExec(env, node);
-    case LiTexNodeType.InferNode:
-
-    case LiTexNodeType.Error:
-      throw Error("Undefined operator");
-  }
 }
 
 function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {

@@ -21,6 +21,7 @@ export enum LiTexNodeType {
   InheritNode,
   LetNode,
   DefNode,
+  ProofNode,
 }
 
 export class LiTeXNode {
