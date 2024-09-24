@@ -44,3 +44,55 @@ export function IndexOfGivenSymbol(
 
   return undefined;
 }
+
+export function areStrArrStructureEqual(
+  arr1: string[][],
+  arr2: string[][]
+): Boolean {
+  // Check if the outer arrays have the same length
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  // Check if each corresponding inner array has the same length
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i].length !== arr2[i].length) {
+      return false;
+    }
+  }
+
+  // If we've made it this far, the structures are equal
+  return true;
+}
+
+export function relationBetweenStrArrArrays(
+  arr1: string[][],
+  arr2: string[][]
+): Map<string, string> {
+  const result = new Map<string, string>();
+
+  for (let i = 0; i < arr1.length; i++) {
+    for (let j = 0; j < arr2.length; j++) {
+      result.set(arr1[i][j], arr2[i][j]);
+    }
+  }
+
+  return result;
+}
+
+export function freeVarsToFixedVars(
+  strArrToChange: string[][],
+  relation: Map<string, string>
+): string[][] {
+  const result: string[][] = [];
+
+  for (const item of strArrToChange) {
+    const cur: string[] = [];
+    for (const subitem of item) {
+      cur.push(relation.get(subitem) as string);
+    }
+    result.push(cur);
+  }
+
+  return result;
+}

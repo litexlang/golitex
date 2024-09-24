@@ -15,7 +15,11 @@ import {
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { builtInCallOptNames } from "./executor_builtins";
-import { freeVarsToFixedVars } from "./common";
+import {
+  areStrArrStructureEqual,
+  freeVarsToFixedVars,
+  relationBetweenStrArrArrays,
+} from "./common";
 import { IndexOfGivenSymbol } from "./common";
 
 export enum ResultType {
@@ -272,7 +276,40 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
 function existExec(env: LiTeXEnv, node: ExistNode) {}
 
 function knowCallOptExec(env: LiTeXEnv, node: CallOptNode) {
+  switch (env.optType(node.optName)) {
+    case LiTexNodeType.InferNode:
+      knowInferCallOptExec(env, node);
+      break;
+  }
   env.newFact(node);
+}
+
+function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
+  try {
+    const optNamesList = node.getParaNames();
+    for (let i = 0, s = ""; i < optNamesList.length; i++) {
+      s += optNamesList[i];
+      if (env.optType(s) === LiTexNodeType.InferNode) {
+        const inferNode: InferNode = env.infers.get(s) as InferNode;
+        if (!areStrArrStructureEqual(inferNode.params, node.optParams)) {
+          throw Error("Invalid number of given arguments.");
+        }
+        const relation: Map<string, string> = relationBetweenStrArrArrays(
+          inferNode.params,
+          node.optParams
+        );
+        for (let item of inferNode.requirements) {
+          if (item.type === LiTexNodeType.CallOptNode) {
+            item = item as CallOptNode;
+          }
+        }
+      }
+      s += "::";
+    }
+  } catch (error) {
+    catchRuntimeError(env, error, "know infer");
+    return ResultType.Error;
+  }
 }
 
 function knowOnlyIfNodeExec(env: LiTeXEnv, node: OnlyIfNode) {
