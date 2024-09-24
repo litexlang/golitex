@@ -95,12 +95,14 @@ const codes: string[] = [
   // "know IF-THEN(Q,P);",
   // "F1(Q);",
   // "know IF-THEN(2,1);",
-  // "// Test code for prove",
-  // "prove IF-THEN(#1, FixedVar) {know F1(#1);}",
+  "// Test code for def",
+  "prove IF-THEN(#1, FixedVar) {know F1(#1);}",
   "def bundle(x,y: P(x), Q(y););",
   "know bundle(1,2);",
   "bundle(1,2);",
   "P(1);",
+  "know bundle(3,#);",
+  "bundle(3,#);",
 ];
 
 function callOptsExecTest() {
