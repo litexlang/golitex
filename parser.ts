@@ -10,7 +10,7 @@ import {
   // FactExprNode,
   // FactsNode,
   HaveNode,
-  IffNode,
+  // IffNode,
   KnowNode,
   LiTeXNode,
   LiTexNodeType,
@@ -19,10 +19,12 @@ import {
   ParamsColonFactExprsNode,
   // PropertyNode,
   // FactExprNodeNames,
-  OnlyIfNode,
-  IfNode,
+  // OnlyIfNode,
+  // IfNode,
   LetNode,
   DefNode,
+  FactNode,
+  OnlyIfFactNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { specialChars } from "./lexer";
@@ -72,9 +74,9 @@ const stmtKeywords: { [key: string]: Function } = {
   exist: existParse,
   not: notParse,
   or: orParse,
-  "<=>": iffParse,
-  "=>": onlyIfParse,
-  "<=": ifParse,
+  // "<=>": iffParse,
+  // "=>": onlyIfParse,
+  // "<=": ifParse,
   inherit: inheritParse,
   let: letParse,
   def: defParse,
@@ -143,8 +145,8 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
       //   knowNode.facts.push(stmtKeywords[tokens[0]](env, tokens));
       // } else {
       // called by know
-      const node = callOptParse(env, tokens);
-      knowNode.facts.push(node as CallOptNode);
+      const node = factParse(env, tokens);
+      knowNode.facts.push(node);
       // }
 
       if (tokens[0] === ",") skip(tokens, ",");
@@ -257,50 +259,50 @@ function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
   }
 }
 
-function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
-  try {
-    skip(tokens, "<=>");
-    const left = callOptParse(env, tokens);
-    const right = callOptParse(env, tokens);
-    const result = new IffNode(left, right);
+// function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
+//   try {
+//     skip(tokens, "<=>");
+//     const left = callOptParse(env, tokens);
+//     const right = callOptParse(env, tokens);
+//     const result = new IffNode(left, right);
 
-    // tokens.shift(); // skip ;
-    return result;
-  } catch (error) {
-    handleParseError(tokens, env, "<=>");
-    throw error;
-  }
-}
+//     // tokens.shift(); // skip ;
+//     return result;
+//   } catch (error) {
+//     handleParseError(tokens, env, "<=>");
+//     throw error;
+//   }
+// }
 
-function onlyIfParse(env: LiTeXEnv, tokens: string[]): OnlyIfNode {
-  try {
-    skip(tokens, "=>");
-    const left = callOptParse(env, tokens);
+// function onlyIfParse(env: LiTeXEnv, tokens: string[]): OnlyIfNode {
+//   try {
+//     skip(tokens, "=>");
+//     const left = callOptParse(env, tokens);
 
-    const right = blockParse(env, tokens);
+//     const right = blockParse(env, tokens);
 
-    const result = new OnlyIfNode(left, right as CallOptsNode[]);
-    // tokens.shift(); // skip ;
-    return result;
-  } catch (error) {
-    handleParseError(tokens, env, "=>");
-    throw error;
-  }
-}
+//     const result = new OnlyIfNode(left, right as CallOptsNode[]);
+//     // tokens.shift(); // skip ;
+//     return result;
+//   } catch (error) {
+//     handleParseError(tokens, env, "=>");
+//     throw error;
+//   }
+// }
 
-function ifParse(env: LiTeXEnv, tokens: string[]): IfNode {
-  try {
-    skip(tokens, "<=");
-    const left = blockParse(env, tokens);
-    const right = callOptParse(env, tokens);
-    const result = new IfNode(left as CallOptsNode[], right);
-    // tokens.shift(); // skip ;
-    return result;
-  } catch (error) {
-    handleParseError(tokens, env, "<=");
-    throw error;
-  }
-}
+// function ifParse(env: LiTeXEnv, tokens: string[]): IfNode {
+//   try {
+//     skip(tokens, "<=");
+//     const left = blockParse(env, tokens);
+//     const right = callOptParse(env, tokens);
+//     const result = new IfNode(left as CallOptsNode[], right);
+//     // tokens.shift(); // skip ;
+//     return result;
+//   } catch (error) {
+//     handleParseError(tokens, env, "<=");
+//     throw error;
+//   }
+// }
 
 function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
   try {
@@ -487,6 +489,23 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
   } catch (error) {
     handleParseError(tokens, env, "def");
     env.returnToSnapShot(snapShot);
+    throw error;
+  }
+}
+
+function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
+  try {
+    const left = callOptParse(env, tokens);
+    if (tokens[0] !== "=>") {
+      return left;
+    } else {
+      skip(tokens, "=>");
+      const right = blockParse(env, tokens) as CallOptNode[];
+      const fact = new OnlyIfFactNode(left, right);
+      return fact;
+    }
+  } catch (error) {
+    handleParseError(tokens, env, "fact");
     throw error;
   }
 }

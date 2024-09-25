@@ -7,6 +7,8 @@ export enum LiTexNodeType {
   Node,
   NotNode,
   OrNode,
+  OnlyIfFactNode,
+  LiTexNodeType,
   CallOptNode,
   CallOptsNode,
   KnowNode,
@@ -66,53 +68,20 @@ export class CallOptNode extends LiTeXNode {
   }
 }
 
-// // when parsing FactExprNode, need to pass in isEnd
-// export type FactExprNode =
-//   | KnowNode
-//   | CallOptNode
-//   | OrNode
-//   | NotNode
-//   | IffNode
-//   | OnlyIfNode
-//   | IfNode
-//   | CallOptsNode;
-// export const FactExprNodeNames: string[] = [
-//   "know",
-//   "or",
-//   "not",
-//   "<=>",
-//   "<=",
-//   "=>",
-// ];
+export class OnlyIfFactNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.OnlyIfFactNode;
+  // notice ifNode and onlyIfs can not be OnlyIfFactNode itself.
+  ifNode: CallOptNode;
+  onlyIfs: CallOptNode[];
 
-// export type CanBeKnownNode =
-//   | InferNode
-//   | ExistNode
-//   | IffNode
-//   | OnlyIfNode
-//   | IfNode
-//   | CallOptNode
-//   | OrNode
-//   | NotNode
-//   | CallOptsNode;
-// export const canBeKnownNodeNames: string[] = [
-//   "infer",
-//   "exist",
-//   "<=>",
-//   "not",
-//   "or",
-//   "<=",
-//   "=>",
-// ];
+  constructor(ifNode: CallOptNode, onlyIfs: CallOptNode[]) {
+    super();
+    this.ifNode = ifNode;
+    this.onlyIfs = onlyIfs;
+  }
+}
 
-// export class FactsNode extends LiTeXNode {
-//   type: LiTexNodeType = LiTexNodeType.FactsNode;
-//   facts: FactExprNode[] = [];
-//   constructor(facts: FactExprNode[]) {
-//     super();
-//     this.facts = facts;
-//   }
-// }
+export type FactNode = CallOptNode | OnlyIfFactNode;
 
 export class InferNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
@@ -166,7 +135,7 @@ export class InferNode extends LiTeXNode {
 
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
-  facts: CallOptNode[] = [];
+  facts: FactNode[] = [];
 }
 
 export class HaveNode extends LiTeXNode {
@@ -199,42 +168,6 @@ export class CheckNode extends LiTeXNode {
   constructor(callOpts: CallOptNode[]) {
     super();
     this.callOpts = callOpts;
-  }
-}
-
-export class IffNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.IffNode;
-  left: CallOptNode;
-  right: CallOptNode;
-
-  constructor(left: CallOptNode, right: CallOptNode) {
-    super();
-    this.left = left;
-    this.right = right;
-  }
-}
-
-export class OnlyIfNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.OnlyIfNode;
-  left: CallOptNode;
-  right: CallOptsNode[]; // it's better to have CallOptsNode[] as type
-
-  constructor(left: CallOptNode, right: CallOptsNode[]) {
-    super();
-    this.left = left;
-    this.right = right;
-  }
-}
-
-export class IfNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.IfNode;
-  left: CallOptsNode[]; // it's better to have CallOptsNode[] as type
-  right: CallOptNode;
-
-  constructor(left: CallOptsNode[], right: CallOptNode) {
-    super();
-    this.left = left;
-    this.right = right;
   }
 }
 

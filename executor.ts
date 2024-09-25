@@ -3,16 +3,18 @@ import {
   CallOptsNode,
   InferNode,
   ExistNode,
-  IffNode,
-  IfNode,
+  // IffNode,
+  // IfNode,
   KnowNode,
   LiTeXNode,
   LiTexNodeType,
-  OnlyIfNode,
+  // OnlyIfNode,
   LetNode,
   // CanBeKnownNode,
   DefNode,
   getFreeToFixedMap,
+  FactNode,
+  OnlyIfFactNode,
 } from "./ast";
 import { FactAboutGivenOpt, LiTeXEnv } from "./env";
 import { builtInCallOptNames } from "./executor_builtins";
@@ -157,83 +159,8 @@ function addNewOnlyIfsToDefs(
   }
 }
 
-function knowIfExec(env: LiTeXEnv, node: IfNode): ResultType {
-  //? Unfinished: might introduce repeated facts
-  try {
-    const key: string = node.right.optName;
-    if (!env.keyInDefs(key)) return ResultType.Unknown;
-    const InferNode = env.infers.get(key);
-
-    for (const item of node.left as CallOptsNode[]) {
-      for (const subitem of item.nodes as CallOptNode[])
-        addNewOnlyIfsToDefs(
-          env,
-          InferNode as InferNode,
-          node.right,
-          subitem as CallOptNode
-        );
-    }
-
-    return ResultType.True;
-  } catch (error) {
-    catchRuntimeError(env, error, "if");
-    return ResultType.Error;
-  }
-}
-
-function knowOnlyIfExec(env: LiTeXEnv, node: OnlyIfNode): ResultType {
-  //? Unfinished: might introduce repeated facts
-  try {
-    // if (!env.isCallOptFact(node.left)) {
-    //   return ResultType.Unknown;
-    // }
-
-    // //! needs fixings: why there are so many for ??
-    // for (const item of node.right as CallOptsNode[]) {
-    //   for (const subitem of item.nodes as CallOptNode[]) {
-    //     for (let opt of env.callOptFactsOnlyIfs.get(
-    //       node.left.optName
-    //     ) as FactAboutGivenOpt[])
-
-    //       (
-    //         env.callOptFactsOnlyIfs.get(
-    //           node.left.optName
-    //         ) as FactAboutGivenOpt[]
-    //       )[index]["onlyIfs"].push(subitem);
-    //   }
-    // }
-
-    return ResultType.True;
-  } catch (error) {
-    catchRuntimeError(env, error, "if");
-    return ResultType.Error;
-  }
-}
-
-function knowIffExec(env: LiTeXEnv, node: IffNode): ResultType {
-  //? Unfinished: might introduce repeated facts
-  try {
-    const leftKey: string = node.left.optName;
-    if (!env.keyInDefs(leftKey)) return ResultType.Unknown;
-    const leftDefNode = env.infers.get(leftKey);
-
-    const rightKey: string = node.right.optName;
-    if (!env.keyInDefs(rightKey)) return ResultType.Unknown;
-    const rightDefNode = env.infers.get(rightKey);
-
-    addNewOnlyIfsToDefs(env, leftDefNode as InferNode, node.left, node.right);
-    addNewOnlyIfsToDefs(env, rightDefNode as InferNode, node.right, node.left);
-
-    return ResultType.True;
-  } catch (error) {
-    catchRuntimeError(env, error, "iff");
-    return ResultType.Error;
-  }
-}
-
-// The interesting part: Even if you don't declare opt, you can still know facts about that opt. That means we don't need to claim what "set" or "number" means, and directly 'know set(a)' when necessary
 function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
-  let facts: CallOptNode[] = [];
+  let facts: FactNode[] = [];
   if (node.type === LiTexNodeType.KnowNode) {
     facts = (node as KnowNode).facts;
   } else if (node.type === LiTexNodeType.LetNode) {
@@ -241,36 +168,16 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
   }
 
   for (let i = 0; i < facts.length; i++) {
-    const curNode = facts[i];
+    const curNode: FactNode = facts[i];
     let result: ResultType = ResultType.Unknown;
     switch (curNode.type) {
-      // case LiTexNodeType.InferNode:
-      //   inferExec(env, curNode as InferNode);
-      //   break;
-      // case LiTexNodeType.ExistNode:
-      //   existExec(env, curNode as ExistNode);
-      //   break;
       case LiTexNodeType.CallOptNode:
         result = knowCallOptExec(env, curNode as CallOptNode);
         if (result !== ResultType.True) return result;
         break;
-      // case LiTexNodeType.OnlyIfNode:
-      //   knowOnlyIfNodeExec(env, curNode as OnlyIfNode);
-      //   break;
-      // case LiTexNodeType.IffNode:
-      //   knowIffExec(env, curNode as IffNode);
-      //   break;
-      // case LiTexNodeType.IfNode:
-      //   knowIfExec(env, curNode as IfNode);
-      //   break;
-      // case LiTexNodeType.OnlyIfNode:
-      //   knowOnlyIfExec(env, curNode as OnlyIfNode);
-      //   break;
-      case LiTexNodeType.CallOptsNode:
-        // for (const item of (curNode as CallOptsNode).nodes) {
-        result = knowCallOptExec(env, curNode as CallOptNode);
+      case LiTexNodeType.OnlyIfFactNode:
+        result = knowOnlyIfFactExec(env, curNode as OnlyIfFactNode);
         if (result !== ResultType.True) return result;
-        // }
         break;
     }
   }
@@ -278,6 +185,10 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
 }
 
 function existExec(env: LiTeXEnv, node: ExistNode) {}
+
+function knowOnlyIfFactExec(env: LiTeXEnv, node: OnlyIfFactNode): ResultType {
+  return ResultType.True;
+}
 
 function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
   switch (env.optType(node.optName)) {
