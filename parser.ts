@@ -17,7 +17,7 @@ import {
   NotNode,
   OrNode,
   ParamsColonFactExprsNode,
-  PropertyNode,
+  // PropertyNode,
   FactExprNodeNames,
   OnlyIfNode,
   IfNode,
@@ -25,7 +25,6 @@ import {
   DefNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
-import { property } from "lodash";
 import { specialChars } from "./lexer";
 
 function skip(tokens: string[], s: string = "") {

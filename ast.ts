@@ -243,30 +243,30 @@ export class IfNode extends LiTeXNode {
   }
 }
 
-export class PropertyNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.PropertyNode;
-  optName: string;
-  calledParams: string[];
-  onlyIfExprs: LiTeXNode[] = [];
+// export class PropertyNode extends LiTeXNode {
+//   type: LiTexNodeType = LiTexNodeType.PropertyNode;
+//   optName: string;
+//   calledParams: string[];
+//   onlyIfExprs: LiTeXNode[] = [];
 
-  constructor(optName: string, calledParams: string[]) {
-    super();
-    this.optName = optName;
-    this.calledParams = calledParams;
-  }
-}
+//   constructor(optName: string, calledParams: string[]) {
+//     super();
+//     this.optName = optName;
+//     this.calledParams = calledParams;
+//   }
+// }
 
 // Exist: means 2 things happen at the same time: var decl and know callOpt
 export class ExistNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.ExistNode;
   declOptName: string = "";
   params: string[] = [];
-  requirements: LiTeXNode[] = [];
+  requirements: CallOptNode[] = [];
 
   constructor(
     declOptName: string,
     params: string[],
-    requirements: LiTeXNode[]
+    requirements: CallOptNode[]
   ) {
     super();
     this.declOptName = declOptName;
