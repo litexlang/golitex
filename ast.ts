@@ -177,7 +177,7 @@ export class KnowNode extends LiTeXNode {
 export class HaveNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.HaveNode;
   params: string[];
-  properties: LiTeXNode[];
+  properties: CallOptNode[];
 
   constructor(node: ParamsColonFactExprsNode) {
     super();
@@ -189,9 +189,9 @@ export class HaveNode extends LiTeXNode {
 export class ParamsColonFactExprsNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.ParamsColonFactExprsNode;
   params: string[];
-  properties: CanBeKnownNode[];
+  properties: CallOptNode[];
 
-  constructor(params: string[], properties: CanBeKnownNode[]) {
+  constructor(params: string[], properties: CallOptNode[]) {
     super();
     this.params = params;
     this.properties = properties;

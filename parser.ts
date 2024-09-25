@@ -80,7 +80,7 @@ const stmtKeywords: { [key: string]: Function } = {
   "=>": onlyIfParse,
   "<=": ifParse,
   inherit: inheritParse,
-  let: letParse,
+  // let: letParse,
   def: defParse,
 };
 
@@ -216,7 +216,7 @@ function paramsColonFactExprsParse(
   tokens: string[]
 ): ParamsColonFactExprsNode {
   const params: string[] = [];
-  const requirements: CanBeKnownNode[] = [];
+  const requirements: CallOptNode[] = [];
   if (!(tokens[0] === ")")) {
     while (1) {
       params.push(tokens.shift() as string);
@@ -229,7 +229,7 @@ function paramsColonFactExprsParse(
       skip(tokens, ":"); // skip :
       while (!(tokens[0] === ")")) {
         const node = LiTexStmtParse(env, tokens);
-        if (node) requirements.push(node as CanBeKnownNode);
+        if (node) requirements.push(node as CallOptNode);
 
         // if (tokens[0] === ",") tokens.shift();
         if (tokens[0] === ")") break;
@@ -353,19 +353,19 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   }
 }
 
-function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
-  try {
-    skip(tokens, "let");
-    skip(tokens, "(");
-    const node = paramsColonFactExprsParse(env, tokens);
-    skip(tokens, ")"); // skip ;
-    skip(tokens, ";");
-    return new LetNode(node);
-  } catch (error) {
-    handleParseError(tokens, env, "let");
-    throw error;
-  }
-}
+// function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
+//   try {
+//     skip(tokens, "let");
+//     skip(tokens, "(");
+//     const node = paramsColonFactExprsParse(env, tokens);
+//     skip(tokens, ")"); // skip ;
+//     skip(tokens, ";");
+//     return new LetNode(node);
+//   } catch (error) {
+//     handleParseError(tokens, env, "let");
+//     throw error;
+//   }
+// }
 
 // function propertyParse(env: LiTeXEnv, tokens: string[]): PropertyNode {
 //   try {
