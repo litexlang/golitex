@@ -108,24 +108,12 @@ function inferExec(
     for (const item of node.requirements) {
       if (item.type === LiTexNodeType.InferNode) {
         inferExec(env, item as InferNode, sonNamePrefix);
-      } else if (item.type === LiTexNodeType.KnowNode) {
-        for (const subitem of (item as KnowNode).facts) {
-          if (subitem.type === LiTexNodeType.InferNode) {
-            inferExec(env, subitem as InferNode, sonNamePrefix);
-          }
-        }
       }
     }
 
     for (const item of node.onlyIfExprs) {
       if (item.type === LiTexNodeType.InferNode) {
         inferExec(env, item as InferNode, sonNamePrefix);
-      } else if (item.type === LiTexNodeType.KnowNode) {
-        for (const subitem of (item as KnowNode).facts) {
-          if (subitem.type === LiTexNodeType.InferNode) {
-            inferExec(env, subitem as InferNode, sonNamePrefix);
-          }
-        }
       }
     }
 

@@ -171,7 +171,7 @@ export class InferNode extends LiTeXNode {
 
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
-  facts: CanBeKnownNode[] = [];
+  facts: CallOptNode[] = [];
 }
 
 export class HaveNode extends LiTeXNode {
