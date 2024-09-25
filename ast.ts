@@ -32,6 +32,8 @@ export enum LiTexNodeType {
   ProofNode,
 }
 
+export type TemplateNode = DefNode | InferNode;
+
 export class LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.Node;
   constructor() {}
@@ -42,31 +44,24 @@ export class CallOptNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptNode;
   optName: string = "";
   optParams: string[][] = [];
+  optNameAsLst: string[] = [];
 
   constructor(opts: [string, string[]][]) {
     super();
     this.optName = opts.map((e) => e[0]).join("::");
     this.optParams = opts.map((e) => e[1]);
-  }
-
-  deepCopy() {
-    return new CallOptNode(this.getOptNameParamsPairs());
-  }
-
-  getParaNames() {
-    return this.optName.split("::");
+    this.optNameAsLst = opts.map((e) => e[0]);
   }
 
   getOptNameParamsPairs(): [string, string[]][] {
-    const optNames = this.getParaNames();
-    return optNames.map((v, i) => {
+    return this.optNameAsLst.map((v, i) => {
       return [this.optName, this.optParams[i]];
     });
   }
 
-  paramsLst(): string[] {
-    return this.optName.split("::");
-  }
+  // paramsLst(): string[] {
+  //   return this.optName.split("::");
+  // }
 
   pushNewNameParamsPair(pair: [string, string[]]) {
     if (this.optName !== "") this.optName += "::" + pair[0];

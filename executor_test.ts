@@ -106,9 +106,12 @@ const codes: string[] = [
   "// Start from one axiom, get followings",
   "infer Axiom(x,y: P(x), Q(y);) { Thm1(x,y); Thm2(x,y);}",
   "know P(#x), Q(#2), Axiom(#ha,#y);",
-  "infer Thm1(x,y: Thm2(x,y);) {Thm3(x,y);}",
-  "Thm1(#0, #1);",
-  "Thm3(#x, #3);",
+  // "infer Thm1(x,y: Thm2(x,y);) {Thm3(x,y);}",
+  // "Thm1(#0, #1);",
+  // "Thm3(#x, #3);",
+  "// know onlyif",
+  "know => Axiom(#x,#y) {Thm4(#y,#x);} ;",
+  // "Axiom(#x, #2);",
 ];
 
 function callOptsExecTest() {

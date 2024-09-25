@@ -9,6 +9,8 @@ import {
 
 type SnapShot = { fatherFreeVars: string[][] };
 
+export type FactAboutGivenOpt = { params: string[][]; onlyIfs: CallOptNode[] };
+
 export class LiTeXEnv {
   errors: string[] = [];
   infers: Map<string, InferNode> = new Map<string, InferNode>();
@@ -17,6 +19,10 @@ export class LiTeXEnv {
   fatherFreeVars: string[][] = [];
   declaredVars: string[] = [];
   defs: Map<string, DefNode> = new Map<string, DefNode>();
+  callOptFactsOnlyIfs: Map<string, FactAboutGivenOpt[]> = new Map<
+    string,
+    FactAboutGivenOpt[]
+  >();
 
   callOptType(node: CallOptNode) {
     return this.optType(node.optName);
@@ -66,26 +72,17 @@ export class LiTeXEnv {
     {
       if (!this.getFromCallOptFacts(node)) {
         this.callOptFacts.set(this.callOptNodeName(node), [node.optParams]);
+        this.callOptFactsOnlyIfs.set(this.callOptNodeName(node), []);
       } else {
         this.callOptFacts.get(this.callOptNodeName(node))?.push(node.optParams);
+        this.callOptFactsOnlyIfs
+          .get(this.callOptNodeName(node))
+          ?.push({ params: node.optParams, onlyIfs: [] });
       }
     }
   }
 
   isCallOptFact(optNode: CallOptNode): Boolean {
-    function paramsIsValid(lst1: string[], lst2: string[]): Boolean {
-      if (lst1.length !== lst2.length) {
-        return false;
-      }
-      for (let i = 0; i < lst1.length; i++) {
-        // The reason why [0] exists in lst1[i][0] is that user sometimes want to specify sequence of given parameter
-        if (lst1[i] !== lst2[i] && lst1[i][0] !== "#") {
-          return false;
-        }
-      }
-      return true;
-    }
-
     const validParamsLst = this.getFromCallOptFacts(optNode);
     if (!validParamsLst) return false;
 
@@ -98,6 +95,44 @@ export class LiTeXEnv {
     }
 
     return false;
+  }
+
+  getCallOptFactIndex(optNode: CallOptNode): number {
+    const validParamsLst = this.getFromCallOptFacts(optNode);
+    if (!validParamsLst) return -1;
+
+    for (const item of validParamsLst) {
+      for (let i = 0; i < item.length; i++) {
+        if (paramsIsValid(item[i], optNode.optParams[i])) {
+          return i;
+        }
+      }
+    }
+
+    return -1;
+  }
+
+  newCallOptFactsOnlyIf(optNode: CallOptNode): Boolean {
+    return true;
+  }
+
+  getCalledFactOnlyIfs(optNode: CallOptNode): CallOptNode[] | undefined {
+    const validParamsLst = this.callOptFactsOnlyIfs.get(optNode.optName);
+    if (!validParamsLst) return undefined;
+
+    for (const item of validParamsLst) {
+      let isTheSame = true;
+      for (let i = 0; i < item.params.length; i++) {
+        if (!paramsIsValid(item.params[i], optNode.optParams[i])) {
+          isTheSame = false;
+          break;
+        }
+      }
+      if (isTheSame) {
+        return item.onlyIfs;
+      }
+    }
+    return undefined;
   }
 
   printCallOptFacts() {
@@ -148,3 +183,23 @@ function strLstEql(lst1: string[], lst2: string[]): Boolean {
   }
   return true;
 }
+
+function paramsIsValid(lst1: string[], lst2: string[]): Boolean {
+  if (lst1.length !== lst2.length) {
+    return false;
+  }
+  for (let i = 0; i < lst1.length; i++) {
+    // The reason why [0] exists in lst1[i][0] is that user sometimes want to specify sequence of given parameter
+    if (lst1[i] !== lst2[i] && lst1[i][0] !== "#") {
+      return false;
+    }
+  }
+  return true;
+}
+
+// export function twoFixedOptHasTheSameMeaning(optNode1 : CallOptNode, optNode2: CallOptNode): Boolean {
+//   if (optNode1.optName !== optNode2.optName) {
+//     return false
+//   }
+
+// }

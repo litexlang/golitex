@@ -14,7 +14,7 @@ import {
   DefNode,
   getFreeToFixedMap,
 } from "./ast";
-import { LiTeXEnv } from "./env";
+import { FactAboutGivenOpt, LiTeXEnv } from "./env";
 import { builtInCallOptNames } from "./executor_builtins";
 import {
   areStrArrStructureEqual,
@@ -144,15 +144,15 @@ function addNewOnlyIfsToDefs(
 ): ResultType {
   try {
     let params: string[][] = [];
-    for (let i = 0; i < right.paramsLst().length; i++) {
+    for (let i = 0; i < right.optNameAsLst.length; i++) {
       params.push([]);
     }
 
-    let optNames: string[] = right.paramsLst();
-    for (let i = 0; i < right.paramsLst().length; i++) {
-      for (let j = 0; j < right.paramsLst()[i].length; j++) {
-        const index = IndexOfGivenSymbol(left, right.paramsLst()[i][j]);
-        if (!index) params[i][j] = right.paramsLst()[i][j];
+    let optNames: string[] = right.optNameAsLst;
+    for (let i = 0; i < right.optNameAsLst.length; i++) {
+      for (let j = 0; j < right.optNameAsLst[i].length; j++) {
+        const index = IndexOfGivenSymbol(left, right.optNameAsLst[i][j]);
+        if (!index) params[i][j] = right.optNameAsLst[i][j];
         else {
           params[i].push(leftDef.params[index[0]][index[1]]);
         }
@@ -198,19 +198,24 @@ function knowIfExec(env: LiTeXEnv, node: IfNode): ResultType {
 function knowOnlyIfExec(env: LiTeXEnv, node: OnlyIfNode): ResultType {
   //? Unfinished: might introduce repeated facts
   try {
-    const key: string = node.left.optName;
-    if (!env.keyInDefs(key)) return ResultType.Unknown;
-    const InferNode = env.infers.get(key);
+    // if (!env.isCallOptFact(node.left)) {
+    //   return ResultType.Unknown;
+    // }
 
-    for (const item of node.right as CallOptsNode[]) {
-      for (const subitem of item.nodes as CallOptNode[])
-        addNewOnlyIfsToDefs(
-          env,
-          InferNode as InferNode,
-          node.left,
-          subitem as CallOptNode
-        );
-    }
+    // //! needs fixings: why there are so many for ??
+    // for (const item of node.right as CallOptsNode[]) {
+    //   for (const subitem of item.nodes as CallOptNode[]) {
+    //     for (let opt of env.callOptFactsOnlyIfs.get(
+    //       node.left.optName
+    //     ) as FactAboutGivenOpt[])
+
+    //       (
+    //         env.callOptFactsOnlyIfs.get(
+    //           node.left.optName
+    //         ) as FactAboutGivenOpt[]
+    //       )[index]["onlyIfs"].push(subitem);
+    //   }
+    // }
 
     return ResultType.True;
   } catch (error) {
