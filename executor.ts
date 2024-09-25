@@ -121,44 +121,6 @@ function inferExec(
   }
 }
 
-function addNewOnlyIfsToDefs(
-  env: LiTeXEnv,
-  leftDef: InferNode,
-  left: CallOptNode,
-  right: CallOptNode
-): ResultType {
-  try {
-    let params: string[][] = [];
-    for (let i = 0; i < right.optNameAsLst.length; i++) {
-      params.push([]);
-    }
-
-    let optNames: string[] = right.optNameAsLst;
-    for (let i = 0; i < right.optNameAsLst.length; i++) {
-      for (let j = 0; j < right.optNameAsLst[i].length; j++) {
-        const index = IndexOfGivenSymbolInCallOpt(
-          left,
-          right.optNameAsLst[i][j]
-        );
-        if (!index) params[i][j] = right.optNameAsLst[i][j];
-        else {
-          params[i].push(leftDef.params[index[0]][index[1]]);
-        }
-      }
-    }
-    let optParamsLst: [string, string[]][] = optNames.map((e, index) => [
-      e,
-      params[index],
-    ]);
-    leftDef.onlyIfExprs.push(new CallOptsNode([new CallOptNode(optParamsLst)]));
-
-    return ResultType.True;
-  } catch (error) {
-    catchRuntimeError(env, error, "onlyIf/Iff/If");
-    return ResultType.Error;
-  }
-}
-
 function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
   let facts: FactNode[] = [];
   if (node.type === LiTexNodeType.KnowNode) {
@@ -183,8 +145,6 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
   }
   return ResultType.True;
 }
-
-function existExec(env: LiTeXEnv, node: ExistNode) {}
 
 function knowOnlyIfFactExec(env: LiTeXEnv, node: OnlyIfFactNode): ResultType {
   return ResultType.True;
