@@ -1,8 +1,3 @@
-import {
-  areStrArrStructureEqual,
-  freeVarsToFixedVars,
-  relationBetweenStrArrArrays,
-} from "./common";
 import { LiTeXEnv } from "./env";
 import { ResultType } from "./executor";
 
@@ -71,53 +66,53 @@ export class CallOptNode extends LiTeXNode {
   }
 }
 
-// when parsing FactExprNode, need to pass in isEnd
-export type FactExprNode =
-  | KnowNode
-  | CallOptNode
-  | OrNode
-  | NotNode
-  | IffNode
-  | OnlyIfNode
-  | IfNode
-  | CallOptsNode;
-export const FactExprNodeNames: string[] = [
-  "know",
-  "or",
-  "not",
-  "<=>",
-  "<=",
-  "=>",
-];
+// // when parsing FactExprNode, need to pass in isEnd
+// export type FactExprNode =
+//   | KnowNode
+//   | CallOptNode
+//   | OrNode
+//   | NotNode
+//   | IffNode
+//   | OnlyIfNode
+//   | IfNode
+//   | CallOptsNode;
+// export const FactExprNodeNames: string[] = [
+//   "know",
+//   "or",
+//   "not",
+//   "<=>",
+//   "<=",
+//   "=>",
+// ];
 
-export type CanBeKnownNode =
-  | InferNode
-  | ExistNode
-  | IffNode
-  | OnlyIfNode
-  | IfNode
-  | CallOptNode
-  | OrNode
-  | NotNode
-  | CallOptsNode;
-export const canBeKnownNodeNames: string[] = [
-  "infer",
-  "exist",
-  "<=>",
-  "not",
-  "or",
-  "<=",
-  "=>",
-];
+// export type CanBeKnownNode =
+//   | InferNode
+//   | ExistNode
+//   | IffNode
+//   | OnlyIfNode
+//   | IfNode
+//   | CallOptNode
+//   | OrNode
+//   | NotNode
+//   | CallOptsNode;
+// export const canBeKnownNodeNames: string[] = [
+//   "infer",
+//   "exist",
+//   "<=>",
+//   "not",
+//   "or",
+//   "<=",
+//   "=>",
+// ];
 
-export class FactsNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.FactsNode;
-  facts: FactExprNode[] = [];
-  constructor(facts: FactExprNode[]) {
-    super();
-    this.facts = facts;
-  }
-}
+// export class FactsNode extends LiTeXNode {
+//   type: LiTexNodeType = LiTexNodeType.FactsNode;
+//   facts: FactExprNode[] = [];
+//   constructor(facts: FactExprNode[]) {
+//     super();
+//     this.facts = facts;
+//   }
+// }
 
 export class InferNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
@@ -243,20 +238,6 @@ export class IfNode extends LiTeXNode {
   }
 }
 
-// export class PropertyNode extends LiTeXNode {
-//   type: LiTexNodeType = LiTexNodeType.PropertyNode;
-//   optName: string;
-//   calledParams: string[];
-//   onlyIfExprs: LiTeXNode[] = [];
-
-//   constructor(optName: string, calledParams: string[]) {
-//     super();
-//     this.optName = optName;
-//     this.calledParams = calledParams;
-//   }
-// }
-
-// Exist: means 2 things happen at the same time: var decl and know callOpt
 export class ExistNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.ExistNode;
   declOptName: string = "";
@@ -277,9 +258,9 @@ export class ExistNode extends LiTeXNode {
 
 export class NotNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.NotNode;
-  exprs: LiTeXNode[] = [];
+  exprs: CallOptNode[] = [];
 
-  constructor(exprs: LiTeXNode[]) {
+  constructor(exprs: CallOptNode[]) {
     super();
     this.exprs = exprs;
   }
@@ -287,7 +268,7 @@ export class NotNode extends LiTeXNode {
 
 export class OrNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.OrNode;
-  blocks: LiTeXNode[][] = [];
+  blocks: CallOptNode[][] = [];
 }
 
 export class CallOptsNode extends LiTeXNode {
@@ -302,7 +283,7 @@ export class CallOptsNode extends LiTeXNode {
 export class LetNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.LetNode;
   params: string[];
-  properties: CanBeKnownNode[];
+  properties: CallOptNode[];
 
   constructor(node: ParamsColonFactExprsNode) {
     super();
@@ -330,28 +311,6 @@ export class DefNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
-  // replace free variables with fixed variables
-  // getFixedNodeFromFreeNode(
-  //   newOptParams: string[][],
-  //   freeCallOpt: CallOptNode
-  // ): CallOptNode {
-  //   try {
-  //     const node = new CallOptNode([]);
-  //     node.optName = freeCallOpt.optName;
-  //     if (!areStrArrStructureEqual(this.params, newOptParams)) {
-  //       throw Error("Invalid number of given arguments.");
-  //     }
-  //     const relation: Map<string, string> = relationBetweenStrArrArrays(
-  //       this.params,
-  //       newOptParams
-  //     );
-  //     node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, relation);
-  //     return node;
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
-
   emitOnlyIfs(env: LiTeXEnv, freeToFixedMap: Map<string, string>) {
     for (const defSubNode of this.requirements) {
       if (defSubNode.type === LiTexNodeType.CallOptsNode) {
@@ -372,9 +331,24 @@ export class DefNode extends LiTeXNode {
 }
 
 export function getFreeToFixedMap(
-  templateNode: DefNode | InferNode,
+  templateNode: TemplateNode,
   calledOpt: CallOptNode
 ): Map<string, string> {
+  function relationBetweenStrArrArrays(
+    usedAsKey: string[][],
+    usedAsValue: string[][]
+  ): Map<string, string> {
+    const result = new Map<string, string>();
+
+    for (let i = 0; i < usedAsKey.length; i++) {
+      for (let j = 0; j < usedAsValue[i].length; j++) {
+        result.set(usedAsKey[i][j], usedAsValue[i][j]);
+      }
+    }
+
+    return result;
+  }
+
   try {
     if (!areStrArrStructureEqual(templateNode.params, calledOpt.optParams)) {
       throw Error("Invalid number of given arguments.");
@@ -392,8 +366,45 @@ export function getFixedNodeFromFreeFixMap(
   freeToFixedMap: Map<string, string>,
   freeCallOpt: CallOptNode
 ): CallOptNode {
+  function freeVarsToFixedVars(
+    strArrToChange: string[][],
+    relation: Map<string, string>
+  ): string[][] {
+    const result: string[][] = [];
+
+    for (const item of strArrToChange) {
+      const cur: string[] = [];
+      for (const subitem of item) {
+        cur.push(relation.get(subitem) as string);
+      }
+      result.push(cur);
+    }
+
+    return result;
+  }
+
   const node = new CallOptNode([]);
   node.optName = freeCallOpt.optName;
   node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, freeToFixedMap);
   return node;
+}
+
+export function areStrArrStructureEqual(
+  arr1: string[][],
+  arr2: string[][]
+): Boolean {
+  // Check if the outer arrays have the same length
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  // Check if each corresponding inner array has the same length
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i].length !== arr2[i].length) {
+      return false;
+    }
+  }
+
+  // If we've made it this far, the structures are equal
+  return true;
 }

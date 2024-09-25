@@ -2,13 +2,13 @@
 import {
   CallOptNode,
   CallOptsNode,
-  CanBeKnownNode,
-  canBeKnownNodeNames,
+  // CanBeKnownNode,
+  // canBeKnownNodeNames,
   CheckNode,
   InferNode,
   ExistNode,
-  FactExprNode,
-  FactsNode,
+  // FactExprNode,
+  // FactsNode,
   HaveNode,
   IffNode,
   KnowNode,
@@ -18,7 +18,7 @@ import {
   OrNode,
   ParamsColonFactExprsNode,
   // PropertyNode,
-  FactExprNodeNames,
+  // FactExprNodeNames,
   OnlyIfNode,
   IfNode,
   LetNode,
@@ -62,8 +62,6 @@ function handleParseError(tokens: string[], env: LiTeXEnv, message: string) {
   );
 }
 
-const ExprEndings = [";"];
-
 const stmtKeywords: { [key: string]: Function } = {
   ";": (env: LiTeXEnv, tokens: string[]) => {
     tokens.shift();
@@ -71,7 +69,6 @@ const stmtKeywords: { [key: string]: Function } = {
   infer: inferParse,
   know: knowParse,
   have: haveParse,
-  // property: propertyParse,
   exist: existParse,
   not: notParse,
   or: orParse,
@@ -79,7 +76,7 @@ const stmtKeywords: { [key: string]: Function } = {
   "=>": onlyIfParse,
   "<=": ifParse,
   inherit: inheritParse,
-  // let: letParse,
+  let: letParse,
   def: defParse,
 };
 
@@ -142,13 +139,13 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 
     skip(tokens, "know"); // skip know
     while (1) {
-      if (canBeKnownNodeNames.includes(tokens[0])) {
-        knowNode.facts.push(stmtKeywords[tokens[0]](env, tokens));
-      } else {
-        // called by know
-        const node = callOptParse(env, tokens);
-        knowNode.facts.push(node as CallOptNode);
-      }
+      // if (canBeKnownNodeNames.includes(tokens[0])) {
+      //   knowNode.facts.push(stmtKeywords[tokens[0]](env, tokens));
+      // } else {
+      // called by know
+      const node = callOptParse(env, tokens);
+      knowNode.facts.push(node as CallOptNode);
+      // }
 
       if (tokens[0] === ",") skip(tokens, ",");
       else break;
@@ -352,47 +349,19 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   }
 }
 
-// function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
-//   try {
-//     skip(tokens, "let");
-//     skip(tokens, "(");
-//     const node = paramsColonFactExprsParse(env, tokens);
-//     skip(tokens, ")"); // skip ;
-//     skip(tokens, ";");
-//     return new LetNode(node);
-//   } catch (error) {
-//     handleParseError(tokens, env, "let");
-//     throw error;
-//   }
-// }
-
-// function propertyParse(env: LiTeXEnv, tokens: string[]): PropertyNode {
-//   try {
-//     tokens.shift(); // skip "property"
-//     const declOptName = tokens.shift() as string;
-//     tokens.shift(); // skip '('
-
-//     const calledParams: string[] = [];
-//     if (!isCurToken(")", tokens)) {
-//       while (1) {
-//         calledParams.push(tokens.shift() as string);
-//         if (isCurToken(",", tokens)) tokens.shift();
-//         else if (isCurToken(")", tokens)) break;
-//       }
-//     }
-//     tokens.shift();
-//     const result = new PropertyNode(declOptName, calledParams);
-//     const block = blockParse(env, tokens);
-//     for (let i = 0; i < block.length; i++) {
-//       result.onlyIfExprs.push(block[i]);
-//     }
-
-//     return result;
-//   } catch (error) {
-//     handleParseError(tokens, env, "property");
-//     throw error;
-//   }
-// }
+function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
+  try {
+    skip(tokens, "let");
+    skip(tokens, "(");
+    const node = paramsColonFactExprsParse(env, tokens);
+    skip(tokens, ")"); // skip ;
+    skip(tokens, ";");
+    return new LetNode(node);
+  } catch (error) {
+    handleParseError(tokens, env, "let");
+    throw error;
+  }
+}
 
 function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
   try {
@@ -420,8 +389,16 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
 function notParse(env: LiTeXEnv, tokens: string[]): NotNode {
   try {
     skip(tokens, "not");
-    const block: LiTeXNode[] = blockParse(env, tokens);
-    return new NotNode(block);
+    const block: CallOptsNode[] = blockParse(env, tokens) as CallOptsNode[];
+    const notNode = new NotNode([]);
+
+    for (const value of block) {
+      for (const callOpt of value.nodes) {
+        notNode.exprs.push(callOpt);
+      }
+    }
+
+    return notNode;
   } catch (error) {
     handleParseError(tokens, env, "not");
     throw error;
@@ -461,7 +438,7 @@ function orParse(env: LiTeXEnv, tokens: string[]) {
     skip(tokens, "or"); // skip or
     const orNode = new OrNode();
     while (tokens[0] === "{") {
-      orNode.blocks.push(blockParse(env, tokens));
+      orNode.blocks.push(blockParse(env, tokens) as CallOptNode[]);
     }
     return orNode;
   } catch (error) {

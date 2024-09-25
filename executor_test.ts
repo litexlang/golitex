@@ -1,5 +1,3 @@
-import { result } from "lodash";
-import { LiTeXNode } from "./ast";
 import { LiTeXEnv } from "./env";
 import { nodeExec, ResultType } from "./executor";
 import { scan } from "./lexer";
@@ -89,20 +87,20 @@ const codes: string[] = [
   // "proof Prove(x,y: cond(x,y);) => {goal(x,y), goal2(x);} {...; ; }",
   // "by Prove(x,y) => next_is_right()",
   // "or set-or-number x: set(x), number(x);",
-  "// Test code for infer, know infer",
-  "infer IF-THEN(Q, P: F1(P), F2(Q);) {F1(Q);}",
-  "know F1(P), F2(Q);",
-  "know IF-THEN(Q,P);",
-  "F1(Q);",
-  "know IF-THEN(2,1);",
-  "// Test code for def",
-  "def bundle(x,y: P(x), Q(y););",
-  "know bundle(1,2);",
-  "bundle(1,2);",
-  "P(1);",
-  "know bundle(3,#2);",
-  "bundle(3,#1);",
-  "Q(#1);",
+  // "// Test code for infer, know infer",
+  // "infer IF-THEN(Q, P: F1(P), F2(Q);) {F1(Q);}",
+  // "know F1(P), F2(Q);",
+  // "know IF-THEN(Q,P);",
+  // "F1(Q);",
+  // "know IF-THEN(2,1);",
+  // "// Test code for def",
+  // "def bundle(x,y: P(x), Q(y););",
+  // "know bundle(1,2);",
+  // "bundle(1,2);",
+  // "P(1);",
+  // "know bundle(3,#2);",
+  // "bundle(3,#1);",
+  // "Q(#1);",
   "// Start from one axiom, get followings",
   "infer Axiom(x,y: P(x), Q(y);) { Thm1(x,y); Thm2(x,y);}",
   "know P(#x), Q(#2), Axiom(#ha,#y);",
@@ -110,7 +108,7 @@ const codes: string[] = [
   "Thm1(#0, #1);",
   "Thm3(#x, #3);",
   "// know onlyif",
-  "know => Axiom(#x,#y) {Thm4(#y,#x);} ;",
+  // "know => Axiom(#x,#y) {Thm4(#y,#x);} ;",
   // "Axiom(#x, #2);",
 ];
 
