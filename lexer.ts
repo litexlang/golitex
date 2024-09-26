@@ -1,4 +1,4 @@
-export const specialChars = ["(", ")", "{", "}", ":", ",", ";", "|"];
+export const specialChars = ["(", ")", "{", "}", ":", ",", ";", "|", "@"];
 
 export function scan(text: string): string[] {
   const tokens: string[] = [];

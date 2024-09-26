@@ -37,6 +37,18 @@ export class LiTeXNode {
 }
 const NullNode = new LiTeXNode();
 
+export function makeCallOptNode(
+  optName: string,
+  optParams: string[][],
+  optNameAsLst: string[]
+) {
+  const node = new CallOptNode([]);
+  node.optName = optName;
+  node.optParams = optParams;
+  node.optNameAsLst = optNameAsLst;
+  return node;
+}
+
 export class CallOptNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptNode;
   optName: string = "";

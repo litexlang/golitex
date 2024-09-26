@@ -15,6 +15,7 @@ import {
   getFreeToFixedMap,
   FactNode,
   CanBeKnownNode,
+  makeCallOptNode,
   // OnlyIfFactNode,
 } from "./ast";
 import { FactAboutGivenOpt, LiTeXEnv } from "./env";
@@ -73,14 +74,14 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultType {
       return ResultType.Unknown;
     }
 
-    switch (env.optType(node.nodes[i].optName)) {
-      case LiTexNodeType.DefNode:
-        knowDefCallOptExec(env, node.nodes[i]);
-        break;
-      case LiTexNodeType.InferNode:
-        knowInferCallOptExec(env, node.nodes[i]);
-        break;
-    }
+    // switch (env.optType(node.nodes[i].optName)) {
+    //   case LiTexNodeType.DefNode:
+    //     knowDefCallOptExec(env, node.nodes[i]);
+    //     break;
+    // case LiTexNodeType.InferNode:
+    //   knowInferCallOptExec(env, node.nodes[i]);
+    //   break;
+    // }
   }
 
   return ResultType.True;
@@ -130,10 +131,21 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
         result = knowCallOptExec(env, curNode as CallOptNode);
         if (result !== ResultType.True) return result;
         break;
+      // When knowing def and infer, we not only emit them into env.defs/infers, we also store facts
+      case LiTexNodeType.DefNode:
+        result = knowDefExec(env, curNode as DefNode);
+        if (result !== ResultType.KnowTrue) return result;
+        break;
+      case LiTexNodeType.InferNode:
+        result = knowInferExec(env, curNode as InferNode);
+        if (result !== ResultType.KnowTrue) return result;
+        break;
       // case LiTexNodeType.OnlyIfFactNode:
       //   result = knowOnlyIfFactExec(env, curNode as OnlyIfFactNode);
       //   if (result !== ResultType.True) return result;
       //   break;
+      default:
+        return ResultType.Error;
     }
   }
   return ResultType.True;
@@ -142,6 +154,23 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
 // function knowOnlyIfFactExec(env: LiTeXEnv, node: OnlyIfFactNode): ResultType {
 //   return ResultType.True;
 // }
+function knowDefExec(env: LiTeXEnv, node: DefNode): ResultType {
+  defExec(env, node);
+  knowCallOptExec(
+    env,
+    makeCallOptNode(node.declOptName, node.params, node.declOptName.split("::"))
+  );
+  return ResultType.KnowTrue;
+}
+
+function knowInferExec(env: LiTeXEnv, node: InferNode): ResultType {
+  inferExec(env, node);
+  knowCallOptExec(
+    env,
+    makeCallOptNode(node.declOptName, node.params, node.declOptName.split("::"))
+  );
+  return ResultType.KnowTrue;
+}
 
 function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
   switch (env.optType(node.optName)) {
@@ -154,7 +183,7 @@ function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
       break;
   }
   env.newFact(node);
-  return ResultType.True;
+  return ResultType.KnowTrue;
 }
 
 function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {

@@ -127,7 +127,9 @@ const codes: string[] = [
   // "know fun(#x) => {fun2(#x); };",
   // "def fun(x: set(x)) => {Set(x);}",
   // "@ : func(x) ;",
-  ": fun(x|set(x)) => {set(x);}",
+  // ": fun(x|set(x)) => {set(x);}",
+  "@: fun(#x,#y);",
+  "fun(2,3);",
 ];
 
 function testLexer() {

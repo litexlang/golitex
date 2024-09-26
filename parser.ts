@@ -166,6 +166,7 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
         case "def":
           node = defParse(env, tokens);
           knowNode.facts.push(node as TemplateNode);
+          break;
         default:
           node = factParse(env, tokens);
           knowNode.facts.push(node as FactNode);
@@ -514,6 +515,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
       );
       (result as InferNode).onlyIfExprs = block;
     } else {
+      // should not add ";" as ending, because know def already has ; as ending of know
       result = new DefNode(
         declOptName,
         curFreeVars,
