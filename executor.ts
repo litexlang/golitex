@@ -31,28 +31,8 @@ export enum ResultType {
   Error,
 }
 
-function getErrorInfo(s: string = ""): ResultInfoType {
-  return { type: ResultType.Error, message: s };
-}
-
-function getTrueInfo(s: string = ""): ResultInfoType {
-  return { type: ResultType.True, message: s };
-}
-
-function getKnowTrueInfo(s: string = ""): ResultInfoType {
-  return { type: ResultType.KnowTrue, message: s };
-}
-
-function getDefTrueInfo(s: string = ""): ResultInfoType {
-  return { type: ResultType.DefTrue, message: s };
-}
-
-function getFalseInfo(s: string = ""): ResultInfoType {
-  return { type: ResultType.False, message: s };
-}
-
-function getUnknownInfo(s: string = ""): ResultInfoType {
-  return { type: ResultType.Unknown, message: s };
+function getInfo(t: ResultType, s: string = ""): ResultInfoType {
+  return { type: t, message: s };
 }
 
 export type ResultInfoType = { type: ResultType; message: string };
@@ -82,7 +62,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ResultInfoType {
       return defExec(env, node as DefNode);
   }
 
-  return getErrorInfo("");
+  return getInfo(ResultType.Error, "");
 }
 
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultInfoType {
@@ -98,7 +78,7 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultInfoType {
     }
 
     if (!env.isCallOptFact(node.nodes[i])) {
-      return getUnknownInfo();
+      return getInfo(ResultType.Unknown);
     }
 
     // switch (env.optType(node.nodes[i].optName)) {
@@ -111,7 +91,7 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ResultInfoType {
     // }
   }
 
-  return getTrueInfo();
+  return getInfo(ResultType.True);
 }
 
 function inferExec(
@@ -135,10 +115,10 @@ function inferExec(
       env.infers.set(fatherName + node.declOptName, node);
     }
 
-    return getTrueInfo();
+    return getInfo(ResultType.True);
   } catch (error) {
     catchRuntimeError(env, error, "infer");
-    return getUnknownInfo();
+    return getInfo(ResultType.Unknown);
   }
 }
 
@@ -172,14 +152,14 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultInfoType {
       //   if (result !== ResultType.True) return result;
       //   break;
       default:
-        return getErrorInfo("");
+        return getInfo(ResultType.Error, "");
     }
   }
-  return getTrueInfo();
+  return getInfo(ResultType.True);
 }
 
 // function knowOnlyIfFactExec(env: LiTeXEnv, node: OnlyIfFactNode): ResultInfoType{
-//   return getTrueInfo();
+//   return getInfo(ResultType.True);
 // }
 function knowDefExec(env: LiTeXEnv, node: DefNode): ResultInfoType {
   defExec(env, node);
@@ -187,7 +167,7 @@ function knowDefExec(env: LiTeXEnv, node: DefNode): ResultInfoType {
     env,
     makeCallOptNode(node.declOptName, node.params, node.declOptName.split("::"))
   );
-  return getKnowTrueInfo();
+  return getInfo(ResultType.KnowTrue);
 }
 
 function knowInferExec(env: LiTeXEnv, node: InferNode): ResultInfoType {
@@ -196,21 +176,21 @@ function knowInferExec(env: LiTeXEnv, node: InferNode): ResultInfoType {
     env,
     makeCallOptNode(node.declOptName, node.params, node.declOptName.split("::"))
   );
-  return getKnowTrueInfo();
+  return getInfo(ResultType.KnowTrue);
 }
 
 function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultInfoType {
   switch (env.optType(node.optName)) {
     case LiTexNodeType.InferNode:
       const result = knowInferCallOptExec(env, node);
-      if (result === ResultType.Unknown) return getUnknownInfo();
+      if (result === ResultType.Unknown) return getInfo(ResultType.Unknown);
       break;
     case LiTexNodeType.DefNode:
       knowDefCallOptExec(env, node);
       break;
   }
   env.newFact(node);
-  return getKnowTrueInfo();
+  return getInfo(ResultType.KnowTrue);
 }
 
 function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
@@ -232,7 +212,7 @@ function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
     relatedInferNode.emitOnlyIfs(env, freeToFixedMap);
   } catch (error) {
     catchRuntimeError(env, error, "know infer");
-    return getErrorInfo("");
+    return getInfo(ResultType.Error, "");
   }
 }
 
@@ -249,7 +229,7 @@ function letExec(env: LiTeXEnv, node: LetNode): ResultInfoType {
     return knowExec(env, node);
   } catch (error) {
     catchRuntimeError(env, error, "let");
-    return getErrorInfo("");
+    return getInfo(ResultType.Error, "");
   }
 }
 
@@ -257,10 +237,10 @@ function defExec(env: LiTeXEnv, node: DefNode): ResultInfoType {
   try {
     env.defs.set(node.declOptName, node);
 
-    return getDefTrueInfo();
+    return getInfo(ResultType.DefTrue);
   } catch (error) {
     catchRuntimeError(env, error, "def");
-    return getErrorInfo("");
+    return getInfo(ResultType.Error, "");
   }
 }
 
@@ -269,5 +249,5 @@ function knowDefCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultInfoType {
 
   const freeToFixedMap: Map<string, string> = getFreeToFixedMap(defNode, node);
   defNode.emitOnlyIfs(env, freeToFixedMap);
-  return getTrueInfo();
+  return getInfo(ResultType.True);
 }
