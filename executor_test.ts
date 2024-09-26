@@ -1,5 +1,5 @@
 import { LiTeXEnv } from "./env";
-import { nodeExec, ResultType } from "./executor";
+import { nodeExec, ResultInfoType, ResultType } from "./executor";
 import { scan } from "./lexer";
 import { LiTeXStmtsParse } from "./parser";
 
@@ -48,8 +48,8 @@ function callOptsExecTest() {
       }
     } else {
       for (let i = 0; i < result.length; i++) {
-        const res: ResultType = nodeExec(env, result[i]);
-        console.log(resultTypeToString(res));
+        const res: ResultInfoType = nodeExec(env, result[i]);
+        console.log(resultTypeToString(res.type));
       }
     }
   }
