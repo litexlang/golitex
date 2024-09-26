@@ -24,7 +24,7 @@ import {
   LetNode,
   DefNode,
   FactNode,
-  OnlyIfFactNode,
+  // OnlyIfFactNode,
   TemplateNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
@@ -156,12 +156,20 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 
     skip(tokens, KnowTypeKeywords); // skip know
     while (1) {
+      let node: LiTeXNode;
       // if (canBeKnownNodeNames.includes(tokens[0])) {
       //   knowNode.facts.push(stmtKeywords[tokens[0]](env, tokens));
       // } else {
       // called by know
-      const node = factParse(env, tokens);
-      knowNode.facts.push(node);
+      switch (tokens[0]) {
+        case ":":
+        case "def":
+          node = defParse(env, tokens);
+          knowNode.facts.push(node as TemplateNode);
+        default:
+          node = factParse(env, tokens);
+          knowNode.facts.push(node as FactNode);
+      }
       // }
 
       if (tokens[0] === ",") skip(tokens, ",");
@@ -181,7 +189,7 @@ function getParams(tokens: string[]): string[] {
     for (let i = 0; i < tokens.length; i++) {
       params.push(tokens[i] as string);
       if (tokens[i + 1] === ",") i++;
-      else if (tokens[i + 1] === ":") break;
+      else if (tokens[i + 1] === "|") break;
       else if (tokens[i + 1] === ")") break;
       else throw Error("infer parameters");
     }
@@ -235,12 +243,12 @@ function paramsColonFactExprsParse(
     while (1) {
       params.push(tokens.shift() as string);
       if (tokens[0] === ",") tokens.shift();
-      else if (tokens[0] === ":") break;
+      else if (tokens[0] === "|") break;
       else if (tokens[0] === ")") break;
       else throw Error("infer parameters");
     }
     if (!(tokens[0] === ")")) {
-      skip(tokens, ":"); // skip :
+      skip(tokens, "|"); // skip :
       while (!(tokens[0] === ")")) {
         const node = callOptParse(env, tokens);
         // const node = LiTexStmtParse(env, tokens);
@@ -525,14 +533,14 @@ function defParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
 function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
   try {
     const left = callOptParse(env, tokens);
-    if (tokens[0] !== "=>") {
-      return left;
-    } else {
-      skip(tokens, "=>");
-      const right = blockParse(env, tokens) as CallOptNode[];
-      const fact = new OnlyIfFactNode(left, right);
-      return fact;
-    }
+    //  else {
+    //   skip(tokens, "=>");
+    //   const right = blockParse(env, tokens) as CallOptNode[];
+    //   const fact = new OnlyIfFactNode(left, right);
+    //   return fact;
+    // }
+
+    return left;
   } catch (error) {
     handleParseError(tokens, env, "fact");
     throw error;

@@ -19,9 +19,9 @@ const codes: string[] = [
   // "Thm1(#0, #1);",
   // "Thm3(#x, #3);",
   "// @ is used as know",
-  ": Axiom(x,y: P(x), Q(y)) => {Thm1(x,y), Thm2(x,y);}",
+  ": Axiom(x,y| P(x), Q(y)) => {Thm1(x,y), Thm2(x,y);}",
   "@ P(#x), Q(#2), Axiom(#ha,#y);",
-  ": Thm1(x,y: Thm2(x,y)) => {Thm3(x,y);}",
+  ": Thm1(x,y| Thm2(x,y)) => {Thm3(x,y);}",
   "Thm1(#0, #1);",
   "Thm3(#x, #3);",
 ];

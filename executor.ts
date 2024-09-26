@@ -14,7 +14,8 @@ import {
   DefNode,
   getFreeToFixedMap,
   FactNode,
-  OnlyIfFactNode,
+  CanBeKnownNode,
+  // OnlyIfFactNode,
 } from "./ast";
 import { FactAboutGivenOpt, LiTeXEnv } from "./env";
 import { builtInCallOptNames } from "./executor_builtins";
@@ -114,7 +115,7 @@ function inferExec(
 }
 
 function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
-  let facts: FactNode[] = [];
+  let facts: CanBeKnownNode[] = [];
   if (node.type === LiTexNodeType.KnowNode) {
     facts = (node as KnowNode).facts;
   } else if (node.type === LiTexNodeType.LetNode) {
@@ -122,25 +123,25 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ResultType {
   }
 
   for (let i = 0; i < facts.length; i++) {
-    const curNode: FactNode = facts[i];
+    const curNode: CanBeKnownNode = facts[i];
     let result: ResultType = ResultType.Unknown;
     switch (curNode.type) {
       case LiTexNodeType.CallOptNode:
         result = knowCallOptExec(env, curNode as CallOptNode);
         if (result !== ResultType.True) return result;
         break;
-      case LiTexNodeType.OnlyIfFactNode:
-        result = knowOnlyIfFactExec(env, curNode as OnlyIfFactNode);
-        if (result !== ResultType.True) return result;
-        break;
+      // case LiTexNodeType.OnlyIfFactNode:
+      //   result = knowOnlyIfFactExec(env, curNode as OnlyIfFactNode);
+      //   if (result !== ResultType.True) return result;
+      //   break;
     }
   }
   return ResultType.True;
 }
 
-function knowOnlyIfFactExec(env: LiTeXEnv, node: OnlyIfFactNode): ResultType {
-  return ResultType.True;
-}
+// function knowOnlyIfFactExec(env: LiTeXEnv, node: OnlyIfFactNode): ResultType {
+//   return ResultType.True;
+// }
 
 function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ResultType {
   switch (env.optType(node.optName)) {

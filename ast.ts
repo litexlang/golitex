@@ -68,20 +68,20 @@ export class CallOptNode extends LiTeXNode {
   }
 }
 
-export class OnlyIfFactNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.OnlyIfFactNode;
-  // notice ifNode and onlyIfs can not be OnlyIfFactNode itself.
-  ifNode: CallOptNode;
-  onlyIfs: CallOptNode[];
+// export class OnlyIfFactNode extends LiTeXNode {
+//   type: LiTexNodeType = LiTexNodeType.OnlyIfFactNode;
+//   // notice ifNode and onlyIfs can not be OnlyIfFactNode itself.
+//   ifNode: CallOptNode;
+//   onlyIfs: CallOptNode[];
 
-  constructor(ifNode: CallOptNode, onlyIfs: CallOptNode[]) {
-    super();
-    this.ifNode = ifNode;
-    this.onlyIfs = onlyIfs;
-  }
-}
+//   constructor(ifNode: CallOptNode, onlyIfs: CallOptNode[]) {
+//     super();
+//     this.ifNode = ifNode;
+//     this.onlyIfs = onlyIfs;
+//   }
+// }
 
-export type FactNode = CallOptNode | OnlyIfFactNode;
+export type FactNode = CallOptNode; // | OnlyIfFactNode;
 
 export class InferNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
@@ -133,9 +133,10 @@ export class InferNode extends LiTeXNode {
   }
 }
 
+export type CanBeKnownNode = FactNode | InferNode | DefNode;
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
-  facts: FactNode[] = [];
+  facts: CanBeKnownNode[] = [];
 }
 
 export class HaveNode extends LiTeXNode {
