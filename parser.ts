@@ -2,29 +2,17 @@
 import {
   CallOptNode,
   CallOptsNode,
-  // CanBeKnownNode,
-  // canBeKnownNodeNames,
-  CheckNode,
   InferNode,
   ExistNode,
-  // FactExprNode,
-  // FactsNode,
   HaveNode,
-  // IffNode,
   KnowNode,
   LiTeXNode,
-  LiTexNodeType,
   NotNode,
   OrNode,
-  ParamsColonFactExprsNode,
-  // PropertyNode,
-  // FactExprNodeNames,
-  // OnlyIfNode,
-  // IfNode,
+  FreeVarsWithFactsNode,
   LetNode,
   DefNode,
   FactNode,
-  // OnlyIfFactNode,
   TemplateNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
@@ -78,20 +66,15 @@ function handleParseError(tokens: string[], env: LiTeXEnv, message: string) {
 }
 
 const stmtKeywords: { [key: string]: Function } = {
-  ";": (env: LiTeXEnv, tokens: string[]) => {
+  ";": (tokens: string[]) => {
     tokens.shift();
   },
-  infer: inferParse,
   know: knowParse,
   "@": knowParse,
   have: haveParse,
   exist: existParse,
   not: notParse,
   or: orParse,
-  // "<=>": iffParse,
-  // "=>": onlyIfParse,
-  // "<=": ifParse,
-  inherit: inheritParse,
   let: letParse,
   def: templateParse,
   ":": templateParse,
@@ -120,28 +103,21 @@ export function LiTexStmtParse(
   env: LiTeXEnv,
   tokens: string[]
 ): LiTeXNode | null {
-  // env.setSnapShot();
-
   try {
     const func = stmtKeywords[tokens[0]];
     const funcName = tokens[0];
     if (func) {
       const node = func(env, tokens);
       if (KnowTypeKeywords.includes(funcName)) {
-        skip(tokens, ";"); // skip ;
+        skip(tokens, ";");
       }
       if (node) {
-        // env.returnToSnapShot();
         return node;
       } else {
-        // env.returnToSnapShot();
         return null;
       }
     } else {
       const node = callOptsParse(env, tokens);
-      // tokens.shift();
-
-      // env.returnToSnapShot();
       return node;
     }
   } catch (error) {
@@ -154,13 +130,9 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
   try {
     const knowNode: KnowNode = new KnowNode();
 
-    skip(tokens, KnowTypeKeywords); // skip know
+    skip(tokens, KnowTypeKeywords);
     while (1) {
       let node: LiTeXNode;
-      // if (canBeKnownNodeNames.includes(tokens[0])) {
-      //   knowNode.facts.push(stmtKeywords[tokens[0]](env, tokens));
-      // } else {
-      // called by know
       switch (tokens[0]) {
         case ":":
         case "def":
@@ -171,7 +143,6 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
           node = factParse(env, tokens);
           knowNode.facts.push(node as FactNode);
       }
-      // }
 
       if (tokens[0] === ",") skip(tokens, ",");
       else break;
@@ -184,59 +155,10 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
   }
 }
 
-function getParams(tokens: string[]): string[] {
-  const params: string[] = [];
-  if (!(tokens[0] === ")")) {
-    for (let i = 0; i < tokens.length; i++) {
-      params.push(tokens[i] as string);
-      if (tokens[i + 1] === ",") i++;
-      else if (tokens[i + 1] === "|") break;
-      else if (tokens[i + 1] === ")") break;
-      else throw Error("infer parameters");
-    }
-  }
-  return params;
-}
-
-function inferParse(env: LiTeXEnv, tokens: string[]): InferNode {
-  const snapShot = env.getSnapShot();
-
-  try {
-    tokens.shift(); // skip "infer" or fatherDefName
-    const declOptName = tokens.shift() as string;
-    skip(tokens, "("); // skip '('
-
-    const curFreeVars = [...env.fatherFreeVars, getParams(tokens)];
-    env.fatherFreeVars = curFreeVars;
-
-    const paramsColonFactExprsNode = paramsColonFactExprsParse(env, tokens);
-
-    skip(tokens, ")"); // skip ")"
-
-    const result = new InferNode(
-      declOptName,
-      curFreeVars,
-      paramsColonFactExprsNode.properties
-    );
-
-    const block = blockParse(env, tokens);
-    for (let i = 0; i < block.length; i++) {
-      result.onlyIfExprs.push(block[i]);
-    }
-
-    env.returnToSnapShot(snapShot);
-    return result;
-  } catch (error) {
-    handleParseError(tokens, env, "infer");
-    env.returnToSnapShot(snapShot);
-    throw error;
-  }
-}
-
-function paramsColonFactExprsParse(
+function freeVarsAndTheirFactsParse(
   env: LiTeXEnv,
   tokens: string[]
-): ParamsColonFactExprsNode {
+): FreeVarsWithFactsNode {
   const params: string[] = [];
   const requirements: CallOptNode[] = [];
 
@@ -261,10 +183,8 @@ function paramsColonFactExprsParse(
     }
   }
 
-  return new ParamsColonFactExprsNode(params, requirements);
+  return new FreeVarsWithFactsNode(params, requirements);
 }
-
-// called by know
 
 function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
   try {
@@ -284,51 +204,6 @@ function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
     throw error;
   }
 }
-
-// function iffParse(env: LiTeXEnv, tokens: string[]): IffNode {
-//   try {
-//     skip(tokens, "<=>");
-//     const left = callOptParse(env, tokens);
-//     const right = callOptParse(env, tokens);
-//     const result = new IffNode(left, right);
-
-//     // tokens.shift(); // skip ;
-//     return result;
-//   } catch (error) {
-//     handleParseError(tokens, env, "<=>");
-//     throw error;
-//   }
-// }
-
-// function onlyIfParse(env: LiTeXEnv, tokens: string[]): OnlyIfNode {
-//   try {
-//     skip(tokens, "=>");
-//     const left = callOptParse(env, tokens);
-
-//     const right = blockParse(env, tokens);
-
-//     const result = new OnlyIfNode(left, right as CallOptsNode[]);
-//     // tokens.shift(); // skip ;
-//     return result;
-//   } catch (error) {
-//     handleParseError(tokens, env, "=>");
-//     throw error;
-//   }
-// }
-
-// function ifParse(env: LiTeXEnv, tokens: string[]): IfNode {
-//   try {
-//     skip(tokens, "<=");
-//     const left = blockParse(env, tokens);
-//     const right = callOptParse(env, tokens);
-//     const result = new IfNode(left as CallOptsNode[], right);
-//     // tokens.shift(); // skip ;
-//     return result;
-//   } catch (error) {
-//     handleParseError(tokens, env, "<=");
-//     throw error;
-//   }
-// }
 
 function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
   try {
@@ -367,7 +242,7 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
     skip(tokens, "have");
     // ! needs to put the following shift into paramsColonParse
     skip(tokens, "("); // skip ()
-    const node = paramsColonFactExprsParse(env, tokens);
+    const node = freeVarsAndTheirFactsParse(env, tokens);
     skip(tokens, ")");
     skip(tokens, ";");
     return new HaveNode(node);
@@ -381,7 +256,7 @@ function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   try {
     skip(tokens, "let");
     skip(tokens, "(");
-    const node = paramsColonFactExprsParse(env, tokens);
+    const node = freeVarsAndTheirFactsParse(env, tokens);
     skip(tokens, ")"); // skip ;
     skip(tokens, ";");
     return new LetNode(node);
@@ -397,14 +272,14 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
     const declOptName = tokens.shift() as string;
     skip(tokens, "("); // skip '('
 
-    const paramsColonFactExprsNode = paramsColonFactExprsParse(env, tokens);
+    const FreeVarsWithFactsNode = freeVarsAndTheirFactsParse(env, tokens);
 
     skip(tokens, ")"); // skip )
 
     const result = new ExistNode(
       declOptName,
-      paramsColonFactExprsNode.params,
-      paramsColonFactExprsNode.properties
+      FreeVarsWithFactsNode.params,
+      FreeVarsWithFactsNode.properties
     );
 
     return result;
@@ -451,7 +326,6 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
       }
     }
 
-    // in current version, callOpt must end with ;
     skip(tokens, ";");
 
     return new CallOptsNode(callOpts);
@@ -463,7 +337,7 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
 
 function orParse(env: LiTeXEnv, tokens: string[]) {
   try {
-    skip(tokens, "or"); // skip or
+    skip(tokens, "or");
     const orNode = new OrNode();
     while (tokens[0] === "{") {
       orNode.blocks.push(blockParse(env, tokens) as CallOptNode[]);
@@ -475,21 +349,21 @@ function orParse(env: LiTeXEnv, tokens: string[]) {
   }
 }
 
-function inheritParse(env: LiTeXEnv, tokens: string[]): InferNode {
-  try {
-    skip(tokens, "inherit");
-    const father = tokens[0];
-    const result = inferParse(env, tokens);
-    result.father = father;
-
-    return result;
-  } catch (error) {
-    catchParseError(tokens, env, error, "inherit");
-    throw error;
-  }
-}
-
 function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
+  function getParamsFromSymbolFactsStmt(tokens: string[]): string[] {
+    const params: string[] = [];
+    if (!(tokens[0] === ")")) {
+      for (let i = 0; i < tokens.length; i++) {
+        params.push(tokens[i] as string);
+        if (tokens[i + 1] === ",") i++;
+        else if (tokens[i + 1] === "|") break;
+        else if (tokens[i + 1] === ")") break;
+        else throw Error("infer parameters");
+      }
+    }
+    return params;
+  }
+
   const snapShot = env.getSnapShot();
 
   try {
@@ -497,10 +371,13 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
     const declOptName = shiftVar(tokens);
     skip(tokens, "(");
 
-    const curFreeVars = [...env.fatherFreeVars, getParams(tokens)];
+    const curFreeVars = [
+      ...env.fatherFreeVars,
+      getParamsFromSymbolFactsStmt(tokens),
+    ];
     env.fatherFreeVars = curFreeVars;
 
-    const paramsColonFactExprsNode = paramsColonFactExprsParse(env, tokens);
+    const FreeVarsWithFactsNode = freeVarsAndTheirFactsParse(env, tokens);
 
     skip(tokens, ")");
 
@@ -511,16 +388,14 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
       result = new InferNode(
         declOptName,
         curFreeVars,
-        paramsColonFactExprsNode.properties
+        FreeVarsWithFactsNode.properties
       );
       (result as InferNode).onlyIfExprs = block;
     } else {
-      // should not add ";" as ending, because know def already has ; as ending of know
-
       result = new DefNode(
         declOptName,
         curFreeVars,
-        paramsColonFactExprsNode.properties
+        FreeVarsWithFactsNode.properties
       );
 
       if (tokens[0] === "{") {
@@ -541,12 +416,6 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
 function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
   try {
     const left = callOptParse(env, tokens);
-    //  else {
-    //   skip(tokens, "=>");
-    //   const right = blockParse(env, tokens) as CallOptNode[];
-    //   const fact = new OnlyIfFactNode(left, right);
-    //   return fact;
-    // }
 
     return left;
   } catch (error) {

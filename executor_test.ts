@@ -1,5 +1,5 @@
 import { LiTeXEnv } from "./env";
-import { nodeExec, ResultInfoType, ResultType } from "./executor";
+import { nodeExec, ExecInfo, ResultType } from "./executor";
 import { scan } from "./lexer";
 import { LiTeXStmtsParse } from "./parser";
 
@@ -24,12 +24,13 @@ const codes: string[] = [
   // ": Thm1(x,y| Thm2(x,y)) => {Thm3(x,y);}",
   // "Thm1(#0, #1);",
   // "Thm3(#x, #3);",
-  // "// know and declare at the same time",
-  // "@: fun(#x,3);",
-  // "fun(2,1);",
-  // "@: deduce(#x,#y) => { corollary(#y,#x);};",
-  // "deduce(1,2);",
-  // "corollary(2,1);",
+  "// know and declare at the same time",
+  "@: fun(#x,3);",
+  "fun(2,1);",
+  "fun(3,3);",
+  "@: deduce(#x,#y) => { corollary(#y,#x);};",
+  "deduce(1,2);",
+  "corollary(2,1);",
   "// declare subTemplate in template",
   ": fun(x,y) {: subFun(y)}",
   "@ fun(#x, #y)::fun3(#x);",
@@ -48,7 +49,7 @@ function callOptsExecTest() {
       }
     } else {
       for (let i = 0; i < result.length; i++) {
-        const res: ResultInfoType = nodeExec(env, result[i]);
+        const res: ExecInfo = nodeExec(env, result[i]);
         console.log(resultTypeToString(res.type));
       }
     }

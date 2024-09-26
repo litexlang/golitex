@@ -17,7 +17,7 @@ export enum LiTexNodeType {
   FactsNode,
   InferNode,
   HaveNode,
-  ParamsColonFactExprsNode,
+  FreeVarsWithFactsNode,
   PropertyNode,
   CheckNode,
   CallOptWithColonColonNode,
@@ -156,15 +156,15 @@ export class HaveNode extends LiTeXNode {
   params: string[];
   properties: CallOptNode[];
 
-  constructor(node: ParamsColonFactExprsNode) {
+  constructor(node: FreeVarsWithFactsNode) {
     super();
     this.params = node.params;
     this.properties = node.properties;
   }
 }
 
-export class ParamsColonFactExprsNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.ParamsColonFactExprsNode;
+export class FreeVarsWithFactsNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.FreeVarsWithFactsNode;
   params: string[];
   properties: CallOptNode[];
 
@@ -231,7 +231,7 @@ export class LetNode extends LiTeXNode {
   params: string[];
   properties: CallOptNode[];
 
-  constructor(node: ParamsColonFactExprsNode) {
+  constructor(node: FreeVarsWithFactsNode) {
     super();
     this.params = node.params;
     this.properties = node.properties;
