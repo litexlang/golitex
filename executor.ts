@@ -108,10 +108,10 @@ function inferExec(
 
     let sonNamePrefix: string = "";
     if (fatherName === "") {
-      sonNamePrefix = node.declOptName + "::";
+      sonNamePrefix = node.declOptName + ":";
       env.infers.set(node.declOptName, node);
     } else {
-      sonNamePrefix = fatherName + node.declOptName + "::";
+      sonNamePrefix = fatherName + node.declOptName + ":";
       env.infers.set(fatherName + node.declOptName, node);
     }
 
@@ -165,7 +165,7 @@ function knowDefExec(env: LiTeXEnv, node: DefNode): ExecInfo {
   defExec(env, node);
   knowCallOptExec(
     env,
-    makeCallOptNode(node.declOptName, node.params, node.declOptName.split("::"))
+    makeCallOptNode(node.declOptName, node.params, node.declOptName.split(":"))
   );
   return info(ResultType.KnowTrue);
 }
@@ -174,7 +174,7 @@ function knowInferExec(env: LiTeXEnv, node: InferNode): ExecInfo {
   inferExec(env, node);
   knowCallOptExec(
     env,
-    makeCallOptNode(node.declOptName, node.params, node.declOptName.split("::"))
+    makeCallOptNode(node.declOptName, node.params, node.declOptName.split(":"))
   );
   return info(ResultType.KnowTrue);
 }

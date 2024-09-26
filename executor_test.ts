@@ -33,9 +33,9 @@ const codes: string[] = [
   "corollary(2,1);",
   "// declare subTemplate in template",
   ": fun(x,y) {: subFun(y)}",
-  "@ fun(#x, #y)::fun3(#x);",
-  "@ fun(#x, #y)::fun4(#x);",
-  "fun(1,2)::fun3(3);",
+  "@ fun(#x, #y):fun3(#x);",
+  "@ fun(#x, #y):fun4(#x);",
+  "fun(1,2):fun3(3);",
 ];
 
 function callOptsExecTest() {

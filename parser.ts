@@ -223,8 +223,8 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
 
       opts.push([name, params]);
 
-      if (isCurToken("::", tokens)) {
-        skip(tokens, "::");
+      if (isCurToken(":", tokens)) {
+        skip(tokens, ":");
       } else {
         break;
       }

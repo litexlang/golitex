@@ -30,7 +30,7 @@ export function scan(text: string): string[] {
         tokens.push(currentToken);
         currentToken = "";
       }
-      tokens.push("::");
+      tokens.push(":");
       i++;
       continue;
     }

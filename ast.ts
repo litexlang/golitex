@@ -57,7 +57,7 @@ export class CallOptNode extends LiTeXNode {
 
   constructor(opts: [string, string[]][]) {
     super();
-    this.optName = opts.map((e) => e[0]).join("::");
+    this.optName = opts.map((e) => e[0]).join(":");
     this.optParams = opts.map((e) => e[1]);
     this.optNameAsLst = opts.map((e) => e[0]);
   }
@@ -69,11 +69,11 @@ export class CallOptNode extends LiTeXNode {
   }
 
   // paramsLst(): string[] {
-  //   return this.optName.split("::");
+  //   return this.optName.split(":");
   // }
 
   pushNewNameParamsPair(pair: [string, string[]]) {
-    if (this.optName !== "") this.optName += "::" + pair[0];
+    if (this.optName !== "") this.optName += ":" + pair[0];
     else this.optName += pair[0];
 
     this.optParams.push(pair[1]);

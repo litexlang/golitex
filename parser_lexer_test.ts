@@ -5,14 +5,14 @@ import { LiTeXStmtsParse } from "./parser";
 import { LiTeXNode } from "./ast";
 
 // ! know should have different kinds of endings
-// ! should able to call subset::p(A,B)(x)
+// ! should able to call subset:p(A,B)(x)
 //   ! know infer when used as para, there are so many ; needs refactor
 // !
 const codes: string[] = [
-  // "set(a)::set(b);",
+  // "set(a):set(b);",
   // "infer a(x: infer p(y: set(s);) {  infer p2(yy: set(yy);) {}  } ) {}",
   // "infer a(x: set(x);) {}",
-  // "set(a)::set(b);",
+  // "set(a):set(b);",
   // "set(a), set(b);", //! strange but works
   // "infer p(x: string(x);) {}", //! I think () here is unnecessary. if I abandon it, I no longer have to adopt sophisticated isEnd
   // "know infer p(x: string(x);) {}, set(a);",
@@ -131,14 +131,14 @@ const codes: string[] = [
   // "@: fun(#x,#y);",
   // "fun(2,3);",
   ": fun(x,y) {: fun2(x,y) ; : fun3(y)}",
-  // "@ fun(#x, #y)::fun3(#x);",
-  // "@ fun(#x, #y)::fun4(#x);",
-  // "fun(1,2)::fun3(3);",
+  // "@ fun(#x, #y):fun3(#x);",
+  // "@ fun(#x, #y):fun4(#x);",
+  // "fun(1,2):fun3(3);",
 ];
 
 function testLexer() {
   // const fileContent: string = readFileSync("example_914.txt", "utf-8");
-  const fileContent = "set(1,2)::setA(3,4);";
+  const fileContent = "set(1,2):setA(3,4);";
   const tokens = scan(fileContent);
   console.log(tokens);
 }
