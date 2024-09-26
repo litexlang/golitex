@@ -128,8 +128,9 @@ const codes: string[] = [
   // "def fun(x: set(x)) => {Set(x);}",
   // "@ : func(x) ;",
   // ": fun(x|set(x)) => {set(x);}",
-  "@: fun(#x,#y);",
-  "fun(2,3);",
+  // "@: fun(#x,#y);",
+  // "fun(2,3);",
+  ": fun(x,y) {: fun2(x,y)}",
 ];
 
 function testLexer() {

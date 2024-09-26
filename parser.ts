@@ -516,11 +516,17 @@ function defParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
       (result as InferNode).onlyIfExprs = block;
     } else {
       // should not add ";" as ending, because know def already has ; as ending of know
+
       result = new DefNode(
         declOptName,
         curFreeVars,
         paramsColonFactExprsNode.properties
       );
+
+      if (tokens[0] === "{") {
+        const block = blockParse(env, tokens);
+        (result as DefNode).onlyIfExprs = block;
+      }
     }
 
     env.returnToSnapShot(snapShot);

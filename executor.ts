@@ -229,6 +229,7 @@ function letExec(env: LiTeXEnv, node: LetNode): ResultType {
 function defExec(env: LiTeXEnv, node: DefNode): ResultType {
   try {
     env.defs.set(node.declOptName, node);
+
     return ResultType.True;
   } catch (error) {
     catchRuntimeError(env, error, "def");

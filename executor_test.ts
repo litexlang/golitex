@@ -24,12 +24,14 @@ const codes: string[] = [
   // ": Thm1(x,y| Thm2(x,y)) => {Thm3(x,y);}",
   // "Thm1(#0, #1);",
   // "Thm3(#x, #3);",
-  "// know and declare at the same time",
-  "@: fun(#x,3);",
-  "fun(2,1);",
-  "@: deduce(#x,#y) => { corollary(#y,#x);};",
-  "deduce(1,2);",
-  "corollary(2,1);",
+  // "// know and declare at the same time",
+  // "@: fun(#x,3);",
+  // "fun(2,1);",
+  // "@: deduce(#x,#y) => { corollary(#y,#x);};",
+  // "deduce(1,2);",
+  // "corollary(2,1);",
+  "// declare subTemplate in template",
+  ": fun(x,y) {: subFun(y)}",
 ];
 
 function callOptsExecTest() {
