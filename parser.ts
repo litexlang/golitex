@@ -25,6 +25,7 @@ import {
   DefNode,
   FactNode,
   OnlyIfFactNode,
+  TemplateNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { specialChars } from "./lexer";
@@ -215,6 +216,7 @@ function paramsColonFactExprsParse(
 ): ParamsColonFactExprsNode {
   const params: string[] = [];
   const requirements: CallOptNode[] = [];
+
   if (!(tokens[0] === ")")) {
     while (1) {
       params.push(tokens.shift() as string);
@@ -226,10 +228,11 @@ function paramsColonFactExprsParse(
     if (!(tokens[0] === ")")) {
       skip(tokens, ":"); // skip :
       while (!(tokens[0] === ")")) {
-        const node = LiTexStmtParse(env, tokens);
+        const node = callOptParse(env, tokens);
+        // const node = LiTexStmtParse(env, tokens);
         if (node) requirements.push(node as CallOptNode);
 
-        // if (tokens[0] === ",") tokens.shift();
+        if (tokens[0] === ",") tokens.shift();
         if (tokens[0] === ")") break;
       }
     }
@@ -463,7 +466,7 @@ function inheritParse(env: LiTeXEnv, tokens: string[]): InferNode {
   }
 }
 
-function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
+function defParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   const snapShot = env.getSnapShot();
 
   try {
@@ -478,14 +481,26 @@ function defParse(env: LiTeXEnv, tokens: string[]): DefNode {
 
     skip(tokens, ")");
 
-    const result = new DefNode(
-      declOptName,
-      curFreeVars,
-      paramsColonFactExprsNode.properties
-    );
+    let result = new LiTeXNode();
+    if (tokens[0] === "=>") {
+      skip(tokens, "=>");
+      const block = blockParse(env, tokens);
+      result = new InferNode(
+        declOptName,
+        curFreeVars,
+        paramsColonFactExprsNode.properties
+      );
+      (result as InferNode).onlyIfExprs = block;
+    } else {
+      result = new DefNode(
+        declOptName,
+        curFreeVars,
+        paramsColonFactExprsNode.properties
+      );
+    }
 
     env.returnToSnapShot(snapShot);
-    return result;
+    return result as TemplateNode;
   } catch (error) {
     handleParseError(tokens, env, "def");
     env.returnToSnapShot(snapShot);

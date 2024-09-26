@@ -22,6 +22,7 @@ import { IndexOfGivenSymbolInCallOpt } from "./common";
 
 export enum ResultType {
   True,
+  KnowTrue,
   False,
   Unknown,
   Error,
@@ -92,7 +93,10 @@ function inferExec(
   try {
     if (env.keyInDefs(node.declOptName)) {
       throw Error(node.declOptName + " has already been declared.");
+    } else if (env.infers.has(node.declOptName)) {
+      throw Error(node.declOptName + " has already been declared.");
     }
+
     let sonNamePrefix: string = "";
     if (fatherName === "") {
       sonNamePrefix = node.declOptName + "::";
@@ -100,18 +104,6 @@ function inferExec(
     } else {
       sonNamePrefix = fatherName + node.declOptName + "::";
       env.infers.set(fatherName + node.declOptName, node);
-    }
-
-    for (const item of node.requirements) {
-      if (item.type === LiTexNodeType.InferNode) {
-        inferExec(env, item as InferNode, sonNamePrefix);
-      }
-    }
-
-    for (const item of node.onlyIfExprs) {
-      if (item.type === LiTexNodeType.InferNode) {
-        inferExec(env, item as InferNode, sonNamePrefix);
-      }
     }
 
     return ResultType.True;

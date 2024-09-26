@@ -124,7 +124,8 @@ const codes: string[] = [
   // "let (x: asf(x););",
   // "set(x), >(x,0);",
   // "def bundle(x: set(x), >(x,0));",
-  "know fun(#x) => {fun2(#x); };",
+  // "know fun(#x) => {fun2(#x); };",
+  "def fun(x: set(x)) => {Set(x);}",
 ];
 
 function testLexer() {

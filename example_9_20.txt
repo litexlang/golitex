@@ -1,5 +1,0 @@
-know >(a,1);
-know >(1,0);
-know infer transitivity_of_inequality(x,y,z: >(x,y), >(y,z);) {
-  >(x,z);
-}
