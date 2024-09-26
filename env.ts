@@ -16,7 +16,7 @@ export class LiTeXEnv {
   infers: Map<string, InferNode> = new Map<string, InferNode>();
   //! string[] will be symbols[] because $$
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
-  fatherFreeVars: string[][] = [];
+  // fatherFreeVars: string[][] = [];
   declaredVars: string[] = [];
   defs: Map<string, DefNode> = new Map<string, DefNode>();
   callOptFactsOnlyIfs: Map<string, FactAboutGivenOpt[]> = new Map<
@@ -36,13 +36,13 @@ export class LiTeXEnv {
     return LiTexNodeType.Error;
   }
 
-  returnToSnapShot(original: SnapShot) {
-    this.fatherFreeVars = original.fatherFreeVars;
-  }
+  // returnToSnapShot(original: SnapShot) {
+  //   this.fatherFreeVars = original.fatherFreeVars;
+  // }
 
-  getSnapShot(): SnapShot {
-    return { fatherFreeVars: [...this.fatherFreeVars] };
-  }
+  // getSnapShot(): SnapShot {
+  //   return { fatherFreeVars: [...this.fatherFreeVars] };
+  // }
 
   constructor() {}
 

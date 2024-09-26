@@ -237,6 +237,9 @@ function defExec(env: LiTeXEnv, node: DefNode): ExecInfo {
   try {
     env.defs.set(node.declOptName, node);
 
+    for (const subNode of node.onlyIfExprs) {
+    }
+
     return info(ResultType.DefTrue);
   } catch (error) {
     catchRuntimeError(env, error, "def");

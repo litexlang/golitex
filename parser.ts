@@ -66,7 +66,7 @@ function handleParseError(tokens: string[], env: LiTeXEnv, message: string) {
 }
 
 const stmtKeywords: { [key: string]: Function } = {
-  ";": (tokens: string[]) => {
+  ";": (env: LiTeXEnv, tokens: string[]) => {
     tokens.shift();
   },
   know: knowParse,
@@ -186,7 +186,7 @@ function freeVarsAndTheirFactsParse(
   return new FreeVarsWithFactsNode(params, requirements);
 }
 
-function blockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
+function nonExecutableBlockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
   try {
     const result: LiTeXNode[] = [];
     skip(tokens, "{"); // skip {
@@ -292,7 +292,10 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
 function notParse(env: LiTeXEnv, tokens: string[]): NotNode {
   try {
     skip(tokens, "not");
-    const block: CallOptsNode[] = blockParse(env, tokens) as CallOptsNode[];
+    const block: CallOptsNode[] = nonExecutableBlockParse(
+      env,
+      tokens
+    ) as CallOptsNode[];
     const notNode = new NotNode([]);
 
     for (const value of block) {
@@ -340,7 +343,7 @@ function orParse(env: LiTeXEnv, tokens: string[]) {
     skip(tokens, "or");
     const orNode = new OrNode();
     while (tokens[0] === "{") {
-      orNode.blocks.push(blockParse(env, tokens) as CallOptNode[]);
+      orNode.blocks.push(nonExecutableBlockParse(env, tokens) as CallOptNode[]);
     }
     return orNode;
   } catch (error) {
@@ -350,7 +353,7 @@ function orParse(env: LiTeXEnv, tokens: string[]) {
 }
 
 function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
-  function getParamsFromSymbolFactsStmt(tokens: string[]): string[] {
+  function freeVars(tokens: string[]): string[] {
     const params: string[] = [];
     if (!(tokens[0] === ")")) {
       for (let i = 0; i < tokens.length; i++) {
@@ -364,18 +367,16 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
     return params;
   }
 
-  const snapShot = env.getSnapShot();
+  // const snapShot = env.getSnapShot();
 
   try {
     skip(tokens, DefTypeKeywords);
     const declOptName = shiftVar(tokens);
     skip(tokens, "(");
 
-    const curFreeVars = [
-      ...env.fatherFreeVars,
-      getParamsFromSymbolFactsStmt(tokens),
-    ];
-    env.fatherFreeVars = curFreeVars;
+    // const curFreeVars = [...env.fatherFreeVars, freeVars(tokens)];
+    // env.fatherFreeVars = curFreeVars;
+    const curFreeVars = [freeVars(tokens)];
 
     const FreeVarsWithFactsNode = freeVarsAndTheirFactsParse(env, tokens);
 
@@ -384,7 +385,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
     let result = new LiTeXNode();
     if (tokens[0] === "=>") {
       skip(tokens, "=>");
-      const block = blockParse(env, tokens);
+      const block = nonExecutableBlockParse(env, tokens);
       result = new InferNode(
         declOptName,
         curFreeVars,
@@ -399,16 +400,16 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
       );
 
       if (tokens[0] === "{") {
-        const block = blockParse(env, tokens);
+        const block = nonExecutableBlockParse(env, tokens);
         (result as DefNode).onlyIfExprs = block;
       }
     }
 
-    env.returnToSnapShot(snapShot);
+    // env.returnToSnapShot(snapShot);
     return result as TemplateNode;
   } catch (error) {
     handleParseError(tokens, env, "def");
-    env.returnToSnapShot(snapShot);
+    // env.returnToSnapShot(snapShot);
     throw error;
   }
 }

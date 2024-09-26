@@ -34,6 +34,7 @@ const codes: string[] = [
   "// declare subTemplate in template",
   ": fun(x,y) {: subFun(y)}",
   "@ fun(#x, #y)::fun3(#x);",
+  "@ fun(#x, #y)::fun4(#x);",
   "fun(1,2)::fun3(3);",
 ];
 
