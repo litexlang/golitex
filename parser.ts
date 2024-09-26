@@ -30,13 +30,25 @@ import {
 import { LiTeXEnv } from "./env";
 import { specialChars } from "./lexer";
 
-function skip(tokens: string[], s: string = "") {
-  if (s === "") {
-    return tokens.shift();
-  } else if (s === tokens[0]) {
-    return tokens.shift();
+const KnowTypeKeywords = ["@", "know", "suppose"];
+const DefTypeKeywords = [":", "def"];
+
+function skip(tokens: string[], s: string | string[] = "") {
+  if (typeof s === "string") {
+    if (s === "") {
+      return tokens.shift();
+    } else if (s === tokens[0]) {
+      return tokens.shift();
+    } else {
+      throw Error("unexpected symbol: " + tokens[0]);
+    }
   } else {
-    throw Error("");
+    for (const value of s) {
+      if (value === tokens[0]) {
+        return tokens.shift();
+      }
+    }
+    throw Error("unexpected symbol: " + tokens[0]);
   }
 }
 
@@ -71,6 +83,7 @@ const stmtKeywords: { [key: string]: Function } = {
   },
   infer: inferParse,
   know: knowParse,
+  "@": knowParse,
   have: haveParse,
   exist: existParse,
   not: notParse,
@@ -81,6 +94,7 @@ const stmtKeywords: { [key: string]: Function } = {
   inherit: inheritParse,
   let: letParse,
   def: defParse,
+  ":": defParse,
 };
 
 export function LiTeXStmtsParse(
@@ -113,7 +127,7 @@ export function LiTexStmtParse(
     const funcName = tokens[0];
     if (func) {
       const node = func(env, tokens);
-      if (funcName === "know") {
+      if (KnowTypeKeywords.includes(funcName)) {
         skip(tokens, ";"); // skip ;
       }
       if (node) {
@@ -140,7 +154,7 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
   try {
     const knowNode: KnowNode = new KnowNode();
 
-    skip(tokens, "know"); // skip know
+    skip(tokens, KnowTypeKeywords); // skip know
     while (1) {
       // if (canBeKnownNodeNames.includes(tokens[0])) {
       //   knowNode.facts.push(stmtKeywords[tokens[0]](env, tokens));
@@ -470,7 +484,7 @@ function defParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   const snapShot = env.getSnapShot();
 
   try {
-    skip(tokens, "def");
+    skip(tokens, DefTypeKeywords);
     const declOptName = shiftVar(tokens);
     skip(tokens, "(");
 

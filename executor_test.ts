@@ -12,8 +12,18 @@ const codes: string[] = [
   // "infer Thm1(x,y: Thm2(x,y);) {Thm3(x,y);}",
   // "Thm1(#0, #1);",
   // "Thm3(#x, #3);",
-  "// declare infer or",
-  "def fun(x: set(x)) => {Set(x);}",
+  // "// declare infer using def =>",
+  // "def Axiom(x,y: P(x), Q(y)) => {Thm1(x,y), Thm2(x,y);}",
+  // "know P(#x), Q(#2), Axiom(#ha,#y);",
+  // "def Thm1(x,y: Thm2(x,y)) => {Thm3(x,y);}",
+  // "Thm1(#0, #1);",
+  // "Thm3(#x, #3);",
+  "// @ is used as know",
+  ": Axiom(x,y: P(x), Q(y)) => {Thm1(x,y), Thm2(x,y);}",
+  "@ P(#x), Q(#2), Axiom(#ha,#y);",
+  ": Thm1(x,y: Thm2(x,y)) => {Thm3(x,y);}",
+  "Thm1(#0, #1);",
+  "Thm3(#x, #3);",
 ];
 
 function callOptsExecTest() {
