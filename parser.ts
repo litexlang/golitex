@@ -93,8 +93,8 @@ const stmtKeywords: { [key: string]: Function } = {
   // "<=": ifParse,
   inherit: inheritParse,
   let: letParse,
-  def: defParse,
-  ":": defParse,
+  def: templateParse,
+  ":": templateParse,
 };
 
 export function LiTeXStmtsParse(
@@ -164,7 +164,7 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
       switch (tokens[0]) {
         case ":":
         case "def":
-          node = defParse(env, tokens);
+          node = templateParse(env, tokens);
           knowNode.facts.push(node as TemplateNode);
           break;
         default:
@@ -489,7 +489,7 @@ function inheritParse(env: LiTeXEnv, tokens: string[]): InferNode {
   }
 }
 
-function defParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
+function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   const snapShot = env.getSnapShot();
 
   try {

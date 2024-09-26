@@ -32,6 +32,8 @@ const codes: string[] = [
   // "corollary(2,1);",
   "// declare subTemplate in template",
   ": fun(x,y) {: subFun(y)}",
+  "@ fun(#x, #y)::fun3(#x);",
+  "fun(1,2)::fun3(3);",
 ];
 
 function callOptsExecTest() {
@@ -68,6 +70,8 @@ function resultTypeToString(res: ResultType): string {
       return "unknown";
     case ResultType.KnowTrue:
       return "knowTrue";
+    case ResultType.DefTrue:
+      return "defTrue";
   }
 
   return "";

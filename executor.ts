@@ -25,6 +25,7 @@ import { IndexOfGivenSymbolInCallOpt } from "./common";
 export enum ResultType {
   True,
   KnowTrue,
+  DefTrue,
   False,
   Unknown,
   Error,
@@ -230,7 +231,7 @@ function defExec(env: LiTeXEnv, node: DefNode): ResultType {
   try {
     env.defs.set(node.declOptName, node);
 
-    return ResultType.True;
+    return ResultType.DefTrue;
   } catch (error) {
     catchRuntimeError(env, error, "def");
     return ResultType.Error;
