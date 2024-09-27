@@ -6,12 +6,21 @@ import {
   LiTeXNode,
   CallOptsNode,
   TemplateNode,
+  FactNode,
+  areStrArrStructureEqual,
 } from "./ast";
 import { OptsConnectionSymbol } from "./common";
+import { ExecInfo, resultInfo, ResultType } from "./executor";
 
 // type SnapShot = { fatherFreeVars: string[][] };
 
 export type FactAboutGivenOpt = { params: string[][]; onlyIfs: CallOptNode[] };
+
+export type TemplateFact = {
+  subTemplates: Map<string, TemplateFact>;
+  facts: string[][][];
+  templateNode: TemplateNode;
+};
 
 export class LiTeXEnv {
   errors: string[] = [];
@@ -29,11 +38,92 @@ export class LiTeXEnv {
     TemplateNode
   >();
 
+  pushNewFact(fact: FactNode): ExecInfo {
+    const declaredTemplate = this.getDeclaredTemplate(fact.optName);
+    if (!declaredTemplate)
+      return resultInfo(
+        ResultType.Error,
+        fact.optName + "has not been declared"
+      );
+    declaredTemplate?.facts.push(fact.optParams);
+    return resultInfo(ResultType.KnowTrue);
+  }
+
+  // facts: Map<string, TemplateFact> = new Map<string, TemplateFact>();
+
+  checkFact(calledFact: FactNode): ExecInfo {
+    const declaredTemplate = this.getDeclaredTemplate(calledFact.optName);
+    if (!declaredTemplate)
+      return resultInfo(
+        ResultType.Error,
+        calledFact.optName + " has not been declared."
+      );
+    for (const value of declaredTemplate?.facts) {
+      if (areNestedArraysEqual(value, calledFact.optParams)) {
+        return resultInfo(ResultType.True);
+      }
+    }
+
+    return resultInfo(ResultType.Unknown);
+
+    function areNestedArraysEqual(arr1: string[][], arr2: string[][]): boolean {
+      if (arr1.length !== arr2.length) {
+        return false;
+      }
+
+      for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i].length !== arr2[i].length) {
+          return false;
+        }
+
+        for (let j = 0; j < arr1[i].length; j++) {
+          if (arr1[i][j] !== arr2[i][j]) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+  }
+
+  // knowNewFact(calledFact: FactNode): ExecInfo {
+  //   const knownFacts: string[][][] | undefined = this.getTemplateFactFacts(
+  //     calledFact.optName
+  //   );
+  //   if (!knownFacts)
+  //     return resultInfo(
+  //       ResultType.Unknown,
+  //       calledFact.optName + "is not declared."
+  //     );
+  //   else {
+  //   }
+  // }
+
+  // private getTemplateFactFacts(
+  //   nameWithColons: string
+  // ): string[][][] | undefined {
+  //   const names = nameWithColons.split(OptsConnectionSymbol);
+  //   if (names.length === 1) {
+  //     return this.facts.get(names[0])?.facts;
+  //   } else {
+  //     let factMap = this.facts.get(names[0]);
+  //     if (!factMap) return undefined;
+  //     for (let i = 1; i < names.length; i++) {
+  //       factMap = factMap.subTemplates.get(names[i]);
+  //       if (!factMap) return undefined;
+  //     }
+  //     return factMap.facts;
+  //   }
+  // }
+
+  // newTemplateDecl(env: LiTeXEnv, node: TemplateNode): ExecInfo {}
+
   callOptType(node: CallOptNode) {
     return this.optType(node.optName);
   }
 
-  getDeclaredTemplate(s: string): TemplateNode | undefined {
+  getDeclaredTemplate(node: string | CallOptNode): TemplateNode | undefined {
     const isTop = (s: string): Boolean => {
       return !s.includes(OptsConnectionSymbol);
     };
@@ -42,6 +132,10 @@ export class LiTeXEnv {
       const colonIndex = str.indexOf(":");
       return colonIndex !== -1 ? str.slice(0, colonIndex) : str;
     };
+
+    let s = "";
+    if (node instanceof CallOptNode) s = node.optName;
+    else s = node;
 
     let relatedTemplate: TemplateNode | undefined;
     if (isTop(s)) {

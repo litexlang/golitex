@@ -41,6 +41,8 @@ const codes: string[] = [
   // "fun(3);",
   "know fun(2):fun3(1,2);",
   "fun(2):fun3(1,2);",
+  "fun(3);",
+  "fun(1):fun3(1,2);",
   // ": inf(x) => {set(x);}",
   // "know inf(2);",
   // "inf(2), set(2);",

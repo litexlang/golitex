@@ -107,6 +107,7 @@ export class TemplateNode extends LiTeXNode {
     string,
     TemplateNode
   >();
+  facts: string[][][] = [];
 
   constructor(
     declOptName: string,
