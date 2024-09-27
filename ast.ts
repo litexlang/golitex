@@ -30,7 +30,7 @@ export enum LiTexNodeType {
   QuestionMarkNode,
 }
 
-export type TemplateNode = DefNode | InferNode;
+// export type TemplateNode = DefNode | InferNode;
 
 export class LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.Node;
@@ -96,7 +96,7 @@ export class CallOptNode extends LiTeXNode {
 
 export type FactNode = CallOptNode; // | OnlyIfFactNode;
 
-export class InferNode extends LiTeXNode {
+export class TemplateNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
   declOptName: string;
   params: string[][];
@@ -117,6 +117,29 @@ export class InferNode extends LiTeXNode {
     this.declOptName = declOptName;
     this.params = params;
     this.requirements = requirements;
+  }
+
+  initDeclaredTemplates() {
+    for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
+      const value = this.onlyIfExprs[i];
+      if (value instanceof TemplateNode) {
+        value.initDeclaredTemplates();
+        this.declaredTemplates.set(value.declOptName, value);
+        this.onlyIfExprs.splice(i, 1);
+      }
+    }
+  }
+}
+
+export class InferNode extends TemplateNode {
+  type: LiTexNodeType = LiTexNodeType.InferNode;
+
+  constructor(
+    declOptName: string,
+    params: string[][],
+    requirements: LiTeXNode[]
+  ) {
+    super(declOptName, params, requirements);
   }
 
   emitOnlyIfs(env: LiTeXEnv, freeToFixedMap: Map<string, string>) {
@@ -150,7 +173,7 @@ export class InferNode extends LiTeXNode {
   }
 }
 
-export type CanBeKnownNode = FactNode | InferNode | DefNode;
+export type CanBeKnownNode = FactNode | InferNode | DefNode | TemplateNode;
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
@@ -243,27 +266,15 @@ export class LetNode extends LiTeXNode {
   }
 }
 
-export class DefNode extends LiTeXNode {
+export class DefNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.DefNode;
-  declOptName: string;
-  params: string[][];
-  requirements: LiTeXNode[] = [];
-  onlyIfExprs: LiTeXNode[] = [];
-  father: string = "";
-  declaredTemplates: Map<string, TemplateNode> = new Map<
-    string,
-    TemplateNode
-  >();
 
   constructor(
     declOptName: string,
     params: string[][],
     requirements: LiTeXNode[]
   ) {
-    super();
-    this.declOptName = declOptName;
-    this.params = params;
-    this.requirements = requirements;
+    super(declOptName, params, requirements);
   }
 
   emitOnlyIfs(env: LiTeXEnv, freeToFixedMap: Map<string, string>) {

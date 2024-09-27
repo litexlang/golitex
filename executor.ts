@@ -51,19 +51,32 @@ export function handleRuntimeError(env: LiTeXEnv, message: string) {
 
 export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
   switch (node.type) {
+    case LiTexNodeType.DefNode:
+    // return defExec(env, node as DefNode);
     case LiTexNodeType.InferNode:
-      return inferExec(env, node as InferNode);
+      // return inferExec(env, node as InferNode);
+      templateDeclExec(env, node as TemplateNode);
     case LiTexNodeType.KnowNode:
       return knowExec(env, node as KnowNode);
     case LiTexNodeType.CallOptsNode:
       return callOptsExec(env, node as CallOptsNode);
     case LiTexNodeType.LetNode:
       return letExec(env, node as LetNode);
-    case LiTexNodeType.DefNode:
-      return defExec(env, node as DefNode);
   }
 
   return info(ResultType.Error, "Invalid Expression.");
+}
+
+function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
+  try {
+    env.declaredTemplates.set(node.declOptName, node);
+    node.initDeclaredTemplates();
+
+    return info(ResultType.DefTrue);
+  } catch (error) {
+    catchRuntimeError(env, error, "template declaration");
+    return info(ResultType.Error);
+  }
 }
 
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
@@ -243,14 +256,14 @@ function defExec(
   try {
     env.defs.set(fatherName + node.declOptName, node);
 
-    for (const value of node.onlyIfExprs) {
-      switch (value.type) {
-        case LiTexNodeType.DefNode:
-        case LiTexNodeType.InferNode:
-          node.declaredTemplates.set(node.declOptName, value as TemplateNode);
-          break;
-      }
-    }
+    // for (const value of node.onlyIfExprs) {
+    //   switch (value.type) {
+    //     case LiTexNodeType.DefNode:
+    //     case LiTexNodeType.InferNode:
+    //       node.declaredTemplates.set(node.declOptName, value as TemplateNode);
+    //       break;
+    //   }
+    // }
 
     return info(ResultType.DefTrue);
   } catch (error) {

@@ -60,7 +60,7 @@ function callOptsExecTest() {
   }
   console.log("");
   env.printCallOptFacts();
-  env.printInfers();
+  env.printDeclaredTemplates();
 }
 
 function resultTypeToString(res: ResultType): string {

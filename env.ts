@@ -152,26 +152,11 @@ export class LiTeXEnv {
     console.log("");
   }
 
-  printInfers() {
+  printDeclaredTemplates() {
     console.log("------template-----\n");
-    const templates = [
-      { name: "infer", data: this.infers },
-      { name: "def", data: this.defs },
-    ];
 
-    for (const { name, data } of templates) {
-      for (const [key, value] of data) {
-        console.log(`[${name}]  ` + key);
-        console.log(value.params);
-        console.log("requirements:");
-        for (const item of value.requirements) {
-          console.log(item);
-        }
-        console.log("onlyIfs:");
-        for (const item of value.onlyIfExprs) {
-          console.log(item);
-        }
-      }
+    for (const value of this.declaredTemplates) {
+      console.log(value);
       console.log("");
     }
   }
