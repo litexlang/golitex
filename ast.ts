@@ -1,6 +1,4 @@
-import { LiTeXEnv } from "./env";
-
-// There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
+// There are 3 things in LiTex: Declaration (var, fact-template) ; check; know
 export enum LiTexNodeType {
   Error,
   Node,
