@@ -120,10 +120,10 @@ export class TemplateNode extends LiTeXNode {
   }
 
   getDeclaredSubTemplate(s: string): undefined | TemplateNode {
-    const names = s.split(":");
+    const names: string[] = s.split(":");
     let curTemplate: TemplateNode | undefined = this;
-    for (const value of names) {
-      curTemplate = curTemplate?.declaredTemplates.get(value);
+    for (let i = 1; i < names.length; i++) {
+      curTemplate = curTemplate?.declaredTemplates.get(names[i]);
       if (!curTemplate) {
         return undefined;
       }

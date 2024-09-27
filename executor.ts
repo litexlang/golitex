@@ -236,23 +236,22 @@ function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
   switch (env.optType(node.optName)) {
     case LiTexNodeType.InferNode:
       {
-        const relatedInferNode = env.getDeclaredTemplate(
-          node.optName
-        ) as InferNode;
+        // const relatedInferNode = env.getDeclaredTemplate(
+        //   node.optName
+        // ) as InferNode;
         const inferFreeToFixedMap: Map<string, string> = getFreeToFixedMap(
-          relatedInferNode,
+          relatedTemplate as InferNode,
           node
         );
 
-        const checkResult: ResultType = relatedInferNode.checkRequirements(
-          env,
-          inferFreeToFixedMap
-        );
+        const checkResult: ResultType = (
+          relatedTemplate as InferNode
+        ).checkRequirements(env, inferFreeToFixedMap);
         if (!(checkResult === ResultType.True)) {
           return info(checkResult);
         }
 
-        relatedInferNode.emitOnlyIfs(env, inferFreeToFixedMap);
+        (relatedTemplate as InferNode).emitOnlyIfs(env, inferFreeToFixedMap);
       }
       break;
 
