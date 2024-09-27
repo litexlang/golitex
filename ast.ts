@@ -1,3 +1,5 @@
+import { OptsConnectionSymbol } from "./common";
+
 // There are 3 things in LiTex: Declaration (var, fact-template) ; check; know
 export enum LiTexNodeType {
   Error,
@@ -40,7 +42,7 @@ export class CallOptNode extends LiTeXNode {
 
   constructor(opts: [string, string[]][]) {
     super();
-    this.optName = opts.map((e) => e[0]).join(":");
+    this.optName = opts.map((e) => e[0]).join(OptsConnectionSymbol);
     this.optParams = opts.map((e) => e[1]);
     this.optNameAsLst = opts.map((e) => e[0]);
   }
@@ -52,7 +54,7 @@ export class CallOptNode extends LiTeXNode {
   }
 
   pushNewNameParamsPair(pair: [string, string[]]) {
-    if (this.optName !== "") this.optName += ":" + pair[0];
+    if (this.optName !== "") this.optName += OptsConnectionSymbol + pair[0];
     else this.optName += pair[0];
 
     this.optParams.push(pair[1]);
@@ -63,20 +65,14 @@ export class CallOptNode extends LiTeXNode {
 export class TemplateNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
   declOptName: string;
-  params: string[][];
   requirements: LiTeXNode[] = [];
   onlyIfExprs: LiTeXNode[] = [];
   declaredTemplates = new Map<string, TemplateNode>();
   facts: string[][][] = [];
 
-  constructor(
-    declOptName: string,
-    params: string[][],
-    requirements: LiTeXNode[]
-  ) {
+  constructor(declOptName: string, requirements: LiTeXNode[]) {
     super();
     this.declOptName = declOptName;
-    this.params = params;
     this.requirements = requirements;
   }
 
@@ -107,12 +103,8 @@ export class TemplateNode extends LiTeXNode {
 export class InferNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
 
-  constructor(
-    declOptName: string,
-    params: string[][],
-    requirements: LiTeXNode[]
-  ) {
-    super(declOptName, params, requirements);
+  constructor(declOptName: string, requirements: LiTeXNode[]) {
+    super(declOptName, requirements);
   }
 }
 
@@ -204,12 +196,8 @@ export class LetNode extends LiTeXNode {
 export class DefNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.DefNode;
 
-  constructor(
-    declOptName: string,
-    params: string[][],
-    requirements: LiTeXNode[]
-  ) {
-    super(declOptName, params, requirements);
+  constructor(declOptName: string, requirements: LiTeXNode[]) {
+    super(declOptName, requirements);
   }
 }
 

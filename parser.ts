@@ -406,14 +406,14 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
       const block = nonExecutableBlockParse(env, tokens);
       result = new InferNode(
         declOptName,
-        curFreeVars,
+        // curFreeVars,
         FreeVarsWithFactsNode.properties
       );
       (result as InferNode).onlyIfExprs = block;
     } else {
       result = new DefNode(
         declOptName,
-        curFreeVars,
+        // curFreeVars,
         FreeVarsWithFactsNode.properties
       );
 

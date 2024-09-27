@@ -1,4 +1,4 @@
-import { CallOptNode, LiTexNodeType, TemplateNode, FactNode } from "./ast";
+import { CallOptNode, TemplateNode, FactNode } from "./ast";
 import { OptsConnectionSymbol } from "./common";
 import { ExecInfo, resultInfo, ResultType } from "./executor";
 
