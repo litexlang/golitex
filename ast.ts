@@ -27,6 +27,7 @@ export enum LiTexNodeType {
   LetNode,
   DefNode,
   ProofNode,
+  QuestionMarkNode,
 }
 
 export type TemplateNode = DefNode | InferNode;
@@ -102,6 +103,10 @@ export class InferNode extends LiTeXNode {
   requirements: LiTeXNode[] = [];
   onlyIfExprs: LiTeXNode[] = [];
   father: string = "";
+  declaredTemplates: Map<string, TemplateNode> = new Map<
+    string,
+    TemplateNode
+  >();
 
   constructor(
     declOptName: string,
@@ -245,6 +250,10 @@ export class DefNode extends LiTeXNode {
   requirements: LiTeXNode[] = [];
   onlyIfExprs: LiTeXNode[] = [];
   father: string = "";
+  declaredTemplates: Map<string, TemplateNode> = new Map<
+    string,
+    TemplateNode
+  >();
 
   constructor(
     declOptName: string,
@@ -273,6 +282,16 @@ export class DefNode extends LiTeXNode {
         }
       }
     }
+  }
+}
+
+export class QuestionMarkNode extends LiTeXNode {
+  type = LiTexNodeType.QuestionMarkNode;
+  template: TemplateNode;
+
+  constructor(template: TemplateNode) {
+    super();
+    this.template = template;
   }
 }
 

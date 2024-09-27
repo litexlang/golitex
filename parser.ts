@@ -14,6 +14,7 @@ import {
   DefNode,
   FactNode,
   TemplateNode,
+  QuestionMarkNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { specialChars } from "./lexer";
@@ -186,12 +187,29 @@ function freeVarsAndTheirFactsParse(
   return new FreeVarsWithFactsNode(params, requirements);
 }
 
+function questionMarkParse(env: LiTeXEnv, tokens: string[]): QuestionMarkNode {
+  try {
+    skip(tokens, "?");
+    tokens.unshift(":");
+    const template = templateParse(env, tokens);
+    return new QuestionMarkNode(template);
+  } catch (error) {
+    catchParseError(tokens, env, error, "?");
+    throw error;
+  }
+}
+
 function nonExecutableBlockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
   try {
     const result: LiTeXNode[] = [];
     skip(tokens, "{"); // skip {
 
     while (!isCurToken("}", tokens)) {
+      if (isCurToken("?", tokens)) {
+        const node = questionMarkParse(env, tokens);
+        if (node) result.push(node);
+        continue;
+      }
       const node = LiTexStmtParse(env, tokens);
       if (node) result.push(node);
     }

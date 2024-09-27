@@ -5,9 +5,10 @@ import {
   LiTexNodeType,
   LiTeXNode,
   CallOptsNode,
+  TemplateNode,
 } from "./ast";
 
-type SnapShot = { fatherFreeVars: string[][] };
+// type SnapShot = { fatherFreeVars: string[][] };
 
 export type FactAboutGivenOpt = { params: string[][]; onlyIfs: CallOptNode[] };
 
@@ -22,6 +23,11 @@ export class LiTeXEnv {
   callOptFactsOnlyIfs: Map<string, FactAboutGivenOpt[]> = new Map<
     string,
     FactAboutGivenOpt[]
+  >();
+
+  declaredTemplates: Map<string, TemplateNode> = new Map<
+    string,
+    TemplateNode
   >();
 
   callOptType(node: CallOptNode) {
@@ -136,7 +142,7 @@ export class LiTeXEnv {
   }
 
   printCallOptFacts() {
-    console.log("----callOpt------\n");
+    console.log("----facts------\n");
     for (const [key, value] of this.callOptFacts) {
       console.log("[opt]  " + key);
       for (const item of value) {
@@ -147,20 +153,27 @@ export class LiTeXEnv {
   }
 
   printInfers() {
-    console.log("------infer-------\n");
-    for (const [key, value] of this.infers) {
-      console.log("[infer]  " + key);
-      console.log(value.params);
-      console.log("requirements:");
-      for (const item of value.requirements) {
-        console.log(item);
+    console.log("------template-----\n");
+    const templates = [
+      { name: "infer", data: this.infers },
+      { name: "def", data: this.defs },
+    ];
+
+    for (const { name, data } of templates) {
+      for (const [key, value] of data) {
+        console.log(`[${name}]  ` + key);
+        console.log(value.params);
+        console.log("requirements:");
+        for (const item of value.requirements) {
+          console.log(item);
+        }
+        console.log("onlyIfs:");
+        for (const item of value.onlyIfExprs) {
+          console.log(item);
+        }
       }
-      console.log("onlyIfs:");
-      for (const item of value.onlyIfExprs) {
-        console.log(item);
-      }
+      console.log("");
     }
-    console.log("");
   }
 
   newFacts(node: LiTeXNode) {

@@ -14,3 +14,5 @@ export function IndexOfGivenSymbolInCallOpt(
 
   return undefined;
 }
+
+export const OptsConnectionSymbol = ":";

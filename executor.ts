@@ -16,11 +16,12 @@ import {
   FactNode,
   CanBeKnownNode,
   makeCallOptNode,
+  TemplateNode,
   // OnlyIfFactNode,
 } from "./ast";
 import { FactAboutGivenOpt, LiTeXEnv } from "./env";
 import { builtInCallOptNames } from "./executor_builtins";
-import { IndexOfGivenSymbolInCallOpt } from "./common";
+import { IndexOfGivenSymbolInCallOpt, OptsConnectionSymbol } from "./common";
 
 export enum ResultType {
   True,
@@ -123,6 +124,7 @@ function inferExec(
 }
 
 function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
+  //TODO: Needs to check whether a template is declared
   let facts: CanBeKnownNode[] = [];
   if (node.type === LiTexNodeType.KnowNode) {
     facts = (node as KnowNode).facts;
@@ -233,11 +235,21 @@ function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
   }
 }
 
-function defExec(env: LiTeXEnv, node: DefNode): ExecInfo {
+function defExec(
+  env: LiTeXEnv,
+  node: DefNode,
+  fatherName: string = ""
+): ExecInfo {
   try {
-    env.defs.set(node.declOptName, node);
+    env.defs.set(fatherName + node.declOptName, node);
 
-    for (const subNode of node.onlyIfExprs) {
+    for (const value of node.onlyIfExprs) {
+      switch (value.type) {
+        case LiTexNodeType.DefNode:
+        case LiTexNodeType.InferNode:
+          node.declaredTemplates.set(node.declOptName, value as TemplateNode);
+          break;
+      }
     }
 
     return info(ResultType.DefTrue);
