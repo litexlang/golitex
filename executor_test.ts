@@ -1,5 +1,5 @@
 import { LiTeXEnv } from "./env";
-import { nodeExec, ExecInfo, ResultType } from "./executor";
+import { nodeExec, ExecInfo, ResultType, resultTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { LiTeXStmtsParse } from "./parser";
 
@@ -54,32 +54,13 @@ function callOptsExecTest() {
     } else {
       for (let i = 0; i < result.length; i++) {
         const res: ExecInfo = nodeExec(env, result[i]);
-        console.log(resultTypeToString(res.type));
+        console.log(resultTypeMap[res.type]);
       }
     }
   }
   console.log("");
   env.printCallOptFacts();
   env.printDeclaredTemplates();
-}
-
-function resultTypeToString(res: ResultType): string {
-  switch (res) {
-    case ResultType.Error:
-      return "error";
-    case ResultType.False:
-      return "false";
-    case ResultType.True:
-      return "true";
-    case ResultType.Unknown:
-      return "unknown";
-    case ResultType.KnowTrue:
-      return "knowTrue";
-    case ResultType.DefTrue:
-      return "defTrue";
-  }
-
-  return "";
 }
 
 callOptsExecTest();

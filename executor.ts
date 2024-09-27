@@ -26,11 +26,24 @@ import { IndexOfGivenSymbolInCallOpt, OptsConnectionSymbol } from "./common";
 export enum ResultType {
   True,
   KnowTrue,
+  KnowError,
   DefTrue,
+  DefError,
   False,
   Unknown,
   Error,
 }
+
+export const resultTypeMap: { [key in ResultType]: string } = {
+  [ResultType.Error]: "error",
+  [ResultType.False]: "false",
+  [ResultType.True]: "true",
+  [ResultType.Unknown]: "unknown",
+  [ResultType.KnowTrue]: "knowTrue",
+  [ResultType.DefTrue]: "defTrue",
+  [ResultType.KnowError]: "know: error",
+  [ResultType.DefError]: "def: error",
+};
 
 function info(t: ResultType, s: string = ""): ExecInfo {
   return { type: t, message: s };
@@ -55,7 +68,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
     // return defExec(env, node as DefNode);
     case LiTexNodeType.InferNode:
       // return inferExec(env, node as InferNode);
-      templateDeclExec(env, node as TemplateNode);
+      return templateDeclExec(env, node as TemplateNode);
     case LiTexNodeType.KnowNode:
       return knowExec(env, node as KnowNode);
     case LiTexNodeType.CallOptsNode:
@@ -75,7 +88,7 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
     return info(ResultType.DefTrue);
   } catch (error) {
     catchRuntimeError(env, error, "template declaration");
-    return info(ResultType.Error);
+    return info(ResultType.DefError);
   }
 }
 
