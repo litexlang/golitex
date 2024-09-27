@@ -11,6 +11,10 @@ export class LiTeXEnv {
   >();
   constructor() {}
 
+  pushErrorMessage(s: string) {
+    this.errors.push(s);
+  }
+
   pushNewFact(fact: FactNode): ExecInfo {
     const declaredTemplate = this.getDeclaredTemplate(fact.optName);
     if (!declaredTemplate)
@@ -52,14 +56,6 @@ export class LiTeXEnv {
   getFact(s: string): string[][][] | undefined {
     const node = this.getDeclaredTemplate(s);
     return node?.facts;
-  }
-
-  pushErrorMessage(s: string) {
-    this.errors.push(s);
-  }
-
-  callOptNodeName(optNode: CallOptNode) {
-    return optNode.optName;
   }
 
   printCallOptFacts() {

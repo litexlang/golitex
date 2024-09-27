@@ -2,47 +2,34 @@
 export enum LiTexNodeType {
   Error,
   Node,
+
+  // Logic
   NotNode,
   OrNode,
-  OnlyIfFactNode,
-  LiTexNodeType,
+
+  // Fact
   CallOptNode,
   CallOptsNode,
+
+  // Operators
   KnowNode,
   ExistNode,
-  IffNode,
-  FactsNode,
-  InferNode,
   HaveNode,
-  FreeVarsWithFactsNode,
-  PropertyNode,
-  CheckNode,
-  CallOptWithColonColonNode,
-  OnlyIfNode,
-  IfNode,
-  InheritNode,
   LetNode,
-  DefNode,
   ProofNode,
+
+  // Template
+  InferNode,
+  DefNode,
+
+  // Helper
+  FreeVarsWithFactsNode,
   QuestionMarkNode,
 }
 
 export class LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.Node;
   constructor() {}
-}
-const NullNode = new LiTeXNode();
-
-export function makeCallOptNode(
-  optName: string,
-  optParams: string[][],
-  optNameAsLst: string[]
-) {
-  const node = new CallOptNode([]);
-  node.optName = optName;
-  node.optParams = optParams;
-  node.optNameAsLst = optNameAsLst;
-  return node;
 }
 
 export class CallOptNode extends LiTeXNode {
@@ -72,19 +59,14 @@ export class CallOptNode extends LiTeXNode {
   }
 }
 
-export type FactNode = CallOptNode;
-
+// Main data structure of the whole project
 export class TemplateNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
   declOptName: string;
   params: string[][];
   requirements: LiTeXNode[] = [];
   onlyIfExprs: LiTeXNode[] = [];
-  father: string = "";
-  declaredTemplates: Map<string, TemplateNode> = new Map<
-    string,
-    TemplateNode
-  >();
+  declaredTemplates = new Map<string, TemplateNode>();
   facts: string[][][] = [];
 
   constructor(
@@ -164,15 +146,6 @@ export class FreeVarsWithFactsNode extends LiTeXNode {
   }
 }
 
-export class CheckNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.CheckNode;
-  callOpts: CallOptNode[] = [];
-  constructor(callOpts: CallOptNode[]) {
-    super();
-    this.callOpts = callOpts;
-  }
-}
-
 export class ExistNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.ExistNode;
   declOptName: string = "";
@@ -206,6 +179,7 @@ export class OrNode extends LiTeXNode {
   blocks: CallOptNode[][] = [];
 }
 
+export type FactNode = CallOptNode;
 export class CallOptsNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptsNode;
   nodes: CallOptNode[] = [];
@@ -237,24 +211,6 @@ export class DefNode extends TemplateNode {
   ) {
     super(declOptName, params, requirements);
   }
-
-  // emitOnlyIfs(env: LiTeXEnv, freeToFixedMap: Map<string, string>) {
-  //   for (const defSubNode of this.requirements) {
-  //     if (defSubNode.type === LiTexNodeType.CallOptsNode) {
-  //       for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
-  //         env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
-  //       }
-  //     }
-  //   }
-
-  //   for (const defSubNode of this.onlyIfExprs) {
-  //     if (defSubNode.type === LiTexNodeType.CallOptsNode) {
-  //       for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
-  //         env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
-  //       }
-  //     }
-  //   }
-  // }
 }
 
 export class QuestionMarkNode extends LiTeXNode {
@@ -265,31 +221,4 @@ export class QuestionMarkNode extends LiTeXNode {
     super();
     this.template = template;
   }
-}
-
-export function getFixedNodeFromFreeFixMap(
-  freeToFixedMap: Map<string, string>,
-  freeCallOpt: CallOptNode
-): CallOptNode {
-  function freeVarsToFixedVars(
-    strArrToChange: string[][],
-    relation: Map<string, string>
-  ): string[][] {
-    const result: string[][] = [];
-
-    for (const item of strArrToChange) {
-      const cur: string[] = [];
-      for (const subitem of item) {
-        cur.push(relation.get(subitem) as string);
-      }
-      result.push(cur);
-    }
-
-    return result;
-  }
-
-  const node = new CallOptNode([]);
-  node.optName = freeCallOpt.optName;
-  node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, freeToFixedMap);
-  return node;
 }
