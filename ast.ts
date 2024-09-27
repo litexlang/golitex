@@ -69,10 +69,16 @@ export class TemplateNode extends LiTeXNode {
   onlyIfExprs: LiTeXNode[] = [];
   declaredTemplates = new Map<string, TemplateNode>();
   facts: string[][][] = [];
+  freeVars: string[];
 
-  constructor(declOptName: string, requirements: LiTeXNode[]) {
+  constructor(
+    declOptName: string,
+    freeVars: string[],
+    requirements: LiTeXNode[]
+  ) {
     super();
     this.declOptName = declOptName;
+    this.freeVars = freeVars;
     this.requirements = requirements;
   }
 
@@ -103,8 +109,12 @@ export class TemplateNode extends LiTeXNode {
 export class InferNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
 
-  constructor(declOptName: string, requirements: LiTeXNode[]) {
-    super(declOptName, requirements);
+  constructor(
+    declOptName: string,
+    freeVars: string[],
+    requirements: LiTeXNode[]
+  ) {
+    super(declOptName, freeVars, requirements);
   }
 }
 
@@ -196,8 +206,12 @@ export class LetNode extends LiTeXNode {
 export class DefNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.DefNode;
 
-  constructor(declOptName: string, requirements: LiTeXNode[]) {
-    super(declOptName, requirements);
+  constructor(
+    declOptName: string,
+    freeVars: string[],
+    requirements: LiTeXNode[]
+  ) {
+    super(declOptName, freeVars, requirements);
   }
 }
 

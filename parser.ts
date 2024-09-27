@@ -172,10 +172,9 @@ function freeVarsAndTheirFactsParse(
       else throw Error("infer parameters");
     }
     if (!(tokens[0] === ")")) {
-      skip(tokens, "|"); // skip :
+      skip(tokens, "|");
       while (!(tokens[0] === ")")) {
         const node = callOptParse(env, tokens);
-        // const node = LiTexStmtParse(env, tokens);
         if (node) requirements.push(node as CallOptNode);
 
         if (tokens[0] === ",") tokens.shift();
@@ -385,16 +384,12 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
     return params;
   }
 
-  // const snapShot = env.getSnapShot();
-
   try {
     skip(tokens, DefTypeKeywords);
     const declOptName = shiftVar(tokens);
     skip(tokens, "(");
 
-    // const curFreeVars = [...env.fatherFreeVars, freeVars(tokens)];
-    // env.fatherFreeVars = curFreeVars;
-    const curFreeVars = [freeVars(tokens)];
+    const curFreeVars = freeVars(tokens);
 
     const FreeVarsWithFactsNode = freeVarsAndTheirFactsParse(env, tokens);
 
@@ -406,14 +401,14 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
       const block = nonExecutableBlockParse(env, tokens);
       result = new InferNode(
         declOptName,
-        // curFreeVars,
+        curFreeVars,
         FreeVarsWithFactsNode.properties
       );
       (result as InferNode).onlyIfExprs = block;
     } else {
       result = new DefNode(
         declOptName,
-        // curFreeVars,
+        curFreeVars,
         FreeVarsWithFactsNode.properties
       );
 
