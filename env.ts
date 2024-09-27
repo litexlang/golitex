@@ -7,6 +7,7 @@ import {
   CallOptsNode,
   TemplateNode,
 } from "./ast";
+import { OptsConnectionSymbol } from "./common";
 
 // type SnapShot = { fatherFreeVars: string[][] };
 
@@ -15,9 +16,7 @@ export type FactAboutGivenOpt = { params: string[][]; onlyIfs: CallOptNode[] };
 export class LiTeXEnv {
   errors: string[] = [];
   infers: Map<string, InferNode> = new Map<string, InferNode>();
-  //! string[] will be symbols[] because $$
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
-  // fatherFreeVars: string[][] = [];
   declaredVars: string[] = [];
   defs: Map<string, DefNode> = new Map<string, DefNode>();
   callOptFactsOnlyIfs: Map<string, FactAboutGivenOpt[]> = new Map<
@@ -30,21 +29,40 @@ export class LiTeXEnv {
     TemplateNode
   >();
 
-  // facts: Map<string, { params: string[]; son: string }> = new Map<
-  //   string,
-  //   { params: string[]; son: string }
-  // >();
-
   callOptType(node: CallOptNode) {
     return this.optType(node.optName);
   }
 
+  getDeclaredTemplate(s: string): TemplateNode | undefined {
+    const isTop = (s: string): Boolean => {
+      return !s.includes(OptsConnectionSymbol);
+    };
+
+    const getBeforeFirstColon = (str: string): string => {
+      const colonIndex = str.indexOf(":");
+      return colonIndex !== -1 ? str.slice(0, colonIndex) : str;
+    };
+
+    let relatedTemplate: TemplateNode | undefined;
+    if (isTop(s)) {
+      relatedTemplate = this.declaredTemplates.get(s);
+    } else {
+      relatedTemplate = this.declaredTemplates
+        .get(getBeforeFirstColon(s))
+        ?.getDeclaredSubTemplate(s);
+    }
+
+    return relatedTemplate;
+  }
+
   optType(s: string): LiTexNodeType {
-    let node: LiTeXNode = this.infers.get(s) as LiTeXNode;
-    if (node) return LiTexNodeType.InferNode;
-    node = this.defs.get(s) as LiTeXNode;
-    if (node) return LiTexNodeType.DefNode;
-    return LiTexNodeType.Error;
+    const node = this.getDeclaredTemplate(s);
+    return (node as TemplateNode).type;
+    // let node: LiTeXNode = this.infers.get(s) as LiTeXNode;
+    // if (node) return LiTexNodeType.InferNode;
+    // node = this.defs.get(s) as LiTeXNode;
+    // if (node) return LiTexNodeType.DefNode;
+    // return LiTexNodeType.Error;
   }
 
   // returnToSnapShot(original: SnapShot) {

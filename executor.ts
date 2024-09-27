@@ -123,33 +123,33 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
   return info(ResultType.True);
 }
 
-function inferExec(
-  env: LiTeXEnv,
-  node: InferNode,
-  fatherName: string = ""
-): ExecInfo {
-  try {
-    if (env.keyInDefs(node.declOptName)) {
-      throw Error(node.declOptName + " has already been declared.");
-    } else if (env.infers.has(node.declOptName)) {
-      throw Error(node.declOptName + " has already been declared.");
-    }
+// function inferExec(
+//   env: LiTeXEnv,
+//   node: InferNode,
+//   fatherName: string = ""
+// ): ExecInfo {
+//   try {
+//     if (env.keyInDefs(node.declOptName)) {
+//       throw Error(node.declOptName + " has already been declared.");
+//     } else if (env.infers.has(node.declOptName)) {
+//       throw Error(node.declOptName + " has already been declared.");
+//     }
 
-    let sonNamePrefix: string = "";
-    if (fatherName === "") {
-      sonNamePrefix = node.declOptName + ":";
-      env.infers.set(node.declOptName, node);
-    } else {
-      sonNamePrefix = fatherName + node.declOptName + ":";
-      env.infers.set(fatherName + node.declOptName, node);
-    }
+//     let sonNamePrefix: string = "";
+//     if (fatherName === "") {
+//       sonNamePrefix = node.declOptName + ":";
+//       env.infers.set(node.declOptName, node);
+//     } else {
+//       sonNamePrefix = fatherName + node.declOptName + ":";
+//       env.infers.set(fatherName + node.declOptName, node);
+//     }
 
-    return info(ResultType.True);
-  } catch (error) {
-    catchRuntimeError(env, error, "infer");
-    return info(ResultType.Unknown);
-  }
-}
+//     return info(ResultType.True);
+//   } catch (error) {
+//     catchRuntimeError(env, error, "infer");
+//     return info(ResultType.Unknown);
+//   }
+// }
 
 function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   //TODO: Needs to check whether a template is declared
@@ -190,72 +190,85 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
 }
 
 function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
-  const isTop = (s: string): Boolean => {
-    return !s.includes(OptsConnectionSymbol);
-  };
+  // function knowDefCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+  //   const defNode = env.defs.get(node.optName) as DefNode;
 
-  const getBeforeFirstColon = (str: string): string => {
-    const colonIndex = str.indexOf(":");
-    return colonIndex !== -1 ? str.slice(0, colonIndex) : str;
-  };
+  //   const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
+  //     defNode,
+  //     node
+  //   );
+  //   defNode.emitOnlyIfs(env, freeToFixedMap);
+  //   return info(ResultType.True);
+  // }
 
-  function knowDefCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
-    const defNode = env.defs.get(node.optName) as DefNode;
+  // function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
+  //   try {
+  //     const relatedInferNode = env.infers.get(node.optName) as InferNode;
+  //     const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
+  //       relatedInferNode,
+  //       node
+  //     );
 
-    const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
-      defNode,
-      node
-    );
-    defNode.emitOnlyIfs(env, freeToFixedMap);
-    return info(ResultType.True);
-  }
+  //     const checkResult: ResultType = relatedInferNode.checkRequirements(
+  //       env,
+  //       freeToFixedMap
+  //     );
+  //     if (!(checkResult === ResultType.True)) {
+  //       return checkResult;
+  //     }
 
-  function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
-    try {
-      const relatedInferNode = env.infers.get(node.optName) as InferNode;
-      const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
-        relatedInferNode,
-        node
-      );
+  //     relatedInferNode.emitOnlyIfs(env, freeToFixedMap);
+  //   } catch (error) {
+  //     catchRuntimeError(env, error, "know infer");
+  //     return info(ResultType.Error, "");
+  //   }
+  // }
 
-      const checkResult: ResultType = relatedInferNode.checkRequirements(
-        env,
-        freeToFixedMap
-      );
-      if (!(checkResult === ResultType.True)) {
-        return checkResult;
-      }
-
-      relatedInferNode.emitOnlyIfs(env, freeToFixedMap);
-    } catch (error) {
-      catchRuntimeError(env, error, "know infer");
-      return info(ResultType.Error, "");
-    }
-  }
-
-  let relatedTemplate: TemplateNode | undefined;
-  if (isTop(node.optName)) {
-    relatedTemplate = env.declaredTemplates.get(
-      getBeforeFirstColon(node.optName)
-    );
-  } else {
-    relatedTemplate = env.declaredTemplates
-      .get(getBeforeFirstColon(node.optName))
-      ?.getDeclaredSubTemplate(node.optName);
-  }
+  /**Check whether the called fact is declared. */
+  let relatedTemplate: TemplateNode | undefined = env.getDeclaredTemplate(
+    node.optName
+  );
 
   if (!relatedTemplate)
     return info(ResultType.KnowUndeclared, node.optName + " has not declared");
 
+  /**Check fact and emit onlyIfs. */
   switch (env.optType(node.optName)) {
     case LiTexNodeType.InferNode:
-      const result = knowInferCallOptExec(env, node);
-      if (result === ResultType.Unknown) return info(ResultType.Unknown);
+      {
+        const relatedInferNode = env.getDeclaredTemplate(
+          node.optName
+        ) as InferNode;
+        const inferFreeToFixedMap: Map<string, string> = getFreeToFixedMap(
+          relatedInferNode,
+          node
+        );
+
+        const checkResult: ResultType = relatedInferNode.checkRequirements(
+          env,
+          inferFreeToFixedMap
+        );
+        if (!(checkResult === ResultType.True)) {
+          return info(checkResult);
+        }
+
+        relatedInferNode.emitOnlyIfs(env, inferFreeToFixedMap);
+      }
       break;
+
     case LiTexNodeType.DefNode:
-      knowDefCallOptExec(env, node);
+      {
+        const defNode = env.getDeclaredTemplate(node.optName) as DefNode;
+
+        const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
+          defNode,
+          node
+        );
+        defNode.emitOnlyIfs(env, freeToFixedMap);
+      }
       break;
   }
+
   env.newFact(node);
   return info(ResultType.KnowTrue);
 }
@@ -298,26 +311,26 @@ function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
   }
 }
 
-function defExec(
-  env: LiTeXEnv,
-  node: DefNode,
-  fatherName: string = ""
-): ExecInfo {
-  try {
-    env.defs.set(fatherName + node.declOptName, node);
+// function defExec(
+//   env: LiTeXEnv,
+//   node: DefNode,
+//   fatherName: string = ""
+// ): ExecInfo {
+//   try {
+//     env.defs.set(fatherName + node.declOptName, node);
 
-    // for (const value of node.onlyIfExprs) {
-    //   switch (value.type) {
-    //     case LiTexNodeType.DefNode:
-    //     case LiTexNodeType.InferNode:
-    //       node.declaredTemplates.set(node.declOptName, value as TemplateNode);
-    //       break;
-    //   }
-    // }
+//     // for (const value of node.onlyIfExprs) {
+//     //   switch (value.type) {
+//     //     case LiTexNodeType.DefNode:
+//     //     case LiTexNodeType.InferNode:
+//     //       node.declaredTemplates.set(node.declOptName, value as TemplateNode);
+//     //       break;
+//     //   }
+//     // }
 
-    return info(ResultType.DefTrue);
-  } catch (error) {
-    catchRuntimeError(env, error, "def");
-    return info(ResultType.Error, "");
-  }
-}
+//     return info(ResultType.DefTrue);
+//   } catch (error) {
+//     catchRuntimeError(env, error, "def");
+//     return info(ResultType.Error, "");
+//   }
+// }
