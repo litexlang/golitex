@@ -1,7 +1,5 @@
 import {
   CallOptNode,
-  InferNode,
-  DefNode,
   LiTexNodeType,
   LiTeXNode,
   CallOptsNode,
@@ -11,25 +9,10 @@ import {
 import { OptsConnectionSymbol } from "./common";
 import { ExecInfo, resultInfo, ResultType } from "./executor";
 
-export type FactAboutGivenOpt = { params: string[][]; onlyIfs: CallOptNode[] };
-
-export type TemplateFact = {
-  subTemplates: Map<string, TemplateFact>;
-  facts: string[][][];
-  templateNode: TemplateNode;
-};
-
 export class LiTeXEnv {
   errors: string[] = [];
-  infers: Map<string, InferNode> = new Map<string, InferNode>();
   callOptFacts: Map<string, string[][][]> = new Map<string, string[][][]>();
   declaredVars: string[] = [];
-  defs: Map<string, DefNode> = new Map<string, DefNode>();
-  callOptFactsOnlyIfs: Map<string, FactAboutGivenOpt[]> = new Map<
-    string,
-    FactAboutGivenOpt[]
-  >();
-
   declaredTemplates: Map<string, TemplateNode> = new Map<
     string,
     TemplateNode
@@ -44,46 +27,6 @@ export class LiTeXEnv {
       );
     declaredTemplate?.facts.push(fact.optParams);
     return resultInfo(ResultType.KnowTrue);
-  }
-
-  checkFact(calledFact: FactNode): ExecInfo {
-    const declaredTemplate = this.getDeclaredTemplate(calledFact.optName);
-    if (!declaredTemplate)
-      return resultInfo(
-        ResultType.Error,
-        calledFact.optName + " has not been declared."
-      );
-    for (const value of declaredTemplate?.facts) {
-      if (areNestedArraysEqual(value, calledFact.optParams)) {
-        return resultInfo(ResultType.True);
-      }
-    }
-
-    return resultInfo(ResultType.Unknown);
-
-    function areNestedArraysEqual(arr1: string[][], arr2: string[][]): boolean {
-      if (arr1.length !== arr2.length) {
-        return false;
-      }
-
-      for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i].length !== arr2[i].length) {
-          return false;
-        }
-
-        for (let j = 0; j < arr1[i].length; j++) {
-          if (arr1[i][j] !== arr2[i][j]) {
-            return false;
-          }
-        }
-      }
-
-      return true;
-    }
-  }
-
-  callOptType(node: CallOptNode) {
-    return this.optType(node.optName);
   }
 
   getDeclaredTemplate(node: string | CallOptNode): TemplateNode | undefined {
@@ -123,10 +66,6 @@ export class LiTeXEnv {
     this.errors.push(s);
   }
 
-  keyInDefs(s: string) {
-    return this.infers.has(s);
-  }
-
   callOptNodeName(optNode: CallOptNode) {
     return optNode.optName;
   }
@@ -135,24 +74,6 @@ export class LiTeXEnv {
     const optName: string = optNode.optName;
     const validParamsLst = this.callOptFacts.get(optName);
     return validParamsLst;
-  }
-
-  newFact(node: CallOptNode) {
-    // check whether it's truly a new fact
-    // if (this.isCallOptFact(node)) {
-    //   return;
-    // } else
-    {
-      if (!this.getFromCallOptFacts(node)) {
-        this.callOptFacts.set(this.callOptNodeName(node), [node.optParams]);
-        this.callOptFactsOnlyIfs.set(this.callOptNodeName(node), []);
-      } else {
-        this.callOptFacts.get(this.callOptNodeName(node))?.push(node.optParams);
-        this.callOptFactsOnlyIfs
-          .get(this.callOptNodeName(node))
-          ?.push({ params: node.optParams, onlyIfs: [] });
-      }
-    }
   }
 
   isCallOptFact(optNode: CallOptNode): Boolean {
@@ -189,25 +110,6 @@ export class LiTeXEnv {
     return true;
   }
 
-  getCalledFactOnlyIfs(optNode: CallOptNode): CallOptNode[] | undefined {
-    const validParamsLst = this.callOptFactsOnlyIfs.get(optNode.optName);
-    if (!validParamsLst) return undefined;
-
-    for (const item of validParamsLst) {
-      let isTheSame = true;
-      for (let i = 0; i < item.params.length; i++) {
-        if (!paramsIsValid(item.params[i], optNode.optParams[i])) {
-          isTheSame = false;
-          break;
-        }
-      }
-      if (isTheSame) {
-        return item.onlyIfs;
-      }
-    }
-    return undefined;
-  }
-
   printCallOptFacts() {
     console.log("----facts------\n");
     for (const [key, value] of this.callOptFacts) {
@@ -225,14 +127,6 @@ export class LiTeXEnv {
     for (const value of this.declaredTemplates) {
       console.log(value);
       console.log("");
-    }
-  }
-
-  newFacts(node: LiTeXNode) {
-    if (node.type === LiTexNodeType.CallOptsNode) {
-      for (const [j, callOptNode] of (node as CallOptsNode).nodes.entries()) {
-        this.newFact(callOptNode);
-      }
     }
   }
 }

@@ -134,36 +134,6 @@ export class InferNode extends TemplateNode {
   ) {
     super(declOptName, params, requirements);
   }
-
-  emitOnlyIfs(env: LiTeXEnv, freeToFixedMap: Map<string, string>) {
-    for (const defSubNode of this.onlyIfExprs) {
-      if (defSubNode.type === LiTexNodeType.CallOptsNode) {
-        for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
-          env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
-        }
-      }
-    }
-  }
-
-  // checkRequirements(
-  //   env: LiTeXEnv,
-  //   freeToFixedMap: Map<string, string>
-  // ): ResultType {
-  //   for (const req of this.requirements) {
-  //     if (req.type === LiTexNodeType.CallOptsNode) {
-  //       for (const freeOpt of (req as CallOptsNode).nodes) {
-  //         const isFact: Boolean = env.isCallOptFact(
-  //           // this.getFixedNodeFromFreeNode(fixedOpt.optParams, freeOpt)
-  //           getFixedNodeFromFreeFixMap(freeToFixedMap, freeOpt)
-  //         );
-  //         if (!isFact) {
-  //           return ResultType.Unknown;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   return ResultType.True;
-  // }
 }
 
 export type CanBeKnownNode = FactNode | InferNode | DefNode | TemplateNode;
@@ -270,23 +240,23 @@ export class DefNode extends TemplateNode {
     super(declOptName, params, requirements);
   }
 
-  emitOnlyIfs(env: LiTeXEnv, freeToFixedMap: Map<string, string>) {
-    for (const defSubNode of this.requirements) {
-      if (defSubNode.type === LiTexNodeType.CallOptsNode) {
-        for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
-          env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
-        }
-      }
-    }
+  // emitOnlyIfs(env: LiTeXEnv, freeToFixedMap: Map<string, string>) {
+  //   for (const defSubNode of this.requirements) {
+  //     if (defSubNode.type === LiTexNodeType.CallOptsNode) {
+  //       for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
+  //         env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
+  //       }
+  //     }
+  //   }
 
-    for (const defSubNode of this.onlyIfExprs) {
-      if (defSubNode.type === LiTexNodeType.CallOptsNode) {
-        for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
-          env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
-        }
-      }
-    }
-  }
+  //   for (const defSubNode of this.onlyIfExprs) {
+  //     if (defSubNode.type === LiTexNodeType.CallOptsNode) {
+  //       for (const freeCallOpt of (defSubNode as CallOptsNode).nodes) {
+  //         env.newFact(getFixedNodeFromFreeFixMap(freeToFixedMap, freeCallOpt));
+  //       }
+  //     }
+  //   }
+  // }
 }
 
 export class QuestionMarkNode extends LiTeXNode {
