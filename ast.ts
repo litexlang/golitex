@@ -119,6 +119,18 @@ export class TemplateNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
+  getDeclaredSubTemplate(s: string): undefined | TemplateNode {
+    const names = s.split(":");
+    let curTemplate: TemplateNode | undefined = this;
+    for (const value of names) {
+      curTemplate = curTemplate?.declaredTemplates.get(value);
+      if (!curTemplate) {
+        return undefined;
+      }
+    }
+    return curTemplate;
+  }
+
   initDeclaredTemplates() {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];

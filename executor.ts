@@ -27,6 +27,7 @@ export enum ResultType {
   True,
   KnowTrue,
   KnowError,
+  KnowUndeclared,
   DefTrue,
   DefError,
   False,
@@ -43,6 +44,7 @@ export const resultTypeMap: { [key in ResultType]: string } = {
   [ResultType.DefTrue]: "defTrue",
   [ResultType.KnowError]: "know: error",
   [ResultType.DefError]: "def: error",
+  [ResultType.KnowUndeclared]: "know: undeclared opt",
 };
 
 function info(t: ResultType, s: string = ""): ExecInfo {
@@ -163,8 +165,9 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     let result: ExecInfo;
     switch (curNode.type) {
       case LiTexNodeType.CallOptNode:
-        result = knowCallOptExec(env, curNode as CallOptNode);
-        if (result.type !== ResultType.True) return result;
+        // result = knowCallOptExec(env, curNode as CallOptNode);
+        result = knowFactExec(env, curNode as CallOptNode);
+        if (result.type !== ResultType.KnowTrue) return result;
         break;
       // When knowing def and infer, we not only emit them into env.defs/infers, we also store facts
       case LiTexNodeType.DefNode:
@@ -184,6 +187,35 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     }
   }
   return info(ResultType.True);
+}
+
+function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
+  const isTop = (s: string): Boolean => {
+    return !s.includes(OptsConnectionSymbol);
+  };
+
+  const getBeforeFirstColon = (str: string): string => {
+    const colonIndex = str.indexOf(":");
+    return colonIndex !== -1 ? str.slice(0, colonIndex) : str;
+  };
+
+  let relatedTemplate: TemplateNode | undefined;
+  if (isTop(node.optName)) {
+    relatedTemplate = env.declaredTemplates.get(
+      getBeforeFirstColon(node.optName)
+    );
+  } else {
+    relatedTemplate = env.declaredTemplates
+      .get(getBeforeFirstColon(node.optName))
+      ?.getDeclaredSubTemplate(node.optName);
+  }
+
+  if (!relatedTemplate)
+    return info(ResultType.KnowUndeclared, node.optName + " has not declared");
+
+  const res = knowCallOptExec(env, node);
+
+  return res;
 }
 
 // function knowOnlyIfFactExec(env: LiTeXEnv, node: OnlyIfFactNode): ExecInfo{
