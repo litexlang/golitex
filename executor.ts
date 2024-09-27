@@ -1,13 +1,10 @@
 import {
   CallOptNode,
   CallOptsNode,
-  InferNode,
   KnowNode,
   LiTeXNode,
   LiTexNodeType,
   LetNode,
-  DefNode,
-  getFreeToFixedMap,
   FactNode,
   CanBeKnownNode,
   TemplateNode,
@@ -128,7 +125,6 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
 }
 
 function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
-  //TODO: Needs to check whether a template is declared
   let facts: CanBeKnownNode[] = [];
   if (node.type === LiTexNodeType.KnowNode) {
     facts = (node as KnowNode).facts;
@@ -140,7 +136,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   for (const fact of facts) {
     switch (fact.type) {
       case LiTexNodeType.CallOptNode:
-        res = env.pushNewFact(fact as FactNode);
+        res = knowFactExec(env, fact as FactNode);
     }
     if (res.type !== ResultType.KnowTrue) return res;
   }
@@ -149,10 +145,9 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
 }
 
 function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
-  /**Check whether the called fact is declared. */
-  let relatedTemplate: TemplateNode | undefined = env.getDeclaredTemplate(
-    node.optName
-  );
+  //TODO: Needs to check whether a template is declared
+
+  let relatedTemplate = env.getDeclaredTemplate(node.optName);
 
   if (!relatedTemplate)
     return resultInfo(
@@ -160,43 +155,7 @@ function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
       node.optName + " has not declared"
     );
 
-  /**Check fact and emit onlyIfs. */
-  switch (env.optType(node.optName)) {
-    case LiTexNodeType.InferNode:
-      {
-        // const relatedInferNode = env.getDeclaredTemplate(
-        //   node.optName
-        // ) as InferNode;
-        const inferFreeToFixedMap: Map<string, string> = getFreeToFixedMap(
-          relatedTemplate as InferNode,
-          node
-        );
-
-        const checkResult: ResultType = (
-          relatedTemplate as InferNode
-        ).checkRequirements(env, inferFreeToFixedMap);
-        if (!(checkResult === ResultType.True)) {
-          return resultInfo(checkResult);
-        }
-
-        (relatedTemplate as InferNode).emitOnlyIfs(env, inferFreeToFixedMap);
-      }
-      break;
-
-    case LiTexNodeType.DefNode:
-      {
-        const defNode = env.getDeclaredTemplate(node.optName) as DefNode;
-
-        const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
-          defNode,
-          node
-        );
-        defNode.emitOnlyIfs(env, freeToFixedMap);
-      }
-      break;
-  }
-
-  env.newFact(node);
+  env.pushNewFact(node);
   return resultInfo(ResultType.KnowTrue);
 }
 

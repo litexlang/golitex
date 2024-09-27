@@ -1,5 +1,4 @@
 import { LiTeXEnv } from "./env";
-import { ResultType } from "./executor";
 
 // There are 3 things in LiTex: Declaration (var, fact-formula) ; check; know
 export enum LiTexNodeType {
@@ -29,8 +28,6 @@ export enum LiTexNodeType {
   ProofNode,
   QuestionMarkNode,
 }
-
-// export type TemplateNode = DefNode | InferNode;
 
 export class LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.Node;
@@ -69,10 +66,6 @@ export class CallOptNode extends LiTeXNode {
     });
   }
 
-  // paramsLst(): string[] {
-  //   return this.optName.split(":");
-  // }
-
   pushNewNameParamsPair(pair: [string, string[]]) {
     if (this.optName !== "") this.optName += ":" + pair[0];
     else this.optName += pair[0];
@@ -81,20 +74,7 @@ export class CallOptNode extends LiTeXNode {
   }
 }
 
-// export class OnlyIfFactNode extends LiTeXNode {
-//   type: LiTexNodeType = LiTexNodeType.OnlyIfFactNode;
-//   // notice ifNode and onlyIfs can not be OnlyIfFactNode itself.
-//   ifNode: CallOptNode;
-//   onlyIfs: CallOptNode[];
-
-//   constructor(ifNode: CallOptNode, onlyIfs: CallOptNode[]) {
-//     super();
-//     this.ifNode = ifNode;
-//     this.onlyIfs = onlyIfs;
-//   }
-// }
-
-export type FactNode = CallOptNode; // | OnlyIfFactNode;
+export type FactNode = CallOptNode;
 
 export class TemplateNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
@@ -165,25 +145,25 @@ export class InferNode extends TemplateNode {
     }
   }
 
-  checkRequirements(
-    env: LiTeXEnv,
-    freeToFixedMap: Map<string, string>
-  ): ResultType {
-    for (const req of this.requirements) {
-      if (req.type === LiTexNodeType.CallOptsNode) {
-        for (const freeOpt of (req as CallOptsNode).nodes) {
-          const isFact: Boolean = env.isCallOptFact(
-            // this.getFixedNodeFromFreeNode(fixedOpt.optParams, freeOpt)
-            getFixedNodeFromFreeFixMap(freeToFixedMap, freeOpt)
-          );
-          if (!isFact) {
-            return ResultType.Unknown;
-          }
-        }
-      }
-    }
-    return ResultType.True;
-  }
+  // checkRequirements(
+  //   env: LiTeXEnv,
+  //   freeToFixedMap: Map<string, string>
+  // ): ResultType {
+  //   for (const req of this.requirements) {
+  //     if (req.type === LiTexNodeType.CallOptsNode) {
+  //       for (const freeOpt of (req as CallOptsNode).nodes) {
+  //         const isFact: Boolean = env.isCallOptFact(
+  //           // this.getFixedNodeFromFreeNode(fixedOpt.optParams, freeOpt)
+  //           getFixedNodeFromFreeFixMap(freeToFixedMap, freeOpt)
+  //         );
+  //         if (!isFact) {
+  //           return ResultType.Unknown;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   return ResultType.True;
+  // }
 }
 
 export type CanBeKnownNode = FactNode | InferNode | DefNode | TemplateNode;
@@ -319,38 +299,6 @@ export class QuestionMarkNode extends LiTeXNode {
   }
 }
 
-export function getFreeToFixedMap(
-  templateNode: TemplateNode,
-  calledOpt: CallOptNode
-): Map<string, string> {
-  function relationBetweenStrArrArrays(
-    usedAsKey: string[][],
-    usedAsValue: string[][]
-  ): Map<string, string> {
-    const result = new Map<string, string>();
-
-    for (let i = 0; i < usedAsKey.length; i++) {
-      for (let j = 0; j < usedAsValue[i].length; j++) {
-        result.set(usedAsKey[i][j], usedAsValue[i][j]);
-      }
-    }
-
-    return result;
-  }
-
-  try {
-    if (!areStrArrStructureEqual(templateNode.params, calledOpt.optParams)) {
-      throw Error("Invalid number of given arguments.");
-    }
-    return relationBetweenStrArrArrays(
-      templateNode.params,
-      calledOpt.optParams
-    );
-  } catch (error) {
-    throw error;
-  }
-}
-
 export function getFixedNodeFromFreeFixMap(
   freeToFixedMap: Map<string, string>,
   freeCallOpt: CallOptNode
@@ -376,24 +324,4 @@ export function getFixedNodeFromFreeFixMap(
   node.optName = freeCallOpt.optName;
   node.optParams = freeVarsToFixedVars(freeCallOpt.optParams, freeToFixedMap);
   return node;
-}
-
-export function areStrArrStructureEqual(
-  arr1: string[][],
-  arr2: string[][]
-): Boolean {
-  // Check if the outer arrays have the same length
-  if (arr1.length !== arr2.length) {
-    return false;
-  }
-
-  // Check if each corresponding inner array has the same length
-  for (let i = 0; i < arr1.length; i++) {
-    if (arr1[i].length !== arr2[i].length) {
-      return false;
-    }
-  }
-
-  // If we've made it this far, the structures are equal
-  return true;
 }

@@ -7,12 +7,9 @@ import {
   CallOptsNode,
   TemplateNode,
   FactNode,
-  areStrArrStructureEqual,
 } from "./ast";
 import { OptsConnectionSymbol } from "./common";
 import { ExecInfo, resultInfo, ResultType } from "./executor";
-
-// type SnapShot = { fatherFreeVars: string[][] };
 
 export type FactAboutGivenOpt = { params: string[][]; onlyIfs: CallOptNode[] };
 
@@ -48,8 +45,6 @@ export class LiTeXEnv {
     declaredTemplate?.facts.push(fact.optParams);
     return resultInfo(ResultType.KnowTrue);
   }
-
-  // facts: Map<string, TemplateFact> = new Map<string, TemplateFact>();
 
   checkFact(calledFact: FactNode): ExecInfo {
     const declaredTemplate = this.getDeclaredTemplate(calledFact.optName);
@@ -87,38 +82,6 @@ export class LiTeXEnv {
     }
   }
 
-  // knowNewFact(calledFact: FactNode): ExecInfo {
-  //   const knownFacts: string[][][] | undefined = this.getTemplateFactFacts(
-  //     calledFact.optName
-  //   );
-  //   if (!knownFacts)
-  //     return resultInfo(
-  //       ResultType.Unknown,
-  //       calledFact.optName + "is not declared."
-  //     );
-  //   else {
-  //   }
-  // }
-
-  // private getTemplateFactFacts(
-  //   nameWithColons: string
-  // ): string[][][] | undefined {
-  //   const names = nameWithColons.split(OptsConnectionSymbol);
-  //   if (names.length === 1) {
-  //     return this.facts.get(names[0])?.facts;
-  //   } else {
-  //     let factMap = this.facts.get(names[0]);
-  //     if (!factMap) return undefined;
-  //     for (let i = 1; i < names.length; i++) {
-  //       factMap = factMap.subTemplates.get(names[i]);
-  //       if (!factMap) return undefined;
-  //     }
-  //     return factMap.facts;
-  //   }
-  // }
-
-  // newTemplateDecl(env: LiTeXEnv, node: TemplateNode): ExecInfo {}
-
   callOptType(node: CallOptNode) {
     return this.optType(node.optName);
   }
@@ -152,20 +115,7 @@ export class LiTeXEnv {
   optType(s: string): LiTexNodeType {
     const node = this.getDeclaredTemplate(s);
     return (node as TemplateNode).type;
-    // let node: LiTeXNode = this.infers.get(s) as LiTeXNode;
-    // if (node) return LiTexNodeType.InferNode;
-    // node = this.defs.get(s) as LiTeXNode;
-    // if (node) return LiTexNodeType.DefNode;
-    // return LiTexNodeType.Error;
   }
-
-  // returnToSnapShot(original: SnapShot) {
-  //   this.fatherFreeVars = original.fatherFreeVars;
-  // }
-
-  // getSnapShot(): SnapShot {
-  //   return { fatherFreeVars: [...this.fatherFreeVars] };
-  // }
 
   constructor() {}
 
