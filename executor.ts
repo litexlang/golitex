@@ -37,11 +37,11 @@ export enum ResultType {
 
 export const resultTypeMap: { [key in ResultType]: string } = {
   [ResultType.Error]: "error",
-  [ResultType.False]: "false",
-  [ResultType.True]: "true",
-  [ResultType.Unknown]: "unknown",
-  [ResultType.KnowTrue]: "knowTrue",
-  [ResultType.DefTrue]: "defTrue",
+  [ResultType.False]: "check: false",
+  [ResultType.True]: "check: true",
+  [ResultType.Unknown]: "check: unknown",
+  [ResultType.KnowTrue]: "know: true",
+  [ResultType.DefTrue]: "def: true",
   [ResultType.KnowError]: "know: error",
   [ResultType.DefError]: "def: error",
   [ResultType.KnowUndeclared]: "know: undeclared opt",
@@ -170,14 +170,14 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
         if (result.type !== ResultType.KnowTrue) return result;
         break;
       // When knowing def and infer, we not only emit them into env.defs/infers, we also store facts
-      case LiTexNodeType.DefNode:
-        result = knowDefExec(env, curNode as DefNode);
-        if (result.type !== ResultType.KnowTrue) return result;
-        break;
-      case LiTexNodeType.InferNode:
-        result = knowInferExec(env, curNode as InferNode);
-        if (result.type !== ResultType.KnowTrue) return result;
-        break;
+      // case LiTexNodeType.DefNode:
+      //   result = knowDefExec(env, curNode as DefNode);
+      //   if (result.type !== ResultType.KnowTrue) return result;
+      //   break;
+      // case LiTexNodeType.InferNode:
+      //   result = knowInferExec(env, curNode as InferNode);
+      //   if (result.type !== ResultType.KnowTrue) return result;
+      //   break;
       // case LiTexNodeType.OnlyIfFactNode:
       //   result = knowOnlyIfFactExec(env, curNode as OnlyIfFactNode);
       //   if (result !== ResultType.True) return result;
@@ -186,7 +186,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
         return info(ResultType.Error, "");
     }
   }
-  return info(ResultType.True);
+  return info(ResultType.KnowTrue);
 }
 
 function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
@@ -198,6 +198,40 @@ function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
     const colonIndex = str.indexOf(":");
     return colonIndex !== -1 ? str.slice(0, colonIndex) : str;
   };
+
+  function knowDefCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+    const defNode = env.defs.get(node.optName) as DefNode;
+
+    const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
+      defNode,
+      node
+    );
+    defNode.emitOnlyIfs(env, freeToFixedMap);
+    return info(ResultType.True);
+  }
+
+  function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
+    try {
+      const relatedInferNode = env.infers.get(node.optName) as InferNode;
+      const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
+        relatedInferNode,
+        node
+      );
+
+      const checkResult: ResultType = relatedInferNode.checkRequirements(
+        env,
+        freeToFixedMap
+      );
+      if (!(checkResult === ResultType.True)) {
+        return checkResult;
+      }
+
+      relatedInferNode.emitOnlyIfs(env, freeToFixedMap);
+    } catch (error) {
+      catchRuntimeError(env, error, "know infer");
+      return info(ResultType.Error, "");
+    }
+  }
 
   let relatedTemplate: TemplateNode | undefined;
   if (isTop(node.optName)) {
@@ -213,33 +247,6 @@ function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
   if (!relatedTemplate)
     return info(ResultType.KnowUndeclared, node.optName + " has not declared");
 
-  const res = knowCallOptExec(env, node);
-
-  return res;
-}
-
-// function knowOnlyIfFactExec(env: LiTeXEnv, node: OnlyIfFactNode): ExecInfo{
-//   return info(ResultType.True);
-// }
-function knowDefExec(env: LiTeXEnv, node: DefNode): ExecInfo {
-  defExec(env, node);
-  knowCallOptExec(
-    env,
-    makeCallOptNode(node.declOptName, node.params, node.declOptName.split(":"))
-  );
-  return info(ResultType.KnowTrue);
-}
-
-function knowInferExec(env: LiTeXEnv, node: InferNode): ExecInfo {
-  inferExec(env, node);
-  knowCallOptExec(
-    env,
-    makeCallOptNode(node.declOptName, node.params, node.declOptName.split(":"))
-  );
-  return info(ResultType.KnowTrue);
-}
-
-function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   switch (env.optType(node.optName)) {
     case LiTexNodeType.InferNode:
       const result = knowInferCallOptExec(env, node);
@@ -253,28 +260,26 @@ function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   return info(ResultType.KnowTrue);
 }
 
-function knowInferCallOptExec(env: LiTeXEnv, node: CallOptNode) {
-  try {
-    const relatedInferNode = env.infers.get(node.optName) as InferNode;
-    const freeToFixedMap: Map<string, string> = getFreeToFixedMap(
-      relatedInferNode,
-      node
-    );
+// function knowOnlyIfFactExec(env: LiTeXEnv, node: OnlyIfFactNode): ExecInfo{
+//   return info(ResultType.True);
+// }
+// function knowDefExec(env: LiTeXEnv, node: DefNode): ExecInfo {
+//   defExec(env, node);
+//   knowCallOptExec(
+//     env,
+//     makeCallOptNode(node.declOptName, node.params, node.declOptName.split(":"))
+//   );
+//   return info(ResultType.KnowTrue);
+// }
 
-    const checkResult: ResultType = relatedInferNode.checkRequirements(
-      env,
-      freeToFixedMap
-    );
-    if (!(checkResult === ResultType.True)) {
-      return checkResult;
-    }
-
-    relatedInferNode.emitOnlyIfs(env, freeToFixedMap);
-  } catch (error) {
-    catchRuntimeError(env, error, "know infer");
-    return info(ResultType.Error, "");
-  }
-}
+// function knowInferExec(env: LiTeXEnv, node: InferNode): ExecInfo {
+//   inferExec(env, node);
+//   knowCallOptExec(
+//     env,
+//     makeCallOptNode(node.declOptName, node.params, node.declOptName.split(":"))
+//   );
+//   return info(ResultType.KnowTrue);
+// }
 
 function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
   try {
@@ -315,12 +320,4 @@ function defExec(
     catchRuntimeError(env, error, "def");
     return info(ResultType.Error, "");
   }
-}
-
-function knowDefCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
-  const defNode = env.defs.get(node.optName) as DefNode;
-
-  const freeToFixedMap: Map<string, string> = getFreeToFixedMap(defNode, node);
-  defNode.emitOnlyIfs(env, freeToFixedMap);
-  return info(ResultType.True);
 }

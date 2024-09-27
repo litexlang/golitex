@@ -30,6 +30,11 @@ export class LiTeXEnv {
     TemplateNode
   >();
 
+  // facts: Map<string, { params: string[]; son: string }> = new Map<
+  //   string,
+  //   { params: string[]; son: string }
+  // >();
+
   callOptType(node: CallOptNode) {
     return this.optType(node.optName);
   }

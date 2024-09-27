@@ -38,6 +38,7 @@ const codes: string[] = [
   // "fun(1,2):fun3(3);",
   ": fun(x) {:fun2(x) ; : fun3(x,y) => {set(x,y);} ; fun4(x);}",
   "know fun(3);",
+  "fun(3);",
   // "// do ?",
   // ": func(x,y) {? fun2(x,y);  ? fun3(y) => {fun4(x);} }",
 ];
