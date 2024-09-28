@@ -134,9 +134,11 @@ const codes: string[] = [
   // "@ fun(#x, #y):fun3(#x);",
   // "@ fun(#x, #y):fun4(#x);",
   // "fun(1,2):fun3(3);",
-  "// ",
-  ": func(x,y) {? fun2(x,y);  ? fun3(y) => {fun4(x);} }",
-  ": fun(x) {:fun2(x) ; : fun3(x,y) => {set(x,y);} }",
+  // "// ",
+  // ": func(x,y) {? fun2(x,y);  ? fun3(y) => {fun4(x);} }",
+  // ": fun(x) {:fun2(x) ; : fun3(x,y) => {set(x,y);} }",
+  // ": func(x,y) {? fun2();  ? fun3(y) => {fun4(x);} }",
+  "know func(1,2):fun2();",
 ];
 
 function testLexer() {

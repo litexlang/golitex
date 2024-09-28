@@ -97,6 +97,21 @@ export class TemplateNode extends LiTeXNode {
   initDeclaredTemplates() {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
+
+      if (value instanceof QuestionMarkNode) {
+        this.onlyIfExprs.splice(i, 1);
+
+        const callNode = new CallOptNode([
+          [value.template.declOptName, value.template.freeVars],
+        ]);
+        const templateNode: TemplateNode = value.template;
+
+        this.onlyIfExprs.splice(i, 0, callNode, templateNode);
+      }
+    }
+
+    for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
+      const value = this.onlyIfExprs[i];
       if (value instanceof TemplateNode) {
         value.initDeclaredTemplates();
         this.declaredTemplates.set(value.declOptName, value);

@@ -229,13 +229,17 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
       const name = shiftVar(tokens) as string;
       const params: string[] = [];
       skip(tokens, "(");
-      while (1) {
-        params.push(shiftVar(tokens));
-        if (isCurToken(",", tokens)) skip(tokens, ",");
-        else if (isCurToken(")", tokens)) {
-          skip(tokens, ")");
-          break;
-        } else throw Error("");
+      if (!isCurToken(")", tokens)) {
+        while (1) {
+          params.push(shiftVar(tokens));
+          if (isCurToken(",", tokens)) skip(tokens, ",");
+          else if (isCurToken(")", tokens)) {
+            skip(tokens, ")");
+            break;
+          } else throw Error("");
+        }
+      } else {
+        skip(tokens, ")");
       }
 
       opts.push([name, params]);

@@ -114,7 +114,11 @@ function checkFactExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 
 function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
   try {
-    env.declaredTemplates.set(node.declOptName, node);
+    (env.declaredTemplates as Map<string, TemplateNode>).set(
+      node.declOptName,
+      node
+    );
+    // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
     node.initDeclaredTemplates();
 
     return resultInfo(ResultType.DefTrue);
