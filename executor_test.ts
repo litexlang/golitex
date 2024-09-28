@@ -57,6 +57,7 @@ const codes: string[] = [
   ": func(x,y) {? fun2();  ? fun3(y) => {fun4(x);} }",
   "know func(1,2):fun2();",
   "func(1,2):fun2();",
+  "know func(1,2,3);",
 ];
 
 function callOptsExecTest() {
@@ -72,7 +73,8 @@ function callOptsExecTest() {
     } else {
       for (let i = 0; i < result.length; i++) {
         const res: ExecInfo = nodeExec(env, result[i]);
-        console.log(resultTypeMap[res.type]);
+        if (!res.message) console.log(resultTypeMap[res.type]);
+        else console.log(resultTypeMap[res.type], res.message);
       }
     }
   }

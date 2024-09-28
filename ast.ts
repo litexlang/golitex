@@ -1,4 +1,5 @@
 import { OptsConnectionSymbol } from "./common";
+import { ExecInfo, resultInfo, ResultType } from "./executor";
 
 // There are 3 things in LiTex: Declaration (var, fact-template) ; check; know
 export enum LiTexNodeType {
@@ -62,7 +63,7 @@ export class CallOptNode extends LiTeXNode {
 }
 
 // Main data structure of the whole project
-export class TemplateNode extends LiTeXNode {
+export abstract class TemplateNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
   declOptName: string;
   requirements: LiTeXNode[] = [];
@@ -119,6 +120,8 @@ export class TemplateNode extends LiTeXNode {
       }
     }
   }
+
+  abstract knowFactExecCheck(node: FactNode): ExecInfo;
 }
 
 export class InferNode extends TemplateNode {
@@ -130,6 +133,35 @@ export class InferNode extends TemplateNode {
     requirements: LiTeXNode[]
   ) {
     super(declOptName, freeVars, requirements);
+  }
+
+  knowFactExecCheck(node: FactNode): ExecInfo {
+    let template: undefined | TemplateNode = this as TemplateNode;
+    for (let i = 0; ; i++) {
+      if (template.freeVars.length !== node.optParams[i].length) {
+        return resultInfo(
+          ResultType.KnowError,
+          template.declOptName +
+            " has " +
+            template.freeVars.length +
+            " parameters, get " +
+            node.optNameAsLst[i].length +
+            " instead."
+        );
+      }
+
+      if (i + 1 < node.optNameAsLst.length) {
+        template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
+        if (!template)
+          return resultInfo(
+            ResultType.KnowError,
+            "Undefined operator " + node.optName
+          );
+      } else {
+        break;
+      }
+    }
+    return resultInfo(ResultType.KnowTrue);
   }
 }
 
@@ -227,6 +259,36 @@ export class DefNode extends TemplateNode {
     requirements: LiTeXNode[]
   ) {
     super(declOptName, freeVars, requirements);
+  }
+
+  // When a fact is to be stored, whether it satisfies requirements must be checked
+  knowFactExecCheck(node: FactNode): ExecInfo {
+    let template: undefined | TemplateNode = this as TemplateNode;
+    for (let i = 0; ; i++) {
+      if (template.freeVars.length !== node.optParams[i].length) {
+        return resultInfo(
+          ResultType.KnowError,
+          template.declOptName +
+            " has " +
+            template.freeVars.length +
+            " parameters, get " +
+            node.optNameAsLst[i].length +
+            " instead."
+        );
+      }
+
+      if (i + 1 < node.optNameAsLst.length) {
+        template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
+        if (!template)
+          return resultInfo(
+            ResultType.KnowError,
+            "Undefined operator " + node.optName
+          );
+      } else {
+        break;
+      }
+    }
+    return resultInfo(ResultType.KnowTrue);
   }
 }
 

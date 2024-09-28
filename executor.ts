@@ -159,7 +159,13 @@ function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
       node.optName + " has not declared"
     );
 
+  let res = (
+    env.getDeclaredTemplate(node.optNameAsLst[0]) as TemplateNode
+  ).knowFactExecCheck(node);
+  if (res.type !== ResultType.KnowTrue) return res;
+
   env.pushNewFact(node);
+
   return resultInfo(ResultType.KnowTrue);
 }
 
