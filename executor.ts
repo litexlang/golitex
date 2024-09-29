@@ -8,6 +8,8 @@ import {
   FactNode,
   CanBeKnownNode,
   TemplateNode,
+  makeTemplateNodeFact,
+  makeMapBetweenFreeVarsAndFixedVar,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
@@ -138,40 +140,71 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
 }
 
 function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
-  let facts: CanBeKnownNode[] = [];
-  let isKnowEverything: Boolean = false;
-  if (node.type === LiTexNodeType.KnowNode) {
-    facts = (node as KnowNode).facts;
-    isKnowEverything = (node as KnowNode).isKnowEverything;
-  } else if (node.type === LiTexNodeType.LetNode) {
-    facts = (node as LetNode).properties;
-  }
-
-  let res: ExecInfo = { type: ResultType.Error, message: "" };
-  for (const fact of facts) {
-    switch (fact.type) {
-      case LiTexNodeType.CallOptNode: {
-        res = knowFactExec(env, fact as FactNode);
-        const template = env.getDeclaredTemplate(fact as CallOptNode);
-        template?.emitOnlyIfs(env, fact as FactNode);
-        break;
-      }
-      case LiTexNodeType.DefNode:
-      case LiTexNodeType.InferNode: {
-        res = templateDeclExec(env, fact as TemplateNode);
-        res = knowFactExec(
-          env,
-          CallOptNode.create((fact as TemplateNode).declOptName, [
-            (fact as TemplateNode).freeVars,
-          ])
-        );
-        break;
-      }
+  try {
+    let facts: CanBeKnownNode[] = [];
+    let isKnowEverything: Boolean = false;
+    if (node.type === LiTexNodeType.KnowNode) {
+      facts = (node as KnowNode).facts;
+      isKnowEverything = (node as KnowNode).isKnowEverything;
+    } else if (node.type === LiTexNodeType.LetNode) {
+      facts = (node as LetNode).properties;
     }
-    if (res.type !== ResultType.KnowTrue) return res;
-  }
 
-  return resultInfo(ResultType.KnowTrue);
+    let res: ExecInfo = { type: ResultType.Error, message: "" };
+    for (const fact of facts) {
+      switch (fact.type) {
+        case LiTexNodeType.CallOptNode: {
+          res = knowFactExec(env, fact as FactNode);
+
+          if (isKnowEverything) {
+            const template = env.getDeclaredTemplate(fact as CallOptNode);
+            if (!template)
+              throw Error(
+                `${(fact as CallOptNode).optName} has not been declared.`
+              );
+            //   for (let i = 0; i < template?.requirements.length; i++) {
+            //     if (template.requirements[i] instanceof CallOptNode) {
+            //       const localTemp = env.getDeclaredTemplate(
+            //         template.requirements[i] as CallOptNode
+            //       ) as TemplateNode;
+            //       if (!localTemp)
+            //         throw Error(
+            //           `${(template.requirements[i] as CallOptNode).optName} has not been declared.`
+            //         );
+            //       const mapBetweenFreeVarsAndFixed = new Map<string, string>();
+            //       for (let j = 0; j < (fact); j++)
+            //       localTemp.facts.push(
+            //         makeTemplateNodeFact(
+            //           (template.requirements[i] as CallOptNode).optParams,
+            //           []
+            //         )
+            //       );
+            //     }
+            //   }
+            template?.emitOnlyIfs(env, fact as FactNode);
+          }
+          break;
+        }
+        case LiTexNodeType.DefNode:
+        case LiTexNodeType.InferNode: {
+          res = templateDeclExec(env, fact as TemplateNode);
+          res = knowFactExec(
+            env,
+            CallOptNode.create((fact as TemplateNode).declOptName, [
+              (fact as TemplateNode).freeVars,
+            ])
+          );
+          break;
+        }
+      }
+      if (res.type !== ResultType.KnowTrue) return res;
+    }
+
+    return resultInfo(ResultType.KnowTrue);
+  } catch (error) {
+    catchRuntimeError(env, error, "know");
+    return resultInfo(ResultType.KnowError);
+  }
 }
 
 export function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {

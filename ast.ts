@@ -314,6 +314,7 @@ export class DefNode extends TemplateNode {
   }
 
   emitOnlyIfs(env: LiTeXEnv, fixedNode: FactNode): ExecInfo {
+    //! Chain reaction is not allowed, maybe I should add some syntax to allow user to use chain reaction.
     const argumentsOfTheLastOpt =
       fixedNode.optParams[fixedNode.optParams.length - 1];
     const freeToFixed = new Map<string, string>();
@@ -322,7 +323,7 @@ export class DefNode extends TemplateNode {
     }
 
     for (let i = 0; i < this.onlyIfExprs.length; i++) {
-      if ((this.onlyIfExprs[i] as CallOptNode) instanceof CallOptsNode) {
+      if (this.onlyIfExprs[i] instanceof CallOptsNode) {
         for (const onlyIfFact of (this.onlyIfExprs[i] as CallOptsNode).nodes) {
           // replace freeVars with fixedVars
           const newParams: string[][] = [];
@@ -339,10 +340,66 @@ export class DefNode extends TemplateNode {
           const relatedTemplate = env.getDeclaredTemplate(onlyIfFact);
           relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
         }
+      } else if (this.onlyIfExprs[i] instanceof CallOptNode) {
+        const onlyIfFact: CallOptNode = this.onlyIfExprs[i] as CallOptNode;
+        const newParams: string[][] = [];
+        for (let j = 0; j < onlyIfFact.optParams.length; j++) {
+          const subParams: string[] = [];
+          for (let k = 0; k < onlyIfFact.optParams[j].length; k++) {
+            const fixed = freeToFixed.get(onlyIfFact.optParams[j][k]);
+            if (fixed) subParams.push(fixed);
+            else subParams.push(onlyIfFact.optParams[j][k]);
+          }
+          newParams.push(subParams);
+        }
+
+        const relatedTemplate = env.getDeclaredTemplate(onlyIfFact);
+        relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
       }
     }
+
+    //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
     return resultInfo(ResultType.KnowTrue);
   }
+
+  makeMapBetweenFreeVarsAndFixedVarsAtCurrentTemplate(
+    mapping: Map<string, string>,
+    fixedVars: string[]
+  ): Map<string, string> | undefined {
+    if (fixedVars.length !== this.freeVars.length) return undefined;
+
+    for (let i = 0; i < fixedVars.length; i++) {
+      mapping.set(this.freeVars[i], fixedVars[i]);
+    }
+  }
+}
+
+export function makeMapBetweenFreeVarsAndFixedVar(
+  env: LiTeXEnv,
+  opt: CallOptNode
+): Map<string, string> | undefined {
+  const names = opt.optName.split(OptsConnectionSymbol);
+  const res = new Map<string, string>();
+
+  let template = env.getDeclaredTemplate(names[0]);
+  if (template?.facts.length !== opt.optParams[0].length) {
+    return undefined;
+  }
+  for (let i = 0; i < opt.optParams[0].length; i++) {
+    res.set(template?.freeVars[i], opt.optParams[0][i]);
+  }
+
+  for (let i = 1; i < names.length; i++) {
+    template = template?.declaredTemplates.get(names[i]);
+    if (template?.facts.length !== opt.optParams[i].length) {
+      return undefined;
+    }
+    for (let j = 0; j < opt.optParams[i].length; j++) {
+      res.set(template?.freeVars[j], opt.optParams[i][j]);
+    }
+  }
+
+  return res;
 }
 
 export class QuestionMarkNode extends LiTeXNode {

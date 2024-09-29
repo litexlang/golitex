@@ -74,8 +74,9 @@ const codes: string[] = [
   // "know-everything everything(1,2);", // requirements, onlyIfs, itself, all emitted.
   "// test emitFact",
   "def func4(x);",
-  "def func(x) <=> {func4(x);}",
-  "know func(1);",
+  "def set(x);",
+  "def func(x| set(x)) <=> {func4(x); def subF(y|set(y)) }",
+  "know_everything func(1):subF(2);",
 ];
 
 function callOptsExecTest() {
