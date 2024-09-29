@@ -20,7 +20,6 @@ import { LiTeXEnv } from "./env";
 import { specialChars } from "./lexer";
 
 const KnowTypeKeywords = ["@", "know", "suppose"];
-const KnowAndDeclareKeywords = ["know!", "@!"];
 const DefTypeKeywords = [":", "def"];
 
 function skip(tokens: string[], s: string | string[] = "") {
