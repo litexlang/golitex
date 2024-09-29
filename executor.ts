@@ -141,6 +141,15 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     switch (fact.type) {
       case LiTexNodeType.CallOptNode:
         res = knowFactExec(env, fact as FactNode);
+      case LiTexNodeType.DefNode:
+      case LiTexNodeType.InferNode:
+        res = templateDeclExec(env, fact as TemplateNode);
+        res = knowFactExec(
+          env,
+          CallOptNode.create((fact as TemplateNode).declOptName, [
+            (fact as TemplateNode).freeVars,
+          ])
+        );
     }
     if (res.type !== ResultType.KnowTrue) return res;
   }
@@ -149,8 +158,6 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
 }
 
 function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
-  //TODO: Needs to check whether a template is declared
-
   let relatedTemplate = env.getDeclaredTemplate(node.optName);
 
   if (!relatedTemplate)

@@ -43,9 +43,15 @@ export class CallOptNode extends LiTeXNode {
 
   constructor(opts: [string, string[]][]) {
     super();
+
     this.optName = opts.map((e) => e[0]).join(OptsConnectionSymbol);
     this.optParams = opts.map((e) => e[1]);
     this.optNameAsLst = opts.map((e) => e[0]);
+  }
+
+  static create(name: string, params: string[][]) {
+    const names = name.split(OptsConnectionSymbol);
+    return new CallOptNode(names.map((e, i) => [e, params[i]]));
   }
 
   getOptNameParamsPairs(): [string, string[]][] {
