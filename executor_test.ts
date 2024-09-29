@@ -54,8 +54,8 @@ const codes: string[] = [
   // "know inf(2);",
   // "inf(2), set(2);",
   // "// do ?",
-  ": func(x,y) <=> {? fun2();  ? fun3(y) => {fun4(x);} }",
-  "@ func(1,2):fun2();",
+  // ": func(x,y) <=> {? fun2();  ? fun3(y) => {fun4(x);} }",
+  // "@ func(1,2):fun2();",
   // "func(1,2):fun2();",
   // "@ func(1,2,3);",
   // "@! func(1,2):fun3(3);",
@@ -72,9 +72,10 @@ const codes: string[] = [
   // "// know everything",
   // ": everything(x,y: fun0(x,y)) <=> {? fun2();  ? fun3(y) => {fun4(x);} }",
   // "know-everything everything(1,2);", // requirements, onlyIfs, itself, all emitted.
-  // "// test emitFact",
-  // "def func(x) {func4(x);}",
-  // "know func(1);",
+  "// test emitFact",
+  "def func4(x);",
+  "def func(x) <=> {func4(x);}",
+  "know func(1);",
 ];
 
 function callOptsExecTest() {

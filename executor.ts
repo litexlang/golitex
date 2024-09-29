@@ -153,7 +153,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
       case LiTexNodeType.CallOptNode: {
         res = knowFactExec(env, fact as FactNode);
         const template = env.getDeclaredTemplate(fact as CallOptNode);
-        // template?.emitOnlyIfs(env, fact as FactNode);
+        template?.emitOnlyIfs(env, fact as FactNode);
         break;
       }
       case LiTexNodeType.DefNode:

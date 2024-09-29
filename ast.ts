@@ -322,39 +322,23 @@ export class DefNode extends TemplateNode {
     }
 
     for (let i = 0; i < this.onlyIfExprs.length; i++) {
-      if (this.onlyIfExprs[i] instanceof CallOptNode) {
-        // replace freeVars with fixedVars
-        const newParams: string[][] = [];
-        for (
-          let j = 0;
-          j < (this.onlyIfExprs[i] as CallOptNode).optParams.length;
-          j++
-        ) {
-          const subParams: string[] = [];
-          for (
-            let k = 0;
-            k < (this.onlyIfExprs[i] as CallOptNode).optParams[j].length;
-            k++
-          ) {
-            const fixed = freeToFixed.get(
-              (this.onlyIfExprs[i] as CallOptNode).optParams[j][k]
-            );
-            if (fixed) subParams.push(fixed);
-            else
-              subParams.push(
-                (this.onlyIfExprs[i] as CallOptNode).optParams[j][k]
-              );
+      if ((this.onlyIfExprs[i] as CallOptNode) instanceof CallOptsNode) {
+        for (const onlyIfFact of (this.onlyIfExprs[i] as CallOptsNode).nodes) {
+          // replace freeVars with fixedVars
+          const newParams: string[][] = [];
+          for (let j = 0; j < onlyIfFact.optParams.length; j++) {
+            const subParams: string[] = [];
+            for (let k = 0; k < onlyIfFact.optParams[j].length; k++) {
+              const fixed = freeToFixed.get(onlyIfFact.optParams[j][k]);
+              if (fixed) subParams.push(fixed);
+              else subParams.push(onlyIfFact.optParams[j][k]);
+            }
+            newParams.push(subParams);
           }
-          newParams.push(subParams);
-        }
 
-        const nameOfTheNewFact = [...fixedNode.optNameAsLst];
-        nameOfTheNewFact.pop();
-        nameOfTheNewFact.push((this.onlyIfExprs[i] as CallOptNode).optName);
-        knowFactExec(
-          env,
-          CallOptNode.create(nameOfTheNewFact.join(":"), newParams)
-        );
+          const relatedTemplate = env.getDeclaredTemplate(onlyIfFact);
+          relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+        }
       }
     }
     return resultInfo(ResultType.KnowTrue);
