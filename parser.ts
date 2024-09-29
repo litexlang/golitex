@@ -459,11 +459,8 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
         break;
 
       default:
-        result = new DefNode(
-          declOptName,
-          curFreeVars,
-          FreeVarsWithFactsNode.properties
-        );
+        result = new DefNode(declOptName, curFreeVars, []);
+        (result as DefNode).onlyIfExprs = FreeVarsWithFactsNode.properties;
         break;
     }
 
