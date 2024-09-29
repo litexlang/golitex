@@ -164,7 +164,6 @@ export type CanBeKnownNode = FactNode | InferNode | DefNode | TemplateNode;
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
-  isKnowAndDeclare: Boolean = false;
 }
 
 export class HaveNode extends LiTeXNode {
