@@ -17,10 +17,7 @@ import {
   QuestionMarkNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
-import { specialChars } from "./lexer";
-
-const KnowTypeKeywords = ["@", "know", "suppose"];
-const DefTypeKeywords = [":", "def"];
+import { KnowTypeKeywords, DefTypeKeywords, specialChars } from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
