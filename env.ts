@@ -74,7 +74,7 @@ export class LiTeXEnv {
     function printFact(template: TemplateNode, fatherName: string = "") {
       const name = fatherName + OptsConnectionSymbol + template.declOptName;
       console.log(name);
-      console.log(template.facts);
+      console.log(template.facts.map((e) => e.params));
       for (const subTemplate of template.declaredTemplates.values()) {
         printFact(subTemplate, name);
       }

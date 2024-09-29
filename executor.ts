@@ -139,8 +139,10 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
 
 function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   let facts: CanBeKnownNode[] = [];
+  let isKnowEverything: Boolean = false;
   if (node.type === LiTexNodeType.KnowNode) {
     facts = (node as KnowNode).facts;
+    isKnowEverything = (node as KnowNode).isKnowEverything;
   } else if (node.type === LiTexNodeType.LetNode) {
     facts = (node as LetNode).properties;
   }
@@ -148,10 +150,14 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   let res: ExecInfo = { type: ResultType.Error, message: "" };
   for (const fact of facts) {
     switch (fact.type) {
-      case LiTexNodeType.CallOptNode:
+      case LiTexNodeType.CallOptNode: {
         res = knowFactExec(env, fact as FactNode);
+        const template = env.getDeclaredTemplate(fact as CallOptNode);
+        // template?.emitOnlyIfs(env, fact as FactNode);
+        break;
+      }
       case LiTexNodeType.DefNode:
-      case LiTexNodeType.InferNode:
+      case LiTexNodeType.InferNode: {
         res = templateDeclExec(env, fact as TemplateNode);
         res = knowFactExec(
           env,
@@ -159,6 +165,8 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
             (fact as TemplateNode).freeVars,
           ])
         );
+        break;
+      }
     }
     if (res.type !== ResultType.KnowTrue) return res;
   }
@@ -166,7 +174,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   return resultInfo(ResultType.KnowTrue);
 }
 
-function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
+export function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
   let relatedTemplate = env.getDeclaredTemplate(node.optName);
 
   if (!relatedTemplate)

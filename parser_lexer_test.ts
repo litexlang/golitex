@@ -138,7 +138,7 @@ const codes: string[] = [
   // ": func(x,y) {? fun2(x,y);  ? fun3(y) => {fun4(x);} }",
   // ": fun(x) {:fun2(x) ; : fun3(x,y) => {set(x,y);} }",
   // ": func(x,y) {? fun2();  ? fun3(y) => {fun4(x);} }",
-  "know func(1,2):fun2();",
+  "know_everything func(1,2):fun2();",
 ];
 
 function testLexer() {

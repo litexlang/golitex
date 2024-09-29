@@ -1,6 +1,6 @@
-import { on } from "events";
 import { OptsConnectionSymbol } from "./common";
-import { ExecInfo, resultInfo, ResultType } from "./executor";
+import { LiTeXEnv } from "./env";
+import { ExecInfo, knowFactExec, resultInfo, ResultType } from "./executor";
 
 // There are 3 things in LiTex: Declaration (var, fact-template) ; check; know
 export enum LiTexNodeType {
@@ -142,6 +142,8 @@ export abstract class TemplateNode extends LiTeXNode {
   }
 
   abstract knowFactExecCheck(node: FactNode): ExecInfo;
+
+  abstract emitOnlyIfs(env: LiTeXEnv, fixedNode: FactNode): ExecInfo;
 }
 
 export class InferNode extends TemplateNode {
@@ -177,6 +179,10 @@ export class InferNode extends TemplateNode {
       }
     }
     return resultInfo(ResultType.KnowTrue);
+  }
+
+  emitOnlyIfs(env: LiTeXEnv, fixedNode: FactNode): ExecInfo {
+    return resultInfo(ResultType.True);
   }
 }
 
@@ -302,6 +308,53 @@ export class DefNode extends TemplateNode {
           );
       } else {
         break;
+      }
+    }
+    return resultInfo(ResultType.KnowTrue);
+  }
+
+  emitOnlyIfs(env: LiTeXEnv, fixedNode: FactNode): ExecInfo {
+    const argumentsOfTheLastOpt =
+      fixedNode.optParams[fixedNode.optParams.length - 1];
+    const freeToFixed = new Map<string, string>();
+    for (let i = 0; i < argumentsOfTheLastOpt.length; i++) {
+      freeToFixed.set(this.freeVars[i] as string, argumentsOfTheLastOpt[i]);
+    }
+
+    for (let i = 0; i < this.onlyIfExprs.length; i++) {
+      if (this.onlyIfExprs[i] instanceof CallOptNode) {
+        // replace freeVars with fixedVars
+        const newParams: string[][] = [];
+        for (
+          let j = 0;
+          j < (this.onlyIfExprs[i] as CallOptNode).optParams.length;
+          j++
+        ) {
+          const subParams: string[] = [];
+          for (
+            let k = 0;
+            k < (this.onlyIfExprs[i] as CallOptNode).optParams[j].length;
+            k++
+          ) {
+            const fixed = freeToFixed.get(
+              (this.onlyIfExprs[i] as CallOptNode).optParams[j][k]
+            );
+            if (fixed) subParams.push(fixed);
+            else
+              subParams.push(
+                (this.onlyIfExprs[i] as CallOptNode).optParams[j][k]
+              );
+          }
+          newParams.push(subParams);
+        }
+
+        const nameOfTheNewFact = [...fixedNode.optNameAsLst];
+        nameOfTheNewFact.pop();
+        nameOfTheNewFact.push((this.onlyIfExprs[i] as CallOptNode).optName);
+        knowFactExec(
+          env,
+          CallOptNode.create(nameOfTheNewFact.join(":"), newParams)
+        );
       }
     }
     return resultInfo(ResultType.KnowTrue);
