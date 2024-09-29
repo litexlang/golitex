@@ -78,6 +78,14 @@ const stmtKeywords: {
   let: letParse,
   def: templateParse,
   ":": templateParse,
+  know_everything: (env: LiTeXEnv, tokens: string[]) => {
+    const node = knowParse(env, tokens);
+    node.isKnowEverything = true;
+  },
+  "@!": (env: LiTeXEnv, tokens: string[]) => {
+    const node = knowParse(env, tokens);
+    node.isKnowEverything = true;
+  },
 };
 
 export function LiTeXStmtsParse(

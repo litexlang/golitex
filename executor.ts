@@ -84,8 +84,11 @@ function checkFactExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     const relatedTemplate = env.getDeclaredTemplate(node);
     if (!relatedTemplate)
       return resultInfo(ResultType.False, node.optName + " is not declared.");
-    for (const value of relatedTemplate?.facts.map((e) => e["params"])) {
-      if (checkParams(value, node.optParams)) {
+    for (let i = 0; i < relatedTemplate.facts.length; i++) {
+      if (
+        checkParams(relatedTemplate.facts[i].params, node.optParams) &&
+        relatedTemplate.facts[i].activated
+      ) {
         return resultInfo(ResultType.True);
       }
     }

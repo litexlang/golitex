@@ -69,12 +69,17 @@ export class CallOptNode extends LiTeXNode {
   }
 }
 
-export type TemplateNodeFact = { params: string[][]; onlyIfs: CallOptNode[] };
+export type TemplateNodeFact = {
+  params: string[][];
+  onlyIfs: CallOptNode[];
+  activated: Boolean;
+};
 export function makeTemplateNodeFact(
   params: string[][],
-  onlyIfs: CallOptNode[]
+  onlyIfs: CallOptNode[],
+  activated: Boolean = true
 ) {
-  return { params: params, onlyIfs: onlyIfs };
+  return { params: params, onlyIfs: onlyIfs, activated: activated };
 }
 
 // Main data structure of the whole project
@@ -179,6 +184,7 @@ export type CanBeKnownNode = FactNode | InferNode | DefNode | TemplateNode;
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
+  isKnowEverything: Boolean = false;
 }
 
 export class HaveNode extends LiTeXNode {

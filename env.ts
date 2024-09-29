@@ -65,7 +65,7 @@ export class LiTeXEnv {
   }
 
   printCallOptFacts() {
-    console.log("----facts------\n");
+    console.log("-----facts-------\n");
     for (const template of this.declaredTemplates.values()) {
       printFact(template);
     }
@@ -82,7 +82,7 @@ export class LiTeXEnv {
   }
 
   printDeclaredTemplates() {
-    console.log("------template-----\n");
+    console.log("-----template-----\n");
 
     for (const value of this.declaredTemplates) {
       console.log(value);
