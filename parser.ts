@@ -18,6 +18,7 @@ import {
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { KnowTypeKeywords, DefTypeKeywords, specialChars } from "./common";
+import { ok } from "assert";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -399,35 +400,71 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
     skip(tokens, ")");
 
     let result: LiTeXNode;
-    if (tokens[0] === "=>") {
-      skip(tokens, "=>");
-      const block = nonExecutableBlockParse(env, tokens);
-      result = new InferNode(
-        declOptName,
-        curFreeVars,
-        FreeVarsWithFactsNode.properties
-      );
-      (result as InferNode).onlyIfExprs = block;
-    } else if (tokens[0] === "<=>") {
-      skip(tokens, "<=>");
-      const block = nonExecutableBlockParse(env, tokens);
-      result = new DefNode(
-        declOptName,
-        curFreeVars,
-        FreeVarsWithFactsNode.properties
-      );
-      (result as DefNode).onlyIfExprs = block;
-    } else {
-      result = new DefNode(
-        declOptName,
-        curFreeVars,
-        FreeVarsWithFactsNode.properties
-      );
+    switch (tokens[0]) {
+      case "=>":
+        skip(tokens, "=>");
+        if (!isCurToken("{", tokens)) {
+          result = new InferNode(
+            declOptName,
+            curFreeVars,
+            FreeVarsWithFactsNode.properties
+          );
+          const facts = callOptsParse(env, tokens).nodes;
+          for (let i = 0; i < facts.length; i++) {
+            (result as InferNode).onlyIfExprs.push(facts[i]);
+          }
+        } else {
+          const blockArrow = nonExecutableBlockParse(env, tokens);
+          result = new InferNode(
+            declOptName,
+            curFreeVars,
+            FreeVarsWithFactsNode.properties
+          );
+          (result as InferNode).onlyIfExprs = blockArrow;
+        }
 
-      if (tokens[0] === "{") {
-        const block = nonExecutableBlockParse(env, tokens);
-        (result as DefNode).onlyIfExprs = block;
-      }
+        break;
+
+      case "{":
+        const blockBrace = nonExecutableBlockParse(env, tokens);
+        result = new InferNode(
+          declOptName,
+          curFreeVars,
+          FreeVarsWithFactsNode.properties
+        );
+        (result as InferNode).onlyIfExprs = blockBrace;
+        break;
+
+      case "<=>":
+        skip(tokens, "<=>");
+        if (!isCurToken("{", tokens)) {
+          result = new DefNode(
+            declOptName,
+            curFreeVars,
+            FreeVarsWithFactsNode.properties
+          );
+          (result as DefNode).onlyIfExprs = (
+            result as DefNode
+          ).onlyIfExprs.concat(callOptsParse(env, tokens).nodes);
+        } else {
+          const blockDoubleArrow = nonExecutableBlockParse(env, tokens);
+          result = new DefNode(
+            declOptName,
+            curFreeVars,
+            FreeVarsWithFactsNode.properties
+          );
+          (result as DefNode).onlyIfExprs = blockDoubleArrow;
+        }
+
+        break;
+
+      default:
+        result = new DefNode(
+          declOptName,
+          curFreeVars,
+          FreeVarsWithFactsNode.properties
+        );
+        break;
     }
 
     // env.returnToSnapShot(snapShot);
@@ -446,6 +483,28 @@ function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
     return left;
   } catch (error) {
     handleParseError(tokens, env, "fact");
+    throw error;
+  }
+}
+
+function bracedFactsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
+  try {
+    skip(tokens, "(");
+    const opts: CallOptsNode = new CallOptsNode([]);
+    while (1) {
+      const opt = callOptParse(env, tokens);
+      if (tokens[0] === ")") break;
+      else if (tokens[0] === ",") {
+        skip(tokens, ",");
+        opts.nodes.push(opt);
+      } else {
+        throw Error("");
+      }
+    }
+    skip(tokens, ")");
+    return opts;
+  } catch (error) {
+    handleParseError(tokens, env, "braced facts");
     throw error;
   }
 }
