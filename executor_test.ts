@@ -60,7 +60,8 @@ const codes: string[] = [
   // "@ func(1,2,3);",
   // "@! func(1,2):fun3(3);",
   ": definedP(x,y) <=> {set(x);}",
-  "know : fun(1,2);",
+  // "know : fun(1,2);",
+  "is_def(definedP2);",
 ];
 
 function callOptsExecTest() {

@@ -9,6 +9,7 @@ import {
   CanBeKnownNode,
   TemplateNode,
 } from "./ast";
+import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
 
 export enum ResultType {
@@ -75,6 +76,11 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
 
 function checkFactExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   try {
+    const builtinFunc = LiTeXBuiltinKeywords[node.optName];
+    if (builtinFunc) {
+      return builtinFunc(env, node);
+    }
+
     const relatedTemplate = env.getDeclaredTemplate(node);
     if (!relatedTemplate)
       return resultInfo(ResultType.False, node.optName + " is not declared.");

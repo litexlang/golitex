@@ -66,7 +66,9 @@ function handleParseError(tokens: string[], env: LiTeXEnv, message: string) {
   );
 }
 
-const stmtKeywords: { [key: string]: Function } = {
+const stmtKeywords: {
+  [key: string]: (env: LiTeXEnv, tokens: string[]) => any;
+} = {
   ";": (env: LiTeXEnv, tokens: string[]) => {
     tokens.shift();
   },
