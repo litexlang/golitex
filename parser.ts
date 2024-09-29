@@ -18,7 +18,6 @@ import {
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import { KnowTypeKeywords, DefTypeKeywords, specialChars } from "./common";
-import { ok } from "assert";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {

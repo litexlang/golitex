@@ -1,3 +1,4 @@
+import { on } from "events";
 import { OptsConnectionSymbol } from "./common";
 import { ExecInfo, resultInfo, ResultType } from "./executor";
 
@@ -68,6 +69,14 @@ export class CallOptNode extends LiTeXNode {
   }
 }
 
+export type TemplateNodeFact = { params: string[][]; onlyIfs: CallOptNode[] };
+export function makeTemplateNodeFact(
+  params: string[][],
+  onlyIfs: CallOptNode[]
+) {
+  return { params: params, onlyIfs: onlyIfs };
+}
+
 // Main data structure of the whole project
 export abstract class TemplateNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
@@ -75,7 +84,7 @@ export abstract class TemplateNode extends LiTeXNode {
   requirements: LiTeXNode[] = [];
   onlyIfExprs: LiTeXNode[] = [];
   declaredTemplates = new Map<string, TemplateNode>();
-  facts: string[][][] = [];
+  facts: TemplateNodeFact[] = [];
   freeVars: string[];
 
   constructor(

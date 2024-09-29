@@ -1,4 +1,10 @@
-import { CallOptNode, TemplateNode, FactNode } from "./ast";
+import {
+  CallOptNode,
+  TemplateNode,
+  FactNode,
+  makeTemplateNodeFact,
+  TemplateNodeFact,
+} from "./ast";
 import { OptsConnectionSymbol } from "./common";
 import { ExecInfo, resultInfo, ResultType } from "./executor";
 
@@ -22,7 +28,7 @@ export class LiTeXEnv {
         ResultType.Error,
         fact.optName + "has not been declared"
       );
-    declaredTemplate?.facts.push(fact.optParams);
+    declaredTemplate?.facts.push(makeTemplateNodeFact(fact.optParams, []));
     return resultInfo(ResultType.KnowTrue);
   }
 
@@ -53,7 +59,7 @@ export class LiTeXEnv {
     return relatedTemplate;
   }
 
-  getFact(s: string): string[][][] | undefined {
+  getFact(s: string): TemplateNodeFact[] | undefined {
     const node = this.getDeclaredTemplate(s);
     return node?.facts;
   }
