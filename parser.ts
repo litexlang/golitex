@@ -20,6 +20,7 @@ import { LiTeXEnv } from "./env";
 import { specialChars } from "./lexer";
 
 const KnowTypeKeywords = ["@", "know", "suppose"];
+const KnowAndDeclareKeywords = ["know!", "@!"];
 const DefTypeKeywords = [":", "def"];
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -399,7 +400,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
 
     skip(tokens, ")");
 
-    let result = new LiTeXNode();
+    let result: LiTeXNode;
     if (tokens[0] === "=>") {
       skip(tokens, "=>");
       const block = nonExecutableBlockParse(env, tokens);
@@ -409,6 +410,15 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
         FreeVarsWithFactsNode.properties
       );
       (result as InferNode).onlyIfExprs = block;
+    } else if (tokens[0] === "<=>") {
+      skip(tokens, "<=>");
+      const block = nonExecutableBlockParse(env, tokens);
+      result = new DefNode(
+        declOptName,
+        curFreeVars,
+        FreeVarsWithFactsNode.properties
+      );
+      (result as DefNode).onlyIfExprs = block;
     } else {
       result = new DefNode(
         declOptName,

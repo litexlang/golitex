@@ -54,10 +54,12 @@ const codes: string[] = [
   // "know inf(2);",
   // "inf(2), set(2);",
   // "// do ?",
-  ": func(x,y) {? fun2();  ? fun3(y) => {fun4(x);} }",
-  "know func(1,2):fun2();",
-  "func(1,2):fun2();",
-  "know func(1,2,3);",
+  // ": func(x,y) <=> {? fun2();  ? fun3(y) => {fun4(x);} }",
+  // "@ func(1,2):fun2();",
+  // "func(1,2):fun2();",
+  // "@ func(1,2,3);",
+  // "@! func(1,2):fun3(3);",
+  ": definedP(x,y) <=> {set(x);}",
 ];
 
 function callOptsExecTest() {

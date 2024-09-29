@@ -30,7 +30,7 @@ export enum LiTexNodeType {
   QuestionMarkNode,
 }
 
-export class LiTeXNode {
+export abstract class LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.Node;
   constructor() {}
 }
@@ -141,12 +141,7 @@ export class InferNode extends TemplateNode {
       if (template.freeVars.length !== node.optParams[i].length) {
         return resultInfo(
           ResultType.KnowError,
-          template.declOptName +
-            " has " +
-            template.freeVars.length +
-            " parameters, get " +
-            node.optNameAsLst[i].length +
-            " instead."
+          `${template.declOptName} has ${template.freeVars.length} parameters, get ${node.optNameAsLst[i].length} instead.`
         );
       }
 
