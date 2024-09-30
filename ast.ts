@@ -326,6 +326,8 @@ export class InferNode extends TemplateNode {
 }
 
 export class ExistNode extends TemplateNode {
+  type = LiTexNodeType.ExistNode;
+
   knowFactExecCheck(node: FactNode): ExecInfo {
     return resultInfo(ResultType.True);
   }
@@ -340,10 +342,11 @@ export class KnowNode extends LiTeXNode {
 
 export class HaveNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.HaveNode;
-  params: string[] = [];
+  opt: CallOptNode;
 
-  constructor() {
+  constructor(opt: CallOptNode) {
     super();
+    this.opt = opt;
   }
 }
 

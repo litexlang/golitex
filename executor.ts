@@ -8,6 +8,7 @@ import {
   FactNode,
   CanBeKnownNode,
   TemplateNode,
+  HaveNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
@@ -22,6 +23,8 @@ export enum ResultType {
   False,
   Unknown,
   Error,
+  HaveError,
+  HaveTrue,
 }
 
 export const resultTypeMap: { [key in ResultType]: string } = {
@@ -34,6 +37,8 @@ export const resultTypeMap: { [key in ResultType]: string } = {
   [ResultType.KnowError]: "know: error",
   [ResultType.DefError]: "def: error",
   [ResultType.KnowUndeclared]: "know: undeclared opt",
+  [ResultType.HaveError]: "have: error",
+  [ResultType.HaveTrue]: "have: true",
 };
 
 export function resultInfo(t: ResultType, s: string = ""): ExecInfo {
@@ -57,21 +62,26 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
   switch (node.type) {
     case LiTexNodeType.DefNode:
     case LiTexNodeType.InferNode:
+    case LiTexNodeType.ExistNode:
       return templateDeclExec(env, node as TemplateNode);
     case LiTexNodeType.KnowNode:
       return knowExec(env, node as KnowNode);
     case LiTexNodeType.CallOptsNode:
       //TODO : Emit facts
-      for (const fact of (node as CallOptsNode).nodes) {
-        let res = checkFactExec(env, fact as CallOptNode);
-        if (res.type !== ResultType.True) return res;
-      }
-      return resultInfo(ResultType.True);
-    case LiTexNodeType.LetNode:
-      return letExec(env, node as LetNode);
+      return callOptsExec(env, node as CallOptsNode);
+    case LiTexNodeType.HaveNode:
+      return haveExec(env, node as HaveNode);
   }
 
   return resultInfo(ResultType.Error, "Invalid Expression.");
+}
+
+function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
+  for (const fact of (node as CallOptsNode).nodes) {
+    let res = checkFactExec(env, fact as CallOptNode);
+    if (res.type !== ResultType.True) return res;
+  }
+  return resultInfo(ResultType.True);
 }
 
 function checkFactExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
@@ -228,19 +238,11 @@ export function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
   return resultInfo(ResultType.KnowTrue);
 }
 
-function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
+export function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
   try {
-    for (const item of node.params) {
-      if (env.declaredVars.includes(item)) {
-        throw Error(item + "has already been declared");
-      }
-    }
-
-    env.declaredVars = [...env.declaredVars, ...node.params];
-
-    return knowExec(env, node);
+    return resultInfo(ResultType.HaveTrue);
   } catch (error) {
-    catchRuntimeError(env, error, "let");
-    return resultInfo(ResultType.Error, "");
+    handleRuntimeError(env, "have");
+    return resultInfo(ResultType.HaveError);
   }
 }

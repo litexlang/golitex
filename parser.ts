@@ -41,6 +41,7 @@ function skip(tokens: string[], s: string | string[] = "") {
   }
 }
 
+//! Not only gets symbol, in the future it will parse $$
 function shiftVar(tokens: string[]): string {
   const token = tokens.shift();
   if (typeof token !== "string") {
@@ -77,7 +78,7 @@ const stmtKeywords: {
   have: haveParse,
   // not: notParse,
   // or: orParse,
-  let: letParse,
+  // let: letParse,
   def: templateParse,
   ":": templateParse,
   exist: templateParse,
@@ -273,25 +274,12 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
 
 function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   try {
-    const haveNode = new HaveNode();
-
     skip(tokens, "have");
-    shiftVar(tokens);
-    skip(tokens, "(");
 
-    if (!isCurToken(")", tokens)) {
-      while (true) {
-        haveNode.params.push(shiftVar(tokens));
+    const opt = callOptParse(env, tokens);
 
-        if (isCurToken(")", tokens)) {
-          break;
-        }
+    const haveNode = new HaveNode(opt);
 
-        skip(tokens, ",");
-      }
-    }
-
-    skip(tokens, ")");
     skip(tokens, ";");
     return haveNode;
   } catch (error) {
@@ -300,19 +288,19 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   }
 }
 
-function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
-  try {
-    skip(tokens, "let");
-    skip(tokens, "(");
-    const node = freeVarsAndTheirFactsParse(env, tokens);
-    skip(tokens, ")"); // skip ;
-    skip(tokens, ";");
-    return new LetNode(node);
-  } catch (error) {
-    handleParseError(tokens, env, "let");
-    throw error;
-  }
-}
+// function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
+//   try {
+//     skip(tokens, "let");
+//     skip(tokens, "(");
+//     const node = freeVarsAndTheirFactsParse(env, tokens);
+//     skip(tokens, ")"); // skip ;
+//     skip(tokens, ";");
+//     return new LetNode(node);
+//   } catch (error) {
+//     handleParseError(tokens, env, "let");
+//     throw error;
+//   }
+// }
 
 function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
   try {
