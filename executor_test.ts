@@ -70,7 +70,7 @@ const codes: string[] = [
   // "know func(1,2);",
   // "fun5(1);",
   // "// know everything",
-  // ": everything(x,y: fun0(x,y)) <=> {? fun2();  ? fun3(y) => {fun4(x);} }",
+  // ": everything(x,y| fun0(x,y)) <=> {$ fun2();  $ fun3(y) => {fun4(x);} }",
   // "know-everything everything(1,2);", // requirements, onlyIfs, itself, all emitted.
   "// test emitFact",
   "def func4(x);",

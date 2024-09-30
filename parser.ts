@@ -11,10 +11,15 @@ import {
   DefNode,
   FactNode,
   TemplateNode,
-  QuestionMarkNode,
+  DollarMarkNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
-import { KnowTypeKeywords, DefTypeKeywords, specialChars } from "./common";
+import {
+  KnowTypeKeywords,
+  DefTypeKeywords,
+  specialChars,
+  DefBlockDeclareAndCall,
+} from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -192,14 +197,14 @@ function freeVarsAndTheirFactsParse(
   return new FreeVarsWithFactsNode(params, requirements);
 }
 
-function questionMarkParse(env: LiTeXEnv, tokens: string[]): QuestionMarkNode {
+function questionMarkParse(env: LiTeXEnv, tokens: string[]): DollarMarkNode {
   try {
-    skip(tokens, "?");
+    skip(tokens, DefBlockDeclareAndCall);
     tokens.unshift(":");
     const template = templateParse(env, tokens);
-    return new QuestionMarkNode(template);
+    return new DollarMarkNode(template);
   } catch (error) {
-    catchParseError(tokens, env, error, "?");
+    catchParseError(tokens, env, error, DefBlockDeclareAndCall);
     throw error;
   }
 }
@@ -210,7 +215,7 @@ function nonExecutableBlockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
     skip(tokens, "{"); // skip {
 
     while (!isCurToken("}", tokens)) {
-      if (isCurToken("?", tokens)) {
+      if (isCurToken(DefBlockDeclareAndCall, tokens)) {
         const node = questionMarkParse(env, tokens);
         if (node) result.push(node);
         continue;
@@ -450,28 +455,6 @@ function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
     return left;
   } catch (error) {
     handleParseError(tokens, env, "fact");
-    throw error;
-  }
-}
-
-function bracedFactsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
-  try {
-    skip(tokens, "(");
-    const opts: CallOptsNode = new CallOptsNode([]);
-    while (1) {
-      const opt = callOptParse(env, tokens);
-      if (tokens[0] === ")") break;
-      else if (tokens[0] === ",") {
-        skip(tokens, ",");
-        opts.nodes.push(opt);
-      } else {
-        throw Error("");
-      }
-    }
-    skip(tokens, ")");
-    return opts;
-  } catch (error) {
-    handleParseError(tokens, env, "braced facts");
     throw error;
   }
 }

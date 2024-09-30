@@ -24,7 +24,7 @@ export enum LiTexNodeType {
 
   // Helper
   FreeVarsWithFactsNode,
-  QuestionMarkNode,
+  DollarMarkNode,
 }
 
 export abstract class LiTeXNode {
@@ -112,12 +112,12 @@ export abstract class TemplateNode extends LiTeXNode {
     return curTemplate;
   }
 
-  // If a node is QuestionMarkNode or TemplateNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
+  // If a node is DollarMarkNode or TemplateNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
   initDeclaredTemplates(): ExecInfo {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
 
-      if (value instanceof QuestionMarkNode) {
+      if (value instanceof DollarMarkNode) {
         this.onlyIfExprs.splice(i, 1);
 
         const callNode = new CallOptNode([
@@ -247,6 +247,48 @@ export abstract class TemplateNode extends LiTeXNode {
   }
 }
 
+export class DefNode extends TemplateNode {
+  type: LiTexNodeType = LiTexNodeType.DefNode;
+
+  constructor(
+    declOptName: string,
+    freeVars: string[],
+    requirements: LiTeXNode[]
+  ) {
+    super(declOptName, freeVars, requirements);
+  }
+
+  // When a fact is to be stored, whether it satisfies requirements must be checked
+  knowFactExecCheck(node: FactNode): ExecInfo {
+    let template: undefined | TemplateNode = this as TemplateNode;
+    for (let i = 0; ; i++) {
+      if (template.freeVars.length !== node.optParams[i].length) {
+        return resultInfo(
+          ResultType.KnowError,
+          template.declOptName +
+            " has " +
+            template.freeVars.length +
+            " parameters, get " +
+            node.optNameAsLst[i].length +
+            " instead."
+        );
+      }
+
+      if (i + 1 < node.optNameAsLst.length) {
+        template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
+        if (!template)
+          return resultInfo(
+            ResultType.KnowError,
+            "Undefined operator " + node.optName
+          );
+      } else {
+        break;
+      }
+    }
+    return resultInfo(ResultType.KnowTrue);
+  }
+}
+
 export class InferNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
 
@@ -349,50 +391,8 @@ export class LetNode extends LiTeXNode {
   }
 }
 
-export class DefNode extends TemplateNode {
-  type: LiTexNodeType = LiTexNodeType.DefNode;
-
-  constructor(
-    declOptName: string,
-    freeVars: string[],
-    requirements: LiTeXNode[]
-  ) {
-    super(declOptName, freeVars, requirements);
-  }
-
-  // When a fact is to be stored, whether it satisfies requirements must be checked
-  knowFactExecCheck(node: FactNode): ExecInfo {
-    let template: undefined | TemplateNode = this as TemplateNode;
-    for (let i = 0; ; i++) {
-      if (template.freeVars.length !== node.optParams[i].length) {
-        return resultInfo(
-          ResultType.KnowError,
-          template.declOptName +
-            " has " +
-            template.freeVars.length +
-            " parameters, get " +
-            node.optNameAsLst[i].length +
-            " instead."
-        );
-      }
-
-      if (i + 1 < node.optNameAsLst.length) {
-        template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
-        if (!template)
-          return resultInfo(
-            ResultType.KnowError,
-            "Undefined operator " + node.optName
-          );
-      } else {
-        break;
-      }
-    }
-    return resultInfo(ResultType.KnowTrue);
-  }
-}
-
-export class QuestionMarkNode extends LiTeXNode {
-  type = LiTexNodeType.QuestionMarkNode;
+export class DollarMarkNode extends LiTeXNode {
+  type = LiTexNodeType.DollarMarkNode;
   template: TemplateNode;
 
   constructor(template: TemplateNode) {
