@@ -154,33 +154,29 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     for (const fact of facts) {
       switch (fact.type) {
         case LiTexNodeType.CallOptNode: {
-          res = knowFactExec(env, fact as FactNode);
-
-          if (isKnowEverything) {
-            const template = env.getDeclaredTemplate(fact as CallOptNode);
-            if (!template)
-              throw Error(
-                `${(fact as CallOptNode).optName} has not been declared.`
-              );
-
-            template?.emitFactByFixingFreeVars(
-              env,
-              fact as FactNode,
-              template.onlyIfExprs,
-              template.requirements
-            );
-          }
+          if (isKnowEverything)
+            res = knowEverythingFactExec(env, fact as CallOptNode);
+          else res = knowFactExec(env, fact as CallOptNode);
           break;
         }
         case LiTexNodeType.DefNode:
         case LiTexNodeType.InferNode: {
           res = templateDeclExec(env, fact as TemplateNode);
-          res = knowFactExec(
-            env,
-            CallOptNode.create((fact as TemplateNode).declOptName, [
-              (fact as TemplateNode).freeVars,
-            ])
-          );
+          if (isKnowEverything) {
+            res = knowEverythingFactExec(
+              env,
+              CallOptNode.create((fact as TemplateNode).declOptName, [
+                (fact as TemplateNode).freeVars,
+              ])
+            );
+          } else {
+            res = knowFactExec(
+              env,
+              CallOptNode.create((fact as TemplateNode).declOptName, [
+                (fact as TemplateNode).freeVars,
+              ])
+            );
+          }
           break;
         }
       }
@@ -192,6 +188,27 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     catchRuntimeError(env, error, "know");
     return resultInfo(ResultType.KnowError);
   }
+}
+
+export function knowEverythingFactExec(
+  env: LiTeXEnv,
+  fact: FactNode
+): ExecInfo {
+  let res: ExecInfo = { type: ResultType.Error, message: "" };
+  res = knowFactExec(env, fact as FactNode);
+
+  const template = env.getDeclaredTemplate(fact as CallOptNode);
+  if (!template)
+    throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
+
+  template?.emitFactByFixingFreeVars(
+    env,
+    fact as FactNode,
+    template.onlyIfExprs,
+    template.requirements
+  );
+
+  return resultInfo(ResultType.KnowTrue);
 }
 
 export function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {

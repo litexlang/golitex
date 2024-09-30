@@ -78,8 +78,8 @@ const codes: string[] = [
   "def twoSet(x,y);",
   "def func(x| set(x)) <=> {func4(x); def subF(y|twoSet(x,y)) }",
   "know_everything func(1):subF(2);",
-  "know_everything func(3);",
-  "!:",
+  "! func(3);",
+  "!: func5(3 | set(3)) <=> {func(1):subF(3);}; ",
 ];
 
 function callOptsExecTest() {

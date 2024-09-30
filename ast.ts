@@ -103,7 +103,7 @@ export abstract class TemplateNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
-  // Input a full name with colons and get
+  // Input a full name with colons and get descendants from any depth
   getDeclaredSubTemplate(s: string): undefined | TemplateNode {
     const names: string[] = s.split(":");
     let curTemplate: TemplateNode | undefined = this;
