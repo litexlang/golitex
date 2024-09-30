@@ -21,7 +21,7 @@ export class LiTeXEnv {
     this.errors.push(s);
   }
 
-  pushNewFact(fact: FactNode): ExecInfo {
+  pushCallOptFact(fact: CallOptNode): ExecInfo {
     const declaredTemplate = this.getDeclaredTemplate(fact.optName);
     if (!declaredTemplate)
       return resultInfo(

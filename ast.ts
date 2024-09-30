@@ -165,13 +165,14 @@ export abstract class TemplateNode extends LiTeXNode {
     }
   }
 
-  abstract knowFactExecCheck(node: FactNode): ExecInfo;
+  abstract knowCallOptExecCheck(node: FactNode): ExecInfo;
 
-  emitFactByFixingFreeVars(
+  // Main method of the whole project
+  emitCallOptByFixingFreeVars(
     env: LiTeXEnv,
-    fixedNode: FactNode,
+    fixedNode: CallOptNode, // the fullCallOpt, including params of father opts. 'this' is in the lowest opt of the CallOpt.
     emitWhat: LiTeXNode[], // pass in template.requirement or template.onlyIfExprs
-    additionalEmit?: LiTeXNode[]
+    additionalEmit?: LiTeXNode[] // pass in template.requirement or template.onlyIfExprs
   ): ExecInfo {
     //! Chain reaction is not allowed, maybe I should add some syntax to allow user to use chain reaction.
     const freeToFixed = new Map<string, string>();
@@ -259,7 +260,7 @@ export class DefNode extends TemplateNode {
   }
 
   // When a fact is to be stored, whether it satisfies requirements must be checked
-  knowFactExecCheck(node: FactNode): ExecInfo {
+  knowCallOptExecCheck(node: CallOptNode): ExecInfo {
     let template: undefined | TemplateNode = this as TemplateNode;
     for (let i = 0; ; i++) {
       if (template.freeVars.length !== node.optParams[i].length) {
@@ -300,7 +301,7 @@ export class InferNode extends TemplateNode {
     super(declOptName, freeVars, requirements);
   }
 
-  knowFactExecCheck(node: FactNode): ExecInfo {
+  knowCallOptExecCheck(node: CallOptNode): ExecInfo {
     let template: undefined | TemplateNode = this as TemplateNode;
     for (let i = 0; ; i++) {
       if (template.freeVars.length !== node.optParams[i].length) {
@@ -328,7 +329,7 @@ export class InferNode extends TemplateNode {
 export class ExistNode extends TemplateNode {
   type = LiTexNodeType.ExistNode;
 
-  knowFactExecCheck(node: FactNode): ExecInfo {
+  knowCallOptExecCheck(node: FactNode): ExecInfo {
     return resultInfo(ResultType.True);
   }
 }
@@ -362,7 +363,7 @@ export class FreeVarsWithFactsNode extends LiTeXNode {
   }
 }
 
-export type FactNode = CallOptNode;
+export type FactNode = CallOptNode | CallOptsNode;
 export enum CallOptsNodeType {
   And,
   Or,
