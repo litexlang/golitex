@@ -116,7 +116,8 @@ export abstract class TemplateNode extends LiTeXNode {
     return curTemplate;
   }
 
-  initDeclaredTemplates() {
+  // If a node is QuestionMarkNode or TemplateNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
+  initDeclaredTemplates(): ExecInfo {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
 
@@ -138,7 +139,33 @@ export abstract class TemplateNode extends LiTeXNode {
         value.initDeclaredTemplates();
         this.declaredTemplates.set(value.declOptName, value);
         this.onlyIfExprs.splice(i, 1);
+      } else if (value instanceof CallOptsNode) {
+        this.onlyIfExprs = insertListIntoListAndDeleteElemOnIndex(
+          this.onlyIfExprs,
+          (value as CallOptsNode).nodes,
+          i
+        );
       }
+    }
+
+    for (let i = 0; i < this.onlyIfExprs.length; i++) {
+      if (this.onlyIfExprs[i].type !== LiTexNodeType.CallOptNode) {
+        return resultInfo(
+          ResultType.DefError,
+          `arguments of def block should have type callOpt-type or def-type.`
+        );
+      }
+    }
+    return resultInfo(ResultType.DefTrue);
+
+    function insertListIntoListAndDeleteElemOnIndex<T>(
+      originalList: T[],
+      itemsToInsert: T[],
+      position: number
+    ): T[] {
+      const newList = [...originalList];
+      newList.splice(position, 1, ...itemsToInsert);
+      return newList;
     }
   }
 
