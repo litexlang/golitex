@@ -6,6 +6,6 @@ export const KnowTypeKeywords = [
   "know",
   "suppose",
   "know_everything",
-  "@!",
+  "!",
 ];
 export const DefTypeKeywords = [":", "def"];

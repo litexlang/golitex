@@ -103,6 +103,7 @@ export abstract class TemplateNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
+  // Input a full name with colons and get
   getDeclaredSubTemplate(s: string): undefined | TemplateNode {
     const names: string[] = s.split(":");
     let curTemplate: TemplateNode | undefined = this;
@@ -143,11 +144,84 @@ export abstract class TemplateNode extends LiTeXNode {
 
   abstract knowFactExecCheck(node: FactNode): ExecInfo;
 
-  abstract emitFactByFixingFreeVars(
+  emitFactByFixingFreeVars(
     env: LiTeXEnv,
     fixedNode: FactNode,
-    emitWhat: LiTeXNode[] // pass in template.requirement or template.onlyIfExprs
-  ): ExecInfo;
+    emitWhat: LiTeXNode[], // pass in template.requirement or template.onlyIfExprs
+    additionalEmit?: LiTeXNode[]
+  ): ExecInfo {
+    //! Chain reaction is not allowed, maybe I should add some syntax to allow user to use chain reaction.
+    const freeToFixed = new Map<string, string>();
+
+    for (
+      let optIndex = 0,
+        curTemplate = env.getDeclaredTemplate(fixedNode.optNameAsLst[0]);
+      optIndex < fixedNode.optParams.length;
+      optIndex++,
+        curTemplate = curTemplate.declaredTemplates.get(
+          fixedNode.optNameAsLst[optIndex]
+        )
+    ) {
+      const argumentsOfCurrentOpt: string[] = fixedNode.optParams[optIndex];
+
+      if (!curTemplate) return resultInfo(ResultType.Error);
+
+      for (
+        let argIndex = 0;
+        argIndex < argumentsOfCurrentOpt.length;
+        argIndex++
+      ) {
+        if (argIndex < curTemplate.freeVars.length) {
+          freeToFixed.set(
+            curTemplate.freeVars[argIndex] as string,
+            argumentsOfCurrentOpt[argIndex]
+          );
+        }
+      }
+    }
+
+    for (let i = 0; i < emitWhat.length; i++) {
+      if (emitWhat[i] instanceof CallOptsNode) {
+        for (const onlyIfFact of (emitWhat[i] as CallOptsNode).nodes) {
+          moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
+        }
+      } else if (emitWhat[i] instanceof CallOptNode) {
+        moreFactByMakingFreeVarsIntoFixed(emitWhat[i] as CallOptNode);
+      }
+    }
+
+    if (additionalEmit) {
+      for (let i = 0; i < additionalEmit.length; i++) {
+        if (additionalEmit[i] instanceof CallOptsNode) {
+          for (const onlyIfFact of (additionalEmit[i] as CallOptsNode).nodes) {
+            moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
+          }
+        } else if (additionalEmit[i] instanceof CallOptNode) {
+          moreFactByMakingFreeVarsIntoFixed(additionalEmit[i] as CallOptNode);
+        }
+      }
+    }
+
+    //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
+    return resultInfo(ResultType.KnowTrue);
+
+    function moreFactByMakingFreeVarsIntoFixed(factToBeEmitted: CallOptNode) {
+      // replace freeVars with fixedVars
+      const newParams: string[][] = [];
+      for (let j = 0; j < factToBeEmitted.optParams.length; j++) {
+        const subParams: string[] = [];
+        for (let k = 0; k < factToBeEmitted.optParams[j].length; k++) {
+          const fixed = freeToFixed.get(factToBeEmitted.optParams[j][k]);
+          if (fixed) subParams.push(fixed);
+          else subParams.push(factToBeEmitted.optParams[j][k]);
+        }
+        newParams.push(subParams);
+      }
+
+      const relatedTemplate = env.getDeclaredTemplate(factToBeEmitted);
+      relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+    }
+  }
 }
 
 export class InferNode extends TemplateNode {
@@ -183,10 +257,6 @@ export class InferNode extends TemplateNode {
       }
     }
     return resultInfo(ResultType.KnowTrue);
-  }
-
-  emitFactByFixingFreeVars(env: LiTeXEnv, fixedNode: FactNode): ExecInfo {
-    return resultInfo(ResultType.True);
   }
 }
 
@@ -315,67 +385,6 @@ export class DefNode extends TemplateNode {
       }
     }
     return resultInfo(ResultType.KnowTrue);
-  }
-
-  emitFactByFixingFreeVars(
-    env: LiTeXEnv,
-    fixedNode: FactNode,
-    emitWhat: LiTeXNode[] = this.onlyIfExprs
-  ): ExecInfo {
-    //! Chain reaction is not allowed, maybe I should add some syntax to allow user to use chain reaction.
-    const freeToFixed = new Map<string, string>();
-
-    for (let optIndex = 0; optIndex < fixedNode.optParams.length; optIndex++) {
-      const argumentsOfCurrentOpt: string[] = fixedNode.optParams[optIndex];
-      const curTemplateName = fixedNode.optNameAsLst
-        .slice(0, optIndex + 1)
-        .join(":");
-      const curTemplate = env.getDeclaredTemplate(curTemplateName);
-      if (!curTemplate) return resultInfo(ResultType.Error);
-
-      for (
-        let argIndex = 0;
-        argIndex < argumentsOfCurrentOpt.length;
-        argIndex++
-      ) {
-        if (argIndex < curTemplate.freeVars.length) {
-          freeToFixed.set(
-            curTemplate.freeVars[argIndex] as string,
-            argumentsOfCurrentOpt[argIndex]
-          );
-        }
-      }
-    }
-
-    for (let i = 0; i < emitWhat.length; i++) {
-      if (emitWhat[i] instanceof CallOptsNode) {
-        for (const onlyIfFact of (emitWhat[i] as CallOptsNode).nodes) {
-          moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
-        }
-      } else if (emitWhat[i] instanceof CallOptNode) {
-        moreFactByMakingFreeVarsIntoFixed(emitWhat[i] as CallOptNode);
-      }
-    }
-
-    //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
-    return resultInfo(ResultType.KnowTrue);
-
-    function moreFactByMakingFreeVarsIntoFixed(factToBeEmitted: CallOptNode) {
-      // replace freeVars with fixedVars
-      const newParams: string[][] = [];
-      for (let j = 0; j < factToBeEmitted.optParams.length; j++) {
-        const subParams: string[] = [];
-        for (let k = 0; k < factToBeEmitted.optParams[j].length; k++) {
-          const fixed = freeToFixed.get(factToBeEmitted.optParams[j][k]);
-          if (fixed) subParams.push(fixed);
-          else subParams.push(factToBeEmitted.optParams[j][k]);
-        }
-        newParams.push(subParams);
-      }
-
-      const relatedTemplate = env.getDeclaredTemplate(factToBeEmitted);
-      relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
-    }
   }
 }
 

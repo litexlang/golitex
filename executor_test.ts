@@ -58,7 +58,7 @@ const codes: string[] = [
   // "@ func(1,2):fun2();",
   // "func(1,2):fun2();",
   // "@ func(1,2,3);",
-  // "@! func(1,2):fun3(3);",
+  // "! func(1,2):fun3(3);",
   // ": definedP(x,y) <=> {set(x);}",
   // "know : fun(1,2);",
   // "is_def(definedP2);",
@@ -79,6 +79,7 @@ const codes: string[] = [
   "def func(x| set(x)) <=> {func4(x); def subF(y|twoSet(x,y)) }",
   "know_everything func(1):subF(2);",
   "know_everything func(3);",
+  "!:",
 ];
 
 function callOptsExecTest() {

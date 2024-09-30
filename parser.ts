@@ -83,7 +83,7 @@ const stmtKeywords: {
     node.isKnowEverything = true;
     return node;
   },
-  "@!": (env: LiTeXEnv, tokens: string[]) => {
+  "!": (env: LiTeXEnv, tokens: string[]) => {
     const node = knowParse(env, tokens);
     node.isKnowEverything = true;
     return node;

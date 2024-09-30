@@ -166,11 +166,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
             template?.emitFactByFixingFreeVars(
               env,
               fact as FactNode,
-              template.onlyIfExprs
-            );
-            template.emitFactByFixingFreeVars(
-              env,
-              fact as FactNode,
+              template.onlyIfExprs,
               template.requirements
             );
           }
