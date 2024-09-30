@@ -6,7 +6,7 @@ import {
   TemplateNodeFact,
 } from "./ast";
 import { OptsConnectionSymbol } from "./common";
-import { ExecInfo, resultInfo, ResultType } from "./executor";
+import { ExecInfo, execInfo, ResultType } from "./executor";
 
 export class LiTeXEnv {
   errors: string[] = [];
@@ -24,12 +24,9 @@ export class LiTeXEnv {
   pushCallOptFact(fact: CallOptNode): ExecInfo {
     const declaredTemplate = this.getDeclaredTemplate(fact.optName);
     if (!declaredTemplate)
-      return resultInfo(
-        ResultType.Error,
-        fact.optName + "has not been declared"
-      );
+      return execInfo(ResultType.Error, fact.optName + "has not been declared");
     declaredTemplate?.facts.push(makeTemplateNodeFact(fact.optParams, []));
-    return resultInfo(ResultType.KnowTrue);
+    return execInfo(ResultType.KnowTrue);
   }
 
   // Main function of the whole pj

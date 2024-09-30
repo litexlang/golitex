@@ -41,21 +41,21 @@ export const resultTypeMap: { [key in ResultType]: string } = {
   [ResultType.HaveTrue]: "have: true",
 };
 
-export function resultInfo(t: ResultType, s: string = ""): ExecInfo {
+export function execInfo(t: ResultType, s: string = ""): ExecInfo {
   return { type: t, message: s };
 }
 
 export type ExecInfo = { type: ResultType; message: string };
 
-export function catchRuntimeError(env: LiTeXEnv, err: any, m: string) {
+export function catchRuntimeError(env: LiTeXEnv, err: any, m: string): string {
   if (err instanceof Error) {
     if (err.message) handleRuntimeError(env, err.message);
   }
-  handleRuntimeError(env, m);
+  return handleRuntimeError(env, m);
 }
 
-export function handleRuntimeError(env: LiTeXEnv, message: string) {
-  env.pushErrorMessage("Runtime error: " + message);
+export function handleRuntimeError(env: LiTeXEnv, message: string): string {
+  return "Runtime error: " + message;
 }
 
 export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
@@ -73,7 +73,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
       return haveExec(env, node as HaveNode);
   }
 
-  return resultInfo(ResultType.Error, "Invalid Expression.");
+  return execInfo(ResultType.Error, "Invalid Expression.");
 }
 
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
@@ -81,7 +81,7 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
     let res = checkFactExec(env, fact as CallOptNode);
     if (res.type !== ResultType.True) return res;
   }
-  return resultInfo(ResultType.True);
+  return execInfo(ResultType.True);
 }
 
 function checkFactExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
@@ -93,20 +93,20 @@ function checkFactExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 
     const relatedTemplate = env.getDeclaredTemplate(node);
     if (!relatedTemplate)
-      return resultInfo(ResultType.False, node.optName + " is not declared.");
+      return execInfo(ResultType.False, node.optName + " is not declared.");
     for (let i = 0; i < relatedTemplate.facts.length; i++) {
       if (
         checkParams(relatedTemplate.facts[i].params, node.optParams) &&
         relatedTemplate.facts[i].activated
       ) {
-        return resultInfo(ResultType.True);
+        return execInfo(ResultType.True);
       }
     }
 
-    return resultInfo(ResultType.Unknown);
+    return execInfo(ResultType.Unknown);
   } catch (error) {
     catchRuntimeError(env, error, "check");
-    return resultInfo(ResultType.Error);
+    return execInfo(ResultType.Error);
   }
 
   function checkParams(arr1: string[][], arr2: string[][]): boolean {
@@ -140,10 +140,10 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
     // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
     node.initDeclaredTemplates();
 
-    return resultInfo(ResultType.DefTrue);
+    return execInfo(ResultType.DefTrue);
   } catch (error) {
     catchRuntimeError(env, error, "template declaration");
-    return resultInfo(ResultType.DefError);
+    return execInfo(ResultType.DefError);
   }
 }
 
@@ -191,10 +191,10 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
       if (res.type !== ResultType.KnowTrue) return res;
     }
 
-    return resultInfo(ResultType.KnowTrue);
+    return execInfo(ResultType.KnowTrue);
   } catch (error) {
     catchRuntimeError(env, error, "know");
-    return resultInfo(ResultType.KnowError);
+    return execInfo(ResultType.KnowError);
   }
 }
 
@@ -216,14 +216,14 @@ export function knowEverythingCallOptExec(
     template.requirements
   );
 
-  return resultInfo(ResultType.KnowTrue);
+  return execInfo(ResultType.KnowTrue);
 }
 
 export function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   let relatedTemplate = env.getDeclaredTemplate(node.optName);
 
   if (!relatedTemplate)
-    return resultInfo(
+    return execInfo(
       ResultType.KnowUndeclared,
       node.optName + " has not declared"
     );
@@ -235,25 +235,30 @@ export function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 
   env.pushCallOptFact(node);
 
-  return resultInfo(ResultType.KnowTrue);
+  return execInfo(ResultType.KnowTrue);
 }
 
 export function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
   try {
     const relatedOpt = node.opt;
     const existTemplate = env.getDeclaredTemplate(relatedOpt);
+
     if (existTemplate?.type !== LiTexNodeType.ExistNode) {
-      throw Error(node.opt.optName + "is not a exist opt.");
-    } else {
-      existTemplate.emitCallOptByFixingFreeVars(
-        env,
-        node.opt,
-        existTemplate.requirements
-      );
+      throw new Error(`${relatedOpt.optName} is not a exist opt.`);
     }
-    return resultInfo(ResultType.HaveTrue);
+
+    existTemplate.emitCallOptByFixingFreeVars(
+      env,
+      relatedOpt,
+      existTemplate.requirements
+    );
+
+    return execInfo(ResultType.HaveTrue);
   } catch (error) {
-    handleRuntimeError(env, "have");
-    return resultInfo(ResultType.HaveError);
+    if (error instanceof Error) {
+      return execInfo(ResultType.HaveError, error.message);
+    } else {
+      return execInfo(ResultType.HaveError, String(error));
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { OptsConnectionSymbol } from "./common";
 import { LiTeXEnv } from "./env";
-import { ExecInfo, resultInfo, ResultType } from "./executor";
+import { ExecInfo, execInfo, ResultType } from "./executor";
 
 // There are 3 things in LiTex: Declaration (var, fact-template) ; check; know
 export enum LiTexNodeType {
@@ -146,13 +146,13 @@ export abstract class TemplateNode extends LiTeXNode {
 
     for (let i = 0; i < this.onlyIfExprs.length; i++) {
       if (this.onlyIfExprs[i].type !== LiTexNodeType.CallOptNode) {
-        return resultInfo(
+        return execInfo(
           ResultType.DefError,
           `arguments of def block should have type callOpt-type or def-type.`
         );
       }
     }
-    return resultInfo(ResultType.DefTrue);
+    return execInfo(ResultType.DefTrue);
 
     function insertListIntoListAndDeleteElemOnIndex<T>(
       originalList: T[],
@@ -188,7 +188,7 @@ export abstract class TemplateNode extends LiTeXNode {
     ) {
       const argumentsOfCurrentOpt: string[] = fixedNode.optParams[optIndex];
 
-      if (!curTemplate) return resultInfo(ResultType.Error);
+      if (!curTemplate) return execInfo(ResultType.Error);
 
       for (
         let argIndex = 0;
@@ -227,7 +227,7 @@ export abstract class TemplateNode extends LiTeXNode {
     }
 
     //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
-    return resultInfo(ResultType.KnowTrue);
+    return execInfo(ResultType.KnowTrue);
 
     function moreFactByMakingFreeVarsIntoFixed(factToBeEmitted: CallOptNode) {
       // replace freeVars with fixedVars
@@ -264,7 +264,7 @@ export class DefNode extends TemplateNode {
     let template: undefined | TemplateNode = this as TemplateNode;
     for (let i = 0; ; i++) {
       if (template.freeVars.length !== node.optParams[i].length) {
-        return resultInfo(
+        return execInfo(
           ResultType.KnowError,
           template.declOptName +
             " has " +
@@ -278,7 +278,7 @@ export class DefNode extends TemplateNode {
       if (i + 1 < node.optNameAsLst.length) {
         template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
         if (!template)
-          return resultInfo(
+          return execInfo(
             ResultType.KnowError,
             "Undefined operator " + node.optName
           );
@@ -286,7 +286,7 @@ export class DefNode extends TemplateNode {
         break;
       }
     }
-    return resultInfo(ResultType.KnowTrue);
+    return execInfo(ResultType.KnowTrue);
   }
 }
 
@@ -305,7 +305,7 @@ export class InferNode extends TemplateNode {
     let template: undefined | TemplateNode = this as TemplateNode;
     for (let i = 0; ; i++) {
       if (template.freeVars.length !== node.optParams[i].length) {
-        return resultInfo(
+        return execInfo(
           ResultType.KnowError,
           `${template.declOptName} has ${template.freeVars.length} parameters, get ${node.optNameAsLst[i].length} instead.`
         );
@@ -314,7 +314,7 @@ export class InferNode extends TemplateNode {
       if (i + 1 < node.optNameAsLst.length) {
         template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
         if (!template)
-          return resultInfo(
+          return execInfo(
             ResultType.KnowError,
             "Undefined operator " + node.optName
           );
@@ -322,7 +322,7 @@ export class InferNode extends TemplateNode {
         break;
       }
     }
-    return resultInfo(ResultType.KnowTrue);
+    return execInfo(ResultType.KnowTrue);
   }
 }
 
@@ -330,7 +330,7 @@ export class ExistNode extends TemplateNode {
   type = LiTexNodeType.ExistNode;
 
   knowCallOptExecCheck(node: FactNode): ExecInfo {
-    return resultInfo(ResultType.True);
+    return execInfo(ResultType.True);
   }
 }
 

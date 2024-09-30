@@ -70,18 +70,20 @@ const codes: string[] = [
   // "know func(1,2);",
   // "fun5(1);",
   // "// know everything",
-  ": everything(x,y| fun0(x,y)) <=> {$ fun2();  $ fun3(y) => {fun4(x);} }",
-  "know_everything everything(1,2);", // requirements, onlyIfs, itself, all emitted.
-  "// test emitFact",
-  "def func4(x);",
-  "def set(x);",
-  "def twoSet(x,y);",
-  "def func(x| set(x)) <=> {func4(x); def subF(y|twoSet(x,y)) }",
-  "know_everything func(1):subF(2);",
-  "! func(3);",
-  "!: func5(3 | set(3)) <=> {func(1):subF(3);}; ",
-  "exist existenceOf(x| set(x))",
-  "have existenceOf(y);",
+  // ": everything(x,y| fun0(x,y)) <=> {$ fun2();  $ fun3(y) => {fun4(x);} }",
+  // "know_everything everything(1,2);", // requirements, onlyIfs, itself, all emitted.
+  // "// test emitFact",
+  // "def func4(x);",
+  // "def set(x);",
+  // "def twoSet(x,y);",
+  // "def func(x| set(x)) <=> {func4(x); def subF(y|twoSet(x,y)) }",
+  // "know_everything func(1):subF(2);",
+  // "! func(3);",
+  // "!: func5(3 | set(3)) <=> {func(1):subF(3);}; ",
+  // "exist existenceOf(x| set(x))",
+  // "have existenceOf(y);",
+  "def exist2(x|set(x))",
+  "have exist2(y);",
 ];
 
 function callOptsExecTest() {
@@ -98,7 +100,7 @@ function callOptsExecTest() {
       for (let i = 0; i < result.length; i++) {
         const res: ExecInfo = nodeExec(env, result[i]);
         if (!res.message) console.log(resultTypeMap[res.type]);
-        else console.log(resultTypeMap[res.type], res.message);
+        else console.log(`${resultTypeMap[res.type]} '${res.message}'`);
       }
     }
   }
