@@ -22,6 +22,6 @@ export const KnowTypeKeywords = [
   "!",
 ];
 export const ExistKeywords = ["exist", "?"];
-export const DefTypeKeywords = [":", "def", ...ExistKeywords];
+export const TemplateDeclarationKeywords = [":", "def", ...ExistKeywords];
 
 export const DefBlockDeclareAndCall = "$";

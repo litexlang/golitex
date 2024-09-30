@@ -81,6 +81,7 @@ const codes: string[] = [
   // "! func(3);",
   // "!: func5(3 | set(3)) <=> {func(1):subF(3);}; ",
   "exist existenceOf(x| set(x))",
+  "have existenceOf(y);",
 ];
 
 function callOptsExecTest() {

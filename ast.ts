@@ -340,13 +340,10 @@ export class KnowNode extends LiTeXNode {
 
 export class HaveNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.HaveNode;
-  params: string[];
-  properties: CallOptNode[];
+  params: string[] = [];
 
-  constructor(node: FreeVarsWithFactsNode) {
+  constructor() {
     super();
-    this.params = node.params;
-    this.properties = node.properties;
   }
 }
 

@@ -16,7 +16,7 @@ import {
 import { LiTeXEnv } from "./env";
 import {
   KnowTypeKeywords,
-  DefTypeKeywords,
+  TemplateDeclarationKeywords,
   specialChars,
   DefBlockDeclareAndCall,
   ExistKeywords,
@@ -273,13 +273,27 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
 
 function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   try {
+    const haveNode = new HaveNode();
+
     skip(tokens, "have");
-    // ! needs to put the following shift into paramsColonParse
-    skip(tokens, "("); // skip ()
-    const node = freeVarsAndTheirFactsParse(env, tokens);
+    shiftVar(tokens);
+    skip(tokens, "(");
+
+    if (!isCurToken(")", tokens)) {
+      while (true) {
+        haveNode.params.push(shiftVar(tokens));
+
+        if (isCurToken(")", tokens)) {
+          break;
+        }
+
+        skip(tokens, ",");
+      }
+    }
+
     skip(tokens, ")");
     skip(tokens, ";");
-    return new HaveNode(node);
+    return haveNode;
   } catch (error) {
     handleParseError(tokens, env, "have");
     throw error;
@@ -348,7 +362,7 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
 
 function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   try {
-    const declName = skip(tokens, DefTypeKeywords) as string; // KnowTypeKeywords
+    const declName = skip(tokens, TemplateDeclarationKeywords) as string; // KnowTypeKeywords
     const declOptName = shiftVar(tokens);
     skip(tokens, "(");
 

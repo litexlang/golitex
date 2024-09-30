@@ -134,7 +134,8 @@ const codes: string[] = [
   // ": func(x,y) {? fun2();  ? fun3(y) => {fun4(x);} }",
   // "know_everything func(1,2):fun2();",
   // "!: func5(2 | set(2)) <=> {func(1):subF(2);} ;",
-  "exist existenceOf(x| set(x))",
+  // "exist existenceOf(x| set(x))",
+  "have existenceOf(y);",
 ];
 
 function testLexer() {
