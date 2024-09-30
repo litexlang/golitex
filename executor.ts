@@ -162,26 +162,17 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
               throw Error(
                 `${(fact as CallOptNode).optName} has not been declared.`
               );
-            //   for (let i = 0; i < template?.requirements.length; i++) {
-            //     if (template.requirements[i] instanceof CallOptNode) {
-            //       const localTemp = env.getDeclaredTemplate(
-            //         template.requirements[i] as CallOptNode
-            //       ) as TemplateNode;
-            //       if (!localTemp)
-            //         throw Error(
-            //           `${(template.requirements[i] as CallOptNode).optName} has not been declared.`
-            //         );
-            //       const mapBetweenFreeVarsAndFixed = new Map<string, string>();
-            //       for (let j = 0; j < (fact); j++)
-            //       localTemp.facts.push(
-            //         makeTemplateNodeFact(
-            //           (template.requirements[i] as CallOptNode).optParams,
-            //           []
-            //         )
-            //       );
-            //     }
-            //   }
-            template?.emitOnlyIfs(env, fact as FactNode);
+
+            template?.emitFactByFixingFreeVars(
+              env,
+              fact as FactNode,
+              template.onlyIfExprs
+            );
+            template.emitFactByFixingFreeVars(
+              env,
+              fact as FactNode,
+              template.requirements
+            );
           }
           break;
         }

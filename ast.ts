@@ -143,7 +143,11 @@ export abstract class TemplateNode extends LiTeXNode {
 
   abstract knowFactExecCheck(node: FactNode): ExecInfo;
 
-  abstract emitOnlyIfs(env: LiTeXEnv, fixedNode: FactNode): ExecInfo;
+  abstract emitFactByFixingFreeVars(
+    env: LiTeXEnv,
+    fixedNode: FactNode,
+    emitWhat: LiTeXNode[] // pass in template.requirement or template.onlyIfExprs
+  ): ExecInfo;
 }
 
 export class InferNode extends TemplateNode {
@@ -181,7 +185,7 @@ export class InferNode extends TemplateNode {
     return resultInfo(ResultType.KnowTrue);
   }
 
-  emitOnlyIfs(env: LiTeXEnv, fixedNode: FactNode): ExecInfo {
+  emitFactByFixingFreeVars(env: LiTeXEnv, fixedNode: FactNode): ExecInfo {
     return resultInfo(ResultType.True);
   }
 }
@@ -313,7 +317,11 @@ export class DefNode extends TemplateNode {
     return resultInfo(ResultType.KnowTrue);
   }
 
-  emitOnlyIfs(env: LiTeXEnv, fixedNode: FactNode): ExecInfo {
+  emitFactByFixingFreeVars(
+    env: LiTeXEnv,
+    fixedNode: FactNode,
+    emitWhat: LiTeXNode[] = this.onlyIfExprs
+  ): ExecInfo {
     //! Chain reaction is not allowed, maybe I should add some syntax to allow user to use chain reaction.
     const argumentsOfTheLastOpt =
       fixedNode.optParams[fixedNode.optParams.length - 1];
@@ -322,44 +330,35 @@ export class DefNode extends TemplateNode {
       freeToFixed.set(this.freeVars[i] as string, argumentsOfTheLastOpt[i]);
     }
 
-    for (let i = 0; i < this.onlyIfExprs.length; i++) {
-      if (this.onlyIfExprs[i] instanceof CallOptsNode) {
-        for (const onlyIfFact of (this.onlyIfExprs[i] as CallOptsNode).nodes) {
-          // replace freeVars with fixedVars
-          const newParams: string[][] = [];
-          for (let j = 0; j < onlyIfFact.optParams.length; j++) {
-            const subParams: string[] = [];
-            for (let k = 0; k < onlyIfFact.optParams[j].length; k++) {
-              const fixed = freeToFixed.get(onlyIfFact.optParams[j][k]);
-              if (fixed) subParams.push(fixed);
-              else subParams.push(onlyIfFact.optParams[j][k]);
-            }
-            newParams.push(subParams);
-          }
-
-          const relatedTemplate = env.getDeclaredTemplate(onlyIfFact);
-          relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+    for (let i = 0; i < emitWhat.length; i++) {
+      if (emitWhat[i] instanceof CallOptsNode) {
+        for (const onlyIfFact of (emitWhat[i] as CallOptsNode).nodes) {
+          moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
         }
-      } else if (this.onlyIfExprs[i] instanceof CallOptNode) {
-        const onlyIfFact: CallOptNode = this.onlyIfExprs[i] as CallOptNode;
-        const newParams: string[][] = [];
-        for (let j = 0; j < onlyIfFact.optParams.length; j++) {
-          const subParams: string[] = [];
-          for (let k = 0; k < onlyIfFact.optParams[j].length; k++) {
-            const fixed = freeToFixed.get(onlyIfFact.optParams[j][k]);
-            if (fixed) subParams.push(fixed);
-            else subParams.push(onlyIfFact.optParams[j][k]);
-          }
-          newParams.push(subParams);
-        }
-
-        const relatedTemplate = env.getDeclaredTemplate(onlyIfFact);
-        relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+      } else if (emitWhat[i] instanceof CallOptNode) {
+        moreFactByMakingFreeVarsIntoFixed(emitWhat[i] as CallOptNode);
       }
     }
 
     //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
     return resultInfo(ResultType.KnowTrue);
+
+    function moreFactByMakingFreeVarsIntoFixed(onlyIfFact: CallOptNode) {
+      // replace freeVars with fixedVars
+      const newParams: string[][] = [];
+      for (let j = 0; j < onlyIfFact.optParams.length; j++) {
+        const subParams: string[] = [];
+        for (let k = 0; k < onlyIfFact.optParams[j].length; k++) {
+          const fixed = freeToFixed.get(onlyIfFact.optParams[j][k]);
+          if (fixed) subParams.push(fixed);
+          else subParams.push(onlyIfFact.optParams[j][k]);
+        }
+        newParams.push(subParams);
+      }
+
+      const relatedTemplate = env.getDeclaredTemplate(onlyIfFact);
+      relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+    }
   }
 
   makeMapBetweenFreeVarsAndFixedVarsAtCurrentTemplate(

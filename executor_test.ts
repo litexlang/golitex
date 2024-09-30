@@ -75,8 +75,10 @@ const codes: string[] = [
   "// test emitFact",
   "def func4(x);",
   "def set(x);",
-  "def func(x| set(x)) <=> {func4(x); def subF(y|set(y)) }",
+  "def twoSet(x,y);",
+  "def func(x| set(x)) <=> {func4(x); def subF(y|twoSet(x,y)) }",
   "know_everything func(1):subF(2);",
+  "know_everything func(3);",
 ];
 
 function callOptsExecTest() {
