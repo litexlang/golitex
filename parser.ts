@@ -1,4 +1,3 @@
-// ! TODO: 1. based on situations, know might not end with ; 2. introduce @infer @exist as syntactic sugar of know infer 3. iff should be iff(p(...), q(...)) 4. better callOpts 5. FATAL: know in (:) consumes ',' and (:) itself consumes ','
 import {
   CallOptNode,
   CallOptsNode,

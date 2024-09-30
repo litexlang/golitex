@@ -1,20 +1,14 @@
-import { readFileSync } from "fs";
 import { scan } from "./lexer";
 import { LiTeXEnv } from "./env";
 import { LiTeXStmtsParse } from "./parser";
-import { LiTeXNode } from "./ast";
 
-// ! know should have different kinds of endings
-// ! should able to call subset:p(A,B)(x)
-//   ! know infer when used as para, there are so many ; needs refactor
-// !
 const codes: string[] = [
   // "set(a):set(b);",
   // "infer a(x: infer p(y: set(s);) {  infer p2(yy: set(yy);) {}  } ) {}",
   // "infer a(x: set(x);) {}",
   // "set(a):set(b);",
-  // "set(a), set(b);", //! strange but works
-  // "infer p(x: string(x);) {}", //! I think () here is unnecessary. if I abandon it, I no longer have to adopt sophisticated isEnd
+  // "set(a), set(b);",
+  // "infer p(x: string(x);) {}",
   // "know infer p(x: string(x);) {}, set(a);",
   // "infer object(x) {object(x), object2(x);}",
   // "know object(#);",

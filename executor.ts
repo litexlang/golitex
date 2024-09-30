@@ -8,8 +8,6 @@ import {
   FactNode,
   CanBeKnownNode,
   TemplateNode,
-  makeTemplateNodeFact,
-  makeMapBetweenFreeVarsAndFixedVar,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";

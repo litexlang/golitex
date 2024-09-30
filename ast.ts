@@ -388,34 +388,6 @@ export class DefNode extends TemplateNode {
   }
 }
 
-export function makeMapBetweenFreeVarsAndFixedVar(
-  env: LiTeXEnv,
-  opt: CallOptNode
-): Map<string, string> | undefined {
-  const names = opt.optName.split(OptsConnectionSymbol);
-  const res = new Map<string, string>();
-
-  let template = env.getDeclaredTemplate(names[0]);
-  if (template?.facts.length !== opt.optParams[0].length) {
-    return undefined;
-  }
-  for (let i = 0; i < opt.optParams[0].length; i++) {
-    res.set(template?.freeVars[i], opt.optParams[0][i]);
-  }
-
-  for (let i = 1; i < names.length; i++) {
-    template = template?.declaredTemplates.get(names[i]);
-    if (template?.facts.length !== opt.optParams[i].length) {
-      return undefined;
-    }
-    for (let j = 0; j < opt.optParams[i].length; j++) {
-      res.set(template?.freeVars[j], opt.optParams[i][j]);
-    }
-  }
-
-  return res;
-}
-
 export class QuestionMarkNode extends LiTeXNode {
   type = LiTexNodeType.QuestionMarkNode;
   template: TemplateNode;
