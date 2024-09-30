@@ -72,14 +72,15 @@ const codes: string[] = [
   // "// know everything",
   // ": everything(x,y| fun0(x,y)) <=> {$ fun2();  $ fun3(y) => {fun4(x);} }",
   // "know-everything everything(1,2);", // requirements, onlyIfs, itself, all emitted.
-  "// test emitFact",
-  "def func4(x);",
-  "def set(x);",
-  "def twoSet(x,y);",
-  "def func(x| set(x)) <=> {func4(x); def subF(y|twoSet(x,y)) }",
-  "know_everything func(1):subF(2);",
-  "! func(3);",
-  "!: func5(3 | set(3)) <=> {func(1):subF(3);}; ",
+  // "// test emitFact",
+  // "def func4(x);",
+  // "def set(x);",
+  // "def twoSet(x,y);",
+  // "def func(x| set(x)) <=> {func4(x); def subF(y|twoSet(x,y)) }",
+  // "know_everything func(1):subF(2);",
+  // "! func(3);",
+  // "!: func5(3 | set(3)) <=> {func(1):subF(3);}; ",
+  "exist existenceOf(x| set(x))",
 ];
 
 function callOptsExecTest() {

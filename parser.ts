@@ -19,6 +19,7 @@ import {
   DefTypeKeywords,
   specialChars,
   DefBlockDeclareAndCall,
+  ExistKeywords,
 } from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -74,12 +75,13 @@ const stmtKeywords: {
   know: knowParse,
   "@": knowParse,
   have: haveParse,
-  exist: existParse,
   // not: notParse,
   // or: orParse,
   let: letParse,
   def: templateParse,
   ":": templateParse,
+  exist: templateParse,
+  "?": templateParse,
   know_everything: (env: LiTeXEnv, tokens: string[]) => {
     const node = knowParse(env, tokens);
     node.isKnowEverything = true;
@@ -298,29 +300,6 @@ function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
   }
 }
 
-function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
-  try {
-    skip(tokens, "exist");
-    const declOptName = tokens.shift() as string;
-    skip(tokens, "("); // skip '('
-
-    const FreeVarsWithFactsNode = freeVarsAndTheirFactsParse(env, tokens);
-
-    skip(tokens, ")"); // skip )
-
-    const result = new ExistNode(
-      declOptName,
-      FreeVarsWithFactsNode.params,
-      FreeVarsWithFactsNode.properties
-    );
-
-    return result;
-  } catch (error) {
-    handleParseError(tokens, env, "exist");
-    throw error;
-  }
-}
-
 function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
   try {
     const callOpts: CallOptNode[] = [];
@@ -348,23 +327,28 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
   }
 }
 
-function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
-  function freeVars(tokens: string[]): string[] {
-    const params: string[] = [];
-    if (!(tokens[0] === ")")) {
-      for (let i = 0; i < tokens.length; i++) {
-        params.push(tokens[i] as string);
-        if (tokens[i + 1] === ",") i++;
-        else if (tokens[i + 1] === "|") break;
-        else if (tokens[i + 1] === ")") break;
-        else throw Error("infer parameters");
-      }
-    }
-    return params;
-  }
+// function existParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
+//   try {
+//     skip(tokens, ExistKeywords);
+//     const declOptName = shiftVar(tokens);
+//     skip(tokens, "(");
 
+//     const curFreeVars = freeVars(tokens);
+
+//     const FreeVarsWithFactsNode = freeVarsAndTheirFactsParse(env, tokens);
+
+//     skip(tokens, ")");
+
+//     return;
+//   } catch (error) {
+//     catchParseError(tokens, env, error, "exist");
+//     throw error;
+//   }
+// }
+
+function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   try {
-    skip(tokens, DefTypeKeywords);
+    const declName = skip(tokens, DefTypeKeywords) as string; // KnowTypeKeywords
     const declOptName = shiftVar(tokens);
     skip(tokens, "(");
 
@@ -434,8 +418,11 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
         break;
 
       default:
-        result = new DefNode(declOptName, curFreeVars, []);
-        (result as DefNode).onlyIfExprs = FreeVarsWithFactsNode.properties;
+        if (ExistKeywords.includes(declName))
+          result = new ExistNode(declOptName, curFreeVars, []);
+        else result = new DefNode(declOptName, curFreeVars, []);
+        (result as TemplateNode).requirements =
+          FreeVarsWithFactsNode.properties;
         break;
     }
 
@@ -457,4 +444,18 @@ function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
     handleParseError(tokens, env, "fact");
     throw error;
   }
+}
+
+function freeVars(tokens: string[]): string[] {
+  const params: string[] = [];
+  if (!(tokens[0] === ")")) {
+    for (let i = 0; i < tokens.length; i++) {
+      params.push(tokens[i] as string);
+      if (tokens[i + 1] === ",") i++;
+      else if (tokens[i + 1] === "|") break;
+      else if (tokens[i + 1] === ")") break;
+      else throw Error("infer parameters");
+    }
+  }
+  return params;
 }

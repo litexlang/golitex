@@ -20,9 +20,8 @@ export const KnowTypeKeywords = [
   "suppose",
   "know_everything",
   "!",
-  "exist",
-  "?",
 ];
-export const DefTypeKeywords = [":", "def"];
+export const ExistKeywords = ["exist", "?"];
+export const DefTypeKeywords = [":", "def", ...ExistKeywords];
 
 export const DefBlockDeclareAndCall = "$";
