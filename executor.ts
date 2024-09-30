@@ -240,6 +240,17 @@ export function knowFactExec(env: LiTeXEnv, node: FactNode): ExecInfo {
 
 export function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
   try {
+    const relatedOpt = node.opt;
+    const existTemplate = env.getDeclaredTemplate(relatedOpt);
+    if (existTemplate?.type !== LiTexNodeType.ExistNode) {
+      throw Error(node.opt.optName + "is not a exist opt.");
+    } else {
+      existTemplate.emitFactByFixingFreeVars(
+        env,
+        node.opt,
+        existTemplate.requirements
+      );
+    }
     return resultInfo(ResultType.HaveTrue);
   } catch (error) {
     handleRuntimeError(env, "have");

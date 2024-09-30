@@ -74,7 +74,7 @@ const codes: string[] = [
   // "know-everything everything(1,2);", // requirements, onlyIfs, itself, all emitted.
   // "// test emitFact",
   // "def func4(x);",
-  // "def set(x);",
+  "def set(x);",
   // "def twoSet(x,y);",
   // "def func(x| set(x)) <=> {func4(x); def subF(y|twoSet(x,y)) }",
   // "know_everything func(1):subF(2);",
