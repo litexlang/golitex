@@ -6,8 +6,6 @@ import {
   HaveNode,
   KnowNode,
   LiTeXNode,
-  NotNode,
-  OrNode,
   FreeVarsWithFactsNode,
   LetNode,
   DefNode,
@@ -72,8 +70,8 @@ const stmtKeywords: {
   "@": knowParse,
   have: haveParse,
   exist: existParse,
-  not: notParse,
-  or: orParse,
+  // not: notParse,
+  // or: orParse,
   let: letParse,
   def: templateParse,
   ":": templateParse,
@@ -318,28 +316,6 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
   }
 }
 
-function notParse(env: LiTeXEnv, tokens: string[]): NotNode {
-  try {
-    skip(tokens, "not");
-    const block: CallOptsNode[] = nonExecutableBlockParse(
-      env,
-      tokens
-    ) as CallOptsNode[];
-    const notNode = new NotNode([]);
-
-    for (const value of block) {
-      for (const callOpt of value.nodes) {
-        notNode.exprs.push(callOpt);
-      }
-    }
-
-    return notNode;
-  } catch (error) {
-    handleParseError(tokens, env, "not");
-    throw error;
-  }
-}
-
 function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
   try {
     const callOpts: CallOptNode[] = [];
@@ -363,20 +339,6 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
     return new CallOptsNode(callOpts);
   } catch (error) {
     catchParseError(tokens, env, error, "facts");
-    throw error;
-  }
-}
-
-function orParse(env: LiTeXEnv, tokens: string[]) {
-  try {
-    skip(tokens, "or");
-    const orNode = new OrNode();
-    while (tokens[0] === "{") {
-      orNode.blocks.push(nonExecutableBlockParse(env, tokens) as CallOptNode[]);
-    }
-    return orNode;
-  } catch (error) {
-    catchParseError(tokens, env, error, "or");
     throw error;
   }
 }

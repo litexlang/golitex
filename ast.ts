@@ -1,15 +1,11 @@
 import { OptsConnectionSymbol } from "./common";
 import { LiTeXEnv } from "./env";
-import { ExecInfo, knowFactExec, resultInfo, ResultType } from "./executor";
+import { ExecInfo, resultInfo, ResultType } from "./executor";
 
 // There are 3 things in LiTex: Declaration (var, fact-template) ; check; know
 export enum LiTexNodeType {
   Error,
   Node,
-
-  // Logic
-  NotNode,
-  OrNode,
 
   // Fact
   CallOptNode,
@@ -287,7 +283,13 @@ export class InferNode extends TemplateNode {
   }
 }
 
-export type CanBeKnownNode = FactNode | InferNode | DefNode | TemplateNode;
+export class ExistNode extends TemplateNode {
+  knowFactExecCheck(node: FactNode): ExecInfo {
+    return resultInfo(ResultType.True);
+  }
+}
+
+export type CanBeKnownNode = FactNode | TemplateNode;
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
@@ -318,43 +320,17 @@ export class FreeVarsWithFactsNode extends LiTeXNode {
   }
 }
 
-export class ExistNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.ExistNode;
-  declOptName: string = "";
-  params: string[] = [];
-  requirements: CallOptNode[] = [];
-
-  constructor(
-    declOptName: string,
-    params: string[],
-    requirements: CallOptNode[]
-  ) {
-    super();
-    this.declOptName = declOptName;
-    this.params = params;
-    this.requirements = requirements;
-  }
-}
-
-export class NotNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.NotNode;
-  exprs: CallOptNode[] = [];
-
-  constructor(exprs: CallOptNode[]) {
-    super();
-    this.exprs = exprs;
-  }
-}
-
-export class OrNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.OrNode;
-  blocks: CallOptNode[][] = [];
-}
-
 export type FactNode = CallOptNode;
+export enum CallOptsNodeType {
+  And,
+  Or,
+  False,
+}
 export class CallOptsNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptsNode;
   nodes: CallOptNode[] = [];
+  factType: CallOptsNodeType = CallOptsNodeType.And;
+
   constructor(nodes: CallOptNode[]) {
     super();
     this.nodes = nodes;
