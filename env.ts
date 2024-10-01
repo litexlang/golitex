@@ -25,7 +25,7 @@ export class LiTeXEnv {
     const declaredTemplate = this.getDeclaredTemplate(fact.optName);
     if (!declaredTemplate)
       return execInfo(ResultType.Error, fact.optName + "has not been declared");
-    declaredTemplate?.facts.push(makeTemplateNodeFact(fact.optParams, []));
+    declaredTemplate?.facts.push(makeTemplateNodeFact(fact.optParams));
     return execInfo(ResultType.KnowTrue);
   }
 

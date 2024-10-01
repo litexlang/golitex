@@ -1,6 +1,5 @@
 import { OptsConnectionSymbol } from "./common";
-import { LiTeXEnv } from "./env";
-import { checkParams, ExecInfo, execInfo, ResultType } from "./executor";
+import { ExecInfo, execInfo, ResultType } from "./executor";
 
 // There are 3 things in LiTex: Declaration (var, fact-template) ; check; know
 export enum LiTexNodeType {
@@ -68,14 +67,21 @@ export class CallOptNode extends LiTeXNode {
 export type TemplateNodeFact = {
   params: string[][];
   onlyIfs: CallOptNode[];
+  requirements: CallOptNode[];
   activated: Boolean;
 };
 export function makeTemplateNodeFact(
   params: string[][],
-  onlyIfs: CallOptNode[],
+  onlyIfs: CallOptNode[] = [],
+  requirements: CallOptNode[] = [],
   activated: Boolean = true
 ) {
-  return { params: params, onlyIfs: onlyIfs, activated: activated };
+  return {
+    params: params,
+    onlyIfs: onlyIfs,
+    activated: activated,
+    requirements: requirements,
+  };
 }
 
 // Main data structure of the whole project
@@ -287,6 +293,7 @@ export class LetNode extends LiTeXNode {
   }
 }
 
+// Declare and call at the same time.
 export class DollarMarkNode extends LiTeXNode {
   type = LiTexNodeType.DollarMarkNode;
   template: TemplateNode;

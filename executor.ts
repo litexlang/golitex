@@ -47,6 +47,22 @@ export function execInfo(t: ResultType, s: string = ""): ExecInfo {
 
 export type ExecInfo = { type: ResultType; message: string };
 
+function checkFixedOpt(env: LiTeXEnv, callOpt: CallOptNode): ExecInfo {
+  const relatedTemplate = env.getDeclaredTemplate(callOpt);
+  if (!relatedTemplate)
+    return execInfo(ResultType.Error, callOpt.optName + " is not declared.");
+  for (let i = 0; i < relatedTemplate.facts.length; i++) {
+    const res = checkParams(relatedTemplate.facts[i].params, callOpt.optParams);
+    if (res) return execInfo(ResultType.True);
+  }
+  return execInfo(ResultType.Unknown);
+}
+
+function infoTypeIsNotTrue(info: ExecInfo) {
+  if (info.type !== ResultType.True) return true;
+  else return false;
+}
+
 export function catchRuntimeError(env: LiTeXEnv, err: any, m: string): string {
   if (err instanceof Error) {
     if (err.message) handleRuntimeError(env, err.message);
@@ -118,23 +134,21 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 
     if (infoTypeIsNotTrue(res)) return res;
 
-    if (res.type === ResultType.True) {
-      // emit
-      fixFreeVarsAndCallHandlerFunc(
-        env,
-        node,
-        (newParams: string[][], relatedTemplate: TemplateNode) => {
-          relatedTemplate.facts.push(makeTemplateNodeFact(newParams, []));
-          return execInfo(ResultType.True);
-        },
-        relatedTemplate.onlyIfExprs
-      );
+    // emit
+    fixFreeVarsAndCallHandlerFunc(
+      env,
+      node,
+      (newParams: string[][], relatedTemplate: TemplateNode) => {
+        relatedTemplate.facts.push(makeTemplateNodeFact(newParams));
+        return execInfo(ResultType.True);
+      },
+      relatedTemplate.onlyIfExprs
+    );
 
-      return execInfo(
-        ResultType.KnowTrue,
-        `${node.optName} itself and all of its requirements are true`
-      );
-    }
+    // return execInfo(
+    //   ResultType.KnowTrue,
+    //   `${node.optName} itself and all of its requirements are true`
+    // );
 
     return execInfo(
       ResultType.DefTrue,
@@ -249,7 +263,7 @@ export function knowEverythingCallOptExec(
     env,
     fact,
     (newParams: string[][], relatedTemplate: TemplateNode) => {
-      relatedTemplate.facts.push(makeTemplateNodeFact(newParams, []));
+      relatedTemplate.facts.push(makeTemplateNodeFact(newParams));
       return execInfo(ResultType.True);
     },
     template.onlyIfExprs,
@@ -377,23 +391,6 @@ function fixFreeVarsAndCallHandlerFunc(
     }
 
     const relatedTemplate = env.getDeclaredTemplate(factToBeEmitted);
-    // relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
     return { newParams: newParams, relatedTemplate: relatedTemplate };
   }
-}
-
-function checkFixedOpt(env: LiTeXEnv, callOpt: CallOptNode): ExecInfo {
-  const relatedTemplate = env.getDeclaredTemplate(callOpt);
-  if (!relatedTemplate)
-    return execInfo(ResultType.Error, callOpt.optName + " is not declared.");
-  for (let i = 0; i < relatedTemplate.facts.length; i++) {
-    const res = checkParams(relatedTemplate.facts[i].params, callOpt.optParams);
-    if (res) return execInfo(ResultType.True);
-  }
-  return execInfo(ResultType.Unknown);
-}
-
-function infoTypeIsNotTrue(info: ExecInfo) {
-  if (info.type !== ResultType.True) return true;
-  else return false;
 }

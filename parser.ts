@@ -422,6 +422,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
       default:
         if (ExistKeywords.includes(declName))
           result = new ExistNode(declOptName, curFreeVars, []);
+        // def () {} is syntax sugar for def () => {}
         else result = new DefNode(declOptName, curFreeVars, []);
         (result as TemplateNode).requirements =
           FreeVarsWithFactsNode.properties;
