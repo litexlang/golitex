@@ -8,6 +8,7 @@ import {
   FactNode,
   CanBeKnownNode,
   TemplateNode,
+  makeTemplateNodeFact,
   // HaveNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
@@ -95,15 +96,28 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     if (!relatedTemplate)
       return execInfo(ResultType.False, node.optName + " is not declared.");
 
-    const res = relatedTemplate.checkByFixingFreeVars(
+    // check all requirements
+    const res = haveFreeVarsFixedAndDoSomething(
       env,
       node,
+      (newParams: string[][], relatedTemplate: TemplateNode) => {
+        for (let i = 0; i < relatedTemplate?.facts.length; i++) {
+          checkParams(
+            relatedTemplate.facts[i].params,
+            newParams //
+          );
+        }
+      },
       relatedTemplate.requirements
     );
+    // emit
     if (res.type === ResultType.KnowTrue) {
-      relatedTemplate.emitCallOptByFixingFreeVars(
+      haveFreeVarsFixedAndDoSomething(
         env,
         node,
+        (newParams: string[][], relatedTemplate: TemplateNode) => {
+          relatedTemplate.facts.push(makeTemplateNodeFact(newParams, []));
+        },
         relatedTemplate.onlyIfExprs
       );
       return execInfo(
@@ -221,9 +235,12 @@ export function knowEverythingCallOptExec(
   if (!template)
     throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
 
-  template?.emitCallOptByFixingFreeVars(
+  haveFreeVarsFixedAndDoSomething(
     env,
     fact,
+    (newParams: string[][], relatedTemplate: TemplateNode) => {
+      relatedTemplate.facts.push(makeTemplateNodeFact(newParams, []));
+    },
     template.onlyIfExprs,
     template.requirements
   );
@@ -250,27 +267,98 @@ export function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   return execInfo(ResultType.KnowTrue);
 }
 
-// export function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
-//   try {
-//     const relatedOpt = node.opt;
-//     const existTemplate = env.getDeclaredTemplate(relatedOpt);
+function haveFreeVarsFixedAndDoSomething(
+  env: LiTeXEnv,
+  fixedNode: CallOptNode, // the fullCallOpt, including params of father opts. 'this' is in the lowest opt of the CallOpt.
+  doWhenFreeVarsAreFixed: (
+    fixedParams: string[][],
+    relatedTemplate: TemplateNode
+  ) => any,
+  emitWhat: LiTeXNode[], // pass in template.requirement or template.onlyIfExprs
+  additionalEmit?: LiTeXNode[]
+): ExecInfo {
+  //! Chain reaction is not allowed, maybe I should add some syntax to allow user to use chain reaction.
+  const freeToFixed = new Map<string, string>();
 
-//     if (existTemplate?.type !== LiTexNodeType.ExistNode) {
-//       throw new Error(`${relatedOpt.optName} is not a exist opt.`);
-//     }
+  for (
+    let optIndex = 0,
+      curTemplate = env.getDeclaredTemplate(fixedNode.optNameAsLst[0]);
+    optIndex < fixedNode.optParams.length;
+    optIndex++,
+      curTemplate = curTemplate.declaredTemplates.get(
+        fixedNode.optNameAsLst[optIndex]
+      )
+  ) {
+    const argumentsOfCurrentOpt: string[] = fixedNode.optParams[optIndex];
 
-//     existTemplate.emitCallOptByFixingFreeVars(
-//       env,
-//       relatedOpt,
-//       existTemplate.requirements
-//     );
+    if (!curTemplate) return execInfo(ResultType.Error);
 
-//     return execInfo(ResultType.HaveTrue);
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       return execInfo(ResultType.HaveError, error.message);
-//     } else {
-//       return execInfo(ResultType.HaveError, String(error));
-//     }
-//   }
-// }
+    for (
+      let argIndex = 0;
+      argIndex < argumentsOfCurrentOpt.length;
+      argIndex++
+    ) {
+      if (argIndex < curTemplate.freeVars.length) {
+        freeToFixed.set(
+          curTemplate.freeVars[argIndex] as string,
+          argumentsOfCurrentOpt[argIndex]
+        );
+      }
+    }
+  }
+
+  for (let i = 0; i < emitWhat.length; i++) {
+    if (emitWhat[i] instanceof CallOptsNode) {
+      for (const onlyIfFact of (emitWhat[i] as CallOptsNode).nodes) {
+        doToCallOptAfterFixingVars(onlyIfFact);
+      }
+    } else if (emitWhat[i] instanceof CallOptNode) {
+      doToCallOptAfterFixingVars(emitWhat[i] as CallOptNode);
+    }
+  }
+
+  if (additionalEmit) {
+    for (let i = 0; i < additionalEmit.length; i++) {
+      if (additionalEmit[i] instanceof CallOptsNode) {
+        for (const onlyIfFact of (additionalEmit[i] as CallOptsNode).nodes) {
+          doToCallOptAfterFixingVars(onlyIfFact);
+        }
+      } else if (additionalEmit[i] instanceof CallOptNode) {
+        doToCallOptAfterFixingVars(additionalEmit[i] as CallOptNode);
+      }
+    }
+  }
+
+  //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
+  return execInfo(ResultType.KnowTrue);
+
+  function doToCallOptAfterFixingVars(callOpt: CallOptNode) {
+    const res: {
+      newParams: string[][];
+      relatedTemplate: TemplateNode | undefined;
+    } = getFixedParamsAndRelatedTemplate(callOpt);
+    if (!res.relatedTemplate) return execInfo(ResultType.Error);
+    doWhenFreeVarsAreFixed(res.newParams, res.relatedTemplate);
+  }
+
+  function getFixedParamsAndRelatedTemplate(factToBeEmitted: CallOptNode): {
+    newParams: string[][];
+    relatedTemplate: TemplateNode | undefined;
+  } {
+    // replace freeVars with fixedVars
+    const newParams: string[][] = [];
+    for (let j = 0; j < factToBeEmitted.optParams.length; j++) {
+      const subParams: string[] = [];
+      for (let k = 0; k < factToBeEmitted.optParams[j].length; k++) {
+        const fixed = freeToFixed.get(factToBeEmitted.optParams[j][k]);
+        if (fixed) subParams.push(fixed);
+        else subParams.push(factToBeEmitted.optParams[j][k]);
+      }
+      newParams.push(subParams);
+    }
+
+    const relatedTemplate = env.getDeclaredTemplate(factToBeEmitted);
+    // relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+    return { newParams: newParams, relatedTemplate: relatedTemplate };
+  }
+}
