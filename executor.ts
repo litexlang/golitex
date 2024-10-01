@@ -9,13 +9,12 @@ import {
   CanBeKnownNode,
   TemplateNode,
   makeTemplateNodeFact,
-  // HaveNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
 
 export enum ResultType {
-  True,
+  True, // not only used as True for callOptExec, but also as a generic type passed between subFunctions.
   KnowTrue,
   KnowError,
   KnowUndeclared,
@@ -96,8 +95,12 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     if (!relatedTemplate)
       return execInfo(ResultType.False, node.optName + " is not declared.");
 
+    // check itself
+    let res: ExecInfo = checkFixedOpt(env, node);
+    if (infoTypeIsNotTrue(res)) return res;
+
     // check all requirements
-    const res = fixFreeVarsAndCallHandlerFunc(
+    res = fixFreeVarsAndCallHandlerFunc(
       env,
       node,
       (newParams: string[][], relatedTemplate: TemplateNode) => {
@@ -112,6 +115,8 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       },
       relatedTemplate.requirements
     );
+
+    if (infoTypeIsNotTrue(res)) return res;
 
     if (res.type === ResultType.True) {
       // emit
@@ -375,4 +380,20 @@ function fixFreeVarsAndCallHandlerFunc(
     // relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
     return { newParams: newParams, relatedTemplate: relatedTemplate };
   }
+}
+
+function checkFixedOpt(env: LiTeXEnv, callOpt: CallOptNode): ExecInfo {
+  const relatedTemplate = env.getDeclaredTemplate(callOpt);
+  if (!relatedTemplate)
+    return execInfo(ResultType.Error, callOpt.optName + " is not declared.");
+  for (let i = 0; i < relatedTemplate.facts.length; i++) {
+    const res = checkParams(relatedTemplate.facts[i].params, callOpt.optParams);
+    if (res) return execInfo(ResultType.True);
+  }
+  return execInfo(ResultType.Unknown);
+}
+
+function infoTypeIsNotTrue(info: ExecInfo) {
+  if (info.type !== ResultType.True) return true;
+  else return false;
 }
