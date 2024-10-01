@@ -135,7 +135,8 @@ const codes: string[] = [
   // "know_everything func(1,2):fun2();",
   // "!: func5(2 | set(2)) <=> {func(1):subF(2);} ;",
   // "exist existenceOf(x| set(x))",
-  "have existenceOf(y);",
+  // "have existenceOf(y);",
+  "let x: set(x), set2(x);",
 ];
 
 function testLexer() {

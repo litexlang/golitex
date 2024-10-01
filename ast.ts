@@ -198,12 +198,12 @@ export class CallOptsNode extends LiTeXNode {
 
 export class LetNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.LetNode;
-  params: string[];
+  vars: string[];
   properties: CallOptNode[];
 
-  constructor(node: { params: string[]; properties: CallOptNode[] }) {
+  constructor(node: { freeVars: string[]; properties: CallOptNode[] }) {
     super();
-    this.params = node.params;
+    this.vars = node.freeVars;
     this.properties = node.properties;
   }
 }

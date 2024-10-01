@@ -19,6 +19,7 @@ import {
   specialChars,
   DefBlockDeclareAndCall,
   ExistKeywords,
+  SeparationBetweenSymbolsAndTheirFacts,
 } from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -77,7 +78,7 @@ const stmtKeywords: {
   // have: haveParse,
   // not: notParse,
   // or: orParse,
-  // let: letParse,
+  let: letParse,
   def: templateParse,
   ":": templateParse,
   exist: templateParse,
@@ -171,28 +172,32 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 
 function freeVarsAndTheirFactsParse(
   env: LiTeXEnv,
-  tokens: string[]
+  tokens: string[],
+  begin: string = "(",
+  end: string = ")"
 ): { freeVars: string[]; properties: CallOptNode[] } {
   const requirements: CallOptNode[] = [];
   const freeVars: string[] = [];
 
-  if (!(tokens[0] === ")")) {
+  skip(tokens, begin);
+
+  if (!(tokens[0] === end)) {
     while (1) {
       const freeVar = tokens.shift() as string;
       freeVars.push(freeVar);
       if (tokens[0] === ",") tokens.shift();
-      else if (tokens[0] === "|") break;
-      else if (tokens[0] === ")") break;
+      else if (tokens[0] === SeparationBetweenSymbolsAndTheirFacts) break;
+      else if (tokens[0] === end) break;
       else throw Error("infer parameters");
     }
-    if (!(tokens[0] === ")")) {
-      skip(tokens, "|");
-      while (!(tokens[0] === ")")) {
+    if (!(tokens[0] === end)) {
+      skip(tokens, SeparationBetweenSymbolsAndTheirFacts);
+      while (!(tokens[0] === end)) {
         const node = callOptParse(env, tokens);
         if (node) requirements.push(node as CallOptNode);
 
         if (tokens[0] === ",") tokens.shift();
-        if (tokens[0] === ")") break;
+        if (tokens[0] === end) break;
       }
     }
   }
@@ -303,7 +308,6 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   try {
     const declName = skip(tokens, TemplateDeclarationKeywords) as string; // KnowTypeKeywords
     const declOptName = shiftVar(tokens);
-    skip(tokens, "(");
 
     const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
       freeVarsAndTheirFactsParse(env, tokens);
@@ -394,6 +398,15 @@ function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
     return left;
   } catch (error) {
     handleParseError(tokens, env, "fact");
+    throw error;
+  }
+}
+
+function letParse(env: LiTeXEnv, tokens: string[]): LetNode {
+  try {
+    return new LetNode(freeVarsAndTheirFactsParse(env, tokens, "let", ";"));
+  } catch (error) {
+    handleParseError(tokens, env, "let");
     throw error;
   }
 }

@@ -25,6 +25,8 @@ export enum ResultType {
   Error,
   HaveError,
   HaveTrue,
+  LetTrue,
+  LetError,
 }
 
 export const resultTypeMap: { [key in ResultType]: string } = {
@@ -39,6 +41,8 @@ export const resultTypeMap: { [key in ResultType]: string } = {
   [ResultType.KnowUndeclared]: "know: undeclared opt",
   [ResultType.HaveError]: "have: error",
   [ResultType.HaveTrue]: "have: true",
+  [ResultType.LetError]: "let: error",
+  [ResultType.LetTrue]: "let: true",
 };
 
 export function execInfo(t: ResultType, s: string = ""): ExecInfo {
@@ -83,13 +87,30 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
     case LiTexNodeType.KnowNode:
       return knowExec(env, node as KnowNode);
     case LiTexNodeType.CallOptsNode:
-      //TODO : Emit facts
       return callOptsExec(env, node as CallOptsNode);
-    // case LiTexNodeType.HaveNode:
-    //   return haveExec(env, node as HaveNode);
+    case LiTexNodeType.LetNode:
+      return letExec(env, node as LetNode);
   }
 
   return execInfo(ResultType.Error, "Invalid Expression.");
+}
+
+function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
+  // Check ofr duplicate variable declarations
+  const duplicateVars = node.vars.filter((v) => env.declaredVars.includes(v));
+  if (duplicateVars.length > 0) {
+    return execInfo(
+      ResultType.LetError,
+      `Error: Variable(s) ${duplicateVars.join(", ")} already declared in this scope.`
+    );
+  }
+
+  env.declaredVars = env.declaredVars.concat(node.vars) as string[];
+  for (let i = 0; i < node.properties.length; i++) {
+    knowCallOptExec(env, node.properties[i]);
+  }
+
+  return execInfo(ResultType.LetTrue);
 }
 
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
