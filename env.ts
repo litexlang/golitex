@@ -29,7 +29,8 @@ export class LiTeXEnv {
     return execInfo(ResultType.KnowTrue);
   }
 
-  // Main function of the whole pj
+  // Main function of the whole project
+  // input full name of an opt, output the template of the lowest hierarchy
   getDeclaredTemplate(node: string | CallOptNode): TemplateNode | undefined {
     const isTop = (s: string): Boolean => {
       return !s.includes(OptsConnectionSymbol);

@@ -8,7 +8,7 @@ import {
   FactNode,
   CanBeKnownNode,
   TemplateNode,
-  HaveNode,
+  // HaveNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
@@ -69,8 +69,8 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
     case LiTexNodeType.CallOptsNode:
       //TODO : Emit facts
       return callOptsExec(env, node as CallOptsNode);
-    case LiTexNodeType.HaveNode:
-      return haveExec(env, node as HaveNode);
+    // case LiTexNodeType.HaveNode:
+    //   return haveExec(env, node as HaveNode);
   }
 
   return execInfo(ResultType.Error, "Invalid Expression.");
@@ -78,13 +78,13 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
 
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
   for (const fact of (node as CallOptsNode).nodes) {
-    let res = checkFactExec(env, fact as CallOptNode);
+    let res = callOptExec(env, fact as CallOptNode);
     if (res.type !== ResultType.True) return res;
   }
   return execInfo(ResultType.True);
 }
 
-function checkFactExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   try {
     const builtinFunc = LiTeXBuiltinKeywords[node.optName];
     if (builtinFunc) {
@@ -94,41 +94,73 @@ function checkFactExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     const relatedTemplate = env.getDeclaredTemplate(node);
     if (!relatedTemplate)
       return execInfo(ResultType.False, node.optName + " is not declared.");
-    for (let i = 0; i < relatedTemplate.facts.length; i++) {
-      if (
-        checkParams(relatedTemplate.facts[i].params, node.optParams) &&
-        relatedTemplate.facts[i].activated
-      ) {
-        return execInfo(ResultType.True);
-      }
+
+    const res = relatedTemplate.checkByFixingFreeVars(
+      env,
+      node,
+      relatedTemplate.requirements
+    );
+    if (res.type === ResultType.KnowTrue) {
+      relatedTemplate.emitCallOptByFixingFreeVars(
+        env,
+        node,
+        relatedTemplate.onlyIfExprs
+      );
+      return execInfo(
+        ResultType.KnowTrue,
+        `${node.optName} itself and all of its requirements are true`
+      );
     }
 
-    return execInfo(ResultType.Unknown);
+    // for (let i = 0; i < relatedTemplate.facts.length; i++) {
+    //   if (
+    //     checkParams(relatedTemplate.facts[i].params, node.optParams) &&
+    //     relatedTemplate.facts[i].activated
+    //   ) {
+    //     switch (relatedTemplate.type) {
+    //       case LiTexNodeType.ExistNode: {
+    //         relatedTemplate.emitCallOptByFixingFreeVars(
+    //           env,
+    //           node,
+    //           relatedTemplate.requirements
+    //         );
+    //       }
+    //       case LiTexNodeType.DefNode: {
+    //       }
+    //     }
+    //     return execInfo(ResultType.True);
+    //   }
+    // }
+
+    return execInfo(
+      ResultType.DefTrue,
+      `${node.optName} itself is true while its requirements are not all satisfied.`
+    );
   } catch (error) {
     catchRuntimeError(env, error, "check");
     return execInfo(ResultType.Error);
   }
+}
 
-  function checkParams(arr1: string[][], arr2: string[][]): boolean {
-    if (arr1.length !== arr2.length) {
+export function checkParams(arr1: string[][], arr2: string[][]): boolean {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i].length !== arr2[i].length) {
       return false;
     }
 
-    for (let i = 0; i < arr1.length; i++) {
-      if (arr1[i].length !== arr2[i].length) {
+    for (let j = 0; j < arr1[i].length; j++) {
+      // If arr1[i][j] starts with '#', consider it a match regardless of arr2[i][j]
+      if (!arr1[i][j].startsWith("#") && arr1[i][j] !== arr2[i][j]) {
         return false;
       }
-
-      for (let j = 0; j < arr1[i].length; j++) {
-        // If arr1[i][j] starts with '#', consider it a match regardless of arr2[i][j]
-        if (!arr1[i][j].startsWith("#") && arr1[i][j] !== arr2[i][j]) {
-          return false;
-        }
-      }
     }
-
-    return true;
   }
+
+  return true;
 }
 
 function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
@@ -238,27 +270,27 @@ export function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   return execInfo(ResultType.KnowTrue);
 }
 
-export function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
-  try {
-    const relatedOpt = node.opt;
-    const existTemplate = env.getDeclaredTemplate(relatedOpt);
+// export function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
+//   try {
+//     const relatedOpt = node.opt;
+//     const existTemplate = env.getDeclaredTemplate(relatedOpt);
 
-    if (existTemplate?.type !== LiTexNodeType.ExistNode) {
-      throw new Error(`${relatedOpt.optName} is not a exist opt.`);
-    }
+//     if (existTemplate?.type !== LiTexNodeType.ExistNode) {
+//       throw new Error(`${relatedOpt.optName} is not a exist opt.`);
+//     }
 
-    existTemplate.emitCallOptByFixingFreeVars(
-      env,
-      relatedOpt,
-      existTemplate.requirements
-    );
+//     existTemplate.emitCallOptByFixingFreeVars(
+//       env,
+//       relatedOpt,
+//       existTemplate.requirements
+//     );
 
-    return execInfo(ResultType.HaveTrue);
-  } catch (error) {
-    if (error instanceof Error) {
-      return execInfo(ResultType.HaveError, error.message);
-    } else {
-      return execInfo(ResultType.HaveError, String(error));
-    }
-  }
-}
+//     return execInfo(ResultType.HaveTrue);
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       return execInfo(ResultType.HaveError, error.message);
+//     } else {
+//       return execInfo(ResultType.HaveError, String(error));
+//     }
+//   }
+// }

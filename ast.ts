@@ -1,6 +1,6 @@
 import { OptsConnectionSymbol } from "./common";
 import { LiTeXEnv } from "./env";
-import { ExecInfo, execInfo, ResultType } from "./executor";
+import { checkParams, ExecInfo, execInfo, ResultType } from "./executor";
 
 // There are 3 things in LiTex: Declaration (var, fact-template) ; check; know
 export enum LiTexNodeType {
@@ -125,7 +125,8 @@ export abstract class TemplateNode extends LiTeXNode {
         ]);
         const templateNode: TemplateNode = value.template;
 
-        this.onlyIfExprs.splice(i, 0, callNode, templateNode);
+        //! Here lies a problem: the templateNode's optName should start with : and anything start with : means it inherits from all above.
+        this.onlyIfExprs.splice(i, 0, templateNode, callNode);
       }
     }
 
@@ -246,18 +247,84 @@ export abstract class TemplateNode extends LiTeXNode {
       relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
     }
   }
+
+  // Main method of the whole project
+  checkByFixingFreeVars(
+    env: LiTeXEnv,
+    fixedNode: CallOptNode, // the fullCallOpt, including params of father opts. 'this' is in the lowest opt of the CallOpt.
+    emitWhat: LiTeXNode[] // pass in template.requirement or template.onlyIfExprs
+  ): ExecInfo {
+    //! Chain reaction is not allowed, maybe I should add some syntax to allow user to use chain reaction.
+    const freeToFixed = new Map<string, string>();
+
+    for (
+      let optIndex = 0,
+        curTemplate = env.getDeclaredTemplate(fixedNode.optNameAsLst[0]);
+      optIndex < fixedNode.optParams.length;
+      optIndex++,
+        curTemplate = curTemplate.declaredTemplates.get(
+          fixedNode.optNameAsLst[optIndex]
+        )
+    ) {
+      const argumentsOfCurrentOpt: string[] = fixedNode.optParams[optIndex];
+
+      if (!curTemplate) return execInfo(ResultType.Error);
+
+      for (
+        let argIndex = 0;
+        argIndex < argumentsOfCurrentOpt.length;
+        argIndex++
+      ) {
+        if (argIndex < curTemplate.freeVars.length) {
+          freeToFixed.set(
+            curTemplate.freeVars[argIndex] as string,
+            argumentsOfCurrentOpt[argIndex]
+          );
+        }
+      }
+    }
+
+    for (let i = 0; i < emitWhat.length; i++) {
+      if (emitWhat[i] instanceof CallOptsNode) {
+        for (const onlyIfFact of (emitWhat[i] as CallOptsNode).nodes) {
+          moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
+        }
+      } else if (emitWhat[i] instanceof CallOptNode) {
+        moreFactByMakingFreeVarsIntoFixed(emitWhat[i] as CallOptNode);
+      }
+    }
+
+    //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
+    return execInfo(ResultType.KnowTrue);
+
+    function moreFactByMakingFreeVarsIntoFixed(factToBeEmitted: CallOptNode) {
+      // replace freeVars with fixedVars
+      const newParams: string[][] = [];
+      for (let j = 0; j < factToBeEmitted.optParams.length; j++) {
+        const subParams: string[] = [];
+        for (let k = 0; k < factToBeEmitted.optParams[j].length; k++) {
+          const fixed = freeToFixed.get(factToBeEmitted.optParams[j][k]);
+          if (fixed) subParams.push(fixed);
+          else subParams.push(factToBeEmitted.optParams[j][k]);
+        }
+        newParams.push(subParams);
+      }
+
+      const relatedTemplate = env.getDeclaredTemplate(factToBeEmitted);
+      // relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+      if (!relatedTemplate) return false;
+      for (let i = 0; i < relatedTemplate?.facts.length; i++) {
+        checkParams(
+          (relatedTemplate.facts[i] as TemplateNodeFact).params,
+          newParams
+        );
+      }
+    }
+  }
 }
 
 export class DefNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.DefNode;
-
-  constructor(
-    declOptName: string,
-    freeVars: string[],
-    requirements: LiTeXNode[]
-  ) {
-    super(declOptName, freeVars, requirements);
-  }
 
   // When a fact is to be stored, whether it satisfies requirements must be checked
   knowCallOptExecCheck(node: CallOptNode): ExecInfo {
@@ -293,14 +360,6 @@ export class DefNode extends TemplateNode {
 export class InferNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
 
-  constructor(
-    declOptName: string,
-    freeVars: string[],
-    requirements: LiTeXNode[]
-  ) {
-    super(declOptName, freeVars, requirements);
-  }
-
   knowCallOptExecCheck(node: CallOptNode): ExecInfo {
     let template: undefined | TemplateNode = this as TemplateNode;
     for (let i = 0; ; i++) {
@@ -329,8 +388,8 @@ export class InferNode extends TemplateNode {
 export class ExistNode extends TemplateNode {
   type = LiTexNodeType.ExistNode;
 
-  knowCallOptExecCheck(node: FactNode): ExecInfo {
-    return execInfo(ResultType.True);
+  knowCallOptExecCheck(node: CallOptNode): ExecInfo {
+    return execInfo(ResultType.KnowTrue);
   }
 }
 
@@ -339,16 +398,6 @@ export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
   isKnowEverything: Boolean = false;
-}
-
-export class HaveNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.HaveNode;
-  opt: CallOptNode;
-
-  constructor(opt: CallOptNode) {
-    super();
-    this.opt = opt;
-  }
 }
 
 export class FreeVarsWithFactsNode extends LiTeXNode {

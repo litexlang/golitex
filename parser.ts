@@ -3,7 +3,7 @@ import {
   CallOptsNode,
   InferNode,
   ExistNode,
-  HaveNode,
+  // HaveNode,
   KnowNode,
   LiTeXNode,
   FreeVarsWithFactsNode,
@@ -75,7 +75,7 @@ const stmtKeywords: {
   },
   know: knowParse,
   "@": knowParse,
-  have: haveParse,
+  // have: haveParse,
   // not: notParse,
   // or: orParse,
   // let: letParse,
@@ -272,21 +272,21 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
   }
 }
 
-function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
-  try {
-    skip(tokens, "have");
+// function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
+//   try {
+//     skip(tokens, "have");
 
-    const opt = callOptParse(env, tokens);
+//     const opt = callOptParse(env, tokens);
 
-    const haveNode = new HaveNode(opt);
+//     const haveNode = new HaveNode(opt);
 
-    skip(tokens, ";");
-    return haveNode;
-  } catch (error) {
-    handleParseError(tokens, env, "have");
-    throw error;
-  }
-}
+//     skip(tokens, ";");
+//     return haveNode;
+//   } catch (error) {
+//     handleParseError(tokens, env, "have");
+//     throw error;
+//   }
+// }
 
 // function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
 //   try {
