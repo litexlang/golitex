@@ -94,11 +94,11 @@ const codes: string[] = [
   // "set(3);",
   // "def fun(x) { def fun2(y) {def E(i,j)}}",
   // "know fun(1):fun2(2):E(3,4);",
-  // "def fun3(x,y,a,b| fun(x):fun2(y):E(a,b) ) => {set(b); }",
-  // "know fun3(1,2,3,4);",
-  // "fun3(1,2,3,4);",
-  // "know fun3(0,2,3,4);",
-  // "fun3(0,2,3,5);",
+  "def fun3(x,y,a,b| fun(x):fun2(y):E(a,b) ) => {set(b); }",
+  "know fun3(1,2,3,4);",
+  "fun3(1,2,3,4);",
+  "know fun3(0,2,3,4);",
+  "fun3(0,2,3,5);",
   "know set(1);",
 ];
 

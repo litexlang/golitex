@@ -173,13 +173,14 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 function freeVarsAndTheirFactsParse(
   env: LiTeXEnv,
   tokens: string[]
-): FreeVarsWithFactsNode {
-  const params: string[] = [];
+): { freeVars: string[]; properties: CallOptNode[] } {
   const requirements: CallOptNode[] = [];
+  const freeVars: string[] = [];
 
   if (!(tokens[0] === ")")) {
     while (1) {
-      params.push(tokens.shift() as string);
+      const freeVar = tokens.shift() as string;
+      freeVars.push(freeVar);
       if (tokens[0] === ",") tokens.shift();
       else if (tokens[0] === "|") break;
       else if (tokens[0] === ")") break;
@@ -197,7 +198,7 @@ function freeVarsAndTheirFactsParse(
     }
   }
 
-  return new FreeVarsWithFactsNode(params, requirements);
+  return { freeVars: freeVars, properties: requirements };
 }
 
 function questionMarkParse(env: LiTeXEnv, tokens: string[]): DollarMarkNode {
@@ -354,9 +355,8 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
     const declOptName = shiftVar(tokens);
     skip(tokens, "(");
 
-    const curFreeVars = freeVars(tokens);
-
-    const FreeVarsWithFactsNode = freeVarsAndTheirFactsParse(env, tokens);
+    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
+      freeVarsAndTheirFactsParse(env, tokens);
 
     skip(tokens, ")");
 
@@ -367,8 +367,8 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
         if (!isCurToken("{", tokens)) {
           result = new InferNode(
             declOptName,
-            curFreeVars,
-            FreeVarsWithFactsNode.properties
+            freeVarsFact.freeVars,
+            freeVarsFact.properties
           );
           const facts = callOptsParse(env, tokens).nodes;
           for (let i = 0; i < facts.length; i++) {
@@ -378,8 +378,8 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
           const blockArrow = nonExecutableBlockParse(env, tokens);
           result = new InferNode(
             declOptName,
-            curFreeVars,
-            FreeVarsWithFactsNode.properties
+            freeVarsFact.freeVars,
+            freeVarsFact.properties
           );
           (result as InferNode).onlyIfExprs = blockArrow;
         }
@@ -390,8 +390,8 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
         const blockBrace = nonExecutableBlockParse(env, tokens);
         result = new InferNode(
           declOptName,
-          curFreeVars,
-          FreeVarsWithFactsNode.properties
+          freeVarsFact.freeVars,
+          freeVarsFact.properties
         );
         (result as InferNode).onlyIfExprs = blockBrace;
         break;
@@ -401,8 +401,8 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
         if (!isCurToken("{", tokens)) {
           result = new DefNode(
             declOptName,
-            curFreeVars,
-            FreeVarsWithFactsNode.properties
+            freeVarsFact.freeVars,
+            freeVarsFact.properties
           );
           (result as DefNode).onlyIfExprs = (
             result as DefNode
@@ -411,8 +411,8 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
           const blockDoubleArrow = nonExecutableBlockParse(env, tokens);
           result = new DefNode(
             declOptName,
-            curFreeVars,
-            FreeVarsWithFactsNode.properties
+            freeVarsFact.freeVars,
+            freeVarsFact.properties
           );
           (result as DefNode).onlyIfExprs = blockDoubleArrow;
         }
@@ -421,11 +421,10 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
 
       default:
         if (ExistKeywords.includes(declName))
-          result = new ExistNode(declOptName, curFreeVars, []);
-        // def () {} is syntax sugar for def () => {}
-        else result = new DefNode(declOptName, curFreeVars, []);
-        (result as TemplateNode).requirements =
-          FreeVarsWithFactsNode.properties;
+          result = new ExistNode(declOptName, freeVarsFact.freeVars, []);
+        // def () {} is syntax sugar for def () =>
+        else result = new DefNode(declOptName, freeVarsFact.freeVars, []);
+        (result as TemplateNode).requirements = freeVarsFact.properties;
         break;
     }
 

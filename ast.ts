@@ -158,78 +158,18 @@ export abstract class TemplateNode extends LiTeXNode {
       return newList;
     }
   }
-
-  // abstract knowCallOptExecCheck(node: FactNode): ExecInfo;
 }
 
 export class DefNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.DefNode;
-
-  // When a fact is to be stored, whether it satisfies requirements must be checked
-  // knowCallOptExecCheck(node: CallOptNode): ExecInfo {
-  //   let template: undefined | TemplateNode = this as TemplateNode;
-  //   for (let i = 0; ; i++) {
-  //     if (template.freeVars.length !== node.optParams[i].length) {
-  //       return execInfo(
-  //         ResultType.KnowError,
-  //         template.declOptName +
-  //           " has " +
-  //           template.freeVars.length +
-  //           " parameters, get " +
-  //           node.optNameAsLst[i].length +
-  //           " instead."
-  //       );
-  //     }
-
-  //     if (i + 1 < node.optNameAsLst.length) {
-  //       template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
-  //       if (!template)
-  //         return execInfo(
-  //           ResultType.KnowError,
-  //           "Undefined operator " + node.optName
-  //         );
-  //     } else {
-  //       break;
-  //     }
-  //   }
-  //   return execInfo(ResultType.KnowTrue);
-  // }
 }
 
 export class InferNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
-
-  // knowCallOptExecCheck(node: CallOptNode): ExecInfo {
-  //   let template: undefined | TemplateNode = this as TemplateNode;
-  //   for (let i = 0; ; i++) {
-  //     if (template.freeVars.length !== node.optParams[i].length) {
-  //       return execInfo(
-  //         ResultType.KnowError,
-  //         `${template.declOptName} has ${template.freeVars.length} parameters, get ${node.optNameAsLst[i].length} instead.`
-  //       );
-  //     }
-
-  //     if (i + 1 < node.optNameAsLst.length) {
-  //       template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
-  //       if (!template)
-  //         return execInfo(
-  //           ResultType.KnowError,
-  //           "Undefined operator " + node.optName
-  //         );
-  //     } else {
-  //       break;
-  //     }
-  //   }
-  //   return execInfo(ResultType.KnowTrue);
-  // }
 }
 
 export class ExistNode extends TemplateNode {
   type = LiTexNodeType.ExistNode;
-
-  knowCallOptExecCheck(node: CallOptNode): ExecInfo {
-    return execInfo(ResultType.KnowTrue);
-  }
 }
 
 export type CanBeKnownNode = FactNode | TemplateNode;
