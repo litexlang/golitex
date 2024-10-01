@@ -101,15 +101,16 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
 
 function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
   // Check ofr duplicate variable declarations
-  const duplicateVars = node.vars.filter((v) => env.declaredVars.includes(v));
-  if (duplicateVars.length > 0) {
+  const notDeclared = node.vars.filter((v) => env.declaredVars.includes(v));
+  if (!notDeclared) {
     return execInfo(
       ResultType.LetError,
-      `Error: Variable(s) ${duplicateVars.join(", ")} already declared in this scope.`
+      `Error: Variable(s) ${node.vars.join(", ")} already declared in this scope.`
     );
   }
 
   env.declaredVars = env.declaredVars.concat(node.vars) as string[];
+
   for (let i = 0; i < node.properties.length; i++) {
     knowCallOptExec(env, node.properties[i]);
   }
@@ -199,6 +200,7 @@ export function _checkParamsUsingTwoArrayArrays(
 
 function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
   try {
+    // Here we overwrite the original declared functions.
     (env.declaredTemplates as Map<string, TemplateNode>).set(
       node.declOptName,
       node
@@ -426,9 +428,9 @@ const _checkOpt = (
       relatedTemplate.facts[i].params,
       newParams //
     );
-    if (!res) return execInfo(ResultType.Unknown);
+    if (res) return execInfo(ResultType.True);
   }
-  return execInfo(ResultType.True);
+  return execInfo(ResultType.Unknown);
 };
 
 export function _paramsInOptAreDeclared(
@@ -442,17 +444,14 @@ export function _paramsInOptAreDeclared(
 
   if (is2DArray) {
     // Handle 2D array case
-    for (let i = 0; i < optParams.length; i++) {
-      for (let j = 0; j < (optParams[i] as string[]).length; j++) {
-        if (!env.declaredVars.includes((optParams[i] as string[])[j]))
-          return false;
+    for (const paramGroup of optParams as string[][]) {
+      if (env.varsAreNotDeclared(paramGroup)) {
+        return false;
       }
     }
   } else {
     // Handle 1D array case
-    for (let i = 0; i < optParams.length; i++) {
-      if (!env.declaredVars.includes(optParams[i] as string)) return false;
-    }
+    return !env.varsAreNotDeclared(optParams as string[]);
   }
 
   return true;

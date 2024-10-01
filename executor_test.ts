@@ -101,9 +101,14 @@ const codes: string[] = [
   // "know fun3(0,2,3,4);",
   // "fun3(0,2,3,5);",
   // "fun3(0,2,3,4);",
-  "// let",
-  "let x,y: set(x), set(y);",
-  "know set(z);",
+  // "// let",
+  // "let x,y: set(x), set(y);",
+  // "know set(z);",
+  "// when knowing exist and get the exist",
+  "exist existenceOfX(x: set(x));",
+  "let x;",
+  "know existenceOfX(x);",
+  "existenceOfX(x);",
 ];
 
 function callOptsExecTest() {

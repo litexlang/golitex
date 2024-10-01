@@ -1,7 +1,6 @@
 import {
   CallOptNode,
   TemplateNode,
-  FactNode,
   makeTemplateNodeFact,
   TemplateNodeFact,
 } from "./ast";
@@ -21,6 +20,15 @@ export class LiTeXEnv {
     TemplateNode
   >();
   constructor() {}
+
+  varsAreNotDeclared(vars: string[] | string): Boolean {
+    if (Array.isArray(vars)) {
+      const duplicateVars = vars.filter((v) => this.declaredVars.includes(v));
+      return duplicateVars.length > 0 ? false : true;
+    } else {
+      return !this.declaredVars.includes(vars as string);
+    }
+  }
 
   pushErrorMessage(s: string) {
     this.errors.push(s);

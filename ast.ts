@@ -145,6 +145,7 @@ export abstract class TemplateNode extends LiTeXNode {
       const value = this.onlyIfExprs[i];
       if (value instanceof TemplateNode) {
         value.initDeclaredTemplates();
+        // Here we overwrite the original declared functions.
         this.declaredTemplates.set(value.declOptName, value);
         this.onlyIfExprs.splice(i, 1);
       } else if (value instanceof CallOptsNode) {
