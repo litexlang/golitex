@@ -219,10 +219,19 @@ export abstract class TemplateNode extends LiTeXNode {
       for (let i = 0; i < additionalEmit.length; i++) {
         if (additionalEmit[i] instanceof CallOptsNode) {
           for (const onlyIfFact of (additionalEmit[i] as CallOptsNode).nodes) {
-            moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
+            const paramsAndTemplate =
+              moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
+            paramsAndTemplate.relatedTemplate?.facts.push(
+              makeTemplateNodeFact(paramsAndTemplate.newParams, [])
+            );
           }
         } else if (additionalEmit[i] instanceof CallOptNode) {
-          moreFactByMakingFreeVarsIntoFixed(additionalEmit[i] as CallOptNode);
+          const paramsAndTemplate = moreFactByMakingFreeVarsIntoFixed(
+            additionalEmit[i] as CallOptNode
+          );
+          paramsAndTemplate.relatedTemplate?.facts.push(
+            makeTemplateNodeFact(paramsAndTemplate.newParams, [])
+          );
         }
       }
     }
@@ -230,7 +239,10 @@ export abstract class TemplateNode extends LiTeXNode {
     //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
     return execInfo(ResultType.KnowTrue);
 
-    function moreFactByMakingFreeVarsIntoFixed(factToBeEmitted: CallOptNode) {
+    function moreFactByMakingFreeVarsIntoFixed(factToBeEmitted: CallOptNode): {
+      newParams: string[][];
+      relatedTemplate: TemplateNode | undefined;
+    } {
       // replace freeVars with fixedVars
       const newParams: string[][] = [];
       for (let j = 0; j < factToBeEmitted.optParams.length; j++) {
@@ -244,7 +256,8 @@ export abstract class TemplateNode extends LiTeXNode {
       }
 
       const relatedTemplate = env.getDeclaredTemplate(factToBeEmitted);
-      relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+      // relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+      return { newParams: newParams, relatedTemplate: relatedTemplate };
     }
   }
 
@@ -287,17 +300,36 @@ export abstract class TemplateNode extends LiTeXNode {
     for (let i = 0; i < emitWhat.length; i++) {
       if (emitWhat[i] instanceof CallOptsNode) {
         for (const onlyIfFact of (emitWhat[i] as CallOptsNode).nodes) {
-          moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
+          const res = moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
+          if (!res.relatedTemplate) return execInfo(ResultType.Error);
+          for (let i = 0; i < res.relatedTemplate?.facts.length; i++) {
+            checkParams(
+              (res.relatedTemplate.facts[i] as TemplateNodeFact).params,
+              res.newParams //
+            );
+          }
         }
       } else if (emitWhat[i] instanceof CallOptNode) {
-        moreFactByMakingFreeVarsIntoFixed(emitWhat[i] as CallOptNode);
+        const res = moreFactByMakingFreeVarsIntoFixed(
+          emitWhat[i] as CallOptNode
+        );
+        if (!res.relatedTemplate) return execInfo(ResultType.Error);
+        for (let i = 0; i < res.relatedTemplate?.facts.length; i++) {
+          checkParams(
+            (res.relatedTemplate.facts[i] as TemplateNodeFact).params,
+            res.newParams //
+          );
+        }
       }
     }
 
     //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
     return execInfo(ResultType.KnowTrue);
 
-    function moreFactByMakingFreeVarsIntoFixed(factToBeEmitted: CallOptNode) {
+    function moreFactByMakingFreeVarsIntoFixed(factToBeEmitted: CallOptNode): {
+      newParams: string[][];
+      relatedTemplate: TemplateNode | undefined;
+    } {
       // replace freeVars with fixedVars
       const newParams: string[][] = [];
       for (let j = 0; j < factToBeEmitted.optParams.length; j++) {
@@ -312,13 +344,7 @@ export abstract class TemplateNode extends LiTeXNode {
 
       const relatedTemplate = env.getDeclaredTemplate(factToBeEmitted);
       // relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
-      if (!relatedTemplate) return false;
-      for (let i = 0; i < relatedTemplate?.facts.length; i++) {
-        checkParams(
-          (relatedTemplate.facts[i] as TemplateNodeFact).params,
-          newParams
-        );
-      }
+      return { newParams: newParams, relatedTemplate: relatedTemplate };
     }
   }
 }
@@ -448,5 +474,79 @@ export class DollarMarkNode extends LiTeXNode {
   constructor(template: TemplateNode) {
     super();
     this.template = template;
+  }
+}
+
+function checkByFixingFreeVars(
+  env: LiTeXEnv,
+  fixedNode: CallOptNode, // the fullCallOpt, including params of father opts. 'this' is in the lowest opt of the CallOpt.
+  emitWhat: LiTeXNode[], // pass in template.requirement or template.onlyIfExprs
+  doWhatWhen: Function
+): ExecInfo {
+  //! Chain reaction is not allowed, maybe I should add some syntax to allow user to use chain reaction.
+  const freeToFixed = new Map<string, string>();
+
+  for (
+    let optIndex = 0,
+      curTemplate = env.getDeclaredTemplate(fixedNode.optNameAsLst[0]);
+    optIndex < fixedNode.optParams.length;
+    optIndex++,
+      curTemplate = curTemplate.declaredTemplates.get(
+        fixedNode.optNameAsLst[optIndex]
+      )
+  ) {
+    const argumentsOfCurrentOpt: string[] = fixedNode.optParams[optIndex];
+
+    if (!curTemplate) return execInfo(ResultType.Error);
+
+    for (
+      let argIndex = 0;
+      argIndex < argumentsOfCurrentOpt.length;
+      argIndex++
+    ) {
+      if (argIndex < curTemplate.freeVars.length) {
+        freeToFixed.set(
+          curTemplate.freeVars[argIndex] as string,
+          argumentsOfCurrentOpt[argIndex]
+        );
+      }
+    }
+  }
+
+  for (let i = 0; i < emitWhat.length; i++) {
+    if (emitWhat[i] instanceof CallOptsNode) {
+      for (const onlyIfFact of (emitWhat[i] as CallOptsNode).nodes) {
+        moreFactByMakingFreeVarsIntoFixed(onlyIfFact);
+      }
+    } else if (emitWhat[i] instanceof CallOptNode) {
+      moreFactByMakingFreeVarsIntoFixed(emitWhat[i] as CallOptNode);
+    }
+  }
+
+  //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
+  return execInfo(ResultType.KnowTrue);
+
+  function moreFactByMakingFreeVarsIntoFixed(factToBeEmitted: CallOptNode) {
+    // replace freeVars with fixedVars
+    const newParams: string[][] = [];
+    for (let j = 0; j < factToBeEmitted.optParams.length; j++) {
+      const subParams: string[] = [];
+      for (let k = 0; k < factToBeEmitted.optParams[j].length; k++) {
+        const fixed = freeToFixed.get(factToBeEmitted.optParams[j][k]);
+        if (fixed) subParams.push(fixed);
+        else subParams.push(factToBeEmitted.optParams[j][k]);
+      }
+      newParams.push(subParams);
+    }
+
+    const relatedTemplate = env.getDeclaredTemplate(factToBeEmitted);
+    // relatedTemplate?.facts.push(makeTemplateNodeFact(newParams, []));
+    if (!relatedTemplate) return false;
+    for (let i = 0; i < relatedTemplate?.facts.length; i++) {
+      checkParams(
+        (relatedTemplate.facts[i] as TemplateNodeFact).params,
+        newParams
+      );
+    }
   }
 }

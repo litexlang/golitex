@@ -112,26 +112,6 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       );
     }
 
-    // for (let i = 0; i < relatedTemplate.facts.length; i++) {
-    //   if (
-    //     checkParams(relatedTemplate.facts[i].params, node.optParams) &&
-    //     relatedTemplate.facts[i].activated
-    //   ) {
-    //     switch (relatedTemplate.type) {
-    //       case LiTexNodeType.ExistNode: {
-    //         relatedTemplate.emitCallOptByFixingFreeVars(
-    //           env,
-    //           node,
-    //           relatedTemplate.requirements
-    //         );
-    //       }
-    //       case LiTexNodeType.DefNode: {
-    //       }
-    //     }
-    //     return execInfo(ResultType.True);
-    //   }
-    // }
-
     return execInfo(
       ResultType.DefTrue,
       `${node.optName} itself is true while its requirements are not all satisfied.`
