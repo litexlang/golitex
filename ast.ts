@@ -179,23 +179,11 @@ export class KnowNode extends LiTeXNode {
   isKnowEverything: Boolean = false;
 }
 
-export class FreeVarsWithFactsNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.FreeVarsWithFactsNode;
-  params: string[];
-  properties: CallOptNode[];
-
-  constructor(params: string[], properties: CallOptNode[]) {
-    super();
-    this.params = params;
-    this.properties = properties;
-  }
-}
-
 export type FactNode = CallOptNode | CallOptsNode;
 export enum CallOptsNodeType {
   And,
   Or,
-  False,
+  Not,
 }
 export class CallOptsNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.CallOptsNode;
@@ -213,7 +201,7 @@ export class LetNode extends LiTeXNode {
   params: string[];
   properties: CallOptNode[];
 
-  constructor(node: FreeVarsWithFactsNode) {
+  constructor(node: { params: string[]; properties: CallOptNode[] }) {
     super();
     this.params = node.params;
     this.properties = node.properties;

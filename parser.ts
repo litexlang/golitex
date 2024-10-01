@@ -6,7 +6,6 @@ import {
   // HaveNode,
   KnowNode,
   LiTeXNode,
-  FreeVarsWithFactsNode,
   LetNode,
   DefNode,
   FactNode,
@@ -273,36 +272,6 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
   }
 }
 
-// function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
-//   try {
-//     skip(tokens, "have");
-
-//     const opt = callOptParse(env, tokens);
-
-//     const haveNode = new HaveNode(opt);
-
-//     skip(tokens, ";");
-//     return haveNode;
-//   } catch (error) {
-//     handleParseError(tokens, env, "have");
-//     throw error;
-//   }
-// }
-
-// function letParse(env: LiTeXEnv, tokens: string[]): HaveNode {
-//   try {
-//     skip(tokens, "let");
-//     skip(tokens, "(");
-//     const node = freeVarsAndTheirFactsParse(env, tokens);
-//     skip(tokens, ")"); // skip ;
-//     skip(tokens, ";");
-//     return new LetNode(node);
-//   } catch (error) {
-//     handleParseError(tokens, env, "let");
-//     throw error;
-//   }
-// }
-
 function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
   try {
     const callOpts: CallOptNode[] = [];
@@ -329,25 +298,6 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
     throw error;
   }
 }
-
-// function existParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
-//   try {
-//     skip(tokens, ExistKeywords);
-//     const declOptName = shiftVar(tokens);
-//     skip(tokens, "(");
-
-//     const curFreeVars = freeVars(tokens);
-
-//     const FreeVarsWithFactsNode = freeVarsAndTheirFactsParse(env, tokens);
-
-//     skip(tokens, ")");
-
-//     return;
-//   } catch (error) {
-//     catchParseError(tokens, env, error, "exist");
-//     throw error;
-//   }
-// }
 
 function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   try {
@@ -446,18 +396,4 @@ function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
     handleParseError(tokens, env, "fact");
     throw error;
   }
-}
-
-function freeVars(tokens: string[]): string[] {
-  const params: string[] = [];
-  if (!(tokens[0] === ")")) {
-    for (let i = 0; i < tokens.length; i++) {
-      params.push(tokens[i] as string);
-      if (tokens[i + 1] === ",") i++;
-      else if (tokens[i + 1] === "|") break;
-      else if (tokens[i + 1] === ")") break;
-      else throw Error("infer parameters");
-    }
-  }
-  return params;
 }

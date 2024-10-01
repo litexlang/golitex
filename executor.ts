@@ -113,7 +113,8 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 
     // check itself
     let res: ExecInfo = checkFixedOpt(env, node);
-    if (infoTypeIsNotTrue(res)) return res;
+    if (infoTypeIsNotTrue(res))
+      return execInfo(res.type, `${node.optName} itself is not satisfied.`);
 
     // check all requirements
     res = fixFreeVarsAndCallHandlerFunc(
@@ -123,7 +124,11 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       relatedTemplate.requirements
     );
 
-    if (infoTypeIsNotTrue(res)) return res;
+    if (infoTypeIsNotTrue(res))
+      return execInfo(
+        res.type,
+        `${node.optName} itself is true while its requirements are not satisfied.`
+      );
 
     // emit
     fixFreeVarsAndCallHandlerFunc(
@@ -140,7 +145,7 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 
     return execInfo(
       ResultType.DefTrue,
-      `${node.optName} itself is true while its requirements are not all satisfied.`
+      `${node.optName} itself and its requirements are all satisfied.`
     );
   } catch (error) {
     catchRuntimeError(env, error, "check");
