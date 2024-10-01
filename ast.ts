@@ -1,7 +1,7 @@
 import { OptsConnectionSymbol } from "./common";
 import { ExecInfo, execInfo, ResultType } from "./executor";
 
-// There are 3 things in LiTex: Declaration (var, fact-template) ; check; know
+// There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
 export enum LiTexNodeType {
   Error,
   Node,
@@ -49,19 +49,6 @@ export class CallOptNode extends LiTeXNode {
     const names = name.split(OptsConnectionSymbol);
     return new CallOptNode(names.map((e, i) => [e, params[i]]));
   }
-
-  getOptNameParamsPairs(): [string, string[]][] {
-    return this.optNameAsLst.map((v, i) => {
-      return [this.optName, this.optParams[i]];
-    });
-  }
-
-  pushNewNameParamsPair(pair: [string, string[]]) {
-    if (this.optName !== "") this.optName += OptsConnectionSymbol + pair[0];
-    else this.optName += pair[0];
-
-    this.optParams.push(pair[1]);
-  }
 }
 
 export type TemplateNodeFact = {
@@ -88,11 +75,11 @@ export function makeTemplateNodeFact(
 export abstract class TemplateNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
   declOptName: string;
+  freeVars: string[];
   requirements: LiTeXNode[] = [];
   onlyIfExprs: LiTeXNode[] = [];
   declaredTemplates = new Map<string, TemplateNode>();
   facts: TemplateNodeFact[] = [];
-  freeVars: string[];
 
   constructor(
     declOptName: string,
@@ -172,69 +159,69 @@ export abstract class TemplateNode extends LiTeXNode {
     }
   }
 
-  abstract knowCallOptExecCheck(node: FactNode): ExecInfo;
+  // abstract knowCallOptExecCheck(node: FactNode): ExecInfo;
 }
 
 export class DefNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.DefNode;
 
   // When a fact is to be stored, whether it satisfies requirements must be checked
-  knowCallOptExecCheck(node: CallOptNode): ExecInfo {
-    let template: undefined | TemplateNode = this as TemplateNode;
-    for (let i = 0; ; i++) {
-      if (template.freeVars.length !== node.optParams[i].length) {
-        return execInfo(
-          ResultType.KnowError,
-          template.declOptName +
-            " has " +
-            template.freeVars.length +
-            " parameters, get " +
-            node.optNameAsLst[i].length +
-            " instead."
-        );
-      }
+  // knowCallOptExecCheck(node: CallOptNode): ExecInfo {
+  //   let template: undefined | TemplateNode = this as TemplateNode;
+  //   for (let i = 0; ; i++) {
+  //     if (template.freeVars.length !== node.optParams[i].length) {
+  //       return execInfo(
+  //         ResultType.KnowError,
+  //         template.declOptName +
+  //           " has " +
+  //           template.freeVars.length +
+  //           " parameters, get " +
+  //           node.optNameAsLst[i].length +
+  //           " instead."
+  //       );
+  //     }
 
-      if (i + 1 < node.optNameAsLst.length) {
-        template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
-        if (!template)
-          return execInfo(
-            ResultType.KnowError,
-            "Undefined operator " + node.optName
-          );
-      } else {
-        break;
-      }
-    }
-    return execInfo(ResultType.KnowTrue);
-  }
+  //     if (i + 1 < node.optNameAsLst.length) {
+  //       template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
+  //       if (!template)
+  //         return execInfo(
+  //           ResultType.KnowError,
+  //           "Undefined operator " + node.optName
+  //         );
+  //     } else {
+  //       break;
+  //     }
+  //   }
+  //   return execInfo(ResultType.KnowTrue);
+  // }
 }
 
 export class InferNode extends TemplateNode {
   type: LiTexNodeType = LiTexNodeType.InferNode;
 
-  knowCallOptExecCheck(node: CallOptNode): ExecInfo {
-    let template: undefined | TemplateNode = this as TemplateNode;
-    for (let i = 0; ; i++) {
-      if (template.freeVars.length !== node.optParams[i].length) {
-        return execInfo(
-          ResultType.KnowError,
-          `${template.declOptName} has ${template.freeVars.length} parameters, get ${node.optNameAsLst[i].length} instead.`
-        );
-      }
+  // knowCallOptExecCheck(node: CallOptNode): ExecInfo {
+  //   let template: undefined | TemplateNode = this as TemplateNode;
+  //   for (let i = 0; ; i++) {
+  //     if (template.freeVars.length !== node.optParams[i].length) {
+  //       return execInfo(
+  //         ResultType.KnowError,
+  //         `${template.declOptName} has ${template.freeVars.length} parameters, get ${node.optNameAsLst[i].length} instead.`
+  //       );
+  //     }
 
-      if (i + 1 < node.optNameAsLst.length) {
-        template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
-        if (!template)
-          return execInfo(
-            ResultType.KnowError,
-            "Undefined operator " + node.optName
-          );
-      } else {
-        break;
-      }
-    }
-    return execInfo(ResultType.KnowTrue);
-  }
+  //     if (i + 1 < node.optNameAsLst.length) {
+  //       template = template.declaredTemplates.get(node.optNameAsLst[i + 1]);
+  //       if (!template)
+  //         return execInfo(
+  //           ResultType.KnowError,
+  //           "Undefined operator " + node.optName
+  //         );
+  //     } else {
+  //       break;
+  //     }
+  //   }
+  //   return execInfo(ResultType.KnowTrue);
+  // }
 }
 
 export class ExistNode extends TemplateNode {

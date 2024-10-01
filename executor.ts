@@ -119,16 +119,7 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     res = fixFreeVarsAndCallHandlerFunc(
       env,
       node,
-      (newParams: string[][], relatedTemplate: TemplateNode) => {
-        for (let i = 0; i < relatedTemplate?.facts.length; i++) {
-          const res = checkParams(
-            relatedTemplate.facts[i].params,
-            newParams //
-          );
-          if (!res) return execInfo(ResultType.Unknown);
-        }
-        return execInfo(ResultType.True);
-      },
+      _checkOpt,
       relatedTemplate.requirements
     );
 
@@ -138,10 +129,7 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     fixFreeVarsAndCallHandlerFunc(
       env,
       node,
-      (newParams: string[][], relatedTemplate: TemplateNode) => {
-        relatedTemplate.facts.push(makeTemplateNodeFact(newParams));
-        return execInfo(ResultType.True);
-      },
+      _pushNewOpt,
       relatedTemplate.onlyIfExprs
     );
 
@@ -282,12 +270,7 @@ export function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       node.optName + " has not declared"
     );
 
-  let res = (
-    env.getDeclaredTemplate(node.optNameAsLst[0]) as TemplateNode
-  ).knowCallOptExecCheck(node);
-  if (res.type !== ResultType.KnowTrue) return res;
-
-  env.pushCallOptFact(node);
+  fixFreeVarsAndCallHandlerFunc(env, node, _pushNewOpt, [node]);
 
   return execInfo(ResultType.KnowTrue);
 }
@@ -394,3 +377,19 @@ function fixFreeVarsAndCallHandlerFunc(
     return { newParams: newParams, relatedTemplate: relatedTemplate };
   }
 }
+
+const _pushNewOpt = (newParams: string[][], relatedTemplate: TemplateNode) => {
+  relatedTemplate.facts.push(makeTemplateNodeFact(newParams));
+  return execInfo(ResultType.True);
+};
+
+const _checkOpt = (newParams: string[][], relatedTemplate: TemplateNode) => {
+  for (let i = 0; i < relatedTemplate?.facts.length; i++) {
+    const res = checkParams(
+      relatedTemplate.facts[i].params,
+      newParams //
+    );
+    if (!res) return execInfo(ResultType.Unknown);
+  }
+  return execInfo(ResultType.True);
+};

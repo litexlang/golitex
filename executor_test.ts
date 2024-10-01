@@ -85,11 +85,11 @@ const codes: string[] = [
   // "existenceOf(x);",
   // "def exist2(x|set(x))",
   // "have exist2(y);",
-  "// check and emit",
-  "def inf(x|set(x)) => set(2);",
-  "know inf(1);",
-  "know set(1);",
-  "inf(1);",
+  // "// check and emit",
+  // "def inf(x|set(x)) => set(2);",
+  // "know inf(1);",
+  // "know set(1);",
+  // "inf(1);",
   // "set(2);",
   // "set(3);",
   // "def fun(x) { def fun2(y) {def E(i,j)}}",
@@ -99,6 +99,7 @@ const codes: string[] = [
   // "fun3(1,2,3,4);",
   // "know fun3(0,2,3,4);",
   // "fun3(0,2,3,5);",
+  "know set(1);",
 ];
 
 function callOptsExecTest() {
