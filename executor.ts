@@ -97,29 +97,34 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       return execInfo(ResultType.False, node.optName + " is not declared.");
 
     // check all requirements
-    const res = haveFreeVarsFixedAndDoSomething(
+    const res = fixFreeVarsAndCallHandlerFunc(
       env,
       node,
       (newParams: string[][], relatedTemplate: TemplateNode) => {
         for (let i = 0; i < relatedTemplate?.facts.length; i++) {
-          checkParams(
+          const res = checkParams(
             relatedTemplate.facts[i].params,
             newParams //
           );
+          if (!res) return execInfo(ResultType.Unknown);
         }
+        return execInfo(ResultType.True);
       },
       relatedTemplate.requirements
     );
-    // emit
-    if (res.type === ResultType.KnowTrue) {
-      haveFreeVarsFixedAndDoSomething(
+
+    if (res.type === ResultType.True) {
+      // emit
+      fixFreeVarsAndCallHandlerFunc(
         env,
         node,
         (newParams: string[][], relatedTemplate: TemplateNode) => {
           relatedTemplate.facts.push(makeTemplateNodeFact(newParams, []));
+          return execInfo(ResultType.True);
         },
         relatedTemplate.onlyIfExprs
       );
+
       return execInfo(
         ResultType.KnowTrue,
         `${node.optName} itself and all of its requirements are true`
@@ -235,11 +240,12 @@ export function knowEverythingCallOptExec(
   if (!template)
     throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
 
-  haveFreeVarsFixedAndDoSomething(
+  fixFreeVarsAndCallHandlerFunc(
     env,
     fact,
     (newParams: string[][], relatedTemplate: TemplateNode) => {
       relatedTemplate.facts.push(makeTemplateNodeFact(newParams, []));
+      return execInfo(ResultType.True);
     },
     template.onlyIfExprs,
     template.requirements
@@ -267,13 +273,13 @@ export function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   return execInfo(ResultType.KnowTrue);
 }
 
-function haveFreeVarsFixedAndDoSomething(
+function fixFreeVarsAndCallHandlerFunc(
   env: LiTeXEnv,
   fixedNode: CallOptNode, // the fullCallOpt, including params of father opts. 'this' is in the lowest opt of the CallOpt.
   doWhenFreeVarsAreFixed: (
     fixedParams: string[][],
     relatedTemplate: TemplateNode
-  ) => any,
+  ) => ExecInfo,
   emitWhat: LiTeXNode[], // pass in template.requirement or template.onlyIfExprs
   additionalEmit?: LiTeXNode[]
 ): ExecInfo {
@@ -310,10 +316,14 @@ function haveFreeVarsFixedAndDoSomething(
   for (let i = 0; i < emitWhat.length; i++) {
     if (emitWhat[i] instanceof CallOptsNode) {
       for (const onlyIfFact of (emitWhat[i] as CallOptsNode).nodes) {
-        doToCallOptAfterFixingVars(onlyIfFact);
+        const result: ExecInfo = doToCallOptAfterFixingVars(onlyIfFact);
+        if (result.type !== ResultType.True) return result;
       }
     } else if (emitWhat[i] instanceof CallOptNode) {
-      doToCallOptAfterFixingVars(emitWhat[i] as CallOptNode);
+      const result: ExecInfo = doToCallOptAfterFixingVars(
+        emitWhat[i] as CallOptNode
+      );
+      if (result.type !== ResultType.True) return result;
     }
   }
 
@@ -321,24 +331,28 @@ function haveFreeVarsFixedAndDoSomething(
     for (let i = 0; i < additionalEmit.length; i++) {
       if (additionalEmit[i] instanceof CallOptsNode) {
         for (const onlyIfFact of (additionalEmit[i] as CallOptsNode).nodes) {
-          doToCallOptAfterFixingVars(onlyIfFact);
+          const result: ExecInfo = doToCallOptAfterFixingVars(onlyIfFact);
+          if (result.type !== ResultType.True) return result;
         }
       } else if (additionalEmit[i] instanceof CallOptNode) {
-        doToCallOptAfterFixingVars(additionalEmit[i] as CallOptNode);
+        const result: ExecInfo = doToCallOptAfterFixingVars(
+          additionalEmit[i] as CallOptNode
+        );
+        if (result.type !== ResultType.True) return result;
       }
     }
   }
 
   //TODO: Has not emitted onlyIfs that binds to specific fact instead of Template.onlyIfs.
-  return execInfo(ResultType.KnowTrue);
+  return execInfo(ResultType.True);
 
-  function doToCallOptAfterFixingVars(callOpt: CallOptNode) {
+  function doToCallOptAfterFixingVars(callOpt: CallOptNode): ExecInfo {
     const res: {
       newParams: string[][];
       relatedTemplate: TemplateNode | undefined;
     } = getFixedParamsAndRelatedTemplate(callOpt);
     if (!res.relatedTemplate) return execInfo(ResultType.Error);
-    doWhenFreeVarsAreFixed(res.newParams, res.relatedTemplate);
+    return doWhenFreeVarsAreFixed(res.newParams, res.relatedTemplate);
   }
 
   function getFixedParamsAndRelatedTemplate(factToBeEmitted: CallOptNode): {
