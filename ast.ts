@@ -1,5 +1,11 @@
 import { OptsConnectionSymbol } from "./common";
-import { ExecInfo, execInfo, ResultType } from "./executor";
+import { LiTeXEnv } from "./env";
+import {
+  _paramsInOptAreDeclared,
+  ExecInfo,
+  execInfo,
+  ResultType,
+} from "./executor";
 
 // There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
 export enum LiTexNodeType {
@@ -90,6 +96,18 @@ export abstract class TemplateNode extends LiTeXNode {
     this.declOptName = declOptName;
     this.freeVars = freeVars;
     this.requirements = requirements;
+  }
+
+  newFact(env: LiTeXEnv, fact: TemplateNodeFact): ExecInfo {
+    if (!_paramsInOptAreDeclared(env, fact.params))
+      return execInfo(
+        ResultType.Error,
+        `Not all of referred symbols ${fact.params} are declared.`
+      );
+    else {
+      this.facts.push(fact);
+    }
+    return execInfo(ResultType.True);
   }
 
   // Input a full name with colons and get descendants from any depth

@@ -103,6 +103,7 @@ const codes: string[] = [
   // "fun3(0,2,3,4);",
   "// let",
   "let x,y: set(x), set(y);",
+  "know set(z);",
 ];
 
 function callOptsExecTest() {

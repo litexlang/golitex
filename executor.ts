@@ -9,6 +9,7 @@ import {
   CanBeKnownNode,
   TemplateNode,
   makeTemplateNodeFact,
+  DefNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
@@ -56,7 +57,10 @@ function checkFixedOpt(env: LiTeXEnv, callOpt: CallOptNode): ExecInfo {
   if (!relatedTemplate)
     return execInfo(ResultType.Error, callOpt.optName + " is not declared.");
   for (let i = 0; i < relatedTemplate.facts.length; i++) {
-    const res = checkParams(relatedTemplate.facts[i].params, callOpt.optParams);
+    const res = _checkParamsUsingTwoArrayArrays(
+      relatedTemplate.facts[i].params,
+      callOpt.optParams
+    );
     if (res) return execInfo(ResultType.True);
   }
   return execInfo(ResultType.Unknown);
@@ -159,11 +163,6 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       relatedTemplate.onlyIfExprs
     );
 
-    // return execInfo(
-    //   ResultType.KnowTrue,
-    //   `${node.optName} itself and all of its requirements are true`
-    // );
-
     return execInfo(
       ResultType.DefTrue,
       `${node.optName} itself and its requirements are all satisfied.`
@@ -174,7 +173,10 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   }
 }
 
-export function checkParams(arr1: string[][], arr2: string[][]): boolean {
+export function _checkParamsUsingTwoArrayArrays(
+  arr1: string[][],
+  arr2: string[][]
+): boolean {
   if (arr1.length !== arr2.length) {
     return false;
   }
@@ -223,6 +225,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     }
 
     let res: ExecInfo = { type: ResultType.Error, message: "" };
+
     for (const fact of facts) {
       switch (fact.type) {
         case LiTexNodeType.CallOptNode: {
@@ -276,10 +279,7 @@ export function knowEverythingCallOptExec(
   fixFreeVarsAndCallHandlerFunc(
     env,
     fact,
-    (newParams: string[][], relatedTemplate: TemplateNode) => {
-      relatedTemplate.facts.push(makeTemplateNodeFact(newParams));
-      return execInfo(ResultType.True);
-    },
+    _pushNewOpt,
     template.onlyIfExprs,
     template.requirements
   );
@@ -305,6 +305,7 @@ function fixFreeVarsAndCallHandlerFunc(
   env: LiTeXEnv,
   fixedNode: CallOptNode, // the fullCallOpt, including params of father opts. 'this' is in the lowest opt of the CallOpt.
   doWhenFreeVarsAreFixed: (
+    env: LiTeXEnv,
     fixedParams: string[][],
     relatedTemplate: TemplateNode
   ) => ExecInfo,
@@ -380,7 +381,7 @@ function fixFreeVarsAndCallHandlerFunc(
       relatedTemplate: TemplateNode | undefined;
     } = getFixedParamsAndRelatedTemplate(callOpt);
     if (!res.relatedTemplate) return execInfo(ResultType.Error);
-    return doWhenFreeVarsAreFixed(res.newParams, res.relatedTemplate);
+    return doWhenFreeVarsAreFixed(env, res.newParams, res.relatedTemplate);
   }
 
   function getFixedParamsAndRelatedTemplate(factToBeEmitted: CallOptNode): {
@@ -404,14 +405,22 @@ function fixFreeVarsAndCallHandlerFunc(
   }
 }
 
-const _pushNewOpt = (newParams: string[][], relatedTemplate: TemplateNode) => {
-  relatedTemplate.facts.push(makeTemplateNodeFact(newParams));
+const _pushNewOpt = (
+  env: LiTeXEnv,
+  newParams: string[][],
+  relatedTemplate: TemplateNode
+) => {
+  relatedTemplate.newFact(env, makeTemplateNodeFact(newParams));
   return execInfo(ResultType.True);
 };
 
-const _checkOpt = (newParams: string[][], relatedTemplate: TemplateNode) => {
+const _checkOpt = (
+  env: LiTeXEnv,
+  newParams: string[][],
+  relatedTemplate: TemplateNode
+) => {
   for (let i = 0; i < relatedTemplate?.facts.length; i++) {
-    const res = checkParams(
+    const res = _checkParamsUsingTwoArrayArrays(
       relatedTemplate.facts[i].params,
       newParams //
     );
@@ -419,3 +428,30 @@ const _checkOpt = (newParams: string[][], relatedTemplate: TemplateNode) => {
   }
   return execInfo(ResultType.True);
 };
+
+export function _paramsInOptAreDeclared(
+  env: LiTeXEnv,
+  optParams: string[][] | string[]
+): boolean {
+  if (optParams.length === 0) return true;
+
+  // Check if optParams is a 2D array
+  const is2DArray = Array.isArray(optParams[0]);
+
+  if (is2DArray) {
+    // Handle 2D array case
+    for (let i = 0; i < optParams.length; i++) {
+      for (let j = 0; j < (optParams[i] as string[]).length; j++) {
+        if (!env.declaredVars.includes((optParams[i] as string[])[j]))
+          return false;
+      }
+    }
+  } else {
+    // Handle 1D array case
+    for (let i = 0; i < optParams.length; i++) {
+      if (!env.declaredVars.includes(optParams[i] as string)) return false;
+    }
+  }
+
+  return true;
+}

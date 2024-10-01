@@ -6,7 +6,12 @@ import {
   TemplateNodeFact,
 } from "./ast";
 import { OptsConnectionSymbol } from "./common";
-import { ExecInfo, execInfo, ResultType } from "./executor";
+import {
+  _paramsInOptAreDeclared,
+  ExecInfo,
+  execInfo,
+  ResultType,
+} from "./executor";
 
 export class LiTeXEnv {
   errors: string[] = [];
@@ -22,6 +27,13 @@ export class LiTeXEnv {
   }
 
   pushCallOptFact(fact: CallOptNode): ExecInfo {
+    if (!_paramsInOptAreDeclared(this, fact.optParams)) {
+      return execInfo(
+        ResultType.Error,
+        `Not all of referred symbols ${(fact as CallOptNode).optParams} are declared.`
+      );
+    }
+
     const declaredTemplate = this.getDeclaredTemplate(fact.optName);
     if (!declaredTemplate)
       return execInfo(ResultType.Error, fact.optName + "has not been declared");
