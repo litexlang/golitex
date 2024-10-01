@@ -276,13 +276,15 @@ export function knowEverythingCallOptExec(
   if (!template)
     throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
 
-  fixFreeVarsAndCallHandlerFunc(
+  res = fixFreeVarsAndCallHandlerFunc(
     env,
     fact,
     _pushNewOpt,
     template.onlyIfExprs,
     template.requirements
   );
+
+  if (_isNotResultTypeTrue(res)) return res;
 
   return execInfo(ResultType.KnowTrue);
 }
@@ -296,8 +298,9 @@ export function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       node.optName + " has not declared"
     );
 
-  fixFreeVarsAndCallHandlerFunc(env, node, _pushNewOpt, [node]);
+  const res = fixFreeVarsAndCallHandlerFunc(env, node, _pushNewOpt, [node]);
 
+  if (_isNotResultTypeTrue(res)) return res;
   return execInfo(ResultType.KnowTrue);
 }
 
@@ -410,8 +413,7 @@ const _pushNewOpt = (
   newParams: string[][],
   relatedTemplate: TemplateNode
 ) => {
-  relatedTemplate.newFact(env, makeTemplateNodeFact(newParams));
-  return execInfo(ResultType.True);
+  return relatedTemplate.newFact(env, makeTemplateNodeFact(newParams));
 };
 
 const _checkOpt = (
@@ -454,4 +456,9 @@ export function _paramsInOptAreDeclared(
   }
 
   return true;
+}
+
+function _isNotResultTypeTrue(res: ExecInfo): Boolean {
+  if (res.type === ResultType.True) return false;
+  else return true;
 }
