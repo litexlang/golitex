@@ -19,17 +19,55 @@ export class LiTeXEnv {
     string,
     TemplateNode
   >();
-  constructor() {}
+  father: LiTeXEnv | undefined;
+  symbolsFactsPairs: Map<string[][], TemplateNode> = new Map<
+    string[][],
+    TemplateNode
+  >();
+
+  constructor(father: LiTeXEnv | undefined = undefined) {
+    this.father = father;
+  }
+
+  newSymbolsFactsPair(key: string[][], template: TemplateNode) {
+    this.symbolsFactsPairs.set(key, template);
+  }
+
+  declareNewVar(v: string | string[]): Boolean {
+    if (Array.isArray(v)) {
+      for (let i = 0; i < v.length; i++) {
+        if (!this.varsAreNotDeclared(v[i])) return false;
+      }
+      this.declaredVars.concat(v);
+      return true;
+    } else {
+      if (this.varsAreNotDeclared(v)) {
+        this.declaredVars.push(v);
+        return true;
+      } else return false;
+    }
+  }
 
   varsAreNotDeclared(vars: string[] | string): boolean {
-    const isVarDeclared = (v: string) =>
-      this.declaredVars.includes(v) || v.startsWith("#");
+    const isVarDeclared = (v: string): boolean => {
+      if (this.declaredVars.includes(v) || v.startsWith("#")) {
+        return true;
+      }
+      return this.father ? this.father.isVarDeclared(v) : false;
+    };
 
     if (Array.isArray(vars)) {
       return vars.every((v) => !isVarDeclared(v));
     } else {
       return !isVarDeclared(vars);
     }
+  }
+
+  private isVarDeclared(v: string): boolean {
+    if (this.declaredVars.includes(v) || v.startsWith("#")) {
+      return true;
+    }
+    return this.father ? this.father.isVarDeclared(v) : false;
   }
 
   pushErrorMessage(s: string) {
@@ -47,7 +85,7 @@ export class LiTeXEnv {
   // Main function of the whole project
   // input full name of an opt, output the template of the lowest hierarchy
   getDeclaredTemplate(node: string | CallOptNode): TemplateNode | undefined {
-    const isTop = (s: string): Boolean => {
+    const isTop = (s: string): boolean => {
       return !s.includes(OptsConnectionSymbol);
     };
 
@@ -61,15 +99,28 @@ export class LiTeXEnv {
     else s = node;
 
     let relatedTemplate: TemplateNode | undefined;
-    if (isTop(s)) {
-      relatedTemplate = this.declaredTemplates.get(s);
-    } else {
-      relatedTemplate = this.declaredTemplates
-        .get(getBeforeFirstColon(s))
-        ?.getDeclaredSubTemplate(s);
-    }
 
-    return relatedTemplate;
+    const searchInCurrentEnv = (): TemplateNode | undefined => {
+      if (isTop(s)) {
+        return this.declaredTemplates.get(s);
+      } else {
+        const topLevelTemplate = this.declaredTemplates.get(
+          getBeforeFirstColon(s)
+        );
+        return topLevelTemplate?.getDeclaredSubTemplate(s);
+      }
+    };
+
+    relatedTemplate = searchInCurrentEnv();
+
+    // If not found in current environment, search in father
+    if (!relatedTemplate && this.father) {
+      relatedTemplate = this.father.getDeclaredTemplate(node);
+
+      return relatedTemplate;
+    } else {
+      return relatedTemplate;
+    }
   }
 
   getFact(s: string): TemplateNodeFact[] | undefined {

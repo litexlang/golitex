@@ -110,8 +110,11 @@ const codes: string[] = [
   // "know existenceOfX(x);",
   // "existenceOfX(x);",
   "def set(x);",
-  "def fun(x) {set(x);}",
+  "def set2(x);",
+  "def fun(x) {set(x); set2(x);}",
   "know set(#a);",
+  // "set(x);",
+  "prove fun(x) {set(x); know set2(x) ; set2(x);}",
 ];
 
 function callOptsExecTest() {

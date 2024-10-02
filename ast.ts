@@ -24,6 +24,7 @@ export enum LiTexNodeType {
   HaveNode,
   LetNode,
   ProofNode,
+  CheckInProof,
 
   // Template
   InferNode,
@@ -104,6 +105,7 @@ export abstract class TemplateNode extends LiTeXNode {
     if (!_paramsInOptAreDeclared(env, fact.params))
       return _VarsAreNotDeclared(fact);
     else {
+      env.newSymbolsFactsPair(fact.params, this);
       this.facts.push(fact);
     }
     return execInfo(ResultType.True);
@@ -238,6 +240,7 @@ export class DollarMarkNode extends LiTeXNode {
 }
 
 export class ProveNode extends LiTeXNode {
+  type = LiTexNodeType.ProofNode;
   templateName: string;
   freeVars: string[];
   requirements: LiTeXNode[];

@@ -1,3 +1,4 @@
+import { on } from "events";
 import {
   CallOptNode,
   CallOptsNode,
@@ -11,6 +12,7 @@ import {
   makeTemplateNodeFact,
   DefNode,
   TemplateNodeFact,
+  ProveNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
@@ -29,6 +31,8 @@ export enum ResultType {
   HaveTrue,
   LetTrue,
   LetError,
+  ProveError,
+  ProveTrue,
 }
 
 export const resultTypeMap: { [key in ResultType]: string } = {
@@ -45,7 +49,20 @@ export const resultTypeMap: { [key in ResultType]: string } = {
   [ResultType.HaveTrue]: "have: true",
   [ResultType.LetError]: "let: error",
   [ResultType.LetTrue]: "let: true",
+  [ResultType.ProveError]: "prove: error",
+  [ResultType.ProveTrue]: "prove: true",
 };
+
+export function execInfoIsTrue(res: ExecInfo) {
+  return [
+    ResultType.True,
+    ResultType.KnowError,
+    ResultType.DefTrue,
+    ResultType.HaveError,
+    ResultType.LetError,
+    ResultType.ProveError,
+  ].includes(res.type);
+}
 
 export function execInfo(t: ResultType, s: string = ""): ExecInfo {
   return { type: t, message: s };
@@ -95,9 +112,66 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
       return callOptsExec(env, node as CallOptsNode);
     case LiTexNodeType.LetNode:
       return letExec(env, node as LetNode);
+    case LiTexNodeType.ProofNode:
+      return proveNode(env, node as ProveNode);
   }
 
   return execInfo(ResultType.Error, "Invalid Expression.");
+}
+
+function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
+  const relatedTemplate = env.getDeclaredTemplate(node.templateName);
+  if (!relatedTemplate)
+    return execInfo(
+      ResultType.ProveError,
+      `${node.templateName} is not declared.`
+    );
+  env = new LiTeXEnv(env);
+
+  for (let i = 0; i < node.freeVars.length; i++) {
+    if (node.freeVars[i].startsWith("*")) continue;
+    const res = env.declaredVars.push(node.freeVars[i]);
+  }
+
+  //! Currently requirement cannot see what is defined in block
+  for (let fact of node.requirements) {
+    const relatedTemplate = env.getDeclaredTemplate(fact as CallOptNode);
+    if (relatedTemplate)
+      env.newSymbolsFactsPair((fact as CallOptNode).optParams, relatedTemplate);
+  }
+
+  let res: ExecInfo = execInfo(ResultType.ProveTrue);
+
+  let onlyIfsThatNeedsCheck = [...relatedTemplate.onlyIfExprs];
+
+  for (let onlyIfCallOpts of node.onlyIfExprs) {
+    if (onlyIfCallOpts instanceof CallOptsNode) {
+      for (let onlyIf of (onlyIfCallOpts as CallOptsNode).nodes) {
+        res = nodeExec(env, onlyIf);
+        if (onlyIf instanceof CallOptNode) {
+          for (let i = 0; i < onlyIfsThatNeedsCheck.length; i++) {
+            let onlyIfThatNeedsCheck = onlyIfsThatNeedsCheck[i];
+            let isTrue = fixFreeVarsAndCallHandlerFunc(env, onlyIf, _checkOpt, [
+              onlyIfThatNeedsCheck,
+            ]);
+            if (execInfoIsTrue(isTrue)) {
+              onlyIfsThatNeedsCheck.splice(i, 1);
+              i--;
+            }
+          }
+        }
+      }
+    } else {
+      res = nodeExec(env, onlyIfCallOpts);
+    }
+  }
+
+  if (onlyIfsThatNeedsCheck.length === 0) return execInfo(ResultType.ProveTrue);
+  else
+    return execInfo(
+      ResultType.ProveError,
+      "not all onlyIfs in template are satisfied."
+    );
 }
 
 function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
@@ -122,7 +196,7 @@ function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
   for (const fact of (node as CallOptsNode).nodes) {
     let res = callOptExec(env, fact as CallOptNode);
-    if (res.type !== ResultType.True) return res;
+    if (!execInfoIsTrue(res)) return res;
   }
   return execInfo(ResultType.True);
 }
