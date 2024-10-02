@@ -26,18 +26,47 @@ export class LiTeXEnv {
     this.father = father;
   }
 
+  newVar(varName: string): boolean {
+    if (this.declaredVars.includes(varName)) {
+      return false;
+    }
+
+    this.declaredVars.push(varName);
+    return true;
+  }
+
   symbolsFactsPairIsTrue(key: string[][], template: TemplateNode): boolean {
     const matchingPair = this.symbolsFactsPairs.find((pair) =>
-      this.arraysEqual(pair.vars, key)
+      isFact(pair.vars, key)
     );
 
     if (matchingPair) {
-      return matchingPair.template.some(
+      let res = matchingPair.template.some(
         (t) => t.declOptName === template.declOptName
       );
+      if (res) return true;
     }
 
-    return false;
+    if (this.father) return this.father.symbolsFactsPairIsTrue(key, template);
+    else return false;
+
+    function isFact(arr1: string[][], arr2: string[][]): boolean {
+      if (arr1.length !== arr2.length) return false;
+
+      for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i].length !== arr2[i].length) return false;
+        for (let j = 0; j < arr1[i].length; j++) {
+          const val1 = arr1[i][j];
+          const val2 = arr2[i][j];
+          // if the vars stored in env.symbolsFactsPair start with # then is right.
+          if (val1 !== val2 && !val1.startsWith("#")) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
   }
 
   private arraysEqual(arr1: string[][], arr2: string[][]): boolean {

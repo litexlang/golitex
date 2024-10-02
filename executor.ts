@@ -127,7 +127,19 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
 
   for (let i = 0; i < node.freeVars.length; i++) {
     if (node.freeVars[i].startsWith("*")) continue;
-    const res = env.declaredVars.push(node.freeVars[i]);
+    if (node.freeVars[i].startsWith("#"))
+      return execInfo(
+        ResultType.ProveError,
+        "parameters in requirement should not start with #"
+      );
+    else {
+      let res = env.newVar(node.freeVars[i]);
+      if (!res)
+        return execInfo(
+          ResultType.ProveError,
+          "two parameters have the same name."
+        );
+    }
   }
 
   //! Currently requirement cannot see what is defined in block
