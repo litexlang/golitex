@@ -106,7 +106,7 @@ export abstract class TemplateNode extends LiTeXNode {
       return _VarsAreNotDeclared(fact);
     else {
       env.newSymbolsFactsPair(fact.params, this);
-      this.facts.push(fact);
+      // this.facts.push(fact);
     }
     return execInfo(ResultType.True);
   }

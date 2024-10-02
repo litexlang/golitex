@@ -20,17 +20,52 @@ export class LiTeXEnv {
     TemplateNode
   >();
   father: LiTeXEnv | undefined;
-  symbolsFactsPairs: Map<string[][], TemplateNode> = new Map<
-    string[][],
-    TemplateNode
-  >();
+  symbolsFactsPairs: { vars: string[][]; template: TemplateNode[] }[] = [];
 
   constructor(father: LiTeXEnv | undefined = undefined) {
     this.father = father;
   }
 
+  symbolsFactsPairIsTrue(key: string[][], template: TemplateNode): boolean {
+    const matchingPair = this.symbolsFactsPairs.find((pair) =>
+      this.arraysEqual(pair.vars, key)
+    );
+
+    if (matchingPair) {
+      return matchingPair.template.some(
+        (t) => t.declOptName === template.declOptName
+      );
+    }
+
+    return false;
+  }
+
+  private arraysEqual(arr1: string[][], arr2: string[][]): boolean {
+    if (arr1.length !== arr2.length) return false;
+
+    for (let i = 0; i < arr1.length; i++) {
+      if (arr1[i].length !== arr2[i].length) return false;
+      for (let j = 0; j < arr1[i].length; j++) {
+        if (arr1[i][j] !== arr2[i][j]) return false;
+      }
+    }
+
+    return true;
+  }
+
   newSymbolsFactsPair(key: string[][], template: TemplateNode) {
-    this.symbolsFactsPairs.set(key, template);
+    const existingPair = this.symbolsFactsPairs.find((pair) =>
+      this.arraysEqual(pair.vars, key)
+    );
+
+    if (existingPair) {
+      existingPair.template.push(template);
+    } else {
+      this.symbolsFactsPairs.push({
+        vars: key,
+        template: [template],
+      });
+    }
   }
 
   declareNewVar(v: string | string[]): Boolean {
@@ -130,19 +165,23 @@ export class LiTeXEnv {
 
   printCallOptFacts() {
     console.log("-----facts-------\n");
-    for (const template of this.declaredTemplates.values()) {
-      printFact(template);
+    for (const fact of this.symbolsFactsPairs) {
+      console.log(fact);
     }
-    console.log("");
 
-    function printFact(template: TemplateNode, fatherName: string = "") {
-      const name = fatherName + OptsConnectionSymbol + template.declOptName;
-      console.log(name);
-      console.log(template.facts.map((e) => e.params));
-      for (const subTemplate of template.declaredTemplates.values()) {
-        printFact(subTemplate, name);
-      }
-    }
+    // for (const template of this.declaredTemplates.values()) {
+    //   printFact(template);
+    // }
+    // console.log("");
+
+    // function printFact(template: TemplateNode, fatherName: string = "") {
+    //   const name = fatherName + OptsConnectionSymbol + template.declOptName;
+    //   console.log(name);
+    //   console.log(template.facts.map((e) => e.params));
+    //   for (const subTemplate of template.declaredTemplates.values()) {
+    //     printFact(subTemplate, name);
+    //   }
+    // }
   }
 
   printDeclaredTemplates() {

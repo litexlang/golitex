@@ -23,7 +23,6 @@ import {
   SeparationBetweenSymbolsAndTheirFacts,
   ProveKeywords,
 } from "./common";
-import { handleRuntimeError } from "./executor";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {

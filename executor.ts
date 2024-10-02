@@ -72,15 +72,11 @@ export type ExecInfo = { type: ResultType; message: string };
 
 function checkFixedOpt(env: LiTeXEnv, callOpt: CallOptNode): ExecInfo {
   const relatedTemplate = env.getDeclaredTemplate(callOpt);
-  if (!relatedTemplate)
-    return execInfo(ResultType.Error, callOpt.optName + " is not declared.");
-  for (let i = 0; i < relatedTemplate.facts.length; i++) {
-    const res = _checkParamsUsingTwoArrayArrays(
-      relatedTemplate.facts[i].params,
-      callOpt.optParams
-    );
+  if (relatedTemplate) {
+    const res = env.symbolsFactsPairIsTrue(callOpt.optParams, relatedTemplate);
     if (res) return execInfo(ResultType.True);
   }
+
   return execInfo(ResultType.Unknown);
 }
 
@@ -119,6 +115,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
   return execInfo(ResultType.Error, "Invalid Expression.");
 }
 
+//TODO: add requirements
 function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
   const relatedTemplate = env.getDeclaredTemplate(node.templateName);
   if (!relatedTemplate)
@@ -213,12 +210,17 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       return execInfo(ResultType.False, node.optName + " is not declared.");
 
     // check itself
-    let res: ExecInfo = checkFixedOpt(env, node);
-    if (infoTypeIsNotTrue(res))
-      return execInfo(res.type, `${node.optName} itself is not satisfied.`);
+    // let res: ExecInfo = checkFixedOpt(env, node);
+    const isTrue = env.symbolsFactsPairIsTrue(node.optParams, relatedTemplate);
+
+    if (!isTrue)
+      return execInfo(
+        ResultType.Unknown,
+        `${node.optName} itself is not satisfied.`
+      );
 
     // check all requirements
-    res = fixFreeVarsAndCallHandlerFunc(
+    let res = fixFreeVarsAndCallHandlerFunc(
       env,
       node,
       _checkOpt,
@@ -294,6 +296,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   try {
     let facts: CanBeKnownNode[] = [];
     let isKnowEverything: Boolean = false;
+
     if (node.type === LiTexNodeType.KnowNode) {
       facts = (node as KnowNode).facts;
       isKnowEverything = (node as KnowNode).isKnowEverything;
@@ -498,14 +501,18 @@ const _checkOpt = (
   newParams: string[][],
   relatedTemplate: TemplateNode
 ) => {
-  for (let i = 0; i < relatedTemplate?.facts.length; i++) {
-    const res = _checkParamsUsingTwoArrayArrays(
-      relatedTemplate.facts[i].params,
-      newParams //
-    );
-    if (res) return execInfo(ResultType.True);
-  }
-  return execInfo(ResultType.Unknown);
+  return env.symbolsFactsPairIsTrue(newParams, relatedTemplate)
+    ? execInfo(ResultType.True)
+    : execInfo(ResultType.Unknown);
+
+  // for (let i = 0; i < relatedTemplate?.facts.length; i++) {
+  //   const res = _checkParamsUsingTwoArrayArrays(
+  //     relatedTemplate.facts[i].params,
+  //     newParams //
+  //   );
+  //   if (res) return execInfo(ResultType.True);
+  // }
+  // return execInfo(ResultType.Unknown);
 };
 
 export function _paramsInOptAreDeclared(
