@@ -136,7 +136,10 @@ const codes: string[] = [
   // "!: func5(2 | set(2)) <=> {func(1):subF(2);} ;",
   // "exist existenceOf(x| set(x))",
   // "have existenceOf(y);",
-  "let x: set(x), set2(x);",
+  // "let x: set(x), set2(x);",
+  "def fun(x) {set(x);}",
+  "know set(#a);",
+  "prove fun(#x) {set(#x);}",
 ];
 
 function testLexer() {

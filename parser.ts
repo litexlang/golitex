@@ -11,6 +11,7 @@ import {
   FactNode,
   TemplateNode,
   DollarMarkNode,
+  ProveNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import {
@@ -20,7 +21,9 @@ import {
   DefBlockDeclareAndCall,
   ExistKeywords,
   SeparationBetweenSymbolsAndTheirFacts,
+  ProveKeywords,
 } from "./common";
+import { handleRuntimeError } from "./executor";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -67,7 +70,7 @@ function handleParseError(tokens: string[], env: LiTeXEnv, message: string) {
   );
 }
 
-const stmtKeywords: {
+const KeywordFunctionMap: {
   [key: string]: (env: LiTeXEnv, tokens: string[]) => any;
 } = {
   ";": (env: LiTeXEnv, tokens: string[]) => {
@@ -93,6 +96,8 @@ const stmtKeywords: {
     node.isKnowEverything = true;
     return node;
   },
+  prove: proveParse,
+  "&": proveParse,
 };
 
 export function LiTeXStmtsParse(
@@ -119,7 +124,7 @@ export function LiTexStmtParse(
   tokens: string[]
 ): LiTeXNode | null {
   try {
-    const func = stmtKeywords[tokens[0]];
+    const func = KeywordFunctionMap[tokens[0]];
     const funcName = tokens[0];
     if (func) {
       const node = func(env, tokens);
@@ -201,6 +206,8 @@ function freeVarsAndTheirFactsParse(
       }
     }
   }
+
+  skip(tokens, end);
 
   return { freeVars: freeVars, properties: requirements };
 }
@@ -312,7 +319,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
     const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
       freeVarsAndTheirFactsParse(env, tokens);
 
-    skip(tokens, ")");
+    // skip(tokens, ")");
 
     let result: LiTeXNode;
     switch (tokens[0]) {
@@ -407,6 +414,29 @@ function letParse(env: LiTeXEnv, tokens: string[]): LetNode {
     return new LetNode(freeVarsAndTheirFactsParse(env, tokens, "let", ";"));
   } catch (error) {
     handleParseError(tokens, env, "let");
+    throw error;
+  }
+}
+
+function proveParse(env: LiTeXEnv, tokens: string[]): ProveNode {
+  try {
+    skip(tokens, ProveKeywords);
+    const templateName = shiftVar(tokens);
+
+    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
+      freeVarsAndTheirFactsParse(env, tokens);
+
+    const blockBrace = nonExecutableBlockParse(env, tokens);
+    const result = new ProveNode(
+      templateName,
+      freeVarsFact.freeVars,
+      freeVarsFact.properties,
+      blockBrace
+    );
+
+    return result;
+  } catch (error) {
+    handleParseError(tokens, env, "prove");
     throw error;
   }
 }

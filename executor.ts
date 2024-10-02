@@ -10,6 +10,7 @@ import {
   TemplateNode,
   makeTemplateNodeFact,
   DefNode,
+  TemplateNodeFact,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
@@ -461,3 +462,9 @@ function _isNotResultTypeTrue(res: ExecInfo): Boolean {
   if (res.type === ResultType.True) return false;
   else return true;
 }
+
+export const _VarsAreNotDeclared = (fact: TemplateNodeFact) =>
+  execInfo(
+    ResultType.Error,
+    `Not all of referred symbols ${fact.params} are declared.`
+  );

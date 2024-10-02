@@ -1,7 +1,9 @@
+import { on } from "events";
 import { OptsConnectionSymbol } from "./common";
 import { LiTeXEnv } from "./env";
 import {
   _paramsInOptAreDeclared,
+  _VarsAreNotDeclared,
   ExecInfo,
   execInfo,
   ResultType,
@@ -100,10 +102,7 @@ export abstract class TemplateNode extends LiTeXNode {
 
   newFact(env: LiTeXEnv, fact: TemplateNodeFact): ExecInfo {
     if (!_paramsInOptAreDeclared(env, fact.params))
-      return execInfo(
-        ResultType.Error,
-        `Not all of referred symbols ${fact.params} are declared.`
-      );
+      return _VarsAreNotDeclared(fact);
     else {
       this.facts.push(fact);
     }
@@ -235,5 +234,25 @@ export class DollarMarkNode extends LiTeXNode {
   constructor(template: TemplateNode) {
     super();
     this.template = template;
+  }
+}
+
+export class ProveNode extends LiTeXNode {
+  templateName: string;
+  freeVars: string[];
+  requirements: LiTeXNode[];
+  onlyIfExprs: LiTeXNode[];
+
+  constructor(
+    templateName: string,
+    freeVars: string[],
+    requirements: LiTeXNode[],
+    onlyIfExprs: LiTeXNode[]
+  ) {
+    super();
+    this.templateName = templateName;
+    this.freeVars = freeVars;
+    this.requirements = requirements;
+    this.onlyIfExprs = onlyIfExprs;
   }
 }

@@ -10,6 +10,7 @@ export const specialChars = [
   "!",
   "$",
   "?",
+  "&",
 ];
 
 export const OptsConnectionSymbol = ":";
@@ -26,3 +27,4 @@ export const TemplateDeclarationKeywords = [":", "def", ...ExistKeywords];
 export const DefBlockDeclareAndCall = "$";
 
 export const SeparationBetweenSymbolsAndTheirFacts = ":";
+export const ProveKeywords = ["&", "prove"];

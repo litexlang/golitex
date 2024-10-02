@@ -21,12 +21,14 @@ export class LiTeXEnv {
   >();
   constructor() {}
 
-  varsAreNotDeclared(vars: string[] | string): Boolean {
+  varsAreNotDeclared(vars: string[] | string): boolean {
+    const isVarDeclared = (v: string) =>
+      this.declaredVars.includes(v) || v.startsWith("#");
+
     if (Array.isArray(vars)) {
-      const duplicateVars = vars.filter((v) => this.declaredVars.includes(v));
-      return duplicateVars.length > 0 ? false : true;
+      return vars.every((v) => !isVarDeclared(v));
     } else {
-      return !this.declaredVars.includes(vars as string);
+      return !isVarDeclared(vars);
     }
   }
 
@@ -35,17 +37,10 @@ export class LiTeXEnv {
   }
 
   pushCallOptFact(fact: CallOptNode): ExecInfo {
-    if (!_paramsInOptAreDeclared(this, fact.optParams)) {
-      return execInfo(
-        ResultType.Error,
-        `Not all of referred symbols ${(fact as CallOptNode).optParams} are declared.`
-      );
-    }
-
     const declaredTemplate = this.getDeclaredTemplate(fact.optName);
     if (!declaredTemplate)
       return execInfo(ResultType.Error, fact.optName + "has not been declared");
-    declaredTemplate?.facts.push(makeTemplateNodeFact(fact.optParams));
+    declaredTemplate.newFact(this, makeTemplateNodeFact(fact.optParams));
     return execInfo(ResultType.KnowTrue);
   }
 

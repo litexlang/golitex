@@ -74,7 +74,7 @@ const codes: string[] = [
   // "know_everything everything(1,2);", // requirements, onlyIfs, itself, all emitted.
   // "// test emitFact",
   // "def func4(x);",
-  "def set(x);",
+  // "def set(x);",
   // "def twoSet(x,y);",
   // "def func(x: set(x)) <=> {func4(x); def subF(y:twoSet(x,y)) }",
   // "know_everything func(1):subF(2);",
@@ -104,11 +104,14 @@ const codes: string[] = [
   // "// let",
   // "let x,y: set(x), set(y);",
   // "know set(z);",
-  "// when knowing exist and get the exist",
-  "exist existenceOfX(x: set(x));",
-  "let x;",
-  "know existenceOfX(x);",
-  "existenceOfX(x);",
+  // "// when knowing exist and get the exist",
+  // "exist existenceOfX(x: set(x));",
+  // "let x;",
+  // "know existenceOfX(x);",
+  // "existenceOfX(x);",
+  "def set(x);",
+  "def fun(x) {set(x);}",
+  "know set(#a);",
 ];
 
 function callOptsExecTest() {
