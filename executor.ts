@@ -132,9 +132,43 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
 
   //! Currently requirement cannot see what is defined in block
   for (let fact of node.requirements) {
+    // all parameters of current fact start with *
+    let allStartWithStar = true;
+    for (let i = 0; i < (fact as CallOptNode).optParams.length; i++) {
+      for (let j = 0; j < (fact as CallOptNode).optParams[i].length; j++) {
+        if (!(fact as CallOptNode).optParams[i][j].startsWith("*"))
+          allStartWithStar = false;
+      }
+    }
+
     const relatedTemplate = env.getDeclaredTemplate(fact as CallOptNode);
-    if (relatedTemplate)
-      env.newSymbolsFactsPair((fact as CallOptNode).optParams, relatedTemplate);
+    if (relatedTemplate) {
+      if (!allStartWithStar) {
+        env.newSymbolsFactsPair(
+          (fact as CallOptNode).optParams.map((e) =>
+            e.map((el) => (el.startsWith("*") ? el.slice(1) : el))
+          ),
+          relatedTemplate
+        );
+      } else {
+        let res = env.symbolsFactsPairIsTrue(
+          (fact as CallOptNode).optParams.map((e) =>
+            e.map((el) => el.slice(1))
+          ),
+          relatedTemplate
+        );
+        if (!res)
+          return execInfo(
+            ResultType.Error,
+            `${res} does not have fact ${relatedTemplate.declOptName}`
+          );
+      }
+    } else {
+      return execInfo(
+        ResultType.Error,
+        (fact as CallOptNode).optName + " is not defined."
+      );
+    }
   }
 
   let res: ExecInfo = execInfo(ResultType.ProveTrue);
@@ -504,15 +538,6 @@ const _checkOpt = (
   return env.symbolsFactsPairIsTrue(newParams, relatedTemplate)
     ? execInfo(ResultType.True)
     : execInfo(ResultType.Unknown);
-
-  // for (let i = 0; i < relatedTemplate?.facts.length; i++) {
-  //   const res = _checkParamsUsingTwoArrayArrays(
-  //     relatedTemplate.facts[i].params,
-  //     newParams //
-  //   );
-  //   if (res) return execInfo(ResultType.True);
-  // }
-  // return execInfo(ResultType.Unknown);
 };
 
 export function _paramsInOptAreDeclared(
