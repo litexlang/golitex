@@ -138,6 +138,30 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
   }
 
   //! Currently the requirements in the template are not considered
+  //! I notice that the current prove has wrong structure because it cannot prove xxx:yyy
+  // bind the requirements in prove
+
+  for (let i = 0; i < relatedTemplate.requirements.length; i++) {
+    const requirement = relatedTemplate.requirements[i];
+    if (requirement instanceof CallOptNode) {
+      const result = findPositions(
+        requirement.optParams as string[][],
+        [relatedTemplate.freeVars] as string[][]
+      );
+      const fixed = requirement.optParams.map((e) =>
+        e.map((el) => {
+          const ij: [number, number][] | undefined = result.get(el);
+          if (!ij) return execInfo(ResultType.Error);
+          return node.freeVars[ij[0][0]][ij[0][1]];
+        })
+      ) as string[][];
+      env.newSymbolsFactsPair(
+        fixed,
+        env.getDeclaredTemplate(requirement) as TemplateNode
+      );
+    }
+  }
+
   //! Currently requirement cannot see what is defined in block
   for (let fact of node.requirements) {
     // all parameters of current fact start with *
@@ -150,11 +174,13 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
     }
 
     const relatedTemplate = env.getDeclaredTemplate(fact as CallOptNode);
+
     if (relatedTemplate) {
       if (!allStartWithStar) {
+        // bind the requirements in opt
         env.newSymbolsFactsPair(
-          (fact as CallOptNode).optParams.map((e) =>
-            e.map((el) => (el.startsWith("*") ? el.slice(1) : el))
+          (fact as CallOptNode).optParams.map(
+            (e) => e.map((el) => (el.startsWith("*") ? el.slice(1) : el)) // no need to always use * as prefix
           ),
           relatedTemplate
         );
@@ -454,7 +480,8 @@ function fixFreeVarsAndCallHandlerFunc(
   doWhenFreeVarsAreFixed: (
     env: LiTeXEnv,
     fixedParams: string[][],
-    relatedTemplate: TemplateNode
+    relatedTemplate: TemplateNode,
+    FixedTemplates?: CallOptNode[]
   ) => ExecInfo,
   emitWhat: LiTeXNode[], // pass in template.requirement or template.onlyIfExprs
   additionalEmit?: LiTeXNode[]
@@ -572,6 +599,15 @@ const _checkOpt = (
     : execInfo(ResultType.Unknown);
 };
 
+const _fixRequirements = (
+  env: LiTeXEnv,
+  newParams: string[][],
+  relatedTemplate: TemplateNode
+) => {
+  for (let requirement of relatedTemplate.requirements) {
+  }
+};
+
 export function _paramsInOptAreDeclared(
   env: LiTeXEnv,
   optParams: string[][] | string[]
@@ -606,3 +642,30 @@ export const _VarsAreNotDeclared = (fact: TemplateNodeFact) =>
     ResultType.Error,
     `Not all of referred symbols ${fact.params} are declared.`
   );
+
+function findPositions(
+  array1: string[][],
+  array2: string[][]
+): Map<string, [number, number][]> {
+  const positionMap = new Map<string, [number, number][]>();
+
+  for (let i = 0; i < array1.length; i++) {
+    for (let j = 0; j < array1[i].length; j++) {
+      const element = array1[i][j];
+
+      if (!positionMap.has(element)) {
+        positionMap.set(element, []);
+      }
+
+      for (let m = 0; m < array2.length; m++) {
+        for (let n = 0; n < array2[m].length; n++) {
+          if (array2[m][n] === element) {
+            positionMap.get(element)!.push([m, n]);
+          }
+        }
+      }
+    }
+  }
+
+  return positionMap;
+}

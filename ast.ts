@@ -89,6 +89,7 @@ export abstract class TemplateNode extends LiTeXNode {
   onlyIfExprs: LiTeXNode[] = [];
   declaredTemplates = new Map<string, TemplateNode>();
   facts: TemplateNodeFact[] = [];
+  fathers: TemplateNode[] = [];
 
   constructor(
     declOptName: string,
