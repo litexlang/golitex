@@ -251,6 +251,32 @@ export abstract class TemplateNode extends LiTeXNode {
     }
   }
 
+  emitOnlyIfs(
+    env: LiTeXEnv,
+    freeFixMap: Map<string, string>,
+    fathers: string[][] = []
+  ) {
+    for (let onlyIf of this.onlyIfExprs) {
+      (env.getDeclaredTemplate(onlyIf as CallOptNode) as TemplateNode).emit(
+        env,
+        freeFixMap,
+        fathers
+      );
+    }
+  }
+
+  emitRequirements(
+    env: LiTeXEnv,
+    freeFixMap: Map<string, string>,
+    fathers: string[][] = []
+  ) {
+    for (let requirement of this.requirements) {
+      (
+        env.getDeclaredTemplate(requirement as CallOptNode) as TemplateNode
+      ).emit(env, freeFixMap, fathers);
+    }
+  }
+
   requirementsSatisfied(env: LiTeXEnv, mapping: Map<string, string>) {
     let allRequirementsAreSatisfied: Boolean = true;
     for (let requirement of this.requirements) {

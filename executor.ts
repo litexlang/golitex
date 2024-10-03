@@ -693,6 +693,7 @@ function _allStartWithAsterisk(arr: string[][]): boolean {
   return arr.every((subArr) => subArr.every((str) => str.startsWith("*")));
 }
 
+//! know everything not done
 function yaKnowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   try {
     let facts: CanBeKnownNode[] = [];
@@ -707,7 +708,33 @@ function yaKnowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     }
 
     for (const fact of facts) {
-      res = yaKnowCallOptExec(env, fact as CallOptNode);
+      switch (fact.type) {
+        case LiTexNodeType.CallOptNode:
+          if (isKnowEverything)
+            res = yaKnowEverythingCallOptExec(env, fact as CallOptNode);
+          else res = yaKnowCallOptExec(env, fact as CallOptNode);
+          break;
+        case LiTexNodeType.DefNode:
+        case LiTexNodeType.InferNode: {
+          res = templateDeclExec(env, fact as TemplateNode);
+          if (isKnowEverything) {
+            res = yaKnowEverythingCallOptExec(
+              env,
+              CallOptNode.create((fact as TemplateNode).declOptName, [
+                (fact as TemplateNode).freeVars,
+              ])
+            );
+          } else {
+            res = yaKnowCallOptExec(
+              env,
+              CallOptNode.create((fact as TemplateNode).declOptName, [
+                (fact as TemplateNode).freeVars,
+              ])
+            );
+          }
+          break;
+        }
+      }
       if (!execInfoIsTrue(res)) return res;
     }
 
@@ -716,6 +743,28 @@ function yaKnowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     catchRuntimeError(env, error, "know");
     return execInfo(ResultType.KnowError);
   }
+}
+
+function yaKnowEverythingCallOptExec(
+  env: LiTeXEnv,
+  fact: CallOptNode
+): ExecInfo {
+  let res: ExecInfo = { type: ResultType.Error, message: "" };
+  res = yaKnowCallOptExec(env, fact);
+
+  const template = env.getDeclaredTemplate(fact as CallOptNode);
+  if (!template)
+    throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
+
+  let mapping = template.fix(fact);
+  if (!mapping) return execInfo(ResultType.KnowError);
+
+  template.emitOnlyIfs(env, mapping);
+  template.emitRequirements(env, mapping);
+
+  if (_isNotResultTypeTrue(res)) return res;
+
+  return execInfo(ResultType.KnowTrue);
 }
 
 function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
