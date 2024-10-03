@@ -90,6 +90,8 @@ export abstract class TemplateNode extends LiTeXNode {
   declaredTemplates = new Map<string, TemplateNode>();
   facts: TemplateNodeFact[] = [];
   fathers: TemplateNode[] = [];
+  // Fix all free variables in this template, no matter it's declared in fathers or itself
+  freeFixMap: Map<string, string> = new Map<string, string>();
 
   constructor(
     declOptName: string,
@@ -179,6 +181,48 @@ export abstract class TemplateNode extends LiTeXNode {
       const newList = [...originalList];
       newList.splice(position, 1, ...itemsToInsert);
       return newList;
+    }
+  }
+
+  // Fix all free variables in this template, no matter it's declared in fathers or itself
+  // callOptParams: the fullOpt that calls this template
+  fix(callOptParams: CallOptNode | string[][]): ExecInfo {
+    if (callOptParams instanceof CallOptNode) {
+      callOptParams = callOptParams.optParams;
+    }
+    callOptParams = callOptParams as string[][];
+
+    const relatedTemplates = [...this.fathers, this];
+
+    if (
+      !areArraysEqual(
+        callOptParams,
+        relatedTemplates.map((e) => e.freeVars)
+      )
+    ) {
+      return execInfo(ResultType.Error, "given argument numbers are invalid.");
+    }
+
+    for (let [i, template] of relatedTemplates.entries()) {
+      template.freeVars.forEach((v, j: number) =>
+        this.freeFixMap.set(v, callOptParams[i][j])
+      );
+    }
+
+    return execInfo(ResultType.True);
+
+    function areArraysEqual(arr1: string[][], arr2: string[][]): boolean {
+      if (arr1.length !== arr2.length) {
+        return false;
+      }
+
+      for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i].length !== arr2[i].length) {
+          return false;
+        }
+      }
+
+      return true;
     }
   }
 }
