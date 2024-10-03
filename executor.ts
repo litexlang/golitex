@@ -70,20 +70,15 @@ export function execInfo(t: ResultType, s: string = ""): ExecInfo {
 
 export type ExecInfo = { type: ResultType; message: string };
 
-function checkFixedOpt(env: LiTeXEnv, callOpt: CallOptNode): ExecInfo {
-  const relatedTemplate = env.getDeclaredTemplate(callOpt);
-  if (relatedTemplate) {
-    const res = env.symbolsFactsPairIsTrue(callOpt.optParams, relatedTemplate);
-    if (res) return execInfo(ResultType.True);
-  }
+// function checkFixedOpt(env: LiTeXEnv, callOpt: CallOptNode): ExecInfo {
+//   const relatedTemplate = env.getDeclaredTemplate(callOpt);
+//   if (relatedTemplate) {
+//     const res = env.symbolsFactsPairIsTrue(callOpt.optParams, relatedTemplate);
+//     if (res) return execInfo(ResultType.True);
+//   }
 
-  return execInfo(ResultType.Unknown);
-}
-
-function infoTypeIsNotTrue(info: ExecInfo) {
-  if (info.type !== ResultType.True) return true;
-  else return false;
-}
+//   return execInfo(ResultType.Unknown);
+// }
 
 export function catchRuntimeError(env: LiTeXEnv, err: any, m: string): string {
   if (err instanceof Error) {
@@ -142,6 +137,7 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
     }
   }
 
+  //! Currently the requirements in the template are not considered
   //! Currently requirement cannot see what is defined in block
   for (let fact of node.requirements) {
     // all parameters of current fact start with *
@@ -190,22 +186,10 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
   for (let onlyIfCallOpts of node.onlyIfExprs) {
     if (onlyIfCallOpts instanceof CallOptsNode) {
       for (let onlyIf of (onlyIfCallOpts as CallOptsNode).nodes) {
-        res = nodeExec(env, onlyIf);
-        if (onlyIf instanceof CallOptNode) {
-          for (let i = 0; i < onlyIfsThatNeedsCheck.length; i++) {
-            let onlyIfThatNeedsCheck = onlyIfsThatNeedsCheck[i];
-            let isTrue = fixFreeVarsAndCallHandlerFunc(env, onlyIf, _checkOpt, [
-              onlyIfThatNeedsCheck,
-            ]);
-            if (execInfoIsTrue(isTrue)) {
-              onlyIfsThatNeedsCheck.splice(i, 1);
-              i--;
-            }
-          }
-        }
+        processOnlyIfCallOpt(onlyIf);
       }
     } else {
-      res = nodeExec(env, onlyIfCallOpts);
+      processOnlyIfCallOpt(onlyIfCallOpts as CallOptNode);
     }
   }
 
@@ -215,6 +199,25 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
       ResultType.ProveError,
       "not all onlyIfs in template are satisfied."
     );
+
+  function processOnlyIfCallOpt(onlyIf: CallOptNode) {
+    res = nodeExec(env, onlyIf);
+    if (onlyIf instanceof CallOptNode) {
+      for (let i = 0; i < onlyIfsThatNeedsCheck.length; i++) {
+        let onlyIfThatNeedsCheck = onlyIfsThatNeedsCheck[i];
+        let isTrue = fixFreeVarsAndCallHandlerFunc(env, onlyIf, _checkOpt, [
+          onlyIfThatNeedsCheck,
+        ]);
+        if (execInfoIsTrue(isTrue)) {
+          fixFreeVarsAndCallHandlerFunc(env, onlyIf, _pushNewOpt, [
+            onlyIfThatNeedsCheck,
+          ]);
+          onlyIfsThatNeedsCheck.splice(i, 1);
+          i--;
+        }
+      }
+    }
+  }
 }
 
 function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
@@ -273,7 +276,7 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       relatedTemplate.requirements
     );
 
-    if (infoTypeIsNotTrue(res))
+    if (_isNotResultTypeTrue(res))
       return execInfo(
         res.type,
         `${node.optName} itself is true while its requirements are not satisfied.`
@@ -284,7 +287,10 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       env,
       node,
       _pushNewOpt,
-      relatedTemplate.onlyIfExprs
+      relatedTemplate.onlyIfExprs.filter((v) => {
+        if (v instanceof CallOptNode) return true;
+        else return false;
+      })
     );
 
     return execInfo(
@@ -360,6 +366,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
           else res = knowCallOptExec(env, fact as CallOptNode);
           break;
         }
+        //! 需要把后面改了，适应新版的放到env的做法
         case LiTexNodeType.DefNode:
         case LiTexNodeType.InferNode: {
           res = templateDeclExec(env, fact as TemplateNode);
@@ -424,9 +431,20 @@ export function knowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       node.optName + " has not declared"
     );
 
-  const res = fixFreeVarsAndCallHandlerFunc(env, node, _pushNewOpt, [node]);
+  let res = fixFreeVarsAndCallHandlerFunc(env, node, _pushNewOpt, [node]);
 
   if (_isNotResultTypeTrue(res)) return res;
+
+  res = fixFreeVarsAndCallHandlerFunc(
+    env,
+    node,
+    _pushNewOpt,
+    relatedTemplate.onlyIfExprs.filter((v) => {
+      if (v instanceof CallOptNode) return true;
+      else return false;
+    })
+  );
+
   return execInfo(ResultType.KnowTrue);
 }
 
@@ -539,7 +557,9 @@ const _pushNewOpt = (
   newParams: string[][],
   relatedTemplate: TemplateNode
 ) => {
-  return relatedTemplate.newFact(env, makeTemplateNodeFact(newParams));
+  env.newSymbolsFactsPair(newParams, relatedTemplate);
+  return execInfo(ResultType.True);
+  // return relatedTemplate.newFact(env, makeTemplateNodeFact(newParams));
 };
 
 const _checkOpt = (
