@@ -138,24 +138,32 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
   }
 
   //! Currently the requirements in the template are not considered
-  //! I notice that the current prove has wrong structure because it cannot prove xxx:yyy
+
   // bind the requirements in prove
 
   //! several if-thens: 1. callOpt vs callOpts 2. with * or with no *.
   for (let i = 0; i < relatedTemplate.requirements.length; i++) {
     const requirement = relatedTemplate.requirements[i];
     if (requirement instanceof CallOptNode) {
-      const result = findPositions(
+      //! I notice that the current prove has wrong structure because it cannot prove xxx:yyy, the reason why we use [relatedTemplate.freeVars] here is that one day it will become relatedTemplate.fullFreeVars (after fullFreeVars are introduced into proveNode)
+      const result = _findReqVarIndexInTemplate(
         requirement.optParams as string[][],
-        [relatedTemplate.freeVars] as string[][]
+        relatedTemplate.freeVars
       );
-      let fixed = requirement.optParams.map((e) =>
-        e.map((el) => {
-          const ij: [number, number][] | undefined = result.get(el);
-          if (!ij) return execInfo(ResultType.Error);
-          return node.freeVars[ij[0][1]];
-        })
-      ) as string[][];
+
+      // fixedParamForRequirement
+      let fixed: string[][] = [];
+      for (let i = 0; i < requirement.optParams.length; i++) {
+        fixed.push([]);
+        for (let j = 0; j < requirement.optParams[i].length; j++) {
+          fixed[i].push("");
+        }
+      }
+
+      for (let item of result) {
+        fixed[item.requirementIndex[0]][item.requirementIndex[1]] =
+          node.freeVars[item.templateParamsIndex];
+      }
 
       if (!_allStartWithAsterisk(fixed))
         env.newSymbolsFactsPair(
@@ -168,10 +176,17 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
         fixed = fixed.map(
           (e) => e.map((el) => (el.startsWith("*") ? el.slice(1) : el)) // no need to always use * as prefix
         );
-        env.symbolsFactsPairIsTrue(
-          fixed,
-          env.getDeclaredTemplate(requirement) as TemplateNode
-        );
+        if (
+          !env.symbolsFactsPairIsTrue(
+            fixed,
+            env.getDeclaredTemplate(requirement) as TemplateNode
+          )
+        ) {
+          return execInfo(
+            ResultType.ProveError,
+            `requirements of ${fixed} are not satisfied.`
+          );
+        }
       }
     }
   }
@@ -257,6 +272,31 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
         }
       }
     }
+  }
+
+  function _findReqVarIndexInTemplate(
+    requirementVars: string[][],
+    relatedSingleTemplateFreeVars: string[]
+  ): {
+    requirementIndex: [number, number];
+    templateParamsIndex: number;
+  }[] {
+    const mapping: {
+      requirementIndex: [number, number];
+      templateParamsIndex: number;
+    }[] = [];
+    for (let i = 0; i < requirementVars.length; i++) {
+      for (let j = 0; j < requirementVars[i].length; j++) {
+        for (let k = 0; k < relatedSingleTemplateFreeVars.length; k++) {
+          if (relatedSingleTemplateFreeVars[k] === requirementVars[i][j]) {
+            mapping.push({ requirementIndex: [i, j], templateParamsIndex: k });
+            break;
+          }
+        }
+      }
+    }
+
+    return mapping;
   }
 }
 
