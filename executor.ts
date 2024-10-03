@@ -688,33 +688,6 @@ export const _VarsAreNotDeclared = (fact: TemplateNodeFact) =>
     `Not all of referred symbols ${fact.params} are declared.`
   );
 
-function findPositions(
-  array1: string[][],
-  array2: string[][]
-): Map<string, [number, number][]> {
-  const positionMap = new Map<string, [number, number][]>();
-
-  for (let i = 0; i < array1.length; i++) {
-    for (let j = 0; j < array1[i].length; j++) {
-      const element = array1[i][j];
-
-      if (!positionMap.has(element)) {
-        positionMap.set(element, []);
-      }
-
-      for (let m = 0; m < array2.length; m++) {
-        for (let n = 0; n < array2[m].length; n++) {
-          if (array2[m][n] === element) {
-            positionMap.get(element)!.push([m, n]);
-          }
-        }
-      }
-    }
-  }
-
-  return positionMap;
-}
-
 function _allStartWithAsterisk(arr: string[][]): boolean {
   return arr.every((subArr) => subArr.every((str) => str.startsWith("*")));
 }

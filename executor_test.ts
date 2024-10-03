@@ -119,11 +119,11 @@ const codes: string[] = [
   // "know set3(#1);",
   // "def fun4(x,y: set(x), set(y)) { set(x);}",
   // "prove fun4(x,y) {set(x); set(y);}",
-  "def set2(x,y);",
-  "know set2(#x, #y);",
-  "def fun4(x, y: set2(x,y)) ",
-  "let x,y;",
-  "prove fun4(*x, *y) {}",
+  // "def set2(x,y);",
+  // "know set2(#x, #y);",
+  // "def fun4(x, y: set2(x,y)) ",
+  // "let x,y;",
+  // "prove fun4(*x, *y) {}",
   // "// refactor how facts are stored",
   // "def set(x);",
   // "let 1;",
@@ -134,6 +134,7 @@ const codes: string[] = [
   // "know inferF(1);",
   // "inferF(1);",
   // "set2(1);",
+  "def set(x) => {def set2(x) => {}}",
 ];
 
 function callOptsExecTest() {

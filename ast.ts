@@ -126,7 +126,7 @@ export abstract class TemplateNode extends LiTeXNode {
   }
 
   // If a node is DollarMarkNode or TemplateNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
-  initDeclaredTemplates(): ExecInfo {
+  initDeclaredTemplates(fathers: TemplateNode[] = []): ExecInfo {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
 
@@ -143,10 +143,12 @@ export abstract class TemplateNode extends LiTeXNode {
       }
     }
 
+    this.fathers = fathers;
+
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
       if (value instanceof TemplateNode) {
-        value.initDeclaredTemplates();
+        value.initDeclaredTemplates([...fathers, this]);
         // Here we overwrite the original declared functions.
         this.declaredTemplates.set(value.declOptName, value);
         this.onlyIfExprs.splice(i, 1);
