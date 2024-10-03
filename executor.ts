@@ -141,6 +141,7 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
   //! I notice that the current prove has wrong structure because it cannot prove xxx:yyy
   // bind the requirements in prove
 
+  //! several if-thens: 1. callOpt vs callOpts 2. with * or with no *.
   for (let i = 0; i < relatedTemplate.requirements.length; i++) {
     const requirement = relatedTemplate.requirements[i];
     if (requirement instanceof CallOptNode) {
@@ -148,17 +149,30 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
         requirement.optParams as string[][],
         [relatedTemplate.freeVars] as string[][]
       );
-      const fixed = requirement.optParams.map((e) =>
+      let fixed = requirement.optParams.map((e) =>
         e.map((el) => {
           const ij: [number, number][] | undefined = result.get(el);
           if (!ij) return execInfo(ResultType.Error);
-          return node.freeVars[ij[0][0]][ij[0][1]];
+          return node.freeVars[ij[0][1]];
         })
       ) as string[][];
-      env.newSymbolsFactsPair(
-        fixed,
-        env.getDeclaredTemplate(requirement) as TemplateNode
-      );
+
+      if (!_allStartWithAsterisk(fixed))
+        env.newSymbolsFactsPair(
+          fixed.map(
+            (e) => e.map((el) => (el.startsWith("*") ? el.slice(1) : el)) // no need to always use * as prefix
+          ),
+          env.getDeclaredTemplate(requirement) as TemplateNode
+        );
+      else {
+        fixed = fixed.map(
+          (e) => e.map((el) => (el.startsWith("*") ? el.slice(1) : el)) // no need to always use * as prefix
+        );
+        env.symbolsFactsPairIsTrue(
+          fixed,
+          env.getDeclaredTemplate(requirement) as TemplateNode
+        );
+      }
     }
   }
 
@@ -599,15 +613,6 @@ const _checkOpt = (
     : execInfo(ResultType.Unknown);
 };
 
-const _fixRequirements = (
-  env: LiTeXEnv,
-  newParams: string[][],
-  relatedTemplate: TemplateNode
-) => {
-  for (let requirement of relatedTemplate.requirements) {
-  }
-};
-
 export function _paramsInOptAreDeclared(
   env: LiTeXEnv,
   optParams: string[][] | string[]
@@ -668,4 +673,8 @@ function findPositions(
   }
 
   return positionMap;
+}
+
+function _allStartWithAsterisk(arr: string[][]): boolean {
+  return arr.every((subArr) => subArr.every((str) => str.startsWith("*")));
 }
