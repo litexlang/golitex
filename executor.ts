@@ -736,21 +736,10 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   if (!mapping) return execInfo(ResultType.KnowError);
   // let res = relatedTemplate.emit(env, mapping, );
 
-  let allRequirementsAreSatisfied: Boolean = true;
-  for (let requirement of relatedTemplate.requirements) {
-    if (requirement instanceof CallOptNode) {
-      const keys: string[][] = [...(requirement as CallOptNode).optParams].map(
-        (sArr) => sArr.map((s) => mapping.get(s) || "")
-      );
-      let calledT = env.getDeclaredTemplate(requirement as CallOptNode);
-      if (!calledT) return execInfo(ResultType.Error);
-      let res = env.symbolsFactsPairIsTrue(keys, calledT);
-      if (!res) {
-        allRequirementsAreSatisfied = false;
-        break;
-      }
-    }
-  }
+  let allRequirementsAreSatisfied = relatedTemplate.requirementsSatisfied(
+    env,
+    mapping
+  );
 
   if (allRequirementsAreSatisfied) {
     for (let onlyIf of relatedTemplate.onlyIfExprs) {

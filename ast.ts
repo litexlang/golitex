@@ -250,6 +250,25 @@ export abstract class TemplateNode extends LiTeXNode {
       );
     }
   }
+
+  requirementsSatisfied(env: LiTeXEnv, mapping: Map<string, string>) {
+    let allRequirementsAreSatisfied: Boolean = true;
+    for (let requirement of this.requirements) {
+      if (requirement instanceof CallOptNode) {
+        const keys: string[][] = [
+          ...(requirement as CallOptNode).optParams,
+        ].map((sArr) => sArr.map((s) => mapping.get(s) || ""));
+        let calledT = env.getDeclaredTemplate(requirement as CallOptNode);
+        if (!calledT) return execInfo(ResultType.Error);
+        let res = env.symbolsFactsPairIsTrue(keys, calledT);
+        if (!res) {
+          allRequirementsAreSatisfied = false;
+          break;
+        }
+      }
+    }
+    return allRequirementsAreSatisfied;
+  }
 }
 
 export class DefNode extends TemplateNode {
