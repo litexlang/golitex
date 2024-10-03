@@ -16,6 +16,7 @@ import {
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
+import { map } from "lodash";
 
 export enum ResultType {
   True, // not only used as True for callOptExec, but also as a generic type passed between subFunctions.
@@ -98,7 +99,8 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
     case LiTexNodeType.ExistNode:
       return templateDeclExec(env, node as TemplateNode);
     case LiTexNodeType.KnowNode:
-      return knowExec(env, node as KnowNode);
+      // return knowExec(env, node as KnowNode);
+      return yaKnowExec(env, node as KnowNode);
     case LiTexNodeType.CallOptsNode:
       return callOptsExec(env, node as CallOptsNode);
     case LiTexNodeType.LetNode:
@@ -428,6 +430,7 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   try {
     let facts: CanBeKnownNode[] = [];
     let isKnowEverything: Boolean = false;
+    let res: ExecInfo = { type: ResultType.Error, message: "" };
 
     if (node.type === LiTexNodeType.KnowNode) {
       facts = (node as KnowNode).facts;
@@ -435,8 +438,6 @@ function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     } else if (node.type === LiTexNodeType.LetNode) {
       facts = (node as LetNode).properties;
     }
-
-    let res: ExecInfo = { type: ResultType.Error, message: "" };
 
     for (const fact of facts) {
       switch (fact.type) {
@@ -691,3 +692,87 @@ export const _VarsAreNotDeclared = (fact: TemplateNodeFact) =>
 function _allStartWithAsterisk(arr: string[][]): boolean {
   return arr.every((subArr) => subArr.every((str) => str.startsWith("*")));
 }
+
+function yaKnowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
+  try {
+    let facts: CanBeKnownNode[] = [];
+    let isKnowEverything: Boolean = false;
+    let res: ExecInfo = { type: ResultType.Error, message: "" };
+
+    if (node.type === LiTexNodeType.KnowNode) {
+      facts = (node as KnowNode).facts;
+      isKnowEverything = (node as KnowNode).isKnowEverything;
+    } else if (node.type === LiTexNodeType.LetNode) {
+      facts = (node as LetNode).properties;
+    }
+
+    for (const fact of facts) {
+      res = yaKnowCallOptExec(env, fact as CallOptNode);
+      if (!execInfoIsTrue(res)) return res;
+    }
+
+    return execInfo(ResultType.KnowTrue);
+  } catch (error) {
+    catchRuntimeError(env, error, "know");
+    return execInfo(ResultType.KnowError);
+  }
+}
+
+function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+  let relatedTemplate = env.getDeclaredTemplate(node);
+
+  if (!relatedTemplate)
+    return execInfo(
+      ResultType.KnowUndeclared,
+      node.optName + " has not declared"
+    );
+
+  //! THE CLASSICAL WAY OF TRANSFORMING FREE VAR INTO FIXED AND EMIT
+  env.newSymbolsFactsPair(
+    node.optParams,
+    env.getDeclaredTemplate(node) as TemplateNode
+  );
+  let mapping = relatedTemplate.fix(node);
+  if (!mapping) return execInfo(ResultType.KnowError);
+  // let res = relatedTemplate.emit(env, mapping, );
+
+  let allRequirementsAreSatisfied: Boolean = true;
+  for (let requirement of relatedTemplate.requirements) {
+    if (requirement instanceof CallOptNode) {
+      const keys: string[][] = [...(requirement as CallOptNode).optParams].map(
+        (sArr) => sArr.map((s) => mapping.get(s) || "")
+      );
+      let calledT = env.getDeclaredTemplate(requirement as CallOptNode);
+      if (!calledT) return execInfo(ResultType.Error);
+      let res = env.symbolsFactsPairIsTrue(keys, calledT);
+      if (!res) {
+        allRequirementsAreSatisfied = false;
+        break;
+      }
+    }
+  }
+
+  if (allRequirementsAreSatisfied) {
+    for (let onlyIf of relatedTemplate.onlyIfExprs) {
+      if (onlyIf instanceof CallOptNode) {
+        let tmp = env.getDeclaredTemplate(onlyIf);
+        if (!tmp) return execInfo(ResultType.Error);
+        tmp.emit(env, mapping, node.optParams);
+      }
+    }
+  }
+
+  return execInfo(ResultType.KnowTrue);
+  // else return execInfo(ResultType.KnowError, res.message);
+}
+
+// export function emitByFixingFreeVars(
+//   env: LiTeXEnv,
+//   mapping: Map<string, string>,
+//   callOptParams: CallOptNode | string[][]
+// ) {
+//   if (callOptParams instanceof CallOptNode) {
+//     callOptParams = callOptParams.optParams;
+//   }
+
+// }

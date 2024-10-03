@@ -134,7 +134,11 @@ const codes: string[] = [
   // "know inferF(1);",
   // "inferF(1);",
   // "set2(1);",
-  "def set(x) => {def set2(x) => {}}",
+  // "def set(x) => {def set2(x) => {}}",
+  "def two(x,y);",
+  "def set(x) => {def set2(y) => {two(x,y);}}",
+  "know set(1):set2(2);",
+  "",
 ];
 
 function callOptsExecTest() {

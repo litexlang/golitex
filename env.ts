@@ -188,10 +188,10 @@ export class LiTeXEnv {
     }
   }
 
-  getFact(s: string): TemplateNodeFact[] | undefined {
-    const node = this.getDeclaredTemplate(s);
-    return node?.facts;
-  }
+  // getFact(s: string): TemplateNodeFact[] | undefined {
+  //   const node = this.getDeclaredTemplate(s);
+  //   return node?.facts;
+  // }
 
   printCallOptFacts() {
     console.log("-----facts-------\n");

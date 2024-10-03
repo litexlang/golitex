@@ -86,12 +86,13 @@ export abstract class TemplateNode extends LiTeXNode {
   declOptName: string;
   freeVars: string[];
   requirements: LiTeXNode[] = [];
-  onlyIfExprs: LiTeXNode[] = [];
+  onlyIfExprs: LiTeXNode[] = []; // After declaration, this becomes CallOpt[]
   declaredTemplates = new Map<string, TemplateNode>();
-  facts: TemplateNodeFact[] = [];
-  fathers: TemplateNode[] = [];
+  // facts: TemplateNodeFact[] = [];
+  private fathers: TemplateNode[] = [];
   // Fix all free variables in this template, no matter it's declared in fathers or itself
-  freeFixMap: Map<string, string> = new Map<string, string>();
+  // private freeFixMap: Map<string, string> = new Map<string, string>();
+  // private fixedFullParams: string[][] = [];
 
   constructor(
     declOptName: string,
@@ -186,11 +187,15 @@ export abstract class TemplateNode extends LiTeXNode {
 
   // Fix all free variables in this template, no matter it's declared in fathers or itself
   // callOptParams: the fullOpt that calls this template
-  fix(callOptParams: CallOptNode | string[][]): ExecInfo {
+  fix(
+    callOptParams: CallOptNode | string[][]
+  ): Map<string, string> | undefined {
     if (callOptParams instanceof CallOptNode) {
       callOptParams = callOptParams.optParams;
     }
     callOptParams = callOptParams as string[][];
+
+    const freeFixMap = new Map<string, string>();
 
     const relatedTemplates = [...this.fathers, this];
 
@@ -200,16 +205,16 @@ export abstract class TemplateNode extends LiTeXNode {
         relatedTemplates.map((e) => e.freeVars)
       )
     ) {
-      return execInfo(ResultType.Error, "given argument numbers are invalid.");
+      undefined;
     }
 
     for (let [i, template] of relatedTemplates.entries()) {
       template.freeVars.forEach((v, j: number) =>
-        this.freeFixMap.set(v, callOptParams[i][j])
+        freeFixMap.set(v, callOptParams[i][j])
       );
     }
 
-    return execInfo(ResultType.True);
+    return freeFixMap;
 
     function areArraysEqual(arr1: string[][], arr2: string[][]): boolean {
       if (arr1.length !== arr2.length) {
@@ -223,6 +228,26 @@ export abstract class TemplateNode extends LiTeXNode {
       }
 
       return true;
+    }
+  }
+
+  emit(
+    env: LiTeXEnv,
+    freeFixMap: Map<string, string>,
+    fathers: string[][] = []
+  ): ExecInfo {
+    try {
+      const keys = fathers.map((arr) => [...arr]);
+      keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || ""));
+
+      env.newSymbolsFactsPair(keys, this);
+
+      return execInfo(ResultType.True);
+    } catch (error) {
+      return execInfo(
+        ResultType.Error,
+        "error when emitting new fact into environment."
+      );
     }
   }
 }
