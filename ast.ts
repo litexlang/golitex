@@ -205,7 +205,7 @@ export abstract class TemplateNode extends LiTeXNode {
         relatedTemplates.map((e) => e.freeVars)
       )
     ) {
-      undefined;
+      return undefined;
     }
 
     for (let [i, template] of relatedTemplates.entries()) {
@@ -277,7 +277,7 @@ export abstract class TemplateNode extends LiTeXNode {
     }
   }
 
-  requirementsSatisfied(env: LiTeXEnv, mapping: Map<string, string>) {
+  requirementsSatisfied(env: LiTeXEnv, mapping: Map<string, string>): Boolean {
     let allRequirementsAreSatisfied: Boolean = true;
     for (let requirement of this.requirements) {
       if (requirement instanceof CallOptNode) {
@@ -285,7 +285,7 @@ export abstract class TemplateNode extends LiTeXNode {
           ...(requirement as CallOptNode).optParams,
         ].map((sArr) => sArr.map((s) => mapping.get(s) || ""));
         let calledT = env.getDeclaredTemplate(requirement as CallOptNode);
-        if (!calledT) return execInfo(ResultType.Error);
+        if (!calledT) return false;
         let res = env.symbolsFactsPairIsTrue(keys, calledT);
         if (!res) {
           allRequirementsAreSatisfied = false;

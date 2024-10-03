@@ -6,11 +6,8 @@ import {
   LiTeXNode,
   LiTexNodeType,
   LetNode,
-  FactNode,
   CanBeKnownNode,
   TemplateNode,
-  makeTemplateNodeFact,
-  DefNode,
   TemplateNodeFact,
   ProveNode,
 } from "./ast";
@@ -65,21 +62,10 @@ export function execInfoIsTrue(res: ExecInfo) {
   ].includes(res.type);
 }
 
-export function execInfo(t: ResultType, s: string = ""): ExecInfo {
+export const execInfo = (t: ResultType, s: string = "") => {
   return { type: t, message: s };
-}
-
+};
 export type ExecInfo = { type: ResultType; message: string };
-
-// function checkFixedOpt(env: LiTeXEnv, callOpt: CallOptNode): ExecInfo {
-//   const relatedTemplate = env.getDeclaredTemplate(callOpt);
-//   if (relatedTemplate) {
-//     const res = env.symbolsFactsPairIsTrue(callOpt.optParams, relatedTemplate);
-//     if (res) return execInfo(ResultType.True);
-//   }
-
-//   return execInfo(ResultType.Unknown);
-// }
 
 export function catchRuntimeError(env: LiTeXEnv, err: any, m: string): string {
   if (err instanceof Error) {
@@ -99,7 +85,6 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
     case LiTexNodeType.ExistNode:
       return templateDeclExec(env, node as TemplateNode);
     case LiTexNodeType.KnowNode:
-      // return knowExec(env, node as KnowNode);
       return yaKnowExec(env, node as KnowNode);
     case LiTexNodeType.CallOptsNode:
       return callOptsExec(env, node as CallOptsNode);
@@ -341,8 +326,10 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       return execInfo(ResultType.False, node.optName + " is not declared.");
 
     // check itself
-    // let res: ExecInfo = checkFixedOpt(env, node);
-    const isTrue = env.symbolsFactsPairIsTrue(node.optParams, relatedTemplate);
+    let isTrue: Boolean = env.symbolsFactsPairIsTrue(
+      node.optParams,
+      relatedTemplate
+    );
 
     if (!isTrue)
       return execInfo(
@@ -351,29 +338,40 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       );
 
     // check all requirements
-    let res = fixFreeVarsAndCallHandlerFunc(
-      env,
-      node,
-      _checkOpt,
-      relatedTemplate.requirements
-    );
-
-    if (_isNotResultTypeTrue(res))
+    const mapping = relatedTemplate.fix(node);
+    if (!mapping) return execInfo(ResultType.Error);
+    isTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+    if (!isTrue)
       return execInfo(
-        res.type,
+        ResultType.Unknown,
         `${node.optName} itself is true while its requirements are not satisfied.`
       );
 
+    // let res = fixFreeVarsAndCallHandlerFunc(
+    //   env,
+    //   node,
+    //   _checkOpt,
+    //   relatedTemplate.requirements
+    // );
+
+    // if (_isNotResultTypeTrue(res))
+    //   return execInfo(
+    //     res.type,
+    //     `${node.optName} itself is true while its requirements are not satisfied.`
+    //   );
+
     // emit
-    fixFreeVarsAndCallHandlerFunc(
-      env,
-      node,
-      _pushNewOpt,
-      relatedTemplate.onlyIfExprs.filter((v) => {
-        if (v instanceof CallOptNode) return true;
-        else return false;
-      })
-    );
+    relatedTemplate.emitOnlyIfs(env, mapping);
+
+    // fixFreeVarsAndCallHandlerFunc(
+    //   env,
+    //   node,
+    //   _pushNewOpt,
+    //   relatedTemplate.onlyIfExprs.filter((v) => {
+    //     if (v instanceof CallOptNode) return true;
+    //     else return false;
+    //   })
+    // );
 
     return execInfo(
       ResultType.DefTrue,
@@ -423,59 +421,6 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
   } catch (error) {
     catchRuntimeError(env, error, "template declaration");
     return execInfo(ResultType.DefError);
-  }
-}
-
-function knowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
-  try {
-    let facts: CanBeKnownNode[] = [];
-    let isKnowEverything: Boolean = false;
-    let res: ExecInfo = { type: ResultType.Error, message: "" };
-
-    if (node.type === LiTexNodeType.KnowNode) {
-      facts = (node as KnowNode).facts;
-      isKnowEverything = (node as KnowNode).isKnowEverything;
-    } else if (node.type === LiTexNodeType.LetNode) {
-      facts = (node as LetNode).properties;
-    }
-
-    for (const fact of facts) {
-      switch (fact.type) {
-        case LiTexNodeType.CallOptNode: {
-          if (isKnowEverything)
-            res = knowEverythingCallOptExec(env, fact as CallOptNode);
-          else res = knowCallOptExec(env, fact as CallOptNode);
-          break;
-        }
-        //! 需要把后面改了，适应新版的放到env的做法
-        case LiTexNodeType.DefNode:
-        case LiTexNodeType.InferNode: {
-          res = templateDeclExec(env, fact as TemplateNode);
-          if (isKnowEverything) {
-            res = knowEverythingCallOptExec(
-              env,
-              CallOptNode.create((fact as TemplateNode).declOptName, [
-                (fact as TemplateNode).freeVars,
-              ])
-            );
-          } else {
-            res = knowCallOptExec(
-              env,
-              CallOptNode.create((fact as TemplateNode).declOptName, [
-                (fact as TemplateNode).freeVars,
-              ])
-            );
-          }
-          break;
-        }
-      }
-      if (res.type !== ResultType.KnowTrue) return res;
-    }
-
-    return execInfo(ResultType.KnowTrue);
-  } catch (error) {
-    catchRuntimeError(env, error, "know");
-    return execInfo(ResultType.KnowError);
   }
 }
 
