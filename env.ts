@@ -20,7 +20,11 @@ export class LiTeXEnv {
     TemplateNode
   >();
   father: LiTeXEnv | undefined;
-  symbolsFactsPairs: { vars: string[][]; template: TemplateNode[] }[] = [];
+  symbolsFactsPairs: {
+    vars: string[][];
+    template: TemplateNode[];
+    requirements: CallOptNode[][];
+  }[] = [];
 
   constructor(father: LiTeXEnv | undefined = undefined) {
     this.father = father;
@@ -36,21 +40,66 @@ export class LiTeXEnv {
   }
 
   symbolsFactsPairIsTrue(key: string[][], template: TemplateNode): boolean {
-    const matchingPair = this.symbolsFactsPairs.find((pair) =>
-      isFact(pair.vars, key)
-    );
+    for (let sfPair of this.symbolsFactsPairs) {
+      if (!_isLiterallyFact(sfPair.vars, key)) {
+        continue;
+      } else {
+        for (let templatesThatSatisfySFPair of sfPair.template) {
+          // check whether we are manipulating the correct opt
+          if (templatesThatSatisfySFPair.declOptName !== template.declOptName)
+            continue;
 
-    if (matchingPair) {
-      let res = matchingPair.template.some(
-        (t) => t.declOptName === template.declOptName
-      );
-      if (res) return true;
+          // no extra requirements
+          if (sfPair.requirements.length === 0) {
+            return true;
+          }
+
+          // check extra requirements
+          // mapping: from free(those #xxx are "free") to fixed
+          let sfPairVarToFixVarMapping = new Map<string, string>();
+          sfPair.vars.forEach((e, i) =>
+            e.forEach((s, j) => sfPairVarToFixVarMapping.set(s, key[i][j]))
+          );
+
+          let allRequirementsSatisfied = true;
+          for (let rl of sfPair.requirements) {
+            for (let req of rl) {
+              // check whether each requirement is satisfied
+              const optName: string = req.optName; // req name
+              let fixedParams: string[][] = [];
+
+              // req.optParams are free. fix them. put them into fixedParams
+              for (let i = 0; i < req.optParams.length; i++) {
+                fixedParams.push([]);
+                for (let j = 0; j < req.optParams[i].length; j++) {
+                  let s = sfPairVarToFixVarMapping.get(req.optParams[i][j]);
+                  if (!s) return false;
+                  fixedParams[i].push(s as string);
+                }
+              }
+
+              // check fixed params
+              let tmp = this.getDeclaredTemplate(optName);
+              if (!tmp) return false;
+              let res = this.symbolsFactsPairIsTrue(fixedParams, tmp);
+              if (!res) {
+                allRequirementsSatisfied = false;
+                break;
+              }
+            }
+            if (!allRequirementsSatisfied) break;
+          }
+
+          if (allRequirementsSatisfied) return true;
+          else continue;
+        }
+      }
     }
 
     if (this.father) return this.father.symbolsFactsPairIsTrue(key, template);
     else return false;
 
-    function isFact(arr1: string[][], arr2: string[][]): boolean {
+    function _isLiterallyFact(arr1: string[][], arr2: string[][]): boolean {
       if (arr1.length !== arr2.length) return false;
 
       for (let i = 0; i < arr1.length; i++) {
@@ -83,7 +132,11 @@ export class LiTeXEnv {
   }
 
   // 在#时，这个函数有点问题,因为 #a, #b 会被当成不一样的东西，实际上他们是一样的
-  newSymbolsFactsPair(key: string[][], template: TemplateNode) {
+  newSymbolsFactsPair(
+    key: string[][],
+    template: TemplateNode,
+    requirements: CallOptNode[][] = []
+  ) {
     const existingPair = this.symbolsFactsPairs.find((pair) =>
       this.arraysEqual(pair.vars, key)
     );
@@ -94,6 +147,7 @@ export class LiTeXEnv {
       this.symbolsFactsPairs.push({
         vars: key,
         template: [template],
+        requirements: requirements,
       });
     }
   }

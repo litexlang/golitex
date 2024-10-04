@@ -724,7 +724,8 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   //! THE CLASSICAL WAY OF TRANSFORMING FREE VAR INTO FIXED AND EMIT
   env.newSymbolsFactsPair(
     node.optParams,
-    env.getDeclaredTemplate(node) as TemplateNode
+    env.getDeclaredTemplate(node) as TemplateNode,
+    node.requirements
   );
   let mapping = relatedTemplate.fix(node);
   if (!mapping) return execInfo(ResultType.KnowError);
@@ -735,6 +736,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     mapping
   );
 
+  //! If all the requirements of this template is satisfied, then facts are emitted.
   if (allRequirementsAreSatisfied) {
     for (let onlyIf of relatedTemplate.onlyIfExprs) {
       if (onlyIf instanceof CallOptNode) {
