@@ -822,16 +822,65 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
       let mapping = template.fix(fact);
       if (!mapping) return execInfo(ResultType.KnowError);
 
-      template.emitOnlyIfs(env, mapping);
+      // template.emitOnlyIfs(env, mapping);
       let noErr = template.emitRequirements(env, mapping);
       if (!noErr)
         return execInfo(ResultType.Error, "calling undefined operator.");
     }
   }
 
+  /* emit or check requirements of extra requirements in proveNode on vars. the code is very similar to emitting or checking requirements of template on vars. I guess they can be combined. */
+  for (let [index, curParams] of node.freeVars.entries()) {
+    if (node.requirements[index].length === 0) {
+      continue;
+    }
+
+    let currentRequirements = node.requirements[index];
+
+    for (let requirement of currentRequirements) {
+      // getName
+      let optName = requirement.optName;
+
+      // fixedParams
+      let params = requirement.optParams;
+      const allStartWithAsterisk = _allStartWithAsterisk(params);
+      params.map((e) =>
+        e.map((s) => {
+          s.startsWith("*") ? s.slice(1) : s;
+        })
+      );
+
+      if (allStartWithAsterisk) {
+        /* check requirements */
+        const res = callOptExec(env, CallOptNode.create(optName, params));
+        if (!execInfoIsTrue(res))
+          return execInfo(ResultType.Error, `${optName} is not true`);
+      } else {
+        /* emit requirements: copy some code from knowEverything */
+        const fact = CallOptNode.create(optName, params);
+
+        const template = env.getDeclaredTemplate(fact as CallOptNode);
+        if (!template)
+          throw Error(
+            `${(fact as CallOptNode).optName} has not been declared.`
+          );
+
+        let mapping = template.fix(fact);
+        if (!mapping) return execInfo(ResultType.KnowError);
+
+        // template.emitOnlyIfs(env, mapping);
+        // let noErr = template.emitRequirements(env, mapping);
+        env.newSymbolsFactsPair(params, template);
+        // if (!noErr)
+        //   return execInfo(ResultType.Error, "calling undefined operator.");
+      }
+    }
+  }
+
+  /* emit facts. check whether all onlyIfs in template are satisfied. */
+
   let res: ExecInfo = execInfo(ResultType.ProveError);
   let onlyIfsThatNeedsCheck = [...relatedTemplate.onlyIfExprs];
-
   for (let onlyIfCallOpts of node.onlyIfExprs) {
     if (onlyIfCallOpts instanceof CallOptsNode) {
       for (let onlyIf of (onlyIfCallOpts as CallOptsNode).nodes) {
@@ -841,7 +890,6 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
       processOnlyIfCallOpt(onlyIfCallOpts as CallOptNode);
     }
   }
-
   if (onlyIfsThatNeedsCheck.length === 0) return execInfo(ResultType.ProveTrue);
   else
     return execInfo(
