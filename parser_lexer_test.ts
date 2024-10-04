@@ -139,8 +139,8 @@ const codes: string[] = [
   // "let x: set(x), set2(x);",
   // "def fun(x) {set(x);}",
   // "know set(#a);",
-  // "prove fun(#x) { set(#x);}",
-  "know set(a: set(x)):set2(1,2,3):set3(x,y: set(x):set(t));",
+  "prove fun(#x):fun2(1,2: set(1), st2(1,2)) { set(#x);}",
+  // "know set(a: set(x)):set2(1,2,3):set3(x,y: set(x):set(t));",
 ];
 
 function testLexer() {

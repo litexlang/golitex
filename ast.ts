@@ -378,3 +378,24 @@ export class ProveNode extends LiTeXNode {
     this.onlyIfExprs = onlyIfExprs;
   }
 }
+
+export class YAProveNode extends LiTeXNode {
+  type = LiTexNodeType.ProofNode;
+  templateNames: string[];
+  freeVars: string[][];
+  requirements: CallOptNode[][];
+  onlyIfExprs: LiTeXNode[];
+
+  constructor(
+    templateNames: string[],
+    freeVars: string[][],
+    requirements: CallOptNode[][],
+    onlyIfExprs: LiTeXNode[]
+  ) {
+    super();
+    this.templateNames = templateNames;
+    this.freeVars = freeVars;
+    this.requirements = requirements;
+    this.onlyIfExprs = onlyIfExprs;
+  }
+}

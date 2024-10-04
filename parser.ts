@@ -12,6 +12,7 @@ import {
   TemplateNode,
   DollarMarkNode,
   ProveNode,
+  YAProveNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import {
@@ -95,8 +96,8 @@ const KeywordFunctionMap: {
     node.isKnowEverything = true;
     return node;
   },
-  prove: proveParse,
-  "&": proveParse,
+  prove: yaProveParse,
+  "&": yaProveParse,
 };
 
 export function LiTeXStmtsParse(
@@ -251,7 +252,7 @@ function nonExecutableBlockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
 function callOptParse(
   env: LiTeXEnv,
   tokens: string[],
-  calledByKnow: Boolean = false
+  withFacts: Boolean = false
 ): CallOptNode {
   try {
     const opts: [string, string[]][] = [];
@@ -260,7 +261,7 @@ function callOptParse(
     while (1) {
       const name = shiftVar(tokens) as string;
 
-      if (!calledByKnow) {
+      if (!withFacts) {
         const params: string[] = [];
 
         skip(tokens, "(");
@@ -448,6 +449,24 @@ function proveParse(env: LiTeXEnv, tokens: string[]): ProveNode {
       blockBrace
     );
 
+    return result;
+  } catch (error) {
+    handleParseError(tokens, env, "prove");
+    throw error;
+  }
+}
+
+function yaProveParse(env: LiTeXEnv, tokens: string[]): YAProveNode {
+  try {
+    skip(tokens, ProveKeywords);
+    const relatedOpt = callOptParse(env, tokens, true);
+    const blockBrace = nonExecutableBlockParse(env, tokens);
+    const result = new YAProveNode(
+      relatedOpt.optNameAsLst,
+      relatedOpt.optParams,
+      relatedOpt.requirements,
+      blockBrace
+    );
     return result;
   } catch (error) {
     handleParseError(tokens, env, "prove");
