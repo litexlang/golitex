@@ -137,9 +137,10 @@ const codes: string[] = [
   // "exist existenceOf(x| set(x))",
   // "have existenceOf(y);",
   // "let x: set(x), set2(x);",
-  "def fun(x) {set(x);}",
-  "know set(#a);",
-  "prove fun(#x) {C set(#x);}",
+  // "def fun(x) {set(x);}",
+  // "know set(#a);",
+  // "prove fun(#x) { set(#x);}",
+  "know set(a: set(x)):set2(1,2,3):set3(x,y: set(x):set(t));",
 ];
 
 function testLexer() {

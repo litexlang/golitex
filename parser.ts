@@ -159,7 +159,7 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
           knowNode.facts.push(node as TemplateNode);
           break;
         default:
-          node = factParse(env, tokens);
+          node = callOptParse(env, tokens, true);
           knowNode.facts.push(node as FactNode);
       }
 
@@ -174,6 +174,7 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
   }
 }
 
+// skips begin and end
 function freeVarsAndTheirFactsParse(
   env: LiTeXEnv,
   tokens: string[],
@@ -247,27 +248,41 @@ function nonExecutableBlockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
   }
 }
 
-function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
+function callOptParse(
+  env: LiTeXEnv,
+  tokens: string[],
+  calledByKnow: Boolean = false
+): CallOptNode {
   try {
     const opts: [string, string[]][] = [];
+    const requirements: CallOptNode[][] = [];
+
     while (1) {
       const name = shiftVar(tokens) as string;
-      const params: string[] = [];
-      skip(tokens, "(");
-      if (!isCurToken(")", tokens)) {
-        while (1) {
-          params.push(shiftVar(tokens));
-          if (isCurToken(",", tokens)) skip(tokens, ",");
-          else if (isCurToken(")", tokens)) {
-            skip(tokens, ")");
-            break;
-          } else throw Error("");
-        }
-      } else {
-        skip(tokens, ")");
-      }
 
-      opts.push([name, params]);
+      if (!calledByKnow) {
+        const params: string[] = [];
+
+        skip(tokens, "(");
+        if (!isCurToken(")", tokens)) {
+          while (1) {
+            params.push(shiftVar(tokens));
+            if (isCurToken(",", tokens)) skip(tokens, ",");
+            else if (isCurToken(")", tokens)) {
+              skip(tokens, ")");
+              break;
+            } else throw Error("");
+          }
+        } else {
+          skip(tokens, ")");
+        }
+
+        opts.push([name, params]);
+      } else {
+        const freeVarsAndFacts = freeVarsAndTheirFactsParse(env, tokens);
+        opts.push([name, freeVarsAndFacts.freeVars]);
+        requirements.push(freeVarsAndFacts.properties);
+      }
 
       if (isCurToken(":", tokens)) {
         skip(tokens, ":");
@@ -276,7 +291,7 @@ function callOptParse(env: LiTeXEnv, tokens: string[]): CallOptNode {
       }
     }
 
-    return new CallOptNode(opts);
+    return new CallOptNode(opts, requirements);
   } catch (error) {
     handleParseError(tokens, env, "call opt");
     throw error;
@@ -397,16 +412,16 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   }
 }
 
-function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
-  try {
-    const left = callOptParse(env, tokens);
+// function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
+//   try {
+//     const left = callOptParse(env, tokens);
 
-    return left;
-  } catch (error) {
-    handleParseError(tokens, env, "fact");
-    throw error;
-  }
-}
+//     return left;
+//   } catch (error) {
+//     handleParseError(tokens, env, "fact");
+//     throw error;
+//   }
+// }
 
 function letParse(env: LiTeXEnv, tokens: string[]): LetNode {
   try {
