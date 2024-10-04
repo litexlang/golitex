@@ -1,4 +1,3 @@
-import { on } from "events";
 import {
   CallOptNode,
   CallOptsNode,
@@ -10,10 +9,10 @@ import {
   TemplateNode,
   TemplateNodeFact,
   ProveNode,
+  YAProveNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
-import { map } from "lodash";
 
 export enum ResultType {
   True, // not only used as True for callOptExec, but also as a generic type passed between subFunctions.
@@ -91,7 +90,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
     case LiTexNodeType.LetNode:
       return letExec(env, node as LetNode);
     case LiTexNodeType.ProofNode:
-      return proveNode(env, node as ProveNode);
+      return yaProveExec(env, node as YAProveNode);
   }
 
   return execInfo(ResultType.Error, "Invalid Expression.");
@@ -124,9 +123,7 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
     }
   }
 
-  //! Currently the requirements in the template are not considered
-
-  // bind the requirements in prove
+  // emit the requirements in prove
 
   //! several if-thens: 1. callOpt vs callOpts 2. with * or with no *.
   for (let i = 0; i < relatedTemplate.requirements.length; i++) {
@@ -193,7 +190,7 @@ function proveNode(env: LiTeXEnv, node: ProveNode): ExecInfo {
 
     if (relatedTemplate) {
       if (!allStartWithStar) {
-        // bind the requirements in opt
+        // emit the requirements in opt
         env.newSymbolsFactsPair(
           (fact as CallOptNode).optParams.map(
             (e) => e.map((el) => (el.startsWith("*") ? el.slice(1) : el)) // no need to always use * as prefix
@@ -705,7 +702,8 @@ function yaKnowEverythingCallOptExec(
   if (!mapping) return execInfo(ResultType.KnowError);
 
   template.emitOnlyIfs(env, mapping);
-  template.emitRequirements(env, mapping);
+  let noErr = template.emitRequirements(env, mapping);
+  if (!noErr) return execInfo(ResultType.Error, "calling undefined operator.");
 
   if (_isNotResultTypeTrue(res)) return res;
 
@@ -761,3 +759,112 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 //   }
 
 // }
+
+function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
+  const relatedTemplate = env.getDeclaredTemplate(node.templateNames.join(":"));
+  if (!relatedTemplate)
+    return execInfo(
+      ResultType.ProveError,
+      `${node.templateNames.join(":")} is not declared.`
+    );
+  env = new LiTeXEnv(env);
+
+  // introduce vars into new env
+  for (let l of node.freeVars) {
+    for (let freeVar of l) {
+      if (freeVar.startsWith("*")) continue;
+      else if (freeVar.startsWith("#")) {
+        return execInfo(
+          ResultType.ProveError,
+          "parameters in requirement should not start with #"
+        );
+      } else {
+        let res = env.newVar(freeVar);
+        if (!res)
+          return execInfo(
+            ResultType.ProveError,
+            "two parameters have the same name."
+          );
+      }
+    }
+  }
+
+  // emit or check requirements of template on vars
+  for (let [index, curParams] of node.freeVars.entries()) {
+    // getName
+    let optName = node.templateNames[0];
+    for (let i = 1; i <= index; i++) {
+      optName += ":" + node.freeVars[i];
+    }
+
+    // fixedParams
+    let params = node.freeVars.slice(0, index + 1);
+    const allStartWithAsterisk = _allStartWithAsterisk(params);
+    params.map((e) =>
+      e.map((s) => {
+        s.startsWith("*") ? s.slice(1) : s;
+      })
+    );
+
+    if (allStartWithAsterisk) {
+      /* check requirements */
+      const res = callOptExec(env, CallOptNode.create(optName, params));
+      if (!execInfoIsTrue(res))
+        return execInfo(ResultType.Error, `${optName} is not true`);
+    } else {
+      /* emit requirements: copy some code from knowEverything */
+      const fact = CallOptNode.create(optName, params);
+
+      const template = env.getDeclaredTemplate(fact as CallOptNode);
+      if (!template)
+        throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
+
+      let mapping = template.fix(fact);
+      if (!mapping) return execInfo(ResultType.KnowError);
+
+      template.emitOnlyIfs(env, mapping);
+      let noErr = template.emitRequirements(env, mapping);
+      if (!noErr)
+        return execInfo(ResultType.Error, "calling undefined operator.");
+    }
+  }
+
+  let res: ExecInfo = execInfo(ResultType.ProveError);
+  let onlyIfsThatNeedsCheck = [...relatedTemplate.onlyIfExprs];
+
+  for (let onlyIfCallOpts of node.onlyIfExprs) {
+    if (onlyIfCallOpts instanceof CallOptsNode) {
+      for (let onlyIf of (onlyIfCallOpts as CallOptsNode).nodes) {
+        processOnlyIfCallOpt(onlyIf);
+      }
+    } else {
+      processOnlyIfCallOpt(onlyIfCallOpts as CallOptNode);
+    }
+  }
+
+  if (onlyIfsThatNeedsCheck.length === 0) return execInfo(ResultType.ProveTrue);
+  else
+    return execInfo(
+      ResultType.ProveError,
+      "not all onlyIfs in template are satisfied."
+    );
+
+  function processOnlyIfCallOpt(onlyIf: CallOptNode) {
+    res = nodeExec(env, onlyIf);
+    if (onlyIf instanceof CallOptNode) {
+      for (let i = 0; i < onlyIfsThatNeedsCheck.length; i++) {
+        let onlyIfThatNeedsCheck = onlyIfsThatNeedsCheck[i];
+        let isTrue = fixFreeVarsAndCallHandlerFunc(env, onlyIf, _checkOpt, [
+          onlyIfThatNeedsCheck,
+        ]);
+        if (execInfoIsTrue(isTrue)) {
+          fixFreeVarsAndCallHandlerFunc(env, onlyIf, _pushNewOpt, [
+            onlyIfThatNeedsCheck,
+          ]);
+          onlyIfsThatNeedsCheck.splice(i, 1);
+          i--;
+        }
+      }
+    }
+  }
+}

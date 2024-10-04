@@ -273,10 +273,13 @@ export abstract class TemplateNode extends LiTeXNode {
     fathers: string[][] = []
   ) {
     for (let requirement of this.requirements) {
-      (
-        env.getDeclaredTemplate(requirement as CallOptNode) as TemplateNode
-      ).emit(env, freeFixMap, fathers);
+      const relatedTemplate = env.getDeclaredTemplate(
+        requirement as CallOptNode
+      ) as TemplateNode;
+      if (!relatedTemplate) return false;
+      relatedTemplate.emit(env, freeFixMap, fathers);
     }
+    return true;
   }
 
   requirementsSatisfied(env: LiTeXEnv, mapping: Map<string, string>): Boolean {
