@@ -57,17 +57,16 @@ function isCurToken(s: string, tokens: string[]) {
   return s === tokens[0];
 }
 
-function catchParseError(tokens: string[], env: LiTeXEnv, err: any, m: string) {
-  if (err instanceof Error) {
-    if (err.message) handleParseError(tokens, env, err.message);
-  }
-  handleParseError(tokens, env, m);
-}
-
-function handleParseError(tokens: string[], env: LiTeXEnv, message: string) {
-  env.pushErrorMessage(
-    "parsing error: " + message + ' in "' + tokens.slice(0, 5).join(" ") + '"'
-  );
+function handleParseError(
+  tokens: string[],
+  env: LiTeXEnv,
+  m: string,
+  // start: string = "",
+  // index?: number,
+  addErrorDepth: Boolean = true
+) {
+  const errorIndex = tokens.length * -1;
+  env.pushNewError(`At ${tokens[0]}[${errorIndex}]: ${m}`, addErrorDepth);
 }
 
 const KeywordFunctionMap: {
@@ -141,7 +140,7 @@ export function LiTexStmtParse(
       return node;
     }
   } catch (error) {
-    handleParseError(tokens, env, "Stmt");
+    handleParseError(tokens, env, "Statement");
     throw error;
   }
 }
@@ -170,7 +169,7 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 
     return knowNode;
   } catch (error) {
-    catchParseError(tokens, env, error, "know");
+    handleParseError(tokens, env, "know");
     throw error;
   }
 }
@@ -220,7 +219,7 @@ function questionMarkParse(env: LiTeXEnv, tokens: string[]): DollarMarkNode {
     const template = templateParse(env, tokens);
     return new DollarMarkNode(template);
   } catch (error) {
-    catchParseError(tokens, env, error, DefBlockDeclareAndCall);
+    handleParseError(tokens, env, DefBlockDeclareAndCall);
     throw error;
   }
 }
@@ -254,6 +253,9 @@ function callOptParse(
   tokens: string[],
   withFacts: Boolean = false
 ): CallOptNode {
+  const startIndex = tokens.length * -1;
+  const start = tokens[0];
+
   try {
     const opts: [string, string[]][] = [];
     const requirements: CallOptNode[][] = [];
@@ -321,7 +323,7 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
 
     return new CallOptsNode(callOpts);
   } catch (error) {
-    catchParseError(tokens, env, error, "facts");
+    handleParseError(tokens, env, "facts");
     throw error;
   }
 }

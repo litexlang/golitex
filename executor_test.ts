@@ -154,9 +154,10 @@ function callOptsExecTest() {
     const tokens = scan(item);
     const result = LiTeXStmtsParse(env, tokens);
     if (result === null) {
-      for (let i = 0; i < env.errors.length; i++) {
-        console.log(env.errors[i]);
-        console.log("parse error: ___________");
+      for (let i = env.errorsWithDepth.length - 1; i >= 0; i--) {
+        let space = "";
+        env.errorsWithDepth[i].forEach((e) => (space += "\t"));
+        console.log(space + env.errorsWithDepth[i]);
       }
     } else {
       for (let i = 0; i < result.length; i++) {

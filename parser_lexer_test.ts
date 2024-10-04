@@ -139,7 +139,7 @@ const codes: string[] = [
   // "let x: set(x), set2(x);",
   // "def fun(x) {set(x);}",
   // "know set(#a);",
-  "prove fun(#x):fun2(1,2: set(1), st2(1,2)) { set(#x);}",
+  "prove fun(#x []):fun2(1,2: set(1), st2(1,2)) { set(#x);}",
   // "know set(a: set(x)):set2(1,2,3):set3(x,y: set(x):set(t));",
 ];
 
@@ -156,11 +156,14 @@ function testParser() {
     const tokens = scan(codes[i]);
     const result = LiTeXStmtsParse(env, tokens);
     if (result === null) {
-      console.log("_____________");
-      for (let i = 0; i < env.errors.length; i++) {
-        console.log(env.errors[i]);
+      const maxDepth = env.errorsWithDepth[env.errorsWithDepth.length - 1][1];
+      for (let i = env.errorsWithDepth.length - 1; i >= 0; i--) {
+        let space = "";
+        for (let j = 0; j < maxDepth - env.errorsWithDepth[i][1]; j++) {
+          space += "  ";
+        }
+        console.log(space + env.errorsWithDepth[i][0]);
       }
-      console.log("_____________");
     } else {
       for (let i = 0; i < result.length; i++) {
         console.log(result[i]);

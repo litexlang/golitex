@@ -14,6 +14,8 @@ import {
 
 export class LiTeXEnv {
   errors: string[] = [];
+  errorsWithDepth: [string, number][] = []; // [error message, depth]
+  private errorDepth = 0;
   declaredVars: string[] = [];
   declaredTemplates: Map<string, TemplateNode> = new Map<
     string,
@@ -191,6 +193,13 @@ export class LiTeXEnv {
 
   pushErrorMessage(s: string) {
     this.errors.push(s);
+  }
+
+  pushNewError(s: string, addDepth: Boolean = false) {
+    if (addDepth) {
+      this.errorDepth++;
+    }
+    this.errorsWithDepth.push([s, this.errorDepth]);
   }
 
   pushCallOptFact(fact: CallOptNode): ExecInfo {
