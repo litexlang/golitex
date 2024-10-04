@@ -789,95 +789,72 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
     }
   }
 
-  // emit or check requirements of template on vars
-  for (let [index, curParams] of node.freeVars.entries()) {
-    // getName
-    let optName = node.templateNames[0];
-    for (let i = 1; i <= index; i++) {
-      optName += ":" + node.freeVars[i];
-    }
-
-    // fixedParams
-    let params = node.freeVars.slice(0, index + 1);
+  function handleRequirements(
+    env: LiTeXEnv,
+    optName: string,
+    params: string[][],
+    isExtraRequirement = false
+  ) {
     const allStartWithAsterisk = _allStartWithAsterisk(params);
-    params.map((e) =>
-      e.map((s) => {
-        s.startsWith("*") ? s.slice(1) : s;
-      })
+    params = params.map((e) =>
+      e.map((s) => (s.startsWith("*") ? s.slice(1) : s))
     );
 
     if (allStartWithAsterisk) {
       /* check requirements */
       const res = callOptExec(env, CallOptNode.create(optName, params));
-      if (!execInfoIsTrue(res))
+      if (!execInfoIsTrue(res)) {
         return execInfo(ResultType.Error, `${optName} is not true`);
+      }
     } else {
-      /* emit requirements: copy some code from knowEverything */
+      /* emit requirements */
       const fact = CallOptNode.create(optName, params);
-
-      const template = env.getDeclaredTemplate(fact as CallOptNode);
-      if (!template)
-        throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
+      const template = env.getDeclaredTemplate(fact);
+      if (!template) {
+        throw Error(`${optName} has not been declared.`);
+      }
 
       let mapping = template.fix(fact);
       if (!mapping) return execInfo(ResultType.KnowError);
 
-      // template.emitOnlyIfs(env, mapping);
-      let noErr = template.emitRequirements(env, mapping);
-      if (!noErr)
-        return execInfo(ResultType.Error, "calling undefined operator.");
+      if (isExtraRequirement) {
+        env.newSymbolsFactsPair(params, template);
+      } else {
+        let noErr = template.emitRequirements(env, mapping);
+        if (!noErr) {
+          return execInfo(ResultType.Error, "calling undefined operator.");
+        }
+      }
     }
+
+    return null; // No error
   }
 
-  /* emit or check requirements of extra requirements in proveNode on vars. the code is very similar to emitting or checking requirements of template on vars. I guess they can be combined. */
+  // Emit and check requirements from template declaration and proveNode
   for (let [index, curParams] of node.freeVars.entries()) {
-    if (node.requirements[index].length === 0) {
-      continue;
+    // Handle template requirements
+    let optName = node.templateNames[0];
+    for (let i = 1; i <= index; i++) {
+      optName += ":" + node.freeVars[i];
     }
 
-    let currentRequirements = node.requirements[index];
+    let params = node.freeVars.slice(0, index + 1);
+    let result = handleRequirements(env, optName, params);
+    if (result) return result;
 
-    for (let requirement of currentRequirements) {
-      // getName
-      let optName = requirement.optName;
-
-      // fixedParams
-      let params = requirement.optParams;
-      const allStartWithAsterisk = _allStartWithAsterisk(params);
-      params.map((e) =>
-        e.map((s) => {
-          s.startsWith("*") ? s.slice(1) : s;
-        })
-      );
-
-      if (allStartWithAsterisk) {
-        /* check requirements */
-        const res = callOptExec(env, CallOptNode.create(optName, params));
-        if (!execInfoIsTrue(res))
-          return execInfo(ResultType.Error, `${optName} is not true`);
-      } else {
-        /* emit requirements: copy some code from knowEverything */
-        const fact = CallOptNode.create(optName, params);
-
-        const template = env.getDeclaredTemplate(fact as CallOptNode);
-        if (!template)
-          throw Error(
-            `${(fact as CallOptNode).optName} has not been declared.`
-          );
-
-        let mapping = template.fix(fact);
-        if (!mapping) return execInfo(ResultType.KnowError);
-
-        // template.emitOnlyIfs(env, mapping);
-        // let noErr = template.emitRequirements(env, mapping);
-        env.newSymbolsFactsPair(params, template);
-        // if (!noErr)
-        //   return execInfo(ResultType.Error, "calling undefined operator.");
+    // Handle extra requirements in proveNode
+    if (node.requirements[index].length > 0) {
+      for (let requirement of node.requirements[index]) {
+        result = handleRequirements(
+          env,
+          requirement.optName,
+          requirement.optParams,
+          true
+        );
+        if (result) return result;
       }
     }
   }
-
-  /* emit facts. check whether all onlyIfs in template are satisfied. */
 
   let res: ExecInfo = execInfo(ResultType.ProveError);
   let onlyIfsThatNeedsCheck = [...relatedTemplate.onlyIfExprs];
