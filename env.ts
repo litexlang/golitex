@@ -133,7 +133,6 @@ export class LiTeXEnv {
     return true;
   }
 
-  // 在#时，这个函数有点问题,因为 #a, #b 会被当成不一样的东西，实际上他们是一样的
   newSymbolsFactsPair(
     key: string[][],
     template: TemplateNode,

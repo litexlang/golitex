@@ -1,3 +1,4 @@
+import { template } from "lodash";
 import {
   CallOptNode,
   CallOptsNode,
@@ -767,6 +768,7 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
       ResultType.ProveError,
       `${node.templateNames.join(":")} is not declared.`
     );
+  const originalEnv = env;
   env = new LiTeXEnv(env);
 
   // introduce vars into new env
@@ -785,6 +787,138 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
             ResultType.ProveError,
             "two parameters have the same name."
           );
+      }
+    }
+  }
+
+  // Emit and check requirements from template declaration and proveNode
+  for (let [index, curParams] of node.freeVars.entries()) {
+    // Handle template requirements
+    let optName = node.templateNames[0];
+    for (let i = 1; i <= index; i++) {
+      optName += ":" + node.freeVars[i];
+    }
+
+    let params = node.freeVars.slice(0, index + 1);
+    let result = handleRequirements(env, optName, params);
+    if (result) return result;
+
+    // Handle extra requirements in proveNode
+    if (node.requirements[index].length > 0) {
+      for (let requirement of node.requirements[index]) {
+        result = handleRequirements(
+          env,
+          requirement.optName,
+          requirement.optParams,
+          true
+        );
+        if (result) return result;
+      }
+    }
+  }
+
+  let res: ExecInfo = execInfo(ResultType.ProveError);
+  let onlyIfsThatNeedsCheck = [...relatedTemplate.onlyIfExprs];
+  for (let onlyIfCallOpts of node.onlyIfExprs) {
+    if (onlyIfCallOpts instanceof CallOptsNode) {
+      for (let onlyIf of (onlyIfCallOpts as CallOptsNode).nodes) {
+        processOnlyIfCallOpt(onlyIf);
+      }
+    } else {
+      processOnlyIfCallOpt(onlyIfCallOpts as CallOptNode);
+    }
+  }
+  if (onlyIfsThatNeedsCheck.length === 0) {
+    /** If prove is true, then emit new fact. */
+
+    /** FixedVars */
+    const fixedVars = [];
+    for (let l of node.freeVars) {
+      const vl = [];
+      for (let v of l) {
+        if (v.startsWith("*")) vl.push(v.slice(1));
+        else vl.push("#" + v);
+      }
+      fixedVars.push(vl);
+    }
+
+    const TName = node.templateNames.join(":");
+    const relatedT = env.getDeclaredTemplate(TName);
+    if (!relatedT)
+      return execInfo(ResultType.Error, `${TName} has not declared.`);
+
+    /** Fix Prove requirements */
+    const requirements: CallOptNode[][] = [];
+    for (let l of node.requirements) {
+      const vl: CallOptNode[] = [];
+      for (let req of l as CallOptNode[]) {
+        /**  Fix freeVars in a single requirement */
+        const fixedFreeVarsArr: string[][] = [];
+        for (let freeVars of node.freeVars) {
+          const fixedFreeVars: string[] = [];
+          for (let s of freeVars) {
+            if (s.startsWith("*")) fixedFreeVars.push(s.slice(1));
+            else fixedFreeVars.push("#" + s);
+          }
+          fixedFreeVarsArr.push(fixedFreeVars);
+        }
+
+        vl.push(CallOptNode.create(req.optName, fixedFreeVarsArr));
+      }
+
+      requirements.push(vl);
+    }
+
+    /** Fix template requirements */
+    const mapping = relatedT.fix(fixedVars);
+    for (let [index, opt] of node.templateNames.entries()) {
+      let name = node.templateNames[0];
+      for (let i = 1; i < index; i++) name += ":" + node.templateNames[i];
+      const curT = env.getDeclaredTemplate(name);
+      if (!curT) return execInfo(ResultType.Error);
+
+      /** new requirement */
+      for (let req of curT?.requirements as CallOptNode[]) {
+        /** get name of current requirement */
+        const fixedFreeVarsArr: string[][] = [];
+        for (let freeVars of req.optParams) {
+          const fixedFreeVars: string[] = [];
+          for (let s of freeVars) {
+            fixedFreeVars.push(mapping?.get(s) as string);
+          }
+          fixedFreeVarsArr.push(fixedFreeVars);
+        }
+
+        requirements[index].push(
+          CallOptNode.create(req.optName, fixedFreeVarsArr)
+        );
+      }
+    }
+
+    originalEnv.newSymbolsFactsPair(fixedVars, relatedT, requirements);
+
+    return execInfo(ResultType.ProveTrue);
+  } else
+    return execInfo(
+      ResultType.ProveError,
+      "not all onlyIfs in template are satisfied."
+    );
+
+  function processOnlyIfCallOpt(onlyIf: CallOptNode) {
+    res = nodeExec(env, onlyIf);
+    if (onlyIf instanceof CallOptNode) {
+      for (let i = 0; i < onlyIfsThatNeedsCheck.length; i++) {
+        let onlyIfThatNeedsCheck = onlyIfsThatNeedsCheck[i];
+        let isTrue = fixFreeVarsAndCallHandlerFunc(env, onlyIf, _checkOpt, [
+          onlyIfThatNeedsCheck,
+        ]);
+        if (execInfoIsTrue(isTrue)) {
+          fixFreeVarsAndCallHandlerFunc(env, onlyIf, _pushNewOpt, [
+            onlyIfThatNeedsCheck,
+          ]);
+          onlyIfsThatNeedsCheck.splice(i, 1);
+          i--;
+        }
       }
     }
   }
@@ -828,68 +962,5 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
     }
 
     return null; // No error
-  }
-
-  // Emit and check requirements from template declaration and proveNode
-  for (let [index, curParams] of node.freeVars.entries()) {
-    // Handle template requirements
-    let optName = node.templateNames[0];
-    for (let i = 1; i <= index; i++) {
-      optName += ":" + node.freeVars[i];
-    }
-
-    let params = node.freeVars.slice(0, index + 1);
-    let result = handleRequirements(env, optName, params);
-    if (result) return result;
-
-    // Handle extra requirements in proveNode
-    if (node.requirements[index].length > 0) {
-      for (let requirement of node.requirements[index]) {
-        result = handleRequirements(
-          env,
-          requirement.optName,
-          requirement.optParams,
-          true
-        );
-        if (result) return result;
-      }
-    }
-  }
-
-  let res: ExecInfo = execInfo(ResultType.ProveError);
-  let onlyIfsThatNeedsCheck = [...relatedTemplate.onlyIfExprs];
-  for (let onlyIfCallOpts of node.onlyIfExprs) {
-    if (onlyIfCallOpts instanceof CallOptsNode) {
-      for (let onlyIf of (onlyIfCallOpts as CallOptsNode).nodes) {
-        processOnlyIfCallOpt(onlyIf);
-      }
-    } else {
-      processOnlyIfCallOpt(onlyIfCallOpts as CallOptNode);
-    }
-  }
-  if (onlyIfsThatNeedsCheck.length === 0) return execInfo(ResultType.ProveTrue);
-  else
-    return execInfo(
-      ResultType.ProveError,
-      "not all onlyIfs in template are satisfied."
-    );
-
-  function processOnlyIfCallOpt(onlyIf: CallOptNode) {
-    res = nodeExec(env, onlyIf);
-    if (onlyIf instanceof CallOptNode) {
-      for (let i = 0; i < onlyIfsThatNeedsCheck.length; i++) {
-        let onlyIfThatNeedsCheck = onlyIfsThatNeedsCheck[i];
-        let isTrue = fixFreeVarsAndCallHandlerFunc(env, onlyIf, _checkOpt, [
-          onlyIfThatNeedsCheck,
-        ]);
-        if (execInfoIsTrue(isTrue)) {
-          fixFreeVarsAndCallHandlerFunc(env, onlyIf, _pushNewOpt, [
-            onlyIfThatNeedsCheck,
-          ]);
-          onlyIfsThatNeedsCheck.splice(i, 1);
-          i--;
-        }
-      }
-    }
   }
 }
