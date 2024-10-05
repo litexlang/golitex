@@ -58,15 +58,15 @@ function isCurToken(s: string, tokens: string[]) {
 }
 
 function handleParseError(
-  tokens: string[],
+  // tokens: string[],
   env: LiTeXEnv,
   m: string,
-  // start: string = "",
-  // index?: number,
+  index: number,
+  start: string = "",
   addErrorDepth: Boolean = true
 ) {
-  const errorIndex = tokens.length * -1;
-  env.pushNewError(`At ${tokens[0]}[${errorIndex}]: ${m}`, addErrorDepth);
+  const errorIndex = index;
+  env.pushNewError(`At ${start}[${errorIndex * -1}]: ${m}`, addErrorDepth);
 }
 
 const KeywordFunctionMap: {
@@ -122,6 +122,9 @@ export function LiTexStmtParse(
   env: LiTeXEnv,
   tokens: string[]
 ): LiTeXNode | null {
+  const start = tokens[0];
+  const index = tokens.length;
+
   try {
     const func = KeywordFunctionMap[tokens[0]];
     const funcName = tokens[0];
@@ -140,12 +143,15 @@ export function LiTexStmtParse(
       return node;
     }
   } catch (error) {
-    handleParseError(tokens, env, "Statement");
+    handleParseError(env, "Stmt", index, start);
     throw error;
   }
 }
 
 function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
   try {
     const knowNode: KnowNode = new KnowNode();
 
@@ -169,7 +175,7 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 
     return knowNode;
   } catch (error) {
-    handleParseError(tokens, env, "know");
+    handleParseError(env, "know", index, start);
     throw error;
   }
 }
@@ -213,18 +219,24 @@ function freeVarsAndTheirFactsParse(
 }
 
 function questionMarkParse(env: LiTeXEnv, tokens: string[]): DollarMarkNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
   try {
     skip(tokens, DefBlockDeclareAndCall);
     tokens.unshift(":");
     const template = templateParse(env, tokens);
     return new DollarMarkNode(template);
   } catch (error) {
-    handleParseError(tokens, env, DefBlockDeclareAndCall);
+    handleParseError(env, "?", index, start);
     throw error;
   }
 }
 
 function nonExecutableBlockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
+  const start = tokens[0];
+  const index = tokens.length;
+
   try {
     const result: LiTeXNode[] = [];
     skip(tokens, "{"); // skip {
@@ -243,7 +255,7 @@ function nonExecutableBlockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
 
     return result;
   } catch (error) {
-    handleParseError(tokens, env, "infer: infer block parse");
+    handleParseError(env, "{}", index, start);
     throw error;
   }
 }
@@ -253,7 +265,7 @@ function callOptParse(
   tokens: string[],
   withFacts: Boolean = false
 ): CallOptNode {
-  const startIndex = tokens.length * -1;
+  const index = tokens.length;
   const start = tokens[0];
 
   try {
@@ -296,12 +308,15 @@ function callOptParse(
 
     return new CallOptNode(opts, requirements);
   } catch (error) {
-    handleParseError(tokens, env, "call opt");
+    handleParseError(env, "operator", index, start);
     throw error;
   }
 }
 
 function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
   try {
     const callOpts: CallOptNode[] = [];
 
@@ -323,12 +338,15 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
 
     return new CallOptsNode(callOpts);
   } catch (error) {
-    handleParseError(tokens, env, "facts");
+    handleParseError(env, "operators", index, start);
     throw error;
   }
 }
 
 function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
   try {
     const declName = skip(tokens, TemplateDeclarationKeywords) as string; // KnowTypeKeywords
     const declOptName = shiftVar(tokens);
@@ -409,7 +427,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
     // env.returnToSnapShot(snapShot);
     return result as TemplateNode;
   } catch (error) {
-    handleParseError(tokens, env, "def");
+    handleParseError(env, "declare template", index, start);
     // env.returnToSnapShot(snapShot);
     throw error;
   }
@@ -427,38 +445,21 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
 // }
 
 function letParse(env: LiTeXEnv, tokens: string[]): LetNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
   try {
     return new LetNode(freeVarsAndTheirFactsParse(env, tokens, "let", ";"));
   } catch (error) {
-    handleParseError(tokens, env, "let");
-    throw error;
-  }
-}
-
-function proveParse(env: LiTeXEnv, tokens: string[]): ProveNode {
-  try {
-    skip(tokens, ProveKeywords);
-    const templateName = shiftVar(tokens);
-
-    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
-      freeVarsAndTheirFactsParse(env, tokens);
-
-    const blockBrace = nonExecutableBlockParse(env, tokens);
-    const result = new ProveNode(
-      templateName,
-      freeVarsFact.freeVars,
-      freeVarsFact.properties,
-      blockBrace
-    );
-
-    return result;
-  } catch (error) {
-    handleParseError(tokens, env, "prove");
+    handleParseError(env, "let", index, start);
     throw error;
   }
 }
 
 function yaProveParse(env: LiTeXEnv, tokens: string[]): YAProveNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
   try {
     skip(tokens, ProveKeywords);
     const relatedOpt = callOptParse(env, tokens, true);
@@ -471,7 +472,7 @@ function yaProveParse(env: LiTeXEnv, tokens: string[]): YAProveNode {
     );
     return result;
   } catch (error) {
-    handleParseError(tokens, env, "prove");
+    handleParseError(env, "prove", index, start);
     throw error;
   }
 }
