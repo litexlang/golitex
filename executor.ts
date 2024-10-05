@@ -148,7 +148,11 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 
     const relatedTemplate = env.getDeclaredTemplate(node);
     if (!relatedTemplate)
-      return execInfo(ResultType.False, node.optName + " is not declared.");
+      return handleRuntimeError(
+        env,
+        ResultType.False,
+        node.optName + " is not declared."
+      );
 
     // check itself
     let isTrue: Boolean = env.symbolsFactsPairIsTrue(
@@ -157,7 +161,8 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     );
 
     if (!isTrue)
-      return execInfo(
+      return handleRuntimeError(
+        env,
         ResultType.Unknown,
         `${node.optName} itself is not satisfied.`
       );
