@@ -402,3 +402,14 @@ export class YAProveNode extends LiTeXNode {
     this.onlyIfExprs = onlyIfExprs;
   }
 }
+
+export class HaveNode extends LiTeXNode {
+  type = LiTexNodeType.HaveNode;
+  params: string[];
+  opt: CallOptNode;
+  constructor(params: string[], opt: CallOptNode) {
+    super();
+    this.params = params;
+    this.opt = opt;
+  }
+}

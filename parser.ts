@@ -13,6 +13,7 @@ import {
   DollarMarkNode,
   ProveNode,
   YAProveNode,
+  HaveNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import {
@@ -77,7 +78,7 @@ const KeywordFunctionMap: {
   },
   know: knowParse,
   "@": knowParse,
-  // have: haveParse,
+  have: haveParse,
   // not: notParse,
   // or: orParse,
   let: letParse,
@@ -479,6 +480,7 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
   const index = tokens.length;
 
   try {
+    /** Copy code from templateParse */
     skip(tokens, TemplateDeclarationKeywords) as string; // KnowTypeKeywords
     const declOptName = shiftVar(tokens);
 
@@ -498,6 +500,34 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
     return result;
   } catch (error) {
     handleParseError(env, "exist", index, start);
+    throw error;
+  }
+}
+
+function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, "have");
+    const params: string[] = [];
+    while (1) {
+      params.push(shiftVar(tokens));
+      if (isCurToken(",", tokens)) {
+        skip(tokens, ",");
+        continue;
+      } else if (isCurToken(":", tokens)) {
+        skip(tokens, ":");
+        break;
+      } else {
+        throw Error(`${tokens[0]} is supposed to be ',' or ':'`);
+      }
+    }
+
+    const opt = callOptParse(env, tokens, false);
+    return new HaveNode(params, opt);
+  } catch (error) {
+    handleParseError(env, "have", index, start);
     throw error;
   }
 }
