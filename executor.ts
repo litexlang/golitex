@@ -155,10 +155,7 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       );
 
     // check itself
-    let isTrue: Boolean = env.isSymsTplPairTrue(
-      node.optParams,
-      relatedTemplate
-    );
+    let isTrue: Boolean = env.isStoredFact(node.optParams, relatedTemplate);
 
     if (!isTrue)
       return handleRuntimeError(
@@ -358,7 +355,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       );
 
     //! THE CLASSICAL WAY OF TRANSFORMING FREE VAR INTO FIXED AND EMIT
-    env.newSymTplReq(
+    env.newStoredFact(
       node.optParams,
       env.getDeclaredTemplate(node) as TemplateNode,
       node.requirements
@@ -528,7 +525,7 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
         }
       }
 
-      originalEnv.newSymTplReq(fixedVars, relatedT, requirements);
+      originalEnv.newStoredFact(fixedVars, relatedT, requirements);
 
       return execInfo(ResultType.ProveTrue);
     } else
@@ -542,7 +539,7 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
       if (onlyIf instanceof CallOptNode) {
         for (let i = 0; i < onlyIfsThatNeedsCheck.length; i++) {
           let checkedOpt = onlyIfsThatNeedsCheck[i] as CallOptNode;
-          let isTrue = env.callOptIsTrue(checkedOpt);
+          let isTrue = env.isCallOptTrue(checkedOpt);
 
           if (isTrue) {
             env.newCallOptFact(checkedOpt);
@@ -582,7 +579,7 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
         if (!mapping) return execInfo(ResultType.KnowError);
 
         if (isExtraRequirement) {
-          env.newSymTplReq(params, template);
+          env.newStoredFact(params, template);
         } else {
           let noErr = template.emitRequirements(env, mapping);
           if (!noErr) {

@@ -13,6 +13,12 @@ import {
   ResultType,
 } from "./executor";
 
+export type StoredFact = {
+  vars: string[][];
+  template: TemplateNode[];
+  requirements: CallOptNode[][];
+};
+
 export class LiTeXEnv {
   errors: string[] = [];
   errorsWithDepth: [string, number][] = []; // [error message, depth]
@@ -23,11 +29,7 @@ export class LiTeXEnv {
     TemplateNode
   >();
   father: LiTeXEnv | undefined;
-  symbolsFactsPairs: {
-    vars: string[][];
-    template: TemplateNode[];
-    requirements: CallOptNode[][];
-  }[] = [];
+  symbolsFactsPairs: StoredFact[] = [];
 
   constructor(father: LiTeXEnv | undefined = undefined) {
     this.father = father;
@@ -42,17 +44,17 @@ export class LiTeXEnv {
     return true;
   }
 
-  callOptIsTrue(opt: CallOptNode): Boolean {
+  isCallOptTrue(opt: CallOptNode): Boolean {
     const relatedT = this.getDeclaredTemplate(opt);
     if (!relatedT) {
       handleRuntimeError(this, ResultType.Unknown);
       return false;
     } else {
-      return this.isSymsTplPairTrue(opt.optParams, relatedT);
+      return this.isStoredFact(opt.optParams, relatedT);
     }
   }
 
-  isSymsTplPairTrue(key: string[][], template: TemplateNode): boolean {
+  isStoredFact(key: string[][], template: TemplateNode): boolean {
     for (let sfPair of this.symbolsFactsPairs) {
       if (!_isLiterallyFact(sfPair.vars, key)) {
         continue;
@@ -94,7 +96,7 @@ export class LiTeXEnv {
               // check fixed params
               let tmp = this.getDeclaredTemplate(optName);
               if (!tmp) return false;
-              let res = this.isSymsTplPairTrue(fixedParams, tmp);
+              let res = this.isStoredFact(fixedParams, tmp);
               if (!res) {
                 allRequirementsSatisfied = false;
                 break;
@@ -109,7 +111,7 @@ export class LiTeXEnv {
       }
     }
 
-    if (this.father) return this.father.isSymsTplPairTrue(key, template);
+    if (this.father) return this.father.isStoredFact(key, template);
     else return false;
 
     function _isLiterallyFact(arr1: string[][], arr2: string[][]): boolean {
@@ -154,12 +156,12 @@ export class LiTeXEnv {
       );
       return false;
     } else {
-      this.newSymTplReq(opt.optParams, T);
+      this.newStoredFact(opt.optParams, T);
       return true;
     }
   }
 
-  newSymTplReq(
+  newStoredFact(
     key: string[][],
     template: TemplateNode,
     requirements: CallOptNode[][] = []

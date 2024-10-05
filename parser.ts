@@ -83,7 +83,7 @@ const KeywordFunctionMap: {
   let: letParse,
   def: templateParse,
   ":": templateParse,
-  exist: templateParse,
+  exist: existParse,
   "?": templateParse,
   know_everything: (env: LiTeXEnv, tokens: string[]) => {
     const node = knowParse(env, tokens);
@@ -416,10 +416,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
         break;
 
       default:
-        if (ExistKeywords.includes(declName))
-          result = new ExistNode(declOptName, freeVarsFact.freeVars, []);
-        // def () {} is syntax sugar for def () =>
-        else result = new DefNode(declOptName, freeVarsFact.freeVars, []);
+        result = new DefNode(declOptName, freeVarsFact.freeVars, []);
         (result as TemplateNode).requirements = freeVarsFact.properties;
         break;
     }
@@ -473,6 +470,34 @@ function yaProveParse(env: LiTeXEnv, tokens: string[]): YAProveNode {
     return result;
   } catch (error) {
     handleParseError(env, "prove", index, start);
+    throw error;
+  }
+}
+
+function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, TemplateDeclarationKeywords) as string; // KnowTypeKeywords
+    const declOptName = shiftVar(tokens);
+
+    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
+      freeVarsAndTheirFactsParse(env, tokens);
+
+    let result: ExistNode;
+
+    const blockBrace = nonExecutableBlockParse(env, tokens);
+    result = new ExistNode(
+      declOptName,
+      freeVarsFact.freeVars,
+      freeVarsFact.properties
+    );
+    (result as ExistNode).onlyIfExprs = blockBrace;
+
+    return result;
+  } catch (error) {
+    handleParseError(env, "exist", index, start);
     throw error;
   }
 }
