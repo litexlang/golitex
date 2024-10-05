@@ -1,3 +1,4 @@
+import { map } from "lodash";
 import {
   CallOptNode,
   CallOptsNode,
@@ -99,6 +100,8 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
         return letExec(env, node as LetNode);
       case LiTexNodeType.ProofNode:
         return yaProveExec(env, node as YAProveNode);
+      case LiTexNodeType.HaveNode:
+        return haveExec(env, node as HaveNode);
     }
     return execInfo(ResultType.Error, "Stmt");
   } catch (error) {
@@ -601,11 +604,70 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
   }
 }
 
-// function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
-//   try {
-//     const relatedExistName = node.opt.optName
+function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
+  try {
+    /** If a variable is not declared, then declare it. If declared, bind new properties to it  */
+    const notDeclared = node.params.filter((v) => env.declaredVars.includes(v));
+    if (!notDeclared) {
+      env.declareNewVar(notDeclared);
+    }
 
-//   } catch (error) {
-//     return handleRuntimeError(env, ResultType.HaveError);
-//   }
-// }
+    const relatedExist = env.getDeclaredTemplate(node.opt);
+    if (!relatedExist)
+      return handleRuntimeError(
+        env,
+        ResultType.HaveError,
+        "exist not declared"
+      );
+
+    const mapping = relatedExist?.fix(node.opt);
+    if (!mapping)
+      return handleRuntimeError(
+        env,
+        ResultType.HaveError,
+        "calling undeclared symbol."
+      );
+
+    for (let req of relatedExist.requirements as CallOptNode[]) {
+      const fixedArrArr = _fixFrees(mapping, req.optParams);
+      if (!_isStringArrayArray(fixedArrArr))
+        return handleRuntimeError(env, ResultType.HaveError);
+      env.newCallOptFact(CallOptNode.create(req.optName, fixedArrArr));
+    }
+
+    return execInfo(ResultType.HaveTrue);
+  } catch (error) {
+    return handleRuntimeError(env, ResultType.HaveError);
+  }
+}
+
+function _fixFrees(
+  mapping: Map<string, string>,
+  freeArrArr: string[][]
+): string[][] | undefined {
+  const fixedArrArr: string[][] = [];
+  for (let freeArr of freeArrArr) {
+    const arr: string[] = [];
+    for (let s of freeArr) {
+      const fixedS = mapping.get(s);
+      if (!fixedS) return undefined;
+      arr.push(fixedS);
+    }
+    fixedArrArr.push(arr);
+  }
+  return fixedArrArr;
+}
+
+function _isStringArrayArray(arr: any): arr is (string | undefined)[][] {
+  return (
+    Array.isArray(arr) &&
+    arr.every(
+      (innerArr) =>
+        innerArr === undefined ||
+        (Array.isArray(innerArr) &&
+          innerArr.every(
+            (item) => typeof item === "string" || item === undefined
+          ))
+    )
+  );
+}
