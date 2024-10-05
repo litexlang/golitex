@@ -111,7 +111,7 @@ export abstract class TemplateNode extends LiTeXNode {
     if (!_paramsInOptAreDeclared(env, fact.params))
       return _VarsAreNotDeclared(fact);
     else {
-      env.newSymbolsFactsPair(fact.params, this);
+      env.newSymTplReq(fact.params, this);
       // this.facts.push(fact);
     }
     return execInfo(ResultType.True);
@@ -242,7 +242,7 @@ export abstract class TemplateNode extends LiTeXNode {
       const keys = fathers.map((arr) => [...arr]);
       keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || ""));
 
-      env.newSymbolsFactsPair(keys, this);
+      env.newSymTplReq(keys, this);
 
       return execInfo(ResultType.True);
     } catch (error) {
@@ -291,7 +291,7 @@ export abstract class TemplateNode extends LiTeXNode {
         ].map((sArr) => sArr.map((s) => mapping.get(s) || ""));
         let calledT = env.getDeclaredTemplate(requirement as CallOptNode);
         if (!calledT) return false;
-        let res = env.symbolsFactsPairIsTrue(keys, calledT);
+        let res = env.isSymsTplPairTrue(keys, calledT);
         if (!res) {
           allRequirementsAreSatisfied = false;
           break;

@@ -9,6 +9,7 @@ import {
   _paramsInOptAreDeclared,
   ExecInfo,
   execInfo,
+  handleRuntimeError,
   ResultType,
 } from "./executor";
 
@@ -41,7 +42,17 @@ export class LiTeXEnv {
     return true;
   }
 
-  symbolsFactsPairIsTrue(key: string[][], template: TemplateNode): boolean {
+  callOptIsTrue(opt: CallOptNode): Boolean {
+    const relatedT = this.getDeclaredTemplate(opt);
+    if (!relatedT) {
+      handleRuntimeError(this, ResultType.Unknown);
+      return false;
+    } else {
+      return this.isSymsTplPairTrue(opt.optParams, relatedT);
+    }
+  }
+
+  isSymsTplPairTrue(key: string[][], template: TemplateNode): boolean {
     for (let sfPair of this.symbolsFactsPairs) {
       if (!_isLiterallyFact(sfPair.vars, key)) {
         continue;
@@ -83,7 +94,7 @@ export class LiTeXEnv {
               // check fixed params
               let tmp = this.getDeclaredTemplate(optName);
               if (!tmp) return false;
-              let res = this.symbolsFactsPairIsTrue(fixedParams, tmp);
+              let res = this.isSymsTplPairTrue(fixedParams, tmp);
               if (!res) {
                 allRequirementsSatisfied = false;
                 break;
@@ -98,7 +109,7 @@ export class LiTeXEnv {
       }
     }
 
-    if (this.father) return this.father.symbolsFactsPairIsTrue(key, template);
+    if (this.father) return this.father.isSymsTplPairTrue(key, template);
     else return false;
 
     function _isLiterallyFact(arr1: string[][], arr2: string[][]): boolean {
@@ -133,7 +144,22 @@ export class LiTeXEnv {
     return true;
   }
 
-  newSymbolsFactsPair(
+  newCallOptFact(opt: CallOptNode): Boolean {
+    const T = this.getDeclaredTemplate(opt);
+    if (!T) {
+      handleRuntimeError(
+        this,
+        ResultType.Error,
+        `${opt.optName} is not declared`
+      );
+      return false;
+    } else {
+      this.newSymTplReq(opt.optParams, T);
+      return true;
+    }
+  }
+
+  newSymTplReq(
     key: string[][],
     template: TemplateNode,
     requirements: CallOptNode[][] = []

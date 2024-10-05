@@ -155,7 +155,7 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       );
 
     // check itself
-    let isTrue: Boolean = env.symbolsFactsPairIsTrue(
+    let isTrue: Boolean = env.isSymsTplPairTrue(
       node.optParams,
       relatedTemplate
     );
@@ -358,7 +358,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       );
 
     //! THE CLASSICAL WAY OF TRANSFORMING FREE VAR INTO FIXED AND EMIT
-    env.newSymbolsFactsPair(
+    env.newSymTplReq(
       node.optParams,
       env.getDeclaredTemplate(node) as TemplateNode,
       node.requirements
@@ -528,7 +528,7 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
         }
       }
 
-      originalEnv.newSymbolsFactsPair(fixedVars, relatedT, requirements);
+      originalEnv.newSymTplReq(fixedVars, relatedT, requirements);
 
       return execInfo(ResultType.ProveTrue);
     } else
@@ -542,14 +542,10 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
       if (onlyIf instanceof CallOptNode) {
         for (let i = 0; i < onlyIfsThatNeedsCheck.length; i++) {
           let checkedOpt = onlyIfsThatNeedsCheck[i] as CallOptNode;
-          let relatedT = env.getDeclaredTemplate(checkedOpt) as TemplateNode;
-          let isTrue = env.symbolsFactsPairIsTrue(
-            checkedOpt.optParams,
-            relatedT
-          );
+          let isTrue = env.callOptIsTrue(checkedOpt);
 
           if (isTrue) {
-            env.newSymbolsFactsPair(checkedOpt.optParams, relatedT);
+            env.newCallOptFact(checkedOpt);
             onlyIfsThatNeedsCheck.splice(i, 1);
             i--;
           }
@@ -586,7 +582,7 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
         if (!mapping) return execInfo(ResultType.KnowError);
 
         if (isExtraRequirement) {
-          env.newSymbolsFactsPair(params, template);
+          env.newSymTplReq(params, template);
         } else {
           let noErr = template.emitRequirements(env, mapping);
           if (!noErr) {
