@@ -481,7 +481,8 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
 
   try {
     /** Copy code from templateParse */
-    skip(tokens, TemplateDeclarationKeywords) as string; // KnowTypeKeywords
+    skip(tokens, "exist") as string; // KnowTypeKeywords
+
     const declOptName = shiftVar(tokens);
 
     const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
@@ -489,13 +490,11 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
 
     let result: ExistNode;
 
-    const blockBrace = nonExecutableBlockParse(env, tokens);
     result = new ExistNode(
       declOptName,
       freeVarsFact.freeVars,
       freeVarsFact.properties
     );
-    (result as ExistNode).onlyIfExprs = blockBrace;
 
     return result;
   } catch (error) {
@@ -510,6 +509,7 @@ function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
 
   try {
     skip(tokens, "have");
+
     const params: string[] = [];
     while (1) {
       params.push(shiftVar(tokens));

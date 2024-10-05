@@ -150,7 +150,8 @@ const codes: string[] = [
   // "def set(x) ;",
   // "let x: set(x);",
   "def set(x);",
-  "exist func(x: set(x)) {whatIfSet(x);}",
+  "exist func(x: set(x))",
+  "have x: func(x);",
 ];
 
 function callOptsExecTest() {

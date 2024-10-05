@@ -141,6 +141,7 @@ const codes: string[] = [
   // "know set(#a);",
   // "prove fun(#x []):fun2(1,2: set(1), st2(1,2)) { set(#x);}",
   // "know set(a: set(x)):set2(1,2,3):set3(x,y: set(x):set(t));",
+  "exist func(x: set(x));",
   "have x: fun(x);",
 ];
 

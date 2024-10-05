@@ -9,6 +9,8 @@ import {
   TemplateNode,
   TemplateNodeFact,
   YAProveNode,
+  HaveNode,
+  ExistNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
@@ -31,6 +33,8 @@ export enum ResultType {
   ProveTrue,
   KnowEverythingTrue,
   KnowEverythingError,
+  ExistError,
+  ExistTrue,
 }
 
 export const resultTypeMap: { [key in ResultType]: string } = {
@@ -51,6 +55,8 @@ export const resultTypeMap: { [key in ResultType]: string } = {
   [ResultType.ProveTrue]: "prove: true",
   [ResultType.KnowEverythingError]: "know_everything: error",
   [ResultType.KnowEverythingTrue]: "know_everything: true",
+  [ResultType.ExistError]: "exist: error",
+  [ResultType.ExistTrue]: "exist: true",
 };
 
 export function execInfoIsTrue(res: ExecInfo) {
@@ -594,3 +600,12 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
     return handleRuntimeError(env, ResultType.ProveError, "");
   }
 }
+
+// function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
+//   try {
+//     const relatedExistName = node.opt.optName
+
+//   } catch (error) {
+//     return handleRuntimeError(env, ResultType.HaveError);
+//   }
+// }
