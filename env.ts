@@ -284,4 +284,12 @@ export class LiTeXEnv {
       console.log("");
     }
   }
+
+  printErrorsWithDepth() {
+    for (let i = this.errorsWithDepth.length - 1; i >= 0; i--) {
+      let space = "";
+      this.errorsWithDepth[i].forEach((e) => (space += "\t"));
+      console.log(space + this.errorsWithDepth[i]);
+    }
+  }
 }

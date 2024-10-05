@@ -118,7 +118,8 @@ const codes: string[] = [
   // "def set3(x) => set2(x);",
   // "know set3(#1);",
   "def fun4(x,y: set(x), set(y)) { set(x);}",
-  "prove fun4(x,y) {set(x); set(y);}",
+  "let x,y: set(x), set(y);",
+  "prove fun4(*x,*y) {set(x); set(y);}",
   // "def set2(x,y);",
   // "know set2(#x, #y);",
   // "def set2(x,y) ;",
@@ -146,6 +147,8 @@ const codes: string[] = [
   // "know set(#x: set2(#x));",
   // "let 1: set2(1);",
   // "set(1);",
+  // "def set(x) ;",
+  // "let x: set(x);",
 ];
 
 function callOptsExecTest() {
@@ -154,11 +157,7 @@ function callOptsExecTest() {
     const tokens = scan(item);
     const result = LiTeXStmtsParse(env, tokens);
     if (result === null) {
-      for (let i = env.errorsWithDepth.length - 1; i >= 0; i--) {
-        let space = "";
-        env.errorsWithDepth[i].forEach((e) => (space += "\t"));
-        console.log(space + env.errorsWithDepth[i]);
-      }
+      env.printErrorsWithDepth();
     } else {
       for (let i = 0; i < result.length; i++) {
         const res: ExecInfo = nodeExec(env, result[i]);
@@ -168,8 +167,12 @@ function callOptsExecTest() {
     }
   }
   console.log("");
-  env.printCallOptFacts();
-  env.printDeclaredTemplates();
+  if (env.errorsWithDepth.length === 0) {
+    env.printCallOptFacts();
+    env.printDeclaredTemplates();
+  } else {
+    env.printErrorsWithDepth();
+  }
 }
 
 callOptsExecTest();
