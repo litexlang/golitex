@@ -1,12 +1,7 @@
-import {
-  CallOptNode,
-  TemplateNode,
-  makeTemplateNodeFact,
-  TemplateNodeFact,
-} from "./ast";
+import { CallOptNode, TemplateNode, makeTemplateNodeFact } from "./ast";
 import { OptsConnectionSymbol } from "./common";
 import {
-  _paramsInOptAreDeclared,
+  // _paramsInOptAreDeclared,
   ExecInfo,
   execInfo,
   handleRuntimeError,
@@ -229,13 +224,13 @@ export class LiTeXEnv {
     this.errorsWithDepth.push([s, this.errorDepth]);
   }
 
-  pushCallOptFact(fact: CallOptNode): ExecInfo {
-    const declaredTemplate = this.getDeclaredTemplate(fact.optName);
-    if (!declaredTemplate)
-      return execInfo(ResultType.Error, fact.optName + "has not been declared");
-    declaredTemplate.newFact(this, makeTemplateNodeFact(fact.optParams));
-    return execInfo(ResultType.KnowTrue);
-  }
+  // pushCallOptFact(fact: CallOptNode): ExecInfo {
+  //   const declaredTemplate = this.getDeclaredTemplate(fact.optName);
+  //   if (!declaredTemplate)
+  //     return execInfo(ResultType.Error, fact.optName + "has not been declared");
+  //   declaredTemplate.newFact(this, makeTemplateNodeFact(fact.optParams));
+  //   return execInfo(ResultType.KnowTrue);
+  // }
 
   // Main function of the whole project
   // input full name of an opt, output the template of the lowest hierarchy

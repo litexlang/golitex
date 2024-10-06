@@ -1,4 +1,3 @@
-import { map } from "lodash";
 import {
   CallOptNode,
   CallOptsNode,
@@ -11,7 +10,6 @@ import {
   TemplateNodeFact,
   YAProveNode,
   HaveNode,
-  ExistNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXEnv } from "./env";
@@ -63,11 +61,13 @@ export const resultTypeMap: { [key in ResultType]: string } = {
 export function execInfoIsTrue(res: ExecInfo) {
   return [
     ResultType.True,
-    ResultType.KnowError,
+    ResultType.KnowTrue,
     ResultType.DefTrue,
-    ResultType.HaveError,
-    ResultType.LetError,
-    ResultType.ProveError,
+    ResultType.HaveTrue,
+    ResultType.LetTrue,
+    ResultType.ProveTrue,
+    ResultType.KnowEverythingTrue,
+    ResultType.ExistTrue,
   ].includes(res.type);
 }
 
@@ -175,10 +175,11 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 
     // check all requirements
     const mapping = relatedTemplate.fix(node);
-    if (!mapping) return execInfo(ResultType.Error);
+    if (!mapping) return handleRuntimeError(env, ResultType.Error);
     isTrue = relatedTemplate.requirementsSatisfied(env, mapping);
     if (!isTrue)
-      return execInfo(
+      return handleRuntimeError(
+        env,
         ResultType.Unknown,
         `${node.optName} itself is true while its requirements are not satisfied.`
       );
@@ -193,30 +194,6 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   } catch (error) {
     return handleRuntimeError(env, ResultType.Error, "call operator");
   }
-}
-
-export function _checkParamsUsingTwoArrayArrays(
-  arr1: string[][],
-  arr2: string[][]
-): boolean {
-  if (arr1.length !== arr2.length) {
-    return false;
-  }
-
-  for (let i = 0; i < arr1.length; i++) {
-    if (arr1[i].length !== arr2[i].length) {
-      return false;
-    }
-
-    for (let j = 0; j < arr1[i].length; j++) {
-      // If arr1[i][j] starts with '#', consider it a match regardless of arr2[i][j]
-      if (!arr1[i][j].startsWith("#") && arr1[i][j] !== arr2[i][j]) {
-        return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
@@ -235,47 +212,44 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
   }
 }
 
-export function _paramsInOptAreDeclared(
-  env: LiTeXEnv,
-  optParams: string[][] | string[]
-): boolean {
-  if (optParams.length === 0) return true;
+// export function _paramsInOptAreDeclared(
+//   env: LiTeXEnv,
+//   optParams: string[][] | string[]
+// ): boolean {
+//   if (optParams.length === 0) return true;
 
-  // Check if optParams is a 2D array
-  const is2DArray = Array.isArray(optParams[0]);
+//   // Check if optParams is a 2D array
+//   const is2DArray = Array.isArray(optParams[0]);
 
-  if (is2DArray) {
-    // Handle 2D array case
-    for (const paramGroup of optParams as string[][]) {
-      if (env.varsAreNotDeclared(paramGroup)) {
-        return false;
-      }
-    }
-  } else {
-    // Handle 1D array case
-    return !env.varsAreNotDeclared(optParams as string[]);
-  }
+//   if (is2DArray) {
+//     // Handle 2D array case
+//     for (const paramGroup of optParams as string[][]) {
+//       if (env.varsAreNotDeclared(paramGroup)) {
+//         return false;
+//       }
+//     }
+//   } else {
+//     // Handle 1D array case
+//     return !env.varsAreNotDeclared(optParams as string[]);
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
-function _isNotResultTypeTrue(res: ExecInfo): Boolean {
-  if (res.type === ResultType.True) return false;
-  else return true;
-}
+// function _isNotResultTypeTrue(res: ExecInfo): Boolean {
+//   if (res.type === ResultType.True) return false;
+//   else return true;
+// }
 
-export const _VarsAreNotDeclared = (fact: TemplateNodeFact) =>
-  execInfo(
-    ResultType.Error,
-    `Not all of referred symbols ${fact.params} are declared.`
-  );
-
-function _allStartWithAsterisk(arr: string[][]): boolean {
-  return arr.every((subArr) => subArr.every((str) => str.startsWith("*")));
-}
+// export const _VarsAreNotDeclared = (fact: TemplateNodeFact) =>
+//   execInfo(
+//     ResultType.Error,
+//     `Not all of referred symbols ${fact.params} are declared.`
+//   );
 
 //! know everything not done
-function yaKnowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
+function yaKnowExec(env: LiTeXEnv, node: KnowNode): ExecInfo {
+  // function yaKnowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   try {
     let facts: CanBeKnownNode[] = [];
     let isKnowEverything: Boolean = false;
@@ -284,9 +258,10 @@ function yaKnowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
     if (node.type === LiTexNodeType.KnowNode) {
       facts = (node as KnowNode).facts;
       isKnowEverything = (node as KnowNode).isKnowEverything;
-    } else if (node.type === LiTexNodeType.LetNode) {
-      facts = (node as LetNode).properties;
     }
+    // else if (node.type === LiTexNodeType.LetNode) {
+    //   facts = (node as LetNode).properties;
+    // }
 
     for (const fact of facts) {
       switch (fact.type) {
@@ -345,7 +320,7 @@ function yaKnowEverythingCallOptExec(
     if (!noErr)
       return execInfo(ResultType.Error, "calling undefined operator.");
 
-    if (_isNotResultTypeTrue(res)) return res;
+    if (!execInfoIsTrue(res)) return res;
 
     return execInfo(ResultType.KnowTrue);
   } catch (error) {
@@ -565,7 +540,9 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
       params: string[][],
       isExtraRequirement = false
     ) {
-      const allStartWithAsterisk = _allStartWithAsterisk(params);
+      const allStartWithAsterisk = params.every((subArr) =>
+        subArr.every((str) => str.startsWith("*"))
+      );
       params = params.map((e) =>
         e.map((s) => (s.startsWith("*") ? s.slice(1) : s))
       );
@@ -630,8 +607,7 @@ function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
 
     for (let req of relatedExist.requirements as CallOptNode[]) {
       const fixedArrArr = _fixFrees(mapping, req.optParams);
-      if (!_isStringArrayArray(fixedArrArr))
-        return handleRuntimeError(env, ResultType.HaveError);
+      if (!fixedArrArr) return handleRuntimeError(env, ResultType.HaveError);
       env.newCallOptFact(CallOptNode.create(req.optName, fixedArrArr));
     }
 
@@ -658,16 +634,16 @@ function _fixFrees(
   return fixedArrArr;
 }
 
-function _isStringArrayArray(arr: any): arr is (string | undefined)[][] {
-  return (
-    Array.isArray(arr) &&
-    arr.every(
-      (innerArr) =>
-        innerArr === undefined ||
-        (Array.isArray(innerArr) &&
-          innerArr.every(
-            (item) => typeof item === "string" || item === undefined
-          ))
-    )
-  );
-}
+// function _isStringArrayArray(arr: any): arr is (string | undefined)[][] {
+//   return (
+//     Array.isArray(arr) &&
+//     arr.every(
+//       (innerArr) =>
+//         innerArr === undefined ||
+//         (Array.isArray(innerArr) &&
+//           innerArr.every(
+//             (item) => typeof item === "string" || item === undefined
+//           ))
+//     )
+//   );
+// }

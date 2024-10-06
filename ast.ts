@@ -1,9 +1,9 @@
-import { on } from "events";
+// import { on } from "events";
 import { OptsConnectionSymbol } from "./common";
 import { LiTeXEnv } from "./env";
 import {
-  _paramsInOptAreDeclared,
-  _VarsAreNotDeclared,
+  // _paramsInOptAreDeclared,
+  // _VarsAreNotDeclared,
   ExecInfo,
   execInfo,
   ResultType,
@@ -107,15 +107,15 @@ export abstract class TemplateNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
-  newFact(env: LiTeXEnv, fact: TemplateNodeFact): ExecInfo {
-    if (!_paramsInOptAreDeclared(env, fact.params))
-      return _VarsAreNotDeclared(fact);
-    else {
-      env.newStoredFact(fact.params, this);
-      // this.facts.push(fact);
-    }
-    return execInfo(ResultType.True);
-  }
+  // newFact(env: LiTeXEnv, fact: TemplateNodeFact): ExecInfo {
+  //   if (!_paramsInOptAreDeclared(env, fact.params))
+  //     return _VarsAreNotDeclared(fact);
+  //   else {
+  //     env.newStoredFact(fact.params, this);
+  //     // this.facts.push(fact);
+  //   }
+  //   return execInfo(ResultType.True);
+  // }
 
   // Input a full name with colons and get descendants from any depth
   getDeclaredSubTemplate(s: string): undefined | TemplateNode {
