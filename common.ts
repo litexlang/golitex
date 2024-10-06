@@ -28,3 +28,11 @@ export const DefBlockDeclareAndCall = "$"; // sort of works like do in coffeeScr
 
 export const SeparationBetweenSymbolsAndTheirFacts = ":";
 export const ProveKeywords = ["&", "prove"];
+
+export const LiTeXKeywords = [
+  ...specialChars,
+  ...KnowTypeKeywords,
+  ...ExistKeywords,
+  ...TemplateDeclarationKeywords,
+  ...ProveKeywords,
+];

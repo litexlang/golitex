@@ -11,6 +11,7 @@ import {
   HaveNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
+import { LiTeXKeywords } from "./common";
 import { LiTeXEnv } from "./env";
 
 export enum ResultType {
@@ -209,11 +210,17 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
       );
     }
 
+    if (LiTeXKeywords.includes(node.declOptName)) {
+      throw new Error(`Template '${node.declOptName}' is LiTeX keyword.`);
+    }
+
     // If not already declared, set the new template
     declaredTemplates.set(node.declOptName, node);
 
     // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
-    node.initDeclaredTemplates();
+    let res = node.initDeclaredTemplates(env);
+    if (!execInfoIsTrue(res))
+      return handleRuntimeError(env, ResultType.DefError);
 
     return execInfo(ResultType.DefTrue);
   } catch (error) {

@@ -349,7 +349,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   const index = tokens.length;
 
   try {
-    const declName = skip(tokens, TemplateDeclarationKeywords) as string; // KnowTypeKeywords
+    skip(tokens, TemplateDeclarationKeywords);
     const declOptName = shiftVar(tokens);
 
     const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
@@ -417,6 +417,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
         break;
 
       default:
+        // no arrow, no block
         result = new DefNode(declOptName, freeVarsFact.freeVars, []);
         (result as TemplateNode).requirements = freeVarsFact.properties;
         break;

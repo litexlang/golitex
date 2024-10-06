@@ -1,5 +1,5 @@
 import { CallOptNode, TemplateNode, makeTemplateNodeFact } from "./ast";
-import { OptsConnectionSymbol } from "./common";
+import { LiTeXKeywords, OptsConnectionSymbol } from "./common";
 import {
   // _paramsInOptAreDeclared,
   ExecInfo,
@@ -16,7 +16,7 @@ export type StoredFact = {
 
 export class LiTeXEnv {
   errors: string[] = [];
-  errorsWithDepth: [string, number][] = []; // [error message, depth]
+  errorsWithDepth: [string, number][] = []; //? [error message, depth], number here does not work for the time being
   private errorDepth = 0;
   declaredVars: string[] = [];
   declaredTemplates: Map<string, TemplateNode> = new Map<
@@ -32,6 +32,10 @@ export class LiTeXEnv {
 
   newVar(varName: string): boolean {
     if (this.declaredVars.includes(varName)) {
+      return false;
+    }
+
+    if (LiTeXKeywords.includes(varName)) {
       return false;
     }
 

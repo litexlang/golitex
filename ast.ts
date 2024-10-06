@@ -1,11 +1,12 @@
 // import { on } from "events";
-import { OptsConnectionSymbol } from "./common";
+import { LiTeXKeywords, OptsConnectionSymbol } from "./common";
 import { LiTeXEnv } from "./env";
 import {
   // _paramsInOptAreDeclared,
   // _VarsAreNotDeclared,
   ExecInfo,
   execInfo,
+  handleRuntimeError,
   ResultType,
 } from "./executor";
 
@@ -131,7 +132,7 @@ export abstract class TemplateNode extends LiTeXNode {
   }
 
   // If a node is DollarMarkNode or TemplateNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
-  initDeclaredTemplates(fathers: TemplateNode[] = []): ExecInfo {
+  initDeclaredTemplates(env: LiTeXEnv, fathers: TemplateNode[] = []): ExecInfo {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
 
@@ -153,8 +154,14 @@ export abstract class TemplateNode extends LiTeXNode {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
       if (value instanceof TemplateNode) {
-        value.initDeclaredTemplates([...fathers, this]);
+        value.initDeclaredTemplates(env, [...fathers, this]);
         // Here we overwrite the original declared functions.
+        if (LiTeXKeywords.includes(value.declOptName))
+          return handleRuntimeError(
+            env,
+            ResultType.DefError,
+            `Template '${value.declOptName}' is LiTeX keyword.`
+          );
         this.declaredTemplates.set(value.declOptName, value);
         this.onlyIfExprs.splice(i, 1);
       } else if (value instanceof CallOptsNode) {
