@@ -7,7 +7,6 @@ import {
   LetNode,
   CanBeKnownNode,
   TemplateNode,
-  TemplateNodeFact,
   YAProveNode,
   HaveNode,
 } from "./ast";
@@ -212,44 +211,7 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
   }
 }
 
-// export function _paramsInOptAreDeclared(
-//   env: LiTeXEnv,
-//   optParams: string[][] | string[]
-// ): boolean {
-//   if (optParams.length === 0) return true;
-
-//   // Check if optParams is a 2D array
-//   const is2DArray = Array.isArray(optParams[0]);
-
-//   if (is2DArray) {
-//     // Handle 2D array case
-//     for (const paramGroup of optParams as string[][]) {
-//       if (env.varsAreNotDeclared(paramGroup)) {
-//         return false;
-//       }
-//     }
-//   } else {
-//     // Handle 1D array case
-//     return !env.varsAreNotDeclared(optParams as string[]);
-//   }
-
-//   return true;
-// }
-
-// function _isNotResultTypeTrue(res: ExecInfo): Boolean {
-//   if (res.type === ResultType.True) return false;
-//   else return true;
-// }
-
-// export const _VarsAreNotDeclared = (fact: TemplateNodeFact) =>
-//   execInfo(
-//     ResultType.Error,
-//     `Not all of referred symbols ${fact.params} are declared.`
-//   );
-
-//! know everything not done
 function yaKnowExec(env: LiTeXEnv, node: KnowNode): ExecInfo {
-  // function yaKnowExec(env: LiTeXEnv, node: KnowNode | LetNode): ExecInfo {
   try {
     let facts: CanBeKnownNode[] = [];
     let isKnowEverything: Boolean = false;
@@ -259,9 +221,6 @@ function yaKnowExec(env: LiTeXEnv, node: KnowNode): ExecInfo {
       facts = (node as KnowNode).facts;
       isKnowEverything = (node as KnowNode).isKnowEverything;
     }
-    // else if (node.type === LiTexNodeType.LetNode) {
-    //   facts = (node as LetNode).properties;
-    // }
 
     for (const fact of facts) {
       switch (fact.type) {
@@ -589,28 +548,6 @@ function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
       env.declareNewVar(notDeclared);
     }
 
-    // const relatedExist = env.getDeclaredTemplate(node.opt);
-    // if (!relatedExist)
-    //   return handleRuntimeError(
-    //     env,
-    //     ResultType.HaveError,
-    //     "exist not declared"
-    //   );
-
-    // const mapping = relatedExist?.fix(node.opt);
-    // if (!mapping)
-    //   return handleRuntimeError(
-    //     env,
-    //     ResultType.HaveError,
-    //     "calling undeclared symbol."
-    //   );
-
-    // for (let req of relatedExist.requirements as CallOptNode[]) {
-    //   const fixedArrArr = _fixFreesUsingMap(mapping, req.optParams);
-    //   if (!fixedArrArr) return handleRuntimeError(env, ResultType.HaveError);
-    //   env.newCallOptFact(CallOptNode.create(req.optName, fixedArrArr));
-    // }
-
     const optParamsArr = fixFree(env, node.opt, false, true);
     if (optParamsArr === undefined)
       return handleRuntimeError(env, ResultType.HaveError);
@@ -645,20 +582,6 @@ function _fixFreesUsingMap(
   return fixedArrArr;
 }
 
-// function _isStringArrayArray(arr: any): arr is (string | undefined)[][] {
-//   return (
-//     Array.isArray(arr) &&
-//     arr.every(
-//       (innerArr) =>
-//         innerArr === undefined ||
-//         (Array.isArray(innerArr) &&
-//           innerArr.every(
-//             (item) => typeof item === "string" || item === undefined
-//           ))
-//     )
-//   );
-// }
-
 type OptParamsType = { name: string; params: string[][] };
 type FixFreeType = {
   onlyIf: OptParamsType[];
@@ -666,6 +589,7 @@ type FixFreeType = {
 };
 
 // Main Helper Function
+//? Many executor function can be refactored using fixFree
 function fixFree(
   env: LiTeXEnv,
   opt: CallOptNode,
