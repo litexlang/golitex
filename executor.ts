@@ -589,26 +589,37 @@ function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
       env.declareNewVar(notDeclared);
     }
 
-    const relatedExist = env.getDeclaredTemplate(node.opt);
-    if (!relatedExist)
-      return handleRuntimeError(
-        env,
-        ResultType.HaveError,
-        "exist not declared"
-      );
+    // const relatedExist = env.getDeclaredTemplate(node.opt);
+    // if (!relatedExist)
+    //   return handleRuntimeError(
+    //     env,
+    //     ResultType.HaveError,
+    //     "exist not declared"
+    //   );
 
-    const mapping = relatedExist?.fix(node.opt);
-    if (!mapping)
-      return handleRuntimeError(
-        env,
-        ResultType.HaveError,
-        "calling undeclared symbol."
-      );
+    // const mapping = relatedExist?.fix(node.opt);
+    // if (!mapping)
+    //   return handleRuntimeError(
+    //     env,
+    //     ResultType.HaveError,
+    //     "calling undeclared symbol."
+    //   );
 
-    for (let req of relatedExist.requirements as CallOptNode[]) {
-      const fixedArrArr = _fixFrees(mapping, req.optParams);
-      if (!fixedArrArr) return handleRuntimeError(env, ResultType.HaveError);
-      env.newCallOptFact(CallOptNode.create(req.optName, fixedArrArr));
+    // for (let req of relatedExist.requirements as CallOptNode[]) {
+    //   const fixedArrArr = _fixFreesUsingMap(mapping, req.optParams);
+    //   if (!fixedArrArr) return handleRuntimeError(env, ResultType.HaveError);
+    //   env.newCallOptFact(CallOptNode.create(req.optName, fixedArrArr));
+    // }
+
+    const optParamsArr = fixFree(env, node.opt, false, true);
+    if (optParamsArr === undefined)
+      return handleRuntimeError(env, ResultType.HaveError);
+    else {
+      for (let strArrArr of optParamsArr.req) {
+        env.newCallOptFact(
+          CallOptNode.create(strArrArr.name, strArrArr.params)
+        );
+      }
     }
 
     return execInfo(ResultType.HaveTrue);
@@ -617,7 +628,7 @@ function haveExec(env: LiTeXEnv, node: HaveNode): ExecInfo {
   }
 }
 
-function _fixFrees(
+function _fixFreesUsingMap(
   mapping: Map<string, string>,
   freeArrArr: string[][]
 ): string[][] | undefined {
@@ -647,3 +658,62 @@ function _fixFrees(
 //     )
 //   );
 // }
+
+type OptParamsType = { name: string; params: string[][] };
+type FixFreeType = {
+  onlyIf: OptParamsType[];
+  req: OptParamsType[];
+};
+
+// Main Helper Function
+function fixFree(
+  env: LiTeXEnv,
+  opt: CallOptNode,
+  fixOnlyIf: Boolean = false,
+  fixReq: Boolean = false
+): FixFreeType | undefined {
+  const template = env.getDeclaredTemplate(opt);
+  const result = {
+    onlyIf: [] as OptParamsType[],
+    req: [] as OptParamsType[],
+  };
+
+  if (!template) {
+    handleRuntimeError(env, ResultType.HaveError, "exist not declared");
+    return undefined;
+  }
+
+  const mapping = template?.fix(opt);
+  if (!mapping) {
+    handleRuntimeError(env, ResultType.HaveError, "calling undeclared symbol.");
+    return undefined;
+  }
+
+  if (fixReq) {
+    const optParamsArr: OptParamsType[] = [];
+    for (let curOpt of template.requirements as CallOptNode[]) {
+      const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
+      if (!fixedArrArr) {
+        handleRuntimeError(env, ResultType.HaveError);
+        return undefined;
+      }
+      optParamsArr.push({ name: curOpt.optName, params: fixedArrArr });
+    }
+    result.req = optParamsArr;
+  }
+
+  if (fixOnlyIf) {
+    const optParamsArr: OptParamsType[] = [];
+    for (let curOpt of template.onlyIfExprs as CallOptNode[]) {
+      const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
+      if (!fixedArrArr) {
+        handleRuntimeError(env, ResultType.HaveError);
+        return undefined;
+      }
+      optParamsArr.push({ name: curOpt.optName, params: fixedArrArr });
+    }
+    result.onlyIf = optParamsArr;
+  }
+
+  return result;
+}
