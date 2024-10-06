@@ -279,7 +279,7 @@ export class LiTeXEnv {
   // }
 
   printCallOptFacts() {
-    console.log("-----facts-------\n");
+    console.log("\n-----facts-------\n");
     for (const fact of this.symbolsFactsPairs) {
       console.log(fact);
     }
@@ -300,7 +300,7 @@ export class LiTeXEnv {
   }
 
   printDeclaredTemplates() {
-    console.log("-----template-----\n");
+    console.log("\n-----template-----\n");
 
     for (const value of this.declaredTemplates) {
       console.log(value);
@@ -311,8 +311,10 @@ export class LiTeXEnv {
   printErrorsWithDepth() {
     for (let i = this.errorsWithDepth.length - 1; i >= 0; i--) {
       let space = "";
-      this.errorsWithDepth[i].forEach((e) => (space += "\t"));
-      console.log(space + this.errorsWithDepth[i]);
+      for (let j = 0; j < this.errorsWithDepth.length - 1 - i; j++) {
+        space += "  ";
+      }
+      console.log(space + this.errorsWithDepth[i][0]);
     }
   }
 }

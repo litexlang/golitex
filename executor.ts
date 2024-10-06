@@ -197,17 +197,31 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
 
 function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
   try {
-    // Here we overwrite the original declared functions.
-    (env.declaredTemplates as Map<string, TemplateNode>).set(
-      node.declOptName,
-      node
-    );
+    const declaredTemplates = env.declaredTemplates as Map<
+      string,
+      TemplateNode
+    >;
+
+    // Check if the template name already exists
+    if (declaredTemplates.has(node.declOptName)) {
+      throw new Error(
+        `Template '${node.declOptName}' has already been declared. Duplicate declarations are not allowed.`
+      );
+    }
+
+    // If not already declared, set the new template
+    declaredTemplates.set(node.declOptName, node);
+
     // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
     node.initDeclaredTemplates();
 
     return execInfo(ResultType.DefTrue);
   } catch (error) {
-    return handleRuntimeError(env, ResultType.DefError, "template declaration");
+    return handleRuntimeError(
+      env,
+      ResultType.DefError,
+      `Template declaration error: ${(error as Error).message}`
+    );
   }
 }
 

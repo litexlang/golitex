@@ -2,6 +2,7 @@ import { LiTeXEnv } from "./env";
 import { nodeExec, ExecInfo, ResultType, resultTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { LiTeXStmtsParse } from "./parser";
+import { testCodes } from "./test_code";
 
 const env: LiTeXEnv = new LiTeXEnv();
 
@@ -179,3 +180,33 @@ function callOptsExecTest() {
 }
 
 callOptsExecTest();
+
+// function testExecutor() {
+//   console.log("\n----results------\n");
+//   const whatIsTested = [];
+//   for (const [key, code] of Object.entries(testCodes)) {
+//     whatIsTested.push(key);
+//     const tokens = scan(code);
+//     const result = LiTeXStmtsParse(env, tokens);
+//     if (result === null) {
+//       env.printErrorsWithDepth();
+//     } else {
+//       for (let i = 0; i < result.length; i++) {
+//         const res: ExecInfo = nodeExec(env, result[i]);
+//         if (!res.message) console.log(resultTypeMap[res.type]);
+//         else console.log(`${resultTypeMap[res.type]} '${res.message}'`);
+//       }
+//     }
+//   }
+//   console.log("\n----TestWhat----\n");
+//   whatIsTested.forEach((e) => console.log(e));
+//   if (env.errorsWithDepth.length === 0) {
+//     env.printCallOptFacts();
+//     env.printDeclaredTemplates();
+//   } else {
+//     console.log();
+//     env.printErrorsWithDepth();
+//   }
+// }
+
+// testExecutor();

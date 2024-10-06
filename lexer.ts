@@ -4,9 +4,22 @@ export function scan(text: string): string[] {
   const tokens: string[] = [];
   let currentToken = "";
   let inComment = false;
+  let inEscape = false;
 
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
+
+    if (inEscape) {
+      if (char === "\n" || i === text.length - 1) {
+        inEscape = false;
+      }
+      continue;
+    }
+
+    if (char === "\\") {
+      inEscape = true;
+      continue;
+    }
 
     if (inComment) {
       if (char === "\n") {
@@ -55,7 +68,7 @@ export function scan(text: string): string[] {
     tokens.push(currentToken);
   }
 
-  tokens.push("_EOF");
+  // tokens.push("_EOF");
 
   return tokens;
 }

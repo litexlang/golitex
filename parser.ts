@@ -107,7 +107,7 @@ export function LiTeXStmtsParse(
   try {
     const result: LiTeXNode[] = [];
 
-    while (tokens[0] !== "_EOF") {
+    while (tokens.length > 0) {
       const node = LiTexStmtParse(env, tokens);
       if (node) {
         result.push(node);
