@@ -179,49 +179,72 @@ const codes: string[] = [
 
 // callOptsExecTest();
 
-function testExecutor() {
-  console.log("\n----results------\n");
-  const whatIsTested = [];
+function testExecutor(testError: Boolean = false) {
   let env: LiTeXEnv = new LiTeXEnv();
-  for (const [key, code] of Object.entries(testCodes)) {
-    whatIsTested.push(key);
-    const tokens = scan(code as string);
-    const result = LiTeXStmtsParse(env, tokens);
-    if (result === null) {
-      env.printErrorsWithDepth();
-    } else {
-      for (let i = 0; i < result.length; i++) {
-        const res: ExecInfo = nodeExec(env, result[i]);
-        if (!res.message) console.log(resultTypeMap[res.type]);
-        else console.log(`${resultTypeMap[res.type]} '${res.message}'`);
+  if (testError === false) {
+    console.log("\n----results------\n");
+    const whatIsTested = [];
+    for (const [key, code] of Object.entries(testCodes)) {
+      whatIsTested.push(key);
+      const tokens = scan(code as string);
+      const result = LiTeXStmtsParse(env, tokens);
+      if (result === null) {
+        env.printErrorsWithDepth();
+      } else {
+        for (let i = 0; i < result.length; i++) {
+          const res: ExecInfo = nodeExec(env, result[i]);
+          if (!res.message) console.log(resultTypeMap[res.type]);
+          else console.log(`${resultTypeMap[res.type]} '${res.message}'`);
+        }
       }
     }
-  }
-  console.log("\n----TestWhat----\n");
-  whatIsTested.forEach((e) => console.log(e));
-  if (env.errorsWithDepth.length === 0) {
-    env.printCallOptFacts();
-    env.printDeclaredTemplates();
-  } else {
-    console.log();
-    env.printErrorsWithDepth();
+    console.log("\n----TestWhat----\n");
+    whatIsTested.forEach((e) => console.log(e));
+    if (env.errorsWithDepth.length === 0) {
+      env.printCallOptFacts();
+      env.printDeclaredTemplates();
+    } else {
+      console.log();
+      env.printErrorsWithDepth();
+    }
   }
 
-  env = new LiTeXEnv();
-  for (const [key, code] of Object.entries(testErrorCode)) {
-    const tokens = scan(code as string);
-    const result = LiTeXStmtsParse(env, tokens);
-    if (result === null) {
-      env.printErrorsWithDepth();
-    } else {
-      for (let i = 0; i < result.length; i++) {
-        const res: ExecInfo = nodeExec(env, result[i]);
+  if (testError === false) {
+    env = new LiTeXEnv();
+    for (const [key, code] of Object.entries(testErrorCode)) {
+      const tokens = scan(code as string);
+      const result = LiTeXStmtsParse(env, tokens);
+      if (result === null) {
+        env.printErrorsWithDepth();
+      } else {
+        for (let i = 0; i < result.length; i++) {
+          const res: ExecInfo = nodeExec(env, result[i]);
+        }
+      }
+      if (env.errorsWithDepth.length === 0) {
+        console.log(`${key} error not detected.`);
       }
     }
-    if (env.errorsWithDepth.length === 0) {
-      console.log(`${key} error not detected.`);
+  } else {
+    console.log("\n----Errors-----\n");
+    const whatIsTested = [];
+    let env: LiTeXEnv = new LiTeXEnv();
+    for (const [key, code] of Object.entries(testErrorCode)) {
+      whatIsTested.push(key);
+      const tokens = scan(code as string);
+      const result = LiTeXStmtsParse(env, tokens);
+      if (result === null) {
+        env.printErrorsWithDepth();
+      } else {
+        for (let i = 0; i < result.length; i++) {
+          const res: ExecInfo = nodeExec(env, result[i]);
+          if (!res.message) console.log(resultTypeMap[res.type]);
+          else console.log(`${resultTypeMap[res.type]} '${res.message}'`);
+        }
+      }
+      console.log();
     }
   }
 }
 
-testExecutor();
+testExecutor(true);

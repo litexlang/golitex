@@ -132,6 +132,7 @@ export abstract class TemplateNode extends LiTeXNode {
   }
 
   // If a node is DollarMarkNode or TemplateNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
+  //! REFACTOR THIS SO THAT DEF IN REQ CAN APPEAR HERE.
   initDeclaredTemplates(env: LiTeXEnv, fathers: TemplateNode[] = []): ExecInfo {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
