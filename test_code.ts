@@ -9,6 +9,7 @@ export const testCodes = {
   // ForAllKnow: "know set(#);",
   // ForAllCheck: "set(3);",
   Bundle: ":bundle(x,y,z: F(x,y):son(z))", // call defOpt has 2 possible effects: either check requirement and emit opt, or check opt emit requirements
+  Redefine: "re_def set(x)",
 };
 
 export const testErrorCode = {

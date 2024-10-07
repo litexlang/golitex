@@ -204,7 +204,7 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
     >;
 
     // Check if the template name already exists
-    if (declaredTemplates.has(node.declOptName)) {
+    if (!node.isRedefine && declaredTemplates.has(node.declOptName)) {
       throw new Error(
         `Template '${node.declOptName}' has already been declared. Duplicate declarations are not allowed.`
       );

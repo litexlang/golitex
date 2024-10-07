@@ -24,6 +24,7 @@ import {
   ExistKeywords,
   SeparationBetweenSymbolsAndTheirFacts,
   ProveKeywords,
+  redefineTemplateDeclarationKeywords,
 } from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -83,6 +84,7 @@ const KeywordFunctionMap: {
   // or: orParse,
   let: letParse,
   def: templateParse,
+  re_def: templateParse,
   ":": templateParse,
   exist: existParse,
   "?": templateParse,
@@ -349,7 +351,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, TemplateDeclarationKeywords);
+    const defName = skip(tokens, TemplateDeclarationKeywords);
     const declOptName = shiftVar(tokens);
 
     const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
@@ -423,7 +425,9 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
         break;
     }
 
-    // env.returnToSnapShot(snapShot);
+    if (redefineTemplateDeclarationKeywords.includes(defName as string)) {
+      (result as TemplateNode).isRedefine = true;
+    }
     return result as TemplateNode;
   } catch (error) {
     handleParseError(env, "declare template", index, start);

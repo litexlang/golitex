@@ -96,6 +96,7 @@ export abstract class TemplateNode extends LiTeXNode {
   // Fix all free variables in this template, no matter it's declared in fathers or itself
   // private freeFixMap: Map<string, string> = new Map<string, string>();
   // private fixedFullParams: string[][] = [];
+  isRedefine: Boolean = false;
 
   constructor(
     declOptName: string,
@@ -155,14 +156,13 @@ export abstract class TemplateNode extends LiTeXNode {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
       if (value instanceof TemplateNode) {
-        value.initDeclaredTemplates(env, [...fathers, this]);
-        // Here we overwrite the original declared functions.
         if (LiTeXKeywords.includes(value.declOptName))
           return handleRuntimeError(
             env,
             ResultType.DefError,
             `Template '${value.declOptName}' is LiTeX keyword.`
           );
+        value.initDeclaredTemplates(env, [...fathers, this]);
         this.declaredTemplates.set(value.declOptName, value);
         this.onlyIfExprs.splice(i, 1);
       } else if (value instanceof CallOptsNode) {
