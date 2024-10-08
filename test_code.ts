@@ -1,6 +1,6 @@
 export const testCodes = {
   Basics:
-    ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(y,h);}}",
+    ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(yZXS,h);}}",
   // Nothing: "",
   // Comment: "\\ Comment",
   // BasicInfer:

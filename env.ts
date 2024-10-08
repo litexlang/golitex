@@ -49,11 +49,11 @@ export class LiTeXEnv {
       handleRuntimeError(this, ResultType.Unknown);
       return false;
     } else {
-      return this.isStoredFact(opt.optParams, relatedT);
+      return this.isStoredTrueFact(opt.optParams, relatedT);
     }
   }
 
-  isStoredFact(key: string[][], template: TemplateNode): boolean {
+  isStoredTrueFact(key: string[][], template: TemplateNode): boolean {
     for (let sfPair of this.symbolsFactsPairs) {
       if (!_isLiterallyFact(sfPair.vars, key)) {
         continue;
@@ -95,7 +95,7 @@ export class LiTeXEnv {
               // check fixed params
               let tmp = this.getDeclaredTemplate(optName);
               if (!tmp) return false;
-              let res = this.isStoredFact(fixedParams, tmp);
+              let res = this.isStoredTrueFact(fixedParams, tmp);
               if (!res) {
                 allRequirementsSatisfied = false;
                 break;
@@ -110,7 +110,7 @@ export class LiTeXEnv {
       }
     }
 
-    if (this.father) return this.father.isStoredFact(key, template);
+    if (this.father) return this.father.isStoredTrueFact(key, template);
     else return false;
 
     function _isLiterallyFact(arr1: string[][], arr2: string[][]): boolean {

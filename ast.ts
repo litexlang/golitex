@@ -299,7 +299,7 @@ export abstract class TemplateNode extends LiTeXNode {
         ].map((sArr) => sArr.map((s) => mapping.get(s) || ""));
         let calledT = env.getDeclaredTemplate(requirement as CallOptNode);
         if (!calledT) return false;
-        let res = env.isStoredFact(keys, calledT);
+        let res = env.isStoredTrueFact(keys, calledT);
         if (!res) {
           allRequirementsAreSatisfied = false;
           break;

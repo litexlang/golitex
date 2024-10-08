@@ -1,5 +1,5 @@
 import { LiTeXEnv } from "./env";
-import { nodeExec, ExecInfo, ResultType, resultTypeMap } from "./executor";
+import { nodeExec, ExecInfo, ResultType, ResultTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { LiTeXStmtsParse } from "./parser";
 import { testCodes, testErrorCode } from "./test_code";
@@ -163,8 +163,8 @@ const codes: string[] = [
 //     } else {
 //       for (let i = 0; i < result.length; i++) {
 //         const res: ExecInfo = nodeExec(env, result[i]);
-//         if (!res.message) console.log(resultTypeMap[res.type]);
-//         else console.log(`${resultTypeMap[res.type]} '${res.message}'`);
+//         if (!res.message) console.log(ResultTypeMap[res.type]);
+//         else console.log(`${ResultTypeMap[res.type]} '${res.message}'`);
 //       }
 //     }
 //   }
@@ -193,8 +193,8 @@ function testExecutor(testError: Boolean = false) {
       } else {
         for (let i = 0; i < result.length; i++) {
           const res: ExecInfo = nodeExec(env, result[i]);
-          if (!res.message) console.log(resultTypeMap[res.type]);
-          else console.log(`${resultTypeMap[res.type]} '${res.message}'`);
+          if (!res.message) console.log(ResultTypeMap[res.type]);
+          else console.log(`${ResultTypeMap[res.type]} '${res.message}'`);
         }
       }
     }
@@ -238,8 +238,8 @@ function testExecutor(testError: Boolean = false) {
       } else {
         for (let i = 0; i < result.length; i++) {
           const res: ExecInfo = nodeExec(env, result[i]);
-          if (!res.message) console.log(resultTypeMap[res.type]);
-          else console.log(`${resultTypeMap[res.type]} '${res.message}'`);
+          if (!res.message) console.log(ResultTypeMap[res.type]);
+          else console.log(`${ResultTypeMap[res.type]} '${res.message}'`);
         }
       }
       console.log();

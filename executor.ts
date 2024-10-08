@@ -1,3 +1,4 @@
+import { findIndex } from "lodash";
 import {
   CallOptNode,
   CallOptsNode,
@@ -9,6 +10,7 @@ import {
   TemplateNode,
   YAProveNode,
   HaveNode,
+  ExistNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXKeywords } from "./common";
@@ -36,7 +38,7 @@ export enum ResultType {
   ExistTrue,
 }
 
-export const resultTypeMap: { [key in ResultType]: string } = {
+export const ResultTypeMap: { [key in ResultType]: string } = {
   [ResultType.Error]: "error",
   [ResultType.False]: "check: false",
   [ResultType.True]: "check: true",
@@ -74,10 +76,10 @@ export function execInfoIsTrue(res: ExecInfo) {
 export function handleRuntimeError(
   env: LiTeXEnv,
   type: ResultType,
-  m: string = ""
+  message: string = ""
 ): ExecInfo {
-  env.pushNewError(resultTypeMap[type] + ": " + m);
-  return execInfo(type, m);
+  env.pushNewError(ResultTypeMap[type] + ": " + message);
+  return execInfo(type, message);
 }
 
 export const execInfo = (t: ResultType, s: string = "") => {
@@ -156,6 +158,7 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     }
 
     const relatedTemplate = env.getDeclaredTemplate(node);
+
     if (!relatedTemplate)
       return handleRuntimeError(
         env,
@@ -163,8 +166,12 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
         node.optName + " is not declared."
       );
 
+    if (relatedTemplate?.type === LiTexNodeType.ExistNode) {
+      return checkExist(env, node as CallOptNode);
+    }
+
     // check itself
-    let isTrue: Boolean = env.isStoredFact(node.optParams, relatedTemplate);
+    let isTrue: Boolean = env.isStoredTrueFact(node.optParams, relatedTemplate);
 
     if (!isTrue)
       return handleRuntimeError(
@@ -661,4 +668,40 @@ function fixFree(
   }
 
   return result;
+}
+
+function checkExist(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+  try {
+    const relatedTemplate = env.getDeclaredTemplate(node);
+    if (!relatedTemplate)
+      return handleRuntimeError(
+        env,
+        ResultType.Error,
+        `${node.optName} has not declared.`
+      );
+
+    const fixedRequirements = fixFree(env, node, false, true)?.req;
+    if (!fixedRequirements)
+      return handleRuntimeError(
+        env,
+        ResultType.Error,
+        `Invalid invocation of ${node.optName}.`
+      );
+
+    for (let fixedReq of fixedRequirements) {
+      const tmp = env.getDeclaredTemplate(fixedReq.name);
+      if (!tmp)
+        return handleRuntimeError(
+          env,
+          ResultType.Error,
+          `${findIndex.name} has not declared.`
+        );
+      if (!env.isStoredTrueFact(fixedReq.params, tmp))
+        return execInfo(ResultType.Unknown);
+    }
+
+    return execInfo(ResultType.True);
+  } catch (error) {
+    return handleRuntimeError(env, ResultType.Error);
+  }
 }
