@@ -10,8 +10,6 @@ import {
   TemplateNode,
   YAProveNode,
   HaveNode,
-  ExistNode,
-  DefNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXKeywords } from "./common";
@@ -141,6 +139,7 @@ function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
 
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
   try {
+    const whatIsTrue: string[] = [];
     for (const fact of (node as CallOptsNode).nodes) {
       const relatedTemplate = env.getDeclaredTemplate(fact as CallOptNode);
       if (!relatedTemplate)
@@ -166,8 +165,9 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
       }
       if (!execInfoIsTrue(info))
         return handleRuntimeError(env, ResultType.Error, "");
+      whatIsTrue.push(`${fact.optName} ${fact.optParams}`);
     }
-    return execInfo(ResultType.True);
+    return execInfo(ResultType.True, whatIsTrue.join(";"));
   } catch (error) {
     return handleRuntimeError(env, ResultType.Error, "call operators");
   }
@@ -258,7 +258,16 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): ExecInfo {
     if (!execInfoIsTrue(res))
       return handleRuntimeError(env, ResultType.DefError);
 
-    return execInfo(ResultType.DefTrue);
+    switch (node.type) {
+      case LiTexNodeType.DefNode:
+        return execInfo(ResultType.DefTrue, "def");
+      case LiTexNodeType.ExistNode:
+        return execInfo(ResultType.DefTrue, "exist");
+      case LiTexNodeType.InferNode:
+        return execInfo(ResultType.DefTrue, "infer");
+    }
+
+    return execInfo(ResultType.Error);
   } catch (error) {
     return handleRuntimeError(
       env,
