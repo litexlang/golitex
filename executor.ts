@@ -141,6 +141,9 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
   try {
     for (const fact of (node as CallOptsNode).nodes) {
       let info = callOptExec(env, fact as CallOptNode);
+      if (info.type === ResultType.Unknown || info.type === ResultType.False) {
+        return info;
+      }
       if (!execInfoIsTrue(info))
         return handleRuntimeError(env, ResultType.Error, "");
     }
@@ -681,7 +684,7 @@ function checkExist(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       );
 
     const fixedRequirements = fixFree(env, node, false, true)?.req;
-    if (!fixedRequirements)
+    if (fixedRequirements === undefined)
       return handleRuntimeError(
         env,
         ResultType.Error,
