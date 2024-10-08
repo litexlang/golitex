@@ -15,6 +15,11 @@ export const testCodes = {
   // KnowExist: "exist SetExist(x: set(x));",
   // Have: "have S: SetExist(S);", //! This works improperly. Have should be inferred by knowing exist, not declaring exist.
   // ProveExist: "let o: obj(o); exist ObjExist(x: obj(x));  ObjExist(o);",
+
+  DefDecl:
+    ":subC(x); : subD(x){:subE(y);};def concept(x,y: subC(x), subD(x):subE(y))",
+  DefCheckLeft: "let x,y: subC(x), subD(x):subE(y) ;concept(x,y);",
+  DefCheckRight: "",
 };
 
 export const testErrorCode = {

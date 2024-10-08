@@ -249,4 +249,4 @@ function testExecutor(testError: Boolean = false) {
   }
 }
 
-testExecutor(true);
+testExecutor();

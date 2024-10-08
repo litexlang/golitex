@@ -11,6 +11,7 @@ import {
   YAProveNode,
   HaveNode,
   ExistNode,
+  DefNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXKeywords } from "./common";
@@ -170,7 +171,9 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       );
 
     if (relatedTemplate?.type === LiTexNodeType.ExistNode) {
-      return checkExist(env, node as CallOptNode);
+      return callExistExec(env, node as CallOptNode);
+    } else if (relatedTemplate.type === LiTexNodeType.DefNode) {
+      return callDefExec(env, node as CallOptNode);
     }
 
     // check itself
@@ -625,20 +628,21 @@ function fixFree(
   env: LiTeXEnv,
   opt: CallOptNode,
   fixOnlyIf: Boolean = false,
-  fixReq: Boolean = false
+  fixReq: Boolean = false,
+  relatedTemplate: TemplateNode | undefined = undefined
 ): FixFreeType | undefined {
-  const template = env.getDeclaredTemplate(opt);
+  if (!relatedTemplate) env.getDeclaredTemplate(opt);
   const result = {
     onlyIf: [] as OptParamsType[],
     req: [] as OptParamsType[],
   };
 
-  if (!template) {
+  if (!relatedTemplate) {
     handleRuntimeError(env, ResultType.HaveError, "exist not declared");
     return undefined;
   }
 
-  const mapping = template?.fix(opt);
+  const mapping = relatedTemplate?.fix(opt);
   if (!mapping) {
     handleRuntimeError(env, ResultType.HaveError, "calling undeclared symbol.");
     return undefined;
@@ -646,7 +650,7 @@ function fixFree(
 
   if (fixReq) {
     const optParamsArr: OptParamsType[] = [];
-    for (let curOpt of template.requirements as CallOptNode[]) {
+    for (let curOpt of relatedTemplate.requirements as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
         handleRuntimeError(env, ResultType.HaveError);
@@ -659,7 +663,7 @@ function fixFree(
 
   if (fixOnlyIf) {
     const optParamsArr: OptParamsType[] = [];
-    for (let curOpt of template.onlyIfExprs as CallOptNode[]) {
+    for (let curOpt of relatedTemplate.onlyIfExprs as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
         handleRuntimeError(env, ResultType.HaveError);
@@ -673,7 +677,7 @@ function fixFree(
   return result;
 }
 
-function checkExist(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+function callExistExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   try {
     const relatedTemplate = env.getDeclaredTemplate(node);
     if (!relatedTemplate)
@@ -706,5 +710,62 @@ function checkExist(env: LiTeXEnv, node: CallOptNode): ExecInfo {
     return execInfo(ResultType.True);
   } catch (error) {
     return handleRuntimeError(env, ResultType.Error);
+  }
+}
+
+function callDefExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+  try {
+    const relatedTemplate = env.getDeclaredTemplate(node);
+
+    if (!relatedTemplate)
+      return handleRuntimeError(
+        env,
+        ResultType.False,
+        node.optName + " is not declared."
+      );
+
+    // check left(i.e. the opt itself)
+    let leftIsTrue: Boolean = env.isStoredTrueFact(
+      node.optParams,
+      relatedTemplate
+    );
+
+    if (leftIsTrue) {
+      const fixedRequirements = fixFree(
+        env,
+        node,
+        false,
+        true,
+        relatedTemplate
+      )?.req;
+      if (!fixedRequirements)
+        return handleRuntimeError(
+          env,
+          ResultType.Error,
+          `Invalid invocation of ${node.optName}.`
+        );
+      for (let fixedReq of fixedRequirements) {
+        const tmp = env.getDeclaredTemplate(fixedReq.name);
+        if (!tmp)
+          return handleRuntimeError(
+            env,
+            ResultType.Error,
+            `${findIndex.name} has not declared.`
+          );
+        env.newStoredFact(fixedReq.params, tmp);
+      }
+    }
+
+    let rightIsTrue: Boolean = false;
+    const mapping = relatedTemplate.fix(node);
+    if (!mapping) return handleRuntimeError(env, ResultType.Error);
+    rightIsTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+    if (!rightIsTrue) return execInfo(ResultType.Unknown);
+    else {
+      env.newCallOptFact(node);
+    }
+    return execInfo(ResultType.True);
+  } catch (error) {
+    return handleRuntimeError(env, ResultType.DefError);
   }
 }
