@@ -10,6 +10,7 @@ import {
   TemplateNode,
   YAProveNode,
   HaveNode,
+  ExistNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXKeywords } from "./common";
@@ -150,11 +151,11 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
         );
       let info: ExecInfo = ErrorExecInfo;
       switch (relatedTemplate.type) {
+        case LiTexNodeType.ExistNode:
+          info = callDefExec(env, fact, relatedTemplate, true);
+          break;
         case LiTexNodeType.DefNode:
           info = callDefExec(env, fact, relatedTemplate);
-          break;
-        case LiTexNodeType.ExistNode:
-          info = callExistExec(env, fact, relatedTemplate);
           break;
         case LiTexNodeType.InferNode:
           info = callInferExec(env, fact, relatedTemplate);
@@ -715,15 +716,18 @@ function callExistExec(
   relatedTemplate: TemplateNode
 ): ExecInfo {
   try {
-    // const relatedTemplate = env.getDeclaredTemplate(node);
-    // if (!relatedTemplate)
-    //   return handleRuntimeError(
-    //     env,
-    //     ResultType.Error,
-    //     `${node.optName} has not declared.`
-    //   );
+    /** check exist itself and emit requirements */
+    // ...
 
-    const fixedRequirements = fixFree(env, node, false, true)?.req;
+    /** check requirements and emit exist */
+
+    const fixedRequirements = fixFree(
+      env,
+      node,
+      false,
+      true,
+      relatedTemplate
+    )?.req;
     if (fixedRequirements === undefined)
       return handleRuntimeError(
         env,
@@ -743,6 +747,8 @@ function callExistExec(
         return execInfo(ResultType.Unknown);
     }
 
+    env.newCallOptFact(node);
+
     return execInfo(ResultType.True);
   } catch (error) {
     return handleRuntimeError(env, ResultType.Error);
@@ -752,7 +758,8 @@ function callExistExec(
 function callDefExec(
   env: LiTeXEnv,
   node: CallOptNode,
-  relatedTemplate: TemplateNode
+  relatedTemplate: TemplateNode,
+  calledByExist: Boolean = false
 ): ExecInfo {
   try {
     // check left(i.e. the opt itself)
@@ -775,6 +782,7 @@ function callDefExec(
           ResultType.Error,
           `Invalid invocation of ${node.optName}.`
         );
+      // emit
       for (let fixedReq of fixedRequirements) {
         const tmp = env.getDeclaredTemplate(fixedReq.name);
         if (!tmp)
@@ -795,6 +803,8 @@ function callDefExec(
     else {
       env.newCallOptFact(node);
     }
+
+    if (calledByExist) (relatedTemplate as ExistNode).isTrue = true;
     return execInfo(ResultType.True);
   } catch (error) {
     return handleRuntimeError(env, ResultType.DefError);

@@ -320,6 +320,7 @@ export class InferNode extends TemplateNode {
 
 export class ExistNode extends TemplateNode {
   type = LiTexNodeType.ExistNode;
+  isTrue = false;
 }
 
 export type CanBeKnownNode = FactNode | TemplateNode;
