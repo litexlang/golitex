@@ -18,8 +18,8 @@ export const testCodes = {
 
   DefDecl:
     ":subC(x); : subD(x){:subE(y);};def concept(x,y: subC(x), subD(x):subE(y))",
-  DefCheckLeft: "let x,y: subC(x), subD(x):subE(y) ;concept(x,y);",
-  DefCheckRight: "",
+  DefCheckLeft: "let x,y: subC(x), subD(x):subE(y) ; concept(x,y);",
+  // DefCheckRight: "",
 };
 
 export const testErrorCode = {

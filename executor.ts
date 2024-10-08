@@ -18,7 +18,7 @@ import { LiTeXKeywords } from "./common";
 import { LiTeXEnv } from "./env";
 
 export enum ResultType {
-  True, // not only used as True for callOptExec, but also as a generic type passed between subFunctions.
+  True, // not only used as True for callInferExec, but also as a generic type passed between subFunctions.
   KnowTrue,
   KnowError,
   KnowUndeclared,
@@ -87,6 +87,7 @@ export const execInfo = (t: ResultType, s: string = "") => {
   return { type: t, message: s };
 };
 export type ExecInfo = { type: ResultType; message: string };
+export const ErrorExecInfo = { type: ResultType.Error, message: "" };
 
 export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
   try {
@@ -141,7 +142,25 @@ function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
 function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
   try {
     for (const fact of (node as CallOptsNode).nodes) {
-      let info = callOptExec(env, fact as CallOptNode);
+      const relatedTemplate = env.getDeclaredTemplate(fact as CallOptNode);
+      if (!relatedTemplate)
+        return handleRuntimeError(
+          env,
+          ResultType.Error,
+          `${fact.optName} is not declared.`
+        );
+      let info: ExecInfo = ErrorExecInfo;
+      switch (relatedTemplate.type) {
+        case LiTexNodeType.DefNode:
+          info = callDefExec(env, fact, relatedTemplate);
+          break;
+        case LiTexNodeType.ExistNode:
+          info = callExistExec(env, fact, relatedTemplate);
+          break;
+        case LiTexNodeType.InferNode:
+          info = callInferExec(env, fact, relatedTemplate);
+          break;
+      }
       if (info.type === ResultType.Unknown || info.type === ResultType.False) {
         return info;
       }
@@ -154,14 +173,18 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): ExecInfo {
   }
 }
 
-function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+function callInferExec(
+  env: LiTeXEnv,
+  node: CallOptNode,
+  relatedTemplate: TemplateNode | undefined = undefined
+): ExecInfo {
   try {
     const builtinFunc = LiTeXBuiltinKeywords[node.optName];
     if (builtinFunc) {
       return builtinFunc(env, node);
     }
 
-    const relatedTemplate = env.getDeclaredTemplate(node);
+    if (!relatedTemplate) relatedTemplate = env.getDeclaredTemplate(node);
 
     if (!relatedTemplate)
       return handleRuntimeError(
@@ -170,11 +193,11 @@ function callOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
         node.optName + " is not declared."
       );
 
-    if (relatedTemplate?.type === LiTexNodeType.ExistNode) {
-      return callExistExec(env, node as CallOptNode);
-    } else if (relatedTemplate.type === LiTexNodeType.DefNode) {
-      return callDefExec(env, node as CallOptNode);
-    }
+    // if (relatedTemplate?.type === LiTexNodeType.ExistNode) {
+    //   return callExistExec(env, node as CallOptNode);
+    // } else if (relatedTemplate.type === LiTexNodeType.DefNode) {
+    //   return callDefExec(env, node as CallOptNode);
+    // }
 
     // check itself
     let isTrue: Boolean = env.isStoredTrueFact(node.optParams, relatedTemplate);
@@ -542,7 +565,7 @@ function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
 
       if (allStartWithAsterisk) {
         /* check requirements */
-        const res = callOptExec(env, CallOptNode.create(optName, params));
+        const res = callInferExec(env, CallOptNode.create(optName, params));
         if (!execInfoIsTrue(res)) {
           return execInfo(ResultType.Error, `${optName} is not true`);
         }
@@ -677,15 +700,19 @@ function fixFree(
   return result;
 }
 
-function callExistExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+function callExistExec(
+  env: LiTeXEnv,
+  node: CallOptNode,
+  relatedTemplate: TemplateNode
+): ExecInfo {
   try {
-    const relatedTemplate = env.getDeclaredTemplate(node);
-    if (!relatedTemplate)
-      return handleRuntimeError(
-        env,
-        ResultType.Error,
-        `${node.optName} has not declared.`
-      );
+    // const relatedTemplate = env.getDeclaredTemplate(node);
+    // if (!relatedTemplate)
+    //   return handleRuntimeError(
+    //     env,
+    //     ResultType.Error,
+    //     `${node.optName} has not declared.`
+    //   );
 
     const fixedRequirements = fixFree(env, node, false, true)?.req;
     if (fixedRequirements === undefined)
@@ -713,17 +740,12 @@ function callExistExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   }
 }
 
-function callDefExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
+function callDefExec(
+  env: LiTeXEnv,
+  node: CallOptNode,
+  relatedTemplate: TemplateNode
+): ExecInfo {
   try {
-    const relatedTemplate = env.getDeclaredTemplate(node);
-
-    if (!relatedTemplate)
-      return handleRuntimeError(
-        env,
-        ResultType.False,
-        node.optName + " is not declared."
-      );
-
     // check left(i.e. the opt itself)
     let leftIsTrue: Boolean = env.isStoredTrueFact(
       node.optParams,
