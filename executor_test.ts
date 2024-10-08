@@ -204,8 +204,9 @@ function testExecutor(testError: Boolean = false) {
       env.printCallOptFacts();
       env.printDeclaredTemplates();
     } else {
-      console.log();
+      console.log("\n------Error------\n");
       env.printErrorsWithDepth();
+      console.log();
     }
   }
 
@@ -230,6 +231,7 @@ function testExecutor(testError: Boolean = false) {
     const whatIsTested = [];
     let env: LiTeXEnv = new LiTeXEnv();
     for (const [key, code] of Object.entries(testErrorCode)) {
+      console.log(key + ":");
       whatIsTested.push(key);
       const tokens = scan(code as string);
       const result = LiTeXStmtsParse(env, tokens);
@@ -247,4 +249,4 @@ function testExecutor(testError: Boolean = false) {
   }
 }
 
-testExecutor();
+testExecutor(true);

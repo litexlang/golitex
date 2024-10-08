@@ -15,10 +15,9 @@ export const testCodes = {
   // KnowExist: "exist SetExist(x: set(x));",
   // Have: "have S: SetExist(S);", //! This works improperly. Have should be inferred by knowing exist, not declaring exist.
   // ProveExist: "let o: obj(o); exist ObjExist(x: obj(x));  ObjExist(o);",
-
-  Let: "let o: set(o); exist ObjExist(x: obj(x)); ObjExist(o);",
 };
 
 export const testErrorCode = {
   RepeatDeclaration: `def set(x); def set(x); `,
+  Let: "let o:set3(o);",
 };

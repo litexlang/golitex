@@ -128,7 +128,7 @@ function letExec(env: LiTeXEnv, node: LetNode): ExecInfo {
     for (let i = 0; i < node.properties.length; i++) {
       let info = yaKnowCallOptExec(env, node.properties[i]);
       if (!execInfoIsTrue(info))
-        return handleRuntimeError(env, ResultType.KnowError, "");
+        return handleRuntimeError(env, ResultType.LetError, info.message);
     }
 
     return execInfo(ResultType.LetTrue);
