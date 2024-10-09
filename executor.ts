@@ -102,7 +102,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): ExecInfo {
       case LiTexNodeType.LetNode:
         return letExec(env, node as LetNode);
       case LiTexNodeType.ProofNode:
-        return yaProveExec(env, node as YAProveNode);
+        return proveInferExec(env, node as YAProveNode);
       case LiTexNodeType.HaveNode:
         return haveExec(env, node as HaveNode);
     }
@@ -397,7 +397,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   }
 }
 
-function yaProveExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
+function proveInferExec(env: LiTeXEnv, node: YAProveNode): ExecInfo {
   try {
     const relatedTemplate = env.getDeclaredTemplate(
       node.templateNames.join(":")

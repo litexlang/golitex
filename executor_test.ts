@@ -2,6 +2,7 @@ import { LiTeXEnv } from "./env";
 import { nodeExec, ExecInfo, ResultType, ResultTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { LiTeXStmtsParse } from "./parser";
+import { setTheory } from "./tao_analysis_one";
 import { testCodes, testErrorCode } from "./test_code";
 
 const codes: string[] = [
@@ -179,39 +180,9 @@ const codes: string[] = [
 
 // callOptsExecTest();
 
-function testExecutor(testError: Boolean = false) {
-  let env: LiTeXEnv = new LiTeXEnv();
-  if (testError === false) {
-    console.log("\n----results------\n");
-    const whatIsTested = [];
-    for (const [key, code] of Object.entries(testCodes)) {
-      whatIsTested.push(key);
-      const tokens = scan(code as string);
-      const result = LiTeXStmtsParse(env, tokens);
-      if (result === null) {
-        env.printErrorsWithDepth();
-      } else {
-        for (let i = 0; i < result.length; i++) {
-          const res: ExecInfo = nodeExec(env, result[i]);
-          if (!res.message) console.log(ResultTypeMap[res.type]);
-          else console.log(`${ResultTypeMap[res.type]} '${res.message}'`);
-        }
-      }
-    }
-    console.log("\n----TestWhat----\n");
-    whatIsTested.forEach((e) => console.log(e));
-    if (env.errorsWithDepth.length === 0) {
-      env.printCallOptFacts();
-      env.printDeclaredTemplates();
-    } else {
-      console.log("\n------Error------\n");
-      env.printErrorsWithDepth();
-      console.log();
-    }
-  }
-
-  if (testError === false) {
-    env = new LiTeXEnv();
+function testError(asIfRight = false) {
+  if (asIfRight) {
+    const env = new LiTeXEnv();
     for (const [key, code] of Object.entries(testErrorCode)) {
       const tokens = scan(code as string);
       const result = LiTeXStmtsParse(env, tokens);
@@ -249,4 +220,36 @@ function testExecutor(testError: Boolean = false) {
   }
 }
 
-testExecutor();
+function testExecutor(testWhat: any = testCodes) {
+  let env: LiTeXEnv = new LiTeXEnv();
+
+  console.log("\n----results------\n");
+  const whatIsTested = [];
+  for (const [key, code] of Object.entries(testWhat)) {
+    whatIsTested.push(key);
+    const tokens = scan(code as string);
+    const result = LiTeXStmtsParse(env, tokens);
+    if (result === null) {
+      env.printErrorsWithDepth();
+    } else {
+      for (let i = 0; i < result.length; i++) {
+        const res: ExecInfo = nodeExec(env, result[i]);
+        if (!res.message) console.log(ResultTypeMap[res.type]);
+        else console.log(`${ResultTypeMap[res.type]} '${res.message}'`);
+      }
+    }
+  }
+  console.log("\n----TestWhat----\n");
+  whatIsTested.forEach((e) => console.log(e));
+  if (env.errorsWithDepth.length === 0) {
+    env.printCallOptFacts();
+    env.printDeclaredTemplates();
+  } else {
+    console.log("\n------Error------\n");
+    env.printErrorsWithDepth();
+    console.log();
+  }
+}
+
+testExecutor(setTheory);
+// testError();
