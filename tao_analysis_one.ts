@@ -6,5 +6,5 @@ export const setTheory = {
   In_both_set: ": inBoth(A,B,y: set(A), set(B) item(A,y)) <=> item(B,y);",
   Equality_of_sets:
     "def equality_of_sets(A,B: set(A), set(B)) <=> {set(A); set(B); inBoth(A,B,#y) ;}",
-  A_equals_B: "@ set(A), set(B), equality_of_sets(A,B);",
+  A_equals_B: "let A,B: set(A), set(B), equality_of_sets(A,B);",
 };

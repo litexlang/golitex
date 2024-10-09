@@ -29,7 +29,9 @@ export const testCodes = {
   // Prove: "def implies(x:set(x)) {set(x);}; prove implies(x) {}",
   // CallDefRight: "def func(x:set(x)); : set(x); let x: set(x); func(x);",
 
-  inferRight: "def inf(x,y:set(x),set(y)) => {set2(x,y);}",
+  inferRight:
+    "def inf(x,y:set(x),set(y)) => {set2(x,y);} let x,y: set(x), set(y), inf(x,y);set2(x,y);",
+  KnowEverything: "let a,b; know_everything inf(a,b);",
 };
 
 export const testErrorCode = {
