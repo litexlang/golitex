@@ -370,23 +370,36 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       env.getDeclaredTemplate(node) as TemplateNode,
       node.requirements
     );
-    let mapping = relatedTemplate.fix(node);
-    if (!mapping) return execInfo(ResultType.KnowError);
-    // let res = relatedTemplate.emit(env, mapping, );
 
-    let allRequirementsAreSatisfied = relatedTemplate.requirementsSatisfied(
-      env,
-      mapping
-    );
-
-    //! If all the requirements of this template is satisfied, then facts are emitted.
-    if (allRequirementsAreSatisfied) {
-      for (let onlyIf of relatedTemplate.onlyIfExprs) {
-        if (onlyIf instanceof CallOptNode) {
-          let tmp = env.getDeclaredTemplate(onlyIf);
-          if (!tmp) return execInfo(ResultType.Error);
-          tmp.emit(env, mapping, node.optParams);
-        }
+    let rightIsTrue: Boolean = false;
+    const mapping = relatedTemplate.fix(node);
+    if (!mapping) return handleRuntimeError(env, ResultType.Error);
+    rightIsTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+    if (!rightIsTrue) return execInfo(ResultType.Unknown);
+    else {
+      const fixedRequirements = fixFree(
+        env,
+        node,
+        true,
+        false,
+        relatedTemplate
+      )?.onlyIf;
+      if (!fixedRequirements)
+        return handleRuntimeError(
+          env,
+          ResultType.Error,
+          `Invalid invocation of ${node.optName}.`
+        );
+      // emit
+      for (let fixedReq of fixedRequirements) {
+        const tmp = env.getDeclaredTemplate(fixedReq.name);
+        if (!tmp)
+          return handleRuntimeError(
+            env,
+            ResultType.Error,
+            `${findIndex.name} has not declared.`
+          );
+        env.newStoredFact(fixedReq.params, tmp);
       }
     }
 
@@ -641,8 +654,8 @@ function _fixFreesUsingMap(
     const arr: string[] = [];
     for (let s of freeArr) {
       const fixedS = mapping.get(s);
-      if (!fixedS) return undefined;
-      arr.push(fixedS);
+      if (!fixedS) arr.push(s);
+      else arr.push(fixedS);
     }
     fixedArrArr.push(arr);
   }

@@ -248,7 +248,7 @@ export abstract class TemplateNode extends LiTeXNode {
   ): ExecInfo {
     try {
       const keys = fathers.map((arr) => [...arr]);
-      keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || ""));
+      keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || e));
 
       env.newStoredFact(keys, this);
 

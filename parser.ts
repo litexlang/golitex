@@ -387,12 +387,12 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
 
       case "{":
         const blockBrace = nonExecutableBlockParse(env, tokens);
-        result = new InferNode(
+        result = new DefNode(
           declOptName,
           freeVarsFact.freeVars,
           freeVarsFact.properties
         );
-        (result as InferNode).onlyIfExprs = blockBrace;
+        (result as DefNode).onlyIfExprs = blockBrace;
         break;
 
       case "<=>":
