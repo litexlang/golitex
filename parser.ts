@@ -14,6 +14,7 @@ import {
   ProveNode,
   YAProveNode,
   HaveNode,
+  ImpliesFactNode,
 } from "./ast";
 import { LiTeXEnv } from "./env";
 import {
@@ -169,7 +170,25 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
           break;
         default:
           node = callOptParse(env, tokens, true);
-          knowNode.facts.push(node as FactNode);
+          if (isCurToken("=>", tokens)) {
+            skip(tokens, "=>");
+            if (isCurToken("{", tokens)) {
+              const block = nonExecutableBlockParse(env, tokens);
+              const implies = new ImpliesFactNode(
+                node as CallOptNode,
+                block as CallOptNode[]
+              );
+              knowNode.facts.push(implies);
+            } else {
+              const implied = callOptParse(env, tokens);
+              const implies = new ImpliesFactNode(node as CallOptNode, [
+                implied as CallOptNode,
+              ]);
+              knowNode.facts.push(implies);
+            }
+          } else {
+            knowNode.facts.push(node as FactNode);
+          }
       }
 
       if (tokens[0] === ",") skip(tokens, ",");

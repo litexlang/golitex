@@ -11,6 +11,7 @@ import {
   YAProveNode,
   HaveNode,
   ExistNode,
+  ImpliesFactNode,
 } from "./ast";
 import { LiTeXBuiltinKeywords } from "./builtins";
 import { LiTeXKeywords } from "./common";
@@ -302,6 +303,8 @@ function yaKnowExec(env: LiTeXEnv, node: KnowNode): ExecInfo {
           if (isKnowEverything)
             res = yaKnowEverythingCallOptExec(env, fact as CallOptNode);
           else res = yaKnowCallOptExec(env, fact as CallOptNode);
+          break;
+        case LiTexNodeType.ImpliesFactNode:
           break;
         case LiTexNodeType.DefNode:
         case LiTexNodeType.InferNode: {
@@ -925,3 +928,21 @@ function checkFree(
 
   return true;
 }
+
+// function knowImpliesFactExec(env: LiTeXEnv, node: ImpliesFactNode) {
+//   try {
+//     const namesWithHash = node.freeVars.map((e) => "#" + e);
+//     for (const req of node.requirements.concat(node.onlyIfExprs)) {
+//       req.optParams.map((ls) =>
+//         ls.map((s) => {
+//           if (node.freeVars.includes(s)) {
+//             return "#" + s;
+//           }
+//         })
+//       );
+//     }
+//     env.newStoredFact();
+//   } catch (error) {
+//     return handleRuntimeError(env, ResultType.KnowError);
+//   }
+// }

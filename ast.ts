@@ -1,4 +1,5 @@
 // import { on } from "events";
+import { on } from "events";
 import { LiTeXKeywords, OptsConnectionSymbol } from "./common";
 import { LiTeXEnv } from "./env";
 import {
@@ -19,13 +20,14 @@ export enum LiTexNodeType {
   CallOptNode,
   CallOptsNode,
 
-  // Operators
+  // Operator | ImpliesFactNodes
   KnowNode,
   ExistNode,
   HaveNode,
   LetNode,
   ProofNode,
   CheckInProof,
+  ImpliesFactNode,
 
   // Template
   InferNode,
@@ -326,7 +328,7 @@ export class ExistNode extends TemplateNode {
   isTrue = false;
 }
 
-export type CanBeKnownNode = FactNode | TemplateNode;
+export type CanBeKnownNode = FactNode | TemplateNode | ImpliesFactNode;
 export class KnowNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
@@ -423,5 +425,17 @@ export class HaveNode extends LiTeXNode {
     super();
     this.params = params;
     this.opt = opt;
+  }
+}
+
+export class ImpliesFactNode extends LiTeXNode {
+  type: LiTexNodeType = LiTexNodeType.ImpliesFactNode;
+  callOpt: CallOptNode;
+  onlyIfExprs: CallOptNode[] = [];
+
+  constructor(callOpt: CallOptNode, onlyIfExprs: CallOptNode[]) {
+    super();
+    this.callOpt = callOpt;
+    this.onlyIfExprs = onlyIfExprs;
   }
 }
