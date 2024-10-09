@@ -431,11 +431,17 @@ export class HaveNode extends LiTeXNode {
 export class ImpliesFactNode extends LiTeXNode {
   type: LiTexNodeType = LiTexNodeType.ImpliesFactNode;
   callOpt: CallOptNode;
+  requirements: CallOptNode[][] = [];
   onlyIfExprs: CallOptNode[] = [];
 
-  constructor(callOpt: CallOptNode, onlyIfExprs: CallOptNode[]) {
+  constructor(
+    callOpt: CallOptNode,
+    onlyIfExprs: CallOptNode[],
+    requirements: CallOptNode[][] = []
+  ) {
     super();
     this.callOpt = callOpt;
+    this.requirements = requirements;
     this.onlyIfExprs = onlyIfExprs;
   }
 }

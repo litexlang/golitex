@@ -1,9 +1,11 @@
 import { CallOptNode, TemplateNode, makeTemplateNodeFact } from "./ast";
 import { LiTeXKeywords, OptsConnectionSymbol } from "./common";
 import {
+  emitFree,
   // _paramsInOptAreDeclared,
   ExecInfo,
   execInfo,
+  fixFree,
   handleRuntimeError,
   ResultType,
 } from "./executor";
@@ -11,7 +13,8 @@ import {
 export type StoredFact = {
   vars: string[][];
   template: TemplateNode[];
-  requirements: CallOptNode[][];
+  requirements: CallOptNode[][]; // CallOptNode[] is related to a single Template
+  onlyIfs: CallOptNode[]; // when this fact is satisfied, extra onlyIf is emitted
 };
 
 export class LiTeXEnv {
@@ -49,12 +52,17 @@ export class LiTeXEnv {
       handleRuntimeError(this, ResultType.Unknown);
       return false;
     } else {
-      return this.isStoredTrueFact(opt.optParams, relatedT);
+      return this.isStoredTrueFact(opt.optParams, relatedT, opt);
     }
   }
 
-  isStoredTrueFact(key: string[][], template: TemplateNode): boolean {
-    for (let sfPair of this.symbolsFactsPairs) {
+  isStoredTrueFact(
+    key: string[][],
+    template: TemplateNode,
+    //! 这种emit方式有问题：如果我有多个fact都能证明这个东西是对的，那么只有一个storedFact onlyif 会被释放
+    callOpt: undefined | CallOptNode = undefined // when defined, something will be emitted: the storedFact
+  ): boolean {
+    for (let sfPair of this.symbolsFactsPairs as StoredFact[]) {
       if (!_isLiterallyFact(sfPair.vars, key)) {
         continue;
       } else {
@@ -65,6 +73,9 @@ export class LiTeXEnv {
 
           // no extra requirements
           if (sfPair.requirements.length === 0) {
+            if (callOpt)
+              emitFree(this, callOpt, template, false, false, sfPair.onlyIfs);
+
             return true;
           }
 
@@ -95,7 +106,7 @@ export class LiTeXEnv {
               // check fixed params
               let tmp = this.getDeclaredTemplate(optName);
               if (!tmp) return false;
-              let res = this.isStoredTrueFact(fixedParams, tmp);
+              let res = this.isStoredTrueFact(fixedParams, tmp); // nothing is emitted here.
               if (!res) {
                 allRequirementsSatisfied = false;
                 break;
@@ -104,13 +115,17 @@ export class LiTeXEnv {
             if (!allRequirementsSatisfied) break;
           }
 
-          if (allRequirementsSatisfied) return true;
-          else continue;
+          if (allRequirementsSatisfied) {
+            if (callOpt)
+              emitFree(this, callOpt, template, false, false, sfPair.onlyIfs);
+            return true;
+          } else continue;
         }
       }
     }
 
-    if (this.father) return this.father.isStoredTrueFact(key, template);
+    if (this.father)
+      return this.father.isStoredTrueFact(key, template, callOpt);
     else return false;
 
     function _isLiterallyFact(arr1: string[][], arr2: string[][]): boolean {
@@ -163,7 +178,8 @@ export class LiTeXEnv {
   newStoredFact(
     key: string[][],
     template: TemplateNode,
-    requirements: CallOptNode[][] = []
+    requirements: CallOptNode[][] = [],
+    onlyIfs: CallOptNode[] = []
   ) {
     const existingPair = this.symbolsFactsPairs.find((pair) =>
       this.arraysEqual(pair.vars, key)
@@ -176,6 +192,7 @@ export class LiTeXEnv {
         vars: key,
         template: [template],
         requirements: requirements,
+        onlyIfs: onlyIfs,
       });
     }
   }

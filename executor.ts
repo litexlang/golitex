@@ -305,6 +305,7 @@ function yaKnowExec(env: LiTeXEnv, node: KnowNode): ExecInfo {
           else res = yaKnowCallOptExec(env, fact as CallOptNode);
           break;
         case LiTexNodeType.ImpliesFactNode:
+          res = knowImpliesFactExec(env, fact as ImpliesFactNode);
           break;
         case LiTexNodeType.DefNode:
         case LiTexNodeType.InferNode: {
@@ -681,31 +682,34 @@ type OptParamsType = { name: string; params: string[][] };
 type FixFreeType = {
   onlyIf: OptParamsType[];
   req: OptParamsType[];
+  others: OptParamsType[];
 };
 
 // Main Helper Function
 //? Many executor function can be refactored using fixFree
-function fixFree(
+export function fixFree(
   env: LiTeXEnv,
   opt: CallOptNode,
   fixOnlyIf: Boolean = false,
   fixReq: Boolean = false,
-  relatedTemplate: TemplateNode | undefined = undefined
+  relatedTemplate: TemplateNode | undefined = undefined,
+  otherFrees: CallOptNode[] = []
 ): FixFreeType | undefined {
   if (!relatedTemplate) env.getDeclaredTemplate(opt);
   const result = {
     onlyIf: [] as OptParamsType[],
     req: [] as OptParamsType[],
+    others: [] as OptParamsType[],
   };
 
   if (!relatedTemplate) {
-    handleRuntimeError(env, ResultType.HaveError, "exist not declared");
+    handleRuntimeError(env, ResultType.Error, "exist not declared");
     return undefined;
   }
 
   const mapping = relatedTemplate?.fix(opt);
   if (!mapping) {
-    handleRuntimeError(env, ResultType.HaveError, "calling undeclared symbol.");
+    handleRuntimeError(env, ResultType.Error, "calling undeclared symbol.");
     return undefined;
   }
 
@@ -714,7 +718,7 @@ function fixFree(
     for (let curOpt of relatedTemplate.requirements as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
-        handleRuntimeError(env, ResultType.HaveError);
+        handleRuntimeError(env, ResultType.Error);
         return undefined;
       }
       optParamsArr.push({ name: curOpt.optName, params: fixedArrArr });
@@ -727,12 +731,25 @@ function fixFree(
     for (let curOpt of relatedTemplate.onlyIfExprs as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
-        handleRuntimeError(env, ResultType.HaveError);
+        handleRuntimeError(env, ResultType.Error);
         return undefined;
       }
       optParamsArr.push({ name: curOpt.optName, params: fixedArrArr });
     }
     result.onlyIf = optParamsArr;
+  }
+
+  if (otherFrees.length >= 1) {
+    const optParamsArr: OptParamsType[] = [];
+    for (let curOpt of otherFrees as CallOptNode[]) {
+      const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
+      if (!fixedArrArr) {
+        handleRuntimeError(env, ResultType.Error);
+        return undefined;
+      }
+      optParamsArr.push({ name: curOpt.optName, params: fixedArrArr });
+    }
+    result.others = optParamsArr;
   }
 
   return result;
@@ -862,21 +879,35 @@ function callDefExec(
   }
 }
 
-function emitFree(
+export function emitFree(
   env: LiTeXEnv,
   node: CallOptNode,
   relatedTemplate: TemplateNode,
   onlyIf: Boolean,
-  req: Boolean
+  req: Boolean,
+  otherFrees: CallOptNode[] = [] // free vars not bound to template.onlyif or req
 ): ExecInfo {
-  const fixedFrees = fixFree(env, node, onlyIf, req, relatedTemplate);
-  if (fixedFrees?.onlyIf === undefined || fixedFrees.req === undefined)
+  const fixedFrees = fixFree(
+    env,
+    node,
+    onlyIf,
+    req,
+    relatedTemplate,
+    otherFrees
+  );
+  if (
+    fixedFrees?.onlyIf === undefined ||
+    fixedFrees.req === undefined ||
+    fixedFrees.others === undefined
+  )
     return handleRuntimeError(
       env,
       ResultType.Error,
       `Invalid invocation of ${node.optName}.`
     );
-  const fixWhat = fixedFrees?.onlyIf.concat(fixedFrees.req);
+  const fixWhat = fixedFrees?.onlyIf
+    .concat(fixedFrees.req)
+    .concat(fixedFrees.others);
 
   // emit
   for (let fixedReq of fixWhat) {
@@ -893,7 +924,7 @@ function emitFree(
   return execInfo(ResultType.True);
 }
 
-function checkFree(
+export function checkFree(
   env: LiTeXEnv,
   node: CallOptNode,
   relatedTemplate: TemplateNode,
@@ -929,20 +960,27 @@ function checkFree(
   return true;
 }
 
-// function knowImpliesFactExec(env: LiTeXEnv, node: ImpliesFactNode) {
-//   try {
-//     const namesWithHash = node.freeVars.map((e) => "#" + e);
-//     for (const req of node.requirements.concat(node.onlyIfExprs)) {
-//       req.optParams.map((ls) =>
-//         ls.map((s) => {
-//           if (node.freeVars.includes(s)) {
-//             return "#" + s;
-//           }
-//         })
-//       );
-//     }
-//     env.newStoredFact();
-//   } catch (error) {
-//     return handleRuntimeError(env, ResultType.KnowError);
-//   }
-// }
+function knowImpliesFactExec(env: LiTeXEnv, node: ImpliesFactNode): ExecInfo {
+  try {
+    const tmp = env.getDeclaredTemplate(node.callOpt);
+    if (!tmp) {
+      handleRuntimeError(
+        env,
+        ResultType.Error,
+        `${findIndex.name} has not declared.`
+      );
+      return execInfo(ResultType.KnowError);
+    }
+
+    env.newStoredFact(
+      node.callOpt.optParams,
+      tmp,
+      node.requirements,
+      node.onlyIfExprs
+    );
+
+    return execInfo(ResultType.KnowTrue);
+  } catch (error) {
+    return handleRuntimeError(env, ResultType.KnowError);
+  }
+}
