@@ -201,7 +201,10 @@ function callInferExec(
     // }
 
     // check itself
-    let isTrue: Boolean = env.isStoredTrueFact(node.optParams, relatedTemplate);
+    let isTrue: Boolean | undefined = env.isStoredTrueFact(
+      node.optParams,
+      relatedTemplate
+    );
 
     if (!isTrue)
       return handleRuntimeError(
@@ -211,9 +214,12 @@ function callInferExec(
       );
 
     // check all requirements
-    const mapping = relatedTemplate.fix(node);
-    if (!mapping) return handleRuntimeError(env, ResultType.Error);
-    isTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+    isTrue = checkFree(env, node, relatedTemplate, false, true);
+
+    // const mapping = relatedTemplate.fix(node);
+    // if (!mapping) return handleRuntimeError(env, ResultType.Error);
+    // isTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+
     if (!isTrue)
       return handleRuntimeError(
         env,
@@ -222,7 +228,8 @@ function callInferExec(
       );
 
     // emit
-    relatedTemplate.emitOnlyIfs(env, mapping);
+    emit(env, node, relatedTemplate, true, false);
+    // relatedTemplate.emitOnlyIfs(env, mapping);
 
     return execInfo(
       ResultType.DefTrue,
@@ -356,6 +363,18 @@ function yaKnowEverythingCallOptExec(
 
 function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
   try {
+    if (
+      !node.optParams.every((ls) =>
+        ls.every((s) => env.declaredVars.includes(s))
+      )
+    ) {
+      return handleRuntimeError(
+        env,
+        ResultType.KnowError,
+        "symbol not declared."
+      );
+    }
+
     let relatedTemplate = env.getDeclaredTemplate(node);
 
     if (!relatedTemplate)
@@ -811,12 +830,15 @@ function callDefExec(
           );
         env.newStoredFact(fixedReq.params, tmp);
       }
+      return execInfo(ResultType.True);
     }
 
-    let rightIsTrue: Boolean = false;
-    const mapping = relatedTemplate.fix(node);
-    if (!mapping) return handleRuntimeError(env, ResultType.Error);
-    rightIsTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+    let rightIsTrue = checkFree(env, node, relatedTemplate, false, true);
+    // let rightIsTrue: Boolean = false;
+    // const mapping = relatedTemplate.fix(node);
+    // if (!mapping) return handleRuntimeError(env, ResultType.Error);
+    // rightIsTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+
     if (!rightIsTrue) return execInfo(ResultType.Unknown);
     else {
       env.newCallOptFact(node);
@@ -858,4 +880,40 @@ function emit(
   }
 
   return execInfo(ResultType.True);
+}
+
+function checkFree(
+  env: LiTeXEnv,
+  node: CallOptNode,
+  relatedTemplate: TemplateNode,
+  onlyIf: Boolean,
+  req: Boolean
+): Boolean | undefined {
+  const fixedFrees = fixFree(env, node, onlyIf, req, relatedTemplate);
+  if (fixedFrees?.onlyIf === undefined || fixedFrees.req === undefined) {
+    handleRuntimeError(
+      env,
+      ResultType.Error,
+      `Invalid invocation of ${node.optName}.`
+    );
+    return undefined;
+  }
+  const fixWhat = fixedFrees?.onlyIf.concat(fixedFrees.req);
+
+  //
+  for (let fixedReq of fixWhat) {
+    const tmp = env.getDeclaredTemplate(fixedReq.name);
+    if (!tmp) {
+      handleRuntimeError(
+        env,
+        ResultType.Error,
+        `${findIndex.name} has not declared.`
+      );
+      return undefined;
+    }
+    const t = env.isStoredTrueFact(fixedReq.params, tmp);
+    if (!t) return false;
+  }
+
+  return true;
 }
