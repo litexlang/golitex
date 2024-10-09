@@ -371,36 +371,41 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): ExecInfo {
       node.requirements
     );
 
+    /** The following lines should be refactored */
     let rightIsTrue: Boolean = false;
     const mapping = relatedTemplate.fix(node);
     if (!mapping) return handleRuntimeError(env, ResultType.Error);
     rightIsTrue = relatedTemplate.requirementsSatisfied(env, mapping);
     if (!rightIsTrue) return execInfo(ResultType.Unknown);
     else {
-      const fixedRequirements = fixFree(
-        env,
-        node,
-        true,
-        false,
-        relatedTemplate
-      )?.onlyIf;
-      if (!fixedRequirements)
-        return handleRuntimeError(
-          env,
-          ResultType.Error,
-          `Invalid invocation of ${node.optName}.`
-        );
-      // emit
-      for (let fixedReq of fixedRequirements) {
-        const tmp = env.getDeclaredTemplate(fixedReq.name);
-        if (!tmp)
-          return handleRuntimeError(
-            env,
-            ResultType.Error,
-            `${findIndex.name} has not declared.`
-          );
-        env.newStoredFact(fixedReq.params, tmp);
-      }
+      const res = emit(env, node, relatedTemplate, true, false);
+      if (!execInfoIsTrue(res)) return res;
+
+      /** All code in else can be abstracted */
+      // const fixedRequirements = fixFree(
+      //   env,
+      //   node,
+      //   true,
+      //   false,
+      //   relatedTemplate
+      // )?.onlyIf;
+      // if (!fixedRequirements)
+      //   return handleRuntimeError(
+      //     env,
+      //     ResultType.Error,
+      //     `Invalid invocation of ${node.optName}.`
+      //   );
+      // // emit
+      // for (let fixedReq of fixedRequirements) {
+      //   const tmp = env.getDeclaredTemplate(fixedReq.name);
+      //   if (!tmp)
+      //     return handleRuntimeError(
+      //       env,
+      //       ResultType.Error,
+      //       `${findIndex.name} has not declared.`
+      //     );
+      //   env.newStoredFact(fixedReq.params, tmp);
+      // }
     }
 
     return execInfo(ResultType.KnowTrue);
@@ -822,4 +827,35 @@ function callDefExec(
   } catch (error) {
     return handleRuntimeError(env, ResultType.DefError);
   }
+}
+
+function emit(
+  env: LiTeXEnv,
+  node: CallOptNode,
+  relatedTemplate: TemplateNode,
+  onlyIf: Boolean,
+  req: Boolean
+): ExecInfo {
+  const fixedFrees = fixFree(env, node, onlyIf, req, relatedTemplate);
+  if (fixedFrees?.onlyIf === undefined || fixedFrees.req === undefined)
+    return handleRuntimeError(
+      env,
+      ResultType.Error,
+      `Invalid invocation of ${node.optName}.`
+    );
+  const fixWhat = fixedFrees?.onlyIf.concat(fixedFrees.req);
+
+  // emit
+  for (let fixedReq of fixWhat) {
+    const tmp = env.getDeclaredTemplate(fixedReq.name);
+    if (!tmp)
+      return handleRuntimeError(
+        env,
+        ResultType.Error,
+        `${findIndex.name} has not declared.`
+      );
+    env.newStoredFact(fixedReq.params, tmp);
+  }
+
+  return execInfo(ResultType.True);
 }
