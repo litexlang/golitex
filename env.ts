@@ -2,10 +2,11 @@ import { CallOptNode, TNode, makeTemplateNodeFact } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import {
   emitFree,
-  // _paramsInOptAreDeclared,
   fixFree,
+  hFixFreeErr,
   hNoRelTErr,
   hRunErr,
+  OptParamsType,
   RType,
 } from "./executor";
 
@@ -45,8 +46,8 @@ export class L_Env {
   newYAFact(
     TName: string,
     vars: string[][],
-    req: CallOptNode[],
-    onlyIf: CallOptNode[]
+    req: CallOptNode[] = [],
+    onlyIf: CallOptNode[] = []
   ) {
     if (this.yaFacts.has(TName)) {
       this.yaFacts.get(TName)?.push(new yaSingleFact(vars, req, onlyIf));
@@ -55,7 +56,56 @@ export class L_Env {
     }
   }
 
-  yaCheckAndEmit(TName: string, vars: string[][]) {}
+  yaCheckAndEmit(opt: CallOptNode): Boolean {
+    const RelT = this.getRelT(opt);
+    if (!RelT) {
+      hNoRelTErr(opt);
+      return false;
+    }
+    const RFacts = this.yaFacts.get(opt.optName);
+    if (!RFacts) return false;
+
+    /** Find all facts that the current input satisfies */
+    let isT = false;
+    for (const [i, singleFact] of (RFacts as yaSingleFact[]).entries()) {
+      if (!_isLiterallyFact(singleFact.vars, opt.optParams)) continue;
+
+      /** Check requirements of this single fact */
+      //! 这里有问题！！！，需要自建map，比如 know fun(#x,a: g(x)):fun2(#y:t(a,y)) 这里需要建立联系
+      let dict = fixFree(this, opt, false, false, RelT, singleFact.req);
+      if (!dict) {
+        hFixFreeErr(opt);
+        return false;
+      }
+      let others: { name: string; params: string[][] }[] = dict.others;
+      isT = others.every((e) =>
+        this.yaCheckAndEmit(CallOptNode.create(e.name, e.params))
+      );
+
+      if (!isT) continue;
+
+      /** Emit onlyIfs */
+      dict = fixFree(this, opt, false, false, RelT, singleFact.onlyIf);
+      if (!dict) {
+        hFixFreeErr(opt);
+        return false;
+      }
+      others = dict.others;
+      others.forEach((e) => this.newYAFact(e.name, e.params));
+    }
+    return isT;
+
+    function _isLiterallyFact(fact: string[][], arr2: string[][]) {
+      return (
+        fact.length === arr2.length &&
+        fact.every(
+          (row, i) =>
+            row.length === arr2[i].length &&
+            row.every((val, j) => val === arr2[i][j] || val.startsWith("#"))
+        )
+      );
+    }
+  }
 
   newVar(varName: string): boolean {
     if (this.declaredVars.includes(varName)) {

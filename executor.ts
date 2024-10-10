@@ -13,7 +13,7 @@ import {
   ExistNode,
   ImpliesFactNode,
 } from "./ast";
-import { L_BuiltinKeywords } from "./builtins";
+import { L_Builtins } from "./builtins";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
 
@@ -192,7 +192,7 @@ function callInferExec(
   relT: TNode | undefined = undefined
 ): RInfo {
   try {
-    const builtinFunc = L_BuiltinKeywords[node.optName];
+    const builtinFunc = L_Builtins[node.optName];
     if (builtinFunc) {
       return builtinFunc(env, node);
     }
@@ -382,8 +382,8 @@ function haveExec(env: L_Env, node: HaveNode): RInfo {
   }
 }
 
-type OptParamsType = { name: string; params: string[][] };
-type FixFreeType = {
+export type OptParamsType = { name: string; params: string[][] };
+export type FixFreeType = {
   onlyIf: OptParamsType[];
   req: OptParamsType[];
   others: OptParamsType[];

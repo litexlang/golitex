@@ -1,10 +1,6 @@
-// import { on } from "events";
-import { on } from "events";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
 import {
-  // _paramsInOptAreDeclared,
-  // _VarsAreNotDeclared,
   hInfo,
   RInfo,
   hRunErr,

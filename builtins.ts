@@ -2,7 +2,7 @@ import { CallOptNode, L_Node } from "./ast";
 import { L_Env } from "./env";
 import { hInfo, RInfo, hRunErr, RType } from "./executor";
 
-export const L_BuiltinKeywords: {
+export const L_Builtins: {
   [key: string]: (env: L_Env, node: L_Node) => RInfo;
 } = {
   is_def: (env: L_Env, node: L_Node): RInfo => {
