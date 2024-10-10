@@ -198,52 +198,26 @@ function callInferExec(
     }
 
     if (!relT) relT = env.getRelT(node);
-
     if (!relT) return hNoRelTErr(node, RType.Error);
 
-    // if ( relT?.type === L_NodeType.ExistNode) {
-    //   return callExistExec(env, node as CallOptNode);
-    // } else if ( relT.type === L_NodeType.DefNode) {
-    //   return callDefExec(env, node as CallOptNode);
-    // }
-
     // check itself
-    let isTrue: Boolean | undefined = env.isStoredTrueFact(
-      node.optParams,
-      relT
-    );
-
-    if (!isTrue)
-      return hRunErr(
-        env,
-        RType.Unknown,
-        `${node.optName} itself is not satisfied.`
-      );
+    let isT: Boolean | undefined = env.isStoredTrueFact(node.optParams, relT);
+    if (!isT) return hInfo(RType.Unknown, `${node.optName} itself unsatisfied`);
 
     // check all requirements
-    isTrue = checkFree(env, node, relT, false, true);
+    isT = checkFree(env, node, relT, false, true);
 
-    // const mapping =  relT.fix(node);
-    // if (!mapping) return hRunErr(env, RType.Error);
-    // isTrue =  relT.requirementsSatisfied(env, mapping);
-
-    if (!isTrue)
-      return hRunErr(
-        env,
-        RType.Unknown,
-        `${node.optName} itself is true while its requirements are not satisfied.`
-      );
+    if (isT === undefined)
+      return hRunErr(env, RType.Error, "check infer requirement error.");
+    if (isT === false)
+      return hInfo(RType.Unknown, `${node.optName} requirements unsatisfied.`);
 
     // emit
     emitFree(env, node, relT, true, false);
-    //  relT.emitOnlyIfs(env, mapping);
 
-    return hInfo(
-      RType.DefTrue,
-      `${node.optName} itself and its requirements are all satisfied.`
-    );
+    return hInfo(RType.True);
   } catch (error) {
-    return hRunErr(env, RType.Error, "call operator");
+    return hRunErr(env, RType.Error, `call ${node.optName}`);
   }
 }
 
