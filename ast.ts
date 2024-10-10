@@ -212,18 +212,18 @@ export abstract class TNode extends L_Node {
 
     const freeFixMap = new Map<string, string>();
 
-    const relatedTemplates = [...this.fathers, this];
+    const relTs = [...this.fathers, this];
 
     if (
       !areArraysEqual(
         callOptParams,
-        relatedTemplates.map((e) => e.freeVars)
+        relTs.map((e) => e.freeVars)
       )
     ) {
       return undefined;
     }
 
-    for (let [i, template] of relatedTemplates.entries()) {
+    for (let [i, template] of relTs.entries()) {
       template.freeVars.forEach((v, j: number) =>
         freeFixMap.set(v, callOptParams[i][j])
       );
@@ -286,9 +286,9 @@ export abstract class TNode extends L_Node {
     fathers: string[][] = []
   ) {
     for (let requirement of this.requirements) {
-      const relatedTemplate = env.getRelT(requirement as CallOptNode) as TNode;
-      if (!relatedTemplate) return false;
-      relatedTemplate.emit(env, freeFixMap, fathers);
+      const relT = env.getRelT(requirement as CallOptNode) as TNode;
+      if (!relT) return false;
+      relT.emit(env, freeFixMap, fathers);
     }
     return true;
   }

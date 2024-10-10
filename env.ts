@@ -299,7 +299,7 @@ export class L_Env {
     if (node instanceof CallOptNode) s = node.optName;
     else s = node;
 
-    let relatedTemplate: TNode | undefined;
+    let relT: TNode | undefined;
 
     const searchInCurrentEnv = (): TNode | undefined => {
       if (isTop(s)) {
@@ -312,15 +312,15 @@ export class L_Env {
       }
     };
 
-    relatedTemplate = searchInCurrentEnv();
+    relT = searchInCurrentEnv();
 
     // If not found in current environment, search in father
-    if (!relatedTemplate && this.father) {
-      relatedTemplate = this.father.getRelT(node);
+    if (!relT && this.father) {
+      relT = this.father.getRelT(node);
 
-      return relatedTemplate;
+      return relT;
     } else {
-      return relatedTemplate;
+      return relT;
     }
   }
 

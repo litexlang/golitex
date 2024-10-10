@@ -159,19 +159,19 @@ function callOptsExec(env: L_Env, node: CallOptsNode): RInfo {
   try {
     const whatIsTrue: string[] = [];
     for (const fact of (node as CallOptsNode).nodes) {
-      const relatedTemplate = env.getRelT(fact as CallOptNode);
-      if (!relatedTemplate)
+      const relT = env.getRelT(fact as CallOptNode);
+      if (!relT)
         return hRunErr(env, RType.Error, `${fact.optName} is not declared.`);
       let info: RInfo = ErrorRInfo;
-      switch (relatedTemplate.type) {
+      switch (relT.type) {
         case L_NodeType.ExistNode:
-          info = callDefExec(env, fact, relatedTemplate, true);
+          info = callDefExec(env, fact, relT, true);
           break;
         case L_NodeType.DefNode:
-          info = callDefExec(env, fact, relatedTemplate);
+          info = callDefExec(env, fact, relT);
           break;
         case L_NodeType.InferNode:
-          info = callInferExec(env, fact, relatedTemplate);
+          info = callInferExec(env, fact, relT);
           break;
       }
       if (info.type === RType.Unknown || info.type === RType.False) {
@@ -189,7 +189,7 @@ function callOptsExec(env: L_Env, node: CallOptsNode): RInfo {
 function callInferExec(
   env: L_Env,
   node: CallOptNode,
-  relatedTemplate: TNode | undefined = undefined
+  relT: TNode | undefined = undefined
 ): RInfo {
   try {
     const builtinFunc = L_BuiltinKeywords[node.optName];
@@ -197,21 +197,20 @@ function callInferExec(
       return builtinFunc(env, node);
     }
 
-    if (!relatedTemplate) relatedTemplate = env.getRelT(node);
+    if (!relT) relT = env.getRelT(node);
 
-    if (!relatedTemplate)
-      return hRunErr(env, RType.False, node.optName + " is not declared.");
+    if (!relT) return hNoRelTErr(node, RType.Error);
 
-    // if (relatedTemplate?.type === L_NodeType.ExistNode) {
+    // if ( relT?.type === L_NodeType.ExistNode) {
     //   return callExistExec(env, node as CallOptNode);
-    // } else if (relatedTemplate.type === L_NodeType.DefNode) {
+    // } else if ( relT.type === L_NodeType.DefNode) {
     //   return callDefExec(env, node as CallOptNode);
     // }
 
     // check itself
     let isTrue: Boolean | undefined = env.isStoredTrueFact(
       node.optParams,
-      relatedTemplate
+      relT
     );
 
     if (!isTrue)
@@ -222,11 +221,11 @@ function callInferExec(
       );
 
     // check all requirements
-    isTrue = checkFree(env, node, relatedTemplate, false, true);
+    isTrue = checkFree(env, node, relT, false, true);
 
-    // const mapping = relatedTemplate.fix(node);
+    // const mapping =  relT.fix(node);
     // if (!mapping) return hRunErr(env, RType.Error);
-    // isTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+    // isTrue =  relT.requirementsSatisfied(env, mapping);
 
     if (!isTrue)
       return hRunErr(
@@ -236,8 +235,8 @@ function callInferExec(
       );
 
     // emit
-    emitFree(env, node, relatedTemplate, true, false);
-    // relatedTemplate.emitOnlyIfs(env, mapping);
+    emitFree(env, node, relT, true, false);
+    //  relT.emitOnlyIfs(env, mapping);
 
     return hInfo(
       RType.DefTrue,
@@ -377,14 +376,14 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
       return hRunErr(env, RType.KnowError, "symbol not declared.");
     }
 
-    let relatedTemplate = env.getRelT(node);
+    let relT = env.getRelT(node);
 
-    if (!relatedTemplate)
+    if (!relT)
       return hInfo(RType.KnowUndeclared, node.optName + " has not declared");
 
     /**Know Exist Opt */
-    if (relatedTemplate.type === L_NodeType.ExistNode) {
-      (relatedTemplate as ExistNode).isTrue = true;
+    if (relT.type === L_NodeType.ExistNode) {
+      (relT as ExistNode).isTrue = true;
       return hInfo(RType.KnowTrue);
     }
 
@@ -397,15 +396,15 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
 
     /** The following lines should be refactored */
     // let rightIsTrue: Boolean = false;
-    // const mapping = relatedTemplate.fix(node);
+    // const mapping =  relT.fix(node);
     // if (!mapping) return hRunErr(env, RType.Error);
-    // rightIsTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+    // rightIsTrue =  relT.requirementsSatisfied(env, mapping);
 
-    let rightIsTrue = checkFree(env, node, relatedTemplate, false, true);
+    let rightIsTrue = checkFree(env, node, relT, false, true);
 
     if (!rightIsTrue) return hInfo(RType.Unknown);
     else {
-      const res = emitFree(env, node, relatedTemplate, true, false);
+      const res = emitFree(env, node, relT, true, false);
       if (!RInfoIsTrue(res)) return res;
 
       /** All code in else can be abstracted */
@@ -414,7 +413,7 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
       //   node,
       //   true,
       //   false,
-      //   relatedTemplate
+      //    relT
       // )?.onlyIf;
       // if (!fixedRequirements)
       //   return hRunErr(
@@ -444,10 +443,10 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
 
 // function proveInferExec(env: L_Env, node: YAProveNode): RInfo {
 //   try {
-//     const relatedTemplate = env.getRelT(
+//     const  relT = env.getRelT(
 //       node.templateNames.join(":")
 //     );
-//     if (!relatedTemplate)
+//     if (! relT)
 //       return hInfo(
 //         RType.ProveError,
 //         `${node.templateNames.join(":")} is not declared.`
@@ -503,7 +502,7 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
 //     }
 
 //     let res: RInfo = RInfo(RType.ProveError);
-//     let onlyIfsThatNeedsCheck = [...relatedTemplate.onlyIfExprs];
+//     let onlyIfsThatNeedsCheck = [... relT.onlyIfExprs];
 //     for (let onlyIfCallOpts of node.onlyIfExprs) {
 //       if (onlyIfCallOpts instanceof CallOptsNode) {
 //         for (let onlyIf of (onlyIfCallOpts as CallOptsNode).nodes) {
@@ -684,22 +683,22 @@ export function fixFree(
   opt: CallOptNode,
   fixOnlyIf: Boolean = false,
   fixReq: Boolean = false,
-  relatedTemplate: TNode | undefined = undefined,
+  relT: TNode | undefined = undefined,
   otherFrees: CallOptNode[] = []
 ): FixFreeType | undefined {
-  if (!relatedTemplate) env.getRelT(opt);
+  if (!relT) env.getRelT(opt);
   const result = {
     onlyIf: [] as OptParamsType[],
     req: [] as OptParamsType[],
     others: [] as OptParamsType[],
   };
 
-  if (!relatedTemplate) {
+  if (!relT) {
     hRunErr(env, RType.Error, "exist not declared");
     return undefined;
   }
 
-  const mapping = relatedTemplate?.fix(opt);
+  const mapping = relT?.fix(opt);
   if (!mapping) {
     hRunErr(env, RType.Error, "calling undeclared symbol.");
     return undefined;
@@ -707,7 +706,7 @@ export function fixFree(
 
   if (fixReq) {
     const optParamsArr: OptParamsType[] = [];
-    for (let curOpt of relatedTemplate.requirements as CallOptNode[]) {
+    for (let curOpt of relT.requirements as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
         hRunErr(env, RType.Error);
@@ -720,7 +719,7 @@ export function fixFree(
 
   if (fixOnlyIf) {
     const optParamsArr: OptParamsType[] = [];
-    for (let curOpt of relatedTemplate.onlyIfExprs as CallOptNode[]) {
+    for (let curOpt of relT.onlyIfExprs as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
         hRunErr(env, RType.Error);
@@ -767,7 +766,7 @@ export function fixFree(
 // function callExistExec(
 //   env: L_Env,
 //   node: CallOptNode,
-//   relatedTemplate: TNode
+//    relT: TNode
 // ): RInfo {
 //   try {
 //     /** check exist itself and emit requirements */
@@ -780,7 +779,7 @@ export function fixFree(
 //       node,
 //       false,
 //       true,
-//       relatedTemplate
+//        relT
 //     )?.req;
 //     if (fixedRequirements === undefined)
 //       return hRunErr(
@@ -812,18 +811,15 @@ export function fixFree(
 function callDefExec(
   env: L_Env,
   node: CallOptNode,
-  relatedTemplate: TNode,
+  relT: TNode,
   calledByExist: Boolean = false
 ): RInfo {
   try {
     // check left(i.e. the opt itself)
-    let leftIsTrue: Boolean = env.isStoredTrueFact(
-      node.optParams,
-      relatedTemplate
-    );
+    let leftIsTrue: Boolean = env.isStoredTrueFact(node.optParams, relT);
 
     if (leftIsTrue) {
-      const res = emitFree(env, node, relatedTemplate, false, true);
+      const res = emitFree(env, node, relT, false, true);
       if (!RInfoIsTrue(res)) return res;
 
       // const fixedRequirements = fixFree(
@@ -831,7 +827,7 @@ function callDefExec(
       //   node,
       //   false,
       //   true,
-      //   relatedTemplate
+      //    relT
       // )?.req;
       // if (!fixedRequirements)
       //   return hRunErr(
@@ -853,18 +849,18 @@ function callDefExec(
       // return hInfo(RType.True);
     }
 
-    let rightIsTrue = checkFree(env, node, relatedTemplate, false, true);
+    let rightIsTrue = checkFree(env, node, relT, false, true);
     // let rightIsTrue: Boolean = false;
-    // const mapping = relatedTemplate.fix(node);
+    // const mapping =  relT.fix(node);
     // if (!mapping) return hRunErr(env, RType.Error);
-    // rightIsTrue = relatedTemplate.requirementsSatisfied(env, mapping);
+    // rightIsTrue =  relT.requirementsSatisfied(env, mapping);
 
     if (!rightIsTrue) return hInfo(RType.Unknown);
     else {
       env.newCallOptFact(node);
     }
 
-    if (calledByExist) (relatedTemplate as ExistNode).isTrue = true;
+    if (calledByExist) (relT as ExistNode).isTrue = true;
     return hInfo(RType.True);
   } catch (error) {
     return hRunErr(env, RType.DefError);
@@ -874,19 +870,12 @@ function callDefExec(
 export function emitFree(
   env: L_Env,
   node: CallOptNode,
-  relatedTemplate: TNode,
+  relT: TNode,
   onlyIf: Boolean,
   req: Boolean,
   otherFrees: CallOptNode[] = [] // free vars not bound to template.onlyif or req
 ): RInfo {
-  const fixedFrees = fixFree(
-    env,
-    node,
-    onlyIf,
-    req,
-    relatedTemplate,
-    otherFrees
-  );
+  const fixedFrees = fixFree(env, node, onlyIf, req, relT, otherFrees);
   if (
     fixedFrees?.onlyIf === undefined ||
     fixedFrees.req === undefined ||
@@ -911,11 +900,11 @@ export function emitFree(
 export function checkFree(
   env: L_Env,
   node: CallOptNode,
-  relatedTemplate: TNode,
+  relT: TNode,
   onlyIf: Boolean,
   req: Boolean
 ): Boolean | undefined {
-  const fixedFrees = fixFree(env, node, onlyIf, req, relatedTemplate);
+  const fixedFrees = fixFree(env, node, onlyIf, req, relT);
   if (fixedFrees?.onlyIf === undefined || fixedFrees.req === undefined) {
     hRunErr(env, RType.Error, `Invalid invocation of ${node.optName}.`);
     return undefined;
