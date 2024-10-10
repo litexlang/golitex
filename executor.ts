@@ -382,6 +382,12 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
     if (!relatedTemplate)
       return hInfo(RType.KnowUndeclared, node.optName + " has not declared");
 
+    /**Know Exist Opt */
+    if (relatedTemplate.type === L_NodeType.ExistNode) {
+      (relatedTemplate as ExistNode).isTrue = true;
+      return hInfo(RType.KnowTrue);
+    }
+
     //! THE CLASSICAL WAY OF TRANSFORMING FREE VAR INTO FIXED AND EMIT
     env.newStoredFact(
       node.optParams,
@@ -657,6 +663,7 @@ function haveExec(env: L_Env, node: HaveNode): RInfo {
         return hInfo(RType.HaveFailed);
     }
 
+    (relT as ExistNode).isTrue = true;
     return hInfo(RType.HaveTrue);
   } catch (error) {
     return hRunErr(env, RType.HaveError);

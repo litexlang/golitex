@@ -16,6 +16,18 @@ export type StoredFact = {
   onlyIfs: CallOptNode[]; // when this fact is satisfied, extra onlyIf is emitted
 };
 
+export class yaSingleFact {
+  vars: string[][];
+  req: CallOptNode[];
+  onlyIf: CallOptNode[];
+
+  constructor(vars: string[][], req: CallOptNode[], onlyIf: CallOptNode[]) {
+    this.vars = vars;
+    this.onlyIf = onlyIf;
+    this.req = req;
+  }
+}
+
 export class L_Env {
   errors: string[] = [];
   errorsWithDepth: [string, number][] = []; //? [error message, depth], number here does not work for the time being
@@ -24,10 +36,26 @@ export class L_Env {
   declaredTemplates: Map<string, TNode> = new Map<string, TNode>();
   father: L_Env | undefined;
   symbolsFactsPairs: StoredFact[] = [];
+  yaFacts: Map<string, yaSingleFact[]> = new Map<string, yaSingleFact[]>();
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
   }
+
+  newYAFact(
+    TName: string,
+    vars: string[][],
+    req: CallOptNode[],
+    onlyIf: CallOptNode[]
+  ) {
+    if (this.yaFacts.has(TName)) {
+      this.yaFacts.get(TName)?.push(new yaSingleFact(vars, req, onlyIf));
+    } else {
+      this.yaFacts.set(TName, [new yaSingleFact(vars, req, onlyIf)]);
+    }
+  }
+
+  yaCheckAndEmit(TName: string, vars: string[][]) {}
 
   newVar(varName: string): boolean {
     if (this.declaredVars.includes(varName)) {
