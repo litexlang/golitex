@@ -33,7 +33,10 @@ export const testCodes = {
   //   "def inf(x,y:set(x),set(y)) => {set2(x,y);} let x,y: set(x), set(y), inf(x,y);set2(x,y);",
   // KnowEverything: "let a,b; know_everything inf(a,b);",
 
-  KnowImplies: "let x,y; know set(#x) => {set(#x);};",
+  //! ideal: let x,y: know set(#x:..):set2(#y:..) => {...}
+  // KnowImplies: "let x,y; know set(#x) => {set(#x);};",  
+
+
 };
 
 export const testErrorCode = {

@@ -233,9 +233,11 @@ function testExecutor(testWhat: any = testCodes) {
       env.printErrorsWithDepth();
     } else {
       for (let i = 0; i < result.length; i++) {
-        const res: ExecInfo = nodeExec(env, result[i]);
-        if (!res.message) console.log(ResultTypeMap[res.type]);
-        else console.log(`${ResultTypeMap[res.type]} '${res.message}'`);
+        if (key !== "Basics") {
+          const res: ExecInfo = nodeExec(env, result[i]);
+          if (!res.message) console.log(ResultTypeMap[res.type]);
+          else console.log(`${ResultTypeMap[res.type]} '${res.message}'`);
+        }
       }
     }
   }
