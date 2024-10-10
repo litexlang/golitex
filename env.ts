@@ -102,8 +102,7 @@ export class L_Env {
       } else {
         for (let templatesThatSatisfySFPair of sfPair.template) {
           // check whether we are manipulating the correct opt
-          if (templatesThatSatisfySFPair.declOptName !== template.declOptName)
-            continue;
+          if (templatesThatSatisfySFPair.name !== template.name) continue;
 
           // no extra requirements
           if (sfPair.requirements.length === 0) {
@@ -341,7 +340,7 @@ export class L_Env {
     // console.log("");
 
     // function printFact(template: TNode, fatherName: string = "") {
-    //   const name = fatherName + OptsConnectionSymbol + template.declOptName;
+    //   const name = fatherName + OptsConnectionSymbol + template. name;
     //   console.log(name);
     //   console.log(template.facts.map((e) => e.params));
     //   for (const subTemplate of template.declaredTemplates.values()) {

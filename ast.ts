@@ -88,7 +88,7 @@ export function makeTemplateNodeFact(
 // Main data structure of the whole project
 export abstract class TNode extends L_Node {
   type: L_NodeType = L_NodeType.InferNode;
-  declOptName: string;
+  name: string;
   freeVars: string[];
   requirements: CallOptNode[] = [];
   onlyIfExprs: L_Node[] = []; // After declaration, this becomes CallOpt[]
@@ -100,13 +100,9 @@ export abstract class TNode extends L_Node {
   // private fixedFullParams: string[][] = [];
   isRedefine: Boolean = false;
 
-  constructor(
-    declOptName: string,
-    freeVars: string[],
-    requirements: CallOptNode[]
-  ) {
+  constructor(name: string, freeVars: string[], requirements: CallOptNode[]) {
     super();
-    this.declOptName = declOptName;
+    this.name = name;
     this.freeVars = freeVars;
     this.requirements = requirements;
   }
@@ -147,7 +143,7 @@ export abstract class TNode extends L_Node {
         this.onlyIfExprs.splice(i, 1);
 
         const callNode = new CallOptNode([
-          [value.template.declOptName, value.template.freeVars],
+          [value.template.name, value.template.freeVars],
         ]);
         const templateNode: TNode = value.template;
 
@@ -160,14 +156,14 @@ export abstract class TNode extends L_Node {
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
       if (value instanceof TNode) {
-        if (L_Keywords.includes(value.declOptName))
+        if (L_Keywords.includes(value.name))
           return hRunErr(
             env,
             RType.DefError,
-            `Template '${value.declOptName}' is L_ keyword.`
+            `Template '${value.name}' is L_ keyword.`
           );
         value.initDeclaredTemplates(env, [...fathers, this]);
-        this.declaredTemplates.set(value.declOptName, value);
+        this.declaredTemplates.set(value.name, value);
         this.onlyIfExprs.splice(i, 1);
       } else if (value instanceof CallOptsNode) {
         this.onlyIfExprs = insertListIntoListAndDeleteElemOnIndex(

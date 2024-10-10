@@ -224,16 +224,16 @@ function callInferExec(
 function templateDeclExec(env: L_Env, node: TNode): RInfo {
   try {
     // Check if the template name already exists
-    if (!node.isRedefine && env.declaredTemplates.has(node.declOptName)) {
-      return hRunErr(env, RType.DefError, `${node.declOptName} has declared`);
+    if (!node.isRedefine && env.declaredTemplates.has(node.name)) {
+      return hRunErr(env, RType.DefError, `${node.name} has declared`);
     }
 
-    if (L_Keywords.includes(node.declOptName)) {
-      return hRunErr(env, RType.DefError, `'${node.declOptName}' is keyword.`);
+    if (L_Keywords.includes(node.name)) {
+      return hRunErr(env, RType.DefError, `'${node.name}' is keyword.`);
     }
 
     // If not already declared, set the new template
-    env.declaredTemplates.set(node.declOptName, node);
+    env.declaredTemplates.set(node.name, node);
 
     // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
     let res = node.initDeclaredTemplates(env);
@@ -281,14 +281,14 @@ function yaKnowExec(env: L_Env, node: KnowNode): RInfo {
           if (isKnowEverything) {
             res = yaKnowEverythingCallOptExec(
               env,
-              CallOptNode.create((fact as TNode).declOptName, [
+              CallOptNode.create((fact as TNode).name, [
                 (fact as TNode).freeVars,
               ])
             );
           } else {
             res = yaKnowCallOptExec(
               env,
-              CallOptNode.create((fact as TNode).declOptName, [
+              CallOptNode.create((fact as TNode).name, [
                 (fact as TNode).freeVars,
               ])
             );

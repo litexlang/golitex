@@ -364,7 +364,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
 
   try {
     const defName = skip(tokens, TemplateDeclarationKeywords);
-    const declOptName = shiftVar(tokens);
+    const name = shiftVar(tokens);
 
     const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
       freeVarsAndTheirFactsParse(env, tokens);
@@ -377,7 +377,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
         skip(tokens, "=>");
         if (!isCurToken("{", tokens)) {
           result = new InferNode(
-            declOptName,
+            name,
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
@@ -388,7 +388,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
         } else {
           const blockArrow = nonExecutableBlockParse(env, tokens);
           result = new InferNode(
-            declOptName,
+            name,
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
@@ -400,7 +400,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
       case "{":
         const blockBrace = nonExecutableBlockParse(env, tokens);
         result = new InferNode(
-          declOptName,
+          name,
           freeVarsFact.freeVars,
           freeVarsFact.properties
         );
@@ -411,7 +411,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
         skip(tokens, "<=>");
         if (!isCurToken("{", tokens)) {
           result = new DefNode(
-            declOptName,
+            name,
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
@@ -421,7 +421,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
         } else {
           const blockDoubleArrow = nonExecutableBlockParse(env, tokens);
           result = new DefNode(
-            declOptName,
+            name,
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
@@ -432,7 +432,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
 
       default:
         // no arrow, no block
-        result = new DefNode(declOptName, freeVarsFact.freeVars, []);
+        result = new DefNode(name, freeVarsFact.freeVars, []);
         (result as TNode).requirements = freeVarsFact.properties;
         break;
     }
@@ -500,7 +500,7 @@ function existParse(env: L_Env, tokens: string[]): ExistNode {
     /** Copy code from templateParse */
     skip(tokens, "exist") as string; // KnowTypeKeywords
 
-    const declOptName = shiftVar(tokens);
+    const name = shiftVar(tokens);
 
     const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
       freeVarsAndTheirFactsParse(env, tokens);
@@ -508,7 +508,7 @@ function existParse(env: L_Env, tokens: string[]): ExistNode {
     let result: ExistNode;
 
     result = new ExistNode(
-      declOptName,
+      name,
       freeVarsFact.freeVars,
       freeVarsFact.properties
     );
