@@ -93,11 +93,7 @@ export abstract class TNode extends L_Node {
   requirements: CallOptNode[] = [];
   onlyIfExprs: L_Node[] = []; // After declaration, this becomes CallOpt[]
   declaredTemplates = new Map<string, TNode>();
-  // facts: TNodeFact[] = [];
   private fathers: TNode[] = [];
-  // Fix all free variables in this template, no matter it's declared in fathers or itself
-  // private freeFixMap: Map<string, string> = new Map<string, string>();
-  // private fixedFullParams: string[][] = [];
   isRedefine: Boolean = false;
 
   constructor(name: string, freeVars: string[], requirements: CallOptNode[]) {
@@ -106,17 +102,6 @@ export abstract class TNode extends L_Node {
     this.freeVars = freeVars;
     this.requirements = requirements;
   }
-
-  // newFact(env: L_Env, fact: TNodeFact): RInfo {
-  //   if (!_paramsInOptAreDeclared(env, fact.params))
-  //     return _VarsAreNotDeclared(fact);
-  //   else {
-  //     env.newStoredFact(fact.params, this);
-  //     // this.facts.push(fact);
-  //   }
-  //   return hInfo(RType.True);
-  // }
-
   // Input a full name with colons and get descendants from any depth
   getDeclaredSubTemplate(s: string): undefined | TNode {
     const names: string[] = s.split(":");
@@ -368,27 +353,6 @@ export class DollarMarkNode extends L_Node {
     this.template = template;
   }
 }
-
-// export class ProveNode extends L_Node {
-//   type = L_NodeType.ProofNode;
-//   templateName: string;
-//   freeVars: string[];
-//   requirements: L_Node[];
-//   onlyIfExprs: L_Node[];
-
-//   constructor(
-//     templateName: string,
-//     freeVars: string[],
-//     requirements: L_Node[],
-//     onlyIfExprs: L_Node[]
-//   ) {
-//     super();
-//     this.templateName = templateName;
-//     this.freeVars = freeVars;
-//     this.requirements = requirements;
-//     this.onlyIfExprs = onlyIfExprs;
-//   }
-// }
 
 export class YAProveNode extends L_Node {
   type = L_NodeType.ProofNode;
