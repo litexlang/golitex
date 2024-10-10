@@ -947,6 +947,8 @@ function proveExec(env: L_Env, node: YAProveNode): RInfo {
         return proveInferExec(env, node, relatedT);
       case L_NodeType.DefNode:
         return proveDefExec(env, node, relatedT);
+      case L_NodeType.ExistNode:
+        return proveExist(env, node, relatedT);
     }
     return hRunErr(env, RType.ProveError);
   } catch (error) {
@@ -954,8 +956,17 @@ function proveExec(env: L_Env, node: YAProveNode): RInfo {
   }
 }
 
+function proveExist(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
+  try {
+    return hInfo(RType.ExistTrue);
+  } catch (error) {
+    return hRunErr(env, RType.ProveError);
+  }
+}
+
 function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
   try {
+    /** The only different between proveDef and proveInfer is: case def template requirements are used to check; in case infer they are used as pre-conditions*/
     const onlyIfs = node.onlyIfExprs as L_Node[];
     const req: CallOptNode[] = (node.requirements as CallOptNode[][]).flat();
     const newEnv = new L_Env();
@@ -984,7 +995,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
     }
 
     /**After execution, check whether template requirements are satisfied.*/
-    for (const [i, fact] of TFixFree.onlyIf.entries()) {
+    for (const [i, fact] of TFixFree.req.entries()) {
       const tmp = env.getRelT(fact.name);
       if (!tmp)
         return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
@@ -1035,7 +1046,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
         return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
     }
 
-    /**After execution, check whether template requirements are satisfied.*/
+    /**After execution, check whether template onlyIfs are satisfied.*/
     for (const [i, fact] of TFixFree.onlyIf.entries()) {
       const tmp = env.getRelT(fact.name);
       if (!tmp)
