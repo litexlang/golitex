@@ -6,8 +6,8 @@ import {
   ExecInfo,
   execInfo,
   fixFree,
-  handleRuntimeError,
-  ResultType,
+  hRunErr,
+  RType,
 } from "./executor";
 
 export type StoredFact = {
@@ -49,7 +49,7 @@ export class LiTeXEnv {
   isCallOptTrue(opt: CallOptNode): Boolean {
     const relatedT = this.getDeclaredTemplate(opt);
     if (!relatedT) {
-      handleRuntimeError(this, ResultType.Unknown);
+      hRunErr(this, RType.Unknown);
       return false;
     } else {
       return this.isStoredTrueFact(opt.optParams, relatedT, opt);
@@ -163,11 +163,7 @@ export class LiTeXEnv {
   newCallOptFact(opt: CallOptNode): Boolean {
     const T = this.getDeclaredTemplate(opt);
     if (!T) {
-      handleRuntimeError(
-        this,
-        ResultType.Error,
-        `${opt.optName} is not declared`
-      );
+      hRunErr(this, RType.Error, `${opt.optName} is not declared`);
       return false;
     } else {
       this.newStoredFact(opt.optParams, T);
@@ -248,9 +244,9 @@ export class LiTeXEnv {
   // pushCallOptFact(fact: CallOptNode): ExecInfo {
   //   const declaredTemplate = this.getDeclaredTemplate(fact.optName);
   //   if (!declaredTemplate)
-  //     return execInfo(ResultType.Error, fact.optName + "has not been declared");
+  //     return execInfo(RType.Error, fact.optName + "has not been declared");
   //   declaredTemplate.newFact(this, makeTemplateNodeFact(fact.optParams));
-  //   return execInfo(ResultType.KnowTrue);
+  //   return execInfo(RType.KnowTrue);
   // }
 
   // Main function of the whole project

@@ -11,7 +11,6 @@ import {
   FactNode,
   TemplateNode,
   DollarMarkNode,
-  ProveNode,
   YAProveNode,
   HaveNode,
   ImpliesFactNode,
@@ -406,7 +405,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
 
       case "{":
         const blockBrace = nonExecutableBlockParse(env, tokens);
-        result = new DefNode(
+        result = new InferNode(
           declOptName,
           freeVarsFact.freeVars,
           freeVarsFact.properties

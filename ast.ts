@@ -7,12 +7,12 @@ import {
   // _VarsAreNotDeclared,
   ExecInfo,
   execInfo,
-  handleRuntimeError,
-  ResultType,
+  hRunErr,
+  RType,
 } from "./executor";
 
 // There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
-export enum LiTexNodeType {
+export enum LiTeXNodeType {
   Error,
   Node,
 
@@ -39,12 +39,12 @@ export enum LiTexNodeType {
 }
 
 export abstract class LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.Node;
+  type: LiTeXNodeType = LiTeXNodeType.Node;
   constructor() {}
 }
 
 export class CallOptNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.CallOptNode;
+  type: LiTeXNodeType = LiTeXNodeType.CallOptNode;
   optName: string = "";
   optParams: string[][] = [];
   optNameAsLst: string[] = [];
@@ -87,7 +87,7 @@ export function makeTemplateNodeFact(
 
 // Main data structure of the whole project
 export abstract class TemplateNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.InferNode;
+  type: LiTeXNodeType = LiTeXNodeType.InferNode;
   declOptName: string;
   freeVars: string[];
   requirements: CallOptNode[] = [];
@@ -118,7 +118,7 @@ export abstract class TemplateNode extends LiTeXNode {
   //     env.newStoredFact(fact.params, this);
   //     // this.facts.push(fact);
   //   }
-  //   return execInfo(ResultType.True);
+  //   return execInfo(RType.True);
   // }
 
   // Input a full name with colons and get descendants from any depth
@@ -161,9 +161,9 @@ export abstract class TemplateNode extends LiTeXNode {
       const value = this.onlyIfExprs[i];
       if (value instanceof TemplateNode) {
         if (LiTeXKeywords.includes(value.declOptName))
-          return handleRuntimeError(
+          return hRunErr(
             env,
-            ResultType.DefError,
+            RType.DefError,
             `Template '${value.declOptName}' is LiTeX keyword.`
           );
         value.initDeclaredTemplates(env, [...fathers, this]);
@@ -180,14 +180,14 @@ export abstract class TemplateNode extends LiTeXNode {
 
     // make sure everything is done well.
     for (let i = 0; i < this.onlyIfExprs.length; i++) {
-      if (this.onlyIfExprs[i].type !== LiTexNodeType.CallOptNode) {
+      if (this.onlyIfExprs[i].type !== LiTeXNodeType.CallOptNode) {
         return execInfo(
-          ResultType.DefError,
+          RType.DefError,
           `arguments of def block should have type callOpt-type or def-type.`
         );
       }
     }
-    return execInfo(ResultType.DefTrue);
+    return execInfo(RType.DefTrue);
 
     function insertListIntoListAndDeleteElemOnIndex<T>(
       originalList: T[],
@@ -257,10 +257,10 @@ export abstract class TemplateNode extends LiTeXNode {
 
       env.newStoredFact(keys, this);
 
-      return execInfo(ResultType.True);
+      return execInfo(RType.True);
     } catch (error) {
       return execInfo(
-        ResultType.Error,
+        RType.Error,
         "error when emitting new fact into environment."
       );
     }
@@ -316,21 +316,21 @@ export abstract class TemplateNode extends LiTeXNode {
 }
 
 export class DefNode extends TemplateNode {
-  type: LiTexNodeType = LiTexNodeType.DefNode;
+  type: LiTeXNodeType = LiTeXNodeType.DefNode;
 }
 
 export class InferNode extends TemplateNode {
-  type: LiTexNodeType = LiTexNodeType.InferNode;
+  type: LiTeXNodeType = LiTeXNodeType.InferNode;
 }
 
 export class ExistNode extends TemplateNode {
-  type = LiTexNodeType.ExistNode;
+  type = LiTeXNodeType.ExistNode;
   isTrue = false;
 }
 
 export type CanBeKnownNode = FactNode | TemplateNode | ImpliesFactNode;
 export class KnowNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.KnowNode;
+  type: LiTeXNodeType = LiTeXNodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
   isKnowEverything: Boolean = false;
 }
@@ -342,7 +342,7 @@ export enum CallOptsNodeType {
   Not,
 }
 export class CallOptsNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.CallOptsNode;
+  type: LiTeXNodeType = LiTeXNodeType.CallOptsNode;
   nodes: CallOptNode[] = [];
   factType: CallOptsNodeType = CallOptsNodeType.And;
 
@@ -353,7 +353,7 @@ export class CallOptsNode extends LiTeXNode {
 }
 
 export class LetNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.LetNode;
+  type: LiTeXNodeType = LiTeXNodeType.LetNode;
   vars: string[];
   properties: CallOptNode[];
 
@@ -366,7 +366,7 @@ export class LetNode extends LiTeXNode {
 
 // Declare and call at the same time.
 export class DollarMarkNode extends LiTeXNode {
-  type = LiTexNodeType.DollarMarkNode;
+  type = LiTeXNodeType.DollarMarkNode;
   template: TemplateNode;
 
   constructor(template: TemplateNode) {
@@ -375,50 +375,51 @@ export class DollarMarkNode extends LiTeXNode {
   }
 }
 
-export class ProveNode extends LiTeXNode {
-  type = LiTexNodeType.ProofNode;
-  templateName: string;
-  freeVars: string[];
-  requirements: LiTeXNode[];
-  onlyIfExprs: LiTeXNode[];
+// export class ProveNode extends LiTeXNode {
+//   type = LiTeXNodeType.ProofNode;
+//   templateName: string;
+//   freeVars: string[];
+//   requirements: LiTeXNode[];
+//   onlyIfExprs: LiTeXNode[];
 
-  constructor(
-    templateName: string,
-    freeVars: string[],
-    requirements: LiTeXNode[],
-    onlyIfExprs: LiTeXNode[]
-  ) {
-    super();
-    this.templateName = templateName;
-    this.freeVars = freeVars;
-    this.requirements = requirements;
-    this.onlyIfExprs = onlyIfExprs;
-  }
-}
+//   constructor(
+//     templateName: string,
+//     freeVars: string[],
+//     requirements: LiTeXNode[],
+//     onlyIfExprs: LiTeXNode[]
+//   ) {
+//     super();
+//     this.templateName = templateName;
+//     this.freeVars = freeVars;
+//     this.requirements = requirements;
+//     this.onlyIfExprs = onlyIfExprs;
+//   }
+// }
 
 export class YAProveNode extends LiTeXNode {
-  type = LiTexNodeType.ProofNode;
+  type = LiTeXNodeType.ProofNode;
   templateNames: string[];
-  freeVars: string[][];
+  vars: string[][];
   requirements: CallOptNode[][];
   onlyIfExprs: LiTeXNode[];
 
   constructor(
     templateNames: string[],
-    freeVars: string[][],
+    vars: string[][],
     requirements: CallOptNode[][],
     onlyIfExprs: LiTeXNode[]
   ) {
     super();
     this.templateNames = templateNames;
-    this.freeVars = freeVars;
+    this.vars = vars;
     this.requirements = requirements;
     this.onlyIfExprs = onlyIfExprs;
+    //! It's impossible to get template here at parsing time, because in current interpreter, we parse everything then run, which leads to empty env at parsing time.
   }
 }
 
 export class HaveNode extends LiTeXNode {
-  type = LiTexNodeType.HaveNode;
+  type = LiTeXNodeType.HaveNode;
   params: string[];
   opt: CallOptNode;
   constructor(params: string[], opt: CallOptNode) {
@@ -429,7 +430,7 @@ export class HaveNode extends LiTeXNode {
 }
 
 export class ImpliesFactNode extends LiTeXNode {
-  type: LiTexNodeType = LiTexNodeType.ImpliesFactNode;
+  type: LiTeXNodeType = LiTeXNodeType.ImpliesFactNode;
   callOpt: CallOptNode;
   requirements: CallOptNode[][] = [];
   onlyIfExprs: CallOptNode[] = [];

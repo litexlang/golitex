@@ -145,7 +145,7 @@ const codes: string[] = [
   // "have x: fun(x);",
   // "re_def set(x) {}",
   // "exist ObjExist(x: obj(x)); ObjExist(o);",
-  "know set(#A) => {set(#A);};",
+  // "know set(#A) => {set(#A);};",
 ];
 
 function testLexer() {
