@@ -1,6 +1,6 @@
 export const testCodes = {
-  Basics:
-    ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(y,h);}} :set3(x){:set2(x)} ;",
+  // Basics:
+  //   ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(y,h);}} :set3(x){:set2(x)} ;",
   // Nothing: "",
   // Comment: "\\ Comment",
   // BasicInfer:
@@ -28,16 +28,13 @@ export const testCodes = {
   // ExistDecl1: "exist SomethingWithSomeProperties_E(x: set(x))",
   // Prove: "def implies(x:set(x)) {set(x);}; prove implies(x) {}",
   // CallDefRight: "def func(x:set(x)); : set(x); let x: set(x); func(x);",
-
   // inferRight:
   //   "def inf(x,y:set(x),set(y)) => {set2(x,y);} let x,y: set(x), set(y), inf(x,y);set2(x,y);",
   // KnowEverything: "let a,b; know_everything inf(a,b);",
-
   //! ideal: let x,y: know set(#x:..):set2(#y:..) => {...}
   // KnowImplies: "let x,y; know set(#x) => {set(#x);};",
-
-  ProveDef0: "& set3(x) {};",
-  // ProveDef: "prove set3(x: feature(x)):set2(x: f2(x)) {}",
+  // ProveDef0: "& set3(x) {};",
+  ProveDef: ":f2(x); :set3(x){:set2(x){f2(x);}}; prove set3(x):set2(x:f2(x)){}",
 };
 
 export const testErrorCode = {

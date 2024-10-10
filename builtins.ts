@@ -1,11 +1,11 @@
 import { CallOptNode, LiTeXNode } from "./ast";
 import { LiTeXEnv } from "./env";
-import { hInfo, rInfo, hRunErr, RType } from "./executor";
+import { hInfo, RInfo, hRunErr, RType } from "./executor";
 
 export const LiTeXBuiltinKeywords: {
-  [key: string]: (env: LiTeXEnv, node: LiTeXNode) => rInfo;
+  [key: string]: (env: LiTeXEnv, node: LiTeXNode) => RInfo;
 } = {
-  is_def: (env: LiTeXEnv, node: LiTeXNode): rInfo => {
+  is_def: (env: LiTeXEnv, node: LiTeXNode): RInfo => {
     const T = env.getDeclaredTemplate((node as CallOptNode).optParams[0][0])
       ? hInfo(RType.True)
       : hInfo(RType.False);

@@ -239,7 +239,7 @@ export class LiTeXEnv {
     this.errorsWithDepth.push([s, this.errorDepth]);
   }
 
-  // pushCallOptFact(fact: CallOptNode): rInfo {
+  // pushCallOptFact(fact: CallOptNode): RInfo {
   //   const declaredTemplate = this.getDeclaredTemplate(fact.optName);
   //   if (!declaredTemplate)
   //     return hInfo(RType.Error, fact.optName + "has not been declared");

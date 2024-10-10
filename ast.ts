@@ -6,7 +6,7 @@ import {
   // _paramsInOptAreDeclared,
   // _VarsAreNotDeclared,
   hInfo,
-  rInfo,
+  RInfo,
   hRunErr,
   RType,
 } from "./executor";
@@ -111,7 +111,7 @@ export abstract class TemplateNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
-  // newFact(env: LiTeXEnv, fact: TemplateNodeFact): rInfo {
+  // newFact(env: LiTeXEnv, fact: TemplateNodeFact): RInfo {
   //   if (!_paramsInOptAreDeclared(env, fact.params))
   //     return _VarsAreNotDeclared(fact);
   //   else {
@@ -136,7 +136,7 @@ export abstract class TemplateNode extends LiTeXNode {
 
   // If a node is DollarMarkNode or TemplateNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
   //! REFACTOR THIS SO THAT DEF IN REQ CAN APPEAR HERE.
-  initDeclaredTemplates(env: LiTeXEnv, fathers: TemplateNode[] = []): rInfo {
+  initDeclaredTemplates(env: LiTeXEnv, fathers: TemplateNode[] = []): RInfo {
     this.fathers = fathers;
 
     // process DollarMarks
@@ -250,7 +250,7 @@ export abstract class TemplateNode extends LiTeXNode {
     env: LiTeXEnv,
     freeFixMap: Map<string, string>,
     fathers: string[][] = []
-  ): rInfo {
+  ): RInfo {
     try {
       const keys = fathers.map((arr) => [...arr]);
       keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || e));

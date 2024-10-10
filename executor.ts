@@ -63,7 +63,7 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.ExistTrue]: "exist: true",
 };
 
-export function rInfoIsTrue(res: rInfo) {
+export function RInfoIsTrue(res: RInfo) {
   return [
     RType.True,
     RType.KnowTrue,
@@ -80,7 +80,7 @@ export function hRunErr(
   env: LiTeXEnv,
   type: RType,
   message: string = ""
-): rInfo {
+): RInfo {
   env.pushNewError(RTypeMap[type] + ": " + message);
   return hInfo(type, message);
 }
@@ -88,10 +88,10 @@ export function hRunErr(
 export const hInfo = (t: RType, s: string = "") => {
   return { type: t, message: s };
 };
-export type rInfo = { type: RType; message: string };
-export const ErrorrInfo = { type: RType.Error, message: "" };
+export type RInfo = { type: RType; message: string };
+export const ErrorRInfo = { type: RType.Error, message: "" };
 
-export function nodeExec(env: LiTeXEnv, node: LiTeXNode): rInfo {
+export function nodeExec(env: LiTeXEnv, node: LiTeXNode): RInfo {
   try {
     switch (node.type) {
       case LiTeXNodeType.DefNode:
@@ -105,8 +105,8 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): rInfo {
       case LiTeXNodeType.LetNode:
         return letExec(env, node as LetNode);
       case LiTeXNodeType.ProofNode:
-        return hInfo(RType.True);
-      // return proveExec(env, node as YAProveNode);
+        // return hInfo(RType.True);
+        return proveExec(env, node as YAProveNode);
       case LiTeXNodeType.HaveNode:
         return haveExec(env, node as HaveNode);
     }
@@ -116,7 +116,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): rInfo {
   }
 }
 
-function letExec(env: LiTeXEnv, node: LetNode): rInfo {
+function letExec(env: LiTeXEnv, node: LetNode): RInfo {
   try {
     // Check ofr duplicate variable declarations
     const notDeclared = node.vars.filter((v) => env.declaredVars.includes(v));
@@ -132,7 +132,7 @@ function letExec(env: LiTeXEnv, node: LetNode): rInfo {
 
     for (let i = 0; i < node.properties.length; i++) {
       let info = yaKnowCallOptExec(env, node.properties[i]);
-      if (!rInfoIsTrue(info)) return hRunErr(env, RType.LetError, info.message);
+      if (!RInfoIsTrue(info)) return hRunErr(env, RType.LetError, info.message);
     }
 
     return hInfo(RType.LetTrue);
@@ -141,14 +141,14 @@ function letExec(env: LiTeXEnv, node: LetNode): rInfo {
   }
 }
 
-function callOptsExec(env: LiTeXEnv, node: CallOptsNode): rInfo {
+function callOptsExec(env: LiTeXEnv, node: CallOptsNode): RInfo {
   try {
     const whatIsTrue: string[] = [];
     for (const fact of (node as CallOptsNode).nodes) {
       const relatedTemplate = env.getDeclaredTemplate(fact as CallOptNode);
       if (!relatedTemplate)
         return hRunErr(env, RType.Error, `${fact.optName} is not declared.`);
-      let info: rInfo = ErrorrInfo;
+      let info: RInfo = ErrorRInfo;
       switch (relatedTemplate.type) {
         case LiTeXNodeType.ExistNode:
           info = callDefExec(env, fact, relatedTemplate, true);
@@ -163,7 +163,7 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): rInfo {
       if (info.type === RType.Unknown || info.type === RType.False) {
         return info;
       }
-      if (!rInfoIsTrue(info)) return hRunErr(env, RType.Error, "");
+      if (!RInfoIsTrue(info)) return hRunErr(env, RType.Error, "");
       whatIsTrue.push(`${fact.optName} ${fact.optParams}`);
     }
     return hInfo(RType.True, whatIsTrue.join(";"));
@@ -176,7 +176,7 @@ function callInferExec(
   env: LiTeXEnv,
   node: CallOptNode,
   relatedTemplate: TemplateNode | undefined = undefined
-): rInfo {
+): RInfo {
   try {
     const builtinFunc = LiTeXBuiltinKeywords[node.optName];
     if (builtinFunc) {
@@ -234,7 +234,7 @@ function callInferExec(
   }
 }
 
-function templateDeclExec(env: LiTeXEnv, node: TemplateNode): rInfo {
+function templateDeclExec(env: LiTeXEnv, node: TemplateNode): RInfo {
   try {
     const declaredTemplates = env.declaredTemplates as Map<
       string,
@@ -257,7 +257,7 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): rInfo {
 
     // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
     let res = node.initDeclaredTemplates(env);
-    if (!rInfoIsTrue(res)) return hRunErr(env, RType.DefError);
+    if (!RInfoIsTrue(res)) return hRunErr(env, RType.DefError);
 
     switch (node.type) {
       case LiTeXNodeType.DefNode:
@@ -278,11 +278,11 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): rInfo {
   }
 }
 
-function yaKnowExec(env: LiTeXEnv, node: KnowNode): rInfo {
+function yaKnowExec(env: LiTeXEnv, node: KnowNode): RInfo {
   try {
     let facts: CanBeKnownNode[] = [];
     let isKnowEverything: Boolean = false;
-    let res: rInfo = { type: RType.Error, message: "" };
+    let res: RInfo = { type: RType.Error, message: "" };
 
     if (node.type === LiTeXNodeType.KnowNode) {
       facts = (node as KnowNode).facts;
@@ -320,7 +320,7 @@ function yaKnowExec(env: LiTeXEnv, node: KnowNode): rInfo {
           break;
         }
       }
-      if (!rInfoIsTrue(res)) return res;
+      if (!RInfoIsTrue(res)) return res;
     }
 
     return hInfo(RType.KnowTrue);
@@ -329,9 +329,9 @@ function yaKnowExec(env: LiTeXEnv, node: KnowNode): rInfo {
   }
 }
 
-function yaKnowEverythingCallOptExec(env: LiTeXEnv, fact: CallOptNode): rInfo {
+function yaKnowEverythingCallOptExec(env: LiTeXEnv, fact: CallOptNode): RInfo {
   try {
-    let res: rInfo = { type: RType.Error, message: "" };
+    let res: RInfo = { type: RType.Error, message: "" };
     res = yaKnowCallOptExec(env, fact);
 
     const template = env.getDeclaredTemplate(fact as CallOptNode);
@@ -348,7 +348,7 @@ function yaKnowEverythingCallOptExec(env: LiTeXEnv, fact: CallOptNode): rInfo {
     // if (!noErr)
     //   return hInfo(RType.Error, "calling undefined operator.");
 
-    // if (!rInfoIsTrue(res)) return res;
+    // if (!RInfoIsTrue(res)) return res;
 
     return hInfo(RType.KnowTrue);
   } catch (error) {
@@ -356,7 +356,7 @@ function yaKnowEverythingCallOptExec(env: LiTeXEnv, fact: CallOptNode): rInfo {
   }
 }
 
-function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): rInfo {
+function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
   try {
     if (
       !node.optParams.every((ls) =>
@@ -389,7 +389,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): rInfo {
     if (!rightIsTrue) return hInfo(RType.Unknown);
     else {
       const res = emitFree(env, node, relatedTemplate, true, false);
-      if (!rInfoIsTrue(res)) return res;
+      if (!RInfoIsTrue(res)) return res;
 
       /** All code in else can be abstracted */
       // const fixedRequirements = fixFree(
@@ -425,7 +425,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): rInfo {
   }
 }
 
-// function proveInferExec(env: LiTeXEnv, node: YAProveNode): rInfo {
+// function proveInferExec(env: LiTeXEnv, node: YAProveNode): RInfo {
 //   try {
 //     const relatedTemplate = env.getDeclaredTemplate(
 //       node.templateNames.join(":")
@@ -485,7 +485,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): rInfo {
 //       }
 //     }
 
-//     let res: rInfo = rInfo(RType.ProveError);
+//     let res: RInfo = RInfo(RType.ProveError);
 //     let onlyIfsThatNeedsCheck = [...relatedTemplate.onlyIfExprs];
 //     for (let onlyIfCallOpts of node.onlyIfExprs) {
 //       if (onlyIfCallOpts instanceof CallOptsNode) {
@@ -604,7 +604,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): rInfo {
 //       if (allStartWithAsterisk) {
 //         /* check requirements */
 //         const res = callInferExec(env, CallOptNode.create(optName, params));
-//         if (!rInfoIsTrue(res)) {
+//         if (!RInfoIsTrue(res)) {
 //           return hInfo(RType.Error, `${optName} is not true`);
 //         }
 //       } else {
@@ -635,7 +635,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): rInfo {
 //   }
 // }
 
-function haveExec(env: LiTeXEnv, node: HaveNode): rInfo {
+function haveExec(env: LiTeXEnv, node: HaveNode): RInfo {
   try {
     /** If a variable is not declared, then declare it. If declared, bind new properties to it  */
     const notDeclared = node.params.filter((v) => env.declaredVars.includes(v));
@@ -757,7 +757,7 @@ export function fixFree(
 //   env: LiTeXEnv,
 //   node: CallOptNode,
 //   relatedTemplate: TemplateNode
-// ): rInfo {
+// ): RInfo {
 //   try {
 //     /** check exist itself and emit requirements */
 //     // ...
@@ -803,7 +803,7 @@ function callDefExec(
   node: CallOptNode,
   relatedTemplate: TemplateNode,
   calledByExist: Boolean = false
-): rInfo {
+): RInfo {
   try {
     // check left(i.e. the opt itself)
     let leftIsTrue: Boolean = env.isStoredTrueFact(
@@ -813,7 +813,7 @@ function callDefExec(
 
     if (leftIsTrue) {
       const res = emitFree(env, node, relatedTemplate, false, true);
-      if (!rInfoIsTrue(res)) return res;
+      if (!RInfoIsTrue(res)) return res;
 
       // const fixedRequirements = fixFree(
       //   env,
@@ -867,7 +867,7 @@ export function emitFree(
   onlyIf: Boolean,
   req: Boolean,
   otherFrees: CallOptNode[] = [] // free vars not bound to template.onlyif or req
-): rInfo {
+): RInfo {
   const fixedFrees = fixFree(
     env,
     node,
@@ -925,7 +925,7 @@ export function checkFree(
   return true;
 }
 
-function knowImpliesFactExec(env: LiTeXEnv, node: ImpliesFactNode): rInfo {
+function knowImpliesFactExec(env: LiTeXEnv, node: ImpliesFactNode): RInfo {
   try {
     const tmp = env.getDeclaredTemplate(node.callOpt);
     if (!tmp) {
@@ -946,12 +946,12 @@ function knowImpliesFactExec(env: LiTeXEnv, node: ImpliesFactNode): rInfo {
   }
 }
 
-function proveExec(env: LiTeXEnv, node: YAProveNode): rInfo {
+function proveExec(env: LiTeXEnv, node: YAProveNode): RInfo {
   try {
     const relatedT = env.getDeclaredTemplate(node.templateNames.join(":"));
     switch (relatedT?.type) {
-      case LiTeXNodeType.DefNode:
-        return proveDefExec(env, node, relatedT);
+      case LiTeXNodeType.InferNode:
+        return proveInferExec(env, node, relatedT);
     }
     return hRunErr(env, RType.ProveError);
   } catch (error) {
@@ -959,17 +959,18 @@ function proveExec(env: LiTeXEnv, node: YAProveNode): rInfo {
   }
 }
 
-function proveDefExec(
+function proveInferExec(
   env: LiTeXEnv,
   node: YAProveNode,
   relatedT: TemplateNode
-): rInfo {
+): RInfo {
   try {
     const onlyIfs = node.onlyIfExprs as CallOptNode[];
     const req: CallOptNode[] = (node.requirements as CallOptNode[][]).flat();
     const relOpt = CallOptNode.create(node.templateNames.join(":"), node.vars);
     const newEnv = new LiTeXEnv();
     newEnv.father = env;
+    env = newEnv;
 
     const TFixFree = fixFree(env, relOpt, true, true, relatedT);
     if (!TFixFree) return hRunErr(env, RType.ProveError);
@@ -979,11 +980,6 @@ function proveDefExec(
 
     const onlyIfFixFree = fixFree(env, relOpt, false, false, relatedT, req);
     if (!onlyIfFixFree) return hRunErr(env, RType.ProveError);
-
-    const mapping = relatedT.fix(relOpt);
-    if (!mapping) {
-      return hRunErr(env, RType.Error, "calling undeclared symbol.");
-    }
 
     /**Emit req in newEnv */
     for (const [i, fact] of req.entries()) {
@@ -996,7 +992,7 @@ function proveDefExec(
     /**Execute onlyIfs in the prove block*/
     for (const [i, node] of onlyIfs.entries()) {
       const res = nodeExec(newEnv, node);
-      if (!rInfoIsTrue(res))
+      if (!RInfoIsTrue(res))
         return hInfo(RType.ProveFailed, `${i}th statement failed.`);
     }
 
