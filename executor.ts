@@ -350,262 +350,19 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
       node.requirements
     );
 
-    /** The following lines should be refactored */
-    // let rightIsTrue: Boolean = false;
-    // const mapping =  relT.fix(node);
-    // if (!mapping) return hRunErr(env, RType.Error);
-    // rightIsTrue =  relT.requirementsSatisfied(env, mapping);
-
     let rightIsTrue = checkFree(env, node, relT, false, true);
 
     if (!rightIsTrue) return hInfo(RType.Unknown);
     else {
       const res = emitFree(env, node, relT, true, false);
       if (!RInfoIsTrue(res)) return res;
-
-      /** All code in else can be abstracted */
-      // const fixedRequirements = fixFree(
-      //   env,
-      //   node,
-      //   true,
-      //   false,
-      //    relT
-      // )?.onlyIf;
-      // if (!fixedRequirements)
-      //   return hRunErr(
-      //     env,
-      //     RType.Error,
-      //     `Invalid invocation of ${node.optName}.`
-      //   );
-      // // emit
-      // for (let fixedReq of fixedRequirements) {
-      //   const tmp = env.getRelT(fixedReq.name);
-      //   if (!tmp)
-      //     return hRunErr(
-      //       env,
-      //       RType.Error,
-      //       `${findIndex.name} has not declared.`
-      //     );
-      //   env.newStoredFact(fixedReq.params, tmp);
-      // }
     }
 
     return hInfo(RType.KnowTrue);
-    // else return hInfo(RType.KnowError, res.message);
   } catch (error) {
     return hRunErr(env, RType.KnowError, "");
   }
 }
-
-// function proveInferExec(env: L_Env, node: YAProveNode): RInfo {
-//   try {
-//     const  relT = env.getRelT(
-//       node.templateNames.join(":")
-//     );
-//     if (! relT)
-//       return hInfo(
-//         RType.ProveError,
-//         `${node.templateNames.join(":")} is not declared.`
-//       );
-//     const originalEnv = env;
-//     env = new L_Env(env);
-
-//     // introduce vars into new env
-//     for (let l of node.freeVars) {
-//       for (let freeVar of l) {
-//         if (freeVar.startsWith("*")) continue;
-//         else if (freeVar.startsWith("#")) {
-//           return hInfo(
-//             RType.ProveError,
-//             "parameters in requirement should not start with #"
-//           );
-//         } else {
-//           let res = env.newVar(freeVar);
-//           if (!res)
-//             return hInfo(
-//               RType.ProveError,
-//               "two parameters have the same name."
-//             );
-//         }
-//       }
-//     }
-
-//     // Emit and check requirements from template declaration and proveNode
-//     for (let [index, curParams] of node.freeVars.entries()) {
-//       // Handle template requirements
-//       let optName = node.templateNames[0];
-//       for (let i = 1; i <= index; i++) {
-//         optName += ":" + node.freeVars[i];
-//       }
-
-//       let result: { type: RType; message: string } | null;
-//       // let params = node.freeVars.slice(0, index + 1);
-//       // let result = handleRequirements(env, optName, params);
-//       // if (result) return result;
-
-//       // Handle extra requirements in proveNode
-//       if (node.requirements[index].length > 0) {
-//         for (let requirement of node.requirements[index]) {
-//           result = handleRequirements(
-//             env,
-//             requirement.optName,
-//             requirement.optParams,
-//             true
-//           );
-//           if (result) return result;
-//         }
-//       }
-//     }
-
-//     let res: RInfo = RInfo(RType.ProveError);
-//     let onlyIfsThatNeedsCheck = [... relT.onlyIfExprs];
-//     for (let onlyIfCallOpts of node.onlyIfExprs) {
-//       if (onlyIfCallOpts instanceof CallOptsNode) {
-//         for (let onlyIf of (onlyIfCallOpts as CallOptsNode).nodes) {
-//           processOnlyIfCallOpt(onlyIf);
-//         }
-//       } else {
-//         processOnlyIfCallOpt(onlyIfCallOpts as CallOptNode);
-//       }
-//     }
-//     if (onlyIfsThatNeedsCheck.length === 0) {
-//       /** If prove is true, then emit new fact. */
-
-//       /** FixedVars */
-//       const fixedVars = [];
-//       for (let l of node.freeVars) {
-//         const vl = [];
-//         for (let v of l) {
-//           if (v.startsWith("*")) vl.push(v.slice(1));
-//           else vl.push("#" + v);
-//         }
-//         fixedVars.push(vl);
-//       }
-
-//       const TName = node.templateNames.join(":");
-//       const relatedT = env.getRelT(TName);
-//       if (!relatedT)
-//         return hInfo(RType.Error, `${TName} has not declared.`);
-
-//       /** Fix Prove requirements */
-//       const requirements: CallOptNode[][] = [];
-//       for (let l of node.requirements) {
-//         const vl: CallOptNode[] = [];
-//         for (let req of l as CallOptNode[]) {
-//           /**  Fix freeVars in a single requirement */
-//           const fixedFreeVarsArr: string[][] = [];
-//           for (let freeVars of node.freeVars) {
-//             const fixedFreeVars: string[] = [];
-//             for (let s of freeVars) {
-//               if (s.startsWith("*")) fixedFreeVars.push(s.slice(1));
-//               else fixedFreeVars.push("#" + s);
-//             }
-//             fixedFreeVarsArr.push(fixedFreeVars);
-//           }
-
-//           vl.push(CallOptNode.create(req.optName, fixedFreeVarsArr));
-//         }
-
-//         requirements.push(vl);
-//       }
-
-//       /** Fix template requirements */
-//       const mapping = relatedT.fix(fixedVars);
-//       for (let [index, opt] of node.templateNames.entries()) {
-//         let name = node.templateNames[0];
-//         for (let i = 1; i < index; i++) name += ":" + node.templateNames[i];
-//         const curT = env.getRelT(name);
-//         if (!curT) return hInfo(RType.Error);
-
-//         /** new requirement */
-//         for (let req of curT?.requirements as CallOptNode[]) {
-//           /** get name of current requirement */
-//           const fixedFreeVarsArr: string[][] = [];
-//           for (let freeVars of req.optParams) {
-//             const fixedFreeVars: string[] = [];
-//             for (let s of freeVars) {
-//               fixedFreeVars.push(mapping?.get(s) as string);
-//             }
-//             fixedFreeVarsArr.push(fixedFreeVars);
-//           }
-
-//           requirements[index].push(
-//             CallOptNode.create(req.optName, fixedFreeVarsArr)
-//           );
-//         }
-//       }
-
-//       originalEnv.newStoredFact(fixedVars, relatedT, requirements);
-
-//       return hInfo(RType.ProveTrue);
-//     } else
-//       return hInfo(
-//         RType.ProveError,
-//         "not all onlyIfs in template are satisfied."
-//       );
-
-//     function processOnlyIfCallOpt(onlyIf: CallOptNode) {
-//       res = nodeExec(env, onlyIf);
-//       if (onlyIf instanceof CallOptNode) {
-//         for (let i = 0; i < onlyIfsThatNeedsCheck.length; i++) {
-//           let checkedOpt = onlyIfsThatNeedsCheck[i] as CallOptNode;
-//           let isTrue = env.isCallOptTrue(checkedOpt);
-
-//           if (isTrue) {
-//             env.newCallOptFact(checkedOpt);
-//             onlyIfsThatNeedsCheck.splice(i, 1);
-//             i--;
-//           }
-//         }
-//       }
-//     }
-
-//     function handleRequirements(
-//       env: L_Env,
-//       optName: string,
-//       params: string[][],
-//       isExtraRequirement = false
-//     ) {
-//       const allStartWithAsterisk = params.every((subArr) =>
-//         subArr.every((str) => str.startsWith("*"))
-//       );
-//       params = params.map((e) =>
-//         e.map((s) => (s.startsWith("*") ? s.slice(1) : s))
-//       );
-
-//       if (allStartWithAsterisk) {
-//         /* check requirements */
-//         const res = callInferExec(env, CallOptNode.create(optName, params));
-//         if (!RInfoIsTrue(res)) {
-//           return hInfo(RType.Error, `${optName} is not true`);
-//         }
-//       } else {
-//         /* emit requirements */
-//         const fact = CallOptNode.create(optName, params);
-//         const template = env.getRelT(fact);
-//         if (!template) {
-//           throw Error(`${optName} has not been declared.`);
-//         }
-
-//         let mapping = template.fix(fact);
-//         if (!mapping) return hInfo(RType.KnowError);
-
-//         if (isExtraRequirement) {
-//           env.newStoredFact(params, template);
-//         } else {
-//           let noErr = template.emitRequirements(env, mapping);
-//           if (!noErr) {
-//             return hInfo(RType.Error, "calling undefined operator.");
-//           }
-//         }
-//       }
-
-//       return null; // No error
-//     }
-//   } catch (error) {
-//     return hRunErr(env, RType.ProveError, "");
-//   }
-// }
 
 function haveExec(env: L_Env, node: HaveNode): RInfo {
   try {
@@ -719,51 +476,6 @@ export function fixFree(
   }
 }
 
-// function callExistExec(
-//   env: L_Env,
-//   node: CallOptNode,
-//    relT: TNode
-// ): RInfo {
-//   try {
-//     /** check exist itself and emit requirements */
-//     // ...
-
-//     /** check requirements and emit exist */
-
-//     const fixedRequirements = fixFree(
-//       env,
-//       node,
-//       false,
-//       true,
-//        relT
-//     )?.req;
-//     if (fixedRequirements === undefined)
-//       return hRunErr(
-//         env,
-//         RType.Error,
-//         `Invalid invocation of ${node.optName}.`
-//       );
-
-//     for (let fixedReq of fixedRequirements) {
-//       const tmp = env.getRelT(fixedReq.name);
-//       if (!tmp)
-//         return hRunErr(
-//           env,
-//           RType.Error,
-//           `${findIndex.name} has not declared.`
-//         );
-//       if (!env.isStoredTrueFact(fixedReq.params, tmp))
-//         return hInfo(RType.Unknown);
-//     }
-
-//     env.newCallOptFact(node);
-
-//     return hInfo(RType.True);
-//   } catch (error) {
-//     return hRunErr(env, RType.Error);
-//   }
-// }
-
 function callDefExec(
   env: L_Env,
   node: CallOptNode,
@@ -777,39 +489,9 @@ function callDefExec(
     if (leftIsTrue) {
       const res = emitFree(env, node, relT, false, true);
       if (!RInfoIsTrue(res)) return res;
-
-      // const fixedRequirements = fixFree(
-      //   env,
-      //   node,
-      //   false,
-      //   true,
-      //    relT
-      // )?.req;
-      // if (!fixedRequirements)
-      //   return hRunErr(
-      //     env,
-      //     RType.Error,
-      //     `Invalid invocation of ${node.optName}.`
-      //   );
-      // // emit
-      // for (let fixedReq of fixedRequirements) {
-      //   const tmp = env.getRelT(fixedReq.name);
-      //   if (!tmp)
-      //     return hRunErr(
-      //       env,
-      //       RType.Error,
-      //       `${findIndex.name} has not declared.`
-      //     );
-      //   env.newStoredFact(fixedReq.params, tmp);
-      // }
-      // return hInfo(RType.True);
     }
 
     let rightIsTrue = checkFree(env, node, relT, false, true);
-    // let rightIsTrue: Boolean = false;
-    // const mapping =  relT.fix(node);
-    // if (!mapping) return hRunErr(env, RType.Error);
-    // rightIsTrue =  relT.requirementsSatisfied(env, mapping);
 
     if (!rightIsTrue) return hInfo(RType.Unknown);
     else {
