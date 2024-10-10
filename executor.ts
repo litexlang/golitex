@@ -223,21 +223,17 @@ function callInferExec(
 
 function templateDeclExec(env: L_Env, node: TNode): RInfo {
   try {
-    const declaredTemplates = env.declaredTemplates as Map<string, TNode>;
-
     // Check if the template name already exists
-    if (!node.isRedefine && declaredTemplates.has(node.declOptName)) {
-      throw new Error(
-        `Template '${node.declOptName}' has already been declared. Duplicate declarations are not allowed.`
-      );
+    if (!node.isRedefine && env.declaredTemplates.has(node.declOptName)) {
+      return hRunErr(env, RType.DefError, `${node.declOptName} has declared`);
     }
 
     if (L_Keywords.includes(node.declOptName)) {
-      throw new Error(`Template '${node.declOptName}' is L_ keyword.`);
+      return hRunErr(env, RType.DefError, `'${node.declOptName}' is keyword.`);
     }
 
     // If not already declared, set the new template
-    declaredTemplates.set(node.declOptName, node);
+    env.declaredTemplates.set(node.declOptName, node);
 
     // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
     let res = node.initDeclaredTemplates(env);
@@ -254,11 +250,7 @@ function templateDeclExec(env: L_Env, node: TNode): RInfo {
 
     return hInfo(RType.Error);
   } catch (error) {
-    return hRunErr(
-      env,
-      RType.DefError,
-      `Template declaration error: ${(error as Error).message}`
-    );
+    return hRunErr(env, RType.DefError);
   }
 }
 
@@ -323,16 +315,6 @@ function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RInfo {
       throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
 
     emitFree(env, fact, template, true, true);
-
-    // let mapping = template.fix(fact);
-    // if (!mapping) return hInfo(RType.KnowError);
-
-    // template.emitOnlyIfs(env, mapping);
-    // let noErr = template.emitRequirements(env, mapping);
-    // if (!noErr)
-    //   return hInfo(RType.Error, "calling undefined operator.");
-
-    // if (!RInfoIsTrue(res)) return res;
 
     return hInfo(RType.KnowTrue);
   } catch (error) {
