@@ -34,7 +34,9 @@ export const testCodes = {
   //! ideal: let x,y: know set(#x:..):set2(#y:..) => {...}
   // KnowImplies: "let x,y; know set(#x) => {set(#x);};",
   // ProveDef0: "& set3(x) {};",
-  ProveDef: ":f2(x); :set3(x){:set2(x){f2(x);}}; prove set3(x):set2(x:f2(x)){}",
+  ProveDef: ":f2(x); :set3(x){:set2(x){f2(x);}}; ",
+  // ProveDef1: "prove set3(x):set2(x:f2(x)){}",
+  ProveDef2: "prove set3(y):set2(y){know f2(y);}",
 };
 
 export const testErrorCode = {

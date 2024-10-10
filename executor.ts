@@ -965,7 +965,7 @@ function proveInferExec(
   relatedT: TemplateNode
 ): RInfo {
   try {
-    const onlyIfs = node.onlyIfExprs as CallOptNode[];
+    const onlyIfs = node.onlyIfExprs as LiTeXNode[];
     const req: CallOptNode[] = (node.requirements as CallOptNode[][]).flat();
     const relOpt = CallOptNode.create(node.templateNames.join(":"), node.vars);
     const newEnv = new LiTeXEnv();
@@ -975,11 +975,11 @@ function proveInferExec(
     const TFixFree = fixFree(env, relOpt, true, true, relatedT);
     if (!TFixFree) return hRunErr(env, RType.ProveError);
 
-    const reqFixFree = fixFree(env, relOpt, false, false, relatedT, onlyIfs);
-    if (!reqFixFree) return hRunErr(env, RType.ProveError);
-
-    const onlyIfFixFree = fixFree(env, relOpt, false, false, relatedT, req);
-    if (!onlyIfFixFree) return hRunErr(env, RType.ProveError);
+    /**Declare variables in newEnv */
+    for (let varToDecl of node.vars.flat()) {
+      if (!newEnv.declaredVars.includes(varToDecl))
+        newEnv.declareNewVar(varToDecl);
+    }
 
     /**Emit req in newEnv */
     for (const [i, fact] of req.entries()) {
@@ -990,10 +990,10 @@ function proveInferExec(
     }
 
     /**Execute onlyIfs in the prove block*/
-    for (const [i, node] of onlyIfs.entries()) {
-      const res = nodeExec(newEnv, node);
+    for (const [i, curNode] of onlyIfs.entries()) {
+      const res = nodeExec(newEnv, curNode);
       if (!RInfoIsTrue(res))
-        return hInfo(RType.ProveFailed, `${i}th statement failed.`);
+        return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
     }
 
     /**After execution, check whether all the requirements are satisfied.*/
