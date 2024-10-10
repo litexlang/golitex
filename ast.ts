@@ -5,8 +5,8 @@ import { LiTeXEnv } from "./env";
 import {
   // _paramsInOptAreDeclared,
   // _VarsAreNotDeclared,
-  Rinfo,
-  Rinfo,
+  hInfo,
+  rInfo,
   hRunErr,
   RType,
 } from "./executor";
@@ -111,14 +111,14 @@ export abstract class TemplateNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
-  // newFact(env: LiTeXEnv, fact: TemplateNodeFact): Rinfo {
+  // newFact(env: LiTeXEnv, fact: TemplateNodeFact): rInfo {
   //   if (!_paramsInOptAreDeclared(env, fact.params))
   //     return _VarsAreNotDeclared(fact);
   //   else {
   //     env.newStoredFact(fact.params, this);
   //     // this.facts.push(fact);
   //   }
-  //   return Rinfo(RType.True);
+  //   return hInfo(RType.True);
   // }
 
   // Input a full name with colons and get descendants from any depth
@@ -136,7 +136,7 @@ export abstract class TemplateNode extends LiTeXNode {
 
   // If a node is DollarMarkNode or TemplateNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
   //! REFACTOR THIS SO THAT DEF IN REQ CAN APPEAR HERE.
-  initDeclaredTemplates(env: LiTeXEnv, fathers: TemplateNode[] = []): Rinfo {
+  initDeclaredTemplates(env: LiTeXEnv, fathers: TemplateNode[] = []): rInfo {
     this.fathers = fathers;
 
     // process DollarMarks
@@ -181,13 +181,13 @@ export abstract class TemplateNode extends LiTeXNode {
     // make sure everything is done well.
     for (let i = 0; i < this.onlyIfExprs.length; i++) {
       if (this.onlyIfExprs[i].type !== LiTeXNodeType.CallOptNode) {
-        return Rinfo(
+        return hInfo(
           RType.DefError,
           `arguments of def block should have type callOpt-type or def-type.`
         );
       }
     }
-    return Rinfo(RType.DefTrue);
+    return hInfo(RType.DefTrue);
 
     function insertListIntoListAndDeleteElemOnIndex<T>(
       originalList: T[],
@@ -250,16 +250,16 @@ export abstract class TemplateNode extends LiTeXNode {
     env: LiTeXEnv,
     freeFixMap: Map<string, string>,
     fathers: string[][] = []
-  ): Rinfo {
+  ): rInfo {
     try {
       const keys = fathers.map((arr) => [...arr]);
       keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || e));
 
       env.newStoredFact(keys, this);
 
-      return Rinfo(RType.True);
+      return hInfo(RType.True);
     } catch (error) {
-      return Rinfo(
+      return hInfo(
         RType.Error,
         "error when emitting new fact into environment."
       );

@@ -1,5 +1,5 @@
 import { LiTeXEnv } from "./env";
-import { nodeExec, Rinfo, RType, RTypeMap } from "./executor";
+import { nodeExec, rInfo, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { LiTeXStmtsParse } from "./parser";
 import { setTheory } from "./tao_analysis_one";
@@ -163,7 +163,7 @@ const codes: string[] = [
 //       env.printErrorsWithDepth();
 //     } else {
 //       for (let i = 0; i < result.length; i++) {
-//         const res: Rinfo = nodeExec(env, result[i]);
+//         const res: rInfo = nodeExec(env, result[i]);
 //         if (!res.message) console.log(RTypeMap[res.type]);
 //         else console.log(`${RTypeMap[res.type]} '${res.message}'`);
 //       }
@@ -190,7 +190,7 @@ function testError(asIfRight = false) {
         env.printErrorsWithDepth();
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res: Rinfo = nodeExec(env, result[i]);
+          const res: rInfo = nodeExec(env, result[i]);
         }
       }
       if (env.errorsWithDepth.length === 0) {
@@ -210,7 +210,7 @@ function testError(asIfRight = false) {
         env.printErrorsWithDepth();
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res: Rinfo = nodeExec(env, result[i]);
+          const res: rInfo = nodeExec(env, result[i]);
           if (!res.message) console.log(RTypeMap[res.type]);
           else console.log(`${RTypeMap[res.type]} '${res.message}'`);
         }
@@ -234,7 +234,7 @@ function testExecutor(testWhat: any = testCodes) {
     } else {
       for (let i = 0; i < result.length; i++) {
         if (key !== "Basics") {
-          const res: Rinfo = nodeExec(env, result[i]);
+          const res: rInfo = nodeExec(env, result[i]);
           if (!res.message) console.log(RTypeMap[res.type]);
           else console.log(`${RTypeMap[res.type]} '${res.message}'`);
         }
