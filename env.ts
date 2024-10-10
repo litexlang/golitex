@@ -1,5 +1,5 @@
-import { CallOptNode, TemplateNode, makeTemplateNodeFact } from "./ast";
-import { LiTeXKeywords, OptsConnectionSymbol } from "./common";
+import { CallOptNode, TNode, makeTemplateNodeFact } from "./ast";
+import { L_Keywords, OptsConnectionSymbol } from "./common";
 import {
   emitFree,
   // _paramsInOptAreDeclared,
@@ -10,24 +10,21 @@ import {
 
 export type StoredFact = {
   vars: string[][];
-  template: TemplateNode[];
+  template: TNode[];
   requirements: CallOptNode[][]; // CallOptNode[] is related to a single Template
   onlyIfs: CallOptNode[]; // when this fact is satisfied, extra onlyIf is emitted
 };
 
-export class LiTeXEnv {
+export class L_Env {
   errors: string[] = [];
   errorsWithDepth: [string, number][] = []; //? [error message, depth], number here does not work for the time being
   private errorDepth = 0;
   declaredVars: string[] = [];
-  declaredTemplates: Map<string, TemplateNode> = new Map<
-    string,
-    TemplateNode
-  >();
-  father: LiTeXEnv | undefined;
+  declaredTemplates: Map<string, TNode> = new Map<string, TNode>();
+  father: L_Env | undefined;
   symbolsFactsPairs: StoredFact[] = [];
 
-  constructor(father: LiTeXEnv | undefined = undefined) {
+  constructor(father: L_Env | undefined = undefined) {
     this.father = father;
   }
 
@@ -36,7 +33,7 @@ export class LiTeXEnv {
       return false;
     }
 
-    if (LiTeXKeywords.includes(varName)) {
+    if (L_Keywords.includes(varName)) {
       return false;
     }
 
@@ -45,7 +42,7 @@ export class LiTeXEnv {
   }
 
   isCallOptTrue(opt: CallOptNode): Boolean {
-    const relatedT = this.getDeclaredTemplate(opt);
+    const relatedT = this.getRelT(opt);
     if (!relatedT) {
       hRunErr(this, RType.Unknown);
       return false;
@@ -56,7 +53,7 @@ export class LiTeXEnv {
 
   isStoredTrueFact(
     key: string[][],
-    template: TemplateNode,
+    template: TNode,
     //! 这种emit方式有问题：如果我有多个fact都能证明这个东西是对的，那么只有一个storedFact onlyif 会被释放
     callOpt: undefined | CallOptNode = undefined // when defined, something will be emitted: the storedFact
   ): boolean {
@@ -102,7 +99,7 @@ export class LiTeXEnv {
               }
 
               // check fixed params
-              let tmp = this.getDeclaredTemplate(optName);
+              let tmp = this.getRelT(optName);
               if (!tmp) return false;
               let res = this.isStoredTrueFact(fixedParams, tmp); // nothing is emitted here.
               if (!res) {
@@ -159,7 +156,7 @@ export class LiTeXEnv {
   }
 
   newCallOptFact(opt: CallOptNode): Boolean {
-    const T = this.getDeclaredTemplate(opt);
+    const T = this.getRelT(opt);
     if (!T) {
       hRunErr(this, RType.Error, `${opt.optName} is not declared`);
       return false;
@@ -171,7 +168,7 @@ export class LiTeXEnv {
 
   newStoredFact(
     key: string[][],
-    template: TemplateNode,
+    template: TNode,
     requirements: CallOptNode[][] = [],
     onlyIfs: CallOptNode[] = []
   ) {
@@ -240,7 +237,7 @@ export class LiTeXEnv {
   }
 
   // pushCallOptFact(fact: CallOptNode): RInfo {
-  //   const declaredTemplate = this.getDeclaredTemplate(fact.optName);
+  //   const declaredTemplate = this.getRelT(fact.optName);
   //   if (!declaredTemplate)
   //     return hInfo(RType.Error, fact.optName + "has not been declared");
   //   declaredTemplate.newFact(this, makeTemplateNodeFact(fact.optParams));
@@ -249,7 +246,7 @@ export class LiTeXEnv {
 
   // Main function of the whole project
   // input full name of an opt, output the template of the lowest hierarchy
-  getDeclaredTemplate(node: string | CallOptNode): TemplateNode | undefined {
+  getRelT(node: string | CallOptNode): TNode | undefined {
     const isTop = (s: string): boolean => {
       return !s.includes(OptsConnectionSymbol);
     };
@@ -263,9 +260,9 @@ export class LiTeXEnv {
     if (node instanceof CallOptNode) s = node.optName;
     else s = node;
 
-    let relatedTemplate: TemplateNode | undefined;
+    let relatedTemplate: TNode | undefined;
 
-    const searchInCurrentEnv = (): TemplateNode | undefined => {
+    const searchInCurrentEnv = (): TNode | undefined => {
       if (isTop(s)) {
         return this.declaredTemplates.get(s);
       } else {
@@ -280,7 +277,7 @@ export class LiTeXEnv {
 
     // If not found in current environment, search in father
     if (!relatedTemplate && this.father) {
-      relatedTemplate = this.father.getDeclaredTemplate(node);
+      relatedTemplate = this.father.getRelT(node);
 
       return relatedTemplate;
     } else {
@@ -288,8 +285,8 @@ export class LiTeXEnv {
     }
   }
 
-  // getFact(s: string): TemplateNodeFact[] | undefined {
-  //   const node = this.getDeclaredTemplate(s);
+  // getFact(s: string): TNodeFact[] | undefined {
+  //   const node = this.getRelT(s);
   //   return node?.facts;
   // }
 
@@ -304,7 +301,7 @@ export class LiTeXEnv {
     // }
     // console.log("");
 
-    // function printFact(template: TemplateNode, fatherName: string = "") {
+    // function printFact(template: TNode, fatherName: string = "") {
     //   const name = fatherName + OptsConnectionSymbol + template.declOptName;
     //   console.log(name);
     //   console.log(template.facts.map((e) => e.params));

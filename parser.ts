@@ -5,17 +5,17 @@ import {
   ExistNode,
   // HaveNode,
   KnowNode,
-  LiTeXNode,
+  L_Node,
   LetNode,
   DefNode,
   FactNode,
-  TemplateNode,
+  TNode,
   DollarMarkNode,
   YAProveNode,
   HaveNode,
   ImpliesFactNode,
 } from "./ast";
-import { LiTeXEnv } from "./env";
+import { L_Env } from "./env";
 import {
   KnowTypeKeywords,
   TemplateDeclarationKeywords,
@@ -61,7 +61,7 @@ function isCurToken(s: string, tokens: string[]) {
 
 function handleParseError(
   // tokens: string[],
-  env: LiTeXEnv,
+  env: L_Env,
   m: string,
   index: number,
   start: string = "",
@@ -72,9 +72,9 @@ function handleParseError(
 }
 
 const KeywordFunctionMap: {
-  [key: string]: (env: LiTeXEnv, tokens: string[]) => any;
+  [key: string]: (env: L_Env, tokens: string[]) => any;
 } = {
-  ";": (env: LiTeXEnv, tokens: string[]) => {
+  ";": (env: L_Env, tokens: string[]) => {
     tokens.shift();
   },
   know: knowParse,
@@ -88,12 +88,12 @@ const KeywordFunctionMap: {
   ":": templateParse,
   exist: existParse,
   "?": templateParse,
-  know_everything: (env: LiTeXEnv, tokens: string[]) => {
+  know_everything: (env: L_Env, tokens: string[]) => {
     const node = knowParse(env, tokens);
     node.isKnowEverything = true;
     return node;
   },
-  "!": (env: LiTeXEnv, tokens: string[]) => {
+  "!": (env: L_Env, tokens: string[]) => {
     const node = knowParse(env, tokens);
     node.isKnowEverything = true;
     return node;
@@ -102,12 +102,9 @@ const KeywordFunctionMap: {
   "&": yaProveParse,
 };
 
-export function LiTeXStmtsParse(
-  env: LiTeXEnv,
-  tokens: string[]
-): LiTeXNode[] | null {
+export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
   try {
-    const result: LiTeXNode[] = [];
+    const result: L_Node[] = [];
 
     while (tokens.length > 0) {
       const node = LiTexStmtParse(env, tokens);
@@ -121,10 +118,7 @@ export function LiTeXStmtsParse(
   }
 }
 
-export function LiTexStmtParse(
-  env: LiTeXEnv,
-  tokens: string[]
-): LiTeXNode | null {
+export function LiTexStmtParse(env: L_Env, tokens: string[]): L_Node | null {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -151,7 +145,7 @@ export function LiTexStmtParse(
   }
 }
 
-function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
+function knowParse(env: L_Env, tokens: string[]): KnowNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -160,12 +154,12 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 
     skip(tokens, KnowTypeKeywords);
     while (1) {
-      let node: LiTeXNode;
+      let node: L_Node;
       switch (tokens[0]) {
         case ":":
         case "def":
           node = templateParse(env, tokens);
-          knowNode.facts.push(node as TemplateNode);
+          knowNode.facts.push(node as TNode);
           break;
         default:
           node = callOptParse(env, tokens, true);
@@ -203,7 +197,7 @@ function knowParse(env: LiTeXEnv, tokens: string[]): KnowNode {
 
 // skips begin and end
 function freeVarsAndTheirFactsParse(
-  env: LiTeXEnv,
+  env: L_Env,
   tokens: string[],
   begin: string = "(",
   end: string = ")"
@@ -239,7 +233,7 @@ function freeVarsAndTheirFactsParse(
   return { freeVars: freeVars, properties: requirements };
 }
 
-function questionMarkParse(env: LiTeXEnv, tokens: string[]): DollarMarkNode {
+function questionMarkParse(env: L_Env, tokens: string[]): DollarMarkNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -254,12 +248,12 @@ function questionMarkParse(env: LiTeXEnv, tokens: string[]): DollarMarkNode {
   }
 }
 
-function nonExecutableBlockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
+function nonExecutableBlockParse(env: L_Env, tokens: string[]): L_Node[] {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const result: LiTeXNode[] = [];
+    const result: L_Node[] = [];
     skip(tokens, "{"); // skip {
 
     while (!isCurToken("}", tokens)) {
@@ -282,7 +276,7 @@ function nonExecutableBlockParse(env: LiTeXEnv, tokens: string[]): LiTeXNode[] {
 }
 
 function callOptParse(
-  env: LiTeXEnv,
+  env: L_Env,
   tokens: string[],
   withFacts: Boolean = false
 ): CallOptNode {
@@ -334,7 +328,7 @@ function callOptParse(
   }
 }
 
-function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
+function callOptsParse(env: L_Env, tokens: string[]): CallOptsNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -364,7 +358,7 @@ function callOptsParse(env: LiTeXEnv, tokens: string[]): CallOptsNode {
   }
 }
 
-function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
+function templateParse(env: L_Env, tokens: string[]): TNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -377,7 +371,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
 
     // skip(tokens, ")");
 
-    let result: LiTeXNode;
+    let result: L_Node;
     switch (tokens[0]) {
       case "=>":
         skip(tokens, "=>");
@@ -439,14 +433,14 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
       default:
         // no arrow, no block
         result = new DefNode(declOptName, freeVarsFact.freeVars, []);
-        (result as TemplateNode).requirements = freeVarsFact.properties;
+        (result as TNode).requirements = freeVarsFact.properties;
         break;
     }
 
     if (redefineTemplateDeclarationKeywords.includes(defName as string)) {
-      (result as TemplateNode).isRedefine = true;
+      (result as TNode).isRedefine = true;
     }
-    return result as TemplateNode;
+    return result as TNode;
   } catch (error) {
     handleParseError(env, "declare template", index, start);
     // env.returnToSnapShot(snapShot);
@@ -454,7 +448,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
   }
 }
 
-// function factParse(env: LiTeXEnv, tokens: string[]): FactNode {
+// function factParse(env: L_Env, tokens: string[]): FactNode {
 //   try {
 //     const left = callOptParse(env, tokens);
 
@@ -465,7 +459,7 @@ function templateParse(env: LiTeXEnv, tokens: string[]): TemplateNode {
 //   }
 // }
 
-function letParse(env: LiTeXEnv, tokens: string[]): LetNode {
+function letParse(env: L_Env, tokens: string[]): LetNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -477,7 +471,7 @@ function letParse(env: LiTeXEnv, tokens: string[]): LetNode {
   }
 }
 
-function yaProveParse(env: LiTeXEnv, tokens: string[]): YAProveNode {
+function yaProveParse(env: L_Env, tokens: string[]): YAProveNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -498,7 +492,7 @@ function yaProveParse(env: LiTeXEnv, tokens: string[]): YAProveNode {
   }
 }
 
-function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
+function existParse(env: L_Env, tokens: string[]): ExistNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -526,7 +520,7 @@ function existParse(env: LiTeXEnv, tokens: string[]): ExistNode {
   }
 }
 
-function haveParse(env: LiTeXEnv, tokens: string[]): HaveNode {
+function haveParse(env: L_Env, tokens: string[]): HaveNode {
   const start = tokens[0];
   const index = tokens.length;
 

@@ -1,7 +1,7 @@
 // import { on } from "events";
 import { on } from "events";
-import { LiTeXKeywords, OptsConnectionSymbol } from "./common";
-import { LiTeXEnv } from "./env";
+import { L_Keywords, OptsConnectionSymbol } from "./common";
+import { L_Env } from "./env";
 import {
   // _paramsInOptAreDeclared,
   // _VarsAreNotDeclared,
@@ -12,7 +12,7 @@ import {
 } from "./executor";
 
 // There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
-export enum LiTeXNodeType {
+export enum L_NodeType {
   Error,
   Node,
 
@@ -38,13 +38,13 @@ export enum LiTeXNodeType {
   DollarMarkNode,
 }
 
-export abstract class LiTeXNode {
-  type: LiTeXNodeType = LiTeXNodeType.Node;
+export abstract class L_Node {
+  type: L_NodeType = L_NodeType.Node;
   constructor() {}
 }
 
-export class CallOptNode extends LiTeXNode {
-  type: LiTeXNodeType = LiTeXNodeType.CallOptNode;
+export class CallOptNode extends L_Node {
+  type: L_NodeType = L_NodeType.CallOptNode;
   optName: string = "";
   optParams: string[][] = [];
   optNameAsLst: string[] = [];
@@ -65,7 +65,7 @@ export class CallOptNode extends LiTeXNode {
   }
 }
 
-export type TemplateNodeFact = {
+export type TNodeFact = {
   params: string[][];
   onlyIfs: CallOptNode[];
   requirements: CallOptNode[];
@@ -86,15 +86,15 @@ export function makeTemplateNodeFact(
 }
 
 // Main data structure of the whole project
-export abstract class TemplateNode extends LiTeXNode {
-  type: LiTeXNodeType = LiTeXNodeType.InferNode;
+export abstract class TNode extends L_Node {
+  type: L_NodeType = L_NodeType.InferNode;
   declOptName: string;
   freeVars: string[];
   requirements: CallOptNode[] = [];
-  onlyIfExprs: LiTeXNode[] = []; // After declaration, this becomes CallOpt[]
-  declaredTemplates = new Map<string, TemplateNode>();
-  // facts: TemplateNodeFact[] = [];
-  private fathers: TemplateNode[] = [];
+  onlyIfExprs: L_Node[] = []; // After declaration, this becomes CallOpt[]
+  declaredTemplates = new Map<string, TNode>();
+  // facts: TNodeFact[] = [];
+  private fathers: TNode[] = [];
   // Fix all free variables in this template, no matter it's declared in fathers or itself
   // private freeFixMap: Map<string, string> = new Map<string, string>();
   // private fixedFullParams: string[][] = [];
@@ -111,7 +111,7 @@ export abstract class TemplateNode extends LiTeXNode {
     this.requirements = requirements;
   }
 
-  // newFact(env: LiTeXEnv, fact: TemplateNodeFact): RInfo {
+  // newFact(env: L_Env, fact: TNodeFact): RInfo {
   //   if (!_paramsInOptAreDeclared(env, fact.params))
   //     return _VarsAreNotDeclared(fact);
   //   else {
@@ -122,9 +122,9 @@ export abstract class TemplateNode extends LiTeXNode {
   // }
 
   // Input a full name with colons and get descendants from any depth
-  getDeclaredSubTemplate(s: string): undefined | TemplateNode {
+  getDeclaredSubTemplate(s: string): undefined | TNode {
     const names: string[] = s.split(":");
-    let curTemplate: TemplateNode | undefined = this;
+    let curTemplate: TNode | undefined = this;
     for (let i = 1; i < names.length; i++) {
       curTemplate = curTemplate?.declaredTemplates.get(names[i]);
       if (!curTemplate) {
@@ -134,9 +134,9 @@ export abstract class TemplateNode extends LiTeXNode {
     return curTemplate;
   }
 
-  // If a node is DollarMarkNode or TemplateNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
+  // If a node is DollarMarkNode or TNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
   //! REFACTOR THIS SO THAT DEF IN REQ CAN APPEAR HERE.
-  initDeclaredTemplates(env: LiTeXEnv, fathers: TemplateNode[] = []): RInfo {
+  initDeclaredTemplates(env: L_Env, fathers: TNode[] = []): RInfo {
     this.fathers = fathers;
 
     // process DollarMarks
@@ -149,7 +149,7 @@ export abstract class TemplateNode extends LiTeXNode {
         const callNode = new CallOptNode([
           [value.template.declOptName, value.template.freeVars],
         ]);
-        const templateNode: TemplateNode = value.template;
+        const templateNode: TNode = value.template;
 
         //! Here lies a problem: the templateNode's optName should start with : and anything start with : means it inherits from all above.
         this.onlyIfExprs.splice(i, 0, templateNode, callNode);
@@ -159,12 +159,12 @@ export abstract class TemplateNode extends LiTeXNode {
     // eliminate template declarations in onlyIfs, retain callOpts
     for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
       const value = this.onlyIfExprs[i];
-      if (value instanceof TemplateNode) {
-        if (LiTeXKeywords.includes(value.declOptName))
+      if (value instanceof TNode) {
+        if (L_Keywords.includes(value.declOptName))
           return hRunErr(
             env,
             RType.DefError,
-            `Template '${value.declOptName}' is LiTeX keyword.`
+            `Template '${value.declOptName}' is L_ keyword.`
           );
         value.initDeclaredTemplates(env, [...fathers, this]);
         this.declaredTemplates.set(value.declOptName, value);
@@ -180,7 +180,7 @@ export abstract class TemplateNode extends LiTeXNode {
 
     // make sure everything is done well.
     for (let i = 0; i < this.onlyIfExprs.length; i++) {
-      if (this.onlyIfExprs[i].type !== LiTeXNodeType.CallOptNode) {
+      if (this.onlyIfExprs[i].type !== L_NodeType.CallOptNode) {
         return hInfo(
           RType.DefError,
           `arguments of def block should have type callOpt-type or def-type.`
@@ -247,7 +247,7 @@ export abstract class TemplateNode extends LiTeXNode {
   }
 
   emit(
-    env: LiTeXEnv,
+    env: L_Env,
     freeFixMap: Map<string, string>,
     fathers: string[][] = []
   ): RInfo {
@@ -267,12 +267,12 @@ export abstract class TemplateNode extends LiTeXNode {
   }
 
   emitOnlyIfs(
-    env: LiTeXEnv,
+    env: L_Env,
     freeFixMap: Map<string, string>,
     fathers: string[][] = []
   ) {
     for (let onlyIf of this.onlyIfExprs) {
-      (env.getDeclaredTemplate(onlyIf as CallOptNode) as TemplateNode).emit(
+      (env.getRelT(onlyIf as CallOptNode) as TNode).emit(
         env,
         freeFixMap,
         fathers
@@ -281,28 +281,26 @@ export abstract class TemplateNode extends LiTeXNode {
   }
 
   emitRequirements(
-    env: LiTeXEnv,
+    env: L_Env,
     freeFixMap: Map<string, string>,
     fathers: string[][] = []
   ) {
     for (let requirement of this.requirements) {
-      const relatedTemplate = env.getDeclaredTemplate(
-        requirement as CallOptNode
-      ) as TemplateNode;
+      const relatedTemplate = env.getRelT(requirement as CallOptNode) as TNode;
       if (!relatedTemplate) return false;
       relatedTemplate.emit(env, freeFixMap, fathers);
     }
     return true;
   }
 
-  requirementsSatisfied(env: LiTeXEnv, mapping: Map<string, string>): Boolean {
+  requirementsSatisfied(env: L_Env, mapping: Map<string, string>): Boolean {
     let allRequirementsAreSatisfied: Boolean = true;
     for (let requirement of this.requirements) {
       if (requirement instanceof CallOptNode) {
         const keys: string[][] = [
           ...(requirement as CallOptNode).optParams,
         ].map((sArr) => sArr.map((s) => mapping.get(s) || ""));
-        let calledT = env.getDeclaredTemplate(requirement as CallOptNode);
+        let calledT = env.getRelT(requirement as CallOptNode);
         if (!calledT) return false;
         let res = env.isStoredTrueFact(keys, calledT);
         if (!res) {
@@ -315,22 +313,22 @@ export abstract class TemplateNode extends LiTeXNode {
   }
 }
 
-export class DefNode extends TemplateNode {
-  type: LiTeXNodeType = LiTeXNodeType.DefNode;
+export class DefNode extends TNode {
+  type: L_NodeType = L_NodeType.DefNode;
 }
 
-export class InferNode extends TemplateNode {
-  type: LiTeXNodeType = LiTeXNodeType.InferNode;
+export class InferNode extends TNode {
+  type: L_NodeType = L_NodeType.InferNode;
 }
 
-export class ExistNode extends TemplateNode {
-  type = LiTeXNodeType.ExistNode;
+export class ExistNode extends TNode {
+  type = L_NodeType.ExistNode;
   isTrue = false;
 }
 
-export type CanBeKnownNode = FactNode | TemplateNode | ImpliesFactNode;
-export class KnowNode extends LiTeXNode {
-  type: LiTeXNodeType = LiTeXNodeType.KnowNode;
+export type CanBeKnownNode = FactNode | TNode | ImpliesFactNode;
+export class KnowNode extends L_Node {
+  type: L_NodeType = L_NodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
   isKnowEverything: Boolean = false;
 }
@@ -341,8 +339,8 @@ export enum CallOptsNodeType {
   Or,
   Not,
 }
-export class CallOptsNode extends LiTeXNode {
-  type: LiTeXNodeType = LiTeXNodeType.CallOptsNode;
+export class CallOptsNode extends L_Node {
+  type: L_NodeType = L_NodeType.CallOptsNode;
   nodes: CallOptNode[] = [];
   factType: CallOptsNodeType = CallOptsNodeType.And;
 
@@ -352,8 +350,8 @@ export class CallOptsNode extends LiTeXNode {
   }
 }
 
-export class LetNode extends LiTeXNode {
-  type: LiTeXNodeType = LiTeXNodeType.LetNode;
+export class LetNode extends L_Node {
+  type: L_NodeType = L_NodeType.LetNode;
   vars: string[];
   properties: CallOptNode[];
 
@@ -365,28 +363,28 @@ export class LetNode extends LiTeXNode {
 }
 
 // Declare and call at the same time.
-export class DollarMarkNode extends LiTeXNode {
-  type = LiTeXNodeType.DollarMarkNode;
-  template: TemplateNode;
+export class DollarMarkNode extends L_Node {
+  type = L_NodeType.DollarMarkNode;
+  template: TNode;
 
-  constructor(template: TemplateNode) {
+  constructor(template: TNode) {
     super();
     this.template = template;
   }
 }
 
-// export class ProveNode extends LiTeXNode {
-//   type = LiTeXNodeType.ProofNode;
+// export class ProveNode extends L_Node {
+//   type = L_NodeType.ProofNode;
 //   templateName: string;
 //   freeVars: string[];
-//   requirements: LiTeXNode[];
-//   onlyIfExprs: LiTeXNode[];
+//   requirements: L_Node[];
+//   onlyIfExprs: L_Node[];
 
 //   constructor(
 //     templateName: string,
 //     freeVars: string[],
-//     requirements: LiTeXNode[],
-//     onlyIfExprs: LiTeXNode[]
+//     requirements: L_Node[],
+//     onlyIfExprs: L_Node[]
 //   ) {
 //     super();
 //     this.templateName = templateName;
@@ -396,18 +394,18 @@ export class DollarMarkNode extends LiTeXNode {
 //   }
 // }
 
-export class YAProveNode extends LiTeXNode {
-  type = LiTeXNodeType.ProofNode;
+export class YAProveNode extends L_Node {
+  type = L_NodeType.ProofNode;
   templateNames: string[];
   vars: string[][];
   requirements: CallOptNode[][];
-  onlyIfExprs: LiTeXNode[];
+  onlyIfExprs: L_Node[];
 
   constructor(
     templateNames: string[],
     vars: string[][],
     requirements: CallOptNode[][],
-    onlyIfExprs: LiTeXNode[]
+    onlyIfExprs: L_Node[]
   ) {
     super();
     this.templateNames = templateNames;
@@ -418,8 +416,8 @@ export class YAProveNode extends LiTeXNode {
   }
 }
 
-export class HaveNode extends LiTeXNode {
-  type = LiTeXNodeType.HaveNode;
+export class HaveNode extends L_Node {
+  type = L_NodeType.HaveNode;
   params: string[];
   opt: CallOptNode;
   constructor(params: string[], opt: CallOptNode) {
@@ -429,8 +427,8 @@ export class HaveNode extends LiTeXNode {
   }
 }
 
-export class ImpliesFactNode extends LiTeXNode {
-  type: LiTeXNodeType = LiTeXNodeType.ImpliesFactNode;
+export class ImpliesFactNode extends L_Node {
+  type: L_NodeType = L_NodeType.ImpliesFactNode;
   callOpt: CallOptNode;
   requirements: CallOptNode[][] = [];
   onlyIfExprs: CallOptNode[] = [];

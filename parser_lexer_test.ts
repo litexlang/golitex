@@ -1,6 +1,6 @@
 import { scan } from "./lexer";
-import { LiTeXEnv } from "./env";
-import { LiTeXStmtsParse } from "./parser";
+import { L_Env } from "./env";
+import { L_StmtsParse } from "./parser";
 
 const codes: string[] = [
   // "set(a):set(b);",
@@ -157,10 +157,10 @@ function testLexer() {
 }
 
 function testParser() {
-  const env = new LiTeXEnv();
+  const env = new L_Env();
   for (let i = 0; i < codes.length; i++) {
     const tokens = scan(codes[i]);
-    const result = LiTeXStmtsParse(env, tokens);
+    const result = L_StmtsParse(env, tokens);
     if (result === null) {
       const maxDepth = env.errorsWithDepth[env.errorsWithDepth.length - 1][1];
       for (let i = env.errorsWithDepth.length - 1; i >= 0; i--) {

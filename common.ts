@@ -35,7 +35,7 @@ export const DefBlockDeclareAndCall = "$"; // sort of works like do in coffeeScr
 export const SeparationBetweenSymbolsAndTheirFacts = ":";
 export const ProveKeywords = ["&", "prove"];
 
-export const LiTeXKeywords = [
+export const L_Keywords = [
   ...specialChars,
   ...KnowTypeKeywords,
   ...ExistKeywords,

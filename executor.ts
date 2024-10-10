@@ -3,19 +3,19 @@ import {
   CallOptNode,
   CallOptsNode,
   KnowNode,
-  LiTeXNode,
-  LiTeXNodeType,
+  L_Node,
+  L_NodeType,
   LetNode,
   CanBeKnownNode,
-  TemplateNode,
+  TNode,
   YAProveNode,
   HaveNode,
   ExistNode,
   ImpliesFactNode,
 } from "./ast";
-import { LiTeXBuiltinKeywords } from "./builtins";
-import { LiTeXKeywords } from "./common";
-import { LiTeXEnv } from "./env";
+import { L_BuiltinKeywords } from "./builtins";
+import { L_Keywords } from "./common";
+import { L_Env } from "./env";
 
 export enum RType {
   True, // not only used as True for callInferExec, but also as a generic type passed between subFunctions.
@@ -76,11 +76,7 @@ export function RInfoIsTrue(res: RInfo) {
   ].includes(res.type);
 }
 
-export function hRunErr(
-  env: LiTeXEnv,
-  type: RType,
-  message: string = ""
-): RInfo {
+export function hRunErr(env: L_Env, type: RType, message: string = ""): RInfo {
   env.pushNewError(RTypeMap[type] + ": " + message);
   return hInfo(type, message);
 }
@@ -91,23 +87,23 @@ export const hInfo = (t: RType, s: string = "") => {
 export type RInfo = { type: RType; message: string };
 export const ErrorRInfo = { type: RType.Error, message: "" };
 
-export function nodeExec(env: LiTeXEnv, node: LiTeXNode): RInfo {
+export function nodeExec(env: L_Env, node: L_Node): RInfo {
   try {
     switch (node.type) {
-      case LiTeXNodeType.DefNode:
-      case LiTeXNodeType.InferNode:
-      case LiTeXNodeType.ExistNode:
-        return templateDeclExec(env, node as TemplateNode);
-      case LiTeXNodeType.KnowNode:
+      case L_NodeType.DefNode:
+      case L_NodeType.InferNode:
+      case L_NodeType.ExistNode:
+        return templateDeclExec(env, node as TNode);
+      case L_NodeType.KnowNode:
         return yaKnowExec(env, node as KnowNode);
-      case LiTeXNodeType.CallOptsNode:
+      case L_NodeType.CallOptsNode:
         return callOptsExec(env, node as CallOptsNode);
-      case LiTeXNodeType.LetNode:
+      case L_NodeType.LetNode:
         return letExec(env, node as LetNode);
-      case LiTeXNodeType.ProofNode:
+      case L_NodeType.ProofNode:
         // return hInfo(RType.True);
         return proveExec(env, node as YAProveNode);
-      case LiTeXNodeType.HaveNode:
+      case L_NodeType.HaveNode:
         return haveExec(env, node as HaveNode);
     }
     return hInfo(RType.Error, "Stmt");
@@ -116,7 +112,7 @@ export function nodeExec(env: LiTeXEnv, node: LiTeXNode): RInfo {
   }
 }
 
-function letExec(env: LiTeXEnv, node: LetNode): RInfo {
+function letExec(env: L_Env, node: LetNode): RInfo {
   try {
     // Check ofr duplicate variable declarations
     const notDeclared = node.vars.filter((v) => env.declaredVars.includes(v));
@@ -141,22 +137,22 @@ function letExec(env: LiTeXEnv, node: LetNode): RInfo {
   }
 }
 
-function callOptsExec(env: LiTeXEnv, node: CallOptsNode): RInfo {
+function callOptsExec(env: L_Env, node: CallOptsNode): RInfo {
   try {
     const whatIsTrue: string[] = [];
     for (const fact of (node as CallOptsNode).nodes) {
-      const relatedTemplate = env.getDeclaredTemplate(fact as CallOptNode);
+      const relatedTemplate = env.getRelT(fact as CallOptNode);
       if (!relatedTemplate)
         return hRunErr(env, RType.Error, `${fact.optName} is not declared.`);
       let info: RInfo = ErrorRInfo;
       switch (relatedTemplate.type) {
-        case LiTeXNodeType.ExistNode:
+        case L_NodeType.ExistNode:
           info = callDefExec(env, fact, relatedTemplate, true);
           break;
-        case LiTeXNodeType.DefNode:
+        case L_NodeType.DefNode:
           info = callDefExec(env, fact, relatedTemplate);
           break;
-        case LiTeXNodeType.InferNode:
+        case L_NodeType.InferNode:
           info = callInferExec(env, fact, relatedTemplate);
           break;
       }
@@ -173,24 +169,24 @@ function callOptsExec(env: LiTeXEnv, node: CallOptsNode): RInfo {
 }
 
 function callInferExec(
-  env: LiTeXEnv,
+  env: L_Env,
   node: CallOptNode,
-  relatedTemplate: TemplateNode | undefined = undefined
+  relatedTemplate: TNode | undefined = undefined
 ): RInfo {
   try {
-    const builtinFunc = LiTeXBuiltinKeywords[node.optName];
+    const builtinFunc = L_BuiltinKeywords[node.optName];
     if (builtinFunc) {
       return builtinFunc(env, node);
     }
 
-    if (!relatedTemplate) relatedTemplate = env.getDeclaredTemplate(node);
+    if (!relatedTemplate) relatedTemplate = env.getRelT(node);
 
     if (!relatedTemplate)
       return hRunErr(env, RType.False, node.optName + " is not declared.");
 
-    // if (relatedTemplate?.type === LiTeXNodeType.ExistNode) {
+    // if (relatedTemplate?.type === L_NodeType.ExistNode) {
     //   return callExistExec(env, node as CallOptNode);
-    // } else if (relatedTemplate.type === LiTeXNodeType.DefNode) {
+    // } else if (relatedTemplate.type === L_NodeType.DefNode) {
     //   return callDefExec(env, node as CallOptNode);
     // }
 
@@ -234,12 +230,9 @@ function callInferExec(
   }
 }
 
-function templateDeclExec(env: LiTeXEnv, node: TemplateNode): RInfo {
+function templateDeclExec(env: L_Env, node: TNode): RInfo {
   try {
-    const declaredTemplates = env.declaredTemplates as Map<
-      string,
-      TemplateNode
-    >;
+    const declaredTemplates = env.declaredTemplates as Map<string, TNode>;
 
     // Check if the template name already exists
     if (!node.isRedefine && declaredTemplates.has(node.declOptName)) {
@@ -248,8 +241,8 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): RInfo {
       );
     }
 
-    if (LiTeXKeywords.includes(node.declOptName)) {
-      throw new Error(`Template '${node.declOptName}' is LiTeX keyword.`);
+    if (L_Keywords.includes(node.declOptName)) {
+      throw new Error(`Template '${node.declOptName}' is L_ keyword.`);
     }
 
     // If not already declared, set the new template
@@ -260,11 +253,11 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): RInfo {
     if (!RInfoIsTrue(res)) return hRunErr(env, RType.DefError);
 
     switch (node.type) {
-      case LiTeXNodeType.DefNode:
+      case L_NodeType.DefNode:
         return hInfo(RType.DefTrue, "def");
-      case LiTeXNodeType.ExistNode:
+      case L_NodeType.ExistNode:
         return hInfo(RType.DefTrue, "exist");
-      case LiTeXNodeType.InferNode:
+      case L_NodeType.InferNode:
         return hInfo(RType.DefTrue, "infer");
     }
 
@@ -278,42 +271,42 @@ function templateDeclExec(env: LiTeXEnv, node: TemplateNode): RInfo {
   }
 }
 
-function yaKnowExec(env: LiTeXEnv, node: KnowNode): RInfo {
+function yaKnowExec(env: L_Env, node: KnowNode): RInfo {
   try {
     let facts: CanBeKnownNode[] = [];
     let isKnowEverything: Boolean = false;
     let res: RInfo = { type: RType.Error, message: "" };
 
-    if (node.type === LiTeXNodeType.KnowNode) {
+    if (node.type === L_NodeType.KnowNode) {
       facts = (node as KnowNode).facts;
       isKnowEverything = (node as KnowNode).isKnowEverything;
     }
 
     for (const fact of facts) {
       switch (fact.type) {
-        case LiTeXNodeType.CallOptNode:
+        case L_NodeType.CallOptNode:
           if (isKnowEverything)
             res = yaKnowEverythingCallOptExec(env, fact as CallOptNode);
           else res = yaKnowCallOptExec(env, fact as CallOptNode);
           break;
-        case LiTeXNodeType.ImpliesFactNode:
+        case L_NodeType.ImpliesFactNode:
           res = knowImpliesFactExec(env, fact as ImpliesFactNode);
           break;
-        case LiTeXNodeType.DefNode:
-        case LiTeXNodeType.InferNode: {
-          res = templateDeclExec(env, fact as TemplateNode);
+        case L_NodeType.DefNode:
+        case L_NodeType.InferNode: {
+          res = templateDeclExec(env, fact as TNode);
           if (isKnowEverything) {
             res = yaKnowEverythingCallOptExec(
               env,
-              CallOptNode.create((fact as TemplateNode).declOptName, [
-                (fact as TemplateNode).freeVars,
+              CallOptNode.create((fact as TNode).declOptName, [
+                (fact as TNode).freeVars,
               ])
             );
           } else {
             res = yaKnowCallOptExec(
               env,
-              CallOptNode.create((fact as TemplateNode).declOptName, [
-                (fact as TemplateNode).freeVars,
+              CallOptNode.create((fact as TNode).declOptName, [
+                (fact as TNode).freeVars,
               ])
             );
           }
@@ -329,12 +322,12 @@ function yaKnowExec(env: LiTeXEnv, node: KnowNode): RInfo {
   }
 }
 
-function yaKnowEverythingCallOptExec(env: LiTeXEnv, fact: CallOptNode): RInfo {
+function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RInfo {
   try {
     let res: RInfo = { type: RType.Error, message: "" };
     res = yaKnowCallOptExec(env, fact);
 
-    const template = env.getDeclaredTemplate(fact as CallOptNode);
+    const template = env.getRelT(fact as CallOptNode);
     if (!template)
       throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
 
@@ -356,7 +349,7 @@ function yaKnowEverythingCallOptExec(env: LiTeXEnv, fact: CallOptNode): RInfo {
   }
 }
 
-function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
+function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
   try {
     if (
       !node.optParams.every((ls) =>
@@ -366,7 +359,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
       return hRunErr(env, RType.KnowError, "symbol not declared.");
     }
 
-    let relatedTemplate = env.getDeclaredTemplate(node);
+    let relatedTemplate = env.getRelT(node);
 
     if (!relatedTemplate)
       return hInfo(RType.KnowUndeclared, node.optName + " has not declared");
@@ -374,7 +367,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
     //! THE CLASSICAL WAY OF TRANSFORMING FREE VAR INTO FIXED AND EMIT
     env.newStoredFact(
       node.optParams,
-      env.getDeclaredTemplate(node) as TemplateNode,
+      env.getRelT(node) as TNode,
       node.requirements
     );
 
@@ -407,7 +400,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
       //   );
       // // emit
       // for (let fixedReq of fixedRequirements) {
-      //   const tmp = env.getDeclaredTemplate(fixedReq.name);
+      //   const tmp = env.getRelT(fixedReq.name);
       //   if (!tmp)
       //     return hRunErr(
       //       env,
@@ -425,9 +418,9 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
   }
 }
 
-// function proveInferExec(env: LiTeXEnv, node: YAProveNode): RInfo {
+// function proveInferExec(env: L_Env, node: YAProveNode): RInfo {
 //   try {
-//     const relatedTemplate = env.getDeclaredTemplate(
+//     const relatedTemplate = env.getRelT(
 //       node.templateNames.join(":")
 //     );
 //     if (!relatedTemplate)
@@ -436,7 +429,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
 //         `${node.templateNames.join(":")} is not declared.`
 //       );
 //     const originalEnv = env;
-//     env = new LiTeXEnv(env);
+//     env = new L_Env(env);
 
 //     // introduce vars into new env
 //     for (let l of node.freeVars) {
@@ -511,7 +504,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
 //       }
 
 //       const TName = node.templateNames.join(":");
-//       const relatedT = env.getDeclaredTemplate(TName);
+//       const relatedT = env.getRelT(TName);
 //       if (!relatedT)
 //         return hInfo(RType.Error, `${TName} has not declared.`);
 
@@ -542,7 +535,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
 //       for (let [index, opt] of node.templateNames.entries()) {
 //         let name = node.templateNames[0];
 //         for (let i = 1; i < index; i++) name += ":" + node.templateNames[i];
-//         const curT = env.getDeclaredTemplate(name);
+//         const curT = env.getRelT(name);
 //         if (!curT) return hInfo(RType.Error);
 
 //         /** new requirement */
@@ -589,7 +582,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
 //     }
 
 //     function handleRequirements(
-//       env: LiTeXEnv,
+//       env: L_Env,
 //       optName: string,
 //       params: string[][],
 //       isExtraRequirement = false
@@ -610,7 +603,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
 //       } else {
 //         /* emit requirements */
 //         const fact = CallOptNode.create(optName, params);
-//         const template = env.getDeclaredTemplate(fact);
+//         const template = env.getRelT(fact);
 //         if (!template) {
 //           throw Error(`${optName} has not been declared.`);
 //         }
@@ -635,7 +628,7 @@ function yaKnowCallOptExec(env: LiTeXEnv, node: CallOptNode): RInfo {
 //   }
 // }
 
-function haveExec(env: LiTeXEnv, node: HaveNode): RInfo {
+function haveExec(env: L_Env, node: HaveNode): RInfo {
   try {
     /** If a variable is not declared, then declare it. If declared, bind new properties to it  */
     const notDeclared = node.params.filter((v) => env.declaredVars.includes(v));
@@ -669,14 +662,14 @@ type FixFreeType = {
 // Main Helper Function
 //? Many executor function can be refactored using fixFree
 export function fixFree(
-  env: LiTeXEnv,
+  env: L_Env,
   opt: CallOptNode,
   fixOnlyIf: Boolean = false,
   fixReq: Boolean = false,
-  relatedTemplate: TemplateNode | undefined = undefined,
+  relatedTemplate: TNode | undefined = undefined,
   otherFrees: CallOptNode[] = []
 ): FixFreeType | undefined {
-  if (!relatedTemplate) env.getDeclaredTemplate(opt);
+  if (!relatedTemplate) env.getRelT(opt);
   const result = {
     onlyIf: [] as OptParamsType[],
     req: [] as OptParamsType[],
@@ -754,9 +747,9 @@ export function fixFree(
 }
 
 // function callExistExec(
-//   env: LiTeXEnv,
+//   env: L_Env,
 //   node: CallOptNode,
-//   relatedTemplate: TemplateNode
+//   relatedTemplate: TNode
 // ): RInfo {
 //   try {
 //     /** check exist itself and emit requirements */
@@ -779,7 +772,7 @@ export function fixFree(
 //       );
 
 //     for (let fixedReq of fixedRequirements) {
-//       const tmp = env.getDeclaredTemplate(fixedReq.name);
+//       const tmp = env.getRelT(fixedReq.name);
 //       if (!tmp)
 //         return hRunErr(
 //           env,
@@ -799,9 +792,9 @@ export function fixFree(
 // }
 
 function callDefExec(
-  env: LiTeXEnv,
+  env: L_Env,
   node: CallOptNode,
-  relatedTemplate: TemplateNode,
+  relatedTemplate: TNode,
   calledByExist: Boolean = false
 ): RInfo {
   try {
@@ -830,7 +823,7 @@ function callDefExec(
       //   );
       // // emit
       // for (let fixedReq of fixedRequirements) {
-      //   const tmp = env.getDeclaredTemplate(fixedReq.name);
+      //   const tmp = env.getRelT(fixedReq.name);
       //   if (!tmp)
       //     return hRunErr(
       //       env,
@@ -861,9 +854,9 @@ function callDefExec(
 }
 
 export function emitFree(
-  env: LiTeXEnv,
+  env: L_Env,
   node: CallOptNode,
-  relatedTemplate: TemplateNode,
+  relatedTemplate: TNode,
   onlyIf: Boolean,
   req: Boolean,
   otherFrees: CallOptNode[] = [] // free vars not bound to template.onlyif or req
@@ -888,7 +881,7 @@ export function emitFree(
 
   // emit
   for (let fixedReq of fixWhat) {
-    const tmp = env.getDeclaredTemplate(fixedReq.name);
+    const tmp = env.getRelT(fixedReq.name);
     if (!tmp)
       return hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
     env.newStoredFact(fixedReq.params, tmp);
@@ -898,9 +891,9 @@ export function emitFree(
 }
 
 export function checkFree(
-  env: LiTeXEnv,
+  env: L_Env,
   node: CallOptNode,
-  relatedTemplate: TemplateNode,
+  relatedTemplate: TNode,
   onlyIf: Boolean,
   req: Boolean
 ): Boolean | undefined {
@@ -913,7 +906,7 @@ export function checkFree(
 
   //
   for (let fixedReq of fixWhat) {
-    const tmp = env.getDeclaredTemplate(fixedReq.name);
+    const tmp = env.getRelT(fixedReq.name);
     if (!tmp) {
       hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
       return undefined;
@@ -925,9 +918,9 @@ export function checkFree(
   return true;
 }
 
-function knowImpliesFactExec(env: LiTeXEnv, node: ImpliesFactNode): RInfo {
+function knowImpliesFactExec(env: L_Env, node: ImpliesFactNode): RInfo {
   try {
-    const tmp = env.getDeclaredTemplate(node.callOpt);
+    const tmp = env.getRelT(node.callOpt);
     if (!tmp) {
       hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
       return hInfo(RType.KnowError);
@@ -946,12 +939,14 @@ function knowImpliesFactExec(env: LiTeXEnv, node: ImpliesFactNode): RInfo {
   }
 }
 
-function proveExec(env: LiTeXEnv, node: YAProveNode): RInfo {
+function proveExec(env: L_Env, node: YAProveNode): RInfo {
   try {
-    const relatedT = env.getDeclaredTemplate(node.templateNames.join(":"));
+    const relatedT = env.getRelT(node.templateNames.join(":"));
     switch (relatedT?.type) {
-      case LiTeXNodeType.InferNode:
+      case L_NodeType.InferNode:
         return proveInferExec(env, node, relatedT);
+      case L_NodeType.DefNode:
+        return proveDefExec(env, node, relatedT);
     }
     return hRunErr(env, RType.ProveError);
   } catch (error) {
@@ -959,19 +954,23 @@ function proveExec(env: LiTeXEnv, node: YAProveNode): RInfo {
   }
 }
 
-function proveInferExec(
-  env: LiTeXEnv,
-  node: YAProveNode,
-  relatedT: TemplateNode
-): RInfo {
+function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
   try {
-    const onlyIfs = node.onlyIfExprs as LiTeXNode[];
+    return hInfo(RType.ProveTrue);
+  } catch (error) {
+    return hRunErr(env, RType.ProveError);
+  }
+}
+
+function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
+  try {
+    const onlyIfs = node.onlyIfExprs as L_Node[];
     const req: CallOptNode[] = (node.requirements as CallOptNode[][]).flat();
-    const relOpt = CallOptNode.create(node.templateNames.join(":"), node.vars);
-    const newEnv = new LiTeXEnv();
+    const newEnv = new L_Env();
     newEnv.father = env;
     env = newEnv;
 
+    const relOpt = CallOptNode.create(node.templateNames.join(":"), node.vars);
     const TFixFree = fixFree(env, relOpt, true, true, relatedT);
     if (!TFixFree) return hRunErr(env, RType.ProveError);
 
@@ -983,7 +982,7 @@ function proveInferExec(
 
     /**Emit req in newEnv */
     for (const [i, fact] of req.entries()) {
-      const tmp = env.getDeclaredTemplate(fact.optName);
+      const tmp = env.getRelT(fact.optName);
       if (!tmp)
         return hRunErr(env, RType.ProveError, `${fact.optName} not declared`);
       newEnv.newStoredFact(fact.optParams, tmp, [], []);
@@ -998,7 +997,7 @@ function proveInferExec(
 
     /**After execution, check whether all the requirements are satisfied.*/
     for (const [i, fact] of TFixFree.onlyIf.entries()) {
-      const tmp = env.getDeclaredTemplate(fact.name);
+      const tmp = env.getRelT(fact.name);
       if (!tmp)
         return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
       const isT = env.isStoredTrueFact(fact.params, tmp);

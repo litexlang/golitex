@@ -1,7 +1,7 @@
-import { LiTeXEnv } from "./env";
+import { L_Env } from "./env";
 import { nodeExec, RInfo, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
-import { LiTeXStmtsParse } from "./parser";
+import { L_StmtsParse } from "./parser";
 import { setTheory } from "./tao_analysis_one";
 import { testCodes, testErrorCode } from "./test_code";
 
@@ -158,7 +158,7 @@ const codes: string[] = [
 //   console.log("\n----results------\n");
 //   for (const item of codes) {
 //     const tokens = scan(item);
-//     const result = LiTeXStmtsParse(env, tokens);
+//     const result = L_StmtsParse(env, tokens);
 //     if (result === null) {
 //       env.printErrorsWithDepth();
 //     } else {
@@ -182,10 +182,10 @@ const codes: string[] = [
 
 function testError(asIfRight = false) {
   if (asIfRight) {
-    const env = new LiTeXEnv();
+    const env = new L_Env();
     for (const [key, code] of Object.entries(testErrorCode)) {
       const tokens = scan(code as string);
-      const result = LiTeXStmtsParse(env, tokens);
+      const result = L_StmtsParse(env, tokens);
       if (result === null) {
         env.printErrorsWithDepth();
       } else {
@@ -200,12 +200,12 @@ function testError(asIfRight = false) {
   } else {
     console.log("\n----Errors-----\n");
     const whatIsTested = [];
-    let env: LiTeXEnv = new LiTeXEnv();
+    let env: L_Env = new L_Env();
     for (const [key, code] of Object.entries(testErrorCode)) {
       console.log(key + ":");
       whatIsTested.push(key);
       const tokens = scan(code as string);
-      const result = LiTeXStmtsParse(env, tokens);
+      const result = L_StmtsParse(env, tokens);
       if (result === null) {
         env.printErrorsWithDepth();
       } else {
@@ -221,14 +221,14 @@ function testError(asIfRight = false) {
 }
 
 function testExecutor(testWhat: any = testCodes) {
-  let env: LiTeXEnv = new LiTeXEnv();
+  let env: L_Env = new L_Env();
 
   console.log("\n----results------\n");
   const whatIsTested = [];
   for (const [key, code] of Object.entries(testWhat)) {
     whatIsTested.push(key);
     const tokens = scan(code as string);
-    const result = LiTeXStmtsParse(env, tokens);
+    const result = L_StmtsParse(env, tokens);
     if (result === null) {
       env.printErrorsWithDepth();
     } else {
