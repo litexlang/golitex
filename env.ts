@@ -3,8 +3,8 @@ import { LiTeXKeywords, OptsConnectionSymbol } from "./common";
 import {
   emitFree,
   // _paramsInOptAreDeclared,
-  ExecInfo,
-  execInfo,
+  Rinfo,
+  Rinfo,
   fixFree,
   hRunErr,
   RType,
@@ -241,12 +241,12 @@ export class LiTeXEnv {
     this.errorsWithDepth.push([s, this.errorDepth]);
   }
 
-  // pushCallOptFact(fact: CallOptNode): ExecInfo {
+  // pushCallOptFact(fact: CallOptNode): Rinfo {
   //   const declaredTemplate = this.getDeclaredTemplate(fact.optName);
   //   if (!declaredTemplate)
-  //     return execInfo(RType.Error, fact.optName + "has not been declared");
+  //     return Rinfo(RType.Error, fact.optName + "has not been declared");
   //   declaredTemplate.newFact(this, makeTemplateNodeFact(fact.optParams));
-  //   return execInfo(RType.KnowTrue);
+  //   return Rinfo(RType.KnowTrue);
   // }
 
   // Main function of the whole project
