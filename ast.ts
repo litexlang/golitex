@@ -418,11 +418,9 @@ export class YAProveNode extends L_Node {
 
 export class HaveNode extends L_Node {
   type = L_NodeType.HaveNode;
-  params: string[];
   opt: CallOptNode;
-  constructor(params: string[], opt: CallOptNode) {
+  constructor(opt: CallOptNode) {
     super();
-    this.params = params;
     this.opt = opt;
   }
 }

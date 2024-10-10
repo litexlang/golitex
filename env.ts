@@ -4,6 +4,7 @@ import {
   emitFree,
   // _paramsInOptAreDeclared,
   fixFree,
+  hNoRelTErr,
   hRunErr,
   RType,
 } from "./executor";
@@ -48,6 +49,16 @@ export class L_Env {
       return false;
     } else {
       return this.isStoredTrueFact(opt.optParams, relatedT, opt);
+    }
+  }
+
+  isFact(TName: string, params: string[][]): Boolean {
+    const relT = this.getRelT(TName);
+    if (!relT) {
+      hNoRelTErr(TName);
+      return false;
+    } else {
+      return this.isStoredTrueFact(params, relT);
     }
   }
 

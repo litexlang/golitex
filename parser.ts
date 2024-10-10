@@ -526,23 +526,8 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
 
   try {
     skip(tokens, "have");
-
-    const params: string[] = [];
-    while (1) {
-      params.push(shiftVar(tokens));
-      if (isCurToken(",", tokens)) {
-        skip(tokens, ",");
-        continue;
-      } else if (isCurToken(":", tokens)) {
-        skip(tokens, ":");
-        break;
-      } else {
-        throw Error(`${tokens[0]} is supposed to be ',' or ':'`);
-      }
-    }
-
-    const opt = callOptParse(env, tokens, false);
-    return new HaveNode(params, opt);
+    const opt = callOptParse(env, tokens);
+    return new HaveNode(opt);
   } catch (error) {
     handleParseError(env, "have", index, start);
     throw error;

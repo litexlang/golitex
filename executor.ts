@@ -29,6 +29,7 @@ export enum RType {
   Error,
   HaveError,
   HaveTrue,
+  HaveFailed,
   LetTrue,
   LetError,
   ProveError,
@@ -52,6 +53,7 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.KnowUndeclared]: "know: undeclared opt",
   [RType.HaveError]: "have: error",
   [RType.HaveTrue]: "have: true",
+  [RType.HaveFailed]: "have: failed",
   [RType.LetError]: "let: error",
   [RType.LetTrue]: "let: true",
   [RType.ProveError]: "prove: error",
@@ -86,6 +88,22 @@ export const hInfo = (t: RType, s: string = "") => {
 };
 export type RInfo = { type: RType; message: string };
 export const ErrorRInfo = { type: RType.Error, message: "" };
+export const hNoRelTErr = (
+  opt: CallOptNode | string,
+  type: RType = RType.Error
+) => {
+  if (opt instanceof CallOptNode)
+    return hInfo(type, opt.optName + " not declared.");
+  else return hInfo(type, opt + " not declared.");
+};
+export const hFixFreeErr = (
+  opt: CallOptNode | string,
+  type: RType = RType.Error
+) => {
+  if (opt instanceof CallOptNode)
+    return hInfo(type, `fail to instantiate ${opt.optName}`);
+  else return hInfo(type, `fail to instantiate ${opt}`);
+};
 
 export function nodeExec(env: L_Env, node: L_Node): RInfo {
   try {
@@ -630,20 +648,13 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
 
 function haveExec(env: L_Env, node: HaveNode): RInfo {
   try {
-    /** If a variable is not declared, then declare it. If declared, bind new properties to it  */
-    const notDeclared = node.params.filter((v) => env.declaredVars.includes(v));
-    if (!notDeclared) {
-      env.declareNewVar(notDeclared);
-    }
-
-    const optParamsArr = fixFree(env, node.opt, false, true);
-    if (optParamsArr === undefined) return hRunErr(env, RType.HaveError);
-    else {
-      for (let strArrArr of optParamsArr.req) {
-        env.newCallOptFact(
-          CallOptNode.create(strArrArr.name, strArrArr.params)
-        );
-      }
+    const relT = env.getRelT(node.opt);
+    if (!relT) return hNoRelTErr(node.opt, RType.HaveError);
+    const req = fixFree(env, node.opt, false, true, relT)?.req;
+    if (!req) return hFixFreeErr(node.opt, RType.HaveError);
+    for (const optParams of req) {
+      if (!env.isFact(optParams.name, optParams.params))
+        return hInfo(RType.HaveFailed);
     }
 
     return hInfo(RType.HaveTrue);
@@ -947,18 +958,13 @@ function proveExec(env: L_Env, node: YAProveNode): RInfo {
         return proveInferExec(env, node, relatedT);
       case L_NodeType.DefNode:
         return proveDefExec(env, node, relatedT);
-      case L_NodeType.ExistNode:
-        return proveExist(env, node, relatedT);
     }
-    return hRunErr(env, RType.ProveError);
-  } catch (error) {
-    return hRunErr(env, RType.ProveError);
-  }
-}
 
-function proveExist(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
-  try {
-    return hInfo(RType.ExistTrue);
+    return hRunErr(
+      env,
+      RType.ProveError,
+      `prove keyword should be followed by declared template name`
+    );
   } catch (error) {
     return hRunErr(env, RType.ProveError);
   }

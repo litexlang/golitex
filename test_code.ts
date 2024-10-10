@@ -38,8 +38,9 @@ export const testCodes = {
   // ProveDef1: "prove set3(x):set2(x:f2(x)){}",
   // ProveDef2: "prove set3(y):set2(y){know f2(y);}",
 
-  ProveDef3: ":bun(x,y:sett(x),sett(y)) :sett(x)",
-  ProveDef4: "prove bun(x,y) {know sett(x), sett(y);}",
+  // ProveDef3: ":bun(x,y:sett(x),sett(y)) :sett(x)",
+  // ProveDef4: "prove bun(x,y) {know sett(x), sett(y);}",
+  ProveHaveExist: "exist E(x:set(x)); let x: set(x); have E(x);",
 };
 
 export const testErrorCode = {
