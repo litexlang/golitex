@@ -1,6 +1,6 @@
 export const testCodes = {
-  // Basics:
-  //   ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(y,h);}} :set3(x){:set2(x)} ;",
+  Basics:
+    ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(y,h);}} :set3(x){:set2(x)} ;",
   // Nothing: "",
   // Comment: "\\ Comment",
   // BasicInfer:
@@ -34,9 +34,12 @@ export const testCodes = {
   //! ideal: let x,y: know set(#x:..):set2(#y:..) => {...}
   // KnowImplies: "let x,y; know set(#x) => {set(#x);};",
   // ProveDef0: "& set3(x) {};",
-  ProveDef: ":f2(x); :set3(x){:set2(x){f2(x);}}; ",
+  // ProveDef: ":f2(x); :set3(x){:set2(x){f2(x);}}; ",
   // ProveDef1: "prove set3(x):set2(x:f2(x)){}",
-  ProveDef2: "prove set3(y):set2(y){know f2(y);}",
+  // ProveDef2: "prove set3(y):set2(y){know f2(y);}",
+
+  // ProveDef3: ":bun(x,y:set(x),set(y)) :sett(x)",
+  // ProveDef4: "prove bun(x,y) {know sett(x), sett(y);}",
 };
 
 export const testErrorCode = {

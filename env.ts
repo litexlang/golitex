@@ -311,10 +311,11 @@ export class L_Env {
     // }
   }
 
-  printDeclaredTemplates() {
+  printDeclaredTemplates(doNotPrint: string[] = []) {
     console.log("\n-----template-----\n");
 
     for (const value of this.declaredTemplates) {
+      if (doNotPrint.includes(value[0])) continue;
       console.log(value);
       console.log("");
     }

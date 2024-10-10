@@ -956,6 +956,42 @@ function proveExec(env: L_Env, node: YAProveNode): RInfo {
 
 function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
   try {
+    const onlyIfs = node.onlyIfExprs as L_Node[];
+    const req: CallOptNode[] = (node.requirements as CallOptNode[][]).flat();
+    const newEnv = new L_Env();
+    newEnv.father = env;
+    env = newEnv;
+
+    const relOpt = CallOptNode.create(
+      node.templateNames.join(":"),
+      node.vars.map((ls) => ls.map((s) => (s.startsWith("*") ? s.slice(1) : s)))
+    );
+    const TFixFree = fixFree(env, relOpt, true, true, relatedT);
+    if (!TFixFree) return hRunErr(env, RType.ProveError);
+
+    /**Declare variables in newEnv */
+    for (let varToDecl of node.vars.flat()) {
+      if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
+        continue;
+      newEnv.declareNewVar(varToDecl);
+    }
+
+    /**Execute onlyIfs in the prove block*/
+    for (const [i, curNode] of onlyIfs.entries()) {
+      const res = nodeExec(newEnv, curNode);
+      if (!RInfoIsTrue(res))
+        return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
+    }
+
+    /**After execution, check whether template requirements are satisfied.*/
+    for (const [i, fact] of TFixFree.onlyIf.entries()) {
+      const tmp = env.getRelT(fact.name);
+      if (!tmp)
+        return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
+      const isT = env.isStoredTrueFact(fact.params, tmp);
+      if (!isT) return hInfo(RType.ProveFailed, `${fact.name} not satisfied.`);
+    }
+
     return hInfo(RType.ProveTrue);
   } catch (error) {
     return hRunErr(env, RType.ProveError);
@@ -970,14 +1006,18 @@ function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
     newEnv.father = env;
     env = newEnv;
 
-    const relOpt = CallOptNode.create(node.templateNames.join(":"), node.vars);
+    const relOpt = CallOptNode.create(
+      node.templateNames.join(":"),
+      node.vars.map((ls) => ls.map((s) => (s.startsWith("*") ? s.slice(1) : s)))
+    );
     const TFixFree = fixFree(env, relOpt, true, true, relatedT);
     if (!TFixFree) return hRunErr(env, RType.ProveError);
 
     /**Declare variables in newEnv */
     for (let varToDecl of node.vars.flat()) {
-      if (!newEnv.declaredVars.includes(varToDecl))
-        newEnv.declareNewVar(varToDecl);
+      if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
+        continue;
+      newEnv.declareNewVar(varToDecl);
     }
 
     /**Emit req in newEnv */
@@ -995,7 +1035,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
         return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
     }
 
-    /**After execution, check whether all the requirements are satisfied.*/
+    /**After execution, check whether template requirements are satisfied.*/
     for (const [i, fact] of TFixFree.onlyIf.entries()) {
       const tmp = env.getRelT(fact.name);
       if (!tmp)

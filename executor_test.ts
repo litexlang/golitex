@@ -233,8 +233,8 @@ function testExecutor(testWhat: any = testCodes) {
       env.printErrorsWithDepth();
     } else {
       for (let i = 0; i < result.length; i++) {
+        const res: RInfo = nodeExec(env, result[i]);
         if (key !== "Basics") {
-          const res: RInfo = nodeExec(env, result[i]);
           if (!res.message) console.log(RTypeMap[res.type]);
           else console.log(`${RTypeMap[res.type]} '${res.message}'`);
         }
@@ -245,7 +245,8 @@ function testExecutor(testWhat: any = testCodes) {
   whatIsTested.forEach((e) => console.log(e));
   if (env.errorsWithDepth.length === 0) {
     env.printCallOptFacts();
-    env.printDeclaredTemplates();
+    // do not print templates declared in Basics
+    env.printDeclaredTemplates(["obj", "set", "set2", "F", "set3"]);
   } else {
     console.log("\n------Error------\n");
     env.printErrorsWithDepth();
