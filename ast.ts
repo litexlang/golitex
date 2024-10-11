@@ -360,26 +360,13 @@ export class DollarMarkNode extends L_Node {
 
 export class YAProveNode extends L_Node {
   type = L_NodeType.ProofNode;
-  templateNames: string[];
-  vars: string[][];
-  requirements: CallOptNode[][];
-  onlyIfs: CallOptNode[];
+  opt: CallOptNode;
   onlyIfExprs: L_Node[];
 
-  constructor(
-    templateNames: string[],
-    vars: string[][],
-    requirements: CallOptNode[][],
-    onlyIfs: CallOptNode[],
-    onlyIfExprs: L_Node[]
-  ) {
+  constructor(opt: CallOptNode, onlyIfExprs: L_Node[]) {
     super();
-    this.templateNames = templateNames;
-    this.vars = vars;
-    this.requirements = requirements;
-    this.onlyIfs = onlyIfs;
+    this.opt = opt;
     this.onlyIfExprs = onlyIfExprs;
-    //! It's impossible to get template here at parsing time, because in current interpreter, we parse everything then run, which leads to empty env at parsing time.
   }
 }
 

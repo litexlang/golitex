@@ -582,7 +582,7 @@ function knowImpliesFactExec(env: L_Env, node: ImpliesFactNode): RInfo {
 
 function proveExec(env: L_Env, node: YAProveNode): RInfo {
   try {
-    const relatedT = env.getRelT(node.templateNames.join(":"));
+    const relatedT = env.getRelT(node.opt.optName);
     switch (relatedT?.type) {
       case L_NodeType.InferNode:
         return proveInferExec(env, node, relatedT);
@@ -604,20 +604,22 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
   try {
     /** The only different between proveDef and proveInfer is: case def template requirements are used to check; in case infer they are used as pre-conditions*/
     const onlyIfs = node.onlyIfExprs as L_Node[];
-    const req: CallOptNode[] = (node.requirements as CallOptNode[][]).flat();
+    const req: CallOptNode[] = (node.opt.req as CallOptNode[][]).flat();
     const newEnv = new L_Env();
     newEnv.father = env;
     env = newEnv;
 
     const relOpt = CallOptNode.create(
-      node.templateNames.join(":"),
-      node.vars.map((ls) => ls.map((s) => (s.startsWith("*") ? s.slice(1) : s)))
+      node.opt.optName,
+      node.opt.optParams.map((ls) =>
+        ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
+      )
     );
     const TFixFree = fixFree(env, relOpt, true, true, relatedT);
     if (!TFixFree) return hRunErr(env, RType.ProveError);
 
     /**Declare variables in newEnv */
-    for (let varToDecl of node.vars.flat()) {
+    for (let varToDecl of node.opt.optParams.flat()) {
       if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
         continue;
       newEnv.declareNewVar(varToDecl);
@@ -648,20 +650,22 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
 function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
   try {
     const onlyIfs = node.onlyIfExprs as L_Node[];
-    const req: CallOptNode[] = (node.requirements as CallOptNode[][]).flat();
+    const req: CallOptNode[] = (node.opt.req as CallOptNode[][]).flat();
     const newEnv = new L_Env();
     newEnv.father = env;
     env = newEnv;
 
     const relOpt = CallOptNode.create(
-      node.templateNames.join(":"),
-      node.vars.map((ls) => ls.map((s) => (s.startsWith("*") ? s.slice(1) : s)))
+      node.opt.optName,
+      node.opt.optParams.map((ls) =>
+        ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
+      )
     );
     const TFixFree = fixFree(env, relOpt, true, true, relatedT);
     if (!TFixFree) return hRunErr(env, RType.ProveError);
 
     /**Declare variables in newEnv */
-    for (let varToDecl of node.vars.flat()) {
+    for (let varToDecl of node.opt.optParams.flat()) {
       if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
         continue;
       newEnv.declareNewVar(varToDecl);
