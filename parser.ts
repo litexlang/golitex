@@ -163,6 +163,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
           break;
         default:
           node = callOptParse(env, tokens, true, true);
+          knowNode.facts.push(node as CallOptNode);
       }
 
       if (tokens[0] === ",") skip(tokens, ",");

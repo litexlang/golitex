@@ -24,6 +24,14 @@ export class L_Env {
     this.father = father;
   }
 
+  newYAFactAsOpt(opt: CallOptNode) {
+    if (this.yaFacts.has(opt.optName)) {
+      this.yaFacts.get(opt.optName)?.push(opt);
+    } else {
+      this.yaFacts.set(opt.optName, [opt]);
+    }
+  }
+
   newYAFact(
     TName: string,
     vars: string[][],
@@ -40,11 +48,11 @@ export class L_Env {
   }
 
   yaCheckAndEmit(opt: CallOptNode): L_Out<Boolean> {
-    const RelT = this.getRelT(opt);
-    if (!RelT) {
-      hNoRelTErr(opt);
-      return cL_Out<Boolean>(false);
-    }
+    // const RelT = this.getRelT(opt);
+    // if (!RelT) {
+    //   hNoRelTErr(opt);
+    //   return cL_Out<Boolean>(false);
+    // }
     const RFacts = this.yaFacts.get(opt.optName);
     if (!RFacts) return cL_Out<Boolean>(false);
 
@@ -96,7 +104,7 @@ export class L_Env {
       });
       facts.forEach((e) => this.newYAFact(e.name, e.params));
     }
-    return cL_Out<Boolean>(true);
+    return isT ? cL_Out<Boolean>(true) : cL_Out<Boolean>(false);
 
     function _isLiterallyFact(fact: string[][], arr2: string[][]) {
       return (
@@ -380,6 +388,13 @@ export class L_Env {
   //   const node = this.getRelT(s);
   //   return node?.facts;
   // }
+
+  printYAFacts() {
+    console.log("\n-----facts-------\n");
+    for (const fact of this.yaFacts) {
+      console.log(fact);
+    }
+  }
 
   printCallOptFacts() {
     console.log("\n-----facts-------\n");

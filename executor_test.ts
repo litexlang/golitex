@@ -244,7 +244,8 @@ function testExecutor(testWhat: any = testCodes) {
   console.log("\n----TestWhat----\n");
   whatIsTested.forEach((e) => console.log(e));
   if (env.errorsWithDepth.length === 0) {
-    env.printCallOptFacts();
+    env.printYAFacts();
+    // env.printCallOptFacts();
     // do not print templates declared in Basics
     env.printDeclaredTemplates(["obj", "set", "set2", "F", "set3"]);
   } else {

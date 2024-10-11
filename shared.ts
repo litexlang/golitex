@@ -6,6 +6,9 @@ export type L_Out<T> = {
 export function cL_Out<T>(value: T, errStr: string = ""): L_Out<T> {
   return { value, errStr };
 }
+export function isL_OutErr<T>(out: L_Out<T>) {
+  return out.value === null ? true : false;
+}
 
 export function cErr_Out(err: string) {
   return { value: null, errStr: err };

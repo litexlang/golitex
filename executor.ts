@@ -16,6 +16,7 @@ import {
 import { L_Builtins } from "./builtins";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
+import { isL_OutErr } from "./shared";
 
 export enum RType {
   True, // not only used as True for callInferExec, but also as a generic type passed between subFunctions.
@@ -328,9 +329,10 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
       !node.optParams.every((ls) =>
         ls.every((s) => env.declaredVars.includes(s) || s.startsWith("#"))
       )
-    ) {
+    )
       return hRunErr(env, RType.KnowError, "symbol not declared.");
-    }
+
+    env.newYAFactAsOpt(node);
 
     // env.newYAFact()
     return hInfo(RType.KnowTrue);
@@ -489,6 +491,35 @@ export function fixFree(
   }
 }
 
+// function callDefExec(
+//   env: L_Env,
+//   node: CallOptNode,
+//   relT: TNode,
+//   calledByExist: Boolean = false
+// ): RInfo {
+//   try {
+//     // check left(i.e. the opt itself)
+//     let leftIsTrue: Boolean = env.isStoredTrueFact(node.optParams, relT);
+
+//     if (leftIsTrue) {
+//       const res = emitFree(env, node, relT, false, true);
+//       if (!RInfoIsTrue(res)) return res;
+//     }
+
+//     let rightIsTrue = checkFree(env, node, relT, false, true);
+
+//     if (!rightIsTrue) return hInfo(RType.Unknown);
+//     else {
+//       env.newCallOptFact(node);
+//     }
+
+//     if (calledByExist) (relT as ExistNode).isTrue = true;
+//     return hInfo(RType.True);
+//   } catch (error) {
+//     return hRunErr(env, RType.DefError);
+//   }
+// }
+
 function callDefExec(
   env: L_Env,
   node: CallOptNode,
@@ -496,23 +527,10 @@ function callDefExec(
   calledByExist: Boolean = false
 ): RInfo {
   try {
-    // check left(i.e. the opt itself)
-    let leftIsTrue: Boolean = env.isStoredTrueFact(node.optParams, relT);
+    const res = env.yaCheckAndEmit(node);
+    if (isL_OutErr(res)) return hRunErr(env, RType.DefError, res.errStr);
 
-    if (leftIsTrue) {
-      const res = emitFree(env, node, relT, false, true);
-      if (!RInfoIsTrue(res)) return res;
-    }
-
-    let rightIsTrue = checkFree(env, node, relT, false, true);
-
-    if (!rightIsTrue) return hInfo(RType.Unknown);
-    else {
-      env.newCallOptFact(node);
-    }
-
-    if (calledByExist) (relT as ExistNode).isTrue = true;
-    return hInfo(RType.True);
+    return res.value ? hInfo(RType.True) : hInfo(RType.Unknown);
   } catch (error) {
     return hRunErr(env, RType.DefError);
   }

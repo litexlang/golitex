@@ -146,9 +146,10 @@ const codes: string[] = [
   // "re_def set(x) {}",
   // "exist ObjExist(x: obj(x)); ObjExist(o);",
   // "know set(#A) => {set(#A);};",
-  "prove set3(y:set(y)):set2(y) => {ha(z);} {know f2(y);}",
-  "know set(x:sdf(x)):set2(y:sg(y)) => {dsg(z);};",
-  "let x: set2(x: obj(x)):set3(x) => {obj(x);} ;",
+  // "prove set3(y:set(y)):set2(y) => {ha(z);} {know f2(y);}",
+  // "know set(x:sdf(x)):set2(y:sg(y)) => {dsg(z);};",
+  // "let x: set2(x: obj(x)):set3(x) => {obj(x);} ;",
+  "know set(y);",
 ];
 
 function testLexer() {
