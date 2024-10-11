@@ -332,9 +332,9 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
     )
       return hRunErr(env, RType.KnowError, "symbol not declared.");
 
-    env.newYAFactAsOpt(node);
+    env.YAFactAndEmit(node);
 
-    // env.newYAFact()
+    // env.YAFactAndEmit()
     return hInfo(RType.KnowTrue);
   } catch (error) {
     return hRunErr(env, RType.KnowError);

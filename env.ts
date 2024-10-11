@@ -24,28 +24,32 @@ export class L_Env {
     this.father = father;
   }
 
-  newYAFactAsOpt(opt: CallOptNode) {
+  YAFactAndEmit(opt: CallOptNode, emit: Boolean = true) {
     if (this.yaFacts.has(opt.optName)) {
       this.yaFacts.get(opt.optName)?.push(opt);
     } else {
       this.yaFacts.set(opt.optName, [opt]);
     }
-  }
 
-  newYAFact(
-    TName: string,
-    vars: string[][],
-    req: CallOptNode[] = [],
-    onlyIf: CallOptNode[] = []
-  ) {
-    if (this.yaFacts.has(TName)) {
-      this.yaFacts
-        .get(TName)
-        ?.push(CallOptNode.create("", vars, [req], onlyIf));
-    } else {
-      this.yaFacts.set(TName, [CallOptNode.create("", vars, [req], onlyIf)]);
+    if (emit) {
+      opt.onlyIFs.forEach((e: CallOptNode) => this.YAFactAndEmit(e, false));
     }
   }
+
+  // YAFactAndEmit(
+  //   TName: string,
+  //   vars: string[][],
+  //   req: CallOptNode[] = [],
+  //   onlyIf: CallOptNode[] = []
+  // ) {
+  //   if (this.yaFacts.has(TName)) {
+  //     this.yaFacts
+  //       .get(TName)
+  //       ?.push(CallOptNode.create("", vars, [req], onlyIf));
+  //   } else {
+  //     this.yaFacts.set(TName, [CallOptNode.create("", vars, [req], onlyIf)]);
+  //   }
+  // }
 
   yaCheckAndEmit(opt: CallOptNode): L_Out<Boolean> {
     // const RelT = this.getRelT(opt);
@@ -102,7 +106,9 @@ export class L_Env {
           ),
         };
       });
-      facts.forEach((e) => this.newYAFact(e.name, e.params));
+      facts.forEach((e) =>
+        this.YAFactAndEmit(CallOptNode.create(e.name, e.params))
+      );
     }
     return isT ? cL_Out<Boolean>(true) : cL_Out<Boolean>(false);
 

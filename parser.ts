@@ -311,7 +311,10 @@ function callOptParse(
       return new CallOptNode(opts, requirements);
     else {
       skip(tokens, "=>");
-      const onlyIfs = nonExecutableBlockParse(env, tokens) as CallOptNode[];
+      skip(tokens, "{");
+
+      const onlyIfs: CallOptNode[] = callOptsParse(env, tokens, "}").nodes;
+
       return new CallOptNode(opts, requirements, onlyIfs);
     }
   } catch (error) {
@@ -320,7 +323,7 @@ function callOptParse(
   }
 }
 
-function callOptsParse(env: L_Env, tokens: string[]): CallOptsNode {
+function callOptsParse(env: L_Env, tokens: string[], end = ";"): CallOptsNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -331,9 +334,9 @@ function callOptsParse(env: L_Env, tokens: string[]): CallOptsNode {
       callOpts.push(callOptParse(env, tokens));
       if (tokens[0] === ",") {
         skip(tokens, ",");
-      } else if (tokens[0] === ";") {
+      } else if (tokens[0] === end) {
         break;
-      } else if (specialChars.includes(tokens[0]) && tokens[0] !== ";") {
+      } else if (specialChars.includes(tokens[0]) && tokens[0] !== end) {
         throw Error(
           tokens[0] +
             "is not expected to appear here.',' is used to split between two facts."
@@ -341,7 +344,7 @@ function callOptsParse(env: L_Env, tokens: string[]): CallOptsNode {
       }
     }
 
-    skip(tokens, ";");
+    skip(tokens, end);
 
     return new CallOptsNode(callOpts);
   } catch (error) {
