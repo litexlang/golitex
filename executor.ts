@@ -341,7 +341,10 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
     )
       return hRunErr(env, RType.KnowError, "symbol not declared.");
 
-    env.YANewFactEmit(node);
+    if (node.optParams.every((ls) => ls.every((s) => s[0] !== "#")))
+      // If every var in callOpt is not 'forall', we emit onlyIf immediately
+      env.YANewFactEmit(node);
+    else env.YANewFactEmit(node, false);
 
     // env.YANewFactEmit()
     return hInfo(RType.KnowTrue);

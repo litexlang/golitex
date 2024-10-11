@@ -4,15 +4,15 @@
 export const testCodes = {
   Basics:
     ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(y,h);}} :set3(x){:set2(x)} ;",
-  // KnowExtendedInfer: "let x: set2(x: obj(x)):set3(x) => {obj(x);};",
+  KnowExtendedInfer: "let x; know set2(#x: obj(x)):set3(#x) => {obj(x)};",
   // KnowExtendedInfer2: "let y: set2(y: obj(y)):set3(y) => {obj(y)};",
   // Know3: "know set(y);",
   // unknownCheck: "set(x);",
   // trueCheck: "set(y);",
   // knowHash: "know set(#x);",
   // trueCheck2: "let t; set(t);",
-  def1: ":obj2(x) : aliasOfSet(x: obj2(x), set(x));",
-  def2: "let x: obj2(x); aliasOfSet(x);",
+  // def1: ":obj2(x) : aliasOfSet(x: obj2(x), set(x));",
+  // def2: "let x: obj2(x); aliasOfSet(x);",
 };
 
 export const testErrorCode = {
