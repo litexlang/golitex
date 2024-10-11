@@ -71,7 +71,7 @@ export class L_Env {
       if (!_isLiterallyFact(singleFact.vars, opt.optParams)) continue;
 
       /** Check requirements of this single fact */
-      //! 这里有问题！！！，需要自建map，比如 know fun(#x,a: g(x)):fun2(#y:t(a,y)) 这里需要建立联系
+      //! 这里有问题！！！，需要自建map，比如 know fun(#x,a: g(x)):fun2(#y:t(a,y)) 这里需要建立联系 比如我 fun(2,1):fun2(3)
       let dict = fixFree(this, opt, false, false, RelT, singleFact.req);
       if (!dict) {
         hFixFreeErr(opt);

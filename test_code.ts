@@ -40,7 +40,11 @@ export const testCodes = {
 
   // ProveDef3: ":bun(x,y:sett(x),sett(y)) :sett(x)",
   // ProveDef4: "prove bun(x,y) {know sett(x), sett(y);}",
-  ProveHaveExist: "exist E(x:set(x)); let x: set(x); have E(x);",
+  // ProveHaveExist: "exist E(x:set(x)); let x: set(x); have E(x);",
+
+  knowExtendedFact:
+    ":fun(x,y){:fun2(z:set(z)) {}} ; let x,y,z; know fun(#x,y:set(x)):fun2(#z:set2(y,z));",
+  checkExtendedFact: "know set(x), set2(y,z), set(z); fun(x,y):fun2(z);",
 };
 
 export const testErrorCode = {
