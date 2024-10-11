@@ -113,7 +113,7 @@ export function nodeExec(env: L_Env, node: L_Node): RInfo {
       case L_NodeType.ExistNode:
         return templateDeclExec(env, node as TNode);
       case L_NodeType.KnowNode:
-        return yaKnowExec(env, node as KnowNode);
+        return knowExec(env, node as KnowNode);
       case L_NodeType.CallOptsNode:
         return callOptsExec(env, node as CallOptsNode);
       case L_NodeType.LetNode:
@@ -254,7 +254,7 @@ function templateDeclExec(env: L_Env, node: TNode): RInfo {
   }
 }
 
-function yaKnowExec(env: L_Env, node: KnowNode): RInfo {
+function knowExec(env: L_Env, node: KnowNode): RInfo {
   try {
     let facts: CanBeKnownNode[] = [];
     let isKnowEverything: Boolean = false;

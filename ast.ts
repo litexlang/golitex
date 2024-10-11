@@ -1,30 +1,27 @@
+import { on } from "events";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
 import { hInfo, RInfo, hRunErr, RType } from "./executor";
 
-// There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
+//? There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
 export enum L_NodeType {
   Error,
   Node,
 
-  // Fact
   CallOptNode,
   CallOptsNode,
 
-  // Operator | ImpliesFactNodes
   KnowNode,
-  ExistNode,
   HaveNode,
   LetNode,
   ProofNode,
   CheckInProof,
   ImpliesFactNode,
 
-  // Template
   InferNode,
   DefNode,
+  ExistNode,
 
-  // Helper
   FreeVarsWithFactsNode,
   DollarMarkNode,
 }
@@ -39,7 +36,7 @@ export class CallOptNode extends L_Node {
   optParams: string[][];
   optNameAsLst: string[];
 
-  /**Extra features */
+  /**Extra features: used in know, prove*/
   req: CallOptNode[][] = [];
   onlyIFs: CallOptNode[] = [];
 
@@ -366,18 +363,21 @@ export class YAProveNode extends L_Node {
   templateNames: string[];
   vars: string[][];
   requirements: CallOptNode[][];
+  onlyIfs: CallOptNode[];
   onlyIfExprs: L_Node[];
 
   constructor(
     templateNames: string[],
     vars: string[][],
     requirements: CallOptNode[][],
+    onlyIfs: CallOptNode[],
     onlyIfExprs: L_Node[]
   ) {
     super();
     this.templateNames = templateNames;
     this.vars = vars;
     this.requirements = requirements;
+    this.onlyIfs = onlyIfs;
     this.onlyIfExprs = onlyIfExprs;
     //! It's impossible to get template here at parsing time, because in current interpreter, we parse everything then run, which leads to empty env at parsing time.
   }

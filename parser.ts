@@ -162,26 +162,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
           knowNode.facts.push(node as TNode);
           break;
         default:
-          node = callOptParse(env, tokens, true);
-          if (isCurToken("=>", tokens)) {
-            skip(tokens, "=>");
-            if (isCurToken("{", tokens)) {
-              const block = nonExecutableBlockParse(env, tokens);
-              const implies = new ImpliesFactNode(
-                node as CallOptNode,
-                block as CallOptNode[]
-              );
-              knowNode.facts.push(implies);
-            } else {
-              const implied = callOptParse(env, tokens);
-              const implies = new ImpliesFactNode(node as CallOptNode, [
-                implied as CallOptNode,
-              ]);
-              knowNode.facts.push(implies);
-            }
-          } else {
-            knowNode.facts.push(node as FactNode);
-          }
+          node = callOptParse(env, tokens, true, true);
       }
 
       if (tokens[0] === ",") skip(tokens, ",");
@@ -455,17 +436,6 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
   }
 }
 
-// function factParse(env: L_Env, tokens: string[]): FactNode {
-//   try {
-//     const left = callOptParse(env, tokens);
-
-//     return left;
-//   } catch (error) {
-//     handleParseError(tokens, env, "fact");
-//     throw error;
-//   }
-// }
-
 function letParse(env: L_Env, tokens: string[]): LetNode {
   const start = tokens[0];
   const index = tokens.length;
@@ -484,12 +454,13 @@ function yaProveParse(env: L_Env, tokens: string[]): YAProveNode {
 
   try {
     skip(tokens, ProveKeywords);
-    const relatedOpt = callOptParse(env, tokens, true);
+    const relatedOpt = callOptParse(env, tokens, true, true);
     const blockBrace = nonExecutableBlockParse(env, tokens);
     const result = new YAProveNode(
       relatedOpt.optNameAsLst,
       relatedOpt.optParams,
       relatedOpt.req,
+      relatedOpt.onlyIFs,
       blockBrace
     );
     return result;
