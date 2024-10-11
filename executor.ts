@@ -344,11 +344,7 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
     }
 
     //! THE CLASSICAL WAY OF TRANSFORMING FREE VAR INTO FIXED AND EMIT
-    env.newStoredFact(
-      node.optParams,
-      env.getRelT(node) as TNode,
-      node.requirements
-    );
+    env.newStoredFact(node.optParams, env.getRelT(node) as TNode, node.req);
 
     let rightIsTrue = checkFree(env, node, relT, false, true);
 

@@ -278,7 +278,8 @@ function nonExecutableBlockParse(env: L_Env, tokens: string[]): L_Node[] {
 function callOptParse(
   env: L_Env,
   tokens: string[],
-  withFacts: Boolean = false
+  withReq: Boolean = false,
+  withOnlyIf: Boolean = false
 ): CallOptNode {
   const index = tokens.length;
   const start = tokens[0];
@@ -290,7 +291,7 @@ function callOptParse(
     while (1) {
       const name = shiftVar(tokens) as string;
 
-      if (!withFacts) {
+      if (!withReq) {
         const params: string[] = [];
 
         skip(tokens, "(");
@@ -321,7 +322,13 @@ function callOptParse(
       }
     }
 
-    return new CallOptNode(opts, requirements);
+    if (!withOnlyIf || !isCurToken("=>", tokens))
+      return new CallOptNode(opts, requirements);
+    else {
+      skip(tokens, "=>");
+      const onlyIfs = nonExecutableBlockParse(env, tokens) as CallOptNode[];
+      return new CallOptNode(opts, requirements, onlyIfs);
+    }
   } catch (error) {
     handleParseError(env, "operator", index, start);
     throw error;
@@ -482,7 +489,7 @@ function yaProveParse(env: L_Env, tokens: string[]): YAProveNode {
     const result = new YAProveNode(
       relatedOpt.optNameAsLst,
       relatedOpt.optParams,
-      relatedOpt.requirements,
+      relatedOpt.req,
       blockBrace
     );
     return result;

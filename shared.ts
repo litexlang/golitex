@@ -1,14 +1,14 @@
 export type L_Out<T> = {
   value: T | null;
-  error: string | null;
+  errStr: string;
 };
 
-export function cL_Out<T>(value: T, error: string | null = null): L_Out<T> {
-  return { value, error };
+export function cL_Out<T>(value: T, errStr: string = ""): L_Out<T> {
+  return { value, errStr };
 }
 
 export function cErr_Out(err: string) {
-  return { value: null, error: err };
+  return { value: null, errStr: err };
 }
 
 export function freeFixMap(

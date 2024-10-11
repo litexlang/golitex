@@ -9,6 +9,7 @@ import {
   OptParamsType,
   RType,
 } from "./executor";
+import { cErr_Out, cL_Out, freeFixMap, L_Out } from "./shared";
 
 export type StoredFact = {
   vars: string[][];
@@ -56,44 +57,64 @@ export class L_Env {
     }
   }
 
-  yaCheckAndEmit(opt: CallOptNode): Boolean {
+  yaCheckAndEmit(opt: CallOptNode): L_Out<Boolean> {
     const RelT = this.getRelT(opt);
     if (!RelT) {
       hNoRelTErr(opt);
-      return false;
+      return cL_Out<Boolean>(false);
     }
     const RFacts = this.yaFacts.get(opt.optName);
-    if (!RFacts) return false;
+    if (!RFacts) return cL_Out<Boolean>(false);
 
     /** Find all facts that the current input satisfies */
     let isT = false;
     for (const [i, singleFact] of (RFacts as yaSingleFact[]).entries()) {
       if (!_isLiterallyFact(singleFact.vars, opt.optParams)) continue;
 
+      const temp = freeFixMap(singleFact.vars, opt.optParams);
+      if (!temp.value) return cErr_Out(temp.errStr);
+      const mapping = temp.value;
+
       /** Check requirements of this single fact */
-      //! 这里有问题！！！，需要自建map，比如 know fun(#x,a: g(x)):fun2(#y:t(a,y)) 这里需要建立联系 比如我 fun(2,1):fun2(3)
-      let dict = fixFree(this, opt, false, false, RelT, singleFact.req);
-      if (!dict) {
-        hFixFreeErr(opt);
-        return false;
-      }
-      let others: { name: string; params: string[][] }[] = dict.others;
-      isT = others.every((e) =>
+      let facts: { name: string; params: string[][] }[] = singleFact.req.map(
+        (e) => {
+          return {
+            name: e.optName,
+            params: e.optParams.map((ls) =>
+              ls.map((s) => {
+                const res = mapping.get(s);
+                if (res !== undefined)
+                  return res; // replace free var in param list with fixed var
+                else return s; // global var unspecified in parameter list
+              })
+            ),
+          };
+        }
+      );
+
+      isT = facts.every((e) =>
         this.yaCheckAndEmit(CallOptNode.create(e.name, e.params))
       );
 
       if (!isT) continue;
 
       /** Emit onlyIfs */
-      dict = fixFree(this, opt, false, false, RelT, singleFact.onlyIf);
-      if (!dict) {
-        hFixFreeErr(opt);
-        return false;
-      }
-      others = dict.others;
-      others.forEach((e) => this.newYAFact(e.name, e.params));
+      facts = singleFact.onlyIf.map((e) => {
+        return {
+          name: e.optName,
+          params: e.optParams.map((ls) =>
+            ls.map((s) => {
+              const res = mapping.get(s);
+              if (res !== undefined)
+                return res; // replace free var in param list with fixed var
+              else return s; // global var unspecified in parameter list
+            })
+          ),
+        };
+      });
+      facts.forEach((e) => this.newYAFact(e.name, e.params));
     }
-    return isT;
+    return cL_Out<Boolean>(true);
 
     function _isLiterallyFact(fact: string[][], arr2: string[][]) {
       return (

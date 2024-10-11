@@ -1,11 +1,6 @@
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
-import {
-  hInfo,
-  RInfo,
-  hRunErr,
-  RType,
-} from "./executor";
+import { hInfo, RInfo, hRunErr, RType } from "./executor";
 
 // There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
 export enum L_NodeType {
@@ -36,28 +31,44 @@ export enum L_NodeType {
 
 export abstract class L_Node {
   type: L_NodeType = L_NodeType.Node;
-  constructor() {}
 }
 
 export class CallOptNode extends L_Node {
   type: L_NodeType = L_NodeType.CallOptNode;
-  optName: string = "";
-  optParams: string[][] = [];
-  optNameAsLst: string[] = [];
-  requirements: CallOptNode[][] = [];
+  optName: string;
+  optParams: string[][];
+  optNameAsLst: string[];
 
-  constructor(opts: [string, string[]][], requirements: CallOptNode[][] = []) {
+  /**Extra features */
+  req: CallOptNode[][] = [];
+  onlyIFs: CallOptNode[] = [];
+
+  constructor(
+    opts: [string, string[]][],
+    req: CallOptNode[][] = [],
+    onlyIfs: CallOptNode[] = []
+  ) {
     super();
 
     this.optName = opts.map((e) => e[0]).join(OptsConnectionSymbol);
     this.optParams = opts.map((e) => e[1]);
     this.optNameAsLst = opts.map((e) => e[0]);
-    this.requirements = requirements;
+    this.req = req;
+    this.onlyIFs = onlyIfs;
   }
 
-  static create(name: string, params: string[][]) {
+  static create(
+    name: string,
+    params: string[][],
+    req: CallOptNode[][] = [],
+    onlyIfs: CallOptNode[] = []
+  ) {
     const names = name.split(OptsConnectionSymbol);
-    return new CallOptNode(names.map((e, i) => [e, params[i]]));
+    return new CallOptNode(
+      names.map((e, i) => [e, params[i]]),
+      req,
+      onlyIfs
+    );
   }
 }
 
