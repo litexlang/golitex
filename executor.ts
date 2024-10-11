@@ -16,7 +16,7 @@ import {
 import { L_Builtins } from "./builtins";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
-import { isL_OutErr } from "./shared";
+import { fixOpt, isL_OutErr } from "./shared";
 
 export enum RType {
   True, // not only used as True for callInferExec, but also as a generic type passed between subFunctions.
@@ -163,7 +163,7 @@ function callOptExec(env: L_Env, fact: CallOptNode): RInfo {
   let info: RInfo = ErrorRInfo;
   switch (relT.type) {
     case L_NodeType.ExistNode:
-      info = callDefExec(env, fact, relT, true);
+      info = callExistExec(env, fact, relT);
       break;
     case L_NodeType.DefNode:
       info = callDefExec(env, fact, relT);
@@ -183,26 +183,12 @@ function callOptsExec(env: L_Env, node: CallOptsNode): RInfo {
   try {
     const whatIsTrue: string[] = [];
     for (const fact of (node as CallOptsNode).nodes) {
-      const relT = env.getRelT(fact as CallOptNode);
-      if (!relT)
-        return hRunErr(env, RType.Error, `${fact.optName} is not declared.`);
-      let info: RInfo = ErrorRInfo;
-      switch (relT.type) {
-        case L_NodeType.ExistNode:
-          info = callDefExec(env, fact, relT, true);
-          break;
-        case L_NodeType.DefNode:
-          info = callDefExec(env, fact, relT);
-          break;
-        case L_NodeType.InferNode:
-          info = callInferExec(env, fact, relT);
-          break;
-      }
+      const info = callOptExec(env, fact);
       if (info.type === RType.Unknown || info.type === RType.False) {
-        return info;
+        return hInfo(info.type);
+      } else if (!RInfoIsTrue(info)) {
+        return hRunErr(env, info.type);
       }
-      if (!RInfoIsTrue(info)) return hRunErr(env, RType.Error, "");
-      whatIsTrue.push(`${fact.optName} ${fact.optParams}`);
     }
     return hInfo(RType.True, whatIsTrue.join(";"));
   } catch (error) {
@@ -543,11 +529,19 @@ export function fixFree(
 //   }
 // }
 
+function callExistExec(env: L_Env, node: CallOptNode, relT: TNode): RInfo {
+  try {
+    return hInfo(RType.ExistTrue);
+  } catch (error) {
+    return hRunErr(env, RType.ExistError);
+  }
+}
+
 function callDefExec(
   env: L_Env,
   node: CallOptNode,
-  relT: TNode,
-  calledByExist: Boolean = false
+  relT: TNode
+  // calledByExist: Boolean = false
 ): RInfo {
   try {
     //TODO:  There are two trues of callDef: 1. itself 2. all requirements satisfied.
@@ -560,13 +554,24 @@ function callDefExec(
       return hInfo(RType.True);
     }
 
-    let isT = true;
-    let relT = env.getRelT(node);
-    for (const req of relT.req) {
-      const res = callOptExec(env, req);
-      if (res.type !== RType.True) {
-        isT = false;
-        break;
+    let temp = fixOpt(
+      env,
+      node,
+      relT.getSelfFathersFreeVars(),
+      relT.getSelfFathersReq()
+    );
+    if (isL_OutErr(temp)) return hRunErr(env, RType.Error);
+    const fixedReq = temp.value as CallOptNode[];
+
+    let isT = false;
+    if (fixedReq.length > 0) {
+      isT = true;
+      for (const req of fixedReq) {
+        const res = callOptExec(env, req);
+        if (res.type !== RType.True) {
+          isT = false;
+          break;
+        }
       }
     }
 

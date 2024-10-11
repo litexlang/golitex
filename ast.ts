@@ -119,6 +119,22 @@ export abstract class TNode extends L_Node {
     return curTemplate;
   }
 
+  getSelfFathersReq(): CallOptNode[] {
+    const out: CallOptNode[] = [];
+    this.fathers.forEach((e) => e.requirements.forEach((req) => out.push(req)));
+    this.requirements.forEach((e) => out.push(e));
+    return out;
+  }
+
+  getSelfFathersFreeVars() {
+    const out: string[][] = [];
+    for (const father of this.fathers) {
+      out.push(father.freeVars);
+    }
+    out.push(this.freeVars);
+    return out;
+  }
+
   // If a node is DollarMarkNode or TNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
   //! REFACTOR THIS SO THAT DEF IN REQ CAN APPEAR HERE.
   initDeclaredTemplates(env: L_Env, fathers: TNode[] = []): RInfo {
