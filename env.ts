@@ -1,14 +1,6 @@
 import { CallOptNode, TNode, makeTemplateNodeFact } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
-import {
-  emitFree,
-  fixFree,
-  hFixFreeErr,
-  hNoRelTErr,
-  hRunErr,
-  OptParamsType,
-  RType,
-} from "./executor";
+import { emitFree, hNoRelTErr, hRunErr, RType } from "./executor";
 import { cErr_Out, cL_Out, freeFixMap, L_Out } from "./shared";
 
 export type StoredFact = {
@@ -18,18 +10,6 @@ export type StoredFact = {
   onlyIfs: CallOptNode[]; // when this fact is satisfied, extra onlyIf is emitted
 };
 
-export class yaSingleFact {
-  vars: string[][];
-  req: CallOptNode[];
-  onlyIf: CallOptNode[];
-
-  constructor(vars: string[][], req: CallOptNode[], onlyIf: CallOptNode[]) {
-    this.vars = vars;
-    this.onlyIf = onlyIf;
-    this.req = req;
-  }
-}
-
 export class L_Env {
   errors: string[] = [];
   errorsWithDepth: [string, number][] = []; //? [error message, depth], number here does not work for the time being
@@ -38,7 +18,7 @@ export class L_Env {
   declaredTemplates: Map<string, TNode> = new Map<string, TNode>();
   father: L_Env | undefined;
   symbolsFactsPairs: StoredFact[] = [];
-  yaFacts: Map<string, yaSingleFact[]> = new Map<string, yaSingleFact[]>();
+  yaFacts: Map<string, CallOptNode[]> = new Map<string, CallOptNode[]>();
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
@@ -51,9 +31,11 @@ export class L_Env {
     onlyIf: CallOptNode[] = []
   ) {
     if (this.yaFacts.has(TName)) {
-      this.yaFacts.get(TName)?.push(new yaSingleFact(vars, req, onlyIf));
+      this.yaFacts
+        .get(TName)
+        ?.push(CallOptNode.create("", vars, [req], onlyIf));
     } else {
-      this.yaFacts.set(TName, [new yaSingleFact(vars, req, onlyIf)]);
+      this.yaFacts.set(TName, [CallOptNode.create("", vars, [req], onlyIf)]);
     }
   }
 
@@ -68,10 +50,10 @@ export class L_Env {
 
     /** Find all facts that the current input satisfies */
     let isT = false;
-    for (const [i, singleFact] of (RFacts as yaSingleFact[]).entries()) {
-      if (!_isLiterallyFact(singleFact.vars, opt.optParams)) continue;
+    for (const [i, singleFact] of (RFacts as CallOptNode[]).entries()) {
+      if (!_isLiterallyFact(singleFact.optParams, opt.optParams)) continue;
 
-      const temp = freeFixMap(singleFact.vars, opt.optParams);
+      const temp = freeFixMap(singleFact.optParams, opt.optParams);
       if (!temp.value) return cErr_Out(temp.errStr);
       const mapping = temp.value;
 
@@ -99,7 +81,7 @@ export class L_Env {
       if (!isT) continue;
 
       /** Emit onlyIfs */
-      facts = singleFact.onlyIf.map((e) => {
+      facts = singleFact.onlyIFs.map((e) => {
         return {
           name: e.optName,
           params: e.optParams.map((ls) =>

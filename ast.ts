@@ -37,7 +37,7 @@ export class CallOptNode extends L_Node {
   optNameAsLst: string[];
 
   /**Extra features: used in know, prove*/
-  req: CallOptNode[][] = [];
+  req: CallOptNode[] = [];
   onlyIFs: CallOptNode[] = [];
 
   constructor(
@@ -50,7 +50,7 @@ export class CallOptNode extends L_Node {
     this.optName = opts.map((e) => e[0]).join(OptsConnectionSymbol);
     this.optParams = opts.map((e) => e[1]);
     this.optNameAsLst = opts.map((e) => e[0]);
-    this.req = req;
+    this.req = req.flat();
     this.onlyIFs = onlyIfs;
   }
 

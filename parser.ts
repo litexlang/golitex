@@ -181,7 +181,8 @@ function freeVarsAndTheirFactsParse(
   env: L_Env,
   tokens: string[],
   begin: string = "(",
-  end: string = ")"
+  end: string = ")",
+  optWithReqAndOnlyIf: Boolean = false
 ): { freeVars: string[]; properties: CallOptNode[] } {
   const requirements: CallOptNode[] = [];
   const freeVars: string[] = [];
@@ -200,7 +201,9 @@ function freeVarsAndTheirFactsParse(
     if (!(tokens[0] === end)) {
       skip(tokens, SeparationBetweenSymbolsAndTheirFacts);
       while (!(tokens[0] === end)) {
-        const node = callOptParse(env, tokens);
+        let node: CallOptNode;
+        if (optWithReqAndOnlyIf) node = callOptParse(env, tokens, true, true);
+        else node = callOptParse(env, tokens);
         if (node) requirements.push(node as CallOptNode);
 
         if (tokens[0] === ",") tokens.shift();
@@ -441,7 +444,9 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   const index = tokens.length;
 
   try {
-    return new LetNode(freeVarsAndTheirFactsParse(env, tokens, "let", ";"));
+    return new LetNode(
+      freeVarsAndTheirFactsParse(env, tokens, "let", ";", true)
+    );
   } catch (error) {
     handleParseError(env, "let", index, start);
     throw error;
