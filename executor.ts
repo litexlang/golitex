@@ -11,7 +11,6 @@ import {
   YAProveNode,
   HaveNode,
   ExistNode,
-  ImpliesFactNode,
 } from "./ast";
 import { L_Builtins } from "./builtins";
 import { L_Keywords } from "./common";
@@ -202,28 +201,28 @@ function callInferExec(
   relT: TNode | undefined = undefined
 ): RInfo {
   try {
-    const builtinFunc = L_Builtins[node.optName];
-    if (builtinFunc) {
-      return builtinFunc(env, node);
-    }
+    // const builtinFunc = L_Builtins[node.optName];
+    // if (builtinFunc) {
+    //   return builtinFunc(env, node);
+    // }
 
-    if (!relT) relT = env.getRelT(node);
-    if (!relT) return hNoRelTErr(node, RType.Error);
+    // if (!relT) relT = env.getRelT(node);
+    // if (!relT) return hNoRelTErr(node, RType.Error);
 
-    // check itself
-    let isT: Boolean | undefined = env.isStoredTrueFact(node.optParams, relT);
-    if (!isT) return hInfo(RType.Unknown, `${node.optName} itself unsatisfied`);
+    // // check itself
+    // let isT: Boolean | undefined = env.isStoredTrueFact(node.optParams, relT);
+    // if (!isT) return hInfo(RType.Unknown, `${node.optName} itself unsatisfied`);
 
-    // check all requirements
-    isT = checkFree(env, node, relT, false, true);
+    // // check all requirements
+    // isT = checkFree(env, node, relT, false, true);
 
-    if (isT === undefined)
-      return hRunErr(env, RType.Error, "check infer requirement error.");
-    if (isT === false)
-      return hInfo(RType.Unknown, `${node.optName} requirements unsatisfied.`);
+    // if (isT === undefined)
+    //   return hRunErr(env, RType.Error, "check infer requirement error.");
+    // if (isT === false)
+    //   return hInfo(RType.Unknown, `${node.optName} requirements unsatisfied.`);
 
-    // emit
-    emitFree(env, node, relT, true, false);
+    // // emit
+    // emitFree(env, node, relT, true, false);
 
     return hInfo(RType.True);
   } catch (error) {
@@ -282,9 +281,9 @@ function knowExec(env: L_Env, node: KnowNode): RInfo {
             res = yaKnowEverythingCallOptExec(env, fact as CallOptNode);
           else res = yaKnowCallOptExec(env, fact as CallOptNode);
           break;
-        case L_NodeType.ImpliesFactNode:
-          res = knowImpliesFactExec(env, fact as ImpliesFactNode);
-          break;
+        // case L_NodeType.ImpliesFactNode:
+        //   res = knowImpliesFactExec(env, fact as ImpliesFactNode);
+        //   break;
         case L_NodeType.DefNode:
         case L_NodeType.InferNode: {
           res = templateDeclExec(env, fact as TNode);
@@ -317,14 +316,14 @@ function knowExec(env: L_Env, node: KnowNode): RInfo {
 
 function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RInfo {
   try {
-    let res: RInfo = { type: RType.Error, message: "" };
-    res = yaKnowCallOptExec(env, fact);
+    // let res: RInfo = { type: RType.Error, message: "" };
+    // res = yaKnowCallOptExec(env, fact);
 
-    const template = env.getRelT(fact as CallOptNode);
-    if (!template)
-      throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
+    // const template = env.getRelT(fact as CallOptNode);
+    // if (!template)
+    //   throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
 
-    emitFree(env, fact, template, true, true);
+    // emitFree(env, fact, template, true, true);
 
     return hInfo(RType.KnowTrue);
   } catch (error) {
@@ -334,6 +333,8 @@ function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RInfo {
 
 function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
   try {
+    if (!env.getRelT(node)) return hInfo(RType.KnowError);
+
     if (
       !node.optParams.every((ls) =>
         ls.every((s) => env.declaredVars.includes(s) || s.startsWith("#"))
@@ -393,16 +394,16 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
 
 function haveExec(env: L_Env, node: HaveNode): RInfo {
   try {
-    const relT = env.getRelT(node.opt);
-    if (!relT) return hNoRelTErr(node.opt, RType.HaveError);
-    const req = fixFree(env, node.opt, false, true, relT)?.req;
-    if (!req) return hFixFreeErr(node.opt, RType.HaveError);
-    for (const optParams of req) {
-      if (!env.isFact(optParams.name, optParams.params))
-        return hInfo(RType.HaveFailed);
-    }
+    // const relT = env.getRelT(node.opt);
+    // if (!relT) return hNoRelTErr(node.opt, RType.HaveError);
+    // const req = fixFree(env, node.opt, false, true, relT)?.req;
+    // if (!req) return hFixFreeErr(node.opt, RType.HaveError);
+    // for (const optParams of req) {
+    //   if (!env.isFact(optParams.name, optParams.params))
+    //     return hInfo(RType.HaveFailed);
+    // }
 
-    (relT as ExistNode).isTrue = true;
+    // (relT as ExistNode).isTrue = true;
     return hInfo(RType.HaveTrue);
   } catch (error) {
     return hRunErr(env, RType.HaveError);
@@ -584,84 +585,84 @@ function callDefExec(
   }
 }
 
-export function emitFree(
-  env: L_Env,
-  node: CallOptNode,
-  relT: TNode,
-  onlyIf: Boolean,
-  req: Boolean,
-  otherFrees: CallOptNode[] = [] // free vars not bound to template.onlyif or req
-): RInfo {
-  const fixedFrees = fixFree(env, node, onlyIf, req, relT, otherFrees);
-  if (
-    fixedFrees?.onlyIf === undefined ||
-    fixedFrees.req === undefined ||
-    fixedFrees.others === undefined
-  )
-    return hRunErr(env, RType.Error, `Invalid invocation of ${node.optName}.`);
-  const fixWhat = fixedFrees?.onlyIf
-    .concat(fixedFrees.req)
-    .concat(fixedFrees.others);
+// export function emitFree(
+//   env: L_Env,
+//   node: CallOptNode,
+//   relT: TNode,
+//   onlyIf: Boolean,
+//   req: Boolean,
+//   otherFrees: CallOptNode[] = [] // free vars not bound to template.onlyif or req
+// ): RInfo {
+//   const fixedFrees = fixFree(env, node, onlyIf, req, relT, otherFrees);
+//   if (
+//     fixedFrees?.onlyIf === undefined ||
+//     fixedFrees.req === undefined ||
+//     fixedFrees.others === undefined
+//   )
+//     return hRunErr(env, RType.Error, `Invalid invocation of ${node.optName}.`);
+//   const fixWhat = fixedFrees?.onlyIf
+//     .concat(fixedFrees.req)
+//     .concat(fixedFrees.others);
 
-  // emit
-  for (let fixedReq of fixWhat) {
-    const tmp = env.getRelT(fixedReq.name);
-    if (!tmp)
-      return hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
-    env.newStoredFact(fixedReq.params, tmp);
-  }
+//   // emit
+//   for (let fixedReq of fixWhat) {
+//     const tmp = env.getRelT(fixedReq.name);
+//     if (!tmp)
+//       return hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
+//     env.newStoredFact(fixedReq.params, tmp);
+//   }
 
-  return hInfo(RType.True);
-}
+//   return hInfo(RType.True);
+// }
 
-export function checkFree(
-  env: L_Env,
-  node: CallOptNode,
-  relT: TNode,
-  onlyIf: Boolean,
-  req: Boolean
-): Boolean | undefined {
-  const fixedFrees = fixFree(env, node, onlyIf, req, relT);
-  if (fixedFrees?.onlyIf === undefined || fixedFrees.req === undefined) {
-    hRunErr(env, RType.Error, `Invalid invocation of ${node.optName}.`);
-    return undefined;
-  }
-  const fixWhat = fixedFrees?.onlyIf.concat(fixedFrees.req);
+// export function checkFree(
+//   env: L_Env,
+//   node: CallOptNode,
+//   relT: TNode,
+//   onlyIf: Boolean,
+//   req: Boolean
+// ): Boolean | undefined {
+//   const fixedFrees = fixFree(env, node, onlyIf, req, relT);
+//   if (fixedFrees?.onlyIf === undefined || fixedFrees.req === undefined) {
+//     hRunErr(env, RType.Error, `Invalid invocation of ${node.optName}.`);
+//     return undefined;
+//   }
+//   const fixWhat = fixedFrees?.onlyIf.concat(fixedFrees.req);
 
-  //
-  for (let fixedReq of fixWhat) {
-    const tmp = env.getRelT(fixedReq.name);
-    if (!tmp) {
-      hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
-      return undefined;
-    }
-    const t = env.isStoredTrueFact(fixedReq.params, tmp);
-    if (!t) return false;
-  }
+//   //
+//   for (let fixedReq of fixWhat) {
+//     const tmp = env.getRelT(fixedReq.name);
+//     if (!tmp) {
+//       hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
+//       return undefined;
+//     }
+//     const t = env.isStoredTrueFact(fixedReq.params, tmp);
+//     if (!t) return false;
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
-function knowImpliesFactExec(env: L_Env, node: ImpliesFactNode): RInfo {
-  try {
-    const tmp = env.getRelT(node.callOpt);
-    if (!tmp) {
-      hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
-      return hInfo(RType.KnowError);
-    }
+// function knowImpliesFactExec(env: L_Env, node: ImpliesFactNode): RInfo {
+//   try {
+//     const tmp = env.getRelT(node.callOpt);
+//     if (!tmp) {
+//       hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
+//       return hInfo(RType.KnowError);
+//     }
 
-    env.newStoredFact(
-      node.callOpt.optParams,
-      tmp,
-      node.requirements,
-      node.onlyIfExprs
-    );
+//     env.newStoredFact(
+//       node.callOpt.optParams,
+//       tmp,
+//       node.requirements,
+//       node.onlyIfExprs
+//     );
 
-    return hInfo(RType.KnowTrue);
-  } catch (error) {
-    return hRunErr(env, RType.KnowError);
-  }
-}
+//     return hInfo(RType.KnowTrue);
+//   } catch (error) {
+//     return hRunErr(env, RType.KnowError);
+//   }
+// }
 
 function proveExec(env: L_Env, node: YAProveNode): RInfo {
   try {
@@ -685,44 +686,44 @@ function proveExec(env: L_Env, node: YAProveNode): RInfo {
 
 function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
   try {
-    /** The only different between proveDef and proveInfer is: case def template requirements are used to check; in case infer they are used as pre-conditions*/
-    const onlyIfs = node.onlyIfExprs as L_Node[];
-    const req: CallOptNode[] = node.opt.req;
-    const newEnv = new L_Env();
-    newEnv.father = env;
-    env = newEnv;
+    // /** The only different between proveDef and proveInfer is: case def template requirements are used to check; in case infer they are used as pre-conditions*/
+    // const onlyIfs = node.onlyIfExprs as L_Node[];
+    // const req: CallOptNode[] = node.opt.req;
+    // const newEnv = new L_Env();
+    // newEnv.father = env;
+    // env = newEnv;
 
-    const relOpt = CallOptNode.create(
-      node.opt.optName,
-      node.opt.optParams.map((ls) =>
-        ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
-      )
-    );
-    const TFixFree = fixFree(env, relOpt, true, true, relatedT);
-    if (!TFixFree) return hRunErr(env, RType.ProveError);
+    // const relOpt = CallOptNode.create(
+    //   node.opt.optName,
+    //   node.opt.optParams.map((ls) =>
+    //     ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
+    //   )
+    // );
+    // const TFixFree = fixFree(env, relOpt, true, true, relatedT);
+    // if (!TFixFree) return hRunErr(env, RType.ProveError);
 
-    /**Declare variables in newEnv */
-    for (let varToDecl of node.opt.optParams.flat()) {
-      if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
-        continue;
-      newEnv.declareNewVar(varToDecl);
-    }
+    // /**Declare variables in newEnv */
+    // for (let varToDecl of node.opt.optParams.flat()) {
+    //   if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
+    //     continue;
+    //   newEnv.declareNewVar(varToDecl);
+    // }
 
-    /**Execute onlyIfs in the prove block*/
-    for (const [i, curNode] of onlyIfs.entries()) {
-      const res = nodeExec(newEnv, curNode);
-      if (!RInfoIsTrue(res))
-        return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
-    }
+    // /**Execute onlyIfs in the prove block*/
+    // for (const [i, curNode] of onlyIfs.entries()) {
+    //   const res = nodeExec(newEnv, curNode);
+    //   if (!RInfoIsTrue(res))
+    //     return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
+    // }
 
-    /**After execution, check whether template requirements are satisfied.*/
-    for (const [i, fact] of TFixFree.req.entries()) {
-      const tmp = env.getRelT(fact.name);
-      if (!tmp)
-        return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
-      const isT = env.isStoredTrueFact(fact.params, tmp);
-      if (!isT) return hInfo(RType.ProveFailed, `${fact.name} not satisfied.`);
-    }
+    // /**After execution, check whether template requirements are satisfied.*/
+    // for (const [i, fact] of TFixFree.req.entries()) {
+    //   const tmp = env.getRelT(fact.name);
+    //   if (!tmp)
+    //     return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
+    //   const isT = env.isStoredTrueFact(fact.params, tmp);
+    //   if (!isT) return hInfo(RType.ProveFailed, `${fact.name} not satisfied.`);
+    // }
 
     return hInfo(RType.ProveTrue);
   } catch (error) {
@@ -732,51 +733,51 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
 
 function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
   try {
-    const onlyIfs = node.onlyIfExprs as L_Node[];
-    const req: CallOptNode[] = node.opt.req;
-    const newEnv = new L_Env();
-    newEnv.father = env;
-    env = newEnv;
+    // const onlyIfs = node.onlyIfExprs as L_Node[];
+    // const req: CallOptNode[] = node.opt.req;
+    // const newEnv = new L_Env();
+    // newEnv.father = env;
+    // env = newEnv;
 
-    const relOpt = CallOptNode.create(
-      node.opt.optName,
-      node.opt.optParams.map((ls) =>
-        ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
-      )
-    );
-    const TFixFree = fixFree(env, relOpt, true, true, relatedT);
-    if (!TFixFree) return hRunErr(env, RType.ProveError);
+    // const relOpt = CallOptNode.create(
+    //   node.opt.optName,
+    //   node.opt.optParams.map((ls) =>
+    //     ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
+    //   )
+    // );
+    // const TFixFree = fixFree(env, relOpt, true, true, relatedT);
+    // if (!TFixFree) return hRunErr(env, RType.ProveError);
 
-    /**Declare variables in newEnv */
-    for (let varToDecl of node.opt.optParams.flat()) {
-      if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
-        continue;
-      newEnv.declareNewVar(varToDecl);
-    }
+    // /**Declare variables in newEnv */
+    // for (let varToDecl of node.opt.optParams.flat()) {
+    //   if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
+    //     continue;
+    //   newEnv.declareNewVar(varToDecl);
+    // }
 
-    /**Emit req in newEnv */
-    for (const [i, fact] of req.entries()) {
-      const tmp = env.getRelT(fact.optName);
-      if (!tmp)
-        return hRunErr(env, RType.ProveError, `${fact.optName} not declared`);
-      newEnv.newStoredFact(fact.optParams, tmp, [], []);
-    }
+    // /**Emit req in newEnv */
+    // for (const [i, fact] of req.entries()) {
+    //   const tmp = env.getRelT(fact.optName);
+    //   if (!tmp)
+    //     return hRunErr(env, RType.ProveError, `${fact.optName} not declared`);
+    //   newEnv.newStoredFact(fact.optParams, tmp, [], []);
+    // }
 
-    /**Execute onlyIfs in the prove block*/
-    for (const [i, curNode] of onlyIfs.entries()) {
-      const res = nodeExec(newEnv, curNode);
-      if (!RInfoIsTrue(res))
-        return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
-    }
+    // /**Execute onlyIfs in the prove block*/
+    // for (const [i, curNode] of onlyIfs.entries()) {
+    //   const res = nodeExec(newEnv, curNode);
+    //   if (!RInfoIsTrue(res))
+    //     return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
+    // }
 
-    /**After execution, check whether template onlyIfs are satisfied.*/
-    for (const [i, fact] of TFixFree.onlyIf.entries()) {
-      const tmp = env.getRelT(fact.name);
-      if (!tmp)
-        return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
-      const isT = env.isStoredTrueFact(fact.params, tmp);
-      if (!isT) return hInfo(RType.ProveFailed, `${fact.name} not satisfied.`);
-    }
+    // /**After execution, check whether template onlyIfs are satisfied.*/
+    // for (const [i, fact] of TFixFree.onlyIf.entries()) {
+    //   const tmp = env.getRelT(fact.name);
+    //   if (!tmp)
+    //     return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
+    //   const isT = env.isStoredTrueFact(fact.params, tmp);
+    //   if (!isT) return hInfo(RType.ProveFailed, `${fact.name} not satisfied.`);
+    // }
 
     return hInfo(RType.ProveTrue);
   } catch (error) {

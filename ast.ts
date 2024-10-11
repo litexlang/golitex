@@ -247,71 +247,71 @@ export abstract class TNode extends L_Node {
     }
   }
 
-  emit(
-    env: L_Env,
-    freeFixMap: Map<string, string>,
-    fathers: string[][] = []
-  ): RInfo {
-    try {
-      const keys = fathers.map((arr) => [...arr]);
-      keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || e));
+  // emit(
+  //   env: L_Env,
+  //   freeFixMap: Map<string, string>,
+  //   fathers: string[][] = []
+  // ): RInfo {
+  //   try {
+  //     const keys = fathers.map((arr) => [...arr]);
+  //     keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || e));
 
-      env.newStoredFact(keys, this);
+  //     env.newStoredFact(keys, this);
 
-      return hInfo(RType.True);
-    } catch (error) {
-      return hInfo(
-        RType.Error,
-        "error when emitting new fact into environment."
-      );
-    }
-  }
+  //     return hInfo(RType.True);
+  //   } catch (error) {
+  //     return hInfo(
+  //       RType.Error,
+  //       "error when emitting new fact into environment."
+  //     );
+  //   }
+  // }
 
-  emitOnlyIfs(
-    env: L_Env,
-    freeFixMap: Map<string, string>,
-    fathers: string[][] = []
-  ) {
-    for (let onlyIf of this.onlyIfExprs) {
-      (env.getRelT(onlyIf as CallOptNode) as TNode).emit(
-        env,
-        freeFixMap,
-        fathers
-      );
-    }
-  }
+  // emitOnlyIfs(
+  //   env: L_Env,
+  //   freeFixMap: Map<string, string>,
+  //   fathers: string[][] = []
+  // ) {
+  //   for (let onlyIf of this.onlyIfExprs) {
+  //     (env.getRelT(onlyIf as CallOptNode) as TNode).emit(
+  //       env,
+  //       freeFixMap,
+  //       fathers
+  //     );
+  //   }
+  // }
 
-  emitRequirements(
-    env: L_Env,
-    freeFixMap: Map<string, string>,
-    fathers: string[][] = []
-  ) {
-    for (let requirement of this.requirements) {
-      const relT = env.getRelT(requirement as CallOptNode) as TNode;
-      if (!relT) return false;
-      relT.emit(env, freeFixMap, fathers);
-    }
-    return true;
-  }
+  // emitRequirements(
+  //   env: L_Env,
+  //   freeFixMap: Map<string, string>,
+  //   fathers: string[][] = []
+  // ) {
+  //   for (let requirement of this.requirements) {
+  //     const relT = env.getRelT(requirement as CallOptNode) as TNode;
+  //     if (!relT) return false;
+  //     relT.emit(env, freeFixMap, fathers);
+  //   }
+  //   return true;
+  // }
 
-  requirementsSatisfied(env: L_Env, mapping: Map<string, string>): Boolean {
-    let allRequirementsAreSatisfied: Boolean = true;
-    for (let requirement of this.requirements) {
-      if (requirement instanceof CallOptNode) {
-        const keys: string[][] = [
-          ...(requirement as CallOptNode).optParams,
-        ].map((sArr) => sArr.map((s) => mapping.get(s) || ""));
-        let calledT = env.getRelT(requirement as CallOptNode);
-        if (!calledT) return false;
-        let res = env.isStoredTrueFact(keys, calledT);
-        if (!res) {
-          allRequirementsAreSatisfied = false;
-          break;
-        }
-      }
-    }
-    return allRequirementsAreSatisfied;
-  }
+  // requirementsSatisfied(env: L_Env, mapping: Map<string, string>): Boolean {
+  //   let allRequirementsAreSatisfied: Boolean = true;
+  //   for (let requirement of this.requirements) {
+  //     if (requirement instanceof CallOptNode) {
+  //       const keys: string[][] = [
+  //         ...(requirement as CallOptNode).optParams,
+  //       ].map((sArr) => sArr.map((s) => mapping.get(s) || ""));
+  //       let calledT = env.getRelT(requirement as CallOptNode);
+  //       if (!calledT) return false;
+  //       let res = env.isStoredTrueFact(keys, calledT);
+  //       if (!res) {
+  //         allRequirementsAreSatisfied = false;
+  //         break;
+  //       }
+  //     }
+  //   }
+  //   return allRequirementsAreSatisfied;
+  // }
 }
 
 export class DefNode extends TNode {
@@ -327,7 +327,7 @@ export class ExistNode extends TNode {
   isTrue = false;
 }
 
-export type CanBeKnownNode = FactNode | TNode | ImpliesFactNode;
+export type CanBeKnownNode = FactNode | TNode;
 export class KnowNode extends L_Node {
   type: L_NodeType = L_NodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
@@ -395,20 +395,20 @@ export class HaveNode extends L_Node {
   }
 }
 
-export class ImpliesFactNode extends L_Node {
-  type: L_NodeType = L_NodeType.ImpliesFactNode;
-  callOpt: CallOptNode;
-  requirements: CallOptNode[][] = [];
-  onlyIfExprs: CallOptNode[] = [];
+// export class ImpliesFactNode extends L_Node {
+//   type: L_NodeType = L_NodeType.ImpliesFactNode;
+//   callOpt: CallOptNode;
+//   requirements: CallOptNode[][] = [];
+//   onlyIfExprs: CallOptNode[] = [];
 
-  constructor(
-    callOpt: CallOptNode,
-    onlyIfExprs: CallOptNode[],
-    requirements: CallOptNode[][] = []
-  ) {
-    super();
-    this.callOpt = callOpt;
-    this.requirements = requirements;
-    this.onlyIfExprs = onlyIfExprs;
-  }
-}
+//   constructor(
+//     callOpt: CallOptNode,
+//     onlyIfExprs: CallOptNode[],
+//     requirements: CallOptNode[][] = []
+//   ) {
+//     super();
+//     this.callOpt = callOpt;
+//     this.requirements = requirements;
+//     this.onlyIfExprs = onlyIfExprs;
+//   }
+// }

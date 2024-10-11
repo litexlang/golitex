@@ -13,7 +13,6 @@ import {
   DollarMarkNode,
   YAProveNode,
   HaveNode,
-  ImpliesFactNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {

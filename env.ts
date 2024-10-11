@@ -1,6 +1,5 @@
 import { CallOptNode, TNode, makeTemplateNodeFact } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
-import { emitFree, hNoRelTErr, hRunErr, RType } from "./executor";
 import { cErr_Out, cL_Out, freeFixMap, L_Out } from "./shared";
 
 export type StoredFact = {
@@ -17,7 +16,7 @@ export class L_Env {
   declaredVars: string[] = [];
   declaredTemplates: Map<string, TNode> = new Map<string, TNode>();
   father: L_Env | undefined;
-  symbolsFactsPairs: StoredFact[] = [];
+  // symbolsFactsPairs: StoredFact[] = [];
   yaFacts: Map<string, CallOptNode[]> = new Map<string, CallOptNode[]>();
 
   constructor(father: L_Env | undefined = undefined) {
@@ -138,115 +137,115 @@ export class L_Env {
     return true;
   }
 
-  isCallOptTrue(opt: CallOptNode): Boolean {
-    const relatedT = this.getRelT(opt);
-    if (!relatedT) {
-      hRunErr(this, RType.Unknown);
-      return false;
-    } else {
-      return this.isStoredTrueFact(opt.optParams, relatedT, opt);
-    }
-  }
+  // isCallOptTrue(opt: CallOptNode): Boolean {
+  //   const relatedT = this.getRelT(opt);
+  //   if (!relatedT) {
+  //     hRunErr(this, RType.Unknown);
+  //     return false;
+  //   } else {
+  //     return this.isStoredTrueFact(opt.optParams, relatedT, opt);
+  //   }
+  // }
 
-  isFact(TName: string, params: string[][]): Boolean {
-    const relT = this.getRelT(TName);
-    if (!relT) {
-      hNoRelTErr(TName);
-      return false;
-    } else {
-      return this.isStoredTrueFact(params, relT);
-    }
-  }
+  // isFact(TName: string, params: string[][]): Boolean {
+  //   const relT = this.getRelT(TName);
+  //   if (!relT) {
+  //     hNoRelTErr(TName);
+  //     return false;
+  //   } else {
+  //     return this.isStoredTrueFact(params, relT);
+  //   }
+  // }
 
-  isStoredTrueFact(
-    key: string[][],
-    template: TNode,
-    //! 这种emit方式有问题：如果我有多个fact都能证明这个东西是对的，那么只有一个storedFact onlyif 会被释放
-    callOpt: undefined | CallOptNode = undefined // when defined, something will be emitted: the storedFact
-  ): boolean {
-    for (let sfPair of this.symbolsFactsPairs as StoredFact[]) {
-      if (!_isLiterallyFact(sfPair.vars, key)) {
-        continue;
-      } else {
-        for (let templatesThatSatisfySFPair of sfPair.template) {
-          // check whether we are manipulating the correct opt
-          if (templatesThatSatisfySFPair.name !== template.name) continue;
+  // isStoredTrueFact(
+  //   key: string[][],
+  //   template: TNode,
+  //   //! 这种emit方式有问题：如果我有多个fact都能证明这个东西是对的，那么只有一个storedFact onlyif 会被释放
+  //   callOpt: undefined | CallOptNode = undefined // when defined, something will be emitted: the storedFact
+  // ): boolean {
+  //   for (let sfPair of this.symbolsFactsPairs as StoredFact[]) {
+  //     if (!_isLiterallyFact(sfPair.vars, key)) {
+  //       continue;
+  //     } else {
+  //       for (let templatesThatSatisfySFPair of sfPair.template) {
+  //         // check whether we are manipulating the correct opt
+  //         if (templatesThatSatisfySFPair.name !== template.name) continue;
 
-          // no extra requirements
-          if (sfPair.requirements.length === 0) {
-            if (callOpt)
-              emitFree(this, callOpt, template, false, false, sfPair.onlyIfs);
+  //         // no extra requirements
+  //         if (sfPair.requirements.length === 0) {
+  //           if (callOpt)
+  //             emitFree(this, callOpt, template, false, false, sfPair.onlyIfs);
 
-            return true;
-          }
+  //           return true;
+  //         }
 
-          // check extra requirements
-          // mapping: from free(those #xxx are "free") to fixed
-          let sfPairVarToFixVarMapping = new Map<string, string>();
-          sfPair.vars.forEach((e, i) =>
-            e.forEach((s, j) => sfPairVarToFixVarMapping.set(s, key[i][j]))
-          );
+  //         // check extra requirements
+  //         // mapping: from free(those #xxx are "free") to fixed
+  //         let sfPairVarToFixVarMapping = new Map<string, string>();
+  //         sfPair.vars.forEach((e, i) =>
+  //           e.forEach((s, j) => sfPairVarToFixVarMapping.set(s, key[i][j]))
+  //         );
 
-          let allRequirementsSatisfied = true;
-          for (let rl of sfPair.requirements) {
-            for (let req of rl) {
-              // check whether each requirement is satisfied
-              const optName: string = req.optName; // req name
-              let fixedParams: string[][] = [];
+  //         let allRequirementsSatisfied = true;
+  //         for (let rl of sfPair.requirements) {
+  //           for (let req of rl) {
+  //             // check whether each requirement is satisfied
+  //             const optName: string = req.optName; // req name
+  //             let fixedParams: string[][] = [];
 
-              // req.optParams are free. fix them. put them into fixedParams
-              for (let i = 0; i < req.optParams.length; i++) {
-                fixedParams.push([]);
-                for (let j = 0; j < req.optParams[i].length; j++) {
-                  let s = sfPairVarToFixVarMapping.get(req.optParams[i][j]);
-                  if (!s) return false;
-                  fixedParams[i].push(s as string);
-                }
-              }
+  //             // req.optParams are free. fix them. put them into fixedParams
+  //             for (let i = 0; i < req.optParams.length; i++) {
+  //               fixedParams.push([]);
+  //               for (let j = 0; j < req.optParams[i].length; j++) {
+  //                 let s = sfPairVarToFixVarMapping.get(req.optParams[i][j]);
+  //                 if (!s) return false;
+  //                 fixedParams[i].push(s as string);
+  //               }
+  //             }
 
-              // check fixed params
-              let tmp = this.getRelT(optName);
-              if (!tmp) return false;
-              let res = this.isStoredTrueFact(fixedParams, tmp); // nothing is emitted here.
-              if (!res) {
-                allRequirementsSatisfied = false;
-                break;
-              }
-            }
-            if (!allRequirementsSatisfied) break;
-          }
+  //             // check fixed params
+  //             let tmp = this.getRelT(optName);
+  //             if (!tmp) return false;
+  //             let res = this.isStoredTrueFact(fixedParams, tmp); // nothing is emitted here.
+  //             if (!res) {
+  //               allRequirementsSatisfied = false;
+  //               break;
+  //             }
+  //           }
+  //           if (!allRequirementsSatisfied) break;
+  //         }
 
-          if (allRequirementsSatisfied) {
-            if (callOpt)
-              emitFree(this, callOpt, template, false, false, sfPair.onlyIfs);
-            return true;
-          } else continue;
-        }
-      }
-    }
+  //         if (allRequirementsSatisfied) {
+  //           if (callOpt)
+  //             emitFree(this, callOpt, template, false, false, sfPair.onlyIfs);
+  //           return true;
+  //         } else continue;
+  //       }
+  //     }
+  //   }
 
-    if (this.father)
-      return this.father.isStoredTrueFact(key, template, callOpt);
-    else return false;
+  //   if (this.father)
+  //     return this.father.isStoredTrueFact(key, template, callOpt);
+  //   else return false;
 
-    function _isLiterallyFact(arr1: string[][], arr2: string[][]): boolean {
-      if (arr1.length !== arr2.length) return false;
+  //   function _isLiterallyFact(arr1: string[][], arr2: string[][]): boolean {
+  //     if (arr1.length !== arr2.length) return false;
 
-      for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i].length !== arr2[i].length) return false;
-        for (let j = 0; j < arr1[i].length; j++) {
-          const val1 = arr1[i][j];
-          const val2 = arr2[i][j];
-          // if the vars stored in env.symbolsFactsPair start with # then is right.
-          if (val1 !== val2 && !val1.startsWith("#")) {
-            return false;
-          }
-        }
-      }
+  //     for (let i = 0; i < arr1.length; i++) {
+  //       if (arr1[i].length !== arr2[i].length) return false;
+  //       for (let j = 0; j < arr1[i].length; j++) {
+  //         const val1 = arr1[i][j];
+  //         const val2 = arr2[i][j];
+  //         // if the vars stored in env.symbolsFactsPair start with # then is right.
+  //         if (val1 !== val2 && !val1.startsWith("#")) {
+  //           return false;
+  //         }
+  //       }
+  //     }
 
-      return true;
-    }
-  }
+  //     return true;
+  //   }
+  // }
 
   private arraysEqual(arr1: string[][], arr2: string[][]): boolean {
     if (arr1.length !== arr2.length) return false;
@@ -261,38 +260,38 @@ export class L_Env {
     return true;
   }
 
-  newCallOptFact(opt: CallOptNode): Boolean {
-    const T = this.getRelT(opt);
-    if (!T) {
-      hRunErr(this, RType.Error, `${opt.optName} is not declared`);
-      return false;
-    } else {
-      this.newStoredFact(opt.optParams, T);
-      return true;
-    }
-  }
+  // newCallOptFact(opt: CallOptNode): Boolean {
+  //   const T = this.getRelT(opt);
+  //   if (!T) {
+  //     hRunErr(this, RType.Error, `${opt.optName} is not declared`);
+  //     return false;
+  //   } else {
+  //     this.newStoredFact(opt.optParams, T);
+  //     return true;
+  //   }
+  // }
 
-  newStoredFact(
-    key: string[][],
-    template: TNode,
-    requirements: CallOptNode[][] = [],
-    onlyIfs: CallOptNode[] = []
-  ) {
-    const existingPair = this.symbolsFactsPairs.find((pair) =>
-      this.arraysEqual(pair.vars, key)
-    );
+  // newStoredFact(
+  //   key: string[][],
+  //   template: TNode,
+  //   requirements: CallOptNode[][] = [],
+  //   onlyIfs: CallOptNode[] = []
+  // ) {
+  //   const existingPair = this.symbolsFactsPairs.find((pair) =>
+  //     this.arraysEqual(pair.vars, key)
+  //   );
 
-    if (existingPair) {
-      existingPair.template.push(template);
-    } else {
-      this.symbolsFactsPairs.push({
-        vars: key,
-        template: [template],
-        requirements: requirements,
-        onlyIfs: onlyIfs,
-      });
-    }
-  }
+  //   if (existingPair) {
+  //     existingPair.template.push(template);
+  //   } else {
+  //     this.symbolsFactsPairs.push({
+  //       vars: key,
+  //       template: [template],
+  //       requirements: requirements,
+  //       onlyIfs: onlyIfs,
+  //     });
+  //   }
+  // }
 
   declareNewVar(v: string | string[]): Boolean {
     if (Array.isArray(v)) {
@@ -401,27 +400,6 @@ export class L_Env {
     for (const fact of this.yaFacts) {
       console.log(fact);
     }
-  }
-
-  printCallOptFacts() {
-    console.log("\n-----facts-------\n");
-    for (const fact of this.symbolsFactsPairs) {
-      console.log(fact);
-    }
-
-    // for (const template of this.declaredTemplates.values()) {
-    //   printFact(template);
-    // }
-    // console.log("");
-
-    // function printFact(template: TNode, fatherName: string = "") {
-    //   const name = fatherName + OptsConnectionSymbol + template. name;
-    //   console.log(name);
-    //   console.log(template.facts.map((e) => e.params));
-    //   for (const subTemplate of template.declaredTemplates.values()) {
-    //     printFact(subTemplate, name);
-    //   }
-    // }
   }
 
   printDeclaredTemplates(doNotPrint: string[] = []) {
