@@ -156,6 +156,29 @@ function letExec(env: L_Env, node: LetNode): RInfo {
   }
 }
 
+function callOptExec(env: L_Env, fact: CallOptNode): RInfo {
+  const relT = env.getRelT(fact as CallOptNode);
+  if (!relT)
+    return hRunErr(env, RType.Error, `${fact.optName} is not declared.`);
+  let info: RInfo = ErrorRInfo;
+  switch (relT.type) {
+    case L_NodeType.ExistNode:
+      info = callDefExec(env, fact, relT, true);
+      break;
+    case L_NodeType.DefNode:
+      info = callDefExec(env, fact, relT);
+      break;
+    case L_NodeType.InferNode:
+      info = callInferExec(env, fact, relT);
+      break;
+  }
+  if (info.type === RType.Unknown || info.type === RType.False) {
+    return info;
+  }
+  if (!RInfoIsTrue(info)) return hRunErr(env, RType.Error, "");
+  return hInfo(RType.True);
+}
+
 function callOptsExec(env: L_Env, node: CallOptsNode): RInfo {
   try {
     const whatIsTrue: string[] = [];
@@ -332,9 +355,9 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
     )
       return hRunErr(env, RType.KnowError, "symbol not declared.");
 
-    env.YAFactAndEmit(node);
+    env.YANewFactEmit(node);
 
-    // env.YAFactAndEmit()
+    // env.YANewFactEmit()
     return hInfo(RType.KnowTrue);
   } catch (error) {
     return hRunErr(env, RType.KnowError);
@@ -527,10 +550,27 @@ function callDefExec(
   calledByExist: Boolean = false
 ): RInfo {
   try {
-    const res = env.yaCheckAndEmit(node);
+    //TODO:  There are two trues of callDef: 1. itself 2. all requirements satisfied.
+
+    const res = env.yaDefCheckEmit(node);
     if (isL_OutErr(res)) return hRunErr(env, RType.DefError, res.errStr);
 
-    return res.value ? hInfo(RType.True) : hInfo(RType.Unknown);
+    if (res.value) {
+      node.onlyIFs.forEach((e) => env.YANewFactEmit(e, false));
+      return hInfo(RType.True);
+    }
+
+    let isT = true;
+    let relT = env.getRelT(node);
+    for (const req of relT.req) {
+      const res = callOptExec(env, req);
+      if (res.type !== RType.True) {
+        isT = false;
+        break;
+      }
+    }
+
+    return isT ? hInfo(RType.True) : hInfo(RType.Unknown);
   } catch (error) {
     return hRunErr(env, RType.DefError);
   }

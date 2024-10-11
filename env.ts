@@ -24,7 +24,8 @@ export class L_Env {
     this.father = father;
   }
 
-  YAFactAndEmit(opt: CallOptNode, emit: Boolean = true) {
+  YANewFactEmit(opt: CallOptNode, emit: Boolean = true) {
+    /** Much unnecessary info is stored here. e.g. The optName and optNameLst can be set to "" because the key of map already store that info. */
     if (this.yaFacts.has(opt.optName)) {
       this.yaFacts.get(opt.optName)?.push(opt);
     } else {
@@ -32,11 +33,11 @@ export class L_Env {
     }
 
     if (emit) {
-      opt.onlyIFs.forEach((e: CallOptNode) => this.YAFactAndEmit(e, false));
+      opt.onlyIFs.forEach((e: CallOptNode) => this.YANewFactEmit(e, false));
     }
   }
 
-  // YAFactAndEmit(
+  // YANewFactEmit(
   //   TName: string,
   //   vars: string[][],
   //   req: CallOptNode[] = [],
@@ -51,7 +52,7 @@ export class L_Env {
   //   }
   // }
 
-  yaCheckAndEmit(opt: CallOptNode): L_Out<Boolean> {
+  yaDefCheckEmit(opt: CallOptNode): L_Out<Boolean> {
     // const RelT = this.getRelT(opt);
     // if (!RelT) {
     //   hNoRelTErr(opt);
@@ -87,7 +88,7 @@ export class L_Env {
       );
 
       isT = facts.every((e) =>
-        this.yaCheckAndEmit(CallOptNode.create(e.name, e.params))
+        this.yaDefCheckEmit(CallOptNode.create(e.name, e.params))
       );
 
       if (!isT) continue;
@@ -107,7 +108,7 @@ export class L_Env {
         };
       });
       facts.forEach((e) =>
-        this.YAFactAndEmit(CallOptNode.create(e.name, e.params))
+        this.YANewFactEmit(CallOptNode.create(e.name, e.params))
       );
     }
     return isT ? cL_Out<Boolean>(true) : cL_Out<Boolean>(false);

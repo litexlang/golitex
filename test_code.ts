@@ -9,6 +9,10 @@ export const testCodes = {
   Know3: "know set(y);",
   unknownCheck: "set(x);",
   trueCheck: "set(y);",
+  knowHash: "know set(#x);",
+  trueCheck2: "let t; set(t);",
+  def1: ": aliasOfSet(x: obj(x));",
+  def2: "aliasOfSet(x);",
 };
 
 export const testErrorCode = {
