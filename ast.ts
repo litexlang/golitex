@@ -376,6 +376,10 @@ export class LetNode extends L_Node {
     this.vars = node.freeVars;
     this.properties = node.properties;
   }
+
+  toString() {
+    return `${this.vars.join(", ")}: ${this.properties.map((s) => s.toString()).join(", ")}`;
+  }
 }
 
 // Declare and call at the same time.

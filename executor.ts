@@ -141,7 +141,7 @@ function letExec(env: L_Env, node: LetNode): RL_Out {
       if (isNull(info.v)) return cEnvErrL_Out(env, RType.LetError, info.err);
     }
 
-    return cL_Out(RType.LetTrue);
+    return cL_Out(RType.LetTrue, node.toString());
   } catch (error) {
     return cEnvErrL_Out(env, RType.LetError, "let");
   }
@@ -167,7 +167,7 @@ function callOptExec(env: L_Env, fact: CallOptNode): RL_Out {
     return info;
   }
   if (isL_OutErr(info)) return cEnvErrL_Out(env, RType.Error, "");
-  return cL_Out(RType.True);
+  return cL_Out(RType.True, fact.toString());
 }
 
 function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
@@ -179,6 +179,8 @@ function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
         return cL_Out(info.v);
       } else if (isNull(info.v)) {
         return cL_Out(null);
+      } else {
+        whatIsTrue.push(info.err);
       }
     }
     return cL_Out(RType.True, whatIsTrue.join(";"));

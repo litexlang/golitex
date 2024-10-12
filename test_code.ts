@@ -17,6 +17,7 @@ export const testCodes = {
 
   ProveInfer:
     "let y0: set0(y0), set(y0); prove p1(#x: set(x)):p2(y0: set(y0)) => {set(y0)} {}",
+  CallOpt: "set0(y0);",
 };
 
 export const testErrorCode = {
