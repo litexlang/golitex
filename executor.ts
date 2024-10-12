@@ -1,3 +1,4 @@
+import { isNull } from "lodash";
 import {
   CallOptNode,
   CallOptsNode,
@@ -73,6 +74,15 @@ export function RInfoIsTrue(res: RInfo) {
     RType.KnowEverythingTrue,
     RType.ExistTrue,
   ].includes(res.type);
+}
+
+function RInfoIsError(res: RInfo) {
+  function isErrorRType(type: RType): boolean {
+    const typeName = RType[type]; // 获取枚举的键名
+    return typeName.endsWith("Error");
+  }
+
+  return isErrorRType(res.type);
 }
 
 export function hRunErr(env: L_Env, type: RType, message: string = ""): RInfo {
@@ -548,7 +558,7 @@ function callDefExec(
     //TODO:  There are two trues of callDef: 1. itself 2. all requirements satisfied.
 
     const res = env.yaDefCheckEmit(node);
-    if (isL_OutErr(res)) return hRunErr(env, RType.DefError, res.errStr);
+    if (isL_OutErr(res)) return hRunErr(env, RType.DefError, res.err);
 
     if (res.value) {
       node.onlyIFs.forEach((e) => env.YANewFactEmit(e, false));
@@ -806,6 +816,26 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
         const out = callOptExec(env, req);
         if (!RInfoIsTrue(out))
           return hInfo(RType.Unknown, `${req.toString()} unsatisfied.`);
+      } else {
+        newEnv.YANewFactEmit(req, false);
+      }
+    }
+
+    // Check or emit requirements from relT
+    const { value: fixedOpts, err } = fixOpt(
+      env,
+      node.opt,
+      relT.getSelfFathersFreeVars(),
+      relT.getSelfFathersReq()
+    );
+    if (isNull(fixedOpts)) return hRunErr(env, RType.Error);
+    for (const req of fixedOpt) {
+    }
+
+    for (const proveNode of node.proveBlock) {
+      const out = nodeExec(newEnv, proveNode);
+      if (RInfoIsError(out)) {
+        return out;
       }
     }
 

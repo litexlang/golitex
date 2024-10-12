@@ -4,23 +4,23 @@ import { L_Env } from "./env";
 import { hRunErr, RType } from "./executor";
 
 export type L_Out<T> = {
-  value: T | null;
-  errStr: string;
+  value: T | null; // value === null works as signal of err
+  err: string;
 };
 
-export function cL_Out<T>(value: T, errStr: string = ""): L_Out<T> {
-  return { value, errStr };
+export function cL_Out<T>(value: T, err: string = ""): L_Out<T> {
+  return { value, err };
 }
 export function isL_OutErr<T>(out: L_Out<T>) {
   return out.value === null ? true : false;
 }
 
 export function cErr_Out(err: string = "Error") {
-  return { value: null, errStr: err };
+  return { value: null, err: err };
 }
 
 export function cNoRelTErr_Out(opt: CallOptNode) {
-  return { value: null, errStr: `${opt.optName} undeclared.` };
+  return { value: null, err: `${opt.optName} undeclared.` };
 }
 
 export function freeFixMap(

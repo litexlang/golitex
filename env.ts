@@ -66,7 +66,7 @@ export class L_Env {
       if (!_isLiterallyFact(singleFact.optParams, opt.optParams)) continue;
 
       const temp = freeFixMap(singleFact.optParams, opt.optParams);
-      if (!temp.value) return cErr_Out(temp.errStr);
+      if (!temp.value) return cErr_Out(temp.err);
       const mapping = temp.value;
 
       /** Check requirements of this single fact */
@@ -387,6 +387,44 @@ export class L_Env {
       return relT;
     } else {
       return relT;
+    }
+  }
+
+  relT(node: string | CallOptNode): L_Out<TNode> {
+    const isTop = (s: string): boolean => {
+      return !s.includes(OptsConnectionSymbol);
+    };
+
+    const getBeforeFirstColon = (str: string): string => {
+      const colonIndex = str.indexOf(OptsConnectionSymbol);
+      return colonIndex !== -1 ? str.slice(0, colonIndex) : str;
+    };
+
+    let s = "";
+    if (node instanceof CallOptNode) s = node.optName;
+    else s = node;
+
+    let relT: TNode | undefined;
+
+    const searchInCurrentEnv = (): TNode | undefined => {
+      if (isTop(s)) {
+        return this.declaredTemplates.get(s);
+      } else {
+        const topLevelTemplate = this.declaredTemplates.get(
+          getBeforeFirstColon(s)
+        );
+        return topLevelTemplate?.getDeclaredSubTemplate(s);
+      }
+    };
+
+    relT = searchInCurrentEnv();
+
+    // If not found in current environment, search in father
+    if (!relT && this.father) {
+      return this.father.relT(node);
+    } else {
+      if (relT === undefined) return cErr_Out(`${node.toString()} undeclared.`);
+      return cL_Out(relT);
     }
   }
 
