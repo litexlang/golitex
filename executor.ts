@@ -809,10 +809,26 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
 function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
   try {
     const newEnv = new L_Env(env);
+    const proveHashParams: string[] = node.opt.optParams
+      .map((ls) =>
+        ls.reduce((acc, s) => {
+          if (s.startsWith("#")) {
+            acc.push(s.slice(1));
+          }
+          return acc;
+        }, [] as string[])
+      )
+      .flat();
+    const proveNoHashParams: string[][] = node.opt.optParams.map((ls) =>
+      ls.map((s) => (s.startsWith("#") ? s.slice(1) : s))
+    );
 
-    // Check or emit requirements from callOpt
+    /**
+     * Check or emit requirements from callOpt before doing so from relT,
+     * so that user can suppose req of relT is True.
+     * */
     for (const req of node.opt.req) {
-      if (req.optParams.every((ls) => ls.every((s) => s.startsWith("#")))) {
+      if (req.optParams.flat().every((s) => !proveHashParams.includes(s))) {
         const out = callOptExec(env, req);
         if (!RInfoIsTrue(out))
           return hInfo(RType.Unknown, `${req.toString()} unsatisfied.`);
@@ -822,13 +838,13 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
     }
 
     // Check or emit requirements from relT
-    const { v: fixedOpts, err } = fixOpt(
+    let { v: fixedOpts, err } = fixOpt(
       env,
-      node.opt, // notice var starting with # is used as key
+      proveNoHashParams,
       relT.getSelfFathersFreeVars(),
       relT.getSelfFathersReq()
     );
-    if (isNull(fixedOpts)) return hRunErr(env, RType.Error);
+    if (isNull(fixedOpts)) return hRunErr(env, RType.Error, err);
     for (const req of fixedOpts) {
       if (req.optParams.every((ls) => ls.every((s) => s.startsWith("#")))) {
         const out = callOptExec(env, req);
@@ -839,12 +855,37 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
       }
     }
 
-    for (const proveNode of node.proveBlock) {
-      const out = nodeExec(newEnv, proveNode);
-      if (RInfoIsError(out)) {
-        return out;
+    // Run proveBlock
+    for (const expr of node.proveBlock) {
+      const out = nodeExec(newEnv, expr);
+      if (RInfoIsError(out)) return out;
+    }
+
+    // check onlyIF of opt
+    for (const onlyIf of node.opt.onlyIFs) {
+      if (env.yaDefCheckEmit(onlyIf, true)) continue;
+      else {
+        return hInfo(RType.Unknown, `${onlyIf.toString()} unknown.`);
       }
     }
+
+    // check onlyIf of relT
+    let tmp = fixOpt(
+      env,
+      node.opt,
+      relT.getSelfFathersFreeVars(),
+      relT.onlyIfExprs as CallOptNode[]
+    );
+    if (isNull(tmp.v)) return hRunErr(env, RType.Error, tmp.err);
+    for (const onlyIf of tmp.v) {
+      if (env.yaDefCheckEmit(onlyIf, true)) continue;
+      else {
+        return hInfo(RType.Unknown, `${onlyIf.toString()} unknown.`);
+      }
+    }
+
+    // emit prove, notice how opt of proveNode is literally the same as the fact emitted
+    knowExec(env, new KnowNode([node.opt]));
 
     return hInfo(RType.ProveTrue);
   } catch (error) {

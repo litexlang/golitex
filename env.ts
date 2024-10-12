@@ -51,7 +51,8 @@ export class L_Env {
   //   }
   // }
 
-  yaDefCheckEmit(opt: CallOptNode): L_Out<Boolean> {
+  //! Maybe I should add a syntax to allow user to specify in which env the fact is emitted: the newEnv opened by prove or the global env.
+  yaDefCheckEmit(opt: CallOptNode, emit = true): L_Out<Boolean> {
     // const RelT = this.getRelT(opt);
     // if (!RelT) {
     //   hNoRelTErr(opt);
@@ -87,28 +88,37 @@ export class L_Env {
       );
 
       isT = facts.every((e) =>
-        this.yaDefCheckEmit(CallOptNode.create(e.name, e.params))
+        this.yaDefCheckEmit(CallOptNode.create(e.name, e.params), false)
       );
 
-      if (!isT) continue;
+      if (!isT) {
+        // Look up into father env
+        if (this.father === undefined) continue;
+        else {
+          const out = this.father.yaDefCheckEmit(opt);
+          if (!out.v) continue;
+        }
+      }
 
       /** Emit onlyIfs */
-      facts = singleFact.onlyIFs.map((e) => {
-        return {
-          name: e.optName,
-          params: e.optParams.map((ls) =>
-            ls.map((s) => {
-              const res = mapping.get(s);
-              if (res !== undefined)
-                return res; // replace free var in param list with fixed var
-              else return s; // global var unspecified in parameter list
-            })
-          ),
-        };
-      });
-      facts.forEach((e) =>
-        this.YANewFactEmit(CallOptNode.create(e.name, e.params))
-      );
+      if (emit) {
+        facts = singleFact.onlyIFs.map((e) => {
+          return {
+            name: e.optName,
+            params: e.optParams.map((ls) =>
+              ls.map((s) => {
+                const res = mapping.get(s);
+                if (res !== undefined)
+                  return res; // replace free var in param list with fixed var
+                else return s; // global var unspecified in parameter list
+              })
+            ),
+          };
+        });
+        facts.forEach((e) =>
+          this.YANewFactEmit(CallOptNode.create(e.name, e.params))
+        );
+      }
     }
     return isT ? cL_Out<Boolean>(true) : cL_Out<Boolean>(false);
 

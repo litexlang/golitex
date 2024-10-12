@@ -60,14 +60,18 @@ export function freeFixMap(
 
 export function fixOpt(
   env: L_Env,
-  fixedOpt: CallOptNode,
+  fixedOpt: CallOptNode | string[][],
   free: string[][],
   fixWhats: CallOptNode[]
 ): L_Out<CallOptNode[]> {
-  const relT = env.getRelT(fixedOpt);
-  if (!relT) return cNoRelTErr_Out(fixedOpt);
+  let fixedParams: string[][];
+  if (Array.isArray(fixedOpt)) {
+    fixedParams = fixedOpt;
+  } else {
+    fixedParams = fixedOpt.optParams;
+  }
 
-  const temp = freeFixMap(free, fixedOpt.optParams);
+  const temp = freeFixMap(free, fixedParams);
   if (isL_OutErr(temp)) return cErr_Out("");
   const mapping = temp.v;
 

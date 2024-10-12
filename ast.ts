@@ -338,6 +338,11 @@ export class KnowNode extends L_Node {
   type: L_NodeType = L_NodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
   isKnowEverything: Boolean = false;
+
+  constructor(facts: CallOptNode[] = []) {
+    super();
+    this.facts = facts;
+  }
 }
 
 export type FactNode = CallOptNode | CallOptsNode;
