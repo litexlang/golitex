@@ -13,7 +13,7 @@ import {
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
-import { fixOpt, isL_OutErr, L_Out } from "./shared";
+import { cEnvErrL_Out, cL_Out, fixOpt, isL_OutErr, RL_Out } from "./shared";
 
 export enum RType {
   True, // not only used as True for callInferExec, but also as a generic type passed between subFunctions.
@@ -63,37 +63,22 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.ExistTrue]: "exist: true",
 };
 
-export function RInfoIsTrue(res: RInfo) {
-  return [
-    RType.True,
-    RType.KnowTrue,
-    RType.DefTrue,
-    RType.HaveTrue,
-    RType.LetTrue,
-    RType.ProveTrue,
-    RType.KnowEverythingTrue,
-    RType.ExistTrue,
-  ].includes(res.type);
-}
-
-function RInfoIsError(res: RInfo) {
+function IsL_OutRTypeErr(res: RL_Out) {
   function isErrorRType(type: RType): boolean {
     const typeName = RType[type]; // 获取枚举的键名
     return typeName.endsWith("Error");
   }
 
-  return isErrorRType(res.type);
+  return isErrorRType(res.v as RType);
 }
 
-export function hRunErr(env: L_Env, type: RType, message: string = ""): RInfo {
+export function hRunErr(env: L_Env, type: RType, message: string = "") {
   env.pushNewError(RTypeMap[type] + ": " + message);
-  return hInfo(type, message);
 }
 
 export const hInfo = (t: RType, s: string = "") => {
   return { type: t, message: s };
 };
-export type RInfo = { type: RType; message: string };
 export const ErrorRInfo = { type: RType.Error, message: "" };
 export const hNoRelTErr = (
   opt: CallOptNode | string,
@@ -112,7 +97,7 @@ export const hFixFreeErr = (
   else return hInfo(type, `fail to instantiate ${opt}`);
 };
 
-export function nodeExec(env: L_Env, node: L_Node): RInfo {
+export function nodeExec(env: L_Env, node: L_Node): RL_Out {
   try {
     switch (node.type) {
       case L_NodeType.DefNode:
@@ -131,18 +116,18 @@ export function nodeExec(env: L_Env, node: L_Node): RInfo {
       case L_NodeType.HaveNode:
         return haveExec(env, node as HaveNode);
     }
-    return hInfo(RType.Error, "Stmt");
+    return cEnvErrL_Out(env, RType.Error, "Stmt");
   } catch (error) {
-    return hRunErr(env, RType.Error, "Stmt");
+    return cEnvErrL_Out(env, RType.Error, "Stmt");
   }
 }
 
-function letExec(env: L_Env, node: LetNode): RInfo {
+function letExec(env: L_Env, node: LetNode): RL_Out {
   try {
     // Check ofr duplicate variable declarations
     const notDeclared = node.vars.filter((v) => env.declaredVars.includes(v));
     if (!notDeclared) {
-      return hRunErr(
+      return cEnvErrL_Out(
         env,
         RType.LetError,
         `Error: Variable(s) ${node.vars.join(", ")} already declared in this scope.`
@@ -153,20 +138,20 @@ function letExec(env: L_Env, node: LetNode): RInfo {
 
     for (let i = 0; i < node.properties.length; i++) {
       let info = yaKnowCallOptExec(env, node.properties[i]);
-      if (!RInfoIsTrue(info)) return hRunErr(env, RType.LetError, info.message);
+      if (isNull(info.v)) return cEnvErrL_Out(env, RType.LetError, info.err);
     }
 
-    return hInfo(RType.LetTrue);
+    return cL_Out(RType.LetTrue);
   } catch (error) {
-    return hRunErr(env, RType.LetError, "let");
+    return cEnvErrL_Out(env, RType.LetError, "let");
   }
 }
 
-function callOptExec(env: L_Env, fact: CallOptNode): RInfo {
+function callOptExec(env: L_Env, fact: CallOptNode): RL_Out {
   const relT = env.getRelT(fact as CallOptNode);
   if (!relT)
-    return hRunErr(env, RType.Error, `${fact.optName} is not declared.`);
-  let info: RInfo = ErrorRInfo;
+    return cEnvErrL_Out(env, RType.Error, `${fact.optName} is not declared.`);
+  let info: RL_Out = cL_Out(RType.Error);
   switch (relT.type) {
     case L_NodeType.ExistNode:
       info = callExistExec(env, fact, relT);
@@ -178,27 +163,27 @@ function callOptExec(env: L_Env, fact: CallOptNode): RInfo {
       info = callInferExec(env, fact, relT);
       break;
   }
-  if (info.type === RType.Unknown || info.type === RType.False) {
+  if (info.v === RType.Unknown || info.v === RType.False) {
     return info;
   }
-  if (!RInfoIsTrue(info)) return hRunErr(env, RType.Error, "");
-  return hInfo(RType.True);
+  if (isL_OutErr(info)) return cEnvErrL_Out(env, RType.Error, "");
+  return cL_Out(RType.True);
 }
 
-function callOptsExec(env: L_Env, node: CallOptsNode): RInfo {
+function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
   try {
     const whatIsTrue: string[] = [];
     for (const fact of (node as CallOptsNode).nodes) {
       const info = callOptExec(env, fact);
-      if (info.type === RType.Unknown || info.type === RType.False) {
-        return hInfo(info.type);
-      } else if (!RInfoIsTrue(info)) {
-        return hRunErr(env, info.type);
+      if (info.v === RType.Unknown || info.v === RType.False) {
+        return cL_Out(info.v);
+      } else if (isNull(info.v)) {
+        return cL_Out(null);
       }
     }
-    return hInfo(RType.True, whatIsTrue.join(";"));
+    return cL_Out(RType.True, whatIsTrue.join(";"));
   } catch (error) {
-    return hRunErr(env, RType.Error, "call operators");
+    return cEnvErrL_Out(env, RType.Error, "call operators");
   }
 }
 
@@ -206,7 +191,7 @@ function callInferExec(
   env: L_Env,
   node: CallOptNode,
   relT: TNode | undefined = undefined
-): RInfo {
+): RL_Out {
   try {
     // const builtinFunc = L_Builtins[node.optName];
     // if (builtinFunc) {
@@ -218,34 +203,34 @@ function callInferExec(
 
     // // check itself
     // let isT: Boolean | undefined = env.isStoredTrueFact(node.optParams, relT);
-    // if (!isT) return hInfo(RType.Unknown, `${node.optName} itself unsatisfied`);
+    // if (!isT) return cL_Out(RType.Unknown, `${node.optName} itself unsatisfied`);
 
     // // check all requirements
     // isT = checkFree(env, node, relT, false, true);
 
     // if (isT === undefined)
-    //   return hRunErr(env, RType.Error, "check infer requirement error.");
+    //   return cEnvErrL_Out(env, RType.Error, "check infer requirement error.");
     // if (isT === false)
-    //   return hInfo(RType.Unknown, `${node.optName} requirements unsatisfied.`);
+    //   return cL_Out(RType.Unknown, `${node.optName} requirements unsatisfied.`);
 
     // // emit
     // emitFree(env, node, relT, true, false);
 
-    return hInfo(RType.True);
+    return cL_Out(RType.True);
   } catch (error) {
-    return hRunErr(env, RType.Error, `call ${node.optName}`);
+    return cEnvErrL_Out(env, RType.Error, `call ${node.optName}`);
   }
 }
 
-function templateDeclExec(env: L_Env, node: TNode): RInfo {
+function templateDeclExec(env: L_Env, node: TNode): RL_Out {
   try {
     // Check if the template name already exists
     if (!node.isRedefine && env.declaredTemplates.has(node.name)) {
-      return hRunErr(env, RType.DefError, `${node.name} has declared`);
+      return cEnvErrL_Out(env, RType.DefError, `${node.name} has declared`);
     }
 
     if (L_Keywords.includes(node.name)) {
-      return hRunErr(env, RType.DefError, `'${node.name}' is keyword.`);
+      return cEnvErrL_Out(env, RType.DefError, `'${node.name}' is keyword.`);
     }
 
     // If not already declared, set the new template
@@ -253,28 +238,28 @@ function templateDeclExec(env: L_Env, node: TNode): RInfo {
 
     // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
     let res = node.initDeclaredTemplates(env);
-    if (!RInfoIsTrue(res)) return hRunErr(env, RType.DefError);
+    if (isNull(res.v)) return cEnvErrL_Out(env, RType.DefError);
 
     switch (node.type) {
       case L_NodeType.DefNode:
-        return hInfo(RType.DefTrue, "def");
+        return cL_Out(RType.DefTrue, "def");
       case L_NodeType.ExistNode:
-        return hInfo(RType.DefTrue, "exist");
+        return cL_Out(RType.DefTrue, "exist");
       case L_NodeType.InferNode:
-        return hInfo(RType.DefTrue, "infer");
+        return cL_Out(RType.DefTrue, "infer");
     }
 
-    return hInfo(RType.Error);
+    return cL_Out(RType.Error);
   } catch (error) {
-    return hRunErr(env, RType.DefError);
+    return cEnvErrL_Out(env, RType.DefError);
   }
 }
 
-function knowExec(env: L_Env, node: KnowNode): RInfo {
+function knowExec(env: L_Env, node: KnowNode): RL_Out {
   try {
     let facts: CanBeKnownNode[] = [];
     let isKnowEverything: Boolean = false;
-    let res: RInfo = { type: RType.Error, message: "" };
+    let res: RL_Out = { v: RType.Error, err: "" };
 
     if (node.type === L_NodeType.KnowNode) {
       facts = (node as KnowNode).facts;
@@ -312,18 +297,18 @@ function knowExec(env: L_Env, node: KnowNode): RInfo {
           break;
         }
       }
-      if (!RInfoIsTrue(res)) return res;
+      if (isNull(res.v)) return res;
     }
 
-    return hInfo(RType.KnowTrue);
+    return cL_Out(RType.KnowTrue);
   } catch (error) {
-    return hRunErr(env, RType.KnowError, "know");
+    return cEnvErrL_Out(env, RType.KnowError, "know");
   }
 }
 
-function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RInfo {
+function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RL_Out {
   try {
-    // let res: RInfo = { type: RType.Error, message: "" };
+    // let res: RL_Out  = { type: RType.Error, message: "" };
     // res = yaKnowCallOptExec(env, fact);
 
     // const template = env.getRelT(fact as CallOptNode);
@@ -332,22 +317,22 @@ function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RInfo {
 
     // emitFree(env, fact, template, true, true);
 
-    return hInfo(RType.KnowTrue);
+    return cL_Out(RType.KnowTrue);
   } catch (error) {
-    return hRunErr(env, RType.KnowEverythingError, "");
+    return cEnvErrL_Out(env, RType.KnowEverythingError, "");
   }
 }
 
-function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
+function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RL_Out {
   try {
-    if (!env.getRelT(node)) return hInfo(RType.KnowError);
+    if (!env.getRelT(node)) return cL_Out(RType.KnowError);
 
     if (
       !node.optParams.every((ls) =>
         ls.every((s) => env.declaredVars.includes(s) || s.startsWith("#"))
       )
     )
-      return hRunErr(env, RType.KnowError, "symbol not declared.");
+      return cEnvErrL_Out(env, RType.KnowError, "symbol not declared.");
 
     if (node.optParams.every((ls) => ls.every((s) => s[0] !== "#")))
       // If every var in callOpt is not 'forall', we emit onlyIf immediately
@@ -355,31 +340,31 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
     else env.YANewFactEmit(node, false);
 
     // env.YANewFactEmit()
-    return hInfo(RType.KnowTrue);
+    return cL_Out(RType.KnowTrue);
   } catch (error) {
-    return hRunErr(env, RType.KnowError);
+    return cEnvErrL_Out(env, RType.KnowError);
   }
 }
 
-// function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
+// function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RL_Out  {
 //   try {
 //     if (
 //       !node.optParams.every((ls) =>
 //         ls.every((s) => env.declaredVars.includes(s) || s.startsWith("#"))
 //       )
 //     ) {
-//       return hRunErr(env, RType.KnowError, "symbol not declared.");
+//       return cEnvErrL_Out(env, RType.KnowError, "symbol not declared.");
 //     }
 
 //     let relT = env.getRelT(node);
 
 //     if (!relT)
-//       return hInfo(RType.KnowUndeclared, node.optName + " has not declared");
+//       return cL_Out(RType.KnowUndeclared, node.optName + " has not declared");
 
 //     /**Know Exist Opt */
 //     if (relT.type === L_NodeType.ExistNode) {
 //       (relT as ExistNode).isTrue = true;
-//       return hInfo(RType.KnowTrue);
+//       return cL_Out(RType.KnowTrue);
 //     }
 
 //     //! THE CLASSICAL WAY OF TRANSFORMING FREE VAR INTO FIXED AND EMIT
@@ -387,19 +372,19 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RInfo {
 
 //     let rightIsTrue = checkFree(env, node, relT, false, true);
 
-//     if (!rightIsTrue) return hInfo(RType.Unknown);
+//     if (!rightIsTrue) return cL_Out(RType.Unknown);
 //     else {
 //       const res = emitFree(env, node, relT, true, false);
-//       if (!RInfoIsTrue(res)) return res;
+//       if (isNull(res.v)) return res;
 //     }
 
-//     return hInfo(RType.KnowTrue);
+//     return cL_Out(RType.KnowTrue);
 //   } catch (error) {
-//     return hRunErr(env, RType.KnowError, "");
+//     return cEnvErrL_Out(env, RType.KnowError, "");
 //   }
 // }
 
-function haveExec(env: L_Env, node: HaveNode): RInfo {
+function haveExec(env: L_Env, node: HaveNode): RL_Out {
   try {
     // const relT = env.getRelT(node.opt);
     // if (!relT) return hNoRelTErr(node.opt, RType.HaveError);
@@ -407,13 +392,13 @@ function haveExec(env: L_Env, node: HaveNode): RInfo {
     // if (!req) return hFixFreeErr(node.opt, RType.HaveError);
     // for (const optParams of req) {
     //   if (!env.isFact(optParams.name, optParams.params))
-    //     return hInfo(RType.HaveFailed);
+    //     return cL_Out(RType.HaveFailed);
     // }
 
     // (relT as ExistNode).isTrue = true;
-    return hInfo(RType.HaveTrue);
+    return cL_Out(RType.HaveTrue);
   } catch (error) {
-    return hRunErr(env, RType.HaveError);
+    return cEnvErrL_Out(env, RType.HaveError);
   }
 }
 
@@ -442,13 +427,13 @@ export function fixFree(
   };
 
   if (!relT) {
-    hRunErr(env, RType.Error, "exist not declared");
+    cEnvErrL_Out(env, RType.Error, "exist not declared");
     return undefined;
   }
 
   const mapping = relT?.fix(opt);
   if (!mapping) {
-    hRunErr(env, RType.Error, "calling undeclared symbol.");
+    cEnvErrL_Out(env, RType.Error, "calling undeclared symbol.");
     return undefined;
   }
 
@@ -457,7 +442,7 @@ export function fixFree(
     for (let curOpt of relT.requirements as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
-        hRunErr(env, RType.Error);
+        cEnvErrL_Out(env, RType.Error);
         return undefined;
       }
       optParamsArr.push({ name: curOpt.optName, params: fixedArrArr });
@@ -470,7 +455,7 @@ export function fixFree(
     for (let curOpt of relT.onlyIfExprs as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
-        hRunErr(env, RType.Error);
+        cEnvErrL_Out(env, RType.Error);
         return undefined;
       }
       optParamsArr.push({ name: curOpt.optName, params: fixedArrArr });
@@ -483,7 +468,7 @@ export function fixFree(
     for (let curOpt of otherFrees as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
-        hRunErr(env, RType.Error);
+        cEnvErrL_Out(env, RType.Error);
         return undefined;
       }
       optParamsArr.push({ name: curOpt.optName, params: fixedArrArr });
@@ -516,35 +501,35 @@ export function fixFree(
 //   node: CallOptNode,
 //   relT: TNode,
 //   calledByExist: Boolean = false
-// ): RInfo {
+// ): RL_Out  {
 //   try {
 //     // check left(i.e. the opt itself)
 //     let leftIsTrue: Boolean = env.isStoredTrueFact(node.optParams, relT);
 
 //     if (leftIsTrue) {
 //       const res = emitFree(env, node, relT, false, true);
-//       if (!RInfoIsTrue(res)) return res;
+//       if (isNull(res.v)) return res;
 //     }
 
 //     let rightIsTrue = checkFree(env, node, relT, false, true);
 
-//     if (!rightIsTrue) return hInfo(RType.Unknown);
+//     if (!rightIsTrue) return cL_Out(RType.Unknown);
 //     else {
 //       env.newCallOptFact(node);
 //     }
 
 //     if (calledByExist) (relT as ExistNode).isTrue = true;
-//     return hInfo(RType.True);
+//     return cL_Out(RType.True);
 //   } catch (error) {
-//     return hRunErr(env, RType.DefError);
+//     return cEnvErrL_Out(env, RType.DefError);
 //   }
 // }
 
-function callExistExec(env: L_Env, node: CallOptNode, relT: TNode): RInfo {
+function callExistExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
   try {
-    return hInfo(RType.ExistTrue);
+    return cL_Out(RType.ExistTrue);
   } catch (error) {
-    return hRunErr(env, RType.ExistError);
+    return cEnvErrL_Out(env, RType.ExistError);
   }
 }
 
@@ -553,16 +538,16 @@ function callDefExec(
   node: CallOptNode,
   relT: TNode
   // calledByExist: Boolean = false
-): RInfo {
+): RL_Out {
   try {
     //TODO:  There are two trues of callDef: 1. itself 2. all requirements satisfied.
 
-    const res = env.yaDefCheckEmit(node);
-    if (isL_OutErr(res)) return hRunErr(env, RType.DefError, res.err);
+    const out = env.yaDefCheckEmit(node);
+    if (isL_OutErr(out)) return cEnvErrL_Out(env, RType.DefError, out.err);
 
-    if (res.v) {
+    if (out.v) {
       node.onlyIFs.forEach((e) => env.YANewFactEmit(e, false));
-      return hInfo(RType.True);
+      return cL_Out(RType.True);
     }
 
     let temp = fixOpt(
@@ -571,7 +556,7 @@ function callDefExec(
       relT.getSelfFathersFreeVars(),
       relT.getSelfFathersReq()
     );
-    if (isL_OutErr(temp)) return hRunErr(env, RType.Error);
+    if (isL_OutErr(temp)) return cEnvErrL_Out(env, RType.Error);
     const fixedReq = temp.v as CallOptNode[];
 
     let isT = false;
@@ -579,16 +564,16 @@ function callDefExec(
       isT = true;
       for (const req of fixedReq) {
         const res = callOptExec(env, req);
-        if (res.type !== RType.True) {
+        if (res.v !== RType.True) {
           isT = false;
           break;
         }
       }
     }
 
-    return isT ? hInfo(RType.True) : hInfo(RType.Unknown);
+    return isT ? cL_Out(RType.True) : cL_Out(RType.Unknown);
   } catch (error) {
-    return hRunErr(env, RType.DefError);
+    return cEnvErrL_Out(env, RType.DefError);
   }
 }
 
@@ -599,14 +584,14 @@ function callDefExec(
 //   onlyIf: Boolean,
 //   req: Boolean,
 //   otherFrees: CallOptNode[] = [] // free vars not bound to template.onlyif or req
-// ): RInfo {
+// ): RL_Out  {
 //   const fixedFrees = fixFree(env, node, onlyIf, req, relT, otherFrees);
 //   if (
 //     fixedFrees?.onlyIf === undefined ||
 //     fixedFrees.req === undefined ||
 //     fixedFrees.others === undefined
 //   )
-//     return hRunErr(env, RType.Error, `Invalid invocation of ${node.optName}.`);
+//     return cEnvErrL_Out(env, RType.Error, `Invalid invocation of ${node.optName}.`);
 //   const fixWhat = fixedFrees?.onlyIf
 //     .concat(fixedFrees.req)
 //     .concat(fixedFrees.others);
@@ -615,11 +600,11 @@ function callDefExec(
 //   for (let fixedReq of fixWhat) {
 //     const tmp = env.getRelT(fixedReq.name);
 //     if (!tmp)
-//       return hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
+//       return cEnvErrL_Out(env, RType.Error, `${findIndex.name} has not declared.`);
 //     env.newStoredFact(fixedReq.params, tmp);
 //   }
 
-//   return hInfo(RType.True);
+//   return cL_Out(RType.True);
 // }
 
 // export function checkFree(
@@ -631,7 +616,7 @@ function callDefExec(
 // ): Boolean | undefined {
 //   const fixedFrees = fixFree(env, node, onlyIf, req, relT);
 //   if (fixedFrees?.onlyIf === undefined || fixedFrees.req === undefined) {
-//     hRunErr(env, RType.Error, `Invalid invocation of ${node.optName}.`);
+//     cEnvErrL_Out(env, RType.Error, `Invalid invocation of ${node.optName}.`);
 //     return undefined;
 //   }
 //   const fixWhat = fixedFrees?.onlyIf.concat(fixedFrees.req);
@@ -640,7 +625,7 @@ function callDefExec(
 //   for (let fixedReq of fixWhat) {
 //     const tmp = env.getRelT(fixedReq.name);
 //     if (!tmp) {
-//       hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
+//       cEnvErrL_Out(env, RType.Error, `${findIndex.name} has not declared.`);
 //       return undefined;
 //     }
 //     const t = env.isStoredTrueFact(fixedReq.params, tmp);
@@ -650,12 +635,12 @@ function callDefExec(
 //   return true;
 // }
 
-// function knowImpliesFactExec(env: L_Env, node: ImpliesFactNode): RInfo {
+// function knowImpliesFactExec(env: L_Env, node: ImpliesFactNode): RL_Out  {
 //   try {
 //     const tmp = env.getRelT(node.callOpt);
 //     if (!tmp) {
-//       hRunErr(env, RType.Error, `${findIndex.name} has not declared.`);
-//       return hInfo(RType.KnowError);
+//       cEnvErrL_Out(env, RType.Error, `${findIndex.name} has not declared.`);
+//       return cL_Out(RType.KnowError);
 //     }
 
 //     env.newStoredFact(
@@ -665,13 +650,13 @@ function callDefExec(
 //       node.onlyIfExprs
 //     );
 
-//     return hInfo(RType.KnowTrue);
+//     return cL_Out(RType.KnowTrue);
 //   } catch (error) {
-//     return hRunErr(env, RType.KnowError);
+//     return cEnvErrL_Out(env, RType.KnowError);
 //   }
 // }
 
-function proveExec(env: L_Env, node: YAProveNode): RInfo {
+function proveExec(env: L_Env, node: YAProveNode): RL_Out {
   try {
     const relatedT = env.getRelT(node.opt.optName);
     switch (relatedT?.type) {
@@ -681,17 +666,17 @@ function proveExec(env: L_Env, node: YAProveNode): RInfo {
         return proveDefExec(env, node, relatedT);
     }
 
-    return hRunErr(
+    return cEnvErrL_Out(
       env,
       RType.ProveError,
       `prove keyword should be followed by declared template name`
     );
   } catch (error) {
-    return hRunErr(env, RType.ProveError);
+    return cEnvErrL_Out(env, RType.ProveError);
   }
 }
 
-function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
+function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RL_Out {
   try {
     // /** The only different between proveDef and proveInfer is: case def template requirements are used to check; in case infer they are used as pre-conditions*/
     // const onlyIfs = node.onlyIfExprs as L_Node[];
@@ -707,7 +692,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
     //   )
     // );
     // const TFixFree = fixFree(env, relOpt, true, true, relatedT);
-    // if (!TFixFree) return hRunErr(env, RType.ProveError);
+    // if (!TFixFree) return cEnvErrL_Out(env, RType.ProveError);
 
     // /**Declare variables in newEnv */
     // for (let varToDecl of node.opt.optParams.flat()) {
@@ -719,26 +704,26 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
     // /**Execute onlyIfs in the prove block*/
     // for (const [i, curNode] of onlyIfs.entries()) {
     //   const res = nodeExec(newEnv, curNode);
-    //   if (!RInfoIsTrue(res))
-    //     return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
+    //   if (isNull(res.v))
+    //     return cL_Out(RType.ProveFailed, `${i}th stmt failed.`);
     // }
 
     // /**After execution, check whether template requirements are satisfied.*/
     // for (const [i, fact] of TFixFree.req.entries()) {
     //   const tmp = env.getRelT(fact.name);
     //   if (!tmp)
-    //     return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
+    //     return cEnvErrL_Out(env, RType.ProveError, `${fact.name} not declared`);
     //   const isT = env.isStoredTrueFact(fact.params, tmp);
-    //   if (!isT) return hInfo(RType.ProveFailed, `${fact.name} not satisfied.`);
+    //   if (!isT) return cL_Out(RType.ProveFailed, `${fact.name} not satisfied.`);
     // }
 
-    return hInfo(RType.ProveTrue);
+    return cL_Out(RType.ProveTrue);
   } catch (error) {
-    return hRunErr(env, RType.ProveError);
+    return cEnvErrL_Out(env, RType.ProveError);
   }
 }
 
-// function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
+// function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RL_Out  {
 //   try {
 //     // const onlyIfs = node.onlyIfExprs as L_Node[];
 //     // const req: CallOptNode[] = node.opt.req;
@@ -753,7 +738,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
 //     //   )
 //     // );
 //     // const TFixFree = fixFree(env, relOpt, true, true, relatedT);
-//     // if (!TFixFree) return hRunErr(env, RType.ProveError);
+//     // if (!TFixFree) return cEnvErrL_Out(env, RType.ProveError);
 
 //     // /**Declare variables in newEnv */
 //     // for (let varToDecl of node.opt.optParams.flat()) {
@@ -766,29 +751,29 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
 //     // for (const [i, fact] of req.entries()) {
 //     //   const tmp = env.getRelT(fact.optName);
 //     //   if (!tmp)
-//     //     return hRunErr(env, RType.ProveError, `${fact.optName} not declared`);
+//     //     return cEnvErrL_Out(env, RType.ProveError, `${fact.optName} not declared`);
 //     //   newEnv.newStoredFact(fact.optParams, tmp, [], []);
 //     // }
 
 //     // /**Execute onlyIfs in the prove block*/
 //     // for (const [i, curNode] of onlyIfs.entries()) {
 //     //   const res = nodeExec(newEnv, curNode);
-//     //   if (!RInfoIsTrue(res))
-//     //     return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
+//     //   if (isNull(res.v))
+//     //     return cL_Out(RType.ProveFailed, `${i}th stmt failed.`);
 //     // }
 
 //     // /**After execution, check whether template onlyIfs are satisfied.*/
 //     // for (const [i, fact] of TFixFree.onlyIf.entries()) {
 //     //   const tmp = env.getRelT(fact.name);
 //     //   if (!tmp)
-//     //     return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
+//     //     return cEnvErrL_Out(env, RType.ProveError, `${fact.name} not declared`);
 //     //   const isT = env.isStoredTrueFact(fact.params, tmp);
-//     //   if (!isT) return hInfo(RType.ProveFailed, `${fact.name} not satisfied.`);
+//     //   if (!isT) return cL_Out(RType.ProveFailed, `${fact.name} not satisfied.`);
 //     // }
 
-//     return hInfo(RType.ProveTrue);
+//     return cL_Out(RType.ProveTrue);
 //   } catch (error) {
-//     return hRunErr(env, RType.ProveError);
+//     return cEnvErrL_Out(env, RType.ProveError);
 //   }
 // }
 
@@ -806,21 +791,17 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
  * 5. If all `onlyIf` conditions are satisfied, emit the corresponding conditions
  *    from `relT` and `callOpt`.
  */
-function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
+function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
   try {
     const newEnv = new L_Env(env);
-    const proveHashParams: string[] = node.opt.optParams
-      .map((ls) =>
-        ls.reduce((acc, s) => {
-          if (s.startsWith("#")) {
-            acc.push(s.slice(1));
-          }
-          return acc;
-        }, [] as string[])
-      )
-      .flat();
+    const proveHashParams: string[] = [];
     const proveNoHashParams: string[][] = node.opt.optParams.map((ls) =>
-      ls.map((s) => (s.startsWith("#") ? s.slice(1) : s))
+      ls.map((s) => {
+        if (s.startsWith("#")) {
+          proveHashParams.push(s.slice(1));
+          return s.slice(1);
+        } else return s;
+      })
     );
 
     /**
@@ -830,8 +811,8 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
     for (const req of node.opt.req) {
       if (req.optParams.flat().every((s) => !proveHashParams.includes(s))) {
         const out = callOptExec(env, req);
-        if (!RInfoIsTrue(out))
-          return hInfo(RType.Unknown, `${req.toString()} unsatisfied.`);
+        if (isNull(out.v))
+          return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
       } else {
         newEnv.YANewFactEmit(req, false);
       }
@@ -844,12 +825,12 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
       relT.getSelfFathersFreeVars(),
       relT.getSelfFathersReq()
     );
-    if (isNull(fixedOpts)) return hRunErr(env, RType.Error, err);
+    if (isNull(fixedOpts)) return cEnvErrL_Out(env, RType.Error, err);
     for (const req of fixedOpts) {
       if (req.optParams.every((ls) => ls.every((s) => s.startsWith("#")))) {
         const out = callOptExec(env, req);
-        if (!RInfoIsTrue(out))
-          return hInfo(RType.Unknown, `${req.toString()} unsatisfied.`);
+        if (isNull(out.v))
+          return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
       } else {
         newEnv.YANewFactEmit(req, false);
       }
@@ -858,14 +839,14 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
     // Run proveBlock
     for (const expr of node.proveBlock) {
       const out = nodeExec(newEnv, expr);
-      if (RInfoIsError(out)) return out;
+      if (isNull(out.v)) return out;
     }
 
     // check onlyIF of opt
     for (const onlyIf of node.opt.onlyIFs) {
       if (env.yaDefCheckEmit(onlyIf, true)) continue;
       else {
-        return hInfo(RType.Unknown, `${onlyIf.toString()} unknown.`);
+        return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
       }
     }
 
@@ -876,19 +857,19 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
       relT.getSelfFathersFreeVars(),
       relT.onlyIfExprs as CallOptNode[]
     );
-    if (isNull(tmp.v)) return hRunErr(env, RType.Error, tmp.err);
+    if (isNull(tmp.v)) return cEnvErrL_Out(env, RType.Error, tmp.err);
     for (const onlyIf of tmp.v) {
       if (env.yaDefCheckEmit(onlyIf, true)) continue;
       else {
-        return hInfo(RType.Unknown, `${onlyIf.toString()} unknown.`);
+        return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
       }
     }
 
     // emit prove, notice how opt of proveNode is literally the same as the fact emitted
     yaKnowCallOptExec(env, node.opt);
 
-    return hInfo(RType.ProveTrue);
+    return cL_Out(RType.ProveTrue, `${node.opt.toString()}`);
   } catch (error) {
-    return hRunErr(env, RType.ProveError);
+    return cEnvErrL_Out(env, RType.ProveError);
   }
 }

@@ -1,7 +1,8 @@
 import { L_Env } from "./env";
-import { nodeExec, RInfo, RType, RTypeMap } from "./executor";
+import { nodeExec, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { L_StmtsParse } from "./parser";
+import { isL_OutErr, RL_Out } from "./shared";
 import { setTheory } from "./tao_analysis_one";
 import { testCodes, testErrorCode } from "./test_code";
 
@@ -163,7 +164,7 @@ const codes: string[] = [
 //       env.printErrorsWithDepth();
 //     } else {
 //       for (let i = 0; i < result.length; i++) {
-//         const res: RInfo = nodeExec(env, result[i]);
+//         const res: L_Out<RType>  = nodeExec(env, result[i]);
 //         if (!res.message) console.log(RTypeMap[res.type]);
 //         else console.log(`${RTypeMap[res.type]} '${res.message}'`);
 //       }
@@ -190,7 +191,7 @@ function testError(asIfRight = false) {
         env.printErrorsWithDepth();
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res: RInfo = nodeExec(env, result[i]);
+          const res: RL_Out = nodeExec(env, result[i]);
         }
       }
       if (env.errorsWithDepth.length === 0) {
@@ -210,9 +211,9 @@ function testError(asIfRight = false) {
         env.printErrorsWithDepth();
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res: RInfo = nodeExec(env, result[i]);
-          if (!res.message) console.log(RTypeMap[res.type]);
-          else console.log(`${RTypeMap[res.type]} '${res.message}'`);
+          const res: RL_Out = nodeExec(env, result[i]);
+          if (isL_OutErr(res)) console.log(RTypeMap[res.v as RType]);
+          else console.log(env.errors);
         }
       }
       console.log();
@@ -233,10 +234,10 @@ function testExecutor(testWhat: any = testCodes) {
       env.printErrorsWithDepth();
     } else {
       for (let i = 0; i < result.length; i++) {
-        const res: RInfo = nodeExec(env, result[i]) as RInfo;
+        const res: RL_Out = nodeExec(env, result[i]) as RL_Out;
         if (key !== "Basics") {
-          if (!res.message) console.log(RTypeMap[res.type]);
-          else console.log(`${RTypeMap[res.type]} '${res.message}'`);
+          if (isL_OutErr(res)) console.log(env.errors);
+          else console.log(`${RTypeMap[res.v as RType]} '${res.err}'`);
         }
       }
     }

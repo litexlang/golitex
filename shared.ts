@@ -7,9 +7,12 @@ export type L_Out<T> = {
   err: string;
 };
 
-export function cL_Out<T>(v: T, err: string = ""): L_Out<T> {
+export const ErrL_Out = { v: null, err: "" };
+
+export function cL_Out<T>(v: T | null, err: string = ""): L_Out<T> {
   return { v, err };
 }
+
 export function isL_OutErr<T>(out: L_Out<T>) {
   return out.v === null ? true : false;
 }
@@ -22,10 +25,16 @@ export function cNoRelTErr_Out(opt: CallOptNode) {
   return { v: null, err: `${opt.optName} undeclared.` };
 }
 
-export function cEnvErrL_Out(env: L_Env, type: RType, m: string = "") {
-  hRunErr(env, type, m);
-  return cL_Out(null);
+export function cEnvErrL_Out<T>(
+  env: L_Env,
+  t: RType,
+  m: string = ""
+): L_Out<T> {
+  hRunErr(env, t, m);
+  return cL_Out<T>(null);
 }
+
+export type RL_Out = L_Out<RType | null>;
 
 export function freeFixMap(
   free: string[][],

@@ -1,20 +1,21 @@
 import { CallOptNode, L_Node } from "./ast";
 import { L_Env } from "./env";
-import { hInfo, RInfo, hRunErr, RType } from "./executor";
+import { hInfo, RType } from "./executor";
+import { cEnvErrL_Out, cL_Out, RL_Out } from "./shared";
 
 export const L_Builtins: {
-  [key: string]: (env: L_Env, node: L_Node) => RInfo;
+  [key: string]: (env: L_Env, node: L_Node) => RL_Out;
 } = {
-  is_def: (env: L_Env, node: L_Node): RInfo => {
+  is_def: (env: L_Env, node: L_Node): RL_Out => {
     const T = env.getRelT((node as CallOptNode).optParams[0][0])
       ? hInfo(RType.True)
       : hInfo(RType.False);
     if (!T)
-      return hRunErr(
+      return cEnvErrL_Out(
         env,
         RType.Error,
         `${(node as CallOptNode).optName} is not declared.`
       );
-    else return hInfo(RType.True);
+    else return cL_Out(RType.True);
   },
 };

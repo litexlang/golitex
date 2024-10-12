@@ -351,7 +351,7 @@ export class L_Env {
     this.errorsWithDepth.push([s, this.errorDepth]);
   }
 
-  // pushCallOptFact(fact: CallOptNode): RInfo {
+  // pushCallOptFact(fact: CallOptNode): L_Out<RType>  {
   //   const declaredTemplate = this.getRelT(fact.optName);
   //   if (!declaredTemplate)
   //     return hInfo(RType.Error, fact.optName + "has not been declared");

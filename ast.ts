@@ -1,6 +1,7 @@
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
-import { hInfo, RInfo, hRunErr, RType } from "./executor";
+import { hInfo, RType } from "./executor";
+import { cEnvErrL_Out, cL_Out, RL_Out } from "./shared";
 
 //? There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
 export enum L_NodeType {
@@ -143,7 +144,7 @@ export abstract class TNode extends L_Node {
 
   // If a node is DollarMarkNode or TNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
   //! REFACTOR THIS SO THAT DEF IN REQ CAN APPEAR HERE.
-  initDeclaredTemplates(env: L_Env, fathers: TNode[] = []): RInfo {
+  initDeclaredTemplates(env: L_Env, fathers: TNode[] = []): RL_Out {
     this.fathers = fathers;
 
     // process DollarMarks
@@ -168,7 +169,7 @@ export abstract class TNode extends L_Node {
       const value = this.onlyIfExprs[i];
       if (value instanceof TNode) {
         if (L_Keywords.includes(value.name))
-          return hRunErr(
+          return cEnvErrL_Out(
             env,
             RType.DefError,
             `Template '${value.name}' is L_ keyword.`
@@ -188,13 +189,14 @@ export abstract class TNode extends L_Node {
     // make sure everything is done well.
     for (let i = 0; i < this.onlyIfExprs.length; i++) {
       if (this.onlyIfExprs[i].type !== L_NodeType.CallOptNode) {
-        return hInfo(
+        return cEnvErrL_Out(
+          env,
           RType.DefError,
           `arguments of def block should have type callOpt-type or def-type.`
         );
       }
     }
-    return hInfo(RType.DefTrue);
+    return cL_Out(RType.DefTrue);
 
     function insertListIntoListAndDeleteElemOnIndex<T>(
       originalList: T[],
@@ -257,7 +259,7 @@ export abstract class TNode extends L_Node {
   //   env: L_Env,
   //   freeFixMap: Map<string, string>,
   //   fathers: string[][] = []
-  // ): RInfo {
+  // ): RL_Out  {
   //   try {
   //     const keys = fathers.map((arr) => [...arr]);
   //     keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || e));
