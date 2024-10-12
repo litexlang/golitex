@@ -4,23 +4,23 @@ import { L_Env } from "./env";
 import { hRunErr, RType } from "./executor";
 
 export type L_Out<T> = {
-  value: T | null; // value === null works as signal of err
+  v: T | null; // v === null works as signal of err
   err: string;
 };
 
-export function cL_Out<T>(value: T, err: string = ""): L_Out<T> {
-  return { value, err };
+export function cL_Out<T>(v: T, err: string = ""): L_Out<T> {
+  return { v, err };
 }
 export function isL_OutErr<T>(out: L_Out<T>) {
-  return out.value === null ? true : false;
+  return out.v === null ? true : false;
 }
 
 export function cErr_Out(err: string = "Error") {
-  return { value: null, err: err };
+  return { v: null, err: err };
 }
 
 export function cNoRelTErr_Out(opt: CallOptNode) {
-  return { value: null, err: `${opt.optName} undeclared.` };
+  return { v: null, err: `${opt.optName} undeclared.` };
 }
 
 export function freeFixMap(
@@ -69,7 +69,7 @@ export function fixOpt(
 
   const temp = freeFixMap(free, fixedOpt.optParams);
   if (isL_OutErr(temp)) return cErr_Out("");
-  const mapping = temp.value;
+  const mapping = temp.v;
 
   const res: CallOptNode[] = [];
   for (let fixWhat of fixWhats) {

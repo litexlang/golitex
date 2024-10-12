@@ -66,8 +66,8 @@ export class L_Env {
       if (!_isLiterallyFact(singleFact.optParams, opt.optParams)) continue;
 
       const temp = freeFixMap(singleFact.optParams, opt.optParams);
-      if (!temp.value) return cErr_Out(temp.err);
-      const mapping = temp.value;
+      if (!temp.v) return cErr_Out(temp.err);
+      const mapping = temp.v;
 
       /** Check requirements of this single fact */
       let facts: { name: string; params: string[][] }[] = singleFact.req.map(

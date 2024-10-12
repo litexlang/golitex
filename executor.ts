@@ -560,7 +560,7 @@ function callDefExec(
     const res = env.yaDefCheckEmit(node);
     if (isL_OutErr(res)) return hRunErr(env, RType.DefError, res.err);
 
-    if (res.value) {
+    if (res.v) {
       node.onlyIFs.forEach((e) => env.YANewFactEmit(e, false));
       return hInfo(RType.True);
     }
@@ -572,7 +572,7 @@ function callDefExec(
       relT.getSelfFathersReq()
     );
     if (isL_OutErr(temp)) return hRunErr(env, RType.Error);
-    const fixedReq = temp.value as CallOptNode[];
+    const fixedReq = temp.v as CallOptNode[];
 
     let isT = false;
     if (fixedReq.length > 0) {
@@ -822,14 +822,21 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
     }
 
     // Check or emit requirements from relT
-    const { value: fixedOpts, err } = fixOpt(
+    const { v: fixedOpts, err } = fixOpt(
       env,
-      node.opt,
+      node.opt, // notice var starting with # is used as key
       relT.getSelfFathersFreeVars(),
       relT.getSelfFathersReq()
     );
     if (isNull(fixedOpts)) return hRunErr(env, RType.Error);
-    for (const req of fixedOpt) {
+    for (const req of fixedOpts) {
+      if (req.optParams.every((ls) => ls.every((s) => s.startsWith("#")))) {
+        const out = callOptExec(env, req);
+        if (!RInfoIsTrue(out))
+          return hInfo(RType.Unknown, `${req.toString()} unsatisfied.`);
+      } else {
+        newEnv.YANewFactEmit(req, false);
+      }
     }
 
     for (const proveNode of node.proveBlock) {
