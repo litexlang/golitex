@@ -13,7 +13,7 @@ import {
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
-import { fixOpt, isL_OutErr } from "./shared";
+import { fixOpt, isL_OutErr, L_Out } from "./shared";
 
 export enum RType {
   True, // not only used as True for callInferExec, but also as a generic type passed between subFunctions.
@@ -885,7 +885,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
     }
 
     // emit prove, notice how opt of proveNode is literally the same as the fact emitted
-    knowExec(env, new KnowNode([node.opt]));
+    yaKnowCallOptExec(env, node.opt);
 
     return hInfo(RType.ProveTrue);
   } catch (error) {

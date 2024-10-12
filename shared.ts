@@ -1,4 +1,3 @@
-import { findIndex } from "lodash";
 import { CallOptNode } from "./ast";
 import { L_Env } from "./env";
 import { hRunErr, RType } from "./executor";
@@ -21,6 +20,11 @@ export function cErr_Out(err: string = "Error") {
 
 export function cNoRelTErr_Out(opt: CallOptNode) {
   return { v: null, err: `${opt.optName} undeclared.` };
+}
+
+export function cEnvErrL_Out(env: L_Env, type: RType, m: string = "") {
+  hRunErr(env, type, m);
+  return cL_Out(null);
 }
 
 export function freeFixMap(
@@ -93,9 +97,4 @@ export function fixOpt(
   }
 
   return cL_Out(res);
-}
-
-export function hEnvErrL_Out(env: L_Env, type: RType, m: string = "") {
-  hRunErr(env, type, m);
-  return cL_Out(null);
 }

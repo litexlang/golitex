@@ -233,7 +233,7 @@ function testExecutor(testWhat: any = testCodes) {
       env.printErrorsWithDepth();
     } else {
       for (let i = 0; i < result.length; i++) {
-        const res: RInfo = nodeExec(env, result[i]);
+        const res: RInfo = nodeExec(env, result[i]) as RInfo;
         if (key !== "Basics") {
           if (!res.message) console.log(RTypeMap[res.type]);
           else console.log(`${RTypeMap[res.type]} '${res.message}'`);
