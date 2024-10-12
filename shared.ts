@@ -34,7 +34,7 @@ export function cEnvErrL_Out<T>(
   return cL_Out<T>(null);
 }
 
-export type RL_Out = L_Out<RType | null>;
+export type RL_Out = L_Out<RType> | L_Out<null>;
 
 export function freeFixMap(
   free: string[][],

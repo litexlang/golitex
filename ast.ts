@@ -72,6 +72,8 @@ export class CallOptNode extends L_Node {
     let s = this.optNameAsLst
       .map((v, i) => `${v}(${this.optParams[i].join(", ")})`)
       .join(":");
+    if (this.onlyIFs.length > 0)
+      s += " => {" + this.onlyIFs.map((v, i) => v.toString()).join(", ") + "}";
     return s;
   }
 }

@@ -72,7 +72,7 @@ function IsL_OutRTypeErr(res: RL_Out) {
   return isErrorRType(res.v as RType);
 }
 
-export function hRunErr(env: L_Env, type: RType, message: string = "") {
+export function hRunErr(env: L_Env, type: RType, message: string | null = "") {
   env.pushNewError(RTypeMap[type] + ": " + message);
 }
 
