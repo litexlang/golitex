@@ -1,4 +1,3 @@
-import { findIndex } from "lodash";
 import {
   CallOptNode,
   CallOptsNode,
@@ -10,9 +9,7 @@ import {
   TNode,
   YAProveNode,
   HaveNode,
-  ExistNode,
 } from "./ast";
-import { L_Builtins } from "./builtins";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
 import { fixOpt, isL_OutErr } from "./shared";

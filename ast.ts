@@ -1,4 +1,3 @@
-import { on } from "events";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
 import { hInfo, RInfo, hRunErr, RType } from "./executor";

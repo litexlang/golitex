@@ -4,8 +4,8 @@
 export const testCodes = {
   Basics:
     ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(y,h);}} :set3(x){:set2(x)} ;",
-  KnowExtendedInfer: "let x; know set3(#x: obj(x)):set2(#x) => {obj(x)};",
-  knowInfer: "set3(x):set2(x);",
+  KnowExtendedInfer: "let A; know set3(#x: obj(x)):set2(#x) => {F(x, #E)};",
+  knowInfer: "set3(x):set2(A);",
   // KnowExtendedInfer2: "let y: set2(y: obj(y)):set3(y) => {obj(y)};",
   // Know3: "know set(y);",
   // unknownCheck: "set(x);",

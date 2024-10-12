@@ -1,6 +1,7 @@
 import { findIndex } from "lodash";
 import { CallOptNode } from "./ast";
 import { L_Env } from "./env";
+import { hRunErr, RType } from "./executor";
 
 export type L_Out<T> = {
   value: T | null;
@@ -88,4 +89,9 @@ export function fixOpt(
   }
 
   return cL_Out(res);
+}
+
+export function hEnvErrL_Out(env: L_Env, type: RType, m: string = "") {
+  hRunErr(env, type, m);
+  return cL_Out(null);
 }
