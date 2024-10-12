@@ -728,53 +728,86 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
   }
 }
 
-function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
+// function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RInfo {
+//   try {
+//     // const onlyIfs = node.onlyIfExprs as L_Node[];
+//     // const req: CallOptNode[] = node.opt.req;
+//     // const newEnv = new L_Env();
+//     // newEnv.father = env;
+//     // env = newEnv;
+
+//     // const relOpt = CallOptNode.create(
+//     //   node.opt.optName,
+//     //   node.opt.optParams.map((ls) =>
+//     //     ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
+//     //   )
+//     // );
+//     // const TFixFree = fixFree(env, relOpt, true, true, relatedT);
+//     // if (!TFixFree) return hRunErr(env, RType.ProveError);
+
+//     // /**Declare variables in newEnv */
+//     // for (let varToDecl of node.opt.optParams.flat()) {
+//     //   if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
+//     //     continue;
+//     //   newEnv.declareNewVar(varToDecl);
+//     // }
+
+//     // /**Emit req in newEnv */
+//     // for (const [i, fact] of req.entries()) {
+//     //   const tmp = env.getRelT(fact.optName);
+//     //   if (!tmp)
+//     //     return hRunErr(env, RType.ProveError, `${fact.optName} not declared`);
+//     //   newEnv.newStoredFact(fact.optParams, tmp, [], []);
+//     // }
+
+//     // /**Execute onlyIfs in the prove block*/
+//     // for (const [i, curNode] of onlyIfs.entries()) {
+//     //   const res = nodeExec(newEnv, curNode);
+//     //   if (!RInfoIsTrue(res))
+//     //     return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
+//     // }
+
+//     // /**After execution, check whether template onlyIfs are satisfied.*/
+//     // for (const [i, fact] of TFixFree.onlyIf.entries()) {
+//     //   const tmp = env.getRelT(fact.name);
+//     //   if (!tmp)
+//     //     return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
+//     //   const isT = env.isStoredTrueFact(fact.params, tmp);
+//     //   if (!isT) return hInfo(RType.ProveFailed, `${fact.name} not satisfied.`);
+//     // }
+
+//     return hInfo(RType.ProveTrue);
+//   } catch (error) {
+//     return hRunErr(env, RType.ProveError);
+//   }
+// }
+
+/**
+ * Proves inference execution by building a new environment, checking requirements,
+ * and validating conditions based on relational terms and call options.
+ *
+ * Steps:
+ * 1. Build a new environment (`newEnv`).
+ * 2. Check if the given requirements (from `relT` or `callOpt`) contain any variables that
+ *    do not start with `#`. If any variables start with `#`, emit the requirement in `newEnv`.
+ * 3. Run `proveBlock`. If no errors occur, proceed to the next step.
+ * 4. If no errors occur, check whether all `onlyIf` conditions (from `relT` and `callOpt`)
+ *    are satisfied.
+ * 5. If all `onlyIf` conditions are satisfied, emit the corresponding conditions
+ *    from `relT` and `callOpt`.
+ */
+function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RInfo {
   try {
-    // const onlyIfs = node.onlyIfExprs as L_Node[];
-    // const req: CallOptNode[] = node.opt.req;
-    // const newEnv = new L_Env();
-    // newEnv.father = env;
-    // env = newEnv;
+    const newEnv = new L_Env(env);
 
-    // const relOpt = CallOptNode.create(
-    //   node.opt.optName,
-    //   node.opt.optParams.map((ls) =>
-    //     ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
-    //   )
-    // );
-    // const TFixFree = fixFree(env, relOpt, true, true, relatedT);
-    // if (!TFixFree) return hRunErr(env, RType.ProveError);
-
-    // /**Declare variables in newEnv */
-    // for (let varToDecl of node.opt.optParams.flat()) {
-    //   if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
-    //     continue;
-    //   newEnv.declareNewVar(varToDecl);
-    // }
-
-    // /**Emit req in newEnv */
-    // for (const [i, fact] of req.entries()) {
-    //   const tmp = env.getRelT(fact.optName);
-    //   if (!tmp)
-    //     return hRunErr(env, RType.ProveError, `${fact.optName} not declared`);
-    //   newEnv.newStoredFact(fact.optParams, tmp, [], []);
-    // }
-
-    // /**Execute onlyIfs in the prove block*/
-    // for (const [i, curNode] of onlyIfs.entries()) {
-    //   const res = nodeExec(newEnv, curNode);
-    //   if (!RInfoIsTrue(res))
-    //     return hInfo(RType.ProveFailed, `${i}th stmt failed.`);
-    // }
-
-    // /**After execution, check whether template onlyIfs are satisfied.*/
-    // for (const [i, fact] of TFixFree.onlyIf.entries()) {
-    //   const tmp = env.getRelT(fact.name);
-    //   if (!tmp)
-    //     return hRunErr(env, RType.ProveError, `${fact.name} not declared`);
-    //   const isT = env.isStoredTrueFact(fact.params, tmp);
-    //   if (!isT) return hInfo(RType.ProveFailed, `${fact.name} not satisfied.`);
-    // }
+    // Check or emit requirements from callOpt
+    for (const req of node.opt.req) {
+      if (req.optParams.every((ls) => ls.every((s) => s.startsWith("#")))) {
+        const out = callOptExec(env, req);
+        if (!RInfoIsTrue(out))
+          return hInfo(RType.Unknown, `${req.toString()} unsatisfied.`);
+      }
+    }
 
     return hInfo(RType.ProveTrue);
   } catch (error) {

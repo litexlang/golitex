@@ -3,7 +3,7 @@
 //! as onlyIf, so you should not use the same symbol in order to avoid trouble.
 export const testCodes = {
   Basics:
-    ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(y,h);}} :set3(x){:set2(x)} ;",
+    ":obj(x) :set(x) :set2(x,y) :F(x,y:set(x)) {$son(h:set(h)) {set2(y,h);}} :set3(x){:set2(x)} :set0(x); know set0(#x) => {set3(x);};",
   KnowExtendedInfer: "let A; know set3(#x: obj(x)):set2(#x) => {F(x, #E)};",
   knowInfer: "set3(x):set2(A);",
   // KnowExtendedInfer2: "let y: set2(y: obj(y)):set3(y) => {obj(y)};",
@@ -14,6 +14,9 @@ export const testCodes = {
   // trueCheck2: "let t; set(t);",
   // def1: ":obj2(x) : aliasOfSet(x: obj2(x), set(x));",
   // def2: "let x: obj2(x); aliasOfSet(x);",
+
+  ProveInfer:
+    ": p1(x:set(x)):p2(y:set2(x,y), set0(y)) {set3(y); set(x);}; let y0: set0(y0), set(y0); prove p1(#x: set(x)):p2(y0: set(y0)) => {set(y0)} {}",
 };
 
 export const testErrorCode = {

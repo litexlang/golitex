@@ -66,6 +66,13 @@ export class CallOptNode extends L_Node {
       onlyIfs
     );
   }
+
+  toString() {
+    let s = this.optNameAsLst
+      .map((v, i) => `${v}(${this.optParams[i].join(", ")})`)
+      .join(":");
+    return s;
+  }
 }
 
 export type TNodeFact = {
@@ -376,12 +383,12 @@ export class DollarMarkNode extends L_Node {
 export class YAProveNode extends L_Node {
   type = L_NodeType.ProofNode;
   opt: CallOptNode;
-  onlyIfExprs: L_Node[];
+  proveBlock: L_Node[];
 
-  constructor(opt: CallOptNode, onlyIfExprs: L_Node[]) {
+  constructor(opt: CallOptNode, proveBlock: L_Node[]) {
     super();
     this.opt = opt;
-    this.onlyIfExprs = onlyIfExprs;
+    this.proveBlock = proveBlock;
   }
 }
 
