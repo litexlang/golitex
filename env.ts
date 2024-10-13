@@ -80,7 +80,11 @@ export class L_Env {
       if (!temp.v) return cErr_Out(temp.err);
       const mapping = temp.v;
 
-      /** Check requirements of this single fact */
+      /**
+       * Check requirements of this single fact
+       * NOTICE LITERALLY CORRECT IS NOT ENOUGH, OPT MUST SATISFIED EXTRA
+       * ONLYIFs BOUND TO THIS STORED FACT.
+       */
       let facts: { name: string; params: string[][] }[] = singleFact.req.map(
         (e) => {
           return {

@@ -150,7 +150,8 @@ const codes: string[] = [
   // "know set(x:sdf(x)):set2(y:sg(y)) => {dsg(z);};",
   // "let x: set2(x: obj(x)):set3(x) => {obj(x);} ;",
   // "know set(y);",
-  ": p1(x:set(x)):p2(y:set2(x,y), set0(y)) {set3(y); set(x);}; let y0: set0(y0), set(y0); prove p1(#x: set(x)):p2(y0: set(y0)) => {set(y0)} {}",
+  // ": p1(x:set(x)):p2(y:set2(x,y), set0(y)) {set3(y); set(x);}; let y0: set0(y0), set(y0); prove p1(#x: set(x)):p2(y0: set(y0)) => {set(y0)} {}",
+  "have x,y: set(x);",
 ];
 
 function testLexer() {

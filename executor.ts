@@ -10,6 +10,7 @@ import {
   TNode,
   YAProveNode,
   HaveNode,
+  ExistNode,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -318,7 +319,13 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RL_Out {
 
 function haveExec(env: L_Env, node: HaveNode): RL_Out {
   try {
-    return cL_Out(RType.HaveTrue);
+    const isT = env.checkEmit(node.opt, false);
+    if (isT.v === true) {
+      const relT = env.relT(node.opt).v;
+      (relT as ExistNode).isTrue = true;
+    }
+
+    return cL_Out(RType.HaveFailed);
   } catch (error) {
     return cEnvErrL_Out(env, RType.HaveError);
   }

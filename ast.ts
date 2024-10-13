@@ -14,6 +14,7 @@ export enum L_NodeType {
   KnowNode,
   HaveNode,
   LetNode,
+
   ProofNode,
   CheckInProof,
   ImpliesFactNode,
@@ -347,9 +348,11 @@ export class YAProveNode extends L_Node {
 
 export class HaveNode extends L_Node {
   type = L_NodeType.HaveNode;
+  vars: string[];
   opt: CallOptNode;
-  constructor(opt: CallOptNode) {
+  constructor(vars: string[], opt: CallOptNode) {
     super();
+    this.vars = vars;
     this.opt = opt;
   }
 }
