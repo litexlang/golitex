@@ -21,7 +21,7 @@ export const testCodes = {
   // def: ":sett(x){:set(y)};",
   // def2: ":tes(x,y:set(x),set(y))",
   // prove2: "prove tes(#x,#y) {}",
-  Have: "let x: obj(x); obj(x);",
+  Have: "exist E(x) ; let x : E(x); have t: E(t);",
 };
 
 export const testErrorCode = {
