@@ -317,12 +317,35 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RL_Out {
   }
 }
 
+/**
+ * Steps
+ * 1. Check whether given vars(symbols) already declared
+ * 2. Check whether have.opt.isTrue
+ * 3. If true, emit have.opt along with its onlyIfs
+ */
 function haveExec(env: L_Env, node: HaveNode): RL_Out {
   try {
-    const isT = env.checkEmit(node.opt, false);
-    if (isT.v === true) {
-      const relT = env.relT(node.opt).v;
-      (relT as ExistNode).isTrue = true;
+    const relT = env.relT(node.opt).v;
+    if (!(relT instanceof ExistNode))
+      return cEnvErrL_Out(
+        env,
+        RType.HaveError,
+        `${node.opt.toString()} is not exist operator.`
+      );
+
+    if (env.yaFacts.has(node.opt.optName)) {
+      const isT = node.vars.every((e) => !env.declaredVars.includes(e));
+      if (!isT)
+        return cEnvErrL_Out(
+          env,
+          RType.HaveError,
+          `One of ${node.vars.toString()} already declared.`
+        );
+      else {
+        node.vars.forEach((e) => env.newVar(e));
+        env.YANewFactEmit(node.opt, true);
+        return cL_Out(RType.HaveTrue);
+      }
     }
 
     return cL_Out(RType.HaveFailed);
