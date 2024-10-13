@@ -527,7 +527,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
 
     // check and emit onlyIF of opt
     for (const onlyIf of node.opt.onlyIFs) {
-      if (newEnv.checkEmit(onlyIf, true, env)) continue;
+      if (newEnv.checkEmit(onlyIf, true, env).v) continue;
       else {
         return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
       }
@@ -548,7 +548,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
       }
     }
 
-    // emit prove, notice how opt of proveNode is literally the same as the fact emitted
+    // emit prove.opt itself, notice how opt of proveNode is literally the same as the fact emitted
     yaKnowCallOptExec(env, node.opt);
 
     return cL_Out(RType.ProveTrue, `${node.opt.toString()}`);

@@ -71,8 +71,8 @@ export class L_Env {
     }
 
     /** Find all facts that the current input satisfies */
-    let isT = false;
     const relT = this.relT(opt).v as TNode;
+    let isT = false;
     for (const [i, singleFact] of (RFacts as CallOptNode[]).entries()) {
       if (!this._isLiterallyFact(singleFact.optParams, opt.optParams)) continue;
 
