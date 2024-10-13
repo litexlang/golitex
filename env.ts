@@ -59,7 +59,13 @@ export class L_Env {
     //   return cL_Out<Boolean>(false);
     // }
     const RFacts = this.yaFacts.get(opt.optName);
-    if (!RFacts) return cL_Out<Boolean>(false);
+    if (!RFacts) {
+      if (this.father === undefined) return cL_Out<Boolean>(false);
+      else {
+        const out = this.father.yaDefCheckEmit(opt);
+        return out;
+      }
+    }
 
     /** Find all facts that the current input satisfies */
     let isT = false;
@@ -91,14 +97,7 @@ export class L_Env {
         this.yaDefCheckEmit(CallOptNode.create(e.name, e.params), false)
       );
 
-      if (!isT) {
-        // Look up into father env
-        if (this.father === undefined) continue;
-        else {
-          const out = this.father.yaDefCheckEmit(opt);
-          if (!out.v) continue;
-        }
-      }
+      if (!isT) continue;
 
       /** Emit onlyIfs */
       if (emit) {

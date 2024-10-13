@@ -244,11 +244,11 @@ function templateDeclExec(env: L_Env, node: TNode): RL_Out {
 
     switch (node.type) {
       case L_NodeType.DefNode:
-        return cL_Out(RType.DefTrue, "def");
+        return cL_Out(RType.DefTrue, `def ${node.toString()}`);
       case L_NodeType.ExistNode:
-        return cL_Out(RType.DefTrue, "exist");
+        return cL_Out(RType.DefTrue, `exist ${node.toString()}`);
       case L_NodeType.InferNode:
-        return cL_Out(RType.DefTrue, "infer");
+        return cL_Out(RType.DefTrue, `infer ${node.toString()}`);
     }
 
     return cL_Out(RType.Error);
@@ -544,36 +544,7 @@ function callDefExec(
   try {
     //TODO:  There are two trues of callDef: 1. itself 2. all requirements satisfied.
 
-    const out = env.yaDefCheckEmit(node);
-    if (isL_OutErr(out)) return cEnvErrL_Out(env, RType.DefError, out.err);
-
-    if (out.v) {
-      node.onlyIFs.forEach((e) => env.YANewFactEmit(e, false));
-      return cL_Out(RType.True);
-    }
-
-    let temp = fixOpt(
-      env,
-      node,
-      relT.getSelfFathersFreeVars(),
-      relT.getSelfFathersReq()
-    );
-    if (isL_OutErr(temp)) return cEnvErrL_Out(env, RType.Error);
-    const fixedReq = temp.v as CallOptNode[];
-
-    let isT = false;
-    if (fixedReq.length > 0) {
-      isT = true;
-      for (const req of fixedReq) {
-        const res = callOptExec(env, req);
-        if (res.v !== RType.True) {
-          isT = false;
-          break;
-        }
-      }
-    }
-
-    return isT ? cL_Out(RType.True) : cL_Out(RType.Unknown);
+    return cL_Out(RType.True);
   } catch (error) {
     return cEnvErrL_Out(env, RType.DefError);
   }
@@ -678,52 +649,52 @@ function proveExec(env: L_Env, node: YAProveNode): RL_Out {
   }
 }
 
-function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RL_Out {
-  try {
-    // /** The only different between proveDef and proveInfer is: case def template requirements are used to check; in case infer they are used as pre-conditions*/
-    // const onlyIfs = node.onlyIfExprs as L_Node[];
-    // const req: CallOptNode[] = node.opt.req;
-    // const newEnv = new L_Env();
-    // newEnv.father = env;
-    // env = newEnv;
+// function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RL_Out {
+// try {
+// /** The only different between proveDef and proveInfer is: case def template requirements are used to check; in case infer they are used as pre-conditions*/
+// const onlyIfs = node.onlyIfExprs as L_Node[];
+// const req: CallOptNode[] = node.opt.req;
+// const newEnv = new L_Env();
+// newEnv.father = env;
+// env = newEnv;
 
-    // const relOpt = CallOptNode.create(
-    //   node.opt.optName,
-    //   node.opt.optParams.map((ls) =>
-    //     ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
-    //   )
-    // );
-    // const TFixFree = fixFree(env, relOpt, true, true, relatedT);
-    // if (!TFixFree) return cEnvErrL_Out(env, RType.ProveError);
+// const relOpt = CallOptNode.create(
+//   node.opt.optName,
+//   node.opt.optParams.map((ls) =>
+//     ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
+//   )
+// );
+// const TFixFree = fixFree(env, relOpt, true, true, relatedT);
+// if (!TFixFree) return cEnvErrL_Out(env, RType.ProveError);
 
-    // /**Declare variables in newEnv */
-    // for (let varToDecl of node.opt.optParams.flat()) {
-    //   if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
-    //     continue;
-    //   newEnv.declareNewVar(varToDecl);
-    // }
+// /**Declare variables in newEnv */
+// for (let varToDecl of node.opt.optParams.flat()) {
+//   if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
+//     continue;
+//   newEnv.declareNewVar(varToDecl);
+// }
 
-    // /**Execute onlyIfs in the prove block*/
-    // for (const [i, curNode] of onlyIfs.entries()) {
-    //   const res = nodeExec(newEnv, curNode);
-    //   if (isNull(res.v))
-    //     return cL_Out(RType.ProveFailed, `${i}th stmt failed.`);
-    // }
+// /**Execute onlyIfs in the prove block*/
+// for (const [i, curNode] of onlyIfs.entries()) {
+//   const res = nodeExec(newEnv, curNode);
+//   if (isNull(res.v))
+//     return cL_Out(RType.ProveFailed, `${i}th stmt failed.`);
+// }
 
-    // /**After execution, check whether template requirements are satisfied.*/
-    // for (const [i, fact] of TFixFree.req.entries()) {
-    //   const tmp = env.getRelT(fact.name);
-    //   if (!tmp)
-    //     return cEnvErrL_Out(env, RType.ProveError, `${fact.name} not declared`);
-    //   const isT = env.isStoredTrueFact(fact.params, tmp);
-    //   if (!isT) return cL_Out(RType.ProveFailed, `${fact.name} not satisfied.`);
-    // }
+// /**After execution, check whether template requirements are satisfied.*/
+// for (const [i, fact] of TFixFree.req.entries()) {
+//   const tmp = env.getRelT(fact.name);
+//   if (!tmp)
+//     return cEnvErrL_Out(env, RType.ProveError, `${fact.name} not declared`);
+//   const isT = env.isStoredTrueFact(fact.params, tmp);
+//   if (!isT) return cL_Out(RType.ProveFailed, `${fact.name} not satisfied.`);
+// }
 
-    return cL_Out(RType.ProveTrue);
-  } catch (error) {
-    return cEnvErrL_Out(env, RType.ProveError);
-  }
-}
+//     return cL_Out(RType.ProveTrue);
+//   } catch (error) {
+//     return cEnvErrL_Out(env, RType.ProveError);
+//   }
+// }
 
 // function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RL_Out  {
 //   try {
@@ -780,8 +751,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RL_Out {
 // }
 
 /**
- * Proves inference execution by building a new environment, checking requirements,
- * and validating conditions based on relational terms and call options.
+ * Proves inference execution.
  *
  * Steps:
  * 1. Build a new environment (`newEnv`).
@@ -866,6 +836,83 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
         return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
       }
     }
+
+    // emit prove, notice how opt of proveNode is literally the same as the fact emitted
+    yaKnowCallOptExec(env, node.opt);
+
+    return cL_Out(RType.ProveTrue, `${node.opt.toString()}`);
+  } catch (error) {
+    return cEnvErrL_Out(env, RType.ProveError);
+  }
+}
+
+/**
+ * Proves def execution.
+ *
+ * Steps:
+ * 1. Build a new environment (`newEnv`).
+ * 2. Check if the given requirements (`callOpt`) contain any variables that
+ *    do not start with `#`. If any variables start with `#`, emit the requirement in `newEnv`.
+ * 3. Run `proveBlock`. If no errors occur, proceed to the next step.
+ * 4. If no errors occur, check whether all `req` conditions (from `relT`)
+ *    are satisfied.
+ * 5. If all `req` conditions are satisfied, emit the corresponding opt.
+ */
+function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
+  try {
+    const newEnv = new L_Env(env);
+    const proveHashParams: string[] = [];
+    const proveNoHashParams: string[][] = node.opt.optParams.map((ls) =>
+      ls.map((s) => {
+        if (s.startsWith("#")) {
+          proveHashParams.push(s.slice(1));
+          return s.slice(1);
+        } else return s;
+      })
+    );
+
+    /**
+     * Check or emit requirements from callOpt before doing so from relT,
+     * so that user can suppose req of relT is True.
+     * */
+    for (const req of node.opt.req) {
+      if (req.optParams.flat().every((s) => !proveHashParams.includes(s))) {
+        const out = callOptExec(env, req);
+        if (isNull(out.v))
+          return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
+      } else {
+        newEnv.YANewFactEmit(req, false);
+      }
+    }
+
+    // Run proveBlock
+    for (const expr of node.proveBlock) {
+      const out = nodeExec(newEnv, expr);
+      if (isNull(out.v)) return out;
+    }
+
+    // Check requirements from relT
+    let { v: fixedOpts, err } = fixOpt(
+      env,
+      proveNoHashParams,
+      relT.getSelfFathersFreeVars(),
+      relT.getSelfFathersReq()
+    );
+    if (isNull(fixedOpts)) return cEnvErrL_Out(env, RType.Error, err);
+    for (const req of fixedOpts) {
+      const out = newEnv.yaDefCheckEmit(req, false);
+      if (isNull(out.v)) return cL_Out(RType.ProveError, out.err);
+      if (out.v === false)
+        return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
+    }
+
+    // // check onlyIF of opt
+    // for (const onlyIf of node.opt.onlyIFs) {
+    //   if (env.yaDefCheckEmit(onlyIf, true)) continue;
+    //   else {
+    //     return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
+    //   }
+    // }
 
     // emit prove, notice how opt of proveNode is literally the same as the fact emitted
     yaKnowCallOptExec(env, node.opt);

@@ -257,71 +257,11 @@ export abstract class TNode extends L_Node {
     }
   }
 
-  // emit(
-  //   env: L_Env,
-  //   freeFixMap: Map<string, string>,
-  //   fathers: string[][] = []
-  // ): RL_Out  {
-  //   try {
-  //     const keys = fathers.map((arr) => [...arr]);
-  //     keys.push([...this.freeVars].map((e) => freeFixMap.get(e) || e));
-
-  //     env.newStoredFact(keys, this);
-
-  //     return hInfo(RType.True);
-  //   } catch (error) {
-  //     return hInfo(
-  //       RType.Error,
-  //       "error when emitting new fact into environment."
-  //     );
-  //   }
-  // }
-
-  // emitOnlyIfs(
-  //   env: L_Env,
-  //   freeFixMap: Map<string, string>,
-  //   fathers: string[][] = []
-  // ) {
-  //   for (let onlyIf of this.onlyIfExprs) {
-  //     (env.getRelT(onlyIf as CallOptNode) as TNode).emit(
-  //       env,
-  //       freeFixMap,
-  //       fathers
-  //     );
-  //   }
-  // }
-
-  // emitRequirements(
-  //   env: L_Env,
-  //   freeFixMap: Map<string, string>,
-  //   fathers: string[][] = []
-  // ) {
-  //   for (let requirement of this.requirements) {
-  //     const relT = env.getRelT(requirement as CallOptNode) as TNode;
-  //     if (!relT) return false;
-  //     relT.emit(env, freeFixMap, fathers);
-  //   }
-  //   return true;
-  // }
-
-  // requirementsSatisfied(env: L_Env, mapping: Map<string, string>): Boolean {
-  //   let allRequirementsAreSatisfied: Boolean = true;
-  //   for (let requirement of this.requirements) {
-  //     if (requirement instanceof CallOptNode) {
-  //       const keys: string[][] = [
-  //         ...(requirement as CallOptNode).optParams,
-  //       ].map((sArr) => sArr.map((s) => mapping.get(s) || ""));
-  //       let calledT = env.getRelT(requirement as CallOptNode);
-  //       if (!calledT) return false;
-  //       let res = env.isStoredTrueFact(keys, calledT);
-  //       if (!res) {
-  //         allRequirementsAreSatisfied = false;
-  //         break;
-  //       }
-  //     }
-  //   }
-  //   return allRequirementsAreSatisfied;
-  // }
+  toString(): string {
+    return `${this.name} ${this.getSelfFathersFreeVars()
+      .map((ls) => ls.join(","))
+      .join(":")}`;
+  }
 }
 
 export class DefNode extends TNode {
