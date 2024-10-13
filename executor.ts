@@ -782,7 +782,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
      * */
     for (const req of node.opt.req) {
       if (req.optParams.flat().every((s) => !proveHashParams.includes(s))) {
-        const out = callOptExec(env, req);
+        const out = env.checkEmit(req, false);
         if (isNull(out.v))
           return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
       } else {
@@ -800,7 +800,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     if (isNull(fixedOpts)) return cEnvErrL_Out(env, RType.Error, err);
     for (const req of fixedOpts) {
       if (req.optParams.every((ls) => ls.every((s) => s.startsWith("#")))) {
-        const out = callOptExec(env, req);
+        const out = env.checkEmit(req, false);
         if (isNull(out.v))
           return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
       } else {
@@ -816,7 +816,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
 
     // check onlyIF of opt
     for (const onlyIf of node.opt.onlyIFs) {
-      if (env.yaDefCheckEmit(onlyIf, true)) continue;
+      if (newEnv.checkEmit(onlyIf, true, env)) continue;
       else {
         return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
       }
@@ -831,7 +831,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     );
     if (isNull(tmp.v)) return cEnvErrL_Out(env, RType.Error, tmp.err);
     for (const onlyIf of tmp.v) {
-      if (env.yaDefCheckEmit(onlyIf, true)) continue;
+      if (newEnv.checkEmit(onlyIf, true, env)) continue;
       else {
         return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
       }
@@ -900,7 +900,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     );
     if (isNull(fixedOpts)) return cEnvErrL_Out(env, RType.Error, err);
     for (const req of fixedOpts) {
-      const out = newEnv.yaDefCheckEmit(req, false);
+      const out = newEnv.checkEmit(req, false);
       if (isNull(out.v)) return cL_Out(RType.ProveError, out.err);
       if (out.v === false)
         return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
@@ -908,7 +908,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
 
     // // check onlyIF of opt
     // for (const onlyIf of node.opt.onlyIFs) {
-    //   if (env.yaDefCheckEmit(onlyIf, true)) continue;
+    //   if (env.checkEmit(onlyIf, true)) continue;
     //   else {
     //     return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
     //   }

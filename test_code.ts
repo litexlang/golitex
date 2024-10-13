@@ -15,12 +15,12 @@ export const testCodes = {
   // def1: ":obj2(x) : aliasOfSet(x: obj2(x), set(x));",
   // def2: "let x: obj2(x); aliasOfSet(x);",
 
-  // ProveInfer:
-  //   "let y0: set0(y0), set(y0); prove p1(#x: set(x)):p2(y0: set(y0)) => {set(y0)} {}",
-  // CallOpt: "set0(y0);",
+  ProveInfer:
+    "let y0: set0(y0), set(y0); prove p1(#x: set(x)):p2(y0: set(y0)) => {set(y0)} {}",
+  CallOpt: "set0(y0);",
   // def: ":sett(x){:set(y)};",
-  def2: ":tes(x,y:set(x),set(y))",
-  prove2: "prove tes(#x,#y) {}",
+  // def2: ":tes(x,y:set(x),set(y))",
+  // prove2: "prove tes(#x,#y) {}",
 };
 
 export const testErrorCode = {
