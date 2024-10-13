@@ -1,6 +1,21 @@
-import { CallOptNode, TNode, makeTemplateNodeFact } from "./ast";
+import { isNull } from "lodash";
+import {
+  CallOptNode,
+  DefNode,
+  InferNode,
+  L_Node,
+  TNode,
+  makeTemplateNodeFact,
+} from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
-import { cErr_Out, cL_Out, freeFixMap, L_Out } from "./shared";
+import {
+  cErr_Out,
+  cL_Out,
+  fixOpt,
+  freeFixMap,
+  isL_OutErr,
+  L_Out,
+} from "./shared";
 
 export type StoredFact = {
   vars: string[][];
@@ -57,6 +72,7 @@ export class L_Env {
 
     /** Find all facts that the current input satisfies */
     let isT = false;
+    const relT = this.relT(opt).v as TNode;
     for (const [i, singleFact] of (RFacts as CallOptNode[]).entries()) {
       if (!this._isLiterallyFact(singleFact.optParams, opt.optParams)) continue;
 
@@ -87,26 +103,12 @@ export class L_Env {
 
       if (!isT) continue;
 
-      /** Emit onlyIfs */
+      /** Emit onlyIfs (from opt and from relT)*/
       if (emit) {
-        facts = singleFact.onlyIFs.map((e) => {
-          return {
-            name: e.optName,
-            params: e.optParams.map((ls) =>
-              ls.map((s) => {
-                const res = mapping.get(s);
-                if (res !== undefined)
-                  return res; // replace free var in param list with fixed var
-                else return s; // global var unspecified in parameter list
-              })
-            ),
-          };
-        });
-        facts.forEach((e) =>
-          emitTo.YANewFactEmit(CallOptNode.create(e.name, e.params))
-        );
+        this.emit(singleFact, mapping, relT, emitTo);
       }
     }
+
     return isT ? cL_Out<Boolean>(true) : cL_Out<Boolean>(false);
   }
 
@@ -119,6 +121,53 @@ export class L_Env {
           row.every((val, j) => val === arr2[i][j] || val.startsWith("#"))
       )
     );
+  }
+
+  //! 这里需要区分 infer, def 的emit标准
+  emit(
+    fact: CallOptNode,
+    mapping: Map<string, string>,
+    relT: TNode,
+    emitTo: L_Env = this
+  ) {
+    // Requirements of InferNode must be checked
+    if (relT instanceof InferNode) {
+      const fixedRelTReq = fixOpt(
+        this,
+        fact,
+        relT.getSelfFathersFreeVars(),
+        relT.requirements
+      );
+      if (isNull(fixedRelTReq.v)) return;
+
+      if (!fixedRelTReq.v.every((req) => this.checkEmit(req, false))) return;
+    }
+
+    // emit onlyIf from opt
+    let facts = fact.onlyIFs.map((e) => {
+      return CallOptNode.create(
+        e.optName,
+        e.optParams.map((ls) =>
+          ls.map((s) => {
+            const res = mapping.get(s);
+            if (res !== undefined)
+              return res; // replace free var in param list with fixed var
+            else return s; // global var unspecified in parameter list
+          })
+        )
+      );
+    });
+    facts.forEach((e) => emitTo.YANewFactEmit(e));
+
+    // emit onlyIf from relT
+    const fixedRelTOnlyIfs = fixOpt(
+      this,
+      fact,
+      relT.getSelfFathersFreeVars(),
+      relT.onlyIfExprs as CallOptNode[]
+    );
+    if (isNull(fixedRelTOnlyIfs.v)) return;
+    else fixedRelTOnlyIfs.v.forEach((e) => emitTo.YANewFactEmit(e));
   }
 
   newVar(varName: string): boolean {

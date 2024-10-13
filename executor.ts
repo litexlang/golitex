@@ -195,29 +195,6 @@ function callInferExec(
   relT: TNode | undefined = undefined
 ): RL_Out {
   try {
-    // const builtinFunc = L_Builtins[node.optName];
-    // if (builtinFunc) {
-    //   return builtinFunc(env, node);
-    // }
-
-    // if (!relT) relT = env.getRelT(node);
-    // if (!relT) return hNoRelTErr(node, RType.Error);
-
-    // // check itself
-    // let isT: Boolean | undefined = env.isStoredTrueFact(node.optParams, relT);
-    // if (!isT) return cL_Out(RType.Unknown, `${node.optName} itself unsatisfied`);
-
-    // // check all requirements
-    // isT = checkFree(env, node, relT, false, true);
-
-    // if (isT === undefined)
-    //   return cEnvErrL_Out(env, RType.Error, "check infer requirement error.");
-    // if (isT === false)
-    //   return cL_Out(RType.Unknown, `${node.optName} requirements unsatisfied.`);
-
-    // // emit
-    // emitFree(env, node, relT, true, false);
-
     return cL_Out(RType.True);
   } catch (error) {
     return cEnvErrL_Out(env, RType.Error, `call ${node.optName}`);
@@ -310,15 +287,6 @@ function knowExec(env: L_Env, node: KnowNode): RL_Out {
 
 function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RL_Out {
   try {
-    // let res: RL_Out  = { type: RType.Error, message: "" };
-    // res = yaKnowCallOptExec(env, fact);
-
-    // const template = env.getRelT(fact as CallOptNode);
-    // if (!template)
-    //   throw Error(`${(fact as CallOptNode).optName} has not been declared.`);
-
-    // emitFree(env, fact, template, true, true);
-
     return cL_Out(RType.KnowTrue);
   } catch (error) {
     return cEnvErrL_Out(env, RType.KnowEverythingError, "");
@@ -348,56 +316,8 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RL_Out {
   }
 }
 
-// function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RL_Out  {
-//   try {
-//     if (
-//       !node.optParams.every((ls) =>
-//         ls.every((s) => env.declaredVars.includes(s) || s.startsWith("#"))
-//       )
-//     ) {
-//       return cEnvErrL_Out(env, RType.KnowError, "symbol not declared.");
-//     }
-
-//     let relT = env.getRelT(node);
-
-//     if (!relT)
-//       return cL_Out(RType.KnowUndeclared, node.optName + " has not declared");
-
-//     /**Know Exist Opt */
-//     if (relT.type === L_NodeType.ExistNode) {
-//       (relT as ExistNode).isTrue = true;
-//       return cL_Out(RType.KnowTrue);
-//     }
-
-//     //! THE CLASSICAL WAY OF TRANSFORMING FREE VAR INTO FIXED AND EMIT
-//     env.newStoredFact(node.optParams, env.getRelT(node) as TNode, node.req);
-
-//     let rightIsTrue = checkFree(env, node, relT, false, true);
-
-//     if (!rightIsTrue) return cL_Out(RType.Unknown);
-//     else {
-//       const res = emitFree(env, node, relT, true, false);
-//       if (isNull(res.v)) return res;
-//     }
-
-//     return cL_Out(RType.KnowTrue);
-//   } catch (error) {
-//     return cEnvErrL_Out(env, RType.KnowError, "");
-//   }
-// }
-
 function haveExec(env: L_Env, node: HaveNode): RL_Out {
   try {
-    // const relT = env.getRelT(node.opt);
-    // if (!relT) return hNoRelTErr(node.opt, RType.HaveError);
-    // const req = fixFree(env, node.opt, false, true, relT)?.req;
-    // if (!req) return hFixFreeErr(node.opt, RType.HaveError);
-    // for (const optParams of req) {
-    //   if (!env.isFact(optParams.name, optParams.params))
-    //     return cL_Out(RType.HaveFailed);
-    // }
-
-    // (relT as ExistNode).isTrue = true;
     return cL_Out(RType.HaveTrue);
   } catch (error) {
     return cEnvErrL_Out(env, RType.HaveError);
@@ -498,35 +418,6 @@ export function fixFree(
   }
 }
 
-// function callDefExec(
-//   env: L_Env,
-//   node: CallOptNode,
-//   relT: TNode,
-//   calledByExist: Boolean = false
-// ): RL_Out  {
-//   try {
-//     // check left(i.e. the opt itself)
-//     let leftIsTrue: Boolean = env.isStoredTrueFact(node.optParams, relT);
-
-//     if (leftIsTrue) {
-//       const res = emitFree(env, node, relT, false, true);
-//       if (isNull(res.v)) return res;
-//     }
-
-//     let rightIsTrue = checkFree(env, node, relT, false, true);
-
-//     if (!rightIsTrue) return cL_Out(RType.Unknown);
-//     else {
-//       env.newCallOptFact(node);
-//     }
-
-//     if (calledByExist) (relT as ExistNode).isTrue = true;
-//     return cL_Out(RType.True);
-//   } catch (error) {
-//     return cEnvErrL_Out(env, RType.DefError);
-//   }
-// }
-
 function callExistExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
   try {
     return cL_Out(RType.ExistTrue);
@@ -550,85 +441,6 @@ function callDefExec(
   }
 }
 
-// export function emitFree(
-//   env: L_Env,
-//   node: CallOptNode,
-//   relT: TNode,
-//   onlyIf: Boolean,
-//   req: Boolean,
-//   otherFrees: CallOptNode[] = [] // free vars not bound to template.onlyif or req
-// ): RL_Out  {
-//   const fixedFrees = fixFree(env, node, onlyIf, req, relT, otherFrees);
-//   if (
-//     fixedFrees?.onlyIf === undefined ||
-//     fixedFrees.req === undefined ||
-//     fixedFrees.others === undefined
-//   )
-//     return cEnvErrL_Out(env, RType.Error, `Invalid invocation of ${node.optName}.`);
-//   const fixWhat = fixedFrees?.onlyIf
-//     .concat(fixedFrees.req)
-//     .concat(fixedFrees.others);
-
-//   // emit
-//   for (let fixedReq of fixWhat) {
-//     const tmp = env.getRelT(fixedReq.name);
-//     if (!tmp)
-//       return cEnvErrL_Out(env, RType.Error, `${findIndex.name} has not declared.`);
-//     env.newStoredFact(fixedReq.params, tmp);
-//   }
-
-//   return cL_Out(RType.True);
-// }
-
-// export function checkFree(
-//   env: L_Env,
-//   node: CallOptNode,
-//   relT: TNode,
-//   onlyIf: Boolean,
-//   req: Boolean
-// ): Boolean | undefined {
-//   const fixedFrees = fixFree(env, node, onlyIf, req, relT);
-//   if (fixedFrees?.onlyIf === undefined || fixedFrees.req === undefined) {
-//     cEnvErrL_Out(env, RType.Error, `Invalid invocation of ${node.optName}.`);
-//     return undefined;
-//   }
-//   const fixWhat = fixedFrees?.onlyIf.concat(fixedFrees.req);
-
-//   //
-//   for (let fixedReq of fixWhat) {
-//     const tmp = env.getRelT(fixedReq.name);
-//     if (!tmp) {
-//       cEnvErrL_Out(env, RType.Error, `${findIndex.name} has not declared.`);
-//       return undefined;
-//     }
-//     const t = env.isStoredTrueFact(fixedReq.params, tmp);
-//     if (!t) return false;
-//   }
-
-//   return true;
-// }
-
-// function knowImpliesFactExec(env: L_Env, node: ImpliesFactNode): RL_Out  {
-//   try {
-//     const tmp = env.getRelT(node.callOpt);
-//     if (!tmp) {
-//       cEnvErrL_Out(env, RType.Error, `${findIndex.name} has not declared.`);
-//       return cL_Out(RType.KnowError);
-//     }
-
-//     env.newStoredFact(
-//       node.callOpt.optParams,
-//       tmp,
-//       node.requirements,
-//       node.onlyIfExprs
-//     );
-
-//     return cL_Out(RType.KnowTrue);
-//   } catch (error) {
-//     return cEnvErrL_Out(env, RType.KnowError);
-//   }
-// }
-
 function proveExec(env: L_Env, node: YAProveNode): RL_Out {
   try {
     const relatedT = env.getRelT(node.opt.optName);
@@ -648,107 +460,6 @@ function proveExec(env: L_Env, node: YAProveNode): RL_Out {
     return cEnvErrL_Out(env, RType.ProveError);
   }
 }
-
-// function proveDefExec(env: L_Env, node: YAProveNode, relatedT: TNode): RL_Out {
-// try {
-// /** The only different between proveDef and proveInfer is: case def template requirements are used to check; in case infer they are used as pre-conditions*/
-// const onlyIfs = node.onlyIfExprs as L_Node[];
-// const req: CallOptNode[] = node.opt.req;
-// const newEnv = new L_Env();
-// newEnv.father = env;
-// env = newEnv;
-
-// const relOpt = CallOptNode.create(
-//   node.opt.optName,
-//   node.opt.optParams.map((ls) =>
-//     ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
-//   )
-// );
-// const TFixFree = fixFree(env, relOpt, true, true, relatedT);
-// if (!TFixFree) return cEnvErrL_Out(env, RType.ProveError);
-
-// /**Declare variables in newEnv */
-// for (let varToDecl of node.opt.optParams.flat()) {
-//   if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
-//     continue;
-//   newEnv.declareNewVar(varToDecl);
-// }
-
-// /**Execute onlyIfs in the prove block*/
-// for (const [i, curNode] of onlyIfs.entries()) {
-//   const res = nodeExec(newEnv, curNode);
-//   if (isNull(res.v))
-//     return cL_Out(RType.ProveFailed, `${i}th stmt failed.`);
-// }
-
-// /**After execution, check whether template requirements are satisfied.*/
-// for (const [i, fact] of TFixFree.req.entries()) {
-//   const tmp = env.getRelT(fact.name);
-//   if (!tmp)
-//     return cEnvErrL_Out(env, RType.ProveError, `${fact.name} not declared`);
-//   const isT = env.isStoredTrueFact(fact.params, tmp);
-//   if (!isT) return cL_Out(RType.ProveFailed, `${fact.name} not satisfied.`);
-// }
-
-//     return cL_Out(RType.ProveTrue);
-//   } catch (error) {
-//     return cEnvErrL_Out(env, RType.ProveError);
-//   }
-// }
-
-// function proveInferExec(env: L_Env, node: YAProveNode, relatedT: TNode): RL_Out  {
-//   try {
-//     // const onlyIfs = node.onlyIfExprs as L_Node[];
-//     // const req: CallOptNode[] = node.opt.req;
-//     // const newEnv = new L_Env();
-//     // newEnv.father = env;
-//     // env = newEnv;
-
-//     // const relOpt = CallOptNode.create(
-//     //   node.opt.optName,
-//     //   node.opt.optParams.map((ls) =>
-//     //     ls.map((s) => (s.startsWith("*") ? s.slice(1) : s))
-//     //   )
-//     // );
-//     // const TFixFree = fixFree(env, relOpt, true, true, relatedT);
-//     // if (!TFixFree) return cEnvErrL_Out(env, RType.ProveError);
-
-//     // /**Declare variables in newEnv */
-//     // for (let varToDecl of node.opt.optParams.flat()) {
-//     //   if (varToDecl.startsWith("*") || newEnv.declaredVars.includes(varToDecl))
-//     //     continue;
-//     //   newEnv.declareNewVar(varToDecl);
-//     // }
-
-//     // /**Emit req in newEnv */
-//     // for (const [i, fact] of req.entries()) {
-//     //   const tmp = env.getRelT(fact.optName);
-//     //   if (!tmp)
-//     //     return cEnvErrL_Out(env, RType.ProveError, `${fact.optName} not declared`);
-//     //   newEnv.newStoredFact(fact.optParams, tmp, [], []);
-//     // }
-
-//     // /**Execute onlyIfs in the prove block*/
-//     // for (const [i, curNode] of onlyIfs.entries()) {
-//     //   const res = nodeExec(newEnv, curNode);
-//     //   if (isNull(res.v))
-//     //     return cL_Out(RType.ProveFailed, `${i}th stmt failed.`);
-//     // }
-
-//     // /**After execution, check whether template onlyIfs are satisfied.*/
-//     // for (const [i, fact] of TFixFree.onlyIf.entries()) {
-//     //   const tmp = env.getRelT(fact.name);
-//     //   if (!tmp)
-//     //     return cEnvErrL_Out(env, RType.ProveError, `${fact.name} not declared`);
-//     //   const isT = env.isStoredTrueFact(fact.params, tmp);
-//     //   if (!isT) return cL_Out(RType.ProveFailed, `${fact.name} not satisfied.`);
-//     // }
-
-//     return cL_Out(RType.ProveTrue);
-//   } catch (error) {
-//     return cEnvErrL_Out(env, RType.ProveError);
-//   }
-// }
 
 /**
  * Proves inference execution.
@@ -814,7 +525,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
       if (isNull(out.v)) return out;
     }
 
-    // check onlyIF of opt
+    // check and emit onlyIF of opt
     for (const onlyIf of node.opt.onlyIFs) {
       if (newEnv.checkEmit(onlyIf, true, env)) continue;
       else {
@@ -822,7 +533,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
       }
     }
 
-    // check onlyIf of relT
+    // check and emit onlyIf of relT
     let tmp = fixOpt(
       env,
       node.opt,
@@ -877,7 +588,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
      * */
     for (const req of node.opt.req) {
       if (req.optParams.flat().every((s) => !proveHashParams.includes(s))) {
-        const out = callOptExec(env, req);
+        const out = env.checkEmit(req, false);
         if (isNull(out.v))
           return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
       } else {
@@ -906,13 +617,28 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
         return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
     }
 
-    // // check onlyIF of opt
-    // for (const onlyIf of node.opt.onlyIFs) {
-    //   if (env.checkEmit(onlyIf, true)) continue;
-    //   else {
-    //     return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
-    //   }
-    // }
+    // check and emit onlyIF of opt
+    for (const onlyIf of node.opt.onlyIFs) {
+      if (newEnv.checkEmit(onlyIf, true, env)) continue;
+      else {
+        return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
+      }
+    }
+
+    // check and emit onlyIf of relT
+    let tmp = fixOpt(
+      env,
+      node.opt,
+      relT.getSelfFathersFreeVars(),
+      relT.onlyIfExprs as CallOptNode[]
+    );
+    if (isNull(tmp.v)) return cEnvErrL_Out(env, RType.Error, tmp.err);
+    for (const onlyIf of tmp.v) {
+      if (newEnv.checkEmit(onlyIf, true, env)) continue;
+      else {
+        return cL_Out(RType.Unknown, `${onlyIf.toString()} unknown.`);
+      }
+    }
 
     // emit prove, notice how opt of proveNode is literally the same as the fact emitted
     yaKnowCallOptExec(env, node.opt);
