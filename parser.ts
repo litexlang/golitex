@@ -377,7 +377,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
           );
           const facts = callOptsParse(env, tokens).nodes;
           for (let i = 0; i < facts.length; i++) {
-            (result as InferNode).onlyIfExprs.push(facts[i]);
+            (result as InferNode).onlyIfs.push(facts[i]);
           }
         } else {
           const blockArrow = nonExecutableBlockParse(env, tokens);
@@ -386,7 +386,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
-          (result as InferNode).onlyIfExprs = blockArrow;
+          (result as InferNode).onlyIfs = blockArrow;
         }
 
         break;
@@ -398,7 +398,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
           freeVarsFact.freeVars,
           freeVarsFact.properties
         );
-        (result as DefNode).onlyIfExprs = blockBrace;
+        (result as DefNode).onlyIfs = blockBrace;
         break;
 
       case "<=>":
@@ -409,9 +409,9 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
-          (result as DefNode).onlyIfExprs = (
-            result as DefNode
-          ).onlyIfExprs.concat(callOptsParse(env, tokens).nodes);
+          (result as DefNode).onlyIfs = (result as DefNode).onlyIfs.concat(
+            callOptsParse(env, tokens).nodes
+          );
         } else {
           const blockDoubleArrow = nonExecutableBlockParse(env, tokens);
           result = new DefNode(
@@ -419,7 +419,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
-          (result as DefNode).onlyIfExprs = blockDoubleArrow;
+          (result as DefNode).onlyIfs = blockDoubleArrow;
         }
 
         break;

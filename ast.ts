@@ -105,7 +105,7 @@ export abstract class TNode extends L_Node {
   name: string;
   freeVars: string[];
   requirements: CallOptNode[] = [];
-  onlyIfExprs: L_Node[] = []; // After declaration, this becomes CallOpt[]
+  onlyIfs: L_Node[] = []; // After declaration, this becomes CallOpt[]
   declaredTemplates = new Map<string, TNode>();
   private fathers: TNode[] = [];
   isRedefine: Boolean = false;
@@ -145,17 +145,17 @@ export abstract class TNode extends L_Node {
     return out;
   }
 
-  // If a node is DollarMarkNode or TNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfExprs. If there is non-def, non-call node in block, report error
+  // If a node is DollarMarkNode or TNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfs. If there is non-def, non-call node in block, report error
   //! REFACTOR THIS SO THAT DEF IN REQ CAN APPEAR HERE.
   initDeclaredTemplates(env: L_Env, fathers: TNode[] = []): RL_Out {
     this.fathers = fathers;
 
     // process DollarMarks
-    for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
-      const value = this.onlyIfExprs[i];
+    for (let i = this.onlyIfs.length - 1; i >= 0; i--) {
+      const value = this.onlyIfs[i];
 
       if (value instanceof DollarMarkNode) {
-        this.onlyIfExprs.splice(i, 1);
+        this.onlyIfs.splice(i, 1);
 
         const callNode = new CallOptNode([
           [value.template.name, value.template.freeVars],
@@ -163,13 +163,13 @@ export abstract class TNode extends L_Node {
         const templateNode: TNode = value.template;
 
         //! Here lies a problem: the templateNode's optName should start with : and anything start with : means it inherits from all above.
-        this.onlyIfExprs.splice(i, 0, templateNode, callNode);
+        this.onlyIfs.splice(i, 0, templateNode, callNode);
       }
     }
 
     // eliminate template declarations in onlyIfs, retain callOpts
-    for (let i = this.onlyIfExprs.length - 1; i >= 0; i--) {
-      const value = this.onlyIfExprs[i];
+    for (let i = this.onlyIfs.length - 1; i >= 0; i--) {
+      const value = this.onlyIfs[i];
       if (value instanceof TNode) {
         if (L_Keywords.includes(value.name))
           return cEnvErrL_Out(
@@ -179,10 +179,10 @@ export abstract class TNode extends L_Node {
           );
         value.initDeclaredTemplates(env, [...fathers, this]);
         this.declaredTemplates.set(value.name, value);
-        this.onlyIfExprs.splice(i, 1);
+        this.onlyIfs.splice(i, 1);
       } else if (value instanceof CallOptsNode) {
-        this.onlyIfExprs = insertListIntoListAndDeleteElemOnIndex(
-          this.onlyIfExprs,
+        this.onlyIfs = insertListIntoListAndDeleteElemOnIndex(
+          this.onlyIfs,
           (value as CallOptsNode).nodes,
           i
         );
@@ -190,8 +190,8 @@ export abstract class TNode extends L_Node {
     }
 
     // make sure everything is done well.
-    for (let i = 0; i < this.onlyIfExprs.length; i++) {
-      if (this.onlyIfExprs[i].type !== L_NodeType.CallOptNode) {
+    for (let i = 0; i < this.onlyIfs.length; i++) {
+      if (this.onlyIfs[i].type !== L_NodeType.CallOptNode) {
         return cEnvErrL_Out(
           env,
           RType.DefError,
@@ -361,16 +361,16 @@ export class HaveNode extends L_Node {
 //   type: L_NodeType = L_NodeType.ImpliesFactNode;
 //   callOpt: CallOptNode;
 //   requirements: CallOptNode[][] = [];
-//   onlyIfExprs: CallOptNode[] = [];
+//   onlyIfs: CallOptNode[] = [];
 
 //   constructor(
 //     callOpt: CallOptNode,
-//     onlyIfExprs: CallOptNode[],
+//     onlyIfs: CallOptNode[],
 //     requirements: CallOptNode[][] = []
 //   ) {
 //     super();
 //     this.callOpt = callOpt;
 //     this.requirements = requirements;
-//     this.onlyIfExprs = onlyIfExprs;
+//     this.onlyIfs = onlyIfs;
 //   }
 // }

@@ -168,7 +168,7 @@ export class L_Env {
       this,
       fact,
       relT.allVars(),
-      relT.onlyIfExprs as CallOptNode[]
+      relT.onlyIfs as CallOptNode[]
     );
     if (isNull(fixedRelTOnlyIfs.v)) return;
     else fixedRelTOnlyIfs.v.forEach((e) => emitTo.YANewFactEmit(e));

@@ -213,7 +213,7 @@ function callInferExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
         env,
         node,
         relT.allVars(),
-        relT.onlyIfExprs as CallOptNode[]
+        relT.onlyIfs as CallOptNode[]
       );
       fixedReq.v?.forEach((e) => env.YANewFactEmit(e, false));
       return cL_Out(RType.InferTrue);
@@ -427,7 +427,7 @@ export function fixFree(
 
   if (fixOnlyIf) {
     const optParamsArr: OptParamsType[] = [];
-    for (let curOpt of relT.onlyIfExprs as CallOptNode[]) {
+    for (let curOpt of relT.onlyIfs as CallOptNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
         cEnvErrL_Out(env, RType.Error);
@@ -605,7 +605,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
       env,
       node.opt,
       relT.allVars(),
-      relT.onlyIfExprs as CallOptNode[]
+      relT.onlyIfs as CallOptNode[]
     );
     if (isNull(tmp.v)) return cEnvErrL_Out(env, RType.Error, tmp.err);
     for (const onlyIf of tmp.v) {
@@ -697,7 +697,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
       env,
       node.opt,
       relT.allVars(),
-      relT.onlyIfExprs as CallOptNode[]
+      relT.onlyIfs as CallOptNode[]
     );
     if (isNull(tmp.v)) return cEnvErrL_Out(env, RType.Error, tmp.err);
     for (const onlyIf of tmp.v) {

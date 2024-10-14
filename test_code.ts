@@ -22,7 +22,8 @@ export const testCodes = {
   // def2: ":tes(x,y:set(x),set(y))",
   // prove2: "prove tes(#x,#y) {}",
   // Have: "exist E(x) ; let x : E(x); have t: E(t);",
-  callDef: "let y: set0(y); set0(y); let o: obj(o); obj(o);",
+  // callDef: "let y: set0(y); set0(y); let o: obj(o); obj(o);",
+  callInfer: ":INF(x:set(x)) => obj(x); let y: INF(y), set(y); INF(y);",
 };
 
 export const testErrorCode = {
