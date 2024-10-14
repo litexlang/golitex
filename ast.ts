@@ -307,7 +307,7 @@ export class DefNode extends TNode {
     if (isNull(tmp.v)) return cL_Out(null);
     else {
       if (tmp.v.every((opt) => env.checkEmit(opt).v)) {
-        env.YANewFactEmit(node, emit);
+        env.newFactEmit(node, emit);
         return cL_Out(RType.True, "check by requirements");
       }
       return cL_Out(RType.Unknown);
@@ -317,7 +317,7 @@ export class DefNode extends TNode {
   emitTOnlyIf(env: L_Env, node: CallOptNode): RL_Out {
     const tmp = fixOpt(env, node, this.allVars(), this.allReq());
     if (isNull(tmp.v)) return cL_Out(null);
-    tmp.v.forEach((e) => env.YANewFactEmit(e, true));
+    tmp.v.forEach((e) => env.newFactEmit(e, true));
     return cL_Out(RType.True, "check by itself");
   }
 }
@@ -339,7 +339,7 @@ export class InferNode extends TNode {
       this.allVars(),
       this.onlyIfs as CallOptNode[]
     );
-    fixedReq.v?.forEach((e) => env.YANewFactEmit(e, true));
+    fixedReq.v?.forEach((e) => env.newFactEmit(e, true));
     return cL_Out(RType.InferTrue);
   }
 }
@@ -412,7 +412,7 @@ export class DollarMarkNode extends L_Node {
   }
 }
 
-export class YAProveNode extends L_Node {
+export class ProveNode extends L_Node {
   type = L_NodeType.ProofNode;
   opt: CallOptNode;
   proveBlock: L_Node[];
@@ -436,21 +436,3 @@ export class HaveNode extends L_Node {
     this.opt = opt;
   }
 }
-
-// export class ImpliesFactNode extends L_Node {
-//   type: L_NodeType = L_NodeType.ImpliesFactNode;
-//   callOpt: CallOptNode;
-//   requirements: CallOptNode[][] = [];
-//   onlyIfs: CallOptNode[] = [];
-
-//   constructor(
-//     callOpt: CallOptNode,
-//     onlyIfs: CallOptNode[],
-//     requirements: CallOptNode[][] = []
-//   ) {
-//     super();
-//     this.callOpt = callOpt;
-//     this.requirements = requirements;
-//     this.onlyIfs = onlyIfs;
-//   }
-// }

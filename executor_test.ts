@@ -247,7 +247,7 @@ function testExecutor(testWhat: any = testCodes) {
   console.log("\n----TestWhat----\n");
   whatIsTested.forEach((e) => console.log(e));
   if (env.errorsWithDepth.length === 0) {
-    if (env.yaFacts.size > 0) env.printYAFacts();
+    if (env.facts.size > 0) env.printFacts();
     // env.printCallOptFacts();
     // do not print templates declared in Basics
     if (env.declaredTemplates.size > 0)

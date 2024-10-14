@@ -8,7 +8,7 @@ import {
   LetNode,
   CanBeKnownNode,
   TNode,
-  YAProveNode,
+  ProveNode,
   HaveNode,
   ExistNode,
   DefNode,
@@ -126,7 +126,7 @@ export function nodeExec(env: L_Env, node: L_Node): RL_Out {
         return letExec(env, node as LetNode);
       case L_NodeType.ProofNode:
         // return hInfo(RType.True);
-        return proveExec(env, node as YAProveNode);
+        return proveExec(env, node as ProveNode);
       case L_NodeType.HaveNode:
         return haveExec(env, node as HaveNode);
     }
@@ -151,7 +151,7 @@ function letExec(env: L_Env, node: LetNode): RL_Out {
     env.declaredVars = env.declaredVars.concat(node.vars) as string[];
 
     for (let i = 0; i < node.properties.length; i++) {
-      let info = yaKnowCallOptExec(env, node.properties[i]);
+      let info = knowCallOptExec(env, node.properties[i]);
       if (isNull(info.v)) return cEnvErrL_Out(env, RType.LetError, info.err);
     }
 
@@ -276,8 +276,8 @@ function knowExec(env: L_Env, node: KnowNode): RL_Out {
       switch (fact.type) {
         case L_NodeType.CallOptNode:
           if (isKnowEverything)
-            res = yaKnowEverythingCallOptExec(env, fact as CallOptNode);
-          else res = yaKnowCallOptExec(env, fact as CallOptNode);
+            res = knowEverythingCallOptExec(env, fact as CallOptNode);
+          else res = knowCallOptExec(env, fact as CallOptNode);
           break;
         // case L_NodeType.ImpliesFactNode:
         //   res = knowImpliesFactExec(env, fact as ImpliesFactNode);
@@ -286,14 +286,14 @@ function knowExec(env: L_Env, node: KnowNode): RL_Out {
         case L_NodeType.InferNode: {
           res = templateDeclExec(env, fact as TNode);
           if (isKnowEverything) {
-            res = yaKnowEverythingCallOptExec(
+            res = knowEverythingCallOptExec(
               env,
               CallOptNode.create((fact as TNode).name, [
                 (fact as TNode).freeVars,
               ])
             );
           } else {
-            res = yaKnowCallOptExec(
+            res = knowCallOptExec(
               env,
               CallOptNode.create((fact as TNode).name, [
                 (fact as TNode).freeVars,
@@ -312,7 +312,7 @@ function knowExec(env: L_Env, node: KnowNode): RL_Out {
   }
 }
 
-function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RL_Out {
+function knowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RL_Out {
   try {
     return cL_Out(RType.KnowTrue);
   } catch (error) {
@@ -320,7 +320,7 @@ function yaKnowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RL_Out {
   }
 }
 
-function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RL_Out {
+function knowCallOptExec(env: L_Env, node: CallOptNode): RL_Out {
   try {
     if (!env.getRelT(node)) return cL_Out(RType.KnowError);
 
@@ -333,10 +333,10 @@ function yaKnowCallOptExec(env: L_Env, node: CallOptNode): RL_Out {
 
     if (node.optParams.every((ls) => ls.every((s) => s[0] !== "#")))
       // If every var in callOpt is not 'forall', we emit onlyIf immediately
-      env.YANewFactEmit(node);
-    else env.YANewFactEmit(node, false);
+      env.newFactEmit(node);
+    else env.newFactEmit(node, false);
 
-    // env.YANewFactEmit()
+    // env.newFactEmit()
     return cL_Out(RType.KnowTrue);
   } catch (error) {
     return cEnvErrL_Out(env, RType.KnowError);
@@ -369,7 +369,7 @@ function haveExec(env: L_Env, node: HaveNode): RL_Out {
         );
       else {
         node.vars.forEach((e) => env.newVar(e));
-        env.YANewFactEmit(node.opt, true);
+        env.newFactEmit(node.opt, true);
         return cL_Out(RType.HaveTrue);
       }
     }
@@ -380,7 +380,7 @@ function haveExec(env: L_Env, node: HaveNode): RL_Out {
   }
 
   function existTrue(env: L_Env, optName: string) {
-    const facts = env.yaFacts.get(optName);
+    const facts = env.facts.get(optName);
     if (!facts) return false;
     for (const fact of facts) {
       if (
@@ -520,7 +520,7 @@ function callDefExec(env: L_Env, node: CallOptNode, relT: DefNode): RL_Out {
   }
 }
 
-function proveExec(env: L_Env, node: YAProveNode): RL_Out {
+function proveExec(env: L_Env, node: ProveNode): RL_Out {
   try {
     const relatedT = env.getRelT(node.opt.optName);
     switch (relatedT?.type) {
@@ -553,7 +553,7 @@ function proveExec(env: L_Env, node: YAProveNode): RL_Out {
  * 5. If all `onlyIf` conditions are satisfied, emit the corresponding conditions
  *    from `relT` and `callOpt`.
  */
-function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
+function proveInferExec(env: L_Env, node: ProveNode, relT: TNode): RL_Out {
   try {
     const newEnv = new L_Env(env);
     const proveHashParams: string[] = [];
@@ -576,7 +576,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
         if (isNull(out.v))
           return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
       } else {
-        newEnv.YANewFactEmit(req, false);
+        newEnv.newFactEmit(req, false);
       }
     }
 
@@ -594,7 +594,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
         if (isNull(out.v))
           return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
       } else {
-        newEnv.YANewFactEmit(req, false);
+        newEnv.newFactEmit(req, false);
       }
     }
 
@@ -628,7 +628,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     }
 
     // emit prove.opt itself, notice how opt of proveNode is literally the same as the fact emitted
-    yaKnowCallOptExec(env, node.opt);
+    knowCallOptExec(env, node.opt);
 
     if (node.name !== "") env.newBy(node.name, node.opt);
 
@@ -650,7 +650,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
  *    are satisfied.
  * 5. If all `req` conditions are satisfied, emit the corresponding opt.
  */
-function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
+function proveDefExec(env: L_Env, node: ProveNode, relT: TNode): RL_Out {
   try {
     const newEnv = new L_Env(env);
 
@@ -689,7 +689,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
         if (isNull(out.v))
           return cL_Out(RType.Unknown, `${req.toString()} unsatisfied.`);
       } else {
-        newEnv.YANewFactEmit(req, false);
+        newEnv.newFactEmit(req, false);
       }
     }
 
@@ -738,7 +738,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     }
 
     // emit prove, notice how opt of proveNode is literally the same as the fact emitted
-    yaKnowCallOptExec(env, node.opt);
+    knowCallOptExec(env, node.opt);
 
     if (node.name !== "") env.newBy(node.name, node.opt);
 

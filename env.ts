@@ -17,7 +17,7 @@ export class L_Env {
   declaredVars: string[] = [];
   declaredTemplates = new Map<string, TNode>();
   father: L_Env | undefined;
-  yaFacts = new Map<string, CallOptNode[]>();
+  facts = new Map<string, CallOptNode[]>();
   bys = new Map<string, CallOptNode>();
 
   constructor(father: L_Env | undefined = undefined) {
@@ -28,17 +28,17 @@ export class L_Env {
     this.bys.set(key, by);
   }
 
-  YANewFactEmit(opt: CallOptNode, emit: Boolean = true) {
+  newFactEmit(opt: CallOptNode, emit: Boolean = true) {
     /** Much unnecessary info is stored here. e.g. The optName and optNameLst can be set to "" because the key of map already store that info. */
-    if (this.yaFacts.has(opt.optName)) {
+    if (this.facts.has(opt.optName)) {
       if (opt.onlyIFs.length === 0 && this.checkEmit(opt, false)) return;
-      else this.yaFacts.get(opt.optName)?.push(opt);
+      else this.facts.get(opt.optName)?.push(opt);
     } else {
-      this.yaFacts.set(opt.optName, [opt]);
+      this.facts.set(opt.optName, [opt]);
     }
 
     if (emit) {
-      opt.onlyIFs.forEach((e: CallOptNode) => this.YANewFactEmit(e, false));
+      opt.onlyIFs.forEach((e: CallOptNode) => this.newFactEmit(e, false));
     }
   }
 
@@ -50,7 +50,7 @@ export class L_Env {
     emit: Boolean = true,
     emitTo: L_Env = this
   ): L_Out<Boolean> {
-    const RFacts = this.yaFacts.get(opt.optName);
+    const RFacts = this.facts.get(opt.optName);
     if (!RFacts) {
       if (this.father === undefined) return cL_Out<Boolean>(false);
       else {
@@ -99,6 +99,7 @@ export class L_Env {
       if (!isT) continue;
 
       /** Emit onlyIfs (from opt and from relT)*/
+      // ! I think this piece of code should be refactored by relT.emit
       if (emit) {
         this.emitByMapping(singleFact, mapping, relT, emitTo);
       }
@@ -118,7 +119,7 @@ export class L_Env {
     );
   }
 
-  //! 这里需要区分 infer, def 的emit标准
+  // ! I think this piece of code should be refactored by relT.emit
   emitByMapping(
     fact: CallOptNode,
     mapping: Map<string, string>,
@@ -152,7 +153,7 @@ export class L_Env {
         )
       );
     });
-    facts.forEach((e) => emitTo.YANewFactEmit(e));
+    facts.forEach((e) => emitTo.newFactEmit(e));
 
     // emit onlyIf from relT
     const fixedRelTOnlyIfs = fixOpt(
@@ -162,7 +163,7 @@ export class L_Env {
       relT.onlyIfs as CallOptNode[]
     );
     if (isNull(fixedRelTOnlyIfs.v)) return;
-    else fixedRelTOnlyIfs.v.forEach((e) => emitTo.YANewFactEmit(e));
+    else fixedRelTOnlyIfs.v.forEach((e) => emitTo.newFactEmit(e));
   }
 
   newVar(varName: string): boolean {
@@ -305,9 +306,9 @@ export class L_Env {
     }
   }
 
-  printYAFacts() {
+  printFacts() {
     console.log("\n-----facts-------\n");
-    for (const [key, factUnderCurKey] of this.yaFacts) {
+    for (const [key, factUnderCurKey] of this.facts) {
       factUnderCurKey.forEach((e) => console.log(e.toString()));
     }
   }

@@ -10,7 +10,7 @@ import {
   DefNode,
   TNode,
   DollarMarkNode,
-  YAProveNode,
+  ProveNode,
   HaveNode,
 } from "./ast";
 import { L_Env } from "./env";
@@ -503,7 +503,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   }
 }
 
-function yaProveParse(env: L_Env, tokens: string[]): YAProveNode {
+function yaProveParse(env: L_Env, tokens: string[]): ProveNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -517,7 +517,7 @@ function yaProveParse(env: L_Env, tokens: string[]): YAProveNode {
     }
     const relatedOpt = callOptParse(env, tokens, true, true);
     const blockBrace = nonExecutableBlockParse(env, tokens);
-    const result = new YAProveNode(relatedOpt, blockBrace, name);
+    const result = new ProveNode(relatedOpt, blockBrace, name);
     return result;
   } catch (error) {
     handleParseError(env, "prove", index, start);
