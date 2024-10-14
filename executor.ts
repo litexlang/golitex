@@ -356,7 +356,7 @@ function haveExec(env: L_Env, node: HaveNode): RL_Out {
         `${node.opt.toString()} is not exist operator.`
       );
 
-    if (env.yaFacts.has(node.opt.optName)) {
+    if (relT.isTrue || (relT.isTrue = existTrue(env, node.opt.optName))) {
       const isT = node.vars.every((e) => !env.declaredVars.includes(e));
       if (!isT)
         return cEnvErrL_Out(
@@ -374,6 +374,19 @@ function haveExec(env: L_Env, node: HaveNode): RL_Out {
     return cL_Out(RType.HaveFailed);
   } catch (error) {
     return cEnvErrL_Out(env, RType.HaveError);
+  }
+
+  function existTrue(env: L_Env, optName: string) {
+    const facts = env.yaFacts.get(optName);
+    if (!facts) return false;
+    for (const fact of facts) {
+      if (
+        fact.optParams.every((e) => e.every((v) => !v.startsWith("#"))) &&
+        fact.req.every((e) => env.checkEmit(e, false))
+      )
+        return true;
+    }
+    return false;
   }
 }
 
@@ -473,7 +486,13 @@ export function fixFree(
 
 function callExistExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
   try {
-    return cL_Out(RType.ExistTrue);
+    const out = env.checkEmit(node, true);
+    if (out.v) {
+      // relT.isTrue = true is updated in haveExec
+      return cL_Out(RType.ExistTrue);
+    } else {
+      return cL_Out(RType.Unknown);
+    }
   } catch (error) {
     return cEnvErrL_Out(env, RType.ExistError);
   }

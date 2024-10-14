@@ -331,7 +331,7 @@ export class L_Env {
     }
 
     function printTAndSubT(tNode: TNode) {
-      console.log(tNode.toString());
+      console.log(tNode.toString() + "\n");
       for (const subTNode of tNode.declaredTemplates) {
         printTAndSubT(subTNode[1]);
       }

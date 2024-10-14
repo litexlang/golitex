@@ -277,13 +277,11 @@ export abstract class TNode extends L_Node {
 
     const names = this.allNames();
     const vars = this.allVars();
-    return `
-${typeName} ${names.map((v, i) => `${v}(${vars[i].toString()})`).join(":")}
+    return `${typeName} ${names.map((v, i) => `${v}(${vars[i].toString()})`).join(":")}
 req: ${this.allReq()
       .map((e) => e.toString())
       .join(", ")}
-onlyIfs: ${this.onlyIfs.map((e) => (e as CallOptNode).toString()).join(", ")}
-`;
+onlyIfs: ${this.onlyIfs.map((e) => (e as CallOptNode).toString()).join(", ")}`;
   }
 }
 
