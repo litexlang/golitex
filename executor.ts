@@ -49,6 +49,8 @@ export enum RType {
   KnowEverythingError,
   ExistError,
   ExistTrue,
+  ByError,
+  ByTrue,
 }
 
 export const RTypeMap: { [key in RType]: string } = {
@@ -75,6 +77,8 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.KnowEverythingTrue]: "know_everything: true",
   [RType.ExistError]: "exist: error",
   [RType.ExistTrue]: "exist: true",
+  [RType.ByError]: "by: error",
+  [RType.ByTrue]: "by: true",
 };
 
 function IsL_OutRTypeErr(res: RL_Out) {

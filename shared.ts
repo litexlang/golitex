@@ -25,13 +25,13 @@ export function cNoRelTErr_Out(opt: CallOptNode) {
   return { v: null, err: `${opt.optName} undeclared.` };
 }
 
-export function cEnvErrL_Out<T>(
+export function cEnvErrL_Out(
   env: L_Env,
   t: RType,
   m: string = ""
-): L_Out<T> {
+): L_Out<RType> {
   hRunErr(env, t, m);
-  return cL_Out<T>(null);
+  return cL_Out<RType>(null);
 }
 
 export type RL_Out = L_Out<RType> | L_Out<null>;

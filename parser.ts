@@ -12,6 +12,7 @@ import {
   DollarMarkNode,
   ProveNode,
   HaveNode,
+  ByNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -100,6 +101,7 @@ const KeywordFunctionMap: {
   },
   prove: yaProveParse,
   "&": yaProveParse,
+  by: byParse,
 };
 
 export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
@@ -572,6 +574,24 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
     skip(tokens, ";");
 
     return new HaveNode(vars, opt);
+  } catch (error) {
+    handleParseError(env, "have", index, start);
+    throw error;
+  }
+}
+
+function byParse(env: L_Env, tokens: string[]): ByNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, "by");
+
+    const name = shiftVar(tokens);
+    const opt = callOptParse(env, tokens);
+
+    skip(tokens, ";");
+    return new ByNode(name, opt);
   } catch (error) {
     handleParseError(env, "have", index, start);
     throw error;

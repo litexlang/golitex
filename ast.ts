@@ -33,6 +33,7 @@ export enum L_NodeType {
 
   FreeVarsWithFactsNode,
   DollarMarkNode,
+  ByNode,
 }
 
 export abstract class L_Node {
@@ -433,6 +434,18 @@ export class HaveNode extends L_Node {
   constructor(vars: string[], opt: CallOptNode) {
     super();
     this.vars = vars;
+    this.opt = opt;
+  }
+}
+
+export class ByNode extends L_Node {
+  type = L_NodeType.ByNode;
+  name: string;
+  opt: CallOptNode;
+
+  constructor(name: string, opt: CallOptNode) {
+    super();
+    this.name = name;
     this.opt = opt;
   }
 }

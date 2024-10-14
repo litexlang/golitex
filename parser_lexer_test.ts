@@ -153,7 +153,8 @@ const codes: string[] = [
   // ": p1(x:set(x)):p2(y:set2(x,y), set0(y)) {set3(y); set(x);}; let y0: set0(y0), set(y0); prove p1(#x: set(x)):p2(y0: set(y0)) => {set(y0)} {}",
   // "have x,y: set(x);",
   // "s,b:a,c is set:set2;",
-  "prove (THM) set(x) => {set1(x)} {}",
+  // "prove (THM) set(x) => {set1(x)} {}",
+  "by certainProof set(x):set(y);",
 ];
 
 function testLexer() {
