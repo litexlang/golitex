@@ -8,7 +8,6 @@ import {
   L_Node,
   LetNode,
   DefNode,
-  FactNode,
   TNode,
   DollarMarkNode,
   YAProveNode,
@@ -20,10 +19,10 @@ import {
   TemplateDeclarationKeywords,
   specialChars,
   DefBlockDeclareAndCall,
-  ExistKeywords,
   SymbolsFactsSeparator,
   ProveKeywords,
   redefineTemplateDeclarationKeywords,
+  suchThats,
 } from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -277,38 +276,83 @@ function callOptParse(
      * 1. fun(X):fun2(Y)..
      * 2. X:Y.. is fun:fun2
      */
-    while (1) {
-      const name = shiftVar(tokens) as string;
+    if (tokens.length >= 1 && tokens[1] === "(") {
+      while (1) {
+        const name = shiftVar(tokens) as string;
 
-      if (!withReq) {
-        const params: string[] = [];
+        if (!withReq) {
+          const params: string[] = [];
 
-        skip(tokens, "(");
-        if (!isCurToken(")", tokens)) {
-          while (1) {
-            params.push(shiftVar(tokens));
-            if (isCurToken(",", tokens)) skip(tokens, ",");
-            else if (isCurToken(")", tokens)) {
-              skip(tokens, ")");
-              break;
-            } else throw Error("");
+          skip(tokens, "(");
+          if (!isCurToken(")", tokens)) {
+            while (1) {
+              params.push(shiftVar(tokens));
+              if (isCurToken(",", tokens)) skip(tokens, ",");
+              else if (isCurToken(")", tokens)) {
+                skip(tokens, ")");
+                break;
+              } else throw Error("");
+            }
+          } else {
+            skip(tokens, ")");
           }
+
+          opts.push([name, params]);
         } else {
-          skip(tokens, ")");
+          const freeVarsAndFacts = freeVarsAndTheirFactsParse(env, tokens);
+          opts.push([name, freeVarsAndFacts.freeVars]);
+          requirements.push(freeVarsAndFacts.properties);
         }
 
-        opts.push([name, params]);
-      } else {
-        const freeVarsAndFacts = freeVarsAndTheirFactsParse(env, tokens);
-        opts.push([name, freeVarsAndFacts.freeVars]);
-        requirements.push(freeVarsAndFacts.properties);
+        if (isCurToken(":", tokens)) {
+          skip(tokens, ":");
+        } else {
+          break;
+        }
+      }
+    } else {
+      let n = 0;
+      const vars: string[][] = [[]];
+      const optNames: string[] = [];
+
+      if (!withReq) {
+        while (!suchThats.includes(tokens[0])) {
+          vars[n].push(shiftVar(tokens));
+          if (isCurToken(",", tokens)) skip(tokens, ",");
+          else if (isCurToken(":", tokens)) {
+            skip(tokens, ":");
+            vars.push([]);
+            n++;
+          }
+        }
+      }
+      // else {
+      //   while (!suchThats.includes(tokens[0])) {
+      //     vars[n].push(shiftVar(tokens));
+      //     if (isCurToken(",", tokens)) skip(tokens, ",");
+      //     else if (isCurToken(":", tokens)) {
+      //       skip(tokens, ":");
+      //       vars.push([]);
+      //       n++;
+      //     } else if (isCurToken("|", tokens)) {
+      //       requirements.push([]);
+      //       while (![...suchThats, ":"].includes(tokens[0])) {
+      //         requirements[-1].push(callOptParse(env, tokens));
+      //         if (isCurToken(",", tokens)) skip(tokens, ",");
+      //       }
+      //     }
+      //   }
+      // }
+
+      skip(tokens, suchThats);
+
+      optNames.push(shiftVar(tokens));
+      for (let i = 1; i < n + 1; i++) {
+        skip(tokens, ":");
+        optNames.push(shiftVar(tokens));
       }
 
-      if (isCurToken(":", tokens)) {
-        skip(tokens, ":");
-      } else {
-        break;
-      }
+      vars.forEach((v, i) => opts.push([optNames[i], v]));
     }
 
     if (!withOnlyIf || !isCurToken("=>", tokens))

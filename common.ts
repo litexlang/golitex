@@ -43,3 +43,5 @@ export const L_Keywords = [
   ...TemplateDeclarationKeywords,
   ...ProveKeywords,
 ];
+
+export const suchThats = ["st", "is"];
