@@ -16,7 +16,14 @@ import {
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
-import { cEnvErrL_Out, cL_Out, fixOpt, isL_OutErr, RL_Out } from "./shared";
+import {
+  cEnvErrL_Out,
+  cL_Out,
+  ErrL_Out,
+  fixOpt,
+  isL_OutErr,
+  RL_Out,
+} from "./shared";
 
 export enum RType {
   True, // not only used as True for callInferExec, but also as a generic type passed between subFunctions.
@@ -623,6 +630,8 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     // emit prove.opt itself, notice how opt of proveNode is literally the same as the fact emitted
     yaKnowCallOptExec(env, node.opt);
 
+    if (node.name !== "") env.newBy(node.name, node.opt);
+
     return cL_Out(RType.ProveTrue, `${node.opt.toString()}`);
   } catch (error) {
     return cEnvErrL_Out(env, RType.ProveError);
@@ -644,7 +653,23 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
 function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
   try {
     const newEnv = new L_Env(env);
+
+    if (
+      !node.opt.optParams
+        .flat()
+        .every((e) => (e.startsWith("#") ? true : env.declaredVars.includes(e)))
+    ) {
+      const vars = node.opt.optParams.map((ls) => ls.join(",")).join(",");
+      return cEnvErrL_Out(
+        env,
+        RType.ProveError,
+        `Some of [${vars}] undeclared.`
+      );
+    }
+
     const proveHashParams: string[] = [];
+
+    // If parameter start with #, we push s.slice(1); else push s
     const proveNoHashParams: string[][] = node.opt.optParams.map((ls) =>
       ls.map((s) => {
         if (s.startsWith("#")) {
@@ -714,6 +739,8 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
 
     // emit prove, notice how opt of proveNode is literally the same as the fact emitted
     yaKnowCallOptExec(env, node.opt);
+
+    if (node.name !== "") env.newBy(node.name, node.opt);
 
     return cL_Out(RType.ProveTrue, `${node.opt.toString()}`);
   } catch (error) {

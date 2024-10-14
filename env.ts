@@ -15,12 +15,17 @@ export class L_Env {
   errorsWithDepth: [string, number][] = []; //? [error message, depth], number here does not work for the time being
   private errorDepth = 0;
   declaredVars: string[] = [];
-  declaredTemplates: Map<string, TNode> = new Map<string, TNode>();
+  declaredTemplates = new Map<string, TNode>();
   father: L_Env | undefined;
-  yaFacts: Map<string, CallOptNode[]> = new Map<string, CallOptNode[]>();
+  yaFacts = new Map<string, CallOptNode[]>();
+  bys = new Map<string, CallOptNode>();
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  newBy(key: string, by: CallOptNode) {
+    this.bys.set(key, by);
   }
 
   YANewFactEmit(opt: CallOptNode, emit: Boolean = true) {
@@ -321,6 +326,15 @@ export class L_Env {
         printTAndSubT(subTNode[1]);
       }
     }
+  }
+
+  printBys() {
+    console.log("\n-----Bys-----\n");
+
+    for (const [key, factUnderCurKey] of this.bys) {
+      console.log(`${key}: ${factUnderCurKey.toString()}`);
+    }
+    console.log();
   }
 
   printErrorsWithDepth() {

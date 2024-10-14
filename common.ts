@@ -35,6 +35,7 @@ export const DefBlockDeclareAndCall = "$"; // sort of works like do in coffeeScr
 
 export const SymbolsFactsSeparator = "|";
 export const ProveKeywords = ["&", "prove"];
+export const suchThats = ["st", "is"];
 
 export const L_Keywords = [
   ...specialChars,
@@ -42,6 +43,6 @@ export const L_Keywords = [
   ...ExistKeywords,
   ...TemplateDeclarationKeywords,
   ...ProveKeywords,
+  SymbolsFactsSeparator,
+  ...suchThats,
 ];
-
-export const suchThats = ["st", "is"];

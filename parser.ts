@@ -512,9 +512,15 @@ function yaProveParse(env: L_Env, tokens: string[]): YAProveNode {
 
   try {
     skip(tokens, ProveKeywords);
+    let name = "";
+    if (isCurToken("(", tokens)) {
+      skip(tokens, "(");
+      name = shiftVar(tokens);
+      skip(tokens, ")");
+    }
     const relatedOpt = callOptParse(env, tokens, true, true);
     const blockBrace = nonExecutableBlockParse(env, tokens);
-    const result = new YAProveNode(relatedOpt, blockBrace);
+    const result = new YAProveNode(relatedOpt, blockBrace, name);
     return result;
   } catch (error) {
     handleParseError(env, "prove", index, start);

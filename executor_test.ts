@@ -235,8 +235,11 @@ function testExecutor(testWhat: any = testCodes) {
       for (let i = 0; i < result.length; i++) {
         const res: RL_Out = nodeExec(env, result[i]) as RL_Out;
         if (key !== "Basics") {
-          if (isL_OutErr(res)) console.log(env.errors);
-          else console.log(`${RTypeMap[res.v as RType]} '${res.err}'`);
+          if (isL_OutErr(res)) {
+            console.log(env.errorsWithDepth.map((e) => e[0]).join("\n"));
+            // clean errors
+            env.errorsWithDepth = [];
+          } else console.log(`${RTypeMap[res.v as RType]} '${res.err}'`);
         }
       }
     }
@@ -244,18 +247,20 @@ function testExecutor(testWhat: any = testCodes) {
   console.log("\n----TestWhat----\n");
   whatIsTested.forEach((e) => console.log(e));
   if (env.errorsWithDepth.length === 0) {
-    env.printYAFacts();
+    if (env.yaFacts.size > 0) env.printYAFacts();
     // env.printCallOptFacts();
     // do not print templates declared in Basics
-    env.printDeclaredTemplates([
-      "obj",
-      "set",
-      "set0",
-      "p1",
-      "set2",
-      // "F",
-      "set3",
-    ]);
+    if (env.declaredTemplates.size > 0)
+      env.printDeclaredTemplates([
+        "obj",
+        "set",
+        "set0",
+        "p1",
+        "set2",
+        // "F",
+        "set3",
+      ]);
+    if (env.bys.size > 0) env.printBys();
   } else {
     console.log("\n------Error------\n");
     env.printErrorsWithDepth();
