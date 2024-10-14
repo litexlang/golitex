@@ -129,14 +129,14 @@ export abstract class TNode extends L_Node {
     return curTemplate;
   }
 
-  getSelfFathersReq(): CallOptNode[] {
+  allReq(): CallOptNode[] {
     const out: CallOptNode[] = [];
     this.fathers.forEach((e) => e.requirements.forEach((req) => out.push(req)));
     this.requirements.forEach((e) => out.push(e));
     return out;
   }
 
-  getSelfFathersFreeVars() {
+  allVars() {
     const out: string[][] = [];
     for (const father of this.fathers) {
       out.push(father.freeVars);
@@ -259,7 +259,7 @@ export abstract class TNode extends L_Node {
   }
 
   toString(): string {
-    return `${this.name} ${this.getSelfFathersFreeVars()
+    return `${this.name} ${this.allVars()
       .map((ls) => ls.join(","))
       .join(":")}`;
   }

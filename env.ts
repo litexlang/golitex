@@ -109,7 +109,7 @@ export class L_Env {
 
       /** Emit onlyIfs (from opt and from relT)*/
       if (emit) {
-        this.emit(singleFact, mapping, relT, emitTo);
+        this.emitByMapping(singleFact, mapping, relT, emitTo);
       }
     }
 
@@ -128,7 +128,7 @@ export class L_Env {
   }
 
   //! 这里需要区分 infer, def 的emit标准
-  emit(
+  emitByMapping(
     fact: CallOptNode,
     mapping: Map<string, string>,
     relT: TNode,
@@ -139,7 +139,7 @@ export class L_Env {
       const fixedRelTReq = fixOpt(
         this,
         fact,
-        relT.getSelfFathersFreeVars(),
+        relT.allVars(),
         relT.requirements
       );
       if (isNull(fixedRelTReq.v)) return;
@@ -167,7 +167,7 @@ export class L_Env {
     const fixedRelTOnlyIfs = fixOpt(
       this,
       fact,
-      relT.getSelfFathersFreeVars(),
+      relT.allVars(),
       relT.onlyIfExprs as CallOptNode[]
     );
     if (isNull(fixedRelTOnlyIfs.v)) return;

@@ -23,6 +23,8 @@ export enum RType {
   KnowUndeclared,
   DefTrue,
   DefError,
+  InferTrue,
+  InferError,
   False,
   Unknown,
   Error,
@@ -49,6 +51,8 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.DefTrue]: "def: true",
   [RType.KnowError]: "know: error",
   [RType.DefError]: "def: error",
+  [RType.InferError]: "infer: error",
+  [RType.InferTrue]: "infer: true",
   [RType.KnowUndeclared]: "know: undeclared opt",
   [RType.HaveError]: "have: error",
   [RType.HaveTrue]: "have: true",
@@ -190,13 +194,32 @@ function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
   }
 }
 
-function callInferExec(
-  env: L_Env,
-  node: CallOptNode,
-  relT: TNode | undefined = undefined
-): RL_Out {
+/**
+ * Steps
+ * 1. check opt itself
+ * 2. check opt requirements
+ * 3. If 1. and 2. true, emit onlyIfs of relT
+ */
+function callInferExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
   try {
-    return cL_Out(RType.True);
+    if (!env.checkEmit(node, true)) {
+      return cL_Out(RType.Unknown, `${node.toString()} itself unknown`);
+    }
+
+    const fixedReq = fixOpt(env, node, relT?.allVars(), relT.allReq());
+    const isT = fixedReq.v?.every((e) => env.checkEmit(e, true));
+    if (isT) {
+      const fixedReq = fixOpt(
+        env,
+        node,
+        relT.allVars(),
+        relT.onlyIfExprs as CallOptNode[]
+      );
+      fixedReq.v?.forEach((e) => env.YANewFactEmit(e, false));
+      return cL_Out(RType.InferTrue);
+    } else {
+      return cL_Out(RType.Unknown);
+    }
   } catch (error) {
     return cEnvErrL_Out(env, RType.Error, `call ${node.optName}`);
   }
@@ -456,16 +479,30 @@ function callExistExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
   }
 }
 
-function callDefExec(
-  env: L_Env,
-  node: CallOptNode,
-  relT: TNode
-  // calledByExist: Boolean = false
-): RL_Out {
+/**
+ * Steps
+ * 1. check itself.If true, emit its req
+ * 2. If unknown, check its req; if true this time, emit itself
+ */
+function callDefExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
   try {
-    //TODO:  There are two trues of callDef: 1. itself 2. all requirements satisfied.
+    if (env.checkEmit(node, true)) {
+      const tmp = fixOpt(env, node, relT.allVars(), relT.allReq());
+      if (isNull(tmp.v)) return cL_Out(null);
+      tmp.v.forEach((e) => env.YANewFactEmit(e));
+      return cL_Out(RType.True, "check by itself");
+    } else {
+      const tmp = fixOpt(env, node, relT.allVars(), relT.allReq());
+      if (isNull(tmp.v)) return cL_Out(null);
+      else {
+        if (tmp.v.every((opt) => callOptExec(env, opt).v === RType.True)) {
+          env.YANewFactEmit(node);
+          return cL_Out(RType.True, "check by requirements");
+        }
+      }
+    }
 
-    return cL_Out(RType.True);
+    return cL_Out(RType.Unknown);
   } catch (error) {
     return cEnvErrL_Out(env, RType.DefError);
   }
@@ -535,8 +572,8 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     let { v: fixedOpts, err } = fixOpt(
       env,
       proveNoHashParams,
-      relT.getSelfFathersFreeVars(),
-      relT.getSelfFathersReq()
+      relT.allVars(),
+      relT.allReq()
     );
     if (isNull(fixedOpts)) return cEnvErrL_Out(env, RType.Error, err);
     for (const req of fixedOpts) {
@@ -567,7 +604,7 @@ function proveInferExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     let tmp = fixOpt(
       env,
       node.opt,
-      relT.getSelfFathersFreeVars(),
+      relT.allVars(),
       relT.onlyIfExprs as CallOptNode[]
     );
     if (isNull(tmp.v)) return cEnvErrL_Out(env, RType.Error, tmp.err);
@@ -636,8 +673,8 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     let { v: fixedOpts, err } = fixOpt(
       env,
       proveNoHashParams,
-      relT.getSelfFathersFreeVars(),
-      relT.getSelfFathersReq()
+      relT.allVars(),
+      relT.allReq()
     );
     if (isNull(fixedOpts)) return cEnvErrL_Out(env, RType.Error, err);
     for (const req of fixedOpts) {
@@ -659,7 +696,7 @@ function proveDefExec(env: L_Env, node: YAProveNode, relT: TNode): RL_Out {
     let tmp = fixOpt(
       env,
       node.opt,
-      relT.getSelfFathersFreeVars(),
+      relT.allVars(),
       relT.onlyIfExprs as CallOptNode[]
     );
     if (isNull(tmp.v)) return cEnvErrL_Out(env, RType.Error, tmp.err);
