@@ -1,7 +1,15 @@
+import { isNull } from "lodash";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
 import { hInfo, RType } from "./executor";
-import { cEnvErrL_Out, cL_Out, RL_Out } from "./shared";
+import {
+  cEnvErrL_Out,
+  cL_Out,
+  ErrL_Out,
+  fixOpt,
+  L_Out,
+  RL_Out,
+} from "./shared";
 
 //? There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
 export enum L_NodeType {
@@ -287,10 +295,47 @@ onlyIfs: ${this.onlyIfs.map((e) => (e as CallOptNode).toString()).join(", ")}`;
 
 export class DefNode extends TNode {
   type: L_NodeType = L_NodeType.DefNode;
+
+  emitTOnlyIf(env: L_Env, node: CallOptNode): RL_Out {
+    const tmp = fixOpt(env, node, this.allVars(), this.allReq());
+    if (isNull(tmp.v)) return cL_Out(null);
+    tmp.v.forEach((e) => env.YANewFactEmit(e));
+    return cL_Out(RType.True, "check by itself");
+  }
+
+  checkReq(env: L_Env, node: CallOptNode): RL_Out {
+    const tmp = fixOpt(env, node, this.allVars(), this.allReq());
+    if (isNull(tmp.v)) return cL_Out(null);
+    else {
+      if (tmp.v.every((opt) => env.checkEmit(opt).v)) {
+        env.YANewFactEmit(node);
+        return cL_Out(RType.True, "check by requirements");
+      }
+      return cL_Out(RType.Unknown);
+    }
+  }
 }
 
 export class InferNode extends TNode {
   type: L_NodeType = L_NodeType.InferNode;
+
+  checkReq(env: L_Env, node: CallOptNode): L_Out<Boolean> {
+    const fixedReq = fixOpt(env, node, this.allVars(), this.allReq());
+    const isT = fixedReq.v?.every((e) => env.checkEmit(e, true));
+    if (isT === undefined) return ErrL_Out;
+    else return cL_Out(isT);
+  }
+
+  emitTOnlyIf(env: L_Env, node: CallOptNode): RL_Out {
+    const fixedReq = fixOpt(
+      env,
+      node,
+      this.allVars(),
+      this.onlyIfs as CallOptNode[]
+    );
+    fixedReq.v?.forEach((e) => env.YANewFactEmit(e, false));
+    return cL_Out(RType.InferTrue);
+  }
 }
 
 export class ExistNode extends TNode {

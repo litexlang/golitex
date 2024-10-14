@@ -11,6 +11,8 @@ import {
   YAProveNode,
   HaveNode,
   ExistNode,
+  DefNode,
+  InferNode,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -159,13 +161,13 @@ function callOptExec(env: L_Env, fact: CallOptNode): RL_Out {
   let info: RL_Out = cL_Out(RType.Error);
   switch (relT.type) {
     case L_NodeType.ExistNode:
-      info = callExistExec(env, fact, relT);
+      info = callExistExec(env, fact, relT as ExistNode);
       break;
     case L_NodeType.DefNode:
-      info = callDefExec(env, fact, relT);
+      info = callDefExec(env, fact, relT as DefNode);
       break;
     case L_NodeType.InferNode:
-      info = callInferExec(env, fact, relT);
+      info = callInferExec(env, fact, relT as InferNode);
       break;
   }
   if (info.v === RType.Unknown || info.v === RType.False) {
@@ -200,23 +202,17 @@ function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
  * 2. check opt requirements
  * 3. If 1. and 2. true, emit onlyIfs of relT
  */
-function callInferExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
+function callInferExec(env: L_Env, node: CallOptNode, relT: InferNode): RL_Out {
   try {
     if (!env.checkEmit(node, true)) {
       return cL_Out(RType.Unknown, `${node.toString()} itself unknown`);
     }
 
-    const fixedReq = fixOpt(env, node, relT?.allVars(), relT.allReq());
-    const isT = fixedReq.v?.every((e) => env.checkEmit(e, true));
-    if (isT) {
-      const fixedReq = fixOpt(
-        env,
-        node,
-        relT.allVars(),
-        relT.onlyIfs as CallOptNode[]
-      );
-      fixedReq.v?.forEach((e) => env.YANewFactEmit(e, false));
-      return cL_Out(RType.InferTrue);
+    let isT = relT.checkReq(env, node).v;
+    if (isNull(isT)) return cL_Out(RType.Error);
+
+    if (isT as Boolean) {
+      return relT.emitTOnlyIf(env, node);
     } else {
       return cL_Out(RType.Unknown);
     }
@@ -484,7 +480,7 @@ export function fixFree(
   }
 }
 
-function callExistExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
+function callExistExec(env: L_Env, node: CallOptNode, relT: ExistNode): RL_Out {
   try {
     const out = env.checkEmit(node, true);
     if (out.v) {
@@ -503,25 +499,13 @@ function callExistExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
  * 1. check itself.If true, emit its req
  * 2. If unknown, check its req; if true this time, emit itself
  */
-function callDefExec(env: L_Env, node: CallOptNode, relT: TNode): RL_Out {
+function callDefExec(env: L_Env, node: CallOptNode, relT: DefNode): RL_Out {
   try {
     if (env.checkEmit(node, true)) {
-      const tmp = fixOpt(env, node, relT.allVars(), relT.allReq());
-      if (isNull(tmp.v)) return cL_Out(null);
-      tmp.v.forEach((e) => env.YANewFactEmit(e));
-      return cL_Out(RType.True, "check by itself");
+      return relT.emitTOnlyIf(env, node);
     } else {
-      const tmp = fixOpt(env, node, relT.allVars(), relT.allReq());
-      if (isNull(tmp.v)) return cL_Out(null);
-      else {
-        if (tmp.v.every((opt) => callOptExec(env, opt).v === RType.True)) {
-          env.YANewFactEmit(node);
-          return cL_Out(RType.True, "check by requirements");
-        }
-      }
+      return relT.checkReq(env, node);
     }
-
-    return cL_Out(RType.Unknown);
   } catch (error) {
     return cEnvErrL_Out(env, RType.DefError);
   }
