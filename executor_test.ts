@@ -248,7 +248,15 @@ function testExecutor(testWhat: any = testCodes) {
     env.printYAFacts();
     // env.printCallOptFacts();
     // do not print templates declared in Basics
-    env.printDeclaredTemplates(["obj", "set", "set2", "F", "set3"]);
+    env.printDeclaredTemplates([
+      "obj",
+      "set",
+      "set0",
+      "p1",
+      "set2",
+      "F",
+      "set3",
+    ]);
   } else {
     console.log("\n------Error------\n");
     env.printErrorsWithDepth();

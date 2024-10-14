@@ -145,6 +145,15 @@ export abstract class TNode extends L_Node {
     return out;
   }
 
+  allNames() {
+    const out: string[] = [];
+    for (const father of this.fathers) {
+      out.push(father.name);
+    }
+    out.push(this.name);
+    return out;
+  }
+
   // If a node is DollarMarkNode or TNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfs. If there is non-def, non-call node in block, report error
   //! REFACTOR THIS SO THAT DEF IN REQ CAN APPEAR HERE.
   initDeclaredTemplates(env: L_Env, fathers: TNode[] = []): RL_Out {
@@ -259,9 +268,22 @@ export abstract class TNode extends L_Node {
   }
 
   toString(): string {
-    return `${this.name} ${this.allVars()
-      .map((ls) => ls.join(","))
-      .join(":")}`;
+    const typeName =
+      this instanceof DefNode
+        ? "def"
+        : this instanceof InferNode
+          ? "infer"
+          : "exist";
+
+    const names = this.allNames();
+    const vars = this.allVars();
+    return `
+${typeName} ${names.map((v, i) => `${v}(${vars[i].toString()})`).join(":")}
+req: ${this.allReq()
+      .map((e) => e.toString())
+      .join(", ")}
+onlyIfs: ${this.onlyIfs.map((e) => (e as CallOptNode).toString()).join(", ")}
+`;
   }
 }
 

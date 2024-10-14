@@ -41,7 +41,8 @@ export class L_Env {
   YANewFactEmit(opt: CallOptNode, emit: Boolean = true) {
     /** Much unnecessary info is stored here. e.g. The optName and optNameLst can be set to "" because the key of map already store that info. */
     if (this.yaFacts.has(opt.optName)) {
-      this.yaFacts.get(opt.optName)?.push(opt);
+      if (opt.onlyIFs.length === 0 && this.checkEmit(opt, false)) return;
+      else this.yaFacts.get(opt.optName)?.push(opt);
     } else {
       this.yaFacts.set(opt.optName, [opt]);
     }
@@ -316,18 +317,24 @@ export class L_Env {
 
   printYAFacts() {
     console.log("\n-----facts-------\n");
-    for (const fact of this.yaFacts) {
-      console.log(fact);
+    for (const [key, factUnderCurKey] of this.yaFacts) {
+      factUnderCurKey.forEach((e) => console.log(e.toString()));
     }
   }
 
   printDeclaredTemplates(doNotPrint: string[] = []) {
     console.log("\n-----template-----\n");
 
-    for (const value of this.declaredTemplates) {
-      if (doNotPrint.includes(value[0])) continue;
-      console.log(value);
-      console.log("");
+    for (const [key, tNode] of this.declaredTemplates) {
+      if (doNotPrint.includes(key)) continue;
+      printTAndSubT(tNode);
+    }
+
+    function printTAndSubT(tNode: TNode) {
+      console.log(tNode.toString());
+      for (const subTNode of tNode.declaredTemplates) {
+        printTAndSubT(subTNode[1]);
+      }
     }
   }
 
