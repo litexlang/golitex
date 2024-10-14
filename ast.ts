@@ -291,12 +291,14 @@ req: ${this.allReq()
       .join(", ")}
 onlyIfs: ${this.onlyIfs.map((e) => (e as CallOptNode).toString()).join(", ")}`;
   }
+
+  abstract checkReq(env: L_Env, node: CallOptNode, emit: Boolean): RL_Out;
 }
 
 export class DefNode extends TNode {
   type: L_NodeType = L_NodeType.DefNode;
 
-  checkReq(env: L_Env, node: CallOptNode, emit = false): RL_Out {
+  checkReq(env: L_Env, node: CallOptNode, emit: Boolean = false): RL_Out {
     const tmp = fixOpt(env, node, this.allVars(), this.allReq());
     if (isNull(tmp.v)) return cL_Out(null);
     else {
@@ -319,11 +321,11 @@ export class DefNode extends TNode {
 export class InferNode extends TNode {
   type: L_NodeType = L_NodeType.InferNode;
 
-  checkReq(env: L_Env, node: CallOptNode, emit = false): L_Out<Boolean> {
+  checkReq(env: L_Env, node: CallOptNode, emit: Boolean = false): RL_Out {
     const fixedReq = fixOpt(env, node, this.allVars(), this.allReq());
     const isT = fixedReq.v?.every((e) => env.checkEmit(e, emit));
     if (isT === undefined) return ErrL_Out;
-    else return cL_Out(isT);
+    else return cL_Out(RType.True);
   }
 
   emitTOnlyIf(env: L_Env, node: CallOptNode): RL_Out {
@@ -341,6 +343,13 @@ export class InferNode extends TNode {
 export class ExistNode extends TNode {
   type = L_NodeType.ExistNode;
   isTrue = false;
+  checkReq(env: L_Env, node: CallOptNode, emit: Boolean = false): RL_Out {
+    return ErrL_Out;
+  }
+
+  emitTOnlyIf(env: L_Env, node: CallOptNode): RL_Out {
+    return ErrL_Out;
+  }
 }
 
 export type CanBeKnownNode = FactNode | TNode;
@@ -403,11 +412,13 @@ export class YAProveNode extends L_Node {
   type = L_NodeType.ProofNode;
   opt: CallOptNode;
   proveBlock: L_Node[];
+  name: string;
 
-  constructor(opt: CallOptNode, proveBlock: L_Node[]) {
+  constructor(opt: CallOptNode, proveBlock: L_Node[], name: string = "") {
     super();
     this.opt = opt;
     this.proveBlock = proveBlock;
+    this.name = name;
   }
 }
 

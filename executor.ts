@@ -211,7 +211,7 @@ function callInferExec(env: L_Env, node: CallOptNode, relT: InferNode): RL_Out {
     let isT = relT.checkReq(env, node).v;
     if (isNull(isT)) return cL_Out(RType.Error);
 
-    if (isT as Boolean) {
+    if (isT === RType.True) {
       return relT.emitTOnlyIf(env, node);
     } else {
       return cL_Out(RType.Unknown);

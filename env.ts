@@ -42,7 +42,7 @@ export class L_Env {
    */
   checkEmit(
     opt: CallOptNode,
-    emit = true,
+    emit: Boolean = true,
     emitTo: L_Env = this
   ): L_Out<Boolean> {
     const RFacts = this.yaFacts.get(opt.optName);

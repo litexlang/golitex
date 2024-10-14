@@ -311,6 +311,7 @@ function callOptParse(
         }
       }
     } else {
+      // suchThat version of callOpt only works when !withReq
       let n = 0;
       const vars: string[][] = [[]];
       const optNames: string[] = [];
