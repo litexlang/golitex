@@ -21,7 +21,7 @@ import {
   specialChars,
   DefBlockDeclareAndCall,
   ExistKeywords,
-  SeparationBetweenSymbolsAndTheirFacts,
+  SymbolsFactsSeparator,
   ProveKeywords,
   redefineTemplateDeclarationKeywords,
 } from "./common";
@@ -194,12 +194,12 @@ function freeVarsAndTheirFactsParse(
       const freeVar = tokens.shift() as string;
       freeVars.push(freeVar);
       if (tokens[0] === ",") tokens.shift();
-      else if (tokens[0] === SeparationBetweenSymbolsAndTheirFacts) break;
+      else if (tokens[0] === SymbolsFactsSeparator) break;
       else if (tokens[0] === end) break;
       else throw Error("infer parameters");
     }
     if (!(tokens[0] === end)) {
-      skip(tokens, SeparationBetweenSymbolsAndTheirFacts);
+      skip(tokens, SymbolsFactsSeparator);
       while (!(tokens[0] === end)) {
         let node: CallOptNode;
         if (optWithReqAndOnlyIf) node = callOptParse(env, tokens, true, true);
@@ -272,6 +272,11 @@ function callOptParse(
     const opts: [string, string[]][] = [];
     const requirements: CallOptNode[][] = [];
 
+    /**
+     * There are 2 ways to parse here
+     * 1. fun(X):fun2(Y)..
+     * 2. X:Y.. is fun:fun2
+     */
     while (1) {
       const name = shiftVar(tokens) as string;
 
@@ -508,11 +513,11 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
     skip(tokens, "have");
 
     const vars: string[] = [];
-    while (!isCurToken(":", tokens)) {
+    while (!isCurToken(SymbolsFactsSeparator, tokens)) {
       vars.push(shiftVar(tokens));
       if (isCurToken(",", tokens)) skip(tokens, ",");
     }
-    skip(tokens, ":");
+    skip(tokens, SymbolsFactsSeparator);
 
     const opt = callOptParse(env, tokens, false, false);
 

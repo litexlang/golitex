@@ -1,14 +1,7 @@
 import { isNull } from "lodash";
 import { CallOptNode, InferNode, TNode } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
-import {
-  cErr_Out,
-  cL_Out,
-  fixOpt,
-  freeFixMap,
-  isL_OutErr,
-  L_Out,
-} from "./shared";
+import { cErr_Out, cL_Out, fixOpt, freeFixMap, L_Out } from "./shared";
 
 export type StoredFact = {
   vars: string[][];
@@ -24,7 +17,6 @@ export class L_Env {
   declaredVars: string[] = [];
   declaredTemplates: Map<string, TNode> = new Map<string, TNode>();
   father: L_Env | undefined;
-  // symbolsFactsPairs: StoredFact[] = [];
   yaFacts: Map<string, CallOptNode[]> = new Map<string, CallOptNode[]>();
 
   constructor(father: L_Env | undefined = undefined) {

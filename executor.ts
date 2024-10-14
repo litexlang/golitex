@@ -204,7 +204,7 @@ function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
  */
 function callInferExec(env: L_Env, node: CallOptNode, relT: InferNode): RL_Out {
   try {
-    if (!env.checkEmit(node, true)) {
+    if (!env.checkEmit(node, false)) {
       return cL_Out(RType.Unknown, `${node.toString()} itself unknown`);
     }
 
@@ -502,9 +502,11 @@ function callExistExec(env: L_Env, node: CallOptNode, relT: ExistNode): RL_Out {
 function callDefExec(env: L_Env, node: CallOptNode, relT: DefNode): RL_Out {
   try {
     if (env.checkEmit(node, true)) {
-      return relT.emitTOnlyIf(env, node);
+      return cL_Out(RType.True);
     } else {
-      return relT.checkReq(env, node);
+      const out = relT.checkReq(env, node);
+      if (out.v === RType.True) relT.emitTOnlyIf(env, node);
+      return out;
     }
   } catch (error) {
     return cEnvErrL_Out(env, RType.DefError);

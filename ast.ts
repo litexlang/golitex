@@ -296,32 +296,32 @@ onlyIfs: ${this.onlyIfs.map((e) => (e as CallOptNode).toString()).join(", ")}`;
 export class DefNode extends TNode {
   type: L_NodeType = L_NodeType.DefNode;
 
-  emitTOnlyIf(env: L_Env, node: CallOptNode): RL_Out {
-    const tmp = fixOpt(env, node, this.allVars(), this.allReq());
-    if (isNull(tmp.v)) return cL_Out(null);
-    tmp.v.forEach((e) => env.YANewFactEmit(e));
-    return cL_Out(RType.True, "check by itself");
-  }
-
-  checkReq(env: L_Env, node: CallOptNode): RL_Out {
+  checkReq(env: L_Env, node: CallOptNode, emit = false): RL_Out {
     const tmp = fixOpt(env, node, this.allVars(), this.allReq());
     if (isNull(tmp.v)) return cL_Out(null);
     else {
       if (tmp.v.every((opt) => env.checkEmit(opt).v)) {
-        env.YANewFactEmit(node);
+        env.YANewFactEmit(node, emit);
         return cL_Out(RType.True, "check by requirements");
       }
       return cL_Out(RType.Unknown);
     }
+  }
+
+  emitTOnlyIf(env: L_Env, node: CallOptNode): RL_Out {
+    const tmp = fixOpt(env, node, this.allVars(), this.allReq());
+    if (isNull(tmp.v)) return cL_Out(null);
+    tmp.v.forEach((e) => env.YANewFactEmit(e, true));
+    return cL_Out(RType.True, "check by itself");
   }
 }
 
 export class InferNode extends TNode {
   type: L_NodeType = L_NodeType.InferNode;
 
-  checkReq(env: L_Env, node: CallOptNode): L_Out<Boolean> {
+  checkReq(env: L_Env, node: CallOptNode, emit = false): L_Out<Boolean> {
     const fixedReq = fixOpt(env, node, this.allVars(), this.allReq());
-    const isT = fixedReq.v?.every((e) => env.checkEmit(e, true));
+    const isT = fixedReq.v?.every((e) => env.checkEmit(e, emit));
     if (isT === undefined) return ErrL_Out;
     else return cL_Out(isT);
   }
@@ -333,7 +333,7 @@ export class InferNode extends TNode {
       this.allVars(),
       this.onlyIfs as CallOptNode[]
     );
-    fixedReq.v?.forEach((e) => env.YANewFactEmit(e, false));
+    fixedReq.v?.forEach((e) => env.YANewFactEmit(e, true));
     return cL_Out(RType.InferTrue);
   }
 }
