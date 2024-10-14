@@ -24,7 +24,7 @@ export const testCodes = {
   // Have: "exist E(x) ; let x : E(x); have t: E(t);",
   // callDef: "let y | set0(y); set0(y); let o| obj(o); obj(o);",
   // callInfer: ":INF(x|set(x)) => obj(x); let y| INF(y), set(y); INF(y);",
-  NamedProve: "prove (THM) set(#x) => {set(x)} {set(x),set(x);}",
+  NamedProve: "prove [THM] set(#x) => {set(x)} {set(x),set(x);}",
 };
 
 export const testErrorCode = {

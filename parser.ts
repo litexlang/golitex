@@ -23,6 +23,8 @@ import {
   ProveKeywords,
   redefineTemplateDeclarationKeywords,
   suchThats,
+  byLBracket,
+  byRBracket,
 } from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -262,7 +264,8 @@ function callOptParse(
   env: L_Env,
   tokens: string[],
   withReq: Boolean = false,
-  withOnlyIf: Boolean = false
+  withOnlyIf: Boolean = false,
+  withByName: Boolean = false
 ): CallOptNode {
   const index = tokens.length;
   const start = tokens[0];
@@ -327,24 +330,6 @@ function callOptParse(
           }
         }
       }
-      // else {
-      //   while (!suchThats.includes(tokens[0])) {
-      //     vars[n].push(shiftVar(tokens));
-      //     if (isCurToken(",", tokens)) skip(tokens, ",");
-      //     else if (isCurToken(":", tokens)) {
-      //       skip(tokens, ":");
-      //       vars.push([]);
-      //       n++;
-      //     } else if (isCurToken("|", tokens)) {
-      //       requirements.push([]);
-      //       while (![...suchThats, ":"].includes(tokens[0])) {
-      //         requirements[-1].push(callOptParse(env, tokens));
-      //         if (isCurToken(",", tokens)) skip(tokens, ",");
-      //       }
-      //     }
-      //   }
-      // }
-
       skip(tokens, suchThats);
 
       optNames.push(shiftVar(tokens));
@@ -356,15 +341,27 @@ function callOptParse(
       vars.forEach((v, i) => opts.push([optNames[i], v]));
     }
 
+    let out: CallOptNode;
     if (!withOnlyIf || !isCurToken("=>", tokens))
-      return new CallOptNode(opts, requirements);
+      out = new CallOptNode(opts, requirements);
     else {
       skip(tokens, "=>");
       skip(tokens, "{");
 
       const onlyIfs: CallOptNode[] = callOptsParse(env, tokens, "}").nodes;
 
-      return new CallOptNode(opts, requirements, onlyIfs);
+      out = new CallOptNode(opts, requirements, onlyIfs);
+    }
+
+    if (!withByName) return out;
+    else {
+      if (!isCurToken("[", tokens)) return out;
+      else {
+        skip(tokens, "[");
+        out.byName = shiftVar(tokens);
+        skip(tokens, "]");
+        return out;
+      }
     }
   } catch (error) {
     handleParseError(env, "operator", index, start);
@@ -513,10 +510,10 @@ function yaProveParse(env: L_Env, tokens: string[]): YAProveNode {
   try {
     skip(tokens, ProveKeywords);
     let name = "";
-    if (isCurToken("(", tokens)) {
-      skip(tokens, "(");
+    if (isCurToken(byLBracket, tokens)) {
+      skip(tokens, byLBracket);
       name = shiftVar(tokens);
-      skip(tokens, ")");
+      skip(tokens, byRBracket);
     }
     const relatedOpt = callOptParse(env, tokens, true, true);
     const blockBrace = nonExecutableBlockParse(env, tokens);

@@ -3,6 +3,8 @@ export const specialChars = [
   ")",
   "{",
   "}",
+  "[",
+  "]",
   ":",
   ",",
   ";",
@@ -36,6 +38,8 @@ export const DefBlockDeclareAndCall = "$"; // sort of works like do in coffeeScr
 export const SymbolsFactsSeparator = "|";
 export const ProveKeywords = ["&", "prove"];
 export const suchThats = ["st", "is"];
+export const byLBracket = "[";
+export const byRBracket = "]";
 
 export const L_Keywords = [
   ...specialChars,
@@ -45,4 +49,6 @@ export const L_Keywords = [
   ...ProveKeywords,
   SymbolsFactsSeparator,
   ...suchThats,
+  byLBracket,
+  byRBracket,
 ];

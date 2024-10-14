@@ -48,11 +48,13 @@ export class CallOptNode extends L_Node {
   /**Extra features: used in know, prove*/
   req: CallOptNode[] = [];
   onlyIFs: CallOptNode[] = [];
+  byName: string = "";
 
   constructor(
     opts: [string, string[]][],
     req: CallOptNode[][] = [],
-    onlyIfs: CallOptNode[] = []
+    onlyIfs: CallOptNode[] = [],
+    byName: string = ""
   ) {
     super();
 
@@ -67,13 +69,15 @@ export class CallOptNode extends L_Node {
     name: string,
     params: string[][],
     req: CallOptNode[][] = [],
-    onlyIfs: CallOptNode[] = []
+    onlyIfs: CallOptNode[] = [],
+    byName: string = ""
   ) {
     const names = name.split(OptsConnectionSymbol);
     return new CallOptNode(
       names.map((e, i) => [e, params[i]]),
       req,
-      onlyIfs
+      onlyIfs,
+      byName
     );
   }
 
