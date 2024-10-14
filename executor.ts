@@ -13,6 +13,7 @@ import {
   ExistNode,
   DefNode,
   InferNode,
+  ByNode,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -22,6 +23,7 @@ import {
   ErrL_Out,
   fixOpt,
   isL_OutErr,
+  L_ERR,
   RL_Out,
 } from "./shared";
 
@@ -133,6 +135,8 @@ export function nodeExec(env: L_Env, node: L_Node): RL_Out {
         return proveExec(env, node as ProveNode);
       case L_NodeType.HaveNode:
         return haveExec(env, node as HaveNode);
+      case L_NodeType.ByNode:
+        return byExec(env, node as ByNode);
     }
     return cEnvErrL_Out(env, RType.Error, "Stmt");
   } catch (error) {
@@ -749,5 +753,19 @@ function proveDefExec(env: L_Env, node: ProveNode, relT: TNode): RL_Out {
     return cL_Out(RType.ProveTrue, `${node.opt.toString()}`);
   } catch (error) {
     return cEnvErrL_Out(env, RType.ProveError);
+  }
+}
+
+function byExec(env: L_Env, node: ByNode): RL_Out {
+  try {
+    const freeFact = env.bys.get(node.name);
+    if (freeFact === undefined) return cEnvErrL_Out(env, RType.ByError);
+
+    const mapping = env.useSingleFreeFactToCheck(freeFact, node.opt);
+
+    if (mapping === L_ERR) return cL_Out(RType.Unknown);
+    else return cL_Out(RType.ByTrue);
+  } catch (error) {
+    return cEnvErrL_Out(env, RType.ByError);
   }
 }

@@ -1,7 +1,7 @@
-import { isNull } from "lodash";
+import { isNull, map } from "lodash";
 import { CallOptNode, InferNode, TNode } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
-import { cErr_Out, cL_Out, fixOpt, freeFixMap, L_Out } from "./shared";
+import { cErr_Out, cL_Out, fixOpt, freeFixMap, L_ERR, L_Out } from "./shared";
 
 export type StoredFact = {
   vars: string[][];
@@ -65,38 +65,8 @@ export class L_Env {
     const relT = this.relT(opt).v as TNode;
     let isT = false;
     for (const [i, singleFact] of (RFacts as CallOptNode[]).entries()) {
-      if (!this._isLiterallyFact(singleFact.optParams, opt.optParams)) continue;
-
-      const temp = freeFixMap(singleFact.optParams, opt.optParams);
-      if (!temp.v) return cErr_Out(temp.err);
-      const mapping = temp.v;
-
-      /**
-       * Check requirements of this single fact
-       * NOTICE LITERALLY CORRECT IS NOT ENOUGH, OPT MUST SATISFIED EXTRA
-       * ONLYIFs BOUND TO THIS STORED FACT.
-       */
-      let facts: { name: string; params: string[][] }[] = singleFact.req.map(
-        (e) => {
-          return {
-            name: e.optName,
-            params: e.optParams.map((ls) =>
-              ls.map((s) => {
-                const res = mapping.get(s);
-                if (res !== undefined)
-                  return res; // replace hashVar in param list with fixed var
-                else return s; // global var unspecified in parameter list
-              })
-            ),
-          };
-        }
-      );
-
-      isT = facts.every((e) =>
-        this.checkEmit(CallOptNode.create(e.name, e.params), false)
-      );
-
-      if (!isT) continue;
+      const mapping = this.useSingleFreeFactToCheck(singleFact, opt);
+      if (mapping === undefined) continue;
 
       /** Emit onlyIfs (from opt and from relT)*/
       // ! I think this piece of code should be refactored by relT.emit
@@ -106,6 +76,47 @@ export class L_Env {
     }
 
     return isT ? cL_Out<Boolean>(true) : cL_Out<Boolean>(false);
+  }
+
+  useSingleFreeFactToCheck(
+    freeFact: CallOptNode,
+    opt: CallOptNode
+  ): Map<string, string> | L_ERR {
+    if (!this._isLiterallyFact(freeFact.optParams, opt.optParams))
+      return undefined;
+
+    const temp = freeFixMap(freeFact.optParams, opt.optParams);
+    if (!temp.v) return undefined;
+    const mapping = temp.v;
+
+    /**
+     * Check requirements of this single fact
+     * NOTICE LITERALLY CORRECT IS NOT ENOUGH, OPT MUST SATISFIED EXTRA
+     * ONLYIFs BOUND TO THIS STORED FACT.
+     */
+    let facts: { name: string; params: string[][] }[] = freeFact.req.map(
+      (e) => {
+        return {
+          name: e.optName,
+          params: e.optParams.map((ls) =>
+            ls.map((s) => {
+              const res = mapping.get(s);
+              if (res !== undefined)
+                return res; // replace hashVar in param list with fixed var
+              else return s; // global var unspecified in parameter list
+            })
+          ),
+        };
+      }
+    );
+
+    if (
+      facts.every((e) =>
+        this.checkEmit(CallOptNode.create(e.name, e.params), false)
+      )
+    ) {
+      return mapping;
+    } else return undefined;
   }
 
   private _isLiterallyFact(fact: string[][], arr2: string[][]) {

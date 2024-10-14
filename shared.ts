@@ -2,6 +2,9 @@ import { CallOptNode } from "./ast";
 import { L_Env } from "./env";
 import { hRunErr, RType } from "./executor";
 
+export const L_ERR = undefined;
+export type L_ERR = undefined;
+
 export type L_Out<T> = {
   v: T | null; // v === null works as signal of err
   err: string;

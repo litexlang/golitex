@@ -3,7 +3,7 @@
 //! as onlyIf, so you should not use the same symbol in order to avoid trouble.
 export const testCodes = {
   Basics:
-    ":obj(x) :set(x); know set(#x); :set2(x,y) :F(x,y|set(x)) {$son(h|set(h)) {set2(y,h);}} :set3(x){:set2(x)} :set0(x); know set0(#x) => {set3(x)};  : p1(x|set(x)) => {:p2(y|set2(x,y), set0(y)) => {set3(y); set(x);}}  ",
+    ":obj(x) :set(x); know set(#x); :set2(x,y) :F(x,y|set(x)) {$son(h|set(h)) {set2(y,h);}} :set3(x){:set2(x)} :set0(x); know set0(#x) => {set3(x)};  : p1(x|set(x)) => {:p2(y|set2(x,y), set0(y)) => {set3(y); set(x);}} ; :simpleInfer(x) => {}  ",
   // KnowExtendedInfer: "let A; know set3(#x: obj(x)):set2(#x) => {F(x, #E)};",
   // knowInfer: "set3(x):set2(A);",
   // KnowExtendedInfer2: "let y: set2(y: obj(y)):set3(y) => {obj(y)};",
@@ -24,7 +24,9 @@ export const testCodes = {
   // Have: "exist E(x) ; let x : E(x); have t: E(t);",
   // callDef: "let y | set0(y); set0(y); let o| obj(o); obj(o);",
   // callInfer: ":INF(x|set(x)) => obj(x); let y| INF(y), set(y); INF(y);",
-  NamedProve: "prove [THM] set(#x) => {set(x)} {set(x),set(x);}",
+  // NamedProve: "prove [THM] set(#x) => {set(x)} {set(x),set(x);}",
+  easyProve: "prove [certainProof] simpleInfer(#x) {}; let x;",
+  by: " by certainProof simpleInfer(x); ",
 };
 
 export const testErrorCode = {
