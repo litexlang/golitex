@@ -3,7 +3,6 @@ import { nodeExec, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { L_StmtsParse } from "./parser";
 import { isL_OutErr, RL_Out } from "./shared";
-import { setTheory } from "./tao_analysis_one";
 import { testCodes, testErrorCode } from "./test_code";
 
 const codes: string[] = [
