@@ -1,12 +1,5 @@
 import { isNull } from "lodash";
-import {
-  CallOptNode,
-  DefNode,
-  InferNode,
-  L_Node,
-  TNode,
-  makeTemplateNodeFact,
-} from "./ast";
+import { CallOptNode, InferNode, TNode } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import {
   cErr_Out,
