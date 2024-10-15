@@ -643,6 +643,7 @@ function thmParse(env: L_Env, tokens: string[]): ThmNode {
   }
 }
 
+// all facts here are vanilla, which means they are of form opt(...)
 function reqOnlyIfFactParse(env: L_Env, tokens: string[]): FactNode {
   const start = tokens[0];
   const index = tokens.length;
