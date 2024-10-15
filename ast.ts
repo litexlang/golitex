@@ -3,11 +3,12 @@ import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
 import { hInfo, RType } from "./executor";
 import {
-  cEnvErrL_Out,
+  cEnvRType,
   cL_Out,
   ErrL_Out,
   fixOpt,
   L_Out,
+  relTNotFoundEnvErr,
   RL_Out,
 } from "./shared";
 
@@ -181,7 +182,7 @@ export abstract class TNode extends L_Node {
 
   // If a node is DollarMarkNode or TNode, i.e. it is the son template of this, then it is pushed into this.declaredTemplates and it is removed from this.onlyIfs. If there is non-def, non-call node in block, report error
   //! REFACTOR THIS SO THAT DEF IN REQ CAN APPEAR HERE.
-  initDeclaredTemplates(env: L_Env, fathers: TNode[] = []): RL_Out {
+  initDeclaredTemplates(env: L_Env, fathers: TNode[] = []): RType {
     this.fathers = fathers;
 
     // process DollarMarks
@@ -206,11 +207,7 @@ export abstract class TNode extends L_Node {
       const value = this.onlyIfs[i];
       if (value instanceof TNode) {
         if (L_Keywords.includes(value.name))
-          return cEnvErrL_Out(
-            env,
-            RType.DefError,
-            `Template '${value.name}' is L_ keyword.`
-          );
+          return cEnvRType(env, RType.Error, ``);
         value.initDeclaredTemplates(env, [...fathers, this]);
         this.declaredTemplates.set(value.name, value);
         this.onlyIfs.splice(i, 1);
@@ -235,14 +232,14 @@ export abstract class TNode extends L_Node {
     // make sure everything is done well.
     for (let i = 0; i < this.onlyIfs.length; i++) {
       if (!(this.onlyIfs[i] instanceof FactNode)) {
-        return cEnvErrL_Out(
+        return cEnvRType(
           env,
-          RType.DefError,
+          RType.Error,
           `arguments of def block should have type callOpt-type or def-type.`
         );
       }
     }
-    return cL_Out(RType.DefTrue);
+    return RType.DefTrue;
 
     // function insertListIntoListAndDeleteElemOnIndex<T>(
     //   originalList: T[],
@@ -331,43 +328,44 @@ export abstract class TNode extends L_Node {
     return result;
   }
 
-  abstract checkReq(env: L_Env, node: FactNode, emit: Boolean): RL_Out;
+  abstract checkReq(env: L_Env, node: FactNode, emit: Boolean): RType;
+  abstract emitTOnlyIf(env: L_Env, node: FactNode): RType;
 }
 
 export class DefNode extends TNode {
   // type: L_NodeType = L_NodeType.DefNode;
 
-  checkReq(env: L_Env, node: FactNode, emit: Boolean = false): RL_Out {
+  checkReq(env: L_Env, node: FactNode, emit: Boolean = false): RType {
     const tmp = fixOpt(env, node, this.allVars(), this.allReq());
-    if (isNull(tmp.v)) return cL_Out(null);
+    if (isNull(tmp.v)) return relTNotFoundEnvErr(env, node);
     else {
       if (tmp.v.every((opt) => env.checkEmit(opt).v)) {
         env.newFactEmit(node, emit);
-        return cL_Out(RType.True, "check by requirements");
+        return RType.True;
       }
-      return cL_Out(RType.Unknown);
+      return RType.Unknown;
     }
   }
 
-  emitTOnlyIf(env: L_Env, node: FactNode): RL_Out {
+  emitTOnlyIf(env: L_Env, node: FactNode): RType {
     const tmp = fixOpt(env, node, this.allVars(), this.allReq());
-    if (isNull(tmp.v)) return cL_Out(null);
+    if (isNull(tmp.v)) return relTNotFoundEnvErr(env, node);
     tmp.v.forEach((e) => env.newFactEmit(e, true));
-    return cL_Out(RType.True, "check by itself");
+    return RType.True;
   }
 }
 
 export class InferNode extends TNode {
   // type: L_NodeType = L_NodeType.InferNode;
 
-  checkReq(env: L_Env, node: FactNode, emit: Boolean = false): RL_Out {
+  checkReq(env: L_Env, node: FactNode, emit: Boolean = false): RType {
     const fixedReq = fixOpt(env, node, this.allVars(), this.allReq());
     const isT = fixedReq.v?.every((e) => env.checkEmit(e, emit));
-    if (isT === undefined) return ErrL_Out;
-    else return cL_Out(RType.True);
+    if (isT === undefined) return relTNotFoundEnvErr(env, node);
+    else return RType.True;
   }
 
-  emitTOnlyIf(env: L_Env, node: FactNode): RL_Out {
+  emitTOnlyIf(env: L_Env, node: FactNode): RType {
     const fixedReq = fixOpt(
       env,
       node,
@@ -375,19 +373,19 @@ export class InferNode extends TNode {
       this.onlyIfs as FactNode[]
     );
     fixedReq.v?.forEach((e) => env.newFactEmit(e, true));
-    return cL_Out(RType.InferTrue);
+    return RType.InferTrue;
   }
 }
 
 export class ExistNode extends TNode {
   // type = L_NodeType.ExistNode;
   isTrue = false;
-  checkReq(env: L_Env, node: FactNode, emit: Boolean = false): RL_Out {
-    return ErrL_Out;
+  checkReq(env: L_Env, node: FactNode, emit: Boolean = false): RType {
+    return RType.Error;
   }
 
-  emitTOnlyIf(env: L_Env, node: FactNode): RL_Out {
-    return ErrL_Out;
+  emitTOnlyIf(env: L_Env, node: FactNode): RType {
+    return RType.Error;
   }
 }
 

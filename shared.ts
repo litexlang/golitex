@@ -28,17 +28,21 @@ export function cErr_Out(err: string = "Error") {
   return { v: null, err: err };
 }
 
-export function cNoRelTErr_Out(opt: FactNode) {
-  return { v: null, err: `${opt.optName} undeclared.` };
+// export function cNoRelTErr_Out(opt: FactNode) {
+//   return { v: null, err: `${opt.optName} undeclared.` };
+// }
+
+export function cEnvRType(
+  env: L_Env,
+  t: RType = RType.Error,
+  m: string = ""
+): RType {
+  hRunErr(env, t, m);
+  return t;
 }
 
-export function cEnvErrL_Out(
-  env: L_Env,
-  t: RType,
-  m: string = ""
-): L_Out<RType> {
-  hRunErr(env, t, m);
-  return cL_Out<RType>(null);
+export function relTNotFoundEnvErr(env: L_Env, node: FactNode): RType {
+  return cEnvRType(env, RType.Error, `${FactNode.toString()} undeclared`);
 }
 
 export type RL_Out = L_Out<RType> | L_Out<null>;
@@ -118,4 +122,8 @@ export function hRemoveHashPrefix(arr: string[][]): string[][] {
   return (arr as string[][]).map((ls) =>
     ls.map((s) => (s.startsWith("#") ? s.slice(1) : s))
   );
+}
+
+export function isRTypeErr(r: RType) {
+  return r === RType.Error;
 }

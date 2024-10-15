@@ -2,7 +2,7 @@ import { L_Env } from "./env";
 import { nodeExec, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { L_StmtsParse } from "./parser";
-import { isL_OutErr, RL_Out } from "./shared";
+import { isL_OutErr, isRTypeErr, RL_Out } from "./shared";
 import { setTheory } from "./tao_analysis_one";
 import { testCodes, testErrorCode } from "./test_code";
 
@@ -191,7 +191,7 @@ function testError(asIfRight = false) {
         env.printErrorsWithDepth();
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res: RL_Out = nodeExec(env, result[i]);
+          const res = nodeExec(env, result[i]);
         }
       }
       if (env.errorsWithDepth.length === 0) {
@@ -211,8 +211,8 @@ function testError(asIfRight = false) {
         env.printErrorsWithDepth();
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res: RL_Out = nodeExec(env, result[i]);
-          if (isL_OutErr(res)) console.log(RTypeMap[res.v as RType]);
+          const res = nodeExec(env, result[i]);
+          if (isRTypeErr(res)) console.log(RTypeMap[res as RType]);
           else console.log(env.errors);
         }
       }
@@ -234,16 +234,16 @@ function testExecutor(testWhat: any = testCodes) {
       env.printErrorsWithDepth();
     } else {
       for (let i = 0; i < result.length; i++) {
-        const res: RL_Out = nodeExec(env, result[i]) as RL_Out;
+        const res = nodeExec(env, result[i]);
         if (key !== "Basics") {
-          if (isL_OutErr(res)) {
+          if (isRTypeErr(res)) {
             console.log(env.errorsWithDepth.map((e) => e[0]).join("\n"));
             // clean errors
             env.errorsWithDepth = [];
           } else {
-            if (RTypeMap[res.v as RType].length > 0)
-              console.log(`${RTypeMap[res.v as RType]} '${res.err}'`);
-            else console.log(`${res.err}`);
+            if (RTypeMap[res as RType].length > 0)
+              console.log(`${RTypeMap[res as RType]} '${res}'`);
+            else console.log(`${res}`);
           }
         }
       }
