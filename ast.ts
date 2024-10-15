@@ -12,37 +12,37 @@ import {
 } from "./shared";
 
 //? There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
-export enum L_NodeType {
-  Error,
-  Node,
+// export enum L_NodeType {
+//   Error,
+//   Node,
 
-  FactNode,
-  // CallOptsNode,
+//   FactNode,
+//   // CallOptsNode,
 
-  KnowNode,
-  HaveNode,
-  LetNode,
+//   KnowNode,
+//   HaveNode,
+//   LetNode,
 
-  ProofNode,
-  CheckInProof,
-  ImpliesFactNode,
+//   ProofNode,
+//   CheckInProof,
+//   ImpliesFactNode,
 
-  InferNode,
-  DefNode,
-  ExistNode,
+//   InferNode,
+//   DefNode,
+//   ExistNode,
 
-  FreeVarsWithFactsNode,
-  DollarMarkNode,
-  ByNode,
-  ThmNode,
-}
+//   FreeVarsWithFactsNode,
+//   DollarMarkNode,
+//   ByNode,
+//   ThmNode,
+// }
 
 export abstract class L_Node {
-  type: L_NodeType = L_NodeType.Node;
+  // type: L_NodeType = L_NodeType.Node;
 }
 
 export class FactNode extends L_Node {
-  type: L_NodeType = L_NodeType.FactNode;
+  // type: L_NodeType = L_NodeType.FactNode;
   optName: string;
   optParams: string[][];
   optNameAsLst: string[];
@@ -120,7 +120,7 @@ export function makeTemplateNodeFact(
 
 // Main data structure of the whole project
 export abstract class TNode extends L_Node {
-  type: L_NodeType = L_NodeType.InferNode;
+  // type: L_NodeType = L_NodeType.InferNode;
   name: string;
   freeVars: string[];
   requirements: FactNode[] = [];
@@ -234,7 +234,7 @@ export abstract class TNode extends L_Node {
 
     // make sure everything is done well.
     for (let i = 0; i < this.onlyIfs.length; i++) {
-      if (this.onlyIfs[i].type !== L_NodeType.FactNode) {
+      if (!(this.onlyIfs[i] instanceof FactNode)) {
         return cEnvErrL_Out(
           env,
           RType.DefError,
@@ -335,7 +335,7 @@ export abstract class TNode extends L_Node {
 }
 
 export class DefNode extends TNode {
-  type: L_NodeType = L_NodeType.DefNode;
+  // type: L_NodeType = L_NodeType.DefNode;
 
   checkReq(env: L_Env, node: FactNode, emit: Boolean = false): RL_Out {
     const tmp = fixOpt(env, node, this.allVars(), this.allReq());
@@ -358,7 +358,7 @@ export class DefNode extends TNode {
 }
 
 export class InferNode extends TNode {
-  type: L_NodeType = L_NodeType.InferNode;
+  // type: L_NodeType = L_NodeType.InferNode;
 
   checkReq(env: L_Env, node: FactNode, emit: Boolean = false): RL_Out {
     const fixedReq = fixOpt(env, node, this.allVars(), this.allReq());
@@ -380,7 +380,7 @@ export class InferNode extends TNode {
 }
 
 export class ExistNode extends TNode {
-  type = L_NodeType.ExistNode;
+  // type = L_NodeType.ExistNode;
   isTrue = false;
   checkReq(env: L_Env, node: FactNode, emit: Boolean = false): RL_Out {
     return ErrL_Out;
@@ -393,7 +393,7 @@ export class ExistNode extends TNode {
 
 export type CanBeKnownNode = FactNode | TNode;
 export class KnowNode extends L_Node {
-  type: L_NodeType = L_NodeType.KnowNode;
+  // type: L_NodeType = L_NodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
   isKnowEverything: Boolean = false;
 
@@ -413,7 +413,7 @@ export class KnowNode extends L_Node {
 //   Not,
 // }
 // export class CallOptsNode extends L_Node {
-//   type: L_NodeType = L_NodeType.CallOptsNode;
+// type: L_NodeType = L_NodeType.CallOptsNode;
 //   nodes: (FactNode | CallOptsNode)[] = [];
 //   factType: CallOptsNodeType = CallOptsNodeType.And;
 
@@ -424,7 +424,7 @@ export class KnowNode extends L_Node {
 // }
 
 export class LetNode extends L_Node {
-  type: L_NodeType = L_NodeType.LetNode;
+  // type: L_NodeType = L_NodeType.LetNode;
   vars: string[];
   properties: FactNode[];
 
@@ -441,7 +441,7 @@ export class LetNode extends L_Node {
 
 // Declare and call at the same time.
 export class DollarMarkNode extends L_Node {
-  type = L_NodeType.DollarMarkNode;
+  // type = L_NodeType.DollarMarkNode;
   template: TNode;
 
   constructor(template: TNode) {
@@ -451,7 +451,7 @@ export class DollarMarkNode extends L_Node {
 }
 
 export class ProveNode extends L_Node {
-  type = L_NodeType.ProofNode;
+  // type = L_NodeType.ProofNode;
   opt: FactNode;
   proveBlock: L_Node[];
   name: string;
@@ -465,7 +465,7 @@ export class ProveNode extends L_Node {
 }
 
 export class HaveNode extends L_Node {
-  type = L_NodeType.HaveNode;
+  // type = L_NodeType.HaveNode;
   vars: string[];
   opt: FactNode;
   constructor(vars: string[], opt: FactNode) {
@@ -476,7 +476,7 @@ export class HaveNode extends L_Node {
 }
 
 export class ByNode extends L_Node {
-  type = L_NodeType.ByNode;
+  // type = L_NodeType.ByNode;
   name: string;
   opt: FactNode;
 
@@ -488,7 +488,7 @@ export class ByNode extends L_Node {
 }
 
 export class ThmNode extends L_Node {
-  type = L_NodeType.ThmNode;
+  // type = L_NodeType.ThmNode;
   opt: FactNode;
   proveBlock: L_Node[];
 

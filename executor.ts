@@ -3,7 +3,7 @@ import {
   FactNode,
   KnowNode,
   L_Node,
-  L_NodeType,
+  // L_NodeType,
   LetNode,
   CanBeKnownNode,
   TNode,
@@ -117,26 +117,24 @@ export const hFixFreeErr = (
 
 export function nodeExec(env: L_Env, node: L_Node): RL_Out {
   try {
-    switch (node.type) {
-      case L_NodeType.DefNode:
-      case L_NodeType.InferNode:
-      case L_NodeType.ExistNode:
-        return templateDeclExec(env, node as TNode);
-      case L_NodeType.KnowNode:
-        return knowExec(env, node as KnowNode);
-      // case L_NodeType.CallOptsNode:
-      //   return callOptsExec(env, node as CallOptsNode);
-      case L_NodeType.LetNode:
-        return letExec(env, node as LetNode);
-      case L_NodeType.ProofNode:
-        // return hInfo(RType.True);
-        return proveExec(env, node as ProveNode);
-      case L_NodeType.HaveNode:
-        return haveExec(env, node as HaveNode);
-      case L_NodeType.ByNode:
-        return byExec(env, node as ByNode);
-      case L_NodeType.ThmNode:
-        return thmExec(env, node as ThmNode);
+    if (
+      node instanceof DefNode ||
+      node instanceof InferNode ||
+      node instanceof ExistNode
+    ) {
+      return templateDeclExec(env, node as TNode);
+    } else if (node instanceof KnowNode) {
+      return knowExec(env, node as KnowNode);
+    } else if (node instanceof LetNode) {
+      return letExec(env, node as LetNode);
+    } else if (node instanceof ProveNode) {
+      return proveExec(env, node as ProveNode);
+    } else if (node instanceof HaveNode) {
+      return haveExec(env, node as HaveNode);
+    } else if (node instanceof ByNode) {
+      return byExec(env, node as ByNode);
+    } else if (node instanceof ThmNode) {
+      return thmExec(env, node as ThmNode);
     }
     return cEnvErrL_Out(env, RType.Error, "Stmt");
   } catch (error) {
@@ -174,16 +172,12 @@ function callOptExec(env: L_Env, fact: FactNode): RL_Out {
   if (!relT)
     return cEnvErrL_Out(env, RType.Error, `${fact.optName} is not declared.`);
   let info: RL_Out = cL_Out(RType.Error);
-  switch (relT.type) {
-    case L_NodeType.ExistNode:
-      info = callExistExec(env, fact, relT as ExistNode);
-      break;
-    case L_NodeType.DefNode:
-      info = callDefExec(env, fact, relT as DefNode);
-      break;
-    case L_NodeType.InferNode:
-      info = callInferExec(env, fact, relT as InferNode);
-      break;
+  if (relT instanceof ExistNode) {
+    info = callExistExec(env, fact, relT);
+  } else if (relT instanceof DefNode) {
+    info = callDefExec(env, fact, relT);
+  } else if (relT instanceof InferNode) {
+    info = callInferExec(env, fact, relT);
   }
   if (info.v === RType.Unknown || info.v === RType.False) {
     return info;
@@ -254,16 +248,7 @@ function templateDeclExec(env: L_Env, node: TNode): RL_Out {
     let res = node.initDeclaredTemplates(env);
     if (isNull(res.v)) return cEnvErrL_Out(env, RType.DefError);
 
-    switch (node.type) {
-      case L_NodeType.DefNode:
-        return cL_Out(RType.DefTrue, `def ${node.toString()}`);
-      case L_NodeType.ExistNode:
-        return cL_Out(RType.DefTrue, `exist ${node.toString()}`);
-      case L_NodeType.InferNode:
-        return cL_Out(RType.DefTrue, `infer ${node.toString()}`);
-    }
-
-    return cL_Out(RType.Error);
+    return cL_Out(RType.DefTrue, `${node.toString()}`);
   } catch (error) {
     return cEnvErrL_Out(env, RType.DefError);
   }
@@ -275,38 +260,28 @@ function knowExec(env: L_Env, node: KnowNode): RL_Out {
     let isKnowEverything: Boolean = false;
     let res: RL_Out = { v: RType.Error, err: "" };
 
-    if (node.type === L_NodeType.KnowNode) {
+    if (node instanceof KnowNode) {
       facts = (node as KnowNode).facts;
       isKnowEverything = (node as KnowNode).isKnowEverything;
     }
 
     for (const fact of facts) {
-      switch (fact.type) {
-        case L_NodeType.FactNode:
-          if (isKnowEverything)
-            res = knowEverythingCallOptExec(env, fact as FactNode);
-          else res = knowCallOptExec(env, fact as FactNode);
-          break;
-        // case L_NodeType.ImpliesFactNode:
-        //   res = knowImpliesFactExec(env, fact as ImpliesFactNode);
-        //   break;
-        case L_NodeType.DefNode:
-        case L_NodeType.InferNode: {
-          res = templateDeclExec(env, fact as TNode);
-          if (isKnowEverything) {
-            res = knowEverythingCallOptExec(
-              env,
-              FactNode.create((fact as TNode).name, [(fact as TNode).freeVars])
-            );
-          } else {
-            res = knowCallOptExec(
-              env,
-              FactNode.create((fact as TNode).name, [(fact as TNode).freeVars])
-            );
-          }
-          break;
+      if (fact instanceof FactNode) {
+        if (isKnowEverything) {
+          res = knowEverythingCallOptExec(env, fact);
+        } else {
+          res = knowCallOptExec(env, fact);
+        }
+      } else if (fact instanceof DefNode || fact instanceof InferNode) {
+        res = templateDeclExec(env, fact);
+        const factNode = FactNode.create(fact.name, [fact.freeVars]);
+        if (isKnowEverything) {
+          res = knowEverythingCallOptExec(env, factNode);
+        } else {
+          res = knowCallOptExec(env, factNode);
         }
       }
+      // The commented-out ImpliesFactNode case has been omitted
       if (isNull(res.v)) return res;
     }
 
@@ -527,11 +502,10 @@ function callDefExec(env: L_Env, node: FactNode, relT: DefNode): RL_Out {
 function proveExec(env: L_Env, node: ProveNode): RL_Out {
   try {
     const relatedT = env.getRelT(node.opt.optName);
-    switch (relatedT?.type) {
-      case L_NodeType.InferNode:
-        return proveInferExec(env, node, relatedT);
-      case L_NodeType.DefNode:
-        return proveDefExec(env, node, relatedT);
+    if (relatedT instanceof InferNode) {
+      return proveInferExec(env, node, relatedT);
+    } else if (relatedT instanceof DefNode) {
+      return proveDefExec(env, node, relatedT);
     }
 
     return cEnvErrL_Out(
