@@ -273,6 +273,6 @@ function testExecutor(testWhat: any = testCodes) {
   }
 }
 
-testExecutor(setTheory);
-// testExecutor(testCodes);
+// testExecutor(setTheory);
+testExecutor(testCodes);
 // testError();
