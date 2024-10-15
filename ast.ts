@@ -239,7 +239,7 @@ export abstract class TNode extends L_Node {
         );
       }
     }
-    return RType.DefTrue;
+    return RType.True;
 
     // function insertListIntoListAndDeleteElemOnIndex<T>(
     //   originalList: T[],
@@ -373,7 +373,7 @@ export class InferNode extends TNode {
       this.onlyIfs as FactNode[]
     );
     fixedReq.v?.forEach((e) => env.newFactEmit(e, true));
-    return RType.InferTrue;
+    return RType.True;
   }
 }
 

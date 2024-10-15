@@ -31,30 +31,30 @@ import {
 export enum RType {
   Error,
   True, // not only used as True for callInferExec, but also as a generic type passed between subFunctions.
-  KnowTrue,
+  // KnowTrue,
   // KnowError,
   KnowUndeclared,
-  DefTrue,
+  // DefTrue,
   // DefError,
-  InferTrue,
+  // InferTrue,
   // InferError,
   False,
   Unknown,
   // Error,
-  HaveTrue,
+  // HaveTrue,
   HaveFailed,
-  LetTrue,
+  // LetTrue,
   // LetError,
   // Error,
-  ProveTrue,
+  // ProveTrue,
   ProveFailed,
-  KnowEverythingTrue,
+  // KnowEverythingTrue,
   // KnowEverythingError,
   // ExistError,
-  ExistTrue,
+  // ExistTrue,
   // ByError,
-  ByTrue,
-  ThmTrue,
+  // ByTrue,
+  // ThmTrue,
   ThmFailed,
   // ThmError,
 }
@@ -64,30 +64,30 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.False]: "check: false",
   [RType.True]: "check: true",
   [RType.Unknown]: "check: unknown",
-  [RType.KnowTrue]: "",
-  [RType.DefTrue]: "",
+  // [RType.KnowTrue]: "",
+  // [RType.DefTrue]: "",
   // [RType.KnowError]: "know: error",
   // [RType.DefError]: "def: error",
   // [RType.InferError]: "infer: error",
-  [RType.InferTrue]: "",
+  // [RType.InferTrue]: "",
   [RType.KnowUndeclared]: "know: undeclared opt",
   // [RType.HaveError]: "have: error",
-  [RType.HaveTrue]: "have: true",
+  // [RType.HaveTrue]: "have: true",
   [RType.HaveFailed]: "have: failed",
   // [RType.LetError]: "let: error",
-  [RType.LetTrue]: "",
+  // [RType.LetTrue]: "",
   // [RType.ProveError]: "prove: error",
-  [RType.ProveTrue]: "prove: true",
+  // [RType.ProveTrue]: "prove: true",
   [RType.ProveFailed]: "prove: failed",
   // [RType.KnowEverythingError]: "know_everything: error",
-  [RType.KnowEverythingTrue]: "know_everything: true",
+  // [RType.KnowEverythingTrue]: "know_everything: true",
   // [RType.ExistError]: "exist: error",
-  [RType.ExistTrue]: "exist: true",
+  // [RType.ExistTrue]: "exist: true",
   // [RType.ByError]: "by: error",
-  [RType.ByTrue]: "by: true",
+  // [RType.ByTrue]: "by: true",
   // [RType.ThmError]: "thm: error",
   [RType.ThmFailed]: "thm: failed",
-  [RType.ThmTrue]: "thm: true",
+  // [RType.ThmTrue]: "thm: true",
 };
 
 export function hRunErr(env: L_Env, type: RType, message: string | null = "") {
@@ -184,7 +184,7 @@ function letExec(env: L_Env, node: LetNode): RType {
       if (isNull(info)) return cEnvRType(env, RType.Error);
     }
 
-    return RType.LetTrue;
+    return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error, "let");
   }
@@ -268,7 +268,7 @@ function templateDeclExec(env: L_Env, node: TNode): RType {
     let res = node.initDeclaredTemplates(env);
     if (isRTypeErr(res)) return cEnvRType(env, RType.Error);
 
-    return RType.DefTrue;
+    return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error);
   }
@@ -305,7 +305,7 @@ function knowExec(env: L_Env, node: KnowNode): RType {
       if (isRTypeErr(res)) return res;
     }
 
-    return RType.KnowTrue;
+    return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error, "know");
   }
@@ -313,7 +313,7 @@ function knowExec(env: L_Env, node: KnowNode): RType {
 
 function knowEverythingCallOptExec(env: L_Env, fact: FactNode): RType {
   try {
-    return RType.KnowTrue;
+    return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error, "");
   }
@@ -336,7 +336,7 @@ function knowCallOptExec(env: L_Env, node: FactNode): RType {
     else env.newFactEmit(node, false);
 
     // env.newFactEmit()
-    return RType.KnowTrue;
+    return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error);
   }
@@ -369,7 +369,7 @@ function haveExec(env: L_Env, node: HaveNode): RType {
       else {
         node.vars.forEach((e) => env.newVar(e));
         env.newFactEmit(node.opt, true);
-        return RType.HaveTrue;
+        return RType.True;
       }
     }
 
@@ -491,7 +491,7 @@ function callExistExec(env: L_Env, node: FactNode, relT: ExistNode): RType {
     const out = env.checkEmit(node, true);
     if (out.v) {
       // relT.isTrue = true is updated in haveExec
-      return RType.ExistTrue;
+      return RType.True;
     } else {
       return RType.Unknown;
     }
@@ -623,7 +623,7 @@ function proveInferExec(env: L_Env, node: ProveNode, relT: TNode): RType {
 
     if (node.name !== "") env.newBy(node.name, node.opt);
 
-    return RType.ProveTrue;
+    return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error);
   }
@@ -722,7 +722,7 @@ function proveDefExec(env: L_Env, node: ProveNode, relT: TNode): RType {
 
     if (node.name !== "") env.newBy(node.name, node.opt);
 
-    return RType.ProveTrue;
+    return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error);
   }
@@ -736,7 +736,7 @@ function byExec(env: L_Env, node: ByNode): RType {
     const mapping = env.useSingleFreeFactToCheck(freeFact, node.opt);
 
     if (mapping === UdfErr) return RType.Unknown;
-    else return RType.ByTrue;
+    else return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error);
   }
@@ -760,12 +760,12 @@ function thmExec(env: L_Env, node: ThmNode): RType {
     );
     let isT = templateDeclExec(env, relT);
 
-    if (isT !== RType.DefTrue) return cEnvRType(env, RType.Error);
+    if (isT !== RType.True) return cEnvRType(env, RType.Error);
 
     isT = proveInferExec(env, new ProveNode(node.opt, node.proveBlock), relT);
-    if (isT !== RType.ProveTrue) return RType.ThmFailed;
+    if (isT !== RType.True) return RType.ThmFailed;
 
-    return RType.ThmTrue;
+    return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error);
   }
