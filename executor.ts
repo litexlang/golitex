@@ -116,25 +116,35 @@ export const hFixFreeErr = (
   else return hInfo(type, `fail to instantiate ${opt}`);
 };
 
-export function nodePrintExec(env: L_Env, node: L_Node): RType {
-  const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
-    DefNode: templateDeclExec,
-    InferNode: templateDeclExec,
-    ExistNode: templateDeclExec,
-    KnowNode: knowExec,
-    LetNode: letExec,
-    ProveNode: proveExec,
-    HaveNode: haveExec,
-    ByNode: byExec,
-    ThmNode: thmExec,
-  };
+const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
+  DefNode: templateDeclExec,
+  InferNode: templateDeclExec,
+  ExistNode: templateDeclExec,
+  KnowNode: knowExec,
+  LetNode: letExec,
+  ProveNode: proveExec,
+  HaveNode: haveExec,
+  ByNode: byExec,
+  ThmNode: thmExec,
+};
 
+export function nodePrintExec(env: L_Env, node: L_Node): RType {
   try {
     const nodeType = node.constructor.name;
     const execFunc = nodeExecMap[nodeType];
 
-    if (execFunc && isRTypeTrue(execFunc(env, node))) {
+    if (execFunc && isRTypeTrue(execFunc(env, node)))
       return successMesIntoEnv(env, node);
+    else {
+      const result = callOptExec(env, node as FactNode);
+      if (isRTypeTrue(result)) return successMesIntoEnv(env, node);
+      else if (result === RType.Unknown) {
+        env.newMessage(`Unknown ${node.toString()}`);
+        return RType.Unknown;
+      } else if (result === RType.False) {
+        env.newMessage(`False ${node.toString()}`);
+        return RType.False;
+      }
     }
 
     return RType.Error;

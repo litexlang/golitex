@@ -238,13 +238,11 @@ function testExecutor(testWhat: any = testCodes) {
         if (key !== "Basics") {
           if (isRTypeErr(res)) {
             console.log(env.messages);
-            // clean errors
-            env.messages = [];
           } else {
             console.log(env.messages.at(-1));
-            env.messages = [];
           }
         }
+        env.messages = [];
       }
     }
   }
