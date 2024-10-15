@@ -28,9 +28,9 @@ export const testCodes = {
   // easyProve: "prove [certainProof] simpleInfer(#x) {}; let x;",
   // by: " by certainProof simpleInfer(x); ",
   // thm: "thm thm_infer(#x) => {set(x)} {set(x);}",
-  // is: "let x\n x is obj; x is set;",
-  setEqual:
-    ": item(x,A| set(A)) => {} : setEqual(A,B| set(A), set(B)) => {item(#x, A) => item(x, B); item(#x, B) => item(x, A);}",
+  is: "let x\n x is obj; x is set; :tmp (x|set(x)) => {set(x);}",
+  // setEqual:
+  //   ": item(x,A| set(A)) => {} : setEqual(A,B| set(A), set(B)) => {item(#x, A) => item(x, B); item(#x, B) => item(x, A);}",
 };
 
 export const testErrorCode = {

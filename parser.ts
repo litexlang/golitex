@@ -1,6 +1,6 @@
 import {
-  CallOptNode,
-  CallOptsNode,
+  FactNode,
+  // CallOptsNode,
   InferNode,
   ExistNode,
   KnowNode,
@@ -74,7 +74,7 @@ function handleParseError(
 }
 
 const KeywordFunctionMap: {
-  [key: string]: (env: L_Env, tokens: string[]) => any;
+  [key: string]: Function; // (env: L_Env, tokens: string[]) => any;
 } = {
   ";": (env: L_Env, tokens: string[]) => {
     tokens.shift();
@@ -114,10 +114,7 @@ export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
     const result: L_Node[] = [];
 
     while (tokens.length > 0) {
-      const node = LiTexStmtParse(env, tokens);
-      if (node) {
-        result.push(node);
-      }
+      LiTexStmtParse(env, tokens, result);
     }
     return result;
   } catch (error) {
@@ -125,7 +122,11 @@ export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
   }
 }
 
-export function LiTexStmtParse(env: L_Env, tokens: string[]): L_Node | null {
+export function LiTexStmtParse(
+  env: L_Env,
+  tokens: string[],
+  putInto: L_Node[]
+) {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -138,13 +139,13 @@ export function LiTexStmtParse(env: L_Env, tokens: string[]): L_Node | null {
         skip(tokens, StdStmtEnds);
       }
       if (node) {
-        return node;
+        putInto.push(node);
       } else {
-        return null;
+        return;
       }
     } else {
-      const node = callOptsParse(env, tokens);
-      return node;
+      callOptsParse(env, tokens, putInto);
+      return;
     }
   } catch (error) {
     handleParseError(env, "Stmt", index, start);
@@ -170,7 +171,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
           break;
         default:
           node = callOptParse(env, tokens, true, true);
-          knowNode.facts.push(node as CallOptNode);
+          knowNode.facts.push(node as FactNode);
       }
 
       if (tokens[0] === ",") skip(tokens, ",");
@@ -191,8 +192,8 @@ function freeVarsAndTheirFactsParse(
   begin: string = "(",
   end: string[] = [")"],
   optWithReqAndOnlyIf: Boolean = false
-): { freeVars: string[]; properties: CallOptNode[] } {
-  const requirements: CallOptNode[] = [];
+): { freeVars: string[]; properties: FactNode[] } {
+  const requirements: FactNode[] = [];
   const freeVars: string[] = [];
 
   skip(tokens, begin);
@@ -209,10 +210,10 @@ function freeVarsAndTheirFactsParse(
     if (!end.includes(tokens[0])) {
       skip(tokens, SymbolsFactsSeparator);
       while (!end.includes(tokens[0])) {
-        let node: CallOptNode;
+        let node: FactNode;
         if (optWithReqAndOnlyIf) node = callOptParse(env, tokens, true, true);
         else node = callOptParse(env, tokens);
-        if (node) requirements.push(node as CallOptNode);
+        if (node) requirements.push(node as FactNode);
 
         if (tokens[0] === ",") tokens.shift();
         if (end.includes(tokens[0])) break;
@@ -253,9 +254,7 @@ function blockParse(env: L_Env, tokens: string[]): L_Node[] {
         const node = questionMarkParse(env, tokens);
         if (node) result.push(node);
         continue;
-      }
-      const node = LiTexStmtParse(env, tokens);
-      if (node) result.push(node);
+      } else LiTexStmtParse(env, tokens, result);
     }
 
     skip(tokens, "}"); // skip }
@@ -273,13 +272,13 @@ function callOptParse(
   withReq: Boolean = false,
   withOnlyIf: Boolean = false,
   withByName: Boolean = false
-): CallOptNode {
+): FactNode {
   const index = tokens.length;
   const start = tokens[0];
 
   try {
     const opts: [string, string[]][] = [];
-    const requirements: CallOptNode[][] = [];
+    const requirements: FactNode[][] = [];
 
     /**
      * There are 2 ways to parse here
@@ -348,16 +347,17 @@ function callOptParse(
       vars.forEach((v, i) => opts.push([optNames[i], v]));
     }
 
-    let out: CallOptNode;
+    let out: FactNode;
     if (!withOnlyIf || !isCurToken("=>", tokens))
-      out = new CallOptNode(opts, requirements);
+      out = new FactNode(opts, requirements);
     else {
       skip(tokens, "=>");
       skip(tokens, "{");
 
-      const onlyIfs: CallOptNode[] = callOptsParse(env, tokens, ["}"]).nodes;
+      const onlyIfs: FactNode[] = [];
+      callOptsParse(env, tokens, onlyIfs, ["}"]);
 
-      out = new CallOptNode(opts, requirements, onlyIfs);
+      out = new FactNode(opts, requirements, onlyIfs);
     }
 
     if (!withByName) return out;
@@ -379,13 +379,14 @@ function callOptParse(
 function callOptsParse(
   env: L_Env,
   tokens: string[],
+  putInto: L_Node[] | undefined,
   end: string[] = StdStmtEnds
-): CallOptsNode {
+): FactNode[] {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const callOpts: CallOptNode[] = [];
+    const callOpts: FactNode[] = [];
 
     while (1) {
       callOpts.push(callOptParse(env, tokens));
@@ -406,7 +407,9 @@ function callOptsParse(
 
     skip(tokens, end);
 
-    return new CallOptsNode(callOpts);
+    callOpts.forEach((e) => putInto?.push(e));
+
+    return callOpts;
   } catch (error) {
     handleParseError(env, "operators", index, start);
     throw error;
@@ -421,7 +424,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
     const defName = skip(tokens, TemplateDeclarationKeywords);
     const name = shiftVar(tokens);
 
-    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
+    const freeVarsFact: { freeVars: string[]; properties: FactNode[] } =
       freeVarsAndTheirFactsParse(env, tokens);
 
     // skip(tokens, ")");
@@ -436,7 +439,8 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
-          const facts = callOptsParse(env, tokens).nodes;
+          const facts: FactNode[] = [];
+          callOptsParse(env, tokens, facts);
           for (let i = 0; i < facts.length; i++) {
             (result as InferNode).onlyIfs.push(facts[i]);
           }
@@ -470,9 +474,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
-          (result as DefNode).onlyIfs = (result as DefNode).onlyIfs.concat(
-            callOptsParse(env, tokens).nodes
-          );
+          callOptsParse(env, tokens, (result as DefNode).onlyIfs);
         } else {
           const blockDoubleArrow = blockParse(env, tokens);
           result = new DefNode(
@@ -549,7 +551,7 @@ function existParse(env: L_Env, tokens: string[]): ExistNode {
 
     const name = shiftVar(tokens);
 
-    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
+    const freeVarsFact: { freeVars: string[]; properties: FactNode[] } =
       freeVarsAndTheirFactsParse(env, tokens);
 
     let result: ExistNode;

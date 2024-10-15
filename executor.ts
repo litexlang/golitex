@@ -1,7 +1,6 @@
 import { isNull } from "lodash";
 import {
-  CallOptNode,
-  CallOptsNode,
+  FactNode,
   KnowNode,
   L_Node,
   L_NodeType,
@@ -91,15 +90,6 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.ThmTrue]: "thm: true",
 };
 
-function IsL_OutRTypeErr(res: RL_Out) {
-  function isErrorRType(type: RType): boolean {
-    const typeName = RType[type]; // 获取枚举的键名
-    return typeName.endsWith("Error");
-  }
-
-  return isErrorRType(res.v as RType);
-}
-
 export function hRunErr(env: L_Env, type: RType, message: string | null = "") {
   env.pushNewError(RTypeMap[type] + ": " + message);
 }
@@ -109,18 +99,18 @@ export const hInfo = (t: RType, s: string = "") => {
 };
 export const ErrorRInfo = { type: RType.Error, message: "" };
 export const hNoRelTErr = (
-  opt: CallOptNode | string,
+  opt: FactNode | string,
   type: RType = RType.Error
 ) => {
-  if (opt instanceof CallOptNode)
+  if (opt instanceof FactNode)
     return hInfo(type, opt.optName + " not declared.");
   else return hInfo(type, opt + " not declared.");
 };
 export const hFixFreeErr = (
-  opt: CallOptNode | string,
+  opt: FactNode | string,
   type: RType = RType.Error
 ) => {
-  if (opt instanceof CallOptNode)
+  if (opt instanceof FactNode)
     return hInfo(type, `fail to instantiate ${opt.optName}`);
   else return hInfo(type, `fail to instantiate ${opt}`);
 };
@@ -134,8 +124,8 @@ export function nodeExec(env: L_Env, node: L_Node): RL_Out {
         return templateDeclExec(env, node as TNode);
       case L_NodeType.KnowNode:
         return knowExec(env, node as KnowNode);
-      case L_NodeType.CallOptsNode:
-        return callOptsExec(env, node as CallOptsNode);
+      // case L_NodeType.CallOptsNode:
+      //   return callOptsExec(env, node as CallOptsNode);
       case L_NodeType.LetNode:
         return letExec(env, node as LetNode);
       case L_NodeType.ProofNode:
@@ -179,8 +169,8 @@ function letExec(env: L_Env, node: LetNode): RL_Out {
   }
 }
 
-function callOptExec(env: L_Env, fact: CallOptNode): RL_Out {
-  const relT = env.getRelT(fact as CallOptNode);
+function callOptExec(env: L_Env, fact: FactNode): RL_Out {
+  const relT = env.getRelT(fact as FactNode);
   if (!relT)
     return cEnvErrL_Out(env, RType.Error, `${fact.optName} is not declared.`);
   let info: RL_Out = cL_Out(RType.Error);
@@ -202,24 +192,24 @@ function callOptExec(env: L_Env, fact: CallOptNode): RL_Out {
   return cL_Out(RType.True, fact.toString());
 }
 
-function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
-  try {
-    const whatIsTrue: string[] = [];
-    for (const fact of (node as CallOptsNode).nodes) {
-      const info = callOptExec(env, fact);
-      if (info.v === RType.Unknown || info.v === RType.False) {
-        return cL_Out(info.v);
-      } else if (isNull(info.v)) {
-        return cL_Out(null);
-      } else {
-        whatIsTrue.push(info.err);
-      }
-    }
-    return cL_Out(RType.True, whatIsTrue.join(";"));
-  } catch (error) {
-    return cEnvErrL_Out(env, RType.Error, "call operators");
-  }
-}
+// function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
+//   try {
+//     const whatIsTrue: string[] = [];
+//     for (const fact of (node as CallOptsNode).nodes) {
+//       const info = callOptExec(env, fact as FactNode);
+//       if (info.v === RType.Unknown || info.v === RType.False) {
+//         return cL_Out(info.v);
+//       } else if (isNull(info.v)) {
+//         return cL_Out(null);
+//       } else {
+//         whatIsTrue.push(info.err);
+//       }
+//     }
+//     return cL_Out(RType.True, whatIsTrue.join(";"));
+//   } catch (error) {
+//     return cEnvErrL_Out(env, RType.Error, "call operators");
+//   }
+// }
 
 /**
  * Steps
@@ -227,7 +217,7 @@ function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
  * 2. check opt requirements
  * 3. If 1. and 2. true, emit onlyIfs of relT
  */
-function callInferExec(env: L_Env, node: CallOptNode, relT: InferNode): RL_Out {
+function callInferExec(env: L_Env, node: FactNode, relT: InferNode): RL_Out {
   try {
     if (!env.checkEmit(node, false).v) {
       return cL_Out(RType.Unknown, `${node.toString()} itself unknown`);
@@ -292,10 +282,10 @@ function knowExec(env: L_Env, node: KnowNode): RL_Out {
 
     for (const fact of facts) {
       switch (fact.type) {
-        case L_NodeType.CallOptNode:
+        case L_NodeType.FactNode:
           if (isKnowEverything)
-            res = knowEverythingCallOptExec(env, fact as CallOptNode);
-          else res = knowCallOptExec(env, fact as CallOptNode);
+            res = knowEverythingCallOptExec(env, fact as FactNode);
+          else res = knowCallOptExec(env, fact as FactNode);
           break;
         // case L_NodeType.ImpliesFactNode:
         //   res = knowImpliesFactExec(env, fact as ImpliesFactNode);
@@ -306,16 +296,12 @@ function knowExec(env: L_Env, node: KnowNode): RL_Out {
           if (isKnowEverything) {
             res = knowEverythingCallOptExec(
               env,
-              CallOptNode.create((fact as TNode).name, [
-                (fact as TNode).freeVars,
-              ])
+              FactNode.create((fact as TNode).name, [(fact as TNode).freeVars])
             );
           } else {
             res = knowCallOptExec(
               env,
-              CallOptNode.create((fact as TNode).name, [
-                (fact as TNode).freeVars,
-              ])
+              FactNode.create((fact as TNode).name, [(fact as TNode).freeVars])
             );
           }
           break;
@@ -330,7 +316,7 @@ function knowExec(env: L_Env, node: KnowNode): RL_Out {
   }
 }
 
-function knowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RL_Out {
+function knowEverythingCallOptExec(env: L_Env, fact: FactNode): RL_Out {
   try {
     return cL_Out(RType.KnowTrue);
   } catch (error) {
@@ -338,7 +324,7 @@ function knowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RL_Out {
   }
 }
 
-function knowCallOptExec(env: L_Env, node: CallOptNode): RL_Out {
+function knowCallOptExec(env: L_Env, node: FactNode): RL_Out {
   try {
     if (!env.getRelT(node)) return cL_Out(RType.KnowError);
 
@@ -422,11 +408,11 @@ export type FixFreeType = {
 //? Many executor function can be refactored using fixFree
 export function fixFree(
   env: L_Env,
-  opt: CallOptNode,
+  opt: FactNode,
   fixOnlyIf: Boolean = false,
   fixReq: Boolean = false,
   relT: TNode | undefined = undefined,
-  otherFrees: CallOptNode[] = []
+  otherFrees: FactNode[] = []
 ): FixFreeType | undefined {
   if (!relT) env.getRelT(opt);
   const result = {
@@ -448,7 +434,7 @@ export function fixFree(
 
   if (fixReq) {
     const optParamsArr: OptParamsType[] = [];
-    for (let curOpt of relT.requirements as CallOptNode[]) {
+    for (let curOpt of relT.requirements as FactNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
         cEnvErrL_Out(env, RType.Error);
@@ -461,7 +447,7 @@ export function fixFree(
 
   if (fixOnlyIf) {
     const optParamsArr: OptParamsType[] = [];
-    for (let curOpt of relT.onlyIfs as CallOptNode[]) {
+    for (let curOpt of relT.onlyIfs as FactNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
         cEnvErrL_Out(env, RType.Error);
@@ -474,7 +460,7 @@ export function fixFree(
 
   if (otherFrees.length >= 1) {
     const optParamsArr: OptParamsType[] = [];
-    for (let curOpt of otherFrees as CallOptNode[]) {
+    for (let curOpt of otherFrees as FactNode[]) {
       const fixedArrArr = _fixFreesUsingMap(mapping, curOpt.optParams);
       if (!fixedArrArr) {
         cEnvErrL_Out(env, RType.Error);
@@ -505,7 +491,7 @@ export function fixFree(
   }
 }
 
-function callExistExec(env: L_Env, node: CallOptNode, relT: ExistNode): RL_Out {
+function callExistExec(env: L_Env, node: FactNode, relT: ExistNode): RL_Out {
   try {
     const out = env.checkEmit(node, true);
     if (out.v) {
@@ -524,7 +510,7 @@ function callExistExec(env: L_Env, node: CallOptNode, relT: ExistNode): RL_Out {
  * 1. check itself.If true, emit its req
  * 2. If unknown, check its req; if true this time, emit itself
  */
-function callDefExec(env: L_Env, node: CallOptNode, relT: DefNode): RL_Out {
+function callDefExec(env: L_Env, node: FactNode, relT: DefNode): RL_Out {
   try {
     if (env.checkEmit(node, true).v) {
       return cL_Out(RType.True);
@@ -631,12 +617,7 @@ function proveInferExec(env: L_Env, node: ProveNode, relT: TNode): RL_Out {
     }
 
     // check and emit onlyIf of relT
-    let tmp = fixOpt(
-      env,
-      node.opt,
-      relT.allVars(),
-      relT.onlyIfs as CallOptNode[]
-    );
+    let tmp = fixOpt(env, node.opt, relT.allVars(), relT.onlyIfs as FactNode[]);
     if (isNull(tmp.v)) return cEnvErrL_Out(env, RType.Error, tmp.err);
     for (const onlyIf of tmp.v) {
       if (newEnv.checkEmit(onlyIf, true, env)) continue;
@@ -741,12 +722,7 @@ function proveDefExec(env: L_Env, node: ProveNode, relT: TNode): RL_Out {
     }
 
     // check and emit onlyIf of relT
-    let tmp = fixOpt(
-      env,
-      node.opt,
-      relT.allVars(),
-      relT.onlyIfs as CallOptNode[]
-    );
+    let tmp = fixOpt(env, node.opt, relT.allVars(), relT.onlyIfs as FactNode[]);
     if (isNull(tmp.v)) return cEnvErrL_Out(env, RType.Error, tmp.err);
     for (const onlyIf of tmp.v) {
       if (newEnv.checkEmit(onlyIf, true, env)) continue;

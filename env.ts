@@ -1,5 +1,5 @@
 import { isNull, map } from "lodash";
-import { CallOptNode, InferNode, TNode } from "./ast";
+import { FactNode, InferNode, TNode } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import {
   cErr_Out,
@@ -15,8 +15,8 @@ import {
 export type StoredFact = {
   vars: string[][];
   template: TNode[];
-  requirements: CallOptNode[][]; // CallOptNode[] is related to a single Template
-  onlyIfs: CallOptNode[]; // when this fact is satisfied, extra onlyIf is emitted
+  requirements: FactNode[][]; // FactNode[] is related to a single Template
+  onlyIfs: FactNode[]; // when this fact is satisfied, extra onlyIf is emitted
 };
 
 export class L_Env {
@@ -26,18 +26,18 @@ export class L_Env {
   declaredVars: string[] = [];
   declaredTemplates = new Map<string, TNode>();
   father: L_Env | undefined;
-  facts = new Map<string, CallOptNode[]>();
-  bys = new Map<string, CallOptNode>();
+  facts = new Map<string, FactNode[]>();
+  bys = new Map<string, FactNode>();
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
   }
 
-  newBy(key: string, by: CallOptNode) {
+  newBy(key: string, by: FactNode) {
     this.bys.set(key, by);
   }
 
-  newFactEmit(opt: CallOptNode, emit: Boolean = true) {
+  newFactEmit(opt: FactNode, emit: Boolean = true) {
     /** Much unnecessary info is stored here. e.g. The optName and optNameLst can be set to "" because the key of map already store that info. */
     if (this.facts.has(opt.optName)) {
       if (opt.onlyIFs.length === 0 && this.checkEmit(opt, false)) return;
@@ -47,12 +47,12 @@ export class L_Env {
     }
 
     if (emit) {
-      opt.onlyIFs.forEach((e: CallOptNode) => this.newFactEmit(e, false));
+      opt.onlyIFs.forEach((e: FactNode) => this.newFactEmit(e, false));
     }
   }
 
-  getSelfFathersFact(opt: CallOptNode): CallOptNode[] {
-    const out: CallOptNode[] = [];
+  getSelfFathersFact(opt: FactNode): FactNode[] {
+    const out: FactNode[] = [];
     let currentEnv: L_Env | undefined = this;
     while (currentEnv !== undefined) {
       const RFacts = currentEnv.facts.get(opt.optName);
@@ -66,7 +66,7 @@ export class L_Env {
    * whatever relT(opt).type is, checkEmit checks whether it's known true.
    */
   checkEmit(
-    opt: CallOptNode,
+    opt: FactNode,
     emit: Boolean = true,
     emitTo: L_Env = this
   ): L_Out<Boolean> {
@@ -92,8 +92,8 @@ export class L_Env {
   }
 
   useSingleFreeFactToCheck(
-    freeFact: CallOptNode,
-    opt: CallOptNode
+    freeFact: FactNode,
+    opt: FactNode
   ): Map<string, string> | UdfErr {
     if (!this._isLiterallyFact(freeFact.optParams, opt.optParams))
       return undefined;
@@ -125,7 +125,7 @@ export class L_Env {
 
     if (
       facts.every((e) =>
-        this.checkEmit(CallOptNode.create(e.name, e.params), false)
+        this.checkEmit(FactNode.create(e.name, e.params), false)
       )
     ) {
       return mapping;
@@ -145,7 +145,7 @@ export class L_Env {
 
   // ! I think this piece of code should be refactored by relT.emit
   emitByMapping(
-    fact: CallOptNode,
+    fact: FactNode,
     mapping: Map<string, string>,
     relT: TNode,
     emitTo: L_Env = this
@@ -165,7 +165,7 @@ export class L_Env {
 
     // emit onlyIf from opt
     let facts = fact.onlyIFs.map((e) => {
-      return CallOptNode.create(
+      return FactNode.create(
         e.optName,
         e.optParams.map((ls) =>
           ls.map((s) => {
@@ -184,7 +184,7 @@ export class L_Env {
       this,
       fact,
       relT.allVars(),
-      relT.onlyIfs as CallOptNode[]
+      relT.onlyIfs as FactNode[]
     );
     if (isNull(fixedRelTOnlyIfs.v)) return;
     else fixedRelTOnlyIfs.v.forEach((e) => emitTo.newFactEmit(e));
@@ -253,7 +253,7 @@ export class L_Env {
 
   // Main function of the whole project
   // input full name of an opt, output the template of the lowest hierarchy
-  getRelT(node: string | CallOptNode): TNode | undefined {
+  getRelT(node: string | FactNode): TNode | undefined {
     const isTop = (s: string): boolean => {
       return !s.includes(OptsConnectionSymbol);
     };
@@ -264,7 +264,7 @@ export class L_Env {
     };
 
     let s = "";
-    if (node instanceof CallOptNode) s = node.optName;
+    if (node instanceof FactNode) s = node.optName;
     else s = node;
 
     let relT: TNode | undefined;
@@ -292,7 +292,7 @@ export class L_Env {
     }
   }
 
-  relT(node: string | CallOptNode): L_Out<TNode> {
+  relT(node: string | FactNode): L_Out<TNode> {
     const isTop = (s: string): boolean => {
       return !s.includes(OptsConnectionSymbol);
     };
@@ -303,7 +303,7 @@ export class L_Env {
     };
 
     let s = "";
-    if (node instanceof CallOptNode) s = node.optName;
+    if (node instanceof FactNode) s = node.optName;
     else s = node;
 
     let relT: TNode | undefined;
