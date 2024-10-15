@@ -10,6 +10,7 @@ import {
   L_Out,
   RL_Out,
 } from "./shared";
+import exp from "constants";
 
 //? There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
 export enum L_NodeType {
@@ -34,6 +35,7 @@ export enum L_NodeType {
   FreeVarsWithFactsNode,
   DollarMarkNode,
   ByNode,
+  ThmNode,
 }
 
 export abstract class L_Node {
@@ -447,5 +449,17 @@ export class ByNode extends L_Node {
     super();
     this.name = name;
     this.opt = opt;
+  }
+}
+
+export class ThmNode extends L_Node {
+  type = L_NodeType.ThmNode;
+  opt: CallOptNode;
+  proveBlock: L_Node[];
+
+  constructor(opt: CallOptNode, proveBlock: L_Node[]) {
+    super();
+    this.opt = opt;
+    this.proveBlock = proveBlock;
   }
 }

@@ -1,7 +1,7 @@
 import { isNull, map } from "lodash";
 import { CallOptNode, InferNode, TNode } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
-import { cErr_Out, cL_Out, fixOpt, freeFixMap, L_ERR, L_Out } from "./shared";
+import { cErr_Out, cL_Out, fixOpt, freeFixMap, L_Err, L_Out } from "./shared";
 
 export type StoredFact = {
   vars: string[][];
@@ -81,7 +81,7 @@ export class L_Env {
   useSingleFreeFactToCheck(
     freeFact: CallOptNode,
     opt: CallOptNode
-  ): Map<string, string> | L_ERR {
+  ): Map<string, string> | L_Err {
     if (!this._isLiterallyFact(freeFact.optParams, opt.optParams))
       return undefined;
 

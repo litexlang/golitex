@@ -23,7 +23,7 @@ import {
   ErrL_Out,
   fixOpt,
   isL_OutErr,
-  L_ERR,
+  L_Err,
   RL_Out,
 } from "./shared";
 
@@ -763,7 +763,7 @@ function byExec(env: L_Env, node: ByNode): RL_Out {
 
     const mapping = env.useSingleFreeFactToCheck(freeFact, node.opt);
 
-    if (mapping === L_ERR) return cL_Out(RType.Unknown);
+    if (mapping === L_Err) return cL_Out(RType.Unknown);
     else return cL_Out(RType.ByTrue);
   } catch (error) {
     return cEnvErrL_Out(env, RType.ByError);

@@ -13,6 +13,7 @@ import {
   ProveNode,
   HaveNode,
   ByNode,
+  ThmNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -102,6 +103,7 @@ const KeywordFunctionMap: {
   prove: yaProveParse,
   "&": yaProveParse,
   by: byParse,
+  thm: thmParse,
 };
 
 export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
@@ -235,7 +237,7 @@ function questionMarkParse(env: L_Env, tokens: string[]): DollarMarkNode {
   }
 }
 
-function nonExecutableBlockParse(env: L_Env, tokens: string[]): L_Node[] {
+function blockParse(env: L_Env, tokens: string[]): L_Node[] {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -429,7 +431,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
             (result as InferNode).onlyIfs.push(facts[i]);
           }
         } else {
-          const blockArrow = nonExecutableBlockParse(env, tokens);
+          const blockArrow = blockParse(env, tokens);
           result = new InferNode(
             name,
             freeVarsFact.freeVars,
@@ -441,7 +443,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
         break;
 
       case "{":
-        const blockBrace = nonExecutableBlockParse(env, tokens);
+        const blockBrace = blockParse(env, tokens);
         result = new InferNode(
           name,
           freeVarsFact.freeVars,
@@ -462,7 +464,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
             callOptsParse(env, tokens).nodes
           );
         } else {
-          const blockDoubleArrow = nonExecutableBlockParse(env, tokens);
+          const blockDoubleArrow = blockParse(env, tokens);
           result = new DefNode(
             name,
             freeVarsFact.freeVars,
@@ -518,7 +520,7 @@ function yaProveParse(env: L_Env, tokens: string[]): ProveNode {
       skip(tokens, byRBracket);
     }
     const relatedOpt = callOptParse(env, tokens, true, true);
-    const blockBrace = nonExecutableBlockParse(env, tokens);
+    const blockBrace = blockParse(env, tokens);
     const result = new ProveNode(relatedOpt, blockBrace, name);
     return result;
   } catch (error) {
@@ -593,7 +595,24 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
     skip(tokens, ";");
     return new ByNode(name, opt);
   } catch (error) {
-    handleParseError(env, "have", index, start);
+    handleParseError(env, "by", index, start);
+    throw error;
+  }
+}
+
+function thmParse(env: L_Env, tokens: string[]): ThmNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, "thm");
+
+    const opt = callOptParse(env, tokens, true, true);
+    const block = blockParse(env, tokens);
+
+    return new ThmNode(opt, block);
+  } catch (error) {
+    handleParseError(env, "thm", index, start);
     throw error;
   }
 }

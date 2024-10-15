@@ -154,7 +154,8 @@ const codes: string[] = [
   // "have x,y: set(x);",
   // "s,b:a,c is set:set2;",
   // "prove (THM) set(x) => {set1(x)} {}",
-  "by certainProof set(x):set(y);",
+  // "by certainProof set(x):set(y);",
+  "thm thm_infer(#x| set(x)) => {set(x)} {set(x);}",
 ];
 
 function testLexer() {
