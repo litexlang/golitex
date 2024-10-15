@@ -28,6 +28,7 @@ import {
   byRBracket,
   StdStmtEnds,
 } from "./common";
+import { on } from "events";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -79,6 +80,7 @@ const KeywordFunctionMap: {
   ";": (env: L_Env, tokens: string[]) => {
     tokens.shift();
   },
+  "(": reqOnlyIfFactParse,
   "\n": (env: L_Env, tokens: string[]) => {
     tokens.shift();
   },
@@ -269,6 +271,7 @@ function blockParse(env: L_Env, tokens: string[]): L_Node[] {
 function callOptParse(
   env: L_Env,
   tokens: string[],
+  // the followings all false means vanilla callOpt
   withReq: Boolean = false,
   withOnlyIf: Boolean = false,
   withByName: Boolean = false
@@ -636,6 +639,37 @@ function thmParse(env: L_Env, tokens: string[]): ThmNode {
     return new ThmNode(opt, block);
   } catch (error) {
     handleParseError(env, "thm", index, start);
+    throw error;
+  }
+}
+
+function reqOnlyIfFactParse(env: L_Env, tokens: string[]): FactNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    const req: FactNode[] = [];
+    skip(tokens, "(");
+    while (!isCurToken(")", tokens)) {
+      req.push(callOptParse(env, tokens, false, false));
+      if (isCurToken(",", tokens)) skip(tokens, ",");
+    }
+    skip(tokens, ")");
+
+    skip(tokens, "=>");
+    skip(tokens, "{");
+
+    const onlyIf: FactNode[] = [];
+    while (!isCurToken("}", tokens)) {
+      onlyIf.push(callOptParse(env, tokens, false, false));
+      if (isCurToken(",", tokens)) skip(tokens, ",");
+    }
+
+    skip(tokens, "}");
+
+    return new FactNode([], [req], onlyIf);
+  } catch (error) {
+    handleParseError(env, "fact", index, start);
     throw error;
   }
 }

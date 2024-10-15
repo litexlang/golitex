@@ -157,7 +157,8 @@ const codes: string[] = [
   // "by certainProof set(x):set(y);",
   // "thm thm_infer(#x| set(x)) => {set(x)} {set(x);}",
   // ":obj(x)",
-  ":tmp (x|set(x)) => {set(x);}",
+  // ":tmp (x|set(x)) => {set(x);}",
+  "(set(#x,b), set2(a,b)) => {obj(a), obj(b), obj2(3,x)};",
 ];
 
 function testLexer() {

@@ -124,8 +124,8 @@ export class L_Env {
     );
 
     if (
-      facts.every((e) =>
-        this.checkEmit(FactNode.create(e.name, e.params), false)
+      facts.every(
+        (e) => this.checkEmit(FactNode.create(e.name, e.params), false).v
       )
     ) {
       return mapping;
