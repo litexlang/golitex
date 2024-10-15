@@ -20,9 +20,7 @@ export type StoredFact = {
 };
 
 export class L_Env {
-  errors: string[] = [];
-  errorsWithDepth: [string, number][] = []; //? [error message, depth], number here does not work for the time being
-  private errorDepth = 0;
+  messages: string[] = []; //? [error message, depth], number here does not work for the time being
   declaredVars: string[] = [];
   declaredTemplates = new Map<string, TNode>();
   father: L_Env | undefined;
@@ -240,15 +238,8 @@ export class L_Env {
     return this.father ? this.father.isVarDeclared(v) : false;
   }
 
-  pushErrorMessage(s: string) {
-    this.errors.push(s);
-  }
-
-  pushNewError(s: string, addDepth: Boolean = false) {
-    if (addDepth) {
-      this.errorDepth++;
-    }
-    this.errorsWithDepth.push([s, this.errorDepth]);
+  newMessage(s: string, addDepth: Boolean = false) {
+    this.messages.push(s);
   }
 
   // Main function of the whole project
@@ -363,12 +354,12 @@ export class L_Env {
   }
 
   printErrorsWithDepth() {
-    for (let i = this.errorsWithDepth.length - 1; i >= 0; i--) {
+    for (let i = this.messages.length - 1; i >= 0; i--) {
       let space = "";
-      for (let j = 0; j < this.errorsWithDepth.length - 1 - i; j++) {
+      for (let j = 0; j < this.messages.length - 1 - i; j++) {
         space += "  ";
       }
-      console.log(space + this.errorsWithDepth[i][0]);
+      console.log(space + this.messages[i][0]);
     }
   }
 }

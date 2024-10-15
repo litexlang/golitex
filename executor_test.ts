@@ -1,5 +1,5 @@
 import { L_Env } from "./env";
-import { nodeExec, RType, RTypeMap } from "./executor";
+import { nodePrintExec, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { L_StmtsParse } from "./parser";
 import { isL_OutErr, isRTypeErr, RL_Out } from "./shared";
@@ -164,14 +164,14 @@ const codes: string[] = [
 //       env.printErrorsWithDepth();
 //     } else {
 //       for (let i = 0; i < result.length; i++) {
-//         const res: L_Out<RType>  = nodeExec(env, result[i]);
+//         const res: L_Out<RType>  = nodePrintExec(env, result[i]);
 //         if (!res.message) console.log(RTypeMap[res.type]);
 //         else console.log(`${RTypeMap[res.type]} '${res.message}'`);
 //       }
 //     }
 //   }
 //   console.log("");
-//   if (env.errorsWithDepth.length === 0) {
+//   if (env.messages.length === 0) {
 //     env.printCallOptFacts();
 //     env.printDeclaredTemplates();
 //   } else {
@@ -191,10 +191,10 @@ function testError(asIfRight = false) {
         env.printErrorsWithDepth();
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res = nodeExec(env, result[i]);
+          const res = nodePrintExec(env, result[i]);
         }
       }
-      if (env.errorsWithDepth.length === 0) {
+      if (env.messages.length === 0) {
         console.log(`${key} error not detected.`);
       }
     }
@@ -211,9 +211,9 @@ function testError(asIfRight = false) {
         env.printErrorsWithDepth();
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res = nodeExec(env, result[i]);
+          const res = nodePrintExec(env, result[i]);
           if (isRTypeErr(res)) console.log(RTypeMap[res as RType]);
-          else console.log(env.errors);
+          else console.log(env.messages);
         }
       }
       console.log();
@@ -229,21 +229,20 @@ function testExecutor(testWhat: any = testCodes) {
   for (const [key, code] of Object.entries(testWhat)) {
     whatIsTested.push(key);
     const tokens = scan(code as string);
-    const result = L_StmtsParse(env, tokens);
-    if (result === null) {
+    const parseResult = L_StmtsParse(env, tokens);
+    if (parseResult === null) {
       env.printErrorsWithDepth();
     } else {
-      for (let i = 0; i < result.length; i++) {
-        const res = nodeExec(env, result[i]);
+      for (let i = 0; i < parseResult.length; i++) {
+        const res = nodePrintExec(env, parseResult[i]);
         if (key !== "Basics") {
           if (isRTypeErr(res)) {
-            console.log(env.errorsWithDepth.map((e) => e[0]).join("\n"));
+            console.log(env.messages);
             // clean errors
-            env.errorsWithDepth = [];
+            env.messages = [];
           } else {
-            if (RTypeMap[res as RType].length > 0)
-              console.log(`${RTypeMap[res as RType]} '${res}'`);
-            else console.log(`${res}`);
+            console.log(env.messages.at(-1));
+            env.messages = [];
           }
         }
       }
@@ -251,7 +250,7 @@ function testExecutor(testWhat: any = testCodes) {
   }
   console.log("\n----TestWhat----\n");
   whatIsTested.forEach((e) => console.log(e));
-  if (env.errorsWithDepth.length === 0) {
+  if (env.messages.length === 0) {
     if (env.facts.size > 0) env.printFacts();
     // env.printCallOptFacts();
     // do not print templates declared in Basics

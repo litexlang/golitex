@@ -173,13 +173,9 @@ function testParser() {
     const tokens = scan(codes[i]);
     const result = L_StmtsParse(env, tokens);
     if (result === null) {
-      const maxDepth = env.errorsWithDepth[env.errorsWithDepth.length - 1][1];
-      for (let i = env.errorsWithDepth.length - 1; i >= 0; i--) {
-        let space = "";
-        for (let j = 0; j < maxDepth - env.errorsWithDepth[i][1]; j++) {
-          space += "  ";
-        }
-        console.log(space + env.errorsWithDepth[i][0]);
+      const maxDepth = env.messages[env.messages.length - 1][1];
+      for (let i = env.messages.length - 1; i >= 0; i--) {
+        console.log(env.messages[i]);
       }
     } else {
       for (let i = 0; i < result.length; i++) {

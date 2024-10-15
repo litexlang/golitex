@@ -127,3 +127,7 @@ export function hRemoveHashPrefix(arr: string[][]): string[][] {
 export function isRTypeErr(r: RType) {
   return r === RType.Error;
 }
+
+export function isRTypeTrue(r: RType) {
+  return r === RType.True;
+}

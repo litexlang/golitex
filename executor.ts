@@ -26,6 +26,7 @@ import {
   RL_Out,
   hRemoveHashPrefix,
   isRTypeErr,
+  isRTypeTrue,
 } from "./shared";
 
 export enum RType {
@@ -91,7 +92,7 @@ export const RTypeMap: { [key in RType]: string } = {
 };
 
 export function hRunErr(env: L_Env, type: RType, message: string | null = "") {
-  env.pushNewError(RTypeMap[type] + ": " + message);
+  env.newMessage(RTypeMap[type] + ": " + message);
 }
 
 export const hInfo = (t: RType, s: string = "") => {
@@ -115,51 +116,60 @@ export const hFixFreeErr = (
   else return hInfo(type, `fail to instantiate ${opt}`);
 };
 
-export function nodeExec(env: L_Env, node: L_Node, noPrint = false): RType {
+export function nodePrintExec(env: L_Env, node: L_Node): RType {
+  const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
+    DefNode: templateDeclExec,
+    InferNode: templateDeclExec,
+    ExistNode: templateDeclExec,
+    KnowNode: knowExec,
+    LetNode: letExec,
+    ProveNode: proveExec,
+    HaveNode: haveExec,
+    ByNode: byExec,
+    ThmNode: thmExec,
+  };
+
   try {
-    if (noPrint) {
-      if (
-        node instanceof DefNode ||
-        node instanceof InferNode ||
-        node instanceof ExistNode
-      ) {
-        return templateDeclExec(env, node as TNode);
-      } else if (node instanceof KnowNode) {
-        return knowExec(env, node as KnowNode);
-      } else if (node instanceof LetNode) {
-        return letExec(env, node as LetNode);
-      } else if (node instanceof ProveNode) {
-        return proveExec(env, node as ProveNode);
-      } else if (node instanceof HaveNode) {
-        return haveExec(env, node as HaveNode);
-      } else if (node instanceof ByNode) {
-        return byExec(env, node as ByNode);
-      } else if (node instanceof ThmNode) {
-        return thmExec(env, node as ThmNode);
-      }
-      return RType.Error;
-    } else {
-      if (
-        node instanceof DefNode ||
-        node instanceof InferNode ||
-        node instanceof ExistNode
-      ) {
-        return templateDeclExec(env, node as TNode);
-      } else if (node instanceof KnowNode) {
-        return knowExec(env, node as KnowNode);
-      } else if (node instanceof LetNode) {
-        return letExec(env, node as LetNode);
-      } else if (node instanceof ProveNode) {
-        return proveExec(env, node as ProveNode);
-      } else if (node instanceof HaveNode) {
-        return haveExec(env, node as HaveNode);
-      } else if (node instanceof ByNode) {
-        return byExec(env, node as ByNode);
-      } else if (node instanceof ThmNode) {
-        return thmExec(env, node as ThmNode);
-      }
-      return RType.Error;
+    const nodeType = node.constructor.name;
+    const execFunc = nodeExecMap[nodeType];
+
+    if (execFunc && isRTypeTrue(execFunc(env, node))) {
+      return successMesIntoEnv(env, node);
     }
+
+    return RType.Error;
+  } catch (error) {
+    return RType.Error;
+  }
+
+  function successMesIntoEnv(env: L_Env, node: L_Node): RType {
+    env.newMessage(`OK! ${node.toString()}`);
+    return RType.True;
+  }
+}
+
+export function nodeExec(env: L_Env, node: L_Node): RType {
+  try {
+    if (
+      node instanceof DefNode ||
+      node instanceof InferNode ||
+      node instanceof ExistNode
+    ) {
+      return templateDeclExec(env, node as TNode);
+    } else if (node instanceof KnowNode) {
+      return knowExec(env, node as KnowNode);
+    } else if (node instanceof LetNode) {
+      return letExec(env, node as LetNode);
+    } else if (node instanceof ProveNode) {
+      return proveExec(env, node as ProveNode);
+    } else if (node instanceof HaveNode) {
+      return haveExec(env, node as HaveNode);
+    } else if (node instanceof ByNode) {
+      return byExec(env, node as ByNode);
+    } else if (node instanceof ThmNode) {
+      return thmExec(env, node as ThmNode);
+    }
+    return RType.Error;
   } catch (error) {
     return RType.Error;
   }

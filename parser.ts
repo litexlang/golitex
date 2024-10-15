@@ -71,7 +71,7 @@ function handleParseError(
   addErrorDepth: Boolean = true
 ) {
   const errorIndex = index;
-  env.pushNewError(`At ${start}[${errorIndex * -1}]: ${m}`, addErrorDepth);
+  env.newMessage(`At ${start}[${errorIndex * -1}]: ${m}`, addErrorDepth);
 }
 
 const KeywordFunctionMap: {
