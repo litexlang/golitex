@@ -25,8 +25,9 @@ export const testCodes = {
   // callDef: "let y | set0(y); set0(y); let o| obj(o); obj(o);",
   // callInfer: ":INF(x|set(x)) => obj(x); let y| INF(y), set(y); INF(y);",
   // NamedProve: "prove [THM] set(#x) => {set(x)} {set(x),set(x);}",
-  easyProve: "prove [certainProof] simpleInfer(#x) {}; let x;",
-  by: " by certainProof simpleInfer(x); ",
+  // easyProve: "prove [certainProof] simpleInfer(#x) {}; let x;",
+  // by: " by certainProof simpleInfer(x); ",
+  thm: "thm thm_infer(#x) => {set(x)} {set(x);}",
 };
 
 export const testErrorCode = {

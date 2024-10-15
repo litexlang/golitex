@@ -1,7 +1,16 @@
 import { isNull, map } from "lodash";
 import { CallOptNode, InferNode, TNode } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
-import { cErr_Out, cL_Out, fixOpt, freeFixMap, L_Err, L_Out } from "./shared";
+import {
+  cErr_Out,
+  cL_Out,
+  fixOpt,
+  freeFixMap,
+  UdfErr,
+  L_Out,
+  isUdf,
+  notUdf,
+} from "./shared";
 
 export type StoredFact = {
   vars: string[][];
@@ -42,6 +51,17 @@ export class L_Env {
     }
   }
 
+  getSelfFathersFact(opt: CallOptNode): CallOptNode[] {
+    const out: CallOptNode[] = [];
+    let currentEnv: L_Env | undefined = this;
+    while (currentEnv !== undefined) {
+      const RFacts = currentEnv.facts.get(opt.optName);
+      if (notUdf(RFacts)) RFacts?.forEach((e) => out.push(e));
+      currentEnv = (currentEnv as L_Env).father;
+    }
+    return out;
+  }
+
   /**
    * whatever relT(opt).type is, checkEmit checks whether it's known true.
    */
@@ -50,16 +70,8 @@ export class L_Env {
     emit: Boolean = true,
     emitTo: L_Env = this
   ): L_Out<Boolean> {
-    const RFacts = this.facts.get(opt.optName);
-    if (!RFacts) {
-      if (this.father === undefined) return cL_Out<Boolean>(false);
-      else {
-        // if current fact is checked true in its fatherEnv, emit in fatherEnv instead of son env.
-        //? Maybe I should add a syntax to allow user to specify in which env the fact is emitted: the newEnv opened by prove or the global env.
-        const out = this.father.checkEmit(opt, true);
-        return out;
-      }
-    }
+    const RFacts = this.getSelfFathersFact(opt);
+    if (RFacts.length === 0) return cL_Out<Boolean>(false);
 
     /** Find all facts that the current input satisfies */
     const relT = this.relT(opt).v as TNode;
@@ -67,6 +79,7 @@ export class L_Env {
     for (const [i, singleFact] of (RFacts as CallOptNode[]).entries()) {
       const mapping = this.useSingleFreeFactToCheck(singleFact, opt);
       if (mapping === undefined) continue;
+      else isT = true;
 
       /** Emit onlyIfs (from opt and from relT)*/
       // ! I think this piece of code should be refactored by relT.emit
@@ -81,7 +94,7 @@ export class L_Env {
   useSingleFreeFactToCheck(
     freeFact: CallOptNode,
     opt: CallOptNode
-  ): Map<string, string> | L_Err {
+  ): Map<string, string> | UdfErr {
     if (!this._isLiterallyFact(freeFact.optParams, opt.optParams))
       return undefined;
 

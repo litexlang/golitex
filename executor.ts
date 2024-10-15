@@ -14,6 +14,7 @@ import {
   DefNode,
   InferNode,
   ByNode,
+  ThmNode,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -23,8 +24,9 @@ import {
   ErrL_Out,
   fixOpt,
   isL_OutErr,
-  L_Err,
+  UdfErr,
   RL_Out,
+  hRemoveHashPrefix,
 } from "./shared";
 
 export enum RType {
@@ -53,6 +55,9 @@ export enum RType {
   ExistTrue,
   ByError,
   ByTrue,
+  ThmTrue,
+  ThmFailed,
+  ThmError,
 }
 
 export const RTypeMap: { [key in RType]: string } = {
@@ -81,6 +86,9 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.ExistTrue]: "exist: true",
   [RType.ByError]: "by: error",
   [RType.ByTrue]: "by: true",
+  [RType.ThmError]: "thm: error",
+  [RType.ThmFailed]: "thm: failed",
+  [RType.ThmTrue]: "thm: true",
 };
 
 function IsL_OutRTypeErr(res: RL_Out) {
@@ -137,6 +145,8 @@ export function nodeExec(env: L_Env, node: L_Node): RL_Out {
         return haveExec(env, node as HaveNode);
       case L_NodeType.ByNode:
         return byExec(env, node as ByNode);
+      case L_NodeType.ThmNode:
+        return thmExec(env, node as ThmNode);
     }
     return cEnvErrL_Out(env, RType.Error, "Stmt");
   } catch (error) {
@@ -763,8 +773,37 @@ function byExec(env: L_Env, node: ByNode): RL_Out {
 
     const mapping = env.useSingleFreeFactToCheck(freeFact, node.opt);
 
-    if (mapping === L_Err) return cL_Out(RType.Unknown);
+    if (mapping === UdfErr) return cL_Out(RType.Unknown);
     else return cL_Out(RType.ByTrue);
+  } catch (error) {
+    return cEnvErrL_Out(env, RType.ByError);
+  }
+}
+
+/**
+ * Steps
+ * 1. extract template from thm and declare it
+ * 2. prove opt extracted from thm, everything works as if proveExec
+ */
+function thmExec(env: L_Env, node: ThmNode): RL_Out {
+  try {
+    // extract template from thm
+    const freeVars = hRemoveHashPrefix(node.opt.optParams);
+
+    const relT = new InferNode(
+      node.opt.optName,
+      freeVars[0],
+      node.opt.req,
+      node.opt.onlyIFs
+    );
+    let isT = templateDeclExec(env, relT);
+
+    if (isT.v !== RType.DefTrue) return cEnvErrL_Out(env, RType.ThmError);
+
+    isT = proveInferExec(env, new ProveNode(node.opt, node.proveBlock), relT);
+    if (isT.v !== RType.ProveTrue) return cL_Out(RType.ThmFailed, isT.err);
+
+    return cL_Out(RType.ThmTrue);
   } catch (error) {
     return cEnvErrL_Out(env, RType.ByError);
   }

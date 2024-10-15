@@ -608,6 +608,17 @@ function thmParse(env: L_Env, tokens: string[]): ThmNode {
     skip(tokens, "thm");
 
     const opt = callOptParse(env, tokens, true, true);
+
+    // opt.optName should not have ':'
+    if (opt.optNameAsLst.length > 1 || opt.optParams.length > 1) {
+      handleParseError(
+        env,
+        `operator in thm should not have concatenated name ${opt.optName}`,
+        index,
+        start
+      );
+    }
+
     const block = blockParse(env, tokens);
 
     return new ThmNode(opt, block);

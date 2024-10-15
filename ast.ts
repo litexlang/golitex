@@ -11,6 +11,7 @@ import {
   RL_Out,
 } from "./shared";
 import exp from "constants";
+import { on } from "events";
 
 //? There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
 export enum L_NodeType {
@@ -125,11 +126,17 @@ export abstract class TNode extends L_Node {
   private fathers: TNode[] = [];
   isRedefine: Boolean = false;
 
-  constructor(name: string, freeVars: string[], requirements: CallOptNode[]) {
+  constructor(
+    name: string,
+    freeVars: string[],
+    requirements: CallOptNode[],
+    onlyIfs: L_Node[] = []
+  ) {
     super();
     this.name = name;
     this.freeVars = freeVars;
     this.requirements = requirements;
+    this.onlyIfs = onlyIfs;
   }
   // Input a full name with colons and get descendants from any depth
   getDeclaredSubTemplate(s: string): undefined | TNode {
