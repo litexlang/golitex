@@ -48,6 +48,7 @@ export function scan(text: string): string[] {
       continue;
     }
 
+    // notice specialChars.includes('\n')
     if (specialChars.includes(char)) {
       if (currentToken) {
         tokens.push(currentToken);

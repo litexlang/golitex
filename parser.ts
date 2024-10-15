@@ -3,7 +3,6 @@ import {
   CallOptsNode,
   InferNode,
   ExistNode,
-  // HaveNode,
   KnowNode,
   L_Node,
   LetNode,
@@ -27,6 +26,7 @@ import {
   suchThats,
   byLBracket,
   byRBracket,
+  StdStmtEnds,
 } from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -77,6 +77,9 @@ const KeywordFunctionMap: {
   [key: string]: (env: L_Env, tokens: string[]) => any;
 } = {
   ";": (env: L_Env, tokens: string[]) => {
+    tokens.shift();
+  },
+  "\n": (env: L_Env, tokens: string[]) => {
     tokens.shift();
   },
   know: knowParse,
@@ -132,7 +135,7 @@ export function LiTexStmtParse(env: L_Env, tokens: string[]): L_Node | null {
     if (func) {
       const node = func(env, tokens);
       if (KnowTypeKeywords.includes(funcName)) {
-        skip(tokens, ";");
+        skip(tokens, StdStmtEnds);
       }
       if (node) {
         return node;
@@ -186,7 +189,7 @@ function freeVarsAndTheirFactsParse(
   env: L_Env,
   tokens: string[],
   begin: string = "(",
-  end: string = ")",
+  end: string[] = [")"],
   optWithReqAndOnlyIf: Boolean = false
 ): { freeVars: string[]; properties: CallOptNode[] } {
   const requirements: CallOptNode[] = [];
@@ -194,25 +197,25 @@ function freeVarsAndTheirFactsParse(
 
   skip(tokens, begin);
 
-  if (!(tokens[0] === end)) {
+  if (!end.includes(tokens[0])) {
     while (1) {
       const freeVar = tokens.shift() as string;
       freeVars.push(freeVar);
       if (tokens[0] === ",") tokens.shift();
       else if (tokens[0] === SymbolsFactsSeparator) break;
-      else if (tokens[0] === end) break;
+      else if (end.includes(tokens[0])) break;
       else throw Error("infer parameters");
     }
-    if (!(tokens[0] === end)) {
+    if (!end.includes(tokens[0])) {
       skip(tokens, SymbolsFactsSeparator);
-      while (!(tokens[0] === end)) {
+      while (!end.includes(tokens[0])) {
         let node: CallOptNode;
         if (optWithReqAndOnlyIf) node = callOptParse(env, tokens, true, true);
         else node = callOptParse(env, tokens);
         if (node) requirements.push(node as CallOptNode);
 
         if (tokens[0] === ",") tokens.shift();
-        if (tokens[0] === end) break;
+        if (end.includes(tokens[0])) break;
       }
     }
   }
@@ -352,7 +355,7 @@ function callOptParse(
       skip(tokens, "=>");
       skip(tokens, "{");
 
-      const onlyIfs: CallOptNode[] = callOptsParse(env, tokens, "}").nodes;
+      const onlyIfs: CallOptNode[] = callOptsParse(env, tokens, ["}"]).nodes;
 
       out = new CallOptNode(opts, requirements, onlyIfs);
     }
@@ -373,7 +376,11 @@ function callOptParse(
   }
 }
 
-function callOptsParse(env: L_Env, tokens: string[], end = ";"): CallOptsNode {
+function callOptsParse(
+  env: L_Env,
+  tokens: string[],
+  end: string[] = StdStmtEnds
+): CallOptsNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -384,9 +391,12 @@ function callOptsParse(env: L_Env, tokens: string[], end = ";"): CallOptsNode {
       callOpts.push(callOptParse(env, tokens));
       if (tokens[0] === ",") {
         skip(tokens, ",");
-      } else if (tokens[0] === end) {
+      } else if (end.includes(tokens[0])) {
         break;
-      } else if (specialChars.includes(tokens[0]) && tokens[0] !== end) {
+      } else if (
+        specialChars.includes(tokens[0]) &&
+        !StdStmtEnds.includes(tokens[0])
+      ) {
         throw Error(
           tokens[0] +
             "is not expected to appear here.',' is used to split between two facts."
@@ -499,7 +509,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
 
   try {
     return new LetNode(
-      freeVarsAndTheirFactsParse(env, tokens, "let", ";", true)
+      freeVarsAndTheirFactsParse(env, tokens, "let", StdStmtEnds, true)
     );
   } catch (error) {
     handleParseError(env, "let", index, start);
@@ -573,7 +583,7 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
 
     const opt = callOptParse(env, tokens, false, false);
 
-    skip(tokens, ";");
+    skip(tokens, StdStmtEnds);
 
     return new HaveNode(vars, opt);
   } catch (error) {
@@ -592,7 +602,7 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
     const name = shiftVar(tokens);
     const opt = callOptParse(env, tokens);
 
-    skip(tokens, ";");
+    skip(tokens, StdStmtEnds);
     return new ByNode(name, opt);
   } catch (error) {
     handleParseError(env, "by", index, start);

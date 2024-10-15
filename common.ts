@@ -8,6 +8,7 @@ export const specialChars = [
   ":",
   ",",
   ";",
+  "\n",
   "@",
   "!",
   "$",
@@ -52,3 +53,5 @@ export const L_Keywords = [
   byLBracket,
   byRBracket,
 ];
+
+export const StdStmtEnds = [";", "\n"];

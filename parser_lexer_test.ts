@@ -155,12 +155,12 @@ const codes: string[] = [
   // "s,b:a,c is set:set2;",
   // "prove (THM) set(x) => {set1(x)} {}",
   // "by certainProof set(x):set(y);",
-  "thm thm_infer(#x| set(x)) => {set(x)} {set(x);}",
+  // "thm thm_infer(#x| set(x)) => {set(x)} {set(x);}",
+  ":obj(x)",
 ];
 
 function testLexer() {
-  // const fileContent: string = readFileSync("example_914.txt", "utf-8");
-  const fileContent = "set(1,2):setA(3,4);";
+  const fileContent = ":obj(x)";
   const tokens = scan(fileContent);
   console.log(tokens);
 }

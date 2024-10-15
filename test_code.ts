@@ -27,7 +27,8 @@ export const testCodes = {
   // NamedProve: "prove [THM] set(#x) => {set(x)} {set(x),set(x);}",
   // easyProve: "prove [certainProof] simpleInfer(#x) {}; let x;",
   // by: " by certainProof simpleInfer(x); ",
-  thm: "thm thm_infer(#x) => {set(x)} {set(x);}",
+  // thm: "thm thm_infer(#x) => {set(x)} {set(x);}",
+  is: "let x\n x is obj;",
 };
 
 export const testErrorCode = {

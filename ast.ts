@@ -10,8 +10,6 @@ import {
   L_Out,
   RL_Out,
 } from "./shared";
-import exp from "constants";
-import { on } from "events";
 
 //? There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
 export enum L_NodeType {
