@@ -293,15 +293,30 @@ export abstract class TNode extends L_Node {
         ? "def"
         : this instanceof InferNode
           ? "infer"
-          : "exist";
+          : this instanceof ExistNode
+            ? "exist"
+            : "";
 
     const names = this.allNames();
     const vars = this.allVars();
-    return `${typeName} ${names.map((v, i) => `${v}(${vars[i].toString()})`).join(":")}
-req: ${this.allReq()
+
+    let result = `${typeName} ${names.map((v, i) => `${v}(${vars[i].toString()})`).join(":")}`;
+
+    const reqStr = this.allReq()
       .map((e) => e.toString())
-      .join(", ")}
-onlyIfs: ${this.onlyIfs.map((e) => (e as CallOptNode).toString()).join(", ")}`;
+      .join(", ");
+    if (reqStr) {
+      result += ` req: ${reqStr}`;
+    }
+
+    const onlyIfsStr = this.onlyIfs
+      .map((e) => (e as CallOptNode).toString())
+      .join(", ");
+    if (onlyIfsStr) {
+      result += ` onlyIfs: ${onlyIfsStr}`;
+    }
+
+    return result;
   }
 
   abstract checkReq(env: L_Env, node: CallOptNode, emit: Boolean): RL_Out;
@@ -373,6 +388,10 @@ export class KnowNode extends L_Node {
   constructor(facts: CallOptNode[] = []) {
     super();
     this.facts = facts;
+  }
+
+  toString(): string {
+    return this.facts.map((e) => (e as CallOptNode).toString()).join("; ");
   }
 }
 

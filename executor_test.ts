@@ -3,6 +3,7 @@ import { nodeExec, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { L_StmtsParse } from "./parser";
 import { isL_OutErr, RL_Out } from "./shared";
+import { setTheory } from "./tao_analysis_one";
 import { testCodes, testErrorCode } from "./test_code";
 
 const codes: string[] = [
@@ -239,7 +240,11 @@ function testExecutor(testWhat: any = testCodes) {
             console.log(env.errorsWithDepth.map((e) => e[0]).join("\n"));
             // clean errors
             env.errorsWithDepth = [];
-          } else console.log(`${RTypeMap[res.v as RType]} '${res.err}'`);
+          } else {
+            if (RTypeMap[res.v as RType].length > 0)
+              console.log(`${RTypeMap[res.v as RType]} '${res.err}'`);
+            else console.log(`${res.err}`);
+          }
         }
       }
     }
@@ -268,6 +273,6 @@ function testExecutor(testWhat: any = testCodes) {
   }
 }
 
-// testExecutor(setTheory);
-testExecutor(testCodes);
+testExecutor(setTheory);
+// testExecutor(testCodes);
 // testError();

@@ -76,7 +76,7 @@ export class L_Env {
     /** Find all facts that the current input satisfies */
     const relT = this.relT(opt).v as TNode;
     let isT = false;
-    for (const [i, singleFact] of (RFacts as CallOptNode[]).entries()) {
+    for (const [i, singleFact] of RFacts.entries()) {
       const mapping = this.useSingleFreeFactToCheck(singleFact, opt);
       if (mapping === undefined) continue;
       else isT = true;

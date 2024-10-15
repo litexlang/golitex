@@ -65,18 +65,18 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.False]: "check: false",
   [RType.True]: "check: true",
   [RType.Unknown]: "check: unknown",
-  [RType.KnowTrue]: "know: true",
-  [RType.DefTrue]: "def: true",
+  [RType.KnowTrue]: "",
+  [RType.DefTrue]: "",
   [RType.KnowError]: "know: error",
   [RType.DefError]: "def: error",
   [RType.InferError]: "infer: error",
-  [RType.InferTrue]: "infer: true",
+  [RType.InferTrue]: "",
   [RType.KnowUndeclared]: "know: undeclared opt",
   [RType.HaveError]: "have: error",
   [RType.HaveTrue]: "have: true",
   [RType.HaveFailed]: "have: failed",
   [RType.LetError]: "let: error",
-  [RType.LetTrue]: "let: true",
+  [RType.LetTrue]: "",
   [RType.ProveError]: "prove: error",
   [RType.ProveTrue]: "prove: true",
   [RType.ProveFailed]: "prove: failed",
@@ -229,7 +229,7 @@ function callOptsExec(env: L_Env, node: CallOptsNode): RL_Out {
  */
 function callInferExec(env: L_Env, node: CallOptNode, relT: InferNode): RL_Out {
   try {
-    if (!env.checkEmit(node, false)) {
+    if (!env.checkEmit(node, false).v) {
       return cL_Out(RType.Unknown, `${node.toString()} itself unknown`);
     }
 
@@ -324,7 +324,7 @@ function knowExec(env: L_Env, node: KnowNode): RL_Out {
       if (isNull(res.v)) return res;
     }
 
-    return cL_Out(RType.KnowTrue);
+    return cL_Out(RType.KnowTrue, node.toString());
   } catch (error) {
     return cEnvErrL_Out(env, RType.KnowError, "know");
   }
@@ -526,7 +526,7 @@ function callExistExec(env: L_Env, node: CallOptNode, relT: ExistNode): RL_Out {
  */
 function callDefExec(env: L_Env, node: CallOptNode, relT: DefNode): RL_Out {
   try {
-    if (env.checkEmit(node, true)) {
+    if (env.checkEmit(node, true).v) {
       return cL_Out(RType.True);
     } else {
       const out = relT.checkReq(env, node);

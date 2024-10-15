@@ -31,6 +31,10 @@ export function scan(text: string): string[] {
     // use // as comment
     if (char === "/" && text[i + 1] === "/") {
       inComment = true;
+      /**
+       * In order to make `know set(#x) // ... ` works instead of `know set(#x); //...` , we put in a '\n' before any //
+       */
+      tokens.push("\n");
       if (currentToken) {
         tokens.push(currentToken);
         currentToken = "";
