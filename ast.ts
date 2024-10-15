@@ -47,10 +47,15 @@ export class FactNode extends L_Node {
   optParams: string[][];
   optNameAsLst: string[];
 
-  /**Extra features: used in know, prove*/
+  byName: string = "";
+
+  //! req and onlyIfs are used in some completely unrelated situations
+  //! this is highly related to how # works: 1. when prove : introduce local var, bind req 2. when being checked: literally true?
+  //! 1. used in prove/TNode/by/... req (emit or check)
+  //! 2. used as opening a local env and check whether onlyIf works under req. If true, emit.
+  //! 3. know (emit)
   req: FactNode[] = [];
   onlyIFs: FactNode[] = [];
-  byName: string = "";
 
   constructor(
     opts: [string, string[]][],
