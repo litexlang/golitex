@@ -188,18 +188,6 @@ export abstract class TNode extends L_Node {
     // process DollarMarks
     for (let i = this.onlyIfs.length - 1; i >= 0; i--) {
       const value = this.onlyIfs[i];
-
-      if (value instanceof DollarMarkNode) {
-        this.onlyIfs.splice(i, 1);
-
-        const callNode = new CallOptNode([
-          [value.template.name, value.template.freeVars],
-        ]);
-        const templateNode: TNode = value.template;
-
-        //! Here lies a problem: the templateNode's optName should start with : and anything start with : means it inherits from all above.
-        this.onlyIfs.splice(i, 0, templateNode, callNode);
-      }
     }
 
     // eliminate template declarations in onlyIfs, retain callOpts
@@ -361,9 +349,8 @@ export class ExistNode extends TNode {
   }
 }
 
-export type CanBeKnownNode = CallOptNode | TNode;
 export class KnowNode extends L_Node {
-  facts: CanBeKnownNode[] = [];
+  facts: FactNode[] = [];
   isKnowEverything: Boolean = false;
 
   constructor(facts: CallOptNode[] = []) {
@@ -378,9 +365,9 @@ export class KnowNode extends L_Node {
 
 export class LetNode extends L_Node {
   vars: string[];
-  properties: CallOptNode[];
+  properties: FactNode[];
 
-  constructor(node: { freeVars: string[]; properties: CallOptNode[] }) {
+  constructor(node: { freeVars: string[]; properties: FactNode[] }) {
     super();
     this.vars = node.freeVars;
     this.properties = node.properties;
@@ -388,16 +375,6 @@ export class LetNode extends L_Node {
 
   toString() {
     return `${this.vars.join(", ")}| ${this.properties.map((s) => s.toString()).join(", ")}`;
-  }
-}
-
-// Declare and call at the same time.
-export class DollarMarkNode extends L_Node {
-  template: TNode;
-
-  constructor(template: TNode) {
-    super();
-    this.template = template;
   }
 }
 

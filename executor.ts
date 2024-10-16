@@ -5,7 +5,6 @@ import {
   L_Node,
   // L_NodeType,
   LetNode,
-  CanBeKnownNode,
   TNode,
   ProveNode,
   HaveNode,
@@ -14,6 +13,7 @@ import {
   InferNode,
   ByNode,
   ThmNode,
+  FactNode,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -200,8 +200,11 @@ function letExec(env: L_Env, node: LetNode): RType {
     env.declaredVars = env.declaredVars.concat(node.vars) as string[];
 
     for (let i = 0; i < node.properties.length; i++) {
-      let info = knowCallOptExec(env, node.properties[i]);
-      if (isNull(info)) return cEnvRType(env, RType.Error);
+      //! In theory, ANY FactNode can be known, but currently knowExec is not refactored.
+      if (node.properties[i] instanceof CallOptNode) {
+        let info = knowFactExec(env, node.properties[i] as CallOptNode);
+        if (isNull(info)) return cEnvRType(env, RType.Error);
+      }
     }
 
     return RType.True;
@@ -296,7 +299,7 @@ function templateDeclExec(env: L_Env, node: TNode): RType {
 
 function knowExec(env: L_Env, node: KnowNode): RType {
   try {
-    let facts: CanBeKnownNode[] = [];
+    let facts: FactNode[] = [];
     let isKnowEverything: Boolean = false;
     let res: RType = RType.Error;
 
@@ -310,7 +313,7 @@ function knowExec(env: L_Env, node: KnowNode): RType {
         if (isKnowEverything) {
           res = knowEverythingCallOptExec(env, fact);
         } else {
-          res = knowCallOptExec(env, fact);
+          res = knowFactExec(env, fact);
         }
       } else if (fact instanceof DefNode || fact instanceof InferNode) {
         res = templateDeclExec(env, fact);
@@ -318,7 +321,7 @@ function knowExec(env: L_Env, node: KnowNode): RType {
         if (isKnowEverything) {
           res = knowEverythingCallOptExec(env, factNode);
         } else {
-          res = knowCallOptExec(env, factNode);
+          res = knowFactExec(env, factNode);
         }
       }
       // The commented-out ImpliesCallOptNode case has been omitted
@@ -339,7 +342,8 @@ function knowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RType {
   }
 }
 
-function knowCallOptExec(env: L_Env, node: CallOptNode): RType {
+//! node here must be changed into type FactNode
+function knowFactExec(env: L_Env, node: CallOptNode): RType {
   try {
     if (!env.getRelT(node)) return RType.Error;
 
@@ -644,7 +648,7 @@ function proveInferExec(env: L_Env, node: ProveNode, relT: TNode): RType {
     }
 
     // emit prove.opt itself, notice how opt of proveNode is literally the same as the fact emitted
-    knowCallOptExec(env, node.opt);
+    knowFactExec(env, node.opt);
 
     if (node.name !== "") env.newBy(node.name, node.opt);
 
@@ -748,7 +752,7 @@ function proveDefExec(env: L_Env, node: ProveNode, relT: TNode): RType {
     }
 
     // emit prove, notice how opt of proveNode is literally the same as the fact emitted
-    knowCallOptExec(env, node.opt);
+    knowFactExec(env, node.opt);
 
     if (node.name !== "") env.newBy(node.name, node.opt);
 

@@ -8,7 +8,6 @@ import {
   LetNode,
   DefNode,
   TNode,
-  DollarMarkNode,
   ProveNode,
   HaveNode,
   ByNode,
@@ -19,7 +18,6 @@ import {
   KnowTypeKeywords,
   TemplateDeclarationKeywords,
   specialChars,
-  DefBlockDeclareAndCall,
   SymbolsFactsSeparator,
   ProveKeywords,
   redefineTemplateDeclarationKeywords,
@@ -165,16 +163,8 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
     skip(tokens, KnowTypeKeywords);
     while (1) {
       let node: L_Node;
-      switch (tokens[0]) {
-        case ":":
-        case "def":
-          node = templateParse(env, tokens);
-          knowNode.facts.push(node as TNode);
-          break;
-        default:
-          node = callOptParse(env, tokens, true, true);
-          knowNode.facts.push(node as CallOptNode);
-      }
+      node = callOptParse(env, tokens, true, true);
+      knowNode.facts.push(node as CallOptNode);
 
       if (tokens[0] === ",") skip(tokens, ",");
       else break;
@@ -228,21 +218,6 @@ function freeVarsAndTheirFactsParse(
   return { freeVars: freeVars, properties: requirements };
 }
 
-function questionMarkParse(env: L_Env, tokens: string[]): DollarMarkNode {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  try {
-    skip(tokens, DefBlockDeclareAndCall);
-    tokens.unshift(":");
-    const template = templateParse(env, tokens);
-    return new DollarMarkNode(template);
-  } catch (error) {
-    handleParseError(env, "?", index, start);
-    throw error;
-  }
-}
-
 function blockParse(env: L_Env, tokens: string[]): L_Node[] {
   const start = tokens[0];
   const index = tokens.length;
@@ -252,11 +227,7 @@ function blockParse(env: L_Env, tokens: string[]): L_Node[] {
     skip(tokens, "{"); // skip {
 
     while (!isCurToken("}", tokens)) {
-      if (isCurToken(DefBlockDeclareAndCall, tokens)) {
-        const node = questionMarkParse(env, tokens);
-        if (node) result.push(node);
-        continue;
-      } else LiTexStmtParse(env, tokens, result);
+      LiTexStmtParse(env, tokens, result);
     }
 
     skip(tokens, "}"); // skip }

@@ -11,7 +11,6 @@ export const specialChars = [
   "\n",
   "@",
   "!",
-  "$",
   "?",
   "&",
   "|",
@@ -33,8 +32,6 @@ export const TemplateDeclarationKeywords = [
   ...redefineTemplateDeclarationKeywords,
   ...ExistKeywords,
 ];
-
-export const DefBlockDeclareAndCall = "$"; // sort of works like do in coffeeScript and (function (...){...}).call(...) in JS
 
 export const SymbolsFactsSeparator = "|";
 export const ProveKeywords = ["&", "prove"];
