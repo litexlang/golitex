@@ -2,53 +2,71 @@ import { isNull } from "lodash";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
 import { hInfo, RType } from "./executor";
-import {
-  cEnvRType,
-  cL_Out,
-  ErrL_Out,
-  fixOpt,
-  L_Out,
-  relTNotFoundEnvErr,
-  RL_Out,
-} from "./shared";
+import { cEnvRType, fixOpt, relTNotFoundEnvErr } from "./shared";
 
-//? There are several things in LiTex: Declaration (var, fact-template) ; check; know(let); emit
-// export enum L_NodeType {
-//   Error,
-//   Node,
+export abstract class L_Node {}
 
-//   CallOptNode,
-//   // CallOptsNode,
-
-//   KnowNode,
-//   HaveNode,
-//   LetNode,
-
-//   ProofNode,
-//   CheckInProof,
-//   ImpliesCallOptNode,
-
-//   InferNode,
-//   DefNode,
-//   ExistNode,
-
-//   FreeVarsWithFactsNode,
-//   DollarMarkNode,
-//   ByNode,
-//   ThmNode,
-// }
-
-export abstract class L_Node {
-  // type: L_NodeType = L_NodeType.Node;
+export abstract class FactNode extends L_Node {
+  isT: Boolean = true;
+  byName: string = "";
+  constructor(isT: Boolean, byName: string) {
+    super();
+    this.isT = isT;
+    this.byName = byName;
+  }
 }
 
-export class CallOptNode extends L_Node {
-  // type: L_NodeType = L_NodeType.CallOptNode;
+export class OrNode extends FactNode {
+  name: string;
+  facts: FactNode[];
+  constructor(
+    name: string,
+    facts: FactNode[],
+    isT: Boolean = true,
+    byName: string = ""
+  ) {
+    super(isT, byName);
+    this.name = name;
+    this.facts = facts;
+  }
+}
+
+export class ShortCallOptNode extends FactNode {
+  fullName: string;
+  params: string[][];
+
+  constructor(
+    fullName: string,
+    params: string[][],
+    isT: Boolean = true,
+    byName: string = ""
+  ) {
+    super(isT, byName);
+    this.fullName = fullName;
+    this.params = params;
+  }
+}
+
+export class IfThenNode extends FactNode {
+  req: FactNode[];
+  onlyIfs: FactNode[];
+
+  constructor(
+    req: FactNode[],
+    onlyIfs: FactNode[],
+    isT: Boolean = true,
+    byName: string = ""
+  ) {
+    super(isT, byName);
+    this.req = req;
+    this.onlyIfs = onlyIfs;
+  }
+}
+
+export class CallOptNode extends FactNode {
   optName: string;
   optParams: string[][];
   optNameAsLst: string[];
-
-  byName: string = "";
 
   //! req and onlyIfs are used in some completely unrelated situations
   //! this is highly related to how # works: 1. when prove : introduce local var, bind req 2. when being checked: literally true?
@@ -62,9 +80,10 @@ export class CallOptNode extends L_Node {
     opts: [string, string[]][],
     req: CallOptNode[][] = [],
     onlyIfs: CallOptNode[] = [],
+    isT: Boolean = true,
     byName: string = ""
   ) {
-    super();
+    super(isT, byName);
 
     this.optName = opts.map((e) => e[0]).join(OptsConnectionSymbol);
     this.optParams = opts.map((e) => e[1]);
@@ -78,13 +97,15 @@ export class CallOptNode extends L_Node {
     params: string[][],
     req: CallOptNode[][] = [],
     onlyIfs: CallOptNode[] = [],
-    byName: string = ""
+    byName: string = "",
+    isT: Boolean = true
   ) {
     const names = name.split(OptsConnectionSymbol);
     return new CallOptNode(
       names.map((e, i) => [e, params[i]]),
       req,
       onlyIfs,
+      isT,
       byName
     );
   }
@@ -99,29 +120,8 @@ export class CallOptNode extends L_Node {
   }
 }
 
-export type TNodeFact = {
-  params: string[][];
-  onlyIfs: CallOptNode[];
-  requirements: CallOptNode[];
-  activated: Boolean;
-};
-export function makeTemplateNodeFact(
-  params: string[][],
-  onlyIfs: CallOptNode[] = [],
-  requirements: CallOptNode[] = [],
-  activated: Boolean = true
-) {
-  return {
-    params: params,
-    onlyIfs: onlyIfs,
-    activated: activated,
-    requirements: requirements,
-  };
-}
-
 // Main data structure of the whole project
 export abstract class TNode extends L_Node {
-  // type: L_NodeType = L_NodeType.InferNode;
   name: string;
   freeVars: string[];
   requirements: CallOptNode[] = [];
@@ -212,21 +212,6 @@ export abstract class TNode extends L_Node {
         this.declaredTemplates.set(value.name, value);
         this.onlyIfs.splice(i, 1);
       }
-      // else if (value instanceof CallOptNode) {
-      // this.onlyIfs.push(value);
-      // this.onlyIfs = insertListIntoListAndDeleteElemOnIndex(
-      //   this.onlyIfs,
-      //   (value as CallOptsNode).nodes,
-      //   i
-      // );
-      // }
-      // else if (value instanceof CallOptsNode) {
-      //   this.onlyIfs = insertListIntoListAndDeleteElemOnIndex(
-      //     this.onlyIfs,
-      //     (value as CallOptsNode).nodes,
-      //     i
-      //   );
-      // }
     }
 
     // make sure everything is done well.
@@ -240,16 +225,6 @@ export abstract class TNode extends L_Node {
       }
     }
     return RType.True;
-
-    // function insertListIntoListAndDeleteElemOnIndex<T>(
-    //   originalList: T[],
-    //   itemsToInsert: T,
-    //   position: number
-    // ): T[] {
-    //   const newList = [...originalList];
-    //   newList.splice(position, 1, itemsToInsert);
-    //   return newList;
-    // }
   }
 
   // Fix all free variables in this template, no matter it's declared in fathers or itself
@@ -335,8 +310,6 @@ export abstract class TNode extends L_Node {
 }
 
 export class DefNode extends TNode {
-  // type: L_NodeType = L_NodeType.DefNode;
-
   checkReq(env: L_Env, node: CallOptNode, emit: Boolean = false): RType {
     const tmp = fixOpt(env, node, this.allVars(), this.allReq());
     if (isNull(tmp.v)) return relTNotFoundEnvErr(env, node);
@@ -358,8 +331,6 @@ export class DefNode extends TNode {
 }
 
 export class InferNode extends TNode {
-  // type: L_NodeType = L_NodeType.InferNode;
-
   checkReq(env: L_Env, node: CallOptNode, emit: Boolean = false): RType {
     const fixedReq = fixOpt(env, node, this.allVars(), this.allReq());
     const isT = fixedReq.v?.every((e) => env.checkEmit(e, emit));
@@ -380,7 +351,6 @@ export class InferNode extends TNode {
 }
 
 export class ExistNode extends TNode {
-  // type = L_NodeType.ExistNode;
   isTrue = false;
   checkReq(env: L_Env, node: CallOptNode, emit: Boolean = false): RType {
     return RType.Error;
@@ -393,7 +363,6 @@ export class ExistNode extends TNode {
 
 export type CanBeKnownNode = CallOptNode | TNode;
 export class KnowNode extends L_Node {
-  // type: L_NodeType = L_NodeType.KnowNode;
   facts: CanBeKnownNode[] = [];
   isKnowEverything: Boolean = false;
 
@@ -407,24 +376,7 @@ export class KnowNode extends L_Node {
   }
 }
 
-// export enum CallOptsNodeType {
-//   And,
-//   Or,
-//   Not,
-// }
-// export class CallOptsNode extends L_Node {
-// type: L_NodeType = L_NodeType.CallOptsNode;
-//   nodes: (CallOptNode | CallOptsNode)[] = [];
-//   factType: CallOptsNodeType = CallOptsNodeType.And;
-
-//   constructor(nodes: CallOptNode[]) {
-//     super();
-//     this.nodes = nodes;
-//   }
-// }
-
 export class LetNode extends L_Node {
-  // type: L_NodeType = L_NodeType.LetNode;
   vars: string[];
   properties: CallOptNode[];
 
@@ -441,7 +393,6 @@ export class LetNode extends L_Node {
 
 // Declare and call at the same time.
 export class DollarMarkNode extends L_Node {
-  // type = L_NodeType.DollarMarkNode;
   template: TNode;
 
   constructor(template: TNode) {
@@ -451,7 +402,6 @@ export class DollarMarkNode extends L_Node {
 }
 
 export class ProveNode extends L_Node {
-  // type = L_NodeType.ProofNode;
   opt: CallOptNode;
   proveBlock: L_Node[];
   name: string;
@@ -465,7 +415,6 @@ export class ProveNode extends L_Node {
 }
 
 export class HaveNode extends L_Node {
-  // type = L_NodeType.HaveNode;
   vars: string[];
   opt: CallOptNode;
   constructor(vars: string[], opt: CallOptNode) {
@@ -476,7 +425,6 @@ export class HaveNode extends L_Node {
 }
 
 export class ByNode extends L_Node {
-  // type = L_NodeType.ByNode;
   name: string;
   opt: CallOptNode;
 
@@ -488,7 +436,6 @@ export class ByNode extends L_Node {
 }
 
 export class ThmNode extends L_Node {
-  // type = L_NodeType.ThmNode;
   opt: CallOptNode;
   proveBlock: L_Node[];
 
