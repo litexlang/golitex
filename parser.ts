@@ -59,7 +59,7 @@ function shiftVar(tokens: string[]): string {
   return token;
 }
 
-function isCurToken(s: string, tokens: string[]) {
+function isCurToken(tokens: string[], s: string) {
   return s === tokens[0];
 }
 
@@ -229,7 +229,7 @@ function blockParse(env: L_Env, tokens: string[]): L_Node[] {
     const result: L_Node[] = [];
     skip(tokens, "{"); // skip {
 
-    while (!isCurToken("}", tokens)) {
+    while (!isCurToken(tokens, "}")) {
       LiTexStmtParse(env, tokens, result);
     }
 
@@ -270,11 +270,11 @@ function callOptParse(
           const params: string[] = [];
 
           skip(tokens, "(");
-          if (!isCurToken(")", tokens)) {
+          if (!isCurToken(tokens, ")")) {
             while (1) {
               params.push(shiftVar(tokens));
-              if (isCurToken(",", tokens)) skip(tokens, ",");
-              else if (isCurToken(")", tokens)) {
+              if (isCurToken(tokens, ",")) skip(tokens, ",");
+              else if (isCurToken(tokens, ")")) {
                 skip(tokens, ")");
                 break;
               } else throw Error("");
@@ -290,7 +290,7 @@ function callOptParse(
           requirements.push(freeVarsAndFacts.properties);
         }
 
-        if (isCurToken(":", tokens)) {
+        if (isCurToken(tokens, ":")) {
           skip(tokens, ":");
         } else {
           break;
@@ -305,8 +305,8 @@ function callOptParse(
       if (!withReq) {
         while (!suchThats.includes(tokens[0])) {
           vars[n].push(shiftVar(tokens));
-          if (isCurToken(",", tokens)) skip(tokens, ",");
-          else if (isCurToken(":", tokens)) {
+          if (isCurToken(tokens, ",")) skip(tokens, ",");
+          else if (isCurToken(tokens, ":")) {
             skip(tokens, ":");
             vars.push([]);
             n++;
@@ -325,7 +325,7 @@ function callOptParse(
     }
 
     let out: CallOptNode;
-    if (!withOnlyIf || !isCurToken("=>", tokens))
+    if (!withOnlyIf || !isCurToken(tokens, "=>"))
       out = new CallOptNode(opts, requirements);
     else {
       skip(tokens, "=>");
@@ -339,7 +339,7 @@ function callOptParse(
 
     if (!withByName) return out;
     else {
-      if (!isCurToken("[", tokens)) return out;
+      if (!isCurToken(tokens, "[")) return out;
       else {
         skip(tokens, "[");
 
@@ -410,7 +410,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
     switch (tokens[0]) {
       case "=>":
         skip(tokens, "=>");
-        if (!isCurToken("{", tokens)) {
+        if (!isCurToken(tokens, "{")) {
           result = new InferNode(
             name,
             freeVarsFact.freeVars,
@@ -445,7 +445,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
 
       case "<=>":
         skip(tokens, "<=>");
-        if (!isCurToken("{", tokens)) {
+        if (!isCurToken(tokens, "{")) {
           result = new DefNode(
             name,
             freeVarsFact.freeVars,
@@ -503,7 +503,7 @@ function yaProveParse(env: L_Env, tokens: string[]): ProveNode {
   try {
     skip(tokens, ProveKeywords);
     let name = "";
-    if (isCurToken(byLBracket, tokens)) {
+    if (isCurToken(tokens, byLBracket)) {
       skip(tokens, byLBracket);
       name = shiftVar(tokens);
       skip(tokens, byRBracket);
@@ -554,9 +554,9 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
     skip(tokens, "have");
 
     const vars: string[] = [];
-    while (!isCurToken(SymbolsFactsSeparator, tokens)) {
+    while (!isCurToken(tokens, SymbolsFactsSeparator)) {
       vars.push(shiftVar(tokens));
-      if (isCurToken(",", tokens)) skip(tokens, ",");
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
     skip(tokens, SymbolsFactsSeparator);
 
@@ -625,9 +625,9 @@ function reqOnlyIfFactParse(env: L_Env, tokens: string[]): CallOptNode {
   try {
     const req: CallOptNode[] = [];
     skip(tokens, "(");
-    while (!isCurToken(")", tokens)) {
+    while (!isCurToken(tokens, ")")) {
       req.push(callOptParse(env, tokens, false, false));
-      if (isCurToken(",", tokens)) skip(tokens, ",");
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
     skip(tokens, ")");
 
@@ -635,9 +635,9 @@ function reqOnlyIfFactParse(env: L_Env, tokens: string[]): CallOptNode {
     skip(tokens, "{");
 
     const onlyIf: CallOptNode[] = [];
-    while (!isCurToken("}", tokens)) {
+    while (!isCurToken(tokens, "}")) {
       onlyIf.push(callOptParse(env, tokens, false, false));
-      if (isCurToken(",", tokens)) skip(tokens, ",");
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
     skip(tokens, "}");
@@ -682,21 +682,21 @@ function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
 
   try {
     let nameAsParam: string[] = [];
-    while (!isCurToken("(", tokens)) {
+    while (!isCurToken(tokens, "(")) {
       nameAsParam.push(shiftVar(tokens));
-      if (isCurToken(":", tokens)) skip(tokens, ":");
+      if (isCurToken(tokens, ":")) skip(tokens, ":");
     }
 
     skip(tokens, "(");
     const params: string[][] = [];
-    while (!isCurToken(")", tokens)) {
+    while (!isCurToken(tokens, ")")) {
       const curParams: string[] = [];
-      while (!isCurToken(":", tokens) && !isCurToken(")", tokens)) {
+      while (!isCurToken(tokens, ":") && !isCurToken(tokens, ")")) {
         curParams.push(shiftVar(tokens));
-        if (isCurToken(",", tokens)) skip(tokens, ",");
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
       params.push(curParams);
-      if (isCurToken(":", tokens)) skip(tokens, ":");
+      if (isCurToken(tokens, ":")) skip(tokens, ":");
     }
 
     skip(tokens, ")");
@@ -733,9 +733,9 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
     skip(tokens, "{");
 
     const facts: FactNode[] = [];
-    while (!isCurToken("}", tokens)) {
+    while (!isCurToken(tokens, "}")) {
       facts.push(factParse(env, tokens));
-      if (isCurToken(",", tokens)) skip(tokens, ",");
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
     skip(tokens, "}");
@@ -753,18 +753,18 @@ function ifThenParse(env: L_Env, tokens: string[]): IfThenNode {
   try {
     skip(tokens, "(");
     const req: FactNode[] = [];
-    while (!isCurToken(")", tokens)) {
+    while (!isCurToken(tokens, ")")) {
       req.push(factParse(env, tokens));
-      if (isCurToken(",", tokens)) skip(tokens, ",");
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
     skip(tokens, ")");
 
     const onlyIfs: FactNode[] = [];
     skip(tokens, "=>");
     skip(tokens, "{");
-    while (!isCurToken("}", tokens)) {
+    while (!isCurToken(tokens, "}")) {
       onlyIfs.push(factParse(env, tokens));
-      if (isCurToken(",", tokens)) skip(tokens, ",");
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
     skip(tokens, "}");
 
