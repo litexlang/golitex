@@ -315,14 +315,6 @@ function knowExec(env: L_Env, node: KnowNode): RType {
         } else {
           res = knowFactExec(env, fact);
         }
-      } else if (fact instanceof DefNode || fact instanceof InferNode) {
-        res = templateDeclExec(env, fact);
-        const factNode = CallOptNode.create(fact.name, [fact.freeVars]);
-        if (isKnowEverything) {
-          res = knowEverythingCallOptExec(env, factNode);
-        } else {
-          res = knowFactExec(env, factNode);
-        }
       }
       // The commented-out ImpliesCallOptNode case has been omitted
       if (isRTypeErr(res)) return res;
