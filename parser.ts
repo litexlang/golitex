@@ -30,7 +30,6 @@ import {
   byRBracket,
   StdStmtEnds,
 } from "./common";
-import { on } from "events";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -343,6 +342,7 @@ function callOptParse(
       if (!isCurToken("[", tokens)) return out;
       else {
         skip(tokens, "[");
+
         skip(tokens, "]");
         return out;
       }
@@ -703,7 +703,7 @@ function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
 
     return new ShortCallOptNode(nameAsParam.join(":"), params);
   } catch (error) {
-    handleParseError(env, "not", index, start);
+    handleParseError(env, `${start} is invalid operator.`, index, start);
     throw error;
   }
 }

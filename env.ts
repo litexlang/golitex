@@ -352,14 +352,4 @@ export class L_Env {
     }
     console.log();
   }
-
-  printErrorsWithDepth() {
-    for (let i = this.messages.length - 1; i >= 0; i--) {
-      let space = "";
-      for (let j = 0; j < this.messages.length - 1 - i; j++) {
-        space += "  ";
-      }
-      console.log(space + this.messages[i][0]);
-    }
-  }
 }

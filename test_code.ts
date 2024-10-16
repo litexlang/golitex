@@ -1,6 +1,9 @@
 export const testCodes = {
-  Basics:
-    ":obj(x) => {}; :set(x); know set(#x); :set2(x,y) :F(x,y|set(x)) {:son(h|set(h)) son(h);} :set3(x){:set2(x)} :set0(x); know set0(#x) => {set3(x)};  : p1(x|set(x)) => {:p2(y|set2(x,y), set0(y)) => {set3(y); set(x);}} ; :simpleInfer(x) => {}  ",
+  // Basics:
+  //   ":obj(x) => {}; :set(x); know set(#x); :set2(x,y) :F(x,y|set(x)) {:son(h|set(h)) son(h);} :set3(x){:set2(x)} :set0(x); know set0(#x) => {set3(x)};  : p1(x|set(x)) => {:p2(y|set2(x,y), set0(y)) => {set3(y); set(x);}} ; :simpleInfer(x) => {}  ",
+  // def: ":obj(x) => {};  : set(x);",
+  // know: "know set(#x);",
+  err1: "~",
   // KnowExtendedInfer: "let A; know set3(#x: obj(x)):set2(#x) => {F(x, #E)};",
   // knowInfer: "set3(x):set2(A);",
   // KnowExtendedInfer2: "let y: set2(y: obj(y)):set3(y) => {obj(y)};",
@@ -11,7 +14,6 @@ export const testCodes = {
   // trueCheck2: "let t; set(t);",
   // def1: ":obj2(x) : aliasOfSet(x: obj2(x), set(x));",
   // def2: "let x: obj2(x); aliasOfSet(x);",
-
   // ProveInfer:
   //   "let y0: set0(y0), set(y0); prove p1(#x: set(x)):p2(y0: set0(y0)) => {obj(y0)} {}",
   // CallOpt: "obj(y0);",
@@ -25,7 +27,7 @@ export const testCodes = {
   // easyProve: "prove [certainProof] simpleInfer(#x) {}; let x;",
   // by: " by certainProof simpleInfer(x); ",
   // thm: "thm thm_infer(#x) => {set(x)} {set(x);}",
-  is: "let x | obj(x); x is set; :tmp (x|set(x)) => {set(x);}",
+  // is: "let x | obj(x); x is set; :tmp (x|set(x)) => {set(x);}",
   // setEqual:
   //   ": item(x,A| set(A)) => {} : setEqual(A,B| set(A), set(B)) => {item(#x, A) => item(x, B); item(#x, B) => item(x, A);}",
 };

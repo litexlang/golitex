@@ -188,7 +188,7 @@ function testError(asIfRight = false) {
       const tokens = scan(code as string);
       const result = L_StmtsParse(env, tokens);
       if (result === null) {
-        env.printErrorsWithDepth();
+        console.log(env.messages);
       } else {
         for (let i = 0; i < result.length; i++) {
           const res = nodePrintExec(env, result[i]);
@@ -208,7 +208,7 @@ function testError(asIfRight = false) {
       const tokens = scan(code as string);
       const result = L_StmtsParse(env, tokens);
       if (result === null) {
-        env.printErrorsWithDepth();
+        console.log(env.messages);
       } else {
         for (let i = 0; i < result.length; i++) {
           const res = nodePrintExec(env, result[i]);
@@ -231,7 +231,8 @@ function testExecutor(testWhat: any = testCodes) {
     const tokens = scan(code as string);
     const parseResult = L_StmtsParse(env, tokens);
     if (parseResult === null) {
-      env.printErrorsWithDepth();
+      console.log(env.messages);
+      env.messages = [];
     } else {
       for (let i = 0; i < parseResult.length; i++) {
         const res = nodePrintExec(env, parseResult[i]);
@@ -265,7 +266,7 @@ function testExecutor(testWhat: any = testCodes) {
     if (env.bys.size > 0) env.printBys();
   } else {
     console.log("\n------Error------\n");
-    env.printErrorsWithDepth();
+    console.log(env.messages);
     console.log();
   }
 }

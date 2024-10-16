@@ -22,12 +22,7 @@ export class ShortCallOptNode extends FactNode {
   fullName: string;
   params: string[][];
 
-  constructor(
-    fullName: string,
-    params: string[][],
-    isT: Boolean = true,
-    byName: string = ""
-  ) {
+  constructor(fullName: string, params: string[][]) {
     super();
     this.fullName = fullName;
     this.params = params;
@@ -38,12 +33,7 @@ export class IfThenNode extends FactNode {
   req: FactNode[];
   onlyIfs: FactNode[];
 
-  constructor(
-    req: FactNode[],
-    onlyIfs: FactNode[],
-    isT: Boolean = true,
-    byName: string = ""
-  ) {
+  constructor(req: FactNode[], onlyIfs: FactNode[]) {
     super();
     this.req = req;
     this.onlyIfs = onlyIfs;
@@ -66,9 +56,7 @@ export class CallOptNode extends FactNode {
   constructor(
     opts: [string, string[]][],
     req: CallOptNode[][] = [],
-    onlyIfs: CallOptNode[] = [],
-    isT: Boolean = true,
-    byName: string = ""
+    onlyIfs: CallOptNode[] = []
   ) {
     super();
 
@@ -83,17 +71,13 @@ export class CallOptNode extends FactNode {
     name: string,
     params: string[][],
     req: CallOptNode[][] = [],
-    onlyIfs: CallOptNode[] = [],
-    byName: string = "",
-    isT: Boolean = true
+    onlyIfs: CallOptNode[] = []
   ) {
     const names = name.split(OptsConnectionSymbol);
     return new CallOptNode(
       names.map((e, i) => [e, params[i]]),
       req,
-      onlyIfs,
-      isT,
-      byName
+      onlyIfs
     );
   }
 
