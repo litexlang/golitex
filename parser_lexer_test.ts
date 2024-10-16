@@ -158,7 +158,9 @@ const codes: string[] = [
   // "thm thm_infer(#x| set(x)) => {set(x)} {set(x);}",
   // ":obj(x)",
   // ":tmp (x|set(x)) => {set(x);}",
-  "(set(#x,b), set2(a,b)) => {obj(a), obj(b), obj2(3,x)};",
+  // "(set(#x,b), set2(a,b)) => {obj(a), obj(b), obj2(3,x)};",
+  // "let x | obj(x);",
+  "know (set(x), set(y), set(z)) => {set2(x,y), set2(x,z)}",
 ];
 
 function testLexer() {

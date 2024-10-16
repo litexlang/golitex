@@ -1,4 +1,4 @@
-import { FactNode } from "./ast";
+import { CallOptNode } from "./ast";
 import { L_Env } from "./env";
 import { hRunErr, RType } from "./executor";
 
@@ -28,7 +28,7 @@ export function cErr_Out(err: string = "Error") {
   return { v: null, err: err };
 }
 
-// export function cNoRelTErr_Out(opt: FactNode) {
+// export function cNoRelTErr_Out(opt: CallOptNode) {
 //   return { v: null, err: `${opt.optName} undeclared.` };
 // }
 
@@ -41,8 +41,8 @@ export function cEnvRType(
   return t;
 }
 
-export function relTNotFoundEnvErr(env: L_Env, node: FactNode): RType {
-  return cEnvRType(env, RType.Error, `${FactNode.toString()} undeclared`);
+export function relTNotFoundEnvErr(env: L_Env, node: CallOptNode): RType {
+  return cEnvRType(env, RType.Error, `${CallOptNode.toString()} undeclared`);
 }
 
 export type RL_Out = L_Out<RType> | L_Out<null>;
@@ -84,10 +84,10 @@ export function freeFixMap(
 
 export function fixOpt(
   env: L_Env,
-  fixedOpt: FactNode | string[][],
+  fixedOpt: CallOptNode | string[][],
   free: string[][],
-  fixWhats: FactNode[]
-): L_Out<FactNode[]> {
+  fixWhats: CallOptNode[]
+): L_Out<CallOptNode[]> {
   let fixedParams: string[][];
   if (Array.isArray(fixedOpt)) {
     fixedParams = fixedOpt;
@@ -99,7 +99,7 @@ export function fixOpt(
   if (isL_OutErr(temp)) return cErr_Out("");
   const mapping = temp.v;
 
-  const res: FactNode[] = [];
+  const res: CallOptNode[] = [];
   for (let fixWhat of fixWhats) {
     let hasError = false;
     const fixedParams = fixWhat.optParams.map((ls) =>
@@ -112,7 +112,8 @@ export function fixOpt(
       })
     );
     if (hasError) return cErr_Out();
-    else res.push(FactNode.create(fixWhat.optName, fixedParams as string[][]));
+    else
+      res.push(CallOptNode.create(fixWhat.optName, fixedParams as string[][]));
   }
 
   return cL_Out(res);

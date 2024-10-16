@@ -1,5 +1,5 @@
 import {
-  FactNode,
+  CallOptNode,
   // CallOptsNode,
   InferNode,
   ExistNode,
@@ -173,7 +173,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
           break;
         default:
           node = callOptParse(env, tokens, true, true);
-          knowNode.facts.push(node as FactNode);
+          knowNode.facts.push(node as CallOptNode);
       }
 
       if (tokens[0] === ",") skip(tokens, ",");
@@ -194,8 +194,8 @@ function freeVarsAndTheirFactsParse(
   begin: string = "(",
   end: string[] = [")"],
   optWithReqAndOnlyIf: Boolean = false
-): { freeVars: string[]; properties: FactNode[] } {
-  const requirements: FactNode[] = [];
+): { freeVars: string[]; properties: CallOptNode[] } {
+  const requirements: CallOptNode[] = [];
   const freeVars: string[] = [];
 
   skip(tokens, begin);
@@ -212,10 +212,10 @@ function freeVarsAndTheirFactsParse(
     if (!end.includes(tokens[0])) {
       skip(tokens, SymbolsFactsSeparator);
       while (!end.includes(tokens[0])) {
-        let node: FactNode;
+        let node: CallOptNode;
         if (optWithReqAndOnlyIf) node = callOptParse(env, tokens, true, true);
         else node = callOptParse(env, tokens);
-        if (node) requirements.push(node as FactNode);
+        if (node) requirements.push(node as CallOptNode);
 
         if (tokens[0] === ",") tokens.shift();
         if (end.includes(tokens[0])) break;
@@ -275,13 +275,13 @@ function callOptParse(
   withReq: Boolean = false,
   withOnlyIf: Boolean = false,
   withByName: Boolean = false
-): FactNode {
+): CallOptNode {
   const index = tokens.length;
   const start = tokens[0];
 
   try {
     const opts: [string, string[]][] = [];
-    const requirements: FactNode[][] = [];
+    const requirements: CallOptNode[][] = [];
 
     /**
      * There are 2 ways to parse here
@@ -350,17 +350,17 @@ function callOptParse(
       vars.forEach((v, i) => opts.push([optNames[i], v]));
     }
 
-    let out: FactNode;
+    let out: CallOptNode;
     if (!withOnlyIf || !isCurToken("=>", tokens))
-      out = new FactNode(opts, requirements);
+      out = new CallOptNode(opts, requirements);
     else {
       skip(tokens, "=>");
       skip(tokens, "{");
 
-      const onlyIfs: FactNode[] = [];
+      const onlyIfs: CallOptNode[] = [];
       callOptsParse(env, tokens, onlyIfs, ["}"]);
 
-      out = new FactNode(opts, requirements, onlyIfs);
+      out = new CallOptNode(opts, requirements, onlyIfs);
     }
 
     if (!withByName) return out;
@@ -384,12 +384,12 @@ function callOptsParse(
   tokens: string[],
   putInto: L_Node[] | undefined,
   end: string[] = StdStmtEnds
-): FactNode[] {
+): CallOptNode[] {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const callOpts: FactNode[] = [];
+    const callOpts: CallOptNode[] = [];
 
     while (1) {
       callOpts.push(callOptParse(env, tokens));
@@ -427,7 +427,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
     const defName = skip(tokens, TemplateDeclarationKeywords);
     const name = shiftVar(tokens);
 
-    const freeVarsFact: { freeVars: string[]; properties: FactNode[] } =
+    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
       freeVarsAndTheirFactsParse(env, tokens);
 
     // skip(tokens, ")");
@@ -442,7 +442,7 @@ function templateParse(env: L_Env, tokens: string[]): TNode {
             freeVarsFact.freeVars,
             freeVarsFact.properties
           );
-          const facts: FactNode[] = [];
+          const facts: CallOptNode[] = [];
           callOptsParse(env, tokens, facts);
           for (let i = 0; i < facts.length; i++) {
             (result as InferNode).onlyIfs.push(facts[i]);
@@ -554,7 +554,7 @@ function existParse(env: L_Env, tokens: string[]): ExistNode {
 
     const name = shiftVar(tokens);
 
-    const freeVarsFact: { freeVars: string[]; properties: FactNode[] } =
+    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
       freeVarsAndTheirFactsParse(env, tokens);
 
     let result: ExistNode;
@@ -644,12 +644,12 @@ function thmParse(env: L_Env, tokens: string[]): ThmNode {
 }
 
 // all facts here are vanilla, which means they are of form opt(...)
-function reqOnlyIfFactParse(env: L_Env, tokens: string[]): FactNode {
+function reqOnlyIfFactParse(env: L_Env, tokens: string[]): CallOptNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const req: FactNode[] = [];
+    const req: CallOptNode[] = [];
     skip(tokens, "(");
     while (!isCurToken(")", tokens)) {
       req.push(callOptParse(env, tokens, false, false));
@@ -660,7 +660,7 @@ function reqOnlyIfFactParse(env: L_Env, tokens: string[]): FactNode {
     skip(tokens, "=>");
     skip(tokens, "{");
 
-    const onlyIf: FactNode[] = [];
+    const onlyIf: CallOptNode[] = [];
     while (!isCurToken("}", tokens)) {
       onlyIf.push(callOptParse(env, tokens, false, false));
       if (isCurToken(",", tokens)) skip(tokens, ",");
@@ -668,7 +668,7 @@ function reqOnlyIfFactParse(env: L_Env, tokens: string[]): FactNode {
 
     skip(tokens, "}");
 
-    return new FactNode([], [req], onlyIf);
+    return new CallOptNode([], [req], onlyIf);
   } catch (error) {
     handleParseError(env, "fact", index, start);
     throw error;
