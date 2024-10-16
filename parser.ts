@@ -82,7 +82,7 @@ const KeywordFunctionMap: {
   ";": (env: L_Env, tokens: string[]) => {
     tokens.shift();
   },
-  "(": reqOnlyIfFactParse,
+  // "(": reqOnlyIfFactParse,
   "\n": (env: L_Env, tokens: string[]) => {
     tokens.shift();
   },
@@ -343,7 +343,6 @@ function callOptParse(
       if (!isCurToken("[", tokens)) return out;
       else {
         skip(tokens, "[");
-        out.byName = shiftVar(tokens);
         skip(tokens, "]");
         return out;
       }
@@ -359,15 +358,15 @@ function callOptsParse(
   tokens: string[],
   putInto: L_Node[] | undefined,
   end: string[] = StdStmtEnds
-): CallOptNode[] {
+): FactNode[] {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const callOpts: CallOptNode[] = [];
+    const callOpts: FactNode[] = [];
 
     while (1) {
-      callOpts.push(callOptParse(env, tokens));
+      callOpts.push(factParse(env, tokens));
       if (tokens[0] === ",") {
         skip(tokens, ",");
       } else if (end.includes(tokens[0])) {
@@ -692,13 +691,15 @@ function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
     const params: string[][] = [];
     while (!isCurToken(")", tokens)) {
       const curParams: string[] = [];
-      while (!isCurToken(":", tokens)) {
+      while (!isCurToken(":", tokens) && !isCurToken(")", tokens)) {
         curParams.push(shiftVar(tokens));
         if (isCurToken(",", tokens)) skip(tokens, ",");
       }
       params.push(curParams);
       if (isCurToken(":", tokens)) skip(tokens, ":");
     }
+
+    skip(tokens, ")");
 
     return new ShortCallOptNode(nameAsParam.join(":"), params);
   } catch (error) {
@@ -712,7 +713,10 @@ function notParse(env: L_Env, tokens: string[]): FactNode {
   const index = tokens.length;
 
   try {
-    const relParser = factParserSignals[tokens[0]];
+    skip(tokens, "not");
+    const fact = factParse(env, tokens);
+    fact.isT = false;
+    return fact;
   } catch (error) {
     handleParseError(env, "not", index, start);
     throw error;
@@ -724,7 +728,18 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
   const index = tokens.length;
 
   try {
-    const relParser = factParserSignals[tokens[0]];
+    skip(tokens, "or");
+
+    skip(tokens, "{");
+
+    const facts: FactNode[] = [];
+    while (!isCurToken("}", tokens)) {
+      facts.push(factParse(env, tokens));
+      if (isCurToken(",", tokens)) skip(tokens, ",");
+    }
+
+    skip(tokens, "}");
+    return new OrNode(facts);
   } catch (error) {
     handleParseError(env, "or", index, start);
     throw error;
@@ -736,7 +751,24 @@ function ifThenParse(env: L_Env, tokens: string[]): IfThenNode {
   const index = tokens.length;
 
   try {
-    const relParser = factParserSignals[tokens[0]];
+    skip(tokens, "(");
+    const req: FactNode[] = [];
+    while (!isCurToken(")", tokens)) {
+      req.push(factParse(env, tokens));
+      if (isCurToken(",", tokens)) skip(tokens, ",");
+    }
+    skip(tokens, ")");
+
+    const onlyIfs: FactNode[] = [];
+    skip(tokens, "=>");
+    skip(tokens, "{");
+    while (!isCurToken("}", tokens)) {
+      onlyIfs.push(factParse(env, tokens));
+      if (isCurToken(",", tokens)) skip(tokens, ",");
+    }
+    skip(tokens, "}");
+
+    return new IfThenNode(req, onlyIfs);
   } catch (error) {
     handleParseError(env, "()=>{}", index, start);
     throw error;

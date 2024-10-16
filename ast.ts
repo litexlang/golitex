@@ -8,25 +8,12 @@ export abstract class L_Node {}
 
 export abstract class FactNode extends L_Node {
   isT: Boolean = true;
-  byName: string = "";
-  constructor(isT: Boolean, byName: string) {
-    super();
-    this.isT = isT;
-    this.byName = byName;
-  }
 }
 
 export class OrNode extends FactNode {
-  name: string;
   facts: FactNode[];
-  constructor(
-    name: string,
-    facts: FactNode[],
-    isT: Boolean = true,
-    byName: string = ""
-  ) {
-    super(isT, byName);
-    this.name = name;
+  constructor(facts: FactNode[]) {
+    super();
     this.facts = facts;
   }
 }
@@ -41,7 +28,7 @@ export class ShortCallOptNode extends FactNode {
     isT: Boolean = true,
     byName: string = ""
   ) {
-    super(isT, byName);
+    super();
     this.fullName = fullName;
     this.params = params;
   }
@@ -57,7 +44,7 @@ export class IfThenNode extends FactNode {
     isT: Boolean = true,
     byName: string = ""
   ) {
-    super(isT, byName);
+    super();
     this.req = req;
     this.onlyIfs = onlyIfs;
   }
@@ -83,7 +70,7 @@ export class CallOptNode extends FactNode {
     isT: Boolean = true,
     byName: string = ""
   ) {
-    super(isT, byName);
+    super();
 
     this.optName = opts.map((e) => e[0]).join(OptsConnectionSymbol);
     this.optParams = opts.map((e) => e[1]);
