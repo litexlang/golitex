@@ -23,8 +23,7 @@ export class yaIfThenNode extends yaFactNode {
   constructor(
     public freeVars: string[] = [],
     public req: FactNode[] = [],
-    public onlyIfs: FactNode[] = [],
-    name: string = ""
+    public onlyIfs: ShortCallOptNode[] = []
   ) {
     super();
   }

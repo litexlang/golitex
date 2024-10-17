@@ -175,7 +175,7 @@ const codes: string[] = [
   // "$tmp if x,y | set(x) => set2(x,y); ",
   // "know set(x), set0(#x);",
   "know if x,y | set(x) => est(x,y) ;",
-  "know if x,y | set(x) => {set2(x,y), set3(x)};",
+  "know ? x,y | set(x) then {set2(x,y), set3(x)};",
 ];
 
 function testLexer() {

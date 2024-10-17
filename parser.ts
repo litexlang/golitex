@@ -805,14 +805,20 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
     );
     const paramReq = nodeListParse<yaFactNode>(env, tokens, yaFactParse, [
       "=>",
+      "then",
     ]);
 
     if (!isCurToken(tokens, "{")) {
-      const fact = yaFactParse(env, tokens);
+      const fact = shortCallOptParse(env, tokens);
       return new yaIfThenNode(vars, paramReq, [fact]);
     } else {
       skip(tokens, "{");
-      const facts = nodeListParse<yaFactNode>(env, tokens, yaFactParse, ["}"]);
+      const facts = nodeListParse<ShortCallOptNode>(
+        env,
+        tokens,
+        shortCallOptParse,
+        ["}"]
+      );
       return new yaIfThenNode(vars, paramReq, facts);
     }
   } catch (error) {
@@ -824,7 +830,7 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
 function nodeListParse<T>(
   env: L_Env,
   tokens: string[],
-  parseFunc: Function,
+  parseFunc: (env: L_Env, tokens: string[], ...args: any[]) => T,
   end: string[],
   skipEnd: Boolean = true,
   separation: string = ","
