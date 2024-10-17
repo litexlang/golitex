@@ -21,6 +21,7 @@ export class OrNode extends yaFactNode {
 
 export class yaIfThenNode extends yaFactNode {
   constructor(
+    public fullName: string,
     public freeVars: string[] = [],
     public req: yaFactNode[] = [],
     public onlyIfs: ShortCallOptNode[] = []
@@ -29,7 +30,7 @@ export class yaIfThenNode extends yaFactNode {
   }
 
   toString() {
-    return `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
+    return `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}[${this.fullName}]`;
   }
 }
 
@@ -414,16 +415,5 @@ export class ThmNode extends L_Node {
     super();
     this.opt = opt;
     this.proveBlock = proveBlock;
-  }
-}
-
-export class DeclNode extends L_Node {
-  constructor(
-    public name: string,
-    public node: L_Node
-  ) {
-    super();
-    this.name = name;
-    this.node = node;
   }
 }

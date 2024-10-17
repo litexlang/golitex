@@ -30,7 +30,7 @@ export const testCodes = {
   // setEqual:
   //   ": item(x,A| set(A)) => {} : setEqual(A,B| set(A), set(B)) => {item(#x, A) => item(x, B); item(#x, B) => item(x, A);}",
   Opt: "know set(x);",
-  ifThenKnow: "know if | set(x), set(y) then set2(x);",
+  ifThenKnow: "know if | set(x), set(y) then set(x) [tmp];",
 };
 
 export const testErrorCode = {

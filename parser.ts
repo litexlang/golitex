@@ -18,7 +18,7 @@ import {
   ShortCallOptNode,
   yaIfThenNode,
   yaFactNode,
-  DeclNode,
+  // DeclNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -112,19 +112,19 @@ const KeywordFunctionMap: {
   "&": proveParse,
   by: byParse,
   thm: thmParse,
-  $: (env: L_Env, tokens: string[]) => {
-    const start = tokens[0];
-    const index = tokens.length;
-    try {
-      skip(tokens, yaIfThenKeywords);
-      const name = shiftVar(tokens);
-      const out = yaIfThenParse(env, tokens);
-      return new DeclNode(name, out);
-    } catch (error) {
-      handleParseError(env, "Parsing variables", index, start);
-      throw error;
-    }
-  },
+  // $: (env: L_Env, tokens: string[]) => {
+  //   const start = tokens[0];
+  //   const index = tokens.length;
+  //   try {
+  //     skip(tokens, yaIfThenKeywords);
+  //     const name = shiftVar(tokens);
+  //     const out = yaIfThenParse(env, tokens);
+  //     return new DeclNode(name, out);
+  //   } catch (error) {
+  //     handleParseError(env, "Parsing variables", index, start);
+  //     throw error;
+  //   }
+  // },
 };
 
 export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
@@ -809,19 +809,20 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
       "then",
     ]);
 
+    let facts: ShortCallOptNode[];
     if (!isCurToken(tokens, "{")) {
-      const fact = shortCallOptParse(env, tokens);
-      return new yaIfThenNode(vars, paramReq, [fact]);
+      facts = [shortCallOptParse(env, tokens)];
     } else {
       skip(tokens, "{");
-      const facts = nodeListParse<ShortCallOptNode>(
-        env,
-        tokens,
-        shortCallOptParse,
-        ["}"]
-      );
-      return new yaIfThenNode(vars, paramReq, facts);
+      facts = nodeListParse<ShortCallOptNode>(env, tokens, shortCallOptParse, [
+        "}",
+      ]);
     }
+
+    skip(tokens, "[");
+    const name = shiftVar(tokens);
+    skip(tokens, "]");
+    return new yaIfThenNode(name, vars, paramReq, facts);
   } catch (error) {
     handleParseError(env, "()=>{}", index, start);
     throw error;

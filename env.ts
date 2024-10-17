@@ -5,6 +5,7 @@ import {
   ShortCallOptNode,
   TNode,
   yaFactNode,
+  yaIfThenNode,
 } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import {
@@ -38,19 +39,52 @@ export class L_Env {
     { params: string[][]; req: yaFactNode[] }[]
   >();
 
+  private declTemps = new Map<string, yaFactNode>();
+
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
   }
 
-  addShortOptFact(opt: ShortCallOptNode, req: yaFactNode[] = []) {
-    if (this.shortOptFacts.get(opt.fullName) === undefined) {
-      this.shortOptFacts.set(opt.fullName, [{ params: opt.params, req: req }]);
-    } else {
-      this.shortOptFacts
-        .get(opt.fullName)!
-        .push({ params: opt.params, req: req });
+  declTemp(name: string, fact: yaFactNode) {
+    if (this.declTemps.has(name)) throw Error(`${name} is already declared`);
+    else {
+      this.declTemps.set(name, fact);
+      if (fact instanceof yaIfThenNode) fact.fullName = ""; // save memory
     }
   }
+
+  /**
+   * @param hash stores which given vars are onlyIf vars
+   */
+  addShortOptFact(
+    env: L_Env,
+    opt: ShortCallOptNode,
+    req: yaFactNode[] = [],
+    hash: string[] = []
+  ) {
+    const params =
+      hash.length === 0
+        ? opt.params
+        : opt.params.map((ls) =>
+            ls.map((s) => (hash.includes(s) ? "#" + s : s))
+          );
+
+    if (this.shortOptFacts.get(opt.fullName) === undefined) {
+      this.shortOptFacts.set(opt.fullName, [
+        {
+          params: params,
+          req: req,
+        },
+      ]);
+    } else {
+      this.shortOptFacts.get(opt.fullName)!.push({
+        params: params,
+        req: req,
+      });
+    }
+  }
+
+  checkFact(opt: yaIfThenNode[]) {}
 
   newBy(key: string, by: CallOptNode) {
     this.bys.set(key, by);
