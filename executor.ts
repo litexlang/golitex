@@ -14,6 +14,8 @@ import {
   ByNode,
   ThmNode,
   FactNode,
+  ShortCallOptNode,
+  yaIfThenNode,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -28,6 +30,7 @@ import {
   isRTypeErr,
   isRTypeTrue,
 } from "./shared";
+import { only } from "node:test";
 
 export enum RType {
   Error,
@@ -120,7 +123,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   DefNode: templateDeclExec,
   InferNode: templateDeclExec,
   ExistNode: templateDeclExec,
-  KnowNode: knowExec,
+  KnowNode: yaKnowExec,
   LetNode: letExec,
   ProveNode: proveExec,
   HaveNode: haveExec,
@@ -167,7 +170,7 @@ export function nodeExec(env: L_Env, node: L_Node): RType {
     ) {
       return templateDeclExec(env, node as TNode);
     } else if (node instanceof KnowNode) {
-      return knowExec(env, node as KnowNode);
+      return yaKnowExec(env, node as KnowNode);
     } else if (node instanceof LetNode) {
       return letExec(env, node as LetNode);
     } else if (node instanceof ProveNode) {
@@ -297,34 +300,34 @@ function templateDeclExec(env: L_Env, node: TNode): RType {
   }
 }
 
-function knowExec(env: L_Env, node: KnowNode): RType {
-  try {
-    let facts: FactNode[] = [];
-    let isKnowEverything: Boolean = false;
-    let res: RType = RType.Error;
+// function knowExec(env: L_Env, node: KnowNode): RType {
+//   try {
+//     let facts: FactNode[] = [];
+//     let isKnowEverything: Boolean = false;
+//     let res: RType = RType.Error;
 
-    if (node instanceof KnowNode) {
-      facts = (node as KnowNode).facts;
-      isKnowEverything = (node as KnowNode).isKnowEverything;
-    }
+//     if (node instanceof KnowNode) {
+//       facts = (node as KnowNode).facts;
+//       isKnowEverything = (node as KnowNode).isKnowEverything;
+//     }
 
-    for (const fact of facts) {
-      if (fact instanceof CallOptNode) {
-        if (isKnowEverything) {
-          res = knowEverythingCallOptExec(env, fact);
-        } else {
-          res = knowFactExec(env, fact);
-        }
-      }
-      // The commented-out ImpliesCallOptNode case has been omitted
-      if (isRTypeErr(res)) return res;
-    }
+//     for (const fact of facts) {
+//       if (fact instanceof CallOptNode) {
+//         if (isKnowEverything) {
+//           res = knowEverythingCallOptExec(env, fact);
+//         } else {
+//           res = knowFactExec(env, fact);
+//         }
+//       }
+//       // The commented-out ImpliesCallOptNode case has been omitted
+//       if (isRTypeErr(res)) return res;
+//     }
 
-    return RType.True;
-  } catch (error) {
-    return cEnvRType(env, RType.Error, "know");
-  }
-}
+//     return RType.True;
+//   } catch (error) {
+//     return cEnvRType(env, RType.Error, "know");
+//   }
+// }
 
 function knowEverythingCallOptExec(env: L_Env, fact: CallOptNode): RType {
   try {
@@ -795,4 +798,27 @@ function thmExec(env: L_Env, node: ThmNode): RType {
   } catch (error) {
     return cEnvRType(env, RType.Error);
   }
+}
+
+function yaKnowExec(env: L_Env, node: KnowNode): RType {
+  try {
+    for (const fact of node.facts) {
+      if (fact instanceof ShortCallOptNode) {
+        env.addShortOptFact(fact);
+      } else if (fact instanceof yaIfThenNode) {
+        for (const onlyIf of fact.onlyIfs) {
+          env.addShortOptFact(onlyIf);
+        }
+      }
+    }
+
+    return RType.True;
+  } catch (error) {
+    yaHandleExecError(env, `${node.toString()}`);
+    throw error;
+  }
+}
+
+function yaHandleExecError(env: L_Env, m: string) {
+  env.newMessage(m);
 }

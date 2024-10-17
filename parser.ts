@@ -72,11 +72,9 @@ function handleParseError(
   env: L_Env,
   m: string,
   index: number,
-  start: string = "",
-  addErrorDepth: Boolean = true
+  start: string = ""
 ) {
-  const errorIndex = index;
-  env.newMessage(`At ${start}[${errorIndex * -1}]: ${m}`, addErrorDepth);
+  env.newMessage(`At ${start}[${index * -1}]: ${m}`);
 }
 
 const KeywordFunctionMap: {
@@ -182,9 +180,8 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
 
     skip(tokens, KnowTypeKeywords);
     while (1) {
-      let node: L_Node;
-      node = yaFactParse(env, tokens);
-      knowNode.facts.push(node as yaFactNode);
+      const node = yaFactParse(env, tokens);
+      knowNode.facts.push(node);
 
       if (tokens[0] === ",") skip(tokens, ",");
       else break;
@@ -797,7 +794,7 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, "if");
+    skip(tokens, ["if", "?"]);
     const vars = nodeListParse<string>(
       env,
       tokens,

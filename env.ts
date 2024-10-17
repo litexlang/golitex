@@ -1,5 +1,11 @@
 import { isNull, map } from "lodash";
-import { CallOptNode, InferNode, TNode } from "./ast";
+import {
+  CallOptNode,
+  InferNode,
+  ShortCallOptNode,
+  TNode,
+  yaFactNode,
+} from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import {
   cErr_Out,
@@ -27,8 +33,23 @@ export class L_Env {
   facts = new Map<string, CallOptNode[]>();
   bys = new Map<string, CallOptNode>();
 
+  shortOptFacts = new Map<
+    string,
+    { params: string[][]; req: yaFactNode[] }[]
+  >();
+
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  addShortOptFact(opt: ShortCallOptNode, req: yaFactNode[] = []) {
+    if (this.shortOptFacts.get(opt.fullName) === undefined) {
+      this.shortOptFacts.set(opt.fullName, [{ params: opt.params, req: req }]);
+    } else {
+      this.shortOptFacts
+        .get(opt.fullName)!
+        .push({ params: opt.params, req: req });
+    }
   }
 
   newBy(key: string, by: CallOptNode) {
@@ -238,7 +259,7 @@ export class L_Env {
     return this.father ? this.father.isVarDeclared(v) : false;
   }
 
-  newMessage(s: string, addDepth: Boolean = false) {
+  newMessage(s: string) {
     this.messages.push(s);
   }
 
@@ -323,8 +344,15 @@ export class L_Env {
 
   printFacts() {
     console.log("\n-----facts-------\n");
-    for (const [key, factUnderCurKey] of this.facts) {
-      factUnderCurKey.forEach((e) => console.log(e.toString()));
+    // for (const [key, factUnderCurKey] of this.facts) {
+    //   factUnderCurKey.forEach((e) => console.log(e.toString()));
+    // }
+
+    for (const [key, factUnderCurKey] of this.shortOptFacts) {
+      console.log(key);
+      factUnderCurKey.forEach((e) => {
+        `${console.log(e.params.toString())} ${e.req.toString()}`;
+      });
     }
   }
 

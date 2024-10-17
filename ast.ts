@@ -3,7 +3,6 @@ import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
 import { hInfo, RType } from "./executor";
 import { cEnvRType, fixOpt, relTNotFoundEnvErr } from "./shared";
-import { on } from "events";
 
 export abstract class L_Node {}
 
@@ -29,6 +28,8 @@ export class yaIfThenNode extends yaFactNode {
   ) {
     super();
   }
+
+  toString() {}
 }
 
 export class ShortCallOptNode extends yaFactNode {
@@ -39,6 +40,16 @@ export class ShortCallOptNode extends yaFactNode {
     super();
     this.fullName = fullName;
     this.params = params;
+  }
+
+  nameAsLst() {
+    return this.fullName.split(":");
+  }
+
+  toString() {
+    return this.nameAsLst()
+      .map((name, i) => `${name}(${this.params[i]})`)
+      .join(":");
   }
 }
 
@@ -332,13 +343,15 @@ export class ExistNode extends TNode {
 export class KnowNode extends L_Node {
   isKnowEverything: Boolean = false;
 
-  constructor(public facts: CallOptNode[] = []) {
+  constructor(public facts: yaFactNode[] = []) {
     super();
     this.facts = facts;
   }
 
   toString(): string {
-    return this.facts.map((e) => (e as CallOptNode).toString()).join("; ");
+    return (
+      "know: " + this.facts.map((e) => (e as yaFactNode).toString()).join("; ")
+    );
   }
 }
 
