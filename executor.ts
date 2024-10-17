@@ -16,6 +16,8 @@ import {
   FactNode,
   ShortCallOptNode,
   yaIfThenNode,
+  yaFactNode,
+  OrNode,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -31,6 +33,7 @@ import {
   isRTypeTrue,
 } from "./shared";
 import { only } from "node:test";
+import { error } from "console";
 
 export enum RType {
   Error,
@@ -804,21 +807,41 @@ function yaKnowExec(env: L_Env, node: KnowNode): RType {
   try {
     for (const fact of node.facts) {
       if (fact instanceof ShortCallOptNode) {
-        env.addShortOptFact(fact);
+        if (isFactDeclared(env, fact)) env.addShortOptFact(fact);
+        else throw Error(`${fact.fullName} is not declared`);
       } else if (fact instanceof yaIfThenNode) {
-        for (const onlyIf of fact.onlyIfs) {
-          env.addShortOptFact(onlyIf, fact.onlyIfs);
-        }
+        if (isFactDeclared(env, fact)) {
+          for (const onlyIf of fact.onlyIfs) {
+            env.addShortOptFact(onlyIf, fact.req);
+          }
+        } else throw Error(`Not all given facts are declared`);
       }
     }
 
     return RType.True;
   } catch (error) {
-    yaHandleExecError(env, `${node.toString()}`);
+    let m = `'${node.toString()}'`;
+    if (error instanceof Error) m += ` ${error.message}`;
+    yaHandleExecError(env, m);
     throw error;
   }
 }
 
 function yaHandleExecError(env: L_Env, m: string) {
   env.newMessage(m);
+}
+
+function isFactDeclared(env: L_Env, fact: yaFactNode): Boolean {
+  if (fact instanceof ShortCallOptNode) {
+    return env.relT(fact.fullName).v !== null;
+  } else if (fact instanceof yaIfThenNode) {
+    return (
+      fact.req.every((e) => isFactDeclared(env, e)) &&
+      fact.onlyIfs.every((e) => isFactDeclared(env, e))
+    );
+  } else if (fact instanceof OrNode) {
+    return fact.facts.every((e) => isFactDeclared(env, e));
+  }
+
+  throw error;
 }

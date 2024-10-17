@@ -342,19 +342,19 @@ export class L_Env {
     }
   }
 
-  printFacts() {
-    console.log("\n-----facts-------\n");
-    // for (const [key, factUnderCurKey] of this.facts) {
-    //   factUnderCurKey.forEach((e) => console.log(e.toString()));
-    // }
+  // printFacts() {
+  //   console.log("\n-----facts-------\n");
+  //   // for (const [key, factUnderCurKey] of this.facts) {
+  //   //   factUnderCurKey.forEach((e) => console.log(e.toString()));
+  //   // }
 
-    for (const [key, factUnderCurKey] of this.shortOptFacts) {
-      console.log(key);
-      factUnderCurKey.forEach((e) => {
-        `${console.log(e.params.toString())} ${e.req.toString()}`;
-      });
-    }
-  }
+  //   for (const [key, factUnderCurKey] of this.shortOptFacts) {
+  //     console.log(key);
+  //     factUnderCurKey.forEach((e) => {
+  //       `${console.log(e.params.toString())} ${e.req.toString()}`;
+  //     });
+  //   }
+  // }
 
   printDeclaredTemplates(doNotPrint: string[] = []) {
     console.log("\n-----template-----\n");

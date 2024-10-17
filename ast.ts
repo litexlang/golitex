@@ -22,7 +22,7 @@ export class OrNode extends yaFactNode {
 export class yaIfThenNode extends yaFactNode {
   constructor(
     public freeVars: string[] = [],
-    public req: FactNode[] = [],
+    public req: yaFactNode[] = [],
     public onlyIfs: ShortCallOptNode[] = []
   ) {
     super();
