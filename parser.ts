@@ -17,6 +17,8 @@ import {
   // IfThenNode,
   ShortCallOptNode,
   yaIfThenNode,
+  yaFactNode,
+  DeclNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -112,7 +114,19 @@ const KeywordFunctionMap: {
   "&": proveParse,
   by: byParse,
   thm: thmParse,
-  $: yaIfThenParse,
+  $: (env: L_Env, tokens: string[]) => {
+    const start = tokens[0];
+    const index = tokens.length;
+    try {
+      skip(tokens, yaIfThenKeywords);
+      const name = shiftVar(tokens);
+      const out = yaIfThenParse(env, tokens);
+      return new DeclNode(name, out);
+    } catch (error) {
+      handleParseError(env, "Parsing variables", index, start);
+      throw error;
+    }
+  },
 };
 
 export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
@@ -169,8 +183,8 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
     skip(tokens, KnowTypeKeywords);
     while (1) {
       let node: L_Node;
-      node = callOptParse(env, tokens, true, true);
-      knowNode.facts.push(node as CallOptNode);
+      node = yaFactParse(env, tokens);
+      knowNode.facts.push(node as yaFactNode);
 
       if (tokens[0] === ",") skip(tokens, ",");
       else break;
@@ -361,15 +375,15 @@ function callOptsParse(
   tokens: string[],
   putInto: L_Node[] | undefined,
   end: string[] = StdStmtEnds
-): FactNode[] {
+): yaFactNode[] {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const callOpts: FactNode[] = [];
+    const callOpts: yaFactNode[] = [];
 
     while (1) {
-      callOpts.push(factParse(env, tokens));
+      callOpts.push(yaFactParse(env, tokens));
       if (tokens[0] === ",") {
         skip(tokens, ",");
       } else if (end.includes(tokens[0])) {
@@ -655,15 +669,16 @@ function reqOnlyIfFactParse(env: L_Env, tokens: string[]): CallOptNode {
 const factParserSignals: { [key: string]: Function } = {
   or: orParse,
   not: notParse,
+  if: yaIfThenParse,
 };
 
-function factParse(env: L_Env, tokens: string[]): FactNode {
+function yaFactParse(env: L_Env, tokens: string[]): yaFactNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     const relParser: Function | undefined = factParserSignals[tokens[0]];
-    let out: FactNode;
+    let out: yaFactNode;
     if (relParser === undefined) {
       out = shortCallOptParse(env, tokens);
     } else {
@@ -710,13 +725,13 @@ function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
   }
 }
 
-function notParse(env: L_Env, tokens: string[]): FactNode {
+function notParse(env: L_Env, tokens: string[]): yaFactNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     skip(tokens, "not");
-    const fact = factParse(env, tokens);
+    const fact = yaFactParse(env, tokens);
     fact.isT = false;
     return fact;
   } catch (error) {
@@ -734,9 +749,9 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 
     skip(tokens, "{");
 
-    const facts: FactNode[] = [];
+    const facts: yaFactNode[] = [];
     while (!isCurToken(tokens, "}")) {
-      facts.push(factParse(env, tokens));
+      facts.push(yaFactParse(env, tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -756,7 +771,7 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 //     skip(tokens, "(");
 //     const req: FactNode[] = [];
 //     while (!isCurToken(tokens, ")")) {
-//       req.push(factParse(env, tokens));
+//       req.push(yaFactParse(env, tokens));
 //       if (isCurToken(tokens, ",")) skip(tokens, ",");
 //     }
 //     skip(tokens, ")");
@@ -765,7 +780,7 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 //     skip(tokens, "=>");
 //     skip(tokens, "{");
 //     while (!isCurToken(tokens, "}")) {
-//       onlyIfs.push(factParse(env, tokens));
+//       onlyIfs.push(yaFactParse(env, tokens));
 //       if (isCurToken(tokens, ",")) skip(tokens, ",");
 //     }
 //     skip(tokens, "}");
@@ -782,9 +797,6 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, yaIfThenKeywords);
-    const name = shiftVar(tokens);
-
     skip(tokens, "if");
     const vars = nodeListParse<string>(
       env,
@@ -794,19 +806,18 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
       },
       ["|"]
     );
-    const paramReq = nodeListParse<FactNode>(env, tokens, factParse, ["=>"]);
+    const paramReq = nodeListParse<yaFactNode>(env, tokens, yaFactParse, [
+      "=>",
+    ]);
 
     if (!isCurToken(tokens, "{")) {
-      const facts = nodeListParse<FactNode>(env, tokens, factParse, [";"]);
-      return new yaIfThenNode(vars, paramReq, facts, name);
+      const fact = yaFactParse(env, tokens);
+      return new yaIfThenNode(vars, paramReq, [fact]);
+    } else {
+      skip(tokens, "{");
+      const facts = nodeListParse<yaFactNode>(env, tokens, yaFactParse, ["}"]);
+      return new yaIfThenNode(vars, paramReq, facts);
     }
-
-    throw Error;
-    // else {
-    //   skip(tokens, "{");
-    //   const facts = nodeListParse<L_Node>(env, tokens, factParse, [";"]);
-    //   return new yaIfThenNode(vars, paramReq, facts);
-    // }
   } catch (error) {
     handleParseError(env, "()=>{}", index, start);
     throw error;

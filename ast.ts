@@ -11,39 +11,31 @@ export abstract class FactNode extends L_Node {
   isT: Boolean = true;
 }
 
-export class OrNode extends FactNode {
-  facts: FactNode[];
-  constructor(facts: FactNode[]) {
+export abstract class yaFactNode extends FactNode {}
+
+export class OrNode extends yaFactNode {
+  constructor(public facts: FactNode[]) {
     super();
     this.facts = facts;
   }
 }
 
-export class yaIfThenNode extends FactNode {
-  name: string = "";
-  freeVars: string[] = [];
-  req: FactNode[] = [];
-  onlyIfs: FactNode[] = [];
-
+export class yaIfThenNode extends yaFactNode {
   constructor(
-    freeVars: string[],
-    req: FactNode[],
-    onlyIfs: FactNode[],
+    public freeVars: string[] = [],
+    public req: FactNode[] = [],
+    public onlyIfs: FactNode[] = [],
     name: string = ""
   ) {
     super();
-    this.freeVars = freeVars;
-    this.req = req;
-    this.onlyIfs = onlyIfs;
-    this.name = name;
   }
 }
 
-export class ShortCallOptNode extends FactNode {
-  fullName: string;
-  params: string[][];
-
-  constructor(fullName: string, params: string[][]) {
+export class ShortCallOptNode extends yaFactNode {
+  constructor(
+    public fullName: string,
+    public params: string[][]
+  ) {
     super();
     this.fullName = fullName;
     this.params = params;
@@ -114,19 +106,15 @@ export class CallOptNode extends FactNode {
 
 // Main data structure of the whole project
 export abstract class TNode extends L_Node {
-  name: string;
-  freeVars: string[];
-  requirements: CallOptNode[] = [];
-  onlyIfs: L_Node[] = []; // After declaration, this becomes CallOpt[]
   declaredTemplates = new Map<string, TNode>();
   private fathers: TNode[] = [];
   isRedefine: Boolean = false;
 
   constructor(
-    name: string,
-    freeVars: string[],
-    requirements: CallOptNode[],
-    onlyIfs: L_Node[] = []
+    public name: string,
+    public freeVars: string[],
+    public requirements: CallOptNode[],
+    public onlyIfs: L_Node[] = []
   ) {
     super();
     this.name = name;
@@ -342,10 +330,9 @@ export class ExistNode extends TNode {
 }
 
 export class KnowNode extends L_Node {
-  facts: FactNode[] = [];
   isKnowEverything: Boolean = false;
 
-  constructor(facts: CallOptNode[] = []) {
+  constructor(public facts: CallOptNode[] = []) {
     super();
     this.facts = facts;
   }
@@ -371,11 +358,11 @@ export class LetNode extends L_Node {
 }
 
 export class ProveNode extends L_Node {
-  opt: CallOptNode;
-  proveBlock: L_Node[];
-  name: string;
-
-  constructor(opt: CallOptNode, proveBlock: L_Node[], name: string = "") {
+  constructor(
+    public opt: CallOptNode,
+    public proveBlock: L_Node[],
+    public name: string = ""
+  ) {
     super();
     this.opt = opt;
     this.proveBlock = proveBlock;
@@ -384,9 +371,10 @@ export class ProveNode extends L_Node {
 }
 
 export class HaveNode extends L_Node {
-  vars: string[];
-  opt: CallOptNode;
-  constructor(vars: string[], opt: CallOptNode) {
+  constructor(
+    public vars: string[],
+    public opt: CallOptNode
+  ) {
     super();
     this.vars = vars;
     this.opt = opt;
@@ -394,10 +382,10 @@ export class HaveNode extends L_Node {
 }
 
 export class ByNode extends L_Node {
-  name: string;
-  opt: CallOptNode;
-
-  constructor(name: string, opt: CallOptNode) {
+  constructor(
+    public name: string,
+    public opt: CallOptNode
+  ) {
     super();
     this.name = name;
     this.opt = opt;
@@ -405,12 +393,23 @@ export class ByNode extends L_Node {
 }
 
 export class ThmNode extends L_Node {
-  opt: CallOptNode;
-  proveBlock: L_Node[];
-
-  constructor(opt: CallOptNode, proveBlock: L_Node[]) {
+  constructor(
+    public opt: CallOptNode,
+    public proveBlock: L_Node[]
+  ) {
     super();
     this.opt = opt;
     this.proveBlock = proveBlock;
+  }
+}
+
+export class DeclNode extends L_Node {
+  constructor(
+    public name: string,
+    public node: L_Node
+  ) {
+    super();
+    this.name = name;
+    this.node = node;
   }
 }

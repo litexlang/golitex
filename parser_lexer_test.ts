@@ -172,8 +172,10 @@ const codes: string[] = [
   // "x,y:z,h is set:set2",
   // "set(x|set(x)):set2(x|set(x)) => {h(x)}",
   // "~",
-  "$ tmp if x,y | set(x) => set2(x,y); ",
-  "know set(x), set0(#x);",
+  // "$tmp if x,y | set(x) => set2(x,y); ",
+  // "know set(x), set0(#x);",
+  "know if x,y | set(x) => est(x,y) ;",
+  "know if x,y | set(x) => {set2(x,y), set3(x)};",
 ];
 
 function testLexer() {
