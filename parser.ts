@@ -14,8 +14,9 @@ import {
   ThmNode,
   FactNode,
   OrNode,
-  IfThenNode,
+  // IfThenNode,
   ShortCallOptNode,
+  yaIfThenNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -29,6 +30,7 @@ import {
   byLBracket,
   byRBracket,
   StdStmtEnds,
+  yaIfThenKeywords,
 } from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -106,10 +108,11 @@ const KeywordFunctionMap: {
     node.isKnowEverything = true;
     return node;
   },
-  prove: yaProveParse,
-  "&": yaProveParse,
+  prove: proveParse,
+  "&": proveParse,
   by: byParse,
   thm: thmParse,
+  $: yaIfThenParse,
 };
 
 export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
@@ -496,7 +499,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   }
 }
 
-function yaProveParse(env: L_Env, tokens: string[]): ProveNode {
+function proveParse(env: L_Env, tokens: string[]): ProveNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -652,7 +655,6 @@ function reqOnlyIfFactParse(env: L_Env, tokens: string[]): CallOptNode {
 const factParserSignals: { [key: string]: Function } = {
   or: orParse,
   not: notParse,
-  "(": ifThenParse,
 };
 
 function factParse(env: L_Env, tokens: string[]): FactNode {
@@ -746,31 +748,94 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
   }
 }
 
-function ifThenParse(env: L_Env, tokens: string[]): IfThenNode {
+// function arrowFuncParse(env: L_Env, tokens: string[]): IfThenNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
+
+//   try {
+//     skip(tokens, "(");
+//     const req: FactNode[] = [];
+//     while (!isCurToken(tokens, ")")) {
+//       req.push(factParse(env, tokens));
+//       if (isCurToken(tokens, ",")) skip(tokens, ",");
+//     }
+//     skip(tokens, ")");
+
+//     const onlyIfs: FactNode[] = [];
+//     skip(tokens, "=>");
+//     skip(tokens, "{");
+//     while (!isCurToken(tokens, "}")) {
+//       onlyIfs.push(factParse(env, tokens));
+//       if (isCurToken(tokens, ",")) skip(tokens, ",");
+//     }
+//     skip(tokens, "}");
+
+//     return new IfThenNode(req, onlyIfs);
+//   } catch (error) {
+//     handleParseError(env, "()=>{}", index, start);
+//     throw error;
+//   }
+// }
+
+function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    skip(tokens, "(");
-    const req: FactNode[] = [];
-    while (!isCurToken(tokens, ")")) {
-      req.push(factParse(env, tokens));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, ")");
+    skip(tokens, yaIfThenKeywords);
+    const name = shiftVar(tokens);
 
-    const onlyIfs: FactNode[] = [];
-    skip(tokens, "=>");
-    skip(tokens, "{");
-    while (!isCurToken(tokens, "}")) {
-      onlyIfs.push(factParse(env, tokens));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, "}");
+    skip(tokens, "if");
+    const vars = nodeListParse<string>(
+      env,
+      tokens,
+      (env: L_Env, tokens: string[]) => {
+        return shiftVar(tokens);
+      },
+      ["|"]
+    );
+    const paramReq = nodeListParse<FactNode>(env, tokens, factParse, ["=>"]);
 
-    return new IfThenNode(req, onlyIfs);
+    if (!isCurToken(tokens, "{")) {
+      const facts = nodeListParse<FactNode>(env, tokens, factParse, [";"]);
+      return new yaIfThenNode(vars, paramReq, facts, name);
+    }
+
+    throw Error;
+    // else {
+    //   skip(tokens, "{");
+    //   const facts = nodeListParse<L_Node>(env, tokens, factParse, [";"]);
+    //   return new yaIfThenNode(vars, paramReq, facts);
+    // }
   } catch (error) {
     handleParseError(env, "()=>{}", index, start);
+    throw error;
+  }
+}
+
+function nodeListParse<T>(
+  env: L_Env,
+  tokens: string[],
+  parseFunc: Function,
+  end: string[],
+  skipEnd: Boolean = true,
+  separation: string = ","
+): T[] {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    const out: T[] = [];
+    while (!end.includes(tokens[0])) {
+      out.push(parseFunc(env, tokens));
+      if (isCurToken(tokens, separation)) skip(tokens, separation);
+    }
+
+    if (skipEnd) skip(tokens, end);
+
+    return out;
+  } catch (error) {
+    handleParseError(env, "Parsing variables", index, start);
     throw error;
   }
 }

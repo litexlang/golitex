@@ -171,7 +171,9 @@ const codes: string[] = [
   // "(set(x), set2(x)) => {h(x), p(x)};",
   // "x,y:z,h is set:set2",
   // "set(x|set(x)):set2(x|set(x)) => {h(x)}",
-  "~",
+  // "~",
+  "$ tmp if x,y | set(x) => set2(x,y); ",
+  "know set(x), set0(#x);",
 ];
 
 function testLexer() {

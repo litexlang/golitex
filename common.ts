@@ -14,6 +14,7 @@ export const specialChars = [
   "?",
   "&",
   "|",
+  "$",
 ];
 
 export const OptsConnectionSymbol = ":";
@@ -52,3 +53,4 @@ export const L_Keywords = [
 ];
 
 export const StdStmtEnds = [";", "\n"];
+export const yaIfThenKeywords = ["$"];

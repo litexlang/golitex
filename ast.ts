@@ -3,6 +3,7 @@ import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
 import { hInfo, RType } from "./executor";
 import { cEnvRType, fixOpt, relTNotFoundEnvErr } from "./shared";
+import { on } from "events";
 
 export abstract class L_Node {}
 
@@ -18,6 +19,26 @@ export class OrNode extends FactNode {
   }
 }
 
+export class yaIfThenNode extends FactNode {
+  name: string = "";
+  freeVars: string[] = [];
+  req: FactNode[] = [];
+  onlyIfs: FactNode[] = [];
+
+  constructor(
+    freeVars: string[],
+    req: FactNode[],
+    onlyIfs: FactNode[],
+    name: string = ""
+  ) {
+    super();
+    this.freeVars = freeVars;
+    this.req = req;
+    this.onlyIfs = onlyIfs;
+    this.name = name;
+  }
+}
+
 export class ShortCallOptNode extends FactNode {
   fullName: string;
   params: string[][];
@@ -29,16 +50,16 @@ export class ShortCallOptNode extends FactNode {
   }
 }
 
-export class IfThenNode extends FactNode {
-  req: FactNode[];
-  onlyIfs: FactNode[];
+// export class IfThenNode extends FactNode {
+//   req: FactNode[];
+//   onlyIfs: FactNode[];
 
-  constructor(req: FactNode[], onlyIfs: FactNode[]) {
-    super();
-    this.req = req;
-    this.onlyIfs = onlyIfs;
-  }
-}
+//   constructor(req: FactNode[], onlyIfs: FactNode[]) {
+//     super();
+//     this.req = req;
+//     this.onlyIfs = onlyIfs;
+//   }
+// }
 
 export class CallOptNode extends FactNode {
   optName: string;
