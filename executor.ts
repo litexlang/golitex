@@ -807,7 +807,7 @@ function yaKnowExec(env: L_Env, node: KnowNode): RType {
         env.addShortOptFact(fact);
       } else if (fact instanceof yaIfThenNode) {
         for (const onlyIf of fact.onlyIfs) {
-          env.addShortOptFact(onlyIf);
+          env.addShortOptFact(onlyIf, fact.onlyIfs);
         }
       }
     }

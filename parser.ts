@@ -667,6 +667,7 @@ const factParserSignals: { [key: string]: Function } = {
   or: orParse,
   not: notParse,
   if: yaIfThenParse,
+  "?": yaIfThenParse,
 };
 
 function yaFactParse(env: L_Env, tokens: string[]): yaFactNode {

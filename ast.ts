@@ -28,7 +28,9 @@ export class yaIfThenNode extends yaFactNode {
     super();
   }
 
-  toString() {}
+  toString() {
+    return `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
+  }
 }
 
 export class ShortCallOptNode extends yaFactNode {
