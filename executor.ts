@@ -18,6 +18,8 @@ import {
   yaIfThenNode,
   yaFactNode,
   OrNode,
+  DeclNode,
+  DefDeclNode,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -123,9 +125,9 @@ export const hFixFreeErr = (
 };
 
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
-  DefNode: templateDeclExec,
-  InferNode: templateDeclExec,
-  ExistNode: templateDeclExec,
+  DefNode: declExec,
+  InferNode: declExec,
+  ExistNode: declExec,
   KnowNode: yaKnowExec,
   LetNode: letExec,
   ProveNode: proveExec,
@@ -166,12 +168,8 @@ export function nodePrintExec(env: L_Env, node: L_Node): RType {
 
 export function nodeExec(env: L_Env, node: L_Node): RType {
   try {
-    if (
-      node instanceof DefNode ||
-      node instanceof InferNode ||
-      node instanceof ExistNode
-    ) {
-      return templateDeclExec(env, node as TNode);
+    if (node instanceof DeclNode) {
+      return declExec(env, node as DeclNode);
     } else if (node instanceof KnowNode) {
       return yaKnowExec(env, node as KnowNode);
     } else if (node instanceof LetNode) {
@@ -279,27 +277,41 @@ function callInferExec(env: L_Env, node: CallOptNode, relT: InferNode): RType {
   }
 }
 
-function templateDeclExec(env: L_Env, node: TNode): RType {
+// function declExec(env: L_Env, node: TNode): RType {
+//   try {
+//     // Check if the template name already exists
+//     if (!node.isRedefine && env.declaredTemplates.has(node.name)) {
+//       return cEnvRType(env, RType.Error, `${node.name} has declared`);
+//     }
+
+//     if (L_Keywords.includes(node.name)) {
+//       return cEnvRType(env, RType.Error, `'${node.name}' is keyword.`);
+//     }
+
+//     // If not already declared, set the new template
+//     env.declaredTemplates.set(node.name, node);
+
+//     // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
+//     let res = node.initDeclaredTemplates(env);
+//     if (isRTypeErr(res)) return cEnvRType(env, RType.Error);
+
+//     return RType.True;
+//   } catch (error) {
+//     return cEnvRType(env, RType.Error);
+//   }
+// }
+
+function declExec(env: L_Env, node: DeclNode): RType {
   try {
-    // Check if the template name already exists
-    if (!node.isRedefine && env.declaredTemplates.has(node.name)) {
-      return cEnvRType(env, RType.Error, `${node.name} has declared`);
+    if (node instanceof DefDeclNode) {
     }
-
-    if (L_Keywords.includes(node.name)) {
-      return cEnvRType(env, RType.Error, `'${node.name}' is keyword.`);
-    }
-
-    // If not already declared, set the new template
-    env.declaredTemplates.set(node.name, node);
-
-    // move templates(pure, questionMark) from node.onlyIfs to node.declaredTemplates
-    let res = node.initDeclaredTemplates(env);
-    if (isRTypeErr(res)) return cEnvRType(env, RType.Error);
 
     return RType.True;
   } catch (error) {
-    return cEnvRType(env, RType.Error);
+    let m = `'${node.toString()}'`;
+    if (error instanceof Error) m += ` ${error.message}`;
+    yaHandleExecError(env, m);
+    throw error;
   }
 }
 
@@ -782,20 +794,20 @@ function byExec(env: L_Env, node: ByNode): RType {
 function thmExec(env: L_Env, node: ThmNode): RType {
   try {
     // extract template from thm
-    const freeVars = hRemoveHashPrefix(node.opt.optParams);
+    // const freeVars = hRemoveHashPrefix(node.opt.optParams);
 
-    const relT = new InferNode(
-      node.opt.optName,
-      freeVars[0],
-      node.opt.req,
-      node.opt.onlyIFs
-    );
-    let isT = templateDeclExec(env, relT);
+    // const relT = new InferNode(
+    //   node.opt.optName,
+    //   freeVars[0],
+    //   node.opt.req,
+    //   node.opt.onlyIFs
+    // );
+    // let isT = declExec(env, relT);
 
-    if (isT !== RType.True) return cEnvRType(env, RType.Error);
+    // if (isT !== RType.True) return cEnvRType(env, RType.Error);
 
-    isT = proveInferExec(env, new ProveNode(node.opt, node.proveBlock), relT);
-    if (isT !== RType.True) return RType.ThmFailed;
+    // isT = proveInferExec(env, new ProveNode(node.opt, node.proveBlock), relT);
+    // if (isT !== RType.True) return RType.ThmFailed;
 
     return RType.True;
   } catch (error) {

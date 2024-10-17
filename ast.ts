@@ -417,3 +417,21 @@ export class ThmNode extends L_Node {
     this.proveBlock = proveBlock;
   }
 }
+
+export abstract class DeclNode extends L_Node {
+  constructor(
+    public name: string = "",
+    public freeVars: string[] = [],
+    public req: yaFactNode[] = [],
+    public onlyIfs: yaFactNode[] = []
+  ) {
+    super();
+    this.name = name;
+    this.freeVars = freeVars;
+    this.req = req;
+    this.onlyIfs = onlyIfs;
+  }
+}
+
+export class IffDeclNode extends DeclNode {}
+export class IfThenDeclNode extends DeclNode {}

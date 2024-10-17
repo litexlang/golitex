@@ -25,13 +25,15 @@ export const KnowTypeKeywords = [
   "know_everything",
   "!",
 ];
-export const ExistKeywords = ["exist", "?"];
+export const IfThenKeywords = ["imply", "?"];
+export const ExistKeywords = ["exist"];
+export const DefKeywords = [":", "def"];
 export const redefineTemplateDeclarationKeywords = ["re_def"];
 export const TemplateDeclarationKeywords = [
-  ":",
-  "def",
   ...redefineTemplateDeclarationKeywords,
+  ...DefKeywords,
   ...ExistKeywords,
+  ...IfThenKeywords,
 ];
 
 export const SymbolsFactsSeparator = "|";

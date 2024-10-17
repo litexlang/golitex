@@ -19,6 +19,9 @@ import {
   yaIfThenNode,
   yaFactNode,
   // DeclNode,
+  DeclNode,
+  DefDeclNode,
+  IfThenDeclNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -33,7 +36,10 @@ import {
   byRBracket,
   StdStmtEnds,
   yaIfThenKeywords,
+  IfThenKeywords,
+  DefKeywords,
 } from "./common";
+import { on } from "events";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -93,11 +99,11 @@ const KeywordFunctionMap: {
   // not: notParse,
   // or: orParse,
   let: letParse,
-  def: templateParse,
-  re_def: templateParse,
-  ":": templateParse,
+  def: DeclNodeParse,
+  // re_def: templateParse,
+  ":": DeclNodeParse,
   exist: existParse,
-  "?": templateParse,
+  // "?": templateParse,
   know_everything: (env: L_Env, tokens: string[]) => {
     const node = knowParse(env, tokens);
     node.isKnowEverything = true;
@@ -407,94 +413,105 @@ function callOptsParse(
   }
 }
 
-function templateParse(env: L_Env, tokens: string[]): TNode {
+function templateParse(env: L_Env, tokens: string[]): DeclNode {
   const start = tokens[0];
   const index = tokens.length;
-
   try {
-    const defName = skip(tokens, TemplateDeclarationKeywords);
-    const name = shiftVar(tokens);
-
-    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
-      freeVarsAndTheirFactsParse(env, tokens);
-
-    // skip(tokens, ")");
-
-    let result: L_Node;
-    switch (tokens[0]) {
-      case "=>":
-        skip(tokens, "=>");
-        if (!isCurToken(tokens, "{")) {
-          result = new InferNode(
-            name,
-            freeVarsFact.freeVars,
-            freeVarsFact.properties
-          );
-          const facts: CallOptNode[] = [];
-          callOptsParse(env, tokens, facts);
-          for (let i = 0; i < facts.length; i++) {
-            (result as InferNode).onlyIfs.push(facts[i]);
-          }
-        } else {
-          const blockArrow = blockParse(env, tokens);
-          result = new InferNode(
-            name,
-            freeVarsFact.freeVars,
-            freeVarsFact.properties
-          );
-          (result as InferNode).onlyIfs = blockArrow;
-        }
-
-        break;
-
-      case "{":
-        const blockBrace = blockParse(env, tokens);
-        result = new InferNode(
-          name,
-          freeVarsFact.freeVars,
-          freeVarsFact.properties
-        );
-        (result as DefNode).onlyIfs = blockBrace;
-        break;
-
-      case "<=>":
-        skip(tokens, "<=>");
-        if (!isCurToken(tokens, "{")) {
-          result = new DefNode(
-            name,
-            freeVarsFact.freeVars,
-            freeVarsFact.properties
-          );
-          callOptsParse(env, tokens, (result as DefNode).onlyIfs);
-        } else {
-          const blockDoubleArrow = blockParse(env, tokens);
-          result = new DefNode(
-            name,
-            freeVarsFact.freeVars,
-            freeVarsFact.properties
-          );
-          (result as DefNode).onlyIfs = blockDoubleArrow;
-        }
-
-        break;
-
-      default:
-        // no arrow, no block
-        result = new DefNode(name, freeVarsFact.freeVars, []);
-        (result as TNode).requirements = freeVarsFact.properties;
-        break;
-    }
-
-    if (redefineTemplateDeclarationKeywords.includes(defName as string)) {
-      (result as TNode).isRedefine = true;
-    }
-    return result as TNode;
+    return new DefDeclNode();
   } catch (error) {
-    handleParseError(env, "declare template", index, start);
-    // env.returnToSnapShot(snapShot);
+    handleParseError(env, "declaration", index, start);
     throw error;
   }
 }
+
+// function templateParse(env: L_Env, tokens: string[]): TNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
+
+//   try {
+//     const defName = skip(tokens, TemplateDeclarationKeywords);
+// const name = shiftVar(tokens);
+
+//     const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
+//       freeVarsAndTheirFactsParse(env, tokens);
+
+//     // skip(tokens, ")");
+
+//     let result: L_Node;
+//     switch (tokens[0]) {
+//       case "=>":
+//         skip(tokens, "=>");
+//         if (!isCurToken(tokens, "{")) {
+//           result = new InferNode(
+//             name,
+//             freeVarsFact.freeVars,
+//             freeVarsFact.properties
+//           );
+//           const facts: CallOptNode[] = [];
+//           callOptsParse(env, tokens, facts);
+//           for (let i = 0; i < facts.length; i++) {
+//             (result as InferNode).onlyIfs.push(facts[i]);
+//           }
+//         } else {
+//           const blockArrow = blockParse(env, tokens);
+//           result = new InferNode(
+//             name,
+//             freeVarsFact.freeVars,
+//             freeVarsFact.properties
+//           );
+//           (result as InferNode).onlyIfs = blockArrow;
+//         }
+
+//         break;
+
+//       case "{":
+//         const blockBrace = blockParse(env, tokens);
+//         result = new InferNode(
+//           name,
+//           freeVarsFact.freeVars,
+//           freeVarsFact.properties
+//         );
+//         (result as DefNode).onlyIfs = blockBrace;
+//         break;
+
+//       case "<=>":
+//         skip(tokens, "<=>");
+//         if (!isCurToken(tokens, "{")) {
+//           result = new DefNode(
+//             name,
+//             freeVarsFact.freeVars,
+//             freeVarsFact.properties
+//           );
+//           callOptsParse(env, tokens, (result as DefNode).onlyIfs);
+//         } else {
+//           const blockDoubleArrow = blockParse(env, tokens);
+//           result = new DefNode(
+//             name,
+//             freeVarsFact.freeVars,
+//             freeVarsFact.properties
+//           );
+//           (result as DefNode).onlyIfs = blockDoubleArrow;
+//         }
+
+//         break;
+
+//       default:
+//         // no arrow, no block
+//         result = new DefNode(name, freeVarsFact.freeVars, []);
+//         (result as TNode).requirements = freeVarsFact.properties;
+//         break;
+//     }
+
+//     if (redefineTemplateDeclarationKeywords.includes(defName as string)) {
+//       (result as TNode).isRedefine = true;
+//     }
+//     return result as TNode;
+//   } catch (error) {
+//     handleParseError(env, "declare template", index, start);
+//     // env.returnToSnapShot(snapShot);
+//     throw error;
+//   }
+// }
 
 function letParse(env: L_Env, tokens: string[]): LetNode {
   const start = tokens[0];
@@ -850,6 +867,57 @@ function nodeListParse<T>(
     if (skipEnd) skip(tokens, end);
 
     return out;
+  } catch (error) {
+    handleParseError(env, "Parsing variables", index, start);
+    throw error;
+  }
+}
+
+function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
+  const start = tokens[0];
+  const index = tokens.length;
+  try {
+    const nodeKind = skip(tokens, TemplateDeclarationKeywords) as string;
+
+    const name = shiftVar(tokens);
+    const vars = nodeListParse<string>(
+      env,
+      tokens,
+      (env: L_Env, tokens: string[]) => {
+        return shiftVar(tokens);
+      },
+      ["|"]
+    );
+
+    const req = nodeListParse<yaFactNode>(
+      env,
+      tokens,
+      yaFactParse,
+      [";", "=>"],
+      false
+    );
+
+    let onlyIfs: yaFactNode[] = [];
+    if (isCurToken(tokens, ";")) {
+      skip(tokens, ";");
+    } else if (isCurToken(tokens, "=>")) {
+      skip(tokens, "=>");
+
+      if (!isCurToken(tokens, "{")) {
+        onlyIfs = [yaFactParse(env, tokens)];
+      } else {
+        skip(tokens, "{");
+        onlyIfs = nodeListParse<yaFactNode>(env, tokens, yaFactParse, ["}"]);
+      }
+    }
+
+    if (IfThenKeywords.includes(nodeKind)) {
+      return new IfThenDeclNode(name, vars, req, onlyIfs);
+    } else if (DefKeywords.includes(nodeKind)) {
+      return new DefDeclNode(name, vars, req, onlyIfs);
+    }
+
+    throw Error();
   } catch (error) {
     handleParseError(env, "Parsing variables", index, start);
     throw error;

@@ -1,5 +1,6 @@
 export const testCodes = {
-  Basics: ":obj(x) => {}; :set(x);",
+  Basics: ": set x | ; ",
+  // Basics2: ": set2 x| set(x); : set3 x| set2(x) => set2(x); : set4 x | {}",
   // def: ":obj(x) => {};  : set(x);",
   // know: "know set(#x);",
   // err1: "~",
@@ -30,7 +31,7 @@ export const testCodes = {
   // setEqual:
   //   ": item(x,A| set(A)) => {} : setEqual(A,B| set(A), set(B)) => {item(#x, A) => item(x, B); item(#x, B) => item(x, A);}",
   Opt: "know set(x);",
-  ifThenKnow: "know if | set(x), set(y) then set(x) [tmp];",
+  // ifThenKnow: "know if | set(x), set(y) then set(x) [tmp];",
 };
 
 export const testErrorCode = {
