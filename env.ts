@@ -45,12 +45,19 @@ export class L_Env {
     this.father = father;
   }
 
+  // If opt is not declared, just throw error. I no longer need to write `if (... !== undefined)`
   declTemp(name: string, fact: yaFactNode) {
     if (this.declTemps.has(name)) throw Error(`${name} is already declared`);
     else {
       this.declTemps.set(name, fact);
       if (fact instanceof yaIfThenNode) fact.fullName = ""; // save memory
     }
+  }
+
+  getDeclTemp(name: string): yaFactNode {
+    const out = this.declTemps.get(name);
+    if (out == undefined) throw Error(`${name} undeclared`);
+    else return out;
   }
 
   /**

@@ -807,15 +807,14 @@ function yaKnowExec(env: L_Env, node: KnowNode): RType {
   try {
     for (const fact of node.facts) {
       if (fact instanceof ShortCallOptNode) {
-        if (isFactDeclared(env, fact)) env.addShortOptFact(env, fact);
-        else throw Error(`${fact.fullName} is not declared`);
+        const relT = env.getDeclTemp(fact.fullName);
+        env.addShortOptFact(env, fact);
       } else if (fact instanceof yaIfThenNode) {
-        if (isFactDeclared(env, fact)) {
-          env.declTemp(fact.fullName, fact);
-          for (const onlyIf of fact.onlyIfs) {
-            env.addShortOptFact(env, onlyIf, fact.req, fact.freeVars);
-          }
-        } else throw Error(`Not all given facts are declared`);
+        const relT = env.getDeclTemp(fact.fullName);
+        env.declTemp(fact.fullName, fact);
+        for (const onlyIf of fact.onlyIfs) {
+          env.addShortOptFact(env, onlyIf, fact.req, fact.freeVars);
+        }
       }
     }
 
