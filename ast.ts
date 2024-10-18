@@ -1,7 +1,7 @@
 import { isNull } from "lodash";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
-import { hInfo, RType } from "./executor";
+import { RType } from "./executor";
 import { cEnvRType, fixOpt, relTNotFoundEnvErr } from "./shared";
 import { on } from "events";
 
