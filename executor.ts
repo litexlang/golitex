@@ -775,13 +775,14 @@ function proveDefExec(env: L_Env, node: ProveNode, relT: TNode): RType {
 
 function byExec(env: L_Env, node: ByNode): RType {
   try {
-    const freeFact = env.bys.get(node.name);
-    if (freeFact === undefined) return cEnvRType(env, RType.Error);
+    // const freeFact = env.bys.get(node.name);
+    // if (freeFact === undefined) return cEnvRType(env, RType.Error);
 
-    const mapping = env.useSingleFreeFactToCheck(freeFact, node.opt);
+    // const mapping = env.useSingleFreeFactToCheck(freeFact, node.opt);
 
-    if (mapping === UdfErr) return RType.Unknown;
-    else return RType.True;
+    // if (mapping === UdfErr) return RType.Unknown;
+    // else
+    return RType.True;
   } catch (error) {
     return cEnvRType(env, RType.Error);
   }
@@ -825,10 +826,19 @@ function knowExec(env: L_Env, node: KnowNode): RType {
         const isT = env.varsAreNotDeclared(fact.params.flat());
         if (isT) throw Error(`${fact.params.flat().toString()} not declared.`);
         env.addShortOptFact(env, fact);
+        if (fact.byName !== "") {
+          fact.byName = "";
+          env.newBy(fact.byName, fact);
+        }
       } else if (fact instanceof yaIfThenNode) {
-        //! Here have 2 situations: if-then with name, if-then with no name
+        // store facts
         for (const onlyIf of fact.onlyIfs) {
           env.addShortOptFact(env, onlyIf, fact.req, fact.freeVars);
+        }
+        // store by
+        if (fact.byName !== "") {
+          env.newBy(fact.byName, fact);
+          fact.byName = "";
         }
       }
     }

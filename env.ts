@@ -2,6 +2,7 @@ import { isNull, map } from "lodash";
 import {
   CallOptNode,
   DeclNode,
+  FactNode,
   InferNode,
   ShortCallOptNode,
   TNode,
@@ -33,7 +34,7 @@ export class L_Env {
   declaredTemplates = new Map<string, TNode>();
   father: L_Env | undefined;
   facts = new Map<string, CallOptNode[]>();
-  bys = new Map<string, CallOptNode>();
+  bys = new Map<string, FactNode>();
 
   shortOptFacts = new Map<string, ShortCallOptNode[]>();
 
@@ -48,7 +49,6 @@ export class L_Env {
     if (this.declTemps.has(name)) throw Error(`${name} is already declared`);
     else {
       this.declTemps.set(name, fact);
-      if (fact instanceof yaIfThenNode) fact.fullName = ""; // save memory
     }
   }
 
@@ -82,7 +82,12 @@ export class L_Env {
 
   checkFact(opt: yaIfThenNode[]) {}
 
-  newBy(key: string, by: CallOptNode) {
+  /**
+   * called by
+   * 1. know named if-then
+   * 2.
+   */
+  newBy(key: string, by: FactNode) {
     this.bys.set(key, by);
   }
 

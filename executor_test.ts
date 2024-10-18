@@ -6,7 +6,7 @@ import { L_StmtsParse } from "./parser";
 // import { testParser } from "./parser_lexer_test";
 import { isL_OutErr, isRTypeErr, RL_Out } from "./shared";
 import { setTheory } from "./tao_analysis_one";
-import { testCodes, testErrorCode } from "./test_code";
+import { testCodes, testErrorCode, testList } from "./test_code";
 
 const codes: string[] = [
   // "// Start from one axiom, get followings",
@@ -277,41 +277,6 @@ function testExecutor(testWhat: any = testCodes) {
 // testExecutor(testCodes);
 // testError();
 
-function testListOfCodes(exprs: string[]): RType[] {
-  const copied = [...exprs];
-  const env = new L_Env();
-  const results: RType[] = [];
-
-  for (let i = 0; i < exprs.length; i++) {
-    const expr = exprs[i];
-    const out = run(env, expr);
-    if (out === undefined) {
-      console.log(`[${i}] ${copied[i]}`);
-      continue;
-    } else {
-      results.concat(out);
-    }
-  }
-
-  return results;
-}
-
-function run(env: L_Env, expr: string) {
-  const tokens = scan(expr);
-  const nodes = L_StmtsParse(env, tokens);
-  if (nodes === undefined) {
-    testParser([expr]);
-    return undefined;
-  }
-  const result = nodes?.map((e) => nodePrintExec(env, e));
-  env.messages.forEach((e) => console.log(e));
-  env.messages = [];
-
-  return result;
-}
-
-testListOfCodes(setTheory);
-
 function testParser(codes: string[]) {
   const env = new L_Env();
   for (let i = 0; i < codes.length; i++) {
@@ -330,3 +295,44 @@ function testParser(codes: string[]) {
     }
   }
 }
+
+function testListOfCodes(exprs: string[]): RType[] {
+  const copied = [...exprs];
+  const env = new L_Env();
+  const results: RType[] = [];
+
+  for (let i = 0; i < exprs.length; i++) {
+    const expr = exprs[i];
+    const out = run(env, expr);
+    if (out === undefined) {
+      console.log("--------");
+      console.log(`[${i}] ${copied[i]}`);
+      testParser([expr]);
+      console.log("--------");
+      continue;
+    } else {
+      results.concat(out);
+    }
+  }
+
+  env.printDeclaredTemplates();
+  env.printFacts();
+
+  return results;
+}
+
+function run(env: L_Env, expr: string) {
+  const tokens = scan(expr);
+  const nodes = L_StmtsParse(env, tokens);
+  if (nodes === undefined) {
+    return undefined;
+  }
+  const result = nodes?.map((e) => nodePrintExec(env, e));
+  env.messages.forEach((e) => console.log(e));
+  env.messages = [];
+
+  return result;
+}
+
+// testListOfCodes(setTheory);
+testListOfCodes(testList);

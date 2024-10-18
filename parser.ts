@@ -837,7 +837,9 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
       name = shiftVar(tokens);
       skip(tokens, "]");
     }
-    return new yaIfThenNode(name, vars, req, onlyIfs);
+    const out = new yaIfThenNode(vars, req, onlyIfs);
+    out.byName = name;
+    return out;
   } catch (error) {
     handleParseError(env, "()=>{}", index, start);
     throw error;

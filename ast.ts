@@ -3,11 +3,13 @@ import { L_Keywords, OptsConnectionSymbol } from "./common";
 import { L_Env } from "./env";
 import { hInfo, RType } from "./executor";
 import { cEnvRType, fixOpt, relTNotFoundEnvErr } from "./shared";
+import { on } from "events";
 
 export abstract class L_Node {}
 
 export abstract class FactNode extends L_Node {
   isT: Boolean = true;
+  byName: string = "";
 }
 
 export abstract class yaFactNode extends FactNode {}
@@ -21,16 +23,21 @@ export class OrNode extends yaFactNode {
 
 export class yaIfThenNode extends yaFactNode {
   constructor(
-    public fullName: string,
     public freeVars: string[] = [],
     public req: yaFactNode[] = [],
     public onlyIfs: ShortCallOptNode[] = []
   ) {
     super();
+    this.req = req;
+    this.onlyIfs = onlyIfs;
   }
 
   toString() {
-    return `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}[${this.fullName}]`;
+    if (this.byName !== "") {
+      return `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}[${this.byName}]`;
+    } else {
+      return `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
+    }
   }
 }
 
@@ -49,9 +56,17 @@ export class ShortCallOptNode extends yaFactNode {
   }
 
   toString() {
-    return this.nameAsLst()
-      .map((name, i) => `${name}(${this.params[i]})`)
-      .join(":");
+    if (this.byName !== "") {
+      return (
+        this.nameAsLst()
+          .map((name, i) => `${name}(${this.params[i]})`)
+          .join(":") + `[${this.byName}]`
+      );
+    } else {
+      return this.nameAsLst()
+        .map((name, i) => `${name}(${this.params[i]})`)
+        .join(":");
+    }
   }
 }
 
