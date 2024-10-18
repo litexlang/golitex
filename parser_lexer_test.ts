@@ -177,7 +177,9 @@ const codes: string[] = [
   // "know if x,y | set(x) => est(x,y) ;",
   // "know ? x,y | set(x) => {set2(x,y), set3(x)} [tmp];",
   // "know ? | set(x) => set(x)[tmp2];",
-  `: obj x | ;  // Everything is an object.`,
+  // `: obj x | ;  // Everything is an object.`,
+  // `: item x,A | set(A)  => {} ;`,
+  `let EMPTY_SET |  if x => not item(x,EMPTY_SET); ; `,
 ];
 
 function testLexer() {

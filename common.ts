@@ -25,6 +25,7 @@ export const KnowTypeKeywords = [
   "know_everything",
   "!",
 ];
+export const ThenKeywords = ["then", "=>"];
 export const IfThenKeywords = ["imply", "?"];
 export const ExistKeywords = ["exist"];
 export const DefKeywords = [":", "def"];
@@ -56,3 +57,4 @@ export const L_Keywords = [
 
 export const StdStmtEnds = [";", "\n"];
 export const yaIfThenKeywords = ["$"];
+export const LetKeywords = ["let"];

@@ -361,10 +361,10 @@ export class LetNode extends L_Node {
   vars: string[];
   properties: FactNode[];
 
-  constructor(node: { freeVars: string[]; properties: FactNode[] }) {
+  constructor(vars: string[], facts: FactNode[]) {
     super();
-    this.vars = node.freeVars;
-    this.properties = node.properties;
+    this.vars = vars;
+    this.properties = facts;
   }
 
   toString() {

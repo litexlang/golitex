@@ -15,6 +15,7 @@ import {
   DeclNode,
   DefDeclNode,
   IfThenDeclNode,
+  FactNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -29,6 +30,8 @@ import {
   yaIfThenKeywords,
   IfThenKeywords,
   DefKeywords,
+  LetKeywords,
+  ThenKeywords,
 } from "./common";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -478,9 +481,29 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   const index = tokens.length;
 
   try {
-    return new LetNode(
-      freeVarsAndTheirFactsParse(env, tokens, "let", StdStmtEnds, true)
+    skip(tokens, LetKeywords);
+    const vars = listParse<string>(
+      env,
+      tokens,
+      (env, e) => shiftVar(e),
+      [...StdStmtEnds, "|"],
+      false
     );
+
+    if (StdStmtEnds.includes(tokens[0])) {
+      skip(tokens, StdStmtEnds);
+      return new LetNode(vars, []);
+    } else {
+      skip(tokens, "|");
+      const facts = listParse<FactNode>(
+        env,
+        tokens,
+        factParse,
+        StdStmtEnds,
+        true
+      );
+      return new LetNode(vars, facts);
+    }
   } catch (error) {
     handleParseError(env, "let", index, start);
     throw error;
@@ -773,25 +796,30 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
 
   try {
     skip(tokens, ["if", "?"]);
-    const vars = nodeListParse<string>(
+    const vars = listParse<string>(
       env,
       tokens,
       (env: L_Env, tokens: string[]) => {
         return shiftVar(tokens);
       },
-      ["|"]
+      ["|", ...ThenKeywords],
+      false
     );
-    const paramReq = nodeListParse<yaFactNode>(env, tokens, factParse, [
-      "=>",
-      "then",
-    ]);
+
+    let paramReq: FactNode[] = [];
+    if (ThenKeywords.includes(tokens[0])) {
+      skip(tokens, ThenKeywords);
+    } else {
+      skip(tokens, "|");
+      paramReq = listParse<yaFactNode>(env, tokens, factParse, ["=>", "then"]);
+    }
 
     let facts: ShortCallOptNode[];
     if (!isCurToken(tokens, "{")) {
       facts = [shortCallOptParse(env, tokens)];
     } else {
       skip(tokens, "{");
-      facts = nodeListParse<ShortCallOptNode>(env, tokens, shortCallOptParse, [
+      facts = listParse<ShortCallOptNode>(env, tokens, shortCallOptParse, [
         "}",
       ]);
     }
@@ -809,7 +837,7 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
   }
 }
 
-function nodeListParse<T>(
+function listParse<T>(
   env: L_Env,
   tokens: string[],
   parseFunc: (env: L_Env, tokens: string[], ...args: any[]) => T,
@@ -847,26 +875,34 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
       nodeType = shiftVar(tokens);
     }
 
-    const vars = nodeListParse<string>(
+    const vars = listParse<string>(
       env,
       tokens,
       (env: L_Env, tokens: string[]) => {
         return shiftVar(tokens);
       },
-      ["|"]
+      ["|", ...StdStmtEnds],
+      false
     );
 
-    const req = nodeListParse<yaFactNode>(
+    if (StdStmtEnds.includes(tokens[0])) {
+      skip(tokens, StdStmtEnds);
+      return new DefDeclNode(name, vars);
+    } else {
+      skip(tokens, "|");
+    }
+
+    const req = listParse<yaFactNode>(
       env,
       tokens,
       factParse,
-      [";", "=>"],
+      [...StdStmtEnds, "=>"],
       false
     );
 
     let onlyIfs: yaFactNode[] = [];
-    if (isCurToken(tokens, ";")) {
-      skip(tokens, ";");
+    if (StdStmtEnds.includes(tokens[0])) {
+      skip(tokens, StdStmtEnds);
     } else if (isCurToken(tokens, "=>")) {
       skip(tokens, "=>");
 
@@ -874,7 +910,7 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
         onlyIfs = [factParse(env, tokens)];
       } else {
         skip(tokens, "{");
-        onlyIfs = nodeListParse<yaFactNode>(env, tokens, factParse, ["}"]);
+        onlyIfs = listParse<yaFactNode>(env, tokens, factParse, ["}"]);
       }
     }
 

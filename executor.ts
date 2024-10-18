@@ -128,7 +128,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   DefNode: declExec,
   DefDeclNode: declExec,
   ExistNode: declExec,
-  KnowNode: yaKnowExec,
+  KnowNode: knowExec,
   LetNode: letExec,
   ProveNode: proveExec,
   HaveNode: haveExec,
@@ -171,7 +171,7 @@ export function nodeExec(env: L_Env, node: L_Node): RType {
     if (node instanceof DeclNode) {
       return declExec(env, node as DeclNode);
     } else if (node instanceof KnowNode) {
-      return yaKnowExec(env, node as KnowNode);
+      return knowExec(env, node as KnowNode);
     } else if (node instanceof LetNode) {
       return letExec(env, node as LetNode);
     } else if (node instanceof ProveNode) {
@@ -814,7 +814,7 @@ function thmExec(env: L_Env, node: ThmNode): RType {
   }
 }
 
-function yaKnowExec(env: L_Env, node: KnowNode): RType {
+function knowExec(env: L_Env, node: KnowNode): RType {
   try {
     for (const fact of node.facts) {
       if (fact instanceof ShortCallOptNode) {
