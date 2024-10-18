@@ -1,24 +1,17 @@
 import {
   CallOptNode,
-  // CallOptsNode,
-  InferNode,
   ExistNode,
   KnowNode,
   L_Node,
   LetNode,
-  DefNode,
-  TNode,
   ProveNode,
   HaveNode,
   ByNode,
   ThmNode,
-  FactNode,
   OrNode,
-  // IfThenNode,
   ShortCallOptNode,
   yaIfThenNode,
   yaFactNode,
-  // DeclNode,
   DeclNode,
   DefDeclNode,
   IfThenDeclNode,
@@ -26,11 +19,9 @@ import {
 import { L_Env } from "./env";
 import {
   KnowTypeKeywords,
-  TemplateDeclarationKeywords,
   specialChars,
   SymbolsFactsSeparator,
   ProveKeywords,
-  redefineTemplateDeclarationKeywords,
   suchThats,
   byLBracket,
   byRBracket,
@@ -88,48 +79,19 @@ const KeywordFunctionMap: {
   ";": (env: L_Env, tokens: string[]) => {
     tokens.shift();
   },
-  // "(": reqOnlyIfFactParse,
   "\n": (env: L_Env, tokens: string[]) => {
     tokens.shift();
   },
   know: knowParse,
   "@": knowParse,
   have: haveParse,
-  // not: notParse,
-  // or: orParse,
   let: letParse,
   def: DeclNodeParse,
-  // re_def: templateParse,
   ":": DeclNodeParse,
   exist: existParse,
-  // "?": templateParse,
-  know_everything: (env: L_Env, tokens: string[]) => {
-    const node = knowParse(env, tokens);
-    node.isKnowEverything = true;
-    return node;
-  },
-  "!": (env: L_Env, tokens: string[]) => {
-    const node = knowParse(env, tokens);
-    node.isKnowEverything = true;
-    return node;
-  },
   prove: proveParse,
-  "&": proveParse,
   by: byParse,
   thm: thmParse,
-  // $: (env: L_Env, tokens: string[]) => {
-  //   const start = tokens[0];
-  //   const index = tokens.length;
-  //   try {
-  //     skip(tokens, yaIfThenKeywords);
-  //     const name = shiftVar(tokens);
-  //     const out = yaIfThenParse(env, tokens);
-  //     return new DeclNode(name, out);
-  //   } catch (error) {
-  //     handleParseError(env, "Parsing variables", index, start);
-  //     throw error;
-  //   }
-  // },
 };
 
 export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
