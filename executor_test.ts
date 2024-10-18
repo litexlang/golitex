@@ -1,7 +1,9 @@
+import exp from "constants";
 import { L_Env } from "./env";
-import { nodePrintExec, RType, RTypeMap } from "./executor";
+import { nodeExec, nodePrintExec, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { L_StmtsParse } from "./parser";
+// import { testParser } from "./parser_lexer_test";
 import { isL_OutErr, isRTypeErr, RL_Out } from "./shared";
 import { setTheory } from "./tao_analysis_one";
 import { testCodes, testErrorCode } from "./test_code";
@@ -271,6 +273,60 @@ function testExecutor(testWhat: any = testCodes) {
   }
 }
 
-testExecutor(setTheory);
+// testExecutor(setTheory);
 // testExecutor(testCodes);
 // testError();
+
+function testListOfCodes(exprs: string[]): RType[] {
+  const copied = [...exprs];
+  const env = new L_Env();
+  const results: RType[] = [];
+
+  for (let i = 0; i < exprs.length; i++) {
+    const expr = exprs[i];
+    const out = run(env, expr);
+    if (out === undefined) {
+      console.log(`[${i}] ${copied[i]}`);
+      continue;
+    } else {
+      results.concat(out);
+    }
+  }
+
+  return results;
+}
+
+function run(env: L_Env, expr: string) {
+  const tokens = scan(expr);
+  const nodes = L_StmtsParse(env, tokens);
+  if (nodes === undefined) {
+    testParser([expr]);
+    return undefined;
+  }
+  const result = nodes?.map((e) => nodePrintExec(env, e));
+  env.messages.forEach((e) => console.log(e));
+  env.messages = [];
+
+  return result;
+}
+
+testListOfCodes(setTheory);
+
+function testParser(codes: string[]) {
+  const env = new L_Env();
+  for (let i = 0; i < codes.length; i++) {
+    const tokens = scan(codes[i]);
+    // const tokensCopy = [...tokens];
+    const result = L_StmtsParse(env, tokens);
+    if (result === null) {
+      const maxDepth = env.messages[env.messages.length - 1][1];
+      for (let i = env.messages.length - 1; i >= 0; i--) {
+        console.log(env.messages[i]);
+      }
+    } else {
+      for (let i = 0; i < result.length; i++) {
+        console.log(result[i]);
+      }
+    }
+  }
+}

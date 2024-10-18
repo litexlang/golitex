@@ -188,7 +188,7 @@ function testLexer() {
   console.log(tokens);
 }
 
-function testParser() {
+function testParser(codes: string[]) {
   const env = new L_Env();
   for (let i = 0; i < codes.length; i++) {
     const tokens = scan(codes[i]);
@@ -207,5 +207,5 @@ function testParser() {
   }
 }
 
-testParser();
+// testParser(codes);
 // testLexer();
