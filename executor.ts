@@ -203,13 +203,15 @@ function letExec(env: L_Env, node: LetNode): RType {
 
     env.declaredVars = env.declaredVars.concat(node.vars) as string[];
 
-    for (let i = 0; i < node.properties.length; i++) {
-      //! In theory, ANY FactNode can be known, but currently knowExec is not refactored.
-      if (node.properties[i] instanceof CallOptNode) {
-        let info = knowFactExec(env, node.properties[i] as CallOptNode);
-        if (isNull(info)) return cEnvRType(env, RType.Error);
-      }
-    }
+    knowExec(env, new KnowNode(node.facts));
+
+    // for (let i = 0; i < node.facts.length; i++) {
+    //   //! In theory, ANY FactNode can be known, but currently knowExec is not refactored.
+    // if (node.properties[i] instanceof CallOptNode) {
+    //   let info = knowFactExec(env, node.properties[i] as CallOptNode);
+    //   if (isNull(info)) return cEnvRType(env, RType.Error);
+    // }
+    // }
 
     return RType.True;
   } catch (error) {
@@ -825,7 +827,6 @@ function knowExec(env: L_Env, node: KnowNode): RType {
         env.addShortOptFact(env, fact);
       } else if (fact instanceof yaIfThenNode) {
         //! Here have 2 situations: if-then with name, if-then with no name
-
         for (const onlyIf of fact.onlyIfs) {
           env.addShortOptFact(env, onlyIf, fact.req, fact.freeVars);
         }

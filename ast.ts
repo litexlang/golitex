@@ -359,16 +359,16 @@ export class KnowNode extends L_Node {
 
 export class LetNode extends L_Node {
   vars: string[];
-  properties: FactNode[];
+  facts: FactNode[];
 
   constructor(vars: string[], facts: FactNode[]) {
     super();
     this.vars = vars;
-    this.properties = facts;
+    this.facts = facts;
   }
 
   toString() {
-    return `${this.vars.join(", ")}| ${this.properties.map((s) => s.toString()).join(", ")}`;
+    return `${this.vars.join(", ")}| ${this.facts.map((s) => s.toString()).join(", ")}`;
   }
 }
 

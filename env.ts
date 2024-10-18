@@ -35,10 +35,7 @@ export class L_Env {
   facts = new Map<string, CallOptNode[]>();
   bys = new Map<string, CallOptNode>();
 
-  shortOptFacts = new Map<
-    string,
-    { params: string[][]; req: yaFactNode[] }[]
-  >();
+  shortOptFacts = new Map<string, ShortCallOptNode[]>();
 
   private declTemps = new Map<string, DeclNode>();
 
@@ -77,17 +74,9 @@ export class L_Env {
           );
 
     if (this.shortOptFacts.get(opt.fullName) === undefined) {
-      this.shortOptFacts.set(opt.fullName, [
-        {
-          params: params,
-          req: req,
-        },
-      ]);
+      this.shortOptFacts.set(opt.fullName, [opt]);
     } else {
-      this.shortOptFacts.get(opt.fullName)!.push({
-        params: params,
-        req: req,
-      });
+      this.shortOptFacts.get(opt.fullName)!.push(opt);
     }
   }
 
@@ -391,8 +380,8 @@ export class L_Env {
 
     for (const [key, factUnderCurKey] of this.shortOptFacts) {
       console.log(key);
-      factUnderCurKey.forEach((e) => {
-        `${console.log(e.params.toString())} ${e.req.toString()}`;
+      factUnderCurKey.forEach((e: ShortCallOptNode) => {
+        console.log((e.isT ? "" : "[not] ") + e.toString());
       });
     }
   }

@@ -33,6 +33,7 @@ import {
   LetKeywords,
   ThenKeywords,
 } from "./common";
+import { only } from "node:test";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -806,22 +807,28 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
       false
     );
 
-    let paramReq: FactNode[] = [];
+    let req: FactNode[] = [];
     if (ThenKeywords.includes(tokens[0])) {
       skip(tokens, ThenKeywords);
     } else {
       skip(tokens, "|");
-      paramReq = listParse<yaFactNode>(env, tokens, factParse, ["=>", "then"]);
+      req = listParse<yaFactNode>(env, tokens, factParse, ["=>", "then"]);
     }
 
-    let facts: ShortCallOptNode[];
+    let onlyIfs: ShortCallOptNode[];
     if (!isCurToken(tokens, "{")) {
-      facts = [shortCallOptParse(env, tokens)];
+      const fact = factParse(env, tokens);
+      if (!(fact instanceof ShortCallOptNode))
+        throw Error(`${fact.toString()} is not operator-type fact.`);
+      else onlyIfs = [fact];
     } else {
       skip(tokens, "{");
-      facts = listParse<ShortCallOptNode>(env, tokens, shortCallOptParse, [
-        "}",
-      ]);
+      const out = listParse<FactNode>(env, tokens, factParse, ["}"]);
+      if (out.every((e) => e instanceof ShortCallOptNode)) {
+        onlyIfs = out as ShortCallOptNode[];
+      } else {
+        throw Error(`Not all onlyIfs are operator-type fact.`);
+      }
     }
 
     let name = "";
@@ -830,7 +837,7 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
       name = shiftVar(tokens);
       skip(tokens, "]");
     }
-    return new yaIfThenNode(name, vars, paramReq, facts);
+    return new yaIfThenNode(name, vars, req, onlyIfs);
   } catch (error) {
     handleParseError(env, "()=>{}", index, start);
     throw error;
