@@ -825,8 +825,7 @@ function yaKnowExec(env: L_Env, node: KnowNode): RType {
         env.addShortOptFact(env, fact);
       } else if (fact instanceof yaIfThenNode) {
         //! Here have 2 situations: if-then with name, if-then with no name
-        // const relT = env.getDeclTemp(fact.fullName);
-        // env.declTemp(fact.fullName, relT);
+
         for (const onlyIf of fact.onlyIfs) {
           env.addShortOptFact(env, onlyIf, fact.req, fact.freeVars);
         }

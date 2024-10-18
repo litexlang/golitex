@@ -39,7 +39,6 @@ import {
   IfThenKeywords,
   DefKeywords,
 } from "./common";
-import { on } from "events";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
