@@ -1,6 +1,7 @@
 import { isNull, map } from "lodash";
 import {
   CallOptNode,
+  DeclNode,
   InferNode,
   ShortCallOptNode,
   TNode,
@@ -39,14 +40,14 @@ export class L_Env {
     { params: string[][]; req: yaFactNode[] }[]
   >();
 
-  private declTemps = new Map<string, yaFactNode>();
+  private declTemps = new Map<string, DeclNode>();
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
   }
 
   // If opt is not declared, just throw error. I no longer need to write `if (... !== undefined)`
-  declTemp(name: string, fact: yaFactNode) {
+  declTemp(name: string, fact: DeclNode) {
     if (this.declTemps.has(name)) throw Error(`${name} is already declared`);
     else {
       this.declTemps.set(name, fact);
@@ -54,10 +55,9 @@ export class L_Env {
     }
   }
 
-  getDeclTemp(name: string): yaFactNode {
+  getDeclTemp(name: string): DeclNode | undefined {
     const out = this.declTemps.get(name);
-    if (out == undefined) throw Error(`${name} undeclared`);
-    else return out;
+    return out;
   }
 
   /**
@@ -383,19 +383,19 @@ export class L_Env {
     }
   }
 
-  // printFacts() {
-  //   console.log("\n-----facts-------\n");
-  //   // for (const [key, factUnderCurKey] of this.facts) {
-  //   //   factUnderCurKey.forEach((e) => console.log(e.toString()));
-  //   // }
+  printFacts() {
+    console.log("\n-----facts-------\n");
+    // for (const [key, factUnderCurKey] of this.facts) {
+    //   factUnderCurKey.forEach((e) => console.log(e.toString()));
+    // }
 
-  //   for (const [key, factUnderCurKey] of this.shortOptFacts) {
-  //     console.log(key);
-  //     factUnderCurKey.forEach((e) => {
-  //       `${console.log(e.params.toString())} ${e.req.toString()}`;
-  //     });
-  //   }
-  // }
+    for (const [key, factUnderCurKey] of this.shortOptFacts) {
+      console.log(key);
+      factUnderCurKey.forEach((e) => {
+        `${console.log(e.params.toString())} ${e.req.toString()}`;
+      });
+    }
+  }
 
   printDeclaredTemplates(doNotPrint: string[] = []) {
     console.log("\n-----template-----\n");

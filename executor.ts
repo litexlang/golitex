@@ -126,7 +126,7 @@ export const hFixFreeErr = (
 
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   DefNode: declExec,
-  InferNode: declExec,
+  DefDeclNode: declExec,
   ExistNode: declExec,
   KnowNode: yaKnowExec,
   LetNode: letExec,
@@ -303,8 +303,7 @@ function callInferExec(env: L_Env, node: CallOptNode, relT: InferNode): RType {
 
 function declExec(env: L_Env, node: DeclNode): RType {
   try {
-    if (node instanceof DefDeclNode) {
-    }
+    env.declTemp(node.name, node);
 
     return RType.True;
   } catch (error) {
@@ -820,10 +819,14 @@ function yaKnowExec(env: L_Env, node: KnowNode): RType {
     for (const fact of node.facts) {
       if (fact instanceof ShortCallOptNode) {
         const relT = env.getDeclTemp(fact.fullName);
+        if (relT === undefined) throw Error(`${fact.fullName} not declared.`);
+        const isT = env.varsAreNotDeclared(fact.params.flat());
+        if (isT) throw Error(`${fact.params.flat().toString()} not declared.`);
         env.addShortOptFact(env, fact);
       } else if (fact instanceof yaIfThenNode) {
-        const relT = env.getDeclTemp(fact.fullName);
-        env.declTemp(fact.fullName, fact);
+        //! Here have 2 situations: if-then with name, if-then with no name
+        // const relT = env.getDeclTemp(fact.fullName);
+        // env.declTemp(fact.fullName, relT);
         for (const onlyIf of fact.onlyIfs) {
           env.addShortOptFact(env, onlyIf, fact.req, fact.freeVars);
         }

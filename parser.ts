@@ -836,9 +836,12 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
       ]);
     }
 
-    skip(tokens, "[");
-    const name = shiftVar(tokens);
-    skip(tokens, "]");
+    let name = "";
+    if (isCurToken(tokens, "[")) {
+      skip(tokens, "[");
+      name = shiftVar(tokens);
+      skip(tokens, "]");
+    }
     return new yaIfThenNode(name, vars, paramReq, facts);
   } catch (error) {
     handleParseError(env, "()=>{}", index, start);
@@ -877,9 +880,13 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
   const start = tokens[0];
   const index = tokens.length;
   try {
-    const nodeKind = skip(tokens, TemplateDeclarationKeywords) as string;
-
+    let nodeType = shiftVar(tokens);
     const name = shiftVar(tokens);
+
+    if (IfThenKeywords.includes(tokens[0])) {
+      nodeType = shiftVar(tokens);
+    }
+
     const vars = nodeListParse<string>(
       env,
       tokens,
@@ -911,9 +918,9 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
       }
     }
 
-    if (IfThenKeywords.includes(nodeKind)) {
+    if (IfThenKeywords.includes(nodeType)) {
       return new IfThenDeclNode(name, vars, req, onlyIfs);
-    } else if (DefKeywords.includes(nodeKind)) {
+    } else if (DefKeywords.includes(nodeType)) {
       return new DefDeclNode(name, vars, req, onlyIfs);
     }
 

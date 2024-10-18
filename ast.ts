@@ -433,5 +433,5 @@ export abstract class DeclNode extends L_Node {
   }
 }
 
-export class IffDeclNode extends DeclNode {}
+export class DefDeclNode extends DeclNode {}
 export class IfThenDeclNode extends DeclNode {}
