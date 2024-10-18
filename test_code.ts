@@ -31,7 +31,8 @@ export const testCodes = {
   // is: "let x | obj(x); x is set; :tmp (x|set(x)) => {set(x);}",
   // setEqual:
   //   ": item(x,A| set(A)) => {} : setEqual(A,B| set(A), set(B)) => {item(#x, A) => item(x, B); item(#x, B) => item(x, A);}",
-  Opt: "let x; know set(#x); know if x| set(x) => {set(x)} [g]; ",
+  Opt: "let x; know set(#x);",
+  // opt2: " know if x| set(x) => {set(x)} [g]; ",
   // ifThenKnow: "know if | set(x), set(y) then set(x) [tmp];",
 };
 
