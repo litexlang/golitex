@@ -255,16 +255,16 @@ function testExecutor(testWhat: any = testCodes) {
     if (env.shortOptFacts.size > 0) env.printFacts();
     // env.printCallOptFacts();
     // do not print templates declared in Basics
-    if (env.declaredTemplates.size > 0)
-      env.printDeclaredTemplates([
-        "obj",
-        "set",
-        "set0",
-        "p1",
-        "set2",
-        // "F",
-        "set3",
-      ]);
+    // if (env.declaredTemplates.size > 0)
+    //   env.printDeclaredTemplates([
+    //     "obj",
+    //     "set",
+    //     "set0",
+    //     "p1",
+    //     "set2",
+    //     // "F",
+    //     "set3",
+    //   ]);
     if (env.bys.size > 0) env.printBys();
   } else {
     console.log("\n------Error------\n");
@@ -335,4 +335,4 @@ function run(env: L_Env, expr: string) {
 }
 
 // testListOfCodes(setTheory);
-testListOfCodes(testList);
+testListOfCodes(setTheory);

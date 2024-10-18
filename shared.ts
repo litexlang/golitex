@@ -1,4 +1,4 @@
-import { CallOptNode } from "./ast";
+// import { CallOptNode } from "./ast";
 import { L_Env } from "./env";
 import { hRunErr, RType } from "./executor";
 
@@ -41,9 +41,9 @@ export function cEnvRType(
   return t;
 }
 
-export function relTNotFoundEnvErr(env: L_Env, node: CallOptNode): RType {
-  return cEnvRType(env, RType.Error, `${CallOptNode.toString()} undeclared`);
-}
+// export function relTNotFoundEnvErr(env: L_Env, node: CallOptNode): RType {
+//   return cEnvRType(env, RType.Error, `${CallOptNode.toString()} undeclared`);
+// }
 
 export type RL_Out = L_Out<RType> | L_Out<null>;
 
@@ -82,42 +82,42 @@ export function freeFixMap(
   }
 }
 
-export function fixOpt(
-  env: L_Env,
-  fixedOpt: CallOptNode | string[][],
-  free: string[][],
-  fixWhats: CallOptNode[]
-): L_Out<CallOptNode[]> {
-  let fixedParams: string[][];
-  if (Array.isArray(fixedOpt)) {
-    fixedParams = fixedOpt;
-  } else {
-    fixedParams = fixedOpt.optParams;
-  }
+// export function fixOpt(
+//   env: L_Env,
+//   fixedOpt: CallOptNode | string[][],
+//   free: string[][],
+//   fixWhats: CallOptNode[]
+// ): L_Out<CallOptNode[]> {
+//   let fixedParams: string[][];
+//   if (Array.isArray(fixedOpt)) {
+//     fixedParams = fixedOpt;
+//   } else {
+//     fixedParams = fixedOpt.optParams;
+//   }
 
-  const temp = freeFixMap(free, fixedParams);
-  if (isL_OutErr(temp)) return cErr_Out("");
-  const mapping = temp.v;
+//   const temp = freeFixMap(free, fixedParams);
+//   if (isL_OutErr(temp)) return cErr_Out("");
+//   const mapping = temp.v;
 
-  const res: CallOptNode[] = [];
-  for (let fixWhat of fixWhats) {
-    let hasError = false;
-    const fixedParams = fixWhat.optParams.map((ls) =>
-      ls.map((s) => {
-        const fixedS = mapping?.get(s);
-        if (fixedS === undefined) hasError = true;
-        else {
-          return fixedS;
-        }
-      })
-    );
-    if (hasError) return cErr_Out();
-    else
-      res.push(CallOptNode.create(fixWhat.optName, fixedParams as string[][]));
-  }
+//   const res: CallOptNode[] = [];
+//   for (let fixWhat of fixWhats) {
+//     let hasError = false;
+//     const fixedParams = fixWhat.optParams.map((ls) =>
+//       ls.map((s) => {
+//         const fixedS = mapping?.get(s);
+//         if (fixedS === undefined) hasError = true;
+//         else {
+//           return fixedS;
+//         }
+//       })
+//     );
+//     if (hasError) return cErr_Out();
+//     else
+//       res.push(CallOptNode.create(fixWhat.optName, fixedParams as string[][]));
+//   }
 
-  return cL_Out(res);
-}
+//   return cL_Out(res);
+// }
 
 export function hRemoveHashPrefix(arr: string[][]): string[][] {
   return (arr as string[][]).map((ls) =>

@@ -1,17 +1,16 @@
 import {
-  CallOptNode,
-  ExistNode,
+  // CallOptNode,
+  // ExistNode,
   KnowNode,
   L_Node,
   LetNode,
-  ProveNode,
-  HaveNode,
-  ByNode,
-  ThmNode,
+  // ProveNode,
+  // HaveNode,
+  // ByNode,
+  // ThmNode,
   OrNode,
   ShortCallOptNode,
-  yaIfThenNode,
-  yaFactNode,
+  IfThenNode,
   DeclNode,
   DefDeclNode,
   IfThenDeclNode,
@@ -100,14 +99,14 @@ const KeywordFunctionMap: {
   },
   know: knowParse,
   "@": knowParse,
-  have: haveParse,
+  // have: haveParse,
   let: letParse,
   def: DeclNodeParse,
   ":": DeclNodeParse,
-  exist: existParse,
-  prove: proveParse,
-  by: byParse,
-  thm: thmParse,
+  // exist: existParse,
+  // prove: proveParse,
+  // by: byParse,
+  // thm: thmParse,
 };
 
 export function LiTexStmtParse(
@@ -165,45 +164,45 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
 }
 
 // skips begin and end
-function freeVarsAndTheirFactsParse(
-  env: L_Env,
-  tokens: string[],
-  begin: string = "(",
-  end: string[] = [")"],
-  optWithReqAndOnlyIf: Boolean = false
-): { freeVars: string[]; properties: CallOptNode[] } {
-  const requirements: CallOptNode[] = [];
-  const freeVars: string[] = [];
+// function freeVarsAndTheirFactsParse(
+//   env: L_Env,
+//   tokens: string[],
+//   begin: string = "(",
+//   end: string[] = [")"],
+//   optWithReqAndOnlyIf: Boolean = false
+// ): { freeVars: string[]; properties: CallOptNode[] } {
+//   const requirements: CallOptNode[] = [];
+//   const freeVars: string[] = [];
 
-  skip(tokens, begin);
+//   skip(tokens, begin);
 
-  if (!end.includes(tokens[0])) {
-    while (1) {
-      const freeVar = tokens.shift() as string;
-      freeVars.push(freeVar);
-      if (tokens[0] === ",") tokens.shift();
-      else if (tokens[0] === SymbolsFactsSeparator) break;
-      else if (end.includes(tokens[0])) break;
-      else throw Error("infer parameters");
-    }
-    if (!end.includes(tokens[0])) {
-      skip(tokens, SymbolsFactsSeparator);
-      while (!end.includes(tokens[0])) {
-        let node: CallOptNode;
-        if (optWithReqAndOnlyIf) node = callOptParse(env, tokens, true, true);
-        else node = callOptParse(env, tokens);
-        if (node) requirements.push(node as CallOptNode);
+//   if (!end.includes(tokens[0])) {
+//     while (1) {
+//       const freeVar = tokens.shift() as string;
+//       freeVars.push(freeVar);
+//       if (tokens[0] === ",") tokens.shift();
+//       else if (tokens[0] === SymbolsFactsSeparator) break;
+//       else if (end.includes(tokens[0])) break;
+//       else throw Error("infer parameters");
+//     }
+//     if (!end.includes(tokens[0])) {
+//       skip(tokens, SymbolsFactsSeparator);
+//       while (!end.includes(tokens[0])) {
+//         let node: CallOptNode;
+//         if (optWithReqAndOnlyIf) node = callOptParse(env, tokens, true, true);
+//         else node = callOptParse(env, tokens);
+//         if (node) requirements.push(node as CallOptNode);
 
-        if (tokens[0] === ",") tokens.shift();
-        if (end.includes(tokens[0])) break;
-      }
-    }
-  }
+//         if (tokens[0] === ",") tokens.shift();
+//         if (end.includes(tokens[0])) break;
+//       }
+//     }
+//   }
 
-  skip(tokens, end);
+//   skip(tokens, end);
 
-  return { freeVars: freeVars, properties: requirements };
-}
+//   return { freeVars: freeVars, properties: requirements };
+// }
 
 function blockParse(env: L_Env, tokens: string[]): L_Node[] {
   const start = tokens[0];
@@ -226,128 +225,128 @@ function blockParse(env: L_Env, tokens: string[]): L_Node[] {
   }
 }
 
-function callOptParse(
-  env: L_Env,
-  tokens: string[],
-  // the followings all false means vanilla callOpt
-  withReq: Boolean = false,
-  withOnlyIf: Boolean = false,
-  withByName: Boolean = false
-): CallOptNode {
-  const index = tokens.length;
-  const start = tokens[0];
+// function callOptParse(
+//   env: L_Env,
+//   tokens: string[],
+//   // the followings all false means vanilla callOpt
+//   withReq: Boolean = false,
+//   withOnlyIf: Boolean = false,
+//   withByName: Boolean = false
+// ): CallOptNode {
+//   const index = tokens.length;
+//   const start = tokens[0];
 
-  try {
-    const opts: [string, string[]][] = [];
-    const requirements: CallOptNode[][] = [];
+//   try {
+//     const opts: [string, string[]][] = [];
+//     const requirements: CallOptNode[][] = [];
 
-    /**
-     * There are 2 ways to parse here
-     * 1. fun(X):fun2(Y)..
-     * 2. X:Y.. is fun:fun2
-     */
-    if (tokens.length >= 1 && tokens[1] === "(") {
-      while (1) {
-        const name = shiftVar(tokens) as string;
+//     /**
+//      * There are 2 ways to parse here
+//      * 1. fun(X):fun2(Y)..
+//      * 2. X:Y.. is fun:fun2
+//      */
+//     if (tokens.length >= 1 && tokens[1] === "(") {
+//       while (1) {
+//         const name = shiftVar(tokens) as string;
 
-        if (!withReq) {
-          const params: string[] = [];
+//         if (!withReq) {
+//           const params: string[] = [];
 
-          skip(tokens, "(");
-          if (!isCurToken(tokens, ")")) {
-            while (1) {
-              params.push(shiftVar(tokens));
-              if (isCurToken(tokens, ",")) skip(tokens, ",");
-              else if (isCurToken(tokens, ")")) {
-                skip(tokens, ")");
-                break;
-              } else throw Error("");
-            }
-          } else {
-            skip(tokens, ")");
-          }
+//           skip(tokens, "(");
+//           if (!isCurToken(tokens, ")")) {
+//             while (1) {
+//               params.push(shiftVar(tokens));
+//               if (isCurToken(tokens, ",")) skip(tokens, ",");
+//               else if (isCurToken(tokens, ")")) {
+//                 skip(tokens, ")");
+//                 break;
+//               } else throw Error("");
+//             }
+//           } else {
+//             skip(tokens, ")");
+//           }
 
-          opts.push([name, params]);
-        } else {
-          const freeVarsAndFacts = freeVarsAndTheirFactsParse(env, tokens);
-          opts.push([name, freeVarsAndFacts.freeVars]);
-          requirements.push(freeVarsAndFacts.properties);
-        }
+//           opts.push([name, params]);
+//         } else {
+//           const freeVarsAndFacts = freeVarsAndTheirFactsParse(env, tokens);
+//           opts.push([name, freeVarsAndFacts.freeVars]);
+//           requirements.push(freeVarsAndFacts.properties);
+//         }
 
-        if (isCurToken(tokens, ":")) {
-          skip(tokens, ":");
-        } else {
-          break;
-        }
-      }
-    } else {
-      // suchThat version of callOpt only works when !withReq
-      let n = 0;
-      const vars: string[][] = [[]];
-      const optNames: string[] = [];
+//         if (isCurToken(tokens, ":")) {
+//           skip(tokens, ":");
+//         } else {
+//           break;
+//         }
+//       }
+//     } else {
+//       // suchThat version of callOpt only works when !withReq
+//       let n = 0;
+//       const vars: string[][] = [[]];
+//       const optNames: string[] = [];
 
-      if (!withReq) {
-        while (!suchThats.includes(tokens[0])) {
-          vars[n].push(shiftVar(tokens));
-          if (isCurToken(tokens, ",")) skip(tokens, ",");
-          else if (isCurToken(tokens, ":")) {
-            skip(tokens, ":");
-            vars.push([]);
-            n++;
-          }
-        }
-      }
-      skip(tokens, suchThats);
+//       if (!withReq) {
+//         while (!suchThats.includes(tokens[0])) {
+//           vars[n].push(shiftVar(tokens));
+//           if (isCurToken(tokens, ",")) skip(tokens, ",");
+//           else if (isCurToken(tokens, ":")) {
+//             skip(tokens, ":");
+//             vars.push([]);
+//             n++;
+//           }
+//         }
+//       }
+//       skip(tokens, suchThats);
 
-      optNames.push(shiftVar(tokens));
-      for (let i = 1; i < n + 1; i++) {
-        skip(tokens, ":");
-        optNames.push(shiftVar(tokens));
-      }
+//       optNames.push(shiftVar(tokens));
+//       for (let i = 1; i < n + 1; i++) {
+//         skip(tokens, ":");
+//         optNames.push(shiftVar(tokens));
+//       }
 
-      vars.forEach((v, i) => opts.push([optNames[i], v]));
-    }
+//       vars.forEach((v, i) => opts.push([optNames[i], v]));
+//     }
 
-    let out: CallOptNode;
-    if (!withOnlyIf || !isCurToken(tokens, "=>"))
-      out = new CallOptNode(opts, requirements);
-    else {
-      skip(tokens, "=>");
-      skip(tokens, "{");
+//     let out: CallOptNode;
+//     if (!withOnlyIf || !isCurToken(tokens, "=>"))
+//       out = new CallOptNode(opts, requirements);
+//     else {
+//       skip(tokens, "=>");
+//       skip(tokens, "{");
 
-      const onlyIfs: CallOptNode[] = [];
-      callOptsParse(env, tokens, onlyIfs, ["}"]);
+//       const onlyIfs: CallOptNode[] = [];
+//       callOptsParse(env, tokens, onlyIfs, ["}"]);
 
-      out = new CallOptNode(opts, requirements, onlyIfs);
-    }
+//       out = new CallOptNode(opts, requirements, onlyIfs);
+//     }
 
-    if (!withByName) return out;
-    else {
-      if (!isCurToken(tokens, "[")) return out;
-      else {
-        skip(tokens, "[");
+//     if (!withByName) return out;
+//     else {
+//       if (!isCurToken(tokens, "[")) return out;
+//       else {
+//         skip(tokens, "[");
 
-        skip(tokens, "]");
-        return out;
-      }
-    }
-  } catch (error) {
-    handleParseError(env, "operator", index, start);
-    throw error;
-  }
-}
+//         skip(tokens, "]");
+//         return out;
+//       }
+//     }
+//   } catch (error) {
+//     handleParseError(env, "operator", index, start);
+//     throw error;
+//   }
+// }
 
 function callOptsParse(
   env: L_Env,
   tokens: string[],
   putInto: L_Node[] | undefined,
   end: string[] = StdStmtEnds
-): yaFactNode[] {
+): FactNode[] {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const callOpts: yaFactNode[] = [];
+    const callOpts: FactNode[] = [];
 
     while (1) {
       callOpts.push(factParse(env, tokens));
@@ -511,158 +510,158 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   }
 }
 
-function proveParse(env: L_Env, tokens: string[]): ProveNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function proveParse(env: L_Env, tokens: string[]): ProveNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, ProveKeywords);
-    let name = "";
-    if (isCurToken(tokens, byLBracket)) {
-      skip(tokens, byLBracket);
-      name = shiftVar(tokens);
-      skip(tokens, byRBracket);
-    }
-    const relatedOpt = callOptParse(env, tokens, true, true);
-    const blockBrace = blockParse(env, tokens);
-    const result = new ProveNode(relatedOpt, blockBrace, name);
-    return result;
-  } catch (error) {
-    handleParseError(env, "prove", index, start);
-    throw error;
-  }
-}
+//   try {
+//     skip(tokens, ProveKeywords);
+//     let name = "";
+//     if (isCurToken(tokens, byLBracket)) {
+//       skip(tokens, byLBracket);
+//       name = shiftVar(tokens);
+//       skip(tokens, byRBracket);
+//     }
+//     const relatedOpt = callOptParse(env, tokens, true, true);
+//     const blockBrace = blockParse(env, tokens);
+//     const result = new ProveNode(relatedOpt, blockBrace, name);
+//     return result;
+//   } catch (error) {
+//     handleParseError(env, "prove", index, start);
+//     throw error;
+//   }
+// }
 
-function existParse(env: L_Env, tokens: string[]): ExistNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function existParse(env: L_Env, tokens: string[]): ExistNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    /** Copy code from templateParse */
-    skip(tokens, "exist") as string; // KnowTypeKeywords
+//   try {
+//     /** Copy code from templateParse */
+//     skip(tokens, "exist") as string; // KnowTypeKeywords
 
-    const name = shiftVar(tokens);
+//     const name = shiftVar(tokens);
 
-    const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
-      freeVarsAndTheirFactsParse(env, tokens);
+//     const freeVarsFact: { freeVars: string[]; properties: CallOptNode[] } =
+//       freeVarsAndTheirFactsParse(env, tokens);
 
-    let result: ExistNode;
+//     let result: ExistNode;
 
-    result = new ExistNode(
-      name,
-      freeVarsFact.freeVars,
-      freeVarsFact.properties
-    );
+//     result = new ExistNode(
+//       name,
+//       freeVarsFact.freeVars,
+//       freeVarsFact.properties
+//     );
 
-    return result;
-  } catch (error) {
-    handleParseError(env, "exist", index, start);
-    throw error;
-  }
-}
+//     return result;
+//   } catch (error) {
+//     handleParseError(env, "exist", index, start);
+//     throw error;
+//   }
+// }
 
-function haveParse(env: L_Env, tokens: string[]): HaveNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function haveParse(env: L_Env, tokens: string[]): HaveNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, "have");
+//   try {
+//     skip(tokens, "have");
 
-    const vars: string[] = [];
-    while (!isCurToken(tokens, SymbolsFactsSeparator)) {
-      vars.push(shiftVar(tokens));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, SymbolsFactsSeparator);
+//     const vars: string[] = [];
+//     while (!isCurToken(tokens, SymbolsFactsSeparator)) {
+//       vars.push(shiftVar(tokens));
+//       if (isCurToken(tokens, ",")) skip(tokens, ",");
+//     }
+//     skip(tokens, SymbolsFactsSeparator);
 
-    const opt = callOptParse(env, tokens, false, false);
+//     const opt = callOptParse(env, tokens, false, false);
 
-    skip(tokens, StdStmtEnds);
+//     skip(tokens, StdStmtEnds);
 
-    return new HaveNode(vars, opt);
-  } catch (error) {
-    handleParseError(env, "have", index, start);
-    throw error;
-  }
-}
+//     return new HaveNode(vars, opt);
+//   } catch (error) {
+//     handleParseError(env, "have", index, start);
+//     throw error;
+//   }
+// }
 
-function byParse(env: L_Env, tokens: string[]): ByNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function byParse(env: L_Env, tokens: string[]): ByNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, "by");
+//   try {
+//     skip(tokens, "by");
 
-    const name = shiftVar(tokens);
-    const opt = callOptParse(env, tokens);
+//     const name = shiftVar(tokens);
+//     const opt = callOptParse(env, tokens);
 
-    skip(tokens, StdStmtEnds);
-    return new ByNode(name, opt);
-  } catch (error) {
-    handleParseError(env, "by", index, start);
-    throw error;
-  }
-}
+//     skip(tokens, StdStmtEnds);
+//     return new ByNode(name, opt);
+//   } catch (error) {
+//     handleParseError(env, "by", index, start);
+//     throw error;
+//   }
+// }
 
-function thmParse(env: L_Env, tokens: string[]): ThmNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function thmParse(env: L_Env, tokens: string[]): ThmNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, "thm");
+//   try {
+//     skip(tokens, "thm");
 
-    const opt = callOptParse(env, tokens, true, true);
+//     const opt = callOptParse(env, tokens, true, true);
 
-    // opt.optName should not have ':'
-    if (opt.optNameAsLst.length > 1 || opt.optParams.length > 1) {
-      handleParseError(
-        env,
-        `operator in thm should not have concatenated name ${opt.optName}`,
-        index,
-        start
-      );
-    }
+//     // opt.optName should not have ':'
+//     if (opt.optNameAsLst.length > 1 || opt.optParams.length > 1) {
+//       handleParseError(
+//         env,
+//         `operator in thm should not have concatenated name ${opt.optName}`,
+//         index,
+//         start
+//       );
+//     }
 
-    const block = blockParse(env, tokens);
+//     const block = blockParse(env, tokens);
 
-    return new ThmNode(opt, block);
-  } catch (error) {
-    handleParseError(env, "thm", index, start);
-    throw error;
-  }
-}
+//     return new ThmNode(opt, block);
+//   } catch (error) {
+//     handleParseError(env, "thm", index, start);
+//     throw error;
+//   }
+// }
 
-// all facts here are vanilla, which means they are of form opt(...)
-function reqOnlyIfFactParse(env: L_Env, tokens: string[]): CallOptNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// // all facts here are vanilla, which means they are of form opt(...)
+// function reqOnlyIfFactParse(env: L_Env, tokens: string[]): CallOptNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    const req: CallOptNode[] = [];
-    skip(tokens, "(");
-    while (!isCurToken(tokens, ")")) {
-      req.push(callOptParse(env, tokens, false, false));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, ")");
+//   try {
+//     const req: CallOptNode[] = [];
+//     skip(tokens, "(");
+//     while (!isCurToken(tokens, ")")) {
+//       req.push(callOptParse(env, tokens, false, false));
+//       if (isCurToken(tokens, ",")) skip(tokens, ",");
+//     }
+//     skip(tokens, ")");
 
-    skip(tokens, "=>");
-    skip(tokens, "{");
+//     skip(tokens, "=>");
+//     skip(tokens, "{");
 
-    const onlyIf: CallOptNode[] = [];
-    while (!isCurToken(tokens, "}")) {
-      onlyIf.push(callOptParse(env, tokens, false, false));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
+//     const onlyIf: CallOptNode[] = [];
+//     while (!isCurToken(tokens, "}")) {
+//       onlyIf.push(callOptParse(env, tokens, false, false));
+//       if (isCurToken(tokens, ",")) skip(tokens, ",");
+//     }
 
-    skip(tokens, "}");
+//     skip(tokens, "}");
 
-    return new CallOptNode([], [req], onlyIf);
-  } catch (error) {
-    handleParseError(env, "fact", index, start);
-    throw error;
-  }
-}
+//     return new CallOptNode([], [req], onlyIf);
+//   } catch (error) {
+//     handleParseError(env, "fact", index, start);
+//     throw error;
+//   }
+// }
 
 const factParserSignals: { [key: string]: Function } = {
   or: orParse,
@@ -671,13 +670,13 @@ const factParserSignals: { [key: string]: Function } = {
   "?": yaIfThenParse,
 };
 
-function factParse(env: L_Env, tokens: string[]): yaFactNode {
+function factParse(env: L_Env, tokens: string[]): FactNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     const relParser: Function | undefined = factParserSignals[tokens[0]];
-    let out: yaFactNode;
+    let out: FactNode;
     if (relParser === undefined) {
       out = shortCallOptParse(env, tokens);
     } else {
@@ -724,7 +723,7 @@ function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
   }
 }
 
-function notParse(env: L_Env, tokens: string[]): yaFactNode {
+function notParse(env: L_Env, tokens: string[]): FactNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -748,7 +747,7 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 
     skip(tokens, "{");
 
-    const facts: yaFactNode[] = [];
+    const facts: FactNode[] = [];
     while (!isCurToken(tokens, "}")) {
       facts.push(factParse(env, tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
@@ -791,7 +790,7 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 //   }
 // }
 
-function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
+function yaIfThenParse(env: L_Env, tokens: string[]): IfThenNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -812,7 +811,7 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
       skip(tokens, ThenKeywords);
     } else {
       skip(tokens, "|");
-      req = listParse<yaFactNode>(env, tokens, factParse, ["=>", "then"]);
+      req = listParse<FactNode>(env, tokens, factParse, ["=>", "then"]);
     }
 
     let onlyIfs: ShortCallOptNode[];
@@ -837,7 +836,7 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
       name = shiftVar(tokens);
       skip(tokens, "]");
     }
-    const out = new yaIfThenNode(vars, req, onlyIfs);
+    const out = new IfThenNode(vars, req, onlyIfs);
     out.byName = name;
     return out;
   } catch (error) {
@@ -901,7 +900,7 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
       skip(tokens, "|");
     }
 
-    const req = listParse<yaFactNode>(
+    const req = listParse<FactNode>(
       env,
       tokens,
       factParse,
@@ -909,7 +908,7 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
       false
     );
 
-    let onlyIfs: yaFactNode[] = [];
+    let onlyIfs: FactNode[] = [];
     if (StdStmtEnds.includes(tokens[0])) {
       skip(tokens, StdStmtEnds);
     } else if (isCurToken(tokens, "=>")) {
@@ -919,7 +918,7 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
         onlyIfs = [factParse(env, tokens)];
       } else {
         skip(tokens, "{");
-        onlyIfs = listParse<yaFactNode>(env, tokens, factParse, ["}"]);
+        onlyIfs = listParse<FactNode>(env, tokens, factParse, ["}"]);
       }
     }
 
