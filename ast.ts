@@ -436,39 +436,14 @@ export abstract class DeclNode extends L_Node {
 export class DefDeclNode extends DeclNode {}
 export class IfThenDeclNode extends DeclNode {}
 
-export abstract class StoredFact extends L_Node {
-  constructor(
-    public name: string,
-    public freeVars: string[]
-  ) {
-    super();
-    this.name = name;
-    this.freeVars = freeVars;
-  }
-}
-
-export class StoredIfThen extends StoredFact {
-  constructor(
-    name: string,
-    freeVars: string[],
-    public req: yaFactNode[],
-    public onlyIfs: yaFactNode[]
-  ) {
-    super(name, freeVars);
-    this.req = req;
-    this.onlyIfs = onlyIfs;
-  }
-}
-
-export class StoredDef extends StoredFact {
-  constructor(
-    name: string,
-    freeVars: string[],
-    public req: yaFactNode[],
-    public onlyIfs: yaFactNode[]
-  ) {
-    super(name, freeVars);
-    this.req = req;
-    this.onlyIfs = onlyIfs;
-  }
-}
+// works like a lambda function ready to be evaluated (especially fix freeVars)
+// export abstract class StoredFact extends L_Node {
+//   constructor(
+//     public fact: yaFactNode,
+//     public byName: string = ""
+//   ) {
+//     super();
+//     this.byName = byName;
+//     this.fact = fact;
+//   }
+// }

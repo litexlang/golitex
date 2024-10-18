@@ -73,6 +73,18 @@ function handleParseError(
   env.newMessage(`At ${start}[${index * -1}]: ${m}`);
 }
 
+export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
+  try {
+    const result: L_Node[] = [];
+    while (tokens.length > 0) {
+      LiTexStmtParse(env, tokens, result);
+    }
+    return result;
+  } catch (error) {
+    return null;
+  }
+}
+
 const KeywordFunctionMap: {
   [key: string]: Function; // (env: L_Env, tokens: string[]) => any;
 } = {
@@ -93,19 +105,6 @@ const KeywordFunctionMap: {
   by: byParse,
   thm: thmParse,
 };
-
-export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
-  try {
-    const result: L_Node[] = [];
-
-    while (tokens.length > 0) {
-      LiTexStmtParse(env, tokens, result);
-    }
-    return result;
-  } catch (error) {
-    return null;
-  }
-}
 
 export function LiTexStmtParse(
   env: L_Env,
@@ -147,7 +146,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
 
     skip(tokens, KnowTypeKeywords);
     while (1) {
-      const node = yaFactParse(env, tokens);
+      const node = factParse(env, tokens);
       knowNode.facts.push(node);
 
       if (tokens[0] === ",") skip(tokens, ",");
@@ -347,7 +346,7 @@ function callOptsParse(
     const callOpts: yaFactNode[] = [];
 
     while (1) {
-      callOpts.push(yaFactParse(env, tokens));
+      callOpts.push(factParse(env, tokens));
       if (tokens[0] === ",") {
         skip(tokens, ",");
       } else if (end.includes(tokens[0])) {
@@ -648,7 +647,7 @@ const factParserSignals: { [key: string]: Function } = {
   "?": yaIfThenParse,
 };
 
-function yaFactParse(env: L_Env, tokens: string[]): yaFactNode {
+function factParse(env: L_Env, tokens: string[]): yaFactNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -707,7 +706,7 @@ function notParse(env: L_Env, tokens: string[]): yaFactNode {
 
   try {
     skip(tokens, "not");
-    const fact = yaFactParse(env, tokens);
+    const fact = factParse(env, tokens);
     fact.isT = false;
     return fact;
   } catch (error) {
@@ -727,7 +726,7 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 
     const facts: yaFactNode[] = [];
     while (!isCurToken(tokens, "}")) {
-      facts.push(yaFactParse(env, tokens));
+      facts.push(factParse(env, tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -747,7 +746,7 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 //     skip(tokens, "(");
 //     const req: FactNode[] = [];
 //     while (!isCurToken(tokens, ")")) {
-//       req.push(yaFactParse(env, tokens));
+//       req.push(factParse(env, tokens));
 //       if (isCurToken(tokens, ",")) skip(tokens, ",");
 //     }
 //     skip(tokens, ")");
@@ -756,7 +755,7 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 //     skip(tokens, "=>");
 //     skip(tokens, "{");
 //     while (!isCurToken(tokens, "}")) {
-//       onlyIfs.push(yaFactParse(env, tokens));
+//       onlyIfs.push(factParse(env, tokens));
 //       if (isCurToken(tokens, ",")) skip(tokens, ",");
 //     }
 //     skip(tokens, "}");
@@ -782,7 +781,7 @@ function yaIfThenParse(env: L_Env, tokens: string[]): yaIfThenNode {
       },
       ["|"]
     );
-    const paramReq = nodeListParse<yaFactNode>(env, tokens, yaFactParse, [
+    const paramReq = nodeListParse<yaFactNode>(env, tokens, factParse, [
       "=>",
       "then",
     ]);
@@ -860,7 +859,7 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
     const req = nodeListParse<yaFactNode>(
       env,
       tokens,
-      yaFactParse,
+      factParse,
       [";", "=>"],
       false
     );
@@ -872,10 +871,10 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
       skip(tokens, "=>");
 
       if (!isCurToken(tokens, "{")) {
-        onlyIfs = [yaFactParse(env, tokens)];
+        onlyIfs = [factParse(env, tokens)];
       } else {
         skip(tokens, "{");
-        onlyIfs = nodeListParse<yaFactNode>(env, tokens, yaFactParse, ["}"]);
+        onlyIfs = nodeListParse<yaFactNode>(env, tokens, factParse, ["}"]);
       }
     }
 
