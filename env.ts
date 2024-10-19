@@ -407,7 +407,17 @@ export class L_Env {
     // }
 
     for (const [key, factUnderCurKey] of this.shortOptFacts) {
-      console.log(key);
+      const t = this.factTypes.get(key);
+      let tStr = "";
+      if (t === FactType.Def) {
+        tStr = "def";
+      } else if (t === FactType.IfThen) {
+        tStr = "if-then";
+      } else if (t === FactType.Or) {
+        tStr = "or";
+      }
+
+      console.log(`[${tStr}] ${key}`);
       factUnderCurKey.forEach((e: StoredFactValue) => {
         console.log((e.isT ? "" : "[not] ") + e.toString());
       });
