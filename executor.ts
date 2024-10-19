@@ -830,8 +830,9 @@ function knowExec(env: L_Env, node: KnowNode): RType {
   try {
     for (const fact of node.facts) {
       if (fact instanceof ShortCallOptNode) {
-        const relT = env.getDeclTemp(fact.fullName);
-        if (relT === undefined) throw Error(`${fact.fullName} not declared.`);
+        const facts = env.shortOptFacts.get(fact.fullName);
+        if (facts === undefined) throw Error(`${fact.fullName} not declared.`);
+
         const isT = env.varsAreNotDeclared(fact.params.flat());
         if (isT) throw Error(`${fact.params.flat().toString()} not declared.`);
         env.addShortOptFact(env, fact);

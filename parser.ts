@@ -150,8 +150,15 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
 
     skip(tokens, KnowTypeKeywords);
     while (1) {
-      const node = factParse(env, tokens);
-      knowNode.facts.push(node);
+      //! TODO
+      const relParser: Function | undefined = factParserSignals[tokens[0]];
+      let out: FactNode;
+      if (relParser === undefined) {
+        out = shortCallOptParse(env, tokens, false);
+      } else {
+        out = relParser(env, tokens, true);
+      }
+      knowNode.facts.push(out);
 
       if (tokens[0] === ",") skip(tokens, ",");
       else break;
@@ -704,9 +711,6 @@ function shortCallOptParse(
     let nameAsParam: string[] = [];
     while (!isCurToken(tokens, "(")) {
       let curTok = shiftVar(tokens);
-      if (addHash && !env.declaredVars.includes(curTok)) {
-        curTok = "#" + curTok;
-      }
       nameAsParam.push(curTok);
       if (isCurToken(tokens, ":")) skip(tokens, ":");
     }
