@@ -60,16 +60,6 @@ export class L_Env {
    * @param hash stores which given vars are onlyIf vars
    */
   addShortOptFact(env: L_Env, opt: ShortCallOptNode, toHash: string[] = []) {
-    opt.params = opt.params.map((ls) =>
-      ls.map((s) => {
-        if (toHash.includes(s)) {
-          return "#" + s;
-        } else {
-          return s;
-        }
-      })
-    );
-
     if (this.shortOptFacts.get(opt.fullName) === undefined) {
       this.shortOptFacts.set(opt.fullName, [opt]);
     } else {

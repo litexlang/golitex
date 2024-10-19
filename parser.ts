@@ -33,6 +33,7 @@ import {
   ThenKeywords,
 } from "./common";
 import { only } from "node:test";
+import { add } from "lodash";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -670,7 +671,7 @@ const factParserSignals: { [key: string]: Function } = {
   "?": yaIfThenParse,
 };
 
-function factParse(env: L_Env, tokens: string[]): FactNode {
+function factParse(env: L_Env, tokens: string[], addHash = false): FactNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -678,9 +679,9 @@ function factParse(env: L_Env, tokens: string[]): FactNode {
     const relParser: Function | undefined = factParserSignals[tokens[0]];
     let out: FactNode;
     if (relParser === undefined) {
-      out = shortCallOptParse(env, tokens);
+      out = shortCallOptParse(env, tokens, addHash);
     } else {
-      out = relParser(env, tokens);
+      out = relParser(env, tokens, addHash);
     }
 
     return out;
@@ -691,14 +692,22 @@ function factParse(env: L_Env, tokens: string[]): FactNode {
 }
 
 // parse p1:p2:p3(x1,x2:x3:x4,x5,x6)
-function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
+function shortCallOptParse(
+  env: L_Env,
+  tokens: string[],
+  addHash = false
+): ShortCallOptNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     let nameAsParam: string[] = [];
     while (!isCurToken(tokens, "(")) {
-      nameAsParam.push(shiftVar(tokens));
+      let curTok = shiftVar(tokens);
+      if (addHash && !env.declaredVars.includes(curTok)) {
+        curTok = "#" + curTok;
+      }
+      nameAsParam.push(curTok);
       if (isCurToken(tokens, ":")) skip(tokens, ":");
     }
 
@@ -706,10 +715,16 @@ function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
     const params: string[][] = [];
     while (!isCurToken(tokens, ")")) {
       const curParams: string[] = [];
+
       while (!isCurToken(tokens, ":") && !isCurToken(tokens, ")")) {
-        curParams.push(shiftVar(tokens));
+        let curTok = shiftVar(tokens);
+        if (addHash && !env.declaredVars.includes(curTok)) {
+          curTok = "#" + curTok;
+        }
+        curParams.push(curTok);
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
+
       params.push(curParams);
       if (isCurToken(tokens, ":")) skip(tokens, ":");
     }
@@ -723,13 +738,13 @@ function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
   }
 }
 
-function notParse(env: L_Env, tokens: string[]): FactNode {
+function notParse(env: L_Env, tokens: string[], addHash = false): FactNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     skip(tokens, "not");
-    const fact = factParse(env, tokens);
+    const fact = factParse(env, tokens, addHash);
     fact.isT = false;
     return fact;
   } catch (error) {
@@ -738,7 +753,7 @@ function notParse(env: L_Env, tokens: string[]): FactNode {
   }
 }
 
-function orParse(env: L_Env, tokens: string[]): OrNode {
+function orParse(env: L_Env, tokens: string[], addHash = false): OrNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -749,7 +764,7 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 
     const facts: FactNode[] = [];
     while (!isCurToken(tokens, "}")) {
-      facts.push(factParse(env, tokens));
+      facts.push(factParse(env, tokens, addHash));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -790,39 +805,66 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
 //   }
 // }
 
-function yaIfThenParse(env: L_Env, tokens: string[]): IfThenNode {
+function yaIfThenParse(
+  env: L_Env,
+  tokens: string[],
+  addHash = false
+): IfThenNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     skip(tokens, ["if", "?"]);
-    const vars = listParse<string>(
+
+    const vars = varLstParse(
       env,
       tokens,
-      (env: L_Env, tokens: string[]) => {
-        return shiftVar(tokens);
-      },
       ["|", ...ThenKeywords],
-      false
+      false,
+      addHash
     );
+
+    // const vars = listParse<string>(
+    //   env,
+    //   tokens,
+    //   (env: L_Env, tokens: string[]) => {
+    //     return shiftVar(tokens);
+    //   },
+
+    //   false
+    // );
 
     let req: FactNode[] = [];
     if (ThenKeywords.includes(tokens[0])) {
       skip(tokens, ThenKeywords);
     } else {
       skip(tokens, "|");
-      req = listParse<FactNode>(env, tokens, factParse, ["=>", "then"]);
+      req = listParse<FactNode>(
+        env,
+        tokens,
+        factParse,
+        ["=>", "then"],
+        true,
+        addHash
+      );
     }
 
     let onlyIfs: ShortCallOptNode[];
     if (!isCurToken(tokens, "{")) {
-      const fact = factParse(env, tokens);
+      const fact = factParse(env, tokens, addHash);
       if (!(fact instanceof ShortCallOptNode))
         throw Error(`${fact.toString()} is not operator-type fact.`);
       else onlyIfs = [fact];
     } else {
       skip(tokens, "{");
-      const out = listParse<FactNode>(env, tokens, factParse, ["}"]);
+      const out = listParse<FactNode>(
+        env,
+        tokens,
+        factParse,
+        ["}"],
+        true,
+        addHash
+      );
       if (out.every((e) => e instanceof ShortCallOptNode)) {
         onlyIfs = out as ShortCallOptNode[];
       } else {
@@ -851,6 +893,7 @@ function listParse<T>(
   parseFunc: (env: L_Env, tokens: string[], ...args: any[]) => T,
   end: string[],
   skipEnd: Boolean = true,
+  addHash: Boolean = false,
   separation: string = ","
 ): T[] {
   const start = tokens[0];
@@ -859,7 +902,38 @@ function listParse<T>(
   try {
     const out: T[] = [];
     while (!end.includes(tokens[0])) {
-      out.push(parseFunc(env, tokens));
+      out.push(parseFunc(env, tokens, addHash));
+      if (isCurToken(tokens, separation)) skip(tokens, separation);
+    }
+
+    if (skipEnd) skip(tokens, end);
+
+    return out;
+  } catch (error) {
+    handleParseError(env, "Parsing variables", index, start);
+    throw error;
+  }
+}
+
+function varLstParse(
+  env: L_Env,
+  tokens: string[],
+  end: string[],
+  skipEnd: Boolean = true,
+  addHash: Boolean = true,
+  separation: string = ","
+): string[] {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    const out: string[] = [];
+    while (!end.includes(tokens[0])) {
+      let curTok = shiftVar(tokens);
+      if (addHash && !env.declaredVars.includes(curTok)) {
+        curTok = "#" + curTok;
+      }
+      out.push(curTok);
       if (isCurToken(tokens, separation)) skip(tokens, separation);
     }
 
@@ -883,15 +957,17 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
       nodeType = shiftVar(tokens);
     }
 
-    const vars = listParse<string>(
-      env,
-      tokens,
-      (env: L_Env, tokens: string[]) => {
-        return shiftVar(tokens);
-      },
-      ["|", ...StdStmtEnds],
-      false
-    );
+    const vars = varLstParse(env, tokens, ["|", ...StdStmtEnds], false, true);
+
+    // const vars = listParse<string>(
+    //   env,
+    //   tokens,
+    //   (env: L_Env, tokens: string[]) => {
+    //     return shiftVar(tokens);
+    //   },
+    //   ["|", ...StdStmtEnds],
+    //   false
+    // );
 
     if (StdStmtEnds.includes(tokens[0])) {
       skip(tokens, StdStmtEnds);
@@ -905,20 +981,28 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
       tokens,
       factParse,
       [...StdStmtEnds, "=>"],
-      false
+      false,
+      true //! DeclNodeParse addHash = true
     );
 
-    let onlyIfs: FactNode[] = [];
+    let onlyIfs: ShortCallOptNode[] = [];
     if (StdStmtEnds.includes(tokens[0])) {
       skip(tokens, StdStmtEnds);
     } else if (isCurToken(tokens, "=>")) {
       skip(tokens, "=>");
 
       if (!isCurToken(tokens, "{")) {
-        onlyIfs = [factParse(env, tokens)];
+        onlyIfs = [shortCallOptParse(env, tokens, true)];
       } else {
         skip(tokens, "{");
-        onlyIfs = listParse<FactNode>(env, tokens, factParse, ["}"]);
+        onlyIfs = listParse<ShortCallOptNode>(
+          env,
+          tokens,
+          shortCallOptParse,
+          ["}"],
+          true,
+          true
+        );
       }
     }
 

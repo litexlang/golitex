@@ -58,7 +58,7 @@ export abstract class DeclNode extends L_Node {
     public name: string = "",
     public freeVars: string[] = [],
     public req: FactNode[] = [],
-    public onlyIfs: FactNode[] = []
+    public onlyIfs: ShortCallOptNode[] = []
   ) {
     super();
     this.name = name;

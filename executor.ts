@@ -19,6 +19,7 @@ import {
   OrNode,
   DeclNode,
   DefDeclNode,
+  IfThenDeclNode,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -305,7 +306,15 @@ function letExec(env: L_Env, node: LetNode): RType {
 
 function declExec(env: L_Env, node: DeclNode): RType {
   try {
-    env.declTemp(node.name, node);
+    // env.declTemp(node.name, node);
+    knowExec(
+      env,
+      new KnowNode([
+        new IfThenNode(node.freeVars, node.req, [
+          new ShortCallOptNode(node.name, [node.freeVars]),
+        ]),
+      ])
+    );
 
     return RType.True;
   } catch (error) {
