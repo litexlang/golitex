@@ -20,6 +20,7 @@ import {
   DeclNode,
   DefDeclNode,
   IfThenDeclNode,
+  FactType,
 } from "./ast";
 import { L_Keywords } from "./common";
 import { L_Env } from "./env";
@@ -306,7 +307,18 @@ function letExec(env: L_Env, node: LetNode): RType {
 
 function declExec(env: L_Env, node: DeclNode): RType {
   try {
-    // env.declTemp(node.name, node);
+    if (env.optDecled(node.name)) {
+      throw Error(`${node.name} already declared.`);
+    }
+
+    if (node instanceof DefDeclNode) {
+      env.factTypes.set(node.name, FactType.Def);
+    } else if (node instanceof IfThenDeclNode) {
+      env.factTypes.set(node.name, FactType.IfThen);
+    } else if (node instanceof OrNode) {
+      env.factTypes.set(node.name, FactType.Or);
+    }
+
     knowExec(
       env,
       new KnowNode([
@@ -830,12 +842,12 @@ function knowExec(env: L_Env, node: KnowNode): RType {
   try {
     for (const fact of node.facts) {
       if (fact instanceof ShortCallOptNode) {
-        const facts = env.shortOptFacts.get(fact.fullName);
-        if (facts === undefined) throw Error(`${fact.fullName} not declared.`);
+        if (!env.optDecled(fact.fullName))
+          throw Error(`${fact.fullName} not declared.`);
 
         const isT = env.varsAreNotDeclared(fact.params.flat());
         if (isT) throw Error(`${fact.params.flat().toString()} not declared.`);
-        env.addShortOptFact(env, fact);
+        env.addShortOptFact(env, fact, []);
         if (fact.byName !== "") {
           fact.byName = "";
           env.newBy(fact.byName, fact);
@@ -843,7 +855,7 @@ function knowExec(env: L_Env, node: KnowNode): RType {
       } else if (fact instanceof IfThenNode) {
         // store facts
         for (const onlyIf of fact.onlyIfs) {
-          env.addShortOptFact(env, onlyIf, fact.freeVars);
+          env.addShortOptFact(env, onlyIf, fact.req);
         }
         // store by
         if (fact.byName !== "") {

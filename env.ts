@@ -7,6 +7,7 @@ import {
   // TNode,
   FactNode,
   IfThenNode,
+  FactType,
 } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
 import {
@@ -27,6 +28,34 @@ import {
 //   onlyIfs: CallOptNode[]; // when this fact is satisfied, extra onlyIf is emitted
 // };
 
+class StoredFactValue {
+  constructor(
+    public vars: string[][],
+    public req: FactNode[],
+    public isT: Boolean = false
+  ) {}
+
+  toString() {
+    let result = "";
+
+    // Add req part if it's not empty
+    if (this.req.length > 0) {
+      result += this.req.map((e) => e.toString()).join("; ");
+      result += " => ";
+    }
+
+    // Add vars part
+    result += this.vars.map((subArray) => subArray.join(", ")).join("; ");
+
+    // Add 'not' if isT is false
+    if (!this.isT) {
+      result = "not " + result;
+    }
+
+    return result;
+  }
+}
+
 export class L_Env {
   messages: string[] = []; //? [error message, depth], number here does not work for the time being
   declaredVars: string[] = [];
@@ -35,35 +64,44 @@ export class L_Env {
   // facts = new Map<string, CallOptNode[]>();
   bys = new Map<string, FactNode>();
 
-  shortOptFacts = new Map<string, ShortCallOptNode[]>();
+  shortOptFacts = new Map<string, StoredFactValue[]>();
+  factTypes = new Map<string, FactType>();
 
-  private declTemps = new Map<string, DeclNode>();
+  // private declTemps = new Map<string, DeclNode>();
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
   }
 
-  // If opt is not declared, just throw error. I no longer need to write `if (... !== undefined)`
-  declTemp(name: string, fact: DeclNode) {
-    if (this.declTemps.has(name)) throw Error(`${name} is already declared`);
-    else {
-      this.declTemps.set(name, fact);
-    }
+  optDecled(name: string) {
+    return this.factTypes.has(name);
   }
 
-  getDeclTemp(name: string): DeclNode | undefined {
-    const out = this.declTemps.get(name);
-    return out;
-  }
+  // If opt is not declared, just throw error. I no longer need to write `if (... !== undefined)`
+  // declTemp(name: string, fact: DeclNode) {
+  //   if (this.declTemps.has(name)) throw Error(`${name} is already declared`);
+  //   else {
+  //     this.declTemps.set(name, fact);
+  //   }
+  // }
+
+  // getDeclTemp(name: string): DeclNode | undefined {
+  //   const out = this.declTemps.get(name);
+  //   return out;
+  // }
 
   /**
    * @param hash stores which given vars are onlyIf vars
    */
-  addShortOptFact(env: L_Env, opt: ShortCallOptNode, toHash: string[] = []) {
+  addShortOptFact(env: L_Env, opt: ShortCallOptNode, req: FactNode[]) {
     if (this.shortOptFacts.get(opt.fullName) === undefined) {
-      this.shortOptFacts.set(opt.fullName, [opt]);
+      this.shortOptFacts.set(opt.fullName, [
+        new StoredFactValue(opt.params, req, opt.isT),
+      ]);
     } else {
-      this.shortOptFacts.get(opt.fullName)!.push(opt);
+      this.shortOptFacts
+        .get(opt.fullName)!
+        .push(new StoredFactValue(opt.params, req, opt.isT));
     }
   }
 
@@ -370,21 +408,19 @@ export class L_Env {
 
     for (const [key, factUnderCurKey] of this.shortOptFacts) {
       console.log(key);
-      factUnderCurKey.forEach((e: ShortCallOptNode) => {
+      factUnderCurKey.forEach((e: StoredFactValue) => {
         console.log((e.isT ? "" : "[not] ") + e.toString());
       });
     }
   }
 
   printDeclaredTemplates(doNotPrint: string[] = []) {
-    console.log("\n-----template-----\n");
-
-    for (const [key, tNode] of this.declTemps) {
-      if (doNotPrint.includes(key)) continue;
-      console.log(tNode);
-      // printTAndSubT(tNode);
-    }
-
+    // console.log("\n-----template-----\n");
+    // for (const [key, tNode] of this.declTemps) {
+    //   if (doNotPrint.includes(key)) continue;
+    //   console.log(tNode);
+    //   // printTAndSubT(tNode);
+    // }
     // function printTAndSubT(tNode: DeclNode) {
     //   console.log(tNode.toString() + "\n");
     //   for (const subTNode of tNode.declaredTemplates) {

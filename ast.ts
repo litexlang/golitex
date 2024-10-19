@@ -1,5 +1,11 @@
 export abstract class L_Node {}
 
+export enum FactType {
+  Or,
+  IfThen,
+  Def,
+}
+
 export abstract class FactNode extends L_Node {
   isT: Boolean = true;
   byName: string = "";

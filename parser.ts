@@ -150,7 +150,6 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
 
     skip(tokens, KnowTypeKeywords);
     while (1) {
-      //! TODO
       const relParser: Function | undefined = factParserSignals[tokens[0]];
       let out: FactNode;
       if (relParser === undefined) {
