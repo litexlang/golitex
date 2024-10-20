@@ -28,7 +28,7 @@ import {
 //   onlyIfs: CallOptNode[]; // when this fact is satisfied, extra onlyIf is emitted
 // };
 
-class StoredFactValue {
+export class StoredFactValue {
   constructor(
     public vars: string[][],
     public req: FactNode[],
@@ -447,4 +447,6 @@ export class L_Env {
     }
     console.log();
   }
+
+  
 }
