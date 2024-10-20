@@ -179,7 +179,9 @@ const codes: string[] = [
   // "know ? | set(x) => set(x)[tmp2];",
   // `: obj x | ;  // Everything is an object.`,
   // `: item x,A | set(A)  => {} ;`,
-  `let EMPTY_SET |  if x => not item(x,EMPTY_SET); ; `,
+  // `let EMPTY_SET |  if x => not item(x,EMPTY_SET); ; `,
+    `let VAR;`,
+    `set(VAR);`
 ];
 
 function testLexer() {
@@ -207,5 +209,5 @@ function testParser(codes: string[]) {
   }
 }
 
-// testParser(codes);
+testParser(codes);
 // testLexer();
