@@ -1,21 +1,14 @@
-import { CallOptNode, L_Node } from "./ast";
+import { FactNode, L_Node, ShortCallOptNode } from "./ast";
 import { L_Env } from "./env";
-import { hInfo, RType } from "./executor";
-import { cEnvRType, cL_Out, RL_Out } from "./shared";
+import { RType } from "./executor";
 
-export const L_Builtins: {
-  [key: string]: (env: L_Env, node: L_Node) => RType;
-} = {
-  is_def: (env: L_Env, node: L_Node): RType => {
-    const T = env.getRelT((node as CallOptNode).optParams[0][0])
-      ? hInfo(RType.True)
-      : hInfo(RType.False);
-    if (!T)
-      return cEnvRType(
-        env,
-        RType.Error,
-        `${(node as CallOptNode).optName} is not declared.`
-      );
-    else return RType.True;
-  },
-};
+export const L_Builtins = new Map<
+  string,
+  (env: L_Env, node: L_Node) => RType
+>();
+
+L_Builtins.set("isProp", (env: L_Env, node: L_Node): RType => {
+  return node instanceof ShortCallOptNode && env.getOptType(node.fullName)
+    ? RType.True
+    : RType.Error;
+});

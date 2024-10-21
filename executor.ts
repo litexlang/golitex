@@ -15,6 +15,7 @@ import {
 import { L_Env } from "./env";
 import { cEnvRType, isRTypeTrue } from "./shared";
 import { checker } from "./checker";
+import { L_Builtins } from "./builtins";
 
 export enum RType {
   Error,
@@ -81,6 +82,11 @@ export namespace executor {
    * 2. know new fact
    */
   function factExec(env: L_Env, node: FactNode): RType {
+    if (node instanceof ShortCallOptNode) {
+      const func = L_Builtins.get(node.fullName);
+      if (func) return func(env, node);
+    }
+
     const res = checker.check(env, node as FactNode);
     if (isRTypeTrue(res)) {
       knowExec(env, new KnowNode([node]));
