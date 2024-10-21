@@ -13,13 +13,22 @@ export const testErrorCode = {
   // Let: "let o:set3(o);",
 };
 
-export const testList = [
+// Aristotle induction
+export const testList2 = [
   "def obj x | => {};",
   "def set x | obj(x);",
   "let y | set(y);",
   "def set2 z | set(z);",
   "set2(y);",
   "set2(y);",
+];
+
+export const testList = [
+  "def obj x | => {};",
+  "def obj2 x | => {};",
+  "def p2 x | obj(x), obj2(x);",
+  "let y | obj(y);",
+  "if | obj2(y) => {p2(y);}",
 ];
 
 export const testCode = false;
