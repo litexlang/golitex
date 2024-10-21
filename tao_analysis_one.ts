@@ -9,3 +9,5 @@ export const setTheory = [
   `let EMPTY_SET |  if x => not item(x,EMPTY_SET); ; `,
   "know if A,B| eq(EMPTY_SET, A), eq(EMPTY_SET, B) => {eq(A,B)};",
 ];
+
+export const testTao = false;

@@ -5,8 +5,8 @@ import { scan } from "./lexer";
 import { L_StmtsParse } from "./parser";
 // import { testParser } from "./parser_lexer_test";
 import { isL_OutErr, isRTypeErr, RL_Out } from "./shared";
-import { setTheory } from "./tao_analysis_one";
-import { testCodes, testErrorCode, testList } from "./test_code";
+import { setTheory, testTao } from "./tao_analysis_one";
+import { testCode, testCodes, testErrorCode, testList } from "./test_code";
 
 const codes: string[] = [
   // "// Start from one axiom, get followings",
@@ -296,7 +296,7 @@ function testParser(codes: string[]) {
   }
 }
 
-function testListOfCodes(exprs: string[]): RType[] {
+export function testListOfCodes(exprs: string[]): RType[] {
   const copied = [...exprs];
   const env = new L_Env();
   const results: RType[] = [];
@@ -334,5 +334,7 @@ function run(env: L_Env, expr: string) {
   return result;
 }
 
-// testListOfCodes(testList);
-testListOfCodes(setTheory);
+// testTao and testCode here works like an electric circuit: both the same: test testList, not the same, test SetTheory. Now I only need to change testCode and testTao to
+// specify what I wanna test, instead of jumping between files.
+if (testTao !== testCode) testListOfCodes(setTheory);
+else testListOfCodes(testList);
