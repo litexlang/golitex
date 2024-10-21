@@ -197,10 +197,7 @@ function testParser(codes: string[]) {
     // const tokensCopy = [...tokens];
     const result = parser.L_StmtsParse(env, tokens);
     if (result === null) {
-      const maxDepth = env.messages[env.messages.length - 1][1];
-      for (let i = env.messages.length - 1; i >= 0; i--) {
-        console.log(env.messages[i]);
-      }
+      env.printClearMessage();
     } else {
       for (let i = 0; i < result.length; i++) {
         console.log(result[i]);

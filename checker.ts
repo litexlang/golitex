@@ -44,15 +44,15 @@ export namespace checker {
               case RType.True:
                 return true;
               case RType.Unknown: {
-                if (env.father) return checkShortOpt(env.father, opt);
-                else return false;
+                const father = env.getFather();
+                return father ? checkShortOpt(father, opt) : false;
               }
               default:
                 return false;
             }
           })
         ) {
-          env.messages.push(`${opt} is true, by ${storedFact}`);
+          env.newMessage(`${opt} is true, by ${storedFact}`);
           return RType.True;
         }
       }

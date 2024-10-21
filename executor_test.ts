@@ -183,82 +183,76 @@ const codes: string[] = [
 
 // callOptsExecTest();
 
-function testError(asIfRight = false) {
-  if (asIfRight) {
-    const env = new L_Env();
-    for (const [key, code] of Object.entries(testErrorCode)) {
-      const tokens = scan(code as string);
-      const result = parser.L_StmtsParse(env, tokens);
-      if (result === null) {
-        console.log(env.messages);
-      } else {
-        for (let i = 0; i < result.length; i++) {
-          const res = executor.nodeExec(env, result[i]);
-        }
-      }
-      if (env.messages.length === 0) {
-        console.log(`${key} error not detected.`);
-      }
-    }
-  } else {
-    console.log("\n----Errors-----\n");
-    const whatIsTested = [];
-    let env: L_Env = new L_Env();
-    for (const [key, code] of Object.entries(testErrorCode)) {
-      console.log(key + ":");
-      whatIsTested.push(key);
-      const tokens = scan(code as string);
-      const result = parser.L_StmtsParse(env, tokens);
-      if (result === null) {
-        console.log(env.messages);
-      } else {
-        for (let i = 0; i < result.length; i++) {
-          const res = executor.nodeExec(env, result[i]);
-          if (isRTypeErr(res)) console.log(RTypeMap[res as RType]);
-          else console.log(env.messages);
-        }
-      }
-      console.log();
-    }
-  }
-}
+// function testError(asIfRight = false) {
+//   if (asIfRight) {
+//     const env = new L_Env();
+//     for (const [key, code] of Object.entries(testErrorCode)) {
+//       const tokens = scan(code as string);
+//       const result = parser.L_StmtsParse(env, tokens);
+//       if (result === null) {
+//         env.printClearMessage();
+//       } else {
+//         for (let i = 0; i < result.length; i++) {
+//           const res = executor.nodeExec(env, result[i]);
+//         }
+//       }
+//     }
+//   } else {
+//     console.log("\n----Errors-----\n");
+//     const whatIsTested = [];
+//     let env: L_Env = new L_Env();
+//     for (const [key, code] of Object.entries(testErrorCode)) {
+//       console.log(key + ":");
+//       whatIsTested.push(key);
+//       const tokens = scan(code as string);
+//       const result = parser.L_StmtsParse(env, tokens);
+//       if (result === null) {
+//         env.printClearMessage();
+//       } else {
+//         for (let i = 0; i < result.length; i++) {
+//           const res = executor.nodeExec(env, result[i]);
+//           if (isRTypeErr(res)) console.log(RTypeMap[res as RType]);
+//           else env.printClearMessage();
+//         }
+//       }
+//       console.log();
+//     }
+//   }
+// }
 
-function testExecutor(testWhat: any = testCodes) {
-  let env: L_Env = new L_Env();
+// function testExecutor(testWhat: any = testCodes) {
+//   let env: L_Env = new L_Env();
 
-  console.log("\n----results------\n");
-  const whatIsTested = [];
-  for (const [key, code] of Object.entries(testWhat)) {
-    whatIsTested.push(key);
-    const tokens = scan(code as string);
-    const parseResult = parser.L_StmtsParse(env, tokens);
-    if (parseResult === null) {
-      console.log(env.messages);
-      env.messages = [];
-    } else {
-      for (let i = 0; i < parseResult.length; i++) {
-        const res = executor.nodeExec(env, parseResult[i]);
-        if (key !== "Basics") {
-          if (isRTypeErr(res)) {
-            console.log(env.messages);
-          } else {
-            console.log(env.messages.at(-1));
-          }
-        }
-        env.messages = [];
-      }
-    }
-  }
-  console.log("\n----TestWhat----\n");
-  whatIsTested.forEach((e) => console.log(e));
-  if (env.messages.length === 0) {
-    env.printFacts();
-  } else {
-    console.log("\n------Error------\n");
-    console.log(env.messages);
-    console.log();
-  }
-}
+//   console.log("\n----results------\n");
+//   const whatIsTested = [];
+//   for (const [key, code] of Object.entries(testWhat)) {
+//     whatIsTested.push(key);
+//     const tokens = scan(code as string);
+//     const parseResult = parser.L_StmtsParse(env, tokens);
+//     if (parseResult === null) {
+//       env.printClearMessage();
+//     } else {
+//       for (let i = 0; i < parseResult.length; i++) {
+//         const res = executor.nodeExec(env, parseResult[i]);
+//         if (isRTypeErr(res)) {
+//           env.printClearMessage();
+//         } else {
+//           console.log(env.messages.at(-1));
+//         }
+//         env.messages = [];
+//       }
+//     }
+//   }
+//   console.log("\n----TestWhat----\n");
+//   whatIsTested.forEach((e) => console.log(e));
+//   if (env.messages.length === 0) {
+//     env.printFacts();
+//   } else {
+//     console.log("\n------Error------\n");
+//     console.log(env.messages);
+//     console.log();
+//   }
+// }
 
 // testExecutor(setTheory);
 // testExecutor(testCodes);
@@ -271,10 +265,7 @@ function testParser(codes: string[]) {
     // const tokensCopy = [...tokens];
     const result = parser.L_StmtsParse(env, tokens);
     if (result === null) {
-      const maxDepth = env.messages[env.messages.length - 1][1];
-      for (let i = env.messages.length - 1; i >= 0; i--) {
-        console.log(env.messages[i]);
-      }
+      env.printClearMessage();
     } else {
       for (let i = 0; i < result.length; i++) {
         console.log(result[i]);
@@ -314,8 +305,7 @@ function run(env: L_Env, expr: string) {
     return undefined;
   }
   const result = nodes?.map((e) => executor.nodeExec(env, e));
-  env.messages.forEach((e) => console.log(e));
-  env.messages = [];
+  env.printClearMessage();
 
   return result;
 }

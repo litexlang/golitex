@@ -175,17 +175,14 @@ export namespace executor {
 
   function letExec(env: L_Env, node: LetNode): RType {
     try {
-      // Check ofr duplicate variable declarations
-      const notDeclared = node.vars.filter((v) => env.declaredVars.includes(v));
-      if (!notDeclared) {
-        return cEnvRType(
-          env,
-          RType.Error,
+      // Check duplicate variable declarations
+      const noErr = env.declareNewVar(node.vars);
+      if (!noErr) {
+        env.newMessage(
           `Error: Variable(s) ${node.vars.join(", ")} already declared in this scope.`
         );
+        return RType.Error;
       }
-
-      env.declaredVars = env.declaredVars.concat(node.vars) as string[];
 
       knowExec(env, new KnowNode(node.facts));
 

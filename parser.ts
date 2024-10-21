@@ -311,7 +311,7 @@ export namespace parser {
 
         while (!isCurToken(tokens, ":") && !isCurToken(tokens, ")")) {
           let curTok = shiftVar(tokens);
-          if (addHash && !env.declaredVars.includes(curTok)) {
+          if (addHash && env.varsAreNotDeclared(curTok)) {
             curTok = "#" + curTok;
           }
           curParams.push(curTok);
@@ -484,7 +484,7 @@ export namespace parser {
       const out: string[] = [];
       while (!end.includes(tokens[0])) {
         let curTok = shiftVar(tokens);
-        if (addHash && !env.declaredVars.includes(curTok)) {
+        if (addHash && env.varsAreNotDeclared(curTok)) {
           curTok = "#" + curTok;
         }
         out.push(curTok);

@@ -1,23 +1,4 @@
-import { isNull, map } from "lodash";
-import {
-  // CallOptNode,
-  DeclNode,
-  // InferNode,
-  ShortCallOptNode,
-  // TNode,
-  FactNode,
-  IfThenNode,
-  FactType,
-} from "./ast";
-import { L_Keywords, OptsConnectionSymbol } from "./common";
-
-// export type StoredFact = {
-//   vars: string[][];
-//   template: TNode[];
-//   requirements: CallOptNode[][]; // CallOptNode[] is related to a single Template
-//   onlyIfs: CallOptNode[]; // when this fact is satisfied, extra onlyIf is emitted
-// };
-
+import { ShortCallOptNode, FactNode, FactType } from "./ast";
 export class StoredFactValue {
   constructor(
     public vars: string[][],
@@ -28,16 +9,13 @@ export class StoredFactValue {
   toString() {
     let result = "";
 
-    // Add vars part
     result += this.vars.map((subArray) => subArray.join(", ")).join("; ");
 
-    // Add req part if it's not empty
     if (this.req.length > 0) {
       result += " | ";
       result += this.req.map((e) => e.toString()).join("; ");
     }
 
-    // Add 'not' if isT is false
     if (!this.isT) {
       result = "(not) " + result;
     }
@@ -47,40 +25,35 @@ export class StoredFactValue {
 }
 
 export class L_Env {
-  messages: string[] = []; //? [error message, depth], number here does not work for the time being
-  declaredVars: string[] = [];
-  // declaredTemplates = new Map<string, TNode>();
-  public father: L_Env | undefined;
-  // facts = new Map<string, CallOptNode[]>();
-
+  private declaredVars: string[] = [];
+  private messages: string[] = [];
   private shortOptFacts = new Map<string, StoredFactValue[]>();
   private factTypes = new Map<string, FactType>();
 
-  // private declTemps = new Map<string, DeclNode>();
-
-  constructor(father: L_Env | undefined = undefined) {
+  constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
   }
 
+  getFather(): L_Env | undefined {
+    return this.father;
+  }
+
+  // get from itself and father
   getOptType(s: string) {
     let out = this.factTypes.get(s);
-    if (!out) {
-      return this.father?.factTypes.get(s);
-    } else return out;
+    return out ? out : this.father?.factTypes.get(s);
   }
 
   setOptType(s: string, type: FactType) {
     this.factTypes.set(s, type);
   }
 
+  // get from itself and father
   getShortOptFact(s: string): StoredFactValue[] | undefined {
     let out = this.shortOptFacts.get(s);
     return out ? out : this.father?.getShortOptFact(s);
   }
 
-  /**
-   * @param hash stores which given vars are onlyIf vars
-   */
   addShortOptFact(opt: ShortCallOptNode, req: FactNode[]) {
     if (this.shortOptFacts.get(opt.fullName) === undefined) {
       this.shortOptFacts.set(opt.fullName, [
@@ -98,7 +71,7 @@ export class L_Env {
       for (let i = 0; i < v.length; i++) {
         if (!this.varsAreNotDeclared(v[i])) return false;
       }
-      this.declaredVars.concat(v);
+      this.declaredVars = this.declaredVars.concat(v);
       return true;
     } else {
       if (this.varsAreNotDeclared(v)) {
@@ -132,6 +105,11 @@ export class L_Env {
 
   newMessage(s: string) {
     this.messages.push(s);
+  }
+
+  printClearMessage() {
+    console.log(this.messages);
+    this.messages = [];
   }
 
   printFacts() {
