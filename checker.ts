@@ -4,13 +4,14 @@ import {
   FactNode,
   FactType,
   IfThenNode,
+  KnowNode,
   ShortCallOptNode,
 } from "./ast";
 import { L_Env, StoredFactValue } from "./env";
-import { RType } from "./executor";
+import { executor, RType } from "./executor";
 
 export namespace checker {
-  function checkShortOpt(env: L_Env, opt: ShortCallOptNode): RType {
+  export function checkShortOpt(env: L_Env, opt: ShortCallOptNode): RType {
     const facts = env.shortOptFacts.get(opt.fullName);
     if (!facts) return RType.Error;
 
@@ -87,8 +88,18 @@ export namespace checker {
    * 2. introduce var defined in if-then to new env
    * 3. check onlyIfs of if-then
    */
-  function checkIfThen(env: L_Env, node: IfThenNode): RType {
-    return RType.Error;
+  export function checkIfThen(env: L_Env, node: IfThenNode): RType {
+    const newEnv = new L_Env(env);
+    newEnv.declareNewVar(node.freeVars);
+    executor.knowExec(newEnv, new KnowNode(node.req));
+
+    for (const fact of node.onlyIfs) {
+      const out = check(newEnv, fact);
+      if (out === RType.Error) return RType.Error;
+      else if (out === RType.False) return RType.False;
+    }
+
+    return RType.True;
   }
 
   function checkBy(env: L_Env, node: ByNode): RType {

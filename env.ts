@@ -10,16 +10,6 @@ import {
   FactType,
 } from "./ast";
 import { L_Keywords, OptsConnectionSymbol } from "./common";
-import {
-  cErr_Out,
-  cL_Out,
-  // fixOpt,
-  freeFixMap,
-  UdfErr,
-  L_Out,
-  isUdf,
-  notUdf,
-} from "./shared";
 
 // export type StoredFact = {
 //   vars: string[][];
