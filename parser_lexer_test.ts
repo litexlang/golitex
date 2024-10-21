@@ -1,6 +1,6 @@
 import { scan } from "./lexer";
 import { L_Env } from "./env";
-import { L_StmtsParse } from "./parser";
+import { parser } from "./parser";
 
 const codes: string[] = [
   // "set(a):set(b);",
@@ -180,8 +180,8 @@ const codes: string[] = [
   // `: obj x | ;  // Everything is an object.`,
   // `: item x,A | set(A)  => {} ;`,
   // `let EMPTY_SET |  if x => not item(x,EMPTY_SET); ; `,
-    `let VAR;`,
-    `set(VAR);`
+  `let VAR;`,
+  `set(VAR);`,
 ];
 
 function testLexer() {
@@ -195,7 +195,7 @@ function testParser(codes: string[]) {
   for (let i = 0; i < codes.length; i++) {
     const tokens = scan(codes[i]);
     // const tokensCopy = [...tokens];
-    const result = L_StmtsParse(env, tokens);
+    const result = parser.L_StmtsParse(env, tokens);
     if (result === null) {
       const maxDepth = env.messages[env.messages.length - 1][1];
       for (let i = env.messages.length - 1; i >= 0; i--) {

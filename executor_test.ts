@@ -315,7 +315,6 @@ export function testListOfCodes(exprs: string[]): RType[] {
     }
   }
 
-  env.printDeclaredTemplates();
   env.printFacts();
 
   return results;

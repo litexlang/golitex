@@ -111,22 +111,6 @@ export const hInfo = (t: RType, s: string = "") => {
   return { type: t, message: s };
 };
 export const ErrorRInfo = { type: RType.Error, message: "" };
-// export const hNoRelTErr = (
-//   opt: CallOptNode | string,
-//   type: RType = RType.Error
-// ) => {
-//   if (opt instanceof CallOptNode)
-//     return hInfo(type, opt.optName + " not declared.");
-//   else return hInfo(type, opt + " not declared.");
-// };
-// export const hFixFreeErr = (
-//   opt: CallOptNode | string,
-//   type: RType = RType.Error
-// ) => {
-//   if (opt instanceof CallOptNode)
-//     return hInfo(type, `fail to instantiate ${opt.optName}`);
-//   else return hInfo(type, `fail to instantiate ${opt}`);
-// };
 
 export namespace executor {
   const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
@@ -145,11 +129,16 @@ export namespace executor {
 
       if (execFunc && isRTypeTrue(execFunc(env, node)))
         return successMesIntoEnv(env, node);
-      else if (node instanceof ShortCallOptNode) {
-        return factExec(env, node as ShortCallOptNode);
+      else if (node instanceof FactNode) {
+        try {
+          return factExec(env, node as FactNode);
+        } catch (error) {
+          throw Error(`${node as FactNode}`);
+        }
       }
       return RType.Error;
     } catch (error) {
+      if (error instanceof Error) env.newMessage(`Error: ${error.message}`);
       return RType.Error;
     }
   }
@@ -235,11 +224,6 @@ export namespace executor {
             throw Error(`${fact.params.flat().toString()} not declared.`);
 
           env.addShortOptFact(env, fact, [...fatherReq]);
-
-          if (fact.useName !== "") {
-            fact.useName = "";
-            env.newBy(fact.useName, fact);
-          }
         } else if (fact instanceof IfThenNode) {
           // store facts
           for (const onlyIf of fact.onlyIfs) {
@@ -250,11 +234,6 @@ export namespace executor {
                 ...fatherReq,
                 ...fact.req,
               ]);
-          }
-          // store by
-          if (fact.useName !== "") {
-            env.newBy(fact.useName, fact);
-            fact.useName = "";
           }
         }
       }
@@ -274,7 +253,7 @@ export namespace executor {
 
   function declExec(env: L_Env, node: DeclNode): RType {
     try {
-      if (env.optDecled(node.name)) {
+      if (env.getOptType(node.name)) {
         throw Error(`${node.name} already declared.`);
       }
 

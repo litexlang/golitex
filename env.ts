@@ -64,25 +64,11 @@ export class L_Env {
   }
 
   getOptType(s: string) {
-    return this.factTypes.get(s);
+    let out = this.factTypes.get(s);
+    if (!out) {
+      return this.father?.factTypes.get(s);
+    } else return out;
   }
-
-  optDecled(name: string) {
-    return this.factTypes.has(name);
-  }
-
-  // If opt is not declared, just throw error. I no longer need to write `if (... !== undefined)`
-  // declTemp(name: string, fact: DeclNode) {
-  //   if (this.declTemps.has(name)) throw Error(`${name} is already declared`);
-  //   else {
-  //     this.declTemps.set(name, fact);
-  //   }
-  // }
-
-  // getDeclTemp(name: string): DeclNode | undefined {
-  //   const out = this.declTemps.get(name);
-  //   return out;
-  // }
 
   /**
    * @param hash stores which given vars are onlyIf vars
@@ -99,13 +85,79 @@ export class L_Env {
     }
   }
 
-  /**
-   * called by
-   * 1. know named if-then
-   * 2.
-   */
-  newBy(key: string, by: FactNode) {
-    this.bys.set(key, by);
+  declareNewVar(v: string | string[]): Boolean {
+    if (Array.isArray(v)) {
+      for (let i = 0; i < v.length; i++) {
+        if (!this.varsAreNotDeclared(v[i])) return false;
+      }
+      this.declaredVars.concat(v);
+      return true;
+    } else {
+      if (this.varsAreNotDeclared(v)) {
+        this.declaredVars.push(v);
+        return true;
+      } else return false;
+    }
+  }
+
+  varsAreNotDeclared(vars: string[] | string): boolean {
+    const isVarDeclared = (v: string): boolean => {
+      if (this.declaredVars.includes(v) || v.startsWith("#")) {
+        return true;
+      }
+      return this.father ? this.father.isVarDeclared(v) : false;
+    };
+
+    if (Array.isArray(vars)) {
+      return vars.every((v) => !isVarDeclared(v));
+    } else {
+      return !isVarDeclared(vars);
+    }
+  }
+
+  private isVarDeclared(v: string): boolean {
+    if (this.declaredVars.includes(v) || v.startsWith("#")) {
+      return true;
+    }
+    return this.father ? this.father.isVarDeclared(v) : false;
+  }
+
+  newMessage(s: string) {
+    this.messages.push(s);
+  }
+
+  printFacts() {
+    console.log("\n-----facts-------\n");
+    // for (const [key, factUnderCurKey] of this.facts) {
+    //   factUnderCurKey.forEach((e) => console.log(e.toString()));
+    // }
+
+    for (const [key, factUnderCurKey] of this.shortOptFacts) {
+      const t = this.factTypes.get(key);
+      let tStr = "";
+      if (t === FactType.Def) {
+        tStr = "def";
+      } else if (t === FactType.IfThen) {
+        tStr = "if-then";
+      } else if (t === FactType.Or) {
+        tStr = "or";
+      }
+
+      console.log(`[${tStr}] ${key}`);
+      factUnderCurKey.forEach((e: StoredFactValue) => {
+        console.log(e.toString());
+      });
+      console.log();
+    }
+  }
+
+  printBys() {
+    console.log("\n-----Bys-----\n");
+
+    for (const [key, factUnderCurKey] of this.bys) {
+      console.log(`${key}: ${factUnderCurKey.toString()}`);
+    }
+    console.log();
   }
 
   // newFactEmit(opt: CallOptNode, emit: Boolean = true) {
@@ -261,59 +313,25 @@ export class L_Env {
   //   else fixedRelTOnlyIfs.v.forEach((e) => emitTo.newFactEmit(e));
   // }
 
-  newVar(varName: string): boolean {
-    if (this.declaredVars.includes(varName)) {
-      return false;
-    }
+  // optDecled(name: string) {
+  //   let out = this.factTypes.has(name);
+  //   if (!out) {
+  //     return this.father?.factTypes.get(s);
+  //   } else return
+  // }
 
-    if (L_Keywords.includes(varName)) {
-      return false;
-    }
+  // If opt is not declared, just throw error. I no longer need to write `if (... !== undefined)`
+  // declTemp(name: string, fact: DeclNode) {
+  //   if (this.declTemps.has(name)) throw Error(`${name} is already declared`);
+  //   else {
+  //     this.declTemps.set(name, fact);
+  //   }
+  // }
 
-    this.declaredVars.push(varName);
-    return true;
-  }
-
-  declareNewVar(v: string | string[]): Boolean {
-    if (Array.isArray(v)) {
-      for (let i = 0; i < v.length; i++) {
-        if (!this.varsAreNotDeclared(v[i])) return false;
-      }
-      this.declaredVars.concat(v);
-      return true;
-    } else {
-      if (this.varsAreNotDeclared(v)) {
-        this.declaredVars.push(v);
-        return true;
-      } else return false;
-    }
-  }
-
-  varsAreNotDeclared(vars: string[] | string): boolean {
-    const isVarDeclared = (v: string): boolean => {
-      if (this.declaredVars.includes(v) || v.startsWith("#")) {
-        return true;
-      }
-      return this.father ? this.father.isVarDeclared(v) : false;
-    };
-
-    if (Array.isArray(vars)) {
-      return vars.every((v) => !isVarDeclared(v));
-    } else {
-      return !isVarDeclared(vars);
-    }
-  }
-
-  private isVarDeclared(v: string): boolean {
-    if (this.declaredVars.includes(v) || v.startsWith("#")) {
-      return true;
-    }
-    return this.father ? this.father.isVarDeclared(v) : false;
-  }
-
-  newMessage(s: string) {
-    this.messages.push(s);
-  }
+  // getDeclTemp(name: string): DeclNode | undefined {
+  //   const out = this.declTemps.get(name);
+  //   return out;
+  // }
 
   // Main function of the whole project
   // input full name of an opt, output the template of the lowest hierarchy
@@ -394,52 +412,18 @@ export class L_Env {
   //   }
   // }
 
-  printFacts() {
-    console.log("\n-----facts-------\n");
-    // for (const [key, factUnderCurKey] of this.facts) {
-    //   factUnderCurKey.forEach((e) => console.log(e.toString()));
-    // }
-
-    for (const [key, factUnderCurKey] of this.shortOptFacts) {
-      const t = this.factTypes.get(key);
-      let tStr = "";
-      if (t === FactType.Def) {
-        tStr = "def";
-      } else if (t === FactType.IfThen) {
-        tStr = "if-then";
-      } else if (t === FactType.Or) {
-        tStr = "or";
-      }
-
-      console.log(`[${tStr}] ${key}`);
-      factUnderCurKey.forEach((e: StoredFactValue) => {
-        console.log(e.toString());
-      });
-      console.log();
-    }
-  }
-
-  printDeclaredTemplates(doNotPrint: string[] = []) {
-    // console.log("\n-----template-----\n");
-    // for (const [key, tNode] of this.declTemps) {
-    //   if (doNotPrint.includes(key)) continue;
-    //   console.log(tNode);
-    //   // printTAndSubT(tNode);
-    // }
-    // function printTAndSubT(tNode: DeclNode) {
-    //   console.log(tNode.toString() + "\n");
-    //   for (const subTNode of tNode.declaredTemplates) {
-    //     printTAndSubT(subTNode[1]);
-    //   }
-    // }
-  }
-
-  printBys() {
-    console.log("\n-----Bys-----\n");
-
-    for (const [key, factUnderCurKey] of this.bys) {
-      console.log(`${key}: ${factUnderCurKey.toString()}`);
-    }
-    console.log();
-  }
+  // printDeclaredTemplates(doNotPrint: string[] = []) {
+  // console.log("\n-----template-----\n");
+  // for (const [key, tNode] of this.declTemps) {
+  //   if (doNotPrint.includes(key)) continue;
+  //   console.log(tNode);
+  //   // printTAndSubT(tNode);
+  // }
+  // function printTAndSubT(tNode: DeclNode) {
+  //   console.log(tNode.toString() + "\n");
+  //   for (const subTNode of tNode.declaredTemplates) {
+  //     printTAndSubT(subTNode[1]);
+  //   }
+  // }
+  // }
 }
