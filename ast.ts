@@ -22,7 +22,9 @@ export class IfThenNode extends FactNode {
   constructor(
     public freeVars: string[] = [],
     public req: FactNode[] = [],
-    public onlyIfs: ShortCallOptNode[] = []
+    //! I think we should onlyIfs: FactNode[] because despite we can not store if-then
+    //! we can still check it.
+    public onlyIfs: FactNode[] = []
   ) {
     super();
     this.req = req;
@@ -64,7 +66,7 @@ export class ByNode extends FactNode {
     public fact: FactNode,
     public bys: FactNode[]
   ) {
-    super()
+    super();
   }
 }
 
@@ -102,10 +104,10 @@ export class KnowNode extends L_Node {
 }
 
 export class LetNode extends L_Node {
-  vars: string[];
-  facts: FactNode[];
-
-  constructor(vars: string[], facts: FactNode[]) {
+  constructor(
+    public vars: string[],
+    public facts: FactNode[]
+  ) {
     super();
     this.vars = vars;
     this.facts = facts;

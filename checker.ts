@@ -1,5 +1,11 @@
 import { map } from "lodash";
-import { FactNode, FactType, IfThenNode, ShortCallOptNode } from "./ast";
+import {
+  ByNode,
+  FactNode,
+  FactType,
+  IfThenNode,
+  ShortCallOptNode,
+} from "./ast";
 import { L_Env, StoredFactValue } from "./env";
 import { RType } from "./executor";
 
@@ -40,6 +46,10 @@ export namespace checker {
   export function check(env: L_Env, node: FactNode): RType {
     if (node instanceof ShortCallOptNode) {
       return checkShortOpt(env, node);
+    } else if (node instanceof IfThenNode) {
+      return checkIfThen(env, node);
+    } else if (node instanceof ByNode) {
+      return checkBy(env, node);
     }
 
     return RType.Error;
@@ -69,5 +79,19 @@ export namespace checker {
       );
     }
     throw Error("fact should be if-then or shortOpt");
+  }
+
+  /**
+   * Steps
+   * 1. open a new Env
+   * 2. introduce var defined in if-then to new env
+   * 3. check onlyIfs of if-then
+   */
+  function checkIfThen(env: L_Env, node: IfThenNode): RType {
+    return RType.Error;
+  }
+
+  function checkBy(env: L_Env, node: ByNode): RType {
+    return RType.Error;
   }
 }

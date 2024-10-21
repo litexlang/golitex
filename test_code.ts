@@ -19,6 +19,7 @@ export const testList = [
   "let y | set(y);",
   "def set2 z | set(z);",
   "set2(y);",
+  "set2(y);",
 ];
 
 export const testCode = false;

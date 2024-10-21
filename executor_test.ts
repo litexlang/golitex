@@ -166,7 +166,7 @@ const codes: string[] = [
 //       env.printErrorsWithDepth();
 //     } else {
 //       for (let i = 0; i < result.length; i++) {
-//         const res: L_Out<RType>  = executor.nodePrintExec(env, result[i]);
+//         const res: L_Out<RType>  = executor.nodeExec(env, result[i]);
 //         if (!res.message) console.log(RTypeMap[res.type]);
 //         else console.log(`${RTypeMap[res.type]} '${res.message}'`);
 //       }
@@ -193,7 +193,7 @@ function testError(asIfRight = false) {
         console.log(env.messages);
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res = executor.nodePrintExec(env, result[i]);
+          const res = executor.nodeExec(env, result[i]);
         }
       }
       if (env.messages.length === 0) {
@@ -213,7 +213,7 @@ function testError(asIfRight = false) {
         console.log(env.messages);
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res = executor.nodePrintExec(env, result[i]);
+          const res = executor.nodeExec(env, result[i]);
           if (isRTypeErr(res)) console.log(RTypeMap[res as RType]);
           else console.log(env.messages);
         }
@@ -237,7 +237,7 @@ function testExecutor(testWhat: any = testCodes) {
       env.messages = [];
     } else {
       for (let i = 0; i < parseResult.length; i++) {
-        const res = executor.nodePrintExec(env, parseResult[i]);
+        const res = executor.nodeExec(env, parseResult[i]);
         if (key !== "Basics") {
           if (isRTypeErr(res)) {
             console.log(env.messages);
@@ -327,7 +327,7 @@ function run(env: L_Env, expr: string) {
   if (nodes === undefined) {
     return undefined;
   }
-  const result = nodes?.map((e) => executor.nodePrintExec(env, e));
+  const result = nodes?.map((e) => executor.nodeExec(env, e));
   env.messages.forEach((e) => console.log(e));
   env.messages = [];
 
