@@ -8,7 +8,7 @@ export enum FactType {
 
 export abstract class FactNode extends L_Node {
   isT: Boolean = true;
-  byName: string = "";
+  useName: string = "";
 }
 
 export class OrNode extends FactNode {
@@ -31,8 +31,8 @@ export class IfThenNode extends FactNode {
 
   toString() {
     const mainPart = `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
-    const byNamePart = this.byName !== "" ? `[${this.byName}]` : "";
-    return mainPart + byNamePart;
+    const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
+    return mainPart + useNamePart;
   }
 }
 
@@ -54,8 +54,17 @@ export class ShortCallOptNode extends FactNode {
     const mainPart = this.nameAsLst()
       .map((name, i) => `${name}(${this.params[i]})`)
       .join(":");
-    const byNamePart = this.byName !== "" ? `[${this.byName}]` : "";
-    return mainPart + byNamePart;
+    const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
+    return mainPart + useNamePart;
+  }
+}
+
+export class ByNode extends FactNode {
+  constructor(
+    public fact: FactNode,
+    public bys: FactNode[]
+  ) {
+    super()
   }
 }
 

@@ -856,9 +856,9 @@ function knowExec(env: L_Env, node: KnowNode): RType {
         const isT = env.varsAreNotDeclared(fact.params.flat());
         if (isT) throw Error(`${fact.params.flat().toString()} not declared.`);
         env.addShortOptFact(env, fact, []);
-        if (fact.byName !== "") {
-          fact.byName = "";
-          env.newBy(fact.byName, fact);
+        if (fact.useName !== "") {
+          fact.useName = "";
+          env.newBy(fact.useName, fact);
         }
       } else if (fact instanceof IfThenNode) {
         // store facts
@@ -866,9 +866,9 @@ function knowExec(env: L_Env, node: KnowNode): RType {
           env.addShortOptFact(env, onlyIf, fact.req);
         }
         // store by
-        if (fact.byName !== "") {
-          env.newBy(fact.byName, fact);
-          fact.byName = "";
+        if (fact.useName !== "") {
+          env.newBy(fact.useName, fact);
+          fact.useName = "";
         }
       }
     }

@@ -15,6 +15,7 @@ import {
   DefDeclNode,
   IfThenDeclNode,
   FactNode,
+  ByNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -690,6 +691,13 @@ function factParse(env: L_Env, tokens: string[], addHash = false): FactNode {
       out = relParser(env, tokens, addHash);
     }
 
+    if (isCurToken(tokens, "by")) {
+      skip(tokens, "by")
+      skip(tokens, "{")
+      const bys = listParse<FactNode>(env, tokens, factParse, ["}"]);
+      return new ByNode(out, bys)
+    }
+
     return out;
   } catch (error) {
     handleParseError(env, "fact", index, start);
@@ -882,7 +890,7 @@ function yaIfThenParse(
       skip(tokens, "]");
     }
     const out = new IfThenNode(vars, req, onlyIfs);
-    out.byName = name;
+    out.useName = name;
     return out;
   } catch (error) {
     handleParseError(env, "()=>{}", index, start);
