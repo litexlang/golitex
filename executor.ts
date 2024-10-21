@@ -159,8 +159,10 @@ export namespace executor {
     if (isRTypeTrue(res)) {
       knowExec(env, new KnowNode([node]));
       return successMesIntoEnv(env, node);
-    } else if (res === RType.False) {
+    } else if (res === RType.Unknown) {
       env.newMessage(`Unknown. ${node.toString()}`);
+    } else if (res === RType.False) {
+      env.newMessage(`False. ${node.toString()}`);
       return res;
     }
     return RType.Error;
@@ -260,7 +262,7 @@ export namespace executor {
       let factType: FactType;
       if (node instanceof DefDeclNode) {
         factType = FactType.Def;
-        env.factTypes.set(node.name, factType);
+        env.setOptType(node.name, factType);
         knowExec(
           env,
           new KnowNode([
@@ -271,10 +273,10 @@ export namespace executor {
         );
       } else if (node instanceof IfThenDeclNode) {
         factType = FactType.IfThen;
-        env.factTypes.set(node.name, factType);
+        env.setOptType(node.name, factType);
       } else if (node instanceof OrNode) {
         factType = FactType.Or;
-        env.factTypes.set(node.name, factType);
+        env.setOptType(node.name, factType);
       }
 
       return RType.True;

@@ -50,12 +50,11 @@ export class L_Env {
   messages: string[] = []; //? [error message, depth], number here does not work for the time being
   declaredVars: string[] = [];
   // declaredTemplates = new Map<string, TNode>();
-  father: L_Env | undefined;
+  public father: L_Env | undefined;
   // facts = new Map<string, CallOptNode[]>();
-  bys = new Map<string, FactNode>();
 
   private shortOptFacts = new Map<string, StoredFactValue[]>();
-  factTypes = new Map<string, FactType>();
+  private factTypes = new Map<string, FactType>();
 
   // private declTemps = new Map<string, DeclNode>();
 
@@ -68,6 +67,10 @@ export class L_Env {
     if (!out) {
       return this.father?.factTypes.get(s);
     } else return out;
+  }
+
+  setOptType(s: string, type: FactType) {
+    this.factTypes.set(s, type);
   }
 
   getShortOptFact(s: string): StoredFactValue[] | undefined {
