@@ -147,11 +147,10 @@ export function nodePrintExec(env: L_Env, node: L_Node): RType {
     if (execFunc && isRTypeTrue(execFunc(env, node)))
       return successMesIntoEnv(env, node);
     else {
-      const res = checker.check(env, node as ShortCallOptNode)
-      if (isRTypeTrue(res))
-          return successMesIntoEnv(env, node)
+      const res = checker.check(env, node as ShortCallOptNode);
+      if (isRTypeTrue(res)) return successMesIntoEnv(env, node);
       else if (res === RType.False) {
-        env.newMessage(`Unknown. ${node.toString()}`)
+        env.newMessage(`Unknown. ${node.toString()}`);
         return res;
       }
       // const result = callOptExec(env, node as CallOptNode);
@@ -320,22 +319,25 @@ function declExec(env: L_Env, node: DeclNode): RType {
       throw Error(`${node.name} already declared.`);
     }
 
+    let factType: FactType;
     if (node instanceof DefDeclNode) {
-      env.factTypes.set(node.name, FactType.Def);
+      factType = FactType.Def;
+      env.factTypes.set(node.name, factType);
+      knowExec(
+        env,
+        new KnowNode([
+          new IfThenNode(node.freeVars, node.req, [
+            new ShortCallOptNode(node.name, [node.freeVars]),
+          ]),
+        ])
+      );
     } else if (node instanceof IfThenDeclNode) {
-      env.factTypes.set(node.name, FactType.IfThen);
+      factType = FactType.IfThen;
+      env.factTypes.set(node.name, factType);
     } else if (node instanceof OrNode) {
-      env.factTypes.set(node.name, FactType.Or);
+      factType = FactType.Or;
+      env.factTypes.set(node.name, factType);
     }
-
-    knowExec(
-      env,
-      new KnowNode([
-        new IfThenNode(node.freeVars, node.req, [
-          new ShortCallOptNode(node.name, [node.freeVars]),
-        ]),
-      ])
-    );
 
     return RType.True;
   } catch (error) {
@@ -851,12 +853,15 @@ function knowExec(env: L_Env, node: KnowNode): RType {
   try {
     for (const fact of node.facts) {
       if (fact instanceof ShortCallOptNode) {
-        if (!env.optDecled(fact.fullName))
+        const factType = env.getOptType(fact.fullName);
+        if (factType === undefined)
           throw Error(`${fact.fullName} not declared.`);
 
         const isT = env.varsAreNotDeclared(fact.params.flat());
         if (isT) throw Error(`${fact.params.flat().toString()} not declared.`);
+
         env.addShortOptFact(env, fact, []);
+
         if (fact.useName !== "") {
           fact.useName = "";
           env.newBy(fact.useName, fact);
