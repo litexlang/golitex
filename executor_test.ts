@@ -334,5 +334,5 @@ function run(env: L_Env, expr: string) {
   return result;
 }
 
-// testListOfCodes(setTheory);
+// testListOfCodes(testList);
 testListOfCodes(setTheory);

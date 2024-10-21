@@ -384,17 +384,6 @@ function callOptsParse(
   }
 }
 
-function templateParse(env: L_Env, tokens: string[]): DeclNode {
-  const start = tokens[0];
-  const index = tokens.length;
-  try {
-    return new DefDeclNode();
-  } catch (error) {
-    handleParseError(env, "declaration", index, start);
-    throw error;
-  }
-}
-
 // function templateParse(env: L_Env, tokens: string[]): TNode {
 //   const start = tokens[0];
 //   const index = tokens.length;
@@ -1000,6 +989,7 @@ function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
     if (StdStmtEnds.includes(tokens[0])) {
       skip(tokens, StdStmtEnds);
     } else if (isCurToken(tokens, "=>")) {
+      nodeType = IfThenKeywords[0]
       skip(tokens, "=>");
 
       if (!isCurToken(tokens, "{")) {

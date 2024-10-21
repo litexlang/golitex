@@ -10,4 +10,4 @@ export const testErrorCode = {
   // Let: "let o:set3(o);",
 };
 
-export const testList = [": set x; ;", "know if x | set(x) => set(x) [*];"];
+export const testList = ["def inf x |  set(x) => {} ;"];

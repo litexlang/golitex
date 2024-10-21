@@ -129,6 +129,7 @@ export const ErrorRInfo = { type: RType.Error, message: "" };
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   DefNode: declExec,
   DefDeclNode: declExec,
+  IfThenDeclNode: declExec,
   ExistNode: declExec,
   KnowNode: knowExec,
   LetNode: letExec,

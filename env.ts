@@ -38,18 +38,18 @@ export class StoredFactValue {
   toString() {
     let result = "";
 
-    // Add req part if it's not empty
-    if (this.req.length > 0) {
-      result += this.req.map((e) => e.toString()).join("; ");
-      result += " => ";
-    }
-
     // Add vars part
     result += this.vars.map((subArray) => subArray.join(", ")).join("; ");
 
+    // Add req part if it's not empty
+    if (this.req.length > 0) {
+      result += " | ";
+      result += this.req.map((e) => e.toString()).join("; ");
+    }
+
     // Add 'not' if isT is false
     if (!this.isT) {
-      result = "not " + result;
+      result = "(not) " + result;
     }
 
     return result;
@@ -419,8 +419,9 @@ export class L_Env {
 
       console.log(`[${tStr}] ${key}`);
       factUnderCurKey.forEach((e: StoredFactValue) => {
-        console.log((e.isT ? "" : "[not] ") + e.toString());
+        console.log(e.toString());
       });
+      console.log();
     }
   }
 
@@ -447,6 +448,4 @@ export class L_Env {
     }
     console.log();
   }
-
-  
 }
