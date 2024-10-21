@@ -14,11 +14,11 @@ export const testErrorCode = {
 };
 
 export const testList = [
-  "def obj x;",
+  "def obj x | => {};",
   "def set x | obj(x);",
   "let y | set(y);",
   "def set2 z | set(z);",
-  // "set2(y);",
+  "set2(y);",
 ];
 
 export const testCode = false;

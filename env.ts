@@ -73,6 +73,10 @@ export class L_Env {
     this.father = father;
   }
 
+  getOptType(s: string) {
+    return this.factTypes.get(s);
+  }
+
   optDecled(name: string) {
     return this.factTypes.has(name);
   }
