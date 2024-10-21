@@ -12,7 +12,7 @@ import { executor, RType } from "./executor";
 
 export namespace checker {
   export function checkShortOpt(env: L_Env, opt: ShortCallOptNode): RType {
-    const facts = env.shortOptFacts.get(opt.fullName);
+    const facts = env.getShortOptFact(opt.fullName);
     if (!facts) return RType.Error;
 
     for (const storedFact of facts) {

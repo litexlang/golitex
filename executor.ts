@@ -223,12 +223,12 @@ export namespace executor {
           if (isT)
             throw Error(`${fact.params.flat().toString()} not declared.`);
 
-          env.addShortOptFact(env, fact, [...fatherReq]);
+          env.addShortOptFact(fact, [...fatherReq]);
         } else if (fact instanceof IfThenNode) {
           // store facts
           for (const onlyIf of fact.onlyIfs) {
             if (onlyIf instanceof ShortCallOptNode)
-              env.addShortOptFact(env, onlyIf, [...fatherReq, ...fact.req]);
+              env.addShortOptFact(onlyIf, [...fatherReq, ...fact.req]);
             else
               knowExec(env, new KnowNode([onlyIf]), [
                 ...fatherReq,

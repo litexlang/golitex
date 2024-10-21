@@ -252,20 +252,7 @@ function testExecutor(testWhat: any = testCodes) {
   console.log("\n----TestWhat----\n");
   whatIsTested.forEach((e) => console.log(e));
   if (env.messages.length === 0) {
-    if (env.shortOptFacts.size > 0) env.printFacts();
-    // env.printCallOptFacts();
-    // do not print templates declared in Basics
-    // if (env.declaredTemplates.size > 0)
-    //   env.printDeclaredTemplates([
-    //     "obj",
-    //     "set",
-    //     "set0",
-    //     "p1",
-    //     "set2",
-    //     // "F",
-    //     "set3",
-    //   ]);
-    if (env.bys.size > 0) env.printBys();
+    env.printFacts();
   } else {
     console.log("\n------Error------\n");
     console.log(env.messages);

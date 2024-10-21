@@ -54,7 +54,7 @@ export class L_Env {
   // facts = new Map<string, CallOptNode[]>();
   bys = new Map<string, FactNode>();
 
-  shortOptFacts = new Map<string, StoredFactValue[]>();
+  private shortOptFacts = new Map<string, StoredFactValue[]>();
   factTypes = new Map<string, FactType>();
 
   // private declTemps = new Map<string, DeclNode>();
@@ -70,10 +70,15 @@ export class L_Env {
     } else return out;
   }
 
+  getShortOptFact(s: string): StoredFactValue[] | undefined {
+    let out = this.shortOptFacts.get(s);
+    return out ? out : this.father?.getShortOptFact(s);
+  }
+
   /**
    * @param hash stores which given vars are onlyIf vars
    */
-  addShortOptFact(env: L_Env, opt: ShortCallOptNode, req: FactNode[]) {
+  addShortOptFact(opt: ShortCallOptNode, req: FactNode[]) {
     if (this.shortOptFacts.get(opt.fullName) === undefined) {
       this.shortOptFacts.set(opt.fullName, [
         new StoredFactValue(opt.params, req, opt.isT),
@@ -128,9 +133,6 @@ export class L_Env {
 
   printFacts() {
     console.log("\n-----facts-------\n");
-    // for (const [key, factUnderCurKey] of this.facts) {
-    //   factUnderCurKey.forEach((e) => console.log(e.toString()));
-    // }
 
     for (const [key, factUnderCurKey] of this.shortOptFacts) {
       const t = this.factTypes.get(key);
@@ -149,15 +151,6 @@ export class L_Env {
       });
       console.log();
     }
-  }
-
-  printBys() {
-    console.log("\n-----Bys-----\n");
-
-    for (const [key, factUnderCurKey] of this.bys) {
-      console.log(`${key}: ${factUnderCurKey.toString()}`);
-    }
-    console.log();
   }
 
   // newFactEmit(opt: CallOptNode, emit: Boolean = true) {
