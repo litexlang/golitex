@@ -1,8 +1,8 @@
 import exp from "constants";
 import { L_Env } from "./env";
-import { nodeExec, nodePrintExec, RType, RTypeMap } from "./executor";
+import { executor, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
-import { L_StmtsParse } from "./parser";
+import { parser } from "./parser";
 // import { testParser } from "./parser_lexer_test";
 import { isL_OutErr, isRTypeErr, RL_Out } from "./shared";
 import { setTheory, testTao } from "./tao_analysis_one";
@@ -161,12 +161,12 @@ const codes: string[] = [
 //   console.log("\n----results------\n");
 //   for (const item of codes) {
 //     const tokens = scan(item);
-//     const result = L_StmtsParse(env, tokens);
+//     const result = parser.L_StmtsParse(env, tokens);
 //     if (result === null) {
 //       env.printErrorsWithDepth();
 //     } else {
 //       for (let i = 0; i < result.length; i++) {
-//         const res: L_Out<RType>  = nodePrintExec(env, result[i]);
+//         const res: L_Out<RType>  = executor.nodePrintExec(env, result[i]);
 //         if (!res.message) console.log(RTypeMap[res.type]);
 //         else console.log(`${RTypeMap[res.type]} '${res.message}'`);
 //       }
@@ -188,12 +188,12 @@ function testError(asIfRight = false) {
     const env = new L_Env();
     for (const [key, code] of Object.entries(testErrorCode)) {
       const tokens = scan(code as string);
-      const result = L_StmtsParse(env, tokens);
+      const result = parser.L_StmtsParse(env, tokens);
       if (result === null) {
         console.log(env.messages);
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res = nodePrintExec(env, result[i]);
+          const res = executor.nodePrintExec(env, result[i]);
         }
       }
       if (env.messages.length === 0) {
@@ -208,12 +208,12 @@ function testError(asIfRight = false) {
       console.log(key + ":");
       whatIsTested.push(key);
       const tokens = scan(code as string);
-      const result = L_StmtsParse(env, tokens);
+      const result = parser.L_StmtsParse(env, tokens);
       if (result === null) {
         console.log(env.messages);
       } else {
         for (let i = 0; i < result.length; i++) {
-          const res = nodePrintExec(env, result[i]);
+          const res = executor.nodePrintExec(env, result[i]);
           if (isRTypeErr(res)) console.log(RTypeMap[res as RType]);
           else console.log(env.messages);
         }
@@ -231,13 +231,13 @@ function testExecutor(testWhat: any = testCodes) {
   for (const [key, code] of Object.entries(testWhat)) {
     whatIsTested.push(key);
     const tokens = scan(code as string);
-    const parseResult = L_StmtsParse(env, tokens);
+    const parseResult = parser.L_StmtsParse(env, tokens);
     if (parseResult === null) {
       console.log(env.messages);
       env.messages = [];
     } else {
       for (let i = 0; i < parseResult.length; i++) {
-        const res = nodePrintExec(env, parseResult[i]);
+        const res = executor.nodePrintExec(env, parseResult[i]);
         if (key !== "Basics") {
           if (isRTypeErr(res)) {
             console.log(env.messages);
@@ -282,7 +282,7 @@ function testParser(codes: string[]) {
   for (let i = 0; i < codes.length; i++) {
     const tokens = scan(codes[i]);
     // const tokensCopy = [...tokens];
-    const result = L_StmtsParse(env, tokens);
+    const result = parser.L_StmtsParse(env, tokens);
     if (result === null) {
       const maxDepth = env.messages[env.messages.length - 1][1];
       for (let i = env.messages.length - 1; i >= 0; i--) {
@@ -323,11 +323,11 @@ export function testListOfCodes(exprs: string[]): RType[] {
 
 function run(env: L_Env, expr: string) {
   const tokens = scan(expr);
-  const nodes = L_StmtsParse(env, tokens);
+  const nodes = parser.L_StmtsParse(env, tokens);
   if (nodes === undefined) {
     return undefined;
   }
-  const result = nodes?.map((e) => nodePrintExec(env, e));
+  const result = nodes?.map((e) => executor.nodePrintExec(env, e));
   env.messages.forEach((e) => console.log(e));
   env.messages = [];
 
