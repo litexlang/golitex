@@ -1,4 +1,3 @@
-import { map } from "lodash";
 import {
   ByNode,
   FactNode,
