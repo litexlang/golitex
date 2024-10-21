@@ -212,6 +212,101 @@ export namespace executor {
     }
   }
 
+  /**
+   * know shortOpt: store directly
+   * know if-then: if then is shortOpt, store it bound with if as req; if then is if-then, inherit father req and do knowExec again.
+   */
+  //! This one of the functions in which new facts are generated.
+  //! In order to unify interface, after checking a fact, we use KnowExec to emit new fact
+  export function knowExec(
+    env: L_Env,
+    node: KnowNode,
+    fatherReq: FactNode[] = []
+  ): RType {
+    try {
+      for (const fact of node.facts) {
+        if (fact instanceof ShortCallOptNode) {
+          const factType = env.getOptType(fact.fullName);
+          if (factType === undefined)
+            throw Error(`${fact.fullName} not declared.`);
+
+          const isT = env.varsAreNotDeclared(fact.params.flat());
+          if (isT)
+            throw Error(`${fact.params.flat().toString()} not declared.`);
+
+          env.addShortOptFact(env, fact, [...fatherReq]);
+
+          if (fact.useName !== "") {
+            fact.useName = "";
+            env.newBy(fact.useName, fact);
+          }
+        } else if (fact instanceof IfThenNode) {
+          // store facts
+          for (const onlyIf of fact.onlyIfs) {
+            if (onlyIf instanceof ShortCallOptNode)
+              env.addShortOptFact(env, onlyIf, [...fatherReq, ...fact.req]);
+            else
+              knowExec(env, new KnowNode([onlyIf]), [
+                ...fatherReq,
+                ...fact.req,
+              ]);
+          }
+          // store by
+          if (fact.useName !== "") {
+            env.newBy(fact.useName, fact);
+            fact.useName = "";
+          }
+        }
+      }
+
+      return RType.True;
+    } catch (error) {
+      let m = `'${node.toString()}'`;
+      if (error instanceof Error) m += ` ${error.message}`;
+      yaHandleExecError(env, m);
+      throw error;
+    }
+  }
+
+  function yaHandleExecError(env: L_Env, m: string) {
+    env.newMessage(m);
+  }
+
+  function declExec(env: L_Env, node: DeclNode): RType {
+    try {
+      if (env.optDecled(node.name)) {
+        throw Error(`${node.name} already declared.`);
+      }
+
+      let factType: FactType;
+      if (node instanceof DefDeclNode) {
+        factType = FactType.Def;
+        env.factTypes.set(node.name, factType);
+        knowExec(
+          env,
+          new KnowNode([
+            new IfThenNode(node.freeVars, node.req, [
+              new ShortCallOptNode(node.name, [node.freeVars]),
+            ]),
+          ])
+        );
+      } else if (node instanceof IfThenDeclNode) {
+        factType = FactType.IfThen;
+        env.factTypes.set(node.name, factType);
+      } else if (node instanceof OrNode) {
+        factType = FactType.Or;
+        env.factTypes.set(node.name, factType);
+      }
+
+      return RType.True;
+    } catch (error) {
+      let m = `'${node.toString()}'`;
+      if (error instanceof Error) m += ` ${error.message}`;
+      yaHandleExecError(env, m);
+      throw error;
+    }
+  }
+
   // function callOptExec(env: L_Env, fact: CallOptNode): RType {
   // const relT = env.getRelT(fact as CallOptNode);
   // if (!relT)
@@ -295,41 +390,6 @@ export namespace executor {
   //     return cEnvRType(env, RType.Error);
   //   }
   // }
-
-  function declExec(env: L_Env, node: DeclNode): RType {
-    try {
-      if (env.optDecled(node.name)) {
-        throw Error(`${node.name} already declared.`);
-      }
-
-      let factType: FactType;
-      if (node instanceof DefDeclNode) {
-        factType = FactType.Def;
-        env.factTypes.set(node.name, factType);
-        knowExec(
-          env,
-          new KnowNode([
-            new IfThenNode(node.freeVars, node.req, [
-              new ShortCallOptNode(node.name, [node.freeVars]),
-            ]),
-          ])
-        );
-      } else if (node instanceof IfThenDeclNode) {
-        factType = FactType.IfThen;
-        env.factTypes.set(node.name, factType);
-      } else if (node instanceof OrNode) {
-        factType = FactType.Or;
-        env.factTypes.set(node.name, factType);
-      }
-
-      return RType.True;
-    } catch (error) {
-      let m = `'${node.toString()}'`;
-      if (error instanceof Error) m += ` ${error.message}`;
-      yaHandleExecError(env, m);
-      throw error;
-    }
-  }
 
   // function knowExec(env: L_Env, node: KnowNode): RType {
   //   try {
@@ -831,66 +891,6 @@ export namespace executor {
   //     return cEnvRType(env, RType.Error);
   //   }
   // }
-
-  /**
-   * know shortOpt: store directly
-   * know if-then: if then is shortOpt, store it bound with if as req; if then is if-then, inherit father req and do knowExec again.
-   */
-  //! This one of the functions in which new facts are generated.
-  //! In order to unify interface, after checking a fact, we use KnowExec to emit new fact
-  export function knowExec(
-    env: L_Env,
-    node: KnowNode,
-    fatherReq: FactNode[] = []
-  ): RType {
-    try {
-      for (const fact of node.facts) {
-        if (fact instanceof ShortCallOptNode) {
-          const factType = env.getOptType(fact.fullName);
-          if (factType === undefined)
-            throw Error(`${fact.fullName} not declared.`);
-
-          const isT = env.varsAreNotDeclared(fact.params.flat());
-          if (isT)
-            throw Error(`${fact.params.flat().toString()} not declared.`);
-
-          env.addShortOptFact(env, fact, [...fatherReq]);
-
-          if (fact.useName !== "") {
-            fact.useName = "";
-            env.newBy(fact.useName, fact);
-          }
-        } else if (fact instanceof IfThenNode) {
-          // store facts
-          for (const onlyIf of fact.onlyIfs) {
-            if (onlyIf instanceof ShortCallOptNode)
-              env.addShortOptFact(env, onlyIf, [...fatherReq, ...fact.req]);
-            else
-              knowExec(env, new KnowNode([onlyIf]), [
-                ...fatherReq,
-                ...fact.req,
-              ]);
-          }
-          // store by
-          if (fact.useName !== "") {
-            env.newBy(fact.useName, fact);
-            fact.useName = "";
-          }
-        }
-      }
-
-      return RType.True;
-    } catch (error) {
-      let m = `'${node.toString()}'`;
-      if (error instanceof Error) m += ` ${error.message}`;
-      yaHandleExecError(env, m);
-      throw error;
-    }
-  }
-
-  function yaHandleExecError(env: L_Env, m: string) {
-    env.newMessage(m);
-  }
 
   // function isFactDeclared(env: L_Env, fact: FactNode): Boolean {
   //   if (fact instanceof ShortCallOptNode) {

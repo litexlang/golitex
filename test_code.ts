@@ -28,7 +28,7 @@ export const testList = [
   "def obj2 x | => {};",
   "def p2 x | obj(x), obj2(x);",
   "let y | obj(y);",
-  "if | obj2(y) => {p2(y);}",
+  "if | obj2(y) => {p2(y)};",
 ];
 
 export const testCode = false;
