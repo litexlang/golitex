@@ -168,7 +168,7 @@ export namespace parser {
         const relParser: Function | undefined = factParserSignals[tokens[0]];
         let out: FactNode;
         if (relParser === undefined) {
-          out = shortCallOptParse(env, tokens, false);
+          out = shortCallOptParse(env, tokens);
         } else {
           out = relParser(env, tokens, true);
         }
@@ -222,11 +222,11 @@ export namespace parser {
   const factParserSignals: { [key: string]: Function } = {
     or: orParse,
     not: notParse,
-    if: yaIfThenParse,
-    "?": yaIfThenParse,
+    if: ifThenParse,
+    "?": ifThenParse,
   };
 
-  function factParse(env: L_Env, tokens: string[], addHash = false): FactNode {
+  function factParse(env: L_Env, tokens: string[]): FactNode {
     const start = tokens[0];
     const index = tokens.length;
 
@@ -234,9 +234,9 @@ export namespace parser {
       const relParser: Function | undefined = factParserSignals[tokens[0]];
       let out: FactNode;
       if (relParser === undefined) {
-        out = shortCallOptParse(env, tokens, addHash);
+        out = shortCallOptParse(env, tokens);
       } else {
-        out = relParser(env, tokens, addHash);
+        out = relParser(env, tokens);
       }
 
       if (isCurToken(tokens, "by")) {
@@ -254,42 +254,38 @@ export namespace parser {
   }
 
   // parse p1:p2:p3(x1,x2:x3:x4,x5,x6)
-  function shortCallOptParse(
-    env: L_Env,
-    tokens: string[],
-    addHash = false
-  ): ShortCallOptNode {
+  function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
     const start = tokens[0];
     const index = tokens.length;
 
     try {
       let nameAsParam: string = shiftVar(tokens);
 
-      const params: string[] = [];
+      const vars: string[] = [];
       skip(tokens, "(");
 
       const curParams: string[] = [];
       while (!isCurToken(tokens, ")")) {
-        params.push(shiftVar(tokens));
+        vars.push(shiftVar(tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
 
       skip(tokens, ")");
 
-      return new ShortCallOptNode(nameAsParam, params);
+      return new ShortCallOptNode(nameAsParam, vars);
     } catch (error) {
       handleParseError(env, `${start} is invalid operator.`, index, start);
       throw error;
     }
   }
 
-  function notParse(env: L_Env, tokens: string[], addHash = false): FactNode {
+  function notParse(env: L_Env, tokens: string[]): FactNode {
     const start = tokens[0];
     const index = tokens.length;
 
     try {
       skip(tokens, "not");
-      const fact = factParse(env, tokens, addHash);
+      const fact = factParse(env, tokens);
       fact.isT = false;
       return fact;
     } catch (error) {
@@ -298,7 +294,7 @@ export namespace parser {
     }
   }
 
-  function orParse(env: L_Env, tokens: string[], addHash = false): OrNode {
+  function orParse(env: L_Env, tokens: string[]): OrNode {
     const start = tokens[0];
     const index = tokens.length;
 
@@ -309,7 +305,7 @@ export namespace parser {
 
       const facts: FactNode[] = [];
       while (!isCurToken(tokens, "}")) {
-        facts.push(factParse(env, tokens, addHash));
+        facts.push(factParse(env, tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
 
@@ -321,56 +317,32 @@ export namespace parser {
     }
   }
 
-  function yaIfThenParse(
-    env: L_Env,
-    tokens: string[],
-    addHash = false
-  ): IfThenNode {
+  function ifThenParse(env: L_Env, tokens: string[]): IfThenNode {
     const start = tokens[0];
     const index = tokens.length;
 
     try {
       skip(tokens, ["if", "?"]);
 
-      const vars = varLstParse(
-        env,
-        tokens,
-        ["|", ...ThenKeywords],
-        false,
-        addHash
-      );
+      const vars = varLstParse(env, tokens, ["|", ...ThenKeywords], false);
 
       let req: FactNode[] = [];
       if (ThenKeywords.includes(tokens[0])) {
         skip(tokens, ThenKeywords);
       } else {
         skip(tokens, "|");
-        req = listParse<FactNode>(
-          env,
-          tokens,
-          factParse,
-          ["=>", "then"],
-          true,
-          addHash
-        );
+        req = listParse<FactNode>(env, tokens, factParse, ["=>", "then"], true);
       }
 
       let onlyIfs: ShortCallOptNode[];
       if (!isCurToken(tokens, "{")) {
-        const fact = factParse(env, tokens, addHash);
+        const fact = factParse(env, tokens);
         if (!(fact instanceof ShortCallOptNode))
           throw Error(`${fact.toString()} is not operator-type fact.`);
         else onlyIfs = [fact];
       } else {
         skip(tokens, "{");
-        const out = listParse<FactNode>(
-          env,
-          tokens,
-          factParse,
-          ["}"],
-          true,
-          addHash
-        );
+        const out = listParse<FactNode>(env, tokens, factParse, ["}"], true);
         if (out.every((e) => e instanceof ShortCallOptNode)) {
           onlyIfs = out as ShortCallOptNode[];
         } else {
@@ -399,7 +371,6 @@ export namespace parser {
     parseFunc: (env: L_Env, tokens: string[], ...args: any[]) => T,
     end: string[],
     skipEnd: Boolean = true,
-    addHash: Boolean = false,
     separation: string = ","
   ): T[] {
     const start = tokens[0];
@@ -408,7 +379,7 @@ export namespace parser {
     try {
       const out: T[] = [];
       while (!end.includes(tokens[0])) {
-        out.push(parseFunc(env, tokens, addHash));
+        out.push(parseFunc(env, tokens));
         if (isCurToken(tokens, separation)) skip(tokens, separation);
       }
 
@@ -426,7 +397,6 @@ export namespace parser {
     tokens: string[],
     end: string[],
     skipEnd: Boolean = true,
-    addHash: Boolean = true,
     separation: string = ","
   ): string[] {
     const start = tokens[0];
@@ -436,9 +406,6 @@ export namespace parser {
       const out: string[] = [];
       while (!end.includes(tokens[0])) {
         let curTok = shiftVar(tokens);
-        if (addHash && env.varsAreNotDeclared(curTok)) {
-          curTok = "#" + curTok;
-        }
         out.push(curTok);
         if (isCurToken(tokens, separation)) skip(tokens, separation);
       }
@@ -463,7 +430,7 @@ export namespace parser {
         nodeType = shiftVar(tokens);
       }
 
-      const vars = varLstParse(env, tokens, ["|", ...StdStmtEnds], false, true);
+      const vars = varLstParse(env, tokens, ["|", ...StdStmtEnds], false);
 
       if (StdStmtEnds.includes(tokens[0])) {
         skip(tokens, StdStmtEnds);
@@ -477,8 +444,7 @@ export namespace parser {
         tokens,
         factParse,
         [...StdStmtEnds, "=>"],
-        false,
-        true //! DeclNodeParse addHash = true
+        false
       );
 
       let onlyIfs: ShortCallOptNode[] = [];
@@ -488,7 +454,7 @@ export namespace parser {
         skip(tokens, "=>");
 
         if (!isCurToken(tokens, "{")) {
-          onlyIfs = [shortCallOptParse(env, tokens, true)];
+          onlyIfs = [shortCallOptParse(env, tokens)];
         } else {
           skip(tokens, "{");
           onlyIfs = listParse<ShortCallOptNode>(
@@ -496,7 +462,6 @@ export namespace parser {
             tokens,
             shortCallOptParse,
             ["}"],
-            true,
             true
           );
         }
@@ -522,7 +487,7 @@ export namespace parser {
     try {
       skip(tokens, ProveKeywords);
 
-      const toProve = yaIfThenParse(env, tokens, false);
+      const toProve = ifThenParse(env, tokens);
 
       skip(tokens, "{");
 

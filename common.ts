@@ -57,5 +57,4 @@ export const L_Keywords = [
 ];
 
 export const StdStmtEnds = [";", "\n"];
-export const yaIfKeywords = ["$"];
 export const LetKeywords = ["let"];

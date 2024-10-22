@@ -41,13 +41,13 @@ export namespace checker {
        * 2.1 locally correct
        * 2.2 correctness is given by father
        */
-      if (storedFact.vars.every((s, j) => checkSingleVar(s, opt.params[j]))) {
+      if (storedFact.vars.every((s, j) => checkSingleVar(s, opt.vars[j]))) {
         /**
          * check current opt by replacing potential hashed var with current var
          */
         //! I think the following fixing is buggy
         const freeToFixMap = new Map<string, string>();
-        storedFact.vars.forEach((s, j) => freeToFixMap.set(s, opt.params[j]));
+        storedFact.vars.forEach((s, j) => freeToFixMap.set(s, opt.vars[j]));
 
         if (
           storedFact.req.every((e) => {
@@ -104,7 +104,7 @@ export namespace checker {
 
     for (const storedFact of facts) {
       if (
-        storedFact.vars.every((s, j) => checkSingleVar(s, opt.params[j])) &&
+        storedFact.vars.every((s, j) => checkSingleVar(s, opt.vars[j])) &&
         storedFact.req.length === 0 &&
         storedFact.isT
       ) {
@@ -147,7 +147,7 @@ export namespace checker {
     } else if (e instanceof ShortCallOptNode) {
       return new ShortCallOptNode(
         e.fullName,
-        e.params.map((s) => {
+        e.vars.map((s) => {
           const out = freeToFixMap.get(s);
           if (out === undefined) return s;
           else return out;

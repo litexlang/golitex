@@ -25,13 +25,19 @@ export const testList2 = [
   "def inf if x | obj(x) => {obj3(x)}",
 ];
 
-export const testList = [
+export const testList3 = [
   "def obj if x | => {};",
   "def obj2 x | obj(x) ;",
   "def obj3 if x | obj(x), obj2(x) => {} ",
   "prove if x | obj(x), obj3(x) => {obj2(x)} {}", // obj3 is useless
 ];
 
-export const testList4 = [";;;;;"];
+export const testList4 = [";;;\n\n;;"];
+
+export const testList = [
+  "def p1 if x | => {}",
+  "def p2 x | p1(x);",
+  // "def p3 x | p2(x);",
+];
 
 export const testCode = false;

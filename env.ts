@@ -57,12 +57,12 @@ export class L_Env {
   addShortOptFact(opt: ShortCallOptNode, req: FactNode[]) {
     if (this.shortOptFacts.get(opt.fullName) === undefined) {
       this.shortOptFacts.set(opt.fullName, [
-        new StoredFactValue(opt.params, req, opt.isT),
+        new StoredFactValue(opt.vars, req, opt.isT),
       ]);
     } else {
       this.shortOptFacts
         .get(opt.fullName)!
-        .push(new StoredFactValue(opt.params, req, opt.isT));
+        .push(new StoredFactValue(opt.vars, req, opt.isT));
     }
   }
 
