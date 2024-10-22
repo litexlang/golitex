@@ -183,7 +183,11 @@ const codes: string[] = [
   // `let VAR;`,
   // `set(VAR);`,
   // "prove if x | set(x) => {set(x)} {set2(x);}",
-  "set(2); set(1);",
+  // "set(2); set(1);",
+  "def obj if x | => {}",
+  "def obj2 x | obj(x) ;",
+  "def obj3 if x | obj(x), obj2(x) => {} ",
+  "prove if x | obj(x), obj3(x) => {obj2(x)} {}", // obj3 is useless
 ];
 
 function testLexer() {

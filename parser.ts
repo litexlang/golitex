@@ -71,7 +71,7 @@ export namespace parser {
     try {
       const result: L_Node[] = [];
       while (tokens.length > 0) {
-        LiTexStmtParse(env, tokens, result);
+        result.push(NodeParse(env, tokens));
       }
       return result;
     } catch (error) {
@@ -122,36 +122,34 @@ export namespace parser {
     }
   }
 
-  export function LiTexStmtParse(
-    env: L_Env,
-    tokens: string[],
-    putInto: L_Node[]
-  ) {
-    const start = tokens[0];
-    const index = tokens.length;
+  // export function LiTexStmtParse(
+  //   env: L_Env,
+  //   tokens: string[],
+  //   putInto: L_Node[]
+  // ) {
+  //   const start = tokens[0];
+  //   const index = tokens.length;
 
-    try {
-      const func = KeywordFunctionMap[tokens[0]];
-      const funcName = tokens[0];
-      if (func) {
-        const node = func(env, tokens);
-        if (KnowTypeKeywords.includes(funcName)) {
-          skip(tokens, StdStmtEnds);
-        }
-        if (node) {
-          putInto.push(node);
-        } else {
-          return;
-        }
-      } else {
-        callOptsParse(env, tokens, putInto);
-        return;
-      }
-    } catch (error) {
-      handleParseError(env, "Stmt", index, start);
-      throw error;
-    }
-  }
+  //   try {
+  //     if (func) {
+  //       const node = func(env, tokens);
+  //       if (KnowTypeKeywords.includes(funcName)) {
+  //         skip(tokens, StdStmtEnds);
+  //       }
+  //       if (node) {
+  //         putInto.push(node);
+  //       } else {
+  //         return;
+  //       }
+  //     } else {
+  //       callOptsParse(env, tokens, putInto);
+  //       return;
+  //     }
+  //   } catch (error) {
+  //     handleParseError(env, "Stmt", index, start);
+  //     throw error;
+  //   }
+  // }
 
   function knowParse(env: L_Env, tokens: string[]): KnowNode {
     const start = tokens[0];
@@ -178,67 +176,6 @@ export namespace parser {
       return knowNode;
     } catch (error) {
       handleParseError(env, "know", index, start);
-      throw error;
-    }
-  }
-
-  function blockParse(env: L_Env, tokens: string[]): L_Node[] {
-    const start = tokens[0];
-    const index = tokens.length;
-
-    try {
-      const result: L_Node[] = [];
-      skip(tokens, "{"); // skip {
-
-      while (!isCurToken(tokens, "}")) {
-        LiTexStmtParse(env, tokens, result);
-      }
-
-      skip(tokens, "}"); // skip }
-
-      return result;
-    } catch (error) {
-      handleParseError(env, "{}", index, start);
-      throw error;
-    }
-  }
-
-  function callOptsParse(
-    env: L_Env,
-    tokens: string[],
-    putInto: L_Node[] | undefined,
-    end: string[] = StdStmtEnds
-  ): FactNode[] {
-    const start = tokens[0];
-    const index = tokens.length;
-
-    try {
-      const callOpts: FactNode[] = [];
-
-      while (1) {
-        callOpts.push(factParse(env, tokens));
-        if (tokens[0] === ",") {
-          skip(tokens, ",");
-        } else if (end.includes(tokens[0])) {
-          break;
-        } else if (
-          specialChars.includes(tokens[0]) &&
-          !StdStmtEnds.includes(tokens[0])
-        ) {
-          throw Error(
-            tokens[0] +
-              "is not expected to appear here.',' is used to split between two facts."
-          );
-        }
-      }
-
-      skip(tokens, end);
-
-      callOpts.forEach((e) => putInto?.push(e));
-
-      return callOpts;
-    } catch (error) {
-      handleParseError(env, "operators", index, start);
       throw error;
     }
   }
