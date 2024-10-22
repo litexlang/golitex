@@ -1,6 +1,6 @@
 // import { CallOptNode } from "./ast";
 import { L_Env } from "./env";
-import { hRunErr, RType } from "./executor";
+import { RType } from "./executor";
 
 export const UdfErr = undefined;
 export type UdfErr = undefined;
@@ -32,14 +32,14 @@ export function cErr_Out(err: string = "Error") {
 //   return { v: null, err: `${opt.optName} undeclared.` };
 // }
 
-export function cEnvRType(
-  env: L_Env,
-  t: RType = RType.Error,
-  m: string = ""
-): RType {
-  hRunErr(env, t, m);
-  return t;
-}
+// export function cEnvRType(
+//   env: L_Env,
+//   t: RType = RType.Error,
+//   m: string = ""
+// ): RType {
+//   hRunErr(env, t, m);
+//   return t;
+// }
 
 // export function relTNotFoundEnvErr(env: L_Env, node: CallOptNode): RType {
 //   return cEnvRType(env, RType.Error, `${CallOptNode.toString()} undeclared`);

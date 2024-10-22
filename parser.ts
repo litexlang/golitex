@@ -16,7 +16,7 @@ import {
   KnowTypeKeywords,
   specialChars,
   StdStmtEnds,
-  IfThenKeywords,
+  IfKeywords,
   DefKeywords,
   LetKeywords,
   ThenKeywords,
@@ -507,7 +507,7 @@ export namespace parser {
       let nodeType = shiftVar(tokens);
       const name = shiftVar(tokens);
 
-      if (IfThenKeywords.includes(tokens[0])) {
+      if (IfKeywords.includes(tokens[0])) {
         nodeType = shiftVar(tokens);
       }
 
@@ -533,7 +533,6 @@ export namespace parser {
       if (StdStmtEnds.includes(tokens[0])) {
         skip(tokens, StdStmtEnds);
       } else if (isCurToken(tokens, "=>")) {
-        nodeType = IfThenKeywords[0];
         skip(tokens, "=>");
 
         if (!isCurToken(tokens, "{")) {
@@ -551,7 +550,7 @@ export namespace parser {
         }
       }
 
-      if (IfThenKeywords.includes(nodeType)) {
+      if (IfKeywords.includes(nodeType)) {
         return new IfThenDeclNode(name, vars, req, onlyIfs);
       } else if (DefKeywords.includes(nodeType)) {
         return new DefDeclNode(name, vars, req, onlyIfs);

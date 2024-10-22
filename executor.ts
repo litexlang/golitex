@@ -13,7 +13,7 @@ import {
   ByNode,
 } from "./ast";
 import { L_Env } from "./env";
-import { cEnvRType, isRTypeTrue } from "./shared";
+import { isRTypeTrue } from "./shared";
 import { checker } from "./checker";
 import { L_Builtins } from "./builtins";
 
@@ -118,17 +118,10 @@ export namespace executor {
 
       knowExec(env, new KnowNode(node.facts));
 
-      // for (let i = 0; i < node.facts.length; i++) {
-      //   //! In theory, ANY FactNode can be known, but currently knowExec is not refactored.
-      // if (node.properties[i] instanceof CallOptNode) {
-      //   let info = knowFactExec(env, node.properties[i] as CallOptNode);
-      //   if (isNull(info)) return cEnvRType(env, RType.Error);
-      // }
-      // }
-
       return RType.True;
     } catch (error) {
-      return cEnvRType(env, RType.Error, "let");
+      env.newMessage(`Error: ${node.toString()}`);
+      return RType.Error;
     }
   }
 
@@ -173,13 +166,9 @@ export namespace executor {
     } catch (error) {
       let m = `'${node.toString()}'`;
       if (error instanceof Error) m += ` ${error.message}`;
-      yaHandleExecError(env, m);
+      env.newMessage(m);
       throw error;
     }
-  }
-
-  function yaHandleExecError(env: L_Env, m: string) {
-    env.newMessage(m);
   }
 
   function declExec(env: L_Env, node: DeclNode): RType {
@@ -192,17 +181,48 @@ export namespace executor {
       if (node instanceof DefDeclNode) {
         factType = FactType.Def;
         env.setOptType(node.name, factType);
+        const definedFact = new ShortCallOptNode(node.name, [node.freeVars]);
+        /** Notice the following 4 knowExec can be reduced to 2 */
+        // itself => req
+        knowExec(
+          env,
+          new KnowNode([new IfThenNode(node.freeVars, node.req, [definedFact])])
+        );
+
+        // req => itself
+        knowExec(
+          env,
+          new KnowNode([new IfThenNode(node.freeVars, [definedFact], node.req)])
+        );
+
+        // itself => onlyIf
         knowExec(
           env,
           new KnowNode([
-            new IfThenNode(node.freeVars, node.req, [
-              new ShortCallOptNode(node.name, [node.freeVars]),
-            ]),
+            new IfThenNode(node.freeVars, [definedFact], node.onlyIfs),
           ])
+        );
+
+        // req => onlyIf
+        knowExec(
+          env,
+          new KnowNode([new IfThenNode(node.freeVars, node.req, node.onlyIfs)])
         );
       } else if (node instanceof IfThenDeclNode) {
         factType = FactType.IfThen;
         env.setOptType(node.name, factType);
+        // req + itself => onlyIf
+        const definedFact = new ShortCallOptNode(node.name, [node.freeVars]);
+        knowExec(
+          env,
+          new KnowNode([
+            new IfThenNode(
+              node.freeVars,
+              [definedFact, ...node.req],
+              node.onlyIfs
+            ),
+          ])
+        );
       } else if (node instanceof OrNode) {
         factType = FactType.Or;
         env.setOptType(node.name, factType);
@@ -212,7 +232,7 @@ export namespace executor {
     } catch (error) {
       let m = `'${node.toString()}'`;
       if (error instanceof Error) m += ` ${error.message}`;
-      yaHandleExecError(env, m);
+      env.newMessage(m);
       throw error;
     }
   }

@@ -26,7 +26,7 @@ export const KnowTypeKeywords = [
   "!",
 ];
 export const ThenKeywords = ["then", "=>"];
-export const IfThenKeywords = ["imply", "?"];
+export const IfKeywords = ["if", "?"];
 export const ExistKeywords = ["exist"];
 export const DefKeywords = [":", "def"];
 export const redefineTemplateDeclarationKeywords = ["re_def"];
@@ -34,7 +34,7 @@ export const TemplateDeclarationKeywords = [
   ...redefineTemplateDeclarationKeywords,
   ...DefKeywords,
   ...ExistKeywords,
-  ...IfThenKeywords,
+  ...IfKeywords,
 ];
 
 export const SymbolsFactsSeparator = "|";
@@ -56,5 +56,5 @@ export const L_Keywords = [
 ];
 
 export const StdStmtEnds = [";", "\n"];
-export const yaIfThenKeywords = ["$"];
+export const yaIfKeywords = ["$"];
 export const LetKeywords = ["let"];
