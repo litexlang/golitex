@@ -17,11 +17,7 @@ export namespace checker {
    * @param ignore  which fact (ShortCallOpt) to ignore in order to avoid "req => itself, itself => req"-kind loop
    * @returns RType Error, True, False
    */
-  export function checkShortOpt(
-    env: L_Env,
-    opt: ShortCallOptNode,
-    ignore: string[] = []
-  ): RType {
+  export function checkShortOpt(env: L_Env, opt: ShortCallOptNode): RType {
     const facts = env.getShortOptFact(opt.fullName);
     if (!facts) return RType.Error;
 
@@ -55,23 +51,10 @@ export namespace checker {
                 fixFree(e, freeToFixMap) as ShortCallOptNode
               );
               return out === RType.True;
+            } else if (e instanceof IfThenNode) {
+              //! I FORBID IF-THEN AS STORED REQ TO AVOID DEAD-LOCK AND TOO-LONG SEARCHING
+              return false;
             }
-            //  else if (e instanceof IfThenNode) {
-            //   //! I FORBID IF-THEN AS STORED REQ TO AVOID DEAD-LOCK AND TOO-LONG SEARCHING
-            //   return false;
-            // }
-
-            // const out = checker.check(env, fixFree(e, freeToFixMap));
-            // switch (out) {
-            //   case RType.True:
-            //     return true;
-            //   case RType.Unknown: {
-            //     const father = env.getFather();
-            //     return father ? checkShortOpt(father, opt) : false;
-            //   }
-            //   default:
-            //     return false;
-            // }
           })
         ) {
           env.newMessage(`${opt} is true, by ${storedFact}`);
