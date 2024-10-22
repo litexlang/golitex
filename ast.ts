@@ -14,7 +14,6 @@ export abstract class FactNode extends L_Node {
 export class OrNode extends FactNode {
   constructor(public facts: FactNode[]) {
     super();
-    this.facts = facts;
   }
 }
 
@@ -27,8 +26,6 @@ export class IfThenNode extends FactNode {
     public onlyIfs: FactNode[] = []
   ) {
     super();
-    this.req = req;
-    this.onlyIfs = onlyIfs;
   }
 
   toString() {
@@ -44,8 +41,6 @@ export class ShortCallOptNode extends FactNode {
     public params: string[][]
   ) {
     super();
-    this.fullName = fullName;
-    this.params = params;
   }
 
   nameAsLst() {
@@ -78,10 +73,6 @@ export abstract class DeclNode extends L_Node {
     public onlyIfs: ShortCallOptNode[] = []
   ) {
     super();
-    this.name = name;
-    this.freeVars = freeVars;
-    this.req = req;
-    this.onlyIfs = onlyIfs;
   }
 }
 
@@ -93,7 +84,6 @@ export class KnowNode extends L_Node {
 
   constructor(public facts: FactNode[] = []) {
     super();
-    this.facts = facts;
   }
 
   toString(): string {
@@ -109,11 +99,18 @@ export class LetNode extends L_Node {
     public facts: FactNode[]
   ) {
     super();
-    this.vars = vars;
-    this.facts = facts;
   }
 
   toString() {
     return `${this.vars.join(", ")}| ${this.facts.map((s) => s.toString()).join(", ")}`;
+  }
+}
+
+export class ProveNode extends L_Node {
+  constructor(
+    public toProve: IfThenNode,
+    public block: L_Node[]
+  ) {
+    super();
   }
 }

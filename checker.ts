@@ -59,16 +59,6 @@ export namespace checker {
           storedFact.req.every((e) => {
             const out = checkByFactsWithNoReq(env, fixFree(e, freeToFixMap));
             return out === RType.True;
-            // if (e instanceof ShortCallOptNode) {
-            //   const out = checkShortOptByFactsWithNoReq(
-            //     env,
-            //     fixFree(e, freeToFixMap) as ShortCallOptNode
-            //   );
-            //   return out === RType.True;
-            // } else if (e instanceof IfThenNode) {
-            //   //! I FORBID IF-THEN AS STORED REQ TO AVOID DEAD-LOCK AND TOO-LONG SEARCHING
-            //   return false;
-            // }
           })
         ) {
           env.newMessage(`${opt} is true, by ${storedFact}`);
