@@ -180,8 +180,9 @@ const codes: string[] = [
   // `: obj x | ;  // Everything is an object.`,
   // `: item x,A | set(A)  => {} ;`,
   // `let EMPTY_SET |  if x => not item(x,EMPTY_SET); ; `,
-  `let VAR;`,
-  `set(VAR);`,
+  // `let VAR;`,
+  // `set(VAR);`,
+  "prove if x | set(x) => {set(x)} {set2(x);}",
 ];
 
 function testLexer() {

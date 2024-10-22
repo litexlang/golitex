@@ -10,6 +10,8 @@ import {
   IfThenDeclNode,
   FactNode,
   ByNode,
+  ProveNode,
+  FactsNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -20,7 +22,9 @@ import {
   DefKeywords,
   LetKeywords,
   ThenKeywords,
+  ProveKeywords,
 } from "./common";
+import { start } from "repl";
 
 export namespace parser {
   function skip(tokens: string[], s: string | string[] = "") {
@@ -92,11 +96,32 @@ export namespace parser {
     let: letParse,
     def: DeclNodeParse,
     ":": DeclNodeParse,
+    prove: proveParse,
     // exist: existParse,
     // prove: proveParse,
     // by: byParse,
     // thm: thmParse,
   };
+
+  export function NodeParse(env: L_Env, tokens: string[]): L_Node {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      const func = KeywordFunctionMap[tokens[0]];
+      const funcName = tokens[0];
+      if (func) {
+        const node = func(env, tokens);
+        return node;
+      } else {
+        const nodes = listParse<FactNode>(env, tokens, factParse, [";"]);
+        return new FactsNode(nodes);
+      }
+    } catch (error) {
+      handleParseError(env, "node", index, start);
+      throw error;
+    }
+  }
 
   export function LiTexStmtParse(
     env: L_Env,
@@ -559,6 +584,28 @@ export namespace parser {
       throw Error();
     } catch (error) {
       handleParseError(env, "Parsing variables", index, start);
+      throw error;
+    }
+  }
+
+  function proveParse(env: L_Env, tokens: string[]): ProveNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, ProveKeywords);
+
+      const toProve = yaIfThenParse(env, tokens, false);
+
+      skip(tokens, "{");
+
+      const nodes = listParse<L_Node>(env, tokens, NodeParse, ["}"]);
+
+      // TODO Unfold FactsNode
+
+      return new ProveNode(toProve, nodes);
+    } catch (error) {
+      handleParseError(env, "Parsing prove", index, start);
       throw error;
     }
   }

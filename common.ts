@@ -22,6 +22,7 @@ export const KnowTypeKeywords = [
   "@",
   "know",
   "suppose",
+  "assume",
   "know_everything",
   "!",
 ];
@@ -38,7 +39,7 @@ export const TemplateDeclarationKeywords = [
 ];
 
 export const SymbolsFactsSeparator = "|";
-export const ProveKeywords = ["&", "prove"];
+export const ProveKeywords = ["prove"];
 export const suchThats = ["st", "is"];
 export const byLBracket = "[";
 export const byRBracket = "]";

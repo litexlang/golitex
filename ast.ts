@@ -114,3 +114,10 @@ export class ProveNode extends L_Node {
     super();
   }
 }
+
+// Works as a placeholder for facts when parsing. does not go to executor stage.
+export class FactsNode extends L_Node {
+  constructor(public facts: FactNode[]) {
+    super();
+  }
+}
