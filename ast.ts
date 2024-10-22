@@ -50,7 +50,7 @@ export class IfThenNode extends FactNode {
 export class ShortCallOptNode extends FactNode {
   constructor(
     public fullName: string,
-    public params: string[][]
+    public params: string[]
   ) {
     super();
   }
@@ -68,8 +68,8 @@ export class ShortCallOptNode extends FactNode {
   }
 
   hashVars(varsToHash: string[]) {
-    this.params = this.params.map((ls) =>
-      ls.map((s) => (varsToHash.includes(s) ? "#" + s : s))
+    this.params = this.params.map((s) =>
+      varsToHash.includes(s) ? "#" + s : s
     );
   }
 }

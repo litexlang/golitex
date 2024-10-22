@@ -263,34 +263,20 @@ export namespace parser {
     const index = tokens.length;
 
     try {
-      let nameAsParam: string[] = [];
-      while (!isCurToken(tokens, "(")) {
-        let curTok = shiftVar(tokens);
-        nameAsParam.push(curTok);
-        if (isCurToken(tokens, ":")) skip(tokens, ":");
-      }
+      let nameAsParam: string = shiftVar(tokens);
 
+      const params: string[] = [];
       skip(tokens, "(");
-      const params: string[][] = [];
+
+      const curParams: string[] = [];
       while (!isCurToken(tokens, ")")) {
-        const curParams: string[] = [];
-
-        while (!isCurToken(tokens, ":") && !isCurToken(tokens, ")")) {
-          let curTok = shiftVar(tokens);
-          if (addHash && env.varsAreNotDeclared(curTok)) {
-            curTok = "#" + curTok;
-          }
-          curParams.push(curTok);
-          if (isCurToken(tokens, ",")) skip(tokens, ",");
-        }
-
-        params.push(curParams);
-        if (isCurToken(tokens, ":")) skip(tokens, ":");
+        params.push(shiftVar(tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
 
       skip(tokens, ")");
 
-      return new ShortCallOptNode(nameAsParam.join(":"), params);
+      return new ShortCallOptNode(nameAsParam, params);
     } catch (error) {
       handleParseError(env, `${start} is invalid operator.`, index, start);
       throw error;

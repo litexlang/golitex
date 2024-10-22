@@ -5,22 +5,6 @@ import { parser } from "./parser";
 import { setTheory, testTao } from "./tao_analysis_one";
 import { testCode, testList } from "./test_code";
 
-function testParser(codes: string[]) {
-  const env = new L_Env();
-  for (let i = 0; i < codes.length; i++) {
-    const tokens = scan(codes[i]);
-    // const tokensCopy = [...tokens];
-    const result = parser.L_StmtsParse(env, tokens);
-    if (result === null) {
-      env.printClearMessage();
-    } else {
-      for (let i = 0; i < result.length; i++) {
-        console.log(result[i]);
-      }
-    }
-  }
-}
-
 export function testListOfCodes(exprs: string[]): RType[] {
   const copied = [...exprs];
   const env = new L_Env();

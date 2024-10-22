@@ -1,7 +1,7 @@
 import { ShortCallOptNode, FactNode, FactType } from "./ast";
 export class StoredFactValue {
   constructor(
-    public vars: string[][],
+    public vars: string[],
     public req: FactNode[],
     public isT: Boolean = false
   ) {}
@@ -9,7 +9,7 @@ export class StoredFactValue {
   toString() {
     let result = "";
 
-    result += this.vars.map((subArray) => subArray.join(", ")).join("; ");
+    result += this.vars.join(", ");
 
     if (this.req.length > 0) {
       result += " | ";

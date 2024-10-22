@@ -183,7 +183,7 @@ export namespace executor {
       if (node instanceof DefDeclNode) {
         factType = FactType.Def;
         env.setOptType(node.name, factType);
-        const definedFact = new ShortCallOptNode(node.name, [node.freeVars]);
+        const definedFact = new ShortCallOptNode(node.name, node.freeVars);
         /** Notice the following 4 knowExec can be reduced to 2 */
         // itself => req
         knowExec(
@@ -215,7 +215,7 @@ export namespace executor {
         factType = FactType.IfThen;
         env.setOptType(node.name, factType);
         // req + itself => onlyIf
-        const definedFact = new ShortCallOptNode(node.name, [node.freeVars]);
+        const definedFact = new ShortCallOptNode(node.name, node.freeVars);
         knowExec(
           env,
           new KnowNode([

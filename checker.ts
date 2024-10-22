@@ -41,19 +41,13 @@ export namespace checker {
        * 2.1 locally correct
        * 2.2 correctness is given by father
        */
-      if (
-        storedFact.vars.every((ls, i) =>
-          ls.every((s, j) => checkSingleVar(s, opt.params[i][j]))
-        )
-      ) {
+      if (storedFact.vars.every((s, j) => checkSingleVar(s, opt.params[j]))) {
         /**
          * check current opt by replacing potential hashed var with current var
          */
         //! I think the following fixing is buggy
         const freeToFixMap = new Map<string, string>();
-        storedFact.vars.forEach((lst, i) =>
-          lst.forEach((s, j) => freeToFixMap.set(s, opt.params[i][j]))
-        );
+        storedFact.vars.forEach((s, j) => freeToFixMap.set(s, opt.params[j]));
 
         if (
           storedFact.req.every((e) => {
@@ -110,9 +104,7 @@ export namespace checker {
 
     for (const storedFact of facts) {
       if (
-        storedFact.vars.every((ls, i) =>
-          ls.every((s, j) => checkSingleVar(s, opt.params[i][j]))
-        ) &&
+        storedFact.vars.every((s, j) => checkSingleVar(s, opt.params[j])) &&
         storedFact.req.length === 0 &&
         storedFact.isT
       ) {
@@ -155,13 +147,11 @@ export namespace checker {
     } else if (e instanceof ShortCallOptNode) {
       return new ShortCallOptNode(
         e.fullName,
-        e.params.map((ls) =>
-          ls.map((s) => {
-            const out = freeToFixMap.get(s);
-            if (out === undefined) return s;
-            else return out;
-          })
-        )
+        e.params.map((s) => {
+          const out = freeToFixMap.get(s);
+          if (out === undefined) return s;
+          else return out;
+        })
       );
     }
     throw Error("fact should be if-then or shortOpt");
