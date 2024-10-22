@@ -183,32 +183,44 @@ export namespace executor {
         factType = FactType.Def;
         env.setOptType(node.name, factType);
         const definedFact = new ShortCallOptNode(node.name, node.freeVars);
-        /** Notice the following 4 knowExec can be reduced to 2 */
+        definedFact.hashVars(node.freeVars);
+
+        node.req.forEach((e) => e.hashVars(node.freeVars));
+        node.onlyIfs.forEach((e) => e.hashVars(node.freeVars));
+
+        const hashedReq =
+          /** Notice the following 4 knowExec can be reduced to 2 */
+          // req => itself
+          knowExec(
+            env,
+            new KnowNode([
+              new IfThenNode(definedFact.vars, node.req, [definedFact]),
+            ])
+          );
+
+        // //! The whole checking process might be locked by "req => itself, itself =>req"
         // itself => req
         knowExec(
           env,
-          new KnowNode([new IfThenNode(node.freeVars, node.req, [definedFact])])
-        );
-
-        // //! The whole checking process might be locked by "req => itself, itself =>req"
-        // req => itself
-        knowExec(
-          env,
-          new KnowNode([new IfThenNode(node.freeVars, [definedFact], node.req)])
+          new KnowNode([
+            new IfThenNode(definedFact.vars, [definedFact], node.req),
+          ])
         );
 
         // itself => onlyIf
         knowExec(
           env,
           new KnowNode([
-            new IfThenNode(node.freeVars, [definedFact], node.onlyIfs),
+            new IfThenNode(definedFact.vars, [definedFact], node.onlyIfs),
           ])
         );
 
         // req => onlyIf
         knowExec(
           env,
-          new KnowNode([new IfThenNode(node.freeVars, node.req, node.onlyIfs)])
+          new KnowNode([
+            new IfThenNode(definedFact.vars, node.req, node.onlyIfs),
+          ])
         );
       } else if (node instanceof IfThenDeclNode) {
         factType = FactType.IfThen;
