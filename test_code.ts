@@ -1,5 +1,5 @@
 // Aristotle induction
-export const testList = [
+export const testList0 = [
   "def obj if x | => {}",
   "def set x | obj(x);",
   "let y | set(y);",
@@ -31,5 +31,7 @@ export const testList3 = [
   "def obj3 if x | obj(x), obj2(x) => {} ",
   "prove if x | obj(x), obj3(x) => {obj2(x)} {}", // obj3 is useless
 ];
+
+export const testList = [";"];
 
 export const testCode = false;

@@ -67,27 +67,33 @@ export namespace parser {
     env.newMessage(`At ${start}[${index * -1}]: ${m}`);
   }
 
-  export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] | null {
+  export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] {
     try {
       const result: L_Node[] = [];
       while (tokens.length > 0) {
+        while (tokens.length > 0 && ["\n", ";"].includes(tokens[0])) {
+          tokens.shift();
+        }
+        if (tokens.length === 0) return result;
+
         result.push(NodeParse(env, tokens));
       }
       return result;
     } catch (error) {
-      return null;
+      env.newMessage(`Error: Parse Statement.`);
+      throw error;
     }
   }
 
   const KeywordFunctionMap: {
     [key: string]: Function; // (env: L_Env, tokens: string[]) => any;
   } = {
-    ";": (env: L_Env, tokens: string[]) => {
-      tokens.shift();
-    },
-    "\n": (env: L_Env, tokens: string[]) => {
-      tokens.shift();
-    },
+    // ";": (env: L_Env, tokens: string[]) => {
+    //   tokens.shift();
+    // },
+    // "\n": (env: L_Env, tokens: string[]) => {
+    //   tokens.shift();
+    // },
     know: knowParse,
     "@": knowParse,
     // have: haveParse,
@@ -107,7 +113,6 @@ export namespace parser {
 
     try {
       const func = KeywordFunctionMap[tokens[0]];
-      const funcName = tokens[0];
       if (func) {
         const node = func(env, tokens);
         return node;
@@ -535,7 +540,7 @@ export namespace parser {
 
       skip(tokens, "{");
 
-      const nodes = listParse<L_Node>(env, tokens, NodeParse, ["}"]);
+      const nodes = L_StmtsParse(env, tokens);
 
       // TODO Unfold FactsNode
 
