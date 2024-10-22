@@ -10,6 +10,18 @@ import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
 
 export namespace checker {
+  export function check(env: L_Env, node: FactNode): RType {
+    if (node instanceof ShortCallOptNode) {
+      return checkShortOpt(env, node);
+    } else if (node instanceof IfThenNode) {
+      return checkIfThen(env, node);
+    } else if (node instanceof ByNode) {
+      return checkBy(env, node);
+    }
+
+    return RType.Error;
+  }
+
   /**
    * Main function of checker
    * @param env the environment we are working at
@@ -66,22 +78,6 @@ export namespace checker {
     return RType.Unknown;
   }
 
-  function checkSingleVar(trueFact: string, toCheck: string) {
-    return trueFact.startsWith("#") || trueFact === toCheck;
-  }
-
-  export function check(env: L_Env, node: FactNode): RType {
-    if (node instanceof ShortCallOptNode) {
-      return checkShortOpt(env, node);
-    } else if (node instanceof IfThenNode) {
-      return checkIfThen(env, node);
-    } else if (node instanceof ByNode) {
-      return checkBy(env, node);
-    }
-
-    return RType.Error;
-  }
-
   /**
    * Steps
    * 1. open a new Env
@@ -104,6 +100,53 @@ export namespace checker {
 
   function checkBy(env: L_Env, node: ByNode): RType {
     return RType.Error;
+  }
+
+  export function checkByFactsWithNoReq(env: L_Env, node: FactNode) {
+    if (node instanceof ShortCallOptNode) {
+      return checkShortOptByFactsWithNoReq(env, node);
+    } else if (node instanceof IfThenNode) {
+      return checkIfThenByFactsWithNoReq(env, node);
+    }
+
+    return RType.Error;
+  }
+
+  function checkShortOptByFactsWithNoReq(env: L_Env, opt: ShortCallOptNode) {
+    const facts = env.getShortOptFact(opt.fullName);
+    if (!facts) return RType.Error;
+
+    for (const storedFact of facts) {
+      if (
+        storedFact.vars.every((ls, i) =>
+          ls.every((s, j) => checkSingleVar(s, opt.params[i][j]))
+        ) &&
+        storedFact.req.length === 0 &&
+        storedFact.isT
+      ) {
+        return RType.True;
+      }
+    }
+
+    return RType.Unknown;
+  }
+
+  function checkIfThenByFactsWithNoReq(env: L_Env, node: IfThenNode): RType {
+    const newEnv = new L_Env(env);
+    newEnv.declareNewVar(node.freeVars);
+    executor.knowExec(newEnv, new KnowNode(node.req));
+
+    for (const fact of node.onlyIfs) {
+      const out = checkByFactsWithNoReq(newEnv, fact);
+      if (out === RType.Error) return RType.Error;
+      else if ([RType.False, RType.Unknown].includes(out)) return out;
+    }
+
+    return RType.True;
+  }
+
+  function checkSingleVar(trueFact: string, toCheck: string) {
+    return trueFact.startsWith("#") || trueFact === toCheck;
   }
 
   function fixFree(e: FactNode, freeToFixMap: Map<string, string>): FactNode {
@@ -130,24 +173,5 @@ export namespace checker {
       );
     }
     throw Error("fact should be if-then or shortOpt");
-  }
-
-  function checkShortOptByFactsWithNoReq(env: L_Env, opt: ShortCallOptNode) {
-    const facts = env.getShortOptFact(opt.fullName);
-    if (!facts) return RType.Error;
-
-    for (const storedFact of facts) {
-      if (
-        storedFact.vars.every((ls, i) =>
-          ls.every((s, j) => checkSingleVar(s, opt.params[i][j]))
-        ) &&
-        storedFact.req.length === 0 &&
-        storedFact.isT
-      ) {
-        return RType.True;
-      }
-    }
-
-    return RType.Unknown;
   }
 }
