@@ -11,7 +11,6 @@ import {
   FactNode,
   ByNode,
   ProveNode,
-  FactsNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -24,7 +23,6 @@ import {
   ThenKeywords,
   ProveKeywords,
 } from "./common";
-import { start } from "repl";
 
 export namespace parser {
   function skip(tokens: string[], s: string | string[] = "") {
@@ -114,8 +112,9 @@ export namespace parser {
         const node = func(env, tokens);
         return node;
       } else {
-        const nodes = listParse<FactNode>(env, tokens, factParse, [";"]);
-        return new FactsNode(nodes);
+        const node = factParse(env, tokens);
+        skip(tokens, [",", ";"]);
+        return node;
       }
     } catch (error) {
       handleParseError(env, "node", index, start);

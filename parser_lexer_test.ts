@@ -182,7 +182,8 @@ const codes: string[] = [
   // `let EMPTY_SET |  if x => not item(x,EMPTY_SET); ; `,
   // `let VAR;`,
   // `set(VAR);`,
-  "prove if x | set(x) => {set(x)} {set2(x);}",
+  // "prove if x | set(x) => {set(x)} {set2(x);}",
+  "set(2); set(1);",
 ];
 
 function testLexer() {

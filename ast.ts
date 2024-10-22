@@ -9,12 +9,16 @@ export enum FactType {
 export abstract class FactNode extends L_Node {
   isT: Boolean = true;
   useName: string = "";
+
+  abstract hashVars(varsToHash: string[]): void;
 }
 
 export class OrNode extends FactNode {
   constructor(public facts: FactNode[]) {
     super();
   }
+
+  hashVars(varsToHash: string[]) {}
 }
 
 export class IfThenNode extends FactNode {
@@ -32,6 +36,14 @@ export class IfThenNode extends FactNode {
     const mainPart = `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     return mainPart + useNamePart;
+  }
+
+  hashVars(varsToHash: string[]) {
+    this.freeVars = this.freeVars.map((s) =>
+      varsToHash.includes(s) ? "#" + s : s
+    );
+    this.req.forEach((e) => e.hashVars(varsToHash));
+    this.onlyIfs.forEach((e) => e.hashVars(varsToHash));
   }
 }
 
@@ -54,6 +66,12 @@ export class ShortCallOptNode extends FactNode {
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     return mainPart + useNamePart;
   }
+
+  hashVars(varsToHash: string[]) {
+    this.params = this.params.map((ls) =>
+      ls.map((s) => (varsToHash.includes(s) ? "#" + s : s))
+    );
+  }
 }
 
 export class ByNode extends FactNode {
@@ -63,6 +81,8 @@ export class ByNode extends FactNode {
   ) {
     super();
   }
+
+  hashVars(varsToHash: string[]) {}
 }
 
 export abstract class DeclNode extends L_Node {
@@ -111,13 +131,6 @@ export class ProveNode extends L_Node {
     public toProve: IfThenNode,
     public block: L_Node[]
   ) {
-    super();
-  }
-}
-
-// Works as a placeholder for facts when parsing. does not go to executor stage.
-export class FactsNode extends L_Node {
-  constructor(public facts: FactNode[]) {
     super();
   }
 }
