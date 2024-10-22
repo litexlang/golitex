@@ -11,7 +11,7 @@ export const testErrorCode = {
 };
 
 // Aristotle induction
-export const testList0 = [
+export const testList = [
   "def obj if x | => {};",
   "def set x | obj(x);",
   "let y | set(y);",
@@ -29,7 +29,7 @@ export const testList1 = [
   // "if | => {p2(y)};",
 ];
 
-export const testList = [
+export const testList2 = [
   "def obj if x | => {};",
   "def obj2 x | obj(x) ;",
   "def obj3 if x | => {};",
