@@ -30,10 +30,7 @@ export function testListOfCodes(exprs: string[]): RType[] {
     const expr = exprs[i];
     const out = run(env, expr);
     if (out === undefined) {
-      console.log("--------");
-      console.log(`[${i}] ${copied[i]}`);
-      testParser([expr]);
-      console.log("--------");
+      env.printClearMessage();
       continue;
     } else {
       results.concat(out);
@@ -41,20 +38,25 @@ export function testListOfCodes(exprs: string[]): RType[] {
   }
 
   env.printFacts();
+  env.printClearMessage();
 
   return results;
 }
 
 function run(env: L_Env, expr: string) {
-  const tokens = scan(expr);
-  const nodes = parser.L_StmtsParse(env, tokens);
-  if (nodes === undefined) {
+  try {
+    const tokens = scan(expr);
+    const nodes = parser.L_StmtsParse(env, tokens);
+    if (nodes === undefined) {
+      return undefined;
+    }
+    const result = nodes?.map((e) => executor.nodeExec(env, e));
+    env.printClearMessage();
+
+    return result;
+  } catch (error) {
     return undefined;
   }
-  const result = nodes?.map((e) => executor.nodeExec(env, e));
-  env.printClearMessage();
-
-  return result;
 }
 
 // testTao and testCode here works like an electric circuit: both the same: test testList, not the same, test SetTheory. Now I only need to change testCode and testTao to

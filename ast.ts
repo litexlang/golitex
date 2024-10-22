@@ -94,6 +94,10 @@ export abstract class DeclNode extends L_Node {
   ) {
     super();
   }
+
+  toString() {
+    return `${this.name}(${this.freeVars})`;
+  }
 }
 
 export class DefDeclNode extends DeclNode {}
@@ -132,5 +136,9 @@ export class ProveNode extends L_Node {
     public block: L_Node[]
   ) {
     super();
+  }
+
+  toString() {
+    return `prove ${this.toProve}`;
   }
 }

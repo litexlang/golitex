@@ -540,9 +540,17 @@ export namespace parser {
 
       skip(tokens, "{");
 
-      const nodes = L_StmtsParse(env, tokens);
+      const nodes: L_Node[] = [];
+      while (tokens[0] !== "}") {
+        while (["\n", ";"].includes(tokens[0])) {
+          tokens.shift();
+        }
+        if (tokens[0] === "}") continue;
 
-      // TODO Unfold FactsNode
+        nodes.push(NodeParse(env, tokens));
+      }
+
+      skip(tokens, "}");
 
       return new ProveNode(toProve, nodes);
     } catch (error) {
