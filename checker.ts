@@ -10,7 +10,18 @@ import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
 
 export namespace checker {
-  export function checkShortOpt(env: L_Env, opt: ShortCallOptNode): RType {
+  /**
+   * Main function of checker
+   * @param env the environment we are working at
+   * @param opt the fact (ShortCallOptFact) we wanna prove
+   * @param ignore  which fact (ShortCallOpt) to ignore in order to avoid "req => itself, itself => req"-kind loop
+   * @returns RType Error, True, False
+   */
+  export function checkShortOpt(
+    env: L_Env,
+    opt: ShortCallOptNode,
+    ignore: string[] = []
+  ): RType {
     const facts = env.getShortOptFact(opt.fullName);
     if (!facts) return RType.Error;
 
@@ -38,17 +49,29 @@ export namespace checker {
 
         if (
           storedFact.req.every((e) => {
-            const out = checker.check(env, fixFree(e, freeToFixMap));
-            switch (out) {
-              case RType.True:
-                return true;
-              case RType.Unknown: {
-                const father = env.getFather();
-                return father ? checkShortOpt(father, opt) : false;
-              }
-              default:
-                return false;
+            if (e instanceof ShortCallOptNode) {
+              const out = checkShortOptByFactsWithNoReq(
+                env,
+                fixFree(e, freeToFixMap) as ShortCallOptNode
+              );
+              return out === RType.True;
             }
+            //  else if (e instanceof IfThenNode) {
+            //   //! I FORBID IF-THEN AS STORED REQ TO AVOID DEAD-LOCK AND TOO-LONG SEARCHING
+            //   return false;
+            // }
+
+            // const out = checker.check(env, fixFree(e, freeToFixMap));
+            // switch (out) {
+            //   case RType.True:
+            //     return true;
+            //   case RType.Unknown: {
+            //     const father = env.getFather();
+            //     return father ? checkShortOpt(father, opt) : false;
+            //   }
+            //   default:
+            //     return false;
+            // }
           })
         ) {
           env.newMessage(`${opt} is true, by ${storedFact}`);
@@ -58,10 +81,10 @@ export namespace checker {
     }
 
     return RType.Unknown;
+  }
 
-    function checkSingleVar(trueFact: string, toCheck: string) {
-      return trueFact.startsWith("#") || trueFact === toCheck;
-    }
+  function checkSingleVar(trueFact: string, toCheck: string) {
+    return trueFact.startsWith("#") || trueFact === toCheck;
   }
 
   export function check(env: L_Env, node: FactNode): RType {
@@ -124,5 +147,24 @@ export namespace checker {
       );
     }
     throw Error("fact should be if-then or shortOpt");
+  }
+
+  function checkShortOptByFactsWithNoReq(env: L_Env, opt: ShortCallOptNode) {
+    const facts = env.getShortOptFact(opt.fullName);
+    if (!facts) return RType.Error;
+
+    for (const storedFact of facts) {
+      if (
+        storedFact.vars.every((ls, i) =>
+          ls.every((s, j) => checkSingleVar(s, opt.params[i][j]))
+        ) &&
+        storedFact.req.length === 0 &&
+        storedFact.isT
+      ) {
+        return RType.True;
+      }
+    }
+
+    return RType.Unknown;
   }
 }

@@ -189,26 +189,26 @@ export namespace executor {
           new KnowNode([new IfThenNode(node.freeVars, node.req, [definedFact])])
         );
 
-        //! The whole checking process might be locked by "req => itself, itself =>req"
-        // // req => itself
-        // knowExec(
-        //   env,
-        //   new KnowNode([new IfThenNode(node.freeVars, [definedFact], node.req)])
-        // );
+        // //! The whole checking process might be locked by "req => itself, itself =>req"
+        // req => itself
+        knowExec(
+          env,
+          new KnowNode([new IfThenNode(node.freeVars, [definedFact], node.req)])
+        );
 
-        // // itself => onlyIf
-        // knowExec(
-        //   env,
-        //   new KnowNode([
-        //     new IfThenNode(node.freeVars, [definedFact], node.onlyIfs),
-        //   ])
-        // );
+        // itself => onlyIf
+        knowExec(
+          env,
+          new KnowNode([
+            new IfThenNode(node.freeVars, [definedFact], node.onlyIfs),
+          ])
+        );
 
-        // // req => onlyIf
-        // knowExec(
-        //   env,
-        //   new KnowNode([new IfThenNode(node.freeVars, node.req, node.onlyIfs)])
-        // );
+        // req => onlyIf
+        knowExec(
+          env,
+          new KnowNode([new IfThenNode(node.freeVars, node.req, node.onlyIfs)])
+        );
       } else if (node instanceof IfThenDeclNode) {
         factType = FactType.IfThen;
         env.setOptType(node.name, factType);
