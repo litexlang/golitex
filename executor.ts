@@ -51,7 +51,7 @@ export namespace executor {
     LetNode: letExec,
     ByNode: byExec,
     ProveNode: proveExec,
-    // HaveNode: haveExec,
+    HaveNode: haveExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node): RType {
@@ -108,6 +108,40 @@ export namespace executor {
   //TODO
   function byExec(env: L_Env, node: ByNode): RType {
     return RType.Error;
+  }
+
+  function haveExec(env: L_Env, node: HaveNode): RType {
+    try {
+      // Check duplicate variable declarations
+      const noErr = env.declareNewVar(node.vars);
+      if (!noErr) {
+        env.newMessage(
+          `Error: Variable(s) ${node.vars.join(", ")} already declared in this scope.`
+        );
+        return RType.Error;
+      }
+
+      for (const fact of node.facts) {
+        if (fact instanceof ShortCallOptNode) {
+          const out = checker.checkShortOptInHave(env, fact);
+          if (out !== RType.True) {
+            env.newMessage(`Unknown: ${node.toString()}`);
+            return out;
+          }
+        } else {
+          //! For the time being, if-then can not be checked when have
+          env.newMessage(`Error: ${node.toString()}`);
+          return RType.Error;
+        }
+      }
+
+      knowExec(env, new KnowNode(node.facts));
+
+      return RType.True;
+    } catch (error) {
+      env.newMessage(`Error: ${node.toString()}`);
+      return RType.Error;
+    }
   }
 
   function letExec(env: L_Env, node: LetNode): RType {
@@ -189,6 +223,7 @@ export namespace executor {
 
       let factType: FactType;
       if (node instanceof DefDeclNode || node instanceof ExistNode) {
+        // we declare and exe exist-fact by exactly using shortOpt code.
         factType = node instanceof DefDeclNode ? FactType.Def : FactType.Exist;
         env.setOptType(node.name, factType);
 

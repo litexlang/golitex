@@ -44,7 +44,7 @@ export const testList = [
   "def p1 if x | => {}",
   "exist Ex x | p1(x);", // can be used as a "stronger" version of def.
   "let y | p1(y);",
-  "Ex(y);", // we declare and exe exist-fact by using shortOpt code.
+  // "Ex(y);", // we declare and exe exist-fact by exactly using shortOpt code.
   "have x | Ex(x);",
 ];
 

@@ -116,6 +116,26 @@ export namespace checker {
     return RType.Unknown;
   }
 
+  export function checkShortOptInHave(
+    env: L_Env,
+    opt: ShortCallOptNode
+  ): RType {
+    const facts = env.getShortOptFact(opt.fullName);
+    if (!facts) return RType.Error;
+
+    for (const storedFact of facts) {
+      if (
+        storedFact.vars.every((s, j) => !s.startsWith("#")) &&
+        storedFact.req.length === 0 &&
+        storedFact.isT
+      ) {
+        return RType.True;
+      }
+    }
+
+    return RType.Unknown;
+  }
+
   function checkIfThenByFactsWithNoReq(env: L_Env, node: IfThenNode): RType {
     const newEnv = new L_Env(env);
     newEnv.declareNewVar(node.freeVars);
