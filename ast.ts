@@ -6,6 +6,7 @@ export enum FactType {
   Or,
   IfThen,
   Def,
+  Exist,
 }
 
 export abstract class FactNode extends L_Node {
@@ -100,6 +101,9 @@ export abstract class DeclNode extends L_Node {
   }
 }
 
+export class ExistNode extends DeclNode {
+  public isT = false;
+}
 export class DefDeclNode extends DeclNode {}
 export class IfThenDeclNode extends DeclNode {}
 
@@ -140,16 +144,6 @@ export class ProveNode extends L_Node {
 
   toString() {
     return `prove ${this.toProve}`;
-  }
-}
-
-export class ExistNode extends L_Node {
-  constructor(
-    public name: string,
-    public vars: string[],
-    public facts: FactNode[]
-  ) {
-    super();
   }
 }
 

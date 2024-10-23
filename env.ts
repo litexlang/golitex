@@ -29,7 +29,6 @@ export class L_Env {
   private messages: string[] = [];
   private shortOptFacts = new Map<string, StoredFactValue[]>();
   private factTypes = new Map<string, FactType>();
-  private exists = new Map<string, ExistNode>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;

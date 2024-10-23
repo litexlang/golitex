@@ -12,6 +12,7 @@ import {
   ByNode,
   ProveNode,
   ExistNode,
+  HaveNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -24,6 +25,7 @@ import {
   ThenKeywords,
   ProveKeywords,
   ExistKeywords,
+  HaveKeywords,
 } from "./common";
 
 export namespace parser {
@@ -104,6 +106,7 @@ export namespace parser {
     ":": DeclNodeParse,
     prove: proveParse,
     exist: existParse,
+    have: haveParse,
     // prove: proveParse,
     // by: byParse,
     // thm: thmParse,
@@ -539,6 +542,40 @@ export namespace parser {
       return new ExistNode(name, vars, req);
     } catch (error) {
       handleParseError(env, "Exist prove", index, start);
+      throw error;
+    }
+  }
+
+  function haveParse(env: L_Env, tokens: string[]): HaveNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, HaveKeywords);
+      const vars = listParse<string>(
+        env,
+        tokens,
+        (env, e) => shiftVar(e),
+        [...StdStmtEnds, "|"],
+        false
+      );
+
+      if (StdStmtEnds.includes(tokens[0])) {
+        skip(tokens, StdStmtEnds);
+        return new HaveNode(vars, []);
+      } else {
+        skip(tokens, "|");
+        const facts = listParse<FactNode>(
+          env,
+          tokens,
+          factParse,
+          StdStmtEnds,
+          true
+        );
+        return new HaveNode(vars, facts);
+      }
+    } catch (error) {
+      handleParseError(env, "have", index, start);
       throw error;
     }
   }

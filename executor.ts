@@ -12,6 +12,7 @@ import {
   FactType,
   ByNode,
   ProveNode,
+  ExistNode,
 } from "./ast";
 import { L_Env } from "./env";
 import { isRTypeTrue } from "./shared";
@@ -235,6 +236,17 @@ export namespace executor {
               [definedFact, ...node.req],
               node.onlyIfs
             ),
+          ])
+        );
+      } else if (node instanceof ExistNode) {
+        factType = FactType.Exist;
+        env.setOptType(node.name, factType);
+        const definedFact = new ShortCallOptNode(node.name, node.freeVars);
+        // req => itself
+        knowExec(
+          env,
+          new KnowNode([
+            new IfThenNode(definedFact.vars, node.req, [definedFact]),
           ])
         );
       } else if (node instanceof OrNode) {

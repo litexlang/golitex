@@ -1,5 +1,6 @@
 import {
   ByNode,
+  ExistNode,
   FactNode,
   FactType,
   IfThenNode,

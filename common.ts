@@ -58,3 +58,4 @@ export const L_Keywords = [
 
 export const StdStmtEnds = [";", "\n"];
 export const LetKeywords = ["let"];
+export const HaveKeywords = ["have"];
