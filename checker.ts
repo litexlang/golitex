@@ -16,8 +16,6 @@ export namespace checker {
       return checkShortOpt(env, node);
     } else if (node instanceof IfThenNode) {
       return checkIfThen(env, node);
-    } else if (node instanceof ByNode) {
-      return checkBy(env, node);
     }
 
     return RType.Error;
@@ -37,12 +35,15 @@ export namespace checker {
     for (const storedFact of facts) {
       /**
        * Main Logic of Checking Steps:
-       * 1. literally correct
+       * 1. literally correct and isT
        * 2. req correct
        * 2.1 locally correct
        * 2.2 correctness is given by father
        */
-      if (storedFact.vars.every((s, j) => checkSingleVar(s, opt.vars[j]))) {
+      if (
+        storedFact.isT &&
+        storedFact.vars.every((s, j) => checkSingleVar(s, opt.vars[j]))
+      ) {
         /**
          * check current opt by replacing potential hashed var with current var
          */
@@ -85,10 +86,6 @@ export namespace checker {
     return RType.True;
   }
 
-  function checkBy(env: L_Env, node: ByNode): RType {
-    return RType.Error;
-  }
-
   export function checkByFactsWithNoReq(env: L_Env, node: FactNode) {
     if (node instanceof ShortCallOptNode) {
       return checkShortOptByFactsWithNoReq(env, node);
@@ -105,9 +102,9 @@ export namespace checker {
 
     for (const storedFact of facts) {
       if (
+        storedFact.isT &&
         storedFact.vars.every((s, j) => checkSingleVar(s, opt.vars[j])) &&
-        storedFact.req.length === 0 &&
-        storedFact.isT
+        storedFact.req.length === 0
       ) {
         return RType.True;
       }
