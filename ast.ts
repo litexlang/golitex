@@ -77,8 +77,8 @@ export class ShortCallOptNode extends FactNode {
 
 export class ByNode extends FactNode {
   constructor(
-    public fact: FactNode,
-    public bys: FactNode[]
+    public facts: FactNode[],
+    public block: FactNode[]
   ) {
     super();
   }

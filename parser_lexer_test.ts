@@ -188,8 +188,9 @@ const codes: string[] = [
   // "def obj2 x | obj(x) ;",
   // "def obj3 if x | obj(x), obj2(x) => {} ",
   // "prove if x | obj(x), obj3(x) => {obj2(x)} {}", // obj3 is useless
-  "exist  Existence x |  set(x), set2(x,y);",
-  "have x,y| set(x), set2(x,y);",
+  // "exist  Existence x |  set(x), set2(x,y);",
+  // "have x,y| set(x), set2(x,y);",
+  "set(x) by {set2(x)};",
 ];
 
 function testLexer() {

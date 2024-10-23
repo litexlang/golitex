@@ -248,7 +248,7 @@ export namespace parser {
         skip(tokens, "by");
         skip(tokens, "{");
         const bys = listParse<FactNode>(env, tokens, factParse, ["}"]);
-        return new ByNode(out, bys);
+        return new ByNode([out], bys);
       }
 
       return out;

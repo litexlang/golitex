@@ -105,9 +105,22 @@ export namespace executor {
     return RType.Error;
   }
 
-  //TODO
   function byExec(env: L_Env, node: ByNode): RType {
-    return RType.Error;
+    const newEnv = new L_Env(env);
+    for (const subNode of node.block) {
+      const out = nodeExec(newEnv, subNode);
+      if (!(out === RType.True)) return out;
+    }
+
+    // check
+    for (const toTest of node.facts) {
+      const out = checker.check(newEnv, toTest);
+      if (!(out === RType.True)) return out;
+    }
+
+    // emit into env
+    knowExec(env, new KnowNode(node.facts));
+    return RType.True;
   }
 
   function haveExec(env: L_Env, node: HaveNode): RType {
