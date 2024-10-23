@@ -34,10 +34,18 @@ export const testList3 = [
 
 export const testList4 = [";;;\n\n;;"];
 
-export const testList = [
+export const testList5 = [
   "def p1 if x | => {}",
   "def p2 x | p1(x);",
   // "def p3 x | p2(x);",
+];
+
+export const testList = [
+  "def p1 if x | => {}",
+  "exist Ex x | p1(x);", // can be used as a "stronger" version of def.
+  "let y | p1(y);",
+  "Ex(y);", // we declare and exe exist-fact by using shortOpt code.
+  "have x | Ex(x);",
 ];
 
 export const testCode = false;

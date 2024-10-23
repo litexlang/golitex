@@ -13,6 +13,7 @@ import {
   ByNode,
   ProveNode,
   ExistNode,
+  HaveNode,
 } from "./ast";
 import { L_Env } from "./env";
 import { isRTypeTrue } from "./shared";
@@ -50,6 +51,7 @@ export namespace executor {
     LetNode: letExec,
     ByNode: byExec,
     ProveNode: proveExec,
+    // HaveNode: haveExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node): RType {
@@ -179,15 +181,16 @@ export namespace executor {
         throw Error(`${node.name} already declared.`);
       }
 
-      let factType: FactType;
-      if (node instanceof DefDeclNode) {
-        factType = FactType.Def;
-        env.setOptType(node.name, factType);
-        const definedFact = new ShortCallOptNode(node.name, node.freeVars);
-        definedFact.hashVars(node.freeVars);
+      const definedFact = new ShortCallOptNode(node.name, node.freeVars);
+      definedFact.hashVars(node.freeVars);
 
-        node.req.forEach((e) => e.hashVars(node.freeVars));
-        node.onlyIfs.forEach((e) => e.hashVars(node.freeVars));
+      node.req.forEach((e) => e.hashVars(node.freeVars));
+      node.onlyIfs.forEach((e) => e.hashVars(node.freeVars));
+
+      let factType: FactType;
+      if (node instanceof DefDeclNode || node instanceof ExistNode) {
+        factType = node instanceof DefDeclNode ? FactType.Def : FactType.Exist;
+        env.setOptType(node.name, factType);
 
         const hashedReq =
           /** Notice the following 4 knowExec can be reduced to 2 */
@@ -227,7 +230,7 @@ export namespace executor {
         factType = FactType.IfThen;
         env.setOptType(node.name, factType);
         // req + itself => onlyIf
-        const definedFact = new ShortCallOptNode(node.name, node.freeVars);
+        // const definedFact = new ShortCallOptNode(node.name, node.freeVars);
         knowExec(
           env,
           new KnowNode([
@@ -236,17 +239,6 @@ export namespace executor {
               [definedFact, ...node.req],
               node.onlyIfs
             ),
-          ])
-        );
-      } else if (node instanceof ExistNode) {
-        factType = FactType.Exist;
-        env.setOptType(node.name, factType);
-        const definedFact = new ShortCallOptNode(node.name, node.freeVars);
-        // req => itself
-        knowExec(
-          env,
-          new KnowNode([
-            new IfThenNode(definedFact.vars, node.req, [definedFact]),
           ])
         );
       } else if (node instanceof OrNode) {

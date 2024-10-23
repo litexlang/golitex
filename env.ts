@@ -118,6 +118,8 @@ export class L_Env {
         tStr = "if-then";
       } else if (t === FactType.Or) {
         tStr = "or";
+      } else if (t === FactType.Exist) {
+        tStr = "exist";
       }
 
       console.log(`[${tStr}] ${key}`);
