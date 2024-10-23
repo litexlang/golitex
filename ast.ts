@@ -1,3 +1,5 @@
+import exp from "constants";
+
 export abstract class L_Node {}
 
 export enum FactType {
@@ -138,5 +140,28 @@ export class ProveNode extends L_Node {
 
   toString() {
     return `prove ${this.toProve}`;
+  }
+}
+
+export class ExistNode extends L_Node {
+  constructor(
+    public name: string,
+    public vars: string[],
+    public facts: FactNode[]
+  ) {
+    super();
+  }
+}
+
+export class HaveNode extends L_Node {
+  constructor(
+    public vars: string[],
+    public facts: FactNode[]
+  ) {
+    super();
+  }
+
+  toString() {
+    return `${this.vars.join(", ")}| ${this.facts.map((s) => s.toString()).join(", ")}`;
   }
 }

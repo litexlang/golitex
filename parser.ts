@@ -11,6 +11,7 @@ import {
   FactNode,
   ByNode,
   ProveNode,
+  ExistNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -22,6 +23,7 @@ import {
   LetKeywords,
   ThenKeywords,
   ProveKeywords,
+  ExistKeywords,
 } from "./common";
 
 export namespace parser {
@@ -101,7 +103,7 @@ export namespace parser {
     def: DeclNodeParse,
     ":": DeclNodeParse,
     prove: proveParse,
-    // exist: existParse,
+    exist: existParse,
     // prove: proveParse,
     // by: byParse,
     // thm: thmParse,
@@ -506,6 +508,37 @@ export namespace parser {
       return new ProveNode(toProve, nodes);
     } catch (error) {
       handleParseError(env, "Parsing prove", index, start);
+      throw error;
+    }
+  }
+
+  function existParse(env: L_Env, tokens: string[]): ExistNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, ExistKeywords);
+      const name = shiftVar(tokens);
+      const vars = varLstParse(env, tokens, ["|", ...StdStmtEnds], false);
+
+      if (StdStmtEnds.includes(tokens[0])) {
+        skip(tokens, StdStmtEnds);
+        return new ExistNode(name, vars, []);
+      } else {
+        skip(tokens, "|");
+      }
+
+      const req = listParse<FactNode>(
+        env,
+        tokens,
+        factParse,
+        [...StdStmtEnds],
+        true
+      );
+
+      return new ExistNode(name, vars, req);
+    } catch (error) {
+      handleParseError(env, "Exist prove", index, start);
       throw error;
     }
   }

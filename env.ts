@@ -1,4 +1,4 @@
-import { ShortCallOptNode, FactNode, FactType } from "./ast";
+import { ShortCallOptNode, FactNode, FactType, ExistNode } from "./ast";
 export class StoredFactValue {
   constructor(
     public vars: string[],
@@ -29,6 +29,7 @@ export class L_Env {
   private messages: string[] = [];
   private shortOptFacts = new Map<string, StoredFactValue[]>();
   private factTypes = new Map<string, FactType>();
+  private exists = new Map<string, ExistNode>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
