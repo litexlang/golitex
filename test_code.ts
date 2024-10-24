@@ -1,5 +1,6 @@
 // Aristotle induction
 export const testList0 = [
+  "def obj2 x |;",
   "def obj if x | => {}",
   "def set x | obj(x);",
   "let y | set(y);",
@@ -22,7 +23,9 @@ export const testList2 = [
   "def obj2 x | obj(x) ;",
   "def obj3 if x | => {}",
   "def obj4 if x | => {obj3(x)}",
+  "let EMPTY_SET;",
   "def inf if x | obj(x) => {obj3(x)}",
+  "prove if x | obj(x) => {obj3(x)} {}",
 ];
 
 export const testList3 = [
@@ -49,12 +52,33 @@ export const testList6 = [
   "have z | Ex(z);",
 ];
 
-export const testList = [
+export const testList7 = [
   "def p1 if x | => {}",
   "def p2 x | p1(x);",
   "def p3 x | p2(x);",
   "let y | p1(y);",
+  "p3(y);",
   "p3(y) by {p2(y)};",
+  "p3(y);",
+  "know not p1(y);",
+  "p1(y);",
+];
+
+export const testList8 = [
+  "def obj if x | => {};",
+  "def obj2 x,y | obj(x), obj(y);",
+  "let x,y | obj(x), obj(y);",
+  "obj(x), obj(y);",
+  "obj2(x,y);",
+  // "know obj(y);",
+  // "obj(y);",
+  // "obj2(x,y);",
+];
+
+export const testList = [
+  "def obj if x | => {};",
+  "let x| not obj(x);",
+  "not obj(x);",
 ];
 
 export const testCode = false;

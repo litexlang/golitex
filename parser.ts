@@ -84,7 +84,7 @@ export namespace parser {
       }
       return result;
     } catch (error) {
-      env.newMessage(`Error: Parse Statement.`);
+      env.newMessage(`Error: Syntax Error.`);
       throw error;
     }
   }

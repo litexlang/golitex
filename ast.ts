@@ -1,5 +1,3 @@
-import exp from "constants";
-
 export abstract class L_Node {}
 
 export enum FactType {
@@ -38,7 +36,8 @@ export class IfThenNode extends FactNode {
   toString() {
     const mainPart = `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
-    return mainPart + useNamePart;
+    const notPart = !this.isT ? "[not] " : "";
+    return notPart + mainPart + useNamePart;
   }
 
   hashVars(varsToHash: string[]) {
@@ -67,7 +66,8 @@ export class ShortCallOptNode extends FactNode {
       .map((name, i) => `${name}(${this.vars[i]})`)
       .join(":");
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
-    return mainPart + useNamePart;
+    const notPart = !this.isT ? "[not] " : "";
+    return notPart + mainPart + useNamePart;
   }
 
   hashVars(varsToHash: string[]) {

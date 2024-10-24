@@ -35,13 +35,13 @@ export namespace checker {
     for (const storedFact of facts) {
       /**
        * Main Logic of Checking Steps:
-       * 1. literally correct and isT
+       * 1. literally correct and stored.isT === opt.isT
        * 2. req correct
        * 2.1 locally correct
        * 2.2 correctness is given by father
        */
       if (
-        storedFact.isT &&
+        storedFact.isT === opt.isT &&
         storedFact.vars.every((s, j) => checkSingleVar(s, opt.vars[j]))
       ) {
         /**
@@ -102,7 +102,7 @@ export namespace checker {
 
     for (const storedFact of facts) {
       if (
-        storedFact.isT &&
+        storedFact.isT === opt.isT &&
         storedFact.vars.every((s, j) => checkSingleVar(s, opt.vars[j])) &&
         storedFact.req.length === 0
       ) {
@@ -124,7 +124,7 @@ export namespace checker {
       if (
         storedFact.vars.every((s, j) => !s.startsWith("#")) &&
         storedFact.req.length === 0 &&
-        storedFact.isT
+        storedFact.isT === opt.isT
       ) {
         return RType.True;
       }

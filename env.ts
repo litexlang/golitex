@@ -17,7 +17,7 @@ export class StoredFactValue {
     }
 
     if (!this.isT) {
-      result = "(not) " + result;
+      result = "[not] " + result;
     }
 
     return result;
