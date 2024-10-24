@@ -21,7 +21,6 @@ import { L_Env } from "./env";
 import { isRTypeTrue } from "./shared";
 import { checker } from "./checker";
 import { L_Builtins } from "./builtins";
-import { AssumeByContraKeywords } from "./common";
 
 export enum RType {
   Error,

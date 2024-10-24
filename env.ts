@@ -120,6 +120,8 @@ export class L_Env {
         tStr = "or";
       } else if (t === FactType.Exist) {
         tStr = "exist";
+      } else if (t === FactType.OnlyIf) {
+        tStr = "only_if";
       }
 
       console.log(`[${tStr}] ${key}`);

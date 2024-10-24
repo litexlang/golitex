@@ -1,5 +1,6 @@
 export abstract class L_Node {}
 
+// FactType does not have logical effects, it's only used when printing.
 export enum FactType {
   Or = 1, // make sure all FactType is true in if
   IfThen,

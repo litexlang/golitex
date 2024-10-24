@@ -90,6 +90,10 @@ export const testList10 = [
   "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
 ];
 
-export const testList = ["def p0 only_if x | ;", "def p1 only_if x | p2(x);"];
+export const testList = [
+  "def p0 only_if x | ;",
+  "def p1 only_if x | p0(x);",
+  "let x | p0(x);",
+];
 
 export const testCode = false;
