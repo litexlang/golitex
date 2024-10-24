@@ -287,6 +287,7 @@ export namespace parser {
     }
   }
 
+  // At parsing stage, not is "executed"
   function notParse(env: L_Env, tokens: string[]): FactNode {
     const start = tokens[0];
     const index = tokens.length;

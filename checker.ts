@@ -63,6 +63,11 @@ export namespace checker {
       }
     }
 
+    const father = env.getFather();
+    if (father) {
+      return checkShortOpt(father, opt);
+    }
+
     return RType.Unknown;
   }
 

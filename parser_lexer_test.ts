@@ -47,7 +47,7 @@ const codes: string[] = [
   // `,
   // `have (EMPTY_SET: empty_set(EMPTY_SET) );`,
   // `
-  // know onlyif = (x,y){
+  // know onlyIf = (x,y){
   //   know infer p3(x: not_in(x,A))  {not_in(x,B)};
   //   know infer p4(x: not_in(x,B))  {not_in(x,A)};
   // }`,

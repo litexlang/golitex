@@ -14,11 +14,13 @@ import {
   ProveNode,
   ExistNode,
   HaveNode,
+  AssumeByContraNode,
 } from "./ast";
 import { L_Env } from "./env";
 import { isRTypeTrue } from "./shared";
 import { checker } from "./checker";
 import { L_Builtins } from "./builtins";
+import { AssumeByContraKeywords } from "./common";
 
 export enum RType {
   Error,
@@ -42,9 +44,8 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.ThmFailed]: "thm: failed",
 };
 
-function handleExecError(env: L_Env, node: L_Node, out: RType, m: string = "") {
-  if (out === RType.Unknown) env.newMessage(`${m} Unknown: ${node}`);
-  else if (out === RType.Error) env.newMessage(`${m} Error: ${node}`);
+function handleExecError(env: L_Env, out: RType, m: string = "") {
+  env.newMessage(m);
   return out;
 }
 
@@ -63,6 +64,7 @@ export namespace executor {
     ByNode: byExec,
     ProveNode: proveExec,
     HaveNode: haveExec,
+    AssumeByContraNode: assumeByContraExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node): RType {
@@ -189,6 +191,8 @@ export namespace executor {
   }
 
   /**
+   * Main Function of whole project. Not only used at assume expression, other expressions which introduces new fact into environment calls this function.
+   *
    * know shortOpt: store directly
    * know if-then: if then is shortOpt, store it bound with if as req; if then is if-then, inherit father req and do knowExec again.
    */
@@ -324,9 +328,8 @@ export namespace executor {
       if (out !== RType.True) {
         return handleExecError(
           env,
-          subNode,
           out,
-          "Proof Block Expression Execution Failed."
+          `Proof Block Expression ${subNode} failed.`
         );
       }
     }
@@ -335,12 +338,7 @@ export namespace executor {
     for (const toTest of node.toProve.onlyIfs) {
       const out = checker.check(newEnv, toTest);
       if (!(out === RType.True)) {
-        return handleExecError(
-          env,
-          toTest,
-          out,
-          "Proof failed to prove all results."
-        );
+        return handleExecError(env, out, `Proof failed to prove ${toTest}.`);
       }
     }
 
@@ -358,5 +356,56 @@ export namespace executor {
     );
 
     return RType.True;
+  }
+
+  /**
+   * Steps
+   * 1. open new Env
+   * 2. assume node.assume
+   * 3. run block
+   * 4. check node.contradict, not node.contradict
+   * 5. emit the reverse of node.assume
+   */
+  function assumeByContraExec(env: L_Env, node: AssumeByContraNode): RType {
+    try {
+      const newEnv = new L_Env(env);
+      knowExec(newEnv, new KnowNode([node.assume]));
+      for (const subNode of node.block) {
+        const out = nodeExec(newEnv, subNode);
+        if (out !== RType.True) {
+          return handleExecError(
+            env,
+            out,
+            `Proof Block Expression ${subNode} Failed.`
+          );
+        }
+      }
+
+      let out = checker.check(newEnv, node.contradict);
+      if (!(out === RType.True)) {
+        return handleExecError(
+          env,
+          out,
+          `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
+        );
+      }
+
+      node.contradict.isT = !node.contradict.isT;
+      out = checker.check(newEnv, node.contradict);
+      if (!(out === RType.True)) {
+        return handleExecError(
+          env,
+          out,
+          `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
+        );
+      }
+
+      node.assume.isT = !node.assume.isT;
+      knowExec(env, new KnowNode([node.assume]));
+      return RType.True;
+    } catch (error) {
+      env.newMessage(`${node}`);
+      return RType.Error;
+    }
   }
 }

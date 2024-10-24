@@ -28,7 +28,7 @@ export const testList2 = [
   "prove if x | obj(x) => {obj3(x)} {}",
 ];
 
-export const testList = [
+export const testList3 = [
   "def obj if x | => {};",
   "def obj2 x | obj(x) ;",
   "def obj3 if x | obj(x), obj2(x) => {} ",
@@ -82,11 +82,11 @@ export const testList9 = [
   "not obj(x);",
 ];
 
-export const testList10 = [
+export const testList = [
   "def p1 if x | => {}",
   "def p2 x | p1(x);",
   "def p3 x | p2(x);",
-  "let y | not p3(y);",
+  "let x | not p3(x);",
   "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
 ];
 
