@@ -28,11 +28,12 @@ export const testList2 = [
   "prove if x | obj(x) => {obj3(x)} {}",
 ];
 
-export const testList3 = [
+export const testList = [
   "def obj if x | => {};",
   "def obj2 x | obj(x) ;",
   "def obj3 if x | obj(x), obj2(x) => {} ",
-  "prove if x | obj(x), obj3(x) => {obj2(x)} {}", // obj3 is useless
+  "prove if x |  => {obj2(x)} {}", // unsuccessful prove
+  "prove if x |  obj(x), obj3(x) => {obj2(x)} {}", // obj3 is useless
 ];
 
 export const testList4 = [";;;\n\n;;"];
@@ -64,7 +65,7 @@ export const testList7 = [
   "p1(y);",
 ];
 
-export const testList = [
+export const testList8 = [
   "def obj if x | => {};",
   "def obj2 x,y | obj(x), obj(y);",
   "let x,y | obj(x), obj(y);",

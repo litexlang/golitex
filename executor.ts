@@ -42,6 +42,17 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.ThmFailed]: "thm: failed",
 };
 
+function handleExecError(env: L_Env, node: L_Node, out: RType, m: string = "") {
+  if (out === RType.Unknown) env.newMessage(`${m} Unknown: ${node}`);
+  else if (out === RType.Error) env.newMessage(`${m} Error: ${node}`);
+  return out;
+}
+
+/**
+ * Guideline of what execute functions do
+ * 1. return RType thing
+ * 2. env.newMessage()
+ */
 export namespace executor {
   const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
     DefDeclNode: declExec,
@@ -310,13 +321,27 @@ export namespace executor {
     // execute prove block
     for (const subNode of node.block) {
       const out = nodeExec(newEnv, subNode);
-      if (!(out === RType.True)) return out;
+      if (out !== RType.True) {
+        return handleExecError(
+          env,
+          subNode,
+          out,
+          "Proof Block Expression Execution Failed."
+        );
+      }
     }
 
     // check
     for (const toTest of node.toProve.onlyIfs) {
       const out = checker.check(newEnv, toTest);
-      if (!(out === RType.True)) return out;
+      if (!(out === RType.True)) {
+        return handleExecError(
+          env,
+          toTest,
+          out,
+          "Proof failed to prove all results."
+        );
+      }
     }
 
     // emit into env
