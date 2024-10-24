@@ -191,7 +191,8 @@ const codes: string[] = [
   // "exist  Existence x |  set(x), set2(x,y);",
   // "have x,y| set(x), set2(x,y);",
   // "set(x) by {set2(x)};",
-  "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
+  // "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
+  "def p1 only_if x | p2(x);",
 ];
 
 function testLexer() {

@@ -15,6 +15,7 @@ import {
   ExistNode,
   HaveNode,
   AssumeByContraNode,
+  OnlyIfDeclNode,
 } from "./ast";
 import { L_Env } from "./env";
 import { isRTypeTrue } from "./shared";
@@ -59,6 +60,7 @@ export namespace executor {
     DefDeclNode: declExec,
     IfThenDeclNode: declExec,
     ExistNode: declExec,
+    OnlyIfDeclNode: declExec,
     KnowNode: knowExec,
     LetNode: letExec,
     ByNode: byExec,
@@ -304,6 +306,7 @@ export namespace executor {
             ),
           ])
         );
+      } else if (node instanceof OnlyIfDeclNode) {
       } else if (node instanceof OrNode) {
         factType = FactType.Or;
         env.setOptType(node.name, factType);

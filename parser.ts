@@ -14,6 +14,7 @@ import {
   ExistNode,
   HaveNode,
   AssumeByContraNode,
+  OnlyIfDeclNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -28,6 +29,7 @@ import {
   ExistKeywords,
   HaveKeywords,
   AssumeByContraKeywords,
+  OnlyIfKeywords,
 } from "./common";
 
 export namespace parser {
@@ -435,7 +437,7 @@ export namespace parser {
       let nodeType = shiftVar(tokens);
       const name = shiftVar(tokens);
 
-      if (IfKeywords.includes(tokens[0])) {
+      if ([...IfKeywords, ...OnlyIfKeywords].includes(tokens[0])) {
         nodeType = shiftVar(tokens);
       }
 
@@ -480,6 +482,8 @@ export namespace parser {
         return new IfThenDeclNode(name, vars, req, onlyIfs);
       } else if (DefKeywords.includes(nodeType)) {
         return new DefDeclNode(name, vars, req, onlyIfs);
+      } else if (OnlyIfKeywords.includes(nodeType)) {
+        return new OnlyIfDeclNode(name, vars, req, onlyIfs);
       }
 
       throw Error();

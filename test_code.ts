@@ -82,12 +82,14 @@ export const testList9 = [
   "not obj(x);",
 ];
 
-export const testList = [
+export const testList10 = [
   "def p1 if x | => {}",
   "def p2 x | p1(x);",
   "def p3 x | p2(x);",
   "let x | not p3(x);",
   "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
 ];
+
+export const testList = ["def p0 only_if x | ;", "def p1 only_if x | p2(x);"];
 
 export const testCode = false;

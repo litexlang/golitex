@@ -29,6 +29,7 @@ export namespace checker {
    * @returns RType Error, True, False
    */
   export function checkShortOpt(env: L_Env, opt: ShortCallOptNode): RType {
+    // get related fact from itself and its ancestors
     const facts = env.getShortOptFact(opt.fullName);
     if (!facts) return RType.Error;
 
@@ -62,12 +63,6 @@ export namespace checker {
         }
       }
     }
-
-    const father = env.getFather();
-    if (father) {
-      return checkShortOpt(father, opt);
-    }
-
     return RType.Unknown;
   }
 

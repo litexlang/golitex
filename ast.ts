@@ -100,6 +100,7 @@ export class ExistNode extends DeclNode {
 }
 export class DefDeclNode extends DeclNode {}
 export class IfThenDeclNode extends DeclNode {}
+export class OnlyIfDeclNode extends DeclNode {}
 
 export class KnowNode extends L_Node {
   isKnowEverything: Boolean = false;

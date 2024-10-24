@@ -21,6 +21,7 @@ export const OptsConnectionSymbol = ":";
 export const KnowTypeKeywords = ["@", "know", "suppose", "assume"];
 export const ThenKeywords = ["then", "=>"];
 export const IfKeywords = ["if", "?"];
+export const OnlyIfKeywords = ["only_if"];
 export const ExistKeywords = ["exist"];
 export const DefKeywords = [":", "def"];
 export const redefineTemplateDeclarationKeywords = ["re_def"];
