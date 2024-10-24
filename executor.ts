@@ -328,42 +328,46 @@ export namespace executor {
 
   function proveExec(env: L_Env, node: ProveNode): RType {
     const newEnv = new L_Env(env);
-    newEnv.declareNewVar(node.toProve.freeVars);
-    knowExec(newEnv, new KnowNode(node.toProve.req));
-    // execute prove block
-    for (const subNode of node.block) {
-      const out = nodeExec(newEnv, subNode);
-      if (out !== RType.True) {
-        return handleExecError(
-          env,
-          out,
-          `Proof Block Expression ${subNode} failed.`
-        );
+    if (node.toProve !== null) {
+      newEnv.declareNewVar(node.toProve.freeVars);
+      knowExec(newEnv, new KnowNode(node.toProve.req));
+      // execute prove block
+      for (const subNode of node.block) {
+        const out = nodeExec(newEnv, subNode);
+        if (out !== RType.True) {
+          return handleExecError(
+            env,
+            out,
+            `Proof Block Expression ${subNode} failed.`
+          );
+        }
       }
+
+      // check
+      for (const toTest of node.toProve.onlyIfs) {
+        const out = checker.check(newEnv, toTest);
+        if (!(out === RType.True)) {
+          return handleExecError(env, out, `Proof failed to prove ${toTest}.`);
+        }
+      }
+
+      // emit into env
+      node.toProve.hashVars(node.toProve.freeVars);
+      knowExec(
+        env,
+        new KnowNode([
+          new IfThenNode(
+            node.toProve.freeVars,
+            node.toProve.req,
+            node.toProve.onlyIfs
+          ),
+        ])
+      );
+
+      return RType.True;
     }
 
-    // check
-    for (const toTest of node.toProve.onlyIfs) {
-      const out = checker.check(newEnv, toTest);
-      if (!(out === RType.True)) {
-        return handleExecError(env, out, `Proof failed to prove ${toTest}.`);
-      }
-    }
-
-    // emit into env
-    node.toProve.hashVars(node.toProve.freeVars);
-    knowExec(
-      env,
-      new KnowNode([
-        new IfThenNode(
-          node.toProve.freeVars,
-          node.toProve.req,
-          node.toProve.onlyIfs
-        ),
-      ])
-    );
-
-    return RType.True;
+    return RType.Error;
   }
 
   /**

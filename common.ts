@@ -9,28 +9,18 @@ export const specialChars = [
   ",",
   ";",
   "\n",
-  "@",
   "!",
-  "?",
   "&",
   "|",
   "$",
 ];
 
-export const OptsConnectionSymbol = ":";
-export const KnowTypeKeywords = ["@", "know", "suppose", "assume"];
+export const KnowTypeKeywords = ["know", "assume"];
 export const ThenKeywords = ["then", "=>"];
-export const IfKeywords = ["if", "?"];
+export const IfKeywords = ["if"];
 export const OnlyIfKeywords = ["only_if"];
 export const ExistKeywords = ["exist"];
-export const DefKeywords = [":", "def"];
-export const redefineTemplateDeclarationKeywords = ["re_def"];
-export const TemplateDeclarationKeywords = [
-  ...redefineTemplateDeclarationKeywords,
-  ...DefKeywords,
-  ...ExistKeywords,
-  ...IfKeywords,
-];
+export const DefKeywords = ["def"];
 
 export const SymbolsFactsSeparator = "|";
 export const ProveKeywords = ["prove"];
@@ -42,7 +32,6 @@ export const L_Keywords = [
   ...specialChars,
   ...KnowTypeKeywords,
   ...ExistKeywords,
-  ...TemplateDeclarationKeywords,
   ...ProveKeywords,
   SymbolsFactsSeparator,
   ...suchThats,

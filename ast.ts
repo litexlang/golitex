@@ -133,7 +133,9 @@ export class LetNode extends L_Node {
 
 export class ProveNode extends L_Node {
   constructor(
-    public toProve: IfThenNode,
+    // Only one of toProve, fixedIfThenOpt exists
+    public toProve: IfThenNode | null,
+    public fixedIfThenOpt: ShortCallOptNode | null,
     public block: L_Node[]
   ) {
     super();

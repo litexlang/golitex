@@ -99,11 +99,19 @@ const testList11 = [
 
 const testList12 = ["def p1 if x | => ;"];
 
+const testList13 = [
+  "def obj if x | => ;",
+  "def obj2 if x | obj(x) ;",
+  "def obj3 if x | => obj2(x);",
+  "def obj4 if x | obj3(x) => obj(x);",
+  // "prove obj4(x) {obj2(x); obj1(x);}",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
-  testList2: [testList2, true],
-  testList3: [testList3, true],
+  testList2: [testList2, false],
+  testList3: [testList3, false],
   testList4: [testList4, false],
   testList5: [testList5, false],
   testList6: [testList6, false],
@@ -112,6 +120,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList9: [testList9, false],
   testList10: [testList10, false],
   testList11: [testList11, false],
+  testList12: [testList12, false],
+  testList13: [testList13, true],
 };
 
 export function testCode() {

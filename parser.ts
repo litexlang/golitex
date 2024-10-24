@@ -338,7 +338,7 @@ export namespace parser {
     const index = tokens.length;
 
     try {
-      skip(tokens, ["if", "?"]);
+      skip(tokens, IfKeywords);
 
       const vars = varLstParse(env, tokens, ["|", ...ThenKeywords], false);
 
@@ -486,23 +486,33 @@ export namespace parser {
     try {
       skip(tokens, ProveKeywords);
 
-      const toProve = ifThenParse(env, tokens, ["{"], false);
+      let toProve: null | IfThenNode = null;
+      let fixedIfThenOpt: null | ShortCallOptNode = null;
 
+      if (IfKeywords.includes(tokens[0])) {
+        toProve = ifThenParse(env, tokens, ["{"], false);
+      } else {
+        fixedIfThenOpt = shortCallOptParse(env, tokens);
+      }
+
+      const block: L_Node[] = [];
       skip(tokens, "{");
-
-      const nodes: L_Node[] = [];
       while (tokens[0] !== "}") {
         while (["\n", ";"].includes(tokens[0])) {
           tokens.shift();
         }
         if (tokens[0] === "}") continue;
 
-        nodes.push(NodeParse(env, tokens));
+        block.push(NodeParse(env, tokens));
       }
 
       skip(tokens, "}");
 
-      return new ProveNode(toProve, nodes);
+      if (toProve !== null) {
+        return new ProveNode(toProve, null, block);
+      } else {
+        return new ProveNode(null, fixedIfThenOpt, block);
+      }
     } catch (error) {
       handleParseError(env, "Parsing prove", index, start);
       throw error;
