@@ -57,14 +57,8 @@ export class ShortCallOptNode extends FactNode {
     super();
   }
 
-  nameAsLst() {
-    return this.fullName.split(":");
-  }
-
   toString() {
-    const mainPart = this.nameAsLst()
-      .map((name, i) => `${name}(${this.vars[i]})`)
-      .join(":");
+    const mainPart = this.fullName + `(${this.vars.join(", ")})`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
     return notPart + mainPart + useNamePart;

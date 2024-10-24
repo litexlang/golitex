@@ -64,7 +64,7 @@ export const testList7 = [
   "p1(y);",
 ];
 
-export const testList8 = [
+export const testList = [
   "def obj if x | => {};",
   "def obj2 x,y | obj(x), obj(y);",
   "let x,y | obj(x), obj(y);",
@@ -75,7 +75,7 @@ export const testList8 = [
   // "obj2(x,y);",
 ];
 
-export const testList = [
+export const testList9 = [
   "def obj if x | => {};",
   "let x| not obj(x);",
   "not obj(x);",
