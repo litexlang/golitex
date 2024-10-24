@@ -1,9 +1,10 @@
 export abstract class L_Node {}
 
 export enum FactType {
-  Or,
+  Or = 1, // make sure all FactType is true in if
   IfThen,
   Def,
+  OnlyIf,
   Exist,
 }
 

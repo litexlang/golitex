@@ -307,6 +307,12 @@ export namespace executor {
           ])
         );
       } else if (node instanceof OnlyIfDeclNode) {
+        factType = FactType.OnlyIf;
+        env.setOptType(node.name, factType);
+        knowExec(
+          env,
+          new KnowNode([new IfThenNode(node.freeVars, node.req, [definedFact])])
+        );
       } else if (node instanceof OrNode) {
         factType = FactType.Or;
         env.setOptType(node.name, factType);
