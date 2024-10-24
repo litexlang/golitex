@@ -441,14 +441,14 @@ export namespace parser {
         nodeType = shiftVar(tokens);
       }
 
-      const vars = varLstParse(env, tokens, ["|", ...StdStmtEnds], false);
+      const vars = varLstParse(env, tokens, ["|"], true);
 
-      if (StdStmtEnds.includes(tokens[0])) {
-        skip(tokens, StdStmtEnds);
-        return new DefDeclNode(name, vars);
-      } else {
-        skip(tokens, "|");
-      }
+      // if (StdStmtEnds.includes(tokens[0])) {
+      //   skip(tokens, StdStmtEnds);
+      //   return new DefDeclNode(name, vars);
+      // } else {
+      //   skip(tokens, "|");
+      // }
 
       const req = listParse<FactNode>(
         env,
@@ -464,18 +464,13 @@ export namespace parser {
       } else if (isCurToken(tokens, "=>")) {
         skip(tokens, "=>");
 
-        if (!isCurToken(tokens, "{")) {
-          onlyIfs = [shortCallOptParse(env, tokens)];
-        } else {
-          skip(tokens, "{");
-          onlyIfs = listParse<ShortCallOptNode>(
-            env,
-            tokens,
-            shortCallOptParse,
-            ["}"],
-            true
-          );
-        }
+        onlyIfs = listParse<ShortCallOptNode>(
+          env,
+          tokens,
+          shortCallOptParse,
+          StdStmtEnds,
+          true
+        );
       }
 
       if (IfKeywords.includes(nodeType)) {
