@@ -18,14 +18,7 @@ export const specialChars = [
 ];
 
 export const OptsConnectionSymbol = ":";
-export const KnowTypeKeywords = [
-  "@",
-  "know",
-  "suppose",
-  "assume",
-  "know_everything",
-  "!",
-];
+export const KnowTypeKeywords = ["@", "know", "suppose", "assume"];
 export const ThenKeywords = ["then", "=>"];
 export const IfKeywords = ["if", "?"];
 export const ExistKeywords = ["exist"];
@@ -59,3 +52,5 @@ export const L_Keywords = [
 export const StdStmtEnds = [";", "\n"];
 export const LetKeywords = ["let"];
 export const HaveKeywords = ["have"];
+
+export const AssumeByContraKeywords = ["assume_by_contradiction"];

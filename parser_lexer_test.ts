@@ -190,7 +190,8 @@ const codes: string[] = [
   // "prove if x | obj(x), obj3(x) => {obj2(x)} {}", // obj3 is useless
   // "exist  Existence x |  set(x), set2(x,y);",
   // "have x,y| set(x), set2(x,y);",
-  "set(x) by {set2(x)};",
+  // "set(x) by {set2(x)};",
+  "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
 ];
 
 function testLexer() {

@@ -153,3 +153,17 @@ export class HaveNode extends L_Node {
     return `${this.vars.join(", ")}| ${this.facts.map((s) => s.toString()).join(", ")}`;
   }
 }
+
+export class AssumeByContraNode extends L_Node {
+  constructor(
+    public assume: FactNode,
+    public block: L_Node[],
+    public contradict: FactNode
+  ) {
+    super();
+  }
+
+  toString() {
+    return `assume_by_contradiction ${this.assume}`;
+  }
+}

@@ -13,6 +13,7 @@ import {
   ProveNode,
   ExistNode,
   HaveNode,
+  AssumeByContraNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -26,6 +27,7 @@ import {
   ProveKeywords,
   ExistKeywords,
   HaveKeywords,
+  AssumeByContraKeywords,
 } from "./common";
 
 export namespace parser {
@@ -107,6 +109,7 @@ export namespace parser {
     prove: proveParse,
     exist: existParse,
     have: haveParse,
+    assume_by_contradiction: assumeByContraParse,
     // prove: proveParse,
     // by: byParse,
     // thm: thmParse,
@@ -576,6 +579,32 @@ export namespace parser {
       }
     } catch (error) {
       handleParseError(env, "have", index, start);
+      throw error;
+    }
+  }
+
+  function assumeByContraParse(
+    env: L_Env,
+    tokens: string[]
+  ): AssumeByContraNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, AssumeByContraKeywords);
+      const assume = factParse(env, tokens);
+      skip(tokens, "{");
+      const block: L_Node[] = [];
+      while (!isCurToken(tokens, "}")) {
+        block.push(NodeParse(env, tokens));
+      }
+      skip(tokens, "}");
+      skip(tokens, "{");
+      const contradict = factParse(env, tokens);
+      skip(tokens, "}");
+      return new AssumeByContraNode(assume, block, contradict);
+    } catch (error) {
+      handleParseError(env, "assume_by_contradiction", index, start);
       throw error;
     }
   }
