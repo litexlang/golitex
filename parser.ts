@@ -328,7 +328,12 @@ export namespace parser {
     }
   }
 
-  function ifThenParse(env: L_Env, tokens: string[]): IfThenNode {
+  function ifThenParse(
+    env: L_Env,
+    tokens: string[],
+    ends: string[] = StdStmtEnds,
+    skipEnd = true
+  ): IfThenNode {
     const start = tokens[0];
     const index = tokens.length;
 
@@ -346,29 +351,15 @@ export namespace parser {
       }
 
       let onlyIfs: ShortCallOptNode[];
-      if (!isCurToken(tokens, "{")) {
-        const fact = factParse(env, tokens);
-        if (!(fact instanceof ShortCallOptNode))
-          throw Error(`${fact.toString()} is not operator-type fact.`);
-        else onlyIfs = [fact];
+
+      const facts = listParse<FactNode>(env, tokens, factParse, ends, skipEnd);
+      if (facts.every((e) => e instanceof ShortCallOptNode)) {
+        onlyIfs = facts as ShortCallOptNode[];
       } else {
-        skip(tokens, "{");
-        const out = listParse<FactNode>(env, tokens, factParse, ["}"], true);
-        if (out.every((e) => e instanceof ShortCallOptNode)) {
-          onlyIfs = out as ShortCallOptNode[];
-        } else {
-          throw Error(`Not all onlyIfs are operator-type fact.`);
-        }
+        throw Error(`Not all onlyIfs are operator-type fact.`);
       }
 
-      let name = "";
-      if (isCurToken(tokens, "[")) {
-        skip(tokens, "[");
-        name = shiftVar(tokens);
-        skip(tokens, "]");
-      }
       const out = new IfThenNode(vars, req, onlyIfs);
-      out.useName = name;
       return out;
     } catch (error) {
       handleParseError(env, "()=>{}", index, start);
@@ -495,7 +486,7 @@ export namespace parser {
     try {
       skip(tokens, ProveKeywords);
 
-      const toProve = ifThenParse(env, tokens);
+      const toProve = ifThenParse(env, tokens, ["{"], false);
 
       skip(tokens, "{");
 

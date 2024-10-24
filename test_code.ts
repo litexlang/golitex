@@ -4,7 +4,7 @@ import { scan } from "./lexer";
 import { parser } from "./parser";
 
 // Aristotle induction
-export const testList0 = [
+const testList0 = [
   "def obj2 x |;",
   "def obj if x | => ;",
   "def set x | obj(x);",
@@ -14,43 +14,42 @@ export const testList0 = [
   "set2(y);",
 ];
 
-export const testList1 = [
+const testList1 = [
   "def obj if x | => ;",
   "def obj2 if x | => ;",
   "def p2 x | obj(x), obj2(x);",
   "let y | obj(y);",
-  "if | obj2(y) => {p2(y)};",
-  // "if | => {p2(y)};",
+  "if | obj2(y) => p2(y);",
 ];
 
-export const testList2 = [
+const testList2 = [
   "def obj if x | => ;",
   "def obj2 x | obj(x) ;",
   "def obj3 if x | => ;",
   "def obj4 if x | => obj3(x);",
   "let EMPTY_SET;",
   "def inf if x | obj(x) => obj3(x);",
-  "prove if x | obj(x) => {obj3(x)} {}", // unsuccessful prove
-  "prove if x | obj(x) => {obj3(x)} {know obj4(x);}",
+  "prove if x | obj(x) => obj3(x) {}", // unsuccessful prove
+  "prove if x | obj(x) => obj3(x) {know obj4(x);}",
 ];
 
-export const testList3 = [
+const testList3 = [
   "def obj if x | => ;",
   "def obj2 x | obj(x) ;",
   "def obj3 if x | obj(x), obj2(x) => ; ",
-  "prove if x |  => {obj2(x)} {}", // unsuccessful prove
-  "prove if x |  obj(x), obj3(x) => {obj2(x)} {}", // obj3 is useless
+  "prove if x |  => obj2(x) {}", // unsuccessful prove
+  "prove if x |  obj(x), obj3(x) => obj2(x) {}", // obj3 is useless
 ];
 
-export const testList4 = [";;;\n\n;;"];
+const testList4 = [";;;\n\n;;"];
 
-export const testList5 = [
+const testList5 = [
   "def p1 if x | => ;",
   "def p2 x | p1(x);",
   // "def p3 x | p2(x);",
 ];
 
-export const testList6 = [
+const testList6 = [
   "def p1 if x | => ;",
   "exist Ex x | p1(x);", // can be used as a "stronger" version of def.
   "let y | p1(y);",
@@ -59,7 +58,7 @@ export const testList6 = [
   "have z | Ex(z);",
 ];
 
-export const testList7 = [
+const testList7 = [
   "def p1 if x | => ;",
   "def p2 x | p1(x);",
   "def p3 x | p2(x);",
@@ -71,7 +70,7 @@ export const testList7 = [
   "p1(y);",
 ];
 
-export const testList8 = [
+const testList8 = [
   "def obj if x | => ;;",
   "def obj2 x,y | obj(x), obj(y);",
   "let x,y | obj(x), obj(y);",
@@ -82,13 +81,9 @@ export const testList8 = [
   // "obj2(x,y);",
 ];
 
-export const testList9 = [
-  "def obj if x | => ;;",
-  "let x| not obj(x);",
-  "not obj(x);",
-];
+const testList9 = ["def obj if x | => ;;", "let x| not obj(x);", "not obj(x);"];
 
-export const testList10 = [
+const testList10 = [
   "def p1 if x | => ;",
   "def p2 x | p1(x);",
   "def p3 x | p2(x);",
@@ -96,23 +91,25 @@ export const testList10 = [
   "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
 ];
 
-export const testList11 = [
+const testList11 = [
   "def p0 only_if x | ;",
   "def p1 only_if x | p0(x);",
   "let x | p0(x);",
 ];
 
+const testList12 = ["def p1 if x | => ;"];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
-  testList2: [testList2, false],
-  testList3: [testList3, false],
+  testList2: [testList2, true],
+  testList3: [testList3, true],
   testList4: [testList4, false],
   testList5: [testList5, false],
   testList6: [testList6, false],
   testList7: [testList7, false],
   testList8: [testList8, false],
-  testList9: [testList9, true],
+  testList9: [testList9, false],
   testList10: [testList10, false],
   testList11: [testList11, false],
 };
