@@ -9,7 +9,6 @@ import {
   DeclNode,
   DefDeclNode,
   IfThenDeclNode,
-  FactType,
   ByNode,
   ProveNode,
   ExistNode,
@@ -250,11 +249,10 @@ export namespace executor {
       node.req.forEach((e) => e.hashVars(node.freeVars));
       node.onlyIfs.forEach((e) => e.hashVars(node.freeVars));
 
-      let factType: FactType;
       if (node instanceof DefDeclNode || node instanceof ExistNode) {
         // we declare and exe exist-fact by exactly using shortOpt code.
-        factType = node instanceof DefDeclNode ? FactType.Def : FactType.Exist;
-        env.setOptType(node.name, factType);
+        // factType = node instanceof DefDeclNode ? FactType.Def : FactType.Exist;
+        env.setOptType(node.name, node);
 
         const hashedReq =
           /** Notice the following 4 knowExec can be reduced to 2 */
@@ -291,8 +289,8 @@ export namespace executor {
           ])
         );
       } else if (node instanceof IfThenDeclNode) {
-        factType = FactType.IfThen;
-        env.setOptType(node.name, factType);
+        // factType = FactType.IfThen;
+        env.setOptType(node.name, node);
         // req + itself => onlyIf
         // const definedFact = new ShortCallOptNode(node.name, node.freeVars);
         knowExec(
@@ -306,15 +304,15 @@ export namespace executor {
           ])
         );
       } else if (node instanceof OnlyIfDeclNode) {
-        factType = FactType.OnlyIf;
-        env.setOptType(node.name, factType);
+        // factType = FactType.OnlyIf;
+        env.setOptType(node.name, node);
         knowExec(
           env,
           new KnowNode([new IfThenNode(node.freeVars, node.req, [definedFact])])
         );
       } else if (node instanceof OrNode) {
-        factType = FactType.Or;
-        env.setOptType(node.name, factType);
+        // factType = FactType.Or;
+        env.setOptType(node.name, node);
       }
 
       return RType.True;

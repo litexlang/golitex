@@ -2,7 +2,6 @@ import {
   ByNode,
   ExistNode,
   FactNode,
-  FactType,
   IfThenNode,
   KnowNode,
   ShortCallOptNode,

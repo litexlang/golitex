@@ -1,4 +1,12 @@
-import { ShortCallOptNode, FactNode, FactType, ExistNode } from "./ast";
+import {
+  ShortCallOptNode,
+  FactNode,
+  ExistNode,
+  DeclNode,
+  DefDeclNode,
+  IfThenDeclNode,
+  OnlyIfDeclNode,
+} from "./ast";
 export class StoredFactValue {
   constructor(
     public vars: string[],
@@ -28,7 +36,7 @@ export class L_Env {
   private declaredVars: string[] = [];
   private messages: string[] = [];
   private shortOptFacts = new Map<string, StoredFactValue[]>();
-  private factTypes = new Map<string, FactType>();
+  private declaredFacts = new Map<string, DeclNode>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
@@ -40,12 +48,12 @@ export class L_Env {
 
   // get from itself and father
   getOptType(s: string) {
-    let out = this.factTypes.get(s);
-    return out ? out : this.father?.factTypes.get(s);
+    let out = this.declaredFacts.get(s);
+    return out ? out : this.father?.declaredFacts.get(s);
   }
 
-  setOptType(s: string, type: FactType) {
-    this.factTypes.set(s, type);
+  setOptType(s: string, declNode: DeclNode) {
+    this.declaredFacts.set(s, declNode);
   }
 
   // get from itself and father
@@ -110,17 +118,15 @@ export class L_Env {
     console.log("\n-----facts-------\n");
 
     for (const [key, factUnderCurKey] of this.shortOptFacts) {
-      const t = this.factTypes.get(key);
+      const t = this.declaredFacts.get(key);
       let tStr = "";
-      if (t === FactType.Def) {
+      if (t instanceof DefDeclNode) {
         tStr = "def";
-      } else if (t === FactType.IfThen) {
+      } else if (t instanceof IfThenDeclNode) {
         tStr = "if-then";
-      } else if (t === FactType.Or) {
-        tStr = "or";
-      } else if (t === FactType.Exist) {
+      } else if (t instanceof ExistNode) {
         tStr = "exist";
-      } else if (t === FactType.OnlyIf) {
+      } else if (t instanceof OnlyIfDeclNode) {
         tStr = "only_if";
       }
 

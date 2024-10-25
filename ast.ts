@@ -1,14 +1,5 @@
 export abstract class L_Node {}
 
-// FactType does not have logical effects, it's only used when printing.
-export enum FactType {
-  Or = 1, // make sure all FactType is true in if
-  IfThen,
-  Def,
-  OnlyIf,
-  Exist,
-}
-
 export abstract class FactNode extends L_Node {
   isT: Boolean = true;
   useName: string = "";
