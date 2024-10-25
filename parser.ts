@@ -30,6 +30,8 @@ import {
   HaveKeywords,
   AssumeByContraKeywords,
   OnlyIfKeywords,
+  IsKeywords,
+  IsAreKeywords,
 } from "./common";
 
 export namespace parser {
@@ -78,14 +80,7 @@ export namespace parser {
   export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] {
     try {
       const result: L_Node[] = [];
-      while (tokens.length > 0) {
-        while (tokens.length > 0 && ["\n", ";"].includes(tokens[0])) {
-          tokens.shift();
-        }
-        if (tokens.length === 0) return result;
-
-        result.push(NodeParse(env, tokens));
-      }
+      getNodesFromSingleNode(env, tokens, result);
       return result;
     } catch (error) {
       env.newMessage(`Error: Syntax Error.`);
@@ -117,54 +112,55 @@ export namespace parser {
     // thm: thmParse,
   };
 
-  export function NodeParse(env: L_Env, tokens: string[]): L_Node {
+  // export function NodeParse(env: L_Env, tokens: string[]): L_Node {
+  //   const start = tokens[0];
+  //   const index = tokens.length;
+
+  //   try {
+  //     const func = KeywordFunctionMap[tokens[0]];
+  //     if (func) {
+  //       const node = func(env, tokens);
+  //       return node;
+  //     } else {
+  //       const node = singleOptParse(env, tokens);
+  //       skip(tokens, [",", ";"]);
+  //       return node;
+  //     }
+  //   } catch (error) {
+  //     handleParseError(env, "node", index, start);
+  //     throw error;
+  //   }
+  // }
+
+  export function getNodesFromSingleNode(
+    env: L_Env,
+    tokens: string[],
+    holder: L_Node[]
+  ): void {
     const start = tokens[0];
     const index = tokens.length;
-
     try {
+      while (tokens.length > 0) {
+        while (tokens.length > 0 && ["\n", ";"].includes(tokens[0])) {
+          tokens.shift();
+        }
+        break;
+      }
+
       const func = KeywordFunctionMap[tokens[0]];
       if (func) {
         const node = func(env, tokens);
+        holder.push(node);
         return node;
       } else {
-        const node = factParse(env, tokens);
-        skip(tokens, [",", ";"]);
-        return node;
+        const nodes = optFactsParse(env, tokens, StdStmtEnds, true);
+        nodes.forEach((e) => nodes.push(e));
       }
     } catch (error) {
       handleParseError(env, "node", index, start);
       throw error;
     }
   }
-
-  // export function LiTexStmtParse(
-  //   env: L_Env,
-  //   tokens: string[],
-  //   putInto: L_Node[]
-  // ) {
-  //   const start = tokens[0];
-  //   const index = tokens.length;
-
-  //   try {
-  //     if (func) {
-  //       const node = func(env, tokens);
-  //       if (KnowTypeKeywords.includes(funcName)) {
-  //         skip(tokens, StdStmtEnds);
-  //       }
-  //       if (node) {
-  //         putInto.push(node);
-  //       } else {
-  //         return;
-  //       }
-  //     } else {
-  //       callOptsParse(env, tokens, putInto);
-  //       return;
-  //     }
-  //   } catch (error) {
-  //     handleParseError(env, "Stmt", index, start);
-  //     throw error;
-  //   }
-  // }
 
   function knowParse(env: L_Env, tokens: string[]): KnowNode {
     const start = tokens[0];
@@ -174,19 +170,27 @@ export namespace parser {
       const knowNode: KnowNode = new KnowNode();
 
       skip(tokens, KnowTypeKeywords);
-      while (1) {
+      while (!StdStmtEnds.includes(tokens[0])) {
         const relParser: Function | undefined = factParserSignals[tokens[0]];
-        let out: FactNode;
         if (relParser === undefined) {
-          out = OptParse(env, tokens);
+          // out = OptParse(env, tokens);
+          const outs: FactNode[] = optFactsParse(
+            env,
+            tokens,
+            [...StdStmtEnds, ","],
+            false
+          );
         } else {
-          out = relParser(env, tokens, true);
+          //! THE FOLLOWING CODES ARE WRONG.
+          // let out: FactNode;
+          // out = relParser(env, tokens, true);
+          // knowNode.facts.push(out);
         }
-        knowNode.facts.push(out);
 
         if (tokens[0] === ",") skip(tokens, ",");
         else break;
       }
+      skip(tokens, StdStmtEnds);
 
       return knowNode;
     } catch (error) {
@@ -214,13 +218,14 @@ export namespace parser {
         return new LetNode(vars, []);
       } else {
         skip(tokens, "|");
-        const facts = listParse<FactNode>(
-          env,
-          tokens,
-          factParse,
-          StdStmtEnds,
-          true
-        );
+        const facts = optFactsParse(env, tokens, StdStmtEnds, true);
+        // const facts = listParse<FactNode>(
+        //   env,
+        //   tokens,
+        //   singleOptParse,
+        //   StdStmtEnds,
+        //   true
+        // );
         return new LetNode(vars, facts);
       }
     } catch (error) {
@@ -236,7 +241,7 @@ export namespace parser {
     "?": ifThenParse,
   };
 
-  function factParse(env: L_Env, tokens: string[]): FactNode {
+  function singleOptParse(env: L_Env, tokens: string[]): FactNode {
     const start = tokens[0];
     const index = tokens.length;
 
@@ -247,13 +252,6 @@ export namespace parser {
         out = OptParse(env, tokens);
       } else {
         out = relParser(env, tokens);
-      }
-
-      if (isCurToken(tokens, "by")) {
-        skip(tokens, "by");
-        skip(tokens, "{");
-        const bys = listParse<FactNode>(env, tokens, factParse, ["}"]);
-        return new ByNode([out], bys);
       }
 
       return out;
@@ -268,20 +266,32 @@ export namespace parser {
     const index = tokens.length;
 
     try {
-      let nameAsParam: string = shiftVar(tokens);
+      if (tokens.length >= 2 && tokens[1] === "(") {
+        // parse functional operator
+        const name: string = shiftVar(tokens);
 
-      const vars: string[] = [];
-      skip(tokens, "(");
+        const vars: string[] = [];
+        skip(tokens, "(");
 
-      const curParams: string[] = [];
-      while (!isCurToken(tokens, ")")) {
-        vars.push(shiftVar(tokens));
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
+        while (!isCurToken(tokens, ")")) {
+          vars.push(shiftVar(tokens));
+          if (isCurToken(tokens, ",")) skip(tokens, ",");
+        }
+
+        skip(tokens, ")");
+
+        return new OptNode(name, vars);
+      } else {
+        // parse relational operator
+        const vars: string[] = [];
+        while (!IsKeywords.includes(tokens[0])) {
+          vars.push(shiftVar(tokens));
+          if (isCurToken(tokens, ",")) skip(tokens, ", ");
+        }
+        skip(tokens, IsKeywords);
+        const name = shiftVar(tokens);
+        return new OptNode(name, vars);
       }
-
-      skip(tokens, ")");
-
-      return new OptNode(nameAsParam, vars);
     } catch (error) {
       handleParseError(env, `${start} is invalid operator.`, index, start);
       throw error;
@@ -295,7 +305,7 @@ export namespace parser {
 
     try {
       skip(tokens, "not");
-      const fact = factParse(env, tokens);
+      const fact = singleOptParse(env, tokens);
       fact.isT = false;
       return fact;
     } catch (error) {
@@ -315,7 +325,7 @@ export namespace parser {
 
       const facts: FactNode[] = [];
       while (!isCurToken(tokens, "}")) {
-        facts.push(factParse(env, tokens));
+        facts.push(singleOptParse(env, tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
 
@@ -346,12 +356,14 @@ export namespace parser {
         skip(tokens, ThenKeywords);
       } else {
         skip(tokens, "|");
-        req = listParse<FactNode>(env, tokens, factParse, ["=>", "then"], true);
+        // req = listParse<FactNode>(env, tokens, singleOptParse, ["=>", "then"], true);
+        req = optFactsParse(env, tokens, ThenKeywords, true);
       }
 
       let onlyIfs: OptNode[];
 
-      const facts = listParse<FactNode>(env, tokens, factParse, ends, skipEnd);
+      // const facts = listParse<FactNode>(env, tokens, singleOptParse, ends, skipEnd);
+      const facts = optFactsParse(env, tokens, ends, skipEnd);
       if (facts.every((e) => e instanceof OptNode)) {
         onlyIfs = facts as OptNode[];
       } else {
@@ -440,13 +452,14 @@ export namespace parser {
       //   skip(tokens, "|");
       // }
 
-      const req = listParse<FactNode>(
-        env,
-        tokens,
-        factParse,
-        [...StdStmtEnds, "=>"],
-        false
-      );
+      // const req = listParse<FactNode>(
+      //   env,
+      //   tokens,
+      //   singleOptParse,
+      //   [...StdStmtEnds, "=>"],
+      //   false
+      // );
+      const req = optFactsParse(env, tokens, [...StdStmtEnds, "=>"], false);
 
       let onlyIfs: FactNode[] = [];
       if (StdStmtEnds.includes(tokens[0])) {
@@ -454,13 +467,14 @@ export namespace parser {
       } else if (isCurToken(tokens, "=>")) {
         skip(tokens, "=>");
 
-        onlyIfs = listParse<FactNode>(
-          env,
-          tokens,
-          factParse,
-          StdStmtEnds,
-          true
-        );
+        // onlyIfs = listParse<FactNode>(
+        //   env,
+        //   tokens,
+        //   singleOptParse,
+        //   StdStmtEnds,
+        //   true
+        // );
+        onlyIfs = optFactsParse(env, tokens, StdStmtEnds, true);
       }
 
       if (IfKeywords.includes(nodeType)) {
@@ -502,7 +516,7 @@ export namespace parser {
         }
         if (tokens[0] === "}") continue;
 
-        block.push(NodeParse(env, tokens));
+        getNodesFromSingleNode(env, tokens, block);
       }
 
       skip(tokens, "}");
@@ -534,13 +548,14 @@ export namespace parser {
         skip(tokens, "|");
       }
 
-      const req = listParse<FactNode>(
-        env,
-        tokens,
-        factParse,
-        [...StdStmtEnds],
-        true
-      );
+      // const req = listParse<FactNode>(
+      //   env,
+      //   tokens,
+      //   singleOptParse,
+      //   [...StdStmtEnds],
+      //   true
+      // );
+      const req = optFactsParse(env, tokens, [...StdStmtEnds], true);
 
       return new ExistNode(name, vars, req);
     } catch (error) {
@@ -568,13 +583,14 @@ export namespace parser {
         return new HaveNode(vars, []);
       } else {
         skip(tokens, "|");
-        const facts = listParse<FactNode>(
-          env,
-          tokens,
-          factParse,
-          StdStmtEnds,
-          true
-        );
+        // const facts = listParse<FactNode>(
+        //   env,
+        //   tokens,
+        //   singleOptParse,
+        //   StdStmtEnds,
+        //   true
+        // );
+        const facts = optFactsParse(env, tokens, StdStmtEnds, true);
         return new HaveNode(vars, facts);
       }
     } catch (error) {
@@ -592,19 +608,56 @@ export namespace parser {
 
     try {
       skip(tokens, AssumeByContraKeywords);
-      const assume = factParse(env, tokens);
+      const assume = singleOptParse(env, tokens);
       skip(tokens, "{");
       const block: L_Node[] = [];
       while (!isCurToken(tokens, "}")) {
-        block.push(NodeParse(env, tokens));
+        getNodesFromSingleNode(env, tokens, block);
       }
       skip(tokens, "}");
       skip(tokens, "{");
-      const contradict = factParse(env, tokens);
+      const contradict = singleOptParse(env, tokens);
       skip(tokens, "}");
       return new AssumeByContraNode(assume, block, contradict);
     } catch (error) {
       handleParseError(env, "assume_by_contradiction", index, start);
+      throw error;
+    }
+  }
+
+  function optFactsParse(
+    env: L_Env,
+    tokens: string[],
+    end: string[],
+    skipEnd: Boolean = false
+  ): FactNode[] {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      const out: FactNode[] = [];
+      while (!end.includes(tokens[0])) {
+        if (tokens.length >= 2 && tokens[1] === "(") {
+          out.push(OptParse(env, tokens));
+        } else {
+          const vars: string[] = [];
+          while (!IsAreKeywords.includes(tokens[0])) {
+            vars.push(shiftVar(tokens));
+            if (isCurToken(tokens, ",")) skip(tokens, ",");
+          }
+          const isAre = shiftVar(tokens);
+          const optName = shiftVar(tokens);
+          vars.forEach((e) => out.push(new OptNode(optName, [e])));
+        }
+
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+
+      if (skipEnd) skip(tokens, end);
+
+      return out;
+    } catch (error) {
+      handleParseError(env, "fact", index, start);
       throw error;
     }
   }

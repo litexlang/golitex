@@ -107,21 +107,32 @@ const testList13 = [
   "prove obj4(#x) {obj2(x); obj(x);}",
 ];
 
+const testList14 = [
+  "def obj if x | => ;",
+  "def obj2 if x | => x is obj;",
+  "let x | x is obj;",
+  "let a,b,c | a,b,c are obj;",
+  "let q,w,e | w,e is obj;",
+  "know a is obj;",
+  "know b,c are obj2, obj2(x), w,e are obj2;",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
-  testList: [testList0, true],
-  testList1: [testList1, true],
-  testList2: [testList2, true],
-  testList3: [testList3, true],
-  testList4: [testList4, true],
-  testList5: [testList5, true],
-  testList6: [testList6, true],
-  testList7: [testList7, true],
-  testList8: [testList8, true],
-  testList9: [testList9, true],
-  testList10: [testList10, true],
-  testList11: [testList11, true],
-  testList12: [testList12, true],
-  testList13: [testList13, true],
+  testList: [testList0, false],
+  testList1: [testList1, false],
+  testList2: [testList2, false],
+  testList3: [testList3, false],
+  testList4: [testList4, false],
+  testList5: [testList5, false],
+  testList6: [testList6, false],
+  testList7: [testList7, false],
+  testList8: [testList8, false],
+  testList9: [testList9, false],
+  testList10: [testList10, false],
+  testList11: [testList11, false],
+  testList12: [testList12, false],
+  testList13: [testList13, false],
+  testList14: [testList14, true],
 };
 
 export function testCode() {
