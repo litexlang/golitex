@@ -5,9 +5,9 @@ import { parser } from "./parser";
 
 // Aristotle induction
 const testList0 = [
-  "def obj2 x |;",
   "def obj if x | => ;",
   "def set x | obj(x);",
+  "def obj2 x |;",
   "let y | set(y);",
   "def set2 z | set(z);",
   "set2(y);",

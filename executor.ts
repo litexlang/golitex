@@ -243,8 +243,10 @@ export namespace executor {
         throw Error(`${node.name} already declared.`);
       }
 
+      env.setDeclFact(node.name, node);
+
       // const originalOptVars = [...node.vars];
-      const definedFact = new ShortCallOptNode(node.name, node.vars);
+      const definedFact = new ShortCallOptNode(node.name, [...node.vars]);
       definedFact.hashVars(node.vars);
 
       // at the end of declExec, node.rmvHashFromVars
@@ -261,7 +263,7 @@ export namespace executor {
           knowExec(
             env,
             new KnowNode([
-              new IfThenNode(definedFact.vars, node.req, [definedFact]),
+              new IfThenNode(definedFact.vars, [...node.req], [definedFact]),
             ])
           );
 
@@ -270,7 +272,7 @@ export namespace executor {
         knowExec(
           env,
           new KnowNode([
-            new IfThenNode(definedFact.vars, [definedFact], node.req),
+            new IfThenNode(definedFact.vars, [definedFact], [...node.req]),
           ])
         );
 
@@ -278,7 +280,7 @@ export namespace executor {
         knowExec(
           env,
           new KnowNode([
-            new IfThenNode(definedFact.vars, [definedFact], node.onlyIfs),
+            new IfThenNode(definedFact.vars, [definedFact], [...node.onlyIfs]),
           ])
         );
 
@@ -286,7 +288,7 @@ export namespace executor {
         knowExec(
           env,
           new KnowNode([
-            new IfThenNode(definedFact.vars, node.req, node.onlyIfs),
+            new IfThenNode(definedFact.vars, [...node.req], [...node.onlyIfs]),
           ])
         );
       } else if (node instanceof IfThenDeclNode) {
@@ -297,7 +299,12 @@ export namespace executor {
         knowExec(
           env,
           new KnowNode([
-            new IfThenNode(node.vars, [definedFact, ...node.req], node.onlyIfs),
+            new IfThenNode(
+              // definedFact.vars,
+              node.vars,
+              [definedFact, ...node.req],
+              [...node.onlyIfs]
+            ),
           ])
         );
       } else if (node instanceof OnlyIfDeclNode) {
@@ -305,15 +312,21 @@ export namespace executor {
 
         knowExec(
           env,
-          new KnowNode([new IfThenNode(node.vars, node.req, [definedFact])])
+          new KnowNode([
+            new IfThenNode(
+              // definedFact.vars,
+              node.vars,
+              [...node.req],
+              [definedFact]
+            ),
+          ])
         );
       } else if (node instanceof OrNode) {
         // factType = FactType.Or;
       }
 
       // clean up hash added to declFact
-      node.rmvHashFromVars(node.vars);
-      env.setDeclFact(node.name, node);
+      // node.rmvHashFromVars(node.vars);
 
       return RType.True;
     } catch (error) {
@@ -373,6 +386,8 @@ export namespace executor {
         );
       }
 
+      declFact.rmvHashFromVars(declFact.vars);
+
       if (!(declFact instanceof IfThenDeclNode)) {
         return handleExecError(
           env,
@@ -420,6 +435,8 @@ export namespace executor {
       // store new fact into env
       node.fixedIfThenOpt.vars = originalOptVars;
       knowExec(env, new KnowNode([node.fixedIfThenOpt]));
+
+      declFact.hashVars(declFact.vars);
 
       return RType.True;
     }
