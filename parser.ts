@@ -3,7 +3,7 @@ import {
   L_Node,
   LetNode,
   OrNode,
-  ShortCallOptNode,
+  OptNode,
   IfThenNode,
   DeclNode,
   DefDeclNode,
@@ -178,7 +178,7 @@ export namespace parser {
         const relParser: Function | undefined = factParserSignals[tokens[0]];
         let out: FactNode;
         if (relParser === undefined) {
-          out = shortCallOptParse(env, tokens);
+          out = OptParse(env, tokens);
         } else {
           out = relParser(env, tokens, true);
         }
@@ -244,7 +244,7 @@ export namespace parser {
       const relParser: Function | undefined = factParserSignals[tokens[0]];
       let out: FactNode;
       if (relParser === undefined) {
-        out = shortCallOptParse(env, tokens);
+        out = OptParse(env, tokens);
       } else {
         out = relParser(env, tokens);
       }
@@ -263,7 +263,7 @@ export namespace parser {
     }
   }
 
-  function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
+  function OptParse(env: L_Env, tokens: string[]): OptNode {
     const start = tokens[0];
     const index = tokens.length;
 
@@ -281,7 +281,7 @@ export namespace parser {
 
       skip(tokens, ")");
 
-      return new ShortCallOptNode(nameAsParam, vars);
+      return new OptNode(nameAsParam, vars);
     } catch (error) {
       handleParseError(env, `${start} is invalid operator.`, index, start);
       throw error;
@@ -349,11 +349,11 @@ export namespace parser {
         req = listParse<FactNode>(env, tokens, factParse, ["=>", "then"], true);
       }
 
-      let onlyIfs: ShortCallOptNode[];
+      let onlyIfs: OptNode[];
 
       const facts = listParse<FactNode>(env, tokens, factParse, ends, skipEnd);
-      if (facts.every((e) => e instanceof ShortCallOptNode)) {
-        onlyIfs = facts as ShortCallOptNode[];
+      if (facts.every((e) => e instanceof OptNode)) {
+        onlyIfs = facts as OptNode[];
       } else {
         throw Error(`Not all onlyIfs are operator-type fact.`);
       }
@@ -448,19 +448,13 @@ export namespace parser {
         false
       );
 
-      let onlyIfs: ShortCallOptNode[] = [];
+      let onlyIfs: OptNode[] = [];
       if (StdStmtEnds.includes(tokens[0])) {
         skip(tokens, StdStmtEnds);
       } else if (isCurToken(tokens, "=>")) {
         skip(tokens, "=>");
 
-        onlyIfs = listParse<ShortCallOptNode>(
-          env,
-          tokens,
-          shortCallOptParse,
-          StdStmtEnds,
-          true
-        );
+        onlyIfs = listParse<OptNode>(env, tokens, OptParse, StdStmtEnds, true);
       }
 
       if (IfKeywords.includes(nodeType)) {
@@ -486,12 +480,12 @@ export namespace parser {
       skip(tokens, ProveKeywords);
 
       let toProve: null | IfThenNode = null;
-      let fixedIfThenOpt: null | ShortCallOptNode = null;
+      let fixedIfThenOpt: null | OptNode = null;
 
       if (IfKeywords.includes(tokens[0])) {
         toProve = ifThenParse(env, tokens, ["{"], false);
       } else {
-        fixedIfThenOpt = shortCallOptParse(env, tokens);
+        fixedIfThenOpt = OptParse(env, tokens);
       }
 
       const block: L_Node[] = [];

@@ -1,5 +1,5 @@
 import {
-  ShortCallOptNode,
+  OptNode,
   FactNode,
   ExistNode,
   DeclNode,
@@ -35,7 +35,7 @@ export class StoredFactValue {
 export class L_Env {
   private declaredVars: string[] = [];
   private messages: string[] = [];
-  private shortOptFacts = new Map<string, StoredFactValue[]>();
+  private OptFacts = new Map<string, StoredFactValue[]>();
   private declaredFacts = new Map<string, DeclNode>();
 
   constructor(private father: L_Env | undefined = undefined) {
@@ -57,20 +57,20 @@ export class L_Env {
   }
 
   // get from itself and father
-  getShortOptFact(s: string): StoredFactValue[] | undefined {
-    let out = this.shortOptFacts.get(s);
-    return out ? out : this.father?.getShortOptFact(s);
+  getOptFact(s: string): StoredFactValue[] | undefined {
+    let out = this.OptFacts.get(s);
+    return out ? out : this.father?.getOptFact(s);
   }
 
-  addShortOptFact(opt: ShortCallOptNode, req: FactNode[]) {
-    if (this.shortOptFacts.get(opt.fullName) === undefined) {
-      this.shortOptFacts.set(opt.fullName, [
+  addOptFact(opt: OptNode, req: FactNode[]) {
+    if (this.OptFacts.get(opt.fullName) === undefined) {
+      this.OptFacts.set(opt.fullName, [
         new StoredFactValue(opt.vars, req, opt.isT),
       ]);
     } else {
-      this.shortOptFacts
-        .get(opt.fullName)!
-        .push(new StoredFactValue(opt.vars, req, opt.isT));
+      this.OptFacts.get(opt.fullName)!.push(
+        new StoredFactValue(opt.vars, req, opt.isT)
+      );
     }
   }
 
@@ -117,7 +117,7 @@ export class L_Env {
   printFacts() {
     console.log("\n-----facts-------\n");
 
-    for (const [key, factUnderCurKey] of this.shortOptFacts) {
+    for (const [key, factUnderCurKey] of this.OptFacts) {
       const t = this.declaredFacts.get(key);
       let tStr = "";
       if (t instanceof DefDeclNode) {

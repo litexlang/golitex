@@ -2,7 +2,7 @@ import {
   KnowNode,
   L_Node,
   LetNode,
-  ShortCallOptNode,
+  OptNode,
   IfThenNode,
   FactNode,
   OrNode,
@@ -100,7 +100,7 @@ export namespace executor {
    * 2. know new fact
    */
   function factExec(env: L_Env, node: FactNode): RType {
-    if (node instanceof ShortCallOptNode) {
+    if (node instanceof OptNode) {
       const func = L_Builtins.get(node.fullName);
       if (func) return func(env, node);
     }
@@ -148,8 +148,8 @@ export namespace executor {
       }
 
       for (const fact of node.facts) {
-        if (fact instanceof ShortCallOptNode) {
-          const out = checker.checkShortOptInHave(env, fact);
+        if (fact instanceof OptNode) {
+          const out = checker.checkOptInHave(env, fact);
           if (out !== RType.True) {
             env.newMessage(`Unknown: ${node.toString()}`);
             return out;
@@ -193,8 +193,8 @@ export namespace executor {
   /**
    * Main Function of whole project. Not only used at assume expression, other expressions which introduces new fact into environment calls this function.
    *
-   * know shortOpt: store directly
-   * know if-then: if then is shortOpt, store it bound with if as req; if then is if-then, inherit father req and do knowExec again.
+   * know Opt: store directly
+   * know if-then: if then is Opt, store it bound with if as req; if then is if-then, inherit father req and do knowExec again.
    */
   //! This one of the functions in which new facts are generated.
   //! In order to unify interface, after checking a fact, we use KnowExec to emit new fact
@@ -205,7 +205,7 @@ export namespace executor {
   ): RType {
     try {
       for (const fact of node.facts) {
-        if (fact instanceof ShortCallOptNode) {
+        if (fact instanceof OptNode) {
           const factType = env.getDeclFact(fact.fullName);
           if (factType === undefined)
             throw Error(`${fact.fullName} not declared.`);
@@ -213,12 +213,12 @@ export namespace executor {
           const isT = env.varsAreNotDeclared(fact.vars.flat());
           if (isT) throw Error(`${fact.vars.flat().toString()} not declared.`);
 
-          env.addShortOptFact(fact, [...fatherReq]);
+          env.addOptFact(fact, [...fatherReq]);
         } else if (fact instanceof IfThenNode) {
           // store facts
           for (const onlyIf of fact.onlyIfs) {
-            if (onlyIf instanceof ShortCallOptNode)
-              env.addShortOptFact(onlyIf, [...fatherReq, ...fact.req]);
+            if (onlyIf instanceof OptNode)
+              env.addOptFact(onlyIf, [...fatherReq, ...fact.req]);
             else
               knowExec(env, new KnowNode([onlyIf]), [
                 ...fatherReq,
@@ -246,7 +246,7 @@ export namespace executor {
       env.setDeclFact(node.name, node);
 
       // const originalOptVars = [...node.vars];
-      const definedFact = new ShortCallOptNode(node.name, [...node.vars]);
+      const definedFact = new OptNode(node.name, [...node.vars]);
       definedFact.hashVars(node.vars);
 
       // at the end of declExec, node.rmvHashFromVars
@@ -254,7 +254,7 @@ export namespace executor {
       node.hashVars(node.vars);
 
       if (node instanceof DefDeclNode || node instanceof ExistNode) {
-        // we declare and exe exist-fact by exactly using shortOpt code.
+        // we declare and exe exist-fact by exactly using Opt code.
         // factType = node instanceof DefDeclNode ? FactType.Def : FactType.Exist;
 
         const hashedReq =
@@ -295,7 +295,7 @@ export namespace executor {
         // factType = FactType.IfThen;
 
         // req + itself => onlyIf
-        // const definedFact = new ShortCallOptNode(node.name, node.vars);
+        // const definedFact = new OptNode(node.name, node.vars);
         knowExec(
           env,
           new KnowNode([

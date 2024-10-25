@@ -93,7 +93,7 @@ export class IfThenNode extends FactNode {
   }
 }
 
-export class ShortCallOptNode extends FactNode {
+export class OptNode extends FactNode {
   constructor(
     public fullName: string,
     public vars: string[]
@@ -125,8 +125,8 @@ export class ShortCallOptNode extends FactNode {
     });
   }
 
-  copy(): ShortCallOptNode {
-    return new ShortCallOptNode(this.fullName, [...this.vars]);
+  copy(): OptNode {
+    return new OptNode(this.fullName, [...this.vars]);
   }
 }
 
@@ -152,7 +152,7 @@ export abstract class DeclNode extends L_Node {
     public name: string = "",
     public vars: string[] = [],
     public req: FactNode[] = [],
-    public onlyIfs: ShortCallOptNode[] = []
+    public onlyIfs: OptNode[] = []
   ) {
     super();
   }
@@ -161,7 +161,7 @@ export abstract class DeclNode extends L_Node {
     return `${this.name}(${this.vars})`;
   }
 
-  replaceVars(givenOpt: ShortCallOptNode) {
+  replaceVars(givenOpt: OptNode) {
     const mapping = new Map<string, string>();
     this.vars.forEach((v, i) => {
       mapping.set(v, givenOpt.vars[i]);
@@ -188,7 +188,7 @@ export abstract class DeclNode extends L_Node {
     for (const r of this.req) {
       req.push(r.copy());
     }
-    const onlyIfs: ShortCallOptNode[] = [];
+    const onlyIfs: OptNode[] = [];
     for (const onlyIf of this.onlyIfs) {
       onlyIfs.push(onlyIf.copy());
     }
@@ -198,19 +198,6 @@ export abstract class DeclNode extends L_Node {
     copyTo.onlyIfs = onlyIfs;
     copyTo.req = req;
   }
-}
-
-function copyDeclNode<T extends DeclNode>(declNode: T): T {
-  const vars = [...declNode.vars];
-  const req: FactNode[] = [];
-  for (const r of declNode.req) {
-    req.push(r.copy());
-  }
-  const onlyIfs: ShortCallOptNode[] = [];
-  for (const onlyIf of declNode.onlyIfs) {
-    onlyIfs.push(onlyIf.copy());
-  }
-  return declNode.constructor(declNode.name, vars, req, onlyIfs);
 }
 
 export class ExistNode extends DeclNode {
@@ -251,7 +238,7 @@ export class ProveNode extends L_Node {
   constructor(
     // Only one of toProve, fixedIfThenOpt exists
     public toProve: IfThenNode | null,
-    public fixedIfThenOpt: ShortCallOptNode | null,
+    public fixedIfThenOpt: OptNode | null,
     public block: L_Node[]
   ) {
     super();
@@ -291,7 +278,7 @@ export class AssumeByContraNode extends L_Node {
 }
 
 export class _OptsNode extends L_Node {
-  constructor(public opts: ShortCallOptNode[]) {
+  constructor(public opts: OptNode[]) {
     super();
   }
 }

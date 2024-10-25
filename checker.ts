@@ -4,15 +4,15 @@ import {
   FactNode,
   IfThenNode,
   KnowNode,
-  ShortCallOptNode,
+  OptNode,
 } from "./ast";
 import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
 
 export namespace checker {
   export function check(env: L_Env, node: FactNode): RType {
-    if (node instanceof ShortCallOptNode) {
-      return checkShortOpt(env, node);
+    if (node instanceof OptNode) {
+      return checkOpt(env, node);
     } else if (node instanceof IfThenNode) {
       return checkIfThen(env, node);
     }
@@ -23,13 +23,13 @@ export namespace checker {
   /**
    * Main function of checker
    * @param env the environment we are working at
-   * @param opt the fact (ShortCallOptFact) we wanna prove
-   * @param ignore  which fact (ShortCallOpt) to ignore in order to avoid "req => itself, itself => req"-kind loop
+   * @param opt the fact (OptFact) we wanna prove
+   * @param ignore  which fact (Opt) to ignore in order to avoid "req => itself, itself => req"-kind loop
    * @returns RType Error, True, False
    */
-  export function checkShortOpt(env: L_Env, opt: ShortCallOptNode): RType {
+  export function checkOpt(env: L_Env, opt: OptNode): RType {
     // get related fact from itself and its ancestors
-    const facts = env.getShortOptFact(opt.fullName);
+    const facts = env.getOptFact(opt.fullName);
     if (!facts) return RType.Error;
 
     for (const storedFact of facts) {
@@ -86,8 +86,8 @@ export namespace checker {
   }
 
   export function checkByFactsWithNoReq(env: L_Env, node: FactNode) {
-    if (node instanceof ShortCallOptNode) {
-      return checkShortOptByFactsWithNoReq(env, node);
+    if (node instanceof OptNode) {
+      return checkOptByFactsWithNoReq(env, node);
     } else if (node instanceof IfThenNode) {
       return checkIfThenByFactsWithNoReq(env, node);
     }
@@ -95,8 +95,8 @@ export namespace checker {
     return RType.Error;
   }
 
-  function checkShortOptByFactsWithNoReq(env: L_Env, opt: ShortCallOptNode) {
-    const facts = env.getShortOptFact(opt.fullName);
+  function checkOptByFactsWithNoReq(env: L_Env, opt: OptNode) {
+    const facts = env.getOptFact(opt.fullName);
     if (!facts) return RType.Error;
 
     for (const storedFact of facts) {
@@ -112,11 +112,8 @@ export namespace checker {
     return RType.Unknown;
   }
 
-  export function checkShortOptInHave(
-    env: L_Env,
-    opt: ShortCallOptNode
-  ): RType {
-    const facts = env.getShortOptFact(opt.fullName);
+  export function checkOptInHave(env: L_Env, opt: OptNode): RType {
+    const facts = env.getOptFact(opt.fullName);
     if (!facts) return RType.Error;
 
     for (const storedFact of facts) {
@@ -161,8 +158,8 @@ export namespace checker {
         [...e.req],
         [...e.onlyIfs]
       );
-    } else if (e instanceof ShortCallOptNode) {
-      return new ShortCallOptNode(
+    } else if (e instanceof OptNode) {
+      return new OptNode(
         e.fullName,
         e.vars.map((s) => {
           const out = freeToFixMap.get(s);
@@ -171,6 +168,6 @@ export namespace checker {
         })
       );
     }
-    throw Error("fact should be if-then or shortOpt");
+    throw Error("fact should be if-then or Opt");
   }
 }

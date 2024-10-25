@@ -54,7 +54,7 @@ const testList6 = [
   "exist Ex x | p1(x);", // can be used as a "stronger" version of def.
   "let y | p1(y);",
   "have x | Ex(x);", // unsuccessful have
-  "Ex(y);", // we declare and exe exist-fact by exactly using shortOpt code.
+  "Ex(y);", // we declare and exe exist-fact by exactly using Opt code.
   "have z | Ex(z);",
 ];
 
