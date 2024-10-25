@@ -377,8 +377,8 @@ export namespace executor {
 
       return RType.True;
     } else if (node.fixedIfThenOpt !== null) {
-      const declFact = env.getDeclFact(node.fixedIfThenOpt.fullName);
-      if (declFact === undefined) {
+      const originalDeclFact = env.getDeclFact(node.fixedIfThenOpt.fullName);
+      if (originalDeclFact === undefined) {
         return handleExecError(
           env,
           RType.Error,
@@ -386,6 +386,8 @@ export namespace executor {
         );
       }
 
+      const declFact = new IfThenDeclNode("", [], [], []);
+      originalDeclFact.copyTo(declFact);
       declFact.rmvHashFromVars(declFact.vars);
 
       if (!(declFact instanceof IfThenDeclNode)) {
@@ -435,8 +437,6 @@ export namespace executor {
       // store new fact into env
       node.fixedIfThenOpt.vars = originalOptVars;
       knowExec(env, new KnowNode([node.fixedIfThenOpt]));
-
-      declFact.hashVars(declFact.vars);
 
       return RType.True;
     }

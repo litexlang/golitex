@@ -16,6 +16,11 @@ export abstract class FactNode extends L_Node {
    * @param mapping key = free variable, value = given variable
    */
   abstract replaceVars(mapping: Map<string, string>): void;
+
+  /**
+   * copy() is necessary because when we store hashed facts by using declNode (to improve performance) but when proving we need to fix declNode with given variables.
+   */
+  abstract copy(): FactNode;
 }
 
 export class OrNode extends FactNode {
@@ -26,6 +31,9 @@ export class OrNode extends FactNode {
   hashVars(varsToHash: string[]) {}
   rmvHashFromVars(varsToHash: string[]): void {}
   replaceVars(mapping: Map<string, string>): void {}
+  copy(): OrNode {
+    return new OrNode([]);
+  }
 }
 
 export class IfThenNode extends FactNode {
@@ -68,6 +76,19 @@ export class IfThenNode extends FactNode {
     this.req.forEach((e) => e.replaceVars(mapping));
     this.onlyIfs.forEach((e) => e.replaceVars(mapping));
   }
+
+  copy(): IfThenNode {
+    const req: FactNode[] = [];
+    for (const r of this.req) {
+      req.push(r.copy());
+    }
+    const onlyIfs: FactNode[] = [];
+    for (const onlyIf of this.onlyIfs) {
+      onlyIfs.push(onlyIf.copy());
+    }
+    const vars = [...this.vars];
+    return new IfThenNode(vars, req, onlyIfs);
+  }
 }
 
 export class ShortCallOptNode extends FactNode {
@@ -101,6 +122,10 @@ export class ShortCallOptNode extends FactNode {
       if (fixed !== undefined) this.vars[i] = fixed;
     });
   }
+
+  copy(): ShortCallOptNode {
+    return new ShortCallOptNode(this.fullName, [...this.vars]);
+  }
 }
 
 export class ByNode extends FactNode {
@@ -114,9 +139,13 @@ export class ByNode extends FactNode {
   hashVars(varsToHash: string[]) {}
   rmvHashFromVars(varsToHash: string[]): void {}
   replaceVars(mapping: Map<string, string>): void {}
+  copy(): ByNode {
+    return new ByNode([], []);
+  }
 }
 
 export abstract class DeclNode extends L_Node {
+  // WHEN ADDING FIELD HERE, DON'T FORGET TO UPDATE copyTo()
   constructor(
     public name: string = "",
     public vars: string[] = [],
@@ -150,6 +179,35 @@ export abstract class DeclNode extends L_Node {
     this.req.forEach((v) => v.rmvHashFromVars(varsToHash));
     this.onlyIfs.forEach((v) => v.rmvHashFromVars(varsToHash));
   }
+
+  copyTo(copyTo: DeclNode) {
+    const vars = [...this.vars];
+    const req: FactNode[] = [];
+    for (const r of this.req) {
+      req.push(r.copy());
+    }
+    const onlyIfs: ShortCallOptNode[] = [];
+    for (const onlyIf of this.onlyIfs) {
+      onlyIfs.push(onlyIf.copy());
+    }
+    copyTo.name = this.name;
+    copyTo.vars = vars;
+    copyTo.onlyIfs = onlyIfs;
+    copyTo.req = req;
+  }
+}
+
+function copyDeclNode<T extends DeclNode>(declNode: T): T {
+  const vars = [...declNode.vars];
+  const req: FactNode[] = [];
+  for (const r of declNode.req) {
+    req.push(r.copy());
+  }
+  const onlyIfs: ShortCallOptNode[] = [];
+  for (const onlyIf of declNode.onlyIfs) {
+    onlyIfs.push(onlyIf.copy());
+  }
+  return declNode.constructor(declNode.name, vars, req, onlyIfs);
 }
 
 export class ExistNode extends DeclNode {
