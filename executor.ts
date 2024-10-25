@@ -206,7 +206,7 @@ export namespace executor {
     try {
       for (const fact of node.facts) {
         if (fact instanceof ShortCallOptNode) {
-          const factType = env.getOptType(fact.fullName);
+          const factType = env.getDeclFact(fact.fullName);
           if (factType === undefined)
             throw Error(`${fact.fullName} not declared.`);
 
@@ -239,7 +239,7 @@ export namespace executor {
 
   function declExec(env: L_Env, node: DeclNode): RType {
     try {
-      if (env.getOptType(node.name)) {
+      if (env.getDeclFact(node.name)) {
         throw Error(`${node.name} already declared.`);
       }
 
@@ -252,7 +252,7 @@ export namespace executor {
       if (node instanceof DefDeclNode || node instanceof ExistNode) {
         // we declare and exe exist-fact by exactly using shortOpt code.
         // factType = node instanceof DefDeclNode ? FactType.Def : FactType.Exist;
-        env.setOptType(node.name, node);
+        env.setDeclFact(node.name, node);
 
         const hashedReq =
           /** Notice the following 4 knowExec can be reduced to 2 */
@@ -290,7 +290,7 @@ export namespace executor {
         );
       } else if (node instanceof IfThenDeclNode) {
         // factType = FactType.IfThen;
-        env.setOptType(node.name, node);
+        env.setDeclFact(node.name, node);
         // req + itself => onlyIf
         // const definedFact = new ShortCallOptNode(node.name, node.freeVars);
         knowExec(
@@ -305,14 +305,14 @@ export namespace executor {
         );
       } else if (node instanceof OnlyIfDeclNode) {
         // factType = FactType.OnlyIf;
-        env.setOptType(node.name, node);
+        env.setDeclFact(node.name, node);
         knowExec(
           env,
           new KnowNode([new IfThenNode(node.freeVars, node.req, [definedFact])])
         );
       } else if (node instanceof OrNode) {
         // factType = FactType.Or;
-        env.setOptType(node.name, node);
+        env.setDeclFact(node.name, node);
       }
 
       return RType.True;
@@ -361,6 +361,20 @@ export namespace executor {
           ),
         ])
       );
+
+      return RType.True;
+    } else if (node.fixedIfThenOpt !== null) {
+      const declFact = env.getDeclFact(node.fixedIfThenOpt.fullName);
+      if (declFact === undefined) {
+        return handleExecError(
+          env,
+          RType.Error,
+          `${node.fixedIfThenOpt.fullName} is not declared.`
+        );
+      }
+
+      // Replace all free variables in the declared node with the given variables
+      declFact;
 
       return RType.True;
     }

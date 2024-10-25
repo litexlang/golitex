@@ -5,6 +5,7 @@ export abstract class FactNode extends L_Node {
   useName: string = "";
 
   abstract hashVars(varsToHash: string[]): void;
+  abstract replaceVars(mapping: Map<string, string>): void;
 }
 
 export class OrNode extends FactNode {
@@ -13,6 +14,7 @@ export class OrNode extends FactNode {
   }
 
   hashVars(varsToHash: string[]) {}
+  replaceVars(mapping: Map<string, string>): void {}
 }
 
 export class IfThenNode extends FactNode {
@@ -40,6 +42,15 @@ export class IfThenNode extends FactNode {
     this.req.forEach((e) => e.hashVars(varsToHash));
     this.onlyIfs.forEach((e) => e.hashVars(varsToHash));
   }
+
+  replaceVars(mapping: Map<string, string>): void {
+    for (let i = 0; i < this.freeVars.length; i++) {
+      const fixed = mapping.get(this.freeVars[i]);
+      if (fixed !== undefined) this.freeVars[i] = fixed;
+    }
+    this.req.forEach((e) => e.replaceVars(mapping));
+    this.onlyIfs.forEach((e) => e.replaceVars(mapping));
+  }
 }
 
 export class ShortCallOptNode extends FactNode {
@@ -60,6 +71,13 @@ export class ShortCallOptNode extends FactNode {
   hashVars(varsToHash: string[]) {
     this.vars = this.vars.map((s) => (varsToHash.includes(s) ? "#" + s : s));
   }
+
+  replaceVars(mapping: Map<string, string>): void {
+    this.vars.forEach((v, i) => {
+      const fixed = mapping.get(v);
+      if (fixed !== undefined) this.vars[i] = fixed;
+    });
+  }
 }
 
 export class ByNode extends FactNode {
@@ -71,6 +89,7 @@ export class ByNode extends FactNode {
   }
 
   hashVars(varsToHash: string[]) {}
+  replaceVars(mapping: Map<string, string>): void {}
 }
 
 export abstract class DeclNode extends L_Node {
@@ -85,6 +104,16 @@ export abstract class DeclNode extends L_Node {
 
   toString() {
     return `${this.name}(${this.freeVars})`;
+  }
+
+  replaceVars(givenOpt: ShortCallOptNode) {
+    const mapping = new Map<string, string>();
+    this.freeVars.forEach((v, i) => {
+      mapping.set(v, givenOpt.vars[i]);
+    });
+    this.freeVars.forEach((v, i) => (this.freeVars[i] = givenOpt.vars[i]));
+    this.req.forEach((v) => v.replaceVars(mapping));
+    this.onlyIfs.forEach((v) => v.replaceVars(mapping));
   }
 }
 

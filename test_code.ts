@@ -140,6 +140,7 @@ export function testCode() {
     }
 
     env.printFacts();
+    env.printDeclFacts();
     env.printClearMessage();
   }
 }

@@ -47,12 +47,12 @@ export class L_Env {
   }
 
   // get from itself and father
-  getOptType(s: string) {
+  getDeclFact(s: string) {
     let out = this.declaredFacts.get(s);
     return out ? out : this.father?.declaredFacts.get(s);
   }
 
-  setOptType(s: string, declNode: DeclNode) {
+  setDeclFact(s: string, declNode: DeclNode) {
     this.declaredFacts.set(s, declNode);
   }
 
@@ -135,6 +135,14 @@ export class L_Env {
         console.log(e.toString());
       });
       console.log();
+    }
+  }
+
+  printDeclFacts() {
+    console.log("\n--Declared Facts--\n");
+
+    for (const [name, declFact] of this.declaredFacts) {
+      console.log(declFact);
     }
   }
 }
