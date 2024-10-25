@@ -108,7 +108,7 @@ const testList13 = [
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
-  testList: [testList0, false],
+  testList: [testList0, true],
   testList1: [testList1, false],
   testList2: [testList2, false],
   testList3: [testList3, false],

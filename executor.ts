@@ -386,6 +386,7 @@ export namespace executor {
         );
       }
 
+      // We must create a new declFact to avoid overwriting original declFact when hashing and removing hashes. The reason is that if we directly change the original declFact, storedFacts are changed because they are referenced to original declFact.
       const declFact = new IfThenDeclNode("", [], [], []);
       originalDeclFact.copyTo(declFact);
       declFact.rmvHashFromVars(declFact.vars);

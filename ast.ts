@@ -1,3 +1,5 @@
+import { on } from "events";
+
 export abstract class L_Node {}
 
 export abstract class FactNode extends L_Node {
@@ -190,6 +192,7 @@ export abstract class DeclNode extends L_Node {
     for (const onlyIf of this.onlyIfs) {
       onlyIfs.push(onlyIf.copy());
     }
+
     copyTo.name = this.name;
     copyTo.vars = vars;
     copyTo.onlyIfs = onlyIfs;
