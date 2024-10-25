@@ -448,13 +448,19 @@ export namespace parser {
         false
       );
 
-      let onlyIfs: OptNode[] = [];
+      let onlyIfs: FactNode[] = [];
       if (StdStmtEnds.includes(tokens[0])) {
         skip(tokens, StdStmtEnds);
       } else if (isCurToken(tokens, "=>")) {
         skip(tokens, "=>");
 
-        onlyIfs = listParse<OptNode>(env, tokens, OptParse, StdStmtEnds, true);
+        onlyIfs = listParse<FactNode>(
+          env,
+          tokens,
+          factParse,
+          StdStmtEnds,
+          true
+        );
       }
 
       if (IfKeywords.includes(nodeType)) {

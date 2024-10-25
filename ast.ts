@@ -152,7 +152,7 @@ export abstract class DeclNode extends L_Node {
     public name: string = "",
     public vars: string[] = [],
     public req: FactNode[] = [],
-    public onlyIfs: OptNode[] = []
+    public onlyIfs: FactNode[] = []
   ) {
     super();
   }
@@ -188,7 +188,7 @@ export abstract class DeclNode extends L_Node {
     for (const r of this.req) {
       req.push(r.copy());
     }
-    const onlyIfs: OptNode[] = [];
+    const onlyIfs: FactNode[] = [];
     for (const onlyIf of this.onlyIfs) {
       onlyIfs.push(onlyIf.copy());
     }
