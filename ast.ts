@@ -142,6 +142,12 @@ export abstract class DeclNode extends L_Node {
     this.onlyIfs.forEach((v) => v.replaceVars(mapping));
   }
 
+  // NOTE: freeVars of DeclNode itself are not hashed, only its subNodes are hashed.
+  hashVars(varsToHash: string[]) {
+    this.req.forEach((v) => v.hashVars(varsToHash));
+    this.onlyIfs.forEach((v) => v.hashVars(varsToHash));
+  }
+
   rmvHashFromVars(varsToHash: string[]) {
     this.req.forEach((v) => v.rmvHashFromVars(varsToHash));
     this.onlyIfs.forEach((v) => v.rmvHashFromVars(varsToHash));
@@ -193,7 +199,8 @@ export class ProveNode extends L_Node {
   }
 
   toString() {
-    return `prove ${this.toProve}`;
+    if (this.toProve) return `prove ${this.toProve}`;
+    else return `prove ${this.fixedIfThenOpt}`;
   }
 }
 

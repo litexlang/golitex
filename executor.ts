@@ -243,12 +243,13 @@ export namespace executor {
         throw Error(`${node.name} already declared.`);
       }
 
-      const originalOptVars = [...node.freeVars];
+      // const originalOptVars = [...node.freeVars];
       const definedFact = new ShortCallOptNode(node.name, node.freeVars);
       definedFact.hashVars(node.freeVars);
 
-      node.req.forEach((e) => e.hashVars(node.freeVars));
-      node.onlyIfs.forEach((e) => e.hashVars(node.freeVars));
+      // at the end of declExec, node.rmvHashFromVars
+      // NOTE: node.freeVars are not hashed.
+      node.hashVars(node.freeVars);
 
       if (node instanceof DefDeclNode || node instanceof ExistNode) {
         // we declare and exe exist-fact by exactly using shortOpt code.
@@ -315,7 +316,7 @@ export namespace executor {
       }
 
       // clean up hash added to declFact
-      node.rmvHashFromVars(originalOptVars);
+      node.rmvHashFromVars(node.freeVars);
       env.setDeclFact(node.name, node);
 
       return RType.True;
