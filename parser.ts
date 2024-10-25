@@ -263,7 +263,6 @@ export namespace parser {
     }
   }
 
-  // parse p1:p2:p3(x1,x2:x3:x4,x5,x6)
   function shortCallOptParse(env: L_Env, tokens: string[]): ShortCallOptNode {
     const start = tokens[0];
     const index = tokens.length;

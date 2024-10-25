@@ -30,7 +30,7 @@ export class OrNode extends FactNode {
 
 export class IfThenNode extends FactNode {
   constructor(
-    public freeVars: string[] = [],
+    public vars: string[] = [],
     public req: FactNode[] = [],
     //! I think we should onlyIfs: FactNode[] because despite we can not store if-then
     //! we can still check it.
@@ -40,22 +40,20 @@ export class IfThenNode extends FactNode {
   }
 
   toString() {
-    const mainPart = `if ${this.freeVars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
+    const mainPart = `if ${this.vars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
     return notPart + mainPart + useNamePart;
   }
 
   hashVars(varsToHash: string[]) {
-    this.freeVars = this.freeVars.map((s) =>
-      varsToHash.includes(s) ? "#" + s : s
-    );
+    this.vars = this.vars.map((s) => (varsToHash.includes(s) ? "#" + s : s));
     this.req.forEach((e) => e.hashVars(varsToHash));
     this.onlyIfs.forEach((e) => e.hashVars(varsToHash));
   }
 
   rmvHashFromVars(varsToHash: string[]): void {
-    this.freeVars = this.freeVars.map((s) =>
+    this.vars = this.vars.map((s) =>
       varsToHash.includes(s.slice(1)) && s[0] === "#" ? s.slice(1) : s
     );
     this.req.forEach((e) => e.rmvHashFromVars(varsToHash));
@@ -63,9 +61,9 @@ export class IfThenNode extends FactNode {
   }
 
   replaceVars(mapping: Map<string, string>): void {
-    for (let i = 0; i < this.freeVars.length; i++) {
-      const fixed = mapping.get(this.freeVars[i]);
-      if (fixed !== undefined) this.freeVars[i] = fixed;
+    for (let i = 0; i < this.vars.length; i++) {
+      const fixed = mapping.get(this.vars[i]);
+      if (fixed !== undefined) this.vars[i] = fixed;
     }
     this.req.forEach((e) => e.replaceVars(mapping));
     this.onlyIfs.forEach((e) => e.replaceVars(mapping));
@@ -121,7 +119,7 @@ export class ByNode extends FactNode {
 export abstract class DeclNode extends L_Node {
   constructor(
     public name: string = "",
-    public freeVars: string[] = [],
+    public vars: string[] = [],
     public req: FactNode[] = [],
     public onlyIfs: ShortCallOptNode[] = []
   ) {
@@ -129,20 +127,20 @@ export abstract class DeclNode extends L_Node {
   }
 
   toString() {
-    return `${this.name}(${this.freeVars})`;
+    return `${this.name}(${this.vars})`;
   }
 
   replaceVars(givenOpt: ShortCallOptNode) {
     const mapping = new Map<string, string>();
-    this.freeVars.forEach((v, i) => {
+    this.vars.forEach((v, i) => {
       mapping.set(v, givenOpt.vars[i]);
     });
-    this.freeVars.forEach((v, i) => (this.freeVars[i] = givenOpt.vars[i]));
+    this.vars.forEach((v, i) => (this.vars[i] = givenOpt.vars[i]));
     this.req.forEach((v) => v.replaceVars(mapping));
     this.onlyIfs.forEach((v) => v.replaceVars(mapping));
   }
 
-  // NOTE: freeVars of DeclNode itself are not hashed, only its subNodes are hashed.
+  // NOTE: vars of DeclNode itself are not hashed, only its subNodes are hashed.
   hashVars(varsToHash: string[]) {
     this.req.forEach((v) => v.hashVars(varsToHash));
     this.onlyIfs.forEach((v) => v.hashVars(varsToHash));
@@ -228,5 +226,11 @@ export class AssumeByContraNode extends L_Node {
 
   toString() {
     return `assume_by_contradiction ${this.assume}`;
+  }
+}
+
+export class _OptsNode extends L_Node {
+  constructor(public opts: ShortCallOptNode[]) {
+    super();
   }
 }

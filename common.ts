@@ -44,3 +44,5 @@ export const LetKeywords = ["let"];
 export const HaveKeywords = ["have"];
 
 export const AssumeByContraKeywords = ["assume_by_contradiction"];
+
+export const IsAreKeywords = ["is", "are"];

@@ -243,13 +243,13 @@ export namespace executor {
         throw Error(`${node.name} already declared.`);
       }
 
-      // const originalOptVars = [...node.freeVars];
-      const definedFact = new ShortCallOptNode(node.name, node.freeVars);
-      definedFact.hashVars(node.freeVars);
+      // const originalOptVars = [...node.vars];
+      const definedFact = new ShortCallOptNode(node.name, node.vars);
+      definedFact.hashVars(node.vars);
 
       // at the end of declExec, node.rmvHashFromVars
-      // NOTE: node.freeVars are not hashed.
-      node.hashVars(node.freeVars);
+      // NOTE: node.vars are not hashed.
+      node.hashVars(node.vars);
 
       if (node instanceof DefDeclNode || node instanceof ExistNode) {
         // we declare and exe exist-fact by exactly using shortOpt code.
@@ -293,15 +293,11 @@ export namespace executor {
         // factType = FactType.IfThen;
 
         // req + itself => onlyIf
-        // const definedFact = new ShortCallOptNode(node.name, node.freeVars);
+        // const definedFact = new ShortCallOptNode(node.name, node.vars);
         knowExec(
           env,
           new KnowNode([
-            new IfThenNode(
-              node.freeVars,
-              [definedFact, ...node.req],
-              node.onlyIfs
-            ),
+            new IfThenNode(node.vars, [definedFact, ...node.req], node.onlyIfs),
           ])
         );
       } else if (node instanceof OnlyIfDeclNode) {
@@ -309,14 +305,14 @@ export namespace executor {
 
         knowExec(
           env,
-          new KnowNode([new IfThenNode(node.freeVars, node.req, [definedFact])])
+          new KnowNode([new IfThenNode(node.vars, node.req, [definedFact])])
         );
       } else if (node instanceof OrNode) {
         // factType = FactType.Or;
       }
 
       // clean up hash added to declFact
-      node.rmvHashFromVars(node.freeVars);
+      node.rmvHashFromVars(node.vars);
       env.setDeclFact(node.name, node);
 
       return RType.True;
@@ -331,7 +327,7 @@ export namespace executor {
   function proveExec(env: L_Env, node: ProveNode): RType {
     const newEnv = new L_Env(env);
     if (node.toProve !== null) {
-      newEnv.declareNewVar(node.toProve.freeVars);
+      newEnv.declareNewVar(node.toProve.vars);
       knowExec(newEnv, new KnowNode(node.toProve.req));
       // execute prove block
       for (const subNode of node.block) {
@@ -354,12 +350,12 @@ export namespace executor {
       }
 
       // store new fact into env
-      node.toProve.hashVars(node.toProve.freeVars);
+      node.toProve.hashVars(node.toProve.vars);
       knowExec(
         env,
         new KnowNode([
           new IfThenNode(
-            node.toProve.freeVars,
+            node.toProve.vars,
             node.toProve.req,
             node.toProve.onlyIfs
           ),

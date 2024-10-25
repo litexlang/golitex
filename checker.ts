@@ -73,7 +73,7 @@ export namespace checker {
    */
   export function checkIfThen(env: L_Env, node: IfThenNode): RType {
     const newEnv = new L_Env(env);
-    newEnv.declareNewVar(node.freeVars);
+    newEnv.declareNewVar(node.vars);
     executor.knowExec(newEnv, new KnowNode(node.req));
 
     for (const fact of node.onlyIfs) {
@@ -134,7 +134,7 @@ export namespace checker {
 
   function checkIfThenByFactsWithNoReq(env: L_Env, node: IfThenNode): RType {
     const newEnv = new L_Env(env);
-    newEnv.declareNewVar(node.freeVars);
+    newEnv.declareNewVar(node.vars);
     executor.knowExec(newEnv, new KnowNode(node.req));
 
     for (const fact of node.onlyIfs) {
@@ -153,7 +153,7 @@ export namespace checker {
   function fixFree(e: FactNode, freeToFixMap: Map<string, string>): FactNode {
     if (e instanceof IfThenNode) {
       return new IfThenNode(
-        e.freeVars.map((s) => {
+        e.vars.map((s) => {
           const out = freeToFixMap.get(s);
           if (out === undefined) return s;
           else return out;
