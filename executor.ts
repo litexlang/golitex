@@ -243,6 +243,7 @@ export namespace executor {
         throw Error(`${node.name} already declared.`);
       }
 
+      const originalOptVars = [...node.freeVars];
       const definedFact = new ShortCallOptNode(node.name, node.freeVars);
       definedFact.hashVars(node.freeVars);
 
@@ -252,7 +253,6 @@ export namespace executor {
       if (node instanceof DefDeclNode || node instanceof ExistNode) {
         // we declare and exe exist-fact by exactly using shortOpt code.
         // factType = node instanceof DefDeclNode ? FactType.Def : FactType.Exist;
-        env.setDeclFact(node.name, node);
 
         const hashedReq =
           /** Notice the following 4 knowExec can be reduced to 2 */
@@ -290,7 +290,7 @@ export namespace executor {
         );
       } else if (node instanceof IfThenDeclNode) {
         // factType = FactType.IfThen;
-        env.setDeclFact(node.name, node);
+
         // req + itself => onlyIf
         // const definedFact = new ShortCallOptNode(node.name, node.freeVars);
         knowExec(
@@ -305,15 +305,18 @@ export namespace executor {
         );
       } else if (node instanceof OnlyIfDeclNode) {
         // factType = FactType.OnlyIf;
-        env.setDeclFact(node.name, node);
+
         knowExec(
           env,
           new KnowNode([new IfThenNode(node.freeVars, node.req, [definedFact])])
         );
       } else if (node instanceof OrNode) {
         // factType = FactType.Or;
-        env.setDeclFact(node.name, node);
       }
+
+      // clean up hash added to declFact
+      node.rmvHashFromVars(originalOptVars);
+      env.setDeclFact(node.name, node);
 
       return RType.True;
     } catch (error) {
@@ -349,7 +352,7 @@ export namespace executor {
         }
       }
 
-      // emit into env
+      // store new fact into env
       node.toProve.hashVars(node.toProve.freeVars);
       knowExec(
         env,
@@ -373,8 +376,53 @@ export namespace executor {
         );
       }
 
+      if (!(declFact instanceof IfThenDeclNode)) {
+        return handleExecError(
+          env,
+          RType.Error,
+          `${node.fixedIfThenOpt.fullName} is not if-type operator.`
+        );
+      }
+
       // Replace all free variables in the declared node with the given variables
-      declFact;
+      const originalOptVars = [...node.fixedIfThenOpt.vars];
+
+      // eliminate # so that user don't need to type #
+      for (let i = 0; i < node.fixedIfThenOpt.vars.length; i++) {
+        if (node.fixedIfThenOpt.vars[i].startsWith("#"))
+          node.fixedIfThenOpt.vars[i] = node.fixedIfThenOpt.vars[i].slice(1);
+      }
+      declFact.replaceVars(node.fixedIfThenOpt);
+
+      // declare variables into newEnv
+      newEnv.declareNewVar(node.fixedIfThenOpt.vars);
+
+      // Assume all requirements of given operator is true
+      knowExec(newEnv, new KnowNode(declFact.req));
+
+      // execute prove block
+      for (const subNode of node.block) {
+        const out = nodeExec(newEnv, subNode);
+        if (out !== RType.True) {
+          return handleExecError(
+            env,
+            out,
+            `Proof Block Expression ${subNode} failed.`
+          );
+        }
+      }
+
+      // check
+      for (const toTest of declFact.onlyIfs) {
+        const out = checker.check(newEnv, toTest);
+        if (!(out === RType.True)) {
+          return handleExecError(env, out, `Proof failed to prove ${toTest}.`);
+        }
+      }
+
+      // store new fact into env
+      node.fixedIfThenOpt.vars = originalOptVars;
+      knowExec(env, new KnowNode([node.fixedIfThenOpt]));
 
       return RType.True;
     }

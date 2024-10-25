@@ -4,7 +4,17 @@ export abstract class FactNode extends L_Node {
   isT: Boolean = true;
   useName: string = "";
 
+  /**
+   * Currently, when executing declaration of facts, we update all facts within the declNode in-place by adding or removing #prefix
+   * @param varsToHash
+   */
   abstract hashVars(varsToHash: string[]): void;
+  abstract rmvHashFromVars(varsToHash: string[]): void;
+
+  /**
+   * Used when replacing all free variables in the declared node with the given variables
+   * @param mapping key = free variable, value = given variable
+   */
   abstract replaceVars(mapping: Map<string, string>): void;
 }
 
@@ -14,6 +24,7 @@ export class OrNode extends FactNode {
   }
 
   hashVars(varsToHash: string[]) {}
+  rmvHashFromVars(varsToHash: string[]): void {}
   replaceVars(mapping: Map<string, string>): void {}
 }
 
@@ -41,6 +52,14 @@ export class IfThenNode extends FactNode {
     );
     this.req.forEach((e) => e.hashVars(varsToHash));
     this.onlyIfs.forEach((e) => e.hashVars(varsToHash));
+  }
+
+  rmvHashFromVars(varsToHash: string[]): void {
+    this.freeVars = this.freeVars.map((s) =>
+      varsToHash.includes(s.slice(1)) && s[0] === "#" ? s.slice(1) : s
+    );
+    this.req.forEach((e) => e.rmvHashFromVars(varsToHash));
+    this.onlyIfs.forEach((e) => e.rmvHashFromVars(varsToHash));
   }
 
   replaceVars(mapping: Map<string, string>): void {
@@ -72,6 +91,12 @@ export class ShortCallOptNode extends FactNode {
     this.vars = this.vars.map((s) => (varsToHash.includes(s) ? "#" + s : s));
   }
 
+  rmvHashFromVars(varsToHash: string[]): void {
+    this.vars = this.vars.map((s) =>
+      varsToHash.includes(s.slice(1)) && s[0] === "#" ? s.slice(1) : s
+    );
+  }
+
   replaceVars(mapping: Map<string, string>): void {
     this.vars.forEach((v, i) => {
       const fixed = mapping.get(v);
@@ -89,6 +114,7 @@ export class ByNode extends FactNode {
   }
 
   hashVars(varsToHash: string[]) {}
+  rmvHashFromVars(varsToHash: string[]): void {}
   replaceVars(mapping: Map<string, string>): void {}
 }
 
@@ -114,6 +140,11 @@ export abstract class DeclNode extends L_Node {
     this.freeVars.forEach((v, i) => (this.freeVars[i] = givenOpt.vars[i]));
     this.req.forEach((v) => v.replaceVars(mapping));
     this.onlyIfs.forEach((v) => v.replaceVars(mapping));
+  }
+
+  rmvHashFromVars(varsToHash: string[]) {
+    this.req.forEach((v) => v.rmvHashFromVars(varsToHash));
+    this.onlyIfs.forEach((v) => v.rmvHashFromVars(varsToHash));
   }
 }
 

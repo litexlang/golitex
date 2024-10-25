@@ -101,10 +101,10 @@ const testList12 = ["def p1 if x | => ;"];
 
 const testList13 = [
   "def obj if x | => ;",
-  "def obj2 if x | obj(x) ;",
+  "def obj2 if x | => obj(x) ;",
   "def obj3 if x | => obj2(x);",
   "def obj4 if x | obj3(x) => obj(x);",
-  // "prove obj4(x) {obj2(x); obj1(x);}",
+  "prove obj4(#x) {obj2(x); obj(x);}",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
