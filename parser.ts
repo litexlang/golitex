@@ -32,6 +32,9 @@ import {
   OnlyIfKeywords,
   IsKeywords,
   IsAreKeywords,
+  NotKeywords,
+  OrKeywords,
+  L_Keywords,
 } from "./common";
 
 export namespace parser {
@@ -91,15 +94,8 @@ export namespace parser {
   const KeywordFunctionMap: {
     [key: string]: Function; // (env: L_Env, tokens: string[]) => any;
   } = {
-    // ";": (env: L_Env, tokens: string[]) => {
-    //   tokens.shift();
-    // },
-    // "\n": (env: L_Env, tokens: string[]) => {
-    //   tokens.shift();
-    // },
     know: knowParse,
     "@": knowParse,
-    // have: haveParse,
     let: letParse,
     def: DeclNodeParse,
     ":": DeclNodeParse,
@@ -107,30 +103,7 @@ export namespace parser {
     exist: existParse,
     have: haveParse,
     assume_by_contradiction: assumeByContraParse,
-    // prove: proveParse,
-    // by: byParse,
-    // thm: thmParse,
   };
-
-  // export function NodeParse(env: L_Env, tokens: string[]): L_Node {
-  //   const start = tokens[0];
-  //   const index = tokens.length;
-
-  //   try {
-  //     const func = KeywordFunctionMap[tokens[0]];
-  //     if (func) {
-  //       const node = func(env, tokens);
-  //       return node;
-  //     } else {
-  //       const node = singleOptParse(env, tokens);
-  //       skip(tokens, [",", ";"]);
-  //       return node;
-  //     }
-  //   } catch (error) {
-  //     handleParseError(env, "node", index, start);
-  //     throw error;
-  //   }
-  // }
 
   export function getNodesFromSingleNode(
     env: L_Env,
@@ -141,7 +114,7 @@ export namespace parser {
     const index = tokens.length;
     try {
       while (tokens.length > 0) {
-        while (tokens.length > 0 && ["\n", ";"].includes(tokens[0])) {
+        while (tokens.length > 0 && StdStmtEnds.includes(tokens[0])) {
           tokens.shift();
         }
         break;
@@ -212,6 +185,11 @@ export namespace parser {
         [...StdStmtEnds, "|"],
         false
       );
+
+      if (!vars.every((e) => !L_Keywords.includes(e))) {
+        env.newMessage(`Error: ${vars} contain LiTeX keywords.`);
+        throw Error();
+      }
 
       if (StdStmtEnds.includes(tokens[0])) {
         skip(tokens, StdStmtEnds);
@@ -304,7 +282,7 @@ export namespace parser {
     const index = tokens.length;
 
     try {
-      skip(tokens, "not");
+      skip(tokens, NotKeywords);
       const fact = singleOptParse(env, tokens);
       fact.isT = false;
       return fact;
@@ -319,7 +297,7 @@ export namespace parser {
     const index = tokens.length;
 
     try {
-      skip(tokens, "or");
+      skip(tokens, OrKeywords);
 
       skip(tokens, "{");
 
@@ -438,6 +416,11 @@ export namespace parser {
     try {
       let nodeType = shiftVar(tokens);
       const name = shiftVar(tokens);
+
+      if (!L_Keywords.includes(name)) {
+        env.newMessage(`Error: ${name} is a LiTeX keyword.`);
+        throw Error();
+      }
 
       if ([...IfKeywords, ...OnlyIfKeywords].includes(tokens[0])) {
         nodeType = shiftVar(tokens);
@@ -577,6 +560,11 @@ export namespace parser {
         [...StdStmtEnds, "|"],
         false
       );
+
+      if (!vars.every((e) => !L_Keywords.includes(e))) {
+        env.newMessage(`Error: ${vars} contain LiTeX keywords.`);
+        throw Error();
+      }
 
       if (StdStmtEnds.includes(tokens[0])) {
         skip(tokens, StdStmtEnds);

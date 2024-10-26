@@ -25,19 +25,6 @@ export const DefKeywords = ["def"];
 export const SymbolsFactsSeparator = "|";
 export const ProveKeywords = ["prove"];
 export const suchThats = ["st", "is"];
-export const byLBracket = "[";
-export const byRBracket = "]";
-
-export const L_Keywords = [
-  ...specialChars,
-  ...KnowTypeKeywords,
-  ...ExistKeywords,
-  ...ProveKeywords,
-  SymbolsFactsSeparator,
-  ...suchThats,
-  byLBracket,
-  byRBracket,
-];
 
 export const StdStmtEnds = [";", "\n"];
 export const LetKeywords = ["let"];
@@ -48,3 +35,25 @@ export const AssumeByContraKeywords = ["assume_by_contradiction"];
 export const IsKeywords = ["is"];
 export const AreKeywords = ["are"];
 export const IsAreKeywords = [...IsKeywords, ...AreKeywords];
+export const NotKeywords = ["not"];
+export const OrKeywords = ["or"];
+
+export const L_Keywords: string[] = [
+  ...specialChars,
+  ...KnowTypeKeywords,
+  ...ThenKeywords,
+  ...IfKeywords,
+  ...OnlyIfKeywords,
+  ...ExistKeywords,
+  ...DefKeywords,
+  ...ProveKeywords,
+  ...suchThats,
+  ...StdStmtEnds,
+  ...LetKeywords,
+  ...HaveKeywords,
+  ...AssumeByContraKeywords,
+  ...IsKeywords,
+  ...AreKeywords,
+  ...NotKeywords,
+  ...OrKeywords,
+];
