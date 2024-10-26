@@ -143,7 +143,8 @@ const testList17 = [
   "let x| x is obj0, x is obj, x is obj2, x is obj3;",
   "let a;",
   "if => a is obj0;",
-  "iff obj0(a) <=> ;",
+  "iff z| obj0(a), z is obj0 <=> ;",
+  "only_if obj0(a) <= ;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

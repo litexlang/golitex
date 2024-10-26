@@ -1,4 +1,11 @@
-import { FactNode, IffNode, IfThenNode, KnowNode, OptNode } from "./ast";
+import {
+  FactNode,
+  IffNode,
+  IfThenNode,
+  KnowNode,
+  OnlyIfNode,
+  OptNode,
+} from "./ast";
 import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
 
@@ -7,9 +14,14 @@ export namespace checker {
     if (node instanceof OptNode) {
       return checkOpt(env, node);
     } else if (node instanceof IfThenNode) {
-      return checkIfThen(env, node);
+      return checkLogicalOpt(env, node.vars, node.req, node.onlyIfs);
     } else if (node instanceof IffNode) {
-      return checkIff(env, node);
+      let out = checkLogicalOpt(env, node.vars, node.req, node.onlyIfs);
+      if (out !== RType.True) return out;
+      out = checkLogicalOpt(env, node.vars, node.onlyIfs, node.req);
+      return out;
+    } else if (node instanceof OnlyIfNode) {
+      return checkLogicalOpt(env, node.vars, node.onlyIfs, node.req);
     }
 
     return RType.Error;
@@ -66,35 +78,17 @@ export namespace checker {
    * 2. emit var and req defined in if-then to new env
    * 3. check onlyIfs of if-then
    */
-  export function checkIfThen(env: L_Env, node: IfThenNode): RType {
+  export function checkLogicalOpt(
+    env: L_Env,
+    vars: string[],
+    knowWhat: FactNode[],
+    checkWhat: FactNode[]
+  ): RType {
     const newEnv = new L_Env(env);
-    newEnv.declareNewVar(node.vars);
-    executor.knowExec(newEnv, new KnowNode(node.req));
+    newEnv.declareNewVar(vars);
+    executor.knowExec(newEnv, new KnowNode(knowWhat));
 
-    for (const fact of node.onlyIfs) {
-      const out = check(newEnv, fact);
-      if (out === RType.Error) return RType.Error;
-      else if ([RType.False, RType.Unknown].includes(out)) return out;
-    }
-
-    return RType.True;
-  }
-
-  export function checkIff(env: L_Env, node: IfThenNode): RType {
-    let newEnv = new L_Env(env);
-    newEnv.declareNewVar(node.vars);
-    executor.knowExec(newEnv, new KnowNode(node.req));
-
-    for (const fact of node.onlyIfs) {
-      const out = check(newEnv, fact);
-      if (out === RType.Error) return RType.Error;
-      else if ([RType.False, RType.Unknown].includes(out)) return out;
-    }
-
-    newEnv = new L_Env(env);
-    newEnv.declareNewVar(node.vars);
-    executor.knowExec(newEnv, new KnowNode(node.onlyIfs));
-    for (const fact of node.req) {
+    for (const fact of checkWhat) {
       const out = check(newEnv, fact);
       if (out === RType.Error) return RType.Error;
       else if ([RType.False, RType.Unknown].includes(out)) return out;
