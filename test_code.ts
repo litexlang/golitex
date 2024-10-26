@@ -1,5 +1,5 @@
 import { L_Env } from "./env";
-import { executor } from "./executor";
+import { executor, RType } from "./executor";
 import { scan } from "./lexer";
 import { parser } from "./parser";
 
@@ -117,6 +117,14 @@ const testList14 = [
   "know b,c are obj2, obj2(x), w,e are obj2;",
 ];
 
+const testList15 = [
+  "def obj if x | => ;",
+  "know obj(#x);",
+  "obj(#y);",
+  "let x,y,z | ;",
+  "x,y,z are obj;",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -132,7 +140,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList11: [testList11, false],
   testList12: [testList12, false],
   testList13: [testList13, false],
-  testList14: [testList14, true],
+  testList14: [testList14, false],
+  testList15: [testList15, true],
 };
 
 export function testCode() {
@@ -163,7 +172,11 @@ function run(env: L_Env, expr: string) {
     if (nodes === undefined) {
       return undefined;
     }
-    const result = nodes?.map((e) => executor.nodeExec(env, e));
+    const result: RType[] = [];
+    for (const node of nodes) {
+      const out = executor.nodeExec(env, node);
+      result.push(out);
+    }
     env.printClearMessage();
 
     return result;

@@ -127,7 +127,7 @@ export namespace parser {
         return node;
       } else {
         const nodes = optFactsParse(env, tokens, StdStmtEnds, true);
-        nodes.forEach((e) => nodes.push(e));
+        nodes.forEach((e) => holder.push(e));
       }
     } catch (error) {
       handleParseError(env, "node", index, start);
@@ -153,11 +153,12 @@ export namespace parser {
             [...StdStmtEnds, ","],
             false
           );
+          knowNode.facts = knowNode.facts.concat(outs);
         } else {
           //! THE FOLLOWING CODES ARE WRONG.
-          // let out: FactNode;
-          // out = relParser(env, tokens, true);
-          // knowNode.facts.push(out);
+          let out: FactNode;
+          out = relParser(env, tokens, true);
+          knowNode.facts.push(out);
         }
 
         if (tokens[0] === ",") skip(tokens, ",");
@@ -417,7 +418,7 @@ export namespace parser {
       let nodeType = shiftVar(tokens);
       const name = shiftVar(tokens);
 
-      if (!L_Keywords.includes(name)) {
+      if (L_Keywords.includes(name)) {
         env.newMessage(`Error: ${name} is a LiTeX keyword.`);
         throw Error();
       }

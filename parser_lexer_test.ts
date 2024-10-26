@@ -193,7 +193,8 @@ const codes: string[] = [
   // "set(x) by {set2(x)};",
   // "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
   // "def p1 only_if x | p2(x);",
-  "prove obj4(x) {obj2(x); obj1(x);}",
+  // "prove obj4(x) {obj2(x); obj1(x);}",
+  "obj(#y);",
 ];
 
 function testLexer() {

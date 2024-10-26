@@ -210,8 +210,8 @@ export namespace executor {
           if (factType === undefined)
             throw Error(`${fact.fullName} not declared.`);
 
-          const isT = env.varsAreNotDeclared(fact.vars.flat());
-          if (isT) throw Error(`${fact.vars.flat().toString()} not declared.`);
+          const isT = env.varsAreNotDeclared(fact.vars);
+          if (isT) throw Error(`${fact.vars.toString()} not declared.`);
 
           env.addOptFact(fact, [...fatherReq]);
         } else if (fact instanceof IfThenNode) {
