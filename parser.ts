@@ -9,7 +9,6 @@ import {
   DefDeclNode,
   IfThenDeclNode,
   FactNode,
-  ByNode,
   ProveNode,
   ExistNode,
   HaveNode,
@@ -35,6 +34,7 @@ import {
   NotKeywords,
   OrKeywords,
   L_Keywords,
+  IffKeywords,
 } from "./common";
 
 export namespace parser {
@@ -423,7 +423,7 @@ export namespace parser {
     const start = tokens[0];
     const index = tokens.length;
     try {
-      let nodeType = shiftVar(tokens);
+      shiftVar(tokens);
       const name = shiftVar(tokens);
 
       if (L_Keywords.includes(name)) {
@@ -431,53 +431,40 @@ export namespace parser {
         throw Error();
       }
 
-      if ([...IfKeywords, ...OnlyIfKeywords].includes(tokens[0])) {
-        nodeType = shiftVar(tokens);
-      }
+      if (IfKeywords.includes(tokens[0])) {
+        const ifThen = ifThenParse(env, tokens, StdStmtEnds, true);
+        return new IfThenDeclNode(
+          name,
+          ifThen.vars,
+          ifThen.req,
+          ifThen.onlyIfs
+        );
+      } else {
+        if (IffKeywords.includes(tokens[0])) {
+          skip(tokens, IffKeywords);
+        }
 
-      const vars = varLstParse(env, tokens, ["|"], true);
+        const vars = varLstParse(env, tokens, ["|"], true);
+        const req = optFactsParse(env, tokens, [...StdStmtEnds, "=>"], false);
 
-      // if (StdStmtEnds.includes(tokens[0])) {
-      //   skip(tokens, StdStmtEnds);
-      //   return new DefDeclNode(name, vars);
-      // } else {
-      //   skip(tokens, "|");
-      // }
+        let onlyIfs: FactNode[] = [];
+        if (StdStmtEnds.includes(tokens[0])) {
+          skip(tokens, StdStmtEnds);
+        } else if (isCurToken(tokens, "=>")) {
+          skip(tokens, "=>");
+          onlyIfs = optFactsParse(env, tokens, StdStmtEnds, true);
+        }
 
-      // const req = listParse<FactNode>(
-      //   env,
-      //   tokens,
-      //   singleOptParse,
-      //   [...StdStmtEnds, "=>"],
-      //   false
-      // );
-      const req = optFactsParse(env, tokens, [...StdStmtEnds, "=>"], false);
-
-      let onlyIfs: FactNode[] = [];
-      if (StdStmtEnds.includes(tokens[0])) {
-        skip(tokens, StdStmtEnds);
-      } else if (isCurToken(tokens, "=>")) {
-        skip(tokens, "=>");
-
-        // onlyIfs = listParse<FactNode>(
-        //   env,
-        //   tokens,
-        //   singleOptParse,
-        //   StdStmtEnds,
-        //   true
-        // );
-        onlyIfs = optFactsParse(env, tokens, StdStmtEnds, true);
-      }
-
-      if (IfKeywords.includes(nodeType)) {
-        return new IfThenDeclNode(name, vars, req, onlyIfs);
-      } else if (DefKeywords.includes(nodeType)) {
         return new DefDeclNode(name, vars, req, onlyIfs);
-      } else if (OnlyIfKeywords.includes(nodeType)) {
-        return new OnlyIfDeclNode(name, vars, req, onlyIfs);
       }
 
-      throw Error();
+      // if (IfKeywords.includes(nodeType)) {
+      //   return new IfThenDeclNode(name, vars, req, onlyIfs);
+      // } else if (DefKeywords.includes(nodeType)) {
+      //   return new DefDeclNode(name, vars, req, onlyIfs);
+      // } else if (OnlyIfKeywords.includes(nodeType)) {
+      //   return new OnlyIfDeclNode(name, vars, req, onlyIfs);
+      // }
     } catch (error) {
       handleParseError(env, "Parsing variables", index, start);
       throw error;

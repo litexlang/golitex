@@ -1,11 +1,4 @@
-import {
-  ByNode,
-  ExistNode,
-  FactNode,
-  IfThenNode,
-  KnowNode,
-  OptNode,
-} from "./ast";
+import { FactNode, IfThenNode, KnowNode, OptNode } from "./ast";
 import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
 

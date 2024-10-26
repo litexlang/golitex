@@ -19,6 +19,7 @@ export const KnowTypeKeywords = ["know", "assume"];
 export const ThenKeywords = ["then", "=>"];
 export const IfKeywords = ["if"];
 export const OnlyIfKeywords = ["only_if"];
+export const IffKeywords = ["iff"];
 export const ExistKeywords = ["exist"];
 export const DefKeywords = ["def"];
 
@@ -45,6 +46,7 @@ export const L_Keywords: string[] = [
   ...ThenKeywords,
   ...IfKeywords,
   ...OnlyIfKeywords,
+  ...IffKeywords,
   ...ExistKeywords,
   ...DefKeywords,
   ...ProveKeywords,

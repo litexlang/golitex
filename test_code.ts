@@ -130,6 +130,9 @@ const testList16 = [
   "let x;",
   "def obj2 if x | => x is obj;",
   "know if x | obj(x) => obj(x);",
+  "def obj3 if | obj(x) => obj(x);",
+  "let x2;",
+  "know if obj(x2) => obj2(x2);",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

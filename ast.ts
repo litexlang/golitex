@@ -38,7 +38,7 @@ export class OrNode extends FactNode {
   }
 }
 
-export class IfThenNode extends FactNode {
+export abstract class LogicalNode extends FactNode {
   constructor(
     public vars: string[] = [],
     public req: FactNode[] = [],
@@ -50,7 +50,7 @@ export class IfThenNode extends FactNode {
   }
 
   toString() {
-    const mainPart = `if ${this.vars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
+    const mainPart = `if ${this.vars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => ${this.onlyIfs.map((e) => e.toString()).join(", ")}`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
     return notPart + mainPart + useNamePart;
@@ -79,7 +79,7 @@ export class IfThenNode extends FactNode {
     this.onlyIfs.forEach((e) => e.replaceVars(mapping));
   }
 
-  copy(): IfThenNode {
+  copy(): LogicalNode {
     const req: FactNode[] = [];
     for (const r of this.req) {
       req.push(r.copy());
@@ -89,9 +89,23 @@ export class IfThenNode extends FactNode {
       onlyIfs.push(onlyIf.copy());
     }
     const vars = [...this.vars];
-    return new IfThenNode(vars, req, onlyIfs);
+
+    if (this instanceof IfThenNode) {
+      return new IfThenNode(vars, req, onlyIfs);
+    }
+    if (this instanceof IffNode) {
+      return new IffNode(vars, req, onlyIfs);
+    }
+    if (this instanceof OnlyIfNode) {
+      return new OnlyIfNode(vars, req, onlyIfs);
+    }
+    throw Error();
   }
 }
+
+export class IfThenNode extends LogicalNode {}
+export class OnlyIfNode extends LogicalNode {}
+export class IffNode extends LogicalNode {}
 
 export class OptNode extends FactNode {
   constructor(
@@ -127,22 +141,6 @@ export class OptNode extends FactNode {
 
   copy(): OptNode {
     return new OptNode(this.fullName, [...this.vars]);
-  }
-}
-
-export class ByNode extends FactNode {
-  constructor(
-    public facts: FactNode[],
-    public block: FactNode[]
-  ) {
-    super();
-  }
-
-  hashVars(varsToHash: string[]) {}
-  rmvHashFromVars(varsToHash: string[]): void {}
-  replaceVars(mapping: Map<string, string>): void {}
-  copy(): ByNode {
-    return new ByNode([], []);
   }
 }
 
