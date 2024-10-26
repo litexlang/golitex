@@ -39,6 +39,7 @@ export const NotKeywords = ["not"];
 export const OrKeywords = ["or"];
 
 export const L_Keywords: string[] = [
+  "#",
   ...specialChars,
   ...KnowTypeKeywords,
   ...ThenKeywords,

@@ -2,7 +2,6 @@ import { L_Env } from "./env";
 import { executor, RType, RTypeMap } from "./executor";
 import { scan } from "./lexer";
 import { parser } from "./parser";
-import { setTheory, testTao } from "./tao_analysis_one";
 import { testCode } from "./test_code";
 
 export function testListOfCodes(exprs: string[]): RType[] {

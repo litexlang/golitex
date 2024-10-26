@@ -144,8 +144,8 @@ export namespace parser {
 
       skip(tokens, KnowTypeKeywords);
       while (!StdStmtEnds.includes(tokens[0])) {
-        const relParser: Function | undefined = factParserSignals[tokens[0]];
-        if (relParser === undefined) {
+        const factKeywords = [...OrKeywords, ...NotKeywords, ...IfKeywords];
+        if (!factKeywords.includes(tokens[0])) {
           // out = OptParse(env, tokens);
           const outs: FactNode[] = optFactsParse(
             env,
@@ -155,10 +155,14 @@ export namespace parser {
           );
           knowNode.facts = knowNode.facts.concat(outs);
         } else {
+          if (IfKeywords.includes(tokens[0])) {
+            const out = ifThenParse(env, tokens, [",", ...StdStmtEnds], false);
+            knowNode.facts.push(out);
+          }
           //! THE FOLLOWING CODES ARE WRONG.
-          let out: FactNode;
-          out = relParser(env, tokens, true);
-          knowNode.facts.push(out);
+          // let out: FactNode;
+          // out = relParser(env, tokens, false);
+          // knowNode.facts.push(out);
         }
 
         if (tokens[0] === ",") skip(tokens, ",");
@@ -328,21 +332,25 @@ export namespace parser {
     try {
       skip(tokens, IfKeywords);
 
-      const vars = varLstParse(env, tokens, ["|", ...ThenKeywords], false);
+      const symbolsBeforeThenKeyword: string[] = [];
+      for (let i = 0; i < tokens.length; i++) {
+        if (!ThenKeywords.includes(tokens[i]))
+          symbolsBeforeThenKeyword.push(tokens[i]);
+        else break;
+      }
 
+      let vars: string[] = [];
       let req: FactNode[] = [];
-      if (ThenKeywords.includes(tokens[0])) {
-        skip(tokens, ThenKeywords);
-      } else {
+      if (symbolsBeforeThenKeyword.includes("|")) {
+        vars = varLstParse(env, tokens, ["|"], false);
         skip(tokens, "|");
-        // req = listParse<FactNode>(env, tokens, singleOptParse, ["=>", "then"], true);
+        req = optFactsParse(env, tokens, ThenKeywords, true);
+      } else {
         req = optFactsParse(env, tokens, ThenKeywords, true);
       }
 
       let onlyIfs: OptNode[];
-
-      // const facts = listParse<FactNode>(env, tokens, singleOptParse, ends, skipEnd);
-      const facts = optFactsParse(env, tokens, ends, skipEnd);
+      const facts = optFactsParse(env, tokens, StdStmtEnds, skipEnd);
       if (facts.every((e) => e instanceof OptNode)) {
         onlyIfs = facts as OptNode[];
       } else {
@@ -352,7 +360,7 @@ export namespace parser {
       const out = new IfThenNode(vars, req, onlyIfs);
       return out;
     } catch (error) {
-      handleParseError(env, "()=>{}", index, start);
+      handleParseError(env, "if-then", index, start);
       throw error;
     }
   }
