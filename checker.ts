@@ -1,4 +1,4 @@
-import { FactNode, IfThenNode, KnowNode, OptNode } from "./ast";
+import { FactNode, IffNode, IfThenNode, KnowNode, OptNode } from "./ast";
 import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
 
@@ -8,6 +8,8 @@ export namespace checker {
       return checkOpt(env, node);
     } else if (node instanceof IfThenNode) {
       return checkIfThen(env, node);
+    } else if (node instanceof IffNode) {
+      return checkIff(env, node);
     }
 
     return RType.Error;
@@ -70,6 +72,29 @@ export namespace checker {
     executor.knowExec(newEnv, new KnowNode(node.req));
 
     for (const fact of node.onlyIfs) {
+      const out = check(newEnv, fact);
+      if (out === RType.Error) return RType.Error;
+      else if ([RType.False, RType.Unknown].includes(out)) return out;
+    }
+
+    return RType.True;
+  }
+
+  export function checkIff(env: L_Env, node: IfThenNode): RType {
+    let newEnv = new L_Env(env);
+    newEnv.declareNewVar(node.vars);
+    executor.knowExec(newEnv, new KnowNode(node.req));
+
+    for (const fact of node.onlyIfs) {
+      const out = check(newEnv, fact);
+      if (out === RType.Error) return RType.Error;
+      else if ([RType.False, RType.Unknown].includes(out)) return out;
+    }
+
+    newEnv = new L_Env(env);
+    newEnv.declareNewVar(node.vars);
+    executor.knowExec(newEnv, new KnowNode(node.onlyIfs));
+    for (const fact of node.req) {
       const out = check(newEnv, fact);
       if (out === RType.Error) return RType.Error;
       else if ([RType.False, RType.Unknown].includes(out)) return out;

@@ -51,9 +51,23 @@ export abstract class LogicalOptNode extends FactNode {
   }
 
   toString() {
-    const mainPart = `if ${this.vars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} => ${this.onlyIfs.map((e) => e.toString()).join(", ")}`;
+    let type: string = "";
+    let separator = "";
+    if (this instanceof IffNode) {
+      type = "iff";
+      separator = "<=>";
+    } else if (this instanceof IfThenNode) {
+      type = "if";
+      separator = "=>";
+    } else if (this instanceof OnlyIfNode) {
+      type = "only_if";
+      separator = "<=";
+    }
+
+    const mainPart = `${type} ${this.vars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} ${separator} ${this.onlyIfs.map((e) => e.toString()).join(", ")}`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
+
     return notPart + mainPart + useNamePart;
   }
 
