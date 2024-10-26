@@ -14,6 +14,9 @@ import {
   HaveNode,
   AssumeByContraNode,
   OnlyIfDeclNode,
+  LogicalOptNode,
+  IffNode,
+  OnlyIfNode,
 } from "./ast";
 import { L_Env } from "./env";
 import { isRTypeTrue } from "./shared";
@@ -194,16 +197,26 @@ export namespace executor {
           if (isT) throw Error(`${fact.vars.toString()} not declared.`);
 
           env.addOptFact(fact, [...fatherReq]);
-        } else if (fact instanceof IfThenNode) {
+        } else if (fact instanceof LogicalOptNode) {
           // store facts
-          for (const onlyIf of fact.onlyIfs) {
-            if (onlyIf instanceof OptNode)
-              env.addOptFact(onlyIf, [...fatherReq, ...fact.req]);
-            else
-              knowExec(env, new KnowNode([onlyIf]), [
-                ...fatherReq,
-                ...fact.req,
-              ]);
+          // for (const onlyIf of fact.onlyIfs) {
+          //   if (onlyIf instanceof OptNode)
+          //     env.addOptFact(onlyIf, [...fatherReq, ...fact.req]);
+          //   else
+          //     knowExec(env, new KnowNode([onlyIf]), [
+          //       ...fatherReq,
+          //       ...fact.req,
+          //     ]);
+          // }
+          if (fact instanceof IfThenNode) {
+            knowLogicalOpt(env, fact.onlyIfs, fact.req, fatherReq);
+          } else if (fact instanceof IffNode) {
+            knowLogicalOpt(env, fact.onlyIfs, fact.req, fatherReq);
+            knowLogicalOpt(env, fact.req, fact.onlyIfs, fatherReq);
+          } else if (fact instanceof OnlyIfNode) {
+            knowLogicalOpt(env, fact.req, fact.onlyIfs, fatherReq);
+          } else {
+            throw Error();
           }
         }
       }
@@ -214,6 +227,19 @@ export namespace executor {
       if (error instanceof Error) m += ` ${error.message}`;
       env.newMessage(m);
       throw error;
+    }
+  }
+
+  function knowLogicalOpt(
+    env: L_Env,
+    knowWhat: FactNode[],
+    req: FactNode[],
+    fatherReq: FactNode[]
+  ): void {
+    for (const onlyIf of knowWhat) {
+      if (onlyIf instanceof OptNode)
+        env.addOptFact(onlyIf, [...fatherReq, ...req]);
+      else knowExec(env, new KnowNode([onlyIf]), [...fatherReq, ...req]);
     }
   }
 
