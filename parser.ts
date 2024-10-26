@@ -434,7 +434,7 @@ export namespace parser {
         throw Error();
       }
 
-      if (LogicalKeywords.includes(tokens[0])) {
+      if (IfKeywords.includes(tokens[0])) {
         const logicalOpt = logicalOptParse(env, tokens, StdStmtEnds, true);
         return DeclNode.create(name, logicalOpt);
         // return new IfThenDeclNode(
@@ -444,19 +444,23 @@ export namespace parser {
         //   ifThen.onlyIfs
         // );
       } else {
-        // if (IffKeywords.includes(tokens[0])) {
-        //   skip(tokens, IffKeywords);
-        // }
+        let type = "";
+        if (LogicalKeywords.includes(tokens[0])) {
+          type = shiftVar(tokens);
+        }
 
         const vars = varLstParse(env, tokens, ["|"], true);
         const req = optFactsParse(env, tokens, [...StdStmtEnds], false);
 
-        let onlyIfs: FactNode[] = [];
-        if (StdStmtEnds.includes(tokens[0])) {
-          skip(tokens, StdStmtEnds);
-        }
+        skip(tokens, StdStmtEnds);
 
-        return new IffDeclNode(name, vars, req, onlyIfs);
+        if (IffKeywords.includes(type)) {
+          return new IffDeclNode(name, vars, req, []);
+        } else if (OnlyIfKeywords.includes(type)) {
+          return new OnlyIfDeclNode(name, vars, req, []);
+        } else {
+          return new IffDeclNode(name, vars, req, []);
+        }
       }
 
       // if (IfKeywords.includes(nodeType)) {

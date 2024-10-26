@@ -121,9 +121,9 @@ export class L_Env {
       const t = this.declaredFacts.get(key);
       let tStr = "";
       if (t instanceof IffDeclNode) {
-        tStr = "def";
+        tStr = "iff";
       } else if (t instanceof IfThenDeclNode) {
-        tStr = "if-then";
+        tStr = "if";
       } else if (t instanceof ExistNode) {
         tStr = "exist";
       } else if (t instanceof OnlyIfDeclNode) {

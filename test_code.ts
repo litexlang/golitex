@@ -138,8 +138,9 @@ const testList16 = [
 const testList17 = [
   "def obj0 x | ;",
   "def obj if x | =>;",
-  "def obj2 iff x | <=> ;",
-  "def obj3 only_if x | <=;",
+  "def obj2 iff x | ;",
+  "def obj3 only_if x | x is obj  ;",
+  "let x| x is obj0, x is obj, x is obj2, x is obj3;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
