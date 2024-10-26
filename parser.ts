@@ -434,7 +434,7 @@ export namespace parser {
         throw Error();
       }
 
-      if (IfKeywords.includes(tokens[0])) {
+      if (LogicalKeywords.includes(tokens[0])) {
         const logicalOpt = logicalOptParse(env, tokens, StdStmtEnds, true);
         return DeclNode.create(name, logicalOpt);
         // return new IfThenDeclNode(
@@ -444,19 +444,16 @@ export namespace parser {
         //   ifThen.onlyIfs
         // );
       } else {
-        if (IffKeywords.includes(tokens[0])) {
-          skip(tokens, IffKeywords);
-        }
+        // if (IffKeywords.includes(tokens[0])) {
+        //   skip(tokens, IffKeywords);
+        // }
 
         const vars = varLstParse(env, tokens, ["|"], true);
-        const req = optFactsParse(env, tokens, [...StdStmtEnds, "=>"], false);
+        const req = optFactsParse(env, tokens, [...StdStmtEnds], false);
 
         let onlyIfs: FactNode[] = [];
         if (StdStmtEnds.includes(tokens[0])) {
           skip(tokens, StdStmtEnds);
-        } else if (isCurToken(tokens, "=>")) {
-          skip(tokens, "=>");
-          onlyIfs = optFactsParse(env, tokens, StdStmtEnds, true);
         }
 
         return new IffDeclNode(name, vars, req, onlyIfs);

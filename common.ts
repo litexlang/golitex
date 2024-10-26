@@ -68,7 +68,7 @@ export const L_Keywords: string[] = [
 export const LogicalOptPairs: { [k: string]: string[] } = {
   if: ThenKeywords,
   iff: IffThenKeywords,
-  onlyIf: OnlyIfThenKeywords,
+  only_if: OnlyIfThenKeywords,
 };
 
 export const LogicalKeywords = [

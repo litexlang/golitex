@@ -135,6 +135,13 @@ const testList16 = [
   "know if obj(x2) => obj2(x2);",
 ];
 
+const testList17 = [
+  "def obj0 x | ;",
+  "def obj if x | =>;",
+  "def obj2 iff x | <=> ;",
+  "def obj3 only_if x | <=;",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -143,7 +150,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList4: [testList4, false],
   testList5: [testList5, false],
   testList6: [testList6, false],
-  testList7: [testList7, true],
+  testList7: [testList7, false],
   testList8: [testList8, false],
   testList9: [testList9, false],
   testList10: [testList10, false],
@@ -153,6 +160,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList14: [testList14, false],
   testList15: [testList15, false],
   testList16: [testList16, false],
+  testList17: [testList17, true],
 };
 
 export function testCode() {
