@@ -64,7 +64,7 @@ const testList7 = [
   "def p3 x | p2(x);",
   "let y | p1(y);",
   "p3(y);", // unknown
-  "p3(y) by {p2(y)};",
+  // "p3(y) by {p2(y)};",
   "p3(y);",
   "know not p1(y);",
   "p1(y);",
@@ -143,7 +143,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList4: [testList4, false],
   testList5: [testList5, false],
   testList6: [testList6, false],
-  testList7: [testList7, false],
+  testList7: [testList7, true],
   testList8: [testList8, false],
   testList9: [testList9, false],
   testList10: [testList10, false],
@@ -152,7 +152,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList13: [testList13, false],
   testList14: [testList14, false],
   testList15: [testList15, false],
-  testList16: [testList16, true],
+  testList16: [testList16, false],
 };
 
 export function testCode() {

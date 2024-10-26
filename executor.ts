@@ -7,7 +7,7 @@ import {
   FactNode,
   OrNode,
   DeclNode,
-  DefDeclNode,
+  IffDeclNode,
   IfThenDeclNode,
   ProveNode,
   ExistNode,
@@ -54,7 +54,7 @@ function handleExecError(env: L_Env, out: RType, m: string = "") {
  */
 export namespace executor {
   const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
-    DefDeclNode: declExec,
+    IffDeclNode: declExec,
     IfThenDeclNode: declExec,
     ExistNode: declExec,
     OnlyIfDeclNode: declExec,
@@ -233,9 +233,9 @@ export namespace executor {
       // NOTE: node.vars are not hashed.
       node.hashVars(node.vars);
 
-      if (node instanceof DefDeclNode || node instanceof ExistNode) {
+      if (node instanceof IffDeclNode || node instanceof ExistNode) {
         // we declare and exe exist-fact by exactly using Opt code.
-        // factType = node instanceof DefDeclNode ? FactType.Def : FactType.Exist;
+        // factType = node instanceof IffDeclNode ? FactType.Def : FactType.Exist;
 
         const hashedReq =
           /** Notice the following 4 knowExec can be reduced to 2 */

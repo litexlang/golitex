@@ -3,7 +3,7 @@ import {
   FactNode,
   ExistNode,
   DeclNode,
-  DefDeclNode,
+  IffDeclNode,
   IfThenDeclNode,
   OnlyIfDeclNode,
 } from "./ast";
@@ -120,7 +120,7 @@ export class L_Env {
     for (const [key, factUnderCurKey] of this.OptFacts) {
       const t = this.declaredFacts.get(key);
       let tStr = "";
-      if (t instanceof DefDeclNode) {
+      if (t instanceof IffDeclNode) {
         tStr = "def";
       } else if (t instanceof IfThenDeclNode) {
         tStr = "if-then";

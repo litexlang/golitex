@@ -1,4 +1,5 @@
 import { on } from "events";
+import { IffKeywords, IfKeywords, OnlyIfKeywords } from "./common";
 
 export abstract class L_Node {}
 
@@ -38,7 +39,7 @@ export class OrNode extends FactNode {
   }
 }
 
-export abstract class LogicalNode extends FactNode {
+export abstract class LogicalOptNode extends FactNode {
   constructor(
     public vars: string[] = [],
     public req: FactNode[] = [],
@@ -79,7 +80,7 @@ export abstract class LogicalNode extends FactNode {
     this.onlyIfs.forEach((e) => e.replaceVars(mapping));
   }
 
-  copy(): LogicalNode {
+  copy(): LogicalOptNode {
     const req: FactNode[] = [];
     for (const r of this.req) {
       req.push(r.copy());
@@ -101,11 +102,27 @@ export abstract class LogicalNode extends FactNode {
     }
     throw Error();
   }
+
+  static create(
+    type: string,
+    vars: string[],
+    req: FactNode[],
+    onlyIfs: FactNode[]
+  ): LogicalOptNode {
+    if (IfKeywords.includes(type)) {
+      return new IfThenNode(vars, req, onlyIfs);
+    } else if (IffKeywords.includes(type)) {
+      return new IffNode(vars, req, onlyIfs);
+    } else if (OnlyIfKeywords.includes(type)) {
+      return new OnlyIfNode(vars, req, onlyIfs);
+    }
+    throw Error();
+  }
 }
 
-export class IfThenNode extends LogicalNode {}
-export class OnlyIfNode extends LogicalNode {}
-export class IffNode extends LogicalNode {}
+export class IfThenNode extends LogicalOptNode {}
+export class OnlyIfNode extends LogicalOptNode {}
+export class IffNode extends LogicalOptNode {}
 
 export class OptNode extends FactNode {
   constructor(
@@ -155,6 +172,17 @@ export abstract class DeclNode extends L_Node {
     super();
   }
 
+  static create(name: string, node: LogicalOptNode): DeclNode {
+    if (node instanceof IfThenNode) {
+      return new IfThenDeclNode(name, node.vars, node.req, node.onlyIfs);
+    } else if (node instanceof IffNode) {
+      return new IffDeclNode(name, node.vars, node.req, node.onlyIfs);
+    } else if (node instanceof OnlyIfNode) {
+      return new OnlyIfDeclNode(name, node.vars, node.req, node.onlyIfs);
+    }
+    throw Error();
+  }
+
   toString() {
     return `${this.name}(${this.vars})`;
   }
@@ -201,7 +229,7 @@ export abstract class DeclNode extends L_Node {
 export class ExistNode extends DeclNode {
   public isT = false;
 }
-export class DefDeclNode extends DeclNode {}
+export class IffDeclNode extends DeclNode {}
 export class IfThenDeclNode extends DeclNode {}
 export class OnlyIfDeclNode extends DeclNode {}
 

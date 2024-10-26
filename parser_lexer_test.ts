@@ -194,7 +194,8 @@ const codes: string[] = [
   // "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
   // "def p1 only_if x | p2(x);",
   // "prove obj4(x) {obj2(x); obj1(x);}",
-  "obj(#y);",
+  // "obj(#y);",
+  "if | obj2(y) => p2(y);",
 ];
 
 function testLexer() {

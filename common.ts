@@ -17,6 +17,8 @@ export const specialChars = [
 
 export const KnowTypeKeywords = ["know", "assume"];
 export const ThenKeywords = ["then", "=>"];
+export const OnlyIfThenKeywords = ["<="];
+export const IffThenKeywords = ["<=>"];
 export const IfKeywords = ["if"];
 export const OnlyIfKeywords = ["only_if"];
 export const IffKeywords = ["iff"];
@@ -44,6 +46,8 @@ export const L_Keywords: string[] = [
   ...specialChars,
   ...KnowTypeKeywords,
   ...ThenKeywords,
+  ...OnlyIfThenKeywords,
+  ...IffThenKeywords,
   ...IfKeywords,
   ...OnlyIfKeywords,
   ...IffKeywords,
@@ -59,4 +63,16 @@ export const L_Keywords: string[] = [
   ...AreKeywords,
   ...NotKeywords,
   ...OrKeywords,
+];
+
+export const LogicalOptPairs: { [k: string]: string[] } = {
+  if: ThenKeywords,
+  iff: IffThenKeywords,
+  onlyIf: OnlyIfThenKeywords,
+};
+
+export const LogicalKeywords = [
+  ...IfKeywords,
+  ...OnlyIfKeywords,
+  ...IffKeywords,
 ];
