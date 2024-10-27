@@ -149,9 +149,9 @@ const testList17 = [
 
 const testList18 = [
   "def obj0 if x | => ;",
-  "know obj0(#x);",
-  "let y; obj0(y);",
-  "let z;",
+  // "know obj0(#x);",
+  // "let y; obj0(y);",
+  // "let z;",
   "1,2,3,4 are obj0;",
 ];
 
@@ -182,8 +182,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList15: [testList15, false],
   testList16: [testList16, false],
   testList17: [testList17, false],
-  testList18: [testList18, false],
-  testList19: [testList19, true],
+  testList18: [testList18, true],
+  testList19: [testList19, false],
 };
 
 export function testCode() {

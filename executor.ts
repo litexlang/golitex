@@ -102,23 +102,31 @@ export namespace executor {
    * 2. know new fact
    */
   function factExec(env: L_Env, node: FactNode): RType {
-    if (node instanceof OptNode) {
-      const func = L_Builtins.get(node.fullName);
-      if (func) return func(env, node);
-    }
+    try {
+      if (node instanceof OptNode) {
+        const func = L_Builtins.get(node.fullName);
+        if (func) return func(env, node);
+      }
 
-    const res = checker.check(env, node as FactNode);
-    if (res.type === RType.True) {
-      if (res.checkedByOpt === false) knowExec(env, new KnowNode([node]));
-      return successMesIntoEnv(env, node);
-    } else if (res.type === RType.Unknown) {
-      env.newMessage(`Unknown. ${node.toString()}`);
-      return RType.Unknown;
-    } else if (res.type === RType.False) {
-      env.newMessage(`False. ${node.toString()}`);
-      return RType.False;
+      const res = checker.check(env, node as FactNode);
+      if (res.type === RType.True) {
+        if (res.checkedByOpt === false) knowExec(env, new KnowNode([node]));
+        return successMesIntoEnv(env, node);
+      } else if (res.type === RType.Unknown) {
+        env.newMessage(`Unknown. ${node.toString()}`);
+        return RType.Unknown;
+      } else if (res.type === RType.False) {
+        env.newMessage(`False. ${node.toString()}`);
+        return RType.False;
+      } else if (res.type === RType.Error) {
+        env.newMessage(`Error: ${node.toString()}`);
+        return RType.Error;
+      }
+      return RType.Error;
+    } catch (error) {
+      env.newMessage(`Error: ${node.toString()}`);
+      return RType.Error;
     }
-    return RType.Error;
   }
 
   function haveExec(env: L_Env, node: HaveNode): RType {
@@ -196,7 +204,7 @@ export namespace executor {
             throw Error(`${fact.fullName} not declared.`);
 
           const isT = env.varsAreNotDeclared(fact.vars);
-          if (isT) throw Error(`${fact.vars.toString()} not declared.`);
+          if (isT) throw Error(`Not all of ${fact.vars} are declared.`);
 
           env.addOptFact(fact, [...fatherReq]);
         } else if (fact instanceof LogicalOptNode) {

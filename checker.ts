@@ -46,7 +46,20 @@ export namespace checker {
   export function checkOpt(env: L_Env, opt: OptNode): CheckerOut {
     // get related fact from itself and its ancestors
     const facts = env.getOptFact(opt.fullName);
-    if (!facts) return new CheckerOut(RType.Error);
+    if (facts === undefined) {
+      if (env.getDeclFact(opt.fullName)) {
+        return new CheckerOut(RType.Unknown);
+      } else {
+        env.newMessage(`${opt.fullName} not declared.`);
+        return new CheckerOut(RType.Error);
+      }
+    }
+
+    const varsNotDeclared = env.varsAreNotDeclared(opt.vars);
+    if (varsNotDeclared) {
+      env.newMessage(`Not all of ${opt.vars} are declared.`);
+      return new CheckerOut(RType.Error);
+    }
 
     for (const storedFact of facts) {
       /**
