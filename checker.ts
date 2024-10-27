@@ -8,23 +8,27 @@ import {
 } from "./ast";
 import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
+import { CheckerOut } from "./shared";
 
 export namespace checker {
-  export function check(env: L_Env, node: FactNode): RType {
+  export function check(env: L_Env, node: FactNode): CheckerOut {
     if (node instanceof OptNode) {
-      return checkOpt(env, node);
+      const out = checkOpt(env, node);
+      return out;
     } else if (node instanceof IfThenNode) {
-      return checkLogicalOpt(env, node.vars, node.req, node.onlyIfs);
+      const out = checkLogicalOpt(env, node.vars, node.req, node.onlyIfs);
+      return new CheckerOut(out);
     } else if (node instanceof IffNode) {
       let out = checkLogicalOpt(env, node.vars, node.req, node.onlyIfs);
-      if (out !== RType.True) return out;
+      if (!(out === RType.True)) return new CheckerOut(out);
       out = checkLogicalOpt(env, node.vars, node.onlyIfs, node.req);
-      return out;
+      return new CheckerOut(out);
     } else if (node instanceof OnlyIfNode) {
-      return checkLogicalOpt(env, node.vars, node.onlyIfs, node.req);
+      const out = checkLogicalOpt(env, node.vars, node.onlyIfs, node.req);
+      return new CheckerOut(out);
     }
 
-    return RType.Error;
+    return new CheckerOut(RType.Error);
   }
 
   /**
@@ -34,10 +38,10 @@ export namespace checker {
    * @param ignore  which fact (Opt) to ignore in order to avoid "req => itself, itself => req"-kind loop
    * @returns RType Error, True, False
    */
-  export function checkOpt(env: L_Env, opt: OptNode): RType {
+  export function checkOpt(env: L_Env, opt: OptNode): CheckerOut {
     // get related fact from itself and its ancestors
     const facts = env.getOptFact(opt.fullName);
-    if (!facts) return RType.Error;
+    if (!facts) return new CheckerOut(RType.Error);
 
     for (const storedFact of facts) {
       /**
@@ -65,11 +69,13 @@ export namespace checker {
           })
         ) {
           env.newMessage(`${opt} is true, by ${storedFact}`);
-          return RType.True;
+          if (storedFact.req.length === 0)
+            return new CheckerOut(RType.True, true);
+          else return new CheckerOut(RType.True);
         }
       }
     }
-    return RType.Unknown;
+    return new CheckerOut(RType.Unknown);
   }
 
   /**
@@ -90,14 +96,14 @@ export namespace checker {
 
     for (const fact of checkWhat) {
       const out = check(newEnv, fact);
-      if (out === RType.Error) return RType.Error;
-      else if ([RType.False, RType.Unknown].includes(out)) return out;
+      if (out.type === RType.Error) return RType.Error;
+      else if ([RType.False, RType.Unknown].includes(out.type)) return out.type;
     }
 
     return RType.True;
   }
 
-  export function checkByFactsWithNoReq(env: L_Env, node: FactNode) {
+  export function checkByFactsWithNoReq(env: L_Env, node: FactNode): RType {
     if (node instanceof OptNode) {
       return checkOptByFactsWithNoReq(env, node);
     } else if (node instanceof IfThenNode) {
@@ -107,7 +113,7 @@ export namespace checker {
     return RType.Error;
   }
 
-  function checkOptByFactsWithNoReq(env: L_Env, opt: OptNode) {
+  function checkOptByFactsWithNoReq(env: L_Env, opt: OptNode): RType {
     const facts = env.getOptFact(opt.fullName);
     if (!facts) return RType.Error;
 
@@ -155,7 +161,7 @@ export namespace checker {
     return RType.True;
   }
 
-  function checkSingleVar(trueFact: string, toCheck: string) {
+  function checkSingleVar(trueFact: string, toCheck: string): Boolean {
     return trueFact.startsWith("#") || trueFact === toCheck;
   }
 

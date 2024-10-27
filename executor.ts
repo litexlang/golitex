@@ -107,14 +107,15 @@ export namespace executor {
     }
 
     const res = checker.check(env, node as FactNode);
-    if (isRTypeTrue(res)) {
-      knowExec(env, new KnowNode([node]));
+    if (res.type === RType.True) {
+      if (res.checkedByOpt === false) knowExec(env, new KnowNode([node]));
       return successMesIntoEnv(env, node);
-    } else if (res === RType.Unknown) {
+    } else if (res.type === RType.Unknown) {
       env.newMessage(`Unknown. ${node.toString()}`);
-    } else if (res === RType.False) {
+      return RType.Unknown;
+    } else if (res.type === RType.False) {
       env.newMessage(`False. ${node.toString()}`);
-      return res;
+      return RType.False;
     }
     return RType.Error;
   }
@@ -363,8 +364,12 @@ export namespace executor {
       // check
       for (const toTest of node.toProve.onlyIfs) {
         const out = checker.check(newEnv, toTest);
-        if (!(out === RType.True)) {
-          return handleExecError(env, out, `Proof failed to prove ${toTest}.`);
+        if (!(out.type === RType.True)) {
+          return handleExecError(
+            env,
+            out.type,
+            `Proof failed to prove ${toTest}.`
+          );
         }
       }
 
@@ -436,8 +441,12 @@ export namespace executor {
       // check
       for (const toTest of declFact.onlyIfs) {
         const out = checker.check(newEnv, toTest);
-        if (!(out === RType.True)) {
-          return handleExecError(env, out, `Proof failed to prove ${toTest}.`);
+        if (!(out.type === RType.True)) {
+          return handleExecError(
+            env,
+            out.type,
+            `Proof failed to prove ${toTest}.`
+          );
         }
       }
 
@@ -475,20 +484,20 @@ export namespace executor {
       }
 
       let out = checker.check(newEnv, node.contradict);
-      if (!(out === RType.True)) {
+      if (!(out.type === RType.True)) {
         return handleExecError(
           env,
-          out,
+          out.type,
           `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
         );
       }
 
       node.contradict.isT = !node.contradict.isT;
       out = checker.check(newEnv, node.contradict);
-      if (!(out === RType.True)) {
+      if (!(out.type === RType.True)) {
         return handleExecError(
           env,
-          out,
+          out.type,
           `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
         );
       }

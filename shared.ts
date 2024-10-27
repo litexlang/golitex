@@ -132,3 +132,10 @@ export function isRTypeErr(r: RType) {
 export function isRTypeTrue(r: RType) {
   return r === RType.True;
 }
+
+export class CheckerOut {
+  constructor(
+    public type: RType,
+    public checkedByOpt: Boolean = false
+  ) {}
+}

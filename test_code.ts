@@ -147,6 +147,12 @@ const testList17 = [
   "only_if obj0(a) <= ;",
 ];
 
+const testList18 = [
+  "def obj0 if x | => ;",
+  "know obj0(#x);",
+  "let y; obj0(y);",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -165,7 +171,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList14: [testList14, false],
   testList15: [testList15, false],
   testList16: [testList16, false],
-  testList17: [testList17, true],
+  testList17: [testList17, false],
+  testList18: [testList18, true],
 };
 
 export function testCode() {
