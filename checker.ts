@@ -6,9 +6,14 @@ import {
   OnlyIfNode,
   OptNode,
 } from "./ast";
-import { L_Env, StoredFactValue } from "./env";
+import { L_Env } from "./env";
 import { executor, RType } from "./executor";
-import { CheckerOut } from "./shared";
+export class CheckerOut {
+  constructor(
+    public type: RType,
+    public checkedByOpt: Boolean = false
+  ) {}
+}
 
 export namespace checker {
   export function check(env: L_Env, node: FactNode): CheckerOut {

@@ -7,7 +7,6 @@ import {
   IfThenNode,
   DeclNode,
   IffDeclNode,
-  IfThenDeclNode,
   FactNode,
   ProveNode,
   ExistNode,
@@ -15,14 +14,13 @@ import {
   AssumeByContraNode,
   OnlyIfDeclNode,
   LogicalOptNode,
+  ByNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
   KnowTypeKeywords,
-  specialChars,
   StdStmtEnds,
   IfKeywords,
-  DefKeywords,
   LetKeywords,
   ThenKeywords,
   ProveKeywords,
@@ -38,8 +36,8 @@ import {
   IffKeywords,
   LogicalOptPairs,
   LogicalKeywords,
+  ByKeywords,
 } from "./common";
-import { sep } from "path";
 
 export namespace parser {
   function skip(tokens: string[], s: string | string[] = "") {
@@ -131,8 +129,12 @@ export namespace parser {
         holder.push(node);
         return node;
       } else {
-        const nodes = optFactsParse(env, tokens, StdStmtEnds, true);
-        nodes.forEach((e) => holder.push(e));
+        const byNode = byFactsParse(env, tokens, StdStmtEnds, true);
+        if (byNode.block.length === 0) {
+          byNode.facts.forEach((e) => holder.push(e));
+        } else {
+          holder.push(byNode);
+        }
       }
     } catch (error) {
       handleParseError(env, "node", index, start);
@@ -498,7 +500,7 @@ export namespace parser {
         while (["\n", ";"].includes(tokens[0])) {
           tokens.shift();
         }
-        if (tokens[0] === "}") continue;
+        if (tokens[0] === "}") break;
 
         getNodesFromSingleNode(env, tokens, block);
       }
@@ -719,6 +721,41 @@ export namespace parser {
       return out;
     } catch (error) {
       handleParseError(env, "if-then", index, start);
+      throw error;
+    }
+  }
+
+  function byFactsParse(
+    env: L_Env,
+    tokens: string[],
+    end: string[],
+    skipEnd: Boolean = false
+  ): ByNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      const facts = optFactsParse(env, tokens, [...end, ...ByKeywords]);
+      const block: L_Node[] = [];
+      if (ByKeywords.includes(tokens[0])) {
+        skip(tokens, ByKeywords);
+        skip(tokens, "{");
+        while (tokens[0] !== "}") {
+          while (["\n", ";"].includes(tokens[0])) {
+            tokens.shift();
+          }
+          if (tokens[0] === "}") break;
+
+          getNodesFromSingleNode(env, tokens, block);
+        }
+        skip(tokens, "}");
+      }
+
+      if (skipEnd) skip(tokens, end);
+
+      return new ByNode(facts, block);
+    } catch (error) {
+      handleParseError(env, "fact", index, start);
       throw error;
     }
   }

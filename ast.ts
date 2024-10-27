@@ -1,4 +1,3 @@
-import { on } from "events";
 import { IffKeywords, IfKeywords, OnlyIfKeywords } from "./common";
 
 export abstract class L_Node {}
@@ -317,8 +316,11 @@ export class AssumeByContraNode extends L_Node {
   }
 }
 
-export class _OptsNode extends L_Node {
-  constructor(public opts: OptNode[]) {
+export class ByNode extends L_Node {
+  constructor(
+    public facts: FactNode[],
+    public block: L_Node[]
+  ) {
     super();
   }
 }

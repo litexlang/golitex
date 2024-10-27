@@ -40,6 +40,7 @@ export const AreKeywords = ["are"];
 export const IsAreKeywords = [...IsKeywords, ...AreKeywords];
 export const NotKeywords = ["not"];
 export const OrKeywords = ["or"];
+export const ByKeywords = ["by"];
 
 export const L_Keywords: string[] = [
   "#",
@@ -63,6 +64,7 @@ export const L_Keywords: string[] = [
   ...AreKeywords,
   ...NotKeywords,
   ...OrKeywords,
+  ...ByKeywords,
 ];
 
 export const LogicalOptPairs: { [k: string]: string[] } = {

@@ -17,9 +17,9 @@ import {
   LogicalOptNode,
   IffNode,
   OnlyIfNode,
+  ByNode,
 } from "./ast";
 import { L_Env } from "./env";
-import { isRTypeTrue } from "./shared";
 import { checker } from "./checker";
 import { L_Builtins } from "./builtins";
 
@@ -66,6 +66,7 @@ export namespace executor {
     ProveNode: proveExec,
     HaveNode: haveExec,
     AssumeByContraNode: assumeByContraExec,
+    ByNode: byExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node): RType {
@@ -73,7 +74,7 @@ export namespace executor {
       const nodeType = node.constructor.name;
       const execFunc = nodeExecMap[nodeType];
 
-      if (execFunc && isRTypeTrue(execFunc(env, node)))
+      if (execFunc && execFunc(env, node) === RType.True)
         return successMesIntoEnv(env, node);
       else if (node instanceof FactNode) {
         try {
@@ -199,16 +200,6 @@ export namespace executor {
 
           env.addOptFact(fact, [...fatherReq]);
         } else if (fact instanceof LogicalOptNode) {
-          // store facts
-          // for (const onlyIf of fact.onlyIfs) {
-          //   if (onlyIf instanceof OptNode)
-          //     env.addOptFact(onlyIf, [...fatherReq, ...fact.req]);
-          //   else
-          //     knowExec(env, new KnowNode([onlyIf]), [
-          //       ...fatherReq,
-          //       ...fact.req,
-          //     ]);
-          // }
           if (fact instanceof IfThenNode) {
             knowLogicalOpt(env, fact.onlyIfs, fact.req, fatherReq);
           } else if (fact instanceof IffNode) {
@@ -252,7 +243,6 @@ export namespace executor {
 
       env.setDeclFact(node.name, node);
 
-      // const originalOptVars = [...node.vars];
       const definedFact = new OptNode(node.name, [...node.vars]);
       definedFact.hashVars(node.vars);
 
@@ -262,42 +252,48 @@ export namespace executor {
 
       if (node instanceof IffDeclNode || node instanceof ExistNode) {
         // we declare and exe exist-fact by exactly using Opt code.
-        // factType = node instanceof IffDeclNode ? FactType.Def : FactType.Exist;
 
-        const hashedReq =
-          /** Notice the following 4 knowExec can be reduced to 2 */
-          // req => itself
-          knowExec(
-            env,
-            new KnowNode([
-              new IfThenNode(definedFact.vars, [...node.req], [definedFact]),
-            ])
-          );
-
-        // //! The whole checking process might be locked by "req => itself, itself =>req"
-        // itself => req
+        /** Notice the following 4 knowExec can be reduced to 2 */
+        // req => itself
         knowExec(
           env,
           new KnowNode([
-            new IfThenNode(definedFact.vars, [definedFact], [...node.req]),
+            new IfThenNode(
+              definedFact.vars,
+              [...node.req],
+              [definedFact, ...node.onlyIfs]
+            ),
+          ])
+        );
+
+        // //! The whole checking process might be locked by "req => itself, itself =>req"
+        // itself => req and itself => onlyIfs
+        knowExec(
+          env,
+          new KnowNode([
+            new IfThenNode(
+              definedFact.vars,
+              [definedFact],
+              [...node.req, ...node.onlyIfs]
+            ),
           ])
         );
 
         // itself => onlyIf
-        knowExec(
-          env,
-          new KnowNode([
-            new IfThenNode(definedFact.vars, [definedFact], [...node.onlyIfs]),
-          ])
-        );
+        // knowExec(
+        //   env,
+        //   new KnowNode([
+        //     new IfThenNode(definedFact.vars, [definedFact], [...node.onlyIfs]),
+        //   ])
+        // );
 
         // req => onlyIf
-        knowExec(
-          env,
-          new KnowNode([
-            new IfThenNode(definedFact.vars, [...node.req], [...node.onlyIfs]),
-          ])
-        );
+        // knowExec(
+        //   env,
+        //   new KnowNode([
+        //     new IfThenNode(definedFact.vars, [...node.req], [...node.onlyIfs]),
+        //   ])
+        // );
       } else if (node instanceof IfThenDeclNode) {
         // factType = FactType.IfThen;
 
@@ -509,5 +505,19 @@ export namespace executor {
       env.newMessage(`${node}`);
       return RType.Error;
     }
+  }
+
+  function byExec(env: L_Env, node: ByNode): RType {
+    const newEnv = new L_Env(env);
+    for (const subNode of node.block) {
+      const out = nodeExec(newEnv, subNode);
+      if (out !== RType.True) return out;
+    }
+    for (const fact of node.facts) {
+      const out = nodeExec(newEnv, fact);
+      if (out !== RType.True) return out;
+    }
+    knowExec(env, new KnowNode(node.facts));
+    return RType.True;
   }
 }

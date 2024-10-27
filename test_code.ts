@@ -151,6 +151,16 @@ const testList18 = [
   "def obj0 if x | => ;",
   "know obj0(#x);",
   "let y; obj0(y);",
+  "let z;",
+  "1,2,3,4 are obj0;",
+];
+
+const testList19 = [
+  "def obj0 if x | => ;",
+  "def obj1 if x | => x is obj0;",
+  "def obj2 if x | => obj1(x);",
+  "let x | obj2(x);",
+  "x is obj0 by {x is obj1;};", // If we put by at the end, then it's a declarative way of proving: instead of procedurally prove a result, we now declare a result at beginning and then prove it.
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
@@ -172,7 +182,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList15: [testList15, false],
   testList16: [testList16, false],
   testList17: [testList17, false],
-  testList18: [testList18, true],
+  testList18: [testList18, false],
+  testList19: [testList19, true],
 };
 
 export function testCode() {
