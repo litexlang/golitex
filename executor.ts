@@ -262,7 +262,7 @@ export namespace executor {
         // we declare and exe exist-fact by exactly using Opt code.
 
         /** Notice the following 4 knowExec can be reduced to 2 */
-        // req => itself
+        // req => itself; req => onlyIfs
         knowExec(
           env,
           new KnowNode([
@@ -275,7 +275,7 @@ export namespace executor {
         );
 
         // //! The whole checking process might be locked by "req => itself, itself =>req"
-        // itself => req and itself => onlyIfs
+        // itself => req ; itself => onlyIfs
         knowExec(
           env,
           new KnowNode([

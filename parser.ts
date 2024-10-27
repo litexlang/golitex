@@ -208,13 +208,6 @@ export namespace parser {
       } else {
         skip(tokens, "|");
         const facts = optFactsParse(env, tokens, StdStmtEnds, true);
-        // const facts = listParse<FactNode>(
-        //   env,
-        //   tokens,
-        //   singleOptParse,
-        //   StdStmtEnds,
-        //   true
-        // );
         return new LetNode(vars, facts);
       }
     } catch (error) {
@@ -616,6 +609,7 @@ export namespace parser {
     }
   }
 
+  // Main Function of parser
   function optFactsParse(
     env: L_Env,
     tokens: string[],

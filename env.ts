@@ -75,7 +75,7 @@ export class L_Env {
   }
 
   declareNewVar(v: string[]): boolean {
-    if (v.every(this.varsAreNotDeclared, this)) {
+    if (this.varsAreNotDeclared(v)) {
       this.declaredVars.push(...v);
       return true;
     }
@@ -83,7 +83,7 @@ export class L_Env {
     return false;
   }
 
-  varsAreNotDeclared(vars: string[] | string): boolean {
+  varsAreNotDeclared(vars: string[]): boolean {
     const isVarDeclared = (v: string): boolean => {
       if (this.declaredVars.includes(v) || v.startsWith("#")) {
         return true;

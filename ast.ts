@@ -197,7 +197,15 @@ export abstract class DeclNode extends L_Node {
   }
 
   toString() {
-    return `${this.name}(${this.vars})`;
+    if (this instanceof IfThenDeclNode)
+      return `def if ${this.name}(${this.vars})`;
+    else if (this instanceof IffDeclNode)
+      return `def iff ${this.name}(${this.vars})`;
+    else if (this instanceof OnlyIfDeclNode)
+      return `def only_if ${this.name}(${this.vars})`;
+    else if (this instanceof ExistNode)
+      return `def Exist ${this.name}(${this.vars})`;
+    else return `Declaration Error`;
   }
 
   replaceVars(givenOpt: OptNode) {
