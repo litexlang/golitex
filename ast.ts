@@ -71,7 +71,9 @@ export abstract class LogicalOptNode extends FactNode {
   }
 
   hashVars(varsToHash: string[]) {
-    this.vars = this.vars.map((s) => (varsToHash.includes(s) ? "#" + s : s));
+    this.vars = this.vars.map((s) =>
+      varsToHash.includes(s) ? (s.startsWith("#") ? s : "#" + s) : s
+    );
     this.req.forEach((e) => e.hashVars(varsToHash));
     this.onlyIfs.forEach((e) => e.hashVars(varsToHash));
   }
@@ -153,7 +155,10 @@ export class OptNode extends FactNode {
   }
 
   hashVars(varsToHash: string[]) {
-    this.vars = this.vars.map((s) => (varsToHash.includes(s) ? "#" + s : s));
+    this.vars = this.vars.map((s) =>
+      varsToHash.includes(s) ? (s.startsWith("#") ? s : "#" + s) : s
+    );
+    // this.vars = this.vars.map((s) => (varsToHash.includes(s) ? "#" + s : s));
   }
 
   rmvHashFromVars(varsToHash: string[]): void {

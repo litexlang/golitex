@@ -167,8 +167,6 @@ const setTheory1 = [
   "def object x | ;",
   "def set if x | =>;",
   "def in if x,A | A is set => ;",
-  "if x | in(x,A) => in(x,B); ",
-  "if x | in(x,B) => in(x,A);",
   "def = iff A,B | set(A), set(B) <=> if x | in(x,A) => in(x,B), if x | in(x,B) => in(x,A);",
 ];
 
@@ -219,9 +217,9 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList17: [testList17, false],
   testList18: [testList18, false],
   testList19: [testList19, false],
-  setTheory1: [setTheory1, false],
+  setTheory1: [setTheory1, true],
   testList20: [testList20, false],
-  testList21: [testList21, true],
+  testList21: [testList21, false],
 };
 
 export function testCode() {
