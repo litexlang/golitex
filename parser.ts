@@ -15,6 +15,8 @@ import {
   OnlyIfDeclNode,
   LogicalOptNode,
   ByNode,
+  IfThenDeclNode,
+  OnlyIfNode,
 } from "./ast";
 import { L_Env } from "./env";
 import {
@@ -38,6 +40,10 @@ import {
   LogicalKeywords,
   ByKeywords,
   AreKeywords,
+  DefKeywords,
+  WhenKeyword,
+  IffThenKeywords,
+  OnlyIfThenKeywords,
 } from "./common";
 
 export namespace parser {
@@ -99,7 +105,8 @@ export namespace parser {
   } = {
     know: knowParse,
     let: letParse,
-    def: DeclNodeParse,
+    // def: DeclNodeParse,
+    def: defineParse,
     prove: proveParse,
     exist: existParse,
     have: haveParse,
@@ -250,13 +257,17 @@ export namespace parser {
 
         skip(tokens, ")");
       } else {
-        // parse relational operator
-        while (!IsKeywords.includes(tokens[0])) {
-          vars.push(shiftVar(tokens));
-          if (isCurToken(tokens, ",")) skip(tokens, ", ");
-        }
+        const v = shiftVar(tokens);
+        vars.push(v);
         skip(tokens, IsKeywords);
         name = shiftVar(tokens);
+        // parse relational operator
+        // while (!IsKeywords.includes(tokens[0])) {
+        //   vars.push(shiftVar(tokens));
+        //   if (isCurToken(tokens, ",")) skip(tokens, ", ");
+        // }
+        // skip(tokens, IsKeywords);
+        // name = shiftVar(tokens);
       }
 
       return new OptNode(name, vars);
@@ -755,6 +766,45 @@ export namespace parser {
       if (skipEnd) skip(tokens, end);
 
       return new ByNode(facts, block);
+    } catch (error) {
+      handleParseError(env, "fact", index, start);
+      throw error;
+    }
+  }
+
+  function defineParse(env: L_Env, tokens: string[]): DeclNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, DefKeywords);
+      const opt: OptNode = OptParse(env, tokens);
+      const separator = shiftVar(tokens);
+
+      const onlyIfs = factsParse(
+        env,
+        tokens,
+        StdStmtEnds.concat(WhenKeyword),
+        false
+      );
+
+      let req: FactNode[] = [];
+      if (tokens[0] === WhenKeyword) {
+        skip(tokens, WhenKeyword);
+        req = factsParse(env, tokens, StdStmtEnds, false);
+      }
+
+      skip(tokens, StdStmtEnds);
+
+      if (ThenKeywords.includes(separator)) {
+        return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs);
+      } else if (IffThenKeywords.includes(separator)) {
+        return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs);
+      } else if (OnlyIfThenKeywords.includes(separator)) {
+        return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs);
+      }
+
+      throw Error();
     } catch (error) {
       handleParseError(env, "fact", index, start);
       throw error;

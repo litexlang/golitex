@@ -71,6 +71,7 @@ export abstract class LogicalOptNode extends FactNode {
   }
 
   hashVars(varsToHash: string[]) {
+    //! CONVENTION: NEVER INTRODUCE ANY VARIABLE WITH ## PREFIX
     this.vars = this.vars.map((s) =>
       varsToHash.includes(s) ? (s.startsWith("#") ? s : "#" + s) : s
     );
@@ -155,6 +156,7 @@ export class OptNode extends FactNode {
   }
 
   hashVars(varsToHash: string[]) {
+    //! CONVENTION: NEVER INTRODUCE ANY VARIABLE WITH ## PREFIX
     this.vars = this.vars.map((s) =>
       varsToHash.includes(s) ? (s.startsWith("#") ? s : "#" + s) : s
     );

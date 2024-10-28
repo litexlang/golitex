@@ -178,14 +178,6 @@ const testList20 = [
   "def eq iff A,B | A,B are object <=> A,B are obj2;",
 ];
 
-const future1 = [
-  "def obj0 x | =>;",
-  "def obj1 x | =>;",
-  "def obj2(x,y) <=> x,y are obj1 when x,y are obj0;",
-  "def obj3(x,y) => x,y are obj1 when x,y are obj0;",
-  "def obj4(x,y) <= x,y are obj1 when x,y are obj0;",
-];
-
 const testList21 = [
   "def obj0 if  x | =>;",
   "def obj1 if x | =>;",
@@ -194,6 +186,21 @@ const testList21 = [
   "let a,b;",
   // "know if x | x,b are obj0 => x is obj1;",
   "know if x | x,b are obj1 => if | obj3(x,a) => x is obj2;",
+];
+
+const testList22 = [
+  "def x is obj0 =>;",
+  "def x is obj1 =>;",
+  "def obj2(x,y) <=> x,y are obj1 when x,y are obj0;",
+  "def obj3(x,y) => x,y are obj1 when x,y are obj0;",
+  "def obj4(x,y) <= x,y are obj1 when x,y are obj0;",
+];
+
+const testList23 = [
+  "def x is object =>;",
+  "def x is set =>;",
+  "def in(x,A) => when A is set;",
+  "def =(A,B) <=> if x | in(x,A) => {in(x,B)}, if x | in(x,B) => {in(x,A)} when A,B are set;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
@@ -217,9 +224,11 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList17: [testList17, false],
   testList18: [testList18, false],
   testList19: [testList19, false],
-  setTheory1: [setTheory1, true],
+  setTheory1: [setTheory1, false],
   testList20: [testList20, false],
   testList21: [testList21, false],
+  testList22: [testList22, false],
+  testList23: [testList23, true],
 };
 
 export function testCode() {
@@ -238,7 +247,7 @@ export function testCode() {
     }
 
     env.printFacts();
-    env.printDeclFacts();
+    // env.printDeclFacts();
     env.printClearMessage();
   }
 }
