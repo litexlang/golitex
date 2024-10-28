@@ -209,12 +209,12 @@ export namespace executor {
           env.addOptFact(fact, [...fatherReq]);
         } else if (fact instanceof LogicalOptNode) {
           if (fact instanceof IfThenNode) {
-            knowLogicalOpt(env, fact.onlyIfs, fact.req, fatherReq);
+            knowLogicalOpt(env, fact.vars, fact.onlyIfs, fact.req, fatherReq);
           } else if (fact instanceof IffNode) {
-            knowLogicalOpt(env, fact.onlyIfs, fact.req, fatherReq);
-            knowLogicalOpt(env, fact.req, fact.onlyIfs, fatherReq);
+            knowLogicalOpt(env, fact.vars, fact.onlyIfs, fact.req, fatherReq);
+            knowLogicalOpt(env, fact.vars, fact.req, fact.onlyIfs, fatherReq);
           } else if (fact instanceof OnlyIfNode) {
-            knowLogicalOpt(env, fact.req, fact.onlyIfs, fatherReq);
+            knowLogicalOpt(env, fact.vars, fact.req, fact.onlyIfs, fatherReq);
           } else {
             throw Error();
           }
@@ -232,14 +232,20 @@ export namespace executor {
 
   function knowLogicalOpt(
     env: L_Env,
+    vars: string[],
     knowWhat: FactNode[],
     req: FactNode[],
     fatherReq: FactNode[]
   ): void {
+    fatherReq.forEach((e) => e.hashVars(vars));
+    req.forEach((e) => e.hashVars(vars));
     for (const onlyIf of knowWhat) {
-      if (onlyIf instanceof OptNode)
+      if (onlyIf instanceof OptNode) {
+        onlyIf.hashVars(vars);
         env.addOptFact(onlyIf, [...fatherReq, ...req]);
-      else knowExec(env, new KnowNode([onlyIf]), [...fatherReq, ...req]);
+      } else {
+        knowExec(env, new KnowNode([onlyIf]), [...fatherReq, ...req]);
+      }
     }
   }
 

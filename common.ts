@@ -41,9 +41,11 @@ export const IsAreKeywords = [...IsKeywords, ...AreKeywords];
 export const NotKeywords = ["not"];
 export const OrKeywords = ["or"];
 export const ByKeywords = ["by"];
+export const WhenKeyword = "when";
 
 export const L_Keywords: string[] = [
   "#",
+  WhenKeyword,
   ...specialChars,
   ...KnowTypeKeywords,
   ...ThenKeywords,

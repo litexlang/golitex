@@ -180,6 +180,20 @@ const testList20 = [
   "def eq iff A,B | A,B are object <=> A,B are obj2;",
 ];
 
+const future1 = [
+  "def obj0 x | =>;",
+  "def obj1 x | =>;",
+  "def obj2(x,y) <=> x,y are obj1 when x,y are obj0;",
+  "def obj3(x,y) => x,y are obj1 when x,y are obj0;",
+  "def obj4(x,y) <= x,y are obj1 when x,y are obj0;",
+];
+
+const testList21 = [
+  "def obj0 if  x | =>;",
+  "def obj1 if x | =>;",
+  "know if x | x is obj0 => x is obj1;",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -202,7 +216,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList18: [testList18, false],
   testList19: [testList19, false],
   setTheory1: [setTheory1, false],
-  testList20: [testList20, true],
+  testList20: [testList20, false],
+  testList21: [testList21, true],
 };
 
 export function testCode() {
