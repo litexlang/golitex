@@ -713,19 +713,13 @@ export namespace parser {
       if (symbolsBeforeThenKeyword.includes("|")) {
         vars = varLstParse(env, tokens, ["|"], false);
         skip(tokens, "|");
+
         req = factsParse(env, tokens, separation, true);
       } else {
         req = factsParse(env, tokens, separation, true);
       }
 
-      let onlyIfs: OptNode[] = [];
-      const facts = factsParse(env, tokens, ends, skipEnd);
-
-      if (facts.every((e) => e instanceof OptNode)) {
-        onlyIfs = facts as OptNode[];
-      } else {
-        // throw Error(`Not all onlyIfs are operator-type fact.`);
-      }
+      const onlyIfs = factsParse(env, tokens, ends, skipEnd);
 
       const out = LogicalOptNode.create(type, vars, req, onlyIfs);
       return out;

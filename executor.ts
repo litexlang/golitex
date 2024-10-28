@@ -194,7 +194,8 @@ export namespace executor {
   export function knowExec(
     env: L_Env,
     node: KnowNode,
-    fatherReq: FactNode[] = []
+    fatherReq: FactNode[] = [],
+    varsToHash: string[] = []
   ): RType {
     try {
       for (const fact of node.facts) {
@@ -209,12 +210,36 @@ export namespace executor {
           env.addOptFact(fact, [...fatherReq]);
         } else if (fact instanceof LogicalOptNode) {
           if (fact instanceof IfThenNode) {
-            knowLogicalOpt(env, fact.vars, fact.onlyIfs, fact.req, fatherReq);
+            knowLogicalOpt(
+              env,
+              [...fact.vars, ...varsToHash],
+              fact.onlyIfs,
+              fact.req,
+              fatherReq
+            );
           } else if (fact instanceof IffNode) {
-            knowLogicalOpt(env, fact.vars, fact.onlyIfs, fact.req, fatherReq);
-            knowLogicalOpt(env, fact.vars, fact.req, fact.onlyIfs, fatherReq);
+            knowLogicalOpt(
+              env,
+              [...fact.vars, ...varsToHash],
+              fact.onlyIfs,
+              fact.req,
+              fatherReq
+            );
+            knowLogicalOpt(
+              env,
+              [...fact.vars, ...varsToHash],
+              fact.req,
+              fact.onlyIfs,
+              fatherReq
+            );
           } else if (fact instanceof OnlyIfNode) {
-            knowLogicalOpt(env, fact.vars, fact.req, fact.onlyIfs, fatherReq);
+            knowLogicalOpt(
+              env,
+              [...fact.vars, ...varsToHash],
+              fact.req,
+              fact.onlyIfs,
+              fatherReq
+            );
           } else {
             throw Error();
           }
@@ -232,19 +257,24 @@ export namespace executor {
 
   function knowLogicalOpt(
     env: L_Env,
-    vars: string[],
+    varsToHash: string[],
     knowWhat: FactNode[],
     req: FactNode[],
     fatherReq: FactNode[]
   ): void {
-    fatherReq.forEach((e) => e.hashVars(vars));
-    req.forEach((e) => e.hashVars(vars));
+    fatherReq.forEach((e) => e.hashVars(varsToHash));
+    req.forEach((e) => e.hashVars(varsToHash));
     for (const onlyIf of knowWhat) {
       if (onlyIf instanceof OptNode) {
-        onlyIf.hashVars(vars);
+        onlyIf.hashVars(varsToHash);
         env.addOptFact(onlyIf, [...fatherReq, ...req]);
       } else {
-        knowExec(env, new KnowNode([onlyIf]), [...fatherReq, ...req]);
+        knowExec(
+          env,
+          new KnowNode([onlyIf]),
+          [...fatherReq, ...req],
+          [...varsToHash]
+        );
       }
     }
   }

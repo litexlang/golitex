@@ -191,7 +191,11 @@ const future1 = [
 const testList21 = [
   "def obj0 if  x | =>;",
   "def obj1 if x | =>;",
-  "know if x | x is obj0 => x is obj1;",
+  "def obj2 if x | =>;",
+  "def obj3 if x,y | =>;",
+  "let a,b;",
+  // "know if x | x,b are obj0 => x is obj1;",
+  "know if x | x,b are obj1 => if | obj3(x,a) => x is obj2;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
