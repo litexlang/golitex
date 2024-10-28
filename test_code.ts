@@ -201,6 +201,8 @@ const testList23 = [
   "def x is set =>;",
   "def in(x,A) => when A is set;",
   "def =(A,B) <=> if x | in(x,A) => {in(x,B)}, if x | in(x,B) => {in(x,A)} when A,B are set;",
+  "let A,B | A,B are set, if x | in(x,A) => {in(x,B)}, if x | in(x,B) => {in(x,A)};",
+  "=(A,B);",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

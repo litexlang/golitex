@@ -9,8 +9,8 @@ import {
 } from "./ast";
 export class StoredFactValue {
   constructor(
-    public vars: string[],
-    public req: FactNode[],
+    public vars: string[], //! vars here never start with #
+    public req: FactNode[], //! vars here might start with #
     public isT: Boolean = false
   ) {}
 
