@@ -172,6 +172,14 @@ const setTheory1 = [
   "def = iff A,B | set(A), set(B) <=> if x | in(x,A) => in(x,B), if x | in(x,B) => in(x,A);",
 ];
 
+const testList20 = [
+  "def object x | ;",
+  "def obj2 if x | =>;",
+  // "def = A,B | obj(A), obj(B);",
+  // "def deduce only_if x | x is obj <= ;",
+  "def eq iff A,B | A,B are object <=> A,B are obj2;",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -193,7 +201,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList17: [testList17, false],
   testList18: [testList18, false],
   testList19: [testList19, false],
-  setTheory1: [setTheory1, true],
+  setTheory1: [setTheory1, false],
+  testList20: [testList20, true],
 };
 
 export function testCode() {

@@ -268,8 +268,8 @@ export namespace executor {
           new KnowNode([
             new IfThenNode(
               definedFact.vars,
-              [...node.req],
-              [definedFact, ...node.onlyIfs]
+              [definedFact, ...node.req],
+              [...node.onlyIfs]
             ),
           ])
         );
@@ -281,27 +281,11 @@ export namespace executor {
           new KnowNode([
             new IfThenNode(
               definedFact.vars,
-              [definedFact],
-              [...node.req, ...node.onlyIfs]
+              [...node.onlyIfs, ...node.req],
+              [definedFact]
             ),
           ])
         );
-
-        // itself => onlyIf
-        // knowExec(
-        //   env,
-        //   new KnowNode([
-        //     new IfThenNode(definedFact.vars, [definedFact], [...node.onlyIfs]),
-        //   ])
-        // );
-
-        // req => onlyIf
-        // knowExec(
-        //   env,
-        //   new KnowNode([
-        //     new IfThenNode(definedFact.vars, [...node.req], [...node.onlyIfs]),
-        //   ])
-        // );
       } else if (node instanceof IfThenDeclNode) {
         // factType = FactType.IfThen;
 
@@ -327,7 +311,7 @@ export namespace executor {
             new IfThenNode(
               // definedFact.vars,
               node.vars,
-              [...node.req],
+              [...node.onlyIfs, ...node.req],
               [definedFact]
             ),
           ])

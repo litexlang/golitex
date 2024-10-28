@@ -443,11 +443,11 @@ export namespace parser {
         skip(tokens, StdStmtEnds);
 
         if (IffKeywords.includes(type)) {
-          return new IffDeclNode(name, vars, req, []);
+          return new IffDeclNode(name, vars, [], req);
         } else if (OnlyIfKeywords.includes(type)) {
-          return new OnlyIfDeclNode(name, vars, req, []);
+          return new OnlyIfDeclNode(name, vars, [], req);
         } else {
-          return new IffDeclNode(name, vars, req, []);
+          return new IffDeclNode(name, vars, [], req);
         }
       }
 
