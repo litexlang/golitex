@@ -37,6 +37,7 @@ import {
   LogicalOptPairs,
   LogicalKeywords,
   ByKeywords,
+  AreKeywords,
 } from "./common";
 
 export namespace parser {
@@ -97,10 +98,8 @@ export namespace parser {
     [key: string]: Function; // (env: L_Env, tokens: string[]) => any;
   } = {
     know: knowParse,
-    "@": knowParse,
     let: letParse,
     def: DeclNodeParse,
-    ":": DeclNodeParse,
     prove: proveParse,
     exist: existParse,
     have: haveParse,
@@ -151,25 +150,13 @@ export namespace parser {
 
       skip(tokens, KnowTypeKeywords);
       while (!StdStmtEnds.includes(tokens[0])) {
-        // out = OptParse(env, tokens);
-        const outs: FactNode[] = optFactsParse(
+        const outs: FactNode[] = factsParse(
           env,
           tokens,
           [...StdStmtEnds, ","],
           false
         );
         knowNode.facts = knowNode.facts.concat(outs);
-
-        // } else {
-        //   if (IfKeywords.includes(tokens[0])) {
-        //     const out = ifThenParse(env, tokens, [",", ...StdStmtEnds], false);
-        //     knowNode.facts.push(out);
-        //   }
-        //   //! THE FOLLOWING CODES ARE WRONG.
-        //   // let out: FactNode;
-        //   // out = relParser(env, tokens, false);
-        //   // knowNode.facts.push(out);
-        // }
 
         if (tokens[0] === ",") skip(tokens, ",");
         else break;
@@ -207,7 +194,7 @@ export namespace parser {
         return new LetNode(vars, []);
       } else {
         skip(tokens, "|");
-        const facts = optFactsParse(env, tokens, StdStmtEnds, true);
+        const facts = factsParse(env, tokens, StdStmtEnds, true);
         return new LetNode(vars, facts);
       }
     } catch (error) {
@@ -342,13 +329,13 @@ export namespace parser {
       if (symbolsBeforeThenKeyword.includes("|")) {
         vars = varLstParse(env, tokens, ["|"], false);
         skip(tokens, "|");
-        req = optFactsParse(env, tokens, ThenKeywords, true);
+        req = factsParse(env, tokens, ThenKeywords, true);
       } else {
-        req = optFactsParse(env, tokens, ThenKeywords, true);
+        req = factsParse(env, tokens, ThenKeywords, true);
       }
 
       let onlyIfs: OptNode[];
-      const facts = optFactsParse(env, tokens, StdStmtEnds, skipEnd);
+      const facts = factsParse(env, tokens, StdStmtEnds, skipEnd);
       if (facts.every((e) => e instanceof OptNode)) {
         onlyIfs = facts as OptNode[];
       } else {
@@ -429,7 +416,9 @@ export namespace parser {
         throw Error();
       }
 
-      if (IfKeywords.includes(tokens[0])) {
+      if (
+        [...IfKeywords, ...IffKeywords, ...OnlyIfKeywords].includes(tokens[0])
+      ) {
         const logicalOpt = logicalOptParse(env, tokens, StdStmtEnds, true);
         return DeclNode.create(name, logicalOpt);
         // return new IfThenDeclNode(
@@ -444,8 +433,12 @@ export namespace parser {
           type = shiftVar(tokens);
         }
 
-        const vars = varLstParse(env, tokens, ["|"], true);
-        const req = optFactsParse(env, tokens, [...StdStmtEnds], false);
+        let req: FactNode[] = [];
+        // `|` must exist in declaration to reduce confusion.
+        const vars = varLstParse(env, tokens, ["|"], false);
+
+        skip(tokens, "|");
+        req = factsParse(env, tokens, [...StdStmtEnds], false);
 
         skip(tokens, StdStmtEnds);
 
@@ -534,7 +527,7 @@ export namespace parser {
       //   [...StdStmtEnds],
       //   true
       // );
-      const req = optFactsParse(env, tokens, [...StdStmtEnds], true);
+      const req = factsParse(env, tokens, [...StdStmtEnds], true);
 
       return new ExistNode(name, vars, req);
     } catch (error) {
@@ -574,7 +567,7 @@ export namespace parser {
         //   StdStmtEnds,
         //   true
         // );
-        const facts = optFactsParse(env, tokens, StdStmtEnds, true);
+        const facts = factsParse(env, tokens, StdStmtEnds, true);
         return new HaveNode(vars, facts);
       }
     } catch (error) {
@@ -610,7 +603,7 @@ export namespace parser {
   }
 
   // Main Function of parser
-  function optFactsParse(
+  function factsParse(
     env: L_Env,
     tokens: string[],
     end: string[],
@@ -647,7 +640,29 @@ export namespace parser {
             vars.push(shiftVar(tokens));
             if (isCurToken(tokens, ",")) skip(tokens, ",");
           }
-          const isAre = shiftVar(tokens);
+          const isAre = skip(tokens, IsAreKeywords) as string;
+          if (AreKeywords.includes(isAre)) {
+            if (vars.length < 2) {
+              handleParseError(
+                env,
+                "`are` requires more than 1 parameters.",
+                index,
+                start
+              );
+              throw Error();
+            }
+          } else {
+            if (vars.length !== 1) {
+              handleParseError(
+                env,
+                "`is` requires exactly one parameter.",
+                index,
+                start
+              );
+              throw Error();
+            }
+          }
+
           const optName = shiftVar(tokens);
           for (const v of vars) {
             const fact = new OptNode(optName, [v]);
@@ -698,17 +713,18 @@ export namespace parser {
       if (symbolsBeforeThenKeyword.includes("|")) {
         vars = varLstParse(env, tokens, ["|"], false);
         skip(tokens, "|");
-        req = optFactsParse(env, tokens, separation, true);
+        req = factsParse(env, tokens, separation, true);
       } else {
-        req = optFactsParse(env, tokens, separation, true);
+        req = factsParse(env, tokens, separation, true);
       }
 
-      let onlyIfs: OptNode[];
-      const facts = optFactsParse(env, tokens, ends, skipEnd);
+      let onlyIfs: OptNode[] = [];
+      const facts = factsParse(env, tokens, ends, skipEnd);
+
       if (facts.every((e) => e instanceof OptNode)) {
         onlyIfs = facts as OptNode[];
       } else {
-        throw Error(`Not all onlyIfs are operator-type fact.`);
+        // throw Error(`Not all onlyIfs are operator-type fact.`);
       }
 
       const out = LogicalOptNode.create(type, vars, req, onlyIfs);
@@ -729,7 +745,7 @@ export namespace parser {
     const index = tokens.length;
 
     try {
-      const facts = optFactsParse(env, tokens, [...end, ...ByKeywords]);
+      const facts = factsParse(env, tokens, [...end, ...ByKeywords]);
       const block: L_Node[] = [];
       if (ByKeywords.includes(tokens[0])) {
         skip(tokens, ByKeywords);

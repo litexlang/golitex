@@ -195,7 +195,8 @@ const codes: string[] = [
   // "def p1 only_if x | p2(x);",
   // "prove obj4(x) {obj2(x); obj1(x);}",
   // "obj(#y);",
-  "if | obj2(y) => p2(y);",
+  // "if | obj2(y) => p2(y);",
+  "def = iff A,B | set(A), set(B) <=> if x | in(x,A) => in(x,B), if x | in(x,B) => in(x,A);",
 ];
 
 function testLexer() {

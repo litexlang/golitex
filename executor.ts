@@ -351,6 +351,7 @@ export namespace executor {
   function proveExec(env: L_Env, node: ProveNode): RType {
     const newEnv = new L_Env(env);
     if (node.toProve !== null) {
+      // prove vanilla if-then
       newEnv.declareNewVar(node.toProve.vars);
       knowExec(newEnv, new KnowNode(node.toProve.req));
       // execute prove block
@@ -392,6 +393,7 @@ export namespace executor {
 
       return RType.True;
     } else if (node.fixedIfThenOpt !== null) {
+      // prove declared opt
       const originalDeclFact = env.getDeclFact(node.fixedIfThenOpt.fullName);
       if (originalDeclFact === undefined) {
         return handleExecError(

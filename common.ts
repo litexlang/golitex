@@ -16,7 +16,7 @@ export const specialChars = [
 ];
 
 export const KnowTypeKeywords = ["know", "assume"];
-export const ThenKeywords = ["then", "=>"];
+export const ThenKeywords = ["=>"];
 export const OnlyIfThenKeywords = ["<="];
 export const IffThenKeywords = ["<=>"];
 export const IfKeywords = ["if"];
@@ -27,7 +27,7 @@ export const DefKeywords = ["def"];
 
 export const SymbolsFactsSeparator = "|";
 export const ProveKeywords = ["prove"];
-export const suchThats = ["st", "is"];
+// export const suchThats = ["st", "is"];
 
 export const StdStmtEnds = [";", "\n"];
 export const LetKeywords = ["let"];
@@ -55,7 +55,6 @@ export const L_Keywords: string[] = [
   ...ExistKeywords,
   ...DefKeywords,
   ...ProveKeywords,
-  ...suchThats,
   ...StdStmtEnds,
   ...LetKeywords,
   ...HaveKeywords,
