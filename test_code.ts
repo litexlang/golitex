@@ -165,9 +165,9 @@ const testList19 = [
 
 const setTheory1 = [
   "def object x | ;",
-  "def set if x | =>;",
-  "def in if x,A | A is set => ;",
-  "def = iff A,B | set(A), set(B) <=> if x | in(x,A) => in(x,B), if x | in(x,B) => in(x,A);",
+  "def set if x | => {};",
+  "def in if x,A | A is set => {};",
+  "def = iff A,B | set(A), set(B) <=> {if x | in(x,A) => {in(x,B)}, if x | in(x,B) => {in(x,A)}}",
 ];
 
 const testList20 = [

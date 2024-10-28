@@ -419,7 +419,7 @@ export namespace parser {
       if (
         [...IfKeywords, ...IffKeywords, ...OnlyIfKeywords].includes(tokens[0])
       ) {
-        const logicalOpt = logicalOptParse(env, tokens, StdStmtEnds, true);
+        const logicalOpt = logicalOptParse(env, tokens);
         return DeclNode.create(name, logicalOpt);
         // return new IfThenDeclNode(
         //   name,
@@ -475,7 +475,7 @@ export namespace parser {
       let fixedIfThenOpt: null | OptNode = null;
 
       if (IfKeywords.includes(tokens[0])) {
-        toProve = logicalOptParse(env, tokens, ["{"], false);
+        toProve = logicalOptParse(env, tokens);
       } else {
         fixedIfThenOpt = OptParse(env, tokens);
       }
@@ -622,12 +622,7 @@ export namespace parser {
         }
 
         if (LogicalKeywords.includes(tokens[0])) {
-          const fact = logicalOptParse(
-            env,
-            tokens,
-            [",", ...StdStmtEnds],
-            false
-          );
+          const fact = logicalOptParse(env, tokens);
           fact.isT = isT;
           out.push(fact);
         } else if (tokens.length >= 2 && tokens[1] === "(") {
@@ -685,9 +680,9 @@ export namespace parser {
 
   function logicalOptParse(
     env: L_Env,
-    tokens: string[],
-    ends: string[] = StdStmtEnds,
-    skipEnd = true
+    tokens: string[]
+    // ends: string[] = StdStmtEnds,
+    // skipEnd = true
   ): LogicalOptNode {
     const start = tokens[0];
     const index = tokens.length;
@@ -719,7 +714,9 @@ export namespace parser {
         req = factsParse(env, tokens, separation, true);
       }
 
-      const onlyIfs = factsParse(env, tokens, ends, skipEnd);
+      skip(tokens, "{");
+
+      const onlyIfs = factsParse(env, tokens, ["}"], true);
 
       const out = LogicalOptNode.create(type, vars, req, onlyIfs);
       return out;
