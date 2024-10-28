@@ -5,25 +5,25 @@ import { parser } from "./parser";
 
 // Aristotle induction
 const testList0 = [
-  "def obj if x | => ;",
-  "def set x | obj(x);",
-  "def obj2 x |;",
+  "def obj(x) => ;",
+  "def set(x) => obj(x);",
+  "def obj2(x) => set(x);",
   "let y | set(y);",
-  "def set2 z | set(z);",
+  "def set2(z) <=> set(z);",
   "set2(y);",
   "set2(y);",
 ];
 
 const testList1 = [
-  "def obj if x | => ;",
-  "def obj2 if x | => ;",
-  "def p2 x | obj(x), obj2(x);",
+  "def obj(x) => ;",
+  "def obj2(x) => ;",
+  "def x is p2 <=> obj(x), obj2(x);",
   "let y | obj(y);",
-  "if | obj2(y) => p2(y);",
+  "if  | obj2(y) => {p2(y)};",
 ];
 
 const testList2 = [
-  "def obj if x | => ;",
+  "def obj(x) => ;",
   "def obj2 x | obj(x) ;",
   "def obj3 if x | => ;",
   "def obj4 if x | => obj3(x);",
@@ -34,7 +34,7 @@ const testList2 = [
 ];
 
 const testList3 = [
-  "def obj if x | => ;",
+  "def obj(x) => ;",
   "def obj2 x | obj(x) ;",
   "def obj3 if x | obj(x), obj2(x) => ; ",
   "prove if x |  => obj2(x) {}", // unsuccessful prove
@@ -100,7 +100,7 @@ const testList11 = [
 const testList12 = ["def p1 if x | => ;"];
 
 const testList13 = [
-  "def obj if x | => ;",
+  "def obj(x) => ;",
   "def obj2 if x | => obj(x) ;",
   "def obj3 if x | => obj2(x);",
   "def obj4 if x | obj3(x) => obj(x);",
@@ -108,7 +108,7 @@ const testList13 = [
 ];
 
 const testList14 = [
-  "def obj if x | => ;",
+  "def obj(x) => ;",
   "def obj2 if x | => x is obj;",
   "let x | x is obj;",
   "let a,b,c | a,b,c are obj;",
@@ -118,7 +118,7 @@ const testList14 = [
 ];
 
 const testList15 = [
-  "def obj if x | => ;",
+  "def obj(x) => ;",
   "know obj(#x);",
   "obj(#y);",
   "let x,y,z | ;",
@@ -126,7 +126,7 @@ const testList15 = [
 ];
 
 const testList16 = [
-  "def obj if x | => ;",
+  "def obj(x) => ;",
   "let x;",
   "def obj2 if x | => x is obj;",
   "know if x | obj(x) => obj(x);",
@@ -207,7 +207,7 @@ const testList23 = [
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
-  testList1: [testList1, false],
+  testList1: [testList1, true],
   testList2: [testList2, false],
   testList3: [testList3, false],
   testList4: [testList4, false],
@@ -230,7 +230,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList20: [testList20, false],
   testList21: [testList21, false],
   testList22: [testList22, false],
-  testList23: [testList23, true],
+  testList23: [testList23, false],
 };
 
 export function testCode() {

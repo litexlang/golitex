@@ -6,7 +6,7 @@ import {
   OnlyIfNode,
   OptNode,
 } from "./ast";
-import { L_Env } from "./env";
+import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
 export class CheckerOut {
   constructor(
@@ -45,7 +45,7 @@ export namespace checker {
    */
   export function checkOpt(env: L_Env, opt: OptNode): CheckerOut {
     // get related fact from itself and its ancestors
-    const facts = env.getOptFact(opt.fullName);
+    const facts: StoredFactValue[] | undefined = env.getOptFact(opt.fullName);
     if (facts === undefined) {
       if (env.getDeclFact(opt.fullName)) {
         return new CheckerOut(RType.Unknown);
@@ -82,7 +82,12 @@ export namespace checker {
 
         if (
           storedFact.req.every((e) => {
-            const out = checkByFactsWithNoReq(env, fixFree(e, freeToFixMap));
+            let out: RType = RType.Error;
+            if (e instanceof OptNode) {
+              out = checkByFactsWithNoReq(env, fixFree(e, freeToFixMap));
+            } else if (e instanceof IfThenNode) {
+              out = checkLogicalOpt(env, e.vars, e.req, e.onlyIfs);
+            }
             return out === RType.True;
           })
         ) {
