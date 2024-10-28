@@ -24,34 +24,35 @@ const testList1 = [
 
 const testList2 = [
   "def obj(x) => ;",
-  "def obj2 x | obj(x) ;",
-  "def obj3 if x | => ;",
-  "def obj4 if x | => obj3(x);",
+  "def x is obj2 <=> obj(x) ;",
+  "def x is obj3  => ;",
+  "def x is obj4  => obj3(x);",
   "let EMPTY_SET;",
-  "def inf if x | obj(x) => obj3(x);",
-  "prove if x | obj(x) => obj3(x) {}", // unsuccessful prove
-  "prove if x | obj(x) => obj3(x) {know obj4(x);}",
+  "def x is inf  => obj3(x) when  obj(x);",
+  "prove if x | obj(x) => {obj3(x)} {}", // unsuccessful prove
+  "prove if x | obj(x) => {obj3(x)} {know obj4(x);}",
 ];
 
 const testList3 = [
   "def obj(x) => ;",
-  "def obj2 x | obj(x) ;",
-  "def obj3 if x | obj(x), obj2(x) => ; ",
-  "prove if x |  => obj2(x) {}", // unsuccessful prove
-  "prove if x |  obj(x), obj3(x) => obj2(x) {}", // obj3 is useless
+  "def obj2(x) <=> obj(x) ;",
+  "def x is obj3  <=  obj(x), obj2(x) ; ",
+  "def x is obj4 <= when obj(x), obj2(x);",
+  // "prove if x |  => obj2(x) {}", // unsuccessful prove
+  // "prove if x |  obj(x), obj3(x) => obj2(x) {}", // obj3 is useless
 ];
 
 const testList4 = [";;;\n\n;;"];
 
 const testList5 = [
-  "def p1 if x | => ;",
-  "def p2 x | p1(x);",
+  "def x is p1 => ;",
+  "def p2(x) <=> p1(x);",
   // "def p3 x | p2(x);",
 ];
 
 const testList6 = [
-  "def p1 if x | => ;",
-  "exist Ex x | p1(x);", // can be used as a "stronger" version of def.
+  "def p1(x)  => ;",
+  "exist Ex(x) <=> p1(x);", // can be used as a "stronger" version of def.
   "let y | p1(y);",
   "have x | Ex(x);", // unsuccessful have
   "Ex(y);", // we declare and exe exist-fact by exactly using Opt code.
@@ -59,9 +60,9 @@ const testList6 = [
 ];
 
 const testList7 = [
-  "def p1 if x | => ;",
-  "def p2 x | p1(x);",
-  "def p3 x | p2(x);",
+  "def p1(x) => ;",
+  "def p2(x) <=> p1(x);",
+  "def p3(x) <=> p2(x);",
   "let y | p1(y);",
   "p3(y);", // unknown
   // "p3(y) by {p2(y)};",
@@ -71,8 +72,8 @@ const testList7 = [
 ];
 
 const testList8 = [
-  "def obj if x | => ;;",
-  "def obj2 x,y | obj(x), obj(y);",
+  "def obj(x)  => ;;",
+  "def obj2(x,y) <=> obj(x), obj(y);",
   "let x,y | obj(x), obj(y);",
   "obj(x), obj(y);",
   "obj2(x,y);",
@@ -81,38 +82,34 @@ const testList8 = [
   // "obj2(x,y);",
 ];
 
-const testList9 = ["def obj if x | => ;;", "let x| not obj(x);", "not obj(x);"];
+const testList9 = ["def obj(x)  => ;;", "let x | not obj(x);", "not obj(x);"];
 
 const testList10 = [
-  "def p1 if x | => ;",
-  "def p2 x | p1(x);",
-  "def p3 x | p2(x);",
+  "def p1(x) => ;",
+  "def p2(x) <=> p1(x);",
+  "def p3(x) <=> p2(x);",
   "let x | not p3(x);",
   "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
 ];
 
-const testList11 = [
-  "def p0 only_if x | ;",
-  "def p1 only_if x | p0(x);",
-  "let x | p0(x);",
-];
+const testList11 = ["def p0(x) <= ;", "def p1(x) <= p0(x);", "let x | p0(x);"];
 
-const testList12 = ["def p1 if x | => ;"];
+const testList12 = ["def p1(x) => ;"];
 
 const testList13 = [
   "def obj(x) => ;",
-  "def obj2 if x | => obj(x) ;",
-  "def obj3 if x | => obj2(x);",
-  "def obj4 if x | obj3(x) => obj(x);",
+  "def obj2(x) => obj(x) ;",
+  "def obj3(x) => obj2(x);",
+  "def obj4(x) => obj(x) when obj3(x);",
   "prove obj4(#x) {obj2(x); obj(x);}",
 ];
 
 const testList14 = [
   "def obj(x) => ;",
-  "def obj2 if x | => x is obj;",
+  "def obj2(x) => x is obj;",
   "let x | x is obj;",
   "let a,b,c | a,b,c are obj;",
-  "let q,w,e | w,e is obj;",
+  "let q,w,e | w,e are obj;",
   "know a is obj;",
   "know b,c are obj2, obj2(x), w,e are obj2;",
 ];
@@ -128,27 +125,27 @@ const testList15 = [
 const testList16 = [
   "def obj(x) => ;",
   "let x;",
-  "def obj2 if x | => x is obj;",
-  "know if x | obj(x) => obj(x);",
-  "def obj3 if | obj(x) => obj(x);",
+  "def x is obj2 => x is obj;",
+  "know if x | obj(x) => {obj(x)};",
+  "def obj3() => obj(x) when obj(x);",
   "let x2;",
-  "know if obj(x2) => obj2(x2);",
+  "know if obj(x2) => {obj2(x2)};",
 ];
 
 const testList17 = [
-  "def obj0 x | ;",
-  "def obj if x | =>;",
-  "def obj2 iff x | ;",
-  "def obj3 only_if x | x is obj  ;",
+  "def x is obj0 <=> ;",
+  "def x is obj =>;",
+  "def x is obj2 <=> ;",
+  "def x is obj3 <= x is obj  ;",
   "let x| x is obj0, x is obj, x is obj2, x is obj3;",
   "let a;",
-  "if => a is obj0;",
-  "iff z| obj0(a), z is obj0 <=> ;",
-  "only_if obj0(a) <= ;",
+  "if => {a is obj0};",
+  "iff z| obj0(a), z is obj <=> {};",
+  "only_if obj0(a) <= {};",
 ];
 
 const testList18 = [
-  "def obj0 if x | => ;",
+  "def obj0(x) => ;",
   "let 1,2,3,4;",
   "1,2,3,4 are obj0;",
   "know obj0(#x);",
@@ -156,9 +153,9 @@ const testList18 = [
 ];
 
 const testList19 = [
-  "def obj0 if x | => ;",
-  "def obj1 if x | => x is obj0;",
-  "def obj2 if x | => obj1(x);",
+  "def obj0(x) => ;",
+  "def obj1(x) => x is obj0;",
+  "def obj2(x) => obj1(x);",
   "let x | obj2(x);",
   "x is obj0 by {x is obj1;};", // If we put by at the end, then it's a declarative way of proving: instead of procedurally prove a result, we now declare a result at beginning and then prove it.
 ];
@@ -171,21 +168,21 @@ const setTheory1 = [
 ];
 
 const testList20 = [
-  "def object x | ;",
-  "def obj2 if x | =>;",
+  "def object(x) <=>;",
+  "def obj2(x) =>;",
   // "def = A,B | obj(A), obj(B);",
   // "def deduce only_if x | x is obj <= ;",
-  "def eq iff A,B | A,B are object <=> A,B are obj2;",
+  "def eq(A,B)  <=> A,B are obj2 when A,B are object;",
 ];
 
 const testList21 = [
-  "def obj0 if  x | =>;",
-  "def obj1 if x | =>;",
-  "def obj2 if x | =>;",
-  "def obj3 if x,y | =>;",
+  "def obj0( x) =>;",
+  "def obj1(x) =>;",
+  "def obj2(x) =>;",
+  "def obj3(x,y )  =>;",
   "let a,b;",
   // "know if x | x,b are obj0 => x is obj1;",
-  "know if x | x,b are obj1 => if | obj3(x,a) => x is obj2;",
+  "know if x | x,b are obj1 => {if | obj3(x,a) => {x is obj2}};",
 ];
 
 const testList22 = [
@@ -207,7 +204,7 @@ const testList23 = [
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
-  testList1: [testList1, true],
+  testList1: [testList1, false],
   testList2: [testList2, false],
   testList3: [testList3, false],
   testList4: [testList4, false],
@@ -226,11 +223,11 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList17: [testList17, false],
   testList18: [testList18, false],
   testList19: [testList19, false],
+  testList20: [testList20, true],
+  testList21: [testList21, true],
+  testList22: [testList22, true],
+  testList23: [testList23, true],
   setTheory1: [setTheory1, false],
-  testList20: [testList20, false],
-  testList21: [testList21, false],
-  testList22: [testList22, false],
-  testList23: [testList23, false],
 };
 
 export function testCode() {
