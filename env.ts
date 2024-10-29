@@ -33,7 +33,7 @@ export class L_Env {
   private OptFacts = new Map<string, StoredFactValue[]>();
   private declaredFacts = new Map<string, DeclNode>();
 
-  public storedFacts = new Map<string, L_Storage.Fact[]>();
+  public storedFacts = new Map<string, L_Storage.StoredFact[]>();
   private freeFixMap = new Map<string, string>();
 
   constructor(private father: L_Env | undefined = undefined) {
@@ -58,9 +58,9 @@ export class L_Env {
     this.declaredFacts.set(s, declNode);
   }
 
-  getStoredFacts(s: string): L_Storage.Fact[] | undefined {
+  getStoredFacts(s: string): L_Storage.StoredFact[] | undefined {
     let curEnv: L_Env | undefined = this;
-    let out: L_Storage.Fact[] = [];
+    let out: L_Storage.StoredFact[] = [];
     while (curEnv !== undefined) {
       const facts = curEnv.storedFacts.get(s);
       if (facts !== undefined) {
@@ -77,16 +77,16 @@ export class L_Env {
     req: FactNode[],
     isT: Boolean = true,
     freeVars: string[]
-  ): L_Storage.Fact | null {
+  ): L_Storage.StoredFact | null {
     try {
       if (this.storedFacts.get(name) === undefined) {
         // ! Currently does not examine whether an operator is declared
-        const out = new L_Storage.Fact(vars, req, isT, freeVars);
+        const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
         this.storedFacts.set(name, [out]);
         return out;
 
         // if (this.declaredFacts.get(name)) {
-        //   const out = new L_Storage.Fact(vars, req, isT, freeVars);
+        //   const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
         //   this.storedFacts.set(name, [out]);
         //   return out;
         // } else {
@@ -94,7 +94,7 @@ export class L_Env {
         //   return null;
         // }
       } else {
-        const out = new L_Storage.Fact(vars, req, isT, freeVars);
+        const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
         this.storedFacts.get(name)!.push(out);
         return out;
       }

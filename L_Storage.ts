@@ -12,7 +12,7 @@ import { L_Env } from "./env";
 import { RType } from "./executor";
 
 export namespace L_Storage {
-  export class Fact {
+  export class StoredFact {
     constructor(
       public vars: string[],
       public req: FactNode[],
@@ -33,7 +33,7 @@ export namespace L_Storage {
       return result;
     }
 
-    //! If the stored fact has no req, it means that this stored Fact is vanilla stored fact with opt-type.
+    //! If the stored fact has no req, it means that this stored StoredFact is vanilla stored fact with opt-type.
     checkLiterally(vars: string[], isT: Boolean): RType {
       if (vars.length !== this.vars.length) return RType.Error;
       if (this.req.length !== 0) return RType.Unknown;
@@ -73,39 +73,12 @@ export namespace L_Storage {
       }
 
       console.log(`[${tStr}] ${key}`);
-      factUnderCurKey.forEach((e: Fact) => {
+      factUnderCurKey.forEach((e: StoredFact) => {
         console.log(e.toString());
       });
       console.log();
     }
   }
-
-  // export function storeFact(
-  //   env: L_Env,
-  //   name: string,
-  //   vars: string[],
-  //   req: FactNode[],
-  //   isT: Boolean = true,
-  //   freeVars: string[]
-  // ): boolean {
-  //   try {
-  //     if (env.storedFacts.get(name) === undefined) {
-  //       if (env.getDeclFact(name)) {
-  //         env.storedFacts.set(name, [new Fact(vars, req, isT, freeVars)]);
-  //         return true;
-  //       } else {
-  //         env.newMessage(`${name} not declared.`);
-  //         return false;
-  //       }
-  //     } else {
-  //       env.storedFacts.get(name)!.push(new Fact(vars, req, isT, freeVars));
-  //       return true;
-  //     }
-  //   } catch (error) {
-  //     env.newMessage(`failed to store fact about ${name}.`);
-  //     return false;
-  //   }
-  // }
 
   export function storeFactInDecl(env: L_Env, toDecl: DeclNode) {
     if (toDecl instanceof IfThenDeclNode) {
