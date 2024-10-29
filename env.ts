@@ -7,6 +7,7 @@ import {
   IfThenDeclNode,
   OnlyIfDeclNode,
 } from "./ast";
+import { StoredFact } from "./storage";
 export class StoredFactValue {
   constructor(
     public vars: string[], //! vars here never start with #
@@ -32,7 +33,7 @@ export class L_Env {
   private OptFacts = new Map<string, StoredFactValue[]>();
   private declaredFacts = new Map<string, DeclNode>();
 
-  private storedFacts = new Map<string, StoredFactValue[]>();
+  public storedFacts = new Map<string, StoredFact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
@@ -52,33 +53,45 @@ export class L_Env {
     this.declaredFacts.set(s, declNode);
   }
 
-  getStoredFact(s: string): StoredFactValue[] | undefined {
-    let out = this.storedFacts.get(s);
+  getStoredFact(s: string): StoredFact[] | undefined {
+    let out: StoredFact[] | undefined = this.storedFacts.get(s);
     return out ? out : this.father?.getStoredFact(s);
   }
 
-  storeFact(opt: OptNode, req: FactNode[]): Boolean {
+  storeFact(
+    name: string,
+    vars: string[],
+    req: FactNode[],
+    isT: Boolean = true,
+    freeVars: string[]
+  ): boolean {
     try {
-      if (this.storedFacts.get(opt.fullName) === undefined) {
-        if (this.declaredFacts.get(opt.fullName)) {
-          this.storedFacts.set(opt.fullName, [
-            new StoredFactValue(opt.vars, req, opt.isT),
+      if (this.storedFacts.get(name) === undefined) {
+        if (this.declaredFacts.get(name)) {
+          this.storedFacts.set(name, [
+            new StoredFact(vars, req, isT, freeVars),
           ]);
           return true;
         } else {
-          this.newMessage(`${opt.fullName} not declared.`);
+          this.newMessage(`${name} not declared.`);
           return false;
         }
       } else {
         this.storedFacts
-          .get(opt.fullName)!
-          .push(new StoredFactValue(opt.vars, req, opt.isT));
+          .get(name)!
+          .push(new StoredFact(vars, req, isT, freeVars));
         return true;
       }
     } catch (error) {
-      this.newMessage(`failed to store ${opt}.`);
+      this.newMessage(`failed to store fact about ${name}.`);
       return false;
     }
+  }
+
+  yaVarsDeclared(s: string) {
+    if (this.declaredVars.includes(s)) return true;
+    else if (this.father) return this.father.declaredVars.includes(s);
+    else return false;
   }
 
   // get from itself and father
@@ -125,9 +138,7 @@ export class L_Env {
   }
 
   private isVarDeclared(v: string): boolean {
-    if (this.declaredVars.includes(v) || v.startsWith("#")) {
-      return true;
-    }
+    if (this.declaredVars.includes(v) || v.startsWith("#")) return true;
     return this.father ? this.father.isVarDeclared(v) : false;
   }
 

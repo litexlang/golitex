@@ -215,7 +215,14 @@ const testList23 = [
   // {let x; know p(x); p(y); know p2(x,y); q(x,y); return q(x,y);}
 ];
 
-//
+const testList24 = [
+  "def x is object => ;",
+  "def x is object1 => x is object;",
+  "def x is object2 => x is object1;",
+  "let y;",
+  // check, store
+  "if x is object2 => if x is object1 => x is object;",
+];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
