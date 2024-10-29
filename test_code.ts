@@ -218,6 +218,7 @@ const testList23 = [
 
 const testList24 = [
   "def x is object => ;",
+  "def x is obj => ;",
   "def x is object1 => x is object;",
   "def x is object2 => x is object1;",
   // "let y,z | y is object2;",
@@ -227,8 +228,9 @@ const testList24 = [
   // check, store
   // "if |  x is object2 => {if |  x is object1 => {x is object}};",
   "let y,z;",
-  // "if  | y is object2 => {y is object1};",
-  "if | z is object2 => {if | => {z is object1} } ;",
+  // "if  | y is object2 => {y is obj};",
+  "if  | y is object2 => {y is object};",
+  // "if | z is object2 => {if | => {z is object1} } ;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

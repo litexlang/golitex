@@ -262,7 +262,7 @@ export namespace checker {
       return out;
     }
 
-    return RType.Error;
+    return RType.Unknown;
   }
 
   // the env here is already the env where all check happens. the reason why we don't create the env where everything happens in checkIfThen() is that I think it's better to bind free var with fixed var at higher env
@@ -271,12 +271,6 @@ export namespace checker {
 
     for (const r of toCheck.req) {
       if (r instanceof OptNode) {
-        // if (r.vars.every((e) => !toCheck.vars.includes(e))) {
-        // notice check in env not newEnv because all facts are declared at higher env
-        // notice we check opt literally here to avoid prove-loop when p(x) <=> q(x)
-        //   const out = checkOptLiterally(env, r);
-        //   checkAndMsg(env, out, r);
-        // } else {
         env.storeFact(r.fullName, r.vars, [], r.isT, []);
         // }
       } else if (r instanceof IfThenNode) {

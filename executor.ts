@@ -83,6 +83,10 @@ export namespace executor {
           const out = yaFactExec(env, node as FactNode);
           if (out === RType.True) {
             env.newMessage(`OK! ${node}`);
+          } else if (out === RType.Unknown) {
+            env.newMessage(`Unknown ${node}`);
+          } else if (out === RType.Error) {
+            env.newMessage(`Error ${node}`);
           }
         } catch (error) {
           throw Error(`${node as FactNode}`);
