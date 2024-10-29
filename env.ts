@@ -16,18 +16,12 @@ export class StoredFactValue {
 
   toString() {
     let result = "";
-
     result += this.vars.join(", ");
-
     if (this.req.length > 0) {
       result += " | ";
       result += this.req.map((e) => e.toString()).join("; ");
     }
-
-    if (!this.isT) {
-      result = "[not] " + result;
-    }
-
+    if (!this.isT) result = "[not] " + result;
     return result;
   }
 }
@@ -37,6 +31,8 @@ export class L_Env {
   private messages: string[] = [];
   private OptFacts = new Map<string, StoredFactValue[]>();
   private declaredFacts = new Map<string, DeclNode>();
+
+  private storedFacts = new Map<string, StoredFactValue[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
@@ -56,7 +52,37 @@ export class L_Env {
     this.declaredFacts.set(s, declNode);
   }
 
+  getStoredFact(s: string): StoredFactValue[] | undefined {
+    let out = this.storedFacts.get(s);
+    return out ? out : this.father?.getStoredFact(s);
+  }
+
+  storeFact(opt: OptNode, req: FactNode[]): Boolean {
+    try {
+      if (this.storedFacts.get(opt.fullName) === undefined) {
+        if (this.declaredFacts.get(opt.fullName)) {
+          this.storedFacts.set(opt.fullName, [
+            new StoredFactValue(opt.vars, req, opt.isT),
+          ]);
+          return true;
+        } else {
+          this.newMessage(`${opt.fullName} not declared.`);
+          return false;
+        }
+      } else {
+        this.storedFacts
+          .get(opt.fullName)!
+          .push(new StoredFactValue(opt.vars, req, opt.isT));
+        return true;
+      }
+    } catch (error) {
+      this.newMessage(`failed to store ${opt}.`);
+      return false;
+    }
+  }
+
   // get from itself and father
+  //? To be removed
   getOptFact(s: string): StoredFactValue[] | undefined {
     let out = this.OptFacts.get(s);
     return out ? out : this.father?.getOptFact(s);

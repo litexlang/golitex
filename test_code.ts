@@ -8,8 +8,8 @@ const testList0 = [
   "def obj(x) => ;",
   "def set(x) => obj(x);",
   "def obj2(x) => set(x);",
-  "let y | set(y);",
-  "def set2(z) <=> set(z);",
+  "let y | y is set;",
+  "def z is set2 <=> set(z);",
   "set2(y);",
   "set2(y);",
 ];
@@ -19,8 +19,14 @@ const testList1 = [
   "def obj2(x) => ;",
   "def x is p2 <=> obj(x), obj2(x);",
   "let y | obj(y);",
-  "if  | obj2(y) => {p2(y)};",
+  "if  x | obj2(y) => {p2(y)};",
 ];
+
+// {
+//   let x;
+//   know obj2(y);
+//   check p2(y);
+// }
 
 const testList2 = [
   "def obj(x) => ;",
@@ -29,6 +35,8 @@ const testList2 = [
   "def x is obj4  => obj3(x);",
   "let EMPTY_SET;",
   "def x is inf  => obj3(x) when  obj(x);",
+  // [if] obj3
+  // #x | inf(#x); obj(#x)
   "prove if x | obj(x) => {obj3(x)} {}", // unsuccessful prove
   "prove if x | obj(x) => {obj3(x)} {know obj4(x);}",
 ];
@@ -46,7 +54,8 @@ const testList4 = [";;;\n\n;;"];
 
 const testList5 = [
   "def x is p1 => ;",
-  "def p2(x) <=> p1(x);",
+  "def x is p3 => ;",
+  "def p2(x) <=> p1(x) when p3(x);",
   // "def p3 x | p2(x);",
 ];
 
@@ -146,8 +155,10 @@ const testList17 = [
 
 const testList18 = [
   "def obj0(x) => ;",
+  "def obj11(x) <=> ;",
   "let 1,2,3,4;",
   "1,2,3,4 are obj0;",
+  "1,2,3,4 are obj11;",
   "know obj0(#x);",
   "1,2,3,4 are obj0;",
 ];
@@ -200,7 +211,11 @@ const testList23 = [
   "def =(A,B) <=> if x | in(x,A) => {in(x,B)}, if x | in(x,B) => {in(x,A)} when A,B are set;",
   "let A,B | A,B are set, if x | in(x,A) => {in(x,B)}, if x | in(x,B) => {in(x,A)};",
   "=(A,B);",
+  "if x | p(x), p(y), p2(x,y) => q(x,y)",
+  // {let x; know p(x); p(y); know p2(x,y); q(x,y); return q(x,y);}
 ];
+
+//
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
@@ -221,12 +236,12 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList15: [testList15, false],
   testList16: [testList16, false],
   testList17: [testList17, false],
-  testList18: [testList18, false],
+  testList18: [testList18, true],
   testList19: [testList19, false],
-  testList20: [testList20, true],
-  testList21: [testList21, true],
-  testList22: [testList22, true],
-  testList23: [testList23, true],
+  testList20: [testList20, false],
+  testList21: [testList21, false],
+  testList22: [testList22, false],
+  testList23: [testList23, false],
   setTheory1: [setTheory1, false],
 };
 
