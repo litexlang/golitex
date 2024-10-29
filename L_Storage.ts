@@ -4,6 +4,7 @@ import {
   FactNode,
   IffDeclNode,
   IfThenDeclNode,
+  IfThenNode,
   OnlyIfDeclNode,
   OptNode,
 } from "./ast";
@@ -79,32 +80,32 @@ export namespace L_Storage {
     }
   }
 
-  export function storeFact(
-    env: L_Env,
-    name: string,
-    vars: string[],
-    req: FactNode[],
-    isT: Boolean = true,
-    freeVars: string[]
-  ): boolean {
-    try {
-      if (env.storedFacts.get(name) === undefined) {
-        if (env.getDeclFact(name)) {
-          env.storedFacts.set(name, [new Fact(vars, req, isT, freeVars)]);
-          return true;
-        } else {
-          env.newMessage(`${name} not declared.`);
-          return false;
-        }
-      } else {
-        env.storedFacts.get(name)!.push(new Fact(vars, req, isT, freeVars));
-        return true;
-      }
-    } catch (error) {
-      env.newMessage(`failed to store fact about ${name}.`);
-      return false;
-    }
-  }
+  // export function storeFact(
+  //   env: L_Env,
+  //   name: string,
+  //   vars: string[],
+  //   req: FactNode[],
+  //   isT: Boolean = true,
+  //   freeVars: string[]
+  // ): boolean {
+  //   try {
+  //     if (env.storedFacts.get(name) === undefined) {
+  //       if (env.getDeclFact(name)) {
+  //         env.storedFacts.set(name, [new Fact(vars, req, isT, freeVars)]);
+  //         return true;
+  //       } else {
+  //         env.newMessage(`${name} not declared.`);
+  //         return false;
+  //       }
+  //     } else {
+  //       env.storedFacts.get(name)!.push(new Fact(vars, req, isT, freeVars));
+  //       return true;
+  //     }
+  //   } catch (error) {
+  //     env.newMessage(`failed to store fact about ${name}.`);
+  //     return false;
+  //   }
+  // }
 
   export function storeFactInDecl(env: L_Env, toDecl: DeclNode) {
     if (toDecl instanceof IfThenDeclNode) {
@@ -121,5 +122,45 @@ export namespace L_Storage {
       }
     }
     return true;
+  }
+
+  function storeIfThen(
+    env: L_Env,
+    ifThen: IfThenNode,
+    req: FactNode[],
+    isT: Boolean,
+    frees: string[]
+  ) {
+    for (const onlyIf of ifThen.onlyIfs) {
+      if (onlyIf instanceof OptNode) {
+        storeOpt(env, onlyIf, [...req, ...ifThen.req], isT, frees);
+      } else if (onlyIf instanceof IfThenNode) {
+        storeIfThen(env, onlyIf, [...req, ...ifThen.req], isT, frees);
+      }
+    }
+  }
+
+  function storeOpt(
+    env: L_Env,
+    opt: OptNode,
+    req: FactNode[],
+    isT: Boolean,
+    frees: string[]
+  ) {
+    env.storeFact(opt.fullName, opt.vars, req, isT, frees);
+  }
+
+  export function storeFact(
+    env: L_Env,
+    fact: FactNode,
+    req: FactNode[],
+    isT: Boolean,
+    frees: string[]
+  ) {
+    if (fact instanceof OptNode) {
+      storeOpt(env, fact, req, isT, frees);
+    } else if (fact instanceof IfThenNode) {
+      storeIfThen(env, fact, req, isT, frees);
+    }
   }
 }

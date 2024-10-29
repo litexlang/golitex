@@ -228,7 +228,7 @@ const testList24 = [
   // "if |  x is object2 => {if |  x is object1 => {x is object}};",
   "let y,z;",
   // "if  | y is object2 => {y is object1};",
-  "if | z is object2 => {if | => {z is object2} } ;",
+  "if | z is object2 => {if | => {z is object1} } ;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
