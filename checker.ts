@@ -1,4 +1,3 @@
-import { fail } from "assert";
 import {
   FactNode,
   IffNode,
@@ -10,7 +9,6 @@ import {
 } from "./ast";
 import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
-import { L_Storage } from "./L_Storage";
 export class CheckerOut {
   constructor(
     public type: RType,
