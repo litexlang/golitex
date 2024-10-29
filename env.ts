@@ -168,6 +168,10 @@ export class L_Env {
     this.messages.push(s);
   }
 
+  getAllMessages() {
+    return this.messages;
+  }
+
   printClearMessage() {
     this.messages.forEach((m) => console.log(m));
     this.messages = [];

@@ -18,10 +18,10 @@ export class CheckerOut {
   ) {}
 }
 
-function checkRType(env: L_Env, r: RType, n: L_Node): RType {
+function checkAndMsg(env: L_Env, r: RType, n: L_Node): Boolean {
   if (r === RType.Unknown) env.newMessage(`Unknown ${n}`);
   if (r === RType.Error) env.newMessage(`Error ${n}`);
-  return r;
+  return r === RType.True;
 }
 
 export namespace checker {
@@ -229,26 +229,37 @@ export namespace checker {
     if (toCheck instanceof OptNode) {
       const facts = env.getStoredFacts(toCheck.fullName);
       if (!facts) return RType.Error;
-      for (const fact of facts) {
-        for (const req of fact.req) {
-          const ok = newEnv.fixFrees(fact.vars, toCheck.vars);
+
+      for (const storedFact of facts) {
+        for (const req of storedFact.req) {
+          const ok = newEnv.fixFrees(storedFact.vars, toCheck.vars);
           if (!ok) return RType.Error;
           if (req instanceof OptNode) {
             const out = checkOptLiterally(newEnv, req);
-            if (out === RType.True) {
-              env.newMessage(`OK! ${toCheck} <= ${req}`);
-              return RType.True;
+            if (out === RType.Error) {
+              newEnv.getAllMessages().forEach((e) => env.newMessage(e));
+              return RType.Error;
+            } else if (out === RType.Unknown) {
+              continue;
             }
-            if (out === RType.Error) return RType.Error;
           } else if (req instanceof IfThenNode) {
-            req.vars.forEach((e) => newEnv.newVar(e, e));
-            checkIfThen(newEnv, req);
+            req.vars.forEach((e, i) => newEnv.newVar(e, toCheck.vars[i]));
+            const out = checkIfThen(newEnv, req);
+            if (out === RType.Error) {
+              newEnv.getAllMessages().forEach((e) => env.newMessage(e));
+              return RType.Error;
+            } else if (out === RType.Unknown) {
+              continue;
+            }
           }
         }
+
+        return RType.True;
       }
     } else if (toCheck instanceof IfThenNode) {
       toCheck.vars.forEach((e) => newEnv.newVar(e, e));
-      checkIfThen(newEnv, toCheck);
+      const out = checkIfThen(newEnv, toCheck);
+      return out;
     }
 
     return RType.Error;
@@ -264,7 +275,7 @@ export namespace checker {
           // notice check in env not newEnv because all facts are declared at higher env
           // notice we check opt literally here to avoid prove-loop when p(x) <=> q(x)
           const out = checkOptLiterally(env, r);
-          checkRType(env, out, r);
+          checkAndMsg(env, out, r);
         } else {
           env.storeFact(r.fullName, r.vars, [], r.isT, []);
         }
@@ -272,7 +283,7 @@ export namespace checker {
         const newEnv = new L_Env(env);
         r.vars.forEach((e) => newEnv.newVar(e, e));
         const out = checkIfThen(newEnv, r);
-        checkRType(env, out, r);
+        checkAndMsg(env, out, r);
       }
     }
 
