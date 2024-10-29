@@ -7,7 +7,7 @@ import {
   IfThenDeclNode,
   OnlyIfDeclNode,
 } from "./ast";
-import { StoredFact } from "./storage";
+import { L_Storage } from "./L_Storage";
 export class StoredFactValue {
   constructor(
     public vars: string[], //! vars here never start with #
@@ -33,7 +33,7 @@ export class L_Env {
   private OptFacts = new Map<string, StoredFactValue[]>();
   private declaredFacts = new Map<string, DeclNode>();
 
-  public storedFacts = new Map<string, StoredFact[]>();
+  public storedFacts = new Map<string, L_Storage.Fact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
@@ -53,8 +53,8 @@ export class L_Env {
     this.declaredFacts.set(s, declNode);
   }
 
-  getStoredFact(s: string): StoredFact[] | undefined {
-    let out: StoredFact[] | undefined = this.storedFacts.get(s);
+  getStoredFact(s: string): L_Storage.Fact[] | undefined {
+    let out: L_Storage.Fact[] | undefined = this.storedFacts.get(s);
     return out ? out : this.father?.getStoredFact(s);
   }
 
@@ -69,7 +69,7 @@ export class L_Env {
       if (this.storedFacts.get(name) === undefined) {
         if (this.declaredFacts.get(name)) {
           this.storedFacts.set(name, [
-            new StoredFact(vars, req, isT, freeVars),
+            new L_Storage.Fact(vars, req, isT, freeVars),
           ]);
           return true;
         } else {
@@ -79,7 +79,7 @@ export class L_Env {
       } else {
         this.storedFacts
           .get(name)!
-          .push(new StoredFact(vars, req, isT, freeVars));
+          .push(new L_Storage.Fact(vars, req, isT, freeVars));
         return true;
       }
     } catch (error) {

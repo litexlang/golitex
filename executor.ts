@@ -22,6 +22,7 @@ import {
 import { L_Env } from "./env";
 import { checker } from "./checker";
 import { L_Builtins } from "./builtins";
+import { L_Storage } from "./L_Storage";
 
 export enum RType {
   Error,
@@ -286,6 +287,13 @@ export namespace executor {
       }
 
       env.setDeclFact(node.name, node);
+
+      // new storage system
+      let out = L_Storage.storeFactInDecl(env, node);
+      if (!out) {
+        env.newMessage(`Declaration of ${node} failed.`);
+        return RType.Error;
+      }
 
       const definedFact = new OptNode(node.name, [...node.vars]);
       definedFact.hashVars(node.vars);

@@ -1,5 +1,6 @@
 import { L_Env } from "./env";
 import { executor, RType } from "./executor";
+import { L_Storage } from "./L_Storage";
 import { scan } from "./lexer";
 import { parser } from "./parser";
 
@@ -221,7 +222,7 @@ const testList24 = [
   "def x is object2 => x is object1;",
   "let y;",
   // check, store
-  "if x is object2 => if x is object1 => x is object;",
+  // "if x is object2 => if x is object1 => x is object;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
@@ -243,13 +244,14 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList15: [testList15, false],
   testList16: [testList16, false],
   testList17: [testList17, false],
-  testList18: [testList18, true],
+  testList18: [testList18, false],
   testList19: [testList19, false],
   testList20: [testList20, false],
   testList21: [testList21, false],
   testList22: [testList22, false],
   testList23: [testList23, false],
   setTheory1: [setTheory1, false],
+  testList24: [testList24, true],
 };
 
 export function testCode() {
@@ -267,8 +269,9 @@ export function testCode() {
       }
     }
 
-    env.printFacts();
+    // env.printFacts();
     // env.printDeclFacts();
+    L_Storage.printEnvFacts(env);
     env.printClearMessage();
   }
 }
