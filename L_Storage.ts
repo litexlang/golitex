@@ -32,21 +32,22 @@ export namespace L_Storage {
       return result;
     }
 
-    checkLiterally(opt: OptNode): RType {
-      if (opt.vars.length !== this.vars.length) return RType.Error;
+    //! If the stored fact has no req, it means that this stored Fact is vanilla stored fact with opt-type.
+    checkLiterally(vars: string[], isT: Boolean): RType {
+      if (vars.length !== this.vars.length) return RType.Error;
       if (this.req.length !== 0) return RType.Unknown;
-      if (this.isT !== opt.isT) return RType.Unknown;
+      if (this.isT !== isT) return RType.Unknown;
 
       const freeFixedMap = new Map<string, string>();
       for (const [i, freeVar] of this.freeVars.entries()) {
         if (this.freeVars.includes(freeVar)) {
           if (freeFixedMap.has(freeVar)) {
-            if (freeFixedMap.get(freeVar) !== opt.vars[i]) return RType.Unknown;
+            if (freeFixedMap.get(freeVar) !== vars[i]) return RType.Unknown;
           } else {
-            freeFixedMap.set(freeVar, opt.vars[i]);
+            freeFixedMap.set(freeVar, vars[i]);
           }
         } else {
-          if (freeVar !== opt.vars[i]) return RType.Unknown;
+          if (freeVar !== vars[i]) return RType.Unknown;
         }
       }
 
@@ -105,19 +106,20 @@ export namespace L_Storage {
     }
   }
 
-  export function storeFactInDecl(env: L_Env, node: DeclNode) {
-    if (node instanceof IfThenDeclNode) {
-      const declFact = new OptNode(node.name, node.vars);
-      for (const onlyIf of node.onlyIfs) {
-        return env.storeFact(
-          node.name,
-          node.vars,
-          [declFact, ...node.req],
-          true,
-          node.vars
-        );
+  export function storeFactInDecl(env: L_Env, toDecl: DeclNode) {
+    if (toDecl instanceof IfThenDeclNode) {
+      const declFact = new OptNode(toDecl.name, toDecl.vars);
+      for (const onlyIf of toDecl.onlyIfs) {
+        if (onlyIf instanceof OptNode)
+          env.storeFact(
+            onlyIf.fullName,
+            toDecl.vars,
+            [declFact],
+            true,
+            toDecl.vars
+          );
       }
     }
-    return null;
+    return true;
   }
 }

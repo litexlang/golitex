@@ -34,9 +34,14 @@ export class L_Env {
   private declaredFacts = new Map<string, DeclNode>();
 
   public storedFacts = new Map<string, L_Storage.Fact[]>();
+  private freeFixMap = new Map<string, string>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  newFreeFix(free: string, fix: string) {
+    this.freeFixMap.set(free, fix);
   }
 
   getFather(): L_Env | undefined {
@@ -86,12 +91,6 @@ export class L_Env {
     }
   }
 
-  yaVarsDeclared(s: string) {
-    if (this.declaredVars.includes(s)) return true;
-    else if (this.father) return this.father.declaredVars.includes(s);
-    else return false;
-  }
-
   // get from itself and father
   //? To be removed
   getOptFact(s: string): StoredFactValue[] | undefined {
@@ -118,6 +117,29 @@ export class L_Env {
     }
 
     return false;
+  }
+
+  newVar(free: string, fix: string) {
+    this.freeFixMap.set(free, fix);
+  }
+
+  fixFrees(frees: string[], fixed: string[]): null | Map<string, string> {
+    if (frees.length !== fixed.length) return null;
+
+    for (const [i, v] of frees.entries()) {
+      const stored = this.getVar(v);
+      if (stored === undefined) {
+        this.newVar(v, fixed[i]);
+      } else {
+        if (stored !== fixed[i]) return null;
+      }
+    }
+
+    return this.freeFixMap;
+  }
+
+  getVar(key: string) {
+    return this.freeFixMap.get(key);
   }
 
   varsAreNotDeclared(vars: string[]): boolean {

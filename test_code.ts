@@ -220,7 +220,10 @@ const testList24 = [
   "def x is object => ;",
   "def x is object1 => x is object;",
   "def x is object2 => x is object1;",
-  "let y;",
+  "let y,z | y is object2;",
+  "y is object1;",
+  "know #x is object;",
+  "z is object;",
   // check, store
   // "if x is object2 => if x is object1 => x is object;",
 ];

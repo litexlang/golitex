@@ -79,7 +79,8 @@ export namespace executor {
         return successMesIntoEnv(env, node);
       else if (node instanceof FactNode) {
         try {
-          return factExec(env, node as FactNode);
+          // return factExec(env, node as FactNode);
+          return yaFactExec(env, node as FactNode);
         } catch (error) {
           throw Error(`${node as FactNode}`);
         }
@@ -209,6 +210,15 @@ export namespace executor {
           if (isT) throw Error(`Not all of ${fact.vars} are declared.`);
 
           env.addOptFact(fact, [...fatherReq]);
+
+          //! new storage system
+          const vars = fact.vars.map((s) =>
+            s.startsWith("#") ? s.slice(1) : s
+          );
+          const freeVars = fact.vars
+            .filter((s) => s.startsWith("#"))
+            .map((s) => s.slice(1));
+          env.storeFact(fact.fullName, vars, [], fact.isT, freeVars);
         } else if (fact instanceof LogicalOptNode) {
           if (fact instanceof IfThenNode) {
             knowLogicalOpt(
@@ -557,5 +567,23 @@ export namespace executor {
     }
     knowExec(env, new KnowNode(node.facts));
     return RType.True;
+  }
+
+  function yaFactExec(env: L_Env, toCheck: FactNode): RType {
+    try {
+      let out = checker.checkFactFully(env, toCheck);
+      if (out === RType.True) {
+        if (toCheck instanceof OptNode) {
+          const frees = toCheck.vars
+            .filter((e) => e.startsWith("#"))
+            .map((s) => s.slice(1));
+          env.storeFact(toCheck.fullName, toCheck.vars, [], toCheck.isT, frees);
+        }
+      }
+      return out;
+    } catch (error) {
+      env.newMessage(`failed to check ${toCheck}`);
+      return RType.Error;
+    }
   }
 }

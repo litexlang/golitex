@@ -1,3 +1,4 @@
+import { fail } from "assert";
 import {
   FactNode,
   IffNode,
@@ -215,19 +216,44 @@ export namespace checker {
 
   /** -------------------------------------------------------------- */
 
-  export function checkFactFully(env: L_Env, node: FactNode): RType {
-    if (node instanceof OptNode) {
-      const facts = env.getStoredFacts(node.fullName);
+  export function checkFactFully(env: L_Env, toCheck: FactNode): RType {
+    if (toCheck instanceof OptNode) {
+      const facts = env.getStoredFacts(toCheck.fullName);
+      if (!facts) return RType.Error;
+      for (const fact of facts) {
+        for (const req of fact.req) {
+          const newEnv = new L_Env(env);
+          const ok = newEnv.fixFrees(fact.vars, toCheck.vars);
+          if (!ok) return RType.Error;
+          if (req instanceof OptNode) {
+            const out = checkOptLiterally(newEnv, req);
+            if (out === RType.True) {
+              env.newMessage(`OK! ${toCheck} <= ${req}`);
+              return RType.True;
+            }
+            if (out === RType.Error) return RType.Error;
+          } else if (req instanceof IfThenNode) {
+            const out = checkFactFully(newEnv, req);
+            if (out === RType.True) {
+              env.newMessage(`OK! ${toCheck} <= ${req}`);
+              return RType.True;
+            }
+            if (out === RType.Error) return RType.Error;
+          }
+        }
+      }
+    } else if (toCheck instanceof IfThenNode) {
     }
 
     return RType.Error;
   }
 
-  export function checkOptLiterally(env: L_Env, node: OptNode): RType {
-    const facts = env.getStoredFacts(node.fullName);
+  export function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
+    const facts = env.getStoredFacts(toCheck.fullName);
     if (facts === undefined) return RType.Unknown;
     for (const fact of facts) {
-      const out = fact.checkLiterally(node);
+      const vars = toCheck.vars.map((s) => env.getVar(s) as string);
+      const out = fact.checkLiterally(vars, toCheck.isT);
       if (out === RType.True) return RType.True;
       else if (out === RType.Error) return RType.Error;
     }
