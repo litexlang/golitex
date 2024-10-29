@@ -309,6 +309,8 @@ export namespace checker {
       else if (out === RType.Error) return RType.Error;
     }
 
-    return RType.Unknown;
+    if (env.getFather() !== undefined)
+      return checkOptLiterally(env.getFather() as L_Env, toCheck);
+    else return RType.Unknown;
   }
 }

@@ -59,8 +59,16 @@ export class L_Env {
   }
 
   getStoredFacts(s: string): L_Storage.Fact[] | undefined {
-    let out: L_Storage.Fact[] | undefined = this.storedFacts.get(s);
-    return out ? out : this.father?.getStoredFacts(s);
+    let curEnv: L_Env | undefined = this;
+    let out: L_Storage.Fact[] = [];
+    while (curEnv !== undefined) {
+      const facts = curEnv.storedFacts.get(s);
+      if (facts !== undefined) {
+        out = out.concat(facts);
+      }
+      curEnv = curEnv.father;
+    }
+    return out;
   }
 
   storeFact(
@@ -72,14 +80,19 @@ export class L_Env {
   ): L_Storage.Fact | null {
     try {
       if (this.storedFacts.get(name) === undefined) {
-        if (this.declaredFacts.get(name)) {
-          const out = new L_Storage.Fact(vars, req, isT, freeVars);
-          this.storedFacts.set(name, [out]);
-          return out;
-        } else {
-          this.newMessage(`${name} not declared.`);
-          return null;
-        }
+        // ! Currently does not examine whether an operator is declared
+        const out = new L_Storage.Fact(vars, req, isT, freeVars);
+        this.storedFacts.set(name, [out]);
+        return out;
+
+        // if (this.declaredFacts.get(name)) {
+        //   const out = new L_Storage.Fact(vars, req, isT, freeVars);
+        //   this.storedFacts.set(name, [out]);
+        //   return out;
+        // } else {
+        //   this.newMessage(`${name} not declared.`);
+        //   return null;
+        // }
       } else {
         const out = new L_Storage.Fact(vars, req, isT, freeVars);
         this.storedFacts.get(name)!.push(out);

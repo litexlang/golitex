@@ -578,6 +578,20 @@ export namespace executor {
             .filter((e) => e.startsWith("#"))
             .map((s) => s.slice(1));
           env.storeFact(toCheck.fullName, toCheck.vars, [], toCheck.isT, frees);
+        } else if (toCheck instanceof IfThenNode) {
+          const req = (toCheck as IfThenNode).req;
+          const frees = (toCheck as IfThenNode).vars;
+          for (const onlyIf of (toCheck as IfThenNode).onlyIfs) {
+            if (onlyIf instanceof OptNode) {
+              env.storeFact(
+                onlyIf.fullName,
+                onlyIf.vars,
+                req,
+                toCheck.isT,
+                frees
+              );
+            }
+          }
         }
       }
       return out;
