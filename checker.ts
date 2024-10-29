@@ -4,6 +4,7 @@ import {
   IffNode,
   IfThenNode,
   KnowNode,
+  L_Node,
   OnlyIfNode,
   OptNode,
 } from "./ast";
@@ -15,6 +16,12 @@ export class CheckerOut {
     public type: RType,
     public checkedByOpt: Boolean = false
   ) {}
+}
+
+function checkRType(env: L_Env, r: RType, n: L_Node): RType {
+  if (r === RType.Unknown) env.newMessage(`Unknown ${n}`);
+  if (r === RType.Error) env.newMessage(`Error ${n}`);
+  return r;
 }
 
 export namespace checker {
@@ -215,14 +222,15 @@ export namespace checker {
   }
 
   /** -------------------------------------------------------------- */
-
+  //! PRINCIPLE: STORE FACTS WITH FREE VAR AS KEY, REPLACE FREE VAR WITH FIXED VAR WHEN CHECKING.
   export function checkFactFully(env: L_Env, toCheck: FactNode): RType {
+    const newEnv = new L_Env(env);
+
     if (toCheck instanceof OptNode) {
       const facts = env.getStoredFacts(toCheck.fullName);
       if (!facts) return RType.Error;
       for (const fact of facts) {
         for (const req of fact.req) {
-          const newEnv = new L_Env(env);
           const ok = newEnv.fixFrees(fact.vars, toCheck.vars);
           if (!ok) return RType.Error;
           if (req instanceof OptNode) {
@@ -233,25 +241,57 @@ export namespace checker {
             }
             if (out === RType.Error) return RType.Error;
           } else if (req instanceof IfThenNode) {
-            const out = checkFactFully(newEnv, req);
-            if (out === RType.True) {
-              env.newMessage(`OK! ${toCheck} <= ${req}`);
-              return RType.True;
-            }
-            if (out === RType.Error) return RType.Error;
+            req.vars.forEach((e) => newEnv.newVar(e, e));
+            checkIfThen(newEnv, req);
           }
         }
       }
     } else if (toCheck instanceof IfThenNode) {
+      toCheck.vars.forEach((e) => newEnv.newVar(e, e));
+      checkIfThen(newEnv, toCheck);
     }
 
     return RType.Error;
+  }
+
+  // the env here is already the env where all check happens. the reason why we don't create the env where everything happens in checkIfThen() is that I think it's better to bind free var with fixed var at higher env
+  function checkIfThen(env: L_Env, toCheck: IfThenNode): RType {
+    toCheck.vars.forEach((e) => env.newVar(e, e));
+
+    for (const r of toCheck.req) {
+      if (r instanceof OptNode) {
+        if (r.vars.every((e) => !toCheck.vars.includes(e))) {
+          // notice check in env not newEnv because all facts are declared at higher env
+          // notice we check opt literally here to avoid prove-loop when p(x) <=> q(x)
+          const out = checkOptLiterally(env, r);
+          checkRType(env, out, r);
+        } else {
+          env.storeFact(r.fullName, r.vars, [], r.isT, []);
+        }
+      } else if (r instanceof IfThenNode) {
+        const newEnv = new L_Env(env);
+        r.vars.forEach((e) => newEnv.newVar(e, e));
+        const out = checkIfThen(newEnv, r);
+        checkRType(env, out, r);
+      }
+    }
+
+    for (const onlyIf of toCheck.onlyIfs) {
+      const out = checkFactFully(env, onlyIf);
+
+      if (out === RType.Unknown) return RType.Unknown;
+      if (out === RType.Error) return RType.Error;
+    }
+
+    env.newMessage(`OK! ${toCheck} <= ${toCheck}`);
+    return RType.True;
   }
 
   export function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
     const facts = env.getStoredFacts(toCheck.fullName);
     if (facts === undefined) return RType.Unknown;
     for (const fact of facts) {
+      // .map here is necessary
       const vars = toCheck.vars.map((s) => env.getVar(s) as string);
       const out = fact.checkLiterally(vars, toCheck.isT);
       if (out === RType.True) return RType.True;

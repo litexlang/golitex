@@ -138,8 +138,10 @@ export class L_Env {
     return this.freeFixMap;
   }
 
-  getVar(key: string) {
-    return this.freeFixMap.get(key);
+  getVar(key: string): undefined | string {
+    const out = this.freeFixMap.get(key);
+    if (out) return out;
+    else return this.father?.getVar(key);
   }
 
   varsAreNotDeclared(vars: string[]): boolean {
