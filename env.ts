@@ -53,9 +53,9 @@ export class L_Env {
     this.declaredFacts.set(s, declNode);
   }
 
-  getStoredFact(s: string): L_Storage.Fact[] | undefined {
+  getStoredFacts(s: string): L_Storage.Fact[] | undefined {
     let out: L_Storage.Fact[] | undefined = this.storedFacts.get(s);
-    return out ? out : this.father?.getStoredFact(s);
+    return out ? out : this.father?.getStoredFacts(s);
   }
 
   storeFact(
@@ -64,27 +64,25 @@ export class L_Env {
     req: FactNode[],
     isT: Boolean = true,
     freeVars: string[]
-  ): boolean {
+  ): L_Storage.Fact | null {
     try {
       if (this.storedFacts.get(name) === undefined) {
         if (this.declaredFacts.get(name)) {
-          this.storedFacts.set(name, [
-            new L_Storage.Fact(vars, req, isT, freeVars),
-          ]);
-          return true;
+          const out = new L_Storage.Fact(vars, req, isT, freeVars);
+          this.storedFacts.set(name, [out]);
+          return out;
         } else {
           this.newMessage(`${name} not declared.`);
-          return false;
+          return null;
         }
       } else {
-        this.storedFacts
-          .get(name)!
-          .push(new L_Storage.Fact(vars, req, isT, freeVars));
-        return true;
+        const out = new L_Storage.Fact(vars, req, isT, freeVars);
+        this.storedFacts.get(name)!.push(out);
+        return out;
       }
     } catch (error) {
       this.newMessage(`failed to store fact about ${name}.`);
-      return false;
+      return null;
     }
   }
 

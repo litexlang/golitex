@@ -8,6 +8,7 @@ import {
 } from "./ast";
 import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
+import { L_Storage } from "./L_Storage";
 export class CheckerOut {
   constructor(
     public type: RType,
@@ -210,5 +211,27 @@ export namespace checker {
       );
     }
     throw Error("fact should be if-then or Opt");
+  }
+
+  /** -------------------------------------------------------------- */
+
+  export function checkFactFully(env: L_Env, node: FactNode): RType {
+    if (node instanceof OptNode) {
+      const facts = env.getStoredFacts(node.fullName);
+    }
+
+    return RType.Error;
+  }
+
+  export function checkOptLiterally(env: L_Env, node: OptNode): RType {
+    const facts = env.getStoredFacts(node.fullName);
+    if (facts === undefined) return RType.Unknown;
+    for (const fact of facts) {
+      const out = fact.checkLiterally(node);
+      if (out === RType.True) return RType.True;
+      else if (out === RType.Error) return RType.Error;
+    }
+
+    return RType.Unknown;
   }
 }

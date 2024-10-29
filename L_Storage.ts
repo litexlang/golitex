@@ -8,6 +8,7 @@ import {
   OptNode,
 } from "./ast";
 import { L_Env } from "./env";
+import { RType } from "./executor";
 
 export namespace L_Storage {
   export class Fact {
@@ -20,13 +21,36 @@ export namespace L_Storage {
 
     toString() {
       let result = "";
-      result += this.vars.join(", ");
+      result += this.vars
+        .map((s) => (this.freeVars.includes(s) ? "#" + s : s))
+        .join(", ");
       if (this.req.length > 0) {
-        result += " | ";
+        result += " <= ";
         result += this.req.map((e) => e.toString()).join("; ");
       }
       if (!this.isT) result = "[not] " + result;
       return result;
+    }
+
+    checkLiterally(opt: OptNode): RType {
+      if (opt.vars.length !== this.vars.length) return RType.Error;
+      if (this.req.length !== 0) return RType.Unknown;
+      if (this.isT !== opt.isT) return RType.Unknown;
+
+      const freeFixedMap = new Map<string, string>();
+      for (const [i, freeVar] of this.freeVars.entries()) {
+        if (this.freeVars.includes(freeVar)) {
+          if (freeFixedMap.has(freeVar)) {
+            if (freeFixedMap.get(freeVar) !== opt.vars[i]) return RType.Unknown;
+          } else {
+            freeFixedMap.set(freeVar, opt.vars[i]);
+          }
+        } else {
+          if (freeVar !== opt.vars[i]) return RType.Unknown;
+        }
+      }
+
+      return RType.True;
     }
   }
 
@@ -94,6 +118,6 @@ export namespace L_Storage {
         );
       }
     }
-    return false;
+    return null;
   }
 }
