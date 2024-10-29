@@ -226,8 +226,9 @@ const testList24 = [
   // "z is object;",
   // check, store
   // "if |  x is object2 => {if |  x is object1 => {x is object}};",
-  "let y;",
-  "if  | y is object2 => {y is object1};",
+  "let y,z;",
+  // "if  | y is object2 => {y is object1};",
+  "if | z is object2 => {if | => {z is object2} } ;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

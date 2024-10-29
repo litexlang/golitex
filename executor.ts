@@ -80,7 +80,10 @@ export namespace executor {
       else if (node instanceof FactNode) {
         try {
           // return factExec(env, node as FactNode);
-          return yaFactExec(env, node as FactNode);
+          const out = yaFactExec(env, node as FactNode);
+          if (out === RType.True) {
+            env.newMessage(`OK! ${node}`);
+          }
         } catch (error) {
           throw Error(`${node as FactNode}`);
         }

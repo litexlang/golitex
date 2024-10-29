@@ -271,14 +271,14 @@ export namespace checker {
 
     for (const r of toCheck.req) {
       if (r instanceof OptNode) {
-        if (r.vars.every((e) => !toCheck.vars.includes(e))) {
-          // notice check in env not newEnv because all facts are declared at higher env
-          // notice we check opt literally here to avoid prove-loop when p(x) <=> q(x)
-          const out = checkOptLiterally(env, r);
-          checkAndMsg(env, out, r);
-        } else {
-          env.storeFact(r.fullName, r.vars, [], r.isT, []);
-        }
+        // if (r.vars.every((e) => !toCheck.vars.includes(e))) {
+        // notice check in env not newEnv because all facts are declared at higher env
+        // notice we check opt literally here to avoid prove-loop when p(x) <=> q(x)
+        //   const out = checkOptLiterally(env, r);
+        //   checkAndMsg(env, out, r);
+        // } else {
+        env.storeFact(r.fullName, r.vars, [], r.isT, []);
+        // }
       } else if (r instanceof IfThenNode) {
         const newEnv = new L_Env(env);
         r.vars.forEach((e) => newEnv.newVar(e, e));
