@@ -36,6 +36,8 @@ export class L_Env {
   public storedFacts = new Map<string, L_Storage.StoredFact[]>();
   private freeFixMap = new Map<string, string>();
 
+  public storage = new Map<string, L_Storage.Fact[]>();
+
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
   }

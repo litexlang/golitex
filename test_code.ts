@@ -254,6 +254,12 @@ const testList25 = [
   // "not object(c);",
 ];
 
+const testList26 = [
+  "def x is object =>;",
+  "def x is object2 =>;",
+  "know if x is object => {x is object2};",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],

@@ -170,4 +170,92 @@ export namespace L_Storage {
       storeIfThen(env, fact, req, isT, frees);
     }
   }
+
+  //--------------------------------------------------------------------
+
+  export abstract class StoredReq {
+    abstract v: any;
+  }
+
+  export class FactReq extends StoredReq {
+    constructor(public v: FactNode) {
+      super();
+    }
+  }
+
+  export class StoredLstReq extends StoredReq {
+    constructor(public v: StoredReq[]) {
+      super();
+    }
+  }
+
+  export class Fact {
+    constructor(
+      public vars: string[], // stored fixed
+      public req: StoredReq[],
+      public isT: Boolean = true,
+      public freeVars: string[]
+    ) {}
+  }
+
+  export function newFactInEnv(env: L_Env, fact: FactNode) {
+    if (fact instanceof OptNode) {
+      const name = fact.fullName;
+      const toBeStored = new Fact(fact.vars, [], fact.isT, []);
+
+      const out = env.storage.get(name);
+      if (out === undefined) {
+        env.storage.set(name, [toBeStored]);
+      } else {
+        out.push(toBeStored);
+      }
+    }
+  }
+
+  // export function newFactInEnv(env: L_Env, name: string, fact: Fact) {
+  //   const out = env.storage.get(name);
+  //   if (out === undefined) {
+  //     env.storage.set(name, [fact]);
+  //   } else {
+  //     out.push(fact);
+  //   }
+  // }
+
+  export function declNewFact(env: L_Env, toDecl: DeclNode) {
+    if (toDecl instanceof IfThenDeclNode) {
+      const declFact = new OptNode(toDecl.name, toDecl.vars);
+      for (const onlyIf of toDecl.onlyIfs) {
+      }
+    } else if (toDecl instanceof IffDeclNode) {
+      const declFact = new OptNode(toDecl.name, toDecl.vars);
+      for (const onlyIfs of toDecl.onlyIfs) {
+        if (onlyIfs instanceof OptNode)
+          env.storeFact(
+            onlyIfs.fullName,
+            toDecl.vars,
+            // toDecl.req,
+            [declFact, ...toDecl.req],
+            true,
+            toDecl.vars
+          );
+      }
+      env.storeFact(
+        declFact.fullName,
+        toDecl.vars,
+        [...toDecl.req, ...toDecl.onlyIfs],
+        true,
+        toDecl.vars
+      );
+    } else if (toDecl instanceof OnlyIfDeclNode) {
+      const declFact = new OptNode(toDecl.name, toDecl.vars);
+      env.storeFact(
+        declFact.fullName,
+        toDecl.vars,
+        [...toDecl.req, ...toDecl.onlyIfs],
+        true,
+        toDecl.vars
+      );
+    }
+    return true;
+  }
 }

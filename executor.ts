@@ -306,6 +306,8 @@ export namespace executor {
 
       env.setDeclFact(node.name, node);
 
+      // new new storage system
+
       // new storage system
       let out = L_Storage.storeFactInDecl(env, node);
       if (!out) {
