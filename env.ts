@@ -57,6 +57,17 @@ export class L_Env {
     }
   }
 
+  getStoredFactsFromAllLevels(s: string): L_Storage.Fact[] {
+    let out: L_Storage.Fact[] = [];
+    let curEnv: L_Env | undefined = this;
+    while (curEnv) {
+      const facts = curEnv.storage.get(s);
+      if (facts !== undefined) out = [...out, ...(facts as L_Storage.Fact[])];
+      curEnv = curEnv.father;
+    }
+    return out;
+  }
+
   newFreeFix(free: string, fix: string) {
     this.freeFixMap.set(free, fix);
   }
