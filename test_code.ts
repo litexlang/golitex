@@ -268,6 +268,16 @@ const testList27 = [
   "y is object;",
 ];
 
+const testList28 = [
+  "def x is object =>;",
+  "def x is object2 => object(x);",
+  "def x is object3 => object2(x);",
+  "let x,y,z | x is object3, z is object2;",
+  "x is object;",
+  "y is object;",
+  "z is object;",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -297,7 +307,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList24: [testList24, false],
   testList25: [testList25, false],
   testList26: [testList26, false],
-  testList27: [testList27, true],
+  testList27: [testList27, false],
+  testList28: [testList28, true],
 };
 
 export function testCode() {
