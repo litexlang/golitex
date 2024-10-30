@@ -42,6 +42,21 @@ export class L_Env {
     this.father = father;
   }
 
+  pushIntoStorage(
+    name: string,
+    vars: string[],
+    req: L_Storage.StoredReq[],
+    isT: Boolean
+  ) {
+    const newFact = new L_Storage.Fact(vars, req, isT);
+    const out = this.storage.get(name);
+    if (!out) {
+      this.storage.set(name, [newFact]);
+    } else {
+      out.push(newFact);
+    }
+  }
+
   newFreeFix(free: string, fix: string) {
     this.freeFixMap.set(free, fix);
   }

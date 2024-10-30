@@ -605,4 +605,28 @@ export namespace executor {
       return RType.Error;
     }
   }
+
+  function yaYaFactExec(env: L_Env, toCheck: FactNode): RType {
+    try {
+      // check
+      let out = checker.L_Check(env, toCheck);
+
+      // store
+      if (out === RType.True) {
+        if (toCheck instanceof OptNode) {
+          // const frees = toCheck.vars
+          //   .filter((e) => e.startsWith("#"))
+          //   .map((s) => s.slice(1));
+          // env.storeFact(toCheck.fullName, toCheck.vars, [], toCheck.isT, frees);
+          env.pushIntoStorage(toCheck.fullName, toCheck.vars, [], toCheck.isT);
+        } else if (toCheck instanceof IfThenNode) {
+          L_Storage.storeFact(env, toCheck, [], toCheck.isT, []);
+        }
+      }
+      return out;
+    } catch (error) {
+      env.newMessage(`failed to check ${toCheck}`);
+      return RType.Error;
+    }
+  }
 }

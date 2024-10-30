@@ -311,7 +311,15 @@ export namespace checker {
     else return RType.Unknown;
   }
 
-  // -----------------------
+  // -------------------------------------------------
+  export function L_Check(env: L_Env, toCheck: FactNode): RType {
+    if (toCheck instanceof OptNode) {
+      return L_CheckOpt(env, toCheck);
+    }
+
+    return RType.Unknown;
+  }
+
   export function L_CheckOpt(env: L_Env, toCheck: OptNode): RType {
     const storedFacts: L_Storage.Fact[] | undefined = env.storage.get(
       toCheck.fullName
@@ -338,11 +346,29 @@ export namespace checker {
       }
 
       // try to use the current storedFact ot prove toCheck
+      let unknown = false;
       for (const req of storedFact.req) {
         // try to operate(store facts, introduce new variables) under current layer of stored if-then
         const newEnv = new L_Env(env);
         req.vars.forEach((e) => newEnv.newFreeFix(e, map.get(e) as string));
+        if (req instanceof OptNode) {
+          const out = L_CheckOptLiterally(newEnv, toCheck);
+          if (out === RType.True) continue;
+          else if (out === RType.Unknown || out === RType.Error) {
+            unknown = true;
+            break;
+          }
+        } else if (req instanceof IfThenNode) {
+          const out = L_CheckOpt(newEnv, toCheck);
+          if (out === RType.True) continue;
+          else if (out === RType.Unknown || out === RType.Error) {
+            unknown = true;
+            break;
+          }
+        }
       }
+      if (unknown) continue;
+      return RType.True;
     }
 
     return RType.Unknown;
