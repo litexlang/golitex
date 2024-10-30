@@ -88,11 +88,40 @@ export namespace L_Storage {
           env.storeFact(
             onlyIf.fullName,
             toDecl.vars,
-            [declFact],
+            [declFact, ...toDecl.req],
             true,
             toDecl.vars
           );
       }
+    } else if (toDecl instanceof IffDeclNode) {
+      const declFact = new OptNode(toDecl.name, toDecl.vars);
+      for (const onlyIfs of toDecl.onlyIfs) {
+        if (onlyIfs instanceof OptNode)
+          env.storeFact(
+            onlyIfs.fullName,
+            toDecl.vars,
+            // toDecl.req,
+            [declFact, ...toDecl.req],
+            true,
+            toDecl.vars
+          );
+      }
+      env.storeFact(
+        declFact.fullName,
+        toDecl.vars,
+        [...toDecl.req, ...toDecl.onlyIfs],
+        true,
+        toDecl.vars
+      );
+    } else if (toDecl instanceof OnlyIfDeclNode) {
+      const declFact = new OptNode(toDecl.name, toDecl.vars);
+      env.storeFact(
+        declFact.fullName,
+        toDecl.vars,
+        [...toDecl.req, ...toDecl.onlyIfs],
+        true,
+        toDecl.vars
+      );
     }
     return true;
   }

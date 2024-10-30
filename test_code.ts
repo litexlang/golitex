@@ -20,7 +20,7 @@ const testList1 = [
   "def obj2(x) => ;",
   "def x is p2 <=> obj(x), obj2(x);",
   "let y | obj(y);",
-  "if  x | obj2(y) => {p2(y)};",
+  "if  y | obj2(y) => {p2(y)};",
 ];
 
 // {
@@ -238,7 +238,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList1: [testList1, false],
   testList2: [testList2, false],
   testList3: [testList3, false],
-  testList4: [testList4, false],
+  testList4: [testList4, true],
   testList5: [testList5, false],
   testList6: [testList6, false],
   testList7: [testList7, false],
@@ -259,7 +259,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList22: [testList22, false],
   testList23: [testList23, false],
   setTheory1: [setTheory1, false],
-  testList24: [testList24, true],
+  testList24: [testList24, false],
 };
 
 export function testCode() {
