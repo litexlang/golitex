@@ -18,9 +18,10 @@ const testList0 = [
 const testList1 = [
   "def obj(x) => ;",
   "def obj2(x) => ;",
-  "def x is p2 <=> obj(x), obj2(x);",
+  "def x is p2 <=> obj(x), obj2(x) when;",
   "let y | obj(y);",
-  "if  y | obj2(y) => {p2(y)};",
+  "if  x | obj2(x) => {p2(x)};",
+  "if | y is obj2 => {y is p2};",
 ];
 
 // {
@@ -31,6 +32,8 @@ const testList1 = [
 
 const testList2 = [
   "def obj(x) => ;",
+  "def obj0(x) => ;",
+  "know obj0(#x);", // know #x is obj0;
   "def x is obj2 <=> obj(x) ;",
   "def x is obj3  => ;",
   "def x is obj4  => obj3(x);",
@@ -57,16 +60,18 @@ const testList5 = [
   "def x is p1 => ;",
   "def x is p3 => ;",
   "def p2(x) <=> p1(x) when p3(x);",
+  "let y | y is p2, y is p3;",
+  "y is p1;",
   // "def p3 x | p2(x);",
 ];
 
 const testList6 = [
   "def p1(x)  => ;",
-  "exist Ex(x) <=> p1(x);", // can be used as a "stronger" version of def.
+  "exist exist-p1(x) <=> p1(x);", // can be used as a "stronger" version of def.
   "let y | p1(y);",
-  "have x | Ex(x);", // unsuccessful have
-  "Ex(y);", // we declare and exe exist-fact by exactly using Opt code.
-  "have z | Ex(z);",
+  "have x | exist-p1(x);", // unsuccessful have
+  "exist-p1(y);", // we declare and exe exist-fact by exactly using Opt code.
+  "have z | exist-p1(z);",
 ];
 
 const testList7 = [
@@ -111,6 +116,7 @@ const testList13 = [
   "def obj2(x) => obj(x) ;",
   "def obj3(x) => obj2(x);",
   "def obj4(x) => obj(x) when obj3(x);",
+  "prove if x | obj3(x) => {obj(x)} {obj2(x); obj(x);};",
   "prove obj4(#x) {obj2(x); obj(x);}",
 ];
 
@@ -137,9 +143,10 @@ const testList16 = [
   "let x;",
   "def x is obj2 => x is obj;",
   "know if x | obj(x) => {obj(x)};",
-  "def obj3() => obj(x) when obj(x);",
+  "def obj3() => obj2(x) when obj(x);",
   "let x2;",
   "know if obj(x2) => {obj2(x2)};",
+  // "x2 <= obj(x2);",
 ];
 
 const testList17 = [
@@ -233,12 +240,26 @@ const testList24 = [
   "if | a is object3 => {if | => {a is obj} };",
 ];
 
+const testList25 = [
+  "def x is object =>;",
+  // "let x | x is object;",
+  // "x is object;",
+  // "y is object;",
+  "def object2(x,y) <=>  x,y are object ;",
+  "let a,b | not object(a), not object(b);",
+  "object2(a,b);",
+  "assume_by_contradiction object2(a,b) {object(b);} {object(b)}",
+  // "let c | not object(c);",
+  // "object(c);",
+  // "not object(c);",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
   testList2: [testList2, false],
   testList3: [testList3, false],
-  testList4: [testList4, true],
+  testList4: [testList4, false],
   testList5: [testList5, false],
   testList6: [testList6, false],
   testList7: [testList7, false],
@@ -250,7 +271,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList13: [testList13, false],
   testList14: [testList14, false],
   testList15: [testList15, false],
-  testList16: [testList16, false],
+  testList16: [testList16, true],
   testList17: [testList17, false],
   testList18: [testList18, false],
   testList19: [testList19, false],
@@ -260,6 +281,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList23: [testList23, false],
   setTheory1: [setTheory1, false],
   testList24: [testList24, false],
+  testList25: [testList25, false],
 };
 
 export function testCode() {

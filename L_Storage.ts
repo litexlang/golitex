@@ -40,15 +40,19 @@ export namespace L_Storage {
       if (this.isT !== isT) return RType.Unknown;
 
       const freeFixedMap = new Map<string, string>();
-      for (const [i, freeVar] of this.freeVars.entries()) {
-        if (this.freeVars.includes(freeVar)) {
-          if (freeFixedMap.has(freeVar)) {
-            if (freeFixedMap.get(freeVar) !== vars[i]) return RType.Unknown;
+      for (const [i, v] of this.vars.entries()) {
+        if (!this.freeVars.includes(v)) {
+          if (v !== vars[i]) return RType.Unknown;
+        }
+
+        if (this.freeVars.includes(v)) {
+          if (freeFixedMap.has(v)) {
+            if (freeFixedMap.get(v) !== vars[i]) return RType.Unknown;
           } else {
-            freeFixedMap.set(freeVar, vars[i]);
+            freeFixedMap.set(v, vars[i]);
           }
         } else {
-          if (freeVar !== vars[i]) return RType.Unknown;
+          if (v !== vars[i]) return RType.Unknown;
         }
       }
 
@@ -84,6 +88,7 @@ export namespace L_Storage {
     if (toDecl instanceof IfThenDeclNode) {
       const declFact = new OptNode(toDecl.name, toDecl.vars);
       for (const onlyIf of toDecl.onlyIfs) {
+        //! TODO: ABLE TO STORE IF-THEN
         if (onlyIf instanceof OptNode)
           env.storeFact(
             onlyIf.fullName,

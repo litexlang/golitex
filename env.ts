@@ -136,11 +136,16 @@ export class L_Env {
     this.freeFixMap.set(free, fix);
   }
 
-  fixFrees(frees: string[], fixed: string[]): null | Map<string, string> {
+  fixFrees(
+    frees: string[],
+    fixed: string[],
+    includesFather: Boolean = true
+  ): null | Boolean {
+    //! TODO: I SHOULD ALLOW different length
     if (frees.length !== fixed.length) return null;
 
     for (const [i, v] of frees.entries()) {
-      const stored = this.getVar(v);
+      const stored = this.getVar(v, includesFather);
       if (stored === undefined) {
         this.newVar(v, fixed[i]);
       } else {
@@ -148,13 +153,15 @@ export class L_Env {
       }
     }
 
-    return this.freeFixMap;
+    return true;
   }
 
-  getVar(key: string): undefined | string {
+  getVar(key: string, includesFather: Boolean = true): undefined | string {
+    // TODO: THERE SHOULD NEVER BE A # OUT
+    if (key.startsWith("#")) key = key.slice(1);
     const out = this.freeFixMap.get(key);
     if (out) return out;
-    else return this.father?.getVar(key);
+    else if (includesFather) return this.father?.getVar(key);
   }
 
   varsAreNotDeclared(vars: string[]): boolean {

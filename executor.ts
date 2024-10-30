@@ -79,8 +79,9 @@ export namespace executor {
         return successMesIntoEnv(env, node);
       else if (node instanceof FactNode) {
         try {
-          // return factExec(env, node as FactNode);
-          const out = yaFactExec(env, node as FactNode);
+          const out = factExec(env, node as FactNode);
+          return out;
+          // const out = yaFactExec(env, node as FactNode);
           if (out === RType.True) {
             env.newMessage(`OK! ${node}`);
           } else if (out === RType.Unknown) {

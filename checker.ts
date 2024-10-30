@@ -228,9 +228,10 @@ export namespace checker {
       const facts = env.getStoredFacts(toCheck.fullName);
       if (!facts) return RType.Error;
 
+      let isT = true;
       for (const storedFact of facts) {
         for (const req of storedFact.req) {
-          const ok = newEnv.fixFrees(storedFact.vars, toCheck.vars);
+          const ok = newEnv.fixFrees(storedFact.vars, toCheck.vars, false);
           if (!ok) return RType.Error;
           if (req instanceof OptNode) {
             const out = checkOptLiterally(newEnv, req);
@@ -238,7 +239,8 @@ export namespace checker {
               newEnv.getAllMessages().forEach((e) => env.newMessage(e));
               return RType.Error;
             } else if (out === RType.Unknown) {
-              continue;
+              isT = false;
+              break;
             }
           } else if (req instanceof IfThenNode) {
             req.vars.forEach((e, i) => newEnv.newVar(e, toCheck.vars[i]));
@@ -247,12 +249,13 @@ export namespace checker {
               newEnv.getAllMessages().forEach((e) => env.newMessage(e));
               return RType.Error;
             } else if (out === RType.Unknown) {
-              continue;
+              isT = false;
+              break;
             }
           }
         }
 
-        return RType.True;
+        if (isT) return RType.True;
       }
     } else if (toCheck instanceof IfThenNode) {
       toCheck.vars.forEach((e) => newEnv.newVar(e, e));
@@ -295,8 +298,9 @@ export namespace checker {
     if (facts === undefined) return RType.Unknown;
     for (const fact of facts) {
       // .map here is necessary
-      const vars = toCheck.vars.map((s) => env.getVar(s) as string);
-      const out = fact.checkLiterally(vars, toCheck.isT);
+      const vars = toCheck.vars.map((s) => env.getVar(s));
+      if (vars.includes(undefined)) return RType.Unknown;
+      const out = fact.checkLiterally(vars as string[], toCheck.isT);
       if (out === RType.True) return RType.True;
       else if (out === RType.Error) return RType.Error;
     }
