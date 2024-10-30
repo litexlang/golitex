@@ -264,6 +264,8 @@ const testList27 = [
   "def x is object =>;",
   "let x | x is object;",
   "x is object;",
+  "let y; ",
+  "y is object;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

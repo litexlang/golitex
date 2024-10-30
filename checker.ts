@@ -346,6 +346,11 @@ export namespace checker {
       }
 
       // try to use the current storedFact ot prove toCheck
+
+      // Literally correct
+      if (L_CheckOptLiterally(env, toCheck) !== RType.True) continue;
+
+      // satisfy all requirements
       let unknown = false;
       for (const req of storedFact.req) {
         // try to operate(store facts, introduce new variables) under current layer of stored if-then

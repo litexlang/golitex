@@ -79,8 +79,10 @@ export namespace executor {
         return successMesIntoEnv(env, node);
       else if (node instanceof FactNode) {
         try {
-          const out = factExec(env, node as FactNode);
-          return out;
+          // const out = factExec(env, node as FactNode);
+          // return out;
+
+          const out = yaYaFactExec(env, node as FactNode);
           // const out = yaFactExec(env, node as FactNode);
           if (out === RType.True) {
             env.newMessage(`OK! ${node}`);
@@ -89,6 +91,7 @@ export namespace executor {
           } else if (out === RType.Error) {
             env.newMessage(`Error ${node}`);
           }
+          return out;
         } catch (error) {
           throw Error(`${node as FactNode}`);
         }
@@ -175,6 +178,9 @@ export namespace executor {
 
   function letExec(env: L_Env, node: LetNode): RType {
     try {
+      // ya ya: put new vars into env
+      node.vars.forEach((e) => env.newFreeFix(e, e));
+
       // Check duplicate variable declarations
       const noErr = env.declareNewVar(node.vars);
       if (!noErr) {
