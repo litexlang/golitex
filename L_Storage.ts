@@ -1,3 +1,4 @@
+import { only } from "node:test";
 import {
   DeclNode,
   ExistNode,
@@ -173,41 +174,37 @@ export namespace L_Storage {
 
   //--------------------------------------------------------------------
 
-  export abstract class StoredReq {
-    abstract v: any;
-  }
-
-  export class FactReq extends StoredReq {
-    constructor(public v: FactNode) {
-      super();
-    }
-  }
-
-  export class StoredLstReq extends StoredReq {
-    constructor(public v: StoredReq[]) {
-      super();
-    }
+  export class StoredReq {
+    constructor(
+      public vars: string[],
+      public req: FactNode[]
+    ) {}
   }
 
   export class Fact {
     constructor(
       public vars: string[], // stored fixed
-      public req: StoredReq[],
-      public isT: Boolean = true,
-      public freeVars: string[]
+      public req: StoredReq[], // when adding a new layer of if-then, push a new req list (FactNode[]) at end of req.
+      public isT: Boolean = true
     ) {}
   }
 
-  export function newFactInEnv(env: L_Env, fact: FactNode) {
+  export function newFactInEnv(env: L_Env, fact: FactNode, req: StoredReq[]) {
     if (fact instanceof OptNode) {
       const name = fact.fullName;
-      const toBeStored = new Fact(fact.vars, [], fact.isT, []);
+      const toBeStored = new Fact(fact.vars, req, fact.isT);
 
       const out = env.storage.get(name);
       if (out === undefined) {
         env.storage.set(name, [toBeStored]);
       } else {
         out.push(toBeStored);
+      }
+    } else if (fact instanceof IfThenNode) {
+      // know if x | p(x) => {q(x), if | t(x) => {j(x)}};
+
+      for (const onlyIf of fact.onlyIfs) {
+        newFactInEnv(env, onlyIf, [...req, new StoredReq(fact.vars, fact.req)]);
       }
     }
   }
@@ -223,39 +220,15 @@ export namespace L_Storage {
 
   export function declNewFact(env: L_Env, toDecl: DeclNode) {
     if (toDecl instanceof IfThenDeclNode) {
-      const declFact = new OptNode(toDecl.name, toDecl.vars);
-      for (const onlyIf of toDecl.onlyIfs) {
-      }
-    } else if (toDecl instanceof IffDeclNode) {
-      const declFact = new OptNode(toDecl.name, toDecl.vars);
-      for (const onlyIfs of toDecl.onlyIfs) {
-        if (onlyIfs instanceof OptNode)
-          env.storeFact(
-            onlyIfs.fullName,
-            toDecl.vars,
-            // toDecl.req,
-            [declFact, ...toDecl.req],
-            true,
-            toDecl.vars
-          );
-      }
-      env.storeFact(
-        declFact.fullName,
-        toDecl.vars,
-        [...toDecl.req, ...toDecl.onlyIfs],
-        true,
-        toDecl.vars
-      );
-    } else if (toDecl instanceof OnlyIfDeclNode) {
-      const declFact = new OptNode(toDecl.name, toDecl.vars);
-      env.storeFact(
-        declFact.fullName,
-        toDecl.vars,
-        [...toDecl.req, ...toDecl.onlyIfs],
-        true,
-        toDecl.vars
+      newFactInEnv(
+        env,
+        new IfThenNode(
+          toDecl.vars,
+          [new OptNode(toDecl.name, toDecl.vars), ...toDecl.req],
+          toDecl.onlyIfs
+        ),
+        []
       );
     }
-    return true;
   }
 }
