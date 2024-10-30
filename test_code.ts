@@ -256,8 +256,14 @@ const testList25 = [
 
 const testList26 = [
   "def x is object =>;",
-  "def x is object2 =>;",
+  "def x is object2 => object(x);",
   "know if x is object => {x is object2};",
+];
+
+const testList27 = [
+  "def x is object =>;",
+  "let x | x is object;",
+  "x is object;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
@@ -277,7 +283,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList13: [testList13, false],
   testList14: [testList14, false],
   testList15: [testList15, false],
-  testList16: [testList16, true],
+  testList16: [testList16, false],
   testList17: [testList17, false],
   testList18: [testList18, false],
   testList19: [testList19, false],
@@ -288,6 +294,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   setTheory1: [setTheory1, false],
   testList24: [testList24, false],
   testList25: [testList25, false],
+  testList26: [testList26, false],
+  testList27: [testList27, true],
 };
 
 export function testCode() {
@@ -307,7 +315,8 @@ export function testCode() {
 
     // env.printFacts();
     // env.printDeclFacts();
-    L_Storage.printEnvFacts(env);
+    // L_Storage.printEnvFacts(env);
+    L_Storage.printEnvStoredFacts(env);
     env.printClearMessage();
   }
 }

@@ -9,6 +9,7 @@ import {
 } from "./ast";
 import { L_Env, StoredFactValue } from "./env";
 import { executor, RType } from "./executor";
+import { L_Storage } from "./L_Storage";
 export class CheckerOut {
   constructor(
     public type: RType,
@@ -308,5 +309,58 @@ export namespace checker {
     if (env.getFather() !== undefined)
       return checkOptLiterally(env.getFather() as L_Env, toCheck);
     else return RType.Unknown;
+  }
+
+  // -----------------------
+  export function L_CheckOpt(env: L_Env, toCheck: OptNode): RType {
+    const storedFacts: L_Storage.Fact[] | undefined = env.storage.get(
+      toCheck.fullName
+    );
+    if (storedFacts === undefined) return RType.Unknown;
+
+    for (const storedFact of storedFacts) {
+      if (toCheck.vars.length !== storedFact.vars.length) {
+        env.newMessage(
+          `Invalid number of arguments: need ${storedFact.vars.length}, get ${toCheck.vars.length}`
+        );
+        return RType.Error;
+      }
+
+      const map = new Map<String, string>();
+      for (let i = 0; i < toCheck.vars.length; i++) {
+        // check whether a variable is already declared at current level, for example, `if x,x | ...` is not allowed
+        if (map.get(storedFact.vars[i])) {
+          env.newMessage(`Double declaration of ${storedFact.vars[i]}`);
+          return RType.Error;
+        }
+
+        map.set(storedFact.vars[i], toCheck.vars[i]);
+      }
+
+      // try to use the current storedFact ot prove toCheck
+      for (const req of storedFact.req) {
+        // try to operate(store facts, introduce new variables) under current layer of stored if-then
+        const newEnv = new L_Env(env);
+        req.vars.forEach((e) => newEnv.newFreeFix(e, map.get(e) as string));
+      }
+    }
+
+    return RType.Unknown;
+  }
+
+  export function L_CheckOptLiterally(env: L_Env, toCheck: OptNode): RType {
+    const facts: L_Storage.Fact[] | undefined = env.storage.get(
+      toCheck.fullName
+    );
+
+    if (facts === undefined) return RType.Unknown;
+
+    for (const fact of facts) {
+      const fixedVars = toCheck.vars.map((s) => env.getVar(s) as string);
+      const out = fact.checkLiterally(fixedVars, toCheck.isT);
+      if (out === RType.True) return RType.True;
+    }
+
+    return RType.Unknown;
   }
 }

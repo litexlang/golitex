@@ -91,6 +91,8 @@ export namespace parser {
 
   export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] {
     try {
+      if (tokens.length === 0) return [];
+
       const result: L_Node[] = [];
       getNodesFromSingleNode(env, tokens, result);
       return result;

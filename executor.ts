@@ -209,6 +209,9 @@ export namespace executor {
   ): RType {
     try {
       for (const fact of node.facts) {
+        //! new new storage system
+        L_Storage.newFactInEnv(env, fact, []);
+
         if (fact instanceof OptNode) {
           const factType = env.getDeclFact(fact.fullName);
           if (factType === undefined)
@@ -307,6 +310,7 @@ export namespace executor {
       env.setDeclFact(node.name, node);
 
       // new new storage system
+      L_Storage.declNewFact(env, node);
 
       // new storage system
       let out = L_Storage.storeFactInDecl(env, node);

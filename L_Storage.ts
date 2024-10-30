@@ -179,6 +179,10 @@ export namespace L_Storage {
       public vars: string[],
       public req: FactNode[]
     ) {}
+
+    toString() {
+      return `(if ${this.vars} | ${this.req.map((e) => e.toString()).join(", ")})`;
+    }
   }
 
   export class Fact {
@@ -187,11 +191,70 @@ export namespace L_Storage {
       public req: StoredReq[], // when adding a new layer of if-then, push a new req list (FactNode[]) at end of req.
       public isT: Boolean = true
     ) {}
+
+    toString() {
+      if (this.isT)
+        return `${this.vars} <=  ${this.req.map((e) => e.toString()).join(", ")}`;
+      else
+        return `[not] ${this.vars} <= ${this.req.map((e) => e.toString()).join(", ")}`;
+    }
+
+    getAllFreeVars() {
+      const varsLst: string[][] = this.req.map((e) => e.vars);
+      let out: string[] = [];
+      varsLst.forEach((e) => {
+        out = [...out, ...e];
+      });
+      return out;
+    }
+
+    checkLiterally(toCheckFixedVars: string[], isT: Boolean): RType {
+      const noExtraReq = this.req.every((e) => e.req.length === 0);
+      if (!noExtraReq) return RType.Unknown;
+
+      if (isT !== this.isT) return RType.Unknown;
+
+      //! the following check is based on hypothesis that toCheckFixedVars declared at different level are different
+      const frees = this.getAllFreeVars();
+      for (const [i, v] of toCheckFixedVars.entries()) {
+        if (frees.includes(v)) continue;
+        else if (toCheckFixedVars[i] === this.vars[i]) continue;
+        else return RType.Unknown;
+      }
+
+      return RType.True;
+    }
+  }
+
+  export function printEnvStoredFacts(env: L_Env) {
+    console.log(`\n---Stored Facts---\n`);
+    for (const [s, v] of env.storage.entries()) {
+      console.log(s);
+      v?.forEach((e) => console.log(e));
+      if (v.length >= 0) console.log();
+    }
   }
 
   export function newFactInEnv(env: L_Env, fact: FactNode, req: StoredReq[]) {
     if (fact instanceof OptNode) {
       const name = fact.fullName;
+
+      //! ATTENTION: IMPORTANT RESTRICTION
+      //? I GUESS THIS RESTRICTION MIGHT BE CONTROVERSIAL.
+      let alreadyDeclared: string[] = [];
+      for (const r of req) {
+        if (!r.vars.every((e) => fact.vars.includes(e))) {
+          env.newMessage(`${r.vars} not fully implemented.`);
+          return;
+        }
+        if (r.vars.every((e) => !alreadyDeclared.includes(e))) {
+          alreadyDeclared = [...alreadyDeclared, ...r.vars];
+        } else {
+          env.newMessage(`double declaration of some variables in ${r.vars}`);
+          return;
+        }
+      }
+
       const toBeStored = new Fact(fact.vars, req, fact.isT);
 
       const out = env.storage.get(name);
@@ -201,22 +264,11 @@ export namespace L_Storage {
         out.push(toBeStored);
       }
     } else if (fact instanceof IfThenNode) {
-      // know if x | p(x) => {q(x), if | t(x) => {j(x)}};
-
       for (const onlyIf of fact.onlyIfs) {
         newFactInEnv(env, onlyIf, [...req, new StoredReq(fact.vars, fact.req)]);
       }
     }
   }
-
-  // export function newFactInEnv(env: L_Env, name: string, fact: Fact) {
-  //   const out = env.storage.get(name);
-  //   if (out === undefined) {
-  //     env.storage.set(name, [fact]);
-  //   } else {
-  //     out.push(fact);
-  //   }
-  // }
 
   export function declNewFact(env: L_Env, toDecl: DeclNode) {
     if (toDecl instanceof IfThenDeclNode) {
