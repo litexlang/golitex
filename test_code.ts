@@ -274,8 +274,10 @@ const testList28 = [
   "def x is object3 => object2(x);",
   "let x,y,z | x is object3, z is object2;",
   // "x is object;",
+  // "y is object;",
+  // "z is object;",
+  "know if z | => {z is object};",
   "y is object;",
-  "z is object;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

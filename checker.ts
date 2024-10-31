@@ -399,12 +399,13 @@ export namespace checker {
     if (facts === undefined) return RType.Unknown;
 
     for (const fact of facts) {
+      const frees = fact.getAllFreeVars();
       // const fixedVars = toCheck.vars.map((s) => env.getVar(s) as string);
       // const out = fact.checkLiterally(fixedVars, toCheck.isT);
       // if (out === RType.True) return RType.True;
       if (
-        fact.req.length === 0 &&
-        fact.vars.every((v, i) => v === toCheck.vars[i])
+        fact.isNoReq() &&
+        fact.vars.every((v, i) => frees.includes(v) || v === toCheck.vars[i])
       )
         return RType.True;
     }

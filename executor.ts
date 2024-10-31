@@ -238,6 +238,8 @@ export namespace executor {
           env.storeFact(fact.fullName, vars, [], fact.isT, freeVars);
         } else if (fact instanceof LogicalOptNode) {
           if (fact instanceof IfThenNode) {
+            // L_Storage.newFactInEnv(env, fact, [])
+
             knowLogicalOpt(
               env,
               [...fact.vars, ...varsToHash],

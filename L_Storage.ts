@@ -209,6 +209,13 @@ export namespace L_Storage {
       return out;
     }
 
+    isNoReq(): Boolean {
+      for (const req of this.req) {
+        if (req.req.length !== 0) return false;
+      }
+      return true;
+    }
+
     checkLiterally(toCheckFixedVars: string[], isT: Boolean): RType {
       const noExtraReq = this.req.every((e) => e.req.length === 0);
       if (!noExtraReq) return RType.Unknown;
