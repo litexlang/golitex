@@ -14,7 +14,7 @@ import {
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { checker } from "./L_Checker";
-import { L_Saver } from "./L_Saver";
+import { L_Storage } from "./L_Storage";
 
 export enum RType {
   Error,
@@ -147,6 +147,7 @@ export namespace L_Executor {
 
       for (const fact of node.facts) {
         if (fact instanceof OptNode) {
+          //! TODO checker.checkOptInHave now returns RType.Unknown
           const out = checker.checkOptInHave(env, fact);
           if (out !== RType.True) {
             env.newMessage(`Unknown: ${node.toString()}`);
@@ -204,7 +205,7 @@ export namespace L_Executor {
       if (node instanceof FactNode) {
       } else if (node instanceof KnowNode) {
         for (const fact of node.facts) {
-          L_Saver.L_Store(env, fact, []);
+          L_Storage.L_Store(env, fact, []);
         }
       }
 
@@ -226,8 +227,8 @@ export namespace L_Executor {
       env.setDeclFact(node.name, node);
 
       // new new storage system
-      L_Saver.declNewFact(env, node);
-      // L_Saver;
+      L_Storage.declNewFact(env, node);
+      // L_Storage;
 
       return RType.True;
     } catch (error) {
@@ -429,7 +430,7 @@ export namespace L_Executor {
     try {
       let out = checker.L_Check(env, toCheck);
       if (out === RType.True) {
-        L_Saver.L_Store(env, toCheck, []);
+        L_Storage.L_Store(env, toCheck, []);
       }
       return out;
     } catch (error) {

@@ -9,7 +9,7 @@ import {
 } from "./ast";
 import { L_Env, StoredFactValue } from "./L_Env";
 import { L_Executor, RType } from "./L_Executor";
-import { L_Saver } from "./L_Saver";
+import { L_Storage } from "./L_Storage";
 
 // export class CheckerOut {
 //   constructor(
@@ -162,10 +162,6 @@ export namespace checker {
   //   return RType.Unknown;
   // }
 
-  export function checkOptInHave(env: L_Env, opt: OptNode): RType {
-    return RType.Unknown;
-  }
-
   // function checkIfThenByFactsWithNoReq(env: L_Env, node: IfThenNode): RType {
   //   const newEnv = new L_Env(env);
   //   newEnv.declareNewVar(node.vars);
@@ -221,7 +217,7 @@ export namespace checker {
   }
 
   export function L_CheckOpt(env: L_Env, toCheck: OptNode): RType {
-    const storedFacts: L_Saver.StoredFact[] | undefined =
+    const storedFacts: L_Storage.StoredFact[] | undefined =
       env.getStoredFactsFromAllLevels(toCheck.fullName);
     if (storedFacts === undefined) return RType.Unknown;
 
@@ -302,7 +298,7 @@ export namespace checker {
 
   // check whether a variable in fact.vars is free or fixed at check time instead of run time.
   export function L_CheckOptLiterally(env: L_Env, toCheck: OptNode): Boolean {
-    const facts: L_Saver.StoredFact[] | undefined =
+    const facts: L_Storage.StoredFact[] | undefined =
       env.getStoredFactsFromAllLevels(toCheck.fullName);
 
     if (facts === undefined) return false;
@@ -331,5 +327,9 @@ export namespace checker {
       if (out !== RType.True) return out;
     }
     return RType.True;
+  }
+
+  export function checkOptInHave(env: L_Env, opt: OptNode): RType {
+    return RType.Unknown;
   }
 }

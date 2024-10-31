@@ -2,7 +2,7 @@ import { DeclNode, FactNode, IfThenDeclNode, IfThenNode, OptNode } from "./ast";
 import { L_Env } from "./L_Env";
 import { RType } from "./L_Executor";
 
-export namespace L_Saver {
+export namespace L_Storage {
   export class StoredReq {
     constructor(
       public vars: string[], // store free vars at current level
@@ -60,15 +60,6 @@ export namespace L_Saver {
       }
 
       return RType.True;
-    }
-  }
-
-  export function printEnvStoredFacts(env: L_Env) {
-    console.log(`\n---Stored Facts---\n`);
-    for (const [s, v] of env.storage.entries()) {
-      console.log(s);
-      v?.forEach((e) => console.log(e));
-      if (v.length >= 0) console.log();
     }
   }
 

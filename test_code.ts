@@ -1,6 +1,5 @@
 import { L_Env } from "./L_Env";
 import { L_Executor, RType } from "./L_Executor";
-import { L_Saver } from "./L_Saver";
 import { L_Scan } from "./L_Lexer";
 import { L_Parser } from "./L_Parser";
 
@@ -345,8 +344,8 @@ export function testCode() {
 
     // env.printFacts();
     // env.printDeclFacts();
-    // L_Saver.printEnvFacts(env);
-    L_Saver.printEnvStoredFacts(env);
+    // L_Storage.printEnvFacts(env);
+    env.printAllStoredFacts();
     env.printClearMessage();
   }
 }
