@@ -311,7 +311,9 @@ const testList30 = [
 const testList31 = [
   "def x is p => ;",
   "def x is p1 <=> x is p;",
-  "def x is p2 <= x is p2;",
+  "def x is p2 <= x is p1;",
+  "if x | x is p => {x is p2};",
+  "if x | x is p1 => {x is p2};",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

@@ -87,13 +87,13 @@ export namespace L_Storage {
       );
       storeIfThen(
         env,
-        new IfThenNode(toDecl.vars, [decl, ...toDecl.onlyIfs], toDecl.req),
+        new IfThenNode(toDecl.vars, [...toDecl.req, ...toDecl.onlyIfs], [decl]),
         []
       );
     } else if (toDecl instanceof OnlyIfDeclNode) {
       storeIfThen(
         env,
-        new IfThenNode(toDecl.vars, [decl, ...toDecl.onlyIfs], toDecl.req),
+        new IfThenNode(toDecl.vars, [...toDecl.req, ...toDecl.onlyIfs], [decl]),
         []
       );
     }
