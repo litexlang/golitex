@@ -54,7 +54,7 @@ export namespace L_Executor {
     ByNode: _byExec,
   };
 
-  export function nodeExec(env: L_Env, node: L_Node): RType {
+  export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
     try {
       const nodeType = node.constructor.name;
       const execFunc = nodeExecMap[nodeType];
@@ -64,7 +64,8 @@ export namespace L_Executor {
       else if (node instanceof FactNode) {
         try {
           const out = factExec(env, node as FactNode);
-          if (out === RType.True) {
+
+          if (out === RType.True && showMsg) {
             env.newMessage(`OK! ${node}`);
           } else if (out === RType.Unknown) {
             env.newMessage(`Unknown ${node}`);
@@ -147,7 +148,34 @@ export namespace L_Executor {
   }
 
   function _byExec(env: L_Env, node: ByNode): RType {
-    return RType.True;
+    try {
+      const newEnv = new L_Env(env);
+      for (const subNode of node.block) {
+        const out = nodeExec(newEnv, subNode, false);
+        if (out !== RType.True) {
+          env.newMessage(`${node} failed.`);
+          return out;
+        }
+      }
+
+      for (const fact of node.facts) {
+        const out = checker.L_Check(newEnv, fact);
+        if (out !== RType.True) {
+          env.newMessage(`${node} failed.`);
+          return out;
+        }
+      }
+
+      //! BUG: SHOULD NOT INTRODUCE FACT OF UNDECLARED SYMBOL HERE. SHOULD NOT STORE FACT WITH OPT DECLARED IN NODE.BLOCK
+      for (const fact of node.facts) {
+        L_Storage.store(env, fact, []);
+      }
+
+      return RType.True;
+    } catch (error) {
+      env.newMessage("by error");
+      return RType.Error;
+    }
   }
 
   function factExec(env: L_Env, toCheck: FactNode): RType {
