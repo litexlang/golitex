@@ -37,7 +37,7 @@ export class L_Env {
   // public storedFacts = new Map<string, L_Saver.StoredFact[]>();
   private freeFixMap = new Map<string, string>();
 
-  public storage = new Map<string, L_Saver.Fact[]>();
+  public storage = new Map<string, L_Saver.StoredFact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
@@ -49,7 +49,7 @@ export class L_Env {
     req: L_Saver.StoredReq[],
     isT: Boolean
   ) {
-    const newFact = new L_Saver.Fact(vars, req, isT);
+    const newFact = new L_Saver.StoredFact(vars, req, isT);
     const out = this.storage.get(name);
     if (!out) {
       this.storage.set(name, [newFact]);
@@ -58,12 +58,13 @@ export class L_Env {
     }
   }
 
-  getStoredFactsFromAllLevels(s: string): L_Saver.Fact[] {
-    let out: L_Saver.Fact[] = [];
+  getStoredFactsFromAllLevels(s: string): L_Saver.StoredFact[] {
+    let out: L_Saver.StoredFact[] = [];
     let curEnv: L_Env | undefined = this;
     while (curEnv) {
       const facts = curEnv.storage.get(s);
-      if (facts !== undefined) out = [...out, ...(facts as L_Saver.Fact[])];
+      if (facts !== undefined)
+        out = [...out, ...(facts as L_Saver.StoredFact[])];
       curEnv = curEnv.father;
     }
     return out;

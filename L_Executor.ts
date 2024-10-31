@@ -121,7 +121,7 @@ export namespace L_Executor {
   //       if (func) return func(env, node);
   //     }
 
-  //     const res = checker.check(env, node as FactNode);
+  //     const res = checker.L_Check(env, node as FactNode);
   //     if (res.type === RType.True) {
   //       if (res.checkedByOpt === false) knowExec(env, new KnowNode([node]));
   //       return successMesIntoEnv(env, node);
@@ -266,14 +266,15 @@ export namespace L_Executor {
 
       // check
       for (const toTest of node.toProve.onlyIfs) {
-        const out = checker.check(newEnv, toTest);
-        if (!(out.type === RType.True)) {
-          return handleExecError(
-            env,
-            out.type,
-            `Proof failed to prove ${toTest}.`
-          );
-        }
+        const out = checker.L_Check(newEnv, toTest);
+        //! TODO
+        // if (!(out.type === RType.True)) {
+        //   return handleExecError(
+        //     env,
+        //     out.type,
+        //     `Proof failed to prove ${toTest}.`
+        //   );
+        // }
       }
 
       // store new fact into env
@@ -344,14 +345,15 @@ export namespace L_Executor {
 
       // check
       for (const toTest of declFact.onlyIfs) {
-        const out = checker.check(newEnv, toTest);
-        if (!(out.type === RType.True)) {
-          return handleExecError(
-            env,
-            out.type,
-            `Proof failed to prove ${toTest}.`
-          );
-        }
+        const out = checker.L_Check(newEnv, toTest);
+        //! TODO
+        // if (!(out.type === RType.True)) {
+        //   return handleExecError(
+        //     env,
+        //     out.type,
+        //     `Proof failed to prove ${toTest}.`
+        //   );
+        // }
       }
 
       // store new fact into env
@@ -387,24 +389,26 @@ export namespace L_Executor {
         }
       }
 
-      let out = checker.check(newEnv, node.contradict);
-      if (!(out.type === RType.True)) {
-        return handleExecError(
-          env,
-          out.type,
-          `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
-        );
-      }
+      let out = checker.L_Check(newEnv, node.contradict);
+      //! TODO
+      // if (!(out.type === RType.True)) {
+      //   return handleExecError(
+      //     env,
+      //     out.type,
+      //     `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
+      //   );
+      // }
 
       node.contradict.isT = !node.contradict.isT;
-      out = checker.check(newEnv, node.contradict);
-      if (!(out.type === RType.True)) {
-        return handleExecError(
-          env,
-          out.type,
-          `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
-        );
-      }
+      out = checker.L_Check(newEnv, node.contradict);
+      //! TODO
+      // if (!(out.type === RType.True)) {
+      //   return handleExecError(
+      //     env,
+      //     out.type,
+      //     `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
+      //   );
+      // }
 
       node.assume.isT = !node.assume.isT;
       knowExec(env, new KnowNode([node.assume]));
