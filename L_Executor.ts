@@ -2,11 +2,8 @@ import {
   KnowNode,
   L_Node,
   LetNode,
-  OptNode,
-  IfThenNode,
   FactNode,
   DeclNode,
-  IfThenDeclNode,
   ProveNode,
   HaveNode,
   AssumeByContraNode,
@@ -18,7 +15,7 @@ import { L_Storage } from "./L_Storage";
 
 export enum RType {
   Error,
-  True, // not only used as True for callInferExec, but also as a generic type passed between subFunctions.
+  True,
   KnowUndeclared,
   False,
   Unknown,
@@ -38,9 +35,9 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.ThmFailed]: "thm: failed",
 };
 
-function handleExecError(env: L_Env, out: RType, m: string = "") {
-  env.newMessage(m);
-  return out;
+function successMesIntoEnv(env: L_Env, node: L_Node): RType {
+  env.newMessage(`OK! ${node.toString()}`);
+  return RType.True;
 }
 
 /**
@@ -95,33 +92,8 @@ export namespace L_Executor {
     }
   }
 
-  function successMesIntoEnv(env: L_Env, node: L_Node): RType {
-    env.newMessage(`OK! ${node.toString()}`);
-    return RType.True;
-  }
-
   function haveExec(env: L_Env, node: HaveNode): RType {
     try {
-      // Check duplicate variable declarations
-      node.vars.forEach((e) => env.newVar(e, e));
-
-      for (const fact of node.facts) {
-        if (fact instanceof OptNode) {
-          //! TODO checker.checkOptInHave now returns RType.Unknown
-          const out = checker.checkOptInHave(env, fact);
-          if (out !== RType.True) {
-            env.newMessage(`Unknown: ${node.toString()}`);
-            return out;
-          }
-        } else {
-          //! For the time being, if-then can not be checked when have
-          env.newMessage(`Error: ${node.toString()}`);
-          return RType.Error;
-        }
-      }
-
-      knowExec(env, new KnowNode(node.facts));
-
       return RType.True;
     } catch (error) {
       env.newMessage(`Error: ${node.toString()}`);
@@ -131,20 +103,8 @@ export namespace L_Executor {
 
   function letExec(env: L_Env, node: LetNode): RType {
     try {
-      // ya ya: put new vars into env
       node.vars.forEach((e) => env.newVar(e, e));
-
-      // Check duplicate variable declarations
-      // const noErr = env.declareNewVar(node.vars);
-      // if (!noErr) {
-      //   env.newMessage(
-      //     `Error: Variable(s) ${node.vars.join(", ")} already declared in this scope.`
-      //   );
-      //   return RType.Error;
-      // }
-
-      knowExec(env, new KnowNode(node.facts));
-
+      for (const f of node.facts) L_Storage.store(env, f, []);
       return RType.True;
     } catch (error) {
       env.newMessage(`Error: ${node.toString()}`);
@@ -152,22 +112,9 @@ export namespace L_Executor {
     }
   }
 
-  /**
-   * Main Function of whole project. Not only used at assume expression, other expressions which introduces new fact into environment calls this function.
-   *
-   * know Opt: store directly
-   * know if-then: if then is Opt, store it bound with if as req; if then is if-then, inherit father req and do knowExec again.
-   */
-  //! This one of the functions in which new facts are generated.
-  //! In order to unify interface, after checking a fact, we use KnowExec to emit new fact
-  export function knowExec(env: L_Env, node: KnowNode | FactNode): RType {
+  export function knowExec(env: L_Env, node: KnowNode): RType {
     try {
-      if (node instanceof FactNode) {
-      } else if (node instanceof KnowNode) {
-        for (const fact of node.facts) {
-          L_Storage.L_Store(env, fact, []);
-        }
-      }
+      for (const fact of node.facts) L_Storage.store(env, fact, []);
 
       return RType.True;
     } catch (error) {
@@ -180,15 +127,11 @@ export namespace L_Executor {
 
   function declExec(env: L_Env, node: DeclNode): RType {
     try {
-      if (env.isOptDeclared(node.name)) {
+      if (env.isOptDeclared(node.name))
         throw Error(`${node.name} already declared.`);
-      }
 
       env.setDeclFact(node.name, node);
-
-      // new new storage system
       L_Storage.declNewFact(env, node);
-      // L_Storage;
 
       return RType.True;
     } catch (error) {
@@ -203,52 +146,8 @@ export namespace L_Executor {
     return RType.True;
   }
 
-  /**
-   * Steps
-   * 1. open new Env
-   * 2. assume node.assume
-   * 3. run block
-   * 4. check node.contradict, not node.contradict
-   * 5. emit the reverse of node.assume
-   */
   function assumeByContraExec(env: L_Env, node: AssumeByContraNode): RType {
     try {
-      const newEnv = new L_Env(env);
-      knowExec(newEnv, new KnowNode([node.assume]));
-      for (const subNode of node.block) {
-        const out = nodeExec(newEnv, subNode);
-        if (out !== RType.True) {
-          return handleExecError(
-            env,
-            out,
-            `Proof Block Expression ${subNode} Failed.`
-          );
-        }
-      }
-
-      let out = checker.L_Check(newEnv, node.contradict);
-      //! TODO
-      // if (!(out.type === RType.True)) {
-      //   return handleExecError(
-      //     env,
-      //     out.type,
-      //     `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
-      //   );
-      // }
-
-      node.contradict.isT = !node.contradict.isT;
-      out = checker.L_Check(newEnv, node.contradict);
-      //! TODO
-      // if (!(out.type === RType.True)) {
-      //   return handleExecError(
-      //     env,
-      //     out.type,
-      //     `assume_by_contradiction failed to prove ${node.contradict}. Proof by contradiction requires checking both the statement and its negation.`
-      //   );
-      // }
-
-      node.assume.isT = !node.assume.isT;
-      knowExec(env, new KnowNode([node.assume]));
       return RType.True;
     } catch (error) {
       env.newMessage(`${node}`);
@@ -257,16 +156,6 @@ export namespace L_Executor {
   }
 
   function _byExec(env: L_Env, node: ByNode): RType {
-    const newEnv = new L_Env(env);
-    for (const subNode of node.block) {
-      const out = nodeExec(newEnv, subNode);
-      if (out !== RType.True) return out;
-    }
-    for (const fact of node.facts) {
-      const out = nodeExec(newEnv, fact);
-      if (out !== RType.True) return out;
-    }
-    knowExec(env, new KnowNode(node.facts));
     return RType.True;
   }
 
@@ -274,7 +163,7 @@ export namespace L_Executor {
     try {
       let out = checker.L_Check(env, toCheck);
       if (out === RType.True) {
-        L_Storage.L_Store(env, toCheck, []);
+        L_Storage.store(env, toCheck, []);
       }
       return out;
     } catch (error) {

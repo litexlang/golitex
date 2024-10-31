@@ -1,7 +1,7 @@
 import { FactNode, IfThenNode, KnowNode, OptNode } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Executor, RType } from "./L_Executor";
-import { StoredFact } from "./L_Storage";
+import { L_Storage, StoredFact } from "./L_Storage";
 
 export namespace checker {
   export function L_Check(env: L_Env, toCheck: FactNode): RType {
@@ -121,10 +121,14 @@ export namespace checker {
     let out: RType = RType.True;
     const newEnv = new L_Env(env);
     toCheck.vars.forEach((e) => newEnv.newVar(e, e));
-    L_Executor.knowExec(newEnv, new KnowNode(toCheck.req));
+    for (const f of toCheck.req) L_Storage.store(env, f, []);
+    // L_Executor.knowExec(newEnv, new KnowNode(toCheck.req));
     for (const onlyIf of toCheck.onlyIfs) {
       out = L_Check(newEnv, onlyIf);
       if (out !== RType.True) return out;
+      else {
+        L_Storage.store(newEnv, toCheck, []);
+      }
     }
     return RType.True;
   }

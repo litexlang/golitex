@@ -79,7 +79,7 @@ export namespace L_Storage {
 
   function storeIfThen(env: L_Env, ifThen: IfThenNode, req: StoredReq[]) {
     for (const fact of ifThen.onlyIfs) {
-      L_Store(env, fact, [...req, new StoredReq(ifThen.vars, ifThen.req)]);
+      store(env, fact, [...req, new StoredReq(ifThen.vars, ifThen.req)]);
     }
   }
 
@@ -88,7 +88,7 @@ export namespace L_Storage {
   }
 
   // Main Function of Storage
-  export function L_Store(env: L_Env, fact: FactNode, req: StoredReq[]) {
+  export function store(env: L_Env, fact: FactNode, req: StoredReq[]) {
     if (fact instanceof IfThenNode) storeIfThen(env, fact, req);
     else if (fact instanceof OptNode) storeOpt(env, fact, req);
     else throw Error();

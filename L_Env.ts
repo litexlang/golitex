@@ -1,5 +1,5 @@
 import { DeclNode } from "./ast";
-import { L_Storage, StoredFact, StoredReq } from "./L_Storage";
+import { StoredFact, StoredReq } from "./L_Storage";
 
 export class L_Env {
   private messages: string[] = [];
@@ -21,6 +21,7 @@ export class L_Env {
     }
   }
 
+  // TODO: NEED TO BE REFACTORED SO THAT FACTS WITH THE SAME NAME DECLARED OR STORED WON'T GO WRONG.
   getStoredFactsFromAllLevels(s: string): StoredFact[] {
     let out: StoredFact[] = [];
     let curEnv: L_Env | undefined = this;
