@@ -79,14 +79,15 @@ export class L_Env {
     return out;
   }
 
-  getFather(): L_Env | undefined {
-    return this.father;
-  }
+  //
+  // getDeclFact(s: string) {
+  //   let out = this.declaredFacts.get(s);
+  //   return out ? out : this.father?.declaredFacts.get(s);
+  // }
 
-  // get from itself and father
-  getDeclFact(s: string) {
+  isOptDeclared(s: string) {
     let out = this.declaredFacts.get(s);
-    return out ? out : this.father?.declaredFacts.get(s);
+    return (out ? out : this.father?.declaredFacts.get(s)) !== undefined;
   }
 
   setDeclFact(s: string, declNode: DeclNode) {
