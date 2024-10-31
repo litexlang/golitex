@@ -1,4 +1,12 @@
-import { DeclNode, FactNode, IfThenDeclNode, IfThenNode, OptNode } from "./ast";
+import {
+  DeclNode,
+  FactNode,
+  IffDeclNode,
+  IfThenDeclNode,
+  IfThenNode,
+  OnlyIfDeclNode,
+  OptNode,
+} from "./ast";
 import { L_Env } from "./L_Env";
 import { RType } from "./L_Executor";
 
@@ -64,14 +72,28 @@ export class StoredFact {
 
 export namespace L_Storage {
   export function declNewFact(env: L_Env, toDecl: DeclNode) {
+    const decl = new OptNode(toDecl.name, toDecl.vars);
     if (toDecl instanceof IfThenDeclNode) {
       storeIfThen(
         env,
-        new IfThenNode(
-          toDecl.vars,
-          [new OptNode(toDecl.name, toDecl.vars), ...toDecl.req],
-          toDecl.onlyIfs
-        ),
+        new IfThenNode(toDecl.vars, [decl, ...toDecl.req], toDecl.onlyIfs),
+        []
+      );
+    } else if (toDecl instanceof IffDeclNode) {
+      storeIfThen(
+        env,
+        new IfThenNode(toDecl.vars, [decl, ...toDecl.req], toDecl.onlyIfs),
+        []
+      );
+      storeIfThen(
+        env,
+        new IfThenNode(toDecl.vars, [decl, ...toDecl.onlyIfs], toDecl.req),
+        []
+      );
+    } else if (toDecl instanceof OnlyIfDeclNode) {
+      storeIfThen(
+        env,
+        new IfThenNode(toDecl.vars, [decl, ...toDecl.onlyIfs], toDecl.req),
         []
       );
     }

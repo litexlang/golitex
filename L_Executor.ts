@@ -40,11 +40,6 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
   return RType.True;
 }
 
-/**
- * Guideline of what execute functions do
- * 1. return RType thing
- * 2. env.newMessage()
- */
 export namespace L_Executor {
   const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
     IffDeclNode: declExec,
@@ -68,11 +63,7 @@ export namespace L_Executor {
         return successMesIntoEnv(env, node);
       else if (node instanceof FactNode) {
         try {
-          // const out = factExec(env, node as FactNode);
-          // return out;
-
           const out = factExec(env, node as FactNode);
-          // const out = yaFactExec(env, node as FactNode);
           if (out === RType.True) {
             env.newMessage(`OK! ${node}`);
           } else if (out === RType.Unknown) {

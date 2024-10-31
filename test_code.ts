@@ -308,6 +308,12 @@ const testList30 = [
   "if z | => {if | z is object1, z is p3 => {z is object2, z is object12}};",
 ];
 
+const testList31 = [
+  "def x is p => ;",
+  "def x is p1 <=> x is p;",
+  "def x is p2 <= x is p2;",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -340,7 +346,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList27: [testList27, false],
   testList28: [testList28, false],
   testList29: [testList29, false],
-  testList30: [testList30, true],
+  testList30: [testList30, false],
+  testList31: [testList31, true],
 };
 
 export function testCode() {

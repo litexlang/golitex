@@ -122,11 +122,11 @@ export namespace checker {
     const newEnv = new L_Env(env);
     toCheck.vars.forEach((e) => newEnv.newVar(e, e));
     for (const f of toCheck.req) L_Storage.store(env, f, []);
-    // L_Executor.knowExec(newEnv, new KnowNode(toCheck.req));
     for (const onlyIf of toCheck.onlyIfs) {
       out = L_Check(newEnv, onlyIf);
       if (out !== RType.True) return out;
       else {
+        // checked facts in then are used as stored fact.
         L_Storage.store(newEnv, toCheck, []);
       }
     }
