@@ -61,7 +61,7 @@ export class L_Env {
   printAllStoredFacts() {
     console.log(`\n---Stored Facts---\n`);
     for (const [s, v] of this.storage.entries()) {
-      console.log(s);
+      console.log(`[${s}]`);
       v?.forEach((e) => console.log(e));
       if (v.length >= 0) console.log();
     }
