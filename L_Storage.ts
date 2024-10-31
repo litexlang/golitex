@@ -243,44 +243,9 @@ export namespace L_Storage {
     }
   }
 
-  export function newFactInEnv(env: L_Env, fact: FactNode, req: StoredReq[]) {
-    if (fact instanceof OptNode) {
-      const name = fact.fullName;
-
-      //! ATTENTION: IMPORTANT RESTRICTION
-      //? I GUESS THIS RESTRICTION MIGHT BE CONTROVERSIAL.
-      let alreadyDeclared: string[] = [];
-      for (const r of req) {
-        if (!r.vars.every((e) => fact.vars.includes(e))) {
-          env.newMessage(`${r.vars} not fully implemented.`);
-          return;
-        }
-        if (r.vars.every((e) => !alreadyDeclared.includes(e))) {
-          alreadyDeclared = [...alreadyDeclared, ...r.vars];
-        } else {
-          env.newMessage(`double declaration of some variables in ${r.vars}`);
-          return;
-        }
-      }
-
-      const toBeStored = new Fact(fact.vars, req, fact.isT);
-
-      const out = env.storage.get(name);
-      if (out === undefined) {
-        env.storage.set(name, [toBeStored]);
-      } else {
-        out.push(toBeStored);
-      }
-    } else if (fact instanceof IfThenNode) {
-      for (const onlyIf of fact.onlyIfs) {
-        newFactInEnv(env, onlyIf, [...req, new StoredReq(fact.vars, fact.req)]);
-      }
-    }
-  }
-
   export function declNewFact(env: L_Env, toDecl: DeclNode) {
     if (toDecl instanceof IfThenDeclNode) {
-      newFactInEnv(
+      storeIfThen(
         env,
         new IfThenNode(
           toDecl.vars,
@@ -292,37 +257,20 @@ export namespace L_Storage {
     }
   }
 
-  export function storeIfThen(
-    env: L_Env,
-    ifThen: IfThenNode,
-    req: L_Storage.StoredReq[]
-  ) {
+  function storeIfThen(env: L_Env, ifThen: IfThenNode, req: StoredReq[]) {
     for (const fact of ifThen.onlyIfs) {
-      if (fact instanceof OptNode) {
-        yaStoreOpt(env, fact, [
-          ...req,
-          new L_Storage.StoredReq(ifThen.vars, ifThen.req),
-        ]);
-        // env.pushIntoStorage(
-        //   fact.fullName,
-        //   fact.vars,
-        //   [...req, new L_Storage.StoredReq(ifThen.vars, ifThen.req)],
-        //   fact.isT
-        // );
-      } else if (fact instanceof IfThenNode) {
-        storeIfThen(env, fact, [
-          ...req,
-          new L_Storage.StoredReq(ifThen.vars, ifThen.req),
-        ]);
-      }
+      L_Store(env, fact, [...req, new StoredReq(ifThen.vars, ifThen.req)]);
     }
   }
 
-  export function yaStoreOpt(
-    env: L_Env,
-    fact: OptNode,
-    req: L_Storage.StoredReq[]
-  ) {
+  function yaStoreOpt(env: L_Env, fact: OptNode, req: StoredReq[]) {
     env.pushIntoStorage(fact.fullName, fact.vars, req, fact.isT);
+  }
+
+  // Main Function of storage
+  export function L_Store(env: L_Env, fact: FactNode, req: StoredReq[]) {
+    if (fact instanceof IfThenNode) storeIfThen(env, fact, req);
+    else if (fact instanceof OptNode) yaStoreOpt(env, fact, req);
+    else throw Error();
   }
 }

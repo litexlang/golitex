@@ -67,7 +67,7 @@ export namespace executor {
     ProveNode: proveExec,
     HaveNode: haveExec,
     AssumeByContraNode: assumeByContraExec,
-    ByNode: byExec,
+    ByNode: _byExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node): RType {
@@ -82,7 +82,7 @@ export namespace executor {
           // const out = factExec(env, node as FactNode);
           // return out;
 
-          const out = yaYaFactExec(env, node as FactNode);
+          const out = factExec(env, node as FactNode);
           // const out = yaFactExec(env, node as FactNode);
           if (out === RType.True) {
             env.newMessage(`OK! ${node}`);
@@ -114,33 +114,33 @@ export namespace executor {
    * 1. check fact
    * 2. know new fact
    */
-  function factExec(env: L_Env, node: FactNode): RType {
-    try {
-      if (node instanceof OptNode) {
-        const func = L_Builtins.get(node.fullName);
-        if (func) return func(env, node);
-      }
+  // function factExec(env: L_Env, node: FactNode): RType {
+  //   try {
+  //     if (node instanceof OptNode) {
+  //       const func = L_Builtins.get(node.fullName);
+  //       if (func) return func(env, node);
+  //     }
 
-      const res = checker.check(env, node as FactNode);
-      if (res.type === RType.True) {
-        if (res.checkedByOpt === false) knowExec(env, new KnowNode([node]));
-        return successMesIntoEnv(env, node);
-      } else if (res.type === RType.Unknown) {
-        env.newMessage(`Unknown. ${node.toString()}`);
-        return RType.Unknown;
-      } else if (res.type === RType.False) {
-        env.newMessage(`False. ${node.toString()}`);
-        return RType.False;
-      } else if (res.type === RType.Error) {
-        env.newMessage(`Error: ${node.toString()}`);
-        return RType.Error;
-      }
-      return RType.Error;
-    } catch (error) {
-      env.newMessage(`Error: ${node.toString()}`);
-      return RType.Error;
-    }
-  }
+  //     const res = checker.check(env, node as FactNode);
+  //     if (res.type === RType.True) {
+  //       if (res.checkedByOpt === false) knowExec(env, new KnowNode([node]));
+  //       return successMesIntoEnv(env, node);
+  //     } else if (res.type === RType.Unknown) {
+  //       env.newMessage(`Unknown. ${node.toString()}`);
+  //       return RType.Unknown;
+  //     } else if (res.type === RType.False) {
+  //       env.newMessage(`False. ${node.toString()}`);
+  //       return RType.False;
+  //     } else if (res.type === RType.Error) {
+  //       env.newMessage(`Error: ${node.toString()}`);
+  //       return RType.Error;
+  //     }
+  //     return RType.Error;
+  //   } catch (error) {
+  //     env.newMessage(`Error: ${node.toString()}`);
+  //     return RType.Error;
+  //   }
+  // }
 
   function haveExec(env: L_Env, node: HaveNode): RType {
     try {
@@ -207,73 +207,13 @@ export namespace executor {
    */
   //! This one of the functions in which new facts are generated.
   //! In order to unify interface, after checking a fact, we use KnowExec to emit new fact
-  export function knowExec(
-    env: L_Env,
-    node: KnowNode,
-    fatherReq: FactNode[] = [],
-    varsToHash: string[] = []
-  ): RType {
+  export function knowExec(env: L_Env, node: KnowNode | FactNode): RType {
     try {
-      for (const fact of node.facts) {
-        //! new new storage system
-        L_Storage.newFactInEnv(env, fact, []);
-
-        // if (fact instanceof OptNode) {
-        //   const factType = env.getDeclFact(fact.fullName);
-        //   if (factType === undefined)
-        //     throw Error(`${fact.fullName} not declared.`);
-
-        //   const isT = env.varsAreNotDeclared(fact.vars);
-        //   if (isT) throw Error(`Not all of ${fact.vars} are declared.`);
-
-        //   env.addOptFact(fact, [...fatherReq]);
-
-        //   //! new storage system
-        //   const vars = fact.vars.map((s) =>
-        //     s.startsWith("#") ? s.slice(1) : s
-        //   );
-        //   const freeVars = fact.vars
-        //     .filter((s) => s.startsWith("#"))
-        //     .map((s) => s.slice(1));
-        //   env.storeFact(fact.fullName, vars, [], fact.isT, freeVars);
-        // } else if (fact instanceof LogicalOptNode) {
-        //   if (fact instanceof IfThenNode) {
-        //     // L_Storage.newFactInEnv(env, fact, [])
-
-        //     knowLogicalOpt(
-        //       env,
-        //       [...fact.vars, ...varsToHash],
-        //       fact.onlyIfs,
-        //       fact.req,
-        //       fatherReq
-        //     );
-        //   } else if (fact instanceof IffNode) {
-        //     knowLogicalOpt(
-        //       env,
-        //       [...fact.vars, ...varsToHash],
-        //       fact.onlyIfs,
-        //       fact.req,
-        //       fatherReq
-        //     );
-        //     knowLogicalOpt(
-        //       env,
-        //       [...fact.vars, ...varsToHash],
-        //       fact.req,
-        //       fact.onlyIfs,
-        //       fatherReq
-        //     );
-        //   } else if (fact instanceof OnlyIfNode) {
-        //     knowLogicalOpt(
-        //       env,
-        //       [...fact.vars, ...varsToHash],
-        //       fact.req,
-        //       fact.onlyIfs,
-        //       fatherReq
-        //     );
-        //   } else {
-        //     throw Error();
-        //   }
-        // }
+      if (node instanceof FactNode) {
+      } else if (node instanceof KnowNode) {
+        for (const fact of node.facts) {
+          L_Storage.L_Store(env, fact, []);
+        }
       }
 
       return RType.True;
@@ -282,30 +222,6 @@ export namespace executor {
       if (error instanceof Error) m += ` ${error.message}`;
       env.newMessage(m);
       throw error;
-    }
-  }
-
-  function knowLogicalOpt(
-    env: L_Env,
-    varsToHash: string[],
-    knowWhat: FactNode[],
-    req: FactNode[],
-    fatherReq: FactNode[]
-  ): void {
-    fatherReq.forEach((e) => e.hashVars(varsToHash));
-    req.forEach((e) => e.hashVars(varsToHash));
-    for (const onlyIf of knowWhat) {
-      if (onlyIf instanceof OptNode) {
-        onlyIf.hashVars(varsToHash);
-        env.addOptFact(onlyIf, [...fatherReq, ...req]);
-      } else {
-        knowExec(
-          env,
-          new KnowNode([onlyIf]),
-          [...fatherReq, ...req],
-          [...varsToHash]
-        );
-      }
     }
   }
 
@@ -320,85 +236,6 @@ export namespace executor {
       // new new storage system
       L_Storage.declNewFact(env, node);
       // L_Storage;
-
-      // new storage system
-      // let out = L_Storage.storeFactInDecl(env, node);
-      // if (!out) {
-      //   env.newMessage(`Declaration of ${node} failed.`);
-      //   return RType.Error;
-      // }
-
-      // const definedFact = new OptNode(node.name, [...node.vars]);
-      // definedFact.hashVars(node.vars);
-
-      // // at the end of declExec, node.rmvHashFromVars
-      // // NOTE: node.vars are not hashed.
-      // node.hashVars(node.vars);
-
-      // if (node instanceof IffDeclNode || node instanceof ExistNode) {
-      //   // we declare and exe exist-fact by exactly using Opt code.
-
-      //   /** Notice the following 4 knowExec can be reduced to 2 */
-      //   // req => itself; req => onlyIfs
-      //   knowExec(
-      //     env,
-      //     new KnowNode([
-      //       new IfThenNode(
-      //         definedFact.vars,
-      //         [definedFact, ...node.req],
-      //         [...node.onlyIfs]
-      //       ),
-      //     ])
-      //   );
-
-      //   // //! The whole checking process might be locked by "req => itself, itself =>req"
-      //   // itself => req ; itself => onlyIfs
-      //   knowExec(
-      //     env,
-      //     new KnowNode([
-      //       new IfThenNode(
-      //         definedFact.vars,
-      //         [...node.onlyIfs, ...node.req],
-      //         [definedFact]
-      //       ),
-      //     ])
-      //   );
-      // } else if (node instanceof IfThenDeclNode) {
-      //   // factType = FactType.IfThen;
-
-      //   // req + itself => onlyIf
-      //   // const definedFact = new OptNode(node.name, node.vars);
-      //   knowExec(
-      //     env,
-      //     new KnowNode([
-      //       new IfThenNode(
-      //         // definedFact.vars,
-      //         node.vars,
-      //         [definedFact, ...node.req],
-      //         [...node.onlyIfs]
-      //       ),
-      //     ])
-      //   );
-      // } else if (node instanceof OnlyIfDeclNode) {
-      //   // factType = FactType.OnlyIf;
-
-      //   knowExec(
-      //     env,
-      //     new KnowNode([
-      //       new IfThenNode(
-      //         // definedFact.vars,
-      //         node.vars,
-      //         [...node.onlyIfs, ...node.req],
-      //         [definedFact]
-      //       ),
-      //     ])
-      //   );
-      // } else if (node instanceof OrNode) {
-      //   // factType = FactType.Or;
-      // }
-
-      // clean up hash added to declFact
-      // node.rmvHashFromVars(node.vars);
 
       return RType.True;
     } catch (error) {
@@ -578,7 +415,7 @@ export namespace executor {
     }
   }
 
-  function byExec(env: L_Env, node: ByNode): RType {
+  function _byExec(env: L_Env, node: ByNode): RType {
     const newEnv = new L_Env(env);
     for (const subNode of node.block) {
       const out = nodeExec(newEnv, subNode);
@@ -592,42 +429,14 @@ export namespace executor {
     return RType.True;
   }
 
-  // function yaFactExec(env: L_Env, toCheck: FactNode): RType {
-  //   try {
-  //     // check
-  //     let out = checker.checkFactFully(env, toCheck);
-
-  //     // store
-  //     if (out === RType.True) {
-  //       if (toCheck instanceof OptNode) {
-  //         const frees = toCheck.vars
-  //           .filter((e) => e.startsWith("#"))
-  //           .map((s) => s.slice(1));
-  //         env.storeFact(toCheck.fullName, toCheck.vars, [], toCheck.isT, frees);
-  //       } else if (toCheck instanceof IfThenNode) {
-  //         L_Storage.(env, toCheck, [], toCheck.isT, []);
-  //       }
-  //     }
-  //     return out;
-  //   } catch (error) {
-  //     env.newMessage(`failed to check ${toCheck}`);
-  //     return RType.Error;
-  //   }
-  // }
-
-  function yaYaFactExec(env: L_Env, toCheck: FactNode): RType {
+  function factExec(env: L_Env, toCheck: FactNode): RType {
     try {
       // check
       let out = checker.L_Check(env, toCheck);
 
       // store
       if (out === RType.True) {
-        if (toCheck instanceof OptNode) {
-          L_Storage.yaStoreOpt(env, toCheck, []);
-          // env.pushIntoStorage(toCheck.fullName, toCheck.vars, [], toCheck.isT);
-        } else if (toCheck instanceof IfThenNode) {
-          L_Storage.storeIfThen(env, toCheck, []);
-        }
+        L_Storage.L_Store(env, toCheck, []);
       }
       return out;
     } catch (error) {
