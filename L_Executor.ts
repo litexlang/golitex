@@ -10,7 +10,7 @@ import {
   ByNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
-import { checker } from "./L_Checker";
+import { L_Checker } from "./L_Checker";
 import { L_Storage } from "./L_Storage";
 
 export enum RType {
@@ -51,7 +51,7 @@ export namespace L_Executor {
     ProveNode: proveExec,
     HaveNode: haveExec,
     AssumeByContraNode: assumeByContraExec,
-    ByNode: _byExec,
+    ByNode: byExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
@@ -95,7 +95,12 @@ export namespace L_Executor {
 
   function letExec(env: L_Env, node: LetNode): RType {
     try {
-      node.vars.forEach((e) => env.newVar(e, e));
+      for (const e of node.vars) {
+        const ok = env.newVar(e, e);
+        if (!ok) return RType.Error;
+      }
+      // node.vars.forEach((e) => env.newVar(e, e));
+
       for (const f of node.facts) L_Storage.store(env, f, []);
       return RType.True;
     } catch (error) {
@@ -119,10 +124,12 @@ export namespace L_Executor {
 
   function declExec(env: L_Env, node: DeclNode): RType {
     try {
-      if (env.isOptDeclared(node.name))
+      if (env.isOptDeclaredInThisOrFathers(node.name))
         throw Error(`${node.name} already declared.`);
 
-      env.setDeclFact(node.name, node);
+      const ok = env.setDeclFact(node.name, node);
+      if (!ok) return RType.Error;
+
       L_Storage.declNewFact(env, node);
 
       return RType.True;
@@ -147,7 +154,7 @@ export namespace L_Executor {
     }
   }
 
-  function _byExec(env: L_Env, node: ByNode): RType {
+  function byExec(env: L_Env, node: ByNode): RType {
     try {
       const newEnv = new L_Env(env);
       for (const subNode of node.block) {
@@ -159,7 +166,7 @@ export namespace L_Executor {
       }
 
       for (const fact of node.facts) {
-        const out = checker.L_Check(newEnv, fact);
+        const out = L_Checker.check(newEnv, fact);
         if (out !== RType.True) {
           env.newMessage(`${node} failed.`);
           return out;
@@ -180,7 +187,7 @@ export namespace L_Executor {
 
   function factExec(env: L_Env, toCheck: FactNode): RType {
     try {
-      let out = checker.L_Check(env, toCheck);
+      let out = L_Checker.check(env, toCheck);
       if (out === RType.True) {
         L_Storage.store(env, toCheck, []);
       }

@@ -33,17 +33,31 @@ export class L_Env {
     return out;
   }
 
-  isOptDeclared(s: string) {
+  isOptDeclaredInThisOrFathers(s: string) {
     let out = this.declaredFacts.get(s);
     return (out ? out : this.father?.declaredFacts.get(s)) !== undefined;
   }
 
-  setDeclFact(s: string, declNode: DeclNode) {
+  setDeclFact(s: string, declNode: DeclNode): Boolean {
+    // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
+    if (this.declaredFacts.get(s) !== undefined) {
+      this.newMessage(
+        `${s} already declared in this environment or its fathers environments.`
+      );
+      return false;
+    }
+
     this.declaredFacts.set(s, declNode);
+    return true;
   }
 
-  newVar(free: string, fix: string) {
+  newVar(free: string, fix: string): Boolean {
+    if (this.varsMap.has(free)) {
+      this.newMessage(`${free} already declared.`);
+      return false;
+    }
     this.varsMap.set(free, fix);
+    return true;
   }
 
   getVar(key: string, includesFather: Boolean = true): undefined | string {

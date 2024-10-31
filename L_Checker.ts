@@ -3,19 +3,19 @@ import { L_Env } from "./L_Env";
 import { L_Executor, RType } from "./L_Executor";
 import { L_Storage, StoredFact } from "./L_Storage";
 
-export namespace checker {
-  export function L_Check(env: L_Env, toCheck: FactNode): RType {
+export namespace L_Checker {
+  export function check(env: L_Env, toCheck: FactNode): RType {
     if (toCheck instanceof OptNode) {
-      return L_CheckOpt(env, toCheck);
+      return checkOpt(env, toCheck);
     } else if (toCheck instanceof IfThenNode) {
-      return L_CheckIfThen(env, toCheck);
+      return checkIfThen(env, toCheck);
     }
 
     return RType.Unknown;
   }
 
   // MAIN FUNCTION OF THE WHOLE PROJECT
-  export function L_CheckOpt(env: L_Env, toCheck: OptNode): RType {
+  export function checkOpt(env: L_Env, toCheck: OptNode): RType {
     const storedFacts: StoredFact[] | undefined =
       env.getStoredFactsFromAllLevels(toCheck.fullName);
     if (storedFacts === undefined) return RType.Unknown;
@@ -30,7 +30,7 @@ export namespace checker {
 
       let unknown = false;
       if (storedFact.isNoReq()) {
-        if (L_CheckOptLiterally(env, toCheck)) {
+        if (checkOptLiterally(env, toCheck)) {
           return RType.True;
         } else {
           continue;
@@ -58,9 +58,13 @@ export namespace checker {
 
       for (const currentLevelReq of storedFact.req) {
         // try to operate(store facts, introduce new variables) under current layer of stored if-then
-        currentLevelReq.vars.forEach((e) =>
-          newEnv.newVar(e, map.get(e) as string)
-        );
+        for (const e of currentLevelReq.vars) {
+          const ok = newEnv.newVar(e, map.get(e) as string);
+          if (!ok) return RType.Error;
+        }
+        // currentLevelReq.vars.forEach((e) =>
+        //   newEnv.newVar(e, map.get(e) as string)
+        // );
 
         // satisfy literal restrictions
         for (const req of currentLevelReq.req) {
@@ -69,14 +73,14 @@ export namespace checker {
               req.fullName,
               req.vars.map((e) => newEnv.getVar(e)) as string[]
             );
-            const out = L_CheckOptLiterally(newEnv, checkReq);
+            const out = checkOptLiterally(newEnv, checkReq);
             if (out) continue;
             else {
               unknown = true;
               break;
             }
           } else if (req instanceof IfThenNode) {
-            const out = L_CheckOpt(newEnv, toCheck);
+            const out = checkOpt(newEnv, toCheck);
             if (out === RType.True) continue;
             else if (out === RType.Unknown || out === RType.Error) {
               unknown = true;
@@ -96,7 +100,7 @@ export namespace checker {
   }
 
   // check whether a variable in fact.vars is free or fixed at check time instead of run time.
-  export function L_CheckOptLiterally(env: L_Env, toCheck: OptNode): Boolean {
+  export function checkOptLiterally(env: L_Env, toCheck: OptNode): Boolean {
     const facts: StoredFact[] | undefined = env.getStoredFactsFromAllLevels(
       toCheck.fullName
     );
@@ -117,13 +121,19 @@ export namespace checker {
     return false;
   }
 
-  export function L_CheckIfThen(env: L_Env, toCheck: IfThenNode): RType {
+  export function checkIfThen(env: L_Env, toCheck: IfThenNode): RType {
     let out: RType = RType.True;
     const newEnv = new L_Env(env);
-    toCheck.vars.forEach((e) => newEnv.newVar(e, e));
+
+    for (const e of toCheck.vars) {
+      const ok = newEnv.newVar(e, e);
+      if (!ok) return RType.Error;
+    }
+    // toCheck.vars.forEach((e) => newEnv.newVar(e, e));
+
     for (const f of toCheck.req) L_Storage.store(env, f, []);
     for (const onlyIf of toCheck.onlyIfs) {
-      out = L_Check(newEnv, onlyIf);
+      out = check(newEnv, onlyIf);
       if (out !== RType.True) return out;
       else {
         // checked facts in then are used as stored fact.
