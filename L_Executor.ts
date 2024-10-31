@@ -137,13 +137,7 @@ export namespace L_Executor {
   function haveExec(env: L_Env, node: HaveNode): RType {
     try {
       // Check duplicate variable declarations
-      const noErr = env.declareNewVar(node.vars);
-      if (!noErr) {
-        env.newMessage(
-          `Error: Variable(s) ${node.vars.join(", ")} already declared in this scope.`
-        );
-        return RType.Error;
-      }
+      node.vars.forEach((e) => env.newVar(e, e));
 
       for (const fact of node.facts) {
         if (fact instanceof OptNode) {
@@ -172,16 +166,16 @@ export namespace L_Executor {
   function letExec(env: L_Env, node: LetNode): RType {
     try {
       // ya ya: put new vars into env
-      node.vars.forEach((e) => env.newFreeFix(e, e));
+      node.vars.forEach((e) => env.newVar(e, e));
 
       // Check duplicate variable declarations
-      const noErr = env.declareNewVar(node.vars);
-      if (!noErr) {
-        env.newMessage(
-          `Error: Variable(s) ${node.vars.join(", ")} already declared in this scope.`
-        );
-        return RType.Error;
-      }
+      // const noErr = env.declareNewVar(node.vars);
+      // if (!noErr) {
+      //   env.newMessage(
+      //     `Error: Variable(s) ${node.vars.join(", ")} already declared in this scope.`
+      //   );
+      //   return RType.Error;
+      // }
 
       knowExec(env, new KnowNode(node.facts));
 
@@ -243,7 +237,10 @@ export namespace L_Executor {
     const newEnv = new L_Env(env);
     if (node.toProve !== null) {
       // prove vanilla if-then
-      newEnv.declareNewVar(node.toProve.vars);
+      // newEnv.declareNewVar(node.toProve.vars);
+
+      node.toProve.vars.forEach((e) => newEnv.newVar(e, e));
+
       knowExec(newEnv, new KnowNode(node.toProve.req));
       // execute prove block
       for (const subNode of node.block) {
@@ -319,7 +316,8 @@ export namespace L_Executor {
       declFact.replaceVars(node.fixedIfThenOpt);
 
       // declare variables into newEnv
-      newEnv.declareNewVar(node.fixedIfThenOpt.vars);
+      // newEnv.declareNewVar(node.fixedIfThenOpt.vars);
+      node.fixedIfThenOpt.vars.forEach((e) => newEnv.newVar(e, e));
 
       // Assume all requirements of given operator is true
       knowExec(newEnv, new KnowNode(declFact.req));

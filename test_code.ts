@@ -337,8 +337,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList26: [testList26, false],
   testList27: [testList27, false],
   testList28: [testList28, false],
-  testList29: [testList29, false],
-  testList30: [testList30, true],
+  testList29: [testList29, true],
+  testList30: [testList30, false],
 };
 
 export function testCode() {

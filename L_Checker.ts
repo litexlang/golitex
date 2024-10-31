@@ -260,7 +260,7 @@ export namespace checker {
       for (const currentLevelReq of storedFact.req) {
         // try to operate(store facts, introduce new variables) under current layer of stored if-then
         currentLevelReq.vars.forEach((e) =>
-          newEnv.newFreeFix(e, map.get(e) as string)
+          newEnv.newVar(e, map.get(e) as string)
         );
 
         // satisfy literal restrictions
