@@ -7,7 +7,7 @@ import {
   OnlyIfNode,
   OptNode,
 } from "./ast";
-import { L_Env, StoredFactValue } from "./env";
+import { L_Env, StoredFactValue } from "./L_Env";
 import { L_Executor, RType } from "./L_Executor";
 import { L_Saver } from "./L_Saver";
 

@@ -1,6 +1,6 @@
-import { scan } from "./lexer";
-import { L_Env } from "./env";
-import { parser } from "./parser";
+import { scan } from "./L_Lexer";
+import { L_Env } from "./L_Env";
+import { parser } from "./L_Parser";
 
 const codes: string[] = [
   // "set(a):set(b);",

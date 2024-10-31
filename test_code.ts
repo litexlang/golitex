@@ -1,8 +1,8 @@
-import { L_Env } from "./env";
+import { L_Env } from "./L_Env";
 import { L_Executor, RType } from "./L_Executor";
 import { L_Saver } from "./L_Saver";
-import { scan } from "./lexer";
-import { parser } from "./parser";
+import { L_Scan } from "./L_Lexer";
+import { L_Parser } from "./L_Parser";
 
 // Aristotle induction
 const testList0 = [
@@ -353,8 +353,8 @@ export function testCode() {
 
 function run(env: L_Env, expr: string) {
   try {
-    const tokens = scan(expr);
-    const nodes = parser.L_StmtsParse(env, tokens);
+    const tokens = L_Scan(expr);
+    const nodes = L_Parser.L_StmtsParse(env, tokens);
     if (nodes === undefined) {
       return undefined;
     }

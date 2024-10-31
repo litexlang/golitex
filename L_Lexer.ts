@@ -1,6 +1,6 @@
 import { specialChars } from "./common";
 
-export function scan(text: string): string[] {
+export function L_Scan(text: string): string[] {
   const tokens: string[] = [];
   let currentToken = "";
   let inComment = false;

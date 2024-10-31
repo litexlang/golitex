@@ -18,7 +18,7 @@ import {
   IfThenDeclNode,
   OnlyIfNode,
 } from "./ast";
-import { L_Env } from "./env";
+import { L_Env } from "./L_Env";
 import {
   KnowTypeKeywords,
   StdStmtEnds,
@@ -46,7 +46,7 @@ import {
   OnlyIfThenKeywords,
 } from "./common";
 
-export namespace parser {
+export namespace L_Parser {
   function skip(tokens: string[], s: string | string[] = "") {
     if (typeof s === "string") {
       if (s === "") {

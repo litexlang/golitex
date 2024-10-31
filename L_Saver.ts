@@ -1,5 +1,5 @@
 import { DeclNode, FactNode, IfThenDeclNode, IfThenNode, OptNode } from "./ast";
-import { L_Env } from "./env";
+import { L_Env } from "./L_Env";
 import { RType } from "./L_Executor";
 
 export namespace L_Saver {

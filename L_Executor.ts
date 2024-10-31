@@ -5,23 +5,15 @@ import {
   OptNode,
   IfThenNode,
   FactNode,
-  OrNode,
   DeclNode,
-  IffDeclNode,
   IfThenDeclNode,
   ProveNode,
-  ExistNode,
   HaveNode,
   AssumeByContraNode,
-  OnlyIfDeclNode,
-  LogicalOptNode,
-  IffNode,
-  OnlyIfNode,
   ByNode,
 } from "./ast";
-import { L_Env } from "./env";
+import { L_Env } from "./L_Env";
 import { checker } from "./L_Checker";
-import { L_Builtins } from "./builtins";
 import { L_Saver } from "./L_Saver";
 
 export enum RType {

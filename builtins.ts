@@ -1,5 +1,5 @@
 import { FactNode, L_Node, OptNode } from "./ast";
-import { L_Env } from "./env";
+import { L_Env } from "./L_Env";
 import { RType } from "./L_Executor";
 
 export const L_Builtins = new Map<
