@@ -218,62 +218,62 @@ export namespace executor {
         //! new new storage system
         L_Storage.newFactInEnv(env, fact, []);
 
-        if (fact instanceof OptNode) {
-          const factType = env.getDeclFact(fact.fullName);
-          if (factType === undefined)
-            throw Error(`${fact.fullName} not declared.`);
+        // if (fact instanceof OptNode) {
+        //   const factType = env.getDeclFact(fact.fullName);
+        //   if (factType === undefined)
+        //     throw Error(`${fact.fullName} not declared.`);
 
-          const isT = env.varsAreNotDeclared(fact.vars);
-          if (isT) throw Error(`Not all of ${fact.vars} are declared.`);
+        //   const isT = env.varsAreNotDeclared(fact.vars);
+        //   if (isT) throw Error(`Not all of ${fact.vars} are declared.`);
 
-          env.addOptFact(fact, [...fatherReq]);
+        //   env.addOptFact(fact, [...fatherReq]);
 
-          //! new storage system
-          const vars = fact.vars.map((s) =>
-            s.startsWith("#") ? s.slice(1) : s
-          );
-          const freeVars = fact.vars
-            .filter((s) => s.startsWith("#"))
-            .map((s) => s.slice(1));
-          env.storeFact(fact.fullName, vars, [], fact.isT, freeVars);
-        } else if (fact instanceof LogicalOptNode) {
-          if (fact instanceof IfThenNode) {
-            // L_Storage.newFactInEnv(env, fact, [])
+        //   //! new storage system
+        //   const vars = fact.vars.map((s) =>
+        //     s.startsWith("#") ? s.slice(1) : s
+        //   );
+        //   const freeVars = fact.vars
+        //     .filter((s) => s.startsWith("#"))
+        //     .map((s) => s.slice(1));
+        //   env.storeFact(fact.fullName, vars, [], fact.isT, freeVars);
+        // } else if (fact instanceof LogicalOptNode) {
+        //   if (fact instanceof IfThenNode) {
+        //     // L_Storage.newFactInEnv(env, fact, [])
 
-            knowLogicalOpt(
-              env,
-              [...fact.vars, ...varsToHash],
-              fact.onlyIfs,
-              fact.req,
-              fatherReq
-            );
-          } else if (fact instanceof IffNode) {
-            knowLogicalOpt(
-              env,
-              [...fact.vars, ...varsToHash],
-              fact.onlyIfs,
-              fact.req,
-              fatherReq
-            );
-            knowLogicalOpt(
-              env,
-              [...fact.vars, ...varsToHash],
-              fact.req,
-              fact.onlyIfs,
-              fatherReq
-            );
-          } else if (fact instanceof OnlyIfNode) {
-            knowLogicalOpt(
-              env,
-              [...fact.vars, ...varsToHash],
-              fact.req,
-              fact.onlyIfs,
-              fatherReq
-            );
-          } else {
-            throw Error();
-          }
-        }
+        //     knowLogicalOpt(
+        //       env,
+        //       [...fact.vars, ...varsToHash],
+        //       fact.onlyIfs,
+        //       fact.req,
+        //       fatherReq
+        //     );
+        //   } else if (fact instanceof IffNode) {
+        //     knowLogicalOpt(
+        //       env,
+        //       [...fact.vars, ...varsToHash],
+        //       fact.onlyIfs,
+        //       fact.req,
+        //       fatherReq
+        //     );
+        //     knowLogicalOpt(
+        //       env,
+        //       [...fact.vars, ...varsToHash],
+        //       fact.req,
+        //       fact.onlyIfs,
+        //       fatherReq
+        //     );
+        //   } else if (fact instanceof OnlyIfNode) {
+        //     knowLogicalOpt(
+        //       env,
+        //       [...fact.vars, ...varsToHash],
+        //       fact.req,
+        //       fact.onlyIfs,
+        //       fatherReq
+        //     );
+        //   } else {
+        //     throw Error();
+        //   }
+        // }
       }
 
       return RType.True;
@@ -622,10 +622,6 @@ export namespace executor {
       // store
       if (out === RType.True) {
         if (toCheck instanceof OptNode) {
-          // const frees = toCheck.vars
-          //   .filter((e) => e.startsWith("#"))
-          //   .map((s) => s.slice(1));
-          // env.storeFact(toCheck.fullName, toCheck.vars, [], toCheck.isT, frees);
           env.pushIntoStorage(toCheck.fullName, toCheck.vars, [], toCheck.isT);
         } else if (toCheck instanceof IfThenNode) {
           L_Storage.storeFact(env, toCheck, [], toCheck.isT, []);

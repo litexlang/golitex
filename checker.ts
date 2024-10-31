@@ -315,15 +315,16 @@ export namespace checker {
   export function L_Check(env: L_Env, toCheck: FactNode): RType {
     if (toCheck instanceof OptNode) {
       return L_CheckOpt(env, toCheck);
+    } else if (toCheck instanceof IfThenNode) {
+      return L_CheckIfThen(env, toCheck);
     }
 
     return RType.Unknown;
   }
 
   export function L_CheckOpt(env: L_Env, toCheck: OptNode): RType {
-    const storedFacts: L_Storage.Fact[] | undefined = env.storage.get(
-      toCheck.fullName
-    );
+    const storedFacts: L_Storage.Fact[] | undefined =
+      env.getStoredFactsFromAllLevels(toCheck.fullName);
     if (storedFacts === undefined) return RType.Unknown;
 
     for (const storedFact of storedFacts) {
@@ -421,5 +422,17 @@ export namespace checker {
     }
 
     return false;
+  }
+
+  export function L_CheckIfThen(env: L_Env, toCheck: IfThenNode): RType {
+    let out: RType = RType.True;
+    const newEnv = new L_Env(env);
+    toCheck.vars.forEach((e) => newEnv.newVar(e, e));
+    executor.knowExec(newEnv, new KnowNode(toCheck.req));
+    for (const onlyIf of toCheck.onlyIfs) {
+      out = L_Check(newEnv, onlyIf);
+      if (out !== RType.True) return out;
+    }
+    return RType.True;
   }
 }
