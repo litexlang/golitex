@@ -8,7 +8,7 @@ import {
   OnlyIfDeclNode,
   IfThenNode,
 } from "./ast";
-import { L_Storage } from "./L_Storage";
+import { L_Saver } from "./L_Saver";
 export class StoredFactValue {
   constructor(
     public vars: string[], //! vars here never start with #
@@ -34,10 +34,10 @@ export class L_Env {
   private OptFacts = new Map<string, StoredFactValue[]>();
   private declaredFacts = new Map<string, DeclNode>();
 
-  // public storedFacts = new Map<string, L_Storage.StoredFact[]>();
+  // public storedFacts = new Map<string, L_Saver.StoredFact[]>();
   private freeFixMap = new Map<string, string>();
 
-  public storage = new Map<string, L_Storage.Fact[]>();
+  public storage = new Map<string, L_Saver.Fact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
@@ -46,10 +46,10 @@ export class L_Env {
   pushIntoStorage(
     name: string,
     vars: string[],
-    req: L_Storage.StoredReq[],
+    req: L_Saver.StoredReq[],
     isT: Boolean
   ) {
-    const newFact = new L_Storage.Fact(vars, req, isT);
+    const newFact = new L_Saver.Fact(vars, req, isT);
     const out = this.storage.get(name);
     if (!out) {
       this.storage.set(name, [newFact]);
@@ -58,12 +58,12 @@ export class L_Env {
     }
   }
 
-  getStoredFactsFromAllLevels(s: string): L_Storage.Fact[] {
-    let out: L_Storage.Fact[] = [];
+  getStoredFactsFromAllLevels(s: string): L_Saver.Fact[] {
+    let out: L_Saver.Fact[] = [];
     let curEnv: L_Env | undefined = this;
     while (curEnv) {
       const facts = curEnv.storage.get(s);
-      if (facts !== undefined) out = [...out, ...(facts as L_Storage.Fact[])];
+      if (facts !== undefined) out = [...out, ...(facts as L_Saver.Fact[])];
       curEnv = curEnv.father;
     }
     return out;
@@ -87,9 +87,9 @@ export class L_Env {
     this.declaredFacts.set(s, declNode);
   }
 
-  // getStoredFacts(s: string): L_Storage.StoredFact[] | undefined {
+  // getStoredFacts(s: string): L_Saver.StoredFact[] | undefined {
   //   let curEnv: L_Env | undefined = this;
-  //   let out: L_Storage.StoredFact[] = [];
+  //   let out: L_Saver.StoredFact[] = [];
   //   while (curEnv !== undefined) {
   //     const facts = curEnv.storedFacts.get(s);
   //     if (facts !== undefined) {
@@ -106,16 +106,16 @@ export class L_Env {
   //   req: FactNode[],
   //   isT: Boolean = true,
   //   freeVars: string[]
-  // ): L_Storage.StoredFact | null {
+  // ): L_Saver.StoredFact | null {
   //   try {
   //     if (this.storedFacts.get(name) === undefined) {
   //       // ! Currently does not examine whether an operator is declared
-  //       const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
+  //       const out = new L_Saver.StoredFact(vars, req, isT, freeVars);
   //       this.storedFacts.set(name, [out]);
   //       return out;
 
   // if (this.declaredFacts.get(name)) {
-  //   const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
+  //   const out = new L_Saver.StoredFact(vars, req, isT, freeVars);
   //   this.storedFacts.set(name, [out]);
   //   return out;
   // } else {
@@ -123,7 +123,7 @@ export class L_Env {
   //   return null;
   // }
   //     } else {
-  //       const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
+  //       const out = new L_Saver.StoredFact(vars, req, isT, freeVars);
   //       this.storedFacts.get(name)!.push(out);
   //       return out;
   //     }

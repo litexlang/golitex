@@ -1,6 +1,6 @@
 import { L_Env } from "./env";
-import { executor, RType } from "./executor";
-import { L_Storage } from "./L_Storage";
+import { L_Executor, RType } from "./L_Executor";
+import { L_Saver } from "./L_Saver";
 import { scan } from "./lexer";
 import { parser } from "./parser";
 
@@ -345,8 +345,8 @@ export function testCode() {
 
     // env.printFacts();
     // env.printDeclFacts();
-    // L_Storage.printEnvFacts(env);
-    L_Storage.printEnvStoredFacts(env);
+    // L_Saver.printEnvFacts(env);
+    L_Saver.printEnvStoredFacts(env);
     env.printClearMessage();
   }
 }
@@ -360,7 +360,7 @@ function run(env: L_Env, expr: string) {
     }
     const result: RType[] = [];
     for (const node of nodes) {
-      const out = executor.nodeExec(env, node);
+      const out = L_Executor.nodeExec(env, node);
       result.push(out);
     }
     env.printClearMessage();
@@ -370,3 +370,5 @@ function run(env: L_Env, expr: string) {
     return undefined;
   }
 }
+
+testCode();

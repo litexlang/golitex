@@ -20,9 +20,9 @@ import {
   ByNode,
 } from "./ast";
 import { L_Env } from "./env";
-import { checker } from "./checker";
+import { checker } from "./L_Checker";
 import { L_Builtins } from "./builtins";
-import { L_Storage } from "./L_Storage";
+import { L_Saver } from "./L_Saver";
 
 export enum RType {
   Error,
@@ -56,7 +56,7 @@ function handleExecError(env: L_Env, out: RType, m: string = "") {
  * 1. return RType thing
  * 2. env.newMessage()
  */
-export namespace executor {
+export namespace L_Executor {
   const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
     IffDeclNode: declExec,
     IfThenDeclNode: declExec,
@@ -212,7 +212,7 @@ export namespace executor {
       if (node instanceof FactNode) {
       } else if (node instanceof KnowNode) {
         for (const fact of node.facts) {
-          L_Storage.L_Store(env, fact, []);
+          L_Saver.L_Store(env, fact, []);
         }
       }
 
@@ -234,8 +234,8 @@ export namespace executor {
       env.setDeclFact(node.name, node);
 
       // new new storage system
-      L_Storage.declNewFact(env, node);
-      // L_Storage;
+      L_Saver.declNewFact(env, node);
+      // L_Saver;
 
       return RType.True;
     } catch (error) {
@@ -431,12 +431,9 @@ export namespace executor {
 
   function factExec(env: L_Env, toCheck: FactNode): RType {
     try {
-      // check
       let out = checker.L_Check(env, toCheck);
-
-      // store
       if (out === RType.True) {
-        L_Storage.L_Store(env, toCheck, []);
+        L_Saver.L_Store(env, toCheck, []);
       }
       return out;
     } catch (error) {

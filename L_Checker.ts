@@ -8,8 +8,9 @@ import {
   OptNode,
 } from "./ast";
 import { L_Env, StoredFactValue } from "./env";
-import { executor, RType } from "./executor";
-import { L_Storage } from "./L_Storage";
+import { L_Executor, RType } from "./L_Executor";
+import { L_Saver } from "./L_Saver";
+
 export class CheckerOut {
   constructor(
     public type: RType,
@@ -123,7 +124,7 @@ export namespace checker {
   ): RType {
     const newEnv = new L_Env(env);
     newEnv.declareNewVar(vars);
-    executor.knowExec(newEnv, new KnowNode(knowWhat));
+    L_Executor.knowExec(newEnv, new KnowNode(knowWhat));
 
     for (const fact of checkWhat) {
       const out = check(newEnv, fact);
@@ -181,7 +182,7 @@ export namespace checker {
   function checkIfThenByFactsWithNoReq(env: L_Env, node: IfThenNode): RType {
     const newEnv = new L_Env(env);
     newEnv.declareNewVar(node.vars);
-    executor.knowExec(newEnv, new KnowNode(node.req));
+    L_Executor.knowExec(newEnv, new KnowNode(node.req));
 
     for (const fact of node.onlyIfs) {
       const out = checkByFactsWithNoReq(newEnv, fact);
@@ -323,7 +324,7 @@ export namespace checker {
   }
 
   export function L_CheckOpt(env: L_Env, toCheck: OptNode): RType {
-    const storedFacts: L_Storage.Fact[] | undefined =
+    const storedFacts: L_Saver.Fact[] | undefined =
       env.getStoredFactsFromAllLevels(toCheck.fullName);
     if (storedFacts === undefined) return RType.Unknown;
 
@@ -404,7 +405,7 @@ export namespace checker {
 
   // check whether a variable in fact.vars is free or fixed at check time instead of run time.
   export function L_CheckOptLiterally(env: L_Env, toCheck: OptNode): Boolean {
-    const facts: L_Storage.Fact[] | undefined = env.getStoredFactsFromAllLevels(
+    const facts: L_Saver.Fact[] | undefined = env.getStoredFactsFromAllLevels(
       toCheck.fullName
     );
 
@@ -428,7 +429,7 @@ export namespace checker {
     let out: RType = RType.True;
     const newEnv = new L_Env(env);
     toCheck.vars.forEach((e) => newEnv.newVar(e, e));
-    executor.knowExec(newEnv, new KnowNode(toCheck.req));
+    L_Executor.knowExec(newEnv, new KnowNode(toCheck.req));
     for (const onlyIf of toCheck.onlyIfs) {
       out = L_Check(newEnv, onlyIf);
       if (out !== RType.True) return out;

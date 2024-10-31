@@ -10,9 +10,9 @@ import {
   OptNode,
 } from "./ast";
 import { L_Env } from "./env";
-import { RType } from "./executor";
+import { RType } from "./L_Executor";
 
-export namespace L_Storage {
+export namespace L_Saver {
   // export class StoredFact {
   //   constructor(
   //     public vars: string[],
