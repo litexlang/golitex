@@ -34,7 +34,7 @@ export class L_Env {
   private OptFacts = new Map<string, StoredFactValue[]>();
   private declaredFacts = new Map<string, DeclNode>();
 
-  public storedFacts = new Map<string, L_Storage.StoredFact[]>();
+  // public storedFacts = new Map<string, L_Storage.StoredFact[]>();
   private freeFixMap = new Map<string, string>();
 
   public storage = new Map<string, L_Storage.Fact[]>();
@@ -55,24 +55,6 @@ export class L_Env {
       this.storage.set(name, [newFact]);
     } else {
       out.push(newFact);
-    }
-  }
-
-  yaStoreIfThen(ifThen: IfThenNode, req: L_Storage.StoredReq[]) {
-    for (const fact of ifThen.onlyIfs) {
-      if (fact instanceof OptNode) {
-        this.pushIntoStorage(
-          fact.fullName,
-          fact.vars,
-          [...req, new L_Storage.StoredReq(ifThen.vars, ifThen.req)],
-          fact.isT
-        );
-      } else if (fact instanceof IfThenNode) {
-        this.yaStoreIfThen(fact, [
-          ...req,
-          new L_Storage.StoredReq(ifThen.vars, ifThen.req),
-        ]);
-      }
     }
   }
 
@@ -105,51 +87,51 @@ export class L_Env {
     this.declaredFacts.set(s, declNode);
   }
 
-  getStoredFacts(s: string): L_Storage.StoredFact[] | undefined {
-    let curEnv: L_Env | undefined = this;
-    let out: L_Storage.StoredFact[] = [];
-    while (curEnv !== undefined) {
-      const facts = curEnv.storedFacts.get(s);
-      if (facts !== undefined) {
-        out = out.concat(facts);
-      }
-      curEnv = curEnv.father;
-    }
-    return out;
-  }
+  // getStoredFacts(s: string): L_Storage.StoredFact[] | undefined {
+  //   let curEnv: L_Env | undefined = this;
+  //   let out: L_Storage.StoredFact[] = [];
+  //   while (curEnv !== undefined) {
+  //     const facts = curEnv.storedFacts.get(s);
+  //     if (facts !== undefined) {
+  //       out = out.concat(facts);
+  //     }
+  //     curEnv = curEnv.father;
+  //   }
+  //   return out;
+  // }
 
-  storeFact(
-    name: string,
-    vars: string[],
-    req: FactNode[],
-    isT: Boolean = true,
-    freeVars: string[]
-  ): L_Storage.StoredFact | null {
-    try {
-      if (this.storedFacts.get(name) === undefined) {
-        // ! Currently does not examine whether an operator is declared
-        const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
-        this.storedFacts.set(name, [out]);
-        return out;
+  // storeFact(
+  //   name: string,
+  //   vars: string[],
+  //   req: FactNode[],
+  //   isT: Boolean = true,
+  //   freeVars: string[]
+  // ): L_Storage.StoredFact | null {
+  //   try {
+  //     if (this.storedFacts.get(name) === undefined) {
+  //       // ! Currently does not examine whether an operator is declared
+  //       const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
+  //       this.storedFacts.set(name, [out]);
+  //       return out;
 
-        // if (this.declaredFacts.get(name)) {
-        //   const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
-        //   this.storedFacts.set(name, [out]);
-        //   return out;
-        // } else {
-        //   this.newMessage(`${name} not declared.`);
-        //   return null;
-        // }
-      } else {
-        const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
-        this.storedFacts.get(name)!.push(out);
-        return out;
-      }
-    } catch (error) {
-      this.newMessage(`failed to store fact about ${name}.`);
-      return null;
-    }
-  }
+  // if (this.declaredFacts.get(name)) {
+  //   const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
+  //   this.storedFacts.set(name, [out]);
+  //   return out;
+  // } else {
+  //   this.newMessage(`${name} not declared.`);
+  //   return null;
+  // }
+  //     } else {
+  //       const out = new L_Storage.StoredFact(vars, req, isT, freeVars);
+  //       this.storedFacts.get(name)!.push(out);
+  //       return out;
+  //     }
+  //   } catch (error) {
+  //     this.newMessage(`failed to store fact about ${name}.`);
+  //     return null;
+  //   }
+  // }
 
   // get from itself and father
   //? To be removed

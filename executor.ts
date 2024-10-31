@@ -319,82 +319,83 @@ export namespace executor {
 
       // new new storage system
       L_Storage.declNewFact(env, node);
+      // L_Storage;
 
       // new storage system
-      let out = L_Storage.storeFactInDecl(env, node);
-      if (!out) {
-        env.newMessage(`Declaration of ${node} failed.`);
-        return RType.Error;
-      }
+      // let out = L_Storage.storeFactInDecl(env, node);
+      // if (!out) {
+      //   env.newMessage(`Declaration of ${node} failed.`);
+      //   return RType.Error;
+      // }
 
-      const definedFact = new OptNode(node.name, [...node.vars]);
-      definedFact.hashVars(node.vars);
+      // const definedFact = new OptNode(node.name, [...node.vars]);
+      // definedFact.hashVars(node.vars);
 
-      // at the end of declExec, node.rmvHashFromVars
-      // NOTE: node.vars are not hashed.
-      node.hashVars(node.vars);
+      // // at the end of declExec, node.rmvHashFromVars
+      // // NOTE: node.vars are not hashed.
+      // node.hashVars(node.vars);
 
-      if (node instanceof IffDeclNode || node instanceof ExistNode) {
-        // we declare and exe exist-fact by exactly using Opt code.
+      // if (node instanceof IffDeclNode || node instanceof ExistNode) {
+      //   // we declare and exe exist-fact by exactly using Opt code.
 
-        /** Notice the following 4 knowExec can be reduced to 2 */
-        // req => itself; req => onlyIfs
-        knowExec(
-          env,
-          new KnowNode([
-            new IfThenNode(
-              definedFact.vars,
-              [definedFact, ...node.req],
-              [...node.onlyIfs]
-            ),
-          ])
-        );
+      //   /** Notice the following 4 knowExec can be reduced to 2 */
+      //   // req => itself; req => onlyIfs
+      //   knowExec(
+      //     env,
+      //     new KnowNode([
+      //       new IfThenNode(
+      //         definedFact.vars,
+      //         [definedFact, ...node.req],
+      //         [...node.onlyIfs]
+      //       ),
+      //     ])
+      //   );
 
-        // //! The whole checking process might be locked by "req => itself, itself =>req"
-        // itself => req ; itself => onlyIfs
-        knowExec(
-          env,
-          new KnowNode([
-            new IfThenNode(
-              definedFact.vars,
-              [...node.onlyIfs, ...node.req],
-              [definedFact]
-            ),
-          ])
-        );
-      } else if (node instanceof IfThenDeclNode) {
-        // factType = FactType.IfThen;
+      //   // //! The whole checking process might be locked by "req => itself, itself =>req"
+      //   // itself => req ; itself => onlyIfs
+      //   knowExec(
+      //     env,
+      //     new KnowNode([
+      //       new IfThenNode(
+      //         definedFact.vars,
+      //         [...node.onlyIfs, ...node.req],
+      //         [definedFact]
+      //       ),
+      //     ])
+      //   );
+      // } else if (node instanceof IfThenDeclNode) {
+      //   // factType = FactType.IfThen;
 
-        // req + itself => onlyIf
-        // const definedFact = new OptNode(node.name, node.vars);
-        knowExec(
-          env,
-          new KnowNode([
-            new IfThenNode(
-              // definedFact.vars,
-              node.vars,
-              [definedFact, ...node.req],
-              [...node.onlyIfs]
-            ),
-          ])
-        );
-      } else if (node instanceof OnlyIfDeclNode) {
-        // factType = FactType.OnlyIf;
+      //   // req + itself => onlyIf
+      //   // const definedFact = new OptNode(node.name, node.vars);
+      //   knowExec(
+      //     env,
+      //     new KnowNode([
+      //       new IfThenNode(
+      //         // definedFact.vars,
+      //         node.vars,
+      //         [definedFact, ...node.req],
+      //         [...node.onlyIfs]
+      //       ),
+      //     ])
+      //   );
+      // } else if (node instanceof OnlyIfDeclNode) {
+      //   // factType = FactType.OnlyIf;
 
-        knowExec(
-          env,
-          new KnowNode([
-            new IfThenNode(
-              // definedFact.vars,
-              node.vars,
-              [...node.onlyIfs, ...node.req],
-              [definedFact]
-            ),
-          ])
-        );
-      } else if (node instanceof OrNode) {
-        // factType = FactType.Or;
-      }
+      //   knowExec(
+      //     env,
+      //     new KnowNode([
+      //       new IfThenNode(
+      //         // definedFact.vars,
+      //         node.vars,
+      //         [...node.onlyIfs, ...node.req],
+      //         [definedFact]
+      //       ),
+      //     ])
+      //   );
+      // } else if (node instanceof OrNode) {
+      //   // factType = FactType.Or;
+      // }
 
       // clean up hash added to declFact
       // node.rmvHashFromVars(node.vars);
@@ -591,28 +592,28 @@ export namespace executor {
     return RType.True;
   }
 
-  function yaFactExec(env: L_Env, toCheck: FactNode): RType {
-    try {
-      // check
-      let out = checker.checkFactFully(env, toCheck);
+  // function yaFactExec(env: L_Env, toCheck: FactNode): RType {
+  //   try {
+  //     // check
+  //     let out = checker.checkFactFully(env, toCheck);
 
-      // store
-      if (out === RType.True) {
-        if (toCheck instanceof OptNode) {
-          const frees = toCheck.vars
-            .filter((e) => e.startsWith("#"))
-            .map((s) => s.slice(1));
-          env.storeFact(toCheck.fullName, toCheck.vars, [], toCheck.isT, frees);
-        } else if (toCheck instanceof IfThenNode) {
-          L_Storage.storeFact(env, toCheck, [], toCheck.isT, []);
-        }
-      }
-      return out;
-    } catch (error) {
-      env.newMessage(`failed to check ${toCheck}`);
-      return RType.Error;
-    }
-  }
+  //     // store
+  //     if (out === RType.True) {
+  //       if (toCheck instanceof OptNode) {
+  //         const frees = toCheck.vars
+  //           .filter((e) => e.startsWith("#"))
+  //           .map((s) => s.slice(1));
+  //         env.storeFact(toCheck.fullName, toCheck.vars, [], toCheck.isT, frees);
+  //       } else if (toCheck instanceof IfThenNode) {
+  //         L_Storage.(env, toCheck, [], toCheck.isT, []);
+  //       }
+  //     }
+  //     return out;
+  //   } catch (error) {
+  //     env.newMessage(`failed to check ${toCheck}`);
+  //     return RType.Error;
+  //   }
+  // }
 
   function yaYaFactExec(env: L_Env, toCheck: FactNode): RType {
     try {
@@ -622,9 +623,10 @@ export namespace executor {
       // store
       if (out === RType.True) {
         if (toCheck instanceof OptNode) {
-          env.pushIntoStorage(toCheck.fullName, toCheck.vars, [], toCheck.isT);
+          L_Storage.yaStoreOpt(env, toCheck, []);
+          // env.pushIntoStorage(toCheck.fullName, toCheck.vars, [], toCheck.isT);
         } else if (toCheck instanceof IfThenNode) {
-          env.yaStoreIfThen(toCheck, []);
+          L_Storage.storeIfThen(env, toCheck, []);
         }
       }
       return out;

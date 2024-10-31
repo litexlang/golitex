@@ -285,9 +285,11 @@ const testList29 = [
   "def x is object =>;",
   "def x is object0 => ;",
   "def x is object2 => object(x);",
-  // "if z | z is object2 => {z is object};",
+  "if z | z is object2 => {z is object};",
   "if z | z is object => {z is object};",
-  // "if z | => {z is object0};",
+  "if z | => {z is object0};",
+  "let z | z is object0;",
+  "z is object0;",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
