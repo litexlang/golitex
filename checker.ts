@@ -338,6 +338,8 @@ export namespace checker {
       if (storedFact.isNoReq()) {
         if (L_CheckOptLiterally(env, toCheck)) {
           return RType.True;
+        } else {
+          continue;
         }
       }
 
@@ -374,8 +376,8 @@ export namespace checker {
               req.vars.map((e) => newEnv.getVar(e)) as string[]
             );
             const out = L_CheckOptLiterally(newEnv, checkReq);
-            if (out === RType.True) continue;
-            else if (out === RType.Unknown || out === RType.Error) {
+            if (out) continue;
+            else {
               unknown = true;
               break;
             }
@@ -399,25 +401,25 @@ export namespace checker {
     return RType.Unknown;
   }
 
-  export function L_CheckOptLiterally(env: L_Env, toCheck: OptNode): RType {
+  // check whether a variable in fact.vars is free or fixed at check time instead of run time.
+  export function L_CheckOptLiterally(env: L_Env, toCheck: OptNode): Boolean {
     const facts: L_Storage.Fact[] | undefined = env.getStoredFactsFromAllLevels(
       toCheck.fullName
     );
 
-    if (facts === undefined) return RType.Unknown;
+    if (facts === undefined) return false;
 
     for (const fact of facts) {
       const frees = fact.getAllFreeVars();
-      // const fixedVars = toCheck.vars.map((s) => env.getVar(s) as string);
-      // const out = fact.checkLiterally(fixedVars, toCheck.isT);
-      // if (out === RType.True) return RType.True;
       if (
         fact.isNoReq() &&
-        fact.vars.every((v, i) => frees.includes(v) || v === toCheck.vars[i])
+        toCheck.vars.every(
+          (v, i) => frees.includes(fact.vars[i]) || v === fact.vars[i]
+        )
       )
-        return RType.True;
+        return true;
     }
 
-    return RType.Unknown;
+    return false;
   }
 }
