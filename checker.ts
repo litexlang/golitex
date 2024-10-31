@@ -334,6 +334,13 @@ export namespace checker {
         return RType.Error;
       }
 
+      let unknown = false;
+      if (storedFact.isNoReq()) {
+        if (L_CheckOptLiterally(env, toCheck)) {
+          return RType.True;
+        }
+      }
+
       const map = new Map<String, string>();
       for (let i = 0; i < toCheck.vars.length; i++) {
         // check whether a variable is already declared at current level, for example, `if x,x | ...` is not allowed
@@ -350,8 +357,9 @@ export namespace checker {
       const frees = storedFact.getAllFreeVars();
 
       // satisfy all requirements
-      let unknown = false;
+
       let newEnv = new L_Env(env);
+
       for (const currentLevelReq of storedFact.req) {
         // try to operate(store facts, introduce new variables) under current layer of stored if-then
         currentLevelReq.vars.forEach((e) =>
