@@ -624,7 +624,7 @@ export namespace executor {
         if (toCheck instanceof OptNode) {
           env.pushIntoStorage(toCheck.fullName, toCheck.vars, [], toCheck.isT);
         } else if (toCheck instanceof IfThenNode) {
-          L_Storage.storeFact(env, toCheck, [], toCheck.isT, []);
+          env.yaStoreIfThen(toCheck, []);
         }
       }
       return out;

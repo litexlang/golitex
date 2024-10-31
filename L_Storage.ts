@@ -176,7 +176,7 @@ export namespace L_Storage {
 
   export class StoredReq {
     constructor(
-      public vars: string[],
+      public vars: string[], // store free vars at current level
       public req: FactNode[]
     ) {}
 

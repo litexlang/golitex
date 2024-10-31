@@ -6,6 +6,7 @@ import {
   IffDeclNode,
   IfThenDeclNode,
   OnlyIfDeclNode,
+  IfThenNode,
 } from "./ast";
 import { L_Storage } from "./L_Storage";
 export class StoredFactValue {
@@ -54,6 +55,24 @@ export class L_Env {
       this.storage.set(name, [newFact]);
     } else {
       out.push(newFact);
+    }
+  }
+
+  yaStoreIfThen(ifThen: IfThenNode, req: L_Storage.StoredReq[]) {
+    for (const fact of ifThen.onlyIfs) {
+      if (fact instanceof OptNode) {
+        this.pushIntoStorage(
+          fact.fullName,
+          fact.vars,
+          [...req, new L_Storage.StoredReq(ifThen.vars, ifThen.req)],
+          fact.isT
+        );
+      } else if (fact instanceof IfThenNode) {
+        this.yaStoreIfThen(fact, [
+          ...req,
+          new L_Storage.StoredReq(ifThen.vars, ifThen.req),
+        ]);
+      }
     }
   }
 
