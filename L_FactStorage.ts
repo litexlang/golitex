@@ -45,6 +45,15 @@ export class StoredFact {
     return out;
   }
 
+  getFixedVars() {
+    const out = [];
+    const frees = this.getAllFreeVars();
+    for (const v of this.vars) {
+      if (!frees.includes(v)) out.push(v);
+    }
+    return out;
+  }
+
   isNoReq(): Boolean {
     for (const req of this.req) {
       if (req.req.length !== 0) return false;

@@ -128,7 +128,7 @@ export namespace L_Checker {
     }
     // toCheck.vars.forEach((e) => newEnv.newVar(e, e));
 
-    for (const f of toCheck.req) L_FactStorage.store(env, f, []);
+    for (const f of toCheck.req) L_FactStorage.store(newEnv, f, []);
     for (const onlyIf of toCheck.onlyIfs) {
       out = check(newEnv, onlyIf);
       if (out !== RType.True) return out;
