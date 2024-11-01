@@ -1,4 +1,4 @@
-import { DeclNode } from "./ast";
+import { DeclNode, OptNode } from "./ast";
 import { StoredFact, StoredReq } from "./L_Storage";
 
 export class L_Env {
@@ -21,6 +21,10 @@ export class L_Env {
     }
   }
 
+  getStoredFactsFromCurrentEnv(s: string) {
+    return this.storage.get(s);
+  }
+
   // TODO: NEED TO BE REFACTORED SO THAT FACTS WITH THE SAME NAME DECLARED OR STORED WON'T GO WRONG.
   getStoredFactsFromAllLevels(s: string): StoredFact[] {
     let out: StoredFact[] = [];
@@ -31,6 +35,69 @@ export class L_Env {
       curEnv = curEnv.father;
     }
     return out;
+  }
+
+  getStoredFacts(opt: OptNode): StoredFact[] | null {
+    let visibleEnvLevel = -1;
+    let lowestEnv: L_Env | undefined = undefined;
+
+    const tmp = this.whereIsOptDeclared(opt.fullName);
+    if (tmp) {
+      [visibleEnvLevel, lowestEnv] = tmp;
+    } else {
+      this.newMessage(`${opt} not declared.`);
+      return null;
+    }
+
+    for (let i = 0; i < opt.vars.length; i++) {
+      const tmp = this.whereIsVarDeclared(opt.vars[i]);
+      let curLevel = 0;
+      if (tmp) {
+        [curLevel, lowestEnv] = tmp;
+        if (curLevel < visibleEnvLevel) visibleEnvLevel = curLevel;
+      } else {
+        this.newMessage(`${opt.vars[0]} not found.`);
+        return null;
+      }
+    }
+
+    let out: StoredFact[] = [];
+    for (
+      let i = 0, curEnv: L_Env = this;
+      i <= visibleEnvLevel && curEnv;
+      i++, curEnv = curEnv.father as L_Env
+    ) {
+      const facts = curEnv.getStoredFactsFromCurrentEnv(opt.fullName);
+      if (facts === undefined) continue;
+      else out = [...out, ...facts];
+    }
+
+    return out;
+  }
+
+  private whereIsVarDeclared(s: string): [number, L_Env] | undefined {
+    let curEnv: L_Env | undefined = this;
+    let n = 0;
+
+    while (curEnv && curEnv.getVar(s) === undefined) {
+      n++;
+      curEnv = curEnv.father;
+    }
+
+    return curEnv?.getVar(s) ? [n, curEnv] : undefined;
+  }
+
+  // Return the lowest level of environment in which an operator with given name is declared.
+  private whereIsOptDeclared(s: string): [number, L_Env] | undefined {
+    let curEnv: L_Env | undefined = this;
+    let n = 0;
+
+    while (curEnv && curEnv.declaredFacts.get(s) === undefined) {
+      n++;
+      curEnv = curEnv.father;
+    }
+
+    return curEnv?.getVar(s) ? [n, curEnv] : undefined;
   }
 
   isOptDeclaredInThisOrFathers(s: string) {
