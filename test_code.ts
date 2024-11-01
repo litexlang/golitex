@@ -354,16 +354,16 @@ const testList36 = [
   "def x is p => ; def x is p1 => ; def x is p2 => ; let x | x is p1;",
   "def x is p3 =>;",
   "def p4(x,a) <= a is p2, x is p1 ;",
-  "def x is p0 => if a | p1(a) => {p4(x,a)};",
+  "def x is p0 => if a | p1(a) => {p4(x,a)};", // very important, because x is used over for all a is p2, not a specific a.
   "know if x,a | a is p2, x is p1 => {x is p3};",
   "know if x | => { if a | x is p1, a is p1 => {x is p3} } ;",
   "know if x | => {if a | a is p1, x is p1 => {x is p2, a is p}};",
-  "x is p2;", // very important, because x is used over for all a is p2, not a specific a.
+  "x is p2;",
   "x is p3;",
   "x is p;",
   "know x is p0;",
   "let a | a is p1;",
-  "p4(x,a);",
+  "p4(x,a);", // very important, because x is used over for all a is p2, not a specific a.
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

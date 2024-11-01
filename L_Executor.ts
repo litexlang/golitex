@@ -100,7 +100,7 @@ export namespace L_Executor {
   function letExec(env: L_Env, node: LetNode): RType {
     try {
       for (const e of node.vars) {
-        const ok = env.safeNewVar(e, e);
+        const ok = env.safeNewVar(e);
         if (!ok) return RType.Error;
       }
       // node.vars.forEach((e) => env.newVar(e, e));
@@ -155,7 +155,36 @@ export namespace L_Executor {
     toProve: IfThenNode,
     block: L_Node[]
   ): RType {
-    return RType.Error;
+    try {
+      const newEnv = new L_Env(env);
+      for (const v of toProve.vars) {
+        const ok = newEnv.safeNewVar(v);
+        if (!ok) throw Error();
+      }
+
+      for (const fact of toProve.req) {
+        const ok = L_FactStorage.store(newEnv, fact, []);
+        if (!ok) throw Error();
+      }
+
+      for (const subNode of block) {
+        const out = nodeExec(newEnv, subNode, false);
+        if (out === RType.Error) return RType.Error;
+      }
+
+      //!TODO:  TO CHECK MUST BE DECLARED AT ENV NOT IN BLOCK
+      for (const toCheck of toProve.onlyIfs) {
+        const out = nodeExec(newEnv, toCheck, false);
+        if (out !== RType.True) return out;
+      }
+
+      L_FactStorage.store(env, toProve, []);
+
+      return RType.True;
+    } catch (error) {
+      env.newMessage(`Error: ${toProve}`);
+      return RType.Error;
+    }
   }
 
   function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {

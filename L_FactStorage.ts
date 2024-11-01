@@ -119,9 +119,16 @@ export namespace L_FactStorage {
   }
 
   // Main Function of Storage
-  export function store(env: L_Env, fact: FactNode, req: StoredReq[]) {
-    if (fact instanceof IfThenNode) storeIfThen(env, fact, req);
-    else if (fact instanceof OptNode) storeOpt(env, fact, req);
-    else throw Error();
+  export function store(env: L_Env, fact: FactNode, req: StoredReq[]): Boolean {
+    try {
+      if (fact instanceof IfThenNode) storeIfThen(env, fact, req);
+      else if (fact instanceof OptNode) storeOpt(env, fact, req);
+      else throw Error();
+
+      return true;
+    } catch {
+      env.newMessage(`Failed to store ${fact}.`);
+      return false;
+    }
   }
 }

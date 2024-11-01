@@ -126,14 +126,14 @@ export class L_Env {
     return true;
   }
 
-  safeNewVar(free: string, fix: string): Boolean {
+  safeNewVar(fix: string): Boolean {
     if (
       // this.varsMap.has(free)
       //  ||
       this.declaredFacts.has(fix)
       //  this.fixFreeMap.has(fix)
     ) {
-      this.newMessage(`${free} already declared.`);
+      this.newMessage(`${fix} already declared.`);
       return false;
     }
     // this.varsMap.set(free, fix);
