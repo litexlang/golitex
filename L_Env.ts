@@ -27,18 +27,6 @@ export class L_Env {
     return this.storage.get(s);
   }
 
-  // // TODO: NEED TO BE REFACTORED SO THAT FACTS WITH THE SAME NAME DECLARED OR STORED WON'T GO WRONG.
-  // getStoredFactsFromAllLevels(s: string): StoredFact[] {
-  //   let out: StoredFact[] = [];
-  //   let curEnv: L_Env | undefined = this;
-  //   while (curEnv) {
-  //     const facts = curEnv.storage.get(s);
-  //     if (facts !== undefined) out = [...out, ...(facts as StoredFact[])];
-  //     curEnv = curEnv.father;
-  //   }
-  //   return out;
-  // }
-
   getStoredFacts(opt: OptNode): StoredFact[] | null {
     // varDeclaredNumberMap is used to store how many times a variable is declared in all visible environments
     const varsAsSet = new Set(opt.vars);
@@ -143,19 +131,17 @@ export class L_Env {
     return true;
   }
 
-  // getVar(key: string, includesFather: Boolean = true): undefined | string {
-  //   const out = this.varsMap.get(key);
-  //   if (out) return out;
-  //   else if (includesFather) return this.father?.getVar(key, true);
-  // }
-
-  // getVarFromCurrentEnv(key: string) {
-  //   return this.fixFreeMap.get(key);
-  //   // return this.varsMap.get(key);
-  // }
-
   varDeclaredAtCurrentEnv(key: string) {
     return this.declaredVars.has(key);
+  }
+
+  varDeclared(key: string): Boolean {
+    if (this.declaredVars.has(key)) {
+      return true;
+    } else {
+      if (!this.father) return false;
+      else return this.father.varDeclared(key);
+    }
   }
 
   getMessages() {

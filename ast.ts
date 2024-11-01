@@ -1,4 +1,5 @@
 import { IffKeywords, IfKeywords, OnlyIfKeywords } from "./common";
+import { L_Env } from "./L_Env";
 
 export abstract class L_Node {}
 
@@ -23,6 +24,8 @@ export abstract class FactNode extends L_Node {
    * copy() is necessary because when we store hashed facts by using declNode (to improve performance) but when proving we need to fix declNode with given variables.
    */
   abstract copy(): FactNode;
+
+  abstract varsDeclared(env: L_Env): Boolean;
 }
 
 export class OrNode extends FactNode {
@@ -33,6 +36,9 @@ export class OrNode extends FactNode {
   hashVars(varsToHash: string[]) {}
   rmvHashFromVars(varsToHash: string[]): void {}
   replaceVars(mapping: Map<string, string>): void {}
+  varsDeclared(env: L_Env): Boolean {
+    return false;
+  }
   copy(): OrNode {
     return new OrNode([]);
   }
@@ -134,6 +140,10 @@ export abstract class LogicalOptNode extends FactNode {
     }
     throw Error();
   }
+
+  varsDeclared(env: L_Env): Boolean {
+    return [...this.req, ...this.onlyIfs].every((e) => e.varsDeclared(env));
+  }
 }
 
 export class IfThenNode extends LogicalOptNode {}
@@ -178,6 +188,16 @@ export class OptNode extends FactNode {
 
   copy(): OptNode {
     return new OptNode(this.fullName, [...this.vars]);
+  }
+
+  varsDeclared(env: L_Env): Boolean {
+    for (const v of this.vars) {
+      const declared = env.varDeclared(v);
+      if (!declared) {
+        return false;
+      }
+    }
+    return true;
   }
 }
 
