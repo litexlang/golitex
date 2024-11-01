@@ -10,6 +10,7 @@ import {
   ByNode,
   IfThenNode,
   OptNode,
+  LocalEnvNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
@@ -54,6 +55,7 @@ export namespace L_Executor {
     HaveNode: haveExec,
     AssumeByContraNode: assumeByContraExec,
     ByNode: byExec,
+    LocalEnvNode: localEnvExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
@@ -209,6 +211,24 @@ export namespace L_Executor {
       return out;
     } catch (error) {
       env.newMessage(`failed to check ${toCheck}`);
+      return RType.Error;
+    }
+  }
+
+  function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): RType {
+    try {
+      const newEnv = new L_Env(env);
+      for (let i = 0; i < localEnvNode.nodes.length; i++) {
+        const out = nodeExec(newEnv, localEnvNode.nodes[i]);
+        if (out !== RType.True) {
+          newEnv.getMessages().forEach((e) => env.newMessage(e));
+          return out;
+        }
+      }
+
+      return RType.True;
+    } catch (error) {
+      env.newMessage("{}");
       return RType.Error;
     }
   }
