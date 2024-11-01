@@ -1,5 +1,5 @@
 import { DeclNode, OptNode } from "./ast";
-import { StoredFact, StoredReq } from "./L_Storage";
+import { StoredFact, StoredReq } from "./L_FactStorage";
 
 export class L_Env {
   private messages: string[] = [];
@@ -105,7 +105,7 @@ export class L_Env {
   //   return (out ? out : this.father?.declaredFacts.get(s)) !== undefined;
   // }
 
-  safeSetDeclFact(s: string, declNode: DeclNode): Boolean {
+  safeDeclOpt(s: string, declNode: DeclNode): Boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.declaredFacts.get(s) !== undefined) {
       this.newMessage(
@@ -118,7 +118,7 @@ export class L_Env {
     return true;
   }
 
-  newVar(free: string, fix: string): Boolean {
+  safeNewVar(free: string, fix: string): Boolean {
     if (this.varsMap.has(free)) {
       this.newMessage(`${free} already declared.`);
       return false;

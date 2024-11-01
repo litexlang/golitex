@@ -70,7 +70,7 @@ export class StoredFact {
   }
 }
 
-export namespace L_Storage {
+export namespace L_FactStorage {
   export function declNewFact(env: L_Env, toDecl: DeclNode) {
     const decl = new OptNode(toDecl.name, toDecl.vars);
     if (toDecl instanceof IfThenDeclNode) {

@@ -1,7 +1,7 @@
 import { FactNode, IfThenNode, KnowNode, OptNode } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Executor, RType } from "./L_Executor";
-import { L_Storage, StoredFact } from "./L_Storage";
+import { L_FactStorage, StoredFact } from "./L_FactStorage";
 
 export namespace L_Checker {
   export function check(env: L_Env, toCheck: FactNode): RType {
@@ -58,7 +58,7 @@ export namespace L_Checker {
       for (const currentLevelReq of storedFact.req) {
         // try to operate(store facts, introduce new variables) under current layer of stored if-then
         for (const e of currentLevelReq.vars) {
-          const ok = newEnv.newVar(e, map.get(e) as string);
+          const ok = newEnv.safeNewVar(e, map.get(e) as string);
           if (!ok) return RType.Error;
         }
         // currentLevelReq.vars.forEach((e) =>
@@ -123,18 +123,18 @@ export namespace L_Checker {
     const newEnv = new L_Env(env);
 
     for (const e of toCheck.vars) {
-      const ok = newEnv.newVar(e, e);
+      const ok = newEnv.safeNewVar(e, e);
       if (!ok) return RType.Error;
     }
     // toCheck.vars.forEach((e) => newEnv.newVar(e, e));
 
-    for (const f of toCheck.req) L_Storage.store(env, f, []);
+    for (const f of toCheck.req) L_FactStorage.store(env, f, []);
     for (const onlyIf of toCheck.onlyIfs) {
       out = check(newEnv, onlyIf);
       if (out !== RType.True) return out;
       else {
         // checked facts in then are used as stored fact.
-        L_Storage.store(newEnv, toCheck, []);
+        L_FactStorage.store(newEnv, toCheck, []);
       }
     }
     return RType.True;

@@ -11,7 +11,7 @@ import {
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
-import { L_Storage } from "./L_Storage";
+import { L_FactStorage } from "./L_FactStorage";
 
 export enum RType {
   Error,
@@ -96,12 +96,12 @@ export namespace L_Executor {
   function letExec(env: L_Env, node: LetNode): RType {
     try {
       for (const e of node.vars) {
-        const ok = env.newVar(e, e);
+        const ok = env.safeNewVar(e, e);
         if (!ok) return RType.Error;
       }
       // node.vars.forEach((e) => env.newVar(e, e));
 
-      for (const f of node.facts) L_Storage.store(env, f, []);
+      for (const f of node.facts) L_FactStorage.store(env, f, []);
       return RType.True;
     } catch (error) {
       env.newMessage(`Error: ${node.toString()}`);
@@ -111,7 +111,7 @@ export namespace L_Executor {
 
   export function knowExec(env: L_Env, node: KnowNode): RType {
     try {
-      for (const fact of node.facts) L_Storage.store(env, fact, []);
+      for (const fact of node.facts) L_FactStorage.store(env, fact, []);
 
       return RType.True;
     } catch (error) {
@@ -124,10 +124,10 @@ export namespace L_Executor {
 
   function declExec(env: L_Env, node: DeclNode): RType {
     try {
-      const ok = env.safeSetDeclFact(node.name, node);
+      const ok = env.safeDeclOpt(node.name, node);
       if (!ok) return RType.Error;
 
-      L_Storage.declNewFact(env, node);
+      L_FactStorage.declNewFact(env, node);
 
       return RType.True;
     } catch (error) {
@@ -172,7 +172,7 @@ export namespace L_Executor {
 
       //! BUG: SHOULD NOT INTRODUCE FACT OF UNDECLARED SYMBOL HERE. SHOULD NOT STORE FACT WITH OPT DECLARED IN NODE.BLOCK
       for (const fact of node.facts) {
-        L_Storage.store(env, fact, []);
+        L_FactStorage.store(env, fact, []);
       }
 
       return RType.True;
@@ -186,7 +186,7 @@ export namespace L_Executor {
     try {
       let out = L_Checker.check(env, toCheck);
       if (out === RType.True) {
-        L_Storage.store(env, toCheck, []);
+        L_FactStorage.store(env, toCheck, []);
       }
       return out;
     } catch (error) {
