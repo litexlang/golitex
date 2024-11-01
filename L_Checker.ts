@@ -64,47 +64,47 @@ export namespace L_Checker {
       }
 
       let unknown = false;
-      const map = new Map<String, string>();
+      const map = new Map<string, string>();
+
+      const freeVarsOfAllLevels = storedFact.getAllFreeVars();
       for (let i = 0; i < toCheck.vars.length; i++) {
-        // check whether a variable is already declared at current level, for example, `if x,x | ...` is not allowed
-        if (map.get(storedFact.vars[i])) {
-          env.newMessage(`Double declaration of ${storedFact.vars[i]}`);
-          return RType.Error;
-        }
-
-        map.set(storedFact.vars[i], toCheck.vars[i]);
-      }
-
-      for (const currentLevelReq of storedFact.req) {
-        // try to operate(store facts, introduce new variables) under current layer of stored if-then
-        let newEnv = new L_Env(env);
-
-        for (const e of currentLevelReq.vars) {
-          const ok = newEnv.safeNewVar(e, map.get(e) as string);
-          if (!ok) {
-            newEnv.getMessages().forEach((e) => env.newMessage(e));
+        if (freeVarsOfAllLevels.includes(storedFact.vars[i])) {
+          const alreadyDeclared = map.get(storedFact.vars[i]);
+          if (alreadyDeclared && alreadyDeclared !== toCheck.vars[i]) {
+            env.newMessage(
+              `${storedFact.vars[i]} is signed with 2 different symbols ${alreadyDeclared}, ${toCheck.vars[i]}`
+            );
             return RType.Error;
           }
-        }
 
-        // satisfy literal restrictions
-        // works
+          map.set(storedFact.vars[i], toCheck.vars[i]);
+        }
+      }
+
+      // for (let i = 0; i < toCheck.vars.length; i++) {
+      //   // check whether a variable is already declared at current level, for example, `if x,x | ...` is not allowed
+      //   if (map.get(storedFact.vars[i])) {
+      //     env.newMessage(`Double declaration of ${storedFact.vars[i]}`);
+      //     return RType.Error;
+      //   }
+
+      //   map.set(storedFact.vars[i], toCheck.vars[i]);
+      // }
+
+      for (const currentLevelReq of storedFact.req) {
+        let newEnv = new L_Env(env); // this is necessary because 1. I SIMPLY NEED A NEATER STORAGE SYSTEM THAT ALIGNS WITH THE HIERARCHY OF IF-THENs THE FACT IS STORED. 2. store checked req as future stored facts.
+
         for (const req of currentLevelReq.req) {
           if (req instanceof OptNode) {
-            // const l1 = req.vars.map((e) => newEnv.getVar(e)) as string[];
-
             const fixedVars = req.vars.map((e) => map.get(e)) as string[];
-
-            const checkReq = new OptNode(req.fullName, fixedVars);
-            // const checkReq = new OptNode(
-            //   req.fullName,
-            //   req.vars.map((e) => map.get(e)) as string[]
-            // );
-            const out = checkOptLiterally(env, checkReq);
+            const toCheck = new OptNode(req.fullName, fixedVars);
+            const out = checkOptLiterally(newEnv, toCheck);
             if (out === RType.True) {
+              // store checked req as future stored facts.
+              L_FactStorage.store(newEnv, toCheck, []);
               continue;
             } else if (out === RType.Error) {
-              env.getMessages().forEach((e) => env.newMessage(e));
+              newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
               return RType.Error;
             } else {
               unknown = true;
@@ -124,8 +124,9 @@ export namespace L_Checker {
         }
 
         if (unknown) break;
-        else newEnv = new L_Env(newEnv);
+        newEnv = new L_Env(newEnv);
       }
+
       if (unknown) continue;
       return RType.True;
     }
