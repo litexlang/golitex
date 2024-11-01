@@ -21,45 +21,45 @@ export class L_Env {
     }
   }
 
-  getStoredFactsFromCurrentEnv(s: string) {
+  private getStoredFactsFromCurrentEnv(s: string) {
     return this.storage.get(s);
   }
 
-  // TODO: NEED TO BE REFACTORED SO THAT FACTS WITH THE SAME NAME DECLARED OR STORED WON'T GO WRONG.
-  getStoredFactsFromAllLevels(s: string): StoredFact[] {
-    let out: StoredFact[] = [];
-    let curEnv: L_Env | undefined = this;
-    while (curEnv) {
-      const facts = curEnv.storage.get(s);
-      if (facts !== undefined) out = [...out, ...(facts as StoredFact[])];
-      curEnv = curEnv.father;
-    }
-    return out;
-  }
+  // // TODO: NEED TO BE REFACTORED SO THAT FACTS WITH THE SAME NAME DECLARED OR STORED WON'T GO WRONG.
+  // getStoredFactsFromAllLevels(s: string): StoredFact[] {
+  //   let out: StoredFact[] = [];
+  //   let curEnv: L_Env | undefined = this;
+  //   while (curEnv) {
+  //     const facts = curEnv.storage.get(s);
+  //     if (facts !== undefined) out = [...out, ...(facts as StoredFact[])];
+  //     curEnv = curEnv.father;
+  //   }
+  //   return out;
+  // }
 
-  getStoredFacts(opt: OptNode): StoredFact[] | null {
+  getStoredFacts(opt: OptNode): StoredFact[] | undefined {
     let visibleEnvLevel = -1;
-    let lowestEnv: L_Env | undefined = undefined;
+    let highestVisibleEnv: L_Env | undefined = undefined;
 
     const tmp = this.whereIsOptDeclared(opt.fullName);
     if (tmp) {
-      [visibleEnvLevel, lowestEnv] = tmp;
+      [visibleEnvLevel, highestVisibleEnv] = tmp;
     } else {
       this.newMessage(`${opt} not declared.`);
-      return null;
+      return undefined;
     }
 
-    for (let i = 0; i < opt.vars.length; i++) {
-      const tmp = this.whereIsVarDeclared(opt.vars[i]);
-      let curLevel = 0;
-      if (tmp) {
-        [curLevel, lowestEnv] = tmp;
-        if (curLevel < visibleEnvLevel) visibleEnvLevel = curLevel;
-      } else {
-        this.newMessage(`${opt.vars[0]} not found.`);
-        return null;
-      }
-    }
+    // for (let i = 0; i < opt.vars.length; i++) {
+    //   const tmp = this.whereIsVarDeclared(opt.vars[i]);
+    //   let curLevel = 0;
+    //   if (tmp) {
+    //     [curLevel, highestVisibleEnv] = tmp;
+    //     if (curLevel < visibleEnvLevel) visibleEnvLevel = curLevel;
+    //   } else {
+    //     this.newMessage(`${opt.vars[0]} not found.`);
+    //     return undefined;
+    //   }
+    // }
 
     let out: StoredFact[] = [];
     for (
@@ -97,15 +97,15 @@ export class L_Env {
       curEnv = curEnv.father;
     }
 
-    return curEnv?.getVar(s) ? [n, curEnv] : undefined;
+    return curEnv?.declaredFacts.get(s) ? [n, curEnv] : undefined;
   }
 
-  isOptDeclaredInThisOrFathers(s: string) {
-    let out = this.declaredFacts.get(s);
-    return (out ? out : this.father?.declaredFacts.get(s)) !== undefined;
-  }
+  // isOptDeclaredInThisOrFathers(s: string) {
+  //   let out = this.declaredFacts.get(s);
+  //   return (out ? out : this.father?.declaredFacts.get(s)) !== undefined;
+  // }
 
-  setDeclFact(s: string, declNode: DeclNode): Boolean {
+  safeSetDeclFact(s: string, declNode: DeclNode): Boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.declaredFacts.get(s) !== undefined) {
       this.newMessage(

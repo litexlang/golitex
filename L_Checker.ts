@@ -16,8 +16,7 @@ export namespace L_Checker {
 
   // MAIN FUNCTION OF THE WHOLE PROJECT
   export function checkOpt(env: L_Env, toCheck: OptNode): RType {
-    const storedFacts: StoredFact[] | undefined =
-      env.getStoredFactsFromAllLevels(toCheck.fullName);
+    const storedFacts: StoredFact[] | undefined = env.getStoredFacts(toCheck);
     if (storedFacts === undefined) return RType.Unknown;
 
     for (const storedFact of storedFacts) {
@@ -101,9 +100,7 @@ export namespace L_Checker {
 
   // check whether a variable in fact.vars is free or fixed at check time instead of run time.
   export function checkOptLiterally(env: L_Env, toCheck: OptNode): Boolean {
-    const facts: StoredFact[] | undefined = env.getStoredFactsFromAllLevels(
-      toCheck.fullName
-    );
+    const facts: StoredFact[] | undefined = env.getStoredFacts(toCheck);
 
     if (facts === undefined) return false;
 

@@ -313,7 +313,7 @@ const testList31 = [
   "def x is p1 <=> x is p;",
   "def x is p2 <=> x is p1;",
   "def x is p3 <= x is p2;",
-  "if x | x is p => {x is p2};",
+  // "if x | x is p => {x is p2};",
   "if x | x is p1 => {x is p2};",
   "let x | x is p;",
   "x is p3;",

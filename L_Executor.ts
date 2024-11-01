@@ -124,10 +124,7 @@ export namespace L_Executor {
 
   function declExec(env: L_Env, node: DeclNode): RType {
     try {
-      if (env.isOptDeclaredInThisOrFathers(node.name))
-        throw Error(`${node.name} already declared.`);
-
-      const ok = env.setDeclFact(node.name, node);
+      const ok = env.safeSetDeclFact(node.name, node);
       if (!ok) return RType.Error;
 
       L_Storage.declNewFact(env, node);
