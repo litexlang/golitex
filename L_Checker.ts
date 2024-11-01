@@ -91,11 +91,11 @@ export namespace L_Checker {
         // works
         for (const req of currentLevelReq.req) {
           if (req instanceof OptNode) {
-            const l1 = req.vars.map((e) => newEnv.getVar(e)) as string[];
+            // const l1 = req.vars.map((e) => newEnv.getVar(e)) as string[];
 
-            const l2 = req.vars.map((e) => map.get(e)) as string[];
+            const fixedVars = req.vars.map((e) => map.get(e)) as string[];
 
-            const checkReq = new OptNode(req.fullName, l1);
+            const checkReq = new OptNode(req.fullName, fixedVars);
             // const checkReq = new OptNode(
             //   req.fullName,
             //   req.vars.map((e) => map.get(e)) as string[]

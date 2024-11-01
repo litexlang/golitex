@@ -4,8 +4,9 @@ import { StoredFact, StoredReq } from "./L_FactStorage";
 export class L_Env {
   private messages: string[] = [];
   private declaredFacts = new Map<string, DeclNode>();
-  private varsMap = new Map<string, string>();
-  private fixFreeMap = new Map<string, string>();
+  // private varsMap = new Map<string, string>();
+  // private fixFreeMap = new Map<string, string>();
+  private declaredVars = new Set<string>();
   private storage = new Map<string, StoredFact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
@@ -65,7 +66,7 @@ export class L_Env {
     ) {
       // update how many times a given var is declared
       for (const v of varsAsSet) {
-        if (curEnv.getVarFromCurrentEnv(v)) {
+        if (curEnv.varDeclaredAtCurrentEnv(v)) {
           const curNumber = varDeclaredNumberMap.get(v) as number;
           varDeclaredNumberMap.set(v, curNumber + 1);
         }
@@ -126,25 +127,35 @@ export class L_Env {
   }
 
   safeNewVar(free: string, fix: string): Boolean {
-    if (this.varsMap.has(free) || this.fixFreeMap.has(fix)) {
+    if (
+      // this.varsMap.has(free)
+      //  ||
+      this.declaredFacts.has(fix)
+      //  this.fixFreeMap.has(fix)
+    ) {
       this.newMessage(`${free} already declared.`);
       return false;
     }
-    this.varsMap.set(free, fix);
+    // this.varsMap.set(free, fix);
 
-    this.fixFreeMap.set(fix, free);
+    // this.fixFreeMap.set(fix, free);
+    this.declaredVars.add(fix);
     return true;
   }
 
-  getVar(key: string, includesFather: Boolean = true): undefined | string {
-    const out = this.varsMap.get(key);
-    if (out) return out;
-    else if (includesFather) return this.father?.getVar(key, true);
-  }
+  // getVar(key: string, includesFather: Boolean = true): undefined | string {
+  //   const out = this.varsMap.get(key);
+  //   if (out) return out;
+  //   else if (includesFather) return this.father?.getVar(key, true);
+  // }
 
-  getVarFromCurrentEnv(key: string) {
-    return this.fixFreeMap.get(key);
-    // return this.varsMap.get(key);
+  // getVarFromCurrentEnv(key: string) {
+  //   return this.fixFreeMap.get(key);
+  //   // return this.varsMap.get(key);
+  // }
+
+  varDeclaredAtCurrentEnv(key: string) {
+    return this.declaredVars.has(key);
   }
 
   getMessages() {
