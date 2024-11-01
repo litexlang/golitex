@@ -5,6 +5,7 @@ export class L_Env {
   private messages: string[] = [];
   private declaredFacts = new Map<string, DeclNode>();
   private varsMap = new Map<string, string>();
+  private fixFreeMap = new Map<string, string>();
   private storage = new Map<string, StoredFact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
@@ -125,11 +126,13 @@ export class L_Env {
   }
 
   safeNewVar(free: string, fix: string): Boolean {
-    if (this.varsMap.has(free)) {
+    if (this.varsMap.has(free) || this.fixFreeMap.has(fix)) {
       this.newMessage(`${free} already declared.`);
       return false;
     }
     this.varsMap.set(free, fix);
+
+    this.fixFreeMap.set(fix, free);
     return true;
   }
 
@@ -140,7 +143,8 @@ export class L_Env {
   }
 
   getVarFromCurrentEnv(key: string) {
-    return this.varsMap.get(key);
+    return this.fixFreeMap.get(key);
+    // return this.varsMap.get(key);
   }
 
   getMessages() {

@@ -75,9 +75,10 @@ export namespace L_Checker {
         map.set(storedFact.vars[i], toCheck.vars[i]);
       }
 
-      let newEnv = new L_Env(env);
       for (const currentLevelReq of storedFact.req) {
         // try to operate(store facts, introduce new variables) under current layer of stored if-then
+        let newEnv = new L_Env(env);
+
         for (const e of currentLevelReq.vars) {
           const ok = newEnv.safeNewVar(e, map.get(e) as string);
           if (!ok) {
@@ -85,22 +86,25 @@ export namespace L_Checker {
             return RType.Error;
           }
         }
-        // currentLevelReq.vars.forEach((e) =>
-        //   newEnv.newVar(e, map.get(e) as string)
-        // );
 
         // satisfy literal restrictions
+        // works
         for (const req of currentLevelReq.req) {
           if (req instanceof OptNode) {
-            const checkReq = new OptNode(
-              req.fullName,
-              req.vars.map((e) => newEnv.getVar(e)) as string[]
-            );
-            const out = checkOptLiterally(newEnv, checkReq);
+            const l1 = req.vars.map((e) => newEnv.getVar(e)) as string[];
+
+            const l2 = req.vars.map((e) => map.get(e)) as string[];
+
+            const checkReq = new OptNode(req.fullName, l1);
+            // const checkReq = new OptNode(
+            //   req.fullName,
+            //   req.vars.map((e) => map.get(e)) as string[]
+            // );
+            const out = checkOptLiterally(env, checkReq);
             if (out === RType.True) {
               continue;
             } else if (out === RType.Error) {
-              newEnv.getMessages().forEach((e) => env.newMessage(e));
+              env.getMessages().forEach((e) => env.newMessage(e));
               return RType.Error;
             } else {
               unknown = true;
