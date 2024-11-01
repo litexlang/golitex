@@ -37,7 +37,7 @@ export class L_Env {
   //   return out;
   // }
 
-  getStoredFacts(opt: OptNode): StoredFact[] | undefined {
+  getStoredFacts(opt: OptNode): StoredFact[] | null {
     // varDeclaredNumberMap is used to store how many times a variable is declared in all visible environments
     const varsAsSet = new Set(opt.vars);
     const varDeclaredNumberMap = new Map<string, number>();
@@ -52,7 +52,7 @@ export class L_Env {
       visibleEnvLevel = tmp;
     } else {
       this.newMessage(`${opt} not declared.`);
-      return undefined;
+      return null;
     }
 
     // get fact from every visible env
@@ -98,18 +98,6 @@ export class L_Env {
     return out;
   }
 
-  private whereIsVarDeclared(s: string): [number, L_Env] | undefined {
-    let curEnv: L_Env | undefined = this;
-    let n = 0;
-
-    while (curEnv && curEnv.getVar(s) === undefined) {
-      n++;
-      curEnv = curEnv.father;
-    }
-
-    return curEnv?.getVar(s) ? [n, curEnv] : undefined;
-  }
-
   // Return the lowest level of environment in which an operator with given name is declared.
   private whereIsOptDeclared(s: string): number | undefined {
     let curEnv: L_Env | undefined = this;
@@ -122,11 +110,6 @@ export class L_Env {
 
     return curEnv?.declaredFacts.get(s) ? n : undefined;
   }
-
-  // isOptDeclaredInThisOrFathers(s: string) {
-  //   let out = this.declaredFacts.get(s);
-  //   return (out ? out : this.father?.declaredFacts.get(s)) !== undefined;
-  // }
 
   safeDeclOpt(s: string, declNode: DeclNode): Boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
@@ -158,6 +141,10 @@ export class L_Env {
 
   getVarFromCurrentEnv(key: string) {
     return this.varsMap.get(key);
+  }
+
+  getMessages() {
+    return this.messages;
   }
 
   newMessage(s: string) {
