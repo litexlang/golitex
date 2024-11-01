@@ -96,19 +96,37 @@ export namespace L_Checker {
 
         for (const req of currentLevelReq.req) {
           if (req instanceof OptNode) {
-            const fixedVars = req.vars.map((e) => map.get(e)) as string[];
-            const toCheck = new OptNode(req.fullName, fixedVars);
-            const out = checkOptLiterally(newEnv, toCheck);
-            if (out === RType.True) {
-              // store checked req as future stored facts.
-              L_FactStorage.store(newEnv, toCheck, []);
-              continue;
-            } else if (out === RType.Error) {
-              newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
-              return RType.Error;
+            let everyVarInThisReqIsFixed = true;
+            const fixedVars: string[] = [];
+            for (const v of req.vars) {
+              const fixed = map.get(v);
+              if (fixed === undefined) {
+                everyVarInThisReqIsFixed = false;
+                fixedVars.push(v);
+                break;
+              } else {
+                fixedVars.push(fixed);
+              }
+            }
+
+            // const fixedVars = req.vars.map((e) => map.get(e)) as string[];
+            if (everyVarInThisReqIsFixed) {
+              const toCheck = new OptNode(req.fullName, fixedVars);
+              const out = checkOptLiterally(newEnv, toCheck);
+              if (out === RType.True) {
+                // store checked req as future stored facts.
+                L_FactStorage.store(newEnv, toCheck, []);
+                continue;
+              } else if (out === RType.Error) {
+                newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
+                return RType.Error;
+              } else {
+                unknown = true;
+                break;
+              }
             } else {
-              unknown = true;
-              break;
+              const toStore = new OptNode(req.fullName, fixedVars);
+              L_FactStorage.store(newEnv, toStore, []);
             }
           } else if (req instanceof IfThenNode) {
             const out = checkOpt(newEnv, toCheck);
