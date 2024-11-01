@@ -309,15 +309,16 @@ const testList30 = [
 ];
 
 const testList31 = [
-  "def x is p => ;",
-  "def x is p1 <=> x is p;",
-  "def x is p2 <=> x is p1;",
-  "def x is p3 <= x is p2;",
-  // "if x | x is p => {x is p2};",
+  "def z is p => ;",
+  "def z is p1 => ;",
+  "def z is p2 <=> z is p1;",
+  "def z is p3 <= z is p2;",
+  "if x | x is p => {x is p2};",
   "if x | x is p1 => {x is p2};",
-  "let x | x is p;",
+  "let x | x is p1;",
   "x is p3;",
-  " x is p3 by {x is p1; x is p2;} ;",
+  "x is p2; x is p3;",
+  // " x is p3 by {x is p1; x is p2;} ;",
 ];
 
 const testList32 = ["def x is p => ;", "let x ; know x is p;"];
