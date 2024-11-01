@@ -25,7 +25,8 @@ export abstract class FactNode extends L_Node {
    */
   abstract copy(): FactNode;
 
-  abstract varsDeclared(env: L_Env): Boolean;
+  abstract varsDeclared(env: L_Env, freeVars: string[]): Boolean;
+  abstract factsDeclared(env: L_Env): Boolean;
 }
 
 export class OrNode extends FactNode {
@@ -37,6 +38,9 @@ export class OrNode extends FactNode {
   rmvHashFromVars(varsToHash: string[]): void {}
   replaceVars(mapping: Map<string, string>): void {}
   varsDeclared(env: L_Env): Boolean {
+    return false;
+  }
+  factsDeclared(env: L_Env): Boolean {
     return false;
   }
   copy(): OrNode {
@@ -69,7 +73,7 @@ export abstract class LogicalOptNode extends FactNode {
       separator = "<=";
     }
 
-    const mainPart = `${type} ${this.vars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} ${separator} ${this.onlyIfs.map((e) => e.toString()).join(", ")}`;
+    const mainPart = `${type} ${this.vars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} ${separator} {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
 
@@ -141,8 +145,14 @@ export abstract class LogicalOptNode extends FactNode {
     throw Error();
   }
 
-  varsDeclared(env: L_Env): Boolean {
-    return [...this.req, ...this.onlyIfs].every((e) => e.varsDeclared(env));
+  varsDeclared(env: L_Env, freeVars: string[]): Boolean {
+    return [...this.req, ...this.onlyIfs].every((e) =>
+      e.varsDeclared(env, this.vars)
+    );
+  }
+
+  factsDeclared(env: L_Env): Boolean {
+    return [...this.req, ...this.onlyIfs].every((e) => e.factsDeclared(env));
   }
 }
 
@@ -190,14 +200,24 @@ export class OptNode extends FactNode {
     return new OptNode(this.fullName, [...this.vars]);
   }
 
-  varsDeclared(env: L_Env): Boolean {
+  varsDeclared(env: L_Env, freeVars: string[]): Boolean {
     for (const v of this.vars) {
-      const declared = env.varDeclared(v);
+      const declared = env.varDeclared(v) || freeVars.includes(v);
       if (!declared) {
+        env.newMessage(`${v} not declared in ${this.fullName}`);
         return false;
       }
     }
     return true;
+  }
+
+  factsDeclared(env: L_Env): Boolean {
+    if (env.optDeclared(this.fullName)) {
+      return true;
+    } else {
+      env.newMessage(`${this.fullName} not declared.`);
+      return false;
+    }
   }
 }
 

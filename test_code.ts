@@ -366,6 +366,14 @@ const testList36 = [
   "p4(x,a);", // very important, because x is used over for all a is p2, not a specific a.
 ];
 
+const testList37 = [
+  "def x is p => ; def x is p1 => ; def x is p2 => ; let x | x is p1;",
+  "if x | x is p => {if y | y is p2 => {y is p2, x is p,}};",
+  "if a | a is p => {a is p2, x is p2};",
+  "if b | b is p5 => {};",
+  "if x | y is p => {};",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -404,7 +412,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList33: [testList33, false],
   testList34: [testList34, false],
   testList35: [testList35, false],
-  testList36: [testList36, true],
+  testList36: [testList36, false],
+  testList37: [testList37, true],
 };
 
 export function testCode() {

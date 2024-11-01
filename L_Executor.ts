@@ -233,6 +233,10 @@ export namespace L_Executor {
 
   function factExec(env: L_Env, toCheck: FactNode): RType {
     try {
+      if (!(toCheck.varsDeclared(env, []) && toCheck.factsDeclared(env))) {
+        return RType.Error;
+      }
+
       let out = L_Checker.check(env, toCheck);
       if (out === RType.True) {
         L_FactStorage.store(env, toCheck, []);

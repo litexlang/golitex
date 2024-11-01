@@ -144,6 +144,15 @@ export class L_Env {
     }
   }
 
+  optDeclared(key: string): Boolean {
+    if (this.declaredFacts.get(key)) {
+      return true;
+    } else {
+      if (!this.father) return false;
+      else return this.father.optDeclared(key);
+    }
+  }
+
   getMessages() {
     return this.messages;
   }
