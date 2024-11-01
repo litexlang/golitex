@@ -17,6 +17,7 @@ import {
   ByNode,
   IfThenDeclNode,
   OnlyIfNode,
+  LocalEnvNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import {
@@ -89,13 +90,38 @@ export namespace L_Parser {
     env.newMessage(`At ${start}[${index * -1}]: ${m}`);
   }
 
-  export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] {
-    try {
-      if (tokens.length === 0) return [];
+  // export function L_StmtsParse(env: L_Env, tokens: string[]): L_Node[] {
+  //   try {
+  //     if (tokens.length === 0) return [];
 
-      const result: L_Node[] = [];
-      getNodesFromSingleNode(env, tokens, result);
-      return result;
+  //     const result: L_Node[] = [];
+  //     getNodesFromSingleNode(env, tokens, result);
+  //     return result;
+  //   } catch (error) {
+  //     env.newMessage(`Error: Syntax Error.`);
+  //     throw error;
+  //   }
+  // }
+
+  export function parseUntilGivenEnd(
+    env: L_Env,
+    tokens: string[],
+    end: string | null
+  ): L_Node[] {
+    try {
+      let out: L_Node[] = [];
+
+      if (end !== null) {
+        while (!isCurToken(tokens, end)) {
+          getNodesFromSingleNode(env, tokens, out);
+        }
+      } else {
+        while (tokens.length !== 0) {
+          getNodesFromSingleNode(env, tokens, out);
+        }
+      }
+
+      return out;
     } catch (error) {
       env.newMessage(`Error: Syntax Error.`);
       throw error;
@@ -107,7 +133,7 @@ export namespace L_Parser {
   } = {
     know: knowParse,
     let: letParse,
-    // def: DeclNodeParse,
+    "{": localEnvParse,
     def: defineParse,
     prove: proveParse,
     exist: existParse,
@@ -809,6 +835,22 @@ export namespace L_Parser {
       throw Error();
     } catch (error) {
       handleParseError(env, "fact", index, start);
+      throw error;
+    }
+  }
+
+  function localEnvParse(env: L_Env, tokens: string[]): LocalEnvNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, "{");
+      const nodes = parseUntilGivenEnd(env, tokens, "}");
+      skip(tokens, "}");
+      const out = new LocalEnvNode(nodes);
+      return out;
+    } catch (error) {
+      handleParseError(env, "{}", index, start);
       throw error;
     }
   }

@@ -320,6 +320,8 @@ const testList31 = [
   " x is p3 by {x is p1; x is p2;} ;",
 ];
 
+const testList32 = ["def x is p => ;", "let x ; know x is p;"];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -352,8 +354,9 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList27: [testList27, false],
   testList28: [testList28, false],
   testList29: [testList29, false],
-  testList30: [testList30, true],
-  testList31: [testList31, false],
+  testList30: [testList30, false],
+  testList31: [testList31, true],
+  testList32: [testList32, false],
 };
 
 export function testCode() {
@@ -382,7 +385,8 @@ export function testCode() {
 function run(env: L_Env, expr: string) {
   try {
     const tokens = L_Scan(expr);
-    const nodes = L_Parser.L_StmtsParse(env, tokens);
+    const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
+    // const nodes = L_Parser.L_StmtsParse(env, tokens);
     if (nodes === undefined) {
       return undefined;
     }

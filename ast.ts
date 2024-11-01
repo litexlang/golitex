@@ -339,3 +339,9 @@ export class ByNode extends L_Node {
     super();
   }
 }
+
+export class LocalEnvNode extends L_Node {
+  constructor(public nodes: L_Node[]) {
+    super();
+  }
+}

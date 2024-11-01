@@ -8,6 +8,8 @@ import {
   HaveNode,
   AssumeByContraNode,
   ByNode,
+  IfThenNode,
+  OptNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
@@ -139,7 +141,23 @@ export namespace L_Executor {
   }
 
   function proveExec(env: L_Env, node: ProveNode): RType {
-    return RType.True;
+    if (node.toProve !== null) {
+      return proveIfThen(env, node.toProve, node.block);
+    } else {
+      return proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
+    }
+  }
+
+  function proveIfThen(
+    env: L_Env,
+    toProve: IfThenNode,
+    block: L_Node[]
+  ): RType {
+    return RType.Error;
+  }
+
+  function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {
+    return RType.Error;
   }
 
   function assumeByContraExec(env: L_Env, node: AssumeByContraNode): RType {
