@@ -38,7 +38,10 @@ export namespace L_Checker {
 
   // MAIN FUNCTION OF THE WHOLE PROJECT
   export function checkOpt(env: L_Env, toCheck: OptNode): RType {
-    const storedFacts: StoredFact[] | null = env.getStoredFacts(toCheck);
+    const storedFacts: StoredFact[] | null = L_FactStorage.getStoredFacts(
+      env,
+      toCheck
+    );
     if (storedFacts === null) {
       env.newMessage(`check error: ${toCheck.fullName} not declared.`);
       return RType.Error;
@@ -145,7 +148,10 @@ export namespace L_Checker {
 
   // check whether a variable in fact.vars is free or fixed at check time instead of run time.
   function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
-    const facts: StoredFact[] | null = env.getStoredFacts(toCheck);
+    const facts: StoredFact[] | null = L_FactStorage.getStoredFacts(
+      env,
+      toCheck
+    );
 
     if (facts === null) {
       env.newMessage(`check Error: ${toCheck.fullName} not declared.`);

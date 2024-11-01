@@ -23,73 +23,12 @@ export class L_Env {
     }
   }
 
-  private getStoredFactsFromCurrentEnv(s: string) {
+  public getStoredFactsFromCurrentEnv(s: string) {
     return this.storage.get(s);
   }
 
-  getStoredFacts(opt: OptNode): StoredFact[] | null {
-    // varDeclaredNumberMap is used to store how many times a variable is declared in all visible environments
-    const varsAsSet = new Set(opt.vars);
-    const varDeclaredNumberMap = new Map<string, number>();
-    for (const v of varsAsSet) {
-      varDeclaredNumberMap.set(v, 0);
-    }
-
-    // know where the opt is declared.
-    let visibleEnvLevel = -1;
-    const tmp = this.whereIsOptDeclared(opt.fullName);
-    if (tmp !== undefined) {
-      visibleEnvLevel = tmp;
-    } else {
-      this.newMessage(`${opt} not declared.`);
-      return null;
-    }
-
-    // get fact from every visible env
-    let out: StoredFact[] = [];
-    for (
-      let i = 0, curEnv: L_Env = this;
-      i <= visibleEnvLevel && curEnv;
-      i++, curEnv = curEnv.father as L_Env
-    ) {
-      // update how many times a given var is declared
-      for (const v of varsAsSet) {
-        if (curEnv.varDeclaredAtCurrentEnv(v)) {
-          const curNumber = varDeclaredNumberMap.get(v) as number;
-          varDeclaredNumberMap.set(v, curNumber + 1);
-        }
-      }
-
-      // get stored facts from current environment level
-      const facts = curEnv.getStoredFactsFromCurrentEnv(opt.fullName);
-      if (facts === undefined) continue;
-
-      for (const fact of facts) {
-        const fixedVarsAtFact = fact.getFixedVars();
-
-        // If the var is declared at a higher level, then the fact is RELATED TO THE VARIABLE WITH THE SAME NAME AT HIGHER LEVEL, NOT RELATED WITH CURRENT VARIABLE
-        let invisible = false;
-        for (const v of fixedVarsAtFact) {
-          if (varsAsSet.has(v) && (varDeclaredNumberMap.get(v) as number) > 1) {
-            invisible = true;
-            break;
-          }
-        }
-
-        if (invisible) continue;
-        else out.push(fact);
-      }
-
-      // const facts = curEnv.getStoredFactsFromCurrentEnv(opt.fullName);
-      // if (facts === undefined) continue;
-      // else out = [...out, ...facts];
-    }
-
-    return out;
-  }
-
   // Return the lowest level of environment in which an operator with given name is declared.
-  private whereIsOptDeclared(s: string): number | undefined {
+  public whereIsOptDeclared(s: string): number | undefined {
     let curEnv: L_Env | undefined = this;
     let n = 0;
 
@@ -185,5 +124,9 @@ export class L_Env {
     for (const [name, declFact] of this.declaredFacts) {
       console.log(declFact);
     }
+  }
+
+  getFather() {
+    return this.father;
   }
 }
