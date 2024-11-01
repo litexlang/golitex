@@ -344,4 +344,8 @@ export class LocalEnvNode extends L_Node {
   constructor(public nodes: L_Node[]) {
     super();
   }
+
+  toString() {
+    return `{${this.nodes.map((e) => e.toString()).join("; ")}}`;
+  }
 }

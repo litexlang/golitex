@@ -343,7 +343,12 @@ const testList34 = [
   "x is p2;",
 ];
 
-const testList35 = ["{def x is p => ; def x is p1 => ; def x is p2 => ;}"];
+const testList35 = [
+  "def x is p => ; def x is p1 => ; def x is p2 => ; let x | x is p1;",
+  "{let x | x is p2; x is p2; x is p1;}",
+  "x is p1; x is p2;",
+  "{def x is p1 => ; let x; x is p1; if x | x is p1 => {x is p1};}",
+];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],

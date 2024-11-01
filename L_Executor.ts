@@ -220,10 +220,9 @@ export namespace L_Executor {
       const newEnv = new L_Env(env);
       for (let i = 0; i < localEnvNode.nodes.length; i++) {
         const out = nodeExec(newEnv, localEnvNode.nodes[i]);
-        if (out !== RType.True) {
-          newEnv.getMessages().forEach((e) => env.newMessage(e));
-          return out;
-        }
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        newEnv.clearMessages();
+        if (RType.Error === out) return RType.Error;
       }
 
       return RType.True;

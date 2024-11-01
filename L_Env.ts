@@ -180,6 +180,10 @@ export class L_Env {
     this.messages = [];
   }
 
+  clearMessages() {
+    this.messages = [];
+  }
+
   printDeclFacts() {
     console.log("\n--Declared Facts--\n");
 
