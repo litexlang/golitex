@@ -1,4 +1,4 @@
-import { DeclNode, OptNode } from "./ast";
+import { DeclNode, FactNode, IfThenNode, OptNode } from "./ast";
 import { StoredFact, StoredReq } from "./L_FactStorage";
 
 export class L_Env {
@@ -57,7 +57,7 @@ export class L_Env {
     if (
       // this.varsMap.has(free)
       //  ||
-      this.declaredFacts.has(fix)
+      this.declaredVars.has(fix)
       //  this.fixFreeMap.has(fix)
     ) {
       this.newMessage(`${fix} already declared.`);
@@ -128,5 +128,38 @@ export class L_Env {
 
   getFather() {
     return this.father;
+  }
+
+  someVarsDeclaredHere(fact: FactNode | string[], freeVars: string[]): Boolean {
+    if (Array.isArray(fact)) {
+      return fact.some((e) => this.declaredVars.has(e));
+    }
+
+    if (fact instanceof OptNode) {
+      const out = fact.vars.some(
+        (e) => !freeVars.includes(e) && this.declaredVars.has(e)
+      );
+      return out;
+    } else if (fact instanceof IfThenNode) {
+      return (
+        fact.onlyIfs.some((e) => this.someVarsDeclaredHere(e, fact.vars)) &&
+        fact.req.some((e) => this.someVarsDeclaredHere(e, fact.vars))
+      );
+    }
+
+    throw Error();
+  }
+
+  someOptsDeclaredHere(fact: FactNode): Boolean {
+    if (fact instanceof OptNode) {
+      return this.declaredFacts.get(fact.fullName) !== undefined;
+    } else if (fact instanceof IfThenNode) {
+      return (
+        fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) &&
+        fact.req.some((e) => this.someOptsDeclaredHere(e))
+      );
+    }
+
+    throw Error();
   }
 }

@@ -132,6 +132,14 @@ export namespace L_FactStorage {
     }
   }
 
+  /** MAIN FUNCTION OF THE WHOLE PROJECT
+   *  Given an operator-type fact, return all stored facts that might check this fact.
+   *  Only stored fact of correct environment level, i.e. if there are operators or variables with
+   *  with the same name declared at some upper environment, Then these stored facts
+   *  should are illegal to be returned.
+   *
+   *  @returns null means error. StoredFact[] is used to hold all legal stored facts.
+   */
   export function getStoredFacts(
     env: L_Env,
     opt: OptNode

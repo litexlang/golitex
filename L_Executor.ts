@@ -172,7 +172,23 @@ export namespace L_Executor {
         if (out === RType.Error) return RType.Error;
       }
 
-      //!TODO:  TO CHECK MUST BE DECLARED AT ENV NOT IN BLOCK
+      if (
+        newEnv.someVarsDeclaredHere(toProve.vars, []) ||
+        newEnv.someVarsDeclaredHere(toProve, [])
+      ) {
+        env.newMessage(
+          `Error: Some variables in ${toProve.onlyIfs} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+        );
+        return RType.Error;
+      }
+
+      if (newEnv.someOptsDeclaredHere(toProve)) {
+        env.newMessage(
+          `Error: Some operators in ${toProve.onlyIfs} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+        );
+        return RType.Error;
+      }
+
       for (const toCheck of toProve.onlyIfs) {
         const out = nodeExec(newEnv, toCheck, false);
         if (out !== RType.True) return out;

@@ -36,7 +36,17 @@ export namespace L_Checker {
     return RType.True;
   }
 
-  // MAIN FUNCTION OF THE WHOLE PROJECT
+  /** MAIN FUNCTION OF THE WHOLE PROJECT
+   *  check fact using stored facts. If the stored fact has no extra requirements,
+   *  then we literally check whether the stored fact can be used to validate
+   *  given toCheck (literally: if the given variable is for-all type, or has
+   *  the same literal as stored fact). Else I open a new environment for each
+   *  level of if and if given req is operator-type then if all variables
+   *  are not free, I check this req, else i store the fact into new environment, or
+   *  given req is if-then type, I check it recursively.
+   *  WARNING: YOU SHOULD NOT DECLARE FREE VARIABLE WITH THE SAME NAME
+   *  IN DIFFERENT LEVELS OF IFs in IF-THEN TYPE FACTS.
+   */
   export function checkOpt(env: L_Env, toCheck: OptNode): RType {
     const storedFacts: StoredFact[] | null = L_FactStorage.getStoredFacts(
       env,
