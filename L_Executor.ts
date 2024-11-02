@@ -207,7 +207,44 @@ export namespace L_Executor {
   }
 
   function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {
-    return RType.Error;
+    try {
+      const newEnv = new L_Env(env);
+
+      for (const subNode of block) {
+        const out = nodeExec(newEnv, subNode, false);
+        if (out === RType.Error) {
+          newEnv.getMessages().forEach((e) => env.newMessage(e));
+          env.newMessage(`Errors: Failed to execute ${subNode}`);
+          return RType.Error;
+        }
+      }
+
+      if (newEnv.someVarsDeclaredHere(toProve, [])) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(
+          `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+        );
+        return RType.Error;
+      }
+
+      if (newEnv.someOptsDeclaredHere(toProve)) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(
+          `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+        );
+        return RType.Error;
+      }
+
+      const out = nodeExec(newEnv, toProve, false);
+      if (out !== RType.True) return out;
+
+      L_FactStorage.store(env, toProve, []);
+
+      return RType.True;
+    } catch {
+      env.newMessage(`${toProve}`);
+      return RType.Error;
+    }
   }
 
   function assumeByContraExec(env: L_Env, node: AssumeByContraNode): RType {
@@ -219,19 +256,19 @@ export namespace L_Executor {
     }
   }
 
-  function byExec(env: L_Env, node: ByNode): RType {
+  function byExec(env: L_Env, byNode: ByNode): RType {
     try {
       const newEnv = new L_Env(env);
-      for (const subNode of node.block) {
+      for (const subNode of byNode.block) {
         const out = nodeExec(newEnv, subNode, false);
         if (out !== RType.True) {
           newEnv.getMessages().forEach((e) => env.newMessage(e));
-          env.newMessage(`${node} failed.`);
+          env.newMessage(`${byNode} failed.`);
           return out;
         }
       }
 
-      for (const fact of node.facts) {
+      for (const fact of byNode.facts) {
         if (newEnv.someVarsDeclaredHere(fact, [])) {
           newEnv.getMessages().forEach((e) => env.newMessage(e));
           env.newMessage(
@@ -249,16 +286,16 @@ export namespace L_Executor {
         }
       }
 
-      for (const fact of node.facts) {
+      for (const fact of byNode.facts) {
         const out = L_Checker.check(newEnv, fact);
         if (out !== RType.True) {
           newEnv.getMessages().forEach((e) => env.newMessage(e));
-          env.newMessage(`${node} failed.`);
+          env.newMessage(`${byNode} failed.`);
           return out;
         }
       }
 
-      for (const fact of node.facts) {
+      for (const fact of byNode.facts) {
         L_FactStorage.store(env, fact, []);
       }
 

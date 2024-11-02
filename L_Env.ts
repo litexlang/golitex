@@ -130,11 +130,7 @@ export class L_Env {
     return this.father;
   }
 
-  someVarsDeclaredHere(fact: FactNode | string[], freeVars: string[]): Boolean {
-    if (Array.isArray(fact)) {
-      return fact.some((e) => this.declaredVars.has(e));
-    }
-
+  someVarsDeclaredHere(fact: FactNode, freeVars: string[]): Boolean {
     if (fact instanceof OptNode) {
       const out = fact.vars.some(
         (e) => !freeVars.includes(e) && this.declaredVars.has(e)

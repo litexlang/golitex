@@ -375,11 +375,16 @@ const testList37 = [
 ];
 
 const testList38 = [
-  "def x is p => ; def x is p1 => x is p; def x is p2 => x is p1; def x is p3 => x is p2;",
-  "prove if x | x is p3 => {x is p} {x is p2; x is p1;}",
-  "prove if x | x is p2 => {x is p1} {let x;}",
-  "prove if x | x is p2 => {x is p1} {def x is p1 =>;}",
-  "prove if x | x is p2 => {x is p1} {def x is p2 => ;}",
+  // "def x is p => ; def x is p1 => x is p; def x is p2 => x is p1; def x is p3 => x is p2;",
+  // "prove if x | x is p3 => {x is p} {x is p2; x is p1;}",
+  // "prove if x | x is p2 => {x is p1} {let x;}", // Error: x double declaration
+  // "prove if x | x is p2 => {x is p1} {def x is p1 =>;}", // Err: double declaration of p1
+  // "prove if x | x is p2 => {x is p1} {def x is p2 => ;}", // Err: double declaration of p2
+  "def x is q => ; def x is q1 => x is q; def x is q2 => x is q1; def x is q3 => x is q2;",
+  "let x | x is q3;",
+  "prove x is q {x is q2; x is q1;}",
+  "prove x is q {let x; }", // Err
+  "prove x is q {def x is q => ;};", // Err
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
