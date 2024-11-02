@@ -169,22 +169,25 @@ export namespace L_Executor {
 
       for (const subNode of block) {
         const out = nodeExec(newEnv, subNode, false);
-        if (out === RType.Error) return RType.Error;
+        if (out === RType.Error) {
+          newEnv.getMessages().forEach((e) => env.newMessage(e));
+          env.newMessage(`Errors: Failed to execute ${subNode}`);
+          return RType.Error;
+        }
       }
 
-      if (
-        newEnv.someVarsDeclaredHere(toProve.vars, []) ||
-        newEnv.someVarsDeclaredHere(toProve, [])
-      ) {
+      if (newEnv.someVarsDeclaredHere(toProve, [])) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(
-          `Error: Some variables in ${toProve.onlyIfs} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+          `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
         );
         return RType.Error;
       }
 
       if (newEnv.someOptsDeclaredHere(toProve)) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(
-          `Error: Some operators in ${toProve.onlyIfs} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+          `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
         );
         return RType.Error;
       }
@@ -222,20 +225,39 @@ export namespace L_Executor {
       for (const subNode of node.block) {
         const out = nodeExec(newEnv, subNode, false);
         if (out !== RType.True) {
+          newEnv.getMessages().forEach((e) => env.newMessage(e));
           env.newMessage(`${node} failed.`);
           return out;
         }
       }
 
       for (const fact of node.facts) {
+        if (newEnv.someVarsDeclaredHere(fact, [])) {
+          newEnv.getMessages().forEach((e) => env.newMessage(e));
+          env.newMessage(
+            `Error: Some variables in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+          );
+          return RType.Error;
+        }
+
+        if (newEnv.someOptsDeclaredHere(fact)) {
+          newEnv.getMessages().forEach((e) => env.newMessage(e));
+          env.newMessage(
+            `Error: Some operators in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+          );
+          return RType.Error;
+        }
+      }
+
+      for (const fact of node.facts) {
         const out = L_Checker.check(newEnv, fact);
         if (out !== RType.True) {
+          newEnv.getMessages().forEach((e) => env.newMessage(e));
           env.newMessage(`${node} failed.`);
           return out;
         }
       }
 
-      //! BUG: SHOULD NOT INTRODUCE FACT OF UNDECLARED SYMBOL HERE. SHOULD NOT STORE FACT WITH OPT DECLARED IN NODE.BLOCK
       for (const fact of node.facts) {
         L_FactStorage.store(env, fact, []);
       }

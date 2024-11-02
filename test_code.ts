@@ -376,8 +376,10 @@ const testList37 = [
 
 const testList38 = [
   "def x is p => ; def x is p1 => x is p; def x is p2 => x is p1; def x is p3 => x is p2;",
-  // "prove if x | x is p3 => {x is p} {x is p2; x is p1;}",
+  "prove if x | x is p3 => {x is p} {x is p2; x is p1;}",
   "prove if x | x is p2 => {x is p1} {let x;}",
+  "prove if x | x is p2 => {x is p1} {def x is p1 =>;}",
+  "prove if x | x is p2 => {x is p1} {def x is p2 => ;}",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
@@ -415,12 +417,12 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList30: [testList30, false],
   testList31: [testList31, false],
   testList32: [testList32, false],
-  testList33: [testList33, true],
+  testList33: [testList33, false],
   testList34: [testList34, false],
   testList35: [testList35, false],
-  testList36: [testList36, true],
+  testList36: [testList36, false],
   testList37: [testList37, false],
-  testList38: [testList38, false],
+  testList38: [testList38, true],
 };
 
 export function testCode() {

@@ -142,7 +142,7 @@ export class L_Env {
       return out;
     } else if (fact instanceof IfThenNode) {
       return (
-        fact.onlyIfs.some((e) => this.someVarsDeclaredHere(e, fact.vars)) &&
+        fact.onlyIfs.some((e) => this.someVarsDeclaredHere(e, fact.vars)) ||
         fact.req.some((e) => this.someVarsDeclaredHere(e, fact.vars))
       );
     }
@@ -155,7 +155,7 @@ export class L_Env {
       return this.declaredFacts.get(fact.fullName) !== undefined;
     } else if (fact instanceof IfThenNode) {
       return (
-        fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) &&
+        fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) ||
         fact.req.some((e) => this.someOptsDeclaredHere(e))
       );
     }
