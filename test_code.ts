@@ -399,11 +399,9 @@ const testList39 = [
 
 const testList40 = [
   "def p1(x)  => ;",
-  "exist exist-p1(x) <=> p1(x);", // can be used as a "stronger" version of def.
-  "let y | p1(y);",
-  "have x | exist-p1(x);", // unsuccessful have
-  "exist-p1(y);", // we declare and exe exist-fact by exactly using Opt code.
-  "have z | exist-p1(z);",
+  "let x | x is p1;",
+  "exist p1(x);",
+  "have y | p1(y);",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
