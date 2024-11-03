@@ -545,38 +545,6 @@ export namespace L_Parser {
     }
   }
 
-  function existParse(env: L_Env, tokens: string[]): ExistNode {
-    const start = tokens[0];
-    const index = tokens.length;
-
-    try {
-      skip(tokens, ExistKeywords);
-      const name = shiftVar(tokens);
-      const vars = varLstParse(env, tokens, ["|", ...StdStmtEnds], false);
-
-      if (StdStmtEnds.includes(tokens[0])) {
-        skip(tokens, StdStmtEnds);
-        return new ExistNode(name, vars, []);
-      } else {
-        skip(tokens, "|");
-      }
-
-      // const req = listParse<FactNode>(
-      //   env,
-      //   tokens,
-      //   singleOptParse,
-      //   [...StdStmtEnds],
-      //   true
-      // );
-      const req = factsParse(env, tokens, [...StdStmtEnds], true);
-
-      return new ExistNode(name, vars, req);
-    } catch (error) {
-      handleParseError(env, "Exist prove", index, start);
-      throw error;
-    }
-  }
-
   function haveParse(env: L_Env, tokens: string[]): HaveNode {
     const start = tokens[0];
     const index = tokens.length;
@@ -867,6 +835,27 @@ export namespace L_Parser {
       return new ReturnNode(facts);
     } catch (error) {
       handleParseError(env, "return", index, start);
+      throw error;
+    }
+  }
+
+  function existParse(env: L_Env, tokens: string[]): ExistNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, ExistKeywords);
+      const facts: OptNode[] = [];
+
+      while (!StdStmtEnds.includes(tokens[0])) {
+        const fact = OptParse(env, tokens);
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      skip(tokens, StdStmtEnds);
+
+      return new ExistNode(facts);
+    } catch (error) {
+      handleParseError(env, "Exist prove", index, start);
       throw error;
     }
   }

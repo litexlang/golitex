@@ -64,13 +64,14 @@ const testList5 = [
   // "def p3 x | p2(x);",
 ];
 
+// Obsolete
 const testList6 = [
   "def p1(x)  => ;",
-  "exist exist-p1(x) <=> p1(x);", // can be used as a "stronger" version of def.
-  "let y | p1(y);",
-  "have x | exist-p1(x);", // unsuccessful have
-  "exist-p1(y);", // we declare and exe exist-fact by exactly using Opt code.
-  "have z | exist-p1(z);",
+  // "exist exist-p1(x) <=> p1(x);", // can be used as a "stronger" version of def.
+  // "let y | p1(y);",
+  // "have x | exist-p1(x);", // unsuccessful have
+  // "exist-p1(y);", // we declare and exe exist-fact by exactly using Opt code.
+  // "have z | exist-p1(z);",
 ];
 
 const testList7 = [
@@ -396,6 +397,15 @@ const testList39 = [
   "{x is q2; return x is q1;}",
 ];
 
+const testList40 = [
+  "def p1(x)  => ;",
+  "exist exist-p1(x) <=> p1(x);", // can be used as a "stronger" version of def.
+  "let y | p1(y);",
+  "have x | exist-p1(x);", // unsuccessful have
+  "exist-p1(y);", // we declare and exe exist-fact by exactly using Opt code.
+  "have z | exist-p1(z);",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -437,7 +447,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList36: [testList36, false],
   testList37: [testList37, false],
   testList38: [testList38, false],
-  testList39: [testList39, true],
+  testList39: [testList39, false],
+  testList40: [testList40, true],
 };
 
 export function testCode() {

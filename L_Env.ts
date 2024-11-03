@@ -8,9 +8,22 @@ export class L_Env {
   // private fixFreeMap = new Map<string, string>();
   private declaredVars = new Set<string>();
   private storage = new Map<string, StoredFact[]>();
+  private haves = new Set<string>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  inHaves(name: string): Boolean {
+    if (this.haves.has(name)) return true;
+    else if (this.declaredFacts.has(name))
+      return false; // means the opt is declared at current environment and haves above is invisible.
+    else if (this.father) return this.father?.inHaves(name);
+    else return false;
+  }
+
+  newHave(name: string) {
+    return this.haves.add(name);
   }
 
   newFact(name: string, vars: string[], req: StoredReq[], isT: Boolean) {

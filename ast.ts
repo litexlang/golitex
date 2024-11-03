@@ -294,9 +294,6 @@ export abstract class DeclNode extends L_Node {
   }
 }
 
-export class ExistNode extends DeclNode {
-  public isT = false;
-}
 export class IffDeclNode extends DeclNode {}
 export class IfThenDeclNode extends DeclNode {}
 export class OnlyIfDeclNode extends DeclNode {}
@@ -393,6 +390,12 @@ export class LocalEnvNode extends L_Node {
 
 export class ReturnNode extends L_Node {
   constructor(public facts: FactNode[]) {
+    super();
+  }
+}
+
+export class ExistNode extends L_Node {
+  constructor(public facts: OptNode[]) {
     super();
   }
 }

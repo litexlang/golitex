@@ -12,6 +12,7 @@ import {
   OptNode,
   LocalEnvNode,
   ReturnNode,
+  ExistNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
@@ -20,12 +21,8 @@ import { L_FactStorage } from "./L_FactStorage";
 export enum RType {
   Error,
   True,
-  KnowUndeclared,
   False,
   Unknown,
-  HaveFailed,
-  ProveFailed,
-  ThmFailed,
 }
 
 export const RTypeMap: { [key in RType]: string } = {
@@ -33,10 +30,6 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.False]: "check: false",
   [RType.True]: "check: true",
   [RType.Unknown]: "check: unknown",
-  [RType.KnowUndeclared]: "know: undeclared opt",
-  [RType.HaveFailed]: "have: failed",
-  [RType.ProveFailed]: "prove: failed",
-  [RType.ThmFailed]: "thm: failed",
 };
 
 function successMesIntoEnv(env: L_Env, node: L_Node): RType {
@@ -48,7 +41,7 @@ export namespace L_Executor {
   const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
     IffDeclNode: declExec,
     IfThenDeclNode: declExec,
-    ExistNode: declExec,
+    ExistNode: existExec,
     OnlyIfDeclNode: declExec,
     KnowNode: knowExec,
     LetNode: letExec,
@@ -373,6 +366,27 @@ export namespace L_Executor {
       return RType.True;
     } catch (error) {
       env.newMessage("return");
+      return RType.Error;
+    }
+  }
+
+  function existExec(env: L_Env, node: ExistNode): RType {
+    try {
+      for (const fact of node.facts) {
+        const out = L_Checker.check(env, fact);
+        if (out !== RType.True) {
+          env.newMessage(`Failed to check ${fact}`);
+          return out;
+        }
+      }
+
+      for (const fact of node.facts) {
+        env.newHave(fact.fullName);
+      }
+
+      return RType.True;
+    } catch (error) {
+      env.newMessage("exist");
       return RType.Error;
     }
   }
