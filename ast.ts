@@ -330,7 +330,9 @@ export class ProveNode extends L_Node {
     // Only one of toProve, fixedIfThenOpt exists
     public toProve: IfThenNode | null,
     public fixedIfThenOpt: OptNode | null,
-    public block: L_Node[]
+    public block: L_Node[],
+    // If contradict !== undefined, then prove_by_contradiction
+    public contradict: FactNode[] | undefined = undefined
   ) {
     super();
   }
@@ -377,7 +379,6 @@ export class ByNode extends L_Node {
   }
 }
 
-// {nodes} => {toStore}
 export class LocalEnvNode extends L_Node {
   constructor(public nodes: L_Node[]) {
     super();

@@ -33,8 +33,7 @@ export const StdStmtEnds = [";", "\n"];
 export const LetKeywords = ["let"];
 export const HaveKeywords = ["have"];
 
-export const AssumeByContraKeywords = ["assume_by_contradiction"];
-
+export const ProveByContradictionKeyword = "prove_by_contradiction";
 export const IsKeywords = ["is"];
 export const AreKeywords = ["are"];
 export const IsAreKeywords = [...IsKeywords, ...AreKeywords];
@@ -42,6 +41,7 @@ export const NotKeywords = ["not"];
 export const OrKeywords = ["or"];
 export const ByKeywords = ["by"];
 export const WhenKeyword = "when";
+export const ContradictionKeyword = "contradiction";
 
 export const L_Keywords: string[] = [
   "#",
@@ -60,7 +60,7 @@ export const L_Keywords: string[] = [
   ...StdStmtEnds,
   ...LetKeywords,
   ...HaveKeywords,
-  ...AssumeByContraKeywords,
+  ProveByContradictionKeyword,
   ...IsKeywords,
   ...AreKeywords,
   ...NotKeywords,

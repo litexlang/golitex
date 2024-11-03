@@ -99,12 +99,13 @@ const testList8 = [
 
 const testList9 = ["def obj(x)  => ;;", "let x | not obj(x);", "not obj(x);"];
 
+// obsolete
 const testList10 = [
   "def p1(x) => ;",
-  "def p2(x) <=> p1(x);",
-  "def p3(x) <=> p2(x);",
-  "let x | not p3(x);",
-  "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
+  // "def p2(x) <=> p1(x);",
+  // "def p3(x) <=> p2(x);",
+  // "let x | not p3(x);",
+  // "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
 ];
 
 const testList11 = ["def p0(x) <= ;", "def p1(x) <= p0(x);", "let x | p0(x);"];
@@ -404,6 +405,12 @@ const testList40 = [
   "have y | p1(y);",
 ];
 
+const testList41 = [
+  "def x is q => ; def x is q1 => x is q; def x is q2 => x is q1; def x is q3 => x is q2;",
+  "let x | x is q3;",
+  "prove_by_contradiction x is q {not x is q2; not x is q1;} contradiction not x is q3;",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -444,9 +451,9 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList35: [testList35, false],
   testList36: [testList36, false],
   testList37: [testList37, false],
-  testList38: [testList38, false],
+  testList38: [testList38, true],
   testList39: [testList39, false],
-  testList40: [testList40, true],
+  testList40: [testList40, false],
 };
 
 export function testCode() {

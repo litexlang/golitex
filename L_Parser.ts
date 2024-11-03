@@ -30,7 +30,7 @@ import {
   ProveKeywords,
   ExistKeywords,
   HaveKeywords,
-  AssumeByContraKeywords,
+  ProveByContradictionKeyword,
   OnlyIfKeywords,
   IsKeywords,
   IsAreKeywords,
@@ -46,6 +46,7 @@ import {
   WhenKeyword,
   IffThenKeywords,
   OnlyIfThenKeywords,
+  ContradictionKeyword,
 } from "./common";
 
 export namespace L_Parser {
@@ -137,9 +138,9 @@ export namespace L_Parser {
     "{": localEnvParse,
     def: defineParse,
     prove: proveParse,
+    prove_by_contradiction: proveParse,
     exist: existParse,
     have: haveParse,
-    assume_by_contradiction: assumeByContraParse,
     return: returnParse,
   };
 
@@ -510,7 +511,13 @@ export namespace L_Parser {
     const index = tokens.length;
 
     try {
-      skip(tokens, ProveKeywords);
+      let byContradict = false;
+      if (tokens[0] === ProveByContradictionKeyword) {
+        byContradict = true;
+        skip(tokens, ProveByContradictionKeyword);
+      } else {
+        skip(tokens, ProveKeywords);
+      }
 
       let toProve: null | IfThenNode = null;
       let fixedIfThenOpt: null | OptNode = null;
@@ -534,10 +541,17 @@ export namespace L_Parser {
 
       skip(tokens, "}");
 
+      let contradict: FactNode[] | undefined = undefined;
+      if (byContradict) {
+        skip(tokens, ContradictionKeyword);
+        contradict = factsParse(env, tokens, StdStmtEnds, true);
+        skip(tokens, StdStmtEnds);
+      }
+
       if (toProve !== null) {
-        return new ProveNode(toProve, null, block);
+        return new ProveNode(toProve, null, block, contradict);
       } else {
-        return new ProveNode(null, fixedIfThenOpt, block);
+        return new ProveNode(null, fixedIfThenOpt, block, contradict);
       }
     } catch (error) {
       handleParseError(env, "Parsing prove", index, start);
@@ -582,32 +596,6 @@ export namespace L_Parser {
       }
     } catch (error) {
       handleParseError(env, "have", index, start);
-      throw error;
-    }
-  }
-
-  function assumeByContraParse(
-    env: L_Env,
-    tokens: string[]
-  ): AssumeByContraNode {
-    const start = tokens[0];
-    const index = tokens.length;
-
-    try {
-      skip(tokens, AssumeByContraKeywords);
-      const assume = singleOptParse(env, tokens);
-      skip(tokens, "{");
-      const block: L_Node[] = [];
-      while (!isCurToken(tokens, "}")) {
-        getNodesFromSingleNode(env, tokens, block);
-      }
-      skip(tokens, "}");
-      skip(tokens, "{");
-      const contradict = singleOptParse(env, tokens);
-      skip(tokens, "}");
-      return new AssumeByContraNode(assume, block, contradict);
-    } catch (error) {
-      handleParseError(env, "assume_by_contradiction", index, start);
       throw error;
     }
   }
