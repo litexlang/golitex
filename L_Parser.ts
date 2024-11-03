@@ -11,7 +11,6 @@ import {
   ProveNode,
   ExistNode,
   HaveNode,
-  AssumeByContraNode,
   OnlyIfDeclNode,
   LogicalOptNode,
   ByNode,
@@ -541,10 +540,10 @@ export namespace L_Parser {
 
       skip(tokens, "}");
 
-      let contradict: FactNode[] | undefined = undefined;
+      let contradict: OptNode | undefined = undefined;
       if (byContradict) {
         skip(tokens, ContradictionKeyword);
-        contradict = factsParse(env, tokens, StdStmtEnds, true);
+        contradict = OptParse(env, tokens);
         skip(tokens, StdStmtEnds);
       }
 

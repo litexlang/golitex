@@ -332,7 +332,7 @@ export class ProveNode extends L_Node {
     public fixedIfThenOpt: OptNode | null,
     public block: L_Node[],
     // If contradict !== undefined, then prove_by_contradiction
-    public contradict: FactNode[] | undefined = undefined
+    public contradict: OptNode | undefined = undefined
   ) {
     super();
   }
@@ -356,19 +356,19 @@ export class HaveNode extends L_Node {
   }
 }
 
-export class AssumeByContraNode extends L_Node {
-  constructor(
-    public assume: FactNode,
-    public block: L_Node[],
-    public contradict: FactNode
-  ) {
-    super();
-  }
+// export class AssumeByContraNode extends L_Node {
+//   constructor(
+//     public assume: FactNode,
+//     public block: L_Node[],
+//     public contradict: OptNode
+//   ) {
+//     super();
+//   }
 
-  toString() {
-    return `assume_by_contradiction ${this.assume}`;
-  }
-}
+//   toString() {
+//     return `assume_by_contradiction ${this.assume}`;
+//   }
+// }
 
 export class ByNode extends L_Node {
   constructor(

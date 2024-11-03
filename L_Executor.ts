@@ -6,7 +6,6 @@ import {
   DeclNode,
   ProveNode,
   HaveNode,
-  AssumeByContraNode,
   ByNode,
   IfThenNode,
   OptNode,
@@ -47,7 +46,6 @@ export namespace L_Executor {
     LetNode: letExec,
     ProveNode: proveExec,
     HaveNode: haveExec,
-    AssumeByContraNode: assumeByContraExec,
     ByNode: byExec,
     LocalEnvNode: localEnvExec,
     ReturnNode: returnExec,
@@ -160,10 +158,26 @@ export namespace L_Executor {
   }
 
   function proveExec(env: L_Env, node: ProveNode): RType {
-    if (node.toProve !== null) {
-      return proveIfThen(env, node.toProve, node.block);
+    if (node.contradict === undefined) {
+      if (node.toProve !== null) {
+        return proveIfThen(env, node.toProve, node.block);
+      } else {
+        return proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
+      }
     } else {
-      return proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
+      if (node.toProve !== null) {
+        env.newMessage(
+          `At current version, you can not prove if-then by contradiction.`
+        );
+        return RType.Error;
+      } else {
+        return proveOptByContradict(
+          env,
+          node.fixedIfThenOpt as OptNode,
+          node.block,
+          node.contradict as OptNode
+        );
+      }
     }
   }
 
@@ -252,7 +266,7 @@ export namespace L_Executor {
         return RType.Error;
       }
 
-      const out = nodeExec(newEnv, toProve, false);
+      const out = L_Checker.check(newEnv, toProve);
       if (out !== RType.True) return out;
 
       L_FactStorage.store(env, toProve, []);
@@ -264,11 +278,62 @@ export namespace L_Executor {
     }
   }
 
-  function assumeByContraExec(env: L_Env, node: AssumeByContraNode): RType {
+  function proveOptByContradict(
+    env: L_Env,
+    toProve: OptNode,
+    block: L_Node[],
+    contradict: OptNode
+  ): RType {
     try {
+      const newEnv = new L_Env(env);
+
+      toProve.isT = !toProve.isT;
+      L_FactStorage.store(newEnv, toProve, []);
+
+      for (const subNode of block) {
+        const out = nodeExec(newEnv, subNode, false);
+        if (out === RType.Error) {
+          newEnv.getMessages().forEach((e) => env.newMessage(e));
+          env.newMessage(`Errors: Failed to execute ${subNode}`);
+          return RType.Error;
+        }
+      }
+
+      let out = L_Checker.check(newEnv, contradict);
+      if (out !== RType.True) {
+        env.newMessage(`Errors: Failed to execute ${contradict}`);
+        return RType.Error;
+      }
+
+      contradict.isT = !contradict.isT;
+      out = L_Checker.check(newEnv, contradict);
+      if (out !== RType.True) {
+        env.newMessage(`Errors: Failed to execute ${contradict}`);
+        return RType.Error;
+      }
+
+      if (newEnv.someVarsDeclaredHere(toProve, [])) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(
+          `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+        );
+        return RType.Error;
+      }
+
+      if (newEnv.someOptsDeclaredHere(toProve)) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(
+          `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+        );
+        return RType.Error;
+      }
+
+      toProve.isT = !toProve.isT;
+      L_FactStorage.store(env, toProve, []);
+
       return RType.True;
-    } catch (error) {
-      env.newMessage(`${node}`);
+    } catch {
+      env.newMessage(`${toProve}`);
       return RType.Error;
     }
   }
