@@ -274,6 +274,13 @@ export namespace L_Parser {
     try {
       let name: string = "";
       let vars: string[] = [];
+      let isT = true;
+
+      if (tokens[0] === "not") {
+        isT = false;
+        skip(tokens, "not");
+      }
+
       if (tokens.length >= 2 && tokens[1] === "(") {
         // parse functional operator
         name = shiftVar(tokens);
@@ -300,7 +307,7 @@ export namespace L_Parser {
         // name = shiftVar(tokens);
       }
 
-      return new OptNode(name, vars);
+      return new OptNode(name, vars, isT);
     } catch (error) {
       handleParseError(env, `${start} is invalid operator.`, index, start);
       throw error;

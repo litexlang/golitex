@@ -408,7 +408,7 @@ const testList40 = [
 const testList41 = [
   "def x is q => ; def x is q1 => x is q; def x is q2 => x is q1; def x is q3 => x is q2;",
   "let x | x is q3;",
-  "prove_by_contradiction x is q {not q2(x); not q1(x);} contradiction  q3(x);",
+  "prove_by_contradiction x is q {not q2(x); not q1(x);} contradiction  not q3(x);",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

@@ -4,8 +4,11 @@ import { L_Env } from "./L_Env";
 export abstract class L_Node {}
 
 export abstract class FactNode extends L_Node {
-  isT: Boolean = true;
   useName: string = "";
+
+  constructor(public isT: Boolean) {
+    super();
+  }
 
   /**
    * Currently, when executing declaration of facts, we update all facts within the declNode in-place by adding or removing #prefix
@@ -30,8 +33,11 @@ export abstract class FactNode extends L_Node {
 }
 
 export class OrNode extends FactNode {
-  constructor(public facts: FactNode[]) {
-    super();
+  constructor(
+    public facts: FactNode[],
+    isT: Boolean = true
+  ) {
+    super(isT);
   }
 
   hashVars(varsToHash: string[]) {}
@@ -54,9 +60,10 @@ export abstract class LogicalOptNode extends FactNode {
     public req: FactNode[] = [],
     //! I think we should onlyIfs: FactNode[] because despite we can not store if-then
     //! we can still check it.
-    public onlyIfs: FactNode[] = []
+    public onlyIfs: FactNode[] = [],
+    isT: Boolean = true
   ) {
-    super();
+    super(isT);
   }
 
   toString() {
@@ -163,9 +170,10 @@ export class IffNode extends LogicalOptNode {}
 export class OptNode extends FactNode {
   constructor(
     public fullName: string,
-    public vars: string[]
+    public vars: string[],
+    isT: Boolean = true
   ) {
-    super();
+    super(isT);
   }
 
   toString() {
