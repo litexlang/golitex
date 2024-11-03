@@ -119,7 +119,11 @@ export namespace L_FactStorage {
   }
 
   // Main Function of Storage
-  export function store(env: L_Env, fact: FactNode, req: StoredReq[]): Boolean {
+  export function store(
+    env: L_Env,
+    fact: FactNode,
+    req: StoredReq[] = []
+  ): Boolean {
     try {
       if (fact instanceof IfThenNode) storeIfThen(env, fact, req);
       else if (fact instanceof OptNode) storeOpt(env, fact, req);

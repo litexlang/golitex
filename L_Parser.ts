@@ -569,14 +569,15 @@ export namespace L_Parser {
         return new HaveNode(vars, []);
       } else {
         skip(tokens, "|");
-        // const facts = listParse<FactNode>(
-        //   env,
-        //   tokens,
-        //   singleOptParse,
-        //   StdStmtEnds,
-        //   true
-        // );
-        const facts = factsParse(env, tokens, StdStmtEnds, true);
+        const facts: OptNode[] = [];
+
+        while (!StdStmtEnds.includes(tokens[0])) {
+          const fact = OptParse(env, tokens);
+          facts.push(fact);
+          if (isCurToken(tokens, ",")) skip(tokens, ",");
+        }
+        skip(tokens, StdStmtEnds);
+
         return new HaveNode(vars, facts);
       }
     } catch (error) {
@@ -849,6 +850,7 @@ export namespace L_Parser {
 
       while (!StdStmtEnds.includes(tokens[0])) {
         const fact = OptParse(env, tokens);
+        facts.push(fact);
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
       skip(tokens, StdStmtEnds);

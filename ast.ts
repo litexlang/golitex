@@ -344,7 +344,7 @@ export class ProveNode extends L_Node {
 export class HaveNode extends L_Node {
   constructor(
     public vars: string[],
-    public facts: FactNode[]
+    public facts: OptNode[]
   ) {
     super();
   }

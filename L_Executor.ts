@@ -85,6 +85,28 @@ export namespace L_Executor {
 
   function haveExec(env: L_Env, node: HaveNode): RType {
     try {
+      for (const e of node.vars) {
+        const ok = env.safeNewVar(e);
+        if (!ok) return RType.Error;
+      }
+
+      for (const fact of node.facts) {
+        if (!env.inHaves(fact.fullName)) {
+          env.newMessage(`Not every existence of given fact is validated.`);
+          return RType.Error;
+        }
+      }
+
+      for (const fact of node.facts) {
+        if (node.vars.every((e) => !fact.vars.includes(e))) {
+          env.newMessage(
+            `${fact} does not include any newly declared variable.`
+          );
+          return RType.Error;
+        }
+        L_FactStorage.store(env, fact);
+      }
+
       return RType.True;
     } catch (error) {
       env.newMessage(`Error: ${node.toString()}`);
