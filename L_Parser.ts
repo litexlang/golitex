@@ -240,34 +240,41 @@ export namespace L_Parser {
     }
   }
 
-  const factParserSignals: { [key: string]: Function } = {
-    or: orParse,
-    not: notParse,
-    if: ifThenParse,
-    "?": ifThenParse,
-  };
+  // const factParserSignals: { [key: string]: Function } = {
+  //   or: orParse,
+  //   // not: notParse,
+  //   if: ifThenParse,
+  // };
 
-  function singleOptParse(env: L_Env, tokens: string[]): FactNode {
-    const start = tokens[0];
-    const index = tokens.length;
+  // function singleOptParse(env: L_Env, tokens: string[]): FactNode {
+  //   const start = tokens[0];
+  //   const index = tokens.length;
 
-    try {
-      const relParser: Function | undefined = factParserSignals[tokens[0]];
-      let out: FactNode;
-      if (relParser === undefined) {
-        out = OptParse(env, tokens);
-      } else {
-        out = relParser(env, tokens);
-      }
+  //   try {
+  //     // const relParser: Function | undefined = factParserSignals[tokens[0]];
+  //     // let out: FactNode;
+  //     // if (relParser === undefined) {
+  //     //   out = OptParse(env, tokens);
+  //     // } else {
+  //     //   out = relParser(env, tokens);
+  //     // }
+  //     // return out;
 
-      return out;
-    } catch (error) {
-      handleParseError(env, "fact", index, start);
-      throw error;
-    }
-  }
+  //     let out: FactNode;
+  //     if (IfKeywords.includes(tokens[0])) {
+  //       out = ifThenParse(env, tokens);
+  //     } else {
+  //       out = OptParse(env, tokens);
+  //     }
 
-  function OptParse(env: L_Env, tokens: string[]): OptNode {
+  //     return out;
+  //   } catch (error) {
+  //     handleParseError(env, "fact", index, start);
+  //     throw error;
+  //   }
+  // }
+
+  function OptParse(env: L_Env, tokens: string[], parseNot: Boolean): OptNode {
     const start = tokens[0];
     const index = tokens.length;
 
@@ -276,9 +283,11 @@ export namespace L_Parser {
       let vars: string[] = [];
       let isT = true;
 
-      if (tokens[0] === "not") {
-        isT = false;
-        skip(tokens, "not");
+      if (parseNot) {
+        while (tokens[0] === "not") {
+          isT = false;
+          skip(tokens, "not");
+        }
       }
 
       if (tokens.length >= 2 && tokens[1] === "(") {
@@ -314,89 +323,89 @@ export namespace L_Parser {
     }
   }
 
-  // At parsing stage, not is "executed"
-  function notParse(env: L_Env, tokens: string[]): FactNode {
-    const start = tokens[0];
-    const index = tokens.length;
+  // // At parsing stage, not is "executed"
+  // function notParse(env: L_Env, tokens: string[]): FactNode {
+  //   const start = tokens[0];
+  //   const index = tokens.length;
 
-    try {
-      skip(tokens, NotKeywords);
-      const fact = singleOptParse(env, tokens);
-      fact.isT = false;
-      return fact;
-    } catch (error) {
-      handleParseError(env, "not", index, start);
-      throw error;
-    }
-  }
+  //   try {
+  //     skip(tokens, NotKeywords);
+  //     const fact = singleOptParse(env, tokens);
+  //     fact.isT = false;
+  //     return fact;
+  //   } catch (error) {
+  //     handleParseError(env, "not", index, start);
+  //     throw error;
+  //   }
+  // }
 
-  function orParse(env: L_Env, tokens: string[]): OrNode {
-    const start = tokens[0];
-    const index = tokens.length;
+  // function orParse(env: L_Env, tokens: string[]): OrNode {
+  //   const start = tokens[0];
+  //   const index = tokens.length;
 
-    try {
-      skip(tokens, OrKeywords);
+  //   try {
+  //     skip(tokens, OrKeywords);
 
-      skip(tokens, "{");
+  //     skip(tokens, "{");
 
-      const facts: FactNode[] = [];
-      while (!isCurToken(tokens, "}")) {
-        facts.push(singleOptParse(env, tokens));
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
-      }
+  //     const facts: FactNode[] = [];
+  //     while (!isCurToken(tokens, "}")) {
+  //       facts.push(singleOptParse(env, tokens));
+  //       if (isCurToken(tokens, ",")) skip(tokens, ",");
+  //     }
 
-      skip(tokens, "}");
-      return new OrNode(facts);
-    } catch (error) {
-      handleParseError(env, "or", index, start);
-      throw error;
-    }
-  }
+  //     skip(tokens, "}");
+  //     return new OrNode(facts);
+  //   } catch (error) {
+  //     handleParseError(env, "or", index, start);
+  //     throw error;
+  //   }
+  // }
 
-  function ifThenParse(
-    env: L_Env,
-    tokens: string[],
-    ends: string[] = StdStmtEnds,
-    skipEnd = true
-  ): IfThenNode {
-    const start = tokens[0];
-    const index = tokens.length;
+  // function ifThenParse(
+  //   env: L_Env,
+  //   tokens: string[],
+  //   ends: string[] = StdStmtEnds,
+  //   skipEnd = true
+  // ): IfThenNode {
+  //   const start = tokens[0];
+  //   const index = tokens.length;
 
-    try {
-      skip(tokens, IfKeywords);
+  //   try {
+  //     skip(tokens, IfKeywords);
 
-      const symbolsBeforeThenKeyword: string[] = [];
-      for (let i = 0; i < tokens.length; i++) {
-        if (!ThenKeywords.includes(tokens[i]))
-          symbolsBeforeThenKeyword.push(tokens[i]);
-        else break;
-      }
+  //     const symbolsBeforeThenKeyword: string[] = [];
+  //     for (let i = 0; i < tokens.length; i++) {
+  //       if (!ThenKeywords.includes(tokens[i]))
+  //         symbolsBeforeThenKeyword.push(tokens[i]);
+  //       else break;
+  //     }
 
-      let vars: string[] = [];
-      let req: FactNode[] = [];
-      if (symbolsBeforeThenKeyword.includes("|")) {
-        vars = varLstParse(env, tokens, ["|"], false);
-        skip(tokens, "|");
-        req = factsParse(env, tokens, ThenKeywords, true);
-      } else {
-        req = factsParse(env, tokens, ThenKeywords, true);
-      }
+  //     let vars: string[] = [];
+  //     let req: FactNode[] = [];
+  //     if (symbolsBeforeThenKeyword.includes("|")) {
+  //       vars = varLstParse(env, tokens, ["|"], false);
+  //       skip(tokens, "|");
+  //       req = factsParse(env, tokens, ThenKeywords, true);
+  //     } else {
+  //       req = factsParse(env, tokens, ThenKeywords, true);
+  //     }
 
-      let onlyIfs: OptNode[];
-      const facts = factsParse(env, tokens, StdStmtEnds, skipEnd);
-      if (facts.every((e) => e instanceof OptNode)) {
-        onlyIfs = facts as OptNode[];
-      } else {
-        throw Error(`Not all onlyIfs are operator-type fact.`);
-      }
+  //     let onlyIfs: OptNode[];
+  //     const facts = factsParse(env, tokens, StdStmtEnds, skipEnd);
+  //     if (facts.every((e) => e instanceof OptNode)) {
+  //       onlyIfs = facts as OptNode[];
+  //     } else {
+  //       throw Error(`Not all onlyIfs are operator-type fact.`);
+  //     }
 
-      const out = new IfThenNode(vars, req, onlyIfs);
-      return out;
-    } catch (error) {
-      handleParseError(env, "if-then", index, start);
-      throw error;
-    }
-  }
+  //     const out = new IfThenNode(vars, req, onlyIfs);
+  //     return out;
+  //   } catch (error) {
+  //     handleParseError(env, "if-then", index, start);
+  //     throw error;
+  //   }
+  // }
 
   function listParse<T>(
     env: L_Env,
@@ -452,65 +461,65 @@ export namespace L_Parser {
     }
   }
 
-  function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
-    const start = tokens[0];
-    const index = tokens.length;
-    try {
-      shiftVar(tokens);
-      const name = shiftVar(tokens);
+  // function DeclNodeParse(env: L_Env, tokens: string[]): DeclNode {
+  //   const start = tokens[0];
+  //   const index = tokens.length;
+  //   try {
+  //     shiftVar(tokens);
+  //     const name = shiftVar(tokens);
 
-      if (L_Keywords.includes(name)) {
-        env.newMessage(`Error: ${name} is a LiTeX keyword.`);
-        throw Error();
-      }
+  //     if (L_Keywords.includes(name)) {
+  //       env.newMessage(`Error: ${name} is a LiTeX keyword.`);
+  //       throw Error();
+  //     }
 
-      if (
-        [...IfKeywords, ...IffKeywords, ...OnlyIfKeywords].includes(tokens[0])
-      ) {
-        const logicalOpt = logicalOptParse(env, tokens);
-        return DeclNode.create(name, logicalOpt);
-        // return new IfThenDeclNode(
-        //   name,
-        //   ifThen.vars,
-        //   ifThen.req,
-        //   ifThen.onlyIfs
-        // );
-      } else {
-        let type = "";
-        if (LogicalKeywords.includes(tokens[0])) {
-          type = shiftVar(tokens);
-        }
+  //     if (
+  //       [...IfKeywords, ...IffKeywords, ...OnlyIfKeywords].includes(tokens[0])
+  //     ) {
+  //       const logicalOpt = logicalOptParse(env, tokens);
+  //       return DeclNode.create(name, logicalOpt);
+  //       // return new IfThenDeclNode(
+  //       //   name,
+  //       //   ifThen.vars,
+  //       //   ifThen.req,
+  //       //   ifThen.onlyIfs
+  //       // );
+  //     } else {
+  //       let type = "";
+  //       if (LogicalKeywords.includes(tokens[0])) {
+  //         type = shiftVar(tokens);
+  //       }
 
-        let req: FactNode[] = [];
-        // `|` must exist in declaration to reduce confusion.
-        const vars = varLstParse(env, tokens, ["|"], false);
+  //       let req: FactNode[] = [];
+  //       // `|` must exist in declaration to reduce confusion.
+  //       const vars = varLstParse(env, tokens, ["|"], false);
 
-        skip(tokens, "|");
-        req = factsParse(env, tokens, [...StdStmtEnds], false);
+  //       skip(tokens, "|");
+  //       req = factsParse(env, tokens, [...StdStmtEnds], false);
 
-        skip(tokens, StdStmtEnds);
+  //       skip(tokens, StdStmtEnds);
 
-        if (IffKeywords.includes(type)) {
-          return new IffDeclNode(name, vars, [], req);
-        } else if (OnlyIfKeywords.includes(type)) {
-          return new OnlyIfDeclNode(name, vars, [], req);
-        } else {
-          return new IffDeclNode(name, vars, [], req);
-        }
-      }
+  //       if (IffKeywords.includes(type)) {
+  //         return new IffDeclNode(name, vars, [], req);
+  //       } else if (OnlyIfKeywords.includes(type)) {
+  //         return new OnlyIfDeclNode(name, vars, [], req);
+  //       } else {
+  //         return new IffDeclNode(name, vars, [], req);
+  //       }
+  //     }
 
-      // if (IfKeywords.includes(nodeType)) {
-      //   return new IfThenDeclNode(name, vars, req, onlyIfs);
-      // } else if (DefKeywords.includes(nodeType)) {
-      //   return new IffDeclNode(name, vars, req, onlyIfs);
-      // } else if (OnlyIfKeywords.includes(nodeType)) {
-      //   return new OnlyIfDeclNode(name, vars, req, onlyIfs);
-      // }
-    } catch (error) {
-      handleParseError(env, "Parsing variables", index, start);
-      throw error;
-    }
-  }
+  //     // if (IfKeywords.includes(nodeType)) {
+  //     //   return new IfThenDeclNode(name, vars, req, onlyIfs);
+  //     // } else if (DefKeywords.includes(nodeType)) {
+  //     //   return new IffDeclNode(name, vars, req, onlyIfs);
+  //     // } else if (OnlyIfKeywords.includes(nodeType)) {
+  //     //   return new OnlyIfDeclNode(name, vars, req, onlyIfs);
+  //     // }
+  //   } catch (error) {
+  //     handleParseError(env, "Parsing variables", index, start);
+  //     throw error;
+  //   }
+  // }
 
   function proveParse(env: L_Env, tokens: string[]): ProveNode {
     const start = tokens[0];
@@ -531,7 +540,7 @@ export namespace L_Parser {
       if (IfKeywords.includes(tokens[0])) {
         toProve = logicalOptParse(env, tokens);
       } else {
-        fixedIfThenOpt = OptParse(env, tokens);
+        fixedIfThenOpt = OptParse(env, tokens, true);
       }
 
       const block: L_Node[] = [];
@@ -550,7 +559,7 @@ export namespace L_Parser {
       let contradict: OptNode | undefined = undefined;
       if (byContradict) {
         skip(tokens, ContradictionKeyword);
-        contradict = OptParse(env, tokens);
+        contradict = OptParse(env, tokens, true);
         skip(tokens, StdStmtEnds);
       }
 
@@ -592,7 +601,7 @@ export namespace L_Parser {
         const facts: OptNode[] = [];
 
         while (!StdStmtEnds.includes(tokens[0])) {
-          const fact = OptParse(env, tokens);
+          const fact = OptParse(env, tokens, true);
           facts.push(fact);
           if (isCurToken(tokens, ",")) skip(tokens, ",");
         }
@@ -630,7 +639,7 @@ export namespace L_Parser {
           fact.isT = isT;
           out.push(fact);
         } else if (tokens.length >= 2 && tokens[1] === "(") {
-          const fact = OptParse(env, tokens);
+          const fact = OptParse(env, tokens, false); // false: When using factsParse, not prefix are already removed.
           fact.isT = isT;
           out.push(fact);
         } else {
@@ -771,7 +780,7 @@ export namespace L_Parser {
 
     try {
       skip(tokens, DefKeywords);
-      const opt: OptNode = OptParse(env, tokens);
+      const opt: OptNode = OptParse(env, tokens, false);
       const separator = shiftVar(tokens);
 
       const onlyIfs = factsParse(
@@ -843,7 +852,7 @@ export namespace L_Parser {
       const facts: OptNode[] = [];
 
       while (!StdStmtEnds.includes(tokens[0])) {
-        const fact = OptParse(env, tokens);
+        const fact = OptParse(env, tokens, true);
         facts.push(fact);
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
