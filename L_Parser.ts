@@ -18,6 +18,7 @@ import {
   IfThenDeclNode,
   OnlyIfNode,
   LocalEnvNode,
+  ReturnNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import {
@@ -139,6 +140,7 @@ export namespace L_Parser {
     exist: existParse,
     have: haveParse,
     assume_by_contradiction: assumeByContraParse,
+    return: returnParse,
   };
 
   export function getNodesFromSingleNode(
@@ -851,6 +853,20 @@ export namespace L_Parser {
       return out;
     } catch (error) {
       handleParseError(env, "{}", index, start);
+      throw error;
+    }
+  }
+
+  function returnParse(env: L_Env, tokens: string[]): ReturnNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, "return");
+      const facts = factsParse(env, tokens, StdStmtEnds, true);
+      return new ReturnNode(facts);
+    } catch (error) {
+      handleParseError(env, "return", index, start);
       throw error;
     }
   }

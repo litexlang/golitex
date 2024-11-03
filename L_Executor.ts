@@ -11,6 +11,7 @@ import {
   IfThenNode,
   OptNode,
   LocalEnvNode,
+  ReturnNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
@@ -56,6 +57,7 @@ export namespace L_Executor {
     AssumeByContraNode: assumeByContraExec,
     ByNode: byExec,
     LocalEnvNode: localEnvExec,
+    ReturnNode: returnExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
@@ -336,6 +338,41 @@ export namespace L_Executor {
       return RType.True;
     } catch (error) {
       env.newMessage("{}");
+      return RType.Error;
+    }
+  }
+
+  function returnExec(env: L_Env, node: ReturnNode): RType {
+    try {
+      for (const f of node.facts) {
+        if (env.someOptsDeclaredHere(f)) {
+          env.newMessage(
+            `Error: Some operators in ${f} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+          );
+          return RType.Error;
+        }
+        if (env.someVarsDeclaredHere(f, [])) {
+          env.newMessage(
+            `Error: Some variables in ${f} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+          );
+          return RType.Error;
+        }
+      }
+
+      for (const toProve of node.facts) {
+        const out = L_Checker.check(env, toProve);
+        if (out !== RType.True) return out;
+      }
+
+      const storeTo = env.getFather();
+      if (storeTo) {
+        for (const toProve of node.facts) {
+          L_FactStorage.store(storeTo, toProve, []);
+        }
+      }
+      return RType.True;
+    } catch (error) {
+      env.newMessage("return");
       return RType.Error;
     }
   }

@@ -380,6 +380,7 @@ export class ByNode extends L_Node {
   }
 }
 
+// {nodes} => {toStore}
 export class LocalEnvNode extends L_Node {
   constructor(public nodes: L_Node[]) {
     super();
@@ -387,5 +388,11 @@ export class LocalEnvNode extends L_Node {
 
   toString() {
     return `{${this.nodes.map((e) => e.toString()).join("; ")}}`;
+  }
+}
+
+export class ReturnNode extends L_Node {
+  constructor(public facts: FactNode[]) {
+    super();
   }
 }
