@@ -1,13 +1,9 @@
 export const setTheory = [
-  `def obj x; // Everything is an object.`,
-  `: set x | => {};`,
-  `know set(#x)  // Everything is a set.`,
-  "let VAR; ",
-  "set(VAR);",
-  `: item x,A | set(A)  => {} ;`,
-  `: eq A,B| set(A), set(B), if x | item(x,A) => item(x,B), if x | item(x,B) => item(x,A);`,
-  `let EMPTY_SET |  if x => not item(x,EMPTY_SET); ; `,
-  "know if A,B| eq(EMPTY_SET, A), eq(EMPTY_SET, B) => {eq(A,B)};",
+  "def x is object => ;",
+  "def x is set => x is object;",
+  "def element_of(A,B) => when A,B are object;",
+  "def equal(A,B) <=> if x | element_of(x,A) => {element_of(x,B)}, if x | element_of(x,B) => {element_of(x,A)} when A,B are set;",
+  "let A,B,x | A,B are set, equal(A,B); element_of(x,A); element_of(x,B);",
 ];
 
 export const testTao = false;

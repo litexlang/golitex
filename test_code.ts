@@ -2,6 +2,7 @@ import { L_Env } from "./L_Env";
 import { L_Executor, RType } from "./L_Executor";
 import { L_Scan } from "./L_Lexer";
 import { L_Parser } from "./L_Parser";
+import { setTheory } from "./tao_analysis_one";
 
 // Aristotle induction
 const testList0 = [
@@ -454,7 +455,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList38: [testList38, false],
   testList39: [testList39, false],
   testList40: [testList40, false],
-  testList41: [testList41, true],
+  testList41: [testList41, false],
+  setTheory: [setTheory, true],
 };
 
 export function testCode() {

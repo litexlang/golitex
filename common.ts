@@ -42,6 +42,8 @@ export const OrKeywords = ["or"];
 export const ByKeywords = ["by"];
 export const WhenKeyword = "when";
 export const ContradictionKeyword = "contradiction";
+export const ReturnKeyword = ["return", "so"];
+export const ReturnExistKeyword = ["return_exist"];
 
 export const L_Keywords: string[] = [
   "#",
@@ -66,6 +68,8 @@ export const L_Keywords: string[] = [
   ...NotKeywords,
   ...OrKeywords,
   ...ByKeywords,
+  ...ReturnExistKeyword,
+  ...ReturnKeyword,
 ];
 
 export const LogicalOptPairs: { [k: string]: string[] } = {

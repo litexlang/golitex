@@ -47,6 +47,8 @@ import {
   IffThenKeywords,
   OnlyIfThenKeywords,
   ContradictionKeyword,
+  ReturnKeyword,
+  ReturnExistKeyword,
 } from "./common";
 
 export namespace L_Parser {
@@ -836,11 +838,11 @@ export namespace L_Parser {
     const index = tokens.length;
 
     try {
-      skip(tokens, "return");
+      skip(tokens, ReturnKeyword);
       const facts = factsParse(env, tokens, StdStmtEnds, true);
       return new ReturnNode(facts);
     } catch (error) {
-      handleParseError(env, "return", index, start);
+      handleParseError(env, "return/so", index, start);
       throw error;
     }
   }
@@ -850,7 +852,7 @@ export namespace L_Parser {
     const index = tokens.length;
 
     try {
-      skip(tokens, "return_exist");
+      skip(tokens, ReturnExistKeyword);
       const names: string[] = [];
       while (StdStmtEnds.includes(tokens[0])) {
         names.push(shiftVar(tokens));

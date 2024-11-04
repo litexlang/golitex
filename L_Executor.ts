@@ -497,6 +497,13 @@ export namespace L_Executor {
         }
       }
 
+      let father = env.getFather();
+      if (father) {
+        for (const factName of node.factNames) {
+          father.newHave(factName);
+        }
+      }
+
       return RType.True;
     } catch (error) {
       env.newMessage("return_exist");
