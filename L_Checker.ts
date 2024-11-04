@@ -93,6 +93,22 @@ export namespace L_Checker {
       let unknown = false;
       const map = new Map<string, string>();
 
+      {
+      }
+
+      // //! BYs are USED HERE
+      // for (const by of bys) {
+      //   for (const v of by.vars) {
+      //     const alreadyDeclared = map.get(v);
+      //     if (alreadyDeclared && alreadyDeclared !== toCheck.vars[i]) {
+      //       env.newMessage(
+      //         `${storedFact.vars[i]} is signed with 2 different symbols ${alreadyDeclared}, ${toCheck.vars[i]}`
+      //       );
+      //       return RType.Error;
+      //     }
+      //   }
+      // }
+
       const freeVarsOfAllLevels = storedFact.getAllFreeVars();
       // toCheck.vars.length === storedFact.vars.length
       for (let i = 0; i < storedFact.vars.length; i++) {

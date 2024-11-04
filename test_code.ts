@@ -389,8 +389,8 @@ const testList38 = [
   "prove x is q {let x; }", // Err
   "prove x is q {def x is q => ;};", // Err
   "x is q1 prove {x is q3, x is q2;};",
-  "x is q1 prove {let x;};",
-  "x is q1 prove {def x is q1 => ;};",
+  "x is q1 prove {let x;};", // Err
+  "x is q1 prove {def x is q1 => ;};", // Err
 ];
 
 const testList39 = [
@@ -460,7 +460,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList35: [testList35, false],
   testList36: [testList36, false],
   testList37: [testList37, false],
-  testList38: [testList38, false],
+  testList38: [testList38, true],
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
