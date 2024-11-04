@@ -171,4 +171,8 @@ export class L_Env {
 
     throw Error();
   }
+
+  optDeclaredHere(name: string): Boolean {
+    return this.declaredFacts.get(name) !== undefined;
+  }
 }

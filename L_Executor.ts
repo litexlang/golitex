@@ -12,6 +12,7 @@ import {
   LocalEnvNode,
   ReturnNode,
   ExistNode,
+  ReturnExistNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
@@ -49,6 +50,7 @@ export namespace L_Executor {
     ByNode: byExec,
     LocalEnvNode: localEnvExec,
     ReturnNode: returnExec,
+    ReturnExistNode: returnExistExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
@@ -474,6 +476,30 @@ export namespace L_Executor {
       return RType.True;
     } catch (error) {
       env.newMessage("exist");
+      return RType.Error;
+    }
+  }
+
+  function returnExistExec(env: L_Env, node: ReturnExistNode): RType {
+    try {
+      for (const factName of node.factNames) {
+        if (
+          !(
+            env.inHaves(factName) &&
+            env.optDeclared(factName) &&
+            !env.optDeclaredHere(factName)
+          )
+        ) {
+          env.newMessage(
+            `${factName} must be declared outside current environment and exist of this operator should be checked first.`
+          );
+          return RType.Error;
+        }
+      }
+
+      return RType.True;
+    } catch (error) {
+      env.newMessage("return_exist");
       return RType.Error;
     }
   }

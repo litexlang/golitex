@@ -18,6 +18,7 @@ import {
   OnlyIfNode,
   LocalEnvNode,
   ReturnNode,
+  ReturnExistNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import {
@@ -141,6 +142,7 @@ export namespace L_Parser {
     exist: existParse,
     have: haveParse,
     return: returnParse,
+    return_exist: returnExistParse,
   };
 
   export function getNodesFromSingleNode(
@@ -839,6 +841,27 @@ export namespace L_Parser {
       return new ReturnNode(facts);
     } catch (error) {
       handleParseError(env, "return", index, start);
+      throw error;
+    }
+  }
+
+  function returnExistParse(env: L_Env, tokens: string[]): ReturnExistNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, "return_exist");
+      const names: string[] = [];
+      while (StdStmtEnds.includes(tokens[0])) {
+        names.push(shiftVar(tokens));
+        if (isCurToken(tokens, ",")) {
+          skip(tokens, ",");
+        }
+      }
+
+      return new ReturnExistNode(names);
+    } catch (error) {
+      handleParseError(env, "return_exist", index, start);
       throw error;
     }
   }

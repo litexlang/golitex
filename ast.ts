@@ -403,6 +403,12 @@ export class ReturnNode extends L_Node {
   }
 }
 
+export class ReturnExistNode extends L_Node {
+  constructor(public factNames: string[]) {
+    super();
+  }
+}
+
 export class ExistNode extends L_Node {
   constructor(public facts: OptNode[]) {
     super();
