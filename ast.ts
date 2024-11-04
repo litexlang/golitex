@@ -201,8 +201,6 @@ export class DeclNode extends L_Node {
       return `def iff ${this.name}(${this.vars})`;
     else if (this instanceof OnlyIfDeclNode)
       return `def only_if ${this.name}(${this.vars})`;
-    else if (this instanceof ExistNode)
-      return `def Exist ${this.name}(${this.vars})`;
     else return `Declaration Error`;
   }
 }

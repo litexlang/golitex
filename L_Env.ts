@@ -9,9 +9,25 @@ export class L_Env {
   private declaredVars = new Set<string>();
   private storage = new Map<string, StoredFact[]>();
   private haves = new Set<string>();
+  private bys = new Map<string, StoredFact>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  // TODO: IF THE BY IS RELATED TO OPT WITH THE SAME NAME AT HIGHER LEVEL, WE SHOULD NOT RETURN IT. FOR
+  // TODO: THE TIME BEING, WE DON'T IMPLEMENT THAT PROTECTION.
+  getBy(s: string) {
+    let out = this.bys.get(s);
+    if (out !== undefined) return out;
+    else if (this.father === undefined) return undefined;
+    else return this.father.bys.get(s);
+  }
+
+  setBy(s: string, by: StoredFact) {
+    const out = this.bys.get(s);
+    if (!out) this.bys.set(s, by);
+    else throw Error(`By name ${s} is already occupied.`);
   }
 
   inHaves(name: string): Boolean {

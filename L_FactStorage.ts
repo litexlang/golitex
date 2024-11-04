@@ -87,6 +87,16 @@ export namespace L_FactStorage {
         new IfThenNode(toDecl.vars, [decl, ...toDecl.req], toDecl.onlyIfs),
         []
       );
+      if (toDecl.byName !== undefined) {
+        env.setBy(
+          toDecl.byName,
+          new StoredFact(
+            [], // vars used in by is unnecessary.
+            [new StoredReq(toDecl.vars, [decl, ...toDecl.req])],
+            true
+          )
+        );
+      }
     } else if (toDecl instanceof IffDeclNode) {
       storeIfThen(
         env,
