@@ -13,6 +13,7 @@ import {
   ReturnNode,
   ExistNode,
   ReturnExistNode,
+  ByNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
@@ -47,7 +48,7 @@ export namespace L_Executor {
     LetNode: letExec,
     ProveNode: proveExec,
     HaveNode: haveExec,
-    PostfixProve: byExec,
+    PostfixProve: PostfixProve,
     LocalEnvNode: localEnvExec,
     ReturnNode: returnExec,
     ReturnExistNode: returnExistExec,
@@ -340,19 +341,19 @@ export namespace L_Executor {
     }
   }
 
-  function byExec(env: L_Env, byNode: PostfixProve): RType {
+  function PostfixProve(env: L_Env, PostfixProve: PostfixProve): RType {
     try {
       const newEnv = new L_Env(env);
-      for (const subNode of byNode.block) {
+      for (const subNode of PostfixProve.block) {
         const out = nodeExec(newEnv, subNode, false);
         if (out !== RType.True) {
           newEnv.getMessages().forEach((e) => env.newMessage(e));
-          env.newMessage(`${byNode} failed.`);
+          env.newMessage(`${PostfixProve} failed.`);
           return out;
         }
       }
 
-      for (const fact of byNode.facts) {
+      for (const fact of PostfixProve.facts) {
         if (newEnv.someVarsDeclaredHere(fact, [])) {
           newEnv.getMessages().forEach((e) => env.newMessage(e));
           env.newMessage(
@@ -370,16 +371,16 @@ export namespace L_Executor {
         }
       }
 
-      for (const fact of byNode.facts) {
+      for (const fact of PostfixProve.facts) {
         const out = L_Checker.check(newEnv, fact);
         if (out !== RType.True) {
           newEnv.getMessages().forEach((e) => env.newMessage(e));
-          env.newMessage(`${byNode} failed.`);
+          env.newMessage(`${PostfixProve} failed.`);
           return out;
         }
       }
 
-      for (const fact of byNode.facts) {
+      for (const fact of PostfixProve.facts) {
         L_FactStorage.store(env, fact, []);
       }
 

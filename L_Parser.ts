@@ -19,6 +19,7 @@ import {
   LocalEnvNode,
   ReturnNode,
   ReturnExistNode,
+  ByNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import {
@@ -49,6 +50,7 @@ import {
   ContradictionKeyword,
   ReturnKeyword,
   ReturnExistKeyword,
+  ByKeyword,
 } from "./common";
 
 export namespace L_Parser {
@@ -145,6 +147,7 @@ export namespace L_Parser {
     have: haveParse,
     return: returnParse,
     return_exist: returnExistParse,
+    by: byParse,
   };
 
   export function getNodesFromSingleNode(
@@ -642,6 +645,10 @@ export namespace L_Parser {
           const fact = logicalOptParse(env, tokens);
           fact.isT = isT;
           out.push(fact);
+        } else if (tokens[0] === ByKeyword) {
+          const fact = byParse(env, tokens);
+          fact.isT = isT;
+          out.push(fact);
         } else if (tokens.length >= 2 && tokens[1] === "(") {
           const fact = OptParse(env, tokens, false); // false: When using factsParse, not prefix are already removed.
           fact.isT = isT;
@@ -886,6 +893,28 @@ export namespace L_Parser {
       return new ExistNode(facts);
     } catch (error) {
       handleParseError(env, "Exist prove", index, start);
+      throw error;
+    }
+  }
+
+  function byParse(env: L_Env, tokens: string[]): ByNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, ByKeyword);
+      const bys: OptNode[] = [];
+      while (!ThenKeywords.includes(tokens[0])) {
+        bys.push(OptParse(env, tokens, true));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      skip(tokens, ThenKeywords);
+      skip(tokens, "{");
+      const fact = factsParse(env, tokens, ["}"], false);
+      skip(tokens, "}");
+      return new ByNode(bys, fact); // TODO only parse one fact is enough.
+    } catch (error) {
+      handleParseError(env, "by", index, start);
       throw error;
     }
   }

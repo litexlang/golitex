@@ -412,6 +412,14 @@ const testList41 = [
   "prove_by_contradiction x is q {not q2(x); not q1(x);} contradiction  not q3(x);",
 ];
 
+const byList = [
+  "def x is obj => ;",
+  "def element_of(x,A) => ;",
+  "def equal(A,B) => if x | element_of(x,A) => {element_of(x,B)};",
+  "let x, A, B | element_of(x,A), equal(A,B);",
+  "by equal(A,B) => {element_of(x,B)};",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -456,7 +464,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, true],
+  setTheory: [setTheory, false],
 };
 
 export function testCode() {

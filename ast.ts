@@ -32,6 +32,29 @@ export abstract class FactNode extends L_Node {
   abstract factsDeclared(env: L_Env): Boolean;
 }
 
+export class ByNode extends FactNode {
+  constructor(
+    public bys: OptNode[],
+    public facts: FactNode[],
+    isT: Boolean = true
+  ) {
+    super(isT);
+  }
+  // TODO: implement methods
+  hashVars(varsToHash: string[]) {}
+  rmvHashFromVars(varsToHash: string[]): void {}
+  replaceVars(mapping: Map<string, string>): void {}
+  varsDeclared(env: L_Env): Boolean {
+    return false;
+  }
+  factsDeclared(env: L_Env): Boolean {
+    return false;
+  }
+  copy(): OrNode {
+    return new OrNode([]);
+  }
+}
+
 export class OrNode extends FactNode {
   constructor(
     public facts: FactNode[],
@@ -415,11 +438,11 @@ export class ExistNode extends L_Node {
   }
 }
 
-export class ByNode extends L_Node {
-  constructor(
-    public bys: OptNode[],
-    public fact: FactNode
-  ) {
-    super();
-  }
-}
+// export class ByNode extends L_Node {
+//   constructor(
+//     public bys: OptNode[],
+//     public fact: FactNode
+//   ) {
+//     super();
+//   }
+// }

@@ -32,7 +32,7 @@ export const ProveKeywords = ["prove"];
 export const StdStmtEnds = [";", "\n"];
 export const LetKeywords = ["let"];
 export const HaveKeywords = ["have"];
-
+export const ByKeyword = "by";
 export const ProveByContradictionKeyword = "prove_by_contradiction";
 export const IsKeywords = ["is"];
 export const AreKeywords = ["are"];
@@ -47,6 +47,7 @@ export const ReturnExistKeyword = ["return_exist"];
 
 export const L_Keywords: string[] = [
   "#",
+  ByKeyword,
   WhenKeyword,
   ...specialChars,
   ...KnowTypeKeywords,

@@ -1,20 +1,30 @@
-import { FactNode, IfThenNode, KnowNode, OptNode } from "./ast";
+import { ByNode, FactNode, IfThenNode, KnowNode, OptNode } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Executor, RType } from "./L_Executor";
 import { L_FactStorage, StoredFact } from "./L_FactStorage";
 
 export namespace L_Checker {
-  export function check(env: L_Env, toCheck: FactNode): RType {
+  export function check(
+    env: L_Env,
+    toCheck: FactNode,
+    bys: OptNode[] = []
+  ): RType {
     if (toCheck instanceof OptNode) {
-      return checkOpt(env, toCheck);
+      return checkOpt(env, toCheck, bys);
     } else if (toCheck instanceof IfThenNode) {
-      return checkIfThen(env, toCheck);
+      return checkIfThen(env, toCheck, bys);
+    } else if (toCheck instanceof ByNode) {
+      return checkBy(env, toCheck, bys);
     }
 
     return RType.Unknown;
   }
 
-  export function checkIfThen(env: L_Env, toCheck: IfThenNode): RType {
+  export function checkIfThen(
+    env: L_Env,
+    toCheck: IfThenNode,
+    bys: OptNode[]
+  ): RType {
     let out: RType = RType.True;
     const newEnv = new L_Env(env);
 
@@ -26,7 +36,7 @@ export namespace L_Checker {
 
     for (const f of toCheck.req) L_FactStorage.store(newEnv, f, []);
     for (const onlyIf of toCheck.onlyIfs) {
-      out = check(newEnv, onlyIf);
+      out = check(newEnv, onlyIf, bys);
       if (out !== RType.True) return out;
       else {
         // checked facts in then are used as stored fact.
@@ -47,7 +57,11 @@ export namespace L_Checker {
    *  WARNING: YOU SHOULD NOT DECLARE FREE VARIABLE WITH THE SAME NAME
    *  IN DIFFERENT LEVELS OF IFs in IF-THEN TYPE FACTS.
    */
-  export function checkOpt(env: L_Env, toCheck: OptNode): RType {
+  export function checkOpt(
+    env: L_Env,
+    toCheck: OptNode,
+    bys: OptNode[]
+  ): RType {
     const storedFacts: StoredFact[] | null = L_FactStorage.getStoredFacts(
       env,
       toCheck
@@ -151,7 +165,7 @@ export namespace L_Checker {
               // L_FactStorage.store(newEnv, toStore, []);
             }
           } else if (req instanceof IfThenNode) {
-            const out = checkOpt(newEnv, toCheck);
+            const out = checkOpt(newEnv, toCheck, bys);
             if (out === RType.True) continue;
             else if (out === RType.Error) {
               newEnv.getMessages().forEach((e) => env.newMessage(e));
@@ -202,5 +216,36 @@ export namespace L_Checker {
 
   export function checkOptInHave(env: L_Env, opt: OptNode): RType {
     return RType.Unknown;
+  }
+
+  function checkBy(env: L_Env, toCheck: ByNode, bys: OptNode[]): RType {
+    try {
+      let out = RType.Error;
+      for (const by of toCheck.bys) {
+        out = checkOpt(env, by, []);
+        if (out !== RType.True) {
+          if (out === RType.Error) {
+            env.newMessage(`Error to check ${by}`);
+          }
+          return out;
+        }
+      }
+
+      for (const fact of toCheck.facts) {
+        out = check(env, fact, toCheck.bys);
+
+        if (out !== RType.True) {
+          if (out === RType.Error) {
+            env.newMessage(`Error to check ${fact}`);
+          }
+          return out;
+        }
+      }
+
+      return RType.True;
+    } catch (error) {
+      env.newMessage("check by");
+      return RType.Error;
+    }
   }
 }
