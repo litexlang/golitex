@@ -13,8 +13,6 @@ export namespace L_Checker {
       return checkOpt(env, toCheck, bys);
     } else if (toCheck instanceof IfThenNode) {
       return checkIfThen(env, toCheck, bys);
-    } else if (toCheck instanceof ByNode) {
-      return checkBy(env, toCheck, bys);
     }
 
     return RType.Unknown;
@@ -232,36 +230,5 @@ export namespace L_Checker {
 
   export function checkOptInHave(env: L_Env, opt: OptNode): RType {
     return RType.Unknown;
-  }
-
-  function checkBy(env: L_Env, toCheck: ByNode, bys: OptNode[]): RType {
-    try {
-      let out = RType.Error;
-      for (const by of toCheck.bys) {
-        out = checkOpt(env, by, []);
-        if (out !== RType.True) {
-          if (out === RType.Error) {
-            env.newMessage(`Error to check ${by}`);
-          }
-          return out;
-        }
-      }
-
-      for (const fact of toCheck.facts) {
-        out = check(env, fact, toCheck.bys);
-
-        if (out !== RType.True) {
-          if (out === RType.Error) {
-            env.newMessage(`Error to check ${fact}`);
-          }
-          return out;
-        }
-      }
-
-      return RType.True;
-    } catch (error) {
-      env.newMessage("check by");
-      return RType.Error;
-    }
   }
 }

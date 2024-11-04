@@ -447,10 +447,6 @@ export namespace L_Parser {
           const fact = logicalOptParse(env, tokens);
           fact.isT = isT;
           out.push(fact);
-        } else if (tokens[0] === ByKeyword) {
-          const fact = byParse(env, tokens);
-          fact.isT = isT;
-          out.push(fact);
         } else if (tokens.length >= 2 && tokens[1] === "(") {
           const fact = OptParse(env, tokens, false); // false: When using factsParse, not prefix are already removed.
           fact.isT = isT;
@@ -780,16 +776,16 @@ export namespace L_Parser {
 
     try {
       skip(tokens, ByKeyword);
-      const bys: OptNode[] = [];
-      while (!ThenKeywords.includes(tokens[0])) {
-        bys.push(OptParse(env, tokens, true));
+      const byName = shiftVar(tokens);
+      skip(tokens, "(");
+      const vars: string[] = [];
+      while (!isCurToken(tokens, ")")) {
+        vars.push(shiftVar(tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
-      skip(tokens, ThenKeywords);
-      skip(tokens, "{");
-      const fact = factsParse(env, tokens, ["}"], false);
-      skip(tokens, "}");
-      return new ByNode(bys, fact);
+      skip(tokens, ")");
+
+      return new ByNode(byName, vars);
     } catch (error) {
       handleParseError(env, "by", index, start);
       throw error;

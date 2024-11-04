@@ -14,22 +14,6 @@ export abstract class FactNode extends L_Node {
   abstract factsDeclared(env: L_Env): Boolean;
 }
 
-export class ByNode extends FactNode {
-  constructor(
-    public bys: OptNode[],
-    public facts: FactNode[],
-    isT: Boolean = true
-  ) {
-    super(isT);
-  }
-  varsDeclared(env: L_Env): Boolean {
-    return false;
-  }
-  factsDeclared(env: L_Env): Boolean {
-    return false;
-  }
-}
-
 export class OrNode extends FactNode {
   constructor(
     public facts: FactNode[],
@@ -301,6 +285,15 @@ export class ReturnExistNode extends L_Node {
 
 export class ExistNode extends L_Node {
   constructor(public facts: OptNode[]) {
+    super();
+  }
+}
+
+export class ByNode extends L_Node {
+  constructor(
+    public byName: string,
+    public vars: string[]
+  ) {
     super();
   }
 }

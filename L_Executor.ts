@@ -129,6 +129,13 @@ export namespace L_Executor {
       // node.vars.forEach((e) => env.newVar(e, e));
 
       for (const f of node.facts) L_FactStorage.store(env, f, []);
+
+      for (const f of node.facts) {
+        if (f instanceof IfThenNode) {
+          L_FactStorage.storeIfThenBy(env, f, EmptyStoreFact);
+        }
+      }
+
       return RType.True;
     } catch (error) {
       env.newMessage(`Error: ${node.toString()}`);
@@ -139,7 +146,11 @@ export namespace L_Executor {
   export function knowExec(env: L_Env, node: KnowNode): RType {
     try {
       for (const fact of node.facts) L_FactStorage.store(env, fact, []);
-
+      for (const fact of node.facts) {
+        if (fact instanceof IfThenNode) {
+          L_FactStorage.storeIfThenBy(env, fact, EmptyStoreFact);
+        }
+      }
       return RType.True;
     } catch (error) {
       let m = `'${node.toString()}'`;
