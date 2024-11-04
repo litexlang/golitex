@@ -13,7 +13,7 @@ import {
   HaveNode,
   OnlyIfDeclNode,
   LogicalOptNode,
-  ByNode,
+  PostfixProve,
   IfThenDeclNode,
   OnlyIfNode,
   LocalEnvNode,
@@ -40,7 +40,7 @@ import {
   IffKeywords,
   LogicalOptPairs,
   LogicalKeywords,
-  ByKeywords,
+  PostfixProveKeywords,
   AreKeywords,
   DefKeywords,
   WhenKeyword,
@@ -169,11 +169,11 @@ export namespace L_Parser {
         holder.push(node);
         return node;
       } else {
-        const byNode = byFactsParse(env, tokens, StdStmtEnds, true);
-        if (byNode.block.length === 0) {
-          byNode.facts.forEach((e) => holder.push(e));
+        const postProve = PostfixProveParse(env, tokens, StdStmtEnds, true);
+        if (postProve.block.length === 0) {
+          postProve.facts.forEach((e) => holder.push(e));
         } else {
-          holder.push(byNode);
+          holder.push(postProve);
         }
       }
     } catch (error) {
@@ -743,20 +743,20 @@ export namespace L_Parser {
     }
   }
 
-  function byFactsParse(
+  function PostfixProveParse(
     env: L_Env,
     tokens: string[],
     end: string[],
     skipEnd: Boolean = false
-  ): ByNode {
+  ): PostfixProve {
     const start = tokens[0];
     const index = tokens.length;
 
     try {
-      const facts = factsParse(env, tokens, [...end, ...ByKeywords]);
+      const facts = factsParse(env, tokens, [...end, ...PostfixProveKeywords]);
       const block: L_Node[] = [];
-      if (ByKeywords.includes(tokens[0])) {
-        skip(tokens, ByKeywords);
+      if (PostfixProveKeywords.includes(tokens[0])) {
+        skip(tokens, PostfixProveKeywords);
         skip(tokens, "{");
         while (tokens[0] !== "}") {
           while (["\n", ";"].includes(tokens[0])) {
@@ -771,7 +771,7 @@ export namespace L_Parser {
 
       if (skipEnd) skip(tokens, end);
 
-      return new ByNode(facts, block);
+      return new PostfixProve(facts, block);
     } catch (error) {
       handleParseError(env, "fact", index, start);
       throw error;

@@ -80,7 +80,8 @@ export namespace L_Checker {
       const map = new Map<string, string>();
 
       const freeVarsOfAllLevels = storedFact.getAllFreeVars();
-      for (let i = 0; i < toCheck.vars.length; i++) {
+      // toCheck.vars.length === storedFact.vars.length
+      for (let i = 0; i < storedFact.vars.length; i++) {
         if (freeVarsOfAllLevels.includes(storedFact.vars[i])) {
           const alreadyDeclared = map.get(storedFact.vars[i]);
           if (alreadyDeclared && alreadyDeclared !== toCheck.vars[i]) {
@@ -94,6 +95,20 @@ export namespace L_Checker {
         }
       }
 
+      // for (let i = 0; i < toCheck.vars.length; i++) {
+      //   if (freeVarsOfAllLevels.includes(storedFact.vars[i])) {
+      //     const alreadyDeclared = map.get(storedFact.vars[i]);
+      //     if (alreadyDeclared && alreadyDeclared !== toCheck.vars[i]) {
+      //       env.newMessage(
+      //         `${storedFact.vars[i]} is signed with 2 different symbols ${alreadyDeclared}, ${toCheck.vars[i]}`
+      //       );
+      //       return RType.Error;
+      //     }
+
+      //     map.set(storedFact.vars[i], toCheck.vars[i]);
+      //   }
+      // }
+
       for (const currentLevelReq of storedFact.req) {
         // this is necessary because 1. I SIMPLY NEED A NEATER STORAGE SYSTEM THAT ALIGNS WITH THE HIERARCHY OF IF-THENs THE FACT IS STORED. 2. store checked req as future stored facts. 3. If some vars of the req is free, then the req is not checked, it is stored as a fact.
         let newEnv = new L_Env(env);
@@ -106,8 +121,8 @@ export namespace L_Checker {
               const fixed = map.get(v);
               if (fixed === undefined) {
                 everyVarInThisReqIsFixed = false;
-                fixedVars.push(v);
                 break;
+                // fixedVars.push(v);
               } else {
                 fixedVars.push(fixed);
               }
@@ -129,8 +144,11 @@ export namespace L_Checker {
                 break;
               }
             } else {
-              const toStore = new OptNode(req.fullName, fixedVars);
-              L_FactStorage.store(newEnv, toStore, []);
+              //! WARNING: UNKNOWN SHOULD BE THROWN HERE INSTEAD OF STORING NEW FACTS
+              unknown = true;
+              break;
+              // const toStore = new OptNode(req.fullName, fixedVars);
+              // L_FactStorage.store(newEnv, toStore, []);
             }
           } else if (req instanceof IfThenNode) {
             const out = checkOpt(newEnv, toCheck);

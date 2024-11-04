@@ -6,7 +6,7 @@ import {
   DeclNode,
   ProveNode,
   HaveNode,
-  ByNode,
+  PostfixProve,
   IfThenNode,
   OptNode,
   LocalEnvNode,
@@ -47,7 +47,7 @@ export namespace L_Executor {
     LetNode: letExec,
     ProveNode: proveExec,
     HaveNode: haveExec,
-    ByNode: byExec,
+    PostfixProve: byExec,
     LocalEnvNode: localEnvExec,
     ReturnNode: returnExec,
     ReturnExistNode: returnExistExec,
@@ -340,7 +340,7 @@ export namespace L_Executor {
     }
   }
 
-  function byExec(env: L_Env, byNode: ByNode): RType {
+  function byExec(env: L_Env, byNode: PostfixProve): RType {
     try {
       const newEnv = new L_Env(env);
       for (const subNode of byNode.block) {

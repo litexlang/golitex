@@ -178,7 +178,7 @@ const testList19 = [
   "def obj1(x) => x is obj0;",
   "def obj2(x) => obj1(x);",
   "let x | obj2(x);",
-  "x is obj0 by {x is obj1;};", // If we put by at the end, then it's a declarative way of proving: instead of procedurally prove a result, we now declare a result at beginning and then prove it.
+  "x is obj0 prove· {x is obj1;};", // If we put by at the end, then it's a declarative way of proving: instead of procedurally prove a result, we now declare a result at beginning and then prove it.
 ];
 
 const setTheory1 = [
@@ -388,9 +388,9 @@ const testList38 = [
   "prove x is q {x is q2; x is q1;}",
   "prove x is q {let x; }", // Err
   "prove x is q {def x is q => ;};", // Err
-  "x is q1 by {x is q3, x is q2;};",
-  "x is q1 by {let x;};",
-  "x is q1 by {def x is q1 => ;};",
+  "x is q1 prove {x is q3, x is q2;};",
+  "x is q1 prove {let x;};",
+  "x is q1 prove {def x is q1 => ;};",
 ];
 
 const testList39 = [
