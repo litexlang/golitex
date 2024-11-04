@@ -311,4 +311,8 @@ export class DefByNode extends L_Node {
   ) {
     super();
   }
+
+  toString() {
+    return `def_by ${this.byName} ${this.fact}`;
+  }
 }

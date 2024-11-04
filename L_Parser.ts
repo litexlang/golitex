@@ -134,6 +134,7 @@ export namespace L_Parser {
     return: returnParse,
     return_exist: returnExistParse,
     by: byParse,
+    def_by: defByParse,
   };
 
   export function getNodesFromSingleNode(
@@ -794,6 +795,13 @@ export namespace L_Parser {
           `Current version does not support giving by name to facts which are not of type if`
         );
         throw Error();
+      }
+
+      for (const onlyIf of ifThen.onlyIfs) {
+        if (!(onlyIf instanceof OptNode)) {
+          env.newMessage(`onlyIfs in def_by must be opt type.`);
+          throw Error();
+        }
       }
 
       return new DefByNode(byName, ifThen as IfThenNode);

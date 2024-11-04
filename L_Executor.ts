@@ -14,10 +14,11 @@ import {
   ExistNode,
   ReturnExistNode,
   ByNode,
+  DefByNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
-import { L_FactStorage } from "./L_FactStorage";
+import { L_FactStorage, StoredFact, StoredReq } from "./L_FactStorage";
 
 export enum RType {
   Error,
@@ -52,6 +53,7 @@ export namespace L_Executor {
     LocalEnvNode: localEnvExec,
     ReturnNode: returnExec,
     ReturnExistNode: returnExistExec,
+    DefByNode: defByExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
@@ -508,6 +510,23 @@ export namespace L_Executor {
       return RType.True;
     } catch (error) {
       env.newMessage("return_exist");
+      return RType.Error;
+    }
+  }
+
+  function defByExec(env: L_Env, node: DefByNode): RType {
+    try {
+      let out = factExec(env, node.fact);
+      if (!(out === RType.True)) {
+        env.newMessage(`Failed to check ${node.fact}`);
+        return out;
+      }
+
+      env.setBy(node.byName, node.fact);
+
+      return RType.True;
+    } catch (error) {
+      env.newMessage("def_by");
       return RType.Error;
     }
   }

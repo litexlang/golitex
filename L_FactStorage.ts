@@ -1,3 +1,4 @@
+import exp from "constants";
 import {
   DeclNode,
   FactNode,
@@ -90,11 +91,7 @@ export namespace L_FactStorage {
       if (toDecl.byName !== undefined) {
         env.setBy(
           toDecl.byName,
-          new StoredFact(
-            [], // vars used in by is unnecessary.
-            [new StoredReq(toDecl.vars, [decl, ...toDecl.req])],
-            true
-          )
+          new IfThenNode(toDecl.vars, [decl, ...toDecl.req], toDecl.onlyIfs)
         );
       }
     } else if (toDecl instanceof IffDeclNode) {
