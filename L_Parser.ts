@@ -19,6 +19,8 @@ import {
   ReturnExistNode,
   ByNode,
   DefByNode,
+  OnlyIfNode,
+  IffNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import {
@@ -544,8 +546,26 @@ export namespace L_Parser {
 
       const onlyIfs = factsParse(env, tokens, ["}"], true);
 
-      const out = LogicalOptNode.create(type, vars, req, onlyIfs);
-      return out;
+      let byName: string | undefined = undefined;
+
+      if (isCurToken(tokens, "[")) {
+        skip(tokens, "[");
+        byName = shiftVar(tokens);
+        skip(tokens, "]");
+      }
+
+      if (IfKeywords.includes(type)) {
+        const out = new IfThenNode(vars, req, onlyIfs, true, byName);
+        return out;
+      } else if (OnlyIfKeywords.includes(type)) {
+        const out = new OnlyIfNode(vars, req, onlyIfs, true, byName);
+        return out;
+      } else if (IffKeywords.includes(type)) {
+        const out = new IffNode(vars, req, onlyIfs, true, byName);
+        return out;
+      }
+
+      throw Error();
     } catch (error) {
       handleParseError(env, "if-then", index, start);
       throw error;
@@ -594,13 +614,6 @@ export namespace L_Parser {
     try {
       skip(tokens, DefKeywords);
 
-      let byName: undefined | string = undefined;
-      if (isCurToken(tokens, "[")) {
-        skip(tokens, "[");
-        byName = shiftVar(tokens);
-        skip(tokens, "]");
-      }
-
       const opt: OptNode = OptParse(env, tokens, false);
       const separator = shiftVar(tokens);
 
@@ -617,6 +630,13 @@ export namespace L_Parser {
       if (tokens[0] === WhenKeyword) {
         skip(tokens, WhenKeyword);
         req = factsParse(env, tokens, StdStmtEnds, false);
+      }
+
+      let byName: undefined | string = undefined;
+      if (isCurToken(tokens, "[")) {
+        skip(tokens, "[");
+        byName = shiftVar(tokens);
+        skip(tokens, "]");
       }
 
       skip(tokens, StdStmtEnds);

@@ -421,12 +421,14 @@ const byList = [
 ];
 
 const testList42 = [
-  "def[q_def] x is q => {};",
-  "def[q0_def] x is q0 => {x is q};",
+  "def x is q => {} ;",
+  "def x is q0 => {x is q} [q0_def];",
   "let x;",
   "know x is q;",
-  "def_by [p_then_q] if x | x is q0 => { x is q};",
-  "",
+  "if y | y is q0 => {y is q} [q0_fact1];",
+  // "def_by if x | x is q0 => { if y | y is q => {y is q}[p_then_q] };",
+  // "def x is p2 => {};",
+  // "def x is q1 => {if y | y is p2 => {y is q}[q1_then_p2] };",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {

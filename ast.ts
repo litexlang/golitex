@@ -53,7 +53,8 @@ export abstract class LogicalOptNode extends FactNode {
     //! I think we should onlyIfs: FactNode[] because despite we can not store if-then
     //! we can still check it.
     public onlyIfs: FactNode[] = [],
-    isT: Boolean = true
+    isT: Boolean = true,
+    public byName: undefined | string = undefined
   ) {
     super(isT);
   }
@@ -79,21 +80,21 @@ export abstract class LogicalOptNode extends FactNode {
     return notPart + mainPart + useNamePart;
   }
 
-  static create(
-    type: string,
-    vars: string[],
-    req: FactNode[],
-    onlyIfs: FactNode[]
-  ): LogicalOptNode {
-    if (IfKeywords.includes(type)) {
-      return new IfThenNode(vars, req, onlyIfs);
-    } else if (IffKeywords.includes(type)) {
-      return new IffNode(vars, req, onlyIfs);
-    } else if (OnlyIfKeywords.includes(type)) {
-      return new OnlyIfNode(vars, req, onlyIfs);
-    }
-    throw Error();
-  }
+  // static create(
+  //   type: string,
+  //   vars: string[],
+  //   req: FactNode[],
+  //   onlyIfs: FactNode[]
+  // ): LogicalOptNode {
+  //   if (IfKeywords.includes(type)) {
+  //     return new IfThenNode(vars, req, onlyIfs);
+  //   } else if (IffKeywords.includes(type)) {
+  //     return new IffNode(vars, req, onlyIfs);
+  //   } else if (OnlyIfKeywords.includes(type)) {
+  //     return new OnlyIfNode(vars, req, onlyIfs);
+  //   }
+  //   throw Error();
+  // }
 
   varsDeclared(env: L_Env, freeVars: string[]): Boolean {
     return [...this.req, ...this.onlyIfs].every((e) =>

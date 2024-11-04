@@ -53,7 +53,6 @@ export namespace L_Executor {
     LocalEnvNode: localEnvExec,
     ReturnNode: returnExec,
     ReturnExistNode: returnExistExec,
-    DefByNode: defByExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
@@ -403,6 +402,7 @@ export namespace L_Executor {
       if (out === RType.True) {
         L_FactStorage.store(env, toCheck, []);
       }
+
       return out;
     } catch (error) {
       env.newMessage(`failed to check ${toCheck}`);
@@ -510,23 +510,6 @@ export namespace L_Executor {
       return RType.True;
     } catch (error) {
       env.newMessage("return_exist");
-      return RType.Error;
-    }
-  }
-
-  function defByExec(env: L_Env, node: DefByNode): RType {
-    try {
-      let out = factExec(env, node.fact);
-      if (!(out === RType.True)) {
-        env.newMessage(`Failed to check ${node.fact}`);
-        return out;
-      }
-
-      env.setBy(node.byName, node.fact);
-
-      return RType.True;
-    } catch (error) {
-      env.newMessage("def_by");
       return RType.Error;
     }
   }

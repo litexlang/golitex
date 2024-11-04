@@ -83,32 +83,48 @@ export namespace L_FactStorage {
   export function declNewFact(env: L_Env, toDecl: DeclNode) {
     const decl = new OptNode(toDecl.name, toDecl.vars);
     if (toDecl instanceof IfThenDeclNode) {
-      storeIfThen(
-        env,
-        new IfThenNode(toDecl.vars, [decl, ...toDecl.req], toDecl.onlyIfs),
-        []
+      const ifThen = new IfThenNode(
+        toDecl.vars,
+        [decl, ...toDecl.req],
+        toDecl.onlyIfs,
+        true,
+        toDecl.byName
       );
-      if (toDecl.byName !== undefined) {
-        env.setBy(
-          toDecl.byName,
-          new IfThenNode(toDecl.vars, [decl, ...toDecl.req], toDecl.onlyIfs)
-        );
-      }
+      storeIfThen(env, ifThen, []);
+      L_FactStorage.storeIfThenBy(env, ifThen, new StoredFact([], [], true));
     } else if (toDecl instanceof IffDeclNode) {
       storeIfThen(
         env,
-        new IfThenNode(toDecl.vars, [decl, ...toDecl.req], toDecl.onlyIfs),
+        new IfThenNode(
+          toDecl.vars,
+          [decl, ...toDecl.req],
+          toDecl.onlyIfs,
+          true,
+          toDecl.byName
+        ),
         []
       );
       storeIfThen(
         env,
-        new IfThenNode(toDecl.vars, [...toDecl.req, ...toDecl.onlyIfs], [decl]),
+        new IfThenNode(
+          toDecl.vars,
+          [...toDecl.req, ...toDecl.onlyIfs],
+          [decl],
+          true,
+          toDecl.byName
+        ),
         []
       );
     } else if (toDecl instanceof OnlyIfDeclNode) {
       storeIfThen(
         env,
-        new IfThenNode(toDecl.vars, [...toDecl.req, ...toDecl.onlyIfs], [decl]),
+        new IfThenNode(
+          toDecl.vars,
+          [...toDecl.req, ...toDecl.onlyIfs],
+          [decl],
+          true,
+          toDecl.byName
+        ),
         []
       );
     }
@@ -212,5 +228,27 @@ export namespace L_FactStorage {
     }
 
     return out;
+  }
+
+  export function storeIfThenBy(
+    env: L_Env,
+    ifThen: IfThenNode,
+    higherStoredFact: StoredFact
+  ): void {
+    try {
+      higherStoredFact.req.push(new StoredReq(ifThen.vars, ifThen.req));
+
+      if (ifThen.byName !== undefined) {
+        env.setBy(ifThen.byName, higherStoredFact);
+        return;
+      } else {
+        for (const onlyIf of ifThen.onlyIfs) {
+          if (onlyIf instanceof IfThenNode)
+            storeIfThenBy(env, onlyIf, higherStoredFact);
+        }
+      }
+    } catch (error) {
+      throw Error();
+    }
   }
 }
