@@ -123,7 +123,8 @@ export namespace L_Parser {
     know: knowParse,
     let: letParse,
     "{": localEnvParse,
-    def: defineParse,
+    // def: defineParse,
+    def: yaDefineParse,
     prove: proveParse,
     prove_by_contradiction: proveParse,
     exist: existParse,
@@ -583,12 +584,69 @@ export namespace L_Parser {
     }
   }
 
+  function yaDefineParse(env: L_Env, tokens: string[]): DeclNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, DefKeywords);
+
+      let byName: undefined | string = undefined;
+      if (isCurToken(tokens, "[")) {
+        skip(tokens, "[");
+        byName = shiftVar(tokens);
+        skip(tokens, "]");
+      }
+
+      const opt: OptNode = OptParse(env, tokens, false);
+      const separator = shiftVar(tokens);
+
+      skip(tokens, "{");
+      const onlyIfs = factsParse(
+        env,
+        tokens,
+        StdStmtEnds.concat(WhenKeyword).concat(["}"]),
+        false
+      );
+      skip(tokens, "}");
+
+      let req: FactNode[] = [];
+      if (tokens[0] === WhenKeyword) {
+        skip(tokens, WhenKeyword);
+        req = factsParse(env, tokens, StdStmtEnds, false);
+      }
+
+      skip(tokens, StdStmtEnds);
+
+      if (ThenKeywords.includes(separator)) {
+        return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+      } else if (IffThenKeywords.includes(separator)) {
+        return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+      } else if (OnlyIfThenKeywords.includes(separator)) {
+        return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+      }
+
+      throw Error();
+    } catch (error) {
+      handleParseError(env, "define", index, start);
+      throw error;
+    }
+  }
+
   function defineParse(env: L_Env, tokens: string[]): DeclNode {
     const start = tokens[0];
     const index = tokens.length;
 
     try {
       skip(tokens, DefKeywords);
+
+      let byName: undefined | string = undefined;
+      if (isCurToken(tokens, "[")) {
+        skip(tokens, "[");
+        byName = shiftVar(tokens);
+        skip(tokens, "]");
+      }
+
       const opt: OptNode = OptParse(env, tokens, false);
       const separator = shiftVar(tokens);
 
@@ -608,11 +666,11 @@ export namespace L_Parser {
       skip(tokens, StdStmtEnds);
 
       if (ThenKeywords.includes(separator)) {
-        return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs);
+        return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
       } else if (IffThenKeywords.includes(separator)) {
-        return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs);
+        return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
       } else if (OnlyIfThenKeywords.includes(separator)) {
-        return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs);
+        return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
       }
 
       throw Error();

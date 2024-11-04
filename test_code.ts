@@ -420,6 +420,15 @@ const byList = [
   "by equal(A,B) => {element_of(x,B)};",
 ];
 
+const testList42 = [
+  "def[q_def] x is q => {};",
+  "def[q0_def] x is q0 => {x is q};",
+  // "def<storedFactInDef> x is p => {} when x is q;",
+  // "let x;",
+  // "know x is q;",
+  // "if <storedFact> x | x is p => {is q};",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -458,13 +467,14 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList33: [testList33, false],
   testList34: [testList34, false],
   testList35: [testList35, false],
-  testList36: [testList36, true],
+  testList36: [testList36, false],
   testList37: [testList37, false],
-  testList38: [testList38, true],
+  testList38: [testList38, false],
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
   setTheory: [setTheory, false],
+  testList42: [testList42, true],
 };
 
 export function testCode() {

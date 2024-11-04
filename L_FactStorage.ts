@@ -25,7 +25,6 @@ export class StoredFact {
   constructor(
     public vars: string[], // stored fixed
     public req: StoredReq[], // when adding a new layer of if-then, push a new req list (FactNode[]) at end of req.
-    // public env: L_Env,
     public isT: Boolean
   ) {}
 

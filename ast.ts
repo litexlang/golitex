@@ -172,27 +172,27 @@ export class OptNode extends FactNode {
   }
 }
 
-export abstract class DeclNode extends L_Node {
-  // WHEN ADDING FIELD HERE, DON'T FORGET TO UPDATE copyTo()
+export class DeclNode extends L_Node {
   constructor(
     public name: string = "",
     public vars: string[] = [],
     public req: FactNode[] = [],
-    public onlyIfs: FactNode[] = []
+    public onlyIfs: FactNode[] = [],
+    public byName: string | undefined = undefined
   ) {
     super();
   }
 
-  static create(name: string, node: LogicalOptNode): DeclNode {
-    if (node instanceof IfThenNode) {
-      return new IfThenDeclNode(name, node.vars, node.req, node.onlyIfs);
-    } else if (node instanceof IffNode) {
-      return new IffDeclNode(name, node.vars, node.req, node.onlyIfs);
-    } else if (node instanceof OnlyIfNode) {
-      return new OnlyIfDeclNode(name, node.vars, node.req, node.onlyIfs);
-    }
-    throw Error();
-  }
+  // static create(name: string, node: LogicalOptNode): DeclNode {
+  //   if (node instanceof IfThenNode) {
+  //     return new IfThenDeclNode(name, node.vars, node.req, node.onlyIfs);
+  //   } else if (node instanceof IffNode) {
+  //     return new IffDeclNode(name, node.vars, node.req, node.onlyIfs);
+  //   } else if (node instanceof OnlyIfNode) {
+  //     return new OnlyIfDeclNode(name, node.vars, node.req, node.onlyIfs);
+  //   }
+  //   throw Error();
+  // }
 
   toString() {
     if (this instanceof IfThenDeclNode)
