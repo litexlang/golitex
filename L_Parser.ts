@@ -18,7 +18,6 @@ import {
   ReturnNode,
   ReturnExistNode,
   ByNode,
-  DefByNode,
   OnlyIfNode,
   IffNode,
 } from "./ast";
@@ -136,7 +135,6 @@ export namespace L_Parser {
     return: returnParse,
     return_exist: returnExistParse,
     by: byParse,
-    def_by: defByParse,
   };
 
   export function getNodesFromSingleNode(
@@ -792,39 +790,6 @@ export namespace L_Parser {
       const fact = factsParse(env, tokens, ["}"], false);
       skip(tokens, "}");
       return new ByNode(bys, fact);
-    } catch (error) {
-      handleParseError(env, "by", index, start);
-      throw error;
-    }
-  }
-
-  function defByParse(env: L_Env, tokens: string[]): DefByNode {
-    const start = tokens[0];
-    const index = tokens.length;
-
-    try {
-      skip(tokens, DefByKeywords);
-      skip(tokens, "[");
-      const byName = shiftVar(tokens);
-      skip(tokens, "]");
-
-      const ifThen = factsParse(env, tokens, StdStmtEnds, true)[0];
-
-      if (!(ifThen instanceof IfThenNode)) {
-        env.newMessage(
-          `Current version does not support giving by name to facts which are not of type if`
-        );
-        throw Error();
-      }
-
-      for (const onlyIf of ifThen.onlyIfs) {
-        if (!(onlyIf instanceof OptNode)) {
-          env.newMessage(`onlyIfs in def_by must be opt type.`);
-          throw Error();
-        }
-      }
-
-      return new DefByNode(byName, ifThen as IfThenNode);
     } catch (error) {
       handleParseError(env, "by", index, start);
       throw error;

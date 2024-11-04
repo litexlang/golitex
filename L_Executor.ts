@@ -14,11 +14,15 @@ import {
   ExistNode,
   ReturnExistNode,
   ByNode,
-  DefByNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
-import { L_FactStorage, StoredFact, StoredReq } from "./L_FactStorage";
+import {
+  EmptyStoreFact,
+  L_FactStorage,
+  StoredFact,
+  StoredReq,
+} from "./L_FactStorage";
 
 export enum RType {
   Error,
@@ -401,6 +405,10 @@ export namespace L_Executor {
       let out = L_Checker.check(env, toCheck);
       if (out === RType.True) {
         L_FactStorage.store(env, toCheck, []);
+      }
+
+      if (toCheck instanceof IfThenNode) {
+        L_FactStorage.storeIfThenBy(env, toCheck, EmptyStoreFact);
       }
 
       return out;
