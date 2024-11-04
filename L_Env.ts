@@ -191,4 +191,12 @@ export class L_Env {
   optDeclaredHere(name: string): Boolean {
     return this.declaredFacts.get(name) !== undefined;
   }
+
+  printBys() {
+    console.log("\n-----Bys-----\n");
+    for (const [byName, by] of this.bys) {
+      console.log(byName);
+      console.log(`${by}\n`);
+    }
+  }
 }

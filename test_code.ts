@@ -423,10 +423,9 @@ const byList = [
 const testList42 = [
   "def[q_def] x is q => {};",
   "def[q0_def] x is q0 => {x is q};",
-  // "def<storedFactInDef> x is p => {} when x is q;",
-  // "let x;",
-  // "know x is q;",
-  // "if <storedFact> x | x is p => {is q};",
+  "let x;",
+  "know x is q;",
+  "def_by [p_then_q] if x | x is p => {is q};",
 ];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
@@ -497,6 +496,7 @@ export function testCode() {
     // L_FactStorage.printEnvFacts(env);
     env.printAllStoredFacts();
     env.printClearMessage();
+    env.printBys();
   }
 }
 

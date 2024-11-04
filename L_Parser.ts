@@ -18,6 +18,7 @@ import {
   ReturnNode,
   ReturnExistNode,
   ByNode,
+  DefByNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
 import {
@@ -47,6 +48,7 @@ import {
   ReturnKeyword,
   ReturnExistKeyword,
   ByKeyword,
+  DefByKeywords,
 } from "./common";
 
 export namespace L_Parser {
@@ -768,7 +770,33 @@ export namespace L_Parser {
       skip(tokens, "{");
       const fact = factsParse(env, tokens, ["}"], false);
       skip(tokens, "}");
-      return new ByNode(bys, fact); // TODO only parse one fact is enough.
+      return new ByNode(bys, fact);
+    } catch (error) {
+      handleParseError(env, "by", index, start);
+      throw error;
+    }
+  }
+
+  function defByParse(env: L_Env, tokens: string[]): DefByNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      skip(tokens, DefByKeywords);
+      skip(tokens, "[");
+      const byName = shiftVar(tokens);
+      skip(tokens, "]");
+
+      const ifThen = factsParse(env, tokens, StdStmtEnds, true)[0];
+
+      if (!(ifThen instanceof IfThenNode)) {
+        env.newMessage(
+          `Current version does not support giving by name to facts which are not of type if`
+        );
+        throw Error();
+      }
+
+      return new DefByNode(byName, ifThen as IfThenNode);
     } catch (error) {
       handleParseError(env, "by", index, start);
       throw error;

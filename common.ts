@@ -44,6 +44,7 @@ export const WhenKeyword = "when";
 export const ContradictionKeyword = "contradiction";
 export const ReturnKeyword = ["return", "so"];
 export const ReturnExistKeyword = ["return_exist"];
+export const DefByKeywords = ["def_by"];
 
 export const L_Keywords: string[] = [
   "#",
@@ -71,6 +72,7 @@ export const L_Keywords: string[] = [
   ...PostfixProveKeywords,
   ...ReturnExistKeyword,
   ...ReturnKeyword,
+  ...DefByKeywords,
 ];
 
 export const LogicalOptPairs: { [k: string]: string[] } = {

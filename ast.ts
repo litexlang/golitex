@@ -303,3 +303,12 @@ export class ExistNode extends L_Node {
     super();
   }
 }
+
+export class DefByNode extends L_Node {
+  constructor(
+    public byName: string,
+    public fact: IfThenNode
+  ) {
+    super();
+  }
+}
