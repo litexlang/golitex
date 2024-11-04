@@ -1,6 +1,6 @@
 import { ByNode, FactNode, IfThenNode, KnowNode, OptNode } from "./ast";
 import { L_Env } from "./L_Env";
-import { L_Executor, RType } from "./L_Executor";
+import { RType } from "./L_Executor";
 import { L_FactStorage, StoredFact } from "./L_FactStorage";
 
 export namespace L_Checker {
