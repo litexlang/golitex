@@ -182,7 +182,7 @@ const testList19 = [
   "def obj1(x) => {x is obj0};",
   "def obj2(x) => {obj1(x)};",
   "let x : obj2(x);",
-  "x is obj0 prove· {x is obj1;};", // If we put by at the end, then it's a declarative way of proving: instead of procedurally prove a result, we now declare a result at beginning and then prove it.
+  "x is obj0 prove {x is obj1;};", // If we put by at the end, then it's a declarative way of proving: instead of procedurally prove a result, we now declare a result at beginning and then prove it.
 ];
 
 const setTheory1 = [

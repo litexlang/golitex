@@ -47,6 +47,12 @@ export const exampleDict = {
     code: [
       "x is p;",
       "x is q0;", // unknown
+    ],
+    debug: true,
+    print: false,
+  },
+  if_for_all: {
+    code: [
       "if x : x is p2 => {x is p1};",
       "if x : x is p2 => {x is p2};",
       "if x : x is p2, y is p1 => {}",
@@ -55,6 +61,11 @@ export const exampleDict = {
       "if x : y is p1 => {y is p};",
       "if a: => {if : a is p1 => {if : => {a is p}}};",
     ],
+    debug: true,
+    print: false,
+  },
+  not: {
+    code: ["if x | x is not q0 => {x is not q0};"],
     debug: true,
     print: false,
   },
@@ -82,7 +93,7 @@ export const exampleDict = {
   },
   prove: {
     code: [
-      "prove if x | x is p2 => {x is p} {x is p1;}",
+      "prove if x : x is p2 => {x is p} {x is p1;}",
       "know z is p3;",
       "prove z is p {z is p2; z is p1;}",
     ],
@@ -91,9 +102,14 @@ export const exampleDict = {
   },
   prove_by_contradiction: {
     code: [
-      "let n | n is not p",
+      "let n : n is not p",
       "prove_by_contradiction n is not p3 {n is p2; n is p1;} contradiction n is p;",
     ],
+    debug: true,
+    print: false,
+  },
+  postfix_prove: {
+    code: ["z is p2 prove {z is p3};"],
     debug: true,
     print: false,
   },
@@ -112,14 +128,23 @@ export const exampleDict = {
   },
   block: {
     code: [
-      "let x1, x2 ,x3 | x2 is object;",
+      "let x1, x2 ,x3 : x2 is object; def x is object2 => {x is set};",
       `  {
       def x is object => {};
       know x1 is object;
       x1,x2 are object; 
+        {
+          x1 is object;
+          {
+            def x is object => {x is object2};
+            x1 is object;
+            if x : object => {x is object2, x is set};
+          }
+        }
       }`,
       "x1 is object;",
       "x2 is object;",
+      "if x : object => {x is object2};",
     ],
     debug: true,
     print: false,
