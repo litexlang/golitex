@@ -161,7 +161,23 @@ export namespace L_Executor {
       const ok = env.safeDeclOpt(node.name, node);
       if (!ok) return RType.Error;
 
+      // declare new opt
       L_FactStorage.declNewFact(env, node);
+
+      // store declared opt by
+      L_FactStorage.storeDeclaredIfThenAsBy(env, node);
+
+      // store bys in onlyIfs
+      for (const onlyIf of node.onlyIfs) {
+        if (onlyIf instanceof IfThenNode) {
+          const higherStoreReq = new StoredReq(node.vars, [
+            new OptNode(node.name, node.vars),
+            ...node.req,
+          ]);
+          const higherStoredFact = new StoredFact([], [higherStoreReq], true);
+          L_FactStorage.storeIfThenBy(env, onlyIf, higherStoredFact);
+        }
+      }
 
       return RType.True;
     } catch (error) {

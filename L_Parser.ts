@@ -650,52 +650,52 @@ export namespace L_Parser {
     }
   }
 
-  function defineParse(env: L_Env, tokens: string[]): DeclNode {
-    const start = tokens[0];
-    const index = tokens.length;
+  // function defineParse(env: L_Env, tokens: string[]): DeclNode {
+  //   const start = tokens[0];
+  //   const index = tokens.length;
 
-    try {
-      skip(tokens, DefKeywords);
+  //   try {
+  //     skip(tokens, DefKeywords);
 
-      let byName: undefined | string = undefined;
-      if (isCurToken(tokens, "[")) {
-        skip(tokens, "[");
-        byName = shiftVar(tokens);
-        skip(tokens, "]");
-      }
+  //     let byName: undefined | string = undefined;
+  //     if (isCurToken(tokens, "[")) {
+  //       skip(tokens, "[");
+  //       byName = shiftVar(tokens);
+  //       skip(tokens, "]");
+  //     }
 
-      const opt: OptNode = OptParse(env, tokens, false);
-      const separator = shiftVar(tokens);
+  //     const opt: OptNode = OptParse(env, tokens, false);
+  //     const separator = shiftVar(tokens);
 
-      const onlyIfs = factsParse(
-        env,
-        tokens,
-        StdStmtEnds.concat(WhenKeyword),
-        false
-      );
+  //     const onlyIfs = factsParse(
+  //       env,
+  //       tokens,
+  //       StdStmtEnds.concat(WhenKeyword),
+  //       false
+  //     );
 
-      let req: FactNode[] = [];
-      if (tokens[0] === WhenKeyword) {
-        skip(tokens, WhenKeyword);
-        req = factsParse(env, tokens, StdStmtEnds, false);
-      }
+  //     let req: FactNode[] = [];
+  //     if (tokens[0] === WhenKeyword) {
+  //       skip(tokens, WhenKeyword);
+  //       req = factsParse(env, tokens, StdStmtEnds, false);
+  //     }
 
-      skip(tokens, StdStmtEnds);
+  //     skip(tokens, StdStmtEnds);
 
-      if (ThenKeywords.includes(separator)) {
-        return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
-      } else if (IffThenKeywords.includes(separator)) {
-        return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
-      } else if (OnlyIfThenKeywords.includes(separator)) {
-        return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
-      }
+  //     if (ThenKeywords.includes(separator)) {
+  //       return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+  //     } else if (IffThenKeywords.includes(separator)) {
+  //       return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+  //     } else if (OnlyIfThenKeywords.includes(separator)) {
+  //       return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+  //     }
 
-      throw Error();
-    } catch (error) {
-      handleParseError(env, "fact", index, start);
-      throw error;
-    }
-  }
+  //     throw Error();
+  //   } catch (error) {
+  //     handleParseError(env, "fact", index, start);
+  //     throw error;
+  //   }
+  // }
 
   function localEnvParse(env: L_Env, tokens: string[]): LocalEnvNode {
     const start = tokens[0];
@@ -785,11 +785,17 @@ export namespace L_Parser {
       }
       skip(tokens, ")");
 
+      if (!isCurToken(tokens, "=>")) {
+        return new ByNode(byName, vars, []);
+      }
+
       skip(tokens, "=>");
 
       skip(tokens, "{");
 
       const facts = factsParse(env, tokens, ["}"], true);
+
+      skip(tokens, StdStmtEnds);
 
       return new ByNode(byName, vars, facts);
     } catch (error) {

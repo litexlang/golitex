@@ -354,10 +354,10 @@ const testList35 = [
 ];
 
 const testList36 = [
-  "def x is p => ; def x is p1 => ; def x is p2 => ; let x | x is p1;",
-  "def x is p3 =>;",
-  "def p4(x,a) <= a is p2, x is p1 ;",
-  "def x is p0 => if a | p1(a) => {p4(x,a)};", // very important, because x is used over for all a is p2, not a specific a.
+  "def x is p => {}; def x is p1 => {}; def x is p2 => {}; let x | x is p1;",
+  "def x is p3 => {};",
+  "def p4(x,a) <= {a is p2, x is p1};",
+  "def x is p0 => {if a | p1(a) => {p4(x,a)} };", // very important, because x is used over for all a is p2, not a specific a.
   "know if x,a | a is p2, x is p1 => {x is p3};",
   "know if x | => { if a | x is p1, a is p1 => {x is p3} } ;",
   "know if x | => {if a | a is p1, x is p1 => {x is p2, a is p}};",
@@ -436,6 +436,11 @@ const testList42 = [
   "def x is q1 => {if y | y is p2 => {y is q}[q1_then_p2] };",
 ];
 
+const testList43 = [
+  "def x is p => {}; def x is p1 => {}; def x is p2 => {}; let x | x is p1;",
+  "",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -481,8 +486,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, false],
-  testList42: [testList42, true],
+  setTheory: [setTheory, true],
+  testList42: [testList42, false],
 };
 
 export function testCode() {

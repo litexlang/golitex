@@ -44,7 +44,7 @@ export class StoredFact {
         .join(", ")}`;
 
     if (this.onlyIfs.length !== 0) {
-      out += `\nonlyIfs: ${this.onlyIfs}\n`;
+      out += `\n onlyIfs: ${this.onlyIfs}\n`;
     }
 
     return out;
@@ -105,7 +105,7 @@ export namespace L_FactStorage {
         toDecl.byName
       );
       storeIfThen(env, ifThen, []);
-      L_FactStorage.storeIfThenBy(env, ifThen, new StoredFact([], [], true));
+      // L_FactStorage.storeIfThenBy(env, ifThen, new StoredFact([], [], true));
     } else if (toDecl instanceof IffDeclNode) {
       storeIfThen(
         env,
@@ -264,6 +264,14 @@ export namespace L_FactStorage {
       }
     } catch (error) {
       throw Error();
+    }
+  }
+
+  export function storeDeclaredIfThenAsBy(env: L_Env, node: DeclNode) {
+    if (node.byName !== undefined && node instanceof IfThenDeclNode) {
+      const ifThenToStore = new IfThenNode(node.vars, node.req, node.onlyIfs);
+      ifThenToStore.byName = node.byName;
+      storeIfThenBy(env, ifThenToStore, new StoredFact([], [], true));
     }
   }
 
