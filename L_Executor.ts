@@ -534,9 +534,18 @@ export namespace L_Executor {
       let out = L_Checker.checkBy(env, byNode);
 
       if (out === RType.True) {
-        let ok = L_FactStorage.storeFactInBy(env, byNode);
+        let ok = L_FactStorage.storeFactInStoredBy(env, byNode);
         if (!ok) {
           return RType.Error;
+        }
+
+        for (const fact of byNode.onlyIfs) {
+          //! THE REASON WHY WE DO NOT NEED TO CHECK WHETHER VARIABLES ARE NOT DOUBLE DECLARED
+          //! IS THAT IN BY I CAN NOT DECLARE VAR.
+          ok = L_FactStorage.store(env, fact);
+          if (!ok) {
+            return RType.Error;
+          }
         }
       }
 

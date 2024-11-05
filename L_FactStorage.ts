@@ -37,14 +37,14 @@ export class StoredFact {
   toString() {
     let out = "";
     if (this.isT)
-      out = `${this.vars} <=  ${this.req.map((e) => e.toString()).join(", ")}`;
+      out = `${this.vars.length > 0 ? this.vars.join(", ") + " <= " : ""}${this.req.map((e) => e.toString()).join(", ")}`;
     else
-      out = `[not] ${this.vars} <= ${this.req
+      out = `[not] ${this.vars.length > 0 ? this.vars.join(", ") + " <= " : ""}${this.req
         .map((e) => e.toString())
         .join(", ")}`;
 
     if (this.onlyIfs.length !== 0) {
-      out += `\n${this.onlyIfs}\n`;
+      out += `\nonlyIfs: ${this.onlyIfs}\n`;
     }
 
     return out;
@@ -267,7 +267,7 @@ export namespace L_FactStorage {
     }
   }
 
-  export function storeFactInBy(env: L_Env, byNode: ByNode): Boolean {
+  export function storeFactInStoredBy(env: L_Env, byNode: ByNode): Boolean {
     try {
       const storedFact = env.getBy(byNode.byName) as StoredFact;
 
