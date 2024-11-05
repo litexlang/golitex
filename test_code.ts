@@ -441,6 +441,15 @@ const testList43 = [
   "",
 ];
 
+const 三段论 = [
+  "def 动物 is 会死 => {};",
+  "def 某某 is 人 => {某某 is 会死};",
+  "let 苏格拉底 | 苏格拉底 is 人;",
+  "苏格拉底 is 会死;",
+  "let 神仙 | 神仙 is not 会死;",
+  "prove_by_contradiction 神仙 is not 人 {神仙 is 会死;} contradiction 神仙 is 会死;",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -486,8 +495,9 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, true],
+  setTheory: [setTheory, false],
   testList42: [testList42, false],
+  三段论: [三段论, true],
 };
 
 export function testCode() {
