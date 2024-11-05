@@ -193,6 +193,7 @@ export namespace L_Checker {
       const frees = fact.getAllFreeVars();
       if (
         fact.isNoReq() &&
+        // toCheck.vars.length === fact.vars.length &&
         toCheck.vars.every(
           (v, i) => frees.includes(fact.vars[i]) || v === fact.vars[i]
         )

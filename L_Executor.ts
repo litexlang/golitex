@@ -55,6 +55,18 @@ export namespace L_Executor {
     ByNode: byExec,
   };
 
+  function execResult(out: RType, node: L_Node): string {
+    if (out === RType.True) {
+      return `OK! ${node}`;
+    } else if (out === RType.Unknown) {
+      return `Unknown ${node}`;
+    } else if (out === RType.Error) {
+      return `Error ${node}`;
+    }
+
+    return `???`;
+  }
+
   export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
     try {
       const nodeType = node.constructor.name;
@@ -261,6 +273,8 @@ export namespace L_Executor {
 
       L_FactStorage.store(env, toProve, []);
 
+      newEnv.getMessages().forEach((e) => env.newMessage(e));
+
       return RType.True;
     } catch (error) {
       env.newMessage(`Error: ${toProve}`);
@@ -274,6 +288,7 @@ export namespace L_Executor {
 
       for (const subNode of block) {
         const out = nodeExec(newEnv, subNode, false);
+        env.newMessage(execResult(out, toProve));
         if (out === RType.Error) {
           newEnv.getMessages().forEach((e) => env.newMessage(e));
           env.newMessage(`Errors: Failed to execute ${subNode}`);
@@ -362,6 +377,8 @@ export namespace L_Executor {
       toProve.isT = !toProve.isT;
       L_FactStorage.store(env, toProve, []);
 
+      newEnv.getMessages().forEach((e) => env.newMessage(e));
+
       return RType.True;
     } catch {
       env.newMessage(`${toProve}`);
@@ -411,6 +428,8 @@ export namespace L_Executor {
       for (const fact of PostfixProve.facts) {
         L_FactStorage.store(env, fact, []);
       }
+
+      newEnv.getMessages().forEach((e) => env.newMessage(e));
 
       return RType.True;
     } catch (error) {

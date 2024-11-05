@@ -88,8 +88,8 @@ const testList7 = [
 ];
 
 const testList8 = [
-  "def obj(x)  => ;;",
-  "def obj2(x,y) <=> obj(x), obj(y);",
+  "def obj(x)  => {};;",
+  "def obj2(x,y) <=> {obj(x), obj(y)};",
   "let x,y : obj(x), obj(y);",
   "obj(x), obj(y);",
   "obj2(x,y);",
@@ -98,33 +98,37 @@ const testList8 = [
   // "obj2(x,y);",
 ];
 
-const testList9 = ["def obj(x)  => ;;", "let x : not obj(x);", "not obj(x);"];
+const testList9 = ["def obj(x)  => {};", "let x : not obj(x);", "not obj(x);"];
 
 // obsolete
 const testList10 = [
-  "def p1(x) => ;",
+  "def p1(x) => {};",
   // "def p2(x) <=> p1(x);",
   // "def p3(x) <=> p2(x);",
   // "let x : not p3(x);",
   // "assume_by_contradiction p1(x) {p2(x);} {p3(x)}",
 ];
 
-const testList11 = ["def p0(x) <= ;", "def p1(x) <= p0(x);", "let x : p0(x);"];
+const testList11 = [
+  "def p0(x) <= {};",
+  "def p1(x) <= {p0(x)};",
+  "let x : p0(x);",
+];
 
-const testList12 = ["def p1(x) => ;"];
+const testList12 = ["def p1(x) => {};"];
 
 const testList13 = [
-  "def obj(x) => ;",
-  "def obj2(x) => obj(x) ;",
-  "def obj3(x) => obj2(x);",
-  "def obj4(x) => obj(x) when obj3(x);",
+  "def obj(x) => {};",
+  "def obj2(x) => {obj(x)} ;",
+  "def obj3(x) => {obj2(x)};",
+  "def obj4(x) => {obj(x)} when obj3(x);",
   "prove if x : obj3(x) => {obj(x)} {obj2(x); obj(x);};",
-  "prove obj4(#x) {obj2(x); obj(x);}",
+  // "prove obj4(#x) {obj2(x); obj(x);}", // obsolete
 ];
 
 const testList14 = [
-  "def obj(x) => ;",
-  "def obj2(x) => x is obj;",
+  "def obj(x) => {};",
+  "def obj2(x) => {x is obj};",
   "let x : x is obj;",
   "let a,b,c : a,b,c are obj;",
   "let q,w,e : w,e are obj;",
@@ -133,29 +137,29 @@ const testList14 = [
 ];
 
 const testList15 = [
-  "def obj(x) => ;",
-  "know obj(#x);",
+  "def obj(x) => {};",
+  // "know obj(#x);", obsolete
   "obj(#y);",
   "let x,y,z : ;",
   "x,y,z are obj;",
 ];
 
 const testList16 = [
-  "def obj(x) => ;",
+  "def obj(x) => {};",
   "let x;",
-  "def x is obj2 => x is obj;",
+  "def x is obj2 => {x is obj};",
   "know if x : obj(x) => {obj(x)};",
-  "def obj3() => obj2(x) when obj(x);",
+  "def obj3() => {obj2(x)} when obj(x);",
   "let x2;",
   "know if obj(x2) => {obj2(x2)};",
   // "x2 <= obj(x2);",
 ];
 
 const testList17 = [
-  "def x is obj0 <=> ;",
-  "def x is obj =>;",
-  "def x is obj2 <=> ;",
-  "def x is obj3 <= x is obj  ;",
+  "def x is obj0 <=> {};",
+  "def x is obj => {};",
+  "def x is obj2 <=> {};",
+  "def x is obj3 <= {x is obj}  ;",
   "let x: x is obj0, x is obj, x is obj2, x is obj3;",
   "let a;",
   "if => {a is obj0};",
@@ -164,8 +168,8 @@ const testList17 = [
 ];
 
 const testList18 = [
-  "def obj0(x) => ;",
-  "def obj11(x) <=> ;",
+  "def obj0(x) => {};",
+  "def obj11(x) <=> {};",
   "let 1,2,3,4;",
   "1,2,3,4 are obj0;",
   "1,2,3,4 are obj11;",
@@ -174,51 +178,51 @@ const testList18 = [
 ];
 
 const testList19 = [
-  "def obj0(x) => ;",
-  "def obj1(x) => x is obj0;",
-  "def obj2(x) => obj1(x);",
+  "def obj0(x) => {};",
+  "def obj1(x) => {x is obj0};",
+  "def obj2(x) => {obj1(x)};",
   "let x : obj2(x);",
   "x is obj0 prove· {x is obj1;};", // If we put by at the end, then it's a declarative way of proving: instead of procedurally prove a result, we now declare a result at beginning and then prove it.
 ];
 
 const setTheory1 = [
-  "def object x : ;",
-  "def set if x : => {};",
-  "def in if x,A : A is set => {};",
-  "def = iff A,B : set(A), set(B) <=> {if x : in(x,A) => {in(x,B)}, if x : in(x,B) => {in(x,A)}}",
+  "def object x : => {};",
+  // "def set if x : => {};",
+  // "def in if x,A : A is set => {};",
+  // "def = iff A,B : set(A), set(B) <=> {if x : in(x,A) => {in(x,B)}, if x : in(x,B) => {in(x,A)}}",
 ];
 
 const testList20 = [
-  "def object(x) <=>;",
-  "def obj2(x) =>;",
+  "def object(x) <=> {};",
+  "def obj2(x) => {};",
   // "def = A,B : obj(A), obj(B);",
   // "def deduce only_if x : x is obj <= ;",
-  "def eq(A,B)  <=> A,B are obj2 when A,B are object;",
+  "def eq(A,B)  <=> {A,B are obj2} when A,B are object;",
 ];
 
 const testList21 = [
-  "def obj0( x) =>;",
-  "def obj1(x) =>;",
-  "def obj2(x) =>;",
-  "def obj3(x,y )  =>;",
+  "def obj0( x) => {};",
+  "def obj1(x) => {};",
+  "def obj2(x) => {};",
+  "def obj3(x,y )  => {};",
   "let a,b;",
   // "know if x : x,b are obj0 => x is obj1;",
   "know if x : x,b are obj1 => {if : obj3(x,a) => {x is obj2}};",
 ];
 
 const testList22 = [
-  "def x is obj0 =>;",
-  "def x is obj1 =>;",
-  "def obj2(x,y) <=> x,y are obj1 when x,y are obj0;",
-  "def obj3(x,y) => x,y are obj1 when x,y are obj0;",
-  "def obj4(x,y) <= x,y are obj1 when x,y are obj0;",
+  "def x is obj0 => {};",
+  "def x is obj1 => {};",
+  "def obj2(x,y) <=> {x,y are obj1} when x,y are obj0;",
+  "def obj3(x,y) => {x,y are obj1} when x,y are obj0;",
+  "def obj4(x,y) <= {x,y are obj1} when x,y are obj0;",
 ];
 
 const testList23 = [
-  "def x is object =>;",
-  "def x is set =>;",
-  "def in(x,A) => when A is set;",
-  "def =(A,B) <=> if x : in(x,A) => {in(x,B)}, if x : in(x,B) => {in(x,A)} when A,B are set;",
+  "def x is object => {};",
+  "def x is set => {};",
+  "def in(x,A) => {} when A is set;",
+  "def =(A,B) <=> {if x : in(x,A) => {in(x,B)}, if x : in(x,B) => {in(x,A)} } when A,B are set;",
   "let A,B : A,B are set, if x : in(x,A) => {in(x,B)}, if x : in(x,B) => {in(x,A)};",
   "=(A,B);",
   "if x : p(x), p(y), p2(x,y) => q(x,y)",
@@ -226,11 +230,11 @@ const testList23 = [
 ];
 
 const testList24 = [
-  "def x is object => ;",
-  "def x is obj => ;",
-  "def x is object1 => x is object;",
-  "def x is object2 => x is object1;",
-  "def x is object3 => x is object2;",
+  "def x is object => {};",
+  "def x is obj => {};",
+  "def x is object1 => {x is object};",
+  "def x is object2 => {x is object1};",
+  "def x is object3 => {x is object2};",
   "let y,z,a;",
   "y is object1;",
   "know #x is object;",
@@ -243,11 +247,11 @@ const testList24 = [
 ];
 
 const testList25 = [
-  "def x is object =>;",
+  "def x is object => {};",
   // "let x : x is object;",
   // "x is object;",
   // "y is object;",
-  "def object2(x,y) <=>  x,y are object ;",
+  "def object2(x,y) <=>  {x,y are object };",
   "let a,b : not object(a), not object(b);",
   "object2(a,b);",
   "assume_by_contradiction object2(a,b) {object(b);} {object(b)}",
@@ -257,13 +261,13 @@ const testList25 = [
 ];
 
 const testList26 = [
-  "def x is object =>;",
-  "def x is object2 => object(x);",
+  "def x is object => {};",
+  "def x is object2 => {object(x)};",
   "know if x is object => {x is object2};",
 ];
 
 const testList27 = [
-  "def x is object =>;",
+  "def x is object => {};",
   "let x : x is object;",
   "x is object;",
   "let y; ",
@@ -271,8 +275,8 @@ const testList27 = [
 ];
 
 const testList28 = [
-  "def x is object =>;",
-  "def x is object2 => object(x);",
+  "def x is object => {};",
+  "def x is object2 => {object(x)};",
   // "def x is object3 => object2(x);",
   "let x,y,z : x is object, ;",
   "x is object;",
@@ -284,10 +288,10 @@ const testList28 = [
 ];
 
 const testList29 = [
-  "def x is object =>;",
-  "def x is object0 => ;",
-  "def x is object2 => object(x);",
-  "def x is object3 => x is object2;",
+  "def x is object => {};",
+  "def x is object0 => {};",
+  "def x is object2 => {object(x)};",
+  "def x is object3 => {x is object2};",
   "if z : z is object2 => {z is object};",
   "if z : z is object => {z is object};",
   "if z : => {z is object0};",
@@ -298,10 +302,10 @@ const testList29 = [
 ];
 
 const testList30 = [
-  "def x is object1 => ;",
-  "def x is object2 => ;",
-  "def x is p3 => x is object2;",
-  "def x is object12 => ;",
+  "def x is object1 => {};",
+  "def x is object2 => {};",
+  "def x is p3 => {x is object2};",
+  "def x is object12 => {};",
   "know if x : x is object1, x is object2 => {x is object12};",
   "let a,b,c,d : a is object1, a is object2, c is object1, d is object2;",
   "a is object12;",
@@ -312,10 +316,10 @@ const testList30 = [
 ];
 
 const testList31 = [
-  "def z is p => ;",
-  "def z is p1 => ;",
-  "def z is p2 <=> z is p1;",
-  "def z is p3 <= z is p2;",
+  "def z is p => {};",
+  "def z is p1 => {};",
+  "def z is p2 <=> {z is p1};",
+  "def z is p3 <= {z is p2};",
   "if x : x is p => {x is p2};",
   "if x : x is p1 => {x is p2};",
   "let x : x is p1;",
@@ -324,13 +328,13 @@ const testList31 = [
   // " x is p3 by {x is p1; x is p2;} ;",
 ];
 
-const testList32 = ["def x is p => ;", "let x ; know x is p;"];
+const testList32 = ["def x is p => {};", "let x ; know x is p;"];
 
 const testList33 = [
-  "def x is p => ;",
-  "def x is p1 => ;",
-  "def x is p2 <=> x is p1;",
-  "def x is p3 <= x is p2;",
+  "def x is p => {};",
+  "def x is p1 => {};",
+  "def x is p2 <=> {x is p1};",
+  "def x is p3 <= {x is p2};",
   "if x : x is p => {x is p2};",
   "if x : x is p1 => {x is p2};",
   "let x : x is p1;",
@@ -340,17 +344,17 @@ const testList33 = [
 ];
 
 const testList34 = [
-  "def x is p => ; def x is p1 => ; def x is p2 => ;",
+  "def x is p => {}; def x is p1 => {}; def x is p2 => {};",
   "know if x : x is p => {if : x is p1 => {x is p2}} ;",
   "let x : x is p, x is p1;",
   "x is p2;",
 ];
 
 const testList35 = [
-  "def x is p => ; def x is p1 => ; def x is p2 => ; let x : x is p1;",
+  "def x is p => {}; def x is p1 => {}; def x is p2 =>{} ; let x : x is p1;",
   "{let x : x is p2; x is p2; x is p1;}",
   "x is p1; x is p2;",
-  "{def x is p1 => ; let x; x is p1; if x : x is p1 => {x is p1};}",
+  "{def x is p1 => {}; let x; x is p1; if x : x is p1 => {x is p1};}",
 ];
 
 const testList36 = [
@@ -370,7 +374,7 @@ const testList36 = [
 ];
 
 const testList37 = [
-  "def x is p => ; def x is p1 => ; def x is p2 => ; let x : x is p1;",
+  "def x is p => {}; def x is p1 => {}; def x is p2 => {}; let x : x is p1;",
   "if x : x is p => {if y : y is p2 => {y is p2, x is p,}};",
   "if a : a is p => {a is p2, x is p2};",
   "if b : b is p5 => {};",
@@ -383,7 +387,7 @@ const testList38 = [
   // "prove if x : x is p2 => {x is p1} {let x;}", // Error: x double declaration
   // "prove if x : x is p2 => {x is p1} {def x is p1 =>;}", // Err: double declaration of p1
   // "prove if x : x is p2 => {x is p1} {def x is p2 => ;}", // Err: double declaration of p2
-  "def x is q => ; def x is q1 => x is q; def x is q2 => x is q1; def x is q3 => x is q2;",
+  "def x is q => {}; def x is q1 => {x is q}; def x is q2 => {x is q1}; def x is q3 => {x is q2};",
   "let x : x is q3;",
   "prove x is q {x is q2; x is q1;}",
   "prove x is q {let x; }", // Err
@@ -394,28 +398,28 @@ const testList38 = [
 ];
 
 const testList39 = [
-  "def x is q => ; def x is q1 => x is q; def x is q2 => x is q1; def x is q3 => x is q2;",
+  "def x is q => {}; def x is q1 => {x is q}; def x is q2 => {x is q1}; def x is q3 => {x is q2};",
   "let x : x is q3;",
   "{x is q2; return x is q1;}",
 ];
 
 const testList40 = [
-  "def p1(x)  => ;",
+  "def p1(x)  => {};",
   "let x : x is p1;",
   "exist p1(x);",
   "have y : p1(y);",
 ];
 
 const testList41 = [
-  "def x is q => ; def x is q1 => x is q; def x is q2 => x is q1; def x is q3 => x is q2;",
+  "def x is q => {}; def x is q1 => {x is q}; def x is q2 => {x is q1}; def x is q3 => {x is q2};",
   "let x : x is q3;",
   "prove_by_contradiction x is q {not q2(x); not q1(x);} contradiction  not q3(x);",
 ];
 
 const byList = [
-  "def x is obj => ;",
-  "def element_of(x,A) => ;",
-  "def equal(A,B) => if x : element_of(x,A) => {element_of(x,B)};",
+  "def x is obj => {};",
+  "def element_of(x,A) => {};",
+  "def equal(A,B) => {if x : element_of(x,A) => {element_of(x,B)} };",
   "let x, A, B : element_of(x,A), equal(A,B);",
   "by equal(A,B) => {element_of(x,B)};",
 ];
@@ -437,9 +441,10 @@ const testList42 = [
 ];
 
 const testList43 = [
-  "def x is p => {}; def x is p1 => {}; def x is p2 => {}; let x : x is p1;",
-  "let a,b,c : a,b,c are p1;",
-  "a,b,c are p1;",
+  "def x is p => {}; def x is p1 => {x is p}; def x is p2 => {x is p1}; ",
+  "let a,b,c : a,b,c are p2;",
+  "a,b,c are p2;",
+  "prove a is p {a is p1;}",
 ];
 
 const 三段论 = [
@@ -468,7 +473,6 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList5: [testList5, false],
   testList6: [testList6, false],
   testList7: [testList7, false],
-  //---------------------------------
   testList8: [testList8, false],
   testList9: [testList9, false],
   testList10: [testList10, false],
@@ -478,10 +482,10 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList14: [testList14, false],
   testList15: [testList15, false],
   testList16: [testList16, false],
-  testList17: [testList17, false],
-  testList18: [testList18, false],
-  testList19: [testList19, false],
-  testList20: [testList20, false],
+  testList17: [testList17, true],
+  testList18: [testList18, true],
+  testList19: [testList19, true],
+  testList20: [testList20, true],
   testList21: [testList21, false],
   testList22: [testList22, false],
   testList23: [testList23, false],
@@ -506,7 +510,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList41: [testList41, false],
   setTheory: [setTheory, false],
   testList42: [testList42, false],
-  testList43: [testList43, true],
+  testList43: [testList43, false],
   三段论: [三段论, false],
 };
 
