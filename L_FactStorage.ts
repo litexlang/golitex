@@ -1,4 +1,5 @@
 import {
+  ByNode,
   DeclNode,
   FactNode,
   IffDeclNode,
@@ -22,17 +23,26 @@ export class StoredReq {
 }
 
 export class StoredFact {
+  public onlyIfs: FactNode[] = [];
+
   constructor(
-    public vars: string[], // stored fixed
+    public vars: string[], // stored fixed, only used when storing opts
     public req: StoredReq[], // when adding a new layer of if-then, push a new req list (FactNode[]) at end of req.
     public isT: Boolean
   ) {}
 
   toString() {
+    let out = "";
     if (this.isT)
-      return `${this.vars} <=  ${this.req.map((e) => e.toString()).join(", ")}`;
+      out = `${this.vars} <=  ${this.req.map((e) => e.toString()).join(", ")}`;
     else
-      return `[not] ${this.vars} <= ${this.req.map((e) => e.toString()).join(", ")}`;
+      out = `[not] ${this.vars} <= ${this.req.map((e) => e.toString()).join(", ")}`;
+
+    if (this.onlyIfs.length !== 0) {
+      out += `\n${this.onlyIfs}\n`;
+    }
+
+    return out;
   }
 
   getAllFreeVars() {
@@ -238,6 +248,7 @@ export namespace L_FactStorage {
       higherStoredFact.req.push(new StoredReq(ifThen.vars, ifThen.req));
 
       if (ifThen.byName !== undefined) {
+        higherStoredFact.onlyIfs = ifThen.onlyIfs;
         env.setBy(ifThen.byName, higherStoredFact);
         return;
       } else {
@@ -246,6 +257,45 @@ export namespace L_FactStorage {
             storeIfThenBy(env, onlyIf, higherStoredFact);
         }
       }
+    } catch (error) {
+      throw Error();
+    }
+  }
+
+  export function storeFactInBy(env: L_Env, byNode: ByNode): Boolean {
+    try {
+      const storedFact = env.getBy(byNode.byName) as StoredFact;
+
+      const allFreeVars = storedFact.getAllFreeVars();
+      if (byNode.vars.length !== allFreeVars.length) {
+        env.newMessage(
+          `${byNode.byName} expect ${allFreeVars.length} variables, got ${byNode.vars.length}`
+        );
+        return false;
+      }
+      const map = new Map<string, string>();
+      for (const [i, v] of allFreeVars.entries()) {
+        map.set(allFreeVars[i], byNode.vars[i]);
+      }
+
+      let ok: Boolean = true;
+      //TODO IN THE FUTURE I COPY IF-THEN SO THAT I CAN STORE "fixed" IF-THEN
+      for (const onlyIf of storedFact.onlyIfs) {
+        if (onlyIf instanceof OptNode) {
+          const stored = onlyIf.copy();
+          for (const [i, v] of stored.vars.entries()) {
+            if (map.get(v)) stored.vars[i] = map.get(v) as string;
+          }
+          ok = store(env, stored);
+        }
+
+        if (!ok) {
+          env.newMessage(`Failed to store ${onlyIf}`);
+          return false;
+        }
+      }
+
+      return true;
     } catch (error) {
       throw Error();
     }

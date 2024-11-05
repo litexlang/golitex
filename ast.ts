@@ -104,6 +104,10 @@ export class OptNode extends FactNode {
     super(isT);
   }
 
+  copy(): OptNode {
+    return new OptNode(this.fullName, [...this.vars], this.isT);
+  }
+
   toString() {
     const mainPart = this.fullName + `(${this.vars.join(", ")})`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
@@ -130,10 +134,6 @@ export class OptNode extends FactNode {
       const fixed = mapping.get(v);
       if (fixed !== undefined) this.vars[i] = fixed;
     });
-  }
-
-  copy(): OptNode {
-    return new OptNode(this.fullName, [...this.vars]);
   }
 
   varsDeclared(env: L_Env, freeVars: string[]): Boolean {
