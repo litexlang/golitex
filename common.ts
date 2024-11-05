@@ -25,7 +25,7 @@ export const IffKeywords = ["iff"];
 export const ExistKeywords = ["exist"];
 export const DefKeywords = ["def"];
 
-export const SymbolsFactsSeparator = "|";
+export const SymbolsFactsSeparator = ":";
 export const ProveKeywords = ["prove"];
 // export const suchThats = ["st", "is"];
 

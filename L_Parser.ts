@@ -211,7 +211,7 @@ export namespace L_Parser {
         env,
         tokens,
         (env, e) => shiftVar(e),
-        [...StdStmtEnds, "|"],
+        [...StdStmtEnds, ":"],
         false
       );
 
@@ -224,7 +224,7 @@ export namespace L_Parser {
         skip(tokens, StdStmtEnds);
         return new LetNode(vars, []);
       } else {
-        skip(tokens, "|");
+        skip(tokens, ":");
         const facts = factsParse(env, tokens, StdStmtEnds, true);
         return new LetNode(vars, facts);
       }
@@ -234,7 +234,11 @@ export namespace L_Parser {
     }
   }
 
-  function OptParse(env: L_Env, tokens: string[], parseNot: Boolean): OptNode {
+  function functionalOptParse(
+    env: L_Env,
+    tokens: string[],
+    parseNot: Boolean
+  ): OptNode {
     const start = tokens[0];
     const index = tokens.length;
 
@@ -349,7 +353,7 @@ export namespace L_Parser {
       if (IfKeywords.includes(tokens[0])) {
         toProve = logicalOptParse(env, tokens);
       } else {
-        fixedIfThenOpt = OptParse(env, tokens, true);
+        fixedIfThenOpt = parseVanillaOptWithNot(env, tokens);
       }
 
       const block: L_Node[] = [];
@@ -368,7 +372,7 @@ export namespace L_Parser {
       let contradict: OptNode | undefined = undefined;
       if (byContradict) {
         skip(tokens, ContradictionKeyword);
-        contradict = OptParse(env, tokens, true);
+        contradict = functionalOptParse(env, tokens, true);
         skip(tokens, StdStmtEnds);
       }
 
@@ -393,7 +397,7 @@ export namespace L_Parser {
         env,
         tokens,
         (env, e) => shiftVar(e),
-        [...StdStmtEnds, "|"],
+        [...StdStmtEnds, ":"],
         false
       );
 
@@ -406,11 +410,11 @@ export namespace L_Parser {
         skip(tokens, StdStmtEnds);
         return new HaveNode(vars, []);
       } else {
-        skip(tokens, "|");
+        skip(tokens, ":");
         const facts: OptNode[] = [];
 
         while (!StdStmtEnds.includes(tokens[0])) {
-          const fact = OptParse(env, tokens, true);
+          const fact = functionalOptParse(env, tokens, true);
           facts.push(fact);
           if (isCurToken(tokens, ",")) skip(tokens, ",");
         }
@@ -448,7 +452,7 @@ export namespace L_Parser {
           fact.isT = isT;
           out.push(fact);
         } else if (tokens.length >= 2 && tokens[1] === "(") {
-          const fact = OptParse(env, tokens, false); // false: When using factsParse, not prefix are already removed.
+          const fact = functionalOptParse(env, tokens, false); // false: When using factsParse, not prefix are already removed.
           fact.isT = isT;
           out.push(fact);
         } else {
@@ -458,6 +462,12 @@ export namespace L_Parser {
             if (isCurToken(tokens, ",")) skip(tokens, ",");
           }
           const isAre = skip(tokens, IsAreKeywords) as string;
+
+          if (isCurToken(tokens, "not")) {
+            skip(tokens, "not");
+            isT = !isT;
+          }
+
           if (AreKeywords.includes(isAre)) {
             if (vars.length < 2) {
               handleParseError(
@@ -527,9 +537,9 @@ export namespace L_Parser {
 
       let vars: string[] = [];
       let req: FactNode[] = [];
-      if (symbolsBeforeThenKeyword.includes("|")) {
-        vars = varLstParse(env, tokens, ["|"], false);
-        skip(tokens, "|");
+      if (symbolsBeforeThenKeyword.includes(":")) {
+        vars = varLstParse(env, tokens, [":"], false);
+        skip(tokens, ":");
 
         req = factsParse(env, tokens, separation, true);
       } else {
@@ -608,7 +618,7 @@ export namespace L_Parser {
     try {
       skip(tokens, DefKeywords);
 
-      const opt: OptNode = OptParse(env, tokens, false);
+      const opt: OptNode = functionalOptParse(env, tokens, false);
       const separator = shiftVar(tokens);
 
       skip(tokens, "{");
@@ -664,7 +674,7 @@ export namespace L_Parser {
   //       skip(tokens, "]");
   //     }
 
-  //     const opt: OptNode = OptParse(env, tokens, false);
+  //     const opt: OptNode = functionalOptParse(env, tokens, false);
   //     const separator = shiftVar(tokens);
 
   //     const onlyIfs = factsParse(
@@ -757,7 +767,7 @@ export namespace L_Parser {
       const facts: OptNode[] = [];
 
       while (!StdStmtEnds.includes(tokens[0])) {
-        const fact = OptParse(env, tokens, true);
+        const fact = functionalOptParse(env, tokens, true);
         facts.push(fact);
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
@@ -800,6 +810,41 @@ export namespace L_Parser {
       return new ByNode(byName, vars, facts);
     } catch (error) {
       handleParseError(env, "by", index, start);
+      throw error;
+    }
+  }
+
+  function parseVanillaOptWithNot(env: L_Env, tokens: string[]): OptNode {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      let isT = true;
+
+      if (isCurToken(tokens, "not")) {
+        isT = false;
+        skip(tokens, "not");
+      }
+
+      if (tokens.length >= 2 && tokens[1] === "(") {
+        const fact = functionalOptParse(env, tokens, false);
+        fact.isT = isT;
+        return fact;
+      } else {
+        const varName = shiftVar(tokens);
+        const vars: string[] = [varName];
+        skip(tokens, IsKeywords);
+
+        if (isCurToken(tokens, "not")) {
+          skip(tokens, "not");
+          isT = !isT;
+        }
+
+        const optName = shiftVar(tokens);
+        return new OptNode(optName, vars, isT);
+      }
+    } catch (error) {
+      handleParseError(env, "operator", index, start);
       throw error;
     }
   }

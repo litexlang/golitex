@@ -141,26 +141,26 @@ export class OptNode extends FactNode {
     return notPart + mainPart + useNamePart;
   }
 
-  hashVars(varsToHash: string[]) {
-    //! CONVENTION: NEVER INTRODUCE ANY VARIABLE WITH ## PREFIX
-    this.vars = this.vars.map((s) =>
-      varsToHash.includes(s) ? (s.startsWith("#") ? s : "#" + s) : s
-    );
-    // this.vars = this.vars.map((s) => (varsToHash.includes(s) ? "#" + s : s));
-  }
+  // hashVars(varsToHash: string[]) {
+  //   //! CONVENTION: NEVER INTRODUCE ANY VARIABLE WITH ## PREFIX
+  //   this.vars = this.vars.map((s) =>
+  //     varsToHash.includes(s) ? (s.startsWith("#") ? s : "#" + s) : s
+  //   );
+  //   // this.vars = this.vars.map((s) => (varsToHash.includes(s) ? "#" + s : s));
+  // }
 
-  rmvHashFromVars(varsToHash: string[]): void {
-    this.vars = this.vars.map((s) =>
-      varsToHash.includes(s.slice(1)) && s[0] === "#" ? s.slice(1) : s
-    );
-  }
+  // rmvHashFromVars(varsToHash: string[]): void {
+  //   this.vars = this.vars.map((s) =>
+  //     varsToHash.includes(s.slice(1)) && s[0] === "#" ? s.slice(1) : s
+  //   );
+  // }
 
-  replaceVars(mapping: Map<string, string>): void {
-    this.vars.forEach((v, i) => {
-      const fixed = mapping.get(v);
-      if (fixed !== undefined) this.vars[i] = fixed;
-    });
-  }
+  // replaceVars(mapping: Map<string, string>): void {
+  //   this.vars.forEach((v, i) => {
+  //     const fixed = mapping.get(v);
+  //     if (fixed !== undefined) this.vars[i] = fixed;
+  //   });
+  // }
 
   varsDeclared(env: L_Env, freeVars: string[]): Boolean {
     for (const v of this.vars) {
