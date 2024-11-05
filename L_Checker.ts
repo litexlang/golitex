@@ -79,22 +79,6 @@ export namespace L_Checker {
       let unknown = false;
       const map = new Map<string, string>();
 
-      {
-      }
-
-      // //! BYs are USED HERE
-      // for (const by of bys) {
-      //   for (const v of by.vars) {
-      //     const alreadyDeclared = map.get(v);
-      //     if (alreadyDeclared && alreadyDeclared !== toCheck.vars[i]) {
-      //       env.newMessage(
-      //         `${storedFact.vars[i]} is signed with 2 different symbols ${alreadyDeclared}, ${toCheck.vars[i]}`
-      //       );
-      //       return RType.Error;
-      //     }
-      //   }
-      // }
-
       const freeVarsOfAllLevels = storedFact.getAllFreeVars();
       // toCheck.vars.length === storedFact.vars.length
       for (let i = 0; i < storedFact.vars.length; i++) {
@@ -166,8 +150,11 @@ export namespace L_Checker {
               // const toStore = new OptNode(req.fullName, fixedVars);
               // L_FactStorage.store(newEnv, toStore, []);
             }
-          } else if (req instanceof IfThenNode) {
-            const out = checkOpt(newEnv, toCheck);
+          }
+          //! WARNING: I GUESS IF-THEN HERE IS BUGGY
+          else if (req instanceof IfThenNode) {
+            const out = checkIfThen(newEnv, req); // ? UNTESTED
+            // const out = checkOpt(newEnv, toCheck);
             if (out === RType.True) continue;
             else if (out === RType.Error) {
               newEnv.getMessages().forEach((e) => env.newMessage(e));
@@ -221,7 +208,85 @@ export namespace L_Checker {
   }
 
   // TODO:
-  export function checkBy(env: L_Env, opt: ByNode): RType {
-    return RType.Unknown;
+  export function checkBy(env: L_Env, byNode: ByNode): RType {
+    const storedFact: undefined | StoredFact = env.getBy(byNode.byName);
+    if (storedFact == undefined) {
+      env.newMessage(`${byNode.byName} not declared.`);
+      return RType.Error;
+    }
+
+    const allFreeVars = storedFact.getAllFreeVars();
+    if (byNode.vars.length !== allFreeVars.length) {
+      env.newMessage(
+        `${byNode.byName} expect ${allFreeVars.length} variables, got ${byNode.vars.length}`
+      );
+      return RType.Error;
+    }
+
+    const map = new Map<string, string>();
+    for (const [i, v] of allFreeVars.entries()) {
+      map.set(allFreeVars[i], byNode.vars[i]);
+    }
+
+    let unknown = false;
+    for (const currentLevelReq of storedFact.req) {
+      // this is necessary because 1. I SIMPLY NEED A NEATER STORAGE SYSTEM THAT ALIGNS WITH THE HIERARCHY OF IF-THENs THE FACT IS STORED. 2. store checked req as future stored facts. 3. If some vars of the req is free, then the req is not checked, it is stored as a fact.
+      let newEnv = new L_Env(env);
+
+      for (const req of currentLevelReq.req) {
+        if (req instanceof OptNode) {
+          let everyVarInThisReqIsFixed = true;
+          const fixedVars: string[] = [];
+          for (const v of req.vars) {
+            const fixed = map.get(v);
+            if (fixed === undefined) {
+              everyVarInThisReqIsFixed = false;
+              break;
+              // fixedVars.push(v);
+            } else {
+              fixedVars.push(fixed);
+            }
+          }
+
+          // const fixedVars = req.vars.map((e) => map.get(e)) as string[];
+          if (everyVarInThisReqIsFixed) {
+            const toCheck = new OptNode(req.fullName, fixedVars);
+            const out = checkOptLiterally(newEnv, toCheck);
+            if (out === RType.True) {
+              // store checked req as future stored facts.
+              L_FactStorage.store(newEnv, toCheck, []);
+              continue;
+            } else if (out === RType.Error) {
+              newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
+              return RType.Error;
+            } else {
+              unknown = true;
+              break;
+            }
+          } else {
+            //! WARNING: UNKNOWN SHOULD BE THROWN HERE INSTEAD OF STORING NEW FACTS
+            unknown = true;
+            break;
+            // const toStore = new OptNode(req.fullName, fixedVars);
+            // L_FactStorage.store(newEnv, toStore, []);
+          }
+        } else if (req instanceof IfThenNode) {
+          const out = checkIfThen(newEnv, req);
+          if (out === RType.True) continue;
+          else if (out === RType.Error) {
+            newEnv.getMessages().forEach((e) => env.newMessage(e));
+            return RType.Error;
+          } else {
+            unknown = true;
+            break;
+          }
+        }
+      }
+
+      if (unknown) break;
+      newEnv = new L_Env(newEnv);
+    }
+    if (unknown) return RType.Unknown;
+    else return RType.True;
   }
 }

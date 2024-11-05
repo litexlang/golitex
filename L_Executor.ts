@@ -17,12 +17,7 @@ import {
 } from "./ast";
 import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
-import {
-  EmptyStoreFact,
-  L_FactStorage,
-  StoredFact,
-  StoredReq,
-} from "./L_FactStorage";
+import { L_FactStorage, StoredFact, StoredReq } from "./L_FactStorage";
 
 export enum RType {
   Error,
@@ -133,7 +128,7 @@ export namespace L_Executor {
 
       for (const f of node.facts) {
         if (f instanceof IfThenNode) {
-          L_FactStorage.storeIfThenBy(env, f, EmptyStoreFact);
+          L_FactStorage.storeIfThenBy(env, f, new StoredFact([], [], true));
         }
       }
 
@@ -149,7 +144,7 @@ export namespace L_Executor {
       for (const fact of node.facts) L_FactStorage.store(env, fact, []);
       for (const fact of node.facts) {
         if (fact instanceof IfThenNode) {
-          L_FactStorage.storeIfThenBy(env, fact, EmptyStoreFact);
+          L_FactStorage.storeIfThenBy(env, fact, new StoredFact([], [], true));
         }
       }
       return RType.True;
@@ -420,7 +415,7 @@ export namespace L_Executor {
       }
 
       if (toCheck instanceof IfThenNode) {
-        L_FactStorage.storeIfThenBy(env, toCheck, EmptyStoreFact);
+        L_FactStorage.storeIfThenBy(env, toCheck, new StoredFact([], [], true));
       }
 
       return out;

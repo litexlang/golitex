@@ -422,7 +422,8 @@ const byList = [
 
 const testList42 = [
   "def x is q => {} ;",
-  "def x is q0 => {x is q} [q0_def];",
+  // "def x is q0 => {x is q} [q0_def];",
+  "def x is q0 => {x is q} ;",
   "let x;",
   "know x is q;",
   "if y | y is q0 => {y is q} [q0_fact1];",
@@ -444,7 +445,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList4: [testList4, false],
   testList5: [testList5, false],
   testList6: [testList6, false],
-  testList7: [testList7, true],
+  testList7: [testList7, false],
   //---------------------------------
   testList8: [testList8, false],
   testList9: [testList9, false],

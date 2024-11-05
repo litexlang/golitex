@@ -78,8 +78,6 @@ export class StoredFact {
   }
 }
 
-export const EmptyStoreFact = new StoredFact([], [], true);
-
 export namespace L_FactStorage {
   export function declNewFact(env: L_Env, toDecl: DeclNode) {
     const decl = new OptNode(toDecl.name, toDecl.vars);

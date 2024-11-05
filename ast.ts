@@ -296,4 +296,8 @@ export class ByNode extends L_Node {
   ) {
     super();
   }
+
+  toString() {
+    return `${this.byName}(${this.vars.join(", ")}) is valid`;
+  }
 }
