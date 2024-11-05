@@ -16,7 +16,7 @@ export class FactNode extends L_Node {
     return false;
   }
 
-  copy(): FactNode {
+  useMapToCopy(map: Map<string, string>): FactNode {
     return new FactNode(true);
   }
 }
@@ -50,10 +50,10 @@ export class LogicalOptNode extends FactNode {
     super(isT);
   }
 
-  copy(): FactNode {
+  useMapToCopy(map: Map<string, string>): FactNode {
     const newVars = [...this.vars];
-    const req = this.req.map((e) => e.copy());
-    const onlyIfs = this.onlyIfs.map((e) => e.copy());
+    const req = this.req.map((e) => e.useMapToCopy(map));
+    const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
 
     if (this instanceof IfThenNode)
       return new IfThenNode(newVars, req, onlyIfs, this.isT, this.byName);
@@ -122,8 +122,16 @@ export class OptNode extends FactNode {
     super(isT);
   }
 
-  copy(): OptNode {
-    return new OptNode(this.fullName, [...this.vars], this.isT);
+  useMapToCopy(map: Map<string, string>): OptNode {
+    const newVars: string[] = [];
+    for (const v of this.vars) {
+      const fixed = map.get(v);
+      if (fixed === undefined) throw Error();
+      else {
+        newVars.push(fixed);
+      }
+    }
+    return new OptNode(this.fullName, newVars, this.isT);
   }
 
   toString() {

@@ -5,6 +5,7 @@ import {
   IffDeclNode,
   IfThenDeclNode,
   IfThenNode,
+  LogicalOptNode,
   OnlyIfDeclNode,
   OptNode,
 } from "./ast";
@@ -282,32 +283,23 @@ export namespace L_FactStorage {
         map.set(allFreeVars[i], byNode.vars[i]);
       }
 
-      const onlyIfsToBeStored: FactNode[] = [];
+      // Store onlyIfs bound to StoredBy
+      let onlyIfsToBeStored: FactNode[] = [];
       for (const onlyIf of storedFact.onlyIfs) {
-        onlyIfsToBeStored.push(onlyIf.copy());
+        onlyIfsToBeStored.push(onlyIf.useMapToCopy(map));
       }
 
       let ok: Boolean = true;
       for (const onlyIf of onlyIfsToBeStored) {
-        if (onlyIf instanceof OptNode) {
-          const stored = onlyIf.copy();
-          for (const [i, v] of stored.vars.entries()) {
-            if (map.get(v)) stored.vars[i] = map.get(v) as string;
-          }
-          ok = store(env, stored);
-        }
-
+        ok = store(env, onlyIf, []);
         if (!ok) {
           env.newMessage(`Failed to store ${onlyIf}`);
           return false;
         }
       }
-
       return true;
     } catch (error) {
       throw Error();
     }
-
-    function useMapToStore(fact: FactNode) {}
   }
 }
