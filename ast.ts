@@ -75,7 +75,7 @@ export class LogicalOptNode extends FactNode {
       separator = "<=";
     }
 
-    const mainPart = `${type} ${this.vars.toString()} | ${this.req.map((e) => e.toString()).join(", ")} ${separator} {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
+    const mainPart = `${type} ${this.vars.toString()} : ${this.req.map((e) => e.toString()).join(", ")} ${separator} {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
 

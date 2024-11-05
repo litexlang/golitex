@@ -438,7 +438,8 @@ const testList42 = [
 
 const testList43 = [
   "def x is p => {}; def x is p1 => {}; def x is p2 => {}; let x : x is p1;",
-  "",
+  "let a,b,c : a,b,c are p1;",
+  "a,b,c are p1;",
 ];
 
 const 三段论 = [
@@ -503,8 +504,9 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, true],
+  setTheory: [setTheory, false],
   testList42: [testList42, false],
+  testList43: [testList43, true],
   三段论: [三段论, false],
 };
 

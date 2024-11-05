@@ -126,7 +126,6 @@ export namespace L_Parser {
     know: knowParse,
     let: letParse,
     "{": localEnvParse,
-    // def: defineParse,
     def: yaDefineParse,
     prove: proveParse,
     prove_by_contradiction: proveParse,
@@ -353,7 +352,7 @@ export namespace L_Parser {
       if (IfKeywords.includes(tokens[0])) {
         toProve = logicalOptParse(env, tokens);
       } else {
-        fixedIfThenOpt = parseVanillaOptWithNot(env, tokens);
+        fixedIfThenOpt = parseVanillaOptWithNot(env, tokens, true);
       }
 
       const block: L_Node[] = [];
@@ -439,7 +438,7 @@ export namespace L_Parser {
     const index = tokens.length;
 
     try {
-      const out: FactNode[] = [];
+      let out: FactNode[] = [];
       while (!end.includes(tokens[0])) {
         let isT = true;
         if (isCurToken(tokens, "not")) {
@@ -456,46 +455,45 @@ export namespace L_Parser {
           fact.isT = isT;
           out.push(fact);
         } else {
-          const vars: string[] = [];
-          while (!IsAreKeywords.includes(tokens[0])) {
-            vars.push(shiftVar(tokens));
-            if (isCurToken(tokens, ",")) skip(tokens, ",");
-          }
-          const isAre = skip(tokens, IsAreKeywords) as string;
-
-          if (isCurToken(tokens, "not")) {
-            skip(tokens, "not");
-            isT = !isT;
-          }
-
-          if (AreKeywords.includes(isAre)) {
-            if (vars.length < 2) {
-              handleParseError(
-                env,
-                "`are` requires more than 1 parameters.",
-                index,
-                start
-              );
-              throw Error();
-            }
-          } else {
-            if (vars.length !== 1) {
-              handleParseError(
-                env,
-                "`is` requires exactly one parameter.",
-                index,
-                start
-              );
-              throw Error();
-            }
-          }
-
-          const optName = shiftVar(tokens);
-          for (const v of vars) {
-            const fact = new OptNode(optName, [v]);
-            fact.isT = isT;
-            out.push(fact);
-          }
+          const opts = parseAreIsOpts(env, tokens);
+          out = [...out, ...opts];
+          //   const vars: string[] = [];
+          //   while (!IsAreKeywords.includes(tokens[0])) {
+          //     vars.push(shiftVar(tokens));
+          //     if (isCurToken(tokens, ",")) skip(tokens, ",");
+          //   }
+          //   const isAre = skip(tokens, IsAreKeywords) as string;
+          //   if (isCurToken(tokens, "not")) {
+          //     skip(tokens, "not");
+          //     isT = !isT;
+          //   }
+          // if (AreKeywords.includes(isAre)) {
+          //   if (vars.length < 2) {
+          //     handleParseError(
+          //       env,
+          //       "`are` requires more than 1 parameters.",
+          //       index,
+          //       start
+          //     );
+          //     throw Error();
+          //   }
+          // } else {
+          //   if (vars.length !== 1) {
+          //     handleParseError(
+          //       env,
+          //       "`is` requires exactly one parameter.",
+          //       index,
+          //       start
+          //     );
+          //     throw Error();
+          //   }
+          // }
+          // const optName = shiftVar(tokens);
+          // for (const v of vars) {
+          //   const fact = new OptNode(optName, [v]);
+          //   fact.isT = isT;
+          //   out.push(fact);
+          // }
         }
 
         if (isCurToken(tokens, ",")) skip(tokens, ",");
@@ -814,14 +812,18 @@ export namespace L_Parser {
     }
   }
 
-  function parseVanillaOptWithNot(env: L_Env, tokens: string[]): OptNode {
+  function parseVanillaOptWithNot(
+    env: L_Env,
+    tokens: string[],
+    withNot: Boolean
+  ): OptNode {
     const start = tokens[0];
     const index = tokens.length;
 
     try {
       let isT = true;
 
-      if (isCurToken(tokens, "not")) {
+      if (isCurToken(tokens, "not") && withNot) {
         isT = false;
         skip(tokens, "not");
       }
@@ -835,7 +837,7 @@ export namespace L_Parser {
         const vars: string[] = [varName];
         skip(tokens, IsKeywords);
 
-        if (isCurToken(tokens, "not")) {
+        if (isCurToken(tokens, "not") && withNot) {
           skip(tokens, "not");
           isT = !isT;
         }
@@ -843,6 +845,67 @@ export namespace L_Parser {
         const optName = shiftVar(tokens);
         return new OptNode(optName, vars, isT);
       }
+    } catch (error) {
+      handleParseError(env, "operator", index, start);
+      throw error;
+    }
+  }
+
+  function parseAreIsOpts(env: L_Env, tokens: string[]): OptNode[] {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      const out: OptNode[] = [];
+      let isT = true;
+
+      if (isCurToken(tokens, "not")) {
+        isT = false;
+        skip(tokens, "not");
+      }
+
+      const vars: string[] = [];
+      while (!IsAreKeywords.includes(tokens[0])) {
+        vars.push(shiftVar(tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      const isAre = skip(tokens, IsAreKeywords) as string;
+
+      if (isCurToken(tokens, "not")) {
+        skip(tokens, "not");
+        isT = !isT;
+      }
+
+      if (AreKeywords.includes(isAre)) {
+        if (vars.length < 2) {
+          handleParseError(
+            env,
+            "`are` requires more than 1 parameters.",
+            index,
+            start
+          );
+          throw Error();
+        }
+      } else {
+        if (vars.length !== 1) {
+          handleParseError(
+            env,
+            "`is` requires exactly one parameter.",
+            index,
+            start
+          );
+          throw Error();
+        }
+      }
+
+      const optName = shiftVar(tokens);
+      for (const v of vars) {
+        const fact = new OptNode(optName, [v]);
+        fact.isT = isT;
+        out.push(fact);
+      }
+
+      return out;
     } catch (error) {
       handleParseError(env, "operator", index, start);
       throw error;
