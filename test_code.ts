@@ -6,19 +6,19 @@ import { setTheory } from "./tao_analysis_one";
 
 // Aristotle induction
 const testList0 = [
-  "def obj(x) => ;",
-  "def set(x) => obj(x);",
-  "def obj2(x) => set(x);",
+  "def obj(x) => {};",
+  "def set(x) => {obj(x)};",
+  "def obj2(x) => {set(x)};",
   "let y | y is set;",
-  "def z is set2 <=> set(z);",
+  "def z is set2 <=> {set(z)};",
   "set2(y);",
   "set2(y);",
 ];
 
 const testList1 = [
-  "def obj(x) => ;",
-  "def obj2(x) => ;",
-  "def x is p2 <=> obj(x), obj2(x) when;",
+  "def obj(x) => {};",
+  "def obj2(x) => {};",
+  "def x is p2 <=> {obj(x), obj2(x)} when;",
   "let y | obj(y);",
   "if  x | obj2(x) => {p2(x)};",
   "if | y is obj2 => {y is p2};",
@@ -31,14 +31,14 @@ const testList1 = [
 // }
 
 const testList2 = [
-  "def obj(x) => ;",
-  "def obj0(x) => ;",
+  "def obj(x) => {};",
+  "def obj0(x) => {};",
   "know obj0(#x);", // know #x is obj0;
-  "def x is obj2 <=> obj(x) ;",
-  "def x is obj3  => ;",
-  "def x is obj4  => obj3(x);",
+  "def x is obj2 <=> {obj(x)} ;",
+  "def x is obj3  => {};",
+  "def x is obj4  => {obj3(x)};",
   "let EMPTY_SET;",
-  "def x is inf  => obj3(x) when  obj(x);",
+  "def x is inf  => {obj3(x)} when  obj(x);",
   // [if] obj3
   // #x | inf(#x); obj(#x)
   "prove if x | obj(x) => {obj3(x)} {}", // unsuccessful prove
@@ -46,10 +46,10 @@ const testList2 = [
 ];
 
 const testList3 = [
-  "def obj(x) => ;",
-  "def obj2(x) <=> obj(x) ;",
-  "def x is obj3  <=  obj(x), obj2(x) ; ",
-  "def x is obj4 <= when obj(x), obj2(x);",
+  "def obj(x) => {};",
+  "def obj2(x) <=> {obj(x)} ;",
+  "def x is obj3  <=  {obj(x), obj2(x)} ; ",
+  "def x is obj4 <= {} when obj(x), obj2(x);",
   // "prove if x |  => obj2(x) {}", // unsuccessful prove
   // "prove if x |  obj(x), obj3(x) => obj2(x) {}", // obj3 is useless
 ];
@@ -57,9 +57,9 @@ const testList3 = [
 const testList4 = [";;;\n\n;;"];
 
 const testList5 = [
-  "def x is p1 => ;",
-  "def x is p3 => ;",
-  "def p2(x) <=> p1(x) when p3(x);",
+  "def x is p1 => {};",
+  "def x is p3 => {};",
+  "def p2(x) <=> {p1(x)} when p3(x);",
   "let y | y is p2, y is p3;",
   "y is p1;",
   // "def p3 x | p2(x);",
@@ -67,7 +67,7 @@ const testList5 = [
 
 // Obsolete
 const testList6 = [
-  "def p1(x)  => ;",
+  "def p1(x)  => {};",
   // "exist exist-p1(x) <=> p1(x);", // can be used as a "stronger" version of def.
   // "let y | p1(y);",
   // "have x | exist-p1(x);", // unsuccessful have
@@ -76,9 +76,9 @@ const testList6 = [
 ];
 
 const testList7 = [
-  "def p1(x) => ;",
-  "def p2(x) <=> p1(x);",
-  "def p3(x) <=> p2(x);",
+  "def p1(x) => {};",
+  "def p2(x) <=> {p1(x)};",
+  "def p3(x) <=> {p2(x)};",
   "let y | p1(y);",
   "p3(y);", // unknown
   // "p3(y) by {p2(y)};",
@@ -429,6 +429,8 @@ const testList42 = [
   "know if y | y is q0 => {x is q} [q0_fact2];",
   "let z | if t | t is q0 => {z is q}[q0_fact3];",
   "if | => {if z | z is q0 => {z is q}[q0_fact4] };",
+  "know z is q0;",
+  "by q0_fact1(z)",
   // "def_by if x | x is q0 => { if y | y is q => {y is q}[p_then_q] };",
   // "def x is p2 => {};",
   // "def x is q1 => {if y | y is p2 => {y is q}[q1_then_p2] };",
@@ -442,7 +444,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList4: [testList4, false],
   testList5: [testList5, false],
   testList6: [testList6, false],
-  testList7: [testList7, false],
+  testList7: [testList7, true],
+  //---------------------------------
   testList8: [testList8, false],
   testList9: [testList9, false],
   testList10: [testList10, false],

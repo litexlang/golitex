@@ -57,6 +57,7 @@ export namespace L_Executor {
     LocalEnvNode: localEnvExec,
     ReturnNode: returnExec,
     ReturnExistNode: returnExistExec,
+    ByNode: byExec,
   };
 
   export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
@@ -529,6 +530,15 @@ export namespace L_Executor {
       return RType.True;
     } catch (error) {
       env.newMessage("return_exist");
+      return RType.Error;
+    }
+  }
+
+  function byExec(env: L_Env, byNode: ByNode): RType {
+    try {
+      return L_Checker.checkBy(env, byNode);
+    } catch (error) {
+      env.newMessage("by");
       return RType.Error;
     }
   }
