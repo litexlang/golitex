@@ -785,7 +785,13 @@ export namespace L_Parser {
       }
       skip(tokens, ")");
 
-      return new ByNode(byName, vars);
+      skip(tokens, "=>");
+
+      skip(tokens, "{");
+
+      const facts = factsParse(env, tokens, ["}"], true);
+
+      return new ByNode(byName, vars, facts);
     } catch (error) {
       handleParseError(env, "by", index, start);
       throw error;

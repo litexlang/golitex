@@ -18,12 +18,14 @@ export class StoredReq {
   ) {}
 
   toString() {
-    return `(if ${this.vars.join(", ")} | ${this.req.map((e) => e.toString()).join(", ")})`;
+    return `(if ${this.vars.join(", ")} | ${this.req
+      .map((e) => e.toString())
+      .join(", ")})`;
   }
 }
 
 export class StoredFact {
-  public onlyIfs: FactNode[] = [];
+  public onlyIfs: FactNode[] = []; //? MAYBE USELESS
 
   constructor(
     public vars: string[], // stored fixed, only used when storing opts
@@ -36,7 +38,9 @@ export class StoredFact {
     if (this.isT)
       out = `${this.vars} <=  ${this.req.map((e) => e.toString()).join(", ")}`;
     else
-      out = `[not] ${this.vars} <= ${this.req.map((e) => e.toString()).join(", ")}`;
+      out = `[not] ${this.vars} <= ${this.req
+        .map((e) => e.toString())
+        .join(", ")}`;
 
     if (this.onlyIfs.length !== 0) {
       out += `\n${this.onlyIfs}\n`;
@@ -278,9 +282,13 @@ export namespace L_FactStorage {
         map.set(allFreeVars[i], byNode.vars[i]);
       }
 
-      let ok: Boolean = true;
-      //TODO IN THE FUTURE I COPY IF-THEN SO THAT I CAN STORE "fixed" IF-THEN
+      const onlyIfsToBeStored: FactNode[] = [];
       for (const onlyIf of storedFact.onlyIfs) {
+        onlyIfsToBeStored.push(onlyIf.copy());
+      }
+
+      let ok: Boolean = true;
+      for (const onlyIf of onlyIfsToBeStored) {
         if (onlyIf instanceof OptNode) {
           const stored = onlyIf.copy();
           for (const [i, v] of stored.vars.entries()) {
@@ -299,5 +307,7 @@ export namespace L_FactStorage {
     } catch (error) {
       throw Error();
     }
+
+    function useMapToStore(fact: FactNode) {}
   }
 }

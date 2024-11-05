@@ -431,7 +431,7 @@ const testList42 = [
   "let z | if t | t is q0 => {z is q}[q0_fact3];",
   "if | => {if z | z is q0 => {z is q}[q0_fact4] };",
   "know z is q0;",
-  "by q0_fact1(z)",
+  "by q0_fact1(z) => {z is q};",
   // "def_by if x | x is q0 => { if y | y is q => {y is q}[p_then_q] };",
   // "def x is p2 => {};",
   // "def x is q1 => {if y | y is p2 => {y is q}[q1_then_p2] };",

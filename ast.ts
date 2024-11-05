@@ -1,17 +1,24 @@
-import { IffKeywords, IfKeywords, OnlyIfKeywords } from "./common";
 import { L_Env } from "./L_Env";
 
 export abstract class L_Node {}
 
-export abstract class FactNode extends L_Node {
+export class FactNode extends L_Node {
   useName: string = "";
 
   constructor(public isT: Boolean) {
     super();
   }
 
-  abstract varsDeclared(env: L_Env, freeVars: string[]): Boolean;
-  abstract factsDeclared(env: L_Env): Boolean;
+  varsDeclared(env: L_Env, freeVars: string[]): Boolean {
+    return false;
+  }
+  factsDeclared(env: L_Env): Boolean {
+    return false;
+  }
+
+  copy(): FactNode {
+    return new FactNode(true);
+  }
 }
 
 export class OrNode extends FactNode {
@@ -30,7 +37,7 @@ export class OrNode extends FactNode {
   }
 }
 
-export abstract class LogicalOptNode extends FactNode {
+export class LogicalOptNode extends FactNode {
   constructor(
     public vars: string[] = [],
     public req: FactNode[] = [],
@@ -41,6 +48,17 @@ export abstract class LogicalOptNode extends FactNode {
     public byName: undefined | string = undefined
   ) {
     super(isT);
+  }
+
+  copy(): FactNode {
+    const newVars = [...this.vars];
+    const req = this.req.map((e) => e.copy());
+    const onlyIfs = this.onlyIfs.map((e) => e.copy());
+
+    if (this instanceof IfThenNode)
+      return new IfThenNode(newVars, req, onlyIfs, this.isT, this.byName);
+
+    throw Error();
   }
 
   toString() {
@@ -292,7 +310,8 @@ export class ExistNode extends L_Node {
 export class ByNode extends L_Node {
   constructor(
     public byName: string,
-    public vars: string[]
+    public vars: string[],
+    public onlyIfs: FactNode[]
   ) {
     super();
   }

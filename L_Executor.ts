@@ -532,6 +532,7 @@ export namespace L_Executor {
   function byExec(env: L_Env, byNode: ByNode): RType {
     try {
       const out = L_Checker.checkBy(env, byNode);
+
       if (out === RType.True) {
         let ok = L_FactStorage.storeFactInBy(env, byNode);
         if (!ok) {

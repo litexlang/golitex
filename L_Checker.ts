@@ -229,9 +229,9 @@ export namespace L_Checker {
     }
 
     let unknown = false;
+    let newEnv = new L_Env(env);
     for (const currentLevelReq of storedFact.req) {
       // this is necessary because 1. I SIMPLY NEED A NEATER STORAGE SYSTEM THAT ALIGNS WITH THE HIERARCHY OF IF-THENs THE FACT IS STORED. 2. store checked req as future stored facts. 3. If some vars of the req is free, then the req is not checked, it is stored as a fact.
-      let newEnv = new L_Env(env);
 
       for (const req of currentLevelReq.req) {
         if (req instanceof OptNode) {
@@ -286,7 +286,15 @@ export namespace L_Checker {
       if (unknown) break;
       newEnv = new L_Env(newEnv);
     }
+
     if (unknown) return RType.Unknown;
-    else return RType.True;
+
+    // check whether onlyIfs in by is correct
+    for (const onlyIf of byNode.onlyIfs) {
+      const out = check(newEnv, onlyIf);
+      if (out !== RType.True) return out;
+    }
+
+    return RType.True;
   }
 }
