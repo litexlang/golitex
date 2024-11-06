@@ -466,6 +466,12 @@ const 三段论 = [
   "if somebody is immortal => {somebody is not mortal, somebody is not human};",
 ];
 
+const testList44 = [
+  "def x is object => {};",
+  "let x ;",
+  "{def x is object => {}; know x is object; {x is object;} }",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -484,10 +490,10 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList14: [testList14, false],
   testList15: [testList15, false],
   testList16: [testList16, false],
-  testList17: [testList17, true],
-  testList18: [testList18, true],
-  testList19: [testList19, true],
-  testList20: [testList20, true],
+  testList17: [testList17, false],
+  testList18: [testList18, false],
+  testList19: [testList19, false],
+  testList20: [testList20, false],
   testList21: [testList21, false],
   testList22: [testList22, false],
   testList23: [testList23, false],
@@ -513,6 +519,7 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   setTheory: [setTheory, false],
   testList42: [testList42, false],
   testList43: [testList43, false],
+  testList44: [testList44, true],
   三段论: [三段论, false],
 };
 

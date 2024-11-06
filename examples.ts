@@ -1,31 +1,38 @@
-export const exampleDict = {
-  三段论: {
+import { L_Env } from "./L_Env";
+import { L_Executor, RType } from "./L_Executor";
+import { L_Scan } from "./L_Lexer";
+import { L_Parser } from "./L_Parser";
+
+type ExampleItem = {
+  name: string;
+  code: string[];
+  debug: boolean;
+  print: boolean;
+};
+
+export const exampleList: ExampleItem[] = [
+  {
+    name: "三段论",
     code: [
-      // Introduce a concept "会死"
       "def something is 会死 => {};",
-      // Introduce a concept "人", "人" has property that "人会死"
       "def something is 人 => {something is 会死};",
-      // Introduce a variable "苏格拉底", "苏格拉底" has property that "苏格拉底 is 人"
       "let 苏格拉底 : 苏格拉底 is 人;",
-      // Check: "苏格拉底 is 会死"
       "苏格拉底 is 会死;",
-      // Introduce a variable "神仙", "神仙" has property that "神仙 is not 会死"
       "let 神仙 : 神仙 is not 会死;",
-      // prove by contradiction: to show "神仙 is not 人", we assume "神仙 is 人"
-      // then we get {神仙 is 会死;} which leads to contradiction:
-      // "神仙 is 会死" "神仙 is not 会死" is valid at the same time.
       "prove_by_contradiction 神仙 is not 人 {神仙 is 会死;} contradiction 神仙 is 会死;",
     ],
     debug: false,
     print: false,
   },
-  defs: {
+  {
+    name: "defs",
     code: [
       "def x is p => {};",
       "def x is p1 => {x is p};",
       "def x is p2 => {x is p1};",
-      "def x is p3 <=> {x is p};",
-      "def x is p4 <= {x is p};",
+      "def x is p3 => {x is p2};",
+      "def x is p4 <=> {x is p};",
+      "def x is p5 <= {x is p4};",
       "def pair_wise(x,y) => {};",
       "def multi_wise(x,y,z) => {};",
       "def q0(x) => {};",
@@ -34,7 +41,8 @@ export const exampleDict = {
     debug: true,
     print: false,
   },
-  let: {
+  {
+    name: "let",
     code: [
       "let x , y ,z: x is p;",
       "let a,b,c : a,b,c are p;",
@@ -43,7 +51,8 @@ export const exampleDict = {
     debug: true,
     print: false,
   },
-  facts: {
+  {
+    name: "facts",
     code: [
       "x is p;",
       "x is q0;", // unknown
@@ -51,25 +60,30 @@ export const exampleDict = {
     debug: true,
     print: false,
   },
-  if_for_all: {
+  {
+    name: "if_for_all",
     code: [
       "if x : x is p2 => {x is p1};",
       "if x : x is p2 => {x is p2};",
-      "if x : x is p2, y is p1 => {}",
+      "if x : x is p2, y is p1 => {};",
       "if : y is p1 => {y is p};",
       "if y is p1 => {y is p};",
       "if x : y is p1 => {y is p};",
       "if a: => {if : a is p1 => {if : => {a is p}}};",
+      "know if x: x is p1, x is p2, x is p3 => {x is p5};",
+      "if x : x is p1 => {if x is p2 => {if x is p3 => {x is p5}}};",
     ],
     debug: true,
     print: false,
   },
-  not: {
-    code: ["if x | x is not q0 => {x is not q0};"],
+  {
+    name: "not",
+    code: ["if x : x is not q0 => {x is not q0};"],
     debug: true,
     print: false,
   },
-  knows: {
+  {
+    name: "knows",
     code: [
       "know y is p, z is q;",
       "y is p, q(z);",
@@ -81,7 +95,8 @@ export const exampleDict = {
     debug: true,
     print: false,
   },
-  exist_have: {
+  {
+    name: "exist_have",
     code: [
       "exist something is p;",
       "exist pq(y,z);",
@@ -91,7 +106,8 @@ export const exampleDict = {
     debug: true,
     print: false,
   },
-  prove: {
+  {
+    name: "prove",
     code: [
       "prove if x : x is p2 => {x is p} {x is p1;}",
       "know z is p3;",
@@ -100,20 +116,23 @@ export const exampleDict = {
     debug: true,
     print: false,
   },
-  prove_by_contradiction: {
+  {
+    name: "prove_by_contradiction",
     code: [
-      "let n : n is not p",
+      "let n : n is not p;",
       "prove_by_contradiction n is not p3 {n is p2; n is p1;} contradiction n is p;",
     ],
     debug: true,
     print: false,
   },
-  postfix_prove: {
-    code: ["z is p2 prove {z is p3};"],
+  {
+    name: "postfix_prove",
+    code: ["z is p2 prove {z is p3;};"],
     debug: true,
     print: false,
   },
-  by: {
+  {
+    name: "by",
     code: [
       "def x is object => {};",
       "def x is set => {x is object};",
@@ -126,27 +145,99 @@ export const exampleDict = {
     debug: true,
     print: false,
   },
-  block: {
+  {
+    name: "block",
+    code: [
+      "let u,v : u,v are p3;",
+      "{u is p2; return u is p1;}",
+      "{v is p2;} => {v is p1;};",
+    ],
+    debug: true,
+    print: false,
+  },
+  {
+    name: "block2",
     code: [
       "let x1, x2 ,x3 : x2 is object; def x is object2 => {x is set};",
       `  {
       def x is object => {};
       know x1 is object;
-      x1,x2 are object; 
+      x1,x2 are object;
         {
           x1 is object;
+          x2 is object;
           {
             def x is object => {x is object2};
             x1 is object;
-            if x : object => {x is object2, x is set};
+            if x : x is object => {x is object2, x is set};
           }
         }
-      }`,
+      }`
+        .replace(/\s+/g, " ")
+        .trim(),
       "x1 is object;",
       "x2 is object;",
-      "if x : object => {x is object2};",
+      "if x : x is object2 => {x is set};",
     ],
     debug: true,
     print: false,
   },
-};
+];
+
+function runExampleDict() {
+  const env = new L_Env();
+  for (const example of exampleList) {
+    if (example["debug"] !== true) continue;
+    const exprs = example["code"];
+    console.log(example);
+
+    if (example.print) {
+      const newEnv = new L_Env();
+      for (const expr of exprs) {
+        const out = run(newEnv, expr);
+        if (out === undefined) {
+          newEnv.printClearMessage();
+          continue;
+        }
+      }
+    }
+
+    for (const expr of exprs) {
+      const out = run(env, expr);
+      if (out === undefined) {
+        env.printClearMessage();
+        continue;
+      }
+    }
+  }
+
+  // env.printFacts();
+  // env.printDeclFacts();
+  // L_FactStorage.printEnvFacts(env);
+  env.printAllStoredFacts();
+  env.printClearMessage();
+  env.printBys();
+}
+
+function run(env: L_Env, expr: string) {
+  try {
+    const tokens = L_Scan(expr);
+    const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
+    // const nodes = L_Parser.L_StmtsParse(env, tokens);
+    if (nodes === undefined) {
+      return undefined;
+    }
+    const result: RType[] = [];
+    for (const node of nodes) {
+      const out = L_Executor.nodeExec(env, node);
+      result.push(out);
+    }
+    env.printClearMessage();
+
+    return result;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+runExampleDict();
