@@ -472,7 +472,12 @@ const testList44 = [
   "{def x is object => {}; know x is object; {x is object;} }",
 ];
 
-const testList45 = ["def x is object => {};", "let x : x is object2;"];
+const testList45 = [
+  "def x is object => {};",
+  "let x : x is object2;",
+  "know x is object2;",
+  "let a,b: object(a,b);",
+];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],

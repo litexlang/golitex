@@ -15,6 +15,16 @@ export class L_Env {
     this.father = father;
   }
 
+  getDeclaredFact(s: string): DeclNode | undefined {
+    if (this.declaredFacts.has(s)) {
+      return this.declaredFacts.get(s);
+    } else if (this.father) {
+      return this.father.declaredFacts.get(s);
+    } else {
+      return undefined;
+    }
+  }
+
   // TODO: IF THE BY IS RELATED TO OPT WITH THE SAME NAME AT HIGHER LEVEL, WE SHOULD NOT RETURN IT. FOR
   // TODO: THE TIME BEING, WE DON'T IMPLEMENT THAT PROTECTION.
   getBy(s: string) {

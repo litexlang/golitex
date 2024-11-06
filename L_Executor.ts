@@ -104,6 +104,14 @@ export namespace L_Executor {
         if (!ok) return RType.Error;
       }
 
+      for (const f of node.facts) {
+        const ok = f.factsDeclared(env);
+        if (!ok) {
+          env.newMessage(`${f} not fully declared`);
+          return RType.Error;
+        }
+      }
+
       for (const fact of node.facts) {
         if (!env.inHaves(fact.fullName)) {
           env.newMessage(`Not every existence of given fact is validated.`);
@@ -145,7 +153,13 @@ export namespace L_Executor {
         }
       }
 
-      for (const f of node.facts) L_FactStorage.store(env, f, []);
+      for (const f of node.facts) {
+        const ok = L_FactStorage.store(env, f, []);
+        if (!ok) {
+          env.newMessage(`Failed to store ${f}`);
+          return RType.Error;
+        }
+      }
 
       for (const f of node.facts) {
         if (f instanceof IfThenNode) {
@@ -162,7 +176,20 @@ export namespace L_Executor {
 
   export function knowExec(env: L_Env, node: KnowNode): RType {
     try {
-      for (const fact of node.facts) L_FactStorage.store(env, fact, []);
+      for (const f of node.facts) {
+        const ok = f.factsDeclared(env);
+        if (!ok) {
+          env.newMessage(`${f} not fully declared`);
+          return RType.Error;
+        }
+      }
+      for (const fact of node.facts) {
+        const ok = L_FactStorage.store(env, fact, []);
+        if (!ok) {
+          env.newMessage(`Failed to store ${fact}`);
+          return RType.Error;
+        }
+      }
       for (const fact of node.facts) {
         if (fact instanceof IfThenNode) {
           L_FactStorage.storeIfThenBy(env, fact, new StoredFact([], [], true));

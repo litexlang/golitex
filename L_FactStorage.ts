@@ -94,8 +94,9 @@ export class StoredFact {
 }
 
 export namespace L_FactStorage {
-  export function declNewFact(env: L_Env, toDecl: DeclNode) {
+  export function declNewFact(env: L_Env, toDecl: DeclNode): Boolean {
     const decl = new OptNode(toDecl.name, toDecl.vars);
+    let ok: Boolean = true;
     if (toDecl instanceof IfThenDeclNode) {
       const ifThen = new IfThenNode(
         toDecl.vars,
@@ -104,10 +105,11 @@ export namespace L_FactStorage {
         true,
         toDecl.byName
       );
-      storeIfThen(env, ifThen, []);
+      ok = storeIfThen(env, ifThen, []);
+      return ok;
       // L_FactStorage.storeIfThenBy(env, ifThen, new StoredFact([], [], true));
     } else if (toDecl instanceof IffDeclNode) {
-      storeIfThen(
+      ok = storeIfThen(
         env,
         new IfThenNode(
           toDecl.vars,
@@ -118,7 +120,8 @@ export namespace L_FactStorage {
         ),
         []
       );
-      storeIfThen(
+      if (!ok) return false;
+      ok = storeIfThen(
         env,
         new IfThenNode(
           toDecl.vars,
@@ -129,8 +132,9 @@ export namespace L_FactStorage {
         ),
         []
       );
+      return ok;
     } else if (toDecl instanceof OnlyIfDeclNode) {
-      storeIfThen(
+      ok = storeIfThen(
         env,
         new IfThenNode(
           toDecl.vars,
@@ -141,17 +145,45 @@ export namespace L_FactStorage {
         ),
         []
       );
+      return ok;
     }
+
+    return false;
   }
 
-  function storeIfThen(env: L_Env, ifThen: IfThenNode, req: StoredReq[]) {
+  function storeIfThen(
+    env: L_Env,
+    ifThen: IfThenNode,
+    req: StoredReq[]
+  ): Boolean {
     for (const fact of ifThen.onlyIfs) {
-      store(env, fact, [...req, new StoredReq(ifThen.vars, ifThen.req)]);
+      const ok = store(env, fact, [
+        ...req,
+        new StoredReq(ifThen.vars, ifThen.req),
+      ]);
+      if (ok!) return false;
     }
+
+    return true;
   }
 
-  function storeOpt(env: L_Env, fact: OptNode, req: StoredReq[]) {
+  function storeOpt(env: L_Env, fact: OptNode, req: StoredReq[]): Boolean {
+    const declaredOpt = env.getDeclaredFact(fact.fullName);
+    if (declaredOpt === undefined) {
+      env.newMessage(`${fact.fullName} undeclared`);
+      return false;
+    } else {
+      // TODO: I GUESS I SHOULD CHECK WHETHER GIVEN VARS SATISFY WHEN IN DEF
+      if (declaredOpt.vars.length !== fact.vars.length) {
+        env.newMessage(
+          `${fact.fullName} requires ${declaredOpt.vars.length} parameters, ${fact.vars.length} given.`
+        );
+        return false;
+      }
+    }
+
     env.newFact(fact.fullName, fact.vars, req, fact.isT);
+    return true;
   }
 
   // Main Function of Storage
@@ -161,9 +193,13 @@ export namespace L_FactStorage {
     req: StoredReq[] = []
   ): Boolean {
     try {
-      if (fact instanceof IfThenNode) storeIfThen(env, fact, req);
-      else if (fact instanceof OptNode) storeOpt(env, fact, req);
-      else throw Error();
+      if (fact instanceof IfThenNode) {
+        const ok = storeIfThen(env, fact, req);
+        if (!ok) return false;
+      } else if (fact instanceof OptNode) {
+        const ok = storeOpt(env, fact, req);
+        if (!ok) return false;
+      } else throw Error();
 
       return true;
     } catch {
