@@ -19,7 +19,7 @@ export class StoredReq {
   ) {}
 
   toString() {
-    return `(if ${this.vars.join(", ")} | ${this.req
+    return `(if ${this.vars.join(", ")} : ${this.req
       .map((e) => e.toString())
       .join(", ")})`;
   }

@@ -20,8 +20,10 @@ export const exampleList: ExampleItem[] = [
       "def something is human => {something is mortal};",
       // Introduce a variable "Socrates", "Socrates" has property that "Socrates is human"
       "let Socrates : Socrates is human;",
-      // Check: "Socrates is mortal"
+      // Check: a specific human called Socrates is mortal."
       "Socrates is mortal;",
+      // Check: for all human, human is mortal.
+      "if x : x is human => {x is mortal};",
       // Introduce a variable "god", "god" has property that "god is not mortal"
       "let god : god is not mortal;",
       // prove by contradiction: to show "god is not human", we assume "god is human"
@@ -37,16 +39,28 @@ export const exampleList: ExampleItem[] = [
   {
     name: "defs",
     code: [
+      // Define new concepts
+      // Define a new concept called p. if something is p, then nothing happens
       "def x is p => {};",
+      // if x is p1, then x is p
       "def x is p1 => {x is p};",
       "def x is p2 => {x is p1};",
       "def x is p3 => {x is p2};",
+      // x is p4 is equivalent to x is p
       "def x is p4 <=> {x is p};",
+      // x is p4 then x is p5
       "def x is p5 <= {x is p4};",
+      // There are 2 ways of defining a concept, use functional notation or relational notation
       "def pair_wise(x,y) => {};",
       "def multi_wise(x,y,z) => {};",
       "def q0(x) => {};",
+      // When is used to add conditions for both left and right hand side.
       "def x is q <=> {x is q0} when x is p;",
+      // Example:
+      "def <(x,y) => {};",
+      "def >=(x,y) <= {not <(x,y)};",
+      "let n1,n2,n3 : <(n1,n2), <(n2,n3);",
+      "<(n1,n3);",
     ],
     debug: true,
     print: false,
@@ -54,7 +68,10 @@ export const exampleList: ExampleItem[] = [
   {
     name: "let",
     code: [
-      "let x , y ,z: x is p, p(x);",
+      // let means introducing a new variable into current environment
+      // introduce new variables x,y,z. Assume x is p
+      "let x , y ,z: x is p, p(y);",
+      // are is syntax sugar.
       "let a,b,c : a,b,c are p;",
       "let 1,0, 12343124, 314_garbage_-code_159, _garbage, 你好world;",
     ],
@@ -64,7 +81,10 @@ export const exampleList: ExampleItem[] = [
   {
     name: "facts",
     code: [
+      // MAIN functionality of LiTeX: checking
+      // check whether x is p. Since previously we assumed x is p, so this is true
       "x is p;",
+      // Whether x is q0 is unknown
       "x is q0;", // unknown
     ],
     debug: true,
@@ -73,14 +93,27 @@ export const exampleList: ExampleItem[] = [
   {
     name: "if_for_all",
     code: [
+      // `if .. : .. => {..}` makes "for all" expressions possible
+      // Check: for all x is p2, x is p1. By definition, it's true.
       "if x : x is p2 => {x is p1};",
+      "if x : x is p2 => {x is q0};", // unknown
+      "if x : x is p2 => {x is p1, x is q0};", // unknown
+      // Check: if x is p2, then x is p2. In natural language it's a waste of words, but
+      // actually it's hard to implement in a programming language.
       "if x : x is p2 => {x is p2};",
+      // Check: for all x is p2, y (defined above) is p1, then nothing happens
       "if x : x is p2, y is p1 => {};",
+      // If a called variable is not introduced in `if-then` expression, then
+      // my interpreter searches the parent environment for the variable
       "if : y is p1 => {y is p};",
       "if y is p1 => {y is p};",
       "if x : y is p1 => {y is p};",
+      // `if-then` in `if-then` inherits declared variables and their properties
       "if a: => {if : a is p1 => {if : => {a is p}}};",
+      // know for all x which has properties `x is p1, x is p2, x is p3`, then x is p5.
+      // know "sort of" works in the same way as how axioms and assume works.
       "know if x: x is p1, x is p2, x is p3 => {x is p5};",
+      // you can add new properties at any level of `if-then`
       "if x : x is p1 => {if x is p2 => {if x is p3 => {x is p5}}};",
     ],
     debug: true,
@@ -95,17 +128,18 @@ export const exampleList: ExampleItem[] = [
   {
     name: "knows",
     code: [
+      // know can be used in many cases:
+      // 1. add new properties to a declared operator
+      // 2. assume something
+      // 3. declare something first, then add properties to it by 'knowing' them
       "know y is p, z is q;",
       "y is p, q(z);",
       "x,y are p;",
       "def pq(y,z) => {};",
       "know if x,y : x is p, y is q => {pq(x,y)};",
       "pq(y,z);",
-      "def <(x,y) => {};",
+      // `know` also works for `if-then`s (for all)
       "know if x,y,z: <(x,y), <(y,z) => {<(x,z)};",
-      "def >=(x,y) <= {not <(x,y)};",
-      "let n1,n2,n3 : <(n1,n2), <(n2,n3);",
-      "<(n1,n3);",
     ],
     debug: true,
     print: false,
@@ -115,6 +149,10 @@ export const exampleList: ExampleItem[] = [
     code: [
       "exist something is p;",
       "exist pq(y,z);",
+      // difference between let and have: If you let something and bind properties
+      // to them, then my interpreter won't check whether actually such
+      // variables with those properties actually exists.
+      // If you want to `have` something, you should first prove its existence
       "have d: d is p1;",
       "have e,f: pq(e,f);",
     ],
@@ -124,8 +162,10 @@ export const exampleList: ExampleItem[] = [
   {
     name: "prove",
     code: [
+      // prove syntax1 : prove if-then-type-fact => {your reasoning}
       "prove if x : x is p2 => {x is p} {x is p1;}",
       "know z is p3;",
+      // prove syntax2: prove an operator-type-fact {your reasoning}
       "prove z is p {z is p2; z is p1;}",
     ],
     debug: true,
@@ -135,6 +175,7 @@ export const exampleList: ExampleItem[] = [
     name: "prove_by_contradiction",
     code: [
       "let n : n is not p;",
+      // syntax: prove fact {reasoning} contradiction something-true-and-false;
       "prove_by_contradiction n is not p3 {n is p2; n is p1;} contradiction n is p;",
     ],
     debug: true,
@@ -142,6 +183,7 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "postfix_prove",
+    // allow user to 'first speaks the final result, then prove it.
     code: ["z is p2 prove {z is p3;};"],
     debug: true,
     print: false,
@@ -152,9 +194,15 @@ export const exampleList: ExampleItem[] = [
       "def x is object => {};",
       "def x is set => {x is object};",
       "def element_of(A,B) => {} when A,B are object;",
+      // declare an array of if-then to be of name set_equal
       "def equal(A,B) <=> {if x : element_of(x,A) => {element_of(x,B)} [set_equal] , if x : element_of(x,B) => {element_of(x,A)}} when A,B are set;",
-      "let A,B,x : A,B are set, equal(A,B), element_of(x,A);",
-      "A,B are object;",
+      "know if x,y : equal(x,y) => {equal(y,x)};",
+      "let A,B,x : A,B are set; know equal(A,B); know element_of(x,A);",
+      "A is object;",
+      // use a specific stored fact to prove, instead of letting my interpreter to
+      // loop over all possibilities (in this case, my interpreter can not
+      // prove element(x,B) because it is only given with x and B but
+      // the related reasoning actually requires the third variable A.
       "by set_equal(A,B,x) => {element_of(x,B)};",
     ],
     debug: true,
@@ -162,6 +210,7 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "block",
+    // Anything that happens in the local block environment does not affect block outside.
     code: ["let u,v : u,v are p3;", "{u is p2; return u is p1;}"],
     debug: true,
     print: false,
@@ -200,19 +249,8 @@ function runExampleDict() {
     const exprs = example["code"];
     console.log(`\n[${example["name"]}]`);
 
-    if (example.print) {
-      const newEnv = new L_Env();
-      for (const expr of exprs) {
-        const out = run(newEnv, expr);
-        if (out === undefined) {
-          newEnv.printClearMessage();
-          continue;
-        }
-      }
-    }
-
     for (const expr of exprs) {
-      const out = run(env, expr);
+      const out = runExprs(env, expr);
       if (out === undefined) {
         env.printClearMessage();
         continue;
@@ -228,7 +266,7 @@ function runExampleDict() {
   // env.printBys();
 }
 
-function run(env: L_Env, expr: string) {
+export function runExprs(env: L_Env, expr: string) {
   try {
     const tokens = L_Scan(expr);
     const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
@@ -241,8 +279,8 @@ function run(env: L_Env, expr: string) {
       const out = L_Executor.nodeExec(env, node);
       result.push(out);
     }
-    console.log(`-----\n\n**source code** '${expr}'\n`);
-    console.log();
+    console.log(`-----\n***  source code  ***\n${expr}\n`);
+    console.log("***  results  ***\n");
     env.printClearMessage();
     console.log();
 

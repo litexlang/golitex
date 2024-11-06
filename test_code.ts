@@ -478,10 +478,7 @@ const testList45 = [
   "let a,b: object(a,b);",
 ];
 
-const testList46 = [
-  "def-symbol A[m] when m is natural;",
-  "know if n is natural => { <( A[n],0) };",
-];
+const testList46 = ["def x is object => {};", "let a,b : a,b are object;"];
 
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
@@ -527,12 +524,13 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, false],
+  setTheory: [setTheory, true],
   testList42: [testList42, false],
   testList43: [testList43, false],
   testList44: [testList44, false],
   testList45: [testList45, false],
-  三段论: [三段论, true],
+  testList46: [testList46, false],
+  三段论: [三段论, false],
 };
 
 export function testCode() {
@@ -543,7 +541,7 @@ export function testCode() {
 
     for (let i = 0; i < exprs[0].length; i++) {
       const expr = exprs[0][i];
-      const out = run(env, expr);
+      const out = runExprs(env, expr);
       if (out === undefined) {
         env.printClearMessage();
         continue;
@@ -556,7 +554,7 @@ export function testCode() {
   }
 }
 
-function run(env: L_Env, expr: string) {
+export function runExprs(env: L_Env, expr: string) {
   try {
     const tokens = L_Scan(expr);
     const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
@@ -569,8 +567,8 @@ function run(env: L_Env, expr: string) {
       const out = L_Executor.nodeExec(env, node);
       result.push(out);
     }
-    console.log(`-----\n\n**source code** '${expr}'\n`);
-    console.log();
+    console.log(`-----\n***  source code  ***\n${expr}\n`);
+    console.log("***  results  ***\n");
     env.printClearMessage();
     console.log();
 
