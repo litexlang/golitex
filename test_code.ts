@@ -550,9 +550,6 @@ export function testCode() {
       }
     }
 
-    // env.printFacts();
-    // env.printDeclFacts();
-    // L_FactStorage.printEnvFacts(env);
     env.printAllStoredFacts();
     env.printClearMessage();
     env.printBys();
