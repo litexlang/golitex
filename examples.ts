@@ -172,9 +172,7 @@ export const exampleList: ExampleItem[] = [
             if x : x is object => {x is object2, x is set};
           }
         }
-      }`
-        .replace(/\s+/g, " ")
-        .trim(),
+      }`,
       "x1 is object;",
       "x2 is object;",
       "if x : x is object2 => {x is set};",

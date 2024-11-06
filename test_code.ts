@@ -472,6 +472,8 @@ const testList44 = [
   "{def x is object => {}; know x is object; {x is object;} }",
 ];
 
+const testList45 = ["def x is object => {};", "let x : x is object2;"];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -519,7 +521,8 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   setTheory: [setTheory, false],
   testList42: [testList42, false],
   testList43: [testList43, false],
-  testList44: [testList44, true],
+  testList44: [testList44, false],
+  testList45: [testList45, true],
   三段论: [三段论, false],
 };
 

@@ -136,6 +136,15 @@ export namespace L_Executor {
       }
       // node.vars.forEach((e) => env.newVar(e, e));
 
+      // examine whether all operators are declared
+      for (const f of node.facts) {
+        const ok = f.factsDeclared(env);
+        if (!ok) {
+          env.newMessage(`${f} not fully declared`);
+          return RType.Error;
+        }
+      }
+
       for (const f of node.facts) L_FactStorage.store(env, f, []);
 
       for (const f of node.facts) {

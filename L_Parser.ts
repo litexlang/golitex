@@ -144,12 +144,22 @@ export namespace L_Parser {
     const start = tokens[0];
     const index = tokens.length;
     try {
-      while (tokens.length > 0) {
+      // while (tokens.length > 0) {
+      //   while (tokens.length > 0 && StdStmtEnds.includes(tokens[0])) {
+      //     tokens.shift();
+      //   }
+      //   if (tokens.length === 0) return;
+      //   break;
+      // }
+
+      if (tokens.length === 0) return;
+
+      if (StdStmtEnds.includes(tokens[0])) {
+        tokens.shift();
         while (tokens.length > 0 && StdStmtEnds.includes(tokens[0])) {
           tokens.shift();
         }
-        if (tokens.length === 0) return;
-        break;
+        return; // return is necessary because ; \n is empty expr.
       }
 
       const func = KeywordFunctionMap[tokens[0]];
