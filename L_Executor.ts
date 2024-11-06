@@ -126,7 +126,11 @@ export namespace L_Executor {
           );
           return RType.Error;
         }
-        L_FactStorage.store(env, fact);
+        const ok = L_FactStorage.store(env, fact);
+        if (!ok) {
+          env.newMessage(`Failed to store ${fact}`);
+          return RType.Error;
+        }
       }
 
       return RType.True;
@@ -206,11 +210,15 @@ export namespace L_Executor {
 
   function declExec(env: L_Env, node: DeclNode): RType {
     try {
-      const ok = env.safeDeclOpt(node.name, node);
+      let ok = env.safeDeclOpt(node.name, node);
       if (!ok) return RType.Error;
 
       // declare new opt
-      L_FactStorage.declNewFact(env, node);
+      ok = L_FactStorage.declNewFact(env, node);
+      if (!ok) {
+        env.newMessage(`Failed to store ${node}`);
+        return RType.Error;
+      }
 
       // store declared opt by
       L_FactStorage.storeDeclaredIfThenAsBy(env, node);
@@ -370,7 +378,11 @@ export namespace L_Executor {
       const newEnv = new L_Env(env);
 
       toProve.isT = !toProve.isT;
-      L_FactStorage.store(newEnv, toProve, []);
+      let ok = L_FactStorage.store(newEnv, toProve, []);
+      if (!ok) {
+        newEnv.newMessage(`Failed to store ${toProve}`);
+        return RType.Error;
+      }
 
       for (const subNode of block) {
         const out = nodeExec(newEnv, subNode, false);
@@ -411,7 +423,11 @@ export namespace L_Executor {
       }
 
       toProve.isT = !toProve.isT;
-      L_FactStorage.store(env, toProve, []);
+      ok = L_FactStorage.store(env, toProve, []);
+      if (!ok) {
+        env.newMessage(`Failed to store ${toProve}`);
+        return RType.Error;
+      }
 
       newEnv.getMessages().forEach((e) => env.newMessage(e));
 
@@ -462,7 +478,11 @@ export namespace L_Executor {
       }
 
       for (const fact of PostfixProve.facts) {
-        L_FactStorage.store(env, fact, []);
+        const ok = L_FactStorage.store(env, fact, []);
+        if (!ok) {
+          env.newMessage(`Failed to store ${fact}`);
+          return RType.Error;
+        }
       }
 
       newEnv.getMessages().forEach((e) => env.newMessage(e));
@@ -482,7 +502,11 @@ export namespace L_Executor {
 
       let out = L_Checker.check(env, toCheck);
       if (out === RType.True) {
-        L_FactStorage.store(env, toCheck, []);
+        const ok = L_FactStorage.store(env, toCheck, []);
+        if (!ok) {
+          env.newMessage(`Failed to store ${toCheck}`);
+          return RType.Error;
+        }
       }
 
       if (toCheck instanceof IfThenNode) {
@@ -538,7 +562,11 @@ export namespace L_Executor {
       const storeTo = env.getFather();
       if (storeTo) {
         for (const toProve of node.facts) {
-          L_FactStorage.store(storeTo, toProve, []);
+          const ok = L_FactStorage.store(storeTo, toProve, []);
+          if (!ok) {
+            env.newMessage(`Failed to store ${toProve}`);
+            return RType.Error;
+          }
         }
       }
       return RType.True;
@@ -615,6 +643,7 @@ export namespace L_Executor {
           //! IS THAT IN BY I CAN NOT DECLARE VAR.
           ok = L_FactStorage.store(env, fact);
           if (!ok) {
+            env.newMessage(`Failed to store ${fact}`);
             return RType.Error;
           }
         }
