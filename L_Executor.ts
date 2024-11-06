@@ -19,7 +19,11 @@ import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
 import { L_FactStorage, StoredFact, StoredReq } from "./L_FactStorage";
 
-export let DEBUG_MODE = true;
+export const DEBUG_DICT = {
+  newFact: true,
+  def: true,
+  check: true,
+};
 
 export enum RType {
   Error,
@@ -237,7 +241,7 @@ export namespace L_Executor {
         }
       }
 
-      if (DEBUG_MODE) {
+      if (DEBUG_DICT["def"]) {
         const decl = env.getDeclaredFact(node.name);
         if (decl) env.newMessage(`[def] ${decl.toString()}`);
       }

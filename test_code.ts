@@ -569,7 +569,7 @@ function run(env: L_Env, expr: string) {
       const out = L_Executor.nodeExec(env, node);
       result.push(out);
     }
-    console.log(`[source code] '${expr}'`);
+    console.log(`-----\n\n**source code** '${expr}'\n`);
     console.log();
     env.printClearMessage();
     console.log();

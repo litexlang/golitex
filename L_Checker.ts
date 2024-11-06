@@ -1,12 +1,13 @@
 import { ByNode, FactNode, IfThenNode, KnowNode, OptNode } from "./ast";
 import { L_Env } from "./L_Env";
-import { RType } from "./L_Executor";
+import { DEBUG_DICT, RType } from "./L_Executor";
 import { L_FactStorage, StoredFact } from "./L_FactStorage";
 
 export namespace L_Checker {
   export function check(env: L_Env, toCheck: FactNode): RType {
     if (toCheck instanceof OptNode) {
-      return checkOpt(env, toCheck);
+      const out = checkOpt(env, toCheck);
+      return out;
     } else if (toCheck instanceof IfThenNode) {
       return checkIfThen(env, toCheck);
     }

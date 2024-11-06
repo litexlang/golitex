@@ -10,7 +10,7 @@ import {
   OptNode,
 } from "./ast";
 import { L_Env } from "./L_Env";
-import { DEBUG_MODE, RType } from "./L_Executor";
+import { DEBUG_DICT, RType } from "./L_Executor";
 
 export class StoredReq {
   constructor(
@@ -184,7 +184,7 @@ export namespace L_FactStorage {
 
     const out = env.newFact(fact.fullName, fact.vars, req, fact.isT);
 
-    if (DEBUG_MODE) {
+    if (DEBUG_DICT["newFact"]) {
       if (req.length > 0)
         env.newMessage(`[new fact] ${fact.fullName}(${fact.vars}) <= ${req}`);
       else env.newMessage(`[new fact] ${fact.fullName}(${fact.vars})`);

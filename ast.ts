@@ -243,7 +243,7 @@ export class LetNode extends L_Node {
   }
 
   toString() {
-    return `${this.vars.join(", ")}| ${this.facts.map((s) => s.toString()).join(", ")}`;
+    return `${this.vars.join(", ")}: ${this.facts.map((s) => s.toString()).join(", ")}`;
   }
 }
 
