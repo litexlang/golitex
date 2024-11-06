@@ -449,6 +449,7 @@ const testList43 = [
 
 const 三段论 = [
   // Introduce a concept "mortal"
+  // you can also write def mortal(something) => {};
   "def something is mortal => {};",
   // Introduce a concept "human", "human" has property that "human is mortal"
   "def something is human => {something is mortal};",
@@ -462,8 +463,6 @@ const 三段论 = [
   // then we get {god is mortal;} which leads to contradiction:
   // "god is mortal" "god is not mortal" is valid at the same time.
   "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
-  "def something is immortal => {x is not mortal};",
-  "if somebody is immortal => {somebody is not mortal, somebody is not human};",
 ];
 
 const testList44 = [
@@ -528,12 +527,12 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, true],
+  setTheory: [setTheory, false],
   testList42: [testList42, false],
   testList43: [testList43, false],
   testList44: [testList44, false],
   testList45: [testList45, false],
-  三段论: [三段论, false],
+  三段论: [三段论, true],
 };
 
 export function testCode() {

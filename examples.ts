@@ -12,14 +12,24 @@ type ExampleItem = {
 
 export const exampleList: ExampleItem[] = [
   {
-    name: "三段论",
+    name: "syllogism",
     code: [
-      "def something is 会死 => {};",
-      "def something is 人 => {something is 会死};",
-      "let 苏格拉底 : 苏格拉底 is 人;",
-      "苏格拉底 is 会死;",
-      "let 神仙 : 神仙 is not 会死;",
-      "prove_by_contradiction 神仙 is not 人 {神仙 is 会死;} contradiction 神仙 is 会死;",
+      // Introduce a concept "mortal"
+      "def something is mortal => {};",
+      // Introduce a concept "human", "human" has property that "human is mortal"
+      "def something is human => {something is mortal};",
+      // Introduce a variable "Socrates", "Socrates" has property that "Socrates is human"
+      "let Socrates : Socrates is human;",
+      // Check: "Socrates is mortal"
+      "Socrates is mortal;",
+      // Introduce a variable "god", "god" has property that "god is not mortal"
+      "let god : god is not mortal;",
+      // prove by contradiction: to show "god is not human", we assume "god is human"
+      // then we get {god is mortal;} which leads to contradiction:
+      // "god is mortal" "god is not mortal" is valid at the same time.
+      "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
+      "def something is immortal => {x is not mortal};",
+      "if somebody: somebody is immortal => {somebody is not mortal, somebody is not human};",
     ],
     debug: false,
     print: false,
@@ -152,11 +162,7 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "block",
-    code: [
-      "let u,v : u,v are p3;",
-      "{u is p2; return u is p1;}",
-      "{v is p2;} => {v is p1;};",
-    ],
+    code: ["let u,v : u,v are p3;", "{u is p2; return u is p1;}"],
     debug: true,
     print: false,
   },
