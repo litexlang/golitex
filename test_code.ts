@@ -550,9 +550,9 @@ export function testCode() {
       }
     }
 
-    env.printAllStoredFacts();
-    env.printClearMessage();
-    env.printBys();
+    // env.printAllStoredFacts();
+    // env.printClearMessage();
+    // env.printBys();
   }
 }
 
@@ -569,7 +569,10 @@ function run(env: L_Env, expr: string) {
       const out = L_Executor.nodeExec(env, node);
       result.push(out);
     }
+    console.log(`[source code] '${expr}'`);
+    console.log();
     env.printClearMessage();
+    console.log();
 
     return result;
   } catch (error) {

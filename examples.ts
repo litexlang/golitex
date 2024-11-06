@@ -198,7 +198,7 @@ function runExampleDict() {
   for (const example of exampleList) {
     if (example["debug"] !== true) continue;
     const exprs = example["code"];
-    console.log(example);
+    console.log(`\n[${example["name"]}]`);
 
     if (example.print) {
       const newEnv = new L_Env();
@@ -221,11 +221,11 @@ function runExampleDict() {
   }
 
   // env.printFacts();
-  // env.printDeclFacts();
+  env.printDeclFacts();
   // L_FactStorage.printEnvFacts(env);
-  env.printAllStoredFacts();
-  env.printClearMessage();
-  env.printBys();
+  // env.printAllStoredFacts();
+  // env.printClearMessage();
+  // env.printBys();
 }
 
 function run(env: L_Env, expr: string) {
@@ -241,7 +241,10 @@ function run(env: L_Env, expr: string) {
       const out = L_Executor.nodeExec(env, node);
       result.push(out);
     }
+    console.log(`[source code] '${expr}'`);
+    console.log();
     env.printClearMessage();
+    console.log();
 
     return result;
   } catch (error) {

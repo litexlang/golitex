@@ -52,7 +52,12 @@ export class L_Env {
     return this.haves.add(name);
   }
 
-  newFact(name: string, vars: string[], req: StoredReq[], isT: Boolean) {
+  newFact(
+    name: string,
+    vars: string[],
+    req: StoredReq[],
+    isT: Boolean
+  ): StoredFact {
     const newFact = new StoredFact(vars, req, isT);
     const out = this.storage.get(name);
     if (!out) {
@@ -60,6 +65,8 @@ export class L_Env {
     } else {
       out.push(newFact);
     }
+
+    return newFact;
   }
 
   public getStoredFactsFromCurrentEnv(s: string) {

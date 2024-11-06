@@ -19,6 +19,8 @@ import { L_Env } from "./L_Env";
 import { L_Checker } from "./L_Checker";
 import { L_FactStorage, StoredFact, StoredReq } from "./L_FactStorage";
 
+export let DEBUG_MODE = true;
+
 export enum RType {
   Error,
   True,
@@ -233,6 +235,11 @@ export namespace L_Executor {
           const higherStoredFact = new StoredFact([], [higherStoreReq], true);
           L_FactStorage.storeIfThenBy(env, onlyIf, higherStoredFact);
         }
+      }
+
+      if (DEBUG_MODE) {
+        const decl = env.getDeclaredFact(node.name);
+        if (decl) env.newMessage(`[def] ${decl.toString()}`);
       }
 
       return RType.True;
