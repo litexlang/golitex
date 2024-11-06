@@ -161,7 +161,7 @@ export namespace L_FactStorage {
         ...req,
         new StoredReq(ifThen.vars, ifThen.req),
       ]);
-      if (ok!) return false;
+      if (!ok) return false;
     }
 
     return true;

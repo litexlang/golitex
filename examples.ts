@@ -44,7 +44,7 @@ export const exampleList: ExampleItem[] = [
   {
     name: "let",
     code: [
-      "let x , y ,z: x is p;",
+      "let x , y ,z: x is p, p(x);",
       "let a,b,c : a,b,c are p;",
       "let 1,0, 12343124, 314_garbage_-code_159, _garbage, 你好world;",
     ],
@@ -91,6 +91,11 @@ export const exampleList: ExampleItem[] = [
       "def pq(y,z) => {};",
       "know if x,y : x is p, y is q => {pq(x,y)};",
       "pq(y,z);",
+      "def <(x,y) => {};",
+      "know if x,y,z: <(x,y), <(y,z) => {<(x,z)};",
+      "def >=(x,y) <= {not <(x,y)};",
+      "let n1,n2,n3 : <(n1,n2), <(n2,n3);",
+      "<(n1,n3);",
     ],
     debug: true,
     print: false,

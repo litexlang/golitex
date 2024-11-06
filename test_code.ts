@@ -479,6 +479,11 @@ const testList45 = [
   "let a,b: object(a,b);",
 ];
 
+const testList46 = [
+  "def-symbol A[m] when m is natural;",
+  "know if n is natural => { <( A[n],0) };",
+];
+
 const testsDict: { [s: string]: [string[], Boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -523,11 +528,11 @@ const testsDict: { [s: string]: [string[], Boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, false],
+  setTheory: [setTheory, true],
   testList42: [testList42, false],
   testList43: [testList43, false],
   testList44: [testList44, false],
-  testList45: [testList45, true],
+  testList45: [testList45, false],
   三段论: [三段论, false],
 };
 
