@@ -44,11 +44,6 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
   return RType.True;
 }
 
-function onFail(env: L_Env, m: string, t: RType): RType {
-  env.newMessage(m);
-  return t;
-}
-
 export namespace L_Executor {
   const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
     IffDeclNode: declExec,
@@ -668,7 +663,7 @@ export namespace L_Executor {
         for (const onlyIf of byNode.onlyIfs) {
           const out = L_Checker.check(env, onlyIf);
           if (out !== RType.True) {
-            return onFail(env, `Failed to check ${onlyIf}`, out);
+            return env.onFail(`Failed to check ${onlyIf}`, out);
           }
         }
       }

@@ -1,4 +1,5 @@
 import { DeclNode, FactNode, IfThenNode, OptNode } from "./ast";
+import { RType } from "./L_Executor";
 import { StoredFact, StoredReq } from "./L_FactStorage";
 
 export class L_Env {
@@ -215,5 +216,10 @@ export class L_Env {
       console.log(byName);
       console.log(`${by}\n`);
     }
+  }
+
+  onFail(m: string, t: RType): RType {
+    this.newMessage(m);
+    return t;
   }
 }
