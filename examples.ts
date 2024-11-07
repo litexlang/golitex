@@ -12,7 +12,7 @@ type ExampleItem = {
 
 export const exampleList: ExampleItem[] = [
   {
-    name: "syllogism",
+    name: "syllogism", // 三段论
     code: [
       // Introduce a concept "mortal"
       "def something is mortal => {};",
@@ -33,7 +33,7 @@ export const exampleList: ExampleItem[] = [
       "def something is immortal => {x is not mortal};",
       "if somebody: somebody is immortal => {somebody is not mortal, somebody is not human};",
     ],
-    debug: false,
+    debug: true,
     print: false,
   },
   {
@@ -192,18 +192,22 @@ export const exampleList: ExampleItem[] = [
     name: "by",
     code: [
       "def x is object => {};",
-      "def x is set => {x is object};",
+      "def set(x) => {object(x)};",
+      // "def x is set => {x is object};",
       "def element_of(A,B) => {} when A,B are object;",
-      // declare an array of if-then to be of name set_equal
       "def equal(A,B) <=> {if x : element_of(x,A) => {element_of(x,B)} [set_equal] , if x : element_of(x,B) => {element_of(x,A)}} when A,B are set;",
-      "know if x,y : equal(x,y) => {equal(y,x)};",
-      "let A,B,x : A,B are set; know equal(A,B); know element_of(x,A);",
+      "let A,B : A,B are set, equal(A,B), element_of(x,A);",
       "A is object;",
       // use a specific stored fact to prove, instead of letting my interpreter to
       // loop over all possibilities (in this case, my interpreter can not
       // prove element(x,B) because it is only given with x and B but
       // the related reasoning actually requires the third variable A.
       "by set_equal(A,B,x) => {element_of(x,B)};",
+      "by set_equal(A,B,x);",
+      "def x is empty => {if z : => {not element_of(z,x)}} when x is set;",
+      "know if x, y : x,y are empty => {equal(x,y)};",
+      "let s1, s2 : s1,s2 are empty;",
+      "equal(s1,s2);",
     ],
     debug: true,
     print: false,

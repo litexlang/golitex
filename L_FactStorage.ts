@@ -35,17 +35,27 @@ export class StoredFact {
   ) {}
 
   toString() {
-    let out = "";
-    if (this.isT)
-      out = `${this.vars.length > 0 ? this.vars.join(", ") + " <= " : ""}${this.req.map((e) => e.toString()).join(", ")}`;
-    else
-      out = `[not] ${this.vars.length > 0 ? this.vars.join(", ") + " <= " : ""}${this.req
-        .map((e) => e.toString())
-        .join(", ")}`;
+    const notWords = this.isT ? "[not] " : "";
+    const varsWords = this.vars.length > 0 ? this.vars.join(", ") : "";
+    const reqWords =
+      this.req.length > 0
+        ? " <= " + this.req.map((e) => e.toString()).join(", ")
+        : "";
+    const onlyIfWords =
+      this.onlyIfs.length > 0 ? `\n onlyIfs: ${this.onlyIfs}\n` : "";
 
-    if (this.onlyIfs.length !== 0) {
-      out += `\n onlyIfs: ${this.onlyIfs}\n`;
-    }
+    let out = notWords + varsWords + reqWords + onlyIfWords;
+
+    // if (this.isT)
+    //   out = `${this.vars.length > 0 ? this.vars.join(", ") + " <= " : ""}${this.req.map((e) => e.toString()).join(", ")}`;
+    // else
+    //   out = `[not] ${this.vars.length > 0 ? this.vars.join(", ") + " <= " : ""}${this.req
+    //     .map((e) => e.toString())
+    //     .join(", ")}`;
+
+    // if (this.onlyIfs.length !== 0) {
+    //   out += `\n onlyIfs: ${this.onlyIfs}\n`;
+    // }
 
     return out;
   }

@@ -291,12 +291,6 @@ export namespace L_Checker {
 
     if (unknown) return RType.Unknown;
 
-    // check whether onlyIfs in by is correct
-    for (const onlyIf of byNode.onlyIfs) {
-      const out = check(newEnv, onlyIf);
-      if (out !== RType.True) return out;
-    }
-
     return RType.True;
   }
 }
