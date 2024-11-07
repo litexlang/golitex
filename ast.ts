@@ -39,7 +39,8 @@ export class LogicalOptNode extends FactNode {
     //! we can still check it.
     public onlyIfs: FactNode[] = [],
     isT: boolean = true,
-    public byName: undefined | string = undefined
+    public byName: undefined | string = undefined,
+    public isIff: boolean = false
   ) {
     super(isT);
   }
@@ -58,16 +59,9 @@ export class LogicalOptNode extends FactNode {
   override toString() {
     let type: string = "";
     let separator = "";
-    if (this instanceof IffNode) {
-      type = "iff";
-      separator = "<=>";
-    } else if (this instanceof IfThenNode) {
-      type = "if";
-      separator = "=>";
-    } else if (this instanceof OnlyIfNode) {
-      type = "only_if";
-      separator = "<=";
-    }
+
+    type = "if";
+    separator = "=>";
 
     const mainPart = `${type} ${this.vars.toString()} : ${this.req
       .map((e) => e.toString())
@@ -79,22 +73,6 @@ export class LogicalOptNode extends FactNode {
 
     return notPart + mainPart + useNamePart;
   }
-
-  // static create(
-  //   type: string,
-  //   vars: string[],
-  //   req: FactNode[],
-  //   onlyIfs: FactNode[]
-  // ): LogicalOptNode {
-  //   if (IfKeywords.includes(type)) {
-  //     return new IfThenNode(vars, req, onlyIfs);
-  //   } else if (IffKeywords.includes(type)) {
-  //     return new IffNode(vars, req, onlyIfs);
-  //   } else if (OnlyIfKeywords.includes(type)) {
-  //     return new OnlyIfNode(vars, req, onlyIfs);
-  //   }
-  //   throw Error();
-  // }
 
   override varsDeclared(env: L_Env): boolean {
     return [...this.req, ...this.onlyIfs].every((e) =>
@@ -108,8 +86,8 @@ export class LogicalOptNode extends FactNode {
 }
 
 export class IfThenNode extends LogicalOptNode {}
-export class OnlyIfNode extends LogicalOptNode {}
-export class IffNode extends LogicalOptNode {}
+// export class OnlyIfNode extends LogicalOptNode {}
+// export class IffNode extends LogicalOptNode {}
 
 export class OptNode extends FactNode {
   constructor(

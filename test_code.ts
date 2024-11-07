@@ -1,7 +1,8 @@
 import { L_Env } from "./L_Env.ts";
-import { L_Executor, RType } from "./L_Executor.ts";
+import { RType } from "./L_Executor.ts";
+import * as L_Executor from "./L_Executor.ts";
 import { L_Scan } from "./L_Lexer.ts";
-import { L_Parser } from "./L_Parser.ts";
+import * as L_Parser from "./L_Parser.ts";
 import { setTheory } from "./tao_analysis_one.ts";
 
 // Aristotle induction
@@ -530,6 +531,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList44: [testList44, false],
   testList45: [testList45, false],
   testList46: [testList46, false],
+  byList: [byList, false],
   三段论: [三段论, false],
 };
 
@@ -573,7 +575,7 @@ export function runExprs(env: L_Env, expr: string) {
     console.log();
 
     return result;
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }

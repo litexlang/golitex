@@ -43,7 +43,7 @@ export class StoredFact {
     const onlyIfWords =
       this.onlyIfs.length > 0 ? `\n onlyIfs: ${this.onlyIfs}\n` : "";
 
-    let out = notWords + varsWords + reqWords + onlyIfWords;
+    const out = notWords + varsWords + reqWords + onlyIfWords;
 
     // if (this.isT)
     //   out = `${this.vars.length > 0 ? this.vars.join(", ") + " <= " : ""}${this.req.map((e) => e.toString()).join(", ")}`;
@@ -190,7 +190,7 @@ function storeOpt(env: L_Env, fact: OptNode, req: StoredReq[]): boolean {
     }
   }
 
-  const out = env.newFact(fact.fullName, fact.vars, req, fact.isT);
+  env.newFact(fact.fullName, fact.vars, req, fact.isT);
 
   if (DEBUG_DICT["newFact"]) {
     if (req.length > 0)
@@ -250,7 +250,7 @@ export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
   }
 
   // get fact from every visible env
-  let out: StoredFact[] = [];
+  const out: StoredFact[] = [];
   for (
     let i = 0, curEnv: L_Env = env;
     i <= visibleEnvLevel && curEnv;
@@ -310,7 +310,7 @@ export function storeIfThenBy(
           storeIfThenBy(env, onlyIf, higherStoredFact);
       }
     }
-  } catch (error) {
+  } catch {
     throw Error();
   }
 }
@@ -335,12 +335,12 @@ export function storeFactInStoredBy(env: L_Env, byNode: ByNode): boolean {
       return false;
     }
     const map = new Map<string, string>();
-    for (const [i, v] of allFreeVars.entries()) {
+    for (const [i] of allFreeVars.entries()) {
       map.set(allFreeVars[i], byNode.vars[i]);
     }
 
     // Store onlyIfs bound to StoredBy
-    let onlyIfsToBeStored: FactNode[] = [];
+    const onlyIfsToBeStored: FactNode[] = [];
     for (const onlyIf of storedFact.onlyIfs) {
       onlyIfsToBeStored.push(onlyIf.useMapToCopy(map));
     }
@@ -354,7 +354,7 @@ export function storeFactInStoredBy(env: L_Env, byNode: ByNode): boolean {
       }
     }
     return true;
-  } catch (error) {
+  } catch {
     throw Error();
   }
 }

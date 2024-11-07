@@ -1,6 +1,6 @@
-import { ByNode, FactNode, IfThenNode, KnowNode, OptNode } from "./ast.ts";
+import { ByNode, FactNode, IfThenNode, OptNode } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
-import { DEBUG_DICT, RType } from "./L_Executor.ts";
+import { RType } from "./L_Executor.ts";
 import { StoredFact } from "./L_FactStorage.ts";
 import * as L_FactStorage from "./L_FactStorage.ts";
 
@@ -203,6 +203,8 @@ function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
 }
 
 export function checkOptInHave(env: L_Env, opt: OptNode): RType {
+  env;
+  opt;
   return RType.Unknown;
 }
 
@@ -223,8 +225,8 @@ export function checkBy(env: L_Env, byNode: ByNode): RType {
   }
 
   const map = new Map<string, string>();
-  for (const [i, v] of allFreeVars.entries()) {
-    map.set(allFreeVars[i], byNode.vars[i]);
+  for (const indexValuePair of allFreeVars.entries()) {
+    map.set(allFreeVars[indexValuePair[0]], byNode.vars[indexValuePair[0]]);
   }
 
   let unknown = false;

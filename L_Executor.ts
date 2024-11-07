@@ -45,6 +45,7 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
   return RType.True;
 }
 
+// deno-lint-ignore no-explicit-any
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   IffDeclNode: declExec,
   IfThenDeclNode: declExec,
@@ -92,7 +93,7 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
           env.newMessage(`Error ${node}`);
         }
         return out;
-      } catch (error) {
+      } catch {
         throw Error(`${node as FactNode}`);
       }
     }
@@ -138,7 +139,7 @@ function haveExec(env: L_Env, node: HaveNode): RType {
     }
 
     return RType.True;
-  } catch (error) {
+  } catch {
     env.newMessage(`Error: ${node.toString()}`);
     return RType.Error;
   }
@@ -176,7 +177,7 @@ function letExec(env: L_Env, node: LetNode): RType {
     }
 
     return RType.True;
-  } catch (error) {
+  } catch {
     env.newMessage(`Error: ${node.toString()}`);
     return RType.Error;
   }
@@ -325,7 +326,7 @@ function proveIfThen(env: L_Env, toProve: IfThenNode, block: L_Node[]): RType {
     newEnv.getMessages().forEach((e) => env.newMessage(e));
 
     return RType.True;
-  } catch (error) {
+  } catch {
     env.newMessage(`Error: ${toProve}`);
     return RType.Error;
   }
@@ -493,7 +494,7 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
     newEnv.getMessages().forEach((e) => env.newMessage(e));
 
     return RType.True;
-  } catch (error) {
+  } catch {
     env.newMessage("by error");
     return RType.Error;
   }
@@ -505,21 +506,23 @@ function factExec(env: L_Env, toCheck: FactNode): RType {
       return RType.Error;
     }
 
-    let out = L_Checker.check(env, toCheck);
+    const out = L_Checker.check(env, toCheck);
     if (out === RType.True) {
+      // Store Fact
       const ok = L_FactStorage.store(env, toCheck, []);
       if (!ok) {
         env.newMessage(`Failed to store ${toCheck}`);
         return RType.Error;
       }
-    }
 
-    if (toCheck instanceof IfThenNode) {
-      L_FactStorage.storeIfThenBy(env, toCheck, new StoredFact([], [], true));
+      // Store declared by
+      if (toCheck instanceof IfThenNode) {
+        L_FactStorage.storeIfThenBy(env, toCheck, new StoredFact([], [], true));
+      }
     }
 
     return out;
-  } catch (error) {
+  } catch {
     env.newMessage(`failed to check ${toCheck}`);
     return RType.Error;
   }
@@ -536,7 +539,7 @@ function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): RType {
     }
 
     return RType.True;
-  } catch (error) {
+  } catch {
     env.newMessage("{}");
     return RType.Error;
   }
@@ -575,7 +578,7 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
       }
     }
     return RType.True;
-  } catch (error) {
+  } catch {
     env.newMessage("return");
     return RType.Error;
   }
@@ -596,7 +599,7 @@ function existExec(env: L_Env, node: ExistNode): RType {
     }
 
     return RType.True;
-  } catch (error) {
+  } catch {
     env.newMessage("exist");
     return RType.Error;
   }
@@ -619,7 +622,7 @@ function returnExistExec(env: L_Env, node: ReturnExistNode): RType {
       }
     }
 
-    let father = env.getFather();
+    const father = env.getFather();
     if (father) {
       for (const factName of node.factNames) {
         father.newHave(factName);
@@ -627,7 +630,7 @@ function returnExistExec(env: L_Env, node: ReturnExistNode): RType {
     }
 
     return RType.True;
-  } catch (error) {
+  } catch {
     env.newMessage("return_exist");
     return RType.Error;
   }
@@ -635,7 +638,7 @@ function returnExistExec(env: L_Env, node: ReturnExistNode): RType {
 
 function byExec(env: L_Env, byNode: ByNode): RType {
   try {
-    let out = L_Checker.checkBy(env, byNode);
+    const out = L_Checker.checkBy(env, byNode);
 
     if (out === RType.True) {
       let ok = L_FactStorage.storeFactInStoredBy(env, byNode);
@@ -663,7 +666,7 @@ function byExec(env: L_Env, byNode: ByNode): RType {
     }
 
     return out;
-  } catch (error) {
+  } catch {
     env.newMessage("by");
     return RType.Error;
   }
