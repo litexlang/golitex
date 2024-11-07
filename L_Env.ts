@@ -29,7 +29,7 @@ export class L_Env {
   // TODO: IF THE BY IS RELATED TO OPT WITH THE SAME NAME AT HIGHER LEVEL, WE SHOULD NOT RETURN IT. FOR
   // TODO: THE TIME BEING, WE DON'T IMPLEMENT THAT PROTECTION.
   getBy(s: string) {
-    let out = this.bys.get(s);
+    const out = this.bys.get(s);
     if (out !== undefined) return out;
     else if (this.father === undefined) return undefined;
     else return this.father.bys.get(s);
@@ -41,7 +41,7 @@ export class L_Env {
     else throw Error(`By name ${s} is already occupied.`);
   }
 
-  inHaves(name: string): Boolean {
+  inHaves(name: string): boolean {
     if (this.haves.has(name)) return true;
     else if (this.declaredFacts.has(name))
       return false; // means the opt is declared at current environment and haves above is invisible.
@@ -57,7 +57,7 @@ export class L_Env {
     name: string,
     vars: string[],
     req: StoredReq[],
-    isT: Boolean
+    isT: boolean
   ): StoredFact {
     const newFact = new StoredFact(vars, req, isT);
     const out = this.storage.get(name);
@@ -76,8 +76,10 @@ export class L_Env {
 
   // Return the lowest level of environment in which an operator with given name is declared.
   public whereIsOptDeclared(s: string): number | undefined {
-    let curEnv: L_Env | undefined = this;
-    let n = 0;
+    if (this.declaredFacts.get(s)) return 0;
+
+    let curEnv: L_Env | undefined = this.father;
+    let n = 1;
 
     while (curEnv && curEnv.declaredFacts.get(s) === undefined) {
       n++;
@@ -87,7 +89,7 @@ export class L_Env {
     return curEnv?.declaredFacts.get(s) ? n : undefined;
   }
 
-  safeDeclOpt(s: string, declNode: DeclNode): Boolean {
+  safeDeclOpt(s: string, declNode: DeclNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.declaredFacts.get(s) !== undefined) {
       this.newMessage(
@@ -100,7 +102,7 @@ export class L_Env {
     return true;
   }
 
-  safeNewVar(fix: string): Boolean {
+  safeNewVar(fix: string): boolean {
     if (
       // this.varsMap.has(free)
       //  ||
@@ -121,7 +123,7 @@ export class L_Env {
     return this.declaredVars.has(key);
   }
 
-  varDeclared(key: string): Boolean {
+  varDeclared(key: string): boolean {
     if (this.declaredVars.has(key)) {
       return true;
     } else {
@@ -130,7 +132,7 @@ export class L_Env {
     }
   }
 
-  optDeclared(key: string): Boolean {
+  optDeclared(key: string): boolean {
     if (this.declaredFacts.get(key)) {
       return true;
     } else {
@@ -169,6 +171,7 @@ export class L_Env {
     console.log("\n--Declared Facts--\n");
 
     for (const [name, declFact] of this.declaredFacts) {
+      console.log(name);
       console.log(declFact);
     }
   }
@@ -177,7 +180,7 @@ export class L_Env {
     return this.father;
   }
 
-  someVarsDeclaredHere(fact: FactNode, freeVars: string[]): Boolean {
+  someVarsDeclaredHere(fact: FactNode, freeVars: string[]): boolean {
     if (fact instanceof OptNode) {
       const out = fact.vars.some(
         (e) => !freeVars.includes(e) && this.declaredVars.has(e)
@@ -193,7 +196,7 @@ export class L_Env {
     throw Error();
   }
 
-  someOptsDeclaredHere(fact: FactNode): Boolean {
+  someOptsDeclaredHere(fact: FactNode): boolean {
     if (fact instanceof OptNode) {
       return this.declaredFacts.get(fact.fullName) !== undefined;
     } else if (fact instanceof IfThenNode) {
@@ -206,7 +209,7 @@ export class L_Env {
     throw Error();
   }
 
-  optDeclaredHere(name: string): Boolean {
+  optDeclaredHere(name: string): boolean {
     return this.declaredFacts.get(name) !== undefined;
   }
 

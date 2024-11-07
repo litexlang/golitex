@@ -5,32 +5,29 @@ export abstract class L_Node {}
 export class FactNode extends L_Node {
   useName: string = "";
 
-  constructor(public isT: Boolean) {
+  constructor(public isT: boolean) {
     super();
   }
 
-  varsDeclared(env: L_Env, freeVars: string[]): Boolean {
+  varsDeclared(env: L_Env, freeVars: string[]): boolean {
+    env;
+    freeVars;
     return false;
   }
-  factsDeclared(env: L_Env): Boolean {
+  factsDeclared(env: L_Env): boolean {
+    env;
     return false;
   }
 
   useMapToCopy(map: Map<string, string>): FactNode {
+    map;
     return new FactNode(true);
   }
 }
 
 export class OrNode extends FactNode {
-  constructor(public facts: FactNode[], isT: Boolean = true) {
+  constructor(public facts: FactNode[], isT: boolean = true) {
     super(isT);
-  }
-
-  override varsDeclared(env: L_Env, freeVars: string[]): Boolean {
-    return false;
-  }
-  override factsDeclared(env: L_Env): Boolean {
-    return false;
   }
 }
 
@@ -41,7 +38,7 @@ export class LogicalOptNode extends FactNode {
     //! I think we should onlyIfs: FactNode[] because despite we can not store if-then
     //! we can still check it.
     public onlyIfs: FactNode[] = [],
-    isT: Boolean = true,
+    isT: boolean = true,
     public byName: undefined | string = undefined
   ) {
     super(isT);
@@ -99,13 +96,13 @@ export class LogicalOptNode extends FactNode {
   //   throw Error();
   // }
 
-  override varsDeclared(env: L_Env, freeVars: string[]): Boolean {
+  override varsDeclared(env: L_Env): boolean {
     return [...this.req, ...this.onlyIfs].every((e) =>
       e.varsDeclared(env, this.vars)
     );
   }
 
-  override factsDeclared(env: L_Env): Boolean {
+  override factsDeclared(env: L_Env): boolean {
     return [...this.req, ...this.onlyIfs].every((e) => e.factsDeclared(env));
   }
 }
@@ -118,7 +115,7 @@ export class OptNode extends FactNode {
   constructor(
     public fullName: string,
     public vars: string[],
-    isT: Boolean = true
+    isT: boolean = true
   ) {
     super(isT);
   }
@@ -163,7 +160,7 @@ export class OptNode extends FactNode {
   //   });
   // }
 
-  override varsDeclared(env: L_Env, freeVars: string[]): Boolean {
+  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
     for (const v of this.vars) {
       const declared = env.varDeclared(v) || freeVars.includes(v);
       if (!declared) {
@@ -174,7 +171,7 @@ export class OptNode extends FactNode {
     return true;
   }
 
-  override factsDeclared(env: L_Env): Boolean {
+  override factsDeclared(env: L_Env): boolean {
     if (env.optDeclared(this.fullName)) {
       return true;
     } else {
@@ -222,7 +219,7 @@ export class IfThenDeclNode extends DeclNode {}
 export class OnlyIfDeclNode extends DeclNode {}
 
 export class KnowNode extends L_Node {
-  isKnowEverything: Boolean = false;
+  isKnowEverything: boolean = false;
 
   constructor(public facts: FactNode[] = []) {
     super();
@@ -259,7 +256,7 @@ export class ProveNode extends L_Node {
     super();
   }
 
-  toString() {
+  override toString() {
     if (this.toProve) return `prove ${this.toProve}`;
     else return `prove ${this.fixedIfThenOpt}`;
   }

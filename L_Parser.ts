@@ -245,7 +245,7 @@ export namespace L_Parser {
   function functionalOptParse(
     env: L_Env,
     tokens: string[],
-    parseNot: Boolean
+    parseNot: boolean
   ): OptNode {
     const start = tokens[0];
     const index = tokens.length;
@@ -293,7 +293,7 @@ export namespace L_Parser {
     tokens: string[],
     parseFunc: (env: L_Env, tokens: string[], ...args: any[]) => T,
     end: string[],
-    skipEnd: Boolean = true,
+    skipEnd: boolean = true,
     separation: string = ","
   ): T[] {
     const start = tokens[0];
@@ -319,7 +319,7 @@ export namespace L_Parser {
     env: L_Env,
     tokens: string[],
     end: string[],
-    skipEnd: Boolean = true,
+    skipEnd: boolean = true,
     separation: string = ","
   ): string[] {
     const start = tokens[0];
@@ -441,7 +441,7 @@ export namespace L_Parser {
     env: L_Env,
     tokens: string[],
     end: string[],
-    skipEnd: Boolean = false
+    skipEnd: boolean = false
   ): FactNode[] {
     const start = tokens[0];
     const index = tokens.length;
@@ -587,7 +587,7 @@ export namespace L_Parser {
     env: L_Env,
     tokens: string[],
     end: string[],
-    skipEnd: Boolean = false
+    skipEnd: boolean = false
   ): PostfixProve {
     const start = tokens[0];
     const index = tokens.length;
@@ -824,7 +824,7 @@ export namespace L_Parser {
   function parseVanillaOptWithNot(
     env: L_Env,
     tokens: string[],
-    withNot: Boolean
+    withNot: boolean
   ): OptNode {
     const start = tokens[0];
     const index = tokens.length;

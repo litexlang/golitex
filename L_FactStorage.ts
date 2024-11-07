@@ -31,7 +31,7 @@ export class StoredFact {
   constructor(
     public vars: string[], // stored fixed, only used when storing opts
     public req: StoredReq[], // when adding a new layer of if-then, push a new req list (FactNode[]) at end of req.
-    public isT: Boolean
+    public isT: boolean
   ) {}
 
   toString() {
@@ -78,14 +78,14 @@ export class StoredFact {
     return out;
   }
 
-  isNoReq(): Boolean {
+  isNoReq(): boolean {
     for (const req of this.req) {
       if (req.req.length !== 0) return false;
     }
     return true;
   }
 
-  checkLiterally(toCheckFixedVars: string[], isT: Boolean): RType {
+  checkLiterally(toCheckFixedVars: string[], isT: boolean): RType {
     const noExtraReq = this.req.every((e) => e.req.length === 0);
     if (!noExtraReq) return RType.Unknown;
 
@@ -104,9 +104,9 @@ export class StoredFact {
 }
 
 export namespace L_FactStorage {
-  export function declNewFact(env: L_Env, toDecl: DeclNode): Boolean {
+  export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
     const decl = new OptNode(toDecl.name, toDecl.vars);
-    let ok: Boolean = true;
+    let ok: boolean = true;
     if (toDecl instanceof IfThenDeclNode) {
       const ifThen = new IfThenNode(
         toDecl.vars,
@@ -165,7 +165,7 @@ export namespace L_FactStorage {
     env: L_Env,
     ifThen: IfThenNode,
     req: StoredReq[]
-  ): Boolean {
+  ): boolean {
     for (const fact of ifThen.onlyIfs) {
       const ok = store(env, fact, [
         ...req,
@@ -177,7 +177,7 @@ export namespace L_FactStorage {
     return true;
   }
 
-  function storeOpt(env: L_Env, fact: OptNode, req: StoredReq[]): Boolean {
+  function storeOpt(env: L_Env, fact: OptNode, req: StoredReq[]): boolean {
     const declaredOpt = env.getDeclaredFact(fact.fullName);
     if (declaredOpt === undefined) {
       env.newMessage(`${fact.fullName} undeclared`);
@@ -208,7 +208,7 @@ export namespace L_FactStorage {
     env: L_Env,
     fact: FactNode,
     req: StoredReq[] = []
-  ): Boolean {
+  ): boolean {
     try {
       if (fact instanceof IfThenNode) {
         const ok = storeIfThen(env, fact, req);
@@ -328,7 +328,7 @@ export namespace L_FactStorage {
     }
   }
 
-  export function storeFactInStoredBy(env: L_Env, byNode: ByNode): Boolean {
+  export function storeFactInStoredBy(env: L_Env, byNode: ByNode): boolean {
     try {
       const storedFact = env.getBy(byNode.byName) as StoredFact;
 
@@ -350,7 +350,7 @@ export namespace L_FactStorage {
         onlyIfsToBeStored.push(onlyIf.useMapToCopy(map));
       }
 
-      let ok: Boolean = true;
+      let ok: boolean = true;
       for (const onlyIf of onlyIfsToBeStored) {
         ok = store(env, onlyIf, []);
         if (!ok) {

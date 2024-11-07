@@ -290,6 +290,7 @@ export function runExprs(env: L_Env, expr: string) {
 
     return result;
   } catch (error) {
+    if (error instanceof Error) env.newMessage(error.message);
     return undefined;
   }
 }
