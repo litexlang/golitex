@@ -481,6 +481,12 @@ const testList45 = [
 
 const testList46 = ["def x is object => {};", "let a,b : a,b are object;"];
 
+const testList47 = [
+  "def object(x) => {};",
+  "def object2(x) <= {object(x)};",
+  "def object3(x) <=> {object2(x)};",
+];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -525,7 +531,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, true],
+  setTheory: [setTheory, false],
   testList42: [testList42, false],
   testList43: [testList43, false],
   testList44: [testList44, false],
@@ -533,6 +539,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList46: [testList46, false],
   byList: [byList, false],
   三段论: [三段论, false],
+  testList47: [testList47, true],
 };
 
 export function testCode() {

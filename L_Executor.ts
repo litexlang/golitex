@@ -228,7 +228,6 @@ function declExec(env: L_Env, node: DeclNode): RType {
     // store declared opt by
     L_FactStorage.storeDeclaredIfThenAsBy(env, node);
 
-    // store bys in onlyIfs
     for (const onlyIf of node.onlyIfs) {
       if (onlyIf instanceof IfThenNode) {
         const higherStoreReq = new StoredReq(node.vars, [

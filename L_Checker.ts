@@ -16,25 +16,42 @@ export function check(env: L_Env, toCheck: FactNode): RType {
 }
 
 export function checkIfThen(env: L_Env, toCheck: IfThenNode): RType {
-  let out: RType = RType.True;
-  const newEnv = new L_Env(env);
-
-  for (const e of toCheck.vars) {
-    const ok = newEnv.safeNewVar(e);
-    if (!ok) return RType.Error;
+  let out = openEnvAndCheck(env, toCheck);
+  if (out !== RType.True) return out;
+  if (toCheck.isIff) {
+    const newToCheck = new IfThenNode(
+      toCheck.vars,
+      toCheck.onlyIfs,
+      toCheck.req,
+      toCheck.isT,
+      toCheck.byName,
+      toCheck.isIff
+    );
+    out = openEnvAndCheck(env, newToCheck);
   }
-  // toCheck.vars.forEach((e) => newEnv.newVar(e, e));
 
-  for (const f of toCheck.req) L_FactStorage.store(newEnv, f, []);
-  for (const onlyIf of toCheck.onlyIfs) {
-    out = check(newEnv, onlyIf);
-    if (out !== RType.True) return out;
-    else {
-      // checked facts in then are used as stored fact.
-      L_FactStorage.store(newEnv, toCheck, []);
+  return out;
+
+  function openEnvAndCheck(oldEnv: L_Env, toCheck: IfThenNode): RType {
+    const newEnv = new L_Env(oldEnv);
+
+    for (const e of toCheck.vars) {
+      const ok = newEnv.safeNewVar(e);
+      if (!ok) return RType.Error;
     }
+
+    for (const f of toCheck.req) L_FactStorage.store(newEnv, f, []);
+    for (const onlyIf of toCheck.onlyIfs) {
+      const out = check(newEnv, onlyIf);
+      if (out !== RType.True) return out;
+      else {
+        // checked facts in then are used as stored fact.
+        L_FactStorage.store(newEnv, toCheck, []);
+      }
+    }
+
+    return RType.True;
   }
-  return RType.True;
 }
 
 /** MAIN FUNCTION OF THE WHOLE PROJECT

@@ -172,6 +172,16 @@ function storeIfThen(
     if (!ok) return false;
   }
 
+  if (ifThen.isIff) {
+    for (const fact of ifThen.req) {
+      const ok = store(env, fact, [
+        ...req,
+        new StoredReq(ifThen.vars, ifThen.onlyIfs),
+      ]);
+      if (!ok) return false;
+    }
+  }
+
   return true;
 }
 
