@@ -485,6 +485,8 @@ const testList47 = [
   "def object(x) => {};",
   "def object2(x) <= {object(x)};",
   "def object3(x) <=> {object2(x)};",
+  "if x : x is object3 => {x is object2};",
+  "iff x : x is object3 <=> {x is object2};",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
