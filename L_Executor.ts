@@ -24,6 +24,7 @@ export const DEBUG_DICT = {
   newFact: true,
   def: true,
   check: true,
+  storeBy: true,
 };
 
 export enum RType {
@@ -163,18 +164,26 @@ function letExec(env: L_Env, node: LetNode): RType {
     }
 
     for (const f of node.facts) {
-      const ok = L_FactStorage.store(env, f, []);
+      const ok = L_FactStorage.storeFactAndBy(env, f);
       if (!ok) {
         env.newMessage(`Failed to store ${f}`);
         return RType.Error;
       }
     }
 
-    for (const f of node.facts) {
-      if (f instanceof IfThenNode) {
-        L_FactStorage.storeIfThenBy(env, f, new StoredFact([], [], true));
-      }
-    }
+    // for (const f of node.facts) {
+    //   const ok = L_FactStorage.store(env, f, []);
+    //   if (!ok) {
+    //     env.newMessage(`Failed to store ${f}`);
+    //     return RType.Error;
+    //   }
+    // }
+
+    // for (const f of node.facts) {
+    //   if (f instanceof IfThenNode) {
+    //     L_FactStorage.storeIfThenBy(env, f, new StoredFact([], [], true));
+    //   }
+    // }
 
     return RType.True;
   } catch {
@@ -192,18 +201,27 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
         return RType.Error;
       }
     }
+
     for (const fact of node.facts) {
-      const ok = L_FactStorage.store(env, fact, []);
+      const ok = L_FactStorage.storeFactAndBy(env, fact);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);
         return RType.Error;
       }
     }
-    for (const fact of node.facts) {
-      if (fact instanceof IfThenNode) {
-        L_FactStorage.storeIfThenBy(env, fact, new StoredFact([], [], true));
-      }
-    }
+
+    // for (const fact of node.facts) {
+    //   const ok = L_FactStorage.store(env, fact, []);
+    //   if (!ok) {
+    //     env.newMessage(`Failed to store ${fact}`);
+    //     return RType.Error;
+    //   }
+    // }
+    // for (const fact of node.facts) {
+    //   if (fact instanceof IfThenNode) {
+    //     L_FactStorage.storeIfThenBy(env, fact, new StoredFact([], [], true));
+    //   }
+    // }
     return RType.True;
   } catch (error) {
     let m = `'${node.toString()}'`;
@@ -508,16 +526,22 @@ function factExec(env: L_Env, toCheck: FactNode): RType {
     const out = L_Checker.check(env, toCheck);
     if (out === RType.True) {
       // Store Fact
-      const ok = L_FactStorage.store(env, toCheck, []);
+      const ok = L_FactStorage.storeFactAndBy(env, toCheck);
       if (!ok) {
         env.newMessage(`Failed to store ${toCheck}`);
         return RType.Error;
       }
 
-      // Store declared by
-      if (toCheck instanceof IfThenNode) {
-        L_FactStorage.storeIfThenBy(env, toCheck, new StoredFact([], [], true));
-      }
+      // const ok = L_FactStorage.store(env, toCheck, []);
+      // if (!ok) {
+      //   env.newMessage(`Failed to store ${toCheck}`);
+      //   return RType.Error;
+      // }
+
+      // // Store declared by
+      // if (toCheck instanceof IfThenNode) {
+      //   L_FactStorage.storeIfThenBy(env, toCheck, new StoredFact([], [], true));
+      // }
     }
 
     return out;

@@ -221,7 +221,7 @@ export class L_Env {
     }
   }
 
-  onFail(m: string, t: RType, err: unknown = null): RType {
+  onFail(m: string, t: RType = RType.Error, err: unknown = null): RType {
     if (err instanceof Error) this.newMessage(err.message);
     this.newMessage(m);
     return t;

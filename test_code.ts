@@ -489,6 +489,12 @@ const testList47 = [
   "iff x : x is object3 <=> {x is object2};",
 ];
 
+const testList48 = [
+  "def obj(x) => {};",
+  "def obj2(x) => {obj(x)}[ha];",
+  "if x : x is obj2 => {x is obj}[ha2];",
+];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -541,7 +547,8 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList46: [testList46, false],
   byList: [byList, false],
   三段论: [三段论, false],
-  testList47: [testList47, true],
+  testList47: [testList47, false],
+  testList48: [testList48, true],
 };
 
 export function testCode() {

@@ -306,20 +306,30 @@ export function storeIfThenBy(
   env: L_Env,
   ifThen: IfThenNode,
   higherStoredFact: StoredFact
-): void {
+): boolean {
   try {
     higherStoredFact.req.push(new StoredReq(ifThen.vars, ifThen.req));
 
     if (ifThen.byName !== undefined) {
       higherStoredFact.onlyIfs = ifThen.onlyIfs;
       env.setBy(ifThen.byName, higherStoredFact);
-      return;
+      if (DEBUG_DICT["storeBy"]) {
+        env.newMessage(`[new by] ${ifThen.byName}`);
+      }
+      return true;
     } else {
       for (const onlyIf of ifThen.onlyIfs) {
-        if (onlyIf instanceof IfThenNode)
-          storeIfThenBy(env, onlyIf, higherStoredFact);
+        if (onlyIf instanceof IfThenNode) {
+          const out = storeIfThenBy(env, onlyIf, higherStoredFact);
+          if (!out) {
+            env.newMessage(`Failed to declare ${onlyIf}`);
+            return false;
+          }
+        }
       }
     }
+
+    return true;
   } catch {
     throw Error();
   }
@@ -366,5 +376,28 @@ export function storeFactInStoredBy(env: L_Env, byNode: ByNode): boolean {
     return true;
   } catch {
     throw Error();
+  }
+}
+
+export function storeFactAndBy(env: L_Env, fact: FactNode): boolean {
+  try {
+    if (fact instanceof OptNode) {
+      return storeOpt(env, fact as OptNode, []);
+    } else if (fact instanceof IfThenNode) {
+      let ok = storeIfThen(env, fact, []);
+      if (!ok) {
+        env.newMessage(`Failed to store ${fact}`);
+        return false;
+      }
+      ok = storeIfThenBy(env, fact, new StoredFact([], [], true));
+      if (!ok) {
+        env.newMessage(`Failed to declare ${fact}`);
+        return false;
+      }
+      return true;
+    } else throw Error();
+  } catch {
+    env.newMessage(`Failed to store ${fact}`);
+    return false;
   }
 }
