@@ -4,7 +4,7 @@ import {
   FactNode,
   IffDeclNode,
   IfThenDeclNode,
-  IfThenNode,
+  IfIffNode,
   OnlyIfDeclNode,
   OptNode,
 } from "./ast.ts";
@@ -106,7 +106,7 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
   const decl = new OptNode(toDecl.name, toDecl.vars);
   let ok: boolean = true;
   if (toDecl instanceof IfThenDeclNode) {
-    const ifThen = new IfThenNode(
+    const ifThen = new IfIffNode(
       toDecl.vars,
       [decl, ...toDecl.req],
       toDecl.onlyIfs,
@@ -119,7 +119,7 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
   } else if (toDecl instanceof IffDeclNode) {
     ok = storeIfThen(
       env,
-      new IfThenNode(
+      new IfIffNode(
         toDecl.vars,
         [decl, ...toDecl.req],
         toDecl.onlyIfs,
@@ -131,7 +131,7 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
     if (!ok) return false;
     ok = storeIfThen(
       env,
-      new IfThenNode(
+      new IfIffNode(
         toDecl.vars,
         [...toDecl.req, ...toDecl.onlyIfs],
         [decl],
@@ -144,7 +144,7 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
   } else if (toDecl instanceof OnlyIfDeclNode) {
     ok = storeIfThen(
       env,
-      new IfThenNode(
+      new IfIffNode(
         toDecl.vars,
         [...toDecl.req, ...toDecl.onlyIfs],
         [decl],
@@ -159,11 +159,7 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
   return false;
 }
 
-function storeIfThen(
-  env: L_Env,
-  ifThen: IfThenNode,
-  req: StoredReq[]
-): boolean {
+function storeIfThen(env: L_Env, ifThen: IfIffNode, req: StoredReq[]): boolean {
   for (const fact of ifThen.onlyIfs) {
     const ok = store(env, fact, [
       ...req,
@@ -218,7 +214,7 @@ export function store(
   req: StoredReq[] = []
 ): boolean {
   try {
-    if (fact instanceof IfThenNode) {
+    if (fact instanceof IfIffNode) {
       const ok = storeIfThen(env, fact, req);
       if (!ok) return false;
     } else if (fact instanceof OptNode) {
@@ -304,7 +300,7 @@ export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
 
 export function storeIfThenBy(
   env: L_Env,
-  ifThen: IfThenNode,
+  ifThen: IfIffNode,
   higherStoredFact: StoredFact
 ): boolean {
   try {
@@ -319,7 +315,7 @@ export function storeIfThenBy(
       return true;
     } else {
       for (const onlyIf of ifThen.onlyIfs) {
-        if (onlyIf instanceof IfThenNode) {
+        if (onlyIf instanceof IfIffNode) {
           const out = storeIfThenBy(env, onlyIf, higherStoredFact);
           if (!out) {
             env.newMessage(`Failed to declare ${onlyIf}`);
@@ -337,7 +333,7 @@ export function storeIfThenBy(
 
 export function storeDeclaredIfThenAsBy(env: L_Env, node: DeclNode) {
   if (node.byName !== undefined && node instanceof IfThenDeclNode) {
-    const ifThenToStore = new IfThenNode(node.vars, node.req, node.onlyIfs);
+    const ifThenToStore = new IfIffNode(node.vars, node.req, node.onlyIfs);
     ifThenToStore.byName = node.byName;
     storeIfThenBy(env, ifThenToStore, new StoredFact([], [], true));
   }
@@ -383,7 +379,7 @@ export function storeFactAndBy(env: L_Env, fact: FactNode): boolean {
   try {
     if (fact instanceof OptNode) {
       return storeOpt(env, fact as OptNode, []);
-    } else if (fact instanceof IfThenNode) {
+    } else if (fact instanceof IfIffNode) {
       let ok = storeIfThen(env, fact, []);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);

@@ -7,7 +7,7 @@ import {
   ProveNode,
   HaveNode,
   PostfixProve,
-  IfThenNode,
+  IfIffNode,
   OptNode,
   LocalEnvNode,
   ReturnNode,
@@ -180,7 +180,7 @@ function letExec(env: L_Env, node: LetNode): RType {
     // }
 
     // for (const f of node.facts) {
-    //   if (f instanceof IfThenNode) {
+    //   if (f instanceof IfIffNode) {
     //     L_FactStorage.storeIfThenBy(env, f, new StoredFact([], [], true));
     //   }
     // }
@@ -218,7 +218,7 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
     //   }
     // }
     // for (const fact of node.facts) {
-    //   if (fact instanceof IfThenNode) {
+    //   if (fact instanceof IfIffNode) {
     //     L_FactStorage.storeIfThenBy(env, fact, new StoredFact([], [], true));
     //   }
     // }
@@ -247,7 +247,7 @@ function declExec(env: L_Env, node: DeclNode): RType {
     L_FactStorage.storeDeclaredIfThenAsBy(env, node);
 
     for (const onlyIf of node.onlyIfs) {
-      if (onlyIf instanceof IfThenNode) {
+      if (onlyIf instanceof IfIffNode) {
         const higherStoreReq = new StoredReq(node.vars, [
           new OptNode(node.name, node.vars),
           ...node.req,
@@ -295,7 +295,7 @@ function proveExec(env: L_Env, node: ProveNode): RType {
   }
 }
 
-function proveIfThen(env: L_Env, toProve: IfThenNode, block: L_Node[]): RType {
+function proveIfThen(env: L_Env, toProve: IfIffNode, block: L_Node[]): RType {
   try {
     const newEnv = new L_Env(env);
     for (const v of toProve.vars) {
@@ -539,7 +539,7 @@ function factExec(env: L_Env, toCheck: FactNode): RType {
       // }
 
       // // Store declared by
-      // if (toCheck instanceof IfThenNode) {
+      // if (toCheck instanceof IfIffNode) {
       //   L_FactStorage.storeIfThenBy(env, toCheck, new StoredFact([], [], true));
       // }
     }

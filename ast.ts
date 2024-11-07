@@ -31,7 +31,7 @@ export class OrNode extends FactNode {
   }
 }
 
-export class LogicalOptNode extends FactNode {
+export class IfIffNode extends FactNode {
   constructor(
     public vars: string[] = [],
     public req: FactNode[] = [],
@@ -50,8 +50,8 @@ export class LogicalOptNode extends FactNode {
     const req = this.req.map((e) => e.useMapToCopy(map));
     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
 
-    if (this instanceof IfThenNode)
-      return new IfThenNode(newVars, req, onlyIfs, this.isT, this.byName);
+    if (this instanceof IfIffNode)
+      return new IfIffNode(newVars, req, onlyIfs, this.isT, this.byName);
 
     throw Error();
   }
@@ -85,7 +85,7 @@ export class LogicalOptNode extends FactNode {
   }
 }
 
-export class IfThenNode extends LogicalOptNode {}
+// export class IfIffNode extends LogicalOptNode {}
 // export class OnlyIfNode extends LogicalOptNode {}
 // export class IffNode extends LogicalOptNode {}
 
@@ -170,17 +170,6 @@ export class DeclNode extends L_Node {
     super();
   }
 
-  // static create(name: string, node: LogicalOptNode): DeclNode {
-  //   if (node instanceof IfThenNode) {
-  //     return new IfThenDeclNode(name, node.vars, node.req, node.onlyIfs);
-  //   } else if (node instanceof IffNode) {
-  //     return new IffDeclNode(name, node.vars, node.req, node.onlyIfs);
-  //   } else if (node instanceof OnlyIfNode) {
-  //     return new OnlyIfDeclNode(name, node.vars, node.req, node.onlyIfs);
-  //   }
-  //   throw Error();
-  // }
-
   override toString() {
     if (this instanceof IfThenDeclNode)
       return `def if ${this.name}(${this.vars})`;
@@ -225,7 +214,7 @@ export class LetNode extends L_Node {
 export class ProveNode extends L_Node {
   constructor(
     // Only one of toProve, fixedIfThenOpt exists
-    public toProve: IfThenNode | null,
+    public toProve: IfIffNode | null,
     public fixedIfThenOpt: OptNode | null,
     public block: L_Node[],
     // If contradict !== undefined, then prove_by_contradiction

@@ -1,4 +1,4 @@
-import { ByNode, FactNode, IfThenNode, OptNode } from "./ast.ts";
+import { ByNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact } from "./L_FactStorage.ts";
@@ -8,18 +8,18 @@ export function check(env: L_Env, toCheck: FactNode): RType {
   if (toCheck instanceof OptNode) {
     const out = checkOpt(env, toCheck);
     return out;
-  } else if (toCheck instanceof IfThenNode) {
+  } else if (toCheck instanceof IfIffNode) {
     return checkIfThen(env, toCheck);
   }
 
   return RType.Unknown;
 }
 
-export function checkIfThen(env: L_Env, toCheck: IfThenNode): RType {
+export function checkIfThen(env: L_Env, toCheck: IfIffNode): RType {
   let out = openEnvAndCheck(env, toCheck);
   if (out !== RType.True) return out;
   if (toCheck.isIff) {
-    const newToCheck = new IfThenNode(
+    const newToCheck = new IfIffNode(
       toCheck.vars,
       toCheck.onlyIfs,
       toCheck.req,
@@ -32,7 +32,7 @@ export function checkIfThen(env: L_Env, toCheck: IfThenNode): RType {
 
   return out;
 
-  function openEnvAndCheck(oldEnv: L_Env, toCheck: IfThenNode): RType {
+  function openEnvAndCheck(oldEnv: L_Env, toCheck: IfIffNode): RType {
     const newEnv = new L_Env(oldEnv);
 
     for (const e of toCheck.vars) {
@@ -170,7 +170,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
           }
         }
         //! WARNING: I GUESS IF-THEN HERE IS BUGGY
-        else if (req instanceof IfThenNode) {
+        else if (req instanceof IfIffNode) {
           const out = checkIfThen(newEnv, req); // ? UNTESTED
           // const out = checkOpt(newEnv, toCheck);
           if (out === RType.True) continue;
@@ -288,7 +288,7 @@ export function checkBy(env: L_Env, byNode: ByNode): RType {
           // const toStore = new OptNode(req.fullName, fixedVars);
           // L_FactStorage.store(newEnv, toStore, []);
         }
-      } else if (req instanceof IfThenNode) {
+      } else if (req instanceof IfIffNode) {
         const out = checkIfThen(newEnv, req);
         if (out === RType.True) continue;
         else if (out === RType.Error) {

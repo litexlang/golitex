@@ -3,7 +3,7 @@ import {
   L_Node,
   LetNode,
   OptNode,
-  IfThenNode,
+  IfIffNode,
   DeclNode,
   IffDeclNode,
   FactNode,
@@ -11,7 +11,6 @@ import {
   ExistNode,
   HaveNode,
   OnlyIfDeclNode,
-  LogicalOptNode,
   PostfixProve,
   IfThenDeclNode,
   LocalEnvNode,
@@ -325,7 +324,7 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
       skip(tokens, ProveKeywords);
     }
 
-    let toProve: null | IfThenNode = null;
+    let toProve: null | IfIffNode = null;
     let fixedIfThenOpt: null | OptNode = null;
 
     if (IfKeywords.includes(tokens[0])) {
@@ -491,7 +490,7 @@ function logicalOptParse(
   tokens: string[]
   // ends: string[] = StdStmtEnds,
   // skipEnd = true
-): LogicalOptNode {
+): IfIffNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -535,13 +534,13 @@ function logicalOptParse(
     }
 
     if (IfKeywords.includes(type)) {
-      const out = new IfThenNode(vars, req, onlyIfs, true, byName);
+      const out = new IfIffNode(vars, req, onlyIfs, true, byName);
       return out;
     } else if (OnlyIfKeywords.includes(type)) {
-      const out = new IfThenNode(vars, onlyIfs, req, true, byName);
+      const out = new IfIffNode(vars, onlyIfs, req, true, byName);
       return out;
     } else if (IffKeywords.includes(type)) {
-      const out = new IfThenNode(vars, req, onlyIfs, true, byName, true);
+      const out = new IfIffNode(vars, req, onlyIfs, true, byName, true);
       return out;
     }
 

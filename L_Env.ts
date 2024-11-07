@@ -1,4 +1,4 @@
-import { DeclNode, FactNode, IfThenNode, OptNode } from "./ast.ts";
+import { DeclNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_FactStorage.ts";
 
@@ -186,7 +186,7 @@ export class L_Env {
         (e) => !freeVars.includes(e) && this.declaredVars.has(e)
       );
       return out;
-    } else if (fact instanceof IfThenNode) {
+    } else if (fact instanceof IfIffNode) {
       return (
         fact.onlyIfs.some((e) => this.someVarsDeclaredHere(e, fact.vars)) ||
         fact.req.some((e) => this.someVarsDeclaredHere(e, fact.vars))
@@ -199,7 +199,7 @@ export class L_Env {
   someOptsDeclaredHere(fact: FactNode): boolean {
     if (fact instanceof OptNode) {
       return this.declaredFacts.get(fact.fullName) !== undefined;
-    } else if (fact instanceof IfThenNode) {
+    } else if (fact instanceof IfIffNode) {
       return (
         fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) ||
         fact.req.some((e) => this.someOptsDeclaredHere(e))
