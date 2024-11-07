@@ -1,4 +1,4 @@
-import { L_Env } from "./L_Env";
+import { L_Env } from "./L_Env.ts";
 
 export abstract class L_Node {}
 
@@ -22,17 +22,14 @@ export class FactNode extends L_Node {
 }
 
 export class OrNode extends FactNode {
-  constructor(
-    public facts: FactNode[],
-    isT: Boolean = true
-  ) {
+  constructor(public facts: FactNode[], isT: Boolean = true) {
     super(isT);
   }
 
-  varsDeclared(env: L_Env): Boolean {
+  override varsDeclared(env: L_Env, freeVars: string[]): Boolean {
     return false;
   }
-  factsDeclared(env: L_Env): Boolean {
+  override factsDeclared(env: L_Env): Boolean {
     return false;
   }
 }
@@ -50,7 +47,7 @@ export class LogicalOptNode extends FactNode {
     super(isT);
   }
 
-  useMapToCopy(map: Map<string, string>): FactNode {
+  override useMapToCopy(map: Map<string, string>): FactNode {
     const newVars = [...this.vars];
     const req = this.req.map((e) => e.useMapToCopy(map));
     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
@@ -61,7 +58,7 @@ export class LogicalOptNode extends FactNode {
     throw Error();
   }
 
-  toString() {
+  override toString() {
     let type: string = "";
     let separator = "";
     if (this instanceof IffNode) {
@@ -75,7 +72,11 @@ export class LogicalOptNode extends FactNode {
       separator = "<=";
     }
 
-    const mainPart = `${type} ${this.vars.toString()} : ${this.req.map((e) => e.toString()).join(", ")} ${separator} {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
+    const mainPart = `${type} ${this.vars.toString()} : ${this.req
+      .map((e) => e.toString())
+      .join(", ")} ${separator} {${this.onlyIfs
+      .map((e) => e.toString())
+      .join(", ")}}`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
 
@@ -98,13 +99,13 @@ export class LogicalOptNode extends FactNode {
   //   throw Error();
   // }
 
-  varsDeclared(env: L_Env, freeVars: string[]): Boolean {
+  override varsDeclared(env: L_Env, freeVars: string[]): Boolean {
     return [...this.req, ...this.onlyIfs].every((e) =>
       e.varsDeclared(env, this.vars)
     );
   }
 
-  factsDeclared(env: L_Env): Boolean {
+  override factsDeclared(env: L_Env): Boolean {
     return [...this.req, ...this.onlyIfs].every((e) => e.factsDeclared(env));
   }
 }
@@ -122,7 +123,7 @@ export class OptNode extends FactNode {
     super(isT);
   }
 
-  useMapToCopy(map: Map<string, string>): OptNode {
+  override useMapToCopy(map: Map<string, string>): OptNode {
     const newVars: string[] = [];
     for (const v of this.vars) {
       const fixed = map.get(v);
@@ -134,7 +135,7 @@ export class OptNode extends FactNode {
     return new OptNode(this.fullName, newVars, this.isT);
   }
 
-  toString() {
+  override toString() {
     const mainPart = this.fullName + `(${this.vars.join(", ")})`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
@@ -162,7 +163,7 @@ export class OptNode extends FactNode {
   //   });
   // }
 
-  varsDeclared(env: L_Env, freeVars: string[]): Boolean {
+  override varsDeclared(env: L_Env, freeVars: string[]): Boolean {
     for (const v of this.vars) {
       const declared = env.varDeclared(v) || freeVars.includes(v);
       if (!declared) {
@@ -173,7 +174,7 @@ export class OptNode extends FactNode {
     return true;
   }
 
-  factsDeclared(env: L_Env): Boolean {
+  override factsDeclared(env: L_Env): Boolean {
     if (env.optDeclared(this.fullName)) {
       return true;
     } else {
@@ -205,7 +206,7 @@ export class DeclNode extends L_Node {
   //   throw Error();
   // }
 
-  toString() {
+  override toString() {
     if (this instanceof IfThenDeclNode)
       return `def if ${this.name}(${this.vars})`;
     else if (this instanceof IffDeclNode)
@@ -227,7 +228,7 @@ export class KnowNode extends L_Node {
     super();
   }
 
-  toString(): string {
+  override toString(): string {
     return (
       "know: " + this.facts.map((e) => (e as FactNode).toString()).join("; ")
     );
@@ -235,15 +236,14 @@ export class KnowNode extends L_Node {
 }
 
 export class LetNode extends L_Node {
-  constructor(
-    public vars: string[],
-    public facts: FactNode[]
-  ) {
+  constructor(public vars: string[], public facts: FactNode[]) {
     super();
   }
 
-  toString() {
-    return `${this.vars.join(", ")}: ${this.facts.map((s) => s.toString()).join(", ")}`;
+  override toString() {
+    return `${this.vars.join(", ")}: ${this.facts
+      .map((s) => s.toString())
+      .join(", ")}`;
   }
 }
 
@@ -266,23 +266,19 @@ export class ProveNode extends L_Node {
 }
 
 export class HaveNode extends L_Node {
-  constructor(
-    public vars: string[],
-    public facts: OptNode[]
-  ) {
+  constructor(public vars: string[], public facts: OptNode[]) {
     super();
   }
 
-  toString() {
-    return `${this.vars.join(", ")}| ${this.facts.map((s) => s.toString()).join(", ")}`;
+  override toString() {
+    return `${this.vars.join(", ")}| ${this.facts
+      .map((s) => s.toString())
+      .join(", ")}`;
   }
 }
 
 export class PostfixProve extends L_Node {
-  constructor(
-    public facts: FactNode[],
-    public block: L_Node[]
-  ) {
+  constructor(public facts: FactNode[], public block: L_Node[]) {
     super();
   }
 }
@@ -292,7 +288,7 @@ export class LocalEnvNode extends L_Node {
     super();
   }
 
-  toString() {
+  override toString() {
     return `{${this.nodes.map((e) => e.toString()).join("; ")}}`;
   }
 }
@@ -324,7 +320,7 @@ export class ByNode extends L_Node {
     super();
   }
 
-  toString() {
+  override toString() {
     return `${this.byName}(${this.vars.join(", ")}) is valid`;
   }
 }

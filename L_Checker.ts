@@ -1,7 +1,7 @@
-import { ByNode, FactNode, IfThenNode, KnowNode, OptNode } from "./ast";
-import { L_Env } from "./L_Env";
-import { DEBUG_DICT, RType } from "./L_Executor";
-import { L_FactStorage, StoredFact } from "./L_FactStorage";
+import { ByNode, FactNode, IfThenNode, KnowNode, OptNode } from "./ast.ts";
+import { L_Env } from "./L_Env.ts";
+import { DEBUG_DICT, RType } from "./L_Executor.ts";
+import { L_FactStorage, StoredFact } from "./L_FactStorage.ts";
 
 export namespace L_Checker {
   export function check(env: L_Env, toCheck: FactNode): RType {

@@ -8,9 +8,9 @@ import {
   LogicalOptNode,
   OnlyIfDeclNode,
   OptNode,
-} from "./ast";
-import { L_Env } from "./L_Env";
-import { DEBUG_DICT, RType } from "./L_Executor";
+} from "./ast.ts";
+import { L_Env } from "./L_Env.ts";
+import { DEBUG_DICT, RType } from "./L_Executor.ts";
 
 export class StoredReq {
   constructor(

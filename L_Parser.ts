@@ -20,8 +20,8 @@ import {
   ByNode,
   OnlyIfNode,
   IffNode,
-} from "./ast";
-import { L_Env } from "./L_Env";
+} from "./ast.ts";
+import { L_Env } from "./L_Env.ts";
 import {
   KnowTypeKeywords,
   StdStmtEnds,
@@ -49,8 +49,7 @@ import {
   ReturnKeyword,
   ReturnExistKeyword,
   ByKeyword,
-  DefByKeywords,
-} from "./common";
+} from "./common.ts";
 
 export namespace L_Parser {
   function skip(tokens: string[], s: string | string[] = "") {

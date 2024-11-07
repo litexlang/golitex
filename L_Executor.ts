@@ -14,10 +14,10 @@ import {
   ExistNode,
   ReturnExistNode,
   ByNode,
-} from "./ast";
-import { L_Env } from "./L_Env";
-import { L_Checker } from "./L_Checker";
-import { L_FactStorage, StoredFact, StoredReq } from "./L_FactStorage";
+} from "./ast.ts";
+import { L_Env } from "./L_Env.ts";
+import { L_Checker } from "./L_Checker.ts";
+import { L_FactStorage, StoredFact, StoredReq } from "./L_FactStorage.ts";
 
 export const DEBUG_DICT = {
   newFact: true,

@@ -1,7 +1,7 @@
-import { L_Env } from "./L_Env";
-import { L_Executor, RType } from "./L_Executor";
-import { L_Scan } from "./L_Lexer";
-import { L_Parser } from "./L_Parser";
+import { L_Env } from "./L_Env.ts";
+import { L_Executor, RType } from "./L_Executor.ts";
+import { L_Scan } from "./L_Lexer.ts";
+import { L_Parser } from "./L_Parser.ts";
 
 type ExampleItem = {
   name: string;

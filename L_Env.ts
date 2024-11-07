@@ -1,6 +1,6 @@
-import { DeclNode, FactNode, IfThenNode, OptNode } from "./ast";
-import { RType } from "./L_Executor";
-import { StoredFact, StoredReq } from "./L_FactStorage";
+import { DeclNode, FactNode, IfThenNode, OptNode } from "./ast.ts";
+import { RType } from "./L_Executor.ts";
+import { StoredFact, StoredReq } from "./L_FactStorage.ts";
 
 export class L_Env {
   private messages: string[] = [];
