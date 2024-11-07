@@ -122,7 +122,7 @@ const KeywordFunctionMap: {
   know: knowParse,
   let: letParse,
   "{": localEnvParse,
-  def: yaDefineParse,
+  def: defParse,
   prove: proveParse,
   prove_by_contradiction: proveParse,
   exist: existParse,
@@ -586,7 +586,7 @@ function PostfixProveParse(
   }
 }
 
-function yaDefineParse(env: L_Env, tokens: string[]): DeclNode {
+function defParse(env: L_Env, tokens: string[]): DeclNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -594,22 +594,24 @@ function yaDefineParse(env: L_Env, tokens: string[]): DeclNode {
     skip(tokens, DefKeywords);
 
     const opt: OptNode = functionalOptParse(env, tokens, false);
+
+    let req: FactNode[] = [];
+    if (isCurToken(tokens, ":")) {
+      skip(tokens, ":");
+      req = factsParse(env, tokens, ["=>", "<=>", "<=", ...StdStmtEnds], false);
+    }
+
     const separator = shiftVar(tokens);
 
     skip(tokens, "{");
-    const onlyIfs = factsParse(
-      env,
-      tokens,
-      StdStmtEnds.concat(WhenKeyword).concat(["}"]),
-      false
-    );
+    const onlyIfs = factsParse(env, tokens, ["}"], false);
     skip(tokens, "}");
 
-    let req: FactNode[] = [];
-    if (tokens[0] === WhenKeyword) {
-      skip(tokens, WhenKeyword);
-      req = factsParse(env, tokens, StdStmtEnds, false);
-    }
+    // let req: FactNode[] = [];
+    // if (tokens[0] === WhenKeyword) {
+    //   skip(tokens, WhenKeyword);
+    //   req = factsParse(env, tokens, StdStmtEnds, false);
+    // }
 
     let byName: undefined | string = undefined;
     if (isCurToken(tokens, "[")) {

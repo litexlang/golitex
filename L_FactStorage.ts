@@ -45,17 +45,6 @@ export class StoredFact {
 
     const out = notWords + varsWords + reqWords + onlyIfWords;
 
-    // if (this.isT)
-    //   out = `${this.vars.length > 0 ? this.vars.join(", ") + " <= " : ""}${this.req.map((e) => e.toString()).join(", ")}`;
-    // else
-    //   out = `[not] ${this.vars.length > 0 ? this.vars.join(", ") + " <= " : ""}${this.req
-    //     .map((e) => e.toString())
-    //     .join(", ")}`;
-
-    // if (this.onlyIfs.length !== 0) {
-    //   out += `\n onlyIfs: ${this.onlyIfs}\n`;
-    // }
-
     return out;
   }
 

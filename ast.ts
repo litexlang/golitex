@@ -14,6 +14,7 @@ export class FactNode extends L_Node {
     freeVars;
     return false;
   }
+
   factsDeclared(env: L_Env): boolean {
     env;
     return false;
