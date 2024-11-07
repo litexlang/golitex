@@ -1,5 +1,5 @@
 import { L_Env } from "./L_Env.ts";
-import { L_Executor, RType } from "./L_Executor.ts";
+import { RType, nodeExec } from "./L_Executor.ts";
 import { L_Scan } from "./L_Lexer.ts";
 import { L_Parser } from "./L_Parser.ts";
 
@@ -10,7 +10,7 @@ type ExampleItem = {
   print: boolean;
 };
 
-export const exampleList: ExampleItem[] = [
+const exampleList: ExampleItem[] = [
   {
     name: "syllogism", // 三段论
     code: [
@@ -280,7 +280,7 @@ export function runExprs(env: L_Env, expr: string) {
     }
     const result: RType[] = [];
     for (const node of nodes) {
-      const out = L_Executor.nodeExec(env, node);
+      const out = nodeExec(env, node);
       result.push(out);
     }
     console.log(`-----\n***  source code  ***\n${expr}\n`);
