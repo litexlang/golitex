@@ -30,7 +30,7 @@ export const ProveKeywords = ["prove"];
 // export const suchThats = ["st", "is"];
 
 export const StdStmtEnds = [";", "\n"];
-export const LetKeywords = ["let"];
+export const LetKeywords = ["let", "let!"];
 export const HaveKeywords = ["have"];
 export const ByKeyword = "by";
 export const ProveByContradictionKeyword = "prove_by_contradiction";

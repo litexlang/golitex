@@ -48,10 +48,10 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
 
 // deno-lint-ignore no-explicit-any
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
-  IffDeclNode: declExec,
-  IfThenDeclNode: declExec,
+  IffDeclNode: defExec,
+  IfThenDeclNode: defExec,
   ExistNode: existExec,
-  OnlyIfDeclNode: declExec,
+  OnlyIfDeclNode: defExec,
   KnowNode: knowExec,
   LetNode: letExec,
   ProveNode: proveExec,
@@ -231,7 +231,7 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
   }
 }
 
-function declExec(env: L_Env, node: DeclNode): RType {
+function defExec(env: L_Env, node: DeclNode): RType {
   try {
     let ok = env.safeDeclOpt(node.name, node);
     if (!ok) return RType.Error;

@@ -39,7 +39,6 @@ import {
   PostfixProveKeywords,
   AreKeywords,
   DefKeywords,
-  WhenKeyword,
   IffThenKeywords,
   OnlyIfThenKeywords,
   ContradictionKeyword,
@@ -182,9 +181,10 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
   const index = tokens.length;
 
   try {
-    const knowNode: KnowNode = new KnowNode();
+    const keyword = skip(tokens, KnowTypeKeywords);
+    const strict = keyword === "know" ? false : true;
 
-    skip(tokens, KnowTypeKeywords);
+    const knowNode: KnowNode = new KnowNode([], strict);
     while (!StdStmtEnds.includes(tokens[0])) {
       const outs: FactNode[] = factsParse(
         env,
@@ -211,7 +211,8 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, LetKeywords);
+    const keyword = skip(tokens, LetKeywords);
+    const strict = keyword === "let" ? false : true;
 
     const vars: string[] = [];
     while (![...StdStmtEnds, , ":"].includes(tokens[0])) {
@@ -226,11 +227,11 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
 
     if (StdStmtEnds.includes(tokens[0])) {
       skip(tokens, StdStmtEnds);
-      return new LetNode(vars, []);
+      return new LetNode(vars, [], strict);
     } else {
       skip(tokens, ":");
       const facts = factsParse(env, tokens, StdStmtEnds, true);
-      return new LetNode(vars, facts);
+      return new LetNode(vars, facts, strict);
     }
   } catch (error) {
     handleParseError(env, "let", index, start);

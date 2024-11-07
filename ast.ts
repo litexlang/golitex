@@ -189,7 +189,7 @@ export class OnlyIfDeclNode extends DeclNode {}
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;
 
-  constructor(public facts: FactNode[] = []) {
+  constructor(public facts: FactNode[] = [], public strict: boolean) {
     super();
   }
 
@@ -201,7 +201,11 @@ export class KnowNode extends L_Node {
 }
 
 export class LetNode extends L_Node {
-  constructor(public vars: string[], public facts: FactNode[]) {
+  constructor(
+    public vars: string[],
+    public facts: FactNode[],
+    public strict: boolean
+  ) {
     super();
   }
 
