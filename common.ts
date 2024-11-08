@@ -51,6 +51,8 @@ export const ReturnKeyword = ["return", "so"];
 export const ReturnExistKeyword = ["return_exist"];
 export const DefByKeywords = ["def_by"];
 
+export const NotsKeyword = "nots";
+
 export const L_Keywords: string[] = [
   "#",
   ByKeyword,
@@ -78,6 +80,7 @@ export const L_Keywords: string[] = [
   ...ReturnExistKeyword,
   ...ReturnKeyword,
   ...DefByKeywords,
+  NotsKeyword,
 ];
 
 export const LogicalOptPairs: { [k: string]: string[] } = {

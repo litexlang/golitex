@@ -509,13 +509,14 @@ const testList50 = [
   "or{c is obj, not obj(c)};",
 ];
 
-const testList51 = [
+const testList51 = ["def obj(x) => {};", "let a,b: nots{a is obj, b is obj};"];
+
+const testList52 = [
   "def obj(x) => {};",
   "def obj2(x) => {};",
-  "def obj3(x) => {};",
+  "def obj3(x) => {obj2(x)};",
   "def obj4(x,a) => {};",
-  "know if x : obj(x) => {x is obj2, if a : obj3(x),obj4(x,a) => {obj(x)}};",
-  "know if x : obj(x) => {if : x is obj2 => {obj3(x)}};",
+  "let a : a is obj2;",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
@@ -573,7 +574,9 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList47: [testList47, false],
   testList48: [testList48, false],
   testList49: [testList49, false],
-  testList50: [testList50, true],
+  testList50: [testList50, false],
+  testList51: [testList51, false],
+  testList52: [testList52, true],
 };
 
 export function testCode() {

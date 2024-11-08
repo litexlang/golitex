@@ -1,4 +1,4 @@
-import { ByNode, DeclNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
+import { DeclNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_FactStorage.ts";
 

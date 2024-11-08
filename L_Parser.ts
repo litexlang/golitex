@@ -47,6 +47,8 @@ import {
   ReturnExistKeyword,
   ByKeyword,
   OrKeywords,
+  NotKeywords,
+  NotsKeyword,
 } from "./common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -432,6 +434,10 @@ function factsParse(
         out.push(fact);
       } else if (tokens[0] === "or") {
         const fact = orParse(env, tokens);
+        fact.isT = isT;
+        out.push(fact);
+      } else if (tokens[0] === "nots") {
+        const fact = notsParse(env, tokens);
         fact.isT = isT;
         out.push(fact);
       } else if (tokens.length >= 2 && tokens[1] === "(") {
@@ -906,6 +912,26 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
     skip(tokens, OrKeywords);
     skip(tokens, "{");
     const facts = factsParse(env, tokens, ["}"], false);
+    skip(tokens, "}");
+
+    return new OrNode(facts, true);
+  } catch (error) {
+    handleParseError(env, "operator", index, start);
+    throw error;
+  }
+}
+
+function notsParse(env: L_Env, tokens: string[]): OrNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, NotsKeyword);
+    skip(tokens, "{");
+    const facts = factsParse(env, tokens, ["}"], false);
+    for (const f of facts) {
+      f.isT = !f.isT;
+    }
     skip(tokens, "}");
 
     return new OrNode(facts, true);

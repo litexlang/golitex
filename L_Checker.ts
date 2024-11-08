@@ -42,13 +42,13 @@ export function checkIfThen(env: L_Env, toCheck: IfIffNode): RType {
       if (!ok) return RType.Error;
     }
 
-    for (const f of toCheck.req) L_FactStorage.store(newEnv, f, []);
+    for (const f of toCheck.req) L_FactStorage.store(newEnv, f, [], true);
     for (const onlyIf of toCheck.onlyIfs) {
       const out = check(newEnv, onlyIf);
       if (out !== RType.True) return out;
       else {
         // checked facts in then are used as stored fact.
-        L_FactStorage.store(newEnv, toCheck, []);
+        L_FactStorage.store(newEnv, toCheck, [], true);
       }
     }
 
@@ -139,7 +139,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
             const out = checkOptLiterally(newEnv, toCheck);
             if (out === RType.True) {
               // store checked req as future stored facts.
-              L_FactStorage.store(newEnv, toCheck, []);
+              L_FactStorage.store(newEnv, toCheck, [], true);
               continue;
             } else if (out === RType.Error) {
               newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
@@ -277,7 +277,7 @@ export function checkBy(env: L_Env, byNode: ByNode): RType {
           const out = checkOptLiterally(newEnv, toCheck);
           if (out === RType.True) {
             // store checked req as future stored facts.
-            L_FactStorage.store(newEnv, toCheck, []);
+            L_FactStorage.store(newEnv, toCheck, [], true);
             continue;
           } else if (out === RType.Error) {
             newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
@@ -324,7 +324,9 @@ function checkOr(env: L_Env, toCheck: OrNode): RType {
         if (j === i) continue;
         L_FactStorage.store(
           newEnv,
-          toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT)
+          toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT),
+          [],
+          true
         );
       }
 

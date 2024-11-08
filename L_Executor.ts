@@ -133,7 +133,7 @@ function haveExec(env: L_Env, node: HaveNode): RType {
         env.newMessage(`${fact} does not include any newly declared variable.`);
         return RType.Error;
       }
-      const ok = L_FactStorage.store(env, fact);
+      const ok = L_FactStorage.store(env, fact, [], true);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);
         return RType.Error;
@@ -173,7 +173,7 @@ function letExec(env: L_Env, node: LetNode): RType {
     if (!node.strict) {
       // store facts
       for (const f of node.facts) {
-        const ok = L_FactStorage.storeFactAndBy(env, f);
+        const ok = L_FactStorage.storeFactAndBy(env, f, true);
         if (!ok) {
           env.newMessage(`Failed to store ${f}`);
           return RType.Error;
@@ -214,7 +214,7 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
 
     if (!node.strict) {
       for (const fact of node.facts) {
-        const ok = L_FactStorage.storeFactAndBy(env, fact);
+        const ok = L_FactStorage.storeFactAndBy(env, fact, true);
         if (!ok) {
           env.newMessage(`Failed to store ${fact}`);
           return RType.Error;
@@ -316,7 +316,7 @@ function proveIfThen(env: L_Env, toProve: IfIffNode, block: L_Node[]): RType {
     }
 
     for (const fact of toProve.req) {
-      const ok = L_FactStorage.store(newEnv, fact, []);
+      const ok = L_FactStorage.store(newEnv, fact, [], true);
       if (!ok) throw Error();
     }
 
@@ -350,7 +350,7 @@ function proveIfThen(env: L_Env, toProve: IfIffNode, block: L_Node[]): RType {
       if (out !== RType.True) return out;
     }
 
-    L_FactStorage.store(env, toProve, []);
+    L_FactStorage.store(env, toProve, [], true);
 
     newEnv.getMessages().forEach((e) => env.newMessage(e));
 
@@ -394,7 +394,7 @@ function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {
     const out = L_Checker.check(newEnv, toProve);
     if (out !== RType.True) return out;
 
-    L_FactStorage.store(env, toProve, []);
+    L_FactStorage.store(env, toProve, [], true);
 
     return RType.True;
   } catch {
@@ -413,7 +413,7 @@ function proveOptByContradict(
     const newEnv = new L_Env(env);
 
     toProve.isT = !toProve.isT;
-    let ok = L_FactStorage.store(newEnv, toProve, []);
+    let ok = L_FactStorage.store(newEnv, toProve, [], true);
     if (!ok) {
       newEnv.newMessage(`Failed to store ${toProve}`);
       return RType.Error;
@@ -458,7 +458,7 @@ function proveOptByContradict(
     }
 
     toProve.isT = !toProve.isT;
-    ok = L_FactStorage.store(env, toProve, []);
+    ok = L_FactStorage.store(env, toProve, [], true);
     if (!ok) {
       env.newMessage(`Failed to store ${toProve}`);
       return RType.Error;
@@ -513,7 +513,7 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
     }
 
     for (const fact of PostfixProve.facts) {
-      const ok = L_FactStorage.store(env, fact, []);
+      const ok = L_FactStorage.store(env, fact, [], true);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);
         return RType.Error;
@@ -538,7 +538,7 @@ function factExec(env: L_Env, toCheck: FactNode): RType {
     const out = L_Checker.check(env, toCheck);
     if (out === RType.True) {
       // Store Fact
-      const ok = L_FactStorage.storeFactAndBy(env, toCheck);
+      const ok = L_FactStorage.storeFactAndBy(env, toCheck, true);
       if (!ok) {
         env.newMessage(`Failed to store ${toCheck}`);
         return RType.Error;
@@ -605,7 +605,7 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
     const storeTo = env.getFather();
     if (storeTo) {
       for (const toProve of node.facts) {
-        const ok = L_FactStorage.store(storeTo, toProve, []);
+        const ok = L_FactStorage.store(storeTo, toProve, [], true);
         if (!ok) {
           env.newMessage(`Failed to store ${toProve}`);
           return RType.Error;
@@ -676,7 +676,7 @@ function byExec(env: L_Env, byNode: ByNode): RType {
     const out = L_Checker.checkBy(env, byNode);
 
     if (out === RType.True) {
-      let ok = L_FactStorage.storeFactInStoredBy(env, byNode);
+      let ok = L_FactStorage.storeFactInStoredBy(env, byNode, true);
       if (!ok) {
         return RType.Error;
       }
@@ -684,7 +684,7 @@ function byExec(env: L_Env, byNode: ByNode): RType {
       for (const fact of byNode.onlyIfs) {
         //! THE REASON WHY WE DO NOT NEED TO CHECK WHETHER VARIABLES ARE NOT DOUBLE DECLARED
         //! IS THAT IN BY I CAN NOT DECLARE VAR.
-        ok = L_FactStorage.store(env, fact);
+        ok = L_FactStorage.store(env, fact, [], true);
         if (!ok) {
           env.newMessage(`Failed to store ${fact}`);
           return RType.Error;
