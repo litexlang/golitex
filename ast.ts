@@ -24,6 +24,10 @@ export class FactNode extends L_Node {
     map;
     return new FactNode(true);
   }
+
+  copyWithoutIsT(newIsT: boolean): FactNode {
+    return new FactNode(newIsT);
+  }
 }
 
 export class OrNode extends FactNode {
@@ -37,6 +41,10 @@ export class OrNode extends FactNode {
 
   override factsDeclared(env: L_Env): boolean {
     return this.facts.every((e) => e.factsDeclared(env));
+  }
+
+  override copyWithoutIsT(newIsT: boolean): FactNode {
+    return new OrNode(this.facts, newIsT);
   }
 }
 
@@ -52,6 +60,17 @@ export class IfIffNode extends FactNode {
     public isIff: boolean = false
   ) {
     super(isT);
+  }
+
+  override copyWithoutIsT(newIsT: boolean): FactNode {
+    return new IfIffNode(
+      this.vars,
+      this.req,
+      this.onlyIfs,
+      newIsT,
+      this.byName,
+      this.isIff
+    );
   }
 
   override useMapToCopy(map: Map<string, string>): FactNode {
@@ -105,6 +124,10 @@ export class OptNode extends FactNode {
     isT: boolean = true
   ) {
     super(isT);
+  }
+
+  override copyWithoutIsT(newIsT: boolean): FactNode {
+    return new OptNode(this.fullName, this.vars, newIsT);
   }
 
   override useMapToCopy(map: Map<string, string>): OptNode {

@@ -319,17 +319,15 @@ function checkOr(env: L_Env, toCheck: OrNode): RType {
       const newEnv = new L_Env(env);
       for (let j = 0; j < toCheck.facts.length; j++) {
         if (j === i) continue;
-        toCheck.facts[j].isT = !toCheck.facts[j].isT;
-        L_FactStorage.store(newEnv, toCheck.facts[j]);
+        L_FactStorage.store(
+          newEnv,
+          toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT)
+        );
       }
 
       const out = check(newEnv, toCheck.facts[i]);
       if (out === RType.True) {
         valid = true;
-      }
-
-      for (let j = 0; j < toCheck.facts.length && j !== i; j++) {
-        toCheck.facts[j].isT = !toCheck.facts[j].isT;
       }
 
       if (valid) return RType.True;

@@ -7,6 +7,7 @@ import {
   IfIffNode,
   OnlyIfDeclNode,
   OptNode,
+  OrNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
@@ -188,11 +189,29 @@ function storeOpt(env: L_Env, fact: OptNode, req: StoredReq[]): boolean {
   env.newFact(fact.fullName, fact.vars, req, fact.isT);
 
   if (DEBUG_DICT["newFact"]) {
+    const notWords = fact.isT === false ? "[not]" : "";
     if (req.length > 0)
-      env.newMessage(`[new fact] ${fact.fullName}(${fact.vars}) <= ${req}`);
-    else env.newMessage(`[new fact] ${fact.fullName}(${fact.vars})`);
+      env.newMessage(
+        `[new fact] ${notWords} ${fact.fullName}(${fact.vars}) <= ${req}`
+      );
+    else
+      env.newMessage(`[new fact] ${notWords} ${fact.fullName}(${fact.vars})`);
   }
 
+  return true;
+}
+
+function storeOr(env: L_Env, fact: OrNode, req: StoredReq[]): boolean {
+  for (let i = 0; i < fact.facts.length; i++) {
+    const asReq: FactNode[] = [];
+    for (let j = 0; j < fact.facts.length; j++) {
+      if (j !== i) {
+        asReq.push(fact.facts[j].copyWithoutIsT(!fact.facts[j].isT));
+      }
+    }
+    const ok = store(env, fact.facts[i], [...req, new StoredReq([], asReq)]);
+    if (!ok) return ok;
+  }
   return true;
 }
 
@@ -208,6 +227,9 @@ export function store(
       if (!ok) return false;
     } else if (fact instanceof OptNode) {
       const ok = storeOpt(env, fact, req);
+      if (!ok) return false;
+    } else if (fact instanceof OrNode) {
+      const ok = storeOr(env, fact, req);
       if (!ok) return false;
     } else throw Error();
 
@@ -380,6 +402,8 @@ export function storeFactAndBy(env: L_Env, fact: FactNode): boolean {
         return false;
       }
       return true;
+    } else if (fact instanceof OrNode) {
+      return storeOr(env, fact, []);
     } else throw Error();
   } catch {
     env.newMessage(`Failed to store ${fact}`);
