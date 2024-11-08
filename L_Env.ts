@@ -1,4 +1,4 @@
-import { DeclNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
+import { ByNode, DeclNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_FactStorage.ts";
 
@@ -20,7 +20,7 @@ export class L_Env {
     if (this.declaredFacts.has(s)) {
       return this.declaredFacts.get(s);
     } else if (this.father) {
-      return this.father.declaredFacts.get(s);
+      return this.father.getDeclaredFact(s);
     } else {
       return undefined;
     }
@@ -28,11 +28,11 @@ export class L_Env {
 
   // TODO: IF THE BY IS RELATED TO OPT WITH THE SAME NAME AT HIGHER LEVEL, WE SHOULD NOT RETURN IT. FOR
   // TODO: THE TIME BEING, WE DON'T IMPLEMENT THAT PROTECTION.
-  getBy(s: string) {
+  getBy(s: string): undefined | StoredFact {
     const out = this.bys.get(s);
     if (out !== undefined) return out;
     else if (this.father === undefined) return undefined;
-    else return this.father.bys.get(s);
+    else return this.father.getBy(s);
   }
 
   setBy(s: string, by: StoredFact) {

@@ -502,10 +502,10 @@ const testList49 = [
 
 const testList50 = [
   "def obj(x) => {};",
-  // "def obj2(x,y) <= { or{x is obj, y is obj} };",
-  "let a,b,c;",
+  "def obj2(x,y) <= { or{x is obj, y is obj} };",
+  "let a,b,c: a is obj;",
   // "or{b is obj, a is obj};",
-  // "obj2(a,b);",
+  "obj2(a,b);",
   "or{c is obj, not obj(c)};",
 ];
 

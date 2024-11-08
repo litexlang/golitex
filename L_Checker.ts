@@ -115,22 +115,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
       }
     }
 
-    // for (let i = 0; i < toCheck.vars.length; i++) {
-    //   if (freeVarsOfAllLevels.includes(storedFact.vars[i])) {
-    //     const alreadyDeclared = map.get(storedFact.vars[i]);
-    //     if (alreadyDeclared && alreadyDeclared !== toCheck.vars[i]) {
-    //       env.newMessage(
-    //         `${storedFact.vars[i]} is signed with 2 different symbols ${alreadyDeclared}, ${toCheck.vars[i]}`
-    //       );
-    //       return RType.Error;
-    //     }
-
-    //     map.set(storedFact.vars[i], toCheck.vars[i]);
-    //   }
-    // }
-
     for (const currentLevelReq of storedFact.req) {
-      // this is necessary because 1. I SIMPLY NEED A NEATER STORAGE SYSTEM THAT ALIGNS WITH THE HIERARCHY OF IF-THENs THE FACT IS STORED. 2. store checked req as future stored facts. 3. If some vars of the req is free, then the req is not checked, it is stored as a fact.
       let newEnv = new L_Env(env);
 
       for (const req of currentLevelReq.req) {
@@ -175,6 +160,18 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
         else if (req instanceof IfIffNode) {
           const out = checkIfThen(newEnv, req); // ? UNTESTED
           // const out = checkOpt(newEnv, toCheck);
+          if (out === RType.True) continue;
+          else if (out === RType.Error) {
+            newEnv.getMessages().forEach((e) => env.newMessage(e));
+            return RType.Error;
+          } else {
+            unknown = true;
+            break;
+          }
+        }
+        // OrNode
+        else if (req instanceof OrNode) {
+          const out = checkOr(newEnv, req);
           if (out === RType.True) continue;
           else if (out === RType.Error) {
             newEnv.getMessages().forEach((e) => env.newMessage(e));
