@@ -25,6 +25,7 @@ export const DEBUG_DICT = {
   def: true,
   check: true,
   storeBy: true,
+  let: true,
 };
 
 export enum RType {
@@ -151,6 +152,11 @@ function letExec(env: L_Env, node: LetNode): RType {
     for (const e of node.vars) {
       const ok = env.safeNewVar(e);
       if (!ok) return RType.Error;
+      else {
+        if (DEBUG_DICT["let"]) {
+          env.newMessage(`[new var] ${node.vars}`);
+        }
+      }
     }
     // node.vars.forEach((e) => env.newVar(e, e));
 
@@ -163,11 +169,15 @@ function letExec(env: L_Env, node: LetNode): RType {
       }
     }
 
-    for (const f of node.facts) {
-      const ok = L_FactStorage.storeFactAndBy(env, f);
-      if (!ok) {
-        env.newMessage(`Failed to store ${f}`);
-        return RType.Error;
+    // check all requirements are satisfied
+    if (!node.strict) {
+      // store facts
+      for (const f of node.facts) {
+        const ok = L_FactStorage.storeFactAndBy(env, f);
+        if (!ok) {
+          env.newMessage(`Failed to store ${f}`);
+          return RType.Error;
+        }
       }
     }
 
@@ -202,11 +212,13 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
       }
     }
 
-    for (const fact of node.facts) {
-      const ok = L_FactStorage.storeFactAndBy(env, fact);
-      if (!ok) {
-        env.newMessage(`Failed to store ${fact}`);
-        return RType.Error;
+    if (!node.strict) {
+      for (const fact of node.facts) {
+        const ok = L_FactStorage.storeFactAndBy(env, fact);
+        if (!ok) {
+          env.newMessage(`Failed to store ${fact}`);
+          return RType.Error;
+        }
       }
     }
 

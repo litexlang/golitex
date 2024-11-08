@@ -30,6 +30,14 @@ export class OrNode extends FactNode {
   constructor(public facts: FactNode[], isT: boolean = true) {
     super(isT);
   }
+
+  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
+    return this.facts.every((e) => e.varsDeclared(env, freeVars));
+  }
+
+  override factsDeclared(env: L_Env): boolean {
+    return this.facts.every((e) => e.factsDeclared(env));
+  }
 }
 
 export class IfIffNode extends FactNode {
@@ -75,9 +83,9 @@ export class IfIffNode extends FactNode {
     return notPart + mainPart + useNamePart;
   }
 
-  override varsDeclared(env: L_Env): boolean {
+  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
     return [...this.req, ...this.onlyIfs].every((e) =>
-      e.varsDeclared(env, this.vars)
+      e.varsDeclared(env, [...this.vars, ...freeVars])
     );
   }
 
@@ -117,27 +125,6 @@ export class OptNode extends FactNode {
     const notPart = !this.isT ? "[not] " : "";
     return notPart + mainPart + useNamePart;
   }
-
-  // hashVars(varsToHash: string[]) {
-  //   //! CONVENTION: NEVER INTRODUCE ANY VARIABLE WITH ## PREFIX
-  //   this.vars = this.vars.map((s) =>
-  //     varsToHash.includes(s) ? (s.startsWith("#") ? s : "#" + s) : s
-  //   );
-  //   // this.vars = this.vars.map((s) => (varsToHash.includes(s) ? "#" + s : s));
-  // }
-
-  // rmvHashFromVars(varsToHash: string[]): void {
-  //   this.vars = this.vars.map((s) =>
-  //     varsToHash.includes(s.slice(1)) && s[0] === "#" ? s.slice(1) : s
-  //   );
-  // }
-
-  // replaceVars(mapping: Map<string, string>): void {
-  //   this.vars.forEach((v, i) => {
-  //     const fixed = mapping.get(v);
-  //     if (fixed !== undefined) this.vars[i] = fixed;
-  //   });
-  // }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
     for (const v of this.vars) {

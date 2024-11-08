@@ -17,6 +17,7 @@ import {
   ReturnNode,
   ReturnExistNode,
   ByNode,
+  OrNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -45,6 +46,7 @@ import {
   ReturnKeyword,
   ReturnExistKeyword,
   ByKeyword,
+  OrKeywords,
 } from "./common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -426,6 +428,10 @@ function factsParse(
 
       if (LogicalKeywords.includes(tokens[0])) {
         const fact = logicalOptParse(env, tokens);
+        fact.isT = isT;
+        out.push(fact);
+      } else if (tokens[0] === "or") {
+        const fact = orParse(env, tokens);
         fact.isT = isT;
         out.push(fact);
       } else if (tokens.length >= 2 && tokens[1] === "(") {
@@ -886,6 +892,23 @@ function parseAreIsOpts(env: L_Env, tokens: string[]): OptNode[] {
     }
 
     return out;
+  } catch (error) {
+    handleParseError(env, "operator", index, start);
+    throw error;
+  }
+}
+
+function orParse(env: L_Env, tokens: string[]): OrNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, OrKeywords);
+    skip(tokens, "{");
+    const facts = factsParse(env, tokens, ["}"], false);
+    skip(tokens, "}");
+
+    return new OrNode(facts, true);
   } catch (error) {
     handleParseError(env, "operator", index, start);
     throw error;

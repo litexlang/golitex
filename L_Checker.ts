@@ -1,4 +1,4 @@
-import { ByNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
+import { ByNode, FactNode, IfIffNode, OptNode, OrNode } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact } from "./L_FactStorage.ts";
@@ -10,6 +10,8 @@ export function check(env: L_Env, toCheck: FactNode): RType {
     return out;
   } else if (toCheck instanceof IfIffNode) {
     return checkIfThen(env, toCheck);
+  } else if (toCheck instanceof OrNode) {
+    return checkOr(env, toCheck);
   }
 
   return RType.Unknown;
@@ -308,4 +310,33 @@ export function checkBy(env: L_Env, byNode: ByNode): RType {
   if (unknown) return RType.Unknown;
 
   return RType.True;
+}
+
+function checkOr(env: L_Env, toCheck: OrNode): RType {
+  try {
+    for (let i = 0; i < toCheck.facts.length; i++) {
+      let valid = false;
+      const newEnv = new L_Env(env);
+      for (let j = 0; j < toCheck.facts.length; j++) {
+        if (j === i) continue;
+        toCheck.facts[j].isT = !toCheck.facts[j].isT;
+        L_FactStorage.store(newEnv, toCheck.facts[j]);
+      }
+
+      const out = check(newEnv, toCheck.facts[i]);
+      if (out === RType.True) {
+        valid = true;
+      }
+
+      for (let j = 0; j < toCheck.facts.length && j !== i; j++) {
+        toCheck.facts[j].isT = !toCheck.facts[j].isT;
+      }
+
+      if (valid) return RType.True;
+    }
+
+    return RType.Unknown;
+  } catch {
+    return RType.Error;
+  }
 }

@@ -15,7 +15,12 @@ export const specialChars = [
   "$",
 ];
 
-export const KnowTypeKeywords = ["know", "assume"];
+export const KnowTypeKeywords = [
+  "know",
+  "assume",
+  "strict_know",
+  "strict_assume",
+];
 export const ThenKeywords = ["=>"];
 export const OnlyIfThenKeywords = ["<="];
 export const IffThenKeywords = ["<=>"];
@@ -30,7 +35,7 @@ export const ProveKeywords = ["prove"];
 // export const suchThats = ["st", "is"];
 
 export const StdStmtEnds = [";", "\n"];
-export const LetKeywords = ["let", "let!"];
+export const LetKeywords = ["let", "strict_let"];
 export const HaveKeywords = ["have"];
 export const ByKeyword = "by";
 export const ProveByContradictionKeyword = "prove_by_contradiction";
@@ -81,8 +86,4 @@ export const LogicalOptPairs: { [k: string]: string[] } = {
   only_if: OnlyIfThenKeywords,
 };
 
-export const LogicalKeywords = [
-  ...IfKeywords,
-  ...OnlyIfKeywords,
-  ...IffKeywords,
-];
+export const LogicalKeywords = [...IfKeywords, ...IffKeywords];

@@ -500,6 +500,24 @@ const testList49 = [
   "def obj2(x,y): x is obj, y is obj => {};",
 ];
 
+const testList50 = [
+  "def obj(x) => {};",
+  // "def obj2(x,y) <= { or{x is obj, y is obj} };",
+  "let a,b,c : a is obj;",
+  // "or{b is obj, a is obj};",
+  // "obj2(a,b);",
+  "or{c is obj, c is not obj};",
+];
+
+const testList51 = [
+  "def obj(x) => {};",
+  "def obj2(x) => {};",
+  "def obj3(x) => {};",
+  "def obj4(x,a) => {};",
+  "know if x : obj(x) => {x is obj2, if a : obj3(x),obj4(x,a) => {obj(x)}};",
+  "know if x : obj(x) => {if : x is obj2 => {obj3(x)}};",
+];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -554,7 +572,8 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   三段论: [三段论, false],
   testList47: [testList47, false],
   testList48: [testList48, false],
-  testList49: [testList49, true],
+  testList49: [testList49, false],
+  testList50: [testList50, true],
 };
 
 export function testCode() {
