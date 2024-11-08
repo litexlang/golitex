@@ -32,13 +32,11 @@ import {
   ProveByContradictionKeyword,
   OnlyIfKeywords,
   IsKeywords,
-  IsAreKeywords,
   L_Keywords,
   IffKeywords,
   LogicalOptPairs,
   LogicalKeywords,
   PostfixProveKeywords,
-  AreKeywords,
   DefKeywords,
   IffThenKeywords,
   OnlyIfThenKeywords,
@@ -47,8 +45,8 @@ import {
   ReturnExistKeyword,
   ByKeyword,
   OrKeywords,
-  NotKeywords,
   NotsKeyword,
+  NotKeywords,
 } from "./common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -243,7 +241,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   }
 }
 
-function functionalOptParse(
+function optParseWithNot(
   env: L_Env,
   tokens: string[],
   parseNot: boolean
@@ -278,7 +276,16 @@ function functionalOptParse(
     } else {
       const v = shiftVar(tokens);
       vars.push(v);
+
       skip(tokens, IsKeywords);
+
+      if (parseNot && NotKeywords.includes(tokens[0])) {
+        while (NotKeywords.includes(tokens[0])) {
+          isT = !isT;
+          skip(tokens, NotKeywords);
+        }
+      }
+
       name = shiftVar(tokens);
     }
 
@@ -335,7 +342,7 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
     if (IfKeywords.includes(tokens[0])) {
       toProve = logicalOptParse(env, tokens);
     } else {
-      fixedIfThenOpt = parseVanillaOptWithNot(env, tokens, true);
+      fixedIfThenOpt = optParseWithNot(env, tokens, true);
     }
 
     const block: L_Node[] = [];
@@ -354,7 +361,7 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
     let contradict: OptNode | undefined = undefined;
     if (byContradict) {
       skip(tokens, ContradictionKeyword);
-      contradict = functionalOptParse(env, tokens, true);
+      contradict = optParseWithNot(env, tokens, true);
       skip(tokens, StdStmtEnds);
     }
 
@@ -395,7 +402,7 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
       const facts: OptNode[] = [];
 
       while (!StdStmtEnds.includes(tokens[0])) {
-        const fact = functionalOptParse(env, tokens, true);
+        const fact = optParseWithNot(env, tokens, true);
         facts.push(fact);
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
@@ -420,7 +427,7 @@ function factsParse(
   const index = tokens.length;
 
   try {
-    let out: FactNode[] = [];
+    const out: FactNode[] = [];
     while (!end.includes(tokens[0])) {
       let isT = true;
       if (isCurToken(tokens, "not")) {
@@ -440,50 +447,10 @@ function factsParse(
         const fact = notsParse(env, tokens);
         fact.isT = isT;
         out.push(fact);
-      } else if (tokens.length >= 2 && tokens[1] === "(") {
-        const fact = functionalOptParse(env, tokens, false); // false: When using factsParse, not prefix are already removed.
+      } else {
+        const fact = optParseWithNot(env, tokens, true); // false: When using factsParse, not prefix are already removed.
         fact.isT = isT;
         out.push(fact);
-      } else {
-        const opts = parseAreIsOpts(env, tokens);
-        out = [...out, ...opts];
-        //   const vars: string[] = [];
-        //   while (!IsAreKeywords.includes(tokens[0])) {
-        //     vars.push(shiftVar(tokens));
-        //     if (isCurToken(tokens, ",")) skip(tokens, ",");
-        //   }
-        //   const isAre = skip(tokens, IsAreKeywords) as string;
-        //   if (isCurToken(tokens, "not")) {
-        //     skip(tokens, "not");
-        //     isT = !isT;
-        //   }
-        // if (AreKeywords.includes(isAre)) {
-        //   if (vars.length < 2) {
-        //     handleParseError(
-        //       env,
-        //       "`are` requires more than 1 parameters.",
-        //       index,
-        //       start
-        //     );
-        //     throw Error();
-        //   }
-        // } else {
-        //   if (vars.length !== 1) {
-        //     handleParseError(
-        //       env,
-        //       "`is` requires exactly one parameter.",
-        //       index,
-        //       start
-        //     );
-        //     throw Error();
-        //   }
-        // }
-        // const optName = shiftVar(tokens);
-        // for (const v of vars) {
-        //   const fact = new OptNode(optName, [v]);
-        //   fact.isT = isT;
-        //   out.push(fact);
-        // }
       }
 
       if (isCurToken(tokens, ",")) skip(tokens, ",");
@@ -606,7 +573,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
   try {
     skip(tokens, DefKeywords);
 
-    const opt: OptNode = functionalOptParse(env, tokens, false);
+    const opt: OptNode = optParseWithNot(env, tokens, false);
 
     let req: FactNode[] = [];
     if (isCurToken(tokens, ":")) {
@@ -664,7 +631,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
 //       skip(tokens, "]");
 //     }
 
-//     const opt: OptNode = functionalOptParse(env, tokens, false);
+//     const opt: OptNode = optParseWithNot(env, tokens, false);
 //     const separator = shiftVar(tokens);
 
 //     const onlyIfs = factsParse(
@@ -757,7 +724,7 @@ function existParse(env: L_Env, tokens: string[]): ExistNode {
     const facts: OptNode[] = [];
 
     while (!StdStmtEnds.includes(tokens[0])) {
-      const fact = functionalOptParse(env, tokens, true);
+      const fact = optParseWithNot(env, tokens, true);
       facts.push(fact);
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
@@ -804,105 +771,105 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
   }
 }
 
-function parseVanillaOptWithNot(
-  env: L_Env,
-  tokens: string[],
-  withNot: boolean
-): OptNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function parseVanillaOptWithNot(
+//   env: L_Env,
+//   tokens: string[],
+//   withNot: boolean
+// ): OptNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    let isT = true;
+//   try {
+//     let isT = true;
 
-    if (isCurToken(tokens, "not") && withNot) {
-      isT = false;
-      skip(tokens, "not");
-    }
+//     if (isCurToken(tokens, "not") && withNot) {
+//       isT = false;
+//       skip(tokens, "not");
+//     }
 
-    if (tokens.length >= 2 && tokens[1] === "(") {
-      const fact = functionalOptParse(env, tokens, false);
-      fact.isT = isT;
-      return fact;
-    } else {
-      const varName = shiftVar(tokens);
-      const vars: string[] = [varName];
-      skip(tokens, IsKeywords);
+//     if (tokens.length >= 2 && tokens[1] === "(") {
+//       const fact = optParseWithNot(env, tokens, false);
+//       fact.isT = isT;
+//       return fact;
+//     } else {
+//       const varName = shiftVar(tokens);
+//       const vars: string[] = [varName];
+//       skip(tokens, IsKeywords);
 
-      if (isCurToken(tokens, "not") && withNot) {
-        skip(tokens, "not");
-        isT = !isT;
-      }
+//       if (isCurToken(tokens, "not") && withNot) {
+//         skip(tokens, "not");
+//         isT = !isT;
+//       }
 
-      const optName = shiftVar(tokens);
-      return new OptNode(optName, vars, isT);
-    }
-  } catch (error) {
-    handleParseError(env, "operator", index, start);
-    throw error;
-  }
-}
+//       const optName = shiftVar(tokens);
+//       return new OptNode(optName, vars, isT);
+//     }
+//   } catch (error) {
+//     handleParseError(env, "operator", index, start);
+//     throw error;
+//   }
+// }
 
-function parseAreIsOpts(env: L_Env, tokens: string[]): OptNode[] {
-  const start = tokens[0];
-  const index = tokens.length;
+// function parseAreIsOpts(env: L_Env, tokens: string[]): OptNode[] {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    const out: OptNode[] = [];
-    let isT = true;
+//   try {
+//     const out: OptNode[] = [];
+//     let isT = true;
 
-    if (isCurToken(tokens, "not")) {
-      isT = false;
-      skip(tokens, "not");
-    }
+//     if (isCurToken(tokens, "not")) {
+//       isT = false;
+//       skip(tokens, "not");
+//     }
 
-    const vars: string[] = [];
-    while (!IsAreKeywords.includes(tokens[0])) {
-      vars.push(shiftVar(tokens));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    const isAre = skip(tokens, IsAreKeywords) as string;
+//     const vars: string[] = [];
+//     while (!IsAreKeywords.includes(tokens[0])) {
+//       vars.push(shiftVar(tokens));
+//       if (isCurToken(tokens, ",")) skip(tokens, ",");
+//     }
+//     const isAre = skip(tokens, IsAreKeywords) as string;
 
-    if (isCurToken(tokens, "not")) {
-      skip(tokens, "not");
-      isT = !isT;
-    }
+//     if (isCurToken(tokens, "not")) {
+//       skip(tokens, "not");
+//       isT = !isT;
+//     }
 
-    if (AreKeywords.includes(isAre)) {
-      if (vars.length < 2) {
-        handleParseError(
-          env,
-          "`are` requires more than 1 parameters.",
-          index,
-          start
-        );
-        throw Error();
-      }
-    } else {
-      if (vars.length !== 1) {
-        handleParseError(
-          env,
-          "`is` requires exactly one parameter.",
-          index,
-          start
-        );
-        throw Error();
-      }
-    }
+//     if (AreKeywords.includes(isAre)) {
+//       if (vars.length < 2) {
+//         handleParseError(
+//           env,
+//           "`are` requires more than 1 parameters.",
+//           index,
+//           start
+//         );
+//         throw Error();
+//       }
+//     } else {
+//       if (vars.length !== 1) {
+//         handleParseError(
+//           env,
+//           "`is` requires exactly one parameter.",
+//           index,
+//           start
+//         );
+//         throw Error();
+//       }
+//     }
 
-    const optName = shiftVar(tokens);
-    for (const v of vars) {
-      const fact = new OptNode(optName, [v]);
-      fact.isT = isT;
-      out.push(fact);
-    }
+//     const optName = shiftVar(tokens);
+//     for (const v of vars) {
+//       const fact = new OptNode(optName, [v]);
+//       fact.isT = isT;
+//       out.push(fact);
+//     }
 
-    return out;
-  } catch (error) {
-    handleParseError(env, "operator", index, start);
-    throw error;
-  }
-}
+//     return out;
+//   } catch (error) {
+//     handleParseError(env, "operator", index, start);
+//     throw error;
+//   }
+// }
 
 function orParse(env: L_Env, tokens: string[]): OrNode {
   const start = tokens[0];
