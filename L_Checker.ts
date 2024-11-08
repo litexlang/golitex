@@ -6,8 +6,14 @@ import * as L_FactStorage from "./L_FactStorage.ts";
 
 export function check(env: L_Env, toCheck: FactNode): RType {
   if (toCheck instanceof OptNode) {
-    const out = checkOpt(env, toCheck);
-    return out;
+    let out = checkOpt(env, toCheck);
+    if (out === RType.Unknown) {
+      out = checkOpt(env, toCheck.copyWithoutIsT(!toCheck.isT));
+    }
+    if (out === RType.True) {
+      env.newMessage(`False: ${toCheck}`);
+      return RType.False;
+    }
   } else if (toCheck instanceof IfIffNode) {
     return checkIfThen(env, toCheck);
   } else if (toCheck instanceof OrNode) {

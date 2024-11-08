@@ -62,7 +62,7 @@ export class IfIffNode extends FactNode {
     super(isT);
   }
 
-  override copyWithoutIsT(newIsT: boolean): FactNode {
+  override copyWithoutIsT(newIsT: boolean): IfIffNode {
     return new IfIffNode(
       this.vars,
       this.req,
@@ -126,7 +126,7 @@ export class OptNode extends FactNode {
     super(isT);
   }
 
-  override copyWithoutIsT(newIsT: boolean): FactNode {
+  override copyWithoutIsT(newIsT: boolean): OptNode {
     return new OptNode(this.fullName, this.vars, newIsT);
   }
 

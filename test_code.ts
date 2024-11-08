@@ -458,6 +458,7 @@ const 三段论 = [
   "let Socrates : Socrates is human;",
   // Check: "Socrates is mortal"
   "Socrates is mortal;",
+  "Socrates is not mortal;", // False
   // Introduce a variable "god", "god" has property that "god is not mortal"
   "let god : god is not mortal;",
   // prove by contradiction: to show "god is not human", we assume "god is human"
@@ -517,6 +518,7 @@ const testList52 = [
   "def obj3(x) => {obj2(x)};",
   "def obj4(x,a) => {};",
   "let a : a is obj2;",
+  "if x : not obj2(x) => {not obj3(x)};",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
@@ -570,7 +572,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList45: [testList45, false],
   testList46: [testList46, false],
   byList: [byList, false],
-  三段论: [三段论, false],
+  三段论: [三段论, true],
   testList47: [testList47, false],
   testList48: [testList48, false],
   testList49: [testList49, false],

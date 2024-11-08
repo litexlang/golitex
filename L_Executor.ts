@@ -28,6 +28,8 @@ export const DEBUG_DICT = {
   let: true,
 };
 
+export const CheckFalse = true;
+
 export enum RType {
   Error,
   True,
