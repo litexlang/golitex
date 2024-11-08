@@ -100,7 +100,7 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
       toDecl.vars,
       [decl, ...toDecl.req],
       toDecl.onlyIfs,
-      true,
+      false,
       toDecl.byName
     );
     ok = storeIfThen(env, ifThen, [], true);
@@ -113,7 +113,7 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
         toDecl.vars,
         [decl, ...toDecl.req],
         toDecl.onlyIfs,
-        true,
+        false,
         toDecl.byName
       ),
       [],
@@ -126,7 +126,7 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
         toDecl.vars,
         [...toDecl.req, ...toDecl.onlyIfs],
         [decl],
-        true,
+        false,
         toDecl.byName
       ),
       [],
@@ -462,16 +462,15 @@ function storeContrapositiveFacts(
     allStoredFactReq = [...allStoredFactReq, ...r.req];
   }
 
-  allStoredFactReq.push(fact.copyWithoutIsT(!fact.isT));
+  const factInverse = fact.copyWithoutIsT(!fact.isT);
 
-  // -1 is because the last element is the not factReq, but fact.
-  for (let i = 0; i < allStoredFactReq.length - 1; i++) {
+  for (let i = 0; i < allStoredFactReq.length; i++) {
+    const r = allStoredFactReq.filter((_, index) => index !== i);
+    r.push(factInverse);
     const ifThen = new IfIffNode(
       freeVars,
-      allStoredFactReq
-        .filter((_, index) => index !== i)
-        .map((e) => e.copyWithoutIsT(!e.isT)),
-      [allStoredFactReq[i]],
+      r,
+      [allStoredFactReq[i].copyWithoutIsT(!allStoredFactReq[i].isT)],
       true,
       undefined,
       false
