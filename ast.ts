@@ -73,7 +73,7 @@ export class IfIffNode extends FactNode {
     );
   }
 
-  override useMapToCopy(map: Map<string, string>): FactNode {
+  override useMapToCopy(map: Map<string, string>): IfIffNode {
     const newVars = [...this.vars];
     const req = this.req.map((e) => e.useMapToCopy(map));
     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));

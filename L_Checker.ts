@@ -158,7 +158,9 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
         }
         //! WARNING: I GUESS IF-THEN HERE IS BUGGY
         else if (req instanceof IfIffNode) {
-          const out = checkIfThen(newEnv, req); // ? UNTESTED
+          const newReq = req.useMapToCopy(map);
+
+          const out = checkIfThen(newEnv, newReq); // ? UNTESTED
           // const out = checkOpt(newEnv, toCheck);
           if (out === RType.True) continue;
           else if (out === RType.Error) {
@@ -171,7 +173,11 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
         }
         // OrNode
         else if (req instanceof OrNode) {
-          const out = checkOr(newEnv, req);
+          const newReq: FactNode[] = [];
+          for (const f of req.facts) {
+            newReq.push(f.useMapToCopy(map));
+          }
+          const out = checkOr(newEnv, new OrNode(newReq, req.isT));
           if (out === RType.True) continue;
           else if (out === RType.Error) {
             newEnv.getMessages().forEach((e) => env.newMessage(e));
