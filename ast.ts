@@ -30,6 +30,12 @@ export class FactNode extends L_Node {
   }
 }
 
+export class ExistNode extends FactNode {
+  constructor(public vars: string[], public facts: OptNode[], isT: boolean) {
+    super(isT);
+  }
+}
+
 export class OrNode extends FactNode {
   constructor(public facts: FactNode[], isT: boolean = true) {
     super(isT);
@@ -278,17 +284,11 @@ export class ReturnNode extends L_Node {
   }
 }
 
-export class ReturnExistNode extends L_Node {
-  constructor(public factNames: string[]) {
-    super();
-  }
-}
-
-export class ExistNode extends L_Node {
-  constructor(public facts: OptNode[]) {
-    super();
-  }
-}
+// export class ReturnExistNode extends L_Node {
+//   constructor(public factNames: string[]) {
+//     super();
+//   }
+// }
 
 export class ByNode extends L_Node {
   constructor(

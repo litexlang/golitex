@@ -12,7 +12,7 @@ import {
   LocalEnvNode,
   ReturnNode,
   ExistNode,
-  ReturnExistNode,
+  // ReturnExistNode,
   ByNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
@@ -62,7 +62,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   PostfixProve: postfixProveExec,
   LocalEnvNode: localEnvExec,
   ReturnNode: returnExec,
-  ReturnExistNode: returnExistExec,
+  // ReturnExistNode: returnExistExec,
   ByNode: byExec,
 };
 
@@ -642,36 +642,36 @@ function existExec(env: L_Env, node: ExistNode): RType {
   }
 }
 
-function returnExistExec(env: L_Env, node: ReturnExistNode): RType {
-  try {
-    for (const factName of node.factNames) {
-      if (
-        !(
-          env.inHaves(factName) &&
-          env.optDeclared(factName) &&
-          !env.optDeclaredHere(factName)
-        )
-      ) {
-        env.newMessage(
-          `${factName} must be declared outside current environment and exist of this operator should be checked first.`
-        );
-        return RType.Error;
-      }
-    }
+// function returnExistExec(env: L_Env, node: ReturnExistNode): RType {
+//   try {
+//     for (const factName of node.factNames) {
+//       if (
+//         !(
+//           env.inHaves(factName) &&
+//           env.optDeclared(factName) &&
+//           !env.optDeclaredHere(factName)
+//         )
+//       ) {
+//         env.newMessage(
+//           `${factName} must be declared outside current environment and exist of this operator should be checked first.`
+//         );
+//         return RType.Error;
+//       }
+//     }
 
-    const father = env.getFather();
-    if (father) {
-      for (const factName of node.factNames) {
-        father.newHave(factName);
-      }
-    }
+//     const father = env.getFather();
+//     if (father) {
+//       for (const factName of node.factNames) {
+//         father.newHave(factName);
+//       }
+//     }
 
-    return RType.True;
-  } catch {
-    env.newMessage("return_exist");
-    return RType.Error;
-  }
-}
+//     return RType.True;
+//   } catch {
+//     env.newMessage("return_exist");
+//     return RType.Error;
+//   }
+// }
 
 function byExec(env: L_Env, byNode: ByNode): RType {
   try {

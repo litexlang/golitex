@@ -8,14 +8,13 @@ import {
   IffDeclNode,
   FactNode,
   ProveNode,
-  ExistNode,
   HaveNode,
   OnlyIfDeclNode,
   PostfixProve,
   IfThenDeclNode,
   LocalEnvNode,
   ReturnNode,
-  ReturnExistNode,
+  // ReturnExistNode,
   ByNode,
   OrNode,
 } from "./ast.ts";
@@ -27,7 +26,6 @@ import {
   LetKeywords,
   ThenKeywords,
   ProveKeywords,
-  ExistKeywords,
   HaveKeywords,
   ProveByContradictionKeyword,
   OnlyIfKeywords,
@@ -42,7 +40,7 @@ import {
   OnlyIfThenKeywords,
   ContradictionKeyword,
   ReturnKeyword,
-  ReturnExistKeyword,
+  // ReturnExistKeyword,
   ByKeyword,
   OrKeywords,
   NotsKeyword,
@@ -126,10 +124,10 @@ const KeywordFunctionMap: {
   def: defParse,
   prove: proveParse,
   prove_by_contradiction: proveParse,
-  exist: existParse,
+  // exist: existParse,
   have: haveParse,
   return: returnParse,
-  return_exist: returnExistParse,
+  // return_exist: returnExistParse,
   by: byParse,
 };
 
@@ -254,13 +252,6 @@ function optParseWithNot(
     const vars: string[] = [];
     let isT = true;
 
-    if (parseNot) {
-      while (tokens[0] === "not") {
-        isT = !isT;
-        skip(tokens, "not");
-      }
-    }
-
     if (tokens.length >= 2 && tokens[1] === "(") {
       // parse functional operator
       name = shiftVar(tokens);
@@ -280,10 +271,8 @@ function optParseWithNot(
       skip(tokens, IsKeywords);
 
       if (parseNot && NotKeywords.includes(tokens[0])) {
-        while (NotKeywords.includes(tokens[0])) {
-          isT = !isT;
-          skip(tokens, NotKeywords);
-        }
+        isT = !isT;
+        skip(tokens, NotKeywords);
       }
 
       name = shiftVar(tokens);
@@ -706,48 +695,48 @@ function returnParse(env: L_Env, tokens: string[]): ReturnNode {
   }
 }
 
-function returnExistParse(env: L_Env, tokens: string[]): ReturnExistNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function returnExistParse(env: L_Env, tokens: string[]): ReturnExistNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, ReturnExistKeyword);
-    const names: string[] = [];
-    while (StdStmtEnds.includes(tokens[0])) {
-      names.push(shiftVar(tokens));
-      if (isCurToken(tokens, ",")) {
-        skip(tokens, ",");
-      }
-    }
+//   try {
+//     skip(tokens, ReturnExistKeyword);
+//     const names: string[] = [];
+//     while (StdStmtEnds.includes(tokens[0])) {
+//       names.push(shiftVar(tokens));
+//       if (isCurToken(tokens, ",")) {
+//         skip(tokens, ",");
+//       }
+//     }
 
-    return new ReturnExistNode(names);
-  } catch (error) {
-    handleParseError(env, "return_exist", index, start);
-    throw error;
-  }
-}
+//     return new ReturnExistNode(names);
+//   } catch (error) {
+//     handleParseError(env, "return_exist", index, start);
+//     throw error;
+//   }
+// }
 
-function existParse(env: L_Env, tokens: string[]): ExistNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function existParse(env: L_Env, tokens: string[]): ExistNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, ExistKeywords);
-    const facts: OptNode[] = [];
+//   try {
+//     skip(tokens, ExistKeywords);
+//     const facts: OptNode[] = [];
 
-    while (!StdStmtEnds.includes(tokens[0])) {
-      const fact = optParseWithNot(env, tokens, true);
-      facts.push(fact);
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, StdStmtEnds);
+//     while (!StdStmtEnds.includes(tokens[0])) {
+//       const fact = optParseWithNot(env, tokens, true);
+//       facts.push(fact);
+//       if (isCurToken(tokens, ",")) skip(tokens, ",");
+//     }
+//     skip(tokens, StdStmtEnds);
 
-    return new ExistNode(facts);
-  } catch (error) {
-    handleParseError(env, "Exist prove", index, start);
-    throw error;
-  }
-}
+//     return new ExistNode(facts);
+//   } catch (error) {
+//     handleParseError(env, "Exist prove", index, start);
+//     throw error;
+//   }
+// }
 
 function byParse(env: L_Env, tokens: string[]): ByNode {
   const start = tokens[0];
