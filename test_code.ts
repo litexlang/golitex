@@ -457,13 +457,15 @@ const 三段论 = [
   // Introduce a variable "Socrates", "Socrates" has property that "Socrates is human"
   "let Socrates : Socrates is human;",
   // Check: "Socrates is mortal"
-  "Socrates is mortal;",
-  "Socrates is not mortal;", // False
+  // "Socrates is mortal;",
+  // "Socrates is mortal;", // False
+  "Socrates is not mortal;",
   // Introduce a variable "god", "god" has property that "god is not mortal"
   "let god : god is not mortal;",
   // prove by contradiction: to show "god is not human", we assume "god is human"
   // then we get {god is mortal;} which leads to contradiction:
   // "god is mortal" "god is not mortal" is valid at the same time.
+  "god is not human;",
   "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
 ];
 
@@ -596,7 +598,7 @@ export function testCode() {
       }
     }
 
-    // env.printAllStoredFacts();
+    env.printAllStoredFacts();
     // env.printClearMessage();
     // env.printBys();
   }

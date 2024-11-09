@@ -256,7 +256,7 @@ function optParseWithNot(
 
     if (parseNot) {
       while (tokens[0] === "not") {
-        isT = false;
+        isT = !isT;
         skip(tokens, "not");
       }
     }
@@ -429,27 +429,27 @@ function factsParse(
   try {
     const out: FactNode[] = [];
     while (!end.includes(tokens[0])) {
-      let isT = true;
-      if (isCurToken(tokens, "not")) {
-        isT = false;
-        skip(tokens, "not");
-      }
+      // let isT = true;
+      // if (isCurToken(tokens, "not")) {
+      //   isT = false;
+      //   skip(tokens, "not");
+      // }
 
       if (LogicalKeywords.includes(tokens[0])) {
         const fact = logicalOptParse(env, tokens);
-        fact.isT = isT;
+        // fact.isT = isT;
         out.push(fact);
       } else if (tokens[0] === "or") {
         const fact = orParse(env, tokens);
-        fact.isT = isT;
+        // fact.isT = isT;
         out.push(fact);
       } else if (tokens[0] === "nots") {
         const fact = notsParse(env, tokens);
-        fact.isT = isT;
+        // fact.isT = isT;
         out.push(fact);
       } else {
         const fact = optParseWithNot(env, tokens, true); // false: When using factsParse, not prefix are already removed.
-        fact.isT = isT;
+        // fact.isT = isT;
         out.push(fact);
       }
 

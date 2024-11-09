@@ -6,14 +6,8 @@ import * as L_FactStorage from "./L_FactStorage.ts";
 
 export function check(env: L_Env, toCheck: FactNode): RType {
   if (toCheck instanceof OptNode) {
-    let out = checkOpt(env, toCheck);
-    if (out === RType.Unknown) {
-      out = checkOpt(env, toCheck.copyWithoutIsT(!toCheck.isT));
-    }
-    if (out === RType.True) {
-      env.newMessage(`False: ${toCheck}`);
-      return RType.False;
-    }
+    const out = checkOpt(env, toCheck);
+    return out;
   } else if (toCheck instanceof IfIffNode) {
     return checkIfThen(env, toCheck);
   } else if (toCheck instanceof OrNode) {
@@ -84,6 +78,8 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
   }
 
   for (const storedFact of storedFacts) {
+    if (storedFact.isT !== toCheck.isT) continue;
+
     if (toCheck.vars.length !== storedFact.vars.length) {
       env.newMessage(
         `Invalid number of arguments: need ${storedFact.vars.length}, get ${toCheck.vars.length}`
@@ -105,6 +101,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
     let unknown = false;
     const map = new Map<string, string>();
 
+    //! I GUESS THE FOLLOWING LOGIC SHOULD BE REPLACED BY COPY_WITH_MAP
     const freeVarsOfAllLevels = storedFact.getAllFreeVars();
     // toCheck.vars.length === storedFact.vars.length
     for (let i = 0; i < storedFact.vars.length; i++) {
@@ -218,6 +215,8 @@ function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
   for (const fact of facts) {
     const frees = fact.getAllFreeVars();
     if (
+      //! UPDATE: NOT SURE fact.isT === toCheck.isT should be included.
+      // fact.isT === toCheck.isT &&
       fact.isNoReq() &&
       // toCheck.vars.length === fact.vars.length &&
       toCheck.vars.every(

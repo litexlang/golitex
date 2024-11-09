@@ -35,7 +35,7 @@ export class StoredFact {
   ) {}
 
   toString() {
-    const notWords = this.isT ? "[not] " : "";
+    const notWords = this.isT === false ? "[not] " : "";
     const varsWords = this.vars.length > 0 ? this.vars.join(", ") : "";
     const reqWords =
       this.req.length > 0
