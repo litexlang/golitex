@@ -429,29 +429,8 @@ function factsParse(
   try {
     const out: FactNode[] = [];
     while (!end.includes(tokens[0])) {
-      // let isT = true;
-      // if (isCurToken(tokens, "not")) {
-      //   isT = false;
-      //   skip(tokens, "not");
-      // }
-
-      if (LogicalKeywords.includes(tokens[0])) {
-        const fact = logicalOptParse(env, tokens);
-        // fact.isT = isT;
-        out.push(fact);
-      } else if (tokens[0] === "or") {
-        const fact = orParse(env, tokens);
-        // fact.isT = isT;
-        out.push(fact);
-      } else if (tokens[0] === "nots") {
-        const fact = notsParse(env, tokens);
-        // fact.isT = isT;
-        out.push(fact);
-      } else {
-        const fact = optParseWithNot(env, tokens, true); // false: When using factsParse, not prefix are already removed.
-        // fact.isT = isT;
-        out.push(fact);
-      }
+      const fact = factParse(env, tokens);
+      out.push(fact);
 
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
@@ -459,6 +438,39 @@ function factsParse(
     if (skipEnd) skip(tokens, end);
 
     return out;
+  } catch (error) {
+    handleParseError(env, "fact", index, start);
+    throw error;
+  }
+}
+
+function factParse(env: L_Env, tokens: string[]): FactNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    let isT = true;
+    if (isCurToken(tokens, "not")) {
+      isT = false;
+      skip(tokens, "not");
+    }
+
+    let fact: FactNode;
+    if (LogicalKeywords.includes(tokens[0])) {
+      fact = logicalOptParse(env, tokens);
+      fact.isT = isT ? fact.isT : !fact.isT;
+    } else if (tokens[0] === "or") {
+      fact = orParse(env, tokens);
+      fact.isT = isT ? fact.isT : !fact.isT;
+    } else if (tokens[0] === "nots") {
+      fact = notsParse(env, tokens);
+      fact.isT = isT ? fact.isT : !fact.isT;
+    } else {
+      fact = optParseWithNot(env, tokens, true); // false: When using factsParse, not prefix are already removed.
+      fact.isT = isT ? fact.isT : !fact.isT;
+    }
+
+    return fact;
   } catch (error) {
     handleParseError(env, "fact", index, start);
     throw error;

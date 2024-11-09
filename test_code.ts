@@ -523,6 +523,12 @@ const testList52 = [
   "if x : not obj2(x) => {not obj3(x)};",
 ];
 
+const testList53 = [
+  "def obj(x) => {};",
+  "def obj2(x) => {};",
+  "know not if x : obj(x) => {obj2(x)};",
+];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -581,6 +587,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList50: [testList50, false],
   testList51: [testList51, false],
   testList52: [testList52, false],
+  testList53: [testList53, true],
 };
 
 export function testCode() {
@@ -591,39 +598,31 @@ export function testCode() {
 
     for (let i = 0; i < exprs[0].length; i++) {
       const expr = exprs[0][i];
-      const out = runExprs(env, expr);
-      if (out === undefined) {
-        env.printClearMessage();
-        continue;
-      }
+      runExprs(env, expr);
     }
-
-    env.printAllStoredFacts();
-    // env.printClearMessage();
-    // env.printBys();
   }
 }
 
 export function runExprs(env: L_Env, expr: string) {
   try {
+    console.log(`-----\n***  source code  ***\n${expr}\n`);
     const tokens = L_Scan(expr);
     const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
-    // const nodes = L_Parser.L_StmtsParse(env, tokens);
     if (nodes === undefined) {
-      return undefined;
+      throw Error();
     }
     const result: RType[] = [];
     for (const node of nodes) {
       const out = L_Executor.nodeExec(env, node);
       result.push(out);
     }
-    console.log(`-----\n***  source code  ***\n${expr}\n`);
     console.log("***  results  ***\n");
     env.printClearMessage();
     console.log();
 
     return result;
   } catch {
+    env.printClearMessage();
     return undefined;
   }
 }
