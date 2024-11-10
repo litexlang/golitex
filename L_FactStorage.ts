@@ -192,12 +192,8 @@ function storeIfThen(
       }
 
       // declareAndStoreExist(env);
-      return declareAndStoreExist(
-        env,
-        ExistNode.ifThenToExist(ifThen),
-        [],
-        true
-      );
+      const exist = ExistNode.ifThenToExist(ifThen);
+      return declareAndStoreExist(env, exist, [], true);
     }
   } catch {
     return false;

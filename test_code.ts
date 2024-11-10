@@ -528,8 +528,10 @@ const testList53 = [
   "def obj2(x) => {};",
   "know exist x: obj(x) => {} [Exist-Of-Obj];",
   "know not if x : obj(x) => {obj2(x)}[no-obj-is-obj2];",
-  "let y:y is obj;",
+  "let y , z :y is obj;",
   "st Exist-Of-Obj(y);",
+  "st Exist-Of-Obj(z);",
+  "st no-obj-is-obj2(z);",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {

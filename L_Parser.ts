@@ -47,6 +47,7 @@ import {
   NotsKeyword,
   NotKeywords,
   ExistKeyword,
+  STKeyword,
 } from "./common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -766,7 +767,7 @@ function stParse(env: L_Env, tokens: string[]): STNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, ByKeyword);
+    skip(tokens, STKeyword);
     const byName = shiftVar(tokens);
     skip(tokens, "(");
     const vars: string[] = [];
