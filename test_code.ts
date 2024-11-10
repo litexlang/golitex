@@ -526,8 +526,8 @@ const testList52 = [
 const testList53 = [
   "def obj(x) => {};",
   "def obj2(x) => {};",
-  "know exist x: obj(x) => {} [Exist-Of-Obj];",
-  // "know not if x : obj(x) => {obj2(x)};",
+  // "know exist x: obj(x) => {} [Exist-Of-Obj];",
+  "know not if x : obj(x) => {obj2(x)}[no-obj-is-obj2];",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {

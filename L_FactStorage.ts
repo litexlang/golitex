@@ -185,6 +185,12 @@ function storeIfThen(
 
       return true;
     } else {
+      if (ifThen.byName === undefined) {
+        env.newMessage(
+          `Failed to store ${ifThen}, because it's suppose to have a name.`
+        );
+      }
+
       const nots = new OrNode(
         ifThen.onlyIfs.map((e) => {
           e.isT = !e.isT;

@@ -46,6 +46,10 @@ export class OrNode extends FactNode {
   override copyWithoutIsT(newIsT: boolean): FactNode {
     return new OrNode(this.facts, newIsT);
   }
+
+  override toString(): string {
+    return `ors{${this.facts.map((e) => e.toString()).join(", ")}}`;
+  }
 }
 
 export class IfIffNode extends FactNode {

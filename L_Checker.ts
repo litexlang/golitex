@@ -1,4 +1,11 @@
-import { ByNode, FactNode, IfIffNode, OptNode, OrNode } from "./ast.ts";
+import {
+  ByNode,
+  ExistNode,
+  FactNode,
+  IfIffNode,
+  OptNode,
+  OrNode,
+} from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact } from "./L_FactStorage.ts";
@@ -12,12 +19,19 @@ export function check(env: L_Env, toCheck: FactNode): RType {
     return checkIfThen(env, toCheck);
   } else if (toCheck instanceof OrNode) {
     return checkOr(env, toCheck);
+  } else if (toCheck instanceof ExistNode) {
+    return checkExist(env, toCheck);
   }
 
   return RType.Unknown;
 }
 
 export function checkIfThen(env: L_Env, toCheck: IfIffNode): RType {
+  if (toCheck.isT === false) {
+    env.newMessage(`not-if-then fact ${toCheck} can not be checked directly.`);
+    return RType.Error;
+  }
+
   let out = openEnvAndCheck(env, toCheck);
   if (out !== RType.True) return out;
   if (toCheck.isIff) {
@@ -344,6 +358,34 @@ function checkOr(env: L_Env, toCheck: OrNode): RType {
     }
 
     return RType.Unknown;
+  } catch {
+    return RType.Error;
+  }
+}
+
+function checkExist(env: L_Env, toCheck: ExistNode): RType {
+  try {
+    if (toCheck.isT) {
+      env.newMessage(`exist-type fact ${toCheck} can not be checked directly`);
+      return RType.Error;
+    }
+
+    const nots = new OrNode(
+      toCheck.onlyIfs.map((e) => {
+        e.isT = !e.isT;
+        return e;
+      }),
+      true
+    );
+    const ifThen = new IfIffNode(
+      toCheck.vars,
+      toCheck.req,
+      [nots],
+      true,
+      toCheck.byName,
+      false
+    );
+    return checkIfThen(env, ifThen);
   } catch {
     return RType.Error;
   }
