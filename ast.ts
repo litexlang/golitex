@@ -121,6 +121,44 @@ export class ExistNode extends IfIffNode {
   override toString(): string {
     return `${this.vars}: ${[...this.req, ...this.onlyIfs].join(", ")}`;
   }
+
+  getContraPositive() {
+    const nots = new OrNode(
+      this.onlyIfs.map((e) => {
+        e.isT = !e.isT;
+        return e;
+      }),
+      true
+    );
+    const ifThen = new IfIffNode(
+      this.vars,
+      this.req,
+      [nots],
+      true,
+      this.byName,
+      false
+    );
+    return ifThen;
+  }
+
+  static ifThenToExist(ifThen: IfIffNode): ExistNode {
+    if (ifThen.isT !== false || ifThen.byName === undefined) throw Error;
+    const nots = new OrNode(
+      ifThen.onlyIfs.map((e) => {
+        e.isT = !e.isT;
+        return e;
+      })
+    );
+
+    return new ExistNode(
+      ifThen.vars,
+      ifThen.req,
+      [nots],
+      true,
+      ifThen.byName,
+      false
+    );
+  }
 }
 
 // export class IfIffNode extends LogicalOptNode {}
@@ -300,6 +338,16 @@ export class ByNode extends L_Node {
     public vars: string[],
     public onlyIfs: FactNode[]
   ) {
+    super();
+  }
+
+  override toString() {
+    return `${this.byName}(${this.vars.join(", ")}) is valid`;
+  }
+}
+
+export class STNode extends L_Node {
+  constructor(public byName: string, public vars: string[]) {
     super();
   }
 

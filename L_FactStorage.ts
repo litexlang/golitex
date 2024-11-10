@@ -191,23 +191,13 @@ function storeIfThen(
         );
       }
 
-      const nots = new OrNode(
-        ifThen.onlyIfs.map((e) => {
-          e.isT = !e.isT;
-          return e;
-        }),
+      // declareAndStoreExist(env);
+      return declareAndStoreExist(
+        env,
+        ExistNode.ifThenToExist(ifThen),
+        [],
         true
       );
-      const exist = new ExistNode(
-        ifThen.vars,
-        ifThen.req,
-        [nots],
-        true,
-        ifThen.byName,
-        false
-      );
-      const ok = storeExist(env, exist, req, storeContrapositive);
-      return ok;
     }
   } catch {
     return false;
@@ -452,6 +442,30 @@ export function storeFactInStoredBy(
   }
 }
 
+function declareAndStoreExist(
+  env: L_Env,
+  fact: ExistNode,
+  req: StoredReq[],
+  isT: boolean = false
+): boolean {
+  try {
+    if (fact.byName === undefined) {
+      env.newMessage(`${fact.byName} has already declared as st name.`);
+      throw Error();
+    }
+
+    const newReq = [
+      ...req,
+      new StoredReq(fact.vars, [...fact.req, ...fact.onlyIfs]),
+    ];
+    const toBeStored = new StoredFact(fact.vars, newReq, isT);
+
+    return env.newExist(fact.byName, toBeStored);
+  } catch {
+    throw Error();
+  }
+}
+
 export function storeFactAndBy(
   env: L_Env,
   fact: FactNode,
@@ -461,7 +475,7 @@ export function storeFactAndBy(
     if (fact instanceof OptNode) {
       return storeOpt(env, fact as OptNode, [], storeContrapositive);
     } else if (fact instanceof ExistNode) {
-      return storeExist(env, fact, [], storeContrapositive);
+      return declareAndStoreExist(env, fact, [], true);
     } else if (fact instanceof IfIffNode) {
       let ok = storeIfThen(env, fact, [], storeContrapositive);
       if (!ok) {
@@ -515,7 +529,7 @@ function storeContrapositiveFacts(
   return true;
 }
 
-function storeExist(
+export function storeExistFact(
   env: L_Env,
   fact: ExistNode,
   req: StoredReq[],
@@ -527,24 +541,15 @@ function storeExist(
         env.newMessage(`Failed to store ${fact}, name undefined.`);
         return false;
       }
-      return env.newExist(fact.byName, fact);
+
+      return declareAndStoreExist(env, fact, req, true);
     } else {
-      const nots = new OrNode(
-        fact.onlyIfs.map((e) => {
-          e.isT = !e.isT;
-          return e;
-        }),
-        true
+      const ok = storeIfThen(
+        env,
+        fact.getContraPositive(),
+        req,
+        storeContrapositive
       );
-      const ifThen = new IfIffNode(
-        fact.vars,
-        fact.req,
-        [nots],
-        true,
-        fact.byName,
-        false
-      );
-      const ok = storeIfThen(env, ifThen, req, storeContrapositive);
       return ok;
     }
   } catch {

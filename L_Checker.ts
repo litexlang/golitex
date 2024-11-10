@@ -5,6 +5,7 @@ import {
   IfIffNode,
   OptNode,
   OrNode,
+  STNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
@@ -250,8 +251,12 @@ export function checkOptInHave(env: L_Env, opt: OptNode): RType {
 }
 
 // TODO:
-export function checkBy(env: L_Env, byNode: ByNode): RType {
-  const storedFact: undefined | StoredFact = env.getBy(byNode.byName);
+export function checkBy(env: L_Env, byNode: ByNode | STNode): RType {
+  let storedFact: undefined | StoredFact = undefined;
+
+  if (byNode instanceof ByNode) storedFact = env.getBy(byNode.byName);
+  else if (byNode instanceof STNode) storedFact = env.getSt(byNode.byName);
+
   if (storedFact == undefined) {
     env.newMessage(`${byNode.byName} not declared.`);
     return RType.Error;
@@ -336,6 +341,12 @@ export function checkBy(env: L_Env, byNode: ByNode): RType {
 
 function checkOr(env: L_Env, toCheck: OrNode): RType {
   try {
+    if (toCheck.facts.length === 0) return RType.True;
+
+    if (toCheck.facts.length === 1) {
+      return check(env, toCheck.facts[0]);
+    }
+
     for (let i = 0; i < toCheck.facts.length; i++) {
       let valid = false;
       const newEnv = new L_Env(env);

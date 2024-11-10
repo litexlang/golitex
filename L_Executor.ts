@@ -13,7 +13,7 @@ import {
   ReturnNode,
   // ReturnExistNode,
   ByNode,
-  ExistNode,
+  STNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
@@ -64,6 +64,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   ReturnNode: returnExec,
   // ReturnExistNode: returnExistExec,
   ByNode: byExec,
+  STNode: byExec,
 };
 
 function execResult(out: RType, node: L_Node): string {
@@ -673,32 +674,36 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
 //   }
 // }
 
-function byExec(env: L_Env, byNode: ByNode): RType {
+function byExec(env: L_Env, byNode: ByNode | STNode): RType {
   try {
     const out = L_Checker.checkBy(env, byNode);
 
     if (out === RType.True) {
-      let ok = L_FactStorage.storeFactInStoredBy(env, byNode, true);
-      if (!ok) {
-        return RType.Error;
-      }
-
-      for (const fact of byNode.onlyIfs) {
-        //! THE REASON WHY WE DO NOT NEED TO CHECK WHETHER VARIABLES ARE NOT DOUBLE DECLARED
-        //! IS THAT IN BY I CAN NOT DECLARE VAR.
-        ok = L_FactStorage.store(env, fact, [], true);
+      if (byNode instanceof ByNode) {
+        let ok = L_FactStorage.storeFactInStoredBy(env, byNode, true);
         if (!ok) {
-          env.newMessage(`Failed to store ${fact}`);
           return RType.Error;
         }
-      }
 
-      // check onlyIf in by
-      for (const onlyIf of byNode.onlyIfs) {
-        const out = L_Checker.check(env, onlyIf);
-        if (out !== RType.True) {
-          return env.onFail(`Failed to check ${onlyIf}`, out);
+        for (const fact of byNode.onlyIfs) {
+          //! THE REASON WHY WE DO NOT NEED TO CHECK WHETHER VARIABLES ARE NOT DOUBLE DECLARED
+          //! IS THAT IN BY I CAN NOT DECLARE VAR.
+          ok = L_FactStorage.store(env, fact, [], true);
+          if (!ok) {
+            env.newMessage(`Failed to store ${fact}`);
+            return RType.Error;
+          }
         }
+
+        // check onlyIf in by
+        for (const onlyIf of byNode.onlyIfs) {
+          const out = L_Checker.check(env, onlyIf);
+          if (out !== RType.True) {
+            return env.onFail(`Failed to check ${onlyIf}`, out);
+          }
+        }
+      } else {
+        (env.getSt(byNode.byName) as StoredFact).isT = true;
       }
     }
 

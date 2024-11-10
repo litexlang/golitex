@@ -1,4 +1,4 @@
-import { DeclNode, ExistNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
+import { DeclNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_FactStorage.ts";
 
@@ -11,13 +11,13 @@ export class L_Env {
   private storage = new Map<string, StoredFact[]>();
   private haves = new Set<string>();
   private bys = new Map<string, StoredFact>();
-  private exists = new Map<string, ExistNode>();
+  private exists = new Map<string, StoredFact>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
   }
 
-  newExist(s: string, exist: ExistNode): boolean {
+  newExist(s: string, exist: StoredFact): boolean {
     const out = this.exists.get(s);
     if (!out) {
       this.exists.set(s, exist);
@@ -45,6 +45,13 @@ export class L_Env {
     if (out !== undefined) return out;
     else if (this.father === undefined) return undefined;
     else return this.father.getBy(s);
+  }
+
+  getSt(s: string): undefined | StoredFact {
+    const out = this.exists.get(s);
+    if (out !== undefined) return out;
+    else if (this.father === undefined) return undefined;
+    else return this.father.getSt(s);
   }
 
   setBy(s: string, by: StoredFact) {

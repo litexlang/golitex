@@ -18,6 +18,7 @@ import {
   ByNode,
   OrNode,
   ExistNode,
+  STNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -130,6 +131,7 @@ const KeywordFunctionMap: {
   return: returnParse,
   // return_exist: returnExistParse,
   by: byParse,
+  st: stParse,
 };
 
 export function getNodesFromSingleNode(
@@ -755,6 +757,28 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
     return new ByNode(byName, vars, facts);
   } catch (error) {
     handleParseError(env, "by", index, start);
+    throw error;
+  }
+}
+
+function stParse(env: L_Env, tokens: string[]): STNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, ByKeyword);
+    const byName = shiftVar(tokens);
+    skip(tokens, "(");
+    const vars: string[] = [];
+    while (!isCurToken(tokens, ")")) {
+      vars.push(shiftVar(tokens));
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+    skip(tokens, ")");
+
+    return new STNode(byName, vars);
+  } catch (error) {
+    handleParseError(env, "st", index, start);
     throw error;
   }
 }
