@@ -113,7 +113,11 @@ export class IfIffNode extends FactNode {
   }
 }
 
-export class ExistNode extends IfIffNode {}
+export class ExistNode extends IfIffNode {
+  override toString(): string {
+    return `${this.vars}: ${[...this.req, ...this.onlyIfs].join(", ")}`;
+  }
+}
 
 // export class IfIffNode extends LogicalOptNode {}
 // export class OnlyIfNode extends LogicalOptNode {}

@@ -29,7 +29,6 @@ import {
   ProveKeywords,
   HaveKeywords,
   ProveByContradictionKeyword,
-  OnlyIfKeywords,
   IsKeywords,
   L_Keywords,
   IffKeywords,
@@ -466,12 +465,7 @@ function factParse(env: L_Env, tokens: string[]): FactNode {
   }
 }
 
-function logicalOptParse(
-  env: L_Env,
-  tokens: string[]
-  // ends: string[] = StdStmtEnds,
-  // skipEnd = true
-): IfIffNode {
+function logicalOptParse(env: L_Env, tokens: string[]): IfIffNode {
   const start = tokens[0];
   const index = tokens.length;
 

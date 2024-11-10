@@ -11,9 +11,9 @@ import {
   OptNode,
   LocalEnvNode,
   ReturnNode,
-  ExistNode,
   // ReturnExistNode,
   ByNode,
+  ExistNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";

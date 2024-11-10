@@ -233,6 +233,14 @@ export class L_Env {
     }
   }
 
+  printExists() {
+    console.log("\n----Exists----\n");
+    for (const [existName, exist] of this.exists) {
+      console.log(existName);
+      console.log(`${exist}\n`);
+    }
+  }
+
   onFail(m: string, t: RType = RType.Error, err: unknown = null): RType {
     if (err instanceof Error) this.newMessage(err.message);
     this.newMessage(m);
