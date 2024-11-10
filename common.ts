@@ -27,7 +27,7 @@ export const IffThenKeywords = ["<=>"];
 export const IfKeywords = ["if"];
 export const OnlyIfKeywords = ["only_if"];
 export const IffKeywords = ["iff"];
-export const ExistKeywords = ["exist"];
+export const ExistKeyword = "exist";
 export const DefKeywords = ["def"];
 
 export const SymbolsFactsSeparator = ":";
@@ -65,7 +65,7 @@ export const L_Keywords: string[] = [
   ...IfKeywords,
   ...OnlyIfKeywords,
   ...IffKeywords,
-  ...ExistKeywords,
+  ...ExistKeyword,
   ...DefKeywords,
   ...ProveKeywords,
   ...StdStmtEnds,

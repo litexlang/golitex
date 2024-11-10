@@ -53,7 +53,7 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   IffDeclNode: defExec,
   IfThenDeclNode: defExec,
-  ExistNode: existExec,
+  // ExistNode: existExec,
   OnlyIfDeclNode: defExec,
   KnowNode: knowExec,
   LetNode: letExec,
@@ -621,26 +621,26 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
   }
 }
 
-function existExec(env: L_Env, node: ExistNode): RType {
-  try {
-    for (const fact of node.facts) {
-      const out = L_Checker.check(env, fact);
-      if (out !== RType.True) {
-        env.newMessage(`Failed to check ${fact}`);
-        return out;
-      }
-    }
+// function existExec(env: L_Env, node: ExistNode): RType {
+//   try {
+//     for (const fact of node.facts) {
+//       const out = L_Checker.check(env, fact);
+//       if (out !== RType.True) {
+//         env.newMessage(`Failed to check ${fact}`);
+//         return out;
+//       }
+//     }
 
-    for (const fact of node.facts) {
-      env.newHave(fact.fullName);
-    }
+//     for (const fact of node.facts) {
+//       env.newHave(fact.fullName);
+//     }
 
-    return RType.True;
-  } catch {
-    env.newMessage("exist");
-    return RType.Error;
-  }
-}
+//     return RType.True;
+//   } catch {
+//     env.newMessage("exist");
+//     return RType.Error;
+//   }
+// }
 
 // function returnExistExec(env: L_Env, node: ReturnExistNode): RType {
 //   try {

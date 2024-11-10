@@ -1,4 +1,4 @@
-import { DeclNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
+import { DeclNode, ExistNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_FactStorage.ts";
 
@@ -11,9 +11,21 @@ export class L_Env {
   private storage = new Map<string, StoredFact[]>();
   private haves = new Set<string>();
   private bys = new Map<string, StoredFact>();
+  private exists = new Map<string, ExistNode>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  newExist(s: string, exist: ExistNode): boolean {
+    const out = this.exists.get(s);
+    if (!out) {
+      this.exists.set(s, exist);
+      return true;
+    } else {
+      this.newMessage(`exist ${s} already declared.`);
+      return false;
+    }
   }
 
   getDeclaredFact(s: string): DeclNode | undefined {

@@ -526,7 +526,8 @@ const testList52 = [
 const testList53 = [
   "def obj(x) => {};",
   "def obj2(x) => {};",
-  "know not if x : obj(x) => {obj2(x)};",
+  "know exist x: x is obj(x) [Exist-Of-Obj];",
+  // "know not if x : obj(x) => {obj2(x)};",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
@@ -580,14 +581,14 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList45: [testList45, false],
   testList46: [testList46, false],
   byList: [byList, false],
-  三段论: [三段论, true],
+  三段论: [三段论, false],
   testList47: [testList47, false],
   testList48: [testList48, false],
   testList49: [testList49, false],
   testList50: [testList50, false],
   testList51: [testList51, false],
   testList52: [testList52, false],
-  testList53: [testList53, true],
+  testList53: [testList53, false],
 };
 
 export function testCode() {

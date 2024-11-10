@@ -17,6 +17,7 @@ import {
   // ReturnExistNode,
   ByNode,
   OrNode,
+  ExistNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -45,6 +46,7 @@ import {
   OrKeywords,
   NotsKeyword,
   NotKeywords,
+  ExistKeyword,
 } from "./common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -420,7 +422,6 @@ function factsParse(
     while (!end.includes(tokens[0])) {
       const fact = factParse(env, tokens);
       out.push(fact);
-
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -447,18 +448,17 @@ function factParse(env: L_Env, tokens: string[]): FactNode {
     let fact: FactNode;
     if (LogicalKeywords.includes(tokens[0])) {
       fact = logicalOptParse(env, tokens);
-      fact.isT = isT ? fact.isT : !fact.isT;
     } else if (tokens[0] === "or") {
       fact = orParse(env, tokens);
-      fact.isT = isT ? fact.isT : !fact.isT;
     } else if (tokens[0] === "nots") {
       fact = notsParse(env, tokens);
-      fact.isT = isT ? fact.isT : !fact.isT;
+    } else if (tokens[0] === "exist") {
+      fact = logicalOptParse(env, tokens);
     } else {
       fact = optParseWithNot(env, tokens, true); // false: When using factsParse, not prefix are already removed.
-      fact.isT = isT ? fact.isT : !fact.isT;
     }
 
+    fact.isT = isT ? fact.isT : !fact.isT;
     return fact;
   } catch (error) {
     handleParseError(env, "fact", index, start);
@@ -476,11 +476,7 @@ function logicalOptParse(
   const index = tokens.length;
 
   try {
-    const type = skip(tokens, [
-      ...IfKeywords,
-      ...OnlyIfKeywords,
-      ...IffKeywords,
-    ]);
+    const type = skip(tokens, [...IfKeywords, ExistKeyword, ...IffKeywords]);
     if (type === undefined) throw Error();
     const separation = LogicalOptPairs[type];
 
@@ -515,14 +511,11 @@ function logicalOptParse(
     }
 
     if (IfKeywords.includes(type)) {
-      const out = new IfIffNode(vars, req, onlyIfs, true, byName);
-      return out;
-    } else if (OnlyIfKeywords.includes(type)) {
-      const out = new IfIffNode(vars, onlyIfs, req, true, byName);
-      return out;
+      return new IfIffNode(vars, req, onlyIfs, true, byName);
     } else if (IffKeywords.includes(type)) {
-      const out = new IfIffNode(vars, req, onlyIfs, true, byName, true);
-      return out;
+      return new IfIffNode(vars, req, onlyIfs, true, byName, true);
+    } else if (ExistKeyword === type) {
+      return new ExistNode(vars, req, onlyIfs, true, byName, false);
     }
 
     throw Error();
@@ -904,7 +897,7 @@ function notsParse(env: L_Env, tokens: string[]): OrNode {
 
     return new OrNode(facts, true);
   } catch (error) {
-    handleParseError(env, "operator", index, start);
+    handleParseError(env, "nots", index, start);
     throw error;
   }
 }

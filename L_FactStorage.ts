@@ -8,6 +8,7 @@ import {
   OnlyIfDeclNode,
   OptNode,
   OrNode,
+  ExistNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
@@ -443,6 +444,8 @@ export function storeFactAndBy(
       return true;
     } else if (fact instanceof OrNode) {
       return storeOr(env, fact, [], storeContrapositive);
+    } else if (fact instanceof ExistNode) {
+      return storeExist(env, fact, [], storeContrapositive);
     } else throw Error();
   } catch {
     env.newMessage(`Failed to store ${fact}`);
@@ -480,4 +483,36 @@ function storeContrapositiveFacts(
   }
 
   return true;
+}
+
+function storeExist(
+  env: L_Env,
+  fact: ExistNode,
+  req: StoredReq[],
+  storeContrapositive: boolean
+): boolean {
+  try {
+    if (fact.isT) {
+      if (fact.byName === undefined) {
+        env.newMessage(`Failed to store ${fact}, name undefined.`);
+        return false;
+      }
+      return env.newExist(fact.byName, fact);
+    } else {
+      const nots = new OrNode(fact.onlyIfs, true);
+      const ifThen = new IfIffNode(
+        fact.vars,
+        fact.req,
+        [nots],
+        true,
+        fact.byName,
+        false
+      );
+      const ok = storeIfThen(env, ifThen, req, storeContrapositive);
+      return ok;
+    }
+  } catch {
+    env.newMessage(`Failed to store '${fact}'`);
+    return false;
+  }
 }

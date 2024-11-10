@@ -30,12 +30,6 @@ export class FactNode extends L_Node {
   }
 }
 
-export class ExistNode extends FactNode {
-  constructor(public vars: string[], public facts: OptNode[], isT: boolean) {
-    super(isT);
-  }
-}
-
 export class OrNode extends FactNode {
   constructor(public facts: FactNode[], isT: boolean = true) {
     super(isT);
@@ -118,6 +112,8 @@ export class IfIffNode extends FactNode {
     return [...this.req, ...this.onlyIfs].every((e) => e.factsDeclared(env));
   }
 }
+
+export class ExistNode extends IfIffNode {}
 
 // export class IfIffNode extends LogicalOptNode {}
 // export class OnlyIfNode extends LogicalOptNode {}
