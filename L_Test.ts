@@ -546,9 +546,9 @@ const testList54 = [
 ];
 
 const testList55 = [
-  // "def obj(x) => {};",
-  // "def obj2(x) => {};",
-  // "def empty(x)  : x is obj st {};",
+  "def obj(x) => {};",
+  "def obj2(x) => {};",
+  "def empty(x)  : x is obj st {x is obj2};",
   "def obj0(x) st {};",
 ];
 

@@ -196,7 +196,11 @@ export class ExistNode extends LogicNode {
   }
 }
 export class IffNode extends LogicNode {}
-export class IfNode extends LogicNode {}
+export class IfNode extends LogicNode {
+  useByToDecl(): IfThenDeclNode {
+    return new DeclNode(this.byName, this.vars, this.req, this.onlyIfs);
+  }
+}
 
 // export class LogicNode extends LogicalOptNode {}
 // export class OnlyIfNode extends LogicalOptNode {}

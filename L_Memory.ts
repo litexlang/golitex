@@ -118,11 +118,12 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
     ok = storeIfThen(env, f, [], true);
     return ok;
   } else if (node instanceof ExistDeclNode) {
-    const r = [decl, ...node.req];
-    const onlyIfs = node.onlyIfs.map((e) => e.copyWithoutIsT(!e.isT));
-    const f = new LogicNode(node.vars, r, onlyIfs, true, node.byName);
-    ok = storeIfThen(env, f, [], true);
-    return ok;
+    // const r = [decl, ...node.req];
+    // const onlyIfs = new OrNode(node.onlyIfs, false);
+    // const f = new LogicNode(node.vars, r, [onlyIfs], true, node.byName);
+    // ok = storeIfThen(env, f, [], true);
+    // return ok;
+    return true;
   }
 
   return false;
