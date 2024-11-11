@@ -121,7 +121,7 @@ function haveExec(env: L_Env, node: HaveNode): RType {
     for (const f of node.facts) {
       const ok = f.factsDeclared(env);
       if (!ok) {
-        env.newMessage(`${f} not fully declared`);
+        env.newMessage(`Not all of operators in ${f} are declared`);
         return RType.Error;
       }
     }
@@ -169,7 +169,7 @@ function letExec(env: L_Env, node: LetNode): RType {
     for (const f of node.facts) {
       const ok = f.factsDeclared(env);
       if (!ok) {
-        env.newMessage(`${f} not fully declared`);
+        env.newMessage(`Not all of facts in ${f} are declared`);
         return RType.Error;
       }
     }
@@ -212,7 +212,7 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
     for (const f of node.facts) {
       const ok = f.factsDeclared(env);
       if (!ok) {
-        env.newMessage(`${f} not fully declared`);
+        env.newMessage(`Not all facts in ${f} are declared`);
         return RType.Error;
       }
     }

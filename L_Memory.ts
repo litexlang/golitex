@@ -108,33 +108,27 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
     return ok;
     // L_Memory.storeIfThenBy(env, ifThen, new StoredFact([], [], true));
   } else if (toDecl instanceof IffDeclNode) {
-    ok = storeIfThen(
-      env,
-      new LogicNode(
-        toDecl.vars,
-        [decl, ...toDecl.req],
-        toDecl.onlyIfs,
-        true,
-        // false,
-        toDecl.byName
-      ),
-      [],
-      true
+    let toStore = new LogicNode(
+      toDecl.vars,
+      [decl, ...toDecl.req],
+      toDecl.onlyIfs,
+      true,
+      // false,
+      toDecl.byName
     );
-    if (!ok) return false;
-    ok = storeIfThen(
-      env,
-      new LogicNode(
-        toDecl.vars,
-        [...toDecl.req, ...toDecl.onlyIfs],
-        [decl],
-        // false,
-        true,
-        toDecl.byName
-      ),
-      [],
-      true
+    ok = storeIfThen(env, toStore, [], true);
+    if (!ok) {
+      return false;
+    }
+    toStore = new LogicNode(
+      toDecl.vars,
+      [...toDecl.req, ...toDecl.onlyIfs],
+      [decl],
+      // false,
+      true,
+      toDecl.byName
     );
+    ok = storeIfThen(env, toStore, [], true);
     return ok;
   } else if (toDecl instanceof OnlyIfDeclNode) {
     ok = storeIfThen(
@@ -164,12 +158,8 @@ function storeIfThen(
   try {
     if (ifThen.isT) {
       for (const fact of ifThen.onlyIfs) {
-        const ok = store(
-          env,
-          fact,
-          [...req, new StoredReq(ifThen.vars, ifThen.req)],
-          storeContrapositive
-        );
+        const newReq = new StoredReq(ifThen.vars, ifThen.req);
+        const ok = store(env, fact, [...req, newReq], storeContrapositive);
         if (!ok) return false;
       }
 
@@ -231,10 +221,9 @@ function storeOpt(
     const notWords = fact.isT === false ? "[not]" : "";
     if (req.length > 0)
       env.newMessage(
-        `[new fact] ${notWords} ${fact.fullName}(${fact.vars}) <= ${req}`
+        `[fact] ${notWords} ${fact.fullName}(${fact.vars}) <= ${req}`
       );
-    else
-      env.newMessage(`[new fact] ${notWords} ${fact.fullName}(${fact.vars})`);
+    else env.newMessage(`[fact] ${notWords} ${fact.fullName}(${fact.vars})`);
   }
 
   return true;

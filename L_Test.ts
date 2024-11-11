@@ -546,6 +546,7 @@ const testList54 = [
   "let x : x is not obj;",
   "x is not obj;",
   "x is obj;",
+  "def obj3(x) <=> {x is obj};",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
@@ -592,7 +593,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, false],
+  setTheory: [setTheory, true],
   testList42: [testList42, false],
   testList43: [testList43, false],
   testList44: [testList44, false],
@@ -607,7 +608,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList51: [testList51, false],
   testList52: [testList52, false],
   testList53: [testList53, false],
-  testList54: [testList54, true],
+  testList54: [testList54, false],
 };
 
 export function testCode() {

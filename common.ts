@@ -56,9 +56,9 @@ export const STKeyword = "st";
 
 export const L_Keywords: string[] = [
   "#",
+  ...specialChars,
   ByKeyword,
   WhenKeyword,
-  ...specialChars,
   ...KnowTypeKeywords,
   ...ThenKeywords,
   ...OnlyIfThenKeywords,
