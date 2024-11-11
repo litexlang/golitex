@@ -5,7 +5,6 @@ import {
   LogicNode,
   OptNode,
   OrNode,
-  STNode,
   IfNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
@@ -269,11 +268,11 @@ export function checkOptInHave(env: L_Env, opt: OptNode): RType {
 }
 
 // TODO:
-export function checkBy(env: L_Env, byNode: ByNode | STNode): RType {
+export function checkBy(env: L_Env, byNode: ByNode): RType {
   let storedFact: undefined | StoredFact = undefined;
 
   if (byNode instanceof ByNode) storedFact = env.getBy(byNode.byName);
-  else if (byNode instanceof STNode) storedFact = env.getSt(byNode.byName);
+  // else if (byNode instanceof STNode) storedFact = env.getSt(byNode.byName);
 
   if (storedFact == undefined) {
     env.newMessage(`${byNode.byName} not declared.`);

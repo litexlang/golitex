@@ -261,10 +261,10 @@ export function store(
   storeContrapositive: boolean
 ): boolean {
   try {
-    if (fact instanceof ExistNode) {
-      const ok = storeExistFact(env, fact, req, storeContrapositive);
-      if (!ok) return false;
-    }
+    // if (fact instanceof ExistNode) {
+    //   const ok = storeExistFact(env, fact, req, storeContrapositive);
+    //   if (!ok) return false;
+    // }
     if (fact instanceof LogicNode) {
       const ok = storeIfThen(env, fact, req, storeContrapositive);
       if (!ok) return false;
@@ -521,37 +521,37 @@ function storeContrapositiveFacts(
   return true;
 }
 
-export function storeExistFact(
-  env: L_Env,
-  fact: ExistNode,
-  req: StoredReq[],
-  storeContrapositive: boolean
-): boolean {
-  try {
-    if (fact.isT) {
-      if (fact.byName === undefined) {
-        env.newMessage(`Failed to store ${fact}, name undefined.`);
-        return false;
-      }
+// export function storeExistFact(
+//   env: L_Env,
+//   fact: ExistNode,
+//   req: StoredReq[],
+//   storeContrapositive: boolean
+// ): boolean {
+//   try {
+//     if (fact.isT) {
+//       if (fact.byName === undefined) {
+//         env.newMessage(`Failed to store ${fact}, name undefined.`);
+//         return false;
+//       }
 
-      const storedSt = env.getSt(fact.byName);
-      if (storedSt === undefined)
-        return declareAndStoreExist(env, fact, req, true);
-      else {
-        storedSt.isT = true;
-        return true;
-      }
-    } else {
-      const ok = storeIfThen(
-        env,
-        fact.getContraPositive(),
-        req,
-        storeContrapositive
-      );
-      return ok;
-    }
-  } catch {
-    env.newMessage(`Failed to store '${fact}'`);
-    return false;
-  }
-}
+//       const storedSt = env.getSt(fact.byName);
+//       if (storedSt === undefined)
+//         return declareAndStoreExist(env, fact, req, true);
+//       else {
+//         storedSt.isT = true;
+//         return true;
+//       }
+//     } else {
+//       const ok = storeIfThen(
+//         env,
+//         fact.getContraPositive(),
+//         req,
+//         storeContrapositive
+//       );
+//       return ok;
+//     }
+//   } catch {
+//     env.newMessage(`Failed to store '${fact}'`);
+//     return false;
+//   }
+// }

@@ -13,7 +13,7 @@ import {
   ReturnNode,
   // ReturnExistNode,
   ByNode,
-  STNode,
+  // STNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
@@ -651,7 +651,7 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
 //   }
 // }
 
-function byExec(env: L_Env, byNode: ByNode | STNode): RType {
+function byExec(env: L_Env, byNode: ByNode): RType {
   try {
     const out = L_Checker.checkBy(env, byNode);
 
@@ -679,9 +679,10 @@ function byExec(env: L_Env, byNode: ByNode | STNode): RType {
             return env.onFail(`Failed to check ${onlyIf}`, out);
           }
         }
-      } else {
-        (env.getSt(byNode.byName) as StoredFact).isT = true;
       }
+      // else {
+      //   (env.getSt(byNode.byName) as StoredFact).isT = true;
+      // }
     }
 
     return out;

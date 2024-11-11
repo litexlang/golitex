@@ -5,16 +5,12 @@ import { StoredFact, StoredReq } from "./L_Memory.ts";
 export class L_Env {
   private messages: string[] = [];
   private declaredFacts = new Map<string, DeclNode>();
-  // private varsMap = new Map<string, string>();
-  // private fixFreeMap = new Map<string, string>();
   private declaredVars = new Set<string>();
   private storage = new Map<string, StoredFact[]>();
   private haves = new Set<string>();
 
-  // THE LOGIC of bys and exists are very much the same. The reason why I separate
-  // them is as a human being, it's more straightforward.
   private bys = new Map<string, StoredFact>();
-  private exists = new Map<string, StoredFact>();
+  private exists = new Map<string, StoredFact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
@@ -22,8 +18,9 @@ export class L_Env {
 
   newExist(s: string, exist: StoredFact): boolean {
     const out = this.exists.get(s);
-    if (!out) {
-      this.exists.set(s, exist);
+    if (out !== undefined) {
+      out.push(exist);
+      // this.exists.set(s, exist);
       return true;
     } else {
       this.newMessage(`exist ${s} already declared.`);
@@ -50,7 +47,7 @@ export class L_Env {
     else return this.father.getBy(s);
   }
 
-  getSt(s: string): undefined | StoredFact {
+  getSt(s: string): undefined | StoredFact[] {
     const out = this.exists.get(s);
     if (out !== undefined) return out;
     else if (this.father === undefined) return undefined;
