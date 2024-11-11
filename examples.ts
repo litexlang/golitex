@@ -264,7 +264,7 @@ function runExampleDict() {
 
   // env.printFacts();
   // env.printDeclFacts();
-  // L_FactStorage.printEnvFacts(env);
+  // L_Memory.printEnvFacts(env);
   // env.printAllStoredFacts();
   // env.printClearMessage();
   // env.printBys();

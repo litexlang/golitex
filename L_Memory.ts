@@ -106,7 +106,7 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
     );
     ok = storeIfThen(env, ifThen, [], true);
     return ok;
-    // L_FactStorage.storeIfThenBy(env, ifThen, new StoredFact([], [], true));
+    // L_Memory.storeIfThenBy(env, ifThen, new StoredFact([], [], true));
   } else if (toDecl instanceof IffDeclNode) {
     ok = storeIfThen(
       env,

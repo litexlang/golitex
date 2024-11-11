@@ -522,6 +522,7 @@ const testList52 = [
   "let a : a is obj2;",
   "if x : not obj2(x) => {not obj3(x)};",
   "if x : not obj(x) => {not obj3(x)};",
+  "a is obj2;",
 ];
 
 const testList53 = [

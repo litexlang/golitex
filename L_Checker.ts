@@ -10,7 +10,7 @@ import {
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact } from "./L_Memory.ts";
-import * as L_FactStorage from "./L_Memory.ts";
+import * as L_Memory from "./L_Memory.ts";
 
 export function check(env: L_Env, toCheck: ToCheckNode): RType {
   if (toCheck instanceof OptNode) {
@@ -56,13 +56,13 @@ export function checkIfThen(env: L_Env, toCheck: LogicNode): RType {
       if (!ok) return RType.Error;
     }
 
-    for (const f of toCheck.req) L_FactStorage.store(newEnv, f, [], true);
+    for (const f of toCheck.req) L_Memory.store(newEnv, f, [], true);
     for (const onlyIf of toCheck.onlyIfs) {
       const out = check(newEnv, onlyIf);
       if (out !== RType.True) return out;
       else {
         // checked facts in then are used as stored fact.
-        L_FactStorage.store(newEnv, toCheck, [], true);
+        L_Memory.store(newEnv, toCheck, [], true);
       }
     }
 
@@ -82,7 +82,7 @@ export function checkIfThen(env: L_Env, toCheck: LogicNode): RType {
  *  IN DIFFERENT LEVELS OF IFs in IF-THEN TYPE FACTS.
  */
 export function checkOpt(env: L_Env, toCheck: OptNode): RType {
-  const storedFacts: StoredFact[] | null = L_FactStorage.getStoredFacts(
+  const storedFacts: StoredFact[] | null = L_Memory.getStoredFacts(
     env,
     toCheck
   );
@@ -156,7 +156,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
             const out = checkOptLiterally(newEnv, toCheck);
             if (out === RType.True) {
               // store checked req as future stored facts.
-              L_FactStorage.store(newEnv, toCheck, [], true);
+              L_Memory.store(newEnv, toCheck, [], true);
               continue;
             } else if (out === RType.Error) {
               newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
@@ -170,7 +170,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
             unknown = true;
             break;
             // const toStore = new OptNode(req.fullName, fixedVars);
-            // L_FactStorage.store(newEnv, toStore, []);
+            // L_Memory.store(newEnv, toStore, []);
           }
         }
         //! WARNING: I GUESS IF-THEN HERE IS BUGGY
@@ -219,7 +219,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
 
 // check whether a variable in fact.vars is free or fixed at check time instead of run time.
 function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
-  const facts: StoredFact[] | null = L_FactStorage.getStoredFacts(env, toCheck);
+  const facts: StoredFact[] | null = L_Memory.getStoredFacts(env, toCheck);
 
   if (facts === null) {
     env.newMessage(`check Error: ${toCheck.fullName} not declared.`);
@@ -300,7 +300,7 @@ export function checkBy(env: L_Env, byNode: ByNode | STNode): RType {
           const out = checkOptLiterally(newEnv, toCheck);
           if (out === RType.True) {
             // store checked req as future stored facts.
-            L_FactStorage.store(newEnv, toCheck, [], true);
+            L_Memory.store(newEnv, toCheck, [], true);
             continue;
           } else if (out === RType.Error) {
             newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
@@ -314,7 +314,7 @@ export function checkBy(env: L_Env, byNode: ByNode | STNode): RType {
           unknown = true;
           break;
           // const toStore = new OptNode(req.fullName, fixedVars);
-          // L_FactStorage.store(newEnv, toStore, []);
+          // L_Memory.store(newEnv, toStore, []);
         }
       } else if (req instanceof LogicNode) {
         const out = checkIfThen(newEnv, req);
@@ -351,7 +351,7 @@ function checkOr(env: L_Env, toCheck: OrNode): RType {
       const newEnv = new L_Env(env);
       for (let j = 0; j < toCheck.facts.length; j++) {
         if (j === i) continue;
-        L_FactStorage.store(
+        L_Memory.store(
           newEnv,
           toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT),
           [],
