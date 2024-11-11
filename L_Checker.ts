@@ -197,9 +197,9 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
             break;
           }
         } else if (req instanceof ExistNode) {
-          const newReq = req.useMapToCopy(map);
+          const newReq: ExistNode = req.useMapToCopy(map) as ExistNode;
 
-          const out = checkExistInLogicReq(newEnv, newReq as ExistNode);
+          const out = checkExistInLogicReq(newEnv, newReq);
           if (out === RType.True) continue;
           else if (out === RType.Error) {
             newEnv.getMessages().forEach((e) => env.newMessage(e));

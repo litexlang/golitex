@@ -4,7 +4,6 @@ import {
   ToCheckNode,
   IffDeclNode,
   IfThenDeclNode,
-  LogicNode,
   OnlyIfDeclNode,
   OptNode,
   OrNode,

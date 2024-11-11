@@ -7,7 +7,6 @@ import {
   ProveNode,
   HaveNode,
   PostfixProve,
-  LogicNode,
   OptNode,
   LocalEnvNode,
   ReturnNode,
