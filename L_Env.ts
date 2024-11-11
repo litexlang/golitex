@@ -1,6 +1,6 @@
-import { DeclNode, FactNode, IfIffNode, OptNode } from "./ast.ts";
+import { DeclNode, ToCheckNode, LogicNode, OptNode } from "./ast.ts";
 import { RType } from "./L_Executor.ts";
-import { StoredFact, StoredReq } from "./L_FactStorage.ts";
+import { StoredFact, StoredReq } from "./L_Memory.ts";
 
 export class L_Env {
   private messages: string[] = [];
@@ -199,13 +199,13 @@ export class L_Env {
     return this.father;
   }
 
-  someVarsDeclaredHere(fact: FactNode, freeVars: string[]): boolean {
+  someVarsDeclaredHere(fact: ToCheckNode, freeVars: string[]): boolean {
     if (fact instanceof OptNode) {
       const out = fact.vars.some(
         (e) => !freeVars.includes(e) && this.declaredVars.has(e)
       );
       return out;
-    } else if (fact instanceof IfIffNode) {
+    } else if (fact instanceof LogicNode) {
       return (
         fact.onlyIfs.some((e) => this.someVarsDeclaredHere(e, fact.vars)) ||
         fact.req.some((e) => this.someVarsDeclaredHere(e, fact.vars))
@@ -215,10 +215,10 @@ export class L_Env {
     throw Error();
   }
 
-  someOptsDeclaredHere(fact: FactNode): boolean {
+  someOptsDeclaredHere(fact: ToCheckNode): boolean {
     if (fact instanceof OptNode) {
       return this.declaredFacts.get(fact.fullName) !== undefined;
-    } else if (fact instanceof IfIffNode) {
+    } else if (fact instanceof LogicNode) {
       return (
         fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) ||
         fact.req.some((e) => this.someOptsDeclaredHere(e))

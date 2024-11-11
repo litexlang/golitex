@@ -3,10 +3,10 @@ import {
   L_Node,
   LetNode,
   OptNode,
-  IfIffNode,
+  LogicNode,
   DeclNode,
   IffDeclNode,
-  FactNode,
+  ToCheckNode,
   ProveNode,
   HaveNode,
   OnlyIfDeclNode,
@@ -19,6 +19,7 @@ import {
   OrNode,
   ExistNode,
   STNode,
+  IffNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -190,7 +191,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
 
     const knowNode: KnowNode = new KnowNode([], strict);
     while (!StdStmtEnds.includes(tokens[0])) {
-      const outs: FactNode[] = factsParse(
+      const outs: ToCheckNode[] = factsParse(
         env,
         tokens,
         [...StdStmtEnds, ","],
@@ -329,7 +330,7 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
       skip(tokens, ProveKeywords);
     }
 
-    let toProve: null | IfIffNode = null;
+    let toProve: null | LogicNode = null;
     let fixedIfThenOpt: null | OptNode = null;
 
     if (IfKeywords.includes(tokens[0])) {
@@ -415,12 +416,12 @@ function factsParse(
   tokens: string[],
   end: string[],
   skipEnd: boolean = false
-): FactNode[] {
+): ToCheckNode[] {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const out: FactNode[] = [];
+    const out: ToCheckNode[] = [];
     while (!end.includes(tokens[0])) {
       const fact = factParse(env, tokens);
       out.push(fact);
@@ -436,7 +437,7 @@ function factsParse(
   }
 }
 
-function factParse(env: L_Env, tokens: string[]): FactNode {
+function factParse(env: L_Env, tokens: string[]): ToCheckNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -447,7 +448,7 @@ function factParse(env: L_Env, tokens: string[]): FactNode {
       skip(tokens, "not");
     }
 
-    let fact: FactNode;
+    let fact: ToCheckNode;
     if (LogicalKeywords.includes(tokens[0])) {
       fact = logicalOptParse(env, tokens);
     } else if (tokens[0] === "or") {
@@ -468,7 +469,7 @@ function factParse(env: L_Env, tokens: string[]): FactNode {
   }
 }
 
-function logicalOptParse(env: L_Env, tokens: string[]): IfIffNode {
+function logicalOptParse(env: L_Env, tokens: string[]): LogicNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -485,7 +486,7 @@ function logicalOptParse(env: L_Env, tokens: string[]): IfIffNode {
     }
 
     let vars: string[] = [];
-    let req: FactNode[] = [];
+    let req: ToCheckNode[] = [];
     if (symbolsBeforeThenKeyword.includes(":")) {
       vars = varLstParse(env, tokens, [":"], false);
       skip(tokens, ":");
@@ -508,11 +509,11 @@ function logicalOptParse(env: L_Env, tokens: string[]): IfIffNode {
     }
 
     if (IfKeywords.includes(type)) {
-      return new IfIffNode(vars, req, onlyIfs, true, byName);
+      return new LogicNode(vars, req, onlyIfs, true, byName);
     } else if (IffKeywords.includes(type)) {
-      return new IfIffNode(vars, req, onlyIfs, true, byName, true);
+      return new IffNode(vars, req, onlyIfs, true, byName);
     } else if (ExistKeyword === type) {
-      return new ExistNode(vars, req, onlyIfs, true, byName, false);
+      return new ExistNode(vars, req, onlyIfs, true, byName);
     }
 
     throw Error();
@@ -566,7 +567,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
 
     const opt: OptNode = optParseWithNot(env, tokens, false);
 
-    let req: FactNode[] = [];
+    let req: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
       skip(tokens, ":");
       req = factsParse(env, tokens, ["=>", "<=>", "<=", ...StdStmtEnds], false);
@@ -578,7 +579,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
     const onlyIfs = factsParse(env, tokens, ["}"], false);
     skip(tokens, "}");
 
-    // let req: FactNode[] = [];
+    // let req: ToCheckNode[] = [];
     // if (tokens[0] === WhenKeyword) {
     //   skip(tokens, WhenKeyword);
     //   req = factsParse(env, tokens, StdStmtEnds, false);
@@ -632,7 +633,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
 //       false
 //     );
 
-//     let req: FactNode[] = [];
+//     let req: ToCheckNode[] = [];
 //     if (tokens[0] === WhenKeyword) {
 //       skip(tokens, WhenKeyword);
 //       req = factsParse(env, tokens, StdStmtEnds, false);

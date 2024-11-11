@@ -1,22 +1,22 @@
 import {
   ByNode,
   ExistNode,
-  FactNode,
-  IfIffNode,
+  ToCheckNode,
+  LogicNode,
   OptNode,
   OrNode,
   STNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
-import { StoredFact } from "./L_FactStorage.ts";
-import * as L_FactStorage from "./L_FactStorage.ts";
+import { StoredFact } from "./L_Memory.ts";
+import * as L_FactStorage from "./L_Memory.ts";
 
-export function check(env: L_Env, toCheck: FactNode): RType {
+export function check(env: L_Env, toCheck: ToCheckNode): RType {
   if (toCheck instanceof OptNode) {
     const out = checkOpt(env, toCheck);
     return out;
-  } else if (toCheck instanceof IfIffNode) {
+  } else if (toCheck instanceof LogicNode) {
     return checkIfThen(env, toCheck);
   } else if (toCheck instanceof OrNode) {
     return checkOr(env, toCheck);
@@ -27,29 +27,28 @@ export function check(env: L_Env, toCheck: FactNode): RType {
   return RType.Unknown;
 }
 
-export function checkIfThen(env: L_Env, toCheck: IfIffNode): RType {
+export function checkIfThen(env: L_Env, toCheck: LogicNode): RType {
   if (toCheck.isT === false) {
     env.newMessage(`not-if-then fact ${toCheck} can not be checked directly.`);
     return RType.Error;
   }
 
-  let out = openEnvAndCheck(env, toCheck);
-  if (out !== RType.True) return out;
-  if (toCheck.isIff) {
-    const newToCheck = new IfIffNode(
-      toCheck.vars,
-      toCheck.onlyIfs,
-      toCheck.req,
-      toCheck.isT,
-      toCheck.byName,
-      toCheck.isIff
-    );
-    out = openEnvAndCheck(env, newToCheck);
-  }
-
+  const out = openEnvAndCheck(env, toCheck);
+  // if (out !== RType.True)
   return out;
+  // if (toCheck.isIff) {
+  //   const newToCheck = new LogicNode(
+  //     toCheck.vars,
+  //     toCheck.onlyIfs,
+  //     toCheck.req,
+  //     toCheck.isT,
+  //     toCheck.byName,
+  //     toCheck.isIff
+  //   );
+  //   out = openEnvAndCheck(env, newToCheck);
+  // }
 
-  function openEnvAndCheck(oldEnv: L_Env, toCheck: IfIffNode): RType {
+  function openEnvAndCheck(oldEnv: L_Env, toCheck: LogicNode): RType {
     const newEnv = new L_Env(oldEnv);
 
     for (const e of toCheck.vars) {
@@ -175,7 +174,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
           }
         }
         //! WARNING: I GUESS IF-THEN HERE IS BUGGY
-        else if (req instanceof IfIffNode) {
+        else if (req instanceof LogicNode) {
           const newReq = req.useMapToCopy(map);
 
           const out = checkIfThen(newEnv, newReq); // ? UNTESTED
@@ -191,7 +190,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
         }
         // OrNode
         else if (req instanceof OrNode) {
-          const newReq: FactNode[] = [];
+          const newReq: ToCheckNode[] = [];
           for (const f of req.facts) {
             newReq.push(f.useMapToCopy(map));
           }
@@ -317,7 +316,7 @@ export function checkBy(env: L_Env, byNode: ByNode | STNode): RType {
           // const toStore = new OptNode(req.fullName, fixedVars);
           // L_FactStorage.store(newEnv, toStore, []);
         }
-      } else if (req instanceof IfIffNode) {
+      } else if (req instanceof LogicNode) {
         const out = checkIfThen(newEnv, req);
         if (out === RType.True) continue;
         else if (out === RType.Error) {
@@ -388,13 +387,13 @@ function checkExist(env: L_Env, toCheck: ExistNode): RType {
       }),
       true
     );
-    const ifThen = new IfIffNode(
+    const ifThen = new LogicNode(
       toCheck.vars,
       toCheck.req,
       [nots],
       true,
-      toCheck.byName,
-      false
+      toCheck.byName
+      // false
     );
     return checkIfThen(env, ifThen);
   } catch {

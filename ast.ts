@@ -2,7 +2,7 @@ import { L_Env } from "./L_Env.ts";
 
 export abstract class L_Node {}
 
-export class FactNode extends L_Node {
+export class ToCheckNode extends L_Node {
   useName: string = "";
 
   constructor(public isT: boolean) {
@@ -20,18 +20,18 @@ export class FactNode extends L_Node {
     return false;
   }
 
-  useMapToCopy(map: Map<string, string>): FactNode {
+  useMapToCopy(map: Map<string, string>): ToCheckNode {
     map;
-    return new FactNode(true);
+    return new ToCheckNode(true);
   }
 
-  copyWithoutIsT(newIsT: boolean): FactNode {
-    return new FactNode(newIsT);
+  copyWithoutIsT(newIsT: boolean): ToCheckNode {
+    return new ToCheckNode(newIsT);
   }
 }
 
-export class OrNode extends FactNode {
-  constructor(public facts: FactNode[], isT: boolean = true) {
+export class OrNode extends ToCheckNode {
+  constructor(public facts: ToCheckNode[], isT: boolean = true) {
     super(isT);
   }
 
@@ -43,7 +43,7 @@ export class OrNode extends FactNode {
     return this.facts.every((e) => e.factsDeclared(env));
   }
 
-  override copyWithoutIsT(newIsT: boolean): FactNode {
+  override copyWithoutIsT(newIsT: boolean): ToCheckNode {
     return new OrNode(this.facts, newIsT);
   }
 
@@ -52,38 +52,37 @@ export class OrNode extends FactNode {
   }
 }
 
-export class IfIffNode extends FactNode {
+export class LogicNode extends ToCheckNode {
   constructor(
     public vars: string[] = [],
-    public req: FactNode[] = [],
-    //! I think we should onlyIfs: FactNode[] because despite we can not store if-then
+    public req: ToCheckNode[] = [],
+    //! I think we should onlyIfs: ToCheckNode[] because despite we can not store if-then
     //! we can still check it.
-    public onlyIfs: FactNode[] = [],
+    public onlyIfs: ToCheckNode[] = [],
     isT: boolean = true,
-    public byName: undefined | string = undefined,
-    public isIff: boolean = false
+    public byName: undefined | string = undefined // public isIff: boolean = false
   ) {
     super(isT);
   }
 
-  override copyWithoutIsT(newIsT: boolean): IfIffNode {
-    return new IfIffNode(
+  override copyWithoutIsT(newIsT: boolean): LogicNode {
+    return new LogicNode(
       this.vars,
       this.req,
       this.onlyIfs,
       newIsT,
-      this.byName,
-      this.isIff
+      this.byName
+      // this.isIff
     );
   }
 
-  override useMapToCopy(map: Map<string, string>): IfIffNode {
+  override useMapToCopy(map: Map<string, string>): LogicNode {
     const newVars = [...this.vars];
     const req = this.req.map((e) => e.useMapToCopy(map));
     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
 
-    if (this instanceof IfIffNode)
-      return new IfIffNode(newVars, req, onlyIfs, this.isT, this.byName);
+    if (this instanceof LogicNode)
+      return new LogicNode(newVars, req, onlyIfs, this.isT, this.byName);
 
     throw Error();
   }
@@ -117,9 +116,9 @@ export class IfIffNode extends FactNode {
   }
 }
 
-export class ExistNode extends IfIffNode {
+export class ExistNode extends LogicNode {
   override toString(): string {
-    return `${this.vars}: ${[...this.req, ...this.onlyIfs].join(", ")}`;
+    return `exist ${this.vars}: ${[...this.req, ...this.onlyIfs].join(", ")}`;
   }
 
   getContraPositive() {
@@ -130,18 +129,18 @@ export class ExistNode extends IfIffNode {
       }),
       true
     );
-    const ifThen = new IfIffNode(
+    const ifThen = new LogicNode(
       this.vars,
       this.req,
       [nots],
       true,
-      this.byName,
-      false
+      this.byName
+      // false
     );
     return ifThen;
   }
 
-  static ifThenToExist(ifThen: IfIffNode): ExistNode {
+  static ifThenToExist(ifThen: LogicNode): ExistNode {
     if (ifThen.isT !== false || ifThen.byName === undefined) throw Error;
     const nots = new OrNode(
       ifThen.onlyIfs.map((e) => {
@@ -155,17 +154,17 @@ export class ExistNode extends IfIffNode {
       ifThen.req,
       [nots],
       true,
-      ifThen.byName,
-      false
+      ifThen.byName
+      // false
     );
   }
 }
+export class IffNode extends LogicNode {}
 
-// export class IfIffNode extends LogicalOptNode {}
+// export class LogicNode extends LogicalOptNode {}
 // export class OnlyIfNode extends LogicalOptNode {}
-// export class IffNode extends LogicalOptNode {}
 
-export class OptNode extends FactNode {
+export class OptNode extends ToCheckNode {
   constructor(
     public fullName: string,
     public vars: string[],
@@ -222,8 +221,8 @@ export class DeclNode extends L_Node {
   constructor(
     public name: string = "",
     public vars: string[] = [],
-    public req: FactNode[] = [],
-    public onlyIfs: FactNode[] = [],
+    public req: ToCheckNode[] = [],
+    public onlyIfs: ToCheckNode[] = [],
     public byName: string | undefined = undefined
   ) {
     super();
@@ -247,13 +246,13 @@ export class OnlyIfDeclNode extends DeclNode {}
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;
 
-  constructor(public facts: FactNode[] = [], public strict: boolean) {
+  constructor(public facts: ToCheckNode[] = [], public strict: boolean) {
     super();
   }
 
   override toString(): string {
     return (
-      "know: " + this.facts.map((e) => (e as FactNode).toString()).join("; ")
+      "know: " + this.facts.map((e) => (e as ToCheckNode).toString()).join("; ")
     );
   }
 }
@@ -261,7 +260,7 @@ export class KnowNode extends L_Node {
 export class LetNode extends L_Node {
   constructor(
     public vars: string[],
-    public facts: FactNode[],
+    public facts: ToCheckNode[],
     public strict: boolean
   ) {
     super();
@@ -277,7 +276,7 @@ export class LetNode extends L_Node {
 export class ProveNode extends L_Node {
   constructor(
     // Only one of toProve, fixedIfThenOpt exists
-    public toProve: IfIffNode | null,
+    public toProve: LogicNode | null,
     public fixedIfThenOpt: OptNode | null,
     public block: L_Node[],
     // If contradict !== undefined, then prove_by_contradiction
@@ -305,7 +304,7 @@ export class HaveNode extends L_Node {
 }
 
 export class PostfixProve extends L_Node {
-  constructor(public facts: FactNode[], public block: L_Node[]) {
+  constructor(public facts: ToCheckNode[], public block: L_Node[]) {
     super();
   }
 }
@@ -321,7 +320,7 @@ export class LocalEnvNode extends L_Node {
 }
 
 export class ReturnNode extends L_Node {
-  constructor(public facts: FactNode[]) {
+  constructor(public facts: ToCheckNode[]) {
     super();
   }
 }
@@ -336,7 +335,7 @@ export class ByNode extends L_Node {
   constructor(
     public byName: string,
     public vars: string[],
-    public onlyIfs: FactNode[]
+    public onlyIfs: ToCheckNode[]
   ) {
     super();
   }

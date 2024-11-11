@@ -2,12 +2,12 @@ import {
   KnowNode,
   L_Node,
   LetNode,
-  FactNode,
+  ToCheckNode,
   DeclNode,
   ProveNode,
   HaveNode,
   PostfixProve,
-  IfIffNode,
+  LogicNode,
   OptNode,
   LocalEnvNode,
   ReturnNode,
@@ -17,8 +17,8 @@ import {
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
-import { StoredFact, StoredReq } from "./L_FactStorage.ts";
-import * as L_FactStorage from "./L_FactStorage.ts";
+import { StoredFact, StoredReq } from "./L_Memory.ts";
+import * as L_FactStorage from "./L_Memory.ts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -86,9 +86,9 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
 
     if (execFunc && execFunc(env, node) === RType.True)
       return successMesIntoEnv(env, node);
-    else if (node instanceof FactNode) {
+    else if (node instanceof ToCheckNode) {
       try {
-        const out = factExec(env, node as FactNode);
+        const out = factExec(env, node as ToCheckNode);
 
         if (out === RType.True && showMsg) {
           env.newMessage(`OK! ${node}`);
@@ -99,7 +99,7 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
         }
         return out;
       } catch {
-        throw Error(`${node as FactNode}`);
+        throw Error(`${node as ToCheckNode}`);
       }
     }
     return RType.Error;
@@ -193,7 +193,7 @@ function letExec(env: L_Env, node: LetNode): RType {
     // }
 
     // for (const f of node.facts) {
-    //   if (f instanceof IfIffNode) {
+    //   if (f instanceof LogicNode) {
     //     L_FactStorage.storeIfThenBy(env, f, new StoredFact([], [], true));
     //   }
     // }
@@ -233,7 +233,7 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
     //   }
     // }
     // for (const fact of node.facts) {
-    //   if (fact instanceof IfIffNode) {
+    //   if (fact instanceof LogicNode) {
     //     L_FactStorage.storeIfThenBy(env, fact, new StoredFact([], [], true));
     //   }
     // }
@@ -262,7 +262,7 @@ function defExec(env: L_Env, node: DeclNode): RType {
     L_FactStorage.storeDeclaredIfThenAsBy(env, node);
 
     for (const onlyIf of node.onlyIfs) {
-      if (onlyIf instanceof IfIffNode) {
+      if (onlyIf instanceof LogicNode) {
         const higherStoreReq = new StoredReq(node.vars, [
           new OptNode(node.name, node.vars),
           ...node.req,
@@ -310,7 +310,7 @@ function proveExec(env: L_Env, node: ProveNode): RType {
   }
 }
 
-function proveIfThen(env: L_Env, toProve: IfIffNode, block: L_Node[]): RType {
+function proveIfThen(env: L_Env, toProve: LogicNode, block: L_Node[]): RType {
   try {
     const newEnv = new L_Env(env);
     for (const v of toProve.vars) {
@@ -532,7 +532,7 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
   }
 }
 
-function factExec(env: L_Env, toCheck: FactNode): RType {
+function factExec(env: L_Env, toCheck: ToCheckNode): RType {
   try {
     if (!(toCheck.varsDeclared(env, []) && toCheck.factsDeclared(env))) {
       return RType.Error;
@@ -554,7 +554,7 @@ function factExec(env: L_Env, toCheck: FactNode): RType {
       // }
 
       // // Store declared by
-      // if (toCheck instanceof IfIffNode) {
+      // if (toCheck instanceof LogicNode) {
       //   L_FactStorage.storeIfThenBy(env, toCheck, new StoredFact([], [], true));
       // }
     }
