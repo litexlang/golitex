@@ -279,14 +279,16 @@ export function runExprs(env: L_Env, expr: string) {
       return undefined;
     }
     const result: RType[] = [];
+    console.log(`-----\n***  source code  ***\n${expr}\n`);
+
     for (const node of nodes) {
       const out = nodeExec(env, node);
       result.push(out);
+
+      console.log("***  results  ***\n");
+      env.printClearMessage();
+      console.log();
     }
-    console.log(`-----\n***  source code  ***\n${expr}\n`);
-    console.log("***  results  ***\n");
-    env.printClearMessage();
-    console.log();
 
     return result;
   } catch (error) {
