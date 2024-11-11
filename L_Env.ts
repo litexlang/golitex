@@ -10,6 +10,9 @@ export class L_Env {
   private declaredVars = new Set<string>();
   private storage = new Map<string, StoredFact[]>();
   private haves = new Set<string>();
+
+  // THE LOGIC of bys and exists are very much the same. The reason why I separate
+  // them is as a human being, it's more straightforward.
   private bys = new Map<string, StoredFact>();
   private exists = new Map<string, StoredFact>();
 

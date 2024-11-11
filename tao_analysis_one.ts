@@ -16,3 +16,5 @@ export const setTheoryTest1 = [
   "let s1, s2 : s1 is empty, s2 is empty;",
   "equal(s1,s2);",
 ];
+
+export const setTheoryTest2 = [""];

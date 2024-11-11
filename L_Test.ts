@@ -1,8 +1,5 @@
 import { L_Env } from "./L_Env.ts";
-import { RType } from "./L_Executor.ts";
-import * as L_Executor from "./L_Executor.ts";
-import { L_Scan } from "./L_Lexer.ts";
-import * as L_Parser from "./L_Parser.ts";
+import { runStrings } from "./L_Run.ts";
 import { setTheory } from "./tao_analysis_one.ts";
 
 // Aristotle induction
@@ -549,6 +546,12 @@ const testList54 = [
   "def obj3(x) <=> {x is obj};",
 ];
 
+const testList55 = [
+  "def obj(x) => {};",
+  "def obj2(x) => {};",
+  "let x,y: x,y are obj;",
+];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -593,7 +596,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, true],
+  setTheory: [setTheory, false],
   testList42: [testList42, false],
   testList43: [testList43, false],
   testList44: [testList44, false],
@@ -609,44 +612,16 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList52: [testList52, false],
   testList53: [testList53, false],
   testList54: [testList54, false],
+  testList55: [testList55, true],
 };
 
-export function testCode() {
+function testCode() {
   for (const testList in testsDict) {
     const env = new L_Env();
     const exprs = testsDict[testList];
     if (exprs[1] === false) continue;
 
-    for (let i = 0; i < exprs[0].length; i++) {
-      const expr = exprs[0][i];
-      runExprs(env, expr);
-    }
-
-    env.printExists();
-  }
-}
-
-export function runExprs(env: L_Env, expr: string) {
-  try {
-    console.log(`-----\n***  source code  ***\n${expr}\n`);
-    const tokens = L_Scan(expr);
-    const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
-    if (nodes === undefined) {
-      throw Error();
-    }
-    const result: RType[] = [];
-    for (const node of nodes) {
-      const out = L_Executor.nodeExec(env, node);
-      result.push(out);
-    }
-    console.log("***  results  ***\n");
-    env.printClearMessage();
-    console.log();
-
-    return result;
-  } catch {
-    env.printClearMessage();
-    return undefined;
+    runStrings(env, exprs[0]);
   }
 }
 

@@ -186,20 +186,6 @@ function letExec(env: L_Env, node: LetNode): RType {
       }
     }
 
-    // for (const f of node.facts) {
-    //   const ok = L_Memory.store(env, f, []);
-    //   if (!ok) {
-    //     env.newMessage(`Failed to store ${f}`);
-    //     return RType.Error;
-    //   }
-    // }
-
-    // for (const f of node.facts) {
-    //   if (f instanceof LogicNode) {
-    //     L_Memory.storeIfThenBy(env, f, new StoredFact([], [], true));
-    //   }
-    // }
-
     return RType.True;
   } catch {
     env.newMessage(`Error: ${node.toString()}`);

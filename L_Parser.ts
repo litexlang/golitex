@@ -49,6 +49,7 @@ import {
   NotKeywords,
   ExistKeyword,
   STKeyword,
+  AreKeywords,
 } from "./common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -421,10 +422,11 @@ function factsParse(
   const index = tokens.length;
 
   try {
-    const out: ToCheckNode[] = [];
+    let out: ToCheckNode[] = [];
     while (!end.includes(tokens[0])) {
-      const fact = factParse(env, tokens);
-      out.push(fact);
+      const facts = singleNodeFacts(env, tokens);
+      out = [...out, ...facts];
+      // out.push(facts);
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -437,7 +439,7 @@ function factsParse(
   }
 }
 
-function factParse(env: L_Env, tokens: string[]): ToCheckNode {
+function singleNodeFacts(env: L_Env, tokens: string[]): ToCheckNode[] {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -451,23 +453,112 @@ function factParse(env: L_Env, tokens: string[]): ToCheckNode {
     let fact: ToCheckNode;
     if (LogicalKeywords.includes(tokens[0])) {
       fact = logicalOptParse(env, tokens);
+      fact.isT = isT ? fact.isT : !fact.isT;
+      return [fact];
     } else if (tokens[0] === "or") {
       fact = orParse(env, tokens);
+      fact.isT = isT ? fact.isT : !fact.isT;
+      return [fact];
     } else if (tokens[0] === "nots") {
       fact = notsParse(env, tokens);
+      fact.isT = isT ? fact.isT : !fact.isT;
+      return [fact];
     } else if (tokens[0] === "exist") {
       fact = logicalOptParse(env, tokens);
+      fact.isT = isT ? fact.isT : !fact.isT;
+      return [fact];
     } else {
-      fact = optParseWithNot(env, tokens, true); // false: When using factsParse, not prefix are already removed.
+      const facts = optParseWithNotAre(env, tokens, true);
+      return facts;
     }
-
-    fact.isT = isT ? fact.isT : !fact.isT;
-    return fact;
   } catch (error) {
     handleParseError(env, "fact", index, start);
     throw error;
   }
 }
+
+function optParseWithNotAre(
+  env: L_Env,
+  tokens: string[],
+  parseNot: boolean
+): OptNode[] {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    let name: string = "";
+    const vars: string[] = [];
+    let isT = true;
+
+    if (tokens.length >= 2 && tokens[1] === "(") {
+      // parse functional operator
+      name = shiftVar(tokens);
+
+      skip(tokens, "(");
+
+      while (!isCurToken(tokens, ")")) {
+        vars.push(shiftVar(tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+
+      skip(tokens, ")");
+
+      return [new OptNode(name, vars, isT)];
+    } else {
+      while (![...AreKeywords, ...IsKeywords].includes(tokens[0])) {
+        const v = shiftVar(tokens);
+        vars.push(v);
+        if (tokens[0] === ",") skip(tokens, ",");
+      }
+
+      skip(tokens, [...AreKeywords, ...IsKeywords]);
+
+      if (parseNot && NotKeywords.includes(tokens[0])) {
+        isT = !isT;
+        skip(tokens, NotKeywords);
+      }
+
+      name = shiftVar(tokens);
+      const outs = vars.map((e) => new OptNode(name, [e], isT));
+      return outs;
+    }
+  } catch (error) {
+    handleParseError(env, `${start} is invalid operator.`, index, start);
+    throw error;
+  }
+}
+
+// function singleNodeFact(env: L_Env, tokens: string[]): ToCheckNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
+
+//   try {
+//     let isT = true;
+//     if (isCurToken(tokens, "not")) {
+//       isT = false;
+//       skip(tokens, "not");
+//     }
+
+//     let fact: ToCheckNode;
+//     if (LogicalKeywords.includes(tokens[0])) {
+//       fact = logicalOptParse(env, tokens);
+//     } else if (tokens[0] === "or") {
+//       fact = orParse(env, tokens);
+//     } else if (tokens[0] === "nots") {
+//       fact = notsParse(env, tokens);
+//     } else if (tokens[0] === "exist") {
+//       fact = logicalOptParse(env, tokens);
+//     } else {
+//       fact = optParseWithNot(env, tokens, true);
+//     }
+
+//     fact.isT = isT ? fact.isT : !fact.isT;
+//     return fact;
+//   } catch (error) {
+//     handleParseError(env, "fact", index, start);
+//     throw error;
+//   }
+// }
 
 function logicalOptParse(env: L_Env, tokens: string[]): LogicNode {
   const start = tokens[0];
@@ -579,12 +670,6 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
     const onlyIfs = factsParse(env, tokens, ["}"], false);
     skip(tokens, "}");
 
-    // let req: ToCheckNode[] = [];
-    // if (tokens[0] === WhenKeyword) {
-    //   skip(tokens, WhenKeyword);
-    //   req = factsParse(env, tokens, StdStmtEnds, false);
-    // }
-
     let byName: undefined | string = undefined;
     if (isCurToken(tokens, "[")) {
       skip(tokens, "[");
@@ -608,53 +693,6 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
     throw error;
   }
 }
-
-// function defineParse(env: L_Env, tokens: string[]): DeclNode {
-//   const start = tokens[0];
-//   const index = tokens.length;
-
-//   try {
-//     skip(tokens, DefKeywords);
-
-//     let byName: undefined | string = undefined;
-//     if (isCurToken(tokens, "[")) {
-//       skip(tokens, "[");
-//       byName = shiftVar(tokens);
-//       skip(tokens, "]");
-//     }
-
-//     const opt: OptNode = optParseWithNot(env, tokens, false);
-//     const separator = shiftVar(tokens);
-
-//     const onlyIfs = factsParse(
-//       env,
-//       tokens,
-//       StdStmtEnds.concat(WhenKeyword),
-//       false
-//     );
-
-//     let req: ToCheckNode[] = [];
-//     if (tokens[0] === WhenKeyword) {
-//       skip(tokens, WhenKeyword);
-//       req = factsParse(env, tokens, StdStmtEnds, false);
-//     }
-
-//     skip(tokens, StdStmtEnds);
-
-//     if (ThenKeywords.includes(separator)) {
-//       return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
-//     } else if (IffThenKeywords.includes(separator)) {
-//       return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
-//     } else if (OnlyIfThenKeywords.includes(separator)) {
-//       return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
-//     }
-
-//     throw Error();
-//   } catch (error) {
-//     handleParseError(env, "fact", index, start);
-//     throw error;
-//   }
-// }
 
 function localEnvParse(env: L_Env, tokens: string[]): LocalEnvNode {
   const start = tokens[0];
