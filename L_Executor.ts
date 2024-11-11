@@ -96,6 +96,8 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
           env.newMessage(`Unknown ${node}`);
         } else if (out === RType.Error) {
           env.newMessage(`Error ${node}`);
+        } else if (out === RType.False) {
+          env.newMessage(`False ${node}`);
         }
         return out;
       } catch {
@@ -546,17 +548,6 @@ function factExec(env: L_Env, toCheck: ToCheckNode): RType {
         env.newMessage(`Failed to store ${toCheck}`);
         return RType.Error;
       }
-
-      // const ok = L_Memory.store(env, toCheck, []);
-      // if (!ok) {
-      //   env.newMessage(`Failed to store ${toCheck}`);
-      //   return RType.Error;
-      // }
-
-      // // Store declared by
-      // if (toCheck instanceof LogicNode) {
-      //   L_Memory.storeIfThenBy(env, toCheck, new StoredFact([], [], true));
-      // }
     }
 
     return out;

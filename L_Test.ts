@@ -540,6 +540,14 @@ const testList53 = [
   "by e2e(y);",
 ];
 
+const testList54 = [
+  "def obj(x) => {};",
+  "def obj2(x) => {};",
+  "let x : x is not obj;",
+  "x is not obj;",
+  "x is obj;",
+];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -598,7 +606,8 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList50: [testList50, false],
   testList51: [testList51, false],
   testList52: [testList52, false],
-  testList53: [testList53, true],
+  testList53: [testList53, false],
+  testList54: [testList54, true],
 };
 
 export function testCode() {

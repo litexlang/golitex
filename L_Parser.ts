@@ -225,7 +225,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
-    if (!vars.every((e) => !L_Keywords.includes(e))) {
+    if (vars.some((e) => L_Keywords.includes(e))) {
       env.newMessage(`Error: ${vars} contain LiTeX keywords.`);
       throw Error();
     }

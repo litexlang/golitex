@@ -15,7 +15,13 @@ import * as L_Memory from "./L_Memory.ts";
 
 export function check(env: L_Env, toCheck: ToCheckNode): RType {
   if (toCheck instanceof OptNode) {
-    const out = checkOpt(env, toCheck);
+    let out = checkOpt(env, toCheck);
+    if (out === RType.Unknown) {
+      out = checkOpt(env, toCheck.copyWithoutIsT(!toCheck.isT));
+      if (out === RType.True) {
+        return RType.False;
+      }
+    }
     return out;
   } else if (toCheck instanceof LogicNode) {
     return checkIfThen(env, toCheck);

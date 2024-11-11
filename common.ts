@@ -66,7 +66,7 @@ export const L_Keywords: string[] = [
   ...IfKeywords,
   ...OnlyIfKeywords,
   ...IffKeywords,
-  ...ExistKeyword,
+  ExistKeyword,
   ...DefKeywords,
   ...ProveKeywords,
   ...StdStmtEnds,
