@@ -272,6 +272,10 @@ export function store(
   storeContrapositive: boolean
 ): boolean {
   try {
+    if (fact instanceof ExistNode) {
+      const ok = storeExistFact(env, fact, req, storeContrapositive);
+      if (!ok) return false;
+    }
     if (fact instanceof LogicNode) {
       const ok = storeIfThen(env, fact, req, storeContrapositive);
       if (!ok) return false;
@@ -423,7 +427,8 @@ export function storeFactInStoredBy(
     // Store onlyIfs bound to StoredBy
     const onlyIfsToBeStored: ToCheckNode[] = [];
     for (const onlyIf of storedFact.onlyIfs) {
-      onlyIfsToBeStored.push(onlyIf.useMapToCopy(map));
+      const toStore = onlyIf.useMapToCopy(map);
+      onlyIfsToBeStored.push(toStore);
     }
 
     let ok: boolean = true;
@@ -540,7 +545,13 @@ export function storeExistFact(
         return false;
       }
 
-      return declareAndStoreExist(env, fact, req, true);
+      const storedSt = env.getSt(fact.byName);
+      if (storedSt === undefined)
+        return declareAndStoreExist(env, fact, req, true);
+      else {
+        storedSt.isT = true;
+        return true;
+      }
     } else {
       const ok = storeIfThen(
         env,

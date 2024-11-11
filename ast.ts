@@ -117,6 +117,16 @@ export class LogicNode extends ToCheckNode {
 }
 
 export class ExistNode extends LogicNode {
+  constructor(
+    vars: string[] = [],
+    req: ToCheckNode[] = [],
+    onlyIfs: ToCheckNode[] = [],
+    isT: boolean = true,
+    byName: undefined | string = undefined
+  ) {
+    super(vars, req, onlyIfs, isT, byName);
+  }
+
   override toString(): string {
     return `exist ${this.vars}: ${[...this.req, ...this.onlyIfs].join(", ")}`;
   }
@@ -158,8 +168,35 @@ export class ExistNode extends LogicNode {
       // false
     );
   }
+
+  override useMapToCopy(map: Map<string, string>): ExistNode {
+    const newVars = [...this.vars];
+    const req = this.req.map((e) => e.useMapToCopy(map));
+    const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
+
+    return new ExistNode(newVars, req, onlyIfs, this.isT, this.byName);
+  }
+
+  override copyWithoutIsT(newIsT: boolean): ExistNode {
+    return new ExistNode(
+      this.vars,
+      this.req,
+      this.onlyIfs,
+      newIsT,
+      this.byName
+    );
+  }
+
+  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
+    return super.varsDeclared(env, freeVars);
+  }
+
+  override factsDeclared(env: L_Env): boolean {
+    return super.factsDeclared(env);
+  }
 }
 export class IffNode extends LogicNode {}
+export class IfNode extends LogicNode {}
 
 // export class LogicNode extends LogicalOptNode {}
 // export class OnlyIfNode extends LogicalOptNode {}
@@ -181,8 +218,11 @@ export class OptNode extends ToCheckNode {
     const newVars: string[] = [];
     for (const v of this.vars) {
       const fixed = map.get(v);
-      if (fixed === undefined) throw Error();
-      else {
+      if (fixed === undefined) {
+        //! I DON'T KNOW WHETHER I SHOULD THROW ERROR OR PUSH PREVIOUS SYMBOL
+        // throw Error();
+        newVars.push(v);
+      } else {
         newVars.push(fixed);
       }
     }

@@ -531,11 +531,13 @@ const testList53 = [
   "know exist x: obj(x) => {} [Exist-Of-Obj];",
   "know not if x : obj(x) => {obj2(x)}[no-obj-is-obj2];",
   "let y , z :y is obj;",
-  "st Exist-Of-Obj(y);",
-  "st Exist-Of-Obj(z);",
-  "st no-obj-is-obj2(z);",
+  // "st Exist-Of-Obj(y);",
+  // "st Exist-Of-Obj(z);",
+  // "st no-obj-is-obj2(z);",
   "def obj3(x) => {};",
-  "know if : exist y : y is obj => {} => {exist z : z is obj3 => {}}[e2e];",
+  "know if y : y is obj => {exist z : z is obj2 => {}[*]}[e2e];",
+  // "know if : exist y : y is obj => {} => {exist z : z is obj3 => {}}[e2e];",
+  "by e2e(y);",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
@@ -595,8 +597,8 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList49: [testList49, false],
   testList50: [testList50, false],
   testList51: [testList51, false],
-  testList52: [testList52, true],
-  testList53: [testList53, false],
+  testList52: [testList52, false],
+  testList53: [testList53, true],
 };
 
 export function testCode() {
