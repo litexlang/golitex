@@ -53,7 +53,7 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   IffDeclNode: defExec,
   IfThenDeclNode: defExec,
-  // ExistNode: existExec,
+  ExistDeclNode: defExec,
   OnlyIfDeclNode: defExec,
   KnowNode: knowExec,
   LetNode: letExec,
@@ -84,9 +84,10 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
     const nodeType = node.constructor.name;
     const execFunc = nodeExecMap[nodeType];
 
-    if (execFunc && execFunc(env, node) === RType.True)
-      return successMesIntoEnv(env, node);
-    else if (node instanceof ToCheckNode) {
+    if (execFunc) {
+      const out = execFunc(env, node);
+      if (out === RType.True) return successMesIntoEnv(env, node);
+    } else if (node instanceof ToCheckNode) {
       try {
         const out = factExec(env, node as ToCheckNode);
 

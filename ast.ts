@@ -268,20 +268,31 @@ export class DeclNode extends L_Node {
     super();
   }
 
-  override toString() {
-    if (this instanceof IfThenDeclNode)
-      return `def if ${this.name}(${this.vars})`;
-    else if (this instanceof IffDeclNode)
-      return `def iff ${this.name}(${this.vars})`;
-    else if (this instanceof OnlyIfDeclNode)
-      return `def only_if ${this.name}(${this.vars})`;
-    else return `Declaration Error`;
+  override toString(): string {
+    return "";
   }
 }
 
-export class IffDeclNode extends DeclNode {}
-export class IfThenDeclNode extends DeclNode {}
-export class OnlyIfDeclNode extends DeclNode {}
+export class IffDeclNode extends DeclNode {
+  override toString(): string {
+    return `def iff ${this.name}(${this.vars})`;
+  }
+}
+export class IfThenDeclNode extends DeclNode {
+  override toString(): string {
+    return `def if ${this.name}(${this.vars})`;
+  }
+}
+export class OnlyIfDeclNode extends DeclNode {
+  override toString(): string {
+    return `def only_if ${this.name}(${this.vars})`;
+  }
+}
+export class ExistDeclNode extends DeclNode {
+  override toString(): string {
+    return `def exist ${this.name}(${this.vars})`;
+  }
+}
 
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;

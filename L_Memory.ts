@@ -9,6 +9,7 @@ import {
   OptNode,
   OrNode,
   ExistNode,
+  ExistDeclNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
@@ -108,42 +109,22 @@ export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
     return ok;
     // L_Memory.storeIfThenBy(env, ifThen, new StoredFact([], [], true));
   } else if (toDecl instanceof IffDeclNode) {
-    let toStore = new LogicNode(
-      toDecl.vars,
-      [decl, ...toDecl.req],
-      toDecl.onlyIfs,
-      true,
-      // false,
-      toDecl.byName
-    );
-    ok = storeIfThen(env, toStore, [], true);
+    let r = [decl, ...toDecl.req];
+    let f = new LogicNode(toDecl.vars, r, toDecl.onlyIfs, true, toDecl.byName);
+    ok = storeIfThen(env, f, [], true);
     if (!ok) {
       return false;
     }
-    toStore = new LogicNode(
-      toDecl.vars,
-      [...toDecl.req, ...toDecl.onlyIfs],
-      [decl],
-      // false,
-      true,
-      toDecl.byName
-    );
-    ok = storeIfThen(env, toStore, [], true);
+    r = [...toDecl.req, ...toDecl.onlyIfs];
+    f = new LogicNode(toDecl.vars, r, [decl], true, toDecl.byName);
+    ok = storeIfThen(env, f, [], true);
     return ok;
   } else if (toDecl instanceof OnlyIfDeclNode) {
-    ok = storeIfThen(
-      env,
-      new LogicNode(
-        toDecl.vars,
-        [...toDecl.req, ...toDecl.onlyIfs],
-        [decl],
-        true,
-        toDecl.byName
-      ),
-      [],
-      true
-    );
+    const r = [...toDecl.req, ...toDecl.onlyIfs];
+    const f = new LogicNode(toDecl.vars, r, [decl], true, toDecl.byName);
+    ok = storeIfThen(env, f, [], true);
     return ok;
+  } else if (toDecl instanceof ExistDeclNode) {
   }
 
   return false;

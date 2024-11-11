@@ -34,7 +34,7 @@ export const SymbolsFactsSeparator = ":";
 export const ProveKeywords = ["prove"];
 // export const suchThats = ["st", "is"];
 
-export const StdStmtEnds = [";", "\n"];
+export const L_Ends = [";", "\n"];
 export const LetKeywords = ["let", "strict_let"];
 export const HaveKeywords = ["have"];
 export const ByKeyword = "by";
@@ -69,7 +69,7 @@ export const L_Keywords: string[] = [
   ExistKeyword,
   ...DefKeywords,
   ...ProveKeywords,
-  ...StdStmtEnds,
+  ...L_Ends,
   ...LetKeywords,
   ...HaveKeywords,
   ProveByContradictionKeyword,

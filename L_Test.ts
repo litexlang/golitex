@@ -1,6 +1,5 @@
 import { L_Env } from "./L_Env.ts";
 import { runStrings } from "./L_Run.ts";
-import { setTheory } from "./tao_analysis_one.ts";
 
 // Aristotle induction
 const testList0 = [
@@ -547,9 +546,10 @@ const testList54 = [
 ];
 
 const testList55 = [
-  "def obj(x) => {};",
-  "def obj2(x) => {};",
-  "let x,y: x,y are obj;",
+  // "def obj(x) => {};",
+  // "def obj2(x) => {};",
+  // "def empty(x)  : x is obj st {};",
+  "def obj0(x) st {};",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
@@ -596,7 +596,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList39: [testList39, false],
   testList40: [testList40, false],
   testList41: [testList41, false],
-  setTheory: [setTheory, false],
+  // setTheory: [setTheory, false],
   testList42: [testList42, false],
   testList43: [testList43, false],
   testList44: [testList44, false],

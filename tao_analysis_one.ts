@@ -1,7 +1,7 @@
 import { L_Env } from "./L_Env.ts";
 import { runStrings } from "./L_Run.ts";
 
-export const setTheory = [
+const setTheory = [
   "def x is object => {};",
   "def x is set => {x is object};",
   "def =(x,y) => {};",
@@ -12,15 +12,13 @@ export const setTheory = [
   "know if x : x is object => {exist A : A is set => {element_of(x, A) , if y : element_of(y, A) => { =(y,x) } } [inner-exist]  }[Singleton_sets_and_pair_sets];",
 ];
 
-export const setTheoryTest1 = [
+const setTheoryTest1 = [
   "let A,B,x : A is set, B is set, equal(A,B), element_of(x,A);",
   "by set_equal(A,B,x) => {element_of(x,B)};",
   "know if x, y : x is empty, y is empty => {equal(x,y)};",
   "let s1, s2 : s1 is empty, s2 is empty;",
   "equal(s1,s2);",
 ];
-
-export const setTheoryTest2 = [""];
 
 const setTheoryDict: { [s: string]: [string[], boolean, boolean] } = {
   setTheory: [setTheory, true, false],
