@@ -10,6 +10,7 @@ import {
   OrNode,
   ExistNode,
   ExistDeclNode,
+  IfNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
@@ -99,39 +100,34 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
   let ok: boolean = true;
   if (node instanceof IfThenDeclNode) {
     const r = [decl, ...node.req];
-    const f = new LogicNode(node.vars, r, node.onlyIfs, true, node.byName);
+    const f = new IfNode(node.vars, r, node.onlyIfs, true, node.byName);
     ok = storeIfThen(env, f, [], true);
   } else if (node instanceof IffDeclNode) {
     let r = [decl, ...node.req];
-    let f = new LogicNode(node.vars, r, node.onlyIfs, true, node.byName);
+    let f = new IfNode(node.vars, r, node.onlyIfs, true, node.byName);
     ok = storeIfThen(env, f, [], true);
     if (!ok) {
       return false;
     }
     r = [...node.req, ...node.onlyIfs];
-    f = new LogicNode(node.vars, r, [decl], true, node.byName);
+    f = new IfNode(node.vars, r, [decl], true, node.byName);
     ok = storeIfThen(env, f, [], true);
     return ok;
   } else if (node instanceof OnlyIfDeclNode) {
     const r = [...node.req, ...node.onlyIfs];
-    const f = new LogicNode(node.vars, r, [decl], true, node.byName);
+    const f = new IfNode(node.vars, r, [decl], true, node.byName);
     ok = storeIfThen(env, f, [], true);
     return ok;
   } else if (node instanceof ExistDeclNode) {
-    // const r = [decl, ...node.req];
-    // const onlyIfs = new OrNode(node.onlyIfs, false);
-    // const f = new LogicNode(node.vars, r, [onlyIfs], true, node.byName);
-    // ok = storeIfThen(env, f, [], true);
-    // return ok;
-    return true;
+    ok = true;
   }
 
-  return false;
+  return ok;
 }
 
 function storeIfThen(
   env: L_Env,
-  ifThen: LogicNode,
+  ifThen: IfNode,
   req: StoredReq[],
   storeContrapositive: boolean
 ): boolean {
@@ -245,7 +241,7 @@ export function store(
     //   const ok = storeExistFact(env, fact, req, storeContrapositive);
     //   if (!ok) return false;
     // }
-    if (fact instanceof LogicNode) {
+    if (fact instanceof IfNode) {
       const ok = storeIfThen(env, fact, req, storeContrapositive);
       if (!ok) return false;
     } else if (fact instanceof OptNode) {
@@ -334,7 +330,7 @@ export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
 
 export function storeIfThenBy(
   env: L_Env,
-  ifThen: LogicNode,
+  ifThen: IfNode,
   higherStoredFact: StoredFact
 ): boolean {
   try {
@@ -349,7 +345,7 @@ export function storeIfThenBy(
       return true;
     } else {
       for (const onlyIf of ifThen.onlyIfs) {
-        if (onlyIf instanceof LogicNode) {
+        if (onlyIf instanceof IfNode) {
           const out = storeIfThenBy(env, onlyIf, higherStoredFact);
           if (!out) {
             env.newMessage(`Failed to declare ${onlyIf}`);
@@ -367,7 +363,7 @@ export function storeIfThenBy(
 
 export function storeDeclaredIfThenAsBy(env: L_Env, node: DeclNode) {
   if (node.byName !== undefined && node instanceof IfThenDeclNode) {
-    const ifThenToStore = new LogicNode(node.vars, node.req, node.onlyIfs);
+    const ifThenToStore = new IfNode(node.vars, node.req, node.onlyIfs);
     ifThenToStore.byName = node.byName;
     storeIfThenBy(env, ifThenToStore, new StoredFact([], [], true));
   }
@@ -448,7 +444,7 @@ export function storeFactAndBy(
       return storeOpt(env, fact as OptNode, [], storeContrapositive);
     } else if (fact instanceof ExistNode) {
       return declareAndStoreExist(env, fact, [], true);
-    } else if (fact instanceof LogicNode) {
+    } else if (fact instanceof IfNode) {
       let ok = storeIfThen(env, fact, [], storeContrapositive);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);
@@ -486,7 +482,7 @@ function storeContrapositiveFacts(
   for (let i = 0; i < allStoredFactReq.length; i++) {
     const r = allStoredFactReq.filter((_, index) => index !== i);
     r.push(factInverse);
-    const ifThen = new LogicNode(
+    const ifThen = new IfNode(
       freeVars,
       r,
       [allStoredFactReq[i].copyWithoutIsT(!allStoredFactReq[i].isT)],

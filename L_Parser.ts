@@ -21,6 +21,7 @@ import {
   STNode,
   IffNode,
   ExistDeclNode,
+  IfNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -601,7 +602,7 @@ function logicalOptParse(env: L_Env, tokens: string[]): LogicNode {
     }
 
     if (IfKeywords.includes(type)) {
-      return new LogicNode(vars, req, onlyIfs, true, byName);
+      return new IfNode(vars, req, onlyIfs, true, byName);
     } else if (IffKeywords.includes(type)) {
       return new IffNode(vars, req, onlyIfs, true, byName);
     } else if (ExistKeyword === type) {

@@ -13,6 +13,7 @@ import {
   ReturnNode,
   // ReturnExistNode,
   ByNode,
+  IfNode,
   // STNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
@@ -214,18 +215,6 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
       }
     }
 
-    // for (const fact of node.facts) {
-    //   const ok = L_Memory.store(env, fact, []);
-    //   if (!ok) {
-    //     env.newMessage(`Failed to store ${fact}`);
-    //     return RType.Error;
-    //   }
-    // }
-    // for (const fact of node.facts) {
-    //   if (fact instanceof LogicNode) {
-    //     L_Memory.storeIfThenBy(env, fact, new StoredFact([], [], true));
-    //   }
-    // }
     return RType.True;
   } catch (error) {
     let m = `'${node.toString()}'`;
@@ -251,7 +240,7 @@ function defExec(env: L_Env, node: DeclNode): RType {
     L_Memory.storeDeclaredIfThenAsBy(env, node);
 
     for (const onlyIf of node.onlyIfs) {
-      if (onlyIf instanceof LogicNode) {
+      if (onlyIf instanceof IfNode) {
         const higherStoreReq = new StoredReq(node.vars, [
           new OptNode(node.name, node.vars),
           ...node.req,
@@ -278,10 +267,13 @@ function defExec(env: L_Env, node: DeclNode): RType {
 function proveExec(env: L_Env, node: ProveNode): RType {
   if (node.contradict === undefined) {
     if (node.toProve !== null) {
-      return proveIfThen(env, node.toProve, node.block);
+      if (node.toProve instanceof IfNode)
+        return proveIfThen(env, node.toProve, node.block);
     } else {
       return proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
     }
+
+    return RType.Error;
   } else {
     if (node.toProve !== null) {
       env.newMessage(
@@ -299,7 +291,7 @@ function proveExec(env: L_Env, node: ProveNode): RType {
   }
 }
 
-function proveIfThen(env: L_Env, toProve: LogicNode, block: L_Node[]): RType {
+function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
   try {
     const newEnv = new L_Env(env);
     for (const v of toProve.vars) {
