@@ -94,37 +94,35 @@ export class StoredFact {
   }
 }
 
-export function declNewFact(env: L_Env, toDecl: DeclNode): boolean {
-  const decl = new OptNode(toDecl.name, toDecl.vars);
+export function declNewFact(env: L_Env, node: DeclNode): boolean {
+  const decl = new OptNode(node.name, node.vars);
   let ok: boolean = true;
-  if (toDecl instanceof IfThenDeclNode) {
-    const ifThen = new LogicNode(
-      toDecl.vars,
-      [decl, ...toDecl.req],
-      toDecl.onlyIfs,
-      true,
-      toDecl.byName
-    );
-    ok = storeIfThen(env, ifThen, [], true);
-    return ok;
-    // L_Memory.storeIfThenBy(env, ifThen, new StoredFact([], [], true));
-  } else if (toDecl instanceof IffDeclNode) {
-    let r = [decl, ...toDecl.req];
-    let f = new LogicNode(toDecl.vars, r, toDecl.onlyIfs, true, toDecl.byName);
+  if (node instanceof IfThenDeclNode) {
+    const r = [decl, ...node.req];
+    const f = new LogicNode(node.vars, r, node.onlyIfs, true, node.byName);
+    ok = storeIfThen(env, f, [], true);
+  } else if (node instanceof IffDeclNode) {
+    let r = [decl, ...node.req];
+    let f = new LogicNode(node.vars, r, node.onlyIfs, true, node.byName);
     ok = storeIfThen(env, f, [], true);
     if (!ok) {
       return false;
     }
-    r = [...toDecl.req, ...toDecl.onlyIfs];
-    f = new LogicNode(toDecl.vars, r, [decl], true, toDecl.byName);
+    r = [...node.req, ...node.onlyIfs];
+    f = new LogicNode(node.vars, r, [decl], true, node.byName);
     ok = storeIfThen(env, f, [], true);
     return ok;
-  } else if (toDecl instanceof OnlyIfDeclNode) {
-    const r = [...toDecl.req, ...toDecl.onlyIfs];
-    const f = new LogicNode(toDecl.vars, r, [decl], true, toDecl.byName);
+  } else if (node instanceof OnlyIfDeclNode) {
+    const r = [...node.req, ...node.onlyIfs];
+    const f = new LogicNode(node.vars, r, [decl], true, node.byName);
     ok = storeIfThen(env, f, [], true);
     return ok;
-  } else if (toDecl instanceof ExistDeclNode) {
+  } else if (node instanceof ExistDeclNode) {
+    const r = [decl, ...node.req];
+    const onlyIfs = node.onlyIfs.map((e) => e.copyWithoutIsT(!e.isT));
+    const f = new LogicNode(node.vars, r, onlyIfs, true, node.byName);
+    ok = storeIfThen(env, f, [], true);
+    return ok;
   }
 
   return false;
