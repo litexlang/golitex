@@ -1,7 +1,13 @@
-import { DeclNode, ToCheckNode, LogicNode, OptNode } from "./ast.ts";
+import {
+  DeclNode,
+  ToCheckNode,
+  LogicNode,
+  OptNode,
+  ExistDeclNode,
+} from "./ast.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_Memory.ts";
-import { OneLayerStoredFact, MemorizedExistDecl } from "./L_Memory.ts";
+import { MemorizedExistDecl } from "./L_Memory.ts";
 
 export class L_Env {
   private messages: string[] = [];
@@ -13,13 +19,28 @@ export class L_Env {
   private haves = new Set<string>();
 
   private bys = new Map<string, StoredFact>();
-  private existFactMemory = new Map<string, OneLayerStoredFact[]>();
+  // private existFactMemory = new Map<string, OneLayerStoredFact[]>();
   private declaredExist = new Map<string, MemorizedExistDecl>();
 
   // private exists = new Map<string, StoredFact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  declNewExist(decl: ExistDeclNode): boolean {
+    try {
+      const out = this.declaredExist.get(decl.name);
+      if (out !== undefined) {
+        this.newMessage(`${decl.name} already declared.`);
+        return false;
+      } else {
+        this.declaredExist.set(decl.name, decl.toMemorized());
+        return true;
+      }
+    } catch {
+      return false;
+    }
   }
 
   // newExist(s: string, exist: StoredFact): boolean {

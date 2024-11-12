@@ -8,7 +8,7 @@ import {
   IffDeclNode,
   ToCheckNode,
   ProveNode,
-  HaveNode,
+  // HaveNode,
   OnlyIfDeclNode,
   PostfixProve,
   IfThenDeclNode,
@@ -32,7 +32,7 @@ import {
   LetKeywords,
   ThenKeywords,
   ProveKeywords,
-  HaveKeywords,
+  // HaveKeywords,
   ProveByContradictionKeyword,
   IsKeywords,
   L_Keywords,
@@ -133,7 +133,7 @@ const KeywordFunctionMap: {
   prove: proveParse,
   prove_by_contradiction: proveParse,
   // exist: existParse,
-  have: haveParse,
+  // have: haveParse,
   return: returnParse,
   // return_exist: returnExistParse,
   by: byParse,
@@ -374,45 +374,45 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
   }
 }
 
-function haveParse(env: L_Env, tokens: string[]): HaveNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function haveParse(env: L_Env, tokens: string[]): HaveNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, HaveKeywords);
+//   try {
+//     skip(tokens, HaveKeywords);
 
-    const vars: string[] = [];
-    while (![...L_Ends, , ":"].includes(tokens[0])) {
-      vars.push(shiftVar(tokens));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
+//     const vars: string[] = [];
+//     while (![...L_Ends, , ":"].includes(tokens[0])) {
+//       vars.push(shiftVar(tokens));
+//       if (isCurToken(tokens, ",")) skip(tokens, ",");
+//     }
 
-    if (!vars.every((e) => !L_Keywords.includes(e))) {
-      env.newMessage(`Error: ${vars} contain LiTeX keywords.`);
-      throw Error();
-    }
+//     if (!vars.every((e) => !L_Keywords.includes(e))) {
+//       env.newMessage(`Error: ${vars} contain LiTeX keywords.`);
+//       throw Error();
+//     }
 
-    if (L_Ends.includes(tokens[0])) {
-      skip(tokens, L_Ends);
-      return new HaveNode(vars, []);
-    } else {
-      skip(tokens, ":");
-      const facts: OptNode[] = [];
+//     if (L_Ends.includes(tokens[0])) {
+//       skip(tokens, L_Ends);
+//       return new HaveNode(vars, []);
+//     } else {
+//       skip(tokens, ":");
+//       const facts: OptNode[] = [];
 
-      while (!L_Ends.includes(tokens[0])) {
-        const fact = optParseWithNot(env, tokens, true);
-        facts.push(fact);
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
-      }
-      skip(tokens, L_Ends);
+//       while (!L_Ends.includes(tokens[0])) {
+//         const fact = optParseWithNot(env, tokens, true);
+//         facts.push(fact);
+//         if (isCurToken(tokens, ",")) skip(tokens, ",");
+//       }
+//       skip(tokens, L_Ends);
 
-      return new HaveNode(vars, facts);
-    }
-  } catch (error) {
-    handleParseError(env, "have", index, start);
-    throw error;
-  }
-}
+//       return new HaveNode(vars, facts);
+//     }
+//   } catch (error) {
+//     handleParseError(env, "have", index, start);
+//     throw error;
+//   }
+// }
 
 // Main Function of parser
 function factsParse(

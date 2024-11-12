@@ -1,4 +1,5 @@
 import { L_Env } from "./L_Env.ts";
+import { MemorizedExistDecl } from "./L_Memory.ts";
 
 export abstract class L_Node {}
 
@@ -297,14 +298,23 @@ export class ExistDeclNode extends DeclNode {
     name: string = "",
     vars: string[] = [],
     req: ToCheckNode[] = [],
-    existVars: string[] = [],
-    existFacts: ToCheckNode[] = []
+    private existVars: string[] = [],
+    private existFacts: ToCheckNode[] = []
   ) {
     super(name, vars, req, []); // We don't use onlyIfs field in ExistDecl.
   }
 
+  toMemorized(): MemorizedExistDecl {
+    return new MemorizedExistDecl(this.existVars, this.existFacts);
+  }
+
   override toString(): string {
     return `def exist ${this.name}(${this.vars})`;
+  }
+
+  getIfNode(): IfNode {
+    const itself = [new OptNode(this.name, this.vars, true)];
+    return new IfNode(this.vars, this.req, itself, true, undefined);
   }
 }
 
@@ -356,17 +366,17 @@ export class ProveNode extends L_Node {
   }
 }
 
-export class HaveNode extends L_Node {
-  constructor(public vars: string[], public facts: OptNode[]) {
-    super();
-  }
+// export class HaveNode extends L_Node {
+//   constructor(public vars: string[], public facts: OptNode[]) {
+//     super();
+//   }
 
-  override toString() {
-    return `${this.vars.join(", ")}| ${this.facts
-      .map((s) => s.toString())
-      .join(", ")}`;
-  }
-}
+//   override toString() {
+//     return `${this.vars.join(", ")}| ${this.facts
+//       .map((s) => s.toString())
+//       .join(", ")}`;
+//   }
+// }
 
 export class PostfixProve extends L_Node {
   constructor(public facts: ToCheckNode[], public block: L_Node[]) {

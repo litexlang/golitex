@@ -5,7 +5,7 @@ import {
   ToCheckNode,
   DeclNode,
   ProveNode,
-  HaveNode,
+  // HaveNode,
   PostfixProve,
   OptNode,
   LocalEnvNode,
@@ -13,6 +13,7 @@ import {
   // ReturnExistNode,
   ByNode,
   IfNode,
+  ExistDeclNode,
   // STNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
@@ -53,12 +54,12 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   IffDeclNode: defExec,
   IfThenDeclNode: defExec,
-  ExistDeclNode: defExec,
+  ExistDeclNode: defExistExec,
   OnlyIfDeclNode: defExec,
   KnowNode: knowExec,
   LetNode: letExec,
   ProveNode: proveExec,
-  HaveNode: haveExec,
+  // HaveNode: haveExec,
   PostfixProve: postfixProveExec,
   LocalEnvNode: localEnvExec,
   ReturnNode: returnExec,
@@ -112,46 +113,46 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
   }
 }
 
-function haveExec(env: L_Env, node: HaveNode): RType {
-  try {
-    for (const e of node.vars) {
-      const ok = env.safeNewVar(e);
-      if (!ok) return RType.Error;
-    }
+// function haveExec(env: L_Env, node: HaveNode): RType {
+//   try {
+//     for (const e of node.vars) {
+//       const ok = env.safeNewVar(e);
+//       if (!ok) return RType.Error;
+//     }
 
-    for (const f of node.facts) {
-      const ok = f.factsDeclared(env);
-      if (!ok) {
-        env.newMessage(`Not all of operators in ${f} are declared`);
-        return RType.Error;
-      }
-    }
+//     for (const f of node.facts) {
+//       const ok = f.factsDeclared(env);
+//       if (!ok) {
+//         env.newMessage(`Not all of operators in ${f} are declared`);
+//         return RType.Error;
+//       }
+//     }
 
-    for (const fact of node.facts) {
-      if (!env.inHaves(fact.fullName)) {
-        env.newMessage(`Not every existence of given fact is validated.`);
-        return RType.Error;
-      }
-    }
+//     for (const fact of node.facts) {
+//       if (!env.inHaves(fact.fullName)) {
+//         env.newMessage(`Not every existence of given fact is validated.`);
+//         return RType.Error;
+//       }
+//     }
 
-    for (const fact of node.facts) {
-      if (node.vars.every((e) => !fact.vars.includes(e))) {
-        env.newMessage(`${fact} does not include any newly declared variable.`);
-        return RType.Error;
-      }
-      const ok = L_Memory.store(env, fact, [], true);
-      if (!ok) {
-        env.newMessage(`Failed to store ${fact}`);
-        return RType.Error;
-      }
-    }
+//     for (const fact of node.facts) {
+//       if (node.vars.every((e) => !fact.vars.includes(e))) {
+//         env.newMessage(`${fact} does not include any newly declared variable.`);
+//         return RType.Error;
+//       }
+//       const ok = L_Memory.store(env, fact, [], true);
+//       if (!ok) {
+//         env.newMessage(`Failed to store ${fact}`);
+//         return RType.Error;
+//       }
+//     }
 
-    return RType.True;
-  } catch {
-    env.newMessage(`Error: ${node.toString()}`);
-    return RType.Error;
-  }
-}
+//     return RType.True;
+//   } catch {
+//     env.newMessage(`Error: ${node.toString()}`);
+//     return RType.Error;
+//   }
+// }
 
 function letExec(env: L_Env, node: LetNode): RType {
   try {
@@ -680,6 +681,26 @@ function byExec(env: L_Env, byNode: ByNode): RType {
     return out;
   } catch {
     env.newMessage("by");
+    return RType.Error;
+  }
+}
+
+function defExistExec(env: L_Env, node: ExistDeclNode): RType {
+  try {
+    let ok = env.safeDeclOpt(node.name, node);
+    if (!ok) return RType.Error;
+
+    ok = env.declNewExist(node);
+    if (!ok) {
+      env.newMessage(`Failed to store ${node}`);
+      return RType.Error;
+    }
+
+    ok = L_Memory.storeFactAndBy(env, node.getIfNode(), true);
+
+    return RType.True;
+  } catch {
+    env.newMessage("def exist");
     return RType.Error;
   }
 }

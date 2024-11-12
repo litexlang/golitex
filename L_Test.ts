@@ -554,8 +554,13 @@ const testList55 = [
 
 const testList56 = [
   "def obj(x) => {};",
+  "def obj0(x) => {};",
   "def obj2(a,b) => {};",
-  "def E(x): x is obj exist y: obj2(x,y);",
+  "def E(x): x is obj exist y: obj2(x,y)",
+  "let x : x is obj;",
+  "have E(x): z;",
+  "obj2(x,z);",
+  "know if x : x is obj0 => {E(x)};",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {

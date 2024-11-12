@@ -14,14 +14,14 @@ import {
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
 
-export class OneLayerStoredFact {
-  constructor(
-    public fixedVars: string[],
-    private ifVars: string[],
-    private ifReq: ToCheckNode[],
-    public isT: boolean
-  ) {}
-}
+// export class OneLayerStoredFact {
+//   constructor(
+//     public fixedVars: string[],
+//     private ifVars: string[],
+//     private ifReq: ToCheckNode[],
+//     public isT: boolean
+//   ) {}
+// }
 
 export class MemorizedExistDecl {
   constructor(private vars: string[], private facts: ToCheckNode[]) {}
