@@ -44,7 +44,7 @@ export const AreKeywords = ["are"];
 export const IsAreKeywords = [...IsKeywords, ...AreKeywords];
 export const NotKeywords = ["not"];
 export const OrKeywords = ["or"];
-export const PostfixProveKeywords = ["prove"];
+export const PostProveKeywords = ["prove"];
 export const WhenKeyword = "when";
 export const ContradictionKeyword = "contradiction";
 export const ReturnKeyword = ["return", "so"];
@@ -77,7 +77,7 @@ export const L_Keywords: string[] = [
   ...AreKeywords,
   ...NotKeywords,
   ...OrKeywords,
-  ...PostfixProveKeywords,
+  ...PostProveKeywords,
   ...ReturnExistKeyword,
   ...ReturnKeyword,
   ...DefByKeywords,
