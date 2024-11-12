@@ -671,6 +671,11 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
       req = factsParse(env, tokens, ends, false);
     }
 
+    if (L_Ends.includes(tokens[0])) {
+      //! MAYBE I SHOULD SIMPLY RETURN DeclNode
+      return new IfThenDeclNode(opt.fullName, opt.vars, [], []);
+    }
+
     const separator = shiftVar(tokens);
 
     // let byName: undefined | string = undefined;
@@ -709,7 +714,10 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
       }
       skip(tokens, ":");
 
-      const existFacts = factsParse(env, tokens, L_Ends, false);
+      skip(tokens, "{");
+      const existFacts = factsParse(env, tokens, ["}"], false);
+      skip(tokens, "}");
+
       skip(tokens, L_Ends);
       return new ExistDeclNode(
         opt.fullName,
