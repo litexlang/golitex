@@ -146,7 +146,12 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
 
           // const fixedVars = req.vars.map((e) => map.get(e)) as string[];
           if (everyVarInThisReqIsFixed) {
-            const toCheck = new OptNode(req.name, fixedVars);
+            const toCheck = new OptNode(
+              req.name,
+              fixedVars,
+              req.isT, //! Unknown whether should be true or req.isT
+              undefined
+            );
             const out = checkOptLiterally(newEnv, toCheck);
             if (out === RType.True) {
               // store checked req as future stored facts.
@@ -188,7 +193,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
           for (const f of req.facts) {
             newReq.push(f.useMapToCopy(map));
           }
-          const out = checkOr(newEnv, new OrNode(newReq, req.isT));
+          const out = checkOr(newEnv, new OrNode(newReq, req.isT, undefined));
           if (out === RType.True) continue;
           else if (out === RType.Error) {
             newEnv.getMessages().forEach((e) => env.newMessage(e));

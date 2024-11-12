@@ -243,7 +243,7 @@ function defExec(env: L_Env, node: DeclNode): RType {
     for (const onlyIf of node.onlyIfs) {
       if (onlyIf instanceof IfNode) {
         const higherStoreReq = new StoredReq(node.vars, [
-          new OptNode(node.name, node.vars),
+          new OptNode(node.name, node.vars, true, undefined),
           ...node.req,
         ]);
         const higherStoredFact = new StoredFact([], [higherStoreReq], true);

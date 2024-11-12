@@ -4,9 +4,7 @@ import { MemorizedExistDecl } from "./L_Memory.ts";
 export abstract class L_Node {}
 
 export class ToCheckNode extends L_Node {
-  useName: string = "";
-
-  constructor(public isT: boolean) {
+  constructor(public isT: boolean, public defName: string | undefined) {
     super();
   }
 
@@ -23,17 +21,21 @@ export class ToCheckNode extends L_Node {
 
   useMapToCopy(map: Map<string, string>): ToCheckNode {
     map;
-    return new ToCheckNode(true);
+    return new ToCheckNode(true, undefined);
   }
 
   copyWithoutIsT(newIsT: boolean): ToCheckNode {
-    return new ToCheckNode(newIsT);
+    return new ToCheckNode(newIsT, undefined);
   }
 }
 
 export class OrNode extends ToCheckNode {
-  constructor(public facts: ToCheckNode[], isT: boolean = true) {
-    super(isT);
+  constructor(
+    public facts: ToCheckNode[],
+    isT: boolean,
+    defName: string | undefined
+  ) {
+    super(isT, defName);
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
@@ -45,7 +47,7 @@ export class OrNode extends ToCheckNode {
   }
 
   override copyWithoutIsT(newIsT: boolean): ToCheckNode {
-    return new OrNode(this.facts, newIsT);
+    return new OrNode(this.facts, newIsT, this.defName);
   }
 
   override toString(): string {
@@ -57,13 +59,11 @@ export class LogicNode extends ToCheckNode {
   constructor(
     public vars: string[] = [],
     public req: ToCheckNode[] = [],
-    //! I think we should onlyIfs: ToCheckNode[] because despite we can not store if-then
-    //! we can still check it.
     public onlyIfs: ToCheckNode[] = [],
-    isT: boolean = true,
-    public defName: undefined | string = undefined // public isIff: boolean = false
+    isT: boolean,
+    defName: undefined | string // public isIff: boolean = false
   ) {
-    super(isT);
+    super(isT, defName);
   }
 
   override copyWithoutIsT(newIsT: boolean): LogicNode {
@@ -100,10 +100,9 @@ export class LogicNode extends ToCheckNode {
       .join(", ")} ${separator} {${this.onlyIfs
       .map((e) => e.toString())
       .join(", ")}}`;
-    const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
 
-    return notPart + mainPart + useNamePart;
+    return notPart + mainPart;
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
@@ -208,12 +207,17 @@ export class IfNode extends LogicNode {
 // export class OnlyIfNode extends LogicalOptNode {}
 
 export class OptNode extends ToCheckNode {
-  constructor(public name: string, public vars: string[], isT: boolean = true) {
-    super(isT);
+  constructor(
+    public name: string,
+    public vars: string[],
+    isT: boolean,
+    defName: string | undefined
+  ) {
+    super(isT, defName);
   }
 
   override copyWithoutIsT(newIsT: boolean): OptNode {
-    return new OptNode(this.name, this.vars, newIsT);
+    return new OptNode(this.name, this.vars, newIsT, this.defName);
   }
 
   override useMapToCopy(map: Map<string, string>): OptNode {
@@ -228,14 +232,13 @@ export class OptNode extends ToCheckNode {
         newVars.push(fixed);
       }
     }
-    return new OptNode(this.name, newVars, this.isT);
+    return new OptNode(this.name, newVars, this.isT, this.defName);
   }
 
   override toString() {
     const mainPart = this.name + `(${this.vars.join(", ")})`;
-    const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
-    return notPart + mainPart + useNamePart;
+    return notPart + mainPart;
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
@@ -309,7 +312,7 @@ export class ExistDeclNode extends DeclNode {
   }
 
   getIfNode(): IfNode {
-    const itself = [new OptNode(this.name, this.vars, true)];
+    const itself = [new OptNode(this.name, this.vars, true, undefined)];
     return new IfNode(this.vars, this.req, itself, true, undefined);
   }
 }

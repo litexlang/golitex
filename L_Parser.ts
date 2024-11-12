@@ -289,7 +289,7 @@ function optParseWithNot(
       name = shiftVar(tokens);
     }
 
-    return new OptNode(name, vars, isT);
+    return new OptNode(name, vars, isT, undefined);
   } catch (error) {
     handleParseError(env, `${start} is invalid operator.`, index, start);
     throw error;
@@ -508,7 +508,7 @@ function optParseWithNotAre(
 
       skip(tokens, ")");
 
-      return [new OptNode(name, vars, isT)];
+      return [new OptNode(name, vars, isT, undefined)];
     } else {
       while (![...AreKeywords, ...IsKeywords].includes(tokens[0])) {
         const v = shiftVar(tokens);
@@ -524,7 +524,7 @@ function optParseWithNotAre(
       }
 
       name = shiftVar(tokens);
-      const outs = vars.map((e) => new OptNode(name, [e], isT));
+      const outs = vars.map((e) => new OptNode(name, [e], isT, undefined));
       return outs;
     }
   } catch (error) {
@@ -968,7 +968,7 @@ function orParse(env: L_Env, tokens: string[]): OrNode {
     const facts = factsParse(env, tokens, ["}"], false);
     skip(tokens, "}");
 
-    return new OrNode(facts, true);
+    return new OrNode(facts, true, undefined);
   } catch (error) {
     handleParseError(env, "operator", index, start);
     throw error;
@@ -988,7 +988,7 @@ function notsParse(env: L_Env, tokens: string[]): OrNode {
     }
     skip(tokens, "}");
 
-    return new OrNode(facts, true);
+    return new OrNode(facts, true, undefined);
   } catch (error) {
     handleParseError(env, "nots", index, start);
     throw error;

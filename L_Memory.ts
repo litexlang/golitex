@@ -136,26 +136,26 @@ export class StoredFact {
 }
 
 export function declNewFact(env: L_Env, node: DeclNode): boolean {
-  const decl = new OptNode(node.name, node.vars);
+  const decl = new OptNode(node.name, node.vars, true, undefined);
   let ok: boolean = true;
   if (node instanceof IfThenDeclNode) {
     const r = [decl, ...node.req];
-    const f = new IfNode(node.vars, r, node.onlyIfs, true);
+    const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
     ok = storeIfThen(env, f, [], true);
   } else if (node instanceof IffDeclNode) {
     let r = [decl, ...node.req];
-    let f = new IfNode(node.vars, r, node.onlyIfs, true);
+    let f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
     ok = storeIfThen(env, f, [], true);
     if (!ok) {
       return false;
     }
     r = [...node.req, ...node.onlyIfs];
-    f = new IfNode(node.vars, r, [decl], true);
+    f = new IfNode(node.vars, r, [decl], true, undefined);
     ok = storeIfThen(env, f, [], true);
     return ok;
   } else if (node instanceof OnlyIfDeclNode) {
     const r = [...node.req, ...node.onlyIfs];
-    const f = new IfNode(node.vars, r, [decl], true);
+    const f = new IfNode(node.vars, r, [decl], true, undefined);
     ok = storeIfThen(env, f, [], true);
     return ok;
   } else if (node instanceof ExistDeclNode) {
