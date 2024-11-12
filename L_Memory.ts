@@ -7,7 +7,7 @@ import {
   OnlyIfDeclNode,
   OptNode,
   OrNode,
-  ExistNode,
+  // ExistNode,
   ExistDeclNode,
   IfNode,
 } from "./ast.ts";
@@ -154,13 +154,15 @@ function storeIfThen(
     } else {
       if (ifThen.byName === undefined) {
         env.newMessage(
-          `Failed to store ${ifThen}, because it's suppose to have a name.`
+          `Failed to store ${ifThen}, because not-if-then is suppose to have a name.`
         );
       }
 
+      return false; 
+
       // declareAndStoreExist(env);
-      const exist = ExistNode.ifThenToExist(ifThen);
-      return declareAndStoreExist(env, exist, [], true);
+      // const exist = ExistNode.ifThenToExist(ifThen);
+      // return declareAndStoreExist(env, exist, [], true);
     }
   } catch {
     return false;
@@ -409,29 +411,29 @@ export function storeFactInStoredBy(
   }
 }
 
-function declareAndStoreExist(
-  env: L_Env,
-  fact: ExistNode,
-  req: StoredReq[],
-  isT: boolean = false
-): boolean {
-  try {
-    if (fact.byName === undefined) {
-      env.newMessage(`${fact.byName} has already declared as st name.`);
-      throw Error();
-    }
+// function declareAndStoreExist(
+//   env: L_Env,
+//   fact: ExistNode,
+//   req: StoredReq[],
+//   isT: boolean = false
+// ): boolean {
+//   try {
+//     if (fact.byName === undefined) {
+//       env.newMessage(`${fact.byName} has already declared as st name.`);
+//       throw Error();
+//     }
 
-    const newReq = [
-      ...req,
-      new StoredReq(fact.vars, [...fact.req, ...fact.onlyIfs]),
-    ];
-    const toBeStored = new StoredFact(fact.vars, newReq, isT);
+//     const newReq = [
+//       ...req,
+//       new StoredReq(fact.vars, [...fact.req, ...fact.onlyIfs]),
+//     ];
+//     const toBeStored = new StoredFact(fact.vars, newReq, isT);
 
-    return env.newExist(fact.byName, toBeStored);
-  } catch {
-    throw Error();
-  }
-}
+//     return env.newExist(fact.byName, toBeStored);
+//   } catch {
+//     throw Error();
+//   }
+// }
 
 export function storeFactAndBy(
   env: L_Env,
@@ -441,9 +443,11 @@ export function storeFactAndBy(
   try {
     if (fact instanceof OptNode) {
       return storeOpt(env, fact as OptNode, [], storeContrapositive);
-    } else if (fact instanceof ExistNode) {
-      return declareAndStoreExist(env, fact, [], true);
-    } else if (fact instanceof IfNode) {
+    } 
+    // else if (fact instanceof ExistNode) {
+    //   return declareAndStoreExist(env, fact, [], true);
+    // } 
+    else if (fact instanceof IfNode) {
       let ok = storeIfThen(env, fact, [], storeContrapositive);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);

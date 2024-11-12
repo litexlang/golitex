@@ -52,7 +52,7 @@ export const ReturnExistKeyword = ["return_exist"];
 export const DefByKeywords = ["def_by"];
 
 export const NotsKeyword = "nots";
-export const STKeyword = "st";
+// export const STKeyword = "st";
 
 export const L_Keywords: string[] = [
   "#",
@@ -82,7 +82,7 @@ export const L_Keywords: string[] = [
   ...ReturnKeyword,
   ...DefByKeywords,
   NotsKeyword,
-  STKeyword,
+  // STKeyword,
 ];
 
 export const LogicalOptPairs: { [k: string]: string[] } = {

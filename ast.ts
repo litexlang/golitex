@@ -116,85 +116,86 @@ export class LogicNode extends ToCheckNode {
   }
 }
 
-export class ExistNode extends LogicNode {
-  constructor(
-    vars: string[] = [],
-    req: ToCheckNode[] = [],
-    onlyIfs: ToCheckNode[] = [],
-    isT: boolean = true,
-    byName: undefined | string = undefined
-  ) {
-    super(vars, req, onlyIfs, isT, byName);
-  }
+// export class ExistNode extends LogicNode {
+//   constructor(
+//     vars: string[] = [],
+//     req: ToCheckNode[] = [],
+//     onlyIfs: ToCheckNode[] = [],
+//     isT: boolean = true,
+//     byName: undefined | string = undefined
+//   ) {
+//     super(vars, req, onlyIfs, isT, byName);
+//   }
 
-  override toString(): string {
-    return `exist ${this.vars}: ${[...this.req, ...this.onlyIfs].join(", ")}`;
-  }
+//   override toString(): string {
+//     return `exist ${this.vars}: ${[...this.req, ...this.onlyIfs].join(", ")}`;
+//   }
 
-  getContraPositive() {
-    const nots = new OrNode(
-      this.onlyIfs.map((e) => {
-        e.isT = !e.isT;
-        return e;
-      }),
-      true
-    );
-    const ifThen = new LogicNode(
-      this.vars,
-      this.req,
-      [nots],
-      true,
-      this.byName
-      // false
-    );
-    return ifThen;
-  }
+//   getContraPositive() {
+//     const nots = new OrNode(
+//       this.onlyIfs.map((e) => {
+//         e.isT = !e.isT;
+//         return e;
+//       }),
+//       true
+//     );
+//     const ifThen = new LogicNode(
+//       this.vars,
+//       this.req,
+//       [nots],
+//       true,
+//       this.byName
+//       // false
+//     );
+//     return ifThen;
+//   }
 
-  static ifThenToExist(ifThen: LogicNode): ExistNode {
-    if (ifThen.isT !== false || ifThen.byName === undefined) throw Error;
-    const nots = new OrNode(
-      ifThen.onlyIfs.map((e) => {
-        e.isT = !e.isT;
-        return e;
-      })
-    );
+//   static ifThenToExist(ifThen: LogicNode): ExistNode {
+//     if (ifThen.isT !== false || ifThen.byName === undefined) throw Error;
+//     const nots = new OrNode(
+//       ifThen.onlyIfs.map((e) => {
+//         e.isT = !e.isT;
+//         return e;
+//       })
+//     );
 
-    return new ExistNode(
-      ifThen.vars,
-      ifThen.req,
-      [nots],
-      true,
-      ifThen.byName
-      // false
-    );
-  }
+//     return new ExistNode(
+//       ifThen.vars,
+//       ifThen.req,
+//       [nots],
+//       true,
+//       ifThen.byName
+//       // false
+//     );
+//   }
 
-  override useMapToCopy(map: Map<string, string>): ExistNode {
-    const newVars = [...this.vars];
-    const req = this.req.map((e) => e.useMapToCopy(map));
-    const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
+//   override useMapToCopy(map: Map<string, string>): ExistNode {
+//     const newVars = [...this.vars];
+//     const req = this.req.map((e) => e.useMapToCopy(map));
+//     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
 
-    return new ExistNode(newVars, req, onlyIfs, this.isT, this.byName);
-  }
+//     return new ExistNode(newVars, req, onlyIfs, this.isT, this.byName);
+//   }
 
-  override copyWithoutIsT(newIsT: boolean): ExistNode {
-    return new ExistNode(
-      this.vars,
-      this.req,
-      this.onlyIfs,
-      newIsT,
-      this.byName
-    );
-  }
+//   override copyWithoutIsT(newIsT: boolean): ExistNode {
+//     return new ExistNode(
+//       this.vars,
+//       this.req,
+//       this.onlyIfs,
+//       newIsT,
+//       this.byName
+//     );
+//   }
 
-  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
-    return super.varsDeclared(env, freeVars);
-  }
+//   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
+//     return super.varsDeclared(env, freeVars);
+//   }
 
-  override factsDeclared(env: L_Env): boolean {
-    return super.factsDeclared(env);
-  }
-}
+//   override factsDeclared(env: L_Env): boolean {
+//     return super.factsDeclared(env);
+//   }
+// }
+
 export class IffNode extends LogicNode {}
 export class IfNode extends LogicNode {
   useByToDecl(): IfThenDeclNode {

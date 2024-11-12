@@ -17,10 +17,10 @@ import {
   // ReturnExistNode,
   ByNode,
   OrNode,
-  ExistNode,
-  STNode,
+  // ExistNode,
+  // STNode,
   IffNode,
-  ExistDeclNode,
+  // ExistDeclNode,
   IfNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
@@ -50,7 +50,7 @@ import {
   NotsKeyword,
   NotKeywords,
   ExistKeyword,
-  STKeyword,
+  // STKeyword,
   AreKeywords,
 } from "./common.ts";
 
@@ -136,7 +136,7 @@ const KeywordFunctionMap: {
   return: returnParse,
   // return_exist: returnExistParse,
   by: byParse,
-  st: stParse,
+  // st: stParse,
 };
 
 export function getNodesFromSingleNode(
@@ -605,9 +605,10 @@ function logicalOptParse(env: L_Env, tokens: string[]): LogicNode {
       return new IfNode(vars, req, onlyIfs, true, byName);
     } else if (IffKeywords.includes(type)) {
       return new IffNode(vars, req, onlyIfs, true, byName);
-    } else if (ExistKeyword === type) {
-      return new ExistNode(vars, req, onlyIfs, true, byName);
     }
+    //  else if (ExistKeyword === type) {
+    //   return new ExistNode(vars, req, onlyIfs, true, byName);
+    // }
 
     throw Error();
   } catch (error) {
@@ -688,9 +689,10 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
       return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
     } else if (OnlyIfThenKeywords.includes(separator)) {
       return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
-    } else if (STKeyword === separator) {
-      return new ExistDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
     }
+    //  else if (STKeyword === separator) {
+    //   return new ExistDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+    // }
 
     throw Error();
   } catch (error) {
@@ -806,27 +808,27 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
   }
 }
 
-function stParse(env: L_Env, tokens: string[]): STNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function stParse(env: L_Env, tokens: string[]): STNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, STKeyword);
-    const byName = shiftVar(tokens);
-    skip(tokens, "(");
-    const vars: string[] = [];
-    while (!isCurToken(tokens, ")")) {
-      vars.push(shiftVar(tokens));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, ")");
+//   try {
+//     skip(tokens, STKeyword);
+//     const byName = shiftVar(tokens);
+//     skip(tokens, "(");
+//     const vars: string[] = [];
+//     while (!isCurToken(tokens, ")")) {
+//       vars.push(shiftVar(tokens));
+//       if (isCurToken(tokens, ",")) skip(tokens, ",");
+//     }
+//     skip(tokens, ")");
 
-    return new STNode(byName, vars);
-  } catch (error) {
-    handleParseError(env, "st", index, start);
-    throw error;
-  }
-}
+//     return new STNode(byName, vars);
+//   } catch (error) {
+//     handleParseError(env, "st", index, start);
+//     throw error;
+//   }
+// }
 
 // function parseVanillaOptWithNot(
 //   env: L_Env,

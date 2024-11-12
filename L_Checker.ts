@@ -1,6 +1,6 @@
 import {
   ByNode,
-  ExistNode,
+  // ExistNode,
   ToCheckNode,
   OptNode,
   OrNode,
@@ -25,9 +25,10 @@ export function check(env: L_Env, toCheck: ToCheckNode): RType {
     return checkIfThen(env, toCheck);
   } else if (toCheck instanceof OrNode) {
     return checkOr(env, toCheck);
-  } else if (toCheck instanceof ExistNode) {
-    return checkExist(env, toCheck);
-  }
+  } 
+  // else if (toCheck instanceof ExistNode) {
+  //   return checkExist(env, toCheck);
+  // }
 
   return RType.Unknown;
 }
@@ -196,19 +197,20 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
             unknown = true;
             break;
           }
-        } else if (req instanceof ExistNode) {
-          const newReq: ExistNode = req.useMapToCopy(map) as ExistNode;
-
-          const out = checkExistInLogicReq(newEnv, newReq);
-          if (out === RType.True) continue;
-          else if (out === RType.Error) {
-            newEnv.getMessages().forEach((e) => env.newMessage(e));
-            return RType.Error;
-          } else {
-            unknown = true;
-            break;
-          }
         }
+        //  else if (req instanceof ExistNode) {
+        //   const newReq: ExistNode = req.useMapToCopy(map) as ExistNode;
+
+        //   const out = checkExistInLogicReq(newEnv, newReq);
+        //   if (out === RType.True) continue;
+        //   else if (out === RType.Error) {
+        //     newEnv.getMessages().forEach((e) => env.newMessage(e));
+        //     return RType.Error;
+        //   } else {
+        //     unknown = true;
+        //     break;
+        //   }
+        // }
       }
 
       if (unknown) break;
@@ -378,69 +380,69 @@ function checkOr(env: L_Env, toCheck: OrNode): RType {
   }
 }
 
-function checkExist(env: L_Env, toCheck: ExistNode): RType {
-  try {
-    if (toCheck.isT) {
-      env.newMessage(`exist-type fact ${toCheck} can not be checked directly`);
-      return RType.Error;
-    }
+// function checkExist(env: L_Env, toCheck: ExistNode): RType {
+//   try {
+//     if (toCheck.isT) {
+//       env.newMessage(`exist-type fact ${toCheck} can not be checked directly`);
+//       return RType.Error;
+//     }
 
-    const nots = new OrNode(
-      toCheck.onlyIfs.map((e) => {
-        e.isT = !e.isT;
-        return e;
-      }),
-      true
-    );
-    const ifThen = new IfNode(
-      toCheck.vars,
-      toCheck.req,
-      [nots],
-      true,
-      toCheck.byName
-      // false
-    );
-    return checkIfThen(env, ifThen);
-  } catch {
-    return RType.Error;
-  }
-}
+//     const nots = new OrNode(
+//       toCheck.onlyIfs.map((e) => {
+//         e.isT = !e.isT;
+//         return e;
+//       }),
+//       true
+//     );
+//     const ifThen = new IfNode(
+//       toCheck.vars,
+//       toCheck.req,
+//       [nots],
+//       true,
+//       toCheck.byName
+//       // false
+//     );
+//     return checkIfThen(env, ifThen);
+//   } catch {
+//     return RType.Error;
+//   }
+// }
 
-function checkExistInLogicReq(env: L_Env, toCheck: ExistNode): RType {
-  try {
-    if (toCheck.isT) {
-      let out = RType.True;
-      for (const fact of [...toCheck.req, ...toCheck.onlyIfs]) {
-        if (fact instanceof OptNode) {
-          out = checkOptLiterally(env, fact);
-        } else if (fact instanceof IfNode) {
-          out = checkIfThen(env, fact);
-        } else if (fact instanceof OrNode) {
-          out = checkOr(env, fact);
-        } else throw Error;
+// function checkExistInLogicReq(env: L_Env, toCheck: ExistNode): RType {
+//   try {
+//     if (toCheck.isT) {
+//       let out = RType.True;
+//       for (const fact of [...toCheck.req, ...toCheck.onlyIfs]) {
+//         if (fact instanceof OptNode) {
+//           out = checkOptLiterally(env, fact);
+//         } else if (fact instanceof IfNode) {
+//           out = checkIfThen(env, fact);
+//         } else if (fact instanceof OrNode) {
+//           out = checkOr(env, fact);
+//         } else throw Error;
 
-        if (out !== RType.True) return out;
-      }
-      return out;
-    } else {
-      const nots = new OrNode(
-        toCheck.onlyIfs.map((e) => {
-          e.isT = !e.isT;
-          return e;
-        }),
-        true
-      );
-      const ifThen = new IfNode(
-        toCheck.vars,
-        toCheck.req,
-        [nots],
-        true,
-        toCheck.byName
-        // false
-      );
-      return checkIfThen(env, ifThen);
-    }
-  } catch {
-    return RType.Error;
-  }
-}
+//         if (out !== RType.True) return out;
+//       }
+//       return out;
+//     } else {
+//       const nots = new OrNode(
+//         toCheck.onlyIfs.map((e) => {
+//           e.isT = !e.isT;
+//           return e;
+//         }),
+//         true
+//       );
+//       const ifThen = new IfNode(
+//         toCheck.vars,
+//         toCheck.req,
+//         [nots],
+//         true,
+//         toCheck.byName
+//         // false
+//       );
+//       return checkIfThen(env, ifThen);
+//     }
+//   } catch {
+//     return RType.Error;
+//   }
+// }

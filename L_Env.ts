@@ -1,4 +1,4 @@
-import { DeclNode, ToCheckNode, LogicNode, OptNode } from "./ast.ts";
+import { DeclNode, ToCheckNode, LogicNode, OptNode,  } from "./ast.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_Memory.ts";
 
@@ -10,23 +10,23 @@ export class L_Env {
   private haves = new Set<string>();
 
   private bys = new Map<string, StoredFact>();
-  private exists = new Map<string, StoredFact[]>();
+  // private exists = new Map<string, StoredFact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
   }
 
-  newExist(s: string, exist: StoredFact): boolean {
-    const out = this.exists.get(s);
-    if (out !== undefined) {
-      out.push(exist);
-      // this.exists.set(s, exist);
-      return true;
-    } else {
-      this.newMessage(`exist ${s} already declared.`);
-      return false;
-    }
-  }
+  // newExist(s: string, exist: StoredFact): boolean {
+  //   const out = this.exists.get(s);
+  //   if (out !== undefined) {
+  //     out.push(exist);
+  //     // this.exists.set(s, exist);
+  //     return true;
+  //   } else {
+  //     this.newMessage(`exist ${s} already declared.`);
+  //     return false;
+  //   }
+  // }
 
   getDeclaredFact(s: string): DeclNode | undefined {
     if (this.declaredFacts.has(s)) {
@@ -47,12 +47,12 @@ export class L_Env {
     else return this.father.getBy(s);
   }
 
-  getSt(s: string): undefined | StoredFact[] {
-    const out = this.exists.get(s);
-    if (out !== undefined) return out;
-    else if (this.father === undefined) return undefined;
-    else return this.father.getSt(s);
-  }
+  // getSt(s: string): undefined | StoredFact[] {
+  //   const out = this.exists.get(s);
+  //   if (out !== undefined) return out;
+  //   else if (this.father === undefined) return undefined;
+  //   else return this.father.getSt(s);
+  // }
 
   setBy(s: string, by: StoredFact) {
     const out = this.bys.get(s);
@@ -240,13 +240,13 @@ export class L_Env {
     }
   }
 
-  printExists() {
-    console.log("\n----Exists----\n");
-    for (const [existName, exist] of this.exists) {
-      console.log(existName);
-      console.log(`${exist}\n`);
-    }
-  }
+  // printExists() {
+  //   console.log("\n----Exists----\n");
+  //   for (const [existName, exist] of this.exists) {
+  //     console.log(existName);
+  //     console.log(`${exist}\n`);
+  //   }
+  // }
 
   onFail(m: string, t: RType = RType.Error, err: unknown = null): RType {
     if (err instanceof Error) this.newMessage(err.message);
