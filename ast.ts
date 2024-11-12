@@ -267,8 +267,7 @@ export class DeclNode extends L_Node {
     public name: string = "",
     public vars: string[] = [],
     public req: ToCheckNode[] = [],
-    public onlyIfs: ToCheckNode[] = [],
-    public byName: string | undefined = undefined
+    public onlyIfs: ToCheckNode[] = [] // public byName: string | undefined = undefined
   ) {
     super();
   }
@@ -294,6 +293,16 @@ export class OnlyIfDeclNode extends DeclNode {
   }
 }
 export class ExistDeclNode extends DeclNode {
+  constructor(
+    name: string = "",
+    vars: string[] = [],
+    req: ToCheckNode[] = [],
+    onlyIfs: ToCheckNode[] = []
+    // byName: string | undefined = undefined
+  ) {
+    super(name, vars, req, onlyIfs);
+  }
+
   override toString(): string {
     return `def exist ${this.name}(${this.vars})`;
   }
@@ -401,12 +410,12 @@ export class ByNode extends L_Node {
   }
 }
 
-export class STNode extends L_Node {
-  constructor(public byName: string, public vars: string[]) {
-    super();
-  }
+// export class STNode extends L_Node {
+//   constructor(public byName: string, public vars: string[]) {
+//     super();
+//   }
 
-  override toString() {
-    return `${this.byName}(${this.vars.join(", ")}) is valid`;
-  }
-}
+//   override toString() {
+//     return `${this.byName}(${this.vars.join(", ")}) is valid`;
+//   }
+// }

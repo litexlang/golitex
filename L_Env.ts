@@ -1,15 +1,21 @@
-import { DeclNode, ToCheckNode, LogicNode, OptNode,  } from "./ast.ts";
+import { DeclNode, ToCheckNode, LogicNode, OptNode } from "./ast.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_Memory.ts";
+import { OneLayerStoredFact, MemorizedExistDecl } from "./L_Memory.ts";
 
 export class L_Env {
   private messages: string[] = [];
-  private declaredFacts = new Map<string, DeclNode>();
   private declaredVars = new Set<string>();
+
+  private declaredFacts = new Map<string, DeclNode>();
   private storage = new Map<string, StoredFact[]>();
+
   private haves = new Set<string>();
 
   private bys = new Map<string, StoredFact>();
+  private existFactMemory = new Map<string, OneLayerStoredFact[]>();
+  private declaredExist = new Map<string, MemorizedExistDecl>();
+
   // private exists = new Map<string, StoredFact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {

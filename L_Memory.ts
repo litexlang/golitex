@@ -14,6 +14,19 @@ import {
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
 
+export class OneLayerStoredFact {
+  constructor(
+    public fixedVars: string[],
+    private ifVars: string[],
+    private ifReq: ToCheckNode[],
+    public isT: boolean
+  ) {}
+}
+
+export class MemorizedExistDecl {
+  constructor(private vars: string[], private facts: ToCheckNode[]) {}
+}
+
 export class StoredReq {
   constructor(
     public vars: string[], // store free vars at current level
@@ -99,22 +112,22 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
   let ok: boolean = true;
   if (node instanceof IfThenDeclNode) {
     const r = [decl, ...node.req];
-    const f = new IfNode(node.vars, r, node.onlyIfs, true, node.byName);
+    const f = new IfNode(node.vars, r, node.onlyIfs, true);
     ok = storeIfThen(env, f, [], true);
   } else if (node instanceof IffDeclNode) {
     let r = [decl, ...node.req];
-    let f = new IfNode(node.vars, r, node.onlyIfs, true, node.byName);
+    let f = new IfNode(node.vars, r, node.onlyIfs, true);
     ok = storeIfThen(env, f, [], true);
     if (!ok) {
       return false;
     }
     r = [...node.req, ...node.onlyIfs];
-    f = new IfNode(node.vars, r, [decl], true, node.byName);
+    f = new IfNode(node.vars, r, [decl], true);
     ok = storeIfThen(env, f, [], true);
     return ok;
   } else if (node instanceof OnlyIfDeclNode) {
     const r = [...node.req, ...node.onlyIfs];
-    const f = new IfNode(node.vars, r, [decl], true, node.byName);
+    const f = new IfNode(node.vars, r, [decl], true);
     ok = storeIfThen(env, f, [], true);
     return ok;
   } else if (node instanceof ExistDeclNode) {
@@ -158,7 +171,7 @@ function storeIfThen(
         );
       }
 
-      return false; 
+      return false;
 
       // declareAndStoreExist(env);
       // const exist = ExistNode.ifThenToExist(ifThen);
@@ -362,13 +375,13 @@ export function storeIfThenBy(
   }
 }
 
-export function storeDeclaredIfThenAsBy(env: L_Env, node: DeclNode) {
-  if (node.byName !== undefined && node instanceof IfThenDeclNode) {
-    const ifThenToStore = new IfNode(node.vars, node.req, node.onlyIfs);
-    ifThenToStore.byName = node.byName;
-    storeIfThenBy(env, ifThenToStore, new StoredFact([], [], true));
-  }
-}
+// export function storeDeclaredIfThenAsBy(env: L_Env, node: DeclNode) {
+//   if (node.byName !== undefined && node instanceof IfThenDeclNode) {
+//     const ifThenToStore = new IfNode(node.vars, node.req, node.onlyIfs);
+//     ifThenToStore.byName = node.byName;
+//     storeIfThenBy(env, ifThenToStore, new StoredFact([], [], true));
+//   }
+// }
 
 export function storeFactInStoredBy(
   env: L_Env,
@@ -443,10 +456,10 @@ export function storeFactAndBy(
   try {
     if (fact instanceof OptNode) {
       return storeOpt(env, fact as OptNode, [], storeContrapositive);
-    } 
+    }
     // else if (fact instanceof ExistNode) {
     //   return declareAndStoreExist(env, fact, [], true);
-    // } 
+    // }
     else if (fact instanceof IfNode) {
       let ok = storeIfThen(env, fact, [], storeContrapositive);
       if (!ok) {

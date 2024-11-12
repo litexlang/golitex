@@ -684,11 +684,11 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
     skip(tokens, L_Ends);
 
     if (ThenKeywords.includes(separator)) {
-      return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+      return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs);
     } else if (IffThenKeywords.includes(separator)) {
-      return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+      return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs);
     } else if (OnlyIfThenKeywords.includes(separator)) {
-      return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+      return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs);
     }
     //  else if (STKeyword === separator) {
     //   return new ExistDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);

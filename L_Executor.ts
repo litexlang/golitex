@@ -236,7 +236,7 @@ function defExec(env: L_Env, node: DeclNode): RType {
     }
 
     // store declared opt by
-    L_Memory.storeDeclaredIfThenAsBy(env, node);
+    // L_Memory.storeDeclaredIfThenAsBy(env, node);
 
     for (const onlyIf of node.onlyIfs) {
       if (onlyIf instanceof IfNode) {
