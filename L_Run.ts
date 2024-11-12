@@ -35,5 +35,6 @@ export function runStrings(env: L_Env, exprs: string[], print: boolean = true) {
     runString(env, expr, print);
   }
 
+  console.log("-----\nDONE!\n");
   // env.printExists();
 }

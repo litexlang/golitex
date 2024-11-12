@@ -1,5 +1,5 @@
 import {
-  ByNode,
+  // ByNode,
   DeclNode,
   ToCheckNode,
   IffDeclNode,
@@ -193,7 +193,7 @@ function storeIfThen(
 
       return true;
     } else {
-      if (ifThen.byName === undefined) {
+      if (ifThen.defName === undefined) {
         env.newMessage(
           `Failed to store ${ifThen}, because not-if-then is suppose to have a name.`
         );
@@ -376,11 +376,11 @@ export function storeIfThenBy(
   try {
     higherStoredFact.req.push(new StoredReq(ifThen.vars, ifThen.req));
 
-    if (ifThen.byName !== undefined) {
+    if (ifThen.defName !== undefined) {
       higherStoredFact.onlyIfs = ifThen.onlyIfs;
-      env.setBy(ifThen.byName, higherStoredFact);
+      env.setBy(ifThen.defName, higherStoredFact);
       if (DEBUG_DICT["storeBy"]) {
-        env.newMessage(`[new by] ${ifThen.byName}`);
+        env.newMessage(`[new by] ${ifThen.defName}`);
       }
       return true;
     } else {
@@ -402,53 +402,53 @@ export function storeIfThenBy(
 }
 
 // export function storeDeclaredIfThenAsBy(env: L_Env, node: DeclNode) {
-//   if (node.byName !== undefined && node instanceof IfThenDeclNode) {
+//   if (node.defName !== undefined && node instanceof IfThenDeclNode) {
 //     const ifThenToStore = new IfNode(node.vars, node.req, node.onlyIfs);
-//     ifThenToStore.byName = node.byName;
+//     ifThenToStore.defName = node.defName;
 //     storeIfThenBy(env, ifThenToStore, new StoredFact([], [], true));
 //   }
 // }
 
-export function storeFactInStoredBy(
-  env: L_Env,
-  byNode: ByNode,
-  storeContrapositive: boolean
-): boolean {
-  try {
-    const storedFact = env.getBy(byNode.byName) as StoredFact;
+// export function storeFactInStoredBy(
+//   env: L_Env,
+//   byNode: ByNode,
+//   storeContrapositive: boolean
+// ): boolean {
+//   try {
+//     const storedFact = env.getBy(byNode.defName) as StoredFact;
 
-    const allFreeVars = storedFact.getAllFreeVars();
-    if (byNode.vars.length !== allFreeVars.length) {
-      env.newMessage(
-        `${byNode.byName} expect ${allFreeVars.length} variables, got ${byNode.vars.length}`
-      );
-      return false;
-    }
-    const map = new Map<string, string>();
-    for (const [i] of allFreeVars.entries()) {
-      map.set(allFreeVars[i], byNode.vars[i]);
-    }
+//     const allFreeVars = storedFact.getAllFreeVars();
+//     if (byNode.vars.length !== allFreeVars.length) {
+//       env.newMessage(
+//         `${byNode.defName} expect ${allFreeVars.length} variables, got ${byNode.vars.length}`
+//       );
+//       return false;
+//     }
+//     const map = new Map<string, string>();
+//     for (const [i] of allFreeVars.entries()) {
+//       map.set(allFreeVars[i], byNode.vars[i]);
+//     }
 
-    // Store onlyIfs bound to StoredBy
-    const onlyIfsToBeStored: ToCheckNode[] = [];
-    for (const onlyIf of storedFact.onlyIfs) {
-      const toStore = onlyIf.useMapToCopy(map);
-      onlyIfsToBeStored.push(toStore);
-    }
+//     // Store onlyIfs bound to StoredBy
+//     const onlyIfsToBeStored: ToCheckNode[] = [];
+//     for (const onlyIf of storedFact.onlyIfs) {
+//       const toStore = onlyIf.useMapToCopy(map);
+//       onlyIfsToBeStored.push(toStore);
+//     }
 
-    let ok: boolean = true;
-    for (const onlyIf of onlyIfsToBeStored) {
-      ok = store(env, onlyIf, [], storeContrapositive);
-      if (!ok) {
-        env.newMessage(`Failed to store ${onlyIf}`);
-        return false;
-      }
-    }
-    return true;
-  } catch {
-    throw Error();
-  }
-}
+//     let ok: boolean = true;
+//     for (const onlyIf of onlyIfsToBeStored) {
+//       ok = store(env, onlyIf, [], storeContrapositive);
+//       if (!ok) {
+//         env.newMessage(`Failed to store ${onlyIf}`);
+//         return false;
+//       }
+//     }
+//     return true;
+//   } catch {
+//     throw Error();
+//   }
+// }
 
 // function declareAndStoreExist(
 //   env: L_Env,
@@ -457,8 +457,8 @@ export function storeFactInStoredBy(
 //   isT: boolean = false
 // ): boolean {
 //   try {
-//     if (fact.byName === undefined) {
-//       env.newMessage(`${fact.byName} has already declared as st name.`);
+//     if (fact.defName === undefined) {
+//       env.newMessage(`${fact.defName} has already declared as st name.`);
 //       throw Error();
 //     }
 
@@ -468,7 +468,7 @@ export function storeFactInStoredBy(
 //     ];
 //     const toBeStored = new StoredFact(fact.vars, newReq, isT);
 
-//     return env.newExist(fact.byName, toBeStored);
+//     return env.newExist(fact.defName, toBeStored);
 //   } catch {
 //     throw Error();
 //   }
@@ -547,12 +547,12 @@ function storeContrapositiveFacts(
 // ): boolean {
 //   try {
 //     if (fact.isT) {
-//       if (fact.byName === undefined) {
+//       if (fact.defName === undefined) {
 //         env.newMessage(`Failed to store ${fact}, name undefined.`);
 //         return false;
 //       }
 
-//       const storedSt = env.getSt(fact.byName);
+//       const storedSt = env.getSt(fact.defName);
 //       if (storedSt === undefined)
 //         return declareAndStoreExist(env, fact, req, true);
 //       else {

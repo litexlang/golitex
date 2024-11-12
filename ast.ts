@@ -61,7 +61,7 @@ export class LogicNode extends ToCheckNode {
     //! we can still check it.
     public onlyIfs: ToCheckNode[] = [],
     isT: boolean = true,
-    public byName: undefined | string = undefined // public isIff: boolean = false
+    public defName: undefined | string = undefined // public isIff: boolean = false
   ) {
     super(isT);
   }
@@ -72,7 +72,7 @@ export class LogicNode extends ToCheckNode {
       this.req,
       this.onlyIfs,
       newIsT,
-      this.byName
+      this.defName
       // this.isIff
     );
   }
@@ -83,7 +83,7 @@ export class LogicNode extends ToCheckNode {
     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
 
     if (this instanceof LogicNode)
-      return new LogicNode(newVars, req, onlyIfs, this.isT, this.byName);
+      return new LogicNode(newVars, req, onlyIfs, this.isT, this.defName);
 
     throw Error();
   }
@@ -123,9 +123,9 @@ export class LogicNode extends ToCheckNode {
 //     req: ToCheckNode[] = [],
 //     onlyIfs: ToCheckNode[] = [],
 //     isT: boolean = true,
-//     byName: undefined | string = undefined
+//     defName: undefined | string = undefined
 //   ) {
-//     super(vars, req, onlyIfs, isT, byName);
+//     super(vars, req, onlyIfs, isT, defName);
 //   }
 
 //   override toString(): string {
@@ -145,14 +145,14 @@ export class LogicNode extends ToCheckNode {
 //       this.req,
 //       [nots],
 //       true,
-//       this.byName
+//       this.defName
 //       // false
 //     );
 //     return ifThen;
 //   }
 
 //   static ifThenToExist(ifThen: LogicNode): ExistNode {
-//     if (ifThen.isT !== false || ifThen.byName === undefined) throw Error;
+//     if (ifThen.isT !== false || ifThen.defName === undefined) throw Error;
 //     const nots = new OrNode(
 //       ifThen.onlyIfs.map((e) => {
 //         e.isT = !e.isT;
@@ -165,7 +165,7 @@ export class LogicNode extends ToCheckNode {
 //       ifThen.req,
 //       [nots],
 //       true,
-//       ifThen.byName
+//       ifThen.defName
 //       // false
 //     );
 //   }
@@ -175,7 +175,7 @@ export class LogicNode extends ToCheckNode {
 //     const req = this.req.map((e) => e.useMapToCopy(map));
 //     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
 
-//     return new ExistNode(newVars, req, onlyIfs, this.isT, this.byName);
+//     return new ExistNode(newVars, req, onlyIfs, this.isT, this.defName);
 //   }
 
 //   override copyWithoutIsT(newIsT: boolean): ExistNode {
@@ -184,7 +184,7 @@ export class LogicNode extends ToCheckNode {
 //       this.req,
 //       this.onlyIfs,
 //       newIsT,
-//       this.byName
+//       this.defName
 //     );
 //   }
 
@@ -200,7 +200,7 @@ export class LogicNode extends ToCheckNode {
 export class IffNode extends LogicNode {}
 export class IfNode extends LogicNode {
   useByToDecl(): IfThenDeclNode {
-    return new DeclNode(this.byName, this.vars, this.req, this.onlyIfs);
+    return new DeclNode(this.defName, this.vars, this.req, this.onlyIfs);
   }
 }
 
@@ -264,7 +264,7 @@ export class DeclNode extends L_Node {
     public name: string = "",
     public vars: string[] = [],
     public req: ToCheckNode[] = [],
-    public onlyIfs: ToCheckNode[] = [] // public byName: string | undefined = undefined
+    public onlyIfs: ToCheckNode[] = [] // public defName: string | undefined = undefined
   ) {
     super();
   }
@@ -402,27 +402,27 @@ export class ReturnNode extends L_Node {
 //   }
 // }
 
-export class ByNode extends L_Node {
-  constructor(
-    public byName: string,
-    public vars: string[],
-    public onlyIfs: ToCheckNode[]
-  ) {
-    super();
-  }
-
-  override toString() {
-    return `${this.byName}(${this.vars.join(", ")}) is valid`;
-  }
-}
-
-// export class STNode extends L_Node {
-//   constructor(public byName: string, public vars: string[]) {
+// export class ByNode extends L_Node {
+//   constructor(
+//     public defName: string,
+//     public vars: string[],
+//     public onlyIfs: ToCheckNode[]
+//   ) {
 //     super();
 //   }
 
 //   override toString() {
-//     return `${this.byName}(${this.vars.join(", ")}) is valid`;
+//     return `${this.defName}(${this.vars.join(", ")}) is valid`;
+//   }
+// }
+
+// export class STNode extends L_Node {
+//   constructor(public defName: string, public vars: string[]) {
+//     super();
+//   }
+
+//   override toString() {
+//     return `${this.defName}(${this.vars.join(", ")}) is valid`;
 //   }
 // }
 

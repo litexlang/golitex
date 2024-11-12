@@ -11,7 +11,7 @@ import {
   LocalEnvNode,
   ReturnNode,
   // ReturnExistNode,
-  ByNode,
+  // ByNode,
   IfNode,
   ExistDeclNode,
   HaveNode,
@@ -65,8 +65,8 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   LocalEnvNode: localEnvExec,
   ReturnNode: returnExec,
   // ReturnExistNode: returnExistExec,
-  ByNode: byExec,
-  STNode: byExec,
+  // ByNode: byExec,
+  // STNode: byExec,
 };
 
 function execResult(out: RType, node: L_Node): string {
@@ -645,46 +645,46 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
 //   }
 // }
 
-function byExec(env: L_Env, byNode: ByNode): RType {
-  try {
-    const out = L_Checker.checkBy(env, byNode);
+// function byExec(env: L_Env, byNode: ByNode): RType {
+//   try {
+//     const out = L_Checker.checkBy(env, byNode);
 
-    if (out === RType.True) {
-      if (byNode instanceof ByNode) {
-        let ok = L_Memory.storeFactInStoredBy(env, byNode, true);
-        if (!ok) {
-          return RType.Error;
-        }
+//     if (out === RType.True) {
+//       if (byNode instanceof ByNode) {
+//         let ok = L_Memory.storeFactInStoredBy(env, byNode, true);
+//         if (!ok) {
+//           return RType.Error;
+//         }
 
-        for (const fact of byNode.onlyIfs) {
-          //! THE REASON WHY WE DO NOT NEED TO CHECK WHETHER VARIABLES ARE NOT DOUBLE DECLARED
-          //! IS THAT IN BY I CAN NOT DECLARE VAR.
-          ok = L_Memory.store(env, fact, [], true);
-          if (!ok) {
-            env.newMessage(`Failed to store ${fact}`);
-            return RType.Error;
-          }
-        }
+//         for (const fact of byNode.onlyIfs) {
+//           //! THE REASON WHY WE DO NOT NEED TO CHECK WHETHER VARIABLES ARE NOT DOUBLE DECLARED
+//           //! IS THAT IN BY I CAN NOT DECLARE VAR.
+//           ok = L_Memory.store(env, fact, [], true);
+//           if (!ok) {
+//             env.newMessage(`Failed to store ${fact}`);
+//             return RType.Error;
+//           }
+//         }
 
-        // check onlyIf in by
-        for (const onlyIf of byNode.onlyIfs) {
-          const out = L_Checker.check(env, onlyIf);
-          if (out !== RType.True) {
-            return env.onFail(`Failed to check ${onlyIf}`, out);
-          }
-        }
-      }
-      // else {
-      //   (env.getSt(byNode.byName) as StoredFact).isT = true;
-      // }
-    }
+//         // check onlyIf in by
+//         for (const onlyIf of byNode.onlyIfs) {
+//           const out = L_Checker.check(env, onlyIf);
+//           if (out !== RType.True) {
+//             return env.onFail(`Failed to check ${onlyIf}`, out);
+//           }
+//         }
+//       }
+//       // else {
+//       //   (env.getSt(byNode.defName) as StoredFact).isT = true;
+//       // }
+//     }
 
-    return out;
-  } catch {
-    env.newMessage("by");
-    return RType.Error;
-  }
-}
+//     return out;
+//   } catch {
+//     env.newMessage("by");
+//     return RType.Error;
+//   }
+// }
 
 function defExistExec(env: L_Env, node: ExistDeclNode): RType {
   try {

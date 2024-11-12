@@ -1,5 +1,5 @@
 import {
-  ByNode,
+  // ByNode,
   // ExistNode,
   ToCheckNode,
   OptNode,
@@ -256,94 +256,93 @@ export function checkOptInHave(env: L_Env, opt: OptNode): RType {
   return RType.Unknown;
 }
 
-// TODO:
-export function checkBy(env: L_Env, byNode: ByNode): RType {
-  let storedFact: undefined | StoredFact = undefined;
+// export function checkBy(env: L_Env, byNode: ByNode): RType {
+//   let storedFact: undefined | StoredFact = undefined;
 
-  if (byNode instanceof ByNode) storedFact = env.getBy(byNode.byName);
-  // else if (byNode instanceof STNode) storedFact = env.getSt(byNode.byName);
+//   if (byNode instanceof ByNode) storedFact = env.getBy(byNode.defName);
+//   // else if (byNode instanceof STNode) storedFact = env.getSt(byNode.defName);
 
-  if (storedFact == undefined) {
-    env.newMessage(`${byNode.byName} not declared.`);
-    return RType.Error;
-  }
+//   if (storedFact == undefined) {
+//     env.newMessage(`${byNode.defName} not declared.`);
+//     return RType.Error;
+//   }
 
-  const allFreeVars = storedFact.getAllFreeVars();
-  if (byNode.vars.length !== allFreeVars.length) {
-    env.newMessage(
-      `${byNode.byName} expect ${allFreeVars.length} variables, got ${byNode.vars.length}`
-    );
-    return RType.Error;
-  }
+//   const allFreeVars = storedFact.getAllFreeVars();
+//   if (byNode.vars.length !== allFreeVars.length) {
+//     env.newMessage(
+//       `${byNode.defName} expect ${allFreeVars.length} variables, got ${byNode.vars.length}`
+//     );
+//     return RType.Error;
+//   }
 
-  const map = new Map<string, string>();
-  for (const indexValuePair of allFreeVars.entries()) {
-    map.set(allFreeVars[indexValuePair[0]], byNode.vars[indexValuePair[0]]);
-  }
+//   const map = new Map<string, string>();
+//   for (const indexValuePair of allFreeVars.entries()) {
+//     map.set(allFreeVars[indexValuePair[0]], byNode.vars[indexValuePair[0]]);
+//   }
 
-  let unknown = false;
-  let newEnv = new L_Env(env);
-  for (const currentLevelReq of storedFact.req) {
-    // this is necessary because 1. I SIMPLY NEED A NEATER STORAGE SYSTEM THAT ALIGNS WITH THE HIERARCHY OF IF-THENs THE FACT IS STORED. 2. store checked req as future stored facts. 3. If some vars of the req is free, then the req is not checked, it is stored as a fact.
+//   let unknown = false;
+//   let newEnv = new L_Env(env);
+//   for (const currentLevelReq of storedFact.req) {
+//     // this is necessary because 1. I SIMPLY NEED A NEATER STORAGE SYSTEM THAT ALIGNS WITH THE HIERARCHY OF IF-THENs THE FACT IS STORED. 2. store checked req as future stored facts. 3. If some vars of the req is free, then the req is not checked, it is stored as a fact.
 
-    for (const req of currentLevelReq.req) {
-      if (req instanceof OptNode) {
-        let everyVarInThisReqIsFixed = true;
-        const fixedVars: string[] = [];
-        for (const v of req.vars) {
-          const fixed = map.get(v);
-          if (fixed === undefined) {
-            everyVarInThisReqIsFixed = false;
-            break;
-            // fixedVars.push(v);
-          } else {
-            fixedVars.push(fixed);
-          }
-        }
+//     for (const req of currentLevelReq.req) {
+//       if (req instanceof OptNode) {
+//         let everyVarInThisReqIsFixed = true;
+//         const fixedVars: string[] = [];
+//         for (const v of req.vars) {
+//           const fixed = map.get(v);
+//           if (fixed === undefined) {
+//             everyVarInThisReqIsFixed = false;
+//             break;
+//             // fixedVars.push(v);
+//           } else {
+//             fixedVars.push(fixed);
+//           }
+//         }
 
-        // const fixedVars = req.vars.map((e) => map.get(e)) as string[];
-        if (everyVarInThisReqIsFixed) {
-          const toCheck = new OptNode(req.name, fixedVars);
-          const out = checkOptLiterally(newEnv, toCheck);
-          if (out === RType.True) {
-            // store checked req as future stored facts.
-            L_Memory.store(newEnv, toCheck, [], true);
-            continue;
-          } else if (out === RType.Error) {
-            newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
-            return RType.Error;
-          } else {
-            unknown = true;
-            break;
-          }
-        } else {
-          //! WARNING: UNKNOWN SHOULD BE THROWN HERE INSTEAD OF STORING NEW FACTS
-          unknown = true;
-          break;
-          // const toStore = new OptNode(req.name, fixedVars);
-          // L_Memory.store(newEnv, toStore, []);
-        }
-      } else if (req instanceof IfNode) {
-        const out = checkIfThen(newEnv, req);
-        if (out === RType.True) continue;
-        else if (out === RType.Error) {
-          newEnv.getMessages().forEach((e) => env.newMessage(e));
-          return RType.Error;
-        } else {
-          unknown = true;
-          break;
-        }
-      }
-    }
+//         // const fixedVars = req.vars.map((e) => map.get(e)) as string[];
+//         if (everyVarInThisReqIsFixed) {
+//           const toCheck = new OptNode(req.name, fixedVars);
+//           const out = checkOptLiterally(newEnv, toCheck);
+//           if (out === RType.True) {
+//             // store checked req as future stored facts.
+//             L_Memory.store(newEnv, toCheck, [], true);
+//             continue;
+//           } else if (out === RType.Error) {
+//             newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
+//             return RType.Error;
+//           } else {
+//             unknown = true;
+//             break;
+//           }
+//         } else {
+//           //! WARNING: UNKNOWN SHOULD BE THROWN HERE INSTEAD OF STORING NEW FACTS
+//           unknown = true;
+//           break;
+//           // const toStore = new OptNode(req.name, fixedVars);
+//           // L_Memory.store(newEnv, toStore, []);
+//         }
+//       } else if (req instanceof IfNode) {
+//         const out = checkIfThen(newEnv, req);
+//         if (out === RType.True) continue;
+//         else if (out === RType.Error) {
+//           newEnv.getMessages().forEach((e) => env.newMessage(e));
+//           return RType.Error;
+//         } else {
+//           unknown = true;
+//           break;
+//         }
+//       }
+//     }
 
-    if (unknown) break;
-    newEnv = new L_Env(newEnv);
-  }
+//     if (unknown) break;
+//     newEnv = new L_Env(newEnv);
+//   }
 
-  if (unknown) return RType.Unknown;
+//   if (unknown) return RType.Unknown;
 
-  return RType.True;
-}
+//   return RType.True;
+// }
 
 function checkOr(env: L_Env, toCheck: OrNode): RType {
   try {
@@ -399,7 +398,7 @@ function checkOr(env: L_Env, toCheck: OrNode): RType {
 //       toCheck.req,
 //       [nots],
 //       true,
-//       toCheck.byName
+//       toCheck.defName
 //       // false
 //     );
 //     return checkIfThen(env, ifThen);
@@ -437,7 +436,7 @@ function checkOr(env: L_Env, toCheck: OrNode): RType {
 //         toCheck.req,
 //         [nots],
 //         true,
-//         toCheck.byName
+//         toCheck.defName
 //         // false
 //       );
 //       return checkIfThen(env, ifThen);

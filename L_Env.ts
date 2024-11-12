@@ -273,8 +273,8 @@ export class L_Env {
 
   printBys() {
     console.log("\n-----Bys-----\n");
-    for (const [byName, by] of this.bys) {
-      console.log(byName);
+    for (const [defName, by] of this.bys) {
+      console.log(defName);
       console.log(`${by}\n`);
     }
   }
