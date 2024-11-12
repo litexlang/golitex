@@ -1000,11 +1000,13 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
   try {
     skip(tokens, HaveKeywords);
     const opt = optParseWithNot(env, tokens, false);
+    skip(tokens, ":");
     const vars: string[] = [];
     while (!L_Ends.includes(tokens[0])) {
       vars.push(shiftVar(tokens));
       if (tokens[0] === ",") skip(tokens, ",");
     }
+
     skip(tokens, L_Ends);
     return new HaveNode(opt, vars);
   } catch (error) {

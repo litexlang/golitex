@@ -305,7 +305,7 @@ export class ExistDeclNode extends DeclNode {
   }
 
   toMemorized(): MemorizedExistDecl {
-    return new MemorizedExistDecl(this.existVars, this.existFacts);
+    return new MemorizedExistDecl(this.vars, this.existVars, this.existFacts);
   }
 
   override toString(): string {
@@ -436,6 +436,7 @@ export class HaveNode extends L_Node {
   }
 
   override toString() {
-    return `have ${this.opt.toString()} ${this.vars.join(", ")}`;
+    const varsStr = this.vars.join(", ");
+    return `have ${this.opt.toString()} ${varsStr}`;
   }
 }

@@ -559,7 +559,7 @@ const testList56 = [
   "def E(x): x is obj exist y: obj2(x,y);",
   "let x : x is obj;",
   "have E(x): z;",
-  // "obj2(x,z);",
+  "obj2(x,z);",
   // "know if x : x is obj0 => {E(x)};",
 ];
 

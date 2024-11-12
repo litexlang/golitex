@@ -24,9 +24,35 @@ import { DEBUG_DICT, RType } from "./L_Executor.ts";
 // }
 
 export class MemorizedExistDecl {
-  constructor(private vars: string[], private facts: ToCheckNode[]) {}
+  constructor(
+    private ifVars: string[],
+    private existVars: string[],
+    private existFacts: ToCheckNode[]
+  ) {
+    //! MUST CHECK NO DOUBLE DECLARATION IN [...ifVars, ...vars]
+  }
 
-  instantiate(ifVars: string[], existVars: string[]) {}
+  instantiate(
+    env: L_Env,
+    ifVars: string[],
+    existVars: string[]
+  ): ToCheckNode[] | undefined {
+    const map = new Map<string, string>();
+    if (ifVars.length !== this.ifVars.length) {
+      env.newMessage(
+        `Invalid number of parameters, get ${ifVars.length}, require ${ifVars.length}`
+      );
+      return undefined;
+    }
+    for (let i = 0; i < ifVars.length; i++) {
+      map.set(this.ifVars[i], ifVars[i]);
+    }
+    for (let i = 0; i < existVars.length; i++) {
+      map.set(this.existVars[i], existVars[i]);
+    }
+    const newFacts = this.existFacts.map((e) => e.useMapToCopy(map));
+    return newFacts;
+  }
 }
 
 export class StoredReq {

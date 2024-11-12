@@ -708,11 +708,25 @@ function defExistExec(env: L_Env, node: ExistDeclNode): RType {
 
 function haveExec(env: L_Env, node: HaveNode): RType {
   try {
+    const exist = env.getDeclExist(node.opt.fullName);
+    if (exist === undefined) {
+      env.newMessage(`${node.opt.fullName} is not exist-type fact.`);
+      return RType.Error;
+    }
+
     const out = L_Checker.check(env, node.opt);
     if (out !== RType.True) {
       env.newMessage(`${node} failed.`);
       return out;
     }
+
+    const facts = exist.instantiate(env, node.opt.vars, node.vars);
+    if (facts === undefined) {
+      return RType.Error;
+    }
+    node.vars.forEach((e) => env.safeNewVar(e));
+    facts.forEach((e) => L_Memory.store(env, e, [], true));
+
     return RType.True;
   } catch {
     env.newMessage("have");

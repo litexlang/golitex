@@ -43,6 +43,18 @@ export class L_Env {
     }
   }
 
+  getDeclExist(s: string): MemorizedExistDecl | undefined {
+    const out = this.declaredExist.get(s);
+    if (out !== undefined) return out;
+    else {
+      if (this.father) {
+        return this.father.getDeclExist(s);
+      } else {
+        return undefined;
+      }
+    }
+  }
+
   // newExist(s: string, exist: StoredFact): boolean {
   //   const out = this.exists.get(s);
   //   if (out !== undefined) {
