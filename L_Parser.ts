@@ -23,6 +23,7 @@ import {
   // ExistDeclNode,
   IfNode,
   ExistDeclNode,
+  HaveNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -53,6 +54,7 @@ import {
   ExistKeyword,
   // STKeyword,
   AreKeywords,
+  HaveKeywords,
 } from "./common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -133,7 +135,7 @@ const KeywordFunctionMap: {
   prove: proveParse,
   prove_by_contradiction: proveParse,
   // exist: existParse,
-  // have: haveParse,
+  have: haveParse,
   return: returnParse,
   // return_exist: returnExistParse,
   by: byParse,
@@ -987,6 +989,26 @@ function notsParse(env: L_Env, tokens: string[]): OrNode {
     return new OrNode(facts, true);
   } catch (error) {
     handleParseError(env, "nots", index, start);
+    throw error;
+  }
+}
+
+function haveParse(env: L_Env, tokens: string[]): HaveNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, HaveKeywords);
+    const opt = optParseWithNot(env, tokens, false);
+    const vars: string[] = [];
+    while (!L_Ends.includes(tokens[0])) {
+      vars.push(shiftVar(tokens));
+      if (tokens[0] === ",") skip(tokens, ",");
+    }
+    skip(tokens, L_Ends);
+    return new HaveNode(opt, vars);
+  } catch (error) {
+    handleParseError(env, "have", index, start);
     throw error;
   }
 }

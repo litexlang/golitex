@@ -429,3 +429,13 @@ export class ByNode extends L_Node {
 //     return `${this.byName}(${this.vars.join(", ")}) is valid`;
 //   }
 // }
+
+export class HaveNode extends L_Node {
+  constructor(public opt: OptNode, public vars: string[]) {
+    super();
+  }
+
+  override toString() {
+    return `have ${this.opt.toString()} ${this.vars.join(", ")}`;
+  }
+}

@@ -25,6 +25,8 @@ import { DEBUG_DICT, RType } from "./L_Executor.ts";
 
 export class MemorizedExistDecl {
   constructor(private vars: string[], private facts: ToCheckNode[]) {}
+
+  instantiate(ifVars: string[], existVars: string[]) {}
 }
 
 export class StoredReq {

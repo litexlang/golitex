@@ -14,6 +14,7 @@ import {
   ByNode,
   IfNode,
   ExistDeclNode,
+  HaveNode,
   // STNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
@@ -59,7 +60,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   KnowNode: knowExec,
   LetNode: letExec,
   ProveNode: proveExec,
-  // HaveNode: haveExec,
+  HaveNode: haveExec,
   PostfixProve: postfixProveExec,
   LocalEnvNode: localEnvExec,
   ReturnNode: returnExec,
@@ -701,6 +702,20 @@ function defExistExec(env: L_Env, node: ExistDeclNode): RType {
     return RType.True;
   } catch {
     env.newMessage("def exist");
+    return RType.Error;
+  }
+}
+
+function haveExec(env: L_Env, node: HaveNode): RType {
+  try {
+    const out = L_Checker.check(env, node.opt);
+    if (out !== RType.True) {
+      env.newMessage(`${node} failed.`);
+      return out;
+    }
+    return RType.True;
+  } catch {
+    env.newMessage("have");
     return RType.Error;
   }
 }
