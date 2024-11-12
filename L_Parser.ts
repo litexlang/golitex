@@ -189,16 +189,10 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
 
     const knowNode: KnowNode = new KnowNode([], strict);
     while (!L_Ends.includes(tokens[0])) {
-      const outs: ToCheckNode[] = factsParse(
-        env,
-        tokens,
-        [...L_Ends, ","],
-        false
-      );
+      const outs = factsParse(env, tokens, [...L_Ends, ","], false, true);
       knowNode.facts = knowNode.facts.concat(outs);
 
       if (tokens[0] === ",") skip(tokens, ",");
-      else break;
     }
     skip(tokens, L_Ends);
 
@@ -233,7 +227,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
       return new LetNode(vars, [], strict);
     } else {
       skip(tokens, ":");
-      const facts = factsParse(env, tokens, L_Ends, true);
+      const facts = factsParse(env, tokens, L_Ends, true, true);
       return new LetNode(vars, facts, strict);
     }
   } catch (error) {
@@ -413,8 +407,8 @@ function factsParse(
   env: L_Env,
   tokens: string[],
   end: string[],
-  skipEnd: boolean = false,
-  includeDefName: boolean = false
+  skipEnd: boolean,
+  includeDefName: boolean
 ): ToCheckNode[] {
   const start = tokens[0];
   const index = tokens.length;
@@ -435,47 +429,47 @@ function factsParse(
     handleParseError(env, "fact", index, start);
     throw error;
   }
-}
 
-function singleNodeFacts(
-  env: L_Env,
-  tokens: string[],
-  includeDefName: boolean
-): ToCheckNode[] {
-  const start = tokens[0];
-  const index = tokens.length;
+  function singleNodeFacts(
+    env: L_Env,
+    tokens: string[],
+    includeDefName: boolean
+  ): ToCheckNode[] {
+    const start = tokens[0];
+    const index = tokens.length;
 
-  try {
-    let isT = true;
-    if (isCurToken(tokens, "not")) {
-      isT = false;
-      skip(tokens, "not");
+    try {
+      let isT = true;
+      if (isCurToken(tokens, "not")) {
+        isT = false;
+        skip(tokens, "not");
+      }
+
+      let fact: ToCheckNode;
+      if (LogicalKeywords.includes(tokens[0])) {
+        fact = logicalOptParse(env, tokens, includeDefName);
+        fact.isT = isT ? fact.isT : !fact.isT;
+        return [fact];
+      } else if (tokens[0] === "or") {
+        fact = orParse(env, tokens, includeDefName);
+        fact.isT = isT ? fact.isT : !fact.isT;
+        return [fact];
+      } else if (tokens[0] === "nots") {
+        fact = notsParse(env, tokens, includeDefName);
+        fact.isT = isT ? fact.isT : !fact.isT;
+        return [fact];
+      } else if (tokens[0] === "exist") {
+        fact = logicalOptParse(env, tokens, includeDefName);
+        fact.isT = isT ? fact.isT : !fact.isT;
+        return [fact];
+      } else {
+        const facts = optParseWithNotAre(env, tokens, true, includeDefName);
+        return facts;
+      }
+    } catch (error) {
+      handleParseError(env, "fact", index, start);
+      throw error;
     }
-
-    let fact: ToCheckNode;
-    if (LogicalKeywords.includes(tokens[0])) {
-      fact = logicalOptParse(env, tokens, includeDefName);
-      fact.isT = isT ? fact.isT : !fact.isT;
-      return [fact];
-    } else if (tokens[0] === "or") {
-      fact = orParse(env, tokens, includeDefName);
-      fact.isT = isT ? fact.isT : !fact.isT;
-      return [fact];
-    } else if (tokens[0] === "nots") {
-      fact = notsParse(env, tokens, includeDefName);
-      fact.isT = isT ? fact.isT : !fact.isT;
-      return [fact];
-    } else if (tokens[0] === "exist") {
-      fact = logicalOptParse(env, tokens, includeDefName);
-      fact.isT = isT ? fact.isT : !fact.isT;
-      return [fact];
-    } else {
-      const facts = optParseWithNotAre(env, tokens, true, includeDefName);
-      return facts;
-    }
-  } catch (error) {
-    handleParseError(env, "fact", index, start);
-    throw error;
   }
 }
 
@@ -604,14 +598,14 @@ function logicalOptParse(
       vars = varLstParse(env, tokens, [":"], false);
       skip(tokens, ":");
 
-      req = factsParse(env, tokens, separation, true);
+      req = factsParse(env, tokens, separation, true, includeDefName);
     } else {
-      req = factsParse(env, tokens, separation, true);
+      req = factsParse(env, tokens, separation, true, includeDefName);
     }
 
     skip(tokens, "{");
 
-    const onlyIfs = factsParse(env, tokens, ["}"], true);
+    const onlyIfs = factsParse(env, tokens, ["}"], true, includeDefName);
 
     let defName: string | undefined = undefined;
 
@@ -647,7 +641,13 @@ function PostfixProveParse(
   const index = tokens.length;
 
   try {
-    const facts = factsParse(env, tokens, [...end, ...PostProveKeywords], true);
+    const facts = factsParse(
+      env,
+      tokens,
+      [...end, ...PostProveKeywords],
+      false,
+      true
+    );
     const block: L_Node[] = [];
     if (PostProveKeywords.includes(tokens[0])) {
       skip(tokens, PostProveKeywords);
@@ -685,7 +685,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
     if (isCurToken(tokens, ":")) {
       skip(tokens, ":");
       const ends = ["=>", "<=>", "<=", ...L_Ends, ExistKeyword];
-      req = factsParse(env, tokens, ends, false);
+      req = factsParse(env, tokens, ends, false, false);
     }
 
     if (L_Ends.includes(tokens[0])) {
@@ -711,7 +711,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
 
       if (isCurToken(tokens, "{")) {
         skip(tokens, "{");
-        onlyIfs = factsParse(env, tokens, ["}"], false);
+        onlyIfs = factsParse(env, tokens, ["}"], false, true);
         skip(tokens, "}");
       }
       skip(tokens, L_Ends);
@@ -732,7 +732,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
       skip(tokens, ":");
 
       skip(tokens, "{");
-      const existFacts = factsParse(env, tokens, ["}"], false);
+      const existFacts = factsParse(env, tokens, ["}"], false, true);
       skip(tokens, "}");
 
       skip(tokens, L_Ends);
@@ -768,7 +768,7 @@ function returnParse(env: L_Env, tokens: string[]): ReturnNode {
 
   try {
     skip(tokens, ReturnKeyword);
-    const facts = factsParse(env, tokens, L_Ends, true);
+    const facts = factsParse(env, tokens, L_Ends, true, false);
     return new ReturnNode(facts);
   } catch (error) {
     handleParseError(env, "return/so", index, start);
@@ -986,7 +986,7 @@ function orParse(
   try {
     skip(tokens, OrKeywords);
     skip(tokens, "{");
-    const facts = factsParse(env, tokens, ["}"], false);
+    const facts = factsParse(env, tokens, ["}"], false, includeDefName);
     skip(tokens, "}");
 
     let defName: undefined | string = undefined;
@@ -1014,7 +1014,7 @@ function notsParse(
   try {
     skip(tokens, NotsKeyword);
     skip(tokens, "{");
-    const facts = factsParse(env, tokens, ["}"], false);
+    const facts = factsParse(env, tokens, ["}"], false, includeDefName);
     for (const f of facts) {
       f.isT = !f.isT;
     }
