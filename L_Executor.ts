@@ -130,7 +130,7 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
 //     }
 
 //     for (const fact of node.facts) {
-//       if (!env.inHaves(fact.fullName)) {
+//       if (!env.inHaves(fact.name)) {
 //         env.newMessage(`Not every existence of given fact is validated.`);
 //         return RType.Error;
 //       }
@@ -604,7 +604,7 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
 //     }
 
 //     for (const fact of node.facts) {
-//       env.newHave(fact.fullName);
+//       env.newHave(fact.name);
 //     }
 
 //     return RType.True;
@@ -708,9 +708,9 @@ function defExistExec(env: L_Env, node: ExistDeclNode): RType {
 
 function haveExec(env: L_Env, node: HaveNode): RType {
   try {
-    const exist = env.getDeclExist(node.opt.fullName);
+    const exist = env.getDeclExist(node.opt.name);
     if (exist === undefined) {
-      env.newMessage(`${node.opt.fullName} is not exist-type fact.`);
+      env.newMessage(`${node.opt.name} is not exist-type fact.`);
       return RType.Error;
     }
 

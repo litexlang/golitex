@@ -25,7 +25,7 @@ export function check(env: L_Env, toCheck: ToCheckNode): RType {
     return checkIfThen(env, toCheck);
   } else if (toCheck instanceof OrNode) {
     return checkOr(env, toCheck);
-  } 
+  }
   // else if (toCheck instanceof ExistNode) {
   //   return checkExist(env, toCheck);
   // }
@@ -81,7 +81,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
     toCheck
   );
   if (storedFacts === null) {
-    env.newMessage(`check error: ${toCheck.fullName} not declared.`);
+    env.newMessage(`check error: ${toCheck.name} not declared.`);
     return RType.Error;
   }
 
@@ -146,7 +146,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
 
           // const fixedVars = req.vars.map((e) => map.get(e)) as string[];
           if (everyVarInThisReqIsFixed) {
-            const toCheck = new OptNode(req.fullName, fixedVars);
+            const toCheck = new OptNode(req.name, fixedVars);
             const out = checkOptLiterally(newEnv, toCheck);
             if (out === RType.True) {
               // store checked req as future stored facts.
@@ -163,7 +163,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
             //! WARNING: UNKNOWN SHOULD BE THROWN HERE INSTEAD OF STORING NEW FACTS
             unknown = true;
             break;
-            // const toStore = new OptNode(req.fullName, fixedVars);
+            // const toStore = new OptNode(req.name, fixedVars);
             // L_Memory.store(newEnv, toStore, []);
           }
         }
@@ -229,7 +229,7 @@ function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
   const facts: StoredFact[] | null = L_Memory.getStoredFacts(env, toCheck);
 
   if (facts === null) {
-    env.newMessage(`check Error: ${toCheck.fullName} not declared.`);
+    env.newMessage(`check Error: ${toCheck.name} not declared.`);
     return RType.Error;
   }
 
@@ -303,7 +303,7 @@ export function checkBy(env: L_Env, byNode: ByNode): RType {
 
         // const fixedVars = req.vars.map((e) => map.get(e)) as string[];
         if (everyVarInThisReqIsFixed) {
-          const toCheck = new OptNode(req.fullName, fixedVars);
+          const toCheck = new OptNode(req.name, fixedVars);
           const out = checkOptLiterally(newEnv, toCheck);
           if (out === RType.True) {
             // store checked req as future stored facts.
@@ -320,7 +320,7 @@ export function checkBy(env: L_Env, byNode: ByNode): RType {
           //! WARNING: UNKNOWN SHOULD BE THROWN HERE INSTEAD OF STORING NEW FACTS
           unknown = true;
           break;
-          // const toStore = new OptNode(req.fullName, fixedVars);
+          // const toStore = new OptNode(req.name, fixedVars);
           // L_Memory.store(newEnv, toStore, []);
         }
       } else if (req instanceof IfNode) {

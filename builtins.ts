@@ -8,7 +8,7 @@ export const L_Builtins = new Map<
 >();
 
 // L_Builtins.set("isProp", (env: L_Env, node: L_Node): RType => {
-//   return node instanceof OptNode && env.getDeclFact(node.fullName)
+//   return node instanceof OptNode && env.getDeclFact(node.name)
 //     ? RType.True
 //     : RType.Error;
 // });

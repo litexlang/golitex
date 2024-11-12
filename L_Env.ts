@@ -256,7 +256,7 @@ export class L_Env {
 
   someOptsDeclaredHere(fact: ToCheckNode): boolean {
     if (fact instanceof OptNode) {
-      return this.declaredFacts.get(fact.fullName) !== undefined;
+      return this.declaredFacts.get(fact.name) !== undefined;
     } else if (fact instanceof LogicNode) {
       return (
         fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) ||

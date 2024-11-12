@@ -208,16 +208,12 @@ export class IfNode extends LogicNode {
 // export class OnlyIfNode extends LogicalOptNode {}
 
 export class OptNode extends ToCheckNode {
-  constructor(
-    public fullName: string,
-    public vars: string[],
-    isT: boolean = true
-  ) {
+  constructor(public name: string, public vars: string[], isT: boolean = true) {
     super(isT);
   }
 
   override copyWithoutIsT(newIsT: boolean): OptNode {
-    return new OptNode(this.fullName, this.vars, newIsT);
+    return new OptNode(this.name, this.vars, newIsT);
   }
 
   override useMapToCopy(map: Map<string, string>): OptNode {
@@ -232,11 +228,11 @@ export class OptNode extends ToCheckNode {
         newVars.push(fixed);
       }
     }
-    return new OptNode(this.fullName, newVars, this.isT);
+    return new OptNode(this.name, newVars, this.isT);
   }
 
   override toString() {
-    const mainPart = this.fullName + `(${this.vars.join(", ")})`;
+    const mainPart = this.name + `(${this.vars.join(", ")})`;
     const useNamePart = this.useName !== "" ? `[${this.useName}]` : "";
     const notPart = !this.isT ? "[not] " : "";
     return notPart + mainPart + useNamePart;
@@ -246,7 +242,7 @@ export class OptNode extends ToCheckNode {
     for (const v of this.vars) {
       const declared = env.varDeclared(v) || freeVars.includes(v);
       if (!declared) {
-        env.newMessage(`${v} not declared in ${this.fullName}`);
+        env.newMessage(`${v} not declared in ${this.name}`);
         return false;
       }
     }
@@ -254,10 +250,10 @@ export class OptNode extends ToCheckNode {
   }
 
   override factsDeclared(env: L_Env): boolean {
-    if (env.optDeclared(this.fullName)) {
+    if (env.optDeclared(this.name)) {
       return true;
     } else {
-      env.newMessage(`${this.fullName} not declared.`);
+      env.newMessage(`${this.name} not declared.`);
       return false;
     }
   }

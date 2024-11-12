@@ -216,21 +216,21 @@ function storeOpt(
   req: StoredReq[],
   storeContrapositive: boolean
 ): boolean {
-  const declaredOpt = env.getDeclaredFact(fact.fullName);
+  const declaredOpt = env.getDeclaredFact(fact.name);
   if (declaredOpt === undefined) {
-    env.newMessage(`${fact.fullName} undeclared`);
+    env.newMessage(`${fact.name} undeclared`);
     return false;
   } else {
     // TODO: I GUESS I SHOULD CHECK WHETHER GIVEN VARS SATISFY WHEN IN DEF
     if (declaredOpt.vars.length !== fact.vars.length) {
       env.newMessage(
-        `${fact.fullName} requires ${declaredOpt.vars.length} parameters, ${fact.vars.length} given.`
+        `${fact.name} requires ${declaredOpt.vars.length} parameters, ${fact.vars.length} given.`
       );
       return false;
     }
   }
 
-  env.newFact(fact.fullName, fact.vars, req, fact.isT);
+  env.newFact(fact.name, fact.vars, req, fact.isT);
 
   // store contra positive when storing Opt.
   if (storeContrapositive) storeContrapositiveFacts(env, fact, req);
@@ -238,10 +238,8 @@ function storeOpt(
   if (DEBUG_DICT["newFact"]) {
     const notWords = fact.isT === false ? "[not]" : "";
     if (req.length > 0)
-      env.newMessage(
-        `[fact] ${notWords} ${fact.fullName}(${fact.vars}) <= ${req}`
-      );
-    else env.newMessage(`[fact] ${notWords} ${fact.fullName}(${fact.vars})`);
+      env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars}) <= ${req}`);
+    else env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars})`);
   }
 
   return true;
@@ -319,7 +317,7 @@ export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
 
   // know where the opt is declared.
   let visibleEnvLevel = -1;
-  const tmp = env.whereIsOptDeclared(opt.fullName);
+  const tmp = env.whereIsOptDeclared(opt.name);
   if (tmp !== undefined) {
     visibleEnvLevel = tmp;
   } else {
@@ -343,7 +341,7 @@ export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
     }
 
     // get stored facts from current environment level
-    const facts = curEnv.getStoredFactsFromCurrentEnv(opt.fullName);
+    const facts = curEnv.getStoredFactsFromCurrentEnv(opt.name);
     if (facts === undefined) continue;
 
     for (const fact of facts) {
@@ -362,7 +360,7 @@ export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
       else out.push(fact);
     }
 
-    // const facts = curEnv.getStoredFactsFromCurrentEnv(opt.fullName);
+    // const facts = curEnv.getStoredFactsFromCurrentEnv(opt.name);
     // if (facts === undefined) continue;
     // else out = [...out, ...facts];
   }
