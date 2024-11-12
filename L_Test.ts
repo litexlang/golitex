@@ -548,8 +548,14 @@ const testList54 = [
 const testList55 = [
   "def obj(x) => {};",
   "def obj2(x) => {};",
-  "def empty(x)  : x is obj st {x is obj2};",
-  "def obj0(x) st {};",
+  // "def empty(x)  : x is obj st {x is obj2};",
+  // "def obj0(x) st {};",
+];
+
+const testList56 = [
+  "def obj(x) => {};",
+  "def obj2(a,b) => {};",
+  "def E(x): x is obj exist y: obj2(x,y);",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
@@ -611,8 +617,9 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList51: [testList51, false],
   testList52: [testList52, false],
   testList53: [testList53, false],
-  testList54: [testList54, true],
+  testList54: [testList54, false],
   testList55: [testList55, false],
+  testList56: [testList56, true],
 };
 
 function testCode() {

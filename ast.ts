@@ -297,10 +297,10 @@ export class ExistDeclNode extends DeclNode {
     name: string = "",
     vars: string[] = [],
     req: ToCheckNode[] = [],
-    onlyIfs: ToCheckNode[] = []
-    // byName: string | undefined = undefined
+    existVars: string[] = [],
+    existFacts: ToCheckNode[] = []
   ) {
-    super(name, vars, req, onlyIfs);
+    super(name, vars, req, []); // We don't use onlyIfs field in ExistDecl.
   }
 
   override toString(): string {

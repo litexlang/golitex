@@ -22,6 +22,7 @@ import {
   IffNode,
   // ExistDeclNode,
   IfNode,
+  ExistDeclNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -664,35 +665,58 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
     let req: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
       skip(tokens, ":");
-      const ends = ["=>", "<=>", "<=", ...L_Ends, "st"];
+      const ends = ["=>", "<=>", "<=", ...L_Ends, ExistKeyword];
       req = factsParse(env, tokens, ends, false);
     }
 
     const separator = shiftVar(tokens);
 
-    skip(tokens, "{");
-    const onlyIfs = factsParse(env, tokens, ["}"], false);
-    skip(tokens, "}");
-
-    let byName: undefined | string = undefined;
-    if (isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      byName = shiftVar(tokens);
-      skip(tokens, "]");
-    }
-
-    skip(tokens, L_Ends);
-
-    if (ThenKeywords.includes(separator)) {
-      return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs);
-    } else if (IffThenKeywords.includes(separator)) {
-      return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs);
-    } else if (OnlyIfThenKeywords.includes(separator)) {
-      return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs);
-    }
-    //  else if (STKeyword === separator) {
-    //   return new ExistDeclNode(opt.fullName, opt.vars, req, onlyIfs, byName);
+    // let byName: undefined | string = undefined;
+    // if (isCurToken(tokens, "[")) {
+    //   skip(tokens, "[");
+    //   byName = shiftVar(tokens);
+    //   skip(tokens, "]");
     // }
+
+    if (
+      ThenKeywords.includes(separator) ||
+      IffThenKeywords.includes(separator) ||
+      OnlyIfThenKeywords.includes(separator)
+    ) {
+      let onlyIfs: ToCheckNode[] = [];
+
+      if (isCurToken(tokens, "{")) {
+        skip(tokens, "{");
+        onlyIfs = factsParse(env, tokens, ["}"], false);
+        skip(tokens, "}");
+      }
+      skip(tokens, L_Ends);
+
+      if (ThenKeywords.includes(separator)) {
+        return new IfThenDeclNode(opt.fullName, opt.vars, req, onlyIfs);
+      } else if (IffThenKeywords.includes(separator)) {
+        return new IffDeclNode(opt.fullName, opt.vars, req, onlyIfs);
+      } else {
+        return new OnlyIfDeclNode(opt.fullName, opt.vars, req, onlyIfs);
+      }
+    } else if (ExistKeyword === separator) {
+      const existVars: string[] = [];
+      while (!isCurToken(tokens, ":")) {
+        existVars.push(shiftVar(tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      skip(tokens, ":");
+
+      const existFacts = factsParse(env, tokens, L_Ends, false);
+      skip(tokens, L_Ends);
+      return new ExistDeclNode(
+        opt.fullName,
+        opt.vars,
+        req,
+        existVars,
+        existFacts
+      );
+    }
 
     throw Error();
   } catch (error) {
