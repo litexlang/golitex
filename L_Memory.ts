@@ -37,7 +37,7 @@ export class DefNameDecl {
   }
 
   toIfDecl(): IfDeclNode {
-    return new IfDeclNode(this.name, this.ifVars, this.req, [this.itself]);
+    return new IfDeclNode(this.name, this.ifVars, [...this.req], [this.itself]);
   }
 }
 
@@ -164,22 +164,23 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
   const decl = new OptNode(node.name, node.vars, true, undefined);
   let ok: boolean = true;
   if (node instanceof IfDeclNode) {
-    let f = new IfNode(node.vars, node.req, [decl], true, undefined);
-    ok = storeIfThen(env, f, [], true);
-    if (!ok) {
-      env.newMessage(`failed: ${node}`);
-      return false;
-    }
-    f = new IfNode(node.vars, [decl], node.onlyIfs, true, undefined);
-    ok = storeIfThen(env, f, [], true);
-    if (!ok) {
-      env.newMessage(`failed: ${node}`);
-      return false;
-    }
-    return true;
-    // const r = [decl, ...node.req];
-    // const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
+    // let f = new IfNode(node.vars, node.req, [decl], true, undefined);
     // ok = storeIfThen(env, f, [], true);
+    // if (!ok) {
+    //   env.newMessage(`failed: ${node}`);
+    //   return false;
+    // }
+    // f = new IfNode(node.vars, [decl], node.onlyIfs, true, undefined);
+    // ok = storeIfThen(env, f, [], true);
+    // if (!ok) {
+    //   env.newMessage(`failed: ${node}`);
+    //   return false;
+    // }
+    // return true;
+
+    const r = [decl, ...node.req];
+    const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
+    ok = storeIfThen(env, f, [], true);
   } else if (node instanceof IffDeclNode) {
     let r = [decl, ...node.req];
     let f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
