@@ -11,7 +11,7 @@ import {
   // HaveNode,
   OnlyIfDeclNode,
   PostfixProve,
-  IfThenDeclNode,
+  IfDeclNode,
   LocalEnvNode,
   ReturnNode,
   // ReturnExistNode,
@@ -691,7 +691,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
 
     if (L_Ends.includes(tokens[0])) {
       //! MAYBE I SHOULD SIMPLY RETURN DeclNode
-      return new IfThenDeclNode(opt.name, opt.vars, [], []);
+      return new IfDeclNode(opt.name, opt.vars, [], []);
     }
 
     const separator = shiftVar(tokens);
@@ -718,7 +718,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
       skip(tokens, L_Ends);
 
       if (ThenKeywords.includes(separator)) {
-        return new IfThenDeclNode(opt.name, opt.vars, req, onlyIfs);
+        return new IfDeclNode(opt.name, opt.vars, req, onlyIfs);
       } else if (IffThenKeywords.includes(separator)) {
         return new IffDeclNode(opt.name, opt.vars, req, onlyIfs);
       } else {

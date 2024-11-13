@@ -3,7 +3,7 @@ import {
   DeclNode,
   ToCheckNode,
   IffDeclNode,
-  IfThenDeclNode,
+  IfDeclNode,
   OnlyIfDeclNode,
   OptNode,
   OrNode,
@@ -25,6 +25,7 @@ import { DEBUG_DICT, RType } from "./L_Executor.ts";
 
 export class DefNameDecl {
   constructor(
+    private name: string,
     private ifVars: string[],
     private req: ToCheckNode[],
     private itself: ToCheckNode
@@ -33,6 +34,10 @@ export class DefNameDecl {
   pushBeginNewReq(ifThen: IfNode) {
     this.ifVars = [...ifThen.vars, ...this.ifVars];
     this.req = [...ifThen.req, ...this.req];
+  }
+
+  toIfDecl(): IfDeclNode {
+    return new IfDeclNode(this.name, this.ifVars, this.req, [this.itself]);
   }
 }
 
@@ -151,7 +156,7 @@ export class StoredFact {
 export function declNewFact(env: L_Env, node: DeclNode): boolean {
   const decl = new OptNode(node.name, node.vars, true, undefined);
   let ok: boolean = true;
-  if (node instanceof IfThenDeclNode) {
+  if (node instanceof IfDeclNode) {
     const r = [decl, ...node.req];
     const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
     ok = storeIfThen(env, f, [], true);
@@ -415,7 +420,7 @@ export function storeIfThenBy(
 }
 
 // export function storeDeclaredIfThenAsBy(env: L_Env, node: DeclNode) {
-//   if (node.defName !== undefined && node instanceof IfThenDeclNode) {
+//   if (node.defName !== undefined && node instanceof IfDeclNode) {
 //     const ifThenToStore = new IfNode(node.vars, node.req, node.onlyIfs);
 //     ifThenToStore.defName = node.defName;
 //     storeIfThenBy(env, ifThenToStore, new StoredFact([], [], true));
@@ -586,3 +591,31 @@ function storeContrapositiveFacts(
 //     return false;
 //   }
 // }
+
+export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
+  try {
+    const toDecl = getDefNameDecls(facts);
+    for (const decl of toDecl) {
+      const ifThenDecl = decl.toIfDecl();
+      const ok = declNewFact(env, ifThenDecl);
+      if (!ok) {
+        env.newMessage(`Failed to store ${ifThenDecl}`);
+        return false;
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+
+  function getDefNameDecls(facts: ToCheckNode[]): DefNameDecl[] {
+    let defs: DefNameDecl[] = [];
+    for (const f of facts) {
+      if (f instanceof IfNode) {
+        defs = [...defs, ...f.getSubFactsWithDefName()];
+      }
+    }
+
+    return defs;
+  }
+}

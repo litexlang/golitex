@@ -198,7 +198,7 @@ export class LogicNode extends ToCheckNode {
 
 export class IffNode extends LogicNode {}
 export class IfNode extends LogicNode {
-  useByToDecl(): IfThenDeclNode {
+  useByToDecl(): IfDeclNode {
     return new DeclNode(this.defName, this.vars, this.req, this.onlyIfs);
   }
 
@@ -212,7 +212,7 @@ export class IfNode extends LogicNode {
       }
 
       if (r.defName !== undefined) {
-        out.push(new DefNameDecl([], [], r));
+        out.push(new DefNameDecl(r.defName, [], [], r));
       }
     }
 
@@ -306,7 +306,7 @@ export class IffDeclNode extends DeclNode {
     return `def iff ${this.name}(${this.vars})`;
   }
 }
-export class IfThenDeclNode extends DeclNode {
+export class IfDeclNode extends DeclNode {
   override toString(): string {
     return `def if ${this.name}(${this.vars})`;
   }

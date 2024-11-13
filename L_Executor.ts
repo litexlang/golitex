@@ -54,7 +54,7 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
 // deno-lint-ignore no-explicit-any
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   IffDeclNode: defExec,
-  IfThenDeclNode: defExec,
+  IfDeclNode: defExec,
   ExistDeclNode: defExistExec,
   OnlyIfDeclNode: defExec,
   KnowNode: knowExec,
@@ -176,6 +176,9 @@ function letExec(env: L_Env, node: LetNode): RType {
         return RType.Error;
       }
     }
+
+    // declare defNames
+    L_Memory.declDefNames(env, node.facts);
 
     // check all requirements are satisfied
     if (!node.strict) {
@@ -732,15 +735,4 @@ function haveExec(env: L_Env, node: HaveNode): RType {
     env.newMessage("have");
     return RType.Error;
   }
-}
-
-function getDefNameDecls(facts: ToCheckNode[]): L_Memory.DefNameDecl[] {
-  let defs: L_Memory.DefNameDecl[] = [];
-  for (const f of facts) {
-    if (f instanceof IfNode) {
-      defs = [...defs, ...f.getSubFactsWithDefName()];
-    }
-  }
-
-  return defs;
 }
