@@ -582,6 +582,14 @@ const testList57 = [
   "not obj(x);obj(x);",
 ];
 
+const testList58 = [
+  "def obj(x) ;",
+  "def obj0(x) <=> {obj(x)};", // know if x : obj0(x) => {obj(x)}, if x : obj(x) => {obj0(x)};
+  "let x;",
+  "know obj(x);",
+  "obj0(x);",
+];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -644,7 +652,8 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList54: [testList54, false],
   testList55: [testList55, false],
   testList56: [testList56, false],
-  testList57: [testList57, true],
+  testList57: [testList57, false],
+  testList58: [testList58, true],
 };
 
 function testCode() {

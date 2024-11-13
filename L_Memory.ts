@@ -36,8 +36,8 @@ export class DefNameDecl {
     this.req = [...ifThen.req, ...this.req];
   }
 
-  toIfDecl(): IfDeclNode {
-    return new IfDeclNode(this.name, this.ifVars, [...this.req], [this.itself]);
+  toDeclNode(): DeclNode {
+    return new DeclNode(this.name, this.ifVars, [...this.req], [this.itself]);
   }
 }
 
@@ -155,31 +155,31 @@ export class StoredFact {
 
 export function declNewFact(env: L_Env, node: DeclNode): boolean {
   // declare
-  const tmp = env.getDeclaredFact(node.name);
-  if (tmp !== undefined) {
-    env.newMessage(`${node.name} already declared.`);
-  }
-  env.safeDeclOpt(node.name, node);
-
+  let ok = true;
   const decl = new OptNode(node.name, node.vars, true, undefined);
-  let ok: boolean = true;
   if (node instanceof IfDeclNode) {
+    // ok = declOptIffIfThen(env, node);
+    // if (!ok) {
+    //   env.newMessage(`failed: ${node}`);
+    //   return false;
+    // }
+    // return true;
     // Semantic option
     // def opt(vars); know if vars:  if req ⇒ {onlyIfs} ⇒ {opt(vars)};
-    const newFact = new IfNode(
-      node.vars,
-      [new IfNode([], node.req, node.onlyIfs, true, undefined)],
-      [decl],
-      true,
-      undefined
-    );
-    // unable to store unnamed not if-then, so not store contrapositive
-    // ! 等基于exist的 not if then 实现好了那就把false变成true
-    const ok = storeIfThen(env, newFact, [], false);
-    if (!ok) {
-      env.newMessage(`failed: ${node}`);
-      return false;
-    } else return true;
+    // const newFact = new IfNode(
+    //   node.vars,
+    //   [new IfNode([], node.req, node.onlyIfs, true, undefined)],
+    //   [decl],
+    //   true,
+    //   undefined
+    // );
+    // // unable to store unnamed not if-then, so not store contrapositive
+    // // ! 等基于exist的 not if then 实现好了那就把false变成true
+    // const ok = storeIfThen(env, newFact, [], false);
+    // if (!ok) {
+    //   env.newMessage(`failed: ${node}`);
+    //   return false;
+    // } else return true;
     // Semantic option
     // def opt(vars); know if vars: req ⇒ {opt(vars)}, if vars: opt(vars) ⇒ {onlyIfs};
     // let f = new IfNode(node.vars, node.req, [decl], true, undefined);
@@ -197,21 +197,70 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
     // return true;
     // Semantic option.
     // def opt(vars); know if vars: opt(vars), req ⇒ {onlyIfs}
-    // const r = [decl, ...node.req];
-    // const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
-    // ok = storeIfThen(env, f, [], true);
-  } else if (node instanceof IffDeclNode) {
-    let r = [decl, ...node.req];
-    let f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
-    ok = storeIfThen(env, f, [], true);
+    env.safeDeclOpt(node.name, node);
     if (!ok) {
       return false;
     }
-    r = [...node.req, ...node.onlyIfs];
-    f = new IfNode(node.vars, r, [decl], true, undefined);
+
+    const r = [decl, ...node.req];
+    const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
     ok = storeIfThen(env, f, [], true);
-    return ok;
+  } else if (node instanceof IffDeclNode) {
+    env.safeDeclOpt(node.name, node);
+    if (!ok) {
+      return false;
+    }
+
+    const left = new IfNode(
+      node.vars,
+      [decl, ...node.req],
+      node.onlyIfs,
+      true,
+      undefined
+    );
+    ok = storeIfThen(env, left, [], true);
+    if (!ok) {
+      return false;
+    }
+
+    const right = new IfNode(
+      node.vars,
+      node.onlyIfs,
+      [decl, ...node.req],
+      true,
+      undefined
+    );
+    ok = storeIfThen(env, right, [], true);
+    if (!ok) {
+      return false;
+    }
+
+    // ok = declOptIffIfThen(env, node);
+    // if (!ok) {
+    //   env.newMessage(`failed: ${node}`);
+    //   return false;
+    // }
+    // return true;
+    // env.safeDeclOpt(node.name, node);
+    // if (!ok) {
+    //   return false;
+    // }
+    // let r = [decl, ...node.req];
+    // let f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
+    // ok = storeIfThen(env, f, [], true);
+    // if (!ok) {
+    //   return false;
+    // }
+    // r = [...node.req, ...node.onlyIfs];
+    // f = new IfNode(node.vars, r, [decl], true, undefined);
+    // ok = storeIfThen(env, f, [], true);
+    // return ok;
   } else if (node instanceof OnlyIfDeclNode) {
+    env.safeDeclOpt(node.name, node);
+    if (!ok) {
+      return false;
+    }
+
     const r = [...node.req, ...node.onlyIfs];
     const f = new IfNode(node.vars, r, [decl], true, undefined);
     ok = storeIfThen(env, f, [], true);
@@ -634,8 +683,8 @@ export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
 
     // Process the declarations
     for (const decl of defs) {
-      const ifThenDecl = decl.toIfDecl();
-      const ok = declNewFact(env, ifThenDecl);
+      const ifThenDecl = decl.toDeclNode();
+      const ok = declOptIffIfThen(env, ifThenDecl);
       if (!ok) {
         env.newMessage(`Failed to store ${ifThenDecl}`);
         return false;
@@ -643,6 +692,40 @@ export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
         env.newMessage(`[def] ${ifThenDecl}`);
       }
     }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function declOptIffIfThen(env: L_Env, node: DeclNode): boolean {
+  try {
+    let ok = env.safeDeclOpt(node.name, node);
+    if (!ok) {
+      return false;
+    }
+
+    const decl = new OptNode(node.name, node.vars, true, undefined);
+
+    const req = new IfNode([], node.req, node.onlyIfs, true, undefined);
+    let newFact = new IfNode(node.vars, [req], [decl], true, undefined);
+    // unable to store unnamed not if-then, so not store contrapositive
+    // ! 等基于exist的 not if then 实现好了那就把false变成true
+    ok = storeIfThen(env, newFact, [], false);
+
+    if (!ok) {
+      env.newMessage(`failed: ${node}`);
+      return false;
+    }
+
+    newFact = new IfNode(node.vars, [decl], [req], true, undefined);
+    ok = storeIfThen(env, newFact, [], false);
+
+    if (!ok) {
+      env.newMessage(`failed: ${node}`);
+      return false;
+    }
+
     return true;
   } catch {
     return false;
