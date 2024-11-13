@@ -304,10 +304,6 @@ export function store(
   storeContrapositive: boolean
 ): boolean {
   try {
-    // if (fact instanceof ExistNode) {
-    //   const ok = storeExistFact(env, fact, req, storeContrapositive);
-    //   if (!ok) return false;
-    // }
     if (fact instanceof IfNode) {
       const ok = storeIfThen(env, fact, req, storeContrapositive);
       if (!ok) return false;
@@ -395,103 +391,6 @@ export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
   return out;
 }
 
-// export function storeIfThenBy(
-//   env: L_Env,
-//   ifThen: IfNode,
-//   higherStoredFact: StoredFact
-// ): boolean {
-//   try {
-//     higherStoredFact.req.push(new StoredReq(ifThen.vars, ifThen.req));
-
-//     for (const onlyIf of ifThen.onlyIfs) {
-//       if (onlyIf instanceof IfNode) {
-//         const out = storeIfThenBy(env, onlyIf, higherStoredFact);
-//         if (!out) {
-//           env.newMessage(`Failed to declare ${onlyIf}`);
-//           return false;
-//         }
-//       }
-//     }
-
-//     return true;
-//   } catch {
-//     throw Error();
-//   }
-// }
-
-// export function storeDeclaredIfThenAsBy(env: L_Env, node: DeclNode) {
-//   if (node.defName !== undefined && node instanceof IfDeclNode) {
-//     const ifThenToStore = new IfNode(node.vars, node.req, node.onlyIfs);
-//     ifThenToStore.defName = node.defName;
-//     storeIfThenBy(env, ifThenToStore, new StoredFact([], [], true));
-//   }
-// }
-
-// export function storeFactInStoredBy(
-//   env: L_Env,
-//   byNode: ByNode,
-//   storeContrapositive: boolean
-// ): boolean {
-//   try {
-//     const storedFact = env.getBy(byNode.defName) as StoredFact;
-
-//     const allFreeVars = storedFact.getAllFreeVars();
-//     if (byNode.vars.length !== allFreeVars.length) {
-//       env.newMessage(
-//         `${byNode.defName} expect ${allFreeVars.length} variables, got ${byNode.vars.length}`
-//       );
-//       return false;
-//     }
-//     const map = new Map<string, string>();
-//     for (const [i] of allFreeVars.entries()) {
-//       map.set(allFreeVars[i], byNode.vars[i]);
-//     }
-
-//     // Store onlyIfs bound to StoredBy
-//     const onlyIfsToBeStored: ToCheckNode[] = [];
-//     for (const onlyIf of storedFact.onlyIfs) {
-//       const toStore = onlyIf.useMapToCopy(map);
-//       onlyIfsToBeStored.push(toStore);
-//     }
-
-//     let ok: boolean = true;
-//     for (const onlyIf of onlyIfsToBeStored) {
-//       ok = store(env, onlyIf, [], storeContrapositive);
-//       if (!ok) {
-//         env.newMessage(`Failed to store ${onlyIf}`);
-//         return false;
-//       }
-//     }
-//     return true;
-//   } catch {
-//     throw Error();
-//   }
-// }
-
-// function declareAndStoreExist(
-//   env: L_Env,
-//   fact: ExistNode,
-//   req: StoredReq[],
-//   isT: boolean = false
-// ): boolean {
-//   try {
-//     if (fact.defName === undefined) {
-//       env.newMessage(`${fact.defName} has already declared as st name.`);
-//       throw Error();
-//     }
-
-//     const newReq = [
-//       ...req,
-//       new StoredReq(fact.vars, [...fact.req, ...fact.onlyIfs]),
-//     ];
-//     const toBeStored = new StoredFact(fact.vars, newReq, isT);
-
-//     return env.newExist(fact.defName, toBeStored);
-//   } catch {
-//     throw Error();
-//   }
-// }
-
 export function storeFact(
   env: L_Env,
   fact: ToCheckNode,
@@ -500,21 +399,12 @@ export function storeFact(
   try {
     if (fact instanceof OptNode) {
       return storeOpt(env, fact as OptNode, [], storeContrapositive);
-    }
-    // else if (fact instanceof ExistNode) {
-    //   return declareAndStoreExist(env, fact, [], true);
-    // }
-    else if (fact instanceof IfNode) {
+    } else if (fact instanceof IfNode) {
       const ok = storeIfThen(env, fact, [], storeContrapositive);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);
         return false;
       }
-      // ok = storeIfThenBy(env, fact, new StoredFact([], [], true));
-      // if (!ok) {
-      //   env.newMessage(`Failed to declare ${fact}`);
-      //   return false;
-      // }
       return true;
     } else if (fact instanceof OrNode) {
       return storeOr(env, fact, [], storeContrapositive);
@@ -556,41 +446,6 @@ function storeContrapositiveFacts(
 
   return true;
 }
-
-// export function storeExistFact(
-//   env: L_Env,
-//   fact: ExistNode,
-//   req: StoredReq[],
-//   storeContrapositive: boolean
-// ): boolean {
-//   try {
-//     if (fact.isT) {
-//       if (fact.defName === undefined) {
-//         env.newMessage(`Failed to store ${fact}, name undefined.`);
-//         return false;
-//       }
-
-//       const storedSt = env.getSt(fact.defName);
-//       if (storedSt === undefined)
-//         return declareAndStoreExist(env, fact, req, true);
-//       else {
-//         storedSt.isT = true;
-//         return true;
-//       }
-//     } else {
-//       const ok = storeIfThen(
-//         env,
-//         fact.getContraPositive(),
-//         req,
-//         storeContrapositive
-//       );
-//       return ok;
-//     }
-//   } catch {
-//     env.newMessage(`Failed to store '${fact}'`);
-//     return false;
-//   }
-// }
 
 export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
   try {
