@@ -575,8 +575,9 @@ const testList56 = [
 const testList57 = [
   "def obj(x) ;",
   "def obj0(x) ;",
+  "def x is obj1;",
   "def obj2(a,b) ;",
-  "let x: if obj(x) => {x is obj0} [1_0], not obj0(x) [1_1];",
+  "let x: if obj(x) => {x is obj0 [1_0]}[1_1] , not obj0(x)[1_2];",
   "know not obj0(x);",
   "not obj(x);obj(x);",
 ];

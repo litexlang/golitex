@@ -483,7 +483,7 @@ export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
 //   }
 // }
 
-export function storeFactAndBy(
+export function storeFact(
   env: L_Env,
   fact: ToCheckNode,
   storeContrapositive: boolean

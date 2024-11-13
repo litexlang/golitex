@@ -27,6 +27,10 @@ export class ToCheckNode extends L_Node {
   copyWithoutIsT(newIsT: boolean): ToCheckNode {
     return new ToCheckNode(newIsT, undefined);
   }
+
+  getSubFactsWithDefName(): DefNameDecl[] {
+    return [];
+  }
 }
 
 export class OrNode extends ToCheckNode {
@@ -52,6 +56,10 @@ export class OrNode extends ToCheckNode {
 
   override toString(): string {
     return `ors{${this.facts.map((e) => e.toString()).join(", ")}}`;
+  }
+
+  override getSubFactsWithDefName(): DefNameDecl[] {
+    return [];
   }
 }
 
@@ -202,18 +210,18 @@ export class IfNode extends LogicNode {
     return new DeclNode(this.defName, this.vars, this.req, this.onlyIfs);
   }
 
-  getSubFactsWithDefName(): DefNameDecl[] {
+  override getSubFactsWithDefName(): DefNameDecl[] {
     // get def from req
-    const out: DefNameDecl[] = [];
-    for (const r of [...this.req, ...this.onlyIfs]) {
-      if (r instanceof IfNode) {
-        const below = r.getSubFactsWithDefName();
-        addCurLayer(this, below);
-      }
+    let out: DefNameDecl[] = [];
+    for (const fact of this.req) {
+      const defNameDecls = fact.getSubFactsWithDefName();
+      out = [...out, ...defNameDecls];
+    }
 
-      if (r.defName !== undefined) {
-        out.push(new DefNameDecl(r.defName, [], [], r));
-      }
+    for (const r of this.onlyIfs) {
+      const defNameDecls = r.getSubFactsWithDefName();
+      addCurLayer(this, defNameDecls);
+      out = [...out, ...defNameDecls];
     }
 
     return out;
