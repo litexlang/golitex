@@ -72,8 +72,8 @@ export class LogicNode extends ToCheckNode {
     public vars: string[] = [],
     public req: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [],
-    isT: boolean,
-    defName: undefined | string // public isIff: boolean = false
+    isT: boolean = true,
+    defName: undefined | string = undefined // public isIff: boolean = false
   ) {
     super(isT, defName);
   }
