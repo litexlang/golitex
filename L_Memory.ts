@@ -164,6 +164,24 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
   const decl = new OptNode(node.name, node.vars, true, undefined);
   let ok: boolean = true;
   if (node instanceof IfDeclNode) {
+    // Semantic option
+    // def opt(vars); know if vars:  if req ⇒ {onlyIfs} ⇒ {opt(vars)};
+    const newFact = new IfNode(
+      node.vars,
+      [new IfNode([], node.req, node.onlyIfs, true, undefined)],
+      [decl],
+      true,
+      undefined
+    );
+    // unable to store unnamed not if-then, so not store contrapositive
+    // ! 等基于exist的 not if then 实现好了那就把false变成true
+    const ok = storeIfThen(env, newFact, [], false);
+    if (!ok) {
+      env.newMessage(`failed: ${node}`);
+      return false;
+    } else return true;
+    // Semantic option
+    // def opt(vars); know if vars: req ⇒ {opt(vars)}, if vars: opt(vars) ⇒ {onlyIfs};
     // let f = new IfNode(node.vars, node.req, [decl], true, undefined);
     // ok = storeIfThen(env, f, [], true);
     // if (!ok) {
@@ -177,10 +195,11 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
     //   return false;
     // }
     // return true;
-
-    const r = [decl, ...node.req];
-    const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
-    ok = storeIfThen(env, f, [], true);
+    // Semantic option.
+    // def opt(vars); know if vars: opt(vars), req ⇒ {onlyIfs}
+    // const r = [decl, ...node.req];
+    // const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
+    // ok = storeIfThen(env, f, [], true);
   } else if (node instanceof IffDeclNode) {
     let r = [decl, ...node.req];
     let f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
