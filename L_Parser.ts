@@ -352,7 +352,7 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
     let fixedIfThenOpt: null | OptNode = null;
 
     if (IfKeywords.includes(tokens[0])) {
-      toProve = logicalOptParse(env, tokens, false);
+      toProve = logicParse(env, tokens, false);
     } else {
       fixedIfThenOpt = optParseWithNot(env, tokens, true);
     }
@@ -416,7 +416,7 @@ function factsParse(
 
         let fact: ToCheckNode;
         if (LogicalKeywords.includes(tokens[0])) {
-          fact = logicalOptParse(env, tokens, includeDefName);
+          fact = logicParse(env, tokens, includeDefName);
           fact.isT = isT ? fact.isT : !fact.isT;
           out = [...out, fact];
         } else if (tokens[0] === "or") {
@@ -428,7 +428,7 @@ function factsParse(
           fact.isT = isT ? fact.isT : !fact.isT;
           out = [...out, fact];
         } else if (tokens[0] === "exist") {
-          fact = logicalOptParse(env, tokens, includeDefName);
+          fact = logicParse(env, tokens, includeDefName);
           fact.isT = isT ? fact.isT : !fact.isT;
           out = [...out, fact];
         } else {
@@ -521,7 +521,7 @@ function optParseWithNotAre(
   }
 }
 
-function logicalOptParse(
+function logicParse(
   env: L_Env,
   tokens: string[],
   includeDefName: boolean

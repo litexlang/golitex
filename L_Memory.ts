@@ -154,12 +154,32 @@ export class StoredFact {
 }
 
 export function declNewFact(env: L_Env, node: DeclNode): boolean {
+  // declare
+  const tmp = env.getDeclaredFact(node.name);
+  if (tmp !== undefined) {
+    env.newMessage(`${node.name} already declared.`);
+  }
+  env.safeDeclOpt(node.name, node);
+
   const decl = new OptNode(node.name, node.vars, true, undefined);
   let ok: boolean = true;
   if (node instanceof IfDeclNode) {
-    const r = [decl, ...node.req];
-    const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
+    let f = new IfNode(node.vars, node.req, [decl], true, undefined);
     ok = storeIfThen(env, f, [], true);
+    if (!ok) {
+      env.newMessage(`failed: ${node}`);
+      return false;
+    }
+    f = new IfNode(node.vars, [decl], node.onlyIfs, true, undefined);
+    ok = storeIfThen(env, f, [], true);
+    if (!ok) {
+      env.newMessage(`failed: ${node}`);
+      return false;
+    }
+    return true;
+    // const r = [decl, ...node.req];
+    // const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
+    // ok = storeIfThen(env, f, [], true);
   } else if (node instanceof IffDeclNode) {
     let r = [decl, ...node.req];
     let f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
@@ -585,8 +605,15 @@ function storeContrapositiveFacts(
 
 export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
   try {
-    const toDecl: DefNameDecl[] = getDefNameDecls(facts);
-    for (const decl of toDecl) {
+    // Inline getDefNameDecls logic
+    let defs: DefNameDecl[] = [];
+    for (const f of facts) {
+      const newDefs = f.getSubFactsWithDefName();
+      defs = [...defs, ...newDefs];
+    }
+
+    // Process the declarations
+    for (const decl of defs) {
       const ifThenDecl = decl.toIfDecl();
       const ok = declNewFact(env, ifThenDecl);
       if (!ok) {
@@ -599,15 +626,5 @@ export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
     return true;
   } catch {
     return false;
-  }
-
-  function getDefNameDecls(facts: ToCheckNode[]): DefNameDecl[] {
-    let defs: DefNameDecl[] = [];
-    for (const f of facts) {
-      const newDefs = f.getSubFactsWithDefName();
-      defs = [...defs, ...newDefs];
-    }
-
-    return defs;
   }
 }

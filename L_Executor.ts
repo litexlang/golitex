@@ -177,6 +177,7 @@ function letExec(env: L_Env, node: LetNode): RType {
     }
 
     // declare defNames
+
     const ok = L_Memory.declDefNames(env, node.facts);
     if (!ok) {
       env.newMessage(`Failed to declare new operators in ${node}`);
@@ -233,11 +234,11 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
 
 function defExec(env: L_Env, node: DeclNode): RType {
   try {
-    let ok = env.safeDeclOpt(node.name, node);
-    if (!ok) return RType.Error;
+    // let ok = env.safeDeclOpt(node.name, node);
+    // if (!ok) return RType.Error;
 
     // declare new opt
-    ok = L_Memory.declNewFact(env, node);
+    const ok = L_Memory.declNewFact(env, node);
     if (!ok) {
       env.newMessage(`Failed to store ${node}`);
       return RType.Error;
