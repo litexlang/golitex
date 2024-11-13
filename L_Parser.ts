@@ -474,6 +474,7 @@ function factsParse(
   }
 }
 
+//! Called By factsParse
 function optParseWithNotAre(
   env: L_Env,
   tokens: string[],
@@ -523,6 +524,7 @@ function optParseWithNotAre(
         skip(tokens, NotKeywords);
       }
 
+      name = shiftVar(tokens);
       let defName: undefined | string = undefined;
       if (includeDefName && isCurToken(tokens, "[")) {
         skip(tokens, "[");
@@ -530,7 +532,6 @@ function optParseWithNotAre(
         skip(tokens, "]");
       }
 
-      name = shiftVar(tokens);
       const outs = vars.map((e) => new OptNode(name, [e], isT, undefined));
       outs[outs.length - 1].defName = defName;
       return outs;

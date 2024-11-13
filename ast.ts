@@ -29,7 +29,11 @@ export class ToCheckNode extends L_Node {
   }
 
   getSubFactsWithDefName(): DefNameDecl[] {
-    return [];
+    if (this.defName === undefined) {
+      return [];
+    } else {
+      return [new DefNameDecl(this.defName, [], [], this)];
+    }
   }
 }
 
@@ -110,7 +114,9 @@ export class LogicNode extends ToCheckNode {
       .join(", ")}}`;
     const notPart = !this.isT ? "[not] " : "";
 
-    return notPart + mainPart;
+    const defName = this.defName === undefined ? "" : `[${this.defName}]`;
+
+    return notPart + mainPart + defName;
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
@@ -270,7 +276,8 @@ export class OptNode extends ToCheckNode {
   override toString() {
     const mainPart = this.name + `(${this.vars.join(", ")})`;
     const notPart = !this.isT ? "[not] " : "";
-    return notPart + mainPart;
+    const defName = this.defName === undefined ? "" : `[${this.defName}]`;
+    return notPart + mainPart + defName;
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
@@ -291,6 +298,11 @@ export class OptNode extends ToCheckNode {
       env.newMessage(`${this.name} not declared.`);
       return false;
     }
+  }
+
+  override getSubFactsWithDefName(): DefNameDecl[] {
+    if (this.defName === undefined) return [];
+    else return [new DefNameDecl(this.defName, [], [], this)];
   }
 }
 

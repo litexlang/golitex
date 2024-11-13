@@ -585,7 +585,7 @@ function storeContrapositiveFacts(
 
 export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
   try {
-    const toDecl = getDefNameDecls(facts);
+    const toDecl: DefNameDecl[] = getDefNameDecls(facts);
     for (const decl of toDecl) {
       const ifThenDecl = decl.toIfDecl();
       const ok = declNewFact(env, ifThenDecl);
@@ -604,9 +604,8 @@ export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
   function getDefNameDecls(facts: ToCheckNode[]): DefNameDecl[] {
     let defs: DefNameDecl[] = [];
     for (const f of facts) {
-      if (f instanceof IfNode) {
-        defs = [...defs, ...f.getSubFactsWithDefName()];
-      }
+      const newDefs = f.getSubFactsWithDefName();
+      defs = [...defs, ...newDefs];
     }
 
     return defs;
