@@ -19,7 +19,6 @@ import {
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
-import { StoredFact, StoredReq } from "./L_Memory.ts";
 import * as L_Memory from "./L_Memory.ts";
 
 export const DEBUG_DICT = {
@@ -178,7 +177,11 @@ function letExec(env: L_Env, node: LetNode): RType {
     }
 
     // declare defNames
-    L_Memory.declDefNames(env, node.facts);
+    const ok = L_Memory.declDefNames(env, node.facts);
+    if (!ok) {
+      env.newMessage(`Failed to declare new operators in ${node}`);
+      return RType.Error;
+    }
 
     // check all requirements are satisfied
     if (!node.strict) {
@@ -243,16 +246,16 @@ function defExec(env: L_Env, node: DeclNode): RType {
     // store declared opt by
     // L_Memory.storeDeclaredIfThenAsBy(env, node);
 
-    for (const onlyIf of node.onlyIfs) {
-      if (onlyIf instanceof IfNode) {
-        const higherStoreReq = new StoredReq(node.vars, [
-          new OptNode(node.name, node.vars, true, undefined),
-          ...node.req,
-        ]);
-        const higherStoredFact = new StoredFact([], [higherStoreReq], true);
-        L_Memory.storeIfThenBy(env, onlyIf, higherStoredFact);
-      }
-    }
+    // for (const onlyIf of node.onlyIfs) {
+    //   if (onlyIf instanceof IfNode) {
+    //     const higherStoreReq = new StoredReq(node.vars, [
+    //       new OptNode(node.name, node.vars, true, undefined),
+    //       ...node.req,
+    //     ]);
+    //     const higherStoredFact = new StoredFact([], [higherStoreReq], true);
+    //     L_Memory.storeIfThenBy(env, onlyIf, higherStoredFact);
+    //   }
+    // }
 
     if (DEBUG_DICT["def"]) {
       const decl = env.getDeclaredFact(node.name);
