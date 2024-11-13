@@ -166,10 +166,28 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
             }
           } else {
             //! WARNING: UNKNOWN SHOULD BE THROWN HERE INSTEAD OF STORING NEW FACTS
-            unknown = true;
-            break;
+            // unknown = true;
+            // break;
             // const toStore = new OptNode(req.name, fixedVars);
             // L_Memory.store(newEnv, toStore, []);
+            const toCheck = new OptNode(
+              req.name,
+              fixedVars,
+              req.isT, //! Unknown whether should be true or req.isT
+              undefined
+            );
+            const out = checkOptLiterally(newEnv, toCheck);
+            if (out === RType.True) {
+              // store checked req as future stored facts.
+              L_Memory.store(newEnv, toCheck, [], true);
+              continue;
+            } else if (out === RType.Error) {
+              newEnv.getMessages().forEach((e) => newEnv.newMessage(e));
+              return RType.Error;
+            } else {
+              unknown = true;
+              break;
+            }
           }
         }
         //! WARNING: I GUESS IF-THEN HERE IS BUGGY

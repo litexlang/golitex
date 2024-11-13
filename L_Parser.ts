@@ -464,6 +464,7 @@ function factsParse(
         return [fact];
       } else {
         const facts = optParseWithNotAre(env, tokens, true, includeDefName);
+        facts.forEach((e) => (e.isT = isT ? e.isT : !e.isT));
         return facts;
       }
     } catch (error) {

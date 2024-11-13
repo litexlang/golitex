@@ -572,6 +572,15 @@ const testList56 = [
   // "know if z :  exist y : {obj3(z,y)} ",
 ];
 
+const testList57 = [
+  "def obj(x) ;",
+  "def obj0(x) ;",
+  "def obj2(a,b) ;",
+  "let x: if obj(x) => {x is obj0};",
+  "know not obj0(x);",
+  "not obj(x);obj(x);",
+];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -633,7 +642,8 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList53: [testList53, false],
   testList54: [testList54, false],
   testList55: [testList55, false],
-  testList56: [testList56, true],
+  testList56: [testList56, false],
+  testList57: [testList57, true],
 };
 
 function testCode() {
