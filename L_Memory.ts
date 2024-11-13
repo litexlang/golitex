@@ -14,15 +14,6 @@ import {
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
 
-// export class OneLayerStoredFact {
-//   constructor(
-//     public fixedVars: string[],
-//     private ifVars: string[],
-//     private ifReq: ToCheckNode[],
-//     public isT: boolean
-//   ) {}
-// }
-
 export class DefNameDecl {
   constructor(
     private name: string,

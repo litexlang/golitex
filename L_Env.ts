@@ -55,18 +55,6 @@ export class L_Env {
     }
   }
 
-  // newExist(s: string, exist: StoredFact): boolean {
-  //   const out = this.exists.get(s);
-  //   if (out !== undefined) {
-  //     out.push(exist);
-  //     // this.exists.set(s, exist);
-  //     return true;
-  //   } else {
-  //     this.newMessage(`exist ${s} already declared.`);
-  //     return false;
-  //   }
-  // }
-
   getDeclaredFact(s: string): DeclNode | undefined {
     if (this.declaredFacts.has(s)) {
       return this.declaredFacts.get(s);
@@ -85,13 +73,6 @@ export class L_Env {
     else if (this.father === undefined) return undefined;
     else return this.father.getBy(s);
   }
-
-  // getSt(s: string): undefined | StoredFact[] {
-  //   const out = this.exists.get(s);
-  //   if (out !== undefined) return out;
-  //   else if (this.father === undefined) return undefined;
-  //   else return this.father.getSt(s);
-  // }
 
   setBy(s: string, by: StoredFact) {
     const out = this.bys.get(s);
