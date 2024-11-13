@@ -1,5 +1,5 @@
 import { L_Env } from "./L_Env.ts";
-import { MemorizedExistDecl } from "./L_Memory.ts";
+import { DefNameDecl, MemorizedExistDecl } from "./L_Memory.ts";
 
 export abstract class L_Node {}
 
@@ -200,6 +200,30 @@ export class IffNode extends LogicNode {}
 export class IfNode extends LogicNode {
   useByToDecl(): IfThenDeclNode {
     return new DeclNode(this.defName, this.vars, this.req, this.onlyIfs);
+  }
+
+  getSubFactsWithDefName(): DefNameDecl[] {
+    // get def from req
+    const out: DefNameDecl[] = [];
+    for (const r of [...this.req, ...this.onlyIfs]) {
+      if (r instanceof IfNode) {
+        const below = r.getSubFactsWithDefName();
+        addCurLayer(this, below);
+      }
+
+      if (r.defName !== undefined) {
+        out.push(new DefNameDecl([], [], r));
+      }
+    }
+
+    return out;
+
+    function addCurLayer(ifThen: IfNode, defs: DefNameDecl[]): DefNameDecl[] {
+      for (let i = 0; i < defs.length; i++) {
+        defs[i].pushBeginNewReq(ifThen);
+      }
+      return defs;
+    }
   }
 }
 

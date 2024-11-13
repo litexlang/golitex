@@ -23,6 +23,19 @@ import { DEBUG_DICT, RType } from "./L_Executor.ts";
 //   ) {}
 // }
 
+export class DefNameDecl {
+  constructor(
+    private ifVars: string[],
+    private req: ToCheckNode[],
+    private itself: ToCheckNode
+  ) {}
+
+  pushBeginNewReq(ifThen: IfNode) {
+    this.ifVars = [...ifThen.vars, ...this.ifVars];
+    this.req = [...ifThen.req, ...this.req];
+  }
+}
+
 export class MemorizedExistDecl {
   constructor(
     private ifVars: string[],

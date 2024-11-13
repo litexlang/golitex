@@ -733,3 +733,14 @@ function haveExec(env: L_Env, node: HaveNode): RType {
     return RType.Error;
   }
 }
+
+function getDefNameDecls(facts: ToCheckNode[]): L_Memory.DefNameDecl[] {
+  let defs: L_Memory.DefNameDecl[] = [];
+  for (const f of facts) {
+    if (f instanceof IfNode) {
+      defs = [...defs, ...f.getSubFactsWithDefName()];
+    }
+  }
+
+  return defs;
+}
