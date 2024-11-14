@@ -1,11 +1,4 @@
-import {
-  // ByNode,
-  // ExistNode,
-  ToCheckNode,
-  OptNode,
-  OrNode,
-  IfNode,
-} from "./L_Nodes.ts";
+import { ToCheckNode, OptNode, OrNode, IfNode } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact } from "./L_Memory.ts";

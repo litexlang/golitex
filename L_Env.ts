@@ -1,9 +1,9 @@
 import {
-  DeclNode,
+  DefNode,
   ToCheckNode,
   LogicNode,
   OptNode,
-  ExistDeclNode,
+  ExistDefNode,
 } from "./L_Nodes.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_Memory.ts";
@@ -13,7 +13,7 @@ export class L_Env {
   private messages: string[] = [];
   private declaredVars = new Set<string>();
 
-  private declaredFacts = new Map<string, DeclNode>();
+  private declaredFacts = new Map<string, DefNode>();
   private storage = new Map<string, StoredFact[]>();
 
   private haves = new Set<string>();
@@ -28,7 +28,7 @@ export class L_Env {
     this.father = father;
   }
 
-  declNewExist(decl: ExistDeclNode): boolean {
+  declNewExist(decl: ExistDefNode): boolean {
     try {
       const out = this.declaredExist.get(decl.name);
       if (out !== undefined) {
@@ -55,7 +55,7 @@ export class L_Env {
     }
   }
 
-  getDeclaredFact(s: string): DeclNode | undefined {
+  getDeclaredFact(s: string): DefNode | undefined {
     if (this.declaredFacts.has(s)) {
       return this.declaredFacts.get(s);
     } else if (this.father) {
@@ -128,7 +128,7 @@ export class L_Env {
     return curEnv?.declaredFacts.get(s) ? n : undefined;
   }
 
-  safeDeclOpt(s: string, declNode: DeclNode): boolean {
+  safeDeclOpt(s: string, DefNode: DefNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.declaredFacts.get(s) !== undefined) {
       this.newMessage(
@@ -137,7 +137,7 @@ export class L_Env {
       return false;
     }
 
-    this.declaredFacts.set(s, declNode);
+    this.declaredFacts.set(s, DefNode);
     return true;
   }
 

@@ -1,14 +1,14 @@
 import {
   // ByNode,
-  DeclNode,
+  DefNode,
   ToCheckNode,
-  IffDeclNode,
-  IfDeclNode,
-  OnlyIfDeclNode,
+  IffDefNode,
+  IfDefNode,
+  OnlyIfDefNode,
   OptNode,
   OrNode,
   // ExistNode,
-  ExistDeclNode,
+  ExistDefNode,
   IfNode,
   ExistNode,
 } from "./L_Nodes.ts";
@@ -29,13 +29,8 @@ export class DefNameDecl {
     this.req = [...ifThen.req, ...this.req];
   }
 
-  toDeclNode(): DeclNode {
-    return new IffDeclNode(
-      this.name,
-      this.ifVars,
-      [...this.req],
-      [this.itself]
-    );
+  toDefNode(): DefNode {
+    return new IffDefNode(this.name, this.ifVars, [...this.req], [this.itself]);
   }
 
   toIfNodeIfNodeAsOnlyIf(): IfNode {
@@ -164,11 +159,11 @@ export class StoredFact {
   }
 }
 
-export function declNewFact(env: L_Env, node: DeclNode): boolean {
+export function declNewFact(env: L_Env, node: DefNode): boolean {
   let ok = true;
 
   const decl = new OptNode(node.name, node.vars, true, undefined);
-  if (node instanceof IfDeclNode) {
+  if (node instanceof IfDefNode) {
     ok = env.safeDeclOpt(node.name, node);
     if (!ok) {
       return false;
@@ -176,7 +171,7 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
     const r = [decl, ...node.req];
     const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
     ok = storeIfThen(env, f, [], true);
-  } else if (node instanceof IffDeclNode) {
+  } else if (node instanceof IffDefNode) {
     ok = env.safeDeclOpt(node.name, node);
     if (!ok) {
       return false;
@@ -204,7 +199,7 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
     if (!ok) {
       return false;
     }
-  } else if (node instanceof OnlyIfDeclNode) {
+  } else if (node instanceof OnlyIfDefNode) {
     ok = env.safeDeclOpt(node.name, node);
     if (!ok) {
       return false;
@@ -212,13 +207,14 @@ export function declNewFact(env: L_Env, node: DeclNode): boolean {
     const r = [...node.req, decl];
     const f = new IfNode(node.vars, node.onlyIfs, r, true, undefined);
     ok = storeIfThen(env, f, [], true);
-  } else if (node instanceof ExistDeclNode) {
+  } else if (node instanceof ExistDefNode) {
     ok = defExist(env, node);
   }
 
   return ok;
 }
 
+// store new fact; declare new fact if fact is of type exist.
 function storeIfThen(
   env: L_Env,
   ifThen: IfNode,
@@ -241,7 +237,7 @@ function storeIfThen(
           }
           ifReq = [...ifReq, ...ifThen.req];
 
-          const toDecl = new ExistDeclNode(
+          const toDecl = new ExistDefNode(
             fact.defName,
             ifVars,
             ifReq,
@@ -454,7 +450,7 @@ export function storeFact(
     } else if (fact instanceof ExistNode) {
       return defExist(
         env,
-        new ExistDeclNode(fact.defName, [], [], fact.vars, fact.facts)
+        new ExistDefNode(fact.defName, [], [], fact.vars, fact.facts)
       );
     } else throw Error();
   } catch {
@@ -509,13 +505,13 @@ export function declDefNames(
     }
 
     for (const def of defs) {
-      env.safeDeclOpt(def.name, def.toDeclNode());
+      env.safeDeclOpt(def.name, def.toDefNode());
     }
 
     // Process the declarations
     for (const decl of defs) {
       if (declExist && decl.itself instanceof ExistNode) {
-        const toDecl = new ExistDeclNode(
+        const toDecl = new ExistDefNode(
           decl.name,
           decl.ifVars,
           decl.req,
@@ -545,10 +541,10 @@ export function declDefNames(
           return false;
         }
 
-        env.newMessage(`[def] ${decl.toDeclNode()}`);
+        env.newMessage(`[def] ${decl.toDefNode()}`);
       }
       // // declare contrapositive exist
-      // const exist = new ExistDeclNode(decl.name, decl.ifVars, decl.req, )
+      // const exist = new ExistDefNode(decl.name, decl.ifVars, decl.req, )
       // env.declNewExist()
     }
     return true;
@@ -557,7 +553,7 @@ export function declDefNames(
   }
 }
 
-export function defExist(env: L_Env, node: ExistDeclNode): boolean {
+export function defExist(env: L_Env, node: ExistDefNode): boolean {
   try {
     let ok = env.safeDeclOpt(node.name, node);
     if (!ok) return false;

@@ -4,19 +4,19 @@ import {
   LetNode,
   OptNode,
   LogicNode,
-  DeclNode,
-  IffDeclNode,
+  DefNode,
+  IffDefNode,
   ToCheckNode,
   ProveNode,
-  OnlyIfDeclNode,
+  OnlyIfDefNode,
   PostfixProve,
-  IfDeclNode,
+  IfDefNode,
   LocalEnvNode,
   ReturnNode,
   OrNode,
   IffNode,
   IfNode,
-  ExistDeclNode,
+  ExistDefNode,
   HaveNode,
   ExistNode,
 } from "./L_Nodes.ts";
@@ -583,7 +583,7 @@ function logicParse(
   }
 }
 
-function defParse(env: L_Env, tokens: string[]): DeclNode {
+function defParse(env: L_Env, tokens: string[]): DefNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -600,8 +600,8 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
     }
 
     if (L_Ends.includes(tokens[0])) {
-      //! MAYBE I SHOULD SIMPLY RETURN DeclNode
-      return new IfDeclNode(opt.name, opt.vars, [], []);
+      //! MAYBE I SHOULD SIMPLY RETURN DefNode
+      return new IfDefNode(opt.name, opt.vars, [], []);
     }
 
     const separator = shiftVar(tokens);
@@ -621,11 +621,11 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
       skip(tokens, L_Ends);
 
       if (ThenKeywords.includes(separator)) {
-        return new IfDeclNode(opt.name, opt.vars, req, onlyIfs);
+        return new IfDefNode(opt.name, opt.vars, req, onlyIfs);
       } else if (IffThenKeywords.includes(separator)) {
-        return new IffDeclNode(opt.name, opt.vars, req, onlyIfs);
+        return new IffDefNode(opt.name, opt.vars, req, onlyIfs);
       } else {
-        return new OnlyIfDeclNode(opt.name, opt.vars, req, onlyIfs);
+        return new OnlyIfDefNode(opt.name, opt.vars, req, onlyIfs);
       }
     } else if (ExistKeyword === separator) {
       const existVars: string[] = [];
@@ -640,7 +640,7 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
       skip(tokens, "}");
 
       skip(tokens, L_Ends);
-      return new ExistDeclNode(opt.name, opt.vars, req, existVars, existFacts);
+      return new ExistDefNode(opt.name, opt.vars, req, existVars, existFacts);
     }
 
     throw Error();

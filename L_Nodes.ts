@@ -133,8 +133,8 @@ export class LogicNode extends ToCheckNode {
 
 export class IffNode extends LogicNode {}
 export class IfNode extends LogicNode {
-  useByToDecl(): IfDeclNode {
-    return new DeclNode(this.defName, this.vars, this.req, this.onlyIfs);
+  useByToDecl(): IfDefNode {
+    return new DefNode(this.defName, this.vars, this.req, this.onlyIfs);
   }
 
   override getSubFactsWithDefName(): DefNameDecl[] {
@@ -254,7 +254,7 @@ export class ExistNode extends ToCheckNode {
     // if (this.defName !== undefined) {
     //   defExist(
     //     env,
-    //     new ExistDeclNode(this.defName, [], [], this.vars, this.facts)
+    //     new ExistDefNode(this.defName, [], [], this.vars, this.facts)
     //   );
     //   return true;
     // } else {
@@ -263,7 +263,7 @@ export class ExistNode extends ToCheckNode {
   }
 }
 
-export class DeclNode extends L_Node {
+export class DefNode extends L_Node {
   constructor(
     public name: string = "",
     public vars: string[] = [],
@@ -278,22 +278,22 @@ export class DeclNode extends L_Node {
   }
 }
 
-export class IffDeclNode extends DeclNode {
+export class IffDefNode extends DefNode {
   override toString(): string {
     return `def iff ${this.name}(${this.vars})`;
   }
 }
-export class IfDeclNode extends DeclNode {
+export class IfDefNode extends DefNode {
   override toString(): string {
     return `def if ${this.name}(${this.vars})`;
   }
 }
-export class OnlyIfDeclNode extends DeclNode {
+export class OnlyIfDefNode extends DefNode {
   override toString(): string {
     return `def only_if ${this.name}(${this.vars})`;
   }
 }
-export class ExistDeclNode extends DeclNode {
+export class ExistDefNode extends DefNode {
   constructor(
     name: string = "",
     vars: string[] = [],

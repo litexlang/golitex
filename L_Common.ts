@@ -9,18 +9,12 @@ export const specialChars = [
   ",",
   ";",
   "\n",
-  "!",
   "&",
   "|",
   "$",
 ];
 
-export const KnowTypeKeywords = [
-  "know",
-  "assume",
-  "strict_know",
-  "strict_assume",
-];
+export const KnowTypeKeywords = ["know", "assume"];
 export const ThenKeywords = ["=>"];
 export const OnlyIfThenKeywords = ["<="];
 export const IffThenKeywords = ["<=>"];

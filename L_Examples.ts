@@ -1,7 +1,5 @@
 import { L_Env } from "./L_Env.ts";
-import { RType, nodeExec } from "./L_Executor.ts";
-import { L_Scan } from "./L_Lexer.ts";
-import * as L_Parser from "./L_Parser.ts";
+import { runStrings } from "./L_Run.ts";
 
 type ExampleItem = {
   name: string;
@@ -15,26 +13,26 @@ const exampleList: ExampleItem[] = [
     name: "syllogism", // 三段论
     code: [
       // Introduce a concept "mortal"
-      "def something is mortal => {};",
-      // Introduce a concept "human", "human" has property that "human is mortal"
-      "def something is human => {something is mortal};",
+      "def 某物 is 生命有限;",
+      // Introduce a concept "human", "human" has property that "human is 生命有限"
+      "def 某物 is human => {某物 is 生命有限};",
       // Introduce a variable "Socrates", "Socrates" has property that "Socrates is human"
       "let Socrates : Socrates is human;",
-      // Check: a specific human called Socrates is mortal."
-      "Socrates is mortal;",
-      // Check: for all human, human is mortal.
-      "if x : x is human => {x is mortal};",
-      // Introduce a variable "god", "god" has property that "god is not mortal"
-      "let god : god is not mortal;",
+      // Check: a specific human called Socrates is 生命有限."
+      "Socrates is 生命有限;",
+      // Check: for all human, human is 生命有限.
+      "if x : x is human => {x is 生命有限};",
+      // Introduce a variable "god", "god" has property that "god is not 生命有限"
+      "let god : god is not 生命有限;",
       // prove by contradiction: to show "god is not human", we assume "god is human"
-      // then we get {god is mortal;} which leads to contradiction:
-      // "god is mortal" "god is not mortal" is valid at the same time.
-      "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
-      "def something is immortal => {x is not mortal};",
-      "if somebody: somebody is immortal => {somebody is not mortal, somebody is not human};",
+      // then we get {god is 生命有限;} which leads to contradiction:
+      // "god is 生命有限" "god is not 生命有限" is valid at the same time.
+      "prove_by_contradiction god is not human {god is 生命有限;} contradiction god is 生命有限;",
+      "def 某物 is immortal => {某物 is not 生命有限};",
+      "if somebody: somebody is immortal => {somebody is not 生命有限, somebody is not human};",
     ],
     debug: true,
-    print: false,
+    print: true,
   },
   {
     name: "defs",
@@ -62,7 +60,7 @@ const exampleList: ExampleItem[] = [
       "let n1,n2,n3 : <(n1,n2), <(n2,n3);",
       "<(n1,n3);",
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -75,7 +73,7 @@ const exampleList: ExampleItem[] = [
       "let a,b,c : a,b,c are p;",
       "let 1,0, 12343124, 314_garbage_-code_159, _garbage, 你好world;",
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -87,7 +85,7 @@ const exampleList: ExampleItem[] = [
       // Whether x is q0 is unknown
       "x is q0;", // unknown
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -116,13 +114,13 @@ const exampleList: ExampleItem[] = [
       // you can add new properties at any level of `if-then`
       "if x : x is p1 => {if x is p2 => {if x is p3 => {x is p5}}};",
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
     name: "not",
     code: ["if x : x is not q0 => {x is not q0};"],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -141,7 +139,7 @@ const exampleList: ExampleItem[] = [
       // `know` also works for `if-then`s (for all)
       "know if x,y,z: <(x,y), <(y,z) => {<(x,z)};",
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -156,7 +154,7 @@ const exampleList: ExampleItem[] = [
       "have d: d is p1;",
       "have e,f: pq(e,f);",
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -168,7 +166,7 @@ const exampleList: ExampleItem[] = [
       // prove syntax2: prove an operator-type-fact {your reasoning}
       "prove z is p {z is p2; z is p1;}",
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -178,14 +176,14 @@ const exampleList: ExampleItem[] = [
       // syntax: prove fact {reasoning} contradiction something-true-and-false;
       "prove_by_contradiction n is not p3 {n is p2; n is p1;} contradiction n is p;",
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
     name: "postfix_prove",
     // allow user to 'first speaks the final result, then prove it.
     code: ["z is p2 prove {z is p3;};"],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -209,14 +207,14 @@ const exampleList: ExampleItem[] = [
       "let s1, s2 : s1,s2 are empty;",
       "equal(s1,s2);",
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
     name: "block",
     // Anything that happens in the local block environment does not affect block outside.
     code: ["let u,v : u,v are p3;", "{u is p2; return u is p1;}"],
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -241,60 +239,19 @@ const exampleList: ExampleItem[] = [
       "x2 is object;",
       "if x : x is object2 => {x is set};",
     ],
-    debug: true,
+    debug: false,
     print: false,
   },
 ];
 
-function runExampleDict() {
-  const env = new L_Env();
+function runExamples() {
   for (const example of exampleList) {
-    if (example["debug"] !== true) continue;
-    const exprs = example["code"];
-    console.log(`\n[${example["name"]}]`);
-
-    for (const expr of exprs) {
-      const out = runExprs(env, expr);
-      if (out === undefined) {
-        env.printClearMessage();
-        continue;
-      }
+    const env = new L_Env();
+    if (example.debug) {
+      console.log(example.name);
+      runStrings(env, example.code, example.print);
     }
-  }
-
-  // env.printFacts();
-  // env.printDeclFacts();
-  // L_Memory.printEnvFacts(env);
-  // env.printAllStoredFacts();
-  // env.printClearMessage();
-  // env.printBys();
-}
-
-export function runExprs(env: L_Env, expr: string) {
-  try {
-    const tokens = L_Scan(expr);
-    const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
-    // const nodes = L_Parser.L_StmtsParse(env, tokens);
-    if (nodes === undefined) {
-      return undefined;
-    }
-    const result: RType[] = [];
-    console.log(`-----\n***  source code  ***\n${expr}\n`);
-
-    for (const node of nodes) {
-      const out = nodeExec(env, node);
-      result.push(out);
-
-      console.log("***  results  ***\n");
-      env.printClearMessage();
-      console.log();
-    }
-
-    return result;
-  } catch (error) {
-    if (error instanceof Error) env.newMessage(error.message);
-    return undefined;
   }
 }
 
-runExampleDict();
+runExamples();
