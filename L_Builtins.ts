@@ -1,4 +1,4 @@
-import { OptNode } from "./ast.ts";
+import { OptNode } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
 

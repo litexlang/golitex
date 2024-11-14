@@ -11,7 +11,7 @@ import {
   ExistDeclNode,
   IfNode,
   ExistNode,
-} from "./ast.ts";
+} from "./L_Nodes.ts";
 import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";

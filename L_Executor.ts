@@ -14,10 +14,8 @@ import {
   // ByNode,
   IfNode,
   HaveNode,
-  ExistNode,
-  ExistDeclNode,
   // STNode,
-} from "./ast.ts";
+} from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
 import * as L_Memory from "./L_Memory.ts";

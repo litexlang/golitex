@@ -5,8 +5,7 @@ import {
   OptNode,
   OrNode,
   IfNode,
-  ExistNode,
-} from "./ast.ts";
+} from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact } from "./L_Memory.ts";

@@ -19,7 +19,7 @@ import {
   ExistDeclNode,
   HaveNode,
   ExistNode,
-} from "./ast.ts";
+} from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import {
   KnowTypeKeywords,
@@ -46,7 +46,7 @@ import {
   ExistKeyword,
   AreKeywords,
   HaveKeywords,
-} from "./common.ts";
+} from "./L_Common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {

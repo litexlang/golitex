@@ -4,7 +4,7 @@ import {
   LogicNode,
   OptNode,
   ExistDeclNode,
-} from "./ast.ts";
+} from "./L_Nodes.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
