@@ -5,6 +5,9 @@ const setTheory = [
   "def object(x);",
   "def set(x);",
   "know if x: set(x) => {object(x)};",
+  "def subset(A,B);",
+  "def in(x,A);",
+  "let A,B,C: A,B,C are set;",
 ];
 
 const setTheoryTest1 = [
@@ -16,10 +19,7 @@ const setTheoryTest1 = [
 ];
 
 const setTheory2 = [
-  "def subset(A,B);",
-  "def in(x,A);",
   "know if A, B: A,B are set => {if x: if in(x,A) => {in(x,B)} => {subset(A,B)}};",
-  "let A,B,C: A,B,C are set;",
   "know if x: in(x,A) => {in(x,B)};",
   "subset(A,B);",
   "know subset(B,C);",
@@ -30,13 +30,13 @@ const setTheory2 = [
 const setTheory3 = [
   "def specification(P,A) : is_property(P, 1), set(A) exist B: {B is set, if x: in(x,B) => {P(x), in(x,A)}, if x: P(x), in(x,A) => {in(x,B)} };",
   "have specification(object, A) : objects_in_A;",
-  "",
+  "objects_in_A is set;",
 ];
 
 const setTheoryDict: { [s: string]: [string[], boolean, boolean] } = {
   setTheory: [setTheory, true, false],
   setTheoryTest1: [setTheoryTest1, false, false],
-  setTheory2: [setTheory2, true, false],
+  setTheory2: [setTheory2, false, false],
   setTheory3: [setTheory3, true, true],
 };
 

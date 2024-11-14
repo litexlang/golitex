@@ -20,6 +20,7 @@ import {
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
 import * as L_Memory from "./L_Memory.ts";
+import { L_Builtins } from "./L_Builtins.ts";
 
 export const DEBUG_DICT = {
   newFact: true,

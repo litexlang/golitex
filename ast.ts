@@ -1,3 +1,4 @@
+import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
 import { DefNameDecl, MemorizedExistDecl } from "./L_Memory.ts";
 
@@ -205,6 +206,12 @@ export class OptNode extends ToCheckNode {
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
+    const builtin = L_Builtins.get(this.name);
+    if (builtin) {
+      // ! Not A Good Implementation.
+      return true;
+    }
+
     for (const v of this.vars) {
       const declared = env.varDeclared(v) || freeVars.includes(v);
       if (!declared) {
@@ -216,7 +223,7 @@ export class OptNode extends ToCheckNode {
   }
 
   override factsDeclared(env: L_Env): boolean {
-    if (env.optDeclared(this.name)) {
+    if (env.optDeclared(this.name) || L_Builtins.get(this.name)) {
       return true;
     } else {
       env.newMessage(`${this.name} not declared.`);

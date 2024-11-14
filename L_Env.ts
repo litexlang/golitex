@@ -5,6 +5,7 @@ import {
   OptNode,
   ExistDeclNode,
 } from "./ast.ts";
+import { L_Builtins } from "./L_Builtins.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";

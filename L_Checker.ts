@@ -10,6 +10,7 @@ import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact } from "./L_Memory.ts";
 import * as L_Memory from "./L_Memory.ts";
+import { L_Builtins } from "./L_Builtins.ts";
 
 export function check(env: L_Env, toCheck: ToCheckNode): RType {
   if (toCheck instanceof OptNode) {
@@ -76,6 +77,11 @@ export function checkIfThen(env: L_Env, toCheck: IfNode): RType {
  *  IN DIFFERENT LEVELS OF IFs in IF-THEN TYPE FACTS.
  */
 export function checkOpt(env: L_Env, toCheck: OptNode): RType {
+  const builtins = L_Builtins.get(toCheck.name);
+  if (builtins !== undefined) {
+    return builtins(env, toCheck);
+  }
+
   const storedFacts: StoredFact[] | null = L_Memory.getStoredFacts(
     env,
     toCheck
@@ -137,8 +143,8 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
             const fixed = map.get(v);
             if (fixed === undefined) {
               everyVarInThisReqIsFixed = false;
+              fixedVars.push(v);
               break;
-              // fixedVars.push(v);
             } else {
               fixedVars.push(fixed);
             }
@@ -249,6 +255,11 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
 
 // check whether a variable in fact.vars is free or fixed at check time instead of run time.
 function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
+  const builtins = L_Builtins.get(toCheck.name);
+  if (builtins !== undefined) {
+    return builtins(env, toCheck);
+  }
+
   const facts: StoredFact[] | null = L_Memory.getStoredFacts(env, toCheck);
 
   if (facts === null) {

@@ -603,6 +603,8 @@ const testList60 = [
   // "know if x : if : p1(x) => {p2(x)} => {p0(x)};",
 ];
 
+const testList61 = ["let x;", "def p(x);", "is_property(p,1);"];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -665,10 +667,11 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList54: [testList54, false],
   testList55: [testList55, false],
   testList56: [testList56, false],
-  testList57: [testList57, true],
+  testList57: [testList57, false],
   testList58: [testList58, false],
   testList59: [testList59, false],
   testList60: [testList60, false],
+  testList61: [testList61, true],
 };
 
 function testCode() {

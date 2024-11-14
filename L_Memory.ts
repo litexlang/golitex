@@ -11,6 +11,7 @@ import {
   ExistDeclNode,
   IfNode,
 } from "./ast.ts";
+import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
 
@@ -261,6 +262,8 @@ function storeOpt(
   req: StoredReq[],
   storeContrapositive: boolean
 ): boolean {
+  if (L_Builtins.get(fact.name) !== undefined) return true;
+
   const declaredOpt = env.getDeclaredFact(fact.name);
   if (declaredOpt === undefined) {
     env.newMessage(`${fact.name} undeclared`);
