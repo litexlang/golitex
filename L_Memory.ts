@@ -545,7 +545,7 @@ export function defExist(env: L_Env, node: ExistDeclNode): boolean {
       return false;
     }
 
-    ok = storeFact(env, node.getIfNode(), true);
+    // ok = storeFact(env, node.getIfNode(), true);
 
     return true;
   } catch {
