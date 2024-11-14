@@ -33,7 +33,9 @@ const setTheory3 = [
   "objects_in_A is set;",
 ];
 
-const setTheory4 = ["if y: y is object => {exist x: {P(x,y)}[replacement]} ;"];
+const setTheory4 = [
+  "know if y: y is object => {exist x: {P(x,y)}[replacement]};",
+];
 
 const setTheoryDict: { [s: string]: [string[], boolean, boolean] } = {
   setTheory: [setTheory, true, false],

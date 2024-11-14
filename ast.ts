@@ -1,6 +1,6 @@
 import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
-import { DefNameDecl, MemorizedExistDecl } from "./L_Memory.ts";
+import { defExist, DefNameDecl, MemorizedExistDecl } from "./L_Memory.ts";
 
 export abstract class L_Node {}
 
@@ -245,6 +245,20 @@ export class ExistNode extends ToCheckNode {
     defName: string | undefined = undefined
   ) {
     super(isT, defName);
+  }
+
+  //! MAYBE NOT GOOD
+  override factsDeclared(env: L_Env): boolean {
+    return true;
+    // if (this.defName !== undefined) {
+    //   defExist(
+    //     env,
+    //     new ExistDeclNode(this.defName, [], [], this.vars, this.facts)
+    //   );
+    //   return true;
+    // } else {
+    //   return false;
+    // }
   }
 }
 

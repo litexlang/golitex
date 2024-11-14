@@ -179,11 +179,11 @@ function letExec(env: L_Env, node: LetNode): RType {
 
     // declare defNames
 
-    const ok = L_Memory.declDefNames(env, node.facts);
-    if (!ok) {
-      env.newMessage(`Failed to declare new operators in ${node}`);
-      return RType.Error;
-    }
+    // const ok = L_Memory.declDefNames(env, node.facts, true);
+    // if (!ok) {
+    //   env.newMessage(`Failed to declare new operators in ${node}`);
+    //   return RType.Error;
+    // }
 
     // check all requirements are satisfied
     if (!node.strict) {
@@ -224,7 +224,7 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
       }
     }
 
-    L_Memory.declDefNames(env, node.facts);
+    // L_Memory.declDefNames(env, node.facts, false);
 
     return RType.True;
   } catch (error) {
@@ -526,14 +526,6 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
 
 function factExec(env: L_Env, toCheck: ToCheckNode): RType {
   try {
-    if (toCheck instanceof ExistNode) {
-      L_Memory.defExist(
-        env,
-        new ExistDeclNode(toCheck.defName, [], [], toCheck.vars, toCheck.facts)
-      );
-      return RType.Unknown;
-    }
-
     if (!(toCheck.varsDeclared(env, []) && toCheck.factsDeclared(env))) {
       return RType.Error;
     }

@@ -228,22 +228,36 @@ function storeIfThen(
   try {
     if (ifThen.isT) {
       for (const fact of ifThen.onlyIfs) {
-        const newReq = new StoredReq(ifThen.vars, ifThen.req);
-        const ok = store(env, fact, [...req, newReq], storeContrapositive);
-        if (!ok) return false;
-      }
+        if (fact instanceof ExistNode) {
+          let ifVars: string[] = [];
+          for (const r of [...req]) {
+            ifVars = [...ifVars, ...r.vars];
+          }
+          ifVars = [...ifVars, ...ifThen.vars];
 
-      // if (ifThen.isIff) {
-      //   for (const fact of ifThen.req) {
-      //     const ok = store(
-      //       env,
-      //       fact,
-      //       [...req, new StoredReq(ifThen.vars, ifThen.onlyIfs)],
-      //       storeContrapositive
-      //     );
-      //     if (!ok) return false;
-      //   }
-      // }
+          let ifReq: ToCheckNode[] = [];
+          for (const r of req) {
+            ifReq = [...ifReq, ...r.req];
+          }
+          ifReq = [...ifReq, ...ifThen.req];
+
+          const toDecl = new ExistDeclNode(
+            fact.defName,
+            ifVars,
+            ifReq,
+            fact.vars,
+            fact.facts
+          );
+
+          const ok = defExist(env, toDecl);
+
+          if (!ok) return false;
+        } else {
+          const newReq = new StoredReq(ifThen.vars, ifThen.req);
+          const ok = store(env, fact, [...req, newReq], storeContrapositive);
+          if (!ok) return false;
+        }
+      }
 
       return true;
     } else {
@@ -437,6 +451,11 @@ export function storeFact(
       return true;
     } else if (fact instanceof OrNode) {
       return storeOr(env, fact, [], storeContrapositive);
+    } else if (fact instanceof ExistNode) {
+      return defExist(
+        env,
+        new ExistDeclNode(fact.defName, [], [], fact.vars, fact.facts)
+      );
     } else throw Error();
   } catch {
     env.newMessage(`Failed to store ${fact}`);
@@ -476,7 +495,11 @@ function storeContrapositiveFacts(
   return true;
 }
 
-export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
+export function declDefNames(
+  env: L_Env,
+  facts: ToCheckNode[],
+  declExist: boolean
+): boolean {
   try {
     // Inline getDefNameDecls logic
     let defs: DefNameDecl[] = [];
@@ -491,7 +514,7 @@ export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
 
     // Process the declarations
     for (const decl of defs) {
-      if (decl.itself instanceof ExistNode) {
+      if (declExist && decl.itself instanceof ExistNode) {
         const toDecl = new ExistDeclNode(
           decl.name,
           decl.ifVars,
