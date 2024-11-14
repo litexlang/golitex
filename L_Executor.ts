@@ -223,6 +223,8 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
       }
     }
 
+    L_Memory.declDefNames(env, node.facts);
+
     return RType.True;
   } catch (error) {
     let m = `'${node.toString()}'`;

@@ -4,7 +4,7 @@ import { runStrings } from "./L_Run.ts";
 const setTheory = [
   "def object(x);",
   "def set(x);",
-  "know if x: set(x) => {obj(x)};",
+  "know if x: set(x) => {object(x)};",
 ];
 
 const setTheoryTest1 = [
@@ -15,9 +15,22 @@ const setTheoryTest1 = [
   "equal(s1,s2);",
 ];
 
+const setTheory2 = [
+  "def subset(A,B);",
+  "def in(x,A);",
+  "know if A, B: A,B are set => {if x: if in(x,A) => {in(x,B)} => {subset(A,B)}};",
+  "let A,B,C: A,B,C are set;",
+  "know if x: in(x,A) => {in(x,B)};",
+  "subset(A,B);",
+  "know subset(B,C);",
+  "if x: in(x,A) => {in(x,B), in(x,C)};",
+  "subset(A,C);",
+];
+
 const setTheoryDict: { [s: string]: [string[], boolean, boolean] } = {
   setTheory: [setTheory, true, false],
-  setTheoryTest1: [setTheoryTest1, true, true],
+  setTheoryTest1: [setTheoryTest1, false, false],
+  setTheory2: [setTheory2, true, true],
 };
 
 function testSetTheory() {
