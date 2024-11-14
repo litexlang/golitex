@@ -603,7 +603,17 @@ const testList60 = [
   // "know if x : if : p1(x) => {p2(x)} => {p0(x)};",
 ];
 
-const testList61 = ["let x;", "def p(x);", "is_property(p,1);"];
+const testList61 = [
+  "let x;",
+  "def p(x);",
+  // "is_property(p,1);",
+  // "def PX() exist x {p(x)};",
+  // "have PX(): y;",
+  // "p(y);",
+  "exist x {p(x)} [PY] ;",
+  "have PY(): z;",
+  "p(z);",
+];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],

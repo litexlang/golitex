@@ -18,6 +18,7 @@ import {
   IfNode,
   ExistDeclNode,
   HaveNode,
+  ExistNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -427,8 +428,14 @@ function factsParse(
           fact = notsParse(env, tokens, includeDefName);
           fact.isT = isT ? fact.isT : !fact.isT;
           out = [...out, fact];
-        } else if (tokens[0] === "exist") {
-          fact = logicParse(env, tokens, includeDefName);
+        }
+        // else if (tokens[0] === "exist") {
+        //   fact = logicParse(env, tokens, includeDefName);
+        //   fact.isT = isT ? fact.isT : !fact.isT;
+        //   out = [...out, fact];
+        // }
+        else if (tokens[0] === "exist") {
+          fact = existParse(env, tokens, includeDefName);
           fact.isT = isT ? fact.isT : !fact.isT;
           out = [...out, fact];
         } else {
@@ -569,10 +576,6 @@ function logicParse(
     } else if (IffKeywords.includes(type)) {
       return new IffNode(vars, req, onlyIfs, true, defName);
     }
-    //  else if (ExistKeyword === type) {
-    //   return new ExistNode(vars, req, onlyIfs, true, defName);
-    // }
-
     throw Error();
   } catch (error) {
     handleParseError(env, "if-then", index, start);
@@ -626,11 +629,11 @@ function defParse(env: L_Env, tokens: string[]): DeclNode {
       }
     } else if (ExistKeyword === separator) {
       const existVars: string[] = [];
-      while (!isCurToken(tokens, ":")) {
+      while (!isCurToken(tokens, "{")) {
         existVars.push(shiftVar(tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
-      skip(tokens, ":");
+      // skip(tokens, ":");
 
       skip(tokens, "{");
       const existFacts = factsParse(env, tokens, ["}"], false, true);
@@ -754,6 +757,32 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
     return new HaveNode(opt, vars);
   } catch (error) {
     handleParseError(env, "have", index, start);
+    throw error;
+  }
+}
+
+function existParse(
+  env: L_Env,
+  tokens: string[],
+  includeDefName: boolean
+): ExistNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, ExistKeyword);
+    const vars = varLstParse(env, tokens, ["{"], true);
+    const facts = factsParse(env, tokens, ["}"], true, includeDefName);
+    let defName: undefined | string = undefined;
+    if (includeDefName && isCurToken(tokens, "[")) {
+      skip(tokens, "[");
+      defName = shiftVar(tokens);
+      skip(tokens, "]");
+    }
+
+    return new ExistNode(vars, facts, true, defName);
+  } catch (error) {
+    handleParseError(env, "exist", index, start);
     throw error;
   }
 }

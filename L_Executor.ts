@@ -13,14 +13,14 @@ import {
   // ReturnExistNode,
   // ByNode,
   IfNode,
-  ExistDeclNode,
   HaveNode,
+  ExistNode,
+  ExistDeclNode,
   // STNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
 import * as L_Memory from "./L_Memory.ts";
-import { L_Builtins } from "./L_Builtins.ts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -55,7 +55,7 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   IffDeclNode: defExec,
   IfDeclNode: defExec,
-  ExistDeclNode: defExistExec,
+  ExistDeclNode: defExec,
   OnlyIfDeclNode: defExec,
   KnowNode: knowExec,
   LetNode: letExec,
@@ -526,6 +526,14 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
 
 function factExec(env: L_Env, toCheck: ToCheckNode): RType {
   try {
+    if (toCheck instanceof ExistNode) {
+      L_Memory.defExist(
+        env,
+        new ExistDeclNode(toCheck.defName, [], [], toCheck.vars, toCheck.facts)
+      );
+      return RType.Unknown;
+    }
+
     if (!(toCheck.varsDeclared(env, []) && toCheck.factsDeclared(env))) {
       return RType.Error;
     }
@@ -599,27 +607,6 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
     return RType.True;
   } catch {
     env.newMessage("return");
-    return RType.Error;
-  }
-}
-
-// function existExe
-function defExistExec(env: L_Env, node: ExistDeclNode): RType {
-  try {
-    let ok = env.safeDeclOpt(node.name, node);
-    if (!ok) return RType.Error;
-
-    ok = env.declNewExist(node);
-    if (!ok) {
-      env.newMessage(`Failed to store ${node}`);
-      return RType.Error;
-    }
-
-    ok = L_Memory.storeFact(env, node.getIfNode(), true);
-
-    return RType.True;
-  } catch {
-    env.newMessage("def exist");
     return RType.Error;
   }
 }

@@ -237,6 +237,17 @@ export class OptNode extends ToCheckNode {
   }
 }
 
+export class ExistNode extends ToCheckNode {
+  constructor(
+    public vars: string[],
+    public facts: ToCheckNode[],
+    isT: boolean = true,
+    defName: string | undefined = undefined
+  ) {
+    super(isT, defName);
+  }
+}
+
 export class DeclNode extends L_Node {
   constructor(
     public name: string = "",

@@ -5,6 +5,7 @@ import {
   OptNode,
   OrNode,
   IfNode,
+  ExistNode,
 } from "./ast.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
@@ -27,9 +28,6 @@ export function check(env: L_Env, toCheck: ToCheckNode): RType {
   } else if (toCheck instanceof OrNode) {
     return checkOr(env, toCheck);
   }
-  // else if (toCheck instanceof ExistNode) {
-  //   return checkExist(env, toCheck);
-  // }
 
   return RType.Unknown;
 }
