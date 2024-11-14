@@ -172,8 +172,8 @@ export class OptNode extends ToCheckNode {
   constructor(
     public name: string,
     public vars: string[],
-    isT: boolean,
-    defName: string | undefined
+    isT: boolean = true,
+    defName: string | undefined = undefined
   ) {
     super(isT, defName);
   }

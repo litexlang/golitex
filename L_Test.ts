@@ -575,9 +575,9 @@ const testList56 = [
 const testList57 = [
   "def obj(x) ;",
   "def obj0(x) ;",
-  "def x is obj1;",
-  "def obj2(a,b) ;",
-  "let x: if  obj(x) => {x is obj0[1_0] }[1_1];",
+  // "def x is obj1;",
+  // "def obj2(a,b) ;",
+  "let x: if  obj(x) => {x is obj0[1_0] };",
   "know not obj0(x);",
   "not obj(x);obj(x);",
 ];
@@ -588,6 +588,19 @@ const testList58 = [
   "let x;",
   "know obj(x);",
   "obj0(x);",
+];
+
+const testList59 = [
+  "def p1(x); def p0(x);",
+  "def p2(x); know if x : p2(x) => {if p0(x) => {p1(x)}}, if x: if p0(x) => {p1(x)} => {p2(x)};",
+  "let y: p0(y), p2(y);",
+  "p1(y);",
+];
+
+const testList60 = [
+  "def p1(x); def p0(x); def p2(x);",
+  "know if x : p1(x) => {if  : p2(x) => {p0(x)}};",
+  // "know if x : if : p1(x) => {p2(x)} => {p0(x)};",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
@@ -654,6 +667,8 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList56: [testList56, false],
   testList57: [testList57, true],
   testList58: [testList58, false],
+  testList59: [testList59, false],
+  testList60: [testList60, false],
 };
 
 function testCode() {

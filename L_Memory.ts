@@ -16,10 +16,10 @@ import { DEBUG_DICT, RType } from "./L_Executor.ts";
 
 export class DefNameDecl {
   constructor(
-    private name: string,
-    private ifVars: string[],
-    private req: ToCheckNode[],
-    private itself: ToCheckNode
+    public name: string,
+    public ifVars: string[],
+    public req: ToCheckNode[],
+    public itself: ToCheckNode
   ) {}
 
   pushBeginNewReq(ifThen: IfNode) {
@@ -28,7 +28,25 @@ export class DefNameDecl {
   }
 
   toDeclNode(): DeclNode {
-    return new DeclNode(this.name, this.ifVars, [...this.req], [this.itself]);
+    return new IffDeclNode(
+      this.name,
+      this.ifVars,
+      [...this.req],
+      [this.itself]
+    );
+  }
+
+  toIfNodeIfNodeAsOnlyIf(): IfNode {
+    const req = new OptNode(this.name, this.ifVars);
+    const onlyIf = new IfNode([], this.req, [this.itself]);
+    return new IfNode(this.ifVars, [req, ...this.req], [onlyIf]);
+    // return new IfNode(this.ifVars, [req, ...this.req], [this.itself]);
+  }
+
+  toIfNodeIfNodeAsIf(): IfNode {
+    const onlyIf = new OptNode(this.name, this.ifVars);
+    const req = new IfNode([], this.req, [this.itself]);
+    return new IfNode(this.ifVars, [req], [onlyIf]);
   }
 }
 
@@ -317,7 +335,7 @@ export function store(
 
     return true;
   } catch {
-    env.newMessage(`Failed to store ${fact}.`);
+    env.newMessage(`Function L_Memory store error: ${fact}, req is ${req}.`);
     return false;
   }
 }
@@ -456,77 +474,35 @@ export function declDefNames(env: L_Env, facts: ToCheckNode[]): boolean {
       defs = [...defs, ...newDefs];
     }
 
+    for (const def of defs) {
+      env.safeDeclOpt(def.name, def.toDeclNode());
+    }
+
     // Process the declarations
     for (const decl of defs) {
-      const ifThenDecl = decl.toDeclNode();
-      const ok = declOptIffIfThen(env, ifThenDecl);
+      let ok = true;
+      let store = decl.toIfNodeIfNodeAsOnlyIf();
+      ok = storeIfThen(env, store, [], true);
       if (!ok) {
-        env.newMessage(`Failed to store ${ifThenDecl}`);
+        env.newMessage(`Failed to store ${store}`);
         return false;
-      } else {
-        env.newMessage(`[def] ${ifThenDecl}`);
       }
+
+      store = decl.toIfNodeIfNodeAsIf();
+      // Before implementing not exist req st onlyIf <=> for all req then onlyIf
+      // Here is false.
+      ok = storeIfThen(env, store, [], false);
+      if (!ok) {
+        env.newMessage(`Failed to store ${store}`);
+        return false;
+      }
+
+      env.newMessage(`[def] ${decl.toDeclNode()}`);
+
+      // // declare contrapositive exist
+      // const exist = new ExistDeclNode(decl.name, decl.ifVars, decl.req, )
+      // env.declNewExist()
     }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function declOptIffIfThen(env: L_Env, node: DeclNode): boolean {
-  try {
-    let ok = env.safeDeclOpt(node.name, node);
-    if (!ok) {
-      return false;
-    }
-
-    const decl = new OptNode(node.name, node.vars, true, undefined);
-
-    const req = new IfNode([], node.req, node.onlyIfs, true, undefined);
-    let newFact = new IfNode(node.vars, [req], [decl], true, undefined);
-    // unable to store unnamed not if-then, so not store contrapositive
-    // ! 等基于exist的 not if then 实现好了那就把false变成true
-    ok = storeIfThen(env, newFact, [], false);
-
-    if (!ok) {
-      env.newMessage(`failed: ${node}`);
-      return false;
-    }
-
-    newFact = new IfNode(node.vars, [decl], [req], true, undefined);
-    ok = storeIfThen(env, newFact, [], false);
-
-    if (!ok) {
-      env.newMessage(`failed: ${node}`);
-      return false;
-    }
-
-    newFact = new IfNode(node.vars, [decl, ...node.req], node.onlyIfs);
-    ok = storeIfThen(env, newFact, [], true);
-    if (!ok) {
-      env.newMessage(`failed: ${node}`);
-      return false;
-    }
-
-    // Store contrapositive, declare new exist
-    const f = new ExistDeclNode(
-      node.name,
-      node.vars,
-      node.req,
-      [],
-      [
-        new OrNode(
-          node.onlyIfs.map((e) => {
-            e.isT = !e.isT;
-            return e;
-          }),
-          true,
-          undefined
-        ),
-      ]
-    );
-    ok = env.declNewExist(f);
-
     return true;
   } catch {
     return false;
