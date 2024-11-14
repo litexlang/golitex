@@ -23,14 +23,21 @@ const setTheory2 = [
   "know if x: in(x,A) => {in(x,B)};",
   "subset(A,B);",
   "know subset(B,C);",
-  "if x: in(x,A) => {in(x,B), in(x,C)};",
+  "if A,B,C: A,B,C are set, subset(A,B), subset(B,C) => {if x: in(x,A) => {in(x,B), in(x,C)}, subset(A,C)};",
   "subset(A,C);",
+];
+
+const setTheory3 = [
+  "def specification(P,A) : is_property(P, 1), set(A) exist B: {B is set, if x: in(x,B) => {P(x), in(x,A)}, if x: P(x), in(x,A) => {in(x,B)} };",
+  "have specification(object, A) : objects_in_A;",
+  "",
 ];
 
 const setTheoryDict: { [s: string]: [string[], boolean, boolean] } = {
   setTheory: [setTheory, true, false],
   setTheoryTest1: [setTheoryTest1, false, false],
-  setTheory2: [setTheory2, true, true],
+  setTheory2: [setTheory2, true, false],
+  setTheory3: [setTheory3, true, true],
 };
 
 function testSetTheory() {
