@@ -26,10 +26,9 @@ export const DefKeywords = ["def"];
 
 export const SymbolsFactsSeparator = ":";
 export const ProveKeywords = ["prove"];
-// export const suchThats = ["st", "is"];
 
 export const L_Ends = [";", "\n"];
-export const LetKeywords = ["let", "strict_let"];
+export const LetKeywords = ["let"];
 export const HaveKeywords = ["have"];
 export const ByKeyword = "by";
 export const ProveByContradictionKeyword = "prove_by_contradiction";

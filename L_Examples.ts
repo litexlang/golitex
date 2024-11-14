@@ -10,7 +10,7 @@ type ExampleItem = {
 
 const exampleList: ExampleItem[] = [
   {
-    name: "syllogism", // 三段论
+    name: "syllogism(三段论)",
     code: [
       // Introduce a concept "mortal"
       "def 某物 is 生命有限;",
@@ -31,7 +31,7 @@ const exampleList: ExampleItem[] = [
       "def 某物 is immortal => {某物 is not 生命有限};",
       "if somebody: somebody is immortal => {somebody is not 生命有限, somebody is not human};",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -39,6 +39,8 @@ const exampleList: ExampleItem[] = [
     code: [
       // Define new concepts
       // Define a new concept called p. if something is p, then nothing happens
+      "def q0(x);",
+      "def x is q1;",
       "def x is p => {};",
       // if x is p1, then x is p
       "def x is p1 => {x is p};",
@@ -241,6 +243,25 @@ const exampleList: ExampleItem[] = [
     ],
     debug: false,
     print: false,
+  },
+  {
+    name: "define_exist_1",
+    code: [
+      "def p(x);",
+      "def q(x,y);",
+      "def E(x): p(x) exist y {q(x,y)};",
+      "let x;",
+      "have E(x): y;", // Error: p(x) is unknown
+      "know p(x);",
+      "have E(x): y;", // Error: E(x) itself is unknown
+      "q(x,y);",
+      "know E(x);",
+      "have E(x): y;", // OK
+      "q(x,y);", // OK
+      "E(x);", // OK
+    ],
+    debug: true,
+    print: true,
   },
 ];
 
