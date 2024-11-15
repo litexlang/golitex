@@ -16,6 +16,11 @@ import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
 
+function memoryErr(env: L_Env, s: string = ""): boolean {
+  env.newMessage(`Memory Error: ${s}`);
+  return false;
+}
+
 export class DefNameDecl {
   constructor(
     public name: string,
@@ -218,8 +223,8 @@ export function declNewFact(env: L_Env, node: DefNode): boolean {
 function storeIfThen(
   env: L_Env,
   ifThen: IfNode,
-  req: StoredReq[],
-  storeContrapositive: boolean
+  req: StoredReq[] = [],
+  storeContrapositive: boolean = true
 ): boolean {
   try {
     if (ifThen.isT) {
@@ -306,6 +311,27 @@ function storeOpt(
     if (req.length > 0)
       env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars}) <= ${req}`);
     else env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars})`);
+  }
+
+  if (fact.defName) {
+    const ifVars: string[] = [];
+    const ifReq: ToCheckNode[] = [];
+
+    req.forEach((e) => {
+      e.vars.forEach((v) => ifVars.push(v));
+      e.req.forEach((v) => ifReq.push(v));
+    });
+
+    const itself = [new OptNode(fact.defName, ifVars)];
+    const ifThen = [new IfNode([], ifReq, [fact])];
+
+    const left = new IfNode(ifVars, ifThen, itself);
+    let ok = storeIfThen(env, left, [], false);
+    if (!ok) return memoryErr(env, `failed to declare ${left}`);
+
+    const right = new IfNode(ifVars, itself, ifThen);
+    ok = storeIfThen(env, left, [], false);
+    if (!ok) return memoryErr(env, `failed to declare ${right}`);
   }
 
   return true;
