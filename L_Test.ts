@@ -1,5 +1,5 @@
 import { L_Env } from "./L_Env.ts";
-import { runStrings } from "./L_Run.ts";
+import { runStrings } from "./L_Runner.ts";
 
 // Aristotle induction
 const testList0 = [
@@ -623,6 +623,10 @@ const testList62 = [
   "know if p0() => {exist x,y {p2(x,y)}[ExistP2] };",
   "know p0();",
   "have ExistP2(): a,b;",
+  "p2(a,b);",
+  "know if x: p(x) => {exist y {p2(x,y)}[ExistP]};",
+  "know p(a); have ExistP(a): c;",
+  "p2(a,c);",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {

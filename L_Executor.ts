@@ -187,7 +187,7 @@ function letExec(env: L_Env, node: LetNode): RType {
     if (!node.strict) {
       // store facts
       for (const f of node.facts) {
-        const ok = L_Memory.storeFact(env, f, true);
+        const ok = L_Memory.executorStoreFact(env, f, true);
         if (!ok) {
           env.newMessage(`Failed to store ${f}`);
           return RType.Error;
@@ -214,7 +214,7 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
 
     if (!node.strict) {
       for (const fact of node.facts) {
-        const ok = L_Memory.storeFact(env, fact, true);
+        const ok = L_Memory.executorStoreFact(env, fact, true);
         if (!ok) {
           env.newMessage(`Failed to store ${fact}`);
           return RType.Error;
@@ -531,7 +531,7 @@ function factExec(env: L_Env, toCheck: ToCheckNode): RType {
     const out = L_Checker.check(env, toCheck);
     if (out === RType.True) {
       // Store Fact
-      const ok = L_Memory.storeFact(env, toCheck, true);
+      const ok = L_Memory.executorStoreFact(env, toCheck, true);
       if (!ok) {
         env.newMessage(`Failed to store ${toCheck}`);
         return RType.Error;

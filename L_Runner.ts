@@ -4,9 +4,15 @@ import * as L_Executor from "./L_Executor.ts";
 import { L_Scan } from "./L_Lexer.ts";
 import * as L_Parser from "./L_Parser.ts";
 
-export function runString(env: L_Env, expr: string, print: boolean = true) {
+export function runString(
+  env: L_Env,
+  expr: string,
+  print: boolean = true,
+  printCode: boolean = true
+) {
   try {
-    if (print) console.log(`-----\n***  source code  ***\n${expr}\n`);
+    if (print && printCode)
+      console.log(`-----\n***  source code  ***\n${expr}\n`);
     const tokens = L_Scan(expr);
     const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
     if (nodes === undefined) {
@@ -16,7 +22,7 @@ export function runString(env: L_Env, expr: string, print: boolean = true) {
     for (const node of nodes) {
       L_Executor.nodeExec(env, node);
       if (print) {
-        console.log("***  results  ***\n");
+        if (printCode) console.log("***  results  ***\n");
         env.printClearMessage();
         console.log();
       }

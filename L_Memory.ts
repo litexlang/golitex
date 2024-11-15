@@ -452,16 +452,12 @@ export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
       if (invisible) continue;
       else out.push(fact);
     }
-
-    // const facts = curEnv.getStoredFactsFromCurrentEnv(opt.name);
-    // if (facts === undefined) continue;
-    // else out = [...out, ...facts];
   }
 
   return out;
 }
 
-export function storeFact(
+export function executorStoreFact(
   env: L_Env,
   fact: ToCheckNode,
   storeContrapositive: boolean
@@ -588,7 +584,7 @@ function storeContrapositiveFacts(
 export function defExist(
   env: L_Env,
   node: ExistDefNode,
-  storeFact: boolean
+  storeAsFact: boolean
 ): boolean {
   try {
     let ok = env.safeDeclOpt(node.name, node);
@@ -600,7 +596,7 @@ export function defExist(
       return false;
     }
 
-    if (storeFact) {
+    if (storeAsFact) {
       const itself = new OptNode(node.name, node.vars);
       ok = storeIfThen(env, new IfNode(node.vars, node.req, [itself]));
       if (!ok) return false;
