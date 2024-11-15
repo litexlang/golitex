@@ -138,6 +138,7 @@ export class L_Env {
     }
 
     this.declaredFacts.set(s, DefNode);
+    this.newMessage(`[def] ${DefNode}`);
     return true;
   }
 

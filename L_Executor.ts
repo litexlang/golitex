@@ -261,7 +261,7 @@ function defExec(env: L_Env, node: DefNode): RType {
 
     if (DEBUG_DICT["def"]) {
       const decl = env.getDeclaredFact(node.name);
-      if (decl) env.newMessage(`[def] ${decl.toString()}`);
+      if (!decl) return RType.Error;
     }
 
     return RType.True;

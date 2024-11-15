@@ -616,7 +616,11 @@ const testList61 = [
   "p(z);",
 ];
 
-const testList62 = ["def p(x); def p2(x,y); def p0();"];
+const testList62 = [
+  "def p(x); def p2(x,y); def p0();",
+  "if x:p(x) => {p(x)}[q];",
+  "let x: p(x); p(x)[px];",
+];
 
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
@@ -684,7 +688,8 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList58: [testList58, false],
   testList59: [testList59, false],
   testList60: [testList60, false],
-  testList61: [testList61, true],
+  testList61: [testList61, false],
+  testList62: [testList62, true],
 };
 
 function testCode() {
