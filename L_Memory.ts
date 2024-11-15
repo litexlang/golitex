@@ -314,24 +314,7 @@ function storeOpt(
   }
 
   if (fact.defName) {
-    const ifVars: string[] = [];
-    const ifReq: ToCheckNode[] = [];
-
-    req.forEach((e) => {
-      e.vars.forEach((v) => ifVars.push(v));
-      e.req.forEach((v) => ifReq.push(v));
-    });
-
-    const itself = [new OptNode(fact.defName, ifVars)];
-    const ifThen = [new IfNode([], ifReq, [fact])];
-
-    const left = new IfNode(ifVars, ifThen, itself);
-    let ok = storeIfThen(env, left, [], false);
-    if (!ok) return memoryErr(env, `failed to declare ${left}`);
-
-    const right = new IfNode(ifVars, itself, ifThen);
-    ok = storeIfThen(env, left, [], false);
-    if (!ok) return memoryErr(env, `failed to declare ${right}`);
+    if (!defNameOptDef(env, fact, req)) return false;
   }
 
   return true;
@@ -596,5 +579,62 @@ export function defExist(env: L_Env, node: ExistDefNode): boolean {
   } catch {
     env.newMessage("def exist");
     return false;
+  }
+}
+
+export function defNameOptDef(
+  env: L_Env,
+  fact: OptNode,
+  req: StoredReq[]
+): boolean {
+  try {
+    return storeVanilla();
+  } catch {
+    return memoryErr(
+      env,
+      `Failed to use defName ${fact.defName} to store ${fact}`
+    );
+  }
+
+  // deno-lint-ignore no-unused-vars
+  function storeIfThenType() {
+    const ifVars: string[] = [];
+    const ifReq: ToCheckNode[] = [];
+
+    req.forEach((e) => {
+      e.vars.forEach((v) => ifVars.push(v));
+      e.req.forEach((v) => ifReq.push(v));
+    });
+
+    const itself = [new OptNode(fact.defName as string, ifVars)];
+    const ifThen = [new IfNode([], ifReq, [fact])];
+
+    const left = new IfNode(ifVars, ifThen, itself);
+    let ok = storeIfThen(env, left, [], false);
+    if (!ok) return memoryErr(env, `failed to declare ${left}`);
+
+    const right = new IfNode(ifVars, itself, ifThen);
+    ok = storeIfThen(env, left, [], false);
+    if (!ok) return memoryErr(env, `failed to declare ${right}`);
+
+    return true;
+  }
+
+  function storeVanilla() {
+    const ifVars: string[] = [];
+    const ifReq: ToCheckNode[] = [];
+
+    req.forEach((e) => {
+      e.vars.forEach((v) => ifVars.push(v));
+      e.req.forEach((v) => ifReq.push(v));
+    });
+
+    const itself = new OptNode(fact.defName as string, ifVars);
+
+    const left = new IfNode(ifVars, [itself, ...ifReq], [fact]);
+    const ok = storeIfThen(env, left, [], true);
+    if (!ok) return memoryErr(env, `failed to declare ${left}`);
+
+    return true;
   }
 }

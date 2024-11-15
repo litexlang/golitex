@@ -616,6 +616,8 @@ const testList61 = [
   "p(z);",
 ];
 
+const testList62 = ["def p(x); def p2(x,y); def p0();"];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
