@@ -620,6 +620,9 @@ const testList62 = [
   "def p(x); def p2(x,y); def p0();",
   "if x:p(x) => {p(x)}[q];",
   "let x: p(x); p(x)[px];",
+  "know if p0() => {exist x,y {p2(x,y)}[ExistP2] };",
+  "know p0();",
+  "have ExistP2(): a,b;",
 ];
 
 const testsDict: { [s: string]: [string[], boolean] } = {

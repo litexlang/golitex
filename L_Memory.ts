@@ -217,7 +217,7 @@ export function declNewFact(
     const f = new IfNode(node.vars, node.onlyIfs, r, true, undefined);
     ok = storeIfThen(env, f, [], true, storeDefName);
   } else if (node instanceof ExistDefNode) {
-    ok = defExist(env, node);
+    ok = defExist(env, node, false);
   }
 
   return ok;
@@ -256,7 +256,7 @@ function storeIfThen(
           );
 
           if (storeDefName) {
-            const ok = defExist(env, toDecl);
+            const ok = defExist(env, toDecl, true);
 
             if (!ok) return false;
           }
@@ -481,7 +481,8 @@ export function storeFact(
     } else if (fact instanceof ExistNode) {
       return defExist(
         env,
-        new ExistDefNode(fact.defName, [], [], fact.vars, fact.facts)
+        new ExistDefNode(fact.defName, [], [], fact.vars, fact.facts),
+        true
       );
     } else throw Error();
   } catch {
@@ -584,7 +585,11 @@ function storeContrapositiveFacts(
 //   }
 // }
 
-export function defExist(env: L_Env, node: ExistDefNode): boolean {
+export function defExist(
+  env: L_Env,
+  node: ExistDefNode,
+  storeFact: boolean
+): boolean {
   try {
     let ok = env.safeDeclOpt(node.name, node);
     if (!ok) return false;
@@ -595,7 +600,11 @@ export function defExist(env: L_Env, node: ExistDefNode): boolean {
       return false;
     }
 
-    // ok = storeFact(env, node.getIfNode(), true);
+    if (storeFact) {
+      const itself = new OptNode(node.name, node.vars);
+      ok = storeIfThen(env, new IfNode(node.vars, node.req, [itself]));
+      if (!ok) return false;
+    }
 
     return true;
   } catch {

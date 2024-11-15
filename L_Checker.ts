@@ -86,7 +86,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
 
     if (toCheck.vars.length !== storedFact.vars.length) {
       env.newMessage(
-        `Invalid number of arguments: need ${storedFact.vars.length}, get ${toCheck.vars.length}`
+        `Invalid number of arguments: ${toCheck.name} need ${storedFact.vars.length}, get ${toCheck.vars.length}`
       );
       return RType.Error;
     }
