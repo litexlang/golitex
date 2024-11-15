@@ -44,3 +44,17 @@ export function runStrings(env: L_Env, exprs: string[], print: boolean = true) {
   console.log("-----\nDONE!\n");
   // env.printExists();
 }
+
+export async function runFile(
+  filePath: string,
+  print: boolean = true,
+  printCode: boolean = false
+) {
+  try {
+    const content: string = await Deno.readTextFile(filePath);
+    const env = new L_Env(undefined);
+    runString(env, content, print, printCode);
+  } catch {
+    console.error(`Error reading file:${filePath}.`);
+  }
+}
