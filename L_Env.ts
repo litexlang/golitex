@@ -5,7 +5,6 @@ import {
   OptNode,
   ExistDefNode,
 } from "./L_Nodes.ts";
-import { RType } from "./L_Executor.ts";
 import { StoredFact, StoredReq } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
 
@@ -16,13 +15,7 @@ export class L_Env {
   private declaredFacts = new Map<string, DefNode>();
   private storage = new Map<string, StoredFact[]>();
 
-  private haves = new Set<string>();
-
-  private bys = new Map<string, StoredFact>();
-  // private existFactMemory = new Map<string, OneLayerStoredFact[]>();
   private declaredExist = new Map<string, MemorizedExistDecl>();
-
-  // private exists = new Map<string, StoredFact[]>();
 
   constructor(private father: L_Env | undefined = undefined) {
     this.father = father;
@@ -63,33 +56,6 @@ export class L_Env {
     } else {
       return undefined;
     }
-  }
-
-  // TODO: IF THE BY IS RELATED TO OPT WITH THE SAME NAME AT HIGHER LEVEL, WE SHOULD NOT RETURN IT. FOR
-  // TODO: THE TIME BEING, WE DON'T IMPLEMENT THAT PROTECTION.
-  getBy(s: string): undefined | StoredFact {
-    const out = this.bys.get(s);
-    if (out !== undefined) return out;
-    else if (this.father === undefined) return undefined;
-    else return this.father.getBy(s);
-  }
-
-  setBy(s: string, by: StoredFact) {
-    const out = this.bys.get(s);
-    if (!out) this.bys.set(s, by);
-    else throw Error(`By name ${s} is already occupied.`);
-  }
-
-  inHaves(name: string): boolean {
-    if (this.haves.has(name)) return true;
-    else if (this.declaredFacts.has(name))
-      return false; // means the opt is declared at current environment and haves above is invisible.
-    else if (this.father) return this.father?.inHaves(name);
-    else return false;
-  }
-
-  newHave(name: string) {
-    return this.haves.add(name);
   }
 
   newFact(
@@ -143,18 +109,10 @@ export class L_Env {
   }
 
   safeNewVar(fix: string): boolean {
-    if (
-      // this.varsMap.has(free)
-      //  ||
-      this.declaredVars.has(fix)
-      //  this.fixFreeMap.has(fix)
-    ) {
+    if (this.declaredVars.has(fix)) {
       this.newMessage(`${fix} already declared.`);
       return false;
     }
-    // this.varsMap.set(free, fix);
-
-    // this.fixFreeMap.set(fix, free);
     this.declaredVars.add(fix);
     return true;
   }
@@ -251,27 +209,5 @@ export class L_Env {
 
   optDeclaredHere(name: string): boolean {
     return this.declaredFacts.get(name) !== undefined;
-  }
-
-  printBys() {
-    console.log("\n-----Bys-----\n");
-    for (const [defName, by] of this.bys) {
-      console.log(defName);
-      console.log(`${by}\n`);
-    }
-  }
-
-  // printExists() {
-  //   console.log("\n----Exists----\n");
-  //   for (const [existName, exist] of this.exists) {
-  //     console.log(existName);
-  //     console.log(`${exist}\n`);
-  //   }
-  // }
-
-  onFail(m: string, t: RType = RType.Error, err: unknown = null): RType {
-    if (err instanceof Error) this.newMessage(err.message);
-    this.newMessage(m);
-    return t;
   }
 }

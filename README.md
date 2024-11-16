@@ -2,3 +2,7 @@
 
 Getting started
 Step1: Follow https://docs.deno.com/runtime/getting_started/installation/ , download the latest version of Deno, the open-source runtime for TypeScript and JavaScript.
+Step2:
+cd ./tslitex
+deno run.ts // enter interactive mode
+deno run --allow-all run.ts YOUR_FILE_NAME // run your file first, then enter interactive mode.
