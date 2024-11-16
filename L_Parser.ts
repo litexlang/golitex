@@ -19,6 +19,7 @@ import {
   ExistDefNode,
   HaveNode,
   ExistNode,
+  SpecialNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -46,6 +47,7 @@ import {
   ExistKeyword,
   AreKeywords,
   HaveKeywords,
+  ClearKeyword,
 } from "./L_Common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -126,6 +128,7 @@ const KeywordFunctionMap: {
   prove_by_contradiction: proveParse,
   have: haveParse,
   return: returnParse,
+  clear: clearParse,
 };
 
 export function getNodesFromSingleNode(
@@ -783,6 +786,20 @@ function existParse(
     return new ExistNode(vars, facts, true, defName);
   } catch (error) {
     handleParseError(env, "exist", index, start);
+    throw error;
+  }
+}
+
+function clearParse(env: L_Env, tokens: string[]): L_Node {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, ClearKeyword);
+    skip(tokens, L_Ends);
+    return new SpecialNode(ClearKeyword);
+  } catch (error) {
+    handleParseError(env, "clear", index, start);
     throw error;
   }
 }

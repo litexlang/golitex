@@ -398,3 +398,9 @@ export class HaveNode extends L_Node {
     return `have ${this.opt.toString()} ${varsStr}`;
   }
 }
+
+export class SpecialNode extends L_Node {
+  constructor(public keyword: string) {
+    super();
+  }
+}

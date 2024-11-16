@@ -14,11 +14,13 @@ import {
   // ByNode,
   IfNode,
   HaveNode,
+  SpecialNode,
   // STNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
 import * as L_Memory from "./L_Memory.ts";
+import { ClearKeyword } from "./L_Common.ts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -62,6 +64,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   PostfixProve: postfixProveExec,
   LocalEnvNode: localEnvExec,
   ReturnNode: returnExec,
+  SpecialNode: specialExec,
   // ReturnExistNode: returnExistExec,
   // ByNode: byExec,
   // STNode: byExec,
@@ -625,6 +628,21 @@ function haveExec(env: L_Env, node: HaveNode): RType {
     return RType.True;
   } catch {
     env.newMessage("have");
+    return RType.Error;
+  }
+}
+
+function specialExec(env: L_Env, node: SpecialNode): RType {
+  try {
+    switch (node.keyword) {
+      case ClearKeyword:
+        env.clear();
+        return RType.True;
+    }
+
+    return RType.Error;
+  } catch {
+    env.newMessage(`${node.keyword}`);
     return RType.Error;
   }
 }

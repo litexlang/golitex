@@ -629,6 +629,8 @@ const testList62 = [
   "p2(a,c);",
 ];
 
+const testList63 = ["let x;", "let x;", "clear;", "let x;"];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
@@ -696,7 +698,8 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList59: [testList59, false],
   testList60: [testList60, false],
   testList61: [testList61, false],
-  testList62: [testList62, true],
+  testList62: [testList62, false],
+  testList63: [testList63, true],
 };
 
 function testCode() {

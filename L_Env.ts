@@ -16,9 +16,19 @@ export class L_Env {
   private storage = new Map<string, StoredFact[]>();
 
   private declaredExist = new Map<string, MemorizedExistDecl>();
+  private father: L_Env | undefined = undefined;
 
-  constructor(private father: L_Env | undefined = undefined) {
+  constructor(father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  clear() {
+    this.messages = [];
+    this.declaredVars = new Set<string>();
+    this.declaredFacts = new Map<string, DefNode>();
+    this.storage = new Map<string, StoredFact[]>();
+    this.declaredExist = new Map<string, MemorizedExistDecl>();
+    this.father = undefined;
   }
 
   declNewExist(decl: ExistDefNode): boolean {
