@@ -29,17 +29,18 @@ const testList1 = [
 
 const testList2 = [
   "def obj(x) => {};",
-  "def obj0(x) => {};",
-  "know obj0(#x);", // know #x is obj0;
-  "def x is obj2 <=> {obj(x)} ;",
+  // "def obj0(x) => {};",
+  // "know obj0(#x);", // know #x is obj0;
+  // "def x is obj2 <=> {obj(x)} ;",
   "def x is obj3  => {};",
   "def x is obj4  => {obj3(x)};",
-  "let EMPTY_SET;",
-  "def x is inf  => {obj3(x)};",
+  // "let EMPTY_SET;",
+  // "def x is inf  => {obj3(x)};",
   // [if] obj3
   // #x : inf(#x); obj(#x)
   "prove if x : obj(x) => {obj3(x)} {}", // unsuccessful prove
-  "prove if x : obj(x) => {obj3(x)} {know obj4(x);}",
+  "know if x : obj(x) => {obj4(x)};",
+  "prove if x : obj(x) => {obj3(x)} {obj4(x);}",
 ];
 
 const testList3 = [
@@ -634,7 +635,7 @@ const testList63 = ["let x;", "let x;", "clear;", "let x;"];
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
-  testList2: [testList2, false],
+  testList2: [testList2, true],
   testList3: [testList3, false],
   testList4: [testList4, false],
   testList5: [testList5, false],
@@ -699,7 +700,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList60: [testList60, false],
   testList61: [testList61, false],
   testList62: [testList62, false],
-  testList63: [testList63, true],
+  testList63: [testList63, false],
 };
 
 function testCode() {

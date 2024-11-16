@@ -20,7 +20,7 @@ import {
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
 import * as L_Memory from "./L_Memory.ts";
-import { ClearKeyword } from "./L_Common.ts";
+import { ClearKeyword, RunKeyword } from "./L_Common.ts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -85,6 +85,7 @@ function execResult(out: RType, node: L_Node): string {
 export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
   try {
     const nodeType = node.constructor.name;
+
     const execFunc = nodeExecMap[nodeType];
 
     if (execFunc) {
@@ -277,12 +278,18 @@ function defExec(env: L_Env, node: DefNode): RType {
 }
 
 function proveExec(env: L_Env, node: ProveNode): RType {
+  let out = RType.Error;
   if (node.contradict === undefined) {
     if (node.toProve !== null) {
-      if (node.toProve instanceof IfNode)
-        return proveIfThen(env, node.toProve, node.block);
+      if (node.toProve instanceof IfNode) {
+        out = proveIfThen(env, node.toProve, node.block);
+      }
     } else {
-      return proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
+      out = proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
+    }
+
+    if (out !== RType.True) {
+      env.newMessage(`Failed: ${node}`);
     }
 
     return RType.Error;
@@ -638,6 +645,10 @@ function specialExec(env: L_Env, node: SpecialNode): RType {
       case ClearKeyword:
         env.clear();
         return RType.True;
+      case RunKeyword: {
+        //!TODO
+        return RType.True;
+      }
     }
 
     return RType.Error;

@@ -400,7 +400,7 @@ export class HaveNode extends L_Node {
 }
 
 export class SpecialNode extends L_Node {
-  constructor(public keyword: string) {
+  constructor(public keyword: string, public extra: unknown) {
     super();
   }
 }

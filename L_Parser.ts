@@ -48,6 +48,7 @@ import {
   AreKeywords,
   HaveKeywords,
   ClearKeyword,
+  RunKeyword,
 } from "./L_Common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -128,7 +129,8 @@ const KeywordFunctionMap: {
   prove_by_contradiction: proveParse,
   have: haveParse,
   return: returnParse,
-  clear: clearParse,
+  clear: specialParse,
+  run: specialParse,
 };
 
 export function getNodesFromSingleNode(
@@ -790,14 +792,27 @@ function existParse(
   }
 }
 
-function clearParse(env: L_Env, tokens: string[]): L_Node {
+function specialParse(env: L_Env, tokens: string[]): SpecialNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    skip(tokens, ClearKeyword);
-    skip(tokens, L_Ends);
-    return new SpecialNode(ClearKeyword);
+    const keyword = shiftVar(tokens);
+    switch (keyword) {
+      case ClearKeyword:
+        skip(tokens, L_Ends);
+        return new SpecialNode(ClearKeyword, null);
+      case RunKeyword: {
+        const words: string[] = [];
+        while (!L_Ends.includes(tokens[0])) {
+          words.push(shiftVar(tokens));
+        }
+        skip(tokens, L_Ends);
+        return new SpecialNode(RunKeyword, words.join());
+      }
+      default:
+        throw Error();
+    }
   } catch (error) {
     handleParseError(env, "clear", index, start);
     throw error;

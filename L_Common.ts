@@ -44,6 +44,7 @@ export const ReturnKeyword = ["return", "so"];
 export const ReturnExistKeyword = ["return_exist"];
 export const DefByKeywords = ["def_by"];
 export const ClearKeyword = "clear";
+export const RunKeyword = "run";
 
 export const NotsKeyword = "nots";
 // export const STKeyword = "st";
@@ -77,6 +78,7 @@ export const L_Keywords: string[] = [
   ...ReturnKeyword,
   ...DefByKeywords,
   NotsKeyword,
+  RunKeyword,
   // STKeyword,
 ];
 
