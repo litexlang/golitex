@@ -1,7 +1,7 @@
 import { L_Env } from "./L_Env.ts";
-import { runString } from "./L_Runner.ts";
+import { runFile, runString } from "./L_Runner.ts";
 
-async function L_REPL() {
+async function L_REPL(files: string[]) {
   const env = new L_Env(undefined);
   console.log("LiTeX 0.0.1\n");
   console.log(
@@ -10,19 +10,12 @@ async function L_REPL() {
   console.log(`Exit by inputting 'exit'\n`);
 
   if (Deno.args.length > 0) {
-    const filename = Deno.args[0];
-    try {
-      const fileContent = await Deno.readTextFile(filename);
-      console.log(`Running file: ${filename}\n`);
-      runString(env, fileContent, true, false);
-      console.log(`End Running file: ${filename}\n`);
-    } catch (err) {
-      if (err instanceof Error)
-        console.error(
-          `Error: Unable to read file "${filename}": ${err.message}\n`
-        );
-      else console.error(`Error: Unable to read file ${filename}\n`);
-    }
+    const fileName = Deno.args[0];
+    await runFile(env, fileName, true, false);
+  }
+
+  for (const fileName of files) {
+    await runFile(env, fileName, true, false);
   }
 
   while (true) {
@@ -36,4 +29,4 @@ async function L_REPL() {
   }
 }
 
-L_REPL();
+L_REPL([]);

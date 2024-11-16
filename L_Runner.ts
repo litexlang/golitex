@@ -7,11 +7,11 @@ import * as L_Parser from "./L_Parser.ts";
 export function runString(
   env: L_Env,
   expr: string,
-  print: boolean = true,
+  printResult: boolean = true,
   printCode: boolean = true
 ) {
   try {
-    if (print && printCode)
+    if (printResult && printCode)
       console.log(`-----\n***  source code  ***\n${expr}\n`);
     const tokens = L_Scan(expr);
     const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
@@ -21,7 +21,7 @@ export function runString(
     const result: RType[] = [];
     for (const node of nodes) {
       L_Executor.nodeExec(env, node);
-      if (print) {
+      if (printResult) {
         if (printCode) console.log("***  results  ***\n");
         env.printClearMessage();
         console.log();
@@ -35,10 +35,14 @@ export function runString(
   }
 }
 
-export function runStrings(env: L_Env, exprs: string[], print: boolean = true) {
+export function runStrings(
+  env: L_Env,
+  exprs: string[],
+  printResult: boolean = true
+) {
   for (let i = 0; i < exprs.length; i++) {
     const expr = exprs[i];
-    runString(env, expr, print);
+    runString(env, expr, printResult);
   }
 
   console.log("-----\nDONE!\n");
@@ -46,15 +50,22 @@ export function runStrings(env: L_Env, exprs: string[], print: boolean = true) {
 }
 
 export async function runFile(
-  filePath: string,
-  print: boolean = true,
+  env: L_Env,
+  fileName: string,
+  printResult: boolean = true,
   printCode: boolean = false
 ) {
   try {
-    const content: string = await Deno.readTextFile(filePath);
-    const env = new L_Env(undefined);
-    runString(env, content, print, printCode);
-  } catch {
-    console.error(`Error reading file:${filePath}.`);
+    const fileContent = await Deno.readTextFile(fileName);
+    console.log(fileContent);
+    console.log(`Running file: ${fileName}\n`);
+    runString(env, fileContent, printResult, printCode);
+    console.log(`End Running file: ${fileName}\n`);
+  } catch (err) {
+    if (err instanceof Error)
+      console.error(
+        `Error: Unable to read file "${fileName}": ${err.message}\n`
+      );
+    else console.error(`Error: Unable to read file ${fileName}\n`);
   }
 }
