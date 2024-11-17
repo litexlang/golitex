@@ -55,7 +55,7 @@ const exampleList: ExampleItem[] = [
       "def multi_wise(x,y,z) => {};",
       "def q0(x) => {};",
       // When is used to add conditions for both left and right hand side.
-      "def x is q <=> {x is q0} when x is p;",
+      // "def x is q <=> {x is q0} when x is p;",
       // Example:
       "def <(x,y) => {};",
       "def >=(x,y) <= {not <(x,y)};",

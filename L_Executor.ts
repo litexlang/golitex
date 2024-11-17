@@ -21,6 +21,7 @@ import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
 import * as L_Memory from "./L_Memory.ts";
 import { ClearKeyword, RunKeyword } from "./L_Common.ts";
+import { runFile } from "./L_Runner.ts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -646,7 +647,7 @@ function specialExec(env: L_Env, node: SpecialNode): RType {
         env.clear();
         return RType.True;
       case RunKeyword: {
-        //!TODO
+        runFile(env, node.extra as string, true, false);
         return RType.True;
       }
     }

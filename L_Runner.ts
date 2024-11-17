@@ -49,18 +49,19 @@ export function runStrings(
   // env.printExists();
 }
 
-export async function runFile(
+export function runFile(
   env: L_Env,
   fileName: string,
   printResult: boolean = true,
   printCode: boolean = false
-) {
+): RType[] | undefined {
   try {
-    const fileContent = await Deno.readTextFile(fileName);
+    const fileContent = Deno.readTextFileSync(fileName);
     console.log(fileContent);
     console.log(`Running file: ${fileName}\n`);
-    runString(env, fileContent, printResult, printCode);
+    const out = runString(env, fileContent, printResult, printCode);
     console.log(`End Running file: ${fileName}\n`);
+    return out;
   } catch (err) {
     if (err instanceof Error)
       console.error(
