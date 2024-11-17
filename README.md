@@ -1,6 +1,6 @@
 ## LiTeX
 
-**LiTeX** is a formal proof management system inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **ANYONE** express and verify mathematics at **ANY LEVEL** as **ELEGANTLY** and **INTUITIVELY** as if they were using natural language.
+**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **ANYONE** express and verify mathematics at **ANY LEVEL** as **ELEGANTLY** and **INTUITIVELY** as if they were using natural language. More details are available at [LiTeX GitHub Repository](https://github.com/malloc-realloc/tslitex).
 
 Feel free to share your suggestions and ideas to help us improve this open-source project—your feedback is invaluable!
 
@@ -18,15 +18,9 @@ Feel free to share your suggestions and ideas to help us improve this open-sourc
 
 ---
 
-## Getting Started
-
-LiTeX is inspired by Lisp semantics and LaTeX syntax to enable intuitive and natural language-like expression of proofs. More details are available at [tslitex GitHub Repository](https://github.com/malloc-realloc/tslitex).
-
----
-
 ## A Tour of LiTeX
 
-Let’s explore its syntax with examples, starting with syllogism (三段论):
+Let’s explore its syntax with examples, starting with syllogism:
 
 ### Example:
 
@@ -39,6 +33,13 @@ if x : x is human => {x is mortal};
 let god : god is not mortal;
 prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;
 ```
+
+Some core functionalities of LiTeX are included in this example
+
+- **Concept Definition**: A new concept called `mortal` takes in one parameter. Another concept called `human` has corollary that it's `mortal`.
+- **Variable Definition**: Two variable, `Socrates` and `Plato`, are introduced. Socrates has property that `Socrates is human` is true.
+- **Expression Validation**: The user input an expression `if x : x is human => {x is mortal};`. LiTeX interpreter checks whether given expressions are true based on facts that the user already claimed. For example, we have already known `something is human => {something is mortal};`, so `x is mortal` is true under assumption `x is human`.
+- **Proof**: in LiTeX, there are 2 ways of proving a result: prove or prove_by_contradiction.
 
 ---
 
