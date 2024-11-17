@@ -96,8 +96,6 @@ know if x is p2 => {x is p2};
 
 ---
 
-### Logical Constructs
-
 #### Not
 
 ```plaintext

@@ -57,7 +57,6 @@ export function runFile(
 ): RType[] | undefined {
   try {
     const fileContent = Deno.readTextFileSync(fileName);
-    console.log(fileContent);
     console.log(`Running file: ${fileName}\n`);
     const out = runString(env, fileContent, printResult, printCode);
     console.log(`End Running file: ${fileName}\n`);
