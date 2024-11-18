@@ -5,7 +5,7 @@ function L_REPL(files: string[]) {
   const env = new L_Env(undefined);
   console.log("LiTeX 0.0.1\n");
   console.log(
-    `More information about LiTeX is available at <https://github.com/malloc-realloc/tslitex>\n`
+    `More information about LiTeX is available at <https://github.com/litexlang/tslitex>\n`
   );
   console.log(`Exit by inputting 'exit'\n`);
 

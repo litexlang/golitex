@@ -1,6 +1,6 @@
 ## LiTeX
 
-**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **ANYONE** express and verify mathematics at **ANY LEVEL** as **ELEGANTLY** and **INTUITIVELY** as if they were using natural language. More details are available at [LiTeX GitHub Repository](https://github.com/malloc-realloc/tslitex).
+**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **ANYONE** express and verify mathematics at **ANY LEVEL** as **ELEGANTLY** and **INTUITIVELY** as if they were using natural language. More details are available at [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
 
 Feel free to share your suggestions and ideas to help us improve this open-source project—your feedback is invaluable!
 
