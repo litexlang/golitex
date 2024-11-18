@@ -5,7 +5,7 @@ import {
   OptNode,
   ExistDefNode,
 } from "./L_Nodes.ts";
-import { StoredFact, StoredReq } from "./L_Memory.ts";
+import { ReqSpace, StoredFact, StoredReq } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
 
 export class L_Env {
@@ -17,6 +17,8 @@ export class L_Env {
 
   private declaredExist = new Map<string, MemorizedExistDecl>();
   private father: L_Env | undefined = undefined;
+
+  private reqSpaces = new Map<string, ReqSpace>();
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;

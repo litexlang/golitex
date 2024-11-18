@@ -564,6 +564,13 @@ function logicParse(
       req = factsParse(env, tokens, separation, true, includeDefName);
     }
 
+    let reqName: null | string = null;
+    if (isCurToken(tokens, "[")) {
+      skip(tokens, "[");
+      reqName = shiftVar(tokens);
+      skip(tokens, "]");
+    }
+
     skip(tokens, "{");
 
     const onlyIfs = factsParse(env, tokens, ["}"], true, includeDefName);
@@ -577,9 +584,9 @@ function logicParse(
     }
 
     if (IfKeywords.includes(type)) {
-      return new IfNode(vars, req, onlyIfs, true, defName);
+      return new IfNode(vars, req, onlyIfs, true, defName, reqName);
     } else if (IffKeywords.includes(type)) {
-      return new IffNode(vars, req, onlyIfs, true, defName);
+      return new IffNode(vars, req, onlyIfs, true, defName, reqName);
     }
     throw Error();
   } catch (error) {

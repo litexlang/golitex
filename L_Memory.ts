@@ -21,6 +21,14 @@ function memoryErr(env: L_Env, s: string = ""): boolean {
   return false;
 }
 
+export class ReqSpace {
+  constructor(
+    public name: string,
+    public ifVars: string[],
+    public req: ToCheckNode[]
+  ) {}
+}
+
 export class DefNameDecl {
   constructor(
     public name: string,
@@ -329,7 +337,8 @@ function storeOpt(
   }
 
   if (storeDefName && fact.defName) {
-    if (!defNameOptDef(env, fact, req)) return false;
+    const ok = defNameOptDef(env, fact, req);
+    if (!ok) return false;
   }
 
   return true;

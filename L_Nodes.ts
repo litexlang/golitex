@@ -74,7 +74,8 @@ export class LogicNode extends ToCheckNode {
     public req: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [],
     isT: boolean = true,
-    defName: undefined | string = undefined // public isIff: boolean = false
+    defName: undefined | string = undefined, // public isIff: boolean = false
+    public reqName: null | string = null
   ) {
     super(isT, defName);
   }
@@ -85,7 +86,8 @@ export class LogicNode extends ToCheckNode {
       this.req,
       this.onlyIfs,
       newIsT,
-      this.defName
+      this.defName,
+      this.reqName
       // this.isIff
     );
   }
@@ -96,7 +98,14 @@ export class LogicNode extends ToCheckNode {
     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
 
     if (this instanceof LogicNode)
-      return new LogicNode(newVars, req, onlyIfs, this.isT, this.defName);
+      return new LogicNode(
+        newVars,
+        req,
+        onlyIfs,
+        this.isT,
+        this.defName,
+        this.reqName
+      );
 
     throw Error();
   }
@@ -314,7 +323,7 @@ export class ExistDefNode extends DefNode {
 
   getIfNode(): IfNode {
     const itself = [new OptNode(this.name, this.vars, true, undefined)];
-    return new IfNode(this.vars, this.req, itself, true, undefined);
+    return new IfNode(this.vars, this.req, itself, true, undefined, null);
   }
 }
 
