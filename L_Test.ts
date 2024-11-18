@@ -632,10 +632,23 @@ const testList62 = [
 
 const testList63 = ["let x;", "let x;", "clear;", "let x;"];
 
+const testList64 = [
+  "def set(x); def subset(A,B); def in(x,A);",
+  "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
+  // "know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)} };",
+  // "know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)[P1]}[P2] };",
+  "let A,B,C,D,E,F;",
+  "know if x: in(x,A) => {in(x,B)};",
+  // "subset(A,B);",
+  "know subset(C,D);",
+  "let x: in(x,A);",
+  "in(x,B);",
+];
+
 const testsDict: { [s: string]: [string[], boolean] } = {
   testList: [testList0, false],
   testList1: [testList1, false],
-  testList2: [testList2, true],
+  testList2: [testList2, false],
   testList3: [testList3, false],
   testList4: [testList4, false],
   testList5: [testList5, false],
@@ -701,6 +714,7 @@ const testsDict: { [s: string]: [string[], boolean] } = {
   testList61: [testList61, false],
   testList62: [testList62, false],
   testList63: [testList63, false],
+  testList64: [testList64, true],
 };
 
 function testCode() {
