@@ -245,6 +245,10 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
 
 // check whether a variable in fact.vars is free or fixed at check time instead of run time.
 function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
+  if (toCheck.vars.length !== env.getDeclaredFact(toCheck.name)?.vars.length) {
+    return RType.Unknown;
+  }
+
   const builtins = L_Builtins.get(toCheck.name);
   if (builtins !== undefined) {
     return builtins(env, toCheck);

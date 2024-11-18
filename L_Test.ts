@@ -635,12 +635,12 @@ const testList63 = ["let x;", "let x;", "clear;", "let x;"];
 const testList64 = [
   "def set(x); def subset(A,B); def in(x,A);",
   "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
-  // "know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)} };",
+  "know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)} };",
   // "know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)[P1]}[P2] };",
   "let A,B,C,D,E,F;",
-  "know if x: in(x,A) => {in(x,B)};",
+  // "know if x: in(x,A) => {in(x,B)};",
   // "subset(A,B);",
-  "know subset(C,D);",
+  "know subset(A,B);",
   "let x: in(x,A);",
   "in(x,B);",
 ];
