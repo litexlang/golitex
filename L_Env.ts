@@ -48,6 +48,24 @@ export class L_Env {
     }
   }
 
+  getReqSpace(s: string): ReqSpace | undefined {
+    const out = this.reqSpaces.get(s);
+    if (out !== undefined) return out;
+    else {
+      if (this.father) {
+        return this.father.getReqSpace(s);
+      } else {
+        return undefined;
+      }
+    }
+  }
+
+  newReqSpace(s: string, space: ReqSpace): boolean {
+    if (this.reqSpaces.get(s)) return false;
+    this.reqSpaces.set(s, space);
+    return true;
+  }
+
   getDeclExist(s: string): MemorizedExistDecl | undefined {
     const out = this.declaredExist.get(s);
     if (out !== undefined) return out;

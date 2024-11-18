@@ -23,9 +23,9 @@ function memoryErr(env: L_Env, s: string = ""): boolean {
 
 export class ReqSpace {
   constructor(
-    public name: string,
     public ifVars: string[],
-    public req: ToCheckNode[]
+    public ifReq: ToCheckNode[],
+    public onlyIf: ToCheckNode[]
   ) {}
 }
 
@@ -292,6 +292,11 @@ function storeIfThen(
 
     if (storeDefName && ifThen.defName !== undefined) {
       const ok = defNameIfDef(env, ifThen, req);
+      if (!ok) return false;
+    }
+
+    if (storeDefName && ifThen.reqName) {
+      const ok = storeReqSpace(env, ifThen.reqName, ifThen, req);
       if (!ok) return false;
     }
 
@@ -690,8 +695,8 @@ export function defNameIfDef(
       ifVars.push(...e.vars);
       ifReq.push(...e.req);
     });
-    fact.vars.push(...fact.vars);
-    fact.req.push(...fact.req);
+    ifVars.push(...fact.vars);
+    ifReq.push(...fact.req);
 
     const ok = declNewFact(
       env,
@@ -706,5 +711,38 @@ export function defNameIfDef(
       );
 
     return true;
+  }
+}
+
+export function storeReqSpace(
+  env: L_Env,
+  name: string,
+  fact: IfNode,
+  req: StoredReq[]
+): boolean {
+  try {
+    return storeVanilla();
+  } catch {
+    return memoryErr(
+      env,
+      `Failed to use defName ${fact.defName} to store ${fact}`
+    );
+  }
+
+  function storeVanilla() {
+    const ifVars: string[] = [];
+    const ifReq: ToCheckNode[] = [];
+
+    req.forEach((e) => {
+      ifVars.push(...e.vars);
+      ifReq.push(...e.req);
+    });
+    ifVars.push(...fact.vars);
+    ifReq.push(...fact.req);
+
+    const space = new ReqSpace(ifVars, ifReq, fact.onlyIfs);
+    const ok = env.newReqSpace(name, space);
+
+    return ok;
   }
 }
