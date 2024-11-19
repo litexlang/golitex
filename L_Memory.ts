@@ -11,6 +11,7 @@ import {
   ExistDefNode,
   IfNode,
   ExistNode,
+  LogicNode,
 } from "./L_Nodes.ts";
 import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
@@ -384,8 +385,14 @@ export function store(
   storeDefName: boolean = true
 ): boolean {
   try {
-    if (fact instanceof IfNode) {
-      const ok = storeIfThen(env, fact, req, storeContrapositive, storeDefName);
+    if (fact instanceof LogicNode) {
+      const ok = storeIfThen(
+        env,
+        fact as IfNode,
+        req,
+        storeContrapositive,
+        storeDefName
+      );
       if (!ok) return false;
     } else if (fact instanceof OptNode) {
       const ok = storeOpt(env, fact, req, storeContrapositive, storeDefName);
