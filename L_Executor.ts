@@ -672,9 +672,49 @@ function callExec(env: L_Env, node: CallNode): RType {
     if (reqSpace === undefined)
       return errIntoEnv(env, `${node.reqSpaceName} undefined.`);
 
-    return RType.True;
+    const map = makeStrStrMap(env, reqSpace.ifVars, node.vars);
+    if (map === undefined) {
+      return errIntoEnv(env, `Failed to call ${node.reqSpaceName}`);
+    }
+
+    const req = reqSpace.ifReq.map((e) => e.useMapToCopy(map));
+    const onlyIf = reqSpace.onlyIf.map((e) => e.useMapToCopy(map));
+
+    for (const r of req) {
+      const out = L_Checker.check(env, r);
+      if (out !== RType.True) return out;
+    }
+
+    for (const f of onlyIf) {
+      const ok = L_Memory.store(env, f, [], true, false);
+      if (!ok) return RType.Error;
+    }
+
+    const out = localEnvExec(env, new LocalEnvNode(node.block));
+
+    return out;
   } catch {
     env.newMessage(`Failed: ${node}`);
     return RType.Error;
   }
+}
+
+function makeStrStrMap(
+  env: L_Env,
+  keyVars: string[],
+  valueVars: string[]
+): Map<string, string> | undefined {
+  if (keyVars.length !== valueVars.length) {
+    env.newMessage(
+      `Require ${keyVars.length} elements, get ${valueVars.length}`
+    );
+    return undefined;
+  }
+
+  const out = new Map<string, string>();
+  for (let i = 0; i < keyVars.length; i++) {
+    out.set(keyVars[i], valueVars[i]);
+  }
+
+  return out;
 }
