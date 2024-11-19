@@ -413,3 +413,17 @@ export class SpecialNode extends L_Node {
     super();
   }
 }
+
+export class CallNode extends L_Node {
+  constructor(
+    public reqSpaceName: string,
+    public vars: string[],
+    public block: L_Node[]
+  ) {
+    super();
+  }
+
+  override toString() {
+    return `${this.reqSpaceName}(${this.vars})`;
+  }
+}

@@ -20,6 +20,7 @@ import {
   HaveNode,
   ExistNode,
   SpecialNode,
+  CallNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -131,6 +132,7 @@ const KeywordFunctionMap: {
   return: returnParse,
   clear: specialParse,
   run: specialParse,
+  call: callParse,
 };
 
 export function getNodesFromSingleNode(
@@ -822,6 +824,49 @@ function specialParse(env: L_Env, tokens: string[]): SpecialNode {
     }
   } catch (error) {
     handleParseError(env, "clear", index, start);
+    throw error;
+  }
+}
+
+function callParse(env: L_Env, tokens: string[]): CallNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, "call");
+    const vars: string[] = [];
+    const reqSpaceName = shiftVar(tokens);
+
+    skip(tokens, "(");
+
+    while (!isCurToken(tokens, ")")) {
+      vars.push(shiftVar(tokens));
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+
+    skip(tokens, ")");
+
+    if (!isCurToken(tokens, "{")) {
+      skip(tokens, L_Ends);
+      return new CallNode(reqSpaceName, vars, []);
+    }
+
+    const block: L_Node[] = [];
+    skip(tokens, "{");
+    while (tokens[0] !== "}") {
+      while (["\n", ";"].includes(tokens[0])) {
+        tokens.shift();
+      }
+      if (tokens[0] === "}") break;
+
+      getNodesFromSingleNode(env, tokens, block);
+    }
+
+    skip(tokens, "}");
+
+    return new CallNode(reqSpaceName, vars, block);
+  } catch (error) {
+    handleParseError(env, "call", index, start);
     throw error;
   }
 }

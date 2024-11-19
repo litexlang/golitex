@@ -15,6 +15,7 @@ import {
   IfNode,
   HaveNode,
   SpecialNode,
+  CallNode,
   // STNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
@@ -52,6 +53,11 @@ function successMesIntoEnv(env: L_Env, node: L_Node): RType {
   return RType.True;
 }
 
+function errIntoEnv(env: L_Env, s: string): RType {
+  env.newMessage(`Error: ${s}`);
+  return RType.Error;
+}
+
 // deno-lint-ignore no-explicit-any
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   IffDefNode: defExec,
@@ -66,6 +72,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   LocalEnvNode: localEnvExec,
   ReturnNode: returnExec,
   SpecialNode: specialExec,
+  CallNode: callExec,
   // ReturnExistNode: returnExistExec,
   // ByNode: byExec,
   // STNode: byExec,
@@ -655,6 +662,19 @@ function specialExec(env: L_Env, node: SpecialNode): RType {
     return RType.Error;
   } catch {
     env.newMessage(`${node.keyword}`);
+    return RType.Error;
+  }
+}
+
+function callExec(env: L_Env, node: CallNode): RType {
+  try {
+    const reqSpace = env.getReqSpace(node.reqSpaceName);
+    if (reqSpace === undefined)
+      return errIntoEnv(env, `${node.reqSpaceName} undefined.`);
+
+    return RType.True;
+  } catch {
+    env.newMessage(`Failed: ${node}`);
     return RType.Error;
   }
 }
