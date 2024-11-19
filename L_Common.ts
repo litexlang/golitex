@@ -49,6 +49,8 @@ export const RunKeyword = "run";
 export const NotsKeyword = "nots";
 // export const STKeyword = "st";
 
+export const UseKeyword = "use";
+
 export const L_Keywords: string[] = [
   "#",
   ClearKeyword,
@@ -79,6 +81,7 @@ export const L_Keywords: string[] = [
   ...DefByKeywords,
   NotsKeyword,
   RunKeyword,
+  UseKeyword,
   // STKeyword,
 ];
 

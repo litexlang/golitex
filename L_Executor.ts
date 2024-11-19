@@ -15,7 +15,7 @@ import {
   IfNode,
   HaveNode,
   SpecialNode,
-  CallNode,
+  UseNode,
   // STNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
@@ -72,7 +72,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   LocalEnvNode: localEnvExec,
   ReturnNode: returnExec,
   SpecialNode: specialExec,
-  CallNode: callExec,
+  UseNode: useExec,
   // ReturnExistNode: returnExistExec,
   // ByNode: byExec,
   // STNode: byExec,
@@ -666,7 +666,7 @@ function specialExec(env: L_Env, node: SpecialNode): RType {
   }
 }
 
-function callExec(env: L_Env, node: CallNode): RType {
+function useExec(env: L_Env, node: UseNode): RType {
   try {
     const reqSpace = env.getReqSpace(node.reqSpaceName);
     if (reqSpace === undefined)
@@ -690,9 +690,7 @@ function callExec(env: L_Env, node: CallNode): RType {
       if (!ok) return RType.Error;
     }
 
-    const out = localEnvExec(env, new LocalEnvNode(node.block));
-
-    return out;
+    return RType.True;
   } catch {
     env.newMessage(`Failed: ${node}`);
     return RType.Error;

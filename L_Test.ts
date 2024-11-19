@@ -32,7 +32,7 @@ const exampleList: ExampleItem[] = [
       "let A,B,C,D,E,F;",
       "know subset(A,B);",
       "let x: in(x,A);",
-      "call P(A,B);",
+      "use P(A,B);",
       "if x : in(x,A) => {in(x,B)};",
     ],
     debug: true,

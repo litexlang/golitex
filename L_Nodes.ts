@@ -414,12 +414,8 @@ export class SpecialNode extends L_Node {
   }
 }
 
-export class CallNode extends L_Node {
-  constructor(
-    public reqSpaceName: string,
-    public vars: string[],
-    public block: L_Node[]
-  ) {
+export class UseNode extends L_Node {
+  constructor(public reqSpaceName: string, public vars: string[]) {
     super();
   }
 
