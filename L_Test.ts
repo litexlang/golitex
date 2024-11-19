@@ -10,7 +10,7 @@ type ExampleItem = {
 
 const exampleList: ExampleItem[] = [
   {
-    name: "t0",
+    name: "define subset",
     code: [
       "def set(x); def subset(A,B); def in(x,A);",
       "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
@@ -24,10 +24,10 @@ const exampleList: ExampleItem[] = [
     print: false,
   },
   {
-    name: "t1",
+    name: "reqSpace & use",
     code: [
       "def set(x); def subset(A,B); def in(x,A);",
-      // "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
+      "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
       "know if A,B: subset(A,B) => [P] {if x: in(x,A) => {in(x,B)} };",
       "let A,B,C,D,E,F;",
       "know subset(A,B);",

@@ -1,6 +1,6 @@
 ## LiTeX
 
-**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **ANYONE** express and verify mathematics at **ANY LEVEL** as **ELEGANTLY** and **INTUITIVELY** as if they were using natural language. More details are available at [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
+**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **ANYONE** express and verify mathematics at **ANY LEVEL** as **ELEGANTLY** and **INTUITIVELY** as if they were using natural language. It provides a language to define mathematical concepts, memorize mathematical facts, and generate new mathematical results based on facts that are already proved. More details are available at [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
 
 Feel free to share your suggestions and ideas to help us improve this open-source project—your feedback is invaluable!
 
@@ -27,8 +27,9 @@ Let’s explore its syntax with examples, starting with syllogism:
 ```plaintext
 def mortal(something);
 def something is human => {something is mortal};
-let Socrates , Plato: Socrates is human;
+let Socrates: Socrates is human;
 Socrates is mortal;
+
 if x : x is human => {x is mortal};
 let god : god is not mortal;
 prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;
@@ -40,6 +41,7 @@ Some core functionalities of LiTeX are included in this example
 - **Variable Definition**: Two variable, `Socrates` and `Plato`, are introduced. Socrates has property that `Socrates is human` is true.
 - **Expression Validation**: The user input an expression `if x : x is human => {x is mortal};`. LiTeX interpreter checks whether given expressions are true based on facts that the user already claimed. For example, we have already known `something is human => {something is mortal};`, so `x is mortal` is true under assumption `x is human`.
 - **Proof**: in LiTeX, there are 2 ways of proving a result: prove or prove_by_contradiction.
+- **Expression Values**: After checking, there are 4 types of outcomes: true, unknown, error, false.
 
 ---
 
@@ -52,7 +54,45 @@ Some core functionalities of LiTeX are included in this example
 
 ---
 
-### Syntax
+## Potential of LiTeX
+
+### Advancing Collaborative Mathematics
+
+LiTeX establishes a new paradigm for mathematical collaboration by introducing rigorous verification into the collaborative process. Similar to how distributed version control transformed software development, LiTeX enables mathematicians to contribute to large-scale collaborative projects with confidence. The platform's formal verification engine ensures mathematical correctness, facilitating trust in contributions from the broader mathematical community.
+
+### Enhanced Verification Workflow
+
+The platform significantly reduces the verification overhead in mathematical research. By automating the detection of logical inconsistencies, LiTeX allows researchers and reviewers to focus on the innovative aspects of proofs rather than mechanical verification. This systematic approach to verification maintains mathematical rigor while accelerating the review process.
+
+### Accessible Formal Mathematics
+
+LiTeX bridges the gap between intuitive mathematical thinking and formal verification through its carefully designed specification language. The syntax closely mirrors natural mathematical discourse while maintaining formal precision, making it accessible to both established researchers and students entering the field. This accessibility is crucial for broader adoption of formal methods in mathematics education.
+
+### Educational Integration
+
+The platform serves as an advanced educational tool by providing multiple perspectives on mathematical content:
+
+- Interactive theorem dependency visualization
+- Flexible proof granularity allowing both detailed and high-level views
+- Clear exposition of proof structure and mathematical relationships
+- Systematic approach to building mathematical intuition
+
+These features enable educators to present complex mathematical concepts with unprecedented clarity and allow students to explore proofs at their own pace.
+
+### Mathematical Knowledge Base Development
+
+LiTeX creates a foundation for advancing mathematical AI systems through:
+
+1. Generation of formally verified mathematical content
+2. Creation of structured training datasets
+3. Development of precise mathematical reasoning patterns
+4. Implementation of verifiable mathematical frameworks
+
+The resulting knowledge base serves both human understanding and machine learning applications, contributing to the advancement of automated mathematical reasoning.
+
+By integrating formal verification with collaborative capabilities, LiTeX establishes a robust platform for mathematical education, research, and knowledge development. The system promotes rigorous mathematical practice while fostering broader participation in mathematical discovery and verification.
+
+## Syntax
 
 #### Define New Concepts
 
