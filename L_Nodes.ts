@@ -423,3 +423,13 @@ export class UseNode extends L_Node {
     return `${this.reqSpaceName}(${this.vars})`;
   }
 }
+
+export class MacroNode extends L_Node {
+  constructor(
+    public regexString: string,
+    public varName: string,
+    public facts: L_Node[]
+  ) {
+    super();
+  }
+}

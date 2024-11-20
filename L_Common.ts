@@ -50,10 +50,12 @@ export const NotsKeyword = "nots";
 // export const STKeyword = "st";
 
 export const UseKeyword = "use";
+export const MacroKeywords = "macro";
 
 export const L_Keywords: string[] = [
   "#",
   ClearKeyword,
+  MacroKeywords,
   ...specialChars,
   ByKeyword,
   WhenKeyword,

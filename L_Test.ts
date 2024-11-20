@@ -38,6 +38,12 @@ const exampleList: ExampleItem[] = [
     debug: true,
     print: true,
   },
+  {
+    name: "macro",
+    code: ["def p(x); def q(x,y);", "macro x v p(v);"],
+    debug: true,
+    print: true,
+  },
 ];
 
 function runExamples() {

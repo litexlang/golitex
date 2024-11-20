@@ -21,6 +21,7 @@ import {
   ExistNode,
   SpecialNode,
   UseNode,
+  MacroNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import {
@@ -51,6 +52,7 @@ import {
   ClearKeyword,
   RunKeyword,
   UseKeyword,
+  MacroKeywords,
 } from "./L_Common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {
@@ -134,6 +136,7 @@ const KeywordFunctionMap: {
   clear: specialParse,
   run: specialParse,
   use: useParse,
+  macro: macroParse,
 };
 
 export function getNodesFromSingleNode(
@@ -851,6 +854,23 @@ function useParse(env: L_Env, tokens: string[]): UseNode {
     return new UseNode(reqSpaceName, vars);
   } catch (error) {
     handleParseError(env, "call", index, start);
+    throw error;
+  }
+}
+
+function macroParse(env: L_Env, tokens: string[]): MacroNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, MacroKeywords);
+    const regexString = shiftVar(tokens);
+    const varName = shiftVar(tokens);
+    const facts = factsParse(env, tokens, L_Ends, true, true);
+
+    return new MacroNode(regexString, varName, facts);
+  } catch (error) {
+    handleParseError(env, "macro", index, start);
     throw error;
   }
 }
