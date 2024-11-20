@@ -428,8 +428,22 @@ export class MacroNode extends L_Node {
   constructor(
     public regexString: string,
     public varName: string,
-    public facts: L_Node[]
+    public facts: ToCheckNode[]
   ) {
     super();
+  }
+
+  override toString() {
+    return `regex string: ${this.regexString}, var: ${this.varName}, facts: ${this.facts}`;
+  }
+
+  testRegex(testStr: string): boolean {
+    try {
+      const regex = new RegExp(this.regexString);
+      return regex.test(testStr);
+    } catch (error) {
+      console.error("Invalid Regular Expression:", error);
+      return false;
+    }
   }
 }

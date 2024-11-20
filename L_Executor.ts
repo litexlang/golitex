@@ -16,6 +16,7 @@ import {
   HaveNode,
   SpecialNode,
   UseNode,
+  MacroNode,
   // STNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
@@ -73,6 +74,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   ReturnNode: returnExec,
   SpecialNode: specialExec,
   UseNode: useExec,
+  MacroNode: macroExec,
   // ReturnExistNode: returnExistExec,
   // ByNode: byExec,
   // STNode: byExec,
@@ -203,6 +205,18 @@ function letExec(env: L_Env, node: LetNode): RType {
         if (!ok) {
           env.newMessage(`Failed to store ${f}`);
           return RType.Error;
+        }
+      }
+    }
+
+    // bind properties given by macro
+    for (const e of node.vars) {
+      for (const macro of env.macros) {
+        if (macro.testRegex(e)) {
+          const map = new Map<string, string>();
+          map.set(macro.varName, e);
+          const facts = macro.facts.map((e) => e.useMapToCopy(map));
+          facts.forEach((e) => L_Memory.store(env, e, [], true, true));
         }
       }
     }
@@ -715,4 +729,13 @@ function makeStrStrMap(
   }
 
   return out;
+}
+
+function macroExec(env: L_Env, node: MacroNode): RType {
+  try {
+    env.macros.push(node);
+    return RType.True;
+  } catch {
+    return env.RTypeErr(`Failed: macro ${node}`);
+  }
 }

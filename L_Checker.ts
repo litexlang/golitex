@@ -318,13 +318,3 @@ function checkOr(env: L_Env, toCheck: OrNode): RType {
     return RType.Error;
   }
 }
-
-export function testRegex(regexInput: string, testStr: string): boolean {
-  try {
-    const regex = new RegExp(regexInput);
-    return regex.test(testStr);
-  } catch (error) {
-    console.error("Invalid Regular Expression:", error);
-    return false;
-  }
-}

@@ -4,9 +4,11 @@ import {
   LogicNode,
   OptNode,
   ExistDefNode,
+  MacroNode,
 } from "./L_Nodes.ts";
 import { ReqSpace, StoredFact, StoredReq } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
+import { RType } from "./L_Executor.ts";
 
 export class L_Env {
   private messages: string[] = [];
@@ -19,6 +21,7 @@ export class L_Env {
   private father: L_Env | undefined = undefined;
 
   private reqSpaces = new Map<string, ReqSpace>();
+  public macros: MacroNode[] = [];
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
@@ -239,5 +242,15 @@ export class L_Env {
 
   optDeclaredHere(name: string): boolean {
     return this.declaredFacts.get(name) !== undefined;
+  }
+
+  RTypeErr(message: string): RType {
+    this.newMessage(message);
+    return RType.Error;
+  }
+
+  boolErr(message: string): boolean {
+    this.newMessage(message);
+    return false;
   }
 }
