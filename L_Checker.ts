@@ -37,7 +37,7 @@ export function checkIfThen(env: L_Env, toCheck: IfNode): RType {
     const newEnv = new L_Env(oldEnv);
 
     for (const e of toCheck.vars) {
-      const ok = newEnv.safeNewVar(e);
+      const ok = newEnv.newVar(e);
       if (!ok) return RType.Error;
     }
 

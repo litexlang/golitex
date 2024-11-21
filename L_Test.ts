@@ -35,13 +35,13 @@ const exampleList: ExampleItem[] = [
       "use P(A,B);",
       "if x : in(x,A) => {in(x,B)};",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
     name: "macro",
     code: ["def p(x); def q(x,y);", "macro x v p(v);", "let x;", "p(x);"],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];

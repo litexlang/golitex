@@ -182,7 +182,7 @@ export function declNewFact(
 
   const decl = new OptNode(node.name, node.vars, true, undefined);
   if (node instanceof IfDefNode) {
-    ok = env.safeDeclOpt(node.name, node);
+    ok = env.newDef(node.name, node);
     if (!ok) {
       return false;
     }
@@ -190,7 +190,7 @@ export function declNewFact(
     const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
     ok = storeIfThen(env, f, [], true, storeDefName);
   } else if (node instanceof IffDefNode) {
-    ok = env.safeDeclOpt(node.name, node);
+    ok = env.newDef(node.name, node);
     if (!ok) {
       return false;
     }
@@ -218,7 +218,7 @@ export function declNewFact(
       return false;
     }
   } else if (node instanceof OnlyIfDefNode) {
-    ok = env.safeDeclOpt(node.name, node);
+    ok = env.newDef(node.name, node);
     if (!ok) {
       return false;
     }
@@ -608,10 +608,10 @@ export function defExist(
   storeAsFact: boolean
 ): boolean {
   try {
-    let ok = env.safeDeclOpt(node.name, node);
+    let ok = env.newDef(node.name, node);
     if (!ok) return false;
 
-    ok = env.declNewExist(node);
+    ok = env.newDeclExist(node);
     if (!ok) {
       env.newMessage(`Failed to store ${node}`);
       return false;

@@ -170,7 +170,7 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
 function letExec(env: L_Env, node: LetNode): RType {
   try {
     for (const e of node.vars) {
-      const ok = env.safeNewVar(e);
+      const ok = env.newVar(e);
       if (!ok) return RType.Error;
       else {
         if (DEBUG_DICT["let"]) {
@@ -211,7 +211,7 @@ function letExec(env: L_Env, node: LetNode): RType {
 
     // bind properties given by macro
     for (const e of node.vars) {
-      for (const macro of env.macros) {
+      for (const macro of env.getMacros()) {
         if (macro.testRegex(e)) {
           const map = new Map<string, string>();
           map.set(macro.varName, e);
@@ -336,7 +336,7 @@ function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
   try {
     const newEnv = new L_Env(env);
     for (const v of toProve.vars) {
-      const ok = newEnv.safeNewVar(v);
+      const ok = newEnv.newVar(v);
       if (!ok) throw Error();
     }
 
@@ -651,7 +651,7 @@ function haveExec(env: L_Env, node: HaveNode): RType {
     if (facts === undefined) {
       return RType.Error;
     }
-    node.vars.forEach((e) => env.safeNewVar(e));
+    node.vars.forEach((e) => env.newVar(e));
     facts.forEach((e) => L_Memory.store(env, e, [], true));
 
     return RType.True;
@@ -733,7 +733,7 @@ function makeStrStrMap(
 
 function macroExec(env: L_Env, node: MacroNode): RType {
   try {
-    env.macros.push(node);
+    env.newMacro(node);
     return RType.True;
   } catch {
     return env.RTypeErr(`Failed: macro ${node}`);

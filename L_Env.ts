@@ -21,10 +21,18 @@ export class L_Env {
   private father: L_Env | undefined = undefined;
 
   private reqSpaces = new Map<string, ReqSpace>();
-  public macros: MacroNode[] = [];
+  private macros: MacroNode[] = [];
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  getMacros() {
+    return this.macros;
+  }
+
+  newMacro(macroNode: MacroNode) {
+    this.macros.push(macroNode);
   }
 
   clear() {
@@ -36,7 +44,7 @@ export class L_Env {
     this.father = undefined;
   }
 
-  declNewExist(decl: ExistDefNode): boolean {
+  newDeclExist(decl: ExistDefNode): boolean {
     try {
       const out = this.declaredExist.get(decl.name);
       if (out !== undefined) {
@@ -127,7 +135,7 @@ export class L_Env {
     return curEnv?.declaredFacts.get(s) ? n : undefined;
   }
 
-  safeDeclOpt(s: string, DefNode: DefNode): boolean {
+  newDef(s: string, DefNode: DefNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.declaredFacts.get(s) !== undefined) {
       this.newMessage(
@@ -141,7 +149,7 @@ export class L_Env {
     return true;
   }
 
-  safeNewVar(fix: string): boolean {
+  newVar(fix: string): boolean {
     if (this.declaredVars.has(fix)) {
       this.newMessage(`${fix} already declared.`);
       return false;
