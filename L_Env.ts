@@ -9,6 +9,7 @@ import {
 import { ReqSpace, StoredFact, StoredReq } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
 import { RType } from "./L_Executor.ts";
+import { L_Cache } from "./L_Cache.ts";
 
 export class L_Env {
   private messages: string[] = [];
@@ -23,8 +24,14 @@ export class L_Env {
   private reqSpaces = new Map<string, ReqSpace>();
   private macros: MacroNode[] = [];
 
+  private cache: L_Cache = new L_Cache();
+
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  getCache() {
+    return this.cache;
   }
 
   getMacros() {
@@ -199,6 +206,7 @@ export class L_Env {
 
   printClearMessage() {
     this.messages.forEach((m) => console.log(m));
+    this.cache.newMessage(this.messages);
     this.messages = [];
   }
 
