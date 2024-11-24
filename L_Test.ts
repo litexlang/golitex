@@ -1,4 +1,5 @@
 import { L_Env } from "./L_Env.ts";
+import { testEnvToJSON } from "./L_Frontend.ts";
 import { runStrings } from "./L_Runner.ts";
 
 type ExampleItem = {
@@ -54,6 +55,7 @@ function runExamples() {
       runStrings(env, example.code, example.print);
     }
   }
+  testEnvToJSON(env);
 }
 
 runExamples();

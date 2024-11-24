@@ -269,4 +269,23 @@ export class L_Env {
     this.newMessage(message);
     return false;
   }
+
+  toJSON() {
+    return {
+      vars: Array.from(this.declaredVars),
+      defs: Object.fromEntries(this.declaredFacts),
+      exists: Object.fromEntries(this.declaredExist),
+      facts: Object.fromEntries(this.storage),
+      reqSpaces: Object.fromEntries(this.reqSpaces),
+      macros: this.macros,
+    };
+  }
+  // const out = {
+  //   vars: [],
+  //   defs: {},
+  //   exists: {},
+  //   facts: {},
+  //   reqSpaces: {},
+  //   macros: [],
+  // };
 }

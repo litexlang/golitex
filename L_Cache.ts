@@ -1,3 +1,5 @@
+import type { DefNode, MacroNode } from "./L_Nodes.ts";
+
 export class L_Cache {
   private messages: string[] = [];
   private currentMessage: string[] = [];

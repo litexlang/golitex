@@ -1,5 +1,6 @@
 import type { L_Env } from "./L_Env.ts";
 
-export function cacheToFrontend(env: L_Env) {
-  const cache = env.getCache();
+export function testEnvToJSON(env: L_Env) {
+  const out = env.toJSON();
+  return out;
 }
