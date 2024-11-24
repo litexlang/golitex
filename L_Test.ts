@@ -55,7 +55,7 @@ function runExamples() {
       runStrings(env, example.code, example.print);
     }
   }
-  testEnvToJSON(env);
+  testEnvToJSON(env, "env.json");
 }
 
 runExamples();
