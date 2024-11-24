@@ -1,21 +1,19 @@
-import type { DefNode, MacroNode } from "./L_Nodes.ts";
+// export class L_Cache {
+//   private messages: string[] = [];
+//   private currentMessage: string[] = [];
 
-export class L_Cache {
-  private messages: string[] = [];
-  private currentMessage: string[] = [];
+//   constructor() {}
 
-  constructor() {}
+//   newMessage(newMessage: string[]) {
+//     this.messages.push(...newMessage);
+//     this.currentMessage = newMessage;
+//   }
 
-  newMessage(newMessage: string[]) {
-    this.messages.push(...newMessage);
-    this.currentMessage = newMessage;
-  }
+//   getAllMessages() {
+//     return this.messages;
+//   }
 
-  getAllMessages() {
-    return this.messages;
-  }
-
-  getCurrentMessage() {
-    return this.currentMessage;
-  }
-}
+//   getCurrentMessage() {
+//     return this.currentMessage;
+//   }
+// }

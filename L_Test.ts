@@ -1,5 +1,5 @@
 import { L_Env } from "./L_Env.ts";
-import { testEnvToJSON } from "./L_Frontend.ts";
+import { envToJSON } from "./L_Frontend.ts";
 import { runStrings } from "./L_Runner.ts";
 
 type ExampleItem = {
@@ -9,7 +9,7 @@ type ExampleItem = {
   print: boolean;
 };
 
-const exampleList: ExampleItem[] = [
+export const exampleList: ExampleItem[] = [
   {
     name: "define subset",
     code: [
@@ -55,7 +55,7 @@ function runExamples() {
       runStrings(env, example.code, example.print);
     }
   }
-  testEnvToJSON(env, "env.json");
+  envToJSON(env, "env.json");
 }
 
 runExamples();
