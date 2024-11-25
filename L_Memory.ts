@@ -418,8 +418,16 @@ function storeOpt(
   }
 
   const toStore = new StoredFact(fact.vars, req, fact.isT);
-  const ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
+  let ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
   if (!ok) return false;
+
+  // If fact.vars contains all freeVars in current known if-then
+  if (req.length > 0) {
+    const allFreeVars = toStore.getAllFreeVars();
+    if (allFreeVars.every((e) => fact.vars.includes(e))) {
+      ok = env.newKnownFact(fact.name, [], toStore);
+    }
+  }
 
   return true;
 }
