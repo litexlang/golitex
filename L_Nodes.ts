@@ -183,13 +183,14 @@ export class OptNode extends ToCheckNode {
     public name: string,
     public vars: string[],
     isT: boolean = true,
-    defName: string | undefined = undefined
+    defName: string | undefined = undefined,
+    public ifVars: string[]
   ) {
     super(isT, defName);
   }
 
   override copyWithoutIsT(newIsT: boolean): OptNode {
-    return new OptNode(this.name, this.vars, newIsT, this.defName);
+    return new OptNode(this.name, this.vars, newIsT, this.defName, this.ifVars);
   }
 
   override useMapToCopy(map: Map<string, string>): OptNode {
@@ -204,7 +205,7 @@ export class OptNode extends ToCheckNode {
         newVars.push(fixed);
       }
     }
-    return new OptNode(this.name, newVars, this.isT, this.defName);
+    return new OptNode(this.name, newVars, this.isT, this.defName, this.ifVars);
   }
 
   override toString() {
@@ -308,7 +309,8 @@ export class ExistDefNode extends DefNode {
     vars: string[] = [],
     req: ToCheckNode[] = [],
     private existVars: string[] = [],
-    private existFacts: ToCheckNode[] = []
+    private existFacts: ToCheckNode[] = [],
+    public ifVars: []
   ) {
     super(name, vars, req, []); // We don't use onlyIfs field in ExistDecl.
   }
@@ -322,7 +324,9 @@ export class ExistDefNode extends DefNode {
   }
 
   getIfNode(): IfNode {
-    const itself = [new OptNode(this.name, this.vars, true, undefined)];
+    const itself = [
+      new OptNode(this.name, this.vars, true, undefined, this.ifVars),
+    ];
     return new IfNode(this.vars, this.req, itself, true, undefined, null);
   }
 }
