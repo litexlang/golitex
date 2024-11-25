@@ -43,9 +43,12 @@ export class L_Env {
     }
 
     if (knownNodeRoot !== undefined) {
-      const varsToCheckNumbers = opt.checkVars?.map((e) => e.length);
-      if (varsToCheckNumbers === undefined) return undefined;
-      return knownNodeRoot.getFactsToCheck(varsToCheckNumbers);
+      if (opt.checkVars === undefined) return knownNodeRoot.getFactsToCheck([]);
+      else {
+        const varsToCheckNumbers = opt.checkVars?.map((e) => e.length);
+        if (varsToCheckNumbers === undefined) return undefined;
+        return knownNodeRoot.getFactsToCheck(varsToCheckNumbers);
+      }
     } else {
       return undefined;
     }

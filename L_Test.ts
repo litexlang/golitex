@@ -51,7 +51,7 @@ export const exampleList: ExampleItem[] = [
       "know if x,A,B: subset(A,B), in(x,A) => {in(x,B)}; ",
       "let y,C,D, z: in(y,C), subset(C,D); ",
       // "in(x,A);",
-      // "in(y,D)[y,C,D];",
+      "in(y,D)[y,C,D];",
       "in(z,C);",
       "in(y,C);",
     ],
