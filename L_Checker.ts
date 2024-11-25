@@ -89,6 +89,36 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
   const knowns = env.getKnownFacts(toCheck);
   if (knowns === undefined) return RType.Unknown;
 
+  const map = new Map<string, string>();
+
+  for (const known of knowns as StoredFact[]) {
+    if (known.isT !== toCheck.isT) continue;
+
+    for (let i = 0; i < toCheck.checkVars.length; i++) {
+      for (let j = 0; j < toCheck.checkVars[i].length; j++) {
+        map.set(known.req[i].vars[j], toCheck.checkVars[i][j]);
+      }
+    }
+
+    const fixedKnown = known.fixStoredFact(map);
+
+    let out = RType.True;
+    for (const r of fixedKnown.req as L_Memory.StoredReq[]) {
+      for (const toCheck of r.req as ToCheckNode[]) {
+        if (toCheck instanceof OptNode) {
+          out = checkOptLiterally(env, toCheck);
+          if (out !== RType.True) break;
+        } else {
+          //! NEED TO IMPLEMENT HOW TO CHECK If-Then Literally
+          return RType.Unknown;
+        }
+      }
+      if (out === RType.Unknown) break;
+    }
+
+    if (out === RType.True) return RType.True;
+  }
+
   // out = useStoredFactsToCheckOpt(env, storedFacts, toCheck);
   // return out;
 
