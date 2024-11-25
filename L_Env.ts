@@ -5,7 +5,6 @@ import {
   OptNode,
   ExistDefNode,
   MacroNode,
-  KnowNode,
 } from "./L_Nodes.ts";
 import { KnownFact, ReqSpace, StoredFact, StoredReq } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
@@ -31,6 +30,17 @@ export class L_Env {
 
   constructor(father: L_Env | undefined = undefined) {
     this.father = father;
+  }
+
+  getKnownFacts(opt: OptNode): undefined | StoredFact[] {
+    const knownNodeRoot = this.knownFacts.get(opt.name);
+    if (knownNodeRoot !== undefined) {
+      const varsToCheckNumbers = opt.checkVars?.map((e) => e.length);
+      if (varsToCheckNumbers === undefined) return undefined;
+      return knownNodeRoot.getFactsToCheck(varsToCheckNumbers);
+    } else {
+      return undefined;
+    }
   }
 
   newKnownFact(

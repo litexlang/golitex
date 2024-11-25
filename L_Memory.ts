@@ -405,7 +405,8 @@ function storeOpt(
   }
 
   const toStore = new StoredFact(fact.vars, req, fact.isT);
-  env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
+  const ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
+  if (!ok) return false;
 
   return true;
 }

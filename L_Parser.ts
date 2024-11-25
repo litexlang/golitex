@@ -489,7 +489,7 @@ function optParseWithNotAre(
   env: L_Env,
   tokens: string[],
   parseNot: boolean,
-  includeDefName: boolean
+  _includeDefName: boolean
 ): OptNode[] {
   const start = tokens[0];
   const index = tokens.length;

@@ -81,6 +81,101 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
     return RType.Error;
   }
 
+  let out = useStoredFactsToCheckOpt(env, storedFacts, toCheck);
+  if (out === RType.True) return RType.True;
+
+  if (toCheck.checkVars === undefined) return RType.Unknown;
+
+  const knowns = env.getKnownFacts(toCheck);
+  if (knowns === undefined) return RType.Unknown;
+
+  // out = useStoredFactsToCheckOpt(env, storedFacts, toCheck);
+  // return out;
+
+  return RType.Unknown;
+}
+
+// check whether a variable in fact.vars is free or fixed at check time instead of run time.
+function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
+  if (toCheck.vars.length !== env.getDeclaredFact(toCheck.name)?.vars.length) {
+    return RType.Unknown;
+  }
+
+  const builtins = L_Builtins.get(toCheck.name);
+  if (builtins !== undefined) {
+    return builtins(env, toCheck);
+  }
+
+  const facts: StoredFact[] | null = L_Memory.getStoredFacts(env, toCheck);
+
+  if (facts === null) {
+    env.newMessage(`check Error: ${toCheck.name} not declared.`);
+    return RType.Error;
+  }
+
+  for (const fact of facts) {
+    const frees = fact.getAllFreeVars();
+    if (
+      //! UPDATE: NOT SURE fact.isT === toCheck.isT should be included.
+      // fact.isT === toCheck.isT &&
+      fact.isNoReq() &&
+      // toCheck.vars.length === fact.vars.length &&
+      toCheck.vars.every(
+        (v, i) => frees.includes(fact.vars[i]) || v === fact.vars[i]
+      )
+    )
+      return RType.True;
+  }
+
+  return RType.Unknown;
+}
+
+export function checkOptInHave(env: L_Env, opt: OptNode): RType {
+  env;
+  opt;
+  return RType.Unknown;
+}
+
+function checkOr(env: L_Env, toCheck: OrNode): RType {
+  try {
+    if (toCheck.facts.length === 0) return RType.True;
+
+    if (toCheck.facts.length === 1) {
+      return check(env, toCheck.facts[0]);
+    }
+
+    for (let i = 0; i < toCheck.facts.length; i++) {
+      let valid = false;
+      const newEnv = new L_Env(env);
+      for (let j = 0; j < toCheck.facts.length; j++) {
+        if (j === i) continue;
+        L_Memory.store(
+          newEnv,
+          toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT),
+          [],
+          true
+        );
+      }
+
+      const out = check(newEnv, toCheck.facts[i]);
+      if (out === RType.True) {
+        valid = true;
+      }
+
+      if (valid) return RType.True;
+    }
+
+    return RType.Unknown;
+  } catch {
+    return RType.Error;
+  }
+}
+
+function useStoredFactsToCheckOpt(
+  env: L_Env,
+  storedFacts: StoredFact[],
+  toCheck: OptNode
+): RType {
   for (const storedFact of storedFacts) {
     if (storedFact.isT !== toCheck.isT) continue;
 
@@ -240,81 +335,5 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
     return RType.True;
   }
 
-  return RType.Unknown;
-}
-
-// check whether a variable in fact.vars is free or fixed at check time instead of run time.
-function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
-  if (toCheck.vars.length !== env.getDeclaredFact(toCheck.name)?.vars.length) {
-    return RType.Unknown;
-  }
-
-  const builtins = L_Builtins.get(toCheck.name);
-  if (builtins !== undefined) {
-    return builtins(env, toCheck);
-  }
-
-  const facts: StoredFact[] | null = L_Memory.getStoredFacts(env, toCheck);
-
-  if (facts === null) {
-    env.newMessage(`check Error: ${toCheck.name} not declared.`);
-    return RType.Error;
-  }
-
-  for (const fact of facts) {
-    const frees = fact.getAllFreeVars();
-    if (
-      //! UPDATE: NOT SURE fact.isT === toCheck.isT should be included.
-      // fact.isT === toCheck.isT &&
-      fact.isNoReq() &&
-      // toCheck.vars.length === fact.vars.length &&
-      toCheck.vars.every(
-        (v, i) => frees.includes(fact.vars[i]) || v === fact.vars[i]
-      )
-    )
-      return RType.True;
-  }
-
-  return RType.Unknown;
-}
-
-export function checkOptInHave(env: L_Env, opt: OptNode): RType {
-  env;
-  opt;
-  return RType.Unknown;
-}
-
-function checkOr(env: L_Env, toCheck: OrNode): RType {
-  try {
-    if (toCheck.facts.length === 0) return RType.True;
-
-    if (toCheck.facts.length === 1) {
-      return check(env, toCheck.facts[0]);
-    }
-
-    for (let i = 0; i < toCheck.facts.length; i++) {
-      let valid = false;
-      const newEnv = new L_Env(env);
-      for (let j = 0; j < toCheck.facts.length; j++) {
-        if (j === i) continue;
-        L_Memory.store(
-          newEnv,
-          toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT),
-          [],
-          true
-        );
-      }
-
-      const out = check(newEnv, toCheck.facts[i]);
-      if (out === RType.True) {
-        valid = true;
-      }
-
-      if (valid) return RType.True;
-    }
-
-    return RType.Unknown;
-  } catch {
-    return RType.Error;
-  }
+  return RType.Error;
 }
