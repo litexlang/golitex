@@ -313,7 +313,20 @@ function optParseWithNot(
       name = shiftVar(tokens);
     }
 
-    return new OptNode(name, vars, isT, undefined);
+    let checkVars: string[][] | undefined = undefined;
+
+    if (isCurToken(tokens, "[")) {
+      skip(tokens, "[");
+      checkVars = [];
+      while (!isCurToken(tokens, "]")) {
+        const currentLayerVars = varLstParse(env, tokens, [";", "]"]);
+        checkVars.push(currentLayerVars);
+        if (isCurToken(tokens, ";")) skip(tokens, ";");
+      }
+      skip(tokens, "]");
+    }
+
+    return new OptNode(name, vars, isT, undefined, checkVars);
   } catch (error) {
     handleParseError(env, `${start} is invalid operator.`, index, start);
     throw error;
@@ -499,14 +512,26 @@ function optParseWithNotAre(
 
       skip(tokens, ")");
 
-      let defName: undefined | string = undefined;
-      if (includeDefName && isCurToken(tokens, "[")) {
+      // let defName: undefined | string = undefined;
+      // if (includeDefName && isCurToken(tokens, "[")) {
+      //   skip(tokens, "[");
+      //   defName = shiftVar(tokens);
+      //   skip(tokens, "]");
+      // }
+
+      let checkVars: string[][] | undefined = undefined;
+      if (isCurToken(tokens, "[")) {
         skip(tokens, "[");
-        defName = shiftVar(tokens);
+        checkVars = [];
+        while (!isCurToken(tokens, "]")) {
+          const currentLayerVars = varLstParse(env, tokens, [";", "]"], false);
+          checkVars.push(currentLayerVars);
+          if (isCurToken(tokens, ";")) skip(tokens, ";");
+        }
         skip(tokens, "]");
       }
 
-      return [new OptNode(name, vars, isT, defName)];
+      return [new OptNode(name, vars, isT, undefined, checkVars)];
     } else {
       while (![...AreKeywords, ...IsKeywords].includes(tokens[0])) {
         const v = shiftVar(tokens);
@@ -522,15 +547,30 @@ function optParseWithNotAre(
       }
 
       name = shiftVar(tokens);
-      let defName: undefined | string = undefined;
-      if (includeDefName && isCurToken(tokens, "[")) {
+
+      // let defName: undefined | string = undefined;
+      // if (includeDefName && isCurToken(tokens, "[")) {
+      //   skip(tokens, "[");
+      //   defName = shiftVar(tokens);
+      //   skip(tokens, "]");
+      // }
+
+      let checkVars: string[][] | undefined = undefined;
+      if (isCurToken(tokens, "[")) {
         skip(tokens, "[");
-        defName = shiftVar(tokens);
+        checkVars = [];
+        while (!isCurToken(tokens, "]")) {
+          const currentLayerVars = varLstParse(env, tokens, [";", "]"]);
+          checkVars.push(currentLayerVars);
+          if (isCurToken(tokens, ";")) skip(tokens, ";");
+        }
         skip(tokens, "]");
       }
 
-      const outs = vars.map((e) => new OptNode(name, [e], isT, undefined));
-      outs[outs.length - 1].defName = defName;
+      const outs = vars.map(
+        (e) => new OptNode(name, [e], isT, undefined, checkVars)
+      );
+      // outs[outs.length - 1].defName = undefined;
       return outs;
     }
   } catch (error) {

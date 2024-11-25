@@ -1,5 +1,4 @@
 import { L_Env } from "./L_Env.ts";
-import { envToJSON } from "./L_Frontend.ts";
 import { runStrings } from "./L_Runner.ts";
 
 type ExampleItem = {
@@ -36,13 +35,25 @@ export const exampleList: ExampleItem[] = [
       "use P(A,B);",
       "if x : in(x,A) => {in(x,B)};",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
     name: "macro",
     code: ["def p(x); def q(x,y);", "macro x v p(v);", "let x;", "p(x);"],
     debug: false,
+    print: true,
+  },
+  {
+    name: "opt_with_checkVars",
+    code: [
+      "def subset(x,y); def in (x,A); ",
+      "know if x,A,B: subset(A,B), in(x,A) => {in(x,B)}; ",
+      "let x,A,B: in(x,A), subset(A,B); ",
+      // "in(x,A);",
+      "in(x,B)[x,A,B];",
+    ],
+    debug: true,
     print: true,
   },
 ];
@@ -59,3 +70,25 @@ function runExamples() {
 }
 
 runExamples();
+
+function envToJSON(env: L_Env, fileName: string) {
+  const out = env.toJSON();
+  // Convert the JSON object to a string and then to Uint8Array
+  const jsonString = JSON.stringify(out, null, 2);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(jsonString);
+
+  Deno.writeFileSync(fileName, data);
+  return out;
+}
+
+export function testEnvToJSON() {
+  const env = new L_Env();
+  for (const example of exampleList) {
+    if (example.debug) {
+      console.log(example.name);
+      runStrings(env, example.code, example.print);
+    }
+  }
+  envToJSON(env, "env.json");
+}
