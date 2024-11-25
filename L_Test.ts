@@ -49,16 +49,16 @@ export const exampleList: ExampleItem[] = [
     code: [
       "def subset(x,y); def in (x,A); ",
       "know if x,A,B: subset(A,B), in(x,A) => {in(x,B)}; ",
-      "let x,A,B: in(x,A), subset(A,B); ",
+      "let y,C,D: in(y,C), subset(C,D); ",
       // "in(x,A);",
-      "in(x,B)[x,A,B];",
+      "in(y,D)[y,C,];",
     ],
     debug: true,
     print: true,
   },
 ];
 
-function runExamples() {
+function runExamples(toJSON: boolean) {
   const env = new L_Env();
   for (const example of exampleList) {
     if (example.debug) {
@@ -66,12 +66,12 @@ function runExamples() {
       runStrings(env, example.code, example.print);
     }
   }
-  envToJSON(env, "env.json");
+  if (toJSON) envToJSON(env, "env.json");
 }
 
-runExamples();
+runExamples(false);
 
-function envToJSON(env: L_Env, fileName: string) {
+export function envToJSON(env: L_Env, fileName: string) {
   const out = env.toJSON();
   // Convert the JSON object to a string and then to Uint8Array
   const jsonString = JSON.stringify(out, null, 2);
@@ -80,15 +80,4 @@ function envToJSON(env: L_Env, fileName: string) {
 
   Deno.writeFileSync(fileName, data);
   return out;
-}
-
-export function testEnvToJSON() {
-  const env = new L_Env();
-  for (const example of exampleList) {
-    if (example.debug) {
-      console.log(example.name);
-      runStrings(env, example.code, example.print);
-    }
-  }
-  envToJSON(env, "env.json");
 }

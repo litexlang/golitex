@@ -109,7 +109,8 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
           out = checkOptLiterally(env, toCheck);
           if (out !== RType.True) break;
         } else {
-          //! NEED TO IMPLEMENT HOW TO CHECK If-Then Literally
+          //! NEED TO IMPLEMENT HOW TO CHECK If-Then Literally?
+          // out = checkIfThen(env, toCheck as IfNode);
           return RType.Unknown;
         }
       }
