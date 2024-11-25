@@ -33,6 +33,22 @@ export class L_Env {
     this.father = father;
   }
 
+  newKnownFact(
+    optName: string,
+    checkVars: string[][],
+    fact: StoredFact
+  ): boolean {
+    const checkVarsNumLst = checkVars.map((e) => e.length);
+    const knownFact = this.knownFacts.get(optName);
+    if (knownFact === undefined) {
+      const newKnownFact = new KnownFact();
+      this.knownFacts.set(optName, newKnownFact);
+      return newKnownFact.addChild(checkVarsNumLst, fact);
+    } else {
+      return knownFact.addChild(checkVarsNumLst, fact);
+    }
+  }
+
   // getCache() {
   //   return this.cache;
   // }

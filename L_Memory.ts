@@ -168,6 +168,10 @@ export class StoredFact {
     public isT: boolean
   ) {}
 
+  getVarsToCheck(): string[][] {
+    return this.req.map((e) => e.vars);
+  }
+
   toString() {
     const notWords = this.isT === false ? "[not] " : "";
     const varsWords = this.vars.length > 0 ? this.vars.join(", ") : "";
@@ -399,6 +403,9 @@ function storeOpt(
     const ok = defNameOptDef(env, fact, req);
     if (!ok) return false;
   }
+
+  const toStore = new StoredFact(fact.vars, req, fact.isT);
+  env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
 
   return true;
 }
