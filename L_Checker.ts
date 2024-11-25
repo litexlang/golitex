@@ -72,19 +72,21 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
     return builtins(env, toCheck);
   }
 
-  const storedFacts: StoredFact[] | null = L_Memory.getStoredFacts(
-    env,
-    toCheck
-  );
-  if (storedFacts === null) {
-    env.newMessage(`check error: ${toCheck.name} not declared.`);
-    return RType.Error;
+  // const storedFacts: StoredFact[] | null = L_Memory.getStoredFacts(
+  //   env,
+  //   toCheck
+  // );
+  // if (storedFacts === null) {
+  //   env.newMessage(`check error: ${toCheck.name} not declared.`);
+  //   return RType.Error;
+  // }
+
+  // const out = useStoredFactsToCheckOpt(env, storedFacts, toCheck);
+  // if (out === RType.True) return RType.True;
+
+  if (toCheck.checkVars === undefined) {
+    toCheck.checkVars = [];
   }
-
-  let out = useStoredFactsToCheckOpt(env, storedFacts, toCheck);
-  if (out === RType.True) return RType.True;
-
-  if (toCheck.checkVars === undefined) return RType.Unknown;
 
   const knowns = env.getKnownFacts(toCheck);
   if (knowns === undefined) return RType.Unknown;
