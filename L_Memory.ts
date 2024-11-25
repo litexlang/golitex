@@ -400,10 +400,10 @@ function storeOpt(
     }
   }
 
-  env.newFact(fact.name, fact.vars, req, fact.isT);
+  // env.newFact(fact.name, fact.vars, req, fact.isT);
 
   // store contra positive when storing Opt.
-  if (storeContrapositive) storeContrapositiveFacts(env, fact, req);
+  // if (storeContrapositive) storeContrapositiveFacts(env, fact, req);
 
   if (DEBUG_DICT["newFact"]) {
     const notWords = fact.isT === false ? "[not]" : "";
@@ -503,62 +503,62 @@ export function store(
  *
  *  @returns null means error. StoredFact[] is used to hold all legal stored facts.
  */
-export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
-  // varDeclaredNumberMap is used to store how many times a variable is declared in all visible environments
-  const varsAsSet = new Set(opt.vars);
-  const varDeclaredNumberMap = new Map<string, number>();
-  for (const v of varsAsSet) {
-    varDeclaredNumberMap.set(v, 0);
-  }
+// export function getStoredFacts(env: L_Env, opt: OptNode): StoredFact[] | null {
+//   // varDeclaredNumberMap is used to store how many times a variable is declared in all visible environments
+//   const varsAsSet = new Set(opt.vars);
+//   const varDeclaredNumberMap = new Map<string, number>();
+//   for (const v of varsAsSet) {
+//     varDeclaredNumberMap.set(v, 0);
+//   }
 
-  // know where the opt is declared.
-  let visibleEnvLevel = -1;
-  const tmp = env.whereIsOptDeclared(opt.name);
-  if (tmp !== undefined) {
-    visibleEnvLevel = tmp;
-  } else {
-    env.newMessage(`${opt} not declared.`);
-    return null;
-  }
+//   // know where the opt is declared.
+//   let visibleEnvLevel = -1;
+//   const tmp = env.whereIsOptDeclared(opt.name);
+//   if (tmp !== undefined) {
+//     visibleEnvLevel = tmp;
+//   } else {
+//     env.newMessage(`${opt} not declared.`);
+//     return null;
+//   }
 
-  // get fact from every visible env
-  const out: StoredFact[] = [];
-  for (
-    let i = 0, curEnv: L_Env = env;
-    i <= visibleEnvLevel && curEnv;
-    i++, curEnv = curEnv.getFather() as L_Env
-  ) {
-    // update how many times a given var is declared
-    for (const v of varsAsSet) {
-      if (curEnv.varDeclaredAtCurrentEnv(v)) {
-        const curNumber = varDeclaredNumberMap.get(v) as number;
-        varDeclaredNumberMap.set(v, curNumber + 1);
-      }
-    }
+//   // get fact from every visible env
+//   const out: StoredFact[] = [];
+//   for (
+//     let i = 0, curEnv: L_Env = env;
+//     i <= visibleEnvLevel && curEnv;
+//     i++, curEnv = curEnv.getFather() as L_Env
+//   ) {
+//     // update how many times a given var is declared
+//     for (const v of varsAsSet) {
+//       if (curEnv.varDeclaredAtCurrentEnv(v)) {
+//         const curNumber = varDeclaredNumberMap.get(v) as number;
+//         varDeclaredNumberMap.set(v, curNumber + 1);
+//       }
+//     }
 
-    // get stored facts from current environment level
-    const facts = curEnv.getStoredFactsFromCurrentEnv(opt.name);
-    if (facts === undefined) continue;
+//     // get stored facts from current environment level
+//     const facts = curEnv.getKnownFactsFromCurEnv(opt.name);
+//     if (facts === undefined) continue;
 
-    for (const fact of facts) {
-      const fixedVarsAtFact = fact.getFixedVars();
+//     for (const fact of facts) {
+//       const fixedVarsAtFact = fact.getFixedVars();
 
-      // If the var is declared at a higher level, then the fact is RELATED TO THE VARIABLE WITH THE SAME NAME AT HIGHER LEVEL, NOT RELATED WITH CURRENT VARIABLE
-      let invisible = false;
-      for (const v of fixedVarsAtFact) {
-        if (varsAsSet.has(v) && (varDeclaredNumberMap.get(v) as number) > 1) {
-          invisible = true;
-          break;
-        }
-      }
+//       // If the var is declared at a higher level, then the fact is RELATED TO THE VARIABLE WITH THE SAME NAME AT HIGHER LEVEL, NOT RELATED WITH CURRENT VARIABLE
+//       let invisible = false;
+//       for (const v of fixedVarsAtFact) {
+//         if (varsAsSet.has(v) && (varDeclaredNumberMap.get(v) as number) > 1) {
+//           invisible = true;
+//           break;
+//         }
+//       }
 
-      if (invisible) continue;
-      else out.push(fact);
-    }
-  }
+//       if (invisible) continue;
+//       else out.push(fact);
+//     }
+//   }
 
-  return out;
-}
+//   return out;
+// }
 
 export function executorStoreFact(
   env: L_Env,

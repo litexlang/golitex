@@ -6,7 +6,7 @@ import {
   ExistDefNode,
   MacroNode,
 } from "./L_Nodes.ts";
-import { KnownFact, ReqSpace, StoredFact, StoredReq } from "./L_Memory.ts";
+import { KnownFact, ReqSpace, StoredFact } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
 import { RType } from "./L_Executor.ts";
 // import { L_Cache } from "./L_Cache.ts";
@@ -16,7 +16,7 @@ export class L_Env {
   private declaredVars = new Set<string>();
 
   private declaredFacts = new Map<string, DefNode>();
-  private storage = new Map<string, StoredFact[]>();
+  // private storage = new Map<string, StoredFact[]>();
 
   private declaredExist = new Map<string, MemorizedExistDecl>();
   private father: L_Env | undefined = undefined;
@@ -32,8 +32,16 @@ export class L_Env {
     this.father = father;
   }
 
-  getKnownFacts(opt: OptNode): undefined | StoredFact[] {
+  getKnownFactsFromCurEnv(
+    opt: OptNode,
+    onlyRoot: boolean = false
+  ): undefined | StoredFact[] {
     const knownNodeRoot = this.knownFacts.get(opt.name);
+
+    if (onlyRoot) {
+      return knownNodeRoot?.getFactsToCheck([]);
+    }
+
     if (knownNodeRoot !== undefined) {
       const varsToCheckNumbers = opt.checkVars?.map((e) => e.length);
       if (varsToCheckNumbers === undefined) return undefined;
@@ -75,7 +83,7 @@ export class L_Env {
     this.messages = [];
     this.declaredVars = new Set<string>();
     this.declaredFacts = new Map<string, DefNode>();
-    this.storage = new Map<string, StoredFact[]>();
+    // this.storage = new Map<string, StoredFact[]>();
     this.declaredExist = new Map<string, MemorizedExistDecl>();
     this.father = undefined;
   }
@@ -135,26 +143,26 @@ export class L_Env {
     }
   }
 
-  newFact(
-    name: string,
-    vars: string[],
-    req: StoredReq[],
-    isT: boolean
-  ): StoredFact {
-    const newFact = new StoredFact(vars, req, isT);
-    const out = this.storage.get(name);
-    if (!out) {
-      this.storage.set(name, [newFact]);
-    } else {
-      out.push(newFact);
-    }
+  // newFact(
+  //   name: string,
+  //   vars: string[],
+  //   req: StoredReq[],
+  //   isT: boolean
+  // ): StoredFact {
+  //   const newFact = new StoredFact(vars, req, isT);
+  //   const out = this.storage.get(name);
+  //   if (!out) {
+  //     this.storage.set(name, [newFact]);
+  //   } else {
+  //     out.push(newFact);
+  //   }
 
-    return newFact;
-  }
+  //   return newFact;
+  // }
 
-  public getStoredFactsFromCurrentEnv(s: string) {
-    return this.storage.get(s);
-  }
+  // public getStoredFactsFromCurrentEnv(s: string) {
+  //   return this.storage.get(s);
+  // }
 
   // Return the lowest level of environment in which an operator with given name is declared.
   public whereIsOptDeclared(s: string): number | undefined {
@@ -224,14 +232,14 @@ export class L_Env {
     this.messages.push(s);
   }
 
-  printAllStoredFacts() {
-    console.log(`\n---Stored Facts---\n`);
-    for (const [s, v] of this.storage.entries()) {
-      console.log(`[${s}]`);
-      v?.forEach((e) => console.log(e));
-      if (v.length >= 0) console.log();
-    }
-  }
+  // printAllStoredFacts() {
+  //   console.log(`\n---Stored Facts---\n`);
+  //   for (const [s, v] of this.storage.entries()) {
+  //     console.log(`[${s}]`);
+  //     v?.forEach((e) => console.log(e));
+  //     if (v.length >= 0) console.log();
+  //   }
+  // }
 
   printClearMessage() {
     this.messages.forEach((m) => console.log(m));
@@ -304,7 +312,7 @@ export class L_Env {
       vars: Array.from(this.declaredVars),
       defs: Object.fromEntries(this.declaredFacts),
       exists: Object.fromEntries(this.declaredExist),
-      facts: Object.fromEntries(this.storage),
+      facts: Object.fromEntries(this.knownFacts),
       reqSpaces: Object.fromEntries(this.reqSpaces),
       macros: this.macros,
     };
