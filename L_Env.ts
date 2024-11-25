@@ -5,8 +5,9 @@ import {
   OptNode,
   ExistDefNode,
   MacroNode,
+  KnowNode,
 } from "./L_Nodes.ts";
-import { ReqSpace, StoredFact, StoredReq } from "./L_Memory.ts";
+import { KnownFact, ReqSpace, StoredFact, StoredReq } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
 import { RType } from "./L_Executor.ts";
 // import { L_Cache } from "./L_Cache.ts";
@@ -23,6 +24,8 @@ export class L_Env {
 
   private reqSpaces = new Map<string, ReqSpace>();
   private macros: MacroNode[] = [];
+
+  private knownFacts = new Map<string, KnownFact>();
 
   // private cache: L_Cache = new L_Cache();
 

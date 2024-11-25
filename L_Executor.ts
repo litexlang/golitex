@@ -87,6 +87,8 @@ function execResult(out: RType, node: L_Node): string {
     return `Unknown ${node}`;
   } else if (out === RType.Error) {
     return `Error ${node}`;
+  } else if (out === RType.False) {
+    return `False ${node}`;
   }
 
   return `???`;

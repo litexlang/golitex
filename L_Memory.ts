@@ -22,6 +22,59 @@ function memoryErr(env: L_Env, s: string = ""): boolean {
   return false;
 }
 
+export class KnownFact {
+  facts: StoredFact[] = [];
+  children = new Map<number, KnownFact>();
+
+  constructor() {}
+
+  addChild(checkVarsNumLst: number[], fact: StoredFact): boolean {
+    try {
+      if (checkVarsNumLst.length === 0) {
+        this.facts.push(fact);
+        return true;
+      } else {
+        const child = this.children.get(checkVarsNumLst[0]);
+        if (child === undefined) {
+          const newChild = new KnownFact();
+          this.children.set(checkVarsNumLst[0], newChild);
+          checkVarsNumLst.shift();
+          return newChild.addChild(checkVarsNumLst, fact);
+        } else {
+          checkVarsNumLst.shift();
+          return child.addChild(checkVarsNumLst, fact);
+        }
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  getFactsToCheck(checkVarsNumLst: number[]): StoredFact[] | undefined {
+    try {
+      if (checkVarsNumLst.length === 0) {
+        return this.facts;
+      } else {
+        const index = checkVarsNumLst.shift();
+        const child = this.children.get(index as number);
+        return child?.getFactsToCheck(checkVarsNumLst);
+      }
+    } catch {
+      return undefined;
+    }
+  }
+
+  toString(indent: string = ""): string {
+    let result = indent + "facts: " + this.facts.toString() + "\n";
+    if (!Array.isArray(this.facts)) {
+      this.children.forEach((child) => {
+        result += child.toString(indent + "  ");
+      });
+    }
+    return result;
+  }
+}
+
 export class ReqSpace {
   constructor(
     public ifVars: string[],
