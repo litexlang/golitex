@@ -53,6 +53,12 @@ export const exampleList: ExampleItem[] = [
       // "in(x,A);",
       "in(y,D)[y,C,];",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "test_known",
+    code: ["def p(x);", "let y: p(y);", "know if x : => {p(x)};"],
     debug: true,
     print: true,
   },
