@@ -1,6 +1,14 @@
 import { L_Env } from "./L_Env.ts";
 import { runStrings } from "./L_Runner.ts";
 
+export const DEBUG_DICT = {
+  newFact: true,
+  def: true,
+  check: true,
+  storeBy: true,
+  let: true,
+};
+
 type ExampleItem = {
   name: string;
   code: string[];
@@ -85,6 +93,19 @@ export const exampleList: ExampleItem[] = [
       "def q(x);",
       "know if y: if x : => {p(y)} => {p(y)};",
       "know if y: if x: => {if z: => {p(y)}} => {p(y)};",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "by and know if-then work together",
+    code: [
+      "def p(x);",
+      "def q(x)",
+      "def a(x,y);",
+      "know if [P] x : p(x), if [Q] y: q(y) => {} => {if [A] p(y) => {a(x,y)}};",
+      "let v1,v2: p(v1), q(v2), p(v2);",
+      "by P(v1): by Q(v2) => {by A() => {a(v1,v2)}};",
     ],
     debug: true,
     print: true,

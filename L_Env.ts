@@ -3,16 +3,16 @@ import {
   OptNode,
   ExistDefNode,
   MacroNode,
-  ToCheckNode,
+  L_Node,
 } from "./L_Nodes.ts";
 import {
-  declNewFact,
   examineStoredFact,
   KnownFact,
   ReqSpace,
   StoredFact,
 } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
+import { RType } from "./L_Executor.ts";
 
 export class L_Env {
   private messages: string[] = [];
@@ -232,6 +232,17 @@ export class L_Env {
 
   clearMessages() {
     this.messages = [];
+  }
+
+  OKMesIntoEnvReturnRType(message: L_Node | string): RType {
+    if (message instanceof L_Node) this.newMessage(`OK! ${message}`);
+    else this.newMessage(message);
+    return RType.True;
+  }
+
+  errIntoEnvReturnRType(s: L_Node | string): RType {
+    this.newMessage(`Error: ${s}`);
+    return RType.Error;
   }
 
   printDeclFacts() {

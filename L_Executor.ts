@@ -5,33 +5,22 @@ import {
   ToCheckNode,
   DefNode,
   ProveNode,
-  // HaveNode,
   PostfixProve,
   OptNode,
   LocalEnvNode,
   ReturnNode,
-  // ReturnExistNode,
-  // ByNode,
   IfNode,
   HaveNode,
   SpecialNode,
   UseNode,
   MacroNode,
-  // STNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
 import * as L_Memory from "./L_Memory.ts";
 import { ClearKeyword, RunKeyword } from "./L_Common.ts";
 import { runFile } from "./L_Runner.ts";
-
-export const DEBUG_DICT = {
-  newFact: true,
-  def: true,
-  check: true,
-  storeBy: true,
-  let: true,
-};
+import { DEBUG_DICT } from "./L_Test.ts";
 
 export const CheckFalse = true;
 
@@ -49,15 +38,10 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.Unknown]: "check: unknown",
 };
 
-function successMesIntoEnv(env: L_Env, node: L_Node): RType {
-  env.newMessage(`OK! ${node.toString()}`);
-  return RType.True;
-}
-
-function errIntoEnv(env: L_Env, s: string): RType {
-  env.newMessage(`Error: ${s}`);
-  return RType.Error;
-}
+// function successMesIntoEnv(env: L_Env, node: L_Node): RType {
+//   env.newMessage(`OK! ${node.toString()}`);
+//   return RType.True;
+// }
 
 // deno-lint-ignore no-explicit-any
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
@@ -102,7 +86,7 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
 
     if (execFunc) {
       const out = execFunc(env, node);
-      if (out === RType.True) return successMesIntoEnv(env, node);
+      if (out === RType.True) env.OKMesIntoEnvReturnRType(node);
     } else if (node instanceof ToCheckNode) {
       try {
         const out = factExec(env, node as ToCheckNode);
@@ -512,22 +496,22 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
       }
     }
 
-    for (const fact of PostfixProve.facts) {
-      // if (newEnv.someVarsDeclaredHere(fact, [])) {
-      //   newEnv.getMessages().forEach((e) => env.newMessage(e));
-      //   env.newMessage(
-      //     `Error: Some variables in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-      //   );
-      //   return RType.Error;
-      // }
-      // if (newEnv.someOptsDeclaredHere(fact)) {
-      //   newEnv.getMessages().forEach((e) => env.newMessage(e));
-      //   env.newMessage(
-      //     `Error: Some operators in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-      //   );
-      //   return RType.Error;
-      // }
-    }
+    // for (const fact of PostfixProve.facts) {
+    // if (newEnv.someVarsDeclaredHere(fact, [])) {
+    //   newEnv.getMessages().forEach((e) => env.newMessage(e));
+    //   env.newMessage(
+    //     `Error: Some variables in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+    //   );
+    //   return RType.Error;
+    // }
+    // if (newEnv.someOptsDeclaredHere(fact)) {
+    //   newEnv.getMessages().forEach((e) => env.newMessage(e));
+    //   env.newMessage(
+    //     `Error: Some operators in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+    //   );
+    //   return RType.Error;
+    // }
+    // }
 
     for (const fact of PostfixProve.facts) {
       const out = L_Checker.check(newEnv, fact);
@@ -597,20 +581,20 @@ function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): RType {
 
 function returnExec(env: L_Env, node: ReturnNode): RType {
   try {
-    for (const f of node.facts) {
-      // if (env.someOptsDeclaredHere(f)) {
-      //   env.newMessage(
-      //     `Error: Some operators in ${f} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-      //   );
-      //   return RType.Error;
-      // }
-      // if (env.someVarsDeclaredHere(f, [])) {
-      //   env.newMessage(
-      //     `Error: Some variables in ${f} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-      //   );
-      //   return RType.Error;
-      // }
-    }
+    // for (const f of node.facts) {
+    // if (env.someOptsDeclaredHere(f)) {
+    //   env.newMessage(
+    //     `Error: Some operators in ${f} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+    //   );
+    //   return RType.Error;
+    // }
+    // if (env.someVarsDeclaredHere(f, [])) {
+    //   env.newMessage(
+    //     `Error: Some variables in ${f} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+    //   );
+    //   return RType.Error;
+    // }
+    // }
 
     for (const toProve of node.facts) {
       const out = L_Checker.check(env, toProve);
@@ -685,11 +669,11 @@ function useExec(env: L_Env, node: UseNode): RType {
   try {
     const reqSpace = env.getReqSpace(node.reqSpaceName);
     if (reqSpace === undefined)
-      return errIntoEnv(env, `${node.reqSpaceName} undefined.`);
+      return env.errIntoEnvReturnRType(`${node.reqSpaceName} undefined.`);
 
     const map = makeStrStrMap(env, reqSpace.ifVars, node.vars);
     if (map === undefined) {
-      return errIntoEnv(env, `Failed to call ${node.reqSpaceName}`);
+      return env.errIntoEnvReturnRType(`Failed to call ${node.reqSpaceName}`);
     }
 
     const req = reqSpace.ifReq.map((e) => e.useMapToCopy(map));
@@ -737,6 +721,6 @@ function macroExec(env: L_Env, node: MacroNode): RType {
     env.newMacro(node);
     return RType.True;
   } catch {
-    return errIntoEnv(env, `Failed: macro ${node}`);
+    return env.errIntoEnvReturnRType(`Failed: macro ${node}`);
   }
 }
