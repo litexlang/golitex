@@ -75,14 +75,14 @@ export const exampleList: ExampleItem[] = [
       "know if x : in_domain(x) => {point_wise_continuous(f,x)};",
       "continuous(f);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
-    name: "continuous2",
-    code: [],
-    debug: false,
-    print: false,
+    name: "known if req => opt must satisfy: req does not contain if-then-type fact that has opt as onlyIf",
+    code: ["def p(x);", "def q(x);", "know if y: if x : => {p(y)} => {p(y)};"],
+    debug: true,
+    print: true,
   },
 ];
 

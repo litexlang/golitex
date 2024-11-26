@@ -323,6 +323,7 @@ export class L_Env {
     return {
       vars: Array.from(this.declaredVars),
       defs: Object.fromEntries(this.declaredFacts),
+      knownFacts: Object.fromEntries(this.knownFacts),
       exists: Object.fromEntries(this.declaredExist),
       facts: Object.fromEntries(this.knownFacts),
       reqSpaces: Object.fromEntries(this.reqSpaces),
