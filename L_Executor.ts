@@ -14,6 +14,7 @@ import {
   SpecialNode,
   UseNode,
   MacroNode,
+  PostfixProve,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
@@ -55,7 +56,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   LetNode: letExec,
   ProveNode: proveExec,
   HaveNode: haveExec,
-  // PostfixProve: postfixProveExec,
+  PostfixProve: postfixProveExec,
   LocalEnvNode: localEnvExec,
   ReturnNode: returnExec,
   SpecialNode: specialExec,
@@ -187,218 +188,219 @@ function defExec(env: L_Env, node: DefNode): RType {
   }
 }
 
-function proveExec(env: L_Env, node: ProveNode): RType {
-  let out = RType.Error;
-  if (node.contradict === undefined) {
-    if (node.toProve !== null) {
-      if (node.toProve instanceof IfNode) {
-        out = proveIfThen(env, node.toProve, node.block);
-      }
-    } else {
-      out = proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
-    }
+// function proveExec(env: L_Env, node: ProveNode): RType {
+//   let out = RType.Error;
+//   if (node.contradict === undefined) {
+//     if (node.toProve !== null) {
+//       if (node.toProve instanceof IfNode) {
+//         out = proveIfThen(env, node.toProve, node.block);
+//       }
+//     } else {
+//       out = proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
+//     }
 
-    if (out !== RType.True) {
-      env.newMessage(`Failed: ${node}`);
-    }
+//     if (out !== RType.True) {
+//       env.newMessage(`Failed: ${node}`);
+//     }
 
-    return RType.Error;
-  } else {
-    if (node.toProve !== null) {
-      env.newMessage(
-        `At current version, you can not prove if-then by contradiction.`
-      );
-      return RType.Error;
-    } else {
-      return proveOptByContradict(
-        env,
-        node.fixedIfThenOpt as OptNode,
-        node.block,
-        node.contradict as OptNode
-      );
-    }
-  }
-}
+//     return RType.Error;
+//   } else {
+//     if (node.toProve !== null) {
+//       env.newMessage(
+//         `At current version, you can not prove if-then by contradiction.`
+//       );
+//       return RType.Error;
+//     } else {
+//       return proveOptByContradict(
+//         env,
+//         node.fixedIfThenOpt as OptNode,
+//         node.block,
+//         node.contradict as OptNode
+//       );
+//     }
+//   }
+// }
 
-function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
-  try {
-    const newEnv = new L_Env(env);
-    for (const v of toProve.vars) {
-      const ok = newEnv.newVar(v);
-      if (!ok) throw Error();
-    }
+// function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
+//   try {
+//     const newEnv = new L_Env(env);
+//     for (const v of toProve.vars) {
+//       const ok = newEnv.newVar(v);
+//       if (!ok) throw Error();
+//     }
 
-    for (const fact of toProve.req) {
-      const ok = L_Memory.store(newEnv, fact, [], true);
-      if (!ok) throw Error();
-    }
+//     for (const fact of toProve.req) {
+//       const ok = L_Memory.store(newEnv, fact, [], true);
+//       if (!ok) throw Error();
+//     }
 
-    for (const subNode of block) {
-      const out = nodeExec(newEnv, subNode, false);
-      if (out === RType.Error) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`Errors: Failed to execute ${subNode}`);
-        return RType.Error;
-      }
-    }
+//     for (const subNode of block) {
+//       const out = nodeExec(newEnv, subNode, false);
+//       if (out === RType.Error) {
+//         newEnv.getMessages().forEach((e) => env.newMessage(e));
+//         env.newMessage(`Errors: Failed to execute ${subNode}`);
+//         return RType.Error;
+//       }
+//     }
 
-    if (!toProve.examineVarsNotDoubleDecl([])) {
-      newEnv.getMessages().forEach((e) => env.newMessage(e));
-      env.newMessage(
-        `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-      );
-      return RType.Error;
-    }
+//     if (!toProve.examineVarsNotDoubleDecl([])) {
+//       newEnv.getMessages().forEach((e) => env.newMessage(e));
+//       env.newMessage(
+//         `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+//       );
+//       return RType.Error;
+//     }
 
-    // if (newEnv.someOptsDeclaredHere(toProve)) {
-    //   newEnv.getMessages().forEach((e) => env.newMessage(e));
-    //   env.newMessage(
-    //     `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-    //   );
-    //   return RType.Error;
-    // }
+//     // Avoid define a new operator that has the same name as one of a onlyIf in toProve if-then
+//     // if (newEnv.someOptsDeclaredHere(toProve)) {
+//     //   newEnv.getMessages().forEach((e) => env.newMessage(e));
+//     //   env.newMessage(
+//     //     `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+//     //   );
+//     //   return RType.Error;
+//     // }
 
-    for (const toCheck of toProve.onlyIfs) {
-      const out = nodeExec(newEnv, toCheck, false);
-      if (out !== RType.True) return out;
-    }
+//     for (const toCheck of toProve.onlyIfs) {
+//       const out = nodeExec(newEnv, toCheck, false);
+//       if (out !== RType.True) return out;
+//     }
 
-    L_Memory.store(env, toProve, [], true);
+//     L_Memory.store(env, toProve, [], true);
 
-    newEnv.getMessages().forEach((e) => env.newMessage(e));
+//     newEnv.getMessages().forEach((e) => env.newMessage(e));
 
-    return RType.True;
-  } catch {
-    env.newMessage(`Error: ${toProve}`);
-    return RType.Error;
-  }
-}
+//     return RType.True;
+//   } catch {
+//     env.newMessage(`Error: ${toProve}`);
+//     return RType.Error;
+//   }
+// }
 
-function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {
-  function execResult(out: RType, node: L_Node): string {
-    if (out === RType.True) {
-      return `OK! ${node}`;
-    } else if (out === RType.Unknown) {
-      return `Unknown ${node}`;
-    } else if (out === RType.Error) {
-      return `Error ${node}`;
-    } else if (out === RType.False) {
-      return `False ${node}`;
-    }
+// function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {
+//   function execResult(out: RType, node: L_Node): string {
+//     if (out === RType.True) {
+//       return `OK! ${node}`;
+//     } else if (out === RType.Unknown) {
+//       return `Unknown ${node}`;
+//     } else if (out === RType.Error) {
+//       return `Error ${node}`;
+//     } else if (out === RType.False) {
+//       return `False ${node}`;
+//     }
 
-    return `???`;
-  }
+//     return `???`;
+//   }
 
-  try {
-    const newEnv = new L_Env(env);
+//   try {
+//     const newEnv = new L_Env(env);
 
-    for (const subNode of block) {
-      const out = nodeExec(newEnv, subNode, false);
-      env.newMessage(execResult(out, toProve));
-      if (out === RType.Error) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`Errors: Failed to execute ${subNode}`);
-        return RType.Error;
-      }
-    }
+//     for (const subNode of block) {
+//       const out = nodeExec(newEnv, subNode, false);
+//       env.newMessage(execResult(out, toProve));
+//       if (out === RType.Error) {
+//         newEnv.getMessages().forEach((e) => env.newMessage(e));
+//         env.newMessage(`Errors: Failed to execute ${subNode}`);
+//         return RType.Error;
+//       }
+//     }
 
-    // if (toProve.examineVarsNotDoubleDecl([])) {
-    //   newEnv.getMessages().forEach((e) => env.newMessage(e));
-    //   env.newMessage(
-    //     `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-    //   );
-    //   return RType.Error;
-    // }
+// if (toProve.examineVarsNotDoubleDecl([])) {
+//   newEnv.getMessages().forEach((e) => env.newMessage(e));
+//   env.newMessage(
+//     `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+//   );
+//   return RType.Error;
+// }
 
-    // if (newEnv.someOptsDeclaredHere(toProve)) {
-    //   newEnv.getMessages().forEach((e) => env.newMessage(e));
-    //   env.newMessage(
-    //     `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-    //   );
-    //   return RType.Error;
-    // }
+// if (newEnv.someOptsDeclaredHere(toProve)) {
+//   newEnv.getMessages().forEach((e) => env.newMessage(e));
+//   env.newMessage(
+//     `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+//   );
+//   return RType.Error;
+// }
 
-    const out = L_Checker.check(newEnv, toProve);
-    if (out !== RType.True) return out;
+//     const out = L_Checker.check(newEnv, toProve);
+//     if (out !== RType.True) return out;
 
-    L_Memory.store(env, toProve, [], true);
+//     L_Memory.store(env, toProve, [], true);
 
-    return RType.True;
-  } catch {
-    env.newMessage(`${toProve}`);
-    return RType.Error;
-  }
-}
+//     return RType.True;
+//   } catch {
+//     env.newMessage(`${toProve}`);
+//     return RType.Error;
+//   }
+// }
 
-function proveOptByContradict(
-  env: L_Env,
-  toProve: OptNode,
-  block: L_Node[],
-  contradict: OptNode
-): RType {
-  try {
-    const newEnv = new L_Env(env);
+// function proveOptByContradict(
+//   env: L_Env,
+//   toProve: OptNode,
+//   block: L_Node[],
+//   contradict: OptNode
+// ): RType {
+//   try {
+//     const newEnv = new L_Env(env);
 
-    toProve.isT = !toProve.isT;
-    let ok = L_Memory.store(newEnv, toProve, [], true);
-    if (!ok) {
-      newEnv.newMessage(`Failed to store ${toProve}`);
-      return RType.Error;
-    }
+//     toProve.isT = !toProve.isT;
+//     let ok = L_Memory.store(newEnv, toProve, [], true);
+//     if (!ok) {
+//       newEnv.newMessage(`Failed to store ${toProve}`);
+//       return RType.Error;
+//     }
 
-    for (const subNode of block) {
-      const out = nodeExec(newEnv, subNode, false);
-      if (out === RType.Error) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`Errors: Failed to execute ${subNode}`);
-        return RType.Error;
-      }
-    }
+//     for (const subNode of block) {
+//       const out = nodeExec(newEnv, subNode, false);
+//       if (out === RType.Error) {
+//         newEnv.getMessages().forEach((e) => env.newMessage(e));
+//         env.newMessage(`Errors: Failed to execute ${subNode}`);
+//         return RType.Error;
+//       }
+//     }
 
-    let out = L_Checker.check(newEnv, contradict);
-    if (out !== RType.True) {
-      env.newMessage(`Errors: Failed to execute ${contradict}`);
-      return RType.Error;
-    }
+//     let out = L_Checker.check(newEnv, contradict);
+//     if (out !== RType.True) {
+//       env.newMessage(`Errors: Failed to execute ${contradict}`);
+//       return RType.Error;
+//     }
 
-    contradict.isT = !contradict.isT;
-    out = L_Checker.check(newEnv, contradict);
-    if (out !== RType.True) {
-      env.newMessage(`Errors: Failed to execute ${contradict}`);
-      return RType.Error;
-    }
+//     contradict.isT = !contradict.isT;
+//     out = L_Checker.check(newEnv, contradict);
+//     if (out !== RType.True) {
+//       env.newMessage(`Errors: Failed to execute ${contradict}`);
+//       return RType.Error;
+//     }
 
-    // if (toProve.examineVarsNotDoubleDecl([])) {
-    //   newEnv.getMessages().forEach((e) => env.newMessage(e));
-    //   env.newMessage(
-    //     `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-    //   );
-    //   return RType.Error;
-    // }
+// if (toProve.examineVarsNotDoubleDecl([])) {
+//   newEnv.getMessages().forEach((e) => env.newMessage(e));
+//   env.newMessage(
+//     `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+//   );
+//   return RType.Error;
+// }
 
-    // if (newEnv.someOptsDeclaredHere(toProve)) {
-    //   newEnv.getMessages().forEach((e) => env.newMessage(e));
-    //   env.newMessage(
-    //     `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-    //   );
-    //   return RType.Error;
-    // }
+// if (newEnv.someOptsDeclaredHere(toProve)) {
+//   newEnv.getMessages().forEach((e) => env.newMessage(e));
+//   env.newMessage(
+//     `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+//   );
+//   return RType.Error;
+// }
 
-    toProve.isT = !toProve.isT;
-    ok = L_Memory.store(env, toProve, [], true);
-    if (!ok) {
-      env.newMessage(`Failed to store ${toProve}`);
-      return RType.Error;
-    }
+//     toProve.isT = !toProve.isT;
+//     ok = L_Memory.store(env, toProve, [], true);
+//     if (!ok) {
+//       env.newMessage(`Failed to store ${toProve}`);
+//       return RType.Error;
+//     }
 
-    newEnv.getMessages().forEach((e) => env.newMessage(e));
+//     newEnv.getMessages().forEach((e) => env.newMessage(e));
 
-    return RType.True;
-  } catch {
-    env.newMessage(`${toProve}`);
-    return RType.Error;
-  }
-}
+//     return RType.True;
+//   } catch {
+//     env.newMessage(`${toProve}`);
+//     return RType.Error;
+//   }
+// }
 
 // function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
 //   try {
@@ -638,5 +640,274 @@ function macroExec(env: L_Env, node: MacroNode): RType {
     return RType.True;
   } catch {
     return env.errIntoEnvReturnRType(`Failed: macro ${node}`);
+  }
+}
+
+function proveExec(env: L_Env, node: ProveNode): RType {
+  let out = RType.Error;
+  if (node.contradict === undefined) {
+    if (node.toProve !== null) {
+      if (node.toProve instanceof IfNode) {
+        out = proveIfThen(env, node.toProve, node.block);
+      }
+    } else {
+      out = proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
+    }
+
+    if (out !== RType.True) {
+      env.newMessage(`Failed: ${node}`);
+    }
+
+    return RType.Error;
+  } else {
+    if (node.toProve !== null) {
+      env.newMessage(
+        `At current version, you can not prove if-then by contradiction.`
+      );
+      return RType.Error;
+    } else {
+      return proveOptByContradict(
+        env,
+        node.fixedIfThenOpt as OptNode,
+        node.block,
+        node.contradict as OptNode
+      );
+    }
+  }
+}
+
+function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
+  try {
+    const newEnv = new L_Env(env);
+    for (const v of toProve.vars) {
+      const ok = newEnv.newVar(v);
+      if (!ok) throw Error();
+    }
+
+    for (const fact of toProve.req) {
+      const ok = L_Memory.store(newEnv, fact, [], true);
+      if (!ok) throw Error();
+    }
+
+    for (const subNode of block) {
+      const out = nodeExec(newEnv, subNode, false);
+      if (out === RType.Error) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(`Errors: Failed to execute ${subNode}`);
+        return RType.Error;
+      }
+    }
+
+    if (newEnv.someVarsDeclaredHere(toProve, [])) {
+      newEnv.getMessages().forEach((e) => env.newMessage(e));
+      env.newMessage(
+        `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+      );
+      return RType.Error;
+    }
+
+    if (newEnv.someOptsDeclaredHere(toProve)) {
+      newEnv.getMessages().forEach((e) => env.newMessage(e));
+      env.newMessage(
+        `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+      );
+      return RType.Error;
+    }
+
+    for (const toCheck of toProve.onlyIfs) {
+      const out = nodeExec(newEnv, toCheck, false);
+      if (out !== RType.True) return out;
+    }
+
+    L_Memory.store(env, toProve, [], true);
+
+    newEnv.getMessages().forEach((e) => env.newMessage(e));
+
+    return RType.True;
+  } catch {
+    env.newMessage(`Error: ${toProve}`);
+    return RType.Error;
+  }
+}
+
+function execResult(out: RType, node: L_Node): string {
+  if (out === RType.True) {
+    return `OK! ${node}`;
+  } else if (out === RType.Unknown) {
+    return `Unknown ${node}`;
+  } else if (out === RType.Error) {
+    return `Error ${node}`;
+  } else if (out === RType.False) {
+    return `False ${node}`;
+  }
+
+  return `???`;
+}
+
+function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {
+  try {
+    const newEnv = new L_Env(env);
+
+    for (const subNode of block) {
+      const out = nodeExec(newEnv, subNode, false);
+      env.newMessage(execResult(out, toProve));
+      if (out === RType.Error) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(`Errors: Failed to execute ${subNode}`);
+        return RType.Error;
+      }
+    }
+
+    if (newEnv.someVarsDeclaredHere(toProve, [])) {
+      newEnv.getMessages().forEach((e) => env.newMessage(e));
+      env.newMessage(
+        `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+      );
+      return RType.Error;
+    }
+
+    if (newEnv.someOptsDeclaredHere(toProve)) {
+      newEnv.getMessages().forEach((e) => env.newMessage(e));
+      env.newMessage(
+        `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+      );
+      return RType.Error;
+    }
+
+    const out = L_Checker.check(newEnv, toProve);
+    if (out !== RType.True) return out;
+
+    L_Memory.store(env, toProve, [], true);
+
+    return RType.True;
+  } catch {
+    env.newMessage(`${toProve}`);
+    return RType.Error;
+  }
+}
+
+function proveOptByContradict(
+  env: L_Env,
+  toProve: OptNode,
+  block: L_Node[],
+  contradict: OptNode
+): RType {
+  try {
+    const newEnv = new L_Env(env);
+
+    toProve.isT = !toProve.isT;
+    let ok = L_Memory.store(newEnv, toProve, [], true);
+    if (!ok) {
+      newEnv.newMessage(`Failed to store ${toProve}`);
+      return RType.Error;
+    }
+
+    for (const subNode of block) {
+      const out = nodeExec(newEnv, subNode, false);
+      if (out === RType.Error) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(`Errors: Failed to execute ${subNode}`);
+        return RType.Error;
+      }
+    }
+
+    let out = L_Checker.check(newEnv, contradict);
+    if (out !== RType.True) {
+      env.newMessage(`Errors: Failed to execute ${contradict}`);
+      return RType.Error;
+    }
+
+    contradict.isT = !contradict.isT;
+    out = L_Checker.check(newEnv, contradict);
+    if (out !== RType.True) {
+      env.newMessage(`Errors: Failed to execute ${contradict}`);
+      return RType.Error;
+    }
+
+    if (newEnv.someVarsDeclaredHere(toProve, [])) {
+      newEnv.getMessages().forEach((e) => env.newMessage(e));
+      env.newMessage(
+        `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+      );
+      return RType.Error;
+    }
+
+    if (newEnv.someOptsDeclaredHere(toProve)) {
+      newEnv.getMessages().forEach((e) => env.newMessage(e));
+      env.newMessage(
+        `Error: Some operators in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+      );
+      return RType.Error;
+    }
+
+    toProve.isT = !toProve.isT;
+    ok = L_Memory.store(env, toProve, [], true);
+    if (!ok) {
+      env.newMessage(`Failed to store ${toProve}`);
+      return RType.Error;
+    }
+
+    newEnv.getMessages().forEach((e) => env.newMessage(e));
+
+    return RType.True;
+  } catch {
+    env.newMessage(`${toProve}`);
+    return RType.Error;
+  }
+}
+
+function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
+  try {
+    const newEnv = new L_Env(env);
+    for (const subNode of PostfixProve.block) {
+      const out = nodeExec(newEnv, subNode, false);
+      if (out !== RType.True) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(`${PostfixProve} failed.`);
+        return out;
+      }
+    }
+
+    for (const fact of PostfixProve.facts) {
+      if (newEnv.someVarsDeclaredHere(fact, [])) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(
+          `Error: Some variables in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+        );
+        return RType.Error;
+      }
+
+      if (newEnv.someOptsDeclaredHere(fact)) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(
+          `Error: Some operators in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+        );
+        return RType.Error;
+      }
+    }
+
+    for (const fact of PostfixProve.facts) {
+      const out = L_Checker.check(newEnv, fact);
+      if (out !== RType.True) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        env.newMessage(`${PostfixProve} failed.`);
+        return out;
+      }
+    }
+
+    for (const fact of PostfixProve.facts) {
+      const ok = L_Memory.store(env, fact, [], true);
+      if (!ok) {
+        env.newMessage(`Failed to store ${fact}`);
+        return RType.Error;
+      }
+    }
+
+    newEnv.getMessages().forEach((e) => env.newMessage(e));
+
+    return RType.True;
+  } catch {
+    env.newMessage("by error");
+    return RType.Error;
   }
 }

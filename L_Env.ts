@@ -4,6 +4,8 @@ import {
   ExistDefNode,
   MacroNode,
   L_Node,
+  ToCheckNode,
+  LogicNode,
 } from "./L_Nodes.ts";
 import {
   examineStoredFact,
@@ -267,5 +269,38 @@ export class L_Env {
       reqSpaces: Object.fromEntries(this.reqSpaces),
       macros: this.macros,
     };
+  }
+
+  someVarsDeclaredHere(fact: ToCheckNode, freeVars: string[]): boolean {
+    if (fact instanceof OptNode) {
+      const out = fact.vars.some(
+        (e) => !freeVars.includes(e) && this.declaredVars.has(e)
+      );
+      return out;
+    } else if (fact instanceof LogicNode) {
+      return (
+        fact.onlyIfs.some((e) => this.someVarsDeclaredHere(e, fact.vars)) ||
+        fact.req.some((e) => this.someVarsDeclaredHere(e, fact.vars))
+      );
+    }
+
+    throw Error();
+  }
+
+  someOptsDeclaredHere(fact: ToCheckNode): boolean {
+    if (fact instanceof OptNode) {
+      return this.defs.get(fact.name) !== undefined;
+    } else if (fact instanceof LogicNode) {
+      return (
+        fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) ||
+        fact.req.some((e) => this.someOptsDeclaredHere(e))
+      );
+    }
+
+    throw Error();
+  }
+
+  optDeclaredHere(name: string): boolean {
+    return this.defs.get(name) !== undefined;
   }
 }

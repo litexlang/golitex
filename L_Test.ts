@@ -90,7 +90,7 @@ export const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name: "by and know if-then work together",
+    name: "by and know if-then work together, not implemented",
     code: [
       "def p(x);",
       "def q(x)",
