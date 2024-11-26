@@ -88,7 +88,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
     toCheck.checkVars = [];
   }
 
-  const knowns = env.getKnownFactsFromCurEnv(toCheck);
+  const knowns = L_Memory.getStoredFacts(env, toCheck);
   if (knowns === undefined) return RType.Unknown;
 
   for (const known of knowns as StoredFact[]) {
