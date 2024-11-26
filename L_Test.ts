@@ -55,7 +55,7 @@ export const exampleList: ExampleItem[] = [
       "in(z,C);",
       "in(y,C);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -63,6 +63,26 @@ export const exampleList: ExampleItem[] = [
     code: ["def p(x);", "let y: p(y);", "know if x : => {p(x)};"],
     debug: false,
     print: true,
+  },
+  {
+    name: "continuous",
+    code: [
+      "def point_wise_continuous(f,x);",
+      "def continuous(f);",
+      "def in_domain(x);",
+      "know if f: if x : in_domain(x) => {point_wise_continuous(f,x)} => {continuous(f)};",
+      "let f;",
+      "know if x : in_domain(x) => {point_wise_continuous(f,x)};",
+      "continuous(f);",
+    ],
+    debug: true,
+    print: true,
+  },
+  {
+    name: "continuous2",
+    code: [],
+    debug: false,
+    print: false,
   },
 ];
 
