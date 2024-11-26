@@ -20,7 +20,7 @@ import {
   HaveNode,
   ExistNode,
   SpecialNode,
-  UseNode,
+  ByNode,
   MacroNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
@@ -246,8 +246,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   const index = tokens.length;
 
   try {
-    const keyword = skip(tokens, LetKeywords);
-    const strict = keyword === "let" ? false : true;
+    skip(tokens, LetKeywords);
 
     const vars: string[] = [];
     while (![...L_Ends, , ":"].includes(tokens[0])) {
@@ -872,7 +871,7 @@ function specialParse(env: L_Env, tokens: string[]): SpecialNode {
   }
 }
 
-function useParse(env: L_Env, tokens: string[]): UseNode {
+function useParse(env: L_Env, tokens: string[]): ByNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -891,7 +890,7 @@ function useParse(env: L_Env, tokens: string[]): UseNode {
     skip(tokens, ")");
 
     skip(tokens, L_Ends);
-    return new UseNode(reqSpaceName, vars);
+    return new ByNode(reqSpaceName, vars);
   } catch (error) {
     handleParseError(env, "call", index, start);
     throw error;

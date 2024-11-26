@@ -449,7 +449,7 @@ export class SpecialNode extends L_Node {
   }
 }
 
-export class UseNode extends L_Node {
+export class ByNode extends L_Node {
   constructor(public reqSpaceName: string, public vars: string[]) {
     super();
   }

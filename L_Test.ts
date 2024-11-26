@@ -75,7 +75,7 @@ export const exampleList: ExampleItem[] = [
       "know if x : in_domain(x) => {point_wise_continuous(f,x)};",
       "continuous(f);",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -111,7 +111,7 @@ export const exampleList: ExampleItem[] = [
       "let x: p(x);",
       "p3(x);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];
