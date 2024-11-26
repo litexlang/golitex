@@ -369,7 +369,7 @@ export class ExistDefNode extends DefNode {
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;
 
-  constructor(public facts: ToCheckNode[] = [], public strict: boolean) {
+  constructor(public facts: ToCheckNode[] = []) {
     super();
   }
 
@@ -381,11 +381,7 @@ export class KnowNode extends L_Node {
 }
 
 export class LetNode extends L_Node {
-  constructor(
-    public vars: string[],
-    public facts: ToCheckNode[],
-    public strict: boolean
-  ) {
+  constructor(public vars: string[], public facts: ToCheckNode[]) {
     super();
   }
 

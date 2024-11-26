@@ -20,7 +20,14 @@ import * as L_Checker from "./L_Checker.ts";
 import * as L_Memory from "./L_Memory.ts";
 import { ClearKeyword, RunKeyword } from "./L_Common.ts";
 import { runFile } from "./L_Runner.ts";
-import { DEBUG_DICT } from "./L_Test.ts";
+
+export const DEBUG_DICT = {
+  newFact: true,
+  def: true,
+  check: true,
+  storeBy: true,
+  let: true,
+};
 
 export const CheckFalse = true;
 
@@ -38,11 +45,6 @@ export const RTypeMap: { [key in RType]: string } = {
   [RType.Unknown]: "check: unknown",
 };
 
-// function successMesIntoEnv(env: L_Env, node: L_Node): RType {
-//   env.newMessage(`OK! ${node.toString()}`);
-//   return RType.True;
-// }
-
 // deno-lint-ignore no-explicit-any
 const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   IffDefNode: defExec,
@@ -59,24 +61,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   SpecialNode: specialExec,
   UseNode: useExec,
   MacroNode: macroExec,
-  // ReturnExistNode: returnExistExec,
-  // ByNode: byExec,
-  // STNode: byExec,
 };
-
-function execResult(out: RType, node: L_Node): string {
-  if (out === RType.True) {
-    return `OK! ${node}`;
-  } else if (out === RType.Unknown) {
-    return `Unknown ${node}`;
-  } else if (out === RType.Error) {
-    return `Error ${node}`;
-  } else if (out === RType.False) {
-    return `False ${node}`;
-  }
-
-  return `???`;
-}
 
 export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
   try {
@@ -112,49 +97,9 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
   }
 }
 
-// function haveExec(env: L_Env, node: HaveNode): RType {
-//   try {
-//     for (const e of node.vars) {
-//       const ok = env.safeNewVar(e);
-//       if (!ok) return RType.Error;
-//     }
-
-//     for (const f of node.facts) {
-//       const ok = f.factsDeclared(env);
-//       if (!ok) {
-//         env.newMessage(`Not all of operators in ${f} are declared`);
-//         return RType.Error;
-//       }
-//     }
-
-//     for (const fact of node.facts) {
-//       if (!env.inHaves(fact.name)) {
-//         env.newMessage(`Not every existence of given fact is validated.`);
-//         return RType.Error;
-//       }
-//     }
-
-//     for (const fact of node.facts) {
-//       if (node.vars.every((e) => !fact.vars.includes(e))) {
-//         env.newMessage(`${fact} does not include any newly declared variable.`);
-//         return RType.Error;
-//       }
-//       const ok = L_Memory.store(env, fact, [], true);
-//       if (!ok) {
-//         env.newMessage(`Failed to store ${fact}`);
-//         return RType.Error;
-//       }
-//     }
-
-//     return RType.True;
-//   } catch {
-//     env.newMessage(`Error: ${node.toString()}`);
-//     return RType.Error;
-//   }
-// }
-
 function letExec(env: L_Env, node: LetNode): RType {
   try {
+    // examine whether some vars are already declared. if not, declare them.
     for (const e of node.vars) {
       const ok = env.newVar(e);
       if (!ok) return RType.Error;
@@ -164,7 +109,6 @@ function letExec(env: L_Env, node: LetNode): RType {
         }
       }
     }
-    // node.vars.forEach((e) => env.newVar(e, e));
 
     // examine whether all operators are declared
     for (const f of node.facts) {
@@ -172,26 +116,6 @@ function letExec(env: L_Env, node: LetNode): RType {
       if (!ok) {
         env.newMessage(`Not all of facts in ${f} are declared`);
         return RType.Error;
-      }
-    }
-
-    // declare defNames
-
-    // const ok = L_Memory.declDefNames(env, node.facts, true);
-    // if (!ok) {
-    //   env.newMessage(`Failed to declare new operators in ${node}`);
-    //   return RType.Error;
-    // }
-
-    // check all requirements are satisfied
-    if (!node.strict) {
-      // store facts
-      for (const f of node.facts) {
-        const ok = L_Memory.executorStoreFact(env, f, true);
-        if (!ok) {
-          env.newMessage(`Failed to store ${f}`);
-          return RType.Error;
-        }
       }
     }
 
@@ -207,15 +131,22 @@ function letExec(env: L_Env, node: LetNode): RType {
       }
     }
 
+    // store new facts
+    for (const onlyIf of node.facts) {
+      const ok = L_Memory.store(env, onlyIf, [], false);
+      if (!ok) return RType.Error;
+    }
+
     return RType.True;
   } catch {
-    env.newMessage(`Error: ${node.toString()}`);
-    return RType.Error;
+    return env.errIntoEnvReturnRType(node);
   }
 }
 
 export function knowExec(env: L_Env, node: KnowNode): RType {
   try {
+    // examine whether all facts are declared.
+    // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
     for (const f of node.facts) {
       const ok = f.factsDeclared(env);
       if (!ok) {
@@ -224,17 +155,11 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
       }
     }
 
-    if (!node.strict) {
-      for (const fact of node.facts) {
-        const ok = L_Memory.executorStoreFact(env, fact, true);
-        if (!ok) {
-          env.newMessage(`Failed to store ${fact}`);
-          return RType.Error;
-        }
-      }
+    // store new knowns
+    for (const onlyIf of node.facts) {
+      const ok = L_Memory.store(env, onlyIf, [], false);
+      if (!ok) return RType.Error;
     }
-
-    // L_Memory.declDefNames(env, node.facts, false);
 
     return RType.True;
   } catch (error) {
@@ -247,29 +172,12 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
 
 function defExec(env: L_Env, node: DefNode): RType {
   try {
-    // let ok = env.safeDeclOpt(node.name, node);
-    // if (!ok) return RType.Error;
-
     // declare new opt
     const ok = L_Memory.declNewFact(env, node);
     if (!ok) {
       env.newMessage(`Failed to store ${node}`);
       return RType.Error;
     }
-
-    // store declared opt by
-    // L_Memory.storeDeclaredIfThenAsBy(env, node);
-
-    // for (const onlyIf of node.onlyIfs) {
-    //   if (onlyIf instanceof IfNode) {
-    //     const higherStoreReq = new StoredReq(node.vars, [
-    //       new OptNode(node.name, node.vars, true, undefined),
-    //       ...node.req,
-    //     ]);
-    //     const higherStoredFact = new StoredFact([], [higherStoreReq], true);
-    //     L_Memory.storeIfThenBy(env, onlyIf, higherStoredFact);
-    //   }
-    // }
 
     if (DEBUG_DICT["def"]) {
       const decl = env.getDefs(node.name);
@@ -373,6 +281,20 @@ function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
 }
 
 function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {
+  function execResult(out: RType, node: L_Node): string {
+    if (out === RType.True) {
+      return `OK! ${node}`;
+    } else if (out === RType.Unknown) {
+      return `Unknown ${node}`;
+    } else if (out === RType.Error) {
+      return `Error ${node}`;
+    } else if (out === RType.False) {
+      return `False ${node}`;
+    }
+
+    return `???`;
+  }
+
   try {
     const newEnv = new L_Env(env);
 

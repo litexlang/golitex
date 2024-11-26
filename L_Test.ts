@@ -1,14 +1,6 @@
 import { L_Env } from "./L_Env.ts";
 import { runStrings } from "./L_Runner.ts";
 
-export const DEBUG_DICT = {
-  newFact: true,
-  def: true,
-  check: true,
-  storeBy: true,
-  let: true,
-};
-
 type ExampleItem = {
   name: string;
   code: string[];
@@ -83,7 +75,7 @@ export const exampleList: ExampleItem[] = [
       "know if x : in_domain(x) => {point_wise_continuous(f,x)};",
       "continuous(f);",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -107,7 +99,7 @@ export const exampleList: ExampleItem[] = [
       "let v1,v2: p(v1), q(v2), p(v2);",
       "by P(v1): by Q(v2) => {by A() => {a(v1,v2)}};",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];
