@@ -271,6 +271,7 @@ export class L_Env {
     };
   }
 
+  // used by prove to check whether vars in factToCheck is redefined in block
   someVarsDeclaredHere(fact: ToCheckNode, freeVars: string[]): boolean {
     if (fact instanceof OptNode) {
       const out = fact.vars.some(
@@ -287,6 +288,7 @@ export class L_Env {
     throw Error();
   }
 
+  // used by prove to check whether factToCheck is redefined in block
   someOptsDeclaredHere(fact: ToCheckNode): boolean {
     if (fact instanceof OptNode) {
       return this.defs.get(fact.name) !== undefined;
