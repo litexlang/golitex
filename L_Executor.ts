@@ -5,7 +5,7 @@ import {
   ToCheckNode,
   DefNode,
   ProveNode,
-  PostfixProve,
+  // PostfixProve,
   OptNode,
   LocalEnvNode,
   ReturnNode,
@@ -55,7 +55,7 @@ const nodeExecMap: { [key: string]: (env: L_Env, node: any) => RType } = {
   LetNode: letExec,
   ProveNode: proveExec,
   HaveNode: haveExec,
-  PostfixProve: postfixProveExec,
+  // PostfixProve: postfixProveExec,
   LocalEnvNode: localEnvExec,
   ReturnNode: returnExec,
   SpecialNode: specialExec,
@@ -76,8 +76,8 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
       try {
         const out = factExec(env, node as ToCheckNode);
 
-        if (out === RType.True && showMsg) {
-          env.newMessage(`OK! ${node}`);
+        if (out === RType.True) {
+          if (showMsg) env.newMessage(`OK! ${node}`);
         } else if (out === RType.Unknown) {
           env.newMessage(`Unknown ${node}`);
         } else if (out === RType.Error) {
@@ -162,11 +162,8 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
     }
 
     return RType.True;
-  } catch (error) {
-    let m = `'${node.toString()}'`;
-    if (error instanceof Error) m += ` ${error.message}`;
-    env.newMessage(m);
-    throw error;
+  } catch {
+    return env.errIntoEnvReturnRType(node);
   }
 }
 
@@ -185,11 +182,8 @@ function defExec(env: L_Env, node: DefNode): RType {
     }
 
     return RType.True;
-  } catch (error) {
-    let m = `'${node.toString()}'`;
-    if (error instanceof Error) m += ` ${error.message}`;
-    env.newMessage(m);
-    throw error;
+  } catch {
+    return env.errIntoEnvReturnRType(node);
   }
 }
 
@@ -248,7 +242,7 @@ function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
       }
     }
 
-    if (toProve.examineVarsNotDoubleDecl([])) {
+    if (!toProve.examineVarsNotDoubleDecl([])) {
       newEnv.getMessages().forEach((e) => env.newMessage(e));
       env.newMessage(
         `Error: Some variables in ${toProve} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
@@ -406,60 +400,60 @@ function proveOptByContradict(
   }
 }
 
-function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
-  try {
-    const newEnv = new L_Env(env);
-    for (const subNode of PostfixProve.block) {
-      const out = nodeExec(newEnv, subNode, false);
-      if (out !== RType.True) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`${PostfixProve} failed.`);
-        return out;
-      }
-    }
+// function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
+//   try {
+//     const newEnv = new L_Env(env);
+//     for (const subNode of PostfixProve.block) {
+//       const out = nodeExec(newEnv, subNode, false);
+//       if (out !== RType.True) {
+//         newEnv.getMessages().forEach((e) => env.newMessage(e));
+//         env.newMessage(`${PostfixProve} failed.`);
+//         return out;
+//       }
+//     }
 
-    // for (const fact of PostfixProve.facts) {
-    // if (newEnv.someVarsDeclaredHere(fact, [])) {
-    //   newEnv.getMessages().forEach((e) => env.newMessage(e));
-    //   env.newMessage(
-    //     `Error: Some variables in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-    //   );
-    //   return RType.Error;
-    // }
-    // if (newEnv.someOptsDeclaredHere(fact)) {
-    //   newEnv.getMessages().forEach((e) => env.newMessage(e));
-    //   env.newMessage(
-    //     `Error: Some operators in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-    //   );
-    //   return RType.Error;
-    // }
-    // }
+//     // for (const fact of PostfixProve.facts) {
+//     // if (newEnv.someVarsDeclaredHere(fact, [])) {
+//     //   newEnv.getMessages().forEach((e) => env.newMessage(e));
+//     //   env.newMessage(
+//     //     `Error: Some variables in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+//     //   );
+//     //   return RType.Error;
+//     // }
+//     // if (newEnv.someOptsDeclaredHere(fact)) {
+//     //   newEnv.getMessages().forEach((e) => env.newMessage(e));
+//     //   env.newMessage(
+//     //     `Error: Some operators in ${fact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+//     //   );
+//     //   return RType.Error;
+//     // }
+//     // }
 
-    for (const fact of PostfixProve.facts) {
-      const out = L_Checker.check(newEnv, fact);
-      if (out !== RType.True) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`${PostfixProve} failed.`);
-        return out;
-      }
-    }
+//     for (const fact of PostfixProve.facts) {
+//       const out = L_Checker.check(newEnv, fact);
+//       if (out !== RType.True) {
+//         newEnv.getMessages().forEach((e) => env.newMessage(e));
+//         env.newMessage(`${PostfixProve} failed.`);
+//         return out;
+//       }
+//     }
 
-    for (const fact of PostfixProve.facts) {
-      const ok = L_Memory.store(env, fact, [], true);
-      if (!ok) {
-        env.newMessage(`Failed to store ${fact}`);
-        return RType.Error;
-      }
-    }
+//     for (const fact of PostfixProve.facts) {
+//       const ok = L_Memory.store(env, fact, [], true);
+//       if (!ok) {
+//         env.newMessage(`Failed to store ${fact}`);
+//         return RType.Error;
+//       }
+//     }
 
-    newEnv.getMessages().forEach((e) => env.newMessage(e));
+//     newEnv.getMessages().forEach((e) => env.newMessage(e));
 
-    return RType.True;
-  } catch {
-    env.newMessage("by error");
-    return RType.Error;
-  }
-}
+//     return RType.True;
+//   } catch {
+//     env.newMessage("by error");
+//     return RType.Error;
+//   }
+// }
 
 function factExec(env: L_Env, toCheck: ToCheckNode): RType {
   try {

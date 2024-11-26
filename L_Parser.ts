@@ -222,10 +222,10 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
   const index = tokens.length;
 
   try {
-    const keyword = skip(tokens, KnowTypeKeywords);
-    const strict = keyword === "know" ? false : true;
+    skip(tokens, KnowTypeKeywords);
+    // const strict = keyword === "know" ? false : true;
 
-    const knowNode: KnowNode = new KnowNode([], strict);
+    const knowNode: KnowNode = new KnowNode([]);
     while (!L_Ends.includes(tokens[0])) {
       const outs = factsParse(env, tokens, [...L_Ends, ","], false, true);
       knowNode.facts = knowNode.facts.concat(outs);
@@ -262,11 +262,11 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
 
     if (L_Ends.includes(tokens[0])) {
       skip(tokens, L_Ends);
-      return new LetNode(vars, [], strict);
+      return new LetNode(vars, []);
     } else {
       skip(tokens, ":");
       const facts = factsParse(env, tokens, L_Ends, true, true);
-      return new LetNode(vars, facts, strict);
+      return new LetNode(vars, facts);
     }
   } catch (error) {
     handleParseError(env, "let", index, start);

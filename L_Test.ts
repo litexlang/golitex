@@ -75,7 +75,7 @@ export const exampleList: ExampleItem[] = [
       "know if x : in_domain(x) => {point_wise_continuous(f,x)};",
       "continuous(f);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -100,6 +100,18 @@ export const exampleList: ExampleItem[] = [
       "by P(v1): by Q(v2) => {by A() => {a(v1,v2)}};",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "prove 1",
+    code: [
+      "def p(x); def p2(x); def p3(x);",
+      "know if x: p(x) => {p2(x)}; know if x: p2(x) => {p3(x)};",
+      "prove if x: p(x) => {p3(x)} {p2(x);};",
+      "let x: p(x);",
+      "p3(x);",
+    ],
+    debug: true,
     print: true,
   },
 ];
