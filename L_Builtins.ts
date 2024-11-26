@@ -7,7 +7,7 @@ export const L_Builtins = new Map<string, Function>();
 
 L_Builtins.set("is_property", (env: L_Env, node: OptNode): RType => {
   try {
-    const out = env.getDeclaredFact(node.vars[0]);
+    const out = env.getDefs(node.vars[0]);
     if (out === undefined) {
       env.newMessage(
         `is_property error: ${node.name} is an undeclared operator.`

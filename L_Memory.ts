@@ -382,7 +382,7 @@ function storeOpt(
 ): boolean {
   if (L_Builtins.get(fact.name) !== undefined) return true;
 
-  const declaredOpt = env.getDeclaredFact(fact.name);
+  const declaredOpt = env.getDefs(fact.name);
   if (declaredOpt === undefined) {
     env.newMessage(`${fact.name} undeclared`);
     return false;
@@ -525,7 +525,7 @@ export function getStoredFacts(
   for (
     let i = 0, curEnv: L_Env = env;
     i <= visibleEnvLevel && curEnv;
-    i++, curEnv = curEnv.getFather() as L_Env
+    i++, curEnv = curEnv.getParent() as L_Env
   ) {
     // update how many times a given var is declared
     for (const v of varsAsSet) {

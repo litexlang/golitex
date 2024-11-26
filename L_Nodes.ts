@@ -85,6 +85,16 @@ export class LogicNode extends ToCheckNode {
     super(isT, defName);
   }
 
+  examineVarsNotDoubleDecl(varsFromAboveIf: string[]): boolean {
+    const ok = this.vars.every((e) => !varsFromAboveIf.includes(e));
+    if (!ok) return false;
+    varsFromAboveIf = [...varsFromAboveIf, ...this.vars];
+    return this.onlyIfs.every(
+      (e) =>
+        !(e instanceof LogicNode) || e.examineVarsNotDoubleDecl(varsFromAboveIf)
+    );
+  }
+
   override containOptAsIfThenReqOnlyIf(optName: string): boolean {
     return this.onlyIfs.some((e) => e.containOptAsIfThenReqOnlyIf(optName));
   }

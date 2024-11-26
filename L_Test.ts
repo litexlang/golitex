@@ -80,7 +80,12 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "known if req => opt must satisfy: req does not contain if-then-type fact that has opt as onlyIf",
-    code: ["def p(x);", "def q(x);", "know if y: if x : => {p(y)} => {p(y)};"],
+    code: [
+      "def p(x);",
+      "def q(x);",
+      "know if y: if x : => {p(y)} => {p(y)};",
+      "know if y: if x: => {if z: => {p(y)}} => {p(y)};",
+    ],
     debug: true,
     print: true,
   },
