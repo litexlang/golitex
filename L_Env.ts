@@ -6,7 +6,12 @@ import {
   ExistDefNode,
   MacroNode,
 } from "./L_Nodes.ts";
-import { KnownFact, ReqSpace, StoredFact } from "./L_Memory.ts";
+import {
+  examineStoredFact,
+  KnownFact,
+  ReqSpace,
+  StoredFact,
+} from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
 import { RType } from "./L_Executor.ts";
 // import { L_Cache } from "./L_Cache.ts";
@@ -59,11 +64,15 @@ export class L_Env {
     checkVars: string[][],
     fact: StoredFact
   ): boolean {
+    const ok = examineStoredFact(this, optName, fact);
+    if (!ok) return false;
+
     const checkVarsNumLst = checkVars.map((e) => e.length);
     const knownFact = this.knownFacts.get(optName);
     if (knownFact === undefined) {
       const newKnownFact = new KnownFact();
       this.knownFacts.set(optName, newKnownFact);
+
       return newKnownFact.addChild(checkVarsNumLst, fact);
     } else {
       return knownFact.addChild(checkVarsNumLst, fact);

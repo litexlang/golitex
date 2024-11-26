@@ -36,6 +36,11 @@ export class ToCheckNode extends L_Node {
       return [new DefNameDecl(this.defName, [], [], this)];
     }
   }
+
+  containOptAsIfThenReqOnlyIf(optName: string): boolean {
+    optName;
+    return true;
+  }
 }
 
 export class OrNode extends ToCheckNode {
@@ -78,6 +83,10 @@ export class LogicNode extends ToCheckNode {
     public reqName: null | string = null
   ) {
     super(isT, defName);
+  }
+
+  override containOptAsIfThenReqOnlyIf(optName: string): boolean {
+    return this.onlyIfs.some((e) => e.containOptAsIfThenReqOnlyIf(optName));
   }
 
   override copyWithoutIsT(newIsT: boolean): LogicNode {
@@ -187,6 +196,10 @@ export class OptNode extends ToCheckNode {
     public checkVars: string[][] | undefined = undefined
   ) {
     super(isT, defName);
+  }
+
+  override containOptAsIfThenReqOnlyIf(optName: string): boolean {
+    return optName === this.name;
   }
 
   override copyWithoutIsT(newIsT: boolean): OptNode {

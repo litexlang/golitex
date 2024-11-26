@@ -165,8 +165,6 @@ export class StoredReq {
 }
 
 export class StoredFact {
-  public onlyIfs: ToCheckNode[] = []; //? MAYBE USELESS
-
   constructor(
     public vars: string[], // stored fixed, only used when storing opts
     public req: StoredReq[], // when adding a new layer of if-then, push a new req list (ToCheckNode[]) at end of req.
@@ -192,10 +190,8 @@ export class StoredFact {
       this.req.length > 0
         ? " <= " + this.req.map((e) => e.toString()).join(", ")
         : "";
-    const onlyIfWords =
-      this.onlyIfs.length > 0 ? `\n onlyIfs: ${this.onlyIfs}\n` : "";
 
-    const out = notWords + varsWords + reqWords + onlyIfWords;
+    const out = notWords + varsWords + reqWords;
 
     return out;
   }
@@ -836,5 +832,31 @@ export function storeReqSpace(
     const ok = env.newReqSpace(name, space);
 
     return ok;
+  }
+}
+
+//* toStore should not contain if-then req that contains opt as onlyIf.
+export function examineStoredFact(
+  env: L_Env,
+  optName: string,
+  toStore: StoredFact
+): boolean {
+  try {
+    for (const storedReq of toStore.req as StoredReq[]) {
+      for (const toCheck of storedReq.req) {
+        const factContainOptAsIfThenReqOnlyIf =
+          toCheck.containOptAsIfThenReqOnlyIf(optName);
+        if (factContainOptAsIfThenReqOnlyIf) {
+          env.newMessage(
+            `Error: ${toCheck} contains operator ${optName} as the onlyIf of a if type requirement.`
+          );
+          return false;
+        }
+      }
+    }
+
+    return true;
+  } catch {
+    return false;
   }
 }
