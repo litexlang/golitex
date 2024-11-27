@@ -75,7 +75,7 @@ export const exampleList: ExampleItem[] = [
       "know if x : in_domain(x) => {point_wise_continuous(f,x)};",
       "continuous(f);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -113,6 +113,20 @@ export const exampleList: ExampleItem[] = [
       "p3(x);",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "三段论",
+    code: [
+      "def something is mortal => {};",
+      "def something is human => {something is mortal};",
+      "let Socrates : Socrates is human;",
+      "Socrates is  mortal;",
+      "let god : god is not mortal;",
+      "god is not human;",
+      "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
+    ],
+    debug: true,
     print: true,
   },
 ];

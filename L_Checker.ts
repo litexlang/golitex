@@ -1,4 +1,4 @@
-import { ToCheckNode, OptNode, OrNode, IfNode } from "./L_Nodes.ts";
+import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import { RType } from "./L_Executor.ts";
 import { StoredFact } from "./L_Memory.ts";
@@ -84,9 +84,15 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
       const map = new Map<string, string>();
       if (known.isT !== toCheck.isT) continue;
 
-      for (let i = 0; i < toCheck.checkVars.length; i++) {
-        for (let j = 0; j < toCheck.checkVars[i].length; j++) {
-          map.set(known.req[i].vars[j], toCheck.checkVars[i][j]);
+      if (toCheck.checkVars.length > 0) {
+        for (let i = 0; i < toCheck.checkVars.length; i++) {
+          for (let j = 0; j < toCheck.checkVars[i].length; j++) {
+            map.set(known.req[i].vars[j], toCheck.checkVars[i][j]);
+          }
+        }
+      } else {
+        for (const [i, v] of toCheck.vars.entries()) {
+          map.set(known.vars[i], v);
         }
       }
 
@@ -95,13 +101,13 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
       let out = RType.True;
 
       for (const r of fixedKnown.req as L_Memory.StoredReq[]) {
-        for (const toCheck of r.req as ToCheckNode[]) {
-          if (toCheck instanceof OptNode) {
-            out = checkOptLiterally(env, toCheck);
+        for (const fact of r.req as ToCheckNode[]) {
+          if (fact instanceof OptNode) {
+            out = checkOptLiterally(env, fact);
             if (out !== RType.True) break;
           } else {
             //! NEED TO IMPLEMENT HOW TO CHECK If-Then Literally?
-            out = checkIfThen(env, toCheck as IfNode);
+            out = checkIfThen(env, fact as IfNode);
             if (out !== RType.True) break;
           }
         }
@@ -145,10 +151,11 @@ function checkOptLiterally(env: L_Env, toCheck: OptNode): RType {
       fact.isNoReq() &&
       // toCheck.vars.length === fact.vars.length &&
       toCheck.vars.every(
-        (v, i) => frees.includes(fact.vars[i]) || v === fact.vars[i]
+        (v, i) => frees.includes(fact.vars[i]) || v === fact.vars[i],
       )
-    )
+    ) {
       return RType.True;
+    }
   }
 
   return RType.Unknown;
@@ -177,7 +184,7 @@ function checkOr(env: L_Env, toCheck: OrNode): RType {
           newEnv,
           toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT),
           [],
-          true
+          true,
         );
       }
 

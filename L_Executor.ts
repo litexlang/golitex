@@ -1,20 +1,20 @@
 import {
+  ByNode,
+  DefNode,
+  HaveNode,
+  IfNode,
   KnowNode,
   L_Node,
   LetNode,
-  ToCheckNode,
-  DefNode,
-  ProveNode,
+  LocalEnvNode,
+  MacroNode,
   // PostfixProve,
   OptNode,
-  LocalEnvNode,
-  ReturnNode,
-  IfNode,
-  HaveNode,
-  SpecialNode,
-  ByNode,
-  MacroNode,
   PostfixProve,
+  ProveNode,
+  ReturnNode,
+  SpecialNode,
+  ToCheckNode,
 } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import * as L_Checker from "./L_Checker.ts";
@@ -324,8 +324,9 @@ function specialExec(env: L_Env, node: SpecialNode): RType {
 function useExec(env: L_Env, node: ByNode): RType {
   try {
     const reqSpace = env.getReqSpace(node.reqSpaceName);
-    if (reqSpace === undefined)
+    if (reqSpace === undefined) {
       return env.errIntoEnvReturnRType(`${node.reqSpaceName} undefined.`);
+    }
 
     const map = makeStrStrMap(env, reqSpace.ifVars, node.vars);
     if (map === undefined) {
@@ -355,11 +356,11 @@ function useExec(env: L_Env, node: ByNode): RType {
 function makeStrStrMap(
   env: L_Env,
   keyVars: string[],
-  valueVars: string[]
+  valueVars: string[],
 ): Map<string, string> | undefined {
   if (keyVars.length !== valueVars.length) {
     env.newMessage(
-      `Require ${keyVars.length} elements, get ${valueVars.length}`
+      `Require ${keyVars.length} elements, get ${valueVars.length}`,
     );
     return undefined;
   }
@@ -400,7 +401,7 @@ function proveExec(env: L_Env, node: ProveNode): RType {
   } else {
     if (node.toProve !== null) {
       env.newMessage(
-        `At current version, you can not prove if-then by contradiction.`
+        `At current version, you can not prove if-then by contradiction.`,
       );
       return RType.Error;
     } else {
@@ -408,7 +409,7 @@ function proveExec(env: L_Env, node: ProveNode): RType {
         env,
         node.fixedIfThenOpt as OptNode,
         node.block,
-        node.contradict as OptNode
+        node.contradict as OptNode,
       );
     }
   }
@@ -446,7 +447,7 @@ function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
 
     L_Memory.store(env, toProve, [], true);
 
-    newEnv.getMessages().forEach((e) => env.newMessage(e));
+    newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
 
     return RType.True;
   } catch {
@@ -491,6 +492,8 @@ function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {
 
     L_Memory.store(env, toProve, [], true);
 
+    newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
+
     return RType.True;
   } catch {
     env.newMessage(`${toProve}`);
@@ -502,7 +505,7 @@ function proveOptByContradict(
   env: L_Env,
   toProve: OptNode,
   block: L_Node[],
-  contradict: OptNode
+  contradict: OptNode,
 ): RType {
   try {
     const newEnv = new L_Env(env);
@@ -546,7 +549,9 @@ function proveOptByContradict(
       return RType.Error;
     }
 
-    newEnv.getMessages().forEach((e) => env.newMessage(e));
+    newEnv.getMessages().forEach((e) =>
+      env.newMessage(`[prove_by_contradict] ${e}`)
+    );
 
     return RType.True;
   } catch {
@@ -589,7 +594,7 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
       }
     }
 
-    newEnv.getMessages().forEach((e) => env.newMessage(e));
+    newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
 
     return RType.True;
   } catch {
@@ -602,12 +607,12 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
 function noVarsOrOptDeclaredHere(
   sendErrMessageToEnv: L_Env,
   here: L_Env,
-  targetFact: ToCheckNode
+  targetFact: ToCheckNode,
 ): boolean {
   if (here.someVarsDeclaredHere(targetFact, [])) {
     here.getMessages().forEach((e) => sendErrMessageToEnv.newMessage(e));
     sendErrMessageToEnv.newMessage(
-      `Error: Some variables in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+      `Error: Some variables in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`,
     );
     return false;
   }
@@ -615,7 +620,7 @@ function noVarsOrOptDeclaredHere(
   if (here.someOptsDeclaredHere(targetFact)) {
     here.getMessages().forEach((e) => sendErrMessageToEnv.newMessage(e));
     sendErrMessageToEnv.newMessage(
-      `Error: Some operators in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
+      `Error: Some operators in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`,
     );
     return false;
   }

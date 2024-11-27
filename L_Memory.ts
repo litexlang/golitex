@@ -1,17 +1,17 @@
 import {
   // ByNode,
   DefNode,
-  ToCheckNode,
-  IffDefNode,
+  // ExistNode,
+  ExistDefNode,
+  ExistNode,
   IfDefNode,
+  IffDefNode,
+  IfNode,
+  LogicNode,
   OnlyIfDefNode,
   OptNode,
   OrNode,
-  // ExistNode,
-  ExistDefNode,
-  IfNode,
-  ExistNode,
-  LogicNode,
+  ToCheckNode,
 } from "./L_Nodes.ts";
 import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
@@ -79,7 +79,7 @@ export class ReqSpace {
   constructor(
     public ifVars: string[],
     public ifReq: ToCheckNode[],
-    public onlyIf: ToCheckNode[]
+    public onlyIf: ToCheckNode[],
   ) {}
 }
 
@@ -88,7 +88,7 @@ export class DefNameDecl {
     public name: string,
     public ifVars: string[],
     public req: ToCheckNode[],
-    public itself: ToCheckNode
+    public itself: ToCheckNode,
   ) {}
 
   pushBeginNewReq(ifThen: IfNode) {
@@ -118,7 +118,7 @@ export class MemorizedExistDecl {
   constructor(
     private ifVars: string[],
     private existVars: string[],
-    private existFacts: ToCheckNode[]
+    private existFacts: ToCheckNode[],
   ) {
     //! MUST CHECK NO DOUBLE DECLARATION IN [...ifVars, ...vars]
   }
@@ -126,12 +126,12 @@ export class MemorizedExistDecl {
   instantiate(
     env: L_Env,
     ifVars: string[],
-    existVars: string[]
+    existVars: string[],
   ): ToCheckNode[] | undefined {
     const map = new Map<string, string>();
     if (ifVars.length !== this.ifVars.length) {
       env.newMessage(
-        `Invalid number of parameters, get ${ifVars.length}, require ${ifVars.length}`
+        `Invalid number of parameters, get ${ifVars.length}, require ${ifVars.length}`,
       );
       return undefined;
     }
@@ -149,13 +149,15 @@ export class MemorizedExistDecl {
 export class StoredReq {
   constructor(
     public vars: string[], // store free vars at current level
-    public req: ToCheckNode[]
+    public req: ToCheckNode[],
   ) {}
 
   toString() {
-    return `(if ${this.vars.join(", ")} : ${this.req
-      .map((e) => e.toString())
-      .join(", ")})`;
+    return `(if ${this.vars.join(", ")} : ${
+      this.req
+        .map((e) => e.toString())
+        .join(", ")
+    })`;
   }
 
   fixReqVars(map: Map<string, string>): StoredReq {
@@ -168,7 +170,7 @@ export class StoredFact {
   constructor(
     public vars: string[], // stored fixed, only used when storing opts
     public req: StoredReq[], // when adding a new layer of if-then, push a new req list (ToCheckNode[]) at end of req.
-    public isT: boolean
+    public isT: boolean,
   ) {}
 
   fixStoredFact(map: Map<string, string>): StoredFact {
@@ -186,10 +188,9 @@ export class StoredFact {
   toString() {
     const notWords = this.isT === false ? "[not] " : "";
     const varsWords = this.vars.length > 0 ? this.vars.join(", ") : "";
-    const reqWords =
-      this.req.length > 0
-        ? " <= " + this.req.map((e) => e.toString()).join(", ")
-        : "";
+    const reqWords = this.req.length > 0
+      ? " <= " + this.req.map((e) => e.toString()).join(", ")
+      : "";
 
     const out = notWords + varsWords + reqWords;
 
@@ -242,7 +243,7 @@ export class StoredFact {
 export function declNewFact(
   env: L_Env,
   node: DefNode,
-  storeDefName: boolean = true
+  storeDefName: boolean = true,
 ): boolean {
   let ok = true;
 
@@ -265,7 +266,7 @@ export function declNewFact(
       [decl, ...node.req],
       node.onlyIfs,
       true,
-      undefined
+      undefined,
     );
     ok = storeIfThen(env, left, [], true, storeDefName);
     if (!ok) {
@@ -277,7 +278,7 @@ export function declNewFact(
       node.onlyIfs,
       [decl, ...node.req],
       true,
-      undefined
+      undefined,
     );
     ok = storeIfThen(env, right, [], true, storeDefName);
     if (!ok) {
@@ -304,7 +305,7 @@ function storeIfThen(
   ifThen: IfNode,
   req: StoredReq[] = [],
   storeContrapositive: boolean = true,
-  storeDefName: boolean = true
+  storeDefName: boolean = true,
 ): boolean {
   try {
     if (ifThen.isT) {
@@ -327,7 +328,7 @@ function storeIfThen(
             ifVars,
             ifReq,
             fact.vars,
-            fact.facts
+            fact.facts,
           );
 
           if (storeDefName) {
@@ -342,7 +343,7 @@ function storeIfThen(
             fact,
             [...req, newReq],
             storeContrapositive,
-            storeDefName
+            storeDefName,
           );
           if (!ok) return false;
         }
@@ -350,7 +351,7 @@ function storeIfThen(
     } else {
       if (ifThen.defName === undefined) {
         env.newMessage(
-          `Failed to store ${ifThen}, because not-if-then is suppose to have a name.`
+          `Failed to store ${ifThen}, because not-if-then is suppose to have a name.`,
         );
       }
 
@@ -378,7 +379,7 @@ function storeOpt(
   fact: OptNode,
   req: StoredReq[],
   _storeContrapositive: boolean,
-  storeDefName: boolean = true
+  storeDefName: boolean = true,
 ): boolean {
   if (L_Builtins.get(fact.name) !== undefined) return true;
 
@@ -390,7 +391,7 @@ function storeOpt(
     // TODO: I GUESS I SHOULD CHECK WHETHER GIVEN VARS SATISFY WHEN IN DEF
     if (declaredOpt.vars.length !== fact.vars.length) {
       env.newMessage(
-        `${fact.name} requires ${declaredOpt.vars.length} parameters, ${fact.vars.length} given.`
+        `${fact.name} requires ${declaredOpt.vars.length} parameters, ${fact.vars.length} given.`,
       );
       return false;
     }
@@ -403,9 +404,9 @@ function storeOpt(
 
   if (DEBUG_DICT["newFact"]) {
     const notWords = fact.isT === false ? "[not]" : "";
-    if (req.length > 0)
+    if (req.length > 0) {
       env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars}) <= ${req}`);
-    else env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars})`);
+    } else env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars})`);
   }
 
   if (storeDefName && fact.defName) {
@@ -433,7 +434,7 @@ function storeOr(
   fact: OrNode,
   req: StoredReq[],
   storeContrapositive: boolean,
-  storeDefName: boolean = true
+  storeDefName: boolean = true,
 ): boolean {
   for (let i = 0; i < fact.facts.length; i++) {
     const asReq: ToCheckNode[] = [];
@@ -447,7 +448,7 @@ function storeOr(
       fact.facts[i],
       [...req, new StoredReq([], asReq)],
       storeContrapositive,
-      storeDefName
+      storeDefName,
     );
     if (!ok) return ok;
   }
@@ -460,7 +461,7 @@ export function store(
   fact: ToCheckNode,
   req: StoredReq[] = [],
   storeContrapositive: boolean,
-  storeDefName: boolean = true
+  storeDefName: boolean = true,
 ): boolean {
   try {
     if (fact instanceof LogicNode) {
@@ -469,7 +470,7 @@ export function store(
         fact as IfNode,
         req,
         storeContrapositive,
-        storeDefName
+        storeDefName,
       );
       if (!ok) return false;
     } else if (fact instanceof OptNode) {
@@ -501,7 +502,7 @@ export function store(
  */
 export function getStoredFacts(
   env: L_Env,
-  opt: OptNode
+  opt: OptNode,
 ): StoredFact[] | undefined {
   // varDeclaredNumberMap is used to store how many times a variable is declared in all visible environments
   const varsAsSet = new Set(opt.vars);
@@ -562,7 +563,7 @@ export function getStoredFacts(
 export function executorStoreFact(
   env: L_Env,
   fact: ToCheckNode,
-  storeContrapositive: boolean
+  storeContrapositive: boolean,
 ): boolean {
   try {
     if (fact instanceof OptNode) {
@@ -580,7 +581,7 @@ export function executorStoreFact(
       return defExist(
         env,
         new ExistDefNode(fact.defName, [], [], fact.vars, fact.facts),
-        true
+        true,
       );
     } else throw Error();
   } catch {
@@ -589,10 +590,11 @@ export function executorStoreFact(
   }
 }
 
+// deno-lint-ignore no-unused-vars
 function storeContrapositiveFacts(
   env: L_Env,
   fact: OptNode,
-  req: StoredReq[]
+  req: StoredReq[],
 ): boolean {
   let freeVars: string[] = [];
   let allStoredFactReq: ToCheckNode[] = [];
@@ -611,7 +613,7 @@ function storeContrapositiveFacts(
       r,
       [allStoredFactReq[i].copyWithoutIsT(!allStoredFactReq[i].isT)],
       true,
-      undefined
+      undefined,
       // false
     );
     const ok = storeIfThen(env, ifThen, [], false);
@@ -686,7 +688,7 @@ function storeContrapositiveFacts(
 export function defExist(
   env: L_Env,
   node: ExistDefNode,
-  storeAsFact: boolean
+  storeAsFact: boolean,
 ): boolean {
   try {
     let ok = env.newDef(node.name, node);
@@ -714,14 +716,14 @@ export function defExist(
 export function defNameOptDef(
   env: L_Env,
   fact: OptNode,
-  req: StoredReq[]
+  req: StoredReq[],
 ): boolean {
   try {
     return storeVanilla();
   } catch {
     return memoryErr(
       env,
-      `Failed to use defName ${fact.defName} to store ${fact}`
+      `Failed to use defName ${fact.defName} to store ${fact}`,
     );
   }
 
@@ -743,14 +745,15 @@ export function defNameOptDef(
     const ok = declNewFact(
       env,
       new IfDefNode(fact.defName, ifVars, ifReq, [fact]),
-      false
+      false,
     );
 
-    if (!ok)
+    if (!ok) {
       return memoryErr(
         env,
-        `failed to use defName ${fact.defName} to declare ${declNewFact}`
+        `failed to use defName ${fact.defName} to declare ${declNewFact}`,
       );
+    }
 
     return true;
   }
@@ -759,14 +762,14 @@ export function defNameOptDef(
 export function defNameIfDef(
   env: L_Env,
   fact: IfNode,
-  req: StoredReq[]
+  req: StoredReq[],
 ): boolean {
   try {
     return storeVanilla();
   } catch {
     return memoryErr(
       env,
-      `Failed to use defName ${fact.defName} to store ${fact}`
+      `Failed to use defName ${fact.defName} to store ${fact}`,
     );
   }
 
@@ -789,14 +792,15 @@ export function defNameIfDef(
     const ok = declNewFact(
       env,
       new IfDefNode(fact.defName, ifVars, ifReq, fact.onlyIfs),
-      false
+      false,
     );
 
-    if (!ok)
+    if (!ok) {
       return memoryErr(
         env,
-        `failed to use defName ${fact.defName} to declare ${declNewFact}`
+        `failed to use defName ${fact.defName} to declare ${declNewFact}`,
       );
+    }
 
     return true;
   }
@@ -806,14 +810,14 @@ export function storeReqSpace(
   env: L_Env,
   name: string,
   fact: IfNode,
-  req: StoredReq[]
+  req: StoredReq[],
 ): boolean {
   try {
     return storeVanilla();
   } catch {
     return memoryErr(
       env,
-      `Failed to use defName ${fact.defName} to store ${fact}`
+      `Failed to use defName ${fact.defName} to store ${fact}`,
     );
   }
 
@@ -839,16 +843,16 @@ export function storeReqSpace(
 export function examineStoredFact(
   env: L_Env,
   optName: string,
-  toStore: StoredFact
+  toStore: StoredFact,
 ): boolean {
   try {
     for (const storedReq of toStore.req as StoredReq[]) {
       for (const toCheck of storedReq.req) {
-        const factContainOptAsIfThenReqOnlyIf =
-          toCheck.containOptAsIfThenReqOnlyIf(optName);
+        const factContainOptAsIfThenReqOnlyIf = toCheck
+          .containOptAsIfThenReqOnlyIf(optName);
         if (factContainOptAsIfThenReqOnlyIf) {
           env.newMessage(
-            `Error: ${toCheck} contains operator ${optName} as the onlyIf of a if type requirement.`
+            `Error: ${toCheck} contains operator ${optName} as the onlyIf of a if type requirement.`,
           );
           return false;
         }
@@ -860,4 +864,3 @@ export function examineStoredFact(
     return false;
   }
 }
-
