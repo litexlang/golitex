@@ -18,7 +18,8 @@ export const exampleList: ExampleItem[] = [
       "let A,B,C,D,E,F;",
       "know subset(A,B);",
       "let x: in(x,A);",
-      "in(x,B);", //Unknown
+      "in(x,B)[A,B;x];", //Unknown
+      "in(x,B);", // true
     ],
     debug: false,
     print: false,
@@ -28,7 +29,8 @@ export const exampleList: ExampleItem[] = [
     code: [
       "def set(x); def subset(A,B); def in(x,A);",
       "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
-      "know if A,B: subset(A,B) => [P] {if x: in(x,A) => {in(x,B)} };",
+      // "def P(A,B); know if A,B: P(A,B), subset(A,B) =>  {if x: in(x,A) => {in(x,B)} };",
+      "know if[P] A,B: subset(A,B) =>  {if x: in(x,A) => {in(x,B)} };",
       "let A,B,C,D,E,F;",
       "know subset(A,B);",
       "let x: in(x,A);",
@@ -126,7 +128,7 @@ export const exampleList: ExampleItem[] = [
       "god is not human;",
       "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -138,7 +140,7 @@ export const exampleList: ExampleItem[] = [
       "know p(a);",
       "q(a);", // true
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];
