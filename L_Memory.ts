@@ -15,7 +15,7 @@ import {
 } from "./L_Nodes.ts";
 import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
-import { DEBUG_DICT, RType } from "./L_Executor.ts";
+import { DEBUG_DICT, L_Out } from "./L_Executor.ts";
 import { check } from "./L_Checker.ts";
 
 function memoryErr(env: L_Env, s: string = ""): boolean {
@@ -223,21 +223,21 @@ export class StoredFact {
     return true;
   }
 
-  checkLiterally(toCheckFixedVars: string[], isT: boolean): RType {
+  checkLiterally(toCheckFixedVars: string[], isT: boolean): L_Out {
     const noExtraReq = this.req.every((e) => e.req.length === 0);
-    if (!noExtraReq) return RType.Unknown;
+    if (!noExtraReq) return L_Out.Unknown;
 
-    if (isT !== this.isT) return RType.Unknown;
+    if (isT !== this.isT) return L_Out.Unknown;
 
     //! the following check is based on hypothesis that toCheckFixedVars declared at different level are different
     const frees = this.getAllFreeVars();
     for (const [i, v] of toCheckFixedVars.entries()) {
       if (frees.includes(v)) continue;
       else if (toCheckFixedVars[i] === this.vars[i]) continue;
-      else return RType.Unknown;
+      else return L_Out.Unknown;
     }
 
-    return RType.True;
+    return L_Out.True;
   }
 }
 
@@ -416,17 +416,6 @@ function storeOpt(
   }
 
   const toStore = new StoredFact(fact.vars, req, fact.isT);
-
-  //* cond of fact must be satisfied
-  const def = env.getDef(fact.name);
-  if (def === undefined) {
-    return env.errIntoEnvReturnBoolean(`${fact} not declared.`);
-  }
-  for (const condition of def?.cond) {
-    const out = check(env, condition);
-    if (out !== RType.True) {
-    }
-  }
 
   let ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
   if (!ok) return false;

@@ -1,5 +1,5 @@
 import { L_Env } from "./L_Env.ts";
-import { RType } from "./L_Executor.ts";
+import { L_Out } from "./L_Executor.ts";
 import * as L_Executor from "./L_Executor.ts";
 import { L_Scan } from "./L_Lexer.ts";
 import * as L_Parser from "./L_Parser.ts";
@@ -8,17 +8,18 @@ export function runString(
   env: L_Env,
   expr: string,
   printResult: boolean = true,
-  printCode: boolean = true
+  printCode: boolean = true,
 ) {
   try {
-    if (printResult && printCode)
+    if (printResult && printCode) {
       console.log(`-----\n***  source code  ***\n${expr}\n`);
+    }
     const tokens = L_Scan(expr);
     const nodes = L_Parser.parseUntilGivenEnd(env, tokens, null);
     if (nodes === undefined) {
       throw Error();
     }
-    const result: RType[] = [];
+    const result: L_Out[] = [];
     for (const node of nodes) {
       L_Executor.nodeExec(env, node);
       if (printResult) {
@@ -38,7 +39,7 @@ export function runString(
 export function runStrings(
   env: L_Env,
   exprs: string[],
-  printResult: boolean = true
+  printResult: boolean = true,
 ) {
   for (let i = 0; i < exprs.length; i++) {
     const expr = exprs[i];
@@ -53,8 +54,8 @@ export function runFile(
   env: L_Env,
   fileName: string,
   printResult: boolean = true,
-  printCode: boolean = false
-): RType[] | undefined {
+  printCode: boolean = false,
+): L_Out[] | undefined {
   try {
     const fileContent = Deno.readTextFileSync(fileName);
     console.log(`Running file: ${fileName}\n`);
@@ -62,10 +63,10 @@ export function runFile(
     console.log(`End Running file: ${fileName}\n`);
     return out;
   } catch (err) {
-    if (err instanceof Error)
+    if (err instanceof Error) {
       console.error(
-        `Error: Unable to read file "${fileName}": ${err.message}\n`
+        `Error: Unable to read file "${fileName}": ${err.message}\n`,
       );
-    else console.error(`Error: Unable to read file ${fileName}\n`);
+    } else console.error(`Error: Unable to read file ${fileName}\n`);
   }
 }

@@ -14,7 +14,7 @@ import {
   StoredFact,
 } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
-import { RType } from "./L_Executor.ts";
+import { L_Out } from "./L_Executor.ts";
 
 export class L_Env {
   private messages: string[] = [];
@@ -236,10 +236,10 @@ export class L_Env {
     this.messages = [];
   }
 
-  OKMesIntoEnvReturnRType(message: L_Node | string): RType {
+  OKMesIntoEnvReturnRType(message: L_Node | string): L_Out {
     if (message instanceof L_Node) this.newMessage(`OK! ${message}`);
     else this.newMessage(message);
-    return RType.True;
+    return L_Out.True;
   }
 
   OKMesIntoEnvReturnBoolean(message: L_Node | string): boolean {
@@ -248,9 +248,9 @@ export class L_Env {
     return true;
   }
 
-  errIntoEnvReturnRType(s: L_Node | string): RType {
+  errIntoEnvReturnRType(s: L_Node | string): L_Out {
     this.newMessage(`Error: ${s}`);
-    return RType.Error;
+    return L_Out.Error;
   }
 
   errIntoEnvReturnBoolean(s: L_Node | string): boolean {

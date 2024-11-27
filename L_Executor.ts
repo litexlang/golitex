@@ -32,21 +32,21 @@ export const DEBUG_DICT = {
 
 export const CheckFalse = true;
 
-export enum RType {
+export enum L_Out {
   Error,
   True,
   False,
   Unknown,
 }
 
-export const RTypeMap: { [key in RType]: string } = {
-  [RType.Error]: "error",
-  [RType.False]: "check: false",
-  [RType.True]: "check: true",
-  [RType.Unknown]: "check: unknown",
+export const RTypeMap: { [key in L_Out]: string } = {
+  [L_Out.Error]: "error",
+  [L_Out.False]: "check: false",
+  [L_Out.True]: "check: true",
+  [L_Out.Unknown]: "check: unknown",
 };
 
-export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
+export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
   try {
     const nodeType = node.constructor.name;
 
@@ -92,13 +92,13 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
           try {
             const out = factExec(env, node as ToCheckNode);
 
-            if (out === RType.True) {
+            if (out === L_Out.True) {
               if (showMsg) env.newMessage(`OK! ${node}`);
-            } else if (out === RType.Unknown) {
+            } else if (out === L_Out.Unknown) {
               env.newMessage(`Unknown ${node}`);
-            } else if (out === RType.Error) {
+            } else if (out === L_Out.Error) {
               env.newMessage(`Error ${node}`);
-            } else if (out === RType.False) {
+            } else if (out === L_Out.False) {
               env.newMessage(`False ${node}`);
             }
 
@@ -108,20 +108,20 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): RType {
           }
         }
 
-        return RType.Error;
+        return L_Out.Error;
     }
   } catch (error) {
     if (error instanceof Error) env.newMessage(`Error: ${error.message}`);
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
-function letExec(env: L_Env, node: LetNode): RType {
+function letExec(env: L_Env, node: LetNode): L_Out {
   try {
     // examine whether some vars are already declared. if not, declare them.
     for (const e of node.vars) {
       const ok = env.newVar(e);
-      if (!ok) return RType.Error;
+      if (!ok) return L_Out.Error;
       else {
         if (DEBUG_DICT["let"]) {
           env.newMessage(`[new var] ${node.vars}`);
@@ -134,7 +134,7 @@ function letExec(env: L_Env, node: LetNode): RType {
       const ok = f.factsDeclared(env);
       if (!ok) {
         env.newMessage(`Not all of facts in ${f} are declared`);
-        return RType.Error;
+        return L_Out.Error;
       }
     }
 
@@ -153,16 +153,16 @@ function letExec(env: L_Env, node: LetNode): RType {
     // store new facts
     for (const onlyIf of node.facts) {
       const ok = L_Memory.store(env, onlyIf, [], false);
-      if (!ok) return RType.Error;
+      if (!ok) return L_Out.Error;
     }
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     return env.errIntoEnvReturnRType(node);
   }
 }
 
-export function knowExec(env: L_Env, node: KnowNode): RType {
+export function knowExec(env: L_Env, node: KnowNode): L_Out {
   try {
     // examine whether all facts are declared.
     // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
@@ -170,83 +170,83 @@ export function knowExec(env: L_Env, node: KnowNode): RType {
       const ok = f.factsDeclared(env);
       if (!ok) {
         env.newMessage(`Not all facts in ${f} are declared`);
-        return RType.Error;
+        return L_Out.Error;
       }
     }
 
     // store new knowns
     for (const onlyIf of node.facts) {
       const ok = L_Memory.store(env, onlyIf, [], false);
-      if (!ok) return RType.Error;
+      if (!ok) return L_Out.Error;
     }
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     return env.errIntoEnvReturnRType(node);
   }
 }
 
-function defExec(env: L_Env, node: DefNode): RType {
+function defExec(env: L_Env, node: DefNode): L_Out {
   try {
     // declare new opt
     const ok = L_Memory.declNewFact(env, node);
     if (!ok) {
       env.newMessage(`Failed to store ${node}`);
-      return RType.Error;
+      return L_Out.Error;
     }
 
     if (DEBUG_DICT["def"]) {
       const decl = env.getDef(node.name);
-      if (!decl) return RType.Error;
+      if (!decl) return L_Out.Error;
     }
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     return env.errIntoEnvReturnRType(node);
   }
 }
 
-function factExec(env: L_Env, toCheck: ToCheckNode): RType {
+function factExec(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
     if (!(toCheck.varsDeclared(env, []) && toCheck.factsDeclared(env))) {
-      return RType.Error;
+      return L_Out.Error;
     }
 
     const out = L_Checker.check(env, toCheck);
-    if (out === RType.True) {
+    if (out === L_Out.True) {
       // Store Fact
       const ok = L_Memory.executorStoreFact(env, toCheck, true);
       if (!ok) {
         env.newMessage(`Failed to store ${toCheck}`);
-        return RType.Error;
+        return L_Out.Error;
       }
     }
 
     return out;
   } catch {
     env.newMessage(`failed to check ${toCheck}`);
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
-function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): RType {
+function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): L_Out {
   try {
     const newEnv = new L_Env(env);
     for (let i = 0; i < localEnvNode.nodes.length; i++) {
       const out = nodeExec(newEnv, localEnvNode.nodes[i]);
       newEnv.getMessages().forEach((e) => env.newMessage(e));
       newEnv.clearMessages();
-      if (RType.Error === out) return RType.Error;
+      if (L_Out.Error === out) return L_Out.Error;
     }
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     env.newMessage("{}");
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
-function returnExec(env: L_Env, node: ReturnNode): RType {
+function returnExec(env: L_Env, node: ReturnNode): L_Out {
   try {
     for (const f of node.facts) {
       noVarsOrOptDeclaredHere(env, env, f);
@@ -254,7 +254,7 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
 
     for (const toProve of node.facts) {
       const out = L_Checker.check(env, toProve);
-      if (out !== RType.True) return out;
+      if (out !== L_Out.True) return out;
     }
 
     const storeTo = env.getParent();
@@ -263,65 +263,65 @@ function returnExec(env: L_Env, node: ReturnNode): RType {
         const ok = L_Memory.store(storeTo, toProve, [], true);
         if (!ok) {
           env.newMessage(`Failed to store ${toProve}`);
-          return RType.Error;
+          return L_Out.Error;
         }
       }
     }
-    return RType.True;
+    return L_Out.True;
   } catch {
     env.newMessage("return");
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
-function haveExec(env: L_Env, node: HaveNode): RType {
+function haveExec(env: L_Env, node: HaveNode): L_Out {
   try {
     const exist = env.getDeclExist(node.opt.name);
     if (exist === undefined) {
       env.newMessage(`${node.opt.name} is not exist-type fact.`);
-      return RType.Error;
+      return L_Out.Error;
     }
 
     const out = L_Checker.check(env, node.opt);
-    if (out !== RType.True) {
+    if (out !== L_Out.True) {
       env.newMessage(`${node} failed.`);
       return out;
     }
 
     const facts = exist.instantiate(env, node.opt.vars, node.vars);
     if (facts === undefined) {
-      return RType.Error;
+      return L_Out.Error;
     }
     node.vars.forEach((e) => env.newVar(e));
     facts.forEach((e) => L_Memory.store(env, e, [], true));
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     env.newMessage("have");
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
-function specialExec(env: L_Env, node: SpecialNode): RType {
+function specialExec(env: L_Env, node: SpecialNode): L_Out {
   try {
     switch (node.keyword) {
       case ClearKeyword:
         env.clear();
-        return RType.True;
+        return L_Out.True;
       case RunKeyword: {
         runFile(env, node.extra as string, true, false);
-        return RType.True;
+        return L_Out.True;
       }
     }
 
-    return RType.Error;
+    return L_Out.Error;
   } catch {
     env.newMessage(`${node.keyword}`);
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
-function useExec(env: L_Env, node: ByNode): RType {
+function useExec(env: L_Env, node: ByNode): L_Out {
   try {
     const reqSpace = env.getReqSpace(node.reqSpaceName);
     if (reqSpace === undefined) {
@@ -338,18 +338,18 @@ function useExec(env: L_Env, node: ByNode): RType {
 
     for (const r of req) {
       const out = L_Checker.check(env, r);
-      if (out !== RType.True) return out;
+      if (out !== L_Out.True) return out;
     }
 
     for (const f of onlyIf) {
       const ok = L_Memory.store(env, f, [], true, false);
-      if (!ok) return RType.Error;
+      if (!ok) return L_Out.Error;
     }
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     env.newMessage(`Failed: ${node}`);
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
@@ -373,17 +373,17 @@ function makeStrStrMap(
   return out;
 }
 
-function macroExec(env: L_Env, node: MacroNode): RType {
+function macroExec(env: L_Env, node: MacroNode): L_Out {
   try {
     env.newMacro(node);
-    return RType.True;
+    return L_Out.True;
   } catch {
     return env.errIntoEnvReturnRType(`Failed: macro ${node}`);
   }
 }
 
-function proveExec(env: L_Env, node: ProveNode): RType {
-  let out = RType.Error;
+function proveExec(env: L_Env, node: ProveNode): L_Out {
+  let out = L_Out.Error;
   if (node.contradict === undefined) {
     if (node.toProve !== null) {
       if (node.toProve instanceof IfNode) {
@@ -393,17 +393,17 @@ function proveExec(env: L_Env, node: ProveNode): RType {
       out = proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
     }
 
-    if (out !== RType.True) {
+    if (out !== L_Out.True) {
       env.newMessage(`Failed: ${node}`);
     }
 
-    return RType.Error;
+    return L_Out.Error;
   } else {
     if (node.toProve !== null) {
       env.newMessage(
         `At current version, you can not prove if-then by contradiction.`,
       );
-      return RType.Error;
+      return L_Out.Error;
     } else {
       return proveOptByContradict(
         env,
@@ -415,7 +415,7 @@ function proveExec(env: L_Env, node: ProveNode): RType {
   }
 }
 
-function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
+function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): L_Out {
   try {
     const newEnv = new L_Env(env);
     for (const v of toProve.vars) {
@@ -430,74 +430,74 @@ function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): RType {
 
     for (const subNode of block) {
       const out = nodeExec(newEnv, subNode, false);
-      if (out === RType.Error) {
+      if (out === L_Out.Error) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(`Errors: Failed to execute ${subNode}`);
-        return RType.Error;
+        return L_Out.Error;
       }
     }
 
     const ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
-    if (!ok) return RType.Error;
+    if (!ok) return L_Out.Error;
 
     for (const toCheck of toProve.onlyIfs) {
       const out = nodeExec(newEnv, toCheck, false);
-      if (out !== RType.True) return out;
+      if (out !== L_Out.True) return out;
     }
 
     L_Memory.store(env, toProve, [], true);
 
     newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     env.newMessage(`Error: ${toProve}`);
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
-function execResult(out: RType, node: L_Node): string {
-  if (out === RType.True) {
+function execResult(out: L_Out, node: L_Node): string {
+  if (out === L_Out.True) {
     return `OK! ${node}`;
-  } else if (out === RType.Unknown) {
+  } else if (out === L_Out.Unknown) {
     return `Unknown ${node}`;
-  } else if (out === RType.Error) {
+  } else if (out === L_Out.Error) {
     return `Error ${node}`;
-  } else if (out === RType.False) {
+  } else if (out === L_Out.False) {
     return `False ${node}`;
   }
 
   return `???`;
 }
 
-function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): RType {
+function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
   try {
     const newEnv = new L_Env(env);
 
     for (const subNode of block) {
       const out = nodeExec(newEnv, subNode, false);
       env.newMessage(execResult(out, toProve));
-      if (out === RType.Error) {
+      if (out === L_Out.Error) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(`Errors: Failed to execute ${subNode}`);
-        return RType.Error;
+        return L_Out.Error;
       }
     }
 
     const ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
-    if (!ok) return RType.Error;
+    if (!ok) return L_Out.Error;
 
     const out = L_Checker.check(newEnv, toProve);
-    if (out !== RType.True) return out;
+    if (out !== L_Out.True) return out;
 
     L_Memory.store(env, toProve, [], true);
 
     newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     env.newMessage(`${toProve}`);
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
@@ -506,7 +506,7 @@ function proveOptByContradict(
   toProve: OptNode,
   block: L_Node[],
   contradict: OptNode,
-): RType {
+): L_Out {
   try {
     const newEnv = new L_Env(env);
 
@@ -514,58 +514,58 @@ function proveOptByContradict(
     let ok = L_Memory.store(newEnv, toProve, [], true);
     if (!ok) {
       newEnv.newMessage(`Failed to store ${toProve}`);
-      return RType.Error;
+      return L_Out.Error;
     }
 
     for (const subNode of block) {
       const out = nodeExec(newEnv, subNode, false);
-      if (out === RType.Error) {
+      if (out === L_Out.Error) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(`Errors: Failed to execute ${subNode}`);
-        return RType.Error;
+        return L_Out.Error;
       }
     }
 
     let out = L_Checker.check(newEnv, contradict);
-    if (out !== RType.True) {
+    if (out !== L_Out.True) {
       env.newMessage(`Errors: Failed to execute ${contradict}`);
-      return RType.Error;
+      return L_Out.Error;
     }
 
     contradict.isT = !contradict.isT;
     out = L_Checker.check(newEnv, contradict);
-    if (out !== RType.True) {
+    if (out !== L_Out.True) {
       env.newMessage(`Errors: Failed to execute ${contradict}`);
-      return RType.Error;
+      return L_Out.Error;
     }
 
     ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
-    if (!ok) return RType.Error;
+    if (!ok) return L_Out.Error;
 
     toProve.isT = !toProve.isT;
     ok = L_Memory.store(env, toProve, [], true);
     if (!ok) {
       env.newMessage(`Failed to store ${toProve}`);
-      return RType.Error;
+      return L_Out.Error;
     }
 
     newEnv.getMessages().forEach((e) =>
       env.newMessage(`[prove_by_contradict] ${e}`)
     );
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     env.newMessage(`${toProve}`);
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 
-function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
+function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): L_Out {
   try {
     const newEnv = new L_Env(env);
     for (const subNode of PostfixProve.block) {
       const out = nodeExec(newEnv, subNode, false);
-      if (out !== RType.True) {
+      if (out !== L_Out.True) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(`${PostfixProve} failed.`);
         return out;
@@ -574,12 +574,12 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
 
     for (const fact of PostfixProve.facts) {
       const ok = noVarsOrOptDeclaredHere(env, newEnv, fact);
-      if (!ok) return RType.Error;
+      if (!ok) return L_Out.Error;
     }
 
     for (const fact of PostfixProve.facts) {
       const out = L_Checker.check(newEnv, fact);
-      if (out !== RType.True) {
+      if (out !== L_Out.True) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(`${PostfixProve} failed.`);
         return out;
@@ -590,16 +590,16 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): RType {
       const ok = L_Memory.store(env, fact, [], true);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);
-        return RType.Error;
+        return L_Out.Error;
       }
     }
 
     newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
 
-    return RType.True;
+    return L_Out.True;
   } catch {
     env.newMessage("by error");
-    return RType.Error;
+    return L_Out.Error;
   }
 }
 

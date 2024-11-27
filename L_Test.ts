@@ -126,6 +126,15 @@ export const exampleList: ExampleItem[] = [
       "god is not human;",
       "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "cond",
+    code: [
+      "def p(x); def q(x): p(x);",
+      "",
+    ],
     debug: true,
     print: true,
   },
