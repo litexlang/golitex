@@ -1,6 +1,6 @@
 import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
-import { L_Out } from "./L_Executor.ts";
+import { L_Out, RTypeMap } from "./L_Executor.ts";
 import { StoredFact } from "./L_Memory.ts";
 import * as L_Memory from "./L_Memory.ts";
 import { L_Builtins } from "./L_Builtins.ts";
@@ -74,16 +74,9 @@ export function checkOpt(env: L_Env, toCheck: OptNode): L_Out {
   }
 
   //* cond of fact must be satisfied
-  const def = env.getDef(toCheck.name);
-  if (def === undefined) {
-    return env.errIntoEnvReturnRType(`${toCheck} not declared.`);
-  }
-  for (const condition of def?.cond) {
-    const out = check(env, condition);
-    if (out !== L_Out.True) {
-      env.newMessage(`[Unknown] ${condition}`);
-      return L_Out.Unknown;
-    }
+  const out = checkOptCond(env, toCheck);
+  if (out !== L_Out.True) {
+    return out;
   }
 
   const knowns = L_Memory.getStoredFacts(env, toCheck);
@@ -227,9 +220,10 @@ export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
   }
 
   for (const condition of def?.cond) {
-    const out = check(env, condition);
+    const fixed = condition.useMapToCopy(map);
+    const out = check(env, fixed);
     if (out !== L_Out.True) {
-      env.newMessage(`[Unknown] ${condition}`);
+      env.newMessage(`[Unknown] ${fixed}`);
       return L_Out.Unknown;
     }
   }

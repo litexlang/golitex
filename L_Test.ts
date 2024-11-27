@@ -133,7 +133,10 @@ export const exampleList: ExampleItem[] = [
     name: "cond",
     code: [
       "def p(x); def q(x): p(x);",
-      "",
+      "let a: q(a);",
+      "q(a);", // still not true, because p(x) is not satisfied.
+      "know p(a);",
+      "q(a);", // true
     ],
     debug: true,
     print: true,
