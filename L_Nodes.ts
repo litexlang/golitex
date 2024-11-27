@@ -47,7 +47,7 @@ export class OrNode extends ToCheckNode {
   constructor(
     public facts: ToCheckNode[],
     isT: boolean,
-    defName: string | undefined
+    defName: string | undefined,
   ) {
     super(isT, defName);
   }
@@ -80,7 +80,7 @@ export class LogicNode extends ToCheckNode {
     public onlyIfs: ToCheckNode[] = [],
     isT: boolean = true,
     defName: undefined | string = undefined, // public isIff: boolean = false
-    public reqName: null | string = null
+    public reqName: null | string = null,
   ) {
     super(isT, defName);
   }
@@ -91,7 +91,8 @@ export class LogicNode extends ToCheckNode {
     varsFromAboveIf = [...varsFromAboveIf, ...this.vars];
     return this.onlyIfs.every(
       (e) =>
-        !(e instanceof LogicNode) || e.examineVarsNotDoubleDecl(varsFromAboveIf)
+        !(e instanceof LogicNode) ||
+        e.examineVarsNotDoubleDecl(varsFromAboveIf),
     );
   }
 
@@ -106,7 +107,7 @@ export class LogicNode extends ToCheckNode {
       this.onlyIfs,
       newIsT,
       this.defName,
-      this.reqName
+      this.reqName,
       // this.isIff
     );
   }
@@ -116,15 +117,16 @@ export class LogicNode extends ToCheckNode {
     const req = this.req.map((e) => e.useMapToCopy(map));
     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
 
-    if (this instanceof LogicNode)
+    if (this instanceof LogicNode) {
       return new LogicNode(
         newVars,
         req,
         onlyIfs,
         this.isT,
         this.defName,
-        this.reqName
+        this.reqName,
       );
+    }
 
     throw Error();
   }
@@ -136,11 +138,15 @@ export class LogicNode extends ToCheckNode {
     type = "if";
     separator = "=>";
 
-    const mainPart = `${type} ${this.vars.toString()} : ${this.req
-      .map((e) => e.toString())
-      .join(", ")} ${separator} {${this.onlyIfs
-      .map((e) => e.toString())
-      .join(", ")}}`;
+    const mainPart = `${type} ${this.vars.toString()} : ${
+      this.req
+        .map((e) => e.toString())
+        .join(", ")
+    } ${separator} {${
+      this.onlyIfs
+        .map((e) => e.toString())
+        .join(", ")
+    }}`;
     const notPart = !this.isT ? "[not] " : "";
 
     const defName = this.defName === undefined ? "" : `[${this.defName}]`;
@@ -203,7 +209,7 @@ export class OptNode extends ToCheckNode {
     public vars: string[],
     isT: boolean = true,
     defName: string | undefined = undefined,
-    public checkVars: string[][] | undefined = undefined
+    public checkVars: string[][] | undefined = undefined,
   ) {
     super(isT, defName);
   }
@@ -218,7 +224,7 @@ export class OptNode extends ToCheckNode {
       this.vars,
       newIsT,
       this.defName,
-      this.checkVars
+      this.checkVars,
     );
   }
 
@@ -239,7 +245,7 @@ export class OptNode extends ToCheckNode {
       newVars,
       this.isT,
       this.defName,
-      this.checkVars
+      this.checkVars,
     );
   }
 
@@ -287,7 +293,7 @@ export class ExistNode extends ToCheckNode {
     public vars: string[],
     public facts: ToCheckNode[],
     isT: boolean = true,
-    defName: string | undefined = undefined
+    defName: string | undefined = undefined,
   ) {
     super(isT, defName);
   }
@@ -313,7 +319,8 @@ export class DefNode extends L_Node {
     public name: string = "",
     public vars: string[] = [],
     public req: ToCheckNode[] = [],
-    public onlyIfs: ToCheckNode[] = [] // public defName: string | undefined = undefined
+    public onlyIfs: ToCheckNode[] = [], // public defName: string | undefined = undefined
+    public cond: ToCheckNode[] = [],
   ) {
     super();
   }
@@ -345,7 +352,7 @@ export class ExistDefNode extends DefNode {
     req: ToCheckNode[] = [],
     private existVars: string[] = [],
     private existFacts: ToCheckNode[] = [],
-    public ifVars: string[][] | undefined = undefined
+    public ifVars: string[][] | undefined = undefined,
   ) {
     super(name, vars, req, []); // We don't use onlyIfs field in ExistDecl.
   }
@@ -386,9 +393,11 @@ export class LetNode extends L_Node {
   }
 
   override toString() {
-    return `${this.vars.join(", ")}: ${this.facts
-      .map((s) => s.toString())
-      .join(", ")}`;
+    return `${this.vars.join(", ")}: ${
+      this.facts
+        .map((s) => s.toString())
+        .join(", ")
+    }`;
   }
 }
 
@@ -399,7 +408,7 @@ export class ProveNode extends L_Node {
     public fixedIfThenOpt: OptNode | null,
     public block: L_Node[],
     // If contradict !== undefined, then prove_by_contradiction
-    public contradict: OptNode | undefined = undefined
+    public contradict: OptNode | undefined = undefined,
   ) {
     super();
   }
@@ -463,7 +472,7 @@ export class MacroNode extends L_Node {
   constructor(
     public regexString: string,
     public varName: string,
-    public facts: ToCheckNode[]
+    public facts: ToCheckNode[],
   ) {
     super();
   }

@@ -72,10 +72,6 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
     return builtins(env, toCheck);
   }
 
-  if (toCheck.checkVars === undefined) {
-    toCheck.checkVars = [];
-  }
-
   const knowns = L_Memory.getStoredFacts(env, toCheck);
   if (knowns === undefined) return RType.Unknown;
 
@@ -84,7 +80,7 @@ export function checkOpt(env: L_Env, toCheck: OptNode): RType {
       const map = new Map<string, string>();
       if (known.isT !== toCheck.isT) continue;
 
-      if (toCheck.checkVars.length > 0) {
+      if (toCheck.checkVars !== undefined) {
         for (let i = 0; i < toCheck.checkVars.length; i++) {
           for (let j = 0; j < toCheck.checkVars[i].length; j++) {
             map.set(known.req[i].vars[j], toCheck.checkVars[i][j]);

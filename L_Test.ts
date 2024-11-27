@@ -118,8 +118,8 @@ export const exampleList: ExampleItem[] = [
   {
     name: "三段论",
     code: [
-      "def something is mortal => {};",
-      "def something is human => {something is mortal};",
+      "def something is mortal;",
+      "def something is human; know if x is human => {x is mortal};",
       "let Socrates : Socrates is human;",
       "Socrates is  mortal;",
       "let god : god is not mortal;",
