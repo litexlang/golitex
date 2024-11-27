@@ -860,3 +860,4 @@ export function examineStoredFact(
     return false;
   }
 }
+
