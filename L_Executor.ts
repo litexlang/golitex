@@ -196,7 +196,7 @@ function defExec(env: L_Env, node: DefNode): RType {
     }
 
     if (DEBUG_DICT["def"]) {
-      const decl = env.getDefs(node.name);
+      const decl = env.getDef(node.name);
       if (!decl) return RType.Error;
     }
 

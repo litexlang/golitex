@@ -1,11 +1,11 @@
 import {
   DefNode,
-  OptNode,
   ExistDefNode,
-  MacroNode,
   L_Node,
-  ToCheckNode,
   LogicNode,
+  MacroNode,
+  OptNode,
+  ToCheckNode,
 } from "./L_Nodes.ts";
 import {
   examineStoredFact,
@@ -51,7 +51,7 @@ export class L_Env {
 
   getKnownFactsFromCurEnv(
     opt: OptNode,
-    onlyRoot: boolean = false
+    onlyRoot: boolean = false,
   ): undefined | StoredFact[] {
     const knownNodeRoot = this.knownFacts.get(opt.name);
 
@@ -74,7 +74,7 @@ export class L_Env {
   newKnownFact(
     optName: string,
     checkVars: string[][],
-    fact: StoredFact
+    fact: StoredFact,
   ): boolean {
     const ok = examineStoredFact(this, optName, fact);
     if (!ok) return false;
@@ -149,11 +149,11 @@ export class L_Env {
     }
   }
 
-  getDefs(s: string): DefNode | undefined {
+  getDef(s: string): DefNode | undefined {
     if (this.defs.has(s)) {
       return this.defs.get(s);
     } else if (this.parent) {
-      return this.parent.getDefs(s);
+      return this.parent.getDef(s);
     } else {
       return undefined;
     }
@@ -163,7 +163,7 @@ export class L_Env {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.defs.get(s) !== undefined) {
       this.newMessage(
-        `${s} already declared in this environment or its parents environments.`
+        `${s} already declared in this environment or its parents environments.`,
       );
       return false;
     }
@@ -242,9 +242,20 @@ export class L_Env {
     return RType.True;
   }
 
+  OKMesIntoEnvReturnBoolean(message: L_Node | string): boolean {
+    if (message instanceof L_Node) this.newMessage(`OK! ${message}`);
+    else this.newMessage(message);
+    return true;
+  }
+
   errIntoEnvReturnRType(s: L_Node | string): RType {
     this.newMessage(`Error: ${s}`);
     return RType.Error;
+  }
+
+  errIntoEnvReturnBoolean(s: L_Node | string): boolean {
+    this.newMessage(`Error: ${s}`);
+    return false;
   }
 
   printDeclFacts() {
@@ -275,7 +286,7 @@ export class L_Env {
   someVarsDeclaredHere(fact: ToCheckNode, freeVars: string[]): boolean {
     if (fact instanceof OptNode) {
       const out = fact.vars.some(
-        (e) => !freeVars.includes(e) && this.declaredVars.has(e)
+        (e) => !freeVars.includes(e) && this.declaredVars.has(e),
       );
       return out;
     } else if (fact instanceof LogicNode) {

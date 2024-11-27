@@ -16,6 +16,7 @@ import {
 import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, RType } from "./L_Executor.ts";
+import { check } from "./L_Checker.ts";
 
 function memoryErr(env: L_Env, s: string = ""): boolean {
   env.newMessage(`Memory Error: ${s}`);
@@ -383,7 +384,7 @@ function storeOpt(
 ): boolean {
   if (L_Builtins.get(fact.name) !== undefined) return true;
 
-  const declaredOpt = env.getDefs(fact.name);
+  const declaredOpt = env.getDef(fact.name);
   if (declaredOpt === undefined) {
     env.newMessage(`${fact.name} undeclared`);
     return false;
@@ -415,6 +416,18 @@ function storeOpt(
   }
 
   const toStore = new StoredFact(fact.vars, req, fact.isT);
+
+  //* cond of fact must be satisfied
+  const def = env.getDef(fact.name);
+  if (def === undefined) {
+    return env.errIntoEnvReturnBoolean(`${fact} not declared.`);
+  }
+  for (const condition of def?.cond) {
+    const out = check(env, condition);
+    if (out !== RType.True) {
+    }
+  }
+
   let ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
   if (!ok) return false;
 
