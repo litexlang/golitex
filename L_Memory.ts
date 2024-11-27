@@ -249,6 +249,11 @@ export function declNewFact(
 
   ok = env.newDef(node.name, node);
 
+  for (const onlyIf of node.onlyIfs) {
+    const ok = store(env, onlyIf, [], false);
+    if (!ok) return env.errIntoEnvReturnBoolean(`Failed to store ${onlyIf}`);
+  }
+
   // const decl = new OptNode(node.name, node.vars, true, undefined);
   // if (node instanceof IfDefNode) {
   //   ok = env.newDef(node.name, node);

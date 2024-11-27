@@ -18,10 +18,11 @@ export const exampleList: ExampleItem[] = [
       "let A,B,C,D,E,F;",
       "know subset(A,B);",
       "let x: in(x,A);",
-      // "in(x,B);", // Unknown
+      "in(x,B);", // Unknown
       "in(x,B)[A,B;x];", // True
+      "in(x,B);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -141,6 +142,19 @@ export const exampleList: ExampleItem[] = [
       "q(a);", // true
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "def block",
+    code: [
+      "def p(x); def q(x) {if x: q(x) => {p(x)}};",
+      "let a: q(a);",
+      "p(a);",
+      // "q(a);", // still not true, because p(x) is not satisfied.
+      // "know p(a);",
+      // "q(a);", // true
+    ],
+    debug: true,
     print: true,
   },
 ];

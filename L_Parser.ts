@@ -922,7 +922,15 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
       cond = factsParse(env, tokens, L_Ends, false, false);
     }
 
-    return new IfDefNode(opt.name, opt.vars, cond, []);
+    const onlyIfs: ToCheckNode[] = [];
+    if (isCurToken(tokens, "{")) {
+      skip(tokens, "{");
+      onlyIfs.push(...factsParse(env, tokens, ["}"], false, false));
+      skip(tokens, "}");
+    }
+
+    skip(tokens, L_Ends);
+    return new IfDefNode(opt.name, opt.vars, cond, onlyIfs);
   } catch (error) {
     handleParseError(env, "define", index, start);
     throw error;
