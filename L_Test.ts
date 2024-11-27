@@ -13,16 +13,16 @@ export const exampleList: ExampleItem[] = [
     name: "define subset",
     code: [
       "def set(x); def subset(A,B); def in(x,A);",
-      "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
       "know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)} };",
+      "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
       "let A,B,C,D,E,F;",
       "know subset(A,B);",
       "let x: in(x,A);",
-      "in(x,B)[A,B;x];", //Unknown
-      "in(x,B);", // true
+      // "in(x,B);", // Unknown
+      "in(x,B)[A,B;x];", // True
     ],
-    debug: false,
-    print: false,
+    debug: true,
+    print: true,
   },
   {
     name: "reqSpace & use",
@@ -128,7 +128,7 @@ export const exampleList: ExampleItem[] = [
       "god is not human;",
       "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {

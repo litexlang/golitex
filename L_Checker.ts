@@ -1,6 +1,6 @@
 import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
-import { L_Out, RTypeMap } from "./L_Executor.ts";
+import { L_Out } from "./L_Executor.ts";
 import { StoredFact } from "./L_Memory.ts";
 import * as L_Memory from "./L_Memory.ts";
 import { L_Builtins } from "./L_Builtins.ts";
@@ -208,7 +208,7 @@ function checkOr(env: L_Env, toCheck: OrNode): L_Out {
 export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
   const def = env.getDef(toCheck.name);
   if (def === undefined) {
-    return env.errIntoEnvReturnRType(`${toCheck} not declared.`);
+    return env.errIntoEnvReturnL_Out(`${toCheck} not declared.`);
   }
   if (toCheck.vars.length !== def.vars.length) {
     return lstLengthNotEql(env, toCheck.vars, def.vars);

@@ -16,7 +16,6 @@ import {
 import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, L_Out } from "./L_Executor.ts";
-import { check } from "./L_Checker.ts";
 
 function memoryErr(env: L_Env, s: string = ""): boolean {
   env.newMessage(`Memory Error: ${s}`);
@@ -844,17 +843,17 @@ export function storeReqSpace(
 //* toStore should not contain if-then req that contains opt as onlyIf.
 export function examineStoredFact(
   env: L_Env,
-  optName: string,
+  opt: OptNode,
   toStore: StoredFact,
 ): boolean {
   try {
     for (const storedReq of toStore.req as StoredReq[]) {
       for (const toCheck of storedReq.req) {
         const factContainOptAsIfThenReqOnlyIf = toCheck
-          .containOptAsIfThenReqOnlyIf(optName);
+          .containOptAsIfThenReqOnlyIf(opt);
         if (factContainOptAsIfThenReqOnlyIf) {
           env.newMessage(
-            `Error: ${toCheck} contains operator ${optName} as the onlyIf of a if type requirement.`,
+            `Error: ${toCheck} contains operator ${opt} as the onlyIf of a if type requirement.`,
           );
           return false;
         }

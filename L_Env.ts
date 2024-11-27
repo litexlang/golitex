@@ -76,7 +76,7 @@ export class L_Env {
     checkVars: string[][],
     fact: StoredFact,
   ): boolean {
-    const ok = examineStoredFact(this, optName, fact);
+    const ok = examineStoredFact(this, new OptNode(optName, fact.vars), fact);
     if (!ok) return false;
 
     const checkVarsNumLst = checkVars.map((e) => e.length);
@@ -236,7 +236,7 @@ export class L_Env {
     this.messages = [];
   }
 
-  OKMesIntoEnvReturnRType(message: L_Node | string): L_Out {
+  OKMesIntoEnvReturnL_Out(message: L_Node | string): L_Out {
     if (message instanceof L_Node) this.newMessage(`OK! ${message}`);
     else this.newMessage(message);
     return L_Out.True;
@@ -248,7 +248,7 @@ export class L_Env {
     return true;
   }
 
-  errIntoEnvReturnRType(s: L_Node | string): L_Out {
+  errIntoEnvReturnL_Out(s: L_Node | string): L_Out {
     this.newMessage(`Error: ${s}`);
     return L_Out.Error;
   }

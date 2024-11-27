@@ -39,7 +39,7 @@ export enum L_Out {
   Unknown,
 }
 
-export const RTypeMap: { [key in L_Out]: string } = {
+export const L_OutMap: { [key in L_Out]: string } = {
   [L_Out.Error]: "error",
   [L_Out.False]: "check: false",
   [L_Out.True]: "check: true",
@@ -158,7 +158,7 @@ function letExec(env: L_Env, node: LetNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errIntoEnvReturnRType(node);
+    return env.errIntoEnvReturnL_Out(node);
   }
 }
 
@@ -182,7 +182,7 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errIntoEnvReturnRType(node);
+    return env.errIntoEnvReturnL_Out(node);
   }
 }
 
@@ -202,7 +202,7 @@ function defExec(env: L_Env, node: DefNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errIntoEnvReturnRType(node);
+    return env.errIntoEnvReturnL_Out(node);
   }
 }
 
@@ -325,12 +325,12 @@ function useExec(env: L_Env, node: ByNode): L_Out {
   try {
     const reqSpace = env.getReqSpace(node.reqSpaceName);
     if (reqSpace === undefined) {
-      return env.errIntoEnvReturnRType(`${node.reqSpaceName} undefined.`);
+      return env.errIntoEnvReturnL_Out(`${node.reqSpaceName} undefined.`);
     }
 
     const map = makeStrStrMap(env, reqSpace.ifVars, node.vars);
     if (map === undefined) {
-      return env.errIntoEnvReturnRType(`Failed to call ${node.reqSpaceName}`);
+      return env.errIntoEnvReturnL_Out(`Failed to call ${node.reqSpaceName}`);
     }
 
     const req = reqSpace.ifReq.map((e) => e.useMapToCopy(map));
@@ -378,7 +378,7 @@ function macroExec(env: L_Env, node: MacroNode): L_Out {
     env.newMacro(node);
     return L_Out.True;
   } catch {
-    return env.errIntoEnvReturnRType(`Failed: macro ${node}`);
+    return env.errIntoEnvReturnL_Out(`Failed: macro ${node}`);
   }
 }
 
