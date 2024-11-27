@@ -247,54 +247,56 @@ export function declNewFact(
 ): boolean {
   let ok = true;
 
-  const decl = new OptNode(node.name, node.vars, true, undefined);
-  if (node instanceof IfDefNode) {
-    ok = env.newDef(node.name, node);
-    if (!ok) {
-      return false;
-    }
-    const r = [decl, ...node.req];
-    const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
-    ok = storeIfThen(env, f, [], true, storeDefName);
-  } else if (node instanceof IffDefNode) {
-    ok = env.newDef(node.name, node);
-    if (!ok) {
-      return false;
-    }
-    const left = new IfNode(
-      node.vars,
-      [decl, ...node.req],
-      node.onlyIfs,
-      true,
-      undefined,
-    );
-    ok = storeIfThen(env, left, [], true, storeDefName);
-    if (!ok) {
-      return false;
-    }
+  ok = env.newDef(node.name, node);
 
-    const right = new IfNode(
-      node.vars,
-      node.onlyIfs,
-      [decl, ...node.req],
-      true,
-      undefined,
-    );
-    ok = storeIfThen(env, right, [], true, storeDefName);
-    if (!ok) {
-      return false;
-    }
-  } else if (node instanceof OnlyIfDefNode) {
-    ok = env.newDef(node.name, node);
-    if (!ok) {
-      return false;
-    }
-    const r = [...node.req, decl];
-    const f = new IfNode(node.vars, node.onlyIfs, r, true, undefined);
-    ok = storeIfThen(env, f, [], true, storeDefName);
-  } else if (node instanceof ExistDefNode) {
-    ok = defExist(env, node, false);
-  }
+  // const decl = new OptNode(node.name, node.vars, true, undefined);
+  // if (node instanceof IfDefNode) {
+  //   ok = env.newDef(node.name, node);
+  //   if (!ok) {
+  //     return false;
+  //   }
+  //   const r = [decl, ...node.req];
+  //   const f = new IfNode(node.vars, r, node.onlyIfs, true, undefined);
+  //   ok = storeIfThen(env, f, [], true, storeDefName);
+  // } else if (node instanceof IffDefNode) {
+  //   ok = env.newDef(node.name, node);
+  //   if (!ok) {
+  //     return false;
+  //   }
+  //   const left = new IfNode(
+  //     node.vars,
+  //     [decl, ...node.req],
+  //     node.onlyIfs,
+  //     true,
+  //     undefined,
+  //   );
+  //   ok = storeIfThen(env, left, [], true, storeDefName);
+  //   if (!ok) {
+  //     return false;
+  //   }
+
+  //   const right = new IfNode(
+  //     node.vars,
+  //     node.onlyIfs,
+  //     [decl, ...node.req],
+  //     true,
+  //     undefined,
+  //   );
+  //   ok = storeIfThen(env, right, [], true, storeDefName);
+  //   if (!ok) {
+  //     return false;
+  //   }
+  // } else if (node instanceof OnlyIfDefNode) {
+  //   ok = env.newDef(node.name, node);
+  //   if (!ok) {
+  //     return false;
+  //   }
+  //   const r = [...node.req, decl];
+  //   const f = new IfNode(node.vars, node.onlyIfs, r, true, undefined);
+  //   ok = storeIfThen(env, f, [], true, storeDefName);
+  // } else if (node instanceof ExistDefNode) {
+  //   ok = defExist(env, node, false);
+  // }
 
   return ok;
 }

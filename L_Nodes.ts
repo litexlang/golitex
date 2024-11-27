@@ -319,9 +319,9 @@ export class DefNode extends L_Node {
   constructor(
     public name: string = "",
     public vars: string[] = [],
-    public req: ToCheckNode[] = [],
-    public onlyIfs: ToCheckNode[] = [], // public defName: string | undefined = undefined
     public cond: ToCheckNode[] = [],
+    public onlyIfs: ToCheckNode[] = [], // public defName: string | undefined = undefined
+    // public cond: ToCheckNode[] = [],
   ) {
     super();
   }
@@ -350,7 +350,7 @@ export class ExistDefNode extends DefNode {
   constructor(
     name: string = "",
     vars: string[] = [],
-    req: ToCheckNode[] = [],
+    public req: ToCheckNode[] = [],
     private existVars: string[] = [],
     private existFacts: ToCheckNode[] = [],
     public ifVars: string[][] | undefined = undefined,

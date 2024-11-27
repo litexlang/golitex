@@ -922,7 +922,7 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
       cond = factsParse(env, tokens, L_Ends, false, false);
     }
 
-    return new IfDefNode(opt.name, opt.vars, [], [], cond);
+    return new IfDefNode(opt.name, opt.vars, cond, []);
   } catch (error) {
     handleParseError(env, "define", index, start);
     throw error;
