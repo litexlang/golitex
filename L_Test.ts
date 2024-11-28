@@ -182,6 +182,8 @@ export const exampleList: ExampleItem[] = [
       "def p(x); def q(x); def t(x,y);",
       "know if x,y: t(x,y) => {q(x)};",
       "if x,y: t(x,y) => {q(x)};",
+      "know if x,y: t(x,y) => {q(x)} ;",
+      "if : => {if x,y: t(x,y) => {q(x)} };",
     ],
     debug: true,
     print: true,

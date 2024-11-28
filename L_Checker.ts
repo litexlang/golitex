@@ -143,7 +143,7 @@ export function checkOpt(
     }
   }
 
-  // use checkVars from if to check
+  //* use checkVars from if to check *//
   if (useCheckVarsFromIf) {
     for (let i = 0; i < toCheckVarsFromIf.length; i++) {
       const curToCheckVars = toCheckVarsFromIf.slice(i);
@@ -156,6 +156,17 @@ export function checkOpt(
       );
       const out = checkOpt(env, newOpt, false);
       if (out === L_Out.True) return L_Out.True;
+
+      const anotherCurCheckVars: string[] = [];
+      curToCheckVars.map((e) => anotherCurCheckVars.push(...e));
+      const anotherOpt = new OptNode(
+        toCheck.name,
+        toCheck.vars,
+        toCheck.isT,
+        undefined,
+        [anotherCurCheckVars],
+      );
+      if (checkOpt(env, anotherOpt, false) === L_Out.True) return L_Out.True;
     }
   }
 
