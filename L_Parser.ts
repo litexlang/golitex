@@ -47,7 +47,6 @@ import {
   ProveKeywords,
   ReturnKeyword,
   RunKeyword,
-  UseKeyword,
 } from "./L_Common.ts";
 
 function skip(tokens: string[], s: string | string[] = "") {

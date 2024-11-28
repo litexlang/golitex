@@ -365,25 +365,25 @@ function specialExec(env: L_Env, node: SpecialNode): L_Out {
 //   }
 // }
 
-function makeStrStrMap(
-  env: L_Env,
-  keyVars: string[],
-  valueVars: string[],
-): Map<string, string> | undefined {
-  if (keyVars.length !== valueVars.length) {
-    env.newMessage(
-      `Require ${keyVars.length} elements, get ${valueVars.length}`,
-    );
-    return undefined;
-  }
+// function makeStrStrMap(
+//   env: L_Env,
+//   keyVars: string[],
+//   valueVars: string[],
+// ): Map<string, string> | undefined {
+//   if (keyVars.length !== valueVars.length) {
+//     env.newMessage(
+//       `Require ${keyVars.length} elements, get ${valueVars.length}`,
+//     );
+//     return undefined;
+//   }
 
-  const out = new Map<string, string>();
-  for (let i = 0; i < keyVars.length; i++) {
-    out.set(keyVars[i], valueVars[i]);
-  }
+//   const out = new Map<string, string>();
+//   for (let i = 0; i < keyVars.length; i++) {
+//     out.set(keyVars[i], valueVars[i]);
+//   }
 
-  return out;
-}
+//   return out;
+// }
 
 function macroExec(env: L_Env, node: MacroNode): L_Out {
   try {

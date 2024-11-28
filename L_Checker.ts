@@ -67,7 +67,12 @@ export function checkIfThen(env: L_Env, toCheck: IfNode): L_Out {
  *  WARNING: YOU SHOULD NOT DECLARE FREE VARIABLE WITH THE SAME NAME
  *  IN DIFFERENT LEVELS OF IFs in IF-THEN TYPE FACTS.
  */
-export function checkOpt(env: L_Env, toCheck: OptNode): L_Out {
+export function checkOpt(
+  env: L_Env,
+  toCheck: OptNode,
+  useCheckVarsFromIf: boolean = true,
+  toCheckVarsFromIf: string[][] = [],
+): L_Out {
   const builtins = L_Builtins.get(toCheck.name);
   if (builtins !== undefined) {
     return builtins(env, toCheck);
@@ -121,6 +126,21 @@ export function checkOpt(env: L_Env, toCheck: OptNode): L_Out {
     } else {
       if (known.vars.every((e, i) => e === toCheck.vars[i])) return L_Out.True;
       else continue;
+    }
+  }
+
+  if (useCheckVarsFromIf) {
+    for (let i = 0; i < toCheckVarsFromIf.length; i++) {
+      const curToCheckVars = toCheckVarsFromIf.slice(i);
+      const newOpt = new OptNode(
+        toCheck.name,
+        toCheck.vars,
+        toCheck.isT,
+        undefined,
+        curToCheckVars,
+      );
+      const out = checkOpt(env, newOpt, false);
+      if (out === L_Out.True) return L_Out.True;
     }
   }
 
