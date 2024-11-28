@@ -15,6 +15,7 @@ import {
 } from "./L_Memory.ts";
 import { MemorizedExistDecl } from "./L_Memory.ts";
 import { L_Out } from "./L_Executor.ts";
+import { isToCheckBuiltin } from "./L_Builtins.ts";
 
 export class L_Env {
   private messages: string[] = [];
@@ -185,6 +186,17 @@ export class L_Env {
         return undefined;
       }
     }
+  }
+
+  factsInToCheckAllDeclared(node: ToCheckNode): boolean {
+    if (node instanceof OptNode) {
+      return this.getDef(node.name) !== undefined || isToCheckBuiltin(node);
+    } else if (node instanceof LogicNode) {
+      return node.req.every((e) => this.factsInToCheckAllDeclared(e)) &&
+        node.onlyIfs.every((e) => this.factsInToCheckAllDeclared(e));
+    }
+
+    return false;
   }
 
   getDef(s: string): DefNode | undefined {

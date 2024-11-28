@@ -132,7 +132,7 @@ function letExec(env: L_Env, node: LetNode): L_Out {
 
     // examine whether all operators are declared
     for (const f of node.facts) {
-      const ok = f.factsDeclared(env);
+      const ok = env.factsInToCheckAllDeclared(f);
       if (!ok) {
         env.newMessage(`Not all of facts in ${f} are declared`);
         return L_Out.Error;
@@ -174,7 +174,7 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
     // examine whether all facts are declared.
     // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
     for (const f of node.facts) {
-      const ok = f.factsDeclared(env);
+      const ok = env.factsInToCheckAllDeclared(f);
       if (!ok) {
         env.newMessage(`Not all facts in ${f} are declared`);
         return L_Out.Error;

@@ -1,10 +1,14 @@
-import { OptNode } from "./L_Nodes.ts";
+import { OptNode, ToCheckNode } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import { L_Out } from "./L_Executor.ts";
 import { checkOptLiterally } from "./L_Checker.ts";
 
 // deno-lint-ignore ban-types
 export const L_Builtins = new Map<string, Function>();
+
+export function isToCheckBuiltin(node: ToCheckNode) {
+  return (node instanceof OptNode) && (L_Builtins.get(node.name) !== undefined);
+}
 
 // node looks like is_property(OptName)
 L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {

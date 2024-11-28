@@ -198,6 +198,16 @@ export const exampleList: ExampleItem[] = [
       "know if exist(t_y) => {q(y)};",
       "q(y);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "know exist",
+    code: [
+      "def p(x); def q(x); def t(x,y); def t_y(x); know if x :t(x,y) => {t_y(x)};",
+      "know exist(p);",
+      "exist(p);",
+    ],
     debug: true,
     print: true,
   },

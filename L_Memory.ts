@@ -11,7 +11,7 @@ import {
   OrNode,
   ToCheckNode,
 } from "./L_Nodes.ts";
-import { L_Builtins } from "./L_Builtins.ts";
+import { isToCheckBuiltin, L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, L_Out } from "./L_Executor.ts";
 
@@ -415,6 +415,11 @@ export function store(
   storeContrapositive: boolean,
   // storeDefName: boolean = true,
 ): boolean {
+  if (isToCheckBuiltin(fact)) {
+    const ok = storeBuiltinFact(env, fact, req, storeContrapositive);
+    return ok;
+  }
+
   try {
     if (fact instanceof LogicNode) {
       const ok = storeIfThen(
@@ -802,4 +807,25 @@ export function examineStoredFact(
   } catch {
     return false;
   }
+}
+
+export function storeBuiltinFact(
+  env: L_Env,
+  fact: ToCheckNode,
+  _req: StoredReq[],
+  _storeContrapositive: boolean,
+): boolean {
+  if (fact instanceof OptNode) {
+    switch (fact.name) {
+      case "exist": {
+        env.newExist(fact.vars[0]);
+        env.newMessage(`[exist] ${fact.vars[0]}`);
+        return true;
+      }
+      default:
+        return false;
+    }
+  }
+
+  return false;
 }
