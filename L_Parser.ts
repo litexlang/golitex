@@ -136,6 +136,7 @@ const KeywordFunctionMap: {
   run: specialParse,
   by: byParse,
   macro: macroParse,
+  "[": postfixProveParse,
 };
 
 export function getNodesFromSingleNode(
@@ -178,7 +179,7 @@ export function getNodesFromSingleNode(
 function postfixProveParse(
   env: L_Env,
   tokens: string[],
-  end: string[],
+  end: string[] = [...L_Ends],
   skipEnd: boolean = false,
 ): PostfixProve {
   const start = tokens[0];

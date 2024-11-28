@@ -170,8 +170,8 @@ export const exampleList: ExampleItem[] = [
       "by _2(a);",
       "t(b);", // 如果没有 by _2(a), 那就没有 t(b)
       "t(b)[a];", // 也能证明t(b)
-      // "[_3] if x: p(x) => {q(x)};",
-      // "by _3(a);",
+      "[_3] if x: p(x) => {q(x)};",
+      "by _3(a);",
     ],
     debug: true,
     print: true,
