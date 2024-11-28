@@ -1,6 +1,7 @@
 import { OptNode } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
 import { L_Out } from "./L_Executor.ts";
+import { check } from "./L_Checker.ts";
 
 // deno-lint-ignore ban-types
 export const L_Builtins = new Map<string, Function>();
@@ -25,6 +26,19 @@ L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {
         return L_Out.True;
       }
     }
+  } catch {
+    return L_Out.Error;
+  }
+});
+
+L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
+  try {
+    const out = check(env, node);
+    if (out === L_Out.True) {
+      env.newExist(node.name);
+    }
+
+    return out;
   } catch {
     return L_Out.Error;
   }

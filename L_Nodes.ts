@@ -239,32 +239,6 @@ export class OptNode extends ToCheckNode {
   }
 }
 
-export class ExistNode extends ToCheckNode {
-  constructor(
-    public vars: string[],
-    public facts: ToCheckNode[],
-    isT: boolean = true,
-    // defName: string | undefined = undefined,
-  ) {
-    super(isT);
-  }
-
-  //! MAYBE NOT GOOD
-  override factsDeclared(env: L_Env): boolean {
-    env;
-    return true;
-    // if (this.defName !== undefined) {
-    //   defExist(
-    //     env,
-    //     new ExistDefNode(this.defName, [], [], this.vars, this.facts)
-    //   );
-    //   return true;
-    // } else {
-    //   return false;
-    // }
-  }
-}
-
 export class DefNode extends L_Node {
   constructor(
     public name: string = "",

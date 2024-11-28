@@ -3,7 +3,7 @@ import {
   DefNode,
   // ExistNode,
   ExistDefNode,
-  ExistNode,
+  // ExistNode,
   IfNode,
   LogicNode,
   // OnlyIfDefNode,
@@ -14,11 +14,6 @@ import {
 import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, L_Out } from "./L_Executor.ts";
-
-function memoryErr(env: L_Env, s: string = ""): boolean {
-  env.newMessage(`Memory Error: ${s}`);
-  return false;
-}
 
 export class KnownFact {
   facts: StoredFact[] = [];
@@ -435,8 +430,6 @@ export function store(
     } else if (fact instanceof OrNode) {
       const ok = storeOr(env, fact, req, storeContrapositive);
       if (!ok) return false;
-    } else if (fact instanceof ExistNode) {
-      return memoryErr(env, `It's illegal to use store to ${fact} directly`);
     } else {
       throw Error();
     }
@@ -533,9 +526,6 @@ export function executorStoreFact(
       return true;
     } else if (fact instanceof OrNode) {
       return storeOr(env, fact, [], storeContrapositive);
-    } else if (fact instanceof ExistNode) {
-      //! NEED TO BE IMPLEMENTED
-      return false;
     } else throw Error();
   } catch {
     env.newMessage(`Failed to store ${fact}`);

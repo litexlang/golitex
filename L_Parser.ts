@@ -1,7 +1,7 @@
 import {
   ByNode,
   DefNode,
-  ExistNode,
+  // ExistNode,
   HaveNode,
   IfDefNode,
   IffNode,
@@ -488,11 +488,12 @@ function factsParse(
         //   fact.isT = isT ? fact.isT : !fact.isT;
         //   out = [...out, fact];
         // }
-        else if (tokens[0] === "exist") {
-          fact = existParse(env, tokens, includeDefName);
-          fact.isT = isT ? fact.isT : !fact.isT;
-          out = [...out, fact];
-        } else {
+        // else if (tokens[0] === "exist") {
+        //   fact = existParse(env, tokens, includeDefName);
+        //   fact.isT = isT ? fact.isT : !fact.isT;
+        //   out = [...out, fact];
+        // }
+        else {
           const facts = optParseWithNotAre(env, tokens, true, includeDefName);
           facts.forEach((e) => (e.isT = isT ? e.isT : !e.isT));
           out = [...out, ...facts];
@@ -820,25 +821,25 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
   }
 }
 
-function existParse(
-  env: L_Env,
-  tokens: string[],
-  includeDefName: boolean,
-): ExistNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function existParse(
+//   env: L_Env,
+//   tokens: string[],
+//   includeDefName: boolean,
+// ): ExistNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, ExistKeyword);
-    const vars = varLstParse(env, tokens, ["{"], true);
-    const facts = factsParse(env, tokens, ["}"], true, includeDefName);
+//   try {
+//     skip(tokens, ExistKeyword);
+//     const vars = varLstParse(env, tokens, ["{"], true);
+//     const facts = factsParse(env, tokens, ["}"], true, includeDefName);
 
-    return new ExistNode(vars, facts, true);
-  } catch (error) {
-    handleParseError(env, "exist", index, start);
-    throw error;
-  }
-}
+//     return new ExistNode(vars, facts, true);
+//   } catch (error) {
+//     handleParseError(env, "exist", index, start);
+//     throw error;
+//   }
+// }
 
 function specialParse(env: L_Env, tokens: string[]): SpecialNode {
   const start = tokens[0];
