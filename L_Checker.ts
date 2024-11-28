@@ -174,7 +174,7 @@ export function checkOpt(
 }
 
 // check whether a variable in fact.vars is free or fixed at check time instead of run time.
-function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
+export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
   if (toCheck.vars.length !== env.getDef(toCheck.name)?.vars.length) {
     return L_Out.Unknown;
   }
