@@ -185,6 +185,16 @@ function postfixProveParse(
   const index = tokens.length;
 
   try {
+    const names: string[] = [];
+    if (isCurToken(tokens, "[")) {
+      skip(tokens, "[");
+      while (!isCurToken(tokens, "]")) {
+        names.push(shiftVar(tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      skip(tokens, "]");
+    }
+
     const facts = factsParse(
       env,
       tokens,
@@ -209,7 +219,7 @@ function postfixProveParse(
 
     if (skipEnd) skip(tokens, end);
 
-    return new PostfixProve(facts, block);
+    return new PostfixProve(facts, block, names);
   } catch (error) {
     handleParseError(env, "fact", index, start);
     throw error;
@@ -260,6 +270,16 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   try {
     skip(tokens, LetKeywords);
 
+    const names: string[] = [];
+    if (isCurToken(tokens, "[")) {
+      skip(tokens, "[");
+      while (!isCurToken(tokens, "]")) {
+        names.push(shiftVar(tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      skip(tokens, "]");
+    }
+
     const vars: string[] = [];
     while (![...L_Ends, , ":"].includes(tokens[0])) {
       vars.push(shiftVar(tokens));
@@ -273,11 +293,11 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
 
     if (L_Ends.includes(tokens[0])) {
       skip(tokens, L_Ends);
-      return new LetNode(vars, []);
+      return new LetNode(vars, [], names);
     } else {
       skip(tokens, ":");
       const facts = factsParse(env, tokens, L_Ends, true, true);
-      return new LetNode(vars, facts);
+      return new LetNode(vars, facts, names);
     }
   } catch (error) {
     handleParseError(env, "let", index, start);

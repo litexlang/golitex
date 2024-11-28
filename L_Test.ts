@@ -160,10 +160,18 @@ export const exampleList: ExampleItem[] = [
   {
     name: "namedKnownToCheck",
     code: [
-      "def p(x); def q(x);",
-      "know [_p_q] if x: p(x) => {q(x)};",
+      "def p(x); def q(x); def t(x);",
       "let a: p(a);",
-      "by _p_q(a);",
+      "know [_1] if x: p(x) => {q(x)};",
+      "by _1(a);",
+      "q(a);", // 理论上即使没有 by _1(a), q(a) 也是true
+      "let [_2] b: if x : x is p => {t(b)};", // 这里起到了“如果存在...，则..."的作用
+      "t(b);",
+      "by _2(a);",
+      "t(b);", // 如果没有 by _2(a), 那就没有 t(b)
+      "t(b)[a];", // 也能证明t(b)
+      // "[_3] if x: p(x) => {q(x)};",
+      // "by _3(a);",
     ],
     debug: true,
     print: true,

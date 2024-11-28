@@ -389,7 +389,11 @@ export class KnowNode extends L_Node {
 }
 
 export class LetNode extends L_Node {
-  constructor(public vars: string[], public facts: ToCheckNode[]) {
+  constructor(
+    public vars: string[],
+    public facts: ToCheckNode[],
+    public names: string[],
+  ) {
     super();
   }
 
@@ -421,7 +425,11 @@ export class ProveNode extends L_Node {
 }
 
 export class PostfixProve extends L_Node {
-  constructor(public facts: ToCheckNode[], public block: L_Node[]) {
+  constructor(
+    public facts: ToCheckNode[],
+    public block: L_Node[],
+    public names: string[],
+  ) {
     super();
   }
 }

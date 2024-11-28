@@ -157,6 +157,12 @@ function letExec(env: L_Env, node: LetNode): L_Out {
       if (!ok) return L_Out.Error;
     }
 
+    // store named knowns
+    for (const [i, name] of node.names.entries()) {
+      const ok = env.newNamedKnownToCheck(name, node.facts[i]);
+      if (!ok) throw Error();
+    }
+
     return L_Out.True;
   } catch {
     return env.errIntoEnvReturnL_Out(node);
@@ -566,33 +572,33 @@ function proveOptByContradict(
   }
 }
 
-function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): L_Out {
+function postfixProveExec(env: L_Env, postfixProve: PostfixProve): L_Out {
   try {
     const newEnv = new L_Env(env);
-    for (const subNode of PostfixProve.block) {
+    for (const subNode of postfixProve.block) {
       const out = nodeExec(newEnv, subNode, false);
       if (out !== L_Out.True) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`${PostfixProve} failed.`);
+        env.newMessage(`${postfixProve} failed.`);
         return out;
       }
     }
 
-    for (const fact of PostfixProve.facts) {
+    for (const fact of postfixProve.facts) {
       const ok = noVarsOrOptDeclaredHere(env, newEnv, fact);
       if (!ok) return L_Out.Error;
     }
 
-    for (const fact of PostfixProve.facts) {
+    for (const fact of postfixProve.facts) {
       const out = L_Checker.check(newEnv, fact);
       if (out !== L_Out.True) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`${PostfixProve} failed.`);
+        env.newMessage(`${postfixProve} failed.`);
         return out;
       }
     }
 
-    for (const fact of PostfixProve.facts) {
+    for (const fact of postfixProve.facts) {
       const ok = L_Memory.store(env, fact, [], true);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);
@@ -601,6 +607,12 @@ function postfixProveExec(env: L_Env, PostfixProve: PostfixProve): L_Out {
     }
 
     newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
+
+    // store named knowns
+    for (const [i, key] of postfixProve.names.entries()) {
+      const ok = env.newNamedKnownToCheck(key, postfixProve.facts[i]);
+      if (!ok) throw Error();
+    }
 
     return L_Out.True;
   } catch {
