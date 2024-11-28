@@ -29,7 +29,7 @@ export class L_Env {
   private macros: MacroNode[] = [];
 
   private knownFacts = new Map<string, KnownFact>();
-  private namedKnowns = new Map<string, ToCheckNode>();
+  private namedKnownToChecks = new Map<string, ToCheckNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -48,6 +48,26 @@ export class L_Env {
     this.macros = [];
 
     this.knownFacts = new Map<string, KnownFact>();
+  }
+
+  newNamedKnownToChecks(name: string, toCheck: ToCheckNode): boolean {
+    const out = this.getNamedKnownToChecks(name);
+    if (out === undefined) {
+      this.namedKnownToChecks.set(name, toCheck);
+      return true;
+    } else {
+      return this.errIntoEnvReturnBoolean(
+        `${name} is already a known fact. You can not double declare it.`,
+      );
+    }
+  }
+
+  getNamedKnownToChecks(name: string): ToCheckNode | undefined {
+    const known = this.namedKnownToChecks.get(name);
+    if (known !== undefined) return known;
+    else if (this.parent !== undefined) {
+      return this.parent.getNamedKnownToChecks(name);
+    } else return undefined;
   }
 
   getKnownFactsFromCurEnv(
