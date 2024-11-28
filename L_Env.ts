@@ -91,7 +91,7 @@ export class L_Env {
     opt: OptNode,
     onlyRoot: boolean = false,
   ): undefined | StoredFact[] {
-    const knownNodeRoot = this.knownFacts.get(opt.name);
+    const knownNodeRoot: KnownFact | undefined = this.knownFacts.get(opt.name);
 
     if (onlyRoot) {
       return knownNodeRoot?.getFactsToCheck([]);

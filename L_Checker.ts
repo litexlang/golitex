@@ -112,6 +112,7 @@ export function checkOpt(
           }
         }
       } else {
+        //! NOT RIGHT HERE
         for (const [i, v] of toCheck.vars.entries()) {
           map.set(known.vars[i], v);
         }
@@ -175,13 +176,13 @@ export function checkOpt(
 
 // check whether a variable in fact.vars is free or fixed at check time instead of run time.
 export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
-  if (toCheck.vars.length !== env.getDef(toCheck.name)?.vars.length) {
-    return L_Out.Unknown;
-  }
-
   const builtins = L_Builtins.get(toCheck.name);
   if (builtins !== undefined) {
     return builtins(env, toCheck);
+  }
+
+  if (toCheck.vars.length !== env.getDef(toCheck.name)?.vars.length) {
+    return L_Out.Unknown;
   }
 
   const facts = env.getKnownFactsFromCurEnv(toCheck);

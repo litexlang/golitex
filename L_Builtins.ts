@@ -6,6 +6,7 @@ import { checkOptLiterally } from "./L_Checker.ts";
 // deno-lint-ignore ban-types
 export const L_Builtins = new Map<string, Function>();
 
+// node looks like is_property(OptName)
 L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {
   try {
     const out = env.getDef(node.vars[0]);
@@ -31,7 +32,7 @@ L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {
   }
 });
 
-// node likes like exist(OptName, v1,v2...vn)
+// node looks like exist(OptName, v1,v2...vn)
 L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
   try {
     if (env.isExisted(node.vars[0])) {
