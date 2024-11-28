@@ -4,8 +4,6 @@ import {
   // ExistNode,
   ExistDefNode,
   ExistNode,
-  IfDefNode,
-  IffDefNode,
   IfNode,
   LogicNode,
   // OnlyIfDefNode,
@@ -312,7 +310,7 @@ function storeIfThen(
   ifThen: IfNode,
   req: StoredReq[] = [],
   storeContrapositive: boolean = true,
-  storeDefName: boolean = true,
+  // storeDefName: boolean = true,
 ): boolean {
   try {
     if (ifThen.isT) {
@@ -323,17 +321,12 @@ function storeIfThen(
           fact,
           [...req, newReq],
           storeContrapositive,
-          storeDefName,
+          // storeDefName,
         );
         if (!ok) return false;
       }
     } else {
       return false;
-    }
-
-    if (storeDefName && ifThen.reqName) {
-      const ok = storeReqSpace(env, ifThen.reqName, ifThen, req);
-      if (!ok) return false;
     }
 
     return true;
@@ -347,7 +340,7 @@ function storeOpt(
   fact: OptNode,
   req: StoredReq[],
   _storeContrapositive: boolean,
-  storeDefName: boolean = true,
+  // storeDefName: boolean = true,
 ): boolean {
   if (L_Builtins.get(fact.name) !== undefined) return true;
 
@@ -398,7 +391,7 @@ function storeOr(
   fact: OrNode,
   req: StoredReq[],
   storeContrapositive: boolean,
-  storeDefName: boolean = true,
+  // storeDefName: boolean = true,
 ): boolean {
   for (let i = 0; i < fact.facts.length; i++) {
     const asReq: ToCheckNode[] = [];
@@ -412,7 +405,7 @@ function storeOr(
       fact.facts[i],
       [...req, new StoredReq([], asReq)],
       storeContrapositive,
-      storeDefName,
+      // storeDefName,
     );
     if (!ok) return ok;
   }
@@ -425,7 +418,7 @@ export function store(
   fact: ToCheckNode,
   req: StoredReq[] = [],
   storeContrapositive: boolean,
-  storeDefName: boolean = true,
+  // storeDefName: boolean = true,
 ): boolean {
   try {
     if (fact instanceof LogicNode) {
@@ -434,14 +427,13 @@ export function store(
         fact as IfNode,
         req,
         storeContrapositive,
-        storeDefName,
       );
       if (!ok) return false;
     } else if (fact instanceof OptNode) {
-      const ok = storeOpt(env, fact, req, storeContrapositive, storeDefName);
+      const ok = storeOpt(env, fact, req, storeContrapositive);
       if (!ok) return false;
     } else if (fact instanceof OrNode) {
-      const ok = storeOr(env, fact, req, storeContrapositive, storeDefName);
+      const ok = storeOr(env, fact, req, storeContrapositive);
       if (!ok) return false;
     } else if (fact instanceof ExistNode) {
       return memoryErr(env, `It's illegal to use store to ${fact} directly`);
@@ -574,7 +566,6 @@ function storeContrapositiveFacts(
       r,
       [allStoredFactReq[i].copyWithoutIsT(!allStoredFactReq[i].isT)],
       true,
-      undefined,
       // false
     );
     const ok = storeIfThen(env, ifThen, [], false);

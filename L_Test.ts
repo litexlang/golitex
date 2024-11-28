@@ -185,7 +185,7 @@ export const exampleList: ExampleItem[] = [
       "know if x,y: t(x,y) => {q(x)} ;",
       "if : => {if x,y: t(x,y) => {q(x)} };",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];

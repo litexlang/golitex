@@ -146,7 +146,7 @@ function letExec(env: L_Env, node: LetNode): L_Out {
           const map = new Map<string, string>();
           map.set(macro.varName, e);
           const facts = macro.facts.map((e) => e.useMapToCopy(map));
-          facts.forEach((e) => L_Memory.store(env, e, [], true, true));
+          facts.forEach((e) => L_Memory.store(env, e, [], true));
         }
       }
     }
@@ -698,7 +698,7 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
 
     // ok message
     for (const fact of byNode.namedKnownToChecks) {
-      env.newMessage(`[by] ${fact}`);
+      env.newMessage(`OK! [by] ${fact}`);
     }
 
     return L_Out.True;

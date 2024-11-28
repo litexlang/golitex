@@ -20,6 +20,7 @@ export class ToCheckNode extends L_Node {
     return false;
   }
 
+  // MAIN FUNCTION OF THE WHOLE PROJECT
   useMapToCopy(map: Map<string, string>): ToCheckNode {
     map;
     return new ToCheckNode(true);
@@ -66,7 +67,7 @@ export class LogicNode extends ToCheckNode {
     public req: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [],
     isT: boolean = true,
-    public reqName: null | string = null,
+    // public reqName: null | string = null,
   ) {
     super(isT);
   }
@@ -93,7 +94,7 @@ export class LogicNode extends ToCheckNode {
       this.onlyIfs,
       newIsT,
       // this.defName,
-      this.reqName,
+      // this.reqName,
       // this.isIff
     );
   }
@@ -110,7 +111,7 @@ export class LogicNode extends ToCheckNode {
         onlyIfs,
         this.isT,
         // this.defName,
-        this.reqName,
+        // this.reqName,
       );
     }
 
@@ -319,7 +320,7 @@ export class ExistDefNode extends DefNode {
     const itself = [
       new OptNode(this.name, this.vars, true, this.ifVars),
     ];
-    return new IfNode(this.vars, this.req, itself, true, null);
+    return new IfNode(this.vars, this.req, itself, true);
   }
 }
 

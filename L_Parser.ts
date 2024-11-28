@@ -640,29 +640,14 @@ function logicParse(
       req = factsParse(env, tokens, separation, true, includeDefName);
     }
 
-    let reqName: null | string = null;
-    if (isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      reqName = shiftVar(tokens);
-      skip(tokens, "]");
-    }
-
     skip(tokens, "{");
 
     const onlyIfs = factsParse(env, tokens, ["}"], true, includeDefName);
 
-    let defName: string | undefined = undefined;
-
-    if (includeDefName && isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      defName = shiftVar(tokens);
-      skip(tokens, "]");
-    }
-
     if (IfKeywords.includes(type)) {
-      return new IfNode(vars, req, onlyIfs, true, reqName);
+      return new IfNode(vars, req, onlyIfs, true);
     } else if (IffKeywords.includes(type)) {
-      return new IffNode(vars, req, onlyIfs, true, reqName);
+      return new IffNode(vars, req, onlyIfs, true);
     }
     throw Error();
   } catch (error) {
@@ -782,13 +767,6 @@ function orParse(
     const facts = factsParse(env, tokens, ["}"], false, includeDefName);
     skip(tokens, "}");
 
-    let defName: undefined | string = undefined;
-    if (includeDefName && isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      defName = shiftVar(tokens);
-      skip(tokens, "]");
-    }
-
     return new OrNode(facts, true);
   } catch (error) {
     handleParseError(env, "operator", index, start);
@@ -812,13 +790,6 @@ function notsParse(
       f.isT = !f.isT;
     }
     skip(tokens, "}");
-
-    let defName: undefined | string = undefined;
-    if (includeDefName && isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      defName = shiftVar(tokens);
-      skip(tokens, "]");
-    }
 
     return new OrNode(facts, true);
   } catch (error) {
@@ -861,12 +832,6 @@ function existParse(
     skip(tokens, ExistKeyword);
     const vars = varLstParse(env, tokens, ["{"], true);
     const facts = factsParse(env, tokens, ["}"], true, includeDefName);
-    let defName: undefined | string = undefined;
-    if (includeDefName && isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      defName = shiftVar(tokens);
-      skip(tokens, "]");
-    }
 
     return new ExistNode(vars, facts, true);
   } catch (error) {
