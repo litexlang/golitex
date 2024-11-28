@@ -460,12 +460,12 @@ export class SpecialNode extends L_Node {
 }
 
 export class ByNode extends L_Node {
-  constructor(public opts: OptNode[]) {
+  constructor(public namedKnownToChecks: OptNode[]) {
     super();
   }
 
   override toString() {
-    return `${this.opts.map((e) => e.toString).join(", ")}`;
+    return `${this.namedKnownToChecks.map((e) => e.toString).join(", ")}`;
   }
 }
 

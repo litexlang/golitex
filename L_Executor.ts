@@ -21,6 +21,7 @@ import * as L_Checker from "./L_Checker.ts";
 import * as L_Memory from "./L_Memory.ts";
 import { ClearKeyword, RunKeyword } from "./L_Common.ts";
 import { runFile } from "./L_Runner.ts";
+import { LogicNode } from "./L_Nodes.ts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -633,9 +634,62 @@ function noVarsOrOptDeclaredHere(
   return true;
 }
 
-function byExec(env: L_Env, ByNode: ByNode): L_Out {
+function byExec(env: L_Env, byNode: ByNode): L_Out {
   try {
-    return L_Out.Error;
+    // 这里的 namedKnown 虽然类型是 Opt，但其实不是正常意义的opt
+    for (const namedKnown of byNode.namedKnownToChecks) {
+      // get used stuffs out of byNode
+      const vars = namedKnown.vars;
+      const knownFactName = namedKnown.name;
+
+      const knownToCheck = env.getNamedKnownToCheck(knownFactName);
+      if (knownToCheck === undefined) throw Error();
+
+      // vars number are correct
+      if (knownToCheck instanceof OptNode) {
+        if (vars.length !== 0) {
+          return env.errIntoEnvReturnL_Out(
+            `${knownFactName} is supposed to have no parameter.`,
+          );
+        }
+      } else if (knownToCheck instanceof LogicNode) {
+        if (vars.length !== knownToCheck.vars.length) {
+          return env.errIntoEnvReturnL_Out(
+            `${knownFactName} is supposed to have ${knownToCheck.vars.length} parameters, get ${vars.length}`,
+          );
+        }
+
+        // make mapping from free-parameters-of-if-then to given parameters
+        const map = new Map<string, string>();
+        for (const [i, v] of knownToCheck.vars.entries()) {
+          map.set(v, vars[i]);
+        }
+
+        // check all requirements
+        for (const req of knownToCheck.req) {
+          const fixed = req.useMapToCopy(map);
+          const out = L_Checker.check(env, fixed);
+          if (out !== L_Out.True) {
+            env.newMessage(`Failed to check ${out}`);
+            return out;
+          }
+        }
+
+        // store all onlyIfs
+        for (const onlyIf of knownToCheck.onlyIfs) {
+          const fixed = onlyIf.useMapToCopy(map);
+          const ok = L_Memory.store(env, fixed, [], true);
+          if (!ok) return L_Out.Error;
+        }
+      }
+    }
+
+    // ok message
+    for (const fact of byNode.namedKnownToChecks) {
+      env.newMessage(`[by] ${fact}`);
+    }
+
+    return L_Out.True;
   } catch {
     return env.errIntoEnvReturnL_Out(ByNode);
   }

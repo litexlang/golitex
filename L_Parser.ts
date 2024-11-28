@@ -23,6 +23,7 @@ import {
 import { L_Env } from "./L_Env.ts";
 import {
   AreKeywords,
+  ByKeyword,
   ClearKeyword,
   ContradictionKeyword,
   DefKeywords,
@@ -886,7 +887,7 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, UseKeyword);
+    skip(tokens, ByKeyword);
     const outs: OptNode[] = [];
     while (!isCurToken(tokens, L_Ends)) {
       const opt = optParseWithNot(env, tokens, true);
@@ -896,7 +897,7 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
 
     return new ByNode(outs);
   } catch (error) {
-    handleParseError(env, "call", index, start);
+    handleParseError(env, "by", index, start);
     throw error;
   }
 }

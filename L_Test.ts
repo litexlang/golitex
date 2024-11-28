@@ -163,6 +163,7 @@ export const exampleList: ExampleItem[] = [
       "def p(x); def q(x);",
       "know [_p_q] if x: p(x) => {q(x)};",
       "let a: p(a);",
+      "by _p_q(a);",
     ],
     debug: true,
     print: true,
