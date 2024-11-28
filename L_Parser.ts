@@ -805,16 +805,16 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
 
   try {
     skip(tokens, HaveKeywords);
-    const opt = optParseWithNot(env, tokens, false);
-    skip(tokens, ":");
     const vars: string[] = [];
-    while (!L_Ends.includes(tokens[0])) {
+    while (isCurToken(tokens, ":")) {
       vars.push(shiftVar(tokens));
-      if (tokens[0] === ",") skip(tokens, ",");
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
+    skip(tokens, ":");
 
-    skip(tokens, L_Ends);
-    return new HaveNode(opt, vars);
+    const opts = factsParse(env, tokens, L_Ends, true, false) as OptNode[];
+
+    return new HaveNode(opts, vars);
   } catch (error) {
     handleParseError(env, "have", index, start);
     throw error;

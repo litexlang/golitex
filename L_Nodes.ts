@@ -375,13 +375,13 @@ export class ReturnNode extends L_Node {
 }
 
 export class HaveNode extends L_Node {
-  constructor(public opt: OptNode, public vars: string[]) {
+  constructor(public opts: OptNode[], public vars: string[]) {
     super();
   }
 
   override toString() {
     const varsStr = this.vars.join(", ");
-    return `have ${this.opt.toString()} ${varsStr}`;
+    return `have ${this.opts.toString()} ${varsStr}`;
   }
 }
 

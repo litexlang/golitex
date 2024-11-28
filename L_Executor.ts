@@ -289,25 +289,31 @@ function returnExec(env: L_Env, node: ReturnNode): L_Out {
 
 function haveExec(env: L_Env, node: HaveNode): L_Out {
   try {
-    if (env.isExisted(node.opt.name)) {
-      if (!node.vars.every((e) => node.opt.vars.includes(e))) {
+    if (!node.opts.every((e) => env.isExisted(e.name))) {
+      return env.errIntoEnvReturnL_Out(
+        `operator-type facts in have must proved to be exist.`,
+      );
+    }
+
+    for (const opt of node.opts) {
+      if (!node.vars.every((e) => opt.vars.includes(e))) {
         return env.errIntoEnvReturnL_Out(
-          `have error: [${node.vars}] must be subset of [${node.opt.vars}]`,
+          `have error: [${node.vars}] must be subset of [${opt.vars}]`,
         );
       }
 
-      for (const v of node.vars) {
-        const ok = env.newVar(v);
+      if (env.isExisted(opt.name)) {
+        for (const v of node.vars) {
+          const ok = env.newVar(v);
+          if (!ok) throw Error();
+        }
+
+        const ok = store(env, opt, [], true);
         if (!ok) throw Error();
       }
-
-      const ok = store(env, node.opt, [], true);
-      return ok ? L_Out.True : L_Out.Error;
-    } else {
-      return env.errIntoEnvReturnL_Out(
-        `whether ${node.opt.name} exists is unknown.`,
-      );
     }
+
+    return L_Out.True;
   } catch {
     env.newMessage("have");
     return L_Out.Error;
