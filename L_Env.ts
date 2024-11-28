@@ -210,7 +210,8 @@ export class L_Env {
   }
 
   newVar(fix: string): boolean {
-    if (this.declaredVars.has(fix)) {
+    // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
+    if (this.varDeclared(fix)) {
       this.newMessage(`${fix} already declared.`);
       return false;
     }
