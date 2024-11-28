@@ -177,7 +177,12 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
     // store new knowns
     for (const onlyIf of node.facts) {
       const ok = L_Memory.store(env, onlyIf, [], false);
-      if (!ok) return L_Out.Error;
+      if (!ok) throw new Error();
+    }
+
+    for (const [i, v] of node.names.entries()) {
+      const ok = env.newNamedKnownToCheck(v, node.facts[i]);
+      if (!ok) throw new Error();
     }
 
     return L_Out.True;

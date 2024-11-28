@@ -377,7 +377,7 @@ export class ExistDefNode extends DefNode {
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;
 
-  constructor(public facts: ToCheckNode[] = []) {
+  constructor(public facts: ToCheckNode[], public names: string[]) {
     super();
   }
 

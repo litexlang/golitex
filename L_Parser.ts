@@ -217,18 +217,31 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
 
   try {
     skip(tokens, KnowTypeKeywords);
+
+    const names: string[] = [];
+    if (isCurToken(tokens, "[")) {
+      skip(tokens, "[");
+      while (!isCurToken(tokens, "]")) {
+        names.push(shiftVar(tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      skip(tokens, "]");
+    }
+
+    let facts: ToCheckNode[] = [];
     // const strict = keyword === "know" ? false : true;
 
-    const knowNode: KnowNode = new KnowNode([]);
+    // const knowNode: KnowNode = new KnowNode([], []);
     while (!L_Ends.includes(tokens[0])) {
-      const outs = factsParse(env, tokens, [...L_Ends, ","], false, true);
-      knowNode.facts = knowNode.facts.concat(outs);
+      facts = factsParse(env, tokens, [...L_Ends, ","], false, true);
+      // knowNode.facts = knowNode.facts.concat(outs);
 
       if (tokens[0] === ",") skip(tokens, ",");
     }
     skip(tokens, L_Ends);
 
-    return knowNode;
+    return new KnowNode(facts, names);
+    // return knowNode;
   } catch (error) {
     handleParseError(env, "know", index, start);
     throw error;

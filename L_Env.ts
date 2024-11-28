@@ -50,8 +50,8 @@ export class L_Env {
     this.knownFacts = new Map<string, KnownFact>();
   }
 
-  newNamedKnownToChecks(name: string, toCheck: ToCheckNode): boolean {
-    const out = this.getNamedKnownToChecks(name);
+  newNamedKnownToCheck(name: string, toCheck: ToCheckNode): boolean {
+    const out = this.getNamedKnownToCheck(name);
     if (out === undefined) {
       this.namedKnownToChecks.set(name, toCheck);
       return true;
@@ -62,11 +62,11 @@ export class L_Env {
     }
   }
 
-  getNamedKnownToChecks(name: string): ToCheckNode | undefined {
+  getNamedKnownToCheck(name: string): ToCheckNode | undefined {
     const known = this.namedKnownToChecks.get(name);
     if (known !== undefined) return known;
     else if (this.parent !== undefined) {
-      return this.parent.getNamedKnownToChecks(name);
+      return this.parent.getNamedKnownToCheck(name);
     } else return undefined;
   }
 

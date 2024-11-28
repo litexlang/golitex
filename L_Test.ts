@@ -154,13 +154,15 @@ export const exampleList: ExampleItem[] = [
       // "know p(a);",
       // "q(a);", // true
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
-    name: "exist",
+    name: "namedKnownToCheck",
     code: [
-      "def p(x);",
+      "def p(x); def q(x);",
+      "know [_p_q] if x: p(x) => {q(x)};",
+      "let a: p(a);",
     ],
     debug: true,
     print: true,
