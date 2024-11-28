@@ -146,6 +146,7 @@ export function checkOpt(
   //* use checkVars from if to check *//
   if (useCheckVarsFromIf) {
     for (let i = 0; i < toCheckVarsFromIf.length; i++) {
+      // use toCheckVarsFromIf layer by layer
       const curToCheckVars = toCheckVarsFromIf.slice(i);
       const newOpt = new OptNode(
         toCheck.name,
@@ -157,6 +158,7 @@ export function checkOpt(
       const out = checkOpt(env, newOpt, false);
       if (out === L_Out.True) return L_Out.True;
 
+      // use toCheckVarsFromIf as if it's single layer
       const anotherCurCheckVars: string[] = [];
       curToCheckVars.map((e) => anotherCurCheckVars.push(...e));
       const anotherOpt = new OptNode(
