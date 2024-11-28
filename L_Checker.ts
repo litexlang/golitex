@@ -6,9 +6,13 @@ import * as L_Memory from "./L_Memory.ts";
 import { L_Builtins } from "./L_Builtins.ts";
 import { lstLengthNotEql } from "./L_ErrorReport.ts";
 
-export function check(env: L_Env, toCheck: ToCheckNode): L_Out {
+export function check(
+  env: L_Env,
+  toCheck: ToCheckNode,
+  toCheckVarsFromIf: string[][] = [],
+): L_Out {
   if (toCheck instanceof OptNode) {
-    let out = checkOpt(env, toCheck);
+    let out = checkOpt(env, toCheck, true, toCheckVarsFromIf);
     if (out === L_Out.Unknown) {
       out = checkOpt(env, toCheck.copyWithoutIsT(!toCheck.isT));
       if (out === L_Out.True) {
@@ -17,7 +21,7 @@ export function check(env: L_Env, toCheck: ToCheckNode): L_Out {
     }
     return out;
   } else if (toCheck instanceof IfNode) {
-    return checkIfThen(env, toCheck);
+    return checkIfThen(env, toCheck, toCheckVarsFromIf);
   } else if (toCheck instanceof OrNode) {
     return checkOr(env, toCheck);
   }
@@ -25,16 +29,24 @@ export function check(env: L_Env, toCheck: ToCheckNode): L_Out {
   return L_Out.Unknown;
 }
 
-export function checkIfThen(env: L_Env, toCheck: IfNode): L_Out {
+export function checkIfThen(
+  env: L_Env,
+  toCheck: IfNode,
+  toCheckVarsFromIf: string[][],
+): L_Out {
   if (toCheck.isT === false) {
     env.newMessage(`not-if-then fact ${toCheck} can not be checked directly.`);
     return L_Out.Error;
   }
 
-  const out = openEnvAndCheck(env, toCheck);
+  const out = openEnvAndCheck(env, toCheck, toCheckVarsFromIf);
   return out;
 
-  function openEnvAndCheck(oldEnv: L_Env, toCheck: IfNode): L_Out {
+  function openEnvAndCheck(
+    oldEnv: L_Env,
+    toCheck: IfNode,
+    toCheckVarsFromIf: string[][],
+  ): L_Out {
     const newEnv = new L_Env(oldEnv);
 
     for (const e of toCheck.vars) {
@@ -44,7 +56,7 @@ export function checkIfThen(env: L_Env, toCheck: IfNode): L_Out {
 
     for (const f of toCheck.req) L_Memory.store(newEnv, f, [], true);
     for (const onlyIf of toCheck.onlyIfs) {
-      const out = check(newEnv, onlyIf);
+      const out = check(newEnv, onlyIf, [...toCheckVarsFromIf, toCheck.vars]);
       if (out !== L_Out.True) return out;
       else {
         // checked facts in then are used as stored fact.
@@ -88,6 +100,7 @@ export function checkOpt(
   if (knowns === undefined) return L_Out.Unknown;
 
   for (const known of knowns as StoredFact[]) {
+    // check req
     if (known.req.length > 0) {
       const map = new Map<string, string>();
       if (known.isT !== toCheck.isT) continue;
@@ -115,7 +128,8 @@ export function checkOpt(
             if (out !== L_Out.True) break;
           } else {
             //! NEED TO IMPLEMENT HOW TO CHECK If-Then Literally?
-            out = checkIfThen(env, fact as IfNode);
+            // 也可以是  out = checkIfThen(env, fact as IfNode, []);
+            out = checkIfThen(env, fact as IfNode, toCheckVarsFromIf);
             if (out !== L_Out.True) break;
           }
         }
@@ -129,6 +143,7 @@ export function checkOpt(
     }
   }
 
+  // use checkVars from if to check
   if (useCheckVarsFromIf) {
     for (let i = 0; i < toCheckVarsFromIf.length; i++) {
       const curToCheckVars = toCheckVarsFromIf.slice(i);

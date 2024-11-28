@@ -173,6 +173,16 @@ export const exampleList: ExampleItem[] = [
       "[_3] if x: p(x) => {q(x)};",
       "by _3(a);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "check if-then using literally-the-same if-then",
+    code: [
+      "def p(x); def q(x); def t(x,y);",
+      "know if x,y: t(x,y) => {q(x)};",
+      "if x,y: t(x,y) => {q(x)};",
+    ],
     debug: true,
     print: true,
   },
