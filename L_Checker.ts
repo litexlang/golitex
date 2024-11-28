@@ -152,7 +152,6 @@ export function checkOpt(
         toCheck.name,
         toCheck.vars,
         toCheck.isT,
-        undefined,
         curToCheckVars,
       );
       const out = checkOpt(env, newOpt, false);
@@ -165,7 +164,6 @@ export function checkOpt(
         toCheck.name,
         toCheck.vars,
         toCheck.isT,
-        undefined,
         [anotherCurCheckVars],
       );
       if (checkOpt(env, anotherOpt, false) === L_Out.True) return L_Out.True;

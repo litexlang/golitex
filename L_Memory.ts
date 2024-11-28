@@ -83,36 +83,36 @@ export class ReqSpace {
   ) {}
 }
 
-export class DefNameDecl {
-  constructor(
-    public name: string,
-    public ifVars: string[],
-    public req: ToCheckNode[],
-    public itself: ToCheckNode,
-  ) {}
+// export class DefNameDecl {
+//   constructor(
+//     public name: string,
+//     public ifVars: string[],
+//     public req: ToCheckNode[],
+//     public itself: ToCheckNode,
+//   ) {}
 
-  pushBeginNewReq(ifThen: IfNode) {
-    this.ifVars = [...ifThen.vars, ...this.ifVars];
-    this.req = [...ifThen.req, ...this.req];
-  }
+//   pushBeginNewReq(ifThen: IfNode) {
+//     this.ifVars = [...ifThen.vars, ...this.ifVars];
+//     this.req = [...ifThen.req, ...this.req];
+//   }
 
-  toDefNode(): DefNode {
-    return new IffDefNode(this.name, this.ifVars, [...this.req], [this.itself]);
-  }
+//   toDefNode(): DefNode {
+//     return new IffDefNode(this.name, this.ifVars, [...this.req], [this.itself]);
+//   }
 
-  toIfNodeIfNodeAsOnlyIf(): IfNode {
-    const req = new OptNode(this.name, this.ifVars);
-    const onlyIf = new IfNode([], this.req, [this.itself]);
-    return new IfNode(this.ifVars, [req, ...this.req], [onlyIf]);
-    // return new IfNode(this.ifVars, [req, ...this.req], [this.itself]);
-  }
+//   toIfNodeIfNodeAsOnlyIf(): IfNode {
+//     const req = new OptNode(this.name, this.ifVars);
+//     const onlyIf = new IfNode([], this.req, [this.itself]);
+//     return new IfNode(this.ifVars, [req, ...this.req], [onlyIf]);
+//     // return new IfNode(this.ifVars, [req, ...this.req], [this.itself]);
+//   }
 
-  toIfNodeIfNodeAsIf(): IfNode {
-    const onlyIf = new OptNode(this.name, this.ifVars);
-    const req = new IfNode([], this.req, [this.itself]);
-    return new IfNode(this.ifVars, [req], [onlyIf]);
-  }
-}
+//   toIfNodeIfNodeAsIf(): IfNode {
+//     const onlyIf = new OptNode(this.name, this.ifVars);
+//     const req = new IfNode([], this.req, [this.itself]);
+//     return new IfNode(this.ifVars, [req], [onlyIf]);
+//   }
+// }
 
 export class MemorizedExistDecl {
   constructor(
@@ -317,57 +317,18 @@ function storeIfThen(
   try {
     if (ifThen.isT) {
       for (const fact of ifThen.onlyIfs) {
-        if (fact instanceof ExistNode) {
-          let ifVars: string[] = [];
-          for (const r of [...req]) {
-            ifVars = [...ifVars, ...r.vars];
-          }
-          ifVars = [...ifVars, ...ifThen.vars];
-
-          let ifReq: ToCheckNode[] = [];
-          for (const r of req) {
-            ifReq = [...ifReq, ...r.req];
-          }
-          ifReq = [...ifReq, ...ifThen.req];
-
-          const toDecl = new ExistDefNode(
-            fact.defName,
-            ifVars,
-            ifReq,
-            fact.vars,
-            fact.facts,
-          );
-
-          if (storeDefName) {
-            const ok = defExist(env, toDecl, true);
-
-            if (!ok) return false;
-          }
-        } else {
-          const newReq = new StoredReq(ifThen.vars, ifThen.req);
-          const ok = store(
-            env,
-            fact,
-            [...req, newReq],
-            storeContrapositive,
-            storeDefName,
-          );
-          if (!ok) return false;
-        }
+        const newReq = new StoredReq(ifThen.vars, ifThen.req);
+        const ok = store(
+          env,
+          fact,
+          [...req, newReq],
+          storeContrapositive,
+          storeDefName,
+        );
+        if (!ok) return false;
       }
     } else {
-      if (ifThen.defName === undefined) {
-        env.newMessage(
-          `Failed to store ${ifThen}, because not-if-then is suppose to have a name.`,
-        );
-      }
-
       return false;
-    }
-
-    if (storeDefName && ifThen.defName !== undefined) {
-      const ok = defNameIfDef(env, ifThen, req);
-      if (!ok) return false;
     }
 
     if (storeDefName && ifThen.reqName) {
@@ -414,11 +375,6 @@ function storeOpt(
     if (req.length > 0) {
       env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars}) <= ${req}`);
     } else env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars})`);
-  }
-
-  if (storeDefName && fact.defName) {
-    const ok = defNameOptDef(env, fact, req);
-    if (!ok) return false;
   }
 
   const toStore = new StoredFact(fact.vars, req, fact.isT);
@@ -586,11 +542,8 @@ export function executorStoreFact(
     } else if (fact instanceof OrNode) {
       return storeOr(env, fact, [], storeContrapositive);
     } else if (fact instanceof ExistNode) {
-      return defExist(
-        env,
-        new ExistDefNode(fact.defName, [], [], fact.vars, fact.facts),
-        true,
-      );
+      //! NEED TO BE IMPLEMENTED
+      return false;
     } else throw Error();
   } catch {
     env.newMessage(`Failed to store ${fact}`);
@@ -721,98 +674,98 @@ export function defExist(
   }
 }
 
-export function defNameOptDef(
-  env: L_Env,
-  fact: OptNode,
-  req: StoredReq[],
-): boolean {
-  try {
-    return storeVanilla();
-  } catch {
-    return memoryErr(
-      env,
-      `Failed to use defName ${fact.defName} to store ${fact}`,
-    );
-  }
+// export function defNameOptDef(
+//   env: L_Env,
+//   fact: OptNode,
+//   req: StoredReq[],
+// ): boolean {
+//   try {
+//     return storeVanilla();
+//   } catch {
+//     return memoryErr(
+//       env,
+//       `Failed to use defName ${fact.defName} to store ${fact}`,
+//     );
+//   }
 
-  //! Implement if-then-if-then memorize, layers included. store if-then instead of opt
-  // deno-lint-ignore no-unused-vars
-  function storeIfThenType() {
-    return true;
-  }
+//   //! Implement if-then-if-then memorize, layers included. store if-then instead of opt
+//   // deno-lint-ignore no-unused-vars
+//   function storeIfThenType() {
+//     return true;
+//   }
 
-  function storeVanilla() {
-    const ifVars: string[] = [];
-    const ifReq: ToCheckNode[] = [];
+//   function storeVanilla() {
+//     const ifVars: string[] = [];
+//     const ifReq: ToCheckNode[] = [];
 
-    req.forEach((e) => {
-      e.vars.forEach((v) => ifVars.push(v));
-      e.req.forEach((v) => ifReq.push(v));
-    });
+//     req.forEach((e) => {
+//       e.vars.forEach((v) => ifVars.push(v));
+//       e.req.forEach((v) => ifReq.push(v));
+//     });
 
-    const ok = declNewFact(
-      env,
-      new IfDefNode(fact.defName, ifVars, ifReq, [fact]),
-      false,
-    );
+//     const ok = declNewFact(
+//       env,
+//       new IfDefNode(fact.defName, ifVars, ifReq, [fact]),
+//       false,
+//     );
 
-    if (!ok) {
-      return memoryErr(
-        env,
-        `failed to use defName ${fact.defName} to declare ${declNewFact}`,
-      );
-    }
+//     if (!ok) {
+//       return memoryErr(
+//         env,
+//         `failed to use defName ${fact.defName} to declare ${declNewFact}`,
+//       );
+//     }
 
-    return true;
-  }
-}
+//     return true;
+//   }
+// }
 
-export function defNameIfDef(
-  env: L_Env,
-  fact: IfNode,
-  req: StoredReq[],
-): boolean {
-  try {
-    return storeVanilla();
-  } catch {
-    return memoryErr(
-      env,
-      `Failed to use defName ${fact.defName} to store ${fact}`,
-    );
-  }
+// export function defNameIfDef(
+//   env: L_Env,
+//   fact: IfNode,
+//   req: StoredReq[],
+// ): boolean {
+//   try {
+//     return storeVanilla();
+//   } catch {
+//     return memoryErr(
+//       env,
+//       `Failed to use defName ${fact.defName} to store ${fact}`,
+//     );
+//   }
 
-  // deno-lint-ignore no-unused-vars
-  function storeIfThenType() {
-    return true;
-  }
+//   // deno-lint-ignore no-unused-vars
+//   function storeIfThenType() {
+//     return true;
+//   }
 
-  function storeVanilla() {
-    const ifVars: string[] = [];
-    const ifReq: ToCheckNode[] = [];
+//   function storeVanilla() {
+//     const ifVars: string[] = [];
+//     const ifReq: ToCheckNode[] = [];
 
-    req.forEach((e) => {
-      ifVars.push(...e.vars);
-      ifReq.push(...e.req);
-    });
-    ifVars.push(...fact.vars);
-    ifReq.push(...fact.req);
+//     req.forEach((e) => {
+//       ifVars.push(...e.vars);
+//       ifReq.push(...e.req);
+//     });
+//     ifVars.push(...fact.vars);
+//     ifReq.push(...fact.req);
 
-    const ok = declNewFact(
-      env,
-      new IfDefNode(fact.defName, ifVars, ifReq, fact.onlyIfs),
-      false,
-    );
+//     const ok = declNewFact(
+//       env,
+//       new IfDefNode(fact.defName, ifVars, ifReq, fact.onlyIfs),
+//       false,
+//     );
 
-    if (!ok) {
-      return memoryErr(
-        env,
-        `failed to use defName ${fact.defName} to declare ${declNewFact}`,
-      );
-    }
+//     if (!ok) {
+//       return memoryErr(
+//         env,
+//         `failed to use defName ${fact.defName} to declare ${declNewFact}`,
+//       );
+//     }
 
-    return true;
-  }
-}
+//     return true;
+//   }
+// }
 
 export function storeReqSpace(
   env: L_Env,
@@ -823,10 +776,7 @@ export function storeReqSpace(
   try {
     return storeVanilla();
   } catch {
-    return memoryErr(
-      env,
-      `Failed to use defName ${fact.defName} to store ${fact}`,
-    );
+    return false;
   }
 
   function storeVanilla() {

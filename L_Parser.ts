@@ -357,7 +357,7 @@ function optParseWithNot(
       skip(tokens, "]");
     }
 
-    return new OptNode(name, vars, isT, undefined, checkVars);
+    return new OptNode(name, vars, isT, checkVars);
   } catch (error) {
     handleParseError(env, `${start} is invalid operator.`, index, start);
     throw error;
@@ -561,7 +561,7 @@ function optParseWithNotAre(
         skip(tokens, "]");
       }
 
-      return [new OptNode(name, vars, isT, undefined, checkVars)];
+      return [new OptNode(name, vars, isT, checkVars)];
     } else {
       while (![...AreKeywords, ...IsKeywords].includes(tokens[0])) {
         const v = shiftVar(tokens);
@@ -598,7 +598,7 @@ function optParseWithNotAre(
       }
 
       const outs = vars.map(
-        (e) => new OptNode(name, [e], isT, undefined, checkVars),
+        (e) => new OptNode(name, [e], isT, checkVars),
       );
       // outs[outs.length - 1].defName = undefined;
       return outs;
@@ -660,9 +660,9 @@ function logicParse(
     }
 
     if (IfKeywords.includes(type)) {
-      return new IfNode(vars, req, onlyIfs, true, defName, reqName);
+      return new IfNode(vars, req, onlyIfs, true, reqName);
     } else if (IffKeywords.includes(type)) {
-      return new IffNode(vars, req, onlyIfs, true, defName, reqName);
+      return new IffNode(vars, req, onlyIfs, true, reqName);
     }
     throw Error();
   } catch (error) {
@@ -789,7 +789,7 @@ function orParse(
       skip(tokens, "]");
     }
 
-    return new OrNode(facts, true, defName);
+    return new OrNode(facts, true);
   } catch (error) {
     handleParseError(env, "operator", index, start);
     throw error;
@@ -820,7 +820,7 @@ function notsParse(
       skip(tokens, "]");
     }
 
-    return new OrNode(facts, true, defName);
+    return new OrNode(facts, true);
   } catch (error) {
     handleParseError(env, "nots", index, start);
     throw error;
@@ -868,7 +868,7 @@ function existParse(
       skip(tokens, "]");
     }
 
-    return new ExistNode(vars, facts, true, defName);
+    return new ExistNode(vars, facts, true);
   } catch (error) {
     handleParseError(env, "exist", index, start);
     throw error;

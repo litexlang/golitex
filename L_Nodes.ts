@@ -1,11 +1,11 @@
 import { L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
-import { DefNameDecl, MemorizedExistDecl } from "./L_Memory.ts";
+import { MemorizedExistDecl } from "./L_Memory.ts";
 
 export abstract class L_Node {}
 
 export class ToCheckNode extends L_Node {
-  constructor(public isT: boolean, public defName: string | undefined) {
+  constructor(public isT: boolean) {
     super();
   }
 
@@ -22,19 +22,11 @@ export class ToCheckNode extends L_Node {
 
   useMapToCopy(map: Map<string, string>): ToCheckNode {
     map;
-    return new ToCheckNode(true, undefined);
+    return new ToCheckNode(true);
   }
 
   copyWithoutIsT(newIsT: boolean): ToCheckNode {
-    return new ToCheckNode(newIsT, undefined);
-  }
-
-  getSubFactsWithDefName(): DefNameDecl[] {
-    if (this.defName === undefined) {
-      return [];
-    } else {
-      return [new DefNameDecl(this.defName, [], [], this)];
-    }
+    return new ToCheckNode(newIsT);
   }
 
   containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
@@ -47,9 +39,8 @@ export class OrNode extends ToCheckNode {
   constructor(
     public facts: ToCheckNode[],
     isT: boolean,
-    defName: string | undefined,
   ) {
-    super(isT, defName);
+    super(isT);
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
@@ -61,15 +52,11 @@ export class OrNode extends ToCheckNode {
   }
 
   override copyWithoutIsT(newIsT: boolean): ToCheckNode {
-    return new OrNode(this.facts, newIsT, this.defName);
+    return new OrNode(this.facts, newIsT);
   }
 
   override toString(): string {
     return `ors{${this.facts.map((e) => e.toString()).join(", ")}}`;
-  }
-
-  override getSubFactsWithDefName(): DefNameDecl[] {
-    return [];
   }
 }
 
@@ -79,10 +66,9 @@ export class LogicNode extends ToCheckNode {
     public req: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [],
     isT: boolean = true,
-    defName: undefined | string = undefined, // public isIff: boolean = false
     public reqName: null | string = null,
   ) {
-    super(isT, defName);
+    super(isT);
   }
 
   examineVarsNotDoubleDecl(varsFromAboveIf: string[]): boolean {
@@ -106,7 +92,7 @@ export class LogicNode extends ToCheckNode {
       this.req,
       this.onlyIfs,
       newIsT,
-      this.defName,
+      // this.defName,
       this.reqName,
       // this.isIff
     );
@@ -123,7 +109,7 @@ export class LogicNode extends ToCheckNode {
         req,
         onlyIfs,
         this.isT,
-        this.defName,
+        // this.defName,
         this.reqName,
       );
     }
@@ -149,9 +135,9 @@ export class LogicNode extends ToCheckNode {
     }}`;
     const notPart = !this.isT ? "[not] " : "";
 
-    const defName = this.defName === undefined ? "" : `[${this.defName}]`;
+    // const defName = this.defName === undefined ? "" : `[${this.defName}]`;
 
-    return notPart + mainPart + defName;
+    return notPart + mainPart;
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
@@ -167,37 +153,6 @@ export class LogicNode extends ToCheckNode {
 
 export class IffNode extends LogicNode {}
 export class IfNode extends LogicNode {
-  useByToDecl(): IfDefNode {
-    return new DefNode(this.defName, this.vars, this.req, this.onlyIfs);
-  }
-
-  override getSubFactsWithDefName(): DefNameDecl[] {
-    // get def from req
-    let out: DefNameDecl[] = [];
-    for (const fact of this.req) {
-      const defNameDecls = fact.getSubFactsWithDefName();
-      out = [...out, ...defNameDecls];
-    }
-
-    for (const r of this.onlyIfs) {
-      const defNameDecls = r.getSubFactsWithDefName();
-      addCurLayer(this, defNameDecls);
-      out = [...out, ...defNameDecls];
-    }
-
-    if (this.defName !== undefined) {
-      out = [...out, new DefNameDecl(this.defName, [], [], this)];
-    }
-
-    return out;
-
-    function addCurLayer(ifThen: IfNode, defs: DefNameDecl[]): DefNameDecl[] {
-      for (let i = 0; i < defs.length; i++) {
-        defs[i].pushBeginNewReq(ifThen);
-      }
-      return defs;
-    }
-  }
 }
 
 // export class LogicNode extends LogicalOptNode {}
@@ -208,10 +163,10 @@ export class OptNode extends ToCheckNode {
     public name: string,
     public vars: string[],
     isT: boolean = true,
-    defName: string | undefined = undefined,
+    // defName: string | undefined = undefined,
     public checkVars: string[][] | undefined = undefined,
   ) {
-    super(isT, defName);
+    super(isT);
   }
 
   override containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
@@ -224,7 +179,7 @@ export class OptNode extends ToCheckNode {
       this.name,
       this.vars,
       newIsT,
-      this.defName,
+      // this.defName,
       this.checkVars,
     );
   }
@@ -245,7 +200,7 @@ export class OptNode extends ToCheckNode {
       this.name,
       newVars,
       this.isT,
-      this.defName,
+      // this.defName,
       this.checkVars,
     );
   }
@@ -253,8 +208,7 @@ export class OptNode extends ToCheckNode {
   override toString() {
     const mainPart = this.name + `(${this.vars.join(", ")})`;
     const notPart = !this.isT ? "[not] " : "";
-    const defName = this.defName === undefined ? "" : `[${this.defName}]`;
-    return notPart + mainPart + defName;
+    return notPart + mainPart;
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
@@ -282,11 +236,6 @@ export class OptNode extends ToCheckNode {
       return false;
     }
   }
-
-  override getSubFactsWithDefName(): DefNameDecl[] {
-    if (this.defName === undefined) return [];
-    else return [new DefNameDecl(this.defName, [], [], this)];
-  }
 }
 
 export class ExistNode extends ToCheckNode {
@@ -294,9 +243,9 @@ export class ExistNode extends ToCheckNode {
     public vars: string[],
     public facts: ToCheckNode[],
     isT: boolean = true,
-    defName: string | undefined = undefined,
+    // defName: string | undefined = undefined,
   ) {
-    super(isT, defName);
+    super(isT);
   }
 
   //! MAYBE NOT GOOD
@@ -368,9 +317,9 @@ export class ExistDefNode extends DefNode {
 
   getIfNode(): IfNode {
     const itself = [
-      new OptNode(this.name, this.vars, true, undefined, this.ifVars),
+      new OptNode(this.name, this.vars, true, this.ifVars),
     ];
-    return new IfNode(this.vars, this.req, itself, true, undefined, null);
+    return new IfNode(this.vars, this.req, itself, true, null);
   }
 }
 
