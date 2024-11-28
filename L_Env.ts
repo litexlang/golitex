@@ -18,13 +18,12 @@ import { L_Out } from "./L_Executor.ts";
 import { isToCheckBuiltin } from "./L_Builtins.ts";
 
 export class L_Env {
+  private parent: L_Env | undefined = undefined;
+
   private messages: string[] = [];
   private declaredVars = new Set<string>();
 
   private defs = new Map<string, DefNode>();
-
-  private declaredExist = new Map<string, MemorizedExistDecl>();
-  private parent: L_Env | undefined = undefined;
 
   private reqSpaces = new Map<string, ReqSpace>();
   private macros: MacroNode[] = [];
@@ -44,7 +43,6 @@ export class L_Env {
 
     this.defs = new Map<string, DefNode>();
 
-    this.declaredExist = new Map<string, MemorizedExistDecl>();
     this.parent = undefined;
 
     this.reqSpaces = new Map<string, ReqSpace>();
@@ -159,33 +157,6 @@ export class L_Env {
     if (this.reqSpaces.get(s)) return false;
     this.reqSpaces.set(s, space);
     return true;
-  }
-
-  newDeclExist(decl: ExistDefNode): boolean {
-    try {
-      const out = this.declaredExist.get(decl.name);
-      if (out !== undefined) {
-        this.newMessage(`${decl.name} already declared.`);
-        return false;
-      } else {
-        this.declaredExist.set(decl.name, decl.toMemorized());
-        return true;
-      }
-    } catch {
-      return false;
-    }
-  }
-
-  getDeclExist(s: string): MemorizedExistDecl | undefined {
-    const out = this.declaredExist.get(s);
-    if (out !== undefined) return out;
-    else {
-      if (this.parent) {
-        return this.parent.getDeclExist(s);
-      } else {
-        return undefined;
-      }
-    }
   }
 
   factsInToCheckAllDeclared(node: ToCheckNode): boolean {
@@ -327,7 +298,6 @@ export class L_Env {
       vars: Array.from(this.declaredVars),
       defs: Object.fromEntries(this.defs),
       knowns: Object.fromEntries(this.knownFacts),
-      exists: Object.fromEntries(this.declaredExist),
       reqSpaces: Object.fromEntries(this.reqSpaces),
       macros: this.macros,
     };

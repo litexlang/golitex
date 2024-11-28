@@ -22,6 +22,7 @@ import * as L_Memory from "./L_Memory.ts";
 import { ClearKeyword, RunKeyword } from "./L_Common.ts";
 import { runFile } from "./L_Runner.ts";
 import { LogicNode } from "./L_Nodes.ts";
+import { store } from "./L_Memory.ts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -288,26 +289,25 @@ function returnExec(env: L_Env, node: ReturnNode): L_Out {
 
 function haveExec(env: L_Env, node: HaveNode): L_Out {
   try {
-    const exist = env.getDeclExist(node.opt.name);
-    if (exist === undefined) {
-      env.newMessage(`${node.opt.name} is not exist-type fact.`);
-      return L_Out.Error;
-    }
+    if (env.isExisted(node.opt.name)) {
+      if (!node.vars.every((e) => node.opt.vars.includes(e))) {
+        return env.errIntoEnvReturnL_Out(
+          `have error: [${node.vars}] must be subset of [${node.opt.vars}]`,
+        );
+      }
 
-    const out = L_Checker.check(env, node.opt);
-    if (out !== L_Out.True) {
-      env.newMessage(`${node} failed.`);
-      return out;
-    }
+      for (const v of node.vars) {
+        const ok = env.newVar(v);
+        if (!ok) throw Error();
+      }
 
-    const facts = exist.instantiate(env, node.opt.vars, node.vars);
-    if (facts === undefined) {
-      return L_Out.Error;
+      const ok = store(env, node.opt, [], true);
+      return ok ? L_Out.True : L_Out.Error;
+    } else {
+      return env.errIntoEnvReturnL_Out(
+        `whether ${node.opt.name} exists is unknown.`,
+      );
     }
-    node.vars.forEach((e) => env.newVar(e));
-    facts.forEach((e) => L_Memory.store(env, e, [], true));
-
-    return L_Out.True;
   } catch {
     env.newMessage("have");
     return L_Out.Error;

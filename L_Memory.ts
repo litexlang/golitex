@@ -632,33 +632,33 @@ function storeContrapositiveFacts(
 //   }
 // }
 
-export function defExist(
-  env: L_Env,
-  node: ExistDefNode,
-  storeAsFact: boolean,
-): boolean {
-  try {
-    let ok = env.newDef(node.name, node);
-    if (!ok) return false;
+// export function defExist(
+//   env: L_Env,
+//   node: ExistDefNode,
+//   storeAsFact: boolean,
+// ): boolean {
+//   try {
+//     let ok = env.newDef(node.name, node);
+//     if (!ok) return false;
 
-    ok = env.newDeclExist(node);
-    if (!ok) {
-      env.newMessage(`Failed to store ${node}`);
-      return false;
-    }
+//     ok = env.newDeclExist(node);
+//     if (!ok) {
+//       env.newMessage(`Failed to store ${node}`);
+//       return false;
+//     }
 
-    if (storeAsFact) {
-      const itself = new OptNode(node.name, node.vars);
-      ok = storeIfThen(env, new IfNode(node.vars, node.req, [itself]));
-      if (!ok) return false;
-    }
+//     if (storeAsFact) {
+//       const itself = new OptNode(node.name, node.vars);
+//       ok = storeIfThen(env, new IfNode(node.vars, node.req, [itself]));
+//       if (!ok) return false;
+//     }
 
-    return true;
-  } catch {
-    env.newMessage("def exist");
-    return false;
-  }
-}
+//     return true;
+//   } catch {
+//     env.newMessage("def exist");
+//     return false;
+//   }
+// }
 
 // export function defNameOptDef(
 //   env: L_Env,
