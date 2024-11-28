@@ -173,7 +173,7 @@ export const exampleList: ExampleItem[] = [
       "[_3] if x: p(x) => {q(x)};",
       "by _3(a);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -186,6 +186,12 @@ export const exampleList: ExampleItem[] = [
       "if : => {if x,y: t(x,y) => {q(x)} };",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "exist",
+    code: ["def p(x); def q(x); ", "let x: p(x);", "exist(p,x);", "exist(p);"],
+    debug: true,
     print: true,
   },
 ];

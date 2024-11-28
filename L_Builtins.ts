@@ -31,15 +31,19 @@ L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {
   }
 });
 
+// node likes like exist(OptName, v1,v2...vn)
 L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
   try {
-    if (env.isExisted(node.name)) {
+    if (env.isExisted(node.vars[0])) {
       return L_Out.True;
     }
 
-    const out = checkOptLiterally(env, node);
+    const toCheck = new OptNode(node.vars[0], node.vars.slice(1));
+
+    // Why checkOptLiterally? because I want to make exist as "user-is-responsible-for-checking" as possible
+    const out = checkOptLiterally(env, toCheck);
     if (out === L_Out.True) {
-      env.newExist(node.name);
+      env.newExist(node.vars[0]);
     }
 
     return out;
