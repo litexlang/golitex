@@ -81,8 +81,8 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
       case "SpecialNode":
         return specialExec(env, node as SpecialNode);
 
-      case "UseNode":
-        return useExec(env, node as ByNode);
+      case "ByNode":
+        return byExec(env, node as ByNode);
 
       case "MacroNode":
         return macroExec(env, node as MacroNode);
@@ -326,37 +326,37 @@ function specialExec(env: L_Env, node: SpecialNode): L_Out {
   }
 }
 
-function useExec(env: L_Env, node: ByNode): L_Out {
-  try {
-    const reqSpace = env.getReqSpace(node.reqSpaceName);
-    if (reqSpace === undefined) {
-      return env.errIntoEnvReturnL_Out(`${node.reqSpaceName} undefined.`);
-    }
+// function useExec(env: L_Env, node: ByNode): L_Out {
+//   try {
+//     const reqSpace = env.getReqSpace(node.reqSpaceName);
+//     if (reqSpace === undefined) {
+//       return env.errIntoEnvReturnL_Out(`${node.reqSpaceName} undefined.`);
+//     }
 
-    const map = makeStrStrMap(env, reqSpace.ifVars, node.vars);
-    if (map === undefined) {
-      return env.errIntoEnvReturnL_Out(`Failed to call ${node.reqSpaceName}`);
-    }
+//     const map = makeStrStrMap(env, reqSpace.ifVars, node.vars);
+//     if (map === undefined) {
+//       return env.errIntoEnvReturnL_Out(`Failed to call ${node.reqSpaceName}`);
+//     }
 
-    const req = reqSpace.ifReq.map((e) => e.useMapToCopy(map));
-    const onlyIf = reqSpace.onlyIf.map((e) => e.useMapToCopy(map));
+//     const req = reqSpace.ifReq.map((e) => e.useMapToCopy(map));
+//     const onlyIf = reqSpace.onlyIf.map((e) => e.useMapToCopy(map));
 
-    for (const r of req) {
-      const out = L_Checker.check(env, r);
-      if (out !== L_Out.True) return out;
-    }
+//     for (const r of req) {
+//       const out = L_Checker.check(env, r);
+//       if (out !== L_Out.True) return out;
+//     }
 
-    for (const f of onlyIf) {
-      const ok = L_Memory.store(env, f, [], true, false);
-      if (!ok) return L_Out.Error;
-    }
+//     for (const f of onlyIf) {
+//       const ok = L_Memory.store(env, f, [], true, false);
+//       if (!ok) return L_Out.Error;
+//     }
 
-    return L_Out.True;
-  } catch {
-    env.newMessage(`Failed: ${node}`);
-    return L_Out.Error;
-  }
-}
+//     return L_Out.True;
+//   } catch {
+//     env.newMessage(`Failed: ${node}`);
+//     return L_Out.Error;
+//   }
+// }
 
 function makeStrStrMap(
   env: L_Env,
@@ -631,4 +631,11 @@ function noVarsOrOptDeclaredHere(
   }
 
   return true;
+}
+
+function byExec(env: L_Env, ByNode: ByNode): L_Out {
+  try {
+  } catch {
+    return env.errIntoEnvReturnL_Out(ByNode);
+  }
 }

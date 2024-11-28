@@ -460,12 +460,16 @@ export class SpecialNode extends L_Node {
 }
 
 export class ByNode extends L_Node {
-  constructor(public reqSpaceName: string, public vars: string[]) {
+  constructor(public nameVarsPairs: [string, string[]][]) {
     super();
   }
 
   override toString() {
-    return `${this.reqSpaceName}(${this.vars})`;
+    let out: string[] = [];
+    for (const nvp of this.nameVarsPairs) {
+      out.push(`${nvp[0]}(${nvp[1]})`);
+    }
+    return out.join(", ");
   }
 }
 
