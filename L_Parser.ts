@@ -77,8 +77,12 @@ function shiftVar(tokens: string[]): string {
   return token;
 }
 
-function isCurToken(tokens: string[], s: string) {
-  return s === tokens[0];
+function isCurToken(tokens: string[], s: string | string[]) {
+  if (!Array.isArray(s)) {
+    return s === tokens[0];
+  } else {
+    return s.includes(tokens[0]);
+  }
 }
 
 function handleParseError(
@@ -129,7 +133,7 @@ const KeywordFunctionMap: {
   return: returnParse,
   clear: specialParse,
   run: specialParse,
-  use: useParse,
+  by: byParse,
   macro: macroParse,
 };
 
@@ -877,26 +881,20 @@ function specialParse(env: L_Env, tokens: string[]): SpecialNode {
   }
 }
 
-function useParse(env: L_Env, tokens: string[]): ByNode {
+function byParse(env: L_Env, tokens: string[]): ByNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     skip(tokens, UseKeyword);
-    const vars: string[] = [];
-    const reqSpaceName = shiftVar(tokens);
-
-    skip(tokens, "(");
-
-    while (!isCurToken(tokens, ")")) {
-      vars.push(shiftVar(tokens));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    const outs: OptNode[] = [];
+    while (!isCurToken(tokens, L_Ends)) {
+      const opt = optParseWithNot(env, tokens, true);
+      outs.push(opt);
     }
-
-    skip(tokens, ")");
-
     skip(tokens, L_Ends);
-    return new ByNode(reqSpaceName, vars);
+
+    return new ByNode(outs);
   } catch (error) {
     handleParseError(env, "call", index, start);
     throw error;

@@ -460,16 +460,12 @@ export class SpecialNode extends L_Node {
 }
 
 export class ByNode extends L_Node {
-  constructor(public nameVarsPairs: [string, string[]][]) {
+  constructor(public opts: OptNode[]) {
     super();
   }
 
   override toString() {
-    let out: string[] = [];
-    for (const nvp of this.nameVarsPairs) {
-      out.push(`${nvp[0]}(${nvp[1]})`);
-    }
-    return out.join(", ");
+    return `${this.opts.map((e) => e.toString).join(", ")}`;
   }
 }
 

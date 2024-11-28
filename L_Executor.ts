@@ -635,6 +635,7 @@ function noVarsOrOptDeclaredHere(
 
 function byExec(env: L_Env, ByNode: ByNode): L_Out {
   try {
+    return L_Out.Error;
   } catch {
     return env.errIntoEnvReturnL_Out(ByNode);
   }
