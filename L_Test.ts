@@ -157,6 +157,14 @@ export const exampleList: ExampleItem[] = [
     debug: true,
     print: true,
   },
+  {
+    name: "exist",
+    code: [
+      "def p(x);",
+    ],
+    debug: true,
+    print: true,
+  },
 ];
 
 function runExamples(toJSON: boolean) {

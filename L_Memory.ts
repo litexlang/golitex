@@ -8,7 +8,7 @@ import {
   IffDefNode,
   IfNode,
   LogicNode,
-  OnlyIfDefNode,
+  // OnlyIfDefNode,
   OptNode,
   OrNode,
   ToCheckNode,
@@ -243,7 +243,7 @@ export class StoredFact {
 export function declNewFact(
   env: L_Env,
   node: DefNode,
-  storeDefName: boolean = true,
+  _storeDefName: boolean = true,
 ): boolean {
   let ok = true;
 

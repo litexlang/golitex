@@ -29,6 +29,7 @@ export class L_Env {
   private macros: MacroNode[] = [];
 
   private knownFacts = new Map<string, KnownFact>();
+  private namedKnowns = new Map<string, ToCheckNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -161,7 +162,7 @@ export class L_Env {
 
   newDef(s: string, DefNode: DefNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
-    if (this.defs.get(s) !== undefined) {
+    if (this.getDef(s) !== undefined) {
       this.newMessage(
         `${s} already declared in this environment or its parents environments.`,
       );
