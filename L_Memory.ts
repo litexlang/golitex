@@ -822,7 +822,20 @@ export function storeBuiltinFact(
   if (fact instanceof OptNode) {
     switch (fact.name) {
       case "exist": {
+        // store exist
         env.newExist(fact.vars[0], new KnownExist(fact.isT));
+        // if not exist, then store if vars:  => {fact(vars)}
+        if (!fact.isT) {
+          const defined = env.getDef(fact.vars[0]);
+          if (defined === undefined) return false;
+          const vars = defined.vars;
+          const ifThen = new IfNode(vars, [], [
+            new OptNode(fact.vars[0], vars, false, undefined),
+          ]);
+          const ok = store(env, ifThen, [], false);
+          return ok;
+        }
+
         env.newMessage(`[exist] ${fact.vars[0]}`);
         return true;
       }

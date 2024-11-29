@@ -255,6 +255,7 @@ export const exampleList: ExampleItem[] = [
       "know not exist(p);",
       "exist(p);",
       "not exist(p);",
+      "if x: => {not p(x)};",
     ],
     debug: true,
     print: true,
