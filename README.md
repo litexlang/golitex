@@ -54,53 +54,66 @@ Some core functionalities of LiTeX are included in this example
 
 ## Syntax
 
-#### Define New Concepts
+# Logical Concept System Examples
 
-```plaintext
+## Basic Syllogism
+
+```
+def mortal(something);
+def something is human {if x : x is human => {x is mortal}};
+let Socrates: Socrates is human;
+Socrates is mortal;
+if x : x is human => {x is mortal};
+let god : god is not mortal;
+prove_by_contradiction god is not human {
+  god is mortal;
+} contradiction god is mortal;
+god is not human;
+```
+
+## Concept Definition
+
+```
 def p(x);
 def x is p1;
 def q(x,y);
 def p2(x) {if x: x is p1 => {x is p2} }
+def p3(x) {if x: p3(x) => {p(x)} , if x: p(x) => {p3(x)} }
+let x,y: p3(x), p(y);
+p(x), p3(y);
+def p(x); // error: you can not declare a concept twice.
 ```
 
-#### Check Expressions
+## Expression Checking
 
-```plaintext
-def human(x); def teacher(x,y);
-Aristotle is human;
-human(Aristotle);
-Plato, Aristotle are human;
-Aristotle is not human; // False
-teacher(Plato, Aristotle);
-let somebody; somebody is human; // Unknown,
+```
+def human(x);
+def teacher(x,y);
+let 亚里士多德, Plato: 亚里士多德  is human;
+亚里士多德 is not human; // False
+human(亚里士多德);
+Plato, 亚里士多德 are human;
+teacher(Plato, 亚里士多德);
+know teacher(Plato, 亚里士多德);
+teacher(Plato, 亚里士多德);
+let somebody;
+somebody is human; // Unknown
 ```
 
-#### Introduce New Variables
+## Variable Introduction
 
-```plaintext
+```
+def p(x); def q(x,y);
 let x,y,z;
-let 变量, 10.2, \_nonsense, 你好 world, I-AM-MEANINGLESS;
+let 变量, 10.2, _nonsense, 你好 world, I-AM-MEANINGLESS;
 let a,b,c: a is p, q(b,c);
-let y; know if a: p(a) => {t(y,a)};
-let x: p(x);
-t(y,x);
+let y; // y already declared.
 ```
 
-#### Assume Expressions
+## Not Operator
 
-```plaintext
-know if x: x is p2 => {x is p2};
-know p(x), q(a,b);
-know if x is p2 => {x is p2};
-know if x: if y: q(x,y) => {p(x)} => {p(y)};
-know if x => {if y: q(x,y) => {p(x), p(y)} };
 ```
-
----
-
-#### Not
-
-```plaintext
+def p(x);
 let v1, v2, v3, v4, v5: not p(v1), v2 is not p, not v3 is p, v4,v5 are not p;
 not p(v1);
 let v6;
@@ -109,48 +122,66 @@ know not p(v6);
 not p(v6); // True
 ```
 
-#### If & Forall
+## If and Forall
 
-```plaintext
+```
+def p1(x); def p(x); def p2(x) {if x: x is p2 => {x is p1}}
 if x: x is p2 => {x is p1}; // True
 if x: x is p => {x is p1}; // Unknown
 if x : x is p => {x is p}; // Always true
 ```
 
-#### Prove & Prove by Contradiction
+## Prove and Contradiction
 
-```plaintext
+```
+def p3(x); def p2(x); def p1(x);
+know if x: p3(x) => {p2(x)}, if x : p2(x) => {p1(x)} ;
 prove if x : x is p3 => {x is p1} {x is p2;}
-
-let v10,v12: v10 is p2;
-// prove factual-expression {proofs}
+let v10,v12: v10 is p2; // prove factual-expression {proofs}
 prove v10 is p1 {v10 is p2;}
-
-// prove_by_contradiction factual-expression {proofs} contradiction expression;
 know v12 is not p1;
-prove_by_contradiction v12 is not p3 {v12 is p2} contradiction v12 is p1;
+prove_by_contradiction v12 is not p3 {v12 is p2;} contradiction v12 is p1;
 ```
 
-#### Exist & Have
+## Exist
 
-```plaintext
-def E(x): p(x) exist y {q(x,y)};
-have E(x): v11; // Failed: p(v10) is unknown
-know p(v11);
-have E(x): v11; // True
-q(x,v11);
+```
+def p(x); def q(x); def t(x,y); def t_y(x); know if x :t(x,y) => {t_y(x)};
+let x, y: t(x,y);
+t_y(x);
+exist(t_y,x);
+know if exist(t_y) => {q(y)};
+q(y);
 ```
 
-#### Define Inline While Proving
+## Know Not Exist
 
-```plaintext
-if x: p(x) => {p(x)} [p1_1];
-let v15: p(v15)[p1_2];
-p1_1(x);
-def nothing();
-know if nothing() => {exist x,y {q(x,y)} [p1_3]};
-have p1_3(): v16,17;
-q(v16,v17); // True
+```
+def p(x); def q(x);
+know not exist(p);
+exist(p);
+not exist(p);
+if x: => {not p(x)};
+```
+
+## Prove Exist
+
+```
+def p(x); prove exist(p) {let x: p(x); exist(p, x);}
+```
+
+## Know Exist
+
+```
+def p(x); def q(x); def t(x,y); def t_y(x); know if x :t(x,y) => {t_y(x)};
+know exist(p);
+exist(p);
+```
+
+## Have
+
+```
+def p(x); know exist(p); have x: p(x);
 ```
 
 ## Potential of LiTeX

@@ -27,7 +27,7 @@ export const DefKeywords = ["def"];
 export const SymbolsFactsSeparator = ":";
 export const ProveKeywords = ["prove"];
 
-export const L_Ends = [";", "\n"];
+export const L_Ends = [";"];
 export const LetKeywords = ["let"];
 export const HaveKeywords = ["have"];
 export const ByKeyword = "by";

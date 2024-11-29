@@ -1,8 +1,9 @@
-import { L_Env } from "./L_Env.ts";
-import { L_Out } from "./L_Executor.ts";
-import * as L_Executor from "./L_Executor.ts";
-import { L_Scan } from "./L_Lexer.ts";
-import * as L_Parser from "./L_Parser.ts";
+import { L_Env } from "./L_Env";
+import { L_Out } from "./L_Executor";
+import * as L_Executor from "./L_Executor";
+import { L_Scan } from "./L_Lexer";
+import * as L_Parser from "./L_Parser";
+import * as fs from 'fs';
 
 export function runString(
   env: L_Env,
@@ -57,7 +58,9 @@ export function runFile(
   printCode: boolean = false,
 ): L_Out[] | undefined {
   try {
-    const fileContent = Deno.readTextFileSync(fileName);
+    let fileContent : string = ""
+    fs.writeFileSync(fileName, fileContent, 'utf8');
+    // const fileContent = Deno.readTextFileSync(fileName);
     console.log(`Running file: ${fileName}\n`);
     const out = runString(env, fileContent, printResult, printCode);
     console.log(`End Running file: ${fileName}\n`);

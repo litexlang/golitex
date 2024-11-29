@@ -1,6 +1,6 @@
 // Implement Terrence Tao's Analysis One chapter 3 set theory.
-import { L_Env } from "./L_Env.ts";
-import { runStrings } from "./L_Runner.ts";
+import { L_Env } from "./L_Env";
+import { runStrings } from "./L_Runner";
 
 const setTheory = [
   "def object(x);",

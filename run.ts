@@ -1,5 +1,5 @@
-import { L_Env } from "./L_Env.ts";
-import { runFile, runString } from "./L_Runner.ts";
+import { L_Env } from "./L_Env";
+import { runFile, runString } from "./L_Runner";
 
 function L_REPL(files: string[]) {
   const env = new L_Env(undefined);
@@ -9,8 +9,8 @@ function L_REPL(files: string[]) {
   );
   console.log(`Exit by inputting 'exit'\n`);
 
-  if (Deno.args.length > 0) {
-    const fileName = Deno.args[0];
+  if (process.argv.length > 2) {
+    const fileName = process.argv[2];
     runFile(env, fileName, true, false);
   }
 

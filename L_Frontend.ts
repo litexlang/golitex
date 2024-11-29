@@ -1,6 +1,6 @@
-import { L_Env } from "./L_Env.ts";
-import { runStrings } from "./L_Runner.ts";
-import { envToJSON, exampleList } from "./L_Test.ts";
+import { L_Env } from "./L_Env";
+import { runStrings } from "./L_Runner";
+import { envToJSON, exampleList } from "./L_Test";
 
 function testEnvToJSON() {
   const env = new L_Env();

@@ -19,8 +19,8 @@ import {
   ReturnNode,
   SpecialNode,
   ToCheckNode,
-} from "./L_Nodes.ts";
-import { L_Env } from "./L_Env.ts";
+} from "./L_Nodes";
+import { L_Env } from "./L_Env";
 import {
   AreKeywords,
   ByKeyword,
@@ -47,7 +47,7 @@ import {
   ProveKeywords,
   ReturnKeyword,
   RunKeyword,
-} from "./L_Common.ts";
+} from "./L_Common";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {

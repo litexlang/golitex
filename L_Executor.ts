@@ -15,19 +15,19 @@ import {
   ReturnNode,
   SpecialNode,
   ToCheckNode,
-} from "./L_Nodes.ts";
-import { L_Env } from "./L_Env.ts";
-import * as L_Checker from "./L_Checker.ts";
-import * as L_Memory from "./L_Memory.ts";
-import { ClearKeyword, RunKeyword } from "./L_Common.ts";
-import { runFile } from "./L_Runner.ts";
-import { LogicNode } from "./L_Nodes.ts";
-import { store } from "./L_Memory.ts";
+} from "./L_Nodes";
+import { L_Env } from "./L_Env";
+import * as L_Checker from "./L_Checker";
+import * as L_Memory from "./L_Memory";
+import { ClearKeyword, RunKeyword } from "./L_Common";
+import { runFile } from "./L_Runner";
+import { LogicNode } from "./L_Nodes";
+import { store } from "./L_Memory";
 import {
   reportNewVars,
   reportNotAllFactsInGivenFactAreDeclared,
-} from "./L_Messages.ts";
-import { isToCheckBuiltin, proveExist } from "./L_Builtins.ts";
+} from "./L_Messages";
+import { isToCheckBuiltin, proveExist } from "./L_Builtins";
 
 export const DEBUG_DICT = {
   newFact: true,

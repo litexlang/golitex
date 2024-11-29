@@ -1,6 +1,6 @@
-import { L_Builtins } from "./L_Builtins.ts";
-import { L_Env } from "./L_Env.ts";
-import { MemorizedExistDecl } from "./L_Memory.ts";
+import { L_Builtins } from "./L_Builtins";
+import { L_Env } from "./L_Env";
+import { MemorizedExistDecl } from "./L_Memory";
 
 export abstract class L_Node {}
 

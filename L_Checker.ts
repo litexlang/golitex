@@ -1,10 +1,10 @@
-import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes.ts";
-import { L_Env } from "./L_Env.ts";
-import { L_Out } from "./L_Executor.ts";
-import { StoredFact } from "./L_Memory.ts";
-import * as L_Memory from "./L_Memory.ts";
-import { L_Builtins } from "./L_Builtins.ts";
-import { lstLengthNotEql } from "./L_Messages.ts";
+import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
+import { L_Env } from "./L_Env";
+import { L_Out } from "./L_Executor";
+import { StoredFact } from "./L_Memory";
+import * as L_Memory from "./L_Memory";
+import { L_Builtins } from "./L_Builtins";
+import { lstLengthNotEql } from "./L_Messages";
 
 export function check(
   env: L_Env,

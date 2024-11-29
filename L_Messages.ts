@@ -1,6 +1,6 @@
-import type { L_Env } from "./L_Env.ts";
-import { L_Out } from "./L_Executor.ts";
-import type { OptNode, ToCheckNode } from "./L_Nodes.ts";
+import type { L_Env } from "./L_Env";
+import { L_Out } from "./L_Executor";
+import type { OptNode, ToCheckNode } from "./L_Nodes";
 
 export function lstLengthNotEql(
   env: L_Env,

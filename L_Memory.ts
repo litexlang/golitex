@@ -9,10 +9,10 @@ import {
   OptNode,
   OrNode,
   ToCheckNode,
-} from "./L_Nodes.ts";
-import { isToCheckBuiltin, L_Builtins } from "./L_Builtins.ts";
-import { L_Env } from "./L_Env.ts";
-import { DEBUG_DICT, L_Out } from "./L_Executor.ts";
+} from "./L_Nodes";
+import { isToCheckBuiltin, L_Builtins } from "./L_Builtins";
+import { L_Env } from "./L_Env";
+import { DEBUG_DICT, L_Out } from "./L_Executor";
 
 export class KnownExist {
   constructor(public isT: boolean) {

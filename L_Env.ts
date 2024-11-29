@@ -5,15 +5,15 @@ import {
   MacroNode,
   OptNode,
   ToCheckNode,
-} from "./L_Nodes.ts";
+} from "./L_Nodes";
 import {
   examineStoredFact,
   KnownExist,
   KnownFact,
   StoredFact,
-} from "./L_Memory.ts";
-import { L_Out } from "./L_Executor.ts";
-import { isToCheckBuiltin } from "./L_Builtins.ts";
+} from "./L_Memory";
+import { L_Out } from "./L_Executor";
+import { isToCheckBuiltin } from "./L_Builtins";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;

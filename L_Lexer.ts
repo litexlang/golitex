@@ -1,4 +1,4 @@
-import { specialChars } from "./L_Common.ts";
+import { specialChars } from "./L_Common";
 
 export function L_Scan(text: string): string[] {
   const tokens: string[] = [];

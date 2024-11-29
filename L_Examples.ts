@@ -1,5 +1,5 @@
-import { L_Env } from "./L_Env.ts";
-import { runStrings } from "./L_Runner.ts";
+import { L_Env } from "./L_Env";
+import { runStrings } from "./L_Runner";
 
 type ExampleItem = {
   name: string;

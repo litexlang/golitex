@@ -1,5 +1,6 @@
-import { L_Env } from "./L_Env.ts";
-import { runStrings } from "./L_Runner.ts";
+import { L_Env } from "./L_Env";
+import { runStrings } from "./L_Runner";
+import * as fs from 'fs';
 
 type ExampleItem = {
   name: string;
@@ -276,12 +277,10 @@ function runExamples(toJSON: boolean) {
 runExamples(false);
 
 export function envToJSON(env: L_Env, fileName: string) {
-  const out = env.toJSON();
-  // Convert the JSON object to a string and then to Uint8Array
-  const jsonString = JSON.stringify(out, null, 2);
-  const encoder = new TextEncoder();
-  const data = encoder.encode(jsonString);
-
-  Deno.writeFileSync(fileName, data);
-  return out;
+ const out = env.toJSON();
+ const jsonString = JSON.stringify(out, null, 2);
+ 
+ fs.writeFileSync(fileName, jsonString, 'utf8');
+ 
+ return out;
 }

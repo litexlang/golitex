@@ -1,9 +1,9 @@
-import { L_Node, OptNode, ToCheckNode } from "./L_Nodes.ts";
-import { L_Env } from "./L_Env.ts";
-import { L_Out, nodeExec } from "./L_Executor.ts";
-import { checkOptLiterally } from "./L_Checker.ts";
-import { reportNewExist } from "./L_Messages.ts";
-import { KnownExist } from "./L_Memory.ts";
+import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
+import { L_Env } from "./L_Env";
+import { L_Out, nodeExec } from "./L_Executor";
+import { checkOptLiterally } from "./L_Checker";
+import { reportNewExist } from "./L_Messages";
+import { KnownExist } from "./L_Memory";
 
 // deno-lint-ignore ban-types
 export const L_Builtins = new Map<string, Function>();
