@@ -234,6 +234,17 @@ export const exampleList: ExampleItem[] = [
       "let x: p1(x);",
       "p2(x);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "check",
+    code: [
+      "def p(x); def q(x); def t(x,y);",
+      "let y; know if a: p(a) => {t(y,a)};",
+      "let x: p(x);",
+      "t(y,x);",
+    ],
     debug: true,
     print: true,
   },

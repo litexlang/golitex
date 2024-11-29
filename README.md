@@ -66,13 +66,13 @@ def p2(x) {if x: x is p1 => {x is p2} }
 #### Check Expressions
 
 ```plaintext
+def human(x); def teacher(x,y);
 Aristotle is human;
 human(Aristotle);
 Plato, Aristotle are human;
-q(Plato, Aristotle);
 Aristotle is not human; // False
-let somebody; somebody is human; // Unknown
-if x: x is not p1 => {x is not p2}; // True
+teacher(Plato, Aristotle);
+let somebody; somebody is human; // Unknown,
 ```
 
 #### Introduce New Variables
@@ -81,6 +81,9 @@ if x: x is not p1 => {x is not p2}; // True
 let x,y,z;
 let 变量, 10.2, \_nonsense, 你好 world, I-AM-MEANINGLESS;
 let a,b,c: a is p, q(b,c);
+let y; know if a: p(a) => {t(y,a)};
+let x: p(x);
+t(y,x);
 ```
 
 #### Assume Expressions
@@ -89,6 +92,8 @@ let a,b,c: a is p, q(b,c);
 know if x: x is p2 => {x is p2};
 know p(x), q(a,b);
 know if x is p2 => {x is p2};
+know if x: if y: q(x,y) => {p(x)} => {p(y)};
+know if x => {if y: q(x,y) => {p(x), p(y)} };
 ```
 
 ---

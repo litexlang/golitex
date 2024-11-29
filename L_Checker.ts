@@ -112,7 +112,7 @@ export function checkOpt(
           }
         }
       } else {
-        //! NOT RIGHT HERE
+        //! IT WORKS.
         for (const [i, v] of toCheck.vars.entries()) {
           map.set(known.vars[i], v);
         }
