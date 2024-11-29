@@ -1,6 +1,6 @@
 import type { L_Env } from "./L_Env.ts";
 import { L_Out } from "./L_Executor.ts";
-import type { L_Node, ToCheckNode } from "./L_Nodes.ts";
+import type { L_Node, OptNode, ToCheckNode } from "./L_Nodes.ts";
 
 export function lstLengthNotEql(
   env: L_Env,
@@ -24,5 +24,10 @@ export function reportNotAllFactsInGivenFactAreDeclared(
 
 export function reportNewVars(env: L_Env, vars: string[]): L_Out {
   env.newMessage(`[new var] ${vars}`);
+  return L_Out.True;
+}
+
+export function reportNewExist(env: L_Env, exist: OptNode): L_Out {
+  env.newMessage(`[new exist] ${exist}`);
   return L_Out.True;
 }

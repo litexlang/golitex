@@ -191,6 +191,7 @@ export const exampleList: ExampleItem[] = [
   {
     name: "exist",
     code: [
+      // 如果要加语法糖的话，在这里把一个var fix住，然后进行后续的证明，是个好语法糖
       "def p(x); def q(x); def t(x,y); def t_y(x); know if x :t(x,y) => {t_y(x)};",
       "let x, y: t(x,y);",
       "t_y(x);",
@@ -216,6 +217,12 @@ export const exampleList: ExampleItem[] = [
     code: [
       "def p(x); know exist(p); have x: p(x);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "prove exist",
+    code: ["def p(x); prove exist(p) {let x: p(x); exist(p, x);}"],
     debug: true,
     print: true,
   },

@@ -4,7 +4,7 @@ import { L_Out } from "./L_Executor.ts";
 import { StoredFact } from "./L_Memory.ts";
 import * as L_Memory from "./L_Memory.ts";
 import { L_Builtins } from "./L_Builtins.ts";
-import { lstLengthNotEql } from "./L_ErrorReport.ts";
+import { lstLengthNotEql } from "./L_Messages.ts";
 
 export function check(
   env: L_Env,

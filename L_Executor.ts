@@ -27,6 +27,7 @@ import {
   reportNewVars,
   reportNotAllFactsInGivenFactAreDeclared,
 } from "./L_Messages.ts";
+import { isToCheckBuiltin, proveExist } from "./L_Builtins.ts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -412,7 +413,11 @@ function proveExec(env: L_Env, node: ProveNode): L_Out {
         out = proveIfThen(env, node.toProve, node.block);
       }
     } else {
-      out = proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
+      if (isToCheckBuiltin(node.fixedIfThenOpt as OptNode)) {
+        out = proveBuiltin(env, node.fixedIfThenOpt as OptNode, node.block);
+      } else {
+        out = proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
+      }
     }
 
     if (out !== L_Out.True) {
@@ -434,6 +439,19 @@ function proveExec(env: L_Env, node: ProveNode): L_Out {
         node.contradict as OptNode,
       );
     }
+  }
+}
+
+function proveBuiltin(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
+  try {
+    switch (toProve.name) {
+      case "exist":
+        return proveExist(env, toProve, block);
+      default:
+        return L_Out.Error;
+    }
+  } catch {
+    return env.errMesReturnL_Out(toProve);
   }
 }
 

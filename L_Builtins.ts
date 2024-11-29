@@ -1,7 +1,8 @@
-import { OptNode, ToCheckNode } from "./L_Nodes.ts";
+import { L_Node, OptNode, ToCheckNode } from "./L_Nodes.ts";
 import { L_Env } from "./L_Env.ts";
-import { L_Out } from "./L_Executor.ts";
+import { L_Out, nodeExec } from "./L_Executor.ts";
 import { checkOptLiterally } from "./L_Checker.ts";
+import { reportNewExist } from "./L_Messages.ts";
 
 // deno-lint-ignore ban-types
 export const L_Builtins = new Map<string, Function>();
@@ -56,3 +57,26 @@ L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
     return L_Out.Error;
   }
 });
+
+export function proveExist(
+  env: L_Env,
+  toProve: OptNode,
+  block: L_Node[],
+): L_Out {
+  try {
+    const newEnv = new L_Env(env);
+    for (const node of block) {
+      const out = nodeExec(newEnv, node, true);
+      if (out !== L_Out.True) return out;
+    }
+
+    const checker = L_Builtins.get("exist") as Function;
+    const out = checker(newEnv, toProve);
+    if (out !== L_Out.True) return out;
+
+    env.newExist(toProve.name);
+    return reportNewExist(env, toProve);
+  } catch {
+    return env.errMesReturnL_Out(toProve);
+  }
+}
