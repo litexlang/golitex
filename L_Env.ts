@@ -1,6 +1,5 @@
 import {
   DefNode,
-  ExistDefNode,
   L_Node,
   LogicNode,
   MacroNode,
@@ -13,7 +12,6 @@ import {
   ReqSpace,
   StoredFact,
 } from "./L_Memory.ts";
-import { MemorizedExistDecl } from "./L_Memory.ts";
 import { L_Out } from "./L_Executor.ts";
 import { isToCheckBuiltin } from "./L_Builtins.ts";
 
@@ -72,7 +70,7 @@ export class L_Env {
       this.namedKnownToChecks.set(name, toCheck);
       return true;
     } else {
-      return this.errIntoEnvReturnBoolean(
+      return this.errMesReturnBoolean(
         `${name} is already a known fact. You can not double declare it.`,
       );
     }
@@ -258,24 +256,24 @@ export class L_Env {
     this.messages = [];
   }
 
-  OKMesIntoEnvReturnL_Out(message: L_Node | string): L_Out {
+  OKMesReturnL_Out(message: L_Node | string): L_Out {
     if (message instanceof L_Node) this.newMessage(`OK! ${message}`);
     else this.newMessage(message);
     return L_Out.True;
   }
 
-  OKMesIntoEnvReturnBoolean(message: L_Node | string): boolean {
+  OKMesReturnBoolean(message: L_Node | string): boolean {
     if (message instanceof L_Node) this.newMessage(`OK! ${message}`);
     else this.newMessage(message);
     return true;
   }
 
-  errIntoEnvReturnL_Out(s: L_Node | string): L_Out {
+  errMesReturnL_Out(s: L_Node | string): L_Out {
     this.newMessage(`Error: ${s}`);
     return L_Out.Error;
   }
 
-  errIntoEnvReturnBoolean(s: L_Node | string): boolean {
+  errMesReturnBoolean(s: L_Node | string): boolean {
     this.newMessage(`Error: ${s}`);
     return false;
   }

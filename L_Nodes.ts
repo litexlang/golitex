@@ -381,7 +381,7 @@ export class HaveNode extends L_Node {
 
   override toString() {
     const varsStr = this.vars.join(", ");
-    return `have ${this.opts.toString()} ${varsStr}`;
+    return `have ${varsStr}: ${this.opts.toString()}`;
   }
 }
 

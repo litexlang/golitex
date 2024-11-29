@@ -208,6 +208,14 @@ export const exampleList: ExampleItem[] = [
       "know exist(p);",
       "exist(p);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "have",
+    code: [
+      "def p(x); know exist(p); have x: p(x);",
+    ],
     debug: true,
     print: true,
   },

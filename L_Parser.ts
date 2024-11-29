@@ -806,7 +806,7 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
   try {
     skip(tokens, HaveKeywords);
     const vars: string[] = [];
-    while (isCurToken(tokens, ":")) {
+    while (!isCurToken(tokens, ":")) {
       vars.push(shiftVar(tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }

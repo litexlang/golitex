@@ -166,7 +166,7 @@ function letExec(env: L_Env, node: LetNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errIntoEnvReturnL_Out(node);
+    return env.errMesReturnL_Out(node);
   }
 }
 
@@ -195,7 +195,7 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errIntoEnvReturnL_Out(node);
+    return env.errMesReturnL_Out(node);
   }
 }
 
@@ -215,7 +215,7 @@ function defExec(env: L_Env, node: DefNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errIntoEnvReturnL_Out(node);
+    return env.errMesReturnL_Out(node);
   }
 }
 
@@ -290,14 +290,14 @@ function returnExec(env: L_Env, node: ReturnNode): L_Out {
 function haveExec(env: L_Env, node: HaveNode): L_Out {
   try {
     if (!node.opts.every((e) => env.isExisted(e.name))) {
-      return env.errIntoEnvReturnL_Out(
+      return env.errMesReturnL_Out(
         `operator-type facts in have must proved to be exist.`,
       );
     }
 
     for (const opt of node.opts) {
       if (!node.vars.every((e) => opt.vars.includes(e))) {
-        return env.errIntoEnvReturnL_Out(
+        return env.errMesReturnL_Out(
           `have error: [${node.vars}] must be subset of [${opt.vars}]`,
         );
       }
@@ -312,6 +312,8 @@ function haveExec(env: L_Env, node: HaveNode): L_Out {
         if (!ok) throw Error();
       }
     }
+
+    env.OKMesReturnL_Out(`[have] ${node}`);
 
     return L_Out.True;
   } catch {
@@ -396,7 +398,7 @@ function macroExec(env: L_Env, node: MacroNode): L_Out {
     env.newMacro(node);
     return L_Out.True;
   } catch {
-    return env.errIntoEnvReturnL_Out(`Failed: macro ${node}`);
+    return env.errMesReturnL_Out(`Failed: macro ${node}`);
   }
 }
 
@@ -666,13 +668,13 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
       // vars number are correct
       if (knownToCheck instanceof OptNode) {
         if (vars.length !== 0) {
-          return env.errIntoEnvReturnL_Out(
+          return env.errMesReturnL_Out(
             `${knownFactName} is supposed to have no parameter.`,
           );
         }
       } else if (knownToCheck instanceof LogicNode) {
         if (vars.length !== knownToCheck.vars.length) {
-          return env.errIntoEnvReturnL_Out(
+          return env.errMesReturnL_Out(
             `${knownFactName} is supposed to have ${knownToCheck.vars.length} parameters, get ${vars.length}`,
           );
         }
@@ -709,6 +711,6 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errIntoEnvReturnL_Out(ByNode);
+    return env.errMesReturnL_Out(ByNode);
   }
 }

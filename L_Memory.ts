@@ -2,7 +2,6 @@ import {
   // ByNode,
   DefNode,
   // ExistNode,
-  ExistDefNode,
   // ExistNode,
   IfNode,
   LogicNode,
@@ -244,7 +243,7 @@ export function declNewFact(
 
   for (const onlyIf of node.onlyIfs) {
     const ok = store(env, onlyIf, [], false);
-    if (!ok) return env.errIntoEnvReturnBoolean(`Failed to store ${onlyIf}`);
+    if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);
   }
 
   // const decl = new OptNode(node.name, node.vars, true, undefined);
