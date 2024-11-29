@@ -10,7 +10,6 @@ import {
   examineStoredFact,
   KnownExist,
   KnownFact,
-  ReqSpace,
   StoredFact,
 } from "./L_Memory.ts";
 import { L_Out } from "./L_Executor.ts";
@@ -18,18 +17,12 @@ import { isToCheckBuiltin } from "./L_Builtins.ts";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;
-
   private messages: string[] = [];
   private declaredVars = new Set<string>();
-
-  private defs = new Map<string, DefNode>();
-
-  private reqSpaces = new Map<string, ReqSpace>();
   private macros: MacroNode[] = [];
-
+  private defs = new Map<string, DefNode>();
   private knownFacts = new Map<string, KnownFact>();
   private namedKnownToChecks = new Map<string, ToCheckNode>();
-
   private exists = new Map<string, KnownExist>();
 
   constructor(parent: L_Env | undefined = undefined) {
@@ -37,17 +30,14 @@ export class L_Env {
   }
 
   clear() {
+    this.parent = undefined;
     this.messages = [];
     this.declaredVars = new Set<string>();
-
-    this.defs = new Map<string, DefNode>();
-
-    this.parent = undefined;
-
-    this.reqSpaces = new Map<string, ReqSpace>();
     this.macros = [];
-
+    this.defs = new Map<string, DefNode>();
     this.knownFacts = new Map<string, KnownFact>();
+    this.namedKnownToChecks = new Map<string, ToCheckNode>();
+    this.exists = new Map<string, KnownExist>();
   }
 
   newExist(optName: string, exist: KnownExist): boolean {
@@ -138,24 +128,6 @@ export class L_Env {
 
   newMacro(macroNode: MacroNode) {
     this.macros.push(macroNode);
-  }
-
-  getReqSpace(s: string): ReqSpace | undefined {
-    const out = this.reqSpaces.get(s);
-    if (out !== undefined) return out;
-    else {
-      if (this.parent) {
-        return this.parent.getReqSpace(s);
-      } else {
-        return undefined;
-      }
-    }
-  }
-
-  newReqSpace(s: string, space: ReqSpace): boolean {
-    if (this.reqSpaces.get(s)) return false;
-    this.reqSpaces.set(s, space);
-    return true;
   }
 
   factsInToCheckAllDeclared(node: ToCheckNode): boolean {
@@ -297,7 +269,6 @@ export class L_Env {
       vars: Array.from(this.declaredVars),
       defs: Object.fromEntries(this.defs),
       knowns: Object.fromEntries(this.knownFacts),
-      reqSpaces: Object.fromEntries(this.reqSpaces),
       macros: this.macros,
     };
   }

@@ -757,35 +757,35 @@ function storeContrapositiveFacts(
 //   }
 // }
 
-export function storeReqSpace(
-  env: L_Env,
-  name: string,
-  fact: IfNode,
-  req: StoredReq[],
-): boolean {
-  try {
-    return storeVanilla();
-  } catch {
-    return false;
-  }
+// export function storeReqSpace(
+//   env: L_Env,
+//   name: string,
+//   fact: IfNode,
+//   req: StoredReq[],
+// ): boolean {
+//   try {
+//     return storeVanilla();
+//   } catch {
+//     return false;
+//   }
 
-  function storeVanilla() {
-    const ifVars: string[] = [];
-    const ifReq: ToCheckNode[] = [];
+//   function storeVanilla() {
+//     const ifVars: string[] = [];
+//     const ifReq: ToCheckNode[] = [];
 
-    req.forEach((e) => {
-      ifVars.push(...e.vars);
-      ifReq.push(...e.req);
-    });
-    ifVars.push(...fact.vars);
-    ifReq.push(...fact.req);
+//     req.forEach((e) => {
+//       ifVars.push(...e.vars);
+//       ifReq.push(...e.req);
+//     });
+//     ifVars.push(...fact.vars);
+//     ifReq.push(...fact.req);
 
-    const space = new ReqSpace(ifVars, ifReq, fact.onlyIfs);
-    const ok = env.newReqSpace(name, space);
+//     const space = new ReqSpace(ifVars, ifReq, fact.onlyIfs);
+//     const ok = env.newReqSpace(name, space);
 
-    return ok;
-  }
-}
+//     return ok;
+//   }
+// }
 
 //* toStore should not contain if-then req that contains opt as onlyIf.
 export function examineStoredFact(

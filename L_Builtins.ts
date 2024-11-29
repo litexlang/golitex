@@ -71,6 +71,7 @@ export function proveExist(
       if (out !== L_Out.True) return out;
     }
 
+    // deno-lint-ignore ban-types
     const checker = L_Builtins.get("exist") as Function;
     const out = checker(newEnv, toProve);
     if (out !== L_Out.True) return out;
