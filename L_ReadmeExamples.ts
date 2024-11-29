@@ -23,7 +23,7 @@ export const exampleList: ExampleItem[] = [
       } contradiction god is mortal;`,
       "god is not human;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -33,6 +33,10 @@ export const exampleList: ExampleItem[] = [
       "def x is p1;",
       "def q(x,y);",
       "def p2(x) {if x: x is p1 => {x is p2} }",
+      "def p3(x) {if x: p3(x) => {p(x)} , if x: p(x) => {p3(x)} }",
+      "let x,y: p3(x), p(y);",
+      "p(x), p3(y);",
+      "def p(x);", // error: you can not declare a concept twice.
     ],
     debug: false,
     print: true,
@@ -42,11 +46,13 @@ export const exampleList: ExampleItem[] = [
     code: [
       "def human(x);",
       "def teacher(x,y);",
-      "Aristotle is human;",
-      "human(Aristotle);",
-      "Plato, Aristotle are human;",
-      "Aristotle is not human; // False",
-      "teacher(Plato, Aristotle);",
+      "let 亚里士多德, Plato: 亚里士多德  is human;",
+      "亚里士多德 is not human; // False",
+      "human(亚里士多德);",
+      "Plato, 亚里士多德 are human;",
+      "teacher(Plato, 亚里士多德);",
+      "know teacher(Plato, 亚里士多德);",
+      "teacher(Plato, 亚里士多德);",
       "let somebody;",
       "somebody is human; // Unknown",
     ],
@@ -56,13 +62,11 @@ export const exampleList: ExampleItem[] = [
   {
     name: "variable introduction",
     code: [
+      "def p(x); def q(x,y);",
       "let x,y,z;",
       "let 变量, 10.2, _nonsense, 你好 world, I-AM-MEANINGLESS;",
       "let a,b,c: a is p, q(b,c);",
-      "let y;",
-      "know if a: p(a) => {t(y,a)};",
-      "let x: p(x);",
-      "t(y,x);",
+      "let y;", // y already declared.
     ],
     debug: false,
     print: true,
@@ -70,6 +74,7 @@ export const exampleList: ExampleItem[] = [
   {
     name: "not operator",
     code: [
+      "def p(x);",
       "let v1, v2, v3, v4, v5: not p(v1), v2 is not p, not v3 is p, v4,v5 are not p;",
       "not p(v1);",
       "let v6;",
@@ -77,12 +82,13 @@ export const exampleList: ExampleItem[] = [
       "know not p(v6);",
       "not p(v6); // True",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
     name: "if and forall",
     code: [
+      "def p1(x); def p(x); def p2(x) {if x: x is p2 => {x is p1}}",
       "if x: x is p2 => {x is p1}; // True",
       "if x: x is p => {x is p1}; // Unknown",
       "if x : x is p => {x is p}; // Always true",

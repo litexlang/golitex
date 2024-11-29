@@ -138,8 +138,11 @@ export function checkOpt(
       }
 
       if (out === L_Out.True) return L_Out.True;
-    } else {
-      if (known.vars.every((e, i) => e === toCheck.vars[i])) return L_Out.True;
+    } else { // when there is no req, check vars literally
+      if (
+        known.isT === toCheck.isT &&
+        known.vars.every((e, i) => e === toCheck.vars[i])
+      ) return L_Out.True;
       else continue;
     }
   }
