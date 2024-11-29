@@ -23,6 +23,10 @@ import { ClearKeyword, RunKeyword } from "./L_Common.ts";
 import { runFile } from "./L_Runner.ts";
 import { LogicNode } from "./L_Nodes.ts";
 import { store } from "./L_Memory.ts";
+import {
+  reportNewVars,
+  reportNotAllFactsInGivenFactAreDeclared,
+} from "./L_Messages.ts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -124,19 +128,13 @@ function letExec(env: L_Env, node: LetNode): L_Out {
     for (const e of node.vars) {
       const ok = env.newVar(e);
       if (!ok) return L_Out.Error;
-      else {
-        if (DEBUG_DICT["let"]) {
-          env.newMessage(`[new var] ${node.vars}`);
-        }
-      }
     }
 
     // examine whether all operators are declared
     for (const f of node.facts) {
       const ok = env.factsInToCheckAllDeclared(f);
       if (!ok) {
-        env.newMessage(`Not all of facts in ${f} are declared`);
-        return L_Out.Error;
+        return reportNotAllFactsInGivenFactAreDeclared(env, f);
       }
     }
 
@@ -162,6 +160,10 @@ function letExec(env: L_Env, node: LetNode): L_Out {
     for (const [i, name] of node.names.entries()) {
       const ok = env.newNamedKnownToCheck(name, node.facts[i]);
       if (!ok) throw Error();
+    }
+
+    if (DEBUG_DICT["let"]) {
+      reportNewVars(env, node.vars);
     }
 
     return L_Out.True;

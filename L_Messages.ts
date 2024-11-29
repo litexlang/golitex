@@ -1,5 +1,6 @@
 import type { L_Env } from "./L_Env.ts";
 import { L_Out } from "./L_Executor.ts";
+import type { L_Node, ToCheckNode } from "./L_Nodes.ts";
 
 export function lstLengthNotEql(
   env: L_Env,
@@ -11,4 +12,17 @@ export function lstLengthNotEql(
   );
 
   return L_Out.Error;
+}
+
+export function reportNotAllFactsInGivenFactAreDeclared(
+  env: L_Env,
+  fact: ToCheckNode,
+): L_Out {
+  env.newMessage(`Error! Not all of facts in ${fact} are declared`);
+  return L_Out.Error;
+}
+
+export function reportNewVars(env: L_Env, vars: string[]): L_Out {
+  env.newMessage(`[new var] ${vars}`);
+  return L_Out.True;
 }
