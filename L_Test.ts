@@ -223,6 +223,17 @@ export const exampleList: ExampleItem[] = [
   {
     name: "prove exist",
     code: ["def p(x); prove exist(p) {let x: p(x); exist(p, x);}"],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "different defs",
+    code: [
+      `def p(x); def x is p1; def q(x,y);`,
+      `def p2(x) {if x: x is p1 => {x is p2} }`,
+      "let x: p1(x);",
+      "p2(x);",
+    ],
     debug: true,
     print: true,
   },

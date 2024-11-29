@@ -59,11 +59,8 @@ Some core functionalities of LiTeX are included in this example
 ```plaintext
 def p(x);
 def x is p1;
-def x is p2 => {x is p1};
-def x is p3 <=> {x is p2};
-def x is p4: x is p3 => {x is p1};
 def q(x,y);
-def E(x): p(x) exist y {q(x,y)};
+def p2(x) {if x: x is p1 => {x is p2} }
 ```
 
 #### Check Expressions

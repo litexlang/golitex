@@ -925,10 +925,11 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
       skip(tokens, "{");
       onlyIfs.push(...factsParse(env, tokens, ["}"], false, false));
       skip(tokens, "}");
+      return new IfDefNode(opt.name, opt.vars, cond, onlyIfs);
+    } else {
+      skip(tokens, L_Ends);
+      return new IfDefNode(opt.name, opt.vars, cond, onlyIfs);
     }
-
-    skip(tokens, L_Ends);
-    return new IfDefNode(opt.name, opt.vars, cond, onlyIfs);
   } catch (error) {
     handleParseError(env, "define", index, start);
     throw error;
