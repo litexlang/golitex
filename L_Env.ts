@@ -8,6 +8,7 @@ import {
 } from "./L_Nodes.ts";
 import {
   examineStoredFact,
+  KnownExist,
   KnownFact,
   ReqSpace,
   StoredFact,
@@ -29,7 +30,7 @@ export class L_Env {
   private knownFacts = new Map<string, KnownFact>();
   private namedKnownToChecks = new Map<string, ToCheckNode>();
 
-  private exists = new Set<string>();
+  private exists = new Map<string, KnownExist>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -49,13 +50,13 @@ export class L_Env {
     this.knownFacts = new Map<string, KnownFact>();
   }
 
-  newExist(optName: string): boolean {
-    this.exists.add(optName);
+  newExist(optName: string, exist: KnownExist): boolean {
+    this.exists.set(optName, exist);
     return true;
   }
 
   isExisted(optName: string): boolean {
-    if (this.exists.has(optName)) {
+    if (this.exists.get(optName)?.isT === true) {
       return true;
     } else if (this.parent !== undefined) {
       return this.parent.isExisted(optName);

@@ -245,6 +245,17 @@ export const exampleList: ExampleItem[] = [
       "let x: p(x);",
       "t(y,x);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "know not exist",
+    code: [
+      "def p(x); def q(x);",
+      "know not exist(p);",
+      "exist(p);",
+      "not exist(p);",
+    ],
     debug: true,
     print: true,
   },

@@ -3,6 +3,7 @@ import { L_Env } from "./L_Env.ts";
 import { L_Out, nodeExec } from "./L_Executor.ts";
 import { checkOptLiterally } from "./L_Checker.ts";
 import { reportNewExist } from "./L_Messages.ts";
+import { KnownExist } from "./L_Memory.ts";
 
 // deno-lint-ignore ban-types
 export const L_Builtins = new Map<string, Function>();
@@ -40,7 +41,7 @@ L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {
 // node looks like exist(OptName, v1,v2...vn)
 L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
   try {
-    if (env.isExisted(node.vars[0])) {
+    if (env.isExisted(node.vars[0]) === node.isT) {
       return L_Out.True;
     }
 
@@ -49,7 +50,7 @@ L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
     // Why checkOptLiterally? because I want to make exist as "user-is-responsible-for-checking" as possible
     const out = checkOptLiterally(env, toCheck);
     if (out === L_Out.True) {
-      env.newExist(node.vars[0]);
+      env.newExist(node.vars[0], new KnownExist(node.isT));
     }
 
     return out;
@@ -74,7 +75,7 @@ export function proveExist(
     const out = checker(newEnv, toProve);
     if (out !== L_Out.True) return out;
 
-    env.newExist(toProve.name);
+    env.newExist(toProve.name, new KnownExist(toProve.isT));
     return reportNewExist(env, toProve);
   } catch {
     return env.errMesReturnL_Out(toProve);

@@ -14,6 +14,11 @@ import { isToCheckBuiltin, L_Builtins } from "./L_Builtins.ts";
 import { L_Env } from "./L_Env.ts";
 import { DEBUG_DICT, L_Out } from "./L_Executor.ts";
 
+export class KnownExist {
+  constructor(public isT: boolean) {
+  }
+}
+
 export class KnownFact {
   facts: StoredFact[] = [];
   children = new Map<number, KnownFact>();
@@ -817,7 +822,7 @@ export function storeBuiltinFact(
   if (fact instanceof OptNode) {
     switch (fact.name) {
       case "exist": {
-        env.newExist(fact.vars[0]);
+        env.newExist(fact.vars[0], new KnownExist(fact.isT));
         env.newMessage(`[exist] ${fact.vars[0]}`);
         return true;
       }
