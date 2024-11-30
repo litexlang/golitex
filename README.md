@@ -5,8 +5,11 @@
 Feel free to share your suggestions and ideas to help us improve this open-source project—your feedback is invaluable!
 
 ---
+
 ## Setting up
+
 1. Install Node.js and npm:
+
    - Download and install the latest LTS version from [nodejs.org](https://nodejs.org/)
    - Verify installation by running:
      ```bash
@@ -18,7 +21,9 @@ Feel free to share your suggestions and ideas to help us improve this open-sourc
    ```bash
    cd ./tslitex
    ts-node L_ReadmeExamples.ts
-  ```
+   ```
+
+````
 ---
 
 ## A Tour of LiTeX
@@ -36,7 +41,7 @@ Socrates is mortal;
 if x : x is human => {x is mortal};
 let god : god is not mortal;
 prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;
-```
+````
 
 Some core functionalities of LiTeX are included in this example
 
@@ -185,6 +190,100 @@ exist(p);
 
 ```
 def p(x); know exist(p); have x: p(x);
+```
+
+## Parameter Passing with Subset Demonstration
+
+```
+def set(x); def subset(A,B); def in(x,A);
+
+# Subset definition: if x is in A, then x must be in B
+know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)}};
+
+# Alternative subset definition
+know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};
+
+# Example usage
+let A,B,C,D,E,F;
+know subset(A,B);
+let x: in(x,A);
+in(x,B)[A,B;x];  # Proof of membership
+```
+
+## Transitivity Demonstration
+
+```
+# Define a less-than relation with transitivity
+def <(x,y);
+know if x,y,z: <(x,y), <(y,z) => {<(x,z)};
+
+# Example of transitive property
+let a,b,c: <(a,b), <(b,c);
+<(a,c)[a,b,c];  # Proving transitivity
+```
+
+## Macro: Binding Properties to Literals
+
+```
+# Define a natural number predicate
+def natural(x);
+
+# Macro to automatically recognize natural number literals
+macro "^(0|[1-9]d*)$" v natural(v);
+
+# Example usage
+let 2;
+natural(2);  # Automatically verified
+```
+
+## Continuity Checking
+
+```
+# Define predicates for continuity
+def point_wise_continuous(f,x);
+def continuous(f);
+def in_domain(x);
+
+# Establish continuity condition
+know if f: if x : in_domain(x) => {point_wise_continuous(f,x)} => {continuous(f)};
+
+# Example usage
+let f;
+know if x : in_domain(x) => {point_wise_continuous(f,x)};
+continuous(f);  # Inferred from previous conditions
+```
+
+## Named Known Checks and Proof Mechanisms
+
+```
+# Define predicates
+def p(x); def q(x); def t(x);
+
+# Named known checks with proof by reference
+let a: p(a);
+know [_1] if x: p(x) => {q(x)};
+by _1(a);
+q(a);  # Proven
+
+# Conditional existence proof
+let [_2] b: if x : x is p => {t(b)};
+by _2(a);
+t(b);  # Proven conditionally
+```
+
+## Advanced If-Then Logical Checking
+
+```
+# Define predicates
+def p(x); def q(x); def t(x,y);
+
+# Multiple ways of expressing logical implications
+know if x,y: t(x,y) => {q(x)};
+if x,y: t(x,y) => {q(x)};
+know if x,y: t(x,y) => {q(x)};
+
+# Nested implication checking
+if : => {if x,y: t(x,y) => {q(x)}};
 ```
 
 ## Potential of LiTeX

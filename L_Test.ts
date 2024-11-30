@@ -1,6 +1,6 @@
 import { L_Env } from "./L_Env";
 import { runStrings } from "./L_Runner";
-import * as fs from 'fs';
+import * as fs from "fs";
 
 type ExampleItem = {
   name: string;
@@ -67,26 +67,12 @@ export const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name:
-      "known if req => opt must satisfy: req does not contain if-then-type fact that has opt as onlyIf",
+    name: "known if req => opt must satisfy: req does not contain if-then-type fact that has opt as onlyIf",
     code: [
       "def p(x);",
       "def q(x);",
       "know if y: if x : => {p(y)} => {p(y)};",
       "know if y: if x: => {if z: => {p(y)}} => {p(y)};",
-    ],
-    debug: false,
-    print: true,
-  },
-  {
-    name: "by and know if-then work together, not implemented",
-    code: [
-      "def p(x);",
-      "def q(x)",
-      "def a(x,y);",
-      "know if [P] x : p(x), if [Q] y: q(y) => {} => {if [A] p(y) => {a(x,y)}};",
-      "let v1,v2: p(v1), q(v2), p(v2);",
-      "by P(v1): by Q(v2) => {by A() => {a(v1,v2)}};",
     ],
     debug: false,
     print: true,
@@ -199,9 +185,7 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "have",
-    code: [
-      "def p(x); know exist(p); have x: p(x);",
-    ],
+    code: ["def p(x); know exist(p); have x: p(x);"],
     debug: false,
     print: true,
   },
@@ -261,10 +245,10 @@ function runExamples(toJSON: boolean) {
 runExamples(false);
 
 export function envToJSON(env: L_Env, fileName: string) {
- const out = env.toJSON();
- const jsonString = JSON.stringify(out, null, 2);
- 
- fs.writeFileSync(fileName, jsonString, 'utf8');
- 
- return out;
+  const out = env.toJSON();
+  const jsonString = JSON.stringify(out, null, 2);
+
+  fs.writeFileSync(fileName, jsonString, "utf8");
+
+  return out;
 }

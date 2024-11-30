@@ -189,9 +189,65 @@ export const exampleList: ExampleItem[] = [
     name: "macro: bind properties to a variable based on its literal",
     code: [
       "def natural(x);",
-      'macro "' + String.raw`^(0|[1-9]\d*)$` + '" v natural(v);',
+      'macro "^(0|[1-9]d*)$" v natural(v);',
       "let 2;",
       "natural(2);",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "check if-then example:continuous",
+    code: [
+      "def point_wise_continuous(f,x);",
+      "def continuous(f);",
+      "def in_domain(x);",
+      "know if f: if x : in_domain(x) => {point_wise_continuous(f,x)} => {continuous(f)};",
+      "let f;",
+      "know if x : in_domain(x) => {point_wise_continuous(f,x)};",
+      "continuous(f);",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "known if req => opt must satisfy: req does not contain if-then-type fact that has opt as onlyIf",
+    code: [
+      "def p(x);",
+      "def q(x);",
+      "know if y: if x : => {p(y)} => {p(y)};",
+      "know if y: if x: => {if z: => {p(y)}} => {p(y)};",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "namedKnownToCheck",
+    code: [
+      "def p(x); def q(x); def t(x);",
+      "let a: p(a);",
+      "know [_1] if x: p(x) => {q(x)};",
+      "by _1(a);",
+      "q(a);", // 理论上即使没有 by _1(a), q(a) 也是true
+      "let [_2] b: if x : x is p => {t(b)};", // 这里起到了“如果存在...，则..."的作用
+      "t(b);", // unknown
+      "by _2(a);",
+      "t(b);", // 如果没有 by _2(a), 那就没有 t(b)
+      "t(b)[a];", // 也能证明t(b)
+      "[_3] if x: p(x) => {q(x)};",
+      "by _3(a);",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "check if-then using literally-the-same if-then",
+    code: [
+      "def p(x); def q(x); def t(x,y);",
+      "know if x,y: t(x,y) => {q(x)};",
+      "if x,y: t(x,y) => {q(x)};",
+      "know if x,y: t(x,y) => {q(x)} ;",
+      "if : => {if x,y: t(x,y) => {q(x)} };",
     ],
     debug: true,
     print: true,
