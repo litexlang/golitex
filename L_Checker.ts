@@ -9,7 +9,7 @@ import { lstLengthNotEql } from "./L_Messages";
 export function check(
   env: L_Env,
   toCheck: ToCheckNode,
-  toCheckVarsFromIf: string[][] = [],
+  toCheckVarsFromIf: string[][] = []
 ): L_Out {
   if (toCheck instanceof OptNode) {
     let out = checkOpt(env, toCheck, true, toCheckVarsFromIf);
@@ -32,7 +32,7 @@ export function check(
 export function checkIfThen(
   env: L_Env,
   toCheck: IfNode,
-  toCheckVarsFromIf: string[][],
+  toCheckVarsFromIf: string[][]
 ): L_Out {
   if (toCheck.isT === false) {
     env.newMessage(`not-if-then fact ${toCheck} can not be checked directly.`);
@@ -45,7 +45,7 @@ export function checkIfThen(
   function openEnvAndCheck(
     oldEnv: L_Env,
     toCheck: IfNode,
-    toCheckVarsFromIf: string[][],
+    toCheckVarsFromIf: string[][]
   ): L_Out {
     const newEnv = new L_Env(oldEnv);
 
@@ -83,10 +83,11 @@ export function checkOpt(
   env: L_Env,
   toCheck: OptNode,
   useCheckVarsFromIf: boolean = true,
-  toCheckVarsFromIf: string[][] = [],
+  toCheckVarsFromIf: string[][] = []
 ): L_Out {
   const builtins = L_Builtins.get(toCheck.name);
   if (builtins !== undefined) {
+    env.newMessage(`checked by builtins.`);
     return builtins(env, toCheck);
   }
 
@@ -131,19 +132,24 @@ export function checkOpt(
             //! NEED TO IMPLEMENT HOW TO CHECK If-Then Literally?
             // 也可以是  out = checkIfThen(env, fact as IfNode, []);
             out = checkIfThen(env, fact as IfNode, toCheckVarsFromIf);
-            if (out !== L_Out.True) break;
           }
         }
         if (out === L_Out.Unknown) break;
       }
 
-      if (out === L_Out.True) return L_Out.True;
-    } else { // when there is no req, check vars literally
+      if (out === L_Out.True) {
+        env.newMessage(`[checked by] ${known}`);
+        return L_Out.True;
+      }
+    } else {
+      // when there is no req, check vars literally
       if (
         known.isT === toCheck.isT &&
         known.vars.every((e, i) => e === toCheck.vars[i])
-      ) return L_Out.True;
-      else continue;
+      ) {
+        env.newMessage(`[checked by] ${known}`);
+        return L_Out.True;
+      } else continue;
     }
   }
 
@@ -156,20 +162,19 @@ export function checkOpt(
         toCheck.name,
         toCheck.vars,
         toCheck.isT,
-        curToCheckVars,
+        curToCheckVars
       );
       const out = checkOpt(env, newOpt, false);
-      if (out === L_Out.True) return L_Out.True;
+      if (out === L_Out.True) {
+        return L_Out.True;
+      }
 
       // use toCheckVarsFromIf as if it's single layer
       const anotherCurCheckVars: string[] = [];
       curToCheckVars.map((e) => anotherCurCheckVars.push(...e));
-      const anotherOpt = new OptNode(
-        toCheck.name,
-        toCheck.vars,
-        toCheck.isT,
-        [anotherCurCheckVars],
-      );
+      const anotherOpt = new OptNode(toCheck.name, toCheck.vars, toCheck.isT, [
+        anotherCurCheckVars,
+      ]);
       if (checkOpt(env, anotherOpt, false) === L_Out.True) return L_Out.True;
     }
   }
@@ -204,7 +209,7 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
       fact.isNoReq() &&
       // toCheck.vars.length === fact.vars.length &&
       toCheck.vars.every(
-        (v, i) => frees.includes(fact.vars[i]) || v === fact.vars[i],
+        (v, i) => frees.includes(fact.vars[i]) || v === fact.vars[i]
       )
     ) {
       return L_Out.True;
@@ -237,7 +242,7 @@ function checkOr(env: L_Env, toCheck: OrNode): L_Out {
           newEnv,
           toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT),
           [],
-          true,
+          true
         );
       }
 
