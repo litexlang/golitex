@@ -1,8 +1,10 @@
 # LiTeX
 
-**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **ANYONE** express and verify mathematics at **ANY LEVEL** as **ELEGANTLY** and **INTUITIVELY** as if they were using natural language. LiTeX transforms mathematical proof writing from a solitary endeavor into a collaborative experience, combining the rigor of formal verification with the familiarity of natural mathematical discourse. Whether you're a student learning basic algebra, a professor teaching advanced topology, or a researcher pushing the boundaries of mathematical knowledge, LiTeX provides the tools to express, verify, and share mathematical ideas with confidence. Details are available at [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
+**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **ANYONE** express and verify mathematics at **ANY LEVEL** as **ELEGANTLY** and **INTUITIVELY** as if they were using natural language. LiTeX will be kept as simple as possible, so that even one man cannot write LiTeX, he can still read it.
 
-Feel free to share your suggestions and ideas to help us improve this open-source project—your feedback is invaluable!
+LiTeX introduces rigorous verification into mathematical collaboration, enabling confident contributions to large-scale projects. It makes interactive textbook/paper possible and allows math researchers to focus on innovative aspects rather than mechanical verification. Details are available at [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
+
+Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!
 
 ---
 
@@ -32,7 +34,7 @@ Let’s explore its syntax with examples, starting with syllogism:
 
 ### Example:
 
-```plaintext
+```
 def mortal(something);
 def something is human => {something is mortal};
 let Socrates: Socrates is human;
@@ -304,7 +306,7 @@ Through its carefully designed specification language, LiTeX bridges intuitive m
 
 LiTeX serves as an advanced educational tool offering:
 
-- Interactive theorem dependency visualization
+- Interactive math textbook: Theorem, Concept dependency visualization
 - Flexible proof granularity at multiple levels
 - Clear exposition of mathematical relationships
 - Systematic mathematical intuition building
