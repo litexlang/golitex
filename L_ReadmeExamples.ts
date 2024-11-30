@@ -1,6 +1,6 @@
 import { L_Env } from "./L_Env";
 import { runStrings } from "./L_Runner";
-import * as fs from 'fs';
+import * as fs from "fs";
 
 type ExampleItem = {
   name: string;
@@ -108,7 +108,7 @@ export const exampleList: ExampleItem[] = [
       "know v12 is not p1;",
       `prove_by_contradiction v12 is not p3 {v12 is p2;} contradiction v12 is p1;`,
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -134,7 +134,7 @@ export const exampleList: ExampleItem[] = [
       "not exist(p);",
       "if x: => {not p(x)};",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -155,10 +155,45 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "have",
+    code: ["def p(x); know exist(p); have x: p(x);"],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "use [] to pass in extra parameters example: define subset",
     code: [
-      "def p(x); know exist(p); have x: p(x);",
+      "def set(x); def subset(A,B); def in(x,A);",
+      "know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)} };",
+      "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
+      "let A,B,C,D,E,F;",
+      "know subset(A,B);",
+      "let x: in(x,A);",
+      "in(x,B);", // Unknown
+      "in(x,B)[A,B;x];", // True
+      "in(x,B);",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "use [] to pass in extra parameters example: transitivity",
+    code: [
+      "def <(x,y); know if x,y,z: <(x,y), <(y,z) => {<(x,z)};",
+      "let a,b,c: <(a,b), <(b,c);",
+      "<(a,c)[a,b,c];",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "macro: bind properties to a variable based on its literal",
+    code: [
+      "def natural(x);",
+      'macro "' + String.raw`^(0|[1-9]\d*)$` + '" v natural(v);',
+      "let 2;",
+      "natural(2);",
+    ],
+    debug: true,
     print: true,
   },
 ];
@@ -178,8 +213,8 @@ runExamples(false);
 export function envToJSON(env: any, fileName: string) {
   const out = env.toJSON();
   const jsonString = JSON.stringify(out, null, 2);
-  
-  fs.writeFileSync(fileName, jsonString, 'utf8');
-  
+
+  fs.writeFileSync(fileName, jsonString, "utf8");
+
   return out;
 }

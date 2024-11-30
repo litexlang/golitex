@@ -23,23 +23,7 @@ export const exampleList: ExampleItem[] = [
       "in(x,B)[A,B;x];", // True
       "in(x,B);",
     ],
-    debug: false,
-    print: true,
-  },
-  {
-    name: "reqSpace & use",
-    code: [
-      "def set(x); def subset(A,B); def in(x,A);",
-      "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
-      // "def P(A,B); know if A,B: P(A,B), subset(A,B) =>  {if x: in(x,A) => {in(x,B)} };",
-      "know if[P] A,B: subset(A,B) =>  {if x: in(x,A) => {in(x,B)} };",
-      "let A,B,C,D,E,F;",
-      "know subset(A,B);",
-      "let x: in(x,A);",
-      "use P(A,B);",
-      "if x : in(x,A) => {in(x,B)};",
-    ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -258,7 +242,7 @@ export const exampleList: ExampleItem[] = [
       "not exist(p);",
       "if x: => {not p(x)};",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];

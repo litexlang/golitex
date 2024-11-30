@@ -12,6 +12,8 @@ export const specialChars = [
   "&",
   "|",
   "$",
+  '"',
+  "\\",
 ];
 
 export const KnowTypeKeywords = ["know", "assume"];

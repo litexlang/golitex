@@ -5,17 +5,20 @@
 Feel free to share your suggestions and ideas to help us improve this open-source project—your feedback is invaluable!
 
 ---
-
 ## Setting up
+1. Install Node.js and npm:
+   - Download and install the latest LTS version from [nodejs.org](https://nodejs.org/)
+   - Verify installation by running:
+     ```bash
+     node --version
+     npm --version
+     ```
 
-1. Follow the instructions at [Deno Installation](https://docs.deno.com/runtime/getting_started/installation/) to download the latest version of **Deno**, the open-source runtime for TypeScript and JavaScript.
 2. Run the following commands:
    ```bash
    cd ./tslitex
-   deno run run.ts # Enter interactive mode
-   deno run --allow-all run.ts YOUR_FILE_NAME # Run your file first, then enter interactive mode.
-   ```
-
+   ts-node L_ReadmeExamples.ts
+  ```
 ---
 
 ## A Tour of LiTeX

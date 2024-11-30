@@ -85,11 +85,26 @@ function isCurToken(tokens: string[], s: string | string[]) {
   }
 }
 
+function skipString(tokens: string[]): string {
+  try {
+    skip(tokens, '"');
+    let out = "";
+    while (!isCurToken(tokens, '"')) {
+      out += tokens[0];
+      shiftVar(tokens);
+    }
+    skip(tokens, '"');
+    return out;
+  } catch {
+    throw Error();
+  }
+}
+
 function handleParseError(
   env: L_Env,
   m: string,
   index: number,
-  start: string = "",
+  start: string = ""
 ) {
   env.newMessage(`At ${start}[${index * -1}]: ${m}`);
 }
@@ -97,7 +112,7 @@ function handleParseError(
 export function parseUntilGivenEnd(
   env: L_Env,
   tokens: string[],
-  end: string | null,
+  end: string | null
 ): L_Node[] {
   try {
     const out: L_Node[] = [];
@@ -141,7 +156,7 @@ const KeywordFunctionMap: {
 export function getNodesFromSingleNode(
   env: L_Env,
   tokens: string[],
-  holder: L_Node[],
+  holder: L_Node[]
 ): void {
   const start = tokens[0];
   const index = tokens.length;
@@ -179,7 +194,7 @@ function postfixProveParse(
   env: L_Env,
   tokens: string[],
   end: string[] = [...L_Ends],
-  skipEnd: boolean = false,
+  skipEnd: boolean = false
 ): PostfixProve {
   const start = tokens[0];
   const index = tokens.length;
@@ -200,7 +215,7 @@ function postfixProveParse(
       tokens,
       [...end, ...PostProveKeywords],
       false,
-      true,
+      true
     );
     const block: L_Node[] = [];
     if (PostProveKeywords.includes(tokens[0])) {
@@ -308,7 +323,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
 function optParseWithNot(
   env: L_Env,
   tokens: string[],
-  parseNot: boolean,
+  parseNot: boolean
 ): OptNode {
   const start = tokens[0];
   const index = tokens.length;
@@ -369,7 +384,7 @@ function varLstParse(
   tokens: string[],
   end: string[],
   skipEnd: boolean = true,
-  separation: string = ",",
+  separation: string = ","
 ): string[] {
   const start = tokens[0];
   const index = tokens.length;
@@ -450,7 +465,7 @@ function factsParse(
   tokens: string[],
   end: string[],
   skipEnd: boolean,
-  includeDefName: boolean,
+  includeDefName: boolean
 ): ToCheckNode[] {
   const start = tokens[0];
   const index = tokens.length;
@@ -520,7 +535,7 @@ function optParseWithNotAre(
   env: L_Env,
   tokens: string[],
   parseNot: boolean,
-  _includeDefName: boolean,
+  _includeDefName: boolean
 ): OptNode[] {
   const start = tokens[0];
   const index = tokens.length;
@@ -598,9 +613,7 @@ function optParseWithNotAre(
         skip(tokens, "]");
       }
 
-      const outs = vars.map(
-        (e) => new OptNode(name, [e], isT, checkVars),
-      );
+      const outs = vars.map((e) => new OptNode(name, [e], isT, checkVars));
       // outs[outs.length - 1].defName = undefined;
       return outs;
     }
@@ -613,7 +626,7 @@ function optParseWithNotAre(
 function logicParse(
   env: L_Env,
   tokens: string[],
-  includeDefName: boolean,
+  includeDefName: boolean
 ): LogicNode {
   const start = tokens[0];
   const index = tokens.length;
@@ -757,7 +770,7 @@ function returnParse(env: L_Env, tokens: string[]): ReturnNode {
 function orParse(
   env: L_Env,
   tokens: string[],
-  includeDefName: boolean,
+  includeDefName: boolean
 ): OrNode {
   const start = tokens[0];
   const index = tokens.length;
@@ -778,7 +791,7 @@ function orParse(
 function notsParse(
   env: L_Env,
   tokens: string[],
-  includeDefName: boolean,
+  includeDefName: boolean
 ): OrNode {
   const start = tokens[0];
   const index = tokens.length;
@@ -894,7 +907,7 @@ function macroParse(env: L_Env, tokens: string[]): MacroNode {
 
   try {
     skip(tokens, MacroKeywords);
-    const regexString = shiftVar(tokens);
+    const regexString = skipString(tokens);
     const varName = shiftVar(tokens);
     const facts = factsParse(env, tokens, L_Ends, true, true);
 
