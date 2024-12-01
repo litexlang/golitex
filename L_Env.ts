@@ -7,7 +7,7 @@ import {
   ToCheckNode,
 } from "./L_Nodes";
 import { examineStoredFact } from "./L_Memory";
-import { L_Out } from "./L_Executor";
+import { L_Out } from "./L_DataStructures";
 import { isToCheckBuiltin } from "./L_Builtins";
 import { KnownExist, KnownFact, StoredFact } from "./L_DataStructures";
 

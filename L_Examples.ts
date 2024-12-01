@@ -1,12 +1,6 @@
+import { ExampleItem } from "./L_DataStructures";
 import { L_Env } from "./L_Env";
 import { runStrings } from "./L_Runner";
-
-type ExampleItem = {
-  name: string;
-  code: string[];
-  debug: boolean;
-  print: boolean;
-};
 
 const exampleList: ExampleItem[] = [
   {

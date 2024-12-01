@@ -1,9 +1,9 @@
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Out, nodeExec } from "./L_Executor";
+import { nodeExec } from "./L_Executor";
 import { checkOptLiterally } from "./L_Checker";
 import { reportNewExist } from "./L_Messages";
-import { KnownExist } from "./L_DataStructures";
+import { KnownExist, L_Out } from "./L_DataStructures";
 
 export const L_BuiltinsKeywords: string[] = ["is_property", "exist", "or"];
 

@@ -29,7 +29,7 @@ import {
   reportNotAllFactsInGivenFactAreDeclared,
 } from "./L_Messages";
 import { existBuiltinCheck, isToCheckBuiltin } from "./L_Builtins";
-import { KnownExist } from "./L_DataStructures";
+import { KnownExist, L_Out } from "./L_DataStructures";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -40,13 +40,6 @@ export const DEBUG_DICT = {
 };
 
 export const CheckFalse = true;
-
-export enum L_Out {
-  Error,
-  True,
-  False,
-  Unknown,
-}
 
 export const L_OutMap: { [key in L_Out]: string } = {
   [L_Out.Error]: "error",

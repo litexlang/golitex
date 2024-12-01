@@ -12,7 +12,7 @@ import {
 } from "./L_Nodes";
 import { isToCheckBuiltin, L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
-import { DEBUG_DICT, L_Out } from "./L_Executor";
+import { DEBUG_DICT } from "./L_Executor";
 import { KnownExist, StoredFact, StoredReq } from "./L_DataStructures";
 
 export function declNewFact(

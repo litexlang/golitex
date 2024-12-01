@@ -1,15 +1,15 @@
 import { L_Env } from "./L_Env";
-import { L_Out } from "./L_Executor";
+import { L_Out } from "./L_DataStructures";
 import * as L_Executor from "./L_Executor";
 import { L_Scan } from "./L_Lexer";
 import * as L_Parser from "./L_Parser";
-import * as fs from 'fs';
+import * as fs from "fs";
 
 export function runString(
   env: L_Env,
   expr: string,
   printResult: boolean = true,
-  printCode: boolean = true,
+  printCode: boolean = true
 ) {
   try {
     if (printResult && printCode) {
@@ -40,7 +40,7 @@ export function runString(
 export function runStrings(
   env: L_Env,
   exprs: string[],
-  printResult: boolean = true,
+  printResult: boolean = true
 ) {
   for (let i = 0; i < exprs.length; i++) {
     const expr = exprs[i];
@@ -55,11 +55,11 @@ export function runFile(
   env: L_Env,
   fileName: string,
   printResult: boolean = true,
-  printCode: boolean = false,
+  printCode: boolean = false
 ): L_Out[] | undefined {
   try {
-    let fileContent : string = ""
-    fs.writeFileSync(fileName, fileContent, 'utf8');
+    let fileContent: string = "";
+    fs.writeFileSync(fileName, fileContent, "utf8");
     // const fileContent = Deno.readTextFileSync(fileName);
     console.log(`Running file: ${fileName}\n`);
     const out = runString(env, fileContent, printResult, printCode);
@@ -68,7 +68,7 @@ export function runFile(
   } catch (err) {
     if (err instanceof Error) {
       console.error(
-        `Error: Unable to read file "${fileName}": ${err.message}\n`,
+        `Error: Unable to read file "${fileName}": ${err.message}\n`
       );
     } else console.error(`Error: Unable to read file ${fileName}\n`);
   }

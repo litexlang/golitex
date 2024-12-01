@@ -1,5 +1,18 @@
-import { L_Out } from "./L_Executor";
 import { ToCheckNode } from "./L_Nodes";
+
+export enum L_Out {
+  Error,
+  True,
+  False,
+  Unknown,
+}
+
+export type ExampleItem = {
+  name: string;
+  code: string[];
+  debug: boolean;
+  print: boolean;
+};
 
 export class KnownExist {
   constructor(public isT: boolean) {}

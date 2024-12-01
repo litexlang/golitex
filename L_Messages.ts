@@ -1,14 +1,14 @@
 import type { L_Env } from "./L_Env";
-import { L_Out } from "./L_Executor";
+import { L_Out } from "./L_DataStructures";
 import type { OptNode, ToCheckNode } from "./L_Nodes";
 
 export function lstLengthNotEql(
   env: L_Env,
   lst1: unknown[],
-  lst2: unknown[],
+  lst2: unknown[]
 ): L_Out {
   env.newMessage(
-    `Error: ${lst1} and ${lst2} are supposed to have the same length.`,
+    `Error: ${lst1} and ${lst2} are supposed to have the same length.`
   );
 
   return L_Out.Error;
@@ -16,7 +16,7 @@ export function lstLengthNotEql(
 
 export function reportNotAllFactsInGivenFactAreDeclared(
   env: L_Env,
-  fact: ToCheckNode,
+  fact: ToCheckNode
 ): L_Out {
   env.newMessage(`Error! Not all of facts in ${fact} are declared`);
   return L_Out.Error;
