@@ -62,7 +62,7 @@ export class L_Env {
       return true;
     } else {
       return this.errMesReturnBoolean(
-        `${name} is already a known fact. You can not double declare it.`,
+        `${name} is already a known fact. You can not double declare it.`
       );
     }
   }
@@ -77,7 +77,7 @@ export class L_Env {
 
   getKnownFactsFromCurEnv(
     opt: OptNode,
-    onlyRoot: boolean = false,
+    onlyRoot: boolean = false
   ): undefined | StoredFact[] {
     const knownNodeRoot: KnownFact | undefined = this.knownFacts.get(opt.name);
 
@@ -100,7 +100,7 @@ export class L_Env {
   newKnownFact(
     optName: string,
     checkVars: string[][],
-    fact: StoredFact,
+    fact: StoredFact
   ): boolean {
     const ok = examineStoredFact(this, new OptNode(optName, fact.vars), fact);
     if (!ok) return false;
@@ -134,8 +134,10 @@ export class L_Env {
     if (node instanceof OptNode) {
       return this.getDef(node.name) !== undefined || isToCheckBuiltin(node);
     } else if (node instanceof LogicNode) {
-      return node.req.every((e) => this.factsInToCheckAllDeclared(e)) &&
-        node.onlyIfs.every((e) => this.factsInToCheckAllDeclared(e));
+      return (
+        node.req.every((e) => this.factsInToCheckAllDeclared(e)) &&
+        node.onlyIfs.every((e) => this.factsInToCheckAllDeclared(e))
+      );
     }
 
     return false;
@@ -155,7 +157,7 @@ export class L_Env {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.getDef(s) !== undefined) {
       this.newMessage(
-        `${s} already declared in this environment or its parents environments.`,
+        `${s} already declared in this environment or its parents environments.`
       );
       return false;
     }
@@ -277,7 +279,7 @@ export class L_Env {
   someVarsDeclaredHere(fact: ToCheckNode, freeVars: string[]): boolean {
     if (fact instanceof OptNode) {
       const out = fact.vars.some(
-        (e) => !freeVars.includes(e) && this.declaredVars.has(e),
+        (e) => !freeVars.includes(e) && this.declaredVars.has(e)
       );
       return out;
     } else if (fact instanceof LogicNode) {

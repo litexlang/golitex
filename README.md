@@ -36,14 +36,16 @@ Let’s explore its syntax with examples, starting with syllogism:
 
 ```
 def mortal(something);
-def something is human => {something is mortal};
+def something is human {if x : x is human => {x is mortal}};
 let Socrates: Socrates is human;
 Socrates is mortal;
-
 if x : x is human => {x is mortal};
 let god : god is not mortal;
-prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;
-````
+prove_by_contradiction god is not human {
+  god is mortal;
+} contradiction god is mortal;
+god is not human;
+```
 
 Some core functionalities of LiTeX are included in this example
 
@@ -65,21 +67,6 @@ Some core functionalities of LiTeX are included in this example
 ## Syntax
 
 # Logical Concept System Examples
-
-## Basic Syllogism
-
-```
-def mortal(something);
-def something is human {if x : x is human => {x is mortal}};
-let Socrates: Socrates is human;
-Socrates is mortal;
-if x : x is human => {x is mortal};
-let god : god is not mortal;
-prove_by_contradiction god is not human {
-  god is mortal;
-} contradiction god is mortal;
-god is not human;
-```
 
 ## Concept Definition
 
@@ -351,3 +338,4 @@ The platform advances artificial intelligence systems through:
    - Verification-guided training
 
 LiTeX integrates verification with collaboration to create a robust platform for mathematics education and research, promoting both rigor and broad participation in mathematical advancement.
+````
