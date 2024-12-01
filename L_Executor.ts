@@ -30,6 +30,12 @@ import {
 } from "./L_Messages";
 import { existBuiltinCheck, isToCheckBuiltin } from "./L_Builtins";
 import { KnownExist, L_Out } from "./L_DataStructures";
+import {
+  postfixProveExec,
+  proveExist,
+  proveOpt,
+  proveOptByContradict,
+} from "./L_Prove";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -491,161 +497,8 @@ function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): L_Out {
   }
 }
 
-function execResult(out: L_Out, node: L_Node): string {
-  if (out === L_Out.True) {
-    return `OK! ${node}`;
-  } else if (out === L_Out.Unknown) {
-    return `Unknown ${node}`;
-  } else if (out === L_Out.Error) {
-    return `Error ${node}`;
-  } else if (out === L_Out.False) {
-    return `False ${node}`;
-  }
-
-  return `???`;
-}
-
-function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
-  try {
-    const newEnv = new L_Env(env);
-
-    for (const subNode of block) {
-      const out = nodeExec(newEnv, subNode, false);
-      env.newMessage(execResult(out, toProve));
-      if (out === L_Out.Error) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`Errors: Failed to execute ${subNode}`);
-        return L_Out.Error;
-      }
-    }
-
-    const ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
-    if (!ok) return L_Out.Error;
-
-    const out = L_Checker.check(newEnv, toProve);
-    if (out !== L_Out.True) return out;
-
-    L_Memory.store(env, toProve, [], true);
-
-    newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
-
-    return L_Out.True;
-  } catch {
-    env.newMessage(`${toProve}`);
-    return L_Out.Error;
-  }
-}
-
-function proveOptByContradict(
-  env: L_Env,
-  toProve: OptNode,
-  block: L_Node[],
-  contradict: OptNode
-): L_Out {
-  try {
-    const newEnv = new L_Env(env);
-
-    toProve.isT = !toProve.isT;
-    let ok = L_Memory.store(newEnv, toProve, [], true);
-    if (!ok) {
-      newEnv.newMessage(`Failed to store ${toProve}`);
-      return L_Out.Error;
-    }
-
-    for (const subNode of block) {
-      const out = nodeExec(newEnv, subNode, false);
-      if (out === L_Out.Error) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`Errors: Failed to execute ${subNode}`);
-        return L_Out.Error;
-      }
-    }
-
-    let out = L_Checker.check(newEnv, contradict);
-    if (out !== L_Out.True) {
-      env.newMessage(`Errors: Failed to execute ${contradict}`);
-      return L_Out.Error;
-    }
-
-    contradict.isT = !contradict.isT;
-    out = L_Checker.check(newEnv, contradict);
-    if (out !== L_Out.True) {
-      env.newMessage(`Errors: Failed to execute ${contradict}`);
-      return L_Out.Error;
-    }
-
-    ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
-    if (!ok) return L_Out.Error;
-
-    toProve.isT = !toProve.isT;
-    ok = L_Memory.store(env, toProve, [], true);
-    if (!ok) {
-      env.newMessage(`Failed to store ${toProve}`);
-      return L_Out.Error;
-    }
-
-    newEnv
-      .getMessages()
-      .forEach((e) => env.newMessage(`[prove_by_contradict] ${e}`));
-
-    return L_Out.True;
-  } catch {
-    env.newMessage(`${toProve}`);
-    return L_Out.Error;
-  }
-}
-
-function postfixProveExec(env: L_Env, postfixProve: PostfixProve): L_Out {
-  try {
-    const newEnv = new L_Env(env);
-    for (const subNode of postfixProve.block) {
-      const out = nodeExec(newEnv, subNode, false);
-      if (out !== L_Out.True) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`${postfixProve} failed.`);
-        return out;
-      }
-    }
-
-    for (const fact of postfixProve.facts) {
-      const ok = noVarsOrOptDeclaredHere(env, newEnv, fact);
-      if (!ok) return L_Out.Error;
-    }
-
-    for (const fact of postfixProve.facts) {
-      const out = L_Checker.check(newEnv, fact);
-      if (out !== L_Out.True) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`${postfixProve} failed.`);
-        return out;
-      }
-    }
-
-    for (const fact of postfixProve.facts) {
-      const ok = L_Memory.store(env, fact, [], true);
-      if (!ok) {
-        env.newMessage(`Failed to store ${fact}`);
-        return L_Out.Error;
-      }
-    }
-
-    newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
-
-    // store named knowns
-    for (const [i, key] of postfixProve.names.entries()) {
-      const ok = env.newNamedKnownToCheck(key, postfixProve.facts[i]);
-      if (!ok) throw Error();
-    }
-
-    return L_Out.True;
-  } catch {
-    env.newMessage("by error");
-    return L_Out.Error;
-  }
-}
-
 //
-function noVarsOrOptDeclaredHere(
+export function noVarsOrOptDeclaredHere(
   sendErrMessageToEnv: L_Env,
   here: L_Env,
   targetFact: ToCheckNode
@@ -727,27 +580,5 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
     return L_Out.True;
   } catch {
     return env.errMesReturnL_Out(ByNode);
-  }
-}
-
-export function proveExist(
-  env: L_Env,
-  toProve: OptNode,
-  block: L_Node[]
-): L_Out {
-  try {
-    const newEnv = new L_Env(env);
-    for (const node of block) {
-      const out = nodeExec(newEnv, node, true);
-      if (out !== L_Out.True) return out;
-    }
-
-    const out = existBuiltinCheck(newEnv, toProve);
-    if (out !== L_Out.True) return out;
-
-    env.newExist(toProve.name, new KnownExist(toProve.isT));
-    return reportNewExist(env, toProve);
-  } catch {
-    return env.errMesReturnL_Out(toProve);
   }
 }

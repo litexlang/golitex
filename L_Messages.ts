@@ -1,6 +1,20 @@
 import type { L_Env } from "./L_Env";
 import { L_Out } from "./L_DataStructures";
-import type { OptNode, ToCheckNode } from "./L_Nodes";
+import type { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
+
+export function reportExecL_Out(out: L_Out, node: L_Node): string {
+  if (out === L_Out.True) {
+    return `OK! ${node}`;
+  } else if (out === L_Out.Unknown) {
+    return `Unknown ${node}`;
+  } else if (out === L_Out.Error) {
+    return `Error ${node}`;
+  } else if (out === L_Out.False) {
+    return `False ${node}`;
+  }
+
+  return `???`;
+}
 
 export function lstLengthNotEql(
   env: L_Env,
