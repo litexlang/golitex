@@ -1,7 +1,6 @@
 import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Out } from "./L_Executor";
-import { StoredFact } from "./L_Memory";
 import * as L_Memory from "./L_Memory";
 import { lstLengthNotEql } from "./L_Messages";
 import {
@@ -10,6 +9,7 @@ import {
   isToCheckBuiltin,
 } from "./L_Builtins";
 import { ExistKeyword } from "./L_Common";
+import { StoredFact, StoredReq } from "./L_DataStructures";
 
 export function check(
   env: L_Env,
@@ -134,7 +134,7 @@ export function checkOpt(
 
       let out = L_Out.True;
 
-      for (const r of fixedKnown.req as L_Memory.StoredReq[]) {
+      for (const r of fixedKnown.req as StoredReq[]) {
         for (const fact of r.req as ToCheckNode[]) {
           if (fact instanceof OptNode) {
             out = checkOptLiterally(env, fact);

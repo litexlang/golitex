@@ -6,14 +6,10 @@ import {
   OptNode,
   ToCheckNode,
 } from "./L_Nodes";
-import {
-  examineStoredFact,
-  KnownExist,
-  KnownFact,
-  StoredFact,
-} from "./L_Memory";
+import { examineStoredFact } from "./L_Memory";
 import { L_Out } from "./L_Executor";
 import { isToCheckBuiltin } from "./L_Builtins";
+import { KnownExist, KnownFact, StoredFact } from "./L_DataStructures";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;

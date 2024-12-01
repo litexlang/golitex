@@ -29,6 +29,7 @@ import {
   reportNotAllFactsInGivenFactAreDeclared,
 } from "./L_Messages";
 import { existBuiltinCheck, isToCheckBuiltin } from "./L_Builtins";
+import { KnownExist } from "./L_DataStructures";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -751,7 +752,7 @@ export function proveExist(
     const out = existBuiltinCheck(newEnv, toProve);
     if (out !== L_Out.True) return out;
 
-    env.newExist(toProve.name, new L_Memory.KnownExist(toProve.isT));
+    env.newExist(toProve.name, new KnownExist(toProve.isT));
     return reportNewExist(env, toProve);
   } catch {
     return env.errMesReturnL_Out(toProve);

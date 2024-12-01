@@ -1,6 +1,6 @@
 import { L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
-import { MemorizedExistDecl } from "./L_Memory";
+// import { MemorizedExistDecl } from "./L_Memory";
 
 export abstract class L_Node {}
 
@@ -261,31 +261,31 @@ export class OnlyIfDefNode extends DefNode {
     return `def only_if ${this.name}(${this.vars})`;
   }
 }
-export class ExistDefNode extends DefNode {
-  constructor(
-    name: string = "",
-    vars: string[] = [],
-    public req: ToCheckNode[] = [],
-    private existVars: string[] = [],
-    private existFacts: ToCheckNode[] = [],
-    public ifVars: string[][] | undefined = undefined
-  ) {
-    super(name, vars, req, []); // We don't use onlyIfs field in ExistDecl.
-  }
+// export class ExistDefNode extends DefNode {
+//   constructor(
+//     name: string = "",
+//     vars: string[] = [],
+//     public req: ToCheckNode[] = [],
+//     private existVars: string[] = [],
+//     private existFacts: ToCheckNode[] = [],
+//     public ifVars: string[][] | undefined = undefined
+//   ) {
+//     super(name, vars, req, []); // We don't use onlyIfs field in ExistDecl.
+//   }
 
-  toMemorized(): MemorizedExistDecl {
-    return new MemorizedExistDecl(this.vars, this.existVars, this.existFacts);
-  }
+//   toMemorized(): MemorizedExistDecl {
+//     return new MemorizedExistDecl(this.vars, this.existVars, this.existFacts);
+//   }
 
-  override toString(): string {
-    return `def exist ${this.name}(${this.vars})`;
-  }
+//   override toString(): string {
+//     return `def exist ${this.name}(${this.vars})`;
+//   }
 
-  getIfNode(): IfNode {
-    const itself = [new OptNode(this.name, this.vars, true, this.ifVars)];
-    return new IfNode(this.vars, this.req, itself, true);
-  }
-}
+//   getIfNode(): IfNode {
+//     const itself = [new OptNode(this.name, this.vars, true, this.ifVars)];
+//     return new IfNode(this.vars, this.req, itself, true);
+//   }
+// }
 
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;

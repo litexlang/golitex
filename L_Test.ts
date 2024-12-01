@@ -99,8 +99,9 @@ export const exampleList: ExampleItem[] = [
       "let god : god is not mortal;",
       "god is not human;",
       "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
+      "god is not human;",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
