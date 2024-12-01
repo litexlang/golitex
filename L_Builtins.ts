@@ -58,11 +58,17 @@ export function existBuiltinCheck(env: L_Env, node: OptNode): L_Out {
       );
 
       // Strict checking for existence
-      const out = checkOptLiterally(env, toCheck);
-      if (out === L_Out.True) {
-        env.newExist(node.vars[i], new KnownExist(node.isT));
+      if (!L_BuiltinsKeywords.includes(node.vars[i])) {
+        const out = checkOptLiterally(env, toCheck);
+        if (out === L_Out.True) {
+          env.newExist(node.vars[i], new KnownExist(node.isT));
+        } else {
+          return out;
+        }
       } else {
-        return out;
+        return env.errMesReturnL_Out(
+          `exist operator should not take builtin keyword ${node.vars[i]} as parameter.`
+        );
       }
     }
 
