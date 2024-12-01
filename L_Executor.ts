@@ -19,15 +19,16 @@ import {
 import { L_Env } from "./L_Env";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
-import { ClearKeyword, RunKeyword } from "./L_Common";
+import { ClearKeyword, ExistKeyword, RunKeyword } from "./L_Common";
 import { runFile } from "./L_Runner";
 import { LogicNode } from "./L_Nodes";
 import { store } from "./L_Memory";
 import {
+  reportNewExist,
   reportNewVars,
   reportNotAllFactsInGivenFactAreDeclared,
 } from "./L_Messages";
-import { isToCheckBuiltin, proveExist } from "./L_Builtins";
+import { isToCheckBuiltin, L_Builtins } from "./L_Builtins";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -294,14 +295,14 @@ function haveExec(env: L_Env, node: HaveNode): L_Out {
   try {
     if (!node.opts.every((e) => env.isExisted(e.name))) {
       return env.errMesReturnL_Out(
-        `operator-type facts in have must proved to be exist.`,
+        `operator-type facts in have must proved to be exist.`
       );
     }
 
     for (const opt of node.opts) {
       if (!node.vars.every((e) => opt.vars.includes(e))) {
         return env.errMesReturnL_Out(
-          `have error: [${node.vars}] must be subset of [${opt.vars}]`,
+          `have error: [${node.vars}] must be subset of [${opt.vars}]`
         );
       }
 
@@ -428,7 +429,7 @@ function proveExec(env: L_Env, node: ProveNode): L_Out {
   } else {
     if (node.toProve !== null) {
       env.newMessage(
-        `At current version, you can not prove if-then by contradiction.`,
+        `At current version, you can not prove if-then by contradiction.`
       );
       return L_Out.Error;
     } else {
@@ -436,7 +437,7 @@ function proveExec(env: L_Env, node: ProveNode): L_Out {
         env,
         node.fixedIfThenOpt as OptNode,
         node.block,
-        node.contradict as OptNode,
+        node.contradict as OptNode
       );
     }
   }
@@ -545,7 +546,7 @@ function proveOptByContradict(
   env: L_Env,
   toProve: OptNode,
   block: L_Node[],
-  contradict: OptNode,
+  contradict: OptNode
 ): L_Out {
   try {
     const newEnv = new L_Env(env);
@@ -589,9 +590,9 @@ function proveOptByContradict(
       return L_Out.Error;
     }
 
-    newEnv.getMessages().forEach((e) =>
-      env.newMessage(`[prove_by_contradict] ${e}`)
-    );
+    newEnv
+      .getMessages()
+      .forEach((e) => env.newMessage(`[prove_by_contradict] ${e}`));
 
     return L_Out.True;
   } catch {
@@ -653,12 +654,12 @@ function postfixProveExec(env: L_Env, postfixProve: PostfixProve): L_Out {
 function noVarsOrOptDeclaredHere(
   sendErrMessageToEnv: L_Env,
   here: L_Env,
-  targetFact: ToCheckNode,
+  targetFact: ToCheckNode
 ): boolean {
   if (here.someVarsDeclaredHere(targetFact, [])) {
     here.getMessages().forEach((e) => sendErrMessageToEnv.newMessage(e));
     sendErrMessageToEnv.newMessage(
-      `Error: Some variables in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`,
+      `Error: Some variables in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
     );
     return false;
   }
@@ -666,7 +667,7 @@ function noVarsOrOptDeclaredHere(
   if (here.someOptsDeclaredHere(targetFact)) {
     here.getMessages().forEach((e) => sendErrMessageToEnv.newMessage(e));
     sendErrMessageToEnv.newMessage(
-      `Error: Some operators in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`,
+      `Error: Some operators in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
     );
     return false;
   }
@@ -689,13 +690,13 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
       if (knownToCheck instanceof OptNode) {
         if (vars.length !== 0) {
           return env.errMesReturnL_Out(
-            `${knownFactName} is supposed to have no parameter.`,
+            `${knownFactName} is supposed to have no parameter.`
           );
         }
       } else if (knownToCheck instanceof LogicNode) {
         if (vars.length !== knownToCheck.vars.length) {
           return env.errMesReturnL_Out(
-            `${knownFactName} is supposed to have ${knownToCheck.vars.length} parameters, get ${vars.length}`,
+            `${knownFactName} is supposed to have ${knownToCheck.vars.length} parameters, get ${vars.length}`
           );
         }
 
@@ -732,5 +733,32 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
     return L_Out.True;
   } catch {
     return env.errMesReturnL_Out(ByNode);
+  }
+}
+
+export function proveExist(
+  env: L_Env,
+  toProve: OptNode,
+  block: L_Node[]
+): L_Out {
+  try {
+    const newEnv = new L_Env(env);
+    for (const node of block) {
+      const out = nodeExec(newEnv, node, true);
+      if (out !== L_Out.True) return out;
+    }
+
+    const checker = L_Builtins.get(ExistKeyword);
+    if (!checker) {
+      return L_Out.Error;
+    }
+
+    const out = checker(newEnv, toProve);
+    if (out !== L_Out.True) return out;
+
+    env.newExist(toProve.name, new L_Memory.KnownExist(toProve.isT));
+    return reportNewExist(env, toProve);
+  } catch {
+    return env.errMesReturnL_Out(toProve);
   }
 }

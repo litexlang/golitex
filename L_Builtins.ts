@@ -7,15 +7,23 @@ import { KnownExist } from "./L_Memory";
 
 export const L_BuiltinsKeywords: string[] = ["is_property", "exist", "or"];
 
-// deno-lint-ignore ban-types
-export const L_Builtins = new Map<string, Function>();
+// Define an interface for built-in function types
+export interface BuiltinFunction {
+  (env: L_Env, node: OptNode): L_Out;
+}
 
-export function isToCheckBuiltin(node: ToCheckNode) {
+export function isToCheckBuiltin(node: ToCheckNode): boolean {
   return node instanceof OptNode && L_Builtins.get(node.name) !== undefined;
 }
 
-// node looks like is_property(OptName)
-L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {
+// Create a map of built-in function names to their implementations
+export const L_Builtins = new Map<string, BuiltinFunction>([
+  ["is_property", isPropertyBuiltin],
+  ["exist", existBuiltin],
+]);
+
+// Separate functions from the map
+export function isPropertyBuiltin(env: L_Env, node: OptNode): L_Out {
   try {
     const out = env.getDef(node.vars[0]);
     if (out === undefined) {
@@ -38,10 +46,9 @@ L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {
   } catch {
     return L_Out.Error;
   }
-});
+}
 
-// node looks like exist(OptName, v1,v2...vn)
-L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
+export function existBuiltin(env: L_Env, node: OptNode): L_Out {
   try {
     for (let i = 0; i < node.vars.length; i++) {
       if (env.isExisted(node.vars[i]) === node.isT) {
@@ -53,7 +60,7 @@ L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
         (node.checkVars as string[][])[i]
       );
 
-      // Why checkOptLiterally? because I want to make exist as "user-is-responsible-for-checking" as possible
+      // Strict checking for existence
       const out = checkOptLiterally(env, toCheck);
       if (out === L_Out.True) {
         env.newExist(node.vars[i], new KnownExist(node.isT));
@@ -65,29 +72,5 @@ L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
     return L_Out.True;
   } catch {
     return L_Out.Error;
-  }
-});
-
-export function proveExist(
-  env: L_Env,
-  toProve: OptNode,
-  block: L_Node[]
-): L_Out {
-  try {
-    const newEnv = new L_Env(env);
-    for (const node of block) {
-      const out = nodeExec(newEnv, node, true);
-      if (out !== L_Out.True) return out;
-    }
-
-    // deno-lint-ignore ban-types
-    const checker = L_Builtins.get("exist") as Function;
-    const out = checker(newEnv, toProve);
-    if (out !== L_Out.True) return out;
-
-    env.newExist(toProve.name, new KnownExist(toProve.isT));
-    return reportNewExist(env, toProve);
-  } catch {
-    return env.errMesReturnL_Out(toProve);
   }
 }
