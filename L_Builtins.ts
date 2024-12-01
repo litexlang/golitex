@@ -5,11 +5,13 @@ import { checkOptLiterally } from "./L_Checker";
 import { reportNewExist } from "./L_Messages";
 import { KnownExist } from "./L_Memory";
 
+export const L_BuiltinsKeywords: string[] = ["is_property", "exist", "or"];
+
 // deno-lint-ignore ban-types
 export const L_Builtins = new Map<string, Function>();
 
 export function isToCheckBuiltin(node: ToCheckNode) {
-  return (node instanceof OptNode) && (L_Builtins.get(node.name) !== undefined);
+  return node instanceof OptNode && L_Builtins.get(node.name) !== undefined;
 }
 
 // node looks like is_property(OptName)
@@ -18,15 +20,15 @@ L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {
     const out = env.getDef(node.vars[0]);
     if (out === undefined) {
       env.newMessage(
-        `is_property error: ${node.name} is an undeclared operator.`,
+        `is_property error: ${node.name} is an undeclared operator.`
       );
       return L_Out.Error;
     } else {
       if (out.vars.length !== Number(node.vars[1])) {
         env.newMessage(
-          `is_property error: ${node.name} requires ${out.vars.length} parameters, ${
-            Number(node.vars[1])
-          } given.`,
+          `is_property error: ${node.name} requires ${
+            out.vars.length
+          } parameters, ${Number(node.vars[1])} given.`
         );
         return L_Out.Error;
       } else {
@@ -41,19 +43,26 @@ L_Builtins.set("is_property", (env: L_Env, node: OptNode): L_Out => {
 // node looks like exist(OptName, v1,v2...vn)
 L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
   try {
-    if (env.isExisted(node.vars[0]) === node.isT) {
-      return L_Out.True;
+    for (let i = 0; i < node.vars.length; i++) {
+      if (env.isExisted(node.vars[i]) === node.isT) {
+        return L_Out.True;
+      }
+
+      const toCheck = new OptNode(
+        node.vars[i],
+        (node.checkVars as string[][])[i]
+      );
+
+      // Why checkOptLiterally? because I want to make exist as "user-is-responsible-for-checking" as possible
+      const out = checkOptLiterally(env, toCheck);
+      if (out === L_Out.True) {
+        env.newExist(node.vars[i], new KnownExist(node.isT));
+      } else {
+        return out;
+      }
     }
 
-    const toCheck = new OptNode(node.vars[0], node.vars.slice(1));
-
-    // Why checkOptLiterally? because I want to make exist as "user-is-responsible-for-checking" as possible
-    const out = checkOptLiterally(env, toCheck);
-    if (out === L_Out.True) {
-      env.newExist(node.vars[0], new KnownExist(node.isT));
-    }
-
-    return out;
+    return L_Out.True;
   } catch {
     return L_Out.Error;
   }
@@ -62,7 +71,7 @@ L_Builtins.set("exist", (env: L_Env, node: OptNode): L_Out => {
 export function proveExist(
   env: L_Env,
   toProve: OptNode,
-  block: L_Node[],
+  block: L_Node[]
 ): L_Out {
   try {
     const newEnv = new L_Env(env);

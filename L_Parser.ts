@@ -48,6 +48,7 @@ import {
   ReturnKeyword,
   RunKeyword,
 } from "./L_Common";
+import { L_BuiltinsKeywords } from "./L_Builtins";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {

@@ -146,7 +146,7 @@ prove_by_contradiction v12 is not p3 {v12 is p2;} contradiction v12 is p1;
 def p(x); def q(x); def t(x,y); def t_y(x); know if x :t(x,y) => {t_y(x)};
 let x, y: t(x,y);
 t_y(x);
-exist(t_y,x);
+exist(t_y)[x];
 know if exist(t_y) => {q(y)};
 q(y);
 ```
@@ -164,7 +164,7 @@ if x: => {not p(x)};
 ## Prove Exist
 
 ```
-def p(x); prove exist(p) {let x: p(x); exist(p, x);}
+def p(x); prove exist(p) {let x: p(x); exist(p)[x];}
 ```
 
 ## Know Exist

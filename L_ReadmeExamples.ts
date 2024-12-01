@@ -118,7 +118,7 @@ export const exampleList: ExampleItem[] = [
       "def p(x); def q(x); def t(x,y); def t_y(x); know if x :t(x,y) => {t_y(x)};",
       "let x, y: t(x,y);",
       "t_y(x);",
-      "exist(t_y,x);",
+      "exist(t_y)[x];",
       "know if exist(t_y) => {q(y)};",
       "q(y);",
     ],
@@ -139,7 +139,7 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "prove exist",
-    code: ["def p(x); prove exist(p) {let x: p(x); exist(p, x);}"],
+    code: ["def p(x); prove exist(p) {let x: p(x); exist(p)[x];}"],
     debug: false,
     print: true,
   },

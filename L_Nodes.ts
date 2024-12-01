@@ -37,10 +37,7 @@ export class ToCheckNode extends L_Node {
 }
 
 export class OrNode extends ToCheckNode {
-  constructor(
-    public facts: ToCheckNode[],
-    isT: boolean,
-  ) {
+  constructor(public facts: ToCheckNode[], isT: boolean) {
     super(isT);
   }
 
@@ -66,7 +63,7 @@ export class LogicNode extends ToCheckNode {
     public vars: string[] = [],
     public req: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [],
-    isT: boolean = true,
+    isT: boolean = true
     // public reqName: null | string = null,
   ) {
     super(isT);
@@ -78,8 +75,7 @@ export class LogicNode extends ToCheckNode {
     varsFromAboveIf = [...varsFromAboveIf, ...this.vars];
     return this.onlyIfs.every(
       (e) =>
-        !(e instanceof LogicNode) ||
-        e.examineVarsNotDoubleDecl(varsFromAboveIf),
+        !(e instanceof LogicNode) || e.examineVarsNotDoubleDecl(varsFromAboveIf)
     );
   }
 
@@ -92,7 +88,7 @@ export class LogicNode extends ToCheckNode {
       this.vars,
       this.req,
       this.onlyIfs,
-      newIsT,
+      newIsT
       // this.defName,
       // this.reqName,
       // this.isIff
@@ -109,7 +105,7 @@ export class LogicNode extends ToCheckNode {
         newVars,
         req,
         onlyIfs,
-        this.isT,
+        this.isT
         // this.defName,
         // this.reqName,
       );
@@ -125,15 +121,11 @@ export class LogicNode extends ToCheckNode {
     type = "if";
     separator = "=>";
 
-    const mainPart = `${type} ${this.vars.toString()} : ${
-      this.req
-        .map((e) => e.toString())
-        .join(", ")
-    } ${separator} {${
-      this.onlyIfs
-        .map((e) => e.toString())
-        .join(", ")
-    }}`;
+    const mainPart = `${type} ${this.vars.toString()} : ${this.req
+      .map((e) => e.toString())
+      .join(", ")} ${separator} {${this.onlyIfs
+      .map((e) => e.toString())
+      .join(", ")}}`;
     const notPart = !this.isT ? "[not] " : "";
 
     // const defName = this.defName === undefined ? "" : `[${this.defName}]`;
@@ -153,8 +145,7 @@ export class LogicNode extends ToCheckNode {
 }
 
 export class IffNode extends LogicNode {}
-export class IfNode extends LogicNode {
-}
+export class IfNode extends LogicNode {}
 
 // export class LogicNode extends LogicalOptNode {}
 // export class OnlyIfNode extends LogicalOptNode {}
@@ -165,14 +156,15 @@ export class OptNode extends ToCheckNode {
     public vars: string[],
     isT: boolean = true,
     // defName: string | undefined = undefined,
-    public checkVars: string[][] | undefined = undefined,
+    public checkVars: string[][] | undefined = undefined
   ) {
     super(isT);
   }
 
   override containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
-    return (opt.name === this.name) &&
-      opt.vars.every((e, i) => e === this.vars[i]);
+    return (
+      opt.name === this.name && opt.vars.every((e, i) => e === this.vars[i])
+    );
   }
 
   override copyWithoutIsT(newIsT: boolean): OptNode {
@@ -181,7 +173,7 @@ export class OptNode extends ToCheckNode {
       this.vars,
       newIsT,
       // this.defName,
-      this.checkVars,
+      this.checkVars
     );
   }
 
@@ -202,7 +194,7 @@ export class OptNode extends ToCheckNode {
       newVars,
       this.isT,
       // this.defName,
-      this.checkVars,
+      this.checkVars
     );
   }
 
@@ -244,9 +236,9 @@ export class DefNode extends L_Node {
     public name: string = "",
     public vars: string[] = [],
     public cond: ToCheckNode[] = [],
-    public onlyIfs: ToCheckNode[] = [], // public defName: string | undefined = undefined
-    // public cond: ToCheckNode[] = [],
-  ) {
+    public onlyIfs: ToCheckNode[] = [] // public defName: string | undefined = undefined
+  ) // public cond: ToCheckNode[] = [],
+  {
     super();
   }
 
@@ -277,7 +269,7 @@ export class ExistDefNode extends DefNode {
     public req: ToCheckNode[] = [],
     private existVars: string[] = [],
     private existFacts: ToCheckNode[] = [],
-    public ifVars: string[][] | undefined = undefined,
+    public ifVars: string[][] | undefined = undefined
   ) {
     super(name, vars, req, []); // We don't use onlyIfs field in ExistDecl.
   }
@@ -291,9 +283,7 @@ export class ExistDefNode extends DefNode {
   }
 
   getIfNode(): IfNode {
-    const itself = [
-      new OptNode(this.name, this.vars, true, this.ifVars),
-    ];
+    const itself = [new OptNode(this.name, this.vars, true, this.ifVars)];
     return new IfNode(this.vars, this.req, itself, true);
   }
 }
@@ -316,17 +306,15 @@ export class LetNode extends L_Node {
   constructor(
     public vars: string[],
     public facts: ToCheckNode[],
-    public names: string[],
+    public names: string[]
   ) {
     super();
   }
 
   override toString() {
-    return `${this.vars.join(", ")}: ${
-      this.facts
-        .map((s) => s.toString())
-        .join(", ")
-    }`;
+    return `${this.vars.join(", ")}: ${this.facts
+      .map((s) => s.toString())
+      .join(", ")}`;
   }
 }
 
@@ -337,7 +325,7 @@ export class ProveNode extends L_Node {
     public fixedIfThenOpt: OptNode | null,
     public block: L_Node[],
     // If contradict !== undefined, then prove_by_contradiction
-    public contradict: OptNode | undefined = undefined,
+    public contradict: OptNode | undefined = undefined
   ) {
     super();
   }
@@ -352,7 +340,7 @@ export class PostfixProve extends L_Node {
   constructor(
     public facts: ToCheckNode[],
     public block: L_Node[],
-    public names: string[],
+    public names: string[]
   ) {
     super();
   }
@@ -405,7 +393,7 @@ export class MacroNode extends L_Node {
   constructor(
     public regexString: string,
     public varName: string,
-    public facts: ToCheckNode[],
+    public facts: ToCheckNode[]
   ) {
     super();
   }
