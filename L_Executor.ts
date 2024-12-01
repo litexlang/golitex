@@ -28,7 +28,7 @@ import {
   reportNewVars,
   reportNotAllFactsInGivenFactAreDeclared,
 } from "./L_Messages";
-import { isToCheckBuiltin, L_Builtins } from "./L_Builtins";
+import { existBuiltinCheck, isToCheckBuiltin } from "./L_Builtins";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -748,12 +748,7 @@ export function proveExist(
       if (out !== L_Out.True) return out;
     }
 
-    const checker = L_Builtins.get(ExistKeyword);
-    if (!checker) {
-      return L_Out.Error;
-    }
-
-    const out = checker(newEnv, toProve);
+    const out = existBuiltinCheck(newEnv, toProve);
     if (out !== L_Out.True) return out;
 
     env.newExist(toProve.name, new L_Memory.KnownExist(toProve.isT));

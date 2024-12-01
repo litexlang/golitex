@@ -1,4 +1,4 @@
-import { L_Builtins } from "./L_Builtins";
+import { L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
 import { MemorizedExistDecl } from "./L_Memory";
 
@@ -205,8 +205,8 @@ export class OptNode extends ToCheckNode {
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
-    const builtin = L_Builtins.get(this.name);
-    if (builtin) {
+    const isBuiltin = L_BuiltinsKeywords.includes(this.name);
+    if (isBuiltin) {
       // ! Not A Good Implementation.
       return true;
     }
@@ -222,7 +222,7 @@ export class OptNode extends ToCheckNode {
   }
 
   override factsDeclared(env: L_Env): boolean {
-    if (env.optDeclared(this.name) || L_Builtins.get(this.name)) {
+    if (env.optDeclared(this.name) || L_BuiltinsKeywords.includes(this.name)) {
       return true;
     } else {
       env.newMessage(`${this.name} not declared.`);
@@ -236,9 +236,8 @@ export class DefNode extends L_Node {
     public name: string = "",
     public vars: string[] = [],
     public cond: ToCheckNode[] = [],
-    public onlyIfs: ToCheckNode[] = [] // public defName: string | undefined = undefined
-  ) // public cond: ToCheckNode[] = [],
-  {
+    public onlyIfs: ToCheckNode[] = [] // public defName: string | undefined = undefined // public cond: ToCheckNode[] = [],
+  ) {
     super();
   }
 

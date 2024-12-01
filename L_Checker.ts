@@ -3,8 +3,13 @@ import { L_Env } from "./L_Env";
 import { L_Out } from "./L_Executor";
 import { StoredFact } from "./L_Memory";
 import * as L_Memory from "./L_Memory";
-import { L_Builtins } from "./L_Builtins";
 import { lstLengthNotEql } from "./L_Messages";
+import {
+  existBuiltinCheck,
+  isPropertyBuiltinCheck,
+  isToCheckBuiltin,
+} from "./L_Builtins";
+import { ExistKeyword } from "./L_Common";
 
 export function check(
   env: L_Env,
@@ -85,10 +90,16 @@ export function checkOpt(
   useCheckVarsFromIf: boolean = true,
   toCheckVarsFromIf: string[][] = []
 ): L_Out {
-  const builtins = L_Builtins.get(toCheck.name);
-  if (builtins !== undefined) {
+  if (isToCheckBuiltin(toCheck)) {
     env.newMessage(`checked by builtins.`);
-    return builtins(env, toCheck);
+    switch (toCheck.name) {
+      case "is_property":
+        return isPropertyBuiltinCheck(env, toCheck);
+      case ExistKeyword:
+        return existBuiltinCheck(env, toCheck);
+      default:
+        return L_Out.Error;
+    }
   }
 
   //* cond of fact must be satisfied
@@ -184,9 +195,16 @@ export function checkOpt(
 
 // check whether a variable in fact.vars is free or fixed at check time instead of run time.
 export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
-  const builtins = L_Builtins.get(toCheck.name);
-  if (builtins !== undefined) {
-    return builtins(env, toCheck);
+  if (isToCheckBuiltin(toCheck)) {
+    env.newMessage(`checked by builtins.`);
+    switch (toCheck.name) {
+      case "is_property":
+        return isPropertyBuiltinCheck(env, toCheck);
+      case ExistKeyword:
+        return existBuiltinCheck(env, toCheck);
+      default:
+        return L_Out.Error;
+    }
   }
 
   if (toCheck.vars.length !== env.getDef(toCheck.name)?.vars.length) {

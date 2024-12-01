@@ -8,22 +8,19 @@ import { KnownExist } from "./L_Memory";
 export const L_BuiltinsKeywords: string[] = ["is_property", "exist", "or"];
 
 // Define an interface for built-in function types
-export interface BuiltinFunction {
-  (env: L_Env, node: OptNode): L_Out;
-}
 
 export function isToCheckBuiltin(node: ToCheckNode): boolean {
-  return node instanceof OptNode && L_Builtins.get(node.name) !== undefined;
+  return node instanceof OptNode && L_BuiltinsKeywords.includes(node.name);
 }
 
-// Create a map of built-in function names to their implementations
-export const L_Builtins = new Map<string, BuiltinFunction>([
-  ["is_property", isPropertyBuiltin],
-  ["exist", existBuiltin],
-]);
+// // Create a map of built-in function names to their implementations
+// export const L_Builtins = new Map<string, Function>([
+//   ["is_property", isPropertyBuiltinCheck],
+//   ["exist", existBuiltinCheck],
+// ]);
 
 // Separate functions from the map
-export function isPropertyBuiltin(env: L_Env, node: OptNode): L_Out {
+export function isPropertyBuiltinCheck(env: L_Env, node: OptNode): L_Out {
   try {
     const out = env.getDef(node.vars[0]);
     if (out === undefined) {
@@ -48,7 +45,7 @@ export function isPropertyBuiltin(env: L_Env, node: OptNode): L_Out {
   }
 }
 
-export function existBuiltin(env: L_Env, node: OptNode): L_Out {
+export function existBuiltinCheck(env: L_Env, node: OptNode): L_Out {
   try {
     for (let i = 0; i < node.vars.length; i++) {
       if (env.isExisted(node.vars[i]) === node.isT) {
@@ -69,6 +66,14 @@ export function existBuiltin(env: L_Env, node: OptNode): L_Out {
       }
     }
 
+    return L_Out.True;
+  } catch {
+    return L_Out.Error;
+  }
+}
+
+export function orBuiltinCheck(env: L_Env, node: OptNode): L_Out {
+  try {
     return L_Out.True;
   } catch {
     return L_Out.Error;
