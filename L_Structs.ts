@@ -1,13 +1,17 @@
 import { ToCheckNode } from "./L_Nodes";
 
-export type L_Symbol = string;
+export class L_Symbol {
+  constructor(public name: string) {}
+}
 
-export class CompositeSymbol {
+export class CompositeSymbol extends L_Symbol {
   constructor(
-    public name: string,
-    public vars: CompositeSymbol[],
+    name: string,
+    public vars: L_Symbol[],
     public req: ToCheckNode[]
-  ) {}
+  ) {
+    super(name);
+  }
 }
 
 export enum L_Out {

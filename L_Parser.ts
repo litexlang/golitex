@@ -72,13 +72,14 @@ function skip(tokens: string[], s: string | string[] = "") {
 }
 
 //! Not only gets symbol, in the future it will parse $$
-function shiftSymbol(tokens: string[]): L_Symbol {
+function shiftSymbol(tokens: string[]): string {
   if (tokens[0].startsWith("\\")) {
     const name = tokens[0];
     const outs = [tokens[0]];
     tokens.shift();
     let leftBraceNum = 1;
     skip(tokens, "{");
+    outs.push("{");
     let rightBraceNum = 0;
 
     while (leftBraceNum !== rightBraceNum) {
@@ -985,32 +986,35 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
   }
 }
 
-export function compositeSymbolParse(
-  env: L_Env,
-  tokens: string[]
-): CompositeSymbol {
+export function compositeSymbolParse(env: L_Env, tokens: string[]): L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const name = tokens[0];
-    skip(tokens, "{");
-    const vars: CompositeSymbol[] = [];
-    while (!isCurToken(tokens, "}")) {
-      vars.push(compositeSymbolParse(env, tokens));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, "}");
-    const req: ToCheckNode[] = [];
-    if (isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      while (!isCurToken(tokens, "]")) {
-        req.push(...factsParse(env, tokens, ["]"], false, false));
+    if (tokens[0].startsWith("\\")) {
+      const name = tokens[0];
+      skip(tokens);
+      skip(tokens, "{");
+      const vars: L_Symbol[] = [];
+      while (!isCurToken(tokens, "}")) {
+        vars.push(compositeSymbolParse(env, tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
-      skip(tokens, "]");
+      skip(tokens, "}");
+      const req: ToCheckNode[] = [];
+      if (isCurToken(tokens, "[")) {
+        skip(tokens, "[");
+        while (!isCurToken(tokens, "]")) {
+          req.push(...factsParse(env, tokens, ["]"], false, false));
+        }
+        skip(tokens, "]");
+      }
+      return new CompositeSymbol(name, vars, req);
+    } else {
+      const name = tokens[0];
+      skip(tokens);
+      return new L_Symbol(name);
     }
-
-    return new CompositeSymbol(name, vars, req);
   } catch (error) {
     handleParseError(env, "composite symbol", index, start);
     throw error;

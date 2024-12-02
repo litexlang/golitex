@@ -1,6 +1,5 @@
 import { L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
-import { L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
 
@@ -9,7 +8,7 @@ export class ToCheckNode extends L_Node {
     super();
   }
 
-  varsDeclared(env: L_Env, freeVars: L_Symbol[]): boolean {
+  varsDeclared(env: L_Env, freeVars: string[]): boolean {
     env;
     freeVars;
     return false;
@@ -21,7 +20,7 @@ export class ToCheckNode extends L_Node {
   }
 
   // MAIN FUNCTION OF THE WHOLE PROJECT
-  useMapToCopy(map: Map<string, L_Symbol>): ToCheckNode {
+  useMapToCopy(map: Map<string, string>): ToCheckNode {
     map;
     return new ToCheckNode(true);
   }
@@ -41,7 +40,7 @@ export class OrNode extends ToCheckNode {
     super(isT);
   }
 
-  override varsDeclared(env: L_Env, freeVars: L_Symbol[]): boolean {
+  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
     return this.facts.every((e) => e.varsDeclared(env, freeVars));
   }
 
@@ -94,7 +93,7 @@ export class LogicNode extends ToCheckNode {
     );
   }
 
-  override useMapToCopy(map: Map<string, L_Symbol>): LogicNode {
+  override useMapToCopy(map: Map<string, string>): LogicNode {
     const newVars = [...this.vars];
     const req = this.req.map((e) => e.useMapToCopy(map));
     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
@@ -132,7 +131,7 @@ export class LogicNode extends ToCheckNode {
     return notPart + mainPart;
   }
 
-  override varsDeclared(env: L_Env, freeVars: L_Symbol[]): boolean {
+  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
     return [...this.req, ...this.onlyIfs].every((e) =>
       e.varsDeclared(env, [...this.vars, ...freeVars])
     );
@@ -149,9 +148,9 @@ export class IfNode extends LogicNode {}
 export class OptNode extends ToCheckNode {
   constructor(
     public name: string,
-    public vars: L_Symbol[],
+    public vars: string[],
     isT: boolean = true,
-    public checkVars: L_Symbol[][] | undefined = undefined
+    public checkVars: string[][] | undefined = undefined
   ) {
     super(isT);
   }
@@ -172,8 +171,8 @@ export class OptNode extends ToCheckNode {
     );
   }
 
-  override useMapToCopy(map: Map<string, L_Symbol>): OptNode {
-    const newVars: L_Symbol[] = [];
+  override useMapToCopy(map: Map<string, string>): OptNode {
+    const newVars: string[] = [];
     for (const v of this.vars) {
       const fixed = map.get(v);
       if (fixed === undefined) {
@@ -199,7 +198,7 @@ export class OptNode extends ToCheckNode {
     return notPart + mainPart;
   }
 
-  override varsDeclared(env: L_Env, freeVars: L_Symbol[]): boolean {
+  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
     const isBuiltin = L_BuiltinsKeywords.includes(this.name);
     if (isBuiltin) {
       // ! Not A Good Implementation.

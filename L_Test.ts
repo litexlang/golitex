@@ -226,7 +226,11 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "test \\",
-    code: ["def p(x);", `let \\f{i}[i is p]: \\f{i}[i is p] is p;`, ""],
+    code: [
+      "def p(x);",
+      `let \\f{i}[i is p]: \\f{i}[i is p] is p;`,
+      "\\f{i}[i is p] is p;",
+    ],
     debug: true,
     print: true,
   },

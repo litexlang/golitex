@@ -157,7 +157,13 @@ export function checkOpt(
       // when there is no req, check vars literally
       if (
         known.isT === toCheck.isT &&
-        known.vars.every((e, i) => e === toCheck.vars[i])
+        known.vars.every((e, i) => {
+          if (e.startsWith("\\")) {
+            return checkCompositeLiterally(env, toCheck.vars[i], e);
+          } else {
+            return e === toCheck.vars[i];
+          }
+        })
       ) {
         env.newMessage(`[checked by] ${known}`);
         return L_Out.True;
