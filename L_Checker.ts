@@ -219,7 +219,7 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
     return L_Out.Error;
   }
 
-  for (const fact of facts) {
+  for (const fact of facts as StoredFact[]) {
     const frees = fact.getAllFreeVars();
     if (
       //! UPDATE: NOT SURE fact.isT === toCheck.isT should be included.
@@ -230,7 +230,9 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
         (v, i) =>
           frees.includes(fact.vars[i]) || //! DO NOT KNOW WHY free.includes is necessary. But i choose to retain it to avoid breakdown.
           (!v.startsWith("\\") && v === fact.vars[i]) || //* normal checking
-          (v.startsWith("\\") && checkCompositeLiterally(env, v)) //* check symbol that start with "\\"
+          (v.startsWith("\\") &&
+            fact.vars[i].startsWith("\\") &&
+            checkCompositeLiterally(env, v, fact.vars[i])) //* check symbol that start with "\\"
       )
     ) {
       return L_Out.True;
@@ -307,9 +309,13 @@ export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
   return L_Out.True;
 }
 
+// Steps
+// 1. check the symbol name of compositeSymbol and storedFact after "\\" are the same
+// 2. check storedFact's requirements in [] are satisfied.
 export function checkCompositeLiterally(
   env: L_Env,
-  compositeSymbol: string
+  compositeSymbol: string,
+  storedFact: string
 ): boolean {
   return true;
 }

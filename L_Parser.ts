@@ -49,6 +49,7 @@ import {
   RunKeyword,
 } from "./L_Common";
 import { L_BuiltinsKeywords } from "./L_Builtins";
+import { L_Symbol } from "./L_Structs";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -70,9 +71,10 @@ function skip(tokens: string[], s: string | string[] = "") {
 }
 
 //! Not only gets symbol, in the future it will parse $$
-function shiftVar(tokens: string[]): string {
+function shiftVar(tokens: string[]): L_Symbol {
   if (tokens[0].startsWith("\\")) {
-    let outs = [tokens[0]];
+    const name = tokens[0];
+    const outs = [tokens[0]];
     tokens.shift();
     let leftBraceNum = 0;
     let rightBraceNum = 0;
@@ -83,6 +85,21 @@ function shiftVar(tokens: string[]): string {
       outs.push(tokens[0]);
       tokens.shift();
     }
+
+    if (isCurToken(tokens, "[")) {
+      outs.push(tokens[0]);
+      let leftBracketNum = 1;
+      skip(tokens, "[");
+      let rightBracketNum = 0;
+      while (leftBracketNum !== rightBracketNum) {
+        if (tokens[0] === "[") leftBracketNum++;
+        else if (tokens[0] === "]") rightBracketNum++;
+        outs.push(tokens[0]);
+        tokens.shift();
+      }
+    }
+
+    const out = outs.join(" ");
 
     return outs.join(" ");
   } else {

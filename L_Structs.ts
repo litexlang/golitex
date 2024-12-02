@@ -1,6 +1,10 @@
 import { ToCheckNode } from "./L_Nodes";
 
 export type L_Symbol = string;
+export type L_CompositeSymbol = L_Symbol & {
+  name: string;
+  fields: L_Symbol[];
+};
 
 export enum L_Out {
   Error,

@@ -165,7 +165,7 @@ export const exampleList: ExampleItem[] = [
       "know if exist(t_y) => {q(y)};",
       "q(y);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -226,7 +226,7 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "test \\",
-    code: [`let \\f{i};`],
+    code: [`let \\f{i}[i is p];`],
     debug: true,
     print: true,
   },
