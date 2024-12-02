@@ -1,5 +1,7 @@
 import { ToCheckNode } from "./L_Nodes";
 
+export type L_Symbol = string;
+
 export enum L_Out {
   Error,
   True,

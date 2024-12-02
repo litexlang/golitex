@@ -1,5 +1,6 @@
 import { L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
+import { L_Symbol } from "./L_Structs";
 // import { MemorizedExistDecl } from "./L_Memory";
 
 export abstract class L_Node {}
@@ -9,7 +10,7 @@ export class ToCheckNode extends L_Node {
     super();
   }
 
-  varsDeclared(env: L_Env, freeVars: string[]): boolean {
+  varsDeclared(env: L_Env, freeVars: L_Symbol[]): boolean {
     env;
     freeVars;
     return false;
@@ -21,7 +22,7 @@ export class ToCheckNode extends L_Node {
   }
 
   // MAIN FUNCTION OF THE WHOLE PROJECT
-  useMapToCopy(map: Map<string, string>): ToCheckNode {
+  useMapToCopy(map: Map<string, L_Symbol>): ToCheckNode {
     map;
     return new ToCheckNode(true);
   }
@@ -41,7 +42,7 @@ export class OrNode extends ToCheckNode {
     super(isT);
   }
 
-  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
+  override varsDeclared(env: L_Env, freeVars: L_Symbol[]): boolean {
     return this.facts.every((e) => e.varsDeclared(env, freeVars));
   }
 
@@ -64,7 +65,6 @@ export class LogicNode extends ToCheckNode {
     public req: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [],
     isT: boolean = true
-    // public reqName: null | string = null,
   ) {
     super(isT);
   }
@@ -95,7 +95,7 @@ export class LogicNode extends ToCheckNode {
     );
   }
 
-  override useMapToCopy(map: Map<string, string>): LogicNode {
+  override useMapToCopy(map: Map<string, L_Symbol>): LogicNode {
     const newVars = [...this.vars];
     const req = this.req.map((e) => e.useMapToCopy(map));
     const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
@@ -133,7 +133,7 @@ export class LogicNode extends ToCheckNode {
     return notPart + mainPart;
   }
 
-  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
+  override varsDeclared(env: L_Env, freeVars: L_Symbol[]): boolean {
     return [...this.req, ...this.onlyIfs].every((e) =>
       e.varsDeclared(env, [...this.vars, ...freeVars])
     );
@@ -147,16 +147,12 @@ export class LogicNode extends ToCheckNode {
 export class IffNode extends LogicNode {}
 export class IfNode extends LogicNode {}
 
-// export class LogicNode extends LogicalOptNode {}
-// export class OnlyIfNode extends LogicalOptNode {}
-
 export class OptNode extends ToCheckNode {
   constructor(
     public name: string,
-    public vars: string[],
+    public vars: L_Symbol[],
     isT: boolean = true,
-    // defName: string | undefined = undefined,
-    public checkVars: string[][] | undefined = undefined
+    public checkVars: L_Symbol[][] | undefined = undefined
   ) {
     super(isT);
   }
@@ -177,8 +173,8 @@ export class OptNode extends ToCheckNode {
     );
   }
 
-  override useMapToCopy(map: Map<string, string>): OptNode {
-    const newVars: string[] = [];
+  override useMapToCopy(map: Map<string, L_Symbol>): OptNode {
+    const newVars: L_Symbol[] = [];
     for (const v of this.vars) {
       const fixed = map.get(v);
       if (fixed === undefined) {
@@ -204,7 +200,7 @@ export class OptNode extends ToCheckNode {
     return notPart + mainPart;
   }
 
-  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
+  override varsDeclared(env: L_Env, freeVars: L_Symbol[]): boolean {
     const isBuiltin = L_BuiltinsKeywords.includes(this.name);
     if (isBuiltin) {
       // ! Not A Good Implementation.
@@ -261,31 +257,6 @@ export class OnlyIfDefNode extends DefNode {
     return `def only_if ${this.name}(${this.vars})`;
   }
 }
-// export class ExistDefNode extends DefNode {
-//   constructor(
-//     name: string = "",
-//     vars: string[] = [],
-//     public req: ToCheckNode[] = [],
-//     private existVars: string[] = [],
-//     private existFacts: ToCheckNode[] = [],
-//     public ifVars: string[][] | undefined = undefined
-//   ) {
-//     super(name, vars, req, []); // We don't use onlyIfs field in ExistDecl.
-//   }
-
-//   toMemorized(): MemorizedExistDecl {
-//     return new MemorizedExistDecl(this.vars, this.existVars, this.existFacts);
-//   }
-
-//   override toString(): string {
-//     return `def exist ${this.name}(${this.vars})`;
-//   }
-
-//   getIfNode(): IfNode {
-//     const itself = [new OptNode(this.name, this.vars, true, this.ifVars)];
-//     return new IfNode(this.vars, this.req, itself, true);
-//   }
-// }
 
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;
