@@ -19,7 +19,7 @@ export class KnownExist {
 }
 
 export class KnownFact {
-  facts: StoredFact[] = [];
+  facts: StoredFact[] = []; // facts at current if-then level.
   children = new Map<number, KnownFact>();
 
   constructor() {}

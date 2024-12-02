@@ -227,7 +227,9 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
       fact.isNoReq() &&
       // toCheck.vars.length === fact.vars.length &&
       toCheck.vars.every(
-        (v, i) => frees.includes(fact.vars[i]) || v === fact.vars[i]
+        (v, i) =>
+          frees.includes(fact.vars[i]) || //! DO NOT KNOW WHY free.includes is necessary. But i choose to retain it to avoid breakdown.
+          (!v.startsWith("\\") && v === fact.vars[i])
       )
     ) {
       return L_Out.True;

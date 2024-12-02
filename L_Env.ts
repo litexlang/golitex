@@ -17,7 +17,7 @@ export class L_Env {
   private declaredVars = new Set<string>();
   private macros: MacroNode[] = [];
   private defs = new Map<string, DefNode>();
-  private knownFacts = new Map<string, KnownFact>();
+  private knownFacts = new Map<string, KnownFact>(); // key: operator name; value: stored layers of if-then that can be used to check operator.
   private namedKnownToChecks = new Map<string, ToCheckNode>();
   private exists = new Map<string, KnownExist>();
 
