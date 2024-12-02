@@ -229,7 +229,8 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
       toCheck.vars.every(
         (v, i) =>
           frees.includes(fact.vars[i]) || //! DO NOT KNOW WHY free.includes is necessary. But i choose to retain it to avoid breakdown.
-          (!v.startsWith("\\") && v === fact.vars[i])
+          (!v.startsWith("\\") && v === fact.vars[i]) || //* normal checking
+          (v.startsWith("\\") && checkCompositeLiterally(env, v)) //* check symbol that start with "\\"
       )
     ) {
       return L_Out.True;
@@ -304,4 +305,11 @@ export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
   }
 
   return L_Out.True;
+}
+
+export function checkCompositeLiterally(
+  env: L_Env,
+  compositeSymbol: string
+): boolean {
+  return true;
 }
