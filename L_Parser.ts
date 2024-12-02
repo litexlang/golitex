@@ -71,11 +71,27 @@ function skip(tokens: string[], s: string | string[] = "") {
 
 //! Not only gets symbol, in the future it will parse $$
 function shiftVar(tokens: string[]): string {
-  const token = tokens.shift();
-  if (typeof token !== "string") {
-    throw new Error("No more tokens");
+  if (tokens[0].startsWith("\\")) {
+    let outs = [tokens[0]];
+    tokens.shift();
+    let leftBraceNum = 0;
+    let rightBraceNum = 0;
+
+    while (leftBraceNum !== rightBraceNum || tokens[0] === "{") {
+      if (tokens[0] === "{") leftBraceNum++;
+      else if (tokens[0] === "}") rightBraceNum++;
+      outs.push(tokens[0]);
+      tokens.shift();
+    }
+
+    return outs.join(" ");
+  } else {
+    const token = tokens.shift();
+    if (typeof token !== "string") {
+      throw new Error("No more tokens");
+    }
+    return token;
   }
-  return token;
 }
 
 function isCurToken(tokens: string[], s: string | string[]) {
@@ -302,7 +318,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
-    if (vars.some((e) => L_Keywords.includes(e))) {
+    if (vars.some((e) => L_Keywords.includes(e) && !e.startsWith("\\"))) {
       env.newMessage(`Error: ${vars} contain LiTeX keywords.`);
       throw Error();
     }

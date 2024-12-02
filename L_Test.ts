@@ -95,7 +95,7 @@ export const exampleList: ExampleItem[] = [
       "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
       "god is not human;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -222,6 +222,12 @@ export const exampleList: ExampleItem[] = [
       "if x: => {not p(x)};",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "test \\",
+    code: [`let \\f{i};`],
+    debug: true,
     print: true,
   },
 ];
