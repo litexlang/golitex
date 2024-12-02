@@ -1,5 +1,5 @@
 import { L_Env } from "./L_Env";
-import { L_Out } from "./L_DataStructures";
+import { L_Out } from "./L_Structs";
 import * as L_Executor from "./L_Executor";
 import { L_Scan } from "./L_Lexer";
 import * as L_Parser from "./L_Parser";

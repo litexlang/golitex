@@ -29,7 +29,7 @@ import {
   reportNotAllFactsInGivenFactAreDeclared,
 } from "./L_Messages";
 import { existBuiltinCheck, isToCheckBuiltin } from "./L_Builtins";
-import { KnownExist, L_Out } from "./L_DataStructures";
+import { KnownExist, L_Out } from "./L_Structs";
 import {
   postfixProveExec,
   proveExist,

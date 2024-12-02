@@ -3,7 +3,7 @@ import { L_Env } from "./L_Env";
 import { nodeExec } from "./L_Executor";
 import { checkOptLiterally } from "./L_Checker";
 import { reportNewExist } from "./L_Messages";
-import { KnownExist, L_Out } from "./L_DataStructures";
+import { KnownExist, L_Out } from "./L_Structs";
 
 export const L_BuiltinsKeywords: string[] = ["is_property", "exist", "or"];
 

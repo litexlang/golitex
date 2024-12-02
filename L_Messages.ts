@@ -1,5 +1,5 @@
 import type { L_Env } from "./L_Env";
-import { L_Out } from "./L_DataStructures";
+import { L_Out } from "./L_Structs";
 import type { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 
 export function reportExecL_Out(out: L_Out, node: L_Node): string {

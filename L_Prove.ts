@@ -1,4 +1,4 @@
-import { KnownExist, L_Out } from "./L_DataStructures";
+import { KnownExist, L_Out } from "./L_Structs";
 import { L_Env } from "./L_Env";
 import { nodeExec, noVarsOrOptDeclaredHere } from "./L_Executor";
 import { L_Node, OptNode, PostfixProve } from "./L_Nodes";

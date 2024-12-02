@@ -1,4 +1,4 @@
-import { ExampleItem } from "./L_DataStructures";
+import { ExampleItem } from "./L_Structs";
 import { L_Env } from "./L_Env";
 import { runStrings } from "./L_Runner";
 

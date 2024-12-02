@@ -1,6 +1,6 @@
 import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Out } from "./L_DataStructures";
+import { L_Out } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { lstLengthNotEql } from "./L_Messages";
 import {
@@ -9,7 +9,7 @@ import {
   isToCheckBuiltin,
 } from "./L_Builtins";
 import { ExistKeyword } from "./L_Common";
-import { StoredFact, StoredReq } from "./L_DataStructures";
+import { StoredFact, StoredReq } from "./L_Structs";
 
 export function check(
   env: L_Env,
