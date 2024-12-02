@@ -49,7 +49,8 @@ import {
   RunKeyword,
 } from "./L_Common";
 import { L_BuiltinsKeywords } from "./L_Builtins";
-import { L_Symbol } from "./L_Structs";
+import { CompositeSymbol, L_Symbol } from "./L_Structs";
+import { sign } from "crypto";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -71,15 +72,16 @@ function skip(tokens: string[], s: string | string[] = "") {
 }
 
 //! Not only gets symbol, in the future it will parse $$
-function shiftVar(tokens: string[]): L_Symbol {
+function shiftSymbol(tokens: string[]): L_Symbol {
   if (tokens[0].startsWith("\\")) {
     const name = tokens[0];
     const outs = [tokens[0]];
     tokens.shift();
-    let leftBraceNum = 0;
+    let leftBraceNum = 1;
+    skip(tokens, "{");
     let rightBraceNum = 0;
 
-    while (leftBraceNum !== rightBraceNum || tokens[0] === "{") {
+    while (leftBraceNum !== rightBraceNum) {
       if (tokens[0] === "{") leftBraceNum++;
       else if (tokens[0] === "}") rightBraceNum++;
       outs.push(tokens[0]);
@@ -125,7 +127,7 @@ function skipString(tokens: string[]): string {
     let out = "";
     while (!isCurToken(tokens, '"')) {
       out += tokens[0];
-      shiftVar(tokens);
+      shiftSymbol(tokens);
     }
     skip(tokens, '"');
     return out;
@@ -238,7 +240,7 @@ function postfixProveParse(
     if (isCurToken(tokens, "[")) {
       skip(tokens, "[");
       while (!isCurToken(tokens, "]")) {
-        names.push(shiftVar(tokens));
+        names.push(shiftSymbol(tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
       skip(tokens, "]");
@@ -286,7 +288,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
     if (isCurToken(tokens, "[")) {
       skip(tokens, "[");
       while (!isCurToken(tokens, "]")) {
-        names.push(shiftVar(tokens));
+        names.push(shiftSymbol(tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
       skip(tokens, "]");
@@ -323,7 +325,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
     if (isCurToken(tokens, "[")) {
       skip(tokens, "[");
       while (!isCurToken(tokens, "]")) {
-        names.push(shiftVar(tokens));
+        names.push(shiftSymbol(tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
       skip(tokens, "]");
@@ -331,7 +333,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
 
     const vars: string[] = [];
     while (![...L_Ends, , ":"].includes(tokens[0])) {
-      vars.push(shiftVar(tokens));
+      vars.push(shiftSymbol(tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -369,18 +371,18 @@ function optParseWithNot(
 
     if (tokens.length >= 2 && tokens[1] === "(") {
       // parse functional operator
-      name = shiftVar(tokens);
+      name = shiftSymbol(tokens);
 
       skip(tokens, "(");
 
       while (!isCurToken(tokens, ")")) {
-        vars.push(shiftVar(tokens));
+        vars.push(shiftSymbol(tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
 
       skip(tokens, ")");
     } else {
-      const v = shiftVar(tokens);
+      const v = shiftSymbol(tokens);
       vars.push(v);
 
       skip(tokens, IsKeywords);
@@ -390,7 +392,7 @@ function optParseWithNot(
         skip(tokens, NotKeywords);
       }
 
-      name = shiftVar(tokens);
+      name = shiftSymbol(tokens);
     }
 
     let checkVars: string[][] | undefined = undefined;
@@ -426,7 +428,7 @@ function varLstParse(
   try {
     const out: string[] = [];
     while (!end.includes(tokens[0])) {
-      const curTok = shiftVar(tokens);
+      const curTok = shiftSymbol(tokens);
       out.push(curTok);
       if (isCurToken(tokens, separation)) skip(tokens, separation);
     }
@@ -581,12 +583,12 @@ function optParseWithNotAre(
 
     if (tokens.length >= 2 && tokens[1] === "(") {
       // parse functional operator
-      name = shiftVar(tokens);
+      name = shiftSymbol(tokens);
 
       skip(tokens, "(");
 
       while (!isCurToken(tokens, ")")) {
-        vars.push(shiftVar(tokens));
+        vars.push(shiftSymbol(tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
 
@@ -614,7 +616,7 @@ function optParseWithNotAre(
       return [new OptNode(name, vars, isT, checkVars)];
     } else {
       while (![...AreKeywords, ...IsKeywords].includes(tokens[0])) {
-        const v = shiftVar(tokens);
+        const v = shiftSymbol(tokens);
         vars.push(v);
         if (tokens[0] === ",") skip(tokens, ",");
       }
@@ -626,7 +628,7 @@ function optParseWithNotAre(
         skip(tokens, NotKeywords);
       }
 
-      name = shiftVar(tokens);
+      name = shiftSymbol(tokens);
 
       // let defName: undefined | string = undefined;
       // if (includeDefName && isCurToken(tokens, "[")) {
@@ -854,7 +856,7 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
     skip(tokens, HaveKeywords);
     const vars: string[] = [];
     while (!isCurToken(tokens, ":")) {
-      vars.push(shiftVar(tokens));
+      vars.push(shiftSymbol(tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
     skip(tokens, ":");
@@ -893,7 +895,7 @@ function specialParse(env: L_Env, tokens: string[]): SpecialNode {
   const index = tokens.length;
 
   try {
-    const keyword = shiftVar(tokens);
+    const keyword = shiftSymbol(tokens);
     switch (keyword) {
       case ClearKeyword:
         skip(tokens, L_Ends);
@@ -901,7 +903,7 @@ function specialParse(env: L_Env, tokens: string[]): SpecialNode {
       case RunKeyword: {
         const words: string[] = [];
         while (!L_Ends.includes(tokens[0])) {
-          words.push(shiftVar(tokens));
+          words.push(shiftSymbol(tokens));
         }
         skip(tokens, L_Ends);
         return new SpecialNode(RunKeyword, words.join());
@@ -942,7 +944,7 @@ function macroParse(env: L_Env, tokens: string[]): MacroNode {
   try {
     skip(tokens, MacroKeywords);
     const regexString = skipString(tokens);
-    const varName = shiftVar(tokens);
+    const varName = shiftSymbol(tokens);
     const facts = factsParse(env, tokens, L_Ends, true, true);
 
     return new MacroNode(regexString, varName, facts);
@@ -979,6 +981,38 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
     }
   } catch (error) {
     handleParseError(env, "define", index, start);
+    throw error;
+  }
+}
+
+export function compositeSymbolParse(
+  env: L_Env,
+  tokens: string[]
+): CompositeSymbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    const name = tokens[0];
+    skip(tokens, "{");
+    const vars: CompositeSymbol[] = [];
+    while (!isCurToken(tokens, "}")) {
+      vars.push(compositeSymbolParse(env, tokens));
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+    skip(tokens, "}");
+    const req: ToCheckNode[] = [];
+    if (isCurToken(tokens, "[")) {
+      skip(tokens, "[");
+      while (!isCurToken(tokens, "]")) {
+        req.push(...factsParse(env, tokens, ["]"], false, false));
+      }
+      skip(tokens, "]");
+    }
+
+    return new CompositeSymbol(name, vars, req);
+  } catch (error) {
+    handleParseError(env, "composite symbol", index, start);
     throw error;
   }
 }

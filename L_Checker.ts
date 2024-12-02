@@ -10,6 +10,7 @@ import {
 } from "./L_Builtins";
 import { ExistKeyword } from "./L_Common";
 import { StoredFact, StoredReq } from "./L_Structs";
+import { compositeSymbolParse } from "./L_Parser";
 
 export function check(
   env: L_Env,
@@ -314,8 +315,17 @@ export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
 // 2. check storedFact's requirements in [] are satisfied.
 export function checkCompositeLiterally(
   env: L_Env,
-  compositeSymbol: string,
-  storedFact: string
+  givenStr: string,
+  storedStr: string
 ): boolean {
+  const storedComposite = compositeSymbolParse(env, storedStr.split(" "));
+  const givenComposite = compositeSymbolParse(env, givenStr.split(" "));
+
+  // for (const )
+
+  // for (const r of storedComposite.req) {
+
+  // }
+
   return true;
 }
