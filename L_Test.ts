@@ -256,14 +256,46 @@ export const exampleList: ExampleItem[] = [
       "\\f{i} is p;",
       "know p(i);",
       "\\f{i} is p;",
+      "let #i, #j: #i > 0, #j > 0;",
+      "\\A{#i,#j} is_element_of A;",
       // `let \\f{#i}: \\f{#i} is p;`,
       // "let i: p(i);",
       // "\\f{i} is p;",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "define element of matrix",
+    code: [
+      "def element_of(e,A); def <(i,j); let A,0;",
+      "let# #i, #j: <(0,#i), <(0,#j);",
+      "know element_of(\\A{#i,#j} ,A );",
+      "let i,j: <(0,i), <(0,j);",
+      "element_of(\\A{i,j}, A );",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "union",
+    code: [
+      "def set(A); def element_of(x,A);",
+      "let# #A, #B: set(#A), set(#B);",
+      "know if x: element_of(x,A) => {element_of(x, \\union{A,B})};",
+      "know if x: element_of(x,B) => {element_of(x, \\union{A,B})};",
+      "let x,A,B: set(A), set(B), element_of(x,A);",
+      "element_of(x,\\union{A,B});",
     ],
     debug: true,
     print: true,
   },
 ];
+
+// \frac{i,j}
+// A_{i}^{j}
+// \A{i,j}
+// i,j:  1 <= i ,j <= n;
 
 function runExamples(toJSON: boolean) {
   const env = new L_Env();

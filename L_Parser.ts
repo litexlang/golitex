@@ -1055,6 +1055,12 @@ export function DefCompositeNodeParse(
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
+    if (!names.every((e) => e.startsWith("#"))) {
+      env.newMessage(
+        `Every hashed variable declared in let# should start with #`
+      );
+    }
+
     return new DefCompositeNode(names);
   } catch (error) {
     handleParseError(env, "def_composite", index, start);
