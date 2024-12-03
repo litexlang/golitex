@@ -5,11 +5,7 @@ export class L_Symbol {
 }
 
 export class CompositeSymbol extends L_Symbol {
-  constructor(
-    name: string,
-    public vars: L_Symbol[],
-    public req: ToCheckNode[]
-  ) {
+  constructor(name: string, public vars: string[], public req: ToCheckNode[]) {
     super(name);
   }
 }

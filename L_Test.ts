@@ -225,12 +225,18 @@ export const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name: "test \\",
+    name: "test \\ parser",
     code: [
       "def p(x);",
       `let \\f{i}[i is p]: \\f{i}[i is p] is p;`,
       "\\f{i}[i is p] is p;",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "test \\ checker",
+    code: ["def p(x);", `let \\f{i}: \\f{i} is p;`, "\\f{i} is p;"],
     debug: true,
     print: true,
   },

@@ -1,6 +1,6 @@
 import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Out } from "./L_Structs";
+import { CompositeSymbol, L_Out } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { lstLengthNotEql } from "./L_Messages";
 import {
@@ -324,14 +324,29 @@ export function checkCompositeLiterally(
   givenStr: string,
   storedStr: string
 ): boolean {
-  const storedComposite = compositeSymbolParse(env, storedStr.split(" "));
-  const givenComposite = compositeSymbolParse(env, givenStr.split(" "));
+  try {
+    const storedComposite = compositeSymbolParse(
+      env,
+      storedStr.split(" ")
+    ) as CompositeSymbol;
+    const givenComposite = compositeSymbolParse(
+      env,
+      givenStr.split(" ")
+    ) as CompositeSymbol;
 
-  // for (const )
+    const map = new Map<string, string>();
+    for (const [i, v] of storedComposite.vars.entries()) {
+      map.set(v, givenComposite.vars[i]);
+    }
 
-  // for (const r of storedComposite.req) {
+    for (const r of storedComposite.req) {
+      const out = check(env, r);
+      if (out !== L_Out.True) return false;
+    }
 
-  // }
-
-  return true;
+    return true;
+  } catch {
+    env.newMessage(`Failed to check ${givenStr}`);
+    throw Error();
+  }
 }

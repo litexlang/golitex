@@ -986,7 +986,10 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
   }
 }
 
-export function compositeSymbolParse(env: L_Env, tokens: string[]): L_Symbol {
+export function compositeSymbolParse(
+  env: L_Env,
+  tokens: string[]
+): CompositeSymbol {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -995,9 +998,9 @@ export function compositeSymbolParse(env: L_Env, tokens: string[]): L_Symbol {
       const name = tokens[0];
       skip(tokens);
       skip(tokens, "{");
-      const vars: L_Symbol[] = [];
+      const vars: string[] = [];
       while (!isCurToken(tokens, "}")) {
-        vars.push(compositeSymbolParse(env, tokens));
+        vars.push(shiftSymbol(tokens));
         if (isCurToken(tokens, ",")) skip(tokens, ",");
       }
       skip(tokens, "}");
@@ -1011,9 +1014,7 @@ export function compositeSymbolParse(env: L_Env, tokens: string[]): L_Symbol {
       }
       return new CompositeSymbol(name, vars, req);
     } else {
-      const name = tokens[0];
-      skip(tokens);
-      return new L_Symbol(name);
+      throw Error();
     }
   } catch (error) {
     handleParseError(env, "composite symbol", index, start);
