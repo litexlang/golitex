@@ -158,14 +158,14 @@ export function checkOpt(
       if (
         known.isT === toCheck.isT &&
         known.vars.every((e, i) => {
-          if (e.startsWith("\\")) {
+          if (e.startsWith("\\") && toCheck.vars[i].startsWith("\\")) {
             return checkCompositeLiterally(env, toCheck.vars[i], e);
-          } else {
+          } else if (!e.startsWith("\\") && !e.startsWith("\\")) {
             return e === toCheck.vars[i];
           }
         })
       ) {
-        env.newMessage(`[checked by] ${known}`);
+        env.newMessage(`[checked by] ${toCheck.name}(${known})`);
         return L_Out.True;
       } else continue;
     }
@@ -337,6 +337,20 @@ export function checkCompositeLiterally(
     const map = new Map<string, string>();
     for (const [i, v] of storedComposite.vars.entries()) {
       map.set(v, givenComposite.vars[i]);
+    }
+
+    for (const [i, v] of storedComposite.vars.entries()) {
+      if (v.startsWith("#")) {
+        const toChecks = env.getHashVarFacts(v);
+        if (toChecks === undefined) {
+          return env.errMesReturnBoolean(`hashed variable ${v} not declared`);
+        }
+        for (const r of toChecks) {
+          const toCheck = r.useMapToCopy(map);
+          const out = check(env, toCheck);
+          if (out !== L_Out.True) return false;
+        }
+      }
     }
 
     for (const r of storedComposite.req) {

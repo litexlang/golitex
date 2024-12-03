@@ -52,6 +52,33 @@ export class L_Env {
     }
   }
 
+  newHashVar(fix: string, facts: ToCheckNode[]): boolean {
+    // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
+    if (this.hashVarDeclared(fix)) {
+      this.newMessage(`${fix} already declared.`);
+      return false;
+    }
+    this.declaredHashVars.set(fix, facts);
+    return true;
+  }
+
+  hashVarDeclared(key: string): boolean {
+    if (this.declaredHashVars.has(key)) {
+      return true;
+    } else {
+      if (!this.parent) return false;
+      else return this.parent.hashVarDeclared(key);
+    }
+  }
+
+  getHashVarFacts(key: string): ToCheckNode[] | undefined {
+    const toChecks = this.declaredHashVars.get(key);
+    if (toChecks !== undefined) return toChecks;
+    else if (this.parent !== undefined) {
+      return this.parent.getHashVarFacts(key);
+    } else return undefined;
+  }
+
   newNamedKnownToCheck(name: string, toCheck: ToCheckNode): boolean {
     const out = this.getNamedKnownToCheck(name);
     if (out === undefined) {
@@ -177,25 +204,6 @@ export class L_Env {
     }
 
     return curEnv?.defs.get(s) ? n : undefined;
-  }
-
-  newHashVar(fix: string, facts: ToCheckNode[]): boolean {
-    // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
-    if (this.hashVarDeclared(fix)) {
-      this.newMessage(`${fix} already declared.`);
-      return false;
-    }
-    this.declaredHashVars.set(fix, facts);
-    return true;
-  }
-
-  hashVarDeclared(key: string): boolean {
-    if (this.declaredHashVars.has(key)) {
-      return true;
-    } else {
-      if (!this.parent) return false;
-      else return this.parent.hashVarDeclared(key);
-    }
   }
 
   newVar(fix: string): boolean {

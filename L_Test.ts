@@ -251,6 +251,11 @@ export const exampleList: ExampleItem[] = [
     code: [
       "def p(x); def >(i,j);",
       "let# #i: p(#i);",
+      "know \\f{#i} is p;",
+      "let i;",
+      "\\f{i} is p;",
+      "know p(i);",
+      "\\f{i} is p;",
       // `let \\f{#i}: \\f{#i} is p;`,
       // "let i: p(i);",
       // "\\f{i} is p;",
