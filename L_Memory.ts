@@ -248,7 +248,7 @@ export function getStoredFacts(
   if (tmp !== undefined) {
     visibleEnvLevel = tmp;
   } else {
-    env.newMessage(`${opt} not declared.`);
+    env.newMessage(`operator ${opt} not declared.`);
     return undefined;
   }
 

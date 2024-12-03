@@ -206,9 +206,12 @@ export class OptNode extends ToCheckNode {
     }
 
     for (const v of this.vars) {
-      const declared = env.varDeclared(v) || freeVars.includes(v);
+      const declared =
+        env.varDeclared(v) || freeVars.includes(v) || v.startsWith("\\");
       if (!declared) {
-        env.newMessage(`${v} not declared in ${this.name}`);
+        env.newMessage(
+          `variable ${v} not declared in called operator ${this.name}`
+        );
         return false;
       }
     }
@@ -219,7 +222,7 @@ export class OptNode extends ToCheckNode {
     if (env.optDeclared(this.name) || L_BuiltinsKeywords.includes(this.name)) {
       return true;
     } else {
-      env.newMessage(`${this.name} not declared.`);
+      env.newMessage(`operator ${this.name} not declared.`);
       return false;
     }
   }

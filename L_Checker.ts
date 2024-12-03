@@ -293,7 +293,7 @@ function checkOr(env: L_Env, toCheck: OrNode): L_Out {
 export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
   const def = env.getDef(toCheck.name);
   if (def === undefined) {
-    return env.errMesReturnL_Out(`${toCheck} not declared.`);
+    return env.errMesReturnL_Out(`operator ${toCheck} not declared.`);
   }
   if (toCheck.vars.length !== def.vars.length) {
     return lstLengthNotEql(env, toCheck.vars, def.vars);
