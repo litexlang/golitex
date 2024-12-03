@@ -29,7 +29,9 @@ export const SymbolsFactsSeparator = ":";
 export const ProveKeywords = ["prove"];
 
 export const L_Ends = [";"];
-export const LetKeywords = ["let"];
+export const LetKeyword = "let";
+export const LetHashKeyword = "let#";
+export const LetKeywords = ["let", "let#"];
 export const HaveKeywords = ["have"];
 export const ByKeyword = "by";
 export const ProveByContradictionKeyword = "prove_by_contradiction";

@@ -8,6 +8,7 @@ import {
   IfNode,
   KnowNode,
   L_Node,
+  LetHashNode,
   LetNode,
   LocalEnvNode,
   LogicNode,
@@ -35,6 +36,8 @@ import {
   KnowTypeKeywords,
   L_Ends,
   L_Keywords,
+  LetHashKeyword,
+  LetKeyword,
   LetKeywords,
   LogicalKeywords,
   LogicalOptPairs,
@@ -320,7 +323,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, LetKeywords);
+    const whichLet = skip(tokens, LetKeywords) as string;
 
     const names: string[] = [];
     if (isCurToken(tokens, "[")) {
@@ -345,11 +348,19 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
 
     if (L_Ends.includes(tokens[0])) {
       skip(tokens, L_Ends);
-      return new LetNode(vars, [], names);
+      if (whichLet === LetKeyword) {
+        return new LetNode(vars, [], names);
+      } else {
+        return new LetHashNode(vars, [], names);
+      }
     } else {
       skip(tokens, ":");
       const facts = factsParse(env, tokens, L_Ends, true, true);
-      return new LetNode(vars, facts, names);
+      if (whichLet === LetKeyword) {
+        return new LetNode(vars, [], names);
+      } else {
+        return new LetHashNode(vars, [], names);
+      }
     }
   } catch (error) {
     handleParseError(env, "let", index, start);

@@ -285,6 +285,7 @@ export class LetNode extends L_Node {
       .join(", ")}`;
   }
 }
+export class LetHashNode extends LetNode {}
 
 export class ProveNode extends L_Node {
   constructor(
