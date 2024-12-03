@@ -59,7 +59,7 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
     const nodeType = node.constructor.name;
 
     switch (nodeType) {
-      case "IfDefNode":
+      case "DefNode":
         return defExec(env, node as DefNode);
       case "KnowNode":
         return knowExec(env, node as KnowNode);

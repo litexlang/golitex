@@ -1,9 +1,7 @@
 import {
   ByNode,
   DefNode,
-  // ExistNode,
   HaveNode,
-  IfDefNode,
   IffNode,
   IfNode,
   KnowNode,
@@ -27,7 +25,6 @@ import {
   ByKeyword,
   ClearKeyword,
   ContradictionKeyword,
-  DefCompositeKeyword,
   DefKeywords,
   ExistKeyword,
   HaveKeywords,
@@ -192,7 +189,7 @@ const KeywordFunctionMap: {
   by: byParse,
   macro: macroParse,
   "[": postfixProveParse,
-  "let#": letParse,
+  LetHashKeyword: letParse,
 };
 
 export function getNodesFromSingleNode(
@@ -370,7 +367,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   }
 }
 
-function optParseWithNot(
+function optParseReturnOptNode(
   env: L_Env,
   tokens: string[],
   parseNot: boolean
@@ -475,7 +472,7 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
     if (IfKeywords.includes(tokens[0])) {
       toProve = logicParse(env, tokens, false);
     } else {
-      fixedIfThenOpt = optParseWithNot(env, tokens, true);
+      fixedIfThenOpt = optParseReturnOptNode(env, tokens, true);
     }
 
     const block: L_Node[] = [];
@@ -494,7 +491,7 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
     let contradict: OptNode | undefined = undefined;
     if (byContradict) {
       skip(tokens, ContradictionKeyword);
-      contradict = optParseWithNot(env, tokens, true);
+      contradict = optParseReturnOptNode(env, tokens, true);
       skip(tokens, L_Ends);
     }
 
@@ -720,73 +717,6 @@ function logicParse(
   }
 }
 
-// function defParse(env: L_Env, tokens: string[]): DefNode {
-//   const start = tokens[0];
-//   const index = tokens.length;
-
-//   try {
-//     skip(tokens, DefKeywords);
-
-//     const opt: OptNode = optParseWithNot(env, tokens, false);
-
-//     let req: ToCheckNode[] = [];
-//     if (isCurToken(tokens, ":")) {
-//       skip(tokens, ":");
-//       const ends = ["=>", "<=>", "<=", ...L_Ends, ExistKeyword];
-//       req = factsParse(env, tokens, ends, false, false);
-//     }
-
-//     if (L_Ends.includes(tokens[0])) {
-//       //! MAYBE I SHOULD SIMPLY RETURN DefNode
-//       return new IfDefNode(opt.name, opt.vars, [], []);
-//     }
-
-//     const separator = shiftVar(tokens);
-
-//     if (
-//       ThenKeywords.includes(separator) ||
-//       IffThenKeywords.includes(separator) ||
-//       OnlyIfThenKeywords.includes(separator)
-//     ) {
-//       let onlyIfs: ToCheckNode[] = [];
-
-//       if (isCurToken(tokens, "{")) {
-//         skip(tokens, "{");
-//         onlyIfs = factsParse(env, tokens, ["}"], false, true);
-//         skip(tokens, "}");
-//       }
-//       skip(tokens, L_Ends);
-
-//       if (ThenKeywords.includes(separator)) {
-//         return new IfDefNode(opt.name, opt.vars, req, onlyIfs);
-//       } else if (IffThenKeywords.includes(separator)) {
-//         return new IffDefNode(opt.name, opt.vars, req, onlyIfs);
-//       } else {
-//         return new OnlyIfDefNode(opt.name, opt.vars, req, onlyIfs);
-//       }
-//     } else if (ExistKeyword === separator) {
-//       const existVars: string[] = [];
-//       while (!isCurToken(tokens, "{")) {
-//         existVars.push(shiftVar(tokens));
-//         if (isCurToken(tokens, ",")) skip(tokens, ",");
-//       }
-//       // skip(tokens, ":");
-
-//       skip(tokens, "{");
-//       const existFacts = factsParse(env, tokens, ["}"], false, true);
-//       skip(tokens, "}");
-
-//       skip(tokens, L_Ends);
-//       return new ExistDefNode(opt.name, opt.vars, req, existVars, existFacts);
-//     }
-
-//     throw Error();
-//   } catch (error) {
-//     handleParseError(env, "define", index, start);
-//     throw error;
-//   }
-// }
-
 function localEnvParse(env: L_Env, tokens: string[]): LocalEnvNode {
   const start = tokens[0];
   const index = tokens.length;
@@ -939,7 +869,7 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
     skip(tokens, ByKeyword);
     const outs: OptNode[] = [];
     while (!isCurToken(tokens, L_Ends)) {
-      const opt = optParseWithNot(env, tokens, true);
+      const opt = optParseReturnOptNode(env, tokens, true);
       outs.push(opt);
     }
     skip(tokens, L_Ends);
@@ -975,7 +905,7 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
   try {
     skip(tokens, DefKeywords);
 
-    const opt: OptNode = optParseWithNot(env, tokens, false);
+    const opt: OptNode = optParseReturnOptNode(env, tokens, false);
 
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
@@ -988,10 +918,10 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
       skip(tokens, "{");
       onlyIfs.push(...factsParse(env, tokens, ["}"], false, false));
       skip(tokens, "}");
-      return new IfDefNode(opt.name, opt.vars, cond, onlyIfs);
+      return new DefNode(opt.name, opt.vars, cond, onlyIfs);
     } else {
       skip(tokens, L_Ends);
-      return new IfDefNode(opt.name, opt.vars, cond, onlyIfs);
+      return new DefNode(opt.name, opt.vars, cond, onlyIfs);
     }
   } catch (error) {
     handleParseError(env, "define", index, start);

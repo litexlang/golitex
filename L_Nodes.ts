@@ -243,22 +243,6 @@ export class DefNode extends L_Node {
   }
 }
 
-export class IffDefNode extends DefNode {
-  override toString(): string {
-    return `def iff ${this.name}(${this.vars})`;
-  }
-}
-export class IfDefNode extends DefNode {
-  override toString(): string {
-    return `def if ${this.name}(${this.vars})`;
-  }
-}
-export class OnlyIfDefNode extends DefNode {
-  override toString(): string {
-    return `def only_if ${this.name}(${this.vars})`;
-  }
-}
-
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;
 
