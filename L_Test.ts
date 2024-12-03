@@ -236,7 +236,12 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "test \\ checker",
-    code: ["def p(x);", `let \\f{i}: \\f{i} is p;`, "\\f{i} is p;"],
+    code: [
+      "def p(x); def >(i,j);",
+      `let \\f{i}: \\f{i}[>(i,0)] is p;`,
+      "let i,0: >(i,0);",
+      "\\f{i} is p;",
+    ],
     debug: true,
     print: true,
   },

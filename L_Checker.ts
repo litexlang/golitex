@@ -104,10 +104,10 @@ export function checkOpt(
   }
 
   //* cond of fact must be satisfied
-  const out = checkOptCond(env, toCheck);
-  if (out !== L_Out.True) {
-    return out;
-  }
+  // const out = checkOptCond(env, toCheck);
+  // if (out !== L_Out.True) {
+  //   return out;
+  // }
 
   const knowns = L_Memory.getStoredFacts(env, toCheck);
   if (knowns === undefined) return L_Out.Unknown;
@@ -340,7 +340,8 @@ export function checkCompositeLiterally(
     }
 
     for (const r of storedComposite.req) {
-      const out = check(env, r);
+      const toCheck = r.useMapToCopy(map);
+      const out = check(env, toCheck);
       if (out !== L_Out.True) return false;
     }
 
