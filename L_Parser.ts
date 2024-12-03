@@ -193,6 +193,7 @@ const KeywordFunctionMap: {
   by: byParse,
   macro: macroParse,
   "[": postfixProveParse,
+  "let#": letParse,
   def_composite: DefCompositeNodeParse,
 };
 
@@ -360,9 +361,9 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
       skip(tokens, ":");
       const facts = factsParse(env, tokens, L_Ends, true, true);
       if (whichLet === LetKeyword) {
-        return new LetNode(vars, [], names);
+        return new LetNode(vars, facts, names);
       } else {
-        return new LetHashNode(vars, [], names);
+        return new LetHashNode(vars, facts, names);
       }
     }
   } catch (error) {

@@ -135,14 +135,10 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
 
 function letExec(env: L_Env, node: LetNode): L_Out {
   try {
-    // const isHash = node instanceof LetHashNode;
-
-    // if (isHash) return letHashExec(env, node);
-
     // examine whether some vars are already declared. if not, declare them.
     for (const e of node.vars) {
-      let ok = false;
-      ok = env.newVar(e);
+      const ok = env.newVar(e);
+      // if (isHash) ok = env.newHashVar(e);
       if (!ok) return L_Out.Error;
     }
 
@@ -600,6 +596,12 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
 
 function letHashExec(env: L_Env, node: LetHashNode): L_Out {
   try {
+    for (const e of node.vars) {
+      const ok = env.newHashVar(e, node.facts);
+      if (!ok) return L_Out.Error;
+    }
+
+    env.newMessage(`[let#] ${node}`);
     return L_Out.True;
   } catch {
     return L_Out.Error;

@@ -255,7 +255,7 @@ export const exampleList: ExampleItem[] = [
       // "let i: p(i);",
       // "\\f{i} is p;",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
 ];

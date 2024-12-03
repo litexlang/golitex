@@ -15,7 +15,7 @@ export class L_Env {
   private parent: L_Env | undefined = undefined;
   private messages: string[] = [];
   private declaredVars = new Set<string>();
-  private declaredHashVars = new Set<string>();
+  private declaredHashVars = new Map<string, ToCheckNode[]>();
   private macros: MacroNode[] = [];
   private defs = new Map<string, DefNode>();
   private knownFacts = new Map<string, KnownFact>(); // key: operator name; value: stored layers of if-then that can be used to check operator.
@@ -179,22 +179,22 @@ export class L_Env {
     return curEnv?.defs.get(s) ? n : undefined;
   }
 
-  newHashVar(fix: string): boolean {
+  newHashVar(fix: string, facts: ToCheckNode[]): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.hashVarDeclared(fix)) {
       this.newMessage(`${fix} already declared.`);
       return false;
     }
-    this.declaredVars.add(fix);
+    this.declaredHashVars.set(fix, facts);
     return true;
   }
 
   hashVarDeclared(key: string): boolean {
-    if (this.declaredVars.has(key)) {
+    if (this.declaredHashVars.has(key)) {
       return true;
     } else {
       if (!this.parent) return false;
-      else return this.parent.varDeclared(key);
+      else return this.parent.hashVarDeclared(key);
     }
   }
 
