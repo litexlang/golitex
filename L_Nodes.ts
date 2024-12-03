@@ -381,3 +381,9 @@ export class MacroNode extends L_Node {
     }
   }
 }
+
+export class DefCompositeNode extends L_Node {
+  constructor(public names: string[]) {
+    super();
+  }
+}

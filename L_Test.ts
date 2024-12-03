@@ -238,11 +238,25 @@ export const exampleList: ExampleItem[] = [
     name: "test \\ checker",
     code: [
       "def p(x); def >(i,j);",
+      "let_composite \f;",
       `let \\f{i}: \\f{i}[>(i,0)] is p;`,
       "let i,0: >(i,0);",
       "\\f{i} is p;",
+      // "\\f{2} is p;",
     ],
     debug: true,
+    print: true,
+  },
+  {
+    name: "test let#",
+    code: [
+      "def p(x); def >(i,j);",
+      "let# #i: p(#i);",
+      // `let \\f{#i}: \\f{#i} is p;`,
+      // "let i: p(i);",
+      // "\\f{i} is p;",
+    ],
+    debug: false,
     print: true,
   },
 ];

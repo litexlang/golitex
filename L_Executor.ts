@@ -5,6 +5,7 @@ import {
   IfNode,
   KnowNode,
   L_Node,
+  LetHashNode,
   LetNode,
   LocalEnvNode,
   MacroNode,
@@ -19,7 +20,12 @@ import {
 import { L_Env } from "./L_Env";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
-import { ClearKeyword, ExistKeyword, RunKeyword } from "./L_Common";
+import {
+  ClearKeyword,
+  ExistKeyword,
+  LetHashKeyword,
+  RunKeyword,
+} from "./L_Common";
 import { runFile } from "./L_Runner";
 import { LogicNode } from "./L_Nodes";
 import { store } from "./L_Memory";
@@ -67,6 +73,9 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
 
       case "KnowNode":
         return knowExec(env, node as KnowNode);
+
+      case "LetHashNode":
+        return letHashExec(env, node as LetHashNode);
 
       case "LetNode":
         return letExec(env, node as LetNode);
@@ -126,9 +135,14 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
 
 function letExec(env: L_Env, node: LetNode): L_Out {
   try {
+    // const isHash = node instanceof LetHashNode;
+
+    // if (isHash) return letHashExec(env, node);
+
     // examine whether some vars are already declared. if not, declare them.
     for (const e of node.vars) {
-      const ok = env.newVar(e);
+      let ok = false;
+      ok = env.newVar(e);
       if (!ok) return L_Out.Error;
     }
 
@@ -141,6 +155,7 @@ function letExec(env: L_Env, node: LetNode): L_Out {
     }
 
     // bind properties given by macro
+    //! NOW WE HAVE let#, I doubt this piece of code is broken
     for (const e of node.vars) {
       for (const macro of env.getMacros([])) {
         if (macro.testRegex(e)) {
@@ -580,5 +595,13 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
     return L_Out.True;
   } catch {
     return env.errMesReturnL_Out(ByNode);
+  }
+}
+
+function letHashExec(env: L_Env, node: LetHashNode): L_Out {
+  try {
+    return L_Out.True;
+  } catch {
+    return L_Out.Error;
   }
 }

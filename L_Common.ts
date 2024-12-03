@@ -23,6 +23,7 @@ export const IfKeywords = ["if"];
 export const OnlyIfKeywords = ["only_if"];
 export const IffKeywords = ["iff"];
 export const ExistKeyword = "exist";
+export const DefCompositeKeyword = "def_composite";
 export const DefKeywords = ["def"];
 
 export const SymbolsFactsSeparator = ":";
@@ -87,6 +88,7 @@ export const L_Keywords: string[] = [
   NotsKeyword,
   RunKeyword,
   UseKeyword,
+  DefCompositeKeyword,
   // STKeyword,
 ];
 
