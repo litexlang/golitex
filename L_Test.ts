@@ -287,6 +287,12 @@ export const exampleList: ExampleItem[] = [
       "let x,A,B: set(A), set(B), element_of(x,A);",
       "element_of(x,\\union{A,B});",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "$",
+    code: ["def <(A,B); let A,B;", " $A < B$;"],
     debug: true,
     print: true,
   },

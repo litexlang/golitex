@@ -57,22 +57,32 @@ import { L_BuiltinsKeywords } from "./L_Builtins";
 import { CompositeSymbol, L_Symbol } from "./L_Structs";
 import { sign } from "crypto";
 
-function skip(tokens: string[], s: string | string[] = "") {
-  if (typeof s === "string") {
-    if (s === "") {
-      return tokens.shift();
-    } else if (s === tokens[0]) {
-      return tokens.shift();
+function skip(tokens: string[], s: string | string[] = ""): string {
+  try {
+    if (typeof s === "string") {
+      if (s === "") {
+        const out = tokens.shift();
+        if (out === undefined) throw Error;
+        return out;
+      } else if (s === tokens[0]) {
+        const out = tokens.shift();
+        if (out === undefined) throw Error;
+        return out;
+      } else {
+        throw Error("unexpected symbol: " + tokens[0]);
+      }
     } else {
+      for (const value of s) {
+        if (value === tokens[0]) {
+          const out = tokens.shift();
+          if (out === undefined) throw Error;
+          return out;
+        }
+      }
       throw Error("unexpected symbol: " + tokens[0]);
     }
-  } else {
-    for (const value of s) {
-      if (value === tokens[0]) {
-        return tokens.shift();
-      }
-    }
-    throw Error("unexpected symbol: " + tokens[0]);
+  } catch {
+    throw Error();
   }
 }
 
@@ -385,6 +395,7 @@ function optParseWithNot(
     const vars: string[] = [];
     let isT = true;
 
+    // procedural notation
     if (tokens.length >= 2 && tokens[1] === "(") {
       // parse functional operator
       name = shiftSymbol(tokens);
@@ -397,7 +408,17 @@ function optParseWithNot(
       }
 
       skip(tokens, ")");
-    } else {
+    }
+    // dollar signed notation
+    else if (tokens[0] === "$") {
+      skip(tokens, "$");
+      vars.push(shiftSymbol(tokens));
+      name = tokens.shift() as string;
+      vars.push(shiftSymbol(tokens));
+      skip(tokens, "$");
+    }
+    // relational notation
+    else {
       const v = shiftSymbol(tokens);
       vars.push(v);
 
@@ -413,16 +434,16 @@ function optParseWithNot(
 
     let checkVars: string[][] | undefined = undefined;
 
-    if (isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      checkVars = [];
-      while (!isCurToken(tokens, "]")) {
-        const currentLayerVars = varLstParse(env, tokens, [";", "]"]);
-        checkVars.push(currentLayerVars);
-        if (isCurToken(tokens, ";")) skip(tokens, ";");
-      }
-      skip(tokens, "]");
-    }
+    // if (isCurToken(tokens, "[")) {
+    //   skip(tokens, "[");
+    //   checkVars = [];
+    //   while (!isCurToken(tokens, "]")) {
+    //     const currentLayerVars = varLstParse(env, tokens, [";", "]"]);
+    //     checkVars.push(currentLayerVars);
+    //     if (isCurToken(tokens, ";")) skip(tokens, ";");
+    //   }
+    //   skip(tokens, "]");
+    // }
 
     return new OptNode(name, vars, isT, checkVars);
   } catch (error) {
@@ -610,12 +631,25 @@ function optParseWithNotAre(
 
       skip(tokens, ")");
 
-      // let defName: undefined | string = undefined;
-      // if (includeDefName && isCurToken(tokens, "[")) {
-      //   skip(tokens, "[");
-      //   defName = shiftVar(tokens);
-      //   skip(tokens, "]");
-      // }
+      let checkVars: string[][] | undefined = undefined;
+      if (isCurToken(tokens, "[")) {
+        skip(tokens, "[");
+        checkVars = [];
+        while (!isCurToken(tokens, "]")) {
+          const currentLayerVars = varLstParse(env, tokens, [";", "]"], false);
+          checkVars.push(currentLayerVars);
+          if (isCurToken(tokens, ";")) skip(tokens, ";");
+        }
+        skip(tokens, "]");
+      }
+
+      return [new OptNode(name, vars, isT, checkVars)];
+    } else if (tokens[0] === "$") {
+      skip(tokens, "$");
+      vars.push(shiftSymbol(tokens));
+      name = tokens.shift() as string;
+      vars.push(shiftSymbol(tokens));
+      skip(tokens, "$");
 
       let checkVars: string[][] | undefined = undefined;
       if (isCurToken(tokens, "[")) {
@@ -645,13 +679,6 @@ function optParseWithNotAre(
       }
 
       name = shiftSymbol(tokens);
-
-      // let defName: undefined | string = undefined;
-      // if (includeDefName && isCurToken(tokens, "[")) {
-      //   skip(tokens, "[");
-      //   defName = shiftVar(tokens);
-      //   skip(tokens, "]");
-      // }
 
       let checkVars: string[][] | undefined = undefined;
       if (isCurToken(tokens, "[")) {
