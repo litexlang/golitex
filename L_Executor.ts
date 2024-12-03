@@ -9,7 +9,6 @@ import {
   LetNode,
   LocalEnvNode,
   MacroNode,
-  // PostfixProve,
   OptNode,
   PostfixProve,
   ProveNode,
@@ -20,22 +19,17 @@ import {
 import { L_Env } from "./L_Env";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
-import {
-  ClearKeyword,
-  ExistKeyword,
-  LetHashKeyword,
-  RunKeyword,
-} from "./L_Common";
+import { ClearKeyword, RunKeyword } from "./L_Common";
 import { runFile } from "./L_Runner";
 import { LogicNode } from "./L_Nodes";
 import { store } from "./L_Memory";
 import {
-  reportNewExist,
+  reportExecL_Out,
   reportNewVars,
   reportNotAllFactsInGivenFactAreDeclared,
 } from "./L_Messages";
-import { existBuiltinCheck, isToCheckBuiltin } from "./L_Builtins";
-import { KnownExist, L_Out } from "./L_Structs";
+import { isToCheckBuiltin } from "./L_Builtins";
+import { L_Out } from "./L_Structs";
 import {
   postfixProveExec,
   proveExist,
@@ -65,60 +59,35 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
     const nodeType = node.constructor.name;
 
     switch (nodeType) {
-      case "IffDefNode":
       case "IfDefNode":
-      case "ExistDefNode":
-      case "OnlyIfDefNode":
         return defExec(env, node as DefNode);
-
       case "KnowNode":
         return knowExec(env, node as KnowNode);
-
       case "LetHashNode":
         return letHashExec(env, node as LetHashNode);
-
       case "LetNode":
         return letExec(env, node as LetNode);
-
       case "ProveNode":
         return proveExec(env, node as ProveNode);
-
       case "HaveNode":
         return haveExec(env, node as HaveNode);
-
       case "PostfixProve":
         return postfixProveExec(env, node as PostfixProve);
-
       case "LocalEnvNode":
         return localEnvExec(env, node as LocalEnvNode);
-
       case "ReturnNode":
         return returnExec(env, node as ReturnNode);
-
       case "SpecialNode":
         return specialExec(env, node as SpecialNode);
-
       case "ByNode":
         return byExec(env, node as ByNode);
-
       case "MacroNode":
         return macroExec(env, node as MacroNode);
-
       default:
         if (node instanceof ToCheckNode) {
           try {
             const out = factExec(env, node as ToCheckNode);
-
-            if (out === L_Out.True) {
-              if (showMsg) env.newMessage(`OK! ${node}`);
-            } else if (out === L_Out.Unknown) {
-              env.newMessage(`Unknown ${node}`);
-            } else if (out === L_Out.Error) {
-              env.newMessage(`Error ${node}`);
-            } else if (out === L_Out.False) {
-              env.newMessage(`False ${node}`);
-            }
-
+            env.newMessage(reportExecL_Out(out, node));
             return out;
           } catch {
             throw Error(`${node as ToCheckNode}`);

@@ -1,6 +1,5 @@
 import {
   ByNode,
-  DefCompositeNode,
   DefNode,
   // ExistNode,
   HaveNode,
@@ -194,7 +193,6 @@ const KeywordFunctionMap: {
   macro: macroParse,
   "[": postfixProveParse,
   "let#": letParse,
-  def_composite: DefCompositeNodeParse,
 };
 
 export function getNodesFromSingleNode(
@@ -1033,37 +1031,6 @@ export function compositeSymbolParse(
     }
   } catch (error) {
     handleParseError(env, "composite symbol", index, start);
-    throw error;
-  }
-}
-
-export function DefCompositeNodeParse(
-  env: L_Env,
-  tokens: string[]
-): DefCompositeNode {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  try {
-    skip(tokens, DefCompositeKeyword);
-
-    const names: string[] = [];
-    while (!isCurToken(tokens, L_Ends)) {
-      const s = tokens.shift();
-      if (s === undefined) throw Error();
-      names.push(s);
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-
-    if (!names.every((e) => e.startsWith("#"))) {
-      env.newMessage(
-        `Every hashed variable declared in let# should start with #`
-      );
-    }
-
-    return new DefCompositeNode(names);
-  } catch (error) {
-    handleParseError(env, "def_composite", index, start);
     throw error;
   }
 }
