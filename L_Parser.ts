@@ -49,9 +49,7 @@ import {
   ReturnKeyword,
   RunKeyword,
 } from "./L_Common";
-import { L_BuiltinsKeywords } from "./L_Builtins";
 import { CompositeSymbol, L_Symbol } from "./L_Structs";
-import { sign } from "crypto";
 
 function skip(tokens: string[], s: string | string[] = "") {
   if (typeof s === "string") {
@@ -376,50 +374,41 @@ function optParseReturnOptNode(
   const index = tokens.length;
 
   try {
-    let name: string = "";
-    const vars: string[] = [];
-    let isT = true;
-
-    if (tokens.length >= 2 && tokens[1] === "(") {
-      // parse functional operator
-      name = shiftSymbol(tokens);
-
-      skip(tokens, "(");
-
-      while (!isCurToken(tokens, ")")) {
-        vars.push(shiftSymbol(tokens));
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
-      }
-
-      skip(tokens, ")");
-    } else {
-      const v = shiftSymbol(tokens);
-      vars.push(v);
-
-      skip(tokens, IsKeywords);
-
-      if (parseNot && NotKeywords.includes(tokens[0])) {
-        isT = !isT;
-        skip(tokens, NotKeywords);
-      }
-
-      name = shiftSymbol(tokens);
-    }
-
-    let checkVars: string[][] | undefined = undefined;
-
-    if (isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      checkVars = [];
-      while (!isCurToken(tokens, "]")) {
-        const currentLayerVars = varLstParse(env, tokens, [";", "]"]);
-        checkVars.push(currentLayerVars);
-        if (isCurToken(tokens, ";")) skip(tokens, ";");
-      }
-      skip(tokens, "]");
-    }
-
-    return new OptNode(name, vars, isT, checkVars);
+    return optParseWithNotAre(env, tokens, parseNot)[0];
+    // let name: string = "";
+    // const vars: string[] = [];
+    // let isT = true;
+    // if (tokens.length >= 2 && tokens[1] === "(") {
+    //   // parse functional operator
+    //   name = shiftSymbol(tokens);
+    //   skip(tokens, "(");
+    //   while (!isCurToken(tokens, ")")) {
+    //     vars.push(shiftSymbol(tokens));
+    //     if (isCurToken(tokens, ",")) skip(tokens, ",");
+    //   }
+    //   skip(tokens, ")");
+    // } else {
+    //   const v = shiftSymbol(tokens);
+    //   vars.push(v);
+    //   skip(tokens, IsKeywords);
+    //   if (parseNot && NotKeywords.includes(tokens[0])) {
+    //     isT = !isT;
+    //     skip(tokens, NotKeywords);
+    //   }
+    //   name = shiftSymbol(tokens);
+    // }
+    // let checkVars: string[][] | undefined = undefined;
+    // if (isCurToken(tokens, "[")) {
+    //   skip(tokens, "[");
+    //   checkVars = [];
+    //   while (!isCurToken(tokens, "]")) {
+    //     const currentLayerVars = varLstParse(env, tokens, [";", "]"]);
+    //     checkVars.push(currentLayerVars);
+    //     if (isCurToken(tokens, ";")) skip(tokens, ";");
+    //   }
+    //   skip(tokens, "]");
+    // }
+    // return new OptNode(name, vars, isT, checkVars);
   } catch (error) {
     handleParseError(env, `${start} is invalid operator.`, index, start);
     throw error;
@@ -556,7 +545,7 @@ function factsParse(
         //   out = [...out, fact];
         // }
         else {
-          const facts = optParseWithNotAre(env, tokens, true, includeDefName);
+          const facts = optParseWithNotAre(env, tokens, true);
           facts.forEach((e) => (e.isT = isT ? e.isT : !e.isT));
           out = [...out, ...facts];
         }
@@ -581,8 +570,8 @@ function factsParse(
 function optParseWithNotAre(
   env: L_Env,
   tokens: string[],
-  parseNot: boolean,
-  _includeDefName: boolean
+  parseNot: boolean
+  // _includeDefName: boolean
 ): OptNode[] {
   const start = tokens[0];
   const index = tokens.length;
