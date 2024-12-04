@@ -323,16 +323,30 @@ export const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name: "composite \\union{x,y}: x is set, y is set;",
+    name: "\\union{x,y}",
     code: [
       "def set(x); def in(x, A); def equal(x, y);",
       // "composite \\union{x,y}: x is set, y is set;",
       "let a,b: a is set, b is set;",
       "know if _x, _y: set(_x), set(_y) => {if _z: in(_z, _x) => { in(_z , \\union{_x, _y})}, if _z : in(_z, _y) => {in(_z, \\union{_x,_y})} };",
       "let x: in(x,a); ",
-      "in(x, \\union{a,b})[a,b;x];",
+      "in(x, \\union{a,b}) [a,b;x];",
+      "in(x, \\union{a,b});",
     ],
     debug: true,
+    print: true,
+  },
+  {
+    name: "composite",
+    code: [
+      "def set(x); def in(x, A); def equal(x, y);",
+      // "def_composite \\union{x,y}: x is set, y is set;",
+      "let a,b: a is set, b is set;",
+      "know if _x, _y: set(_x), set(_y) => {if _z: in(_z, _x) => { in(_z , \\union{_x, _y})}, if _z : in(_z, _y) => {in(_z, \\union{_x,_y})} };",
+      "let x: in(x,a); ",
+      "in(x, \\union{a,b})[a,b;x];",
+    ],
+    debug: false,
     print: true,
   },
 ];
@@ -353,8 +367,6 @@ function runExamples(toJSON: boolean) {
   if (toJSON) envToJSON(env, "env.json");
 }
 
-runExamples(false);
-
 export function envToJSON(env: L_Env, fileName: string) {
   const out = env.toJSON();
   const jsonString = JSON.stringify(out, null, 2);
@@ -363,3 +375,16 @@ export function envToJSON(env: L_Env, fileName: string) {
 
   return out;
 }
+
+function runLiTeXFile(filePath: string) {
+  try {
+    const data = fs.readFileSync(filePath, "utf8");
+    const env = new L_Env();
+    runStrings(env, [data], false);
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+
+runExamples(false);
+// runLiTeXFile("./set_theory_examples.litex");
