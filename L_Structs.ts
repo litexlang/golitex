@@ -1,3 +1,4 @@
+import { L_Env } from "./L_Env";
 import { ToCheckNode } from "./L_Nodes";
 
 export class L_Symbol {
@@ -93,8 +94,8 @@ export class StoredReq {
       .join(", ")})`;
   }
 
-  fixReqVars(map: Map<string, string>): StoredReq {
-    const newReq = this.req.map((e) => e.useMapToCopy(map));
+  fixReqVars(env: L_Env, map: Map<string, string>): StoredReq {
+    const newReq = this.req.map((e) => e.useMapToCopy(env, map));
     return new StoredReq(this.vars, newReq);
   }
 }
@@ -106,10 +107,10 @@ export class StoredFact {
     public isT: boolean
   ) {}
 
-  fixStoredFact(map: Map<string, string>): StoredFact {
+  fixStoredFact(env: L_Env, map: Map<string, string>): StoredFact {
     const newReq: StoredReq[] = [];
     for (const r of this.req) {
-      newReq.push(r.fixReqVars(map));
+      newReq.push(r.fixReqVars(env, map));
     }
     return new StoredFact(this.vars, newReq, this.isT);
   }

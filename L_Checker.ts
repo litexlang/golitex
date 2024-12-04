@@ -131,7 +131,7 @@ export function checkOpt(
         }
       }
 
-      const fixedKnown = known.fixStoredFact(map);
+      const fixedKnown = known.fixStoredFact(env, map);
 
       let out = L_Out.True;
 
@@ -305,7 +305,7 @@ export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
   }
 
   for (const condition of def?.cond) {
-    const fixed = condition.useMapToCopy(map);
+    const fixed = condition.useMapToCopy(env, map);
     const out = check(env, fixed);
     if (out !== L_Out.True) {
       env.newMessage(`[Unknown] ${fixed}`);
@@ -346,7 +346,7 @@ export function checkCompositeLiterally(
           return env.errMesReturnBoolean(`hashed variable ${v} not declared`);
         }
         for (const r of toChecks) {
-          const toCheck = r.useMapToCopy(map);
+          const toCheck = r.useMapToCopy(env, map);
           const out = check(env, toCheck);
           if (out !== L_Out.True) return false;
         }
@@ -360,7 +360,7 @@ export function checkCompositeLiterally(
     }
 
     for (const r of storedComposite.req) {
-      const toCheck = r.useMapToCopy(map);
+      const toCheck = r.useMapToCopy(env, map);
       const out = check(env, toCheck);
       if (out !== L_Out.True) return false;
     }

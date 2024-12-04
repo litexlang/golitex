@@ -297,7 +297,7 @@ export const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name: "{}",
+    name: "def singleton set",
     code: [
       "def set(x); def in(x, A); def equal(x, y);",
       "let a;",
@@ -307,6 +307,17 @@ export const exampleList: ExampleItem[] = [
       "equal(A,a)[A];",
       "know in (A, \\singleton{a});",
       "equal(A,a)[A];",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "def singleton set 2",
+    code: [
+      "def set(x); def in(x, A); def equal(x, y);",
+      "know if _x, _a: in(_x, \\singleton{_a}) => {equal(_x,_a)};",
+      "let a,x: in(x, \\singleton{a});",
+      "equal(x,a);",
     ],
     debug: true,
     print: true,

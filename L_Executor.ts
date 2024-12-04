@@ -126,7 +126,7 @@ function letExec(env: L_Env, node: LetNode): L_Out {
         if (macro.testRegex(e)) {
           const map = new Map<string, string>();
           map.set(macro.varName, e);
-          const facts = macro.facts.map((e) => e.useMapToCopy(map));
+          const facts = macro.facts.map((e) => e.useMapToCopy(env, map));
           facts.forEach((e) => L_Memory.store(env, e, [], true));
         }
       }
@@ -537,7 +537,7 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
 
         // check all requirements
         for (const req of knownToCheck.req) {
-          const fixed = req.useMapToCopy(map);
+          const fixed = req.useMapToCopy(env, map);
           const out = L_Checker.check(env, fixed);
           if (out !== L_Out.True) {
             env.newMessage(`Failed to check ${out}`);
@@ -547,7 +547,7 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
 
         // store all onlyIfs
         for (const onlyIf of knownToCheck.onlyIfs) {
-          const fixed = onlyIf.useMapToCopy(map);
+          const fixed = onlyIf.useMapToCopy(env, map);
           const ok = L_Memory.store(env, fixed, [], true);
           if (!ok) return L_Out.Error;
         }

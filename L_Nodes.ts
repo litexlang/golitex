@@ -1,5 +1,6 @@
 import { L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
+import { compositeSymbolParse } from "./L_Parser";
 
 export abstract class L_Node {}
 
@@ -20,7 +21,7 @@ export class ToCheckNode extends L_Node {
   }
 
   // MAIN FUNCTION OF THE WHOLE PROJECT
-  useMapToCopy(map: Map<string, string>): ToCheckNode {
+  useMapToCopy(env: L_Env, map: Map<string, string>): ToCheckNode {
     map;
     return new ToCheckNode(true);
   }
@@ -93,10 +94,10 @@ export class LogicNode extends ToCheckNode {
     );
   }
 
-  override useMapToCopy(map: Map<string, string>): LogicNode {
+  override useMapToCopy(env: L_Env, map: Map<string, string>): LogicNode {
     const newVars = [...this.vars];
-    const req = this.req.map((e) => e.useMapToCopy(map));
-    const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(map));
+    const req = this.req.map((e) => e.useMapToCopy(env, map));
+    const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(env, map));
 
     if (this instanceof LogicNode) {
       return new LogicNode(
@@ -171,7 +172,7 @@ export class OptNode extends ToCheckNode {
     );
   }
 
-  override useMapToCopy(map: Map<string, string>): OptNode {
+  override useMapToCopy(env: L_Env, map: Map<string, string>): OptNode {
     const newVars: string[] = [];
     for (const v of this.vars) {
       const fixed = map.get(v);
@@ -179,6 +180,12 @@ export class OptNode extends ToCheckNode {
         //! I DON'T KNOW WHETHER I SHOULD THROW ERROR OR PUSH PREVIOUS SYMBOL
         // throw Error();
         newVars.push(v);
+
+        // if (!fixed.startsWith("\\")) {
+        // } else {
+        //   const regex = new RegExp(`\\s${v}\\s`);
+        //   if regex.test(v);
+        // }
       } else {
         newVars.push(fixed);
       }
