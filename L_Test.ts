@@ -287,6 +287,12 @@ export const exampleList: ExampleItem[] = [
       "let x,A,B: set(A), set(B), element_of(x,A);",
       "element_of(x,\\union{A,B});",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "{}",
+    code: ["def p(x); {let a: p(a); p(a);}"],
     debug: true,
     print: true,
   },

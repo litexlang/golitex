@@ -229,12 +229,14 @@ function factExec(env: L_Env, toCheck: ToCheckNode): L_Out {
 function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): L_Out {
   try {
     const newEnv = new L_Env(env);
+    env.newMessage(`[local environment]\n`);
     for (let i = 0; i < localEnvNode.nodes.length; i++) {
       const out = nodeExec(newEnv, localEnvNode.nodes[i]);
       newEnv.getMessages().forEach((e) => env.newMessage(e));
       newEnv.clearMessages();
       if (L_Out.Error === out) return L_Out.Error;
     }
+    env.newMessage(`\n[local environment]`);
 
     return L_Out.True;
   } catch {

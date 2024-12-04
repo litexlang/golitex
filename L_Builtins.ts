@@ -5,19 +5,16 @@ import { checkOptLiterally } from "./L_Checker";
 import { reportNewExist } from "./L_Messages";
 import { KnownExist, L_Out } from "./L_Structs";
 
-export const L_BuiltinsKeywords: string[] = ["is_property", "exist", "or"];
-
-// Define an interface for built-in function types
+export const L_BuiltinsKeywords: string[] = [
+  "is_property",
+  "exist",
+  "or",
+  "is_composite",
+];
 
 export function isToCheckBuiltin(node: ToCheckNode): boolean {
   return node instanceof OptNode && L_BuiltinsKeywords.includes(node.name);
 }
-
-// // Create a map of built-in function names to their implementations
-// export const L_Builtins = new Map<string, Function>([
-//   ["is_property", isPropertyBuiltinCheck],
-//   ["exist", existBuiltinCheck],
-// ]);
 
 // Separate functions from the map
 export function isPropertyBuiltinCheck(env: L_Env, node: OptNode): L_Out {
@@ -69,6 +66,22 @@ export function existBuiltinCheck(env: L_Env, node: OptNode): L_Out {
         return env.errMesReturnL_Out(
           `exist operator should not take builtin keyword ${node.vars[i]} as parameter.`
         );
+      }
+    }
+
+    return L_Out.True;
+  } catch {
+    return L_Out.Error;
+  }
+}
+
+export function isCompositeBuiltinCheck(env: L_Env, node: OptNode): L_Out {
+  try {
+    if (node.vars.length !== 1) {
+      return L_Out.Error;
+    } else {
+      if (node.vars[0].startsWith("\\")) {
+        return L_Out.True;
       }
     }
 

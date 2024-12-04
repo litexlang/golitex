@@ -338,7 +338,7 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
-    if (vars.some((e) => L_Keywords.includes(e) && !e.startsWith("\\"))) {
+    if (vars.some((e) => L_Keywords.includes(e) || e.startsWith("\\"))) {
       env.newMessage(`Error: ${vars} contain LiTeX keywords.`);
       throw Error();
     }
@@ -374,41 +374,12 @@ function optParseReturnOptNode(
   const index = tokens.length;
 
   try {
-    return optParseWithNotAre(env, tokens, parseNot)[0];
-    // let name: string = "";
-    // const vars: string[] = [];
-    // let isT = true;
-    // if (tokens.length >= 2 && tokens[1] === "(") {
-    //   // parse functional operator
-    //   name = shiftSymbol(tokens);
-    //   skip(tokens, "(");
-    //   while (!isCurToken(tokens, ")")) {
-    //     vars.push(shiftSymbol(tokens));
-    //     if (isCurToken(tokens, ",")) skip(tokens, ",");
-    //   }
-    //   skip(tokens, ")");
-    // } else {
-    //   const v = shiftSymbol(tokens);
-    //   vars.push(v);
-    //   skip(tokens, IsKeywords);
-    //   if (parseNot && NotKeywords.includes(tokens[0])) {
-    //     isT = !isT;
-    //     skip(tokens, NotKeywords);
-    //   }
-    //   name = shiftSymbol(tokens);
-    // }
-    // let checkVars: string[][] | undefined = undefined;
-    // if (isCurToken(tokens, "[")) {
-    //   skip(tokens, "[");
-    //   checkVars = [];
-    //   while (!isCurToken(tokens, "]")) {
-    //     const currentLayerVars = varLstParse(env, tokens, [";", "]"]);
-    //     checkVars.push(currentLayerVars);
-    //     if (isCurToken(tokens, ";")) skip(tokens, ";");
-    //   }
-    //   skip(tokens, "]");
-    // }
-    // return new OptNode(name, vars, isT, checkVars);
+    const nodes = optParseWithNotAre(env, tokens, parseNot);
+    if (nodes.length > 0) {
+      return nodes[0];
+    } else {
+      throw Error;
+    }
   } catch (error) {
     handleParseError(env, `${start} is invalid operator.`, index, start);
     throw error;
@@ -594,13 +565,6 @@ function optParseWithNotAre(
 
       skip(tokens, ")");
 
-      // let defName: undefined | string = undefined;
-      // if (includeDefName && isCurToken(tokens, "[")) {
-      //   skip(tokens, "[");
-      //   defName = shiftVar(tokens);
-      //   skip(tokens, "]");
-      // }
-
       let checkVars: string[][] | undefined = undefined;
       if (isCurToken(tokens, "[")) {
         skip(tokens, "[");
@@ -643,6 +607,7 @@ function optParseWithNotAre(
         checkVars = [];
         while (!isCurToken(tokens, "]")) {
           const currentLayerVars = varLstParse(env, tokens, [";", "]"]);
+
           checkVars.push(currentLayerVars);
           if (isCurToken(tokens, ";")) skip(tokens, ";");
         }
