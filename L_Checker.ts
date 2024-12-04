@@ -350,6 +350,12 @@ export function checkCompositeLiterally(
           const out = check(env, toCheck);
           if (out !== L_Out.True) return false;
         }
+      } else {
+        // check var literally, other wise in(b, \\singleton{b}) leads to in(n, \\singleton{b})
+        if (map.get(v) === v) continue;
+        else {
+          return false;
+        }
       }
     }
 

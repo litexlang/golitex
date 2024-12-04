@@ -8,10 +8,10 @@ const setTheory = [
   "know if x: set(x) => {object(x)};",
   "def subset(A,B);",
   "def in(x,A);",
-  "let A,B,C: A,B,C are set;",
 ];
 
 const setTheoryTest1 = [
+  "let A,B,C: A,B,C are set;",
   "let A,B,x : A is set, B is set, equal(A,B), element_of(x,A);",
   "by set_equal(A,B,x) => {element_of(x,B)};",
   "know if x, y : x is empty, y is empty => {equal(x,y)};",

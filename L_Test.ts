@@ -293,6 +293,21 @@ export const exampleList: ExampleItem[] = [
   {
     name: "{}",
     code: ["def p(x); {let a: p(a); p(a);}"],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "{}",
+    code: [
+      "def set(x); def in(x, A); def equal(x, y);",
+      "let a;",
+      "know \\singleton{a} is set, if x: in(x, \\singleton{a}) => {equal(a, x)};",
+      // "know if x: x is set, \\(x, \\sing)",
+      "let A: in(A, \\singleton{b});",
+      "equal(A,a)[A];",
+      "know in (A, \\singleton{a});",
+      "equal(A,a)[A];",
+    ],
     debug: true,
     print: true,
   },
