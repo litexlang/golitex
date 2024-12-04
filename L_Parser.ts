@@ -52,22 +52,32 @@ import {
 } from "./L_Common";
 import { CompositeSymbol, L_Symbol } from "./L_Structs";
 
-function skip(tokens: string[], s: string | string[] = "") {
-  if (typeof s === "string") {
-    if (s === "") {
-      return tokens.shift();
-    } else if (s === tokens[0]) {
-      return tokens.shift();
+function skip(tokens: string[], s: string | string[] = ""): string {
+  try {
+    if (typeof s === "string") {
+      if (s === "") {
+        const out = tokens.shift();
+        if (out === undefined) throw Error;
+        return out;
+      } else if (s === tokens[0]) {
+        const out = tokens.shift();
+        if (out === undefined) throw Error;
+        return out;
+      } else {
+        throw Error("unexpected symbol: " + tokens[0]);
+      }
     } else {
+      for (const value of s) {
+        if (value === tokens[0]) {
+          const out = tokens.shift();
+          if (out === undefined) throw Error;
+          return out;
+        }
+      }
       throw Error("unexpected symbol: " + tokens[0]);
     }
-  } else {
-    for (const value of s) {
-      if (value === tokens[0]) {
-        return tokens.shift();
-      }
-    }
-    throw Error("unexpected symbol: " + tokens[0]);
+  } catch {
+    throw Error();
   }
 }
 
@@ -621,13 +631,6 @@ function optParseWithNotAre(
       }
 
       name = shiftSymbol(tokens);
-
-      // let defName: undefined | string = undefined;
-      // if (includeDefName && isCurToken(tokens, "[")) {
-      //   skip(tokens, "[");
-      //   defName = shiftVar(tokens);
-      //   skip(tokens, "]");
-      // }
 
       let checkVars: string[][] | undefined = undefined;
       if (isCurToken(tokens, "[")) {
