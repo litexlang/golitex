@@ -179,13 +179,20 @@ export class OptNode extends ToCheckNode {
       if (fixed === undefined) {
         //! I DON'T KNOW WHETHER I SHOULD THROW ERROR OR PUSH PREVIOUS SYMBOL
         // throw Error();
-        newVars.push(v);
+        // newVars.push(v);
 
-        // if (!fixed.startsWith("\\")) {
-        // } else {
-        //   const regex = new RegExp(`\\s${v}\\s`);
-        //   if regex.test(v);
-        // }
+        if (!v.startsWith("\\")) {
+          newVars.push(v);
+        } else {
+          //! FOR THE TIME BEING, I USE THIS NOT THAT GREAT CODE.
+          for (const freeVar of map.keys()) {
+            const regex = new RegExp(`\\s${freeVar}\\s`);
+            if (regex.test(v)) {
+              const fixed = map.get(freeVar);
+              newVars.push(v.replace(`\\s${freeVar}\\s`, `\\s${fixed}\\s`));
+            }
+          }
+        }
       } else {
         newVars.push(fixed);
       }
