@@ -1,5 +1,6 @@
 import {
   DefNode,
+  ExistNode,
   IfNode,
   LogicNode,
   OptNode,
@@ -9,7 +10,7 @@ import {
 import { isToCheckBuiltin, L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
 import { DEBUG_DICT } from "./L_Executor";
-import { StoredFact, StoredReq } from "./L_Structs";
+import { KnownFact, StoredExist, StoredFact, StoredReq } from "./L_Structs";
 
 export function declNewFact(
   env: L_Env,
@@ -92,9 +93,15 @@ function storeOpt(
     } else env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars})`);
   }
 
-  const toStore = new StoredFact(fact.vars, req, fact.isT);
-
-  let ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
+  let ok = false;
+  let toStore: StoredFact;
+  if (fact instanceof ExistNode) {
+    toStore = new StoredExist(fact.vars, req, fact.isT);
+    ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
+  } else {
+    toStore = new StoredFact(fact.vars, req, fact.isT);
+    ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
+  }
   if (!ok) return false;
 
   // If fact.vars contains all freeVars in current known if-then

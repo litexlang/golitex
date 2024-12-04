@@ -1,6 +1,12 @@
 import { ExistNode, IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { CompositeSymbol, L_Out } from "./L_Structs";
+import {
+  CompositeSymbol,
+  KnownExist,
+  KnownFact,
+  L_Out,
+  StoredExist,
+} from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { lstLengthNotEql } from "./L_Messages";
 import {
@@ -17,9 +23,7 @@ export function check(
   toCheck: ToCheckNode,
   toCheckVarsFromIf: string[][] = []
 ): L_Out {
-  if (toCheck instanceof ExistNode) {
-    return L_Out.Unknown;
-  } else if (toCheck instanceof OptNode) {
+  if (toCheck instanceof OptNode) {
     let out = checkOpt(env, toCheck, true, toCheckVarsFromIf);
     if (out === L_Out.Unknown) {
       out = checkOpt(env, toCheck.copyWithoutIsT(!toCheck.isT));
@@ -115,6 +119,13 @@ export function checkOpt(
   if (knowns === undefined) return L_Out.Unknown;
 
   for (const known of knowns as StoredFact[]) {
+    if (
+      (toCheck instanceof ExistNode && !(known instanceof StoredExist)) ||
+      (!(toCheck instanceof ExistNode) && known instanceof StoredExist)
+    ) {
+      continue;
+    }
+
     // check req
     if (known.req.length > 0) {
       const map = new Map<string, string>();

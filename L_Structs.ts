@@ -82,6 +82,8 @@ export class KnownFact {
   }
 }
 
+export class KnownExist extends KnownFact {}
+
 export class StoredReq {
   constructor(
     public vars: string[], // store free vars at current level

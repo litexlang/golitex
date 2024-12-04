@@ -7,7 +7,7 @@ import {
   ToCheckNode,
 } from "./L_Nodes";
 import { examineStoredFact } from "./L_Memory";
-import { L_Out } from "./L_Structs";
+import { KnownExist, L_Out, StoredExist } from "./L_Structs";
 import { isToCheckBuiltin } from "./L_Builtins";
 import { KnownFact, StoredFact } from "./L_Structs";
 
@@ -132,7 +132,12 @@ export class L_Env {
     const checkVarsNumLst = checkVars.map((e) => e.length);
     const knownFact = this.knownFacts.get(optName);
     if (knownFact === undefined) {
-      const newKnownFact = new KnownFact();
+      let newKnownFact: KnownFact;
+      if (fact instanceof StoredExist) {
+        newKnownFact = new KnownExist();
+      } else {
+        newKnownFact = new KnownFact();
+      }
       this.knownFacts.set(optName, newKnownFact);
 
       return newKnownFact.addChild(checkVarsNumLst, fact);

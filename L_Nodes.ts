@@ -243,7 +243,11 @@ export class OptNode extends ToCheckNode {
   }
 }
 
-export class ExistNode extends OptNode {}
+export class ExistNode extends OptNode {
+  toString(): string {
+    return `exist ${super.toString()}`;
+  }
+}
 
 export class DefNode extends L_Node {
   constructor(
