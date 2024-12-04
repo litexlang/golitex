@@ -9,7 +9,7 @@ import {
 import { isToCheckBuiltin, L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
 import { DEBUG_DICT } from "./L_Executor";
-import { KnownExist, StoredFact, StoredReq } from "./L_Structs";
+import { StoredFact, StoredReq } from "./L_Structs";
 
 export function declNewFact(
   env: L_Env,

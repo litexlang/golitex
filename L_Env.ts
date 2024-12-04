@@ -9,7 +9,7 @@ import {
 import { examineStoredFact } from "./L_Memory";
 import { L_Out } from "./L_Structs";
 import { isToCheckBuiltin } from "./L_Builtins";
-import { KnownExist, KnownFact, StoredFact } from "./L_Structs";
+import { KnownFact, StoredFact } from "./L_Structs";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;
@@ -20,7 +20,7 @@ export class L_Env {
   private defs = new Map<string, DefNode>();
   private knownFacts = new Map<string, KnownFact>(); // key: operator name; value: stored layers of if-then that can be used to check operator.
   private namedKnownToChecks = new Map<string, ToCheckNode>();
-  private exists = new Map<string, KnownFact>();
+  // private exists = new Map<string, KnownFact>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -34,13 +34,13 @@ export class L_Env {
     this.defs = new Map<string, DefNode>();
     this.knownFacts = new Map<string, KnownFact>();
     this.namedKnownToChecks = new Map<string, ToCheckNode>();
-    this.exists = new Map<string, KnownFact>();
+    // this.exists = new Map<string, KnownFact>();
   }
 
-  newExist(optName: string, exist: KnownFact): boolean {
-    this.exists.set(optName, exist);
-    return true;
-  }
+  // newExist(optName: string, exist: KnownFact): boolean {
+  //   this.exists.set(optName, exist);
+  //   return true;
+  // }
 
   // isExisted(optName: string): boolean {
   //   if (this.exists.get(optName)?.isT === true) {

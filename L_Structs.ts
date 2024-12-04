@@ -25,9 +25,9 @@ export type ExampleItem = {
   print: boolean;
 };
 
-export class KnownExist {
-  constructor(public isT: boolean) {}
-}
+// export class KnownExist {
+//   constructor(public isT: boolean) {}
+// }
 
 export class KnownFact {
   facts: StoredFact[] = []; // facts at current if-then level.
@@ -174,3 +174,5 @@ export class StoredFact {
     return L_Out.True;
   }
 }
+
+export class StoredExist extends StoredFact {}

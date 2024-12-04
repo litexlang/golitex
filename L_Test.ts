@@ -354,7 +354,7 @@ export const exampleList: ExampleItem[] = [
     name: "exist",
     code: [
       "def set(x); def in(x, A); def equal(x, y);",
-      "let x;",
+      "let x: equal(x);",
       "exist equal(x);",
     ],
     debug: true,
