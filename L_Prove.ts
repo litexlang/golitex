@@ -5,7 +5,7 @@ import { L_Node, OptNode, PostfixProve } from "./L_Nodes";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import { reportExecL_Out, reportNewExist } from "./L_Messages";
-import { existBuiltinCheck } from "./L_Builtins";
+// import { existBuiltinCheck } from "./L_Builtins";
 
 export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
   try {
@@ -149,24 +149,24 @@ export function postfixProveExec(
   }
 }
 
-export function proveExist(
-  env: L_Env,
-  toProve: OptNode,
-  block: L_Node[]
-): L_Out {
-  try {
-    const newEnv = new L_Env(env);
-    for (const node of block) {
-      const out = nodeExec(newEnv, node, true);
-      if (out !== L_Out.True) return out;
-    }
+// export function proveExist(
+//   env: L_Env,
+//   toProve: OptNode,
+//   block: L_Node[]
+// ): L_Out {
+//   try {
+//     const newEnv = new L_Env(env);
+//     for (const node of block) {
+//       const out = nodeExec(newEnv, node, true);
+//       if (out !== L_Out.True) return out;
+//     }
 
-    const out = existBuiltinCheck(newEnv, toProve);
-    if (out !== L_Out.True) return out;
+//     const out = existBuiltinCheck(newEnv, toProve);
+//     if (out !== L_Out.True) return out;
 
-    env.newExist(toProve.name, new KnownExist(toProve.isT));
-    return reportNewExist(env, toProve);
-  } catch {
-    return env.errMesReturnL_Out(toProve);
-  }
-}
+//     env.newExist(toProve.name, new KnownExist(toProve.isT));
+//     return reportNewExist(env, toProve);
+//   } catch {
+//     return env.errMesReturnL_Out(toProve);
+//   }
+// }

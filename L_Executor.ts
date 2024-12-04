@@ -28,11 +28,11 @@ import {
   reportNewVars,
   reportNotAllFactsInGivenFactAreDeclared,
 } from "./L_Messages";
-import { isToCheckBuiltin } from "./L_Builtins";
+import { isPropertyBuiltinCheck, isToCheckBuiltin } from "./L_Builtins";
 import { L_Out } from "./L_Structs";
 import {
   postfixProveExec,
-  proveExist,
+  // proveExist,
   proveOpt,
   proveOptByContradict,
 } from "./L_Prove";
@@ -275,31 +275,31 @@ function returnExec(env: L_Env, node: ReturnNode): L_Out {
 
 function haveExec(env: L_Env, node: HaveNode): L_Out {
   try {
-    if (!node.opts.every((e) => env.isExisted(e.name))) {
-      return env.errMesReturnL_Out(
-        `operator-type facts in have must proved to be exist.`
-      );
-    }
+    // if (!node.opts.every((e) => env.isExisted(e.name))) {
+    //   return env.errMesReturnL_Out(
+    //     `operator-type facts in have must proved to be exist.`
+    //   );
+    // }
 
-    for (const opt of node.opts) {
-      if (!node.vars.every((e) => opt.vars.includes(e))) {
-        return env.errMesReturnL_Out(
-          `have error: [${node.vars}] must be subset of [${opt.vars}]`
-        );
-      }
+    // for (const opt of node.opts) {
+    //   if (!node.vars.every((e) => opt.vars.includes(e))) {
+    //     return env.errMesReturnL_Out(
+    //       `have error: [${node.vars}] must be subset of [${opt.vars}]`
+    //     );
+    //   }
 
-      if (env.isExisted(opt.name)) {
-        for (const v of node.vars) {
-          const ok = env.newVar(v);
-          if (!ok) throw Error();
-        }
+    //   if (env.isExisted(opt.name)) {
+    //     for (const v of node.vars) {
+    //       const ok = env.newVar(v);
+    //       if (!ok) throw Error();
+    //     }
 
-        const ok = store(env, opt, [], true);
-        if (!ok) throw Error();
-      }
-    }
+    //     const ok = store(env, opt, [], true);
+    //     if (!ok) throw Error();
+    //   }
+    // }
 
-    env.OKMesReturnL_Out(`[have] ${node}`);
+    // env.OKMesReturnL_Out(`[have] ${node}`);
 
     return L_Out.True;
   } catch {
@@ -428,8 +428,10 @@ function proveExec(env: L_Env, node: ProveNode): L_Out {
 function proveBuiltin(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
   try {
     switch (toProve.name) {
-      case "exist":
-        return proveExist(env, toProve, block);
+      case "is_property":
+        return isPropertyBuiltinCheck(env, toProve);
+      // case "exist":
+      //   return proveExist(env, toProve, block);
       default:
         return L_Out.Error;
     }

@@ -1,10 +1,10 @@
-import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
+import { ExistNode, IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { CompositeSymbol, L_Out } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { lstLengthNotEql } from "./L_Messages";
 import {
-  existBuiltinCheck,
+  // existBuiltinCheck,
   isPropertyBuiltinCheck,
   isToCheckBuiltin,
 } from "./L_Builtins";
@@ -17,7 +17,9 @@ export function check(
   toCheck: ToCheckNode,
   toCheckVarsFromIf: string[][] = []
 ): L_Out {
-  if (toCheck instanceof OptNode) {
+  if (toCheck instanceof ExistNode) {
+    return L_Out.Unknown;
+  } else if (toCheck instanceof OptNode) {
     let out = checkOpt(env, toCheck, true, toCheckVarsFromIf);
     if (out === L_Out.Unknown) {
       out = checkOpt(env, toCheck.copyWithoutIsT(!toCheck.isT));
@@ -96,8 +98,8 @@ export function checkOpt(
     switch (toCheck.name) {
       case "is_property":
         return isPropertyBuiltinCheck(env, toCheck);
-      case ExistKeyword:
-        return existBuiltinCheck(env, toCheck);
+      // case ExistKeyword:
+      //   return existBuiltinCheck(env, toCheck);
       default:
         return L_Out.Error;
     }
@@ -207,8 +209,8 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
     switch (toCheck.name) {
       case "is_property":
         return isPropertyBuiltinCheck(env, toCheck);
-      case ExistKeyword:
-        return existBuiltinCheck(env, toCheck);
+      // case ExistKeyword:
+      //   return existBuiltinCheck(env, toCheck);
       default:
         return L_Out.Error;
     }

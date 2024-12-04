@@ -7,7 +7,7 @@ import { KnownExist, L_Out } from "./L_Structs";
 
 export const L_BuiltinsKeywords: string[] = [
   "is_property",
-  "exist",
+  // "exist",
   "or",
   "is_composite",
 ];
@@ -42,36 +42,36 @@ export function isPropertyBuiltinCheck(env: L_Env, node: OptNode): L_Out {
   }
 }
 
-export function existBuiltinCheck(env: L_Env, node: OptNode): L_Out {
-  try {
-    return L_Out.True;
-    // for (let i = 0; i < node.vars.length; i++) {
-    //   if (env.isExisted(node.vars[i]) === node.isT) {
-    //     return L_Out.True;
-    //   }
-    //   const toCheck = new OptNode(
-    //     node.vars[i],
-    //     (node.checkVars as string[][])[i]
-    //   );
-    //   // Strict checking for existence
-    //   if (!L_BuiltinsKeywords.includes(node.vars[i])) {
-    //     const out = checkOptLiterally(env, toCheck);
-    //     if (out === L_Out.True) {
-    //       env.newExist(node.vars[i], new KnownExist(node.isT));
-    //     } else {
-    //       return out;
-    //     }
-    //   } else {
-    //     return env.errMesReturnL_Out(
-    //       `exist operator should not take builtin keyword ${node.vars[i]} as parameter.`
-    //     );
-    //   }
-    // }
-    // return L_Out.True;
-  } catch {
-    return L_Out.Error;
-  }
-}
+// export function existBuiltinCheck(env: L_Env, node: OptNode): L_Out {
+//   try {
+//     return L_Out.True;
+// for (let i = 0; i < node.vars.length; i++) {
+//   if (env.isExisted(node.vars[i]) === node.isT) {
+//     return L_Out.True;
+//   }
+//   const toCheck = new OptNode(
+//     node.vars[i],
+//     (node.checkVars as string[][])[i]
+//   );
+//   // Strict checking for existence
+//   if (!L_BuiltinsKeywords.includes(node.vars[i])) {
+//     const out = checkOptLiterally(env, toCheck);
+//     if (out === L_Out.True) {
+//       env.newExist(node.vars[i], new KnownExist(node.isT));
+//     } else {
+//       return out;
+//     }
+//   } else {
+//     return env.errMesReturnL_Out(
+//       `exist operator should not take builtin keyword ${node.vars[i]} as parameter.`
+//     );
+//   }
+// }
+// return L_Out.True;
+//   } catch {
+//     return L_Out.Error;
+//   }
+// }
 
 export function isCompositeBuiltinCheck(env: L_Env, node: OptNode): L_Out {
   try {

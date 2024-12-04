@@ -243,6 +243,8 @@ export class OptNode extends ToCheckNode {
   }
 }
 
+export class ExistNode extends OptNode {}
+
 export class DefNode extends L_Node {
   constructor(
     public name: string = "",

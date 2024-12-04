@@ -1,6 +1,7 @@
 import {
   ByNode,
   DefNode,
+  ExistNode,
   HaveNode,
   IffNode,
   IfNode,
@@ -552,7 +553,34 @@ function optParseWithNotAre(
     const vars: string[] = [];
     let isT = true;
 
-    if (tokens.length >= 2 && tokens[1] === "(") {
+    if (tokens[0] === ExistKeyword) {
+      skip(tokens, ExistKeyword);
+
+      name = shiftSymbol(tokens);
+
+      skip(tokens, "(");
+
+      while (!isCurToken(tokens, ")")) {
+        vars.push(shiftSymbol(tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+
+      skip(tokens, ")");
+
+      let checkVars: string[][] | undefined = undefined;
+      if (isCurToken(tokens, "[")) {
+        skip(tokens, "[");
+        checkVars = [];
+        while (!isCurToken(tokens, "]")) {
+          const currentLayerVars = varLstParse(env, tokens, [";", "]"], false);
+          checkVars.push(currentLayerVars);
+          if (isCurToken(tokens, ";")) skip(tokens, ";");
+        }
+        skip(tokens, "]");
+      }
+
+      return [new ExistNode(name, vars, isT, checkVars)];
+    } else if (tokens.length >= 2 && tokens[1] === "(") {
       // parse functional operator
       name = shiftSymbol(tokens);
 

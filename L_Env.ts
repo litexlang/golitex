@@ -20,7 +20,7 @@ export class L_Env {
   private defs = new Map<string, DefNode>();
   private knownFacts = new Map<string, KnownFact>(); // key: operator name; value: stored layers of if-then that can be used to check operator.
   private namedKnownToChecks = new Map<string, ToCheckNode>();
-  private exists = new Map<string, KnownExist>();
+  private exists = new Map<string, KnownFact>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -34,23 +34,23 @@ export class L_Env {
     this.defs = new Map<string, DefNode>();
     this.knownFacts = new Map<string, KnownFact>();
     this.namedKnownToChecks = new Map<string, ToCheckNode>();
-    this.exists = new Map<string, KnownExist>();
+    this.exists = new Map<string, KnownFact>();
   }
 
-  newExist(optName: string, exist: KnownExist): boolean {
+  newExist(optName: string, exist: KnownFact): boolean {
     this.exists.set(optName, exist);
     return true;
   }
 
-  isExisted(optName: string): boolean {
-    if (this.exists.get(optName)?.isT === true) {
-      return true;
-    } else if (this.parent !== undefined) {
-      return this.parent.isExisted(optName);
-    } else {
-      return false;
-    }
-  }
+  // isExisted(optName: string): boolean {
+  //   if (this.exists.get(optName)?.isT === true) {
+  //     return true;
+  //   } else if (this.parent !== undefined) {
+  //     return this.parent.isExisted(optName);
+  //   } else {
+  //     return false;
+  //   }
+  // }
 
   newHashVar(fix: string, facts: ToCheckNode[]): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.

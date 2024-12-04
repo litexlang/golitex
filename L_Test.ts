@@ -334,7 +334,7 @@ export const exampleList: ExampleItem[] = [
       "in(x, \\union{a,b}) [a,b;x];",
       "in(x, \\union{a,b});",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -348,6 +348,16 @@ export const exampleList: ExampleItem[] = [
       "in(x, \\union{a,b})[a,b;x];",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "exist",
+    code: [
+      "def set(x); def in(x, A); def equal(x, y);",
+      "let x;",
+      "exist equal(x);",
+    ],
+    debug: true,
     print: true,
   },
 ];
