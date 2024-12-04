@@ -155,6 +155,7 @@ export const exampleList: ExampleItem[] = [
     print: true,
   },
   {
+    // outdated.
     name: "exist",
     code: [
       // 如果要加语法糖的话，在这里把一个var fix住，然后进行后续的证明，是个好语法糖
