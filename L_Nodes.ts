@@ -189,7 +189,8 @@ export class OptNode extends ToCheckNode {
             const regex = new RegExp(`\\s${freeVar}\\s`);
             if (regex.test(v)) {
               const fixed = map.get(freeVar);
-              newVars.push(v.replace(`\\s${freeVar}\\s`, `\\s${fixed}\\s`));
+              const out = v.replace(regex, ` ${fixed} `);
+              newVars.push(out);
             }
           }
         }
