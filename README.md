@@ -25,7 +25,6 @@ Feel free to share your suggestions and ideas to help me improve this open-sourc
    ts-node L_ReadmeExamples.ts
    ```
 
-````
 ---
 
 ## A Tour of LiTeX
@@ -338,4 +337,7 @@ The platform advances artificial intelligence systems through:
    - Verification-guided training
 
 LiTeX integrates verification with collaboration to create a robust platform for mathematics education and research, promoting both rigor and broad participation in mathematical advancement.
-````
+
+```
+
+```
