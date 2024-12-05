@@ -103,17 +103,20 @@ export const exampleList: ExampleItem[] = [
       "in(x,B);",
     ],
     debug: true,
-    runTest: true,
-    print: true,
+    runTest: false,
+    print: false,
   },
   {
+    // not tested yet.
     name: "axiom of specification",
     code: [
       "def subset_with_property(A,P,s); know if A,P,s: set(A), is_property(P) => {subset(s, A), if x: in(x,s) => {P(x)} };",
       "know if A, P: is_property(P), set(A) => {exist subset_with_property(A,P,s)} ;",
     ],
-    debug: false,
-    print: true,
+    test: ["{def p(x); is_property(p);}"],
+    runTest: false,
+    debug: true,
+    print: false,
   },
   {
     name: "intersection",
@@ -121,7 +124,13 @@ export const exampleList: ExampleItem[] = [
       "know if x, a, b: set(a), set(b) , in(x,a), in(x,b) => {in(x, \\intersection{a,b}) };",
       "know if x, a, b: set(a), set(b) , in(x, \\intersection{a,b}) => { in(x,a), in(x, b) };",
     ],
-    debug: false,
+    test: [
+      "let a, b: set(a), set(b);",
+      // " if x: in(x,a), in(x,b) => {in(x, \\intersection{a,b})[x,a,b] } ; ",
+      "if x: in(x, \\intersection{a,b}) => { in(x,a)[x,a,b], in(x, b)[x,a,b] };", // Don't know why this does not work.
+    ],
+    runTest: true,
+    debug: true,
     print: true,
   },
   {

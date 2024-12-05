@@ -217,6 +217,31 @@ export function checkOpt(
     }
   }
 
+  // if (useCheckVarsFromIf) {
+  //   if (toCheck.checkVars !== undefined) {
+  //     // use toCheckVarsFromIf layer by layer
+  //     const curToCheckVars = toCheck.checkVars;
+  //     const newOpt = new OptNode(
+  //       toCheck.name,
+  //       toCheck.vars,
+  //       toCheck.isT,
+  //       curToCheckVars
+  //     );
+  //     const out = checkOpt(env, newOpt, false);
+  //     if (out === L_Out.True) {
+  //       return L_Out.True;
+  //     }
+
+  //     // use toCheckVarsFromIf as if it's single layer
+  //     const anotherCurCheckVars: string[] = [];
+  //     curToCheckVars.map((e) => anotherCurCheckVars.push(...e));
+  //     const anotherOpt = new OptNode(toCheck.name, toCheck.vars, toCheck.isT, [
+  //       anotherCurCheckVars,
+  //     ]);
+  //     if (checkOpt(env, anotherOpt, false) === L_Out.True) return L_Out.True;
+  //   }
+  // }
+
   //* use checkVars from if to check *//
   if (useCheckVarsFromIf) {
     for (let i = 0; i < toCheckVarsFromIf.length; i++) {

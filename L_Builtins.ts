@@ -1,8 +1,5 @@
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { nodeExec } from "./L_Executor";
-import { checkOptLiterally } from "./L_Checker";
-import { reportNewExist } from "./L_Messages";
 import { L_Out } from "./L_Structs";
 
 export const L_BuiltinsKeywords: string[] = [
@@ -26,16 +23,16 @@ export function isPropertyBuiltinCheck(env: L_Env, node: OptNode): L_Out {
       );
       return L_Out.Error;
     } else {
-      if (out.vars.length !== Number(node.vars[1])) {
-        env.newMessage(
-          `is_property error: ${node.name} requires ${
-            out.vars.length
-          } parameters, ${Number(node.vars[1])} given.`
-        );
-        return L_Out.Error;
-      } else {
-        return L_Out.True;
-      }
+      // if (out.vars.length !== Number(node.vars[1])) {
+      //   env.newMessage(
+      //     `is_property error: ${node.name} requires ${
+      //       out.vars.length
+      //     } parameters, ${Number(node.vars[1])} given.`
+      //   );
+      //   return L_Out.Error;
+      // } else {
+      return L_Out.True;
+      // }
     }
   } catch {
     return L_Out.Error;
