@@ -79,7 +79,7 @@ export const exampleList: ExampleItem[] = [
     test: [
       "let a,b: a is set, b is set;",
       "let x: in(x,a); ",
-      "in(x, \\union{a,b}) [a,b;x];",
+      "in(x, \\union{a,b}) [a,b;x];", // x, a, b,
       "in(x, \\union{a,b});",
     ],
     debug: true,
@@ -121,13 +121,14 @@ export const exampleList: ExampleItem[] = [
   {
     name: "intersection",
     code: [
-      "know if x, a, b: set(a), set(b) , in(x,a), in(x,b) => {in(x, \\intersection{a,b}) };",
+      // \frac{a}{b} \intersection(a,b)  $ a - b $
+      "know if x, a, b: a is set, b is set , in(x,a), in(x,b) => {in(x, \\intersection{a,b}) };",
       "know if x, a, b: set(a), set(b) , in(x, \\intersection{a,b}) => { in(x,a), in(x, b) };",
     ],
     test: [
-      "let a, b: set(a), set(b);",
-      " if x: in(x,a), in(x,b) => {in(x, \\intersection{a,b})[x,a,b] } ; ", // don't know why this does not work.
-      "if x: in(x, \\intersection{a,b}) => { in(x,a)[x,a,b], in(x, b)[x,a,b] };", // Don't know why this does not work.
+      "let A, B: set(A), set(B);",
+      " if X: in(X,A), in(X,B) => { in(X, \\intersection{A,B})[X,A,B] } ; ", // don't know why this does not work.
+      "if X: in(X, \\intersection{A,B}) => { in(X,A)[X,A,B], in(X, B)[X,A,B] };", // Don't know why this does not work.
     ],
     runTest: true,
     debug: true,
@@ -156,11 +157,11 @@ export const exampleList: ExampleItem[] = [
   {
     name: "regularity",
     code: [
-      "def either_not_set_or_disjoint_from_given_set(x,A);",
-      "def disjoint(A,B);",
-      "know if x: disjoint(A,B) => {if x: in(x,A) => {not in(x,B)} , if x: in(x,B) => {not in(x,A)}};",
-      "know if x: in(x,A), either_not_set_or_disjoint_from_given_set(x,A) => {if not set(x) => {disjoint(x,A)}, if not disjoint(x,A) => { set(x)} };",
-      "know if A: set(A), not equal(A, EMPTY_SET) => {exist either_not_set_or_disjoint_from_given_set(x,A) } ;",
+      // "def either_not_set_or_disjoint_from_given_set(x,A);",
+      // "def disjoint(A,B);",
+      // "know if x: disjoint(A,B) => {if x: in(x,A) => {not in(x,B)} , if x: in(x,B) => {not in(x,A)}};",
+      // "know if x: in(x,A), either_not_set_or_disjoint_from_given_set(x,A) => {if set(x) => {disjoint(x,A)}, if not disjoint(x,A) => {not  set(x)} };",
+      // "know if A: set(A), not equal(A, EMPTY_SET) => {exist either_not_set_or_disjoint_from_given_set(x,A) } ;",
     ],
     debug: false,
     print: true,
@@ -169,11 +170,10 @@ export const exampleList: ExampleItem[] = [
     name: "natural number",
     code: [
       "def natural(x);",
+      "def =(x,y);",
       " let 0: 0 is natural;",
       " know if n: n is natural => {\\++{n} is natural}; ",
-      "def successor(x,y); know successor(n, \\++{n}) ;",
-      "if x: x is natural => {not successor(x, 0)}; ",
-      "def =(x,y);",
+      "know if x: => {not =(0, \\++{x}) }",
       "know if x,y: =(x,y) => {=(\\++{x}, \\++{y})};",
       "know if x,y: =(\\++{x}, \\++{y}) => {=(x,y)};",
       "know if P: is_property(P), P(0), if n: n is natural, P(n) => {P(\\++{n})} => {if n is natural => {P(n)}};",
