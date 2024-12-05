@@ -27,6 +27,8 @@ export function runString(
         if (printCode) console.log("***  results  ***\n");
         env.printClearMessage();
         console.log();
+      } else {
+        env.clearMessages();
       }
     }
 
@@ -47,7 +49,7 @@ export function runStrings(
     runString(env, expr, printResult);
   }
 
-  console.log("-----\nDONE!\n");
+  if (printResult) console.log("-----\nDONE!\n");
   // env.printExists();
 }
 

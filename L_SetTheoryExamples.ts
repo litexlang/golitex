@@ -45,18 +45,30 @@ export const exampleList: ExampleItem[] = [
       "know if x, a: in(x, \\singleton{a}) => {equal(x, a)};",
       "know if x, a: equal(x,a) => {in(x, \\singleton{a})};",
     ],
-    debug: false,
-    print: true,
+    test: [
+      "let a, b;",
+      "know \\singleton{a} is set;",
+      "let x;",
+      "know in (x, \\singleton{a});",
+      "equal(x,a);",
+      "in(x, \\singleton{a})[x,a]; ",
+      "if _x, _a: equal(_x,_a) => {in(_x, \\singleton{_a})[_x,_a] };",
+    ],
+    debug: true,
+    print: false,
+    runTest: false,
   },
   {
     name: "pair",
     code: [
       "know if x, a, b: in(x, \\pair{a}{b}) => { if not equal(x, b) => {equal(x, a)} , if not equal(x, a) => {equal(x, b)} } ;",
-      "know if x, a : in(x,a) => {in(x, \\pair{a}{b})}",
-      "know if x, b : in(x,b) => {in(x, \\pair{a}{b})}",
+      "know if x, a, b : in(x,a) => {in(x, \\pair{a,b})};",
+      "know if x, a, b : in(x,b) => {in(x, \\pair{a,b})};",
     ],
-    debug: false,
-    print: true,
+    test: ["let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; "],
+    debug: true,
+    runTest: false,
+    print: false,
   },
   {
     name: "pair-wise union",
@@ -64,8 +76,15 @@ export const exampleList: ExampleItem[] = [
       "know if x, y: set(x), set(y) => {if z: in(z, x) => { in(z , \\union{x, y})}, if z : in(z, y) => {in(z, \\union{x,y})} };",
       "know if x, y, z: in(z , \\union{x, y}) => {if not in(z, x) => {in(z, y)}, if not in(z, y) => {in(z, x)}};",
     ],
-    debug: false,
-    print: true,
+    test: [
+      "let a,b: a is set, b is set;",
+      "let x: in(x,a); ",
+      "in(x, \\union{a,b}) [a,b;x];",
+      "in(x, \\union{a,b});",
+    ],
+    debug: true,
+    runTest: false,
+    print: false,
   },
   {
     name: "subset",
@@ -75,7 +94,16 @@ export const exampleList: ExampleItem[] = [
       "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
       "know if x, A, B: in(x,A), not in(x,B) => {not subset(A,B)};",
     ],
-    debug: false,
+    test: [
+      "let A,B,C,D,E,F;",
+      "know subset(A,B);",
+      "let x: in(x,A);",
+      "in(x,B);", // Unknown
+      "in(x,B)[A,B;x];", // True
+      "in(x,B);",
+    ],
+    debug: true,
+    runTest: true,
     print: true,
   },
   {
@@ -156,7 +184,9 @@ function runExamples(toJSON: boolean) {
   const env = new L_Env();
   for (const example of exampleList) {
     if (example.debug) {
-      console.log(example.name);
+      if (example.print) {
+        console.log(example.name);
+      }
       runStrings(env, example.code, example.print);
       if (example.test !== undefined && example.runTest) {
         runStrings(env, example.test, example.print);

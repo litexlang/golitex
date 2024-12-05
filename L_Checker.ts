@@ -63,7 +63,10 @@ export function checkIfThen(
 
     for (const e of toCheck.vars) {
       const ok = newEnv.newVar(e);
-      if (!ok) return L_Out.Error;
+      if (!ok) {
+        newEnv.getMessages().forEach((e) => env.newMessage(e));
+        return L_Out.Error;
+      }
     }
 
     for (const f of toCheck.req) L_Memory.store(newEnv, f, [], true);
@@ -138,10 +141,40 @@ export function checkOpt(
           }
         }
       } else {
-        //! IT WORKS.
-        for (const [i, v] of toCheck.vars.entries()) {
-          map.set(known.vars[i], v);
+        const freeVarsInKnown: string[] = [];
+        for (const r of known.req) {
+          for (const v of r.vars) {
+            freeVarsInKnown.includes(v);
+          }
         }
+
+        const fixedVarsInKnown: string[] = [];
+        for (const v of known.vars) {
+          if (!freeVarsInKnown.includes(v)) {
+            // map.set(v, v);
+            fixedVarsInKnown.push(v);
+          }
+        }
+
+        let fixVarInKnownAndGivenVarLiterallyTheSame = true;
+        for (const [i, v] of toCheck.vars.entries()) {
+          if (fixedVarsInKnown.includes(known.vars[i])) {
+            if (known.vars[i] !== v) {
+              fixVarInKnownAndGivenVarLiterallyTheSame = false;
+              break;
+            }
+          } else {
+            map.set(known.vars[i], v);
+          }
+        }
+
+        if (!fixVarInKnownAndGivenVarLiterallyTheSame) {
+          continue;
+        }
+
+        // for (const [i, v] of toCheck.vars.entries()) {
+        //   map.set(known.vars[i], v);
+        // }
       }
 
       const fixedKnown = known.fixStoredFact(env, map);
