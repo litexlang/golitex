@@ -196,8 +196,19 @@ export function checkOpt(
       }
 
       if (out === L_Out.True) {
-        // check all vars
-
+        // if (
+        //   known.isT === toCheck.isT &&
+        //   known.vars.every((e, i) => {
+        //     if (e.startsWith("\\") && toCheck.vars[i].startsWith("\\")) {
+        //       return checkCompositeLiterally(env, toCheck.vars[i], e);
+        //     } else if (!e.startsWith("\\") && !e.startsWith("\\")) {
+        //       return e === toCheck.vars[i];
+        //     }
+        //   })
+        // ) {
+        //   env.newMessage(`[checked by] ${toCheck.name}(${known})`);
+        //   return L_Out.True;
+        // } else continue;
         env.newMessage(`[checked by] ${known}`);
         return L_Out.True;
       }
@@ -315,9 +326,9 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
             checkCompositeLiterally(env, v, fact.vars[i])) //* check symbol that start with "\\"
       )
     ) {
-      continue;
+      return L_Out.True;
     } else {
-      return L_Out.Unknown;
+      continue;
     }
   }
 

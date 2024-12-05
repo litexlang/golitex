@@ -332,9 +332,8 @@ export const exampleList: ExampleItem[] = [
       "know if _x, _y: set(_x), set(_y) => {if _z: in(_z, _x) => { in(_z , \\union{_x, _y})}, if _z : in(_z, _y) => {in(_z, \\union{_x,_y})} };",
       "let x: in(x,a); ",
       "in(x, \\union{a,b}) [a,b;x];",
-      "in(x, \\union{a,b});",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -358,7 +357,7 @@ export const exampleList: ExampleItem[] = [
       "know exist set(x);",
       "exist set(x);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];

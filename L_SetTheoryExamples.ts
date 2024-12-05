@@ -126,7 +126,7 @@ export const exampleList: ExampleItem[] = [
     ],
     test: [
       "let a, b: set(a), set(b);",
-      " if x: in(x,a), in(x,b) => {in(x, \\intersection{a,b})[x,a,b] } ; ",
+      " if x: in(x,a), in(x,b) => {in(x, \\intersection{a,b})[x,a,b] } ; ", // don't know why this does not work.
       "if x: in(x, \\intersection{a,b}) => { in(x,a)[x,a,b], in(x, b)[x,a,b] };", // Don't know why this does not work.
     ],
     runTest: true,
@@ -178,12 +178,6 @@ export const exampleList: ExampleItem[] = [
       "know if x,y: =(\\++{x}, \\++{y}) => {=(x,y)};",
       "know if P: is_property(P), P(0), if n: n is natural, P(n) => {P(\\++{n})} => {if n is natural => {P(n)}};",
     ],
-    debug: false,
-    print: true,
-  },
-  {
-    name: "know not exist",
-    code: [],
     debug: false,
     print: true,
   },
