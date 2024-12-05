@@ -7,8 +7,10 @@ export const exampleList: ExampleItem[] = [
   {
     name: "define basic concepts: object, set",
     code: ["def object(x); def set(x);", "know if x: set(x) => {object(x)};"],
+    test: ["{let a: set(a); object(a);}"],
     debug: true,
-    print: true,
+    print: false,
+    runTest: false,
   },
   {
     name: "equality of sets",
@@ -17,16 +19,25 @@ export const exampleList: ExampleItem[] = [
       "know if a,b: set(a), set(b), equal(a,b) => {if x: in(x,a) => {in(x,b)}, if x: in(x,b) => {in(x,a)}};",
       "know if a,b: set(a), set(b), if x: in(x,a) => {in(x,b)}, if x: in(x,b) => {in(x,a)} => {equal(a,b)};",
     ],
-    debug: false,
-    print: true,
+    test: [
+      "{let a, b: set(a), set(b), equal(a,b); if x: in(x,a) => {in(x,b)[a,b;x]} , if x: in(x,b) => {in(x,a)[a,b;x]}; let x: in(x,a); in(x,b); }",
+    ],
+    debug: true,
+    print: false,
+    runTest: false,
   },
   {
     name: "empty set",
     code: [
       "let EMPTY_SET: set(EMPTY_SET);know if x: => {not in(x,EMPTY_SET)};",
     ],
-    debug: false,
-    print: true,
+    test: [
+      "// here we must use _x to avoid conflict with x;",
+      "{ let x; not in(x, EMPTY_SET);  if _x: => {not in(_x,EMPTY_SET)}; }",
+    ],
+    debug: true,
+    print: false,
+    runTest: false,
   },
   {
     name: "singleton",
@@ -140,12 +151,16 @@ export const exampleList: ExampleItem[] = [
     print: true,
   },
 ];
+
 function runExamples(toJSON: boolean) {
   const env = new L_Env();
   for (const example of exampleList) {
     if (example.debug) {
       console.log(example.name);
       runStrings(env, example.code, example.print);
+      if (example.test !== undefined && example.runTest) {
+        runStrings(env, example.test, example.print);
+      }
     }
   }
   if (toJSON) envToJSON(env, "env.json");

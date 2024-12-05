@@ -23,6 +23,8 @@ export type ExampleItem = {
   code: string[];
   debug: boolean;
   print: boolean;
+  test?: string[] | undefined;
+  runTest?: boolean;
 };
 
 // export class KnownExist {

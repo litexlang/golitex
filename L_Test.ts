@@ -374,6 +374,9 @@ function runExamples(toJSON: boolean) {
     if (example.debug) {
       console.log(example.name);
       runStrings(env, example.code, example.print);
+      if (example.test !== undefined) {
+        runStrings(env, example.test, example.print);
+      }
     }
   }
   if (toJSON) envToJSON(env, "env.json");

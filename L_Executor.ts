@@ -236,7 +236,7 @@ function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): L_Out {
       newEnv.clearMessages();
       if (L_Out.Error === out) return L_Out.Error;
     }
-    env.newMessage(`\n[local environment]`);
+    env.newMessage(`\n[end of local environment]`);
 
     return L_Out.True;
   } catch {
