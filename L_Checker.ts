@@ -196,6 +196,8 @@ export function checkOpt(
       }
 
       if (out === L_Out.True) {
+        // check all vars
+
         env.newMessage(`[checked by] ${known}`);
         return L_Out.True;
       }
@@ -313,11 +315,13 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
             checkCompositeLiterally(env, v, fact.vars[i])) //* check symbol that start with "\\"
       )
     ) {
-      return L_Out.True;
+      continue;
+    } else {
+      return L_Out.Unknown;
     }
   }
 
-  return L_Out.Unknown;
+  return L_Out.True;
 }
 
 export function checkOptInHave(env: L_Env, opt: OptNode): L_Out {
@@ -404,6 +408,10 @@ export function checkCompositeLiterally(
       env,
       givenStr.split(" ")
     ) as CompositeSymbol;
+
+    if (storedComposite.name !== givenComposite.name) {
+      return false;
+    }
 
     const map = new Map<string, string>();
     for (const [i, v] of storedComposite.vars.entries()) {

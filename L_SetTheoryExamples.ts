@@ -126,7 +126,7 @@ export const exampleList: ExampleItem[] = [
     ],
     test: [
       "let a, b: set(a), set(b);",
-      // " if x: in(x,a), in(x,b) => {in(x, \\intersection{a,b})[x,a,b] } ; ",
+      " if x: in(x,a), in(x,b) => {in(x, \\intersection{a,b})[x,a,b] } ; ",
       "if x: in(x, \\intersection{a,b}) => { in(x,a)[x,a,b], in(x, b)[x,a,b] };", // Don't know why this does not work.
     ],
     runTest: true,
