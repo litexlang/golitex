@@ -117,7 +117,7 @@ function compositeParse(env: L_Env, tokens: string[]): L_Composite {
     skip(tokens, "{");
     const values: L_Symbol[] = [];
     while (!isCurToken(tokens, "}")) {
-      values.push(skip(tokens));
+      values.push(symbolParse(env, tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
     skip(tokens, "}");

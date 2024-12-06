@@ -67,6 +67,12 @@ export function literallyCompareVars(
     if (var1 instanceof L_Singleton && var2 instanceof L_Singleton) {
       return var1.value === var2.value;
     } else if (var1 instanceof L_Composite && var2 instanceof L_Composite) {
+      // name of composite symbol must be equal
+      if (var1.name !== var2.name) {
+        return false;
+      }
+
+      // vars of composite symbol must be equal
       if (var1.values.length !== var2.values.length) {
         return false;
       } else {
