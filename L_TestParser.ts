@@ -9,7 +9,7 @@ export const exampleList: ExampleItem[] = [
   {
     name: "define subset",
     code: ["def set(x);", "let x;", "know set(x);", "set(x);"],
-    debug: false,
+    debug: true,
     print: true,
   },
 ];

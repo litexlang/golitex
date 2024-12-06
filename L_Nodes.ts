@@ -1,6 +1,5 @@
 import { L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
-import { compositeSymbolParse } from "./L_Parser";
 import { L_OptSymbol, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
@@ -175,38 +174,41 @@ export class OptNode extends ToCheckNode {
   }
 
   override useMapToCopy(env: L_Env, map: Map<string, string>): OptNode {
-    const newVars: string[] = [];
-    for (const v of this.vars) {
-      const fixed = map.get(v);
-      if (fixed === undefined) {
-        //! I DON'T KNOW WHETHER I SHOULD THROW ERROR OR PUSH PREVIOUS SYMBOL
-        // throw Error();
-        // newVars.push(v);
+    //*
+    // const newVars: string[] = [];
+    // for (const v of this.vars) {
+    //   const fixed = map.get(v);
+    //   if (fixed === undefined) {
+    //     //! I DON'T KNOW WHETHER I SHOULD THROW ERROR OR PUSH PREVIOUS SYMBOL
+    //     // throw Error();
+    //     // newVars.push(v);
+    //     if (!v.startsWith("\\")) {
+    //       newVars.push(v);
+    //     } else {
+    //       //! FOR THE TIME BEING, I USE THIS NOT THAT GREAT CODE.
+    //       for (const freeVar of map.keys()) {
+    //         const regex = new RegExp(`\\s${freeVar}\\s`);
+    //         if (regex.test(v)) {
+    //           const fixed = map.get(freeVar);
+    //           const out = v.replace(regex, ` ${fixed} `);
+    //           newVars.push(out);
+    //         }
+    //       }
+    //     }
+    //   } else {
+    //     newVars.push(fixed);
+    //   }
+    // }
+    // return new OptNode(
+    //   this.optSymbol,
+    //   newVars,
+    //   this.isT,
+    //   // this.defName,
+    //   this.checkVars
+    // );
+    //*
 
-        if (!v.startsWith("\\")) {
-          newVars.push(v);
-        } else {
-          //! FOR THE TIME BEING, I USE THIS NOT THAT GREAT CODE.
-          for (const freeVar of map.keys()) {
-            const regex = new RegExp(`\\s${freeVar}\\s`);
-            if (regex.test(v)) {
-              const fixed = map.get(freeVar);
-              const out = v.replace(regex, ` ${fixed} `);
-              newVars.push(out);
-            }
-          }
-        }
-      } else {
-        newVars.push(fixed);
-      }
-    }
-    return new OptNode(
-      this.optSymbol,
-      newVars,
-      this.isT,
-      // this.defName,
-      this.checkVars
-    );
+    throw Error();
   }
 
   override toString() {
@@ -216,35 +218,43 @@ export class OptNode extends ToCheckNode {
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
-    const isBuiltin = L_BuiltinsKeywords.includes(this.optSymbol);
-    if (isBuiltin) {
-      // ! Not A Good Implementation.
-      return true;
-    }
+    //*
+    // const isBuiltin = L_BuiltinsKeywords.includes(this.optSymbol);
+    // if (isBuiltin) {
+    //   // ! Not A Good Implementation.
+    //   return true;
+    // }
+    // for (const v of this.vars) {
+    //   const declared =
+    //     env.varDeclared(v) || freeVars.includes(v) || v.startsWith("\\");
+    //   if (!declared) {
+    //     env.newMessage(
+    //       `variable ${v} not declared in called operator ${this.optSymbol}`
+    //     );
+    //     return false;
+    //   }
+    // }
+    // return true;
+    //*
 
-    for (const v of this.vars) {
-      const declared =
-        env.varDeclared(v) || freeVars.includes(v) || v.startsWith("\\");
-      if (!declared) {
-        env.newMessage(
-          `variable ${v} not declared in called operator ${this.optSymbol}`
-        );
-        return false;
-      }
-    }
-    return true;
+    throw Error();
   }
 
   override factsDeclared(env: L_Env): boolean {
-    if (
-      env.optDeclared(this.optSymbol) ||
-      L_BuiltinsKeywords.includes(this.optSymbol)
-    ) {
-      return true;
-    } else {
-      env.newMessage(`operator ${this.optSymbol} not declared.`);
-      return false;
-    }
+    //*
+    //   if (
+    //     env.optDeclared(this.optSymbol) ||
+    //     L_BuiltinsKeywords.includes(this.optSymbol)
+    //   ) {
+    //     return true;
+    //   } else {
+    //     env.newMessage(`operator ${this.optSymbol} not declared.`);
+    //     return false;
+    //   }
+    // }
+    //*
+
+    throw Error();
   }
 }
 

@@ -7,7 +7,7 @@ import {
   ToCheckNode,
 } from "./L_Nodes";
 import { examineStoredFact } from "./L_Memory";
-import { KnownExist, L_Out, StoredExist } from "./L_Structs";
+import { KnownExist, L_OptSymbol, L_Out, StoredExist } from "./L_Structs";
 import { isToCheckBuiltin } from "./L_Builtins";
 import { KnownFact, StoredFact } from "./L_Structs";
 
@@ -103,49 +103,54 @@ export class L_Env {
     opt: OptNode,
     onlyRoot: boolean = false
   ): undefined | StoredFact[] {
-    const knownNodeRoot: KnownFact | undefined = this.knownFacts.get(
-      opt.optSymbol
-    );
-
-    if (onlyRoot) {
-      return knownNodeRoot?.getFactsToCheck([]);
-    }
-
-    if (knownNodeRoot !== undefined) {
-      if (opt.checkVars === undefined) return knownNodeRoot.getFactsToCheck([]);
-      else {
-        const varsToCheckNumbers = opt.checkVars?.map((e) => e.length);
-        if (varsToCheckNumbers === undefined) return undefined;
-        return knownNodeRoot.getFactsToCheck(varsToCheckNumbers);
-      }
-    } else {
-      return undefined;
-    }
+    //*
+    // const knownNodeRoot: KnownFact | undefined = this.knownFacts.get(
+    //   opt.optSymbol
+    // );
+    // if (onlyRoot) {
+    //   return knownNodeRoot?.getFactsToCheck([]);
+    // }
+    // if (knownNodeRoot !== undefined) {
+    //   if (opt.checkVars === undefined) return knownNodeRoot.getFactsToCheck([]);
+    //   else {
+    //     const varsToCheckNumbers = opt.checkVars?.map((e) => e.length);
+    //     if (varsToCheckNumbers === undefined) return undefined;
+    //     return knownNodeRoot.getFactsToCheck(varsToCheckNumbers);
+    //   }
+    // } else {
+    //   return undefined;
+    // }
+    //*
+    return undefined;
   }
 
   newKnownFact(
-    optName: string,
+    optName: L_OptSymbol,
     checkVars: string[][],
     fact: StoredFact
   ): boolean {
     const ok = examineStoredFact(this, new OptNode(optName, fact.vars), fact);
     if (!ok) return false;
 
-    const checkVarsNumLst = checkVars.map((e) => e.length);
-    const knownFact = this.knownFacts.get(optName);
-    if (knownFact === undefined) {
-      let newKnownFact: KnownFact;
-      if (fact instanceof StoredExist) {
-        newKnownFact = new KnownExist();
-      } else {
-        newKnownFact = new KnownFact();
-      }
-      this.knownFacts.set(optName, newKnownFact);
+    //*
+    // const checkVarsNumLst = checkVars.map((e) => e.length);
+    // const knownFact = this.knownFacts.get(optName);
+    // if (knownFact === undefined) {
+    //   let newKnownFact: KnownFact;
+    //   if (fact instanceof StoredExist) {
+    //     newKnownFact = new KnownExist();
+    //   } else {
+    //     newKnownFact = new KnownFact();
+    //   }
+    //   this.knownFacts.set(optName, newKnownFact);
 
-      return newKnownFact.addChild(checkVarsNumLst, fact);
-    } else {
-      return knownFact.addChild(checkVarsNumLst, fact);
-    }
+    //   return newKnownFact.addChild(checkVarsNumLst, fact);
+    // } else {
+    //   return knownFact.addChild(checkVarsNumLst, fact);
+    // }
+    //*
+
+    return false;
   }
 
   getMacros(previous: MacroNode[]): MacroNode[] {
@@ -162,16 +167,18 @@ export class L_Env {
   }
 
   factsInToCheckAllDeclared(node: ToCheckNode): boolean {
-    if (node instanceof OptNode) {
-      return (
-        this.getDef(node.optSymbol) !== undefined || isToCheckBuiltin(node)
-      );
-    } else if (node instanceof LogicNode) {
-      return (
-        node.req.every((e) => this.factsInToCheckAllDeclared(e)) &&
-        node.onlyIfs.every((e) => this.factsInToCheckAllDeclared(e))
-      );
-    }
+    //*
+    // if (node instanceof OptNode) {
+    //   return (
+    //     this.getDef(node.optSymbol) !== undefined || isToCheckBuiltin(node)
+    //   );
+    // } else if (node instanceof LogicNode) {
+    //   return (
+    //     node.req.every((e) => this.factsInToCheckAllDeclared(e)) &&
+    //     node.onlyIfs.every((e) => this.factsInToCheckAllDeclared(e))
+    //   );
+    // }
+    //*
 
     return false;
   }
@@ -310,31 +317,35 @@ export class L_Env {
 
   // used by prove to check whether vars in factToCheck is redefined in block
   someVarsDeclaredHere(fact: ToCheckNode, freeVars: string[]): boolean {
-    if (fact instanceof OptNode) {
-      const out = fact.vars.some(
-        (e) => !freeVars.includes(e) && this.declaredVars.has(e)
-      );
-      return out;
-    } else if (fact instanceof LogicNode) {
-      return (
-        fact.onlyIfs.some((e) => this.someVarsDeclaredHere(e, fact.vars)) ||
-        fact.req.some((e) => this.someVarsDeclaredHere(e, fact.vars))
-      );
-    }
+    //*
+    // if (fact instanceof OptNode) {
+    //   const out = fact.vars.some(
+    //     (e) => !freeVars.includes(e) && this.declaredVars.has(e)
+    //   );
+    //   return out;
+    // } else if (fact instanceof LogicNode) {
+    //   return (
+    //     fact.onlyIfs.some((e) => this.someVarsDeclaredHere(e, fact.vars)) ||
+    //     fact.req.some((e) => this.someVarsDeclaredHere(e, fact.vars))
+    //   );
+    // }
+    //*
 
     throw Error();
   }
 
   // used by prove to check whether factToCheck is redefined in block
   someOptsDeclaredHere(fact: ToCheckNode): boolean {
-    if (fact instanceof OptNode) {
-      return this.defs.get(fact.optSymbol) !== undefined;
-    } else if (fact instanceof LogicNode) {
-      return (
-        fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) ||
-        fact.req.some((e) => this.someOptsDeclaredHere(e))
-      );
-    }
+    //*
+    // if (fact instanceof OptNode) {
+    //   return this.defs.get(fact.optSymbol) !== undefined;
+    // } else if (fact instanceof LogicNode) {
+    //   return (
+    //     fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) ||
+    //     fact.req.some((e) => this.someOptsDeclaredHere(e))
+    //   );
+    // }
+    //*
 
     throw Error();
   }
