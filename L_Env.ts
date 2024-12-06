@@ -1,6 +1,7 @@
 import {
   DefNode,
   L_Node,
+  LetCompositeNode,
   LogicNode,
   MacroNode,
   OptNode,
@@ -23,9 +24,33 @@ export class L_Env {
   // private exists = new Map<string, KnownFact>();
 
   private facts = new Map<string, L_KnownFact[]>();
+  private declaredComposites = new Map<string, LetCompositeNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
+  }
+
+  newCompositeVar(key: string, fact: LetCompositeNode): boolean {
+    if (this.declaredComposites.get(key)) {
+      this.newMessage(`Failed: ${key} already declared.`);
+      return false;
+    } else {
+      this.declaredComposites.set(key, fact);
+      return true;
+    }
+  }
+
+  getCompositeVar(key: string): undefined | LetCompositeNode {
+    const out = this.declaredComposites.get(key);
+    if (out !== undefined) {
+      return out;
+    } else {
+      if (this.parent !== undefined) {
+        return this.parent.getCompositeVar(key);
+      } else {
+        return undefined;
+      }
+    }
   }
 
   newFact(key: string, fact: L_KnownFact): boolean {

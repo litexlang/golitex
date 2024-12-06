@@ -1,7 +1,7 @@
 import { on } from "events";
 import { L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
-import { L_OptSymbol, L_Symbol } from "./L_Structs";
+import { L_Composite, L_OptSymbol, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
 
@@ -417,5 +417,11 @@ export class MacroNode extends L_Node {
       console.error("Invalid Regular Expression:", error);
       return false;
     }
+  }
+}
+
+export class LetCompositeNode extends L_Node {
+  constructor(public composite: L_Composite, public facts: ToCheckNode[]) {
+    super();
   }
 }

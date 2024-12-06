@@ -16,7 +16,7 @@ export const specialChars = [
   "\\",
 ];
 export const SlashKeyword = "\\";
-
+export const LetCompositeKeyword = "let_composite";
 export const KnowTypeKeywords = ["know", "assume"];
 export const ThenKeywords = ["=>"];
 export const OnlyIfThenKeywords = ["<="];

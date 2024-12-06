@@ -5,6 +5,7 @@ import {
   IfNode,
   KnowNode,
   L_Node,
+  LetCompositeNode,
   LetHashNode,
   LetNode,
   LocalEnvNode,
@@ -24,6 +25,7 @@ import { runFile } from "./L_Runner";
 import { LogicNode } from "./L_Nodes";
 import { store } from "./L_Memory";
 import {
+  L_ReportErr,
   reportExecL_Out,
   reportNewVars,
   reportNotAllFactsInGivenFactAreDeclared,
@@ -65,8 +67,8 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
         return defExec(env, node as DefNode);
       case "KnowNode":
         return knowExec(env, node as KnowNode);
-      case "LetHashNode":
-        return letHashExec(env, node as LetHashNode);
+      case "LetCompositeNode":
+        return letCompositeExec(env, node as LetCompositeNode);
       case "LetNode":
         return letExec(env, node as LetNode);
       case "ProveNode":
@@ -564,16 +566,28 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
   //*
 }
 
-function letHashExec(env: L_Env, node: LetHashNode): L_Out {
-  try {
-    for (const e of node.vars) {
-      const ok = env.newHashVar(e, node.facts);
-      if (!ok) return L_Out.Error;
-    }
+// function letHashExec(env: L_Env, node: LetHashNode): L_Out {
+//   try {
+//     for (const e of node.vars) {
+//       const ok = env.newHashVar(e, node.facts);
+//       if (!ok) return L_Out.Error;
+//     }
 
-    env.newMessage(`[let#] ${node}`);
-    return L_Out.True;
+//     env.newMessage(`[let#] ${node}`);
+//     return L_Out.True;
+//   } catch {
+//     return L_Out.Error;
+//   }
+// }
+
+function letCompositeExec(env: L_Env, node: LetCompositeNode): L_Out {
+  try {
+    if (env.newCompositeVar(node.composite.name, node)) {
+      return L_Out.True;
+    } else {
+      throw Error();
+    }
   } catch {
-    return L_Out.Error;
+    return L_ReportErr(env, letCompositeExec, node);
   }
 }

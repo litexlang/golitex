@@ -7,6 +7,7 @@ import {
   IfNode,
   KnowNode,
   L_Node,
+  LetCompositeNode,
   LetHashNode,
   LetNode,
   LocalEnvNode,
@@ -57,7 +58,7 @@ import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 function parseArr<T>(
   env: L_Env,
   tokens: string[],
-  parseFunc: (env: L_Env, tokens: string[]) => T,
+  parseFunc: Function,
   begin: string[] | string | undefined,
   end: string[] | string,
   skipEnd: boolean = true
@@ -1013,3 +1014,31 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
 //     throw error;
 //   }
 // }
+
+// --------------------------------------------------------
+export function LetCompositeParse(
+  env: L_Env,
+  tokens: string[]
+): LetCompositeNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Common.LetCompositeKeyword);
+    const composite = compositeParse(env, tokens);
+    skip(tokens, ":");
+    const facts = parseArr<ToCheckNode>(
+      env,
+      tokens,
+      factsParse,
+      undefined,
+      L_Ends,
+      true
+    );
+
+    return new LetCompositeNode(composite, facts);
+  } catch (error) {
+    handleParseError(env, "define", index, start);
+    throw error;
+  }
+}
