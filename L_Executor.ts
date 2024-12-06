@@ -108,8 +108,7 @@ function letExec(env: L_Env, node: LetNode): L_Out {
   try {
     // examine whether some vars are already declared. if not, declare them.
     for (const e of node.vars) {
-      const ok = env.newVar(e);
-      // if (isHash) ok = env.newHashVar(e);
+      const ok = env.newSingletonVar(e);
       if (!ok) return L_Out.Error;
     }
 
@@ -121,33 +120,26 @@ function letExec(env: L_Env, node: LetNode): L_Out {
       }
     }
 
+    // TODO bind macro
     // bind properties given by macro
-    //! NOW WE HAVE let#, I doubt this piece of code is broken
-    for (const e of node.vars) {
-      for (const macro of env.getMacros([])) {
-        if (macro.testRegex(e)) {
-          const map = new Map<string, string>();
-          map.set(macro.varName, e);
-          const facts = macro.facts.map((e) => e.useMapToCopy(env, map));
-          facts.forEach((e) => L_Memory.store(env, e, [], true));
-        }
-      }
-    }
+    // for (const e of node.vars) {
+    //   for (const macro of env.getMacros([])) {
+    //     if (macro.testRegex(e)) {
+    //       const map = new Map<string, string>();
+    //       map.set(macro.varName, e);
+    //       const facts = macro.facts.map((e) => e.useMapToCopy(env, map));
+    //       facts.forEach((e) => L_Memory.store(env, e, [], true));
+    //     }
+    //   }
+    // }
 
     // store new facts
     for (const onlyIf of node.facts) {
-      const ok = L_Memory.store(env, onlyIf, [], false);
-      if (!ok) return L_Out.Error;
-    }
-
-    // store named knowns
-    for (const [i, name] of node.names.entries()) {
-      const ok = env.newNamedKnownToCheck(name, node.facts[i]);
-      if (!ok) throw Error();
-    }
-
-    if (DEBUG_DICT["let"]) {
-      reportNewVars(env, node.vars);
+      const ok = L_Memory.newFact(env, onlyIf);
+      if (!ok) {
+        reportStoreErr(env, knowExec.name, onlyIf);
+        throw new Error();
+      }
     }
 
     return L_Out.True;
@@ -175,11 +167,6 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
         reportStoreErr(env, knowExec.name, onlyIf);
         throw new Error();
       }
-
-      //*
-      // const ok = L_Memory.store(env, onlyIf, [], false);
-      // if (!ok) throw new Error();
-      //*
     }
 
     // for (const [i, v] of node.names.entries()) {
@@ -458,7 +445,7 @@ function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): L_Out {
   try {
     const newEnv = new L_Env(env);
     for (const v of toProve.vars) {
-      const ok = newEnv.newVar(v);
+      const ok = newEnv.newSingletonVar(v);
       if (!ok) throw Error();
     }
 

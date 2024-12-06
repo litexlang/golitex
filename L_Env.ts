@@ -244,7 +244,7 @@ export class L_Env {
     return curEnv?.defs.get(s) ? n : undefined;
   }
 
-  newVar(fix: string): boolean {
+  newSingletonVar(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.varDeclared(fix)) {
       this.newMessage(`${fix} already declared.`);

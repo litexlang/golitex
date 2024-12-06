@@ -161,7 +161,7 @@ export function checkIfThen(
     const newEnv = new L_Env(oldEnv);
 
     for (const e of toCheck.vars) {
-      const ok = newEnv.newVar(e);
+      const ok = newEnv.newSingletonVar(e);
       if (!ok) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
         return L_Out.Error;
