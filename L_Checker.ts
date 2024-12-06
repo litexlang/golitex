@@ -91,30 +91,6 @@ export function literallyCompareVars(
   }
 }
 
-// 两个符号字面量结构一样，比如singleton和composite就不一样，然后composite和composite之间，需要name一样才行。任何两个singleton的类型都一样。本函数用于对于 know if x, \frac{1,2} 里面的req里，自由变量和 toCheck 的变量的形式 需要对上
-export function literalStructureEqual(
-  env: L_Env,
-  symbol1: L_Symbol,
-  symbol2: L_Symbol
-): boolean {
-  if (symbol1 instanceof L_Singleton && symbol2 instanceof L_Singleton) {
-    return true;
-  } else if (symbol1 instanceof L_Composite && symbol2 instanceof L_Composite) {
-    if (symbol1.name === symbol2.name) {
-      for (let i = 0; i < symbol1.values.length; i++) {
-        if (!literalStructureEqual(env, symbol1.values[i], symbol2.values[i])) {
-          return false;
-        }
-      }
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    return false;
-  }
-}
-
 //-----------------------------------------------------------
 
 export function check(
