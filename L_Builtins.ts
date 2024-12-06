@@ -9,7 +9,9 @@ export const L_BuiltinsKeywords: string[] = [
 ];
 
 export function isToCheckBuiltin(node: ToCheckNode): boolean {
-  return node instanceof OptNode && L_BuiltinsKeywords.includes(node.name);
+  return (
+    node instanceof OptNode && L_BuiltinsKeywords.includes(node.optSymbol.name)
+  );
 }
 
 // Separate functions from the map

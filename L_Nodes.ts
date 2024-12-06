@@ -149,7 +149,7 @@ export class IfNode extends LogicNode {}
 
 export class OptNode extends ToCheckNode {
   constructor(
-    public name: L_OptSymbol,
+    public optSymbol: L_OptSymbol,
     public vars: L_Symbol[],
     isT: boolean = true,
     public checkVars: L_Symbol[][] | undefined = undefined
@@ -159,13 +159,14 @@ export class OptNode extends ToCheckNode {
 
   override containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
     return (
-      opt.name === this.name && opt.vars.every((e, i) => e === this.vars[i])
+      opt.optSymbol === this.optSymbol &&
+      opt.vars.every((e, i) => e === this.vars[i])
     );
   }
 
   override copyWithoutIsT(newIsT: boolean): OptNode {
     return new OptNode(
-      this.name,
+      this.optSymbol,
       this.vars,
       newIsT,
       // this.defName,
@@ -200,7 +201,7 @@ export class OptNode extends ToCheckNode {
       }
     }
     return new OptNode(
-      this.name,
+      this.optSymbol,
       newVars,
       this.isT,
       // this.defName,
@@ -209,13 +210,13 @@ export class OptNode extends ToCheckNode {
   }
 
   override toString() {
-    const mainPart = this.name + `(${this.vars.join(", ")})`;
+    const mainPart = this.optSymbol + `(${this.vars.join(", ")})`;
     const notPart = !this.isT ? "[not] " : "";
     return notPart + mainPart;
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
-    const isBuiltin = L_BuiltinsKeywords.includes(this.name);
+    const isBuiltin = L_BuiltinsKeywords.includes(this.optSymbol);
     if (isBuiltin) {
       // ! Not A Good Implementation.
       return true;
@@ -226,7 +227,7 @@ export class OptNode extends ToCheckNode {
         env.varDeclared(v) || freeVars.includes(v) || v.startsWith("\\");
       if (!declared) {
         env.newMessage(
-          `variable ${v} not declared in called operator ${this.name}`
+          `variable ${v} not declared in called operator ${this.optSymbol}`
         );
         return false;
       }
@@ -235,10 +236,13 @@ export class OptNode extends ToCheckNode {
   }
 
   override factsDeclared(env: L_Env): boolean {
-    if (env.optDeclared(this.name) || L_BuiltinsKeywords.includes(this.name)) {
+    if (
+      env.optDeclared(this.optSymbol) ||
+      L_BuiltinsKeywords.includes(this.optSymbol)
+    ) {
       return true;
     } else {
-      env.newMessage(`operator ${this.name} not declared.`);
+      env.newMessage(`operator ${this.optSymbol} not declared.`);
       return false;
     }
   }

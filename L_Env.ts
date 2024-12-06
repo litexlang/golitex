@@ -103,7 +103,9 @@ export class L_Env {
     opt: OptNode,
     onlyRoot: boolean = false
   ): undefined | StoredFact[] {
-    const knownNodeRoot: KnownFact | undefined = this.knownFacts.get(opt.name);
+    const knownNodeRoot: KnownFact | undefined = this.knownFacts.get(
+      opt.optSymbol
+    );
 
     if (onlyRoot) {
       return knownNodeRoot?.getFactsToCheck([]);
@@ -161,7 +163,9 @@ export class L_Env {
 
   factsInToCheckAllDeclared(node: ToCheckNode): boolean {
     if (node instanceof OptNode) {
-      return this.getDef(node.name) !== undefined || isToCheckBuiltin(node);
+      return (
+        this.getDef(node.optSymbol) !== undefined || isToCheckBuiltin(node)
+      );
     } else if (node instanceof LogicNode) {
       return (
         node.req.every((e) => this.factsInToCheckAllDeclared(e)) &&
@@ -324,7 +328,7 @@ export class L_Env {
   // used by prove to check whether factToCheck is redefined in block
   someOptsDeclaredHere(fact: ToCheckNode): boolean {
     if (fact instanceof OptNode) {
-      return this.defs.get(fact.name) !== undefined;
+      return this.defs.get(fact.optSymbol) !== undefined;
     } else if (fact instanceof LogicNode) {
       return (
         fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) ||

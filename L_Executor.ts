@@ -427,7 +427,7 @@ function proveExec(env: L_Env, node: ProveNode): L_Out {
 
 function proveBuiltin(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
   try {
-    switch (toProve.name) {
+    switch (toProve.optSymbol) {
       case "is_property":
         return isPropertyBuiltinCheck(env, toProve);
       // case "exist":
@@ -512,7 +512,7 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
     for (const namedKnown of byNode.namedKnownToChecks) {
       // get used stuffs out of byNode
       const vars = namedKnown.vars;
-      const knownFactName = namedKnown.name;
+      const knownFactName = namedKnown.optSymbol;
 
       const knownToCheck = env.getNamedKnownToCheck(knownFactName);
       if (knownToCheck === undefined) throw Error();

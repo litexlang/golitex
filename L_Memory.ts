@@ -65,17 +65,17 @@ function storeOpt(
   req: StoredReq[],
   _storeContrapositive: boolean
 ): boolean {
-  if (L_BuiltinsKeywords.includes(fact.name)) return true;
+  if (L_BuiltinsKeywords.includes(fact.optSymbol)) return true;
 
-  const declaredOpt = env.getDef(fact.name);
+  const declaredOpt = env.getDef(fact.optSymbol);
   if (declaredOpt === undefined) {
-    env.newMessage(`${fact.name} undeclared`);
+    env.newMessage(`${fact.optSymbol} undeclared`);
     return false;
   } else {
     // TODO: I GUESS I SHOULD CHECK WHETHER GIVEN VARS SATISFY WHEN IN DEF
     if (declaredOpt.vars.length !== fact.vars.length) {
       env.newMessage(
-        `${fact.name} requires ${declaredOpt.vars.length} parameters, ${fact.vars.length} given.`
+        `${fact.optSymbol} requires ${declaredOpt.vars.length} parameters, ${fact.vars.length} given.`
       );
       return false;
     }
@@ -89,18 +89,20 @@ function storeOpt(
   if (DEBUG_DICT["newFact"]) {
     const notWords = fact.isT === false ? "[not]" : "";
     if (req.length > 0) {
-      env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars}) <= ${req}`);
-    } else env.newMessage(`[fact] ${notWords} ${fact.name}(${fact.vars})`);
+      env.newMessage(
+        `[fact] ${notWords} ${fact.optSymbol}(${fact.vars}) <= ${req}`
+      );
+    } else env.newMessage(`[fact] ${notWords} ${fact.optSymbol}(${fact.vars})`);
   }
 
   let ok = false;
   let toStore: StoredFact;
   if (fact instanceof ExistNode) {
     toStore = new StoredExist(fact.vars, req, fact.isT);
-    ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
+    ok = env.newKnownFact(fact.optSymbol, toStore.getVarsToCheck(), toStore);
   } else {
     toStore = new StoredFact(fact.vars, req, fact.isT);
-    ok = env.newKnownFact(fact.name, toStore.getVarsToCheck(), toStore);
+    ok = env.newKnownFact(fact.optSymbol, toStore.getVarsToCheck(), toStore);
   }
   if (!ok) return false;
 
@@ -108,7 +110,7 @@ function storeOpt(
   if (req.length > 0) {
     const allFreeVars = toStore.getAllFreeVars();
     if (allFreeVars.every((e) => fact.vars.includes(e))) {
-      ok = env.newKnownFact(fact.name, [], toStore);
+      ok = env.newKnownFact(fact.optSymbol, [], toStore);
     }
   }
 
@@ -194,7 +196,7 @@ export function getStoredFacts(
 
   // know where the opt is declared.
   let visibleEnvLevel = -1;
-  const tmp = env.whereIsOptDeclared(opt.name);
+  const tmp = env.whereIsOptDeclared(opt.optSymbol);
   if (tmp !== undefined) {
     visibleEnvLevel = tmp;
   } else {
@@ -330,7 +332,7 @@ export function storeBuiltinFact(
   _storeContrapositive: boolean
 ): boolean {
   if (fact instanceof OptNode) {
-    switch (fact.name) {
+    switch (fact.optSymbol) {
       default:
         return false;
     }

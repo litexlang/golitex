@@ -54,22 +54,30 @@ import {
 import * as L_Common from "./L_Common";
 import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
-function parseTheSame<T>(
+function parseArr<T>(
   env: L_Env,
   tokens: string[],
   parseFunc: (env: L_Env, tokens: string[]) => T,
   begin: string[] | string | undefined,
   end: string[] | string
 ): T[] {
-  if (begin !== undefined) skip(tokens, begin);
-  const out: T[] = [];
-  while (!isCurToken(tokens, end)) {
-    out.push(parseFunc(env, tokens));
-    if (isCurToken(tokens, ",")) skip(tokens, ",");
-  }
-  skip(tokens, end);
+  const start = tokens[0];
+  const index = tokens.length;
 
-  return out;
+  try {
+    if (begin !== undefined) skip(tokens, begin);
+    const out: T[] = [];
+    while (!isCurToken(tokens, end)) {
+      out.push(parseFunc(env, tokens));
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+    skip(tokens, end);
+
+    return out;
+  } catch (error) {
+    handleParseError(env, `parse an array`, index, start);
+    throw error;
+  }
 }
 
 function singletonParse(env: L_Env, tokens: string[]): L_Singleton {
@@ -655,13 +663,13 @@ function optsParse(
       let checkVars: L_Symbol[][] = [];
 
       const optSymbol: L_OptSymbol = optSymbolParse(env, tokens);
-      const vars = parseTheSame<L_Symbol>(env, tokens, symbolParse, "(", ")");
+      const vars = parseArr<L_Symbol>(env, tokens, symbolParse, "(", ")");
 
       if (isCurToken(tokens, "[")) {
         skip(tokens, "[");
         checkVars = [];
         while (!isCurToken(tokens, "]")) {
-          const currentLayerVars = parseTheSame<L_Symbol>(
+          const currentLayerVars = parseArr<L_Symbol>(
             env,
             tokens,
             symbolParse,

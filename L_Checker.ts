@@ -95,7 +95,7 @@ export function checkOpt(
 ): L_Out {
   if (isToCheckBuiltin(toCheck)) {
     env.newMessage(`checked by builtins.`);
-    switch (toCheck.name) {
+    switch (toCheck.optSymbol) {
       case "is_property":
         return isPropertyBuiltinCheck(env, toCheck);
       // case ExistKeyword:
@@ -217,7 +217,7 @@ export function checkOpt(
           }
         })
       ) {
-        env.newMessage(`[checked by] ${toCheck.name}(${known})`);
+        env.newMessage(`[checked by] ${toCheck.optSymbol}(${known})`);
         return L_Out.True;
       } else continue;
     }
@@ -254,7 +254,7 @@ export function checkOpt(
       // use toCheckVarsFromIf layer by layer
       const curToCheckVars = toCheckVarsFromIf.slice(i);
       const newOpt = new OptNode(
-        toCheck.name,
+        toCheck.optSymbol,
         toCheck.vars,
         toCheck.isT,
         curToCheckVars
@@ -267,9 +267,12 @@ export function checkOpt(
       // use toCheckVarsFromIf as if it's single layer
       const anotherCurCheckVars: string[] = [];
       curToCheckVars.map((e) => anotherCurCheckVars.push(...e));
-      const anotherOpt = new OptNode(toCheck.name, toCheck.vars, toCheck.isT, [
-        anotherCurCheckVars,
-      ]);
+      const anotherOpt = new OptNode(
+        toCheck.optSymbol,
+        toCheck.vars,
+        toCheck.isT,
+        [anotherCurCheckVars]
+      );
       if (checkOpt(env, anotherOpt, false) === L_Out.True) return L_Out.True;
     }
   }
@@ -281,7 +284,7 @@ export function checkOpt(
 export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
   if (isToCheckBuiltin(toCheck)) {
     env.newMessage(`checked by builtins.`);
-    switch (toCheck.name) {
+    switch (toCheck.optSymbol) {
       case "is_property":
         return isPropertyBuiltinCheck(env, toCheck);
       // case ExistKeyword:
@@ -291,7 +294,7 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
     }
   }
 
-  if (toCheck.vars.length !== env.getDef(toCheck.name)?.vars.length) {
+  if (toCheck.vars.length !== env.getDef(toCheck.optSymbol)?.vars.length) {
     return L_Out.Unknown;
   }
 
@@ -299,7 +302,7 @@ export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
   // const facts: StoredFact[] | null = L_Memory.getStoredFacts(env, toCheck);
 
   if (facts === undefined) {
-    env.newMessage(`check Error: ${toCheck.name} not declared.`);
+    env.newMessage(`check Error: ${toCheck.optSymbol} not declared.`);
     return L_Out.Error;
   }
 
@@ -370,7 +373,7 @@ function checkOr(env: L_Env, toCheck: OrNode): L_Out {
 }
 
 export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
-  const def = env.getDef(toCheck.name);
+  const def = env.getDef(toCheck.optSymbol);
   if (def === undefined) {
     return env.errMesReturnL_Out(`operator ${toCheck} not declared.`);
   }
