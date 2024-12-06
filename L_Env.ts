@@ -167,18 +167,16 @@ export class L_Env {
   }
 
   factsInToCheckAllDeclared(node: ToCheckNode): boolean {
-    //*
-    // if (node instanceof OptNode) {
-    //   return (
-    //     this.getDef(node.optSymbol) !== undefined || isToCheckBuiltin(node)
-    //   );
-    // } else if (node instanceof LogicNode) {
-    //   return (
-    //     node.req.every((e) => this.factsInToCheckAllDeclared(e)) &&
-    //     node.onlyIfs.every((e) => this.factsInToCheckAllDeclared(e))
-    //   );
-    // }
-    //*
+    if (node instanceof OptNode) {
+      return (
+        this.getDef(node.optSymbol.name) !== undefined || isToCheckBuiltin(node)
+      );
+    } else if (node instanceof LogicNode) {
+      return (
+        node.req.every((e) => this.factsInToCheckAllDeclared(e)) &&
+        node.onlyIfs.every((e) => this.factsInToCheckAllDeclared(e))
+      );
+    }
 
     return false;
   }

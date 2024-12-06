@@ -333,7 +333,7 @@ export const exampleList: ExampleItem[] = [
       "let x: in(x,a); ",
       "in(x, \\union{a,b}) [a,b;x];",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -368,7 +368,7 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "test L_Symbol",
-    code: ["def set(x);"],
+    code: ["def set(x); let x;", "know set(x);"],
     debug: true,
     print: true,
   },

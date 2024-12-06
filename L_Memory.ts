@@ -11,6 +11,7 @@ import { isToCheckBuiltin, L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
 import { DEBUG_DICT } from "./L_Executor";
 import { KnownFact, StoredExist, StoredFact, StoredReq } from "./L_Structs";
+import { reportStoreErr } from "./L_Messages";
 
 export function declNewFact(
   env: L_Env,
@@ -25,6 +26,55 @@ export function declNewFact(
   }
   return ok;
 }
+
+export function newFact(env: L_Env, fact: ToCheckNode): boolean {
+  if (isToCheckBuiltin(fact)) {
+    const ok = newBuiltinFact(env, fact);
+    return ok;
+  }
+
+  try {
+    if (fact instanceof IfNode) {
+      const ok = newIfThenFact(env, fact as IfNode);
+      if (!ok) return false;
+    } else if (fact instanceof OptNode) {
+      const ok = newOptFact(env, fact);
+      if (!ok) return false;
+    } else {
+      throw Error();
+    }
+
+    return true;
+  } catch {
+    return reportStoreErr(env, newFact.name, fact);
+  }
+}
+
+export function newIfThenFact(env: L_Env, fact: IfNode): boolean {
+  try {
+    return false;
+  } catch {
+    return reportStoreErr(env, newIfThenFact.name, fact);
+  }
+}
+
+export function newOptFact(env: L_Env, fact: OptNode): boolean {
+  try {
+    return false;
+  } catch {
+    return reportStoreErr(env, newOptFact.name, fact);
+  }
+}
+
+export function newBuiltinFact(env: L_Env, fact: ToCheckNode): boolean {
+  try {
+    return false;
+  } catch {
+    return reportStoreErr(env, newBuiltinFact.name, fact);
+  }
+}
+
+//----------------------------------------------------------------------
 
 // store new fact; declare new fact if fact is of type exist.
 function storeIfThen(

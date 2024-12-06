@@ -45,3 +45,20 @@ export function reportNewExist(env: L_Env, exist: OptNode): L_Out {
   env.newMessage(`[new exist] ${exist}`);
   return L_Out.True;
 }
+
+export function reportStoreErr(
+  env: L_Env,
+  funcName: string,
+  fact: ToCheckNode
+): boolean {
+  reportFailedFunctionName(env, funcName);
+  return env.errMesReturnBoolean(`Failed to store ${fact}`);
+}
+
+export function reportFailedFunctionName(
+  env: L_Env,
+  funcName: string
+): boolean {
+  env.newMessage(`<${funcName}> Failed`);
+  return false;
+}
