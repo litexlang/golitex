@@ -52,7 +52,54 @@ import {
   SlashKeyword,
 } from "./L_Common";
 import * as L_Common from "./L_Common";
-import { L_Composite, L_Singleton, L_Symbol } from "./L_Structs";
+import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
+
+function singletonParse(env: L_Env, tokens: string[]): L_Singleton {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    const value = skip(tokens) as string;
+    return new L_Singleton(value);
+  } catch (error) {
+    handleParseError(env, "parse singleton", index, start);
+    throw error;
+  }
+}
+
+function optSymbolParse(env: L_Env, tokens: string[]): L_OptSymbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    const name = skip(tokens) as string;
+    return new L_OptSymbol(name);
+  } catch (error) {
+    handleParseError(env, "parse singleton", index, start);
+    throw error;
+  }
+}
+
+function compositeParse(env: L_Env, tokens: string[]): L_Composite {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Common.SlashKeyword);
+    const name = skip(tokens, tokens);
+    skip(tokens, "{");
+    const values: L_Symbol[] = [];
+    while (!isCurToken(tokens, "}")) {
+      values.push(skip(tokens));
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+    skip(tokens, "}");
+    return new L_Composite(name, values);
+  } catch (error) {
+    handleParseError(env, "parse singleton", index, start);
+    throw error;
+  }
+}
 
 function symbolParse(env: L_Env, tokens: string[]): L_Symbol {
   const start = tokens[0];
@@ -60,19 +107,9 @@ function symbolParse(env: L_Env, tokens: string[]): L_Symbol {
 
   try {
     if (tokens[0] === L_Common.SlashKeyword) {
-      skip(tokens, L_Common.SlashKeyword);
-      const name = skip(tokens, tokens);
-      skip(tokens, "{");
-      const values: L_Symbol[] = [];
-      while (!isCurToken(tokens, "}")) {
-        values.push(skip(tokens));
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
-      }
-      skip(tokens, "}");
-      return new L_Composite(name, values);
+      return compositeParse(env, tokens);
     } else {
-      const value = skip(tokens) as string;
-      return new L_Singleton(value);
+      return singletonParse(env, tokens);
     }
   } catch (error) {
     handleParseError(env, "parse symbol", index, start);
@@ -413,7 +450,7 @@ function optParseReturnOptNode(
   const index = tokens.length;
 
   try {
-    const nodes = optParseWithNotAre(env, tokens, parseNot);
+    const nodes = optsParse(env, tokens, parseNot);
     if (nodes.length > 0) {
       return nodes[0];
     } else {
@@ -555,7 +592,7 @@ function factsParse(
         //   out = [...out, fact];
         // }
         else {
-          const facts = optParseWithNotAre(env, tokens, true);
+          const facts = optsParse(env, tokens, true);
           facts.forEach((e) => (e.isT = isT ? e.isT : !e.isT));
           out = [...out, ...facts];
         }
@@ -577,7 +614,7 @@ function factsParse(
   }
 }
 
-function optParseWithNotAre(
+function optsParse(
   env: L_Env,
   tokens: string[],
   parseNot: boolean
@@ -620,28 +657,32 @@ function optParseWithNotAre(
       return [new ExistNode(name, vars, isT, checkVars)];
     } else if (tokens.length >= 2 && tokens[1] === "(") {
       // parse functional operator
-      name = shiftSymbol(tokens);
+      // name = shiftSymbol(tokens);
 
-      skip(tokens, "(");
+      // skip(tokens, "(");
 
-      while (!isCurToken(tokens, ")")) {
-        vars.push(shiftSymbol(tokens));
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
-      }
+      // while (!isCurToken(tokens, ")")) {
+      //   vars.push(shiftSymbol(tokens));
+      //   if (isCurToken(tokens, ",")) skip(tokens, ",");
+      // }
 
-      skip(tokens, ")");
+      // skip(tokens, ")");
 
-      let checkVars: string[][] | undefined = undefined;
-      if (isCurToken(tokens, "[")) {
-        skip(tokens, "[");
-        checkVars = [];
-        while (!isCurToken(tokens, "]")) {
-          const currentLayerVars = varLstParse(env, tokens, [";", "]"], false);
-          checkVars.push(currentLayerVars);
-          if (isCurToken(tokens, ";")) skip(tokens, ";");
-        }
-        skip(tokens, "]");
-      }
+      // let checkVars: string[][] | undefined = undefined;
+      // if (isCurToken(tokens, "[")) {
+      //   skip(tokens, "[");
+      //   checkVars = [];
+      //   while (!isCurToken(tokens, "]")) {
+      //     const currentLayerVars = varLstParse(env, tokens, [";", "]"], false);
+      //     checkVars.push(currentLayerVars);
+      //     if (isCurToken(tokens, ";")) skip(tokens, ";");
+      //   }
+      //   skip(tokens, "]");
+      // }
+
+      const vars: L_Symbol[] = [];
+      let optSymbol: L_OptSymbol;
+      const checkVars: L_Symbol[][] = [];
 
       return [new OptNode(name, vars, isT, checkVars)];
     } else {

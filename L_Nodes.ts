@@ -152,7 +152,7 @@ export class OptNode extends ToCheckNode {
     public name: string,
     public vars: L_Symbol[],
     isT: boolean = true,
-    public checkVars: string[][] | undefined = undefined
+    public checkVars: L_Symbol[][] | undefined = undefined
   ) {
     super(isT);
   }

@@ -14,7 +14,9 @@ export class L_Composite extends L_Symbol {
   }
 }
 
-export class L_OptSymbol {}
+export class L_OptSymbol {
+  constructor(public name: string) {}
+}
 
 export enum L_Out {
   Error,
