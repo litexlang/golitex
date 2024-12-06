@@ -4,7 +4,6 @@ import { L_Out } from "./L_Structs";
 
 export const L_BuiltinsKeywords: string[] = [
   "is_property",
-  // "exist",
   "or",
   "is_composite",
 ];
