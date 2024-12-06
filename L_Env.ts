@@ -29,7 +29,7 @@ export class L_Env {
   }
 
   newFact(key: string, fact: L_KnownFact): boolean {
-    if (this.facts.get(key) !== undefined) {
+    if (this.facts.get(key) === undefined) {
       this.facts.set(key, [fact]);
     } else {
       this.facts.get(key)?.push(fact);

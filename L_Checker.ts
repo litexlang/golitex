@@ -1,12 +1,6 @@
-import { ExistNode, IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
+import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import {
-  L_Composite,
-  L_Out,
-  L_Singleton,
-  L_Symbol,
-  StoredExist,
-} from "./L_Structs";
+import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { L_ReportErr } from "./L_Messages";
 

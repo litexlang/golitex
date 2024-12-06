@@ -182,10 +182,10 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
       //*
     }
 
-    for (const [i, v] of node.names.entries()) {
-      const ok = env.newNamedKnownToCheck(v, node.facts[i]);
-      if (!ok) throw new Error();
-    }
+    // for (const [i, v] of node.names.entries()) {
+    //   const ok = env.newNamedKnownToCheck(v, node.facts[i]);
+    //   if (!ok) throw new Error();
+    // }
 
     return L_Out.True;
   } catch {
@@ -226,7 +226,7 @@ function factExec(env: L_Env, toCheck: ToCheckNode): L_Out {
 
     if (out === L_Out.True) {
       // Store Fact
-      const ok = L_Memory.executorStoreFact(env, toCheck, true);
+      const ok = L_Memory.newFact(env, toCheck);
       if (!ok) {
         env.newMessage(`Failed to store ${toCheck}`);
         return L_Out.Error;
