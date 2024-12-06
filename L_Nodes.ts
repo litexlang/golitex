@@ -1,3 +1,4 @@
+import { on } from "events";
 import { L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
 import { L_OptSymbol, L_Symbol } from "./L_Structs";
@@ -141,6 +142,19 @@ export class LogicNode extends ToCheckNode {
   override factsDeclared(env: L_Env): boolean {
     return [...this.req, ...this.onlyIfs].every((e) => e.factsDeclared(env));
   }
+
+  getRootNodes(): OptNode[] {
+    const out: OptNode[] = [];
+    for (const onlyIf of this.onlyIfs) {
+      if (onlyIf instanceof OptNode) {
+        out.push(onlyIf);
+      } else if (onlyIf instanceof LogicNode) {
+        const roots = onlyIf.getRootNodes();
+        out.push(...roots);
+      }
+    }
+    return out;
+  }
 }
 
 export class IffNode extends LogicNode {}
@@ -212,7 +226,9 @@ export class OptNode extends ToCheckNode {
   }
 
   override toString() {
-    const mainPart = this.optSymbol + `(${this.vars.join(", ")})`;
+    const mainPart =
+      this.optSymbol.name +
+      `(${this.vars.map((e) => e.toString()).join(", ")})`;
     const notPart = !this.isT ? "[not] " : "";
     return notPart + mainPart;
   }

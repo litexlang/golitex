@@ -6,11 +6,19 @@ export class L_Singleton extends L_Symbol {
   constructor(public value: string) {
     super();
   }
+
+  toString() {
+    return this.value;
+  }
 }
 
 export class L_Composite extends L_Symbol {
   constructor(public name: string, public values: L_Symbol[]) {
     super();
+  }
+
+  toString() {
+    return `\\${this.name}{${this.values.map((e) => e.toString()).join(", ")}}`;
   }
 }
 

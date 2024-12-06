@@ -34,6 +34,28 @@ export class L_Env {
     this.parent = parent;
   }
 
+  newKnown(key: string, fact: L_KnownFact): boolean {
+    if (this.knowns.get(key) !== undefined) {
+      this.knowns.set(key, [fact]);
+    } else {
+      this.knowns.get(key)?.push(fact);
+    }
+    return true;
+  }
+
+  getKnown(key: string): undefined | L_KnownFact[] {
+    const out = this.knowns.get(key);
+    if (out !== undefined) {
+      return out;
+    } else {
+      if (this.parent !== undefined) {
+        return this.parent.getKnown(key);
+      } else {
+        return undefined;
+      }
+    }
+  }
+
   clear() {
     this.parent = undefined;
     this.messages = [];
