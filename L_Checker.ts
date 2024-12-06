@@ -1,15 +1,66 @@
 import { ExistNode, IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Out, StoredExist } from "./L_Structs";
+import { L_Out, L_Singleton, L_Symbol, StoredExist } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
-import { lstLengthNotEql } from "./L_Messages";
-import {
-  // existBuiltinCheck,
-  isPropertyBuiltinCheck,
-  isToCheckBuiltin,
-} from "./L_Builtins";
-import { ExistKeyword } from "./L_Common";
-import { StoredFact, StoredReq } from "./L_Structs";
+import { L_ReportErr } from "./L_Messages";
+
+export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
+  try {
+    if (toCheck instanceof OptNode) {
+      return checkOptFact(env, toCheck);
+    } else {
+      return L_Out.Error;
+    }
+  } catch {
+    return L_Out.Error;
+  }
+}
+
+export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
+  try {
+    const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
+    if (relatedKnownFacts === undefined) {
+      return L_Out.Unknown;
+    }
+    for (const curKnown of relatedKnownFacts) {
+      if (curKnown instanceof OptNode) {
+      } else if (curKnown instanceof IfNode) {
+      }
+    }
+
+    return L_Out.Unknown;
+  } catch {
+    return env.errMesReturnL_Out(toCheck);
+  }
+}
+
+export function literallyCompareOptVars(
+  env: L_Env,
+  opt1: OptNode,
+  opt2: OptNode
+): boolean {
+  try {
+    for (let i = 0; i < opt1.vars.length; i++) {}
+
+    return true;
+  } catch {
+    L_ReportErr(env, literallyCompareOptVars, opt1);
+    return false;
+  }
+}
+
+export function literallyCompareVars(
+  env: L_Env,
+  var1: L_Symbol,
+  var2: L_Symbol
+) {
+  try {
+  } catch {
+    L_ReportErr(env, literallyCompareVars);
+  }
+}
+
+//-----------------------------------------------------------
 
 export function check(
   env: L_Env,

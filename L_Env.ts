@@ -7,13 +7,7 @@ import {
   ToCheckNode,
 } from "./L_Nodes";
 import { examineStoredFact } from "./L_Memory";
-import {
-  KnownExist,
-  L_KnownFact,
-  L_OptSymbol,
-  L_Out,
-  StoredExist,
-} from "./L_Structs";
+import { L_KnownFact, L_OptSymbol, L_Out } from "./L_Structs";
 import { isToCheckBuiltin } from "./L_Builtins";
 import { KnownFact, StoredFact } from "./L_Structs";
 
@@ -28,28 +22,28 @@ export class L_Env {
   private namedKnownToChecks = new Map<string, ToCheckNode>();
   // private exists = new Map<string, KnownFact>();
 
-  private knowns = new Map<string, L_KnownFact[]>();
+  private facts = new Map<string, L_KnownFact[]>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
   }
 
-  newKnown(key: string, fact: L_KnownFact): boolean {
-    if (this.knowns.get(key) !== undefined) {
-      this.knowns.set(key, [fact]);
+  newFact(key: string, fact: L_KnownFact): boolean {
+    if (this.facts.get(key) !== undefined) {
+      this.facts.set(key, [fact]);
     } else {
-      this.knowns.get(key)?.push(fact);
+      this.facts.get(key)?.push(fact);
     }
     return true;
   }
 
-  getKnown(key: string): undefined | L_KnownFact[] {
-    const out = this.knowns.get(key);
+  getFacts(key: string): undefined | L_KnownFact[] {
+    const out = this.facts.get(key);
     if (out !== undefined) {
       return out;
     } else {
       if (this.parent !== undefined) {
-        return this.parent.getKnown(key);
+        return this.parent.getFacts(key);
       } else {
         return undefined;
       }

@@ -58,7 +58,7 @@ export function newIfThenFact(env: L_Env, fact: IfNode): boolean {
 
 export function newOptFact(env: L_Env, fact: OptNode): boolean {
   try {
-    return env.newKnown(fact.optSymbol.name, fact);
+    return env.newFact(fact.optSymbol.name, fact);
   } catch {
     return reportStoreErr(env, newOptFact.name, fact);
   }

@@ -368,7 +368,7 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "test L_Symbol",
-    code: ["def set(x); let x;", "know set(x);"],
+    code: ["def set(x); let x;", "know set(x);", "set(x);"],
     debug: true,
     print: true,
   },
