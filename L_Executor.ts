@@ -215,11 +215,15 @@ function defExec(env: L_Env, node: DefNode): L_Out {
 
 function factExec(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
-    if (!(toCheck.varsDeclared(env, []) && toCheck.factsDeclared(env))) {
-      return L_Out.Error;
-    }
+    // TODO: Implement check whether the given toCheck exists and given var exists.
+    // if (!(toCheck.varsDeclared(env, []) && toCheck.factsDeclared(env))) {
+    //   return L_Out.Error;
+    // }
 
-    const out = L_Checker.check(env, toCheck);
+    // const out = L_Checker.check(env, toCheck);
+
+    const out = L_Checker.checkFact(env, toCheck);
+
     if (out === L_Out.True) {
       // Store Fact
       const ok = L_Memory.executorStoreFact(env, toCheck, true);

@@ -1,6 +1,12 @@
 import { ExistNode, IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Out, L_Singleton, L_Symbol, StoredExist } from "./L_Structs";
+import {
+  L_Composite,
+  L_Out,
+  L_Singleton,
+  L_Symbol,
+  StoredExist,
+} from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { L_ReportErr } from "./L_Messages";
 
@@ -24,6 +30,8 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     }
     for (const curKnown of relatedKnownFacts) {
       if (curKnown instanceof OptNode) {
+        const out = literallyCompareOptVars(env, toCheck, curKnown);
+        if (out) return L_Out.True;
       } else if (curKnown instanceof IfNode) {
       }
     }
@@ -34,13 +42,20 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   }
 }
 
+// compare vars length in given opts, compare them literally
 export function literallyCompareOptVars(
   env: L_Env,
   opt1: OptNode,
   opt2: OptNode
 ): boolean {
   try {
-    for (let i = 0; i < opt1.vars.length; i++) {}
+    if (opt1.vars.length !== opt2.vars.length) {
+      return false;
+    }
+
+    for (let i = 0; i < opt1.vars.length; i++) {
+      if (!literallyCompareVars(env, opt1.vars[i], opt2.vars[i])) return false;
+    }
 
     return true;
   } catch {
@@ -55,6 +70,22 @@ export function literallyCompareVars(
   var2: L_Symbol
 ) {
   try {
+    if (var1 instanceof L_Singleton && var2 instanceof L_Singleton) {
+      return var1.value === var2.value;
+    } else if (var1 instanceof L_Composite && var2 instanceof L_Composite) {
+      if (var1.values.length !== var2.values.length) {
+        return false;
+      } else {
+        for (let i = 0; i < var1.values.length; i++) {
+          if (!literallyCompareVars(env, var1.values[i], var2.values[i])) {
+            return false;
+          }
+        }
+        return true;
+      }
+    } else {
+      return false;
+    }
   } catch {
     L_ReportErr(env, literallyCompareVars);
   }
