@@ -7,7 +7,13 @@ import {
   ToCheckNode,
 } from "./L_Nodes";
 import { examineStoredFact } from "./L_Memory";
-import { KnownExist, L_OptSymbol, L_Out, StoredExist } from "./L_Structs";
+import {
+  KnownExist,
+  L_KnownFact,
+  L_OptSymbol,
+  L_Out,
+  StoredExist,
+} from "./L_Structs";
 import { isToCheckBuiltin } from "./L_Builtins";
 import { KnownFact, StoredFact } from "./L_Structs";
 
@@ -21,6 +27,8 @@ export class L_Env {
   private knownFacts = new Map<string, KnownFact>(); // key: operator name; value: stored layers of if-then that can be used to check operator.
   private namedKnownToChecks = new Map<string, ToCheckNode>();
   // private exists = new Map<string, KnownFact>();
+
+  private knowns = new Map<string, L_KnownFact[]>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;

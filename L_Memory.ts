@@ -1,16 +1,14 @@
 import {
   DefNode,
-  ExistNode,
   IfNode,
   LogicNode,
   OptNode,
   OrNode,
   ToCheckNode,
 } from "./L_Nodes";
-import { isToCheckBuiltin, L_BuiltinsKeywords } from "./L_Builtins";
+import { isToCheckBuiltin } from "./L_Builtins";
 import { L_Env } from "./L_Env";
-import { DEBUG_DICT } from "./L_Executor";
-import { KnownFact, StoredExist, StoredFact, StoredReq } from "./L_Structs";
+import { StoredFact, StoredReq } from "./L_Structs";
 import { reportStoreErr } from "./L_Messages";
 
 export function declNewFact(

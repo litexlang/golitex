@@ -27,6 +27,7 @@ import {
   reportExecL_Out,
   reportNewVars,
   reportNotAllFactsInGivenFactAreDeclared,
+  reportStoreErr,
 } from "./L_Messages";
 import { isPropertyBuiltinCheck, isToCheckBuiltin } from "./L_Builtins";
 import { L_Out } from "./L_Structs";
@@ -36,6 +37,7 @@ import {
   proveOpt,
   proveOptByContradict,
 } from "./L_Prove";
+import { on } from "events";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -168,8 +170,16 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
 
     // store new knowns
     for (const onlyIf of node.facts) {
-      const ok = L_Memory.store(env, onlyIf, [], false);
-      if (!ok) throw new Error();
+      const ok = L_Memory.newFact(env, onlyIf);
+      if (!ok) {
+        reportStoreErr(env, knowExec.name, onlyIf);
+        throw new Error();
+      }
+
+      //*
+      // const ok = L_Memory.store(env, onlyIf, [], false);
+      // if (!ok) throw new Error();
+      //*
     }
 
     for (const [i, v] of node.names.entries()) {

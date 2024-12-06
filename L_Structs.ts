@@ -191,3 +191,5 @@ export class StoredFact {
 }
 
 export class StoredExist extends StoredFact {}
+
+export type L_KnownFact = ToCheckNode;
