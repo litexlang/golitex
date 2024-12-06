@@ -363,6 +363,12 @@ export const exampleList: ExampleItem[] = [
   {
     name: "composite symbol",
     code: ["def p(x); ", "let x;", " know p(x);", " p(x);"],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "test L_Symbol",
+    code: ["def set(x);"],
     debug: true,
     print: true,
   },

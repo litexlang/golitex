@@ -193,7 +193,7 @@ function defExec(env: L_Env, node: DefNode): L_Out {
     }
 
     if (DEBUG_DICT["def"]) {
-      const decl = env.getDef(node.name);
+      const decl = env.getDef(node.opt.optSymbol.name);
       if (!decl) return L_Out.Error;
     }
 
@@ -427,7 +427,7 @@ function proveExec(env: L_Env, node: ProveNode): L_Out {
 
 function proveBuiltin(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
   try {
-    switch (toProve.optSymbol) {
+    switch (toProve.optSymbol.name) {
       case "is_property":
         return isPropertyBuiltinCheck(env, toProve);
       // case "exist":
@@ -507,64 +507,60 @@ export function noVarsOrOptDeclaredHere(
 }
 
 function byExec(env: L_Env, byNode: ByNode): L_Out {
-  try {
-    // 这里的 namedKnown 虽然类型是 Opt，但其实不是正常意义的opt
-    for (const namedKnown of byNode.namedKnownToChecks) {
-      // get used stuffs out of byNode
-      const vars = namedKnown.vars;
-      const knownFactName = namedKnown.optSymbol;
-
-      const knownToCheck = env.getNamedKnownToCheck(knownFactName);
-      if (knownToCheck === undefined) throw Error();
-
-      // vars number are correct
-      if (knownToCheck instanceof OptNode) {
-        if (vars.length !== 0) {
-          return env.errMesReturnL_Out(
-            `${knownFactName} is supposed to have no parameter.`
-          );
-        }
-      } else if (knownToCheck instanceof LogicNode) {
-        if (vars.length !== knownToCheck.vars.length) {
-          return env.errMesReturnL_Out(
-            `${knownFactName} is supposed to have ${knownToCheck.vars.length} parameters, get ${vars.length}`
-          );
-        }
-
-        // make mapping from free-parameters-of-if-then to given parameters
-        const map = new Map<string, string>();
-        for (const [i, v] of knownToCheck.vars.entries()) {
-          map.set(v, vars[i]);
-        }
-
-        // check all requirements
-        for (const req of knownToCheck.req) {
-          const fixed = req.useMapToCopy(env, map);
-          const out = L_Checker.check(env, fixed);
-          if (out !== L_Out.True) {
-            env.newMessage(`Failed to check ${out}`);
-            return out;
-          }
-        }
-
-        // store all onlyIfs
-        for (const onlyIf of knownToCheck.onlyIfs) {
-          const fixed = onlyIf.useMapToCopy(env, map);
-          const ok = L_Memory.store(env, fixed, [], true);
-          if (!ok) return L_Out.Error;
-        }
-      }
-    }
-
-    // ok message
-    for (const fact of byNode.namedKnownToChecks) {
-      env.newMessage(`OK! [by] ${fact}`);
-    }
-
-    return L_Out.True;
-  } catch {
-    return env.errMesReturnL_Out(ByNode);
-  }
+  return L_Out.Error;
+  //*
+  // try {
+  //   // 这里的 namedKnown 虽然类型是 Opt，但其实不是正常意义的opt
+  //   for (const namedKnown of byNode.namedKnownToChecks) {
+  //     // get used stuffs out of byNode
+  //     const vars = namedKnown.vars;
+  //     const knownFactName = namedKnown.optSymbol;
+  //     const knownToCheck = env.getNamedKnownToCheck(knownFactName);
+  //     if (knownToCheck === undefined) throw Error();
+  //     // vars number are correct
+  //     if (knownToCheck instanceof OptNode) {
+  //       if (vars.length !== 0) {
+  //         return env.errMesReturnL_Out(
+  //           `${knownFactName} is supposed to have no parameter.`
+  //         );
+  //       }
+  //     } else if (knownToCheck instanceof LogicNode) {
+  //       if (vars.length !== knownToCheck.vars.length) {
+  //         return env.errMesReturnL_Out(
+  //           `${knownFactName} is supposed to have ${knownToCheck.vars.length} parameters, get ${vars.length}`
+  //         );
+  //       }
+  //       // make mapping from free-parameters-of-if-then to given parameters
+  //       const map = new Map<string, string>();
+  //       for (const [i, v] of knownToCheck.vars.entries()) {
+  //         map.set(v, vars[i]);
+  //       }
+  //       // check all requirements
+  //       for (const req of knownToCheck.req) {
+  //         const fixed = req.useMapToCopy(env, map);
+  //         const out = L_Checker.check(env, fixed);
+  //         if (out !== L_Out.True) {
+  //           env.newMessage(`Failed to check ${out}`);
+  //           return out;
+  //         }
+  //       }
+  //       // store all onlyIfs
+  //       for (const onlyIf of knownToCheck.onlyIfs) {
+  //         const fixed = onlyIf.useMapToCopy(env, map);
+  //         const ok = L_Memory.store(env, fixed, [], true);
+  //         if (!ok) return L_Out.Error;
+  //       }
+  //     }
+  //   }
+  //   // ok message
+  //   for (const fact of byNode.namedKnownToChecks) {
+  //     env.newMessage(`OK! [by] ${fact}`);
+  //   }
+  //   return L_Out.True;
+  // } catch {
+  //   return env.errMesReturnL_Out(ByNode);
+  // }
+  //*
 }
 
 function letHashExec(env: L_Env, node: LetHashNode): L_Out {

@@ -1,14 +1,18 @@
 import { ExampleItem } from "./L_Structs";
 import { L_Env } from "./L_Env";
-import { runStrings } from "./L_Runner";
-import * as fs from "fs";
 import { L_Scan } from "./L_Lexer";
 import { parseUntilGivenEnd } from "./L_Parser";
 
 export const exampleList: ExampleItem[] = [
   {
     name: "define subset",
-    code: ["def set(x);", "let x;", "know set(x);", "set(x);"],
+    code: [
+      "def set(x);",
+      "let x;",
+      "know set(x);",
+      "set(x)[x,y];",
+      "set (\\frac{1,2})[\\frac{3,4}, \\frac{5,6}] ;",
+    ],
     debug: true,
     print: true,
   },

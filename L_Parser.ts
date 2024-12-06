@@ -59,7 +59,8 @@ function parseArr<T>(
   tokens: string[],
   parseFunc: (env: L_Env, tokens: string[]) => T,
   begin: string[] | string | undefined,
-  end: string[] | string
+  end: string[] | string,
+  skipEnd: boolean = true
 ): T[] {
   const start = tokens[0];
   const index = tokens.length;
@@ -71,7 +72,7 @@ function parseArr<T>(
       out.push(parseFunc(env, tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
-    skip(tokens, end);
+    if (skipEnd) skip(tokens, end);
 
     return out;
   } catch (error) {
@@ -674,7 +675,8 @@ function optsParse(
             tokens,
             symbolParse,
             undefined,
-            [";", "]"]
+            [";", "]"],
+            false
           );
           checkVars.push(currentLayerVars);
           if (isCurToken(tokens, ";")) skip(tokens, ";");

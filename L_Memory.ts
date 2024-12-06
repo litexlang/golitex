@@ -17,17 +17,13 @@ export function declNewFact(
   node: DefNode,
   _storeDefName: boolean = true
 ): boolean {
-  //*
-  // let ok = true;
-  // ok = env.newDef(node.name, node);
-  // for (const onlyIf of node.onlyIfs) {
-  //   const ok = store(env, onlyIf, [], false);
-  //   if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);
-  // }
-  // return ok;
-  //*
-
-  return false;
+  let ok = true;
+  ok = env.newDef(node.opt.optSymbol.name, node);
+  for (const onlyIf of node.onlyIfs) {
+    const ok = store(env, onlyIf, [], false);
+    if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);
+  }
+  return ok;
 }
 
 // store new fact; declare new fact if fact is of type exist.

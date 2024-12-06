@@ -266,7 +266,7 @@ export class ExistNode extends OptNode {
 
 export class DefNode extends L_Node {
   constructor(
-    public opt: L_Symbol,
+    public opt: OptNode,
     public cond: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [] // public defName: string | undefined = undefined // public cond: ToCheckNode[] = [],
   ) {
