@@ -49,8 +49,36 @@ import {
   ProveKeywords,
   ReturnKeyword,
   RunKeyword,
+  SlashKeyword,
 } from "./L_Common";
-import { CompositeSymbol, L_Symbol } from "./L_Structs";
+import * as L_Common from "./L_Common";
+import { L_Composite, L_Singleton, L_Symbol } from "./L_Structs";
+
+function symbolParse(env: L_Env, tokens: string[]): L_Symbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    if (tokens[0] === L_Common.SlashKeyword) {
+      skip(tokens, L_Common.SlashKeyword);
+      const name = skip(tokens, tokens);
+      skip(tokens, "{");
+      const values: L_Symbol[] = [];
+      while (!isCurToken(tokens, "}")) {
+        values.push(skip(tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      skip(tokens, "}");
+      return new L_Composite(name, values);
+    } else {
+      const value = skip(tokens) as string;
+      return new L_Singleton(value);
+    }
+  } catch (error) {
+    handleParseError(env, "parse symbol", index, start);
+    throw error;
+  }
+}
 
 function skip(tokens: string[], s: string | string[] = ""): string {
   try {
@@ -914,38 +942,38 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
   }
 }
 
-export function compositeSymbolParse(
-  env: L_Env,
-  tokens: string[]
-): CompositeSymbol {
-  const start = tokens[0];
-  const index = tokens.length;
+// export function compositeSymbolParse(
+//   env: L_Env,
+//   tokens: string[]
+// ): CompositeSymbol {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    if (tokens[0].startsWith("\\")) {
-      const name = tokens[0];
-      skip(tokens);
-      skip(tokens, "{");
-      const vars: string[] = [];
-      while (!isCurToken(tokens, "}")) {
-        vars.push(shiftSymbol(tokens));
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
-      }
-      skip(tokens, "}");
-      const req: ToCheckNode[] = [];
-      if (isCurToken(tokens, "[")) {
-        skip(tokens, "[");
-        while (!isCurToken(tokens, "]")) {
-          req.push(...factsParse(env, tokens, ["]"], false, false));
-        }
-        skip(tokens, "]");
-      }
-      return new CompositeSymbol(name, vars, req);
-    } else {
-      throw Error();
-    }
-  } catch (error) {
-    handleParseError(env, "composite symbol", index, start);
-    throw error;
-  }
-}
+//   try {
+//     if (tokens[0].startsWith("\\")) {
+//       const name = tokens[0];
+//       skip(tokens);
+//       skip(tokens, "{");
+//       const vars: string[] = [];
+//       while (!isCurToken(tokens, "}")) {
+//         vars.push(shiftSymbol(tokens));
+//         if (isCurToken(tokens, ",")) skip(tokens, ",");
+//       }
+//       skip(tokens, "}");
+//       const req: ToCheckNode[] = [];
+//       if (isCurToken(tokens, "[")) {
+//         skip(tokens, "[");
+//         while (!isCurToken(tokens, "]")) {
+//           req.push(...factsParse(env, tokens, ["]"], false, false));
+//         }
+//         skip(tokens, "]");
+//       }
+//       return new CompositeSymbol(name, vars, req);
+//     } else {
+//       throw Error();
+//     }
+//   } catch (error) {
+//     handleParseError(env, "composite symbol", index, start);
+//     throw error;
+//   }
+// }

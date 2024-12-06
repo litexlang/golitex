@@ -360,6 +360,12 @@ export const exampleList: ExampleItem[] = [
     debug: false,
     print: true,
   },
+  {
+    name: "composite symbol",
+    code: ["def p(x); ", "let x;", " know p(x);", " p(x);"],
+    debug: true,
+    print: true,
+  },
 ];
 
 // \frac{i,j}

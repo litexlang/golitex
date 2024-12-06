@@ -1,12 +1,6 @@
 import { ExistNode, IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import {
-  CompositeSymbol,
-  KnownExist,
-  KnownFact,
-  L_Out,
-  StoredExist,
-} from "./L_Structs";
+import { L_Out, StoredExist } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { lstLengthNotEql } from "./L_Messages";
 import {
@@ -16,7 +10,6 @@ import {
 } from "./L_Builtins";
 import { ExistKeyword } from "./L_Common";
 import { StoredFact, StoredReq } from "./L_Structs";
-import { compositeSymbolParse } from "./L_Parser";
 
 export function check(
   env: L_Env,

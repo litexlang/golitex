@@ -1,15 +1,20 @@
 import { L_Env } from "./L_Env";
 import { ToCheckNode } from "./L_Nodes";
 
-export class L_Symbol {
-  constructor(public name: string) {}
-}
-
-export class CompositeSymbol extends L_Symbol {
-  constructor(name: string, public vars: string[], public req: ToCheckNode[]) {
-    super(name);
+export abstract class L_Symbol {}
+export class L_Singleton extends L_Symbol {
+  constructor(public value: string) {
+    super();
   }
 }
+
+export class L_Composite extends L_Symbol {
+  constructor(public name: string, public values: L_Symbol[]) {
+    super();
+  }
+}
+
+export class L_OptSymbol {}
 
 export enum L_Out {
   Error,

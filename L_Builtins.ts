@@ -15,24 +15,19 @@ export function isToCheckBuiltin(node: ToCheckNode): boolean {
 // Separate functions from the map
 export function isPropertyBuiltinCheck(env: L_Env, node: OptNode): L_Out {
   try {
-    const out = env.getDef(node.vars[0]);
-    if (out === undefined) {
-      env.newMessage(
-        `is_property error: ${node.name} is an undeclared operator.`
-      );
-      return L_Out.Error;
-    } else {
-      // if (out.vars.length !== Number(node.vars[1])) {
-      //   env.newMessage(
-      //     `is_property error: ${node.name} requires ${
-      //       out.vars.length
-      //     } parameters, ${Number(node.vars[1])} given.`
-      //   );
-      //   return L_Out.Error;
-      // } else {
-      return L_Out.True;
-      // }
-    }
+    // *
+    // const out = env.getDef(node.vars[0]);
+    // if (out === undefined) {
+    //   env.newMessage(
+    //     `is_property error: ${node.name} is an undeclared operator.`
+    //   );
+    //   return L_Out.Error;
+    // } else {
+    //   return L_Out.True;
+    // }
+    // *
+
+    return L_Out.Error;
   } catch {
     return L_Out.Error;
   }
@@ -71,15 +66,18 @@ export function isPropertyBuiltinCheck(env: L_Env, node: OptNode): L_Out {
 
 export function isCompositeBuiltinCheck(env: L_Env, node: OptNode): L_Out {
   try {
-    if (node.vars.length !== 1) {
-      return L_Out.Error;
-    } else {
-      if (node.vars[0].startsWith("\\")) {
-        return L_Out.True;
-      }
-    }
+    // *
+    // if (node.vars.length !== 1) {
+    //   return L_Out.Error;
+    // } else {
+    //   if (node.vars[0].startsWith("\\")) {
+    //     return L_Out.True;
+    //   }
+    // }
+    // return L_Out.True;
+    // *
 
-    return L_Out.True;
+    return L_Out.Error;
   } catch {
     return L_Out.Error;
   }

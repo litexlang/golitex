@@ -13,7 +13,9 @@ export const specialChars = [
   "|",
   "$",
   '"',
+  "\\",
 ];
+export const SlashKeyword = "\\";
 
 export const KnowTypeKeywords = ["know", "assume"];
 export const ThenKeywords = ["=>"];
