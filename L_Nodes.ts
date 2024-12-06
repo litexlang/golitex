@@ -1,7 +1,7 @@
 import { L_BuiltinsKeywords } from "./L_Builtins";
 import { L_Env } from "./L_Env";
 import { compositeSymbolParse } from "./L_Parser";
-import { L_Symbol } from "./L_Structs";
+import { L_OptSymbol, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
 
@@ -149,7 +149,7 @@ export class IfNode extends LogicNode {}
 
 export class OptNode extends ToCheckNode {
   constructor(
-    public name: string,
+    public name: L_OptSymbol,
     public vars: L_Symbol[],
     isT: boolean = true,
     public checkVars: L_Symbol[][] | undefined = undefined
@@ -252,8 +252,7 @@ export class ExistNode extends OptNode {
 
 export class DefNode extends L_Node {
   constructor(
-    public name: string = "",
-    public vars: L_Symbol[] = [],
+    public opt: L_Symbol,
     public cond: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [] // public defName: string | undefined = undefined // public cond: ToCheckNode[] = [],
   ) {

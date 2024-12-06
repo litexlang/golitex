@@ -16,6 +16,10 @@ export class L_Composite extends L_Symbol {
 
 export class L_OptSymbol {
   constructor(public name: string) {}
+
+  toString() {
+    return this.name;
+  }
 }
 
 export enum L_Out {
