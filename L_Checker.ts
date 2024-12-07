@@ -10,15 +10,14 @@ import { L_Env } from "./L_Env";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { L_ReportErr } from "./L_Messages";
+import { knowExec } from "./L_Executor";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
     if (toCheck instanceof OptNode) {
       return checkOptFact(env, toCheck);
     } else if (toCheck instanceof IfNode) {
-      //TODO
-
-      return L_Out.Error;
+      return checkIfFact(env, toCheck);
     } else {
       return L_Out.Error;
     }
@@ -31,6 +30,22 @@ export function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
   try {
     const newEnv = new L_Env(env);
     for (const v of toCheck.vars) {
+      if (v instanceof L_Singleton) {
+        newEnv.newSingletonVar(v.value);
+      } else if (v instanceof L_Composite) {
+        //TODO
+        throw Error();
+      }
+    }
+
+    for (const req of toCheck.req) {
+      // TODO more error report
+      L_Memory.newFact(env, req);
+    }
+
+    for (const onlyIf of toCheck.onlyIfs) {
+      const out = checkFact(env, onlyIf);
+      if (out !== L_Out.True) return out;
     }
 
     return L_Out.True;

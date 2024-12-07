@@ -404,10 +404,25 @@ export const exampleList: ExampleItem[] = [
       "def set(x); def set2(x); let x: set(x);",
       "know if x,y: set(x), set(y) {set2(x), set2(y)};",
       "let a,b: set(a), set(b);",
+      "set2(a);",
       "set2(a)[a,b];",
     ],
     debug: false,
     print: true,
+  },
+  {
+    name: "equality of sets",
+    code: [
+      "def equal(a,b); def in(x,a);",
+      "know if a,b: set(a), set(b), equal(a,b)  {if x: in(x,a) {in(x,b)}, if x: in(x,b) {in(x,a)}};",
+      "know if a,b: set(a), set(b), if x: in(x,a) {in(x,b)}, if x: in(x,b) {in(x,a)} {equal(a,b)};",
+    ],
+    test: [
+      "{let a, b: set(a), set(b), equal(a,b); if x: in(x,a)  {in(x,b)[a,b;x]} , if x: in(x,b)  {in(x,a)[a,b;x]}; let x: in(x,a); in(x,b); }",
+    ],
+    debug: true,
+    print: true,
+    runTest: false,
   },
 ];
 
