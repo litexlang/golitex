@@ -438,7 +438,7 @@ export const exampleList: ExampleItem[] = [
     ],
     test: [
       "let a, b;",
-      "know \\singleton{a} is set;",
+      "know set(\\singleton{a});",
       "let x;",
       "know in (x, \\singleton{a});",
       "equal(x,a);",
@@ -448,6 +448,18 @@ export const exampleList: ExampleItem[] = [
     debug: true,
     print: false,
     runTest: false,
+  },
+  {
+    name: "pair",
+    code: [
+      "know if x, a, b: in(x, \\pair{a}{b}) { if not equal(x, b) {equal(x, a)} , if not equal(x, a) {equal(x, b)} } ;",
+      "know if x, a, b : in(x,a) {in(x, \\pair{a,b})};",
+      "know if x, a, b : in(x,b) {in(x, \\pair{a,b})};",
+    ],
+    test: ["let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; "],
+    debug: false,
+    runTest: false,
+    print: false,
   },
 ];
 

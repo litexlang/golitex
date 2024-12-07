@@ -8,7 +8,7 @@ export const specialChars = [
   ":",
   ",",
   ";",
-  "\n",
+  // "\n",
   "&",
   "|",
   "$",

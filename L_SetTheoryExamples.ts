@@ -44,13 +44,13 @@ export const exampleList: ExampleItem[] = [
       "know if x, a: equal(x,a)  {in(x, \\singleton{a})};",
     ],
     test: [
-      "let a, b;",
-      "know set( \\singleton{a});",
-      "let x;",
-      "know in (x, \\singleton{a});",
-      "equal(x,a);",
-      "in(x, \\singleton{a}); ",
-      "if _x, _a: equal(_x,_a)  {in(_x, \\singleton{_a})[_x, _a] };",
+      `{let a, b;
+      know set( \\singleton{a});
+      let x;
+      know in (x, \\singleton{a});
+      equal(x,a);
+      in(x, \\singleton{a}); 
+      if _x, _a: equal(_x,_a)  {in(_x, \\singleton{_a})[_x, _a] };}`,
     ],
     debug: true,
     print: true,
@@ -59,30 +59,30 @@ export const exampleList: ExampleItem[] = [
   {
     name: "pair",
     code: [
-      "know if x, a, b: in(x, \\pair{a}{b}) => { if not equal(x, b) => {equal(x, a)} , if not equal(x, a) => {equal(x, b)} } ;",
-      "know if x, a, b : in(x,a) => {in(x, \\pair{a,b})};",
-      "know if x, a, b : in(x,b) => {in(x, \\pair{a,b})};",
+      "know if x, a, b: in(x, \\pair{a,b}) { if :  not equal(x, b) {equal(x, a)} , if : not equal(x, a) {equal(x, b)} } ;",
+      "know if x, a, b : in(x,a) {in(x, \\pair{a,b})};",
+      "know if x, a, b : in(x,b) {in(x, \\pair{a,b})};",
     ],
-    test: ["let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; "],
-    debug: false,
-    runTest: false,
-    print: false,
+    test: ["{let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; }"],
+    debug: true,
+    runTest: true,
+    print: true,
   },
   {
     name: "pair-wise union",
     code: [
-      "know if x, y: set(x), set(y) => {if z: in(z, x) => { in(z , \\union{x, y})}, if z : in(z, y) => {in(z, \\union{x,y})} };",
-      "know if x, y, z: in(z , \\union{x, y}) => {if not in(z, x) => {in(z, y)}, if not in(z, y) => {in(z, x)}};",
+      "know if x, y: set(x), set(y) {if z: in(z, x) { in(z , \\union{x, y})}, if z : in(z, y) {in(z, \\union{x,y})} };",
+      "know if x, y, z: in(z , \\union{x, y}) {if :  not in(z, x) {in(z, y)}, if : not in(z, y) {in(z, x)}};",
     ],
     test: [
-      "let a,b: a is set, b is set;",
-      "let x: in(x,a); ",
-      "in(x, \\union{a,b}) [a,b;x];", // x, a, b,
-      "in(x, \\union{a,b});",
+      `{let a,b: set(a), set(b);
+      let x: in(x,a); 
+      in(x, \\union{a,b}) [a,b;x];
+      in(x, \\union{a,b});}`,
     ],
-    debug: false,
-    runTest: false,
-    print: false,
+    debug: true,
+    runTest: true,
+    print: true,
   },
   {
     name: "subset",

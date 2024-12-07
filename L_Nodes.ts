@@ -216,14 +216,7 @@ export class OptNode extends ToCheckNode {
     const newVars: L_Symbol[] = [];
     for (let v of this.vars) {
       let fixed = false;
-      // for (const freeFixPair of freeFixPairs) {
-      // if (L_Symbol.literallyCompareTwoSymbols(env, v, freeFixPair[0])) {
-      //   newVars.push(freeFixPair[1]);
-      //   fixed = true;
-      //   break;
-      // }
-      // }
-      v = v.fix(env, freeFixPairs);
+      v = v.fix(env, freeFixPairs); // if v is singleton, then fix itself; if v is composite, then fix its variables.
       if (!fixed) newVars.push(v);
     }
 
