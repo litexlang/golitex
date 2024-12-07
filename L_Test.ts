@@ -425,13 +425,29 @@ export const exampleList: ExampleItem[] = [
     runTest: false,
   },
   {
-    name: "test let_composite",
-    code: [
-      "def set(x); def set2(x); def number(x);",
-      "let_composite \\frac{x,y}: number(x), number(y);",
-    ],
+    name: "test not",
+    code: ["def set(x); def set2(x); def number(x);", ""],
     debug: false,
     print: true,
+  },
+  {
+    name: "singleton",
+    code: [
+      "know if x, a: in(x, \\singleton{a})  {equal(x, a)};",
+      "know if x, a: equal(x,a)  {in(x, \\singleton{a})};",
+    ],
+    test: [
+      "let a, b;",
+      "know \\singleton{a} is set;",
+      "let x;",
+      "know in (x, \\singleton{a});",
+      "equal(x,a);",
+      "in(x, \\singleton{a})[x,a]; ",
+      "if _x, _a: equal(_x,_a)  {in(_x, \\singleton{_a})[_x,_a] };",
+    ],
+    debug: true,
+    print: false,
+    runTest: false,
   },
 ];
 

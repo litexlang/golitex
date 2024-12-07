@@ -40,11 +40,11 @@ export function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
 
     for (const req of toCheck.req) {
       // TODO more error report
-      L_Memory.newFact(env, req);
+      L_Memory.newFact(newEnv, req);
     }
 
     for (const onlyIf of toCheck.onlyIfs) {
-      const out = checkFact(env, onlyIf);
+      const out = checkFact(newEnv, onlyIf);
       if (out !== L_Out.True) return out;
     }
 
@@ -131,7 +131,8 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       for (const root of roots) {
         if (root[0].optSymbol.name !== toCheck.optSymbol.name) continue;
 
-        if (root[1].length !== toCheck.checkVars?.length) continue;
+        if (toCheck.checkVars === undefined) continue;
+        if (root[1].length !== toCheck.checkVars.length) continue;
 
         let successful = true;
         let freeFixedPairs: [L_Symbol, L_Symbol][] = [];

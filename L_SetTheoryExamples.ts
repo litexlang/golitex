@@ -6,7 +6,7 @@ import * as fs from "fs";
 export const exampleList: ExampleItem[] = [
   {
     name: "define basic concepts: object, set",
-    code: ["def object(x); def set(x);", "know if x: set(x) => {object(x)};"],
+    code: ["def object(x); def set(x);", "know if x: set(x) {object(x)};"],
     test: ["{let a: set(a); object(a);}"],
     debug: true,
     print: false,
@@ -16,11 +16,11 @@ export const exampleList: ExampleItem[] = [
     name: "equality of sets",
     code: [
       "def equal(a,b); def in(x,a);",
-      "know if a,b: set(a), set(b), equal(a,b) => {if x: in(x,a) => {in(x,b)}, if x: in(x,b) => {in(x,a)}};",
-      "know if a,b: set(a), set(b), if x: in(x,a) => {in(x,b)}, if x: in(x,b) => {in(x,a)} => {equal(a,b)};",
+      "know if a,b: set(a), set(b), equal(a,b)  {if x: in(x,a) {in(x,b)}, if x: in(x,b) {in(x,a)}};",
+      "know if a,b: set(a), set(b), if x: in(x,a) {in(x,b)}, if x: in(x,b) {in(x,a)} {equal(a,b)};",
     ],
     test: [
-      "{let a, b: set(a), set(b), equal(a,b); if x: in(x,a) => {in(x,b)[a,b;x]} , if x: in(x,b) => {in(x,a)[a,b;x]}; let x: in(x,a); in(x,b); }",
+      "{let a, b: set(a), set(b), equal(a,b); if x: in(x,a)  {in(x,b)[a,b;x]} , if x: in(x,b)  {in(x,a)[a,b;x]}; let x: in(x,a); in(x,b); }",
     ],
     debug: true,
     print: false,
@@ -28,35 +28,33 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "empty set",
-    code: [
-      "let EMPTY_SET: set(EMPTY_SET);know if x: => {not in(x,EMPTY_SET)};",
-    ],
+    code: ["let EMPTY_SET: set(EMPTY_SET);know if x: {not in(x,EMPTY_SET)};"],
     test: [
       "// here we must use _x to avoid conflict with x;",
       "{ let x; not in(x, EMPTY_SET);  if _x: => {not in(_x,EMPTY_SET)}; }",
     ],
-    debug: true,
+    debug: false,
     print: false,
     runTest: false,
   },
   {
     name: "singleton",
     code: [
-      "know if x, a: in(x, \\singleton{a}) => {equal(x, a)};",
-      "know if x, a: equal(x,a) => {in(x, \\singleton{a})};",
+      "know if x, a: in(x, \\singleton{a})  {equal(x, a)};",
+      "know if x, a: equal(x,a)  {in(x, \\singleton{a})};",
     ],
     test: [
       "let a, b;",
-      "know \\singleton{a} is set;",
+      "know set( \\singleton{a});",
       "let x;",
       "know in (x, \\singleton{a});",
       "equal(x,a);",
-      "in(x, \\singleton{a})[x,a]; ",
-      "if _x, _a: equal(_x,_a) => {in(_x, \\singleton{_a})[_x,_a] };",
+      "in(x, \\singleton{a}); ",
+      "if _x, _a: equal(_x,_a)  {in(_x, \\singleton{_a})[_x, _a] };",
     ],
     debug: true,
-    print: false,
-    runTest: false,
+    print: true,
+    runTest: true,
   },
   {
     name: "pair",
@@ -66,7 +64,7 @@ export const exampleList: ExampleItem[] = [
       "know if x, a, b : in(x,b) => {in(x, \\pair{a,b})};",
     ],
     test: ["let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; "],
-    debug: true,
+    debug: false,
     runTest: false,
     print: false,
   },
@@ -82,7 +80,7 @@ export const exampleList: ExampleItem[] = [
       "in(x, \\union{a,b}) [a,b;x];", // x, a, b,
       "in(x, \\union{a,b});",
     ],
-    debug: true,
+    debug: false,
     runTest: false,
     print: false,
   },
@@ -102,7 +100,7 @@ export const exampleList: ExampleItem[] = [
       "in(x,B)[A,B;x];", // True
       "in(x,B);",
     ],
-    debug: true,
+    debug: false,
     runTest: false,
     print: false,
   },
@@ -115,7 +113,7 @@ export const exampleList: ExampleItem[] = [
     ],
     test: ["{def p(x); is_property(p);}"],
     runTest: false,
-    debug: true,
+    debug: false,
     print: false,
   },
   {
@@ -131,7 +129,7 @@ export const exampleList: ExampleItem[] = [
       "if X: in(X, \\intersection{A,B}) => { in(X,A)[X,A,B], in(X, B)[X,A,B] };", // Don't know why this does not work.
     ],
     runTest: true,
-    debug: true,
+    debug: false,
     print: true,
   },
   {
