@@ -56,6 +56,48 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     }
   }
 
+  // use given if-fact to check operator-fact
+  // There are several default ways to use given opt to fix freeVars of known
+  // 1. known is one-layer, and we replace all vars in that layer with given opt
+  function useIfToCheckOpt(
+    env: L_Env,
+    givenOpt: OptNode,
+    known: IfNode
+  ): boolean {
+    // 1. known is one-layer, and we replace all vars in that layer with given opt
+    let successful = true;
+    const freeFixPairs: [L_Symbol, L_Symbol][] = [];
+    for (let i = 0; i < known.vars.length; i++) {
+      if (!L_Symbol.structureEqual(env, known.vars[i], givenOpt.vars[i])) {
+        successful = false;
+        break;
+      } else {
+        freeFixPairs.push([known.vars[i], givenOpt.vars[i]]);
+      }
+    }
+    if (successful) {
+      // must be single layer
+      if (known.onlyIfs.every((e) => e instanceof OptNode)) {
+        const fixedKnown = known.fix(env, freeFixPairs);
+        if (fixedKnown.req.every((e) => checkFact(env, e) === L_Out.True)) {
+          if (
+            fixedKnown.onlyIfs.some(
+              (e) =>
+                (e as OptNode).optSymbol.name === givenOpt.optSymbol.name &&
+                (e as OptNode).vars.every((v, i) =>
+                  L_Symbol.literallyCompareVars(env, givenOpt.vars[i], v)
+                )
+            )
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
   // Main part of this function
   try {
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
@@ -68,6 +110,7 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         if (out) return L_Out.True;
       } else if (curKnown instanceof IfNode) {
         //TODO
+        const out = useIfToCheckOpt(env, toCheck, curKnown);
       }
     }
 

@@ -383,6 +383,9 @@ export const exampleList: ExampleItem[] = [
     code: [
       "def set(x); let x: set(x);",
       "know if x, \\frac{a,b}[a,b] : set(x) {set(x)};",
+      "def set2(x); know if x: set(x) {set2(x)};",
+      "let y: set(y);",
+      "set2(y);",
     ],
     debug: true,
     print: true,

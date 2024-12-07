@@ -10,6 +10,10 @@ export class ToCheckNode extends L_Node {
     super();
   }
 
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
+    throw Error();
+  }
+
   varsDeclared(env: L_Env, freeVars: string[]): boolean {
     env;
     freeVars;
@@ -67,6 +71,24 @@ export class LogicNode extends ToCheckNode {
     isT: boolean = true
   ) {
     super(isT);
+  }
+
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
+    const newReq: ToCheckNode[] = [];
+    for (const r of this.req) {
+      newReq.push(r.fix(env, freeFixPairs));
+    }
+
+    const newOnlyIf: ToCheckNode[] = [];
+    for (const onlyIf of this.onlyIfs) {
+      newOnlyIf.push(onlyIf.fix(env, freeFixPairs));
+    }
+
+    if (this instanceof IfNode) {
+      return new IfNode([], newReq, newOnlyIf);
+    }
+
+    throw Error();
   }
 
   examineVarsNotDoubleDecl(varsFromAboveIf: string[]): boolean {
@@ -147,6 +169,7 @@ export class LogicNode extends ToCheckNode {
     return [...this.req, ...this.onlyIfs].every((e) => e.factsDeclared(env));
   }
 
+  // extract root of if-then. get operator-fact and its requirements. return operator-fact-requirement-pair.
   getRootNodes(): [OptNode, IfNode[]][] {
     const out: [OptNode, IfNode[]][] = [];
     for (const onlyIf of this.onlyIfs) {
@@ -174,6 +197,23 @@ export class OptNode extends ToCheckNode {
     public checkVars: L_Symbol[][] | undefined = undefined
   ) {
     super(isT);
+  }
+
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptNode {
+    const newVars: L_Symbol[] = [];
+    for (const v of this.vars) {
+      let fixed = false;
+      for (const freeFixPair of freeFixPairs) {
+        if (L_Symbol.literallyCompareVars(env, v, freeFixPair[0])) {
+          newVars.push(freeFixPair[1]);
+          fixed = true;
+          break;
+        }
+      }
+      if (!fixed) newVars.push(v);
+    }
+
+    return new OptNode(this.optSymbol, newVars, this.isT, undefined);
   }
 
   override containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
