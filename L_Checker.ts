@@ -111,6 +111,7 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       } else if (curKnown instanceof IfNode) {
         //TODO
         const out = useIfToCheckOpt(env, toCheck, curKnown);
+        if (out) return L_Out.True;
       }
     }
 
