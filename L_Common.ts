@@ -18,12 +18,11 @@ export const specialChars = [
 export const SlashKeyword = "\\";
 export const LetCompositeKeyword = "let_composite";
 export const KnowTypeKeywords = ["know", "assume"];
-export const ThenKeywords = ["=>"];
-export const OnlyIfThenKeywords = ["<="];
-export const IffThenKeywords = ["<=>"];
-export const IfKeywords = ["if"];
+export const ThenKeyword = "=>";
+export const IffThenKeyword = "<=>";
+export const IfKeyword = "if";
 export const OnlyIfKeywords = ["only_if"];
-export const IffKeywords = ["iff"];
+export const IffKeyword = "iff";
 export const ExistKeyword = "exist";
 export const DefCompositeKeyword = "def_composite";
 export const DefKeywords = ["def"];
@@ -66,12 +65,11 @@ export const L_Keywords: string[] = [
   ByKeyword,
   WhenKeyword,
   ...KnowTypeKeywords,
-  ...ThenKeywords,
-  ...OnlyIfThenKeywords,
-  ...IffThenKeywords,
-  ...IfKeywords,
+  ...ThenKeyword,
+  ...IffThenKeyword,
+  IfKeyword,
   ...OnlyIfKeywords,
-  ...IffKeywords,
+  ...IffKeyword,
   ExistKeyword,
   ...DefKeywords,
   ...ProveKeywords,
@@ -94,11 +92,4 @@ export const L_Keywords: string[] = [
   // STKeyword,
 ];
 
-export const LogicalOptPairs: { [k: string]: string[] } = {
-  if: ThenKeywords,
-  iff: IffThenKeywords,
-  only_if: OnlyIfThenKeywords,
-  exist: ThenKeywords,
-};
-
-export const LogicalKeywords = [...IfKeywords, ...IffKeywords];
+export const LogicalKeywords = [IfKeyword, ...IffKeyword];

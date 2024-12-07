@@ -83,6 +83,7 @@ export class L_Singleton extends L_Symbol {
   }
 }
 
+// e.g. \frac{1,2} ; \+{1,2} ; \union{A,B} ; \set{x}
 export class L_Composite extends L_Symbol {
   constructor(public name: string, public values: L_Symbol[]) {
     super();
@@ -110,6 +111,7 @@ export class L_Composite extends L_Symbol {
   }
 }
 
+// e.g. \frac{\frac{a,b},c}[a,b,c] Here a,b,c are free variables that appear in the given composite symbol.
 export class CompositeSymbolInIfReq extends L_Composite {
   constructor(name: string, values: L_Symbol[], public newVars: L_Singleton[]) {
     super(name, values);
