@@ -14,6 +14,12 @@ export const exampleList: ExampleItem[] = [
       "set (\\frac{1,2})[\\frac{3,4}, \\frac{5,6}] ;",
       "if x, \\frac{a,b}[a,b] : set(x) {set(x)};",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "let_composite",
+    code: ["let_composite \\frac{x,y} : number(x), number(y);"],
     debug: true,
     print: true,
   },

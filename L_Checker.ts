@@ -102,8 +102,8 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         }
       }
       if (successful) {
-        // must be single layer
         // TODO : A BEtter approach: check root opt name equal to given toCheck at first instead of at the end
+        // must be single layer
         if (known.onlyIfs.every((e) => e instanceof OptNode)) {
           const fixedKnown = known.fix(env, freeFixPairs);
           if (fixedKnown.req.every((e) => checkFact(env, e) === L_Out.True)) {

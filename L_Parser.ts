@@ -24,6 +24,7 @@ import {
 import { L_Env } from "./L_Env";
 import {
   AreKeywords,
+  LetCompositeKeyword,
   ByKeyword,
   ClearKeyword,
   ContradictionKeyword,
@@ -59,7 +60,6 @@ import {
   L_Singleton,
   L_Symbol,
 } from "./L_Structs";
-import { only } from "node:test";
 
 function arrParse<T>(
   env: L_Env,
@@ -322,6 +322,7 @@ const KeywordFunctionMap: {
   macro: macroParse,
   "[": postfixProveParse,
   LetHashKeyword: letParse,
+  let_composite: LetCompositeParse,
 };
 
 export function getNodesFromSingleNode(
@@ -1089,14 +1090,12 @@ export function LetCompositeParse(
     skip(tokens, L_Common.LetCompositeKeyword);
     const composite = compositeParse(env, tokens);
     skip(tokens, ":");
-    const facts = arrParse<ToCheckNode>(
-      env,
-      tokens,
-      factsParse,
-      undefined,
-      L_Ends,
-      true
-    );
+    const facts: ToCheckNode[] = [];
+    while (!isCurToken(tokens, L_Ends)) {
+      facts.push(...factsParse(env, tokens, [",", ...L_Ends], false, false));
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+    skip(tokens, L_Ends);
 
     return new LetCompositeNode(composite, facts);
   } catch (error) {

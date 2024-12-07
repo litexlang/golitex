@@ -407,7 +407,7 @@ export const exampleList: ExampleItem[] = [
       "set2(a);",
       "set2(a)[a,b];",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -423,6 +423,15 @@ export const exampleList: ExampleItem[] = [
     debug: false,
     print: true,
     runTest: false,
+  },
+  {
+    name: "test let_composite",
+    code: [
+      "def set(x); def set2(x); def number(x);",
+      "let_composite \\frac{x,y}: number(x), number(y);",
+    ],
+    debug: false,
+    print: true,
   },
 ];
 
