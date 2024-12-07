@@ -444,44 +444,39 @@ function proveBuiltin(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
 }
 
 function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): L_Out {
-  try {
-    const newEnv = new L_Env(env);
-    for (const v of toProve.vars) {
-      const ok = newEnv.newSingletonVar(v);
-      if (!ok) throw Error();
-    }
-
-    for (const fact of toProve.req) {
-      const ok = L_Memory.store(newEnv, fact, [], true);
-      if (!ok) throw Error();
-    }
-
-    for (const subNode of block) {
-      const out = nodeExec(newEnv, subNode, false);
-      if (out === L_Out.Error) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`Errors: Failed to execute ${subNode}`);
-        return L_Out.Error;
-      }
-    }
-
-    const ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
-    if (!ok) return L_Out.Error;
-
-    for (const toCheck of toProve.onlyIfs) {
-      const out = nodeExec(newEnv, toCheck, false);
-      if (out !== L_Out.True) return out;
-    }
-
-    L_Memory.store(env, toProve, [], true);
-
-    newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
-
-    return L_Out.True;
-  } catch {
-    env.newMessage(`Error: ${toProve}`);
-    return L_Out.Error;
-  }
+  return L_Out.Error;
+  // TODO
+  // try {
+  //   const newEnv = new L_Env(env);
+  //   for (const v of toProve.vars) {
+  //     const ok = newEnv.newSingletonVar(v);
+  //     if (!ok) throw Error();
+  //   }
+  //   for (const fact of toProve.req) {
+  //     const ok = L_Memory.store(newEnv, fact, [], true);
+  //     if (!ok) throw Error();
+  //   }
+  //   for (const subNode of block) {
+  //     const out = nodeExec(newEnv, subNode, false);
+  //     if (out === L_Out.Error) {
+  //       newEnv.getMessages().forEach((e) => env.newMessage(e));
+  //       env.newMessage(`Errors: Failed to execute ${subNode}`);
+  //       return L_Out.Error;
+  //     }
+  //   }
+  //   const ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
+  //   if (!ok) return L_Out.Error;
+  //   for (const toCheck of toProve.onlyIfs) {
+  //     const out = nodeExec(newEnv, toCheck, false);
+  //     if (out !== L_Out.True) return out;
+  //   }
+  //   L_Memory.store(env, toProve, [], true);
+  //   newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
+  //   return L_Out.True;
+  // } catch {
+  //   env.newMessage(`Error: ${toProve}`);
+  //   return L_Out.Error;
+  // }
 }
 
 //

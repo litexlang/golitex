@@ -61,7 +61,7 @@ export class OrNode extends ToCheckNode {
 
 export class LogicNode extends ToCheckNode {
   constructor(
-    public vars: string[] = [],
+    public vars: L_Symbol[] = [],
     public req: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [],
     isT: boolean = true
@@ -70,13 +70,15 @@ export class LogicNode extends ToCheckNode {
   }
 
   examineVarsNotDoubleDecl(varsFromAboveIf: string[]): boolean {
-    const ok = this.vars.every((e) => !varsFromAboveIf.includes(e));
-    if (!ok) return false;
-    varsFromAboveIf = [...varsFromAboveIf, ...this.vars];
-    return this.onlyIfs.every(
-      (e) =>
-        !(e instanceof LogicNode) || e.examineVarsNotDoubleDecl(varsFromAboveIf)
-    );
+    return false;
+    // TODO
+    // const ok = this.vars.every((e) => !varsFromAboveIf.includes(e));
+    // if (!ok) return false;
+    // varsFromAboveIf = [...varsFromAboveIf, ...this.vars];
+    // return this.onlyIfs.every(
+    //   (e) =>
+    //     !(e instanceof LogicNode) || e.examineVarsNotDoubleDecl(varsFromAboveIf)
+    // );
   }
 
   override containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
@@ -134,9 +136,11 @@ export class LogicNode extends ToCheckNode {
   }
 
   override varsDeclared(env: L_Env, freeVars: string[]): boolean {
-    return [...this.req, ...this.onlyIfs].every((e) =>
-      e.varsDeclared(env, [...this.vars, ...freeVars])
-    );
+    return false;
+    // TODO
+    // return [...this.req, ...this.onlyIfs].every((e) =>
+    //   e.varsDeclared(env, [...this.vars, ...freeVars])
+    // );
   }
 
   override factsDeclared(env: L_Env): boolean {

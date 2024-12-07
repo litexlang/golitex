@@ -1,4 +1,4 @@
-import { IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
+import { ExistNode, IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
@@ -8,6 +8,10 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
     if (toCheck instanceof OptNode) {
       return checkOptFact(env, toCheck);
+    } else if (toCheck instanceof IfNode) {
+      //TODO
+
+      return L_Out.Error;
     } else {
       return L_Out.Error;
     }
@@ -16,7 +20,43 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   }
 }
 
+export function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
+  try {
+    const newEnv = new L_Env(env);
+    for (const v of toCheck.vars) {
+    }
+
+    return L_Out.True;
+  } catch {
+    return env.errMesReturnL_Out(toCheck);
+  }
+}
+
 export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
+  // compare vars length in given opts, compare them
+  function literallyCompareOptVars(
+    env: L_Env,
+    opt1: OptNode,
+    opt2: OptNode
+  ): boolean {
+    try {
+      if (opt1.vars.length !== opt2.vars.length) {
+        return false;
+      }
+
+      for (let i = 0; i < opt1.vars.length; i++) {
+        if (!L_Symbol.literallyCompareVars(env, opt1.vars[i], opt2.vars[i]))
+          return false;
+      }
+
+      return true;
+    } catch {
+      L_ReportErr(env, literallyCompareOptVars, opt1);
+      return false;
+    }
+  }
+
+  // Main part of this function
   try {
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
     if (relatedKnownFacts === undefined) {
@@ -27,35 +67,13 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         const out = literallyCompareOptVars(env, toCheck, curKnown);
         if (out) return L_Out.True;
       } else if (curKnown instanceof IfNode) {
+        //TODO
       }
     }
 
     return L_Out.Unknown;
   } catch {
     return env.errMesReturnL_Out(toCheck);
-  }
-}
-
-// compare vars length in given opts, compare them literally
-export function literallyCompareOptVars(
-  env: L_Env,
-  opt1: OptNode,
-  opt2: OptNode
-): boolean {
-  try {
-    if (opt1.vars.length !== opt2.vars.length) {
-      return false;
-    }
-
-    for (let i = 0; i < opt1.vars.length; i++) {
-      if (!L_Symbol.literallyCompareVars(env, opt1.vars[i], opt2.vars[i]))
-        return false;
-    }
-
-    return true;
-  } catch {
-    L_ReportErr(env, literallyCompareOptVars, opt1);
-    return false;
   }
 }
 
@@ -89,41 +107,37 @@ export function checkIfThen(
   toCheck: IfNode,
   toCheckVarsFromIf: string[][]
 ): L_Out {
-  if (toCheck.isT === false) {
-    env.newMessage(`not-if-then fact ${toCheck} can not be checked directly.`);
-    return L_Out.Error;
-  }
-
-  const out = openEnvAndCheck(env, toCheck, toCheckVarsFromIf);
-  return out;
-
-  function openEnvAndCheck(
-    oldEnv: L_Env,
-    toCheck: IfNode,
-    toCheckVarsFromIf: string[][]
-  ): L_Out {
-    const newEnv = new L_Env(oldEnv);
-
-    for (const e of toCheck.vars) {
-      const ok = newEnv.newSingletonVar(e);
-      if (!ok) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        return L_Out.Error;
-      }
-    }
-
-    for (const f of toCheck.req) L_Memory.store(newEnv, f, [], true);
-    for (const onlyIf of toCheck.onlyIfs) {
-      const out = check(newEnv, onlyIf, [...toCheckVarsFromIf, toCheck.vars]);
-      if (out !== L_Out.True) return out;
-      else {
-        // checked facts in then are used as stored fact.
-        L_Memory.store(newEnv, toCheck, [], true);
-      }
-    }
-
-    return L_Out.True;
-  }
+  return L_Out.Error;
+  // if (toCheck.isT === false) {
+  //   env.newMessage(`not-if-then fact ${toCheck} can not be checked directly.`);
+  //   return L_Out.Error;
+  // }
+  // const out = openEnvAndCheck(env, toCheck, toCheckVarsFromIf);
+  // return out;
+  // function openEnvAndCheck(
+  //   oldEnv: L_Env,
+  //   toCheck: IfNode,
+  //   toCheckVarsFromIf: string[][]
+  // ): L_Out {
+  //   const newEnv = new L_Env(oldEnv);
+  //   for (const e of toCheck.vars) {
+  //     const ok = newEnv.newSingletonVar(e);
+  //     if (!ok) {
+  //       newEnv.getMessages().forEach((e) => env.newMessage(e));
+  //       return L_Out.Error;
+  //     }
+  //   }
+  //   for (const f of toCheck.req) L_Memory.store(newEnv, f, [], true);
+  //   for (const onlyIf of toCheck.onlyIfs) {
+  //     const out = check(newEnv, onlyIf, [...toCheckVarsFromIf, toCheck.vars]);
+  //     if (out !== L_Out.True) return out;
+  //     else {
+  //       // checked facts in then are used as stored fact.
+  //       L_Memory.store(newEnv, toCheck, [], true);
+  //     }
+  //   }
+  //   return L_Out.True;
+  // }
 }
 
 /** MAIN FUNCTION OF THE WHOLE PROJECT

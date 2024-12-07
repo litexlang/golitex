@@ -1,3 +1,4 @@
+import { lchown } from "fs";
 import { L_Env } from "./L_Env";
 import { L_ReportErr } from "./L_Messages";
 import { ToCheckNode } from "./L_Nodes";
@@ -106,6 +107,12 @@ export class L_Composite extends L_Symbol {
     }
 
     return new L_Composite(this.name, newValues);
+  }
+}
+
+export class CompositeSymbolInIfReq extends L_Composite {
+  constructor(name: string, values: L_Symbol[], public newVars: L_Singleton[]) {
+    super(name, values);
   }
 }
 

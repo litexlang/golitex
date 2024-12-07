@@ -81,27 +81,29 @@ function storeIfThen(
   req: StoredReq[] = [],
   storeContrapositive: boolean = true
 ): boolean {
-  try {
-    if (ifThen.isT) {
-      for (const fact of ifThen.onlyIfs) {
-        const newReq = new StoredReq(ifThen.vars, ifThen.req);
-        const ok = store(
-          env,
-          fact,
-          [...req, newReq],
-          storeContrapositive
-          // storeDefName,
-        );
-        if (!ok) return false;
-      }
-    } else {
-      return false;
-    }
-
-    return true;
-  } catch {
-    return false;
-  }
+  //*
+  // try {
+  //   if (ifThen.isT) {
+  //     for (const fact of ifThen.onlyIfs) {
+  //       const newReq = new StoredReq(ifThen.vars, ifThen.req);
+  //       const ok = store(
+  //         env,
+  //         fact,
+  //         [...req, newReq],
+  //         storeContrapositive
+  //         // storeDefName,
+  //       );
+  //       if (!ok) return false;
+  //     }
+  //   } else {
+  //     return false;
+  //   }
+  //   return true;
+  // } catch {
+  //   return false;
+  // }
+  //*
+  return false;
 }
 
 function storeOpt(
