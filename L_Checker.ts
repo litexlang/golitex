@@ -1,4 +1,11 @@
-import { ExistNode, IfNode, OptNode, OrNode, ToCheckNode } from "./L_Nodes";
+import {
+  ExistNode,
+  IfNode,
+  LogicNode,
+  OptNode,
+  OrNode,
+  ToCheckNode,
+} from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
@@ -45,7 +52,7 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       }
 
       for (let i = 0; i < opt1.vars.length; i++) {
-        if (!L_Symbol.literallyCompareVars(env, opt1.vars[i], opt2.vars[i]))
+        if (!L_Symbol.literallyCompareTwoSymbols(env, opt1.vars[i], opt2.vars[i]))
           return false;
       }
 
@@ -64,33 +71,65 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     givenOpt: OptNode,
     known: IfNode
   ): boolean {
-    // 1. known is one-layer, and we replace all vars in that layer with given opt
-    let successful = true;
-    const freeFixPairs: [L_Symbol, L_Symbol][] = [];
-    for (let i = 0; i < known.vars.length; i++) {
-      if (!L_Symbol.structureEqual(env, known.vars[i], givenOpt.vars[i])) {
-        successful = false;
-        break;
-      } else {
-        freeFixPairs.push([known.vars[i], givenOpt.vars[i]]);
+    if (givenOpt.checkVars === undefined) {
+      // 1. known is one-layer, and we replace all vars in that layer with given opt
+      let successful = true;
+      const freeFixPairs: [L_Symbol, L_Symbol][] = [];
+      for (let i = 0; i < known.vars.length; i++) {
+        if (!L_Symbol.structureEqual(env, known.vars[i], givenOpt.vars[i])) {
+          successful = false;
+          break;
+        } else {
+          freeFixPairs.push([known.vars[i], givenOpt.vars[i]]);
+        }
       }
-    }
-    if (successful) {
-      // must be single layer
-      if (known.onlyIfs.every((e) => e instanceof OptNode)) {
-        const fixedKnown = known.fix(env, freeFixPairs);
-        if (fixedKnown.req.every((e) => checkFact(env, e) === L_Out.True)) {
-          if (
-            fixedKnown.onlyIfs.some(
-              (e) =>
-                (e as OptNode).optSymbol.name === givenOpt.optSymbol.name &&
-                (e as OptNode).vars.every((v, i) =>
-                  L_Symbol.literallyCompareVars(env, givenOpt.vars[i], v)
-                )
-            )
-          ) {
-            return true;
+      if (successful) {
+        // must be single layer
+        if (known.onlyIfs.every((e) => e instanceof OptNode)) {
+          const fixedKnown = known.fix(env, freeFixPairs);
+          if (fixedKnown.req.every((e) => checkFact(env, e) === L_Out.True)) {
+            if (
+              fixedKnown.onlyIfs.some(
+                (e) =>
+                  (e as OptNode).optSymbol.name === givenOpt.optSymbol.name &&
+                  (e as OptNode).vars.every((v, i) =>
+                    L_Symbol.literallyCompareTwoSymbols(env, givenOpt.vars[i], v)
+                  )
+              )
+            ) {
+              return true;
+            }
           }
+        }
+      }
+    } else {
+      const roots: [OptNode, IfNode[]][] = known.getRootNodes();
+      for (const root of roots) {
+        if (root[0].optSymbol.name !== toCheck.optSymbol.name) continue;
+
+        if (root[1].length !== toCheck.checkVars?.length) continue;
+
+        let successful = true;
+        let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
+        for (const [layerNum, layer] of root[1].entries()) {
+          //TODO check length
+          const currentPairs = LogicNode.makeFreeFixPairs(
+            env,
+            toCheck.checkVars,
+            layer.vars
+          );
+          freeFixedPairs = [...freeFixedPairs, ...currentPairs];
+          if (
+            // TODO: BUG: should be literally check fact instead of checkFact
+            layer.req.every((e) => checkFact(env, e.fix(env, freeFixedPairs)))
+          ) {
+          } else {
+            successful = false;
+            break;
+          }
+        }
+        if (successful) {
+          if ( L_Symbol.literallyCompareTwoSymbols(env, ))
         }
       }
     }

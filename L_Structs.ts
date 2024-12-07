@@ -4,7 +4,22 @@ import { L_ReportErr } from "./L_Messages";
 import { ToCheckNode } from "./L_Nodes";
 
 export abstract class L_Symbol {
-  static literallyCompareVars(env: L_Env, var1: L_Symbol, var2: L_Symbol) {
+  static literallyCompareSymbolArray(
+    env: L_Env,
+    var1: L_Symbol[],
+    var2: L_Symbol[]
+  ): boolean {
+    return (
+      var1.length === var2.length &&
+      var1.every((e, i) => L_Symbol.literallyCompareTwoSymbols(env, e, var2[i]))
+    );
+  }
+
+  static literallyCompareTwoSymbols(
+    env: L_Env,
+    var1: L_Symbol,
+    var2: L_Symbol
+  ): boolean {
     try {
       if (var1 instanceof L_Singleton && var2 instanceof L_Singleton) {
         return var1.value === var2.value;
@@ -20,7 +35,7 @@ export abstract class L_Symbol {
         } else {
           for (let i = 0; i < var1.values.length; i++) {
             if (
-              !L_Symbol.literallyCompareVars(
+              !L_Symbol.literallyCompareTwoSymbols(
                 env,
                 var1.values[i],
                 var2.values[i]
@@ -35,7 +50,8 @@ export abstract class L_Symbol {
         return false;
       }
     } catch {
-      L_ReportErr(env, L_Symbol.literallyCompareVars);
+      L_ReportErr(env, L_Symbol.literallyCompareTwoSymbols);
+      return false;
     }
   }
 

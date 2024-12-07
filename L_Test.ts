@@ -387,8 +387,16 @@ export const exampleList: ExampleItem[] = [
       "let y: set(y);",
       "set2(y);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "define basic concepts: object, set",
+    code: ["def object(x); def set(x);", "know if x: set(x) {object(x)};"],
+    test: ["{let a: set(a); object(a);}"],
     debug: true,
     print: true,
+    runTest: false,
   },
 ];
 

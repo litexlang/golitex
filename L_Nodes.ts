@@ -73,6 +73,19 @@ export class LogicNode extends ToCheckNode {
     super(isT);
   }
 
+  static makeFreeFixPairs(
+    env: L_Env,
+    fixed: L_Symbol[],
+    free: L_Symbol[]
+  ): [L_Symbol, L_Symbol][] {
+    const out: [L_Symbol, L_Symbol][] = [];
+    for (let i = 0; i < free.length; i++) {
+      out.push([free[i], fixed[i]]);
+    }
+
+    return out;
+  }
+
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
     const newReq: ToCheckNode[] = [];
     for (const r of this.req) {
@@ -204,7 +217,7 @@ export class OptNode extends ToCheckNode {
     for (const v of this.vars) {
       let fixed = false;
       for (const freeFixPair of freeFixPairs) {
-        if (L_Symbol.literallyCompareVars(env, v, freeFixPair[0])) {
+        if (L_Symbol.literallyCompareTwoSymbols(env, v, freeFixPair[0])) {
           newVars.push(freeFixPair[1]);
           fixed = true;
           break;
