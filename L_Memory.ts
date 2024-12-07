@@ -8,7 +8,7 @@ import {
 } from "./L_Nodes";
 import { isToCheckBuiltin } from "./L_Builtins";
 import { L_Env } from "./L_Env";
-import { StoredFact, StoredReq } from "./L_Structs";
+import { L_Symbol, StoredFact, StoredReq } from "./L_Structs";
 import { reportStoreErr } from "./L_Messages";
 
 export function declNewFact(
@@ -50,7 +50,22 @@ export function newFact(env: L_Env, fact: ToCheckNode): boolean {
 
 export function newIfThenFact(env: L_Env, fact: IfNode): boolean {
   try {
-    return false;
+    const roots: [OptNode, IfNode[]][] = fact.getRootNodes();
+    roots.forEach((root) => env.newFact(root[0].optSymbol.name, fact));
+    return true;
+    // roots.forEach((root) => {
+    //   const newVars: L_Symbol[] = root[1][0].vars;
+    //   const newReq: ToCheckNode[] = root[1][0].req;
+    //   const newOut: IfNode = new IfNode(newVars, newReq, [new IfNode()]);
+    //   let onlyIf = newOut.onlyIfs[0] as IfNode;
+    //   for (let i = 1; i < root[1].length; i++) {
+    //     onlyIf.vars = root[1][i].vars;
+    //     onlyIf.req = root[1][i].req;
+    //     onlyIf.onlyIfs = [new IfNode()];
+    //     onlyIf = onlyIf.onlyIfs[0] as IfNode;
+    //   }
+    //   env.newFact(root[0].optSymbol.name, newOut);
+    // });
   } catch {
     return reportStoreErr(env, newIfThenFact.name, fact);
   }

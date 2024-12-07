@@ -12,6 +12,7 @@ export const exampleList: ExampleItem[] = [
       "know set(x);",
       "set(x)[x,y];",
       "set (\\frac{1,2})[\\frac{3,4}, \\frac{5,6}] ;",
+      "if x, \\frac{a,b}[a,b] : set(x) {set(x)};",
     ],
     debug: true,
     print: true,

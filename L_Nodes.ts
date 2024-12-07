@@ -147,14 +147,16 @@ export class LogicNode extends ToCheckNode {
     return [...this.req, ...this.onlyIfs].every((e) => e.factsDeclared(env));
   }
 
-  getRootNodes(): OptNode[] {
-    const out: OptNode[] = [];
+  getRootNodes(): [OptNode, IfNode[]][] {
+    const out: [OptNode, IfNode[]][] = [];
     for (const onlyIf of this.onlyIfs) {
       if (onlyIf instanceof OptNode) {
-        out.push(onlyIf);
+        out.push([onlyIf, [this]]);
       } else if (onlyIf instanceof LogicNode) {
         const roots = onlyIf.getRootNodes();
-        out.push(...roots);
+        for (const root of roots) {
+          out.push([root[0], [this, ...root[1]]]);
+        }
       }
     }
     return out;

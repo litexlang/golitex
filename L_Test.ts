@@ -378,6 +378,15 @@ export const exampleList: ExampleItem[] = [
     debug: true,
     print: true,
   },
+  {
+    name: "test if",
+    code: [
+      "def set(x); let x: set(x);",
+      "know if x, \\frac{a,b}[a,b] : set(x) {set(x)};",
+    ],
+    debug: true,
+    print: true,
+  },
 ];
 
 // \frac{i,j}
