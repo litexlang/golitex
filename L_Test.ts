@@ -394,7 +394,7 @@ export const exampleList: ExampleItem[] = [
     name: "define basic concepts: object, set",
     code: ["def object(x); def set(x);", "know if x: set(x) {object(x)};"],
     test: ["{let a: set(a); object(a);}"],
-    debug: true,
+    debug: false,
     print: true,
     runTest: false,
   },
@@ -407,7 +407,7 @@ export const exampleList: ExampleItem[] = [
       "set2(a);",
       "set2(a)[a,b];",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -420,7 +420,7 @@ export const exampleList: ExampleItem[] = [
     test: [
       "{let a, b: set(a), set(b), equal(a,b); if x: in(x,a)  {in(x,b)[a,b;x]} , if x: in(x,b)  {in(x,a)[a,b;x]}; let x: in(x,a); in(x,b); }",
     ],
-    debug: true,
+    debug: false,
     print: true,
     runTest: false,
   },

@@ -144,8 +144,11 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           );
           freeFixedPairs = [...freeFixedPairs, ...currentPairs];
           if (
+            //!
             // TODO: BUG: should be literally check fact instead of checkFact
-            layer.req.every((e) => checkFact(env, e.fix(env, freeFixedPairs)))
+            layer.req.every((e) =>
+              checkIfReqLiterally(env, e.fix(env, freeFixedPairs))
+            )
           ) {
           } else {
             successful = false;
@@ -181,6 +184,28 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         //TODO
         const out = useIfToCheckOpt(env, toCheck, curKnown);
         if (out) return L_Out.True;
+      }
+    }
+
+    return L_Out.Unknown;
+  } catch {
+    return env.errMesReturnL_Out(toCheck);
+  }
+}
+
+export function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): L_Out {
+  try {
+    if (toCheck instanceof OptNode) {
+      const knowns = env.getFacts(toCheck.optSymbol.name);
+      if (knowns === undefined) return L_Out.Unknown;
+      for (const known of knowns) {
+        if (known instanceof OptNode) {
+          if (
+            L_Symbol.literallyCompareSymbolArray(env, toCheck.vars, known.vars)
+          ) {
+            return L_Out.True;
+          }
+        }
       }
     }
 
@@ -398,53 +423,53 @@ export function checkOpt(
 }
 
 // check whether a variable in fact.vars is free or fixed at check time instead of run time.
-export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
-  return L_Out.Error;
-  //*
-  // if (isToCheckBuiltin(toCheck)) {
-  //   env.newMessage(`checked by builtins.`);
-  //   switch (toCheck.optSymbol.name) {
-  //     case "is_property":
-  //       return isPropertyBuiltinCheck(env, toCheck);
-  //     // case ExistKeyword:
-  //     //   return existBuiltinCheck(env, toCheck);
-  //     default:
-  //       return L_Out.Error;
-  //   }
-  // }
-  // if (toCheck.vars.length !== env.getDef(toCheck.optSymbol.name)?.vars.length) {
-  //   return L_Out.Unknown;
-  // }
-  // const facts = env.getKnownFactsFromCurEnv(toCheck);
-  // // const facts: StoredFact[] | null = L_Memory.getStoredFacts(env, toCheck);
-  // if (facts === undefined) {
-  //   env.newMessage(`check Error: ${toCheck.optSymbol} not declared.`);
-  //   return L_Out.Error;
-  // }
-  // for (const fact of facts as StoredFact[]) {
-  //   const frees = fact.getAllFreeVars();
-  //   if (
-  //     //! UPDATE: NOT SURE fact.isT === toCheck.isT should be included.
-  //     // fact.isT === toCheck.isT &&
-  //     fact.isNoReq() &&
-  //     // toCheck.vars.length === fact.vars.length &&
-  //     toCheck.vars.every(
-  //       (v, i) =>
-  //         frees.includes(fact.vars[i]) || //! DO NOT KNOW WHY free.includes is necessary. But i choose to retain it to avoid breakdown.
-  //         (!v.startsWith("\\") && v === fact.vars[i]) || //* normal checking
-  //         (v.startsWith("\\") &&
-  //           fact.vars[i].startsWith("\\") &&
-  //           checkCompositeLiterally(env, v, fact.vars[i])) //* check symbol that start with "\\"
-  //     )
-  //   ) {
-  //     return L_Out.True;
-  //   } else {
-  //     continue;
-  //   }
-  // }
-  // return L_Out.True;
-  //*
-}
+// export function checkOptLiterally(env: L_Env, toCheck: OptNode): L_Out {
+//   return L_Out.Error;
+//*
+// if (isToCheckBuiltin(toCheck)) {
+//   env.newMessage(`checked by builtins.`);
+//   switch (toCheck.optSymbol.name) {
+//     case "is_property":
+//       return isPropertyBuiltinCheck(env, toCheck);
+//     // case ExistKeyword:
+//     //   return existBuiltinCheck(env, toCheck);
+//     default:
+//       return L_Out.Error;
+//   }
+// }
+// if (toCheck.vars.length !== env.getDef(toCheck.optSymbol.name)?.vars.length) {
+//   return L_Out.Unknown;
+// }
+// const facts = env.getKnownFactsFromCurEnv(toCheck);
+// // const facts: StoredFact[] | null = L_Memory.getStoredFacts(env, toCheck);
+// if (facts === undefined) {
+//   env.newMessage(`check Error: ${toCheck.optSymbol} not declared.`);
+//   return L_Out.Error;
+// }
+// for (const fact of facts as StoredFact[]) {
+//   const frees = fact.getAllFreeVars();
+//   if (
+//     //! UPDATE: NOT SURE fact.isT === toCheck.isT should be included.
+//     // fact.isT === toCheck.isT &&
+//     fact.isNoReq() &&
+//     // toCheck.vars.length === fact.vars.length &&
+//     toCheck.vars.every(
+//       (v, i) =>
+//         frees.includes(fact.vars[i]) || //! DO NOT KNOW WHY free.includes is necessary. But i choose to retain it to avoid breakdown.
+//         (!v.startsWith("\\") && v === fact.vars[i]) || //* normal checking
+//         (v.startsWith("\\") &&
+//           fact.vars[i].startsWith("\\") &&
+//           checkCompositeLiterally(env, v, fact.vars[i])) //* check symbol that start with "\\"
+//     )
+//   ) {
+//     return L_Out.True;
+//   } else {
+//     continue;
+//   }
+// }
+// return L_Out.True;
+//*
+// }
 
 export function checkOptInHave(env: L_Env, opt: OptNode): L_Out {
   env;
@@ -487,87 +512,87 @@ function checkOr(env: L_Env, toCheck: OrNode): L_Out {
   }
 }
 
-export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
-  return L_Out.Error;
+// export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
+//   return L_Out.Error;
 
-  //*
-  // const def = env.getDef(toCheck.optSymbol);
-  // if (def === undefined) {
-  //   return env.errMesReturnL_Out(`operator ${toCheck} not declared.`);
-  // }
-  // if (toCheck.vars.length !== def.vars.length) {
-  //   return lstLengthNotEql(env, toCheck.vars, def.vars);
-  // }
-  // const map = new Map<string, string>();
-  // for (const [i, v] of toCheck.vars.entries()) {
-  //   map.set(def.vars[i], v);
-  // }
-  // for (const condition of def?.cond) {
-  //   const fixed = condition.useMapToCopy(env, map);
-  //   const out = check(env, fixed);
-  //   if (out !== L_Out.True) {
-  //     env.newMessage(`[Unknown] ${fixed}`);
-  //     return L_Out.Unknown;
-  //   }
-  // }
-  // return L_Out.True;
-  //*
-}
+//*
+// const def = env.getDef(toCheck.optSymbol);
+// if (def === undefined) {
+//   return env.errMesReturnL_Out(`operator ${toCheck} not declared.`);
+// }
+// if (toCheck.vars.length !== def.vars.length) {
+//   return lstLengthNotEql(env, toCheck.vars, def.vars);
+// }
+// const map = new Map<string, string>();
+// for (const [i, v] of toCheck.vars.entries()) {
+//   map.set(def.vars[i], v);
+// }
+// for (const condition of def?.cond) {
+//   const fixed = condition.useMapToCopy(env, map);
+//   const out = check(env, fixed);
+//   if (out !== L_Out.True) {
+//     env.newMessage(`[Unknown] ${fixed}`);
+//     return L_Out.Unknown;
+//   }
+// }
+// return L_Out.True;
+//*
+// }
 
 // Steps
 // 1. check the symbol name of compositeSymbol and storedFact after "\\" are the same
 // 2. check storedFact's requirements in [] are satisfied.
-export function checkCompositeLiterally(
-  env: L_Env,
-  givenStr: string,
-  storedStr: string
-): boolean {
-  return false;
-  //*
-  // try {
-  //   const storedComposite = compositeSymbolParse(
-  //     env,
-  //     storedStr.split(" ")
-  //   ) as CompositeSymbol;
-  //   const givenComposite = compositeSymbolParse(
-  //     env,
-  //     givenStr.split(" ")
-  //   ) as CompositeSymbol;
-  //   if (storedComposite.name !== givenComposite.name) {
-  //     return false;
-  //   }
-  //   const map = new Map<string, string>();
-  //   for (const [i, v] of storedComposite.vars.entries()) {
-  //     map.set(v, givenComposite.vars[i]);
-  //   }
-  //   for (const [i, v] of storedComposite.vars.entries()) {
-  //     if (v.startsWith("#")) {
-  //       const toChecks = env.getHashVarFacts(v);
-  //       if (toChecks === undefined) {
-  //         return env.errMesReturnBoolean(`hashed variable ${v} not declared`);
-  //       }
-  //       for (const r of toChecks) {
-  //         const toCheck = r.useMapToCopy(env, map);
-  //         const out = check(env, toCheck);
-  //         if (out !== L_Out.True) return false;
-  //       }
-  //     } else {
-  //       // check var literally, other wise in(b, \\singleton{b}) leads to in(n, \\singleton{b})
-  //       if (map.get(v) === v) continue;
-  //       else {
-  //         return false;
-  //       }
-  //     }
-  //   }
-  //   for (const r of storedComposite.req) {
-  //     const toCheck = r.useMapToCopy(env, map);
-  //     const out = check(env, toCheck);
-  //     if (out !== L_Out.True) return false;
-  //   }
-  //   return true;
-  // } catch {
-  //   env.newMessage(`Failed to check ${givenStr}`);
-  //   throw Error();
-  // }
-  //*
-}
+// export function checkCompositeLiterally(
+//   env: L_Env,
+//   givenStr: string,
+//   storedStr: string
+// ): boolean {
+//   return false;
+//*
+// try {
+//   const storedComposite = compositeSymbolParse(
+//     env,
+//     storedStr.split(" ")
+//   ) as CompositeSymbol;
+//   const givenComposite = compositeSymbolParse(
+//     env,
+//     givenStr.split(" ")
+//   ) as CompositeSymbol;
+//   if (storedComposite.name !== givenComposite.name) {
+//     return false;
+//   }
+//   const map = new Map<string, string>();
+//   for (const [i, v] of storedComposite.vars.entries()) {
+//     map.set(v, givenComposite.vars[i]);
+//   }
+//   for (const [i, v] of storedComposite.vars.entries()) {
+//     if (v.startsWith("#")) {
+//       const toChecks = env.getHashVarFacts(v);
+//       if (toChecks === undefined) {
+//         return env.errMesReturnBoolean(`hashed variable ${v} not declared`);
+//       }
+//       for (const r of toChecks) {
+//         const toCheck = r.useMapToCopy(env, map);
+//         const out = check(env, toCheck);
+//         if (out !== L_Out.True) return false;
+//       }
+//     } else {
+//       // check var literally, other wise in(b, \\singleton{b}) leads to in(n, \\singleton{b})
+//       if (map.get(v) === v) continue;
+//       else {
+//         return false;
+//       }
+//     }
+//   }
+//   for (const r of storedComposite.req) {
+//     const toCheck = r.useMapToCopy(env, map);
+//     const out = check(env, toCheck);
+//     if (out !== L_Out.True) return false;
+//   }
+//   return true;
+// } catch {
+//   env.newMessage(`Failed to check ${givenStr}`);
+//   throw Error();
+// }
+//*
+// }
