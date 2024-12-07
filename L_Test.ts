@@ -375,7 +375,7 @@ export const exampleList: ExampleItem[] = [
       "know set(\\frac{1,2});",
       "set(\\frac{1,2});",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -397,6 +397,17 @@ export const exampleList: ExampleItem[] = [
     debug: true,
     print: true,
     runTest: false,
+  },
+  {
+    name: "test if2",
+    code: [
+      "def set(x); def set2(x); let x: set(x);",
+      "know if x,y: set(x), set(y) {set2(x), set2(y)};",
+      "let a,b: set(a), set(b);",
+      "set2(a)[a,b];",
+    ],
+    debug: false,
+    print: true,
   },
 ];
 

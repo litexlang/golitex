@@ -52,7 +52,9 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       }
 
       for (let i = 0; i < opt1.vars.length; i++) {
-        if (!L_Symbol.literallyCompareTwoSymbols(env, opt1.vars[i], opt2.vars[i]))
+        if (
+          !L_Symbol.literallyCompareTwoSymbols(env, opt1.vars[i], opt2.vars[i])
+        )
           return false;
       }
 
@@ -71,7 +73,8 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     givenOpt: OptNode,
     known: IfNode
   ): boolean {
-    if (givenOpt.checkVars === undefined) {
+    // TODO: I guess in the future I should remove givenOpt.checkVars.length === 0
+    if (givenOpt.checkVars === undefined || givenOpt.checkVars.length === 0) {
       // 1. known is one-layer, and we replace all vars in that layer with given opt
       let successful = true;
       const freeFixPairs: [L_Symbol, L_Symbol][] = [];
@@ -85,6 +88,7 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       }
       if (successful) {
         // must be single layer
+        // TODO : A BEtter approach: check root opt name equal to given toCheck at first instead of at the end
         if (known.onlyIfs.every((e) => e instanceof OptNode)) {
           const fixedKnown = known.fix(env, freeFixPairs);
           if (fixedKnown.req.every((e) => checkFact(env, e) === L_Out.True)) {
@@ -93,10 +97,15 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
                 (e) =>
                   (e as OptNode).optSymbol.name === givenOpt.optSymbol.name &&
                   (e as OptNode).vars.every((v, i) =>
-                    L_Symbol.literallyCompareTwoSymbols(env, givenOpt.vars[i], v)
+                    L_Symbol.literallyCompareTwoSymbols(
+                      env,
+                      givenOpt.vars[i],
+                      v
+                    )
                   )
               )
             ) {
+              env.newMessage(`[check by] ${known}`);
               return true;
             }
           }
@@ -115,7 +124,7 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           //TODO check length
           const currentPairs = LogicNode.makeFreeFixPairs(
             env,
-            toCheck.checkVars,
+            toCheck.checkVars[layerNum],
             layer.vars
           );
           freeFixedPairs = [...freeFixedPairs, ...currentPairs];
@@ -129,7 +138,13 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           }
         }
         if (successful) {
-          if ( L_Symbol.literallyCompareTwoSymbols(env, ))
+          const fixed = root[0].fix(env, freeFixedPairs);
+          if (
+            L_Symbol.literallyCompareSymbolArray(env, fixed.vars, toCheck.vars)
+          ) {
+            env.newMessage(`[check by] ${root[1][0]}`);
+            return true;
+          }
         }
       }
     }
