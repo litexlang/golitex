@@ -48,46 +48,14 @@ export function literallyCompareOptVars(
     }
 
     for (let i = 0; i < opt1.vars.length; i++) {
-      if (!literallyCompareVars(env, opt1.vars[i], opt2.vars[i])) return false;
+      if (!L_Symbol.literallyCompareVars(env, opt1.vars[i], opt2.vars[i]))
+        return false;
     }
 
     return true;
   } catch {
     L_ReportErr(env, literallyCompareOptVars, opt1);
     return false;
-  }
-}
-
-export function literallyCompareVars(
-  env: L_Env,
-  var1: L_Symbol,
-  var2: L_Symbol
-) {
-  try {
-    if (var1 instanceof L_Singleton && var2 instanceof L_Singleton) {
-      return var1.value === var2.value;
-    } else if (var1 instanceof L_Composite && var2 instanceof L_Composite) {
-      // name of composite symbol must be equal
-      if (var1.name !== var2.name) {
-        return false;
-      }
-
-      // vars of composite symbol must be equal
-      if (var1.values.length !== var2.values.length) {
-        return false;
-      } else {
-        for (let i = 0; i < var1.values.length; i++) {
-          if (!literallyCompareVars(env, var1.values[i], var2.values[i])) {
-            return false;
-          }
-        }
-        return true;
-      }
-    } else {
-      return false;
-    }
-  } catch {
-    L_ReportErr(env, literallyCompareVars);
   }
 }
 

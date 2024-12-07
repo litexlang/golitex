@@ -1,7 +1,77 @@
 import { L_Env } from "./L_Env";
+import { L_ReportErr } from "./L_Messages";
 import { ToCheckNode } from "./L_Nodes";
 
-export abstract class L_Symbol {}
+export abstract class L_Symbol {
+  static literallyCompareVars(env: L_Env, var1: L_Symbol, var2: L_Symbol) {
+    try {
+      if (var1 instanceof L_Singleton && var2 instanceof L_Singleton) {
+        return var1.value === var2.value;
+      } else if (var1 instanceof L_Composite && var2 instanceof L_Composite) {
+        // name of composite symbol must be equal
+        if (var1.name !== var2.name) {
+          return false;
+        }
+
+        // vars of composite symbol must be equal
+        if (var1.values.length !== var2.values.length) {
+          return false;
+        } else {
+          for (let i = 0; i < var1.values.length; i++) {
+            if (
+              !L_Symbol.literallyCompareVars(
+                env,
+                var1.values[i],
+                var2.values[i]
+              )
+            ) {
+              return false;
+            }
+          }
+          return true;
+        }
+      } else {
+        return false;
+      }
+    } catch {
+      L_ReportErr(env, L_Symbol.literallyCompareVars);
+    }
+  }
+
+  // 两个符号字面量结构一样，比如singleton和composite就不一样，然后composite和composite之间，需要name一样才行。任何两个singleton的类型都一样。本函数用于对于 know if x, \frac{1,2} 里面的req里，自由变量和 toCheck 的变量的形式 需要对上
+  static symbolStructureEqual(
+    env: L_Env,
+    symbol1: L_Symbol,
+    symbol2: L_Symbol
+  ): boolean {
+    if (symbol1 instanceof L_Singleton && symbol2 instanceof L_Singleton) {
+      return true;
+    } else if (
+      symbol1 instanceof L_Composite &&
+      symbol2 instanceof L_Composite
+    ) {
+      if (symbol1.name === symbol2.name) {
+        for (let i = 0; i < symbol1.values.length; i++) {
+          if (
+            !L_Symbol.symbolStructureEqual(
+              env,
+              symbol1.values[i],
+              symbol2.values[i]
+            )
+          ) {
+            return false;
+          }
+        }
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+}
+
 export class L_Singleton extends L_Symbol {
   constructor(public value: string) {
     super();
@@ -21,8 +91,9 @@ export class L_Composite extends L_Symbol {
     return `\\${this.name}{${this.values.map((e) => e.toString()).join(", ")}}`;
   }
 
+  // the current symbol is free, use a fixed one to fix. the fixed and current symbol must be of the same structure.
   fix(env: L_Env, fixed: L_Composite): L_Composite | undefined {
-    if (!symbolStructureEqual(env, this, fixed)) return undefined;
+    if (!L_Symbol.symbolStructureEqual(env, this, fixed)) return undefined;
 
     const newValues: L_Symbol[] = [];
     for (const [i, v] of this.values.entries()) {
@@ -43,30 +114,6 @@ export class L_OptSymbol {
 
   toString() {
     return this.name;
-  }
-}
-
-// 两个符号字面量结构一样，比如singleton和composite就不一样，然后composite和composite之间，需要name一样才行。任何两个singleton的类型都一样。本函数用于对于 know if x, \frac{1,2} 里面的req里，自由变量和 toCheck 的变量的形式 需要对上
-export function symbolStructureEqual(
-  env: L_Env,
-  symbol1: L_Symbol,
-  symbol2: L_Symbol
-): boolean {
-  if (symbol1 instanceof L_Singleton && symbol2 instanceof L_Singleton) {
-    return true;
-  } else if (symbol1 instanceof L_Composite && symbol2 instanceof L_Composite) {
-    if (symbol1.name === symbol2.name) {
-      for (let i = 0; i < symbol1.values.length; i++) {
-        if (!symbolStructureEqual(env, symbol1.values[i], symbol2.values[i])) {
-          return false;
-        }
-      }
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    return false;
   }
 }
 
