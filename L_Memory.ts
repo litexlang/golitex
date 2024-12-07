@@ -323,37 +323,37 @@ export function executorStoreFact(
   }
 }
 
-// deno-lint-ignore no-unused-vars
-function storeContrapositiveFacts(
-  env: L_Env,
-  fact: OptNode,
-  req: StoredReq[]
-): boolean {
-  let freeVars: string[] = [];
-  let allStoredFactReq: ToCheckNode[] = [];
-  for (const r of req) {
-    freeVars = [...freeVars, ...r.vars];
-    allStoredFactReq = [...allStoredFactReq, ...r.req];
-  }
+// // deno-lint-ignore no-unused-vars
+// function storeContrapositiveFacts(
+//   env: L_Env,
+//   fact: OptNode,
+//   req: StoredReq[]
+// ): boolean {
+//   let freeVars: string[] = [];
+//   let allStoredFactReq: ToCheckNode[] = [];
+//   for (const r of req) {
+//     freeVars = [...freeVars, ...r.vars];
+//     allStoredFactReq = [...allStoredFactReq, ...r.req];
+//   }
 
-  const factInverse = fact.copyWithoutIsT(!fact.isT);
+//   const factInverse = fact.copyWithoutIsT(!fact.isT);
 
-  for (let i = 0; i < allStoredFactReq.length; i++) {
-    const r = allStoredFactReq.filter((_, index) => index !== i);
-    r.push(factInverse);
-    const ifThen = new IfNode(
-      freeVars,
-      r,
-      [allStoredFactReq[i].copyWithoutIsT(!allStoredFactReq[i].isT)],
-      true
-      // false
-    );
-    const ok = storeIfThen(env, ifThen, [], false);
-    if (!ok) return false;
-  }
+//   for (let i = 0; i < allStoredFactReq.length; i++) {
+//     const r = allStoredFactReq.filter((_, index) => index !== i);
+//     r.push(factInverse);
+//     const ifThen = new IfNode(
+//       freeVars,
+//       r,
+//       [allStoredFactReq[i].copyWithoutIsT(!allStoredFactReq[i].isT)],
+//       true
+//       // false
+//     );
+//     const ok = storeIfThen(env, ifThen, [], false);
+//     if (!ok) return false;
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
 //* toStore should not contain if-then req that contains opt as onlyIf.
 export function examineStoredFact(

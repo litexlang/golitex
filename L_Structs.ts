@@ -14,6 +14,10 @@ export abstract class L_Symbol {
     );
   }
 
+  fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
+    throw Error();
+  }
+
   static literallyCompareTwoSymbols(
     env: L_Env,
     var1: L_Symbol,
@@ -92,6 +96,14 @@ export class L_Singleton extends L_Symbol {
   toString() {
     return this.value;
   }
+
+  fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
+    for (const freeFixed of freeFixedPairs) {
+      if (L_Symbol.literallyCompareTwoSymbols(env, freeFixed[0], this))
+        return freeFixed[1];
+    }
+    return this;
+  }
 }
 
 // e.g. \frac{1,2} ; \+{1,2} ; \union{A,B} ; \set{x}
@@ -100,19 +112,35 @@ export class L_Composite extends L_Symbol {
     super();
   }
 
+  fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
+    const outValues: L_Symbol[] = [];
+    for (const value of this.values) {
+      const fixed = value.fix(env, freeFixedPairs);
+      outValues.push(fixed);
+    }
+
+    return new L_Composite(this.name, outValues);
+  }
+
   toString() {
     return `\\${this.name}{${this.values.map((e) => e.toString()).join(", ")}}`;
   }
 
   // the current symbol is free, use a fixed one to fix. the fixed and current symbol must be of the same structure.
-  fix(env: L_Env, fixed: L_Composite): L_Composite | undefined {
+  fixUsingGivenFixedComposite(
+    env: L_Env,
+    fixed: L_Composite
+  ): L_Composite | undefined {
     if (!L_Symbol.structureEqual(env, this, fixed)) return undefined;
 
     const newValues: L_Symbol[] = [];
     for (const [i, v] of this.values.entries()) {
       if (v instanceof L_Singleton) continue;
       else if (v instanceof L_Composite) {
-        const newV = v.fix(env, fixed.values[i] as L_Composite);
+        const newV = v.fixUsingGivenFixedComposite(
+          env,
+          fixed.values[i] as L_Composite
+        );
         if (newV !== undefined) newValues.push(newV);
         else return undefined;
       }

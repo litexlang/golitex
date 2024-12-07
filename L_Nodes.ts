@@ -214,15 +214,16 @@ export class OptNode extends ToCheckNode {
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptNode {
     const newVars: L_Symbol[] = [];
-    for (const v of this.vars) {
+    for (let v of this.vars) {
       let fixed = false;
-      for (const freeFixPair of freeFixPairs) {
-        if (L_Symbol.literallyCompareTwoSymbols(env, v, freeFixPair[0])) {
-          newVars.push(freeFixPair[1]);
-          fixed = true;
-          break;
-        }
-      }
+      // for (const freeFixPair of freeFixPairs) {
+      // if (L_Symbol.literallyCompareTwoSymbols(env, v, freeFixPair[0])) {
+      //   newVars.push(freeFixPair[1]);
+      //   fixed = true;
+      //   break;
+      // }
+      // }
+      v = v.fix(env, freeFixPairs);
       if (!fixed) newVars.push(v);
     }
 

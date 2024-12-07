@@ -178,8 +178,8 @@ export class L_Env {
     checkVars: string[][],
     fact: StoredFact
   ): boolean {
-    const ok = examineStoredFact(this, new OptNode(optName, fact.vars), fact);
-    if (!ok) return false;
+    // const ok = examineStoredFact(this, new OptNode(optName, fact.vars), fact);
+    // if (!ok) return false;
 
     //*
     // const checkVarsNumLst = checkVars.map((e) => e.length);
