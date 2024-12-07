@@ -18,7 +18,6 @@ export function L_Scan(text: string): string[] {
     // use // as comment
     if (char === "/" && text[i + 1] === "/") {
       inComment = true;
-      tokens.push("\n");
       if (currentToken) {
         tokens.push(currentToken);
         currentToken = "";
