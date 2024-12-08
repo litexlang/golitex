@@ -61,7 +61,7 @@ import {
   L_Symbol,
 } from "./L_Structs";
 import { check } from "./L_Checker";
-import { L_BuiltinParsers } from "./L_Builtins";
+import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
 
 function arrParse<T>(
   env: L_Env,
@@ -608,30 +608,16 @@ function factsParse(
           skip(tokens, "not");
         }
 
+        // TODO implement parse builtin
+        if (isBuiltinKeyword(tokens[0])) {
+        }
+
         let fact: ToCheckNode;
         if (LogicalKeywords.includes(tokens[0])) {
           fact = logicParse(env, tokens, includeDefName);
           fact.isT = isT ? fact.isT : !fact.isT;
           out = [...out, fact];
-        } else if (tokens[0] === "or") {
-          fact = orParse(env, tokens, includeDefName);
-          fact.isT = isT ? fact.isT : !fact.isT;
-          out = [...out, fact];
-        } else if (tokens[0] === "nots") {
-          fact = notsParse(env, tokens, includeDefName);
-          fact.isT = isT ? fact.isT : !fact.isT;
-          out = [...out, fact];
-        } // else if (tokens[0] === "exist") {
-        //   fact = logicParse(env, tokens, includeDefName);
-        //   fact.isT = isT ? fact.isT : !fact.isT;
-        //   out = [...out, fact];
-        // }
-        // else if (tokens[0] === "exist") {
-        //   fact = existParse(env, tokens, includeDefName);
-        //   fact.isT = isT ? fact.isT : !fact.isT;
-        //   out = [...out, fact];
-        // }
-        else {
+        } else {
           const fact = optParse(env, tokens, true);
           out = [...out, fact];
         }
@@ -660,10 +646,6 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
   try {
     // TODO use builtin to implement not
     let isT = true;
-
-    // TODO implement parse builtin
-    if (Object.keys(L_BuiltinParsers).includes(tokens[0])) {
-    }
 
     // if (tokens[0] === ExistKeyword) {
     //   skip(tokens, ExistKeyword);
@@ -839,50 +821,50 @@ function returnParse(env: L_Env, tokens: string[]): ReturnNode {
   }
 }
 
-function orParse(
-  env: L_Env,
-  tokens: string[],
-  includeDefName: boolean
-): OrNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function orParse(
+//   env: L_Env,
+//   tokens: string[],
+//   includeDefName: boolean
+// ): OrNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, OrKeywords);
-    skip(tokens, "{");
-    const facts = factsParse(env, tokens, ["}"], false, includeDefName);
-    skip(tokens, "}");
+//   try {
+//     skip(tokens, OrKeywords);
+//     skip(tokens, "{");
+//     const facts = factsParse(env, tokens, ["}"], false, includeDefName);
+//     skip(tokens, "}");
 
-    return new OrNode(facts, true);
-  } catch (error) {
-    handleParseError(env, "operator", index, start);
-    throw error;
-  }
-}
+//     return new OrNode(facts, true);
+//   } catch (error) {
+//     handleParseError(env, "operator", index, start);
+//     throw error;
+//   }
+// }
 
-function notsParse(
-  env: L_Env,
-  tokens: string[],
-  includeDefName: boolean
-): OrNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function notsParse(
+//   env: L_Env,
+//   tokens: string[],
+//   includeDefName: boolean
+// ): OrNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, NotsKeyword);
-    skip(tokens, "{");
-    const facts = factsParse(env, tokens, ["}"], false, includeDefName);
-    for (const f of facts) {
-      f.isT = !f.isT;
-    }
-    skip(tokens, "}");
+//   try {
+//     skip(tokens, NotsKeyword);
+//     skip(tokens, "{");
+//     const facts = factsParse(env, tokens, ["}"], false, includeDefName);
+//     for (const f of facts) {
+//       f.isT = !f.isT;
+//     }
+//     skip(tokens, "}");
 
-    return new OrNode(facts, true);
-  } catch (error) {
-    handleParseError(env, "nots", index, start);
-    throw error;
-  }
-}
+//     return new OrNode(facts, true);
+//   } catch (error) {
+//     handleParseError(env, "nots", index, start);
+//     throw error;
+//   }
+// }
 
 function haveParse(env: L_Env, tokens: string[]): HaveNode {
   const start = tokens[0];
@@ -1082,3 +1064,7 @@ export function LetCompositeParse(
     throw error;
   }
 }
+
+export function isPropertyParse(env: L_Env, tokens: string[]) {}
+export function orParse() {}
+export function isSymbolShapeParse() {}

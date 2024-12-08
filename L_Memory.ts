@@ -176,30 +176,30 @@ function storeOpt(
   return false;
 }
 
-function storeOr(
-  env: L_Env,
-  fact: OrNode,
-  req: StoredReq[],
-  storeContrapositive: boolean
-): boolean {
-  for (let i = 0; i < fact.facts.length; i++) {
-    const asReq: ToCheckNode[] = [];
-    for (let j = 0; j < fact.facts.length; j++) {
-      if (j !== i) {
-        asReq.push(fact.facts[j].copyWithoutIsT(!fact.facts[j].isT));
-      }
-    }
-    const ok = store(
-      env,
-      fact.facts[i],
-      [...req, new StoredReq([], asReq)],
-      storeContrapositive
-      // storeDefName,
-    );
-    if (!ok) return ok;
-  }
-  return true;
-}
+// function storeOr(
+//   env: L_Env,
+//   fact: OrNode,
+//   req: StoredReq[],
+//   storeContrapositive: boolean
+// ): boolean {
+//   for (let i = 0; i < fact.facts.length; i++) {
+//     const asReq: ToCheckNode[] = [];
+//     for (let j = 0; j < fact.facts.length; j++) {
+//       if (j !== i) {
+//         asReq.push(fact.facts[j].copyWithoutIsT(!fact.facts[j].isT));
+//       }
+//     }
+//     const ok = store(
+//       env,
+//       fact.facts[i],
+//       [...req, new StoredReq([], asReq)],
+//       storeContrapositive
+//       // storeDefName,
+//     );
+//     if (!ok) return ok;
+//   }
+//   return true;
+// }
 
 // Main Function of Storage
 export function store(
@@ -221,8 +221,9 @@ export function store(
       const ok = storeOpt(env, fact, req, storeContrapositive);
       if (!ok) return false;
     } else if (fact instanceof OrNode) {
-      const ok = storeOr(env, fact, req, storeContrapositive);
-      if (!ok) return false;
+      // const ok = storeOr(env, fact, req, storeContrapositive);
+      // if (!ok) return false;
+      throw Error();
     } else {
       throw Error();
     }
@@ -315,7 +316,8 @@ export function executorStoreFact(
       }
       return true;
     } else if (fact instanceof OrNode) {
-      return storeOr(env, fact, [], storeContrapositive);
+      // return storeOr(env, fact, [], storeContrapositive);
+      throw Error();
     } else throw Error();
   } catch {
     env.newMessage(`Failed to store ${fact}`);

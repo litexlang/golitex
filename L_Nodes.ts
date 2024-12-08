@@ -41,28 +41,6 @@ export class ToCheckNode extends L_Node {
   }
 }
 
-export class OrNode extends ToCheckNode {
-  constructor(public facts: ToCheckNode[], isT: boolean) {
-    super(isT);
-  }
-
-  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
-    return this.facts.every((e) => e.varsDeclared(env, freeVars));
-  }
-
-  override factsDeclared(env: L_Env): boolean {
-    return this.facts.every((e) => e.factsDeclared(env));
-  }
-
-  override copyWithoutIsT(newIsT: boolean): ToCheckNode {
-    return new OrNode(this.facts, newIsT);
-  }
-
-  override toString(): string {
-    return `ors{${this.facts.map((e) => e.toString()).join(", ")}}`;
-  }
-}
-
 export class LogicNode extends ToCheckNode {
   constructor(
     public vars: L_Symbol[] = [],
@@ -381,5 +359,30 @@ export class MacroNode extends L_Node {
 export class LetCompositeNode extends L_Node {
   constructor(public composite: L_Composite, public facts: ToCheckNode[]) {
     super();
+  }
+}
+
+export class BuiltinCheckNode extends ToCheckNode {}
+
+export class IsPropertyNode extends BuiltinCheckNode {
+  constructor(public propertyName: string, isT: boolean) {
+    super(isT);
+  }
+}
+
+export class OrNode extends BuiltinCheckNode {
+  constructor(public opts: OptNode[], isT: boolean) {
+    super(isT);
+  }
+}
+
+export class isSymbolShapeNode extends BuiltinCheckNode {
+  constructor(
+    public templateSymbol: L_Symbol,
+    public givenSymbol: L_Symbol,
+    public factsEMustSatisfy: ToCheckNode[],
+    isT: boolean
+  ) {
+    super(isT);
   }
 }

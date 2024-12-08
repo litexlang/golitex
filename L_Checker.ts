@@ -477,40 +477,40 @@ export function checkOptInHave(env: L_Env, opt: OptNode): L_Out {
   return L_Out.Unknown;
 }
 
-function checkOr(env: L_Env, toCheck: OrNode): L_Out {
-  try {
-    if (toCheck.facts.length === 0) return L_Out.True;
+// function checkOr(env: L_Env, toCheck: OrNode): L_Out {
+//   try {
+//     if (toCheck.facts.length === 0) return L_Out.True;
 
-    if (toCheck.facts.length === 1) {
-      return check(env, toCheck.facts[0]);
-    }
+//     if (toCheck.facts.length === 1) {
+//       return check(env, toCheck.facts[0]);
+//     }
 
-    for (let i = 0; i < toCheck.facts.length; i++) {
-      let valid = false;
-      const newEnv = new L_Env(env);
-      for (let j = 0; j < toCheck.facts.length; j++) {
-        if (j === i) continue;
-        L_Memory.store(
-          newEnv,
-          toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT),
-          [],
-          true
-        );
-      }
+//     for (let i = 0; i < toCheck.facts.length; i++) {
+//       let valid = false;
+//       const newEnv = new L_Env(env);
+//       for (let j = 0; j < toCheck.facts.length; j++) {
+//         if (j === i) continue;
+//         L_Memory.store(
+//           newEnv,
+//           toCheck.facts[j].copyWithoutIsT(!toCheck.facts[j].isT),
+//           [],
+//           true
+//         );
+//       }
 
-      const out = check(newEnv, toCheck.facts[i]);
-      if (out === L_Out.True) {
-        valid = true;
-      }
+//       const out = check(newEnv, toCheck.facts[i]);
+//       if (out === L_Out.True) {
+//         valid = true;
+//       }
 
-      if (valid) return L_Out.True;
-    }
+//       if (valid) return L_Out.True;
+//     }
 
-    return L_Out.Unknown;
-  } catch {
-    return L_Out.Error;
-  }
-}
+//     return L_Out.Unknown;
+//   } catch {
+//     return L_Out.Error;
+//   }
+// }
 
 // export function checkOptCond(env: L_Env, toCheck: OptNode): L_Out {
 //   return L_Out.Error;

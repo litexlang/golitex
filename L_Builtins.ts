@@ -1,6 +1,7 @@
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Out, L_Symbol } from "./L_Structs";
+import { isPropertyParse, isSymbolShapeParse, orParse } from "./L_Parser";
 
 export const L_BuiltinParsers = {
   is_property: isPropertyParse,
@@ -8,37 +9,12 @@ export const L_BuiltinParsers = {
   is_symbol_shape: isSymbolShapeParse,
 };
 
-export class IsPropertyNode extends L_Node {
-  constructor(public propertyName: string) {
-    super();
-  }
+export function isBuiltinKeyword(key: string) {
+  return Object.keys(L_BuiltinParsers).includes(key);
 }
-
-export class OrNode extends L_Node {
-  constructor(public opts: OptNode[]) {
-    super();
-  }
-}
-
-export class isSymbolShapeNode extends L_Node {
-  constructor(
-    public templateSymbol: L_Symbol,
-    public givenSymbol: L_Symbol,
-    public factsMustSatisfy: ToCheckNode[]
-  ) {
-    super();
-  }
-}
-
-export function isPropertyParse(env: L_Env, tokens: string[]) {}
-export function orParse() {}
-export function isSymbolShapeParse() {}
 
 export function isToCheckBuiltin(node: ToCheckNode): boolean {
-  return (
-    node instanceof OptNode &&
-    Object.keys(L_BuiltinParsers).includes(node.optSymbol.name)
-  );
+  return node instanceof OptNode && isBuiltinKeyword(node.optSymbol.name);
 }
 
 // Separate functions from the map
