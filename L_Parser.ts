@@ -608,13 +608,11 @@ function factsParse(
           skip(tokens, "not");
         }
 
-        // TODO implement parse builtin
         if (isBuiltinKeyword(tokens[0])) {
-        }
-
-        let fact: ToCheckNode;
-        if (LogicalKeywords.includes(tokens[0])) {
-          fact = logicParse(env, tokens, includeDefName);
+          const parser = L_BuiltinParsers.get(tokens[0]) as Function;
+          out = [...out, parser(env, tokens)];
+        } else if (LogicalKeywords.includes(tokens[0])) {
+          const fact = logicParse(env, tokens, includeDefName);
           fact.isT = isT ? fact.isT : !fact.isT;
           out = [...out, fact];
         } else {

@@ -3,14 +3,13 @@ import { L_Env } from "./L_Env";
 import { L_Out, L_Symbol } from "./L_Structs";
 import { isPropertyParse, isSymbolShapeParse, orParse } from "./L_Parser";
 
-export const L_BuiltinParsers = {
-  is_property: isPropertyParse,
-  or: orParse,
-  is_symbol_shape: isSymbolShapeParse,
-};
+export const L_BuiltinParsers = new Map<string, Function>();
+L_BuiltinParsers.set("is_property", isPropertyParse);
+L_BuiltinParsers.set("or", orParse);
+L_BuiltinParsers.set("is_symbol_shape", isSymbolShapeParse);
 
 export function isBuiltinKeyword(key: string) {
-  return Object.keys(L_BuiltinParsers).includes(key);
+  return L_BuiltinParsers.get(key) !== undefined;
 }
 
 export function isToCheckBuiltin(node: ToCheckNode): boolean {
