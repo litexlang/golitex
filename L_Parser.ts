@@ -1,4 +1,5 @@
 import {
+  BuiltinCheckNode,
   ByNode,
   DefNode,
   ExistNode,
@@ -582,6 +583,46 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
   }
 }
 
+function factParse(env: L_Env, tokens: string[]) {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    const factStart = tokens[0];
+    const factIndex = tokens.length;
+
+    try {
+      let isT = true;
+      if (isCurToken(tokens, "not")) {
+        isT = false;
+        skip(tokens, "not");
+      }
+
+      if (isBuiltinKeyword(tokens[0])) {
+        const parser = L_BuiltinParsers.get(tokens[0]) as Function;
+        const out = parser(env, tokens);
+        out.isT = isT;
+        return out;
+      } else if (LogicalKeywords.includes(tokens[0])) {
+        const fact = logicParse(env, tokens, true);
+        fact.isT = isT ? fact.isT : !fact.isT;
+        return fact;
+      } else {
+        const fact = optParse(env, tokens, true);
+        return fact;
+      }
+
+      throw Error();
+    } catch (error) {
+      handleParseError(env, "fact", factIndex, factStart);
+      throw error;
+    }
+  } catch (error) {
+    handleParseError(env, "fact", index, start);
+    throw error;
+  }
+}
+
 // Main Function of parser
 function factsParse(
   env: L_Env,
@@ -597,32 +638,8 @@ function factsParse(
     let out: ToCheckNode[] = [];
 
     while (!end.includes(tokens[0])) {
-      // Start of former singleNodeFacts logic
-      const factStart = tokens[0];
-      const factIndex = tokens.length;
-
-      try {
-        let isT = true;
-        if (isCurToken(tokens, "not")) {
-          isT = false;
-          skip(tokens, "not");
-        }
-
-        if (isBuiltinKeyword(tokens[0])) {
-          const parser = L_BuiltinParsers.get(tokens[0]) as Function;
-          out = [...out, parser(env, tokens)];
-        } else if (LogicalKeywords.includes(tokens[0])) {
-          const fact = logicParse(env, tokens, includeDefName);
-          fact.isT = isT ? fact.isT : !fact.isT;
-          out = [...out, fact];
-        } else {
-          const fact = optParse(env, tokens, true);
-          out = [...out, fact];
-        }
-      } catch (error) {
-        handleParseError(env, "fact", factIndex, factStart);
-        throw error;
-      }
+      const cur = factParse(env, tokens);
+      out.push(cur);
       // End of former singleNodeFacts logic
 
       if (isCurToken(tokens, ",")) skip(tokens, ",");
@@ -632,7 +649,7 @@ function factsParse(
 
     return out;
   } catch (error) {
-    handleParseError(env, "fact", index, start);
+    handleParseError(env, "facts", index, start);
     throw error;
   }
 }
@@ -1063,6 +1080,18 @@ export function LetCompositeParse(
   }
 }
 
-export function isPropertyParse(env: L_Env, tokens: string[]) {}
-export function orParse() {}
-export function isSymbolShapeParse() {}
+export function isPropertyParse(
+  env: L_Env,
+  tokens: string[]
+): BuiltinCheckNode {
+  throw Error();
+}
+export function orParse(env: L_Env, tokens: string[]): BuiltinCheckNode {
+  throw Error();
+}
+export function isSymbolShapeParse(
+  env: L_Env,
+  tokens: string[]
+): BuiltinCheckNode {
+  throw Error();
+}
