@@ -10,7 +10,6 @@ import { L_Env } from "./L_Env";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { L_ReportErr } from "./L_Messages";
-import { knowExec } from "./L_Executor";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
@@ -223,20 +222,20 @@ export function check(
   toCheck: ToCheckNode,
   toCheckVarsFromIf: string[][] = []
 ): L_Out {
-  if (toCheck instanceof OptNode) {
-    let out = checkOpt(env, toCheck, true, toCheckVarsFromIf);
-    if (out === L_Out.Unknown) {
-      out = checkOpt(env, toCheck.copyWithoutIsT(!toCheck.isT));
-      if (out === L_Out.True) {
-        return L_Out.False;
-      }
-    }
-    return out;
-  } else if (toCheck instanceof IfNode) {
-    return checkIfThen(env, toCheck, toCheckVarsFromIf);
-  } else if (toCheck instanceof OrNode) {
-    return checkOr(env, toCheck);
-  }
+  // if (toCheck instanceof OptNode) {
+  //   let out = checkOpt(env, toCheck, true, toCheckVarsFromIf);
+  //   if (out === L_Out.Unknown) {
+  //     out = checkOpt(env, toCheck.copyWithoutIsT(!toCheck.isT));
+  //     if (out === L_Out.True) {
+  //       return L_Out.False;
+  //     }
+  //   }
+  //   return out;
+  // } else if (toCheck instanceof IfNode) {
+  //   return checkIfThen(env, toCheck, toCheckVarsFromIf);
+  // } else if (toCheck instanceof OrNode) {
+  //   return checkOr(env, toCheck);
+  // }
 
   return L_Out.Unknown;
 }

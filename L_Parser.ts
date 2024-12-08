@@ -60,6 +60,7 @@ import {
   L_Singleton,
   L_Symbol,
 } from "./L_Structs";
+import { check } from "./L_Checker";
 
 function arrParse<T>(
   env: L_Env,
@@ -693,32 +694,39 @@ function optsParse(
       return optsParse(env, tokens, parseNot) as ExistNode[];
     } else if (tokens.length >= 2 && tokens[1] === "(") {
       //TODO CheckVars not implemented
-      let checkVars: L_Symbol[][] = [];
 
       const optSymbol: L_OptSymbol = optSymbolParse(env, tokens);
       const vars = arrParse<L_Symbol>(env, tokens, symbolParse, "(", ")");
 
-      if (isCurToken(tokens, "[")) {
-        skip(tokens, "[");
-        checkVars = [];
-        while (!isCurToken(tokens, "]")) {
-          const currentLayerVars = arrParse<L_Symbol>(
-            env,
-            tokens,
-            symbolParse,
-            undefined,
-            [";", "]"],
-            false
-          );
-          checkVars.push(currentLayerVars);
-          if (isCurToken(tokens, ";")) skip(tokens, ";");
-        }
-        skip(tokens, "]");
-      }
+      let checkVars = checkVarsParse();
 
       return [new OptNode(optSymbol, vars, isT, checkVars)];
     } else {
-      throw Error();
+      const var1 = symbolParse(env, tokens);
+
+      switch (tokens[0]) {
+        case "is": {
+          skip(tokens, "is");
+          const optName = skip(tokens);
+          const optSymbol = new L_OptSymbol(optName);
+          const checkVars = checkVarsParse();
+          const out = new OptNode(optSymbol, [var1], isT, checkVars);
+          return [out];
+        }
+        default: {
+          const optName = skip(tokens);
+          if (env.getDef(optName) === undefined) {
+            env.newMessage(`Failed: ${optName} not declared.`);
+            throw Error();
+          }
+          const optSymbol = new L_OptSymbol(optName);
+          const var2 = symbolParse(env, tokens);
+          const checkVars = checkVarsParse();
+          const out = new OptNode(optSymbol, [var1, var2], isT, checkVars);
+          return [out];
+        }
+      }
+
       // while (![...AreKeywords, ...IsKeywords].includes(tokens[0])) {
       //   const v = shiftSymbol(tokens);
       //   vars.push(v);
@@ -748,6 +756,29 @@ function optsParse(
   } catch (error) {
     handleParseError(env, `${start} is invalid operator.`, index, start);
     throw error;
+  }
+
+  function checkVarsParse(): L_Symbol[][] | undefined {
+    if (isCurToken(tokens, "[")) {
+      skip(tokens, "[");
+      const checkVars: L_Symbol[][] = [];
+      while (!isCurToken(tokens, "]")) {
+        const currentLayerVars = arrParse<L_Symbol>(
+          env,
+          tokens,
+          symbolParse,
+          undefined,
+          [";", "]"],
+          false
+        );
+        checkVars.push(currentLayerVars);
+        if (isCurToken(tokens, ";")) skip(tokens, ";");
+      }
+      skip(tokens, "]");
+      return checkVars;
+    } else {
+      return undefined;
+    }
   }
 }
 

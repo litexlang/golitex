@@ -223,61 +223,6 @@ export class OptNode extends ToCheckNode {
     return new OptNode(this.optSymbol, newVars, this.isT, undefined);
   }
 
-  override containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
-    return (
-      opt.optSymbol === this.optSymbol &&
-      opt.vars.every((e, i) => e === this.vars[i])
-    );
-  }
-
-  override copyWithoutIsT(newIsT: boolean): OptNode {
-    return new OptNode(
-      this.optSymbol,
-      this.vars,
-      newIsT,
-      // this.defName,
-      this.checkVars
-    );
-  }
-
-  override useMapToCopy(env: L_Env, map: Map<string, string>): OptNode {
-    //*
-    // const newVars: string[] = [];
-    // for (const v of this.vars) {
-    //   const fixed = map.get(v);
-    //   if (fixed === undefined) {
-    //     //! I DON'T KNOW WHETHER I SHOULD THROW ERROR OR PUSH PREVIOUS SYMBOL
-    //     // throw Error();
-    //     // newVars.push(v);
-    //     if (!v.startsWith("\\")) {
-    //       newVars.push(v);
-    //     } else {
-    //       //! FOR THE TIME BEING, I USE THIS NOT THAT GREAT CODE.
-    //       for (const freeVar of map.keys()) {
-    //         const regex = new RegExp(`\\s${freeVar}\\s`);
-    //         if (regex.test(v)) {
-    //           const fixed = map.get(freeVar);
-    //           const out = v.replace(regex, ` ${fixed} `);
-    //           newVars.push(out);
-    //         }
-    //       }
-    //     }
-    //   } else {
-    //     newVars.push(fixed);
-    //   }
-    // }
-    // return new OptNode(
-    //   this.optSymbol,
-    //   newVars,
-    //   this.isT,
-    //   // this.defName,
-    //   this.checkVars
-    // );
-    //*
-
-    throw Error();
-  }
-
   override toString() {
     const mainPart =
       this.optSymbol.name +
@@ -285,47 +230,9 @@ export class OptNode extends ToCheckNode {
     const notPart = !this.isT ? "[not] " : "";
     return notPart + mainPart;
   }
-
-  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
-    //*
-    // const isBuiltin = L_BuiltinsKeywords.includes(this.optSymbol);
-    // if (isBuiltin) {
-    //   // ! Not A Good Implementation.
-    //   return true;
-    // }
-    // for (const v of this.vars) {
-    //   const declared =
-    //     env.varDeclared(v) || freeVars.includes(v) || v.startsWith("\\");
-    //   if (!declared) {
-    //     env.newMessage(
-    //       `variable ${v} not declared in called operator ${this.optSymbol}`
-    //     );
-    //     return false;
-    //   }
-    // }
-    // return true;
-    //*
-
-    throw Error();
-  }
-
-  override factsDeclared(env: L_Env): boolean {
-    //*
-    //   if (
-    //     env.optDeclared(this.optSymbol) ||
-    //     L_BuiltinsKeywords.includes(this.optSymbol)
-    //   ) {
-    //     return true;
-    //   } else {
-    //     env.newMessage(`operator ${this.optSymbol} not declared.`);
-    //     return false;
-    //   }
-    // }
-    //*
-
-    throw Error();
-  }
 }
+
+export class BuiltinNode_IsProperty extends ToCheckNode {}
 
 export class ExistNode extends OptNode {
   toString(): string {

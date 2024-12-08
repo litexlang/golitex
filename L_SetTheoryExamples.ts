@@ -93,12 +93,12 @@ export const exampleList: ExampleItem[] = [
       "know if x, A, B: in(x,A), not in(x,B) => {not subset(A,B)};",
     ],
     test: [
-      "let A,B,C,D,E,F;",
-      "know subset(A,B);",
-      "let x: in(x,A);",
-      "in(x,B);", // Unknown
-      "in(x,B)[A,B;x];", // True
-      "in(x,B);",
+      `{let A,B,C,D,E,F;
+      know subset(A,B);
+      let x: in(x,A);
+      in(x,B); // Unknown
+      in(x,B)[A,B;x]; // True
+      in(x,B);}`,
     ],
     debug: false,
     runTest: false,
