@@ -77,7 +77,7 @@ export const exampleList: ExampleItem[] = [
     test: [
       `{let a,b: set(a), set(b);
       let x: in(x,a); 
-      in(x, \\union{a,b}) [a,b;x];
+      in(x, \\union{a,b}) [a,b; x];
       in(x, \\union{a,b});}`,
     ],
     debug: true,

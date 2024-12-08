@@ -420,8 +420,8 @@ export const exampleList: ExampleItem[] = [
     test: [
       "{let a, b: set(a), set(b), equal(a,b); if x: in(x,a)  {in(x,b)[a,b;x]} , if x: in(x,b)  {in(x,a)[a,b;x]}; let x: in(x,a); in(x,b); }",
     ],
-    debug: false,
-    print: true,
+    debug: true,
+    print: false,
     runTest: false,
   },
   {
@@ -446,7 +446,7 @@ export const exampleList: ExampleItem[] = [
       "if _x, _a: equal(_x,_a)  {in(_x, \\singleton{_a})[_x,_a] };",
     ],
     debug: true,
-    print: false,
+    print: true,
     runTest: false,
   },
   {

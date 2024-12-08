@@ -62,17 +62,28 @@ export class L_Env {
     return true;
   }
 
-  getFacts(key: string): undefined | L_KnownFact[] {
-    const out = this.facts.get(key);
-    if (out !== undefined) {
-      return out;
-    } else {
-      if (this.parent !== undefined) {
-        return this.parent.getFacts(key);
-      } else {
-        return undefined;
-      }
+  getFacts(
+    key: string,
+    factsFromParent: L_KnownFact[] | undefined = undefined
+  ): undefined | L_KnownFact[] {
+    // Initialize factsFromParent if it's undefined
+    if (factsFromParent === undefined) {
+      factsFromParent = [];
     }
+
+    // Check facts in current instance
+    const currentFacts = this.facts.get(key);
+    if (currentFacts !== undefined) {
+      factsFromParent.push(...currentFacts);
+    }
+
+    // If no parent, return accumulated facts
+    if (this.parent === undefined) {
+      return factsFromParent.length > 0 ? factsFromParent : undefined;
+    }
+
+    // Recursively get facts from parent
+    return this.parent.getFacts(key, factsFromParent);
   }
 
   clear() {
