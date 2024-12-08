@@ -1,27 +1,5 @@
-import {
-  BuiltinCheckNode,
-  ByNode,
-  DefNode,
-  ExistNode,
-  HaveNode,
-  IffNode,
-  IfNode,
-  KnowNode,
-  L_Node,
-  LetCompositeNode,
-  LetHashNode,
-  LetNode,
-  LocalEnvNode,
-  LogicNode,
-  MacroNode,
-  OptNode,
-  OrNode,
-  PostfixProve,
-  ProveNode,
-  ReturnNode,
-  SpecialNode,
-  ToCheckNode,
-} from "./L_Nodes";
+import { L_Node, LogicNode, ToCheckNode, OptNode } from "./L_Nodes";
+import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import {
   AreKeywords,
@@ -370,7 +348,7 @@ function postfixProveParse(
   tokens: string[],
   end: string[] = [...L_Ends],
   skipEnd: boolean = false
-): PostfixProve {
+): L_Nodes.PostfixProve {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -408,14 +386,14 @@ function postfixProveParse(
 
     if (skipEnd) skip(tokens, end);
 
-    return new PostfixProve(facts, block, names);
+    return new L_Nodes.PostfixProve(facts, block, names);
   } catch (error) {
     handleParseError(env, "fact", index, start);
     throw error;
   }
 }
 
-function knowParse(env: L_Env, tokens: string[]): KnowNode {
+function knowParse(env: L_Env, tokens: string[]): L_Nodes.KnowNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -435,7 +413,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
     let facts: ToCheckNode[] = [];
     // const strict = keyword === "know" ? false : true;
 
-    // const knowNode: KnowNode = new KnowNode([], []);
+    // const knowNode: L_Nodes.KnowNode = new L_Nodes.KnowNode([], []);
     while (!L_Ends.includes(tokens[0])) {
       facts = factsParse(env, tokens, [...L_Ends, ","], false);
       // knowNode.facts = knowNode.facts.concat(outs);
@@ -444,7 +422,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
     }
     skip(tokens, L_Ends);
 
-    return new KnowNode(facts, names);
+    return new L_Nodes.KnowNode(facts, names);
     // return knowNode;
   } catch (error) {
     handleParseError(env, "know", index, start);
@@ -452,7 +430,7 @@ function knowParse(env: L_Env, tokens: string[]): KnowNode {
   }
 }
 
-function letParse(env: L_Env, tokens: string[]): LetNode {
+function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -483,17 +461,17 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
     if (L_Ends.includes(tokens[0])) {
       skip(tokens, L_Ends);
       if (whichLet === LetKeyword) {
-        return new LetNode(vars, [], names);
+        return new L_Nodes.LetNode(vars, [], names);
       } else {
-        return new LetHashNode(vars, [], names);
+        throw Error();
       }
     } else {
       skip(tokens, ":");
       const facts = factsParse(env, tokens, L_Ends, true);
       if (whichLet === LetKeyword) {
-        return new LetNode(vars, facts, names);
+        return new L_Nodes.LetNode(vars, facts, names);
       } else {
-        return new LetHashNode(vars, facts, names);
+        throw Error();
       }
     }
   } catch (error) {
@@ -529,7 +507,7 @@ function varLstParse(
   }
 }
 
-function proveParse(env: L_Env, tokens: string[]): ProveNode {
+function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -572,9 +550,9 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
     }
 
     if (toProve !== null) {
-      return new ProveNode(toProve, null, block, contradict);
+      return new L_Nodes.ProveNode(toProve, null, block, contradict);
     } else {
-      return new ProveNode(null, fixedIfThenOpt, block, contradict);
+      return new L_Nodes.ProveNode(null, fixedIfThenOpt, block, contradict);
     }
   } catch (error) {
     handleParseError(env, "Parsing prove", index, start);
@@ -761,9 +739,9 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     skip(tokens, "}");
 
     if (type === IfKeyword) {
-      return new IfNode(vars, req, onlyIfs, true); //! By default isT = true
+      return new L_Nodes.IfNode(vars, req, onlyIfs, true); //! By default isT = true
     } else if (type === IffKeyword) {
-      return new IffNode(vars, req, onlyIfs, true);
+      return new L_Nodes.IffNode(vars, req, onlyIfs, true);
     } else {
       throw Error();
     }
@@ -786,9 +764,9 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     // }
     // skip(tokens, "{");
     // if (IfKeywords.includes(type)) {
-    //   return new IfNode(vars, req, onlyIfs, true);
+    //   return new L_Nodes.IfNode(vars, req, onlyIfs, true);
     // } else if (IffKeywords.includes(type)) {
-    //   return new IffNode(vars, req, onlyIfs, true);
+    //   return new L_Nodes.IffNode(vars, req, onlyIfs, true);
     // }
     // throw Error();
   } catch (error) {
@@ -797,7 +775,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
   }
 }
 
-function localEnvParse(env: L_Env, tokens: string[]): LocalEnvNode {
+function localEnvParse(env: L_Env, tokens: string[]): L_Nodes.LocalEnvNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -805,7 +783,7 @@ function localEnvParse(env: L_Env, tokens: string[]): LocalEnvNode {
     skip(tokens, "{");
     const nodes = parseUntilGivenEnd(env, tokens, "}");
     skip(tokens, "}");
-    const out = new LocalEnvNode(nodes);
+    const out = new L_Nodes.LocalEnvNode(nodes);
     return out;
   } catch (error) {
     handleParseError(env, "{}", index, start);
@@ -813,14 +791,14 @@ function localEnvParse(env: L_Env, tokens: string[]): LocalEnvNode {
   }
 }
 
-function returnParse(env: L_Env, tokens: string[]): ReturnNode {
+function returnParse(env: L_Env, tokens: string[]): L_Nodes.ReturnNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     skip(tokens, ReturnKeyword);
     const facts = factsParse(env, tokens, L_Ends, true);
-    return new ReturnNode(facts);
+    return new L_Nodes.ReturnNode(facts);
   } catch (error) {
     handleParseError(env, "return/so", index, start);
     throw error;
@@ -868,7 +846,7 @@ function returnParse(env: L_Env, tokens: string[]): ReturnNode {
 //   }
 // }
 
-function haveParse(env: L_Env, tokens: string[]): HaveNode {
+function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -883,7 +861,7 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
 
     const opts = factsParse(env, tokens, L_Ends, true) as OptNode[];
 
-    return new HaveNode(opts, vars);
+    return new L_Nodes.HaveNode(opts, vars);
   } catch (error) {
     handleParseError(env, "have", index, start);
     throw error;
@@ -908,7 +886,7 @@ function haveParse(env: L_Env, tokens: string[]): HaveNode {
 //   }
 // }
 
-function specialParse(env: L_Env, tokens: string[]): SpecialNode {
+function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -917,14 +895,14 @@ function specialParse(env: L_Env, tokens: string[]): SpecialNode {
     switch (keyword) {
       case ClearKeyword:
         skip(tokens, L_Ends);
-        return new SpecialNode(ClearKeyword, null);
+        return new L_Nodes.SpecialNode(ClearKeyword, null);
       case RunKeyword: {
         const words: string[] = [];
         while (!L_Ends.includes(tokens[0])) {
           words.push(shiftSymbol(tokens));
         }
         skip(tokens, L_Ends);
-        return new SpecialNode(RunKeyword, words.join());
+        return new L_Nodes.SpecialNode(RunKeyword, words.join());
       }
       default:
         throw Error();
@@ -935,7 +913,7 @@ function specialParse(env: L_Env, tokens: string[]): SpecialNode {
   }
 }
 
-function byParse(env: L_Env, tokens: string[]): ByNode {
+function byParse(env: L_Env, tokens: string[]): L_Nodes.ByNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -948,14 +926,14 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
     }
     skip(tokens, L_Ends);
 
-    return new ByNode(outs);
+    return new L_Nodes.ByNode(outs);
   } catch (error) {
     handleParseError(env, "by", index, start);
     throw error;
   }
 }
 
-function macroParse(env: L_Env, tokens: string[]): MacroNode {
+function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -965,14 +943,14 @@ function macroParse(env: L_Env, tokens: string[]): MacroNode {
     const varName = shiftSymbol(tokens);
     const facts = factsParse(env, tokens, L_Ends, true);
 
-    return new MacroNode(regexString, varName, facts);
+    return new L_Nodes.MacroNode(regexString, varName, facts);
   } catch (error) {
     handleParseError(env, "macro", index, start);
     throw error;
   }
 }
 
-function defParse(env: L_Env, tokens: string[]): DefNode {
+function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -992,10 +970,10 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
       skip(tokens, "{");
       onlyIfs.push(...factsParse(env, tokens, ["}"], false));
       skip(tokens, "}");
-      return new DefNode(opt, cond, onlyIfs);
+      return new L_Nodes.DefNode(opt, cond, onlyIfs);
     } else {
       skip(tokens, L_Ends);
-      return new DefNode(opt, cond, onlyIfs);
+      return new L_Nodes.DefNode(opt, cond, onlyIfs);
     }
   } catch (error) {
     handleParseError(env, "define", index, start);
@@ -1043,7 +1021,7 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
 export function LetCompositeParse(
   env: L_Env,
   tokens: string[]
-): LetCompositeNode {
+): L_Nodes.LetCompositeNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -1058,7 +1036,7 @@ export function LetCompositeParse(
     }
     skip(tokens, L_Ends);
 
-    return new LetCompositeNode(composite, facts);
+    return new L_Nodes.LetCompositeNode(composite, facts);
   } catch (error) {
     handleParseError(env, "define", index, start);
     throw error;
@@ -1068,15 +1046,18 @@ export function LetCompositeParse(
 export function isPropertyParse(
   env: L_Env,
   tokens: string[]
-): BuiltinCheckNode {
+): L_Nodes.BuiltinCheckNode {
   throw Error();
 }
-export function orParse(env: L_Env, tokens: string[]): BuiltinCheckNode {
+export function orParse(
+  env: L_Env,
+  tokens: string[]
+): L_Nodes.BuiltinCheckNode {
   throw Error();
 }
 export function isSymbolShapeParse(
   env: L_Env,
   tokens: string[]
-): BuiltinCheckNode {
+): L_Nodes.BuiltinCheckNode {
   throw Error();
 }
