@@ -38,6 +38,12 @@ export const exampleList: ExampleItem[] = [
       let b;
       `,
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "opt",
+    code: ["x is set; opt(x); x < y;"],
     debug: true,
     print: true,
   },

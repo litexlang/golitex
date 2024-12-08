@@ -445,7 +445,7 @@ export const exampleList: ExampleItem[] = [
       "in(x, \\singleton{a})[x,a]; ",
       "if _x, _a: equal(_x,_a)  {in(_x, \\singleton{_a})[_x,_a] };",
     ],
-    debug: true,
+    debug: false,
     print: true,
     runTest: false,
   },
@@ -460,6 +460,12 @@ export const exampleList: ExampleItem[] = [
     debug: false,
     runTest: false,
     print: false,
+  },
+  {
+    name: "opt",
+    code: ["def set(x); def <(x,y); let x,y: x is set, x < y;"],
+    debug: true,
+    print: true,
   },
 ];
 

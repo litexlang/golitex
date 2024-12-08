@@ -715,10 +715,10 @@ function optsParse(
         }
         default: {
           const optName = skip(tokens);
-          if (env.getDef(optName) === undefined) {
-            env.newMessage(`Failed: ${optName} not declared.`);
-            throw Error();
-          }
+          // if (env.getDef(optName) === undefined) {
+          //   env.newMessage(`Failed: ${optName} not declared.`);
+          //   throw Error();
+          // }
           const optSymbol = new L_OptSymbol(optName);
           const var2 = symbolParse(env, tokens);
           const checkVars = checkVarsParse();
