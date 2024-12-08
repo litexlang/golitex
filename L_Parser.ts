@@ -61,6 +61,7 @@ import {
   L_Symbol,
 } from "./L_Structs";
 import { check } from "./L_Checker";
+import { L_BuiltinParsers } from "./L_Builtins";
 
 function arrParse<T>(
   env: L_Env,
@@ -501,27 +502,6 @@ function letParse(env: L_Env, tokens: string[]): LetNode {
   }
 }
 
-function optParseReturnOptNode(
-  env: L_Env,
-  tokens: string[],
-  parseNot: boolean
-): OptNode {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  try {
-    const nodes = optsParse(env, tokens, parseNot);
-    if (nodes.length > 0) {
-      return nodes[0];
-    } else {
-      throw Error;
-    }
-  } catch (error) {
-    handleParseError(env, `${start} is invalid operator.`, index, start);
-    throw error;
-  }
-}
-
 function varLstParse(
   env: L_Env,
   tokens: string[],
@@ -568,7 +548,7 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
     if (IfKeyword === tokens[0]) {
       toProve = logicParse(env, tokens, false);
     } else {
-      fixedIfThenOpt = optParseReturnOptNode(env, tokens, true);
+      fixedIfThenOpt = optParse(env, tokens, true);
     }
 
     const block: L_Node[] = [];
@@ -587,7 +567,7 @@ function proveParse(env: L_Env, tokens: string[]): ProveNode {
     let contradict: OptNode | undefined = undefined;
     if (byContradict) {
       skip(tokens, ContradictionKeyword);
-      contradict = optParseReturnOptNode(env, tokens, true);
+      contradict = optParse(env, tokens, true);
       skip(tokens, L_Ends);
     }
 
@@ -652,9 +632,8 @@ function factsParse(
         //   out = [...out, fact];
         // }
         else {
-          const facts = optsParse(env, tokens, true);
-          facts.forEach((e) => (e.isT = isT ? e.isT : !e.isT));
-          out = [...out, ...facts];
+          const fact = optParse(env, tokens, true);
+          out = [...out, fact];
         }
       } catch (error) {
         handleParseError(env, "fact", factIndex, factStart);
@@ -674,25 +653,24 @@ function factsParse(
   }
 }
 
-function optsParse(
-  env: L_Env,
-  tokens: string[],
-  parseNot: boolean
-  // _includeDefName: boolean
-): OptNode[] {
+function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    let name: string = "";
-    const vars: string[] = [];
+    // TODO use builtin to implement not
     let isT = true;
 
-    if (tokens[0] === ExistKeyword) {
-      skip(tokens, ExistKeyword);
+    // TODO implement parse builtin
+    if (Object.keys(L_BuiltinParsers).includes(tokens[0])) {
+    }
 
-      return optsParse(env, tokens, parseNot) as ExistNode[];
-    } else if (tokens.length >= 2 && tokens[1] === "(") {
+    // if (tokens[0] === ExistKeyword) {
+    //   skip(tokens, ExistKeyword);
+
+    //   return optsParse(env, tokens, parseNot) as ExistNode[];
+    // } else
+    if (tokens.length >= 2 && tokens[1] === "(") {
       //TODO CheckVars not implemented
 
       const optSymbol: L_OptSymbol = optSymbolParse(env, tokens);
@@ -700,7 +678,7 @@ function optsParse(
 
       let checkVars = checkVarsParse();
 
-      return [new OptNode(optSymbol, vars, isT, checkVars)];
+      return new OptNode(optSymbol, vars, isT, checkVars);
     } else {
       const var1 = symbolParse(env, tokens);
 
@@ -711,47 +689,17 @@ function optsParse(
           const optSymbol = new L_OptSymbol(optName);
           const checkVars = checkVarsParse();
           const out = new OptNode(optSymbol, [var1], isT, checkVars);
-          return [out];
+          return out;
         }
         default: {
           const optName = skip(tokens);
-          // if (env.getDef(optName) === undefined) {
-          //   env.newMessage(`Failed: ${optName} not declared.`);
-          //   throw Error();
-          // }
           const optSymbol = new L_OptSymbol(optName);
           const var2 = symbolParse(env, tokens);
           const checkVars = checkVarsParse();
           const out = new OptNode(optSymbol, [var1, var2], isT, checkVars);
-          return [out];
+          return out;
         }
       }
-
-      // while (![...AreKeywords, ...IsKeywords].includes(tokens[0])) {
-      //   const v = shiftSymbol(tokens);
-      //   vars.push(v);
-      //   if (tokens[0] === ",") skip(tokens, ",");
-      // }
-      // skip(tokens, [...AreKeywords, ...IsKeywords]);
-      // if (parseNot && NotKeywords.includes(tokens[0])) {
-      //   isT = !isT;
-      //   skip(tokens, NotKeywords);
-      // }
-      // name = shiftSymbol(tokens);
-      // let checkVars: string[][] | undefined = undefined;
-      // if (isCurToken(tokens, "[")) {
-      //   skip(tokens, "[");
-      //   checkVars = [];
-      //   while (!isCurToken(tokens, "]")) {
-      //     const currentLayerVars = varLstParse(env, tokens, [";", "]"]);
-      //     checkVars.push(currentLayerVars);
-      //     if (isCurToken(tokens, ";")) skip(tokens, ";");
-      //   }
-      //   skip(tokens, "]");
-      // }
-      // const outs = vars.map((e) => new OptNode(name, [e], isT, checkVars));
-      // // outs[outs.length - 1].defName = undefined;
-      // return outs;
     }
   } catch (error) {
     handleParseError(env, `${start} is invalid operator.`, index, start);
@@ -1013,7 +961,7 @@ function byParse(env: L_Env, tokens: string[]): ByNode {
     skip(tokens, ByKeyword);
     const outs: OptNode[] = [];
     while (!isCurToken(tokens, L_Ends)) {
-      const opt = optParseReturnOptNode(env, tokens, true);
+      const opt = optParse(env, tokens, true);
       outs.push(opt);
     }
     skip(tokens, L_Ends);
@@ -1049,7 +997,7 @@ function defParse(env: L_Env, tokens: string[]): DefNode {
   try {
     skip(tokens, DefKeywords);
 
-    const opt: OptNode = optParseReturnOptNode(env, tokens, false);
+    const opt: OptNode = optParse(env, tokens, false);
 
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {

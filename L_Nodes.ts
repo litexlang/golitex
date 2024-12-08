@@ -1,5 +1,5 @@
 import { on } from "events";
-import { L_BuiltinsKeywords } from "./L_Builtins";
+import { L_BuiltinParsers } from "./L_Builtins";
 import { L_Env } from "./L_Env";
 import { L_Composite, L_OptSymbol, L_Symbol } from "./L_Structs";
 
@@ -231,8 +231,6 @@ export class OptNode extends ToCheckNode {
     return notPart + mainPart;
   }
 }
-
-export class BuiltinNode_IsProperty extends ToCheckNode {}
 
 export class ExistNode extends OptNode {
   toString(): string {

@@ -1,16 +1,43 @@
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Out } from "./L_Structs";
+import { L_Out, L_Symbol } from "./L_Structs";
 
-export const L_BuiltinsKeywords: string[] = [
-  "is_property",
-  "or",
-  "is_composite",
-];
+export const L_BuiltinParsers = {
+  is_property: isPropertyParse,
+  or: orParse,
+  is_symbol_shape: isSymbolShapeParse,
+};
+
+export class IsPropertyNode extends L_Node {
+  constructor(public propertyName: string) {
+    super();
+  }
+}
+
+export class OrNode extends L_Node {
+  constructor(public opts: OptNode[]) {
+    super();
+  }
+}
+
+export class isSymbolShapeNode extends L_Node {
+  constructor(
+    public templateSymbol: L_Symbol,
+    public givenSymbol: L_Symbol,
+    public factsMustSatisfy: ToCheckNode[]
+  ) {
+    super();
+  }
+}
+
+export function isPropertyParse(env: L_Env, tokens: string[]) {}
+export function orParse() {}
+export function isSymbolShapeParse() {}
 
 export function isToCheckBuiltin(node: ToCheckNode): boolean {
   return (
-    node instanceof OptNode && L_BuiltinsKeywords.includes(node.optSymbol.name)
+    node instanceof OptNode &&
+    Object.keys(L_BuiltinParsers).includes(node.optSymbol.name)
   );
 }
 
