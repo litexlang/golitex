@@ -8,22 +8,31 @@ Feel free to share your suggestions and ideas to help me improve this open-sourc
 
 ---
 
-## Setting up
+### Setting up Node.js and npm to run litex
 
-1. Install Node.js and npm:
+tslitex is written in TypeScript. So Node.js is essential for running litex projects because it provides the JavaScript runtime environment needed to execute TypeScript (.ts) files. Here's a concise guide to setting up Node.js:
 
-   - Download and install the latest LTS version from [nodejs.org](https://nodejs.org/)
-   - Verify installation by running:
-     ```bash
-     node --version
-     npm --version
-     ```
+1. Install Node.js:
 
-2. Run the following commands:
+   - Visit [nodejs.org](https://nodejs.org/)
+   - Download the latest LTS (Long Term Support) version
+   - Run the installer and follow the installation wizard
+
+2. Verify Installation:
+
    ```bash
+   node --version
+   npm --version
+   ```
+
+3. Run the Project:
+   ```bash
+   git clone https://github.com/litexlang/tslitex.git
    cd ./tslitex
    ts-node L_ReadmeExamples.ts
    ```
+
+That's it! These steps will get you set up with Node.js and ready to run your litex project.
 
 ---
 
