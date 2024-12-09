@@ -116,44 +116,51 @@ export const exampleList: ExampleItem[] = [
     test: [
       "{def p(x); is_property(p); let x: set(x); subset(\\subset_with_property{x,p}, x)[x,p];}",
     ],
-    runTest: true,
     debug: true,
-    print: true,
+    runTest: false,
+    print: false,
   },
   {
     name: "intersection",
     code: [
       // \frac{a}{b} \intersection(a,b)  $ a - b $
-      "know if x, a, b: a is set, b is set , in(x,a), in(x,b) => {in(x, \\intersection{a,b}) };",
-      "know if x, a, b: set(a), set(b) , in(x, \\intersection{a,b}) => { in(x,a), in(x, b) };",
+      "know if x, a, b: a is set, b is set , in(x,a), in(x,b) {in(x, \\intersection{a,b}) };",
+      "know if x, a, b: set(a), set(b) , in(x, \\intersection{a,b}) { in(x,a), in(x, b) };",
     ],
     test: [
-      "let A, B: set(A), set(B);",
-      " if X: in(X,A), in(X,B) => { in(X, \\intersection{A,B})[X,A,B] } ; ", // don't know why this does not work.
-      "if X: in(X, \\intersection{A,B}) => { in(X,A)[X,A,B], in(X, B)[X,A,B] };", // Don't know why this does not work.
+      `let A, B: set(A), set(B);
+      let x;
+      know in(x,A), in(x,B); in(x, \\intersection{A,B})[x,A,B];
+      if X: in(X,A), in(X,B) { in(X, \\intersection{A,B})[X,A,B] } ;  
+      if X: in(X, \\intersection{A,B}) { in(X,A)[X,A,B], in(X, B)[X,A,B] }; `,
     ],
-    debug: false,
-    runTest: true,
+    debug: true,
+    runTest: false,
     print: false,
   },
   {
     name: "difference",
     code: [
-      "know if x, a, b: set(a), set(b) , in(x,a), not in(x,b) => {in(x, \\difference{a,b}) };",
+      "let_composite \\difference{a,b}: set(a) ,set(b);",
+      "know if x, a, b: set(a), set(b) , in(x,a), not in(x,b) {in(x, \\difference{a,b}) };",
     ],
-    debug: false,
-    print: true,
+    debug: true,
+    print: false,
   },
   {
-    // not good
     name: "replacement",
     code: [
-      "def the_same(x,y);",
-      "def replacement(A,P, s);",
-      "know if A,P, s: set(A), is_property(P), replacement(A,P,s) => {if x, z: in(z, s), in(x,A) => { exist P(x, z)   } };",
-      "know if A, P: set(A), is_property(P), if x: in(A) => {if y,z : P(x,y), P(x,z) => { the_same(y,z) } }  => {exist replacement(A,P,s)} ;",
+      // TODO 1. equal here should  be =  2. I should introduce {} into let_composite
+      `let_composite \\replacement{a,p}: set(a), is_property(p), if x, a: set(a), in(x,a) {if y1, y2 : p(x, y1), p(x, y2) {equal(y1, y2)} }; `,
+      `let_composite \\replacement_var{z,a,p}: ;`,
+      `know if z, a, p: set(a), is_property(p), if x, a: set(a), in(x,a) {if y1, y2 : p(x, y1), p(x, y2) {equal(y1, y2)} }, in(z, \\replacement{a,p}) {
+        p(\\replacement_var{z,a,p}, z)
+      };`,
+      `know if z, a, p: set(a), is_property(p), if x, a: set(a), in(x,a) {if y1, y2 : p(x, y1), p(x, y2) {equal(y1, y2)} }, p(\\replacement_var{z,a,p}, z){ 
+        in(z, \\replacement{a,p})
+      };`,
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {

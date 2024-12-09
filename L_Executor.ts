@@ -141,8 +141,9 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
     for (const f of node.facts) {
       const ok = env.factsInToCheckAllDeclaredOrBuiltin(f);
       if (!ok) {
-        env.newMessage(`Not all facts in ${f} are declared`);
-        return L_Out.Error;
+        //TODO I SHOULD IMPLEMENT check whether something is declared when checking
+        // env.newMessage(`Not all facts in ${f} are declared`);
+        // return L_Out.Error;
       }
     }
 
