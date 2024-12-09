@@ -1,8 +1,0 @@
-def object(x);
-def set(x);
-know if x: set(x) => {object(x)};
-def subset(A,B);
-def in(x,A);
-know if A, B: A,B are set => {if x: if in(x,A) => {in(x,B)} => {subset(A,B)} };
-know if A, B: A,B are set => {if subset(A,B) => {if x: in(x,A) => {in(x,B)} } };
-
