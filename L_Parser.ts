@@ -401,14 +401,6 @@ function knowParse(env: L_Env, tokens: string[]): L_Nodes.KnowNode {
     skip(tokens, KnowTypeKeywords);
 
     const names: string[] = [];
-    if (isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      while (!isCurToken(tokens, "]")) {
-        names.push(shiftSymbol(tokens));
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
-      }
-      skip(tokens, "]");
-    }
 
     let facts: ToCheckNode[] = [];
     // const strict = keyword === "know" ? false : true;

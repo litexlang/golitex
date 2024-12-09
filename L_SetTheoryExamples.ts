@@ -166,33 +166,38 @@ export const exampleList: ExampleItem[] = [
   {
     name: "regularity",
     code: [
-      // "def either_not_set_or_disjoint_from_given_set(x,A);",
-      // "def disjoint(A,B);",
-      // "know if x: disjoint(A,B) => {if x: in(x,A) => {not in(x,B)} , if x: in(x,B) => {not in(x,A)}};",
-      // "know if x: in(x,A), either_not_set_or_disjoint_from_given_set(x,A) => {if set(x) => {disjoint(x,A)}, if not disjoint(x,A) => {not  set(x)} };",
-      // "know if A: set(A), not equal(A, EMPTY_SET) => {exist either_not_set_or_disjoint_from_given_set(x,A) } ;",
+      "def disjoint(a,b); know if a,b : a is set, b is set, if x: in(x, a) => {not in(x, b)}, if x : in(x,b) => {not in(x, a)} {disjoint(a,b)};",
+      "let_composite \\regularity_element{A}: set(A), not equal(A, EMPTY_SET);",
+      `know if A: set(A), not equal(A, EMPTY_SET) {
+        if : not set(\\regularity_element{A}) {
+          disjoint(A, \\regularity_element{A})
+        },
+        if : not disjoint(A, \\regularity_element{A} ) {
+          set(\\regularity_element{A})
+        }
+      };`,
     ],
-    debug: false,
-    print: true,
+    debug: true,
+    print: false,
   },
   {
     name: "natural number",
     code: [
       "def natural(x);",
-      "def =(x,y);",
+      "def nat_eq(x,y);",
       " let 0: 0 is natural;",
       "let_composite \\++{n}: n is natural;",
-      " know if n: n is natural => {\\++{n} is natural}; ",
-      "know if x: => {not =(0, \\++{x}) }",
-      "know if x,y: =(x,y) => {=(\\++{x}, \\++{y})};",
-      "know if x,y: =(\\++{x}, \\++{y}) => {=(x,y)};",
-      "know if P: is_property(P), P(0), if n: n is natural, P(n) => {P(\\++{n})} => {if n is natural => {P(n)}};",
-      "let_composite \\+{x,y};",
-      "know \\+{x,y} = \\+{y,x};",
-      "know \\+{0,x} = \\+{x,0};",
+      " know if n: n is natural  {\\++{n} is natural}; ",
+      "know if x:  {not nat_eq(0, \\++{x}) };",
+      "know if x,y: nat_eq(x,y)  {nat_eq(\\++{x}, \\++{y})};",
+      "know if x,y: nat_eq(\\++{x}, \\++{y})  {nat_eq(x,y)};",
+      "know if P: is_property(P), P(0), if n: n is natural, P(n)  {P(\\++{n})}  {if m : m is natural  {P(m)} };",
+      "let_composite \\+{x,y}: ;",
+      "know \\+{x,y} nat_eq \\+{y,x};",
+      "know \\+{0,x} nat_eq \\+{x,0};",
     ],
-    debug: false,
-    print: true,
+    debug: true,
+    print: false,
   },
 ];
 

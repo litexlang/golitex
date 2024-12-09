@@ -43,7 +43,16 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "opt",
-    code: ["x is set; opt(x); x < y;"],
+    code: [
+      `know if A: set(A), not equal(A, EMPTY_SET) {
+        if : not set(\\regularity_element{A}) {
+          disjoint(A, \\regularity_element{A})
+        },
+        if : not disjoint(A, \\regularity_element{A} ) {
+          set(\\regularity_element{A})
+        }
+      };`,
+    ],
     debug: true,
     print: true,
   },
