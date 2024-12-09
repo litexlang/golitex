@@ -198,25 +198,26 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   }
 }
 
-export function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): L_Out {
+export function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
   try {
     if (toCheck instanceof OptNode) {
       const knowns = env.getFacts(toCheck.optSymbol.name);
-      if (knowns === undefined) return L_Out.Unknown;
+      if (knowns === undefined) return false;
       for (const known of knowns) {
         if (known instanceof OptNode) {
           if (
+            toCheck.isT === known.isT &&
             L_Symbol.literallyCompareSymbolArray(env, toCheck.vars, known.vars)
           ) {
-            return L_Out.True;
+            return true;
           }
         }
       }
     }
 
-    return L_Out.Unknown;
+    return false;
   } catch {
-    return env.errMesReturnL_Out(toCheck);
+    return env.errMesReturnBoolean(toCheck);
   }
 }
 

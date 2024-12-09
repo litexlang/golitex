@@ -682,17 +682,22 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
     if (isCurToken(tokens, "[")) {
       skip(tokens, "[");
       const checkVars: L_Symbol[][] = [];
+      checkVars.push([]);
       while (!isCurToken(tokens, "]")) {
-        const currentLayerVars = arrParse<L_Symbol>(
-          env,
-          tokens,
-          symbolParse,
-          undefined,
-          [";", "]"],
-          false
+        checkVars[checkVars.length - 1].push(
+          ...arrParse<L_Symbol>(
+            env,
+            tokens,
+            symbolParse,
+            undefined,
+            [";", "]"],
+            false
+          )
         );
-        checkVars.push(currentLayerVars);
-        if (isCurToken(tokens, ";")) skip(tokens, ";");
+        if (isCurToken(tokens, ";")) {
+          checkVars.push([]);
+          skip(tokens, ";");
+        }
       }
       skip(tokens, "]");
       return checkVars;

@@ -464,6 +464,18 @@ export const exampleList: ExampleItem[] = [
   {
     name: "test not",
     code: ["def p(x); let x: not p(x); p(x); not p(x); "],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "pair",
+    code: [
+      "def in(x,y); def equal(a,b);",
+      "know if x, a, b: in(x, \\pair{a,b}) { if :  not equal(x, b) {equal(x, a)} , if : not equal(x, a) {equal(x, b)} } ;",
+      "know if x, a, b : in(x,a) {in(x, \\pair{a,b})};",
+      "know if x, a, b : in(x,b) {in(x, \\pair{a,b})};",
+      "{let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; let y,c,d : in(y, \\pair{c,d}), not equal(y,c); equal(y,d)[y,c,d;]; }",
+    ],
     debug: true,
     print: true,
   },
