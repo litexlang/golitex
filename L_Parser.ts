@@ -39,7 +39,6 @@ import {
   L_Singleton,
   L_Symbol,
 } from "./L_Structs";
-import { check } from "./L_Checker";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
 
 function arrParse<T>(

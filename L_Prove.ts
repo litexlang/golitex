@@ -24,10 +24,10 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
     const ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
     if (!ok) return L_Out.Error;
 
-    const out = L_Checker.check(newEnv, toProve);
+    const out = L_Checker.checkFact(newEnv, toProve);
     if (out !== L_Out.True) return out;
 
-    L_Memory.store(env, toProve, [], true);
+    L_Memory.newFact(env, toProve);
 
     newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
 
@@ -48,7 +48,7 @@ export function proveOptByContradict(
     const newEnv = new L_Env(env);
 
     toProve.isT = !toProve.isT;
-    let ok = L_Memory.store(newEnv, toProve, [], true);
+    let ok = L_Memory.newFact(newEnv, toProve);
     if (!ok) {
       newEnv.newMessage(`Failed to store ${toProve}`);
       return L_Out.Error;
@@ -63,14 +63,14 @@ export function proveOptByContradict(
       }
     }
 
-    let out = L_Checker.check(newEnv, contradict);
+    let out = L_Checker.checkFact(newEnv, contradict);
     if (out !== L_Out.True) {
       env.newMessage(`Errors: Failed to execute ${contradict}`);
       return L_Out.Error;
     }
 
     contradict.isT = !contradict.isT;
-    out = L_Checker.check(newEnv, contradict);
+    out = L_Checker.checkFact(newEnv, contradict);
     if (out !== L_Out.True) {
       env.newMessage(`Errors: Failed to execute ${contradict}`);
       return L_Out.Error;
@@ -80,7 +80,7 @@ export function proveOptByContradict(
     if (!ok) return L_Out.Error;
 
     toProve.isT = !toProve.isT;
-    ok = L_Memory.store(env, toProve, [], true);
+    ok = L_Memory.newFact(env, toProve);
     if (!ok) {
       env.newMessage(`Failed to store ${toProve}`);
       return L_Out.Error;
@@ -118,7 +118,7 @@ export function postfixProveExec(
     }
 
     for (const fact of postfixProve.facts) {
-      const out = L_Checker.check(newEnv, fact);
+      const out = L_Checker.checkFact(newEnv, fact);
       if (out !== L_Out.True) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(`${postfixProve} failed.`);
@@ -127,7 +127,7 @@ export function postfixProveExec(
     }
 
     for (const fact of postfixProve.facts) {
-      const ok = L_Memory.store(env, fact, [], true);
+      const ok = L_Memory.newFact(env, fact);
       if (!ok) {
         env.newMessage(`Failed to store ${fact}`);
         return L_Out.Error;

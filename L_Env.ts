@@ -8,7 +8,6 @@ import {
   OptNode,
   ToCheckNode,
 } from "./L_Nodes";
-import { examineStoredFact } from "./L_Memory";
 import { L_KnownFact, L_OptSymbol, L_Out } from "./L_Structs";
 import { KnownFact, StoredFact } from "./L_Structs";
 

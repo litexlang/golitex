@@ -24,7 +24,6 @@ import * as L_Memory from "./L_Memory";
 import { ClearKeyword, RunKeyword } from "./L_Common";
 import { runFile } from "./L_Runner";
 import { LogicNode } from "./L_Nodes";
-import { store } from "./L_Memory";
 import {
   L_ReportErr,
   reportExecL_Out,
@@ -190,11 +189,6 @@ function defExec(env: L_Env, node: DefNode): L_Out {
 function factExec(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
     // TODO: Implement check whether the given toCheck exists and given var exists.
-    // if (!(toCheck.varsDeclared(env, []) && toCheck.factsDeclared(env))) {
-    //   return L_Out.Error;
-    // }
-
-    // const out = L_Checker.check(env, toCheck);
 
     const out = L_Checker.checkFact(env, toCheck);
 
@@ -238,16 +232,14 @@ function returnExec(env: L_Env, node: ReturnNode): L_Out {
     for (const f of node.facts) {
       noVarsOrOptDeclaredHere(env, env, f);
     }
-
     for (const toProve of node.facts) {
-      const out = L_Checker.check(env, toProve);
+      const out = L_Checker.checkFact(env, toProve);
       if (out !== L_Out.True) return out;
     }
-
     const storeTo = env.getParent();
     if (storeTo) {
       for (const toProve of node.facts) {
-        const ok = L_Memory.store(storeTo, toProve, [], true);
+        const ok = L_Memory.newFact(storeTo, toProve);
         if (!ok) {
           env.newMessage(`Failed to store ${toProve}`);
           return L_Out.Error;

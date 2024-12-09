@@ -540,5 +540,11 @@ function runLiTeXFile(filePath: string) {
   }
 }
 
-runExamples(false);
-// runLiTeXFile("./setTheory.litex");
+const files = {
+  setTheory: "./examples/setTheory.litex",
+  trimology: "./examples/trimology.litex",
+};
+
+runLiTeXFile(files.trimology);
+
+// runExamples(false);
