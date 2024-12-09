@@ -87,7 +87,7 @@ know if x, a, b: in(x,b) {
 };
 
 {
-    let x, a, b: in(x,a);
+    dlet x, a, b: in(x,a);
     in(x, \pair{a,b})[x,a,b];
     let y,c,d: in(y, \pair{c,d}), not equal(y,c);
     equal(y,d)[y,c,d;];

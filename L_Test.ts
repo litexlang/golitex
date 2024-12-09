@@ -492,17 +492,7 @@ export const exampleList: ExampleItem[] = [
   {
     name: "let_composite",
     code: [
-      ` def object(x);
-def set(x);
-
-know if x: set(x) {
-    object(x);
-};
-
-{
-    let a: set(a);
-    object(a);
-}
+      ` let x; /* asdf */ def p(x); /*df*/ know p(x); p(x);
 `,
     ],
     debug: true,
@@ -548,5 +538,5 @@ function runLiTeXFile(filePath: string) {
   }
 }
 
-// runExamples(false);
-runLiTeXFile("./setTheory.litex");
+runExamples(false);
+// runLiTeXFile("./setTheory.litex");
