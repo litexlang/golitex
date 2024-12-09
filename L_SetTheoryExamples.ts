@@ -166,7 +166,7 @@ export const exampleList: ExampleItem[] = [
   {
     name: "regularity",
     code: [
-      "def disjoint(a,b); know if a,b : a is set, b is set, if x: in(x, a) => {not in(x, b)}, if x : in(x,b) => {not in(x, a)} {disjoint(a,b)};",
+      "def disjoint(a,b); know if a,b : a is set, b is set, if x: in(x, a) {not in(x, b)}, if x : in(x,b) {not in(x, a)} {disjoint(a,b)};",
       "let_composite \\regularity_element{A}: set(A), not equal(A, EMPTY_SET);",
       `know if A: set(A), not equal(A, EMPTY_SET) {
         if : not set(\\regularity_element{A}) {

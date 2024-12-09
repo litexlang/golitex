@@ -32,6 +32,8 @@ export function runString(
       }
     }
 
+    if (printCode) console.log();
+
     return result;
   } catch {
     env.printClearMessage();

@@ -44,16 +44,18 @@ export const exampleList: ExampleItem[] = [
   {
     name: "opt",
     code: [
-      `def object(x);
-def set(x);
+      `
+let EMPTY_SET: set(EMPTY_SET);
 
-know if x: set(x) {
-    object(x);
+know if x {
+    not in(x,EMPTY_SET),
 };
 
 {
-    let a: set(a);
-    object(a);
+    let x : not in(x, EMPTY_SET);
+    if _x {
+        not in(_x,EMPTY_SET)[_x];
+    };
 }
 `,
     ],

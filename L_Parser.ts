@@ -716,7 +716,8 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     const type = skip(tokens, [IfKeyword, IffKeyword]);
     if (type === undefined) throw Error();
     const vars: L_Symbol[] = [];
-    while (!isCurToken(tokens, ":")) {
+
+    while (!isCurToken(tokens, [":", "{"])) {
       if (isCurToken(tokens, SlashKeyword)) {
         const s = compositeInIfReqParse(env, tokens);
         vars.push(s);
@@ -726,13 +727,17 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
       }
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
-    skip(tokens, ":");
+
     const req: ToCheckNode[] = [];
-    while (!isCurToken(tokens, "{")) {
-      const facts = factsArrParse(env, tokens, [",", "{"], false);
-      req.push(...facts);
-      if (isCurToken(tokens, [","])) skip(tokens, [","]);
+    if (isCurToken(tokens, ":")) {
+      skip(tokens, ":");
+      while (!isCurToken(tokens, "{")) {
+        const facts = factsArrParse(env, tokens, [",", "{"], false);
+        req.push(...facts);
+        if (isCurToken(tokens, [","])) skip(tokens, [","]);
+      }
     }
+
     skip(tokens, "{");
 
     const onlyIfs: ToCheckNode[] = [];
@@ -751,30 +756,6 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     } else {
       throw Error();
     }
-
-    // const type = skip(tokens, [...IfKeywords, ExistKeyword, ...IffKeywords]);
-    // if (type === undefined) throw Error();
-    // const separation = LogicalOptPairs[type];
-    // const symbolsBeforeThenKeyword: string[] = [];
-    // for (let i = 0; i < tokens.length; i++) {
-    //   if (!separation.includes(tokens[i])) {
-    //     symbolsBeforeThenKeyword.push(tokens[i]);
-    //   } else break;
-    // }
-    // let vars: string[] = [];
-    // let req: ToCheckNode[] = [];
-    // if (symbolsBeforeThenKeyword.includes(":")) {
-    //   vars = varLstParse(env, tokens, [":"], false);
-    //   skip(tokens, ":");
-    // } else {
-    // }
-    // skip(tokens, "{");
-    // if (IfKeywords.includes(type)) {
-    //   return new L_Nodes.IfNode(vars, req, onlyIfs, true);
-    // } else if (IffKeywords.includes(type)) {
-    //   return new L_Nodes.IffNode(vars, req, onlyIfs, true);
-    // }
-    // throw Error();
   } catch (error) {
     handleParseError(env, tokens, "if-then", index, start);
     throw error;
@@ -1034,6 +1015,11 @@ export function LetCompositeParse(
   try {
     skip(tokens, L_Common.LetCompositeKeyword);
     const composite = compositeParse(env, tokens);
+    if (isCurToken(tokens, L_Ends)) {
+      skip(tokens, L_Ends);
+      return new L_Nodes.LetCompositeNode(composite, []);
+    }
+
     skip(tokens, ":");
     const facts: ToCheckNode[] = [];
     while (!isCurToken(tokens, L_Ends)) {

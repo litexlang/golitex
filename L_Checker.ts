@@ -181,6 +181,8 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     if (relatedKnownFacts === undefined) {
       return L_Out.Unknown;
     }
+
+    // TODO 需要先弄 opt 再弄 if
     for (const curKnown of relatedKnownFacts) {
       if (curKnown instanceof OptNode) {
         // TODO 这里的验证 isT 的方式我不太满意
@@ -190,7 +192,11 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
         const out = literallyCompareOptVars(env, toCheck, curKnown);
         if (out) return L_Out.True;
-      } else if (curKnown instanceof IfNode) {
+      }
+    }
+
+    for (const curKnown of relatedKnownFacts) {
+      if (curKnown instanceof IfNode) {
         //TODO
         const out = useIfToCheckOpt(env, toCheck, curKnown);
         if (out) return L_Out.True;
