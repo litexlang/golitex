@@ -34,8 +34,8 @@ export const exampleList: ExampleItem[] = [
       "{ let x;  not in(x, EMPTY_SET)[x];  if _x:  {not in(_x,EMPTY_SET)[_x]}; }",
     ],
     debug: true,
-    runTest: true,
-    print: true,
+    runTest: false,
+    print: false,
   },
   {
     name: "singleton",
@@ -93,7 +93,6 @@ export const exampleList: ExampleItem[] = [
       "def subset(x,y);",
       "know if A,B: subset(A,B) {if x: in(x,A)  {in(x,B)} };",
       "know if A,B: if x: in(x,A)  {in(x,B)}  {subset(A,B)};",
-      "know if x, A, B: in(x,A), not in(x,B)  { subset(A,B)};",
     ],
     test: [
       `{let A,B,C,D,E,F;
@@ -111,11 +110,13 @@ export const exampleList: ExampleItem[] = [
     // not tested yet.
     name: "axiom of specification",
     code: [
-      "def subset_with_property(A,P,s); know if A,P,s: set(A), is_property(P) => {subset(s, A), if x: in(x,s) => {P(x)} };",
       "let_composite \\subset_with_property{A,P}: set(A), is_property(P);",
+      "know if A, P: is_property(P), set(A) {subset(\\subset_with_property{A,P}, A)};",
     ],
-    test: ["{def p(x); is_property(p);}"],
-    runTest: false,
+    test: [
+      "{def p(x); is_property(p); let x: set(x); subset(\\subset_with_property{x,p}, x)[x,p];}",
+    ],
+    runTest: true,
     debug: true,
     print: true,
   },

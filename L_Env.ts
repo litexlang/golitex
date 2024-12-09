@@ -226,7 +226,7 @@ export class L_Env {
     this.macros.push(macroNode);
   }
 
-  factsInToCheckAllDeclared(node: ToCheckNode): boolean {
+  factsInToCheckAllDeclaredOrBuiltin(node: ToCheckNode): boolean {
     if (node instanceof OptNode) {
       return (
         this.getDef(node.optSymbol.name) !== undefined ||
@@ -234,9 +234,11 @@ export class L_Env {
       );
     } else if (node instanceof LogicNode) {
       return (
-        node.req.every((e) => this.factsInToCheckAllDeclared(e)) &&
-        node.onlyIfs.every((e) => this.factsInToCheckAllDeclared(e))
+        node.req.every((e) => this.factsInToCheckAllDeclaredOrBuiltin(e)) &&
+        node.onlyIfs.every((e) => this.factsInToCheckAllDeclaredOrBuiltin(e))
       );
+    } else if (node instanceof BuiltinCheckNode) {
+      return true;
     }
 
     return false;

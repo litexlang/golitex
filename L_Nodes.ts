@@ -382,6 +382,10 @@ export class IsPropertyNode extends BuiltinCheckNode {
   constructor(public propertyName: string, isT: boolean) {
     super(isT);
   }
+
+  toString() {
+    return `is_property(${this.propertyName})`;
+  }
 }
 
 export class OrNode extends BuiltinCheckNode {

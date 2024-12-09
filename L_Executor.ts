@@ -32,7 +32,7 @@ import {
   reportNotAllFactsInGivenFactAreDeclared,
   reportStoreErr,
 } from "./L_Messages";
-import { isPropertyBuiltinCheck } from "./L_Builtins";
+import { isBuiltinKeyword, isPropertyBuiltinCheck } from "./L_Builtins";
 import { L_Out } from "./L_Structs";
 import {
   postfixProveExec,
@@ -139,7 +139,7 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
     // examine whether all facts are declared.
     // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
     for (const f of node.facts) {
-      const ok = env.factsInToCheckAllDeclared(f);
+      const ok = env.factsInToCheckAllDeclaredOrBuiltin(f);
       if (!ok) {
         env.newMessage(`Not all facts in ${f} are declared`);
         return L_Out.Error;
