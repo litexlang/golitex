@@ -486,6 +486,25 @@ export const exampleList: ExampleItem[] = [
       "let_composite \\set_prop{a,p}: set(a);",
       "is_property(set);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "let_composite",
+    code: [
+      ` def object(x);
+def set(x);
+
+know if x: set(x) {
+    object(x);
+};
+
+{
+    let a: set(a);
+    object(a);
+}
+`,
+    ],
     debug: true,
     print: true,
   },
@@ -523,11 +542,11 @@ function runLiTeXFile(filePath: string) {
   try {
     const data = fs.readFileSync(filePath, "utf8");
     const env = new L_Env();
-    runStrings(env, [data], false);
+    runStrings(env, [data], true);
   } catch (err) {
     console.error("Error:", err);
   }
 }
 
-runExamples(false);
-// runLiTeXFile("./set_theory_examples.litex");
+// runExamples(false);
+runLiTeXFile("./setTheory.litex");

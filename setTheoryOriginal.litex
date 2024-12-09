@@ -16,10 +16,10 @@ def in(x,a);
 know if a,b: set(a), set(b), equal(a,b) {
     if x: in(x,a) {
         in(x,b);
-    },
+    }
     if x: in(x,b) {
         in(x,a);
-    },
+    }
 }; 
 
 know if a,b: set(a), set(b), if x: in(x,a) {in(x,b)}, if x: in(x,b) {in(x,a)} {
@@ -30,10 +30,10 @@ know if a,b: set(a), set(b), if x: in(x,a) {in(x,b)}, if x: in(x,b) {in(x,a)} {
     let a, b: set(a), set(b), equal(a,b);
     if x: in(x,a) {
         in(x,b)[a,b;x];
-    };
+    }
     if x: in(x,b) {
         in(x,a)[a,b;x];
-    };
+    }
     let x: in(x,a);
     in(x,b);
 }
@@ -50,7 +50,7 @@ know if x {
     }
     if _x {
         not in(_x,EMPTY_SET)[_x];
-    },
+    }
 }
 
 know if x, a: in(x, \singleton{a}) {
@@ -70,16 +70,16 @@ know if x, a: equal(x,a) {
     in(x, \singleton{a});
     if _x, _a: equal(_x,_a) {
         in(_x, \singleton{_a})[_x, _a];
-    },
+    }
 }
 
 know if x, a, b: in(x, \pair{a,b}) {
     if : not equal(x, b) {
         equal(x, a);
-    },
+    }
     if : not equal(x, a) {
         equal(x, b);
-    },
+    }
 };
 
 know if x, a, b: in(x,a) {
@@ -100,19 +100,19 @@ know if x, a, b: in(x,b) {
 know if x, y: set(x), set(y) {
     if z: in(z, x) {
         in(z, \union{x, y});
-    },
+    }
     if z: in(z, y) {
         in(z, \union{x,y});
-    },
+    }
 };
 
 know if x, y, z: in(z, \union{x, y}) {
     if : not in(z, x) {
         in(z, y);
-    },
+    }
     if : not in(z, y) {
         in(z, x);
-    },
+    }
 };
 
 {
@@ -130,7 +130,7 @@ def subset(x,y);
 know if A,B: subset(A,B) {
     if x: in(x,A) {
         in(x,B);
-    },
+    }
 };
 
 know if A,B: if x: in(x,A) {
@@ -177,11 +177,11 @@ know if x, a, b: set(a), set(b), in(x, \intersection{a,b}) {
     in(x, \intersection{A,B})[x,A,B];
     if X: in(X,A), in(X,B) {
         in(X, \intersection{A,B})[X,A,B];
-    },
+    }
     if X: in(X, \intersection{A,B}) {
         in(X,A)[X,A,B];
         in(X, B)[X,A,B];
-    },
+    }
 }
 
 let_composite \difference{a,b}: set(a), set(b);
@@ -193,7 +193,7 @@ know if x, a, b: set(a), set(b), in(x,a), not in(x,b) {
 let_composite \replacement{a,p}: set(a), is_property(p), if x, a: set(a), in(x,a) {
     if y1, y2: p(x, y1), p(x, y2) {
         equal(y1, y2);
-    },
+    }
 }
 
 let_composite \replacement_var{z,a,p}: ;
@@ -201,7 +201,7 @@ let_composite \replacement_var{z,a,p}: ;
 know if z, a, p: set(a), is_property(p), if x, a: set(a), in(x,a) {
     if y1, y2: p(x, y1), p(x, y2) {
         equal(y1, y2);
-    },
+    }
     in(z, \replacement{a,p});
 }; {
     p(\replacement_var{z,a,p}, z);
@@ -210,7 +210,7 @@ know if z, a, p: set(a), is_property(p), if x, a: set(a), in(x,a) {
 know if z, a, p: set(a), is_property(p), if x, a: set(a), in(x,a) {
     if y1, y2: p(x, y1), p(x, y2) {
         equal(y1, y2);
-    },
+    }
     p(\replacement_var{z,a,p}, z);
 }; {
     in(z, \replacement{a,p});
@@ -232,10 +232,10 @@ let_composite \regularity_element{A}: set(A), not equal(A, EMPTY_SET);
 know if A: set(A), not equal(A, EMPTY_SET) {
     if: not set(\regularity_element{A}) {
         disjoint(A, \regularity_element{A});
-    },
+    }
     if: not disjoint(A, \regularity_element{A}) {
         set(\regularity_element{A});
-    },
+    }
 };
 
 def natural(x);
@@ -266,7 +266,7 @@ know if P: is_property(P), P(0), if n: n is natural, P(n) {
 }; {
     if m: m is natural {
         P(m);
-    },
+    }
 }
 
 let_composite \+{x,y}: ;
