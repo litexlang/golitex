@@ -206,7 +206,15 @@ export class OptNode extends ToCheckNode {
       this.optSymbol.name +
       `(${this.vars.map((e) => e.toString()).join(", ")})`;
     const notPart = !this.isT ? "[not] " : "";
-    return notPart + mainPart;
+    const checkVarsStr =
+      this.checkVars === undefined
+        ? ""
+        : "[" +
+          this.checkVars
+            .map((e) => e.map((j) => j.toString()).join(", "))
+            .join("; ") +
+          "]";
+    return notPart + mainPart + checkVarsStr;
   }
 }
 

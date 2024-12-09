@@ -23,8 +23,8 @@ export const exampleList: ExampleItem[] = [
       "{let a, b: set(a), set(b), equal(a,b); if x: in(x,a)  {in(x,b)[a,b;x]} , if x: in(x,b)  {in(x,a)[a,b;x]}; let x: in(x,a); in(x,b); }",
     ],
     debug: true,
-    print: false,
     runTest: false,
+    print: false,
   },
   {
     name: "empty set",
@@ -34,8 +34,8 @@ export const exampleList: ExampleItem[] = [
       "{ let x; not in(x, EMPTY_SET);  if _x: => {not in(_x,EMPTY_SET)}; }",
     ],
     debug: false,
-    print: false,
     runTest: false,
+    print: false,
   },
   {
     name: "singleton",
@@ -53,8 +53,8 @@ export const exampleList: ExampleItem[] = [
       if _x, _a: equal(_x,_a)  {in(_x, \\singleton{_a})[_x, _a] };}`,
     ],
     debug: true,
+    runTest: false,
     print: false,
-    runTest: true,
   },
   {
     name: "pair",
@@ -67,8 +67,8 @@ export const exampleList: ExampleItem[] = [
       "{let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; let y,c,d : in(y, \\pair{c,d}), not equal(y,c); equal(y,d)[y,c,d;]; }",
     ],
     debug: true,
-    print: true,
-    runTest: true,
+    runTest: false,
+    print: false,
   },
   {
     name: "pair-wise union",
@@ -80,9 +80,10 @@ export const exampleList: ExampleItem[] = [
       `{let a,b: set(a), set(b);
       let x: in(x,a); 
       in(x, \\union{a,b}) [a,b; x];
-      in(x, \\union{a,b});}`,
+      in(x, \\union{a,b});};
+      let y, c, d: in(y, \\union{c,d}); know not in(y, c); in(y, d)[c,d,y;];`,
     ],
-    debug: false,
+    debug: true,
     runTest: false,
     print: false,
   },
@@ -102,9 +103,9 @@ export const exampleList: ExampleItem[] = [
       in(x,B)[A,B;x]; // True
       in(x,B);}`,
     ],
-    debug: false,
-    runTest: false,
-    print: false,
+    debug: true,
+    runTest: true,
+    print: true,
   },
   {
     // not tested yet.
@@ -130,8 +131,8 @@ export const exampleList: ExampleItem[] = [
       " if X: in(X,A), in(X,B) => { in(X, \\intersection{A,B})[X,A,B] } ; ", // don't know why this does not work.
       "if X: in(X, \\intersection{A,B}) => { in(X,A)[X,A,B], in(X, B)[X,A,B] };", // Don't know why this does not work.
     ],
-    runTest: true,
     debug: false,
+    runTest: true,
     print: false,
   },
   {

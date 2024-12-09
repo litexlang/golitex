@@ -72,6 +72,7 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           return false;
       }
 
+      env.newMessage(`[check by] ${toCheck}`);
       return true;
     } catch {
       L_ReportErr(env, literallyCompareOptVars, opt1);
