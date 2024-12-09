@@ -234,7 +234,7 @@ export class DefNode extends L_Node {
   }
 
   override toString(): string {
-    return "";
+    return `${this.opt.toString()}`;
   }
 }
 
