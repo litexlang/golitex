@@ -492,7 +492,9 @@ export const exampleList: ExampleItem[] = [
   {
     name: "let_composite",
     code: [
-      ` let x; /* asdf */ def p(x); /*df*/ know p(x); p(x);
+      ` let x; /* asdf */ def p(x); /*df
+      
+*/ know p(x); p(x);
 `,
     ],
     debug: true,
