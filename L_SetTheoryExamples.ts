@@ -161,7 +161,7 @@ export const exampleList: ExampleItem[] = [
       };`,
     ],
     debug: true,
-    print: true,
+    print: false,
   },
   {
     name: "regularity",
