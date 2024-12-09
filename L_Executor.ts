@@ -114,26 +114,9 @@ function letExec(env: L_Env, node: LetNode): L_Out {
       if (!ok) return L_Out.Error;
     }
 
-    // examine whether all operators are declared
-    for (const f of node.facts) {
-      const ok = env.factsInToCheckAllDeclared(f);
-      if (!ok) {
-        return reportNotAllFactsInGivenFactAreDeclared(env, f);
-      }
-    }
+    // TODO examine whether all operators are declared
 
     // TODO bind macro
-    // bind properties given by macro
-    // for (const e of node.vars) {
-    //   for (const macro of env.getMacros([])) {
-    //     if (macro.testRegex(e)) {
-    //       const map = new Map<string, string>();
-    //       map.set(macro.varName, e);
-    //       const facts = macro.facts.map((e) => e.useMapToCopy(env, map));
-    //       facts.forEach((e) => L_Memory.store(env, e, [], true));
-    //     }
-    //   }
-    // }
 
     // store new facts
     for (const onlyIf of node.facts) {

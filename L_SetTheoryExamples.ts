@@ -53,7 +53,7 @@ export const exampleList: ExampleItem[] = [
       if _x, _a: equal(_x,_a)  {in(_x, \\singleton{_a})[_x, _a] };}`,
     ],
     debug: true,
-    print: true,
+    print: false,
     runTest: true,
   },
   {
@@ -63,10 +63,12 @@ export const exampleList: ExampleItem[] = [
       "know if x, a, b : in(x,a) {in(x, \\pair{a,b})};",
       "know if x, a, b : in(x,b) {in(x, \\pair{a,b})};",
     ],
-    test: ["{let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; }"],
+    test: [
+      "{let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; let y,c,d : in(y, \\pair{c,d}), not equal(y,c); equal(y,d)[y,c,d;]; }",
+    ],
     debug: true,
-    runTest: true,
     print: true,
+    runTest: true,
   },
   {
     name: "pair-wise union",
@@ -80,17 +82,17 @@ export const exampleList: ExampleItem[] = [
       in(x, \\union{a,b}) [a,b; x];
       in(x, \\union{a,b});}`,
     ],
-    debug: true,
-    runTest: true,
-    print: true,
+    debug: false,
+    runTest: false,
+    print: false,
   },
   {
     name: "subset",
     code: [
       "def subset(x,y);",
-      "know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)} };",
-      "know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};",
-      "know if x, A, B: in(x,A), not in(x,B) => {not subset(A,B)};",
+      "know if A,B: subset(A,B) {if x: in(x,A)  {in(x,B)} };",
+      "know if A,B: if x: in(x,A)  {in(x,B)}  {subset(A,B)};",
+      "know if x, A, B: in(x,A), not in(x,B)  { subset(A,B)};",
     ],
     test: [
       `{let A,B,C,D,E,F;
@@ -130,7 +132,7 @@ export const exampleList: ExampleItem[] = [
     ],
     runTest: true,
     debug: false,
-    print: true,
+    print: false,
   },
   {
     name: "difference",

@@ -420,15 +420,9 @@ export const exampleList: ExampleItem[] = [
     test: [
       "{let a, b: set(a), set(b), equal(a,b); if x: in(x,a)  {in(x,b)[a,b;x]} , if x: in(x,b)  {in(x,a)[a,b;x]}; let x: in(x,a); in(x,b); }",
     ],
-    debug: true,
+    debug: false,
     print: false,
     runTest: false,
-  },
-  {
-    name: "test not",
-    code: ["def set(x); def set2(x); def number(x);", ""],
-    debug: false,
-    print: true,
   },
   {
     name: "singleton",
@@ -464,6 +458,12 @@ export const exampleList: ExampleItem[] = [
   {
     name: "opt",
     code: ["def set(x); def <(x,y); let x,y: x is set, x < y;"],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "test not",
+    code: ["def p(x); let x: not p(x); p(x); not p(x); "],
     debug: true,
     print: true,
   },

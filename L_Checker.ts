@@ -177,6 +177,11 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       return L_Out.Unknown;
     }
     for (const curKnown of relatedKnownFacts) {
+      // TODO 这里的验证 isT 的方式我不太满意
+      if (toCheck.isT !== curKnown.isT) {
+        continue;
+      }
+
       if (curKnown instanceof OptNode) {
         const out = literallyCompareOptVars(env, toCheck, curKnown);
         if (out) return L_Out.True;
