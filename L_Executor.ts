@@ -1,4 +1,5 @@
 import {
+  BuiltinCheckNode,
   ByNode,
   DefNode,
   HaveNode,
@@ -31,7 +32,7 @@ import {
   reportNotAllFactsInGivenFactAreDeclared,
   reportStoreErr,
 } from "./L_Messages";
-import { isPropertyBuiltinCheck, isToCheckBuiltin } from "./L_Builtins";
+import { isPropertyBuiltinCheck } from "./L_Builtins";
 import { L_Out } from "./L_Structs";
 import {
   postfixProveExec,
@@ -382,7 +383,7 @@ function proveExec(env: L_Env, node: ProveNode): L_Out {
         out = proveIfThen(env, node.toProve, node.block);
       }
     } else {
-      if (isToCheckBuiltin(node.fixedIfThenOpt as OptNode)) {
+      if (node.fixedIfThenOpt instanceof BuiltinCheckNode) {
         out = proveBuiltin(env, node.fixedIfThenOpt as OptNode, node.block);
       } else {
         out = proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
@@ -561,6 +562,7 @@ function byExec(env: L_Env, byNode: ByNode): L_Out {
 function letCompositeExec(env: L_Env, node: LetCompositeNode): L_Out {
   try {
     if (env.newCompositeVar(node.composite.name, node)) {
+      env.newMessage(`OK! ${node}`);
       return L_Out.True;
     } else {
       throw Error();

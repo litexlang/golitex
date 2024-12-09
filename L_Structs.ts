@@ -168,8 +168,8 @@ export class L_OptSymbol {
 export enum L_Out {
   Error,
   True,
-  False,
   Unknown,
+  False,
 }
 
 export type ExampleItem = {

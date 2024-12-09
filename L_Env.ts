@@ -1,4 +1,5 @@
 import {
+  BuiltinCheckNode,
   DefNode,
   L_Node,
   LetCompositeNode,
@@ -9,7 +10,6 @@ import {
 } from "./L_Nodes";
 import { examineStoredFact } from "./L_Memory";
 import { L_KnownFact, L_OptSymbol, L_Out } from "./L_Structs";
-import { isToCheckBuiltin } from "./L_Builtins";
 import { KnownFact, StoredFact } from "./L_Structs";
 
 export class L_Env {
@@ -229,7 +229,8 @@ export class L_Env {
   factsInToCheckAllDeclared(node: ToCheckNode): boolean {
     if (node instanceof OptNode) {
       return (
-        this.getDef(node.optSymbol.name) !== undefined || isToCheckBuiltin(node)
+        this.getDef(node.optSymbol.name) !== undefined ||
+        node instanceof BuiltinCheckNode
       );
     } else if (node instanceof LogicNode) {
       return (

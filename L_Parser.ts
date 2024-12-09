@@ -1051,7 +1051,20 @@ export function isPropertyParse(
   env: L_Env,
   tokens: string[]
 ): L_Nodes.BuiltinCheckNode {
-  throw Error();
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Common.IsPropertyKeyword);
+    skip(tokens, "(");
+    const name = skip(tokens);
+    skip(tokens, ")");
+
+    return new L_Nodes.IsPropertyNode(name, true);
+  } catch (error) {
+    handleParseError(env, "is_property", index, start);
+    throw error;
+  }
 }
 export function orParse(
   env: L_Env,

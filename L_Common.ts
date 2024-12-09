@@ -17,6 +17,7 @@ export const specialChars = [
 ];
 export const SlashKeyword = "\\";
 export const LetCompositeKeyword = "let_composite";
+export const IsPropertyKeyword = "is_property";
 export const KnowTypeKeywords = ["know", "assume"];
 export const ThenKeyword = "=>";
 export const IffThenKeyword = "<=>";

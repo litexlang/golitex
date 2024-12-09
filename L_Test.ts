@@ -476,6 +476,16 @@ export const exampleList: ExampleItem[] = [
       "know if x, a, b : in(x,b) {in(x, \\pair{a,b})};",
       "{let x, a, b : in(x,a); in(x, \\pair{a,b})[x,a,b]; let y,c,d : in(y, \\pair{c,d}), not equal(y,c); equal(y,d)[y,c,d;]; }",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "let_composite",
+    code: [
+      "def set(x); ",
+      "let_composite \\set_prop{a,p}: set(a);",
+      "is_property(set);",
+    ],
     debug: true,
     print: true,
   },

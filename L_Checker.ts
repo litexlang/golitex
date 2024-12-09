@@ -1,6 +1,8 @@
 import {
+  BuiltinCheckNode,
   ExistNode,
   IfNode,
+  IsPropertyNode,
   LogicNode,
   OptNode,
   OrNode,
@@ -17,6 +19,8 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
       return checkOptFact(env, toCheck);
     } else if (toCheck instanceof IfNode) {
       return checkIfFact(env, toCheck);
+    } else if (toCheck instanceof BuiltinCheckNode) {
+      return checkBuiltinCheckNode(env, toCheck);
     } else {
       return L_Out.Error;
     }
@@ -178,12 +182,12 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       return L_Out.Unknown;
     }
     for (const curKnown of relatedKnownFacts) {
-      // TODO 这里的验证 isT 的方式我不太满意
-      if (toCheck.isT !== curKnown.isT) {
-        continue;
-      }
-
       if (curKnown instanceof OptNode) {
+        // TODO 这里的验证 isT 的方式我不太满意
+        if (toCheck.isT !== curKnown.isT) {
+          continue;
+        }
+
         const out = literallyCompareOptVars(env, toCheck, curKnown);
         if (out) return L_Out.True;
       } else if (curKnown instanceof IfNode) {
@@ -219,6 +223,23 @@ export function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
     return false;
   } catch {
     return env.errMesReturnBoolean(toCheck);
+  }
+}
+
+export function checkBuiltinCheckNode(
+  env: L_Env,
+  toCheck: BuiltinCheckNode
+): L_Out {
+  try {
+    if (toCheck instanceof IsPropertyNode) {
+      return env.getDef(toCheck.propertyName) !== undefined
+        ? L_Out.True
+        : L_Out.Unknown;
+    } else {
+      return L_Out.Error;
+    }
+  } catch {
+    return env.errMesReturnL_Out(toCheck);
   }
 }
 

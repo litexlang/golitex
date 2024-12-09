@@ -15,9 +15,9 @@ export function isBuiltinKeyword(key: string) {
   return L_BuiltinParsers.get(key) !== undefined;
 }
 
-export function isToCheckBuiltin(node: ToCheckNode): boolean {
-  return node instanceof OptNode && isBuiltinKeyword(node.optSymbol.name);
-}
+// export function isToCheckBuiltin(node: ToCheckNode): boolean {
+//   return node instanceof OptNode && isBuiltinKeyword(node.optSymbol.name);
+// }
 
 // Separate functions from the map
 export function isPropertyBuiltinCheck(env: L_Env, node: OptNode): L_Out {

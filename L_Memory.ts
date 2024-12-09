@@ -1,12 +1,13 @@
 import {
+  BuiltinCheckNode,
   DefNode,
   IfNode,
+  IsPropertyNode,
   LogicNode,
   OptNode,
   OrNode,
   ToCheckNode,
 } from "./L_Nodes";
-import { isToCheckBuiltin } from "./L_Builtins";
 import { L_Env } from "./L_Env";
 import { L_Symbol, StoredFact, StoredReq } from "./L_Structs";
 import { reportStoreErr } from "./L_Messages";
@@ -26,7 +27,7 @@ export function declNewFact(
 }
 
 export function newFact(env: L_Env, fact: ToCheckNode): boolean {
-  if (isToCheckBuiltin(fact)) {
+  if (fact instanceof BuiltinCheckNode) {
     const ok = newBuiltinFact(env, fact);
     return ok;
   }
@@ -81,6 +82,10 @@ export function newOptFact(env: L_Env, fact: OptNode): boolean {
 
 export function newBuiltinFact(env: L_Env, fact: ToCheckNode): boolean {
   try {
+    if (fact instanceof IsPropertyNode) {
+      return true;
+    }
+
     return false;
   } catch {
     return reportStoreErr(env, newBuiltinFact.name, fact);
@@ -208,7 +213,7 @@ export function store(
   req: StoredReq[] = [],
   storeContrapositive: boolean
 ): boolean {
-  if (isToCheckBuiltin(fact)) {
+  if (fact instanceof BuiltinCheckNode) {
     const ok = storeBuiltinFact(env, fact, req, storeContrapositive);
     return ok;
   }

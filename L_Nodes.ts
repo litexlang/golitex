@@ -368,6 +368,12 @@ export class LetCompositeNode extends L_Node {
   constructor(public composite: L_Composite, public facts: ToCheckNode[]) {
     super();
   }
+
+  toString(): string {
+    return `let_composite ${this.composite.toString()}: ${this.facts
+      .map((e) => e.toString())
+      .join(", ")}`;
+  }
 }
 
 export class BuiltinCheckNode extends ToCheckNode {}

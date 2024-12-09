@@ -28,14 +28,14 @@ export const exampleList: ExampleItem[] = [
   },
   {
     name: "empty set",
-    code: ["let EMPTY_SET: set(EMPTY_SET);know if x: {not in(x,EMPTY_SET)};"],
+    code: ["let EMPTY_SET: set(EMPTY_SET); know if x: {not in(x,EMPTY_SET)};"],
     test: [
       "// here we must use _x to avoid conflict with x;",
-      "{ let x; not in(x, EMPTY_SET);  if _x: => {not in(_x,EMPTY_SET)}; }",
+      "{ let x;  not in(x, EMPTY_SET)[x];  if _x:  {not in(_x,EMPTY_SET)[_x]}; }",
     ],
-    debug: false,
-    runTest: false,
-    print: false,
+    debug: true,
+    runTest: true,
+    print: true,
   },
   {
     name: "singleton",
@@ -104,20 +104,20 @@ export const exampleList: ExampleItem[] = [
       in(x,B);}`,
     ],
     debug: true,
-    runTest: true,
-    print: true,
+    runTest: false,
+    print: false,
   },
   {
     // not tested yet.
     name: "axiom of specification",
     code: [
       "def subset_with_property(A,P,s); know if A,P,s: set(A), is_property(P) => {subset(s, A), if x: in(x,s) => {P(x)} };",
-      "know if A, P: is_property(P), set(A) => {exist subset_with_property(A,P,s)} ;",
+      "let_composite \\subset_with_property{A,P}: set(A), is_property(P);",
     ],
     test: ["{def p(x); is_property(p);}"],
     runTest: false,
-    debug: false,
-    print: false,
+    debug: true,
+    print: true,
   },
   {
     name: "intersection",
