@@ -502,8 +502,8 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "prove",
-    code: [``],
-    debug: false,
+    code: [`def p(x); if x: p(x) {p(x)};`],
+    debug: true,
     print: true,
   },
 ];

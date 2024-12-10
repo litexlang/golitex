@@ -252,10 +252,10 @@ export class StoredReq {
       .join(", ")})`;
   }
 
-  fixReqVars(env: L_Env, map: Map<string, string>): StoredReq {
-    const newReq = this.req.map((e) => e.useMapToCopy(env, map));
-    return new StoredReq(this.vars, newReq);
-  }
+  // fixReqVars(env: L_Env, map: Map<string, string>): StoredReq {
+  //   const newReq = this.req.map((e) => e.(env, map));
+  //   return new StoredReq(this.vars, newReq);
+  // }
 }
 
 export class StoredFact {
@@ -264,14 +264,6 @@ export class StoredFact {
     public req: StoredReq[], // when adding a new layer of if-then, push a new req list (ToCheckNode[]) at end of req.
     public isT: boolean
   ) {}
-
-  fixStoredFact(env: L_Env, map: Map<string, string>): StoredFact {
-    const newReq: StoredReq[] = [];
-    for (const r of this.req) {
-      newReq.push(r.fixReqVars(env, map));
-    }
-    return new StoredFact(this.vars, newReq, this.isT);
-  }
 
   getVarsToCheck(): string[][] {
     return this.req.map((e) => e.vars);

@@ -1,5 +1,3 @@
-import { on } from "events";
-import { L_BuiltinParsers } from "./L_Builtins";
 import { L_Env } from "./L_Env";
 import { L_Composite, L_OptSymbol, L_Symbol } from "./L_Structs";
 
@@ -25,11 +23,11 @@ export class ToCheckNode extends L_Node {
     return false;
   }
 
-  // MAIN FUNCTION OF THE WHOLE PROJECT
-  useMapToCopy(env: L_Env, map: Map<string, string>): ToCheckNode {
-    map;
-    return new ToCheckNode(true);
-  }
+  // // MAIN FUNCTION OF THE WHOLE PROJECT
+  // useMapToCopy(env: L_Env, map: Map<string, string>): ToCheckNode {
+  //   map;
+  //   return new ToCheckNode(true);
+  // }
 
   copyWithIsTReverse(): ToCheckNode {
     return new ToCheckNode(!this.isT);
@@ -102,37 +100,15 @@ export class LogicNode extends ToCheckNode {
     return new LogicNode(this.vars, this.req, this.onlyIfs, !this.isT);
   }
 
-  override useMapToCopy(env: L_Env, map: Map<string, string>): LogicNode {
-    const newVars = [...this.vars];
-    const req = this.req.map((e) => e.useMapToCopy(env, map));
-    const onlyIfs = this.onlyIfs.map((e) => e.useMapToCopy(env, map));
-
-    if (this instanceof LogicNode) {
-      return new LogicNode(
-        newVars,
-        req,
-        onlyIfs,
-        this.isT
-        // this.defName,
-        // this.reqName,
-      );
-    }
-
-    throw Error();
-  }
-
   override toString() {
     let type: string = "";
     let separator = "";
 
     type = "if";
-    separator = "=>";
 
     const mainPart = `${type} ${this.vars.toString()} : ${this.req
       .map((e) => e.toString())
-      .join(", ")} ${separator} {${this.onlyIfs
-      .map((e) => e.toString())
-      .join(", ")}}`;
+      .join(", ")} {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
     const notPart = !this.isT ? "[not] " : "";
 
     // const defName = this.defName === undefined ? "" : `[${this.defName}]`;

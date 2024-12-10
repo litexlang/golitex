@@ -182,7 +182,7 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       return L_Out.Unknown;
     }
 
-    // TODO 需要先弄 opt 再弄 if
+    //* First check opt-type facts then check if-type facts so that I can check if x: p(x) {p(x)};
     for (const curKnown of relatedKnownFacts) {
       if (curKnown instanceof OptNode) {
         // TODO 这里的验证 isT 的方式我不太满意
