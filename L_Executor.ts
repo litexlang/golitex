@@ -32,7 +32,7 @@ import {
   reportNotAllFactsInGivenFactAreDeclared,
   reportStoreErr,
 } from "./L_Messages";
-import { isBuiltinKeyword, isPropertyBuiltinCheck } from "./L_Builtins";
+import { isBuiltinKeyword } from "./L_Builtins";
 import { L_Out, L_Singleton } from "./L_Structs";
 import {
   postfixProveExec,
@@ -77,8 +77,6 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
         return proveExec(env, node as ProveNode);
       case "ProveContradictNode":
         return proveContradictExec(env, node as ProveContradictNode);
-      case "HaveNode":
-        return haveExec(env, node as HaveNode);
       case "PostfixProve":
         return postfixProveExec(env, node as PostfixProve);
       case "LocalEnvNode":
@@ -87,8 +85,6 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
         return returnExec(env, node as ReturnNode);
       case "SpecialNode":
         return specialExec(env, node as SpecialNode);
-      case "ByNode":
-        return byExec(env, node as ByNode);
       case "MacroNode":
         return macroExec(env, node as MacroNode);
       default:
@@ -253,41 +249,6 @@ function returnExec(env: L_Env, node: ReturnNode): L_Out {
     return L_Out.True;
   } catch {
     env.newMessage("return");
-    return L_Out.Error;
-  }
-}
-
-function haveExec(env: L_Env, node: HaveNode): L_Out {
-  try {
-    // if (!node.opts.every((e) => env.isExisted(e.name))) {
-    //   return env.errMesReturnL_Out(
-    //     `operator-type facts in have must proved to be exist.`
-    //   );
-    // }
-
-    // for (const opt of node.opts) {
-    //   if (!node.vars.every((e) => opt.vars.includes(e))) {
-    //     return env.errMesReturnL_Out(
-    //       `have error: [${node.vars}] must be subset of [${opt.vars}]`
-    //     );
-    //   }
-
-    //   if (env.isExisted(opt.name)) {
-    //     for (const v of node.vars) {
-    //       const ok = env.newVar(v);
-    //       if (!ok) throw Error();
-    //     }
-
-    //     const ok = store(env, opt, [], true);
-    //     if (!ok) throw Error();
-    //   }
-    // }
-
-    // env.OKMesReturnL_Out(`[have] ${node}`);
-
-    return L_Out.True;
-  } catch {
-    env.newMessage("have");
     return L_Out.Error;
   }
 }
@@ -503,57 +464,6 @@ function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
   }
 }
 
-function proveBuiltin(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
-  try {
-    switch (toProve.optSymbol.name) {
-      case "is_property":
-        return isPropertyBuiltinCheck(env, toProve);
-      // case "exist":
-      //   return proveExist(env, toProve, block);
-      default:
-        return L_Out.Error;
-    }
-  } catch {
-    return env.errMesReturnL_Out(toProve);
-  }
-}
-
-function proveIfThen(env: L_Env, toProve: IfNode, block: L_Node[]): L_Out {
-  return L_Out.Error;
-  // TODO
-  // try {
-  //   const newEnv = new L_Env(env);
-  //   for (const v of toProve.vars) {
-  //     const ok = newEnv.newSingletonVar(v);
-  //     if (!ok) throw Error();
-  //   }
-  //   for (const fact of toProve.req) {
-  //     const ok = L_Memory.store(newEnv, fact, [], true);
-  //     if (!ok) throw Error();
-  //   }
-  //   for (const subNode of block) {
-  //     const out = nodeExec(newEnv, subNode, false);
-  //     if (out === L_Out.Error) {
-  //       newEnv.getMessages().forEach((e) => env.newMessage(e));
-  //       env.newMessage(`Errors: Failed to execute ${subNode}`);
-  //       return L_Out.Error;
-  //     }
-  //   }
-  //   const ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
-  //   if (!ok) return L_Out.Error;
-  //   for (const toCheck of toProve.onlyIfs) {
-  //     const out = nodeExec(newEnv, toCheck, false);
-  //     if (out !== L_Out.True) return out;
-  //   }
-  //   L_Memory.store(env, toProve, [], true);
-  //   newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
-  //   return L_Out.True;
-  // } catch {
-  //   env.newMessage(`Error: ${toProve}`);
-  //   return L_Out.Error;
-  // }
-}
-
 //
 export function noVarsOrOptDeclaredHere(
   sendErrMessageToEnv: L_Env,
@@ -578,77 +488,6 @@ export function noVarsOrOptDeclaredHere(
 
   return true;
 }
-
-function byExec(env: L_Env, byNode: ByNode): L_Out {
-  return L_Out.Error;
-  //*
-  // try {
-  //   // 这里的 namedKnown 虽然类型是 Opt，但其实不是正常意义的opt
-  //   for (const namedKnown of byNode.namedKnownToChecks) {
-  //     // get used stuffs out of byNode
-  //     const vars = namedKnown.vars;
-  //     const knownFactName = namedKnown.optSymbol;
-  //     const knownToCheck = env.getNamedKnownToCheck(knownFactName);
-  //     if (knownToCheck === undefined) throw Error();
-  //     // vars number are correct
-  //     if (knownToCheck instanceof OptNode) {
-  //       if (vars.length !== 0) {
-  //         return env.errMesReturnL_Out(
-  //           `${knownFactName} is supposed to have no parameter.`
-  //         );
-  //       }
-  //     } else if (knownToCheck instanceof LogicNode) {
-  //       if (vars.length !== knownToCheck.vars.length) {
-  //         return env.errMesReturnL_Out(
-  //           `${knownFactName} is supposed to have ${knownToCheck.vars.length} parameters, get ${vars.length}`
-  //         );
-  //       }
-  //       // make mapping from free-parameters-of-if-then to given parameters
-  //       const map = new Map<string, string>();
-  //       for (const [i, v] of knownToCheck.vars.entries()) {
-  //         map.set(v, vars[i]);
-  //       }
-  //       // check all requirements
-  //       for (const req of knownToCheck.req) {
-  //         const fixed = req.useMapToCopy(env, map);
-  //         const out = L_Checker.check(env, fixed);
-  //         if (out !== L_Out.True) {
-  //           env.newMessage(`Failed to check ${out}`);
-  //           return out;
-  //         }
-  //       }
-  //       // store all onlyIfs
-  //       for (const onlyIf of knownToCheck.onlyIfs) {
-  //         const fixed = onlyIf.useMapToCopy(env, map);
-  //         const ok = L_Memory.store(env, fixed, [], true);
-  //         if (!ok) return L_Out.Error;
-  //       }
-  //     }
-  //   }
-  //   // ok message
-  //   for (const fact of byNode.namedKnownToChecks) {
-  //     env.newMessage(`OK! [by] ${fact}`);
-  //   }
-  //   return L_Out.True;
-  // } catch {
-  //   return env.errMesReturnL_Out(ByNode);
-  // }
-  //*
-}
-
-// function letHashExec(env: L_Env, node: LetHashNode): L_Out {
-//   try {
-//     for (const e of node.vars) {
-//       const ok = env.newHashVar(e, node.facts);
-//       if (!ok) return L_Out.Error;
-//     }
-
-//     env.newMessage(`[let#] ${node}`);
-//     return L_Out.True;
-//   } catch {
-//     return L_Out.Error;
-//   }
-// }
 
 function letCompositeExec(env: L_Env, node: LetCompositeNode): L_Out {
   try {

@@ -1,3 +1,5 @@
+/* The following examples are LiTeX version of chapter 3 Terrence Tao's famous book Analysis one. */
+
 def object(x);
 def set(x);
 

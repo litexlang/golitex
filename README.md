@@ -16,8 +16,8 @@ This LiTeX interpreter is written in TypeScript. So Node.js is essential for run
 
 1. Install:
 
-   - Visit [nodejs.org](https://nodejs.org/). Download the latest LTS (Long Term Support) version
-   - Visit [git](https://git-scm.com/). Download the latest git.
+- Visit [nodejs.org](https://nodejs.org/). Download the latest LTS (Long Term Support) version
+- Visit [git](https://git-scm.com/). Download the latest git.
 
 2. Verify Installation:
 
@@ -38,7 +38,7 @@ That's it! These steps will get you set up with Node.js and ready to run your li
 
 ## A Tour of LiTeX
 
-LiTeX is a very simple and powerful language. It takes Lean4 nearly 100 lines of code to implement syllogism from scratch, but LiTeX can write that in a way that even people who have not learned LiTeX can understand. Here is how:
+LiTeX is an incredibly simple yet powerful formal proof language. While Lean4 requires nearly 100 lines of code to implement syllogism from scratch, LiTeX can express the same logical reasoning in a way that is remarkably intuitive in just ~10 lines, even for those unfamiliar with the language.
 
 ```
 def mortal(something);
@@ -64,6 +64,8 @@ Some core functionalities of LiTeX are included in this example
 - **Expression Validation**: Expressions like `Socrates is mortal` are called `factual expression to be checked`. LiTeX checks their validation based on `known facts` . For example, we have already known `if x: human(x) {mortal(x)};` and `Socrates is human`, so `Socrates is mortal` is true . If an `factual expression to be checked` can not be checked by LiTeX interpreter, LiTeX prints out `unknown`. Notice `factual expression` can work both as requirement for another factual expression (e.g. `human(x)` is requirement for another fact `if x: human(x) { mortal(x)};` ) or as an `factual expression to be checked`.
 - **Proof**: in LiTeX, there are 2 ways of proving a result: `prove` or `prove_by_contradiction`. In the example, we prove `not human(god)` by using `prove_by_contradiction`.
 - **Expression Values**: After checking, there are 4 types of outcomes: `true`, `unknown`, `error`, `false`.
+
+For more illustrative examples, please visit the ./examples directory.
 
 ---
 
