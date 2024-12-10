@@ -1,4 +1,4 @@
-# LiTeX
+# The LiTeX Proof System
 
 ## Introduction
 
@@ -9,7 +9,7 @@ _Mathematics... is nothing more than a game played according to certain simple r
 
 The basic elements of **LiTeX** called `symbols` have roots in Lisp's fundamental approach, drawing inspiration from its powerful macro system to handle literal manipulations in math. `Symbols` can have `facts` related to them, with some facts leading to further facts—mirroring how mathematical reasoning naturally progresses. Read `A Tour of LiTeX` below for further information.
 
-## Potential
+## Why LiTeX matters
 
 **LiTeX** transforms mathematical collaboration by introducing rigorous verification into research workflows. By automating mechanical proof validation, the system enables mathematicians to focus on innovative aspects rather than tedious verification. It also makes interactive textbooks and large-scale collaborative projects possible. Full details are available at the [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
 
@@ -80,8 +80,6 @@ For more illustrative examples, please visit the ./examples directory.
 - **Unknown**: The interpreter cannot verify the expression using known facts.
 - **Error**: Indicates syntax or semantic errors.
 - **False**: The negation of the current expression is validated as true.
-
-## Syntax
 
 # Logical Concept System Examples
 
@@ -275,9 +273,3 @@ The platform advances artificial intelligence systems through:
    - Logical consistency enforcement
    - Performance benchmarking
    - Verification-guided training
-
-LiTeX integrates verification with collaboration to create a robust platform for mathematics education and research, promoting both rigor and broad participation in mathematical advancement.
-
-```
-
-```
