@@ -87,15 +87,15 @@ const exampleList: ExampleItem[] = [
     name: "三段论",
     code: [
       "def something is mortal;",
-      "def something is human; know if x is human => {x is mortal};",
+      "def something is human; know if x: x is human  {x is mortal};",
       "let Socrates : Socrates is human;",
       "Socrates is  mortal;",
-      "let god : god is not mortal;",
-      "god is not human;",
-      "prove_by_contradiction god is not human {god is mortal;} contradiction god is mortal;",
-      "god is not human;",
+      "let god :  not mortal(god);",
+      "not human(god);",
+      "prove_by_contradiction  not  human(god) {god is mortal;}  god is mortal;",
+      "not human(god);",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -490,14 +490,20 @@ const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name: "let_composite",
+    name: "/**/",
     code: [
       ` let x; /* asdf */ def p(x); /*df
       
 */ know p(x); p(x);
 `,
     ],
-    debug: true,
+    debug: false,
+    print: true,
+  },
+  {
+    name: "prove",
+    code: [``],
+    debug: false,
     print: true,
   },
 ];

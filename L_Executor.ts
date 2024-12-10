@@ -378,9 +378,8 @@ function proveContradictExec(
 ): L_Out {
   try {
     const newEnv = new L_Env(env);
-    proveNode.toProve.isT = !proveNode.toProve.isT;
-    L_Memory.newFact(newEnv, proveNode.toProve);
-    proveNode.toProve.isT = !proveNode.toProve.isT;
+    const negativeToProve = proveNode.toProve.copyWithIsTReverse();
+    L_Memory.newFact(newEnv, negativeToProve);
 
     // TODO Must check all opt and vars in toProve is declared in env instead of in env
     for (const node of proveNode.block) {
@@ -392,9 +391,7 @@ function proveContradictExec(
     }
 
     const out = factExec(newEnv, proveNode.contradict);
-    proveNode.contradict.isT = !proveNode.contradict.isT;
-    const out2 = factExec(newEnv, proveNode.contradict);
-    proveNode.contradict.isT = !proveNode.contradict.isT;
+    const out2 = factExec(newEnv, proveNode.contradict.copyWithIsTReverse());
 
     if (out === L_Out.True && out2 === L_Out.True) {
       L_Memory.newFact(env, proveNode.toProve);

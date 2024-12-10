@@ -530,7 +530,6 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
     skip(tokens, "}");
 
     if (byContradict) {
-      skip(tokens, ContradictionKeyword);
       const contradict = optParse(env, tokens, true);
       skip(tokens, L_Ends);
       return new L_Nodes.ProveContradictNode(toProve, block, contradict);

@@ -31,8 +31,8 @@ export class ToCheckNode extends L_Node {
     return new ToCheckNode(true);
   }
 
-  copyWithoutIsT(newIsT: boolean): ToCheckNode {
-    return new ToCheckNode(newIsT);
+  copyWithIsTReverse(): ToCheckNode {
+    return new ToCheckNode(!this.isT);
   }
 
   containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
@@ -98,16 +98,8 @@ export class LogicNode extends ToCheckNode {
     return this.onlyIfs.some((e) => e.containOptAsIfThenReqOnlyIf(opt));
   }
 
-  override copyWithoutIsT(newIsT: boolean): LogicNode {
-    return new LogicNode(
-      this.vars,
-      this.req,
-      this.onlyIfs,
-      newIsT
-      // this.defName,
-      // this.reqName,
-      // this.isIff
-    );
+  override copyWithIsTReverse(): LogicNode {
+    return new LogicNode(this.vars, this.req, this.onlyIfs, !this.isT);
   }
 
   override useMapToCopy(env: L_Env, map: Map<string, string>): LogicNode {
@@ -199,6 +191,10 @@ export class OptNode extends ToCheckNode {
     }
 
     return new OptNode(this.optSymbol, newVars, this.isT, undefined);
+  }
+
+  override copyWithIsTReverse(): ToCheckNode {
+    return new OptNode(this.optSymbol, this.vars, !this.isT, this.checkVars);
   }
 
   override toString() {
