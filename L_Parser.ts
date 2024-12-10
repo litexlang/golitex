@@ -2,28 +2,18 @@ import { L_Node, LogicNode, ToCheckNode, OptNode } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import {
-  AreKeywords,
-  LetCompositeKeyword,
-  ByKeyword,
   ClearKeyword,
-  ContradictionKeyword,
   DefKeywords,
-  ExistKeyword,
   HaveKeywords,
   IffKeyword,
   IfKeyword,
-  IsKeywords,
   KnowTypeKeywords,
   L_Ends,
   L_Keywords,
-  LetHashKeyword,
   LetKeyword,
   LetKeywords,
   LogicalKeywords,
   MacroKeywords,
-  NotKeywords,
-  NotsKeyword,
-  OrKeywords,
   PostProveKeywords,
   ProveByContradictionKeyword,
   ProveKeywords,
@@ -301,7 +291,6 @@ const KeywordFunctionMap: {
   return: returnParse,
   clear: specialParse,
   run: specialParse,
-  by: byParse,
   macro: macroParse,
   "[": postfixProveParse,
   LetHashKeyword: letParse,
@@ -779,47 +768,6 @@ function returnParse(env: L_Env, tokens: string[]): L_Nodes.ReturnNode {
   }
 }
 
-// function orParse(
-//   env: L_Env,
-//   tokens: string[],
-// ): OrNode {
-//   const start = tokens[0];
-//   const index = tokens.length;
-
-//   try {
-//     skip(tokens, OrKeywords);
-//     skip(tokens, "{");
-//     skip(tokens, "}");
-
-//     return new OrNode(facts, true);
-//   } catch (error) {
-//     handleParseError(env, tokens, "operator", index, start);
-//     throw error;
-//   }
-// }
-
-// function notsParse(
-//   env: L_Env,
-//   tokens: string[],
-// ): OrNode {
-//   const start = tokens[0];
-//   const index = tokens.length;
-
-//   try {
-//     skip(tokens, NotsKeyword);
-//     skip(tokens, "{");
-//     for (const f of facts) {
-//       f.isT = !f.isT;
-//     }
-//     skip(tokens, "}");
-
-//     return new OrNode(facts, true);
-//   } catch (error) {
-//     handleParseError(env, tokens, "nots", index, start);
-//     throw error;
-//   }
-// }
-
 function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
   const start = tokens[0];
   const index = tokens.length;
@@ -841,24 +789,6 @@ function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
     throw error;
   }
 }
-
-// function existParse(
-//   env: L_Env,
-//   tokens: string[],
-// ): ExistNode {
-//   const start = tokens[0];
-//   const index = tokens.length;
-
-//   try {
-//     skip(tokens, ExistKeyword);
-//     const vars = varLstParse(env, tokens, ["{"], true);
-
-//     return new ExistNode(vars, facts, true);
-//   } catch (error) {
-//     handleParseError(env, tokens, "exist", index, start);
-//     throw error;
-//   }
-// }
 
 function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   const start = tokens[0];
@@ -883,26 +813,6 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
     }
   } catch (error) {
     handleParseError(env, tokens, "clear", index, start);
-    throw error;
-  }
-}
-
-function byParse(env: L_Env, tokens: string[]): L_Nodes.ByNode {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  try {
-    skip(tokens, ByKeyword);
-    const outs: OptNode[] = [];
-    while (!isCurToken(tokens, L_Ends)) {
-      const opt = optParse(env, tokens, true);
-      outs.push(opt);
-    }
-    skip(tokens, L_Ends);
-
-    return new L_Nodes.ByNode(outs);
-  } catch (error) {
-    handleParseError(env, tokens, "by", index, start);
     throw error;
   }
 }
@@ -954,42 +864,6 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
     throw error;
   }
 }
-
-// export function compositeSymbolParse(
-//   env: L_Env,
-//   tokens: string[]
-// ): CompositeSymbol {
-//   const start = tokens[0];
-//   const index = tokens.length;
-
-//   try {
-//     if (tokens[0].startsWith("\\")) {
-//       const name = tokens[0];
-//       skip(tokens);
-//       skip(tokens, "{");
-//       const vars: string[] = [];
-//       while (!isCurToken(tokens, "}")) {
-//         vars.push(shiftSymbol(tokens));
-//         if (isCurToken(tokens, ",")) skip(tokens, ",");
-//       }
-//       skip(tokens, "}");
-//       const req: ToCheckNode[] = [];
-//       if (isCurToken(tokens, "[")) {
-//         skip(tokens, "[");
-//         while (!isCurToken(tokens, "]")) {
-//           req.push(...factsParse(env, tokens, ["]"], false, false));
-//         }
-//         skip(tokens, "]");
-//       }
-//       return new CompositeSymbol(name, vars, req);
-//     } else {
-//       throw Error();
-//     }
-//   } catch (error) {
-//     handleParseError(env, tokens, "composite symbol", index, start);
-//     throw error;
-//   }
-// }
 
 // --------------------------------------------------------
 export function LetCompositeParse(

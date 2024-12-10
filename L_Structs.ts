@@ -251,11 +251,6 @@ export class StoredReq {
       .map((e) => e.toString())
       .join(", ")})`;
   }
-
-  // fixReqVars(env: L_Env, map: Map<string, string>): StoredReq {
-  //   const newReq = this.req.map((e) => e.(env, map));
-  //   return new StoredReq(this.vars, newReq);
-  // }
 }
 
 export class StoredFact {
