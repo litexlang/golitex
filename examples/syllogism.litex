@@ -3,8 +3,12 @@ def human(something);
 know if x: human(x) {
   mortal(x)
 };
+
 let Socrates: Socrates is human;
 Socrates is mortal;
 if x: x is human {x is mortal};
 
 let god: not god is mortal;
+prove_by_contradiction not human(god) {
+  god is mortal;
+} god is mortal;

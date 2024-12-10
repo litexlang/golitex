@@ -1,21 +1,23 @@
 # LiTeX
 
-**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **ANYONE** express and verify mathematics at **ANY LEVEL** as **ELEGANTLY** and **INTUITIVELY** as if they were using natural language. LiTeX will be kept as simple as possible, so that even one man cannot write LiTeX, he can still read it.
+## Introduction
 
-LiTeX introduces rigorous verification into mathematical collaboration, enabling confident contributions to large-scale projects. It makes interactive textbook/paper possible and allows math researchers to focus on innovative aspects rather than mechanical verification. Details are available at [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
+**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **anyone** express and verify mathematics at **any level** as **elegantly** and **intuitively** as if they were using **natural language**. In many cases, LiTeX enables users to write the same piece of math in 10% lines of code compared with other formal languages, which is even shorter and efficient than words written in LaTeX.
+
+The goal of **LiTeX** is to introduce rigorous verification into mathematical collaboration, enabling confident contributions to large-scale projects. It makes interactive textbook/paper possible and allows math researchers to focus on innovative aspects rather than mechanical verification. Details are available at [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
 
 Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!
 
 ---
 
-### Setting up Node.js and npm to run litex
+## Setting up Node.js and npm to run tslitex
 
-tslitex is written in TypeScript. So Node.js is essential for running litex projects because it provides the JavaScript runtime environment needed to execute TypeScript (.ts) files. Here's a concise guide to setting up Node.js and other tools:
+This LiTeX interpreter is written in TypeScript. So Node.js is essential for running litex projects because it provides the JavaScript runtime environment needed to execute TypeScript (.ts) files. Here's a concise guide to setting up Node.js and other tools:
 
 1. Install:
 
-   - Visit [nodejs.org](https://nodejs.org/)Download the latest LTS (Long Term Support) version
-   - Visit [git](https://git-scm.com/) Download the latest git.
+   - Visit [nodejs.org](https://nodejs.org/). Download the latest LTS (Long Term Support) version
+   - Visit [git](https://git-scm.com/). Download the latest git.
 
 2. Verify Installation:
 
@@ -29,39 +31,39 @@ tslitex is written in TypeScript. So Node.js is essential for running litex proj
    ```bash
    git clone https://github.com/litexlang/tslitex.git
    cd ./tslitex
-   ts-node L_ReadmeExamples.ts
+   ts-node L_Test.ts examples/syllogism.litex
    ```
 
 That's it! These steps will get you set up with Node.js and ready to run your litex project.
 
----
-
 ## A Tour of LiTeX
 
-Let’s explore its syntax with examples, starting with syllogism:
-
-### Example:
+LiTeX is a very simple and powerful language. It takes Lean4 nearly 100 lines of code to implement syllogism from scratch, but LiTeX can write that in a way that even people who have not learned LiTeX can understand. Here is how:
 
 ```
 def mortal(something);
-def something is human {if x : x is human => {x is mortal}};
+def human(something);
+know if x: human(x) {
+  mortal(x)
+};
+
 let Socrates: Socrates is human;
 Socrates is mortal;
-if x : x is human => {x is mortal};
-let god : god is not mortal;
-prove_by_contradiction god is not human {
+if x: x is human {x is mortal};
+
+let god: not god is mortal;
+prove_by_contradiction not human(god) {
   god is mortal;
-} contradiction god is mortal;
-god is not human;
+} god is mortal;
 ```
 
 Some core functionalities of LiTeX are included in this example
 
-- **Concept Definition**: A new concept called `mortal` takes in one parameter. Another concept called `human` has corollary that it's `mortal`.
-- **Variable Definition**: Two variable, `Socrates` and `Plato`, are introduced. Socrates has property that `Socrates is human` is true.
-- **Expression Validation**: The user input an expression `if x : x is human => {x is mortal};`. LiTeX interpreter checks whether given expressions are true based on facts that the user already claimed. For example, we have already known `something is human => {something is mortal};`, so `x is mortal` is true under assumption `x is human`.
-- **Proof**: in LiTeX, there are 2 ways of proving a result: prove or prove_by_contradiction.
-- **Expression Values**: After checking, there are 4 types of outcomes: true, unknown, error, false.
+- **Concept Definition**: New concepts called `mortal` and `human` are declared. They both have parameter size one. In addition, all variables that has property `human` has property `mortal`.
+- **Variable Definition**: A variable called `Socrates` is introduced. Socrates has property `human`. Another variable called `god` is introduced, with property `not mortal`.
+- **Expression Validation**: Expressions like `Socrates is mortal` are called `factual expression to be checked`. LiTeX checks their validation based on `known facts` . For example, we have already known `if x: human(x) {mortal(x)};` and `Socrates is human`, so `Socrates is mortal` is true . If an `factual expression to be checked` can not be checked by LiTeX interpreter, LiTeX prints out `unknown`. Notice `factual expression` can work both as requirement for another factual expression (e.g. `human(x)` is requirement for another fact `if x: human(x) { mortal(x)};` ) or as an `factual expression to be checked`.
+- **Proof**: in LiTeX, there are 2 ways of proving a result: `prove` or `prove_by_contradiction`. In the example, we prove `not human(god)` by using `prove_by_contradiction`.
+- **Expression Values**: After checking, there are 4 types of outcomes: `true`, `unknown`, `error`, `false`.
 
 ---
 
