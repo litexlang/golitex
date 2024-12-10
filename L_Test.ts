@@ -95,7 +95,7 @@ const exampleList: ExampleItem[] = [
       "prove_by_contradiction  not  human(god) {god is mortal;}  god is mortal;",
       "not human(god);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -503,6 +503,18 @@ const exampleList: ExampleItem[] = [
   {
     name: "prove",
     code: [`def p(x); if x: p(x) {p(x)};`],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "prove",
+    code: [
+      `def p3(x); def p2(x); def p1(x);
+know if x: p3(x) {p2(x)}, if x : p2(x)  {p1(x)} ;
+prove if x : x is p3  {x is p1} {
+  x is p2;
+}`,
+    ],
     debug: true,
     print: true,
   },

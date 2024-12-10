@@ -84,8 +84,13 @@ Some core functionalities of LiTeX are included in this example
 def p(x);
 def x is p1;
 def q(x,y);
-def p2(x) {if x: x is p1 => {x is p2} }
-def p3(x) {if x: p3(x) => {p(x)} , if x: p(x) => {p3(x)} }
+def p2(x) {
+  // properties of a defined concept are written in the following block.
+  if x: x is p1  {
+    x is p2
+  }
+}
+def p3(x) {if x: p3(x)  {p(x)} , if x: p(x)  {p3(x)} }
 let x,y: p3(x), p(y);
 p(x), p3(y);
 def p(x); // error: you can not declare a concept twice.
@@ -94,56 +99,42 @@ def p(x); // error: you can not declare a concept twice.
 ## Expression Checking
 
 ```
-def human(x);
-def teacher(x,y);
-let 亚里士多德, Plato: 亚里士多德  is human;
-亚里士多德 is not human; // False
-human(亚里士多德);
-Plato, 亚里士多德 are human;
-teacher(Plato, 亚里士多德);
-know teacher(Plato, 亚里士多德);
-teacher(Plato, 亚里士多德);
-let somebody;
-somebody is human; // Unknown
+// read a tour of LiTeX
 ```
 
 ## Variable Introduction
 
 ```
-def p(x); def q(x,y);
-let x,y,z;
-let 变量, 10.2, _nonsense, 你好 world, I-AM-MEANINGLESS;
-let a,b,c: a is p, q(b,c);
-let y; // y already declared.
+// read a tour of LiTeX
 ```
 
 ## Not Operator
 
 ```
-def p(x);
-let v1, v2, v3, v4, v5: not p(v1), v2 is not p, not v3 is p, v4,v5 are not p;
-not p(v1);
-let v6;
-not p(v6); // Unknown
-know not p(v6);
-not p(v6); // True
+// read a tour of LiTeX
 ```
 
-## If and Forall
+## If-type Factual Expression
+
+`if-type factual expressions` works as for-any expressions in math.
 
 ```
-def p1(x); def p(x); def p2(x) {if x: x is p2 => {x is p1}}
-if x: x is p2 => {x is p1}; // True
-if x: x is p => {x is p1}; // Unknown
-if x : x is p => {x is p}; // Always true
+def p1(x); def p(x); def p2(x) {
+  if x: x is p2  {x is p1}  // properties of p2
+}
+if x: x is p2  {x is p1}; // True
+if x: x is p  {x is p1}; // Unknown
+if x : x is p  {x is p}; // Always true
 ```
 
 ## Prove and Contradiction
 
 ```
 def p3(x); def p2(x); def p1(x);
-know if x: p3(x) => {p2(x)}, if x : p2(x) => {p1(x)} ;
-prove if x : x is p3 => {x is p1} {x is p2;}
+know if x: p3(x) {p2(x)}, if x : p2(x)  {p1(x)} ;
+prove if x : x is p3  {x is p1} {
+  x is p2;
+}
 let v10,v12: v10 is p2; // prove factual-expression {proofs}
 prove v10 is p1 {v10 is p2;}
 know v12 is not p1;

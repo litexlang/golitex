@@ -33,7 +33,7 @@ import {
   reportStoreErr,
 } from "./L_Messages";
 import { isBuiltinKeyword, isPropertyBuiltinCheck } from "./L_Builtins";
-import { L_Out } from "./L_Structs";
+import { L_Out, L_Singleton } from "./L_Structs";
 import {
   postfixProveExec,
   // proveExist,
@@ -411,6 +411,22 @@ function proveContradictExec(
 function proveExec(env: L_Env, proveNode: ProveNode): L_Out {
   try {
     const newEnv = new L_Env(env);
+    if (proveNode.toProve instanceof IfNode) {
+      return proveIfExec(env, proveNode);
+    } else if (proveNode.toProve instanceof OptNode) {
+      return proveOptExec(env, proveNode);
+    }
+
+    throw Error();
+  } catch {
+    return env.errMesReturnL_Out(`prove failed: ${proveNode}`);
+  }
+}
+
+function proveOptExec(env: L_Env, proveNode: ProveNode): L_Out {
+  try {
+    const newEnv = new L_Env(env);
+
     // TODO Must check all opt and vars in toProve is declared in env instead of in env
     for (const node of proveNode.block) {
       const out = nodeExec(newEnv, node);
@@ -420,13 +436,67 @@ function proveExec(env: L_Env, proveNode: ProveNode): L_Out {
       }
     }
 
-    const out = factExec(newEnv, proveNode.toProve);
+    const out = L_Checker.checkFact(newEnv, proveNode.toProve);
     if (out === L_Out.True) {
-      L_Memory.newFact(env, proveNode.toProve);
-      env.newMessage(`[prove] ${proveNode.toProve}`);
+      const ok = L_Memory.newFact(env, proveNode.toProve);
+      if (ok) return L_Out.True;
+      else throw Error();
+    } else {
+      env.newMessage(`[prove failed] ${proveNode.toProve}`);
+      return L_Out.Unknown;
+    }
+  } catch {
+    return env.errMesReturnL_Out(`prove failed: ${proveNode}`);
+  }
+}
+
+function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
+  try {
+    const newEnv = new L_Env(env);
+    const toProve = proveNode.toProve as IfNode;
+
+    let ok = true;
+    for (const v of toProve.vars) {
+      //TODO how to composite?
+      if (v instanceof L_Singleton) {
+        ok = env.newSingletonVar(v.value);
+        if (!ok) {
+          env.newMessage(`Failed: ${v} already declared`);
+          throw Error();
+        }
+      }
+    }
+
+    for (const node of toProve.req) {
+      ok = L_Memory.newFact(newEnv, node);
+      if (!ok) {
+        throw Error();
+      }
+    }
+
+    // TODO Must check all opt and vars in toProve is declared in env instead of in env
+    for (const node of proveNode.block) {
+      const out = nodeExec(newEnv, node);
+      if (out !== L_Out.True) {
+        env.newMessage(`failed to run ${node}`);
+        throw Error();
+      }
+    }
+
+    for (const onlyIf of toProve.onlyIfs) {
+      const out = factExec(newEnv, onlyIf);
+      if (out !== L_Out.True) {
+        env.newMessage(`Failed to check ${onlyIf}`);
+        throw Error();
+      }
+    }
+
+    const out = L_Memory.newFact(env, toProve);
+    if (out) {
+      env.newMessage(`[prove] ${proveNode}`);
       return L_Out.True;
     } else {
-      return out;
+      throw Error();
     }
   } catch {
     return env.errMesReturnL_Out(`prove failed: ${proveNode}`);
