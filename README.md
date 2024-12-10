@@ -2,11 +2,16 @@
 
 ## Introduction
 
-**LiTeX** is a **formal proof management system** inspired by **Lisp semantics** and **LaTeX syntax**. Its goal is to help **anyone** express and verify mathematics at **any level** as **elegantly** and **intuitively** as if they were using **natural language**. In many cases, LiTeX enables users to write the same piece of math in 10% lines of code compared with other formal languages, which is even shorter and efficient than words written in LaTeX.
+_Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
+-- David Hilbert_
 
-The goal of **LiTeX** is to introduce rigorous verification into mathematical collaboration, enabling confident contributions to large-scale projects. It makes interactive textbook/paper possible and allows math researchers to focus on innovative aspects rather than mechanical verification. Details are available at [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
+**LiTeX** is a formal proof management system inspired by Lisp semantics and LaTeX syntax. Leveraging LaTeX's familiar structure for decomposing mathematical communication and Lisp's "Everything is a symbol" philosophy, LiTeX aims to help anyone express and verify mathematics at any level as elegantly and intuitively as if they were using natural language. <font color="red">Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!</font>
 
-Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!
+The basic elements of **LiTeX** called `symbols` have roots in Lisp's fundamental approach, drawing inspiration from its powerful macro system to handle literal manipulations in math. `Symbols` can have `facts` related to them, with some facts leading to further facts—mirroring how mathematical reasoning naturally progresses. Read `A Tour of LiTeX` below for further information.
+
+## Potential
+
+**LiTeX** transforms mathematical collaboration by introducing rigorous verification into research workflows. By automating mechanical proof validation, the system enables mathematicians to focus on innovative aspects rather than tedious verification. It also makes interactive textbooks and large-scale collaborative projects possible. Full details are available at the [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
 
 ---
 
@@ -209,7 +214,7 @@ know if P: is_property(P), P(0), if n: n is natural, P(n) {
 
 ```
 
-## Potential of LiTeX
+## More about LiTeX
 
 ### Advancing Collaborative Mathematics
 
