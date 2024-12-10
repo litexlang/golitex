@@ -87,7 +87,7 @@ know if x, a, b: in(x,b) {
 };
 
 {
-    dlet x, a, b: in(x,a);
+    let x, a, b: in(x,a);
     in(x, \pair{a,b})[x,a,b];
     let y,c,d: in(y, \pair{c,d}), not equal(y,c);
     equal(y,d)[y,c,d;];
@@ -249,7 +249,5 @@ know if P: is_property(P), P(0), if n: n is natural, P(n) {
 };
 
 let_composite \+{x,y};
-
 know \+{x,y} nat_eq \+{y,x};
-
 know \+{0,x} nat_eq \+{x,0};

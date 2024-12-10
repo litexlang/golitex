@@ -272,18 +272,23 @@ export class LetHashNode extends LetNode {}
 export class ProveNode extends L_Node {
   constructor(
     // Only one of toProve, fixedIfThenOpt exists
-    public toProve: LogicNode | null,
-    public fixedIfThenOpt: OptNode | null,
-    public block: L_Node[],
-    // If contradict !== undefined, then prove_by_contradiction
-    public contradict: OptNode | undefined = undefined
+    public toProve: ToCheckNode,
+    public block: L_Node[] // If contradict !== undefined, then prove_by_contradiction
   ) {
     super();
   }
 
   override toString() {
-    if (this.toProve) return `prove ${this.toProve}`;
-    else return `prove ${this.fixedIfThenOpt}`;
+    return `prove ${this.toProve}`;
+  }
+}
+export class ProveContradictNode extends ProveNode {
+  constructor(
+    toProve: ToCheckNode,
+    block: L_Node[],
+    public contradict: OptNode
+  ) {
+    super(toProve, block);
   }
 }
 

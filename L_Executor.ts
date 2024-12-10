@@ -13,6 +13,7 @@ import {
   MacroNode,
   OptNode,
   PostfixProve,
+  ProveContradictNode,
   ProveNode,
   ReturnNode,
   SpecialNode,
@@ -40,6 +41,7 @@ import {
   proveOptByContradict,
 } from "./L_Prove";
 import { on } from "events";
+import { blob } from "stream/consumers";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -73,6 +75,8 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
         return letExec(env, node as LetNode);
       case "ProveNode":
         return proveExec(env, node as ProveNode);
+      case "ProveContradictNode":
+        return proveContradictExec(env, node as ProveContradictNode);
       case "HaveNode":
         return haveExec(env, node as HaveNode);
       case "PostfixProve":
@@ -368,40 +372,67 @@ function macroExec(env: L_Env, node: MacroNode): L_Out {
   }
 }
 
-function proveExec(env: L_Env, node: ProveNode): L_Out {
-  let out = L_Out.Error;
-  if (node.contradict === undefined) {
-    if (node.toProve !== null) {
-      if (node.toProve instanceof IfNode) {
-        out = proveIfThen(env, node.toProve, node.block);
+function proveContradictExec(
+  env: L_Env,
+  proveNode: ProveContradictNode
+): L_Out {
+  try {
+    const newEnv = new L_Env(env);
+    proveNode.toProve.isT = !proveNode.toProve.isT;
+    L_Memory.newFact(newEnv, proveNode.toProve);
+    proveNode.toProve.isT = !proveNode.toProve.isT;
+
+    // TODO Must check all opt and vars in toProve is declared in env instead of in env
+    for (const node of proveNode.block) {
+      const out = nodeExec(newEnv, node);
+      if (out !== L_Out.True) {
+        env.newMessage(`failed to run ${node}`);
+        throw Error();
       }
+    }
+
+    const out = factExec(newEnv, proveNode.contradict);
+    proveNode.contradict.isT = !proveNode.contradict.isT;
+    const out2 = factExec(newEnv, proveNode.contradict);
+    proveNode.contradict.isT = !proveNode.contradict.isT;
+
+    if (out === L_Out.True && out2 === L_Out.True) {
+      L_Memory.newFact(env, proveNode.toProve);
+      env.newMessage(`[prove_by_contradict] ${proveNode.toProve}`);
+      return L_Out.True;
     } else {
-      if (node.fixedIfThenOpt instanceof BuiltinCheckNode) {
-        out = proveBuiltin(env, node.fixedIfThenOpt as OptNode, node.block);
-      } else {
-        out = proveOpt(env, node.fixedIfThenOpt as OptNode, node.block);
-      }
-    }
-
-    if (out !== L_Out.True) {
-      env.newMessage(`Failed: ${node}`);
-    }
-
-    return L_Out.Error;
-  } else {
-    if (node.toProve !== null) {
       env.newMessage(
-        `At current version, you can not prove if-then by contradiction.`
+        `failed: ${proveNode.contradict} is supposed to be both true and false`
       );
-      return L_Out.Error;
-    } else {
-      return proveOptByContradict(
-        env,
-        node.fixedIfThenOpt as OptNode,
-        node.block,
-        node.contradict as OptNode
-      );
+      return L_Out.Unknown;
     }
+  } catch {
+    return env.errMesReturnL_Out(`prove_by_contradict failed: ${proveNode}`);
+  }
+}
+
+function proveExec(env: L_Env, proveNode: ProveNode): L_Out {
+  try {
+    const newEnv = new L_Env(env);
+    // TODO Must check all opt and vars in toProve is declared in env instead of in env
+    for (const node of proveNode.block) {
+      const out = nodeExec(newEnv, node);
+      if (out !== L_Out.True) {
+        env.newMessage(`failed to run ${node}`);
+        throw Error();
+      }
+    }
+
+    const out = factExec(newEnv, proveNode.toProve);
+    if (out === L_Out.True) {
+      L_Memory.newFact(env, proveNode.toProve);
+      env.newMessage(`[prove] ${proveNode.toProve}`);
+      return L_Out.True;
+    } else {
+      return out;
+    }
+  } catch {
+    return env.errMesReturnL_Out(`prove failed: ${proveNode}`);
   }
 }
 

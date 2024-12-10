@@ -514,14 +514,7 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
       skip(tokens, ProveKeywords);
     }
 
-    let toProve: null | LogicNode = null;
-    let fixedIfThenOpt: null | OptNode = null;
-
-    if (IfKeyword === tokens[0]) {
-      toProve = logicParse(env, tokens);
-    } else {
-      fixedIfThenOpt = optParse(env, tokens, true);
-    }
+    const toProve = factParse(env, tokens);
 
     const block: L_Node[] = [];
     skip(tokens, "{");
@@ -536,17 +529,13 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
 
     skip(tokens, "}");
 
-    let contradict: OptNode | undefined = undefined;
     if (byContradict) {
       skip(tokens, ContradictionKeyword);
-      contradict = optParse(env, tokens, true);
+      const contradict = optParse(env, tokens, true);
       skip(tokens, L_Ends);
-    }
-
-    if (toProve !== null) {
-      return new L_Nodes.ProveNode(toProve, null, block, contradict);
+      return new L_Nodes.ProveContradictNode(toProve, block, contradict);
     } else {
-      return new L_Nodes.ProveNode(null, fixedIfThenOpt, block, contradict);
+      return new L_Nodes.ProveNode(toProve, block);
     }
   } catch (error) {
     handleParseError(env, tokens, "Parsing prove", index, start);

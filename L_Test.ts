@@ -3,7 +3,7 @@ import { L_Env } from "./L_Env";
 import { runStrings } from "./L_Runner";
 import * as fs from "fs";
 
-export const exampleList: ExampleItem[] = [
+const exampleList: ExampleItem[] = [
   {
     name: "define subset",
     code: [
@@ -540,11 +540,13 @@ function runLiTeXFile(filePath: string) {
   }
 }
 
-const files = {
-  setTheory: "./examples/setTheory.litex",
-  trimology: "./examples/trimology.litex",
-};
+function run() {
+  const args = process.argv.slice(2);
+  if (!args || args.length === 0) {
+    runExamples(false);
+  } else {
+    runLiTeXFile(args[0]);
+  }
+}
 
-runLiTeXFile(files.trimology);
-
-// runExamples(false);
+run();
