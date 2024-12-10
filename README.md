@@ -1,7 +1,7 @@
 # The LiTeX Proof System
 
 <div align="center">
-<img src="tools/logo.png" alt="The LiTeX Logo" width="200">
+<img src="tools/logo.png" alt="The LiTeX Logo" width="300">
 
 <small>The LiTeX logo is a tree for two symbolic reasons: 1) binary tree is the basic data structure of Lisp , and LiTeX is strongly influenced by Lisp 2) it evokes the sense of "something leads to another thing" in mathematical discovery.</small>
 
