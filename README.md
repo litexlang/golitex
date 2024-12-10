@@ -135,51 +135,10 @@ know if x: p3(x) {p2(x)}, if x : p2(x)  {p1(x)} ;
 prove if x : x is p3  {x is p1} {
   x is p2;
 }
-let v10,v12: v10 is p2; // prove factual-expression {proofs}
-prove v10 is p1 {v10 is p2;}
-know v12 is not p1;
-prove_by_contradiction v12 is not p3 {v12 is p2;} contradiction v12 is p1;
-```
-
-## Exist
-
-```
-def p(x); def q(x); def t(x,y); def t_y(x); know if x :t(x,y) => {t_y(x)};
-let x, y: t(x,y);
-t_y(x);
-exist(t_y)[x];
-know if exist(t_y) => {q(y)};
-q(y);
-```
-
-## Know Not Exist
-
-```
-def p(x); def q(x);
-know not exist(p);
-exist(p);
-not exist(p);
-if x: => {not p(x)};
-```
-
-## Prove Exist
-
-```
-def p(x); prove exist(p) {let x: p(x); exist(p)[x];}
-```
-
-## Know Exist
-
-```
-def p(x); def q(x); def t(x,y); def t_y(x); know if x :t(x,y) => {t_y(x)};
-know exist(p);
-exist(p);
-```
-
-## Have
-
-```
-def p(x); know exist(p); have x: p(x);
+let v1,v2: v1 is p2; // prove factual-expression {proofs}
+prove v1 is p1 {v1 is p2;}
+know not p1(v2);
+prove_by_contradiction not p3(v2) {v2 is p2;}  v2 is p1;
 ```
 
 ## Parameter Passing with Subset Demonstration
@@ -187,93 +146,65 @@ def p(x); know exist(p); have x: p(x);
 ```
 def set(x); def subset(A,B); def in(x,A);
 
-# Subset definition: if x is in A, then x must be in B
-know if A,B: subset(A,B) => {if x: in(x,A) => {in(x,B)}};
+// Subset definition: if x is in A, then x must be in B
+know if A,B: subset(A,B) {if x: in(x,A) {in(x,B)}};
 
-# Alternative subset definition
-know if A,B: if x: in(x,A) => {in(x,B)} => {subset(A,B)};
+// Alternative subset definition
+know if A,B: if x: in(x,A) {in(x,B)} {subset(A,B)};
 
-# Example usage
+// Example usage
 let A,B,C,D,E,F;
 know subset(A,B);
 let x: in(x,A);
-in(x,B)[A,B;x];  # Proof of membership
+in(x,B)[A,B;x];  // Proof of membership
 ```
 
 ## Transitivity Demonstration
 
 ```
-# Define a less-than relation with transitivity
+// Define a less-than relation with transitivity
 def <(x,y);
-know if x,y,z: <(x,y), <(y,z) => {<(x,z)};
+know if x,y,z: <(x,y), <(y,z)  {<(x,z)};
 
-# Example of transitive property
+// Example of transitive property
 let a,b,c: <(a,b), <(b,c);
-<(a,c)[a,b,c];  # Proving transitivity
+<(a,c)[a,b,c];  // Proving transitivity
 ```
 
-## Macro: Binding Properties to Literals
+## composite symbol declaration (use natural number definition as example)
 
 ```
-# Define a natural number predicate
 def natural(x);
+def nat_eq(x,y);
 
-# Macro to automatically recognize natural number literals
-macro "^(0|[1-9]d*)$" v natural(v);
+let 0: 0 is natural;
 
-# Example usage
-let 2;
-natural(2);  # Automatically verified
-```
+let_composite \++{n}: n is natural;
 
-## Continuity Checking
+know if n: n is natural {
+    \++{n} is natural;
+};
 
-```
-# Define predicates for continuity
-def point_wise_continuous(f,x);
-def continuous(f);
-def in_domain(x);
+know if x {
+    not nat_eq(0, \++{x});
+};
 
-# Establish continuity condition
-know if f: if x : in_domain(x) => {point_wise_continuous(f,x)} => {continuous(f)};
+know if x,y: nat_eq(x,y) {
+    nat_eq(\++{x}, \++{y});
+};
 
-# Example usage
-let f;
-know if x : in_domain(x) => {point_wise_continuous(f,x)};
-continuous(f);  # Inferred from previous conditions
-```
+know if x,y: nat_eq(\++{x}, \++{y}) {
+    nat_eq(x,y);
+};
 
-## Named Known Checks and Proof Mechanisms
+know if P: is_property(P), P(0), if n: n is natural, P(n) {
+    P(\++{n});
+} {
+    if m: m is natural {
+        P(m);
+    };
+};
 
-```
-# Define predicates
-def p(x); def q(x); def t(x);
-
-# Named known checks with proof by reference
-let a: p(a);
-know [_1] if x: p(x) => {q(x)};
-by _1(a);
-q(a);  # Proven
-
-# Conditional existence proof
-let [_2] b: if x : x is p => {t(b)};
-by _2(a);
-t(b);  # Proven conditionally
-```
-
-## Advanced If-Then Logical Checking
-
-```
-# Define predicates
-def p(x); def q(x); def t(x,y);
-
-# Multiple ways of expressing logical implications
-know if x,y: t(x,y) => {q(x)};
-if x,y: t(x,y) => {q(x)};
-know if x,y: t(x,y) => {q(x)};
-
-# Nested implication checking
-if : => {if x,y: t(x,y) => {q(x)}};
 ```
 
 ## Potential of LiTeX

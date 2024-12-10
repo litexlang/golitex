@@ -509,11 +509,15 @@ const exampleList: ExampleItem[] = [
   {
     name: "prove",
     code: [
-      `def p3(x); def p2(x); def p1(x);
-know if x: p3(x) {p2(x)}, if x : p2(x)  {p1(x)} ;
-prove if x : x is p3  {x is p1} {
-  x is p2;
-}`,
+      `
+// Define a less-than relation with transitivity
+def <(x,y);
+know if x,y,z: <(x,y), <(y,z)  {<(x,z)};
+
+// Example of transitive property
+let a,b,c: <(a,b), <(b,c);
+<(a,c)[a,b,c];  // Proving transitivity
+`,
     ],
     debug: true,
     print: true,
