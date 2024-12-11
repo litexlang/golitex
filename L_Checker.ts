@@ -29,7 +29,7 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   }
 }
 
-export function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
+function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
   try {
     const newEnv = new L_Env(env);
     for (const v of toCheck.vars) {
@@ -57,7 +57,7 @@ export function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
   }
 }
 
-export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
+function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   // compare vars length in given opts, compare them
   function literallyCompareOptVars(
     env: L_Env,
@@ -209,7 +209,7 @@ export function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   }
 }
 
-export function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
+function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
   try {
     if (toCheck instanceof OptNode) {
       const knowns = env.getFacts(toCheck.optSymbol.name);
@@ -232,10 +232,7 @@ export function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
   }
 }
 
-export function checkBuiltinCheckNode(
-  env: L_Env,
-  toCheck: BuiltinCheckNode
-): L_Out {
+function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
   try {
     if (toCheck instanceof IsPropertyNode) {
       return env.getDef(toCheck.propertyName) !== undefined

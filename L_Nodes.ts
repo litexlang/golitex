@@ -8,34 +8,14 @@ export class ToCheckNode extends L_Node {
     super();
   }
 
+  // called by checker
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
     throw Error();
   }
 
-  varsDeclared(env: L_Env, freeVars: string[]): boolean {
-    env;
-    freeVars;
-    return false;
-  }
-
-  factsDeclared(env: L_Env): boolean {
-    env;
-    return false;
-  }
-
-  // // MAIN FUNCTION OF THE WHOLE PROJECT
-  // useMapToCopy(env: L_Env, map: Map<string, string>): ToCheckNode {
-  //   map;
-  //   return new ToCheckNode(true);
-  // }
-
+  // called by prove_by_contradiction
   copyWithIsTReverse(): ToCheckNode {
     return new ToCheckNode(!this.isT);
-  }
-
-  containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
-    opt;
-    return true;
   }
 }
 
@@ -92,10 +72,6 @@ export class LogicNode extends ToCheckNode {
     // );
   }
 
-  override containOptAsIfThenReqOnlyIf(opt: OptNode): boolean {
-    return this.onlyIfs.some((e) => e.containOptAsIfThenReqOnlyIf(opt));
-  }
-
   override copyWithIsTReverse(): LogicNode {
     return new LogicNode(this.vars, this.req, this.onlyIfs, !this.isT);
   }
@@ -114,18 +90,6 @@ export class LogicNode extends ToCheckNode {
     // const defName = this.defName === undefined ? "" : `[${this.defName}]`;
 
     return notPart + mainPart;
-  }
-
-  override varsDeclared(env: L_Env, freeVars: string[]): boolean {
-    return false;
-    // TODO
-    // return [...this.req, ...this.onlyIfs].every((e) =>
-    //   e.varsDeclared(env, [...this.vars, ...freeVars])
-    // );
-  }
-
-  override factsDeclared(env: L_Env): boolean {
-    return [...this.req, ...this.onlyIfs].every((e) => e.factsDeclared(env));
   }
 
   // extract root of if-then. get operator-fact and its requirements. return operator-fact-requirement-pair.

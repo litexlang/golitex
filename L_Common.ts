@@ -8,11 +8,8 @@ export const specialChars = [
   ":",
   ",",
   ";",
-  // "\n",
   "&",
   "|",
-  "$",
-  '"',
   "\\",
 ];
 export const SlashKeyword = "\\";
