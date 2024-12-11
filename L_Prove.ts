@@ -136,12 +136,6 @@ export function postfixProveExec(
 
     newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
 
-    // store named knowns
-    for (const [i, key] of postfixProve.names.entries()) {
-      const ok = env.newNamedKnownToCheck(key, postfixProve.facts[i]);
-      if (!ok) throw Error();
-    }
-
     return L_Out.True;
   } catch {
     env.newMessage("by error");

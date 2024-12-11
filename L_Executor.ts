@@ -418,22 +418,6 @@ export function noVarsOrOptDeclaredHere(
   here: L_Env,
   targetFact: ToCheckNode
 ): boolean {
-  if (here.someVarsDeclaredHere(targetFact, [])) {
-    here.getMessages().forEach((e) => sendErrMessageToEnv.newMessage(e));
-    sendErrMessageToEnv.newMessage(
-      `Error: Some variables in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-    );
-    return false;
-  }
-
-  if (here.someOptsDeclaredHere(targetFact)) {
-    here.getMessages().forEach((e) => sendErrMessageToEnv.newMessage(e));
-    sendErrMessageToEnv.newMessage(
-      `Error: Some operators in ${targetFact} are declared in block. It's illegal to declare operator or variable with the same name in the if-then expression you want to prove.`
-    );
-    return false;
-  }
-
   return true;
 }
 

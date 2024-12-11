@@ -18,9 +18,6 @@ export class L_Env {
   private declaredHashVars = new Map<string, ToCheckNode[]>();
   private macros: MacroNode[] = [];
   private defs = new Map<string, DefNode>();
-  private knownFacts = new Map<string, KnownFact>(); // key: operator name; value: stored layers of if-then that can be used to check operator.
-  private namedKnownToChecks = new Map<string, ToCheckNode>();
-  // private exists = new Map<string, KnownFact>();
 
   private facts = new Map<string, L_KnownFact[]>();
   private declaredComposites = new Map<string, LetCompositeNode>();
@@ -91,8 +88,6 @@ export class L_Env {
     this.declaredVars = new Set<string>();
     this.macros = [];
     this.defs = new Map<string, DefNode>();
-    this.knownFacts = new Map<string, KnownFact>();
-    this.namedKnownToChecks = new Map<string, ToCheckNode>();
     // this.exists = new Map<string, KnownFact>();
   }
 
@@ -136,80 +131,6 @@ export class L_Env {
     else if (this.parent !== undefined) {
       return this.parent.getHashVarFacts(key);
     } else return undefined;
-  }
-
-  newNamedKnownToCheck(name: string, toCheck: ToCheckNode): boolean {
-    const out = this.getNamedKnownToCheck(name);
-    if (out === undefined) {
-      this.namedKnownToChecks.set(name, toCheck);
-      return true;
-    } else {
-      return this.errMesReturnBoolean(
-        `${name} is already a known fact. You can not double declare it.`
-      );
-    }
-  }
-
-  getNamedKnownToCheck(name: string): ToCheckNode | undefined {
-    const known = this.namedKnownToChecks.get(name);
-    if (known !== undefined) return known;
-    else if (this.parent !== undefined) {
-      return this.parent.getNamedKnownToCheck(name);
-    } else return undefined;
-  }
-
-  getKnownFactsFromCurEnv(
-    opt: OptNode,
-    onlyRoot: boolean = false
-  ): undefined | StoredFact[] {
-    //*
-    // const knownNodeRoot: KnownFact | undefined = this.knownFacts.get(
-    //   opt.optSymbol
-    // );
-    // if (onlyRoot) {
-    //   return knownNodeRoot?.getFactsToCheck([]);
-    // }
-    // if (knownNodeRoot !== undefined) {
-    //   if (opt.checkVars === undefined) return knownNodeRoot.getFactsToCheck([]);
-    //   else {
-    //     const varsToCheckNumbers = opt.checkVars?.map((e) => e.length);
-    //     if (varsToCheckNumbers === undefined) return undefined;
-    //     return knownNodeRoot.getFactsToCheck(varsToCheckNumbers);
-    //   }
-    // } else {
-    //   return undefined;
-    // }
-    //*
-    return undefined;
-  }
-
-  newKnownFact(
-    optName: L_OptSymbol,
-    checkVars: string[][],
-    fact: StoredFact
-  ): boolean {
-    // const ok = examineStoredFact(this, new OptNode(optName, fact.vars), fact);
-    // if (!ok) return false;
-
-    //*
-    // const checkVarsNumLst = checkVars.map((e) => e.length);
-    // const knownFact = this.knownFacts.get(optName);
-    // if (knownFact === undefined) {
-    //   let newKnownFact: KnownFact;
-    //   if (fact instanceof StoredExist) {
-    //     newKnownFact = new KnownExist();
-    //   } else {
-    //     newKnownFact = new KnownFact();
-    //   }
-    //   this.knownFacts.set(optName, newKnownFact);
-
-    //   return newKnownFact.addChild(checkVarsNumLst, fact);
-    // } else {
-    //   return knownFact.addChild(checkVarsNumLst, fact);
-    // }
-    //*
-
-    return false;
   }
 
   getMacros(previous: MacroNode[]): MacroNode[] {
@@ -372,55 +293,11 @@ export class L_Env {
     }
   }
 
-  getParent() {
-    return this.parent;
-  }
-
   toJSON() {
     return {
       vars: Array.from(this.declaredVars),
       defs: Object.fromEntries(this.defs),
-      knowns: Object.fromEntries(this.knownFacts),
-      macros: this.macros,
+      facts: Object.fromEntries(this.facts),
     };
-  }
-
-  // used by prove to check whether vars in factToCheck is redefined in block
-  someVarsDeclaredHere(fact: ToCheckNode, freeVars: string[]): boolean {
-    //*
-    // if (fact instanceof OptNode) {
-    //   const out = fact.vars.some(
-    //     (e) => !freeVars.includes(e) && this.declaredVars.has(e)
-    //   );
-    //   return out;
-    // } else if (fact instanceof LogicNode) {
-    //   return (
-    //     fact.onlyIfs.some((e) => this.someVarsDeclaredHere(e, fact.vars)) ||
-    //     fact.req.some((e) => this.someVarsDeclaredHere(e, fact.vars))
-    //   );
-    // }
-    //*
-
-    throw Error();
-  }
-
-  // used by prove to check whether factToCheck is redefined in block
-  someOptsDeclaredHere(fact: ToCheckNode): boolean {
-    //*
-    // if (fact instanceof OptNode) {
-    //   return this.defs.get(fact.optSymbol) !== undefined;
-    // } else if (fact instanceof LogicNode) {
-    //   return (
-    //     fact.onlyIfs.some((e) => this.someOptsDeclaredHere(e)) ||
-    //     fact.req.some((e) => this.someOptsDeclaredHere(e))
-    //   );
-    // }
-    //*
-
-    throw Error();
-  }
-
-  optDeclaredHere(name: string): boolean {
-    return this.defs.get(name) !== undefined;
   }
 }
