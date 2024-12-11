@@ -1,6 +1,5 @@
 import { BuiltinCheckNode, L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Out, L_Symbol } from "./L_Structs";
 import { isPropertyParse, isSymbolShapeParse, orParse } from "./L_Parser";
 
 export const L_BuiltinParsers = new Map<

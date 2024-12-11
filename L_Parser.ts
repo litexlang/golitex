@@ -294,7 +294,7 @@ const KeywordFunctionMap: {
   macro: macroParse,
   "[": postfixProveParse,
   LetHashKeyword: letParse,
-  let_composite: LetCompositeParse,
+  def_composite: LetCompositeParse,
 };
 
 export function getNodesFromSingleNode(

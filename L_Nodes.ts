@@ -326,7 +326,7 @@ export class LetCompositeNode extends L_Node {
   }
 
   toString(): string {
-    return `let_composite ${this.composite.toString()}: ${this.facts
+    return `def_composite ${this.composite.toString()}: ${this.facts
       .map((e) => e.toString())
       .join(", ")}`;
   }

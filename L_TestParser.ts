@@ -18,9 +18,9 @@ export const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name: "let_composite",
+    name: "def_composite",
     code: [
-      "let_composite \\frac{x,y} : number(x), number(y);",
+      "def_composite \\frac{x,y} : number(x), number(y);",
       "know if x, a, b: in(x, \\pair{a,b}) { if :  not equal(x, b) {equal(x, a)} , if : not equal(x, a) {equal(x, b)} } ;",
       `
       let a ; // ha

@@ -13,16 +13,14 @@ export const specialChars = [
   "\\",
 ];
 export const SlashKeyword = "\\";
-export const LetCompositeKeyword = "let_composite";
+export const LetCompositeKeyword = "def_composite";
 export const IsPropertyKeyword = "is_property";
-export const KnowTypeKeywords = ["know", "assume"];
+export const KnowTypeKeywords = ["know"];
 export const ThenKeyword = "=>";
 export const IffThenKeyword = "<=>";
 export const IfKeyword = "if";
 export const OnlyIfKeywords = ["only_if"];
 export const IffKeyword = "iff";
-export const ExistKeyword = "exist";
-export const DefCompositeKeyword = "def_composite";
 export const DefKeywords = ["def"];
 
 export const SymbolsFactsSeparator = ":";
@@ -68,7 +66,6 @@ export const L_Keywords: string[] = [
   IfKeyword,
   ...OnlyIfKeywords,
   ...IffKeyword,
-  ExistKeyword,
   ...DefKeywords,
   ...ProveKeywords,
   ...L_Ends,
@@ -86,7 +83,6 @@ export const L_Keywords: string[] = [
   NotsKeyword,
   RunKeyword,
   UseKeyword,
-  DefCompositeKeyword,
   // STKeyword,
 ];
 

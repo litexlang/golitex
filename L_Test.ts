@@ -480,10 +480,10 @@ const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name: "let_composite",
+    name: "def_composite",
     code: [
       "def set(x); ",
-      "let_composite \\set_prop{a,p}: set(a);",
+      "def_composite \\set_prop{a,p}: set(a);",
       "is_property(set);",
     ],
     debug: false,

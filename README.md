@@ -191,7 +191,7 @@ def nat_eq(x,y);
 
 let 0: 0 is natural;
 
-let_composite \++{n}: n is natural;
+def_composite \++{n}: n is natural;
 
 know if n: n is natural {
     \++{n} is natural;
