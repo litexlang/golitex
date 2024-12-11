@@ -288,12 +288,9 @@ const KeywordFunctionMap: {
   prove: proveParse,
   prove_by_contradiction: proveParse,
   have: haveParse,
-  return: returnParse,
   clear: specialParse,
   run: specialParse,
   macro: macroParse,
-  "[": postfixProveParse,
-  LetHashKeyword: letParse,
   def_composite: LetCompositeParse,
 };
 
@@ -750,20 +747,6 @@ function localEnvParse(env: L_Env, tokens: string[]): L_Nodes.LocalEnvNode {
     return out;
   } catch (error) {
     handleParseError(env, tokens, "{}", index, start);
-    throw error;
-  }
-}
-
-function returnParse(env: L_Env, tokens: string[]): L_Nodes.ReturnNode {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  try {
-    skip(tokens, ReturnKeyword);
-    const facts = factsArrParse(env, tokens, L_Ends, true);
-    return new L_Nodes.ReturnNode(facts);
-  } catch (error) {
-    handleParseError(env, tokens, "return/so", index, start);
     throw error;
   }
 }
