@@ -519,6 +519,12 @@ let a,b,c: <(a,b), <(b,c);
 <(a,c)[a,b,c];  // Proving transitivity
 `,
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "prove",
+    code: [`def p(x); let x: p(x); q(x);`],
     debug: true,
     print: true,
   },

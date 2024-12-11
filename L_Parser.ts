@@ -531,7 +531,7 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
   }
 }
 
-function factParse(env: L_Env, tokens: string[]) {
+function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -545,21 +545,21 @@ function factParse(env: L_Env, tokens: string[]) {
         isT = false;
         skip(tokens, "not");
       }
+      let out: L_Nodes.ToCheckNode;
 
       if (isBuiltinKeyword(tokens[0])) {
         const parser = L_BuiltinParsers.get(tokens[0]) as Function;
-        const out = parser(env, tokens);
+        out = parser(env, tokens);
         out.isT = isT;
-        return out;
       } else if (LogicalKeywords.includes(tokens[0])) {
-        const fact = logicParse(env, tokens);
-        fact.isT = isT ? fact.isT : !fact.isT;
-        return fact;
+        out = logicParse(env, tokens);
+        out.isT = isT ? out.isT : !out.isT;
       } else {
-        const fact = optParse(env, tokens, true);
-        fact.isT = isT;
-        return fact;
+        out = optParse(env, tokens, true);
+        out.isT = isT;
       }
+
+      return out;
     } catch (error) {
       handleParseError(env, tokens, "fact", factIndex, factStart);
       throw error;

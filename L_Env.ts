@@ -243,6 +243,16 @@ export class L_Env {
     return false;
   }
 
+  toCheckRelatedOptsDefined(fact: ToCheckNode): boolean {
+    const relatedOpts: OptNode[] = fact.getRelatedOpts();
+    for (const relatedOpt of relatedOpts) {
+      if (this.getDef(relatedOpt.optSymbol.name) === undefined) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   getDef(s: string): DefNode | undefined {
     if (this.defs.has(s)) {
       return this.defs.get(s);

@@ -1,5 +1,5 @@
 import { L_Env } from "./L_Env";
-import { L_Composite, L_OptSymbol, L_Symbol } from "./L_Structs";
+import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
 
@@ -17,6 +17,11 @@ export class ToCheckNode extends L_Node {
   copyWithIsTReverse(): ToCheckNode {
     return new ToCheckNode(!this.isT);
   }
+
+  // called by env.toCheckRelatedOptsDefined
+  getRelatedOpts(): OptNode[] {
+    return [];
+  }
 }
 
 export class LogicNode extends ToCheckNode {
@@ -27,6 +32,18 @@ export class LogicNode extends ToCheckNode {
     isT: boolean = true
   ) {
     super(isT);
+  }
+
+  getRelatedOpts(): OptNode[] {
+    const out: OptNode[] = [];
+    for (const r of this.req) {
+      out.push(...r.getRelatedOpts());
+    }
+    for (const onlyIf of this.onlyIfs) {
+      out.push(...onlyIf.getRelatedOpts());
+    }
+
+    return out;
   }
 
   static makeFreeFixPairs(
@@ -122,6 +139,10 @@ export class OptNode extends ToCheckNode {
     super(isT);
   }
 
+  getRelatedOpts(): OptNode[] {
+    return [this];
+  }
+
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptNode {
     const newVars: L_Symbol[] = [];
     for (let v of this.vars) {
@@ -151,12 +172,6 @@ export class OptNode extends ToCheckNode {
             .join("; ") +
           "]";
     return notPart + mainPart + checkVarsStr;
-  }
-}
-
-export class ExistNode extends OptNode {
-  toString(): string {
-    return `exist ${super.toString()}`;
   }
 }
 

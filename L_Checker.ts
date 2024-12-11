@@ -1,6 +1,5 @@
 import {
   BuiltinCheckNode,
-  ExistNode,
   IfNode,
   IsPropertyNode,
   LogicNode,
@@ -15,6 +14,12 @@ import { L_ReportErr } from "./L_Messages";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
+    const ok = env.toCheckRelatedOptsDefined(toCheck);
+    if (!ok) {
+      env.newMessage(`[Error] ${toCheck} not declared.`);
+      throw Error();
+    }
+
     if (toCheck instanceof OptNode) {
       return checkOptFact(env, toCheck);
     } else if (toCheck instanceof IfNode) {
