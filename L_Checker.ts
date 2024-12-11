@@ -14,7 +14,7 @@ import { L_ReportErr } from "./L_Messages";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
-    const ok = env.toCheckRelatedOptsDefined(toCheck);
+    const ok = env.factsInToCheckAllDeclaredOrBuiltin(toCheck);
     if (!ok) {
       env.newMessage(`[Error] ${toCheck} not declared.`);
       throw Error();

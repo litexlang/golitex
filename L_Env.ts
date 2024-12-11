@@ -2,31 +2,28 @@ import {
   BuiltinCheckNode,
   DefNode,
   L_Node,
-  LetCompositeNode,
+  DefCompositeNode,
   LogicNode,
   MacroNode,
   OptNode,
   ToCheckNode,
 } from "./L_Nodes";
 import { L_KnownFact, L_OptSymbol, L_Out } from "./L_Structs";
-import { KnownFact, StoredFact } from "./L_Structs";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;
   private messages: string[] = [];
-  private declaredVars = new Set<string>();
-  private declaredHashVars = new Map<string, ToCheckNode[]>();
-  private macros: MacroNode[] = [];
+  private declaredSingletons = new Set<string>();
+  private macros: MacroNode[] = []; // TODO to be removed
   private defs = new Map<string, DefNode>();
-
   private facts = new Map<string, L_KnownFact[]>();
-  private declaredComposites = new Map<string, LetCompositeNode>();
+  private declaredComposites = new Map<string, DefCompositeNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
   }
 
-  newCompositeVar(key: string, fact: LetCompositeNode): boolean {
+  newCompositeVar(key: string, fact: DefCompositeNode): boolean {
     if (this.declaredComposites.get(key)) {
       this.newMessage(`Failed: ${key} already declared.`);
       return false;
@@ -36,7 +33,7 @@ export class L_Env {
     }
   }
 
-  getCompositeVar(key: string): undefined | LetCompositeNode {
+  getCompositeVar(key: string): undefined | DefCompositeNode {
     const out = this.declaredComposites.get(key);
     if (out !== undefined) {
       return out;
@@ -85,52 +82,9 @@ export class L_Env {
   clear() {
     this.parent = undefined;
     this.messages = [];
-    this.declaredVars = new Set<string>();
+    this.declaredSingletons = new Set<string>();
     this.macros = [];
     this.defs = new Map<string, DefNode>();
-    // this.exists = new Map<string, KnownFact>();
-  }
-
-  // newExist(optName: string, exist: KnownFact): boolean {
-  //   this.exists.set(optName, exist);
-  //   return true;
-  // }
-
-  // isExisted(optName: string): boolean {
-  //   if (this.exists.get(optName)?.isT === true) {
-  //     return true;
-  //   } else if (this.parent !== undefined) {
-  //     return this.parent.isExisted(optName);
-  //   } else {
-  //     return false;
-  //   }
-  // }
-
-  newHashVar(fix: string, facts: ToCheckNode[]): boolean {
-    // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
-    if (this.hashVarDeclared(fix)) {
-      this.newMessage(`${fix} already declared.`);
-      return false;
-    }
-    this.declaredHashVars.set(fix, facts);
-    return true;
-  }
-
-  hashVarDeclared(key: string): boolean {
-    if (this.declaredHashVars.has(key)) {
-      return true;
-    } else {
-      if (!this.parent) return false;
-      else return this.parent.hashVarDeclared(key);
-    }
-  }
-
-  getHashVarFacts(key: string): ToCheckNode[] | undefined {
-    const toChecks = this.declaredHashVars.get(key);
-    if (toChecks !== undefined) return toChecks;
-    else if (this.parent !== undefined) {
-      return this.parent.getHashVarFacts(key);
-    } else return undefined;
   }
 
   getMacros(previous: MacroNode[]): MacroNode[] {
@@ -146,6 +100,7 @@ export class L_Env {
     this.macros.push(macroNode);
   }
 
+  // used by checker and executor
   factsInToCheckAllDeclaredOrBuiltin(node: ToCheckNode): boolean {
     if (node instanceof OptNode) {
       return (
@@ -162,16 +117,6 @@ export class L_Env {
     }
 
     return false;
-  }
-
-  toCheckRelatedOptsDefined(fact: ToCheckNode): boolean {
-    const relatedOpts: OptNode[] = fact.getRelatedOpts();
-    for (const relatedOpt of relatedOpts) {
-      if (this.getDef(relatedOpt.optSymbol.name) === undefined) {
-        return false;
-      }
-    }
-    return true;
   }
 
   getDef(s: string): DefNode | undefined {
@@ -198,37 +143,22 @@ export class L_Env {
     return true;
   }
 
-  // Return the lowest level of environment in which an operator with given name is declared.
-  public whereIsOptDeclared(s: string): number | undefined {
-    if (this.defs.get(s)) return 0;
-
-    let curEnv: L_Env | undefined = this.parent;
-    let n = 1;
-
-    while (curEnv && curEnv.defs.get(s) === undefined) {
-      n++;
-      curEnv = curEnv.parent;
-    }
-
-    return curEnv?.defs.get(s) ? n : undefined;
-  }
-
   newSingletonVar(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.varDeclared(fix)) {
       this.newMessage(`${fix} already declared.`);
       return false;
     }
-    this.declaredVars.add(fix);
+    this.declaredSingletons.add(fix);
     return true;
   }
 
   varDeclaredAtCurrentEnv(key: string) {
-    return this.declaredVars.has(key);
+    return this.declaredSingletons.has(key);
   }
 
   varDeclared(key: string): boolean {
-    if (this.declaredVars.has(key)) {
+    if (this.declaredSingletons.has(key)) {
       return true;
     } else {
       if (!this.parent) return false;
@@ -295,7 +225,7 @@ export class L_Env {
 
   toJSON() {
     return {
-      vars: Array.from(this.declaredVars),
+      vars: Array.from(this.declaredSingletons),
       defs: Object.fromEntries(this.defs),
       facts: Object.fromEntries(this.facts),
     };

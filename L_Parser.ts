@@ -869,7 +869,7 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
 export function LetCompositeParse(
   env: L_Env,
   tokens: string[]
-): L_Nodes.LetCompositeNode {
+): L_Nodes.DefCompositeNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -878,7 +878,7 @@ export function LetCompositeParse(
     const composite = compositeParse(env, tokens);
     if (isCurToken(tokens, L_Ends)) {
       skip(tokens, L_Ends);
-      return new L_Nodes.LetCompositeNode(composite, []);
+      return new L_Nodes.DefCompositeNode(composite, []);
     }
 
     skip(tokens, ":");
@@ -889,7 +889,7 @@ export function LetCompositeParse(
     }
     skip(tokens, L_Ends);
 
-    return new L_Nodes.LetCompositeNode(composite, facts);
+    return new L_Nodes.DefCompositeNode(composite, facts);
   } catch (error) {
     handleParseError(env, tokens, "define", index, start);
     throw error;

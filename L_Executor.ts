@@ -6,7 +6,7 @@ import {
   IfNode,
   KnowNode,
   L_Node,
-  LetCompositeNode,
+  DefCompositeNode,
   LetHashNode,
   LetNode,
   LocalEnvNode,
@@ -70,7 +70,7 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
       case "KnowNode":
         return knowExec(env, node as KnowNode);
       case "LetCompositeNode":
-        return letCompositeExec(env, node as LetCompositeNode);
+        return letCompositeExec(env, node as DefCompositeNode);
       case "LetNode":
         return letExec(env, node as LetNode);
       case "ProveNode":
@@ -421,7 +421,7 @@ export function noVarsOrOptDeclaredHere(
   return true;
 }
 
-function letCompositeExec(env: L_Env, node: LetCompositeNode): L_Out {
+function letCompositeExec(env: L_Env, node: DefCompositeNode): L_Out {
   try {
     if (env.newCompositeVar(node.composite.name, node)) {
       env.newMessage(`OK! ${node}`);

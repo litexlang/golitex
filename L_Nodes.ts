@@ -17,11 +17,6 @@ export class ToCheckNode extends L_Node {
   copyWithIsTReverse(): ToCheckNode {
     return new ToCheckNode(!this.isT);
   }
-
-  // called by env.toCheckRelatedOptsDefined
-  getRelatedOpts(): OptNode[] {
-    return [];
-  }
 }
 
 export class LogicNode extends ToCheckNode {
@@ -32,18 +27,6 @@ export class LogicNode extends ToCheckNode {
     isT: boolean = true
   ) {
     super(isT);
-  }
-
-  getRelatedOpts(): OptNode[] {
-    const out: OptNode[] = [];
-    for (const r of this.req) {
-      out.push(...r.getRelatedOpts());
-    }
-    for (const onlyIf of this.onlyIfs) {
-      out.push(...onlyIf.getRelatedOpts());
-    }
-
-    return out;
   }
 
   static makeFreeFixPairs(
@@ -137,10 +120,6 @@ export class OptNode extends ToCheckNode {
     public checkVars: L_Symbol[][] | undefined = undefined
   ) {
     super(isT);
-  }
-
-  getRelatedOpts(): OptNode[] {
-    return [this];
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptNode {
@@ -320,7 +299,7 @@ export class MacroNode extends L_Node {
   }
 }
 
-export class LetCompositeNode extends L_Node {
+export class DefCompositeNode extends L_Node {
   constructor(public composite: L_Composite, public facts: ToCheckNode[]) {
     super();
   }
