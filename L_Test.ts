@@ -524,9 +524,7 @@ let a,b,c: <(a,b), <(b,c);
   },
   {
     name: "prove",
-    code: [
-      `def p(x); def_composite \\frac{x,y};  \\frac{1,2} is p; let x; know x is p;`,
-    ],
+    code: [`def p(x); let x; know if x: {p(x)}; p(x);`],
     debug: false,
     print: true,
   },

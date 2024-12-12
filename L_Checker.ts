@@ -102,57 +102,21 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     // TODO: I guess in the future I should remove givenOpt.checkVars.length === 0
     if (givenOpt.checkVars === undefined || givenOpt.checkVars.length === 0) {
       // 1. known is one-layer, and we replace all vars in that layer with given opt
-      let successful = true;
-      const freeFixPairs: [L_Symbol, L_Symbol][] = [];
-      for (let i = 0; i < known.vars.length; i++) {
-        if (
-          !L_Symbol.twoSymbolsHaveTheSameForm(
-            env,
-            known.vars[i],
-            givenOpt.vars[i]
-          )
-        ) {
-          successful = false;
-          break;
-        } else {
-          freeFixPairs.push([known.vars[i], givenOpt.vars[i]]);
-        }
-      }
-      if (successful) {
-        // TODO : A BEtter approach: check root opt name equal to given toCheck at first instead of at the end
-        // must be single layer
-        for (const onlyIf of known.onlyIfs) {
-          if (onlyIf instanceof OptNode) {
-            const fixedKnown = known.fix(env, freeFixPairs);
-            if (fixedKnown.req.every((e) => checkFact(env, e) === L_Out.True)) {
-              // check the givenOpt indeed exists as one of the onlyIfs of fixedKnown
-              if (
-                fixedKnown.onlyIfs.some(
-                  (e) =>
-                    (e as OptNode).optSymbol.name === givenOpt.optSymbol.name &&
-                    (e as OptNode).vars.every((v, i) =>
-                      L_Symbol.literallyCompareTwoSymbols(
-                        env,
-                        givenOpt.vars[i],
-                        v
-                      )
-                    )
-                )
-              ) {
-                env.newMessage(`[check by] ${known}`);
-                return true;
-              }
-            }
-          }
-        }
-      }
+      const automaticallyAddedCheckVars = [givenOpt.vars];
+      const automaticallyGeneratedOpt = new OptNode(
+        givenOpt.optSymbol,
+        givenOpt.vars,
+        givenOpt.isT,
+        automaticallyAddedCheckVars
+      );
+      return useIfToCheckOpt(env, automaticallyGeneratedOpt, known);
     } else {
       const roots: [OptNode, IfNode[]][] = known.getRootNodes();
       for (const root of roots) {
-        if (root[0].optSymbol.name !== toCheck.optSymbol.name) continue;
+        if (root[0].optSymbol.name !== givenOpt.optSymbol.name) continue;
 
-        if (toCheck.checkVars === undefined) continue;
-        if (root[1].length !== toCheck.checkVars.length) continue;
+        if (givenOpt.checkVars === undefined) continue;
+        if (root[1].length !== givenOpt.checkVars.length) continue;
 
         let successful = true;
         let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
@@ -160,16 +124,15 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           //TODO check length
           const currentPairs = LogicNode.makeFreeFixPairs(
             env,
-            toCheck.checkVars[layerNum],
+            givenOpt.checkVars[layerNum],
             layer.vars
           );
           freeFixedPairs = [...freeFixedPairs, ...currentPairs];
           if (
-            //!
-            // TODO: BUG: should be literally check fact instead of checkFact
-            layer.req.every((e) =>
-              checkIfReqLiterally(env, e.fix(env, freeFixedPairs))
-            )
+            //! checkIfReqLiterally is very dumb and may fail at many situations
+            layer.req.every((e) => {
+              return checkIfReqLiterally(env, e.fix(env, freeFixedPairs));
+            })
           ) {
           } else {
             successful = false;
@@ -179,7 +142,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         if (successful) {
           const fixed = root[0].fix(env, freeFixedPairs);
           if (
-            L_Symbol.literallyCompareSymbolArray(env, fixed.vars, toCheck.vars)
+            L_Symbol.literallyCompareSymbolArray(env, fixed.vars, givenOpt.vars)
           ) {
             env.newMessage(`[check by] ${root[1][0]}`);
             return true;
@@ -240,6 +203,11 @@ function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
           }
         }
       }
+    } else if (toCheck instanceof BuiltinCheckNode) {
+      //TODO MAYBE I SHOULD USE CHECK literally
+      return checkBuiltinCheckNode(env, toCheck) === L_Out.True;
+    } else {
+      // TODO
     }
 
     return false;
