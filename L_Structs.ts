@@ -3,6 +3,33 @@ import { L_ReportErr } from "./L_Messages";
 import { ToCheckNode } from "./L_Nodes";
 
 export abstract class L_Symbol {
+  // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol
+  static twoSymbolsHaveTheSameForm(
+    env: L_Env,
+    candidate: L_Symbol,
+    expected: L_Symbol
+  ): boolean {
+    if (expected instanceof L_Singleton) {
+      return true;
+    } else if (expected instanceof L_Composite) {
+      if (
+        candidate instanceof L_Composite &&
+        candidate.name === expected.name &&
+        candidate.values.length === expected.values.length
+      ) {
+        for (const [i, v] of candidate.values.entries()) {
+          if (!L_Symbol.twoSymbolsHaveTheSameForm(env, v, expected.values[i])) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+    }
+
+    throw Error();
+  }
+
   static literallyCompareSymbolArray(
     env: L_Env,
     var1: L_Symbol[],

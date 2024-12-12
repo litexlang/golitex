@@ -247,6 +247,7 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
     } else if (toCheck instanceof IsFormNode) {
       let correctForm = false;
       if (
+        toCheck.composite.values.every((e) => e instanceof L_Singleton) &&
         toCheck.given instanceof L_Composite &&
         toCheck.given.name === toCheck.composite.name &&
         toCheck.given.values.length === toCheck.composite.values.length
