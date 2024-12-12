@@ -11,10 +11,12 @@ export const specialChars = [
   "&",
   "|",
   "\\",
+  "=",
 ];
 export const SlashKeyword = "\\";
+export const EqualKeyword = "=";
 export const LetCompositeKeyword = "def_composite";
-export const IsPropertyKeyword = "is_property";
+export const isFormKeyword = "is_form";
 export const KnowTypeKeywords = ["know"];
 export const ThenKeyword = "=>";
 export const IffThenKeyword = "<=>";
@@ -82,7 +84,7 @@ export const L_Keywords: string[] = [
   ...DefByKeywords,
   NotsKeyword,
   RunKeyword,
-  UseKeyword,
+  EqualKeyword,
   // STKeyword,
 ];
 

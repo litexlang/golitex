@@ -887,7 +887,7 @@ export function isPropertyParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Common.IsPropertyKeyword);
+    skip(tokens, L_Common.isFormKeyword);
     skip(tokens, "(");
     const name = skip(tokens);
     skip(tokens, ")");
@@ -904,9 +904,32 @@ export function orParse(
 ): L_Nodes.BuiltinCheckNode {
   throw Error();
 }
-export function isSymbolShapeParse(
+
+export function isFormParse(
   env: L_Env,
   tokens: string[]
 ): L_Nodes.BuiltinCheckNode {
-  throw Error();
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Common.isFormKeyword);
+    skip(tokens, "(");
+    const singleton = singletonParse(env, tokens);
+    skip(tokens, ",");
+    const composite = compositeParse(env, tokens);
+    skip(tokens, ",");
+    skip(tokens, "{");
+    const facts: ToCheckNode[] = [];
+    while (!isCurToken(tokens, "}")) {
+      facts.push(factParse(env, tokens));
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+    skip(tokens, "}");
+    skip(tokens, ")");
+    return new L_Nodes.IsFormNode(singleton, composite, facts, true);
+  } catch (error) {
+    handleParseError(env, tokens, "is_property", index, start);
+    throw error;
+  }
 }

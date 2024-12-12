@@ -366,11 +366,11 @@ export class OrNode extends BuiltinCheckNode {
   }
 }
 
-export class isSymbolShapeNode extends BuiltinCheckNode {
+export class IsFormNode extends BuiltinCheckNode {
   constructor(
-    public templateSymbol: L_Symbol,
-    public givenSymbol: L_Symbol,
-    public factsEMustSatisfy: ToCheckNode[],
+    public singleton: L_Singleton,
+    public composite: L_Composite,
+    public facts: ToCheckNode[],
     isT: boolean
   ) {
     super(isT);

@@ -391,15 +391,6 @@ function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
   }
 }
 
-//
-export function noVarsOrOptDeclaredHere(
-  sendErrMessageToEnv: L_Env,
-  here: L_Env,
-  targetFact: ToCheckNode
-): boolean {
-  return true;
-}
-
 function defCompositeExec(env: L_Env, node: DefCompositeNode): L_Out {
   try {
     if (env.newCompositeVar(node.composite.name, node)) {

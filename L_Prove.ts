@@ -1,11 +1,20 @@
 import { L_Out } from "./L_Structs";
 import { L_Env } from "./L_Env";
-import { nodeExec, noVarsOrOptDeclaredHere } from "./L_Executor";
-import { L_Node, OptNode, PostfixProve } from "./L_Nodes";
+import { nodeExec } from "./L_Executor";
+import { L_Node, OptNode, PostfixProve, ToCheckNode } from "./L_Nodes";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import { reportExecL_Out, reportNewExist } from "./L_Messages";
 // import { existBuiltinCheck } from "./L_Builtins";
+
+//
+export function noVarsOrOptDeclaredHere(
+  sendErrMessageToEnv: L_Env,
+  here: L_Env,
+  targetFact: ToCheckNode
+): boolean {
+  return true;
+}
 
 export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
   try {
