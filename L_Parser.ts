@@ -114,6 +114,7 @@ function compositeInIfReqParse(
 
   try {
     const composite = compositeParse(env, tokens);
+    // TODO IT SEEMS VARS AFTER COMPOSITE IS UNNECESSARY
     const vars = arrParse<L_Singleton>(
       env,
       tokens,
@@ -252,7 +253,8 @@ function handleParseError(
   );
 }
 
-export function parseUntilGivenEnd(
+// @end: when parsing local env, } is the end; when parsing source code, node is the end
+export function parseNodes(
   env: L_Env,
   tokens: string[],
   end: string | null
@@ -260,13 +262,15 @@ export function parseUntilGivenEnd(
   try {
     const out: L_Node[] = [];
 
-    if (end !== null) {
-      while (!isCurToken(tokens, end)) {
-        getNodesFromSingleNode(env, tokens, out);
+    if (end === null) {
+      while (tokens.length !== 0) {
+        const node = parseNodesFromSingleExpression(env, tokens);
+        if (node !== undefined) out.push(...node);
       }
     } else {
-      while (tokens.length !== 0) {
-        getNodesFromSingleNode(env, tokens, out);
+      while (tokens[0] !== end) {
+        const node = parseNodesFromSingleExpression(env, tokens);
+        if (node !== undefined) out.push(...node);
       }
     }
 
@@ -294,32 +298,31 @@ const KeywordFunctionMap: {
   def_composite: LetCompositeParse,
 };
 
-export function getNodesFromSingleNode(
+// The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
+export function parseNodesFromSingleExpression(
   env: L_Env,
-  tokens: string[],
-  holder: L_Node[]
-): void {
+  tokens: string[]
+): L_Node[] | undefined {
   const start = tokens[0];
   const index = tokens.length;
   try {
-    if (tokens.length === 0) return;
+    if (tokens.length === 0) return undefined;
 
     if (L_Ends.includes(tokens[0])) {
       tokens.shift();
       while (tokens.length > 0 && L_Ends.includes(tokens[0])) {
         tokens.shift();
       }
-      return; // return is necessary because ; \n is empty expr.
+      if (tokens.length === 0) return undefined;
     }
 
     const func = KeywordFunctionMap[tokens[0]];
     if (func) {
       const node = func(env, tokens);
-      holder.push(node);
-      return node;
+      return [node];
     } else {
-      const postProve = factParse(env, tokens);
-      holder.push(postProve);
+      const postProve = factsArrParse(env, tokens, L_Ends, true);
+      return postProve;
     }
   } catch (error) {
     handleParseError(env, tokens, "node", index, start);
@@ -506,7 +509,11 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
       }
       if (tokens[0] === "}") break;
 
-      getNodesFromSingleNode(env, tokens, block);
+      const node = parseNodesFromSingleExpression(env, tokens);
+      if (node !== undefined) block.push(node);
+      else {
+        throw Error();
+      }
     }
 
     skip(tokens, "}");
@@ -737,7 +744,7 @@ function localEnvParse(env: L_Env, tokens: string[]): L_Nodes.LocalEnvNode {
 
   try {
     skip(tokens, "{");
-    const nodes = parseUntilGivenEnd(env, tokens, "}");
+    const nodes = parseNodes(env, tokens, "}");
     skip(tokens, "}");
     const out = new L_Nodes.LocalEnvNode(nodes);
     return out;

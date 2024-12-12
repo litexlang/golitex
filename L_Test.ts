@@ -535,6 +535,7 @@ let a,b,c: <(a,b), <(b,c);
       // "\\frac{1,2} is p;",
       "let 1,2: 1 is p;",
       "is_form(\\frac{\\frac{1,2}, 1}, \\frac{a,b}, {a is p, b is p});",
+      "{let a,b,c: p(a); p(a);}",
     ],
     debug: true,
     print: true,

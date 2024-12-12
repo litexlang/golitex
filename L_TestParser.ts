@@ -1,7 +1,7 @@
 import { ExampleItem } from "./L_Structs";
 import { L_Env } from "./L_Env";
 import { L_Scan } from "./L_Lexer";
-import { parseUntilGivenEnd } from "./L_Parser";
+import { parseNodes } from "./L_Parser";
 
 export const exampleList: ExampleItem[] = [
   {
@@ -80,7 +80,7 @@ function runExamples() {
 function runParserTest(env: L_Env, codes: string[], print: boolean) {
   for (const code of codes) {
     const tokens: string[] = L_Scan(code);
-    const nodes = parseUntilGivenEnd(env, tokens, null);
+    const nodes = parseNodes(env, tokens, null);
     for (const node of nodes) {
       if (print) console.log(node);
     }
