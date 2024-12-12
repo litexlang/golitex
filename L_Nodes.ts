@@ -216,11 +216,7 @@ export class KnowNode extends L_Node {
 }
 
 export class LetNode extends L_Node {
-  constructor(
-    public vars: string[],
-    public facts: ToCheckNode[],
-    public names: string[]
-  ) {
+  constructor(public vars: string[], public facts: ToCheckNode[]) {
     super();
   }
 

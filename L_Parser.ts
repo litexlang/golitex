@@ -175,69 +175,11 @@ function skip(tokens: string[], s: string | string[] = ""): string {
   }
 }
 
-//! Not only gets symbol, in the future it will parse $$
-function shiftSymbol(tokens: string[]): string {
-  if (tokens[0].startsWith("\\")) {
-    const name = tokens[0];
-    const outs = [tokens[0]];
-    tokens.shift();
-    let leftBraceNum = 1;
-    skip(tokens, "{");
-    outs.push("{");
-    let rightBraceNum = 0;
-
-    while (leftBraceNum !== rightBraceNum) {
-      if (tokens[0] === "{") leftBraceNum++;
-      else if (tokens[0] === "}") rightBraceNum++;
-      outs.push(tokens[0]);
-      tokens.shift();
-    }
-
-    if (isCurToken(tokens, "[")) {
-      outs.push(tokens[0]);
-      let leftBracketNum = 1;
-      skip(tokens, "[");
-      let rightBracketNum = 0;
-      while (leftBracketNum !== rightBracketNum) {
-        if (tokens[0] === "[") leftBracketNum++;
-        else if (tokens[0] === "]") rightBracketNum++;
-        outs.push(tokens[0]);
-        tokens.shift();
-      }
-    }
-
-    const out = outs.join(" ");
-
-    return outs.join(" ");
-  } else {
-    const token = tokens.shift();
-    if (typeof token !== "string") {
-      throw new Error("No more tokens");
-    }
-    return token;
-  }
-}
-
 function isCurToken(tokens: string[], s: string | string[]) {
   if (!Array.isArray(s)) {
     return s === tokens[0];
   } else {
     return s.includes(tokens[0]);
-  }
-}
-
-function skipString(tokens: string[]): string {
-  try {
-    skip(tokens, '"');
-    let out = "";
-    while (!isCurToken(tokens, '"')) {
-      out += tokens[0];
-      shiftSymbol(tokens);
-    }
-    skip(tokens, '"');
-    return out;
-  } catch {
-    throw Error();
   }
 }
 
@@ -416,19 +358,9 @@ function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode {
   try {
     const whichLet = skip(tokens, LetKeywords) as string;
 
-    const names: string[] = [];
-    if (isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      while (!isCurToken(tokens, "]")) {
-        names.push(shiftSymbol(tokens));
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
-      }
-      skip(tokens, "]");
-    }
-
     const vars: string[] = [];
     while (![...L_Ends, , ":"].includes(tokens[0])) {
-      vars.push(shiftSymbol(tokens));
+      vars.push(tokens.shift() as string);
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -440,7 +372,7 @@ function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode {
     if (L_Ends.includes(tokens[0])) {
       skip(tokens, L_Ends);
       if (whichLet === LetKeyword) {
-        return new L_Nodes.LetNode(vars, [], names);
+        return new L_Nodes.LetNode(vars, []);
       } else {
         throw Error();
       }
@@ -448,40 +380,13 @@ function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode {
       skip(tokens, ":");
       const facts = factsArrParse(env, tokens, L_Ends, true);
       if (whichLet === LetKeyword) {
-        return new L_Nodes.LetNode(vars, facts, names);
+        return new L_Nodes.LetNode(vars, facts);
       } else {
         throw Error();
       }
     }
   } catch (error) {
     handleParseError(env, tokens, "let", index, start);
-    throw error;
-  }
-}
-
-function varLstParse(
-  env: L_Env,
-  tokens: string[],
-  end: string[],
-  skipEnd: boolean = true,
-  separation: string = ","
-): string[] {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  try {
-    const out: string[] = [];
-    while (!end.includes(tokens[0])) {
-      const curTok = shiftSymbol(tokens);
-      out.push(curTok);
-      if (isCurToken(tokens, separation)) skip(tokens, separation);
-    }
-
-    if (skipEnd) skip(tokens, end);
-
-    return out;
-  } catch (error) {
-    handleParseError(env, tokens, "Parsing variables", index, start);
     throw error;
   }
 }
@@ -762,7 +667,7 @@ function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
     skip(tokens, HaveKeywords);
     const vars: string[] = [];
     while (!isCurToken(tokens, ":")) {
-      vars.push(shiftSymbol(tokens));
+      vars.push(tokens.shift() as string);
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
     skip(tokens, ":");
@@ -781,7 +686,7 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   const index = tokens.length;
 
   try {
-    const keyword = shiftSymbol(tokens);
+    const keyword = tokens.shift() as string;
     switch (keyword) {
       case ClearKeyword:
         skip(tokens, L_Ends);
@@ -789,7 +694,7 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
       case RunKeyword: {
         const words: string[] = [];
         while (!L_Ends.includes(tokens[0])) {
-          words.push(shiftSymbol(tokens));
+          words.push(tokens.shift() as string);
         }
         skip(tokens, L_Ends);
         return new L_Nodes.SpecialNode(RunKeyword, words.join());
@@ -810,13 +715,28 @@ function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
   try {
     skip(tokens, MacroKeywords);
     const regexString = skipString(tokens);
-    const varName = shiftSymbol(tokens);
+    const varName = tokens.shift() as string;
     const facts = factsArrParse(env, tokens, L_Ends, true);
 
     return new L_Nodes.MacroNode(regexString, varName, facts);
   } catch (error) {
     handleParseError(env, tokens, "macro", index, start);
     throw error;
+  }
+
+  function skipString(tokens: string[]): string {
+    try {
+      skip(tokens, '"');
+      let out = "";
+      while (!isCurToken(tokens, '"')) {
+        out += tokens[0];
+        tokens.shift();
+      }
+      skip(tokens, '"');
+      return out;
+    } catch {
+      throw Error();
+    }
   }
 }
 
