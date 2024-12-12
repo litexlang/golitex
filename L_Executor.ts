@@ -146,6 +146,11 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
       }
     }
 
+    if (!node.facts.every((e) => e.varsDeclared(env, []))) {
+      env.newMessage(`[Error] Not all of related variables are declared.`);
+      throw Error();
+    }
+
     // store new knowns
     for (const onlyIf of node.facts) {
       const ok = L_Memory.newFact(env, onlyIf);

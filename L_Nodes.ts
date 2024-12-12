@@ -47,7 +47,17 @@ export class LogicNode extends ToCheckNode {
   }
 
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
-    // TODO make sure composite in varsFromAbove is declared
+    // TODO make sure composite in vars are declared
+    const singletonsInVars = [];
+    for (const v of this.vars) {
+      if (v instanceof L_Composite) {
+        if (!v.declared(env, [...varsFromAbove, ...singletonsInVars])) {
+          return false;
+        }
+      } else if (v instanceof L_Singleton) {
+        singletonsInVars.push(v);
+      }
+    }
 
     return (
       this.req.every((e) =>

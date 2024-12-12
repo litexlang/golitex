@@ -125,8 +125,26 @@ export class L_Composite extends L_Symbol {
     super();
   }
 
+  compositesInside(): L_Composite[] {
+    const out: L_Composite[] = [this];
+    for (const v of this.values) {
+      if (v instanceof L_Composite) {
+        out.push(...v.compositesInside());
+      }
+    }
+    return out;
+  }
+
+  //! subSymbols in L_Composite are supposed to be freeVars
   declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
-    return false;
+    if (env.getCompositeVar(this.name) === undefined) {
+      env.newMessage(`[Error] composite \\${this.name} not declared.`);
+      return false;
+    }
+
+    return this.compositesInside().every(
+      (e) => env.getCompositeVar(e.name) !== undefined
+    );
   }
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
