@@ -205,7 +205,7 @@ function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
       }
     } else if (toCheck instanceof BuiltinCheckNode) {
       //TODO MAYBE I SHOULD USE CHECK literally
-      return checkBuiltinCheckNode(env, toCheck) === L_Out.True;
+      return checkBuiltinCheckNode(env, toCheck, true) === L_Out.True;
     } else {
       // TODO
     }
@@ -216,7 +216,11 @@ function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
   }
 }
 
-function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
+function checkBuiltinCheckNode(
+  env: L_Env,
+  toCheck: BuiltinCheckNode,
+  checkLiterally: boolean = false
+): L_Out {
   try {
     if (toCheck instanceof IsPropertyNode) {
       return env.getDef(toCheck.propertyName) !== undefined
@@ -249,7 +253,9 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
 
       for (const fact of toCheck.facts) {
         const fixed = fact.fix(env, freeFix);
-        const out = checkFact(env, fixed);
+        let out: L_Out = L_Out.Error;
+        if (!checkIfReqLiterally) out = checkFact(env, fixed);
+        else out = checkIfReqLiterally(env, fixed) ? L_Out.True : L_Out.Unknown;
         if (out !== L_Out.True) {
           env.newMessage(`[Error] failed to check ${fixed}`);
           return L_Out.Unknown;
