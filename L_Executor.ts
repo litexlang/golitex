@@ -227,32 +227,6 @@ function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): L_Out {
   }
 }
 
-// function returnExec(env: L_Env, node: ReturnNode): L_Out {
-//   try {
-//     for (const f of node.facts) {
-//       noVarsOrOptDeclaredHere(env, env, f);
-//     }
-//     for (const toProve of node.facts) {
-//       const out = L_Checker.checkFact(env, toProve);
-//       if (out !== L_Out.True) return out;
-//     }
-//     const storeTo = env.getParent();
-//     if (storeTo) {
-//       for (const toProve of node.facts) {
-//         const ok = L_Memory.newFact(storeTo, toProve);
-//         if (!ok) {
-//           env.newMessage(`Failed to store ${toProve}`);
-//           return L_Out.Error;
-//         }
-//       }
-//     }
-//     return L_Out.True;
-//   } catch {
-//     env.newMessage("return");
-//     return L_Out.Error;
-//   }
-// }
-
 function specialExec(env: L_Env, node: SpecialNode): L_Out {
   try {
     switch (node.keyword) {

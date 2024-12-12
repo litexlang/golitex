@@ -524,7 +524,7 @@ let a,b,c: <(a,b), <(b,c);
   },
   {
     name: "prove",
-    code: [`def p(x); let x: p(x); q(x);`],
+    code: [`def p(x); know \\frac{1,2} is p;`],
     debug: true,
     print: true,
   },

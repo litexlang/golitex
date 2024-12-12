@@ -14,6 +14,10 @@ export abstract class L_Symbol {
     );
   }
 
+  declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    return false;
+  }
+
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     throw Error();
   }
@@ -93,6 +97,15 @@ export class L_Singleton extends L_Symbol {
     super();
   }
 
+  declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    return (
+      env.varDeclared(this.value) ||
+      varsFromAbove.some((e) =>
+        L_Symbol.literallyCompareTwoSymbols(env, e, this)
+      )
+    );
+  }
+
   toString() {
     return this.value;
   }
@@ -110,6 +123,10 @@ export class L_Singleton extends L_Symbol {
 export class L_Composite extends L_Symbol {
   constructor(public name: string, public values: L_Symbol[]) {
     super();
+  }
+
+  declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    return false;
   }
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
@@ -154,6 +171,10 @@ export class L_Composite extends L_Symbol {
 export class CompositeSymbolInIfReq extends L_Composite {
   constructor(name: string, values: L_Symbol[], public newVars: L_Singleton[]) {
     super(name, values);
+  }
+
+  declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    return false;
   }
 }
 

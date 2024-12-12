@@ -8,6 +8,10 @@ export class ToCheckNode extends L_Node {
     super();
   }
 
+  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    return false;
+  }
+
   // called by checker
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
     throw Error();
@@ -40,6 +44,19 @@ export class LogicNode extends ToCheckNode {
     }
 
     return out;
+  }
+
+  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    // TODO make sure composite in varsFromAbove is declared
+
+    return (
+      this.req.every((e) =>
+        e.varsDeclared(env, [...varsFromAbove, ...this.vars])
+      ) &&
+      this.onlyIfs.every((e) =>
+        e.varsDeclared(env, [...varsFromAbove, ...this.vars])
+      )
+    );
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
@@ -120,6 +137,16 @@ export class OptNode extends ToCheckNode {
     public checkVars: L_Symbol[][] | undefined = undefined
   ) {
     super(isT);
+  }
+
+  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    return (
+      this.vars.every((e) => e.declared(env, varsFromAbove)) &&
+      (this.checkVars === undefined ||
+        this.checkVars.every((arr) =>
+          arr.every((e) => e.declared(env, varsFromAbove))
+        ))
+    );
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptNode {
