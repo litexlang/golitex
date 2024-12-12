@@ -3,24 +3,19 @@ import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
 
-export class ToCheckNode extends L_Node {
+export abstract class ToCheckNode extends L_Node {
   constructor(public isT: boolean) {
     super();
   }
 
-  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
-    return false;
-  }
+  // called by L_Memory
+  abstract varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean;
 
   // called by checker
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
-    throw Error();
-  }
+  abstract fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode;
 
   // called by prove_by_contradiction
-  copyWithIsTReverse(): ToCheckNode {
-    return new ToCheckNode(!this.isT);
-  }
+  abstract copyWithIsTReverse(): ToCheckNode;
 }
 
 export class LogicNode extends ToCheckNode {
@@ -356,18 +351,20 @@ export class IsPropertyNode extends BuiltinCheckNode {
     super(isT);
   }
 
+  copyWithIsTReverse(): ToCheckNode {
+    return new IsPropertyNode(this.propertyName, !this.isT);
+  }
+
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
+    return this;
+  }
+
   toString() {
     return `is_property(${this.propertyName})`;
   }
 
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     return true;
-  }
-}
-
-export class OrNode extends BuiltinCheckNode {
-  constructor(public opts: OptNode[], isT: boolean) {
-    super(isT);
   }
 }
 
@@ -379,6 +376,10 @@ export class IsFormNode extends BuiltinCheckNode {
     isT: boolean
   ) {
     super(isT);
+  }
+
+  copyWithIsTReverse(): ToCheckNode {
+    return new IsFormNode(this.candidate, this.baseline, this.facts, !this.isT);
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {

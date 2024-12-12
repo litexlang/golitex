@@ -5,7 +5,6 @@ import {
   IsPropertyNode,
   LogicNode,
   OptNode,
-  OrNode,
   ToCheckNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
