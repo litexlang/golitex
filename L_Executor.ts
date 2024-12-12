@@ -69,8 +69,8 @@ export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
         return defExec(env, node as DefNode);
       case "KnowNode":
         return knowExec(env, node as KnowNode);
-      case "LetCompositeNode":
-        return letCompositeExec(env, node as DefCompositeNode);
+      case "DefCompositeNode":
+        return defCompositeExec(env, node as DefCompositeNode);
       case "LetNode":
         return letExec(env, node as LetNode);
       case "ProveNode":
@@ -400,7 +400,7 @@ export function noVarsOrOptDeclaredHere(
   return true;
 }
 
-function letCompositeExec(env: L_Env, node: DefCompositeNode): L_Out {
+function defCompositeExec(env: L_Env, node: DefCompositeNode): L_Out {
   try {
     if (env.newCompositeVar(node.composite.name, node)) {
       env.newMessage(`OK! ${node}`);
@@ -409,6 +409,6 @@ function letCompositeExec(env: L_Env, node: DefCompositeNode): L_Out {
       throw Error();
     }
   } catch {
-    return L_ReportErr(env, letCompositeExec, node);
+    return L_ReportErr(env, defCompositeExec, node);
   }
 }
