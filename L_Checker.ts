@@ -105,7 +105,13 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       let successful = true;
       const freeFixPairs: [L_Symbol, L_Symbol][] = [];
       for (let i = 0; i < known.vars.length; i++) {
-        if (!L_Symbol.structureEqual(env, known.vars[i], givenOpt.vars[i])) {
+        if (
+          !L_Symbol.twoSymbolsHaveTheSameForm(
+            env,
+            known.vars[i],
+            givenOpt.vars[i]
+          )
+        ) {
           successful = false;
           break;
         } else {
@@ -115,24 +121,27 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       if (successful) {
         // TODO : A BEtter approach: check root opt name equal to given toCheck at first instead of at the end
         // must be single layer
-        if (known.onlyIfs.every((e) => e instanceof OptNode)) {
-          const fixedKnown = known.fix(env, freeFixPairs);
-          if (fixedKnown.req.every((e) => checkFact(env, e) === L_Out.True)) {
-            if (
-              fixedKnown.onlyIfs.some(
-                (e) =>
-                  (e as OptNode).optSymbol.name === givenOpt.optSymbol.name &&
-                  (e as OptNode).vars.every((v, i) =>
-                    L_Symbol.literallyCompareTwoSymbols(
-                      env,
-                      givenOpt.vars[i],
-                      v
+        for (const onlyIf of known.onlyIfs) {
+          if (onlyIf instanceof OptNode) {
+            const fixedKnown = known.fix(env, freeFixPairs);
+            if (fixedKnown.req.every((e) => checkFact(env, e) === L_Out.True)) {
+              // check the givenOpt indeed exists as one of the onlyIfs of fixedKnown
+              if (
+                fixedKnown.onlyIfs.some(
+                  (e) =>
+                    (e as OptNode).optSymbol.name === givenOpt.optSymbol.name &&
+                    (e as OptNode).vars.every((v, i) =>
+                      L_Symbol.literallyCompareTwoSymbols(
+                        env,
+                        givenOpt.vars[i],
+                        v
+                      )
                     )
-                  )
-              )
-            ) {
-              env.newMessage(`[check by] ${known}`);
-              return true;
+                )
+              ) {
+                env.newMessage(`[check by] ${known}`);
+                return true;
+              }
             }
           }
         }
@@ -199,7 +208,6 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
         const out = literallyCompareOptVars(env, toCheck, curKnown);
         if (out) return L_Out.True;
-      } else if (curKnown instanceof BuiltinCheckNode) {
       }
     }
 

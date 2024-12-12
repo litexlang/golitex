@@ -6,8 +6,8 @@ export abstract class L_Symbol {
   // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol
   static twoSymbolsHaveTheSameForm(
     env: L_Env,
-    candidate: L_Symbol,
-    expected: L_Symbol
+    expected: L_Symbol,
+    candidate: L_Symbol
   ): boolean {
     if (expected instanceof L_Singleton) {
       return true;

@@ -381,6 +381,24 @@ export class IsFormNode extends BuiltinCheckNode {
     super(isT);
   }
 
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
+    let fixed: L_Symbol | undefined = undefined;
+    for (const freeFix of freeFixPairs) {
+      if (
+        L_Symbol.literallyCompareTwoSymbols(env, freeFix[0], this.candidate)
+      ) {
+        fixed = freeFix[1];
+      }
+    }
+
+    if (fixed === undefined) {
+      env.newMessage(`IsFormNode.fix failed`);
+      throw Error();
+    } else {
+      return new IsFormNode(fixed, this.baseline, this.facts, this.isT);
+    }
+  }
+
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     // TODO
     return true;
