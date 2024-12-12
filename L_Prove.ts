@@ -21,7 +21,7 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
     const newEnv = new L_Env(env);
 
     for (const subNode of block) {
-      const out = L_Exec(newEnv, subNode, false);
+      const out = L_Exec(newEnv, subNode);
       env.newMessage(reportExecL_Out(out, toProve));
       if (out === L_Out.Error) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
@@ -64,7 +64,7 @@ export function proveOptByContradict(
     }
 
     for (const subNode of block) {
-      const out = L_Exec(newEnv, subNode, false);
+      const out = L_Exec(newEnv, subNode);
       if (out === L_Out.Error) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(`Errors: Failed to execute ${subNode}`);
@@ -113,7 +113,7 @@ export function postfixProveExec(
   try {
     const newEnv = new L_Env(env);
     for (const subNode of postfixProve.block) {
-      const out = L_Exec(newEnv, subNode, false);
+      const out = L_Exec(newEnv, subNode);
       if (out !== L_Out.True) {
         newEnv.getMessages().forEach((e) => env.newMessage(e));
         env.newMessage(`${postfixProve} failed.`);

@@ -318,12 +318,8 @@ export function getNodesFromSingleNode(
       holder.push(node);
       return node;
     } else {
-      const postProve = postfixProveParse(env, tokens, L_Ends, true);
-      if (postProve.block.length === 0) {
-        postProve.facts.forEach((e) => holder.push(e));
-      } else {
-        holder.push(postProve);
-      }
+      const postProve = factParse(env, tokens);
+      holder.push(postProve);
     }
   } catch (error) {
     handleParseError(env, tokens, "node", index, start);
@@ -331,55 +327,55 @@ export function getNodesFromSingleNode(
   }
 }
 
-function postfixProveParse(
-  env: L_Env,
-  tokens: string[],
-  end: string[] = [...L_Ends],
-  skipEnd: boolean = false
-): L_Nodes.PostfixProve {
-  const start = tokens[0];
-  const index = tokens.length;
+// function postfixProveParse(
+//   env: L_Env,
+//   tokens: string[],
+//   end: string[] = [...L_Ends],
+//   skipEnd: boolean = false
+// ): L_Nodes.PostfixProve {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    const names: string[] = [];
-    if (isCurToken(tokens, "[")) {
-      skip(tokens, "[");
-      while (!isCurToken(tokens, "]")) {
-        names.push(shiftSymbol(tokens));
-        if (isCurToken(tokens, ",")) skip(tokens, ",");
-      }
-      skip(tokens, "]");
-    }
+//   try {
+//     const names: string[] = [];
+//     if (isCurToken(tokens, "[")) {
+//       skip(tokens, "[");
+//       while (!isCurToken(tokens, "]")) {
+//         names.push(shiftSymbol(tokens));
+//         if (isCurToken(tokens, ",")) skip(tokens, ",");
+//       }
+//       skip(tokens, "]");
+//     }
 
-    const facts = factsArrParse(
-      env,
-      tokens,
-      [...end, ...PostProveKeywords],
-      false
-    );
-    const block: L_Node[] = [];
-    if (PostProveKeywords.includes(tokens[0])) {
-      skip(tokens, PostProveKeywords);
-      skip(tokens, "{");
-      while (tokens[0] !== "}") {
-        while (["\n", ";"].includes(tokens[0])) {
-          tokens.shift();
-        }
-        if (tokens[0] === "}") break;
+//     const facts = factsArrParse(
+//       env,
+//       tokens,
+//       [...end, ...PostProveKeywords],
+//       false
+//     );
+//     const block: L_Node[] = [];
+//     if (PostProveKeywords.includes(tokens[0])) {
+//       skip(tokens, PostProveKeywords);
+//       skip(tokens, "{");
+//       while (tokens[0] !== "}") {
+//         while (["\n", ";"].includes(tokens[0])) {
+//           tokens.shift();
+//         }
+//         if (tokens[0] === "}") break;
 
-        getNodesFromSingleNode(env, tokens, block);
-      }
-      skip(tokens, "}");
-    }
+//         getNodesFromSingleNode(env, tokens, block);
+//       }
+//       skip(tokens, "}");
+//     }
 
-    if (skipEnd) skip(tokens, end);
+//     if (skipEnd) skip(tokens, end);
 
-    return new L_Nodes.PostfixProve(facts, block, names);
-  } catch (error) {
-    handleParseError(env, tokens, "fact", index, start);
-    throw error;
-  }
-}
+//     return new L_Nodes.PostfixProve(facts, block, names);
+//   } catch (error) {
+//     handleParseError(env, tokens, "fact", index, start);
+//     throw error;
+//   }
+// }
 
 function knowParse(env: L_Env, tokens: string[]): L_Nodes.KnowNode {
   const start = tokens[0];

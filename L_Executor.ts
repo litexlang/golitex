@@ -42,6 +42,7 @@ import {
 } from "./L_Prove";
 import { on } from "events";
 import { blob } from "stream/consumers";
+import { optDeclaredVarsDeclared } from "./L_ExecutorHelper";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -60,7 +61,7 @@ export const L_OutMap: { [key in L_Out]: string } = {
   [L_Out.Unknown]: "check: unknown",
 };
 
-export function L_Exec(env: L_Env, node: L_Node, showMsg = true): L_Out {
+export function L_Exec(env: L_Env, node: L_Node): L_Out {
   try {
     const nodeType = node.constructor.name;
 
@@ -81,8 +82,6 @@ export function L_Exec(env: L_Env, node: L_Node, showMsg = true): L_Out {
         return postfixProveExec(env, node as PostfixProve);
       case "LocalEnvNode":
         return localEnvExec(env, node as LocalEnvNode);
-      // case "ReturnNode":
-      //   return returnExec(env, node as ReturnNode);
       case "SpecialNode":
         return specialExec(env, node as SpecialNode);
       case "MacroNode":
@@ -114,7 +113,9 @@ function letExec(env: L_Env, node: LetNode): L_Out {
       if (!ok) return L_Out.Error;
     }
 
-    // TODO examine whether all operators are declared
+    if (!optDeclaredVarsDeclared(env, [])) {
+      throw Error();
+    }
 
     // TODO bind macro
 
@@ -137,17 +138,7 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
   try {
     // examine whether all facts are declared.
     // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
-    for (const f of node.facts) {
-      const ok = env.factsInToCheckAllDeclaredOrBuiltin(f);
-      if (!ok) {
-        //TODO I SHOULD IMPLEMENT check whether something is declared when checking
-        // env.newMessage(`Not all facts in ${f} are declared`);
-        // return L_Out.Error;
-      }
-    }
-
-    if (!node.facts.every((e) => e.varsDeclared(env, []))) {
-      env.newMessage(`[Error] Not all of related variables are declared.`);
+    if (!optDeclaredVarsDeclared(env, node.facts)) {
       throw Error();
     }
 
@@ -180,9 +171,8 @@ function defExec(env: L_Env, node: DefNode): L_Out {
       return L_Out.Error;
     }
 
-    if (DEBUG_DICT["def"]) {
-      const decl = env.getDef(node.opt.optSymbol.name);
-      if (!decl) return L_Out.Error;
+    if (!optDeclaredVarsDeclared(env, node.onlyIfs)) {
+      throw Error();
     }
 
     return L_Out.True;

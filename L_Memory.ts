@@ -8,7 +8,6 @@ import {
   ToCheckNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Symbol, StoredFact, StoredReq } from "./L_Structs";
 import { reportStoreErr } from "./L_Messages";
 
 export function declNewFact(
