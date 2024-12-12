@@ -71,6 +71,8 @@ function newBuiltinFact(env: L_Env, fact: ToCheckNode): boolean {
   try {
     if (fact instanceof IsPropertyNode) {
       return true;
+    } else if (fact instanceof BuiltinCheckNode) {
+      return true;
     }
 
     return false;

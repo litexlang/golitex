@@ -532,7 +532,9 @@ let a,b,c: <(a,b), <(b,c);
     name: "is_form",
     code: [
       `def p(x); def_composite \\frac{x,y}; know if x: is_form(x, \\frac{b,c}) {x is p};`,
-      "\\frac{1,2} is p;",
+      // "\\frac{1,2} is p;",
+      "let 1,2: 1 is p;",
+      "is_form(\\frac{\\frac{1,2}, 1}, \\frac{a,b}, {a is p, b is p});",
     ],
     debug: true,
     print: true,

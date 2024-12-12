@@ -145,7 +145,7 @@ export class L_Env {
 
   newSingletonVar(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
-    if (this.varDeclared(fix)) {
+    if (this.singletonDeclared(fix)) {
       this.newMessage(`${fix} already declared.`);
       return false;
     }
@@ -153,16 +153,12 @@ export class L_Env {
     return true;
   }
 
-  varDeclaredAtCurrentEnv(key: string) {
-    return this.declaredSingletons.has(key);
-  }
-
-  varDeclared(key: string): boolean {
+  singletonDeclared(key: string): boolean {
     if (this.declaredSingletons.has(key)) {
       return true;
     } else {
       if (!this.parent) return false;
-      else return this.parent.varDeclared(key);
+      else return this.parent.singletonDeclared(key);
     }
   }
 

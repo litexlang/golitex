@@ -51,6 +51,7 @@ know if x {
     };
 }
 
+def_composite \singleton{a};
 know if x, a: in(x, \singleton{a}) {
     equal(x, a);
 };

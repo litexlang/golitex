@@ -126,7 +126,7 @@ export class L_Singleton extends L_Symbol {
 
   declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     return (
-      env.varDeclared(this.value) ||
+      env.singletonDeclared(this.value) ||
       varsFromAbove.some((e) =>
         L_Symbol.literallyCompareTwoSymbols(env, e, this)
       )

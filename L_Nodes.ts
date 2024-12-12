@@ -349,7 +349,7 @@ export class DefCompositeNode extends L_Node {
   }
 }
 
-export class BuiltinCheckNode extends ToCheckNode {}
+export abstract class BuiltinCheckNode extends ToCheckNode {}
 
 export class IsPropertyNode extends BuiltinCheckNode {
   constructor(public propertyName: string, isT: boolean) {
@@ -402,5 +402,11 @@ export class IsFormNode extends BuiltinCheckNode {
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     // TODO
     return true;
+  }
+
+  toString(): string {
+    const notStr = this.isT ? "" : "[not]";
+    const mainStr = `is_form(${this.candidate}, ${this.baseline}, {${this.facts}})`;
+    return notStr + mainStr;
   }
 }
