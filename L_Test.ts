@@ -525,7 +525,16 @@ let a,b,c: <(a,b), <(b,c);
   {
     name: "prove",
     code: [
-      `def p(x); def_composite \\frac{x,y}; know \\frac{1,2} is p; let x; know x is p;`,
+      `def p(x); def_composite \\frac{x,y};  \\frac{1,2} is p; let x; know x is p;`,
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "is_form",
+    code: [
+      `def p(x); def_composite \\frac{x,y}; know if x: is_form(x, \\frac{b,c}) {x is p};`,
+      "\\frac{1,2} is p;",
     ],
     debug: true,
     print: true,

@@ -43,6 +43,7 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
         newEnv.newSingletonVar(v.value);
       } else if (v instanceof L_Composite) {
         //TODO
+
         throw Error();
       }
     }
@@ -198,6 +199,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
         const out = literallyCompareOptVars(env, toCheck, curKnown);
         if (out) return L_Out.True;
+      } else if (curKnown instanceof BuiltinCheckNode) {
       }
     }
 
@@ -247,10 +249,10 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
     } else if (toCheck instanceof IsFormNode) {
       let correctForm = false;
       if (
-        toCheck.composite.values.every((e) => e instanceof L_Singleton) &&
-        toCheck.given instanceof L_Composite &&
-        toCheck.given.name === toCheck.composite.name &&
-        toCheck.given.values.length === toCheck.composite.values.length
+        toCheck.baseline.values.every((e) => e instanceof L_Singleton) &&
+        toCheck.candidate instanceof L_Composite &&
+        toCheck.candidate.name === toCheck.baseline.name &&
+        toCheck.candidate.values.length === toCheck.baseline.values.length
       ) {
         correctForm = true;
       }
@@ -258,10 +260,14 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
       if (!correctForm) return L_Out.Unknown;
 
       const freeFix: [L_Symbol, L_Symbol][] = [];
-      for (let i = 0; i < (toCheck.given as L_Composite).values.length; i++) {
+      for (
+        let i = 0;
+        i < (toCheck.candidate as L_Composite).values.length;
+        i++
+      ) {
         freeFix.push([
-          toCheck.composite.values[i],
-          (toCheck.given as L_Composite).values[i],
+          toCheck.baseline.values[i],
+          (toCheck.candidate as L_Composite).values[i],
         ]);
       }
 

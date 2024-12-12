@@ -51,6 +51,7 @@ export class LogicNode extends ToCheckNode {
     const singletonsInVars = [];
     for (const v of this.vars) {
       if (v instanceof L_Composite) {
+        //TODO I am not satisfied with this semantics
         if (!v.declared(env, [...varsFromAbove, ...singletonsInVars])) {
           return false;
         }
@@ -358,6 +359,10 @@ export class IsPropertyNode extends BuiltinCheckNode {
   toString() {
     return `is_property(${this.propertyName})`;
   }
+
+  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    return true;
+  }
 }
 
 export class OrNode extends BuiltinCheckNode {
@@ -368,11 +373,16 @@ export class OrNode extends BuiltinCheckNode {
 
 export class IsFormNode extends BuiltinCheckNode {
   constructor(
-    public given: L_Symbol,
-    public composite: L_Composite,
+    public candidate: L_Symbol,
+    public baseline: L_Composite,
     public facts: ToCheckNode[],
     isT: boolean
   ) {
     super(isT);
+  }
+
+  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    // TODO
+    return true;
   }
 }

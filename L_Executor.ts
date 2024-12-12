@@ -60,7 +60,7 @@ export const L_OutMap: { [key in L_Out]: string } = {
   [L_Out.Unknown]: "check: unknown",
 };
 
-export function nodeExec(env: L_Env, node: L_Node, showMsg = true): L_Out {
+export function L_Exec(env: L_Env, node: L_Node, showMsg = true): L_Out {
   try {
     const nodeType = node.constructor.name;
 
@@ -218,7 +218,7 @@ function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): L_Out {
     const newEnv = new L_Env(env);
     env.newMessage(`[local environment]\n`);
     for (let i = 0; i < localEnvNode.nodes.length; i++) {
-      const out = nodeExec(newEnv, localEnvNode.nodes[i]);
+      const out = L_Exec(newEnv, localEnvNode.nodes[i]);
       newEnv.getMessages().forEach((e) => env.newMessage(e));
       newEnv.clearMessages();
       if (L_Out.Error === out) return L_Out.Error;
@@ -271,7 +271,7 @@ function proveContradictExec(
 
     // TODO Must check all opt and vars in toProve is declared in env instead of in env
     for (const node of proveNode.block) {
-      const out = nodeExec(newEnv, node);
+      const out = L_Exec(newEnv, node);
       if (out !== L_Out.True) {
         env.newMessage(`failed to run ${node}`);
         throw Error();
@@ -317,7 +317,7 @@ function proveOptExec(env: L_Env, proveNode: ProveNode): L_Out {
 
     // TODO Must check all opt and vars in toProve is declared in env instead of in env
     for (const node of proveNode.block) {
-      const out = nodeExec(newEnv, node);
+      const out = L_Exec(newEnv, node);
       if (out !== L_Out.True) {
         env.newMessage(`failed to run ${node}`);
         throw Error();
@@ -364,7 +364,7 @@ function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
 
     // TODO Must check all opt and vars in toProve is declared in env instead of in env
     for (const node of proveNode.block) {
-      const out = nodeExec(newEnv, node);
+      const out = L_Exec(newEnv, node);
       if (out !== L_Out.True) {
         env.newMessage(`failed to run ${node}`);
         throw Error();

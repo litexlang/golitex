@@ -22,7 +22,7 @@ export function runString(
     }
     const result: L_Out[] = [];
     for (const node of nodes) {
-      L_Executor.nodeExec(env, node);
+      L_Executor.L_Exec(env, node);
       if (printResult) {
         if (printCode) console.log("***  results  ***\n");
         env.printClearMessage();

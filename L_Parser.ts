@@ -918,16 +918,22 @@ export function isFormParse(
     const given = symbolParse(env, tokens);
     skip(tokens, ",");
     const composite = compositeParse(env, tokens);
-    skip(tokens, ",");
-    skip(tokens, "{");
-    const facts: ToCheckNode[] = [];
-    while (!isCurToken(tokens, "}")) {
-      facts.push(factParse(env, tokens));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
+
+    if (isCurToken(tokens, ",")) {
+      skip(tokens, ",");
+      skip(tokens, "{");
+      const facts: ToCheckNode[] = [];
+      while (!isCurToken(tokens, "}")) {
+        facts.push(factParse(env, tokens));
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      skip(tokens, "}");
+      skip(tokens, ")");
+      return new L_Nodes.IsFormNode(given, composite, facts, true);
+    } else {
+      skip(tokens, ")");
+      return new L_Nodes.IsFormNode(given, composite, [], true);
     }
-    skip(tokens, "}");
-    skip(tokens, ")");
-    return new L_Nodes.IsFormNode(given, composite, facts, true);
   } catch (error) {
     handleParseError(env, tokens, "is_property", index, start);
     throw error;
