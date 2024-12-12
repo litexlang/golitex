@@ -915,7 +915,7 @@ export function isFormParse(
   try {
     skip(tokens, L_Common.isFormKeyword);
     skip(tokens, "(");
-    const singleton = singletonParse(env, tokens);
+    const given = symbolParse(env, tokens);
     skip(tokens, ",");
     const composite = compositeParse(env, tokens);
     skip(tokens, ",");
@@ -927,7 +927,7 @@ export function isFormParse(
     }
     skip(tokens, "}");
     skip(tokens, ")");
-    return new L_Nodes.IsFormNode(singleton, composite, facts, true);
+    return new L_Nodes.IsFormNode(given, composite, facts, true);
   } catch (error) {
     handleParseError(env, tokens, "is_property", index, start);
     throw error;

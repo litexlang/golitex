@@ -1,6 +1,7 @@
 import {
   BuiltinCheckNode,
   IfNode,
+  IsFormNode,
   IsPropertyNode,
   LogicNode,
   OptNode,
@@ -243,6 +244,36 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
       return env.getDef(toCheck.propertyName) !== undefined
         ? L_Out.True
         : L_Out.Unknown;
+    } else if (toCheck instanceof IsFormNode) {
+      let correctForm = false;
+      if (
+        toCheck.given instanceof L_Composite &&
+        toCheck.given.name === toCheck.composite.name &&
+        toCheck.given.values.length === toCheck.composite.values.length
+      ) {
+        correctForm = true;
+      }
+
+      if (!correctForm) return L_Out.Unknown;
+
+      const freeFix: [L_Symbol, L_Symbol][] = [];
+      for (let i = 0; i < (toCheck.given as L_Composite).values.length; i++) {
+        freeFix.push([
+          toCheck.composite.values[i],
+          (toCheck.given as L_Composite).values[i],
+        ]);
+      }
+
+      for (const fact of toCheck.facts) {
+        const fixed = fact.fix(env, freeFix);
+        const out = checkFact(env, fixed);
+        if (out !== L_Out.True) {
+          env.newMessage(`[Error] failed to check ${fixed}`);
+          return L_Out.Unknown;
+        }
+      }
+
+      return L_Out.True;
     } else {
       return L_Out.Error;
     }

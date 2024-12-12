@@ -368,7 +368,7 @@ export class OrNode extends BuiltinCheckNode {
 
 export class IsFormNode extends BuiltinCheckNode {
   constructor(
-    public singleton: L_Singleton,
+    public given: L_Symbol,
     public composite: L_Composite,
     public facts: ToCheckNode[],
     isT: boolean
