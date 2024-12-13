@@ -445,7 +445,6 @@ export class IsFormNode extends BuiltinCheckNode {
 }
 
 export abstract class ToCheckFormulaNode extends ToCheckNode {
-  //TODO 当前只允许left和right是Opt或者 Formula，不能是IfNode，否则我实现起来有点麻烦
   constructor(
     public left: ToCheckNode,
     public right: ToCheckNode,
@@ -471,6 +470,29 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
 
   getLeftRight(): ToCheckNode[] {
     return [this.left, this.right];
+  }
+
+  whereIsOpt(opt: OptNode) {
+    const out = { left: false, right: false };
+    if (this.left instanceof OptNode) {
+      if (opt.optSymbol.name === this.left.optSymbol.name) {
+        out.left = true;
+      }
+    } else if (this.left instanceof ToCheckFormulaNode) {
+      const got = this.left.whereIsOpt(opt);
+      if (got.left || got.right) out.left = true;
+    }
+
+    if (this.right instanceof OptNode) {
+      if (opt.optSymbol.name === this.right.optSymbol.name) {
+        out.right = true;
+      }
+    } else if (this.right instanceof ToCheckFormulaNode) {
+      const got = this.right.whereIsOpt(opt);
+      if (got.left || got.right) out.right = true;
+    }
+
+    return out;
   }
 }
 

@@ -116,13 +116,34 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     known: ToCheckFormulaNode
   ): boolean {
     try {
-      const roots: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
-        ToCheckNode.getRootOptNodes(known, []);
-      for (const root of roots) {
-        if (root instanceof AndToCheckNode) {
-          continue;
-        } else if (root instanceof OrToCheckNode) {
-        } else if (root instanceof IfNode) {
+      const rootsUnderFormula = ToCheckNode.getRootOptNodes(known, []);
+
+      const rootsWithKeyAsToCheck = rootsUnderFormula.filter(
+        (e) => e[0].optSymbol.name === toCheck.optSymbol.name
+      );
+
+      /* 1. all layers are ToCheckFormulaNode */
+      for (const root of rootsWithKeyAsToCheck) {
+        const layers: (ToCheckFormulaNode | IfNode)[] = root[1];
+        if (layers.every((layer) => layer instanceof ToCheckFormulaNode)) {
+          // given opt and related known opt are with the same parameters
+          if (
+            !(
+              toCheck.vars.length === root[0].vars.length &&
+              toCheck.vars.every((e, i) =>
+                L_Symbol.literallyCompareTwoSymbols(env, e, root[0].vars[i])
+              )
+            )
+          )
+            continue;
+
+          for (const layer of layers) {
+            if (layer instanceof AndToCheckNode) {
+              continue;
+            } else if (layer instanceof OrToCheckNode) {
+              const out = layer.whereIsOpt(toCheck);
+            }
+          }
         }
       }
 
