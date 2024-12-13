@@ -447,34 +447,12 @@ export class IsFormNode extends BuiltinCheckNode {
 export abstract class ToCheckFormulaNode extends ToCheckNode {
   //TODO 当前只允许left和right是Opt或者 Formula，不能是IfNode，否则我实现起来有点麻烦
   constructor(
-    public left: ToCheckFormulaNode | OptNode,
-    public right: ToCheckFormulaNode | OptNode,
+    public left: ToCheckNode,
+    public right: ToCheckNode,
     isT: boolean
   ) {
     super(isT);
   }
-
-  // getRootOptNodes(
-  //   fromAbove: (ToCheckFormulaNode | IfNode)[] = []
-  // ): [OptNode, (ToCheckFormulaNode | IfNode)[]][] {
-  //   const out: [OptNode, (ToCheckFormulaNode | IfNode)[]][] = [];
-  //   const toGets = [this.left, this.right];
-  //   for (const toGet of toGets) {
-  //     if (toGet instanceof OptNode) {
-  //       out.push([toGet, [...fromAbove, this]]);
-  //     } else if (toGet instanceof ToCheckFormulaNode) {
-  //       const below = toGet.getRootOptNodes([...fromAbove, this]);
-  //       out.push(...below);
-  //     } else if (toGet instanceof IfNode) {
-  //       let below: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
-  //         toGet.getRootOptNodes();
-  //       below = below.map((e) => [e[0], [...fromAbove, this, ...e[1]]]);
-  //       out.push(...below);
-  //     }
-  //   }
-
-  //   return out;
-  // }
 
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     //TODO
