@@ -125,25 +125,60 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       /* 1. all layers are ToCheckFormulaNode */
       for (const root of rootsWithKeyAsToCheck) {
         const layers: (ToCheckFormulaNode | IfNode)[] = root[1];
-        if (layers.every((layer) => layer instanceof ToCheckFormulaNode)) {
-          // given opt and related known opt are with the same parameters
-          if (
-            !(
-              toCheck.vars.length === root[0].vars.length &&
-              toCheck.vars.every((e, i) =>
-                L_Symbol.literallyCompareTwoSymbols(env, e, root[0].vars[i])
-              )
-            )
+        if (
+          layers.every((layer) => layer instanceof ToCheckFormulaNode) &&
+          toCheck.vars.length === root[0].vars.length &&
+          toCheck.vars.every((e, i) =>
+            L_Symbol.literallyCompareTwoSymbols(env, e, root[0].vars[i])
           )
-            continue;
-
-          for (const layer of layers) {
+        ) {
+          let checkedTrue = true;
+          for (const [i, layer] of layers.entries()) {
             if (layer instanceof AndToCheckNode) {
               continue;
             } else if (layer instanceof OrToCheckNode) {
-              const out = layer.whereIsOpt(toCheck);
+              if (i + 1 < layers.length && layer.left == layers[i + 1]) {
+                const out = checkFact(env, layer.right.copyWithIsTReverse());
+                if (out === L_Out.True) {
+                  continue;
+                } else {
+                  checkedTrue = false;
+                  break;
+                }
+              } else if (
+                i + 1 < layers.length &&
+                layer.right == layers[i + 1]
+              ) {
+                const out = checkFact(env, layer.left.copyWithIsTReverse());
+                if (out === L_Out.True) {
+                  continue;
+                } else {
+                  checkedTrue = false;
+                  break;
+                }
+              } else if (i + 1 === layers.length) {
+                if (root[0] == layer.left) {
+                  const out = checkFact(env, layer.right.copyWithIsTReverse());
+                  if (out === L_Out.True) {
+                    continue;
+                  } else {
+                    checkedTrue = false;
+                    break;
+                  }
+                } else {
+                  const out = checkFact(env, layer.left.copyWithIsTReverse());
+                  if (out === L_Out.True) {
+                    continue;
+                  } else {
+                    checkedTrue = false;
+                    break;
+                  }
+                }
+              }
             }
           }
+
+          if (checkedTrue) return true;
         }
       }
 
