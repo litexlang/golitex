@@ -445,9 +445,10 @@ export class IsFormNode extends BuiltinCheckNode {
 }
 
 export abstract class ToCheckFormulaNode extends ToCheckNode {
+  //TODO 当前只允许left和right是Opt或者 Formula，不能是IfNode，否则我实现起来有点麻烦
   constructor(
-    public left: ToCheckNode,
-    public right: ToCheckNode,
+    public left: ToCheckFormulaNode | OptNode,
+    public right: ToCheckFormulaNode | OptNode,
     isT: boolean
   ) {
     super(isT);

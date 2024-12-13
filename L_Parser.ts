@@ -447,7 +447,7 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
       skip(tokens, "not");
     }
 
-    let left = factParse(env, tokens);
+    let left = factParse(env, tokens) as L_Nodes.ToCheckFormulaNode | OptNode;
     let curOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
     let curPrecedence = precedence.get(curOpt) as number;
 
@@ -455,31 +455,39 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
       return left;
     }
 
-    let right = factParse(env, tokens);
+    let right = factParse(env, tokens) as L_Nodes.ToCheckFormulaNode | OptNode;
     let nextOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
     let nextPrecedence = precedence.get(nextOpt) as number;
     if (curPrecedence > nextPrecedence) {
       // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
       if (curOpt === L_Common.AndKeyword) {
         left = new L_Nodes.AndToCheckNode(left, right, true);
-        right = factParse(env, tokens);
+        const next = factParse(env, tokens) as
+          | L_Nodes.ToCheckFormulaNode
+          | OptNode;
         // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
         if (nextOpt === L_Common.OrKeyword) {
-          return new L_Nodes.OrToCheckNode(left, right, isT);
+          return new L_Nodes.OrToCheckNode(left, next, isT);
         }
       }
     } else if (curPrecedence < nextPrecedence) {
-      const next = factParse(env, tokens);
+      const next = factParse(env, tokens) as
+        | L_Nodes.ToCheckFormulaNode
+        | OptNode;
       right = new L_Nodes.AndToCheckNode(right, next, true);
       return new L_Nodes.OrToCheckNode(left, right, isT);
     } else {
       if (curOpt === L_Common.AndKeyword) {
         left = new L_Nodes.AndToCheckNode(left, right, isT);
-        const next = factParse(env, tokens);
+        const next = factParse(env, tokens) as
+          | L_Nodes.ToCheckFormulaNode
+          | OptNode;
         return new L_Nodes.AndToCheckNode(left, next, isT);
       } else {
         left = new L_Nodes.OrToCheckNode(left, right, isT);
-        const next = factParse(env, tokens);
+        const next = factParse(env, tokens) as
+          | L_Nodes.ToCheckFormulaNode
+          | OptNode;
         return new L_Nodes.OrToCheckNode(left, next, isT);
       }
     }
