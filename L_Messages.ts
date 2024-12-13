@@ -77,3 +77,13 @@ export function L_ReportErr(env: L_Env, func: Function, node?: L_Node): L_Out {
   if (node !== undefined) env.report(`Failed: ${node}`);
   return L_Out.Error;
 }
+
+export function L_ReportBoolErr(
+  env: L_Env,
+  func: Function,
+  node?: L_Node
+): boolean {
+  env.report(`<${func.name}> Failed`);
+  if (node !== undefined) env.report(`Failed: ${node}`);
+  return false;
+}

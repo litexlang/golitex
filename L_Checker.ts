@@ -13,7 +13,7 @@ import {
 import { L_Env } from "./L_Env";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
-import { L_ReportErr, reportCheckErr } from "./L_Messages";
+import { L_ReportBoolErr, L_ReportErr, reportCheckErr } from "./L_Messages";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
@@ -90,6 +90,13 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     }
 
     for (const curKnown of relatedKnownFacts) {
+      if (curKnown instanceof ToCheckFormulaNode) {
+        const out = useToCheckFormulaToCheckOpt(env, toCheck, curKnown);
+        if (out) return L_Out.True;
+      }
+    }
+
+    for (const curKnown of relatedKnownFacts) {
       if (curKnown instanceof IfNode) {
         //TODO
         const out = useIfToCheckOpt(env, toCheck, curKnown);
@@ -100,6 +107,18 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     return L_Out.Unknown;
   } catch {
     return env.errMesReturnL_Out(toCheck);
+  }
+
+  function useToCheckFormulaToCheckOpt(
+    env: L_Env,
+    toCheck: OptNode,
+    curKnown: ToCheckFormulaNode
+  ): boolean {
+    try {
+      return false;
+    } catch {
+      return L_ReportBoolErr(env, useToCheckFormulaToCheckOpt, toCheck);
+    }
   }
 
   // compare vars length in given opts, compare them

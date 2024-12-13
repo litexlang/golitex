@@ -17,6 +17,7 @@ export abstract class ToCheckNode extends L_Node {
   // called by prove_by_contradiction
   abstract copyWithIsTReverse(): ToCheckNode;
 
+  // get rootNodes of IfNode and ToCheckFormulaNode
   static getRootOptNodes(
     currentNode: ToCheckFormulaNode | IfNode,
     fromAbove: (ToCheckFormulaNode | IfNode)[] = []
