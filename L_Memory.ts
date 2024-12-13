@@ -10,11 +10,7 @@ import {
 import { L_Env } from "./L_Env";
 import { reportStoreErr } from "./L_Messages";
 
-export function declNewFact(
-  env: L_Env,
-  node: DefNode,
-  _storeDefName: boolean = true
-): boolean {
+export function declNewFact(env: L_Env, node: DefNode): boolean {
   let ok = true;
   ok = env.newDef(node.opt.optSymbol.name, node);
   for (const onlyIf of node.onlyIfs) {

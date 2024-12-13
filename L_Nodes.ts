@@ -407,3 +407,43 @@ export class IsFormNode extends BuiltinCheckNode {
     return notStr + mainStr;
   }
 }
+
+export class OrToCheckNode extends ToCheckNode {
+  constructor(left: ToCheckNode, right: ToCheckNode, isT: boolean) {
+    super(isT);
+  }
+
+  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    //TODO
+    return true;
+  }
+
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
+    // TODO
+    throw Error();
+  }
+
+  copyWithIsTReverse(): ToCheckNode {
+    throw Error();
+  }
+}
+
+export class AndToCheckNode extends ToCheckNode {
+  constructor(left: ToCheckNode, right: ToCheckNode, isT: boolean) {
+    super(isT);
+  }
+
+  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    //TODO
+    return true;
+  }
+
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
+    // TODO
+    throw Error();
+  }
+
+  copyWithIsTReverse(): ToCheckNode {
+    throw Error();
+  }
+}

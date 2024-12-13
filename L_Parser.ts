@@ -105,31 +105,6 @@ function compositeParse(env: L_Env, tokens: string[]): L_Composite {
   }
 }
 
-function compositeInIfReqParse(
-  env: L_Env,
-  tokens: string[]
-): CompositeSymbolInIfReq {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  try {
-    const composite = compositeParse(env, tokens);
-    // TODO IT SEEMS VARS AFTER COMPOSITE IS UNNECESSARY
-    const vars = arrParse<L_Singleton>(
-      env,
-      tokens,
-      singletonParse,
-      "[",
-      "]",
-      true
-    );
-    return new CompositeSymbolInIfReq(composite.name, composite.values, vars);
-  } catch (error) {
-    handleParseError(env, tokens, "parse singleton", index, start);
-    throw error;
-  }
-}
-
 function symbolParse(env: L_Env, tokens: string[]): L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
@@ -640,6 +615,31 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
   } catch (error) {
     handleParseError(env, tokens, "if-then", index, start);
     throw error;
+  }
+
+  function compositeInIfReqParse(
+    env: L_Env,
+    tokens: string[]
+  ): CompositeSymbolInIfReq {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      const composite = compositeParse(env, tokens);
+      // TODO IT SEEMS VARS AFTER COMPOSITE IS UNNECESSARY
+      const vars = arrParse<L_Singleton>(
+        env,
+        tokens,
+        singletonParse,
+        "[",
+        "]",
+        true
+      );
+      return new CompositeSymbolInIfReq(composite.name, composite.values, vars);
+    } catch (error) {
+      handleParseError(env, tokens, "parse singleton", index, start);
+      throw error;
+    }
   }
 }
 
