@@ -545,7 +545,8 @@ let a,b,c: <(a,b), <(b,c);
     code: [
       "def p(x); def q(y); def t(z);",
       "let x,y;",
-      "know (p(x) or q(y) and t(x));",
+      "let: p(x);",
+      "(p(x) or q(y) and t(x));",
     ],
     debug: true,
     print: true,

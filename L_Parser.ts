@@ -165,9 +165,7 @@ function handleParseError(
   index: number,
   start: string = ""
 ) {
-  env.newMessage(
-    `At ${start}[${index * -1}]: ${tokens.slice(0, 20).join(" ")}`
-  );
+  env.report(`At ${start}[${index * -1}]: ${tokens.slice(0, 20).join(" ")}`);
 }
 
 // @end: when parsing local env, } is the end; when parsing source code, node is the end
@@ -193,7 +191,7 @@ export function parseNodes(
 
     return out;
   } catch (error) {
-    env.newMessage(`Error: Syntax Error.`);
+    env.report(`Error: Syntax Error.`);
     throw error;
   }
 }
@@ -340,7 +338,7 @@ function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode {
     }
 
     if (vars.some((e) => L_Keywords.includes(e) || e.startsWith("\\"))) {
-      env.newMessage(`Error: ${vars} contain LiTeX keywords.`);
+      env.report(`Error: ${vars} contain LiTeX keywords.`);
       throw Error();
     }
 

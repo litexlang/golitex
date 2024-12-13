@@ -26,7 +26,7 @@ export class L_Env {
 
   newCompositeVar(key: string, fact: DefCompositeNode): boolean {
     if (this.declaredComposites.get(key)) {
-      this.newMessage(`Failed: ${key} already declared.`);
+      this.report(`Failed: ${key} already declared.`);
       return false;
     } else {
       this.declaredComposites.set(key, fact);
@@ -138,21 +138,21 @@ export class L_Env {
   newDef(s: string, DefNode: DefNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.getDef(s) !== undefined) {
-      this.newMessage(
+      this.report(
         `${s} already declared in this environment or its parents environments.`
       );
       return false;
     }
 
     this.defs.set(s, DefNode);
-    this.newMessage(`[def] ${DefNode}`);
+    this.report(`[def] ${DefNode}`);
     return true;
   }
 
   newSingletonVar(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.singletonDeclared(fix)) {
-      this.newMessage(`${fix} already declared.`);
+      this.report(`${fix} already declared.`);
       return false;
     }
     this.declaredSingletons.add(fix);
@@ -181,7 +181,7 @@ export class L_Env {
     return this.messages;
   }
 
-  newMessage(s: string) {
+  report(s: string) {
     this.messages.push(s);
   }
 
@@ -195,24 +195,24 @@ export class L_Env {
   }
 
   OKMesReturnL_Out(message: L_Node | string): L_Out {
-    if (message instanceof L_Node) this.newMessage(`OK! ${message}`);
-    else this.newMessage(message);
+    if (message instanceof L_Node) this.report(`OK! ${message}`);
+    else this.report(message);
     return L_Out.True;
   }
 
   OKMesReturnBoolean(message: L_Node | string): boolean {
-    if (message instanceof L_Node) this.newMessage(`OK! ${message}`);
-    else this.newMessage(message);
+    if (message instanceof L_Node) this.report(`OK! ${message}`);
+    else this.report(message);
     return true;
   }
 
   errMesReturnL_Out(s: L_Node | string): L_Out {
-    this.newMessage(`Error: ${s}`);
+    this.report(`Error: ${s}`);
     return L_Out.Error;
   }
 
   errMesReturnBoolean(s: L_Node | string): boolean {
-    this.newMessage(`Error: ${s}`);
+    this.report(`Error: ${s}`);
     return false;
   }
 

@@ -90,7 +90,7 @@ export function L_Exec(env: L_Env, node: L_Node): L_Out {
         if (node instanceof ToCheckNode) {
           try {
             const out = factExec(env, node as ToCheckNode);
-            env.newMessage(reportExecL_Out(out, node));
+            env.report(reportExecL_Out(out, node));
             return out;
           } catch {
             throw Error(`${node as ToCheckNode}`);
@@ -100,7 +100,7 @@ export function L_Exec(env: L_Env, node: L_Node): L_Out {
         return L_Out.Error;
     }
   } catch (error) {
-    if (error instanceof Error) env.newMessage(`Error: ${error.message}`);
+    if (error instanceof Error) env.report(`Error: ${error.message}`);
     return L_Out.Error;
   }
 }
@@ -167,7 +167,7 @@ function defExec(env: L_Env, node: DefNode): L_Out {
     // declare new opt
     const ok = L_Memory.declNewFact(env, node);
     if (!ok) {
-      env.newMessage(`Failed to store ${node}`);
+      env.report(`Failed to store ${node}`);
       return L_Out.Error;
     }
 
@@ -191,14 +191,14 @@ function factExec(env: L_Env, toCheck: ToCheckNode): L_Out {
       // Store Fact
       const ok = L_Memory.newFact(env, toCheck);
       if (!ok) {
-        env.newMessage(`Failed to store ${toCheck}`);
+        env.report(`Failed to store ${toCheck}`);
         return L_Out.Error;
       }
     }
 
     return out;
   } catch {
-    env.newMessage(`failed to check ${toCheck}`);
+    env.report(`failed to check ${toCheck}`);
     return L_Out.Error;
   }
 }
@@ -206,18 +206,18 @@ function factExec(env: L_Env, toCheck: ToCheckNode): L_Out {
 function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): L_Out {
   try {
     const newEnv = new L_Env(env);
-    env.newMessage(`[local environment]\n`);
+    env.report(`[local environment]\n`);
     for (let i = 0; i < localEnvNode.nodes.length; i++) {
       const out = L_Exec(newEnv, localEnvNode.nodes[i]);
-      newEnv.getMessages().forEach((e) => env.newMessage(e));
+      newEnv.getMessages().forEach((e) => env.report(e));
       newEnv.clearMessages();
       if (L_Out.Error === out) return L_Out.Error;
     }
-    env.newMessage(`\n[end of local environment]`);
+    env.report(`\n[end of local environment]`);
 
     return L_Out.True;
   } catch {
-    env.newMessage("{}");
+    env.report("{}");
     return L_Out.Error;
   }
 }
@@ -236,7 +236,7 @@ function specialExec(env: L_Env, node: SpecialNode): L_Out {
 
     return L_Out.Error;
   } catch {
-    env.newMessage(`${node.keyword}`);
+    env.report(`${node.keyword}`);
     return L_Out.Error;
   }
 }
@@ -263,7 +263,7 @@ function proveContradictExec(
     for (const node of proveNode.block) {
       const out = L_Exec(newEnv, node);
       if (out !== L_Out.True) {
-        env.newMessage(`failed to run ${node}`);
+        env.report(`failed to run ${node}`);
         throw Error();
       }
     }
@@ -273,10 +273,10 @@ function proveContradictExec(
 
     if (out === L_Out.True && out2 === L_Out.True) {
       L_Memory.newFact(env, proveNode.toProve);
-      env.newMessage(`[prove_by_contradict] ${proveNode.toProve}`);
+      env.report(`[prove_by_contradict] ${proveNode.toProve}`);
       return L_Out.True;
     } else {
-      env.newMessage(
+      env.report(
         `failed: ${proveNode.contradict} is supposed to be both true and false`
       );
       return L_Out.Unknown;
@@ -309,7 +309,7 @@ function proveOptExec(env: L_Env, proveNode: ProveNode): L_Out {
     for (const node of proveNode.block) {
       const out = L_Exec(newEnv, node);
       if (out !== L_Out.True) {
-        env.newMessage(`failed to run ${node}`);
+        env.report(`failed to run ${node}`);
         throw Error();
       }
     }
@@ -320,7 +320,7 @@ function proveOptExec(env: L_Env, proveNode: ProveNode): L_Out {
       if (ok) return L_Out.True;
       else throw Error();
     } else {
-      env.newMessage(`[prove failed] ${proveNode.toProve}`);
+      env.report(`[prove failed] ${proveNode.toProve}`);
       return L_Out.Unknown;
     }
   } catch {
@@ -339,7 +339,7 @@ function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
       if (v instanceof L_Singleton) {
         ok = env.newSingletonVar(v.value);
         if (!ok) {
-          env.newMessage(`Failed: ${v} already declared`);
+          env.report(`Failed: ${v} already declared`);
           throw Error();
         }
       }
@@ -356,7 +356,7 @@ function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
     for (const node of proveNode.block) {
       const out = L_Exec(newEnv, node);
       if (out !== L_Out.True) {
-        env.newMessage(`failed to run ${node}`);
+        env.report(`failed to run ${node}`);
         throw Error();
       }
     }
@@ -364,14 +364,14 @@ function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
     for (const onlyIf of toProve.onlyIfs) {
       const out = factExec(newEnv, onlyIf);
       if (out !== L_Out.True) {
-        env.newMessage(`Failed to check ${onlyIf}`);
+        env.report(`Failed to check ${onlyIf}`);
         throw Error();
       }
     }
 
     const out = L_Memory.newFact(env, toProve);
     if (out) {
-      env.newMessage(`[prove] ${proveNode}`);
+      env.report(`[prove] ${proveNode}`);
       return L_Out.True;
     } else {
       throw Error();
@@ -384,7 +384,7 @@ function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
 function defCompositeExec(env: L_Env, node: DefCompositeNode): L_Out {
   try {
     if (env.newCompositeVar(node.composite.name, node)) {
-      env.newMessage(`OK! ${node}`);
+      env.report(`OK! ${node}`);
       return L_Out.True;
     } else {
       throw Error();

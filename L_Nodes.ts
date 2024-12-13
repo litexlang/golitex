@@ -389,7 +389,7 @@ export class IsFormNode extends BuiltinCheckNode {
     }
 
     if (fixed === undefined) {
-      env.newMessage(`IsFormNode.fix failed`);
+      env.report(`IsFormNode.fix failed`);
       throw Error();
     } else {
       return new IsFormNode(fixed, this.baseline, this.facts, this.isT);
@@ -448,16 +448,28 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
   copyWithIsTReverse(): ToCheckNode {
     throw Error();
   }
+
+  getLeftRight(): ToCheckNode[] {
+    return [this.left, this.right];
+  }
 }
 
 export class OrToCheckNode extends ToCheckFormulaNode {
   copyWithIsTReverse(): ToCheckNode {
     return new OrToCheckNode(this.left, this.right, !this.isT);
   }
+
+  toString() {
+    return `(${this.left} or ${this.right})`;
+  }
 }
 
 export class AndToCheckNode extends ToCheckFormulaNode {
   copyWithIsTReverse(): ToCheckNode {
     return new AndToCheckNode(this.left, this.right, !this.isT);
+  }
+
+  toString() {
+    return `(${this.left} and ${this.right})`;
   }
 }

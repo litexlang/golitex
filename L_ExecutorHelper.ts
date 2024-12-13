@@ -14,7 +14,7 @@ export function optDeclaredVarsDeclared(
 
   for (const f of facts) {
     if (!f.varsDeclared(env, [])) {
-      env.newMessage(`[Error] Not all of related variables are declared.`);
+      env.report(`[Error] Not all of related variables are declared.`);
       return false;
     }
   }

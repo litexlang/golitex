@@ -21,7 +21,7 @@ export function lstLengthNotEql(
   lst1: unknown[],
   lst2: unknown[]
 ): L_Out {
-  env.newMessage(
+  env.report(
     `Error: ${lst1} and ${lst2} are supposed to have the same length.`
   );
 
@@ -32,17 +32,17 @@ export function reportNotAllFactsInGivenFactAreDeclared(
   env: L_Env,
   fact: ToCheckNode
 ): L_Out {
-  env.newMessage(`Error! Not all of facts in ${fact} are declared`);
+  env.report(`Error! Not all of facts in ${fact} are declared`);
   return L_Out.Error;
 }
 
 export function reportNewVars(env: L_Env, vars: string[]): L_Out {
-  env.newMessage(`[new var] ${vars}`);
+  env.report(`[new var] ${vars}`);
   return L_Out.True;
 }
 
 export function reportNewExist(env: L_Env, exist: OptNode): L_Out {
-  env.newMessage(`[new exist] ${exist}`);
+  env.report(`[new exist] ${exist}`);
   return L_Out.True;
 }
 
@@ -55,16 +55,25 @@ export function reportStoreErr(
   return env.errMesReturnBoolean(`Failed to store ${fact}`);
 }
 
+export function reportCheckErr(
+  env: L_Env,
+  funcName: string,
+  fact: ToCheckNode
+): L_Out {
+  reportFailedFunctionName(env, funcName);
+  return env.errMesReturnL_Out(`[Error] Failed to check ${fact}`);
+}
+
 export function reportFailedFunctionName(
   env: L_Env,
   funcName: string
 ): boolean {
-  env.newMessage(`<${funcName}> Failed`);
+  env.report(`<${funcName}> Failed`);
   return false;
 }
 
 export function L_ReportErr(env: L_Env, func: Function, node?: L_Node): L_Out {
-  env.newMessage(`<${func.name}> Failed`);
-  if (node !== undefined) env.newMessage(`Failed: ${node}`);
+  env.report(`<${func.name}> Failed`);
+  if (node !== undefined) env.report(`Failed: ${node}`);
   return L_Out.Error;
 }

@@ -1,22 +1,25 @@
 import {
+  AndToCheckNode,
   BuiltinCheckNode,
   IfNode,
   IsFormNode,
   IsPropertyNode,
   LogicNode,
   OptNode,
+  OrToCheckNode,
+  ToCheckFormulaNode,
   ToCheckNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
-import { L_ReportErr } from "./L_Messages";
+import { L_ReportErr, reportCheckErr } from "./L_Messages";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
     const ok = env.factsInToCheckAllDeclaredOrBuiltin(toCheck);
     if (!ok) {
-      env.newMessage(`[Error] ${toCheck} not declared.`);
+      env.report(`[Error] ${toCheck} not declared.`);
       throw Error();
     }
 
@@ -26,6 +29,8 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
       return checkIfFact(env, toCheck);
     } else if (toCheck instanceof BuiltinCheckNode) {
       return checkBuiltinCheckNode(env, toCheck);
+    } else if (toCheck instanceof ToCheckFormulaNode) {
+      return checkToCheckFormula(env, toCheck);
     } else {
       return L_Out.Error;
     }
@@ -82,7 +87,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           return false;
       }
 
-      env.newMessage(`[check by] ${toCheck}`);
+      env.report(`[check by] ${toCheck}`);
       return true;
     } catch {
       L_ReportErr(env, literallyCompareOptVars, opt1);
@@ -143,7 +148,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           if (
             L_Symbol.literallyCompareSymbolArray(env, fixed.vars, givenOpt.vars)
           ) {
-            env.newMessage(`[check by] ${root[1][0]}`);
+            env.report(`[check by] ${root[1][0]}`);
             return true;
           }
         }
@@ -252,7 +257,7 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
         out = checkFact(env, fixed);
 
         if (out !== L_Out.True) {
-          env.newMessage(`[Error] failed to check ${fixed}`);
+          env.report(`[Error] failed to check ${fixed}`);
           return L_Out.Unknown;
         }
       }
@@ -263,5 +268,34 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
     }
   } catch {
     return env.errMesReturnL_Out(toCheck);
+  }
+}
+
+function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
+  try {
+    if (toCheck instanceof OrToCheckNode) {
+      for (const fact of toCheck.getLeftRight()) {
+        const out = checkFact(env, fact);
+        if (out === L_Out.True) {
+          return L_Out.True;
+        }
+      }
+
+      return L_Out.Unknown;
+    } else if (toCheck instanceof AndToCheckNode) {
+      for (const fact of toCheck.getLeftRight()) {
+        const out = checkFact(env, fact);
+        if (out !== L_Out.True) {
+          env.report(`Failed to check ${out}`);
+          return out;
+        }
+      }
+
+      return L_Out.True;
+    }
+
+    throw Error();
+  } catch {
+    return reportCheckErr(env, checkToCheckFormula.name, toCheck);
   }
 }

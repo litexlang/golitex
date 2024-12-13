@@ -22,10 +22,10 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
 
     for (const subNode of block) {
       const out = L_Exec(newEnv, subNode);
-      env.newMessage(reportExecL_Out(out, toProve));
+      env.report(reportExecL_Out(out, toProve));
       if (out === L_Out.Error) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`Errors: Failed to execute ${subNode}`);
+        newEnv.getMessages().forEach((e) => env.report(e));
+        env.report(`Errors: Failed to execute ${subNode}`);
         return L_Out.Error;
       }
     }
@@ -38,11 +38,11 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
 
     L_Memory.newFact(env, toProve);
 
-    newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
+    newEnv.getMessages().forEach((e) => env.report(`[prove] ${e}`));
 
     return L_Out.True;
   } catch {
-    env.newMessage(`${toProve}`);
+    env.report(`${toProve}`);
     return L_Out.Error;
   }
 }
@@ -59,29 +59,29 @@ export function proveOptByContradict(
     toProve.isT = !toProve.isT;
     let ok = L_Memory.newFact(newEnv, toProve);
     if (!ok) {
-      newEnv.newMessage(`Failed to store ${toProve}`);
+      newEnv.report(`Failed to store ${toProve}`);
       return L_Out.Error;
     }
 
     for (const subNode of block) {
       const out = L_Exec(newEnv, subNode);
       if (out === L_Out.Error) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`Errors: Failed to execute ${subNode}`);
+        newEnv.getMessages().forEach((e) => env.report(e));
+        env.report(`Errors: Failed to execute ${subNode}`);
         return L_Out.Error;
       }
     }
 
     let out = L_Checker.checkFact(newEnv, contradict);
     if (out !== L_Out.True) {
-      env.newMessage(`Errors: Failed to execute ${contradict}`);
+      env.report(`Errors: Failed to execute ${contradict}`);
       return L_Out.Error;
     }
 
     contradict.isT = !contradict.isT;
     out = L_Checker.checkFact(newEnv, contradict);
     if (out !== L_Out.True) {
-      env.newMessage(`Errors: Failed to execute ${contradict}`);
+      env.report(`Errors: Failed to execute ${contradict}`);
       return L_Out.Error;
     }
 
@@ -91,17 +91,17 @@ export function proveOptByContradict(
     toProve.isT = !toProve.isT;
     ok = L_Memory.newFact(env, toProve);
     if (!ok) {
-      env.newMessage(`Failed to store ${toProve}`);
+      env.report(`Failed to store ${toProve}`);
       return L_Out.Error;
     }
 
     newEnv
       .getMessages()
-      .forEach((e) => env.newMessage(`[prove_by_contradict] ${e}`));
+      .forEach((e) => env.report(`[prove_by_contradict] ${e}`));
 
     return L_Out.True;
   } catch {
-    env.newMessage(`${toProve}`);
+    env.report(`${toProve}`);
     return L_Out.Error;
   }
 }
@@ -115,8 +115,8 @@ export function postfixProveExec(
     for (const subNode of postfixProve.block) {
       const out = L_Exec(newEnv, subNode);
       if (out !== L_Out.True) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`${postfixProve} failed.`);
+        newEnv.getMessages().forEach((e) => env.report(e));
+        env.report(`${postfixProve} failed.`);
         return out;
       }
     }
@@ -129,8 +129,8 @@ export function postfixProveExec(
     for (const fact of postfixProve.facts) {
       const out = L_Checker.checkFact(newEnv, fact);
       if (out !== L_Out.True) {
-        newEnv.getMessages().forEach((e) => env.newMessage(e));
-        env.newMessage(`${postfixProve} failed.`);
+        newEnv.getMessages().forEach((e) => env.report(e));
+        env.report(`${postfixProve} failed.`);
         return out;
       }
     }
@@ -138,16 +138,16 @@ export function postfixProveExec(
     for (const fact of postfixProve.facts) {
       const ok = L_Memory.newFact(env, fact);
       if (!ok) {
-        env.newMessage(`Failed to store ${fact}`);
+        env.report(`Failed to store ${fact}`);
         return L_Out.Error;
       }
     }
 
-    newEnv.getMessages().forEach((e) => env.newMessage(`[prove] ${e}`));
+    newEnv.getMessages().forEach((e) => env.report(`[prove] ${e}`));
 
     return L_Out.True;
   } catch {
-    env.newMessage("by error");
+    env.report("by error");
     return L_Out.Error;
   }
 }

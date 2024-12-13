@@ -165,7 +165,7 @@ export class L_Composite extends L_Symbol {
   //! subSymbols in L_Composite are supposed to be freeVars
   declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     if (env.getCompositeVar(this.name) === undefined) {
-      env.newMessage(`[Error] composite \\${this.name} not declared.`);
+      env.report(`[Error] composite \\${this.name} not declared.`);
       return false;
     }
 
