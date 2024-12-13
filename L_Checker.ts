@@ -84,12 +84,13 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           continue;
         }
 
-        const out = literallyCompareOptVars(env, toCheck, curKnown);
+        const out = useOptToCheckOpt(env, toCheck, curKnown);
         if (out) return L_Out.True;
       }
     }
 
     for (const curKnown of relatedKnownFacts) {
+      // TODO isT 没考虑
       if (curKnown instanceof ToCheckFormulaNode) {
         const out = useToCheckFormulaToCheckOpt(env, toCheck, curKnown);
         if (out) return L_Out.True;
@@ -98,7 +99,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
     for (const curKnown of relatedKnownFacts) {
       if (curKnown instanceof IfNode) {
-        //TODO
+        // TODO isT 没考虑
         const out = useIfToCheckOpt(env, toCheck, curKnown);
         if (out) return L_Out.True;
       }
@@ -112,9 +113,19 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   function useToCheckFormulaToCheckOpt(
     env: L_Env,
     toCheck: OptNode,
-    curKnown: ToCheckFormulaNode
+    known: ToCheckFormulaNode
   ): boolean {
     try {
+      const roots: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
+        ToCheckNode.getRootOptNodes(known, []);
+      for (const root of roots) {
+        if (root instanceof AndToCheckNode) {
+          continue;
+        } else if (root instanceof OrToCheckNode) {
+        } else if (root instanceof IfNode) {
+        }
+      }
+
       return false;
     } catch {
       return L_ReportBoolErr(env, useToCheckFormulaToCheckOpt, toCheck);
@@ -122,11 +133,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   }
 
   // compare vars length in given opts, compare them
-  function literallyCompareOptVars(
-    env: L_Env,
-    opt1: OptNode,
-    opt2: OptNode
-  ): boolean {
+  function useOptToCheckOpt(env: L_Env, opt1: OptNode, opt2: OptNode): boolean {
     try {
       if (opt1.vars.length !== opt2.vars.length) {
         return false;
@@ -142,7 +149,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       env.report(`[check by] ${toCheck}`);
       return true;
     } catch {
-      L_ReportErr(env, literallyCompareOptVars, opt1);
+      L_ReportErr(env, useOptToCheckOpt, opt1);
       return false;
     }
   }
