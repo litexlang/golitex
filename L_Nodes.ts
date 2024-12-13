@@ -16,6 +16,36 @@ export abstract class ToCheckNode extends L_Node {
 
   // called by prove_by_contradiction
   abstract copyWithIsTReverse(): ToCheckNode;
+
+  static getRootOptNodes(
+    currentNode: ToCheckFormulaNode | IfNode,
+    fromAbove: (ToCheckFormulaNode | IfNode)[] = []
+  ): [OptNode, (ToCheckFormulaNode | IfNode)[]][] {
+    let toGets: ToCheckNode[] = [];
+    if (currentNode instanceof ToCheckFormulaNode) {
+      toGets = currentNode.getLeftRight();
+    } else if (currentNode instanceof IfNode) {
+      toGets = currentNode.onlyIfs;
+    }
+    const out: [OptNode, (ToCheckFormulaNode | IfNode)[]][] = [];
+
+    for (const toGet of toGets) {
+      if (toGet instanceof OptNode) {
+        out.push([toGet, [...fromAbove, currentNode]]);
+      } else if (toGet instanceof ToCheckFormulaNode) {
+        let below: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
+          ToCheckNode.getRootOptNodes(toGet, [...fromAbove, currentNode]);
+        out.push(...below);
+      } else if (toGet instanceof IfNode) {
+        let below: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
+          ToCheckNode.getRootOptNodes(toGet, [...fromAbove, currentNode]);
+        below = below.map((e) => [e[0], [...fromAbove, currentNode, ...e[1]]]);
+        out.push(...below);
+      }
+    }
+
+    return out;
+  }
 }
 
 export class LogicNode extends ToCheckNode {
@@ -116,20 +146,25 @@ export class LogicNode extends ToCheckNode {
   }
 
   // extract root of if-then. get operator-fact and its requirements. return operator-fact-requirement-pair.
-  getRootOptNodes(): [OptNode, IfNode[]][] {
-    const out: [OptNode, IfNode[]][] = [];
-    for (const onlyIf of this.onlyIfs) {
-      if (onlyIf instanceof OptNode) {
-        out.push([onlyIf, [this]]);
-      } else if (onlyIf instanceof LogicNode) {
-        const roots = onlyIf.getRootOptNodes();
-        for (const root of roots) {
-          out.push([root[0], [this, ...root[1]]]);
-        }
-      }
-    }
-    return out;
-  }
+  // getRootOptNodes(
+  //   fromAbove: ToCheckFormulaNode[] = []
+  // ): [OptNode, (IfNode | ToCheckFormulaNode)[]][] {
+  //   const out: [OptNode, (IfNode | ToCheckFormulaNode)[]][] = [];
+  //   for (const onlyIf of this.onlyIfs) {
+  //     if (onlyIf instanceof OptNode) {
+  //       out.push([onlyIf, [this]]);
+  //     } else if (onlyIf instanceof LogicNode) {
+  //       const roots = onlyIf.getRootOptNodes();
+  //       for (const root of roots) {
+  //         out.push([root[0], [this, ...root[1]]]);
+  //       }
+  //     } else if (onlyIf instanceof ToCheckFormulaNode) {
+  //       const below = onlyIf.getRootOptNodes([...fromAbove, this]);
+  //       out.push(...below);
+  //     }
+  //   }
+  //   return out;
+  // }
 }
 
 export class IffNode extends LogicNode {}
@@ -417,27 +452,27 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
     super(isT);
   }
 
-  getRootOptNodes(
-    fromAbove: ToCheckFormulaNode[] = []
-  ): [OptNode, (ToCheckFormulaNode | IfNode)[]][] {
-    const out: [OptNode, (ToCheckFormulaNode | IfNode)[]][] = [];
-    const toGets = [this.left, this.right];
-    for (const toGet of toGets) {
-      if (toGet instanceof OptNode) {
-        out.push([toGet, [...fromAbove, this]]);
-      } else if (toGet instanceof ToCheckFormulaNode) {
-        const below = toGet.getRootOptNodes([...fromAbove, this]);
-        out.push(...below);
-      } else if (toGet instanceof IfNode) {
-        let below: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
-          toGet.getRootOptNodes();
-        below = below.map((e) => [e[0], [...fromAbove, this, ...e[1]]]);
-        out.push(...below);
-      }
-    }
+  // getRootOptNodes(
+  //   fromAbove: (ToCheckFormulaNode | IfNode)[] = []
+  // ): [OptNode, (ToCheckFormulaNode | IfNode)[]][] {
+  //   const out: [OptNode, (ToCheckFormulaNode | IfNode)[]][] = [];
+  //   const toGets = [this.left, this.right];
+  //   for (const toGet of toGets) {
+  //     if (toGet instanceof OptNode) {
+  //       out.push([toGet, [...fromAbove, this]]);
+  //     } else if (toGet instanceof ToCheckFormulaNode) {
+  //       const below = toGet.getRootOptNodes([...fromAbove, this]);
+  //       out.push(...below);
+  //     } else if (toGet instanceof IfNode) {
+  //       let below: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
+  //         toGet.getRootOptNodes();
+  //       below = below.map((e) => [e[0], [...fromAbove, this, ...e[1]]]);
+  //       out.push(...below);
+  //     }
+  //   }
 
-    return out;
-  }
+  //   return out;
+  // }
 
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     //TODO

@@ -148,7 +148,8 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       );
       return useIfToCheckOpt(env, automaticallyGeneratedOpt, known);
     } else {
-      const roots: [OptNode, IfNode[]][] = known.getRootOptNodes();
+      const roots: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
+        ToCheckNode.getRootOptNodes(known, []);
       for (const root of roots) {
         if (root[0].optSymbol.name !== givenOpt.optSymbol.name) continue;
 
@@ -159,21 +160,24 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
         for (const [layerNum, layer] of root[1].entries()) {
           //TODO check length
-          const currentPairs = LogicNode.makeFreeFixPairs(
-            env,
-            givenOpt.checkVars[layerNum],
-            layer.vars
-          );
-          freeFixedPairs = [...freeFixedPairs, ...currentPairs];
-          if (
-            //! checkIfReqLiterally is very dumb and may fail at many situations
-            layer.req.every((e) => {
-              return checkIfReqLiterally(env, e.fix(env, freeFixedPairs));
-            })
-          ) {
-          } else {
-            successful = false;
-            break;
+          // TODO if instanceof ToCheckFormulaNode
+          if (layer instanceof IfNode) {
+            const currentPairs = LogicNode.makeFreeFixPairs(
+              env,
+              givenOpt.checkVars[layerNum],
+              layer.vars
+            );
+            freeFixedPairs = [...freeFixedPairs, ...currentPairs];
+            if (
+              //! checkIfReqLiterally is very dumb and may fail at many situations
+              layer.req.every((e) => {
+                return checkIfReqLiterally(env, e.fix(env, freeFixedPairs));
+              })
+            ) {
+            } else {
+              successful = false;
+              break;
+            }
           }
         }
         if (successful) {

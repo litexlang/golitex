@@ -50,7 +50,7 @@ export function newFact(env: L_Env, fact: ToCheckNode): boolean {
 
 function newIfThenFact(env: L_Env, fact: IfNode): boolean {
   try {
-    const roots: [OptNode, IfNode[]][] = fact.getRootOptNodes();
+    const roots = ToCheckNode.getRootOptNodes(fact);
     roots.forEach((root) => env.newFact(root[0].optSymbol.name, fact));
     return true;
   } catch {
@@ -68,7 +68,7 @@ function newOptFact(env: L_Env, fact: OptNode): boolean {
 
 function newBoolToCheckFormula(env: L_Env, fact: ToCheckFormulaNode): boolean {
   try {
-    const roots: OptNode[] = fact.getRootOptNodes().map((e) => e[0]);
+    const roots: OptNode[] = ToCheckNode.getRootOptNodes(fact).map((e) => e[0]);
     roots.forEach((root) => env.newFact(root.optSymbol.name, fact));
     return true;
   } catch {
