@@ -417,17 +417,22 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
     super(isT);
   }
 
-  getRootOptNodes(): OptNode[] {
-    const out: OptNode[] = [];
+  getRootOptNodes(
+    fromAbove: ToCheckFormulaNode[] = []
+  ): [OptNode, (ToCheckFormulaNode | IfNode)[]][] {
+    const out: [OptNode, (ToCheckFormulaNode | IfNode)[]][] = [];
     const toGets = [this.left, this.right];
     for (const toGet of toGets) {
       if (toGet instanceof OptNode) {
-        out.push(toGet);
+        out.push([toGet, [...fromAbove, this]]);
       } else if (toGet instanceof ToCheckFormulaNode) {
-        out.push(...toGet.getRootOptNodes());
+        const below = toGet.getRootOptNodes([...fromAbove, this]);
+        out.push(...below);
       } else if (toGet instanceof IfNode) {
-        const roots = toGet.getRootOptNodes().map((e) => e[0]);
-        out.push(...roots);
+        let below: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
+          toGet.getRootOptNodes();
+        below = below.map((e) => [e[0], [...fromAbove, this, ...e[1]]]);
+        out.push(...below);
       }
     }
 

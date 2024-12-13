@@ -551,6 +551,18 @@ let a,b,c: <(a,b), <(b,c);
     debug: true,
     print: true,
   },
+  {
+    name: "use boolFormulaToCheck to check",
+    code: [
+      "def p(x); def q(y); def t(z);",
+      "let x,y;",
+      "know not q(y), not t(x);",
+      "(p(x) or q(y) or t(x));",
+      "p(x);",
+    ],
+    debug: false,
+    print: true,
+  },
 ];
 
 // \frac{i,j}

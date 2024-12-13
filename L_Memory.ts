@@ -68,7 +68,7 @@ function newOptFact(env: L_Env, fact: OptNode): boolean {
 
 function newBoolToCheckFormula(env: L_Env, fact: ToCheckFormulaNode): boolean {
   try {
-    const roots: OptNode[] = fact.getRootOptNodes();
+    const roots: OptNode[] = fact.getRootOptNodes().map((e) => e[0]);
     roots.forEach((root) => env.newFact(root.optSymbol.name, fact));
     return true;
   } catch {
