@@ -7,12 +7,14 @@
 
 </div>
 
-## Introduction
+## About
 
 _Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
 -- David Hilbert_
 
-**LiTeX** is a formal proof management system inspired by Lisp semantics and LaTeX syntax. Leveraging LaTeX's familiar structure for decomposing mathematical communication and Lisp's "Everything is a symbol" philosophy, LiTeX aims to help anyone express and verify mathematics at any level as elegantly and intuitively as if they were using natural language. <font color="red">Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!</font>
+LiTeX is a formal proof management system designed to empower anyone, regardless of their mathematical background or expertise, to express and verify mathematics as intuitively as using natural language. It eliminates barriers between the user’s thought process and the expression of their logic by combining the familiar structure of LaTeX for breaking down mathematical expressions with Lisp’s "everything is a symbol" philosophy. This unique approach sets LiTeX apart from existing formal languages, making it far more accessible and intuitive.
+
+<font color="red">Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!</font>
 
 The basic elements of **LiTeX** called `symbols` have roots in Lisp's fundamental approach, drawing inspiration from its powerful macro system to handle literal manipulations in math. `Symbols` can have `facts` related to them, with some facts leading to further facts—mirroring how mathematical reasoning naturally progresses. Read `A Tour of LiTeX` below for further information.
 

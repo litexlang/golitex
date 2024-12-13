@@ -69,6 +69,39 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
 }
 
 function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
+  // Main part of this function
+  try {
+    const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
+    if (relatedKnownFacts === undefined) {
+      return L_Out.Unknown;
+    }
+
+    //* First check opt-type facts then check if-type facts so that I can check if x: p(x) {p(x)};
+    for (const curKnown of relatedKnownFacts) {
+      if (curKnown instanceof OptNode) {
+        // TODO 这里的验证 isT 的方式我不太满意
+        if (toCheck.isT !== curKnown.isT) {
+          continue;
+        }
+
+        const out = literallyCompareOptVars(env, toCheck, curKnown);
+        if (out) return L_Out.True;
+      }
+    }
+
+    for (const curKnown of relatedKnownFacts) {
+      if (curKnown instanceof IfNode) {
+        //TODO
+        const out = useIfToCheckOpt(env, toCheck, curKnown);
+        if (out) return L_Out.True;
+      }
+    }
+
+    return L_Out.Unknown;
+  } catch {
+    return env.errMesReturnL_Out(toCheck);
+  }
+
   // compare vars length in given opts, compare them
   function literallyCompareOptVars(
     env: L_Env,
@@ -156,39 +189,6 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     }
 
     return false;
-  }
-
-  // Main part of this function
-  try {
-    const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
-    if (relatedKnownFacts === undefined) {
-      return L_Out.Unknown;
-    }
-
-    //* First check opt-type facts then check if-type facts so that I can check if x: p(x) {p(x)};
-    for (const curKnown of relatedKnownFacts) {
-      if (curKnown instanceof OptNode) {
-        // TODO 这里的验证 isT 的方式我不太满意
-        if (toCheck.isT !== curKnown.isT) {
-          continue;
-        }
-
-        const out = literallyCompareOptVars(env, toCheck, curKnown);
-        if (out) return L_Out.True;
-      }
-    }
-
-    for (const curKnown of relatedKnownFacts) {
-      if (curKnown instanceof IfNode) {
-        //TODO
-        const out = useIfToCheckOpt(env, toCheck, curKnown);
-        if (out) return L_Out.True;
-      }
-    }
-
-    return L_Out.Unknown;
-  } catch {
-    return env.errMesReturnL_Out(toCheck);
   }
 }
 
