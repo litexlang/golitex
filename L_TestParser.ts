@@ -59,6 +59,12 @@ know if x {
 }
 `,
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "bool fact",
+    code: [`let x: (p(x) or q(y) and j(z));`],
     debug: true,
     print: true,
   },

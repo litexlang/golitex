@@ -420,26 +420,15 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
     const factIndex = tokens.length;
 
     try {
-      let isT = true;
-      if (isCurToken(tokens, "not")) {
-        isT = false;
-        skip(tokens, "not");
-      }
-      let out: L_Nodes.ToCheckNode;
-
-      if (isBuiltinKeyword(tokens[0])) {
-        const parser = L_BuiltinParsers.get(tokens[0]) as Function;
-        out = parser(env, tokens);
-        out.isT = isT;
-      } else if (LogicalKeywords.includes(tokens[0])) {
-        out = logicParse(env, tokens);
-        out.isT = isT ? out.isT : !out.isT;
+      // parse boolean factual formula
+      if (isCurToken(tokens, "(")) {
+        skip(tokens, "(");
+        const out = parseBoolToCheckFormula();
+        skip(tokens, ")");
+        return out;
       } else {
-        out = optParse(env, tokens, true);
-        out.isT = isT;
+        return parsePrimitiveFact();
       }
-
-      return out;
     } catch (error) {
       handleParseError(env, tokens, "fact", factIndex, factStart);
       throw error;
@@ -447,6 +436,81 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
   } catch (error) {
     handleParseError(env, tokens, "fact", index, start);
     throw error;
+  }
+
+  function parseBoolToCheckFormula(): L_Nodes.ToCheckNode {
+    const precedence = new Map<string, number>();
+    precedence.set(L_Common.OrKeyword, 0);
+    precedence.set(L_Common.AndKeyword, 1);
+
+    let isT = true;
+    if (isCurToken(tokens, "not")) {
+      isT = false;
+      skip(tokens, "not");
+    }
+
+    let left = factParse(env, tokens);
+    let curOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
+    let curPrecedence = precedence.get(curOpt) as number;
+
+    if (isCurToken(tokens, ")")) {
+      return left;
+    }
+
+    let right = factParse(env, tokens);
+    let nextOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
+    let nextPrecedence = precedence.get(nextOpt) as number;
+    if (curPrecedence > nextPrecedence) {
+      // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
+      if (curOpt === L_Common.AndKeyword) {
+        left = new L_Nodes.AndToCheckNode(left, right, true);
+        right = factParse(env, tokens);
+        // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
+        if (nextOpt === L_Common.OrKeyword) {
+          return new L_Nodes.OrToCheckNode(left, right, isT);
+        }
+      }
+    } else if (curPrecedence < nextPrecedence) {
+      const next = factParse(env, tokens);
+      right = new L_Nodes.AndToCheckNode(right, next, true);
+      return new L_Nodes.OrToCheckNode(left, right, isT);
+    } else {
+      if (curOpt === L_Common.AndKeyword) {
+        left = new L_Nodes.AndToCheckNode(left, right, isT);
+        const next = factParse(env, tokens);
+        return new L_Nodes.AndToCheckNode(left, next, isT);
+      } else {
+        left = new L_Nodes.OrToCheckNode(left, right, isT);
+        const next = factParse(env, tokens);
+        return new L_Nodes.OrToCheckNode(left, next, isT);
+      }
+    }
+
+    throw Error();
+  }
+
+  function parsePrimitiveFact(): L_Nodes.ToCheckNode {
+    let isT = true;
+    if (isCurToken(tokens, "not")) {
+      isT = false;
+      skip(tokens, "not");
+    }
+
+    let out: L_Nodes.ToCheckNode;
+
+    if (isBuiltinKeyword(tokens[0])) {
+      const parser = L_BuiltinParsers.get(tokens[0]) as Function;
+      out = parser(env, tokens);
+      out.isT = isT;
+    } else if (LogicalKeywords.includes(tokens[0])) {
+      out = logicParse(env, tokens);
+      out.isT = isT ? out.isT : !out.isT;
+    } else {
+      out = optParse(env, tokens, true);
+      out.isT = isT;
+    }
+
+    return out;
   }
 }
 

@@ -13,6 +13,7 @@ export const specialChars = [
   "\\",
   "=",
 ];
+export const BoolToCheckFormulaKeyword = "?";
 export const SlashKeyword = "\\";
 export const EqualKeyword = "=";
 export const LetCompositeKeyword = "def_composite";
@@ -39,7 +40,8 @@ export const IsKeywords = ["is"];
 export const AreKeywords = ["are"];
 export const IsAreKeywords = [...IsKeywords, ...AreKeywords];
 export const NotKeywords = ["not"];
-export const OrKeywords = ["or"];
+export const OrKeyword = "or";
+export const AndKeyword = "and";
 export const PostProveKeywords = ["because"];
 export const WhenKeyword = "when";
 export const ContradictionKeyword = "contradiction";
@@ -77,7 +79,7 @@ export const L_Keywords: string[] = [
   ...IsKeywords,
   ...AreKeywords,
   ...NotKeywords,
-  ...OrKeywords,
+  ...OrKeyword,
   ...PostProveKeywords,
   ...ReturnExistKeyword,
   ...ReturnKeyword,

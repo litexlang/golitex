@@ -408,8 +408,14 @@ export class IsFormNode extends BuiltinCheckNode {
   }
 }
 
-export class OrToCheckNode extends ToCheckNode {
-  constructor(left: ToCheckNode, right: ToCheckNode, isT: boolean) {
+export abstract class BoolToCheckFormulaNode extends ToCheckNode {}
+
+export class OrToCheckNode extends BoolToCheckFormulaNode {
+  constructor(
+    public left: ToCheckNode,
+    public right: ToCheckNode,
+    isT: boolean
+  ) {
     super(isT);
   }
 
@@ -419,17 +425,22 @@ export class OrToCheckNode extends ToCheckNode {
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
-    // TODO
-    throw Error();
+    this.left.fix(env, freeFixPairs);
+    this.right.fix(env, freeFixPairs);
+    return this;
   }
 
   copyWithIsTReverse(): ToCheckNode {
-    throw Error();
+    return new OrToCheckNode(this.left, this.right, !this.isT);
   }
 }
 
-export class AndToCheckNode extends ToCheckNode {
-  constructor(left: ToCheckNode, right: ToCheckNode, isT: boolean) {
+export class AndToCheckNode extends BoolToCheckFormulaNode {
+  constructor(
+    public left: ToCheckNode,
+    public right: ToCheckNode,
+    isT: boolean
+  ) {
     super(isT);
   }
 
@@ -440,10 +451,12 @@ export class AndToCheckNode extends ToCheckNode {
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
     // TODO
-    throw Error();
+    this.left.fix(env, freeFixPairs);
+    this.right.fix(env, freeFixPairs);
+    return this;
   }
 
   copyWithIsTReverse(): ToCheckNode {
-    throw Error();
+    return new AndToCheckNode(this.left, this.right, !this.isT);
   }
 }
