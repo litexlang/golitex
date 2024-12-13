@@ -137,7 +137,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
             if (layer instanceof AndToCheckNode) {
               continue;
             } else if (layer instanceof OrToCheckNode) {
-              if (i + 1 < layers.length && layer.left == layers[i + 1]) {
+              if (i + 1 < layers.length && layer.left === layers[i + 1]) {
                 const out = checkFact(env, layer.right.copyWithIsTReverse());
                 if (out === L_Out.True) {
                   continue;
@@ -147,7 +147,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
                 }
               } else if (
                 i + 1 < layers.length &&
-                layer.right == layers[i + 1]
+                layer.right === layers[i + 1]
               ) {
                 const out = checkFact(env, layer.left.copyWithIsTReverse());
                 if (out === L_Out.True) {
@@ -157,7 +157,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
                   break;
                 }
               } else if (i + 1 === layers.length) {
-                if (root[0] == layer.left) {
+                if (root[0] === layer.left) {
                   const out = checkFact(env, layer.right.copyWithIsTReverse());
                   if (out === L_Out.True) {
                     continue;
