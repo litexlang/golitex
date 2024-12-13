@@ -110,7 +110,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       );
       return useIfToCheckOpt(env, automaticallyGeneratedOpt, known);
     } else {
-      const roots: [OptNode, IfNode[]][] = known.getRootNodes();
+      const roots: [OptNode, IfNode[]][] = known.getRootOptNodes();
       for (const root of roots) {
         if (root[0].optSymbol.name !== givenOpt.optSymbol.name) continue;
 

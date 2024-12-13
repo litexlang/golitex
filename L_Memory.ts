@@ -1,4 +1,5 @@
 import {
+  ToCheckFormulaNode,
   BuiltinCheckNode,
   DefNode,
   IfNode,
@@ -9,6 +10,7 @@ import {
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { reportStoreErr } from "./L_Messages";
+import { BoolToCheckFormulaKeyword } from "./L_Common";
 
 export function declNewFact(env: L_Env, node: DefNode): boolean {
   let ok = true;
@@ -33,6 +35,9 @@ export function newFact(env: L_Env, fact: ToCheckNode): boolean {
     } else if (fact instanceof OptNode) {
       const ok = newOptFact(env, fact);
       if (!ok) return false;
+    } else if (fact instanceof ToCheckFormulaNode) {
+      const ok = newBoolToCheckFormula(env, fact);
+      if (!ok) return false;
     } else {
       throw Error();
     }
@@ -45,7 +50,7 @@ export function newFact(env: L_Env, fact: ToCheckNode): boolean {
 
 function newIfThenFact(env: L_Env, fact: IfNode): boolean {
   try {
-    const roots: [OptNode, IfNode[]][] = fact.getRootNodes();
+    const roots: [OptNode, IfNode[]][] = fact.getRootOptNodes();
     roots.forEach((root) => env.newFact(root[0].optSymbol.name, fact));
     return true;
   } catch {
@@ -58,6 +63,16 @@ function newOptFact(env: L_Env, fact: OptNode): boolean {
     return env.newFact(fact.optSymbol.name, fact);
   } catch {
     return reportStoreErr(env, newOptFact.name, fact);
+  }
+}
+
+function newBoolToCheckFormula(env: L_Env, fact: ToCheckFormulaNode): boolean {
+  try {
+    const roots: OptNode[] = fact.getRootOptNodes();
+    roots.forEach((root) => env.newFact(root.optSymbol.name, fact));
+    return true;
+  } catch {
+    return reportStoreErr(env, newBoolToCheckFormula.name, fact);
   }
 }
 

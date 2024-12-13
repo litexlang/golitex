@@ -116,13 +116,13 @@ export class LogicNode extends ToCheckNode {
   }
 
   // extract root of if-then. get operator-fact and its requirements. return operator-fact-requirement-pair.
-  getRootNodes(): [OptNode, IfNode[]][] {
+  getRootOptNodes(): [OptNode, IfNode[]][] {
     const out: [OptNode, IfNode[]][] = [];
     for (const onlyIf of this.onlyIfs) {
       if (onlyIf instanceof OptNode) {
         out.push([onlyIf, [this]]);
       } else if (onlyIf instanceof LogicNode) {
-        const roots = onlyIf.getRootNodes();
+        const roots = onlyIf.getRootOptNodes();
         for (const root of roots) {
           out.push([root[0], [this, ...root[1]]]);
         }
@@ -408,15 +408,30 @@ export class IsFormNode extends BuiltinCheckNode {
   }
 }
 
-export abstract class BoolToCheckFormulaNode extends ToCheckNode {}
-
-export class OrToCheckNode extends BoolToCheckFormulaNode {
+export abstract class ToCheckFormulaNode extends ToCheckNode {
   constructor(
     public left: ToCheckNode,
     public right: ToCheckNode,
     isT: boolean
   ) {
     super(isT);
+  }
+
+  getRootOptNodes(): OptNode[] {
+    const out: OptNode[] = [];
+    const toGets = [this.left, this.right];
+    for (const toGet of toGets) {
+      if (toGet instanceof OptNode) {
+        out.push(toGet);
+      } else if (toGet instanceof ToCheckFormulaNode) {
+        out.push(...toGet.getRootOptNodes());
+      } else if (toGet instanceof IfNode) {
+        const roots = toGet.getRootOptNodes().map((e) => e[0]);
+        out.push(...roots);
+      }
+    }
+
+    return out;
   }
 
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
@@ -431,31 +446,17 @@ export class OrToCheckNode extends BoolToCheckFormulaNode {
   }
 
   copyWithIsTReverse(): ToCheckNode {
+    throw Error();
+  }
+}
+
+export class OrToCheckNode extends ToCheckFormulaNode {
+  copyWithIsTReverse(): ToCheckNode {
     return new OrToCheckNode(this.left, this.right, !this.isT);
   }
 }
 
-export class AndToCheckNode extends BoolToCheckFormulaNode {
-  constructor(
-    public left: ToCheckNode,
-    public right: ToCheckNode,
-    isT: boolean
-  ) {
-    super(isT);
-  }
-
-  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
-    //TODO
-    return true;
-  }
-
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
-    // TODO
-    this.left.fix(env, freeFixPairs);
-    this.right.fix(env, freeFixPairs);
-    return this;
-  }
-
+export class AndToCheckNode extends ToCheckFormulaNode {
   copyWithIsTReverse(): ToCheckNode {
     return new AndToCheckNode(this.left, this.right, !this.isT);
   }

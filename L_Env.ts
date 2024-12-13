@@ -7,6 +7,7 @@ import {
   MacroNode,
   OptNode,
   ToCheckNode,
+  ToCheckFormulaNode,
 } from "./L_Nodes";
 import { L_KnownFact, L_OptSymbol, L_Out } from "./L_Structs";
 
@@ -114,6 +115,11 @@ export class L_Env {
       );
     } else if (node instanceof BuiltinCheckNode) {
       return true;
+    } else if (node instanceof ToCheckFormulaNode) {
+      return (
+        this.factsInToCheckAllDeclaredOrBuiltin(node.left) &&
+        this.factsInToCheckAllDeclaredOrBuiltin(node.right)
+      );
     }
 
     return false;

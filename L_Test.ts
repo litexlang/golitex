@@ -537,6 +537,16 @@ let a,b,c: <(a,b), <(b,c);
       "is_form(\\frac{\\frac{1,2}, 1}, \\frac{a,b}, {a is p, b is p});",
       "{let a,b,c: p(a); p(a);}",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "boolFormulaToCheck",
+    code: [
+      "def p(x); def q(y); def t(z);",
+      "let x,y;",
+      "know (p(x) or q(y) and t(x));",
+    ],
     debug: true,
     print: true,
   },
