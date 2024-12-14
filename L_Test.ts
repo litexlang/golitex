@@ -548,7 +548,7 @@ let a,b,c: <(a,b), <(b,c);
       "let: p(x);",
       "(p(x) or q(y) and t(x));",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -561,6 +561,18 @@ let a,b,c: <(a,b), <(b,c);
       "p(x);",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "",
+    code: [
+      "def p(x); def q(y); def t(z);",
+      "let x,y;",
+      "know not q(y), not t(x);",
+      "know (p(x) or q(y) or t(x));",
+      "p(x);",
+    ],
+    debug: true,
     print: true,
   },
 ];

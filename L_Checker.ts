@@ -116,8 +116,10 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     known: ToCheckFormulaNode
   ): boolean {
     try {
+      // all roots that is contained in known
       const rootsUnderFormula = ToCheckNode.getRootOptNodes(known, []);
 
+      // roots that related to toCheck
       const rootsWithKeyAsToCheck = rootsUnderFormula.filter(
         (e) => e[0].optSymbol.name === toCheck.optSymbol.name
       );
@@ -138,8 +140,11 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
               continue;
             } else if (layer instanceof OrToCheckNode) {
               if (i + 1 < layers.length && layer.left === layers[i + 1]) {
-                const out = checkFact(env, layer.right.copyWithIsTReverse());
-                if (out === L_Out.True) {
+                const out = checkLiterally(
+                  env,
+                  layer.right.copyWithIsTReverse()
+                );
+                if (out) {
                   continue;
                 } else {
                   checkedTrue = false;
@@ -149,8 +154,11 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
                 i + 1 < layers.length &&
                 layer.right === layers[i + 1]
               ) {
-                const out = checkFact(env, layer.left.copyWithIsTReverse());
-                if (out === L_Out.True) {
+                const out = checkLiterally(
+                  env,
+                  layer.left.copyWithIsTReverse()
+                );
+                if (out) {
                   continue;
                 } else {
                   checkedTrue = false;
@@ -158,16 +166,22 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
                 }
               } else if (i + 1 === layers.length) {
                 if (root[0] === layer.left) {
-                  const out = checkFact(env, layer.right.copyWithIsTReverse());
-                  if (out === L_Out.True) {
+                  const out = checkLiterally(
+                    env,
+                    layer.right.copyWithIsTReverse()
+                  );
+                  if (out) {
                     continue;
                   } else {
                     checkedTrue = false;
                     break;
                   }
                 } else {
-                  const out = checkFact(env, layer.left.copyWithIsTReverse());
-                  if (out === L_Out.True) {
+                  const out = checkLiterally(
+                    env,
+                    layer.left.copyWithIsTReverse()
+                  );
+                  if (out) {
                     continue;
                   } else {
                     checkedTrue = false;
@@ -253,7 +267,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
             if (
               //! checkIfReqLiterally is very dumb and may fail at many situations
               layer.req.every((e) => {
-                return checkIfReqLiterally(env, e.fix(env, freeFixedPairs));
+                return checkLiterally(env, e.fix(env, freeFixedPairs));
               })
             ) {
             } else {
@@ -278,7 +292,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   }
 }
 
-function checkIfReqLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
+function checkLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
   try {
     if (toCheck instanceof OptNode) {
       const knowns = env.getFacts(toCheck.optSymbol.name);
