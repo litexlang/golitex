@@ -245,17 +245,24 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       );
       return useIfToCheckOpt(env, automaticallyGeneratedOpt, known);
     } else {
-      const roots: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
+      let roots: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
         ToCheckNode.getRootOptNodes(known, []);
-      for (const root of roots) {
-        if (root[0].optSymbol.name !== givenOpt.optSymbol.name) continue;
-        if (givenOpt.checkVars === undefined) continue;
-        if (root[1].length !== givenOpt.checkVars.length) continue;
+      roots = roots.filter(
+        (root) =>
+          root[0].optSymbol.name === givenOpt.optSymbol.name &&
+          givenOpt.checkVars !== undefined &&
+          // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了
+          root[1].filter((e) => e instanceof IfNode).length ===
+            givenOpt.checkVars.length
+      );
 
+      for (const root of roots) {
         let successful = true;
         let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
+        const newEnv = new L_Env(env);
         for (const [layerNum, layer] of root[1].entries()) {
           //TODO check length
+
           // TODO if instanceof ToCheckFormulaNode
           if (layer instanceof IfNode) {
             const currentPairs = LogicNode.makeFreeFixPairs(
@@ -270,10 +277,27 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
                 return checkLiterally(env, e.fix(env, freeFixedPairs));
               })
             ) {
+              layer.req.every((fact) =>
+                L_Memory.newFact(newEnv, fact.fix(newEnv, freeFixedPairs))
+              );
             } else {
               successful = false;
               break;
             }
+          } else if (layer instanceof ToCheckFormulaNode) {
+            // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了。事实上这里不用检查，因为 roots 在filter的时候已经相当于检查过了。放在这里只是为了自我提醒
+            const nextLayers = root[1].slice(layerNum);
+            if (!nextLayers.every((e) => e instanceof ToCheckFormulaNode)) {
+              successful = false;
+              break;
+            }
+
+            const out = useToCheckFormulaToCheckOpt(
+              newEnv,
+              toCheck,
+              layer.fix(newEnv, freeFixedPairs)
+            );
+            return out;
           }
         }
         if (successful) {
