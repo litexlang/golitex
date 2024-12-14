@@ -248,7 +248,6 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         ToCheckNode.getRootOptNodes(known, []);
       for (const root of roots) {
         if (root[0].optSymbol.name !== givenOpt.optSymbol.name) continue;
-
         if (givenOpt.checkVars === undefined) continue;
         if (root[1].length !== givenOpt.checkVars.length) continue;
 
@@ -310,6 +309,9 @@ function checkLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
     } else if (toCheck instanceof BuiltinCheckNode) {
       //TODO MAYBE I SHOULD USE CHECK literally
       return checkBuiltinCheckNode(env, toCheck) === L_Out.True;
+    } else if (toCheck instanceof ToCheckFormulaNode) {
+      //TODO MAYBE I SHOULD USE CHECK literally
+      return checkToCheckFormula(env, toCheck) === L_Out.True;
     } else {
       // TODO
     }

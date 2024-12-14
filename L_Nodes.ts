@@ -458,10 +458,16 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
     return true;
   }
 
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
-    this.left.fix(env, freeFixPairs);
-    this.right.fix(env, freeFixPairs);
-    return this;
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckFormulaNode {
+    const left = this.left.fix(env, freeFixPairs);
+    const right = this.right.fix(env, freeFixPairs);
+    if (this instanceof OrToCheckNode) {
+      return new OrToCheckNode(left, right, this.isT);
+    } else if (this instanceof AndToCheckNode) {
+      return new AndToCheckNode(left, right, this.isT);
+    }
+
+    throw Error();
   }
 
   copyWithIsTReverse(): ToCheckNode {

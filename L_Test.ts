@@ -564,13 +564,24 @@ let a,b,c: <(a,b), <(b,c);
     print: true,
   },
   {
-    name: "",
+    name: "know (p(x) or q(y) or t(x));",
     code: [
       "def p(x); def q(y); def t(z);",
       "let x,y;",
       "know not q(y), not t(x);",
       "know (p(x) or q(y) or t(x));",
       "p(x);",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "know if {or}",
+    code: [
+      "def p(x); def q(y); def t(z);",
+      "let x,y: p(y);",
+      "know if x: (p(x) or t(x)) {q(x)};",
+      "q(y);",
     ],
     debug: true,
     print: true,

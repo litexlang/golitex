@@ -456,6 +456,15 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
     }
 
     let right: ToCheckNode = factParse(env, tokens);
+
+    if (isCurToken(tokens, ")")) {
+      if (curOpt === L_Common.OrKeyword) {
+        return new L_Nodes.OrToCheckNode(left, right, isT);
+      } else if (curOpt === L_Common.AndKeyword) {
+        return new L_Nodes.AndToCheckNode(left, right, isT);
+      }
+    }
+
     let nextOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
     let nextPrecedence = precedence.get(nextOpt) as number;
     if (curPrecedence > nextPrecedence) {
