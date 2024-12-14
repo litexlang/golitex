@@ -110,6 +110,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     return env.errMesReturnL_Out(toCheck);
   }
 
+  // TODO 缺失一些用 formula 来验证的方式 1. "if x: (p(x) or t(x)) {(p(x) or t(x))};" 2. use if...if {or} to check
   function useToCheckFormulaToCheckOpt(
     env: L_Env,
     toCheck: OptNode,

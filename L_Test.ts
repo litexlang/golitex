@@ -582,6 +582,18 @@ let a,b,c: <(a,b), <(b,c);
       "let x,y: p(y);",
       "know if x: (p(x) or t(x)) {q(x)};",
       "q(y);",
+      "if x: (p(x) or t(x)) {(p(x) or t(x))};",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "use know if {or} to check",
+    code: [
+      "def p(x); def q(y); def t(z);",
+      "let x,y: p(y), not q(y);",
+      "know if x: p(x) {(q(x) or t(x))};",
+      "t(y);",
     ],
     debug: true,
     print: true,
