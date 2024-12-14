@@ -55,6 +55,16 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     for (const req of toCheck.req) {
       // TODO more error report
       L_Memory.newFact(newEnv, req);
+      if (req instanceof OrToCheckNode) {
+        L_Memory.newFact(
+          newEnv,
+          new IfNode([], [req.left.copyWithIsTReverse()], [req.right])
+        );
+        L_Memory.newFact(
+          newEnv,
+          new IfNode([], [req.right.copyWithIsTReverse()], [req.left])
+        );
+      }
     }
 
     for (const onlyIf of toCheck.onlyIfs) {
@@ -274,7 +284,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
             if (
               //! checkIfReqLiterally is very dumb and may fail at many situations
               layer.req.every((e) => {
-                return checkLiterally(env, e.fix(env, freeFixedPairs));
+                return checkLiterally(newEnv, e.fix(newEnv, freeFixedPairs));
               })
             ) {
               layer.req.every((fact) =>
@@ -402,7 +412,10 @@ function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
   try {
     if (toCheck instanceof OrToCheckNode) {
       for (const fact of toCheck.getLeftRight()) {
-        const out = checkFact(env, fact);
+        const newEnv = new L_Env(env);
+        const another = toCheck.getLeftRight().filter((e) => e !== fact)[0];
+        L_Memory.newFact(newEnv, another.copyWithIsTReverse());
+        const out = checkFact(newEnv, fact);
         if (out === L_Out.True) {
           return L_Out.True;
         }

@@ -584,7 +584,7 @@ let a,b,c: <(a,b), <(b,c);
       "q(y);",
       "if x: (p(x) or t(x)) {(p(x) or t(x))};",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -595,7 +595,7 @@ let a,b,c: <(a,b), <(b,c);
       "know if x: p(x) {(q(x) or t(x))};",
       "t(y);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];
