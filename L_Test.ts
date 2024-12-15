@@ -580,11 +580,12 @@ let a,b,c: <(a,b), <(b,c);
     code: [
       "def p(x); def q(y); def t(z);",
       "let x,y: p(y);",
-      "know if x: (p(x) or t(x)) {q(x)};",
-      "q(y);",
-      "if x: (p(x) or t(x)) {(p(x) or t(x))};",
+      // "know if x: (p(x) or t(x)) {q(x)};",
+      // "q(y);",
+      // "if x: (p(x) or t(x)) {(p(x) or t(x))};",
+      "if x: (p(x) or t(x) or q(x)) {(p(x) or t(x) or q(x))};",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -606,7 +607,7 @@ let a,b,c: <(a,b), <(b,c);
       "let 1,2,3;",
       "know $1 + 2$ p 3;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
