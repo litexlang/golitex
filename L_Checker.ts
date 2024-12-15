@@ -55,6 +55,8 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     for (const req of toCheck.req) {
       // TODO more error report
       L_Memory.newFact(newEnv, req);
+      //! to make "if x : (p(x) or t(x)) {(p(x) or t(x))}" work, I must make or into if-then
+      // TODO 注意到这里我只有一层的 拨开，应该能多几层就好了
       if (req instanceof OrToCheckNode) {
         L_Memory.newFact(
           newEnv,

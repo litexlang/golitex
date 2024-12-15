@@ -84,7 +84,7 @@ function optSymbolParse(env: L_Env, tokens: string[]): L_OptSymbol {
   }
 }
 
-function compositeParse(env: L_Env, tokens: string[]): L_Composite {
+function slashCompositeParse(env: L_Env, tokens: string[]): L_Composite {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -105,13 +105,36 @@ function compositeParse(env: L_Env, tokens: string[]): L_Composite {
   }
 }
 
+function dollarCompositeParse(env: L_Env, tokens: string[]): L_Symbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Common.DollarKeyword);
+    let left = symbolParse(env, tokens);
+    while (!isCurToken(tokens, L_Common.DollarKeyword)) {
+      const opt = optSymbolParse(env, tokens);
+      const right = symbolParse(env, tokens);
+      left = new L_Composite(opt.name, [left, right]);
+    }
+    skip(tokens, L_Common.DollarKeyword);
+
+    return left;
+  } catch (error) {
+    handleParseError(env, tokens, "parse singleton", index, start);
+    throw error;
+  }
+}
+
 function symbolParse(env: L_Env, tokens: string[]): L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     if (tokens[0] === L_Common.SlashKeyword) {
-      return compositeParse(env, tokens);
+      return slashCompositeParse(env, tokens);
+    } else if (tokens[0] === L_Common.DollarKeyword) {
+      return dollarCompositeParse(env, tokens);
     } else {
       return singletonParse(env, tokens);
     }
@@ -696,7 +719,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     const index = tokens.length;
 
     try {
-      const composite = compositeParse(env, tokens);
+      const composite = slashCompositeParse(env, tokens);
       // TODO IT SEEMS VARS AFTER COMPOSITE IS UNNECESSARY
       const vars = arrParse<L_Singleton>(
         env,
@@ -852,7 +875,7 @@ export function LetCompositeParse(
 
   try {
     skip(tokens, L_Common.LetCompositeKeyword);
-    const composite = compositeParse(env, tokens);
+    const composite = slashCompositeParse(env, tokens);
     if (isCurToken(tokens, L_Ends)) {
       skip(tokens, L_Ends);
       return new L_Nodes.DefCompositeNode(composite, []);
@@ -911,7 +934,7 @@ export function isFormParse(
     skip(tokens, "(");
     const given = symbolParse(env, tokens);
     skip(tokens, ",");
-    const composite = compositeParse(env, tokens);
+    const composite = slashCompositeParse(env, tokens);
 
     if (isCurToken(tokens, ",")) {
       skip(tokens, ",");

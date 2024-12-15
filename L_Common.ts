@@ -12,8 +12,10 @@ export const specialChars = [
   "|",
   "\\",
   "=",
+  "$",
 ];
-export const BoolToCheckFormulaKeyword = "?";
+
+export const DollarKeyword = "$";
 export const SlashKeyword = "\\";
 export const EqualKeyword = "=";
 export const LetCompositeKeyword = "def_composite";

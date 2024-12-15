@@ -10,7 +10,6 @@ import {
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { reportStoreErr } from "./L_Messages";
-import { BoolToCheckFormulaKeyword } from "./L_Common";
 
 export function declNewFact(env: L_Env, node: DefNode): boolean {
   let ok = true;

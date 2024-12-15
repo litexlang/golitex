@@ -584,7 +584,7 @@ let a,b,c: <(a,b), <(b,c);
       "q(y);",
       "if x: (p(x) or t(x)) {(p(x) or t(x))};",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -595,6 +595,23 @@ let a,b,c: <(a,b), <(b,c);
       "know if x: p(x) {(q(x) or t(x))};",
       "t(y);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "$$",
+    code: [
+      "def p(x, y);",
+      "def_composite \\+{x,y} ;",
+      "let 1,2,3;",
+      "know $1 + 2$ p 3;",
+    ],
+    debug: true,
+    print: true,
+  },
+  {
+    name: "=",
+    code: ["def p(x);", "let x,y;", "know x"],
     debug: false,
     print: true,
   },
