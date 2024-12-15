@@ -126,6 +126,22 @@ function dollarCompositeParse(env: L_Env, tokens: string[]): L_Symbol {
   }
 }
 
+function prefixSymbolParse(env: L_Env, tokens: string[]): L_Symbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    if (tokens[0] === L_Common.SlashKeyword) {
+      return slashCompositeParse(env, tokens);
+    } else {
+      return singletonParse(env, tokens);
+    }
+  } catch (error) {
+    handleParseError(env, tokens, "parse symbol", index, start);
+    throw error;
+  }
+}
+
 function symbolParse(env: L_Env, tokens: string[]): L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
@@ -980,14 +996,13 @@ function usePrecedenceToParseComposite(
   try {
     skip(tokens, begin);
 
-    const optSymbols = ["+", "-", "*", "/"];
     const precedenceMap = new Map<string, number>();
     precedenceMap.set("+", 0);
     precedenceMap.set("-", 0);
     precedenceMap.set("*", 1);
     precedenceMap.set("/", 1);
 
-    let left = symbolParse(env, tokens);
+    let left = prefixSymbolParse(env, tokens);
 
     while (!isCurToken(tokens, end)) {
       const opt = tokens[0] as string;
@@ -1015,7 +1030,13 @@ function usePrecedenceToParseComposite(
     curPrecedence: number,
     precedenceMap: Map<string, number>
   ): L_Symbol {
-    const left = symbolParse(env, tokens);
+    let left: L_Symbol;
+    if (!isCurToken(tokens, "(")) {
+      left = prefixSymbolParse(env, tokens);
+    } else {
+      left = usePrecedenceToParseComposite(env, tokens, "(", ")");
+    }
+
     if (isCurToken(tokens, end)) {
       return left;
     } else {
