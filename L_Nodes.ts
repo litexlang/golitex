@@ -202,7 +202,7 @@ export class OptNode extends ToCheckNode {
     return new OptNode(this.optSymbol, newVars, this.isT, undefined);
   }
 
-  override copyWithIsTReverse(): ToCheckNode {
+  override copyWithIsTReverse(): OptNode {
     return new OptNode(this.optSymbol, this.vars, !this.isT, this.checkVars);
   }
 
@@ -509,6 +509,40 @@ export class OrToCheckNode extends ToCheckFormulaNode {
 
   toString() {
     return `(${this.left} or ${this.right})`;
+  }
+
+  getRootOpts(): OptNode[] | null {
+    const allRoots: OptNode[] = [];
+    for (const subNode of this.getLeftRight()) {
+      if (subNode instanceof OrToCheckNode) {
+        const roots = subNode.getRootOpts();
+        if (roots === null) {
+          return null;
+        } else {
+          allRoots.push(...roots);
+        }
+      } else if (subNode instanceof OptNode) {
+        allRoots.push(subNode);
+      } else {
+        return null;
+      }
+    }
+
+    return allRoots;
+  }
+
+  // If not all subNodes are either orNode or optNode, return null;
+  getEquivalentIfs(): IfNode[] | null {
+    const roots = this.getRootOpts();
+    if (roots === null) return null;
+
+    const out = roots.map((root, i) => {
+      let others = roots.filter((e, j) => j !== i);
+      others = others.map((e) => e.copyWithIsTReverse());
+      return new IfNode([], others, [root]);
+    });
+
+    return out;
   }
 }
 
