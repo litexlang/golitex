@@ -55,22 +55,6 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     for (const req of toCheck.req) {
       // TODO more error report
       L_Memory.newFact(newEnv, req);
-      //! to make "if x : (p(x) or t(x)) {(p(x) or t(x))}" work, I must make or into if-then
-      // TODO 注意到这里我只有一层的 拨开，应该能多几层就好了 . 续写：不需要多拨开几层，因为下一次调用本函数的时候会拨开
-      // TODO 这里的逻辑最好放在 L_Memory 而不是这里
-      // if (req instanceof OrToCheckNode) {
-      //   L_Memory.newFact(
-      //     newEnv,
-      //     new IfNode([], [req.left.copyWithIsTReverse()], [req.right])
-      //   );
-      //   L_Memory.newFact(
-      //     newEnv,
-      //     new IfNode([], [req.right.copyWithIsTReverse()], [req.left])
-      //   );
-      // } else if (req instanceof AndToCheckNode) {
-      //   // L_Memory.newFact(newEnv, req.left);
-      //   // L_Memory.newFact(newEnv, req.right);
-      // }
     }
 
     for (const onlyIf of toCheck.onlyIfs) {

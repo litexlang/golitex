@@ -488,33 +488,37 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
       }
     }
 
-    let nextOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
-    let nextPrecedence = precedence.get(nextOpt) as number;
-    if (curPrecedence > nextPrecedence) {
-      // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-      if (curOpt === L_Common.AndKeyword) {
-        left = new L_Nodes.AndToCheckNode(left, right, true);
-        const next: ToCheckNode = factParse(env, tokens);
+    while (!isCurToken(tokens, ")")) {
+      let nextOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
+      let nextPrecedence = precedence.get(nextOpt) as number;
+      if (curPrecedence > nextPrecedence) {
         // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-        if (nextOpt === L_Common.OrKeyword) {
-          return new L_Nodes.OrToCheckNode(left, next, isT);
+        if (curOpt === L_Common.AndKeyword) {
+          left = new L_Nodes.AndToCheckNode(left, right, true);
+          const next: ToCheckNode = factParse(env, tokens);
+          // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
+          if (nextOpt === L_Common.OrKeyword) {
+            left = new L_Nodes.OrToCheckNode(left, next, isT);
+          }
+        }
+      } else if (curPrecedence < nextPrecedence) {
+        const next: ToCheckNode = factParse(env, tokens);
+        right = new L_Nodes.AndToCheckNode(right, next, true);
+        left = new L_Nodes.OrToCheckNode(left, right, isT);
+      } else {
+        if (curOpt === L_Common.AndKeyword) {
+          left = new L_Nodes.AndToCheckNode(left, right, isT);
+          const next: ToCheckNode = factParse(env, tokens);
+          left = new L_Nodes.AndToCheckNode(left, next, isT);
+        } else {
+          left = new L_Nodes.OrToCheckNode(left, right, isT);
+          const next: ToCheckNode = factParse(env, tokens);
+          left = new L_Nodes.OrToCheckNode(left, next, isT);
         }
       }
-    } else if (curPrecedence < nextPrecedence) {
-      const next: ToCheckNode = factParse(env, tokens);
-      right = new L_Nodes.AndToCheckNode(right, next, true);
-      return new L_Nodes.OrToCheckNode(left, right, isT);
-    } else {
-      if (curOpt === L_Common.AndKeyword) {
-        left = new L_Nodes.AndToCheckNode(left, right, isT);
-        const next: ToCheckNode = factParse(env, tokens);
-        return new L_Nodes.AndToCheckNode(left, next, isT);
-      } else {
-        left = new L_Nodes.OrToCheckNode(left, right, isT);
-        const next: ToCheckNode = factParse(env, tokens);
-        return new L_Nodes.OrToCheckNode(left, next, isT);
-      }
     }
+
+    return left;
 
     throw Error();
   }

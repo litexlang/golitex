@@ -75,6 +75,7 @@ function newBoolToCheckFormula(env: L_Env, fact: ToCheckFormulaNode): boolean {
       newFact(env, fact.left);
       newFact(env, fact.right);
     } else if (fact instanceof OrToCheckNode) {
+      //! to make "if x : (p(x) or t(x)) {(p(x) or t(x))}" work, I must make or into if-then
       newFact(
         env,
         new IfNode([], [fact.left.copyWithIsTReverse()], [fact.right])
