@@ -443,9 +443,9 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
     try {
       // parse boolean factual formula
       if (isCurToken(tokens, "(")) {
-        skip(tokens, "(");
-        const out = parseBoolToCheckFormula();
-        skip(tokens, ")");
+        // skip(tokens, "(");
+        const out = parseToCheckFormula("(", ")");
+        // skip(tokens, ")");
         return out;
       } else {
         return parsePrimitiveFact();
@@ -459,7 +459,12 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
     throw error;
   }
 
-  function parseBoolToCheckFormula(): L_Nodes.ToCheckNode {
+  function parseToCheckFormula(
+    begin: string,
+    end: string
+  ): L_Nodes.ToCheckNode {
+    skip(tokens, begin);
+
     const precedence = new Map<string, number>();
     precedence.set(L_Common.OrKeyword, 0);
     precedence.set(L_Common.AndKeyword, 1);
@@ -474,13 +479,13 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
     let curOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
     let curPrecedence = precedence.get(curOpt) as number;
 
-    if (isCurToken(tokens, ")")) {
+    if (isCurToken(tokens, end)) {
       return left;
     }
 
     let right: ToCheckNode = factParse(env, tokens);
 
-    if (isCurToken(tokens, ")")) {
+    if (isCurToken(tokens, end)) {
       if (curOpt === L_Common.OrKeyword) {
         return new L_Nodes.OrToCheckNode(left, right, isT);
       } else if (curOpt === L_Common.AndKeyword) {
@@ -488,7 +493,7 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
       }
     }
 
-    while (!isCurToken(tokens, ")")) {
+    while (!isCurToken(tokens, end)) {
       let nextOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
       let nextPrecedence = precedence.get(nextOpt) as number;
       if (curPrecedence > nextPrecedence) {
@@ -517,6 +522,8 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
         }
       }
     }
+
+    skip(tokens, end);
 
     return left;
 
@@ -958,5 +965,73 @@ export function isFormParse(
   } catch (error) {
     handleParseError(env, tokens, "is_property", index, start);
     throw error;
+  }
+}
+
+function usePrecedenceToParseComposite(
+  env: L_Env,
+  tokens: string[],
+  begin: string,
+  end: string
+): L_Symbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, begin);
+
+    const optSymbols = ["+", "-", "*", "/"];
+    const precedenceMap = new Map<string, number>();
+    precedenceMap.set("+", 0);
+    precedenceMap.set("-", 0);
+    precedenceMap.set("*", 1);
+    precedenceMap.set("/", 1);
+
+    let left = symbolParse(env, tokens);
+
+    while (!isCurToken(tokens, end)) {
+      const opt = tokens[0] as string;
+      const next = getSymbolUntilPrecedenceIsNotHigher(
+        env,
+        tokens,
+        end,
+        precedenceMap.get(opt) as number,
+        precedenceMap
+      );
+      left = new L_Composite(opt, [left, next]);
+    }
+
+    skip(tokens, end);
+    return left as L_Symbol;
+  } catch (error) {
+    handleParseError(env, tokens, "let", index, start);
+    throw error;
+  }
+
+  function getSymbolUntilPrecedenceIsNotHigher(
+    env: L_Env,
+    tokens: string[],
+    end: string,
+    curPrecedence: number,
+    precedenceMap: Map<string, number>
+  ): L_Symbol {
+    const left = symbolParse(env, tokens);
+    if (isCurToken(tokens, end)) {
+      return left;
+    } else {
+      const opt = tokens[0] as string;
+      if ((precedenceMap.get(opt) as number) <= curPrecedence) {
+        return left;
+      } else {
+        const next = getSymbolUntilPrecedenceIsNotHigher(
+          env,
+          tokens,
+          end,
+          precedenceMap.get(opt) as number,
+          precedenceMap
+        );
+        return new L_Composite(opt, [left, next]);
+      }
+    }
   }
 }
