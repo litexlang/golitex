@@ -56,17 +56,21 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
       // TODO more error report
       L_Memory.newFact(newEnv, req);
       //! to make "if x : (p(x) or t(x)) {(p(x) or t(x))}" work, I must make or into if-then
-      // TODO 注意到这里我只有一层的 拨开，应该能多几层就好了
-      if (req instanceof OrToCheckNode) {
-        L_Memory.newFact(
-          newEnv,
-          new IfNode([], [req.left.copyWithIsTReverse()], [req.right])
-        );
-        L_Memory.newFact(
-          newEnv,
-          new IfNode([], [req.right.copyWithIsTReverse()], [req.left])
-        );
-      }
+      // TODO 注意到这里我只有一层的 拨开，应该能多几层就好了 . 续写：不需要多拨开几层，因为下一次调用本函数的时候会拨开
+      // TODO 这里的逻辑最好放在 L_Memory 而不是这里
+      // if (req instanceof OrToCheckNode) {
+      //   L_Memory.newFact(
+      //     newEnv,
+      //     new IfNode([], [req.left.copyWithIsTReverse()], [req.right])
+      //   );
+      //   L_Memory.newFact(
+      //     newEnv,
+      //     new IfNode([], [req.right.copyWithIsTReverse()], [req.left])
+      //   );
+      // } else if (req instanceof AndToCheckNode) {
+      //   // L_Memory.newFact(newEnv, req.left);
+      //   // L_Memory.newFact(newEnv, req.right);
+      // }
     }
 
     for (const onlyIf of toCheck.onlyIfs) {
@@ -348,7 +352,7 @@ function checkLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
       return checkBuiltinCheckNode(env, toCheck) === L_Out.True;
     } else if (toCheck instanceof ToCheckFormulaNode) {
       //TODO MAYBE I SHOULD USE CHECK literally
-      return checkToCheckFormula(env, toCheck) === L_Out.True;
+      return checkToCheckFormulaLiterally(env, toCheck) === L_Out.True;
     } else {
       // TODO
     }
@@ -416,6 +420,7 @@ function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
       for (const fact of toCheck.getLeftRight()) {
         const newEnv = new L_Env(env);
         const another = toCheck.getLeftRight().filter((e) => e !== fact)[0];
+        // 有趣的是，我这里不需要进一步地把子节点（比如如果left是or，我在本函数里把left的or再拿出来做newFact）再拿出来，因为我未来做验证的时候，我调用checkFact的时候，我又会来到这个left，这时候我再会把left的or里面的东西拿出来。
         L_Memory.newFact(newEnv, another.copyWithIsTReverse());
         const out = checkFact(newEnv, fact);
         if (out === L_Out.True) {
@@ -430,6 +435,42 @@ function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
         if (out !== L_Out.True) {
           env.report(`Failed to check ${out}`);
           return out;
+        }
+      }
+
+      return L_Out.True;
+    }
+
+    throw Error();
+  } catch {
+    return reportCheckErr(env, checkToCheckFormula.name, toCheck);
+  }
+}
+
+function checkToCheckFormulaLiterally(
+  env: L_Env,
+  toCheck: ToCheckFormulaNode
+): L_Out {
+  try {
+    if (toCheck instanceof OrToCheckNode) {
+      for (const fact of toCheck.getLeftRight()) {
+        const newEnv = new L_Env(env);
+        const another = toCheck.getLeftRight().filter((e) => e !== fact)[0];
+        // 有趣的是，我这里不需要进一步地把子节点（比如如果left是or，我在本函数里把left的or再拿出来做newFact）再拿出来，因为我未来做验证的时候，我调用checkFact的时候，我又会来到这个left，这时候我再会把left的or里面的东西拿出来。
+        L_Memory.newFact(newEnv, another.copyWithIsTReverse());
+        const out = checkLiterally(newEnv, fact);
+        if (out) {
+          return L_Out.True;
+        }
+      }
+
+      return L_Out.Unknown;
+    } else if (toCheck instanceof AndToCheckNode) {
+      for (const fact of toCheck.getLeftRight()) {
+        const out = checkLiterally(env, fact);
+        if (!out) {
+          env.report(`Failed to check ${out}`);
+          return L_Out.Unknown;
         }
       }
 

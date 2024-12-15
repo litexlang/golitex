@@ -7,6 +7,8 @@ import {
   LogicNode,
   OptNode,
   ToCheckNode,
+  AndToCheckNode,
+  OrToCheckNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { reportStoreErr } from "./L_Messages";
@@ -69,6 +71,19 @@ function newBoolToCheckFormula(env: L_Env, fact: ToCheckFormulaNode): boolean {
   try {
     const roots: OptNode[] = ToCheckNode.getRootOptNodes(fact).map((e) => e[0]);
     roots.forEach((root) => env.newFact(root.optSymbol.name, fact));
+    if (fact instanceof AndToCheckNode) {
+      newFact(env, fact.left);
+      newFact(env, fact.right);
+    } else if (fact instanceof OrToCheckNode) {
+      newFact(
+        env,
+        new IfNode([], [fact.left.copyWithIsTReverse()], [fact.right])
+      );
+      newFact(
+        env,
+        new IfNode([], [fact.right.copyWithIsTReverse()], [fact.left])
+      );
+    }
     return true;
   } catch {
     return reportStoreErr(env, newBoolToCheckFormula.name, fact);

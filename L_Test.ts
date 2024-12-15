@@ -580,12 +580,41 @@ let a,b,c: <(a,b), <(b,c);
     code: [
       "def p(x); def q(y); def t(z);",
       "let x,y: p(y);",
-      // "know if x: (p(x) or t(x)) {q(x)};",
-      // "q(y);",
-      // "if x: (p(x) or t(x)) {(p(x) or t(x))};",
+      "know if x: (p(x) or t(x)) {q(x)};",
+      "q(y);",
+      "if x: (p(x) or t(x)) {(p(x) or t(x))};",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "know if {or}",
+    code: [
+      "def p(x); def q(y); def t(z);",
+      "let x,y;",
       "if x: (p(x) or t(x) or q(x)) {(p(x) or t(x) or q(x))};",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "know if {or}",
+    code: [
+      "def p(x); def q(y); def t(z); def a(x);",
+      "let x,y;",
+      "if x: ((q(x) and a(x)) or p(x)) {(p(x) or q(x))};",
+    ],
     debug: true,
+    print: true,
+  },
+  {
+    name: "know if {or}",
+    code: [
+      "def p(x); def q(y); def t(z); def a(x);",
+      "let x,y;",
+      "if x: (p(x) or t(x) or (q(x) and a(x))) {(p(x) or q(x) or t(x) )};",
+    ],
+    debug: false,
     print: true,
   },
   {
@@ -599,6 +628,7 @@ let a,b,c: <(a,b), <(b,c);
     debug: false,
     print: true,
   },
+
   {
     name: "$$",
     code: [
