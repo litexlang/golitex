@@ -15,6 +15,7 @@ import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { L_ReportBoolErr, L_ReportErr, reportCheckErr } from "./L_Messages";
 import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
+import { DEBUG_DICT } from "./L_Executor";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
@@ -55,12 +56,12 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
 
     for (const req of toCheck.req) {
       // TODO more error report
-      // if (!req.varsDeclared(newEnv, [])) {
-      //   newEnv.report(
-      //     `[Undeclared Error] Some of variables in ${req} not declared.`
-      //   );
-      //   return L_Out.Error;
-      // }
+      if (DEBUG_DICT.checkCompositeVar && !req.varsDeclared(newEnv, [])) {
+        newEnv.report(
+          `[Undeclared Error] Some of variables in ${req} not declared.`
+        );
+        return L_Out.Error;
+      }
 
       L_Memory.newFact(newEnv, req);
     }
@@ -80,12 +81,12 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   // Main part of this function
   try {
     // TODO 严重的设计矛盾：composite里面的东西，究竟需不需要先定义一下？？
-    // if (!toCheck.varsDeclared(env, [])) {
-    //   env.report(
-    //     `[Undeclared Error] Some of variables in ${toCheck} not declared.`
-    //   );
-    //   return L_Out.Error;
-    // }
+    if (DEBUG_DICT.checkCompositeVar && !toCheck.varsDeclared(env, [])) {
+      env.report(
+        `[Undeclared Error] Some of variables in ${toCheck} not declared.`
+      );
+      return L_Out.Error;
+    }
 
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
     if (relatedKnownFacts === undefined) {

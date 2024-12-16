@@ -461,8 +461,8 @@ export class IsFormNode extends BuiltinCheckNode {
 
 export abstract class ToCheckFormulaNode extends ToCheckNode {
   constructor(
-    public left: ToCheckNode,
-    public right: ToCheckNode,
+    public left: OptNode | ToCheckFormulaNode,
+    public right: OptNode | ToCheckFormulaNode,
     isT: boolean
   ) {
     super(isT);
@@ -570,3 +570,5 @@ export class AndToCheckNode extends ToCheckFormulaNode {
     return `(${this.left} and ${this.right})`;
   }
 }
+
+export type FormulaSubNode = ToCheckFormulaNode | OptNode;

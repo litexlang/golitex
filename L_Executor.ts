@@ -50,6 +50,7 @@ export const DEBUG_DICT = {
   check: true,
   storeBy: true,
   let: true,
+  checkCompositeVar: true,
 };
 
 export const CheckFalse = true;
