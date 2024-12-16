@@ -1,7 +1,7 @@
 import { L_Env } from "./L_Env";
 import { ToCheckNode } from "./L_Nodes";
 
-export function optDeclaredVarsDeclared(
+export function optsVarsDeclaredInFacts(
   env: L_Env,
   facts: ToCheckNode[]
 ): boolean {

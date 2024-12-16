@@ -594,7 +594,7 @@ let a,b,c: <(a,b), <(b,c);
       "let x,y;",
       "if x: (p(x) or t(x) or q(x)) {(p(x) or t(x) or q(x))};",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -648,8 +648,14 @@ let a,b,c: <(a,b), <(b,c);
   },
   {
     name: "=",
-    code: ["def p(x);", "let x,y;", "know x"],
-    debug: false,
+    code: [
+      "def nat(x); def number(x);",
+      "let x,y;",
+      "def_composite \\frac{a,b}: nat(a), nat(b);",
+      "\\frac{1,2} is number;",
+      "\\frac{x,y} is nat;",
+    ],
+    debug: true,
     print: true,
   },
 ];

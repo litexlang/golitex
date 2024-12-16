@@ -42,7 +42,7 @@ import {
 } from "./L_Prove";
 import { on } from "events";
 import { blob } from "stream/consumers";
-import { optDeclaredVarsDeclared } from "./L_ExecutorHelper";
+import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -113,7 +113,7 @@ function letExec(env: L_Env, node: LetNode): L_Out {
       if (!ok) return L_Out.Error;
     }
 
-    if (!optDeclaredVarsDeclared(env, [])) {
+    if (!optsVarsDeclaredInFacts(env, [])) {
       throw Error();
     }
 
@@ -138,7 +138,7 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
   try {
     // examine whether all facts are declared.
     // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
-    if (!optDeclaredVarsDeclared(env, node.facts)) {
+    if (!optsVarsDeclaredInFacts(env, node.facts)) {
       throw Error();
     }
 
@@ -171,7 +171,7 @@ function defExec(env: L_Env, node: DefNode): L_Out {
       return L_Out.Error;
     }
 
-    if (!optDeclaredVarsDeclared(env, node.onlyIfs)) {
+    if (!optsVarsDeclaredInFacts(env, node.onlyIfs)) {
       throw Error();
     }
 

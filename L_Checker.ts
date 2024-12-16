@@ -14,6 +14,7 @@ import { L_Env } from "./L_Env";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { L_ReportBoolErr, L_ReportErr, reportCheckErr } from "./L_Messages";
+import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
@@ -71,6 +72,14 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
 function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   // Main part of this function
   try {
+    // if (!optsVarsDeclaredInFacts(env, [toCheck])) {
+    //   return L_ReportErr(
+    //     env,
+    //     checkOptFact,
+    //     `Operators and variables in ${toCheck} must be declared before being used.`
+    //   );
+    // }
+
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
     if (relatedKnownFacts === undefined) {
       return L_Out.Unknown;

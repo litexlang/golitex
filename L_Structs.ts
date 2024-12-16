@@ -3,6 +3,25 @@ import { L_ReportErr } from "./L_Messages";
 import { ToCheckNode } from "./L_Nodes";
 
 export abstract class L_Symbol {
+  abstract getRootSingletons(): L_Singleton[];
+
+  getDeclaredAndUndeclaredRootSingletons(env: L_Env): {
+    declared: L_Singleton[];
+    undeclared: L_Singleton[];
+  } {
+    const allRootSingletons = this.getRootSingletons();
+    const declared: L_Singleton[] = [];
+    const undeclared: L_Singleton[] = [];
+    for (const root of allRootSingletons) {
+      if (env.singletonDeclared(root.value)) {
+        declared.push(root);
+      } else {
+        undeclared.push(root);
+      }
+    }
+    return { declared: declared, undeclared: undeclared };
+  }
+
   // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol. meanwhile, whether elements of composite are the same does not matter. e.g. \frac{1,2} and \frac{a,b} does not matter.
   static haveTheSameForm(
     env: L_Env,
@@ -84,40 +103,15 @@ export abstract class L_Symbol {
       return false;
     }
   }
-
-  // 两个符号字面量结构一样，比如singleton和composite就不一样，然后composite和composite之间，需要name一样才行。任何两个singleton的类型都一样。本函数用于对于 know if x, \frac{1,2} 里面的req里，自由变量和 toCheck 的变量的形式 需要对上
-  // static structureEqual(
-  //   env: L_Env,
-  //   symbol1: L_Symbol,
-  //   symbol2: L_Symbol
-  // ): boolean {
-  //   if (symbol1 instanceof L_Singleton && symbol2 instanceof L_Singleton) {
-  //     return true;
-  //   } else if (
-  //     symbol1 instanceof L_Composite &&
-  //     symbol2 instanceof L_Composite
-  //   ) {
-  //     if (symbol1.name === symbol2.name) {
-  //       for (let i = 0; i < symbol1.values.length; i++) {
-  //         if (
-  //           !L_Symbol.structureEqual(env, symbol1.values[i], symbol2.values[i])
-  //         ) {
-  //           return false;
-  //         }
-  //       }
-  //       return true;
-  //     } else {
-  //       return false;
-  //     }
-  //   } else {
-  //     return false;
-  //   }
-  // }
 }
 
 export class L_Singleton extends L_Symbol {
   constructor(public value: string) {
     super();
+  }
+
+  getRootSingletons(): L_Singleton[] {
+    return [this];
   }
 
   declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
@@ -144,6 +138,14 @@ export class L_Singleton extends L_Symbol {
 export class L_Composite extends L_Symbol {
   constructor(public name: string, public values: L_Symbol[]) {
     super();
+  }
+
+  getRootSingletons(): L_Singleton[] {
+    const out: L_Singleton[] = [];
+    for (const value of this.values) {
+      out.push(...value.getRootSingletons());
+    }
+    return out;
   }
 
   compositesInside(): L_Composite[] {
