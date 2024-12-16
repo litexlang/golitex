@@ -654,16 +654,56 @@ let a,b,c: <(a,b), <(b,c);
       "def_composite \\frac{a,b}: nat(a), nat(b);",
       "\\frac{1,2} is number;",
       "\\frac{x,y} is nat;",
+      "know if k: is_form(k, \\frac{x,y}) {k is number}",
+    ],
+    debug: true,
+    print: true,
+  },
+  {
+    name: "is_form", // currently, is_form is used as composite in req
+    code: [
+      "def nat(x); def number(x);",
+      "let x,y: x is nat, y is nat;",
+      "def_composite \\frac{a,b}: number(a), number(b);",
+      "know if x: x is nat {x is number};", // inherit: 直接全部继承；know if x: x is nat {x is number} 需要说明一下是number 才能得到后续的结论。
+      "x is number; y is number;",
+      "\\frac{x,y} is number;",
+      "know if k: is_form(k, \\frac{x,y}) {k is number}",
+      "\\frac{x,y} is number;",
+    ],
+    debug: true,
+    print: true,
+  },
+  {
+    name: "lets", // currently, is_form is used as composite in req
+    code: [
+      "def nat(x);",
+      "let x,y: x is nat, y is nat;",
+      "lets arabic_natural_number /^[0-9]+$/ : arabic_natural_number is nat;",
+      "1 is nat;",
+    ],
+    debug: true,
+    print: true,
+  },
+  {
+    name: "+",
+    code: [
+      "def nat(x); def real(x)",
+      "def_composite \\+{a,b}: real(a), real(b);",
+      "let a, b, c, 0: a is real, b is real, c is real, 0 is real;",
+      "if n: is_form(n, \\+{x,y}) {n is real} ;",
+      "$a + b$  is real;",
+      "$a + b + c$ is real;",
+      "def >(x, y): x is real, y is real;", // 也可以暂时选择不要实现:
+      "know if x,y: >(x,0), >(y,0) {\\+{x,y} > x, $x + y$ > y};",
+      "know a > 0; know b > 0;",
+      "$a + b$ > 0 [a,b];",
+      "know if n, x: is_form(n, $x + y$, {x > 0, y > 0} ) {n > x}",
     ],
     debug: true,
     print: true,
   },
 ];
-
-// \frac{i,j}
-// A_{i}^{j}
-// \A{i,j}
-// i,j:  1 <= i ,j <= n;
 
 function runExamples(toJSON: boolean) {
   const env = new L_Env();

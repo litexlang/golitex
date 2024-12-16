@@ -318,7 +318,11 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         if (successful) {
           const fixed = root[0].fix(env, freeFixedPairs);
           if (
-            L_Symbol.literallyCompareSymbolArray(env, fixed.vars, givenOpt.vars)
+            L_Symbol.allSymbolsAreLiterallyTheSame(
+              env,
+              fixed.vars,
+              givenOpt.vars
+            )
           ) {
             env.report(`[check by] ${root[1][0]}`);
             return true;
@@ -340,7 +344,11 @@ function checkLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
         if (known instanceof OptNode) {
           if (
             toCheck.isT === known.isT &&
-            L_Symbol.literallyCompareSymbolArray(env, toCheck.vars, known.vars)
+            L_Symbol.allSymbolsAreLiterallyTheSame(
+              env,
+              toCheck.vars,
+              known.vars
+            )
           ) {
             return true;
           }

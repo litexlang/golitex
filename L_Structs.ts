@@ -49,7 +49,7 @@ export abstract class L_Symbol {
     throw Error();
   }
 
-  static literallyCompareSymbolArray(
+  static allSymbolsAreLiterallyTheSame(
     env: L_Env,
     var1: L_Symbol[],
     var2: L_Symbol[]
