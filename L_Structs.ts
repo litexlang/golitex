@@ -60,9 +60,7 @@ export abstract class L_Symbol {
     );
   }
 
-  declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
-    return false;
-  }
+  abstract subSymbolsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean;
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     throw Error();
@@ -114,7 +112,7 @@ export class L_Singleton extends L_Symbol {
     return [this];
   }
 
-  declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+  subSymbolsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     return (
       env.singletonDeclared(this.value) ||
       varsFromAbove.some((e) => L_Symbol.areLiterallyTheSame(env, e, this))
@@ -158,17 +156,31 @@ export class L_Composite extends L_Symbol {
     return out;
   }
 
-  //! subSymbols in L_Composite are supposed to be freeVars
-  declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
-    if (env.getCompositeVar(this.name) === undefined) {
-      env.report(`[Error] composite \\${this.name} not declared.`);
-      return false;
+  subSymbolsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+    if (env.getCompositeVar(this.name) === undefined) return false;
+
+    for (const value of this.values) {
+      if (value instanceof L_Singleton) {
+        if (!env.singletonDeclared(value.value)) return false;
+      } else if (value instanceof L_Composite) {
+        if (!value.subSymbolsDeclared(env, [])) return false;
+      }
     }
 
-    return this.compositesInside().every(
-      (e) => env.getCompositeVar(e.name) !== undefined
-    );
+    return true;
   }
+
+  // //! subSymbols in L_Composite are supposed to be freeVars
+  // declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+  //   if (env.getCompositeVar(this.name) === undefined) {
+  //     env.report(`[Error] composite \\${this.name} not declared.`);
+  //     return false;
+  //   }
+
+  //   return this.compositesInside().every(
+  //     (e) => env.getCompositeVar(e.name) !== undefined
+  //   );
+  // }
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     const outValues: L_Symbol[] = [];
@@ -214,7 +226,7 @@ export class CompositeSymbolInIfReq extends L_Composite {
     super(name, values);
   }
 
-  declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+  subSymbolsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     return false;
   }
 }

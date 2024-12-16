@@ -78,7 +78,9 @@ export class LogicNode extends ToCheckNode {
     for (const v of this.vars) {
       if (v instanceof L_Composite) {
         //TODO I am not satisfied with this semantics
-        if (!v.declared(env, [...varsFromAbove, ...singletonsInVars])) {
+        if (
+          !v.subSymbolsDeclared(env, [...varsFromAbove, ...singletonsInVars])
+        ) {
           return false;
         }
       } else if (v instanceof L_Singleton) {
@@ -198,10 +200,10 @@ export class OptNode extends ToCheckNode {
 
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     return (
-      this.vars.every((e) => e.declared(env, varsFromAbove)) &&
+      this.vars.every((e) => e.subSymbolsDeclared(env, varsFromAbove)) &&
       (this.checkVars === undefined ||
         this.checkVars.every((arr) =>
-          arr.every((e) => e.declared(env, varsFromAbove))
+          arr.every((e) => e.subSymbolsDeclared(env, varsFromAbove))
         ))
     );
   }

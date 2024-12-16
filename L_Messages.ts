@@ -4,13 +4,13 @@ import type { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 
 export function reportExecL_Out(out: L_Out, node: L_Node): string {
   if (out === L_Out.True) {
-    return `<True Expression> ${node}`;
+    return `<True> ${node}`;
   } else if (out === L_Out.Unknown) {
-    return `[Unknown Expression] ${node}`;
+    return `<Unknown> ${node}`;
   } else if (out === L_Out.Error) {
-    return `[Error Expression] ${node}`;
+    return `<Error> ${node}`;
   } else if (out === L_Out.False) {
-    return `[False Expression] ${node}`;
+    return `<False> ${node}`;
   }
 
   return `???`;

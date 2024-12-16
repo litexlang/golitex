@@ -73,11 +73,18 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   // Main part of this function
   try {
     // TODO 严重的设计矛盾：composite里面的东西，究竟需不需要先定义一下？？
-    const declaredUndeclared =
-      toCheck.getDeclaredAndUndeclaredRootSingletons(env);
+    // const declaredUndeclared =
+    //   toCheck.getDeclaredAndUndeclaredRootSingletons(env);
 
-    if (declaredUndeclared.undeclared.length !== 0) {
-      env.report(`[undeclared] ${declaredUndeclared.undeclared}`);
+    // if (declaredUndeclared.undeclared.length !== 0) {
+    //   env.report(`[undeclared] ${declaredUndeclared.undeclared}`);
+    // }
+
+    if (!toCheck.varsDeclared(env, [])) {
+      env.report(
+        `[Undeclared Error] Some of variables in ${toCheck} not declared.`
+      );
+      return L_Out.Error;
     }
 
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
