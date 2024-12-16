@@ -22,7 +22,7 @@ import {
 import { L_Env } from "./L_Env";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
-import { ClearKeyword, RunKeyword } from "./L_Common";
+import { ClearKeyword, RunKeyword } from "./L_Keywords";
 import { runFile } from "./L_Runner";
 import { LogicNode } from "./L_Nodes";
 import {

@@ -20,8 +20,8 @@ import {
   ReturnKeyword,
   RunKeyword,
   SlashKeyword,
-} from "./L_Common";
-import * as L_Common from "./L_Common";
+} from "./L_Keywords";
+import * as L_Common from "./L_Keywords";
 import {
   CompositeSymbolInIfReq,
   L_Composite,
