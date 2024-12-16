@@ -132,7 +132,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           layers.every((layer) => layer instanceof ToCheckFormulaNode) &&
           toCheck.vars.length === root[0].vars.length &&
           toCheck.vars.every((e, i) =>
-            L_Symbol.literallyCompareTwoSymbols(env, e, root[0].vars[i])
+            L_Symbol.areLiterallyTheSame(env, e, root[0].vars[i])
           )
         ) {
           let checkedTrue = true;
@@ -211,9 +211,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       }
 
       for (let i = 0; i < opt1.vars.length; i++) {
-        if (
-          !L_Symbol.literallyCompareTwoSymbols(env, opt1.vars[i], opt2.vars[i])
-        )
+        if (!L_Symbol.areLiterallyTheSame(env, opt1.vars[i], opt2.vars[i]))
           return false;
       }
 

@@ -646,6 +646,12 @@ let a,b,c: <(a,b), <(b,c);
     debug: false,
     print: true,
   },
+  {
+    name: "=",
+    code: ["def p(x);", "let x,y;", "know x"],
+    debug: false,
+    print: true,
+  },
 ];
 
 // \frac{i,j}

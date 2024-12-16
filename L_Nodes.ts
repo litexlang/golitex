@@ -417,9 +417,7 @@ export class IsFormNode extends BuiltinCheckNode {
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
     let fixed: L_Symbol | undefined = undefined;
     for (const freeFix of freeFixPairs) {
-      if (
-        L_Symbol.literallyCompareTwoSymbols(env, freeFix[0], this.candidate)
-      ) {
+      if (L_Symbol.areLiterallyTheSame(env, freeFix[0], this.candidate)) {
         fixed = freeFix[1];
       }
     }

@@ -3,8 +3,8 @@ import { L_ReportErr } from "./L_Messages";
 import { ToCheckNode } from "./L_Nodes";
 
 export abstract class L_Symbol {
-  // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol
-  static twoSymbolsHaveTheSameForm(
+  // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol. meanwhile, whether elements of composite are the same does not matter. e.g. \frac{1,2} and \frac{a,b} does not matter.
+  static haveTheSameForm(
     env: L_Env,
     expected: L_Symbol,
     candidate: L_Symbol
@@ -18,7 +18,7 @@ export abstract class L_Symbol {
         candidate.values.length === expected.values.length
       ) {
         for (const [i, v] of candidate.values.entries()) {
-          if (!L_Symbol.twoSymbolsHaveTheSameForm(env, v, expected.values[i])) {
+          if (!L_Symbol.haveTheSameForm(env, v, expected.values[i])) {
             return false;
           }
         }
@@ -37,7 +37,7 @@ export abstract class L_Symbol {
   ): boolean {
     return (
       var1.length === var2.length &&
-      var1.every((e, i) => L_Symbol.literallyCompareTwoSymbols(env, e, var2[i]))
+      var1.every((e, i) => L_Symbol.areLiterallyTheSame(env, e, var2[i]))
     );
   }
 
@@ -49,7 +49,7 @@ export abstract class L_Symbol {
     throw Error();
   }
 
-  static literallyCompareTwoSymbols(
+  static areLiterallyTheSame(
     env: L_Env,
     var1: L_Symbol,
     var2: L_Symbol
@@ -69,11 +69,7 @@ export abstract class L_Symbol {
         } else {
           for (let i = 0; i < var1.values.length; i++) {
             if (
-              !L_Symbol.literallyCompareTwoSymbols(
-                env,
-                var1.values[i],
-                var2.values[i]
-              )
+              !L_Symbol.areLiterallyTheSame(env, var1.values[i], var2.values[i])
             ) {
               return false;
             }
@@ -84,39 +80,39 @@ export abstract class L_Symbol {
         return false;
       }
     } catch {
-      L_ReportErr(env, L_Symbol.literallyCompareTwoSymbols);
+      L_ReportErr(env, L_Symbol.areLiterallyTheSame);
       return false;
     }
   }
 
   // 两个符号字面量结构一样，比如singleton和composite就不一样，然后composite和composite之间，需要name一样才行。任何两个singleton的类型都一样。本函数用于对于 know if x, \frac{1,2} 里面的req里，自由变量和 toCheck 的变量的形式 需要对上
-  static structureEqual(
-    env: L_Env,
-    symbol1: L_Symbol,
-    symbol2: L_Symbol
-  ): boolean {
-    if (symbol1 instanceof L_Singleton && symbol2 instanceof L_Singleton) {
-      return true;
-    } else if (
-      symbol1 instanceof L_Composite &&
-      symbol2 instanceof L_Composite
-    ) {
-      if (symbol1.name === symbol2.name) {
-        for (let i = 0; i < symbol1.values.length; i++) {
-          if (
-            !L_Symbol.structureEqual(env, symbol1.values[i], symbol2.values[i])
-          ) {
-            return false;
-          }
-        }
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
+  // static structureEqual(
+  //   env: L_Env,
+  //   symbol1: L_Symbol,
+  //   symbol2: L_Symbol
+  // ): boolean {
+  //   if (symbol1 instanceof L_Singleton && symbol2 instanceof L_Singleton) {
+  //     return true;
+  //   } else if (
+  //     symbol1 instanceof L_Composite &&
+  //     symbol2 instanceof L_Composite
+  //   ) {
+  //     if (symbol1.name === symbol2.name) {
+  //       for (let i = 0; i < symbol1.values.length; i++) {
+  //         if (
+  //           !L_Symbol.structureEqual(env, symbol1.values[i], symbol2.values[i])
+  //         ) {
+  //           return false;
+  //         }
+  //       }
+  //       return true;
+  //     } else {
+  //       return false;
+  //     }
+  //   } else {
+  //     return false;
+  //   }
+  // }
 }
 
 export class L_Singleton extends L_Symbol {
@@ -127,9 +123,7 @@ export class L_Singleton extends L_Symbol {
   declared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     return (
       env.singletonDeclared(this.value) ||
-      varsFromAbove.some((e) =>
-        L_Symbol.literallyCompareTwoSymbols(env, e, this)
-      )
+      varsFromAbove.some((e) => L_Symbol.areLiterallyTheSame(env, e, this))
     );
   }
 
@@ -139,7 +133,7 @@ export class L_Singleton extends L_Symbol {
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     for (const freeFixed of freeFixedPairs) {
-      if (L_Symbol.literallyCompareTwoSymbols(env, freeFixed[0], this))
+      if (L_Symbol.areLiterallyTheSame(env, freeFixed[0], this))
         return freeFixed[1];
     }
     return this;
@@ -193,7 +187,7 @@ export class L_Composite extends L_Symbol {
     env: L_Env,
     fixed: L_Composite
   ): L_Composite | undefined {
-    if (!L_Symbol.structureEqual(env, this, fixed)) return undefined;
+    if (!L_Symbol.haveTheSameForm(env, this, fixed)) return undefined;
 
     const newValues: L_Symbol[] = [];
     for (const [i, v] of this.values.entries()) {
