@@ -181,6 +181,21 @@ export class OptNode extends ToCheckNode {
     super(isT);
   }
 
+  getDeclaredAndUndeclaredRootSingletons(env: L_Env): {
+    declared: L_Singleton[];
+    undeclared: L_Singleton[];
+  } {
+    const declared: L_Singleton[] = [];
+    const undeclared: L_Singleton[] = [];
+    for (const v of this.vars) {
+      const declaredUndeclared = v.getDeclaredAndUndeclaredRootSingletons(env);
+      declared.push(...declaredUndeclared.declared);
+      undeclared.push(...declaredUndeclared.undeclared);
+    }
+
+    return { declared: declared, undeclared: undeclared };
+  }
+
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     return (
       this.vars.every((e) => e.declared(env, varsFromAbove)) &&
