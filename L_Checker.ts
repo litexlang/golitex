@@ -55,6 +55,13 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
 
     for (const req of toCheck.req) {
       // TODO more error report
+      if (!req.varsDeclared(newEnv, [])) {
+        newEnv.report(
+          `[Undeclared Error] Some of variables in ${req} not declared.`
+        );
+        return L_Out.Error;
+      }
+
       L_Memory.newFact(newEnv, req);
     }
 
