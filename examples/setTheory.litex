@@ -1,6 +1,14 @@
-/* The following examples are LiTeX versions of Chapter 3 from Terence Tao's famous book *Analysis I*. I have provided the LaTeX version as a comment alongside to help you understand the meaning of each statement. What stands out most is how LiTeX requires far less typing (nearly 50% less) than LaTeX, making it not only more efficient but also exceptionally user-friendly. Unlike other formal proof languages, LiTeX can be used as a practical tool for everyday tasks, rather than just an auxiliary support language. */
+/* The following examples are LiTeX versions of Chapter 3 from Terence Tao's 
+famous book *Analysis I*. I have provided the LaTeX version as a comment 
+alongside to help you understand the meaning of each statement. What stands out 
+most is how LiTeX requires far less typing (nearly 50% less) than LaTeX, making 
+it not only more efficient but also exceptionally user-friendly. Unlike other 
+formal proof languages, LiTeX can be used as a practical tool for everyday 
+tasks, rather than just an auxiliary support language. */
 
-/* Axiom 3.1 (Sets are objects). If A is a set, then A is also an object. In particular, given two sets A and B, it is meaningful to ask whether A is also an element of B. */
+/* Axiom 3.1 (Sets are objects). If A is a set, then A is also an object. 
+In particular, given two sets A and B, it is meaningful to ask whether A is 
+also an element of B. */
 
 def object(x);
 def set(x);
@@ -8,13 +16,17 @@ know if x: set(x) {
   object(x)
 };
 
-// In this file, code embrace by {} are executed in a local environment and reader might read them as if it is 'test-code' for what has be declared.
+// In this file, code embrace by {} are executed in a local environment and 
+reader might read them as if it is 'test-code' for what has be declared.
 {
   let a: set(a);
   object(a);
 }
 
-/* Definition 3.1.4 (Equality of sets). Two sets A and B are equal, A = B, iff every element of A is an element of B and vice versa. To put it another way, A = B if and only if every element x of A belongs also to B, and every element y of B belongs also to A. */
+/* Definition 3.1.4 (Equality of sets). Two sets A and B are equal, A = B, iff 
+every element of A is an element of B and vice versa. To put it another way,
+A = B if and only if every element x of A belongs also to B, and every element 
+y of B belongs also to A. */
 
 def equal(a,b);
 def in(x,a);
@@ -50,8 +62,6 @@ There exists a set $\emptyset$, known as the \textit{empty set}, such that:
 \forall x \, (x \notin \emptyset),
 \]
 i.e., it contains no elements. 
-
-Lemma 3.1.6 (Single choice). Let A be a non-empty set. Then there exists an object x such that x ∈ A.
 */
 
 let EMPTY_SET: set(EMPTY_SET);
@@ -67,8 +77,14 @@ know if x {
 }
 
 /*
-Axiom 3.3 (Singleton sets and pair sets). If a is an object, then there exists a set {a} whose only element is a, i.e., for every object y, we have y∈{a} if and only if y = a; we refer to {a} as the singleton set whose element is a. Furthermore, if a and b are objects, then there exists a set {a, b} whose only elements are a and b; i.e., for every object y, we have y ∈ {a, b} if and only if y = a or y = b; we refer to this set as the pair set formed by a and b.
+Axiom 3.3 (Singleton sets and pair sets). If a is an object, then there exists a
+set {a} whose only element is a, i.e., for every object y, we have y∈{a} if and 
+only if y = a; we refer to {a} as the singleton set whose element is a. 
+Furthermore, if a and b are objects, then there exists a set {a, b} whose only 
+elements are a and b; i.e., for every object y, we have y ∈ {a, b} if and only 
+if y = a or y = b; we refer to this set as the pair set formed by a and b.
 */
+
 def_composite \singleton{a};
 know if x, a: in(x, \singleton{a}) {
     equal(x, a);
@@ -116,7 +132,10 @@ know if x, a, b: in(x,b) {
 
  
 /*
-Axiom 3.4 (Pairwise union). Given any two sets \(A\), \(B\), there exists a set \(A \cup B\), called the union \(A \cup B\) of \(A\) and \(B\), whose elements consist of all the elements which belong to \(A\) or \(B\) or both. In other words, for any object \(x\), 
+Axiom 3.4 (Pairwise union). Given any two sets \(A\), \(B\), there exists a set 
+\(A \cup B\), called the union \(A \cup B\) of \(A\) and \(B\), whose elements
+consist of all the elements which belong to \(A\) or \(B\) or both. In other
+words, for any object \(x\), 
 \[
 x \in A \cup B \iff (x \in A \lor x \in B).
 \]
@@ -152,7 +171,10 @@ know if x, y, z: in(z, \union{x, y}) {
 
 
 /*
-Axiom 3.4 (Pairwise union). Given any two sets \(A\), \(B\), there exists a set \(A \cup B\), called the union \(A \cup B\) of \(A\) and \(B\), whose elements consist of all the elements which belong to \(A\) or \(B\) or both. In other words, for any object \(x\), 
+Axiom 3.4 (Pairwise union). Given any two sets \(A\), \(B\), there exists a set 
+\(A \cup B\), called the union \(A \cup B\) of \(A\) and \(B\), whose elements
+consist of all the elements which belong to \(A\) or \(B\) or both. In other
+words, for any object \(x\), 
 \[
 x \in A \cup B \iff (x \in A \lor x \in B).
 \]
@@ -181,12 +203,17 @@ know if A,B: if x: in(x,A) {
 }
 
 /*
-Axiom 3.5 (Axiom of specification). Let \(A\) be a set, and for each \(x \in A\), let \(P(x)\) be a property pertaining to \(x\) (i.e., \(P(x)\) is either a true statement or a false statement). Then there exists a set, called \(\{x \in A : P(x) \text{ is true}\}\) (or simply \(\{x \in A : P(x)\}\) for short), whose elements are precisely the elements \(x\) in \(A\) for which \(P(x)\) is true. In other words, for any object \(y\),
+Axiom 3.5 (Axiom of specification). Let \(A\) be a set, and for each 
+\(x \in A\), let \(P(x)\) be a property pertaining to \(x\) (i.e., \(P(x)\) is 
+either a true statement or a false statement). Then there exists a set, called
+\(\{x \in A : P(x) \text{ is true}\}\) (or simply \(\{x \in A : P(x)\}\) for 
+short), whose elements are precisely the elements \(x\) in \(A\) for which 
+\(P(x)\) is true. In other words, for any object \(y\),
 \[
 y \in \{x \in A : P(x) \text{ is true}\} \iff (y \in A \text{ and } P(y) \text{ is true}).
 \]
-
 */
+
 def_composite \subset_with_property{A,P}: set(A), is_property(P);
 
 know if A, P: is_property(P), set(A) {
@@ -201,11 +228,13 @@ know if A, P: is_property(P), set(A) {
 }
 
 /*
-Definition 3.1.23 (Intersections). The intersection \(S_1 \cap S_2\) of two sets is defined to be the set
+Definition 3.1.23 (Intersections). The intersection \(S_1 \cap S_2\) of two sets
+is defined to be the set
 \[
 S_1 \cap S_2 := \{x \in S_1 : x \in S_2\}.
 \]
-In other words, \(S_1 \cap S_2\) consists of all the elements which belong to both \(S_1\) and \(S_2\). Thus, for all objects \(x\),
+In other words, \(S_1 \cap S_2\) consists of all the elements which belong to
+both \(S_1\) and \(S_2\). Thus, for all objects \(x\),
 \[
 x \in S_1 \cap S_2 \iff x \in S_1 \text{ and } x \in S_2.
 \]
@@ -236,7 +265,9 @@ know if x, a, b: set(a), set(b), in(x, \intersection{a,b}) {
 }
 
 /*
-Definition 3.1.27 (Difference sets). Given two sets \(A\) and \(B\), we define the set \(A - B\) or \(A \setminus B\) to be the set \(A\) with any elements of \(B\) removed:
+Definition 3.1.27 (Difference sets). Given two sets \(A\) and \(B\), we define 
+the set \(A - B\) or \(A \setminus B\) to be the set \(A\) with any elements of
+\(B\) removed:
 \[
 A \setminus B := \{x \in A : x \notin B\}.
 \]
@@ -254,9 +285,14 @@ def_composite \replacement{a,p}: set(a), is_property(p), if x, a: set(a), in(x,a
 };
 
 /*
-Axiom 3.6 (Replacement). Let \(A\) be a set. For any object \(x \in A\), and any object \(y\), suppose we have a statement \(P(x, y)\) pertaining to \(x\) and \(y\), such that for each \(x \in A\) there is at most one \(y\) for which \(P(x, y)\) is true. Then there exists a set \(\{y : P(x, y) \text{ is true for some } x \in A\}\), such that for any object \(z\),
+Axiom 3.6 (Replacement). Let \(A\) be a set. For any object \(x \in A\), and any
+object \(y\), suppose we have a statement \(P(x, y)\) pertaining to \(x\) and 
+\(y\), such that for each \(x \in A\) there is at most one \(y\) for which 
+\(P(x, y)\) is true. Then there exists a set \(\{y : P(x, y) \text{ is true for
+some } x \in A\}\), such that for any object \(z\),
 \[
-z \in \{y : P(x, y) \text{ is true for some } x \in A\} \iff P(x, z) \text{ is true for some } x \in A.
+z \in \{y : P(x, y) \text{ is true for some } x \in A\} \iff P(x, z) \text{ is 
+true for some } x \in A.
 \]
 */
 
@@ -272,10 +308,12 @@ know if z, a, p: set(a), is_property(p), if x, a: set(a), in(x,a) {
 };
 
 def disjoint(a,b);
-know if a,b : a is set, b is set, if x: in(x, a)  {not in(x, b)}, if x : in(x,b)  {not in(x, a)} {disjoint(a,b)};
+know if a,b : a is set, b is set, if x: in(x, a)  {not in(x, b)}, if x : in(x,b)
+{not in(x, a)} {disjoint(a,b)};
 
 /*
-Axiom 3.9 (Regularity). If A is a non-empty set, then there is at least one element x of A which is either not a set, or is disjoint from A.
+Axiom 3.9 (Regularity). If A is a non-empty set, then there is at least one 
+element x of A which is either not a set, or is disjoint from A.
 */
 
 def_composite \regularity_element{A} : set(A), not equal(A, EMPTY_SET);
@@ -290,13 +328,22 @@ know if A: set(A), not equal(A, EMPTY_SET) {
 };
 
 /*
-Axiom 3.7 (Infinity). There exists a set \(N\), whose elements are called natural numbers, as well as an object \(0 \in N\), and an object \(n^{++}\) assigned to every natural number \(n \in N\), such that the Peano axioms (Axioms 2.1 - 2.5) hold.
+Axiom 3.7 (Infinity). There exists a set \(N\), whose elements are called 
+natural numbers, as well as an object \(0 \in N\), and an object \(n^{++}\)
+assigned to every natural number \(n \in N\), such that the Peano axioms 
+(Axioms 2.1 - 2.5) hold.
 
 Axiom 2.1. 0 is a natural number.
 Axiom 2.2. If n is a natural number, then n++ is also a natural number.
-Axiom 2.3. \(0\) is not the successor of any natural number; i.e., we have \(n^{++} = 0\) for every natural number \(n\).
-Axiom 2.4. Different natural numbers must have different successors; i.e., if \(n, m\) are natural numbers and \(n \neq m\), then \(n^{++} \neq m^{++}\). Equivalently, if \(n^{++} = m^{++}\), then we must have \(n = m\).
-Axiom 2.5 (Principle of mathematical induction). Let P(n) be any property pertaining to a natural number n. Suppose that P(0) is true, and suppose that whenever P(n) is true, P(n++) is also true. Then P(n) is true for every natural number n.
+Axiom 2.3. \(0\) is not the successor of any natural number; i.e., we have 
+\(n^{++} = 0\) for every natural number \(n\).
+Axiom 2.4. Different natural numbers must have different successors; i.e., if 
+\(n, m\) are natural numbers and \(n \neq m\), then \(n^{++} \neq m^{++}\). 
+Equivalently, if \(n^{++} = m^{++}\), then we must have \(n = m\).
+Axiom 2.5 (Principle of mathematical induction). Let P(n) be any property 
+pertaining to a natural number n. Suppose that P(0) is true, and suppose that 
+whenever P(n) is true, P(n++) is also true. Then P(n) is true for every natural 
+number n.
 */
 
 def natural(x);
