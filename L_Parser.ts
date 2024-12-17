@@ -2,14 +2,7 @@ import { L_Node, LogicNode, ToCheckNode, OptNode } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
-import * as L_Common from "./L_Keywords";
-import {
-  CompositeSymbolInIfReq,
-  L_Composite,
-  L_OptSymbol,
-  L_Singleton,
-  L_Symbol,
-} from "./L_Structs";
+import * as L_Structs from "./L_Structs";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
 
 function arrParse<T>(
@@ -39,33 +32,36 @@ function arrParse<T>(
   }
 }
 
-function singletonParse(env: L_Env, tokens: string[]): L_Singleton {
+function singletonParse(env: L_Env, tokens: string[]): L_Structs.L_Singleton {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     const value = skip(tokens) as string;
-    return new L_Singleton(value);
+    return new L_Structs.L_Singleton(value);
   } catch (error) {
     handleParseError(env, tokens, "parse singleton", index, start);
     throw error;
   }
 }
 
-function optSymbolParse(env: L_Env, tokens: string[]): L_OptSymbol {
+function optSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_OptSymbol {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     const name = skip(tokens) as string;
-    return new L_OptSymbol(name);
+    return new L_Structs.L_OptSymbol(name);
   } catch (error) {
     handleParseError(env, tokens, "parse singleton", index, start);
     throw error;
   }
 }
 
-function slashCompositeParse(env: L_Env, tokens: string[]): L_Composite {
+function slashCompositeParse(
+  env: L_Env,
+  tokens: string[]
+): L_Structs.L_Composite {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -73,20 +69,23 @@ function slashCompositeParse(env: L_Env, tokens: string[]): L_Composite {
     skip(tokens, L_Keywords.SlashKeyword);
     const name = skip(tokens, tokens);
     skip(tokens, "{");
-    const values: L_Symbol[] = [];
+    const values: L_Structs.L_Symbol[] = [];
     while (!isCurToken(tokens, "}")) {
       values.push(symbolParse(env, tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
     skip(tokens, "}");
-    return new L_Composite(name, values);
+    return new L_Structs.L_Composite(name, values);
   } catch (error) {
     handleParseError(env, tokens, "parse singleton", index, start);
     throw error;
   }
 }
 
-function dollarCompositeParse(env: L_Env, tokens: string[]): L_Symbol {
+function dollarCompositeParse(
+  env: L_Env,
+  tokens: string[]
+): L_Structs.L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -96,7 +95,7 @@ function dollarCompositeParse(env: L_Env, tokens: string[]): L_Symbol {
     while (!isCurToken(tokens, L_Keywords.DollarKeyword)) {
       const opt = optSymbolParse(env, tokens);
       const right = symbolParse(env, tokens);
-      left = new L_Composite(opt.name, [left, right]);
+      left = new L_Structs.L_Composite(opt.name, [left, right]);
     }
     skip(tokens, L_Keywords.DollarKeyword);
 
@@ -107,7 +106,7 @@ function dollarCompositeParse(env: L_Env, tokens: string[]): L_Symbol {
   }
 }
 
-function prefixSymbolParse(env: L_Env, tokens: string[]): L_Symbol {
+function prefixSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -123,7 +122,7 @@ function prefixSymbolParse(env: L_Env, tokens: string[]): L_Symbol {
   }
 }
 
-function symbolParse(env: L_Env, tokens: string[]): L_Symbol {
+function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -256,8 +255,8 @@ export function parseNodesFromSingleExpression(
       const node = func(env, tokens);
       return [node];
     } else {
-      const postProve = factsArrParse(env, tokens, [L_Keywords.L_End], true);
-      return postProve;
+      const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+      return facts;
     }
   } catch (error) {
     handleParseError(env, tokens, "node", index, start);
@@ -585,8 +584,14 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
     if (tokens.length >= 2 && tokens[1] === "(") {
       //TODO CheckVars not implemented
 
-      const optSymbol: L_OptSymbol = optSymbolParse(env, tokens);
-      const vars = arrParse<L_Symbol>(env, tokens, symbolParse, "(", ")");
+      const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
+      const vars = arrParse<L_Structs.L_Symbol>(
+        env,
+        tokens,
+        symbolParse,
+        "(",
+        ")"
+      );
 
       let checkVars = checkVarsParse();
 
@@ -598,14 +603,14 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
         case "is": {
           skip(tokens, "is");
           const optName = skip(tokens);
-          const optSymbol = new L_OptSymbol(optName);
+          const optSymbol = new L_Structs.L_OptSymbol(optName);
           const checkVars = checkVarsParse();
           const out = new OptNode(optSymbol, [var1], isT, checkVars);
           return out;
         }
         default: {
           const optName = skip(tokens);
-          const optSymbol = new L_OptSymbol(optName);
+          const optSymbol = new L_Structs.L_OptSymbol(optName);
           const var2 = symbolParse(env, tokens);
           const checkVars = checkVarsParse();
           const out = new OptNode(optSymbol, [var1, var2], isT, checkVars);
@@ -624,14 +629,14 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
     throw error;
   }
 
-  function checkVarsParse(): L_Symbol[][] | undefined {
+  function checkVarsParse(): L_Structs.L_Symbol[][] | undefined {
     if (isCurToken(tokens, "[")) {
       skip(tokens, "[");
-      const checkVars: L_Symbol[][] = [];
+      const checkVars: L_Structs.L_Symbol[][] = [];
       checkVars.push([]);
       while (!isCurToken(tokens, "]")) {
         checkVars[checkVars.length - 1].push(
-          ...arrParse<L_Symbol>(
+          ...arrParse<L_Structs.L_Symbol>(
             env,
             tokens,
             symbolParse,
@@ -660,7 +665,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
   try {
     const type = skip(tokens, [L_Keywords.IfKeyword, L_Keywords.IffKeyword]);
     if (type === undefined) throw Error();
-    const vars: L_Symbol[] = [];
+    const vars: L_Structs.L_Symbol[] = [];
 
     while (!isCurToken(tokens, [":", "{"])) {
       if (isCurToken(tokens, L_Keywords.SlashKeyword)) {
@@ -709,14 +714,14 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
   function compositeInIfReqParse(
     env: L_Env,
     tokens: string[]
-  ): CompositeSymbolInIfReq {
+  ): L_Structs.CompositeSymbolInIfReq {
     const start = tokens[0];
     const index = tokens.length;
 
     try {
       const composite = slashCompositeParse(env, tokens);
       // TODO IT SEEMS VARS AFTER COMPOSITE IS UNNECESSARY
-      const vars = arrParse<L_Singleton>(
+      const vars = arrParse<L_Structs.L_Singleton>(
         env,
         tokens,
         singletonParse,
@@ -724,7 +729,11 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
         "]",
         true
       );
-      return new CompositeSymbolInIfReq(composite.name, composite.values, vars);
+      return new L_Structs.CompositeSymbolInIfReq(
+        composite.name,
+        composite.values,
+        vars
+      );
     } catch (error) {
       handleParseError(env, tokens, "parse singleton", index, start);
       throw error;
@@ -962,7 +971,7 @@ function usePrecedenceToParseComposite(
   tokens: string[],
   begin: string,
   end: string
-): L_Symbol {
+): L_Structs.L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -986,11 +995,11 @@ function usePrecedenceToParseComposite(
         precedenceMap.get(opt) as number,
         precedenceMap
       );
-      left = new L_Composite(opt, [left, next]);
+      left = new L_Structs.L_Composite(opt, [left, next]);
     }
 
     skip(tokens, end);
-    return left as L_Symbol;
+    return left as L_Structs.L_Symbol;
   } catch (error) {
     handleParseError(env, tokens, "let", index, start);
     throw error;
@@ -1002,8 +1011,8 @@ function usePrecedenceToParseComposite(
     end: string,
     curPrecedence: number,
     precedenceMap: Map<string, number>
-  ): L_Symbol {
-    let left: L_Symbol;
+  ): L_Structs.L_Symbol {
+    let left: L_Structs.L_Symbol;
     if (!isCurToken(tokens, "(")) {
       left = prefixSymbolParse(env, tokens);
     } else {
@@ -1024,7 +1033,7 @@ function usePrecedenceToParseComposite(
           precedenceMap.get(opt) as number,
           precedenceMap
         );
-        return new L_Composite(opt, [left, next]);
+        return new L_Structs.L_Composite(opt, [left, next]);
       }
     }
   }

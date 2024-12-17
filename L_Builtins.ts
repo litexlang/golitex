@@ -1,10 +1,4 @@
-import {
-  BuiltinCheckNode,
-  IsPropertyNode,
-  L_Node,
-  OptNode,
-  ToCheckNode,
-} from "./L_Nodes";
+import { BuiltinCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { isPropertyParse, isFormParse, orParse } from "./L_Parser";
 import { L_Out } from "./L_Structs";

@@ -4,9 +4,8 @@ import * as L_Memory from "./L_Memory";
 import { L_Keywords } from "./L_Keywords";
 import { runFile } from "./L_Runner";
 import * as L_Nodes from "./L_Nodes";
-import { L_ReportErr, reportExecL_Out, reportStoreErr } from "./L_Messages";
+import * as L_Messages from "./L_Messages";
 import { L_Out, L_Singleton } from "./L_Structs";
-import { postfixProveExec } from "./L_Prove";
 import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
 
 export const DEBUG_DICT = {
@@ -44,8 +43,6 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return proveExec(env, node as L_Nodes.ProveNode);
       case "ProveContradictNode":
         return proveContradictExec(env, node as L_Nodes.ProveContradictNode);
-      case "PostfixProve":
-        return postfixProveExec(env, node as L_Nodes.PostfixProve);
       case "LocalEnvNode":
         return localEnvExec(env, node as L_Nodes.LocalEnvNode);
       case "SpecialNode":
@@ -56,7 +53,7 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         if (node instanceof L_Nodes.ToCheckNode) {
           try {
             const out = factExec(env, node as L_Nodes.ToCheckNode);
-            env.report(reportExecL_Out(out, node));
+            env.report(L_Messages.reportExecL_Out(out, node));
             return out;
           } catch {
             throw Error(`${node as L_Nodes.ToCheckNode}`);
@@ -66,8 +63,7 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return L_Out.Error;
     }
   } catch (error) {
-    if (error instanceof Error) env.report(`Error: ${error.message}`);
-    return L_Out.Error;
+    return L_Messages.L_ReportErr(env, L_Exec, node);
   }
 }
 
@@ -89,14 +85,14 @@ function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
     for (const onlyIf of node.facts) {
       const ok = L_Memory.newFact(env, onlyIf);
       if (!ok) {
-        reportStoreErr(env, knowExec.name, onlyIf);
+        L_Messages.reportStoreErr(env, knowExec.name, onlyIf);
         throw new Error();
       }
     }
 
     return L_Out.True;
   } catch {
-    return env.errMesReturnL_Out(node);
+    return L_Messages.L_ReportErr(env, letExec, node);
   }
 }
 
@@ -112,7 +108,7 @@ export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
     for (const onlyIf of node.facts) {
       const ok = L_Memory.newFact(env, onlyIf);
       if (!ok) {
-        reportStoreErr(env, knowExec.name, onlyIf);
+        L_Messages.reportStoreErr(env, knowExec.name, onlyIf);
         throw new Error();
       }
     }
@@ -124,7 +120,7 @@ export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errMesReturnL_Out(node);
+    return L_Messages.L_ReportErr(env, knowExec, node);
   }
 }
 
@@ -143,7 +139,7 @@ function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errMesReturnL_Out(node);
+    return L_Messages.L_ReportErr(env, defExec, node);
   }
 }
 
@@ -164,8 +160,7 @@ function factExec(env: L_Env, toCheck: L_Nodes.ToCheckNode): L_Out {
 
     return out;
   } catch {
-    env.report(`failed to check ${toCheck}`);
-    return L_Out.Error;
+    return L_Messages.L_ReportErr(env, factExec, toCheck);
   }
 }
 
@@ -183,8 +178,7 @@ function localEnvExec(env: L_Env, localEnvNode: L_Nodes.LocalEnvNode): L_Out {
 
     return L_Out.True;
   } catch {
-    env.report("{}");
-    return L_Out.Error;
+    return L_Messages.L_ReportErr(env, localEnvExec, localEnvExec);
   }
 }
 
@@ -202,8 +196,7 @@ function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
 
     return L_Out.Error;
   } catch {
-    env.report(`${node.keyword}`);
-    return L_Out.Error;
+    return L_Messages.L_ReportErr(env, specialExec, node);
   }
 }
 
@@ -212,7 +205,7 @@ function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
     env.newMacro(node);
     return L_Out.True;
   } catch {
-    return env.errMesReturnL_Out(`Failed: macro ${node}`);
+    return L_Messages.L_ReportErr(env, macroExec, node);
   }
 }
 
@@ -248,7 +241,7 @@ function proveContradictExec(
       return L_Out.Unknown;
     }
   } catch {
-    return env.errMesReturnL_Out(`prove_by_contradict failed: ${proveNode}`);
+    return L_Messages.L_ReportErr(env, proveContradictExec, proveNode);
   }
 }
 
@@ -263,7 +256,7 @@ function proveExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
 
     throw Error();
   } catch {
-    return env.errMesReturnL_Out(`prove failed: ${proveNode}`);
+    return L_Messages.L_ReportErr(env, proveExec, proveNode);
   }
 }
 
@@ -290,7 +283,7 @@ function proveOptExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
       return L_Out.Unknown;
     }
   } catch {
-    return env.errMesReturnL_Out(`prove failed: ${proveNode}`);
+    return L_Messages.L_ReportErr(env, proveOptExec, proveNode);
   }
 }
 
@@ -343,7 +336,7 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
       throw Error();
     }
   } catch {
-    return env.errMesReturnL_Out(`prove failed: ${proveNode}`);
+    return L_Messages.L_ReportErr(env, proveIfExec, proveNode);
   }
 }
 
@@ -356,6 +349,6 @@ function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
       throw Error();
     }
   } catch {
-    return L_ReportErr(env, defCompositeExec, node);
+    return L_Messages.L_ReportErr(env, defCompositeExec, node);
   }
 }

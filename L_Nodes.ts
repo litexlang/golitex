@@ -304,16 +304,6 @@ export class ProveContradictNode extends ProveNode {
   }
 }
 
-export class PostfixProve extends L_Node {
-  constructor(
-    public facts: ToCheckNode[],
-    public block: L_Node[],
-    public names: string[]
-  ) {
-    super();
-  }
-}
-
 export class LocalEnvNode extends L_Node {
   constructor(public nodes: L_Node[]) {
     super();
