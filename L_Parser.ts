@@ -1,26 +1,7 @@
 import { L_Node, LogicNode, ToCheckNode, OptNode } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import {
-  ClearKeyword,
-  DefKeywords,
-  HaveKeywords,
-  IffKeyword,
-  IfKeyword,
-  KnowTypeKeywords,
-  L_Ends,
-  L_Keywords,
-  LetKeyword,
-  LetKeywords,
-  LogicalKeywords,
-  MacroKeywords,
-  PostProveKeywords,
-  ProveByContradictionKeyword,
-  ProveKeywords,
-  ReturnKeyword,
-  RunKeyword,
-  SlashKeyword,
-} from "./L_Keywords";
+import { L_Keywords } from "./L_Keywords";
 import * as L_Common from "./L_Keywords";
 import {
   CompositeSymbolInIfReq,
@@ -89,7 +70,7 @@ function slashCompositeParse(env: L_Env, tokens: string[]): L_Composite {
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Common.SlashKeyword);
+    skip(tokens, L_Keywords.SlashKeyword);
     const name = skip(tokens, tokens);
     skip(tokens, "{");
     const values: L_Symbol[] = [];
@@ -110,14 +91,14 @@ function dollarCompositeParse(env: L_Env, tokens: string[]): L_Symbol {
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Common.DollarKeyword);
+    skip(tokens, L_Keywords.DollarKeyword);
     let left = symbolParse(env, tokens);
-    while (!isCurToken(tokens, L_Common.DollarKeyword)) {
+    while (!isCurToken(tokens, L_Keywords.DollarKeyword)) {
       const opt = optSymbolParse(env, tokens);
       const right = symbolParse(env, tokens);
       left = new L_Composite(opt.name, [left, right]);
     }
-    skip(tokens, L_Common.DollarKeyword);
+    skip(tokens, L_Keywords.DollarKeyword);
 
     return left;
   } catch (error) {
@@ -131,7 +112,7 @@ function prefixSymbolParse(env: L_Env, tokens: string[]): L_Symbol {
   const index = tokens.length;
 
   try {
-    if (tokens[0] === L_Common.SlashKeyword) {
+    if (tokens[0] === L_Keywords.SlashKeyword) {
       return slashCompositeParse(env, tokens);
     } else {
       return singletonParse(env, tokens);
@@ -147,9 +128,9 @@ function symbolParse(env: L_Env, tokens: string[]): L_Symbol {
   const index = tokens.length;
 
   try {
-    if (tokens[0] === L_Common.SlashKeyword) {
+    if (tokens[0] === L_Keywords.SlashKeyword) {
       return slashCompositeParse(env, tokens);
-    } else if (tokens[0] === L_Common.DollarKeyword) {
+    } else if (tokens[0] === L_Keywords.DollarKeyword) {
       return dollarCompositeParse(env, tokens);
     } else {
       return singletonParse(env, tokens);
@@ -262,9 +243,9 @@ export function parseNodesFromSingleExpression(
   try {
     if (tokens.length === 0) return undefined;
 
-    if (L_Ends.includes(tokens[0])) {
+    if (isCurToken(tokens, L_Keywords.L_End)) {
       tokens.shift();
-      while (tokens.length > 0 && L_Ends.includes(tokens[0])) {
+      while (tokens.length > 0 && isCurToken(tokens, L_Keywords.L_End)) {
         tokens.shift();
       }
       if (tokens.length === 0) return undefined;
@@ -275,7 +256,7 @@ export function parseNodesFromSingleExpression(
       const node = func(env, tokens);
       return [node];
     } else {
-      const postProve = factsArrParse(env, tokens, L_Ends, true);
+      const postProve = factsArrParse(env, tokens, [L_Keywords.L_End], true);
       return postProve;
     }
   } catch (error) {
@@ -289,7 +270,7 @@ function knowParse(env: L_Env, tokens: string[]): L_Nodes.KnowNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, KnowTypeKeywords);
+    skip(tokens, L_Keywords.KnowTypeKeywords);
 
     const names: string[] = [];
 
@@ -297,13 +278,13 @@ function knowParse(env: L_Env, tokens: string[]): L_Nodes.KnowNode {
     // const strict = keyword === "know" ? false : true;
 
     // const knowNode: L_Nodes.KnowNode = new L_Nodes.KnowNode([], []);
-    while (!L_Ends.includes(tokens[0])) {
-      facts = factsArrParse(env, tokens, [...L_Ends, ","], false);
+    while (!isCurToken(tokens, L_Keywords.L_End)) {
+      facts = factsArrParse(env, tokens, [L_Keywords.L_End, ","], false);
       // knowNode.facts = knowNode.facts.concat(outs);
 
       if (tokens[0] === ",") skip(tokens, ",");
     }
-    skip(tokens, L_Ends);
+    skip(tokens, L_Keywords.L_End);
 
     return new L_Nodes.KnowNode(facts, names);
     // return knowNode;
@@ -318,30 +299,34 @@ function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode {
   const index = tokens.length;
 
   try {
-    const whichLet = skip(tokens, LetKeywords) as string;
+    const whichLet = skip(tokens, L_Keywords.LetKeyword) as string;
 
     const vars: string[] = [];
-    while (![...L_Ends, , ":"].includes(tokens[0])) {
+    while (![L_Keywords.L_End, , ":"].includes(tokens[0])) {
       vars.push(tokens.shift() as string);
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
-    if (vars.some((e) => L_Keywords.includes(e) || e.startsWith("\\"))) {
+    if (
+      vars.some(
+        (e) => Object.keys(L_Keywords).includes(e) || e.startsWith("\\")
+      )
+    ) {
       env.report(`Error: ${vars} contain LiTeX keywords.`);
       throw Error();
     }
 
-    if (L_Ends.includes(tokens[0])) {
-      skip(tokens, L_Ends);
-      if (whichLet === LetKeyword) {
+    if (isCurToken(tokens, L_Keywords.L_End)) {
+      skip(tokens, L_Keywords.L_End);
+      if (whichLet === L_Keywords.LetKeyword) {
         return new L_Nodes.LetNode(vars, []);
       } else {
         throw Error();
       }
     } else {
       skip(tokens, ":");
-      const facts = factsArrParse(env, tokens, L_Ends, true);
-      if (whichLet === LetKeyword) {
+      const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+      if (whichLet === L_Keywords.LetKeyword) {
         return new L_Nodes.LetNode(vars, facts);
       } else {
         throw Error();
@@ -359,11 +344,11 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
 
   try {
     let byContradict = false;
-    if (tokens[0] === ProveByContradictionKeyword) {
+    if (tokens[0] === L_Keywords.ProveByContradictionKeyword) {
       byContradict = true;
-      skip(tokens, ProveByContradictionKeyword);
+      skip(tokens, L_Keywords.ProveByContradictionKeyword);
     } else {
-      skip(tokens, ProveKeywords);
+      skip(tokens, L_Keywords.ProveKeywords);
     }
 
     const toProve = factParse(env, tokens);
@@ -371,7 +356,7 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
     const block: L_Node[] = [];
     skip(tokens, "{");
     while (tokens[0] !== "}") {
-      while (["\n", ";"].includes(tokens[0])) {
+      while (isCurToken(tokens, L_Keywords.L_End)) {
         tokens.shift();
       }
       if (tokens[0] === "}") break;
@@ -387,7 +372,7 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
 
     if (byContradict) {
       const contradict = optParse(env, tokens, true);
-      skip(tokens, L_Ends);
+      skip(tokens, L_Keywords.L_End);
       return new L_Nodes.ProveContradictNode(toProve, block, contradict);
     } else {
       return new L_Nodes.ProveNode(toProve, block);
@@ -466,8 +451,8 @@ function parseToCheckFormula(
   skip(tokens, begin);
 
   const precedence = new Map<string, number>();
-  precedence.set(L_Common.OrKeyword, 0);
-  precedence.set(L_Common.AndKeyword, 1);
+  precedence.set(L_Keywords.OrKeyword, 0);
+  precedence.set(L_Keywords.AndKeyword, 1);
 
   let isT = true;
   if (isCurToken(tokens, "not")) {
@@ -476,7 +461,7 @@ function parseToCheckFormula(
   }
 
   let left: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
-  let curOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
+  let curOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.AndKeyword]);
   let curPrecedence = precedence.get(curOpt) as number;
 
   if (isCurToken(tokens, end)) {
@@ -486,23 +471,23 @@ function parseToCheckFormula(
   let right: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
 
   if (isCurToken(tokens, end)) {
-    if (curOpt === L_Common.OrKeyword) {
+    if (curOpt === L_Keywords.OrKeyword) {
       return new L_Nodes.OrToCheckNode(left, right, isT);
-    } else if (curOpt === L_Common.AndKeyword) {
+    } else if (curOpt === L_Keywords.AndKeyword) {
       return new L_Nodes.AndToCheckNode(left, right, isT);
     }
   }
 
   while (!isCurToken(tokens, end)) {
-    let nextOpt = skip(tokens, [L_Common.OrKeyword, L_Common.AndKeyword]);
+    let nextOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.AndKeyword]);
     let nextPrecedence = precedence.get(nextOpt) as number;
     if (curPrecedence > nextPrecedence) {
       // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-      if (curOpt === L_Common.AndKeyword) {
+      if (curOpt === L_Keywords.AndKeyword) {
         left = new L_Nodes.AndToCheckNode(left, right, true);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-        if (nextOpt === L_Common.OrKeyword) {
+        if (nextOpt === L_Keywords.OrKeyword) {
           left = new L_Nodes.OrToCheckNode(left, next, isT);
         }
       }
@@ -511,7 +496,7 @@ function parseToCheckFormula(
       right = new L_Nodes.AndToCheckNode(right, next, true);
       left = new L_Nodes.OrToCheckNode(left, right, isT);
     } else {
-      if (curOpt === L_Common.AndKeyword) {
+      if (curOpt === L_Keywords.AndKeyword) {
         left = new L_Nodes.AndToCheckNode(left, right, isT);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         left = new L_Nodes.AndToCheckNode(left, next, isT);
@@ -543,7 +528,7 @@ function parsePrimitiveFact(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
     const parser = L_BuiltinParsers.get(tokens[0]) as Function;
     out = parser(env, tokens);
     out.isT = isT;
-  } else if (LogicalKeywords.includes(tokens[0])) {
+  } else if (["if", "iff"].includes(tokens[0])) {
     out = logicParse(env, tokens);
     out.isT = isT ? out.isT : !out.isT;
   } else {
@@ -673,12 +658,12 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
   const index = tokens.length;
 
   try {
-    const type = skip(tokens, [IfKeyword, IffKeyword]);
+    const type = skip(tokens, [L_Keywords.IfKeyword, L_Keywords.IffKeyword]);
     if (type === undefined) throw Error();
     const vars: L_Symbol[] = [];
 
     while (!isCurToken(tokens, [":", "{"])) {
-      if (isCurToken(tokens, SlashKeyword)) {
+      if (isCurToken(tokens, L_Keywords.SlashKeyword)) {
         const s = compositeInIfReqParse(env, tokens);
         vars.push(s);
       } else {
@@ -709,9 +694,9 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     }
     skip(tokens, "}");
 
-    if (type === IfKeyword) {
+    if (type === L_Keywords.IfKeyword) {
       return new L_Nodes.IfNode(vars, req, onlyIfs, true); //! By default isT = true
-    } else if (type === IffKeyword) {
+    } else if (type === L_Keywords.IffKeyword) {
       return new L_Nodes.IffNode(vars, req, onlyIfs, true);
     } else {
       throw Error();
@@ -768,7 +753,7 @@ function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, HaveKeywords);
+    skip(tokens, L_Keywords.HaveKeywords);
     const vars: string[] = [];
     while (!isCurToken(tokens, ":")) {
       vars.push(tokens.shift() as string);
@@ -776,7 +761,12 @@ function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
     }
     skip(tokens, ":");
 
-    const opts = factsArrParse(env, tokens, L_Ends, true) as OptNode[];
+    const opts = factsArrParse(
+      env,
+      tokens,
+      [L_Keywords.L_End],
+      true
+    ) as OptNode[];
 
     return new L_Nodes.HaveNode(opts, vars);
   } catch (error) {
@@ -792,16 +782,16 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   try {
     const keyword = tokens.shift() as string;
     switch (keyword) {
-      case ClearKeyword:
-        skip(tokens, L_Ends);
-        return new L_Nodes.SpecialNode(ClearKeyword, null);
-      case RunKeyword: {
+      case L_Keywords.ClearKeyword:
+        skip(tokens, L_Keywords.L_End);
+        return new L_Nodes.SpecialNode(L_Keywords.ClearKeyword, null);
+      case L_Keywords.RunKeyword: {
         const words: string[] = [];
-        while (!L_Ends.includes(tokens[0])) {
+        while (!isCurToken(tokens, L_Keywords.L_End)) {
           words.push(tokens.shift() as string);
         }
-        skip(tokens, L_Ends);
-        return new L_Nodes.SpecialNode(RunKeyword, words.join());
+        skip(tokens, L_Keywords.L_End);
+        return new L_Nodes.SpecialNode(L_Keywords.RunKeyword, words.join());
       }
       default:
         throw Error();
@@ -817,10 +807,10 @@ function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, MacroKeywords);
+    skip(tokens, L_Keywords.MacroKeywords);
     const regexString = skipString(tokens);
     const varName = tokens.shift() as string;
-    const facts = factsArrParse(env, tokens, L_Ends, true);
+    const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
 
     return new L_Nodes.MacroNode(regexString, varName, facts);
   } catch (error) {
@@ -849,14 +839,14 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, DefKeywords);
+    skip(tokens, L_Keywords.DefKeywords);
 
     const opt: OptNode = optParse(env, tokens, false);
 
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
       skip(tokens, ":");
-      cond = factsArrParse(env, tokens, L_Ends, false);
+      cond = factsArrParse(env, tokens, [L_Keywords.L_End], false);
     }
 
     const onlyIfs: ToCheckNode[] = [];
@@ -866,7 +856,7 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
       skip(tokens, "}");
       return new L_Nodes.DefNode(opt, cond, onlyIfs);
     } else {
-      skip(tokens, L_Ends);
+      skip(tokens, L_Keywords.L_End);
       return new L_Nodes.DefNode(opt, cond, onlyIfs);
     }
   } catch (error) {
@@ -884,20 +874,20 @@ export function LetCompositeParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Common.LetCompositeKeyword);
+    skip(tokens, L_Keywords.LetCompositeKeyword);
     const composite = slashCompositeParse(env, tokens);
-    if (isCurToken(tokens, L_Ends)) {
-      skip(tokens, L_Ends);
+    if (isCurToken(tokens, L_Keywords.L_End)) {
+      skip(tokens, L_Keywords.L_End);
       return new L_Nodes.DefCompositeNode(composite, []);
     }
 
     skip(tokens, ":");
     const facts: ToCheckNode[] = [];
-    while (!isCurToken(tokens, L_Ends)) {
-      facts.push(...factsArrParse(env, tokens, [",", ...L_Ends], false));
+    while (!isCurToken(tokens, L_Keywords.L_End)) {
+      facts.push(...factsArrParse(env, tokens, [",", L_Keywords.L_End], false));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
-    skip(tokens, L_Ends);
+    skip(tokens, L_Keywords.L_End);
 
     return new L_Nodes.DefCompositeNode(composite, facts);
   } catch (error) {
@@ -914,7 +904,7 @@ export function isPropertyParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Common.isFormKeyword);
+    skip(tokens, L_Keywords.isFormKeyword);
     skip(tokens, "(");
     const name = skip(tokens);
     skip(tokens, ")");
@@ -940,7 +930,7 @@ export function isFormParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Common.isFormKeyword);
+    skip(tokens, L_Keywords.isFormKeyword);
     skip(tokens, "(");
     const given = symbolParse(env, tokens);
     skip(tokens, ",");

@@ -95,7 +95,7 @@ const exampleList: ExampleItem[] = [
       "prove_by_contradiction  not  human(god) {god is mortal;}  god is mortal;",
       "not human(god);",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -646,6 +646,7 @@ let a,b,c: <(a,b), <(b,c);
     debug: false,
     print: true,
   },
+  //------------------------------------------------------------
   {
     name: "=",
     code: [
@@ -656,7 +657,7 @@ let a,b,c: <(a,b), <(b,c);
       "\\frac{x,y} is nat;",
       "know if k: is_form(k, \\frac{x,y}) {k is number}",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -671,7 +672,7 @@ let a,b,c: <(a,b), <(b,c);
       "know if k: is_form(k, \\frac{x,y}) {k is number}",
       "\\frac{x,y} is number;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -682,7 +683,7 @@ let a,b,c: <(a,b), <(b,c);
       "lets arabic_natural_number /^[0-9]+$/ : arabic_natural_number is nat;",
       "1 is nat;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -700,7 +701,7 @@ let a,b,c: <(a,b), <(b,c);
       "$a + b$ > 0 [a,b];",
       "know if n, x: is_form(n, $x + y$, {x > 0, y > 0} ) {n > x}",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];

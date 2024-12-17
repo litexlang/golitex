@@ -22,7 +22,7 @@ import {
 import { L_Env } from "./L_Env";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
-import { ClearKeyword, RunKeyword } from "./L_Keywords";
+import { L_Keywords } from "./L_Keywords";
 import { runFile } from "./L_Runner";
 import { LogicNode } from "./L_Nodes";
 import {
@@ -226,10 +226,10 @@ function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): L_Out {
 function specialExec(env: L_Env, node: SpecialNode): L_Out {
   try {
     switch (node.keyword) {
-      case ClearKeyword:
+      case L_Keywords.ClearKeyword:
         env.clear();
         return L_Out.True;
-      case RunKeyword: {
+      case L_Keywords.RunKeyword: {
         runFile(env, node.extra as string, true, false);
         return L_Out.True;
       }
