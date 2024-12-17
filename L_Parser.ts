@@ -362,7 +362,7 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
       if (tokens[0] === "}") break;
 
       const node = parseNodesFromSingleExpression(env, tokens);
-      if (node !== undefined) block.push(node);
+      if (node !== undefined) block.push(...node);
       else {
         throw Error();
       }
