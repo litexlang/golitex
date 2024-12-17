@@ -1,0 +1,43 @@
+/* The file contains an example of syllogism(三段论). It turns out that It just 
+takes 10% of typing(only ~10 lines) compared with using other formal languages 
+like lean4. Code explanation is in syllogism.litex .*/
+
+// Comparison between LiTeX and Lean4: LiTeX is much simpler and more 
+straightforward.
+
+// LiTeX version
+def human(something);
+def mortal(something);
+know if x: human(x) {mortal(x)};
+let Socrates: Socrates is human;
+Socrates is mortal;
+if x: x is human {x is mortal};
+let god: not god is mortal;
+prove_by_contradiction not human(god) {
+  god is mortal;
+} god is mortal;
+
+// Lean4 version
+/*
+variable (Human : Type)
+variable (Mortal : Human → Prop)
+variable (Socrates : Human)
+axiom all_humans_are_mortal : ∀ (x : Human), Mortal x
+theorem socrates_is_mortal : Mortal Socrates := by
+  apply all_humans_are_mortal
+#check socrates_is_mortal
+def all_humans_will_die : Prop := ∀ (x : Human), Mortal x
+theorem prove_all_humans_will_die : all_humans_will_die := all_humans_are_mortal
+#check prove_all_humans_will_die
+variable (God : Type)
+variable (god : God)
+axiom god_is_immortal : ¬ Mortal God
+theorem god_is_not_human : God ≠ Human :=
+  by
+  intro h
+  have god_is_mortal : Mortal God := all_humans_are_mortal god,
+  contradiction
+
+
+*/
+

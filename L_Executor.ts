@@ -51,13 +51,9 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return macroExec(env, node as L_Nodes.MacroNode);
       default:
         if (node instanceof L_Nodes.ToCheckNode) {
-          try {
-            const out = factExec(env, node as L_Nodes.ToCheckNode);
-            env.report(L_Messages.reportExecL_Out(out, node));
-            return out;
-          } catch {
-            throw Error(`${node as L_Nodes.ToCheckNode}`);
-          }
+          const out = factExec(env, node as L_Nodes.ToCheckNode);
+          env.report(L_Messages.reportExecL_Out(out, node));
+          return out;
         }
 
         return L_Out.Error;
