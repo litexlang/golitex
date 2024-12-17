@@ -1,47 +1,12 @@
-import {
-  BuiltinCheckNode,
-  ByNode,
-  DefNode,
-  HaveNode,
-  IfNode,
-  KnowNode,
-  L_Node,
-  DefCompositeNode,
-  LetHashNode,
-  LetNode,
-  LocalEnvNode,
-  MacroNode,
-  OptNode,
-  PostfixProve,
-  ProveContradictNode,
-  ProveNode,
-  ReturnNode,
-  SpecialNode,
-  ToCheckNode,
-} from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import { L_Keywords } from "./L_Keywords";
 import { runFile } from "./L_Runner";
-import { LogicNode } from "./L_Nodes";
-import {
-  L_ReportErr,
-  reportExecL_Out,
-  reportNewVars,
-  reportNotAllFactsInGivenFactAreDeclared,
-  reportStoreErr,
-} from "./L_Messages";
-import { isBuiltinKeyword } from "./L_Builtins";
+import * as L_Nodes from "./L_Nodes";
+import { L_ReportErr, reportExecL_Out, reportStoreErr } from "./L_Messages";
 import { L_Out, L_Singleton } from "./L_Structs";
-import {
-  postfixProveExec,
-  // proveExist,
-  proveOpt,
-  proveOptByContradict,
-} from "./L_Prove";
-import { on } from "events";
-import { blob } from "stream/consumers";
+import { postfixProveExec } from "./L_Prove";
 import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
 
 export const DEBUG_DICT = {
@@ -62,39 +27,39 @@ export const L_OutMap: { [key in L_Out]: string } = {
   [L_Out.Unknown]: "check: unknown",
 };
 
-export function L_Exec(env: L_Env, node: L_Node): L_Out {
+export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   try {
     const nodeType = node.constructor.name;
 
     switch (nodeType) {
       case "DefNode":
-        return defExec(env, node as DefNode);
+        return defExec(env, node as L_Nodes.DefNode);
       case "KnowNode":
-        return knowExec(env, node as KnowNode);
+        return knowExec(env, node as L_Nodes.KnowNode);
       case "DefCompositeNode":
-        return defCompositeExec(env, node as DefCompositeNode);
+        return defCompositeExec(env, node as L_Nodes.DefCompositeNode);
       case "LetNode":
-        return letExec(env, node as LetNode);
+        return letExec(env, node as L_Nodes.LetNode);
       case "ProveNode":
-        return proveExec(env, node as ProveNode);
+        return proveExec(env, node as L_Nodes.ProveNode);
       case "ProveContradictNode":
-        return proveContradictExec(env, node as ProveContradictNode);
+        return proveContradictExec(env, node as L_Nodes.ProveContradictNode);
       case "PostfixProve":
-        return postfixProveExec(env, node as PostfixProve);
+        return postfixProveExec(env, node as L_Nodes.PostfixProve);
       case "LocalEnvNode":
-        return localEnvExec(env, node as LocalEnvNode);
+        return localEnvExec(env, node as L_Nodes.LocalEnvNode);
       case "SpecialNode":
-        return specialExec(env, node as SpecialNode);
+        return specialExec(env, node as L_Nodes.SpecialNode);
       case "MacroNode":
-        return macroExec(env, node as MacroNode);
+        return macroExec(env, node as L_Nodes.MacroNode);
       default:
-        if (node instanceof ToCheckNode) {
+        if (node instanceof L_Nodes.ToCheckNode) {
           try {
-            const out = factExec(env, node as ToCheckNode);
+            const out = factExec(env, node as L_Nodes.ToCheckNode);
             env.report(reportExecL_Out(out, node));
             return out;
           } catch {
-            throw Error(`${node as ToCheckNode}`);
+            throw Error(`${node as L_Nodes.ToCheckNode}`);
           }
         }
 
@@ -106,7 +71,7 @@ export function L_Exec(env: L_Env, node: L_Node): L_Out {
   }
 }
 
-function letExec(env: L_Env, node: LetNode): L_Out {
+function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
   try {
     // examine whether some vars are already declared. if not, declare them.
     for (const e of node.vars) {
@@ -135,7 +100,7 @@ function letExec(env: L_Env, node: LetNode): L_Out {
   }
 }
 
-export function knowExec(env: L_Env, node: KnowNode): L_Out {
+export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
   try {
     // examine whether all facts are declared.
     // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
@@ -163,7 +128,7 @@ export function knowExec(env: L_Env, node: KnowNode): L_Out {
   }
 }
 
-function defExec(env: L_Env, node: DefNode): L_Out {
+function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
   try {
     // declare new opt
     const ok = L_Memory.declNewFact(env, node);
@@ -182,7 +147,7 @@ function defExec(env: L_Env, node: DefNode): L_Out {
   }
 }
 
-function factExec(env: L_Env, toCheck: ToCheckNode): L_Out {
+function factExec(env: L_Env, toCheck: L_Nodes.ToCheckNode): L_Out {
   try {
     // TODO: Implement check whether the given toCheck exists and given var exists.
 
@@ -204,7 +169,7 @@ function factExec(env: L_Env, toCheck: ToCheckNode): L_Out {
   }
 }
 
-function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): L_Out {
+function localEnvExec(env: L_Env, localEnvNode: L_Nodes.LocalEnvNode): L_Out {
   try {
     const newEnv = new L_Env(env);
     env.report(`[local environment]\n`);
@@ -223,7 +188,7 @@ function localEnvExec(env: L_Env, localEnvNode: LocalEnvNode): L_Out {
   }
 }
 
-function specialExec(env: L_Env, node: SpecialNode): L_Out {
+function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
   try {
     switch (node.keyword) {
       case L_Keywords.ClearKeyword:
@@ -242,7 +207,7 @@ function specialExec(env: L_Env, node: SpecialNode): L_Out {
   }
 }
 
-function macroExec(env: L_Env, node: MacroNode): L_Out {
+function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
   try {
     env.newMacro(node);
     return L_Out.True;
@@ -253,7 +218,7 @@ function macroExec(env: L_Env, node: MacroNode): L_Out {
 
 function proveContradictExec(
   env: L_Env,
-  proveNode: ProveContradictNode
+  proveNode: L_Nodes.ProveContradictNode
 ): L_Out {
   try {
     const newEnv = new L_Env(env);
@@ -287,12 +252,12 @@ function proveContradictExec(
   }
 }
 
-function proveExec(env: L_Env, proveNode: ProveNode): L_Out {
+function proveExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
   try {
     const newEnv = new L_Env(env);
-    if (proveNode.toProve instanceof IfNode) {
+    if (proveNode.toProve instanceof L_Nodes.IfNode) {
       return proveIfExec(env, proveNode);
-    } else if (proveNode.toProve instanceof OptNode) {
+    } else if (proveNode.toProve instanceof L_Nodes.OptNode) {
       return proveOptExec(env, proveNode);
     }
 
@@ -302,7 +267,7 @@ function proveExec(env: L_Env, proveNode: ProveNode): L_Out {
   }
 }
 
-function proveOptExec(env: L_Env, proveNode: ProveNode): L_Out {
+function proveOptExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
   try {
     const newEnv = new L_Env(env);
 
@@ -329,10 +294,10 @@ function proveOptExec(env: L_Env, proveNode: ProveNode): L_Out {
   }
 }
 
-function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
+function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
   try {
     const newEnv = new L_Env(env);
-    const toProve = proveNode.toProve as IfNode;
+    const toProve = proveNode.toProve as L_Nodes.IfNode;
 
     let ok = true;
     for (const v of toProve.vars) {
@@ -382,7 +347,7 @@ function proveIfExec(env: L_Env, proveNode: ProveNode): L_Out {
   }
 }
 
-function defCompositeExec(env: L_Env, node: DefCompositeNode): L_Out {
+function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
   try {
     if (env.newCompositeVar(node.composite.name, node)) {
       env.report(`OK! ${node}`);
