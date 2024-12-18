@@ -101,3 +101,14 @@ export function L_ReportBoolErr(
   if (node !== undefined) env.report(`Failed: ${node}`);
   return false;
 }
+
+export function L_ParseErr(
+  env: L_Env,
+  tokens: string[],
+  func: Function,
+  index: number,
+  start: string = ""
+) {
+  L_ReportErr(env, func, "");
+  env.report(`At ${start}[${index * -1}]: ${tokens.slice(0, 20).join(" ")}`);
+}

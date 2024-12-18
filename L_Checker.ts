@@ -18,7 +18,6 @@ import {
   L_ReportCheckErr,
   reportCheckErr,
 } from "./L_Messages";
-import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
 import { DEBUG_DICT } from "./L_Executor";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {

@@ -4,6 +4,7 @@ import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
+import { L_ParseErr } from "./L_Messages";
 
 function arrParse<T>(
   env: L_Env,
@@ -27,7 +28,7 @@ function arrParse<T>(
 
     return out;
   } catch (error) {
-    handleParseError(env, tokens, `parse an array`, index, start);
+    L_ParseErr(env, tokens, arrParse, index, start);
     throw error;
   }
 }
@@ -40,7 +41,7 @@ function singletonParse(env: L_Env, tokens: string[]): L_Structs.L_Singleton {
     const value = skip(tokens) as string;
     return new L_Structs.L_Singleton(value);
   } catch (error) {
-    handleParseError(env, tokens, "parse singleton", index, start);
+    L_ParseErr(env, tokens, singletonParse, index, start);
     throw error;
   }
 }
@@ -53,7 +54,7 @@ function optSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_OptSymbol {
     const name = skip(tokens) as string;
     return new L_Structs.L_OptSymbol(name);
   } catch (error) {
-    handleParseError(env, tokens, "parse singleton", index, start);
+    L_ParseErr(env, tokens, optSymbolParse, index, start);
     throw error;
   }
 }
@@ -77,7 +78,7 @@ function slashCompositeParse(
     skip(tokens, "}");
     return new L_Structs.L_Composite(name, values);
   } catch (error) {
-    handleParseError(env, tokens, "parse singleton", index, start);
+    L_ParseErr(env, tokens, slashCompositeParse, index, start);
     throw error;
   }
 }
@@ -101,7 +102,7 @@ function dollarCompositeParse(
 
     return left;
   } catch (error) {
-    handleParseError(env, tokens, "parse singleton", index, start);
+    L_ParseErr(env, tokens, dollarCompositeParse, index, start);
     throw error;
   }
 }
@@ -117,7 +118,7 @@ function prefixSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
       return singletonParse(env, tokens);
     }
   } catch (error) {
-    handleParseError(env, tokens, "parse symbol", index, start);
+    L_ParseErr(env, tokens, prefixSymbolParse, index, start);
     throw error;
   }
 }
@@ -135,7 +136,7 @@ function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
       return singletonParse(env, tokens);
     }
   } catch (error) {
-    handleParseError(env, tokens, "parse symbol", index, start);
+    L_ParseErr(env, tokens, symbolParse, index, start);
     throw error;
   }
 }
@@ -175,16 +176,6 @@ function isCurToken(tokens: string[], s: string | string[]) {
   } else {
     return s.includes(tokens[0]);
   }
-}
-
-function handleParseError(
-  env: L_Env,
-  tokens: string[],
-  m: string,
-  index: number,
-  start: string = ""
-) {
-  env.report(`At ${start}[${index * -1}]: ${tokens.slice(0, 20).join(" ")}`);
 }
 
 // @end: when parsing local env, } is the end; when parsing source code, node is the end
@@ -259,7 +250,7 @@ export function parseNodesFromSingleExpression(
       return facts;
     }
   } catch (error) {
-    handleParseError(env, tokens, "node", index, start);
+    L_ParseErr(env, tokens, parseNodesFromSingleExpression, index, start);
     throw error;
   }
 }
@@ -288,7 +279,7 @@ function knowParse(env: L_Env, tokens: string[]): L_Nodes.KnowNode {
     return new L_Nodes.KnowNode(facts, names);
     // return knowNode;
   } catch (error) {
-    handleParseError(env, tokens, "know", index, start);
+    L_ParseErr(env, tokens, knowParse, index, start);
     throw error;
   }
 }
@@ -332,7 +323,7 @@ function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode {
       }
     }
   } catch (error) {
-    handleParseError(env, tokens, "let", index, start);
+    L_ParseErr(env, tokens, letParse, index, start);
     throw error;
   }
 }
@@ -377,7 +368,7 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
       return new L_Nodes.ProveNode(toProve, block);
     }
   } catch (error) {
-    handleParseError(env, tokens, "Parsing prove", index, start);
+    L_ParseErr(env, tokens, proveParse, index, start);
     throw error;
   }
 }
@@ -404,11 +395,11 @@ function formulaSubNodeParse(
         return optParse(env, tokens, true);
       }
     } catch (error) {
-      handleParseError(env, tokens, "fact", factIndex, factStart);
+      L_ParseErr(env, tokens, formulaSubNodeParse, factIndex, factStart);
       throw error;
     }
   } catch (error) {
-    handleParseError(env, tokens, "fact", index, start);
+    L_ParseErr(env, tokens, formulaSubNodeParse, index, start);
     throw error;
   }
 }
@@ -432,11 +423,11 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
         return parsePrimitiveFact(env, tokens);
       }
     } catch (error) {
-      handleParseError(env, tokens, "fact", factIndex, factStart);
+      L_ParseErr(env, tokens, factParse, factIndex, factStart);
       throw error;
     }
   } catch (error) {
-    handleParseError(env, tokens, "fact", index, start);
+    L_ParseErr(env, tokens, factParse, index, start);
     throw error;
   }
 }
@@ -563,7 +554,7 @@ function factsArrParse(
 
     return out;
   } catch (error) {
-    handleParseError(env, tokens, "facts", index, start);
+    L_ParseErr(env, tokens, factsArrParse, index, start);
     throw error;
   }
 }
@@ -619,13 +610,7 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
       }
     }
   } catch (error) {
-    handleParseError(
-      env,
-      tokens,
-      `${start} is invalid operator.`,
-      index,
-      start
-    );
+    L_ParseErr(env, tokens, optParse, index, start);
     throw error;
   }
 
@@ -707,7 +692,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
       throw Error();
     }
   } catch (error) {
-    handleParseError(env, tokens, "if-then", index, start);
+    L_ParseErr(env, tokens, logicParse, index, start);
     throw error;
   }
 
@@ -735,7 +720,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
         vars
       );
     } catch (error) {
-      handleParseError(env, tokens, "parse singleton", index, start);
+      L_ParseErr(env, tokens, compositeInIfReqParse, index, start);
       throw error;
     }
   }
@@ -752,7 +737,7 @@ function localEnvParse(env: L_Env, tokens: string[]): L_Nodes.LocalEnvNode {
     const out = new L_Nodes.LocalEnvNode(nodes);
     return out;
   } catch (error) {
-    handleParseError(env, tokens, "{}", index, start);
+    L_ParseErr(env, tokens, localEnvParse, index, start);
     throw error;
   }
 }
@@ -779,7 +764,7 @@ function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
 
     return new L_Nodes.HaveNode(opts, vars);
   } catch (error) {
-    handleParseError(env, tokens, "have", index, start);
+    L_ParseErr(env, tokens, haveParse, index, start);
     throw error;
   }
 }
@@ -806,7 +791,7 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
         throw Error();
     }
   } catch (error) {
-    handleParseError(env, tokens, "clear", index, start);
+    L_ParseErr(env, tokens, specialParse, index, start);
     throw error;
   }
 }
@@ -823,7 +808,7 @@ function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
 
     return new L_Nodes.MacroNode(regexString, varName, facts);
   } catch (error) {
-    handleParseError(env, tokens, "macro", index, start);
+    L_ParseErr(env, tokens, macroParse, index, start);
     throw error;
   }
 
@@ -869,7 +854,7 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
       return new L_Nodes.DefNode(opt, cond, onlyIfs);
     }
   } catch (error) {
-    handleParseError(env, tokens, "define", index, start);
+    L_ParseErr(env, tokens, defParse, index, start);
     throw error;
   }
 }
@@ -900,7 +885,7 @@ export function LetCompositeParse(
 
     return new L_Nodes.DefCompositeNode(composite, facts);
   } catch (error) {
-    handleParseError(env, tokens, "define", index, start);
+    L_ParseErr(env, tokens, LetCompositeParse, index, start);
     throw error;
   }
 }
@@ -920,7 +905,7 @@ export function isPropertyParse(
 
     return new L_Nodes.IsPropertyNode(name, true);
   } catch (error) {
-    handleParseError(env, tokens, "is_property", index, start);
+    L_ParseErr(env, tokens, isPropertyParse, index, start);
     throw error;
   }
 }
@@ -961,7 +946,7 @@ export function isFormParse(
       return new L_Nodes.IsFormNode(given, composite, [], true);
     }
   } catch (error) {
-    handleParseError(env, tokens, "is_property", index, start);
+    L_ParseErr(env, tokens, isFormParse, index, start);
     throw error;
   }
 }
@@ -1001,7 +986,7 @@ function usePrecedenceToParseComposite(
     skip(tokens, end);
     return left as L_Structs.L_Symbol;
   } catch (error) {
-    handleParseError(env, tokens, "let", index, start);
+    L_ParseErr(env, tokens, usePrecedenceToParseComposite, index, start);
     throw error;
   }
 
