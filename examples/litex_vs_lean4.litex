@@ -38,6 +38,5 @@ theorem god_is_not_human : God ≠ Human :=
   have god_is_mortal : Mortal God := all_humans_are_mortal god,
   contradiction
 
-
 */
 

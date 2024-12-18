@@ -82,6 +82,16 @@ export function L_ReportErr(
   return L_Out.Error;
 }
 
+export function L_ReportCheckErr(
+  env: L_Env,
+  func: Function,
+  node?: L_Node | string
+): L_Out {
+  env.report(`[check failed] <${func.name}> Failed`);
+  if (node !== undefined) env.report(`Failed: ${node}`);
+  return L_Out.Error;
+}
+
 export function L_ReportBoolErr(
   env: L_Env,
   func: Function,

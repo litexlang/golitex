@@ -13,7 +13,11 @@ import {
 import { L_Env } from "./L_Env";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
-import { L_ReportBoolErr, L_ReportErr, reportCheckErr } from "./L_Messages";
+import {
+  L_ReportBoolErr,
+  L_ReportCheckErr,
+  reportCheckErr,
+} from "./L_Messages";
 import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
 import { DEBUG_DICT } from "./L_Executor";
 
@@ -37,7 +41,7 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
       return L_Out.Error;
     }
   } catch {
-    return L_Out.Error;
+    return L_ReportCheckErr(env, checkFact, toCheck);
   }
 }
 
@@ -73,7 +77,7 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return env.errMesReturnL_Out(toCheck);
+    return L_ReportCheckErr(env, checkIfFact, toCheck);
   }
 }
 
@@ -124,7 +128,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
     return L_Out.Unknown;
   } catch {
-    return env.errMesReturnL_Out(toCheck);
+    return L_ReportCheckErr(env, checkOptFact, toCheck);
   }
 
   // TODO 缺失一些用 formula 来验证的方式 1. "if x: (p(x) or t(x)) {(p(x) or t(x))};" 2. use if...if {or} to check
@@ -235,8 +239,11 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       env.report(`[check by] ${toCheck}`);
       return true;
     } catch {
-      L_ReportErr(env, useOptToCheckOpt, opt1);
-      return false;
+      return L_ReportBoolErr(
+        env,
+        useOptToCheckOpt,
+        `Failed to compare ${opt1}, ${opt2}`
+      );
     }
   }
 
@@ -248,90 +255,94 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     givenOpt: OptNode,
     known: IfNode
   ): boolean {
-    // TODO: I guess in the future I should remove givenOpt.checkVars.length === 0
-    if (givenOpt.checkVars === undefined || givenOpt.checkVars.length === 0) {
-      // 1. known is one-layer, and we replace all vars in that layer with given opt
-      const automaticallyAddedCheckVars = [givenOpt.vars];
-      const automaticallyGeneratedOpt = new OptNode(
-        givenOpt.optSymbol,
-        givenOpt.vars,
-        givenOpt.isT,
-        automaticallyAddedCheckVars
-      );
-      return useIfToCheckOpt(env, automaticallyGeneratedOpt, known);
-    } else {
-      let roots: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
-        ToCheckNode.getRootOptNodes(known, []);
-      roots = roots.filter(
-        (root) =>
-          root[0].optSymbol.name === givenOpt.optSymbol.name &&
-          givenOpt.checkVars !== undefined &&
-          // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了
-          root[1].filter((e) => e instanceof IfNode).length ===
-            givenOpt.checkVars.length
-      );
+    try {
+      // TODO: I guess in the future I should remove givenOpt.checkVars.length === 0
+      if (givenOpt.checkVars === undefined || givenOpt.checkVars.length === 0) {
+        // 1. known is one-layer, and we replace all vars in that layer with given opt
+        const automaticallyAddedCheckVars = [givenOpt.vars];
+        const automaticallyGeneratedOpt = new OptNode(
+          givenOpt.optSymbol,
+          givenOpt.vars,
+          givenOpt.isT,
+          automaticallyAddedCheckVars
+        );
+        return useIfToCheckOpt(env, automaticallyGeneratedOpt, known);
+      } else {
+        let roots: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
+          ToCheckNode.getRootOptNodes(known, []);
+        roots = roots.filter(
+          (root) =>
+            root[0].optSymbol.name === givenOpt.optSymbol.name &&
+            givenOpt.checkVars !== undefined &&
+            // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了
+            root[1].filter((e) => e instanceof IfNode).length ===
+              givenOpt.checkVars.length
+        );
 
-      for (const root of roots) {
-        let successful = true;
-        let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
-        const newEnv = new L_Env(env);
-        for (const [layerNum, layer] of root[1].entries()) {
-          //TODO check length
+        for (const root of roots) {
+          let successful = true;
+          let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
+          const newEnv = new L_Env(env);
+          for (const [layerNum, layer] of root[1].entries()) {
+            //TODO check length
 
-          // TODO if instanceof ToCheckFormulaNode
-          if (layer instanceof IfNode) {
-            const currentPairs = LogicNode.makeFreeFixPairs(
-              env,
-              givenOpt.checkVars[layerNum],
-              layer.vars
-            );
-            freeFixedPairs = [...freeFixedPairs, ...currentPairs];
-            if (
-              //! checkIfReqLiterally is very dumb and may fail at many situations
-              layer.req.every((e) => {
-                return checkLiterally(newEnv, e.fix(newEnv, freeFixedPairs));
-              })
-            ) {
-              layer.req.every((fact) =>
-                L_Memory.newFact(newEnv, fact.fix(newEnv, freeFixedPairs))
+            // TODO if instanceof ToCheckFormulaNode
+            if (layer instanceof IfNode) {
+              const currentPairs = LogicNode.makeFreeFixPairs(
+                env,
+                givenOpt.checkVars[layerNum],
+                layer.vars
               );
-            } else {
-              successful = false;
-              break;
-            }
-          } else if (layer instanceof ToCheckFormulaNode) {
-            // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了。事实上这里不用检查，因为 roots 在filter的时候已经相当于检查过了。放在这里只是为了自我提醒
-            const nextLayers = root[1].slice(layerNum);
-            if (!nextLayers.every((e) => e instanceof ToCheckFormulaNode)) {
-              successful = false;
-              break;
-            }
+              freeFixedPairs = [...freeFixedPairs, ...currentPairs];
+              if (
+                //! checkIfReqLiterally is very dumb and may fail at many situations
+                layer.req.every((e) => {
+                  return checkLiterally(newEnv, e.fix(newEnv, freeFixedPairs));
+                })
+              ) {
+                layer.req.every((fact) =>
+                  L_Memory.newFact(newEnv, fact.fix(newEnv, freeFixedPairs))
+                );
+              } else {
+                successful = false;
+                break;
+              }
+            } else if (layer instanceof ToCheckFormulaNode) {
+              // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了。事实上这里不用检查，因为 roots 在filter的时候已经相当于检查过了。放在这里只是为了自我提醒
+              const nextLayers = root[1].slice(layerNum);
+              if (!nextLayers.every((e) => e instanceof ToCheckFormulaNode)) {
+                successful = false;
+                break;
+              }
 
-            const out = useToCheckFormulaToCheckOpt(
-              newEnv,
-              toCheck,
-              layer.fix(newEnv, freeFixedPairs)
-            );
-            return out;
+              const out = useToCheckFormulaToCheckOpt(
+                newEnv,
+                toCheck,
+                layer.fix(newEnv, freeFixedPairs)
+              );
+              return out;
+            }
           }
-        }
-        if (successful) {
-          const fixed = root[0].fix(env, freeFixedPairs);
-          if (
-            L_Symbol.allSymbolsAreLiterallyTheSame(
-              env,
-              fixed.vars,
-              givenOpt.vars
-            )
-          ) {
-            env.report(`[check by] ${root[1][0]}`);
-            return true;
+          if (successful) {
+            const fixed = root[0].fix(env, freeFixedPairs);
+            if (
+              L_Symbol.allSymbolsAreLiterallyTheSame(
+                env,
+                fixed.vars,
+                givenOpt.vars
+              )
+            ) {
+              env.report(`[check by] ${root[1][0]}`);
+              return true;
+            }
           }
         }
       }
-    }
 
-    return false;
+      return false;
+    } catch {
+      return L_ReportBoolErr(env, useIfToCheckOpt, toCheck);
+    }
   }
 }
 
@@ -366,7 +377,7 @@ function checkLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
 
     return false;
   } catch {
-    return env.errMesReturnBoolean(toCheck);
+    return L_ReportBoolErr(env, checkLiterally, toCheck);
   }
 }
 
@@ -417,7 +428,7 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
       return L_Out.Error;
     }
   } catch {
-    return env.errMesReturnL_Out(toCheck);
+    return L_ReportCheckErr(env, checkOptFact, toCheck);
   }
 }
 
@@ -450,7 +461,7 @@ function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
 
     throw Error();
   } catch {
-    return reportCheckErr(env, checkToCheckFormula.name, toCheck);
+    return L_ReportCheckErr(env, checkOptFact, toCheck);
   }
 }
 
@@ -486,6 +497,6 @@ function checkToCheckFormulaLiterally(
 
     throw Error();
   } catch {
-    return reportCheckErr(env, checkToCheckFormula.name, toCheck);
+    return L_ReportCheckErr(env, checkOptFact, toCheck);
   }
 }
