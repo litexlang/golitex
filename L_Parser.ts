@@ -235,7 +235,7 @@ const KeywordFunctionMap: {
   have: haveParse,
   clear: specialParse,
   run: specialParse,
-  def_composite: LetCompositeParse,
+  def_composite: letCompositeParse,
   lets: letsParse,
 };
 
@@ -844,7 +844,7 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
 }
 
 // --------------------------------------------------------
-export function LetCompositeParse(
+export function letCompositeParse(
   env: L_Env,
   tokens: string[]
 ): L_Nodes.DefCompositeNode {
@@ -869,7 +869,7 @@ export function LetCompositeParse(
 
     return new L_Nodes.DefCompositeNode(composite, facts);
   } catch (error) {
-    L_ParseErr(env, tokens, LetCompositeParse, index, start);
+    L_ParseErr(env, tokens, letCompositeParse, index, start);
     throw error;
   }
 }
@@ -882,7 +882,7 @@ export function isPropertyParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.isFormKeyword);
+    skip(tokens, L_Keywords.isPropertyKeyword);
     skip(tokens, "(");
     const name = skip(tokens);
     skip(tokens, ")");

@@ -21,6 +21,7 @@ export const L_Keywords = {
   SlashKeyword: "\\",
   EqualKeyword: "=",
   LetCompositeKeyword: "def_composite",
+  isPropertyKeyword: "is_property",
   isFormKeyword: "is_form",
   KnowTypeKeywords: "know",
   ThenKeyword: "=>",

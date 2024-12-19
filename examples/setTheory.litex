@@ -181,6 +181,7 @@ words, for any object \(x\),
 x \in A \cup B \iff (x \in A \lor x \in B).
 \]
 */
+
 def subset(x,y);
 
 know if A,B: subset(A,B) {
@@ -274,6 +275,7 @@ the set \(A - B\) or \(A \setminus B\) to be the set \(A\) with any elements of
 A \setminus B := \{x \in A : x \notin B\}.
 \]
 */
+
 def_composite \difference{a,b}: set(a), set(b);
 
 know if x, a, b: set(a), set(b), in(x,a), not in(x,b) {
