@@ -76,6 +76,31 @@ know if x, a: equal(x,a) {
     };
 }
 
+def_composite \\pair{a,b};
+know if x, a, b: in(x, \\pair{a,b}) {
+    if : not equal(x, b) {
+        equal(x, a);
+    };
+    if : not equal(x, a) {
+        equal(x, b);
+    };
+};
+
+know if x, a, b: equal(x,a) {
+    in(x, \\pair{a,b});
+};
+
+know if x, a, b: equal(x,b) {
+    in(x, \\pair{a,b});
+};
+
+{
+    let x, a, b: equal(x,a);
+    in(x, \\pair{a,b})[x,a,b];
+    let y,c,d: in(y, \\pair{c,d}), not equal(y,c);
+    equal(y,d)[y,c,d;];
+}
+
 `,
     ],
     debug: true,

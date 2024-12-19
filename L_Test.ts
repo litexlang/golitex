@@ -733,6 +733,42 @@ know if x, a: in(x, \\singleton{a}) {
     equal(x, a);
 };`,
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "",
+    code: [
+      `
+def_composite \\pair{a,b};
+def equal(x,b);
+def in(a,b);
+know if x, a, b: in(x, \\pair{a,b}) {
+    if : not equal(x, b) {
+        equal(x, a);
+    };
+    if : not equal(x, a) {
+        equal(x, b);
+    };
+};
+
+know if x, a, b: equal(x,a) {
+    in(x, \\pair{a,b});
+};
+
+know if x, a, b: equal(x,b) {
+    in(x, \\pair{a,b});
+};
+
+{
+    let x, a, b: equal(x,a);
+//    in(x, \\pair{a,b})[x,a,b];
+    let y,c,d: in(y, \\pair{c,d}), not equal(y,c);
+    equal(y,d)[y,c,d;];
+}
+      
+      `,
+    ],
     debug: true,
     print: true,
   },
