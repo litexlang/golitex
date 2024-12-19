@@ -329,6 +329,39 @@ know if A: set(A), not equal(A, EMPTY_SET) {
   }
 };
 
+def natural(x);
+def nat_eq(x,y);
+
+let 0: 0 is natural;
+
+def_composite \\++{n}: n is natural;
+
+know if n: n is natural {
+    \\++{n} is natural;
+};
+
+know if x {
+    not nat_eq(0, \\++{x});
+};
+
+know if x,y: nat_eq(x,y) {
+    nat_eq(\\++{x}, \\++{y});
+};
+
+know if x,y: nat_eq(\\++{x}, \\++{y}) {
+    nat_eq(x,y);
+};
+
+know if P: is_property(P), P(0), if n: n is natural, P(n) {
+    P(\\++{n});
+} {
+    if m: m is natural {
+        P(m);
+    }
+};
+
+def_composite \\+{x,y};
+
 `,
     ],
     debug: true,

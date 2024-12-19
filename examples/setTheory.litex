@@ -381,6 +381,3 @@ know if P: is_property(P), P(0), if n: n is natural, P(n) {
     };
 };
 
-def_composite \+{x,y};
-know \+{x,y} nat_eq \+{y,x};
-know \+{0,x} nat_eq \+{x,0};
