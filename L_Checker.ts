@@ -138,7 +138,8 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   ): boolean {
     try {
       // all roots that is contained in known
-      const rootsUnderFormula = ToCheckNode.getRootOptNodes(known, []);
+      // const rootsUnderFormula = ToCheckNode.getRootOptNodes(known, []);
+      const rootsUnderFormula = known.getRootOptNodes();
 
       // roots that related to toCheck
       const rootsWithKeyAsToCheck = rootsUnderFormula.filter(
@@ -147,7 +148,8 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
       /* 1. all layers are ToCheckFormulaNode */
       for (const root of rootsWithKeyAsToCheck) {
-        const layers: (ToCheckFormulaNode | IfNode)[] = root[1];
+        // const layers: (ToCheckFormulaNode | IfNode)[] = root[1];
+        const layers = root[1];
         if (
           layers.every((layer) => layer instanceof ToCheckFormulaNode) &&
           toCheck.vars.length === root[0].vars.length &&
@@ -267,8 +269,9 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         );
         return useIfToCheckOpt(env, automaticallyGeneratedOpt, known);
       } else {
-        let roots: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
-          ToCheckNode.getRootOptNodes(known, []);
+        // let roots: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
+        // ToCheckNode.getRootOptNodes(known, []);
+        let roots: [OptNode, ToCheckNode[]][] = known.getRootOptNodes();
         roots = roots.filter(
           (root) =>
             root[0].optSymbol.name === givenOpt.optSymbol.name &&
