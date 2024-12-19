@@ -114,3 +114,15 @@ export function L_ParseErr(
   // env.report(`[Parse Error]\n`);
   env.report(`At ${start}[${index * -1}]: ${tokens.slice(0, 5).join(" ")}`);
 }
+
+export function L_VarNotDeclaredBool(
+  env: L_Env,
+  func: Function,
+  node: ToCheckNode
+): boolean {
+  return L_ReportBoolErr(
+    env,
+    func,
+    `At least one parameters in ${node} is not declared. Please check it.`
+  );
+}

@@ -13,7 +13,7 @@ export function optsVarsDeclaredInFacts(
   }
 
   for (const f of facts) {
-    if (!f.varsDeclared(env, [])) {
+    if (!f.varsDeclared(env)) {
       env.report(`[Error] Not all of related variables are declared.`);
       return false;
     }

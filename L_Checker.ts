@@ -59,7 +59,7 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
 
     for (const req of toCheck.req) {
       // TODO more error report
-      if (DEBUG_DICT.checkCompositeVar && !req.varsDeclared(newEnv, [])) {
+      if (DEBUG_DICT.checkCompositeVar && !req.varsDeclared(newEnv)) {
         newEnv.report(
           `[Undeclared Error] Some of variables in ${req} not declared.`
         );
@@ -84,7 +84,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   // Main part of this function
   try {
     // TODO 严重的设计矛盾：composite里面的东西，究竟需不需要先定义一下？？
-    if (DEBUG_DICT.checkCompositeVar && !toCheck.varsDeclared(env, [])) {
+    if (DEBUG_DICT.checkCompositeVar && !toCheck.varsDeclared(env)) {
       env.report(
         `[Undeclared Error] Some of variables in ${toCheck} not declared.`
       );

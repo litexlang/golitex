@@ -1,4 +1,6 @@
+import { on } from "events";
 import { L_Env } from "./L_Env";
+import { L_ReportBoolErr, L_VarNotDeclaredBool } from "./L_Messages";
 import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
@@ -9,7 +11,7 @@ export abstract class ToCheckNode extends L_Node {
   }
 
   // called by L_Memory
-  abstract varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean;
+  abstract varsDeclared(env: L_Env): boolean;
 
   // called by checker
   abstract fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode;
@@ -82,32 +84,30 @@ export class LogicNode extends ToCheckNode {
     return out;
   }
 
-  //TODO 如果在这里新建一个环境来保存新建的变量的话，那所有的varsFromAbove将没有必要，但我之前的实现已经用了这个”没意义“的第二项存在了，那就这样吧。。。。
-  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
-    // TODO make sure composite in vars are declared
-    const singletonsInVars = [];
+  varsDeclared(env: L_Env): boolean {
+    const newEnv = new L_Env(env);
 
     for (const v of this.vars) {
       if (v instanceof L_Composite) {
-        //TODO I am not satisfied with this semantics
-        if (
-          !v.subSymbolsDeclared(env, [...varsFromAbove, ...singletonsInVars])
-        ) {
-          return false;
-        }
+        // TODO What happens when var in if vars is composite
       } else if (v instanceof L_Singleton) {
-        singletonsInVars.push(v);
+        newEnv.newSingletonVar(v.value);
       }
     }
 
-    return (
-      this.req.every((e) =>
-        e.varsDeclared(env, [...varsFromAbove, ...this.vars])
-      ) &&
-      this.onlyIfs.every((e) =>
-        e.varsDeclared(env, [...varsFromAbove, ...this.vars])
-      )
-    );
+    for (const req of this.req) {
+      if (!req.varsDeclared(newEnv)) {
+        return L_VarNotDeclaredBool(env, this.varsDeclared, req);
+      }
+    }
+
+    for (const onlyIf of this.onlyIfs) {
+      if (!onlyIf.varsDeclared(newEnv)) {
+        return L_VarNotDeclaredBool(env, this.varsDeclared, onlyIf);
+      }
+    }
+
+    return true;
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
@@ -202,14 +202,24 @@ export class OptNode extends ToCheckNode {
     return { declared: declared, undeclared: undeclared };
   }
 
-  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
-    return (
-      this.vars.every((e) => e.subSymbolsDeclared(env, varsFromAbove)) &&
-      (this.checkVars === undefined ||
-        this.checkVars.every((arr) =>
-          arr.every((e) => e.subSymbolsDeclared(env, varsFromAbove))
-        ))
-    );
+  varsDeclared(env: L_Env): boolean {
+    for (const v of this.vars) {
+      if (!v.subSymbolsDeclared(env, [])) {
+        return L_VarNotDeclaredBool(env, this.varsDeclared, this);
+      }
+    }
+
+    if (this.checkVars === undefined) return true;
+
+    for (const layer of this.checkVars) {
+      for (const v of layer) {
+        if (!v.subSymbolsDeclared(env, [])) {
+          return L_VarNotDeclaredBool(env, this.varsDeclared, this);
+        }
+      }
+    }
+
+    return true;
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptNode {
@@ -386,7 +396,7 @@ export class IsPropertyNode extends BuiltinCheckNode {
     return `is_property(${this.propertyName})`;
   }
 
-  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+  varsDeclared(env: L_Env): boolean {
     return true;
   }
 }
@@ -425,7 +435,7 @@ export class IsFormNode extends BuiltinCheckNode {
     }
   }
 
-  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+  varsDeclared(env: L_Env): boolean {
     // TODO
     return true;
   }
@@ -446,7 +456,7 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
     super(isT);
   }
 
-  varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+  varsDeclared(env: L_Env): boolean {
     //TODO
     return true;
   }
