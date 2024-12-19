@@ -182,9 +182,18 @@ export class L_Composite extends L_Symbol {
 
     for (const value of this.values) {
       if (value instanceof L_Singleton) {
-        if (!env.isSingletonDeclared(value.value)) return false;
+        if (!env.isSingletonDeclared(value.value)) {
+          let ok = false;
+          for (const v of varsFromAbove) {
+            if (v instanceof L_Singleton) {
+              if (v.value === value.value) ok = true;
+            }
+          }
+
+          if (!ok) return false;
+        }
       } else if (value instanceof L_Composite) {
-        if (!value.subSymbolsDeclared(env, [])) return false;
+        if (!value.subSymbolsDeclared(env, varsFromAbove)) return false;
       }
     }
 

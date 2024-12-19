@@ -656,8 +656,10 @@ let a,b,c: <(a,b), <(b,c);
       "\\frac{x,y} is nat;",
       "know if k: is_form(k, \\frac{x,y}, {number(x), number(y)} ) {k is number};",
       "\\frac{x,y} is number;",
+      "know x is number, y is number;",
+      "\\frac{x,y} is number;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   //------------------------------------------------------------
@@ -721,6 +723,17 @@ let a,b,c: <(a,b), <(b,c);
       "1 is nat;",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "",
+    code: [
+      `def_composite \\singleton{a};
+know if x, a: in(x, \\singleton{a}) {
+    equal(x, a);
+};`,
+    ],
+    debug: true,
     print: true,
   },
 ];

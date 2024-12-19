@@ -72,6 +72,7 @@ export class LogicNode extends ToCheckNode {
     return out;
   }
 
+  //TODO 如果在这里新建一个环境来保存新建的变量的话，那所有的varsFromAbove将没有必要，但我之前的实现已经用了这个”没意义“的第二项存在了，那就这样吧。。。。
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     // TODO make sure composite in vars are declared
     const singletonsInVars = [];
