@@ -241,33 +241,4 @@ export class L_Env {
       facts: Object.fromEntries(this.facts),
     };
   }
-
-  getRegexFact(key: string): undefined | L_KnownFact[] {
-    let currentFacts: undefined | L_KnownFact[] = undefined;
-
-    for (const letsNode of this.letsVars.values()) {
-      if (letsNode.regex.test(key)) {
-        const regexRelatedFacts = this.getRegexFact(letsNode.name);
-        if (regexRelatedFacts !== undefined) {
-          if (currentFacts === undefined) currentFacts = regexRelatedFacts;
-          else currentFacts.push(...regexRelatedFacts);
-        }
-      }
-    }
-
-    if (currentFacts === undefined) {
-      if (this.parent === undefined) {
-        return undefined;
-      } else {
-        return this.parent.getRegexFact(key);
-      }
-    } else {
-      if (this.parent === undefined) return currentFacts;
-      else {
-        const fromParent = this.parent.getRegexFact(key);
-        if (fromParent === undefined) return currentFacts;
-        else return [...currentFacts, ...fromParent];
-      }
-    }
-  }
 }
