@@ -4,7 +4,7 @@ import { L_Exec } from "./L_Executor";
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
-import { reportExecL_Out, reportNewExist } from "./L_Messages";
+import { reportExecL_Out, reportNewExist } from "./L_Report";
 // import { existBuiltinCheck } from "./L_Builtins";
 
 // TODO : 检查没有var在这里是额外引入的

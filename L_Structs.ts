@@ -1,26 +1,26 @@
 import { L_Env } from "./L_Env";
-import { L_ReportErr } from "./L_Messages";
+import { L_ReportErr } from "./L_Report";
 import { ToCheckNode } from "./L_Nodes";
 
 export abstract class L_Symbol {
   abstract getRootSingletons(): L_Singleton[];
 
-  getDeclaredAndUndeclaredRootSingletons(env: L_Env): {
-    declared: L_Singleton[];
-    undeclared: L_Singleton[];
-  } {
-    const allRootSingletons = this.getRootSingletons();
-    const declared: L_Singleton[] = [];
-    const undeclared: L_Singleton[] = [];
-    for (const root of allRootSingletons) {
-      if (env.isSingletonDeclared(root.value)) {
-        declared.push(root);
-      } else {
-        undeclared.push(root);
-      }
-    }
-    return { declared: declared, undeclared: undeclared };
-  }
+  // getDeclaredAndUndeclaredRootSingletons(env: L_Env): {
+  //   declared: L_Singleton[];
+  //   undeclared: L_Singleton[];
+  // } {
+  //   const allRootSingletons = this.getRootSingletons();
+  //   const declared: L_Singleton[] = [];
+  //   const undeclared: L_Singleton[] = [];
+  //   for (const root of allRootSingletons) {
+  //     if (env.isSingletonDeclared(root.value)) {
+  //       declared.push(root);
+  //     } else {
+  //       undeclared.push(root);
+  //     }
+  //   }
+  //   return { declared: declared, undeclared: undeclared };
+  // }
 
   // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol. meanwhile, whether elements of composite are the same does not matter. e.g. \frac{1,2} and \frac{a,b} does not matter.
   static haveTheSameForm(

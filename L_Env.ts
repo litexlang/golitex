@@ -1,4 +1,4 @@
-import { L_ReportBoolErr } from "./L_Messages";
+import { L_ReportBoolErr } from "./L_Report";
 import {
   BuiltinCheckNode,
   DefNode,

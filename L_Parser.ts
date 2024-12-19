@@ -4,7 +4,7 @@ import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
-import { L_ParseErr } from "./L_Messages";
+import { L_ParseErr } from "./L_Report";
 
 function arrParse<T>(
   env: L_Env,

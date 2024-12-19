@@ -1,10 +1,8 @@
-import { on } from "events";
 import { L_Env } from "./L_Env";
 import {
-  L_ReportBoolErr,
   L_VarsInOptDoubleDeclErr,
   L_VarsInOptNotDeclaredBool,
-} from "./L_Messages";
+} from "./L_Report";
 import {
   CompositeSymbolInIfReq,
   L_Composite,
@@ -141,27 +139,6 @@ export class LogicNode extends ToCheckNode {
 
     return notPart + mainPart;
   }
-
-  // extract root of if-then. get operator-fact and its requirements. return operator-fact-requirement-pair.
-  // getRootOptNodes(
-  //   fromAbove: ToCheckFormulaNode[] = []
-  // ): [OptNode, (IfNode | ToCheckFormulaNode)[]][] {
-  //   const out: [OptNode, (IfNode | ToCheckFormulaNode)[]][] = [];
-  //   for (const onlyIf of this.onlyIfs) {
-  //     if (onlyIf instanceof OptNode) {
-  //       out.push([onlyIf, [this]]);
-  //     } else if (onlyIf instanceof LogicNode) {
-  //       const roots = onlyIf.getRootOptNodes();
-  //       for (const root of roots) {
-  //         out.push([root[0], [this, ...root[1]]]);
-  //       }
-  //     } else if (onlyIf instanceof ToCheckFormulaNode) {
-  //       const below = onlyIf.getRootOptNodes([...fromAbove, this]);
-  //       out.push(...below);
-  //     }
-  //   }
-  //   return out;
-  // }
 }
 
 export class IffNode extends LogicNode {}
@@ -179,21 +156,6 @@ export class OptNode extends ToCheckNode {
 
   getRootOptNodes(): [OptNode, ToCheckNode[]][] {
     return [[this, []]];
-  }
-
-  getDeclaredAndUndeclaredRootSingletons(env: L_Env): {
-    declared: L_Singleton[];
-    undeclared: L_Singleton[];
-  } {
-    const declared: L_Singleton[] = [];
-    const undeclared: L_Singleton[] = [];
-    for (const v of this.vars) {
-      const declaredUndeclared = v.getDeclaredAndUndeclaredRootSingletons(env);
-      declared.push(...declaredUndeclared.declared);
-      undeclared.push(...declaredUndeclared.undeclared);
-    }
-
-    return { declared: declared, undeclared: undeclared };
   }
 
   varsDeclared(env: L_Env): boolean {

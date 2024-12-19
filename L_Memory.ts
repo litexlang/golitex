@@ -11,7 +11,7 @@ import {
   OrToCheckNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { reportStoreErr } from "./L_Messages";
+import { reportStoreErr } from "./L_Report";
 
 export function declNewFact(env: L_Env, node: DefNode): boolean {
   let ok = true;
@@ -51,7 +51,6 @@ export function newFact(env: L_Env, fact: ToCheckNode): boolean {
 
 function newIfThenFact(env: L_Env, fact: IfNode): boolean {
   try {
-    // const roots = ToCheckNode.getRootOptNodes(fact);
     const roots = fact.getRootOptNodes();
     roots.forEach((root) => env.newFact(root[0].optSymbol.name, fact));
     return true;
@@ -70,7 +69,6 @@ function newOptFact(env: L_Env, fact: OptNode): boolean {
 
 function newBoolToCheckFormula(env: L_Env, fact: ToCheckFormulaNode): boolean {
   try {
-    // const roots: OptNode[] = ToCheckNode.getRootOptNodes(fact).map((e) => e[0]);
     const roots: OptNode[] = fact.getRootOptNodes().map((e) => e[0]);
     roots.forEach((root) => env.newFact(root.optSymbol.name, fact));
     if (fact instanceof AndToCheckNode) {
