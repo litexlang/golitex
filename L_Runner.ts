@@ -10,7 +10,7 @@ export function runString(
   expr: string,
   printResult: boolean = true,
   printCode: boolean = true
-) {
+): L_Out[] | undefined {
   try {
     if (printResult && printCode) {
       console.log(`-----\n***  source code  ***\n${expr}\n`);

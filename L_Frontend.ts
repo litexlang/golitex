@@ -1,16 +1,23 @@
-// import { L_Env } from "./L_Env";
-// import { runStrings } from "./L_Runner";
-// import { envToJSON } from "./L_Test";
+import { L_Env } from "./L_Env";
+import { runString } from "./L_Runner";
+import { L_Out } from "./L_Structs";
 
-// function testEnvToJSON() {
-//   const env = new L_Env();
-//   for (const example of exampleList) {
-//     if (example.debug) {
-//       console.log(example.name);
-//       runStrings(env, example.code, example.print);
-//     }
-//   }
-//   envToJSON(env, "env.json");
-// }
+export function LiTeXnbInteract(
+  env: L_Env,
+  text: string
+): { newEnv: L_Env; messages: string[] } {
+  const newEnv = new L_Env(env);
 
-// testEnvToJSON();
+  try {
+    const outs = runString(newEnv, text, false, false);
+    if (outs !== undefined) {
+      for (const out of outs) {
+        if (out !== L_Out.True) throw Error();
+      }
+
+      return { newEnv: newEnv, messages: newEnv.getMessages() };
+    } else throw Error();
+  } catch {
+    return { newEnv: env, messages: newEnv.getMessages() };
+  }
+}

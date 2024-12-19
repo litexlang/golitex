@@ -86,6 +86,7 @@ export class LogicNode extends ToCheckNode {
   varsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     // TODO make sure composite in vars are declared
     const singletonsInVars = [];
+
     for (const v of this.vars) {
       if (v instanceof L_Composite) {
         //TODO I am not satisfied with this semantics
@@ -125,18 +126,6 @@ export class LogicNode extends ToCheckNode {
     }
 
     throw Error();
-  }
-
-  examineVarsNotDoubleDecl(varsFromAboveIf: string[]): boolean {
-    return false;
-    // TODO
-    // const ok = this.vars.every((e) => !varsFromAboveIf.includes(e));
-    // if (!ok) return false;
-    // varsFromAboveIf = [...varsFromAboveIf, ...this.vars];
-    // return this.onlyIfs.every(
-    //   (e) =>
-    //     !(e instanceof LogicNode) || e.examineVarsNotDoubleDecl(varsFromAboveIf)
-    // );
   }
 
   override copyWithIsTReverse(): LogicNode {

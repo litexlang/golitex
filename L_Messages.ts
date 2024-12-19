@@ -111,5 +111,6 @@ export function L_ParseErr(
   start: string = ""
 ) {
   L_ReportErr(env, func, "");
-  env.report(`At ${start}[${index * -1}]: ${tokens.slice(0, 20).join(" ")}`);
+  // env.report(`[Parse Error]\n`);
+  env.report(`At ${start}[${index * -1}]: ${tokens.slice(0, 5).join(" ")}`);
 }
