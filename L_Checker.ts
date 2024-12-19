@@ -148,7 +148,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           layers.every((layer) => layer instanceof ToCheckFormulaNode) &&
           toCheck.vars.length === root[0].vars.length &&
           toCheck.vars.every((e, i) =>
-            L_Symbol.areLiterallyTheSame(env, e, root[0].vars[i])
+            L_Symbol.areLiterallyIdentical(env, e, root[0].vars[i])
           )
         ) {
           let checkedTrue = true;
@@ -227,7 +227,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       }
 
       for (let i = 0; i < opt1.vars.length; i++) {
-        if (!L_Symbol.areLiterallyTheSame(env, opt1.vars[i], opt2.vars[i]))
+        if (!L_Symbol.areLiterallyIdentical(env, opt1.vars[i], opt2.vars[i]))
           return false;
       }
 
@@ -331,7 +331,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
         if (successful) {
           const fixed = root[0].fix(env, freeFixedPairs);
           if (
-            L_Symbol.allSymbolsAreLiterallyTheSame(
+            L_Symbol.allSymbolsLiterallyIdentical(
               env,
               fixed.vars,
               givenOpt.vars
@@ -359,11 +359,7 @@ function checkLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
         if (known instanceof OptNode) {
           if (
             toCheck.isT === known.isT &&
-            L_Symbol.allSymbolsAreLiterallyTheSame(
-              env,
-              toCheck.vars,
-              known.vars
-            )
+            L_Symbol.allSymbolsLiterallyIdentical(env, toCheck.vars, known.vars)
           ) {
             return true;
           }

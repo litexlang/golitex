@@ -1,31 +1,21 @@
 import { L_ReportBoolErr } from "./L_Report";
-import {
-  BuiltinCheckNode,
-  DefNode,
-  L_Node,
-  DefCompositeNode,
-  LogicNode,
-  OptNode,
-  ToCheckNode,
-  ToCheckFormulaNode,
-} from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
-import { L_KnownFact, L_OptSymbol, L_Out, L_Singleton } from "./L_Structs";
+import * as L_Structs from "./L_Structs";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;
   private messages: string[] = [];
   private declaredSingletons = new Set<string>();
-  private defs = new Map<string, DefNode>();
-  private facts = new Map<string, L_KnownFact[]>();
-  private declaredComposites = new Map<string, DefCompositeNode>();
+  private defs = new Map<string, L_Nodes.DefNode>();
+  private facts = new Map<string, L_Structs.L_KnownFact[]>();
+  private declaredComposites = new Map<string, L_Nodes.DefCompositeNode>();
   private letsVars = new Map<string, L_Nodes.LetsNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
   }
 
-  newCompositeVar(key: string, fact: DefCompositeNode): boolean {
+  newCompositeVar(key: string, fact: L_Nodes.DefCompositeNode): boolean {
     if (this.declaredComposites.get(key)) {
       return L_ReportBoolErr(
         this,
@@ -38,7 +28,7 @@ export class L_Env {
     }
   }
 
-  getCompositeVar(key: string): undefined | DefCompositeNode {
+  getCompositeVar(key: string): undefined | L_Nodes.DefCompositeNode {
     const out = this.declaredComposites.get(key);
     if (out !== undefined) {
       return out;
@@ -51,7 +41,7 @@ export class L_Env {
     }
   }
 
-  newFact(key: string, fact: L_KnownFact): boolean {
+  newFact(key: string, fact: L_Structs.L_KnownFact): boolean {
     if (this.facts.get(key) === undefined) {
       this.facts.set(key, [fact]);
     } else {
@@ -60,7 +50,7 @@ export class L_Env {
     return true;
   }
 
-  getFacts(key: string): undefined | L_KnownFact[] {
+  getFacts(key: string): undefined | L_Structs.L_KnownFact[] {
     let currentFacts = this.facts.get(key);
 
     if (currentFacts === undefined) {
@@ -84,7 +74,7 @@ export class L_Env {
     this.messages = [];
     this.declaredSingletons = new Set<string>();
     this.letsVars = new Map<string, L_Nodes.LetsNode>();
-    this.defs = new Map<string, DefNode>();
+    this.defs = new Map<string, L_Nodes.DefNode>();
   }
 
   // two ways of checking : 1. it's letsVar name 2. it satisfies regex of a var
@@ -107,20 +97,20 @@ export class L_Env {
   }
 
   // used by checker and executor
-  factsInToCheckAllDeclaredOrBuiltin(node: ToCheckNode): boolean {
-    if (node instanceof OptNode) {
+  factsInToCheckAllDeclaredOrBuiltin(node: L_Nodes.ToCheckNode): boolean {
+    if (node instanceof L_Nodes.OptNode) {
       return (
         this.getDef(node.optSymbol.name) !== undefined ||
-        node instanceof BuiltinCheckNode
+        node instanceof L_Nodes.BuiltinCheckNode
       );
-    } else if (node instanceof LogicNode) {
+    } else if (node instanceof L_Nodes.LogicNode) {
       return (
         node.req.every((e) => this.factsInToCheckAllDeclaredOrBuiltin(e)) &&
         node.onlyIfs.every((e) => this.factsInToCheckAllDeclaredOrBuiltin(e))
       );
-    } else if (node instanceof BuiltinCheckNode) {
+    } else if (node instanceof L_Nodes.BuiltinCheckNode) {
       return true;
-    } else if (node instanceof ToCheckFormulaNode) {
+    } else if (node instanceof L_Nodes.ToCheckFormulaNode) {
       return (
         this.factsInToCheckAllDeclaredOrBuiltin(node.left) &&
         this.factsInToCheckAllDeclaredOrBuiltin(node.right)
@@ -130,7 +120,7 @@ export class L_Env {
     return false;
   }
 
-  getDef(s: string): DefNode | undefined {
+  getDef(s: string): L_Nodes.DefNode | undefined {
     if (this.defs.has(s)) {
       return this.defs.get(s);
     } else if (this.parent) {
@@ -140,7 +130,7 @@ export class L_Env {
     }
   }
 
-  newDef(s: string, DefNode: DefNode): boolean {
+  newDef(s: string, defNode: L_Nodes.DefNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.getDef(s) !== undefined) {
       return L_ReportBoolErr(
@@ -150,8 +140,8 @@ export class L_Env {
       );
     }
 
-    this.defs.set(s, DefNode);
-    this.report(`[def] ${DefNode}`);
+    this.defs.set(s, defNode);
+    this.report(`[def] ${L_Nodes.DefNode}`);
     return true;
   }
 
@@ -203,24 +193,24 @@ export class L_Env {
     this.messages = [];
   }
 
-  OKMesReturnL_Out(message: L_Node | string): L_Out {
-    if (message instanceof L_Node) this.report(`OK! ${message}`);
+  OKMesReturnL_Out(message: L_Nodes.L_Node | string): L_Structs.L_Out {
+    if (message instanceof L_Nodes.L_Node) this.report(`OK! ${message}`);
     else this.report(message);
-    return L_Out.True;
+    return L_Structs.L_Out.True;
   }
 
-  OKMesReturnBoolean(message: L_Node | string): boolean {
-    if (message instanceof L_Node) this.report(`OK! ${message}`);
+  OKMesReturnBoolean(message: L_Nodes.L_Node | string): boolean {
+    if (message instanceof L_Nodes.L_Node) this.report(`OK! ${message}`);
     else this.report(message);
     return true;
   }
 
-  errMesReturnL_Out(s: L_Node | string): L_Out {
+  errMesReturnL_Out(s: L_Nodes.L_Node | string): L_Structs.L_Out {
     this.report(`Error: ${s}`);
-    return L_Out.Error;
+    return L_Structs.L_Out.Error;
   }
 
-  errMesReturnBoolean(s: L_Node | string): boolean {
+  errMesReturnBoolean(s: L_Nodes.L_Node | string): boolean {
     this.report(`Error: ${s}`);
     return false;
   }

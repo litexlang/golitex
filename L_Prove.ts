@@ -4,17 +4,8 @@ import { L_Exec } from "./L_Executor";
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
-import { reportExecL_Out, reportNewExist } from "./L_Report";
-// import { existBuiltinCheck } from "./L_Builtins";
-
-// TODO : 检查没有var在这里是额外引入的
-export function noVarsOrOptDeclaredHere(
-  sendErrMessageToEnv: L_Env,
-  here: L_Env,
-  targetFact: ToCheckNode
-): boolean {
-  return true;
-}
+import {} from "./L_Report";
+import * as L_Report from "./L_Report";
 
 export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
   try {
@@ -22,7 +13,7 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
 
     for (const subNode of block) {
       const out = L_Exec(newEnv, subNode);
-      env.report(reportExecL_Out(out, toProve));
+      env.report(L_Report.reportExecL_Out(out, toProve));
       if (out === L_Out.Error) {
         newEnv.getMessages().forEach((e) => env.report(e));
         env.report(`Errors: Failed to execute ${subNode}`);
@@ -31,8 +22,14 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
     }
 
     // TODO : 检查没有var在这里是额外引入的
-    const ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
-    if (!ok) return L_Out.Error;
+    const ok = toProve.varsDeclared(env);
+    if (!ok) {
+      return L_Report.L_ReportErr(
+        env,
+        proveOptByContradict,
+        `[Error] parameters in ${toProve} must be declared outside`
+      );
+    }
 
     const out = L_Checker.checkFact(newEnv, toProve);
     if (out !== L_Out.True) return out;
@@ -64,6 +61,15 @@ export function proveOptByContradict(
       return L_Out.Error;
     }
 
+    ok = toProve.varsDeclared(env);
+    if (!ok) {
+      return L_Report.L_ReportErr(
+        env,
+        proveOptByContradict,
+        `[Error] parameters in ${toProve} must be declared outside`
+      );
+    }
+
     for (const subNode of block) {
       const out = L_Exec(newEnv, subNode);
       if (out === L_Out.Error) {
@@ -85,9 +91,6 @@ export function proveOptByContradict(
       env.report(`Errors: Failed to execute ${contradict}`);
       return L_Out.Error;
     }
-
-    ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
-    if (!ok) return L_Out.Error;
 
     toProve.isT = !toProve.isT;
     ok = L_Memory.newFact(env, toProve);
