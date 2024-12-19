@@ -241,4 +241,18 @@ export class L_Env {
       facts: Object.fromEntries(this.facts),
     };
   }
+
+  getLetsVar(varStr: string): L_Nodes.LetsNode | undefined {
+    if (this.letsVars.has(varStr)) {
+      return this.letsVars.get(varStr);
+    }
+
+    for (const knownLet of this.letsVars.values()) {
+      if (knownLet.regex.test(varStr)) return knownLet;
+    }
+
+    if (this.parent !== undefined) {
+      return this.parent.getLetsVar(varStr);
+    } else return undefined;
+  }
 }

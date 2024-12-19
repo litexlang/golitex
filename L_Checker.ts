@@ -514,6 +514,7 @@ function checkToCheckFormulaLiterally(
 
 function checkOptFactUsingRegexVar(env: L_Env, toCheck: OptNode): L_Out {
   try {
+    return L_Out.Unknown;
   } catch {
     return L_ReportCheckErr(env, checkOptFactUsingRegexVar, toCheck);
   }

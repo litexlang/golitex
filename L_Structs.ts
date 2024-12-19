@@ -68,25 +68,34 @@ export abstract class L_Symbol {
 
   static areLiterallyTheSame(
     env: L_Env,
-    var1: L_Symbol,
-    var2: L_Symbol
+    given: L_Symbol,
+    template: L_Symbol
   ): boolean {
     try {
-      if (var1 instanceof L_Singleton && var2 instanceof L_Singleton) {
-        return var1.value === var2.value;
-      } else if (var1 instanceof L_Composite && var2 instanceof L_Composite) {
+      if (given instanceof L_Singleton && template instanceof L_Singleton) {
+        return (
+          given.value === template.value || regexTheSame(env, given, template)
+        );
+      } else if (
+        given instanceof L_Composite &&
+        template instanceof L_Composite
+      ) {
         // name of composite symbol must be equal
-        if (var1.name !== var2.name) {
+        if (given.name !== template.name) {
           return false;
         }
 
         // vars of composite symbol must be equal
-        if (var1.values.length !== var2.values.length) {
+        if (given.values.length !== template.values.length) {
           return false;
         } else {
-          for (let i = 0; i < var1.values.length; i++) {
+          for (let i = 0; i < given.values.length; i++) {
             if (
-              !L_Symbol.areLiterallyTheSame(env, var1.values[i], var2.values[i])
+              !L_Symbol.areLiterallyTheSame(
+                env,
+                given.values[i],
+                template.values[i]
+              )
             ) {
               return false;
             }
@@ -98,6 +107,18 @@ export abstract class L_Symbol {
       }
     } catch {
       L_ReportErr(env, L_Symbol.areLiterallyTheSame);
+      return false;
+    }
+
+    function regexTheSame(
+      env: L_Env,
+      given: L_Singleton,
+      template: L_Singleton
+    ): boolean {
+      const relatedLets = env.getLetsVar(template.value);
+      if (relatedLets !== undefined) {
+        if (relatedLets.regex.test(given.value)) return true;
+      }
       return false;
     }
   }
