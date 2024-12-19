@@ -740,148 +740,20 @@ know if x, a: in(x, \\singleton{a}) {
     name: "",
     code: [
       `
-def_composite \\pair{a,b};
-def equal(x,b);
-def in(a,b);
-know if x, a, b: in(x, \\pair{a,b}) {
-    if : not equal(x, b) {
-        equal(x, a);
-    };
-    if : not equal(x, a) {
-        equal(x, b);
-    };
+def disjoint(a,b);
+def set(A); def equal(A, B);
+
+
+def_composite \\regularity_element{A} : set(A), not equal(A, EMPTY_SET);
+
+know if A: set(A), not equal(A, EMPTY_SET) {
+  if : not set(\\regularity_element{A}) {
+    disjoint(A, \\regularity_element{A})
+  },
+  if : not disjoint(A, \\regularity_element{A} ) {
+    set(\\regularity_element{A})
+  }
 };
-
-know if x, a, b: equal(x,a) {
-    in(x, \\pair{a,b});
-};
-
-know if x, a, b: equal(x,b) {
-    in(x, \\pair{a,b});
-};
-
-{
-    let x, a, b: equal(x,a);
-//    in(x, \\pair{a,b})[x,a,b];
-    let y,c,d: in(y, \\pair{c,d}), not equal(y,c);
-    equal(y,d)[y,c,d;];
-}
-      
-def_composite \\union{x,y};
-know if x, y: set(x), set(y) {
-    if z: in(z, x) {
-        in(z, \\union{x, y});
-    };
-    if z: in(z, y) {
-        in(z, \\union{x,y});
-    };
-};
-
-know if x, y, z: in(z, \\union{x, y}) {
-    if : not in(z, x) {
-        in(z, y);
-    };
-    if : not in(z, y) {
-        in(z, x);
-    };
-};
-
-{
-    let a,b: set(a), set(b);
-    let x: in(x,a);
-    in(x, \\union{a,b})[a,b; x];
-    in(x, \\union{a,b});
-    let y, c, d: in(y, \\union{c,d});
-    know not in(y, c);
-    in(y, d)[c,d,y;];
-}
-
-def subset(x,y);
-
-know if A,B: subset(A,B) {
-    if x: in(x,A) {
-        in(x,B);
-    };
-};
-
-know if A,B: if x: in(x,A) {
-    in(x,B);
-} {
-    subset(A,B);
-};
-
-{
-    let A,B,C,D,E,F;
-    know subset(A,B);
-    let x: in(x,A);
-    in(x,B);
-    in(x,B)[A,B;x];
-    in(x,B);
-}
-
-def_composite \\subset_with_property{A,P}: set(A), is_property(P);
-
-know if A, P: is_property(P), set(A) {
-    subset(\\subset_with_property{A,P}, A)
-};
-
-{
-    def p(x);
-    is_property(p);
-    let x: set(x);
-    subset(\\subset_with_property{x,p}, x)[x,p];
-}
-
-def_composite \\intersection{a,b}; 
-know if x, a, b: a is set, b is set, in(x,a), in(x,b) {
-    in(x, \\intersection{a,b});
-};
-
-know if x, a, b: set(a), set(b), in(x, \\intersection{a,b}) {
-    in(x,a);
-    in(x, b);
-};
-
-{
-    let A, B: set(A), set(B);
-    let x;
-    know in(x,A), in(x,B);
-    in(x, \\intersection{A,B})[x,A,B];
-    if X: in(X,A), in(X,B) {
-        in(X, \\intersection{A,B})[X,A,B];
-    };
-    if X: in(X, \\intersection{A,B}) {
-        in(X,A)[X,A,B];
-        in(X, B)[X,A,B];
-    };
-}
-
-
-def_composite \\difference{a,b}: set(a), set(b);
-
-know if x, a, b: set(a), set(b), in(x,a), not in(x,b) {
-    in(x, \\difference{a,b});
-};
-
-def_composite \\replacement{a,p}: set(a), is_property(p), if x, a: set(a), in(x,a) {
-    if y1, y2: p(x, y1), p(x, y2) {
-        equal(y1, y2);
-    };
-};
-
-def_composite \\replacement_var{z,a,p} ;
-
-know if z, a, p: set(a), is_property(p), if x, a: set(a), in(x,a) {
-    if y1, y2: p(x, y1), p(x, y2) {
-        equal(y1, y2);
-    };
-    in(z, \\replacement{a,p});
-} {
-    p(\\replacement_var{z,a,p}, z);
-};
-
-
-
 `,
     ],
     debug: true,

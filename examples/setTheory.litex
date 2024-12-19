@@ -16,8 +16,8 @@ know if x: set(x) {
   object(x)
 };
 
-// In this file, code embrace by {} are executed in a local environment and 
-reader might read them as if it is 'test-code' for what has be declared.
+/* In this file, code embrace by {} are executed in a local environment and 
+reader might read them as if it is 'test-code' for what has be declared. */
 {
   let a: set(a);
   object(a);

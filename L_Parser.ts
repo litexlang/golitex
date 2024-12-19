@@ -257,6 +257,10 @@ export function parseNodesFromSingleExpression(
       if (tokens.length === 0) return undefined;
     }
 
+    if (tokens.length === 0) {
+      return undefined;
+    }
+
     const func = KeywordFunctionMap[tokens[0]];
     if (func) {
       const node = func(env, tokens);
