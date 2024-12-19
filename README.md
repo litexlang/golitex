@@ -14,7 +14,12 @@ _Mathematics... is nothing more than a game played according to certain simple r
 
 LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to everyone, from elementary students to university professors. With a design as intuitive as natural language, LiTeX requires significantly less typing—about 50% less than LaTeX and 80% less than Lean4 (see examples/setTheory.litex for details). That's why unlike other formal proof languages, LiTeX is practical for everyday tasks, not just an auxiliary tool.
 
-LiTeX "magically" eliminates barriers between the user’s thought process and the expression of their logic by combining the familiar structure of LaTeX for breaking down mathematical expressions with Lisp’s "everything is a symbol" philosophy. This unique approach sets LiTeX apart from existing formal languages, making it far more accessible and intuitive.
+_The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."
+-- Structure and Interpretation of Computer Programs_
+
+LiTeX seamlessly bridges the gap between a user’s thought process and the expression of their logic by combining the structured clarity of LaTeX for mathematical notation with Lisp’s philosophy of “everything is a symbol.” This fusion empowers users to express complex ideas intuitively and fluidly.
+
+Another factor that sets LiTeX from other proof systems apart is its commitment to declarative "mathematical programming." Users simply write what they believe to be true, leaving it to the interpreter to verify correctness. By striking a perfect balance between the imperative mindset of computer programming and the declarative elegance of mathematical writing, LiTeX redefines accessibility and intuitiveness in formal languages.
 
 <font color="red">Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!</font>
 

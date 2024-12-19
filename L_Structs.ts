@@ -51,12 +51,12 @@ export abstract class L_Symbol {
 
   static allSymbolsAreLiterallyTheSame(
     env: L_Env,
-    var1: L_Symbol[],
-    var2: L_Symbol[]
+    given: L_Symbol[],
+    template: L_Symbol[]
   ): boolean {
     return (
-      var1.length === var2.length &&
-      var1.every((e, i) => L_Symbol.areLiterallyTheSame(env, e, var2[i]))
+      given.length === template.length &&
+      given.every((e, i) => L_Symbol.areLiterallyTheSame(env, e, template[i]))
     );
   }
 

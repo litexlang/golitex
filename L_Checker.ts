@@ -81,18 +81,6 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
 }
 
 function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
-  try {
-    if (checkOptFactUsingPureVar(env, toCheck) === L_Out.True) {
-      return L_Out.True;
-    } else {
-      return checkOptFactUsingRegexVar(env, toCheck);
-    }
-  } catch {
-    return L_ReportCheckErr(env, checkOptFact, toCheck);
-  }
-}
-
-function checkOptFactUsingPureVar(env: L_Env, toCheck: OptNode): L_Out {
   // Main part of this function
   try {
     // TODO 严重的设计矛盾：composite里面的东西，究竟需不需要先定义一下？？
@@ -509,13 +497,5 @@ function checkToCheckFormulaLiterally(
     throw Error();
   } catch {
     return L_ReportCheckErr(env, checkOptFact, toCheck);
-  }
-}
-
-function checkOptFactUsingRegexVar(env: L_Env, toCheck: OptNode): L_Out {
-  try {
-    return L_Out.Unknown;
-  } catch {
-    return L_ReportCheckErr(env, checkOptFactUsingRegexVar, toCheck);
   }
 }

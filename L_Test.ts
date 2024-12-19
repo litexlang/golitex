@@ -708,7 +708,8 @@ let a,b,c: <(a,b), <(b,c);
   {
     name: "lets",
     code: [
-      'def nat(x); lets natural_number "^[1-9]\\d*$" : natural_number is nat;',
+      "def nat(x); ",
+      'lets natural_number "^[1-9]\\d*$" : natural_number is nat;',
       "natural_number is nat;",
       "1 is nat;",
     ],
