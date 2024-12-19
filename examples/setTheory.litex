@@ -115,20 +115,21 @@ know if x, a, b: in(x, \pair{a,b}) {
     };
 };
 
-know if x, a, b: in(x,a) {
+know if x, a, b: equal(x,a) {
     in(x, \pair{a,b});
 };
 
-know if x, a, b: in(x,b) {
+know if x, a, b: equal(x,b) {
     in(x, \pair{a,b});
 };
 
 {
-    let x, a, b: in(x,a);
+    let x, a, b: equal(x,a);
     in(x, \pair{a,b})[x,a,b];
     let y,c,d: in(y, \pair{c,d}), not equal(y,c);
     equal(y,d)[y,c,d;];
 }
+
 
  
 /*
@@ -140,6 +141,7 @@ words, for any object \(x\),
 x \in A \cup B \iff (x \in A \lor x \in B).
 \]
 */
+
 def_composite \union{x,y};
 know if x, y: set(x), set(y) {
     if z: in(z, x) {

@@ -767,6 +767,34 @@ know if x, a, b: equal(x,b) {
     equal(y,d)[y,c,d;];
 }
       
+def_composite \\union{x,y};
+know if x, y: set(x), set(y) {
+    if z: in(z, x) {
+        in(z, \\union{x, y});
+    };
+    if z: in(z, y) {
+        in(z, \\union{x,y});
+    };
+};
+
+know if x, y, z: in(z, \\union{x, y}) {
+    if : not in(z, x) {
+        in(z, y);
+    };
+    if : not in(z, y) {
+        in(z, x);
+    };
+};
+
+{
+    let a,b: set(a), set(b);
+    let x: in(x,a);
+    in(x, \\union{a,b})[a,b; x];
+    in(x, \\union{a,b});
+    let y, c, d: in(y, \\union{c,d});
+    know not in(y, c);
+    in(y, d)[c,d,y;];
+}
       `,
     ],
     debug: true,
