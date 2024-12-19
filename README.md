@@ -19,7 +19,7 @@ _The computer revolution is a revolution in the way we think and in the way we e
 
 LiTeX seamlessly bridges the gap between a user’s thought process and the expression of their logic by combining the structured clarity of LaTeX for mathematical notation with Lisp’s philosophy of “everything is a symbol.” This fusion empowers users to express complex ideas intuitively and fluidly.
 
-Another factor that sets LiTeX from other proof systems apart is its commitment to declarative "mathematical programming." Users simply write what they believe to be true, leaving it to the interpreter to verify correctness. By striking a perfect balance between the imperative mindset of computer programming and the declarative elegance of mathematical writing, LiTeX redefines accessibility and intuitiveness in formal languages.
+Another factor that sets LiTeX from other proof systems apart is its commitment to declarative syntax. Users simply write what they believe to be true, leaving it to the interpreter to verify correctness. By striking a perfect balance between the imperative mindset of computer programming and the declarative elegance of mathematical writing, LiTeX redefines accessibility and intuitiveness in formal languages.
 
 <font color="red">Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!</font>
 

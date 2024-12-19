@@ -646,7 +646,6 @@ let a,b,c: <(a,b), <(b,c);
     debug: false,
     print: true,
   },
-  //------------------------------------------------------------
   {
     name: "=",
     code: [
@@ -655,11 +654,13 @@ let a,b,c: <(a,b), <(b,c);
       "def_composite \\frac{a,b}: nat(a), nat(b);",
       "\\frac{1,2} is number;",
       "\\frac{x,y} is nat;",
-      "know if k: is_form(k, \\frac{x,y}) {k is number}",
+      "know if k: is_form(k, \\frac{x,y}, {number(x), number(y)} ) {k is number};",
+      "\\frac{x,y} is number;",
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
+  //------------------------------------------------------------
   {
     name: "is_form", // currently, is_form is used as composite in req
     code: [
@@ -704,6 +705,12 @@ let a,b,c: <(a,b), <(b,c);
     debug: false,
     print: true,
   },
+  {
+    name: "1 + 1 = 2",
+    code: [""],
+    debug: false,
+    print: true,
+  },
   ///-------------------------------------------------------------
   {
     name: "lets",
@@ -713,7 +720,7 @@ let a,b,c: <(a,b), <(b,c);
       "natural_number is nat;",
       "1 is nat;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];
