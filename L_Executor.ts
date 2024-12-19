@@ -295,7 +295,11 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
       if (v instanceof L_Singleton) {
         ok = env.newSingletonVar(v.value);
         if (!ok) {
-          env.report(`Failed: ${v} already declared`);
+          L_Messages.L_ReportErr(
+            env,
+            proveIfExec,
+            `The variable "${v}" is already declared in this environment or its parent environments. Please use a different name.`
+          );
           throw Error();
         }
       }

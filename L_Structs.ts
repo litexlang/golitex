@@ -13,7 +13,7 @@ export abstract class L_Symbol {
     const declared: L_Singleton[] = [];
     const undeclared: L_Singleton[] = [];
     for (const root of allRootSingletons) {
-      if (env.singletonDeclared(root.value)) {
+      if (env.isSingletonDeclared(root.value)) {
         declared.push(root);
       } else {
         undeclared.push(root);
@@ -114,7 +114,7 @@ export class L_Singleton extends L_Symbol {
 
   subSymbolsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
     return (
-      env.singletonDeclared(this.value) ||
+      env.isSingletonDeclared(this.value) ||
       varsFromAbove.some((e) => L_Symbol.areLiterallyTheSame(env, e, this))
     );
   }
@@ -161,7 +161,7 @@ export class L_Composite extends L_Symbol {
 
     for (const value of this.values) {
       if (value instanceof L_Singleton) {
-        if (!env.singletonDeclared(value.value)) return false;
+        if (!env.isSingletonDeclared(value.value)) return false;
       } else if (value instanceof L_Composite) {
         if (!value.subSymbolsDeclared(env, [])) return false;
       }

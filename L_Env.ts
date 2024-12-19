@@ -1,3 +1,4 @@
+import { L_ReportBoolErr } from "./L_Messages";
 import {
   BuiltinCheckNode,
   DefNode,
@@ -9,7 +10,7 @@ import {
   ToCheckFormulaNode,
 } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
-import { L_KnownFact, L_OptSymbol, L_Out } from "./L_Structs";
+import { L_KnownFact, L_OptSymbol, L_Out, L_Singleton } from "./L_Structs";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;
@@ -26,8 +27,11 @@ export class L_Env {
 
   newCompositeVar(key: string, fact: DefCompositeNode): boolean {
     if (this.declaredComposites.get(key)) {
-      this.report(`Failed: ${key} already declared.`);
-      return false;
+      return L_ReportBoolErr(
+        this,
+        this.newCompositeVar,
+        `The variable "${key}" is already declared in this environment or its parent environments. Please use a different name.`
+      );
     } else {
       this.declaredComposites.set(key, fact);
       return true;
@@ -88,6 +92,14 @@ export class L_Env {
     this.defs = new Map<string, DefNode>();
   }
 
+  isLetsVar(varStr: string): boolean {
+    const knownLetsVars = this.getLetsVars();
+    for (const knownLet of knownLetsVars) {
+      if (knownLet.regex.test(varStr)) return true;
+    }
+    return false;
+  }
+
   getLetsVars(): L_Nodes.LetsNode[] {
     let letsVarsFromAllEnvs: L_Nodes.LetsNode[] = [...this.letsVars];
     if (this.parent !== undefined) {
@@ -139,10 +151,11 @@ export class L_Env {
   newDef(s: string, DefNode: DefNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.getDef(s) !== undefined) {
-      this.report(
-        `${s} already declared in this environment or its parents environments.`
+      return L_ReportBoolErr(
+        this,
+        this.newDef,
+        `The variable "${s}" is already declared in this environment or its parent environments. Please use a different name.`
       );
-      return false;
     }
 
     this.defs.set(s, DefNode);
@@ -152,20 +165,23 @@ export class L_Env {
 
   newSingletonVar(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
-    if (this.singletonDeclared(fix)) {
-      this.report(`${fix} already declared.`);
-      return false;
+    if (this.isSingletonDeclared(fix)) {
+      return L_ReportBoolErr(
+        this,
+        this.newSingletonVar,
+        `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
+      );
     }
     this.declaredSingletons.add(fix);
     return true;
   }
 
-  singletonDeclared(key: string): boolean {
-    if (this.declaredSingletons.has(key)) {
+  isSingletonDeclared(key: string): boolean {
+    if (this.declaredSingletons.has(key) || this.isLetsVar(key)) {
       return true;
     } else {
       if (!this.parent) return false;
-      else return this.parent.singletonDeclared(key);
+      else return this.parent.isSingletonDeclared(key);
     }
   }
 

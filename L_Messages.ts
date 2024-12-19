@@ -95,10 +95,11 @@ export function L_ReportCheckErr(
 export function L_ReportBoolErr(
   env: L_Env,
   func: Function,
-  node?: L_Node
+  node?: L_Node | string
 ): boolean {
   env.report(`<${func.name}> Failed`);
   if (node !== undefined) env.report(`Failed: ${node}`);
+
   return false;
 }
 
