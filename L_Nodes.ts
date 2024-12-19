@@ -543,13 +543,13 @@ export class LetsNode extends L_Node {
   constructor(
     public name: string,
     public regex: RegExp,
-    public fact: ToCheckNode[]
+    public facts: ToCheckNode[]
   ) {
     super();
   }
 
   toString() {
-    return `lets ${this.name} ${this.regex} : ${this.fact
+    return `lets ${this.name} ${this.regex} : ${this.facts
       .map((e) => e.toString())
       .join(", ")}`;
   }

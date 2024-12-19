@@ -199,6 +199,9 @@ function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
 function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
   try {
     env.newLetsVars(node);
+    for (const fact of node.facts) {
+      L_Memory.newFact(env, fact);
+    }
     env.report(`<lets OK!> ${node.toString()}`);
     return L_Out.True;
   } catch {

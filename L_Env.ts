@@ -60,28 +60,23 @@ export class L_Env {
     return true;
   }
 
-  getFacts(
-    key: string,
-    factsFromParent: L_KnownFact[] | undefined = undefined
-  ): undefined | L_KnownFact[] {
-    // Initialize factsFromParent if it's undefined
-    if (factsFromParent === undefined) {
-      factsFromParent = [];
-    }
+  getFacts(key: string): undefined | L_KnownFact[] {
+    let currentFacts = this.facts.get(key);
 
-    // Check facts in current instance
-    const currentFacts = this.facts.get(key);
-    if (currentFacts !== undefined) {
-      factsFromParent.push(...currentFacts);
+    if (currentFacts === undefined) {
+      if (this.parent !== undefined) {
+        return this.parent.getFacts(key);
+      } else {
+        return undefined;
+      }
+    } else {
+      const fromParent = this.parent?.getFacts(key);
+      if (fromParent === undefined) {
+        return currentFacts;
+      } else {
+        return [...currentFacts, ...fromParent];
+      }
     }
-
-    // If no parent, return accumulated facts
-    if (this.parent === undefined) {
-      return factsFromParent.length > 0 ? factsFromParent : undefined;
-    }
-
-    // Recursively get facts from parent
-    return this.parent.getFacts(key, factsFromParent);
   }
 
   clear() {
@@ -245,5 +240,34 @@ export class L_Env {
       defs: Object.fromEntries(this.defs),
       facts: Object.fromEntries(this.facts),
     };
+  }
+
+  getRegexFact(key: string): undefined | L_KnownFact[] {
+    let currentFacts: undefined | L_KnownFact[] = undefined;
+
+    for (const letsNode of this.letsVars.values()) {
+      if (letsNode.regex.test(key)) {
+        const regexRelatedFacts = this.getRegexFact(letsNode.name);
+        if (regexRelatedFacts !== undefined) {
+          if (currentFacts === undefined) currentFacts = regexRelatedFacts;
+          else currentFacts.push(...regexRelatedFacts);
+        }
+      }
+    }
+
+    if (currentFacts === undefined) {
+      if (this.parent === undefined) {
+        return undefined;
+      } else {
+        return this.parent.getRegexFact(key);
+      }
+    } else {
+      if (this.parent === undefined) return currentFacts;
+      else {
+        const fromParent = this.parent.getRegexFact(key);
+        if (fromParent === undefined) return currentFacts;
+        else return [...currentFacts, ...fromParent];
+      }
+    }
   }
 }
