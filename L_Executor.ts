@@ -2,7 +2,7 @@ import { L_Env } from "./L_Env";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import { L_Keywords } from "./L_Keywords";
-import { runFile } from "./L_Runner";
+import { runFileWithLogging } from "./L_Runner";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Messages from "./L_Messages";
 import { L_Out, L_Singleton } from "./L_Structs";
@@ -185,7 +185,7 @@ function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
         env.clear();
         return L_Out.True;
       case L_Keywords.RunKeyword: {
-        runFile(env, node.extra as string, true, false);
+        runFileWithLogging(env, node.extra as string, true, false);
         return L_Out.True;
       }
     }

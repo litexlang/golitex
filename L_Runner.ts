@@ -5,7 +5,7 @@ import { L_Scan } from "./L_Lexer";
 import * as L_Parser from "./L_Parser";
 import * as fs from "fs";
 
-export function runString(
+export function runStringWithLogging(
   env: L_Env,
   expr: string,
   printResult: boolean = true,
@@ -23,7 +23,7 @@ export function runString(
     const result: L_Out[] = [];
     for (const node of nodes) {
       L_Executor.L_Exec(env, node);
-      if (printResult) {
+      if (true) {
         if (printCode) console.log("***  results  ***\n");
         env.printClearMessage();
         console.log();
@@ -41,21 +41,21 @@ export function runString(
   }
 }
 
-export function runStrings(
+export function runStringsWithLogging(
   env: L_Env,
   exprs: string[],
   printResult: boolean = true
 ) {
   for (let i = 0; i < exprs.length; i++) {
     const expr = exprs[i];
-    runString(env, expr, printResult);
+    runStringWithLogging(env, expr, printResult);
   }
 
   if (printResult) console.log("-----\nDONE!\n");
   // env.printExists();
 }
 
-export function runFile(
+export function runFileWithLogging(
   env: L_Env,
   fileName: string,
   printResult: boolean = true,
@@ -66,7 +66,7 @@ export function runFile(
     fs.writeFileSync(fileName, fileContent, "utf8");
     // const fileContent = Deno.readTextFileSync(fileName);
     console.log(`Running file: ${fileName}\n`);
-    const out = runString(env, fileContent, printResult, printCode);
+    const out = runStringWithLogging(env, fileContent, printResult, false);
     console.log(`End Running file: ${fileName}\n`);
     return out;
   } catch (err) {

@@ -1,6 +1,6 @@
 import { ExampleItem } from "./L_Structs";
 import { L_Env } from "./L_Env";
-import { runStrings } from "./L_Runner";
+import { runStringsWithLogging } from "./L_Runner";
 import * as fs from "fs";
 
 const exampleList: ExampleItem[] = [
@@ -766,9 +766,9 @@ function runExamples(toJSON: boolean) {
   for (const example of exampleList) {
     if (example.debug) {
       console.log(example.name);
-      runStrings(env, example.code, example.print);
+      runStringsWithLogging(env, example.code, example.print);
       if (example.test !== undefined) {
-        runStrings(env, example.test, example.print);
+        runStringsWithLogging(env, example.test, example.print);
       }
     }
   }
@@ -788,7 +788,7 @@ function runLiTeXFile(filePath: string) {
   try {
     const data = fs.readFileSync(filePath, "utf8");
     const env = new L_Env();
-    runStrings(env, [data], true);
+    runStringsWithLogging(env, [data], false);
   } catch (err) {
     console.error("Error:", err);
   }
