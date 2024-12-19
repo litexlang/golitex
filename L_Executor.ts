@@ -47,8 +47,8 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return localEnvExec(env, node as L_Nodes.LocalEnvNode);
       case "SpecialNode":
         return specialExec(env, node as L_Nodes.SpecialNode);
-      case "MacroNode":
-        return macroExec(env, node as L_Nodes.MacroNode);
+      case "LetsNode":
+        return letsExec(env, node as L_Nodes.LetsNode);
       default:
         if (node instanceof L_Nodes.ToCheckNode) {
           const out = factExec(env, node as L_Nodes.ToCheckNode);
@@ -56,7 +56,7 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
           return out;
         }
 
-        return L_Out.Error;
+        throw Error();
     }
   } catch (error) {
     return L_Messages.L_ReportErr(env, L_Exec, node);
@@ -196,12 +196,13 @@ function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
   }
 }
 
-function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
+function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
   try {
-    env.newMacro(node);
+    env.newLetsVars(node);
+    env.report(`<lets OK!> ${node.toString()}`);
     return L_Out.True;
   } catch {
-    return L_Messages.L_ReportErr(env, macroExec, node);
+    return L_Messages.L_ReportErr(env, letsExec, node);
   }
 }
 

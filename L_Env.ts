@@ -4,21 +4,21 @@ import {
   L_Node,
   DefCompositeNode,
   LogicNode,
-  MacroNode,
   OptNode,
   ToCheckNode,
   ToCheckFormulaNode,
 } from "./L_Nodes";
+import * as L_Nodes from "./L_Nodes";
 import { L_KnownFact, L_OptSymbol, L_Out } from "./L_Structs";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;
   private messages: string[] = [];
   private declaredSingletons = new Set<string>();
-  private macros: MacroNode[] = []; // TODO to be removed
   private defs = new Map<string, DefNode>();
   private facts = new Map<string, L_KnownFact[]>();
   private declaredComposites = new Map<string, DefCompositeNode>();
+  private letsVars: L_Nodes.LetsNode[] = [];
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -84,21 +84,22 @@ export class L_Env {
     this.parent = undefined;
     this.messages = [];
     this.declaredSingletons = new Set<string>();
-    this.macros = [];
+    this.letsVars = [];
     this.defs = new Map<string, DefNode>();
   }
 
-  getMacros(previous: MacroNode[]): MacroNode[] {
-    previous = [...previous, ...this.macros];
+  getLetsVars(): L_Nodes.LetsNode[] {
+    let letsVarsFromAllEnvs: L_Nodes.LetsNode[] = [...this.letsVars];
     if (this.parent !== undefined) {
-      return this.parent.getMacros(previous);
+      letsVarsFromAllEnvs.push(...this.parent.getLetsVars());
+      return letsVarsFromAllEnvs;
     } else {
-      return previous;
+      return this.letsVars;
     }
   }
 
-  newMacro(macroNode: MacroNode) {
-    this.macros.push(macroNode);
+  newLetsVars(macroNode: L_Nodes.LetsNode) {
+    this.letsVars.push(macroNode);
   }
 
   // used by checker and executor

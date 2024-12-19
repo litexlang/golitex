@@ -13,6 +13,7 @@ export const specialChars = [
   "\\",
   "=",
   "$",
+  '"', // for regex parser
 ];
 
 export const L_Keywords = {

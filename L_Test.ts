@@ -95,7 +95,7 @@ const exampleList: ExampleItem[] = [
       "prove_by_contradiction  not  human(god) {god is mortal;}  god is mortal;",
       "not human(god);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -702,6 +702,15 @@ let a,b,c: <(a,b), <(b,c);
       "know if n, x: is_form(n, $x + y$, {x > 0, y > 0} ) {n > x}",
     ],
     debug: false,
+    print: true,
+  },
+  ///-------------------------------------------------------------
+  {
+    name: "lets",
+    code: [
+      'def nat(x); lets natural_number "^[1-9]\\d*$" : natural_number is nat;',
+    ],
+    debug: true,
     print: true,
   },
 ];

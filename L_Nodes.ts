@@ -347,30 +347,6 @@ export class ByNode extends L_Node {
   }
 }
 
-export class MacroNode extends L_Node {
-  constructor(
-    public regexString: string,
-    public varName: string,
-    public facts: ToCheckNode[]
-  ) {
-    super();
-  }
-
-  override toString() {
-    return `regex string: ${this.regexString}, var: ${this.varName}, facts: ${this.facts}`;
-  }
-
-  testRegex(testStr: string): boolean {
-    try {
-      const regex = new RegExp(this.regexString);
-      return regex.test(testStr);
-    } catch (error) {
-      console.error("Invalid Regular Expression:", error);
-      return false;
-    }
-  }
-}
-
 export class DefCompositeNode extends L_Node {
   constructor(public composite: L_Composite, public facts: ToCheckNode[]) {
     super();
@@ -570,5 +546,11 @@ export class LetsNode extends L_Node {
     public fact: ToCheckNode[]
   ) {
     super();
+  }
+
+  toString() {
+    return `lets ${this.name} ${this.regex} : ${this.fact
+      .map((e) => e.toString())
+      .join(", ")}`;
   }
 }

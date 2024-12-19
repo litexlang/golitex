@@ -235,7 +235,6 @@ const KeywordFunctionMap: {
   have: haveParse,
   clear: specialParse,
   run: specialParse,
-  macro: macroParse,
   def_composite: LetCompositeParse,
   lets: letsParse,
 };
@@ -813,23 +812,6 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   }
 }
 
-function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  try {
-    skip(tokens, L_Keywords.MacroKeywords);
-    const regexString = skipString(tokens);
-    const varName = tokens.shift() as string;
-    const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
-
-    return new L_Nodes.MacroNode(regexString, varName, facts);
-  } catch (error) {
-    L_ParseErr(env, tokens, macroParse, index, start);
-    throw error;
-  }
-}
-
 function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
   const start = tokens[0];
   const index = tokens.length;
@@ -1034,7 +1016,7 @@ export function letsParse(env: L_Env, tokens: string[]): L_Nodes.LetsNode {
     skip(tokens, L_Keywords.lets);
     const name = skip(tokens);
     const regex = new RegExp(skipString(tokens));
-
+    skip(tokens, ":");
     const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
     return new L_Nodes.LetsNode(name, regex, facts);
   } catch (error) {
