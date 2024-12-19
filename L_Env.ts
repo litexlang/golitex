@@ -19,7 +19,7 @@ export class L_Env {
   private defs = new Map<string, DefNode>();
   private facts = new Map<string, L_KnownFact[]>();
   private declaredComposites = new Map<string, DefCompositeNode>();
-  private letsVars: L_Nodes.LetsNode[] = [];
+  private letsVars = new Map<string, L_Nodes.LetsNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -88,30 +88,27 @@ export class L_Env {
     this.parent = undefined;
     this.messages = [];
     this.declaredSingletons = new Set<string>();
-    this.letsVars = [];
+    this.letsVars = new Map<string, L_Nodes.LetsNode>();
     this.defs = new Map<string, DefNode>();
   }
 
+  // two ways of checking : 1. it's letsVar name 2. it satisfies regex of a var
   isLetsVar(varStr: string): boolean {
-    const knownLetsVars = this.getLetsVars();
-    for (const knownLet of knownLetsVars) {
+    if (this.letsVars.has(varStr)) {
+      return true;
+    }
+
+    for (const knownLet of this.letsVars.values()) {
       if (knownLet.regex.test(varStr)) return true;
     }
-    return false;
-  }
 
-  getLetsVars(): L_Nodes.LetsNode[] {
-    let letsVarsFromAllEnvs: L_Nodes.LetsNode[] = [...this.letsVars];
     if (this.parent !== undefined) {
-      letsVarsFromAllEnvs.push(...this.parent.getLetsVars());
-      return letsVarsFromAllEnvs;
-    } else {
-      return this.letsVars;
-    }
+      return this.parent.isLetsVar(varStr);
+    } else return false;
   }
 
-  newLetsVars(macroNode: L_Nodes.LetsNode) {
-    this.letsVars.push(macroNode);
+  newLetsVars(letsNode: L_Nodes.LetsNode) {
+    this.letsVars.set(letsNode.name, letsNode);
   }
 
   // used by checker and executor
