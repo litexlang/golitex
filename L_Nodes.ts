@@ -85,6 +85,7 @@ export class LogicNode extends ToCheckNode {
   }
 
   varsDeclared(env: L_Env): boolean {
+    // * The new variables declared as if-fact parameters are stored in newEnv
     const newEnv = new L_Env(env);
 
     for (const v of this.vars) {
@@ -204,7 +205,7 @@ export class OptNode extends ToCheckNode {
 
   varsDeclared(env: L_Env): boolean {
     for (const v of this.vars) {
-      if (!v.subSymbolsDeclared(env, [])) {
+      if (!v.subSymbolsDeclared(env)) {
         return L_VarNotDeclaredBool(env, this.varsDeclared, this);
       }
     }
@@ -213,7 +214,7 @@ export class OptNode extends ToCheckNode {
 
     for (const layer of this.checkVars) {
       for (const v of layer) {
-        if (!v.subSymbolsDeclared(env, [])) {
+        if (!v.subSymbolsDeclared(env)) {
           return L_VarNotDeclaredBool(env, this.varsDeclared, this);
         }
       }

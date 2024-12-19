@@ -60,7 +60,7 @@ export abstract class L_Symbol {
     );
   }
 
-  abstract subSymbolsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean;
+  abstract subSymbolsDeclared(env: L_Env): boolean;
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     throw Error();
@@ -133,11 +133,8 @@ export class L_Singleton extends L_Symbol {
     return [this];
   }
 
-  subSymbolsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
-    return (
-      env.isSingletonDeclared(this.value) ||
-      varsFromAbove.some((e) => L_Symbol.areLiterallyTheSame(env, e, this))
-    );
+  subSymbolsDeclared(env: L_Env): boolean {
+    return env.isSingletonDeclared(this.value);
   }
 
   toString() {
@@ -177,23 +174,18 @@ export class L_Composite extends L_Symbol {
     return out;
   }
 
-  subSymbolsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+  subSymbolsDeclared(env: L_Env): boolean {
     if (env.getCompositeVar(this.name) === undefined) return false;
 
     for (const value of this.values) {
       if (value instanceof L_Singleton) {
         if (!env.isSingletonDeclared(value.value)) {
           let ok = false;
-          for (const v of varsFromAbove) {
-            if (v instanceof L_Singleton) {
-              if (v.value === value.value) ok = true;
-            }
-          }
 
           if (!ok) return false;
         }
       } else if (value instanceof L_Composite) {
-        if (!value.subSymbolsDeclared(env, varsFromAbove)) return false;
+        if (!value.subSymbolsDeclared(env)) return false;
       }
     }
 
@@ -256,7 +248,7 @@ export class CompositeSymbolInIfReq extends L_Composite {
     super(name, values);
   }
 
-  subSymbolsDeclared(env: L_Env, varsFromAbove: L_Symbol[]): boolean {
+  subSymbolsDeclared(env: L_Env): boolean {
     return false;
   }
 }
