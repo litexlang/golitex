@@ -170,6 +170,22 @@ function skip(tokens: string[], s: string | string[] = ""): string {
   }
 }
 
+// used in regex parser
+function skipString(tokens: string[]): string {
+  try {
+    skip(tokens, '"');
+    let out = "";
+    while (!isCurToken(tokens, '"')) {
+      out += tokens[0];
+      tokens.shift();
+    }
+    skip(tokens, '"');
+    return out;
+  } catch {
+    throw Error();
+  }
+}
+
 function isCurToken(tokens: string[], s: string | string[]) {
   if (!Array.isArray(s)) {
     return s === tokens[0];
@@ -221,6 +237,7 @@ const KeywordFunctionMap: {
   run: specialParse,
   macro: macroParse,
   def_composite: LetCompositeParse,
+  lets: letsParse,
 };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
@@ -811,21 +828,6 @@ function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
     L_ParseErr(env, tokens, macroParse, index, start);
     throw error;
   }
-
-  function skipString(tokens: string[]): string {
-    try {
-      skip(tokens, '"');
-      let out = "";
-      while (!isCurToken(tokens, '"')) {
-        out += tokens[0];
-        tokens.shift();
-      }
-      skip(tokens, '"');
-      return out;
-    } catch {
-      throw Error();
-    }
-  }
 }
 
 function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
@@ -1021,5 +1023,22 @@ function usePrecedenceToParseComposite(
         return new L_Structs.L_Composite(opt, [left, next]);
       }
     }
+  }
+}
+
+export function letsParse(env: L_Env, tokens: string[]): L_Nodes.LetsNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Keywords.lets);
+    const name = skip(tokens);
+    const regex = new RegExp(skipString(tokens));
+
+    const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+    return new L_Nodes.LetsNode(name, regex, facts);
+  } catch (error) {
+    L_ParseErr(env, tokens, isFormParse, index, start);
+    throw error;
   }
 }

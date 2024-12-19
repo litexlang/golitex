@@ -7,7 +7,7 @@ import * as L_Memory from "./L_Memory";
 import { reportExecL_Out, reportNewExist } from "./L_Messages";
 // import { existBuiltinCheck } from "./L_Builtins";
 
-//
+// TODO : 检查没有var在这里是额外引入的
 export function noVarsOrOptDeclaredHere(
   sendErrMessageToEnv: L_Env,
   here: L_Env,
@@ -30,6 +30,7 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
       }
     }
 
+    // TODO : 检查没有var在这里是额外引入的
     const ok = noVarsOrOptDeclaredHere(env, newEnv, toProve);
     if (!ok) return L_Out.Error;
 

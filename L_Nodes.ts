@@ -562,3 +562,13 @@ export class AndToCheckNode extends ToCheckFormulaNode {
 }
 
 export type FormulaSubNode = ToCheckFormulaNode | OptNode;
+
+export class LetsNode extends L_Node {
+  constructor(
+    public name: string,
+    public regex: RegExp,
+    public fact: ToCheckNode[]
+  ) {
+    super();
+  }
+}

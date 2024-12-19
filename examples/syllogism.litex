@@ -9,6 +9,7 @@ that as something is human, which means the same thing in LiTeX) is true. Define
 a concept called "mortal", and it takes in one parameter. Anything that has 
 property that it is human, it is mortal.
 */
+
 def human(something);
 def mortal(something);
 know if x: human(x) {
@@ -23,6 +24,7 @@ property called mortal, "Socrates is mortal" should return true.
 Then I ask Then I ask LiTeX interpreter whether for all x, x is human, then
 x is mortal. It should also return true.
 */
+
 let Socrates: Socrates is human;
 Socrates is mortal;
 if x: x is human {x is mortal};
