@@ -1,7 +1,6 @@
 import { BuiltinCheckNode } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { isPropertyParse, isFormParse, orParse } from "./L_Parser";
-import { L_Out } from "./L_Structs";
 
 /**
  * Checker of builtins is in L_Checker.checkBuiltinCheckNode

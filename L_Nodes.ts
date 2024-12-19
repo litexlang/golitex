@@ -1,7 +1,17 @@
 import { on } from "events";
 import { L_Env } from "./L_Env";
-import { L_ReportBoolErr, L_VarNotDeclaredBool } from "./L_Messages";
-import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
+import {
+  L_ReportBoolErr,
+  L_VarsInOptDoubleDeclErr,
+  L_VarsInOptNotDeclaredBool,
+} from "./L_Messages";
+import {
+  CompositeSymbolInIfReq,
+  L_Composite,
+  L_OptSymbol,
+  L_Singleton,
+  L_Symbol,
+} from "./L_Structs";
 
 export abstract class L_Node {}
 
@@ -20,37 +30,6 @@ export abstract class ToCheckNode extends L_Node {
   abstract copyWithIsTReverse(): ToCheckNode;
 
   abstract getRootOptNodes(): [OptNode, ToCheckNode[]][];
-
-  // get rootNodes of IfNode and ToCheckFormulaNode
-  // static getRootOptNodes(
-  //   currentNode: ToCheckFormulaNode | IfNode,
-  //   fromAbove: (ToCheckFormulaNode | IfNode)[] = []
-  // ): [OptNode, (ToCheckFormulaNode | IfNode)[]][] {
-  //   let toGets: ToCheckNode[] = [];
-  //   if (currentNode instanceof ToCheckFormulaNode) {
-  //     toGets = currentNode.getLeftRight();
-  //   } else if (currentNode instanceof IfNode) {
-  //     toGets = currentNode.onlyIfs;
-  //   }
-  //   const out: [OptNode, (ToCheckFormulaNode | IfNode)[]][] = [];
-
-  //   for (const toGet of toGets) {
-  //     if (toGet instanceof OptNode) {
-  //       out.push([toGet, [...fromAbove, currentNode]]);
-  //     } else if (toGet instanceof ToCheckFormulaNode) {
-  //       let below: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
-  //         ToCheckNode.getRootOptNodes(toGet, [...fromAbove, currentNode]);
-  //       out.push(...below);
-  //     } else if (toGet instanceof IfNode) {
-  //       let below: [OptNode, (ToCheckFormulaNode | IfNode)[]][] =
-  //         ToCheckNode.getRootOptNodes(toGet, [...fromAbove, currentNode]);
-  //       below = below.map((e) => [e[0], [...fromAbove, currentNode, ...e[1]]]);
-  //       out.push(...below);
-  //     }
-  //   }
-
-  //   return out;
-  // }
 }
 
 export class LogicNode extends ToCheckNode {
@@ -90,21 +69,35 @@ export class LogicNode extends ToCheckNode {
 
     for (const v of this.vars) {
       if (v instanceof L_Composite) {
-        // TODO What happens when var in if vars is composite
+        if (v instanceof CompositeSymbolInIfReq) {
+          for (const newVar of v.newVars) {
+            if (newVar.subSymbolsDeclared(newEnv)) {
+              return L_VarsInOptDoubleDeclErr(env, this.varsDeclared, newVar);
+            }
+            newEnv.newSingletonVar(newVar.value);
+          }
+
+          if (!v.subSymbolsDeclared(newEnv)) {
+            return L_VarsInOptNotDeclaredBool(newEnv, this.varsDeclared, v);
+          }
+        }
       } else if (v instanceof L_Singleton) {
+        if (v.subSymbolsDeclared(newEnv)) {
+          return L_VarsInOptDoubleDeclErr(env, this.varsDeclared, v);
+        }
         newEnv.newSingletonVar(v.value);
       }
     }
 
     for (const req of this.req) {
       if (!req.varsDeclared(newEnv)) {
-        return L_VarNotDeclaredBool(env, this.varsDeclared, req);
+        return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, req);
       }
     }
 
     for (const onlyIf of this.onlyIfs) {
       if (!onlyIf.varsDeclared(newEnv)) {
-        return L_VarNotDeclaredBool(env, this.varsDeclared, onlyIf);
+        return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, onlyIf);
       }
     }
 
@@ -206,7 +199,7 @@ export class OptNode extends ToCheckNode {
   varsDeclared(env: L_Env): boolean {
     for (const v of this.vars) {
       if (!v.subSymbolsDeclared(env)) {
-        return L_VarNotDeclaredBool(env, this.varsDeclared, this);
+        return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, this);
       }
     }
 
@@ -215,7 +208,7 @@ export class OptNode extends ToCheckNode {
     for (const layer of this.checkVars) {
       for (const v of layer) {
         if (!v.subSymbolsDeclared(env)) {
-          return L_VarNotDeclaredBool(env, this.varsDeclared, this);
+          return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, this);
         }
       }
     }

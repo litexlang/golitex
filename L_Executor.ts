@@ -75,8 +75,6 @@ function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
       throw Error();
     }
 
-    // TODO bind macro
-
     // store new facts
     for (const onlyIf of node.facts) {
       const ok = L_Memory.newFact(env, onlyIf);

@@ -1,6 +1,6 @@
 import type { L_Env } from "./L_Env";
-import { L_Out } from "./L_Structs";
-import type { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
+import { L_Out, L_Symbol } from "./L_Structs";
+import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 
 export function reportExecL_Out(out: L_Out, node: L_Node): string {
   if (out === L_Out.True) {
@@ -111,18 +111,30 @@ export function L_ParseErr(
   start: string = ""
 ) {
   L_ReportErr(env, func, "");
-  // env.report(`[Parse Error]\n`);
   env.report(`At ${start}[${index * -1}]: ${tokens.slice(0, 5).join(" ")}`);
 }
 
-export function L_VarNotDeclaredBool(
+export function L_VarsInOptNotDeclaredBool(
   env: L_Env,
   func: Function,
-  node: ToCheckNode
+  node: ToCheckNode | L_Symbol
 ): boolean {
-  return L_ReportBoolErr(
-    env,
-    func,
-    `At least one parameters in ${node} is not declared. Please check it.`
-  );
+  if (node instanceof ToCheckNode)
+    return L_ReportBoolErr(
+      env,
+      func,
+      `At least one parameters in ${node} is not declared. Please check it.`
+    );
+  else if (node instanceof L_Symbol)
+    return L_ReportBoolErr(env, func, `${node} is not declared.`);
+
+  return false;
+}
+
+export function L_VarsInOptDoubleDeclErr(
+  env: L_Env,
+  func: Function,
+  symbol: L_Symbol
+): boolean {
+  return L_ReportBoolErr(env, func, `[Error] ${symbol} already declared.`);
 }
