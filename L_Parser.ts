@@ -587,11 +587,6 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
     // TODO use builtin to implement not
     let isT = true;
 
-    // if (tokens[0] === ExistKeyword) {
-    //   skip(tokens, ExistKeyword);
-
-    //   return optsParse(env, tokens, parseNot) as ExistNode[];
-    // } else
     if (tokens.length >= 2 && tokens[1] === "(") {
       //TODO CheckVars not implemented
 

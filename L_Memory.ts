@@ -13,16 +13,6 @@ import {
 import { L_Env } from "./L_Env";
 import { reportStoreErr } from "./L_Report";
 
-export function declNewFact(env: L_Env, node: DefNode): boolean {
-  let ok = true;
-  ok = env.newDef(node.opt.optSymbol.name, node);
-  for (const onlyIf of node.onlyIfs) {
-    const ok = newFact(env, onlyIf);
-    if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);
-  }
-  return ok;
-}
-
 export function newFact(env: L_Env, fact: ToCheckNode): boolean {
   if (fact instanceof BuiltinCheckNode) {
     const ok = newBuiltinFact(env, fact);
@@ -37,7 +27,7 @@ export function newFact(env: L_Env, fact: ToCheckNode): boolean {
       const ok = newOptFact(env, fact);
       if (!ok) return false;
     } else if (fact instanceof ToCheckFormulaNode) {
-      const ok = newBoolToCheckFormula(env, fact);
+      const ok = newFormulaFact(env, fact);
       if (!ok) return false;
     } else {
       throw Error();
@@ -67,7 +57,7 @@ function newOptFact(env: L_Env, fact: OptNode): boolean {
   }
 }
 
-function newBoolToCheckFormula(env: L_Env, fact: ToCheckFormulaNode): boolean {
+function newFormulaFact(env: L_Env, fact: ToCheckFormulaNode): boolean {
   try {
     const roots: OptNode[] = fact.getRootOptNodes().map((e) => e[0]);
     roots.forEach((root) => env.newFact(root.optSymbol.name, fact));
@@ -83,7 +73,7 @@ function newBoolToCheckFormula(env: L_Env, fact: ToCheckFormulaNode): boolean {
     }
     return true;
   } catch {
-    return reportStoreErr(env, newBoolToCheckFormula.name, fact);
+    return reportStoreErr(env, newFormulaFact.name, fact);
   }
 }
 

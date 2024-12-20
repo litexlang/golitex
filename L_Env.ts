@@ -97,7 +97,7 @@ export class L_Env {
   }
 
   // used by checker and executor
-  factsInToCheckAllDeclaredOrBuiltin(node: L_Nodes.ToCheckNode): boolean {
+  subFactsDeclaredOrBuiltin(node: L_Nodes.ToCheckNode): boolean {
     if (node instanceof L_Nodes.OptNode) {
       return (
         this.getDef(node.optSymbol.name) !== undefined ||
@@ -105,15 +105,15 @@ export class L_Env {
       );
     } else if (node instanceof L_Nodes.LogicNode) {
       return (
-        node.req.every((e) => this.factsInToCheckAllDeclaredOrBuiltin(e)) &&
-        node.onlyIfs.every((e) => this.factsInToCheckAllDeclaredOrBuiltin(e))
+        node.req.every((e) => this.subFactsDeclaredOrBuiltin(e)) &&
+        node.onlyIfs.every((e) => this.subFactsDeclaredOrBuiltin(e))
       );
     } else if (node instanceof L_Nodes.BuiltinCheckNode) {
       return true;
     } else if (node instanceof L_Nodes.ToCheckFormulaNode) {
       return (
-        this.factsInToCheckAllDeclaredOrBuiltin(node.left) &&
-        this.factsInToCheckAllDeclaredOrBuiltin(node.right)
+        this.subFactsDeclaredOrBuiltin(node.left) &&
+        this.subFactsDeclaredOrBuiltin(node.right)
       );
     }
 

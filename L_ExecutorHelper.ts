@@ -6,7 +6,7 @@ export function optsVarsDeclaredInFacts(
   facts: ToCheckNode[]
 ): boolean {
   for (const f of facts) {
-    const ok = env.factsInToCheckAllDeclaredOrBuiltin(f);
+    const ok = env.subFactsDeclaredOrBuiltin(f);
     if (!ok) {
       //TODO I SHOULD IMPLEMENT check whether something is declared when checking
     }

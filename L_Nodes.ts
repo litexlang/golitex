@@ -27,6 +27,7 @@ export abstract class ToCheckNode extends L_Node {
   // called by prove_by_contradiction
   abstract copyWithIsTReverse(): ToCheckNode;
 
+  // called by "using known fact to check given fact. when doing so, get all root opts and filter opt with the same name."
   abstract getRootOptNodes(): [OptNode, ToCheckNode[]][];
 }
 
@@ -126,16 +127,11 @@ export class LogicNode extends ToCheckNode {
 
   override toString() {
     let type: string = "";
-    let separator = "";
-
     type = "if";
-
     const mainPart = `${type} ${this.vars.toString()} : ${this.req
       .map((e) => e.toString())
       .join(", ")} {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
     const notPart = !this.isT ? "[not] " : "";
-
-    // const defName = this.defName === undefined ? "" : `[${this.defName}]`;
 
     return notPart + mainPart;
   }

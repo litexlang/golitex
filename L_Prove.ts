@@ -4,7 +4,6 @@ import { L_Exec } from "./L_Executor";
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
-import {} from "./L_Report";
 import * as L_Report from "./L_Report";
 
 export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
@@ -21,7 +20,6 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
       }
     }
 
-    // TODO : 检查没有var在这里是额外引入的
     const ok = toProve.varsDeclared(env);
     if (!ok) {
       return L_Report.L_ReportErr(

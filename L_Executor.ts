@@ -121,7 +121,7 @@ export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
 function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
   try {
     // declare new opt
-    const ok = L_Memory.declNewFact(env, node);
+    const ok = declNewFact(env, node);
     if (!ok) {
       env.report(`Failed to store ${node}`);
       return L_Out.Error;
@@ -134,6 +134,16 @@ function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
     return L_Out.True;
   } catch {
     return L_Messages.L_ReportErr(env, defExec, node);
+  }
+
+  function declNewFact(env: L_Env, node: L_Nodes.DefNode): boolean {
+    let ok = true;
+    ok = env.newDef(node.opt.optSymbol.name, node);
+    for (const onlyIf of node.onlyIfs) {
+      const ok = L_Memory.newFact(env, onlyIf);
+      if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);
+    }
+    return ok;
   }
 }
 
