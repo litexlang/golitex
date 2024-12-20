@@ -50,7 +50,7 @@ theorem socrates_is_mortal : Mortal Socrates := by
 #check socrates_is_mortal
 
 // Because LiTeX saves you from "naming a fact so that I can use that later to
-// prove further results".
+// prove further results", LiTeX is much shorter and more concise than Lean4.
 
 def all_humans_will_die : Prop := ∀ (x : Human), Mortal x
 theorem prove_all_humans_will_die : all_humans_will_die := all_humans_are_mortal

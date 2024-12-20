@@ -62,21 +62,76 @@ That's it! These steps will get you set up with Node.js and ready to run your li
 LiTeX is an incredibly simple yet powerful formal proof language. While Lean4 requires nearly 100 lines of code to implement syllogism from scratch, LiTeX can express the same logical reasoning in a way that is remarkably intuitive in just ~10 lines, even for those unfamiliar with the language.
 
 ```
-def mortal(something);
+/* LaTeX version
+Define a property called "human", which takes in one parameter.
+Define a property called "mortal", which takes in one parameter.
+Define a variable called "Socrates", which has property human.
+*/
+
+/* Lean4 version
+variable (Human : Type)
+variable (Mortal : Human → Prop)
+variable (Socrates : Human)
+*/
 def human(something);
+def mortal(something);
+let Socrates: Socrates is human;
+
+/* LaTeX version
+It is known fact that all human is mortal.
+Claim: Socrates is mortal.
+*/
+
+/* Lean4 version
+axiom all_humans_are_mortal : ∀ (x : Human), Mortal x
+theorem socrates_is_mortal : Mortal Socrates := by
+  apply all_humans_are_mortal
+#check socrates_is_mortal
+*/
+
+/* LiTeX version */
 know if x: human(x) {
   mortal(x)
 };
-
-let Socrates: Socrates is human;
 Socrates is mortal;
+
+/* LaTeX version
+Claim: all human is mortal.
+*/
+
+/* Lean4 version
+def all_humans_will_die : Prop := ∀ (x : Human), Mortal x
+theorem prove_all_humans_will_die : all_humans_will_die := all_humans_are_mortal
+*/
+
+/* LiTeX version */
 if x: x is human {x is mortal};
 
+/* LaTeX version
+Define a variable called "god", it has property that it is not mortal.
+Prove by contradiction: god is not human.
+*/
+
+/* Lean4 version
+#check prove_all_humans_will_die
+variable (God : Type)
+variable (god : God)
+axiom god_is_immortal : ¬ Mortal God
+theorem god_is_not_human : God ≠ Human :=
+  by
+  intro h
+  have god_is_mortal : Mortal God := all_humans_are_mortal god,
+  contradiction
+*/
+
+/* LiTeX version */
 let god: not god is mortal;
 prove_by_contradiction not human(god) {
   god is mortal;
 } god is mortal;
 ```
+
+### Explanations
 
 Some core functionalities of LiTeX are included in this example
 
@@ -85,6 +140,31 @@ Some core functionalities of LiTeX are included in this example
 - **Expression Validation**: Expressions like `Socrates is mortal` are called `factual expression to be checked`. LiTeX checks their validation based on `known facts` . For example, we have already known `if x: human(x) {mortal(x)};` and `Socrates is human`, so `Socrates is mortal` is true . If an `factual expression to be checked` can not be checked by LiTeX interpreter, LiTeX prints out `unknown`. Notice `factual expression` can work both as requirement for another factual expression (e.g. `human(x)` is requirement for another fact `if x: human(x) { mortal(x)};` ) or as an `factual expression to be checked`.
 - **Proof**: in LiTeX, there are 2 ways of proving a result: `prove` or `prove_by_contradiction`. In the example, we prove `not human(god)` by using `prove_by_contradiction`.
 - **Expression Values**: After checking, there are 4 types of outcomes: `true`, `unknown`, `error`, `false`.
+
+### Comparison with Lean4
+
+1. Unlike Lean4, a variable(symbol) in LiTeX can has many properties instead of
+   just one type. LiTeX separates concept declaration with variable declaration.
+   Concepts like "human", "mortal" are defined by def, variables like "Socrates"
+   is declared by let.
+2. LiTeX has a declarative syntax which saves you from "naming a fact so that I
+   can use that later to prove further results".
+   They do not need to "tell" my interpreter which facts
+   are used to prove the fact.
+   That is why they do not need to give a name to every fact they got because
+   the only reason why naming a fact is necessary in languages like lean4 is
+   telling the interpreter which fact to use, and that is redundant in LiTeX
+   because LiTeX automatically checks an expression.
+   For example: "theorem socrates_is_mortal",
+   "apply all_humans_are_mortal" are unnecessary.
+   Also, "#check" is unnecessary because any expression that does not start
+   with a LiTeX keyword is by default "an expression to be checked".
+   In short, a simple expression "Socrates is mortal" in LiTeX has many
+   effects: 1. LiTeX searches facts base to check whether it's true based on
+   tree search 2. If it's true, then this expression itself is stored as a
+   new fact.
+3. Because LiTeX saves you from "naming a fact so that I can use that later to
+   prove further results", LiTeX is much shorter and more concise than Lean4.
 
 For more illustrative examples, please visit the ./examples directory.
 
