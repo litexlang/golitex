@@ -59,7 +59,7 @@ That's it! These steps will get you set up with Node.js and ready to run your li
 
 ## A Tour of LiTeX
 
-LiTeX is an incredibly simple yet powerful formal proof language. While Lean4 requires nearly 100 lines of code to implement syllogism from scratch, LiTeX can express the same logical reasoning in a way that is remarkably intuitive in just ~10 lines, even for those unfamiliar with the language.
+The following example compares the implementation of syllogism across three different languages. The LaTeX version represents natural language, Lean4 illustrates the capabilities of current mainstream formal languages, and LiTeX exemplifies a language that is both formal enough to enable rigorous checking and flexible enough to let users express mathematics as if they were speaking in natural language.
 
 ```
 /* LaTeX version
