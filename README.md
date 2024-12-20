@@ -143,28 +143,16 @@ Some core functionalities of LiTeX are included in this example
 
 ### Comparison with Lean4
 
-1. Unlike Lean4, a variable(symbol) in LiTeX can has many properties instead of
-   just one type. LiTeX separates concept declaration with variable declaration.
-   Concepts like "human", "mortal" are defined by def, variables like "Socrates"
-   is declared by let.
-2. LiTeX has a declarative syntax which saves you from "naming a fact so that I
-   can use that later to prove further results".
-   They do not need to "tell" my interpreter which facts
-   are used to prove the fact.
-   That is why they do not need to give a name to every fact they got because
-   the only reason why naming a fact is necessary in languages like lean4 is
-   telling the interpreter which fact to use, and that is redundant in LiTeX
-   because LiTeX automatically checks an expression.
-   For example: "theorem socrates_is_mortal",
-   "apply all_humans_are_mortal" are unnecessary.
-   Also, "#check" is unnecessary because any expression that does not start
-   with a LiTeX keyword is by default "an expression to be checked".
-   In short, a simple expression "Socrates is mortal" in LiTeX has many
-   effects: 1. LiTeX searches facts base to check whether it's true based on
-   tree search 2. If it's true, then this expression itself is stored as a
-   new fact.
-3. Because LiTeX saves you from "naming a fact so that I can use that later to
-   prove further results", LiTeX is much shorter and more concise than Lean4.
+1. Unlike Lean4, a variable (or symbol) in LiTeX can possess multiple properties rather than being limited to a single type. In LiTeX, concept declarations are distinctly separated from variable declarations. For instance, concepts like "human" or "mortal" are defined using the `def` keyword, while variables such as "Socrates" are declared with `let`.
+
+2. LiTeX employs a declarative syntax that eliminates the need to explicitly "name" facts for later use in proofs. Users do not need to inform the interpreter about which facts are being used to establish a proof. This removes the necessity of naming every fact, a practice common in languages like Lean4, where naming is required to direct the interpreter to specific facts. In LiTeX, this redundancy is avoided as the language automatically verifies expressions.  
+   For example, constructs like `theorem socrates_is_mortal` or `apply all_humans_are_mortal` become unnecessary. Similarly, commands like `#check` are redundant because, in LiTeX, any expression not starting with a keyword is assumed to be "an expression to be checked."  
+   In summary, a simple statement like "Socrates is mortal" in LiTeX achieves multiple objectives:
+
+   1. LiTeX performs a tree search through the fact base to verify its validity.
+   2. If validated, the expression itself is recorded as a new fact.
+
+3. By eliminating the need for explicitly naming facts for reuse in proofs, LiTeX produces more concise and streamlined code compared to Lean4.
 
 For more illustrative examples, please visit the ./examples directory.
 
