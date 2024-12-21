@@ -142,6 +142,16 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     known: FormulaKnownFactReq
   ): boolean {
     try {
+      if (
+        !L_Symbol.optsLiterallyIdentical(
+          env,
+          toCheck,
+          known.req[known.req.length - 1] as OptNode
+        )
+      ) {
+        return false;
+      }
+
       let curEnv = new L_Env(env);
       for (let i = 0; i < known.req.length - 1; i++) {
         let curReq = known.req[i];
@@ -152,10 +162,14 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           );
 
           curEnv = new L_Env(curEnv);
-          if (checkLiterally(curEnv, out.anotherBranch)) return false;
+          if (!checkLiterally(curEnv, out.anotherBranch.copyWithIsTReverse()))
+            return false;
 
-          L_Memory.newFact(curEnv, out.anotherBranch.copyWithIsTReverse());
-          if (checkFact(curEnv, out.where)) return false;
+          if (out.where instanceof OptNode) {
+            return true;
+          } else {
+            return useFormulaToCheckOpt(curEnv, toCheck, known);
+          }
         } else if (curReq instanceof AndToCheckNode) {
           continue;
         }
