@@ -118,7 +118,11 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     for (const curKnown of relatedKnownFacts) {
       // TODO isT 没考虑
       if (curKnown instanceof FormulaKnownFactReq) {
-        const out = useFormulaToCheckOpt(env, toCheck, curKnown);
+        const out = useToCheckFormulaToCheckOpt(
+          env,
+          toCheck,
+          curKnown.req[0] as ToCheckFormulaNode
+        );
         if (out) return L_Out.True;
       }
     }
@@ -136,37 +140,37 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     return L_ReportCheckErr(env, checkOptFact, toCheck);
   }
 
-  function useFormulaToCheckOpt(
-    env: L_Env,
-    toCheck: OptNode,
-    known: FormulaKnownFactReq
-  ): boolean {
-    try {
-      let curEnv = new L_Env(env);
-      for (let i = 0; i < known.req.length - 1; i++) {
-        let curReq = known.req;
+  // function useFormulaToCheckOpt(
+  //   env: L_Env,
+  //   toCheck: OptNode,
+  //   known: FormulaKnownFactReq
+  // ): boolean {
+  //   try {
+  //     let curEnv = new L_Env(env);
+  //     for (let i = 0; i < known.req.length - 1; i++) {
+  //       let curReq = known.req[i];
 
-        if (curReq instanceof OrToCheckNode) {
-          const out = curReq.getWhereIsGivenFactAndAnotherBranch(
-            known.req[i + 1] as FormulaSubNode
-          );
+  //       if (curReq instanceof OrToCheckNode) {
+  //         const out = curReq.getWhereIsGivenFactAndAnotherBranch(
+  //           known.req[i + 1]
+  //         );
 
-          curEnv = new L_Env(curEnv);
-          if (checkFact(curEnv, out.anotherBranch) === L_Out.True) return false;
+  //         curEnv = new L_Env(curEnv);
+  //         if (checkFact(curEnv, out.anotherBranch) === L_Out.True) return false;
 
-          L_Memory.newFact(curEnv, out.anotherBranch.copyWithIsTReverse());
-          if (checkFact(curEnv, out.where) !== L_Out.True) return false;
-        } else if (curReq instanceof AndToCheckNode) {
-          continue;
-        }
-      }
+  //         L_Memory.newFact(curEnv, out.anotherBranch.copyWithIsTReverse());
+  //         if (checkFact(curEnv, out.where) !== L_Out.True) return false;
+  //       } else if (curReq instanceof AndToCheckNode) {
+  //         continue;
+  //       }
+  //     }
 
-      if (checkLiterally(curEnv, known.req[known.req.length - 1])) return true;
-      else return false;
-    } catch {
-      return L_ReportBoolErr(env, useFormulaToCheckOpt, toCheck);
-    }
-  }
+  //     if (checkLiterally(curEnv, known.req[known.req.length - 1])) return true;
+  //     else return false;
+  //   } catch {
+  //     return L_ReportBoolErr(env, useFormulaToCheckOpt, toCheck);
+  //   }
+  // }
 
   // TODO 缺失一些用 formula 来验证的方式 1. "if x: (p(x) or t(x)) {(p(x) or t(x))};" 2. use if...if {or} to check
   function useToCheckFormulaToCheckOpt(
@@ -353,18 +357,31 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           }
         } else if (layer instanceof ToCheckFormulaNode) {
           // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了。事实上这里不用检查，因为 roots 在filter的时候已经相当于检查过了。放在这里只是为了自我提醒
-          const nextLayers = roots.slice(layerNum);
-          if (!nextLayers.every((e) => e instanceof ToCheckFormulaNode)) {
-            successful = false;
-            break;
-          }
+          let nextLayers = roots.slice(layerNum);
 
-          const out = useToCheckFormulaToCheckOpt(
-            newEnv,
-            toCheck,
+          // fix every layer
+          nextLayers = nextLayers.map((layer) =>
             layer.fix(newEnv, freeFixedPairs)
           );
-          return out;
+          const formulaKnownFactReq = new FormulaKnownFactReq(nextLayers);
+
+          return useToCheckFormulaToCheckOpt(
+            newEnv,
+            givenOpt,
+            formulaKnownFactReq.req[0] as ToCheckFormulaNode
+          );
+
+          // if (!nextLayers.every((e) => e instanceof ToCheckFormulaNode)) {
+          //   successful = false;
+          //   break;
+          // }
+
+          // const out = useToCheckFormulaToCheckOpt(
+          //   newEnv,
+          //   toCheck,
+          //   layer.fix(newEnv, freeFixedPairs)
+          // );
+          // return out;
         }
       }
       if (successful) {

@@ -408,7 +408,7 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
     super(isT);
   }
 
-  getWhereIsGivenFactAndAnotherBranch(fact: FormulaSubNode): {
+  getWhereIsGivenFactAndAnotherBranch(fact: ToCheckNode): {
     where: FormulaSubNode;
     anotherBranch: FormulaSubNode;
   } {
