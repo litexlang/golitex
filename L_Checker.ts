@@ -56,10 +56,6 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     for (const v of toCheck.vars) {
       if (v instanceof L_Singleton) {
         newEnv.newSingletonVar(v.value);
-      } else if (v instanceof L_Composite) {
-        //TODO
-
-        throw Error();
       }
     }
 

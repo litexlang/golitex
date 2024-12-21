@@ -667,16 +667,11 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
   try {
     const type = skip(tokens, [L_Keywords.IfKeyword, L_Keywords.IffKeyword]);
     if (type === undefined) throw Error();
-    const vars: L_Structs.L_Symbol[] = [];
+    const vars: L_Structs.L_Singleton[] = [];
 
     while (!isCurToken(tokens, [":", "{"])) {
-      if (isCurToken(tokens, L_Keywords.SlashKeyword)) {
-        const s = compositeInIfReqParse(env, tokens);
-        vars.push(s);
-      } else {
-        const singleton = singletonParse(env, tokens);
-        vars.push(singleton);
-      }
+      const singleton = singletonParse(env, tokens);
+      vars.push(singleton);
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -711,35 +706,6 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
   } catch (error) {
     L_ParseErr(env, tokens, logicParse, index, start);
     throw error;
-  }
-
-  function compositeInIfReqParse(
-    env: L_Env,
-    tokens: string[]
-  ): L_Structs.CompositeSymbolInIfReq {
-    const start = tokens[0];
-    const index = tokens.length;
-
-    try {
-      const composite = slashCompositeParse(env, tokens);
-      // TODO IT SEEMS VARS AFTER COMPOSITE IS UNNECESSARY
-      const vars = arrParse<L_Structs.L_Singleton>(
-        env,
-        tokens,
-        singletonParse,
-        "[",
-        "]",
-        true
-      );
-      return new L_Structs.CompositeSymbolInIfReq(
-        composite.name,
-        composite.values,
-        vars
-      );
-    } catch (error) {
-      L_ParseErr(env, tokens, compositeInIfReqParse, index, start);
-      throw error;
-    }
   }
 }
 

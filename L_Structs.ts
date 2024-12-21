@@ -228,16 +228,6 @@ export class L_Composite extends L_Symbol {
   }
 }
 
-export class CompositeSymbolInIfReq extends L_Composite {
-  constructor(name: string, values: L_Symbol[], public newVars: L_Singleton[]) {
-    super(name, values);
-  }
-
-  subSymbolsDeclared(env: L_Env): boolean {
-    return false;
-  }
-}
-
 export class L_OptSymbol {
   constructor(public name: string) {}
 

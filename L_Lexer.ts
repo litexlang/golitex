@@ -85,8 +85,3 @@ export function L_Scan(text: string): string[] {
 
   return tokens;
 }
-
-export type TokenPair = {
-  token: string;
-  position: number;
-};

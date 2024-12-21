@@ -3,13 +3,7 @@ import {
   L_VarsInOptDoubleDeclErr,
   L_VarsInOptNotDeclaredBool,
 } from "./L_Report";
-import {
-  CompositeSymbolInIfReq,
-  L_Composite,
-  L_OptSymbol,
-  L_Singleton,
-  L_Symbol,
-} from "./L_Structs";
+import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
 
@@ -33,7 +27,7 @@ export abstract class ToCheckNode extends L_Node {
 
 export class LogicNode extends ToCheckNode {
   constructor(
-    public vars: L_Symbol[] = [],
+    public vars: L_Singleton[] = [],
     public req: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [],
     isT: boolean = true
@@ -67,25 +61,10 @@ export class LogicNode extends ToCheckNode {
     const newEnv = new L_Env(env);
 
     for (const v of this.vars) {
-      if (v instanceof L_Composite) {
-        if (v instanceof CompositeSymbolInIfReq) {
-          for (const newVar of v.newVars) {
-            if (newVar.subSymbolsDeclared(newEnv)) {
-              return L_VarsInOptDoubleDeclErr(env, this.varsDeclared, newVar);
-            }
-            newEnv.newSingletonVar(newVar.value);
-          }
-
-          if (!v.subSymbolsDeclared(newEnv)) {
-            return L_VarsInOptNotDeclaredBool(newEnv, this.varsDeclared, v);
-          }
-        }
-      } else if (v instanceof L_Singleton) {
-        if (v.subSymbolsDeclared(newEnv)) {
-          return L_VarsInOptDoubleDeclErr(env, this.varsDeclared, v);
-        }
-        newEnv.newSingletonVar(v.value);
+      if (v.subSymbolsDeclared(newEnv)) {
+        return L_VarsInOptDoubleDeclErr(env, this.varsDeclared, v);
       }
+      newEnv.newSingletonVar(v.value);
     }
 
     for (const req of this.req) {
