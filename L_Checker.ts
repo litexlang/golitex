@@ -140,6 +140,70 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     return L_ReportCheckErr(env, checkOptFact, toCheck);
   }
 
+  function useFormulaToCheckOpt(
+    env: L_Env,
+    toCheck: OptNode,
+    known: FormulaKnownFactReq
+  ): boolean {
+    try {
+      if (
+        toCheck.isT !== known.req[length - 1].isT ||
+        L_Symbol.allSymbolsLiterallyIdentical(
+          env,
+          toCheck.vars,
+          (known.req[known.req.length - 1] as OptNode).vars
+        )
+      )
+        return false;
+
+      let curEnv = new L_Env(env);
+      for (let i = 0; i < known.req.length - 1; i++) {
+        if (known.req[i] instanceof OrToCheckNode) {
+          // find the next branch that root lies in
+          const nextIsLeft =
+            known.req[i + 1] === (known.req[i] as OrToCheckNode).left;
+
+          curEnv = new L_Env(curEnv);
+          // make sure another branch in or is not correct. if it's correct,
+          // then we can not assume it's false
+          if (nextIsLeft) {
+            if (checkFact(curEnv, (known.req[i] as OrToCheckNode).right)) {
+              return false;
+            }
+            L_Memory.newFact(
+              curEnv,
+              (known.req[i] as OrToCheckNode).right.copyWithIsTReverse()
+            );
+            if (
+              checkFact(curEnv, (known.req[i] as OrToCheckNode).left) !==
+              L_Out.True
+            ) {
+              return false;
+            }
+          } else {
+            if (checkFact(curEnv, (known.req[i] as OrToCheckNode).left)) {
+              return false;
+            }
+            L_Memory.newFact(
+              curEnv,
+              (known.req[i] as OrToCheckNode).left.copyWithIsTReverse()
+            );
+          }
+        }
+      }
+    } catch {
+      return L_ReportBoolErr(env, useFormulaToCheckOpt, toCheck);
+    }
+
+    function checkOr(
+      curEnv: L_Env,
+      where: ToCheckNode,
+      anotherBranch: ToCheckNode
+    ): boolean {
+      return false;
+    }
+  }
+
   // TODO 缺失一些用 formula 来验证的方式 1. "if x: (p(x) or t(x)) {(p(x) or t(x))};" 2. use if...if {or} to check
   function useToCheckFormulaToCheckOpt(
     env: L_Env,
