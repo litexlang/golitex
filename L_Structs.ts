@@ -1,6 +1,6 @@
 import { L_Env } from "./L_Env";
 import { L_ReportErr } from "./L_Report";
-import { ToCheckNode } from "./L_Nodes";
+import { IfNode, OptNode, ToCheckFormulaNode, ToCheckNode } from "./L_Nodes";
 
 export abstract class L_Symbol {
   abstract getRootSingletons(): L_Singleton[];
@@ -252,4 +252,24 @@ export type ExampleItem = {
   runTest?: boolean;
 };
 
-export type L_KnownFact = ToCheckNode;
+export abstract class L_KnownFactReq {
+  constructor() {}
+}
+
+export class OptKnownFactReq extends L_KnownFactReq {
+  constructor(public opt: OptNode) {
+    super();
+  }
+}
+
+export class IfKnownFactReq extends L_KnownFactReq {
+  constructor(public req: ToCheckNode[]) {
+    super();
+  }
+}
+
+export class FormulaKnownFactReq extends L_KnownFactReq {
+  constructor(public req: ToCheckNode[]) {
+    super();
+  }
+}

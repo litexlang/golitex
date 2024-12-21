@@ -7,7 +7,7 @@ export class L_Env {
   private messages: string[] = [];
   private declaredSingletons = new Set<string>();
   private defs = new Map<string, L_Nodes.DefNode>();
-  private facts = new Map<string, L_Structs.L_KnownFact[]>();
+  private facts = new Map<string, L_Structs.L_KnownFactReq[]>();
   private declaredComposites = new Map<string, L_Nodes.DefCompositeNode>();
   private letsVars = new Map<string, L_Nodes.LetsNode>();
 
@@ -41,7 +41,7 @@ export class L_Env {
     }
   }
 
-  newFact(key: string, fact: L_Structs.L_KnownFact): boolean {
+  newFact(key: string, fact: L_Structs.L_KnownFactReq): boolean {
     if (this.facts.get(key) === undefined) {
       this.facts.set(key, [fact]);
     } else {
@@ -50,7 +50,7 @@ export class L_Env {
     return true;
   }
 
-  getFacts(key: string): undefined | L_Structs.L_KnownFact[] {
+  getFacts(key: string): undefined | L_Structs.L_KnownFactReq[] {
     let currentFacts = this.facts.get(key);
 
     if (currentFacts === undefined) {

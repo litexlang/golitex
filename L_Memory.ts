@@ -12,6 +12,12 @@ import {
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { reportStoreErr } from "./L_Report";
+import {
+  FormulaKnownFactReq,
+  IfKnownFactReq,
+  L_KnownFactReq,
+  OptKnownFactReq,
+} from "./L_Structs";
 
 export function newFact(env: L_Env, fact: ToCheckNode): boolean {
   if (fact instanceof BuiltinCheckNode) {
@@ -42,7 +48,9 @@ export function newFact(env: L_Env, fact: ToCheckNode): boolean {
 function newIfThenFact(env: L_Env, fact: IfNode): boolean {
   try {
     const roots = fact.getRootOptNodes();
-    roots.forEach((root) => env.newFact(root[0].optSymbol.name, fact));
+    roots.forEach((root) =>
+      env.newFact(root[0].optSymbol.name, new IfKnownFactReq(root[1]))
+    );
     return true;
   } catch {
     return reportStoreErr(env, newIfThenFact.name, fact);
@@ -51,7 +59,7 @@ function newIfThenFact(env: L_Env, fact: IfNode): boolean {
 
 function newOptFact(env: L_Env, fact: OptNode): boolean {
   try {
-    return env.newFact(fact.optSymbol.name, fact);
+    return env.newFact(fact.optSymbol.name, new OptKnownFactReq(fact));
   } catch {
     return reportStoreErr(env, newOptFact.name, fact);
   }
@@ -59,8 +67,10 @@ function newOptFact(env: L_Env, fact: OptNode): boolean {
 
 function newFormulaFact(env: L_Env, fact: ToCheckFormulaNode): boolean {
   try {
-    const roots: OptNode[] = fact.getRootOptNodes().map((e) => e[0]);
-    roots.forEach((root) => env.newFact(root.optSymbol.name, fact));
+    const roots = fact.getRootOptNodes();
+    roots.forEach((root) =>
+      env.newFact(root[0].optSymbol.name, new FormulaKnownFactReq(root[1]))
+    );
     if (fact instanceof AndToCheckNode) {
       newFact(env, fact.left);
       newFact(env, fact.right);

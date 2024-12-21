@@ -73,6 +73,8 @@ variable (Human : Type)
 variable (Mortal : Human → Prop)
 variable (Socrates : Human)
 */
+
+/* LiTeX version */
 def human(something);
 def mortal(something);
 let Socrates: Socrates is human;

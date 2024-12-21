@@ -1,6 +1,7 @@
 import {
   AndToCheckNode,
   BuiltinCheckNode,
+  FormulaSubNode,
   IfNode,
   IsFormNode,
   IsPropertyNode,
@@ -11,7 +12,16 @@ import {
   ToCheckNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Composite, L_Out, L_Singleton, L_Symbol } from "./L_Structs";
+import {
+  FormulaKnownFactReq,
+  IfKnownFactReq,
+  L_Composite,
+  L_KnownFactReq,
+  L_Out,
+  L_Singleton,
+  L_Symbol,
+  OptKnownFactReq,
+} from "./L_Structs";
 import * as L_Memory from "./L_Memory";
 import { L_ReportBoolErr, L_ReportCheckErr, reportCheckErr } from "./L_Report";
 import { DEBUG_DICT } from "./L_Executor";
@@ -94,29 +104,33 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
     //* First check opt-type facts then check if-type facts so that I can check if x: p(x) {p(x)};
     for (const curKnown of relatedKnownFacts) {
-      if (curKnown instanceof OptNode) {
+      if (curKnown instanceof OptKnownFactReq) {
         // TODO 这里的验证 isT 的方式我不太满意
-        if (toCheck.isT !== curKnown.isT) {
+        if (curKnown.opt.isT === toCheck.isT) {
           continue;
         }
 
-        const out = useOptToCheckOpt(env, toCheck, curKnown);
+        const out = useOptToCheckOpt(env, toCheck, curKnown.opt as OptNode);
         if (out) return L_Out.True;
       }
     }
 
     for (const curKnown of relatedKnownFacts) {
       // TODO isT 没考虑
-      if (curKnown instanceof ToCheckFormulaNode) {
-        const out = useToCheckFormulaToCheckOpt(env, toCheck, curKnown);
+      if (curKnown instanceof FormulaKnownFactReq) {
+        const out = useToCheckFormulaToCheckOpt(
+          env,
+          toCheck,
+          curKnown.req[0] as ToCheckFormulaNode
+        );
         if (out) return L_Out.True;
       }
     }
 
     for (const curKnown of relatedKnownFacts) {
-      if (curKnown instanceof IfNode) {
+      if (curKnown instanceof IfKnownFactReq) {
         // TODO isT 没考虑
-        const out = useIfToCheckOpt(env, toCheck, curKnown);
+        const out = useIfToCheckOpt(env, toCheck, curKnown.req[0] as IfNode);
         if (out) return L_Out.True;
       }
     }
@@ -356,10 +370,14 @@ function checkLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
       const knowns = env.getFacts(toCheck.optSymbol.name);
       if (knowns === undefined) return false;
       for (const known of knowns) {
-        if (known instanceof OptNode) {
+        if (known instanceof OptKnownFactReq) {
           if (
-            toCheck.isT === known.isT &&
-            L_Symbol.allSymbolsLiterallyIdentical(env, toCheck.vars, known.vars)
+            toCheck.isT === known.opt.isT &&
+            L_Symbol.allSymbolsLiterallyIdentical(
+              env,
+              toCheck.vars,
+              known.opt.vars
+            )
           ) {
             return true;
           }
