@@ -49,7 +49,10 @@ function newIfThenFact(env: L_Env, fact: IfNode): boolean {
   try {
     const roots = fact.getRootOptNodes();
     roots.forEach((root) =>
-      env.newFact(root[0].optSymbol.name, new IfKnownFactReq(root[1]))
+      env.newFact(
+        root[0].optSymbol.name,
+        new IfKnownFactReq([...root[1], root[0]])
+      )
     );
     return true;
   } catch {
@@ -69,7 +72,10 @@ function newFormulaFact(env: L_Env, fact: ToCheckFormulaNode): boolean {
   try {
     const roots = fact.getRootOptNodes();
     roots.forEach((root) =>
-      env.newFact(root[0].optSymbol.name, new FormulaKnownFactReq(root[1]))
+      env.newFact(
+        root[0].optSymbol.name,
+        new FormulaKnownFactReq([...root[1], root[0]])
+      )
     );
     if (fact instanceof AndToCheckNode) {
       newFact(env, fact.left);

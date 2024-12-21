@@ -130,7 +130,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     for (const curKnown of relatedKnownFacts) {
       if (curKnown instanceof IfKnownFactReq) {
         // TODO isT 没考虑
-        const out = useIfToCheckOpt(env, toCheck, curKnown.req[0] as IfNode);
+        const out = useIfToCheckOpt(env, toCheck, curKnown);
         if (out) return L_Out.True;
       }
     }
@@ -256,7 +256,11 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     }
   }
 
-  function useIfToCheckOpt(env: L_Env, given: OptNode, known: IfNode): boolean {
+  function useIfToCheckOpt(
+    env: L_Env,
+    given: OptNode,
+    known: IfKnownFactReq
+  ): boolean {
     try {
       if (given.checkVars === undefined || given.checkVars.length === 0) {
         // 1. known is one-layer, and we replace all vars in that layer with given opt
@@ -283,77 +287,69 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
   function useIfToCheckOptWithCheckVars(
     env: L_Env,
     givenOpt: OptNode,
-    known: IfNode
+    known: IfKnownFactReq
   ): boolean {
     try {
       // TODO: I guess in the future I should remove givenOpt.checkVars.length === 0
 
-      let roots: [OptNode, ToCheckNode[]][] = known.getRootOptNodes();
-      roots = roots.filter(
-        (root) =>
-          root[0].optSymbol.name === givenOpt.optSymbol.name &&
-          givenOpt.checkVars !== undefined &&
-          // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了
-          root[1].filter((e) => e instanceof IfNode).length ===
-            givenOpt.checkVars.length
-      );
+      let roots: ToCheckNode[] = known.req;
 
-      for (const root of roots) {
-        let successful = true;
-        let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
-        const newEnv = new L_Env(env);
-        for (const [layerNum, layer] of root[1].entries()) {
-          //TODO check length
+      let successful = true;
+      let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
+      const newEnv = new L_Env(env);
+      for (let i = 0; i < roots.length - 1; i++) {
+        //TODO check length
+        const layer = roots[i];
+        const layerNum = i;
 
-          // TODO if instanceof ToCheckFormulaNode
-          if (layer instanceof IfNode) {
-            const currentPairs = LogicNode.makeFreeFixPairs(
-              env,
-              (givenOpt.checkVars as L_Symbol[][])[layerNum],
-              layer.vars
-            );
-            freeFixedPairs = [...freeFixedPairs, ...currentPairs];
-            if (
-              //! checkIfReqLiterally is very dumb and may fail at many situations
-              layer.req.every((e) => {
-                return checkLiterally(newEnv, e.fix(newEnv, freeFixedPairs));
-              })
-            ) {
-              layer.req.every((fact) =>
-                L_Memory.newFact(newEnv, fact.fix(newEnv, freeFixedPairs))
-              );
-            } else {
-              successful = false;
-              break;
-            }
-          } else if (layer instanceof ToCheckFormulaNode) {
-            // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了。事实上这里不用检查，因为 roots 在filter的时候已经相当于检查过了。放在这里只是为了自我提醒
-            const nextLayers = root[1].slice(layerNum);
-            if (!nextLayers.every((e) => e instanceof ToCheckFormulaNode)) {
-              successful = false;
-              break;
-            }
-
-            const out = useToCheckFormulaToCheckOpt(
-              newEnv,
-              toCheck,
-              layer.fix(newEnv, freeFixedPairs)
-            );
-            return out;
-          }
-        }
-        if (successful) {
-          const fixed = root[0].fix(env, freeFixedPairs);
+        // TODO if instanceof ToCheckFormulaNode
+        if (layer instanceof IfNode) {
+          const currentPairs = LogicNode.makeFreeFixPairs(
+            env,
+            (givenOpt.checkVars as L_Symbol[][])[layerNum],
+            layer.vars
+          );
+          freeFixedPairs = [...freeFixedPairs, ...currentPairs];
           if (
-            L_Symbol.allSymbolsLiterallyIdentical(
-              env,
-              fixed.vars,
-              givenOpt.vars
-            )
+            //! checkIfReqLiterally is very dumb and may fail at many situations
+            layer.req.every((e) => {
+              return checkLiterally(newEnv, e.fix(newEnv, freeFixedPairs));
+            })
           ) {
-            env.report(`[check by] ${root[1][0]}`);
-            return true;
+            layer.req.every((fact) =>
+              L_Memory.newFact(newEnv, fact.fix(newEnv, freeFixedPairs))
+            );
+          } else {
+            successful = false;
+            break;
           }
+        } else if (layer instanceof ToCheckFormulaNode) {
+          // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了。事实上这里不用检查，因为 roots 在filter的时候已经相当于检查过了。放在这里只是为了自我提醒
+          const nextLayers = roots.slice(layerNum);
+          if (!nextLayers.every((e) => e instanceof ToCheckFormulaNode)) {
+            successful = false;
+            break;
+          }
+
+          const out = useToCheckFormulaToCheckOpt(
+            newEnv,
+            toCheck,
+            layer.fix(newEnv, freeFixedPairs)
+          );
+          return out;
+        }
+      }
+      if (successful) {
+        const fixed = roots[roots.length - 1].fix(env, freeFixedPairs);
+        if (
+          L_Symbol.allSymbolsLiterallyIdentical(
+            env,
+            (fixed as OptNode).vars,
+            givenOpt.vars
+          )
+        ) {
+          env.report(`[check by] ${roots[0]}`);
+          return true;
         }
       }
 
