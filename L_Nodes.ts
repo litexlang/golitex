@@ -409,21 +409,20 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
   }
 
   getWhereIsGivenFactAndAnotherBranch(fact: ToCheckNode): {
-    where: FormulaSubNode;
+    itself: FormulaSubNode;
     anotherBranch: FormulaSubNode;
   } {
     if (fact === this.left) {
-      return { where: this.left, anotherBranch: this.right };
+      return { itself: this.left, anotherBranch: this.right };
     } else if (fact === this.right) {
-      return { where: this.right, anotherBranch: this.left };
+      return { itself: this.right, anotherBranch: this.left };
     }
 
     throw Error();
   }
 
   varsDeclared(env: L_Env): boolean {
-    //TODO
-    return true;
+    return this.left.varsDeclared(env) && this.right.varsDeclared(env);
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckFormulaNode {
