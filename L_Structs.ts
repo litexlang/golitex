@@ -34,6 +34,16 @@ export abstract class L_Symbol {
     throw Error();
   }
 
+  static optsLiterallyIdentical(
+    env: L_Env,
+    given: OptNode,
+    expects: OptNode
+  ): boolean {
+    if (given.optSymbol.name !== expects.optSymbol.name) return false;
+
+    return L_Symbol.allSymbolsLiterallyIdentical(env, given.vars, expects.vars);
+  }
+
   static allSymbolsLiterallyIdentical(
     env: L_Env,
     given: L_Symbol[],

@@ -106,7 +106,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     for (const curKnown of relatedKnownFacts) {
       if (curKnown instanceof OptKnownFactReq) {
         // TODO 这里的验证 isT 的方式我不太满意
-        if (curKnown.opt.isT === toCheck.isT) {
+        if (curKnown.opt.isT !== toCheck.isT) {
           continue;
         }
 
@@ -118,11 +118,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     for (const curKnown of relatedKnownFacts) {
       // TODO isT 没考虑
       if (curKnown instanceof FormulaKnownFactReq) {
-        const out = useToCheckFormulaToCheckOpt(
-          env,
-          toCheck,
-          curKnown.req[0] as ToCheckFormulaNode
-        );
+        const out = useFormulaToCheckOpt(env, toCheck, curKnown);
         if (out) return L_Out.True;
       }
     }
@@ -140,134 +136,136 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
     return L_ReportCheckErr(env, checkOptFact, toCheck);
   }
 
-  // function useFormulaToCheckOpt(
-  //   env: L_Env,
-  //   toCheck: OptNode,
-  //   known: FormulaKnownFactReq
-  // ): boolean {
-  //   try {
-  //     let curEnv = new L_Env(env);
-  //     for (let i = 0; i < known.req.length - 1; i++) {
-  //       let curReq = known.req[i];
-
-  //       if (curReq instanceof OrToCheckNode) {
-  //         const out = curReq.getWhereIsGivenFactAndAnotherBranch(
-  //           known.req[i + 1]
-  //         );
-
-  //         curEnv = new L_Env(curEnv);
-  //         if (checkFact(curEnv, out.anotherBranch) === L_Out.True) return false;
-
-  //         L_Memory.newFact(curEnv, out.anotherBranch.copyWithIsTReverse());
-  //         if (checkFact(curEnv, out.where) !== L_Out.True) return false;
-  //       } else if (curReq instanceof AndToCheckNode) {
-  //         continue;
-  //       }
-  //     }
-
-  //     if (checkLiterally(curEnv, known.req[known.req.length - 1])) return true;
-  //     else return false;
-  //   } catch {
-  //     return L_ReportBoolErr(env, useFormulaToCheckOpt, toCheck);
-  //   }
-  // }
-
-  // TODO 缺失一些用 formula 来验证的方式 1. "if x: (p(x) or t(x)) {(p(x) or t(x))};" 2. use if...if {or} to check
-  function useToCheckFormulaToCheckOpt(
+  function useFormulaToCheckOpt(
     env: L_Env,
     toCheck: OptNode,
-    known: ToCheckFormulaNode
+    known: FormulaKnownFactReq
   ): boolean {
     try {
-      const rootsUnderFormula = known.getRootOptNodes();
+      let curEnv = new L_Env(env);
+      for (let i = 0; i < known.req.length - 1; i++) {
+        let curReq = known.req[i];
 
-      // roots that related to toCheck
-      const rootsWithKeyAsToCheck = rootsUnderFormula.filter(
-        (e) => e[0].optSymbol.name === toCheck.optSymbol.name
-      );
+        if (curReq instanceof OrToCheckNode) {
+          const out = curReq.getWhereIsGivenFactAndAnotherBranch(
+            known.req[i + 1]
+          );
 
-      /* 1. all layers are ToCheckFormulaNode */
-      for (const root of rootsWithKeyAsToCheck) {
-        // const layers: (ToCheckFormulaNode | IfNode)[] = root[1];
-        const layers = root[1];
-        if (
-          layers.every((layer) => layer instanceof ToCheckFormulaNode) &&
-          toCheck.vars.length === root[0].vars.length &&
-          toCheck.vars.every((e, i) =>
-            L_Symbol.areLiterallyIdentical(env, e, root[0].vars[i])
-          )
-        ) {
-          let checkedTrue = true;
-          for (const [i, layer] of layers.entries()) {
-            if (layer instanceof AndToCheckNode) {
-              continue;
-            } else if (layer instanceof OrToCheckNode) {
-              if (i + 1 < layers.length && layer.left === layers[i + 1]) {
-                const out = checkLiterally(
-                  env,
-                  layer.right.copyWithIsTReverse()
-                );
-                if (out) {
-                  continue;
-                } else {
-                  checkedTrue = false;
-                  break;
-                }
-              } else if (
-                i + 1 < layers.length &&
-                layer.right === layers[i + 1]
-              ) {
-                const out = checkLiterally(
-                  env,
-                  layer.left.copyWithIsTReverse()
-                );
-                if (out) {
-                  continue;
-                } else {
-                  checkedTrue = false;
-                  break;
-                }
-              } else if (i + 1 === layers.length) {
-                if (root[0] === layer.left) {
-                  const out = checkLiterally(
-                    env,
-                    layer.right.copyWithIsTReverse()
-                  );
-                  if (out) {
-                    continue;
-                  } else {
-                    checkedTrue = false;
-                    break;
-                  }
-                } else {
-                  const out = checkLiterally(
-                    env,
-                    layer.left.copyWithIsTReverse()
-                  );
-                  if (out) {
-                    continue;
-                  } else {
-                    checkedTrue = false;
-                    break;
-                  }
-                }
-              }
-            }
-          }
+          curEnv = new L_Env(curEnv);
+          if (checkLiterally(curEnv, out.anotherBranch)) return false;
 
-          if (checkedTrue) return true;
+          L_Memory.newFact(curEnv, out.anotherBranch.copyWithIsTReverse());
+          if (checkFact(curEnv, out.where)) return false;
+        } else if (curReq instanceof AndToCheckNode) {
+          continue;
         }
       }
 
-      return false;
+      if (checkLiterally(curEnv, known.req[known.req.length - 1])) return true;
+      else return false;
     } catch {
-      return L_ReportBoolErr(env, useToCheckFormulaToCheckOpt, toCheck);
+      return L_ReportBoolErr(env, useFormulaToCheckOpt, toCheck);
     }
   }
+
+  // // TODO 缺失一些用 formula 来验证的方式 1. "if x: (p(x) or t(x)) {(p(x) or t(x))};" 2. use if...if {or} to check
+  // function useToCheckFormulaToCheckOpt(
+  //   env: L_Env,
+  //   toCheck: OptNode,
+  //   known: ToCheckFormulaNode
+  // ): boolean {
+  //   try {
+  //     const rootsUnderFormula = known.getRootOptNodes();
+
+  //     // roots that related to toCheck
+  //     const rootsWithKeyAsToCheck = rootsUnderFormula.filter(
+  //       (e) => e[0].optSymbol.name === toCheck.optSymbol.name
+  //     );
+
+  //     /* 1. all layers are ToCheckFormulaNode */
+  //     for (const root of rootsWithKeyAsToCheck) {
+  //       // const layers: (ToCheckFormulaNode | IfNode)[] = root[1];
+  //       const layers = root[1];
+  //       if (
+  //         layers.every((layer) => layer instanceof ToCheckFormulaNode) &&
+  //         toCheck.vars.length === root[0].vars.length &&
+  //         toCheck.vars.every((e, i) =>
+  //           L_Symbol.areLiterallyIdentical(env, e, root[0].vars[i])
+  //         )
+  //       ) {
+  //         let checkedTrue = true;
+  //         for (const [i, layer] of layers.entries()) {
+  //           if (layer instanceof AndToCheckNode) {
+  //             continue;
+  //           } else if (layer instanceof OrToCheckNode) {
+  //             if (i + 1 < layers.length && layer.left === layers[i + 1]) {
+  //               const out = checkLiterally(
+  //                 env,
+  //                 layer.right.copyWithIsTReverse()
+  //               );
+  //               if (out) {
+  //                 continue;
+  //               } else {
+  //                 checkedTrue = false;
+  //                 break;
+  //               }
+  //             } else if (
+  //               i + 1 < layers.length &&
+  //               layer.right === layers[i + 1]
+  //             ) {
+  //               const out = checkLiterally(
+  //                 env,
+  //                 layer.left.copyWithIsTReverse()
+  //               );
+  //               if (out) {
+  //                 continue;
+  //               } else {
+  //                 checkedTrue = false;
+  //                 break;
+  //               }
+  //             } else if (i + 1 === layers.length) {
+  //               if (root[0] === layer.left) {
+  //                 const out = checkLiterally(
+  //                   env,
+  //                   layer.right.copyWithIsTReverse()
+  //                 );
+  //                 if (out) {
+  //                   continue;
+  //                 } else {
+  //                   checkedTrue = false;
+  //                   break;
+  //                 }
+  //               } else {
+  //                 const out = checkLiterally(
+  //                   env,
+  //                   layer.left.copyWithIsTReverse()
+  //                 );
+  //                 if (out) {
+  //                   continue;
+  //                 } else {
+  //                   checkedTrue = false;
+  //                   break;
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+
+  //         if (checkedTrue) return true;
+  //       }
+  //     }
+
+  //     return false;
+  //   } catch {
+  //     return L_ReportBoolErr(env, useToCheckFormulaToCheckOpt, toCheck);
+  //   }
+  // }
 
   // compare vars length in given opts, compare them
   function useOptToCheckOpt(env: L_Env, opt1: OptNode, opt2: OptNode): boolean {
     try {
+      if (opt1.isT !== opt2.isT) return false;
+
       if (opt1.vars.length !== opt2.vars.length) {
         return false;
       }
@@ -360,16 +358,24 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
           let nextLayers = roots.slice(layerNum);
 
           // fix every layer
-          nextLayers = nextLayers.map((layer) =>
-            layer.fix(newEnv, freeFixedPairs)
+          nextLayers[0] = nextLayers[0].fix(newEnv, freeFixedPairs);
+          let knowns = nextLayers[0]
+            .getRootOptNodes()
+            .map((e) => [...e[1], e[0]]);
+          knowns = knowns.filter((e) =>
+            L_Symbol.optsLiterallyIdentical(
+              newEnv,
+              toCheck,
+              e[e.length - 1] as OptNode
+            )
           );
-          const formulaKnownFactReq = new FormulaKnownFactReq(nextLayers);
+          for (const known of knowns) {
+            const formulaKnownFactReq = new FormulaKnownFactReq(known);
+            if (useFormulaToCheckOpt(newEnv, givenOpt, formulaKnownFactReq))
+              return true;
+          }
 
-          return useToCheckFormulaToCheckOpt(
-            newEnv,
-            givenOpt,
-            formulaKnownFactReq.req[0] as ToCheckFormulaNode
-          );
+          return false;
 
           // if (!nextLayers.every((e) => e instanceof ToCheckFormulaNode)) {
           //   successful = false;
