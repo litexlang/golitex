@@ -475,6 +475,7 @@ function parseToCheckFormula(
   let curPrecedence = precedence.get(curOpt) as number;
 
   if (isCurToken(tokens, end)) {
+    skip(tokens, end);
     return left;
   }
 
@@ -482,8 +483,10 @@ function parseToCheckFormula(
 
   if (isCurToken(tokens, end)) {
     if (curOpt === L_Keywords.OrKeyword) {
+      skip(tokens, end);
       return new L_Nodes.OrToCheckNode(left, right, isT);
     } else if (curOpt === L_Keywords.AndKeyword) {
+      skip(tokens, end);
       return new L_Nodes.AndToCheckNode(left, right, isT);
     }
   }
@@ -519,7 +522,6 @@ function parseToCheckFormula(
   }
 
   skip(tokens, end);
-
   return left;
 
   throw Error();

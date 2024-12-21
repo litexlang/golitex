@@ -756,6 +756,16 @@ know if A: set(A), not equal(A, EMPTY_SET) {
 };
 `,
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "or",
+    code: [
+      "def p(x); def q(x);",
+      "let a;know (p(a) or q(a)), not p(a);",
+      "q(a);",
+    ],
     debug: true,
     print: true,
   },
