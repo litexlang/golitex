@@ -49,6 +49,10 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return specialExec(env, node as L_Nodes.SpecialNode);
       case "LetsNode":
         return letsExec(env, node as L_Nodes.LetsNode);
+      case "MacroNode": {
+        env.report(`[new macro]${(node as L_Nodes.MacroNode).toString()}`);
+        return L_Out.True;
+      }
       default:
         if (node instanceof L_Nodes.ToCheckNode) {
           const out = factExec(env, node as L_Nodes.ToCheckNode);

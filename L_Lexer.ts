@@ -1,6 +1,7 @@
 import { specialChars } from "./L_Keywords";
+import { L_Env } from "./L_Env";
 
-export function L_Scan(text: string): string[] {
+export function L_Scan(env: L_Env, text: string): string[] {
   const tokens: string[] = [];
   let currentToken = "";
   let inLineComment = false;

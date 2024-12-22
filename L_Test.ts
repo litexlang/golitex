@@ -770,7 +770,7 @@ know if A: set(A), not equal(A, EMPTY_SET) {
       "know not A(a);",
       "B(a);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -784,6 +784,12 @@ know if A: set(A), not equal(A, EMPTY_SET) {
       "know not A(a);",
       "B(a);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "macro",
+    code: ['macro #default_frac "\\frac{x,y}";'],
     debug: true,
     print: true,
   },

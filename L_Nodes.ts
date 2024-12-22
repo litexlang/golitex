@@ -543,3 +543,13 @@ export class LetsNode extends L_Node {
       .join(", ")}`;
   }
 }
+
+export class MacroNode extends L_Node {
+  constructor(public name: string, public macroTokens: string[]) {
+    super();
+  }
+
+  toString() {
+    return `macro ${this.name} ${this.macroTokens.join(" ")}`;
+  }
+}

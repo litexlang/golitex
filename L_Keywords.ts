@@ -55,4 +55,5 @@ export const L_Keywords = {
   specialCharsEqual: "=",
   specialCharsDollar: "$",
   lets: "lets",
+  macro: "macro",
 };
