@@ -24,39 +24,3 @@ export function optsVarsDeclaredInFacts(
 
   return true;
 }
-
-export function compositeSatisfyItsReq(
-  env: L_Env,
-  composite: L_Composite
-): boolean {
-  try {
-    const declaration = env.getCompositeVar(composite.name);
-
-    if (declaration === undefined) {
-      env.report(`[Error] ${composite.name} undeclared`);
-      throw Error();
-    }
-
-    if (composite.values.length !== declaration.composite.values.length) {
-      throw Error();
-    }
-
-    const freeFixPairs: [L_Symbol, L_Symbol][] = LogicNode.makeFreeFixPairs(
-      env,
-      composite.values,
-      declaration.composite.values
-    );
-
-    const newFacts = declaration.facts.map((e) => e.fix(env, freeFixPairs));
-
-    for (const fact of newFacts) {
-      if (checkFact(env, fact) !== L_Out.True) {
-        return false;
-      }
-    }
-
-    return true;
-  } catch {
-    return L_ReportBoolErr(env, compositeSatisfyItsReq, ``);
-  }
-}

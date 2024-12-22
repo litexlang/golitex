@@ -93,6 +93,15 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       return L_Out.Error;
     }
 
+    // TODO ? 需要验证一下toCheck的composite是否符合被定义时的要求
+    for (const v of toCheck.vars) {
+      if (v instanceof L_Composite) {
+        if (!v.compositeSatisfyItsReq(env)) {
+          return L_Out.Unknown;
+        }
+      }
+    }
+
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
     if (relatedKnownFacts === undefined) {
       return L_Out.Unknown;

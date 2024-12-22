@@ -1,6 +1,13 @@
 import { L_Env } from "./L_Env";
-import { L_ReportErr } from "./L_Report";
-import { IfNode, OptNode, ToCheckFormulaNode, ToCheckNode } from "./L_Nodes";
+import { L_ReportBoolErr, L_ReportErr } from "./L_Report";
+import {
+  IfNode,
+  LogicNode,
+  OptNode,
+  ToCheckFormulaNode,
+  ToCheckNode,
+} from "./L_Nodes";
+import { checkFact } from "./L_Checker";
 
 export abstract class L_Symbol {
   abstract getRootSingletons(): L_Singleton[];
@@ -151,6 +158,43 @@ export class L_Singleton extends L_Symbol {
 export class L_Composite extends L_Symbol {
   constructor(public name: string, public values: L_Symbol[]) {
     super();
+  }
+
+  compositeSatisfyItsReq(env: L_Env): boolean {
+    try {
+      const declaration = env.getCompositeVar(this.name);
+
+      if (declaration === undefined) {
+        env.report(`[Error] ${this.name} undeclared`);
+        throw Error();
+      }
+
+      if (this.values.length !== declaration.composite.values.length) {
+        env.report(`[Error] ${this.name} invalid number of parameters.`);
+        throw Error();
+      }
+
+      const freeFixPairs: [L_Symbol, L_Symbol][] = LogicNode.makeFreeFixPairs(
+        env,
+        this.values,
+        declaration.composite.values
+      );
+
+      const newFacts = declaration.facts.map((e) => e.fix(env, freeFixPairs));
+
+      for (const fact of newFacts) {
+        if (checkFact(env, fact) !== L_Out.True) {
+          env.report(
+            `[Unknown] failed to check ${fact} when checking requirement of composite ${this}`
+          );
+          return false;
+        }
+      }
+
+      return true;
+    } catch {
+      return L_ReportBoolErr(env, this.compositeSatisfyItsReq, ``);
+    }
   }
 
   getRootSingletons(): L_Singleton[] {
