@@ -10,6 +10,7 @@ export class L_Env {
   private facts = new Map<string, L_Structs.L_KnownFactReq[]>();
   private declaredComposites = new Map<string, L_Nodes.DefCompositeNode>();
   private letsVars = new Map<string, L_Nodes.LetsNode>();
+  private macros = new Map<string, L_Nodes.MacroNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -243,6 +244,20 @@ export class L_Env {
 
     if (this.parent !== undefined) {
       return this.parent.getLetsVar(varStr);
+    } else return undefined;
+  }
+
+  newMacro(macro: L_Nodes.MacroNode) {
+    this.macros.set(macro.name, macro);
+  }
+
+  getMacro(name: string): L_Nodes.MacroNode | undefined {
+    if (this.macros.has(name)) {
+      return this.macros.get(name);
+    }
+
+    if (this.parent !== undefined) {
+      return this.parent.getMacro(name);
     } else return undefined;
   }
 }

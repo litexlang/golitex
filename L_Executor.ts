@@ -49,10 +49,8 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return specialExec(env, node as L_Nodes.SpecialNode);
       case "LetsNode":
         return letsExec(env, node as L_Nodes.LetsNode);
-      case "MacroNode": {
-        env.report(`[new macro]${(node as L_Nodes.MacroNode).toString()}`);
-        return L_Out.True;
-      }
+      case "MacroNode":
+        return macroExec(env, node as L_Nodes.MacroNode);
       default:
         if (node instanceof L_Nodes.ToCheckNode) {
           const out = factExec(env, node as L_Nodes.ToCheckNode);
@@ -88,6 +86,7 @@ function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
       }
     }
 
+    env.report(`[let] ${node}`);
     return L_Out.True;
   } catch {
     return L_Messages.L_ReportErr(env, letExec, node);
@@ -366,5 +365,20 @@ function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
     }
   } catch {
     return L_Messages.L_ReportErr(env, defCompositeExec, node);
+  }
+}
+
+function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
+  try {
+    if (env.getMacro(node.name) === undefined) {
+      env.newMacro(node);
+    } else {
+      env.report(`[Error] ${node.name} is a declared macro name.`);
+      throw Error();
+    }
+    env.report(`[new macro]${(node as L_Nodes.MacroNode).toString()}`);
+    return L_Out.True;
+  } catch {
+    return L_Messages.L_ReportErr(env, macroExec, node);
   }
 }

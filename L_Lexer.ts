@@ -84,5 +84,19 @@ export function L_Scan(env: L_Env, text: string): string[] {
     tokens.push(currentToken);
   }
 
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    const token = tokens[i];
+    if (token.startsWith("#")) {
+      const searchKey = token.slice(1);
+      const out = env.getMacro(searchKey);
+      if (out === undefined) {
+        env.report(`${token} is not a declared macro name.`);
+        throw Error();
+      } else {
+        tokens.splice(i, 1, ...out.macroTokens);
+      }
+    }
+  }
+
   return tokens;
 }

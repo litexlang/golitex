@@ -1000,9 +1000,6 @@ export function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
   try {
     skip(tokens, L_Keywords.macro);
     const name = skip(tokens);
-    if (name[0] !== "#") {
-      env.report(`macro name must start with #, get ${name[0]}`);
-    }
 
     skip(tokens, '"');
     const macroTokens: string[] = [];

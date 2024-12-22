@@ -789,7 +789,7 @@ know if A: set(A), not equal(A, EMPTY_SET) {
   },
   {
     name: "macro",
-    code: ['macro #default_frac "\\frac{x,y}";'],
+    code: ['macro LET "let";', "#LET x;"],
     debug: true,
     print: true,
   },
