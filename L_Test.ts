@@ -773,6 +773,20 @@ know if A: set(A), not equal(A, EMPTY_SET) {
     debug: true,
     print: true,
   },
+  {
+    name: "or",
+    code: [
+      "def p(x); def q(x);",
+      "let a;know (p(a) or q(a)), not p(a);",
+      // "q(a);",
+      "def A(x); def B(x);",
+      "know if x: {(A(x) or B(x))};",
+      "know not A(a);",
+      "B(a);",
+    ],
+    debug: true,
+    print: true,
+  },
 ];
 
 function runExamples(toJSON: boolean) {
