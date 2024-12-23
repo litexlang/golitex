@@ -29,19 +29,33 @@ export function addDefinition(env: L_Env, opt: OptNode): L_Out {
     return undefined;
   }
 
-  function addStrings(num1: string, num2: string) {
-    let carry = 0; // 进位
+  function addStrings(num1: string, num2: string): string {
+    let carry = "0";
     let result = [];
     let i = num1.length - 1;
     let j = num2.length - 1;
 
-    while (i >= 0 || j >= 0 || carry > 0) {
-      const digit1 = i >= 0 ? num1.charCodeAt(i) - "0".charCodeAt(0) : 0;
-      const digit2 = j >= 0 ? num2.charCodeAt(j) - "0".charCodeAt(0) : 0;
+    const addSingleDigits = (
+      d1: string,
+      d2: string,
+      carry: string
+    ): [string, string] => {
+      const digitMap = "0123456789";
+      let sum =
+        digitMap.indexOf(d1) + digitMap.indexOf(d2) + digitMap.indexOf(carry);
+      const newCarry = digitMap[Math.floor(sum / 10)];
+      const digit = digitMap[sum % 10];
+      return [digit, newCarry];
+    };
 
-      const sum = digit1 + digit2 + carry;
-      result.push(sum % 10); // 当前位
-      carry = Math.floor(sum / 10); // 进位
+    while (i >= 0 || j >= 0 || carry !== "0") {
+      const digit1 = i >= 0 ? num1[i] : "0";
+      const digit2 = j >= 0 ? num2[j] : "0";
+
+      const [sumDigit, newCarry] = addSingleDigits(digit1, digit2, carry);
+      result.push(sumDigit);
+      carry = newCarry;
+
       i--;
       j--;
     }
