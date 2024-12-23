@@ -806,8 +806,13 @@ know if A: set(A), not equal(A, EMPTY_SET) {
   },
   {
     name: "include",
-    code: ['include "./lib/natural_number.ts"'],
-    debug: false,
+    code: [
+      'include "./litex_lib/natural_number.ts"',
+      "def p(x);",
+      "let x;",
+      "x is p;",
+    ],
+    debug: true,
     print: true,
   },
 ];

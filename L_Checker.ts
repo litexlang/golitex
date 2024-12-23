@@ -107,6 +107,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
     if (relatedKnownFacts === undefined) {
+      useLibToCheckOpt(env);
       return L_Out.Unknown;
     }
 
@@ -139,6 +140,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       }
     }
 
+    useLibToCheckOpt(env);
     return L_Out.Unknown;
   } catch {
     return L_ReportCheckErr(env, checkOptFact, toCheck);
@@ -464,38 +466,33 @@ function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
   }
 }
 
-// function checkToCheckFormulaLiterally(
-//   env: L_Env,
-//   toCheck: ToCheckFormulaNode
-// ): L_Out {
-//   try {
-//     if (toCheck instanceof OrToCheckNode) {
-//       for (const fact of toCheck.getLeftRight()) {
-//         const newEnv = new L_Env(env);
-//         const another = toCheck.getLeftRight().filter((e) => e !== fact)[0];
-//         // 有趣的是，我这里不需要进一步地把子节点（比如如果left是or，我在本函数里把left的or再拿出来做newFact）再拿出来，因为我未来做验证的时候，我调用checkFact的时候，我又会来到这个left，这时候我再会把left的or里面的东西拿出来。
-//         L_Memory.newFact(newEnv, another.copyWithIsTReverse());
-//         const out = checkLiterally(newEnv, fact);
-//         if (out) {
-//           return L_Out.True;
-//         }
-//       }
+async function useLibToCheckOpt(env: L_Env) {
+  try {
+    const paths = env.getIncludes();
 
-//       return L_Out.Unknown;
-//     } else if (toCheck instanceof AndToCheckNode) {
-//       for (const fact of toCheck.getLeftRight()) {
-//         const out = checkLiterally(env, fact);
-//         if (!out) {
-//           env.report(`Failed to check ${out}`);
-//           return L_Out.Unknown;
-//         }
-//       }
+    for (const path of paths) {
+      const external = await import(path);
 
-//       return L_Out.True;
-//     }
+      // Assuming external is a module with functions, define the type
+      type ExternalModule = {
+        [key: string]: (...args: any[]) => any; // This defines that the module has string keys, and each value is a function
+      };
 
-//     throw Error();
-//   } catch {
-//     return L_ReportCheckErr(env, checkOptFact, toCheck);
-//   }
-// }
+      const typedExternal = external as ExternalModule;
+
+      // Iterate over all properties in the typed external object
+      for (const prop in typedExternal) {
+        if (typeof typedExternal[prop] === "function") {
+          console.log(`Found function: ${prop}`);
+          // You can call the function here if needed
+          // typedExternal[prop](); // Uncomment to run the function
+        }
+      }
+    }
+
+    return L_Out.Unknown;
+  } catch (err) {
+    env.report(`加载模块失败:${err}`);
+    return L_Out.Error;
+  }
+}
