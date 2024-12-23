@@ -553,3 +553,13 @@ export class MacroNode extends L_Node {
     return `macro ${this.name} ${this.macroTokens.join(" ")}`;
   }
 }
+
+export class IncludeNode extends L_Node {
+  constructor(public path: string) {
+    super();
+  }
+
+  toString() {
+    return `include "${this.path}";`;
+  }
+}

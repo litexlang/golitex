@@ -483,9 +483,9 @@ async function useLibToCheckOpt(env: L_Env) {
       // Iterate over all properties in the typed external object
       for (const prop in typedExternal) {
         if (typeof typedExternal[prop] === "function") {
-          console.log(`Found function: ${prop}`);
+          // console.log(`Found function: ${prop}`);
           // You can call the function here if needed
-          // typedExternal[prop](); // Uncomment to run the function
+          typedExternal[prop](); // Uncomment to run the function
         }
       }
     }

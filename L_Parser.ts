@@ -238,6 +238,7 @@ const KeywordFunctionMap: {
   def_composite: letCompositeParse,
   lets: letsParse,
   macro: macroParse,
+  include: includeParse,
 };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
@@ -1017,6 +1018,33 @@ export function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
 
     skip(tokens, L_Keywords.L_End);
     const out = new L_Nodes.MacroNode(name, macroTokens);
+
+    return out;
+  } catch (error) {
+    L_ParseErr(env, tokens, isFormParse, index, start);
+    throw error;
+  }
+}
+
+export function includeParse(
+  env: L_Env,
+  tokens: string[]
+): L_Nodes.IncludeNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Keywords.include);
+
+    skip(tokens, '"');
+    let path: string = "";
+    while (!isCurToken(tokens, '"')) {
+      path += skip(tokens) as string;
+    }
+    skip(tokens, '"');
+
+    skip(tokens, L_Keywords.L_End);
+    const out = new L_Nodes.IncludeNode(path);
 
     return out;
   } catch (error) {

@@ -56,4 +56,5 @@ export const L_Keywords = {
   specialCharsDollar: "$",
   lets: "lets",
   macro: "macro",
+  include: "include",
 };

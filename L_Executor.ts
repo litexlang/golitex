@@ -51,6 +51,8 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return letsExec(env, node as L_Nodes.LetsNode);
       case "MacroNode":
         return macroExec(env, node as L_Nodes.MacroNode);
+      case "IncludeNode":
+        return includeExec(env, node as L_Nodes.IncludeNode);
       default:
         if (node instanceof L_Nodes.ToCheckNode) {
           const out = factExec(env, node);
@@ -377,6 +379,19 @@ function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
       throw Error();
     }
     env.report(`[new macro]${(node as L_Nodes.MacroNode).toString()}`);
+    return L_Out.True;
+  } catch {
+    return L_Messages.L_ReportErr(env, macroExec, node);
+  }
+}
+
+function includeExec(env: L_Env, node: L_Nodes.IncludeNode): L_Out {
+  try {
+    if (!env.isLibPathIncluded(node.path)) {
+      env.newInclude(node.path);
+    } else {
+    }
+    env.report(`[new lib included] ${node.toString()}`);
     return L_Out.True;
   } catch {
     return L_Messages.L_ReportErr(env, macroExec, node);

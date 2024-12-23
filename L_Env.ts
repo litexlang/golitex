@@ -273,4 +273,9 @@ export class L_Env {
       return [...this.parent.getIncludes(), ...this.includes];
     }
   }
+
+  isLibPathIncluded(path: string): boolean {
+    if (this.getIncludes().some((e) => e === path)) return true;
+    else return false;
+  }
 }
