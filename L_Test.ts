@@ -808,8 +808,8 @@ know if A: set(A), not equal(A, EMPTY_SET) {
     name: "include",
     code: [
       'include "./litex_lib/natural_number.ts" ;',
-      // 'lets natural_number "^[1-9]\\d*$";',
-      "let 2, 1;",
+      'lets natural_number "^[1-9]\\d*$";',
+      // "let 2, 1;",
       "def =(x); def_composite \\+{x,y};",
       "2 = \\+{1,1};",
     ],

@@ -138,7 +138,7 @@ export class L_Singleton extends L_Symbol {
   }
 
   subSymbolsDeclared(env: L_Env): boolean {
-    return env.isSingletonDeclared(this.value);
+    return env.isSingletonDeclared(this.value) || env.isLetsVar(this.value);
   }
 
   toString() {

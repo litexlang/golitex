@@ -992,9 +992,14 @@ export function letsParse(env: L_Env, tokens: string[]): L_Nodes.LetsNode {
     skip(tokens, L_Keywords.lets);
     const name = skip(tokens);
     const regex = new RegExp(skipString(tokens));
-    skip(tokens, ":");
-    const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
-    return new L_Nodes.LetsNode(name, regex, facts);
+    if (isCurToken(tokens, ":")) {
+      skip(tokens, ":");
+      const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+      return new L_Nodes.LetsNode(name, regex, facts);
+    } else {
+      skip(tokens, L_Keywords.L_End);
+      return new L_Nodes.LetsNode(name, regex, []);
+    }
   } catch (error) {
     L_ParseErr(env, tokens, isFormParse, index, start);
     throw error;
