@@ -19,12 +19,12 @@ export const DEBUG_DICT = {
 
 export const CheckFalse = true;
 
-export const L_OutMap: { [key in L_Out]: string } = {
-  [L_Out.Error]: "error",
-  [L_Out.False]: "check: false",
-  [L_Out.True]: "check: true",
-  [L_Out.Unknown]: "check: unknown",
-};
+// export const L_OutMap: { [key in L_Out]: string } = {
+//   [L_Out.Error]: "error",
+//   [L_Out.False]: "check: false",
+//   [L_Out.True]: "check: true",
+//   [L_Out.Unknown]: "check: unknown",
+// };
 
 export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   try {

@@ -142,7 +142,7 @@ export class L_Env {
     }
 
     this.defs.set(s, defNode);
-    this.report(`[def] ${L_Nodes.DefNode}`);
+    this.report(`[def] ${defNode}`);
     return true;
   }
 
