@@ -11,6 +11,7 @@ export class L_Env {
   private declaredComposites = new Map<string, L_Nodes.DefCompositeNode>();
   private letsVars = new Map<string, L_Nodes.LetsNode>();
   private macros = new Map<string, L_Nodes.MacroNode>();
+  private includes: string[] = [];
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -259,5 +260,17 @@ export class L_Env {
     if (this.parent !== undefined) {
       return this.parent.getMacro(name);
     } else return undefined;
+  }
+
+  newInclude(path: string) {
+    this.includes.push(path);
+  }
+
+  getIncludes(): string[] {
+    if (this.parent === undefined) {
+      return this.includes;
+    } else {
+      return [...this.parent.getIncludes(), ...this.includes];
+    }
   }
 }

@@ -801,7 +801,13 @@ know if A: set(A), not equal(A, EMPTY_SET) {
       "let a,b: a is p;",
       "\\q{a,b} is p;",
     ],
-    debug: true,
+    debug: false,
+    print: true,
+  },
+  {
+    name: "include",
+    code: ['include "./lib/natural_number.ts"'],
+    debug: false,
     print: true,
   },
 ];
