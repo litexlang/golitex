@@ -670,12 +670,12 @@ let a,b,c: <(a,b), <(b,c);
       "let x,y: x is nat, y is nat;",
       "def_composite \\frac{a,b}: number(a), number(b);",
       "know if x: x is nat {x is number};", // inherit: 直接全部继承；know if x: x is nat {x is number} 需要说明一下是number 才能得到后续的结论。
-      // "x is number; y is number;",
-      // "\\frac{x,y} is number;",
-      // "know if k: is_form(k, \\frac{x,y}) {k is number}",
-      // "\\frac{x,y} is number;",
+      "x is number; y is number;",
+      "\\frac{x,y} is number;",
+      "know if k: is_form(k, \\frac{x,y}) {k is number};",
+      "\\frac{x,y} is number;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -791,6 +791,17 @@ know if A: set(A), not equal(A, EMPTY_SET) {
     name: "macro",
     code: ['macro LET "let";', "#LET x;"],
     debug: false,
+    print: true,
+  },
+  {
+    name: "check req of composite",
+    code: [
+      "def p(x);",
+      "def_composite \\q{x,y}: x is p;",
+      "let a,b: a is p;",
+      "\\q{a,b} is p;",
+    ],
+    debug: true,
     print: true,
   },
 ];

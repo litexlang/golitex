@@ -185,7 +185,7 @@ export class L_Composite extends L_Symbol {
       for (const fact of newFacts) {
         if (checkFact(env, fact) !== L_Out.True) {
           env.report(
-            `[Unknown] failed to check ${fact} when checking requirement of composite ${this}`
+            `[Unknown] failed to check ${fact} when checking requirements of sub-symbols of composite ${this}`
           );
           return false;
         }
