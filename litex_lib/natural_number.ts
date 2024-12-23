@@ -1,30 +1,33 @@
 import { L_Env } from "../L_Env";
 import { OptNode } from "../L_Nodes";
-import { L_Composite, L_Out, L_Singleton } from "../L_Structs";
+import { L_Composite, L_Out, L_Singleton, L_Symbol } from "../L_Structs";
 
 export function addDefinition(env: L_Env, opt: OptNode): L_Out {
-  if (opt.vars.length === 2) {
-    if (
-      opt.optSymbol.name === "=" &&
-      opt.vars[0] instanceof L_Singleton &&
-      opt.vars[1] instanceof L_Composite
-    ) {
-      if (
-        opt.vars[1].name === "+" &&
-        opt.vars[1].values.length === 2 &&
-        opt.vars[1].values.every((e) => e instanceof L_Singleton)
-      ) {
-        if (
-          opt.vars[0].value ===
-          addStrings(opt.vars[1].values[0].value, opt.vars[1].values[1].value)
-        ) {
-          return L_Out.True;
-        }
-      }
+  if (opt.vars.length === 2 && opt.optSymbol.name === "=") {
+    const left = addedSymbol(opt.vars[0]);
+    const right = addedSymbol(opt.vars[1]);
+    if (left === undefined || right === undefined) return L_Out.Error;
+    else {
+      return left === right ? L_Out.True : L_Out.Unknown;
     }
   }
 
   return L_Out.Unknown;
+
+  function addedSymbol(symbol: L_Symbol): string | undefined {
+    if (
+      symbol instanceof L_Composite &&
+      symbol.name === "+" &&
+      symbol.values.length === 2 &&
+      symbol.values.every((e) => e instanceof L_Singleton)
+    ) {
+      return addStrings(symbol.values[0].value, symbol.values[1].value);
+    } else if (symbol instanceof L_Singleton) {
+      return symbol.value;
+    }
+
+    return undefined;
+  }
 
   function addStrings(num1: string, num2: string) {
     let carry = 0; // 进位
