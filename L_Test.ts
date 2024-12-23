@@ -667,9 +667,9 @@ let a,b,c: <(a,b), <(b,c);
     name: "is_form", // currently, is_form is used as composite in req
     code: [
       "def nat(x); def number(x);",
-      // "let x,y: x is nat, y is nat;",
-      // "def_composite \\frac{a,b}: number(a), number(b);",
-      // "know if x: x is nat {x is number};", // inherit: 直接全部继承；know if x: x is nat {x is number} 需要说明一下是number 才能得到后续的结论。
+      "let x,y: x is nat, y is nat;",
+      "def_composite \\frac{a,b}: number(a), number(b);",
+      "know if x: x is nat {x is number};", // inherit: 直接全部继承；know if x: x is nat {x is number} 需要说明一下是number 才能得到后续的结论。
       // "x is number; y is number;",
       // "\\frac{x,y} is number;",
       // "know if k: is_form(k, \\frac{x,y}) {k is number}",

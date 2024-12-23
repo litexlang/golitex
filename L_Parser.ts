@@ -670,9 +670,12 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     if (type === undefined) throw Error();
     const vars: L_Structs.L_Singleton[] = [];
 
+    const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
     while (!isCurToken(tokens, [":", "{"])) {
       const singleton = singletonParse(env, tokens);
-      vars.push(singleton);
+      const newSingleton = new L_Structs.L_Singleton("_" + singleton.value);
+      vars.push(newSingleton);
+      freeFixPairs.push([singleton, newSingleton]);
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -698,9 +701,13 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     skip(tokens, "}");
 
     if (type === L_Keywords.IfKeyword) {
-      return new L_Nodes.IfNode(vars, req, onlyIfs, true); //! By default isT = true
+      let out = new L_Nodes.IfNode(vars, req, onlyIfs, true); //! By default isT = true
+      out = out.fix(env, freeFixPairs);
+      return out;
     } else if (type === L_Keywords.IffKeyword) {
-      return new L_Nodes.IffNode(vars, req, onlyIfs, true);
+      let out = new L_Nodes.IffNode(vars, req, onlyIfs, true);
+      out = out.fix(env, freeFixPairs);
+      return out;
     } else {
       throw Error();
     }

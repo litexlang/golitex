@@ -94,7 +94,7 @@ export class LogicNode extends ToCheckNode {
     }
 
     if (this instanceof IfNode) {
-      return new IfNode([], newReq, newOnlyIf);
+      return new IfNode(this.vars, newReq, newOnlyIf);
     }
 
     throw Error();
