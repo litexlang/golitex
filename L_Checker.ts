@@ -107,8 +107,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
     if (relatedKnownFacts === undefined) {
-      useLibToCheckOpt(env);
-      return L_Out.Unknown;
+      return useLibToCheckOpt(env, toCheck);
     }
 
     //* First check opt-type facts then check if-type facts so that I can check if x: p(x) {p(x)};
@@ -140,8 +139,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
       }
     }
 
-    useLibToCheckOpt(env);
-    return L_Out.Unknown;
+    return useLibToCheckOpt(env, toCheck);
   } catch {
     return L_ReportCheckErr(env, checkOptFact, toCheck);
   }
@@ -466,12 +464,44 @@ function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
   }
 }
 
-async function useLibToCheckOpt(env: L_Env) {
+// async function useLibToCheckOpt(env: L_Env) {
+//   try {
+//     const paths = env.getIncludes();
+
+//     for (const path of paths) {
+//       const external = await import(path);
+
+//       // Assuming external is a module with functions, define the type
+//       type ExternalModule = {
+//         [key: string]: (...args: any[]) => any; // This defines that the module has string keys, and each value is a function
+//       };
+
+//       const typedExternal = external as ExternalModule;
+
+//       // Iterate over all properties in the typed external object
+//       for (const prop in typedExternal) {
+//         if (typeof typedExternal[prop] === "function") {
+//           // console.log(`Found function: ${prop}`);
+//           // You can call the function here if needed
+//           typedExternal[prop](); // Uncomment to run the function
+//         }
+//       }
+//     }
+
+//     return L_Out.Unknown;
+//   } catch (err) {
+//     env.report(`加载模块失败:${err}`);
+//     return L_Out.Error;
+//   }
+// }
+
+function useLibToCheckOpt(env: L_Env, opt: OptNode) {
   try {
     const paths = env.getIncludes();
 
     for (const path of paths) {
-      const external = await import(path);
+      // Synchronously require the module
+      const external = require(path);
 
       // Assuming external is a module with functions, define the type
       type ExternalModule = {
@@ -485,14 +515,15 @@ async function useLibToCheckOpt(env: L_Env) {
         if (typeof typedExternal[prop] === "function") {
           // console.log(`Found function: ${prop}`);
           // You can call the function here if needed
-          typedExternal[prop](); // Uncomment to run the function
+          const out = typedExternal[prop](env, opt); // Uncomment to run the function
+          if (out === L_Out.True || out === L_Out.Error) return out;
         }
       }
     }
 
     return L_Out.Unknown;
   } catch (err) {
-    env.report(`加载模块失败:${err}`);
+    env.report(`加载模块失败: ${err}`);
     return L_Out.Error;
   }
 }
