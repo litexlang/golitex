@@ -26,7 +26,7 @@ know if x: is_form(x, \++{a}) {x is nat};
 
 /* Axiom 3: 0 is not successor of any natural number. */
 
-def =(x,y): x is nat, y is nat;
+def commutative =(x,y): x is nat, y is nat;
 
 // know if x: x is nat {not =(0, \++{x}) };
 know if x: x is nat {not 0 = \++{x}  };
@@ -37,4 +37,5 @@ include "./litex_lib/natural_number.ts";
   0 = 4;  // false
   let y: y is nat;
   \++{3} = 4;
+  4 = \++{3};
 }

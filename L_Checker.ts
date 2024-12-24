@@ -128,8 +128,12 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
     // TODO ? 需要验证一下toCheck的composite是否符合被定义时的要求
     for (const v of toCheck.vars) {
       if (v instanceof L_Composite) {
+        env.report(`\n[check composite ${v} requirements]`);
         if (!v.compositeSatisfyItsReq(env)) {
+          env.report(`[end of check composite ${v} requirements]\n`);
           return L_Out.Unknown;
+        } else {
+          env.report(`[end of check composite ${v} requirements]\n`);
         }
       }
     }
