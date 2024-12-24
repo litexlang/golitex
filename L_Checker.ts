@@ -23,7 +23,12 @@ import {
   OptKnownFactReq,
 } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
-import { L_ReportBoolErr, L_ReportCheckErr, reportCheckErr } from "./L_Report";
+import {
+  L_ReportBoolErr,
+  L_ReportCheckErr,
+  L_ReportErr,
+  reportCheckErr,
+} from "./L_Report";
 import { DEBUG_DICT } from "./L_Executor";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
@@ -35,7 +40,7 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
     }
 
     if (toCheck instanceof OptNode) {
-      return checkOptFact(env, toCheck);
+      return checkOptFactNotCommutatively(env, toCheck);
     } else if (toCheck instanceof IfNode) {
       return checkIfFact(env, toCheck);
     } else if (toCheck instanceof BuiltinCheckNode) {
@@ -47,6 +52,30 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
     }
   } catch {
     return L_ReportCheckErr(env, checkFact, toCheck);
+  }
+}
+
+function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
+  try {
+    const def = env.getDef(toCheck.optSymbol.name);
+    if (def === undefined) {
+      L_ReportErr(env, checkOptFact, `${toCheck} not declared`);
+      throw Error();
+    }
+
+    if (!def.commutative) {
+      return checkOptFactNotCommutatively(env, toCheck);
+    } else {
+      let out = checkOptFactNotCommutatively(env, toCheck);
+      if (out === L_Out.True || out === L_Out.Error) return out;
+      let interchanged = toCheck.copyCommutatively();
+      if (interchanged === undefined) {
+        return L_Out.Error;
+      }
+      return checkOptFactNotCommutatively(env, interchanged);
+    }
+  } catch {
+    return L_ReportCheckErr(env, checkOptFact, toCheck);
   }
 }
 
@@ -85,7 +114,7 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
   }
 }
 
-function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
+function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
   // Main part of this function
   try {
     // TODO 严重的设计矛盾：composite里面的东西，究竟需不需要先定义一下？？
@@ -141,7 +170,7 @@ function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
 
     return useLibToCheckOpt(env, toCheck);
   } catch {
-    return L_ReportCheckErr(env, checkOptFact, toCheck);
+    return L_ReportCheckErr(env, checkOptFactNotCommutatively, toCheck);
   }
 
   // compare vars length in given opts, compare them
@@ -427,7 +456,7 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
       return L_Out.Error;
     }
   } catch {
-    return L_ReportCheckErr(env, checkOptFact, toCheck);
+    return L_ReportCheckErr(env, checkOptFactNotCommutatively, toCheck);
   }
 }
 
@@ -460,7 +489,7 @@ function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
 
     throw Error();
   } catch {
-    return L_ReportCheckErr(env, checkOptFact, toCheck);
+    return L_ReportCheckErr(env, checkOptFactNotCommutatively, toCheck);
   }
 }
 

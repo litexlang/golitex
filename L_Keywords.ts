@@ -57,4 +57,5 @@ export const L_Keywords = {
   lets: "lets",
   macro: "macro",
   include: "include",
+  commutative: "commutative",
 };

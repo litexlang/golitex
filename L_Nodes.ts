@@ -129,6 +129,12 @@ export class OptNode extends ToCheckNode {
     super(isT);
   }
 
+  copyCommutatively(): OptNode | undefined {
+    if (this.vars.length !== 2) return undefined;
+    const newVars: L_Symbol[] = [this.vars[1], this.vars[0]];
+    return new OptNode(this.optSymbol, newVars, this.isT, this.checkVars);
+  }
+
   getRootOptNodes(): [OptNode, ToCheckNode[]][] {
     return [[this, []]];
   }
@@ -188,8 +194,9 @@ export class OptNode extends ToCheckNode {
 export class DefNode extends L_Node {
   constructor(
     public opt: OptNode,
-    public cond: ToCheckNode[] = [],
-    public onlyIfs: ToCheckNode[] = [] // public defName: string | undefined = undefined // public cond: ToCheckNode[] = [],
+    public cond: ToCheckNode[],
+    public onlyIfs: ToCheckNode[], // public defName: string | undefined = undefined // public cond: ToCheckNode[] = [],
+    public commutative: boolean
   ) {
     super();
   }

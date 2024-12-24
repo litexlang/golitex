@@ -20,8 +20,8 @@ const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name: "test",
-    code: ["def p(x); let x; x is p;"],
+    name: "def_commutative",
+    code: ["def commutative p(x,y);"],
     debug: true,
     print: true,
   },

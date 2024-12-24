@@ -804,6 +804,12 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
   try {
     skip(tokens, L_Keywords.DefKeywords);
 
+    let commutative = false;
+    if (isCurToken(tokens, L_Keywords.commutative)) {
+      skip(tokens, L_Keywords.commutative);
+      commutative = true;
+    }
+
     const opt: OptNode = optParse(env, tokens, false);
 
     let cond: ToCheckNode[] = [];
@@ -817,10 +823,10 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
       skip(tokens, "{");
       onlyIfs.push(...factsArrParse(env, tokens, ["}"], false));
       skip(tokens, "}");
-      return new L_Nodes.DefNode(opt, cond, onlyIfs);
+      return new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
     } else {
       skip(tokens, L_Keywords.L_End);
-      return new L_Nodes.DefNode(opt, cond, onlyIfs);
+      return new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
     }
   } catch (error) {
     L_ParseErr(env, tokens, defParse, index, start);
