@@ -435,14 +435,23 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
     const factIndex = tokens.length;
 
     try {
+      let isT = true;
       // parse boolean factual formula
+      if (isCurToken(tokens, "not")) {
+        skip(tokens, "not");
+        isT = false;
+      }
+
       if (isCurToken(tokens, "(")) {
         // skip(tokens, "(");
         const out = parseToCheckFormula(env, tokens, "(", ")");
         // skip(tokens, ")");
+        out.isT = isT;
         return out;
       } else {
-        return parsePrimitiveFact(env, tokens);
+        const out = parsePrimitiveFact(env, tokens);
+        out.isT = isT;
+        return out;
       }
     } catch (error) {
       L_ParseErr(env, tokens, factParse, factIndex, factStart);

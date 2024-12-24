@@ -28,10 +28,11 @@ know if x: is_form(x, \++{a}) {x is nat};
 
 def =(x,y): x is nat, y is nat;
 
-know if x: x is nat {not =(0, \++{x}) };
+// know if x: x is nat {not =(0, \++{x}) };
+know if x: x is nat {not 0 = \++{x}  };
 
 include "./litex_lib/natural_number.ts";
 
 {
-  not =(0,4);
+  not 0 = 4;
 }

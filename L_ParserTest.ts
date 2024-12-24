@@ -68,6 +68,12 @@ know if x {
     debug: false,
     print: true,
   },
+  {
+    name: "()",
+    code: [`know if x: x is nat {not =(0, \++{x}) };`],
+    debug: true,
+    print: true,
+  },
 ];
 
 function runExamples() {
