@@ -40,7 +40,7 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
     }
 
     if (toCheck instanceof OptNode) {
-      return checkOptFactNotCommutatively(env, toCheck);
+      return checkOptFact(env, toCheck);
     } else if (toCheck instanceof IfNode) {
       return checkIfFact(env, toCheck);
     } else if (toCheck instanceof BuiltinCheckNode) {
@@ -456,7 +456,7 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
       return L_Out.Error;
     }
   } catch {
-    return L_ReportCheckErr(env, checkOptFactNotCommutatively, toCheck);
+    return L_ReportCheckErr(env, checkBuiltinCheckNode, toCheck);
   }
 }
 
@@ -489,7 +489,7 @@ function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
 
     throw Error();
   } catch {
-    return L_ReportCheckErr(env, checkOptFactNotCommutatively, toCheck);
+    return L_ReportCheckErr(env, checkToCheckFormula, toCheck);
   }
 }
 
