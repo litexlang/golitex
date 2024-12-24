@@ -25,17 +25,34 @@ know if x: is_form(x, \++{a}) {x is nat};
 }
 
 /* Axiom 3: 0 is not successor of any natural number. */
+/* Axiom 4: Different natural numbers must have different successors. i.e.
+if n, m are natural numbers and n != m, then n++ != m++. Equivalently, if 
+n++ = m++, then we must have n = m */
 
 def commutative =(x,y): x is nat, y is nat;
+def_composite \+{x,y}: x is nat, y is nat;
 
-// know if x: x is nat {not =(0, \++{x}) };
 know if x: x is nat {not 0 = \++{x}  };
+know if x,y: not x = y {
+  not \++{x} = \++{y}
+};
 
 include "./litex_lib/natural_number.ts";
 
 {
-  0 = 4;  // false
+  0 = 4;  // false, by natural_number.addDefinition
+  not 6 = 2;  // true, by natural_number.addDefinition
   let y: y is nat;
-  \++{3} = 4;
-  4 = \++{3};
+  \++{3} = 4; // true, by natural_number.plusplusEqualsPlusOne
+  4 = \++{3}; // true, by natural_number.plusplusEqualsPlusOne
 }
+
+know if x: x is nat { \+{0,x} = x, \+{x,0} = x};
+
+{
+  $ 0 + 2 $ = 2;
+  2 = $ 2 + 0 $;
+}
+
+know if x,y: x is nat, y is nat {$ x + y $ = $ y + x $};
+know if x,y,z: x is nat, y is nat, z is nat { \+{\+{x,y},z} = \+{x, \+{y,z} } };

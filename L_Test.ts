@@ -25,6 +25,15 @@ const exampleList: ExampleItem[] = [
     debug: true,
     print: true,
   },
+  {
+    name: "prove by contradiction",
+    code: [
+      "def_composite \\++{x}; def =(x,y);",
+      "know if x,y: not x = y {not \\++{x} = \\++{y}};",
+    ],
+    debug: true,
+    print: true,
+  },
 ];
 
 function runExamples(toJSON: boolean) {
