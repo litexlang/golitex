@@ -19,6 +19,12 @@ const exampleList: ExampleItem[] = [
     debug: false,
     print: true,
   },
+  {
+    name: "test",
+    code: ["def p(x); let x; x is p;"],
+    debug: true,
+    print: true,
+  },
 ];
 
 function runExamples(toJSON: boolean) {
@@ -62,5 +68,7 @@ function run() {
     runLiTeXFile(args[0]);
   }
 }
+
+export const printEveryThing = false;
 
 run();

@@ -4,6 +4,7 @@ import * as L_Executor from "./L_Executor";
 import { L_Scan } from "./L_Lexer";
 import * as L_Parser from "./L_Parser";
 import * as fs from "fs";
+import { printEveryThing } from "./L_Test";
 
 export function runStringWithLogging(
   env: L_Env,
@@ -22,13 +23,22 @@ export function runStringWithLogging(
     }
     const result: L_Out[] = [];
     for (const node of nodes) {
-      L_Executor.L_Exec(env, node);
-      if (true) {
-        if (printCode) console.log("***  results  ***\n");
-        env.printClearMessage();
-        console.log();
+      const out = L_Executor.L_Exec(env, node);
+      if (printEveryThing) {
+        if (true) {
+          if (printCode) console.log("***  results  ***\n");
+          env.printClearMessage();
+          console.log();
+        } else {
+          env.clearMessages();
+        }
       } else {
-        env.clearMessages();
+        if (out !== L_Out.True) {
+          env.printClearMessage();
+          console.log();
+        } else {
+          env.clearMessages();
+        }
       }
     }
 
