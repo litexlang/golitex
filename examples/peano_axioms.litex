@@ -34,7 +34,7 @@ know if x: x is nat {not 0 = \++{x}  };
 include "./litex_lib/natural_number.ts";
 
 {
-  // 0 = 4;  // false
+  0 = 4;  // false
   let y: y is nat;
-  y = 4;
+  \++{3} = 4;
 }
