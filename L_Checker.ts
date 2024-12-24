@@ -516,7 +516,8 @@ function useLibToCheckOpt(env: L_Env, opt: OptNode) {
           // console.log(`Found function: ${prop}`);
           // You can call the function here if needed
           const out = typedExternal[prop](env, opt); // Uncomment to run the function
-          if (out === L_Out.True || out === L_Out.Error) return out;
+          if (out === L_Out.True || out === L_Out.False || out === L_Out.Error)
+            return out;
         }
       }
     }

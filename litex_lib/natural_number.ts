@@ -8,7 +8,7 @@ export function addDefinition(env: L_Env, opt: OptNode): L_Out {
     const right = addedSymbol(opt.vars[1]);
     if (left === undefined || right === undefined) return L_Out.Error;
     else {
-      return left === right ? L_Out.True : L_Out.Unknown;
+      return left === right ? L_Out.True : L_Out.False;
     }
   }
 

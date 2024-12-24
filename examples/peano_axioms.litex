@@ -1,0 +1,6 @@
+def nat(x);
+lets arabic_nat "^[1-9]\d*$" : arabic_nat is nat;
+
+{
+  0 is nat;
+}
