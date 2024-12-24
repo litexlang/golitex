@@ -21,7 +21,7 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "def_commutative",
-    code: ["def commutative p(x,y);"],
+    code: ["def commutative p(x,y);", "let a,b: p(a,b); p(b,a);"],
     debug: true,
     print: true,
   },

@@ -2,11 +2,17 @@ import { L_Env } from "../L_Env";
 import { OptNode } from "../L_Nodes";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "../L_Structs";
 
+function isNaturalNumber(str: string) {
+  const regex = /^(0|[1-9]\d*)$/;
+  return regex.test(str);
+}
+
 export function addDefinition(env: L_Env, opt: OptNode): L_Out {
   if (opt.vars.length === 2 && opt.optSymbol.name === "=") {
     const left = addedSymbol(opt.vars[0]);
     const right = addedSymbol(opt.vars[1]);
-    if (left === undefined || right === undefined) return L_Out.Error;
+    // undefined means the given symbol is not the required form
+    if (left === undefined || right === undefined) return L_Out.Unknown;
     else {
       return left === right ? L_Out.True : L_Out.False;
     }
@@ -19,10 +25,15 @@ export function addDefinition(env: L_Env, opt: OptNode): L_Out {
       symbol instanceof L_Composite &&
       symbol.name === "+" &&
       symbol.values.length === 2 &&
-      symbol.values.every((e) => e instanceof L_Singleton)
+      symbol.values.every(
+        (e) => e instanceof L_Singleton && isNaturalNumber(e.value)
+      )
     ) {
-      return addStrings(symbol.values[0].value, symbol.values[1].value);
-    } else if (symbol instanceof L_Singleton) {
+      return addStrings(
+        (symbol.values[0] as L_Singleton).value,
+        (symbol.values[1] as L_Singleton).value
+      );
+    } else if (symbol instanceof L_Singleton && isNaturalNumber(symbol.value)) {
       return symbol.value;
     }
 
@@ -62,4 +73,8 @@ export function addDefinition(env: L_Env, opt: OptNode): L_Out {
 
     return result.reverse().join("");
   }
+}
+
+function plusplusEqualsPlusOne(env: L_Env, opt: OptNode): L_Out {
+  return L_Out.Unknown;
 }
