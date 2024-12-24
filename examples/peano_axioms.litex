@@ -1,6 +1,37 @@
+/* Define the concept of natural number (nat). */
+
 def nat(x);
-lets arabic_nat "^[1-9]\d*$" : arabic_nat is nat;
+
+/* All Arabic numerals are nat. Arabic numerals are equivalent 
+to the regular expression  ^(0|[1-9]\d*)$ .*/
+/* Axiom 1: 0 is nat */
+
+lets arabic_numeral "^(0|[1-9]\d*)$" : arabic_numeral is nat;
 
 {
   0 is nat;
+  3 is nat;
+}
+
+/* Axiom 2: If n is a natural number, then n++ is also a natural number. */
+
+def_composite \++{a}: a is nat;
+know if x: is_form(x, \++{a}) {x is nat};
+
+{
+  let x;
+  \++{0} is nat;
+  \++{x} is nat;  // Unknown: failed to check nat(x)
+}
+
+/* Axiom 3: 0 is not successor of any natural number. */
+
+def =(x,y): x is nat, y is nat;
+
+know if x: x is nat {not =(0, \++{x}) };
+
+include "./litex_lib/natural_number.ts";
+
+{
+  not =(0,4);
 }
