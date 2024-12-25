@@ -118,6 +118,9 @@ export class LogicNode extends ToCheckNode {
 
 export class IffNode extends LogicNode {}
 export class IfNode extends LogicNode {}
+export class IfReqNode {
+  constructor(public fact: ToCheckNode, public vars: L_Symbol[]) {}
+}
 
 export class OptNode extends ToCheckNode {
   constructor(

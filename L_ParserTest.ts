@@ -70,7 +70,7 @@ know if x {
   },
   {
     name: "()",
-    code: [`know if x: x is nat {not =(0, \++{x}) };`],
+    code: [`know if x: x is nat {not =(0, \++{x}) }; if x {p(x)};`],
     debug: true,
     print: true,
   },

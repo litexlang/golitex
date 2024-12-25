@@ -88,6 +88,4 @@ function run() {
   }
 }
 
-export const printEveryThing = false;
-
 run();
