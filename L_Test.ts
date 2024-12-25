@@ -37,7 +37,7 @@ const exampleList: ExampleItem[] = [
   {
     name: "literal opt",
     code: [
-      'def_literal_operator arabic_plus "^(0|[1-9]d*)$" , "^(0|[1-9]d*)$" : "./litex_lib/literal_operators.ts" , "arabic_plus" ;',
+      `def_literal_operator arabic_plus {"./litex_lib/literal_operators.ts" , "arabic_plus"} a,b; `,
     ],
     debug: true,
     print: true,

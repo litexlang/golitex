@@ -59,4 +59,5 @@ export const L_Keywords = {
   include: "include",
   commutative: "commutative",
   def_literal_operator: "def_literal_operator",
+  ifVarPrefix: "_",
 };

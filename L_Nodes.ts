@@ -574,7 +574,8 @@ export class IncludeNode extends L_Node {
 export class DefLiteralOptNode extends L_Node {
   constructor(
     public name: string,
-    public vars: RegExp[],
+    public vars: L_Symbol[],
+    public facts: ToCheckNode[],
     public path: string,
     public func: string
   ) {

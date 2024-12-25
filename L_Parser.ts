@@ -684,7 +684,9 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
     while (!isCurToken(tokens, [":", "{"])) {
       const singleton = singletonParse(env, tokens);
-      const newSingleton = new L_Structs.L_Singleton("_" + singleton.value);
+      const newSingleton = new L_Structs.L_Singleton(
+        L_Keywords.ifVarPrefix + singleton.value
+      );
       vars.push(newSingleton);
       freeFixPairs.push([singleton, newSingleton]);
       if (isCurToken(tokens, ",")) skip(tokens, ",");
@@ -1084,19 +1086,37 @@ export function defLiteralOperatorParse(
   try {
     skip(tokens, L_Keywords.def_literal_operator);
     const name = skip(tokens);
-    const varsAsRegex: RegExp[] = [];
-    while (!isCurToken(tokens, ":")) {
-      const regex = new RegExp(skipString(tokens));
-      varsAsRegex.push(regex);
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, ":");
+    skip(tokens, "{");
     const path = skipString(tokens);
     skip(tokens, ",");
     const func = skipString(tokens);
-    skip(tokens, L_Keywords.L_End);
+    skip(tokens, "}");
 
-    return new L_Nodes.DefLiteralOptNode(name, varsAsRegex, path, func);
+    const vars = arrParse<L_Structs.L_Symbol>(
+      env,
+      tokens,
+      symbolParse,
+      undefined,
+      [":", L_Keywords.L_End],
+      false
+    );
+
+    if (isCurToken(tokens, L_Keywords.L_End)) {
+      skip(tokens, L_Keywords.L_End);
+      return new L_Nodes.DefLiteralOptNode(name, vars, [], path, func);
+    } else {
+      skip(tokens, ":");
+      const facts = arrParse<ToCheckNode>(
+        env,
+        tokens,
+        factParse,
+        undefined,
+        L_Keywords.L_End,
+        false
+      );
+      skip(tokens, L_Keywords.L_End);
+      return new L_Nodes.DefLiteralOptNode(name, vars, facts, path, func);
+    }
   } catch (error) {
     L_ParseErr(env, tokens, isFormParse, index, start);
     throw error;
