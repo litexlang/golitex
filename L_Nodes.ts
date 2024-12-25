@@ -572,7 +572,12 @@ export class IncludeNode extends L_Node {
 }
 
 export class DefLiteralOperatorNode extends L_Node {
-  constructor(public name: string, public vars: RegExp[], public func: string) {
+  constructor(
+    public name: string,
+    public vars: RegExp[],
+    public path: string,
+    public func: string
+  ) {
     super();
   }
 }

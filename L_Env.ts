@@ -1,4 +1,4 @@
-import { L_ReportBoolErr } from "./L_Report";
+import { L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Structs from "./L_Structs";
 
@@ -12,13 +12,40 @@ export class L_Env {
   private letsVars = new Map<string, L_Nodes.LetsNode>();
   private macros = new Map<string, L_Nodes.MacroNode>();
   private includes: string[] = [];
+  private literalOperators = new Map<string, L_Nodes.DefLiteralOperatorNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
   }
 
+  newLiteralOpt(node: L_Nodes.DefLiteralOperatorNode): boolean {
+    if (this.getLiteralOpt(node.name)) {
+      return L_ReportBoolErr(
+        this,
+        this.newLiteralOpt,
+        `The literal operator ${node.name} is already declared.`
+      );
+    } else {
+      this.literalOperators.set(node.name, node);
+      return true;
+    }
+  }
+
+  getLiteralOpt(key: string): undefined | L_Nodes.DefLiteralOperatorNode {
+    const out = this.literalOperators.get(key);
+    if (out === undefined) {
+      return out;
+    } else {
+      if (this.parent !== undefined) {
+        return this.parent.getLiteralOpt(key);
+      } else {
+        return undefined;
+      }
+    }
+  }
+
   newCompositeVar(key: string, fact: L_Nodes.DefCompositeNode): boolean {
-    if (this.declaredComposites.get(key)) {
+    if (this.getCompositeVar(key)) {
       return L_ReportBoolErr(
         this,
         this.newCompositeVar,
@@ -95,6 +122,13 @@ export class L_Env {
   }
 
   newLetsVars(letsNode: L_Nodes.LetsNode) {
+    if (this.isLetsVar(letsNode.name)) {
+      return L_ReportBoolErr(
+        this,
+        this.newLetsVars,
+        `letsVar ${letsNode.name} already declared`
+      );
+    }
     this.letsVars.set(letsNode.name, letsNode);
   }
 
@@ -235,7 +269,7 @@ export class L_Env {
   }
 
   getLetsVar(varStr: string): L_Nodes.LetsNode | undefined {
-    if (this.letsVars.has(varStr)) {
+    if (this.isLetsVar(varStr)) {
       return this.letsVars.get(varStr);
     }
 
@@ -248,8 +282,16 @@ export class L_Env {
     } else return undefined;
   }
 
-  newMacro(macro: L_Nodes.MacroNode) {
+  newMacro(macro: L_Nodes.MacroNode): boolean {
+    if (this.getMacro(macro.name) !== undefined) {
+      return L_ReportBoolErr(
+        this,
+        this.newMacro,
+        `macro ${macro.name} is already declared.`
+      );
+    }
     this.macros.set(macro.name, macro);
+    return true;
   }
 
   getMacro(name: string): L_Nodes.MacroNode | undefined {
@@ -263,7 +305,7 @@ export class L_Env {
   }
 
   newInclude(path: string) {
-    this.includes.push(path);
+    if (!this.isLibPathIncluded(path)) this.includes.push(path);
   }
 
   getIncludes(): string[] {

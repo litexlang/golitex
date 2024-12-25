@@ -1091,10 +1091,12 @@ export function defLiteralOperatorParse(
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
     skip(tokens, ":");
+    const path = skipString(tokens);
+    skip(tokens, ",");
     const func = skipString(tokens);
     skip(tokens, L_Keywords.L_End);
 
-    return new L_Nodes.DefLiteralOperatorNode(name, varsAsRegex, func);
+    return new L_Nodes.DefLiteralOperatorNode(name, varsAsRegex, path, func);
   } catch (error) {
     L_ParseErr(env, tokens, isFormParse, index, start);
     throw error;
