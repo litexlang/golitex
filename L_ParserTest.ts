@@ -77,9 +77,7 @@ know if x {
   {
     name: "()",
     code: [
-      `if x: p(x) {
-      if y: q(x,y) {j(x,y,1)}
-      };`,
+      `know if a,b,c: a is nat, b is nat, c is nat, $a + b$ = $a + c$ {$b = c$};`,
     ],
     debug: true,
     print: true,

@@ -56,4 +56,4 @@ know if x: x is nat { \+{0,x} = x, \+{x,0} = x};
 
 know if x,y: x is nat, y is nat {$ x + y $ = $ y + x $};
 know if x,y,z: x is nat, y is nat, z is nat { \+{\+{x,y},z} = \+{x, \+{y,z} } };
-// know if a,b,c: a is nat, b is nat, c is nat, $a + b$ = $a + c$ {$b = c$};
+know if a,b,c: a is nat, b is nat, c is nat, $a + b $ = $ a + c$ {b = c};
