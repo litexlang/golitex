@@ -239,6 +239,7 @@ const KeywordFunctionMap: {
   lets: letsParse,
   macro: macroParse,
   include: includeParse,
+  def_literal_operator: defLiteralOperatorParse,
 };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
@@ -1067,6 +1068,33 @@ export function includeParse(
     const out = new L_Nodes.IncludeNode(path);
 
     return out;
+  } catch (error) {
+    L_ParseErr(env, tokens, isFormParse, index, start);
+    throw error;
+  }
+}
+
+export function defLiteralOperatorParse(
+  env: L_Env,
+  tokens: string[]
+): L_Nodes.DefLiteralOperatorNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Keywords.def_literal_operator);
+    const name = skip(tokens);
+    const varsAsRegex: RegExp[] = [];
+    while (!isCurToken(tokens, ":")) {
+      const regex = new RegExp(skipString(tokens));
+      varsAsRegex.push(regex);
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+    skip(tokens, ":");
+    const func = skipString(tokens);
+    skip(tokens, L_Keywords.L_End);
+
+    return new L_Nodes.DefLiteralOperatorNode(name, varsAsRegex, func);
   } catch (error) {
     L_ParseErr(env, tokens, isFormParse, index, start);
     throw error;

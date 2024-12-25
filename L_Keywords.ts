@@ -58,4 +58,5 @@ export const L_Keywords = {
   macro: "macro",
   include: "include",
   commutative: "commutative",
+  def_literal_operator: "def_literal_operator",
 };

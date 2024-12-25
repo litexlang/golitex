@@ -570,3 +570,9 @@ export class IncludeNode extends L_Node {
     return `include "${this.path}";`;
   }
 }
+
+export class DefLiteralOperatorNode extends L_Node {
+  constructor(public name: string, public vars: RegExp[], public func: string) {
+    super();
+  }
+}
