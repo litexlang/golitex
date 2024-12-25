@@ -1,5 +1,10 @@
 import { L_Env } from "../L_Env";
-import { L_Composite, L_Singleton, L_Symbol } from "../L_Structs";
+import {
+  L_Composite,
+  L_Singleton,
+  L_Symbol,
+  L_UndefinedSymbol,
+} from "../L_Structs";
 
 function isNaturalNumberStr(str: string) {
   const regex = /^(0|[1-9]\d*)$/;
@@ -42,22 +47,19 @@ function addStrings(num1: string, num2: string): string {
 
 export function arabic_plus(
   env: L_Env,
-  composite: L_Composite
-): L_Singleton | undefined {
+  singleton1: L_Singleton,
+  singleton2: L_Singleton
+): L_Singleton | L_UndefinedSymbol {
   try {
     if (
-      composite.name === "+" &&
-      composite.values.length === 2 &&
-      composite.values[0] instanceof L_Singleton &&
-      composite.values[1] instanceof L_Singleton &&
-      isNaturalNumberStr(composite.values[0].value) &&
-      isNaturalNumberStr(composite.values[1].value)
+      isNaturalNumberStr(singleton1.value) &&
+      isNaturalNumberStr(singleton2.value)
     ) {
-      return new L_Singleton(
-        addStrings(composite.values[0].value, composite.values[1].value)
-      );
+      return new L_Singleton(addStrings(singleton1.value, singleton2.value));
     }
 
-    return undefined;
-  } catch {}
+    return new L_UndefinedSymbol();
+  } catch {
+    return new L_UndefinedSymbol();
+  }
 }

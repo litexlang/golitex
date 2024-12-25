@@ -89,13 +89,13 @@ function literalOptParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
 
   try {
     const name = skip(tokens).slice(1); // the # at the beginning is abandoned
-    skip(tokens, "(");
+    skip(tokens, "{");
     const parameters: L_Structs.L_Symbol[] = [];
-    while (!isCurToken(tokens, ")")) {
+    while (!isCurToken(tokens, "}")) {
       parameters.push(symbolParse(env, tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
-    skip(tokens, ")");
+    skip(tokens, "}");
 
     const defLiteralOpt = env.getLiteralOpt(name);
     if (defLiteralOpt === undefined) {
@@ -115,7 +115,7 @@ function literalOptParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
         typeof typedExternal[prop] === "function" &&
         prop === defLiteralOpt.name
       ) {
-        out = typedExternal[prop](env, parameters);
+        out = typedExternal[prop](env, ...parameters);
         if (out instanceof L_Structs.L_UndefinedSymbol) {
           env.report(`Invalid call of ${defLiteralOpt.name}`);
           throw Error();

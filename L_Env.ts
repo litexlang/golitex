@@ -33,7 +33,7 @@ export class L_Env {
 
   getLiteralOpt(key: string): undefined | L_Nodes.DefLiteralOptNode {
     const out = this.literalOperators.get(key);
-    if (out === undefined) {
+    if (out !== undefined) {
       return out;
     } else {
       if (this.parent !== undefined) {
