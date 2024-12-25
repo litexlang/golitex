@@ -271,16 +271,21 @@ export class L_Env {
 
   getLetsVar(varStr: string): L_Nodes.LetsNode | undefined {
     if (this.isLetsVar(varStr)) {
-      return this.letsVars.get(varStr);
+      const out = this.letsVars.get(varStr);
+      if (out !== undefined) {
+        return out;
+      } else {
+        for (const knownLet of this.letsVars.values()) {
+          if (knownLet.regex.test(varStr)) return knownLet;
+        }
+
+        if (this.parent !== undefined) {
+          return this.parent.getLetsVar(varStr);
+        } else return undefined;
+      }
     }
 
-    for (const knownLet of this.letsVars.values()) {
-      if (knownLet.regex.test(varStr)) return knownLet;
-    }
-
-    if (this.parent !== undefined) {
-      return this.parent.getLetsVar(varStr);
-    } else return undefined;
+    return undefined;
   }
 
   newMacro(macro: L_Nodes.MacroNode): boolean {

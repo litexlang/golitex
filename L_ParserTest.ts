@@ -71,6 +71,16 @@ know if x {
   {
     name: "()",
     code: [`know if x: x is nat {not =(0, \++{x}) }; if x {p(x)};`],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "()",
+    code: [
+      `if x: p(x) {
+      if y: q(x,y) {j(x,y,1)}
+      };`,
+    ],
     debug: true,
     print: true,
   },

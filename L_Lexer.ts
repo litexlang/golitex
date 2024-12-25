@@ -1,4 +1,4 @@
-import { specialChars } from "./L_Keywords";
+import { L_Keywords, specialChars } from "./L_Keywords";
 import { L_Env } from "./L_Env";
 
 export function L_Scan(env: L_Env, text: string): string[] {
@@ -86,7 +86,7 @@ export function L_Scan(env: L_Env, text: string): string[] {
 
   for (let i = tokens.length - 1; i >= 0; i--) {
     const token = tokens[i];
-    if (token.startsWith("#")) {
+    if (token.startsWith(L_Keywords.macroPrefix)) {
       const searchKey = token.slice(1);
       const out = env.getMacro(searchKey);
       if (out === undefined) {
