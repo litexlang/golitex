@@ -22,7 +22,7 @@ const exampleList: ExampleItem[] = [
   {
     name: "def_commutative",
     code: ["def commutative p(x,y);", "let a,b: p(a,b); p(b,a);"],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -30,6 +30,14 @@ const exampleList: ExampleItem[] = [
     code: [
       "def_composite \\++{x}; def =(x,y);",
       "know if x,y: not x = y {not \\++{x} = \\++{y}};",
+    ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "literal opt",
+    code: [
+      'def_literal_operator arabic_plus "^(0|[1-9]d*)$" , "^(0|[1-9]d*)$" : "./litex_lib/literal_operators.ts" , "arabic_plus" ;',
     ],
     debug: true,
     print: true,

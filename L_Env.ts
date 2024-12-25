@@ -12,13 +12,13 @@ export class L_Env {
   private letsVars = new Map<string, L_Nodes.LetsNode>();
   private macros = new Map<string, L_Nodes.MacroNode>();
   private includes: string[] = [];
-  private literalOperators = new Map<string, L_Nodes.DefLiteralOperatorNode>();
+  private literalOperators = new Map<string, L_Nodes.DefLiteralOptNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
   }
 
-  newLiteralOpt(node: L_Nodes.DefLiteralOperatorNode): boolean {
+  newLiteralOpt(node: L_Nodes.DefLiteralOptNode): boolean {
     if (this.getLiteralOpt(node.name)) {
       return L_ReportBoolErr(
         this,
@@ -31,7 +31,7 @@ export class L_Env {
     }
   }
 
-  getLiteralOpt(key: string): undefined | L_Nodes.DefLiteralOperatorNode {
+  getLiteralOpt(key: string): undefined | L_Nodes.DefLiteralOptNode {
     const out = this.literalOperators.get(key);
     if (out === undefined) {
       return out;
@@ -216,8 +216,9 @@ export class L_Env {
     return this.messages;
   }
 
-  report(s: string) {
+  report(s: string): L_Structs.L_Out {
     this.messages.push(s);
+    return L_Structs.L_Out.True;
   }
 
   printClearMessage() {
@@ -305,7 +306,16 @@ export class L_Env {
   }
 
   newInclude(path: string) {
-    if (!this.isLibPathIncluded(path)) this.includes.push(path);
+    if (!this.isLibPathIncluded(path)) {
+      this.includes.push(path);
+      return true;
+    } else {
+      return L_ReportBoolErr(
+        this,
+        this.newInclude,
+        `${path} is already included`
+      );
+    }
   }
 
   getIncludes(): string[] {

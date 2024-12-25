@@ -1077,7 +1077,7 @@ export function includeParse(
 export function defLiteralOperatorParse(
   env: L_Env,
   tokens: string[]
-): L_Nodes.DefLiteralOperatorNode {
+): L_Nodes.DefLiteralOptNode {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -1096,7 +1096,7 @@ export function defLiteralOperatorParse(
     const func = skipString(tokens);
     skip(tokens, L_Keywords.L_End);
 
-    return new L_Nodes.DefLiteralOperatorNode(name, varsAsRegex, path, func);
+    return new L_Nodes.DefLiteralOptNode(name, varsAsRegex, path, func);
   } catch (error) {
     L_ParseErr(env, tokens, isFormParse, index, start);
     throw error;

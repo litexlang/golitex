@@ -53,6 +53,8 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return macroExec(env, node as L_Nodes.MacroNode);
       case "IncludeNode":
         return includeExec(env, node as L_Nodes.IncludeNode);
+      case "DefLiteralOptNode":
+        return defLiteralOptExec(env, node as L_Nodes.DefLiteralOptNode);
       default:
         if (node instanceof L_Nodes.ToCheckNode) {
           const out = factExec(env, node);
@@ -363,12 +365,8 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
 
 function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
   try {
-    if (env.newCompositeVar(node.composite.name, node)) {
-      env.report(`OK! ${node}`);
-      return L_Out.True;
-    } else {
-      throw Error();
-    }
+    if (!env.newCompositeVar(node.composite.name, node)) throw Error();
+    return env.report(`[new def_composite] ${node}`);
   } catch {
     return L_Messages.L_ReportErr(env, defCompositeExec, node);
   }
@@ -376,14 +374,8 @@ function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
 
 function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
   try {
-    if (env.getMacro(node.name) === undefined) {
-      env.newMacro(node);
-    } else {
-      env.report(`[Error] ${node.name} is a declared macro name.`);
-      throw Error();
-    }
-    env.report(`[new macro]${(node as L_Nodes.MacroNode).toString()}`);
-    return L_Out.True;
+    if (!env.newMacro(node)) throw Error();
+    return env.report(`[new macro] ${(node as L_Nodes.MacroNode).toString()}`);
   } catch {
     return L_Messages.L_ReportErr(env, macroExec, node);
   }
@@ -391,13 +383,18 @@ function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
 
 function includeExec(env: L_Env, node: L_Nodes.IncludeNode): L_Out {
   try {
-    if (!env.isLibPathIncluded(node.path)) {
-      env.newInclude(node.path);
-    } else {
-    }
-    env.report(`[new lib included] ${node.toString()}`);
-    return L_Out.True;
+    if (!env.newInclude(node.path)) throw Error();
+    return env.report(`[new lib included] ${node.toString()}`);
   } catch {
     return L_Messages.L_ReportErr(env, macroExec, node);
+  }
+}
+
+function defLiteralOptExec(env: L_Env, node: L_Nodes.DefLiteralOptNode): L_Out {
+  try {
+    if (!env.newLiteralOpt(node)) throw Error();
+    return env.report(`[new def_literal_operator] ${node}`);
+  } catch {
+    return L_Messages.L_ReportErr(env, defLiteralOptExec, node);
   }
 }
