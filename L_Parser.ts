@@ -83,6 +83,56 @@ function slashCompositeParse(
   }
 }
 
+function literalOptParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    const name = skip(tokens).slice(1); // the # at the beginning is abandoned
+    skip(tokens, "(");
+    const parameters: L_Structs.L_Symbol[] = [];
+    while (!isCurToken(tokens, ")")) {
+      parameters.push(symbolParse(env, tokens));
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+    skip(tokens, ")");
+
+    const defLiteralOpt = env.getLiteralOpt(name);
+    if (defLiteralOpt === undefined) {
+      throw Error();
+    }
+
+    const external = require(defLiteralOpt.path);
+    type ExternalModule = {
+      [key: string]: (...args: any[]) => any;
+    };
+
+    const typedExternal = external as ExternalModule;
+
+    let out: L_Structs.L_Symbol | undefined = undefined;
+    for (const prop in typedExternal) {
+      if (
+        typeof typedExternal[prop] === "function" &&
+        prop === defLiteralOpt.name
+      ) {
+        out = typedExternal[prop](env, parameters);
+        if (out instanceof L_Structs.L_UndefinedSymbol) {
+          env.report(`Invalid call of ${defLiteralOpt.name}`);
+          throw Error();
+        } else {
+          return out as L_Structs.L_Symbol;
+        }
+      }
+    }
+
+    env.report(`literal operator ${defLiteralOpt.name} undeclared`);
+    throw Error();
+  } catch (error) {
+    L_ParseErr(env, tokens, literalOptParse, index, start);
+    throw error;
+  }
+}
+
 function dollarCompositeParse(
   env: L_Env,
   tokens: string[]
@@ -132,6 +182,8 @@ function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
       return slashCompositeParse(env, tokens);
     } else if (tokens[0] === L_Keywords.DollarKeyword) {
       return dollarCompositeParse(env, tokens);
+    } else if (tokens[0].startsWith(L_Keywords.literalOptPrefix)) {
+      return literalOptParse(env, tokens);
     } else {
       return singletonParse(env, tokens);
     }

@@ -60,4 +60,5 @@ export const L_Keywords = {
   commutative: "commutative",
   def_literal_operator: "def_literal_operator",
   ifVarPrefix: "_",
+  literalOptPrefix: "#",
 };

@@ -128,6 +128,20 @@ export abstract class L_Symbol {
   }
 }
 
+export class L_UndefinedSymbol extends L_Symbol {
+  constructor() {
+    super();
+  }
+
+  getRootSingletons(): L_Singleton[] {
+    throw Error();
+  }
+
+  subSymbolsDeclared(env: L_Env): boolean {
+    throw Error();
+  }
+}
+
 export class L_Singleton extends L_Symbol {
   constructor(public value: string) {
     super();
