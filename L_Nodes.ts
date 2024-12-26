@@ -194,8 +194,6 @@ export class OptNode extends ToCheckNode {
   }
 }
 
-export class ExistNode extends OptNode {}
-
 export class DefNode extends L_Node {
   constructor(
     public opt: OptNode,
@@ -211,7 +209,17 @@ export class DefNode extends L_Node {
   }
 }
 
-export class DefExistNode extends DefNode {}
+export class DefExistNode extends DefNode {
+  constructor(
+    opt: OptNode,
+    cond: ToCheckNode[],
+    onlyIfs: ToCheckNode[],
+    commutative: boolean,
+    public existVarsNumber: number
+  ) {
+    super(opt, cond, onlyIfs, commutative);
+  }
+}
 
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;

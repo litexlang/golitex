@@ -292,7 +292,7 @@ const KeywordFunctionMap: {
   macro: macroParse,
   include: includeParse,
   def_literal_operator: defLiteralOperatorParse,
-  def_exist: defParse,
+  def_exist: defExistParse,
 };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
@@ -858,10 +858,7 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
   const index = tokens.length;
 
   try {
-    const keyword = skip(tokens, [
-      L_Keywords.DefKeywords,
-      L_Keywords.def_exist,
-    ]);
+    skip(tokens, L_Keywords.DefKeywords);
 
     let commutative = false;
     if (isCurToken(tokens, L_Keywords.commutative)) {
@@ -886,13 +883,52 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
       skip(tokens, L_Keywords.L_End);
     }
 
-    if (keyword === L_Keywords.DefKeywords) {
-      return new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
-    } else if (keyword === L_Keywords.def_exist) {
-      return new L_Nodes.DefExistNode(opt, cond, onlyIfs, commutative);
+    return new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
+  } catch (error) {
+    L_ParseErr(env, tokens, defParse, index, start);
+    throw error;
+  }
+}
+
+function defExistParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Keywords.def_exist);
+
+    const existVarsNumber = parseInt(skip(tokens), 10);
+
+    let commutative = false;
+    if (isCurToken(tokens, L_Keywords.commutative)) {
+      skip(tokens, L_Keywords.commutative);
+      commutative = true;
     }
 
-    throw Error();
+    const opt: OptNode = optParse(env, tokens, false);
+
+    let cond: ToCheckNode[] = [];
+    if (isCurToken(tokens, ":")) {
+      skip(tokens, ":");
+      cond = factsArrParse(env, tokens, [L_Keywords.L_End], false);
+    }
+
+    const onlyIfs: ToCheckNode[] = [];
+    if (isCurToken(tokens, "{")) {
+      skip(tokens, "{");
+      onlyIfs.push(...factsArrParse(env, tokens, ["}"], false));
+      skip(tokens, "}");
+    } else {
+      skip(tokens, L_Keywords.L_End);
+    }
+
+    return new L_Nodes.DefExistNode(
+      opt,
+      cond,
+      onlyIfs,
+      commutative,
+      existVarsNumber
+    );
   } catch (error) {
     L_ParseErr(env, tokens, defParse, index, start);
     throw error;
