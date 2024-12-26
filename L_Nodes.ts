@@ -194,6 +194,8 @@ export class OptNode extends ToCheckNode {
   }
 }
 
+export class ExistNode extends OptNode {}
+
 export class DefNode extends L_Node {
   constructor(
     public opt: OptNode,
@@ -208,6 +210,8 @@ export class DefNode extends L_Node {
     return `${this.opt.toString()}`;
   }
 }
+
+export class DefExistNode extends DefNode {}
 
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;

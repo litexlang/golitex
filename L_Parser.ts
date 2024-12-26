@@ -852,12 +852,18 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   }
 }
 
-function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
+function defParse(
+  env: L_Env,
+  tokens: string[]
+): L_Nodes.DefNode | L_Nodes.DefExistNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.DefKeywords);
+    const keyword = skip(tokens, [
+      L_Keywords.DefKeywords,
+      L_Keywords.def_exist,
+    ]);
 
     let commutative = false;
     if (isCurToken(tokens, L_Keywords.commutative)) {
@@ -878,11 +884,17 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
       skip(tokens, "{");
       onlyIfs.push(...factsArrParse(env, tokens, ["}"], false));
       skip(tokens, "}");
-      return new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
     } else {
       skip(tokens, L_Keywords.L_End);
-      return new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
     }
+
+    if (keyword === L_Keywords.DefKeywords) {
+      return new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
+    } else if (keyword === L_Keywords.def_exist) {
+      return new L_Nodes.DefExistNode(opt, cond, onlyIfs, commutative);
+    }
+
+    throw Error();
   } catch (error) {
     L_ParseErr(env, tokens, defParse, index, start);
     throw error;
