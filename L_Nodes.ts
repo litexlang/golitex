@@ -593,3 +593,5 @@ export class DefLiteralOptNode extends L_Node {
     super();
   }
 }
+
+export class ExistNode extends OptNode {}

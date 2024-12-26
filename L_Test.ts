@@ -46,8 +46,8 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "exist, have",
-    code: ["def_exist 1 p(x); let y: p(y); have a: p(y);"],
-    debug: false,
+    code: ["def_exist p(x,y,z) z :; let a,b ;know p(a,b); p(a,b); "],
+    debug: true,
     print: true,
   },
   {
@@ -56,7 +56,7 @@ const exampleList: ExampleItem[] = [
       "def_composite \\frac{a,b}; let x,y ; def p(x); know p(x);",
       "p(at{\\frac{x,y},0}); ",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];

@@ -56,6 +56,8 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return includeExec(env, node as L_Nodes.IncludeNode);
       case "DefLiteralOptNode":
         return defLiteralOptExec(env, node as L_Nodes.DefLiteralOptNode);
+      case "HaveNode":
+        return haveExec(env, node as L_Nodes.HaveNode);
       default:
         if (node instanceof L_Nodes.ToCheckNode) {
           const out = factExec(env, node);
@@ -402,5 +404,36 @@ function defLiteralOptExec(env: L_Env, node: L_Nodes.DefLiteralOptNode): L_Out {
     return env.report(`[new def_literal_operator] ${node}`);
   } catch {
     return L_Messages.L_ReportErr(env, defLiteralOptExec, node);
+  }
+}
+
+function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
+  try {
+    if (env.getDefExist(node.fact.optSymbol.name) === undefined) {
+      throw Error();
+    }
+
+    const out = L_Checker.checkFact(env, node.fact);
+    if (out === L_Out.True) {
+      for (const v of node.vars) {
+        const ok = env.newSingletonVar(v.value);
+        if (!ok) throw Error();
+      }
+
+      L_Memory.newFact(
+        env,
+        new L_Nodes.OptNode(
+          node.fact.optSymbol,
+          [...node.vars, ...node.vars],
+          node.fact.isT,
+          node.fact.checkVars
+        )
+      );
+      return L_Out.True;
+    } else {
+      throw Error();
+    }
+  } catch {
+    return L_Messages.L_ReportErr(env, haveExec, node);
   }
 }
