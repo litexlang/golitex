@@ -1,16 +1,10 @@
 import { L_Env } from "./L_Env";
 import { L_ReportBoolErr, L_ReportErr } from "./L_Report";
-import {
-  IfNode,
-  LogicNode,
-  OptNode,
-  ToCheckFormulaNode,
-  ToCheckNode,
-} from "./L_Nodes";
+import { LogicNode, OptNode, ToCheckNode } from "./L_Nodes";
 import { checkFact } from "./L_Checker";
 
 export abstract class L_Symbol {
-  abstract getRootSingletons(): L_Singleton[];
+  // abstract getRootSingletons(): L_Singleton[];
 
   // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol. meanwhile, whether elements of composite are the same does not matter. e.g. \frac{1,2} and \frac{a,b} does not matter.
   static haveMatchingSymbolStructure(
@@ -60,12 +54,6 @@ export abstract class L_Symbol {
       given.length === expected.length &&
       given.every((e, i) => L_Symbol.areLiterallyIdentical(env, e, expected[i]))
     );
-  }
-
-  abstract subSymbolsDeclared(env: L_Env): boolean;
-
-  fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
-    throw Error();
   }
 
   // * Literally the same has 2 meanings: 1. as string, they are the same 2.
@@ -126,18 +114,27 @@ export abstract class L_Symbol {
       return false;
     }
   }
+
+  abstract subSymbolsDeclared(env: L_Env): boolean;
+
+  abstract fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol;
 }
 
+// Used for TS API FOR USERS
 export class L_UndefinedSymbol extends L_Symbol {
   constructor() {
     super();
   }
 
-  getRootSingletons(): L_Singleton[] {
+  // getRootSingletons(): L_Singleton[] {
+  //   throw Error();
+  // }
+
+  subSymbolsDeclared(env: L_Env): boolean {
     throw Error();
   }
 
-  subSymbolsDeclared(env: L_Env): boolean {
+  fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     throw Error();
   }
 }
@@ -147,9 +144,9 @@ export class L_Singleton extends L_Symbol {
     super();
   }
 
-  getRootSingletons(): L_Singleton[] {
-    return [this];
-  }
+  // getRootSingletons(): L_Singleton[] {
+  //   return [this];
+  // }
 
   subSymbolsDeclared(env: L_Env): boolean {
     return env.isSingletonDeclared(this.value) || env.isLetsVar(this.value);
@@ -168,10 +165,53 @@ export class L_Singleton extends L_Symbol {
   }
 }
 
+export class IndexedSymbol extends L_Symbol {
+  constructor(public given: L_Symbol, public indexes: number[]) {
+    super();
+  }
+
+  // getRootSingletons(): L_Singleton[] {
+  //   throw Error();
+  // }
+
+  subSymbolsDeclared(env: L_Env): boolean {
+    // TODO
+    return true;
+  }
+
+  // ! IndexedSymbol fix has 2 effects: 1. fix frees 2. return the symbol under the index
+  fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
+    let out: IndexedSymbol = this;
+
+    for (const freeFixed of freeFixedPairs) {
+      if (L_Symbol.areLiterallyIdentical(env, freeFixed[0], this.given)) {
+        out = new IndexedSymbol(freeFixed[1], this.indexes);
+      }
+    }
+
+    if (out.given instanceof L_Composite) {
+      return out.given.getIndexedSubNode(out.indexes);
+    } else {
+      throw Error();
+    }
+  }
+}
+
 // e.g. \frac{1,2} ; \+{1,2} ; \union{A,B} ; \set{x}
 export class L_Composite extends L_Symbol {
   constructor(public name: string, public values: L_Symbol[]) {
     super();
+  }
+
+  getIndexedSubNode(indexes: number[]): L_Symbol {
+    let curComposite: L_Composite = this;
+    for (let i = 0; i < indexes.length; i++) {
+      const cur = curComposite.values[indexes[i]];
+      if (cur instanceof L_Composite) curComposite = cur;
+      else throw Error();
+    }
+
+    return curComposite;
   }
 
   compositeSatisfyItsReq(env: L_Env): boolean {
@@ -211,13 +251,13 @@ export class L_Composite extends L_Symbol {
     }
   }
 
-  getRootSingletons(): L_Singleton[] {
-    const out: L_Singleton[] = [];
-    for (const value of this.values) {
-      out.push(...value.getRootSingletons());
-    }
-    return out;
-  }
+  // getRootSingletons(): L_Singleton[] {
+  //   const out: L_Singleton[] = [];
+  //   for (const value of this.values) {
+  //     out.push(...value.getRootSingletons());
+  //   }
+  //   return out;
+  // }
 
   compositesInside(): L_Composite[] {
     const out: L_Composite[] = [this];

@@ -104,7 +104,7 @@ function literalOptParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   const index = tokens.length;
 
   try {
-    const name = skip(tokens).slice(1); // the # at the beginning is abandoned
+    const name = skip(tokens).slice(L_Keywords.macroPrefix.length); // the # at the beginning is abandoned
     skip(tokens, "{");
     const parameters: L_Structs.L_Symbol[] = [];
     while (!isCurToken(tokens, "}")) {

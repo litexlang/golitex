@@ -142,6 +142,7 @@ export class OptNode extends ToCheckNode {
     return [[this, []]];
   }
 
+  //* 猜想：只要我这里不报错，那我opt里面引入一些虚空变量也行了（比如exist里面的引入的变量）
   varsDeclared(env: L_Env): boolean {
     for (const v of this.vars) {
       if (!v.subSymbolsDeclared(env)) {

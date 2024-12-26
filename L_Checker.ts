@@ -138,6 +138,8 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
       }
     }
 
+    toCheck = toCheck.fix(env, []); // Used to fix indexed symbols
+
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
     if (relatedKnownFacts === undefined) {
       return useLibToCheckOpt(env, toCheck);

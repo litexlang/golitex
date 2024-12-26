@@ -61,6 +61,6 @@ export const L_Keywords = {
   def_literal_operator: "def_literal_operator",
   ifVarPrefix: "%if_",
   literalOptPrefix: "@",
-  macroPrefix: "##",
+  macroPrefix: "MACRO_",
   def_exist: "def_exist",
 };
