@@ -5,7 +5,7 @@ import { L_Keywords } from "./L_Keywords";
 import { runFileWithLogging } from "./L_Runner";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Messages from "./L_Report";
-import { L_Out, L_Singleton } from "./L_Structs";
+import { L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
 
 export const DEBUG_DICT = {
@@ -440,12 +440,45 @@ function defLiteralOptExec(env: L_Env, node: L_Nodes.DefLiteralOptNode): L_Out {
 
 function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
   try {
-    // if (env.getDefExist(node.fact.optSymbol.name) === undefined) {
-    //   throw Error();
-    // }
+    let anonymousSymbolNum = 0;
+    for (const v of node.fact.vars) {
+      if (v instanceof L_Singleton) {
+        if (v.value === L_Keywords.anonymousSymbol) anonymousSymbolNum += 1;
+      }
+    }
+
+    if (node.vars.length !== anonymousSymbolNum) throw Error();
 
     const out = L_Checker.checkFact(env, node.fact);
-    return out;
+
+    if (out !== L_Out.True) return out;
+
+    for (const v of node.vars) {
+      const ok = env.newSingletonVar(v.value);
+      if (!ok) throw Error();
+    }
+
+    const newVars: L_Symbol[] = [];
+    let anonymousSymbolAlreadyGot = 0;
+    for (const v of node.fact.vars) {
+      if (v instanceof L_Singleton && v.value === L_Keywords.anonymousSymbol) {
+        newVars.push(node.vars[anonymousSymbolAlreadyGot]);
+        anonymousSymbolAlreadyGot += 1;
+      } else {
+        newVars.push(v);
+      }
+    }
+
+    const opt = new L_Nodes.OptNode(
+      node.fact.optSymbol,
+      newVars,
+      node.fact.isT,
+      node.fact.checkVars
+    );
+
+    const ok = L_Memory.newFact(env, opt);
+    if (ok) return L_Out.True;
+    else throw Error();
   } catch {
     return L_Messages.L_ReportErr(env, haveExec, node);
   }
