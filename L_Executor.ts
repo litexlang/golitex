@@ -148,12 +148,12 @@ function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
 
   function declNewFact(env: L_Env, node: L_Nodes.DefNode): boolean {
     let ok = true;
-    if (node instanceof L_Nodes.DefExistNode) {
-      ok = env.newDef(node.opt.optSymbol.name, node);
-      ok = env.newExistDef(node.opt.optSymbol.name, node);
-    } else {
-      ok = env.newDef(node.opt.optSymbol.name, node);
-    }
+    // if (node instanceof L_Nodes.DefExistNode) {
+    //   ok = env.newDef(node.opt.optSymbol.name, node);
+    //   ok = env.newExistDef(node.opt.optSymbol.name, node);
+    // } else {
+    ok = env.newDef(node.opt.optSymbol.name, node);
+    // }
     for (const onlyIf of node.onlyIfs) {
       const ok = L_Memory.newFact(env, onlyIf);
       if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);

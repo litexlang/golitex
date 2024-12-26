@@ -210,17 +210,17 @@ export class DefNode extends L_Node {
   }
 }
 
-export class DefExistNode extends DefNode {
-  constructor(
-    opt: OptNode,
-    cond: ToCheckNode[],
-    onlyIfs: ToCheckNode[],
-    commutative: boolean,
-    public existVars: L_Singleton[]
-  ) {
-    super(opt, cond, onlyIfs, commutative);
-  }
-}
+// export class DefExistNode extends DefNode {
+//   constructor(
+//     opt: OptNode,
+//     cond: ToCheckNode[],
+//     onlyIfs: ToCheckNode[],
+//     commutative: boolean,
+//     public existVars: L_Singleton[]
+//   ) {
+//     super(opt, cond, onlyIfs, commutative);
+//   }
+// }
 
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;

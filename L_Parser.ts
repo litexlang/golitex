@@ -320,7 +320,7 @@ const KeywordFunctionMap: {
   macro: macroParse,
   include: includeParse,
   def_literal_operator: defLiteralOperatorParse,
-  def_exist: defExistParse,
+  // def_exist: defExistParse,
 };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
@@ -914,49 +914,49 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
   }
 }
 
-function defExistParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// function defExistParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, L_Keywords.def_exist);
+//   try {
+//     skip(tokens, L_Keywords.def_exist);
 
-    let commutative = false;
-    if (isCurToken(tokens, L_Keywords.commutative)) {
-      skip(tokens, L_Keywords.commutative);
-      commutative = true;
-    }
+//     let commutative = false;
+//     if (isCurToken(tokens, L_Keywords.commutative)) {
+//       skip(tokens, L_Keywords.commutative);
+//       commutative = true;
+//     }
 
-    const opt: OptNode = optParse(env, tokens, false);
+//     const opt: OptNode = optParse(env, tokens, false);
 
-    const existVars: L_Singleton[] = singletonArrParse(
-      env,
-      tokens,
-      [":", "{", L_Keywords.L_End],
-      false
-    );
+//     const existVars: L_Singleton[] = singletonArrParse(
+//       env,
+//       tokens,
+//       [":", "{", L_Keywords.L_End],
+//       false
+//     );
 
-    let cond: ToCheckNode[] = [];
-    if (isCurToken(tokens, ":")) {
-      skip(tokens, ":");
-      cond = factsArrParse(env, tokens, [L_Keywords.L_End], false);
-    }
+//     let cond: ToCheckNode[] = [];
+//     if (isCurToken(tokens, ":")) {
+//       skip(tokens, ":");
+//       cond = factsArrParse(env, tokens, [L_Keywords.L_End], false);
+//     }
 
-    const onlyIfs: ToCheckNode[] = [];
-    if (isCurToken(tokens, "{")) {
-      skip(tokens, "{");
-      onlyIfs.push(...factsArrParse(env, tokens, ["}"], false));
-      skip(tokens, "}");
-    } else {
-      skip(tokens, L_Keywords.L_End);
-    }
+//     const onlyIfs: ToCheckNode[] = [];
+//     if (isCurToken(tokens, "{")) {
+//       skip(tokens, "{");
+//       onlyIfs.push(...factsArrParse(env, tokens, ["}"], false));
+//       skip(tokens, "}");
+//     } else {
+//       skip(tokens, L_Keywords.L_End);
+//     }
 
-    return new L_Nodes.DefExistNode(opt, cond, onlyIfs, commutative, existVars);
-  } catch (error) {
-    L_ParseErr(env, tokens, defParse, index, start);
-    throw error;
-  }
-}
+//     return new L_Nodes.DefExistNode(opt, cond, onlyIfs, commutative, existVars);
+//   } catch (error) {
+//     L_ParseErr(env, tokens, defParse, index, start);
+//     throw error;
+//   }
+// }
 
 // --------------------------------------------------------
 export function letCompositeParse(
