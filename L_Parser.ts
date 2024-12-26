@@ -3,6 +3,7 @@ import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
+import { L_Singleton, L_Composite } from "./L_Structs";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
 import { L_ParseErr } from "./L_Report";
 
@@ -44,6 +45,21 @@ function singletonParse(env: L_Env, tokens: string[]): L_Structs.L_Singleton {
     L_ParseErr(env, tokens, singletonParse, index, start);
     throw error;
   }
+}
+
+function singletonArrParse(
+  env: L_Env,
+  tokens: string[],
+  end: string | string[],
+  skipEnd: boolean
+): L_Structs.L_Singleton[] {
+  const out: L_Structs.L_Singleton[] = [];
+  while (!isCurToken(tokens, end)) {
+    out.push(singletonParse(env, tokens));
+    if (isCurToken(tokens, ",")) skip(tokens, ",");
+  }
+  if (skipEnd) skip(tokens);
+  return out;
 }
 
 function optSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_OptSymbol {
@@ -805,21 +821,17 @@ function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
 
   try {
     skip(tokens, L_Keywords.HaveKeywords);
-    const vars: string[] = [];
-    while (!isCurToken(tokens, ":")) {
-      vars.push(tokens.shift() as string);
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, ":");
-
-    const opts = factsArrParse(
+    const vars = arrParse<L_Structs.L_Singleton>(
       env,
       tokens,
-      [L_Keywords.L_End],
+      singletonParse,
+      undefined,
+      ":",
       true
-    ) as OptNode[];
+    );
+    const fact = optParse(env, tokens, false);
 
-    return new L_Nodes.HaveNode(opts, vars);
+    return new L_Nodes.HaveNode(vars, fact);
   } catch (error) {
     L_ParseErr(env, tokens, haveParse, index, start);
     throw error;
@@ -897,8 +909,6 @@ function defExistParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
   try {
     skip(tokens, L_Keywords.def_exist);
 
-    const existVarsNumber = parseInt(skip(tokens), 10);
-
     let commutative = false;
     if (isCurToken(tokens, L_Keywords.commutative)) {
       skip(tokens, L_Keywords.commutative);
@@ -906,6 +916,13 @@ function defExistParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
     }
 
     const opt: OptNode = optParse(env, tokens, false);
+
+    const existVars: L_Singleton[] = singletonArrParse(
+      env,
+      tokens,
+      [":", "{", L_Keywords.L_End],
+      false
+    );
 
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
@@ -922,13 +939,7 @@ function defExistParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
       skip(tokens, L_Keywords.L_End);
     }
 
-    return new L_Nodes.DefExistNode(
-      opt,
-      cond,
-      onlyIfs,
-      commutative,
-      existVarsNumber
-    );
+    return new L_Nodes.DefExistNode(opt, cond, onlyIfs, commutative, existVars);
   } catch (error) {
     L_ParseErr(env, tokens, defParse, index, start);
     throw error;

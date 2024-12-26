@@ -45,8 +45,8 @@ const exampleList: ExampleItem[] = [
     print: true,
   },
   {
-    name: "literal opt",
-    code: ["def_exist p(x);"],
+    name: "exist, have",
+    code: ["def_exist 1 p(x); let y: p(y); have a: p(y);"],
     debug: true,
     print: true,
   },

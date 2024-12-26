@@ -215,7 +215,7 @@ export class DefExistNode extends DefNode {
     cond: ToCheckNode[],
     onlyIfs: ToCheckNode[],
     commutative: boolean,
-    public existVarsNumber: number
+    public existVars: L_Singleton[]
   ) {
     super(opt, cond, onlyIfs, commutative);
   }
@@ -288,13 +288,8 @@ export class ReturnNode extends L_Node {
 }
 
 export class HaveNode extends L_Node {
-  constructor(public opts: OptNode[], public vars: string[]) {
+  constructor(public vars: L_Singleton[], public fact: OptNode) {
     super();
-  }
-
-  override toString() {
-    const varsStr = this.vars.join(", ");
-    return `have ${varsStr}: ${this.opts.toString()}`;
   }
 }
 
