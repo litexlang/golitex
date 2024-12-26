@@ -34,6 +34,31 @@ function arrParse<T>(
   }
 }
 
+function indexedSymbolParse(
+  env: L_Env,
+  tokens: string[]
+): L_Structs.IndexedSymbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Keywords.indexedSymbolKeyword);
+    skip(tokens, "{");
+    const symbol = symbolParse(env, tokens);
+    const indexes: number[] = [];
+    while (!isCurToken(tokens, "}")) {
+      indexes.push(Number(skip(tokens)));
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+    skip(tokens, "}");
+
+    return new L_Structs.IndexedSymbol(symbol, indexes);
+  } catch (error) {
+    L_ParseErr(env, tokens, indexedSymbolParse, index, start);
+    throw error;
+  }
+}
+
 function singletonParse(env: L_Env, tokens: string[]): L_Structs.L_Singleton {
   const start = tokens[0];
   const index = tokens.length;
@@ -173,22 +198,6 @@ function dollarCompositeParse(
   }
 }
 
-function prefixSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  try {
-    if (tokens[0] === L_Keywords.SlashKeyword) {
-      return slashCompositeParse(env, tokens);
-    } else {
-      return singletonParse(env, tokens);
-    }
-  } catch (error) {
-    L_ParseErr(env, tokens, prefixSymbolParse, index, start);
-    throw error;
-  }
-}
-
 function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
@@ -200,6 +209,8 @@ function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
       return dollarCompositeParse(env, tokens);
     } else if (tokens[0].startsWith(L_Keywords.literalOptPrefix)) {
       return literalOptParse(env, tokens);
+    } else if (tokens[0] === L_Keywords.indexedSymbolKeyword) {
+      return indexedSymbolParse(env, tokens);
     } else {
       return singletonParse(env, tokens);
     }
@@ -1075,6 +1086,23 @@ function usePrecedenceToParseComposite(
   } catch (error) {
     L_ParseErr(env, tokens, usePrecedenceToParseComposite, index, start);
     throw error;
+  }
+
+  function prefixSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    try {
+      // TODO maybe is broken because it does not take # into consideration
+      if (tokens[0] === L_Keywords.SlashKeyword) {
+        return slashCompositeParse(env, tokens);
+      } else {
+        return singletonParse(env, tokens);
+      }
+    } catch (error) {
+      L_ParseErr(env, tokens, prefixSymbolParse, index, start);
+      throw error;
+    }
   }
 
   function getSymbolUntilPrecedenceIsNotHigher(

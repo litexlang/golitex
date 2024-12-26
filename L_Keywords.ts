@@ -63,4 +63,5 @@ export const L_Keywords = {
   literalOptPrefix: "@",
   macroPrefix: "MACRO_",
   def_exist: "def_exist",
+  indexedSymbolKeyword: "at",
 };

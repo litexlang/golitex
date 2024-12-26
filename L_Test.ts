@@ -50,6 +50,15 @@ const exampleList: ExampleItem[] = [
     debug: true,
     print: true,
   },
+  {
+    name: "indexed symbol",
+    code: [
+      "def_composite \\frac{a,b}; let x,y ; def p(x); know p(x);",
+      "p(at{\\frac{x,y},0}); ",
+    ],
+    debug: true,
+    print: true,
+  },
 ];
 
 function runExamples(toJSON: boolean) {
