@@ -407,32 +407,45 @@ function defLiteralOptExec(env: L_Env, node: L_Nodes.DefLiteralOptNode): L_Out {
   }
 }
 
+// function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
+//   try {
+//     // if (env.getDefExist(node.fact.optSymbol.name) === undefined) {
+//     //   throw Error();
+//     // }
+
+//     const out = L_Checker.checkFact(env, node.fact);
+//     if (out === L_Out.True) {
+//       for (const v of node.vars) {
+//         const ok = env.newSingletonVar(v.value);
+//         if (!ok) throw Error();
+//       }
+
+//       L_Memory.newFact(
+//         env,
+//         new L_Nodes.OptNode(
+//           node.fact.optSymbol,
+//           [...node.vars, ...node.vars],
+//           node.fact.isT,
+//           node.fact.checkVars
+//         )
+//       );
+//       return L_Out.True;
+//     } else {
+//       throw Error();
+//     }
+//   } catch {
+//     return L_Messages.L_ReportErr(env, haveExec, node);
+//   }
+// }
+
 function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
   try {
-    if (env.getDefExist(node.fact.optSymbol.name) === undefined) {
-      throw Error();
-    }
+    // if (env.getDefExist(node.fact.optSymbol.name) === undefined) {
+    //   throw Error();
+    // }
 
     const out = L_Checker.checkFact(env, node.fact);
-    if (out === L_Out.True) {
-      for (const v of node.vars) {
-        const ok = env.newSingletonVar(v.value);
-        if (!ok) throw Error();
-      }
-
-      L_Memory.newFact(
-        env,
-        new L_Nodes.OptNode(
-          node.fact.optSymbol,
-          [...node.vars, ...node.vars],
-          node.fact.isT,
-          node.fact.checkVars
-        )
-      );
-      return L_Out.True;
-    } else {
-      throw Error();
-    }
+    return out;
   } catch {
     return L_Messages.L_ReportErr(env, haveExec, node);
   }
