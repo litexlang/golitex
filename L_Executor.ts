@@ -32,6 +32,7 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
 
     switch (nodeType) {
       case "DefNode":
+      case "DefExistNode":
         return defExec(env, node as L_Nodes.DefNode);
       case "KnowNode":
         return knowExec(env, node as L_Nodes.KnowNode);
@@ -145,7 +146,11 @@ function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
 
   function declNewFact(env: L_Env, node: L_Nodes.DefNode): boolean {
     let ok = true;
-    ok = env.newDef(node.opt.optSymbol.name, node);
+    if (node instanceof L_Nodes.DefExistNode) {
+      ok = env.newDef(node.opt.optSymbol.name, node);
+    } else {
+      ok = env.newDef(node.opt.optSymbol.name, node);
+    }
     for (const onlyIf of node.onlyIfs) {
       const ok = L_Memory.newFact(env, onlyIf);
       if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);

@@ -41,6 +41,12 @@ const exampleList: ExampleItem[] = [
       `def =(1,2); let 1,2;`,
       "=(@arabic_plus{1,1} , 2);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "literal opt",
+    code: ["def_exist p(x);"],
     debug: true,
     print: true,
   },

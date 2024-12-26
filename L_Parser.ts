@@ -292,6 +292,7 @@ const KeywordFunctionMap: {
   macro: macroParse,
   include: includeParse,
   def_literal_operator: defLiteralOperatorParse,
+  def_exist: defParse,
 };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
@@ -852,10 +853,7 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   }
 }
 
-function defParse(
-  env: L_Env,
-  tokens: string[]
-): L_Nodes.DefNode | L_Nodes.DefExistNode {
+function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
   const start = tokens[0];
   const index = tokens.length;
 
