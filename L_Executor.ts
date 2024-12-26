@@ -148,6 +148,7 @@ function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
     let ok = true;
     if (node instanceof L_Nodes.DefExistNode) {
       ok = env.newDef(node.opt.optSymbol.name, node);
+      ok = env.newExistDef(node.opt.optSymbol.name, node);
     } else {
       ok = env.newDef(node.opt.optSymbol.name, node);
     }

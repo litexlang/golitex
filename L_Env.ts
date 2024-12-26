@@ -13,6 +13,7 @@ export class L_Env {
   private macros = new Map<string, L_Nodes.MacroNode>();
   private includes: string[] = [];
   private literalOperators = new Map<string, L_Nodes.DefLiteralOptNode>();
+  private defExists = new Map<string, L_Nodes.DefExistNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -166,18 +167,42 @@ export class L_Env {
     }
   }
 
+  getDefExist(s: string): L_Nodes.DefExistNode | undefined {
+    if (this.defExists.has(s)) {
+      return this.defExists.get(s);
+    } else if (this.parent) {
+      return this.parent.getDefExist(s);
+    } else {
+      return undefined;
+    }
+  }
+
   newDef(s: string, defNode: L_Nodes.DefNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.getDef(s) !== undefined) {
       return L_ReportBoolErr(
         this,
         this.newDef,
-        `The variable "${s}" is already declared in this environment or its parent environments. Please use a different name.`
+        `The operator "${s}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
 
     this.defs.set(s, defNode);
     this.report(`[def] ${defNode}`);
+    return true;
+  }
+
+  newExistDef(s: string, defNode: L_Nodes.DefExistNode): boolean {
+    if (this.getDefExist(s) !== undefined) {
+      return L_ReportBoolErr(
+        this,
+        this.newExistDef,
+        `The exist-type operator "${s}" is already declared in this environment or its parent environments. Please use a different name.`
+      );
+    }
+
+    this.defExists.set(s, defNode);
+    this.report(`[def_exist] ${defNode}`);
     return true;
   }
 
