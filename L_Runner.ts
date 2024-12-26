@@ -5,7 +5,7 @@ import { L_Scan } from "./L_Lexer";
 import * as L_Parser from "./L_Parser";
 import * as fs from "fs";
 
-const printEveryThing = false;
+const printEveryThing = true;
 
 export function runStringWithLogging(
   env: L_Env,

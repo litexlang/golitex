@@ -46,6 +46,7 @@ function indexedSymbolParse(
     skip(tokens, "{");
     const symbol = symbolParse(env, tokens);
     const indexes: number[] = [];
+    skip(tokens, ",");
     while (!isCurToken(tokens, "}")) {
       indexes.push(Number(skip(tokens)));
       if (isCurToken(tokens, ",")) skip(tokens, ",");

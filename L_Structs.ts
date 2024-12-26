@@ -2,6 +2,7 @@ import { L_Env } from "./L_Env";
 import { L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import { LogicNode, OptNode, ToCheckNode } from "./L_Nodes";
 import { checkFact } from "./L_Checker";
+import { L_Keywords } from "./L_Keywords";
 
 export abstract class L_Symbol {
   // abstract getRootSingletons(): L_Singleton[];
@@ -175,8 +176,7 @@ export class IndexedSymbol extends L_Symbol {
   // }
 
   subSymbolsDeclared(env: L_Env): boolean {
-    // TODO
-    return true;
+    return this.given.subSymbolsDeclared(env);
   }
 
   // ! IndexedSymbol fix has 2 effects: 1. fix frees 2. return the symbol under the index
@@ -195,6 +195,10 @@ export class IndexedSymbol extends L_Symbol {
       throw Error();
     }
   }
+
+  toString() {
+    return `${L_Keywords.indexedSymbolKeyword}(${this.given}, ${this.indexes})`;
+  }
 }
 
 // e.g. \frac{1,2} ; \+{1,2} ; \union{A,B} ; \set{x}
@@ -205,13 +209,12 @@ export class L_Composite extends L_Symbol {
 
   getIndexedSubNode(indexes: number[]): L_Symbol {
     let curComposite: L_Composite = this;
-    for (let i = 0; i < indexes.length; i++) {
+    for (let i = 0; i < indexes.length - 1; i++) {
       const cur = curComposite.values[indexes[i]];
       if (cur instanceof L_Composite) curComposite = cur;
-      else throw Error();
     }
 
-    return curComposite;
+    return curComposite.values[indexes[indexes.length - 1]];
   }
 
   compositeSatisfyItsReq(env: L_Env): boolean {

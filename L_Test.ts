@@ -47,7 +47,7 @@ const exampleList: ExampleItem[] = [
   {
     name: "exist, have",
     code: ["def_exist 1 p(x); let y: p(y); have a: p(y);"],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
