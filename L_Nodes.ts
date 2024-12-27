@@ -594,4 +594,4 @@ export class DefLiteralOptNode extends L_Node {
   }
 }
 
-export class ExistNode extends OptNode {}
+export class DefFunctionalNode extends L_Node {}

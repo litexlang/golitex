@@ -524,9 +524,14 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
         isT = false;
       }
 
-      if (isCurToken(tokens, "(")) {
+      if (isCurToken(tokens, L_Keywords.LeftFactLogicalFormulaSig)) {
         // skip(tokens, "(");
-        const out = parseToCheckFormula(env, tokens, "(", ")");
+        const out = parseToCheckFormula(
+          env,
+          tokens,
+          L_Keywords.LeftFactLogicalFormulaSig,
+          L_Keywords.RightFactLogicalFormulaSig
+        );
         // skip(tokens, ")");
         out.isT = isT;
         return out;

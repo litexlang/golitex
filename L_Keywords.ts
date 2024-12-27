@@ -67,4 +67,6 @@ export const L_Keywords = {
   // TODO EXIST and any can not appear in some composites, which is weird e.g. know \frac{\frac{EXIST, EXIST}, 2} , so in the future I should make them stricter.
   ExistSymbol: "EXIST",
   AnySymbol: "ANY", //* anySymbol can not be equal to EXIST, and it can equal to any other symbols
+  LeftFactLogicalFormulaSig: "\\[?",
+  RightFactLogicalFormulaSig: "\\?]",
 };

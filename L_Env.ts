@@ -5,15 +5,19 @@ import * as L_Structs from "./L_Structs";
 export class L_Env {
   private parent: L_Env | undefined = undefined;
   private messages: string[] = [];
-  private declaredSingletons = new Set<string>();
+  private singletons = new Set<string>();
   private defs = new Map<string, L_Nodes.DefNode>();
   private facts = new Map<string, L_Structs.L_KnownFactReq[]>();
-  private declaredComposites = new Map<string, L_Nodes.DefCompositeNode>();
+  private composites = new Map<string, L_Nodes.DefCompositeNode>();
   private letsVars = new Map<string, L_Nodes.LetsNode>();
   private macros = new Map<string, L_Nodes.MacroNode>();
   private includes: string[] = [];
   private literalOperators = new Map<string, L_Nodes.DefLiteralOptNode>();
-  // private defExists = new Map<string, L_Nodes.DefExistNode>();
+
+  // TODO
+  private aliases = new Map<string, L_Structs.L_Symbol>();
+  private freeVars = new Map<string, L_Structs.FreeSymbol>();
+  private functionalSymbols = new Map<string, L_Nodes.DefFunctionalNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -53,13 +57,13 @@ export class L_Env {
         `The variable "${key}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     } else {
-      this.declaredComposites.set(key, fact);
+      this.composites.set(key, fact);
       return true;
     }
   }
 
   getCompositeVar(key: string): undefined | L_Nodes.DefCompositeNode {
-    const out = this.declaredComposites.get(key);
+    const out = this.composites.get(key);
     if (out !== undefined) {
       return out;
     } else {
@@ -102,7 +106,7 @@ export class L_Env {
   clear() {
     this.parent = undefined;
     this.messages = [];
-    this.declaredSingletons = new Set<string>();
+    this.singletons = new Set<string>();
     this.letsVars = new Map<string, L_Nodes.LetsNode>();
     this.defs = new Map<string, L_Nodes.DefNode>();
   }
@@ -215,12 +219,12 @@ export class L_Env {
         `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
-    this.declaredSingletons.add(fix);
+    this.singletons.add(fix);
     return true;
   }
 
   isSingletonDeclared(key: string): boolean {
-    if (this.declaredSingletons.has(key) || this.isLetsVar(key)) {
+    if (this.singletons.has(key) || this.isLetsVar(key)) {
       return true;
     } else {
       if (!this.parent) return false;
@@ -288,7 +292,7 @@ export class L_Env {
 
   toJSON() {
     return {
-      vars: Array.from(this.declaredSingletons),
+      vars: Array.from(this.singletons),
       defs: Object.fromEntries(this.defs),
       facts: Object.fromEntries(this.facts),
     };

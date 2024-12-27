@@ -49,7 +49,7 @@ const exampleList: ExampleItem[] = [
     code: [
       "def p(x,y,z) ; let a,b ; know p(a,b, EXIST ); p(a,b, EXIST); have c: p(a,b,EXIST);",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -59,6 +59,12 @@ const exampleList: ExampleItem[] = [
       "p(at{\\frac{x,y},0}); ",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "1 + 1 =2",
+    code: ["let 1,2; def_composite \\+{x,y}; def =(x,y); (1 + 1) = 2;"],
+    debug: true,
     print: true,
   },
 ];
