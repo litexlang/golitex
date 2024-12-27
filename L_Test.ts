@@ -63,8 +63,16 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "1 + 1 =2",
-    code: ["let 1,2; def_composite \\+{x,y}; def =(x,y); (1 + 1) = 2;"],
+    code: ["let 1,2; def_composite \\+{x,y};", " def =(x,y); $ 1 + 1 = 2 $;"],
     debug: true,
+    print: true,
+  },
+  {
+    name: "1 + 1 =2",
+    code: [
+      "let 1,2; def p(x); p(1); def_composite \\frac{a,b}; \\frac{1,2} is p;",
+    ],
+    debug: false,
     print: true,
   },
 ];

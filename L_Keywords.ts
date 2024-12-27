@@ -21,7 +21,7 @@ export const L_Keywords = {
   DollarKeyword: "$",
   SlashKeyword: "\\",
   EqualKeyword: "=",
-  LetCompositeKeyword: "def_composite",
+  DefCompositeKeyword: "def_composite",
   isPropertyKeyword: "is_property",
   isFormKeyword: "is_form",
   KnowTypeKeywords: "know",

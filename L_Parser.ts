@@ -197,7 +197,7 @@ function braceCompositeParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   }
 }
 
-function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
+function singleSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -277,21 +277,23 @@ function isCurToken(tokens: string[], s: string | string[]) {
 // @end: when parsing local env, } is the end; when parsing source code, node is the end
 export function parseNodes(
   env: L_Env,
-  tokens: string[],
+  tokensArr: string[][],
   end: string | null
 ): L_Node[] {
   try {
     const out: L_Node[] = [];
 
-    if (end === null) {
-      while (tokens.length !== 0) {
-        const node = parseNodesFromSingleExpression(env, tokens);
-        if (node !== undefined) out.push(...node);
-      }
-    } else {
-      while (tokens[0] !== end) {
-        const node = parseNodesFromSingleExpression(env, tokens);
-        if (node !== undefined) out.push(...node);
+    for (const tokens of tokensArr) {
+      if (end === null) {
+        while (tokens.length !== 0) {
+          const node = parseNodesFromSingleExpression(env, tokens);
+          if (node !== undefined) out.push(...node);
+        }
+      } else {
+        while (tokens[0] !== end) {
+          const node = parseNodesFromSingleExpression(env, tokens);
+          if (node !== undefined) out.push(...node);
+        }
       }
     }
 
@@ -315,7 +317,7 @@ const KeywordFunctionMap: {
   have: haveParse,
   clear: specialParse,
   run: specialParse,
-  def_composite: letCompositeParse,
+  def_composite: DefCompositeParse,
   lets: letsParse,
   macro: macroParse,
   include: includeParse,
@@ -534,6 +536,14 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
         );
         // skip(tokens, ")");
         out.isT = isT;
+        return out;
+      } else if (isCurToken(tokens, L_Keywords.Dollar)) {
+        skip(tokens, L_Keywords.Dollar);
+        const left = symbolParse(env, tokens);
+        const opt = new L_Structs.L_OptSymbol(skip(tokens));
+        const right = symbolParse(env, tokens);
+        skip(tokens, L_Keywords.Dollar);
+        const out = new OptNode(opt, [left, right], isT);
         return out;
       } else {
         const out = parsePrimitiveFact(env, tokens);
@@ -822,13 +832,34 @@ function localEnvParse(env: L_Env, tokens: string[]): L_Nodes.LocalEnvNode {
 
   try {
     skip(tokens, "{");
-    const nodes = parseNodes(env, tokens, "}");
+    const nodes = parseNodes(env, splitBySemicolon(tokens), "}");
     skip(tokens, "}");
     const out = new L_Nodes.LocalEnvNode(nodes);
     return out;
   } catch (error) {
     L_ParseErr(env, tokens, localEnvParse, index, start);
     throw error;
+  }
+
+  function splitBySemicolon(array: string[]) {
+    const result = [];
+    let currentGroup: string[] = [];
+
+    array.forEach((item) => {
+      currentGroup.push(item); // 把当前元素加入当前组
+      if (item === ";") {
+        // 如果遇到分号
+        result.push(currentGroup); // 把当前组保存到结果
+        currentGroup = []; // 开始新的组
+      }
+    });
+
+    if (currentGroup.length > 0) {
+      // 如果最后还有剩余的元素
+      result.push(currentGroup);
+    }
+
+    return result;
   }
 }
 
@@ -964,7 +995,7 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
 // }
 
 // --------------------------------------------------------
-export function letCompositeParse(
+export function DefCompositeParse(
   env: L_Env,
   tokens: string[]
 ): L_Nodes.DefCompositeNode {
@@ -972,7 +1003,7 @@ export function letCompositeParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.LetCompositeKeyword);
+    skip(tokens, L_Keywords.DefCompositeKeyword);
     const composite = slashCompositeParse(env, tokens);
     if (isCurToken(tokens, L_Keywords.L_End)) {
       skip(tokens, L_Keywords.L_End);
@@ -989,7 +1020,7 @@ export function letCompositeParse(
 
     return new L_Nodes.DefCompositeNode(composite, facts);
   } catch (error) {
-    L_ParseErr(env, tokens, letCompositeParse, index, start);
+    L_ParseErr(env, tokens, DefCompositeParse, index, start);
     throw error;
   }
 }
@@ -1260,6 +1291,24 @@ export function defLiteralOperatorParse(
       skip(tokens, L_Keywords.L_End);
       return new L_Nodes.DefLiteralOptNode(name, vars, facts, path, func);
     }
+  } catch (error) {
+    L_ParseErr(env, tokens, isFormParse, index, start);
+    throw error;
+  }
+}
+
+export function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    let left = singleSymbolParse(env, tokens);
+    while (env.getCompositeVar(tokens[0])) {
+      const optName = skip(tokens);
+      const right = singleSymbolParse(env, tokens);
+      left = new L_Composite(optName, [left, right]);
+    }
+    return left;
   } catch (error) {
     L_ParseErr(env, tokens, isFormParse, index, start);
     throw error;

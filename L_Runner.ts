@@ -17,7 +17,7 @@ export function runStringWithLogging(
     if (printResult && printCode) {
       console.log(`-----\n***  source code  ***\n${expr}\n`);
     }
-    const tokens: string[] = L_Scan(env, expr);
+    const tokens: string[][] = L_Scan(env, expr);
     const nodes = L_Parser.parseNodes(env, tokens, null);
     if (nodes === undefined) {
       throw Error();
