@@ -40,8 +40,8 @@ export const L_Keywords = {
   ClearKeyword: "clear",
   RunKeyword: "run",
   MacroKeywords: "macro",
-  specialChars: "(",
-  specialCharsClose: ")",
+  LeftBrace: "(",
+  RightBrace: ")",
   specialCharsOpen: "{",
   specialCharsCloseBracket: "}",
   specialCharsSquareOpen: "[",
@@ -64,5 +64,7 @@ export const L_Keywords = {
   macroPrefix: "MACRO_",
   def_exist: "def_exist",
   indexedSymbolKeyword: "at",
+  // TODO anonymous and any can not appear in some composites, so in the future I should make them stricter.
   anonymousSymbol: "?",
+  anySymbol: "ANY", //* anySymbol can not be equal to anonymous, and it can equal to any other symbols
 };

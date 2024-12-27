@@ -65,6 +65,21 @@ export abstract class L_Symbol {
     expected: L_Symbol
   ): boolean {
     try {
+      //* ANY symbol is equal to any symbol, except anonymous
+      if (
+        expected instanceof L_Singleton &&
+        expected.value === L_Keywords.anySymbol
+      ) {
+        if (
+          !(
+            given instanceof L_Singleton &&
+            given.value === L_Keywords.anonymousSymbol
+          )
+        ) {
+          return true;
+        }
+      }
+
       if (given instanceof L_Singleton && expected instanceof L_Singleton) {
         return (
           given.value === expected.value || regexIdentical(env, given, expected)
@@ -151,9 +166,10 @@ export class L_Singleton extends L_Symbol {
 
   subSymbolsDeclared(env: L_Env): boolean {
     return (
+      this.value === L_Keywords.anonymousSymbol ||
+      this.value === L_Keywords.anySymbol ||
       env.isSingletonDeclared(this.value) ||
-      env.isLetsVar(this.value) ||
-      this.value === L_Keywords.anonymousSymbol
+      env.isLetsVar(this.value)
     );
   }
 

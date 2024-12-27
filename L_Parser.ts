@@ -175,26 +175,24 @@ function literalOptParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   }
 }
 
-function dollarCompositeParse(
-  env: L_Env,
-  tokens: string[]
-): L_Structs.L_Symbol {
+// TODO Later, this should be parser based on precedence
+function braceCompositeParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.DollarKeyword);
+    skip(tokens, L_Keywords.LeftBrace);
     let left = symbolParse(env, tokens);
     while (!isCurToken(tokens, L_Keywords.DollarKeyword)) {
       const opt = optSymbolParse(env, tokens);
       const right = symbolParse(env, tokens);
       left = new L_Structs.L_Composite(opt.name, [left, right]);
     }
-    skip(tokens, L_Keywords.DollarKeyword);
+    skip(tokens, L_Keywords.RightBrace);
 
     return left;
   } catch (error) {
-    L_ParseErr(env, tokens, dollarCompositeParse, index, start);
+    L_ParseErr(env, tokens, braceCompositeParse, index, start);
     throw error;
   }
 }
@@ -203,11 +201,13 @@ function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   const start = tokens[0];
   const index = tokens.length;
 
+  // TODO Later, there should be parser based on precedence. And there does not  need ((1 * 4) + 4) = 8, there is only $ 1 * 4 + 4 = 8 $
+
   try {
     if (tokens[0] === L_Keywords.SlashKeyword) {
       return slashCompositeParse(env, tokens);
     } else if (tokens[0] === L_Keywords.DollarKeyword) {
-      return dollarCompositeParse(env, tokens);
+      return braceCompositeParse(env, tokens);
     } else if (tokens[0].startsWith(L_Keywords.literalOptPrefix)) {
       return literalOptParse(env, tokens);
     } else if (tokens[0] === L_Keywords.indexedSymbolKeyword) {
