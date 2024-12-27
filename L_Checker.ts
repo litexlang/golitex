@@ -189,7 +189,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
       }
 
       for (let i = 0; i < opt1.vars.length; i++) {
-        if (!L_Symbol.areLiterallyIdentical(env, opt1.vars[i], opt2.vars[i]))
+        if (!L_Symbol.literallyIdentical(env, opt1.vars[i], opt2.vars[i]))
           return false;
       }
 

@@ -7,6 +7,18 @@ import { L_Keywords } from "./L_Keywords";
 export abstract class L_Symbol {
   // abstract getRootSingletons(): L_Singleton[];
 
+  static isExist(symbol: L_Symbol): boolean {
+    return (
+      symbol instanceof L_Singleton && symbol.value === L_Keywords.ExistSymbol
+    );
+  }
+
+  static isAny(symbol: L_Symbol): boolean {
+    return (
+      symbol instanceof L_Singleton && symbol.value === L_Keywords.AnySymbol
+    );
+  }
+
   // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol. meanwhile, whether elements of composite are the same does not matter. e.g. \frac{1,2} and \frac{a,b} does not matter.
   static haveMatchingSymbolStructure(
     env: L_Env,
@@ -53,41 +65,35 @@ export abstract class L_Symbol {
   ): boolean {
     return (
       given.length === expected.length &&
-      given.every((e, i) => L_Symbol.areLiterallyIdentical(env, e, expected[i]))
+      given.every((e, i) => L_Symbol.literallyIdentical(env, e, expected[i]))
     );
   }
 
-  // * Literally the same has 2 meanings: 1. as string, they are the same 2.
-  // * expected is regex and given satisfy that expected.
-  static areLiterallyIdentical(
+  // * MAIN FUNCTION OF THE WHOLE PROJECT
+  static literallyIdentical(
     env: L_Env,
     given: L_Symbol,
     expected: L_Symbol
   ): boolean {
     try {
       //* ANY symbol is equal to any symbol, except EXIST
-      if (
-        expected instanceof L_Singleton &&
-        expected.value === L_Keywords.AnySymbol
-      ) {
-        if (
-          !(
-            given instanceof L_Singleton &&
-            given.value === L_Keywords.ExistSymbol
-          )
-        ) {
-          return true;
-        }
-      }
+      if (provedByAny(env, given, expected)) return true;
+      if (regexIdentical(env, given, expected)) return true;
+      if (pureSingleIdentical(env, given, expected)) return true;
+      if (compareComposites(env, given, expected)) return true;
 
-      if (given instanceof L_Singleton && expected instanceof L_Singleton) {
-        return (
-          given.value === expected.value || regexIdentical(env, given, expected)
-        );
-      } else if (
-        given instanceof L_Composite &&
-        expected instanceof L_Composite
-      ) {
+      return false;
+    } catch {
+      L_ReportErr(env, L_Symbol.literallyIdentical);
+      return false;
+    }
+
+    function compareComposites(
+      env: L_Env,
+      given: L_Symbol,
+      expected: L_Symbol
+    ): boolean {
+      if (given instanceof L_Composite && expected instanceof L_Composite) {
         // name of composite symbol must be equal
         if (given.name !== expected.name) {
           return false;
@@ -99,7 +105,7 @@ export abstract class L_Symbol {
         } else {
           for (let i = 0; i < given.values.length; i++) {
             if (
-              !L_Symbol.areLiterallyIdentical(
+              !L_Symbol.literallyIdentical(
                 env,
                 given.values[i],
                 expected.values[i]
@@ -113,19 +119,42 @@ export abstract class L_Symbol {
       } else {
         return false;
       }
-    } catch {
-      L_ReportErr(env, L_Symbol.areLiterallyIdentical);
+    }
+
+    function provedByAny(
+      env: L_Env,
+      given: L_Symbol,
+      expected: L_Symbol
+    ): boolean {
+      if (L_Symbol.isAny(expected) && !L_Symbol.isExist(given)) return true;
+      if (L_Symbol.isAny(given) && !L_Symbol.isExist(expected)) return true;
+
+      return false;
+    }
+
+    function pureSingleIdentical(
+      env: L_Env,
+      given: L_Symbol,
+      expected: L_Symbol
+    ) {
+      if (given instanceof L_Singleton && expected instanceof L_Singleton) {
+        return given.value === expected.value;
+      }
+
       return false;
     }
 
     function regexIdentical(
       env: L_Env,
-      given: L_Singleton,
-      template: L_Singleton
+      given: L_Symbol,
+      expected: L_Symbol
     ): boolean {
-      const relatedLets = env.getLetsVar(template.value);
-      if (relatedLets !== undefined) {
-        if (relatedLets.regex.test(given.value)) return true;
+      if (given instanceof L_Singleton && expected instanceof L_Singleton) {
+        let relatedLets = env.getLetsVar(expected.value);
+        if (relatedLets !== undefined) {
+          if (relatedLets.regex.test(given.value)) return true;
+        }
+        return false;
       }
       return false;
     }
@@ -180,7 +209,7 @@ export class L_Singleton extends L_Symbol {
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     for (const freeFixed of freeFixedPairs) {
-      if (L_Symbol.areLiterallyIdentical(env, freeFixed[0], this))
+      if (L_Symbol.literallyIdentical(env, freeFixed[0], this))
         return freeFixed[1];
     }
     return this;
@@ -205,7 +234,7 @@ export class IndexedSymbol extends L_Symbol {
     let out: IndexedSymbol = this;
 
     for (const freeFixed of freeFixedPairs) {
-      if (L_Symbol.areLiterallyIdentical(env, freeFixed[0], this.given)) {
+      if (L_Symbol.literallyIdentical(env, freeFixed[0], this.given)) {
         out = new IndexedSymbol(freeFixed[1], this.indexes);
       }
     }
