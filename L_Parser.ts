@@ -277,23 +277,21 @@ function isCurToken(tokens: string[], s: string | string[]) {
 // @end: when parsing local env, } is the end; when parsing source code, node is the end
 export function parseNodes(
   env: L_Env,
-  tokensArr: string[][],
+  tokens: string[],
   end: string | null
 ): L_Node[] {
   try {
     const out: L_Node[] = [];
 
-    for (const tokens of tokensArr) {
-      if (end === null) {
-        while (tokens.length !== 0) {
-          const node = parseNodesFromSingleExpression(env, tokens);
-          if (node !== undefined) out.push(...node);
-        }
-      } else {
-        while (tokens[0] !== end) {
-          const node = parseNodesFromSingleExpression(env, tokens);
-          if (node !== undefined) out.push(...node);
-        }
+    if (end === null) {
+      while (tokens.length !== 0) {
+        const node = parseNodesFromSingleExpression(env, tokens);
+        if (node !== undefined) out.push(...node);
+      }
+    } else {
+      while (tokens[0] !== end) {
+        const node = parseNodesFromSingleExpression(env, tokens);
+        if (node !== undefined) out.push(...node);
       }
     }
 
@@ -832,7 +830,7 @@ function localEnvParse(env: L_Env, tokens: string[]): L_Nodes.LocalEnvNode {
 
   try {
     skip(tokens, "{");
-    const nodes = parseNodes(env, splitBySemicolon(tokens), "}");
+    const nodes = parseNodes(env, tokens, "}");
     skip(tokens, "}");
     const out = new L_Nodes.LocalEnvNode(nodes);
     return out;
