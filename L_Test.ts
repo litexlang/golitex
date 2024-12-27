@@ -47,7 +47,7 @@ const exampleList: ExampleItem[] = [
   {
     name: "exist, have",
     code: [
-      "def p(x,y,z) ; let a,b ; know p(a,b, ?); p(a,b, ?); have c: p(a,b,?);",
+      "def p(x,y,z) ; let a,b ; know p(a,b, EXIST ); p(a,b, EXIST); have c: p(a,b,EXIST);",
     ],
     debug: true,
     print: true,

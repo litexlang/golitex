@@ -555,7 +555,7 @@ function parseToCheckFormula(
 
   const precedence = new Map<string, number>();
   precedence.set(L_Keywords.OrKeyword, 0);
-  precedence.set(L_Keywords.Ampersand, 1);
+  precedence.set(L_Keywords.AndKeyword, 1);
 
   let isT = true;
   if (isCurToken(tokens, "not")) {
@@ -564,7 +564,7 @@ function parseToCheckFormula(
   }
 
   let left: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
-  let curOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.Ampersand]);
+  let curOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.AndKeyword]);
   let curPrecedence = precedence.get(curOpt) as number;
 
   if (isCurToken(tokens, end)) {
@@ -578,18 +578,18 @@ function parseToCheckFormula(
     if (curOpt === L_Keywords.OrKeyword) {
       skip(tokens, end);
       return new L_Nodes.OrToCheckNode(left, right, isT);
-    } else if (curOpt === L_Keywords.Ampersand) {
+    } else if (curOpt === L_Keywords.AndKeyword) {
       skip(tokens, end);
       return new L_Nodes.AndToCheckNode(left, right, isT);
     }
   }
 
   while (!isCurToken(tokens, end)) {
-    let nextOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.Ampersand]);
+    let nextOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.AndKeyword]);
     let nextPrecedence = precedence.get(nextOpt) as number;
     if (curPrecedence > nextPrecedence) {
       // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-      if (curOpt === L_Keywords.Ampersand) {
+      if (curOpt === L_Keywords.AndKeyword) {
         left = new L_Nodes.AndToCheckNode(left, right, true);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
@@ -602,7 +602,7 @@ function parseToCheckFormula(
       right = new L_Nodes.AndToCheckNode(right, next, true);
       left = new L_Nodes.OrToCheckNode(left, right, isT);
     } else {
-      if (curOpt === L_Keywords.Ampersand) {
+      if (curOpt === L_Keywords.AndKeyword) {
         left = new L_Nodes.AndToCheckNode(left, right, isT);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         left = new L_Nodes.AndToCheckNode(left, next, isT);

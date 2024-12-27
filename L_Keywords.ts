@@ -63,9 +63,8 @@ export const L_Keywords = {
   IfVarPrefix: "~if",
   LiteralOptPrefix: "@",
   MacroPrefix: "MACRO_",
-  DefExist: "def_exist",
   IndexedSymbolKeyword: "at",
-  // TODO anonymous and any can not appear in some composites, so in the future I should make them stricter.
-  AnonymousSymbol: "?",
-  AnySymbol: "ANY", //* anySymbol can not be equal to anonymous, and it can equal to any other symbols
+  // TODO EXIST and any can not appear in some composites, which is weird e.g. know \frac{\frac{EXIST, EXIST}, 2} , so in the future I should make them stricter.
+  ExistSymbol: "EXIST",
+  AnySymbol: "ANY", //* anySymbol can not be equal to EXIST, and it can equal to any other symbols
 };

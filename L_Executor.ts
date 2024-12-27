@@ -407,47 +407,16 @@ function defLiteralOptExec(env: L_Env, node: L_Nodes.DefLiteralOptNode): L_Out {
   }
 }
 
-// function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
-//   try {
-//     // if (env.getDefExist(node.fact.optSymbol.name) === undefined) {
-//     //   throw Error();
-//     // }
-
-//     const out = L_Checker.checkFact(env, node.fact);
-//     if (out === L_Out.True) {
-//       for (const v of node.vars) {
-//         const ok = env.newSingletonVar(v.value);
-//         if (!ok) throw Error();
-//       }
-
-//       L_Memory.newFact(
-//         env,
-//         new L_Nodes.OptNode(
-//           node.fact.optSymbol,
-//           [...node.vars, ...node.vars],
-//           node.fact.isT,
-//           node.fact.checkVars
-//         )
-//       );
-//       return L_Out.True;
-//     } else {
-//       throw Error();
-//     }
-//   } catch {
-//     return L_Messages.L_ReportErr(env, haveExec, node);
-//   }
-// }
-
 function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
   try {
-    let anonymousSymbolNum = 0;
+    let existSymbolNum = 0;
     for (const v of node.fact.vars) {
       if (v instanceof L_Singleton) {
-        if (v.value === L_Keywords.AnonymousSymbol) anonymousSymbolNum += 1;
+        if (v.value === L_Keywords.ExistSymbol) existSymbolNum += 1;
       }
     }
 
-    if (node.vars.length !== anonymousSymbolNum) throw Error();
+    if (node.vars.length !== existSymbolNum) throw Error();
 
     const out = L_Checker.checkFact(env, node.fact);
 
@@ -459,11 +428,11 @@ function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
     }
 
     const newVars: L_Symbol[] = [];
-    let anonymousSymbolAlreadyGot = 0;
+    let existSymbolAlreadyGot = 0;
     for (const v of node.fact.vars) {
-      if (v instanceof L_Singleton && v.value === L_Keywords.AnonymousSymbol) {
-        newVars.push(node.vars[anonymousSymbolAlreadyGot]);
-        anonymousSymbolAlreadyGot += 1;
+      if (v instanceof L_Singleton && v.value === L_Keywords.ExistSymbol) {
+        newVars.push(node.vars[existSymbolAlreadyGot]);
+        existSymbolAlreadyGot += 1;
       } else {
         newVars.push(v);
       }

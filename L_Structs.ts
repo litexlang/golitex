@@ -65,7 +65,7 @@ export abstract class L_Symbol {
     expected: L_Symbol
   ): boolean {
     try {
-      //* ANY symbol is equal to any symbol, except anonymous
+      //* ANY symbol is equal to any symbol, except EXIST
       if (
         expected instanceof L_Singleton &&
         expected.value === L_Keywords.AnySymbol
@@ -73,7 +73,7 @@ export abstract class L_Symbol {
         if (
           !(
             given instanceof L_Singleton &&
-            given.value === L_Keywords.AnonymousSymbol
+            given.value === L_Keywords.ExistSymbol
           )
         ) {
           return true;
@@ -164,9 +164,10 @@ export class L_Singleton extends L_Symbol {
   //   return [this];
   // }
 
+  //* IMPORTANT METHOD
   subSymbolsDeclared(env: L_Env): boolean {
     return (
-      this.value === L_Keywords.AnonymousSymbol ||
+      this.value === L_Keywords.ExistSymbol ||
       this.value === L_Keywords.AnySymbol ||
       env.isSingletonDeclared(this.value) ||
       env.isLetsVar(this.value)
