@@ -74,12 +74,13 @@ const exampleList: ExampleItem[] = [
 {
   def_composite \\+{x,y}      ;
   let a,b;
-  def =(x,y);
+  def $ =(x,y);
   \\+{a,b} + b = a;
+  $=(a,b);
 }      
       `,
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {

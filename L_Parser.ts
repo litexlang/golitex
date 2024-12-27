@@ -735,6 +735,7 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
         case "is": {
           skip(tokens, "is");
           const optName = skip(tokens);
+          // skip(tokens, L_Keywords.FunctionalStructuredFactOptPrefix);
           const optSymbol = new L_Structs.L_OptSymbol(optName);
           const checkVars = checkVarsParse();
           const out = new OptNode(optSymbol, [var1], isT, checkVars);

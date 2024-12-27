@@ -2,18 +2,22 @@ import type { L_Env } from "./L_Env";
 import { L_Out, L_Symbol } from "./L_Structs";
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 
-export function reportExecL_Out(out: L_Out, node: L_Node): string {
+export function L_ReportL_Out(env: L_Env, out: L_Out, node: L_Node): L_Out {
+  let message = "";
+
   if (out === L_Out.True) {
-    return `<True> ${node}`;
+    message = `<True> ${node}`;
   } else if (out === L_Out.Unknown) {
-    return `<Unknown> ${node}`;
+    message = `<Unknown> ${node}`;
   } else if (out === L_Out.Error) {
-    return `<Error> ${node}`;
+    message = `<Error> ${node}`;
   } else if (out === L_Out.False) {
-    return `<False> ${node}`;
+    message = `<False> ${node}`;
+  } else {
+    message = `???`;
   }
 
-  return `???`;
+  return env.report(message);
 }
 
 export function lstLengthNotEql(

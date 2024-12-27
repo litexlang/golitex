@@ -7,6 +7,7 @@ import * as L_Nodes from "./L_Nodes";
 import * as L_Messages from "./L_Report";
 import { L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
+import { report } from "process";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -63,7 +64,6 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
       default:
         if (node instanceof L_Nodes.ToCheckNode) {
           const out = factExec(env, node);
-          env.report(L_Messages.reportExecL_Out(out, node));
           return out;
         }
 
@@ -179,7 +179,7 @@ function factExec(env: L_Env, toCheck: L_Nodes.ToCheckNode): L_Out {
       }
     }
 
-    return out;
+    return L_Messages.L_ReportL_Out(env, out, toCheck);
   } catch {
     return L_Messages.L_ReportErr(env, factExec, toCheck);
   }

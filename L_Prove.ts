@@ -12,12 +12,12 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
 
     for (const subNode of block) {
       const out = L_Exec(newEnv, subNode);
-      env.report(L_Report.reportExecL_Out(out, toProve));
       if (out === L_Out.Error) {
         newEnv.getMessages().forEach((e) => env.report(e));
         env.report(`Errors: Failed to execute ${subNode}`);
         return L_Out.Error;
       }
+      return L_Report.L_ReportL_Out(env, out, toProve);
     }
 
     const ok = toProve.varsDeclared(env);
