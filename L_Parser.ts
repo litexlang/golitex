@@ -301,6 +301,7 @@ const KeywordFunctionMap: {
   include: includeParse,
   def_literal_operator: defLiteralOperatorParse,
   let_formal: letFormalParse,
+  let_alias: letAliasParse,
 };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
@@ -369,7 +370,7 @@ function knowParse(env: L_Env, tokens: string[]): L_Nodes.KnowNode {
   }
 }
 
-function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode | L_Out {
+function letParse(env: L_Env, tokens: string[]): L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -440,10 +441,7 @@ function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode | L_Out {
   }
 }
 
-function letFormalParse(
-  env: L_Env,
-  tokens: string[]
-): L_Nodes.LetFormalSymbolNode | L_Out {
+function letFormalParse(env: L_Env, tokens: string[]): L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -972,7 +970,7 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   }
 }
 
-function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode | L_Out {
+function defParse(env: L_Env, tokens: string[]): L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -1093,10 +1091,7 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode | L_Out {
 // }
 
 // --------------------------------------------------------
-export function defCompositeParse(
-  env: L_Env,
-  tokens: string[]
-): L_Nodes.DefCompositeNode | L_Out {
+export function defCompositeParse(env: L_Env, tokens: string[]): L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -1307,7 +1302,7 @@ export function letsParse(env: L_Env, tokens: string[]): L_Nodes.LetsNode {
       return new L_Nodes.LetsNode(name, regex, []);
     }
   } catch (error) {
-    L_ParseErr(env, tokens, isFormParse, index, start);
+    L_ParseErr(env, tokens, letsParse, index, start);
     throw error;
   }
 }
@@ -1332,7 +1327,7 @@ export function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
 
     return out;
   } catch (error) {
-    L_ParseErr(env, tokens, isFormParse, index, start);
+    L_ParseErr(env, tokens, macroParse, index, start);
     throw error;
   }
 }
@@ -1359,7 +1354,7 @@ export function includeParse(
 
     return out;
   } catch (error) {
-    L_ParseErr(env, tokens, isFormParse, index, start);
+    L_ParseErr(env, tokens, includeParse, index, start);
     throw error;
   }
 }
@@ -1406,7 +1401,7 @@ export function defLiteralOperatorParse(
       return new L_Nodes.DefLiteralOptNode(name, vars, facts, path, func);
     }
   } catch (error) {
-    L_ParseErr(env, tokens, isFormParse, index, start);
+    L_ParseErr(env, tokens, defLiteralOperatorParse, index, start);
     throw error;
   }
 }
@@ -1447,8 +1442,33 @@ export function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
         return singletonParse(env, tokens);
       }
     } catch (error) {
-      L_ParseErr(env, tokens, symbolParse, index, start);
+      L_ParseErr(env, tokens, singleSymbolParse, index, start);
       throw error;
     }
+  }
+}
+
+export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Keywords.LetAlias);
+    const name = singletonParse(env, tokens);
+    const toBeAliased = symbolParse(env, tokens);
+
+    const node = new L_Nodes.LetAliasNode(name, toBeAliased);
+
+    const out = letAliasExec(env, node);
+    return out;
+
+    function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
+      const ok = env.newAlias(node.name, node.toBeAliased);
+      if (!ok) return L_Out.Error;
+      else return L_Out.True;
+    }
+  } catch (error) {
+    L_ParseErr(env, tokens, letAliasParse, index, start);
+    throw error;
   }
 }

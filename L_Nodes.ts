@@ -606,3 +606,9 @@ export class DefLiteralOptNode extends L_Node {
 }
 
 export class DefFunctionalNode extends L_Node {}
+
+export class LetAliasNode extends L_Node {
+  constructor(public name: L_Singleton, public toBeAliased: L_Symbol) {
+    super();
+  }
+}

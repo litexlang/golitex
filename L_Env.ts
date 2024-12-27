@@ -249,6 +249,7 @@ export class L_Env {
     }
   }
 
+  //* A VERY IMPORTANT FUNCTION. IT GUARANTEES SAFETY.
   isSingletonDeclared(fix: string): boolean {
     return (
       this.isPureSingletonDeclared(fix) ||
@@ -258,8 +259,13 @@ export class L_Env {
     );
   }
 
-  isAliasDeclared(name: string) {
-    return this.getAlias(name) !== undefined;
+  isAliasDeclared(name: string): boolean {
+    if (this.getAlias(name) !== undefined) {
+      return true;
+    } else {
+      if (!this.parent) return false;
+      else return this.parent.isAliasDeclared(name);
+    }
   }
 
   // two ways of checking : 1. it's letsVar name 2. it satisfies regex of a var

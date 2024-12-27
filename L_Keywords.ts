@@ -71,4 +71,5 @@ export const L_Keywords = {
   RightFactLogicalFormulaSig: "\\?]",
   FunctionalStructuredFactOptPrefix: "$",
   LetFormal: "let_formal",
+  LetAlias: "let_alias",
 };
