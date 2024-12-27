@@ -42,7 +42,7 @@ function indexedSymbolParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.indexedSymbolKeyword);
+    skip(tokens, L_Keywords.IndexedSymbolKeyword);
     skip(tokens, "{");
     const symbol = symbolParse(env, tokens);
     const indexes: number[] = [];
@@ -130,7 +130,7 @@ function literalOptParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   const index = tokens.length;
 
   try {
-    const name = skip(tokens).slice(L_Keywords.macroPrefix.length); // the # at the beginning is abandoned
+    const name = skip(tokens).slice(L_Keywords.MacroPrefix.length); // the # at the beginning is abandoned
     skip(tokens, "{");
     const parameters: L_Structs.L_Symbol[] = [];
     while (!isCurToken(tokens, "}")) {
@@ -208,9 +208,9 @@ function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
       return slashCompositeParse(env, tokens);
     } else if (tokens[0] === L_Keywords.DollarKeyword) {
       return braceCompositeParse(env, tokens);
-    } else if (tokens[0].startsWith(L_Keywords.literalOptPrefix)) {
+    } else if (tokens[0].startsWith(L_Keywords.LiteralOptPrefix)) {
       return literalOptParse(env, tokens);
-    } else if (tokens[0] === L_Keywords.indexedSymbolKeyword) {
+    } else if (tokens[0] === L_Keywords.IndexedSymbolKeyword) {
       return indexedSymbolParse(env, tokens);
     } else {
       return singletonParse(env, tokens);
@@ -555,7 +555,7 @@ function parseToCheckFormula(
 
   const precedence = new Map<string, number>();
   precedence.set(L_Keywords.OrKeyword, 0);
-  precedence.set(L_Keywords.AndKeyword, 1);
+  precedence.set(L_Keywords.Ampersand, 1);
 
   let isT = true;
   if (isCurToken(tokens, "not")) {
@@ -564,7 +564,7 @@ function parseToCheckFormula(
   }
 
   let left: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
-  let curOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.AndKeyword]);
+  let curOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.Ampersand]);
   let curPrecedence = precedence.get(curOpt) as number;
 
   if (isCurToken(tokens, end)) {
@@ -578,18 +578,18 @@ function parseToCheckFormula(
     if (curOpt === L_Keywords.OrKeyword) {
       skip(tokens, end);
       return new L_Nodes.OrToCheckNode(left, right, isT);
-    } else if (curOpt === L_Keywords.AndKeyword) {
+    } else if (curOpt === L_Keywords.Ampersand) {
       skip(tokens, end);
       return new L_Nodes.AndToCheckNode(left, right, isT);
     }
   }
 
   while (!isCurToken(tokens, end)) {
-    let nextOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.AndKeyword]);
+    let nextOpt = skip(tokens, [L_Keywords.OrKeyword, L_Keywords.Ampersand]);
     let nextPrecedence = precedence.get(nextOpt) as number;
     if (curPrecedence > nextPrecedence) {
       // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-      if (curOpt === L_Keywords.AndKeyword) {
+      if (curOpt === L_Keywords.Ampersand) {
         left = new L_Nodes.AndToCheckNode(left, right, true);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
@@ -602,7 +602,7 @@ function parseToCheckFormula(
       right = new L_Nodes.AndToCheckNode(right, next, true);
       left = new L_Nodes.OrToCheckNode(left, right, isT);
     } else {
-      if (curOpt === L_Keywords.AndKeyword) {
+      if (curOpt === L_Keywords.Ampersand) {
         left = new L_Nodes.AndToCheckNode(left, right, isT);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         left = new L_Nodes.AndToCheckNode(left, next, isT);
@@ -766,7 +766,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     while (!isCurToken(tokens, [":", "{"])) {
       const singleton = singletonParse(env, tokens);
       const newSingleton = new L_Structs.L_Singleton(
-        L_Keywords.ifVarPrefix + singleton.value
+        L_Keywords.IfVarPrefix + singleton.value
       );
       vars.push(newSingleton);
       freeFixPairs.push([singleton, newSingleton]);
@@ -885,8 +885,8 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
     skip(tokens, L_Keywords.DefKeywords);
 
     let commutative = false;
-    if (isCurToken(tokens, L_Keywords.commutative)) {
-      skip(tokens, L_Keywords.commutative);
+    if (isCurToken(tokens, L_Keywords.Commutative)) {
+      skip(tokens, L_Keywords.Commutative);
       commutative = true;
     }
 
@@ -1145,7 +1145,7 @@ export function letsParse(env: L_Env, tokens: string[]): L_Nodes.LetsNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.lets);
+    skip(tokens, L_Keywords.Lets);
     const name = skip(tokens);
     const regex = new RegExp(skipString(tokens));
     if (isCurToken(tokens, ":")) {
@@ -1167,7 +1167,7 @@ export function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.macro);
+    skip(tokens, L_Keywords.Macro);
     const name = skip(tokens);
 
     skip(tokens, '"');
@@ -1195,7 +1195,7 @@ export function includeParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.include);
+    skip(tokens, L_Keywords.Include);
 
     skip(tokens, '"');
     let path: string = "";
@@ -1222,7 +1222,7 @@ export function defLiteralOperatorParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.def_literal_operator);
+    skip(tokens, L_Keywords.DefLiteralOperator);
     const name = skip(tokens);
     skip(tokens, "{");
     const path = skipString(tokens);

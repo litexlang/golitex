@@ -443,7 +443,7 @@ function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
     let anonymousSymbolNum = 0;
     for (const v of node.fact.vars) {
       if (v instanceof L_Singleton) {
-        if (v.value === L_Keywords.anonymousSymbol) anonymousSymbolNum += 1;
+        if (v.value === L_Keywords.AnonymousSymbol) anonymousSymbolNum += 1;
       }
     }
 
@@ -461,7 +461,7 @@ function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
     const newVars: L_Symbol[] = [];
     let anonymousSymbolAlreadyGot = 0;
     for (const v of node.fact.vars) {
-      if (v instanceof L_Singleton && v.value === L_Keywords.anonymousSymbol) {
+      if (v instanceof L_Singleton && v.value === L_Keywords.AnonymousSymbol) {
         newVars.push(node.vars[anonymousSymbolAlreadyGot]);
         anonymousSymbolAlreadyGot += 1;
       } else {

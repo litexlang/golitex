@@ -68,12 +68,12 @@ export abstract class L_Symbol {
       //* ANY symbol is equal to any symbol, except anonymous
       if (
         expected instanceof L_Singleton &&
-        expected.value === L_Keywords.anySymbol
+        expected.value === L_Keywords.AnySymbol
       ) {
         if (
           !(
             given instanceof L_Singleton &&
-            given.value === L_Keywords.anonymousSymbol
+            given.value === L_Keywords.AnonymousSymbol
           )
         ) {
           return true;
@@ -166,8 +166,8 @@ export class L_Singleton extends L_Symbol {
 
   subSymbolsDeclared(env: L_Env): boolean {
     return (
-      this.value === L_Keywords.anonymousSymbol ||
-      this.value === L_Keywords.anySymbol ||
+      this.value === L_Keywords.AnonymousSymbol ||
+      this.value === L_Keywords.AnySymbol ||
       env.isSingletonDeclared(this.value) ||
       env.isLetsVar(this.value)
     );
@@ -217,7 +217,7 @@ export class IndexedSymbol extends L_Symbol {
   }
 
   toString() {
-    return `${L_Keywords.indexedSymbolKeyword}(${this.given}, ${this.indexes})`;
+    return `${L_Keywords.IndexedSymbolKeyword}(${this.given}, ${this.indexes})`;
   }
 }
 

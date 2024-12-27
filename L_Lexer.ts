@@ -86,7 +86,7 @@ export function L_Scan(env: L_Env, text: string): string[] {
 
   for (let i = tokens.length - 1; i >= 0; i--) {
     const token = tokens[i];
-    if (token.startsWith(L_Keywords.macroPrefix)) {
+    if (token.startsWith(L_Keywords.MacroPrefix)) {
       const searchKey = token.slice(1);
       const out = env.getMacro(searchKey);
       if (out === undefined) {
