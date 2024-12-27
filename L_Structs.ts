@@ -20,7 +20,7 @@ export abstract class L_Symbol {
   }
 
   // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol. meanwhile, whether elements of composite are the same does not matter. e.g. \frac{1,2} and \frac{a,b} does not matter.
-  static haveMatchingSymbolStructure(
+  static structureIdentical(
     env: L_Env,
     expected: L_Symbol,
     candidate: L_Symbol
@@ -34,9 +34,7 @@ export abstract class L_Symbol {
         candidate.values.length === expected.values.length
       ) {
         for (const [i, v] of candidate.values.entries()) {
-          if (
-            !L_Symbol.haveMatchingSymbolStructure(env, v, expected.values[i])
-          ) {
+          if (!L_Symbol.structureIdentical(env, v, expected.values[i])) {
             return false;
           }
         }
@@ -54,7 +52,6 @@ export abstract class L_Symbol {
     expects: OptNode
   ): boolean {
     if (given.optSymbol.name !== expects.optSymbol.name) return false;
-
     return L_Symbol.allSymbolsLiterallyIdentical(env, given.vars, expects.vars);
   }
 
@@ -99,20 +96,13 @@ export abstract class L_Symbol {
           return false;
         }
 
-        // vars of composite symbol must be equal
         if (given.values.length !== expected.values.length) {
           return false;
         } else {
           for (let i = 0; i < given.values.length; i++) {
-            if (
-              !L_Symbol.literallyIdentical(
-                env,
-                given.values[i],
-                expected.values[i]
-              )
-            ) {
-              return false;
-            }
+            const giv = given.values[i];
+            const exp = expected.values[i];
+            if (!L_Symbol.literallyIdentical(env, giv, exp)) return false;
           }
           return true;
         }
@@ -126,6 +116,7 @@ export abstract class L_Symbol {
       given: L_Symbol,
       expected: L_Symbol
     ): boolean {
+      // Exist can not be proved by any. it can only be proved by exist.
       if (L_Symbol.isAny(expected) && !L_Symbol.isExist(given)) return true;
       if (L_Symbol.isAny(given) && !L_Symbol.isExist(expected)) return true;
 
@@ -359,8 +350,7 @@ export class L_Composite extends L_Symbol {
     env: L_Env,
     fixed: L_Composite
   ): L_Composite | undefined {
-    if (!L_Symbol.haveMatchingSymbolStructure(env, this, fixed))
-      return undefined;
+    if (!L_Symbol.structureIdentical(env, this, fixed)) return undefined;
 
     const newValues: L_Symbol[] = [];
     for (const [i, v] of this.values.entries()) {

@@ -1153,12 +1153,6 @@ export function isPropertyParse(
     throw error;
   }
 }
-export function orParse(
-  env: L_Env,
-  tokens: string[]
-): L_Nodes.BuiltinCheckNode {
-  throw Error();
-}
 
 export function isFormParse(
   env: L_Env,
@@ -1285,7 +1279,7 @@ function usePrecedenceToParseComposite(
   }
 }
 
-export function letsParse(env: L_Env, tokens: string[]): L_Nodes.LetsNode {
+export function letsParse(env: L_Env, tokens: string[]): L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -1293,17 +1287,35 @@ export function letsParse(env: L_Env, tokens: string[]): L_Nodes.LetsNode {
     skip(tokens, L_Keywords.Lets);
     const name = skip(tokens);
     const regex = new RegExp(skipString(tokens));
+
+    let node: L_Nodes.LetsNode | undefined = undefined;
     if (isCurToken(tokens, ":")) {
       skip(tokens, ":");
       const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
-      return new L_Nodes.LetsNode(name, regex, facts);
+      node = new L_Nodes.LetsNode(name, regex, facts);
     } else {
       skip(tokens, L_Keywords.L_End);
-      return new L_Nodes.LetsNode(name, regex, []);
+      node = new L_Nodes.LetsNode(name, regex, []);
     }
+
+    const out = letsExec(env, node);
+    return L_Report.L_ReportL_Out(env, out, node);
   } catch (error) {
     L_ParseErr(env, tokens, letsParse, index, start);
     throw error;
+  }
+
+  function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
+    try {
+      env.newLetsSymbol(node);
+      for (const fact of node.facts) {
+        newFact(env, fact);
+      }
+      env.report(`<lets OK!> ${node.toString()}`);
+      return L_Out.True;
+    } catch {
+      return L_Report.L_ReportErr(env, letsExec, node);
+    }
   }
 }
 

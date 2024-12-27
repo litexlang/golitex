@@ -34,6 +34,8 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
 
       // case "LetNode":
       // return letExec(env, node as L_Nodes.LetNode);
+      // case "LetsNode":
+      //   return letsExec(env, node as L_Nodes.LetsNode);
       case "KnowNode":
         return knowExec(env, node as L_Nodes.KnowNode);
       case "ProveNode":
@@ -44,8 +46,6 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return localEnvExec(env, node as L_Nodes.LocalEnvNode);
       case "SpecialNode":
         return specialExec(env, node as L_Nodes.SpecialNode);
-      case "LetsNode":
-        return letsExec(env, node as L_Nodes.LetsNode);
       case "MacroNode":
         return macroExec(env, node as L_Nodes.MacroNode);
       case "IncludeNode":
@@ -218,18 +218,18 @@ function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
   }
 }
 
-function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
-  try {
-    env.newLetsSymbol(node);
-    for (const fact of node.facts) {
-      L_Memory.newFact(env, fact);
-    }
-    env.report(`<lets OK!> ${node.toString()}`);
-    return L_Out.True;
-  } catch {
-    return L_Report.L_ReportErr(env, letsExec, node);
-  }
-}
+// function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
+//   try {
+//     env.newLetsSymbol(node);
+//     for (const fact of node.facts) {
+//       L_Memory.newFact(env, fact);
+//     }
+//     env.report(`<lets OK!> ${node.toString()}`);
+//     return L_Out.True;
+//   } catch {
+//     return L_Report.L_ReportErr(env, letsExec, node);
+//   }
+// }
 
 function proveContradictExec(
   env: L_Env,
