@@ -1460,11 +1460,24 @@ export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
     const node = new L_Nodes.LetAliasNode(name, toBeAliased);
 
     const out = letAliasExec(env, node);
-    return out;
+    return L_Report.L_ReportL_Out(env, out, node);
 
     function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
-      const ok = env.newAlias(node.name, node.toBeAliased);
-      if (!ok) return L_Out.Error;
+      let ok = node.toBeAliased.subSymbolsDeclared(env);
+      if (!ok)
+        return L_ReportErr(
+          env,
+          letAliasExec,
+          `${node.toBeAliased} undeclared.`
+        );
+
+      ok = env.newAlias(node.name, node.toBeAliased);
+      if (!ok)
+        return L_ReportErr(
+          env,
+          letAliasExec,
+          `declaration of ${node.name} failed`
+        );
       else return L_Out.True;
     }
   } catch (error) {

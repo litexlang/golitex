@@ -611,4 +611,8 @@ export class LetAliasNode extends L_Node {
   constructor(public name: L_Singleton, public toBeAliased: L_Symbol) {
     super();
   }
+
+  toString() {
+    return `[let_alias] ${this.name} ${this.toBeAliased}`;
+  }
 }
