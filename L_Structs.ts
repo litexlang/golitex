@@ -5,6 +5,9 @@ import { checkFact } from "./L_Checker";
 import { L_Keywords } from "./L_Keywords";
 
 export abstract class L_Symbol {
+  abstract subSymbolsDeclared(env: L_Env): boolean;
+  abstract fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol;
+
   static isExistSymbol(symbol: L_Symbol): boolean {
     return (
       symbol instanceof L_Singleton && symbol.value === L_Keywords.ExistSymbol
@@ -16,8 +19,6 @@ export abstract class L_Symbol {
       symbol instanceof L_Singleton && symbol.value === L_Keywords.AnySymbol
     );
   }
-
-  // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol. meanwhile, whether elements of composite are the same does not matter. e.g. \frac{1,2} and \frac{a,b} does not matter.
 
   static symbolArrLiterallyIdentical(
     env: L_Env,
@@ -116,10 +117,6 @@ export abstract class L_Symbol {
       return false;
     }
   }
-
-  abstract subSymbolsDeclared(env: L_Env): boolean;
-
-  abstract fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol;
 }
 
 // Used for TS API FOR USERS

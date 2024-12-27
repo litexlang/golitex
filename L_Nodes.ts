@@ -14,13 +14,10 @@ export abstract class ToCheckNode extends L_Node {
 
   // called by L_Memory
   abstract varsDeclared(env: L_Env): boolean;
-
   // called by checker
   abstract fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode;
-
   // called by prove_by_contradiction
   abstract copyWithIsTReverse(): ToCheckNode;
-
   // called by "using known fact to check given fact. when doing so, get all root opts and filter opt with the same name."
   abstract getRootOptNodes(): [OptNode, ToCheckNode[]][];
 
@@ -53,14 +50,6 @@ export class LogicNode extends ToCheckNode {
     super(isT);
   }
 
-  getRootOptNodes(): [OptNode, ToCheckNode[]][] {
-    const roots = this.onlyIfs.map((e) => e.getRootOptNodes()).flat();
-    for (const root of roots) {
-      root[1] = [this, ...root[1]];
-    }
-    return roots;
-  }
-
   static makeFreeFixPairs(
     env: L_Env,
     fixed: L_Symbol[],
@@ -72,6 +61,14 @@ export class LogicNode extends ToCheckNode {
     }
 
     return out;
+  }
+
+  getRootOptNodes(): [OptNode, ToCheckNode[]][] {
+    const roots = this.onlyIfs.map((e) => e.getRootOptNodes()).flat();
+    for (const root of roots) {
+      root[1] = [this, ...root[1]];
+    }
+    return roots;
   }
 
   varsDeclared(env: L_Env): boolean {

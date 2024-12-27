@@ -1298,7 +1298,7 @@ export function letsParse(env: L_Env, tokens: string[]): L_Out {
     }
 
     const out = letsExec(env, node);
-    return L_Report.L_ReportL_Out(env, out, node);
+    return L_Report.reportL_Out(env, out, node);
   } catch (error) {
     L_ParseErr(env, tokens, letsParse, index, start);
     throw error;
@@ -1471,7 +1471,7 @@ export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
     const node = new L_Nodes.LetAliasNode(name, toBeAliased);
 
     const out = letAliasExec(env, node);
-    return L_Report.L_ReportL_Out(env, out, node);
+    return L_Report.reportL_Out(env, out, node);
 
     function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
       let ok = node.toBeAliased.subSymbolsDeclared(env);

@@ -171,7 +171,7 @@ function factExec(env: L_Env, toCheck: L_Nodes.ToCheckNode): L_Out {
       }
     }
 
-    return L_Report.L_ReportL_Out(env, out, toCheck);
+    return L_Report.reportL_Out(env, out, toCheck);
   } catch {
     return L_Report.L_ReportErr(env, factExec, toCheck);
   }

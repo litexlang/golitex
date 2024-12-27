@@ -2,7 +2,7 @@ import type { L_Env } from "./L_Env";
 import { L_Out, L_Symbol } from "./L_Structs";
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 
-export function L_ReportL_Out(env: L_Env, out: L_Out, node: L_Node): L_Out {
+export function reportL_Out(env: L_Env, out: L_Out, node: L_Node): L_Out {
   let message = "";
 
   if (out === L_Out.True) {
