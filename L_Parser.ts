@@ -201,30 +201,6 @@ function braceCompositeParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   }
 }
 
-function singleSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
-  const start = tokens[0];
-  const index = tokens.length;
-
-  // TODO Later, there should be parser based on precedence. And there does not  need ((1 * 4) + 4) = 8, there is only $ 1 * 4 + 4 = 8 $
-
-  try {
-    if (tokens[0] === L_Keywords.SlashKeyword) {
-      return slashCompositeParse(env, tokens);
-    } else if (tokens[0] === L_Keywords.DollarKeyword) {
-      return braceCompositeParse(env, tokens);
-    } else if (tokens[0].startsWith(L_Keywords.LiteralOptPrefix)) {
-      return literalOptParse(env, tokens);
-    } else if (tokens[0] === L_Keywords.IndexedSymbolKeyword) {
-      return indexedSymbolParse(env, tokens);
-    } else {
-      return singletonParse(env, tokens);
-    }
-  } catch (error) {
-    L_ParseErr(env, tokens, symbolParse, index, start);
-    throw error;
-  }
-}
-
 function skip(tokens: string[], s: string | string[] = ""): string {
   try {
     if (typeof s === "string") {
@@ -439,7 +415,7 @@ function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode | L_Out {
     try {
       // examine whether some vars are already declared. if not, declare them.
       for (const e of node.vars) {
-        const ok = env.newSingletonVar(e);
+        const ok = env.newLetSymbol(e);
         if (!ok) return L_Out.Error;
       }
 
@@ -472,7 +448,7 @@ function letFormalParse(
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.LetKeyword) as string;
+    skip(tokens, L_Keywords.LetFormal);
 
     const vars: string[] = [];
     while (![L_Keywords.L_End, , ":"].includes(tokens[0])) {
@@ -512,7 +488,7 @@ function letFormalParse(
   function letFormalExec(env: L_Env, node: L_Nodes.LetFormalSymbolNode): L_Out {
     try {
       for (const e of node.vars) {
-        const ok = env.newFormalSymbolVar(e);
+        const ok = env.newLetFormalSymbol(e);
         if (!ok) return L_Out.Error;
       }
 
@@ -569,7 +545,7 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
     skip(tokens, "}");
 
     if (byContradict) {
-      const contradict = optParse(env, tokens, true);
+      const contradict = optFactParse(env, tokens, true);
       skip(tokens, L_Keywords.L_End);
       return new L_Nodes.ProveContradictNode(toProve, block, contradict);
     } else {
@@ -600,7 +576,7 @@ function formulaSubNodeParse(
         // skip(tokens, ")");
         return out;
       } else {
-        return optParse(env, tokens, true);
+        return optFactParse(env, tokens, true);
       }
     } catch (error) {
       L_ParseErr(env, tokens, formulaSubNodeParse, factIndex, factStart);
@@ -756,7 +732,7 @@ function parsePrimitiveFact(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
     out = logicParse(env, tokens);
     out.isT = isT ? out.isT : !out.isT;
   } else {
-    out = optParse(env, tokens, true);
+    out = optFactParse(env, tokens, true);
     out.isT = isT;
   }
 
@@ -793,30 +769,18 @@ function factsArrParse(
   }
 }
 
-function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
+function optFactParse(
+  env: L_Env,
+  tokens: string[],
+  parseNot: boolean
+): OptNode {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    // TODO use builtin to implement not
     let isT = true;
 
-    // if (tokens.length >= 2 && tokens[1] === "(") {
-    //   //TODO CheckVars not implemented
-
-    //   const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
-    //   const vars = arrParse<L_Structs.L_Symbol>(
-    //     env,
-    //     tokens,
-    //     symbolParse,
-    //     "(",
-    //     ")"
-    //   );
-
-    //   let checkVars = checkVarsParse();
-
-    //   return new OptNode(optSymbol, vars, isT, checkVars);
-    // }
+    //TODO CheckVars not implemented
 
     // * If The opt starts with $, then it's an opt written like a function
     if (isCurToken(tokens, L_Keywords.FunctionalStructuredFactOptPrefix)) {
@@ -851,7 +815,7 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
       }
     }
   } catch (error) {
-    L_ParseErr(env, tokens, optParse, index, start);
+    L_ParseErr(env, tokens, optFactParse, index, start);
     throw error;
   }
 
@@ -972,7 +936,7 @@ function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
       ":",
       true
     );
-    const fact = optParse(env, tokens, false);
+    const fact = optFactParse(env, tokens, false);
 
     return new L_Nodes.HaveNode(vars, fact);
   } catch (error) {
@@ -1023,7 +987,7 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode | L_Out {
 
     // skip(tokens, L_Keywords.FunctionalStructuredFactOptPrefix);
 
-    const opt: OptNode = optParse(env, tokens, false);
+    const opt: OptNode = optFactParse(env, tokens, false);
 
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
@@ -1462,5 +1426,29 @@ export function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
   } catch (error) {
     L_ParseErr(env, tokens, isFormParse, index, start);
     throw error;
+  }
+
+  function singleSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
+    const start = tokens[0];
+    const index = tokens.length;
+
+    // TODO Later, there should be parser based on precedence. And there does not  need ((1 * 4) + 4) = 8, there is only $ 1 * 4 + 4 = 8 $
+
+    try {
+      if (tokens[0] === L_Keywords.SlashKeyword) {
+        return slashCompositeParse(env, tokens);
+      } else if (tokens[0] === L_Keywords.DollarKeyword) {
+        return braceCompositeParse(env, tokens);
+      } else if (tokens[0].startsWith(L_Keywords.LiteralOptPrefix)) {
+        return literalOptParse(env, tokens);
+      } else if (tokens[0] === L_Keywords.IndexedSymbolKeyword) {
+        return indexedSymbolParse(env, tokens);
+      } else {
+        return singletonParse(env, tokens);
+      }
+    } catch (error) {
+      L_ParseErr(env, tokens, symbolParse, index, start);
+      throw error;
+    }
   }
 }

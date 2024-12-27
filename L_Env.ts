@@ -5,11 +5,11 @@ import * as L_Structs from "./L_Structs";
 export class L_Env {
   private parent: L_Env | undefined = undefined;
   private messages: string[] = [];
-  private singletons = new Set<string>();
+  private pureSingletons = new Set<string>();
   private defs = new Map<string, L_Nodes.DefNode>();
   private facts = new Map<string, L_Structs.L_KnownFactReq[]>();
   private composites = new Map<string, L_Nodes.DefCompositeNode>();
-  private letsVars = new Map<string, L_Nodes.LetsNode>();
+  private regexSingletons = new Map<string, L_Nodes.LetsNode>();
   private macros = new Map<string, L_Nodes.MacroNode>();
   private includes: string[] = [];
   private literalOperators = new Map<string, L_Nodes.DefLiteralOptNode>();
@@ -106,8 +106,8 @@ export class L_Env {
   clear() {
     this.parent = undefined;
     this.messages = [];
-    this.singletons = new Set<string>();
-    this.letsVars = new Map<string, L_Nodes.LetsNode>();
+    this.pureSingletons = new Set<string>();
+    this.regexSingletons = new Map<string, L_Nodes.LetsNode>();
     this.defs = new Map<string, L_Nodes.DefNode>();
   }
 
@@ -184,36 +184,36 @@ export class L_Env {
   //   return true;
   // }
 
-  newLetsVars(letsNode: L_Nodes.LetsNode) {
+  newLetsSymbol(letsNode: L_Nodes.LetsNode) {
     if (this.isSingletonDeclared(letsNode.name)) {
       return L_ReportBoolErr(
         this,
-        this.newLetsVars,
+        this.newLetsSymbol,
         `letsVar ${letsNode.name} already declared`
       );
     }
-    this.letsVars.set(letsNode.name, letsNode);
+    this.regexSingletons.set(letsNode.name, letsNode);
   }
 
-  newSingletonVar(fix: string): boolean {
+  newLetSymbol(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.isSingletonDeclared(fix)) {
       return L_ReportBoolErr(
         this,
-        this.newSingletonVar,
+        this.newLetSymbol,
         `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
-    this.singletons.add(fix);
+    this.pureSingletons.add(fix);
     return true;
   }
 
-  newFormalSymbolVar(fix: string): boolean {
+  newLetFormalSymbol(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.isSingletonDeclared(fix)) {
       return L_ReportBoolErr(
         this,
-        this.newFormalSymbolVar,
+        this.newLetFormalSymbol,
         `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
@@ -229,11 +229,11 @@ export class L_Env {
 
   // two ways of checking : 1. it's letsVar name 2. it satisfies regex of a var
   isLetsVar(varStr: string): boolean {
-    if (this.letsVars.has(varStr)) {
+    if (this.regexSingletons.has(varStr)) {
       return true;
     }
 
-    for (const knownLet of this.letsVars.values()) {
+    for (const knownLet of this.regexSingletons.values()) {
       if (knownLet.regex.test(varStr)) return true;
     }
 
@@ -252,7 +252,7 @@ export class L_Env {
   }
 
   isPureSingletonDeclared(key: string): boolean {
-    if (this.singletons.has(key) || this.isLetsVar(key)) {
+    if (this.pureSingletons.has(key) || this.isLetsVar(key)) {
       return true;
     } else {
       if (!this.parent) return false;
@@ -320,7 +320,7 @@ export class L_Env {
 
   toJSON() {
     return {
-      vars: Array.from(this.singletons),
+      vars: Array.from(this.pureSingletons),
       defs: Object.fromEntries(this.defs),
       facts: Object.fromEntries(this.facts),
     };
@@ -328,11 +328,11 @@ export class L_Env {
 
   getLetsVar(varStr: string): L_Nodes.LetsNode | undefined {
     if (this.isLetsVar(varStr)) {
-      const out = this.letsVars.get(varStr);
+      const out = this.regexSingletons.get(varStr);
       if (out !== undefined) {
         return out;
       } else {
-        for (const knownLet of this.letsVars.values()) {
+        for (const knownLet of this.regexSingletons.values()) {
           if (knownLet.regex.test(varStr)) return knownLet;
         }
 

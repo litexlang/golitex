@@ -220,7 +220,7 @@ function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
 
 function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
   try {
-    env.newLetsVars(node);
+    env.newLetsSymbol(node);
     for (const fact of node.facts) {
       L_Memory.newFact(env, fact);
     }
@@ -318,7 +318,7 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
     for (const v of toProve.vars) {
       //TODO how to composite?
       if (v instanceof L_Singleton) {
-        ok = env.newSingletonVar(v.value);
+        ok = env.newLetSymbol(v.value);
         if (!ok) {
           L_Report.L_ReportErr(
             env,
@@ -418,7 +418,7 @@ function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
     if (out !== L_Out.True) return out;
 
     for (const v of node.vars) {
-      const ok = env.newSingletonVar(v.value);
+      const ok = env.newLetSymbol(v.value);
       if (!ok) throw Error();
     }
 

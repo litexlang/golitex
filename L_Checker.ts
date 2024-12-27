@@ -84,7 +84,7 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     const newEnv = new L_Env(env);
     for (const v of toCheck.vars) {
       if (v instanceof L_Singleton) {
-        newEnv.newSingletonVar(v.value);
+        newEnv.newLetSymbol(v.value);
       } else {
         env.report(`vars in if-expr must be singleton, got ${v}`);
         throw Error();

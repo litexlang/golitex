@@ -64,7 +64,7 @@ export class LogicNode extends ToCheckNode {
       if (v.subSymbolsDeclared(newEnv)) {
         return L_VarsInOptDoubleDeclErr(env, this.varsDeclared, v);
       }
-      newEnv.newSingletonVar(v.value);
+      newEnv.newLetSymbol(v.value);
     }
 
     for (const req of this.req) {

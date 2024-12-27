@@ -82,13 +82,19 @@ const exampleList: ExampleItem[] = [
 }      
       `,
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
     name: "$factual_opt",
     code: ["def $p(x); let y: $p(y);"],
     debug: false,
+    print: true,
+  },
+  {
+    name: "let_formal",
+    code: ["let_formal x; def $p(x); $p(x);"],
+    debug: true,
     print: true,
   },
 ];
