@@ -182,7 +182,7 @@ export class OptNode extends ToCheckNode {
     const mainPart =
       this.optSymbol.name +
       `(${this.vars.map((e) => e.toString()).join(", ")})`;
-    const notPart = !this.isT ? "[not] " : "";
+    const notPart = !this.isT ? "[not] $" : "$";
     const checkVarsStr =
       this.checkVars === undefined
         ? ""

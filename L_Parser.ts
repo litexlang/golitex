@@ -4,7 +4,7 @@ import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
 import { L_Out } from "./L_Structs";
-import { L_Singleton, L_Composite } from "./L_Structs";
+import { L_Singleton, L_Composite, L_Symbol } from "./L_Structs";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
 import { L_ParseErr, L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Report from "./L_Report";
@@ -540,15 +540,17 @@ function factParse(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
         // skip(tokens, ")");
         out.isT = isT;
         return out;
-      } else if (isCurToken(tokens, L_Keywords.Dollar)) {
-        skip(tokens, L_Keywords.Dollar);
-        const left = symbolParse(env, tokens);
-        const opt = new L_Structs.L_OptSymbol(skip(tokens));
-        const right = symbolParse(env, tokens);
-        skip(tokens, L_Keywords.Dollar);
-        const out = new OptNode(opt, [left, right], isT);
-        return out;
-      } else {
+      }
+      // else if (isCurToken(tokens, L_Keywords.Dollar)) {
+      //   skip(tokens, L_Keywords.Dollar);
+      //   const left = symbolParse(env, tokens);
+      //   const opt = new L_Structs.L_OptSymbol(skip(tokens));
+      //   const right = symbolParse(env, tokens);
+      //   skip(tokens, L_Keywords.Dollar);
+      //   const out = new OptNode(opt, [left, right], isT);
+      //   return out;
+      // }
+      else {
         const out = parsePrimitiveFact(env, tokens);
         out.isT = isT;
         return out;
@@ -700,17 +702,28 @@ function optParse(env: L_Env, tokens: string[], parseNot: boolean): OptNode {
     // TODO use builtin to implement not
     let isT = true;
 
-    if (tokens.length >= 2 && tokens[1] === "(") {
-      //TODO CheckVars not implemented
+    // if (tokens.length >= 2 && tokens[1] === "(") {
+    //   //TODO CheckVars not implemented
 
+    //   const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
+    //   const vars = arrParse<L_Structs.L_Symbol>(
+    //     env,
+    //     tokens,
+    //     symbolParse,
+    //     "(",
+    //     ")"
+    //   );
+
+    //   let checkVars = checkVarsParse();
+
+    //   return new OptNode(optSymbol, vars, isT, checkVars);
+    // }
+
+    // * If The opt starts with $, then it's an opt written like a function
+    if (isCurToken(tokens, L_Keywords.FunctionalStructuredFactOptPrefix)) {
+      skip(tokens, L_Keywords.FunctionalStructuredFactOptPrefix);
       const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
-      const vars = arrParse<L_Structs.L_Symbol>(
-        env,
-        tokens,
-        symbolParse,
-        "(",
-        ")"
-      );
+      const vars = arrParse<L_Symbol>(env, tokens, symbolParse, "(", ")");
 
       let checkVars = checkVarsParse();
 
@@ -843,27 +856,6 @@ function localEnvParse(env: L_Env, tokens: string[]): L_Nodes.LocalEnvNode {
     L_ParseErr(env, tokens, localEnvParse, index, start);
     throw error;
   }
-
-  function splitBySemicolon(array: string[]) {
-    const result = [];
-    let currentGroup: string[] = [];
-
-    array.forEach((item) => {
-      currentGroup.push(item); // 把当前元素加入当前组
-      if (item === ";") {
-        // 如果遇到分号
-        result.push(currentGroup); // 把当前组保存到结果
-        currentGroup = []; // 开始新的组
-      }
-    });
-
-    if (currentGroup.length > 0) {
-      // 如果最后还有剩余的元素
-      result.push(currentGroup);
-    }
-
-    return result;
-  }
 }
 
 function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
@@ -928,6 +920,8 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode | L_Out {
       skip(tokens, L_Keywords.Commutative);
       commutative = true;
     }
+
+    // skip(tokens, L_Keywords.FunctionalStructuredFactOptPrefix);
 
     const opt: OptNode = optParse(env, tokens, false);
 

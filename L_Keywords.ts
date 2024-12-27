@@ -69,4 +69,5 @@ export const L_Keywords = {
   AnySymbol: "ANY", //* anySymbol can not be equal to EXIST, and it can equal to any other symbols
   LeftFactLogicalFormulaSig: "\\[?",
   RightFactLogicalFormulaSig: "\\?]",
+  FunctionalStructuredFactOptPrefix: "$",
 };
