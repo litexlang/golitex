@@ -324,7 +324,7 @@ const KeywordFunctionMap: {
   macro: macroParse,
   include: includeParse,
   def_literal_operator: defLiteralOperatorParse,
-  // def_exist: defExistParse,
+  let_formal: letFormalParse,
 };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
@@ -393,12 +393,12 @@ function knowParse(env: L_Env, tokens: string[]): L_Nodes.KnowNode {
   }
 }
 
-function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode {
+function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode | L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
-    const whichLet = skip(tokens, L_Keywords.LetKeyword) as string;
+    skip(tokens, L_Keywords.LetKeyword) as string;
 
     const vars: string[] = [];
     while (![L_Keywords.L_End, , ":"].includes(tokens[0])) {
@@ -415,25 +415,124 @@ function letParse(env: L_Env, tokens: string[]): L_Nodes.LetNode {
       throw Error();
     }
 
+    let out: L_Nodes.LetNode | undefined = undefined;
     if (isCurToken(tokens, L_Keywords.L_End)) {
       skip(tokens, L_Keywords.L_End);
-      if (whichLet === L_Keywords.LetKeyword) {
-        return new L_Nodes.LetNode(vars, []);
-      } else {
-        throw Error();
-      }
+      out = new L_Nodes.LetNode(vars, []);
     } else {
       skip(tokens, ":");
       const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
-      if (whichLet === L_Keywords.LetKeyword) {
-        return new L_Nodes.LetNode(vars, facts);
-      } else {
-        throw Error();
-      }
+      out = new L_Nodes.LetNode(vars, facts);
+    }
+
+    if (letExec(env, out) === L_Out.True) {
+      return L_Out.True;
+    } else {
+      throw Error();
     }
   } catch (error) {
     L_ParseErr(env, tokens, letParse, index, start);
     throw error;
+  }
+
+  function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
+    try {
+      // examine whether some vars are already declared. if not, declare them.
+      for (const e of node.vars) {
+        const ok = env.newSingletonVar(e);
+        if (!ok) return L_Out.Error;
+      }
+
+      if (!optsVarsDeclaredInFacts(env, node.facts)) {
+        throw Error();
+      }
+
+      // store new facts
+      for (const onlyIf of node.facts) {
+        const ok = newFact(env, onlyIf);
+        if (!ok) {
+          L_Report.reportStoreErr(env, letExec.name, onlyIf);
+          throw new Error();
+        }
+      }
+
+      env.report(`[let] ${node}`);
+      return L_Out.True;
+    } catch {
+      return L_Report.L_ReportErr(env, letExec, node);
+    }
+  }
+}
+
+function letFormalParse(
+  env: L_Env,
+  tokens: string[]
+): L_Nodes.LetFormalSymbolNode | L_Out {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Keywords.LetKeyword) as string;
+
+    const vars: string[] = [];
+    while (![L_Keywords.L_End, , ":"].includes(tokens[0])) {
+      vars.push(tokens.shift() as string);
+      if (isCurToken(tokens, ",")) skip(tokens, ",");
+    }
+
+    if (
+      vars.some(
+        (e) => Object.keys(L_Keywords).includes(e) || e.startsWith("\\")
+      )
+    ) {
+      env.report(`Error: ${vars} contain LiTeX keywords.`);
+      throw Error();
+    }
+
+    let out: undefined | L_Nodes.LetFormalSymbolNode = undefined;
+    if (isCurToken(tokens, L_Keywords.L_End)) {
+      skip(tokens, L_Keywords.L_End);
+      out = new L_Nodes.LetFormalSymbolNode(vars, []);
+    } else {
+      skip(tokens, ":");
+      const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+      out = new L_Nodes.LetFormalSymbolNode(vars, facts);
+    }
+
+    if (letFormalExec(env, out) === L_Out.True) {
+      return L_Out.True;
+    } else {
+      throw Error();
+    }
+  } catch (error) {
+    L_ParseErr(env, tokens, letParse, index, start);
+    throw error;
+  }
+
+  function letFormalExec(env: L_Env, node: L_Nodes.LetFormalSymbolNode): L_Out {
+    try {
+      for (const e of node.vars) {
+        const ok = env.newFormalSymbolVar(e);
+        if (!ok) return L_Out.Error;
+      }
+
+      if (!optsVarsDeclaredInFacts(env, node.facts)) {
+        throw Error();
+      }
+
+      for (const onlyIf of node.facts) {
+        const ok = newFact(env, onlyIf);
+        if (!ok) {
+          L_Report.reportStoreErr(env, letFormalExec.name, onlyIf);
+          throw new Error();
+        }
+      }
+
+      env.report(`[let] ${node}`);
+      return L_Out.True;
+    } catch {
+      return L_Report.L_ReportErr(env, letFormalParse, node);
+    }
   }
 }
 
@@ -914,7 +1013,7 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode | L_Out {
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.DefKeywords);
+    skip(tokens, L_Keywords.DefFactKeywords);
 
     let commutative = false;
     if (isCurToken(tokens, L_Keywords.Commutative)) {

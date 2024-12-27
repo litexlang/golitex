@@ -28,7 +28,7 @@ export const L_Keywords = {
   ThenKeyword: "=>",
   IffKeyword: "iff",
   IfKeyword: "if",
-  DefKeywords: "def",
+  DefFactKeywords: "def",
   ProveKeywords: "prove",
   L_End: ";",
   LetKeyword: "let",
@@ -70,4 +70,5 @@ export const L_Keywords = {
   LeftFactLogicalFormulaSig: "\\[?",
   RightFactLogicalFormulaSig: "\\?]",
   FunctionalStructuredFactOptPrefix: "$",
+  LetFormal: "let_formal",
 };

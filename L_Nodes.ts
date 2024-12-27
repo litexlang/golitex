@@ -242,12 +242,23 @@ export class LetNode extends L_Node {
   }
 
   override toString() {
-    return `${this.vars.join(", ")}: ${this.facts
+    return `[let] ${this.vars.join(", ")}: ${this.facts
       .map((s) => s.toString())
       .join(", ")}`;
   }
 }
-export class LetHashNode extends LetNode {}
+
+export class LetFormalSymbolNode extends L_Node {
+  constructor(public vars: string[], public facts: ToCheckNode[]) {
+    super();
+  }
+
+  override toString() {
+    return `[let_formal] ${this.vars.join(", ")}: ${this.facts
+      .map((s) => s.toString())
+      .join(", ")}`;
+  }
+}
 
 export class ProveNode extends L_Node {
   constructor(
@@ -595,5 +606,3 @@ export class DefLiteralOptNode extends L_Node {
 }
 
 export class DefFunctionalNode extends L_Node {}
-
-export class DefFormalSymbolNode extends L_Node {}

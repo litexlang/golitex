@@ -16,7 +16,7 @@ export class L_Env {
 
   // TODO
   private aliases = new Map<string, L_Structs.L_Symbol>();
-  private formalSymbols = new Map<string, L_Structs.FormalSymbol>();
+  private formalSymbols = new Set<string>();
   private functionalSymbols = new Map<string, L_Nodes.DefFunctionalNode>();
 
   constructor(parent: L_Env | undefined = undefined) {
@@ -111,32 +111,6 @@ export class L_Env {
     this.defs = new Map<string, L_Nodes.DefNode>();
   }
 
-  // two ways of checking : 1. it's letsVar name 2. it satisfies regex of a var
-  isLetsVar(varStr: string): boolean {
-    if (this.letsVars.has(varStr)) {
-      return true;
-    }
-
-    for (const knownLet of this.letsVars.values()) {
-      if (knownLet.regex.test(varStr)) return true;
-    }
-
-    if (this.parent !== undefined) {
-      return this.parent.isLetsVar(varStr);
-    } else return false;
-  }
-
-  newLetsVars(letsNode: L_Nodes.LetsNode) {
-    if (this.isLetsVar(letsNode.name)) {
-      return L_ReportBoolErr(
-        this,
-        this.newLetsVars,
-        `letsVar ${letsNode.name} already declared`
-      );
-    }
-    this.letsVars.set(letsNode.name, letsNode);
-  }
-
   // used by checker and executor
   subFactsDeclaredOrBuiltin(node: L_Nodes.ToCheckNode): boolean {
     if (node instanceof L_Nodes.OptNode) {
@@ -210,6 +184,17 @@ export class L_Env {
   //   return true;
   // }
 
+  newLetsVars(letsNode: L_Nodes.LetsNode) {
+    if (this.isSingletonDeclared(letsNode.name)) {
+      return L_ReportBoolErr(
+        this,
+        this.newLetsVars,
+        `letsVar ${letsNode.name} already declared`
+      );
+    }
+    this.letsVars.set(letsNode.name, letsNode);
+  }
+
   newSingletonVar(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.isSingletonDeclared(fix)) {
@@ -223,12 +208,55 @@ export class L_Env {
     return true;
   }
 
-  isSingletonDeclared(key: string): boolean {
+  newFormalSymbolVar(fix: string): boolean {
+    // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
+    if (this.isSingletonDeclared(fix)) {
+      return L_ReportBoolErr(
+        this,
+        this.newFormalSymbolVar,
+        `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
+      );
+    }
+    this.formalSymbols.add(fix);
+    return true;
+  }
+
+  isSingletonDeclared(fix: string): boolean {
+    return (
+      this.isPureSingletonDeclared(fix) || this.isFormalSymbolDeclared(fix)
+    );
+  }
+
+  // two ways of checking : 1. it's letsVar name 2. it satisfies regex of a var
+  isLetsVar(varStr: string): boolean {
+    if (this.letsVars.has(varStr)) {
+      return true;
+    }
+
+    for (const knownLet of this.letsVars.values()) {
+      if (knownLet.regex.test(varStr)) return true;
+    }
+
+    if (this.parent !== undefined) {
+      return this.parent.isLetsVar(varStr);
+    } else return false;
+  }
+
+  isFormalSymbolDeclared(key: string): boolean {
+    if (this.formalSymbols.has(key)) {
+      return true;
+    } else {
+      if (!this.parent) return false;
+      else return this.parent.isFormalSymbolDeclared(key);
+    }
+  }
+
+  isPureSingletonDeclared(key: string): boolean {
     if (this.singletons.has(key) || this.isLetsVar(key)) {
       return true;
     } else {
       if (!this.parent) return false;
-      else return this.parent.isSingletonDeclared(key);
+      else return this.parent.isPureSingletonDeclared(key);
     }
   }
 

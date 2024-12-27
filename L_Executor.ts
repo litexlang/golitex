@@ -31,10 +31,11 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
       // case "DefCompositeNode":
       //   // return defCompositeExec(env, node as L_Nodes.DefCompositeNode);
       //   return L_Out.True;
+
+      // case "LetNode":
+      // return letExec(env, node as L_Nodes.LetNode);
       case "KnowNode":
         return knowExec(env, node as L_Nodes.KnowNode);
-      case "LetNode":
-        return letExec(env, node as L_Nodes.LetNode);
       case "ProveNode":
         return proveExec(env, node as L_Nodes.ProveNode);
       case "ProveContradictNode":
@@ -66,33 +67,33 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   }
 }
 
-function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
-  try {
-    // examine whether some vars are already declared. if not, declare them.
-    for (const e of node.vars) {
-      const ok = env.newSingletonVar(e);
-      if (!ok) return L_Out.Error;
-    }
+// function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
+//   try {
+//     // examine whether some vars are already declared. if not, declare them.
+//     for (const e of node.vars) {
+//       const ok = env.newSingletonVar(e);
+//       if (!ok) return L_Out.Error;
+//     }
 
-    if (!optsVarsDeclaredInFacts(env, node.facts)) {
-      throw Error();
-    }
+//     if (!optsVarsDeclaredInFacts(env, node.facts)) {
+//       throw Error();
+//     }
 
-    // store new facts
-    for (const onlyIf of node.facts) {
-      const ok = L_Memory.newFact(env, onlyIf);
-      if (!ok) {
-        L_Report.reportStoreErr(env, knowExec.name, onlyIf);
-        throw new Error();
-      }
-    }
+//     // store new facts
+//     for (const onlyIf of node.facts) {
+//       const ok = L_Memory.newFact(env, onlyIf);
+//       if (!ok) {
+//         L_Report.reportStoreErr(env, knowExec.name, onlyIf);
+//         throw new Error();
+//       }
+//     }
 
-    env.report(`[let] ${node}`);
-    return L_Out.True;
-  } catch {
-    return L_Report.L_ReportErr(env, letExec, node);
-  }
-}
+//     env.report(`[let] ${node}`);
+//     return L_Out.True;
+//   } catch {
+//     return L_Report.L_ReportErr(env, letExec, node);
+//   }
+// }
 
 export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
   try {
