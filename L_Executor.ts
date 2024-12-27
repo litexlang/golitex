@@ -4,10 +4,9 @@ import * as L_Memory from "./L_Memory";
 import { L_Keywords } from "./L_Keywords";
 import { runFileWithLogging } from "./L_Runner";
 import * as L_Nodes from "./L_Nodes";
-import * as L_Messages from "./L_Report";
+import * as L_Report from "./L_Report";
 import { L_Out, L_Singleton, L_Symbol } from "./L_Structs";
 import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
-import { report } from "process";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -20,13 +19,6 @@ export const DEBUG_DICT = {
 
 export const CheckFalse = true;
 
-// export const L_OutMap: { [key in L_Out]: string } = {
-//   [L_Out.Error]: "error",
-//   [L_Out.False]: "check: false",
-//   [L_Out.True]: "check: true",
-//   [L_Out.Unknown]: "check: unknown",
-// };
-
 export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   try {
     const nodeType = node.constructor.name;
@@ -36,11 +28,11 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
       // case "DefExistNode":
       //   return L_Out.True;
       // return defExec(env, node as L_Nodes.DefNode);
-      case "KnowNode":
-        return knowExec(env, node as L_Nodes.KnowNode);
       // case "DefCompositeNode":
       //   // return defCompositeExec(env, node as L_Nodes.DefCompositeNode);
       //   return L_Out.True;
+      case "KnowNode":
+        return knowExec(env, node as L_Nodes.KnowNode);
       case "LetNode":
         return letExec(env, node as L_Nodes.LetNode);
       case "ProveNode":
@@ -70,7 +62,7 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         throw Error();
     }
   } catch (error) {
-    return L_Messages.L_ReportErr(env, L_Exec, node);
+    return L_Report.L_ReportErr(env, L_Exec, node);
   }
 }
 
@@ -90,7 +82,7 @@ function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
     for (const onlyIf of node.facts) {
       const ok = L_Memory.newFact(env, onlyIf);
       if (!ok) {
-        L_Messages.reportStoreErr(env, knowExec.name, onlyIf);
+        L_Report.reportStoreErr(env, knowExec.name, onlyIf);
         throw new Error();
       }
     }
@@ -98,7 +90,7 @@ function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
     env.report(`[let] ${node}`);
     return L_Out.True;
   } catch {
-    return L_Messages.L_ReportErr(env, letExec, node);
+    return L_Report.L_ReportErr(env, letExec, node);
   }
 }
 
@@ -114,7 +106,7 @@ export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
     for (const onlyIf of node.facts) {
       const ok = L_Memory.newFact(env, onlyIf);
       if (!ok) {
-        L_Messages.reportStoreErr(env, knowExec.name, onlyIf);
+        L_Report.reportStoreErr(env, knowExec.name, onlyIf);
         throw new Error();
       }
     }
@@ -126,7 +118,7 @@ export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
 
     return L_Out.True;
   } catch {
-    return L_Messages.L_ReportErr(env, knowExec, node);
+    return L_Report.L_ReportErr(env, knowExec, node);
   }
 }
 
@@ -179,9 +171,9 @@ function factExec(env: L_Env, toCheck: L_Nodes.ToCheckNode): L_Out {
       }
     }
 
-    return L_Messages.L_ReportL_Out(env, out, toCheck);
+    return L_Report.L_ReportL_Out(env, out, toCheck);
   } catch {
-    return L_Messages.L_ReportErr(env, factExec, toCheck);
+    return L_Report.L_ReportErr(env, factExec, toCheck);
   }
 }
 
@@ -203,7 +195,7 @@ function localEnvExec(env: L_Env, localEnvNode: L_Nodes.LocalEnvNode): L_Out {
 
     return out;
   } catch {
-    return L_Messages.L_ReportErr(env, localEnvExec, localEnvExec);
+    return L_Report.L_ReportErr(env, localEnvExec, localEnvExec);
   }
 }
 
@@ -221,7 +213,7 @@ function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
 
     return L_Out.Error;
   } catch {
-    return L_Messages.L_ReportErr(env, specialExec, node);
+    return L_Report.L_ReportErr(env, specialExec, node);
   }
 }
 
@@ -234,7 +226,7 @@ function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
     env.report(`<lets OK!> ${node.toString()}`);
     return L_Out.True;
   } catch {
-    return L_Messages.L_ReportErr(env, letsExec, node);
+    return L_Report.L_ReportErr(env, letsExec, node);
   }
 }
 
@@ -270,7 +262,7 @@ function proveContradictExec(
       return L_Out.Unknown;
     }
   } catch {
-    return L_Messages.L_ReportErr(env, proveContradictExec, proveNode);
+    return L_Report.L_ReportErr(env, proveContradictExec, proveNode);
   }
 }
 
@@ -285,7 +277,7 @@ function proveExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
 
     throw Error();
   } catch {
-    return L_Messages.L_ReportErr(env, proveExec, proveNode);
+    return L_Report.L_ReportErr(env, proveExec, proveNode);
   }
 }
 
@@ -312,7 +304,7 @@ function proveOptExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
       return L_Out.Unknown;
     }
   } catch {
-    return L_Messages.L_ReportErr(env, proveOptExec, proveNode);
+    return L_Report.L_ReportErr(env, proveOptExec, proveNode);
   }
 }
 
@@ -327,7 +319,7 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
       if (v instanceof L_Singleton) {
         ok = env.newSingletonVar(v.value);
         if (!ok) {
-          L_Messages.L_ReportErr(
+          L_Report.L_ReportErr(
             env,
             proveIfExec,
             `The variable "${v}" is already declared in this environment or its parent environments. Please use a different name.`
@@ -369,7 +361,7 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
       throw Error();
     }
   } catch {
-    return L_Messages.L_ReportErr(env, proveIfExec, proveNode);
+    return L_Report.L_ReportErr(env, proveIfExec, proveNode);
   }
 }
 
@@ -387,7 +379,7 @@ function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
     if (!env.newMacro(node)) throw Error();
     return env.report(`[new macro] ${(node as L_Nodes.MacroNode).toString()}`);
   } catch {
-    return L_Messages.L_ReportErr(env, macroExec, node);
+    return L_Report.L_ReportErr(env, macroExec, node);
   }
 }
 
@@ -396,7 +388,7 @@ function includeExec(env: L_Env, node: L_Nodes.IncludeNode): L_Out {
     if (!env.newInclude(node.path)) throw Error();
     return env.report(`[new lib included] ${node.toString()}`);
   } catch {
-    return L_Messages.L_ReportErr(env, macroExec, node);
+    return L_Report.L_ReportErr(env, macroExec, node);
   }
 }
 
@@ -405,7 +397,7 @@ function defLiteralOptExec(env: L_Env, node: L_Nodes.DefLiteralOptNode): L_Out {
     if (!env.newLiteralOpt(node)) throw Error();
     return env.report(`[new def_literal_operator] ${node}`);
   } catch {
-    return L_Messages.L_ReportErr(env, defLiteralOptExec, node);
+    return L_Report.L_ReportErr(env, defLiteralOptExec, node);
   }
 }
 
@@ -451,6 +443,6 @@ function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
     if (ok) return L_Out.True;
     else throw Error();
   } catch {
-    return L_Messages.L_ReportErr(env, haveExec, node);
+    return L_Report.L_ReportErr(env, haveExec, node);
   }
 }

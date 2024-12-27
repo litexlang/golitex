@@ -595,3 +595,5 @@ export class DefLiteralOptNode extends L_Node {
 }
 
 export class DefFunctionalNode extends L_Node {}
+
+export class DefFormalSymbolNode extends L_Node {}

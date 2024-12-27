@@ -77,6 +77,8 @@ const exampleList: ExampleItem[] = [
   def $ =(x,y);
   \\+{a,b} + b = a;
   $=(a,b);
+  know \\+{a,b} + b = a;
+  \\+{a,b} + b = a;
 }      
       `,
     ],
@@ -86,7 +88,7 @@ const exampleList: ExampleItem[] = [
   {
     name: "$factual_opt",
     code: ["def $p(x); let y: $p(y);"],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];

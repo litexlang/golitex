@@ -28,7 +28,7 @@ export function runStringWithLogging(
       const out = L_Executor.L_Exec(env, node);
       if (printEveryThing) {
         if (true) {
-          if (printCode) console.log("***  results  ***\n");
+          if (printCode) console.log("***  Messages  ***\n");
           env.printClearMessage();
           console.log();
         } else {

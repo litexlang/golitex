@@ -16,7 +16,7 @@ export class L_Env {
 
   // TODO
   private aliases = new Map<string, L_Structs.L_Symbol>();
-  private freeVars = new Map<string, L_Structs.FreeSymbol>();
+  private formalSymbols = new Map<string, L_Structs.FormalSymbol>();
   private functionalSymbols = new Map<string, L_Nodes.DefFunctionalNode>();
 
   constructor(parent: L_Env | undefined = undefined) {

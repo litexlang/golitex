@@ -350,7 +350,7 @@ export class L_Composite extends L_Symbol {
   }
 }
 
-export class FreeSymbol extends L_Singleton {}
+export class FormalSymbol extends L_Singleton {}
 
 export class FunctionalSymbol extends L_Symbol {
   // fixed: at compile time, test whether it contains free vars.
