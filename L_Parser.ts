@@ -3,9 +3,13 @@ import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
+import { L_Out } from "./L_Structs";
 import { L_Singleton, L_Composite } from "./L_Structs";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
-import { L_ParseErr } from "./L_Report";
+import { L_ParseErr, L_ReportBoolErr, L_ReportErr } from "./L_Report";
+import * as L_Report from "./L_Report";
+import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
+import { newFact } from "./L_Memory";
 
 function arrParse<T>(
   env: L_Env,
@@ -315,7 +319,7 @@ const KeywordFunctionMap: {
   have: haveParse,
   clear: specialParse,
   run: specialParse,
-  def_composite: DefCompositeParse,
+  def_composite: defCompositeParse,
   lets: letsParse,
   macro: macroParse,
   include: includeParse,
@@ -348,6 +352,7 @@ export function parseNodesFromSingleExpression(
     const func = KeywordFunctionMap[tokens[0]];
     if (func) {
       const node = func(env, tokens);
+      if (node === L_Out.True) return [];
       return [node];
     } else {
       const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
@@ -911,7 +916,7 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   }
 }
 
-function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
+function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode | L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -941,10 +946,47 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
       skip(tokens, L_Keywords.L_End);
     }
 
-    return new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
+    const out = new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
+
+    if (defExec(env, out) === L_Structs.L_Out.True) return L_Out.True;
+    else throw Error();
   } catch (error) {
     L_ParseErr(env, tokens, defParse, index, start);
     throw error;
+  }
+
+  function defExec(env: L_Env, node: L_Nodes.DefNode): L_Structs.L_Out {
+    try {
+      // declare new opt
+      const ok = declNewFact(env, node);
+      if (!ok) {
+        env.report(`Failed to store ${node}`);
+        return L_Structs.L_Out.Error;
+      }
+
+      if (!optsVarsDeclaredInFacts(env, node.onlyIfs)) {
+        throw Error();
+      }
+
+      return L_Structs.L_Out.True;
+    } catch {
+      return L_ReportErr(env, defExec, node);
+    }
+
+    function declNewFact(env: L_Env, node: L_Nodes.DefNode): boolean {
+      let ok = true;
+      // if (node instanceof L_Nodes.DefExistNode) {
+      //   ok = env.newDef(node.opt.optSymbol.name, node);
+      //   ok = env.newExistDef(node.opt.optSymbol.name, node);
+      // } else {
+      ok = env.newDef(node.opt.optSymbol.name, node);
+      // }
+      for (const onlyIf of node.onlyIfs) {
+        const ok = newFact(env, onlyIf);
+        if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);
+      }
+      return ok;
+    }
   }
 }
 
@@ -993,33 +1035,49 @@ function defParse(env: L_Env, tokens: string[]): L_Nodes.DefNode {
 // }
 
 // --------------------------------------------------------
-export function DefCompositeParse(
+export function defCompositeParse(
   env: L_Env,
   tokens: string[]
-): L_Nodes.DefCompositeNode {
+): L_Nodes.DefCompositeNode | L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
+    let out: L_Nodes.DefCompositeNode | undefined = undefined;
+
     skip(tokens, L_Keywords.DefCompositeKeyword);
     const composite = slashCompositeParse(env, tokens);
+
     if (isCurToken(tokens, L_Keywords.L_End)) {
       skip(tokens, L_Keywords.L_End);
-      return new L_Nodes.DefCompositeNode(composite, []);
+      out = new L_Nodes.DefCompositeNode(composite, []);
+    } else {
+      skip(tokens, ":");
+      const facts: ToCheckNode[] = [];
+      while (!isCurToken(tokens, L_Keywords.L_End)) {
+        facts.push(
+          ...factsArrParse(env, tokens, [",", L_Keywords.L_End], false)
+        );
+        if (isCurToken(tokens, ",")) skip(tokens, ",");
+      }
+      skip(tokens, L_Keywords.L_End);
+      out = new L_Nodes.DefCompositeNode(composite, facts);
     }
 
-    skip(tokens, ":");
-    const facts: ToCheckNode[] = [];
-    while (!isCurToken(tokens, L_Keywords.L_End)) {
-      facts.push(...factsArrParse(env, tokens, [",", L_Keywords.L_End], false));
-      if (isCurToken(tokens, ",")) skip(tokens, ",");
-    }
-    skip(tokens, L_Keywords.L_End);
-
-    return new L_Nodes.DefCompositeNode(composite, facts);
+    if (defCompositeExec(env, out) === L_Out.True) return L_Out.True;
+    else throw Error();
   } catch (error) {
-    L_ParseErr(env, tokens, DefCompositeParse, index, start);
+    L_ParseErr(env, tokens, defCompositeParse, index, start);
     throw error;
+  }
+
+  function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
+    try {
+      if (!env.newCompositeVar(node.composite.name, node)) throw Error();
+      return env.report(`[new def_composite] ${node}`);
+    } catch {
+      return L_Report.L_ReportErr(env, defCompositeExec, node);
+    }
   }
 }
 

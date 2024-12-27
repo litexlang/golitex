@@ -33,11 +33,13 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
     switch (nodeType) {
       case "DefNode":
       case "DefExistNode":
-        return defExec(env, node as L_Nodes.DefNode);
+        return L_Out.True;
+      // return defExec(env, node as L_Nodes.DefNode);
       case "KnowNode":
         return knowExec(env, node as L_Nodes.KnowNode);
-      case "DefCompositeNode":
-        return defCompositeExec(env, node as L_Nodes.DefCompositeNode);
+      // case "DefCompositeNode":
+      //   // return defCompositeExec(env, node as L_Nodes.DefCompositeNode);
+      //   return L_Out.True;
       case "LetNode":
         return letExec(env, node as L_Nodes.LetNode);
       case "ProveNode":
@@ -128,39 +130,39 @@ export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
   }
 }
 
-function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
-  try {
-    // declare new opt
-    const ok = declNewFact(env, node);
-    if (!ok) {
-      env.report(`Failed to store ${node}`);
-      return L_Out.Error;
-    }
+// function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
+//   try {
+//     // declare new opt
+//     const ok = declNewFact(env, node);
+//     if (!ok) {
+//       env.report(`Failed to store ${node}`);
+//       return L_Out.Error;
+//     }
 
-    if (!optsVarsDeclaredInFacts(env, node.onlyIfs)) {
-      throw Error();
-    }
+//     if (!optsVarsDeclaredInFacts(env, node.onlyIfs)) {
+//       throw Error();
+//     }
 
-    return L_Out.True;
-  } catch {
-    return L_Messages.L_ReportErr(env, defExec, node);
-  }
+//     return L_Out.True;
+//   } catch {
+//     return L_Messages.L_ReportErr(env, defExec, node);
+//   }
 
-  function declNewFact(env: L_Env, node: L_Nodes.DefNode): boolean {
-    let ok = true;
-    // if (node instanceof L_Nodes.DefExistNode) {
-    //   ok = env.newDef(node.opt.optSymbol.name, node);
-    //   ok = env.newExistDef(node.opt.optSymbol.name, node);
-    // } else {
-    ok = env.newDef(node.opt.optSymbol.name, node);
-    // }
-    for (const onlyIf of node.onlyIfs) {
-      const ok = L_Memory.newFact(env, onlyIf);
-      if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);
-    }
-    return ok;
-  }
-}
+//   function declNewFact(env: L_Env, node: L_Nodes.DefNode): boolean {
+//     let ok = true;
+//     // if (node instanceof L_Nodes.DefExistNode) {
+//     //   ok = env.newDef(node.opt.optSymbol.name, node);
+//     //   ok = env.newExistDef(node.opt.optSymbol.name, node);
+//     // } else {
+//     ok = env.newDef(node.opt.optSymbol.name, node);
+//     // }
+//     for (const onlyIf of node.onlyIfs) {
+//       const ok = L_Memory.newFact(env, onlyIf);
+//       if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);
+//     }
+//     return ok;
+//   }
+// }
 
 function factExec(env: L_Env, toCheck: L_Nodes.ToCheckNode): L_Out {
   try {
@@ -371,14 +373,14 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
   }
 }
 
-function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
-  try {
-    if (!env.newCompositeVar(node.composite.name, node)) throw Error();
-    return env.report(`[new def_composite] ${node}`);
-  } catch {
-    return L_Messages.L_ReportErr(env, defCompositeExec, node);
-  }
-}
+// function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
+//   try {
+//     if (!env.newCompositeVar(node.composite.name, node)) throw Error();
+//     return env.report(`[new def_composite] ${node}`);
+//   } catch {
+//     return L_Messages.L_ReportErr(env, defCompositeExec, node);
+//   }
+// }
 
 function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
   try {
