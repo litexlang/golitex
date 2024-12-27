@@ -170,7 +170,7 @@ export class L_Singleton extends L_Symbol {
       this.value === L_Keywords.ExistSymbol ||
       this.value === L_Keywords.AnySymbol ||
       env.isSingletonDeclared(this.value) ||
-      env.isLetsVar(this.value)
+      env.isRegexSingleton(this.value)
     );
   }
 

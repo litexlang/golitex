@@ -221,14 +221,49 @@ export class L_Env {
     return true;
   }
 
+  newAlias(
+    name: L_Structs.L_Singleton,
+    toBeAliased: L_Structs.L_Symbol
+  ): boolean {
+    if (this.isSingletonDeclared(name.value)) {
+      return L_ReportBoolErr(
+        this,
+        this.newAlias,
+        `The variable "${name.value}" is already declared in this environment or its parent environments. Please use a different name.`
+      );
+    }
+    this.aliases.set(name.value, toBeAliased);
+    return true;
+  }
+
+  getAlias(name: string): L_Structs.L_Symbol | undefined {
+    const out = this.aliases.get(name);
+    if (out === undefined) {
+      if (this.parent !== undefined) {
+        return this.parent.getAlias(name);
+      } else {
+        return undefined;
+      }
+    } else {
+      return out;
+    }
+  }
+
   isSingletonDeclared(fix: string): boolean {
     return (
-      this.isPureSingletonDeclared(fix) || this.isFormalSymbolDeclared(fix)
+      this.isPureSingletonDeclared(fix) ||
+      this.isRegexSingleton(fix) ||
+      this.isFormalSymbolDeclared(fix) ||
+      this.isAliasDeclared(fix)
     );
   }
 
+  isAliasDeclared(name: string) {
+    return this.getAlias(name) !== undefined;
+  }
+
   // two ways of checking : 1. it's letsVar name 2. it satisfies regex of a var
-  isLetsVar(varStr: string): boolean {
+  isRegexSingleton(varStr: string): boolean {
     if (this.regexSingletons.has(varStr)) {
       return true;
     }
@@ -238,7 +273,7 @@ export class L_Env {
     }
 
     if (this.parent !== undefined) {
-      return this.parent.isLetsVar(varStr);
+      return this.parent.isRegexSingleton(varStr);
     } else return false;
   }
 
@@ -252,7 +287,7 @@ export class L_Env {
   }
 
   isPureSingletonDeclared(key: string): boolean {
-    if (this.pureSingletons.has(key) || this.isLetsVar(key)) {
+    if (this.pureSingletons.has(key)) {
       return true;
     } else {
       if (!this.parent) return false;
@@ -327,7 +362,7 @@ export class L_Env {
   }
 
   getLetsVar(varStr: string): L_Nodes.LetsNode | undefined {
-    if (this.isLetsVar(varStr)) {
+    if (this.isRegexSingleton(varStr)) {
       const out = this.regexSingletons.get(varStr);
       if (out !== undefined) {
         return out;
