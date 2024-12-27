@@ -6,7 +6,6 @@ import { runFileWithLogging } from "./L_Runner";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Report from "./L_Report";
 import { L_Out, L_Singleton, L_Symbol } from "./L_Structs";
-import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -99,7 +98,7 @@ export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
   try {
     // examine whether all facts are declared.
     // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
-    if (!optsVarsDeclaredInFacts(env, node.facts)) {
+    if (!L_Nodes.ToCheckNode.subVarsSubOptsDeclared(env, node.facts)) {
       throw Error();
     }
 

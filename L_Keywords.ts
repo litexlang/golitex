@@ -60,7 +60,7 @@ export const L_Keywords = {
   Include: "include",
   Commutative: "commutative",
   DefLiteralOperator: "def_literal_operator",
-  IfVarPrefix: "~if",
+  IfVarPrefix: "~",
   LiteralOptPrefix: "@",
   MacroPrefix: "MACRO_",
   IndexedSymbolKeyword: "at",

@@ -23,6 +23,24 @@ export abstract class ToCheckNode extends L_Node {
 
   // called by "using known fact to check given fact. when doing so, get all root opts and filter opt with the same name."
   abstract getRootOptNodes(): [OptNode, ToCheckNode[]][];
+
+  static subVarsSubOptsDeclared(env: L_Env, facts: ToCheckNode[]): boolean {
+    for (const f of facts) {
+      const ok = env.subFactsDeclaredOrBuiltin(f);
+      if (!ok) {
+        //TODO I SHOULD IMPLEMENT check whether something is declared when checking
+      }
+    }
+
+    for (const f of facts) {
+      if (!f.varsDeclared(env)) {
+        env.report(`[Error] Not all of related variables are declared.`);
+        return false;
+      }
+    }
+
+    return true;
+  }
 }
 
 export class LogicNode extends ToCheckNode {
@@ -130,6 +148,15 @@ export class OptNode extends ToCheckNode {
     public checkVars: L_Symbol[][] | undefined = undefined
   ) {
     super(isT);
+  }
+
+  static literallyIdentical(
+    env: L_Env,
+    given: OptNode,
+    expects: OptNode
+  ): boolean {
+    if (given.optSymbol.name !== expects.optSymbol.name) return false;
+    return L_Symbol.symbolArrLiterallyIdentical(env, given.vars, expects.vars);
   }
 
   copyCommutatively(): OptNode | undefined {

@@ -8,7 +8,6 @@ import { L_Singleton, L_Composite, L_Symbol } from "./L_Structs";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
 import { L_ParseErr, L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Report from "./L_Report";
-import { optsVarsDeclaredInFacts } from "./L_ExecutorHelper";
 import { newFact } from "./L_Memory";
 
 function arrParse<T>(
@@ -420,7 +419,7 @@ function letParse(env: L_Env, tokens: string[]): L_Out {
         if (!ok) return L_Out.Error;
       }
 
-      if (!optsVarsDeclaredInFacts(env, node.facts)) {
+      if (!ToCheckNode.subVarsSubOptsDeclared(env, node.facts)) {
         throw Error();
       }
 
@@ -490,7 +489,7 @@ function letFormalParse(env: L_Env, tokens: string[]): L_Out {
         if (!ok) return L_Out.Error;
       }
 
-      if (!optsVarsDeclaredInFacts(env, node.facts)) {
+      if (!ToCheckNode.subVarsSubOptsDeclared(env, node.facts)) {
         throw Error();
       }
 
@@ -1020,7 +1019,7 @@ function defParse(env: L_Env, tokens: string[]): L_Out {
         return L_Structs.L_Out.Error;
       }
 
-      if (!optsVarsDeclaredInFacts(env, node.onlyIfs)) {
+      if (!ToCheckNode.subVarsSubOptsDeclared(env, node.onlyIfs)) {
         throw Error();
       }
 

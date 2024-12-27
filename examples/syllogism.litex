@@ -10,10 +10,10 @@ a concept called "mortal", and it takes in one parameter. Anything that has
 property that it is human, it is mortal.
 */
 
-def human(something);
-def mortal(something);
-know if x: human(x) {
-  mortal(x)
+def $human(something);
+def $mortal(something);
+know if x: $human(x) {
+  $mortal(x)
 };
 
 /*
@@ -36,6 +36,6 @@ suppose god is human, then god is mortal, then god is mortal is both true and
 false, which leads to contradiction.
 */
 let god: not god is mortal;
-prove_by_contradiction not human(god) {
+prove_by_contradiction not $human(god) {
   god is mortal;
 } god is mortal;

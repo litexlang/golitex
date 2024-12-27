@@ -281,7 +281,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
             .getRootOptNodes()
             .map((e) => [...e[1], e[0]]);
           knowns = knowns.filter((e) =>
-            L_Symbol.optsLiterallyIdentical(
+            OptNode.literallyIdentical(
               newEnv,
               toCheck,
               e[e.length - 1] as OptNode
@@ -302,7 +302,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
       if (successful) {
         const fixed = roots[roots.length - 1].fix(env, freeFixedPairs);
         if (
-          L_Symbol.allSymbolsLiterallyIdentical(
+          L_Symbol.symbolArrLiterallyIdentical(
             env,
             (fixed as OptNode).vars,
             givenOpt.vars
@@ -326,7 +326,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
   ): boolean {
     try {
       if (
-        !L_Symbol.optsLiterallyIdentical(
+        !OptNode.literallyIdentical(
           env,
           toCheck,
           known.req[known.req.length - 1] as OptNode
@@ -389,7 +389,7 @@ function checkLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
         if (known instanceof OptKnownFactReq) {
           if (
             toCheck.isT === known.opt.isT &&
-            L_Symbol.allSymbolsLiterallyIdentical(
+            L_Symbol.symbolArrLiterallyIdentical(
               env,
               toCheck.vars,
               known.opt.vars

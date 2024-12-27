@@ -5,57 +5,21 @@ import { checkFact } from "./L_Checker";
 import { L_Keywords } from "./L_Keywords";
 
 export abstract class L_Symbol {
-  // abstract getRootSingletons(): L_Singleton[];
-
-  static isExist(symbol: L_Symbol): boolean {
+  static isExistSymbol(symbol: L_Symbol): boolean {
     return (
       symbol instanceof L_Singleton && symbol.value === L_Keywords.ExistSymbol
     );
   }
 
-  static isAny(symbol: L_Symbol): boolean {
+  static isAnySymbol(symbol: L_Symbol): boolean {
     return (
       symbol instanceof L_Singleton && symbol.value === L_Keywords.AnySymbol
     );
   }
 
   // A singleton equals any symbol; A composite must have the same name, the same number of vars of given composite symbol. meanwhile, whether elements of composite are the same does not matter. e.g. \frac{1,2} and \frac{a,b} does not matter.
-  static structureIdentical(
-    env: L_Env,
-    expected: L_Symbol,
-    candidate: L_Symbol
-  ): boolean {
-    if (expected instanceof L_Singleton) {
-      return true;
-    } else if (expected instanceof L_Composite) {
-      if (
-        candidate instanceof L_Composite &&
-        candidate.name === expected.name &&
-        candidate.values.length === expected.values.length
-      ) {
-        for (const [i, v] of candidate.values.entries()) {
-          if (!L_Symbol.structureIdentical(env, v, expected.values[i])) {
-            return false;
-          }
-        }
 
-        return true;
-      }
-    }
-
-    throw Error();
-  }
-
-  static optsLiterallyIdentical(
-    env: L_Env,
-    given: OptNode,
-    expects: OptNode
-  ): boolean {
-    if (given.optSymbol.name !== expects.optSymbol.name) return false;
-    return L_Symbol.allSymbolsLiterallyIdentical(env, given.vars, expects.vars);
-  }
-
-  static allSymbolsLiterallyIdentical(
+  static symbolArrLiterallyIdentical(
     env: L_Env,
     given: L_Symbol[],
     expected: L_Symbol[]
@@ -66,7 +30,7 @@ export abstract class L_Symbol {
     );
   }
 
-  // * MAIN FUNCTION OF THE WHOLE PROJECT
+  // * ONE OF MAIN FUNCTION OF THE WHOLE PROJECT
   static literallyIdentical(
     env: L_Env,
     given: L_Symbol,
@@ -117,8 +81,10 @@ export abstract class L_Symbol {
       expected: L_Symbol
     ): boolean {
       // Exist can not be proved by any. it can only be proved by exist.
-      if (L_Symbol.isAny(expected) && !L_Symbol.isExist(given)) return true;
-      if (L_Symbol.isAny(given) && !L_Symbol.isExist(expected)) return true;
+      if (L_Symbol.isAnySymbol(expected) && !L_Symbol.isExistSymbol(given))
+        return true;
+      if (L_Symbol.isAnySymbol(given) && !L_Symbol.isExistSymbol(expected))
+        return true;
 
       return false;
     }
@@ -350,7 +316,7 @@ export class L_Composite extends L_Symbol {
     env: L_Env,
     fixed: L_Composite
   ): L_Composite | undefined {
-    if (!L_Symbol.structureIdentical(env, this, fixed)) return undefined;
+    if (!structureIdentical(env, this, fixed)) return undefined;
 
     const newValues: L_Symbol[] = [];
     for (const [i, v] of this.values.entries()) {
@@ -366,6 +332,32 @@ export class L_Composite extends L_Symbol {
     }
 
     return new L_Composite(this.name, newValues);
+
+    function structureIdentical(
+      env: L_Env,
+      expected: L_Symbol,
+      candidate: L_Symbol
+    ): boolean {
+      if (expected instanceof L_Singleton) {
+        return true;
+      } else if (expected instanceof L_Composite) {
+        if (
+          candidate instanceof L_Composite &&
+          candidate.name === expected.name &&
+          candidate.values.length === expected.values.length
+        ) {
+          for (const [i, v] of candidate.values.entries()) {
+            if (!structureIdentical(env, v, expected.values[i])) {
+              return false;
+            }
+          }
+
+          return true;
+        }
+      }
+
+      throw Error();
+    }
   }
 }
 
