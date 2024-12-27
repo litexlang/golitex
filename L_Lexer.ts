@@ -1,7 +1,7 @@
 import { L_Keywords, specialChars } from "./L_Keywords";
 import { L_Env } from "./L_Env";
 
-export function L_Scan(env: L_Env, text: string): string[][] {
+export function L_Scan(env: L_Env, text: string): string[] {
   const tokens: string[] = [];
   let currentToken = "";
   let inLineComment = false;
@@ -98,24 +98,24 @@ export function L_Scan(env: L_Env, text: string): string[][] {
     }
   }
 
-  return splitBySemicolon(tokens);
+  return tokens;
 
-  function splitBySemicolon(array: string[]) {
-    const result = [];
-    let currentGroup: string[] = [];
+  // function splitBySemicolon(array: string[]) {
+  //   const result = [];
+  //   let currentGroup: string[] = [];
 
-    array.forEach((item) => {
-      currentGroup.push(item);
-      if (item === ";") {
-        result.push(currentGroup);
-        currentGroup = [];
-      }
-    });
+  //   array.forEach((item) => {
+  //     currentGroup.push(item);
+  //     if (item === ";") {
+  //       result.push(currentGroup);
+  //       currentGroup = [];
+  //     }
+  //   });
 
-    if (currentGroup.length > 0) {
-      result.push(currentGroup);
-    }
+  //   if (currentGroup.length > 0) {
+  //     result.push(currentGroup);
+  //   }
 
-    return result;
-  }
+  //   return result;
+  // }
 }

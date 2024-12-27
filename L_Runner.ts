@@ -17,31 +17,29 @@ export function runStringWithLogging(
     if (printResult && printCode) {
       console.log(`-----\n***  source code  ***\n${expr}\n`);
     }
-    const tokensArr: string[][] = L_Scan(env, expr);
+    const tokens: string[] = L_Scan(env, expr);
 
     let result: L_Out[] = [];
-    for (const tokens of tokensArr) {
-      const nodes = L_Parser.parseNodes(env, tokens, null);
-      if (nodes === undefined) {
-        throw Error();
-      }
-      for (const node of nodes) {
-        const out = L_Executor.L_Exec(env, node);
-        if (printEveryThing) {
-          if (true) {
-            if (printCode) console.log("***  results  ***\n");
-            env.printClearMessage();
-            console.log();
-          } else {
-            env.clearMessages();
-          }
+    const nodes = L_Parser.parseNodes(env, tokens, null);
+    if (nodes === undefined) {
+      throw Error();
+    }
+    for (const node of nodes) {
+      const out = L_Executor.L_Exec(env, node);
+      if (printEveryThing) {
+        if (true) {
+          if (printCode) console.log("***  results  ***\n");
+          env.printClearMessage();
+          console.log();
         } else {
-          if (out !== L_Out.True) {
-            env.printClearMessage();
-            console.log();
-          } else {
-            env.clearMessages();
-          }
+          env.clearMessages();
+        }
+      } else {
+        if (out !== L_Out.True) {
+          env.printClearMessage();
+          console.log();
+        } else {
+          env.clearMessages();
         }
       }
     }

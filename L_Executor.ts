@@ -31,9 +31,9 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
     const nodeType = node.constructor.name;
 
     switch (nodeType) {
-      case "DefNode":
-      case "DefExistNode":
-        return L_Out.True;
+      // case "DefNode":
+      // case "DefExistNode":
+      //   return L_Out.True;
       // return defExec(env, node as L_Nodes.DefNode);
       case "KnowNode":
         return knowExec(env, node as L_Nodes.KnowNode);
