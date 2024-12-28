@@ -111,7 +111,7 @@ function functionalSymbolParse(
       true
     );
 
-    return new L_Structs.FunctionalSymbol(value, symbols, false);
+    return new L_Structs.FunctionalSymbol(env, value, symbols);
   } catch (error) {
     L_ParseErr(env, tokens, singletonParse, index, start);
     throw error;

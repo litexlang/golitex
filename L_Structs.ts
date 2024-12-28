@@ -154,6 +154,10 @@ export class L_UndefinedSymbol extends L_Symbol {
     super();
   }
 
+  containFormalVar(env: L_Env): FormalSymbol[] {
+    throw Error();
+  }
+
   // getRootSingletons(): L_Singleton[] {
   //   throw Error();
   // }
@@ -171,10 +175,6 @@ export class L_Singleton extends L_Symbol {
   constructor(public value: string) {
     super();
   }
-
-  // getRootSingletons(): L_Singleton[] {
-  //   return [this];
-  // }
 
   //* IMPORTANT METHOD
   subSymbolsDeclared(env: L_Env): boolean {
@@ -388,10 +388,15 @@ export class L_Composite extends L_Symbol {
 export class FormalSymbol extends L_Singleton {}
 
 export class FunctionalSymbol extends L_Symbol {
+  containFormalSymbols: FormalSymbol[];
+
   // fixed: at compile time, test whether it contains free vars.
-  constructor(public name: string, vars: L_Symbol[], public fixed: boolean) {
+  constructor(env: L_Env, public name: string, public vars: L_Symbol[]) {
     super();
+    this.containFormalSymbols = this.hasFormalSymbols(env);
   }
+
+  hasFormalSymbols(env: L_Env): FormalSymbol[] {}
 
   subSymbolsDeclared(env: L_Env): boolean {
     throw Error();
