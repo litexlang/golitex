@@ -1125,7 +1125,7 @@ export function defCompositeParse(env: L_Env, tokens: string[]): L_Out {
 
   function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
     try {
-      if (!env.newCompositeVar(node.composite.name, node)) throw Error();
+      if (!env.newComposite(node.composite.name, node)) throw Error();
       return env.report(`[new def_composite] ${node}`);
     } catch {
       return L_Report.L_ReportErr(env, defCompositeExec, node);
