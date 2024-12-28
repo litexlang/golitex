@@ -604,15 +604,15 @@ export class LetsNode extends L_Node {
   }
 }
 
-export class MacroNode extends L_Node {
-  constructor(public name: string, public macroTokens: string[]) {
-    super();
-  }
+// export class MacroNode extends L_Node {
+//   constructor(public name: string, public macroTokens: string[]) {
+//     super();
+//   }
 
-  toString() {
-    return `macro ${this.name} ${this.macroTokens.join(" ")}`;
-  }
-}
+//   toString() {
+//     return `macro ${this.name} ${this.macroTokens.join(" ")}`;
+//   }
+// }
 
 export class IncludeNode extends L_Node {
   constructor(public path: string) {

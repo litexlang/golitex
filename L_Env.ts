@@ -11,7 +11,7 @@ export class L_Env {
   private facts = new Map<string, L_Structs.L_KnownFactReq[]>();
   private composites = new Map<string, L_Nodes.DefCompositeNode>();
   private regexSingletons = new Map<string, L_Nodes.LetsNode>();
-  private macros = new Map<string, L_Nodes.MacroNode>();
+  // private macros = new Map<string, L_Nodes.MacroNode>();
   private includes: string[] = [];
   private literalOperators = new Map<string, L_Nodes.DefLiteralOptNode>();
 
@@ -427,27 +427,27 @@ export class L_Env {
     return undefined;
   }
 
-  newMacro(macro: L_Nodes.MacroNode): boolean {
-    if (this.getMacro(macro.name) !== undefined) {
-      return L_ReportBoolErr(
-        this,
-        this.newMacro,
-        `macro ${macro.name} is already declared.`
-      );
-    }
-    this.macros.set(macro.name, macro);
-    return true;
-  }
+  // newMacro(macro: L_Nodes.MacroNode): boolean {
+  //   if (this.getMacro(macro.name) !== undefined) {
+  //     return L_ReportBoolErr(
+  //       this,
+  //       this.newMacro,
+  //       `macro ${macro.name} is already declared.`
+  //     );
+  //   }
+  //   this.macros.set(macro.name, macro);
+  //   return true;
+  // }
 
-  getMacro(name: string): L_Nodes.MacroNode | undefined {
-    if (this.macros.has(name)) {
-      return this.macros.get(name);
-    }
+  // getMacro(name: string): L_Nodes.MacroNode | undefined {
+  //   if (this.macros.has(name)) {
+  //     return this.macros.get(name);
+  //   }
 
-    if (this.parent !== undefined) {
-      return this.parent.getMacro(name);
-    } else return undefined;
-  }
+  //   if (this.parent !== undefined) {
+  //     return this.parent.getMacro(name);
+  //   } else return undefined;
+  // }
 
   newInclude(path: string) {
     if (!this.isLibPathIncluded(path)) {

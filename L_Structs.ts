@@ -241,7 +241,7 @@ export class L_Composite extends L_Symbol {
     this.insideFormalSymbols = this.extractInsideFormalSymbols();
   }
 
-  extractInsideFormalSymbols(): FormalSymbol[] {
+  private extractInsideFormalSymbols(): FormalSymbol[] {
     const out: FormalSymbol[] = [];
     for (const v of this.values) {
       if (v instanceof FormalSymbol) {
@@ -252,6 +252,14 @@ export class L_Composite extends L_Symbol {
     }
 
     return out;
+  }
+
+  getInsideFormalSymbols() {
+    return this.insideFormalSymbols;
+  }
+
+  hasFormalSymbols() {
+    return this.insideFormalSymbols.length !== 0;
   }
 
   getIndexedSubNode(indexes: number[]): L_Symbol {
@@ -407,10 +415,6 @@ export class FunctionalSymbol extends L_Composite {
   // fixed: at compile time, test whether it contains free vars.
   constructor(public name: string, public vars: L_Symbol[]) {
     super(name, vars);
-  }
-
-  hasFormalSymbols(env: L_Env): FormalSymbol[] {
-    throw Error();
   }
 
   subSymbolsDeclared(env: L_Env): boolean {

@@ -84,38 +84,19 @@ export function L_Scan(env: L_Env, text: string): string[] {
     tokens.push(currentToken);
   }
 
-  for (let i = tokens.length - 1; i >= 0; i--) {
-    const token = tokens[i];
-    if (token.startsWith(L_Keywords.MacroPrefix)) {
-      const searchKey = token.slice(1);
-      const out = env.getMacro(searchKey);
-      if (out === undefined) {
-        env.report(`${token} is not a declared macro name.`);
-        throw Error();
-      } else {
-        tokens.splice(i, 1, ...out.macroTokens);
-      }
-    }
-  }
+  // for (let i = tokens.length - 1; i >= 0; i--) {
+  //   const token = tokens[i];
+  //   if (token.startsWith(L_Keywords.MacroPrefix)) {
+  //     const searchKey = token.slice(1);
+  //     const out = env.getMacro(searchKey);
+  //     if (out === undefined) {
+  //       env.report(`${token} is not a declared macro name.`);
+  //       throw Error();
+  //     } else {
+  //       tokens.splice(i, 1, ...out.macroTokens);
+  //     }
+  //   }
+  // }
 
   return tokens;
-
-  // function splitBySemicolon(array: string[]) {
-  //   const result = [];
-  //   let currentGroup: string[] = [];
-
-  //   array.forEach((item) => {
-  //     currentGroup.push(item);
-  //     if (item === ";") {
-  //       result.push(currentGroup);
-  //       currentGroup = [];
-  //     }
-  //   });
-
-  //   if (currentGroup.length > 0) {
-  //     result.push(currentGroup);
-  //   }
-
-  //   return result;
-  // }
 }

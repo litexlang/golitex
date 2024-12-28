@@ -9,6 +9,7 @@ import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
 import { L_ParseErr, L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Report from "./L_Report";
 import { newFact } from "./L_Memory";
+import { checkFact } from "./L_Checker";
 
 function arrParse<T>(
   env: L_Env,
@@ -341,7 +342,7 @@ const KeywordFunctionMap: {
   run: specialParse,
   def_composite: defCompositeParse,
   lets: letsParse,
-  macro: macroParse,
+  // macro: macroParse,
   include: includeParse,
   def_literal_operator: defLiteralOperatorParse,
   let_formal: letFormalParse,
@@ -976,7 +977,7 @@ function localEnvParse(env: L_Env, tokens: string[]): L_Nodes.LocalEnvNode {
   }
 }
 
-function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
+function haveParse(env: L_Env, tokens: string[]): L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -992,7 +993,57 @@ function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
     );
     const fact = optFactParse(env, tokens, false);
 
-    return new L_Nodes.HaveNode(vars, fact);
+    const node = new L_Nodes.HaveNode(vars, fact);
+
+    const out = haveExec(env, node);
+
+    return out;
+
+    function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
+      try {
+        let existSymbolNum = 0;
+        for (const v of node.fact.vars) {
+          if (v instanceof L_Singleton) {
+            if (v.value === L_Keywords.ExistSymbol) existSymbolNum += 1;
+          }
+        }
+
+        if (node.vars.length !== existSymbolNum) throw Error();
+
+        const out = checkFact(env, node.fact);
+
+        if (out !== L_Out.True) return out;
+
+        for (const v of node.vars) {
+          const ok = env.newLetSymbol(v.value);
+          if (!ok) throw Error();
+        }
+
+        const newVars: L_Symbol[] = [];
+        let existSymbolAlreadyGot = 0;
+        for (const v of node.fact.vars) {
+          if (v instanceof L_Singleton && v.value === L_Keywords.ExistSymbol) {
+            newVars.push(node.vars[existSymbolAlreadyGot]);
+            existSymbolAlreadyGot += 1;
+          } else {
+            newVars.push(v);
+          }
+        }
+
+        const opt = new L_Nodes.OptNode(
+          node.fact.optSymbol,
+          newVars,
+          node.fact.isT,
+          node.fact.checkVars
+        );
+
+        const ok = newFact(env, opt);
+        if (ok) return L_Out.True;
+        else throw Error();
+      } catch {
+        return L_Report.L_ReportErr(env, haveExec, node);
+      }
+    }
   } catch (error) {
     L_ParseErr(env, tokens, haveParse, index, start);
     throw error;
@@ -1375,35 +1426,32 @@ export function letsParse(env: L_Env, tokens: string[]): L_Out {
   }
 }
 
-export function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
-  const start = tokens[0];
-  const index = tokens.length;
+// export function macroParse(env: L_Env, tokens: string[]): L_Nodes.MacroNode {
+//   const start = tokens[0];
+//   const index = tokens.length;
 
-  try {
-    skip(tokens, L_Keywords.Macro);
-    const name = skip(tokens);
+//   try {
+//     skip(tokens, L_Keywords.Macro);
+//     const name = skip(tokens);
 
-    skip(tokens, '"');
-    const macroTokens: string[] = [];
-    while (!isCurToken(tokens, '"')) {
-      macroTokens.push(skip(tokens));
-    }
-    skip(tokens, '"');
+//     skip(tokens, '"');
+//     const macroTokens: string[] = [];
+//     while (!isCurToken(tokens, '"')) {
+//       macroTokens.push(skip(tokens));
+//     }
+//     skip(tokens, '"');
 
-    skip(tokens, L_Keywords.L_End);
-    const out = new L_Nodes.MacroNode(name, macroTokens);
+//     skip(tokens, L_Keywords.L_End);
+//     const out = new L_Nodes.MacroNode(name, macroTokens);
 
-    return out;
-  } catch (error) {
-    L_ParseErr(env, tokens, macroParse, index, start);
-    throw error;
-  }
-}
+//     return out;
+//   } catch (error) {
+//     L_ParseErr(env, tokens, macroParse, index, start);
+//     throw error;
+//   }
+// }
 
-export function includeParse(
-  env: L_Env,
-  tokens: string[]
-): L_Nodes.IncludeNode {
+export function includeParse(env: L_Env, tokens: string[]): L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -1418,19 +1466,27 @@ export function includeParse(
     skip(tokens, '"');
 
     skip(tokens, L_Keywords.L_End);
-    const out = new L_Nodes.IncludeNode(path);
+    const node = new L_Nodes.IncludeNode(path);
+
+    const out = includeExec(env, node);
 
     return out;
+
+    function includeExec(env: L_Env, node: L_Nodes.IncludeNode): L_Out {
+      try {
+        if (!env.newInclude(node.path)) throw Error();
+        return env.report(`[new lib included] ${node.toString()}`);
+      } catch {
+        return L_Report.L_ReportErr(env, includeExec, node);
+      }
+    }
   } catch (error) {
     L_ParseErr(env, tokens, includeParse, index, start);
     throw error;
   }
 }
 
-export function defLiteralOperatorParse(
-  env: L_Env,
-  tokens: string[]
-): L_Nodes.DefLiteralOptNode {
+export function defLiteralOperatorParse(env: L_Env, tokens: string[]): L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -1452,9 +1508,10 @@ export function defLiteralOperatorParse(
       false
     );
 
+    let node: L_Nodes.DefLiteralOptNode | undefined = undefined;
     if (isCurToken(tokens, L_Keywords.L_End)) {
       skip(tokens, L_Keywords.L_End);
-      return new L_Nodes.DefLiteralOptNode(name, vars, [], path, func);
+      node = new L_Nodes.DefLiteralOptNode(name, vars, [], path, func);
     } else {
       skip(tokens, ":");
       const facts = arrParse<ToCheckNode>(
@@ -1466,11 +1523,27 @@ export function defLiteralOperatorParse(
         false
       );
       skip(tokens, L_Keywords.L_End);
-      return new L_Nodes.DefLiteralOptNode(name, vars, facts, path, func);
+      node = new L_Nodes.DefLiteralOptNode(name, vars, facts, path, func);
     }
+
+    const out = defLiteralOptExec(env, node);
+
+    return out;
   } catch (error) {
     L_ParseErr(env, tokens, defLiteralOperatorParse, index, start);
     throw error;
+  }
+
+  function defLiteralOptExec(
+    env: L_Env,
+    node: L_Nodes.DefLiteralOptNode
+  ): L_Out {
+    try {
+      if (!env.newLiteralOpt(node)) throw Error();
+      return env.report(`[new def_literal_operator] ${node}`);
+    } catch {
+      return L_Report.L_ReportErr(env, defLiteralOptExec, node);
+    }
   }
 }
 

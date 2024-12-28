@@ -45,14 +45,14 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
         return localEnvExec(env, node as L_Nodes.LocalEnvNode);
       case "SpecialNode":
         return specialExec(env, node as L_Nodes.SpecialNode);
-      case "MacroNode":
-        return macroExec(env, node as L_Nodes.MacroNode);
-      case "IncludeNode":
-        return includeExec(env, node as L_Nodes.IncludeNode);
-      case "DefLiteralOptNode":
-        return defLiteralOptExec(env, node as L_Nodes.DefLiteralOptNode);
-      case "HaveNode":
-        return haveExec(env, node as L_Nodes.HaveNode);
+      // case "MacroNode":
+      //   return macroExec(env, node as L_Nodes.MacroNode);
+      // case "IncludeNode":
+      //   return includeExec(env, node as L_Nodes.IncludeNode);
+      // case "DefLiteralOptNode":
+      //   return defLiteralOptExec(env, node as L_Nodes.DefLiteralOptNode);
+      // case "HaveNode":
+      //   return haveExec(env, node as L_Nodes.HaveNode);
       default:
         if (node instanceof L_Nodes.ToCheckNode) {
           const out = factExec(env, node);
@@ -374,75 +374,57 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
 //   }
 // }
 
-function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
-  try {
-    if (!env.newMacro(node)) throw Error();
-    return env.report(`[new macro] ${(node as L_Nodes.MacroNode).toString()}`);
-  } catch {
-    return L_Report.L_ReportErr(env, macroExec, node);
-  }
-}
+// function macroExec(env: L_Env, node: L_Nodes.MacroNode): L_Out {
+//   try {
+//     if (!env.newMacro(node)) throw Error();
+//     return env.report(`[new macro] ${(node as L_Nodes.MacroNode).toString()}`);
+//   } catch {
+//     return L_Report.L_ReportErr(env, macroExec, node);
+//   }
+// }
 
-function includeExec(env: L_Env, node: L_Nodes.IncludeNode): L_Out {
-  try {
-    if (!env.newInclude(node.path)) throw Error();
-    return env.report(`[new lib included] ${node.toString()}`);
-  } catch {
-    return L_Report.L_ReportErr(env, macroExec, node);
-  }
-}
+// function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
+//   try {
+//     let existSymbolNum = 0;
+//     for (const v of node.fact.vars) {
+//       if (v instanceof L_Singleton) {
+//         if (v.value === L_Keywords.ExistSymbol) existSymbolNum += 1;
+//       }
+//     }
 
-function defLiteralOptExec(env: L_Env, node: L_Nodes.DefLiteralOptNode): L_Out {
-  try {
-    if (!env.newLiteralOpt(node)) throw Error();
-    return env.report(`[new def_literal_operator] ${node}`);
-  } catch {
-    return L_Report.L_ReportErr(env, defLiteralOptExec, node);
-  }
-}
+//     if (node.vars.length !== existSymbolNum) throw Error();
 
-function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
-  try {
-    let existSymbolNum = 0;
-    for (const v of node.fact.vars) {
-      if (v instanceof L_Singleton) {
-        if (v.value === L_Keywords.ExistSymbol) existSymbolNum += 1;
-      }
-    }
+//     const out = L_Checker.checkFact(env, node.fact);
 
-    if (node.vars.length !== existSymbolNum) throw Error();
+//     if (out !== L_Out.True) return out;
 
-    const out = L_Checker.checkFact(env, node.fact);
+//     for (const v of node.vars) {
+//       const ok = env.newLetSymbol(v.value);
+//       if (!ok) throw Error();
+//     }
 
-    if (out !== L_Out.True) return out;
+//     const newVars: L_Symbol[] = [];
+//     let existSymbolAlreadyGot = 0;
+//     for (const v of node.fact.vars) {
+//       if (v instanceof L_Singleton && v.value === L_Keywords.ExistSymbol) {
+//         newVars.push(node.vars[existSymbolAlreadyGot]);
+//         existSymbolAlreadyGot += 1;
+//       } else {
+//         newVars.push(v);
+//       }
+//     }
 
-    for (const v of node.vars) {
-      const ok = env.newLetSymbol(v.value);
-      if (!ok) throw Error();
-    }
+//     const opt = new L_Nodes.OptNode(
+//       node.fact.optSymbol,
+//       newVars,
+//       node.fact.isT,
+//       node.fact.checkVars
+//     );
 
-    const newVars: L_Symbol[] = [];
-    let existSymbolAlreadyGot = 0;
-    for (const v of node.fact.vars) {
-      if (v instanceof L_Singleton && v.value === L_Keywords.ExistSymbol) {
-        newVars.push(node.vars[existSymbolAlreadyGot]);
-        existSymbolAlreadyGot += 1;
-      } else {
-        newVars.push(v);
-      }
-    }
-
-    const opt = new L_Nodes.OptNode(
-      node.fact.optSymbol,
-      newVars,
-      node.fact.isT,
-      node.fact.checkVars
-    );
-
-    const ok = L_Memory.newFact(env, opt);
-    if (ok) return L_Out.True;
-    else throw Error();
-  } catch {
-    return L_Report.L_ReportErr(env, haveExec, node);
-  }
-}
+//     const ok = L_Memory.newFact(env, opt);
+//     if (ok) return L_Out.True;
+//     else throw Error();
+//   } catch {
+//     return L_Report.L_ReportErr(env, haveExec, node);
+//   }
+// }
