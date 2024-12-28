@@ -149,12 +149,7 @@ export class L_Singleton extends L_Symbol {
 
   //* IMPORTANT METHOD
   subSymbolsDeclared(env: L_Env): boolean {
-    return (
-      this.value === L_Keywords.ExistSymbol ||
-      this.value === L_Keywords.AnySymbol ||
-      env.isSingletonDeclared(this.value) ||
-      env.isRegexSingleton(this.value)
-    );
+    return env.isSingletonDeclared(this.value);
   }
 
   toString() {
@@ -169,6 +164,9 @@ export class L_Singleton extends L_Symbol {
     return this;
   }
 }
+
+const ExistSymbol = new L_Singleton(L_Keywords.ExistSymbol);
+const AnySymbol = new L_Singleton(L_Keywords.AndKeyword);
 
 export class IndexedSymbol extends L_Symbol {
   constructor(public given: L_Symbol, public indexes: number[]) {
@@ -362,7 +360,7 @@ export class FormalSymbol extends L_Singleton {}
 
 export class FunctionalSymbol extends L_Symbol {
   // fixed: at compile time, test whether it contains free vars.
-  constructor(public fixed: boolean) {
+  constructor(public name: string, vars: L_Symbol[], public fixed: boolean) {
     super();
   }
 

@@ -1,9 +1,16 @@
 import { L_Env } from "./L_Env";
+import { L_Keywords } from "./L_Keywords";
 import {
   L_VarsInOptDoubleDeclErr,
   L_VarsInOptNotDeclaredBool,
 } from "./L_Report";
-import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
+import {
+  FunctionalSymbol,
+  L_Composite,
+  L_OptSymbol,
+  L_Singleton,
+  L_Symbol,
+} from "./L_Structs";
 
 export abstract class L_Node {}
 
@@ -629,7 +636,22 @@ export class DefLiteralOptNode extends L_Node {
   }
 }
 
-export class DefFunctionalSymbolNode extends L_Node {}
+export class DefFunctionalSymbolNode extends L_Node {
+  constructor(
+    public functional: FunctionalSymbol,
+    public facts: ToCheckNode[]
+  ) {
+    super();
+  }
+
+  toString(): string {
+    return `${
+      L_Keywords.DefFunctional
+    } ${this.functional.toString()}: ${this.facts
+      .map((e) => e.toString())
+      .join(", ")}`;
+  }
+}
 
 export class LetAliasNode extends L_Node {
   constructor(public name: L_Singleton, public toBeAliased: L_Symbol) {
