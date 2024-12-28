@@ -99,7 +99,7 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "",
-    code: ["def_function f(x);"],
+    code: ["def_composite \\f{x}; let_formal x; def $p(x); $p(\\f{x});"],
     debug: true,
     print: true,
   },

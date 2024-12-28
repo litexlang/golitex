@@ -152,10 +152,7 @@ function optSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_OptSymbol {
   }
 }
 
-function slashCompositeParse(
-  env: L_Env,
-  tokens: string[]
-): L_Structs.L_Composite {
+function compositeParse(env: L_Env, tokens: string[]): L_Structs.L_Composite {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -171,7 +168,7 @@ function slashCompositeParse(
     skip(tokens, "}");
     return new L_Structs.L_Composite(name, values);
   } catch (error) {
-    L_ParseErr(env, tokens, slashCompositeParse, index, start);
+    L_ParseErr(env, tokens, compositeParse, index, start);
     throw error;
   }
 }
@@ -906,6 +903,17 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
     while (!isCurToken(tokens, [":", "{"])) {
       const singleton = pureSingletonAndFormalSymbolParse(env, tokens);
+
+      // ! 这是必要的，因为冲突极有可能造成问题
+      if (singleton instanceof L_Structs.FormalSymbol) {
+        L_ReportBoolErr(
+          env,
+          logicParse,
+          `${singleton.value} is a declared formal symbol. Free variables in logical expressions can not be formal symbol.`
+        );
+        throw Error();
+      }
+
       const newSingleton = new L_Structs.L_Singleton(
         L_Keywords.IfVarPrefix + singleton.value
       );
@@ -1147,7 +1155,7 @@ export function defCompositeParse(env: L_Env, tokens: string[]): L_Out {
     let out: L_Nodes.DefCompositeNode | undefined = undefined;
 
     skip(tokens, L_Keywords.DefCompositeKeyword);
-    const composite = slashCompositeParse(env, tokens);
+    const composite = compositeParse(env, tokens);
 
     if (isCurToken(tokens, L_Keywords.L_End)) {
       skip(tokens, L_Keywords.L_End);
@@ -1214,7 +1222,7 @@ export function isFormParse(
     skip(tokens, "(");
     const given = symbolParse(env, tokens);
     skip(tokens, ",");
-    const composite = slashCompositeParse(env, tokens);
+    const composite = compositeParse(env, tokens);
 
     if (isCurToken(tokens, ",")) {
       skip(tokens, ",");
@@ -1283,7 +1291,7 @@ function usePrecedenceToParseComposite(
     try {
       // TODO maybe is broken because it does not take # into consideration
       if (tokens[0] === L_Keywords.SlashKeyword) {
-        return slashCompositeParse(env, tokens);
+        return compositeParse(env, tokens);
       } else {
         return pureSingletonAndFormalSymbolParse(env, tokens);
       }
@@ -1491,7 +1499,7 @@ export function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
 
     try {
       if (tokens[0] === L_Keywords.SlashKeyword) {
-        return slashCompositeParse(env, tokens);
+        return compositeParse(env, tokens);
       } else if (tokens[0] === L_Keywords.DollarKeyword) {
         return braceCompositeParse(env, tokens);
       } else if (tokens[0].startsWith(L_Keywords.LiteralOptPrefix)) {
