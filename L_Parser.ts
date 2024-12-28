@@ -74,10 +74,10 @@ function singletonFunctionalParse(
     if (tokens[1] === L_Keywords.LeftBrace) {
       return functionalSymbolParse(env, tokens);
     } else {
-      return singletonParse(env, tokens);
+      return pureSingletonAndFormalSymbolParse(env, tokens);
     }
   } catch (error) {
-    L_ParseErr(env, tokens, singletonParse, index, start);
+    L_ParseErr(env, tokens, pureSingletonAndFormalSymbolParse, index, start);
     throw error;
   }
 }
@@ -111,40 +111,32 @@ function functionalSymbolParse(
       true
     );
 
-    return new L_Structs.FunctionalSymbol(env, value, symbols);
+    return new L_Structs.FunctionalSymbol(value, symbols);
   } catch (error) {
-    L_ParseErr(env, tokens, singletonParse, index, start);
+    L_ParseErr(env, tokens, pureSingletonAndFormalSymbolParse, index, start);
     throw error;
   }
 }
 
-function singletonParse(env: L_Env, tokens: string[]): L_Structs.L_Singleton {
+function pureSingletonAndFormalSymbolParse(
+  env: L_Env,
+  tokens: string[]
+): L_Structs.L_Singleton | L_Structs.FormalSymbol {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     const value = skip(tokens) as string;
 
-    return new L_Structs.L_Singleton(value);
+    if (env.isFormalSymbolDeclared(value)) {
+      return new L_Structs.FormalSymbol(value);
+    } else {
+      return new L_Structs.L_Singleton(value);
+    }
   } catch (error) {
-    L_ParseErr(env, tokens, singletonParse, index, start);
+    L_ParseErr(env, tokens, pureSingletonAndFormalSymbolParse, index, start);
     throw error;
   }
-}
-
-function singletonArrParse(
-  env: L_Env,
-  tokens: string[],
-  end: string | string[],
-  skipEnd: boolean
-): L_Structs.L_Singleton[] {
-  const out: L_Structs.L_Singleton[] = [];
-  while (!isCurToken(tokens, end)) {
-    out.push(singletonParse(env, tokens));
-    if (isCurToken(tokens, ",")) skip(tokens, ",");
-  }
-  if (skipEnd) skip(tokens);
-  return out;
 }
 
 function optSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_OptSymbol {
@@ -913,7 +905,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
 
     const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
     while (!isCurToken(tokens, [":", "{"])) {
-      const singleton = singletonParse(env, tokens);
+      const singleton = pureSingletonAndFormalSymbolParse(env, tokens);
       const newSingleton = new L_Structs.L_Singleton(
         L_Keywords.IfVarPrefix + singleton.value
       );
@@ -985,7 +977,7 @@ function haveParse(env: L_Env, tokens: string[]): L_Nodes.HaveNode {
     const vars = arrParse<L_Structs.L_Singleton>(
       env,
       tokens,
-      singletonParse,
+      pureSingletonAndFormalSymbolParse,
       undefined,
       ":",
       true
@@ -1293,7 +1285,7 @@ function usePrecedenceToParseComposite(
       if (tokens[0] === L_Keywords.SlashKeyword) {
         return slashCompositeParse(env, tokens);
       } else {
-        return singletonParse(env, tokens);
+        return pureSingletonAndFormalSymbolParse(env, tokens);
       }
     } catch (error) {
       L_ParseErr(env, tokens, prefixSymbolParse, index, start);
@@ -1523,7 +1515,7 @@ export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
 
   try {
     skip(tokens, L_Keywords.LetAlias);
-    const name = singletonParse(env, tokens);
+    const name = pureSingletonAndFormalSymbolParse(env, tokens);
     const toBeAliased = arrParse<L_Symbol>(
       env,
       tokens,

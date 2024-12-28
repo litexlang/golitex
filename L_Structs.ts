@@ -234,8 +234,24 @@ export class IndexedSymbol extends L_Symbol {
 
 // e.g. \frac{1,2} ; \+{1,2} ; \union{A,B} ; \set{x}
 export class L_Composite extends L_Symbol {
+  insideFormalSymbols: FormalSymbol[];
+
   constructor(public name: string, public values: L_Symbol[]) {
     super();
+    this.insideFormalSymbols = this.extractInsideFormalSymbols();
+  }
+
+  extractInsideFormalSymbols(): FormalSymbol[] {
+    const out: FormalSymbol[] = [];
+    for (const v of this.values) {
+      if (v instanceof FormalSymbol) {
+        out.push(v);
+      } else if (v instanceof L_Composite) {
+        out.push(...v.extractInsideFormalSymbols());
+      }
+    }
+
+    return out;
   }
 
   getIndexedSubNode(indexes: number[]): L_Symbol {
@@ -387,16 +403,15 @@ export class L_Composite extends L_Symbol {
 
 export class FormalSymbol extends L_Singleton {}
 
-export class FunctionalSymbol extends L_Symbol {
-  containFormalSymbols: FormalSymbol[];
-
+export class FunctionalSymbol extends L_Composite {
   // fixed: at compile time, test whether it contains free vars.
-  constructor(env: L_Env, public name: string, public vars: L_Symbol[]) {
-    super();
-    this.containFormalSymbols = this.hasFormalSymbols(env);
+  constructor(public name: string, public vars: L_Symbol[]) {
+    super(name, vars);
   }
 
-  hasFormalSymbols(env: L_Env): FormalSymbol[] {}
+  hasFormalSymbols(env: L_Env): FormalSymbol[] {
+    throw Error();
+  }
 
   subSymbolsDeclared(env: L_Env): boolean {
     throw Error();
