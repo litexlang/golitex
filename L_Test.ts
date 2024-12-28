@@ -82,7 +82,7 @@ const exampleList: ExampleItem[] = [
 }      
       `,
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -95,6 +95,12 @@ const exampleList: ExampleItem[] = [
     name: "let_formal",
     code: ["let_formal x; def $p(x); $p(x); let_alias k x;"],
     debug: false,
+    print: true,
+  },
+  {
+    name: "",
+    code: ["def_function f(x);"],
+    debug: true,
     print: true,
   },
 ];

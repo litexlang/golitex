@@ -71,23 +71,47 @@ function singletonFunctionalParse(
   const index = tokens.length;
 
   try {
+    if (tokens[1] === L_Keywords.LeftBrace) {
+      return functionalSymbolParse(env, tokens);
+    } else {
+      return singletonParse(env, tokens);
+    }
+  } catch (error) {
+    L_ParseErr(env, tokens, singletonParse, index, start);
+    throw error;
+  }
+}
+
+function functionalSymbolParse(
+  env: L_Env,
+  tokens: string[]
+): L_Structs.FunctionalSymbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
     const value = skip(tokens) as string;
 
-    if (isCurToken(tokens, L_Keywords.LeftBrace)) {
-      skip(tokens, L_Keywords.LeftBrace);
-      const symbols = arrParse<L_Symbol>(
+    if (!env.getFunctionalSymbol(tokens[0])) {
+      L_ReportErr(
         env,
-        tokens,
-        symbolParse,
-        undefined,
-        L_Keywords.RightBrace,
-        true
+        singletonFunctionalParse,
+        `${tokens[0]} is not a declared functional symbol`
       );
-
-      return new L_Structs.FunctionalSymbol(value, symbols, false);
-    } else {
-      return new L_Structs.L_Singleton(value);
+      throw Error();
     }
+
+    skip(tokens, L_Keywords.LeftBrace);
+    const symbols = arrParse<L_Symbol>(
+      env,
+      tokens,
+      symbolParse,
+      undefined,
+      L_Keywords.RightBrace,
+      true
+    );
+
+    return new L_Structs.FunctionalSymbol(value, symbols, false);
   } catch (error) {
     L_ParseErr(env, tokens, singletonParse, index, start);
     throw error;
@@ -333,6 +357,7 @@ const KeywordFunctionMap: {
   def_literal_operator: defLiteralOperatorParse,
   let_formal: letFormalParse,
   let_alias: letAliasParse,
+  def_function: defFunctionParse,
 };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
@@ -1531,6 +1556,27 @@ export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
         );
       else return L_Out.True;
     }
+  } catch (error) {
+    L_ParseErr(env, tokens, letAliasParse, index, start);
+    throw error;
+  }
+}
+
+function defFunctionParse(
+  env: L_Env,
+  tokens: string[]
+): L_Nodes.DefFunctionalSymbolNode {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    skip(tokens, L_Keywords.DefFunctional);
+    const functional = functionalSymbolParse(env, tokens);
+    skip(tokens, L_Keywords.Colon);
+    const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+    const out = new L_Nodes.DefFunctionalSymbolNode(functional, facts);
+
+    return out;
   } catch (error) {
     L_ParseErr(env, tokens, letAliasParse, index, start);
     throw error;

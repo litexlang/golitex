@@ -72,5 +72,5 @@ export const L_Keywords = {
   FunctionalStructuredFactOptPrefix: "$",
   LetFormal: "let_formal",
   LetAlias: "let_alias",
-  DefFunctional: "def_functional",
+  DefFunctional: "def_function",
 };
