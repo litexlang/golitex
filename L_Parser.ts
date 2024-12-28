@@ -63,12 +63,44 @@ function indexedSymbolParse(
   }
 }
 
+function singletonFunctionalParse(
+  env: L_Env,
+  tokens: string[]
+): L_Structs.L_Singleton | L_Structs.FunctionalSymbol {
+  const start = tokens[0];
+  const index = tokens.length;
+
+  try {
+    const value = skip(tokens) as string;
+
+    if (isCurToken(tokens, L_Keywords.LeftBrace)) {
+      skip(tokens, L_Keywords.LeftBrace);
+      const symbols = arrParse<L_Symbol>(
+        env,
+        tokens,
+        symbolParse,
+        undefined,
+        L_Keywords.RightBrace,
+        true
+      );
+
+      return new L_Structs.FunctionalSymbol(value, symbols, false);
+    } else {
+      return new L_Structs.L_Singleton(value);
+    }
+  } catch (error) {
+    L_ParseErr(env, tokens, singletonParse, index, start);
+    throw error;
+  }
+}
+
 function singletonParse(env: L_Env, tokens: string[]): L_Structs.L_Singleton {
   const start = tokens[0];
   const index = tokens.length;
 
   try {
     const value = skip(tokens) as string;
+
     return new L_Structs.L_Singleton(value);
   } catch (error) {
     L_ParseErr(env, tokens, singletonParse, index, start);
@@ -1450,7 +1482,8 @@ export function symbolParse(env: L_Env, tokens: string[]): L_Structs.L_Symbol {
       } else if (tokens[0] === L_Keywords.IndexedSymbolKeyword) {
         return indexedSymbolParse(env, tokens);
       } else {
-        return singletonParse(env, tokens);
+        // return singletonParse(env, tokens);
+        return singletonFunctionalParse(env, tokens);
       }
     } catch (error) {
       L_ParseErr(env, tokens, singleSymbolParse, index, start);
