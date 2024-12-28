@@ -1466,7 +1466,14 @@ export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
   try {
     skip(tokens, L_Keywords.LetAlias);
     const name = singletonParse(env, tokens);
-    const toBeAliased = symbolParse(env, tokens);
+    const toBeAliased = arrParse<L_Symbol>(
+      env,
+      tokens,
+      symbolParse,
+      undefined,
+      L_Keywords.L_End,
+      true
+    );
 
     const node = new L_Nodes.LetAliasNode(name, toBeAliased);
 
@@ -1474,7 +1481,7 @@ export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
     return L_Report.reportL_Out(env, out, node);
 
     function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
-      let ok = node.toBeAliased.subSymbolsDeclared(env);
+      let ok = node.toBeAliased.every((e) => e.subSymbolsDeclared(env));
       if (!ok)
         return L_ReportErr(
           env,

@@ -35,7 +35,8 @@ export abstract class L_Symbol {
   static literallyIdentical(
     env: L_Env,
     given: L_Symbol,
-    expected: L_Symbol
+    expected: L_Symbol,
+    useAlias: boolean = true
   ): boolean {
     try {
       //* ANY symbol is equal to any symbol, except EXIST
@@ -44,9 +45,37 @@ export abstract class L_Symbol {
       if (pureSingleIdentical(env, given, expected)) return true;
       if (compareComposites(env, given, expected)) return true;
 
+      if (useAlias) {
+        if (provedByAlias(env, given, expected)) return true;
+      }
+
       return false;
     } catch {
       L_ReportErr(env, L_Symbol.literallyIdentical);
+      return false;
+    }
+
+    function provedByAlias(
+      env: L_Env,
+      given: L_Symbol,
+      expected: L_Symbol
+    ): boolean {
+      if (given instanceof L_Singleton && env.isAlias(given.value)) {
+        for (const alias of env.getAlias(given.value) as L_Symbol[]) {
+          if (L_Symbol.literallyIdentical(env, given, expected, false)) {
+            return true;
+          }
+        }
+      }
+
+      if (expected instanceof L_Singleton && env.isAlias(expected.value)) {
+        for (const alias of env.getAlias(expected.value) as L_Symbol[]) {
+          if (L_Symbol.literallyIdentical(env, given, expected, false)) {
+            return true;
+          }
+        }
+      }
+
       return false;
     }
 

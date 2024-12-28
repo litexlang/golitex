@@ -16,7 +16,7 @@ export class L_Env {
   private literalOperators = new Map<string, L_Nodes.DefLiteralOptNode>();
 
   // TODO
-  private aliases = new Map<string, L_Structs.L_Symbol>();
+  private aliases = new Map<string, L_Structs.L_Symbol[]>();
   private formalSymbols = new Set<string>();
   private functionalSymbols = new Map<
     string,
@@ -258,7 +258,7 @@ export class L_Env {
 
   newAlias(
     name: L_Structs.L_Singleton,
-    toBeAliased: L_Structs.L_Symbol
+    toBeAliased: L_Structs.L_Symbol[]
   ): boolean {
     if (this.isSingletonDeclared(name.value)) {
       return L_ReportBoolErr(
@@ -267,11 +267,12 @@ export class L_Env {
         `The variable "${name.value}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
+
     this.aliases.set(name.value, toBeAliased);
     return true;
   }
 
-  getAlias(name: string): L_Structs.L_Symbol | undefined {
+  getAlias(name: string): L_Structs.L_Symbol[] | undefined {
     const out = this.aliases.get(name);
     if (out === undefined) {
       if (this.parent !== undefined) {
@@ -291,7 +292,7 @@ export class L_Env {
       this.isPureSingletonDeclared(fix) ||
       this.isRegexSingleton(fix) ||
       this.isFormalSymbolDeclared(fix) ||
-      this.isAliasDeclared(fix)
+      this.isAlias(fix)
     );
   }
 
@@ -299,12 +300,12 @@ export class L_Env {
     return fix === L_Keywords.AnySymbol || fix === L_Keywords.ExistSymbol;
   }
 
-  isAliasDeclared(name: string): boolean {
+  isAlias(name: string): boolean {
     if (this.getAlias(name) !== undefined) {
       return true;
     } else {
       if (!this.parent) return false;
-      else return this.parent.isAliasDeclared(name);
+      else return this.parent.isAlias(name);
     }
   }
 
