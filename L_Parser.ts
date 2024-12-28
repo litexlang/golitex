@@ -1562,10 +1562,7 @@ export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
   }
 }
 
-function defFunctionParse(
-  env: L_Env,
-  tokens: string[]
-): L_Nodes.DefFunctionalSymbolNode {
+function defFunctionParse(env: L_Env, tokens: string[]): L_Out {
   const start = tokens[0];
   const index = tokens.length;
 
@@ -1574,9 +1571,24 @@ function defFunctionParse(
     const functional = functionalSymbolParse(env, tokens);
     skip(tokens, L_Keywords.Colon);
     const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
-    const out = new L_Nodes.DefFunctionalSymbolNode(functional, facts);
+    const node = new L_Nodes.DefFunctionalSymbolNode(functional, facts);
+    const ok = defFunctionExec(env, node);
 
-    return out;
+    return ok;
+
+    function defFunctionExec(
+      env: L_Env,
+      node: L_Nodes.DefFunctionalSymbolNode
+    ): L_Structs.L_Out {
+      const ok = env.newFunctionalSymbol(functional.name, node);
+
+      if (!ok) {
+        env.report(`Failed to store ${node}`);
+        return L_Structs.L_Out.Error;
+      }
+
+      return L_Out.True;
+    }
   } catch (error) {
     L_ParseErr(env, tokens, letAliasParse, index, start);
     throw error;
