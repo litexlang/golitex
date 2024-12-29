@@ -544,7 +544,7 @@ function letParse(env: L_Env, tokens: string[]): L_Out {
     try {
       // examine whether some vars are already declared. if not, declare them.
       for (const e of node.vars) {
-        const ok = env.newLetSymbol(e);
+        const ok = env.safeNewPureSingleton(e);
         if (!ok) return L_Out.Error;
       }
 
@@ -613,7 +613,7 @@ function letFormalParse(env: L_Env, tokens: string[]): L_Out {
   function letFormalExec(env: L_Env, node: L_Nodes.LetFormalSymbolNode): L_Out {
     try {
       for (const e of node.vars) {
-        const ok = env.newLetFormalSymbol(e);
+        const ok = env.safeNewFormalSymbol(e);
         if (!ok) return L_Out.Error;
       }
 
@@ -999,7 +999,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
       );
       vars.push(newSingleton);
 
-      newEnv.newLetSymbol(newSingleton.value);
+      newEnv.safeNewPureSingleton(newSingleton.value);
 
       freeFixPairs.push([singleton, newSingleton]);
       if (isCurToken(tokens, ",")) skipper.skip(",");
@@ -1097,7 +1097,7 @@ function haveParse(env: L_Env, tokens: string[]): L_Out {
         if (out !== L_Out.True) return out;
 
         for (const v of node.vars) {
-          const ok = env.newLetSymbol(v.value);
+          const ok = env.safeNewPureSingleton(v.value);
           if (!ok) throw Error();
         }
 
@@ -1222,7 +1222,7 @@ function defParse(env: L_Env, tokens: string[]): L_Out {
       //   ok = env.newDef(node.opt.optSymbol.name, node);
       //   ok = env.newExistDef(node.opt.optSymbol.name, node);
       // } else {
-      ok = env.newDef(node.opt.optSymbol.name, node);
+      ok = env.safeNewDef(node.opt.optSymbol.name, node);
       // }
       for (const onlyIf of node.onlyIfs) {
         const ok = newFact(env, onlyIf);
@@ -1494,7 +1494,7 @@ export function letsParse(env: L_Env, tokens: string[]): L_Out {
 
   function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
     try {
-      env.newLetsSymbol(node);
+      env.safeNewLetsSymbol(node);
       for (const fact of node.facts) {
         newFact(env, fact);
       }
@@ -1688,7 +1688,7 @@ export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
     return L_Report.reportL_Out(env, out, node);
 
     function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
-      let ok = node.toBeAliased.every((e) => e.subSymbolsDeclared(env));
+      let ok = node.toBeAliased.every((e) => e.varsDeclared(env));
       if (!ok)
         return L_ReportErr(
           env,
@@ -1696,7 +1696,7 @@ export function letAliasParse(env: L_Env, tokens: string[]): L_Out {
           `${node.toBeAliased} undeclared.`
         );
 
-      ok = env.newAlias(node.name, node.toBeAliased);
+      ok = env.safeNewAlias(node.name, node.toBeAliased);
       if (!ok)
         return L_ReportErr(
           env,

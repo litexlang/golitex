@@ -184,7 +184,7 @@ export class OptNode extends ToCheckNode {
 
   varsDeclared(env: L_Env): boolean {
     for (const v of this.vars) {
-      if (!v.subSymbolsDeclared(env)) {
+      if (!v.varsDeclared(env)) {
         return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, v);
       }
     }
@@ -193,7 +193,7 @@ export class OptNode extends ToCheckNode {
 
     for (const layer of this.checkVars) {
       for (const v of layer) {
-        if (!v.subSymbolsDeclared(env)) {
+        if (!v.varsDeclared(env)) {
           return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, v);
         }
       }
@@ -374,6 +374,7 @@ export class DefCompositeNode extends L_Node {
 
 export abstract class BuiltinCheckNode extends ToCheckNode {}
 
+// TODO IsProperty logic is not implemented
 export class IsPropertyNode extends BuiltinCheckNode {
   constructor(public propertyName: string, isT: boolean) {
     super(isT);

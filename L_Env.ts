@@ -190,12 +190,12 @@ export class L_Env {
   //   }
   // }
 
-  newDef(s: string, defNode: L_Nodes.DefNode): boolean {
+  safeNewDef(s: string, defNode: L_Nodes.DefNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.getDef(s) !== undefined) {
       return L_ReportBoolErr(
         this,
-        this.newDef,
+        this.safeNewDef,
         `The operator "${s}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
@@ -219,23 +219,23 @@ export class L_Env {
   //   return true;
   // }
 
-  newLetsSymbol(letsNode: L_Nodes.LetsNode) {
+  safeNewLetsSymbol(letsNode: L_Nodes.LetsNode) {
     if (this.isSingletonDeclared(letsNode.name)) {
       return L_ReportBoolErr(
         this,
-        this.newLetsSymbol,
+        this.safeNewLetsSymbol,
         `letsVar ${letsNode.name} already declared`
       );
     }
     this.regexSingletons.set(letsNode.name, letsNode);
   }
 
-  newLetSymbol(fix: string): boolean {
+  safeNewPureSingleton(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.isSingletonDeclared(fix)) {
       return L_ReportBoolErr(
         this,
-        this.newLetSymbol,
+        this.safeNewPureSingleton,
         `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
@@ -243,12 +243,12 @@ export class L_Env {
     return true;
   }
 
-  newLetFormalSymbol(fix: string): boolean {
+  safeNewFormalSymbol(fix: string): boolean {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.isSingletonDeclared(fix)) {
       return L_ReportBoolErr(
         this,
-        this.newLetFormalSymbol,
+        this.safeNewFormalSymbol,
         `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
@@ -256,14 +256,14 @@ export class L_Env {
     return true;
   }
 
-  newAlias(
+  safeNewAlias(
     name: L_Structs.L_Singleton,
     toBeAliased: L_Structs.L_Symbol[]
   ): boolean {
     if (this.isSingletonDeclared(name.value)) {
       return L_ReportBoolErr(
         this,
-        this.newAlias,
+        this.safeNewAlias,
         `The variable "${name.value}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }

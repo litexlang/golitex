@@ -20,14 +20,14 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
       return L_Report.reportL_Out(env, out, toProve);
     }
 
-    const ok = toProve.varsDeclared(env);
-    if (!ok) {
-      return L_Report.L_ReportErr(
-        env,
-        proveOptByContradict,
-        `[Error] parameters in ${toProve} must be declared outside`
-      );
-    }
+    // const ok = toProve.varsDeclared(env);
+    // if (!ok) {
+    //   return L_Report.L_ReportErr(
+    //     env,
+    //     proveOptByContradict,
+    //     `[Error] parameters in ${toProve} must be declared outside`
+    //   );
+    // }
 
     const out = L_Checker.checkFact(newEnv, toProve);
     if (out !== L_Out.True) return out;
@@ -59,14 +59,14 @@ export function proveOptByContradict(
       return L_Out.Error;
     }
 
-    ok = toProve.varsDeclared(env);
-    if (!ok) {
-      return L_Report.L_ReportErr(
-        env,
-        proveOptByContradict,
-        `[Error] parameters in ${toProve} must be declared outside`
-      );
-    }
+    // ok = toProve.varsDeclared(env);
+    // if (!ok) {
+    //   return L_Report.L_ReportErr(
+    //     env,
+    //     proveOptByContradict,
+    //     `[Error] parameters in ${toProve} must be declared outside`
+    //   );
+    // }
 
     for (const subNode of block) {
       const out = L_Exec(newEnv, subNode);

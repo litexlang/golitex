@@ -5,7 +5,7 @@ import { checkFact } from "./L_Checker";
 import { L_Keywords } from "./L_Keywords";
 
 export abstract class L_Symbol {
-  abstract subSymbolsDeclared(env: L_Env): boolean;
+  abstract varsDeclared(env: L_Env): boolean;
   abstract fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol;
 
   static isExistSymbol(symbol: L_Symbol): boolean {
@@ -162,7 +162,7 @@ export class L_UndefinedSymbol extends L_Symbol {
   //   throw Error();
   // }
 
-  subSymbolsDeclared(env: L_Env): boolean {
+  varsDeclared(env: L_Env): boolean {
     throw Error();
   }
 
@@ -177,12 +177,12 @@ export class L_Singleton extends L_Symbol {
   }
 
   //* IMPORTANT METHOD
-  subSymbolsDeclared(env: L_Env): boolean {
+  varsDeclared(env: L_Env): boolean {
     if (env.isSingletonDeclared(this.value)) return true;
     else {
       return L_ReportBoolErr(
         env,
-        this.subSymbolsDeclared,
+        this.varsDeclared,
         `Variable ${this.value} is not declared.`
       );
     }
@@ -213,8 +213,8 @@ export class IndexedSymbol extends L_Symbol {
   //   throw Error();
   // }
 
-  subSymbolsDeclared(env: L_Env): boolean {
-    return this.given.subSymbolsDeclared(env);
+  varsDeclared(env: L_Env): boolean {
+    return this.given.varsDeclared(env);
   }
 
   // ! IndexedSymbol fix has 2 effects: 1. fix frees 2. return the symbol under the index
@@ -334,7 +334,7 @@ export class L_Composite extends L_Symbol {
     return out;
   }
 
-  subSymbolsDeclared(env: L_Env): boolean {
+  varsDeclared(env: L_Env): boolean {
     if (env.getCompositeVar(this.name) === undefined) return false;
 
     for (const value of this.values) {
@@ -345,7 +345,7 @@ export class L_Composite extends L_Symbol {
           if (!ok) return false;
         }
       } else if (value instanceof L_Composite) {
-        if (!value.subSymbolsDeclared(env)) return false;
+        if (!value.varsDeclared(env)) return false;
       }
     }
 
@@ -424,7 +424,7 @@ export class FunctionalSymbol extends L_Composite {
     super(name, vars);
   }
 
-  subSymbolsDeclared(env: L_Env): boolean {
+  varsDeclared(env: L_Env): boolean {
     throw Error();
   }
 
