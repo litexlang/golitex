@@ -310,13 +310,13 @@ export function parseNodes(
 
     if (end === null) {
       while (tokens.length !== 0) {
-        const node = parseNodesFromSingleExpression(env, tokens);
-        if (node !== undefined) out.push(...node);
+        const node = parseSingleNode(env, tokens);
+        if (node !== null) out.push(node);
       }
     } else {
       while (tokens[0] !== end) {
-        const node = parseNodesFromSingleExpression(env, tokens);
-        if (node !== undefined) out.push(...node);
+        const node = parseSingleNode(env, tokens);
+        if (node !== null) out.push(node);
       }
     }
 
@@ -351,61 +351,58 @@ export function parseNodes(
 // };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
-export function parseNodesFromSingleExpression(
-  env: L_Env,
-  tokens: string[]
-): L_Node[] | undefined {
+export function parseSingleNode(env: L_Env, tokens: string[]): L_Node | null {
   const start = tokens[0];
   const index = tokens.length;
   try {
-    if (tokens.length === 0) return undefined;
+    if (tokens.length === 0) return null;
 
     if (isCurToken(tokens, L_Keywords.L_End)) {
       tokens.shift();
       while (tokens.length > 0 && isCurToken(tokens, L_Keywords.L_End)) {
         tokens.shift();
       }
-      if (tokens.length === 0) return undefined;
+      if (tokens.length === 0) return null;
     }
 
     if (tokens.length === 0) {
-      return undefined;
+      return null;
     }
 
     switch (tokens[0]) {
       case "know":
-        return [knowParse(env, tokens)];
+        return knowParse(env, tokens);
       case "{":
-        return [localEnvParse(env, tokens)];
+        return localEnvParse(env, tokens);
       case "prove":
       case "prove_by_contradiction":
-        return [proveParse(env, tokens)];
+        return proveParse(env, tokens);
       case "clear":
       case "run":
-        return [specialParse(env, tokens)];
+        return specialParse(env, tokens);
     }
 
     switch (tokens[0]) {
       case "let":
-        if (letParse(env, tokens) === L_Out.True) return [];
+        if (letParse(env, tokens) === L_Out.True) return null;
       case "def":
-        if (defParse(env, tokens) === L_Out.True) return [];
+        if (defParse(env, tokens) === L_Out.True) return null;
       case "have":
-        if (haveParse(env, tokens) === L_Out.True) return [];
+        if (haveParse(env, tokens) === L_Out.True) return null;
       case "def_composite":
-        if (defCompositeParse(env, tokens) === L_Out.True) return [];
+        if (defCompositeParse(env, tokens) === L_Out.True) return null;
       case "lets":
-        if (letsParse(env, tokens) === L_Out.True) return [];
+        if (letsParse(env, tokens) === L_Out.True) return null;
       case "include":
-        if (includeParse(env, tokens) === L_Out.True) return [];
+        if (includeParse(env, tokens) === L_Out.True) return null;
       case "def_literal_operator":
-        if (defLiteralOperatorParse(env, tokens) === L_Out.True) return [];
+        if (defLiteralOperatorParse(env, tokens) === L_Out.True) return null;
       case "let_formal":
-        if (letFormalParse(env, tokens) === L_Out.True) return [];
+        if (letFormalParse(env, tokens) === L_Out.True) return null;
       case "let_alias":
-        if (letAliasParse(env, tokens) === L_Out.True) return [];
+        if (letAliasParse(env, tokens) === L_Out.True) return null;
       case "def_function":
-        if (defFunctionParse(env, tokens) === L_Out.True) return [];
+        if (defFunctionParse(env, tokens) === L_Out.True) return null;
     }
 
     // const func = KeywordFunctionMap[tokens[0]];
@@ -414,11 +411,14 @@ export function parseNodesFromSingleExpression(
     //   if (node === L_Out.True) return [];
     //   return [node];
     // } else {
-    const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
-    return facts;
+    const fact = factParse(env, tokens);
+    skip(tokens, L_Keywords.L_End);
+    return fact;
+    // const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+    // return facts;
     // }
   } catch (error) {
-    L_ParseErr(env, tokens, parseNodesFromSingleExpression, index, start);
+    L_ParseErr(env, tokens, parseSingleNode, index, start);
     throw error;
   }
 }
@@ -615,8 +615,8 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
       }
       if (tokens[0] === "}") break;
 
-      const node = parseNodesFromSingleExpression(env, tokens);
-      if (node !== undefined) block.push(...node);
+      const node = parseSingleNode(env, tokens);
+      if (node !== null) block.push(node);
       else {
         throw Error();
       }
