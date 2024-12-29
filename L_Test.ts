@@ -105,7 +105,23 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "",
-    code: ["def $p(x); if x, y : $p(z) {};"],
+    code: [
+      `
+      def $set(a);
+      def $equal(a,b);
+      def $in(x,a);
+
+know if a,b: $set(a), $set(b), $equal(a,b)  {
+  if x: $in(x,a) {
+    $in(x,b)
+  }, 
+  if x: $in(x,b) {
+    $in(x,a)
+  }
+};
+      
+      `,
+    ],
     debug: true,
     print: true,
   },
