@@ -147,6 +147,79 @@ know if a,b: $set(a), $set(b), if x: $in(x,a) {$in(x,b)}, if x: $in(x,b) {$in(x,
   $in(x,b); 
 }
 
+know if a,b: $set(a), $set(b), if x: $in(x,a) {$in(x,b)}, if x: $in(x,b) {$in(x,a)} {
+  $equal(a,b)
+};
+
+{
+  let a, b: $set(a), $set(b), $equal(a,b); 
+  know if x: $in(x,a)  {
+    $in(x,b)
+  };
+  know if x: $in(x,b)  {
+    $in(x,a)
+  }; 
+  let x: $in(x,a); 
+  $in(x,b); 
+}
+
+let EMPTY_SET: $set(EMPTY_SET);
+know if x {
+    not $in(x,EMPTY_SET),
+};
+
+{
+    let x : not $in(x, EMPTY_SET);
+    if _x {
+        not $in(_x,EMPTY_SET)[_x];
+    };
+}
+
+def_composite \\singleton{a};
+know if x, a: $in(x, \\singleton{a}) {
+    $equal(x, a);
+};
+
+know if x, a: $equal(x,a) {
+    $in(x, \\singleton{a});
+};
+
+{
+    let a, b;
+    know $set(\\singleton{a});
+    let x;
+    know $in(x, \\singleton{a});
+    $equal(x,a);
+    $in(x, \\singleton{a});
+    if _x, _a: $equal(_x,_a) {
+        $in(_x, \\singleton{_a})[_x, _a];
+    };
+}
+
+def_composite \\pair{a,b};
+know if x, a, b: $in(x, \\pair{a,b}) {
+    if : not $equal(x, b) {
+        $equal(x, a);
+    };
+    if : not $equal(x, a) {
+        $equal(x, b);
+    };
+};
+
+know if x, a, b: $equal(x,a) {
+    $in(x, \\pair{a,b});
+};
+
+know if x, a, b: $equal(x,b) {
+    $in(x, \\pair{a,b});
+};
+
+{
+    let x, a, b: $equal(x,a);
+    $in(x, \\pair{a,b})[x,a,b];
+    let y,c,d: $in(y, \\pair{c,d}), not $equal(y,c);
+    $equal(y,d)[y,c,d;];
+}
 
 `,
     ],

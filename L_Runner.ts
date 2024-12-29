@@ -5,13 +5,13 @@ import { L_Scan } from "./L_Lexer";
 import * as L_Parser from "./L_Parser";
 import * as fs from "fs";
 
-const printEveryThing = true;
+const printEveryThing = false;
 
 export function runStringWithLogging(
   env: L_Env,
   expr: string,
   printResult: boolean = true,
-  printCode: boolean = true
+  printCode: boolean = false
 ): L_Out[] | undefined {
   try {
     if (printResult && printCode) {

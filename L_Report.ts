@@ -82,7 +82,7 @@ export function L_ReportErr(
   node?: L_Node | string,
   err?: unknown
 ): L_Out {
-  env.report(`<${func.name}> Failed`);
+  env.report(`\n<${func.name}> Failed`);
   if (err instanceof Error) env.report(err.message);
   if (node !== undefined) env.report(`Failed: ${node}`);
   return L_Out.Error;
@@ -103,20 +103,20 @@ export function L_ReportBoolErr(
   func: Function,
   node?: L_Node | string
 ): boolean {
-  env.report(`<${func.name}> Failed`);
-  if (node !== undefined) env.report(`Failed: ${node}`);
+  env.report(`\nFailed: <${func.name}>`);
+  if (node !== undefined) env.report(`\nFailed:\n${node}`);
 
   return false;
 }
 
-export function L_ParseErr(
+export function L_ReportParserErr(
   env: L_Env,
   tokens: string[],
   func: Function,
   skipperTokens: string[]
 ) {
-  L_ReportErr(env, func, "");
-  env.report(`${skipperTokens.join(" ")}`);
+  L_ReportErr(env, func, "Parser Error:");
+  env.report(`\n${skipperTokens.join(" ")}`);
 }
 
 export function L_VarsInOptNotDeclaredBool(

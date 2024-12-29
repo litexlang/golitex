@@ -106,6 +106,8 @@ know if x, a: $equal(x,a) {
     };
 }
 
+def_composite \pair{a,b};
+
 know if x, a, b: $in(x, \pair{a,b}) {
     if : not $equal(x, b) {
         $equal(x, a);
