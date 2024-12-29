@@ -92,7 +92,7 @@ function functionalSymbolParse(
   const index = tokens.length;
 
   try {
-    const value = skip(tokens) as string;
+    const value = skip(tokens);
 
     if (!env.getFunctionalSymbol(tokens[0])) {
       L_ReportErr(
@@ -128,7 +128,7 @@ function pureSingletonAndFormalSymbolParse(
   const index = tokens.length;
 
   try {
-    const value = skip(tokens) as string;
+    const value = skip(tokens);
 
     if (env.isFormalSymbolDeclared(value)) {
       return new L_Structs.FormalSymbol(value);
@@ -146,7 +146,7 @@ function optSymbolParse(env: L_Env, tokens: string[]): L_Structs.L_OptSymbol {
   const index = tokens.length;
 
   try {
-    const name = skip(tokens) as string;
+    const name = skip(tokens);
     return new L_Structs.L_OptSymbol(name);
   } catch (error) {
     L_ParseErr(env, tokens, optSymbolParse, index, start);
@@ -359,9 +359,9 @@ export function parseSingleNode(env: L_Env, tokens: string[]): L_Node | null {
     if (tokens.length === 0) return null;
 
     if (isCurToken(tokens, L_Keywords.L_End)) {
-      tokens.shift();
+      skip(tokens);
       while (tokens.length > 0 && isCurToken(tokens, L_Keywords.L_End)) {
-        tokens.shift();
+        skip(tokens);
       }
       if (tokens.length === 0) return null;
     }
@@ -458,11 +458,11 @@ function letParse(env: L_Env, tokens: string[]): L_Out {
   const index = tokens.length;
 
   try {
-    skip(tokens, L_Keywords.LetKeyword) as string;
+    skip(tokens, L_Keywords.LetKeyword);
 
     const vars: string[] = [];
     while (![L_Keywords.L_End, , ":"].includes(tokens[0])) {
-      vars.push(tokens.shift() as string);
+      vars.push(skip(tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -533,7 +533,7 @@ function letFormalParse(env: L_Env, tokens: string[]): L_Out {
 
     const vars: string[] = [];
     while (![L_Keywords.L_End, , ":"].includes(tokens[0])) {
-      vars.push(tokens.shift() as string);
+      vars.push(skip(tokens));
       if (isCurToken(tokens, ",")) skip(tokens, ",");
     }
 
@@ -612,7 +612,7 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
     skip(tokens, "{");
     while (tokens[0] !== "}") {
       while (isCurToken(tokens, L_Keywords.L_End)) {
-        tokens.shift();
+        skip(tokens);
       }
       if (tokens[0] === "}") break;
 
@@ -1093,7 +1093,7 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
   const index = tokens.length;
 
   try {
-    const keyword = tokens.shift() as string;
+    const keyword = skip(tokens);
     switch (keyword) {
       case L_Keywords.ClearKeyword:
         skip(tokens, L_Keywords.L_End);
@@ -1101,7 +1101,7 @@ function specialParse(env: L_Env, tokens: string[]): L_Nodes.SpecialNode {
       case L_Keywords.RunKeyword: {
         const words: string[] = [];
         while (!isCurToken(tokens, L_Keywords.L_End)) {
-          words.push(tokens.shift() as string);
+          words.push(skip(tokens));
         }
         skip(tokens, L_Keywords.L_End);
         return new L_Nodes.SpecialNode(L_Keywords.RunKeyword, words.join());
@@ -1355,7 +1355,7 @@ function usePrecedenceToParseComposite(
     let left = prefixSymbolParse(env, tokens);
 
     while (!isCurToken(tokens, end)) {
-      const opt = tokens[0] as string;
+      const opt = tokens[0];
       const next = getSymbolUntilPrecedenceIsNotHigher(
         env,
         tokens,
@@ -1407,7 +1407,7 @@ function usePrecedenceToParseComposite(
     if (isCurToken(tokens, end)) {
       return left;
     } else {
-      const opt = tokens[0] as string;
+      const opt = tokens[0];
       if ((precedenceMap.get(opt) as number) <= curPrecedence) {
         return left;
       } else {
@@ -1499,7 +1499,7 @@ export function includeParse(env: L_Env, tokens: string[]): L_Out {
     skip(tokens, '"');
     let path: string = "";
     while (!isCurToken(tokens, '"')) {
-      path += skip(tokens) as string;
+      path += skip(tokens);
     }
     skip(tokens, '"');
 
