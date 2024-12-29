@@ -183,7 +183,7 @@ export class L_Singleton extends L_Symbol {
       return L_ReportBoolErr(
         env,
         this.varsDeclared,
-        `Variable ${this.value} is not declared.`
+        `Variable ${this.value} is not declared`
       );
     }
   }

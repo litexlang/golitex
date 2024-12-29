@@ -28,23 +28,23 @@ export abstract class ToCheckNode extends L_Node {
   // called by "using known fact to check given fact. when doing so, get all root opts and filter opt with the same name."
   abstract getRootOptNodes(): [OptNode, ToCheckNode[]][];
 
-  static subVarsSubOptsDeclared(env: L_Env, facts: ToCheckNode[]): boolean {
-    for (const f of facts) {
-      const ok = env.subFactsDeclaredOrBuiltin(f);
-      if (!ok) {
-        //TODO I SHOULD IMPLEMENT check whether something is declared when checking
-      }
-    }
+  // static optsDeclared(env: L_Env, facts: ToCheckNode[]): boolean {
+  //   for (const f of facts) {
+  //     const ok = env.factDeclaredOrBuiltin(f);
+  //     if (!ok) {
+  //       //TODO I SHOULD IMPLEMENT check whether something is declared when checking
+  //     }
+  //   }
 
-    // for (const f of facts) {
-    //   if (!f.varsDeclared(env)) {
-    //     env.report(`[Error] Not all of related variables are declared.`);
-    //     return false;
-    //   }
-    // }
+  //   // for (const f of facts) {
+  //   //   if (!f.varsDeclared(env)) {
+  //   //     env.report(`[Error] Not all of related variables are declared.`);
+  //   //     return false;
+  //   //   }
+  //   // }
 
-    return true;
-  }
+  //   return true;
+  // }
 }
 
 export class LogicNode extends ToCheckNode {

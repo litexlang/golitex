@@ -548,7 +548,7 @@ function letParse(env: L_Env, tokens: string[]): L_Out {
         if (!ok) return L_Out.Error;
       }
 
-      if (!ToCheckNode.subVarsSubOptsDeclared(env, node.facts)) {
+      if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
         throw Error();
       }
 
@@ -617,7 +617,7 @@ function letFormalParse(env: L_Env, tokens: string[]): L_Out {
         if (!ok) return L_Out.Error;
       }
 
-      if (!ToCheckNode.subVarsSubOptsDeclared(env, node.facts)) {
+      if (node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
         throw Error();
       }
 
@@ -853,7 +853,7 @@ function parsePrimitiveFact(env: L_Env, tokens: string[]): L_Nodes.ToCheckNode {
     out = parser(env, tokens);
     out.isT = isT;
   } else if (["if", "iff"].includes(tokens[0])) {
-    out = logicParse(env, tokens);
+    out = ifParse(env, tokens);
     out.isT = isT ? out.isT : !out.isT;
   } else {
     out = optFactParse(env, tokens, true);
@@ -970,13 +970,13 @@ function optFactParse(
   }
 }
 
-function logicParse(env: L_Env, tokens: string[]): LogicNode {
+function ifParse(env: L_Env, tokens: string[]): L_Nodes.IfNode {
   const skipper = new Skipper(env, tokens);
 
   try {
     const newEnv = new L_Env(env);
 
-    const type = skipper.skip([L_Keywords.IfKeyword, L_Keywords.IffKeyword]);
+    const type = skipper.skip(L_Keywords.IfKeyword);
     if (type === undefined) throw Error();
     const vars: L_Structs.L_Singleton[] = [];
 
@@ -988,7 +988,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
       if (singleton instanceof L_Structs.FormalSymbol) {
         L_ReportBoolErr(
           env,
-          logicParse,
+          ifParse,
           `${singleton.value} is a declared formal symbol. Free variables in logical expressions can not be formal symbol.`
         );
         throw Error();
@@ -1026,20 +1026,17 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     }
     skipper.skip("}");
 
-    if (type === L_Keywords.IfKeyword) {
-      let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
-      out = out.fix(newEnv, freeFixPairs);
-      if (out.varsDeclared(newEnv)) {
-        return out;
-      } else {
-        env.getMessages().push(...newEnv.getMessages());
-        L_Report.L_VarsInOptNotDeclaredBool(env, logicParse, out);
-      }
+    let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
+    out = out.fix(newEnv, freeFixPairs);
+    if (out.varsDeclared(newEnv)) {
+      return out;
+    } else {
+      env.getMessages().push(...newEnv.getMessages());
+      L_Report.L_VarsInOptNotDeclaredBool(env, ifParse, out);
+      throw Error();
     }
-
-    throw Error();
   } catch (error) {
-    L_ReportParserErr(env, tokens, logicParse, skipper.curTokens);
+    L_ReportParserErr(env, tokens, ifParse, skipper.curTokens);
     throw error;
   }
 }
@@ -1207,7 +1204,7 @@ function defParse(env: L_Env, tokens: string[]): L_Out {
         return L_Structs.L_Out.Error;
       }
 
-      if (!ToCheckNode.subVarsSubOptsDeclared(env, node.onlyIfs)) {
+      if (!node.onlyIfs.every((e) => env.factDeclaredOrBuiltin(e))) {
         throw Error();
       }
 

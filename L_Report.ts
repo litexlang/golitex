@@ -117,6 +117,7 @@ export function L_ReportParserErr(
 ) {
   L_ReportErr(env, func, "Parser Error:");
   env.report(`\n${skipperTokens.join(" ")}`);
+  env.report(`\n${tokens.slice(0, 15).join(" ")}`);
 }
 
 export function L_VarsInOptNotDeclaredBool(

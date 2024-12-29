@@ -33,7 +33,7 @@ import { DEBUG_DICT } from "./L_Executor";
 
 export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   try {
-    const ok = env.subFactsDeclaredOrBuiltin(toCheck);
+    const ok = env.factDeclaredOrBuiltin(toCheck);
     if (!ok) {
       env.report(`[Error] ${toCheck} not declared.`);
       throw Error();
