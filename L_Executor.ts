@@ -20,49 +20,23 @@ export const CheckFalse = true;
 
 export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   try {
-    const nodeType = node.constructor.name;
-
-    switch (nodeType) {
-      // case "DefNode":
-      // case "DefExistNode":
-      //   return L_Out.True;
-      // return defExec(env, node as L_Nodes.DefNode);
-      // case "DefCompositeNode":
-      //   // return defCompositeExec(env, node as L_Nodes.DefCompositeNode);
-      //   return L_Out.True;
-
-      // case "LetNode":
-      // return letExec(env, node as L_Nodes.LetNode);
-      // case "LetsNode":
-      //   return letsExec(env, node as L_Nodes.LetsNode);
-      case "KnowNode":
-        return knowExec(env, node as L_Nodes.KnowNode);
-      case "ProveNode":
-        return proveExec(env, node as L_Nodes.ProveNode);
-      case "ProveContradictNode":
-        return proveContradictExec(env, node as L_Nodes.ProveContradictNode);
-      case "LocalEnvNode":
-        return localEnvExec(env, node as L_Nodes.LocalEnvNode);
-      case "SpecialNode":
-        return specialExec(env, node as L_Nodes.SpecialNode);
-      // case "MacroNode":
-      //   return macroExec(env, node as L_Nodes.MacroNode);
-      // case "IncludeNode":
-      //   return includeExec(env, node as L_Nodes.IncludeNode);
-      // case "DefLiteralOptNode":
-      //   return defLiteralOptExec(env, node as L_Nodes.DefLiteralOptNode);
-      // case "HaveNode":
-      //   return haveExec(env, node as L_Nodes.HaveNode);
-      default:
-        if (node instanceof L_Nodes.ToCheckNode) {
-          const out = factExec(env, node);
-          return out;
-        }
-
-        throw Error();
+    if (node instanceof L_Nodes.ToCheckNode) {
+      return factExec(env, node);
+    } else if (node instanceof L_Nodes.KnowNode) {
+      return knowExec(env, node);
+    } else if (node instanceof L_Nodes.ProveNode) {
+      return proveExec(env, node);
+    } else if (node instanceof L_Nodes.ProveContradictNode) {
+      return proveContradictExec(env, node);
+    } else if (node instanceof L_Nodes.LocalEnvNode) {
+      return localEnvExec(env, node);
+    } else if (node instanceof L_Nodes.SpecialNode) {
+      return specialExec(env, node);
     }
+
+    throw new Error(`${node} can not be executed at runtime.`);
   } catch (error) {
-    return L_Report.L_ReportErr(env, L_Exec, node);
+    return L_Report.L_ReportErr(env, L_Exec, node, error);
   }
 }
 

@@ -327,28 +327,28 @@ export function parseNodes(
   }
 }
 
-const KeywordFunctionMap: {
-  // deno-lint-ignore ban-types
-  [key: string]: Function;
-} = {
-  know: knowParse,
-  let: letParse,
-  "{": localEnvParse,
-  def: defParse,
-  prove: proveParse,
-  prove_by_contradiction: proveParse,
-  have: haveParse,
-  clear: specialParse,
-  run: specialParse,
-  def_composite: defCompositeParse,
-  lets: letsParse,
-  // macro: macroParse,
-  include: includeParse,
-  def_literal_operator: defLiteralOperatorParse,
-  let_formal: letFormalParse,
-  let_alias: letAliasParse,
-  def_function: defFunctionParse,
-};
+// const KeywordFunctionMap: {
+//   // deno-lint-ignore ban-types
+//   [key: string]: Function;
+// } = {
+//   know: knowParse,
+//   let: letParse,
+//   "{": localEnvParse,
+//   def: defParse,
+//   prove: proveParse,
+//   prove_by_contradiction: proveParse,
+//   have: haveParse,
+//   clear: specialParse,
+//   run: specialParse,
+//   def_composite: defCompositeParse,
+//   lets: letsParse,
+//   // macro: macroParse,
+//   include: includeParse,
+//   def_literal_operator: defLiteralOperatorParse,
+//   let_formal: letFormalParse,
+//   let_alias: letAliasParse,
+//   def_function: defFunctionParse,
+// };
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
 export function parseNodesFromSingleExpression(
@@ -372,15 +372,51 @@ export function parseNodesFromSingleExpression(
       return undefined;
     }
 
-    const func = KeywordFunctionMap[tokens[0]];
-    if (func) {
-      const node = func(env, tokens);
-      if (node === L_Out.True) return [];
-      return [node];
-    } else {
-      const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
-      return facts;
+    switch (tokens[0]) {
+      case "know":
+        return [knowParse(env, tokens)];
+      case "{":
+        return [localEnvParse(env, tokens)];
+      case "prove":
+      case "prove_by_contradiction":
+        return [proveParse(env, tokens)];
+      case "clear":
+      case "run":
+        return [specialParse(env, tokens)];
     }
+
+    switch (tokens[0]) {
+      case "let":
+        if (letParse(env, tokens) === L_Out.True) return [];
+      case "def":
+        if (defParse(env, tokens) === L_Out.True) return [];
+      case "have":
+        if (haveParse(env, tokens) === L_Out.True) return [];
+      case "def_composite":
+        if (defCompositeParse(env, tokens) === L_Out.True) return [];
+      case "lets":
+        if (letsParse(env, tokens) === L_Out.True) return [];
+      case "include":
+        if (includeParse(env, tokens) === L_Out.True) return [];
+      case "def_literal_operator":
+        if (defLiteralOperatorParse(env, tokens) === L_Out.True) return [];
+      case "let_formal":
+        if (letFormalParse(env, tokens) === L_Out.True) return [];
+      case "let_alias":
+        if (letAliasParse(env, tokens) === L_Out.True) return [];
+      case "def_function":
+        if (defFunctionParse(env, tokens) === L_Out.True) return [];
+    }
+
+    // const func = KeywordFunctionMap[tokens[0]];
+    // if (func) {
+    //   const node = func(env, tokens);
+    //   if (node === L_Out.True) return [];
+    //   return [node];
+    // } else {
+    const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+    return facts;
+    // }
   } catch (error) {
     L_ParseErr(env, tokens, parseNodesFromSingleExpression, index, start);
     throw error;

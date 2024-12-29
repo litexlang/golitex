@@ -79,9 +79,11 @@ export function reportFailedFunctionName(
 export function L_ReportErr(
   env: L_Env,
   func: Function,
-  node?: L_Node | string
+  node?: L_Node | string,
+  err?: unknown
 ): L_Out {
   env.report(`<${func.name}> Failed`);
+  if (err instanceof Error) env.report(err.message);
   if (node !== undefined) env.report(`Failed: ${node}`);
   return L_Out.Error;
 }
