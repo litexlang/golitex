@@ -113,11 +113,10 @@ export function L_ParseErr(
   env: L_Env,
   tokens: string[],
   func: Function,
-  index: number,
-  start: string = ""
+  skipperTokens: string[]
 ) {
   L_ReportErr(env, func, "");
-  env.report(`At ${start}[${index * -1}]: ${tokens.slice(0, 5).join(" ")}`);
+  env.report(`${skipperTokens.join(" ")}`);
 }
 
 export function L_VarsInOptNotDeclaredBool(
