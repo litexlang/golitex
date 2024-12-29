@@ -36,12 +36,12 @@ export abstract class ToCheckNode extends L_Node {
       }
     }
 
-    for (const f of facts) {
-      if (!f.varsDeclared(env)) {
-        env.report(`[Error] Not all of related variables are declared.`);
-        return false;
-      }
-    }
+    // for (const f of facts) {
+    //   if (!f.varsDeclared(env)) {
+    //     env.report(`[Error] Not all of related variables are declared.`);
+    //     return false;
+    //   }
+    // }
 
     return true;
   }
@@ -81,23 +81,25 @@ export class LogicNode extends ToCheckNode {
 
   varsDeclared(env: L_Env): boolean {
     // * The new variables declared as if-fact parameters are stored in newEnv
-    const newEnv = new L_Env(env);
+    // const newEnv = new L_Env(env);
 
-    for (const v of this.vars) {
-      if (v.subSymbolsDeclared(newEnv)) {
-        return L_VarsInOptDoubleDeclErr(env, this.varsDeclared, v);
-      }
-      newEnv.newLetSymbol(v.value);
-    }
+    // for (const v of this.vars) {
+    //   if (v.subSymbolsDeclared(newEnv)) {
+    //     return L_VarsInOptDoubleDeclErr(env, this.varsDeclared, v);
+    //   }
+    //   newEnv.newLetSymbol(v.value);
+    // }
 
     for (const req of this.req) {
-      if (!req.varsDeclared(newEnv)) {
+      if (!req.varsDeclared(this.env)) {
+        env.getMessages().push(...this.env.getMessages());
         return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, req);
       }
     }
 
     for (const onlyIf of this.onlyIfs) {
-      if (!onlyIf.varsDeclared(newEnv)) {
+      if (!onlyIf.varsDeclared(this.env)) {
+        env.getMessages().push(...this.env.getMessages());
         return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, onlyIf);
       }
     }
@@ -180,11 +182,10 @@ export class OptNode extends ToCheckNode {
     return [[this, []]];
   }
 
-  //* 猜想：只要我这里不报错，那我opt里面引入一些虚空变量也行了（比如exist里面的引入的变量）
   varsDeclared(env: L_Env): boolean {
     for (const v of this.vars) {
       if (!v.subSymbolsDeclared(env)) {
-        return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, this);
+        return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, v);
       }
     }
 
@@ -193,7 +194,7 @@ export class OptNode extends ToCheckNode {
     for (const layer of this.checkVars) {
       for (const v of layer) {
         if (!v.subSymbolsDeclared(env)) {
-          return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, this);
+          return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, v);
         }
       }
     }

@@ -1029,14 +1029,15 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     if (type === L_Keywords.IfKeyword) {
       let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
       out = out.fix(newEnv, freeFixPairs);
-      return out;
-    } else if (type === L_Keywords.IffKeyword) {
-      let out = new L_Nodes.IffNode(vars, req, onlyIfs, newEnv, true);
-      out = out.fix(newEnv, freeFixPairs);
-      return out;
-    } else {
-      throw Error();
+      if (out.varsDeclared(newEnv)) {
+        return out;
+      } else {
+        env.getMessages().push(...newEnv.getMessages());
+        L_Report.L_VarsInOptNotDeclaredBool(env, logicParse, out);
+      }
     }
+
+    throw Error();
   } catch (error) {
     L_ReportParserErr(env, tokens, logicParse, skipper.curTokens);
     throw error;

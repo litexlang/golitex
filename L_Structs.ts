@@ -178,7 +178,14 @@ export class L_Singleton extends L_Symbol {
 
   //* IMPORTANT METHOD
   subSymbolsDeclared(env: L_Env): boolean {
-    return env.isSingletonDeclared(this.value);
+    if (env.isSingletonDeclared(this.value)) return true;
+    else {
+      return L_ReportBoolErr(
+        env,
+        this.subSymbolsDeclared,
+        `Variable ${this.value} is not declared.`
+      );
+    }
   }
 
   toString() {
