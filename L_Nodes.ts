@@ -52,6 +52,7 @@ export class LogicNode extends ToCheckNode {
     public vars: L_Singleton[] = [],
     public req: ToCheckNode[] = [],
     public onlyIfs: ToCheckNode[] = [],
+    public env: L_Env,
     isT: boolean = true
   ) {
     super(isT);
@@ -116,14 +117,20 @@ export class LogicNode extends ToCheckNode {
     }
 
     if (this instanceof IfNode) {
-      return new IfNode(this.vars, newReq, newOnlyIf);
+      return new IfNode(this.vars, newReq, newOnlyIf, new L_Env(env));
     }
 
     throw Error();
   }
 
   override copyWithIsTReverse(): LogicNode {
-    return new LogicNode(this.vars, this.req, this.onlyIfs, !this.isT);
+    return new LogicNode(
+      this.vars,
+      this.req,
+      this.onlyIfs,
+      this.env,
+      !this.isT
+    );
   }
 
   override toString() {
@@ -550,18 +557,18 @@ export class OrToCheckNode extends ToCheckFormulaNode {
   }
 
   // If not all subNodes are either orNode or optNode, return null;
-  getEquivalentIfs(): IfNode[] | null {
-    const roots = this.getRootOpts();
-    if (roots === null) return null;
+  // getEquivalentIfs(): IfNode[] | null {
+  //   const roots = this.getRootOpts();
+  //   if (roots === null) return null;
 
-    const out = roots.map((root, i) => {
-      let others = roots.filter((e, j) => j !== i);
-      others = others.map((e) => e.copyWithIsTReverse());
-      return new IfNode([], others, [root]);
-    });
+  //   const out = roots.map((root, i) => {
+  //     let others = roots.filter((e, j) => j !== i);
+  //     others = others.map((e) => e.copyWithIsTReverse());
+  //     return new IfNode([], others, [root]);
+  //   });
 
-    return out;
-  }
+  //   return out;
+  // }
 }
 
 export class AndToCheckNode extends ToCheckFormulaNode {

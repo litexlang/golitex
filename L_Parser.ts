@@ -974,13 +974,15 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
   const skipper = new Skipper(env, tokens);
 
   try {
+    const newEnv = new L_Env(env);
+
     const type = skipper.skip([L_Keywords.IfKeyword, L_Keywords.IffKeyword]);
     if (type === undefined) throw Error();
     const vars: L_Structs.L_Singleton[] = [];
 
     const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
     while (!isCurToken(tokens, [":", "{"])) {
-      const singleton = pureSingletonAndFormalSymbolParse(env, tokens);
+      const singleton = pureSingletonAndFormalSymbolParse(newEnv, tokens);
 
       // ! 这是必要的，因为冲突极有可能造成问题
       if (singleton instanceof L_Structs.FormalSymbol) {
@@ -996,6 +998,9 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
         L_Keywords.IfVarPrefix + singleton.value
       );
       vars.push(newSingleton);
+
+      newEnv.newLetSymbol(newSingleton.value);
+
       freeFixPairs.push([singleton, newSingleton]);
       if (isCurToken(tokens, ",")) skipper.skip(",");
     }
@@ -1004,7 +1009,7 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     if (isCurToken(tokens, ":")) {
       skipper.skip(":");
       while (!isCurToken(tokens, "{")) {
-        const facts = factsArrParse(env, tokens, [",", "{"], false);
+        const facts = factsArrParse(newEnv, tokens, [",", "{"], false);
         req.push(...facts);
         if (isCurToken(tokens, [","])) skipper.skip([","]);
       }
@@ -1015,19 +1020,19 @@ function logicParse(env: L_Env, tokens: string[]): LogicNode {
     const onlyIfs: ToCheckNode[] = [];
     while (!isCurToken(tokens, "}")) {
       // const facts = factsArrParse(env, tokens, [",", ";", "}"], false);
-      const fact = factParse(env, tokens);
+      const fact = factParse(newEnv, tokens);
       onlyIfs.push(fact);
       if (isCurToken(tokens, [";", ","])) skipper.skip([";", ","]);
     }
     skipper.skip("}");
 
     if (type === L_Keywords.IfKeyword) {
-      let out = new L_Nodes.IfNode(vars, req, onlyIfs, true); //! By default isT = true
-      out = out.fix(env, freeFixPairs);
+      let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
+      out = out.fix(newEnv, freeFixPairs);
       return out;
     } else if (type === L_Keywords.IffKeyword) {
-      let out = new L_Nodes.IffNode(vars, req, onlyIfs, true);
-      out = out.fix(env, freeFixPairs);
+      let out = new L_Nodes.IffNode(vars, req, onlyIfs, newEnv, true);
+      out = out.fix(newEnv, freeFixPairs);
       return out;
     } else {
       throw Error();
