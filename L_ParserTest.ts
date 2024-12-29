@@ -79,6 +79,12 @@ know if x {
     code: [
       `know if a,b,c: a is nat, b is nat, c is nat, $a + b$ = $a + c$ {$b = c$};`,
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "()",
+    code: ["def_function f(x);"],
     debug: true,
     print: true,
   },
