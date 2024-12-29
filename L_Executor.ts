@@ -72,7 +72,7 @@ export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
   try {
     // examine whether all facts are declared.
     // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
-    if (node.facts.every((e) => env.factDeclaredOrBuiltin(e))) throw Error();
+    if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) throw Error();
     // if (!L_Nodes.ToCheckNode.optsDeclared(env, node.facts)) {
     //   throw Error();
     // }

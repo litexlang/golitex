@@ -617,7 +617,7 @@ function letFormalParse(env: L_Env, tokens: string[]): L_Out {
         if (!ok) return L_Out.Error;
       }
 
-      if (node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
+      if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
         throw Error();
       }
 
@@ -669,7 +669,7 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
     skipper.skip("}");
 
     if (byContradict) {
-      const contradict = optFactParse(env, tokens, true);
+      const contradict = optFactParse(env, tokens, [], true);
       skipper.skip(L_Keywords.L_End);
       return new L_Nodes.ProveContradictNode(toProve, block, contradict);
     } else {
@@ -683,7 +683,8 @@ function proveParse(env: L_Env, tokens: string[]): L_Nodes.ProveNode {
 
 function formulaSubNodeParse(
   env: L_Env,
-  tokens: string[]
+  tokens: string[],
+  freeFixedPairs: [L_Symbol, L_Symbol][]
 ): L_Nodes.FormulaSubNode {
   const skipper = new Skipper(env, tokens);
 
@@ -695,11 +696,11 @@ function formulaSubNodeParse(
       // parse boolean factual formula
       if (isCurToken(tokens, "(")) {
         // skipper.skip( "(");
-        const out = parseToCheckFormula(env, tokens, "(", ")");
+        const out = parseToCheckFormula(env, tokens, "(", ")", freeFixedPairs);
         // skipper.skip( ")");
         return out;
       } else {
-        return optFactParse(env, tokens, true);
+        return optFactParse(env, tokens, freeFixedPairs, true);
       }
     } catch (error) {
       L_ReportParserErr(env, tokens, formulaSubNodeParse, skipper.curTokens);
@@ -736,7 +737,8 @@ function factParse(
           env,
           tokens,
           L_Keywords.LeftFactLogicalFormulaSig,
-          L_Keywords.RightFactLogicalFormulaSig
+          L_Keywords.RightFactLogicalFormulaSig,
+          freeFixedPairs
         );
         // skipper.skip( ")");
         out.isT = isT;
@@ -770,7 +772,8 @@ function parseToCheckFormula(
   env: L_Env,
   tokens: string[],
   begin: string,
-  end: string
+  end: string,
+  freeFixedPairs: [L_Symbol, L_Symbol][]
 ): L_Nodes.FormulaSubNode {
   const skipper = new Skipper(env, tokens);
 
@@ -786,7 +789,11 @@ function parseToCheckFormula(
     skipper.skip("not");
   }
 
-  let left: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
+  let left: L_Nodes.FormulaSubNode = formulaSubNodeParse(
+    env,
+    tokens,
+    freeFixedPairs
+  );
   let curOpt = skipper.skip([L_Keywords.OrKeyword, L_Keywords.AndKeyword]);
   let curPrecedence = precedence.get(curOpt) as number;
 
@@ -795,7 +802,11 @@ function parseToCheckFormula(
     return left;
   }
 
-  let right: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
+  let right: L_Nodes.FormulaSubNode = formulaSubNodeParse(
+    env,
+    tokens,
+    freeFixedPairs
+  );
 
   if (isCurToken(tokens, end)) {
     if (curOpt === L_Keywords.OrKeyword) {
@@ -814,24 +825,40 @@ function parseToCheckFormula(
       // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
       if (curOpt === L_Keywords.AndKeyword) {
         left = new L_Nodes.AndToCheckNode(left, right, true);
-        const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
+        const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(
+          env,
+          tokens,
+          freeFixedPairs
+        );
         // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
         if (nextOpt === L_Keywords.OrKeyword) {
           left = new L_Nodes.OrToCheckNode(left, next, isT);
         }
       }
     } else if (curPrecedence < nextPrecedence) {
-      const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
+      const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(
+        env,
+        tokens,
+        freeFixedPairs
+      );
       right = new L_Nodes.AndToCheckNode(right, next, true);
       left = new L_Nodes.OrToCheckNode(left, right, isT);
     } else {
       if (curOpt === L_Keywords.AndKeyword) {
         left = new L_Nodes.AndToCheckNode(left, right, isT);
-        const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
+        const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(
+          env,
+          tokens,
+          freeFixedPairs
+        );
         left = new L_Nodes.AndToCheckNode(left, next, isT);
       } else {
         left = new L_Nodes.OrToCheckNode(left, right, isT);
-        const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
+        const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(
+          env,
+          tokens,
+          freeFixedPairs
+        );
         left = new L_Nodes.OrToCheckNode(left, next, isT);
       }
     }
@@ -864,7 +891,7 @@ function parsePrimitiveFact(
     out = ifParse(env, tokens, freeFixedPairs);
     out.isT = isT ? out.isT : !out.isT;
   } else {
-    out = optFactParse(env, tokens, true);
+    out = optFactParse(env, tokens, freeFixedPairs, true);
     out.isT = isT;
   }
 
@@ -904,6 +931,7 @@ function factsArrParse(
 function optFactParse(
   env: L_Env,
   tokens: string[],
+  freeFixPairs: [L_Symbol, L_Symbol][],
   parseNot: boolean
 ): OptNode {
   const skipper = new Skipper(env, tokens);
@@ -917,13 +945,20 @@ function optFactParse(
     if (isCurToken(tokens, L_Keywords.FunctionalStructuredFactOptPrefix)) {
       skipper.skip(L_Keywords.FunctionalStructuredFactOptPrefix);
       const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
-      const vars = arrParse<L_Symbol>(env, tokens, symbolParse, "(", ")");
+      const vars = arrParse<L_Symbol>(env, tokens, symbolParse, "(", ")").map(
+        (e) => e.fix(env, freeFixPairs)
+      );
 
       let checkVars = checkVarsParse();
+      if (checkVars !== undefined) {
+        checkVars = checkVars.map((e) =>
+          e.map((v) => v.fix(env, freeFixPairs))
+        );
+      }
 
       return new OptNode(optSymbol, vars, isT, checkVars);
     } else {
-      const var1 = symbolParse(env, tokens);
+      const var1 = symbolParse(env, tokens).fix(env, freeFixPairs);
 
       switch (tokens[0]) {
         case "is": {
@@ -931,15 +966,26 @@ function optFactParse(
           const optName = skipper.skip();
           // skipper.skip( L_Keywords.FunctionalStructuredFactOptPrefix);
           const optSymbol = new L_Structs.L_OptSymbol(optName);
-          const checkVars = checkVarsParse();
+          let checkVars = checkVarsParse();
+          if (checkVars !== undefined) {
+            checkVars = checkVars.map((e) =>
+              e.map((v) => v.fix(env, freeFixPairs))
+            );
+          }
           const out = new OptNode(optSymbol, [var1], isT, checkVars);
           return out;
         }
+        // factual formulas like: a = b
         default: {
           const optName = skipper.skip();
           const optSymbol = new L_Structs.L_OptSymbol(optName);
-          const var2 = symbolParse(env, tokens);
-          const checkVars = checkVarsParse();
+          const var2 = symbolParse(env, tokens).fix(env, freeFixPairs);
+          let checkVars = checkVarsParse();
+          if (checkVars !== undefined) {
+            checkVars = checkVars.map((e) =>
+              e.map((v) => v.fix(env, freeFixPairs))
+            );
+          }
           const out = new OptNode(optSymbol, [var1, var2], isT, checkVars);
           return out;
         }
@@ -1020,7 +1066,7 @@ function ifParse(
       if (isCurToken(tokens, ",")) skipper.skip(",");
     }
 
-    const req: ToCheckNode[] = [];
+    const reqNotFixed: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
       skipper.skip(":");
       while (!isCurToken(tokens, "{")) {
@@ -1031,9 +1077,14 @@ function ifParse(
           freeFixPairs,
           false
         );
-        req.push(...facts);
+        reqNotFixed.push(...facts);
         if (isCurToken(tokens, [","])) skipper.skip([","]);
       }
+    }
+
+    const req: ToCheckNode[] = [];
+    for (const notFixed of reqNotFixed) {
+      req.push(notFixed.fix(newEnv, freeFixPairs));
     }
 
     skipper.skip("{");
@@ -1048,7 +1099,7 @@ function ifParse(
     skipper.skip("}");
 
     let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
-    out = out.fix(newEnv, freeFixPairs);
+
     if (out.varsDeclared(newEnv)) {
       return out;
     } else {
@@ -1091,7 +1142,7 @@ function haveParse(env: L_Env, tokens: string[]): L_Out {
       ":",
       true
     );
-    const fact = optFactParse(env, tokens, false);
+    const fact = optFactParse(env, tokens, [], false);
 
     const node = new L_Nodes.HaveNode(vars, fact);
 
@@ -1190,7 +1241,7 @@ function defParse(env: L_Env, tokens: string[]): L_Out {
 
     // skipper.skip( L_Keywords.FunctionalStructuredFactOptPrefix);
 
-    const opt: OptNode = optFactParse(env, tokens, false);
+    const opt: OptNode = optFactParse(env, tokens, [], false);
 
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
