@@ -315,7 +315,7 @@ export class ProveContradictNode extends ProveNode {
 }
 
 export class LocalEnvNode extends L_Node {
-  constructor(public nodes: L_Node[]) {
+  constructor(public nodes: L_Node[], public localEnv: L_Env) {
     super();
   }
 

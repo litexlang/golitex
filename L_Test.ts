@@ -100,6 +100,56 @@ const exampleList: ExampleItem[] = [
   {
     name: "",
     code: ["def_composite \\f{x}; let_formal x; def $p(x); $p(\\f{x});"],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "",
+    code: [
+      `
+def $object(x);
+def $set(x);
+know if x: $set(x) {
+  $object(x)
+};
+
+/* In this file, code embrace by {} are executed in a local environment and 
+reader might read them as if it is 'test-code' for what has be declared. */
+{
+  let a: $set(a);
+  $object(a);
+}
+
+def $equal(a,b);
+def $in(x,a);
+know if a,b: $set(a), $set(b), $equal(a,b)  {
+  if x: $in(x,a) {
+    $in(x,b)
+  }, 
+  if x: $in(x,b) {
+    $in(x,a)
+  }
+};
+
+know if a,b: $set(a), $set(b), if x: $in(x,a) {$in(x,b)}, if x: $in(x,b) {$in(x,a)} {
+  $equal(a,b)
+};
+
+{
+  let a, b: $set(a), $set(b), $equal(a,b); 
+  know if x: $in(x,a)  {
+    $in(x,b)
+  };
+  know if x: $in(x,b)  {
+    $in(x,a)
+  }; 
+  let x: $in(x,a); 
+  $in(x,b); 
+}
+
+
+`,
+    ],
     debug: true,
     print: true,
   },

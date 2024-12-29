@@ -10,6 +10,7 @@ import { L_ParseErr, L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Report from "./L_Report";
 import { newFact } from "./L_Memory";
 import { checkFact } from "./L_Checker";
+import { lcov } from "node:test/reporters";
 
 function arrParse<T>(
   env: L_Env,
@@ -1002,10 +1003,11 @@ function localEnvParse(env: L_Env, tokens: string[]): L_Nodes.LocalEnvNode {
   const index = tokens.length;
 
   try {
+    const localEnv = new L_Env(env);
     skip(tokens, "{");
-    const nodes = parseNodes(env, tokens, "}");
+    const nodes = parseNodes(localEnv, tokens, "}");
     skip(tokens, "}");
-    const out = new L_Nodes.LocalEnvNode(nodes);
+    const out = new L_Nodes.LocalEnvNode(nodes, localEnv);
     return out;
   } catch (error) {
     L_ParseErr(env, tokens, localEnvParse, index, start);
