@@ -54,6 +54,53 @@ export class LogicNode extends ToCheckNode {
     super(isT);
   }
 
+  addPrefixToVars(): boolean {
+    // const newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
+    //   e,
+    //   new L_Singleton(L_Keywords.IfVarPrefix + e.value),
+    // ]);
+    this.vars = this.vars.map(
+      (e) => new L_Singleton(L_Keywords.IfVarPrefix + e)
+    );
+
+    // freeFixPairs = [...freeFixPairs, ...newFreeFixPairs];
+
+    for (const r of this.req) {
+      if (r instanceof LogicNode) {
+        r.addPrefixToVars();
+      }
+    }
+
+    for (const onlyIf of this.onlyIfs) {
+      if (onlyIf instanceof LogicNode) {
+        onlyIf.addPrefixToVars();
+      }
+    }
+
+    return true;
+
+    // this.req = this.req.map((r) => r.fix(env, freeFixPairs));
+    // this.onlyIfs = this.onlyIfs.map((onlyIf) => onlyIf.fix(env, freeFixPairs));
+  }
+
+  fixUsingIfPrefix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): boolean {
+    try {
+      const newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
+        e,
+        new L_Singleton(L_Keywords.IfVarPrefix + e.value),
+      ]);
+      freeFixPairs = [...freeFixPairs, ...newFreeFixPairs];
+      this.req = this.req.map((r) => r.fix(env, freeFixPairs));
+      this.onlyIfs = this.onlyIfs.map((onlyIf) =>
+        onlyIf.fix(env, freeFixPairs)
+      );
+
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
   static makeFreeFixPairs(
     env: L_Env,
     fixed: L_Symbol[],

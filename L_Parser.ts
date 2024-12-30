@@ -848,7 +848,7 @@ function parsePrimitiveFact(
     out = parser(env, tokens);
     out.isT = isT;
   } else if (["if", "iff"].includes(tokens.peek())) {
-    out = ifParse(env, tokens);
+    out = ifFactParse(env, tokens);
     out.isT = isT ? out.isT : !out.isT;
   } else {
     // out = optToCheckParse(env, tokens, freeFixedPairs, true);
@@ -1009,87 +1009,87 @@ function factsArrParse(
 //   }
 // }
 
-function ifParse(
-  env: L_Env,
-  tokens: L_Tokens
-  // freeFixedPairsFromUpper: [L_Symbol, L_Symbol][]
-): L_Nodes.IfNode {
-  const skipper = new Skipper(env, tokens);
+// function ifParse(
+//   env: L_Env,
+//   tokens: L_Tokens
+//   // freeFixedPairsFromUpper: [L_Symbol, L_Symbol][]
+// ): L_Nodes.IfNode {
+//   const skipper = new Skipper(env, tokens);
 
-  const newEnv = new L_Env(env);
-  try {
-    const type = skipper.skip(env, L_Keywords.IfKeyword);
-    if (type === undefined) throw Error();
-    const vars: L_Structs.L_Singleton[] = [];
+//   const newEnv = new L_Env(env);
+//   try {
+//     const type = skipper.skip(env, L_Keywords.IfKeyword);
+//     if (type === undefined) throw Error();
+//     const vars: L_Structs.L_Singleton[] = [];
 
-    const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
-    while (!isCurToken(tokens, [":", "{"])) {
-      const singleton = pureSingletonAndFormalSymbolParse(newEnv, tokens);
+//     const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
+//     while (!isCurToken(tokens, [":", "{"])) {
+//       const singleton = pureSingletonAndFormalSymbolParse(newEnv, tokens);
 
-      // ! 这是必要的，因为冲突极有可能造成问题
-      if (singleton instanceof L_Structs.FormalSymbol) {
-        L_ReportBoolErr(
-          env,
-          ifParse,
-          `${singleton.value} is a declared formal symbol. Free variables in logical expressions can not be formal symbol.`
-        );
-        throw Error();
-      }
+//       // ! 这是必要的，因为冲突极有可能造成问题
+//       if (singleton instanceof L_Structs.FormalSymbol) {
+//         L_ReportBoolErr(
+//           env,
+//           ifParse,
+//           `${singleton.value} is a declared formal symbol. Free variables in logical expressions can not be formal symbol.`
+//         );
+//         throw Error();
+//       }
 
-      //! The reason why IfVarPrefix is important is that The user may introduce a var in a higher env with the same name as in if-vars
-      const newSingleton = new L_Structs.L_Singleton(
-        L_Keywords.IfVarPrefix + singleton.value
-      );
-      vars.push(newSingleton);
+//       //! The reason why IfVarPrefix is important is that The user may introduce a var in a higher env with the same name as in if-vars
+//       const newSingleton = new L_Structs.L_Singleton(
+//         L_Keywords.IfVarPrefix + singleton.value
+//       );
+//       vars.push(newSingleton);
 
-      newEnv.safeNewPureSingleton(newSingleton.value);
+//       newEnv.safeNewPureSingleton(newSingleton.value);
 
-      freeFixPairs.push([singleton, newSingleton]);
-      if (isCurToken(tokens, ",")) skipper.skip(env, ",");
-    }
+//       freeFixPairs.push([singleton, newSingleton]);
+//       if (isCurToken(tokens, ",")) skipper.skip(env, ",");
+//     }
 
-    const reqNotFixed: ToCheckNode[] = [];
-    if (isCurToken(tokens, ":")) {
-      skipper.skip(env, ":");
-      while (!isCurToken(tokens, "{")) {
-        const facts = factsArrParse(newEnv, tokens, [",", "{"], false);
-        reqNotFixed.push(...facts);
-        if (isCurToken(tokens, [","])) skipper.skip(env, [","]);
-      }
-    }
+//     const reqNotFixed: ToCheckNode[] = [];
+//     if (isCurToken(tokens, ":")) {
+//       skipper.skip(env, ":");
+//       while (!isCurToken(tokens, "{")) {
+//         const facts = factsArrParse(newEnv, tokens, [",", "{"], false);
+//         reqNotFixed.push(...facts);
+//         if (isCurToken(tokens, [","])) skipper.skip(env, [","]);
+//       }
+//     }
 
-    const req: ToCheckNode[] = [];
-    for (const notFixed of reqNotFixed) {
-      req.push(notFixed.fix(newEnv, freeFixPairs));
-    }
+//     const req: ToCheckNode[] = [];
+//     for (const notFixed of reqNotFixed) {
+//       req.push(notFixed.fix(newEnv, freeFixPairs));
+//     }
 
-    skipper.skip(env, "{");
+//     skipper.skip(env, "{");
 
-    const onlyIfs: ToCheckNode[] = [];
-    while (!isCurToken(tokens, "}")) {
-      // const facts = factsArrParse(env, tokens, [",", ";", "}"], false);
-      const fact = factParse(newEnv, tokens);
-      onlyIfs.push(fact);
-      if (isCurToken(tokens, [";", ","])) skipper.skip(env, [";", ","]);
-    }
-    skipper.skip(env, "}");
+//     const onlyIfs: ToCheckNode[] = [];
+//     while (!isCurToken(tokens, "}")) {
+//       // const facts = factsArrParse(env, tokens, [",", ";", "}"], false);
+//       const fact = factParse(newEnv, tokens);
+//       onlyIfs.push(fact);
+//       if (isCurToken(tokens, [";", ","])) skipper.skip(env, [";", ","]);
+//     }
+//     skipper.skip(env, "}");
 
-    let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
+//     let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
 
-    if (out.varsDeclared(newEnv)) {
-      return out;
-    } else {
-      env.getMessages().push(...newEnv.getMessages());
-      env.report(`Error at node ${skipper.nodeString()}`);
-      // L_Report.L_VarsInOptNotDeclaredBool(env, ifParse, out);
-      throw new Error();
-    }
-  } catch (error) {
-    env.getMessages().push(...newEnv.getMessages());
-    L_ReportParserErr(env, tokens, ifParse, skipper);
-    throw error;
-  }
-}
+//     if (out.varsDeclared(newEnv)) {
+//       return out;
+//     } else {
+//       env.getMessages().push(...newEnv.getMessages());
+//       env.report(`Error at node ${skipper.nodeString()}`);
+//       // L_Report.L_VarsInOptNotDeclaredBool(env, ifParse, out);
+//       throw new Error();
+//     }
+//   } catch (error) {
+//     env.getMessages().push(...newEnv.getMessages());
+//     L_ReportParserErr(env, tokens, ifParse, skipper);
+//     throw error;
+//   }
+// }
 
 function localEnvParse(env: L_Env, tokens: L_Tokens): L_Nodes.LocalEnvNode {
   const skipper = new Skipper(env, tokens);
@@ -1897,5 +1897,88 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
     } else {
       return undefined;
     }
+  }
+}
+
+function ifFactParse(
+  env: L_Env,
+  tokens: L_Tokens
+  // freeFixedPairsFromUpper: [L_Symbol, L_Symbol][]
+): L_Nodes.IfNode {
+  const skipper = new Skipper(env, tokens);
+
+  const newEnv = new L_Env(env);
+  try {
+    const type = skipper.skip(env, L_Keywords.IfKeyword);
+    if (type === undefined) throw Error();
+    const vars: L_Structs.L_Singleton[] = [];
+
+    const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
+    while (!isCurToken(tokens, [":", "{"])) {
+      const singleton = pureSingletonAndFormalSymbolParse(newEnv, tokens);
+
+      // ! 这是必要的，因为冲突极有可能造成问题
+      if (singleton instanceof L_Structs.FormalSymbol) {
+        L_ReportBoolErr(
+          env,
+          ifFactParse,
+          `${singleton.value} is a declared formal symbol. Free variables in logical expressions can not be formal symbol.`
+        );
+        throw Error();
+      }
+
+      //! The reason why IfVarPrefix is important is that The user may introduce a var in a higher env with the same name as in if-vars
+      vars.push(singleton);
+      // const newSingleton = new L_Structs.L_Singleton(
+      //   L_Keywords.IfVarPrefix + singleton.value
+      // );
+      // vars.push(newSingleton);
+
+      // newEnv.safeNewPureSingleton(newSingleton.value);
+
+      // freeFixPairs.push([singleton, newSingleton]);
+      // if (isCurToken(tokens, ",")) skipper.skip(env, ",");
+    }
+
+    const req: ToCheckNode[] = [];
+    if (isCurToken(tokens, ":")) {
+      skipper.skip(env, ":");
+      while (!isCurToken(tokens, "{")) {
+        const facts = factsArrParse(newEnv, tokens, [",", "{"], false);
+        req.push(...facts);
+        if (isCurToken(tokens, [","])) skipper.skip(env, [","]);
+      }
+    }
+
+    skipper.skip(env, "{");
+
+    const onlyIfs: ToCheckNode[] = [];
+    while (!isCurToken(tokens, "}")) {
+      // const facts = factsArrParse(env, tokens, [",", ";", "}"], false);
+      const fact = factParse(newEnv, tokens);
+      onlyIfs.push(fact);
+      if (isCurToken(tokens, [";", ","])) skipper.skip(env, [";", ","]);
+    }
+    skipper.skip(env, "}");
+
+    let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
+
+    if (!out.fixUsingIfPrefix(env, [])) throw Error();
+    out.addPrefixToVars();
+
+    return out;
+
+    // if (out.varsDeclared(newEnv)) {
+    //   return out;
+    // } else {
+    //   env.getMessages().push(...newEnv.getMessages());
+    //   env.report(`Error at node ${skipper.nodeString()}`);
+    //   // L_Report.L_VarsInOptNotDeclaredBool(env, ifParse, out);
+    //   throw new Error();
+    // }
+  } catch (error) {
+    env.getMessages().push(...newEnv.getMessages());
+    L_ReportParserErr(env, tokens, ifFactParse, skipper);
+    throw error;
   }
 }
