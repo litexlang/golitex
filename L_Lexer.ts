@@ -379,4 +379,8 @@ export class L_Tokens {
       Math.min(this.sc.length, this.curPos + viewWidth)
     );
   }
+
+  toString() {
+    return `curTok: "${this.peek()}"`;
+  }
 }

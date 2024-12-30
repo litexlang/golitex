@@ -16,7 +16,7 @@ export class L_Env {
   private literalOperators = new Map<string, L_Nodes.DefLiteralOptNode>();
 
   // TODO
-  private aliases = new Map<string, L_Structs.L_Symbol[]>();
+  private symbolAliases = new Map<string, L_Structs.L_Symbol[]>();
   private formalSymbols = new Set<string>();
   private functionalSymbols = new Map<
     string,
@@ -268,12 +268,12 @@ export class L_Env {
       );
     }
 
-    this.aliases.set(name.value, toBeAliased);
+    this.symbolAliases.set(name.value, toBeAliased);
     return true;
   }
 
   getAlias(name: string): L_Structs.L_Symbol[] | undefined {
-    const out = this.aliases.get(name);
+    const out = this.symbolAliases.get(name);
     if (out === undefined) {
       if (this.parent !== undefined) {
         return this.parent.getAlias(name);
