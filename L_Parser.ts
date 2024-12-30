@@ -1888,46 +1888,21 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
   }
 }
 
-function ifFactParse(
-  env: L_Env,
-  tokens: L_Tokens
-  // freeFixedPairsFromUpper: [L_Symbol, L_Symbol][]
-): L_Nodes.IfNode {
+function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
   const skipper = new Skipper(env, tokens);
 
   const newEnv = new L_Env(env);
   try {
     const type = skipper.skip(env, L_Keywords.IfKeyword);
-    if (type === undefined) throw Error();
-    const vars: L_Structs.L_Singleton[] = [];
 
-    const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
+    // Parse vars
+    const vars: L_Structs.L_Singleton[] = [];
     while (!isCurToken(tokens, [":", "{"])) {
       const singleton = pureSingletonAndFormalSymbolParse(newEnv, tokens);
-
-      // ! 这是必要的，因为冲突极有可能造成问题
-      if (singleton instanceof L_Structs.FormalSymbol) {
-        L_ReportBoolErr(
-          env,
-          ifFactParse,
-          `${singleton.value} is a declared formal symbol. Free variables in logical expressions can not be formal symbol.`
-        );
-        throw Error();
-      }
-
-      //! The reason why IfVarPrefix is important is that The user may introduce a var in a higher env with the same name as in if-vars
       vars.push(singleton);
-      // const newSingleton = new L_Structs.L_Singleton(
-      //   L_Keywords.IfVarPrefix + singleton.value
-      // );
-      // vars.push(newSingleton);
-
-      // newEnv.safeNewPureSingleton(newSingleton.value);
-
-      // freeFixPairs.push([singleton, newSingleton]);
-      // if (isCurToken(tokens, ",")) skipper.skip(env, ",");
     }
 
+    // Parse Req
     const req: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
       skipper.skip(env, ":");
@@ -1938,9 +1913,9 @@ function ifFactParse(
       }
     }
 
-    skipper.skip(env, "{");
-
+    // Parse OnlyIfs
     const onlyIfs: ToCheckNode[] = [];
+    skipper.skip(env, "{");
     while (!isCurToken(tokens, "}")) {
       // const facts = factsArrParse(env, tokens, [",", ";", "}"], false);
       const fact = factParse(newEnv, tokens);
@@ -1949,21 +1924,12 @@ function ifFactParse(
     }
     skipper.skip(env, "}");
 
+    // Refactor IfNode: add prefix to vars in IfNode and all inside facts
     let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
-
     if (!out.fixUsingIfPrefix(env, [])) throw Error();
     out.addPrefixToVars();
 
     return out;
-
-    // if (out.varsDeclared(newEnv)) {
-    //   return out;
-    // } else {
-    //   env.getMessages().push(...newEnv.getMessages());
-    //   env.report(`Error at node ${skipper.nodeString()}`);
-    //   // L_Report.L_VarsInOptNotDeclaredBool(env, ifParse, out);
-    //   throw new Error();
-    // }
   } catch (error) {
     env.getMessages().push(...newEnv.getMessages());
     L_ReportParserErr(env, tokens, ifFactParse, skipper);
