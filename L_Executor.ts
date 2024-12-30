@@ -30,9 +30,10 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
       return proveContradictExec(env, node);
     } else if (node instanceof L_Nodes.LocalEnvNode) {
       return localEnvExec(env, node);
-    } else if (node instanceof L_Nodes.SpecialNode) {
-      return specialExec(env, node);
     }
+    //  else if (node instanceof L_Nodes.SpecialNode) {
+    //   return specialExec(env, node);
+    // }
 
     throw new Error(`${node} can not be executed at runtime.`);
   } catch (error) {
@@ -173,23 +174,23 @@ function localEnvExec(env: L_Env, localEnvNode: L_Nodes.LocalEnvNode): L_Out {
   }
 }
 
-function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
-  try {
-    switch (node.keyword) {
-      case L_Keywords.ClearKeyword:
-        env.clear();
-        return L_Out.True;
-      case L_Keywords.RunKeyword: {
-        runFileWithLogging(env, node.extra as string, true, false);
-        return L_Out.True;
-      }
-    }
+// function specialExec(env: L_Env, node: L_Nodes.SpecialNode): L_Out {
+//   try {
+//     switch (node.keyword) {
+//       case L_Keywords.ClearKeyword:
+//         env.clear();
+//         return L_Out.True;
+//       case L_Keywords.RunKeyword: {
+//         runFileWithLogging(env, node.extra as string, true, false);
+//         return L_Out.True;
+//       }
+//     }
 
-    return L_Out.Error;
-  } catch {
-    return L_Report.L_ReportErr(env, specialExec, node);
-  }
-}
+//     return L_Out.Error;
+//   } catch {
+//     return L_Report.L_ReportErr(env, specialExec, node);
+//   }
+// }
 
 // function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
 //   try {

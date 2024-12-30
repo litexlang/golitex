@@ -419,9 +419,9 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
       case "prove":
       case "prove_by_contradiction":
         return proveParse(env, tokens);
-      case "clear":
-      case "run":
-        return specialParse(env, tokens);
+      // case "clear":
+      // case "run":
+      //   return specialParse(env, tokens);
     }
 
     switch (tokens.peek()) {
@@ -1208,31 +1208,31 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
   }
 }
 
-function specialParse(env: L_Env, tokens: L_Tokens): L_Nodes.SpecialNode {
-  const skipper = new Skipper(env, tokens);
+// function specialParse(env: L_Env, tokens: L_Tokens): L_Nodes.SpecialNode {
+//   const skipper = new Skipper(env, tokens);
 
-  try {
-    const keyword = skipper.skip(env);
-    switch (keyword) {
-      case L_Keywords.ClearKeyword:
-        skipper.skip(env, L_Keywords.L_End);
-        return new L_Nodes.SpecialNode(L_Keywords.ClearKeyword, null);
-      case L_Keywords.RunKeyword: {
-        const words: string[] = [];
-        while (!isCurToken(tokens, L_Keywords.L_End)) {
-          words.push(skipper.skip(env));
-        }
-        skipper.skip(env, L_Keywords.L_End);
-        return new L_Nodes.SpecialNode(L_Keywords.RunKeyword, words.join());
-      }
-      default:
-        throw Error();
-    }
-  } catch (error) {
-    L_ReportParserErr(env, tokens, specialParse, skipper);
-    throw error;
-  }
-}
+//   try {
+//     const keyword = skipper.skip(env);
+//     switch (keyword) {
+//       case L_Keywords.ClearKeyword:
+//         skipper.skip(env, L_Keywords.L_End);
+//         return new L_Nodes.SpecialNode(L_Keywords.ClearKeyword, null);
+//       case L_Keywords.RunKeyword: {
+//         const words: string[] = [];
+//         while (!isCurToken(tokens, L_Keywords.L_End)) {
+//           words.push(skipper.skip(env));
+//         }
+//         skipper.skip(env, L_Keywords.L_End);
+//         return new L_Nodes.SpecialNode(L_Keywords.RunKeyword, words.join());
+//       }
+//       default:
+//         throw Error();
+//     }
+//   } catch (error) {
+//     L_ReportParserErr(env, tokens, specialParse, skipper);
+//     throw error;
+//   }
+// }
 
 function defParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
