@@ -187,7 +187,7 @@ export class OptNode extends ToCheckNode {
   varsDeclared(env: L_Env): boolean {
     for (const v of this.vars) {
       if (!v.varsDeclared(env)) {
-        return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, v);
+        return false;
       }
     }
 
@@ -196,7 +196,7 @@ export class OptNode extends ToCheckNode {
     for (const layer of this.checkVars) {
       for (const v of layer) {
         if (!v.varsDeclared(env)) {
-          return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, v);
+          return false;
         }
       }
     }

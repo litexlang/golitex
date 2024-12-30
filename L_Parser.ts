@@ -661,7 +661,7 @@ function proveParse(env: L_Env, tokens: L_Tokens): L_Nodes.ProveNode {
     skipper.skip("}");
 
     if (byContradict) {
-      const contradict = optFactParse(env, tokens, [], true);
+      const contradict = optParse(env, tokens, [], true);
       skipper.skip(L_Keywords.L_End);
       return new L_Nodes.ProveContradictNode(toProve, block, contradict);
     } else {
@@ -688,7 +688,7 @@ function formulaSubNodeParse(
       // skipper.skip( ")");
       return out;
     } else {
-      return optFactParse(env, tokens, freeFixedPairs, true);
+      return optParse(env, tokens, freeFixedPairs, true);
     }
   } catch (error) {
     L_ReportParserErr(env, tokens, formulaSubNodeParse, skipper);
@@ -867,7 +867,7 @@ function parsePrimitiveFact(
     out = ifParse(env, tokens, freeFixedPairs);
     out.isT = isT ? out.isT : !out.isT;
   } else {
-    out = optFactParse(env, tokens, freeFixedPairs, true);
+    out = optParse(env, tokens, freeFixedPairs, true);
     out.isT = isT;
   }
 
@@ -904,7 +904,7 @@ function factsArrParse(
   }
 }
 
-function optFactParse(
+function optParse(
   env: L_Env,
   tokens: L_Tokens,
   freeFixPairs: [L_Symbol, L_Symbol][],
@@ -932,6 +932,13 @@ function optFactParse(
         );
       }
 
+      for (const v of vars) {
+        if (!v.varsDeclared(env)) {
+          // L_Report.L_VarsInOptNotDeclaredBool(env, optParse, v);
+          throw Error;
+        }
+      }
+
       return new OptNode(optSymbol, vars, isT, checkVars);
     } else {
       const var1 = symbolParse(env, tokens).fix(env, freeFixPairs);
@@ -948,8 +955,13 @@ function optFactParse(
               e.map((v) => v.fix(env, freeFixPairs))
             );
           }
-          const out = new OptNode(optSymbol, [var1], isT, checkVars);
-          return out;
+
+          if (!var1.varsDeclared(env)) {
+            // L_Report.L_VarsInOptNotDeclaredBool(env, optParse, var1);
+            throw Error;
+          }
+
+          return new OptNode(optSymbol, [var1], isT, checkVars);
         }
         // factual formulas like: a = b
         default: {
@@ -962,13 +974,20 @@ function optFactParse(
               e.map((v) => v.fix(env, freeFixPairs))
             );
           }
-          const out = new OptNode(optSymbol, [var1, var2], isT, checkVars);
-          return out;
+
+          for (const v of [var1, var2]) {
+            if (!v.varsDeclared(env)) {
+              // L_Report.L_VarsInOptNotDeclaredBool(env, optParse, v);
+              throw Error;
+            }
+          }
+
+          return new OptNode(optSymbol, [var1, var2], isT, checkVars);
         }
       }
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, optFactParse, skipper);
+    L_ReportParserErr(env, tokens, optParse, skipper);
     throw error;
   }
 
@@ -1008,9 +1027,8 @@ function ifParse(
 ): L_Nodes.IfNode {
   const skipper = new Skipper(env, tokens);
 
+  const newEnv = new L_Env(env);
   try {
-    const newEnv = new L_Env(env);
-
     const type = skipper.skip(L_Keywords.IfKeyword);
     if (type === undefined) throw Error();
     const vars: L_Structs.L_Singleton[] = [];
@@ -1080,10 +1098,12 @@ function ifParse(
       return out;
     } else {
       env.getMessages().push(...newEnv.getMessages());
-      L_Report.L_VarsInOptNotDeclaredBool(env, ifParse, out);
-      throw Error();
+      env.report(`Error at node ${skipper.nodeString()}`);
+      // L_Report.L_VarsInOptNotDeclaredBool(env, ifParse, out);
+      throw new Error();
     }
   } catch (error) {
+    env.getMessages().push(...newEnv.getMessages());
     L_ReportParserErr(env, tokens, ifParse, skipper);
     throw error;
   }
@@ -1118,7 +1138,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
       ":",
       true
     );
-    const fact = optFactParse(env, tokens, [], false);
+    const fact = optParse(env, tokens, [], false);
 
     const node = new L_Nodes.HaveNode(vars, fact);
 
@@ -1216,8 +1236,7 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
     }
 
     // skipper.skip( L_Keywords.FunctionalStructuredFactOptPrefix);
-
-    const opt: OptNode = optFactParse(env, tokens, [], false);
+    const opt = getOpt();
 
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
@@ -1241,6 +1260,24 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
   } catch (error) {
     L_ReportParserErr(env, tokens, defParse, skipper);
     throw error;
+  }
+
+  function getOpt(): OptNode {
+    skipper.skip(L_Keywords.FunctionalStructuredFactOptPrefix);
+    const optName = new L_Structs.L_OptSymbol(skipper.skip());
+    skipper.skip(L_Keywords.LeftBrace);
+    const vars = arrParse<L_Symbol>(
+      env,
+      tokens,
+      symbolParse,
+      undefined,
+      L_Keywords.RightBrace,
+      false
+    );
+    skipper.skip(L_Keywords.RightBrace);
+
+    const opt = new OptNode(optName, vars, true, undefined);
+    return opt;
   }
 
   function defExec(env: L_Env, node: L_Nodes.DefNode): L_Structs.L_Out {
