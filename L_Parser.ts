@@ -739,8 +739,27 @@ function factParse(
     //   return out;
     // }
     else {
-      const out = parsePrimitiveFact(env, tokens);
-      out.isT = isT;
+      let isT = true;
+      if (isCurToken(tokens, "not")) {
+        isT = false;
+        skipper.skip(env, "not");
+      }
+
+      let out: L_Nodes.ToCheckNode;
+
+      if (isBuiltinKeyword(tokens.peek())) {
+        const parser = L_BuiltinParsers.get(tokens.peek()) as Function;
+        out = parser(env, tokens);
+        out.isT = isT;
+      } else if (["if", "iff"].includes(tokens.peek())) {
+        out = ifFactParse(env, tokens);
+        out.isT = isT ? out.isT : !out.isT;
+      } else {
+        // out = optToCheckParse(env, tokens, freeFixedPairs, true);
+        out = optFactParse(env, tokens);
+        out.isT = isT;
+      }
+
       return out;
     }
   } catch (error) {
@@ -826,37 +845,6 @@ function parseToCheckFormula(
 
   skipper.skip(env, end);
   return left;
-}
-
-function parsePrimitiveFact(
-  env: L_Env,
-  tokens: L_Tokens
-  // freeFixedPairs: [L_Symbol, L_Symbol][]
-): L_Nodes.ToCheckNode {
-  const skipper = new Skipper(env, tokens);
-
-  let isT = true;
-  if (isCurToken(tokens, "not")) {
-    isT = false;
-    skipper.skip(env, "not");
-  }
-
-  let out: L_Nodes.ToCheckNode;
-
-  if (isBuiltinKeyword(tokens.peek())) {
-    const parser = L_BuiltinParsers.get(tokens.peek()) as Function;
-    out = parser(env, tokens);
-    out.isT = isT;
-  } else if (["if", "iff"].includes(tokens.peek())) {
-    out = ifFactParse(env, tokens);
-    out.isT = isT ? out.isT : !out.isT;
-  } else {
-    // out = optToCheckParse(env, tokens, freeFixedPairs, true);
-    out = optFactParse(env, tokens);
-    out.isT = isT;
-  }
-
-  return out;
 }
 
 // Main Function of parser
