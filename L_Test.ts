@@ -128,7 +128,15 @@ know if a,b: $set(a), $set(b), $equal(a,b)  {
   },
   {
     name: "",
-    code: ["def $p(x); if x: $p(y) {};"],
+    code: [
+      `
+      
+/*
+abd
+*/
+      
+      `,
+    ],
     debug: true,
     print: true,
   },
