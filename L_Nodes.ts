@@ -93,14 +93,16 @@ export class LogicNode extends ToCheckNode {
     for (const req of this.req) {
       if (!req.varsDeclared(this.env)) {
         env.getMessages().push(...this.env.getMessages());
-        return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, req);
+        // return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, req);
+        return false;
       }
     }
 
     for (const onlyIf of this.onlyIfs) {
       if (!onlyIf.varsDeclared(this.env)) {
         env.getMessages().push(...this.env.getMessages());
-        return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, onlyIf);
+        // return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, onlyIf);
+        return false;
       }
     }
 

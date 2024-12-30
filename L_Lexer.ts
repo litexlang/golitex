@@ -248,7 +248,7 @@ export class L_Tokens {
   public sc = "";
 
   constructor(sc: string) {
-    this.sc = sc.trim();
+    this.sc = sc.trim(); // necessary, because isEnd is assumed to be equivalent to curPos >= sc.length
   }
 
   private isSpecialChar(char: string): boolean {
@@ -369,5 +369,14 @@ export class L_Tokens {
 
   curTokIndex(): number {
     return this.curPos;
+  }
+
+  viewCurTokSurroundings(): string {
+    const viewWidth = 25;
+
+    return this.sc.slice(
+      Math.max(0, this.curPos - viewWidth),
+      Math.min(this.sc.length, this.curPos + viewWidth)
+    );
   }
 }

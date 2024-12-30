@@ -2,6 +2,7 @@ import type { L_Env } from "./L_Env";
 import { L_Out, L_Symbol } from "./L_Structs";
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 import { L_Tokens } from "./L_Lexer";
+import { Skipper } from "./L_Parser";
 
 export function reportL_Out(env: L_Env, out: L_Out, node: L_Node): L_Out {
   let message = "";
@@ -104,8 +105,8 @@ export function L_ReportBoolErr(
   func: Function,
   node?: L_Node | string
 ): boolean {
-  env.report(`\nFailed: <${func.name}>`);
-  if (node !== undefined) env.report(`\nFailed:\n${node}`);
+  env.report(`Error at: ${func.name}\n`);
+  if (node !== undefined) env.report(`${node}`);
 
   return false;
 }
@@ -114,11 +115,13 @@ export function L_ReportParserErr(
   env: L_Env,
   tokens: L_Tokens,
   func: Function,
-  skipperTokens: string[]
+  skipper: Skipper
 ) {
-  L_ReportErr(env, func, "Parser Error:");
-  env.report(`\n${skipperTokens.join(" ")}`);
-  env.report(`At ${tokens.curTokIndex()} ${tokens.peek()}: Parser Error`);
+  L_ReportErr(env, func, "Parser Error:\n");
+  env.report(`Error occur at ${tokens.curTokIndex()} ${tokens.peek()}:\n`);
+  env.report(tokens.viewCurTokSurroundings());
+  // env.report(`\n${skipperTokens.join(" ")}`);
+  // env.report(`At ${tokens.curTokIndex()} ${tokens.peek()}: Parser Error`);
 }
 
 export function L_VarsInOptNotDeclaredBool(
