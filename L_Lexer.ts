@@ -381,6 +381,11 @@ export class L_Tokens {
   }
 
   toString() {
-    return `curTok: "${this.peek()}"`;
+    return `curTok: at ${
+      this.curPos
+    } "${this.peek()}", surroundings: ${this.viewCurTokSurroundings().replace(
+      "\n",
+      " "
+    )}`;
   }
 }
