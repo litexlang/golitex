@@ -129,14 +129,7 @@ know if a,b: $set(a), $set(b), $equal(a,b)  {
   {
     name: "",
     code: [
-      `
-      
-/*
-abd
-*/
-      
-      `,
-      "        ",
+      `def $p(x); def_composite \\integer_form{a,b}; know if a,b: \\integer_form{at{a, 0}, at{a, 1}} is p {};`,
     ],
     debug: true,
     print: true,
