@@ -111,7 +111,7 @@ const exampleList: ExampleItem[] = [
       def $equal(a,b);
       def $in(x,a);
 
-know if a,b: $set(a), $set(b), $equal(a,b)  {
+know if a,b: $set(a), $set(c), $equal(a,b)  {
   if x: $in(x,a) {
     $in(x,b)
   }, 
