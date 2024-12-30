@@ -3,17 +3,18 @@ import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
-import { L_Out, L_Tokens } from "./L_Structs";
+import { L_Out } from "./L_Structs";
 import { L_Singleton, L_Composite, L_Symbol } from "./L_Structs";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
 import { L_ReportParserErr, L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Report from "./L_Report";
 import { newFact } from "./L_Memory";
 import { checkFact } from "./L_Checker";
+import { L_Tokens } from "./L_Lexer";
 
 function arrParse<T>(
   env: L_Env,
-  tokens: L_Structs.L_Tokens,
+  tokens: L_Tokens,
   parseFunc: Function,
   begin: string[] | string | undefined,
   end: string[] | string,
@@ -39,7 +40,7 @@ function arrParse<T>(
 
 function indexedSymbolParse(
   env: L_Env,
-  tokens: L_Structs.L_Tokens
+  tokens: L_Tokens
 ): L_Structs.IndexedSymbol {
   const skipper = new Skipper(env, tokens);
 
@@ -351,7 +352,7 @@ function isCurToken(tokens: L_Tokens, s: string | string[]) {
 // @end: when parsing local env, } is the end; when parsing source code, node is the end
 export function parseNodes(
   env: L_Env,
-  tokens: L_Structs.L_Tokens,
+  tokens: L_Tokens,
   end: string | null
 ): L_Node[] {
   try {
