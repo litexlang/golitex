@@ -259,7 +259,7 @@ export class L_Tokens {
     return char.trim() === "";
   }
 
-  private readNextToken(): [string, number] {
+  private readNextToken(): [string, number] | null {
     let currentToken = "";
     let inLineComment = false;
     let inBlockComment = false;
@@ -339,11 +339,11 @@ export class L_Tokens {
       return [currentToken, this.sc.length];
     }
 
-    throw new Error("No more tokens available.");
+    return null;
   }
 
   shift(): string {
-    const [token, nextPos] = this.readNextToken();
+    const [token, nextPos] = this.readNextToken() as [string, number];
     this.curPos = nextPos;
     return token;
   }
@@ -353,7 +353,7 @@ export class L_Tokens {
     let token: string = "";
 
     for (let i = 0; i <= further; i++) {
-      [token, tempPos] = this.readNextToken();
+      [token, tempPos] = this.readNextToken() as [string, number];
     }
 
     return token;
@@ -364,7 +364,8 @@ export class L_Tokens {
   }
 
   isEnd(): boolean {
-    return this.curPos >= this.sc.length;
+    if (this.readNextToken() === null) return true;
+    else return false;
   }
 
   curTokIndex(): number {
@@ -381,11 +382,6 @@ export class L_Tokens {
   }
 
   toString() {
-    return `curTok: at ${
-      this.curPos
-    } "${this.peek()}", surroundings: ${this.viewCurTokSurroundings().replace(
-      "\n",
-      " "
-    )}`;
+    return `curTok: at ${this.curPos} "${this.peek()}"`;
   }
 }

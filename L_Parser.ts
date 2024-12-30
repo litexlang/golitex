@@ -1247,7 +1247,11 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
       skipper.skip(":");
-      cond = factsArrParse(env, tokens, [L_Keywords.L_End], [], false);
+      const newEnv = new L_Env(env);
+      opt.vars.forEach((v) =>
+        newEnv.safeNewPureSingleton((v as L_Singleton).value)
+      );
+      cond = factsArrParse(newEnv, tokens, [L_Keywords.L_End], [], false);
     }
 
     const onlyIfs: ToCheckNode[] = [];
