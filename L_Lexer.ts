@@ -1,6 +1,24 @@
 import { L_Keywords, specialChars } from "./L_Keywords";
 import { L_Env } from "./L_Env";
 
+class L_Tokens {
+  constructor(
+    public sc: string,
+    public tokens: [number, number][],
+    public curTok: number
+  ) {}
+
+  shift(): string {
+    const out = this.sc.slice(
+      this.tokens[this.curTok][0],
+      this.tokens[this.curTok][1]
+    );
+    this.curTok += 1;
+
+    return out;
+  }
+}
+
 export function L_Scan(env: L_Env, text: string): string[] {
   const tokens: string[] = [];
   let currentToken = "";
