@@ -77,16 +77,7 @@ function newFormulaFact(env: L_Env, fact: ToCheckFormulaNode): boolean {
         new FormulaKnownFactReq([...root[1], root[0]])
       )
     );
-    // if (fact instanceof AndToCheckNode) {
-    //   newFact(env, fact.left);
-    //   newFact(env, fact.right);
-    // } else if (fact instanceof OrToCheckNode) {
-    //   //! to make "if x : (p(x) or t(x)) {(p(x) or t(x))}" work, I must make or into if-then
-    //   const equivalentIfs = fact.getEquivalentIfs();
-    //   if (equivalentIfs !== null) {
-    //     equivalentIfs.forEach((ifFact) => newFact(env, ifFact));
-    //   }
-    // }
+
     return true;
   } catch {
     return reportStoreErr(env, newFormulaFact.name, fact);

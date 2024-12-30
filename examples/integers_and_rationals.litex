@@ -14,6 +14,8 @@ know if x: is_form(x, \integer_form{x,y}) {
 
 def_composite \integer_add{a,b}: a is integer, b is integer;
 
+/*
 know if a, b: a is integer, b is integer {
   \integer_add{a,b} integer_equal \integer_form{\integer_form{at{a, 0}, at{b, 0} }  , \integer_form{at{a, 0} , at{a , 1} } }
 };
+*/

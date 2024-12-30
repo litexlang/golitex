@@ -664,7 +664,7 @@ function proveParse(env: L_Env, tokens: L_Tokens): L_Nodes.ProveNode {
     skipper.skip(env, "}");
 
     if (byContradict) {
-      const contradict = optParse(env, tokens, [], true);
+      const contradict = optToCheckParse(env, tokens, [], true);
       skipper.skip(env, L_Keywords.L_End);
       return new L_Nodes.ProveContradictNode(toProve, block, contradict);
     } else {
@@ -691,7 +691,7 @@ function formulaSubNodeParse(
       // skipper.skip(env,  ")");
       return out;
     } else {
-      return optParse(env, tokens, freeFixedPairs, true);
+      return optToCheckParse(env, tokens, freeFixedPairs, true);
     }
   } catch (error) {
     L_ReportParserErr(env, tokens, formulaSubNodeParse, skipper);
@@ -873,7 +873,7 @@ function parsePrimitiveFact(
     out = ifParse(env, tokens, freeFixedPairs);
     out.isT = isT ? out.isT : !out.isT;
   } else {
-    out = optParse(env, tokens, freeFixedPairs, true);
+    out = optToCheckParse(env, tokens, freeFixedPairs, true);
     out.isT = isT;
   }
 
@@ -910,7 +910,7 @@ function factsArrParse(
   }
 }
 
-function optParse(
+function optToCheckParse(
   env: L_Env,
   tokens: L_Tokens,
   freeFixPairs: [L_Symbol, L_Symbol][],
@@ -997,7 +997,7 @@ function optParse(
       }
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, optParse, skipper);
+    L_ReportParserErr(env, tokens, optToCheckParse, skipper);
     throw error;
   }
 
@@ -1149,7 +1149,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
       ":",
       true
     );
-    const fact = optParse(env, tokens, [], false);
+    const fact = optToCheckParse(env, tokens, [], false);
 
     const node = new L_Nodes.HaveNode(vars, fact);
 
@@ -1247,7 +1247,7 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
     }
 
     // skipper.skip(env,  L_Keywords.FunctionalStructuredFactOptPrefix);
-    const opt = optParse(env, tokens, [], false);
+    const opt = optToCheckParse(env, tokens, [], false);
 
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
