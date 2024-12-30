@@ -1,11 +1,11 @@
 import { L_Env } from "./L_Env";
 import { L_Out } from "./L_Structs";
 import * as L_Executor from "./L_Executor";
-import { L_Scan } from "./L_Lexer";
 import * as L_Parser from "./L_Parser";
 import * as fs from "fs";
+import { L_Tokens } from "./L_Lexer";
 
-const printEveryThing = false;
+const printEveryThing = true;
 
 export function runStringWithLogging(
   env: L_Env,
@@ -17,7 +17,7 @@ export function runStringWithLogging(
     if (printResult && printCode) {
       console.log(`-----\n***  source code  ***\n${expr}\n`);
     }
-    const tokens = L_Scan(env, expr);
+    const tokens = new L_Tokens(expr);
 
     let result: L_Out[] = [];
     const nodes = L_Parser.parseNodes(env, tokens, null);
