@@ -1,10 +1,6 @@
 import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
 import {
-  L_VarsInOptDoubleDeclErr,
-  L_VarsInOptNotDeclaredBool,
-} from "./L_Report";
-import {
   FunctionalSymbol,
   L_Composite,
   L_OptSymbol,
