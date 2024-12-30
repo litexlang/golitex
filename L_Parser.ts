@@ -512,6 +512,12 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
     }
 
     let out: L_Nodes.LetNode | undefined = undefined;
+
+    for (const e of vars) {
+      const ok = env.safeNewPureSingleton(e);
+      if (!ok) return L_Out.Error;
+    }
+
     if (isCurToken(tokens, L_Keywords.L_End)) {
       skipper.skip(L_Keywords.L_End);
       out = new L_Nodes.LetNode(vars, []);
@@ -534,10 +540,6 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
   function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
     try {
       // examine whether some vars are already declared. if not, declare them.
-      for (const e of node.vars) {
-        const ok = env.safeNewPureSingleton(e);
-        if (!ok) return L_Out.Error;
-      }
 
       if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
         throw Error();

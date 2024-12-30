@@ -1,6 +1,13 @@
 def $natural(x);
+def_composite \nat_add{x,y}: x is natural, y is natural;
 def_composite \integer_form{x,y}: x is natural, y is natural;
 def $integer(x);
 know if x: is_form(x, \integer_form{x,y}) {
   x is integer
 };
+
+{
+  let 1,2: 1 is natural, 2 is natural;
+  \integer_form{1,2} is integer;
+}
+
