@@ -248,7 +248,7 @@ export class L_Tokens {
   public sc = "";
 
   constructor(sc: string) {
-    this.sc = sc.trim(); // necessary, because isEnd is assumed to be equivalent to curPos >= sc.length
+    this.sc = sc; // necessary, because isEnd is assumed to be equivalent to curPos >= sc.length
   }
 
   private isSpecialChar(char: string): boolean {
