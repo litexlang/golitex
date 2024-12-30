@@ -5,10 +5,7 @@ import { isPropertyParse, isFormParse } from "./L_Parser";
 /**
  * Checker of builtins is in L_Checker.checkBuiltinCheckNode
  */
-export const L_BuiltinParsers = new Map<
-  string,
-  (env: L_Env, tokens: string[]) => BuiltinCheckNode
->();
+export const L_BuiltinParsers = new Map<string, Function>();
 L_BuiltinParsers.set("is_property", isPropertyParse);
 L_BuiltinParsers.set("is_form", isFormParse);
 

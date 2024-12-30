@@ -105,7 +105,7 @@ function runExamples() {
 
 function runParserTest(env: L_Env, codes: string[], print: boolean) {
   for (const code of codes) {
-    const tokens: string[] = L_Scan(env, code);
+    const tokens = L_Scan(env, code);
     const nodes = parseNodes(env, tokens, null);
     for (const node of nodes) {
       if (print) console.log(node);

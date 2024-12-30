@@ -1,5 +1,5 @@
 import type { L_Env } from "./L_Env";
-import { L_Out, L_Symbol } from "./L_Structs";
+import { L_Out, L_Symbol, L_Tokens } from "./L_Structs";
 import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
 
 export function reportL_Out(env: L_Env, out: L_Out, node: L_Node): L_Out {
@@ -111,13 +111,13 @@ export function L_ReportBoolErr(
 
 export function L_ReportParserErr(
   env: L_Env,
-  tokens: string[],
+  tokens: L_Tokens,
   func: Function,
   skipperTokens: string[]
 ) {
   L_ReportErr(env, func, "Parser Error:");
   env.report(`\n${skipperTokens.join(" ")}`);
-  env.report(`\n${tokens.slice(0, 15).join(" ")}`);
+  env.report(`At ${tokens.curTokIndex()} ${tokens.peek()}: Parser Error`);
 }
 
 export function L_VarsInOptNotDeclaredBool(
