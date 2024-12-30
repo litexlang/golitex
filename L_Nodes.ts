@@ -334,11 +334,11 @@ export class LocalEnvNode extends L_Node {
   }
 }
 
-export class ReturnNode extends L_Node {
-  constructor(public facts: ToCheckNode[]) {
-    super();
-  }
-}
+// export class ReturnNode extends L_Node {
+//   constructor(public facts: ToCheckNode[]) {
+//     super();
+//   }
+// }
 
 export class HaveNode extends L_Node {
   constructor(public vars: L_Singleton[], public fact: OptNode) {
@@ -346,21 +346,21 @@ export class HaveNode extends L_Node {
   }
 }
 
-export class SpecialNode extends L_Node {
-  constructor(public keyword: string, public extra: unknown) {
-    super();
-  }
-}
+// export class SpecialNode extends L_Node {
+//   constructor(public keyword: string, public extra: unknown) {
+//     super();
+//   }
+// }
 
-export class ByNode extends L_Node {
-  constructor(public namedKnownToChecks: OptNode[]) {
-    super();
-  }
+// export class ByNode extends L_Node {
+//   constructor(public namedKnownToChecks: OptNode[]) {
+//     super();
+//   }
 
-  override toString() {
-    return `${this.namedKnownToChecks.map((e) => e.toString).join(", ")}`;
-  }
-}
+//   override toString() {
+//     return `${this.namedKnownToChecks.map((e) => e.toString).join(", ")}`;
+//   }
+// }
 
 export class DefCompositeNode extends L_Node {
   constructor(public composite: L_Composite, public facts: ToCheckNode[]) {
