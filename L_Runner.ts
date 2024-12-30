@@ -63,7 +63,10 @@ export function runStringsWithLogging(
     runStringWithLogging(env, expr, printResult);
   }
 
-  if (printResult) console.log("-----\nDONE!\n");
+  if (printResult) {
+    env.getMessages().forEach((e) => console.log(e));
+    console.log("-----\nDONE!\n");
+  }
   // env.printExists();
 }
 

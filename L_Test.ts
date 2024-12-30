@@ -2,6 +2,7 @@ import { ExampleItem } from "./L_Structs";
 import { L_Env } from "./L_Env";
 import { runStringsWithLogging } from "./L_Runner";
 import * as fs from "fs";
+import { log } from "console";
 
 const exampleList: ExampleItem[] = [
   {
@@ -160,7 +161,8 @@ function runLiTeXFile(filePath: string) {
   try {
     const data = fs.readFileSync(filePath, "utf8");
     const env = new L_Env();
-    runStringsWithLogging(env, [data], false);
+    const logging = true;
+    runStringsWithLogging(env, [data], logging);
   } catch (err) {
     console.error("Error:", err);
   }

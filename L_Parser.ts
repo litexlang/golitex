@@ -458,7 +458,6 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
     // return facts;
     // }
   } catch (error) {
-    L_ReportParserErr(env, tokens, parseSingleNode, skipper);
     throw error;
   }
 }
@@ -908,7 +907,7 @@ function optParse(
   env: L_Env,
   tokens: L_Tokens,
   freeFixPairs: [L_Symbol, L_Symbol][],
-  parseNot: boolean
+  checkDeclared: boolean
 ): OptNode {
   const skipper = new Skipper(env, tokens);
 
@@ -932,10 +931,12 @@ function optParse(
         );
       }
 
-      for (const v of vars) {
-        if (!v.varsDeclared(env)) {
-          // L_Report.L_VarsInOptNotDeclaredBool(env, optParse, v);
-          throw Error;
+      if (checkDeclared) {
+        for (const v of vars) {
+          if (!v.varsDeclared(env)) {
+            // L_Report.L_VarsInOptNotDeclaredBool(env, optParse, v);
+            throw Error;
+          }
         }
       }
 
@@ -956,9 +957,10 @@ function optParse(
             );
           }
 
-          if (!var1.varsDeclared(env)) {
-            // L_Report.L_VarsInOptNotDeclaredBool(env, optParse, var1);
-            throw Error;
+          if (checkDeclared) {
+            if (!var1.varsDeclared(env)) {
+              throw Error;
+            }
           }
 
           return new OptNode(optSymbol, [var1], isT, checkVars);
@@ -975,10 +977,11 @@ function optParse(
             );
           }
 
-          for (const v of [var1, var2]) {
-            if (!v.varsDeclared(env)) {
-              // L_Report.L_VarsInOptNotDeclaredBool(env, optParse, v);
-              throw Error;
+          if (checkDeclared) {
+            for (const v of [var1, var2]) {
+              if (!v.varsDeclared(env)) {
+                throw Error;
+              }
             }
           }
 
@@ -1049,6 +1052,7 @@ function ifParse(
         throw Error();
       }
 
+      //! The reason why IfVarPrefix is important is that The user may introduce a var in a higher env with the same name as in if-vars
       const newSingleton = new L_Structs.L_Singleton(
         L_Keywords.IfVarPrefix + singleton.value
       );
@@ -1236,7 +1240,7 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
     }
 
     // skipper.skip( L_Keywords.FunctionalStructuredFactOptPrefix);
-    const opt = getOpt();
+    const opt = optParse(env, tokens, [], false);
 
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
@@ -1262,23 +1266,23 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
     throw error;
   }
 
-  function getOpt(): OptNode {
-    skipper.skip(L_Keywords.FunctionalStructuredFactOptPrefix);
-    const optName = new L_Structs.L_OptSymbol(skipper.skip());
-    skipper.skip(L_Keywords.LeftBrace);
-    const vars = arrParse<L_Symbol>(
-      env,
-      tokens,
-      symbolParse,
-      undefined,
-      L_Keywords.RightBrace,
-      false
-    );
-    skipper.skip(L_Keywords.RightBrace);
+  // function getOpt(): OptNode {
+  //   skipper.skip(L_Keywords.FunctionalStructuredFactOptPrefix);
+  //   const optName = new L_Structs.L_OptSymbol(skipper.skip());
+  //   skipper.skip(L_Keywords.LeftBrace);
+  //   const vars = arrParse<L_Symbol>(
+  //     env,
+  //     tokens,
+  //     symbolParse,
+  //     undefined,
+  //     L_Keywords.RightBrace,
+  //     false
+  //   );
+  //   skipper.skip(L_Keywords.RightBrace);
 
-    const opt = new OptNode(optName, vars, true, undefined);
-    return opt;
-  }
+  //   const opt = new OptNode(optName, vars, true, undefined);
+  //   return opt;
+  // }
 
   function defExec(env: L_Env, node: L_Nodes.DefNode): L_Structs.L_Out {
     try {
@@ -1375,9 +1379,15 @@ export function defCompositeParse(env: L_Env, tokens: L_Tokens): L_Out {
     } else {
       skipper.skip(":");
       const facts: ToCheckNode[] = [];
+
+      const newEnv = new L_Env(env);
+      composite.values.forEach((e) =>
+        newEnv.safeNewPureSingleton((e as L_Singleton).value)
+      );
+
       while (!isCurToken(tokens, L_Keywords.L_End)) {
         facts.push(
-          ...factsArrParse(env, tokens, [",", L_Keywords.L_End], [], false)
+          ...factsArrParse(newEnv, tokens, [",", L_Keywords.L_End], [], false)
         );
         if (isCurToken(tokens, ",")) skipper.skip(",");
       }
