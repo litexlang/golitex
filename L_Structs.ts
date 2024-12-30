@@ -227,11 +227,13 @@ export class IndexedSymbol extends L_Symbol {
       }
     }
 
-    if (out.given instanceof L_Composite) {
-      return out.given.getIndexedSubNode(out.indexes);
-    } else {
-      throw Error();
-    }
+    return out;
+
+    // if (out.given instanceof L_Composite) {
+    //   return out.given.getIndexedSubNode(out.indexes);
+    // } else {
+    //   throw Error();
+    // }
   }
 
   toString() {
