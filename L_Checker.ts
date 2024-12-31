@@ -91,14 +91,6 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     }
 
     for (const req of toCheck.req) {
-      // // TODO more error report
-      // if (DEBUG_DICT.checkCompositeVar && !req.varsDeclared(newEnv)) {
-      //   newEnv.report(
-      //     `[Undeclared Error] Some of variables in ${req} not declared.`
-      //   );
-      //   return L_Out.Error;
-      // }
-
       L_Memory.newFact(newEnv, req);
     }
 
@@ -116,14 +108,6 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
 function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
   // Main part of this function
   try {
-    // // TODO 严重的设计矛盾：composite里面的东西，究竟需不需要先定义一下？？
-    // if (DEBUG_DICT.checkCompositeVar && !toCheck.varsDeclared(env)) {
-    //   env.report(
-    //     `[Undeclared Error] Some of variables in ${toCheck} not declared.`
-    //   );
-    //   return L_Out.Error;
-    // }
-
     // TODO ? 需要验证一下toCheck的composite是否符合被定义时的要求
     for (const v of toCheck.vars) {
       if (v instanceof L_Composite) {

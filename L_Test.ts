@@ -128,7 +128,9 @@ know if a,b: $set(a), $set(b), $equal(a,b)  {
   },
   {
     name: "",
-    code: [`def $p(x) ; know if x,y: $p(x), $p(y) { if z: $p(x) {$p(z)} };`],
+    code: [
+      `concept $p(x) ; know if x,y: $p(x), $p(y) { if z: $p(x) {$p(z)} }; `,
+    ],
     debug: true,
     print: true,
   },
