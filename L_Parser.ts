@@ -468,7 +468,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Nodes.KnowNode {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.KnowType);
+    skipper.skip(env, L_Keywords.Know);
 
     const names: string[] = [];
 
