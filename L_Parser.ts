@@ -439,11 +439,6 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
       throw Error();
     }
 
-    for (const e of vars) {
-      const ok = env.safeNewPureSingleton(e);
-      if (!ok) return L_Out.Error;
-    }
-
     let out: L_Nodes.LetNode | undefined = undefined;
 
     if (isCurToken(tokens, L_Keywords.L_End)) {
@@ -451,7 +446,7 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
       out = new L_Nodes.LetNode(vars, []);
     } else {
       skipper.skip(env, ":");
-      const facts = highLevelFactsParse(env, tokens, [L_Keywords.L_End]);
+      const facts = highLevelFactsParse(env, tokens, [L_Keywords.L_End], vars);
       skipper.skip(env, L_Keywords.L_End);
       out = new L_Nodes.LetNode(vars, facts);
     }
@@ -464,6 +459,11 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
 
   function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
     try {
+      for (const e of node.vars) {
+        const ok = env.safeNewPureSingleton(e);
+        if (!ok) return L_Out.Error;
+      }
+
       if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
         throw Error();
       }
@@ -1655,8 +1655,17 @@ function indexedSymbolParse(
 function highLevelFactsParse(
   env: L_Env,
   tokens: L_Tokens,
-  end: string[]
+  end: string[],
+  moreVars?: string[]
 ): L_FactNode[] {
+  env = new L_Env(env);
+  if (moreVars) {
+    // 这里借用了一下env，然后假装开了一个新环境，以检查是否相关的var都被声明了
+    for (const moreVar of moreVars) {
+      env.safeNewPureSingleton(moreVar);
+    }
+  }
+
   const facts = factsArrParse(env, tokens, end);
 
   for (const fact of facts) {
