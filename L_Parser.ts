@@ -10,6 +10,7 @@ import { L_ReportParserErr, L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Report from "./L_Report";
 import { newFact } from "./L_Memory";
 import { checkFact } from "./L_Checker";
+import * as L_Memory from "./L_Memory";
 import { L_Tokens } from "./L_Lexer";
 
 function arrParse<T>(
@@ -319,8 +320,6 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
     }
 
     switch (tokens.peek()) {
-      case L_Keywords.Let:
-        return letParse(env, tokens);
       case L_Keywords.Know:
         return knowParse(env, tokens);
       case L_Keywords.LeftCurlyBrace:
@@ -331,6 +330,8 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
     }
 
     switch (tokens.peek()) {
+      case L_Keywords.Let:
+        if (letParse(env, tokens) === L_Out.True) return null;
       case "def":
         if (defParse(env, tokens) === L_Out.True) return null;
       case "have":
@@ -379,7 +380,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Nodes.KnowNode {
   }
 }
 
-function letParse(env: L_Env, tokens: L_Tokens): L_Nodes.LetNode {
+function letParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -412,10 +413,37 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Nodes.LetNode {
       out = new L_Nodes.LetNode(vars, facts);
     }
 
-    return out;
+    return letExec(env, out);
   } catch (error) {
     L_ReportParserErr(env, tokens, letParse, skipper);
     throw error;
+  }
+
+  function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
+    try {
+      if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
+        throw Error();
+      }
+
+      for (const e of node.vars) {
+        const ok = env.safeNewPureSingleton(e);
+        if (!ok) return L_Out.Error;
+      }
+
+      // store new facts
+      for (const onlyIf of node.facts) {
+        const ok = L_Memory.newFact(env, onlyIf);
+        if (!ok) {
+          L_Report.reportStoreErr(env, letExec.name, onlyIf);
+          throw new Error();
+        }
+      }
+
+      env.report(`[let] ${node}`);
+      return L_Out.True;
+    } catch {
+      return L_Report.L_ReportErr(env, letExec, node);
+    }
   }
 }
 
