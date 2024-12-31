@@ -1,12 +1,12 @@
 import {
   ToCheckFormulaNode,
   BuiltinCheckNode,
-  DefNode,
+  DefConceptNode,
   IfNode,
   IsPropertyNode,
   LogicNode,
-  OptNode,
-  ToCheckNode,
+  OptFactNode,
+  L_FactNode,
   AndToCheckNode,
   OrToCheckNode,
 } from "./L_Nodes";
@@ -19,7 +19,7 @@ import {
   OptKnownFactReq,
 } from "./L_Structs";
 
-export function newFact(env: L_Env, fact: ToCheckNode): boolean {
+export function newFact(env: L_Env, fact: L_FactNode): boolean {
   if (fact instanceof BuiltinCheckNode) {
     const ok = newBuiltinFact(env, fact);
     return ok;
@@ -29,7 +29,7 @@ export function newFact(env: L_Env, fact: ToCheckNode): boolean {
     if (fact instanceof IfNode) {
       const ok = newIfThenFact(env, fact as IfNode);
       if (!ok) return false;
-    } else if (fact instanceof OptNode) {
+    } else if (fact instanceof OptFactNode) {
       const ok = newOptFact(env, fact);
       if (!ok) return false;
     } else if (fact instanceof ToCheckFormulaNode) {
@@ -60,7 +60,7 @@ function newIfThenFact(env: L_Env, fact: IfNode): boolean {
   }
 }
 
-function newOptFact(env: L_Env, fact: OptNode): boolean {
+function newOptFact(env: L_Env, fact: OptFactNode): boolean {
   try {
     return env.newFact(fact.optSymbol.name, new OptKnownFactReq(fact));
   } catch {
@@ -84,7 +84,7 @@ function newFormulaFact(env: L_Env, fact: ToCheckFormulaNode): boolean {
   }
 }
 
-function newBuiltinFact(env: L_Env, fact: ToCheckNode): boolean {
+function newBuiltinFact(env: L_Env, fact: L_FactNode): boolean {
   try {
     if (fact instanceof IsPropertyNode) {
       return true;

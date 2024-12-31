@@ -6,10 +6,10 @@ import {
   IsFormNode,
   IsPropertyNode,
   LogicNode,
-  OptNode,
+  OptFactNode,
   OrToCheckNode,
   ToCheckFormulaNode,
-  ToCheckNode,
+  L_FactNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import {
@@ -31,7 +31,7 @@ import {
 } from "./L_Report";
 import { DEBUG_DICT } from "./L_Executor";
 
-export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
+export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
   try {
     const ok = env.factDeclaredOrBuiltin(toCheck);
     if (!ok) {
@@ -39,7 +39,7 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
       throw Error();
     }
 
-    if (toCheck instanceof OptNode) {
+    if (toCheck instanceof OptFactNode) {
       return checkOptFact(env, toCheck);
     } else if (toCheck instanceof IfNode) {
       return checkIfFact(env, toCheck);
@@ -55,7 +55,7 @@ export function checkFact(env: L_Env, toCheck: ToCheckNode): L_Out {
   }
 }
 
-function checkOptFact(env: L_Env, toCheck: OptNode): L_Out {
+function checkOptFact(env: L_Env, toCheck: OptFactNode): L_Out {
   try {
     const def = env.getDef(toCheck.optSymbol.name);
     if (def === undefined) {
@@ -114,7 +114,7 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
   }
 }
 
-function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
+function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
   // Main part of this function
   try {
     // // TODO 严重的设计矛盾：composite里面的东西，究竟需不需要先定义一下？？
@@ -153,7 +153,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
           continue;
         }
 
-        const out = useOptToCheckOpt(env, toCheck, curKnown.opt as OptNode);
+        const out = useOptToCheckOpt(env, toCheck, curKnown.opt as OptFactNode);
         if (out) return L_Out.True;
       }
     }
@@ -180,7 +180,11 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
   }
 
   // compare vars length in given opts, compare them
-  function useOptToCheckOpt(env: L_Env, opt1: OptNode, opt2: OptNode): boolean {
+  function useOptToCheckOpt(
+    env: L_Env,
+    opt1: OptFactNode,
+    opt2: OptFactNode
+  ): boolean {
     try {
       if (opt1.isT !== opt2.isT) return false;
 
@@ -206,14 +210,14 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
 
   function useIfToCheckOpt(
     env: L_Env,
-    given: OptNode,
+    given: OptFactNode,
     known: IfKnownFactReq
   ): boolean {
     try {
       if (given.checkVars === undefined || given.checkVars.length === 0) {
         // 1. known is one-layer, and we replace all vars in that layer with given opt
         const autoAddedCheckVars = [given.vars];
-        const autoAddedOpt = new OptNode(
+        const autoAddedOpt = new OptFactNode(
           given.optSymbol,
           given.vars,
           given.isT,
@@ -234,13 +238,13 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
   // 1. known is one-layer, and we replace all vars in that layer with given opt
   function useIfToCheckOptWithCheckVars(
     env: L_Env,
-    givenOpt: OptNode,
+    givenOpt: OptFactNode,
     known: IfKnownFactReq
   ): boolean {
     try {
       // TODO: I guess in the future I should remove givenOpt.checkVars.length === 0
 
-      let roots: ToCheckNode[] = known.req;
+      let roots: L_FactNode[] = known.req;
 
       let successful = true;
       let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
@@ -281,10 +285,10 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
             .getRootOptNodes()
             .map((e) => [...e[1], e[0]]);
           knowns = knowns.filter((e) =>
-            OptNode.literallyIdentical(
+            OptFactNode.literallyIdentical(
               newEnv,
               toCheck,
-              e[e.length - 1] as OptNode
+              e[e.length - 1] as OptFactNode
             )
           );
           for (const known of knowns) {
@@ -304,7 +308,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
         if (
           L_Symbol.symbolArrLiterallyIdentical(
             env,
-            (fixed as OptNode).vars,
+            (fixed as OptFactNode).vars,
             givenOpt.vars
           )
         ) {
@@ -321,15 +325,15 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
 
   function useFormulaToCheckOpt(
     env: L_Env,
-    toCheck: OptNode,
+    toCheck: OptFactNode,
     known: FormulaKnownFactReq
   ): boolean {
     try {
       if (
-        !OptNode.literallyIdentical(
+        !OptFactNode.literallyIdentical(
           env,
           toCheck,
-          known.req[known.req.length - 1] as OptNode
+          known.req[known.req.length - 1] as OptFactNode
         )
       ) {
         return false;
@@ -352,7 +356,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
             return false;
           }
 
-          if (out.itself instanceof OptNode) {
+          if (out.itself instanceof OptFactNode) {
             curEnv.report(
               `[check by] ${curReq}, ${out.anotherBranch.copyWithIsTReverse()}`
             );
@@ -380,9 +384,9 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptNode): L_Out {
   }
 }
 
-function checkLiterally(env: L_Env, toCheck: ToCheckNode): boolean {
+function checkLiterally(env: L_Env, toCheck: L_FactNode): boolean {
   try {
-    if (toCheck instanceof OptNode) {
+    if (toCheck instanceof OptFactNode) {
       const knowns = env.getFacts(toCheck.optSymbol.name);
       if (knowns === undefined) return false;
       for (const known of knowns) {
@@ -530,7 +534,7 @@ function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
 //   }
 // }
 
-function useLibToCheckOpt(env: L_Env, opt: OptNode) {
+function useLibToCheckOpt(env: L_Env, opt: OptFactNode) {
   try {
     const paths = env.getIncludes();
 

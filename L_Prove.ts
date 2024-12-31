@@ -1,12 +1,16 @@
 import { L_Out } from "./L_Structs";
 import { L_Env } from "./L_Env";
 import { L_Exec } from "./L_Executor";
-import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
+import { L_Node, OptFactNode, L_FactNode } from "./L_Nodes";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import * as L_Report from "./L_Report";
 
-export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
+export function proveOpt(
+  env: L_Env,
+  toProve: OptFactNode,
+  block: L_Node[]
+): L_Out {
   try {
     const newEnv = new L_Env(env);
 
@@ -45,9 +49,9 @@ export function proveOpt(env: L_Env, toProve: OptNode, block: L_Node[]): L_Out {
 
 export function proveOptByContradict(
   env: L_Env,
-  toProve: OptNode,
+  toProve: OptFactNode,
   block: L_Node[],
-  contradict: OptNode
+  contradict: OptFactNode
 ): L_Out {
   try {
     const newEnv = new L_Env(env);

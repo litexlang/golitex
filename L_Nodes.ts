@@ -4,7 +4,7 @@ import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
 
-export abstract class ToCheckNode extends L_Node {
+export abstract class L_FactNode extends L_Node {
   constructor(public isT: boolean) {
     super();
   }
@@ -12,18 +12,18 @@ export abstract class ToCheckNode extends L_Node {
   // called by L_Memory
   abstract varsDeclared(env: L_Env): boolean;
   // called by checker
-  abstract fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode;
+  abstract fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode;
   // called by prove_by_contradiction
-  abstract copyWithIsTReverse(): ToCheckNode;
+  abstract copyWithIsTReverse(): L_FactNode;
   // called by "using known fact to check given fact. when doing so, get all root opts and filter opt with the same name."
-  abstract getRootOptNodes(): [OptNode, ToCheckNode[]][];
+  abstract getRootOptNodes(): [OptFactNode, L_FactNode[]][];
 }
 
-export abstract class LogicNode extends ToCheckNode {
+export abstract class LogicNode extends L_FactNode {
   constructor(
     public vars: L_Singleton[] = [],
-    public req: ToCheckNode[] = [],
-    public onlyIfs: ToCheckNode[] = [],
+    public req: L_FactNode[] = [],
+    public onlyIfs: L_FactNode[] = [],
     public env: L_Env,
     isT: boolean = true
   ) {
@@ -81,7 +81,7 @@ export abstract class LogicNode extends ToCheckNode {
     return out;
   }
 
-  getRootOptNodes(): [OptNode, ToCheckNode[]][] {
+  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     const roots = this.onlyIfs.map((e) => e.getRootOptNodes()).flat();
     for (const root of roots) {
       root[1] = [this, ...root[1]];
@@ -108,12 +108,12 @@ export abstract class LogicNode extends ToCheckNode {
 
 export class IffNode extends LogicNode {
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
-    const newReq: ToCheckNode[] = [];
+    const newReq: L_FactNode[] = [];
     for (const r of this.req) {
       newReq.push(r.fix(env, freeFixPairs));
     }
 
-    const newOnlyIf: ToCheckNode[] = [];
+    const newOnlyIf: L_FactNode[] = [];
     for (const onlyIf of this.onlyIfs) {
       newOnlyIf.push(onlyIf.fix(env, freeFixPairs));
     }
@@ -136,12 +136,12 @@ export class IffNode extends LogicNode {
 }
 export class IfNode extends LogicNode {
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
-    const newReq: ToCheckNode[] = [];
+    const newReq: L_FactNode[] = [];
     for (const r of this.req) {
       newReq.push(r.fix(env, freeFixPairs));
     }
 
-    const newOnlyIf: ToCheckNode[] = [];
+    const newOnlyIf: L_FactNode[] = [];
     for (const onlyIf of this.onlyIfs) {
       newOnlyIf.push(onlyIf.fix(env, freeFixPairs));
     }
@@ -164,10 +164,10 @@ export class IfNode extends LogicNode {
 }
 
 export class IfReqNode {
-  constructor(public fact: ToCheckNode, public vars: L_Symbol[]) {}
+  constructor(public fact: L_FactNode, public vars: L_Symbol[]) {}
 }
 
-export class OptNode extends ToCheckNode {
+export class OptFactNode extends L_FactNode {
   constructor(
     public optSymbol: L_OptSymbol,
     public vars: L_Symbol[],
@@ -179,22 +179,22 @@ export class OptNode extends ToCheckNode {
 
   static literallyIdentical(
     env: L_Env,
-    given: OptNode,
-    expects: OptNode
+    given: OptFactNode,
+    expects: OptFactNode
   ): boolean {
     if (given.optSymbol.name !== expects.optSymbol.name) return false;
     return L_Symbol.symbolArrLiterallyIdentical(env, given.vars, expects.vars);
   }
 
-  copyCommutatively(): OptNode | undefined {
+  copyCommutatively(): OptFactNode | undefined {
     if (this.vars.length !== 2) {
       return undefined;
     }
     const newVars: L_Symbol[] = [this.vars[1], this.vars[0]];
-    return new OptNode(this.optSymbol, newVars, this.isT, this.checkVars);
+    return new OptFactNode(this.optSymbol, newVars, this.isT, this.checkVars);
   }
 
-  getRootOptNodes(): [OptNode, ToCheckNode[]][] {
+  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     return [[this, []]];
   }
 
@@ -218,7 +218,7 @@ export class OptNode extends ToCheckNode {
     return true;
   }
 
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptNode {
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptFactNode {
     const newVars: L_Symbol[] = [];
     for (let v of this.vars) {
       let fixed = false;
@@ -226,11 +226,16 @@ export class OptNode extends ToCheckNode {
       if (!fixed) newVars.push(v);
     }
 
-    return new OptNode(this.optSymbol, newVars, this.isT, undefined);
+    return new OptFactNode(this.optSymbol, newVars, this.isT, undefined);
   }
 
-  override copyWithIsTReverse(): OptNode {
-    return new OptNode(this.optSymbol, this.vars, !this.isT, this.checkVars);
+  override copyWithIsTReverse(): OptFactNode {
+    return new OptFactNode(
+      this.optSymbol,
+      this.vars,
+      !this.isT,
+      this.checkVars
+    );
   }
 
   override toString() {
@@ -248,11 +253,11 @@ export class OptNode extends ToCheckNode {
   }
 }
 
-export class DefNode extends L_Node {
+export class DefConceptNode extends L_Node {
   constructor(
-    public opt: OptNode,
-    public cond: ToCheckNode[], // TODO, 类似composite的要求
-    public onlyIfs: ToCheckNode[],
+    public opt: OptFactNode,
+    public cond: L_FactNode[], // TODO, 类似composite的要求
+    public onlyIfs: L_FactNode[],
     public commutative: boolean
   ) {
     super();
@@ -266,7 +271,7 @@ export class DefNode extends L_Node {
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;
 
-  constructor(public facts: ToCheckNode[], public names: string[]) {
+  constructor(public facts: L_FactNode[], public names: string[]) {
     super();
   }
 
@@ -276,7 +281,7 @@ export class KnowNode extends L_Node {
 }
 
 export class LetNode extends L_Node {
-  constructor(public vars: string[], public facts: ToCheckNode[]) {
+  constructor(public vars: string[], public facts: L_FactNode[]) {
     super();
   }
 
@@ -286,7 +291,7 @@ export class LetNode extends L_Node {
 }
 
 export class LetFormalSymbolNode extends L_Node {
-  constructor(public vars: string[], public facts: ToCheckNode[]) {
+  constructor(public vars: string[], public facts: L_FactNode[]) {
     super();
   }
 
@@ -296,7 +301,7 @@ export class LetFormalSymbolNode extends L_Node {
 }
 
 export class ProveNode extends L_Node {
-  constructor(public toProve: ToCheckNode, public block: L_Node[]) {
+  constructor(public toProve: L_FactNode, public block: L_Node[]) {
     super();
   }
 
@@ -306,9 +311,9 @@ export class ProveNode extends L_Node {
 }
 export class ProveContradictNode extends L_Node {
   constructor(
-    public toProve: ToCheckNode,
+    public toProve: L_FactNode,
     public block: L_Node[],
-    public contradict: OptNode
+    public contradict: OptFactNode
   ) {
     super();
   }
@@ -329,7 +334,7 @@ export class LocalEnvNode extends L_Node {
 }
 
 export class HaveNode extends L_Node {
-  constructor(public vars: L_Singleton[], public fact: OptNode) {
+  constructor(public vars: L_Singleton[], public fact: OptFactNode) {
     super();
   }
 
@@ -338,8 +343,8 @@ export class HaveNode extends L_Node {
   }
 }
 
-export class DefCompositeNode extends L_Node {
-  constructor(public composite: L_Composite, public facts: ToCheckNode[]) {
+export class DefOperatorNode extends L_Node {
+  constructor(public composite: L_Composite, public facts: L_FactNode[]) {
     super();
   }
 
@@ -352,7 +357,7 @@ export class LetsNode extends L_Node {
   constructor(
     public name: string,
     public regex: RegExp,
-    public facts: ToCheckNode[]
+    public facts: L_FactNode[]
   ) {
     super();
   }
@@ -378,7 +383,7 @@ export class DefLiteralOptNode extends L_Node {
   constructor(
     public name: string,
     public vars: L_Symbol[],
-    public facts: ToCheckNode[],
+    public facts: L_FactNode[],
     public path: string,
     public func: string
   ) {
@@ -411,7 +416,7 @@ export class LetAliasNode extends L_Node {
 
 // The Followings are half implemented. --------------------------------------
 
-export abstract class BuiltinCheckNode extends ToCheckNode {}
+export abstract class BuiltinCheckNode extends L_FactNode {}
 
 // TODO IsProperty logic is not implemented
 export class IsPropertyNode extends BuiltinCheckNode {
@@ -419,15 +424,15 @@ export class IsPropertyNode extends BuiltinCheckNode {
     super(isT);
   }
 
-  getRootOptNodes(): [OptNode, ToCheckNode[]][] {
+  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     throw Error();
   }
 
-  copyWithIsTReverse(): ToCheckNode {
+  copyWithIsTReverse(): L_FactNode {
     return new IsPropertyNode(this.propertyName, !this.isT);
   }
 
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
     return this;
   }
 
@@ -444,21 +449,21 @@ export class IsFormNode extends BuiltinCheckNode {
   constructor(
     public candidate: L_Symbol,
     public baseline: L_Composite,
-    public facts: ToCheckNode[],
+    public facts: L_FactNode[],
     isT: boolean
   ) {
     super(isT);
   }
 
-  getRootOptNodes(): [OptNode, ToCheckNode[]][] {
+  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     throw Error();
   }
 
-  copyWithIsTReverse(): ToCheckNode {
+  copyWithIsTReverse(): L_FactNode {
     return new IsFormNode(this.candidate, this.baseline, this.facts, !this.isT);
   }
 
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckNode {
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
     let fixed: L_Symbol | undefined = undefined;
     for (const freeFix of freeFixPairs) {
       if (L_Symbol.literallyIdentical(env, freeFix[0], this.candidate)) {
@@ -486,16 +491,16 @@ export class IsFormNode extends BuiltinCheckNode {
   }
 }
 
-export abstract class ToCheckFormulaNode extends ToCheckNode {
+export abstract class ToCheckFormulaNode extends L_FactNode {
   constructor(
-    public left: OptNode | ToCheckFormulaNode,
-    public right: OptNode | ToCheckFormulaNode,
+    public left: OptFactNode | ToCheckFormulaNode,
+    public right: OptFactNode | ToCheckFormulaNode,
     isT: boolean
   ) {
     super(isT);
   }
 
-  getWhereIsGivenFactAndAnotherBranch(fact: ToCheckNode): {
+  getWhereIsGivenFactAndAnotherBranch(fact: L_FactNode): {
     itself: FormulaSubNode;
     anotherBranch: FormulaSubNode;
   } {
@@ -524,17 +529,17 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
     throw Error();
   }
 
-  copyWithIsTReverse(): ToCheckNode {
+  copyWithIsTReverse(): L_FactNode {
     throw Error();
   }
 
-  getLeftRight(): ToCheckNode[] {
+  getLeftRight(): L_FactNode[] {
     return [this.left, this.right];
   }
 
-  whereIsOpt(opt: OptNode) {
+  whereIsOpt(opt: OptFactNode) {
     const out = { left: false, right: false };
-    if (this.left instanceof OptNode) {
+    if (this.left instanceof OptFactNode) {
       if (opt.optSymbol.name === this.left.optSymbol.name) {
         out.left = true;
       }
@@ -543,7 +548,7 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
       if (got.left || got.right) out.left = true;
     }
 
-    if (this.right instanceof OptNode) {
+    if (this.right instanceof OptFactNode) {
       if (opt.optSymbol.name === this.right.optSymbol.name) {
         out.right = true;
       }
@@ -557,12 +562,12 @@ export abstract class ToCheckFormulaNode extends ToCheckNode {
 }
 
 export class OrToCheckNode extends ToCheckFormulaNode {
-  copyWithIsTReverse(): ToCheckNode {
+  copyWithIsTReverse(): L_FactNode {
     return new OrToCheckNode(this.left, this.right, !this.isT);
   }
 
-  getRootOptNodes(): [OptNode, ToCheckNode[]][] {
-    const out: [OptNode, ToCheckNode[]][] = [];
+  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+    const out: [OptFactNode, L_FactNode[]][] = [];
     for (const node of this.getLeftRight()) {
       const roots = node.getRootOptNodes();
       for (const root of roots) {
@@ -577,8 +582,8 @@ export class OrToCheckNode extends ToCheckFormulaNode {
     return `(${this.left} or ${this.right})`;
   }
 
-  getRootOpts(): OptNode[] | null {
-    const allRoots: OptNode[] = [];
+  getRootOpts(): OptFactNode[] | null {
+    const allRoots: OptFactNode[] = [];
     for (const subNode of this.getLeftRight()) {
       if (subNode instanceof OrToCheckNode) {
         const roots = subNode.getRootOpts();
@@ -587,7 +592,7 @@ export class OrToCheckNode extends ToCheckFormulaNode {
         } else {
           allRoots.push(...roots);
         }
-      } else if (subNode instanceof OptNode) {
+      } else if (subNode instanceof OptFactNode) {
         allRoots.push(subNode);
       } else {
         return null;
@@ -599,12 +604,12 @@ export class OrToCheckNode extends ToCheckFormulaNode {
 }
 
 export class AndToCheckNode extends ToCheckFormulaNode {
-  copyWithIsTReverse(): ToCheckNode {
+  copyWithIsTReverse(): L_FactNode {
     return new AndToCheckNode(this.left, this.right, !this.isT);
   }
 
-  getRootOptNodes(): [OptNode, ToCheckNode[]][] {
-    const out: [OptNode, ToCheckNode[]][] = [];
+  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+    const out: [OptFactNode, L_FactNode[]][] = [];
     for (const node of this.getLeftRight()) {
       const roots = node.getRootOptNodes();
       for (const root of roots) {
@@ -620,4 +625,4 @@ export class AndToCheckNode extends ToCheckFormulaNode {
   }
 }
 
-export type FormulaSubNode = ToCheckFormulaNode | OptNode;
+export type FormulaSubNode = ToCheckFormulaNode | OptFactNode;

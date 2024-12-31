@@ -19,7 +19,7 @@ export const CheckFalse = true;
 
 export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   try {
-    if (node instanceof L_Nodes.ToCheckNode) {
+    if (node instanceof L_Nodes.L_FactNode) {
       return factExec(env, node);
     }
     // else if (node instanceof L_Nodes.KnowNode) {
@@ -136,7 +136,7 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
 //   }
 // }
 
-function factExec(env: L_Env, toCheck: L_Nodes.ToCheckNode): L_Out {
+function factExec(env: L_Env, toCheck: L_Nodes.L_FactNode): L_Out {
   try {
     // TODO: Implement check whether the given toCheck exists and given var exists.
 
@@ -250,7 +250,7 @@ function proveExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
     const newEnv = new L_Env(env);
     if (proveNode.toProve instanceof L_Nodes.IfNode) {
       return proveIfExec(env, proveNode);
-    } else if (proveNode.toProve instanceof L_Nodes.OptNode) {
+    } else if (proveNode.toProve instanceof L_Nodes.OptFactNode) {
       return proveOptExec(env, proveNode);
     }
 

@@ -1,5 +1,5 @@
 import { L_Env } from "../L_Env";
-import { OptNode } from "../L_Nodes";
+import { OptFactNode } from "../L_Nodes";
 import { L_Composite, L_Out, L_Singleton, L_Symbol } from "../L_Structs";
 
 function isNaturalNumber(str: string) {
@@ -7,7 +7,7 @@ function isNaturalNumber(str: string) {
   return regex.test(str);
 }
 
-export function addDefinition(env: L_Env, opt: OptNode): L_Out {
+export function addDefinition(env: L_Env, opt: OptFactNode): L_Out {
   if (opt.vars.length === 2 && opt.optSymbol.name === "=") {
     const left = addedSymbol(opt.vars[0]);
     const right = addedSymbol(opt.vars[1]);
@@ -75,7 +75,7 @@ function addStrings(num1: string, num2: string): string {
   return result.reverse().join("");
 }
 
-export function plusplusEqualsPlusOne(env: L_Env, opt: OptNode): L_Out {
+export function plusplusEqualsPlusOne(env: L_Env, opt: OptFactNode): L_Out {
   if (
     opt.optSymbol.name === "=" &&
     opt.vars.length === 2 &&

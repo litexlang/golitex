@@ -1,6 +1,6 @@
 import { L_Env } from "./L_Env";
 import { L_ReportBoolErr, L_ReportErr } from "./L_Report";
-import { LogicNode, OptNode, ToCheckNode } from "./L_Nodes";
+import { LogicNode, OptFactNode, L_FactNode } from "./L_Nodes";
 import { checkFact } from "./L_Checker";
 import { L_Keywords } from "./L_Keywords";
 
@@ -464,19 +464,19 @@ export abstract class L_KnownFactReq {
 }
 
 export class OptKnownFactReq extends L_KnownFactReq {
-  constructor(public opt: OptNode) {
+  constructor(public opt: OptFactNode) {
     super();
   }
 }
 
 export class IfKnownFactReq extends L_KnownFactReq {
-  constructor(public req: ToCheckNode[]) {
+  constructor(public req: L_FactNode[]) {
     super();
   }
 }
 
 export class FormulaKnownFactReq extends L_KnownFactReq {
-  constructor(public req: ToCheckNode[]) {
+  constructor(public req: L_FactNode[]) {
     super();
   }
 }
