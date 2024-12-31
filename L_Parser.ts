@@ -459,7 +459,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Nodes.KnowNode {
 
     // const knowNode: L_Nodes.KnowNode = new L_Nodes.KnowNode([], []);
     while (!isCurToken(tokens, L_Keywords.L_End)) {
-      facts = factsArrParse(env, tokens, [L_Keywords.L_End, ","], false);
+      facts = factsArrParse(env, tokens, [L_Keywords.L_End, ","]);
       // knowNode.facts = knowNode.facts.concat(outs);
 
       if (tokens.peek() === ",") skipper.skip(env, ",");
@@ -507,7 +507,8 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
       out = new L_Nodes.LetNode(vars, []);
     } else {
       skipper.skip(env, ":");
-      const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+      const facts = factsArrParse(env, tokens, [L_Keywords.L_End]);
+      skipper.skip(env, L_Keywords.L_End);
       out = new L_Nodes.LetNode(vars, facts);
     }
 
@@ -573,7 +574,8 @@ function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
       out = new L_Nodes.LetFormalSymbolNode(vars, []);
     } else {
       skipper.skip(env, ":");
-      const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+      const facts = factsArrParse(env, tokens, [L_Keywords.L_End]);
+      skipper.skip(env, L_Keywords.L_End);
       out = new L_Nodes.LetFormalSymbolNode(vars, facts);
     }
 
@@ -830,26 +832,12 @@ function parseToCheckFormula(
 function factsArrParse(
   env: L_Env,
   tokens: L_Tokens,
-  end: string[],
-  // freeFixedPairs: [L_Symbol, L_Symbol][],
-  skipEnd: boolean
+  end: string[]
 ): ToCheckNode[] {
   const skipper = new Skipper(env, tokens);
 
   try {
-    let out: ToCheckNode[] = [];
-
-    while (!end.includes(tokens.peek())) {
-      const cur = factParse(env, tokens);
-      out.push(cur);
-      // End of former singleNodeFacts logic
-
-      if (isCurToken(tokens, ",")) skipper.skip(env, ",");
-    }
-
-    if (skipEnd) skipper.skip(env, end);
-
-    return out;
+    return arrParse<ToCheckNode>(env, tokens, factParse, end);
   } catch (error) {
     L_ReportParserErr(env, tokens, factsArrParse, skipper);
     throw error;
@@ -990,18 +978,16 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
       skipper.skip(env, ":");
-      cond = factsArrParse(
-        env,
-        tokens,
-        [L_Keywords.L_End, L_Keywords.LeftCurlyBrace],
-        false
-      );
+      cond = factsArrParse(env, tokens, [
+        L_Keywords.L_End,
+        L_Keywords.LeftCurlyBrace,
+      ]);
     }
 
     const onlyIfs: ToCheckNode[] = [];
     if (isCurToken(tokens, "{")) {
       skipper.skip(env, "{");
-      onlyIfs.push(...factsArrParse(env, tokens, ["}"], false));
+      onlyIfs.push(...factsArrParse(env, tokens, ["}"]));
       skipper.skip(env, "}");
     } else {
       skipper.skip(env, L_Keywords.L_End);
@@ -1131,9 +1117,7 @@ export function defCompositeParse(env: L_Env, tokens: L_Tokens): L_Out {
       const facts: ToCheckNode[] = [];
 
       while (!isCurToken(tokens, L_Keywords.L_End)) {
-        facts.push(
-          ...factsArrParse(env, tokens, [",", L_Keywords.L_End], false)
-        );
+        facts.push(...factsArrParse(env, tokens, [",", L_Keywords.L_End]));
         if (isCurToken(tokens, ",")) skipper.skip(env, ",");
       }
       skipper.skip(env, L_Keywords.L_End);
@@ -1307,7 +1291,8 @@ export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
     let node: L_Nodes.LetsNode | undefined = undefined;
     if (isCurToken(tokens, ":")) {
       skipper.skip(env, ":");
-      const facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+      const facts = factsArrParse(env, tokens, [L_Keywords.L_End]);
+      skipper.skip(env, L_Keywords.L_End);
       node = new L_Nodes.LetsNode(name, regex, facts);
     } else {
       skipper.skip(env, L_Keywords.L_End);
@@ -1665,7 +1650,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     if (isCurToken(tokens, ":")) {
       skipper.skip(env, ":");
       while (!isCurToken(tokens, "{")) {
-        const facts = factsArrParse(env, tokens, [",", "{"], false);
+        const facts = factsArrParse(env, tokens, [",", "{"]);
         req.push(...facts);
         if (isCurToken(tokens, [","])) skipper.skip(env, [","]);
       }
