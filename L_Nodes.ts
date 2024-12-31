@@ -90,14 +90,19 @@ export abstract class LogicNode extends L_FactNode {
   }
 
   varsDeclared(env: L_Env): boolean {
+    const newEnv = new L_Env(env);
+    for (const v of this.vars) {
+      newEnv.safeNewPureSingleton(v.value);
+    }
+
     for (const req of this.req) {
-      if (!req.varsDeclared(this.env)) {
+      if (!req.varsDeclared(newEnv)) {
         return env.pushMessagesFromEnvReturnFalse(this.env);
       }
     }
 
     for (const onlyIf of this.onlyIfs) {
-      if (!onlyIf.varsDeclared(this.env)) {
+      if (!onlyIf.varsDeclared(newEnv)) {
         return env.pushMessagesFromEnvReturnFalse(this.env);
       }
     }
