@@ -106,6 +106,18 @@ function pureSingletonAndFormalSymbolParse(
   }
 }
 
+function pureSingletonParse(env: L_Env, tokens: L_Tokens): L_Singleton {
+  const skipper = new Skipper(env, tokens);
+
+  try {
+    const value = skipper.skip(env);
+    return new L_Structs.L_Singleton(value);
+  } catch (error) {
+    L_ReportParserErr(env, tokens, pureSingletonParse, skipper);
+    throw error;
+  }
+}
+
 function optSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_OptSymbol {
   const skipper = new Skipper(env, tokens);
 
@@ -1070,7 +1082,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
     const vars = arrParse<L_Structs.L_Singleton>(
       env,
       tokens,
-      pureSingletonAndFormalSymbolParse,
+      pureSingletonParse,
       ":"
     );
     skipper.skip(env, L_Keywords.Colon);
@@ -1691,7 +1703,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
 
   try {
     skipper.skip(env, L_Keywords.LetAlias);
-    const name = pureSingletonAndFormalSymbolParse(env, tokens);
+    const name = pureSingletonParse(env, tokens);
     const toBeAliased = arrParse<L_Symbol>(
       env,
       tokens,
@@ -1856,7 +1868,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     // Parse vars
     const vars: L_Structs.L_Singleton[] = [];
     while (!isCurToken(tokens, [":", "{"])) {
-      const singleton = pureSingletonAndFormalSymbolParse(newEnv, tokens);
+      const singleton = pureSingletonParse(newEnv, tokens);
       vars.push(singleton);
     }
 
