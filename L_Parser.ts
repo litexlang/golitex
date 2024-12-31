@@ -1,4 +1,4 @@
-import { L_Node, LogicNode, ToCheckNode, OptNode } from "./L_Nodes";
+import { L_Node, LogicNode, L_FactNode, OptFactNode } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
@@ -332,12 +332,12 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
         if (knowParse(env, tokens) === L_Out.True) return null;
       case L_Keywords.Let:
         if (letParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.Def:
-        if (defParse(env, tokens) === L_Out.True) return null;
+      case L_Keywords.DefConcept:
+        if (defConceptParse(env, tokens) === L_Out.True) return null;
       case L_Keywords.Have:
         if (haveParse(env, tokens) === L_Out.True) return null;
       case L_Keywords.DefComposite:
-        if (defCompositeParse(env, tokens) === L_Out.True) return null;
+        if (defOperatorParse(env, tokens) === L_Out.True) return null;
       case L_Keywords.Lets:
         if (letsParse(env, tokens) === L_Out.True) return null;
       case L_Keywords.Include:
@@ -366,7 +366,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     const names: string[] = [];
 
-    let facts: ToCheckNode[] = [];
+    let facts: L_FactNode[] = [];
     while (!isCurToken(tokens, L_Keywords.L_End)) {
       facts = factsArrParse(env, tokens, [L_Keywords.L_End, ","]);
       if (tokens.peek() === ",") skipper.skip(env, ",");
@@ -620,7 +620,7 @@ function factParse(
   env: L_Env,
   tokens: L_Tokens
   // freeFixedPairs: [L_Symbol, L_Symbol][]
-): L_Nodes.ToCheckNode {
+): L_Nodes.L_FactNode {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -660,7 +660,7 @@ function factParse(
         skipper.skip(env, "not");
       }
 
-      let out: L_Nodes.ToCheckNode;
+      let out: L_Nodes.L_FactNode;
 
       if (isBuiltinKeyword(tokens.peek())) {
         const parser = L_BuiltinParsers.get(tokens.peek()) as Function;
@@ -764,11 +764,11 @@ function factsArrParse(
   env: L_Env,
   tokens: L_Tokens,
   end: string[]
-): ToCheckNode[] {
+): L_FactNode[] {
   const skipper = new Skipper(env, tokens);
 
   try {
-    const out = arrParse<ToCheckNode>(env, tokens, factParse, end);
+    const out = arrParse<L_FactNode>(env, tokens, factParse, end);
     return out;
   } catch (error) {
     L_ReportParserErr(env, tokens, factsArrParse, skipper);
@@ -845,7 +845,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
           }
         }
 
-        const opt = new L_Nodes.OptNode(
+        const opt = new L_Nodes.OptFactNode(
           node.fact.optSymbol,
           newVars,
           node.fact.isT,
@@ -891,11 +891,11 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
 //   }
 // }
 
-function defParse(env: L_Env, tokens: L_Tokens): L_Out {
+function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.Def);
+    skipper.skip(env, L_Keywords.DefConcept);
 
     let commutative = false;
     if (isCurToken(tokens, L_Keywords.Commutative)) {
@@ -907,7 +907,7 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
     // const opt = optToCheckParse(env, tokens, [], false);
     const opt = optFactParse(env, tokens);
 
-    let cond: ToCheckNode[] = [];
+    let cond: L_FactNode[] = [];
     if (isCurToken(tokens, ":")) {
       skipper.skip(env, ":");
       cond = factsArrParse(env, tokens, [
@@ -916,7 +916,7 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
       ]);
     }
 
-    const onlyIfs: ToCheckNode[] = [];
+    const onlyIfs: L_FactNode[] = [];
     if (isCurToken(tokens, "{")) {
       skipper.skip(env, "{");
       onlyIfs.push(...factsArrParse(env, tokens, ["}"]));
@@ -925,12 +925,12 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
       skipper.skip(env, L_Keywords.L_End);
     }
 
-    const out = new L_Nodes.DefNode(opt, cond, onlyIfs, commutative);
+    const out = new L_Nodes.DefConceptNode(opt, cond, onlyIfs, commutative);
 
-    if (defExec(env, out) === L_Structs.L_Out.True) return L_Out.True;
+    if (defConceptExec(env, out) === L_Structs.L_Out.True) return L_Out.True;
     else throw Error();
   } catch (error) {
-    L_ReportParserErr(env, tokens, defParse, skipper);
+    L_ReportParserErr(env, tokens, defConceptParse, skipper);
     throw error;
   }
 
@@ -952,7 +952,10 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
   //   return opt;
   // }
 
-  function defExec(env: L_Env, node: L_Nodes.DefNode): L_Structs.L_Out {
+  function defConceptExec(
+    env: L_Env,
+    node: L_Nodes.DefConceptNode
+  ): L_Structs.L_Out {
     try {
       // declare new opt
       const ok = declNewFact(env, node);
@@ -967,10 +970,10 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
 
       return L_Structs.L_Out.True;
     } catch {
-      return L_ReportErr(env, defExec, node);
+      return L_ReportErr(env, defConceptExec, node);
     }
 
-    function declNewFact(env: L_Env, node: L_Nodes.DefNode): boolean {
+    function declNewFact(env: L_Env, node: L_Nodes.DefConceptNode): boolean {
       let ok = true;
       // if (node instanceof L_Nodes.DefExistNode) {
       //   ok = env.newDef(node.opt.optSymbol.name, node);
@@ -1032,38 +1035,38 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
 // }
 
 // --------------------------------------------------------
-export function defCompositeParse(env: L_Env, tokens: L_Tokens): L_Out {
+export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    let out: L_Nodes.DefCompositeNode | undefined = undefined;
+    let out: L_Nodes.DefOperatorNode | undefined = undefined;
 
     skipper.skip(env, L_Keywords.DefComposite);
     const composite = compositeParse(env, tokens);
 
     if (isCurToken(tokens, L_Keywords.L_End)) {
       skipper.skip(env, L_Keywords.L_End);
-      out = new L_Nodes.DefCompositeNode(composite, []);
+      out = new L_Nodes.DefOperatorNode(composite, []);
     } else {
       skipper.skip(env, ":");
-      const facts: ToCheckNode[] = [];
+      const facts: L_FactNode[] = [];
 
       while (!isCurToken(tokens, L_Keywords.L_End)) {
         facts.push(...factsArrParse(env, tokens, [",", L_Keywords.L_End]));
         if (isCurToken(tokens, ",")) skipper.skip(env, ",");
       }
       skipper.skip(env, L_Keywords.L_End);
-      out = new L_Nodes.DefCompositeNode(composite, facts);
+      out = new L_Nodes.DefOperatorNode(composite, facts);
     }
 
     if (defCompositeExec(env, out) === L_Out.True) return L_Out.True;
     else throw Error();
   } catch (error) {
-    L_ReportParserErr(env, tokens, defCompositeParse, skipper);
+    L_ReportParserErr(env, tokens, defOperatorParse, skipper);
     throw error;
   }
 
-  function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
+  function defCompositeExec(env: L_Env, node: L_Nodes.DefOperatorNode): L_Out {
     try {
       if (!env.newComposite(node.composite.name, node)) throw Error();
       return env.report(`[new def_composite] ${node}`);
@@ -1108,7 +1111,7 @@ export function isFormParse(
     if (isCurToken(tokens, ",")) {
       skipper.skip(env, ",");
       skipper.skip(env, "{");
-      const facts: ToCheckNode[] = [];
+      const facts: L_FactNode[] = [];
       while (!isCurToken(tokens, "}")) {
         facts.push(factParse(env, tokens));
         if (isCurToken(tokens, ",")) skipper.skip(env, ",");
@@ -1334,7 +1337,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
       node = new L_Nodes.DefLiteralOptNode(name, vars, [], path, func);
     } else {
       skipper.skip(env, ":");
-      const facts = arrParse<ToCheckNode>(
+      const facts = arrParse<L_FactNode>(
         env,
         tokens,
         factParse,
@@ -1494,7 +1497,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
 //   }
 // }
 
-function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
+function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -1512,7 +1515,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
 
       let checkVars = checkVarsParse();
 
-      return new OptNode(optSymbol, vars, isT, checkVars);
+      return new OptFactNode(optSymbol, vars, isT, checkVars);
     } else {
       const var1 = symbolParse(env, tokens);
 
@@ -1524,7 +1527,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
           const optSymbol = new L_Structs.L_OptSymbol(optName);
           let checkVars = checkVarsParse();
 
-          return new OptNode(optSymbol, [var1], isT, checkVars);
+          return new OptFactNode(optSymbol, [var1], isT, checkVars);
         }
         // factual formulas like: a = b
         default: {
@@ -1533,7 +1536,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
           const var2 = symbolParse(env, tokens);
           let checkVars = checkVarsParse();
 
-          return new OptNode(optSymbol, [var1, var2], isT, checkVars);
+          return new OptFactNode(optSymbol, [var1, var2], isT, checkVars);
         }
       }
     }
@@ -1578,7 +1581,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     }
 
     // Parse Req
-    const req: ToCheckNode[] = [];
+    const req: L_FactNode[] = [];
     if (isCurToken(tokens, ":")) {
       skipper.skip(env, ":");
       while (!isCurToken(tokens, "{")) {
@@ -1589,7 +1592,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     }
 
     // Parse OnlyIfs
-    const onlyIfs: ToCheckNode[] = [];
+    const onlyIfs: L_FactNode[] = [];
     skipper.skip(env, "{");
     while (!isCurToken(tokens, "}")) {
       // const facts = factsArrParse(env, tokens, [",", ";", "}"], false);

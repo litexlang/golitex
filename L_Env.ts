@@ -7,9 +7,9 @@ export class L_Env {
   private parent: L_Env | undefined = undefined;
   private messages: string[] = [];
   private pureSingletons = new Set<string>();
-  private defs = new Map<string, L_Nodes.DefNode>();
+  private defs = new Map<string, L_Nodes.DefConceptNode>();
   private facts = new Map<string, L_Structs.L_KnownFactReq[]>();
-  private composites = new Map<string, L_Nodes.DefCompositeNode>();
+  private composites = new Map<string, L_Nodes.DefOperatorNode>();
   private regexSingletons = new Map<string, L_Nodes.LetsNode>();
   // private macros = new Map<string, L_Nodes.MacroNode>();
   private includes: string[] = [];
@@ -53,7 +53,7 @@ export class L_Env {
     }
   }
 
-  newComposite(key: string, fact: L_Nodes.DefCompositeNode): boolean {
+  newComposite(key: string, fact: L_Nodes.DefOperatorNode): boolean {
     if (this.getCompositeVar(key)) {
       return L_ReportBoolErr(
         this,
@@ -97,7 +97,7 @@ export class L_Env {
   //   }
   // }
 
-  getCompositeVar(key: string): undefined | L_Nodes.DefCompositeNode {
+  getCompositeVar(key: string): undefined | L_Nodes.DefOperatorNode {
     const out = this.composites.get(key);
     if (out !== undefined) {
       return out;
@@ -143,12 +143,12 @@ export class L_Env {
     this.messages = [];
     this.pureSingletons = new Set<string>();
     this.regexSingletons = new Map<string, L_Nodes.LetsNode>();
-    this.defs = new Map<string, L_Nodes.DefNode>();
+    this.defs = new Map<string, L_Nodes.DefConceptNode>();
   }
 
   // used by checker and executor
-  factDeclaredOrBuiltin(node: L_Nodes.ToCheckNode): boolean {
-    if (node instanceof L_Nodes.OptNode) {
+  factDeclaredOrBuiltin(node: L_Nodes.L_FactNode): boolean {
+    if (node instanceof L_Nodes.OptFactNode) {
       return (
         this.getDef(node.optSymbol.name) !== undefined ||
         node instanceof L_Nodes.BuiltinCheckNode
@@ -170,7 +170,7 @@ export class L_Env {
     return false;
   }
 
-  getDef(s: string): L_Nodes.DefNode | undefined {
+  getDef(s: string): L_Nodes.DefConceptNode | undefined {
     if (this.defs.has(s)) {
       return this.defs.get(s);
     } else if (this.parent) {
@@ -190,7 +190,7 @@ export class L_Env {
   //   }
   // }
 
-  safeNewDef(s: string, defNode: L_Nodes.DefNode): boolean {
+  safeNewDef(s: string, defNode: L_Nodes.DefConceptNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.getDef(s) !== undefined) {
       return L_ReportBoolErr(

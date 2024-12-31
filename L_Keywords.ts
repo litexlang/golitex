@@ -26,7 +26,7 @@ export const L_Keywords = {
   Then: "=>",
   Iff: "iff",
   If: "if",
-  Def: "concept",
+  DefConcept: "concept",
   Prove: "prove",
   L_End: ";",
   Let: "let",

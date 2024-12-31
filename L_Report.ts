@@ -1,6 +1,6 @@
 import type { L_Env } from "./L_Env";
 import { L_Out, L_Symbol } from "./L_Structs";
-import { L_Node, OptNode, ToCheckNode } from "./L_Nodes";
+import { L_Node, OptFactNode, L_FactNode } from "./L_Nodes";
 import { L_Tokens } from "./L_Lexer";
 import { Skipper } from "./L_Parser";
 
@@ -40,7 +40,7 @@ export function lstLengthNotEql(
 
 export function reportNotAllFactsInGivenFactAreDeclared(
   env: L_Env,
-  fact: ToCheckNode
+  fact: L_FactNode
 ): L_Out {
   env.report(`Error! Not all of facts in ${fact} are declared`);
   return L_Out.Error;
@@ -51,7 +51,7 @@ export function reportNewVars(env: L_Env, vars: string[]): L_Out {
   return L_Out.True;
 }
 
-export function reportNewExist(env: L_Env, exist: OptNode): L_Out {
+export function reportNewExist(env: L_Env, exist: OptFactNode): L_Out {
   env.report(`[new exist] ${exist}`);
   return L_Out.True;
 }
@@ -59,7 +59,7 @@ export function reportNewExist(env: L_Env, exist: OptNode): L_Out {
 export function reportStoreErr(
   env: L_Env,
   funcName: string,
-  fact: ToCheckNode
+  fact: L_FactNode
 ): boolean {
   reportFailedFunctionName(env, funcName);
   return env.errMesReturnBoolean(`Failed to store ${fact}`);
@@ -68,7 +68,7 @@ export function reportStoreErr(
 export function reportCheckErr(
   env: L_Env,
   funcName: string,
-  fact: ToCheckNode
+  fact: L_FactNode
 ): L_Out {
   reportFailedFunctionName(env, funcName);
   return env.errMesReturnL_Out(`[Error] Failed to check ${fact}`);
@@ -134,14 +134,14 @@ export function L_ReportParserErr(
 export function L_VarsInOptNotDeclaredBool(
   env: L_Env,
   func: Function,
-  node: ToCheckNode | L_Symbol,
+  node: L_FactNode | L_Symbol,
   error?: unknown
 ): boolean {
   if (error instanceof Error) {
     env.report(error.message);
   }
 
-  if (node instanceof ToCheckNode)
+  if (node instanceof L_FactNode)
     return L_ReportBoolErr(
       env,
       func,
