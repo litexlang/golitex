@@ -491,10 +491,10 @@ export class IsFormNode extends BuiltinCheckNode {
   }
 }
 
-export abstract class ToCheckFormulaNode extends L_FactNode {
+export abstract class FormulaFactNode extends L_FactNode {
   constructor(
-    public left: OptFactNode | ToCheckFormulaNode,
-    public right: OptFactNode | ToCheckFormulaNode,
+    public left: OptFactNode | FormulaFactNode,
+    public right: OptFactNode | FormulaFactNode,
     isT: boolean
   ) {
     super(isT);
@@ -517,7 +517,7 @@ export abstract class ToCheckFormulaNode extends L_FactNode {
     return this.left.varsDeclared(env) && this.right.varsDeclared(env);
   }
 
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): ToCheckFormulaNode {
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): FormulaFactNode {
     const left = this.left.fix(env, freeFixPairs);
     const right = this.right.fix(env, freeFixPairs);
     if (this instanceof OrToCheckNode) {
@@ -543,7 +543,7 @@ export abstract class ToCheckFormulaNode extends L_FactNode {
       if (opt.optSymbol.name === this.left.optSymbol.name) {
         out.left = true;
       }
-    } else if (this.left instanceof ToCheckFormulaNode) {
+    } else if (this.left instanceof FormulaFactNode) {
       const got = this.left.whereIsOpt(opt);
       if (got.left || got.right) out.left = true;
     }
@@ -552,7 +552,7 @@ export abstract class ToCheckFormulaNode extends L_FactNode {
       if (opt.optSymbol.name === this.right.optSymbol.name) {
         out.right = true;
       }
-    } else if (this.right instanceof ToCheckFormulaNode) {
+    } else if (this.right instanceof FormulaFactNode) {
       const got = this.right.whereIsOpt(opt);
       if (got.left || got.right) out.right = true;
     }
@@ -561,7 +561,7 @@ export abstract class ToCheckFormulaNode extends L_FactNode {
   }
 }
 
-export class OrToCheckNode extends ToCheckFormulaNode {
+export class OrToCheckNode extends FormulaFactNode {
   copyWithIsTReverse(): L_FactNode {
     return new OrToCheckNode(this.left, this.right, !this.isT);
   }
@@ -603,7 +603,7 @@ export class OrToCheckNode extends ToCheckFormulaNode {
   }
 }
 
-export class AndToCheckNode extends ToCheckFormulaNode {
+export class AndToCheckNode extends FormulaFactNode {
   copyWithIsTReverse(): L_FactNode {
     return new AndToCheckNode(this.left, this.right, !this.isT);
   }
@@ -625,4 +625,4 @@ export class AndToCheckNode extends ToCheckFormulaNode {
   }
 }
 
-export type FormulaSubNode = ToCheckFormulaNode | OptFactNode;
+export type FormulaSubNode = FormulaFactNode | OptFactNode;

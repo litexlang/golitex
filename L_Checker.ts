@@ -8,7 +8,7 @@ import {
   LogicNode,
   OptFactNode,
   OrToCheckNode,
-  ToCheckFormulaNode,
+  FormulaFactNode,
   L_FactNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
@@ -29,7 +29,6 @@ import {
   L_ReportErr,
   reportCheckErr,
 } from "./L_Report";
-import { DEBUG_DICT } from "./L_Executor";
 
 export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
   try {
@@ -45,7 +44,7 @@ export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
       return checkIfFact(env, toCheck);
     } else if (toCheck instanceof BuiltinCheckNode) {
       return checkBuiltinCheckNode(env, toCheck);
-    } else if (toCheck instanceof ToCheckFormulaNode) {
+    } else if (toCheck instanceof FormulaFactNode) {
       return checkToCheckFormula(env, toCheck);
     } else {
       return L_Out.Error;
@@ -275,7 +274,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
             successful = false;
             break;
           }
-        } else if (layer instanceof ToCheckFormulaNode) {
+        } else if (layer instanceof FormulaFactNode) {
           // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了。事实上这里不用检查，因为 roots 在filter的时候已经相当于检查过了。放在这里只是为了自我提醒
           let nextLayers = roots.slice(layerNum);
 
@@ -406,7 +405,7 @@ function checkLiterally(env: L_Env, toCheck: L_FactNode): boolean {
     } else if (toCheck instanceof BuiltinCheckNode) {
       //TODO MAYBE I SHOULD USE CHECK literally
       return checkBuiltinCheckNode(env, toCheck) === L_Out.True;
-    } else if (toCheck instanceof ToCheckFormulaNode) {
+    } else if (toCheck instanceof FormulaFactNode) {
       //TODO MAYBE I SHOULD USE CHECK literally
       return checkToCheckFormula(env, toCheck) === L_Out.True;
     } else {
@@ -470,7 +469,7 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
   }
 }
 
-function checkToCheckFormula(env: L_Env, toCheck: ToCheckFormulaNode): L_Out {
+function checkToCheckFormula(env: L_Env, toCheck: FormulaFactNode): L_Out {
   try {
     if (toCheck instanceof OrToCheckNode) {
       for (const fact of toCheck.getLeftRight()) {

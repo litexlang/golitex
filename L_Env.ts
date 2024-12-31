@@ -160,7 +160,7 @@ export class L_Env {
       );
     } else if (node instanceof L_Nodes.BuiltinCheckNode) {
       return true;
-    } else if (node instanceof L_Nodes.ToCheckFormulaNode) {
+    } else if (node instanceof L_Nodes.FormulaFactNode) {
       return (
         this.factDeclaredOrBuiltin(node.left) &&
         this.factDeclaredOrBuiltin(node.right)
@@ -201,7 +201,7 @@ export class L_Env {
     }
 
     this.defs.set(s, defNode);
-    this.report(`[def] ${defNode}`);
+    this.report(`[${L_Keywords.DefConcept}] ${defNode}`);
     return true;
   }
 
