@@ -1,8 +1,7 @@
 import { L_Env } from "./L_Env";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
-import { L_Keywords } from "./L_Keywords";
-import { runFileWithLogging } from "./L_Runner";
+import { checkFact } from "./L_Checker";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Report from "./L_Report";
 import { L_Out, L_Singleton, L_Symbol } from "./L_Structs";
@@ -22,6 +21,8 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   try {
     if (node instanceof L_Nodes.ToCheckNode) {
       return factExec(env, node);
+    } else if (node instanceof L_Nodes.LetNode) {
+      return letExec(env, node);
     } else if (node instanceof L_Nodes.KnowNode) {
       return knowExec(env, node);
     } else if (node instanceof L_Nodes.ProveNode) {
@@ -337,6 +338,33 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
     }
   } catch {
     return L_Report.L_ReportErr(env, proveIfExec, proveNode);
+  }
+}
+
+function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
+  try {
+    if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
+      throw Error();
+    }
+
+    for (const e of node.vars) {
+      const ok = env.safeNewPureSingleton(e);
+      if (!ok) return L_Out.Error;
+    }
+
+    // store new facts
+    for (const onlyIf of node.facts) {
+      const ok = L_Memory.newFact(env, onlyIf);
+      if (!ok) {
+        L_Report.reportStoreErr(env, letExec.name, onlyIf);
+        throw new Error();
+      }
+    }
+
+    env.report(`[let] ${node}`);
+    return L_Out.True;
+  } catch {
+    return L_Report.L_ReportErr(env, letExec, node);
   }
 }
 
