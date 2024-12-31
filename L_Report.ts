@@ -119,9 +119,11 @@ export function L_ReportParserErr(
   env: L_Env,
   tokens: L_Tokens,
   func: Function,
-  skipper: Skipper
+  skipper: Skipper,
+  error?: unknown
 ) {
   // L_ReportErr(env, func, "Parser Error");
+  if (error instanceof Error) env.report(error.message);
   env.report(reportFailedFunc(func));
   // env.report(`Error occur at ${tokens.curTokIndex()} ${tokens.peek()}:\n`);
   // env.report(tokens.viewCurTokSurroundings());
@@ -132,8 +134,13 @@ export function L_ReportParserErr(
 export function L_VarsInOptNotDeclaredBool(
   env: L_Env,
   func: Function,
-  node: ToCheckNode | L_Symbol
+  node: ToCheckNode | L_Symbol,
+  error?: unknown
 ): boolean {
+  if (error instanceof Error) {
+    env.report(error.message);
+  }
+
   if (node instanceof ToCheckNode)
     return L_ReportBoolErr(
       env,

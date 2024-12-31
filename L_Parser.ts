@@ -16,105 +16,75 @@ function arrParse<T>(
   env: L_Env,
   tokens: L_Tokens,
   parseFunc: Function,
-  begin: string[] | string | undefined,
-  end: string[] | string,
-  skipEnd: boolean = true
+  end: string[] | string
 ): T[] {
   const skipper = new Skipper(env, tokens);
 
   try {
-    if (begin !== undefined) skipper.skip(env, begin);
     const out: T[] = [];
     while (!isCurToken(tokens, end)) {
       out.push(parseFunc(env, tokens));
       if (isCurToken(tokens, ",")) skipper.skip(env, ",");
     }
-    if (skipEnd) skipper.skip(env, end);
 
     return out;
   } catch (error) {
-    L_ReportParserErr(env, tokens, arrParse, skipper);
+    L_ReportParserErr(env, tokens, arrParse, skipper, error);
     throw error;
   }
 }
 
-function indexedSymbolParse(
-  env: L_Env,
-  tokens: L_Tokens
-): L_Structs.IndexedSymbol {
-  const skipper = new Skipper(env, tokens);
+// function singletonFunctionalParse(
+//   env: L_Env,
+//   tokens: L_Tokens
+// ): L_Structs.L_Singleton | L_Structs.FunctionalSymbol {
+//   const skipper = new Skipper(env, tokens);
 
-  try {
-    skipper.skip(env, L_Keywords.IndexedSymbol);
-    skipper.skip(env, "{");
-    const symbol = symbolParse(env, tokens);
-    const indexes: number[] = [];
-    skipper.skip(env, ",");
-    while (!isCurToken(tokens, "}")) {
-      indexes.push(Number(skipper.skip(env)));
-      if (isCurToken(tokens, ",")) skipper.skip(env, ",");
-    }
-    skipper.skip(env, "}");
+//   try {
+//     if (tokens.peek(1) === L_Keywords.LeftBrace) {
+//       return functionalSymbolParse(env, tokens);
+//     } else {
+//       return pureSingletonAndFormalSymbolParse(env, tokens);
+//     }
+//   } catch (error) {
+//     L_ReportParserErr(env, tokens, pureSingletonAndFormalSymbolParse, skipper);
+//     throw error;
+//   }
+// }
 
-    return new L_Structs.IndexedSymbol(symbol, indexes);
-  } catch (error) {
-    L_ReportParserErr(env, tokens, indexedSymbolParse, skipper);
-    throw error;
-  }
-}
+// function functionalSymbolParse(
+//   env: L_Env,
+//   tokens: L_Tokens
+// ): L_Structs.FunctionalSymbol {
+//   const skipper = new Skipper(env, tokens);
 
-function singletonFunctionalParse(
-  env: L_Env,
-  tokens: L_Tokens
-): L_Structs.L_Singleton | L_Structs.FunctionalSymbol {
-  const skipper = new Skipper(env, tokens);
+//   try {
+//     const value = skipper.skip(env);
 
-  try {
-    if (tokens.peek(1) === L_Keywords.LeftBrace) {
-      return functionalSymbolParse(env, tokens);
-    } else {
-      return pureSingletonAndFormalSymbolParse(env, tokens);
-    }
-  } catch (error) {
-    L_ReportParserErr(env, tokens, pureSingletonAndFormalSymbolParse, skipper);
-    throw error;
-  }
-}
+//     if (!env.getFunctionalSymbol(tokens.peek())) {
+//       L_ReportErr(
+//         env,
+//         singletonFunctionalParse,
+//         `${tokens.peek()} is not a declared functional symbol`
+//       );
+//       throw Error();
+//     }
 
-function functionalSymbolParse(
-  env: L_Env,
-  tokens: L_Tokens
-): L_Structs.FunctionalSymbol {
-  const skipper = new Skipper(env, tokens);
+//     skipper.skip(env, L_Keywords.LeftBrace);
+//     const symbols = arrParse<L_Symbol>(
+//       env,
+//       tokens,
+//       symbolParse,
+//       L_Keywords.RightBrace
+//     );
+//     skipper.skip(env, L_Keywords.RightBrace);
 
-  try {
-    const value = skipper.skip(env);
-
-    if (!env.getFunctionalSymbol(tokens.peek())) {
-      L_ReportErr(
-        env,
-        singletonFunctionalParse,
-        `${tokens.peek()} is not a declared functional symbol`
-      );
-      throw Error();
-    }
-
-    skipper.skip(env, L_Keywords.LeftBrace);
-    const symbols = arrParse<L_Symbol>(
-      env,
-      tokens,
-      symbolParse,
-      undefined,
-      L_Keywords.RightBrace,
-      true
-    );
-
-    return new L_Structs.FunctionalSymbol(value, symbols);
-  } catch (error) {
-    L_ReportParserErr(env, tokens, pureSingletonAndFormalSymbolParse, skipper);
-    throw error;
-  }
-}
+//     return new L_Structs.FunctionalSymbol(value, symbols);
+//   } catch (error) {
+//     L_ReportParserErr(env, tokens, pureSingletonAndFormalSymbolParse, skipper);
+//     throw error;
+//   }
+// }
 
 function pureSingletonAndFormalSymbolParse(
   env: L_Env,
@@ -155,7 +125,7 @@ function compositeParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Composite {
     skipper.skip(env, L_Keywords.Slash);
     const name = skipper.skip(env);
     skipper.skip(env, "{");
-    const values: L_Structs.L_Symbol[] = [];
+    const values: L_Symbol[] = [];
     while (!isCurToken(tokens, "}")) {
       values.push(symbolParse(env, tokens));
       if (isCurToken(tokens, ",")) skipper.skip(env, ",");
@@ -168,13 +138,13 @@ function compositeParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Composite {
   }
 }
 
-function literalOptParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
+function literalOptParse(env: L_Env, tokens: L_Tokens): L_Symbol {
   const skipper = new Skipper(env, tokens);
 
   try {
     const name = skipper.skip(env).slice(L_Keywords.MacroPrefix.length); // the # at the beginning is abandoned
     skipper.skip(env, "{");
-    const parameters: L_Structs.L_Symbol[] = [];
+    const parameters: L_Symbol[] = [];
     while (!isCurToken(tokens, "}")) {
       parameters.push(symbolParse(env, tokens));
       if (isCurToken(tokens, ",")) skipper.skip(env, ",");
@@ -193,7 +163,7 @@ function literalOptParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
 
     const typedExternal = external as ExternalModule;
 
-    let out: L_Structs.L_Symbol | undefined = undefined;
+    let out: L_Symbol | undefined = undefined;
     for (const prop in typedExternal) {
       if (
         typeof typedExternal[prop] === "function" &&
@@ -204,7 +174,7 @@ function literalOptParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
           env.report(`Invalid call of ${defLiteralOpt.name}`);
           throw Error();
         } else {
-          return out as L_Structs.L_Symbol;
+          return out as L_Symbol;
         }
       }
     }
@@ -218,7 +188,7 @@ function literalOptParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
 }
 
 // TODO Later, this should be parser based on precedence
-function braceCompositeParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
+function braceCompositeParse(env: L_Env, tokens: L_Tokens): L_Symbol {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -443,8 +413,8 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
         if (letFormalParse(env, tokens) === L_Out.True) return null;
       case "let_alias":
         if (letAliasParse(env, tokens) === L_Out.True) return null;
-      case "def_function":
-        if (defFunctionParse(env, tokens) === L_Out.True) return null;
+      // case "def_function":
+      //   if (defFunctionParse(env, tokens) === L_Out.True) return null;
     }
 
     // const func = KeywordFunctionMap[tokens.peek()];
@@ -965,14 +935,14 @@ function factsArrParse(
 //     throw error;
 //   }
 
-//   function checkVarsParse(): L_Structs.L_Symbol[][] | undefined {
+//   function checkVarsParse(): L_Symbol[][] | undefined {
 //     if (isCurToken(tokens, "[")) {
 //       skipper.skip(env, "[");
-//       const checkVars: L_Structs.L_Symbol[][] = [];
+//       const checkVars: L_Symbol[][] = [];
 //       checkVars.push([]);
 //       while (!isCurToken(tokens, "]")) {
 //         checkVars[checkVars.length - 1].push(
-//           ...arrParse<L_Structs.L_Symbol>(
+//           ...arrParse<L_Symbol>(
 //             env,
 //             tokens,
 //             symbolParse,
@@ -1007,7 +977,7 @@ function factsArrParse(
 //     if (type === undefined) throw Error();
 //     const vars: L_Structs.L_Singleton[] = [];
 
-//     const freeFixPairs: [L_Structs.L_Symbol, L_Structs.L_Symbol][] = [];
+//     const freeFixPairs: [L_Symbol, L_Symbol][] = [];
 //     while (!isCurToken(tokens, [":", "{"])) {
 //       const singleton = pureSingletonAndFormalSymbolParse(newEnv, tokens);
 
@@ -1101,10 +1071,9 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
       env,
       tokens,
       pureSingletonAndFormalSymbolParse,
-      undefined,
-      ":",
-      true
+      ":"
     );
+    skipper.skip(env, L_Keywords.Colon);
     // const fact = optToCheckParse(env, tokens, [], false);
     const fact = optFactParse(env, tokens);
     if (!fact.varsDeclared(env)) return L_Out.Error;
@@ -1215,7 +1184,12 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
       opt.vars.forEach((v) =>
         newEnv.safeNewPureSingleton((v as L_Singleton).value)
       );
-      cond = factsArrParse(newEnv, tokens, [L_Keywords.L_End], false);
+      cond = factsArrParse(
+        newEnv,
+        tokens,
+        [L_Keywords.L_End, L_Keywords.LeftCurlyBrace],
+        false
+      );
     }
 
     const onlyIfs: ToCheckNode[] = [];
@@ -1440,7 +1414,7 @@ function usePrecedenceToParseComposite(
   tokens: L_Tokens,
   begin: string,
   end: string
-): L_Structs.L_Symbol {
+): L_Symbol {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -1467,13 +1441,13 @@ function usePrecedenceToParseComposite(
     }
 
     skipper.skip(env, end);
-    return left as L_Structs.L_Symbol;
+    return left as L_Symbol;
   } catch (error) {
     L_ReportParserErr(env, tokens, usePrecedenceToParseComposite, skipper);
     throw error;
   }
 
-  function prefixSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
+  function prefixSymbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
     try {
       // TODO maybe is broken because it does not take # into consideration
       if (tokens.peek() === L_Keywords.Slash) {
@@ -1493,8 +1467,8 @@ function usePrecedenceToParseComposite(
     end: string,
     curPrecedence: number,
     precedenceMap: Map<string, number>
-  ): L_Structs.L_Symbol {
-    let left: L_Structs.L_Symbol;
+  ): L_Symbol {
+    let left: L_Symbol;
     if (!isCurToken(tokens, "(")) {
       left = prefixSymbolParse(env, tokens);
     } else {
@@ -1631,14 +1605,10 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
     const func = skipString(tokens);
     skipper.skip(env, "}");
 
-    const vars = arrParse<L_Structs.L_Symbol>(
-      env,
-      tokens,
-      symbolParse,
-      undefined,
-      [":", L_Keywords.L_End],
-      false
-    );
+    const vars = arrParse<L_Symbol>(env, tokens, symbolParse, [
+      ":",
+      L_Keywords.L_End,
+    ]);
 
     let node: L_Nodes.DefLiteralOptNode | undefined = undefined;
     if (isCurToken(tokens, L_Keywords.L_End)) {
@@ -1650,9 +1620,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
         env,
         tokens,
         factParse,
-        undefined,
-        L_Keywords.L_End,
-        false
+        L_Keywords.L_End
       );
       skipper.skip(env, L_Keywords.L_End);
       node = new L_Nodes.DefLiteralOptNode(name, vars, facts, path, func);
@@ -1679,7 +1647,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
   }
 }
 
-export function symbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
+export function symbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -1695,7 +1663,7 @@ export function symbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
     throw error;
   }
 
-  function singleSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
+  function singleSymbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
     // TODO Later, there should be parser based on precedence. And there does not  need ((1 * 4) + 4) = 8, there is only $ 1 * 4 + 4 = 8 $
 
     try {
@@ -1709,7 +1677,7 @@ export function symbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
         return indexedSymbolParse(env, tokens);
       } else {
         // return singletonParse(env, tokens);
-        return singletonFunctionalParse(env, tokens);
+        return pureSingletonAndFormalSymbolParse(env, tokens);
       }
     } catch (error) {
       L_ReportParserErr(env, tokens, singleSymbolParse, skipper);
@@ -1728,10 +1696,9 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
       env,
       tokens,
       symbolParse,
-      undefined,
-      L_Keywords.L_End,
-      true
+      L_Keywords.L_End
     );
+    skipper.skip(env, L_Keywords.L_End);
 
     const node = new L_Nodes.LetAliasNode(name, toBeAliased);
 
@@ -1762,53 +1729,52 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
   }
 }
 
-function defFunctionParse(env: L_Env, tokens: L_Tokens): L_Out {
-  const skipper = new Skipper(env, tokens);
+// function defFunctionParse(env: L_Env, tokens: L_Tokens): L_Out {
+//   const skipper = new Skipper(env, tokens);
 
-  try {
-    skipper.skip(env, L_Keywords.DefFunctional);
+//   try {
+//     skipper.skip(env, L_Keywords.DefFunctional);
 
-    const funcName = skipper.skip(env);
-    skipper.skip(env, L_Keywords.LeftBrace);
-    const symbols = arrParse<L_Symbol>(
-      env,
-      tokens,
-      symbolParse,
-      undefined,
-      L_Keywords.RightBrace,
-      true
-    );
-    const functional = new L_Structs.FunctionalSymbol(funcName, symbols);
+//     const funcName = skipper.skip(env);
+//     skipper.skip(env, L_Keywords.LeftBrace);
+//     const symbols = arrParse<L_Symbol>(
+//       env,
+//       tokens,
+//       symbolParse,
+//       L_Keywords.RightBrace
+//     );
+//     skipper.skip(env, L_Keywords.RightBrace);
+//     const functional = new L_Structs.FunctionalSymbol(funcName, symbols);
 
-    let facts: ToCheckNode[] = [];
-    if (isCurToken(tokens, L_Keywords.Colon)) {
-      skipper.skip(env, L_Keywords.Colon);
-      facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
-    }
+//     let facts: ToCheckNode[] = [];
+//     if (isCurToken(tokens, L_Keywords.Colon)) {
+//       skipper.skip(env, L_Keywords.Colon);
+//       facts = factsArrParse(env, tokens, [L_Keywords.L_End], true);
+//     }
 
-    const node = new L_Nodes.DefFunctionalSymbolNode(functional, facts);
-    const ok = defFunctionExec(env, node);
+//     const node = new L_Nodes.DefFunctionalSymbolNode(functional, facts);
+//     const ok = defFunctionExec(env, node);
 
-    return ok;
+//     return ok;
 
-    function defFunctionExec(
-      env: L_Env,
-      node: L_Nodes.DefFunctionalSymbolNode
-    ): L_Structs.L_Out {
-      const ok = env.newFunctionalSymbol(functional.name, node);
+//     function defFunctionExec(
+//       env: L_Env,
+//       node: L_Nodes.DefFunctionalSymbolNode
+//     ): L_Structs.L_Out {
+//       const ok = env.newFunctionalSymbol(functional.name, node);
 
-      if (!ok) {
-        env.report(`Failed to store ${node}`);
-        return L_Structs.L_Out.Error;
-      }
+//       if (!ok) {
+//         env.report(`Failed to store ${node}`);
+//         return L_Structs.L_Out.Error;
+//       }
 
-      return L_Out.True;
-    }
-  } catch (error) {
-    L_ReportParserErr(env, tokens, letAliasParse, skipper);
-    throw error;
-  }
-}
+//       return L_Out.True;
+//     }
+//   } catch (error) {
+//     L_ReportParserErr(env, tokens, letAliasParse, skipper);
+//     throw error;
+//   }
+// }
 
 function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
   const skipper = new Skipper(env, tokens);
@@ -1822,7 +1788,9 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
     if (isCurToken(tokens, L_Keywords.FunctionTypeFactOptPrefix)) {
       skipper.skip(env, L_Keywords.FunctionTypeFactOptPrefix);
       const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
-      const vars = arrParse<L_Symbol>(env, tokens, symbolParse, "(", ")");
+      skip(tokens, "(");
+      const vars = arrParse<L_Symbol>(env, tokens, symbolParse, ")");
+      skip(tokens, L_Keywords.RightBrace);
 
       let checkVars = checkVarsParse();
 
@@ -1856,21 +1824,14 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
     throw error;
   }
 
-  function checkVarsParse(): L_Structs.L_Symbol[][] | undefined {
+  function checkVarsParse(): L_Symbol[][] | undefined {
     if (isCurToken(tokens, "[")) {
       skipper.skip(env, "[");
-      const checkVars: L_Structs.L_Symbol[][] = [];
+      const checkVars: L_Symbol[][] = [];
       checkVars.push([]);
       while (!isCurToken(tokens, "]")) {
         checkVars[checkVars.length - 1].push(
-          ...arrParse<L_Structs.L_Symbol>(
-            env,
-            tokens,
-            symbolParse,
-            undefined,
-            [";", "]"],
-            false
-          )
+          ...arrParse<L_Symbol>(env, tokens, symbolParse, [";", "]"])
         );
         if (isCurToken(tokens, ";")) {
           checkVars.push([]);
@@ -1930,6 +1891,31 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
   } catch (error) {
     env.getMessages().push(...newEnv.getMessages());
     L_ReportParserErr(env, tokens, ifFactParse, skipper);
+    throw error;
+  }
+}
+
+function indexedSymbolParse(
+  env: L_Env,
+  tokens: L_Tokens
+): L_Structs.IndexedSymbol {
+  const skipper = new Skipper(env, tokens);
+
+  try {
+    skipper.skip(env, L_Keywords.IndexedSymbol);
+    skipper.skip(env, "{");
+    const symbol = symbolParse(env, tokens);
+    const indexes: number[] = [];
+    skipper.skip(env, ",");
+    while (!isCurToken(tokens, "}")) {
+      indexes.push(Number(skipper.skip(env)));
+      if (isCurToken(tokens, ",")) skipper.skip(env, ",");
+    }
+    skipper.skip(env, "}");
+
+    return new L_Structs.IndexedSymbol(symbol, indexes);
+  } catch (error) {
+    L_ReportParserErr(env, tokens, indexedSymbolParse, skipper);
     throw error;
   }
 }
