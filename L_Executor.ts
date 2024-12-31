@@ -21,9 +21,11 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   try {
     if (node instanceof L_Nodes.ToCheckNode) {
       return factExec(env, node);
-    } else if (node instanceof L_Nodes.KnowNode) {
-      return knowExec(env, node);
-    } else if (node instanceof L_Nodes.ProveNode) {
+    }
+    // else if (node instanceof L_Nodes.KnowNode) {
+    //   return knowExec(env, node);
+    // }
+    else if (node instanceof L_Nodes.ProveNode) {
       return proveExec(env, node);
     } else if (node instanceof L_Nodes.ProveContradictNode) {
       return proveContradictExec(env, node);
@@ -71,34 +73,34 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
 //   }
 // }
 
-export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
-  try {
-    // examine whether all facts are declared.
-    // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
-    if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) throw Error();
-    // if (!L_Nodes.ToCheckNode.optsDeclared(env, node.facts)) {
-    //   throw Error();
-    // }
+// export function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
+//   try {
+//     // examine whether all facts are declared.
+//     // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
+//     if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) throw Error();
+//     // if (!L_Nodes.ToCheckNode.optsDeclared(env, node.facts)) {
+//     //   throw Error();
+//     // }
 
-    // store new knowns
-    for (const onlyIf of node.facts) {
-      const ok = L_Memory.newFact(env, onlyIf);
-      if (!ok) {
-        L_Report.reportStoreErr(env, knowExec.name, onlyIf);
-        throw new Error();
-      }
-    }
+//     // store new knowns
+//     for (const onlyIf of node.facts) {
+//       const ok = L_Memory.newFact(env, onlyIf);
+//       if (!ok) {
+//         L_Report.reportStoreErr(env, knowExec.name, onlyIf);
+//         throw new Error();
+//       }
+//     }
 
-    // for (const [i, v] of node.names.entries()) {
-    //   const ok = env.newNamedKnownToCheck(v, node.facts[i]);
-    //   if (!ok) throw new Error();
-    // }
+//     // for (const [i, v] of node.names.entries()) {
+//     //   const ok = env.newNamedKnownToCheck(v, node.facts[i]);
+//     //   if (!ok) throw new Error();
+//     // }
 
-    return L_Out.True;
-  } catch {
-    return L_Report.L_ReportErr(env, knowExec, node);
-  }
-}
+//     return L_Out.True;
+//   } catch {
+//     return L_Report.L_ReportErr(env, knowExec, node);
+//   }
+// }
 
 // function defExec(env: L_Env, node: L_Nodes.DefNode): L_Out {
 //   try {

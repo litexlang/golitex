@@ -320,8 +320,6 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
     }
 
     switch (tokens.peek()) {
-      case L_Keywords.Know:
-        return knowParse(env, tokens);
       case L_Keywords.LeftCurlyBrace:
         return localEnvParse(env, tokens);
       case L_Keywords.Prove:
@@ -330,23 +328,25 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
     }
 
     switch (tokens.peek()) {
+      case L_Keywords.Know:
+        if (knowParse(env, tokens) === L_Out.True) return null;
       case L_Keywords.Let:
         if (letParse(env, tokens) === L_Out.True) return null;
-      case "def":
+      case L_Keywords.Def:
         if (defParse(env, tokens) === L_Out.True) return null;
-      case "have":
+      case L_Keywords.Have:
         if (haveParse(env, tokens) === L_Out.True) return null;
-      case "def_composite":
+      case L_Keywords.DefComposite:
         if (defCompositeParse(env, tokens) === L_Out.True) return null;
-      case "lets":
+      case L_Keywords.Lets:
         if (letsParse(env, tokens) === L_Out.True) return null;
-      case "include":
+      case L_Keywords.Include:
         if (includeParse(env, tokens) === L_Out.True) return null;
-      case "def_literal_operator":
+      case L_Keywords.DefLiteralOperator:
         if (defLiteralOperatorParse(env, tokens) === L_Out.True) return null;
-      case "let_formal":
+      case L_Keywords.LetFormal:
         if (letFormalParse(env, tokens) === L_Out.True) return null;
-      case "let_alias":
+      case L_Keywords.LetAlias:
         if (letAliasParse(env, tokens) === L_Out.True) return null;
     }
 
@@ -358,7 +358,7 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
   }
 }
 
-function knowParse(env: L_Env, tokens: L_Tokens): L_Nodes.KnowNode {
+function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -373,10 +373,41 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Nodes.KnowNode {
     }
     skipper.skip(env, L_Keywords.L_End);
 
-    return new L_Nodes.KnowNode(facts, names);
+    const out = new L_Nodes.KnowNode(facts, names);
+
+    return knowExec(env, out);
   } catch (error) {
     L_ReportParserErr(env, tokens, knowParse, skipper);
     throw error;
+  }
+
+  function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
+    try {
+      // examine whether all facts are declared.
+      // ! NEED TO IMPLEMENT EXAMINE ALL VARS ARE DECLARED.
+      if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) throw Error();
+      // if (!L_Nodes.ToCheckNode.optsDeclared(env, node.facts)) {
+      //   throw Error();
+      // }
+
+      // store new knowns
+      for (const onlyIf of node.facts) {
+        const ok = L_Memory.newFact(env, onlyIf);
+        if (!ok) {
+          L_Report.reportStoreErr(env, knowExec.name, onlyIf);
+          throw new Error();
+        }
+      }
+
+      // for (const [i, v] of node.names.entries()) {
+      //   const ok = env.newNamedKnownToCheck(v, node.facts[i]);
+      //   if (!ok) throw new Error();
+      // }
+
+      return L_Out.True;
+    } catch {
+      return L_Report.L_ReportErr(env, knowExec, node);
+    }
   }
 }
 
