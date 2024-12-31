@@ -277,7 +277,7 @@ export class KnowNode extends L_Node {
   }
 
   override toString(): string {
-    return `know ${this.facts};`;
+    return `${L_Keywords.Know} ${this.facts};`;
   }
 }
 
@@ -287,7 +287,7 @@ export class LetNode extends L_Node {
   }
 
   override toString() {
-    return `let ${this.vars.join(", ")}: ${this.facts};`;
+    return `${L_Keywords.Let} ${this.vars}: ${this.facts};`;
   }
 }
 
@@ -297,7 +297,7 @@ export class LetFormalSymbolNode extends L_Node {
   }
 
   override toString() {
-    return `let_formal ${this.vars.join(", ")}: ${this.facts};`;
+    return `${L_Keywords.LetFormal} ${this.vars}: ${this.facts};`;
   }
 }
 
@@ -334,33 +334,15 @@ export class LocalEnvNode extends L_Node {
   }
 }
 
-// export class ReturnNode extends L_Node {
-//   constructor(public facts: ToCheckNode[]) {
-//     super();
-//   }
-// }
-
 export class HaveNode extends L_Node {
   constructor(public vars: L_Singleton[], public fact: OptNode) {
     super();
   }
+
+  override toString() {
+    return `${L_Keywords.Have} ${this.vars}: ${this.fact}`;
+  }
 }
-
-// export class SpecialNode extends L_Node {
-//   constructor(public keyword: string, public extra: unknown) {
-//     super();
-//   }
-// }
-
-// export class ByNode extends L_Node {
-//   constructor(public namedKnownToChecks: OptNode[]) {
-//     super();
-//   }
-
-//   override toString() {
-//     return `${this.namedKnownToChecks.map((e) => e.toString).join(", ")}`;
-//   }
-// }
 
 export class DefCompositeNode extends L_Node {
   constructor(public composite: L_Composite, public facts: ToCheckNode[]) {
@@ -368,9 +350,7 @@ export class DefCompositeNode extends L_Node {
   }
 
   toString(): string {
-    return `def_composite ${this.composite.toString()}: ${this.facts
-      .map((e) => e.toString())
-      .join(", ")}`;
+    return `${L_Keywords.DefComposite} ${this.composite}: ${this.facts}`;
   }
 }
 
@@ -395,7 +375,7 @@ export class IsPropertyNode extends BuiltinCheckNode {
   }
 
   toString() {
-    return `is_property(${this.propertyName})`;
+    return `${L_Keywords.isProperty}(${this.propertyName})`;
   }
 
   varsDeclared(env: L_Env): boolean {
@@ -444,7 +424,7 @@ export class IsFormNode extends BuiltinCheckNode {
 
   toString(): string {
     const notStr = this.isT ? "" : "[not]";
-    const mainStr = `is_form(${this.candidate}, ${this.baseline}, {${this.facts}})`;
+    const mainStr = `${L_Keywords.isForm}(${this.candidate}, ${this.baseline}, {${this.facts}})`;
     return notStr + mainStr;
   }
 }
@@ -559,20 +539,6 @@ export class OrToCheckNode extends ToCheckFormulaNode {
 
     return allRoots;
   }
-
-  // If not all subNodes are either orNode or optNode, return null;
-  // getEquivalentIfs(): IfNode[] | null {
-  //   const roots = this.getRootOpts();
-  //   if (roots === null) return null;
-
-  //   const out = roots.map((root, i) => {
-  //     let others = roots.filter((e, j) => j !== i);
-  //     others = others.map((e) => e.copyWithIsTReverse());
-  //     return new IfNode([], others, [root]);
-  //   });
-
-  //   return out;
-  // }
 }
 
 export class AndToCheckNode extends ToCheckFormulaNode {
@@ -615,16 +581,6 @@ export class LetsNode extends L_Node {
   }
 }
 
-// export class MacroNode extends L_Node {
-//   constructor(public name: string, public macroTokens: string[]) {
-//     super();
-//   }
-
-//   toString() {
-//     return `macro ${this.name} ${this.macroTokens.join(" ")}`;
-//   }
-// }
-
 export class IncludeNode extends L_Node {
   constructor(public path: string) {
     super();
@@ -656,11 +612,7 @@ export class DefFunctionalSymbolNode extends L_Node {
   }
 
   toString(): string {
-    return `${
-      L_Keywords.DefFunctional
-    } ${this.functional.toString()}: ${this.facts
-      .map((e) => e.toString())
-      .join(", ")}`;
+    return `${L_Keywords.DefFunctional} ${this.functional}: ${this.facts}`;
   }
 }
 
@@ -670,6 +622,6 @@ export class LetAliasNode extends L_Node {
   }
 
   toString() {
-    return `[let_alias] ${this.name} ${this.toBeAliased}`;
+    return `${L_Keywords.LetAlias} ${this.name} ${this.toBeAliased}`;
   }
 }

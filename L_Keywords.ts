@@ -22,7 +22,7 @@ export const L_Keywords = {
   DefComposite: "def_composite",
   isProperty: "is_property",
   isForm: "is_form",
-  KnowType: "know",
+  Know: "know",
   Then: "=>",
   Iff: "iff",
   If: "if",
