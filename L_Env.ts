@@ -474,4 +474,9 @@ export class L_Env {
     if (this.getIncludes().some((e) => e === path)) return true;
     else return false;
   }
+
+  pushMessagesFromEnvReturnFalse(env: L_Env): boolean {
+    this.messages.push(...env.getMessages());
+    return false;
+  }
 }

@@ -43,7 +43,7 @@ export abstract class ToCheckNode extends L_Node {
   // }
 }
 
-export class LogicNode extends ToCheckNode {
+export abstract class LogicNode extends ToCheckNode {
   constructor(
     public vars: L_Singleton[] = [],
     public req: ToCheckNode[] = [],
@@ -55,15 +55,9 @@ export class LogicNode extends ToCheckNode {
   }
 
   addPrefixToVars(): boolean {
-    // const newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
-    //   e,
-    //   new L_Singleton(L_Keywords.IfVarPrefix + e.value),
-    // ]);
     this.vars = this.vars.map(
       (e) => new L_Singleton(L_Keywords.IfVarPrefix + e)
     );
-
-    // freeFixPairs = [...freeFixPairs, ...newFreeFixPairs];
 
     for (const r of this.req) {
       if (r instanceof LogicNode) {
@@ -78,9 +72,6 @@ export class LogicNode extends ToCheckNode {
     }
 
     return true;
-
-    // this.req = this.req.map((r) => r.fix(env, freeFixPairs));
-    // this.onlyIfs = this.onlyIfs.map((onlyIf) => onlyIf.fix(env, freeFixPairs));
   }
 
   fixUsingIfPrefix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): boolean {
@@ -123,35 +114,23 @@ export class LogicNode extends ToCheckNode {
   }
 
   varsDeclared(env: L_Env): boolean {
-    // * The new variables declared as if-fact parameters are stored in newEnv
-    // const newEnv = new L_Env(env);
-
-    // for (const v of this.vars) {
-    //   if (v.subSymbolsDeclared(newEnv)) {
-    //     return L_VarsInOptDoubleDeclErr(env, this.varsDeclared, v);
-    //   }
-    //   newEnv.newLetSymbol(v.value);
-    // }
-
     for (const req of this.req) {
       if (!req.varsDeclared(this.env)) {
-        env.getMessages().push(...this.env.getMessages());
-        // return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, req);
-        return false;
+        return env.pushMessagesFromEnvReturnFalse(this.env);
       }
     }
 
     for (const onlyIf of this.onlyIfs) {
       if (!onlyIf.varsDeclared(this.env)) {
-        env.getMessages().push(...this.env.getMessages());
-        // return L_VarsInOptNotDeclaredBool(env, this.varsDeclared, onlyIf);
-        return false;
+        return env.pushMessagesFromEnvReturnFalse(this.env);
       }
     }
 
     return true;
   }
+}
 
+export class IffNode extends LogicNode {
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
     const newReq: ToCheckNode[] = [];
     for (const r of this.req) {
@@ -163,37 +142,50 @@ export class LogicNode extends ToCheckNode {
       newOnlyIf.push(onlyIf.fix(env, freeFixPairs));
     }
 
-    if (this instanceof IfNode) {
-      return new IfNode(this.vars, newReq, newOnlyIf, new L_Env(env));
-    }
-
-    throw Error();
+    return new IffNode(this.vars, newReq, newOnlyIf, new L_Env(env));
   }
 
-  override copyWithIsTReverse(): LogicNode {
-    return new LogicNode(
-      this.vars,
-      this.req,
-      this.onlyIfs,
-      this.env,
-      !this.isT
-    );
+  override copyWithIsTReverse(): IffNode {
+    return new IffNode(this.vars, this.req, this.onlyIfs, this.env, !this.isT);
   }
 
   override toString() {
-    let type: string = "";
-    type = "if";
-    const mainPart = `${type} ${this.vars.toString()} : ${this.req
-      .map((e) => e.toString())
-      .join(", ")} {${this.onlyIfs.map((e) => e.toString()).join(", ")}}`;
+    const mainPart = `iff ${this.vars.toString()} : ${this.req} {${
+      this.onlyIfs
+    }}`;
     const notPart = !this.isT ? "[not] " : "";
 
     return notPart + mainPart;
   }
 }
+export class IfNode extends LogicNode {
+  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
+    const newReq: ToCheckNode[] = [];
+    for (const r of this.req) {
+      newReq.push(r.fix(env, freeFixPairs));
+    }
 
-export class IffNode extends LogicNode {}
-export class IfNode extends LogicNode {}
+    const newOnlyIf: ToCheckNode[] = [];
+    for (const onlyIf of this.onlyIfs) {
+      newOnlyIf.push(onlyIf.fix(env, freeFixPairs));
+    }
+
+    return new IfNode(this.vars, newReq, newOnlyIf, new L_Env(env));
+  }
+
+  override copyWithIsTReverse(): IfNode {
+    return new IfNode(this.vars, this.req, this.onlyIfs, this.env, !this.isT);
+  }
+
+  override toString() {
+    const mainPart = `if ${this.vars.toString()} : ${this.req} {${
+      this.onlyIfs
+    }}`;
+    const notPart = !this.isT ? "[not] " : "";
+
+    return notPart + mainPart;
+  }
+}
 export class IfReqNode {
   constructor(public fact: ToCheckNode, public vars: L_Symbol[]) {}
 }
