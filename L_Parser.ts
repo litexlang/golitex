@@ -1358,7 +1358,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
   ): L_Out {
     try {
       if (!env.newLiteralOpt(node)) throw Error();
-      return env.report(`[new def_literal_operator] ${node}`);
+      return env.report(`[new ${L_Keywords.DefLiteralOperator}] ${node}`);
     } catch {
       return L_Report.L_ReportErr(env, defLiteralOptExec, node);
     }

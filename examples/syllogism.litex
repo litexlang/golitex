@@ -10,8 +10,8 @@ a concept called "mortal", and it takes in one parameter. Anything that has
 property that it is human, it is mortal.
 */
 
-def $human(something);
-def $mortal(something);
+concept $human(something);
+concept $mortal(something);
 know if x: $human(x) {
   $mortal(x)
 };

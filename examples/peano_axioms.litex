@@ -1,6 +1,6 @@
 /* Define the concept of natural number (nat). */
 
-def nat(x);
+concept nat(x);
 
 /* All Arabic numerals are nat. Arabic numerals are equivalent 
 to the regular expression  ^(0|[1-9]\d*)$ .*/
@@ -15,7 +15,7 @@ lets arabic_numeral "^(0|[1-9]\d*)$" : arabic_numeral is nat;
 
 /* Axiom 2: If n is a natural number, then n++ is also a natural number. */
 
-def_composite \++{a}: a is nat;
+operator \++{a}: a is nat;
 know if x: is_form(x, \++{a}) {x is nat};
 
 {
@@ -29,8 +29,8 @@ know if x: is_form(x, \++{a}) {x is nat};
 if n, m are natural numbers and n != m, then n++ != m++. Equivalently, if 
 n++ = m++, then we must have n = m */
 
-def commutative =(x,y): x is nat, y is nat;
-def_composite \+{x,y}: x is nat, y is nat;
+concept commutative =(x,y): x is nat, y is nat;
+operator \+{x,y}: x is nat, y is nat;
 
 know if x: x is nat {not 0 = \++{x}  };
 know if x,y: not x = y {
