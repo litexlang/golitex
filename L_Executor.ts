@@ -21,8 +21,6 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   try {
     if (node instanceof L_Nodes.ToCheckNode) {
       return factExec(env, node);
-    } else if (node instanceof L_Nodes.LetNode) {
-      return letExec(env, node);
     } else if (node instanceof L_Nodes.KnowNode) {
       return knowExec(env, node);
     } else if (node instanceof L_Nodes.ProveNode) {
@@ -32,6 +30,9 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
     } else if (node instanceof L_Nodes.LocalEnvNode) {
       return localEnvExec(env, node);
     }
+    // else if (node instanceof L_Nodes.LetNode) {
+    //   return letExec(env, node);
+    // }
     //  else if (node instanceof L_Nodes.SpecialNode) {
     //   return specialExec(env, node);
     // }
@@ -341,32 +342,32 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
   }
 }
 
-function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
-  try {
-    if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
-      throw Error();
-    }
+// function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
+//   try {
+//     if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
+//       throw Error();
+//     }
 
-    for (const e of node.vars) {
-      const ok = env.safeNewPureSingleton(e);
-      if (!ok) return L_Out.Error;
-    }
+//     for (const e of node.vars) {
+//       const ok = env.safeNewPureSingleton(e);
+//       if (!ok) return L_Out.Error;
+//     }
 
-    // store new facts
-    for (const onlyIf of node.facts) {
-      const ok = L_Memory.newFact(env, onlyIf);
-      if (!ok) {
-        L_Report.reportStoreErr(env, letExec.name, onlyIf);
-        throw new Error();
-      }
-    }
+//     // store new facts
+//     for (const onlyIf of node.facts) {
+//       const ok = L_Memory.newFact(env, onlyIf);
+//       if (!ok) {
+//         L_Report.reportStoreErr(env, letExec.name, onlyIf);
+//         throw new Error();
+//       }
+//     }
 
-    env.report(`[let] ${node}`);
-    return L_Out.True;
-  } catch {
-    return L_Report.L_ReportErr(env, letExec, node);
-  }
-}
+//     env.report(`[let] ${node}`);
+//     return L_Out.True;
+//   } catch {
+//     return L_Report.L_ReportErr(env, letExec, node);
+//   }
+// }
 
 // function defCompositeExec(env: L_Env, node: L_Nodes.DefCompositeNode): L_Out {
 //   try {
