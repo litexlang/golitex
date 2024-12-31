@@ -1,5 +1,5 @@
 import {
-  ToCheckFormulaNode,
+  FormulaFactNode,
   BuiltinCheckNode,
   DefConceptNode,
   IfNode,
@@ -32,14 +32,14 @@ export function newFact(env: L_Env, fact: L_FactNode): boolean {
     } else if (fact instanceof OptFactNode) {
       const ok = newOptFact(env, fact);
       if (!ok) return false;
-    } else if (fact instanceof ToCheckFormulaNode) {
+    } else if (fact instanceof FormulaFactNode) {
       const ok = newFormulaFact(env, fact);
       if (!ok) return false;
     } else {
       throw Error();
     }
 
-    return env.OKMesReturnBoolean(`[new fact] ${fact}`);
+    return env.OKMesReturnBoolean(`[fact] ${fact}`);
   } catch {
     return reportStoreErr(env, newFact.name, fact);
   }
@@ -68,7 +68,7 @@ function newOptFact(env: L_Env, fact: OptFactNode): boolean {
   }
 }
 
-function newFormulaFact(env: L_Env, fact: ToCheckFormulaNode): boolean {
+function newFormulaFact(env: L_Env, fact: FormulaFactNode): boolean {
   try {
     const roots = fact.getRootOptNodes();
     roots.forEach((root) =>

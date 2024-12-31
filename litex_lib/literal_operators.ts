@@ -1,10 +1,5 @@
 import { L_Env } from "../L_Env";
-import {
-  L_Composite,
-  L_Singleton,
-  L_Symbol,
-  L_UndefinedSymbol,
-} from "../L_Structs";
+import { L_Singleton, L_UndefinedSymbol } from "../L_Structs";
 
 function isNaturalNumberStr(str: string) {
   const regex = /^(0|[1-9]\d*)$/;

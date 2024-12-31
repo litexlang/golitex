@@ -158,10 +158,6 @@ export class L_UndefinedSymbol extends L_Symbol {
     throw Error();
   }
 
-  // getRootSingletons(): L_Singleton[] {
-  //   throw Error();
-  // }
-
   varsDeclared(env: L_Env): boolean {
     throw Error();
   }
@@ -209,10 +205,6 @@ export class IndexedSymbol extends L_Symbol {
     super();
   }
 
-  // getRootSingletons(): L_Singleton[] {
-  //   throw Error();
-  // }
-
   varsDeclared(env: L_Env): boolean {
     return this.given.varsDeclared(env);
   }
@@ -228,12 +220,6 @@ export class IndexedSymbol extends L_Symbol {
     }
 
     return out;
-
-    // if (out.given instanceof L_Composite) {
-    //   return out.given.getIndexedSubNode(out.indexes);
-    // } else {
-    //   throw Error();
-    // }
   }
 
   toString() {
@@ -317,14 +303,6 @@ export class L_Composite extends L_Symbol {
       return L_ReportBoolErr(env, this.compositeSatisfyItsReq, ``);
     }
   }
-
-  // getRootSingletons(): L_Singleton[] {
-  //   const out: L_Singleton[] = [];
-  //   for (const value of this.values) {
-  //     out.push(...value.getRootSingletons());
-  //   }
-  //   return out;
-  // }
 
   compositesInside(): L_Composite[] {
     const out: L_Composite[] = [this];
@@ -419,21 +397,6 @@ export class L_Composite extends L_Symbol {
 }
 
 export class FormalSymbol extends L_Singleton {}
-
-// export class FunctionalSymbol extends L_Composite {
-//   // fixed: at compile time, test whether it contains free vars.
-//   constructor(public name: string, public vars: L_Symbol[]) {
-//     super(name, vars);
-//   }
-
-//   varsDeclared(env: L_Env): boolean {
-//     throw Error();
-//   }
-
-//   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
-//     throw Error();
-//   }
-// }
 
 export class L_OptSymbol {
   constructor(public name: string) {}
