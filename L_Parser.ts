@@ -856,208 +856,6 @@ function factsArrParse(
   }
 }
 
-// function optToCheckParse(
-//   env: L_Env,
-//   tokens: L_Tokens,
-//   freeFixPairs: [L_Symbol, L_Symbol][],
-//   checkDeclared: boolean
-// ): OptNode {
-//   const skipper = new Skipper(env, tokens);
-
-//   try {
-//     let isT = true;
-
-//     //TODO CheckVars not implemented
-
-//     // * If The opt starts with $, then it's an opt written like a function
-//     if (isCurToken(tokens, L_Keywords.FunctionalStructuredFactOptPrefix)) {
-//       skipper.skip(env, L_Keywords.FunctionalStructuredFactOptPrefix);
-//       const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
-//       const vars = arrParse<L_Symbol>(env, tokens, symbolParse, "(", ")").map(
-//         (e) => e.fix(env, freeFixPairs)
-//       );
-
-//       let checkVars = checkVarsParse();
-//       if (checkVars !== undefined) {
-//         checkVars = checkVars.map((e) =>
-//           e.map((v) => v.fix(env, freeFixPairs))
-//         );
-//       }
-
-//       if (checkDeclared) {
-//         for (const v of vars) {
-//           if (!v.varsDeclared(env)) {
-//             // L_Report.L_VarsInOptNotDeclaredBool(env, optParse, v);
-//             throw Error;
-//           }
-//         }
-//       }
-
-//       return new OptNode(optSymbol, vars, isT, checkVars);
-//     } else {
-//       const var1 = symbolParse(env, tokens).fix(env, freeFixPairs);
-
-//       switch (tokens.peek()) {
-//         case "is": {
-//           skipper.skip(env, "is");
-//           const optName = skipper.skip(env);
-//           // skipper.skip(env,  L_Keywords.FunctionalStructuredFactOptPrefix);
-//           const optSymbol = new L_Structs.L_OptSymbol(optName);
-//           let checkVars = checkVarsParse();
-//           if (checkVars !== undefined) {
-//             checkVars = checkVars.map((e) =>
-//               e.map((v) => v.fix(env, freeFixPairs))
-//             );
-//           }
-
-//           if (checkDeclared) {
-//             if (!var1.varsDeclared(env)) {
-//               throw Error;
-//             }
-//           }
-
-//           return new OptNode(optSymbol, [var1], isT, checkVars);
-//         }
-//         // factual formulas like: a = b
-//         default: {
-//           const optName = skipper.skip(env);
-//           const optSymbol = new L_Structs.L_OptSymbol(optName);
-//           const var2 = symbolParse(env, tokens).fix(env, freeFixPairs);
-//           let checkVars = checkVarsParse();
-//           if (checkVars !== undefined) {
-//             checkVars = checkVars.map((e) =>
-//               e.map((v) => v.fix(env, freeFixPairs))
-//             );
-//           }
-
-//           if (checkDeclared) {
-//             for (const v of [var1, var2]) {
-//               if (!v.varsDeclared(env)) {
-//                 throw Error;
-//               }
-//             }
-//           }
-
-//           return new OptNode(optSymbol, [var1, var2], isT, checkVars);
-//         }
-//       }
-//     }
-//   } catch (error) {
-//     L_ReportParserErr(env, tokens, optToCheckParse, skipper);
-//     throw error;
-//   }
-
-//   function checkVarsParse(): L_Symbol[][] | undefined {
-//     if (isCurToken(tokens, "[")) {
-//       skipper.skip(env, "[");
-//       const checkVars: L_Symbol[][] = [];
-//       checkVars.push([]);
-//       while (!isCurToken(tokens, "]")) {
-//         checkVars[checkVars.length - 1].push(
-//           ...arrParse<L_Symbol>(
-//             env,
-//             tokens,
-//             symbolParse,
-//             undefined,
-//             [";", "]"],
-//             false
-//           )
-//         );
-//         if (isCurToken(tokens, ";")) {
-//           checkVars.push([]);
-//           skipper.skip(env, ";");
-//         }
-//       }
-//       skipper.skip(env, "]");
-//       return checkVars;
-//     } else {
-//       return undefined;
-//     }
-//   }
-// }
-
-// function ifParse(
-//   env: L_Env,
-//   tokens: L_Tokens
-//   // freeFixedPairsFromUpper: [L_Symbol, L_Symbol][]
-// ): L_Nodes.IfNode {
-//   const skipper = new Skipper(env, tokens);
-
-//   const newEnv = new L_Env(env);
-//   try {
-//     const type = skipper.skip(env, L_Keywords.IfKeyword);
-//     if (type === undefined) throw Error();
-//     const vars: L_Structs.L_Singleton[] = [];
-
-//     const freeFixPairs: [L_Symbol, L_Symbol][] = [];
-//     while (!isCurToken(tokens, [":", "{"])) {
-//       const singleton = pureSingletonAndFormalSymbolParse(newEnv, tokens);
-
-//       // ! 这是必要的，因为冲突极有可能造成问题
-//       if (singleton instanceof L_Structs.FormalSymbol) {
-//         L_ReportBoolErr(
-//           env,
-//           ifParse,
-//           `${singleton.value} is a declared formal symbol. Free variables in logical expressions can not be formal symbol.`
-//         );
-//         throw Error();
-//       }
-
-//       //! The reason why IfVarPrefix is important is that The user may introduce a var in a higher env with the same name as in if-vars
-//       const newSingleton = new L_Structs.L_Singleton(
-//         L_Keywords.IfVarPrefix + singleton.value
-//       );
-//       vars.push(newSingleton);
-
-//       newEnv.safeNewPureSingleton(newSingleton.value);
-
-//       freeFixPairs.push([singleton, newSingleton]);
-//       if (isCurToken(tokens, ",")) skipper.skip(env, ",");
-//     }
-
-//     const reqNotFixed: ToCheckNode[] = [];
-//     if (isCurToken(tokens, ":")) {
-//       skipper.skip(env, ":");
-//       while (!isCurToken(tokens, "{")) {
-//         const facts = factsArrParse(newEnv, tokens, [",", "{"], false);
-//         reqNotFixed.push(...facts);
-//         if (isCurToken(tokens, [","])) skipper.skip(env, [","]);
-//       }
-//     }
-
-//     const req: ToCheckNode[] = [];
-//     for (const notFixed of reqNotFixed) {
-//       req.push(notFixed.fix(newEnv, freeFixPairs));
-//     }
-
-//     skipper.skip(env, "{");
-
-//     const onlyIfs: ToCheckNode[] = [];
-//     while (!isCurToken(tokens, "}")) {
-//       // const facts = factsArrParse(env, tokens, [",", ";", "}"], false);
-//       const fact = factParse(newEnv, tokens);
-//       onlyIfs.push(fact);
-//       if (isCurToken(tokens, [";", ","])) skipper.skip(env, [";", ","]);
-//     }
-//     skipper.skip(env, "}");
-
-//     let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
-
-//     if (out.varsDeclared(newEnv)) {
-//       return out;
-//     } else {
-//       env.getMessages().push(...newEnv.getMessages());
-//       env.report(`Error at node ${skipper.nodeString()}`);
-//       // L_Report.L_VarsInOptNotDeclaredBool(env, ifParse, out);
-//       throw new Error();
-//     }
-//   } catch (error) {
-//     env.getMessages().push(...newEnv.getMessages());
-//     L_ReportParserErr(env, tokens, ifParse, skipper);
-//     throw error;
-//   }
-// }
-
 function localEnvParse(env: L_Env, tokens: L_Tokens): L_Nodes.LocalEnvNode {
   const skipper = new Skipper(env, tokens);
 
@@ -1192,12 +990,8 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
     let cond: ToCheckNode[] = [];
     if (isCurToken(tokens, ":")) {
       skipper.skip(env, ":");
-      const newEnv = new L_Env(env);
-      opt.vars.forEach((v) =>
-        newEnv.safeNewPureSingleton((v as L_Singleton).value)
-      );
       cond = factsArrParse(
-        newEnv,
+        env,
         tokens,
         [L_Keywords.L_End, L_Keywords.LeftCurlyBrace],
         false
@@ -1336,14 +1130,9 @@ export function defCompositeParse(env: L_Env, tokens: L_Tokens): L_Out {
       skipper.skip(env, ":");
       const facts: ToCheckNode[] = [];
 
-      const newEnv = new L_Env(env);
-      composite.values.forEach((e) =>
-        newEnv.safeNewPureSingleton((e as L_Singleton).value)
-      );
-
       while (!isCurToken(tokens, L_Keywords.L_End)) {
         facts.push(
-          ...factsArrParse(newEnv, tokens, [",", L_Keywords.L_End], false)
+          ...factsArrParse(env, tokens, [",", L_Keywords.L_End], false)
         );
         if (isCurToken(tokens, ",")) skipper.skip(env, ",");
       }
@@ -1861,14 +1650,13 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
 function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
   const skipper = new Skipper(env, tokens);
 
-  const newEnv = new L_Env(env);
   try {
     const type = skipper.skip(env, L_Keywords.If);
 
     // Parse vars
     const vars: L_Structs.L_Singleton[] = [];
     while (!isCurToken(tokens, [":", "{"])) {
-      const singleton = pureSingletonParse(newEnv, tokens);
+      const singleton = pureSingletonParse(env, tokens);
       vars.push(singleton);
     }
 
@@ -1877,7 +1665,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     if (isCurToken(tokens, ":")) {
       skipper.skip(env, ":");
       while (!isCurToken(tokens, "{")) {
-        const facts = factsArrParse(newEnv, tokens, [",", "{"], false);
+        const facts = factsArrParse(env, tokens, [",", "{"], false);
         req.push(...facts);
         if (isCurToken(tokens, [","])) skipper.skip(env, [","]);
       }
@@ -1888,20 +1676,20 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     skipper.skip(env, "{");
     while (!isCurToken(tokens, "}")) {
       // const facts = factsArrParse(env, tokens, [",", ";", "}"], false);
-      const fact = factParse(newEnv, tokens);
+      const fact = factParse(env, tokens);
       onlyIfs.push(fact);
       if (isCurToken(tokens, [";", ","])) skipper.skip(env, [";", ","]);
     }
     skipper.skip(env, "}");
 
     // Refactor IfNode: add prefix to vars in IfNode and all inside facts
-    let out = new L_Nodes.IfNode(vars, req, onlyIfs, newEnv, true); //! By default isT = true
+    let out = new L_Nodes.IfNode(vars, req, onlyIfs, env, true); //! By default isT = true
     if (!out.fixUsingIfPrefix(env, [])) throw Error();
     out.addPrefixToVars();
 
     return out;
   } catch (error) {
-    env.getMessages().push(...newEnv.getMessages());
+    env.getMessages().push(...env.getMessages());
     L_ReportParserErr(env, tokens, ifFactParse, skipper);
     throw error;
   }
