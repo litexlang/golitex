@@ -45,7 +45,7 @@ function indexedSymbolParse(
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.IndexedSymbolKeyword);
+    skipper.skip(env, L_Keywords.IndexedSymbol);
     skipper.skip(env, "{");
     const symbol = symbolParse(env, tokens);
     const indexes: number[] = [];
@@ -152,7 +152,7 @@ function compositeParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Composite {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.SlashKeyword);
+    skipper.skip(env, L_Keywords.Slash);
     const name = skipper.skip(env);
     skipper.skip(env, "{");
     const values: L_Structs.L_Symbol[] = [];
@@ -224,7 +224,7 @@ function braceCompositeParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
   try {
     skipper.skip(env, L_Keywords.LeftBrace);
     let left = symbolParse(env, tokens);
-    while (!isCurToken(tokens, L_Keywords.DollarKeyword)) {
+    while (!isCurToken(tokens, L_Keywords.Dollar)) {
       const opt = optSymbolParse(env, tokens);
       const right = symbolParse(env, tokens);
       left = new L_Structs.L_Composite(opt.name, [left, right]);
@@ -468,7 +468,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Nodes.KnowNode {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.KnowTypeKeywords);
+    skipper.skip(env, L_Keywords.KnowType);
 
     const names: string[] = [];
 
@@ -496,7 +496,7 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.LetKeyword);
+    skipper.skip(env, L_Keywords.Let);
 
     const vars: string[] = [];
     while (![L_Keywords.L_End, , ":"].includes(tokens.peek())) {
@@ -637,11 +637,11 @@ function proveParse(env: L_Env, tokens: L_Tokens): L_Nodes.ProveNode {
 
   try {
     let byContradict = false;
-    if (tokens.peek() === L_Keywords.ProveByContradictionKeyword) {
+    if (tokens.peek() === L_Keywords.ProveByContradiction) {
       byContradict = true;
-      skipper.skip(env, L_Keywords.ProveByContradictionKeyword);
+      skipper.skip(env, L_Keywords.ProveByContradiction);
     } else {
-      skipper.skip(env, L_Keywords.ProveKeywords);
+      skipper.skip(env, L_Keywords.Prove);
     }
 
     const toProve = factParse(env, tokens);
@@ -780,8 +780,8 @@ function parseToCheckFormula(
   skipper.skip(env, begin);
 
   const precedence = new Map<string, number>();
-  precedence.set(L_Keywords.OrKeyword, 0);
-  precedence.set(L_Keywords.AndKeyword, 1);
+  precedence.set(L_Keywords.Or, 0);
+  precedence.set(L_Keywords.And, 1);
 
   let isT = true;
   if (isCurToken(tokens, "not")) {
@@ -790,7 +790,7 @@ function parseToCheckFormula(
   }
 
   let left: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
-  let curOpt = skipper.skip(env, [L_Keywords.OrKeyword, L_Keywords.AndKeyword]);
+  let curOpt = skipper.skip(env, [L_Keywords.Or, L_Keywords.And]);
   let curPrecedence = precedence.get(curOpt) as number;
 
   if (isCurToken(tokens, end)) {
@@ -801,28 +801,25 @@ function parseToCheckFormula(
   let right: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
 
   if (isCurToken(tokens, end)) {
-    if (curOpt === L_Keywords.OrKeyword) {
+    if (curOpt === L_Keywords.Or) {
       skipper.skip(env, end);
       return new L_Nodes.OrToCheckNode(left, right, isT);
-    } else if (curOpt === L_Keywords.AndKeyword) {
+    } else if (curOpt === L_Keywords.And) {
       skipper.skip(env, end);
       return new L_Nodes.AndToCheckNode(left, right, isT);
     }
   }
 
   while (!isCurToken(tokens, end)) {
-    let nextOpt = skipper.skip(env, [
-      L_Keywords.OrKeyword,
-      L_Keywords.AndKeyword,
-    ]);
+    let nextOpt = skipper.skip(env, [L_Keywords.Or, L_Keywords.And]);
     let nextPrecedence = precedence.get(nextOpt) as number;
     if (curPrecedence > nextPrecedence) {
       // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-      if (curOpt === L_Keywords.AndKeyword) {
+      if (curOpt === L_Keywords.And) {
         left = new L_Nodes.AndToCheckNode(left, right, true);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-        if (nextOpt === L_Keywords.OrKeyword) {
+        if (nextOpt === L_Keywords.Or) {
           left = new L_Nodes.OrToCheckNode(left, next, isT);
         }
       }
@@ -831,7 +828,7 @@ function parseToCheckFormula(
       right = new L_Nodes.AndToCheckNode(right, next, true);
       left = new L_Nodes.OrToCheckNode(left, right, isT);
     } else {
-      if (curOpt === L_Keywords.AndKeyword) {
+      if (curOpt === L_Keywords.And) {
         left = new L_Nodes.AndToCheckNode(left, right, isT);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         left = new L_Nodes.AndToCheckNode(left, next, isT);
@@ -1099,7 +1096,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.HaveKeywords);
+    skipper.skip(env, L_Keywords.Have);
     const vars = arrParse<L_Structs.L_Singleton>(
       env,
       tokens,
@@ -1199,7 +1196,7 @@ function defParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.DefFactKeywords);
+    skipper.skip(env, L_Keywords.Def);
 
     let commutative = false;
     if (isCurToken(tokens, L_Keywords.Commutative)) {
@@ -1343,7 +1340,7 @@ export function defCompositeParse(env: L_Env, tokens: L_Tokens): L_Out {
   try {
     let out: L_Nodes.DefCompositeNode | undefined = undefined;
 
-    skipper.skip(env, L_Keywords.DefCompositeKeyword);
+    skipper.skip(env, L_Keywords.DefComposite);
     const composite = compositeParse(env, tokens);
 
     if (isCurToken(tokens, L_Keywords.L_End)) {
@@ -1392,7 +1389,7 @@ export function isPropertyParse(
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.isPropertyKeyword);
+    skipper.skip(env, L_Keywords.isProperty);
     skipper.skip(env, "(");
     const name = skipper.skip(env);
     skipper.skip(env, ")");
@@ -1411,7 +1408,7 @@ export function isFormParse(
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.isFormKeyword);
+    skipper.skip(env, L_Keywords.isForm);
     skipper.skip(env, "(");
     const given = symbolParse(env, tokens);
     skipper.skip(env, ",");
@@ -1479,7 +1476,7 @@ function usePrecedenceToParseComposite(
   function prefixSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
     try {
       // TODO maybe is broken because it does not take # into consideration
-      if (tokens.peek() === L_Keywords.SlashKeyword) {
+      if (tokens.peek() === L_Keywords.Slash) {
         return compositeParse(env, tokens);
       } else {
         return pureSingletonAndFormalSymbolParse(env, tokens);
@@ -1702,13 +1699,13 @@ export function symbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Symbol {
     // TODO Later, there should be parser based on precedence. And there does not  need ((1 * 4) + 4) = 8, there is only $ 1 * 4 + 4 = 8 $
 
     try {
-      if (tokens.peek() === L_Keywords.SlashKeyword) {
+      if (tokens.peek() === L_Keywords.Slash) {
         return compositeParse(env, tokens);
-      } else if (tokens.peek() === L_Keywords.DollarKeyword) {
+      } else if (tokens.peek() === L_Keywords.Dollar) {
         return braceCompositeParse(env, tokens);
       } else if (tokens.peek().startsWith(L_Keywords.LiteralOptPrefix)) {
         return literalOptParse(env, tokens);
-      } else if (tokens.peek() === L_Keywords.IndexedSymbolKeyword) {
+      } else if (tokens.peek() === L_Keywords.IndexedSymbol) {
         return indexedSymbolParse(env, tokens);
       } else {
         // return singletonParse(env, tokens);
@@ -1822,8 +1819,8 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptNode {
     //TODO CheckVars not implemented
 
     // * If The opt starts with $, then it's an opt written like a function
-    if (isCurToken(tokens, L_Keywords.FunctionalStructuredFactOptPrefix)) {
-      skipper.skip(env, L_Keywords.FunctionalStructuredFactOptPrefix);
+    if (isCurToken(tokens, L_Keywords.FunctionTypeFactOptPrefix)) {
+      skipper.skip(env, L_Keywords.FunctionTypeFactOptPrefix);
       const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
       const vars = arrParse<L_Symbol>(env, tokens, symbolParse, "(", ")");
 
@@ -1893,7 +1890,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
 
   const newEnv = new L_Env(env);
   try {
-    const type = skipper.skip(env, L_Keywords.IfKeyword);
+    const type = skipper.skip(env, L_Keywords.If);
 
     // Parse vars
     const vars: L_Structs.L_Singleton[] = [];
