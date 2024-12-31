@@ -1,12 +1,6 @@
 import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
-import {
-  FunctionalSymbol,
-  L_Composite,
-  L_OptSymbol,
-  L_Singleton,
-  L_Symbol,
-} from "./L_Structs";
+import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
 
@@ -354,6 +348,69 @@ export class DefCompositeNode extends L_Node {
   }
 }
 
+export class LetsNode extends L_Node {
+  constructor(
+    public name: string,
+    public regex: RegExp,
+    public facts: ToCheckNode[]
+  ) {
+    super();
+  }
+
+  toString() {
+    return `lets ${this.name} ${this.regex} : ${this.facts
+      .map((e) => e.toString())
+      .join(", ")}`;
+  }
+}
+
+export class IncludeNode extends L_Node {
+  constructor(public path: string) {
+    super();
+  }
+
+  toString() {
+    return `include "${this.path}";`;
+  }
+}
+
+export class DefLiteralOptNode extends L_Node {
+  constructor(
+    public name: string,
+    public vars: L_Symbol[],
+    public facts: ToCheckNode[],
+    public path: string,
+    public func: string
+  ) {
+    super();
+  }
+}
+
+// export class DefFunctionalSymbolNode extends L_Node {
+//   constructor(
+//     public functional: FunctionalSymbol,
+//     public facts: ToCheckNode[]
+//   ) {
+//     super();
+//   }
+
+//   toString(): string {
+//     return `${L_Keywords.DefFunctional} ${this.functional}: ${this.facts}`;
+//   }
+// }
+
+export class LetAliasNode extends L_Node {
+  constructor(public name: L_Singleton, public toBeAliased: L_Symbol[]) {
+    super();
+  }
+
+  toString() {
+    return `${L_Keywords.LetAlias} ${this.name} ${this.toBeAliased}`;
+  }
+}
+
+// The Followings are half implemented. --------------------------------------
+
 export abstract class BuiltinCheckNode extends ToCheckNode {}
 
 // TODO IsProperty logic is not implemented
@@ -564,64 +621,3 @@ export class AndToCheckNode extends ToCheckFormulaNode {
 }
 
 export type FormulaSubNode = ToCheckFormulaNode | OptNode;
-
-export class LetsNode extends L_Node {
-  constructor(
-    public name: string,
-    public regex: RegExp,
-    public facts: ToCheckNode[]
-  ) {
-    super();
-  }
-
-  toString() {
-    return `lets ${this.name} ${this.regex} : ${this.facts
-      .map((e) => e.toString())
-      .join(", ")}`;
-  }
-}
-
-export class IncludeNode extends L_Node {
-  constructor(public path: string) {
-    super();
-  }
-
-  toString() {
-    return `include "${this.path}";`;
-  }
-}
-
-export class DefLiteralOptNode extends L_Node {
-  constructor(
-    public name: string,
-    public vars: L_Symbol[],
-    public facts: ToCheckNode[],
-    public path: string,
-    public func: string
-  ) {
-    super();
-  }
-}
-
-export class DefFunctionalSymbolNode extends L_Node {
-  constructor(
-    public functional: FunctionalSymbol,
-    public facts: ToCheckNode[]
-  ) {
-    super();
-  }
-
-  toString(): string {
-    return `${L_Keywords.DefFunctional} ${this.functional}: ${this.facts}`;
-  }
-}
-
-export class LetAliasNode extends L_Node {
-  constructor(public name: L_Singleton, public toBeAliased: L_Symbol[]) {
-    super();
-  }
-
-  toString() {
-    return `${L_Keywords.LetAlias} ${this.name} ${this.toBeAliased}`;
-  }
-}

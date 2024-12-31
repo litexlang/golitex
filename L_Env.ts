@@ -18,10 +18,10 @@ export class L_Env {
   // TODO
   private symbolAliases = new Map<string, L_Structs.L_Symbol[]>();
   private formalSymbols = new Set<string>();
-  private functionalSymbols = new Map<
-    string,
-    L_Nodes.DefFunctionalSymbolNode
-  >();
+  // private functionalSymbols = new Map<
+  //   string,
+  //   L_Nodes.DefFunctionalSymbolNode
+  // >();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
@@ -66,36 +66,36 @@ export class L_Env {
     }
   }
 
-  newFunctionalSymbol(
-    key: string,
-    fact: L_Nodes.DefFunctionalSymbolNode
-  ): boolean {
-    if (this.getFunctionalSymbol(key)) {
-      return L_ReportBoolErr(
-        this,
-        this.newFunctionalSymbol,
-        `The variable "${key}" is already declared in this environment or its parent environments. Please use a different name.`
-      );
-    } else {
-      this.functionalSymbols.set(key, fact);
-      return true;
-    }
-  }
+  // newFunctionalSymbol(
+  //   key: string,
+  //   fact: L_Nodes.DefFunctionalSymbolNode
+  // ): boolean {
+  //   if (this.getFunctionalSymbol(key)) {
+  //     return L_ReportBoolErr(
+  //       this,
+  //       this.newFunctionalSymbol,
+  //       `The variable "${key}" is already declared in this environment or its parent environments. Please use a different name.`
+  //     );
+  //   } else {
+  //     this.functionalSymbols.set(key, fact);
+  //     return true;
+  //   }
+  // }
 
-  getFunctionalSymbol(
-    key: string
-  ): undefined | L_Nodes.DefFunctionalSymbolNode {
-    const out = this.functionalSymbols.get(key);
-    if (out !== undefined) {
-      return out;
-    } else {
-      if (this.parent !== undefined) {
-        return this.parent.getFunctionalSymbol(key);
-      } else {
-        return undefined;
-      }
-    }
-  }
+  // getFunctionalSymbol(
+  //   key: string
+  // ): undefined | L_Nodes.DefFunctionalSymbolNode {
+  //   const out = this.functionalSymbols.get(key);
+  //   if (out !== undefined) {
+  //     return out;
+  //   } else {
+  //     if (this.parent !== undefined) {
+  //       return this.parent.getFunctionalSymbol(key);
+  //     } else {
+  //       return undefined;
+  //     }
+  //   }
+  // }
 
   getCompositeVar(key: string): undefined | L_Nodes.DefCompositeNode {
     const out = this.composites.get(key);
