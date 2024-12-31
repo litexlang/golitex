@@ -23,24 +23,6 @@ export abstract class ToCheckNode extends L_Node {
   abstract copyWithIsTReverse(): ToCheckNode;
   // called by "using known fact to check given fact. when doing so, get all root opts and filter opt with the same name."
   abstract getRootOptNodes(): [OptNode, ToCheckNode[]][];
-
-  // static optsDeclared(env: L_Env, facts: ToCheckNode[]): boolean {
-  //   for (const f of facts) {
-  //     const ok = env.factDeclaredOrBuiltin(f);
-  //     if (!ok) {
-  //       //TODO I SHOULD IMPLEMENT check whether something is declared when checking
-  //     }
-  //   }
-
-  //   // for (const f of facts) {
-  //   //   if (!f.varsDeclared(env)) {
-  //   //     env.report(`[Error] Not all of related variables are declared.`);
-  //   //     return false;
-  //   //   }
-  //   // }
-
-  //   return true;
-  // }
 }
 
 export abstract class LogicNode extends ToCheckNode {
@@ -186,6 +168,7 @@ export class IfNode extends LogicNode {
     return notPart + mainPart;
   }
 }
+
 export class IfReqNode {
   constructor(public fact: ToCheckNode, public vars: L_Symbol[]) {}
 }
@@ -210,7 +193,9 @@ export class OptNode extends ToCheckNode {
   }
 
   copyCommutatively(): OptNode | undefined {
-    if (this.vars.length !== 2) return undefined;
+    if (this.vars.length !== 2) {
+      return undefined;
+    }
     const newVars: L_Symbol[] = [this.vars[1], this.vars[0]];
     return new OptNode(this.optSymbol, newVars, this.isT, this.checkVars);
   }
@@ -255,10 +240,8 @@ export class OptNode extends ToCheckNode {
   }
 
   override toString() {
-    const mainPart =
-      this.optSymbol.name +
-      `(${this.vars.map((e) => e.toString()).join(", ")})`;
-    const notPart = !this.isT ? "[not] $" : "$";
+    const mainPart = "$" + this.optSymbol.name + `(${this.vars})`;
+    const notPart = !this.isT ? "[not] " : "";
     const checkVarsStr =
       this.checkVars === undefined
         ? ""
@@ -274,29 +257,17 @@ export class OptNode extends ToCheckNode {
 export class DefNode extends L_Node {
   constructor(
     public opt: OptNode,
-    public cond: ToCheckNode[],
-    public onlyIfs: ToCheckNode[], // public defName: string | undefined = undefined // public cond: ToCheckNode[] = [],
+    public cond: ToCheckNode[], // TODO, 类似composite的要求
+    public onlyIfs: ToCheckNode[],
     public commutative: boolean
   ) {
     super();
   }
 
   override toString(): string {
-    return `${this.opt.toString()}`;
+    return `${this.opt.toString()};`;
   }
 }
-
-// export class DefExistNode extends DefNode {
-//   constructor(
-//     opt: OptNode,
-//     cond: ToCheckNode[],
-//     onlyIfs: ToCheckNode[],
-//     commutative: boolean,
-//     public existVars: L_Singleton[]
-//   ) {
-//     super(opt, cond, onlyIfs, commutative);
-//   }
-// }
 
 export class KnowNode extends L_Node {
   isKnowEverything: boolean = false;
@@ -306,9 +277,7 @@ export class KnowNode extends L_Node {
   }
 
   override toString(): string {
-    return (
-      "know: " + this.facts.map((e) => (e as ToCheckNode).toString()).join("; ")
-    );
+    return `know ${this.facts};`;
   }
 }
 
@@ -318,9 +287,7 @@ export class LetNode extends L_Node {
   }
 
   override toString() {
-    return `[let] ${this.vars.join(", ")}: ${this.facts
-      .map((s) => s.toString())
-      .join(", ")}`;
+    return `let ${this.vars.join(", ")}: ${this.facts};`;
   }
 }
 
@@ -330,32 +297,30 @@ export class LetFormalSymbolNode extends L_Node {
   }
 
   override toString() {
-    return `[let_formal] ${this.vars.join(", ")}: ${this.facts
-      .map((s) => s.toString())
-      .join(", ")}`;
+    return `let_formal ${this.vars.join(", ")}: ${this.facts};`;
   }
 }
 
 export class ProveNode extends L_Node {
+  constructor(public toProve: ToCheckNode, public block: L_Node[]) {
+    super();
+  }
+
+  override toString() {
+    return `${L_Keywords.Prove} ${this.toProve}`;
+  }
+}
+export class ProveContradictNode extends L_Node {
   constructor(
-    // Only one of toProve, fixedIfThenOpt exists
     public toProve: ToCheckNode,
-    public block: L_Node[] // If contradict !== undefined, then prove_by_contradiction
+    public block: L_Node[],
+    public contradict: OptNode
   ) {
     super();
   }
 
   override toString() {
-    return `prove ${this.toProve}`;
-  }
-}
-export class ProveContradictNode extends ProveNode {
-  constructor(
-    toProve: ToCheckNode,
-    block: L_Node[],
-    public contradict: OptNode
-  ) {
-    super(toProve, block);
+    return `${L_Keywords.ProveByContradiction} ${this.toProve}`;
   }
 }
 

@@ -202,7 +202,7 @@ export class L_Singleton extends L_Symbol {
 }
 
 const ExistSymbol = new L_Singleton(L_Keywords.ExistSymbol);
-const AnySymbol = new L_Singleton(L_Keywords.AndKeyword);
+const AnySymbol = new L_Singleton(L_Keywords.And);
 
 export class IndexedSymbol extends L_Symbol {
   constructor(public given: L_Symbol, public indexes: number[]) {
@@ -237,7 +237,7 @@ export class IndexedSymbol extends L_Symbol {
   }
 
   toString() {
-    return `${L_Keywords.IndexedSymbolKeyword}(${this.given}, ${this.indexes})`;
+    return `${L_Keywords.IndexedSymbol}(${this.given}, ${this.indexes})`;
   }
 }
 
