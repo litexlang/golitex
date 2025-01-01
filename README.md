@@ -138,7 +138,7 @@ not god is human;
 
 Some core functionalities of LiTeX are included in this example
 
-- **Concept Definition**: New concepts called `mortal` and `human` are declared. They both have parameter size one. In addition, all variables that has property `human` has property `mortal`. There are 2 ways of calling a concept: if the concept C like mortal is only related to one parameter, you can either use xxx is C or $C(xxx). If the concept like '1 < 2' is related to multiple parameters, you should use $C(v1,v2...).
+- **Concept Definition**: New concepts called `mortal` and `human` are declared. They both have parameter size one. In addition, all variables that has property `human` has property `mortal`. There are many ways of calling a concept: if the concept C like mortal is only related to one parameter, you can either use xxx is C or $C(xxx). If the concept like '1 < 2' is related to multiple parameters, you should use $C(v1,v2...). If the concept like '1 < 2' is related to just 2 symbols, you can write var1 C var2.
 - **Variable Definition**: A variable called `Socrates` is introduced. Socrates has property `human`. Another variable called `god` is introduced, with property `not mortal`.
 - **Expression Validation**: Expressions like `Socrates is mortal` are called `factual expression to be checked`. LiTeX checks their validation based on `known facts` . For example, we have already known `if x: human(x) {mortal(x)};` and `Socrates is human`, so `Socrates is mortal` is true . If an `factual expression to be checked` can not be checked by LiTeX interpreter, LiTeX prints out `unknown`. Notice `factual expression` can work both as requirement for another factual expression (e.g. `human(x)` is requirement for another fact `if x: human(x) { mortal(x)};` ) or as an `factual expression to be checked`.
 - **Proof**: in LiTeX, there are 2 ways of proving a result: `prove` or `prove_by_contradiction`. In the example, we prove `not human(god)` by using `prove_by_contradiction`.
@@ -184,9 +184,9 @@ concept $p2(x) {
     x is p2
   }
 }
-concept $p3(x) {if x: p3(x)  {p(x)} , if x: p(x)  {p3(x)} }
-let x,y: p3(x), p(y);
-p(x), p3(y);
+concept $p3(x) {if x: $p3(x)  {$p(x)} , if x: $p(x)  {$p3(x)} }
+let x,y: $p3(x), $p(y);
+$p(x), $p3(y);
 concept $p(x); // error: you can not declare a concept twice.
 ```
 
@@ -213,7 +213,7 @@ concept $p(x); // error: you can not declare a concept twice.
 `if-type factual expressions` works as for-any expressions in math.
 
 ```
-def p1(x); def p(x); def p2(x) {
+concept $p1(x); concept $p(x); concept $p2(x) {
   if x: x is p2  {x is p1}  // properties of p2
 }
 if x: x is p2  {x is p1}; // True
@@ -224,80 +224,73 @@ if x : x is p  {x is p}; // Always true
 ## Prove and Contradiction
 
 ```
-def p3(x); def p2(x); def p1(x);
-know if x: p3(x) {p2(x)}, if x : p2(x)  {p1(x)} ;
+concept $p3(x); concept $p2(x); concept $p1(x);
+know if x: $p3(x) {$p2(x)}, if x : $p2(x)  {$p1(x)} ;
 prove if x : x is p3  {x is p1} {
   x is p2;
 }
 let v1,v2: v1 is p2; // prove factual-expression {proofs}
 prove v1 is p1 {v1 is p2;}
-know not p1(v2);
-prove_by_contradiction not p3(v2) {v2 is p2;}  v2 is p1;
+know not $p1(v2);
+prove_by_contradiction not $p3(v2) {v2 is p2;}  v2 is p1;
 ```
 
 ## Parameter Passing with Subset Demonstration
 
 ```
-def set(x); def subset(A,B); def in(x,A);
+concept $set(x); concept $subset(A,B); concept $in(x,A);
 
 // Subset definition: if x is in A, then x must be in B
-know if A,B: subset(A,B) {if x: in(x,A) {in(x,B)}};
+know if A,B: $subset(A,B) {if x: $in(x,A) {$in(x,B)}};
 
 // Alternative subset definition
-know if A,B: if x: in(x,A) {in(x,B)} {subset(A,B)};
+know if A,B: if x: $in(x,A) {$in(x,B)} {$subset(A,B)};
 
 // Example usage
 let A,B,C,D,E,F;
-know subset(A,B);
-let x: in(x,A);
-in(x,B)[A,B;x];  // Proof of membership
+know $subset(A,B);
+let x: $in(x,A);
+$in(x,B)[A,B;x];  // Proof of membership
 ```
 
 ## Transitivity Demonstration
 
 ```
 // Define a less-than relation with transitivity
-def <(x,y);
-know if x,y,z: <(x,y), <(y,z)  {<(x,z)};
+def $<(x,y);
+know if x,y,z: $<(x,y), $<(y,z)  {$<(x,z)};
 
 // Example of transitive property
-let a,b,c: <(a,b), <(b,c);
-<(a,c)[a,b,c];  // Proving transitivity
+let a,b,c: $<(a,b), $<(b,c);
+$<(a,c)[a,b,c];  // Proving transitivity
 ```
 
 ## composite symbol declaration (use natural number definition as example)
 
 ```
-def natural(x);
-def nat_eq(x,y);
+concept $natural(x);
+concept $nat_eq(x,y);
 
 let 0: 0 is natural;
 
-def_composite \++{n}: n is natural;
+operator \++{n}: n is natural;
 
 know if n: n is natural {
     \++{n} is natural;
 };
 
 know if x {
-    not nat_eq(0, \++{x});
+    not $nat_eq(0, \++{x});
 };
 
-know if x,y: nat_eq(x,y) {
-    nat_eq(\++{x}, \++{y});
+know if x,y: $nat_eq(x,y) {
+    $nat_eq(\++{x}, \++{y});
 };
 
-know if x,y: nat_eq(\++{x}, \++{y}) {
-    nat_eq(x,y);
+know if x,y: $nat_eq(\++{x}, \++{y}) {
+    $nat_eq(x,y);
 };
 
-know if P: is_property(P), P(0), if n: n is natural, P(n) {
-    P(\++{n});
-} {
-    if m: m is natural {
-        P(m);
-    };
-};
 
 ```
 
