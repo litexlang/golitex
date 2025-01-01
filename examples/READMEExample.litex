@@ -67,4 +67,4 @@ let god: not god is mortal;
 prove_by_contradiction not god is human {
   god is mortal;
 }  god is human;
-god is human;
+not god is human;
