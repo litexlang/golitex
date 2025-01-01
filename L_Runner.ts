@@ -47,8 +47,9 @@ export function runStringWithLogging(
     if (printCode) console.log();
 
     return result;
-  } catch {
+  } catch (error) {
     env.printClearMessage();
+    if (error instanceof Error) console.log(error.message);
     return undefined;
   }
 }

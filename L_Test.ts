@@ -35,7 +35,7 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "throw error system",
-    code: ["concept $p(x); concept q(x); concept $t(x);"],
+    code: ["concept $p(x); concept $q(x); concept $t(x); know $t(y);"],
     debug: true,
     print: true,
   },

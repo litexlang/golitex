@@ -11,7 +11,7 @@ export abstract class L_FactNode extends L_Node {
   }
 
   // called by L_Memory
-  abstract factVarsDeclared(env: L_Env): boolean;
+  abstract tryFactVarsDeclared(env: L_Env): boolean;
   // called by checker
   abstract fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode;
   // called by prove_by_contradiction
@@ -90,22 +90,24 @@ export abstract class LogicNode extends L_FactNode {
     return roots;
   }
 
-  factVarsDeclared(env: L_Env): boolean {
+  tryFactVarsDeclared(env: L_Env): boolean {
     const newEnv = new L_Env(env);
     for (const v of this.vars) {
       newEnv.safeNewPureSingleton(v.value);
     }
 
     for (const req of this.req) {
-      if (!req.factVarsDeclared(newEnv)) {
-        return env.pushMessagesFromEnvReturnFalse(this.env);
-      }
+      req.tryFactVarsDeclared(newEnv);
+      // if (!req.factVarsDeclared(newEnv)) {
+      //   return env.pushMessagesFromEnvReturnFalse(this.env);
+      // }
     }
 
     for (const onlyIf of this.onlyIfs) {
-      if (!onlyIf.factVarsDeclared(newEnv)) {
-        return env.pushMessagesFromEnvReturnFalse(this.env);
-      }
+      // if (!onlyIf.tryFactVarsDeclared(newEnv)) {
+      //   return env.pushMessagesFromEnvReturnFalse(this.env);
+      // }
+      onlyIf.tryFactVarsDeclared(newEnv);
     }
 
     return true;
@@ -204,20 +206,36 @@ export class OptFactNode extends L_FactNode {
     return [[this, []]];
   }
 
-  factVarsDeclared(env: L_Env): boolean {
+  tryFactVarsDeclared(env: L_Env): boolean {
     for (const v of this.vars) {
-      if (!v.tryVarsDeclared(env)) {
-        return false;
+      try {
+        v.tryVarsDeclared(env);
+      } catch (error) {
+        if (error instanceof Error)
+          error.message =
+            `variable ${v} in ${this} not declared.\n` + error.message;
+        throw error;
       }
+      // if (!v.tryVarsDeclared(env)) {
+      //   return false;
+      // }
     }
 
     if (this.checkVars === undefined) return true;
 
     for (const layer of this.checkVars) {
       for (const v of layer) {
-        if (!v.tryVarsDeclared(env)) {
-          return false;
+        try {
+          v.tryVarsDeclared(env);
+        } catch (error) {
+          if (error instanceof Error)
+            error.message =
+              `variable ${v} in ${this} not declared.\n` + error.message;
+          throw error;
         }
+        // if (!v.tryVarsDeclared(env)) {
+        //   return false;
+        // }
       }
     }
 
@@ -446,7 +464,7 @@ export class IsPropertyNode extends BuiltinCheckNode {
     return `${L_Keywords.isProperty}(${this.propertyName})`;
   }
 
-  factVarsDeclared(env: L_Env): boolean {
+  tryFactVarsDeclared(env: L_Env): boolean {
     return true;
   }
 }
@@ -485,7 +503,7 @@ export class IsFormNode extends BuiltinCheckNode {
     }
   }
 
-  factVarsDeclared(env: L_Env): boolean {
+  tryFactVarsDeclared(env: L_Env): boolean {
     // TODO
     return true;
   }
@@ -519,8 +537,10 @@ export abstract class FormulaFactNode extends L_FactNode {
     throw Error();
   }
 
-  factVarsDeclared(env: L_Env): boolean {
-    return this.left.factVarsDeclared(env) && this.right.factVarsDeclared(env);
+  tryFactVarsDeclared(env: L_Env): boolean {
+    return (
+      this.left.tryFactVarsDeclared(env) && this.right.tryFactVarsDeclared(env)
+    );
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): FormulaFactNode {
