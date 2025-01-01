@@ -49,7 +49,7 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
       case L_Keywords.Have:
         // TODO: vars declared
         if (haveParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.DefComposite:
+      case L_Keywords.DefOperator:
         // TODO: vars declared
         if (defOperatorParse(env, tokens) === L_Out.True) return null;
       case L_Keywords.Lets:
@@ -375,7 +375,10 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     let facts: L_FactNode[] = [];
     while (!isCurToken(tokens, L_Keywords.L_End)) {
-      facts = highLevelFactsParse(env, tokens, [L_Keywords.L_End, ","]);
+      facts = parseFactsArrCheckVarsFixIfPrefix(env, tokens, [
+        L_Keywords.L_End,
+        ",",
+      ]);
       if (tokens.peek() === ",") skipper.skip(env, ",");
     }
     skipper.skip(env, L_Keywords.L_End);
@@ -446,7 +449,12 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
       out = new L_Nodes.LetNode(vars, []);
     } else {
       skipper.skip(env, ":");
-      const facts = highLevelFactsParse(env, tokens, [L_Keywords.L_End], vars);
+      const facts = parseFactsArrCheckVarsFixIfPrefix(
+        env,
+        tokens,
+        [L_Keywords.L_End],
+        vars
+      );
       skipper.skip(env, L_Keywords.L_End);
       out = new L_Nodes.LetNode(vars, facts);
     }
@@ -907,7 +915,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
         newEnv.safeNewPureSingleton((e as L_Singleton).value)
       );
       skipper.skip(env, ":");
-      cond = highLevelFactsParse(newEnv, tokens, [
+      cond = parseFactsArrCheckVarsFixIfPrefix(newEnv, tokens, [
         L_Keywords.L_End,
         L_Keywords.LeftCurlyBrace,
       ]);
@@ -920,7 +928,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
         newEnv.safeNewPureSingleton((e as L_Singleton).value)
       );
       skipper.skip(env, "{");
-      onlyIfs.push(...highLevelFactsParse(newEnv, tokens, ["}"]));
+      onlyIfs.push(...parseFactsArrCheckVarsFixIfPrefix(newEnv, tokens, ["}"]));
       skipper.skip(env, "}");
     } else {
       skipper.skip(env, L_Keywords.L_End);
@@ -1043,7 +1051,7 @@ export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
   try {
     let out: L_Nodes.DefOperatorNode | undefined = undefined;
 
-    skipper.skip(env, L_Keywords.DefComposite);
+    skipper.skip(env, L_Keywords.DefOperator);
     const composite = compositeParse(env, tokens);
 
     if (isCurToken(tokens, L_Keywords.L_End)) {
@@ -1652,7 +1660,7 @@ function indexedSymbolParse(
 }
 
 // 1. fix if-fact var prefix 2. check varsDeclared
-function highLevelFactsParse(
+function parseFactsArrCheckVarsFixIfPrefix(
   env: L_Env,
   tokens: L_Tokens,
   end: string[],
