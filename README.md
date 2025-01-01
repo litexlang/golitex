@@ -76,7 +76,7 @@ variable (Socrates : Human)
 
 /* LiTeX version */
 concept something is human;
-concept something is moral;
+concept something is mortal;
 let Socrates: Socrates is human;
 
 /* LaTeX version
@@ -95,7 +95,7 @@ theorem socrates_is_mortal : Mortal Socrates := by
 know if x: x is human {
   x is mortal;
 };
-Socrates is mortal;
+/* Socrates is mortal; */
 
 /* LaTeX version
 Claim: all human is mortal.
@@ -107,7 +107,7 @@ theorem prove_all_humans_will_die : all_humans_will_die := all_humans_are_mortal
 */
 
 /* LiTeX version */
-if x: x is human {x is mortal};
+/* if x: x is human {x is mortal}; */
 
 /* LaTeX version
 Define a variable called "god", it has property that it is not mortal.
@@ -130,14 +130,15 @@ theorem god_is_not_human : God ≠ Human :=
 let god: not god is mortal;
 prove_by_contradiction not god is human {
   god is mortal;
-} god is mortal;
+}  god is human;
+not god is human;
 ```
 
 ### Explanations
 
 Some core functionalities of LiTeX are included in this example
 
-- **Concept Definition**: New concepts called `mortal` and `human` are declared. They both have parameter size one. In addition, all variables that has property `human` has property `mortal`.
+- **Concept Definition**: New concepts called `mortal` and `human` are declared. They both have parameter size one. In addition, all variables that has property `human` has property `mortal`. There are 2 ways of calling a concept: if the concept C like mortal is only related to one parameter, you can either use xxx is C or $C(xxx). If the concept like '1 < 2' is related to multiple parameters, you should use $C(v1,v2...).
 - **Variable Definition**: A variable called `Socrates` is introduced. Socrates has property `human`. Another variable called `god` is introduced, with property `not mortal`.
 - **Expression Validation**: Expressions like `Socrates is mortal` are called `factual expression to be checked`. LiTeX checks their validation based on `known facts` . For example, we have already known `if x: human(x) {mortal(x)};` and `Socrates is human`, so `Socrates is mortal` is true . If an `factual expression to be checked` can not be checked by LiTeX interpreter, LiTeX prints out `unknown`. Notice `factual expression` can work both as requirement for another factual expression (e.g. `human(x)` is requirement for another fact `if x: human(x) { mortal(x)};` ) or as an `factual expression to be checked`.
 - **Proof**: in LiTeX, there are 2 ways of proving a result: `prove` or `prove_by_contradiction`. In the example, we prove `not human(god)` by using `prove_by_contradiction`.
@@ -174,19 +175,19 @@ For more illustrative examples, please visit the ./examples directory.
 ## Concept Definition
 
 ```
-def p(x);
-def x is p1;
-def q(x,y);
-def p2(x) {
+concept $p(x);
+concept x is p1;
+concept $q(x,y);
+concept $p2(x) {
   // properties of a defined concept are written in the following block.
   if x: x is p1  {
     x is p2
   }
 }
-def p3(x) {if x: p3(x)  {p(x)} , if x: p(x)  {p3(x)} }
+concept $p3(x) {if x: p3(x)  {p(x)} , if x: p(x)  {p3(x)} }
 let x,y: p3(x), p(y);
 p(x), p3(y);
-def p(x); // error: you can not declare a concept twice.
+concept $p(x); // error: you can not declare a concept twice.
 ```
 
 ## Expression Checking
