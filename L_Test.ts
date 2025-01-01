@@ -16,6 +16,16 @@ const exampleList: ExampleItem[] = [
       "prove_by_contradiction  not  $human(god) {god is mortal;}  god is mortal;",
       "not $human(god);",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "新的parser检查",
+    code: [
+      "concept $p(x); concept $q(x): $p(x) {$p(x)};",
+      "operator \\frac{x,y}: $p(x);",
+      "know if x: $p(x) {$q(x)};",
+    ],
     debug: true,
     print: true,
   },
