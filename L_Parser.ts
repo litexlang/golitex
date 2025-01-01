@@ -793,7 +793,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
     skipper.skip(env, L_Keywords.Colon);
     // const fact = optToCheckParse(env, tokens, [], false);
     const fact = optFactParse(env, tokens);
-    if (!fact.varsDeclared(env)) return L_Out.Error;
+    if (!fact.factVarsDeclared(env)) return L_Out.Error;
 
     const node = new L_Nodes.HaveNode(vars, fact);
 
@@ -1448,7 +1448,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
     return L_Report.reportL_Out(env, out, node);
 
     function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
-      let ok = node.toBeAliased.every((e) => e.varsDeclared(env));
+      let ok = node.toBeAliased.every((e) => e.tryVarsDeclared(env));
       if (!ok)
         return L_ReportErr(
           env,
@@ -1687,7 +1687,7 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
     if (fact instanceof L_Nodes.IfNode) {
       fact.addPrefixToVars();
     }
-    if (!fact.varsDeclared(env)) throw Error();
+    if (!fact.factVarsDeclared(env)) throw Error();
   }
 
   return facts;
@@ -1695,7 +1695,7 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
 
 function optFactParseVarsDeclared(env: L_Env, tokens: L_Tokens): OptFactNode {
   const node = optFactParse(env, tokens);
-  if (!node.varsDeclared(env)) throw Error();
+  if (!node.factVarsDeclared(env)) throw Error();
   else return node;
 }
 
