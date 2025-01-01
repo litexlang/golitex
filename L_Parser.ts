@@ -510,9 +510,12 @@ function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
       out = new L_Nodes.LetFormalSymbolNode(vars, []);
     } else {
       skipper.skip(env, ":");
-      const facts = parseFactsArrCheckVarsDeclFixIfPrefix(env, tokens, [
-        L_Keywords.L_End,
-      ]);
+      const facts = parseFactsArrCheckVarsDeclFixIfPrefix(
+        env,
+        tokens,
+        [L_Keywords.L_End],
+        vars.map((e) => new L_Singleton(e))
+      );
       skipper.skip(env, L_Keywords.L_End);
       out = new L_Nodes.LetFormalSymbolNode(vars, facts);
     }
@@ -1436,6 +1439,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
   try {
     skipper.skip(env, L_Keywords.LetAlias);
     const name = pureSingletonParse(env, tokens);
+    skipper.skip(env, L_Keywords.Colon);
     const toBeAliased = arrParse<L_Symbol>(
       env,
       tokens,
