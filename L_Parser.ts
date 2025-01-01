@@ -6,7 +6,7 @@ import * as L_Structs from "./L_Structs";
 import { L_Out } from "./L_Structs";
 import { L_Singleton, L_Composite, L_Symbol } from "./L_Structs";
 import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
-import { L_ReportParserErr, L_ReportBoolErr, L_ReportErr } from "./L_Report";
+import { messageParsingError } from "./L_Report";
 import * as L_Report from "./L_Report";
 import { newFact } from "./L_Memory";
 import { checkFact } from "./L_Checker";
@@ -42,35 +42,25 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
     switch (tokens.peek()) {
       case L_Keywords.Know:
         if (knowParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${knowParse.name} Failed`);
       case L_Keywords.Let:
         if (letParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${letParse.name} Failed`);
       case L_Keywords.DefConcept:
         if (defConceptParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${defConceptParse.name} Failed`);
       case L_Keywords.DefOperator:
         if (defOperatorParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${defOperatorParse.name} Failed`);
       case L_Keywords.Lets:
         if (letsParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${letsParse.name} Failed`);
       case L_Keywords.Include:
         if (includeParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${includeParse.name} Failed`);
       case L_Keywords.DefLiteralOperator:
         if (defLiteralOperatorParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${defLiteralOperatorParse.name} Failed`);
       case L_Keywords.LetFormal:
         if (letFormalParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${letFormalParse.name} Failed`);
       case L_Keywords.LetAlias:
         if (letAliasParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${letAliasParse.name} Failed`);
       case L_Keywords.Have:
         // TODO: vars declared
         if (haveParse(env, tokens) === L_Out.True) return null;
-        else throw Error(`${haveParse.name} Failed`);
     }
 
     const fact = factParse(env, tokens);
@@ -98,7 +88,7 @@ function arrParse<T>(
 
     return out;
   } catch (error) {
-    L_ReportParserErr(env, tokens, arrParse, skipper, error);
+    messageParsingError(arrParse, error);
     throw error;
   }
 }
@@ -118,7 +108,7 @@ function pureSingletonAndFormalSymbolParse(
       return new L_Structs.L_Singleton(value);
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, pureSingletonAndFormalSymbolParse, skipper);
+    messageParsingError(pureSingletonAndFormalSymbolParse, error);
     throw error;
   }
 }
@@ -130,7 +120,7 @@ function pureSingletonParse(env: L_Env, tokens: L_Tokens): L_Singleton {
     const value = skipper.skip(env);
     return new L_Structs.L_Singleton(value);
   } catch (error) {
-    L_ReportParserErr(env, tokens, pureSingletonParse, skipper);
+    messageParsingError(pureSingletonParse, error);
     throw error;
   }
 }
@@ -142,7 +132,7 @@ function optSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_OptSymbol {
     const name = skipper.skip(env);
     return new L_Structs.L_OptSymbol(name);
   } catch (error) {
-    L_ReportParserErr(env, tokens, optSymbolParse, skipper);
+    messageParsingError(optSymbolParse, error);
     throw error;
   }
 }
@@ -162,7 +152,7 @@ function compositeParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Composite {
     skipper.skip(env, "}");
     return new L_Structs.L_Composite(name, values);
   } catch (error) {
-    L_ReportParserErr(env, tokens, compositeParse, skipper);
+    messageParsingError(compositeParse, error);
     throw error;
   }
 }
@@ -211,7 +201,7 @@ function literalOptParse(env: L_Env, tokens: L_Tokens): L_Symbol {
     env.report(`literal operator ${defLiteralOpt.name} undeclared`);
     throw Error();
   } catch (error) {
-    L_ReportParserErr(env, tokens, literalOptParse, skipper);
+    messageParsingError(literalOptParse, error);
     throw error;
   }
 }
@@ -232,7 +222,7 @@ function braceCompositeParse(env: L_Env, tokens: L_Tokens): L_Symbol {
 
     return left;
   } catch (error) {
-    L_ReportParserErr(env, tokens, braceCompositeParse, skipper);
+    messageParsingError(braceCompositeParse, error);
     throw error;
   }
 }
@@ -280,7 +270,7 @@ export class Skipper {
         env.report("unexpected symbol: " + this.tokens.peek());
         throw Error("unexpected symbol: " + this.tokens.peek());
       }
-    } catch {
+    } catch (error) {
       throw Error();
     }
   }
@@ -310,7 +300,7 @@ function skip(tokens: L_Tokens, s: string | string[] = ""): string {
       }
       throw Error("unexpected symbol: " + tokens.peek());
     }
-  } catch {
+  } catch (error) {
     throw Error();
   }
 }
@@ -328,7 +318,7 @@ function skipString(tokens: L_Tokens): string {
     if (tokens.peek() === '"') tokens.shift();
     else throw Error();
     return out;
-  } catch {
+  } catch (error) {
     throw Error();
   }
 }
@@ -364,7 +354,7 @@ export function parseNodes(
 
     return out;
   } catch (error) {
-    env.report(`Error: Syntax Error.`);
+    env.report(`Error: Parsing Error.`);
     throw error;
   }
 }
@@ -382,7 +372,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
     const out = new L_Nodes.KnowNode(facts, names);
     return knowExec(env, out);
   } catch (error) {
-    L_ReportParserErr(env, tokens, knowParse, skipper);
+    messageParsingError(knowParse, error);
     throw error;
   }
 
@@ -398,8 +388,9 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
       }
 
       return L_Out.True;
-    } catch {
-      return L_Report.L_ReportErr(env, knowExec, node);
+    } catch (error) {
+      L_Report.L_ReportErr(env, knowExec, node);
+      throw error;
     }
   }
 }
@@ -444,7 +435,7 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     return letExec(env, out);
   } catch (error) {
-    L_ReportParserErr(env, tokens, letParse, skipper);
+    messageParsingError(letParse, error);
     throw error;
   }
 
@@ -470,7 +461,7 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
 
       env.report(`[let] ${node}`);
       return L_Out.True;
-    } catch {
+    } catch (error) {
       return L_Report.L_ReportErr(env, letExec, node);
     }
   }
@@ -520,7 +511,7 @@ function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
       throw Error();
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, letParse, skipper);
+    messageParsingError(letParse, error);
     throw error;
   }
 
@@ -545,7 +536,7 @@ function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
 
       env.report(`[let] ${node}`);
       return L_Out.True;
-    } catch {
+    } catch (error) {
       return L_Report.L_ReportErr(env, letFormalParse, node);
     }
   }
@@ -591,7 +582,7 @@ function proveParse(env: L_Env, tokens: L_Tokens): L_Nodes.ProveNode {
       return new L_Nodes.ProveNode(toProve, block);
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, proveParse, skipper);
+    messageParsingError(proveParse, error);
     throw error;
   }
 }
@@ -615,7 +606,7 @@ function formulaSubNodeParse(
       return optFactParse(env, tokens);
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, formulaSubNodeParse, skipper);
+    messageParsingError(formulaSubNodeParse, error);
     throw error;
   }
 }
@@ -664,7 +655,7 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       return out;
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, factParse, skipper);
+    messageParsingError(factParse, error);
     throw error;
   }
 }
@@ -757,7 +748,7 @@ function factsArrParse(
     const out = arrParse<L_FactNode>(env, tokens, factParse, end);
     return out;
   } catch (error) {
-    L_ReportParserErr(env, tokens, factsArrParse, skipper);
+    messageParsingError(factsArrParse, error);
     throw error;
   }
 }
@@ -773,7 +764,7 @@ function localEnvParse(env: L_Env, tokens: L_Tokens): L_Nodes.LocalEnvNode {
     const out = new L_Nodes.LocalEnvNode(nodes, localEnv);
     return out;
   } catch (error) {
-    L_ReportParserErr(env, tokens, localEnvParse, skipper);
+    messageParsingError(localEnvParse, error);
     throw error;
   }
 }
@@ -842,12 +833,12 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
         const ok = newFact(env, opt);
         if (ok) return L_Out.True;
         else throw Error();
-      } catch {
+      } catch (error) {
         return L_Report.L_ReportErr(env, haveExec, node);
       }
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, haveParse, skipper);
+    messageParsingError(haveParse, error);
     throw error;
   }
 }
@@ -873,7 +864,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
 //         throw Error();
 //     }
 //   } catch (error) {
-//     L_ReportParserErr(env, tokens, specialParse, skipper);
+//     messageParsingError( specialParse,error);
 //     throw error;
 //   }
 // }
@@ -929,7 +920,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
     if (defConceptExec(env, out) === L_Structs.L_Out.True) return L_Out.True;
     else throw Error();
   } catch (error) {
-    L_ReportParserErr(env, tokens, defConceptParse, skipper);
+    messageParsingError(defConceptParse, error);
     throw error;
   }
 
@@ -968,8 +959,9 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
       }
 
       return L_Structs.L_Out.True;
-    } catch {
-      return L_ReportErr(env, defConceptExec, node);
+    } catch (error) {
+      messageParsingError(defConceptExec, error);
+      throw error;
     }
 
     function declNewFact(env: L_Env, node: L_Nodes.DefConceptNode): boolean {
@@ -1068,7 +1060,7 @@ export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
     if (defCompositeExec(env, out) === L_Out.True) return L_Out.True;
     else throw Error();
   } catch (error) {
-    L_ReportParserErr(env, tokens, defOperatorParse, skipper);
+    messageParsingError(defOperatorParse, error);
     throw error;
   }
 
@@ -1076,7 +1068,7 @@ export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
     try {
       if (!env.newComposite(node.composite.name, node)) throw Error();
       return env.report(`[new def_composite] ${node}`);
-    } catch {
+    } catch (error) {
       return L_Report.L_ReportErr(env, defCompositeExec, node);
     }
   }
@@ -1096,7 +1088,7 @@ export function isPropertyParse(
 
     return new L_Nodes.IsPropertyNode(name, true);
   } catch (error) {
-    L_ReportParserErr(env, tokens, isPropertyParse, skipper);
+    messageParsingError(isPropertyParse, error);
     throw error;
   }
 }
@@ -1130,7 +1122,7 @@ export function isFormParse(
       return new L_Nodes.IsFormNode(given, composite, [], true);
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, isFormParse, skipper);
+    messageParsingError(isFormParse, error);
     throw error;
   }
 }
@@ -1169,7 +1161,7 @@ function usePrecedenceToParseComposite(
     skipper.skip(env, end);
     return left as L_Symbol;
   } catch (error) {
-    L_ReportParserErr(env, tokens, usePrecedenceToParseComposite, skipper);
+    messageParsingError(usePrecedenceToParseComposite, error);
     throw error;
   }
 
@@ -1182,7 +1174,7 @@ function usePrecedenceToParseComposite(
         return pureSingletonAndFormalSymbolParse(env, tokens);
       }
     } catch (error) {
-      L_ReportParserErr(env, tokens, prefixSymbolParse, skipper);
+      messageParsingError(prefixSymbolParse, error);
       throw error;
     }
   }
@@ -1249,7 +1241,7 @@ export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
     const out = letsExec(env, node);
     return L_Report.reportL_Out(env, out, node);
   } catch (error) {
-    L_ReportParserErr(env, tokens, letsParse, skipper);
+    messageParsingError(letsParse, error);
     throw error;
   }
 
@@ -1261,7 +1253,7 @@ export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
       }
       env.report(`<lets OK!> ${node.toString()}`);
       return L_Out.True;
-    } catch {
+    } catch (error) {
       return L_Report.L_ReportErr(env, letsExec, node);
     }
   }
@@ -1316,12 +1308,12 @@ export function includeParse(env: L_Env, tokens: L_Tokens): L_Out {
       try {
         if (!env.newInclude(node.path)) throw Error();
         return env.report(`[new lib included] ${node.toString()}`);
-      } catch {
+      } catch (error) {
         return L_Report.L_ReportErr(env, includeExec, node);
       }
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, includeParse, skipper);
+    messageParsingError(includeParse, error);
     throw error;
   }
 }
@@ -1370,7 +1362,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     return out;
   } catch (error) {
-    L_ReportParserErr(env, tokens, defLiteralOperatorParse, skipper);
+    messageParsingError(defLiteralOperatorParse, error);
     throw error;
   }
 
@@ -1381,7 +1373,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
     try {
       if (!env.newLiteralOpt(node)) throw Error();
       return env.report(`[new ${L_Keywords.DefLiteralOperator}] ${node}`);
-    } catch {
+    } catch (error) {
       return L_Report.L_ReportErr(env, defLiteralOptExec, node);
     }
   }
@@ -1399,7 +1391,7 @@ export function symbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
     }
     return left;
   } catch (error) {
-    L_ReportParserErr(env, tokens, isFormParse, skipper);
+    messageParsingError(isFormParse, error);
     throw error;
   }
 
@@ -1420,7 +1412,7 @@ export function symbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
         return pureSingletonAndFormalSymbolParse(env, tokens);
       }
     } catch (error) {
-      L_ReportParserErr(env, tokens, singleSymbolParse, skipper);
+      messageParsingError(singleSymbolParse, error);
       throw error;
     }
   }
@@ -1448,25 +1440,21 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
     return L_Report.reportL_Out(env, out, node);
 
     function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
-      let ok = node.toBeAliased.every((e) => e.tryVarsDeclared(env));
-      if (!ok)
-        return L_ReportErr(
-          env,
-          letAliasExec,
-          `${node.toBeAliased} undeclared.`
-        );
+      try {
+        let ok = node.toBeAliased.every((e) => e.tryVarsDeclared(env));
+        // if (!ok)
+        //   messageParsingError(letAliasExec, `${node.toBeAliased} undeclared.`);
 
-      ok = env.safeNewAlias(node.name, node.toBeAliased);
-      if (!ok)
-        return L_ReportErr(
-          env,
-          letAliasExec,
-          `declaration of ${node.name} failed`
-        );
-      else return L_Out.True;
+        ok = env.safeNewAlias(node.name, node.toBeAliased);
+
+        return L_Out.True;
+      } catch (error) {
+        messageParsingError(letAliasExec, error);
+        throw error;
+      }
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, letAliasParse, skipper);
+    messageParsingError(letAliasParse, error);
     throw error;
   }
 }
@@ -1513,7 +1501,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
 //       return L_Out.True;
 //     }
 //   } catch (error) {
-//     L_ReportParserErr(env, tokens, letAliasParse, skipper);
+//     messageParsingError( letAliasParse,error);
 //     throw error;
 //   }
 // }
@@ -1562,7 +1550,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
       }
     }
   } catch (error) {
-    L_ReportParserErr(env, tokens, optFactParse, skipper);
+    messageParsingError(optFactParse, error);
     throw error;
   }
 
@@ -1636,7 +1624,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     return out;
   } catch (error) {
     env.getMessages().push(...env.getMessages());
-    L_ReportParserErr(env, tokens, ifFactParse, skipper);
+    messageParsingError(ifFactParse, error);
     throw error;
   }
 }
@@ -1661,7 +1649,7 @@ function indexedSymbolParse(
 
     return new L_Structs.IndexedSymbol(symbol, indexes);
   } catch (error) {
-    L_ReportParserErr(env, tokens, indexedSymbolParse, skipper);
+    messageParsingError(indexedSymbolParse, error);
     throw error;
   }
 }
@@ -1712,7 +1700,7 @@ function optFactParseVarsDeclared(env: L_Env, tokens: L_Tokens): OptFactNode {
 //       return pureSingletonAndFormalSymbolParse(env, tokens);
 //     }
 //   } catch (error) {
-//     L_ReportParserErr(env, tokens, pureSingletonAndFormalSymbolParse, skipper);
+//     messageParsingError( pureSingletonAndFormalSymbolParse,error);
 //     throw error;
 //   }
 // }
@@ -1746,7 +1734,7 @@ function optFactParseVarsDeclared(env: L_Env, tokens: L_Tokens): OptFactNode {
 
 //     return new L_Structs.FunctionalSymbol(value, symbols);
 //   } catch (error) {
-//     L_ReportParserErr(env, tokens, pureSingletonAndFormalSymbolParse, skipper);
+//     messageParsingError( pureSingletonAndFormalSymbolParse,error);
 //     throw error;
 //   }
 // }
