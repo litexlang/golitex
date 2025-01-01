@@ -19,7 +19,7 @@ export const specialChars = [
 
 export const L_Keywords = {
   Slash: "\\",
-  DefComposite: "operator",
+  DefOperator: "operator",
   isProperty: "is_property",
   isForm: "is_form",
   Know: "know",

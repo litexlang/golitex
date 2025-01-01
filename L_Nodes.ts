@@ -354,7 +354,7 @@ export class DefOperatorNode extends L_Node {
   }
 
   toString(): string {
-    return `${L_Keywords.DefComposite} ${this.composite}: ${this.facts}`;
+    return `${L_Keywords.DefOperator} ${this.composite}: ${this.facts}`;
   }
 }
 
