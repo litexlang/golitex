@@ -261,9 +261,12 @@ export class L_Env {
     toBeAliased: L_Structs.L_Symbol[]
   ): boolean {
     if (this.isSingletonDeclared(name.value)) {
-      return L_ReportBoolErr(
+      L_ReportBoolErr(
         this,
         this.safeNewAlias,
+        `The variable "${name.value}" is already declared in this environment or its parent environments. Please use a different name.`
+      );
+      throw Error(
         `The variable "${name.value}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
