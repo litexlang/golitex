@@ -378,7 +378,8 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
 
   function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
     try {
-      if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) throw Error();
+      node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
+
       for (const onlyIf of node.facts) {
         const ok = L_Memory.newFact(env, onlyIf);
         if (!ok) {
@@ -446,9 +447,7 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
         if (!ok) return L_Out.Error;
       }
 
-      if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
-        throw Error();
-      }
+      node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
 
       // store new facts
       for (const onlyIf of node.facts) {
@@ -522,9 +521,7 @@ function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
         if (!ok) return L_Out.Error;
       }
 
-      if (!node.facts.every((e) => env.factDeclaredOrBuiltin(e))) {
-        throw Error();
-      }
+      node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
 
       for (const onlyIf of node.facts) {
         const ok = newFact(env, onlyIf);
@@ -954,9 +951,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
         return L_Structs.L_Out.Error;
       }
 
-      if (!node.onlyIfs.every((e) => env.factDeclaredOrBuiltin(e))) {
-        throw Error();
-      }
+      node.onlyIfs.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
 
       return L_Structs.L_Out.True;
     } catch (error) {
