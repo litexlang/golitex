@@ -32,11 +32,7 @@ import {
 
 export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
   try {
-    const ok = env.factDeclaredOrBuiltin(toCheck);
-    if (!ok) {
-      env.report(`[Error] ${toCheck} not declared.`);
-      throw Error();
-    }
+    env.tryFactDeclaredOrBuiltin(toCheck);
 
     if (toCheck instanceof OptFactNode) {
       return checkOptFact(env, toCheck);
@@ -49,8 +45,9 @@ export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
     } else {
       return L_Out.Error;
     }
-  } catch {
-    return L_ReportCheckErr(env, checkFact, toCheck);
+  } catch (error) {
+    L_ReportCheckErr(env, checkFact, toCheck);
+    throw error;
   }
 }
 

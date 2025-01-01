@@ -147,27 +147,25 @@ export class L_Env {
   }
 
   // used by checker and executor
-  factDeclaredOrBuiltin(node: L_Nodes.L_FactNode): boolean {
+  tryFactDeclaredOrBuiltin(node: L_Nodes.L_FactNode): void {
     if (node instanceof L_Nodes.OptFactNode) {
-      return (
+      if (
         this.getDef(node.optSymbol.name) !== undefined ||
         node instanceof L_Nodes.BuiltinCheckNode
-      );
+      )
+        return;
+      else throw Error(`operator ${node.optSymbol.name} is not declared`);
     } else if (node instanceof L_Nodes.LogicNode) {
-      return (
-        node.req.every((e) => this.factDeclaredOrBuiltin(e)) &&
-        node.onlyIfs.every((e) => this.factDeclaredOrBuiltin(e))
-      );
+      node.req.forEach((e) => this.tryFactDeclaredOrBuiltin(e));
+      node.onlyIfs.forEach((e) => this.tryFactDeclaredOrBuiltin(e));
     } else if (node instanceof L_Nodes.BuiltinCheckNode) {
-      return true;
+      return;
     } else if (node instanceof L_Nodes.FormulaFactNode) {
-      return (
-        this.factDeclaredOrBuiltin(node.left) &&
-        this.factDeclaredOrBuiltin(node.right)
-      );
+      this.tryFactDeclaredOrBuiltin(node.left);
+      this.tryFactDeclaredOrBuiltin(node.right);
     }
 
-    return false;
+    return;
   }
 
   getDef(s: string): L_Nodes.DefConceptNode | undefined {

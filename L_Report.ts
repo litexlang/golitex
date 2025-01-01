@@ -165,10 +165,9 @@ export function messageVarNotDeclared(varNotDeclared: string): string {
   return `Not Declared: ${varNotDeclared}`;
 }
 
-export function messageParsingError(func: Function, err: unknown): string {
+export function messageParsingError(func: Function, err: unknown): void {
   const out = `Parser Error: Invalid call of ${func.name}.\n`;
   if (err instanceof Error) err.message = out + err.message;
-  return out;
 }
 
 // export function messageVarInFactNotDecl()
