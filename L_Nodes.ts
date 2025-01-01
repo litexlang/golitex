@@ -1,5 +1,6 @@
 import { L_Env } from "./L_Env";
 import { L_Keywords } from "./L_Keywords";
+import { messageVarNotDeclared } from "./L_Report";
 import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
@@ -10,7 +11,7 @@ export abstract class L_FactNode extends L_Node {
   }
 
   // called by L_Memory
-  abstract varsDeclared(env: L_Env): boolean;
+  abstract factVarsDeclared(env: L_Env): boolean;
   // called by checker
   abstract fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode;
   // called by prove_by_contradiction
@@ -89,21 +90,20 @@ export abstract class LogicNode extends L_FactNode {
     return roots;
   }
 
-  varsDeclared(env: L_Env): boolean {
+  factVarsDeclared(env: L_Env): boolean {
     const newEnv = new L_Env(env);
     for (const v of this.vars) {
       newEnv.safeNewPureSingleton(v.value);
     }
 
     for (const req of this.req) {
-      if (!req.varsDeclared(newEnv)) {
-        throw Error();
+      if (!req.factVarsDeclared(newEnv)) {
         return env.pushMessagesFromEnvReturnFalse(this.env);
       }
     }
 
     for (const onlyIf of this.onlyIfs) {
-      if (!onlyIf.varsDeclared(newEnv)) {
+      if (!onlyIf.factVarsDeclared(newEnv)) {
         return env.pushMessagesFromEnvReturnFalse(this.env);
       }
     }
@@ -204,9 +204,9 @@ export class OptFactNode extends L_FactNode {
     return [[this, []]];
   }
 
-  varsDeclared(env: L_Env): boolean {
+  factVarsDeclared(env: L_Env): boolean {
     for (const v of this.vars) {
-      if (!v.varsDeclared(env)) {
+      if (!v.tryVarsDeclared(env)) {
         return false;
       }
     }
@@ -215,7 +215,7 @@ export class OptFactNode extends L_FactNode {
 
     for (const layer of this.checkVars) {
       for (const v of layer) {
-        if (!v.varsDeclared(env)) {
+        if (!v.tryVarsDeclared(env)) {
           return false;
         }
       }
@@ -446,7 +446,7 @@ export class IsPropertyNode extends BuiltinCheckNode {
     return `${L_Keywords.isProperty}(${this.propertyName})`;
   }
 
-  varsDeclared(env: L_Env): boolean {
+  factVarsDeclared(env: L_Env): boolean {
     return true;
   }
 }
@@ -485,7 +485,7 @@ export class IsFormNode extends BuiltinCheckNode {
     }
   }
 
-  varsDeclared(env: L_Env): boolean {
+  factVarsDeclared(env: L_Env): boolean {
     // TODO
     return true;
   }
@@ -519,8 +519,8 @@ export abstract class FormulaFactNode extends L_FactNode {
     throw Error();
   }
 
-  varsDeclared(env: L_Env): boolean {
-    return this.left.varsDeclared(env) && this.right.varsDeclared(env);
+  factVarsDeclared(env: L_Env): boolean {
+    return this.left.factVarsDeclared(env) && this.right.factVarsDeclared(env);
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): FormulaFactNode {
