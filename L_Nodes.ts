@@ -97,6 +97,7 @@ export abstract class LogicNode extends L_FactNode {
 
     for (const req of this.req) {
       if (!req.varsDeclared(newEnv)) {
+        throw Error();
         return env.pushMessagesFromEnvReturnFalse(this.env);
       }
     }

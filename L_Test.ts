@@ -30,6 +30,12 @@ const exampleList: ExampleItem[] = [
       "let_alias Y: y;",
       "if y: $p(y) {$q(y)};",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "throw error system",
+    code: ["concept $p(x); concept q(x); concept $t(x);"],
     debug: true,
     print: true,
   },
