@@ -40,8 +40,9 @@ export function newFact(env: L_Env, fact: L_FactNode): boolean {
     }
 
     return env.OKMesReturnBoolean(`[fact] ${fact}`);
-  } catch {
-    return reportStoreErr(env, newFact.name, fact);
+  } catch (error) {
+    reportStoreErr(env, newFact.name, fact);
+    throw error;
   }
 }
 
@@ -55,8 +56,9 @@ function newIfThenFact(env: L_Env, fact: IfNode): boolean {
       )
     );
     return true;
-  } catch {
-    return reportStoreErr(env, newIfThenFact.name, fact);
+  } catch (error) {
+    reportStoreErr(env, newIfThenFact.name, fact);
+    throw error;
   }
 }
 

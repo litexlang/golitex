@@ -626,29 +626,25 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
         L_Keywords.LeftFactLogicalFormulaSig,
         L_Keywords.RightFactLogicalFormulaSig
       );
-      out.isT = isT;
+      // out.isT = isT;
+      if (!isT) out.isT = !out.isT;
       return out;
     } else {
-      let isT = true;
-      if (isCurToken(tokens, "not")) {
-        isT = false;
-        skipper.skip(env, "not");
-      }
-
       let out: L_Nodes.L_FactNode;
 
       if (isBuiltinKeyword(tokens.peek())) {
         const parser = L_BuiltinParsers.get(tokens.peek()) as Function;
         out = parser(env, tokens);
-        out.isT = isT;
+        // out.isT = isT;
       } else if (["if", "iff"].includes(tokens.peek())) {
         out = ifFactParse(env, tokens);
-        out.isT = isT ? out.isT : !out.isT;
+        // out.isT = isT ? out.isT : !out.isT;
       } else {
         out = optFactParse(env, tokens);
-        out.isT = isT;
+        // out.isT = isT;
       }
 
+      if (!isT) out.isT = !out.isT;
       return out;
     }
   } catch (error) {
