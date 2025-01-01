@@ -160,3 +160,7 @@ export function L_VarsInOptDoubleDeclErr(
 ): boolean {
   return L_ReportBoolErr(env, func, `[Error] ${symbol} already declared.`);
 }
+
+export function messageVarNotDeclared(v: string): string {
+  return `Not Declared: ${v}`;
+}

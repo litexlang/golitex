@@ -1,5 +1,9 @@
 import { L_Env } from "./L_Env";
-import { L_ReportBoolErr, L_ReportErr } from "./L_Report";
+import {
+  L_ReportBoolErr,
+  L_ReportErr,
+  messageVarNotDeclared,
+} from "./L_Report";
 import { LogicNode, OptFactNode, L_FactNode } from "./L_Nodes";
 import { checkFact } from "./L_Checker";
 import { L_Keywords } from "./L_Keywords";
@@ -176,11 +180,12 @@ export class L_Singleton extends L_Symbol {
   varsDeclared(env: L_Env): boolean {
     if (env.isSingletonDeclared(this.value)) return true;
     else {
-      return L_ReportBoolErr(
-        env,
-        this.varsDeclared,
-        `Variable ${this.value} is not declared`
-      );
+      // return L_ReportBoolErr(
+      //   env,
+      //   this.varsDeclared,
+      //   `Variable ${this.value} is not declared`
+      // );
+      throw Error(messageVarNotDeclared(this.value));
     }
   }
 
