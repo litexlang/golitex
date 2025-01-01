@@ -75,8 +75,8 @@ variable (Socrates : Human)
 */
 
 /* LiTeX version */
-def human(something);
-def mortal(something);
+concept something is human;
+concept something is moral;
 let Socrates: Socrates is human;
 
 /* LaTeX version
@@ -92,8 +92,8 @@ theorem socrates_is_mortal : Mortal Socrates := by
 */
 
 /* LiTeX version */
-know if x: human(x) {
-  mortal(x)
+know if x: x is human {
+  x is mortal;
 };
 Socrates is mortal;
 
@@ -128,7 +128,7 @@ theorem god_is_not_human : God ≠ Human :=
 
 /* LiTeX version */
 let god: not god is mortal;
-prove_by_contradiction not human(god) {
+prove_by_contradiction not god is human {
   god is mortal;
 } god is mortal;
 ```
