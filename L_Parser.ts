@@ -32,7 +32,7 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
     }
 
     switch (tokens.peek()) {
-      case L_KW.LeftCurlyBrace:
+      case L_KW.LCurlyBrace:
         return localEnvParse(env, tokens);
       case L_KW.Prove:
       case L_KW.ProveByContradiction:
@@ -218,7 +218,7 @@ function braceCompositeParse(env: L_Env, tokens: L_Tokens): L_Symbol {
       const right = symbolParse(env, tokens);
       left = new L_Structs.L_Composite(opt.name, [left, right]);
     }
-    skipper.skip(env, L_KW.RightBrace);
+    skipper.skip(env, L_KW.RBrace);
 
     return left;
   } catch (error) {
@@ -611,12 +611,12 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       isT = false;
     }
 
-    if (isCurToken(tokens, L_KW.LeftFactLogicalFormulaSig)) {
+    if (isCurToken(tokens, L_KW.LFactLogicalFormulaSig)) {
       const out = parseToCheckFormula(
         env,
         tokens,
-        L_KW.LeftFactLogicalFormulaSig,
-        L_KW.RightFactLogicalFormulaSig
+        L_KW.LFactLogicalFormulaSig,
+        L_KW.RFactLogicalFormulaSig
       );
       // out.isT = isT;
       if (!isT) out.isT = !out.isT;
@@ -901,7 +901,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
       skipper.skip(env, ":");
       cond = parseFactsArrCheckVarsDeclFixIfPrefix(newEnv, tokens, [
         L_KW.L_End,
-        L_KW.LeftCurlyBrace,
+        L_KW.LCurlyBrace,
       ]);
     }
 
@@ -1091,16 +1091,16 @@ export function isConceptParse(
       env,
       tokens,
       pureSingletonAndFormalSymbolParse,
-      [L_KW.L_End, L_KW.RightBrace]
+      [L_KW.L_End, L_KW.RBrace]
     );
 
     let facts: L_FactNode[] = [];
     if (isCurToken(tokens, L_KW.L_End)) {
       skipper.skip(env, L_KW.L_End);
-      facts = arrParse<L_FactNode>(env, tokens, factParse, [L_KW.RightBrace]);
-      skipper.skip(env, L_KW.RightBrace);
-    } else if (isCurToken(tokens, L_KW.RightBrace)) {
-      skipper.skip(env, L_KW.RightBrace);
+      facts = arrParse<L_FactNode>(env, tokens, factParse, [L_KW.RBrace]);
+      skipper.skip(env, L_KW.RBrace);
+    } else if (isCurToken(tokens, L_KW.RBrace)) {
+      skipper.skip(env, L_KW.RBrace);
     }
 
     return new L_Nodes.IsConceptNode(vars, facts, true);
@@ -1127,10 +1127,10 @@ export function isFormParse(
       throw Error(`${baseline} is supposed to be a composite symbol.`);
 
     let facts: L_FactNode[] = [];
-    if (isCurToken(tokens, L_KW.RightBrace)) {
-      skipper.skip(env, L_KW.RightBrace);
+    if (isCurToken(tokens, L_KW.RBrace)) {
+      skipper.skip(env, L_KW.RBrace);
     } else {
-      facts = arrParse<L_FactNode>(env, tokens, factParse, [L_KW.RightBrace]);
+      facts = arrParse<L_FactNode>(env, tokens, factParse, [L_KW.RBrace]);
     }
 
     return new L_Nodes.IsFormNode(candidate, baseline, facts, true);
@@ -1533,7 +1533,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
       const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
       skipper.skip(env, L_KW.LeftBrace);
       const vars = arrParse<L_Symbol>(env, tokens, symbolParse, ")");
-      skipper.skip(env, L_KW.RightBrace);
+      skipper.skip(env, L_KW.RBrace);
 
       let checkVars = checkVarsParse();
 
