@@ -402,50 +402,9 @@ function checkLiterally(env: L_Env, toCheck: L_FactNode): boolean {
 function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
   try {
     if (toCheck instanceof IsConceptNode) {
-      // TODO: run inside facts
       return checkIsConcept(env, toCheck);
-      // return toCheck.concepts.every(
-      //   (e) => env.getConcept(e.value) !== undefined
-      // )
-      //   ? L_Out.True
-      //   : L_Out.Unknown;
     } else if (toCheck instanceof IsFormNode) {
-      let correctForm = false;
-      if (
-        toCheck.baseline.values.every((e) => e instanceof L_Singleton) &&
-        toCheck.candidate instanceof L_Composite &&
-        toCheck.candidate.name === toCheck.baseline.name &&
-        toCheck.candidate.values.length === toCheck.baseline.values.length
-      ) {
-        correctForm = true;
-      }
-
-      if (!correctForm) return L_Out.Unknown;
-
-      const freeFix: [L_Symbol, L_Symbol][] = [];
-      for (
-        let i = 0;
-        i < (toCheck.candidate as L_Composite).values.length;
-        i++
-      ) {
-        freeFix.push([
-          toCheck.baseline.values[i],
-          (toCheck.candidate as L_Composite).values[i],
-        ]);
-      }
-
-      for (const fact of toCheck.facts) {
-        const fixed = fact.fix(env, freeFix);
-        let out: L_Out = L_Out.Error;
-        out = checkFact(env, fixed);
-
-        if (out !== L_Out.True) {
-          env.report(`[Error] failed to check ${fixed}`);
-          return L_Out.Unknown;
-        }
-      }
-
-      return L_Out.True;
+      return checkIsForm(env, toCheck);
     } else {
       return L_Out.Error;
     }
@@ -563,6 +522,45 @@ function checkIsConcept(env: L_Env, toCheck: IsConceptNode): L_Out {
     for (const fact of toCheck.facts) {
       const out = checkFact(env, fact);
       if (out !== L_Out.True) return out;
+    }
+
+    return L_Out.True;
+  } catch (error) {
+    throw error;
+  }
+}
+
+function checkIsForm(env: L_Env, toCheck: IsFormNode): L_Out {
+  try {
+    let correctForm = false;
+    if (
+      toCheck.baseline.values.every((e) => e instanceof L_Singleton) &&
+      toCheck.candidate instanceof L_Composite &&
+      toCheck.candidate.name === toCheck.baseline.name &&
+      toCheck.candidate.values.length === toCheck.baseline.values.length
+    ) {
+      correctForm = true;
+    }
+
+    if (!correctForm) return L_Out.Unknown;
+
+    const freeFix: [L_Symbol, L_Symbol][] = [];
+    for (let i = 0; i < (toCheck.candidate as L_Composite).values.length; i++) {
+      freeFix.push([
+        toCheck.baseline.values[i],
+        (toCheck.candidate as L_Composite).values[i],
+      ]);
+    }
+
+    for (const fact of toCheck.facts) {
+      const fixed = fact.fix(env, freeFix);
+      let out: L_Out = L_Out.Error;
+      out = checkFact(env, fixed);
+
+      if (out !== L_Out.True) {
+        env.report(`[Error] failed to check ${fixed}`);
+        return L_Out.Unknown;
+      }
     }
 
     return L_Out.True;
