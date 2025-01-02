@@ -576,9 +576,8 @@ function checkFacts(env: L_Env, toCheck: FactsNode): L_Out {
   try {
     for (const f of toCheck.facts) {
       if (f instanceof OptFactNode && f.checkVars === undefined) {
-        const out = checkFact(env, f.newToChecks(toCheck.fixedVars));
-        if (out !== L_Out.True) return out;
       }
+      // TODO bind checkVars to ifNode
     }
 
     return L_Out.True;

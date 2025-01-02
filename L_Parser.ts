@@ -612,13 +612,17 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
 
     if (isCurToken(tokens, L_KW.LBracket)) {
       skipper.skip(L_KW.LBracket);
-      const varsArrArr: L_Symbol[][] = [];
+      const varsArrArr: [L_Singleton, L_Symbol][][] = [];
       while (!isCurToken(tokens, L_KW.RBracket)) {
-        const vars = arrParse<L_Symbol>(env, tokens, symbolParse, [
-          L_KW.RBracket,
-          L_KW.L_End,
-        ]);
-        varsArrArr.push(vars);
+        const varsArr: [L_Singleton, L_Symbol][] = [];
+        while (!isCurToken(tokens, L_KW.L_End)) {
+          const single = pureSingletonParse(env, tokens);
+          skipper.skip(L_KW.Colon);
+          const symbol = symbolParse(env, tokens);
+          varsArr.push([single, symbol]);
+          if (isCurToken(tokens, L_KW.Comma)) skipper.skip(L_KW.Comma);
+        }
+        varsArrArr.push(varsArr);
         if (isCurToken(tokens, L_KW.L_End)) skipper.skip(L_KW.L_End);
       }
 
