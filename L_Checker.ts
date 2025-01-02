@@ -10,6 +10,7 @@ import {
   OrToCheckNode,
   FormulaFactNode,
   L_FactNode,
+  FactsNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import {
@@ -42,6 +43,8 @@ export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
       return checkBuiltinCheckNode(env, toCheck);
     } else if (toCheck instanceof FormulaFactNode) {
       return checkToCheckFormula(env, toCheck);
+    } else if (toCheck instanceof FactsNode) {
+      return checkFacts(env, toCheck);
     } else {
       return L_Out.Error;
     }
@@ -560,6 +563,21 @@ function checkIsForm(env: L_Env, toCheck: IsFormNode): L_Out {
       if (out !== L_Out.True) {
         env.report(`[Error] failed to check ${fixed}`);
         return L_Out.Unknown;
+      }
+    }
+
+    return L_Out.True;
+  } catch (error) {
+    throw error;
+  }
+}
+
+function checkFacts(env: L_Env, toCheck: FactsNode): L_Out {
+  try {
+    for (const f of toCheck.facts) {
+      if (f instanceof OptFactNode && f.checkVars === undefined) {
+        const out = checkFact(env, f.newToChecks(toCheck.fixedVars));
+        if (out !== L_Out.True) return out;
       }
     }
 

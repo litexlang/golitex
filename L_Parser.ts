@@ -322,11 +322,11 @@ function skipString(tokens: L_Tokens): string {
   }
 }
 
-function isCurToken(tokens: L_Tokens, L_KW: string | string[]) {
-  if (!Array.isArray(L_KW)) {
-    return L_KW === tokens.peek();
+function isCurToken(tokens: L_Tokens, str: string | string[]) {
+  if (!Array.isArray(str)) {
+    return str === tokens.peek();
   } else {
-    return L_KW.includes(tokens.peek());
+    return str.includes(tokens.peek());
   }
 }
 
@@ -612,16 +612,23 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
 
     if (isCurToken(tokens, L_KW.LBracket)) {
       skipper.skip(L_KW.LBracket);
-      const vars = arrParse<L_Symbol>(env, tokens, symbolParse, [
-        L_KW.RBracket,
-      ]);
+      const varsArrArr: L_Symbol[][] = [];
+      while (!isCurToken(tokens, L_KW.RBracket)) {
+        const vars = arrParse<L_Symbol>(env, tokens, symbolParse, [
+          L_KW.RBracket,
+          L_KW.L_End,
+        ]);
+        varsArrArr.push(vars);
+        if (isCurToken(tokens, L_KW.L_End)) skipper.skip(L_KW.L_End);
+      }
+
       skipper.skip(L_KW.RBracket);
       skipper.skip(L_KW.LCurlyBrace);
       const facts = arrParse<L_FactNode>(env, tokens, factParse, [
         L_KW.RCurlyBrace,
       ]);
       skipper.skip(L_KW.RCurlyBrace);
-      return new L_Nodes.FactsNode(vars, facts, true);
+      return new L_Nodes.FactsNode(varsArrArr, facts, true);
     } else if (isCurToken(tokens, L_KW.LFactLogicalFormulaSig)) {
       const out = parseToCheckFormula(
         env,

@@ -175,6 +175,10 @@ export class OptFactNode extends L_FactNode {
     super(isT);
   }
 
+  newToChecks(checkVars: L_Symbol[][]): OptFactNode {
+    return new OptFactNode(this.optSymbol, this.vars, this.isT, checkVars);
+  }
+
   static literallyIdentical(
     env: L_Env,
     given: OptFactNode,
@@ -650,7 +654,7 @@ export type FormulaSubNode = FormulaFactNode | OptFactNode;
 
 export class FactsNode extends L_FactNode {
   constructor(
-    public fixedVars: L_Symbol[],
+    public fixedVars: L_Symbol[][],
     public facts: L_FactNode[],
     isT: boolean
   ) {
@@ -659,7 +663,7 @@ export class FactsNode extends L_FactNode {
 
   override tryFactVarsDeclared(env: L_Env): void {
     for (const v of this.fixedVars) {
-      v.tryVarsDeclared(env);
+      v.forEach((e) => e.tryVarsDeclared(env));
     }
 
     for (const fact of this.facts) {
@@ -668,7 +672,9 @@ export class FactsNode extends L_FactNode {
   }
 
   override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
-    const newFixedVars = this.fixedVars.map((e) => e.fix(env, freeFixPairs));
+    const newFixedVars = this.fixedVars.map((e) =>
+      e.map((v) => v.fix(env, freeFixPairs))
+    );
     const newFacts = this.facts.map((e) => e.fix(env, freeFixPairs));
     return new FactsNode(newFixedVars, newFacts, this.isT);
   }
