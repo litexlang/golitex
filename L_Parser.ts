@@ -586,7 +586,7 @@ function formulaSubNodeParse(
     // parse boolean factual formula
     if (isCurToken(tokens, "(")) {
       // skipper.skip(  "(");
-      const out = parseToCheckFormula(env, tokens, "(", ")");
+      const out = parseFactFormula(env, tokens, "(", ")");
       // skipper.skip(  ")");
       return out;
     } else {
@@ -604,13 +604,41 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
 
   try {
     let isT = true;
-    // parse boolean factual formula
     if (isCurToken(tokens, "not")) {
       skipper.skip("not");
       isT = false;
     }
 
+    let out: L_Nodes.L_FactNode | undefined = undefined;
+
     if (isCurToken(tokens, L_KW.LBracket)) {
+      out = factsNodeParse(env, tokens);
+    } else if (isCurToken(tokens, L_KW.LFactFormula)) {
+      out = parseFactFormula(env, tokens, L_KW.LFactFormula, L_KW.RFactFormula);
+    } else if (
+      tokens.peek() === L_KW.Dollar &&
+      builtinFactNames.has(tokens.peek(1))
+    ) {
+      out = builtinFunctionParse(env, tokens);
+    } else if (["if", "iff"].includes(tokens.peek())) {
+      out = ifFactParse(env, tokens);
+    } else {
+      out = optFactParse(env, tokens);
+    }
+
+    if (out === undefined) throw Error();
+    if (!isT) out.isT = !out.isT;
+
+    return out;
+  } catch (error) {
+    messageParsingError(factParse, error);
+    throw error;
+  }
+
+  function factsNodeParse(env: L_Env, tokens: L_Tokens): L_Nodes.FactsNode {
+    const skipper = new Skipper(env, tokens);
+
+    try {
       skipper.skip(L_KW.LBracket);
       const varsArrArr: [L_Singleton, L_Symbol][][] = [];
       while (!isCurToken(tokens, L_KW.RBracket)) {
@@ -633,39 +661,9 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       ]);
       skipper.skip(L_KW.RCurlyBrace);
       return new L_Nodes.FactsNode(varsArrArr, facts, true);
-    } else if (isCurToken(tokens, L_KW.LFactLogicalFormulaSig)) {
-      const out = parseToCheckFormula(
-        env,
-        tokens,
-        L_KW.LFactLogicalFormulaSig,
-        L_KW.RFactLogicalFormulaSig
-      );
-      // out.isT = isT;
-      if (!isT) out.isT = !out.isT;
-      return out;
-    } else {
-      let out: L_Nodes.L_FactNode;
-
-      if (
-        tokens.peek() === L_KW.Dollar &&
-        builtinFactNames.has(tokens.peek(1))
-      ) {
-        out = builtinFunctionParse(env, tokens);
-        // out.isT = isT;
-      } else if (["if", "iff"].includes(tokens.peek())) {
-        out = ifFactParse(env, tokens);
-        // out.isT = isT ? out.isT : !out.isT;
-      } else {
-        out = optFactParse(env, tokens);
-        // out.isT = isT;
-      }
-
-      if (!isT) out.isT = !out.isT;
-      return out;
+    } catch (error) {
+      throw error;
     }
-  } catch (error) {
-    messageParsingError(factParse, error);
-    throw error;
   }
 }
 
@@ -687,7 +685,7 @@ function builtinFunctionParse(env: L_Env, tokens: L_Tokens): L_FactNode {
   }
 }
 
-function parseToCheckFormula(
+function parseFactFormula(
   env: L_Env,
   tokens: L_Tokens,
   begin: string,
@@ -1721,65 +1719,3 @@ function optFactParseVarsDeclared(env: L_Env, tokens: L_Tokens): OptFactNode {
   node.tryFactVarsDeclared(env);
   return node;
 }
-
-function factsNodeParse(env: L_Env, tokens: L_Tokens): L_Nodes.FactsNode {
-  const skipper = new Skipper(env, tokens);
-
-  try {
-    throw Error();
-  } catch (error) {
-    throw error;
-  }
-}
-
-// function singletonFunctionalParse(
-//   env: L_Env,
-//   tokens: L_Tokens
-// ): L_Structs.L_Singleton | L_Structs.FunctionalSymbol {
-//   const skipper = new Skipper(env, tokens);
-
-//   try {
-//     if (tokens.peek(1) === L_Keywords.LeftBrace) {
-//       return functionalSymbolParse(env, tokens);
-//     } else {
-//       return pureSingletonAndFormalSymbolParse(env, tokens);
-//     }
-//   } catch (error) {
-//     messageParsingError( pureSingletonAndFormalSymbolParse,error);
-//     throw error;
-//   }
-// }
-
-// function functionalSymbolParse(
-//   env: L_Env,
-//   tokens: L_Tokens
-// ): L_Structs.FunctionalSymbol {
-//   const skipper = new Skipper(env, tokens);
-
-//   try {
-//     const value = skipper.skip();
-
-//     if (!env.getFunctionalSymbol(tokens.peek())) {
-//       L_ReportErr(
-//         env,
-//         singletonFunctionalParse,
-//         `${tokens.peek()} is not a declared functional symbol`
-//       );
-//       throw Error();
-//     }
-
-//     skipper.skip( L_Keywords.LeftBrace);
-//     const symbols = arrParse<L_Symbol>(
-//       env,
-//       tokens,
-//       symbolParse,
-//       L_Keywords.RightBrace
-//     );
-//     skipper.skip( L_Keywords.RightBrace);
-
-//     return new L_Structs.FunctionalSymbol(value, symbols);
-//   } catch (error) {
-//     messageParsingError( pureSingletonAndFormalSymbolParse,error);
-//     throw error;
-//   }
-// }
