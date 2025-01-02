@@ -643,7 +643,7 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       const varsArrArr: [L_Singleton, L_Symbol][][] = [];
       while (!isCurToken(tokens, L_KW.RBracket)) {
         const varsArr: [L_Singleton, L_Symbol][] = [];
-        while (!isCurToken(tokens, L_KW.L_End)) {
+        while (!isCurToken(tokens, [L_KW.L_End, L_KW.RBracket])) {
           const single = pureSingletonParse(env, tokens);
           skipper.skip(L_KW.Colon);
           const symbol = symbolParse(env, tokens);

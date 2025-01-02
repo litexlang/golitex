@@ -56,13 +56,13 @@ export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
 
 function checkOptFact(env: L_Env, toCheck: OptFactNode): L_Out {
   try {
-    const def = env.getConcept(toCheck.optSymbol.name);
-    if (def === undefined) {
+    const concept = env.getConcept(toCheck.optSymbol.name);
+    if (concept === undefined) {
       L_ReportErr(env, checkOptFact, `${toCheck} not declared`);
       throw Error();
     }
 
-    if (!def.commutative) {
+    if (!concept.commutative) {
       return checkOptFactNotCommutatively(env, toCheck);
     } else {
       let out = checkOptFactNotCommutatively(env, toCheck);
@@ -111,12 +111,12 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
     // TODO ? 需要验证一下toCheck的composite是否符合被定义时的要求
     for (const v of toCheck.vars) {
       if (v instanceof L_Composite) {
-        env.report(`\n[check composite ${v} requirements]`);
+        env.report(`\n[check ${v} requirements]`);
         if (!v.compositeSatisfyItsReq(env)) {
-          env.report(`[end of check composite ${v} requirements]\n`);
+          env.report(`[end of check ${v} requirements]\n`);
           return L_Out.Unknown;
         } else {
-          env.report(`[end of check composite ${v} requirements]\n`);
+          env.report(`[end of check ${v} requirements]\n`);
         }
       }
     }
@@ -577,7 +577,16 @@ function checkIsForm(env: L_Env, toCheck: IsFormNode): L_Out {
 
 function checkFacts(env: L_Env, toCheck: FactsNode): L_Out {
   try {
-    // TODO
+    const newEnv = new L_Env(env);
+    const newCheckVars = toCheck.fixedVars.map((e) => e.map((v) => v[0]));
+
+    for (let fact of toCheck.facts) {
+      // TODO The original source code is changed. It's better to deep copy
+      fact.getRootOptNodes().forEach((e) => (e[0].checkVars = newCheckVars));
+      const out = checkFact(newEnv, fact);
+      if (out !== L_Out.True) return out;
+    }
+
     return L_Out.True;
   } catch (error) {
     throw error;
