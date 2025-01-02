@@ -443,9 +443,9 @@ export class LetAliasNode extends L_Node {
 export abstract class BuiltinCheckNode extends L_FactNode {}
 
 // TODO IsProperty logic is not implemented
-export class IsPropertyNode extends BuiltinCheckNode {
+export class IsConceptNode extends BuiltinCheckNode {
   constructor(
-    public propertyName: string,
+    public concepts: L_Singleton[],
     public facts: L_FactNode[],
     isT: boolean
   ) {
@@ -457,7 +457,7 @@ export class IsPropertyNode extends BuiltinCheckNode {
   }
 
   copyWithIsTReverse(): L_FactNode {
-    return new IsPropertyNode(this.propertyName, this.facts, !this.isT);
+    return new IsConceptNode(this.concepts, this.facts, !this.isT);
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
@@ -465,7 +465,7 @@ export class IsPropertyNode extends BuiltinCheckNode {
   }
 
   toString() {
-    return `${L_Keywords.isProperty}(${this.propertyName})`;
+    return `${L_Keywords.isConcept}(${this.concepts})`;
   }
 
   tryFactVarsDeclared(env: L_Env): boolean {

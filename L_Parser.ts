@@ -1,11 +1,10 @@
 import { L_Node, LogicNode, L_FactNode, OptFactNode } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { L_Keywords } from "./L_Keywords";
+import { builtinFactNames, L_Keywords } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
 import { L_Out } from "./L_Structs";
 import { L_Singleton, L_Composite, L_Symbol } from "./L_Structs";
-import { isBuiltinKeyword, L_BuiltinParsers } from "./L_Builtins";
 import { messageParsingError } from "./L_Report";
 import * as L_Report from "./L_Report";
 import { newFact } from "./L_Memory";
@@ -635,7 +634,7 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
 
       if (
         tokens.peek() === L_Keywords.Dollar &&
-        isBuiltinKeyword(tokens.peek(1))
+        builtinFactNames.has(tokens.peek(1))
       ) {
         out = builtinFunctionParse(env, tokens);
         // out.isT = isT;
@@ -661,8 +660,8 @@ function builtinFunctionParse(env: L_Env, tokens: L_Tokens): L_FactNode {
 
   try {
     switch (tokens.peek()) {
-      case L_Keywords.isProperty:
-        return isPropertyParse(env, tokens);
+      case L_Keywords.isConcept:
+        return isConceptParse(env, tokens);
     }
 
     throw Error();
@@ -1084,17 +1083,16 @@ export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
   }
 }
 
-export function isPropertyParse(
+export function isConceptParse(
   env: L_Env,
   tokens: L_Tokens
-): L_Nodes.IsPropertyNode {
+): L_Nodes.IsConceptNode {
   const skipper = new Skipper(env, tokens);
 
   try {
     skipper.skip(env, L_Keywords.Dollar);
-    const optName = skipper.skip(env, L_Keywords.isProperty);
     skipper.skip(env, L_Keywords.LeftBrace);
-    const vars = arrParse<L_Symbol>(env, tokens, isPropertyParse, [
+    const vars = arrParse<L_Singleton>(env, tokens, parseSingleNode, [
       L_Keywords.L_End,
       L_Keywords.RightBrace,
     ]);
@@ -1110,9 +1108,9 @@ export function isPropertyParse(
       skipper.skip(env, L_Keywords.RightBrace);
     }
 
-    return new L_Nodes.IsPropertyNode(optName, facts, true);
+    return new L_Nodes.IsConceptNode(vars, facts, true);
   } catch (error) {
-    messageParsingError(isPropertyParse, error);
+    messageParsingError(isConceptParse, error);
     throw error;
   }
 }

@@ -148,18 +148,14 @@ export class L_Env {
 
   // used by checker and executor
   tryFactDeclaredOrBuiltin(node: L_Nodes.L_FactNode): void {
-    if (node instanceof L_Nodes.OptFactNode) {
-      if (
-        this.getDef(node.optSymbol.name) !== undefined ||
-        node instanceof L_Nodes.BuiltinCheckNode
-      )
-        return;
+    if (node instanceof L_Nodes.BuiltinCheckNode) {
+      return;
+    } else if (node instanceof L_Nodes.OptFactNode) {
+      if (this.getConcept(node.optSymbol.name) !== undefined) return;
       else throw Error(`operator ${node.optSymbol.name} is not declared`);
     } else if (node instanceof L_Nodes.LogicNode) {
       node.req.forEach((e) => this.tryFactDeclaredOrBuiltin(e));
       node.onlyIfs.forEach((e) => this.tryFactDeclaredOrBuiltin(e));
-    } else if (node instanceof L_Nodes.BuiltinCheckNode) {
-      return;
     } else if (node instanceof L_Nodes.FormulaFactNode) {
       this.tryFactDeclaredOrBuiltin(node.left);
       this.tryFactDeclaredOrBuiltin(node.right);
@@ -168,11 +164,11 @@ export class L_Env {
     return;
   }
 
-  getDef(s: string): L_Nodes.DefConceptNode | undefined {
+  getConcept(s: string): L_Nodes.DefConceptNode | undefined {
     if (this.defs.has(s)) {
       return this.defs.get(s);
     } else if (this.parent) {
-      return this.parent.getDef(s);
+      return this.parent.getConcept(s);
     } else {
       return undefined;
     }
@@ -190,7 +186,7 @@ export class L_Env {
 
   safeNewDef(s: string, defNode: L_Nodes.DefConceptNode): boolean {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
-    if (this.getDef(s) !== undefined) {
+    if (this.getConcept(s) !== undefined) {
       return L_ReportBoolErr(
         this,
         this.safeNewDef,

@@ -3,7 +3,7 @@ import {
   BuiltinCheckNode,
   DefConceptNode,
   IfNode,
-  IsPropertyNode,
+  IsConceptNode,
   LogicNode,
   OptFactNode,
   L_FactNode,
@@ -88,7 +88,7 @@ function newFormulaFact(env: L_Env, fact: FormulaFactNode): boolean {
 
 function newBuiltinFact(env: L_Env, fact: L_FactNode): boolean {
   try {
-    if (fact instanceof IsPropertyNode) {
+    if (fact instanceof IsConceptNode) {
       return true;
     } else if (fact instanceof BuiltinCheckNode) {
       return true;

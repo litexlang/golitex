@@ -4,7 +4,7 @@ import {
   FormulaSubNode,
   IfNode,
   IsFormNode,
-  IsPropertyNode,
+  IsConceptNode,
   LogicNode,
   OptFactNode,
   OrToCheckNode,
@@ -53,7 +53,7 @@ export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
 
 function checkOptFact(env: L_Env, toCheck: OptFactNode): L_Out {
   try {
-    const def = env.getDef(toCheck.optSymbol.name);
+    const def = env.getConcept(toCheck.optSymbol.name);
     if (def === undefined) {
       L_ReportErr(env, checkOptFact, `${toCheck} not declared`);
       throw Error();
@@ -401,8 +401,11 @@ function checkLiterally(env: L_Env, toCheck: L_FactNode): boolean {
 
 function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
   try {
-    if (toCheck instanceof IsPropertyNode) {
-      return env.getDef(toCheck.propertyName) !== undefined
+    if (toCheck instanceof IsConceptNode) {
+      // TODO: run inside facts
+      return toCheck.concepts.every(
+        (e) => env.getConcept(e.value) !== undefined
+      )
         ? L_Out.True
         : L_Out.Unknown;
     } else if (toCheck instanceof IsFormNode) {

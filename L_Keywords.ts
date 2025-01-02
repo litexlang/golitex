@@ -20,7 +20,7 @@ export const specialChars = [
 export const L_Keywords = {
   Slash: "\\",
   DefOperator: "operator",
-  isProperty: "is_property",
+  isConcept: "is_concept",
   isForm: "is_form",
   Know: "know",
   Then: "=>",
@@ -71,3 +71,8 @@ export const L_Keywords = {
   LetAlias: "let_alias",
   DefFunctional: "def_function",
 };
+
+export const builtinFactNames = new Set<string>();
+[L_Keywords.isConcept, L_Keywords.isForm].forEach((e) =>
+  builtinFactNames.add(e)
+);
