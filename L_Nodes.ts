@@ -1,6 +1,5 @@
 import { L_Env } from "./L_Env";
 import { L_KW } from "./L_Keywords";
-import { messageVarNotDeclared } from "./L_Report";
 import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
@@ -11,7 +10,7 @@ export abstract class L_FactNode extends L_Node {
   }
 
   // called by L_Memory
-  abstract tryFactVarsDeclared(env: L_Env): boolean;
+  abstract tryFactVarsDeclared(env: L_Env): void;
   // called by checker
   abstract fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode;
   // called by prove_by_contradiction
@@ -80,7 +79,7 @@ export abstract class LogicNode extends L_FactNode {
     return out;
   }
 
-  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+  override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     const roots = this.onlyIfs.map((e) => e.getRootOptNodes()).flat();
     for (const root of roots) {
       root[1] = [this, ...root[1]];
@@ -88,7 +87,7 @@ export abstract class LogicNode extends L_FactNode {
     return roots;
   }
 
-  tryFactVarsDeclared(env: L_Env): boolean {
+  override tryFactVarsDeclared(env: L_Env): void {
     const newEnv = new L_Env(env);
     for (const v of this.vars) {
       newEnv.safeNewPureSingleton(v.value);
@@ -96,24 +95,16 @@ export abstract class LogicNode extends L_FactNode {
 
     for (const req of this.req) {
       req.tryFactVarsDeclared(newEnv);
-      // if (!req.factVarsDeclared(newEnv)) {
-      //   return env.pushMessagesFromEnvReturnFalse(this.env);
-      // }
     }
 
     for (const onlyIf of this.onlyIfs) {
-      // if (!onlyIf.tryFactVarsDeclared(newEnv)) {
-      //   return env.pushMessagesFromEnvReturnFalse(this.env);
-      // }
       onlyIf.tryFactVarsDeclared(newEnv);
     }
-
-    return true;
   }
 }
 
 export class IffNode extends LogicNode {
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
+  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
     const newReq: L_FactNode[] = [];
     for (const r of this.req) {
       newReq.push(r.fix(env, freeFixPairs));
@@ -140,8 +131,9 @@ export class IffNode extends LogicNode {
     return notPart + mainPart;
   }
 }
+
 export class IfNode extends LogicNode {
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
+  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
     const newReq: L_FactNode[] = [];
     for (const r of this.req) {
       newReq.push(r.fix(env, freeFixPairs));
@@ -200,11 +192,11 @@ export class OptFactNode extends L_FactNode {
     return new OptFactNode(this.optSymbol, newVars, this.isT, this.checkVars);
   }
 
-  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+  override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     return [[this, []]];
   }
 
-  tryFactVarsDeclared(env: L_Env): boolean {
+  override tryFactVarsDeclared(env: L_Env): void {
     for (const v of this.vars) {
       try {
         v.tryVarsDeclared(env);
@@ -219,7 +211,7 @@ export class OptFactNode extends L_FactNode {
       // }
     }
 
-    if (this.checkVars === undefined) return true;
+    if (this.checkVars === undefined) return;
 
     for (const layer of this.checkVars) {
       for (const v of layer) {
@@ -237,10 +229,10 @@ export class OptFactNode extends L_FactNode {
       }
     }
 
-    return true;
+    return;
   }
 
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptFactNode {
+  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptFactNode {
     const newVars: L_Symbol[] = [];
     for (let v of this.vars) {
       let fixed = false;
@@ -450,15 +442,15 @@ export class IsConceptNode extends BuiltinCheckNode {
     super(isT);
   }
 
-  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+  override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     throw Error();
   }
 
-  copyWithIsTReverse(): L_FactNode {
+  override copyWithIsTReverse(): L_FactNode {
     return new IsConceptNode(this.concepts, this.facts, !this.isT);
   }
 
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
+  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
     return this;
   }
 
@@ -466,12 +458,10 @@ export class IsConceptNode extends BuiltinCheckNode {
     return `${L_KW.isConcept}(${this.concepts})`;
   }
 
-  tryFactVarsDeclared(env: L_Env): boolean {
+  override tryFactVarsDeclared(env: L_Env): void {
     for (const fact of this.facts) {
       fact.tryFactVarsDeclared(env);
     }
-
-    return true;
   }
 }
 
@@ -485,15 +475,15 @@ export class IsFormNode extends BuiltinCheckNode {
     super(isT);
   }
 
-  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+  override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     throw Error();
   }
 
-  copyWithIsTReverse(): L_FactNode {
+  override copyWithIsTReverse(): L_FactNode {
     return new IsFormNode(this.candidate, this.baseline, this.facts, !this.isT);
   }
 
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
+  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
     let fixed: L_Symbol | undefined = undefined;
     for (const freeFix of freeFixPairs) {
       if (L_Symbol.literallyIdentical(env, freeFix[0], this.candidate)) {
@@ -509,10 +499,7 @@ export class IsFormNode extends BuiltinCheckNode {
     }
   }
 
-  tryFactVarsDeclared(env: L_Env): boolean {
-    // TODO
-    return true;
-  }
+  override tryFactVarsDeclared(env: L_Env): void {}
 
   toString(): string {
     const notStr = this.isT ? "" : "[not]";
@@ -543,13 +530,15 @@ export abstract class FormulaFactNode extends L_FactNode {
     throw Error();
   }
 
-  tryFactVarsDeclared(env: L_Env): boolean {
-    return (
-      this.left.tryFactVarsDeclared(env) && this.right.tryFactVarsDeclared(env)
-    );
+  override tryFactVarsDeclared(env: L_Env): void {
+    this.left.tryFactVarsDeclared(env);
+    this.right.tryFactVarsDeclared(env);
   }
 
-  fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): FormulaFactNode {
+  override fix(
+    env: L_Env,
+    freeFixPairs: [L_Symbol, L_Symbol][]
+  ): FormulaFactNode {
     const left = this.left.fix(env, freeFixPairs);
     const right = this.right.fix(env, freeFixPairs);
     if (this instanceof OrToCheckNode) {
@@ -561,7 +550,7 @@ export abstract class FormulaFactNode extends L_FactNode {
     throw Error();
   }
 
-  copyWithIsTReverse(): L_FactNode {
+  override copyWithIsTReverse(): L_FactNode {
     throw Error();
   }
 
@@ -594,11 +583,11 @@ export abstract class FormulaFactNode extends L_FactNode {
 }
 
 export class OrToCheckNode extends FormulaFactNode {
-  copyWithIsTReverse(): L_FactNode {
+  override copyWithIsTReverse(): L_FactNode {
     return new OrToCheckNode(this.left, this.right, !this.isT);
   }
 
-  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+  override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     const out: [OptFactNode, L_FactNode[]][] = [];
     for (const node of this.getLeftRight()) {
       const roots = node.getRootOptNodes();
@@ -636,11 +625,11 @@ export class OrToCheckNode extends FormulaFactNode {
 }
 
 export class AndToCheckNode extends FormulaFactNode {
-  copyWithIsTReverse(): L_FactNode {
+  override copyWithIsTReverse(): L_FactNode {
     return new AndToCheckNode(this.left, this.right, !this.isT);
   }
 
-  getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+  override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     const out: [OptFactNode, L_FactNode[]][] = [];
     for (const node of this.getLeftRight()) {
       const roots = node.getRootOptNodes();
@@ -658,3 +647,35 @@ export class AndToCheckNode extends FormulaFactNode {
 }
 
 export type FormulaSubNode = FormulaFactNode | OptFactNode;
+
+export class FactsNode extends L_FactNode {
+  constructor(
+    public fixedVars: L_Symbol[],
+    public facts: L_FactNode[],
+    isT: boolean
+  ) {
+    super(isT);
+  }
+
+  override tryFactVarsDeclared(env: L_Env): void {
+    for (const v of this.fixedVars) {
+      v.tryVarsDeclared(env);
+    }
+
+    for (const fact of this.facts) {
+      fact.tryFactVarsDeclared(env);
+    }
+  }
+
+  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
+    throw Error();
+  }
+
+  override copyWithIsTReverse(): L_FactNode {
+    throw Error();
+  }
+
+  override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+    throw Error();
+  }
+}
