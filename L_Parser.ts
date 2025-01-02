@@ -659,7 +659,7 @@ function builtinFunctionParse(env: L_Env, tokens: L_Tokens): L_FactNode {
   const skipper = new Skipper(env, tokens);
 
   try {
-    switch (tokens.peek()) {
+    switch (tokens.peek(1)) {
       case L_Keywords.isConcept:
         return isConceptParse(env, tokens);
     }
@@ -1091,11 +1091,14 @@ export function isConceptParse(
 
   try {
     skipper.skip(env, L_Keywords.Dollar);
+    skipper.skip(env, L_Keywords.isConcept);
     skipper.skip(env, L_Keywords.LeftBrace);
-    const vars = arrParse<L_Singleton>(env, tokens, parseSingleNode, [
-      L_Keywords.L_End,
-      L_Keywords.RightBrace,
-    ]);
+    const vars = arrParse<L_Singleton>(
+      env,
+      tokens,
+      pureSingletonAndFormalSymbolParse,
+      [L_Keywords.L_End, L_Keywords.RightBrace]
+    );
 
     let facts: L_FactNode[] = [];
     if (isCurToken(tokens, L_Keywords.L_End)) {
