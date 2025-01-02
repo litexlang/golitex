@@ -11,7 +11,6 @@ import { newFact } from "./L_Memory";
 import { checkFact } from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import { L_Tokens } from "./L_Lexer";
-import { skip } from "node:test";
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
 export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
@@ -323,11 +322,11 @@ function skipString(tokens: L_Tokens): string {
   }
 }
 
-function isCurToken(tokens: L_Tokens, s: string | string[]) {
-  if (!Array.isArray(s)) {
-    return s === tokens.peek();
+function isCurToken(tokens: L_Tokens, L_KW: string | string[]) {
+  if (!Array.isArray(L_KW)) {
+    return L_KW === tokens.peek();
   } else {
-    return s.includes(tokens.peek());
+    return L_KW.includes(tokens.peek());
   }
 }
 
@@ -611,7 +610,19 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       isT = false;
     }
 
-    if (isCurToken(tokens, L_KW.LFactLogicalFormulaSig)) {
+    if (isCurToken(tokens, L_KW.LBracket)) {
+      skipper.skip(L_KW.LBracket);
+      const vars = arrParse<L_Symbol>(env, tokens, symbolParse, [
+        L_KW.RBracket,
+      ]);
+      skipper.skip(L_KW.RBracket);
+      skipper.skip(L_KW.LCurlyBrace);
+      const facts = arrParse<L_FactNode>(env, tokens, factParse, [
+        L_KW.RCurlyBrace,
+      ]);
+      skipper.skip(L_KW.RCurlyBrace);
+      return new L_Nodes.FactsNode(vars, facts, true);
+    } else if (isCurToken(tokens, L_KW.LFactLogicalFormulaSig)) {
       const out = parseToCheckFormula(
         env,
         tokens,
@@ -1698,6 +1709,16 @@ function optFactParseVarsDeclared(env: L_Env, tokens: L_Tokens): OptFactNode {
   const node = optFactParse(env, tokens);
   node.tryFactVarsDeclared(env);
   return node;
+}
+
+function factsNodeParse(env: L_Env, tokens: L_Tokens): L_Nodes.FactsNode {
+  const skipper = new Skipper(env, tokens);
+
+  try {
+    throw Error();
+  } catch (error) {
+    throw error;
+  }
 }
 
 // function singletonFunctionalParse(

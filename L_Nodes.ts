@@ -668,11 +668,13 @@ export class FactsNode extends L_FactNode {
   }
 
   override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
-    throw Error();
+    const newFixedVars = this.fixedVars.map((e) => e.fix(env, freeFixPairs));
+    const newFacts = this.facts.map((e) => e.fix(env, freeFixPairs));
+    return new FactsNode(newFixedVars, newFacts, this.isT);
   }
 
   override copyWithIsTReverse(): L_FactNode {
-    throw Error();
+    return new FactsNode(this.fixedVars, this.facts, !this.isT);
   }
 
   override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
