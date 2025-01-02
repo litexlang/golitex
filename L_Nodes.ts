@@ -5,6 +5,8 @@ import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 export abstract class L_Node {}
 
 export abstract class L_FactNode extends L_Node {
+  // checkVars: L_Symbol[][] = [];
+
   constructor(public isT: boolean) {
     super();
   }
@@ -12,8 +14,10 @@ export abstract class L_FactNode extends L_Node {
   // called by L_Memory
   abstract tryFactVarsDeclared(env: L_Env): void;
   // called by checker
-  abstract fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode;
-  // called by prove_by_contradiction
+  abstract fixByIfVars(
+    env: L_Env,
+    freeFixPairs: [L_Symbol, L_Symbol][]
+  ): L_FactNode; // called by prove_by_contradiction
   abstract copyWithIsTReverse(): L_FactNode;
   // called by "using known fact to check given fact. when doing so, get all root opts and filter opt with the same name."
   abstract getRootOptNodes(): [OptFactNode, L_FactNode[]][];
@@ -55,9 +59,9 @@ export abstract class LogicNode extends L_FactNode {
         new L_Singleton(L_KW.IfVarPrefix + e.value),
       ]);
       freeFixPairs = [...freeFixPairs, ...newFreeFixPairs];
-      this.req = this.req.map((r) => r.fix(env, freeFixPairs));
+      this.req = this.req.map((r) => r.fixByIfVars(env, freeFixPairs));
       this.onlyIfs = this.onlyIfs.map((onlyIf) =>
-        onlyIf.fix(env, freeFixPairs)
+        onlyIf.fixByIfVars(env, freeFixPairs)
       );
 
       return true;
@@ -104,15 +108,18 @@ export abstract class LogicNode extends L_FactNode {
 }
 
 export class IffNode extends LogicNode {
-  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
+  override fixByIfVars(
+    env: L_Env,
+    freeFixPairs: [L_Symbol, L_Symbol][]
+  ): LogicNode {
     const newReq: L_FactNode[] = [];
     for (const r of this.req) {
-      newReq.push(r.fix(env, freeFixPairs));
+      newReq.push(r.fixByIfVars(env, freeFixPairs));
     }
 
     const newOnlyIf: L_FactNode[] = [];
     for (const onlyIf of this.onlyIfs) {
-      newOnlyIf.push(onlyIf.fix(env, freeFixPairs));
+      newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
     }
 
     return new IffNode(this.vars, newReq, newOnlyIf, new L_Env(env));
@@ -133,15 +140,18 @@ export class IffNode extends LogicNode {
 }
 
 export class IfNode extends LogicNode {
-  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): LogicNode {
+  override fixByIfVars(
+    env: L_Env,
+    freeFixPairs: [L_Symbol, L_Symbol][]
+  ): LogicNode {
     const newReq: L_FactNode[] = [];
     for (const r of this.req) {
-      newReq.push(r.fix(env, freeFixPairs));
+      newReq.push(r.fixByIfVars(env, freeFixPairs));
     }
 
     const newOnlyIf: L_FactNode[] = [];
     for (const onlyIf of this.onlyIfs) {
-      newOnlyIf.push(onlyIf.fix(env, freeFixPairs));
+      newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
     }
 
     return new IfNode(this.vars, newReq, newOnlyIf, new L_Env(env));
@@ -170,7 +180,7 @@ export class OptFactNode extends L_FactNode {
     public optSymbol: L_OptSymbol,
     public vars: L_Symbol[],
     isT: boolean = true,
-    public checkVars: L_Symbol[][] | undefined = undefined
+    public checkVars: L_Symbol[][] | undefined
   ) {
     super(isT);
   }
@@ -236,7 +246,10 @@ export class OptFactNode extends L_FactNode {
     return;
   }
 
-  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): OptFactNode {
+  override fixByIfVars(
+    env: L_Env,
+    freeFixPairs: [L_Symbol, L_Symbol][]
+  ): OptFactNode {
     const newVars: L_Symbol[] = [];
     for (let v of this.vars) {
       let fixed = false;
@@ -244,7 +257,11 @@ export class OptFactNode extends L_FactNode {
       if (!fixed) newVars.push(v);
     }
 
-    return new OptFactNode(this.optSymbol, newVars, this.isT, undefined);
+    const newCheckVars = this.checkVars?.map((e) =>
+      e.map((v) => v.fix(env, freeFixPairs))
+    );
+
+    return new OptFactNode(this.optSymbol, newVars, this.isT, newCheckVars);
   }
 
   override copyWithIsTReverse(): OptFactNode {
@@ -454,7 +471,10 @@ export class IsConceptNode extends BuiltinCheckNode {
     return new IsConceptNode(this.concepts, this.facts, !this.isT);
   }
 
-  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
+  override fixByIfVars(
+    env: L_Env,
+    freeFixPairs: [L_Symbol, L_Symbol][]
+  ): L_FactNode {
     return this;
   }
 
@@ -487,7 +507,10 @@ export class IsFormNode extends BuiltinCheckNode {
     return new IsFormNode(this.candidate, this.baseline, this.facts, !this.isT);
   }
 
-  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
+  override fixByIfVars(
+    env: L_Env,
+    freeFixPairs: [L_Symbol, L_Symbol][]
+  ): L_FactNode {
     let fixed: L_Symbol | undefined = undefined;
     for (const freeFix of freeFixPairs) {
       if (L_Symbol.literallyIdentical(env, freeFix[0], this.candidate)) {
@@ -539,12 +562,12 @@ export abstract class FormulaFactNode extends L_FactNode {
     this.right.tryFactVarsDeclared(env);
   }
 
-  override fix(
+  override fixByIfVars(
     env: L_Env,
     freeFixPairs: [L_Symbol, L_Symbol][]
   ): FormulaFactNode {
-    const left = this.left.fix(env, freeFixPairs);
-    const right = this.right.fix(env, freeFixPairs);
+    const left = this.left.fixByIfVars(env, freeFixPairs);
+    const right = this.right.fixByIfVars(env, freeFixPairs);
     if (this instanceof OrToCheckNode) {
       return new OrToCheckNode(left, right, this.isT);
     } else if (this instanceof AndToCheckNode) {
@@ -671,12 +694,15 @@ export class FactsNode extends L_FactNode {
     }
   }
 
-  override fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
+  override fixByIfVars(
+    env: L_Env,
+    freeFixPairs: [L_Symbol, L_Symbol][]
+  ): L_FactNode {
     const newFixedVars: [L_Singleton, L_Symbol][][] = this.fixedVars.map((e) =>
       e.map((v: [L_Singleton, L_Symbol]) => [v[0], v[1].fix(env, freeFixPairs)])
     );
-    const newFacts = this.facts.map((e) => e.fix(env, freeFixPairs));
-    return new FactsNode(newFixedVars, newFacts, this.isT);
+
+    return new FactsNode(newFixedVars, this.facts, this.isT);
   }
 
   override copyWithIsTReverse(): L_FactNode {

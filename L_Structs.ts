@@ -288,7 +288,9 @@ export class L_Composite extends L_Symbol {
         declaration.composite.values
       );
 
-      const newFacts = declaration.facts.map((e) => e.fix(env, freeFixPairs));
+      const newFacts = declaration.facts.map((e) =>
+        e.fixByIfVars(env, freeFixPairs)
+      );
 
       for (const fact of newFacts) {
         if (checkFact(env, fact) !== L_Out.True) {
