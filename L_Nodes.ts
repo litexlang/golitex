@@ -444,7 +444,11 @@ export abstract class BuiltinCheckNode extends L_FactNode {}
 
 // TODO IsProperty logic is not implemented
 export class IsPropertyNode extends BuiltinCheckNode {
-  constructor(public propertyName: string, isT: boolean) {
+  constructor(
+    public propertyName: string,
+    public facts: L_FactNode[],
+    isT: boolean
+  ) {
     super(isT);
   }
 
@@ -453,7 +457,7 @@ export class IsPropertyNode extends BuiltinCheckNode {
   }
 
   copyWithIsTReverse(): L_FactNode {
-    return new IsPropertyNode(this.propertyName, !this.isT);
+    return new IsPropertyNode(this.propertyName, this.facts, !this.isT);
   }
 
   fix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): L_FactNode {
@@ -465,6 +469,10 @@ export class IsPropertyNode extends BuiltinCheckNode {
   }
 
   tryFactVarsDeclared(env: L_Env): boolean {
+    for (const fact of this.facts) {
+      fact.tryFactVarsDeclared(env);
+    }
+
     return true;
   }
 }

@@ -12,6 +12,7 @@ import { newFact } from "./L_Memory";
 import { checkFact } from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import { L_Tokens } from "./L_Lexer";
+import { skip } from "node:test";
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
 export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
@@ -276,34 +277,34 @@ export class Skipper {
   }
 }
 
-function skip(tokens: L_Tokens, s: string | string[] = ""): string {
-  try {
-    if (typeof s === "string") {
-      if (s === "") {
-        const out = tokens.shift();
-        if (out === undefined) throw Error;
-        return out;
-      } else if (s === tokens.peek()) {
-        const out = tokens.shift();
-        if (out === undefined) throw Error;
-        return out;
-      } else {
-        throw Error("unexpected symbol: " + tokens.peek());
-      }
-    } else {
-      for (const value of s) {
-        if (value === tokens.peek()) {
-          const out = tokens.shift();
-          if (out === undefined) throw Error;
-          return out;
-        }
-      }
-      throw Error("unexpected symbol: " + tokens.peek());
-    }
-  } catch (error) {
-    throw Error();
-  }
-}
+// function skip(tokens: L_Tokens, s: string | string[] = ""): string {
+//   try {
+//     if (typeof s === "string") {
+//       if (s === "") {
+//         const out = tokens.shift();
+//         if (out === undefined) throw Error;
+//         return out;
+//       } else if (s === tokens.peek()) {
+//         const out = tokens.shift();
+//         if (out === undefined) throw Error;
+//         return out;
+//       } else {
+//         throw Error("unexpected symbol: " + tokens.peek());
+//       }
+//     } else {
+//       for (const value of s) {
+//         if (value === tokens.peek()) {
+//           const out = tokens.shift();
+//           if (out === undefined) throw Error;
+//           return out;
+//         }
+//       }
+//       throw Error("unexpected symbol: " + tokens.peek());
+//     }
+//   } catch (error) {
+//     throw Error();
+//   }
+// }
 
 // used in regex parser
 function skipString(tokens: L_Tokens): string {
@@ -632,9 +633,11 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
     } else {
       let out: L_Nodes.L_FactNode;
 
-      if (isBuiltinKeyword(tokens.peek())) {
-        const parser = L_BuiltinParsers.get(tokens.peek()) as Function;
-        out = parser(env, tokens);
+      if (
+        tokens.peek() === L_Keywords.Dollar &&
+        isBuiltinKeyword(tokens.peek(1))
+      ) {
+        out = builtinFunctionParse(env, tokens);
         // out.isT = isT;
       } else if (["if", "iff"].includes(tokens.peek())) {
         out = ifFactParse(env, tokens);
@@ -647,6 +650,22 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       if (!isT) out.isT = !out.isT;
       return out;
     }
+  } catch (error) {
+    messageParsingError(factParse, error);
+    throw error;
+  }
+}
+
+function builtinFunctionParse(env: L_Env, tokens: L_Tokens): L_FactNode {
+  const skipper = new Skipper(env, tokens);
+
+  try {
+    switch (tokens.peek()) {
+      case L_Keywords.isProperty:
+        return isPropertyParse(env, tokens);
+    }
+
+    throw Error();
   } catch (error) {
     messageParsingError(factParse, error);
     throw error;
@@ -1068,16 +1087,30 @@ export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
 export function isPropertyParse(
   env: L_Env,
   tokens: L_Tokens
-): L_Nodes.BuiltinCheckNode {
+): L_Nodes.IsPropertyNode {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.isProperty);
-    skipper.skip(env, "(");
-    const name = skipper.skip(env);
-    skipper.skip(env, ")");
+    skipper.skip(env, L_Keywords.Dollar);
+    const optName = skipper.skip(env, L_Keywords.isProperty);
+    skipper.skip(env, L_Keywords.LeftBrace);
+    const vars = arrParse<L_Symbol>(env, tokens, isPropertyParse, [
+      L_Keywords.L_End,
+      L_Keywords.RightBrace,
+    ]);
 
-    return new L_Nodes.IsPropertyNode(name, true);
+    let facts: L_FactNode[] = [];
+    if (isCurToken(tokens, L_Keywords.L_End)) {
+      skipper.skip(env, L_Keywords.L_End);
+      facts = arrParse<L_FactNode>(env, tokens, factParse, [
+        L_Keywords.RightBrace,
+      ]);
+      skipper.skip(env, L_Keywords.RightBrace);
+    } else if (isCurToken(tokens, L_Keywords.RightBrace)) {
+      skipper.skip(env, L_Keywords.RightBrace);
+    }
+
+    return new L_Nodes.IsPropertyNode(optName, facts, true);
   } catch (error) {
     messageParsingError(isPropertyParse, error);
     throw error;
@@ -1509,9 +1542,9 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
     if (isCurToken(tokens, L_Keywords.FunctionTypeFactOptPrefix)) {
       skipper.skip(env, L_Keywords.FunctionTypeFactOptPrefix);
       const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
-      skip(tokens, "(");
+      skipper.skip(env, L_Keywords.LeftBrace);
       const vars = arrParse<L_Symbol>(env, tokens, symbolParse, ")");
-      skip(tokens, L_Keywords.RightBrace);
+      skipper.skip(env, L_Keywords.RightBrace);
 
       let checkVars = checkVarsParse();
 
