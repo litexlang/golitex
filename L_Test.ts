@@ -57,7 +57,11 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "checkFacts",
-    code: ["concept $p(x); concept $q(x); let x: $p(x) ;"],
+    code: [
+      "concept $=(x, y); operator \\frac{x,y}; operator \\*{x,y};",
+      " know if n,x,y {\\frac{\\*{x,n}, \\*{y,n}} = \\frac{x,y} } ; ",
+      " if n,x,y {\\frac{\\*{x,n}, \\*{y,n}} = \\frac{x,y} [n,x,y] } ;",
+    ],
     debug: true,
     print: true,
   },

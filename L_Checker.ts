@@ -574,12 +574,7 @@ function checkIsForm(env: L_Env, toCheck: IsFormNode): L_Out {
 
 function checkFacts(env: L_Env, toCheck: FactsNode): L_Out {
   try {
-    for (const f of toCheck.facts) {
-      if (f instanceof OptFactNode && f.checkVars === undefined) {
-      }
-      // TODO bind checkVars to ifNode
-    }
-
+    // TODO
     return L_Out.True;
   } catch (error) {
     throw error;
