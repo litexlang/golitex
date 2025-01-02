@@ -789,7 +789,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
     skipper.skip(L_KW.Colon);
     // const fact = optToCheckParse(env, tokens, [], false);
     const fact = optFactParse(env, tokens);
-    if (!fact.tryFactVarsDeclared(env)) return L_Out.Error;
+    fact.tryFactVarsDeclared(env);
 
     const node = new L_Nodes.HaveNode(vars, fact);
 
@@ -1688,7 +1688,7 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
     if (fact instanceof L_Nodes.IfNode) {
       fact.addPrefixToVars();
     }
-    if (!fact.tryFactVarsDeclared(env)) throw Error();
+    fact.tryFactVarsDeclared(env);
   }
 
   return facts;
@@ -1696,8 +1696,8 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
 
 function optFactParseVarsDeclared(env: L_Env, tokens: L_Tokens): OptFactNode {
   const node = optFactParse(env, tokens);
-  if (!node.tryFactVarsDeclared(env)) throw Error();
-  else return node;
+  node.tryFactVarsDeclared(env);
+  return node;
 }
 
 // function singletonFunctionalParse(

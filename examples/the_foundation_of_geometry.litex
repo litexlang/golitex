@@ -1,8 +1,6 @@
 concept A is point;
 operator \line{A,B}: A is point, B is point;
-concept $=(A,B);
-know if A,B,C: A is point, B is point, C is point {
-  if l1, l2: is_form(l1, \line{A,B}), is_form(l2, \line{A,C}), l1 = l2 {
-    \line{B,C} = l1;
-  }
+concept commutative $=(A,B);
+know if A,B,C: A is point, B is point, C is point, \line{A,B} = \line{A,C} {
+  \line{B,C} = \line{A,B};
 }
