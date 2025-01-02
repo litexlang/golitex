@@ -58,9 +58,12 @@ const exampleList: ExampleItem[] = [
   {
     name: "checkFacts",
     code: [
-      "concept $=(x, y); operator \\frac{x,y}; operator \\*{x,y};",
+      "concept commutative $=(x, y); operator \\frac{x,y}; operator \\*{x,y};",
       " know if n,x,y {\\frac{\\*{x,n}, \\*{y,n}} = \\frac{x,y} } ; ",
-      " if n,x,y {\\frac{\\*{x,n}, \\*{y,n}} = \\frac{x,y} [n,x,y] } ;",
+      // " if n,x,y {\\frac{\\*{x,n}, \\*{y,n}} = \\frac{x,y} [n,x,y] } ;",
+      "let 1,2,3;",
+      "[n: 1,x: \\frac{1,2}, y: \\frac{1,3}] {\\frac{\\*{x,n}, \\*{y,n}} = \\frac{x,y}}; ",
+      "\\frac{\\*{\\frac{1,2},1}, \\*{\\frac{1,3},1}} = \\frac{\\frac{1,2},\\frac{1,3}};",
     ],
     debug: true,
     print: true,

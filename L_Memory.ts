@@ -9,6 +9,7 @@ import {
   L_FactNode,
   AndToCheckNode,
   OrToCheckNode,
+  FactsNode,
 } from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { reportStoreErr } from "./L_Report";
@@ -27,13 +28,16 @@ export function newFact(env: L_Env, fact: L_FactNode): boolean {
 
   try {
     if (fact instanceof IfNode) {
-      const ok = newIfThenFact(env, fact as IfNode);
+      const ok = newIfThenFact(env, fact);
       if (!ok) return false;
     } else if (fact instanceof OptFactNode) {
       const ok = newOptFact(env, fact);
       if (!ok) return false;
     } else if (fact instanceof FormulaFactNode) {
       const ok = newFormulaFact(env, fact);
+      if (!ok) return false;
+    } else if (fact instanceof FactsNode) {
+      const ok = newFactsNode(env, fact);
       if (!ok) return false;
     } else {
       throw Error();
@@ -42,6 +46,19 @@ export function newFact(env: L_Env, fact: L_FactNode): boolean {
     return env.OKMesReturnBoolean(`[fact] ${fact}`);
   } catch (error) {
     reportStoreErr(env, newFact.name, fact);
+    throw error;
+  }
+}
+
+function newFactsNode(env: L_Env, fact: FactsNode): boolean {
+  try {
+    const freeFixPairs = fact.fixedVars.flat();
+    const newFacts = fact.facts.map((e) => e.fixByIfVars(env, freeFixPairs));
+    newFacts.forEach((fact) => newFact(env, fact));
+
+    return true;
+  } catch (error) {
+    reportStoreErr(env, newFactsNode.name, fact);
     throw error;
   }
 }

@@ -43,6 +43,7 @@ function factExec(env: L_Env, toCheck: L_Nodes.L_FactNode): L_Out {
     if (out === L_Out.True) {
       // Store Fact
       const ok = L_Memory.newFact(env, toCheck);
+
       if (!ok) {
         env.report(`Failed to store ${toCheck}`);
         return L_Out.Error;
