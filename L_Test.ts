@@ -41,7 +41,9 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "is_property",
-    code: ["concept $p(x); $is_concept(p);"],
+    code: [
+      "concept $p(x); let x: $p(x); $is_concept(p; $p(x)); $is_concept(p; $p(z));",
+    ],
     debug: true,
     print: true,
   },

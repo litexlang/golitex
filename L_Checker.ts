@@ -403,11 +403,12 @@ function checkBuiltinCheckNode(env: L_Env, toCheck: BuiltinCheckNode): L_Out {
   try {
     if (toCheck instanceof IsConceptNode) {
       // TODO: run inside facts
-      return toCheck.concepts.every(
-        (e) => env.getConcept(e.value) !== undefined
-      )
-        ? L_Out.True
-        : L_Out.Unknown;
+      return checkIsConcept(env, toCheck);
+      // return toCheck.concepts.every(
+      //   (e) => env.getConcept(e.value) !== undefined
+      // )
+      //   ? L_Out.True
+      //   : L_Out.Unknown;
     } else if (toCheck instanceof IsFormNode) {
       let correctForm = false;
       if (
@@ -548,5 +549,24 @@ function useLibToCheckOpt(env: L_Env, opt: OptFactNode) {
   } catch (err) {
     env.report(`加载模块失败: ${err}`);
     return L_Out.Error;
+  }
+}
+
+function checkIsConcept(env: L_Env, toCheck: IsConceptNode): L_Out {
+  try {
+    for (const concept of toCheck.concepts) {
+      if (env.getConcept(concept.value) === undefined) {
+        throw Error(`${concept.value} is not a declared concept.`);
+      }
+    }
+
+    for (const fact of toCheck.facts) {
+      const out = checkFact(env, fact);
+      if (out !== L_Out.True) return out;
+    }
+
+    return L_Out.True;
+  } catch (error) {
+    throw error;
   }
 }
