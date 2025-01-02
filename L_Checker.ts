@@ -121,7 +121,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
       }
     }
 
-    toCheck = toCheck.fix(env, []); // Used to fix indexed symbols
+    toCheck = toCheck.fixByIfVars(env, []); // Used to fix indexed symbols
 
     const relatedKnownFacts = env.getFacts(toCheck.optSymbol.name);
     if (relatedKnownFacts === undefined) {
@@ -248,11 +248,14 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
           if (
             //! checkIfReqLiterally is very dumb and may fail at many situations
             layer.req.every((e) => {
-              return checkLiterally(newEnv, e.fix(newEnv, freeFixedPairs));
+              return checkLiterally(
+                newEnv,
+                e.fixByIfVars(newEnv, freeFixedPairs)
+              );
             })
           ) {
             layer.req.every((fact) =>
-              L_Memory.newFact(newEnv, fact.fix(newEnv, freeFixedPairs))
+              L_Memory.newFact(newEnv, fact.fixByIfVars(newEnv, freeFixedPairs))
             );
           } else {
             successful = false;
@@ -263,7 +266,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
           let nextLayers = roots.slice(layerNum);
 
           // fix every layer. the reason why we can not use known = nextLayers.map(e => e.fix(newEnv, freeFixedPairs)) as parameter of new FormulaKnownFactReq(known) is that address of left right does not correspond to layers of ToCheckNeck in that known array
-          nextLayers[0] = nextLayers[0].fix(newEnv, freeFixedPairs);
+          nextLayers[0] = nextLayers[0].fixByIfVars(newEnv, freeFixedPairs);
           let knowns = nextLayers[0]
             .getRootOptNodes()
             .map((e) => [...e[1], e[0]]);
@@ -287,7 +290,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
         }
       }
       if (successful) {
-        const fixed = roots[roots.length - 1].fix(env, freeFixedPairs);
+        const fixed = roots[roots.length - 1].fixByIfVars(env, freeFixedPairs);
         if (
           L_Symbol.symbolArrLiterallyIdentical(
             env,
@@ -556,7 +559,7 @@ function checkIsForm(env: L_Env, toCheck: IsFormNode): L_Out {
     }
 
     for (const fact of toCheck.facts) {
-      const fixed = fact.fix(env, freeFix);
+      const fixed = fact.fixByIfVars(env, freeFix);
       let out: L_Out = L_Out.Error;
       out = checkFact(env, fixed);
 
