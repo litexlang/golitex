@@ -17,7 +17,7 @@ export const specialChars = [
   "~",
 ];
 
-export const L_Keywords = {
+export const L_KW = {
   Slash: "\\",
   DefOperator: "operator",
   isConcept: "is_concept",
@@ -73,6 +73,4 @@ export const L_Keywords = {
 };
 
 export const builtinFactNames = new Set<string>();
-[L_Keywords.isConcept, L_Keywords.isForm].forEach((e) =>
-  builtinFactNames.add(e)
-);
+[L_KW.isConcept, L_KW.isForm].forEach((e) => builtinFactNames.add(e));

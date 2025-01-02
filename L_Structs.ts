@@ -6,22 +6,18 @@ import {
 } from "./L_Report";
 import { LogicNode, OptFactNode, L_FactNode } from "./L_Nodes";
 import { checkFact } from "./L_Checker";
-import { L_Keywords } from "./L_Keywords";
+import { L_KW } from "./L_Keywords";
 
 export abstract class L_Symbol {
   abstract tryVarsDeclared(env: L_Env): boolean;
   abstract fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol;
 
   static isExistSymbol(symbol: L_Symbol): boolean {
-    return (
-      symbol instanceof L_Singleton && symbol.value === L_Keywords.ExistSymbol
-    );
+    return symbol instanceof L_Singleton && symbol.value === L_KW.ExistSymbol;
   }
 
   static isAnySymbol(symbol: L_Symbol): boolean {
-    return (
-      symbol instanceof L_Singleton && symbol.value === L_Keywords.AnySymbol
-    );
+    return symbol instanceof L_Singleton && symbol.value === L_KW.AnySymbol;
   }
 
   static symbolArrLiterallyIdentical(
@@ -202,8 +198,8 @@ export class L_Singleton extends L_Symbol {
   }
 }
 
-const ExistSymbol = new L_Singleton(L_Keywords.ExistSymbol);
-const AnySymbol = new L_Singleton(L_Keywords.And);
+const ExistSymbol = new L_Singleton(L_KW.ExistSymbol);
+const AnySymbol = new L_Singleton(L_KW.And);
 
 export class IndexedSymbol extends L_Symbol {
   constructor(public given: L_Symbol, public indexes: number[]) {
@@ -228,7 +224,7 @@ export class IndexedSymbol extends L_Symbol {
   }
 
   toString() {
-    return `${L_Keywords.IndexedSymbol}(${this.given}, ${this.indexes})`;
+    return `${L_KW.IndexedSymbol}(${this.given}, ${this.indexes})`;
   }
 }
 

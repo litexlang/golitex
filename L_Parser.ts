@@ -1,7 +1,7 @@
 import { L_Node, LogicNode, L_FactNode, OptFactNode } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
-import { builtinFactNames, L_Keywords } from "./L_Keywords";
+import { builtinFactNames, L_KW } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
 import { L_Out } from "./L_Structs";
 import { L_Singleton, L_Composite, L_Symbol } from "./L_Structs";
@@ -19,9 +19,9 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
   try {
     if (tokens.isEnd()) return null;
 
-    if (isCurToken(tokens, L_Keywords.L_End)) {
+    if (isCurToken(tokens, L_KW.L_End)) {
       skipper.skip(env);
-      while (!tokens.isEnd() && isCurToken(tokens, L_Keywords.L_End)) {
+      while (!tokens.isEnd() && isCurToken(tokens, L_KW.L_End)) {
         skipper.skip(env);
       }
       if (tokens.isEnd()) return null;
@@ -32,39 +32,39 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
     }
 
     switch (tokens.peek()) {
-      case L_Keywords.LeftCurlyBrace:
+      case L_KW.LeftCurlyBrace:
         return localEnvParse(env, tokens);
-      case L_Keywords.Prove:
-      case L_Keywords.ProveByContradiction:
+      case L_KW.Prove:
+      case L_KW.ProveByContradiction:
         return proveParse(env, tokens);
     }
 
     switch (tokens.peek()) {
-      case L_Keywords.Know:
+      case L_KW.Know:
         if (knowParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.Let:
+      case L_KW.Let:
         if (letParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.DefConcept:
+      case L_KW.DefConcept:
         if (defConceptParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.DefOperator:
+      case L_KW.DefOperator:
         if (defOperatorParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.Lets:
+      case L_KW.Lets:
         if (letsParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.Include:
+      case L_KW.Include:
         if (includeParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.DefLiteralOperator:
+      case L_KW.DefLiteralOperator:
         if (defLiteralOperatorParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.LetFormal:
+      case L_KW.LetFormal:
         if (letFormalParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.LetAlias:
+      case L_KW.LetAlias:
         if (letAliasParse(env, tokens) === L_Out.True) return null;
-      case L_Keywords.Have:
+      case L_KW.Have:
         // TODO: vars declared
         if (haveParse(env, tokens) === L_Out.True) return null;
     }
 
     const fact = factParse(env, tokens);
-    skipper.skip(env, L_Keywords.L_End);
+    skipper.skip(env, L_KW.L_End);
     return fact;
   } catch (error) {
     throw error;
@@ -141,7 +141,7 @@ function compositeParse(env: L_Env, tokens: L_Tokens): L_Structs.L_Composite {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.Slash);
+    skipper.skip(env, L_KW.Slash);
     const name = skipper.skip(env);
     skipper.skip(env, "{");
     const values: L_Symbol[] = [];
@@ -161,7 +161,7 @@ function literalOptParse(env: L_Env, tokens: L_Tokens): L_Symbol {
   const skipper = new Skipper(env, tokens);
 
   try {
-    const name = skipper.skip(env).slice(L_Keywords.MacroPrefix.length); // the # at the beginning is abandoned
+    const name = skipper.skip(env).slice(L_KW.MacroPrefix.length); // the # at the beginning is abandoned
     skipper.skip(env, "{");
     const parameters: L_Symbol[] = [];
     while (!isCurToken(tokens, "}")) {
@@ -211,14 +211,14 @@ function braceCompositeParse(env: L_Env, tokens: L_Tokens): L_Symbol {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.LeftBrace);
+    skipper.skip(env, L_KW.LeftBrace);
     let left = symbolParse(env, tokens);
-    while (!isCurToken(tokens, L_Keywords.Dollar)) {
+    while (!isCurToken(tokens, L_KW.Dollar)) {
       const opt = optSymbolParse(env, tokens);
       const right = symbolParse(env, tokens);
       left = new L_Structs.L_Composite(opt.name, [left, right]);
     }
-    skipper.skip(env, L_Keywords.RightBrace);
+    skipper.skip(env, L_KW.RightBrace);
 
     return left;
   } catch (error) {
@@ -363,12 +363,12 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.Know);
+    skipper.skip(env, L_KW.Know);
     const names: string[] = [];
     let facts = parseFactsArrCheckVarsDeclFixIfPrefix(env, tokens, [
-      L_Keywords.L_End,
+      L_KW.L_End,
     ]);
-    skipper.skip(env, L_Keywords.L_End);
+    skipper.skip(env, L_KW.L_End);
     const out = new L_Nodes.KnowNode(facts, names);
     return knowExec(env, out);
   } catch (error) {
@@ -400,37 +400,33 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.Let);
+    skipper.skip(env, L_KW.Let);
 
     const vars: string[] = [];
-    while (![L_Keywords.L_End, , ":"].includes(tokens.peek())) {
+    while (![L_KW.L_End, , ":"].includes(tokens.peek())) {
       vars.push(skipper.skip(env));
       if (isCurToken(tokens, ",")) skipper.skip(env, ",");
     }
 
-    if (
-      vars.some(
-        (e) => Object.keys(L_Keywords).includes(e) || e.startsWith("\\")
-      )
-    ) {
+    if (vars.some((e) => Object.keys(L_KW).includes(e) || e.startsWith("\\"))) {
       env.report(`Error: ${vars} contain LiTeX keywords.`);
       throw Error();
     }
 
     let out: L_Nodes.LetNode | undefined = undefined;
 
-    if (isCurToken(tokens, L_Keywords.L_End)) {
-      skipper.skip(env, L_Keywords.L_End);
+    if (isCurToken(tokens, L_KW.L_End)) {
+      skipper.skip(env, L_KW.L_End);
       out = new L_Nodes.LetNode(vars, []);
     } else {
       skipper.skip(env, ":");
       const facts = parseFactsArrCheckVarsDeclFixIfPrefix(
         env,
         tokens,
-        [L_Keywords.L_End],
+        [L_KW.L_End],
         vars.map((e) => new L_Singleton(e))
       );
-      skipper.skip(env, L_Keywords.L_End);
+      skipper.skip(env, L_KW.L_End);
       out = new L_Nodes.LetNode(vars, facts);
     }
 
@@ -471,36 +467,32 @@ function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.LetFormal);
+    skipper.skip(env, L_KW.LetFormal);
 
     const vars: string[] = [];
-    while (![L_Keywords.L_End, , ":"].includes(tokens.peek())) {
+    while (![L_KW.L_End, , ":"].includes(tokens.peek())) {
       vars.push(skipper.skip(env));
       if (isCurToken(tokens, ",")) skipper.skip(env, ",");
     }
 
-    if (
-      vars.some(
-        (e) => Object.keys(L_Keywords).includes(e) || e.startsWith("\\")
-      )
-    ) {
+    if (vars.some((e) => Object.keys(L_KW).includes(e) || e.startsWith("\\"))) {
       env.report(`Error: ${vars} contain LiTeX keywords.`);
       throw Error();
     }
 
     let out: undefined | L_Nodes.LetFormalSymbolNode = undefined;
-    if (isCurToken(tokens, L_Keywords.L_End)) {
-      skipper.skip(env, L_Keywords.L_End);
+    if (isCurToken(tokens, L_KW.L_End)) {
+      skipper.skip(env, L_KW.L_End);
       out = new L_Nodes.LetFormalSymbolNode(vars, []);
     } else {
       skipper.skip(env, ":");
       const facts = parseFactsArrCheckVarsDeclFixIfPrefix(
         env,
         tokens,
-        [L_Keywords.L_End],
+        [L_KW.L_End],
         vars.map((e) => new L_Singleton(e))
       );
-      skipper.skip(env, L_Keywords.L_End);
+      skipper.skip(env, L_KW.L_End);
       out = new L_Nodes.LetFormalSymbolNode(vars, facts);
     }
 
@@ -544,11 +536,11 @@ function proveParse(env: L_Env, tokens: L_Tokens): L_Nodes.ProveNode {
 
   try {
     let byContradict = false;
-    if (tokens.peek() === L_Keywords.ProveByContradiction) {
+    if (tokens.peek() === L_KW.ProveByContradiction) {
       byContradict = true;
-      skipper.skip(env, L_Keywords.ProveByContradiction);
+      skipper.skip(env, L_KW.ProveByContradiction);
     } else {
-      skipper.skip(env, L_Keywords.Prove);
+      skipper.skip(env, L_KW.Prove);
     }
 
     const toProve = factParse(env, tokens);
@@ -556,7 +548,7 @@ function proveParse(env: L_Env, tokens: L_Tokens): L_Nodes.ProveNode {
     const block: L_Node[] = [];
     skipper.skip(env, "{");
     while (tokens.peek() !== "}") {
-      while (isCurToken(tokens, L_Keywords.L_End)) {
+      while (isCurToken(tokens, L_KW.L_End)) {
         skipper.skip(env);
       }
       if (tokens.peek() === "}") break;
@@ -573,7 +565,7 @@ function proveParse(env: L_Env, tokens: L_Tokens): L_Nodes.ProveNode {
     if (byContradict) {
       // const contradict = optToCheckParse(env, tokens, [], true);
       const contradict = optFactParseVarsDeclared(env, tokens);
-      skipper.skip(env, L_Keywords.L_End);
+      skipper.skip(env, L_KW.L_End);
       return new L_Nodes.ProveContradictNode(toProve, block, contradict);
     } else {
       return new L_Nodes.ProveNode(toProve, block);
@@ -619,12 +611,12 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       isT = false;
     }
 
-    if (isCurToken(tokens, L_Keywords.LeftFactLogicalFormulaSig)) {
+    if (isCurToken(tokens, L_KW.LeftFactLogicalFormulaSig)) {
       const out = parseToCheckFormula(
         env,
         tokens,
-        L_Keywords.LeftFactLogicalFormulaSig,
-        L_Keywords.RightFactLogicalFormulaSig
+        L_KW.LeftFactLogicalFormulaSig,
+        L_KW.RightFactLogicalFormulaSig
       );
       // out.isT = isT;
       if (!isT) out.isT = !out.isT;
@@ -633,7 +625,7 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       let out: L_Nodes.L_FactNode;
 
       if (
-        tokens.peek() === L_Keywords.Dollar &&
+        tokens.peek() === L_KW.Dollar &&
         builtinFactNames.has(tokens.peek(1))
       ) {
         out = builtinFunctionParse(env, tokens);
@@ -660,8 +652,10 @@ function builtinFunctionParse(env: L_Env, tokens: L_Tokens): L_FactNode {
 
   try {
     switch (tokens.peek(1)) {
-      case L_Keywords.isConcept:
+      case L_KW.isConcept:
         return isConceptParse(env, tokens);
+      case L_KW.isForm:
+        return isFormParse(env, tokens);
     }
 
     throw Error();
@@ -683,8 +677,8 @@ function parseToCheckFormula(
   skipper.skip(env, begin);
 
   const precedence = new Map<string, number>();
-  precedence.set(L_Keywords.Or, 0);
-  precedence.set(L_Keywords.And, 1);
+  precedence.set(L_KW.Or, 0);
+  precedence.set(L_KW.And, 1);
 
   let isT = true;
   if (isCurToken(tokens, "not")) {
@@ -693,7 +687,7 @@ function parseToCheckFormula(
   }
 
   let left: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
-  let curOpt = skipper.skip(env, [L_Keywords.Or, L_Keywords.And]);
+  let curOpt = skipper.skip(env, [L_KW.Or, L_KW.And]);
   let curPrecedence = precedence.get(curOpt) as number;
 
   if (isCurToken(tokens, end)) {
@@ -704,25 +698,25 @@ function parseToCheckFormula(
   let right: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
 
   if (isCurToken(tokens, end)) {
-    if (curOpt === L_Keywords.Or) {
+    if (curOpt === L_KW.Or) {
       skipper.skip(env, end);
       return new L_Nodes.OrToCheckNode(left, right, isT);
-    } else if (curOpt === L_Keywords.And) {
+    } else if (curOpt === L_KW.And) {
       skipper.skip(env, end);
       return new L_Nodes.AndToCheckNode(left, right, isT);
     }
   }
 
   while (!isCurToken(tokens, end)) {
-    let nextOpt = skipper.skip(env, [L_Keywords.Or, L_Keywords.And]);
+    let nextOpt = skipper.skip(env, [L_KW.Or, L_KW.And]);
     let nextPrecedence = precedence.get(nextOpt) as number;
     if (curPrecedence > nextPrecedence) {
       // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-      if (curOpt === L_Keywords.And) {
+      if (curOpt === L_KW.And) {
         left = new L_Nodes.AndToCheckNode(left, right, true);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
-        if (nextOpt === L_Keywords.Or) {
+        if (nextOpt === L_KW.Or) {
           left = new L_Nodes.OrToCheckNode(left, next, isT);
         }
       }
@@ -731,7 +725,7 @@ function parseToCheckFormula(
       right = new L_Nodes.AndToCheckNode(right, next, true);
       left = new L_Nodes.OrToCheckNode(left, right, isT);
     } else {
-      if (curOpt === L_Keywords.And) {
+      if (curOpt === L_KW.And) {
         left = new L_Nodes.AndToCheckNode(left, right, isT);
         const next: L_Nodes.FormulaSubNode = formulaSubNodeParse(env, tokens);
         left = new L_Nodes.AndToCheckNode(left, next, isT);
@@ -785,14 +779,14 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.Have);
+    skipper.skip(env, L_KW.Have);
     const vars = arrParse<L_Structs.L_Singleton>(
       env,
       tokens,
       pureSingletonParse,
       ":"
     );
-    skipper.skip(env, L_Keywords.Colon);
+    skipper.skip(env, L_KW.Colon);
     // const fact = optToCheckParse(env, tokens, [], false);
     const fact = optFactParse(env, tokens);
     if (!fact.tryFactVarsDeclared(env)) return L_Out.Error;
@@ -808,7 +802,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
         let existSymbolNum = 0;
         for (const v of node.fact.vars) {
           if (v instanceof L_Singleton) {
-            if (v.value === L_Keywords.ExistSymbol) existSymbolNum += 1;
+            if (v.value === L_KW.ExistSymbol) existSymbolNum += 1;
           }
         }
 
@@ -826,7 +820,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
         const newVars: L_Symbol[] = [];
         let existSymbolAlreadyGot = 0;
         for (const v of node.fact.vars) {
-          if (v instanceof L_Singleton && v.value === L_Keywords.ExistSymbol) {
+          if (v instanceof L_Singleton && v.value === L_KW.ExistSymbol) {
             newVars.push(node.vars[existSymbolAlreadyGot]);
             existSymbolAlreadyGot += 1;
           } else {
@@ -885,11 +879,11 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.DefConcept);
+    skipper.skip(env, L_KW.DefConcept);
 
     let commutative = false;
-    if (isCurToken(tokens, L_Keywords.Commutative)) {
-      skipper.skip(env, L_Keywords.Commutative);
+    if (isCurToken(tokens, L_KW.Commutative)) {
+      skipper.skip(env, L_KW.Commutative);
       commutative = true;
     }
 
@@ -906,8 +900,8 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
       );
       skipper.skip(env, ":");
       cond = parseFactsArrCheckVarsDeclFixIfPrefix(newEnv, tokens, [
-        L_Keywords.L_End,
-        L_Keywords.LeftCurlyBrace,
+        L_KW.L_End,
+        L_KW.LeftCurlyBrace,
       ]);
     }
 
@@ -923,7 +917,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
       );
       skipper.skip(env, "}");
     } else {
-      skipper.skip(env, L_Keywords.L_End);
+      skipper.skip(env, L_KW.L_End);
     }
 
     const out = new L_Nodes.DefConceptNode(opt, cond, onlyIfs, commutative);
@@ -1042,21 +1036,21 @@ export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
   try {
     let out: L_Nodes.DefOperatorNode | undefined = undefined;
 
-    skipper.skip(env, L_Keywords.DefOperator);
+    skipper.skip(env, L_KW.DefOperator);
     const composite = compositeParse(env, tokens);
 
-    if (isCurToken(tokens, L_Keywords.L_End)) {
-      skipper.skip(env, L_Keywords.L_End);
+    if (isCurToken(tokens, L_KW.L_End)) {
+      skipper.skip(env, L_KW.L_End);
       out = new L_Nodes.DefOperatorNode(composite, []);
     } else {
       skipper.skip(env, ":");
       const facts: L_FactNode[] = parseFactsArrCheckVarsDeclFixIfPrefix(
         env,
         tokens,
-        [L_Keywords.L_End],
+        [L_KW.L_End],
         composite.values as L_Singleton[]
       );
-      skipper.skip(env, L_Keywords.L_End);
+      skipper.skip(env, L_KW.L_End);
 
       // while (!isCurToken(tokens, L_Keywords.L_End)) {
       //   facts.push(...factsArrParse(env, tokens, [",", L_Keywords.L_End]));
@@ -1090,25 +1084,23 @@ export function isConceptParse(
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.Dollar);
-    skipper.skip(env, L_Keywords.isConcept);
-    skipper.skip(env, L_Keywords.LeftBrace);
+    skipper.skip(env, L_KW.Dollar);
+    skipper.skip(env, L_KW.isConcept);
+    skipper.skip(env, L_KW.LeftBrace);
     const vars = arrParse<L_Singleton>(
       env,
       tokens,
       pureSingletonAndFormalSymbolParse,
-      [L_Keywords.L_End, L_Keywords.RightBrace]
+      [L_KW.L_End, L_KW.RightBrace]
     );
 
     let facts: L_FactNode[] = [];
-    if (isCurToken(tokens, L_Keywords.L_End)) {
-      skipper.skip(env, L_Keywords.L_End);
-      facts = arrParse<L_FactNode>(env, tokens, factParse, [
-        L_Keywords.RightBrace,
-      ]);
-      skipper.skip(env, L_Keywords.RightBrace);
-    } else if (isCurToken(tokens, L_Keywords.RightBrace)) {
-      skipper.skip(env, L_Keywords.RightBrace);
+    if (isCurToken(tokens, L_KW.L_End)) {
+      skipper.skip(env, L_KW.L_End);
+      facts = arrParse<L_FactNode>(env, tokens, factParse, [L_KW.RightBrace]);
+      skipper.skip(env, L_KW.RightBrace);
+    } else if (isCurToken(tokens, L_KW.RightBrace)) {
+      skipper.skip(env, L_KW.RightBrace);
     }
 
     return new L_Nodes.IsConceptNode(vars, facts, true);
@@ -1125,27 +1117,23 @@ export function isFormParse(
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.isForm);
-    skipper.skip(env, "(");
-    const given = symbolParse(env, tokens);
-    skipper.skip(env, ",");
-    const composite = compositeParse(env, tokens);
+    skipper.skip(env, L_KW.Dollar);
+    skipper.skip(env, L_KW.isForm);
+    skipper.skip(env, L_KW.LeftBrace);
+    const candidate = symbolParse(env, tokens);
+    skipper.skip(env, L_KW.L_End);
+    const baseline = symbolParse(env, tokens);
+    if (!(baseline instanceof L_Composite))
+      throw Error(`${baseline} is supposed to be a composite symbol.`);
 
-    if (isCurToken(tokens, ",")) {
-      skipper.skip(env, ",");
-      skipper.skip(env, "{");
-      const facts: L_FactNode[] = [];
-      while (!isCurToken(tokens, "}")) {
-        facts.push(factParse(env, tokens));
-        if (isCurToken(tokens, ",")) skipper.skip(env, ",");
-      }
-      skipper.skip(env, "}");
-      skipper.skip(env, ")");
-      return new L_Nodes.IsFormNode(given, composite, facts, true);
+    let facts: L_FactNode[] = [];
+    if (isCurToken(tokens, L_KW.RightBrace)) {
+      skipper.skip(env, L_KW.RightBrace);
     } else {
-      skipper.skip(env, ")");
-      return new L_Nodes.IsFormNode(given, composite, [], true);
+      facts = arrParse<L_FactNode>(env, tokens, factParse, [L_KW.RightBrace]);
     }
+
+    return new L_Nodes.IsFormNode(candidate, baseline, facts, true);
   } catch (error) {
     messageParsingError(isFormParse, error);
     throw error;
@@ -1193,7 +1181,7 @@ function usePrecedenceToParseComposite(
   function prefixSymbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
     try {
       // TODO maybe is broken because it does not take # into consideration
-      if (tokens.peek() === L_Keywords.Slash) {
+      if (tokens.peek() === L_KW.Slash) {
         return compositeParse(env, tokens);
       } else {
         return pureSingletonAndFormalSymbolParse(env, tokens);
@@ -1242,7 +1230,7 @@ export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.Lets);
+    skipper.skip(env, L_KW.Lets);
     const name = skipper.skip(env);
     const regex = new RegExp(skipString(tokens));
 
@@ -1253,13 +1241,13 @@ export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
       const facts = parseFactsArrCheckVarsDeclFixIfPrefix(
         env,
         tokens,
-        [L_Keywords.L_End],
+        [L_KW.L_End],
         [new L_Singleton(name)]
       );
-      skipper.skip(env, L_Keywords.L_End);
+      skipper.skip(env, L_KW.L_End);
       node = new L_Nodes.LetsNode(name, regex, facts);
     } else {
-      skipper.skip(env, L_Keywords.L_End);
+      skipper.skip(env, L_KW.L_End);
       node = new L_Nodes.LetsNode(name, regex, []);
     }
 
@@ -1313,7 +1301,7 @@ export function includeParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.Include);
+    skipper.skip(env, L_KW.Include);
 
     skipper.skip(env, '"');
     let path: string = "";
@@ -1322,7 +1310,7 @@ export function includeParse(env: L_Env, tokens: L_Tokens): L_Out {
     }
     skipper.skip(env, '"');
 
-    skipper.skip(env, L_Keywords.L_End);
+    skipper.skip(env, L_KW.L_End);
     const node = new L_Nodes.IncludeNode(path);
 
     const out = includeExec(env, node);
@@ -1348,7 +1336,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.DefLiteralOperator);
+    skipper.skip(env, L_KW.DefLiteralOperator);
     const name = skipper.skip(env);
     skipper.skip(env, "{");
     const path = skipString(tokens);
@@ -1358,12 +1346,12 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     const vars = arrParse<L_Symbol>(env, tokens, symbolParse, [
       ":",
-      L_Keywords.L_End,
+      L_KW.L_End,
     ]);
 
     let node: L_Nodes.DefLiteralOptNode | undefined = undefined;
-    if (isCurToken(tokens, L_Keywords.L_End)) {
-      skipper.skip(env, L_Keywords.L_End);
+    if (isCurToken(tokens, L_KW.L_End)) {
+      skipper.skip(env, L_KW.L_End);
       node = new L_Nodes.DefLiteralOptNode(name, vars, [], path, func);
     } else {
       skipper.skip(env, ":");
@@ -1376,10 +1364,10 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
       const facts = parseFactsArrCheckVarsDeclFixIfPrefix(
         env,
         tokens,
-        [L_Keywords.L_End],
+        [L_KW.L_End],
         vars as L_Singleton[]
       );
-      skipper.skip(env, L_Keywords.L_End);
+      skipper.skip(env, L_KW.L_End);
       node = new L_Nodes.DefLiteralOptNode(name, vars, facts, path, func);
     }
 
@@ -1397,7 +1385,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
   ): L_Out {
     try {
       if (!env.newLiteralOpt(node)) throw Error();
-      return env.report(`[new ${L_Keywords.DefLiteralOperator}] ${node}`);
+      return env.report(`[new ${L_KW.DefLiteralOperator}] ${node}`);
     } catch (error) {
       return L_Report.L_ReportErr(env, defLiteralOptExec, node);
     }
@@ -1424,13 +1412,13 @@ export function symbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
     // TODO Later, there should be parser based on precedence. And there does not  need ((1 * 4) + 4) = 8, there is only $ 1 * 4 + 4 = 8 $
 
     try {
-      if (tokens.peek() === L_Keywords.Slash) {
+      if (tokens.peek() === L_KW.Slash) {
         return compositeParse(env, tokens);
-      } else if (tokens.peek() === L_Keywords.Dollar) {
+      } else if (tokens.peek() === L_KW.Dollar) {
         return braceCompositeParse(env, tokens);
-      } else if (tokens.peek().startsWith(L_Keywords.LiteralOptPrefix)) {
+      } else if (tokens.peek().startsWith(L_KW.LiteralOptPrefix)) {
         return literalOptParse(env, tokens);
-      } else if (tokens.peek() === L_Keywords.IndexedSymbol) {
+      } else if (tokens.peek() === L_KW.IndexedSymbol) {
         return indexedSymbolParse(env, tokens);
       } else {
         // return singletonParse(env, tokens);
@@ -1448,16 +1436,16 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.LetAlias);
+    skipper.skip(env, L_KW.LetAlias);
     const name = pureSingletonParse(env, tokens);
-    skipper.skip(env, L_Keywords.Colon);
+    skipper.skip(env, L_KW.Colon);
     const toBeAliased = arrParse<L_Symbol>(
       env,
       tokens,
       symbolParse,
-      L_Keywords.L_End
+      L_KW.L_End
     );
-    skipper.skip(env, L_Keywords.L_End);
+    skipper.skip(env, L_KW.L_End);
 
     const node = new L_Nodes.LetAliasNode(name, toBeAliased);
 
@@ -1540,12 +1528,12 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
     //TODO CheckVars not implemented
 
     // * If The opt starts with $, then it's an opt written like a function
-    if (isCurToken(tokens, L_Keywords.FunctionTypeFactOptPrefix)) {
-      skipper.skip(env, L_Keywords.FunctionTypeFactOptPrefix);
+    if (isCurToken(tokens, L_KW.FunctionTypeFactOptPrefix)) {
+      skipper.skip(env, L_KW.FunctionTypeFactOptPrefix);
       const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
-      skipper.skip(env, L_Keywords.LeftBrace);
+      skipper.skip(env, L_KW.LeftBrace);
       const vars = arrParse<L_Symbol>(env, tokens, symbolParse, ")");
-      skipper.skip(env, L_Keywords.RightBrace);
+      skipper.skip(env, L_KW.RightBrace);
 
       let checkVars = checkVarsParse();
 
@@ -1605,7 +1593,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.If);
+    skipper.skip(env, L_KW.If);
 
     // Parse vars
     const vars: L_Structs.L_Singleton[] = [];
@@ -1661,7 +1649,7 @@ function indexedSymbolParse(
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(env, L_Keywords.IndexedSymbol);
+    skipper.skip(env, L_KW.IndexedSymbol);
     skipper.skip(env, "{");
     const symbol = symbolParse(env, tokens);
     const indexes: number[] = [];
