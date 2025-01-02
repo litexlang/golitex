@@ -1,7 +1,7 @@
 import { L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Structs from "./L_Structs";
-import { L_Keywords } from "./L_Keywords";
+import { L_KW } from "./L_Keywords";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;
@@ -195,7 +195,7 @@ export class L_Env {
     }
 
     this.defs.set(s, defNode);
-    this.report(`[${L_Keywords.DefConcept}] ${defNode}`);
+    this.report(`[${L_KW.DefConcept}] ${defNode}`);
     return true;
   }
 
@@ -294,7 +294,7 @@ export class L_Env {
   }
 
   isKeywordSingleton(fix: string): boolean {
-    return fix === L_Keywords.AnySymbol || fix === L_Keywords.ExistSymbol;
+    return fix === L_KW.AnySymbol || fix === L_KW.ExistSymbol;
   }
 
   isAlias(name: string): boolean {

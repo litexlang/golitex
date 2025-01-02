@@ -144,7 +144,7 @@
 //   }
 // }
 
-import { L_Keywords, specialChars } from "./L_Keywords";
+import { L_KW, specialChars } from "./L_Keywords";
 import { L_Env } from "./L_Env";
 
 export class L_Tokens {

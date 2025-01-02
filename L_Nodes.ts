@@ -1,5 +1,5 @@
 import { L_Env } from "./L_Env";
-import { L_Keywords } from "./L_Keywords";
+import { L_KW } from "./L_Keywords";
 import { messageVarNotDeclared } from "./L_Report";
 import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
@@ -32,9 +32,7 @@ export abstract class LogicNode extends L_FactNode {
   }
 
   addPrefixToVars(): boolean {
-    this.vars = this.vars.map(
-      (e) => new L_Singleton(L_Keywords.IfVarPrefix + e)
-    );
+    this.vars = this.vars.map((e) => new L_Singleton(L_KW.IfVarPrefix + e));
 
     for (const r of this.req) {
       if (r instanceof LogicNode) {
@@ -55,7 +53,7 @@ export abstract class LogicNode extends L_FactNode {
     try {
       const newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
         e,
-        new L_Singleton(L_Keywords.IfVarPrefix + e.value),
+        new L_Singleton(L_KW.IfVarPrefix + e.value),
       ]);
       freeFixPairs = [...freeFixPairs, ...newFreeFixPairs];
       this.req = this.req.map((r) => r.fix(env, freeFixPairs));
@@ -300,7 +298,7 @@ export class KnowNode extends L_Node {
   }
 
   override toString(): string {
-    return `${L_Keywords.Know} ${this.facts};`;
+    return `${L_KW.Know} ${this.facts};`;
   }
 }
 
@@ -310,7 +308,7 @@ export class LetNode extends L_Node {
   }
 
   override toString() {
-    return `${L_Keywords.Let} ${this.vars}: ${this.facts};`;
+    return `${L_KW.Let} ${this.vars}: ${this.facts};`;
   }
 }
 
@@ -320,7 +318,7 @@ export class LetFormalSymbolNode extends L_Node {
   }
 
   override toString() {
-    return `${L_Keywords.LetFormal} ${this.vars}: ${this.facts};`;
+    return `${L_KW.LetFormal} ${this.vars}: ${this.facts};`;
   }
 }
 
@@ -330,7 +328,7 @@ export class ProveNode extends L_Node {
   }
 
   override toString() {
-    return `${L_Keywords.Prove} ${this.toProve}`;
+    return `${L_KW.Prove} ${this.toProve}`;
   }
 }
 export class ProveContradictNode extends L_Node {
@@ -343,7 +341,7 @@ export class ProveContradictNode extends L_Node {
   }
 
   override toString() {
-    return `${L_Keywords.ProveByContradiction} ${this.toProve}`;
+    return `${L_KW.ProveByContradiction} ${this.toProve}`;
   }
 }
 
@@ -363,7 +361,7 @@ export class HaveNode extends L_Node {
   }
 
   override toString() {
-    return `${L_Keywords.Have} ${this.vars}: ${this.fact}`;
+    return `${L_KW.Have} ${this.vars}: ${this.fact}`;
   }
 }
 
@@ -373,7 +371,7 @@ export class DefOperatorNode extends L_Node {
   }
 
   toString(): string {
-    return `${L_Keywords.DefOperator} ${this.composite}: ${this.facts}`;
+    return `${L_KW.DefOperator} ${this.composite}: ${this.facts}`;
   }
 }
 
@@ -434,7 +432,7 @@ export class LetAliasNode extends L_Node {
   }
 
   toString() {
-    return `${L_Keywords.LetAlias} ${this.name} ${this.toBeAliased}`;
+    return `${L_KW.LetAlias} ${this.name} ${this.toBeAliased}`;
   }
 }
 
@@ -465,7 +463,7 @@ export class IsConceptNode extends BuiltinCheckNode {
   }
 
   toString() {
-    return `${L_Keywords.isConcept}(${this.concepts})`;
+    return `${L_KW.isConcept}(${this.concepts})`;
   }
 
   tryFactVarsDeclared(env: L_Env): boolean {
@@ -518,7 +516,7 @@ export class IsFormNode extends BuiltinCheckNode {
 
   toString(): string {
     const notStr = this.isT ? "" : "[not]";
-    const mainStr = `${L_Keywords.isForm}(${this.candidate}, ${this.baseline}, {${this.facts}})`;
+    const mainStr = `${L_KW.isForm}(${this.candidate}, ${this.baseline}, {${this.facts}})`;
     return notStr + mainStr;
   }
 }

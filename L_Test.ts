@@ -44,6 +44,14 @@ const exampleList: ExampleItem[] = [
     code: [
       "concept $p(x); let x: $p(x); $is_concept(p; $p(x)); $is_concept(p; $p(z));",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "is_form",
+    code: [
+      "concept $p(x); let x: $p(x); operator \\++{x}; let a; $is_form(\\++{a}; \\++{A}) ;",
+    ],
     debug: true,
     print: true,
   },
