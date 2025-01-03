@@ -24,12 +24,7 @@ import {
   OptKnownFactReq,
 } from "./L_Structs";
 import * as L_Memory from "./L_Memory";
-import {
-  L_ReportBoolErr,
-  L_ReportCheckErr,
-  L_ReportErr,
-  reportCheckErr,
-} from "./L_Report";
+import { L_ReportBoolErr, L_ReportCheckErr, L_ReportErr } from "./L_Report";
 
 export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
   try {

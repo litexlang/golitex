@@ -983,11 +983,11 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
   ): L_Structs.L_Out {
     try {
       // declare new opt
-      const ok = declNewFact(env, node);
-      if (!ok) {
-        env.report(`Failed to store ${node}`);
-        return L_Structs.L_Out.Error;
-      }
+      declNewFact(env, node);
+      // if (!ok) {
+      //   env.report(`Failed to store ${node}`);
+      //   return L_Structs.L_Out.Error;
+      // }
 
       node.onlyIfs.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
 
@@ -997,8 +997,8 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
       throw error;
     }
 
-    function declNewFact(env: L_Env, node: L_Nodes.DefConceptNode): boolean {
-      let ok = true;
+    function declNewFact(env: L_Env, node: L_Nodes.DefConceptNode): void {
+      // let ok = true;
       // if (node instanceof L_Nodes.DefExistNode) {
       //   ok = env.newDef(node.opt.optSymbol.name, node);
       //   ok = env.newExistDef(node.opt.optSymbol.name, node);
@@ -1008,7 +1008,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
       for (const onlyIf of node.onlyIfs) {
         tryNewFact(env, onlyIf);
       }
-      return ok;
+      // return ok;
     }
   }
 }
@@ -1483,7 +1483,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
       try {
-        let ok = node.toBeAliased.every((e) => e.tryVarsDeclared(env));
+        node.toBeAliased.every((e) => e.tryVarsDeclared(env));
         // if (!ok)
         //   messageParsingError(letAliasExec, `${node.toBeAliased} undeclared.`);
 

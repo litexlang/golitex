@@ -332,15 +332,15 @@ export class L_Env {
   //   return true;
   // }
 
-  errMesReturnL_Out(s: L_Nodes.L_Node | string): L_Structs.L_Out {
+  errMesReturnL_Out(s: L_Nodes.L_Node | string): void {
     this.report(`Error: ${s}`);
-    return L_Structs.L_Out.Error;
+    // return L_Structs.L_Out.Error;
   }
 
-  errMesReturnBoolean(s: L_Nodes.L_Node | string): boolean {
-    this.report(`Error: ${s}`);
-    return false;
-  }
+  // errMesReturnBoolean(s: L_Nodes.L_Node | string): boolean {
+  //   this.report(`Error: ${s}`);
+  //   return false;
+  // }
 
   printDeclFacts() {
     console.log("\n--Declared Facts--\n");
