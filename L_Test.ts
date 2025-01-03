@@ -75,7 +75,7 @@ const exampleList: ExampleItem[] = [
       `concept $=(x, y); operator \\frac{x,y}; let 1; concept $nat(x);`,
       `if [x(a, b): \\frac{\\frac{a,1}, b}]: $nat(a) {x = \\frac{a, b}};`,
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
   {
@@ -85,6 +85,19 @@ const exampleList: ExampleItem[] = [
       "if a,b: all a,b are p {$q(a,b)} ;",
     ],
     debug: false,
+    print: true,
+  },
+  {
+    name: "",
+    code: [
+      `operator \\*{a,b};`,
+      `let 1,2.3;`,
+      "concept $real(x);",
+      "know if [n(a,b): \\*{a,b}] {n is real};",
+      "3 is real;",
+      "1 * 2 is real;",
+    ],
+    debug: true,
     print: true,
   },
 ];
