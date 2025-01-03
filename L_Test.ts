@@ -66,6 +66,15 @@ const exampleList: ExampleItem[] = [
       // "\\frac{\\*{\\frac{1,2},1}, \\*{\\frac{1,3},1}} = \\frac{\\frac{1,2},\\frac{1,3}};",
       "[1,x: \\frac{1,2}, y: \\frac{1,3}] {\\frac{\\*{x,1}, \\*{y,1}} = \\frac{x,y}}; ",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "new if expr",
+    code: [
+      `concept $=(x, y); operator \\frac{x,y}; let 1; concept $nat(x);`,
+      `if [x: \\frac{\\frac{a,1}, b}]: $nat(a) {x = \\frac{a, b}};`,
+    ],
     debug: true,
     print: true,
   },
