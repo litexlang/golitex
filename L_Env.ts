@@ -320,17 +320,17 @@ export class L_Env {
     this.messages = [];
   }
 
-  OKMesReturnL_Out(message: L_Nodes.L_Node | string): L_Structs.L_Out {
-    if (message instanceof L_Nodes.L_Node) this.report(`OK! ${message}`);
-    else this.report(message);
-    return L_Structs.L_Out.True;
-  }
+  // OKMesReturnL_Out(message: L_Nodes.L_Node | string): L_Structs.L_Out {
+  //   if (message instanceof L_Nodes.L_Node) this.report(`OK! ${message}`);
+  //   else this.report(message);
+  //   return L_Structs.L_Out.True;
+  // }
 
-  OKMesReturnBoolean(message: L_Nodes.L_Node | string): boolean {
-    if (message instanceof L_Nodes.L_Node) this.report(`OK! ${message}`);
-    else this.report(message);
-    return true;
-  }
+  // OKMesReturnBoolean(message: L_Nodes.L_Node | string): boolean {
+  //   if (message instanceof L_Nodes.L_Node) this.report(`OK! ${message}`);
+  //   else this.report(message);
+  //   return true;
+  // }
 
   errMesReturnL_Out(s: L_Nodes.L_Node | string): L_Structs.L_Out {
     this.report(`Error: ${s}`);

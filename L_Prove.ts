@@ -36,7 +36,7 @@ export function proveOpt(
     const out = L_Checker.checkFact(newEnv, toProve);
     if (out !== L_Out.True) return out;
 
-    L_Memory.newFact(env, toProve);
+    L_Memory.tryNewFact(env, toProve);
 
     newEnv.getMessages().forEach((e) => env.report(`[prove] ${e}`));
 
@@ -57,12 +57,7 @@ export function proveOptByContradict(
     const newEnv = new L_Env(env);
 
     toProve.isT = !toProve.isT;
-    let ok = L_Memory.newFact(newEnv, toProve);
-    if (!ok) {
-      newEnv.report(`Failed to store ${toProve}`);
-      return L_Out.Error;
-    }
-
+    L_Memory.tryNewFact(newEnv, toProve);
     // ok = toProve.varsDeclared(env);
     // if (!ok) {
     //   return L_Report.L_ReportErr(
@@ -95,11 +90,11 @@ export function proveOptByContradict(
     }
 
     toProve.isT = !toProve.isT;
-    ok = L_Memory.newFact(env, toProve);
-    if (!ok) {
-      env.report(`Failed to store ${toProve}`);
-      return L_Out.Error;
-    }
+    L_Memory.tryNewFact(env, toProve);
+    // if (!ok) {
+    //   env.report(`Failed to store ${toProve}`);
+    //   return L_Out.Error;
+    // }
 
     newEnv
       .getMessages()

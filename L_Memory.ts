@@ -15,7 +15,7 @@ import {
   OptKnownFactReq,
 } from "./L_Structs";
 
-export function newFact(env: L_Env, fact: L_FactNode): boolean {
+export function tryNewFact(env: L_Env, fact: L_FactNode): void {
   try {
     if (fact instanceof BuiltinCheckNode) {
       newBuiltinFact(env, fact);
@@ -31,9 +31,10 @@ export function newFact(env: L_Env, fact: L_FactNode): boolean {
       throw Error();
     }
 
-    return env.OKMesReturnBoolean(`[fact] ${fact}`);
+    env.report(`[fact] ${fact}`);
   } catch (error) {
-    reportStoreErr(env, newFact.name, fact);
+    env.report(`failed to store ${fact}`);
+    reportStoreErr(env, tryNewFact.name, fact);
     throw error;
   }
 }
@@ -42,7 +43,7 @@ function tryNewFactsNode(env: L_Env, fact: FactsNode): void {
   try {
     const freeFixPairs = fact.varsPairs.flat();
     const newFacts = fact.facts.map((e) => e.fixByIfVars(env, freeFixPairs));
-    newFacts.forEach((fact) => newFact(env, fact));
+    newFacts.forEach((fact) => tryNewFact(env, fact));
   } catch (error) {
     reportStoreErr(env, tryNewFactsNode.name, fact);
     throw error;
