@@ -84,6 +84,12 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     for (const v of toCheck.vars) {
       if (v instanceof L_Singleton) {
         newEnv.safeNewPureSingleton(v.value);
+        for (const form of toCheck.varsForm) {
+          if (form.key.value === v.value) {
+            form.freeVars.forEach((e) => newEnv.safeNewPureSingleton(e.value));
+            break;
+          }
+        }
       } else {
         env.report(`vars in if-expr must be singleton, got ${v}`);
         throw Error();
