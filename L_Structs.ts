@@ -12,6 +12,21 @@ export abstract class L_Symbol {
   abstract tryVarsDeclared(env: L_Env): boolean;
   abstract fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol;
 
+  static structurallyIdentical(a: L_Symbol, b: L_Symbol): boolean {
+    if (a instanceof L_Singleton && b instanceof L_Singleton) {
+      return true;
+    } else if (a instanceof L_Composite && b instanceof L_Composite) {
+      if (a.name === b.name && a.values.length === b.values.length) {
+        return a.values.every((v, i) =>
+          this.structurallyIdentical(v, b.values[i])
+        );
+      }
+      return false;
+    }
+
+    return false;
+  }
+
   static isExistSymbol(symbol: L_Symbol): boolean {
     return symbol instanceof L_Singleton && symbol.value === L_KW.ExistSymbol;
   }

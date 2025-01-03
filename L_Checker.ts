@@ -246,11 +246,31 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
 
         // TODO if instanceof ToCheckFormulaNode
         if (layer instanceof IfNode) {
-          const currentPairs = LogicNode.makeFreeFixPairs(
-            env,
-            (givenOpt.checkVars as L_Symbol[][])[layerNum],
-            layer.vars
-          );
+          const currentPairs: [L_Symbol, L_Symbol][] =
+            LogicNode.makeFreeFixPairs(
+              env,
+              (givenOpt.checkVars as L_Symbol[][])[layerNum],
+              layer.vars
+            );
+
+          //* CHECK WHETHER THE GIVEN VAR SATISFIES ITS FORM.
+          for (const formReq of layer.varsFormReq) {
+            let done = false;
+            for (const pair of currentPairs) {
+              if ((pair[0] as L_Singleton).value === formReq.key.value) {
+                if (L_Symbol.structurallyIdentical(formReq.form, pair[1])) {
+                  done = true;
+                  continue;
+                } else {
+                  throw Error();
+                }
+              }
+              if (done) break;
+            }
+            if (done) continue;
+            else throw Error(`Some variable in formReq is not passed`);
+          }
+
           freeFixedPairs = [...freeFixedPairs, ...currentPairs];
           if (
             //! checkIfReqLiterally is very dumb and may fail at many situations
