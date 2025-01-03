@@ -97,7 +97,7 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     }
 
     for (const req of toCheck.req) {
-      L_Memory.newFact(newEnv, req);
+      L_Memory.tryNewFact(newEnv, req);
     }
 
     for (const onlyIf of toCheck.onlyIfs) {
@@ -294,7 +294,10 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
             })
           ) {
             layer.req.every((fact) =>
-              L_Memory.newFact(newEnv, fact.fixByIfVars(newEnv, freeFixedPairs))
+              L_Memory.tryNewFact(
+                newEnv,
+                fact.fixByIfVars(newEnv, freeFixedPairs)
+              )
             );
           } else {
             successful = false;
@@ -465,7 +468,7 @@ function checkToCheckFormula(env: L_Env, toCheck: FormulaFactNode): L_Out {
         const newEnv = new L_Env(env);
         const another = toCheck.getLeftRight().filter((e) => e !== fact)[0];
         // 有趣的是，我这里不需要进一步地把子节点（比如如果left是or，我在本函数里把left的or再拿出来做newFact）再拿出来，因为我未来做验证的时候，我调用checkFact的时候，我又会来到这个left，这时候我再会把left的or里面的东西拿出来。
-        L_Memory.newFact(newEnv, another.copyWithIsTReverse());
+        L_Memory.tryNewFact(newEnv, another.copyWithIsTReverse());
         const out = checkFact(newEnv, fact);
         if (out === L_Out.True) {
           return L_Out.True;

@@ -41,13 +41,7 @@ function factExec(env: L_Env, toCheck: L_Nodes.L_FactNode): L_Out {
     const out = L_Checker.checkFact(env, toCheck);
 
     if (out === L_Out.True) {
-      // Store Fact
-      const ok = L_Memory.newFact(env, toCheck);
-
-      if (!ok) {
-        env.report(`Failed to store ${toCheck}`);
-        return L_Out.Error;
-      }
+      L_Memory.tryNewFact(env, toCheck);
     }
 
     return L_Report.reportL_Out(env, out, toCheck);
@@ -84,7 +78,7 @@ function proveContradictExec(
   try {
     const newEnv = new L_Env(env);
     const negativeToProve = proveNode.toProve.copyWithIsTReverse();
-    L_Memory.newFact(newEnv, negativeToProve);
+    L_Memory.tryNewFact(newEnv, negativeToProve);
 
     // TODO Must check all opt and vars in toProve is declared in env instead of in env
     for (const node of proveNode.block) {
@@ -99,7 +93,7 @@ function proveContradictExec(
     const out2 = factExec(newEnv, proveNode.contradict.copyWithIsTReverse());
 
     if (out === L_Out.True && out2 === L_Out.True) {
-      L_Memory.newFact(env, proveNode.toProve);
+      L_Memory.tryNewFact(env, proveNode.toProve);
       env.report(`[prove_by_contradict] ${proveNode.toProve}`);
       return L_Out.True;
     } else {
@@ -143,9 +137,8 @@ function proveOptExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
 
     const out = L_Checker.checkFact(newEnv, proveNode.toProve);
     if (out === L_Out.True) {
-      const ok = L_Memory.newFact(env, proveNode.toProve);
-      if (ok) return L_Out.True;
-      else throw Error();
+      L_Memory.tryNewFact(env, proveNode.toProve);
+      return L_Out.True;
     } else {
       env.report(`[prove failed] ${proveNode.toProve}`);
       return L_Out.Unknown;
@@ -169,10 +162,7 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
     }
 
     for (const node of toProve.req) {
-      ok = L_Memory.newFact(newEnv, node);
-      if (!ok) {
-        throw Error();
-      }
+      L_Memory.tryNewFact(newEnv, node);
     }
 
     // TODO Must check all opt and vars in toProve is declared in env instead of in env
@@ -192,13 +182,9 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
       }
     }
 
-    const out = L_Memory.newFact(env, toProve);
-    if (out) {
-      env.report(`[prove] ${proveNode}`);
-      return L_Out.True;
-    } else {
-      throw Error();
-    }
+    L_Memory.tryNewFact(env, toProve);
+    env.report(`[prove] ${proveNode}`);
+    return L_Out.True;
   } catch {
     return L_Report.L_ReportErr(env, proveIfExec, proveNode);
   }

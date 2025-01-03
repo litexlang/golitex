@@ -7,7 +7,7 @@ import { L_Out } from "./L_Structs";
 import { L_Singleton, L_Composite, L_Symbol } from "./L_Structs";
 import { messageParsingError } from "./L_Report";
 import * as L_Report from "./L_Report";
-import { newFact } from "./L_Memory";
+import { tryNewFact } from "./L_Memory";
 import { checkFact } from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import { L_Tokens } from "./L_Lexer";
@@ -380,11 +380,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
       node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
 
       for (const onlyIf of node.facts) {
-        const ok = L_Memory.newFact(env, onlyIf);
-        if (!ok) {
-          L_Report.reportStoreErr(env, knowExec.name, onlyIf);
-          throw new Error();
-        }
+        L_Memory.tryNewFact(env, onlyIf);
       }
 
       return L_Out.True;
@@ -445,11 +441,7 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
 
       // store new facts
       for (const onlyIf of node.facts) {
-        const ok = L_Memory.newFact(env, onlyIf);
-        if (!ok) {
-          L_Report.reportStoreErr(env, letExec.name, onlyIf);
-          throw new Error();
-        }
+        L_Memory.tryNewFact(env, onlyIf);
       }
 
       env.report(`[let] ${node}`);
@@ -513,11 +505,7 @@ function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
       node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
 
       for (const onlyIf of node.facts) {
-        const ok = newFact(env, onlyIf);
-        if (!ok) {
-          L_Report.reportStoreErr(env, letFormalExec.name, onlyIf);
-          throw new Error();
-        }
+        tryNewFact(env, onlyIf);
       }
 
       env.report(`[let] ${node}`);
@@ -878,9 +866,8 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
           node.fact.checkVars
         );
 
-        const ok = newFact(env, opt);
-        if (ok) return L_Out.True;
-        else throw Error();
+        tryNewFact(env, opt);
+        return L_Out.True;
       } catch (error) {
         return L_Report.L_ReportErr(env, haveExec, node);
       }
@@ -1019,8 +1006,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
       env.tryNewDef(node.opt.optSymbol.name, node);
       // }
       for (const onlyIf of node.onlyIfs) {
-        const ok = newFact(env, onlyIf);
-        if (!ok) return env.errMesReturnBoolean(`Failed to store ${onlyIf}`);
+        tryNewFact(env, onlyIf);
       }
       return ok;
     }
@@ -1305,7 +1291,7 @@ export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
     try {
       env.tryNewLetsSymbol(node);
       for (const fact of node.facts) {
-        newFact(env, fact);
+        tryNewFact(env, fact);
       }
       env.report(`<lets OK!> ${node.toString()}`);
       return L_Out.True;
