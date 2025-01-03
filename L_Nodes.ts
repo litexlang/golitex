@@ -33,7 +33,6 @@ export abstract class LogicNode extends L_FactNode {
     public vars: L_Singleton[] = [],
     public req: L_FactNode[] = [],
     public onlyIfs: L_FactNode[] = [],
-    public env: L_Env,
     isT: boolean = true,
     public varsForm: IfVarsFormReqType[] // public varsForm: [L_Singleton, L_Singleton[], L_Symbol][]
   ) {
@@ -128,14 +127,7 @@ export class IffNode extends LogicNode {
       newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
     }
 
-    return new IffNode(
-      this.vars,
-      newReq,
-      newOnlyIf,
-      new L_Env(env),
-      this.isT,
-      this.varsForm
-    );
+    return new IffNode(this.vars, newReq, newOnlyIf, this.isT, this.varsForm);
   }
 
   override copyWithIsTReverse(): IffNode {
@@ -143,7 +135,6 @@ export class IffNode extends LogicNode {
       this.vars,
       this.req,
       this.onlyIfs,
-      this.env,
       !this.isT,
       this.varsForm
     );
@@ -174,14 +165,7 @@ export class IfNode extends LogicNode {
       newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
     }
 
-    return new IfNode(
-      this.vars,
-      newReq,
-      newOnlyIf,
-      new L_Env(env),
-      this.isT,
-      this.varsForm
-    );
+    return new IfNode(this.vars, newReq, newOnlyIf, this.isT, this.varsForm);
   }
 
   override copyWithIsTReverse(): IfNode {
@@ -189,7 +173,6 @@ export class IfNode extends LogicNode {
       this.vars,
       this.req,
       this.onlyIfs,
-      this.env,
       !this.isT,
       this.varsForm
     );
