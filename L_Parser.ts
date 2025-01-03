@@ -645,8 +645,16 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
         const varsArr: [L_Singleton, L_Symbol][] = [];
         while (!isCurToken(tokens, [L_KW.L_End, L_KW.RBracket])) {
           const single = pureSingletonParse(env, tokens);
-          skipper.skip(L_KW.Colon);
-          const symbol = symbolParse(env, tokens);
+
+          // [key: value, key] is both ok. If there is only key, then its value is key itself.
+          let symbol: L_Symbol;
+          if (isCurToken(tokens, L_KW.Colon)) {
+            skipper.skip(L_KW.Colon);
+            symbol = symbolParse(env, tokens);
+          } else {
+            symbol = single;
+          }
+
           varsArr.push([single, symbol]);
           if (isCurToken(tokens, L_KW.Comma)) skipper.skip(L_KW.Comma);
         }

@@ -52,7 +52,7 @@ export function newFact(env: L_Env, fact: L_FactNode): boolean {
 
 function newFactsNode(env: L_Env, fact: FactsNode): boolean {
   try {
-    const freeFixPairs = fact.fixedVars.flat();
+    const freeFixPairs = fact.varsPairs.flat();
     const newFacts = fact.facts.map((e) => e.fixByIfVars(env, freeFixPairs));
     newFacts.forEach((fact) => newFact(env, fact));
 

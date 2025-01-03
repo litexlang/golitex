@@ -677,7 +677,7 @@ export type FormulaSubNode = FormulaFactNode | OptFactNode;
 
 export class FactsNode extends L_FactNode {
   constructor(
-    public fixedVars: [L_Singleton, L_Symbol][][],
+    public varsPairs: [L_Singleton, L_Symbol][][],
     public facts: L_FactNode[],
     isT: boolean
   ) {
@@ -685,7 +685,7 @@ export class FactsNode extends L_FactNode {
   }
 
   override tryFactVarsDeclared(env: L_Env): void {
-    for (const v of this.fixedVars) {
+    for (const v of this.varsPairs) {
       v.forEach((e) => e[1].tryVarsDeclared(env));
     }
 
@@ -698,7 +698,7 @@ export class FactsNode extends L_FactNode {
     env: L_Env,
     freeFixPairs: [L_Symbol, L_Symbol][]
   ): L_FactNode {
-    const newFixedVars: [L_Singleton, L_Symbol][][] = this.fixedVars.map((e) =>
+    const newFixedVars: [L_Singleton, L_Symbol][][] = this.varsPairs.map((e) =>
       e.map((v: [L_Singleton, L_Symbol]) => [v[0], v[1].fix(env, freeFixPairs)])
     );
 
@@ -706,10 +706,17 @@ export class FactsNode extends L_FactNode {
   }
 
   override copyWithIsTReverse(): L_FactNode {
-    return new FactsNode(this.fixedVars, this.facts, !this.isT);
+    return new FactsNode(this.varsPairs, this.facts, !this.isT);
   }
 
   override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     throw Error();
+  }
+
+  toString() {
+    const vars = this.varsPairs
+      .map((arr) => arr.map((e) => `${e[0]}:${e[1]}`))
+      .toString();
+    return `[${vars}] {${this.facts}}`;
   }
 }
