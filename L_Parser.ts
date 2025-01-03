@@ -621,7 +621,7 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
     ) {
       out = builtinFunctionParse(env, tokens);
     } else if (["if", "iff"].includes(tokens.peek())) {
-      out = ifFactParse(env, tokens);
+      out = ifParse(env, tokens);
       // (out as L_Nodes.IfNode).addPrefixToVars();
     } else {
       out = optFactParse(env, tokens);
@@ -1632,7 +1632,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
   }
 }
 
-function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
+function ifParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -1702,7 +1702,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     return out;
   } catch (error) {
     env.getMessages().push(...env.getMessages());
-    messageParsingError(ifFactParse, error);
+    messageParsingError(ifParse, error);
     throw error;
   }
 }

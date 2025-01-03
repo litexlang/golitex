@@ -120,6 +120,10 @@ export abstract class LogicNode extends L_FactNode {
       newEnv.tryNewPureSingleton(v.value);
     }
 
+    for (const formReq of this.varsFormReq) {
+      formReq.freeVars.forEach((e) => newEnv.tryNewPureSingleton(e.value));
+    }
+
     for (const req of this.req) {
       req.tryFactVarsDeclared(newEnv);
     }

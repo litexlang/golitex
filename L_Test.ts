@@ -91,9 +91,10 @@ const exampleList: ExampleItem[] = [
     name: "",
     code: [
       `operator \\*{a,b};`,
-      `let 1,2.3;`,
       "concept $real(x);",
-      "know if [n(a,b): \\*{a,b}] {n is real};",
+      `let 1,2,3;`,
+      // `know all 1,2,3 are real;`,
+      "know if [n(a,b): \\*{a,b}]: a is real {n is real};",
       "3 is real;",
       "1 * 2 is real;",
     ],
