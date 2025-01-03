@@ -172,6 +172,10 @@ export class L_Singleton extends L_Symbol {
     super();
   }
 
+  withIfVarPrefix() {
+    return new L_Singleton(L_KW.IfVarPrefix + this.value);
+  }
+
   //* IMPORTANT METHOD
   tryVarsDeclared(env: L_Env): boolean {
     if (env.isSingletonDeclared(this.value)) return true;

@@ -42,6 +42,12 @@ export abstract class LogicNode extends L_FactNode {
   addPrefixToVars(): boolean {
     this.vars = this.vars.map((e) => new L_Singleton(L_KW.IfVarPrefix + e));
 
+    // TODO form is not done
+    this.varsFormReq.forEach((e) => (e.key = e.key.withIfVarPrefix()));
+    this.varsFormReq.forEach(
+      (e) => (e.freeVars = e.freeVars.map((v) => v.withIfVarPrefix()))
+    );
+
     for (const r of this.req) {
       if (r instanceof LogicNode) {
         r.addPrefixToVars();
