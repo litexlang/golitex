@@ -438,8 +438,7 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
   function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
     try {
       for (const e of node.vars) {
-        const ok = env.safeNewPureSingleton(e);
-        if (!ok) return L_Out.Error;
+        env.tryNewPureSingleton(e);
       }
 
       node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
@@ -841,8 +840,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
         if (out !== L_Out.True) return out;
 
         for (const v of node.vars) {
-          const ok = env.safeNewPureSingleton(v.value);
-          if (!ok) throw Error();
+          env.tryNewPureSingleton(v.value);
         }
 
         const newVars: L_Symbol[] = [];
@@ -924,7 +922,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
     if (isCurToken(tokens, ":")) {
       const newEnv = new L_Env(env);
       opt.vars.forEach((e) =>
-        newEnv.safeNewPureSingleton((e as L_Singleton).value)
+        newEnv.tryNewPureSingleton((e as L_Singleton).value)
       );
       skipper.skip(":");
       cond = parseFactsArrCheckVarsDeclFixIfPrefix(newEnv, tokens, [
@@ -937,7 +935,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
     if (isCurToken(tokens, "{")) {
       const newEnv = new L_Env(env);
       opt.vars.forEach((e) =>
-        newEnv.safeNewPureSingleton((e as L_Singleton).value)
+        newEnv.tryNewPureSingleton((e as L_Singleton).value)
       );
       skipper.skip("{");
       onlyIfs.push(
@@ -1001,7 +999,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
       //   ok = env.newDef(node.opt.optSymbol.name, node);
       //   ok = env.newExistDef(node.opt.optSymbol.name, node);
       // } else {
-      ok = env.safeNewDef(node.opt.optSymbol.name, node);
+      env.tryNewDef(node.opt.optSymbol.name, node);
       // }
       for (const onlyIf of node.onlyIfs) {
         const ok = newFact(env, onlyIf);
@@ -1097,7 +1095,7 @@ export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
 
   function defCompositeExec(env: L_Env, node: L_Nodes.DefOperatorNode): L_Out {
     try {
-      if (!env.newComposite(node.composite.name, node)) throw Error();
+      env.tryNewComposite(node.composite.name, node);
       return env.report(`[new def_composite] ${node}`);
     } catch (error) {
       return L_Report.L_ReportErr(env, defCompositeExec, node);
@@ -1288,7 +1286,7 @@ export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
 
   function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
     try {
-      env.safeNewLetsSymbol(node);
+      env.tryNewLetsSymbol(node);
       for (const fact of node.facts) {
         newFact(env, fact);
       }
@@ -1412,7 +1410,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
     node: L_Nodes.DefLiteralOptNode
   ): L_Out {
     try {
-      if (!env.newLiteralOpt(node)) throw Error();
+      env.tryNewLiteralOpt(node);
       return env.report(`[new ${L_KW.DefLiteralOperator}] ${node}`);
     } catch (error) {
       return L_Report.L_ReportErr(env, defLiteralOptExec, node);
@@ -1728,7 +1726,7 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
   if (moreVars) {
     // 这里借用了一下env，然后假装开了一个新环境，以检查是否相关的var都被声明了
     for (const moreVar of moreVars) {
-      env.safeNewPureSingleton(moreVar.value);
+      env.tryNewPureSingleton(moreVar.value);
     }
   }
 

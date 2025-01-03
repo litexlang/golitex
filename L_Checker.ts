@@ -83,10 +83,10 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     const newEnv = new L_Env(env);
     for (const v of toCheck.vars) {
       if (v instanceof L_Singleton) {
-        newEnv.safeNewPureSingleton(v.value);
+        newEnv.tryNewPureSingleton(v.value);
         for (const form of toCheck.varsFormReq) {
           if (form.key.value === v.value) {
-            form.freeVars.forEach((e) => newEnv.safeNewPureSingleton(e.value));
+            form.freeVars.forEach((e) => newEnv.tryNewPureSingleton(e.value));
             break;
           }
         }
