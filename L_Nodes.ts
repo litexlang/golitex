@@ -23,13 +23,19 @@ export abstract class L_FactNode extends L_Node {
   abstract getRootOptNodes(): [OptFactNode, L_FactNode[]][];
 }
 
+export type IfVarsFormReqType = {
+  key: L_Singleton;
+  freeVars: L_Singleton[];
+  form: L_Symbol;
+};
 export abstract class LogicNode extends L_FactNode {
   constructor(
     public vars: L_Singleton[] = [],
     public req: L_FactNode[] = [],
     public onlyIfs: L_FactNode[] = [],
     public env: L_Env,
-    isT: boolean = true
+    isT: boolean = true,
+    public varsForm: IfVarsFormReqType[] // public varsForm: [L_Singleton, L_Singleton[], L_Symbol][]
   ) {
     super(isT);
   }
@@ -122,11 +128,25 @@ export class IffNode extends LogicNode {
       newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
     }
 
-    return new IffNode(this.vars, newReq, newOnlyIf, new L_Env(env));
+    return new IffNode(
+      this.vars,
+      newReq,
+      newOnlyIf,
+      new L_Env(env),
+      this.isT,
+      this.varsForm
+    );
   }
 
   override copyWithIsTReverse(): IffNode {
-    return new IffNode(this.vars, this.req, this.onlyIfs, this.env, !this.isT);
+    return new IffNode(
+      this.vars,
+      this.req,
+      this.onlyIfs,
+      this.env,
+      !this.isT,
+      this.varsForm
+    );
   }
 
   override toString() {
@@ -154,11 +174,25 @@ export class IfNode extends LogicNode {
       newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
     }
 
-    return new IfNode(this.vars, newReq, newOnlyIf, new L_Env(env));
+    return new IfNode(
+      this.vars,
+      newReq,
+      newOnlyIf,
+      new L_Env(env),
+      this.isT,
+      this.varsForm
+    );
   }
 
   override copyWithIsTReverse(): IfNode {
-    return new IfNode(this.vars, this.req, this.onlyIfs, this.env, !this.isT);
+    return new IfNode(
+      this.vars,
+      this.req,
+      this.onlyIfs,
+      this.env,
+      !this.isT,
+      this.varsForm
+    );
   }
 
   override toString() {

@@ -112,14 +112,14 @@ function pureSingletonAndFormalSymbolParse(
   }
 }
 
-function pureSingletonParse(env: L_Env, tokens: L_Tokens): L_Singleton {
+function singletonParse(env: L_Env, tokens: L_Tokens): L_Singleton {
   const skipper = new Skipper(env, tokens);
 
   try {
     const value = skipper.skip();
     return new L_Structs.L_Singleton(value);
   } catch (error) {
-    messageParsingError(pureSingletonParse, error);
+    messageParsingError(singletonParse, error);
     throw error;
   }
 }
@@ -210,7 +210,7 @@ function braceCompositeParse(env: L_Env, tokens: L_Tokens): L_Symbol {
   const skipper = new Skipper(env, tokens);
 
   try {
-    skipper.skip(L_KW.LeftBrace);
+    skipper.skip(L_KW.LBrace);
     let left = symbolParse(env, tokens);
     while (!isCurToken(tokens, L_KW.Dollar)) {
       const opt = optSymbolParse(env, tokens);
@@ -644,7 +644,7 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       while (!isCurToken(tokens, L_KW.RBracket)) {
         const varsArr: [L_Singleton, L_Symbol][] = [];
         while (!isCurToken(tokens, [L_KW.L_End, L_KW.RBracket])) {
-          const single = pureSingletonParse(env, tokens);
+          const single = singletonParse(env, tokens);
 
           // [key: value, key] is both ok. If there is only key, then its value is key itself.
           let symbol: L_Symbol;
@@ -811,7 +811,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
     const vars = arrParse<L_Structs.L_Singleton>(
       env,
       tokens,
-      pureSingletonParse,
+      singletonParse,
       ":"
     );
     skipper.skip(L_KW.Colon);
@@ -1114,7 +1114,7 @@ export function isConceptParse(
   try {
     skipper.skip(L_KW.Dollar);
     skipper.skip(L_KW.isConcept);
-    skipper.skip(L_KW.LeftBrace);
+    skipper.skip(L_KW.LBrace);
     const vars = arrParse<L_Singleton>(
       env,
       tokens,
@@ -1147,7 +1147,7 @@ export function isFormParse(
   try {
     skipper.skip(L_KW.Dollar);
     skipper.skip(L_KW.isForm);
-    skipper.skip(L_KW.LeftBrace);
+    skipper.skip(L_KW.LBrace);
     const candidate = symbolParse(env, tokens);
     skipper.skip(L_KW.L_End);
     const baseline = symbolParse(env, tokens);
@@ -1465,7 +1465,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
 
   try {
     skipper.skip(L_KW.LetAlias);
-    const name = pureSingletonParse(env, tokens);
+    const name = singletonParse(env, tokens);
     skipper.skip(L_KW.Colon);
     const toBeAliased = arrParse<L_Symbol>(
       env,
@@ -1559,7 +1559,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
     if (isCurToken(tokens, L_KW.FunctionTypeFactOptPrefix)) {
       skipper.skip(L_KW.FunctionTypeFactOptPrefix);
       const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
-      skipper.skip(L_KW.LeftBrace);
+      skipper.skip(L_KW.LBrace);
       const vars = arrParse<L_Symbol>(env, tokens, symbolParse, ")");
       skipper.skip(L_KW.RBrace);
 
@@ -1625,9 +1625,31 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
 
     // Parse vars
     const vars: L_Structs.L_Singleton[] = [];
+    const varsForm: L_Nodes.IfVarsFormReqType[] = [];
     while (!isCurToken(tokens, [":", "{"])) {
-      const singleton = pureSingletonParse(env, tokens);
-      vars.push(singleton);
+      if (!isCurToken(tokens, L_KW.LBracket)) {
+        const singleton = singletonParse(env, tokens);
+        vars.push(singleton);
+      } else {
+        skipper.skip(L_KW.LBracket);
+        while (!isCurToken(tokens, L_KW.RBracket)) {
+          const singleton = singletonParse(env, tokens);
+          vars.push(singleton);
+          skipper.skip(L_KW.LBrace);
+          const freeVars = arrParse<L_Singleton>(
+            env,
+            tokens,
+            singletonParse,
+            L_KW.RBrace
+          );
+          skipper.skip(L_KW.RBrace);
+          skipper.skip(L_KW.Colon);
+          const symbol = symbolParse(env, tokens);
+          varsForm.push({ key: singleton, freeVars: freeVars, form: symbol });
+          if (isCurToken(tokens, L_KW.Comma)) skipper.skip(L_KW.Comma);
+        }
+        skipper.skip(L_KW.RBracket);
+      }
       if (isCurToken(tokens, ",")) skipper.skip(",");
     }
 
@@ -1654,7 +1676,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     skipper.skip("}");
 
     // Refactor IfNode: add prefix to vars in IfNode and all inside facts
-    let out = new L_Nodes.IfNode(vars, req, onlyIfs, env, true); //! By default isT = true
+    let out = new L_Nodes.IfNode(vars, req, onlyIfs, env, true, varsForm); //! By default isT = true
     if (!out.fixUsingIfPrefix(env, [])) throw Error();
     // out.addPrefixToVars();
 

@@ -39,7 +39,7 @@ export const L_KW = {
   Clear: "clear",
   Run: "run",
   Macro: "macro",
-  LeftBrace: "(",
+  LBrace: "(",
   RBrace: ")",
   LCurlyBrace: "{",
   RCurlyBrace: "}",
