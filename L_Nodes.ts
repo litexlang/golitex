@@ -39,7 +39,7 @@ export abstract class LogicNode extends L_FactNode {
     super(isT);
   }
 
-  addPrefixToVars(): boolean {
+  private addPrefixToVars(): boolean {
     this.vars = this.vars.map((e) => new L_Singleton(L_KW.IfVarPrefix + e));
 
     // TODO form is not done
@@ -82,6 +82,10 @@ export abstract class LogicNode extends L_FactNode {
       this.onlyIfs = this.onlyIfs.map((onlyIf) =>
         onlyIf.fixByIfVars(env, freeFixPairs)
       );
+
+      this.varsFormReq.forEach((e) => (e.form = e.form.fix(env, freeFixPairs)));
+
+      this.addPrefixToVars();
 
       return true;
     } catch (error) {

@@ -75,7 +75,7 @@ const exampleList: ExampleItem[] = [
       `concept $=(x, y); operator \\frac{x,y}; let 1; concept $nat(x);`,
       `if [x(a, b): \\frac{\\frac{a,1}, b}]: $nat(a) {x = \\frac{a, b}};`,
     ],
-    debug: false,
+    debug: true,
     print: true,
   },
   {
@@ -84,7 +84,7 @@ const exampleList: ExampleItem[] = [
       "concept $p(x); concept $q(x,y); know if x, y: $p(x), $p(y) {$q(x,y) };",
       "if a,b: all a,b are p {$q(a,b)} ;",
     ],
-    debug: true,
+    debug: false,
     print: true,
   },
 ];

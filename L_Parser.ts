@@ -1693,7 +1693,7 @@ function ifFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
     // Refactor IfNode: add prefix to vars in IfNode and all inside facts
     let out = new L_Nodes.IfNode(vars, req, onlyIfs, true, varsForm); //! By default isT = true
     if (!out.fixUsingIfPrefix(env, [])) throw Error();
-    out.addPrefixToVars();
+    // out.addPrefixToVars();
 
     // if (!out.varsDeclared(env)) {
     //   throw Error();
