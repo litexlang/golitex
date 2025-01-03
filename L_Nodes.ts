@@ -107,7 +107,7 @@ export abstract class LogicNode extends L_FactNode {
   override tryFactVarsDeclared(env: L_Env): void {
     const newEnv = new L_Env(env);
     for (const v of this.vars) {
-      newEnv.safeNewPureSingleton(v.value);
+      newEnv.tryNewPureSingleton(v.value);
     }
 
     for (const req of this.req) {

@@ -164,15 +164,7 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
     for (const v of toProve.vars) {
       //TODO how to composite?
       if (v instanceof L_Singleton) {
-        ok = env.safeNewPureSingleton(v.value);
-        if (!ok) {
-          L_Report.L_ReportErr(
-            env,
-            proveIfExec,
-            `The variable "${v}" is already declared in this environment or its parent environments. Please use a different name.`
-          );
-          throw Error();
-        }
+        env.tryNewPureSingleton(v.value);
       }
     }
 

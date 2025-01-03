@@ -67,7 +67,7 @@ function newIfThenFact(env: L_Env, fact: IfNode): boolean {
   try {
     const roots = fact.getRootOptNodes();
     roots.forEach((root) =>
-      env.newFact(
+      env.tryNewFact(
         root[0].optSymbol.name,
         new IfKnownFactReq([...root[1], root[0]])
       )
@@ -81,9 +81,11 @@ function newIfThenFact(env: L_Env, fact: IfNode): boolean {
 
 function newOptFact(env: L_Env, fact: OptFactNode): boolean {
   try {
-    return env.newFact(fact.optSymbol.name, new OptKnownFactReq(fact));
+    env.tryNewFact(fact.optSymbol.name, new OptKnownFactReq(fact));
+    return true;
   } catch {
-    return reportStoreErr(env, newOptFact.name, fact);
+    reportStoreErr(env, newOptFact.name, fact);
+    throw Error();
   }
 }
 
@@ -91,7 +93,7 @@ function newFormulaFact(env: L_Env, fact: FormulaFactNode): boolean {
   try {
     const roots = fact.getRootOptNodes();
     roots.forEach((root) =>
-      env.newFact(
+      env.tryNewFact(
         root[0].optSymbol.name,
         new FormulaKnownFactReq([...root[1], root[0]])
       )

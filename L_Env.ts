@@ -27,16 +27,17 @@ export class L_Env {
     this.parent = parent;
   }
 
-  newLiteralOpt(node: L_Nodes.DefLiteralOptNode): boolean {
+  tryNewLiteralOpt(node: L_Nodes.DefLiteralOptNode): void {
     if (this.getLiteralOpt(node.name)) {
-      return L_ReportBoolErr(
-        this,
-        this.newLiteralOpt,
-        `The literal operator ${node.name} is already declared.`
-      );
+      throw Error(`The literal operator ${node.name} is already declared.`);
+      // return L_ReportBoolErr(
+      //   this,
+      //   this.newLiteralOpt,
+      //   `The literal operator ${node.name} is already declared.`
+      // );
     } else {
       this.literalOperators.set(node.name, node);
-      return true;
+      // return true;
     }
   }
 
@@ -53,16 +54,15 @@ export class L_Env {
     }
   }
 
-  newComposite(key: string, fact: L_Nodes.DefOperatorNode): boolean {
+  tryNewComposite(key: string, fact: L_Nodes.DefOperatorNode): void {
     if (this.getCompositeVar(key)) {
-      return L_ReportBoolErr(
-        this,
-        this.newComposite,
+      throw Error(
         `The variable "${key}" is already declared in this environment or its parent environments. Please use a different name.`
       );
+      // return L_ReportBoolErr(this, this.tryNewComposite);
     } else {
       this.composites.set(key, fact);
-      return true;
+      // return true;
     }
   }
 
@@ -110,13 +110,12 @@ export class L_Env {
     }
   }
 
-  newFact(key: string, fact: L_Structs.L_KnownFactReq): boolean {
+  tryNewFact(key: string, fact: L_Structs.L_KnownFactReq): void {
     if (this.facts.get(key) === undefined) {
       this.facts.set(key, [fact]);
     } else {
       this.facts.get(key)?.push(fact);
     }
-    return true;
   }
 
   getFacts(key: string): undefined | L_Structs.L_KnownFactReq[] {
@@ -160,8 +159,6 @@ export class L_Env {
       this.tryFactDeclaredOrBuiltin(node.left);
       this.tryFactDeclaredOrBuiltin(node.right);
     }
-
-    return;
   }
 
   getConcept(s: string): L_Nodes.DefConceptNode | undefined {
@@ -174,29 +171,16 @@ export class L_Env {
     }
   }
 
-  // getDefExist(s: string): L_Nodes.DefExistNode | undefined {
-  //   if (this.defExists.has(s)) {
-  //     return this.defExists.get(s);
-  //   } else if (this.parent) {
-  //     return this.parent.getDefExist(s);
-  //   } else {
-  //     return undefined;
-  //   }
-  // }
-
-  safeNewDef(s: string, defNode: L_Nodes.DefConceptNode): boolean {
+  tryNewDef(s: string, defNode: L_Nodes.DefConceptNode): void {
     // REMARK: YOU ARE NOT ALLOWED TO DECLARE A FACT TWICE AT THE SAME ENV.
     if (this.getConcept(s) !== undefined) {
-      return L_ReportBoolErr(
-        this,
-        this.safeNewDef,
+      throw Error(
         `The operator "${s}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
 
     this.defs.set(s, defNode);
     this.report(`[${L_KW.DefConcept}] ${defNode}`);
-    return true;
   }
 
   // newExistDef(s: string, defNode: L_Nodes.DefExistNode): boolean {
@@ -213,28 +197,23 @@ export class L_Env {
   //   return true;
   // }
 
-  safeNewLetsSymbol(letsNode: L_Nodes.LetsNode) {
+  tryNewLetsSymbol(letsNode: L_Nodes.LetsNode) {
     if (this.isSingletonDeclared(letsNode.name)) {
-      return L_ReportBoolErr(
-        this,
-        this.safeNewLetsSymbol,
-        `letsVar ${letsNode.name} already declared`
-      );
+      throw Error(`letsVar ${letsNode.name} already declared`);
+      // return L_ReportBoolErr(this, this.tryNewLetsSymbol);
     }
     this.regexSingletons.set(letsNode.name, letsNode);
   }
 
-  safeNewPureSingleton(fix: string): boolean {
+  tryNewPureSingleton(fix: string): void {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.isSingletonDeclared(fix)) {
-      return L_ReportBoolErr(
-        this,
-        this.safeNewPureSingleton,
+      throw Error(
         `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
       );
+      // return L_ReportBoolErr(this, this.tryNewPureSingleton);
     }
     this.pureSingletons.add(fix);
-    return true;
   }
 
   safeNewFormalSymbol(fix: string): boolean {
