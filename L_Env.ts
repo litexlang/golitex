@@ -332,24 +332,24 @@ export class L_Env {
   //   return true;
   // }
 
-  errMesReturnL_Out(s: L_Nodes.L_Node | string): void {
-    this.report(`Error: ${s}`);
-    // return L_Structs.L_Out.Error;
-  }
+  // errMesReturnL_Out(s: L_Nodes.L_Node | string): void {
+  //   this.report(`Error: ${s}`);
+  //   // return L_Structs.L_Out.Error;
+  // }
 
   // errMesReturnBoolean(s: L_Nodes.L_Node | string): boolean {
   //   this.report(`Error: ${s}`);
   //   return false;
   // }
 
-  printDeclFacts() {
-    console.log("\n--Declared Facts--\n");
+  // printDeclFacts() {
+  //   console.log("\n--Declared Facts--\n");
 
-    for (const [name, declFact] of this.defs) {
-      console.log(name);
-      console.log(declFact);
-    }
-  }
+  //   for (const [name, declFact] of this.defs) {
+  //     console.log(name);
+  //     console.log(declFact);
+  //   }
+  // }
 
   toJSON() {
     return {
