@@ -55,11 +55,11 @@ function localEnvExec(env: L_Env, localEnvNode: L_Nodes.LocalEnvNode): L_Out {
     env.report(`[new local environment]\n`);
     let out = L_Out.True;
     for (let i = 0; i < localEnvNode.nodes.length; i++) {
-      const ok = L_Exec(localEnvNode.localEnv, localEnvNode.nodes[i]);
+      const curOut = L_Exec(localEnvNode.localEnv, localEnvNode.nodes[i]);
       localEnvNode.localEnv.getMessages().forEach((e) => env.report(e));
       localEnvNode.localEnv.clearMessages();
-      if (L_Out.True !== ok) {
-        out = ok;
+      if (L_Out.True !== curOut) {
+        out = curOut;
         if (L_Out.Error === out) return L_Out.Error;
       }
     }
@@ -153,7 +153,7 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
     const newEnv = new L_Env(env);
     const toProve = proveNode.toProve as L_Nodes.IfNode;
 
-    let ok = true;
+    // let ok = true;
     for (const v of toProve.vars) {
       //TODO how to composite?
       if (v instanceof L_Singleton) {

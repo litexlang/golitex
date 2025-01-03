@@ -60,19 +60,19 @@ export function reportStoreErr(
   env: L_Env,
   funcName: string,
   fact: L_FactNode
-): boolean {
+): void {
   reportFailedFunctionName(env, funcName);
-  return env.errMesReturnBoolean(`Failed to store ${fact}`);
+  env.report(`Failed to store ${fact}`);
 }
 
-export function reportCheckErr(
-  env: L_Env,
-  funcName: string,
-  fact: L_FactNode
-): L_Out {
-  reportFailedFunctionName(env, funcName);
-  return env.errMesReturnL_Out(`[Error] Failed to check ${fact}`);
-}
+// export function reportCheckErr(
+//   env: L_Env,
+//   funcName: string,
+//   fact: L_FactNode
+// ): void {
+//   reportFailedFunctionName(env, funcName);
+//   env.errMesReturnL_Out(`[Error] Failed to check ${fact}`);
+// }
 
 export function reportFailedFunctionName(
   env: L_Env,
