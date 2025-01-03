@@ -473,8 +473,8 @@ export type ExampleItem = {
   code: string[];
   debug: boolean;
   print: boolean;
-  test?: string[] | undefined;
-  runTest?: boolean;
+  // test?: string[] | undefined;
+  // runTest?: boolean;
 };
 
 export abstract class L_KnownFactReq {

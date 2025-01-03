@@ -1,6 +1,6 @@
 import { ExampleItem } from "./L_Structs";
 import { L_Env } from "./L_Env";
-import { runStringsWithLogging } from "./L_Runner";
+import { runStrings } from "./L_Runner";
 import * as fs from "fs";
 
 const exampleList: ExampleItem[] = [
@@ -108,22 +108,24 @@ function runExamples(toJSON: boolean) {
   for (const example of exampleList) {
     if (example.debug) {
       console.log(example.name);
-      runStringsWithLogging(env, example.code, example.print);
-      if (example.test !== undefined) {
-        runStringsWithLogging(env, example.test, example.print);
+      runStrings(env, example.code);
+      if (example.print) {
+        console.log(`-----\n***  source code  ***\n${example.code}\n`);
+        console.log("***  Messages  ***\n");
+        env.printClearMessage();
+        console.log();
+        console.log("-----\nDONE!\n");
       }
     }
   }
   if (toJSON) envToJSON(env, "env.json");
-}
 
-export function envToJSON(env: L_Env, fileName: string) {
-  const out = env.toJSON();
-  const jsonString = JSON.stringify(out, null, 2);
-
-  fs.writeFileSync(fileName, jsonString, "utf8");
-
-  return out;
+  function envToJSON(env: L_Env, fileName: string) {
+    const out = env.toJSON();
+    const jsonString = JSON.stringify(out, null, 2);
+    fs.writeFileSync(fileName, jsonString, "utf8");
+    return out;
+  }
 }
 
 function runLiTeXFile(filePath: string) {
@@ -131,13 +133,13 @@ function runLiTeXFile(filePath: string) {
     const data = fs.readFileSync(filePath, "utf8");
     const env = new L_Env();
     const logging = true;
-    runStringsWithLogging(env, [data], logging);
+    runStrings(env, [data]);
   } catch (err) {
     console.error("Error:", err);
   }
 }
 
-function run() {
+function runTest() {
   const args = process.argv.slice(2);
   if (!args || args.length === 0) {
     runExamples(false);
@@ -146,4 +148,4 @@ function run() {
   }
 }
 
-run();
+runTest();
