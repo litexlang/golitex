@@ -84,7 +84,7 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
     for (const v of toCheck.vars) {
       if (v instanceof L_Singleton) {
         newEnv.safeNewPureSingleton(v.value);
-        for (const form of toCheck.varsForm) {
+        for (const form of toCheck.varsFormReq) {
           if (form.key.value === v.value) {
             form.freeVars.forEach((e) => newEnv.safeNewPureSingleton(e.value));
             break;
@@ -225,6 +225,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
   // use given if-fact to check operator-fact
   // There are several default ways to use given opt to fix freeVars of known
   // 1. known is one-layer, and we replace all vars in that layer with given opt
+  //! TODO: HOW TO PROCESS VARS FORM?
   function useIfToCheckOptWithCheckVars(
     env: L_Env,
     givenOpt: OptFactNode,

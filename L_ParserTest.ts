@@ -86,7 +86,7 @@ know if x {
     name: "if",
     code: [
       `concept $=(x, y); operator \\frac{x,y}; let 1; concept $nat(x);`,
-      `if [x: \\frac{\\frac{a,1}, b}]: $nat(a) {x = \\frac{a, b}};`,
+      `if [x(a,b): \\frac{\\frac{a,1}, b}]: $nat(a) {x = \\frac{a, b}};`,
     ],
     debug: true,
     print: true,

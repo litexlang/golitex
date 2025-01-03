@@ -34,7 +34,7 @@ export abstract class LogicNode extends L_FactNode {
     public req: L_FactNode[] = [],
     public onlyIfs: L_FactNode[] = [],
     isT: boolean = true,
-    public varsForm: IfVarsFormReqType[] // public varsForm: [L_Singleton, L_Singleton[], L_Symbol][]
+    public varsFormReq: IfVarsFormReqType[] // public varsForm: [L_Singleton, L_Singleton[], L_Symbol][]
   ) {
     super(isT);
   }
@@ -59,10 +59,18 @@ export abstract class LogicNode extends L_FactNode {
 
   fixUsingIfPrefix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): boolean {
     try {
-      const newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
+      let newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
         e,
         new L_Singleton(L_KW.IfVarPrefix + e.value),
       ]);
+      for (const formReq of this.varsFormReq) {
+        for (const formFreeVar of formReq.freeVars) {
+          newFreeFixPairs.push([
+            formFreeVar,
+            new L_Singleton(L_KW.IfVarPrefix + formFreeVar.value),
+          ]);
+        }
+      }
       freeFixPairs = [...freeFixPairs, ...newFreeFixPairs];
       this.req = this.req.map((r) => r.fixByIfVars(env, freeFixPairs));
       this.onlyIfs = this.onlyIfs.map((onlyIf) =>
@@ -127,7 +135,13 @@ export class IffNode extends LogicNode {
       newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
     }
 
-    return new IffNode(this.vars, newReq, newOnlyIf, this.isT, this.varsForm);
+    return new IffNode(
+      this.vars,
+      newReq,
+      newOnlyIf,
+      this.isT,
+      this.varsFormReq
+    );
   }
 
   override copyWithIsTReverse(): IffNode {
@@ -136,7 +150,7 @@ export class IffNode extends LogicNode {
       this.req,
       this.onlyIfs,
       !this.isT,
-      this.varsForm
+      this.varsFormReq
     );
   }
 
@@ -165,7 +179,7 @@ export class IfNode extends LogicNode {
       newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
     }
 
-    return new IfNode(this.vars, newReq, newOnlyIf, this.isT, this.varsForm);
+    return new IfNode(this.vars, newReq, newOnlyIf, this.isT, this.varsFormReq);
   }
 
   override copyWithIsTReverse(): IfNode {
@@ -174,14 +188,18 @@ export class IfNode extends LogicNode {
       this.req,
       this.onlyIfs,
       !this.isT,
-      this.varsForm
+      this.varsFormReq
     );
   }
 
   override toString() {
-    const mainPart = `if ${this.vars.toString()} : ${this.req} {${
-      this.onlyIfs
-    }}`;
+    const varsFormReqStr = this.varsFormReq
+      .map((e) => `${e.key} (${e.freeVars}) : ${e.form}`)
+      .join(",");
+
+    const mainPart = `if ${this.vars.toString()} [${varsFormReqStr}]: ${
+      this.req
+    } {${this.onlyIfs}}`;
     const notPart = !this.isT ? "[not] " : "";
 
     return notPart + mainPart;
