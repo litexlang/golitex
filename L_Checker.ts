@@ -578,7 +578,7 @@ function checkIsForm(env: L_Env, toCheck: IsFormNode): L_Out {
 function checkFacts(env: L_Env, toCheck: FactsNode): L_Out {
   try {
     const newEnv = new L_Env(env);
-    const newCheckVars = toCheck.fixedVars.map((e) => e.map((v) => v[0]));
+    const newCheckVars = toCheck.varsPairs.map((e) => e.map((v) => v[0]));
 
     for (let fact of toCheck.facts) {
       // TODO The original source code is changed. It's better to deep copy
