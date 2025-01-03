@@ -507,8 +507,7 @@ function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
   function letFormalExec(env: L_Env, node: L_Nodes.LetFormalSymbolNode): L_Out {
     try {
       for (const e of node.vars) {
-        const ok = env.safeNewFormalSymbol(e);
-        if (!ok) return L_Out.Error;
+        env.tryNewFormalSymbol(e);
       }
 
       node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
@@ -610,7 +609,9 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
 
     let out: L_Nodes.L_FactNode | undefined = undefined;
 
-    if (isCurToken(tokens, L_KW.LBracket)) {
+    if (isCurToken(tokens, L_KW.All)) {
+      out = allFactParse(env, tokens);
+    } else if (isCurToken(tokens, L_KW.LBracket)) {
       out = factsNodeParse(env, tokens);
     } else if (isCurToken(tokens, L_KW.LFactFormula)) {
       out = parseFactFormula(env, tokens, L_KW.LFactFormula, L_KW.RFactFormula);
@@ -621,6 +622,7 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
       out = builtinFunctionParse(env, tokens);
     } else if (["if", "iff"].includes(tokens.peek())) {
       out = ifFactParse(env, tokens);
+      (out as L_Nodes.IfNode).addPrefixToVars();
     } else {
       out = optFactParse(env, tokens);
     }
@@ -632,6 +634,21 @@ function factParse(env: L_Env, tokens: L_Tokens): L_Nodes.L_FactNode {
   } catch (error) {
     messageParsingError(factParse, error);
     throw error;
+  }
+
+  function allFactParse(env: L_Env, tokens: L_Tokens): L_Nodes.FactsNode {
+    const skipper = new Skipper(env, tokens);
+
+    try {
+      skipper.skip(L_KW.All);
+      const vars = arrParse<L_Symbol>(env, tokens, symbolParse, L_KW.Are);
+      skipper.skip(L_KW.Are);
+      const opt = optSymbolParse(env, tokens);
+      const facts = vars.map((e) => new OptFactNode(opt, [e], true, undefined));
+      return new L_Nodes.FactsNode([], facts, true);
+    } catch (error) {
+      throw error;
+    }
   }
 
   function factsNodeParse(env: L_Env, tokens: L_Tokens): L_Nodes.FactsNode {
@@ -1345,7 +1362,7 @@ export function includeParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     function includeExec(env: L_Env, node: L_Nodes.IncludeNode): L_Out {
       try {
-        if (!env.newInclude(node.path)) throw Error();
+        env.tryNewInclude(node.path);
         return env.report(`[new lib included] ${node.toString()}`);
       } catch (error) {
         return L_Report.L_ReportErr(env, includeExec, node);
@@ -1484,7 +1501,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
         // if (!ok)
         //   messageParsingError(letAliasExec, `${node.toBeAliased} undeclared.`);
 
-        ok = env.safeNewAlias(node.name, node.toBeAliased);
+        env.tryNewAlias(node.name, node.toBeAliased);
 
         return L_Out.True;
       } catch (error) {
@@ -1733,9 +1750,9 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
   const facts = factsArrParse(env, tokens, end);
 
   for (const fact of facts) {
-    if (fact instanceof L_Nodes.IfNode) {
-      fact.addPrefixToVars();
-    }
+    // if (fact instanceof L_Nodes.IfNode) {
+    //   fact.addPrefixToVars();
+    // }
     fact.tryFactVarsDeclared(env);
   }
 

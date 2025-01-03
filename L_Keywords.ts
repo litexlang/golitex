@@ -70,6 +70,8 @@ export const L_KW = {
   LetFormal: "let_formal",
   LetAlias: "let_alias",
   DefFunctional: "def_function",
+  Are: "are",
+  All: "all",
 };
 
 export const builtinFactNames = new Set<string>();
