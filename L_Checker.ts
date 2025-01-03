@@ -260,6 +260,15 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
               if ((pair[0] as L_Singleton).value === formReq.key.value) {
                 if (L_Symbol.structurallyIdentical(formReq.form, pair[1])) {
                   done = true;
+
+                  // TODO 下面是把 form 里的符号拿出来建立新的对应关系的逻辑。未来显然一定会被删除。
+                  freeFixedPairs.push(
+                    ...L_Symbol.rootSingletonPairsOfStructurallyIdenticalSymbols(
+                      formReq.form,
+                      pair[1]
+                    )
+                  );
+
                   continue;
                 } else {
                   throw Error();
@@ -272,6 +281,9 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
           }
 
           freeFixedPairs = [...freeFixedPairs, ...currentPairs];
+
+          // TODO: INPUT VARS INTRODUCED IN FORM REQ
+
           if (
             //! checkIfReqLiterally is very dumb and may fail at many situations
             layer.req.every((e) => {

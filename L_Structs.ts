@@ -27,6 +27,29 @@ export abstract class L_Symbol {
     return false;
   }
 
+  static rootSingletonPairsOfStructurallyIdenticalSymbols(
+    a: L_Symbol,
+    b: L_Symbol
+  ): [L_Singleton, L_Singleton][] {
+    if (a instanceof L_Singleton && b instanceof L_Singleton) {
+      return [[a, b]];
+    } else if (a instanceof L_Composite && b instanceof L_Composite) {
+      if (a.name === b.name && a.values.length === b.values.length) {
+        return a.values
+          .map((v, i) =>
+            this.rootSingletonPairsOfStructurallyIdenticalSymbols(
+              v,
+              b.values[i]
+            )
+          )
+          .flat();
+      }
+      throw Error();
+    }
+
+    throw Error();
+  }
+
   static isExistSymbol(symbol: L_Symbol): boolean {
     return symbol instanceof L_Singleton && symbol.value === L_KW.ExistSymbol;
   }
@@ -185,6 +208,10 @@ export class L_UndefinedSymbol extends L_Symbol {
 export class L_Singleton extends L_Symbol {
   constructor(public value: string) {
     super();
+  }
+
+  equal(symbol: L_Symbol) {
+    return symbol instanceof L_Singleton && symbol.value === this.value;
   }
 
   withIfVarPrefix() {
