@@ -193,11 +193,17 @@ export class IfNode extends LogicNode {
   }
 
   override toString() {
-    const varsFormReqStr = this.varsFormReq
-      .map((e) => `${e.key} (${e.freeVars}) : ${e.form}`)
-      .join(",");
+    let varsFormReqStr: string = "";
+    if (this.varsFormReq.length > 0) {
+      varsFormReqStr =
+        "[" +
+        this.varsFormReq
+          .map((e) => `${e.key} (${e.freeVars}) : ${e.form}`)
+          .join(",") +
+        "]";
+    }
 
-    const mainPart = `if ${this.vars.toString()} [${varsFormReqStr}]: ${
+    const mainPart = `if ${this.vars.toString()} ${varsFormReqStr}: ${
       this.req
     } {${this.onlyIfs}}`;
     const notPart = !this.isT ? "[not] " : "";
@@ -737,7 +743,9 @@ export class FactsNode extends L_FactNode {
       e.map((v: [L_Singleton, L_Symbol]) => [v[0], v[1].fix(env, freeFixPairs)])
     );
 
-    return new FactsNode(newFixedVars, this.facts, this.isT);
+    const newFacts = this.facts.map((e) => e.fixByIfVars(env, freeFixPairs));
+
+    return new FactsNode(newFixedVars, newFacts, this.isT);
   }
 
   override copyWithIsTReverse(): L_FactNode {

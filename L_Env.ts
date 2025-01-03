@@ -183,24 +183,9 @@ export class L_Env {
     this.report(`[${L_KW.DefConcept}] ${defNode}`);
   }
 
-  // newExistDef(s: string, defNode: L_Nodes.DefExistNode): boolean {
-  //   if (this.getDefExist(s) !== undefined) {
-  //     return L_ReportBoolErr(
-  //       this,
-  //       this.newExistDef,
-  //       `The exist-type operator "${s}" is already declared in this environment or its parent environments. Please use a different name.`
-  //     );
-  //   }
-
-  //   this.defExists.set(s, defNode);
-  //   this.report(`[def_exist] ${defNode}`);
-  //   return true;
-  // }
-
   tryNewLetsSymbol(letsNode: L_Nodes.LetsNode) {
     if (this.isSingletonDeclared(letsNode.name)) {
       throw Error(`letsVar ${letsNode.name} already declared`);
-      // return L_ReportBoolErr(this, this.tryNewLetsSymbol);
     }
     this.regexSingletons.set(letsNode.name, letsNode);
   }
@@ -211,41 +196,31 @@ export class L_Env {
       throw Error(
         `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
       );
-      // return L_ReportBoolErr(this, this.tryNewPureSingleton);
     }
     this.pureSingletons.add(fix);
   }
 
-  safeNewFormalSymbol(fix: string): boolean {
+  tryNewFormalSymbol(fix: string): void {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.isSingletonDeclared(fix)) {
-      return L_ReportBoolErr(
-        this,
-        this.safeNewFormalSymbol,
+      throw Error(
         `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
     this.formalSymbols.add(fix);
-    return true;
   }
 
-  safeNewAlias(
+  tryNewAlias(
     name: L_Structs.L_Singleton,
     toBeAliased: L_Structs.L_Symbol[]
-  ): boolean {
+  ): void {
     if (this.isSingletonDeclared(name.value)) {
-      L_ReportBoolErr(
-        this,
-        this.safeNewAlias,
-        `The variable "${name.value}" is already declared in this environment or its parent environments. Please use a different name.`
-      );
       throw Error(
         `The variable "${name.value}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
 
     this.symbolAliases.set(name.value, toBeAliased);
-    return true;
   }
 
   getAlias(name: string): L_Structs.L_Symbol[] | undefined {
@@ -425,16 +400,11 @@ export class L_Env {
   //   } else return undefined;
   // }
 
-  newInclude(path: string) {
+  tryNewInclude(path: string): void {
     if (!this.isLibPathIncluded(path)) {
       this.includes.push(path);
-      return true;
     } else {
-      return L_ReportBoolErr(
-        this,
-        this.newInclude,
-        `${path} is already included`
-      );
+      throw Error(`${path} is already included`);
     }
   }
 
