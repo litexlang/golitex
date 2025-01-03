@@ -7,16 +7,13 @@ import { L_Tokens } from "./L_Lexer";
 
 const printEveryThing = true;
 
-export function runStringWithLogging(
+export function runString(
   env: L_Env,
-  expr: string,
-  printResult: boolean = true,
-  printCode: boolean = false
+  expr: string
+  // printResult: boolean = true,
+  // printCode: boolean = false
 ): L_Out[] | undefined {
   try {
-    if (printResult && printCode) {
-      console.log(`-----\n***  source code  ***\n${expr}\n`);
-    }
     const tokens = new L_Tokens(expr);
 
     let result: L_Out[] = [];
@@ -26,25 +23,7 @@ export function runStringWithLogging(
     }
     for (const node of nodes) {
       const out = L_Executor.L_Exec(env, node);
-      if (printEveryThing) {
-        if (true) {
-          if (printCode) console.log("***  Messages  ***\n");
-          env.printClearMessage();
-          console.log();
-        } else {
-          env.clearMessages();
-        }
-      } else {
-        if (out !== L_Out.True) {
-          env.printClearMessage();
-          console.log();
-        } else {
-          env.clearMessages();
-        }
-      }
     }
-
-    if (printCode) console.log();
 
     return result;
   } catch (error) {
@@ -54,35 +33,23 @@ export function runStringWithLogging(
   }
 }
 
-export function runStringsWithLogging(
-  env: L_Env,
-  exprs: string[],
-  printResult: boolean = true
-) {
+export function runStrings(env: L_Env, exprs: string[]) {
   for (let i = 0; i < exprs.length; i++) {
     const expr = exprs[i];
-    runStringWithLogging(env, expr, printResult);
+    runString(env, expr);
   }
-
-  if (printResult) {
-    env.getMessages().forEach((e) => console.log(e));
-    console.log("-----\nDONE!\n");
-  }
-  // env.printExists();
 }
 
 export function runFileWithLogging(
   env: L_Env,
-  fileName: string,
-  printResult: boolean = true,
-  printCode: boolean = false
+  fileName: string
 ): L_Out[] | undefined {
   try {
     let fileContent: string = "";
     fs.writeFileSync(fileName, fileContent, "utf8");
     // const fileContent = Deno.readTextFileSync(fileName);
     console.log(`Running file: ${fileName}\n`);
-    const out = runStringWithLogging(env, fileContent, printResult, false);
+    const out = runString(env, fileContent);
     console.log(`End Running file: ${fileName}\n`);
     return out;
   } catch (err) {

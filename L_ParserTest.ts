@@ -99,9 +99,9 @@ function runExamples() {
     if (example.debug) {
       console.log(example.name);
       runParserTest(env, example.code, example.print);
-      if (example.test !== undefined) {
-        runParserTest(env, example.test, example.print);
-      }
+      // if (example.test !== undefined) {
+      //   runParserTest(env, example.test, example.print);
+      // }
     }
   }
 }

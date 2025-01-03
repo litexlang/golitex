@@ -1,5 +1,5 @@
 import { L_Env } from "./L_Env";
-import { runStringWithLogging } from "./L_Runner";
+import { runString } from "./L_Runner";
 import { L_Out } from "./L_Structs";
 
 export function LiTeXnbInteract(
@@ -9,7 +9,7 @@ export function LiTeXnbInteract(
   const newEnv = new L_Env(env);
 
   try {
-    const outs = runStringWithLogging(newEnv, text, false, false);
+    const outs = runString(newEnv, text);
     if (outs !== undefined) {
       for (const out of outs) {
         if (out !== L_Out.True) throw Error();
