@@ -271,8 +271,7 @@ export class OptFactNode extends L_FactNode {
         v.tryVarsDeclared(env);
       } catch (error) {
         if (error instanceof Error)
-          error.message =
-            `variable ${v} in ${this} not declared.\n` + error.message;
+          error.message += `variable ${v} in ${this} not declared.\n`;
         throw error;
       }
       // if (!v.tryVarsDeclared(env)) {
@@ -288,8 +287,7 @@ export class OptFactNode extends L_FactNode {
           v.tryVarsDeclared(env);
         } catch (error) {
           if (error instanceof Error)
-            error.message =
-              `variable ${v} in ${this} not declared.\n` + error.message;
+            error.message += `variable ${v} in ${this} not declared.\n`;
           throw error;
         }
         // if (!v.tryVarsDeclared(env)) {
