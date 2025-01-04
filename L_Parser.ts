@@ -59,8 +59,8 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
         if (includeParse(env, tokens) === L_Out.True) return null;
       case L_KW.DefLiteralOperator:
         if (defLiteralOperatorParse(env, tokens) === L_Out.True) return null;
-      case L_KW.LetFormal:
-        if (letFormalParse(env, tokens) === L_Out.True) return null;
+      // case L_KW.LetFormal:
+      //   if (letFormalParse(env, tokens) === L_Out.True) return null;
       case L_KW.LetAlias:
         if (letAliasParse(env, tokens) === L_Out.True) return null;
       case L_KW.Have:
@@ -171,7 +171,7 @@ function literalOptParse(env: L_Env, tokens: L_Tokens): L_Symbol {
   const skipper = new Skipper(env, tokens);
 
   try {
-    const name = skipper.skip().slice(L_KW.MacroPrefix.length); // the # at the beginning is abandoned
+    const name = skipper.skip().slice(L_KW.LiteralOptPrefix.length); // the # at the beginning is abandoned
     skipper.skip("{");
     const parameters: L_Symbol[] = [];
     while (!isCurToken(tokens, "}")) {
@@ -468,68 +468,68 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
 }
 
 // TODO: vars declared
-function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
-  const skipper = new Skipper(env, tokens);
+// function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
+//   const skipper = new Skipper(env, tokens);
 
-  try {
-    skipper.skip(L_KW.LetFormal);
+//   try {
+//     skipper.skip(L_KW.LetFormal);
 
-    const vars: string[] = [];
-    while (![L_KW.L_End, , ":"].includes(tokens.peek())) {
-      vars.push(skipper.skip());
-      if (isCurToken(tokens, ",")) skipper.skip(",");
-    }
+//     const vars: string[] = [];
+//     while (![L_KW.L_End, , ":"].includes(tokens.peek())) {
+//       vars.push(skipper.skip());
+//       if (isCurToken(tokens, ",")) skipper.skip(",");
+//     }
 
-    if (vars.some((e) => Object.keys(L_KW).includes(e) || e.startsWith("\\"))) {
-      env.report(`Error: ${vars} contain LiTeX keywords.`);
-      throw Error();
-    }
+//     if (vars.some((e) => Object.keys(L_KW).includes(e) || e.startsWith("\\"))) {
+//       env.report(`Error: ${vars} contain LiTeX keywords.`);
+//       throw Error();
+//     }
 
-    let out: undefined | L_Nodes.LetFormalSymbolNode = undefined;
-    if (isCurToken(tokens, L_KW.L_End)) {
-      skipper.skip(L_KW.L_End);
-      out = new L_Nodes.LetFormalSymbolNode(vars, []);
-    } else {
-      skipper.skip(":");
-      const facts = parseFactsArrCheckVarsDeclFixIfPrefix(
-        env,
-        tokens,
-        [L_KW.L_End],
-        vars.map((e) => new L_Singleton(e))
-      );
-      skipper.skip(L_KW.L_End);
-      out = new L_Nodes.LetFormalSymbolNode(vars, facts);
-    }
+//     let out: undefined | L_Nodes.LetFormalSymbolNode = undefined;
+//     if (isCurToken(tokens, L_KW.L_End)) {
+//       skipper.skip(L_KW.L_End);
+//       out = new L_Nodes.LetFormalSymbolNode(vars, []);
+//     } else {
+//       skipper.skip(":");
+//       const facts = parseFactsArrCheckVarsDeclFixIfPrefix(
+//         env,
+//         tokens,
+//         [L_KW.L_End],
+//         vars.map((e) => new L_Singleton(e))
+//       );
+//       skipper.skip(L_KW.L_End);
+//       out = new L_Nodes.LetFormalSymbolNode(vars, facts);
+//     }
 
-    if (letFormalExec(env, out) === L_Out.True) {
-      return L_Out.True;
-    } else {
-      throw Error();
-    }
-  } catch (error) {
-    messageParsingError(letParse, error);
-    throw error;
-  }
+//     if (letFormalExec(env, out) === L_Out.True) {
+//       return L_Out.True;
+//     } else {
+//       throw Error();
+//     }
+//   } catch (error) {
+//     messageParsingError(letParse, error);
+//     throw error;
+//   }
 
-  function letFormalExec(env: L_Env, node: L_Nodes.LetFormalSymbolNode): L_Out {
-    try {
-      for (const e of node.vars) {
-        env.tryNewFormalSymbol(e);
-      }
+//   function letFormalExec(env: L_Env, node: L_Nodes.LetFormalSymbolNode): L_Out {
+//     try {
+//       for (const e of node.vars) {
+//         env.tryNewFormalSymbol(e);
+//       }
 
-      node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
+//       node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
 
-      for (const onlyIf of node.facts) {
-        tryNewFact(env, onlyIf);
-      }
+//       for (const onlyIf of node.facts) {
+//         tryNewFact(env, onlyIf);
+//       }
 
-      env.report(`[let] ${node}`);
-      return L_Out.True;
-    } catch (error) {
-      return L_Report.L_ReportErr(env, letFormalParse, node);
-    }
-  }
-}
+//       env.report(`[let] ${node}`);
+//       return L_Out.True;
+//     } catch (error) {
+//       return L_Report.L_ReportErr(env, letFormalParse, node);
+//     }
+//   }
+// }
 
 function proveParse(env: L_Env, tokens: L_Tokens): L_Nodes.ProveNode {
   const skipper = new Skipper(env, tokens);

@@ -100,6 +100,14 @@ const exampleList: ExampleItem[] = [
       "nat is real;",
       "a is real;",
     ],
+    debug: false,
+  },
+  {
+    name: "",
+    code: [
+      `concept $real(x); operator \\frac{a,b}; let x,y: x is real;`,
+      `\\frac{x,y}[0] is real;`,
+    ],
     debug: true,
   },
 ];
