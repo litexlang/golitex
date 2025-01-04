@@ -193,7 +193,7 @@ export class L_UndefinedSymbol extends L_Symbol {
     super();
   }
 
-  containFormalVar(env: L_Env): FormalSymbol[] {
+  containFormalVar(env: L_Env): L_UndefinedSymbol {
     throw Error();
   }
 
@@ -277,32 +277,8 @@ export class IndexedSymbol extends L_Symbol {
 
 // e.g. \frac{1,2} ; \+{1,2} ; \union{A,B} ; \set{x}
 export class L_Composite extends L_Symbol {
-  insideFormalSymbols: FormalSymbol[];
-
   constructor(public name: string, public values: L_Symbol[]) {
     super();
-    this.insideFormalSymbols = this.extractInsideFormalSymbols();
-  }
-
-  private extractInsideFormalSymbols(): FormalSymbol[] {
-    const out: FormalSymbol[] = [];
-    for (const v of this.values) {
-      if (v instanceof FormalSymbol) {
-        out.push(v);
-      } else if (v instanceof L_Composite) {
-        out.push(...v.extractInsideFormalSymbols());
-      }
-    }
-
-    return out;
-  }
-
-  getInsideFormalSymbols() {
-    return this.insideFormalSymbols;
-  }
-
-  hasFormalSymbols() {
-    return this.insideFormalSymbols.length !== 0;
   }
 
   getIndexedSubNode(indexes: number[]): L_Symbol {
@@ -452,4 +428,4 @@ export class L_Composite extends L_Symbol {
   }
 }
 
-export class FormalSymbol extends L_Singleton {}
+// export class FormalSymbol extends L_Singleton {}

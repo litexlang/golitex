@@ -1,12 +1,4 @@
-import { L_Env } from "./L_Env";
-import {
-  L_ReportBoolErr,
-  L_ReportErr,
-  messageVarNotDeclared,
-} from "./L_Report";
-import { LogicNode, OptFactNode, L_FactNode, L_Node } from "./L_Nodes";
-import { checkFact } from "./L_Checker";
-import { L_KW } from "./L_Keywords";
+import { OptFactNode, L_FactNode, L_Node } from "./L_Nodes";
 
 export class OptSymbol {
   constructor(public name: string) {}
