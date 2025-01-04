@@ -379,15 +379,15 @@ export class LetNode extends L_Node {
   }
 }
 
-export class LetFormalSymbolNode extends L_Node {
-  constructor(public vars: string[], public facts: L_FactNode[]) {
-    super();
-  }
+// export class LetFormalSymbolNode extends L_Node {
+//   constructor(public vars: string[], public facts: L_FactNode[]) {
+//     super();
+//   }
 
-  override toString() {
-    return `${L_KW.LetFormal} ${this.vars}: ${this.facts};`;
-  }
-}
+//   override toString() {
+//     return `${L_KW.LetFormal} ${this.vars}: ${this.facts};`;
+//   }
+// }
 
 export class ProveNode extends L_Node {
   constructor(public toProve: L_FactNode, public block: L_Node[]) {

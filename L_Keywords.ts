@@ -59,15 +59,14 @@ export const L_KW = {
   DefLiteralOperator: "literal_operator",
   IfVarPrefix: "~",
   LiteralOptPrefix: "@",
-  MacroPrefix: "MACRO_",
-  IndexedSymbol: "at",
+  // MacroPrefix: "MACRO_",
+  // IndexedSymbol: "at",
   // TODO EXIST and any can not appear in some composites, which is weird e.g. know \frac{\frac{EXIST, EXIST}, 2} , so in the future I should make them stricter.
   ExistSymbol: "EXIST",
   AnySymbol: "ANY", //* anySymbol can not be equal to EXIST, and it can equal to any other symbols
   LFactFormula: "\\[?",
   RFactFormula: "\\?]",
   FunctionTypeFactOptPrefix: "$",
-  LetFormal: "let_formal",
   LetAlias: "let_alias",
   DefFunctional: "def_function",
   Are: "are",

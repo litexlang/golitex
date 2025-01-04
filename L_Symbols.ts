@@ -78,6 +78,13 @@ export abstract class L_Symbol {
     useAlias: boolean = true
   ): boolean {
     try {
+      if (given instanceof IndexedSymbol) {
+        given = given.getValue();
+      }
+      if (expected instanceof IndexedSymbol) {
+        expected = expected.getValue();
+      }
+
       //* ANY symbol is equal to any symbol, except EXIST
       if (provedByAny(env, given, expected)) return true;
       if (regexIdentical(env, given, expected)) return true;
@@ -249,6 +256,18 @@ export class IndexedSymbol extends L_Symbol {
     super();
   }
 
+  getValue() {
+    let curSymbol = this.given;
+    for (const index of this.indexes) {
+      if (curSymbol instanceof L_Composite) {
+        curSymbol = curSymbol.values[index];
+      } else {
+        throw Error();
+      }
+    }
+    return curSymbol;
+  }
+
   tryVarsDeclared(env: L_Env): boolean {
     return this.given.tryVarsDeclared(env);
   }
@@ -267,7 +286,7 @@ export class IndexedSymbol extends L_Symbol {
   }
 
   toString() {
-    return `${L_KW.IndexedSymbol}(${this.given}, ${this.indexes})`;
+    return `${this.given}[${this.indexes}]`;
   }
 }
 
