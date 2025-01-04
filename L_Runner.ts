@@ -11,17 +11,17 @@ export function runString(env: L_Env, expr: string): L_Out[] | undefined {
   try {
     const tokens = new L_Tokens(expr);
 
-    let result: L_Out[] = [];
-    const nodes = L_Parser.parseNodes(env, tokens, null);
-    if (nodes === undefined) {
-      throw Error();
-    }
-    for (const node of nodes) {
-      const out = L_Executor.L_Exec(env, node.node);
-      if (out === L_Out.Error) return undefined;
-    }
+    while (!tokens.isEnd()) {
+      const start = tokens.curTokIndex();
+      const node = L_Parser.parseSingleNode(env, tokens);
 
-    return result;
+      if (node === null) {
+        continue;
+      } else {
+        const out = L_Executor.L_Exec(env, node);
+        if (out === L_Out.Error) return undefined;
+      }
+    }
   } catch (error) {
     env.printClearMessage();
     if (error instanceof Error) console.log(error.message);
@@ -56,36 +56,11 @@ export function runStringWithLogging(
         if (out === L_Out.Error) return undefined;
         else {
           if (logMessages) {
-            console.log(env.printClearMessage());
+            env.printClearMessage();
           }
         }
       }
     }
-
-    // let result: L_Out[] = [];
-    // const nodes = L_Parser.parseNodes(env, tokens, null);
-    // if (nodes === undefined) {
-    //   throw Error();
-    // }
-
-    // if (logMessages) {
-    //   console.log(env.printClearMessage());
-    // }
-
-    // for (const node of nodes) {
-    //   const out = L_Executor.L_Exec(env, node.node);
-    //   if (out === L_Out.Error) return undefined;
-    //   else {
-    //     if (logSourceCode) {
-    //       console.log(node.sc);
-    //     }
-    //     if (logMessages) {
-    //       console.log(env.printClearMessage());
-    //     }
-    //   }
-    // }
-
-    // return result;
   } catch (error) {
     env.printClearMessage();
     if (error instanceof Error) console.log(error.message);
