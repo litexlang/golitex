@@ -1,7 +1,7 @@
 import { ExampleItem } from "./L_Structs";
 import { L_Env } from "./L_Env";
-import { runStrings } from "./L_Runner";
 import * as fs from "fs";
+import { runString } from "./L_Runner";
 
 const exampleList: ExampleItem[] = [
   {
@@ -98,6 +98,12 @@ const exampleList: ExampleItem[] = [
       "3 is real;",
       "1 * 2 is real;",
     ],
+    debug: false,
+    print: true,
+  },
+  {
+    name: "",
+    code: [`concept real(x);`],
     debug: true,
     print: true,
   },
@@ -108,7 +114,7 @@ function runExamples(toJSON: boolean) {
   for (const example of exampleList) {
     if (example.debug) {
       console.log(example.name);
-      runStrings(env, example.code);
+      testRunStrings(env, example.code);
       if (example.print) {
         console.log(`-----\n***  source code  ***\n${example.code}\n`);
         console.log("***  Messages  ***\n");
@@ -132,10 +138,16 @@ function runLiTeXFile(filePath: string) {
   try {
     const data = fs.readFileSync(filePath, "utf8");
     const env = new L_Env();
-    const logging = true;
-    runStrings(env, [data]);
+    testRunStrings(env, [data]);
   } catch (err) {
     console.error("Error:", err);
+  }
+}
+
+function testRunStrings(env: L_Env, exprs: string[]) {
+  for (let i = 0; i < exprs.length; i++) {
+    const expr = exprs[i];
+    runString(env, expr);
   }
 }
 

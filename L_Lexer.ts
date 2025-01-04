@@ -8,6 +8,10 @@ export class L_Tokens {
     this.sc = sc; // necessary, because isEnd is assumed to be equivalent to curPos >= sc.length
   }
 
+  getCurPos(): number {
+    return this.curPos;
+  }
+
   private isSpecialChar(char: string): boolean {
     return specialChars.includes(char);
   }
