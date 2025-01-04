@@ -103,7 +103,12 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "",
-    code: [`concept $real(x);`],
+    code: [
+      `concept $real(x); lets nat "a|b" ;`,
+      `know nat is real;`,
+      "nat is real;",
+      "a is real;",
+    ],
     debug: true,
     print: true,
   },
