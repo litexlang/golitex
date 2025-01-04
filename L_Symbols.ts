@@ -193,10 +193,6 @@ export class L_UndefinedSymbol extends L_Symbol {
     super();
   }
 
-  containFormalVar(env: L_Env): L_UndefinedSymbol {
-    throw Error();
-  }
-
   tryVarsDeclared(env: L_Env): boolean {
     throw Error();
   }

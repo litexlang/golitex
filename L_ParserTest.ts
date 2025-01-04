@@ -15,7 +15,6 @@ export const exampleList: ExampleItem[] = [
       "if x, \\frac{a,b}[a,b] : set(x) {set(x)};",
     ],
     debug: false,
-    print: true,
   },
   {
     name: "def_composite",
@@ -28,7 +27,6 @@ export const exampleList: ExampleItem[] = [
       `,
     ],
     debug: false,
-    print: true,
   },
   {
     name: "comment",
@@ -39,7 +37,6 @@ export const exampleList: ExampleItem[] = [
       `,
     ],
     debug: false,
-    print: true,
   },
   {
     name: "opt",
@@ -60,19 +57,16 @@ know if x {
 `,
     ],
     debug: false,
-    print: true,
   },
   {
     name: "bool fact",
     code: [`let x: (p(x) or q(y) and j(z) or t(x));`],
     debug: false,
-    print: true,
   },
   {
     name: "()",
     code: [`know if x: x is nat {not =(0, \++{x}) }; if x {p(x)};`],
     debug: false,
-    print: true,
   },
   {
     name: "()",
@@ -80,7 +74,6 @@ know if x {
       `know if a,b,c: a is nat, b is nat, c is nat, $a + b$ = $a + c$ {$b = c$};`,
     ],
     debug: false,
-    print: true,
   },
   {
     name: "if",
@@ -88,8 +81,7 @@ know if x {
       `concept $=(x, y); operator \\frac{x,y}; let 1; concept $nat(x);`,
       `if [x(a,b): \\frac{\\frac{a,1}, b}]: $nat(a) {x = \\frac{a, b}};`,
     ],
-    debug: true,
-    print: true,
+    debug: false,
   },
 ];
 
@@ -98,7 +90,7 @@ function runExamples() {
   for (const example of exampleList) {
     if (example.debug) {
       console.log(example.name);
-      runParserTest(env, example.code, example.print);
+      runParserTest(env, example.code, true);
       // if (example.test !== undefined) {
       //   runParserTest(env, example.test, example.print);
       // }

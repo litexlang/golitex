@@ -74,7 +74,7 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
   } catch (error) {
     if (error instanceof Error) env.report(error.message);
     env.report(
-      `error at ${tokens.curTokIndex()} :: ${tokens.sc.slice(
+      `error at ${tokens.curTokIndex()} -- ${tokens.sc.slice(
         skipper.start,
         tokens.curTokIndex()
       )}`

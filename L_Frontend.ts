@@ -1,3 +1,4 @@
+import { writeFileSync } from "fs";
 import { L_Env } from "./L_Env";
 import { runString } from "./L_Runner";
 import { L_Out } from "./L_Structs";
@@ -20,4 +21,11 @@ export function LiTeXnbInteract(
   } catch {
     return { newEnv: env, messages: newEnv.getMessages() };
   }
+}
+
+function envToJSON(env: L_Env, fileName: string) {
+  const out = env.toJSON();
+  const jsonString = JSON.stringify(out, null, 2);
+  writeFileSync(fileName, jsonString, "utf8");
+  return out;
 }
