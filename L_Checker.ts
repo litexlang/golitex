@@ -16,13 +16,11 @@ import { L_Env } from "./L_Env";
 import {
   FormulaKnownFactReq,
   IfKnownFactReq,
-  L_Composite,
   L_KnownFactReq,
   L_Out,
-  L_Singleton,
-  L_Symbol,
   OptKnownFactReq,
 } from "./L_Structs";
+import { L_Composite, L_Singleton, L_Symbol } from "./L_Symbols";
 import * as L_Memory from "./L_Memory";
 import { L_ReportBoolErr, L_ReportCheckErr, L_ReportErr } from "./L_Report";
 
@@ -577,7 +575,9 @@ function checkIsForm(env: L_Env, toCheck: IsFormNode): L_Out {
   try {
     let correctForm = false;
     if (
-      toCheck.baseline.values.every((e) => e instanceof L_Singleton) &&
+      toCheck.baseline.values.every(
+        (e: L_Symbol) => e instanceof L_Singleton
+      ) &&
       toCheck.candidate instanceof L_Composite &&
       toCheck.candidate.name === toCheck.baseline.name &&
       toCheck.candidate.values.length === toCheck.baseline.values.length

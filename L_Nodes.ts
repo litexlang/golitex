@@ -1,6 +1,7 @@
 import { L_Env } from "./L_Env";
 import { L_KW } from "./L_Keywords";
-import { L_Composite, OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
+import { OptSymbol } from "./L_Structs";
+import { L_Composite, L_Singleton, L_Symbol } from "./L_Symbols";
 
 export abstract class L_Node {}
 

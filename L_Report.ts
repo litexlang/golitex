@@ -1,5 +1,6 @@
 import type { L_Env } from "./L_Env";
-import { L_Out, L_Symbol } from "./L_Structs";
+import { L_Out } from "./L_Structs";
+import { L_Symbol } from "./L_Symbols";
 import { L_Node, OptFactNode, L_FactNode } from "./L_Nodes";
 import { L_Tokens } from "./L_Lexer";
 import { Skipper } from "./L_Parser";

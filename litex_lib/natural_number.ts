@@ -1,6 +1,7 @@
 import { L_Env } from "../L_Env";
 import { OptFactNode } from "../L_Nodes";
-import { L_Composite, L_Out, L_Singleton, L_Symbol } from "../L_Structs";
+import { L_Out } from "../L_Structs";
+import { L_Composite, L_Singleton, L_Symbol } from "../L_Symbols";
 
 function isNaturalNumber(str: string) {
   const regex = /^(0|[1-9]\d*)$/;
