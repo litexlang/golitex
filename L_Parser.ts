@@ -32,6 +32,7 @@ import { checkFact } from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import { L_Tokens } from "./L_Lexer";
 import { FactVarsDeclaredChecker } from "./L_FactNodeHelpers";
+import { SymbolDeclaredChecker } from "./L_SymbolsHelper";
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
 export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
@@ -1512,7 +1513,8 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
       try {
-        node.toBeAliased.every((e) => e.tryVarsDeclared(env));
+        // node.toBeAliased.every((e) => e.tryVarsDeclared(env));
+        node.toBeAliased.every((e) => SymbolDeclaredChecker.check(env, e));
         // if (!ok)
         //   messageParsingError(letAliasExec, `${node.toBeAliased} undeclared.`);
 

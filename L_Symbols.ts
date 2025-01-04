@@ -6,12 +6,11 @@ import {
 } from "./L_Report";
 import { LogicNode, OptFactNode, L_FactNode } from "./L_Facts";
 import { checkFact } from "./L_Checker";
-import { L_Node } from "./L_Nodes";
 import { L_KW } from "./L_Keywords";
 import { L_Out } from "./L_Structs";
 
 export abstract class L_Symbol {
-  abstract tryVarsDeclared(env: L_Env): boolean;
+  // abstract tryVarsDeclared(env: L_Env): boolean;
   abstract fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol;
 
   static structurallyIdentical(a: L_Symbol, b: L_Symbol): boolean {
@@ -269,9 +268,9 @@ export class IndexedSymbol extends L_Symbol {
     return curSymbol;
   }
 
-  tryVarsDeclared(env: L_Env): boolean {
-    return this.given.tryVarsDeclared(env);
-  }
+  // tryVarsDeclared(env: L_Env): boolean {
+  //   return this.given.tryVarsDeclared(env);
+  // }
 
   // ! IndexedSymbol fix has 2 effects: 1. fix frees 2. return the symbol under the index
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
@@ -356,29 +355,29 @@ export class L_Composite extends L_Symbol {
     return out;
   }
 
-  tryVarsDeclared(env: L_Env): boolean {
-    if (env.getCompositeVar(this.name) === undefined) return false;
+  // tryVarsDeclared(env: L_Env): boolean {
+  //   if (env.getCompositeVar(this.name) === undefined) return false;
 
-    for (const value of this.values) {
-      value.tryVarsDeclared(env);
-      // if (value instanceof L_Singleton) {
-      // if (!env.isSingletonDeclared(value.value)) {
-      //   let ok = false;
-      //   if (!ok) {
-      //     throw Error(messageVarNotDeclared(value.value));
-      //     return false;
-      //   }
-      // }
-      // } else if (value instanceof L_Composite) {
+  //   for (const value of this.values) {
+  //     value.tryVarsDeclared(env);
+  //     // if (value instanceof L_Singleton) {
+  //     // if (!env.isSingletonDeclared(value.value)) {
+  //     //   let ok = false;
+  //     //   if (!ok) {
+  //     //     throw Error(messageVarNotDeclared(value.value));
+  //     //     return false;
+  //     //   }
+  //     // }
+  //     // } else if (value instanceof L_Composite) {
 
-      // if (!value.tryVarsDeclared(env)) {
-      //   return false;
-      // }
-      // }
-    }
+  //     // if (!value.tryVarsDeclared(env)) {
+  //     //   return false;
+  //     // }
+  //     // }
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     const outValues: L_Symbol[] = [];
