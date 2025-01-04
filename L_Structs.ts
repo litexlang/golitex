@@ -4,7 +4,7 @@ import {
   L_ReportErr,
   messageVarNotDeclared,
 } from "./L_Report";
-import { LogicNode, OptFactNode, L_FactNode } from "./L_Nodes";
+import { LogicNode, OptFactNode, L_FactNode, L_Node } from "./L_Nodes";
 import { checkFact } from "./L_Checker";
 import { L_KW } from "./L_Keywords";
 
@@ -497,4 +497,8 @@ export class FormulaKnownFactReq extends L_KnownFactReq {
   constructor(public req: L_FactNode[]) {
     super();
   }
+}
+
+export class ParsedNode {
+  constructor(public node: L_Node, public sc: string) {}
 }

@@ -1,7 +1,7 @@
 import { ExampleItem } from "./L_Structs";
 import { L_Env } from "./L_Env";
 import * as fs from "fs";
-import { runString } from "./L_Runner";
+import { runString, runStringWithLogging } from "./L_Runner";
 
 const exampleList: ExampleItem[] = [
   {
@@ -103,24 +103,23 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "",
-    code: [`concept real(x);`],
+    code: [`concept $real(x);`],
     debug: true,
     print: true,
   },
 ];
 
-function runExamples(toJSON: boolean) {
+function runExamples(
+  toJSON: boolean,
+  logSourceCode: boolean = true,
+  logMessages: boolean = true
+) {
   const env = new L_Env();
   for (const example of exampleList) {
     if (example.debug) {
       console.log(example.name);
-      testRunStrings(env, example.code);
-      if (example.print) {
-        console.log(`-----\n***  source code  ***\n${example.code}\n`);
-        console.log("***  Messages  ***\n");
-        env.printClearMessage();
-        console.log();
-        console.log("-----\nDONE!\n");
+      for (const expr of example.code) {
+        runStringWithLogging(env, expr, logSourceCode, logMessages);
       }
     }
   }
@@ -138,16 +137,14 @@ function runLiTeXFile(filePath: string) {
   try {
     const data = fs.readFileSync(filePath, "utf8");
     const env = new L_Env();
-    testRunStrings(env, [data]);
+
+    const exprs = [data];
+    for (let i = 0; i < exprs.length; i++) {
+      const expr = exprs[i];
+      runString(env, expr);
+    }
   } catch (err) {
     console.error("Error:", err);
-  }
-}
-
-function testRunStrings(env: L_Env, exprs: string[]) {
-  for (let i = 0; i < exprs.length; i++) {
-    const expr = exprs[i];
-    runString(env, expr);
   }
 }
 
