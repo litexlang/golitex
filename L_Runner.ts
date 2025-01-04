@@ -7,12 +7,7 @@ import { L_Tokens } from "./L_Lexer";
 
 const printEveryThing = true;
 
-export function runString(
-  env: L_Env,
-  expr: string
-  // printResult: boolean = true,
-  // printCode: boolean = false
-): L_Out[] | undefined {
+export function runString(env: L_Env, expr: string): L_Out[] | undefined {
   try {
     const tokens = new L_Tokens(expr);
 
@@ -23,6 +18,7 @@ export function runString(
     }
     for (const node of nodes) {
       const out = L_Executor.L_Exec(env, node);
+      if (out === L_Out.Error) return undefined;
     }
 
     return result;
@@ -30,13 +26,6 @@ export function runString(
     env.printClearMessage();
     if (error instanceof Error) console.log(error.message);
     return undefined;
-  }
-}
-
-export function runStrings(env: L_Env, exprs: string[]) {
-  for (let i = 0; i < exprs.length; i++) {
-    const expr = exprs[i];
-    runString(env, expr);
   }
 }
 

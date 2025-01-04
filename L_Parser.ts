@@ -66,6 +66,13 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
     skipper.skip(L_KW.L_End);
     return fact;
   } catch (error) {
+    if (error instanceof Error) env.report(error.message);
+    env.report(
+      `error at ${tokens.getCurPos()} :: ${tokens.sc.slice(
+        skipper.start,
+        tokens.getCurPos()
+      )}`
+    );
     throw error;
   }
 }
