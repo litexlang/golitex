@@ -47,11 +47,13 @@ export class FactVarsDeclaredChecker {
     }
 
     for (const req of fact.req) {
-      req.tryFactVarsDeclared(newEnv);
+      // req.tryFactVarsDeclared(newEnv);
+      this.check(newEnv, req);
     }
 
     for (const onlyIf of fact.onlyIfs) {
-      onlyIf.tryFactVarsDeclared(newEnv);
+      // onlyIf.tryFactVarsDeclared(newEnv);
+      this.check(newEnv, onlyIf);
     }
   }
 
@@ -61,7 +63,8 @@ export class FactVarsDeclaredChecker {
     }
 
     for (const f of fact.facts) {
-      f.tryFactVarsDeclared(env);
+      // f.tryFactVarsDeclared(env);
+      this.check(env, f);
     }
   }
 }

@@ -10,7 +10,7 @@ export abstract class L_FactNode extends L_Node {
   }
 
   // called by L_Memory
-  abstract tryFactVarsDeclared(env: L_Env): void;
+  // abstract tryFactVarsDeclared(env: L_Env): void;
   // called by checker
   abstract fixByIfVars(
     env: L_Env,
@@ -112,24 +112,24 @@ export abstract class LogicNode extends L_FactNode {
     return roots;
   }
 
-  override tryFactVarsDeclared(env: L_Env): void {
-    const newEnv = new L_Env(env);
-    for (const v of this.vars) {
-      newEnv.tryNewPureSingleton(v.value);
-    }
+  // override tryFactVarsDeclared(env: L_Env): void {
+  //   const newEnv = new L_Env(env);
+  //   for (const v of this.vars) {
+  //     newEnv.tryNewPureSingleton(v.value);
+  //   }
 
-    for (const formReq of this.varsFormReq) {
-      formReq.freeVars.forEach((e) => newEnv.tryNewPureSingleton(e.value));
-    }
+  //   for (const formReq of this.varsFormReq) {
+  //     formReq.freeVars.forEach((e) => newEnv.tryNewPureSingleton(e.value));
+  //   }
 
-    for (const req of this.req) {
-      req.tryFactVarsDeclared(newEnv);
-    }
+  //   for (const req of this.req) {
+  //     req.tryFactVarsDeclared(newEnv);
+  //   }
 
-    for (const onlyIf of this.onlyIfs) {
-      onlyIf.tryFactVarsDeclared(newEnv);
-    }
-  }
+  //   for (const onlyIf of this.onlyIfs) {
+  //     onlyIf.tryFactVarsDeclared(newEnv);
+  //   }
+  // }
 }
 
 export class IffNode extends LogicNode {
@@ -263,39 +263,39 @@ export class OptFactNode extends L_FactNode {
     return [[this, []]];
   }
 
-  override tryFactVarsDeclared(env: L_Env): void {
-    for (const v of this.vars) {
-      try {
-        v.tryVarsDeclared(env);
-      } catch (error) {
-        if (error instanceof Error)
-          error.message += `variable ${v} in ${this} not declared.\n`;
-        throw error;
-      }
-      // if (!v.tryVarsDeclared(env)) {
-      //   return false;
-      // }
-    }
+  // override tryFactVarsDeclared(env: L_Env): void {
+  //   for (const v of this.vars) {
+  //     try {
+  //       v.tryVarsDeclared(env);
+  //     } catch (error) {
+  //       if (error instanceof Error)
+  //         error.message += `variable ${v} in ${this} not declared.\n`;
+  //       throw error;
+  //     }
+  //     // if (!v.tryVarsDeclared(env)) {
+  //     //   return false;
+  //     // }
+  //   }
 
-    if (this.checkVars === undefined) return;
+  //   if (this.checkVars === undefined) return;
 
-    for (const layer of this.checkVars) {
-      for (const v of layer) {
-        try {
-          v.tryVarsDeclared(env);
-        } catch (error) {
-          if (error instanceof Error)
-            error.message += `variable ${v} in ${this} not declared.\n`;
-          throw error;
-        }
-        // if (!v.tryVarsDeclared(env)) {
-        //   return false;
-        // }
-      }
-    }
+  //   for (const layer of this.checkVars) {
+  //     for (const v of layer) {
+  //       try {
+  //         v.tryVarsDeclared(env);
+  //       } catch (error) {
+  //         if (error instanceof Error)
+  //           error.message += `variable ${v} in ${this} not declared.\n`;
+  //         throw error;
+  //       }
+  //       // if (!v.tryVarsDeclared(env)) {
+  //       //   return false;
+  //       // }
+  //     }
+  //   }
 
-    return;
-  }
+  //   return;
+  // }
 
   override fixByIfVars(
     env: L_Env,
@@ -372,11 +372,11 @@ export class IsConceptNode extends BuiltinCheckNode {
     return `${L_KW.isConcept}(${this.concepts})`;
   }
 
-  override tryFactVarsDeclared(env: L_Env): void {
-    for (const fact of this.facts) {
-      fact.tryFactVarsDeclared(env);
-    }
-  }
+  // override tryFactVarsDeclared(env: L_Env): void {
+  //   for (const fact of this.facts) {
+  //     fact.tryFactVarsDeclared(env);
+  //   }
+  // }
 }
 
 export class IsFormNode extends BuiltinCheckNode {
@@ -416,7 +416,7 @@ export class IsFormNode extends BuiltinCheckNode {
     }
   }
 
-  override tryFactVarsDeclared(env: L_Env): void {}
+  // override tryFactVarsDeclared(env: L_Env): void {}
 
   toString(): string {
     const notStr = this.isT ? "" : "[not]";
@@ -447,10 +447,10 @@ export abstract class FormulaFactNode extends L_FactNode {
     throw Error();
   }
 
-  override tryFactVarsDeclared(env: L_Env): void {
-    this.left.tryFactVarsDeclared(env);
-    this.right.tryFactVarsDeclared(env);
-  }
+  // override tryFactVarsDeclared(env: L_Env): void {
+  //   this.left.tryFactVarsDeclared(env);
+  //   this.right.tryFactVarsDeclared(env);
+  // }
 
   override fixByIfVars(
     env: L_Env,
@@ -574,15 +574,15 @@ export class FactsNode extends L_FactNode {
     super(isT);
   }
 
-  override tryFactVarsDeclared(env: L_Env): void {
-    for (const v of this.varsPairs) {
-      v.forEach((e) => e[1].tryVarsDeclared(env));
-    }
+  // override tryFactVarsDeclared(env: L_Env): void {
+  //   for (const v of this.varsPairs) {
+  //     v.forEach((e) => e[1].tryVarsDeclared(env));
+  //   }
 
-    for (const fact of this.facts) {
-      fact.tryFactVarsDeclared(env);
-    }
-  }
+  //   for (const fact of this.facts) {
+  //     fact.tryFactVarsDeclared(env);
+  //   }
+  // }
 
   override fixByIfVars(
     env: L_Env,
