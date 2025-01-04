@@ -31,6 +31,7 @@ import { tryNewFact } from "./L_Memory";
 import { checkFact } from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import { L_Tokens } from "./L_Lexer";
+import { FactVarsDeclaredChecker } from "./L_FactNodeHelpers";
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
 export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
@@ -845,7 +846,8 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
     skipper.skip(L_KW.Colon);
     // const fact = optToCheckParse(env, tokens, [], false);
     const fact = optFactParse(env, tokens);
-    fact.tryFactVarsDeclared(env);
+    // fact.tryFactVarsDeclared(env);
+    FactVarsDeclaredChecker.check(env, fact);
 
     const node = new L_Nodes.HaveNode(vars, fact);
 
@@ -1769,14 +1771,16 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
     // if (fact instanceof L_Nodes.IfNode) {
     //   fact.addPrefixToVars();
     // }
-    fact.tryFactVarsDeclared(env);
+    // fact.tryFactVarsDeclared(env);
+    FactVarsDeclaredChecker.check(env, fact);
   }
 
   return facts;
 }
 
 function optFactParseVarsDeclared(env: L_Env, tokens: L_Tokens): OptFactNode {
-  const node = optFactParse(env, tokens);
-  node.tryFactVarsDeclared(env);
-  return node;
+  const fact = optFactParse(env, tokens);
+  // node.tryFactVarsDeclared(env);
+  FactVarsDeclaredChecker.check(env, fact);
+  return fact;
 }
