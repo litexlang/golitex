@@ -105,33 +105,30 @@ function arrParse<T>(
   }
 }
 
-function pureSingletonAndFormalSymbolParse(
-  env: L_Env,
-  tokens: L_Tokens
-): L_Singleton {
-  const skipper = new Skipper(env, tokens);
-
-  try {
-    const value = skipper.skip();
-
-    return new L_Singleton(value);
-  } catch (error) {
-    messageParsingError(pureSingletonAndFormalSymbolParse, error);
-    throw error;
-  }
-}
-
 function singletonParse(env: L_Env, tokens: L_Tokens): L_Singleton {
   const skipper = new Skipper(env, tokens);
 
   try {
     const value = skipper.skip();
+
     return new L_Singleton(value);
   } catch (error) {
     messageParsingError(singletonParse, error);
     throw error;
   }
 }
+
+// function singletonParse(env: L_Env, tokens: L_Tokens): L_Singleton {
+//   const skipper = new Skipper(env, tokens);
+
+//   try {
+//     const value = skipper.skip();
+//     return new L_Singleton(value);
+//   } catch (error) {
+//     messageParsingError(singletonParse, error);
+//     throw error;
+//   }
+// }
 
 function optSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.OptSymbol {
   const skipper = new Skipper(env, tokens);
@@ -1129,12 +1126,10 @@ export function isConceptParse(
     skipper.skip(L_KW.Dollar);
     skipper.skip(L_KW.isConcept);
     skipper.skip(L_KW.LBrace);
-    const vars = arrParse<L_Singleton>(
-      env,
-      tokens,
-      pureSingletonAndFormalSymbolParse,
-      [L_KW.L_End, L_KW.RBrace]
-    );
+    const vars = arrParse<L_Singleton>(env, tokens, singletonParse, [
+      L_KW.L_End,
+      L_KW.RBrace,
+    ]);
 
     let facts: L_FactNode[] = [];
     if (isCurToken(tokens, L_KW.L_End)) {
@@ -1226,7 +1221,7 @@ function usePrecedenceToParseComposite(
       if (tokens.peek() === L_KW.Slash) {
         return compositeParse(env, tokens);
       } else {
-        return pureSingletonAndFormalSymbolParse(env, tokens);
+        return singletonParse(env, tokens);
       }
     } catch (error) {
       messageParsingError(prefixSymbolParse, error);
@@ -1454,17 +1449,28 @@ export function symbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
     // TODO Later, there should be parser based on precedence. And there does not  need ((1 * 4) + 4) = 8, there is only $ 1 * 4 + 4 = 8 $
 
     try {
+      let out: L_Symbol;
       if (tokens.peek() === L_KW.Slash) {
-        return compositeParse(env, tokens);
+        out = compositeParse(env, tokens);
       } else if (tokens.peek() === L_KW.Dollar) {
-        return braceCompositeParse(env, tokens);
+        out = braceCompositeParse(env, tokens);
       } else if (tokens.peek().startsWith(L_KW.LiteralOptPrefix)) {
-        return literalOptParse(env, tokens);
-      } else if (tokens.peek() === L_KW.IndexedSymbol) {
-        return indexedSymbolParse(env, tokens);
+        out = literalOptParse(env, tokens);
       } else {
-        // return singletonParse(env, tokens);
-        return pureSingletonAndFormalSymbolParse(env, tokens);
+        out = singletonParse(env, tokens);
+      }
+
+      if (isCurToken(tokens, L_KW.LBracket)) {
+        const indexes: number[] = [];
+        skipper.skip(L_KW.LBracket);
+        while (!isCurToken(tokens, L_KW.RBracket)) {
+          indexes.push(parseInt(skipper.skip()));
+          if (isCurToken(tokens, L_KW.Comma)) skipper.skip(L_KW.Comma);
+        }
+        skipper.skip(L_KW.RBracket);
+        return new IndexedSymbol(out, indexes);
+      } else {
+        return out;
       }
     } catch (error) {
       messageParsingError(singleSymbolParse, error);
@@ -1706,27 +1712,33 @@ function ifParse(env: L_Env, tokens: L_Tokens): L_Nodes.IfNode {
   }
 }
 
-function indexedSymbolParse(env: L_Env, tokens: L_Tokens): IndexedSymbol {
-  const skipper = new Skipper(env, tokens);
+// function indexedSymbolParse(env: L_Env, tokens: L_Tokens): IndexedSymbol {
+//   const skipper = new Skipper(env, tokens);
 
-  try {
-    skipper.skip(L_KW.IndexedSymbol);
-    skipper.skip("{");
-    const symbol = symbolParse(env, tokens);
-    const indexes: number[] = [];
-    skipper.skip(",");
-    while (!isCurToken(tokens, "}")) {
-      indexes.push(Number(skipper.skip()));
-      if (isCurToken(tokens, ",")) skipper.skip(",");
-    }
-    skipper.skip("}");
+//   try {
+//     // skipper.skip(L_KW.IndexedSymbol);
+//     // skipper.skip("{");
+//     // const symbol = symbolParse(env, tokens);
+//     // const indexes: number] = [];
+//     // skipper.skip(",");
+//     // while (!isCurToken(tokens, "}")) {
+//     //   indexes.push(Number(skipper.skip()));
+//     //   if (isCurToken(tokens, ",")) skipper.skip(",");
+//     // }
+//     // skipper.skip("}");
 
-    return new IndexedSymbol(symbol, indexes);
-  } catch (error) {
-    messageParsingError(indexedSymbolParse, error);
-    throw error;
-  }
-}
+//     const symbol = symbolParse(env, tokens);
+//     if (tokens.peek() === L_KW.LBracket) {
+//       skipper.skip(L_KW.LBracket);
+//       while (!isCurToken(tokens, L_KW.RBracket)) {}
+//       skipper.skip(L_KW.RBrace);
+//     }
+//     return new IndexedSymbol(symbol, indexes);
+//   } catch (error) {
+//     messageParsingError(indexedSymbolParse, error);
+//     throw error;
+//   }
+// }
 
 // 1. fix if-fact var prefix 2. check varsDeclared
 function parseFactsArrCheckVarsDeclFixIfPrefix(

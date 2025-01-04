@@ -6,9 +6,8 @@ import {
   LogicNode,
   OptFactNode,
 } from "./L_Nodes";
-import { L_Singleton, L_Symbol } from "./L_Symbols";
 
-class FactVarsDeclaredChecker {
+export class FactVarsDeclaredChecker {
   static check(env: L_Env, fact: L_FactNode): void {
     if (fact instanceof OptFactNode) {
       return this.checkOpt(env, fact);
@@ -23,26 +22,14 @@ class FactVarsDeclaredChecker {
 
   private static checkOpt(env: L_Env, fact: OptFactNode): void {
     for (const v of fact.vars) {
-      try {
-        v.tryVarsDeclared(env);
-      } catch (error) {
-        if (error instanceof Error)
-          error.message += `variable ${v} in ${fact} not declared.\n`;
-        throw error;
-      }
+      v.tryVarsDeclared(env);
     }
 
     if (fact.checkVars === undefined) return;
 
     for (const layer of fact.checkVars) {
       for (const v of layer) {
-        try {
-          v.tryVarsDeclared(env);
-        } catch (error) {
-          if (error instanceof Error)
-            error.message += `variable ${v} in ${fact} not declared.\n`;
-          throw error;
-        }
+        v.tryVarsDeclared(env);
       }
     }
 
@@ -76,24 +63,5 @@ class FactVarsDeclaredChecker {
     for (const f of fact.facts) {
       f.tryFactVarsDeclared(env);
     }
-  }
-}
-
-class SymbolDeclaredChecker {
-  static check(env: L_Env, symbol: L_Symbol): boolean {
-    if (symbol instanceof L_Singleton) {
-      return this.checkSingleton(env, symbol);
-    }
-
-    throw Error();
-  }
-
-  private static messageVarNotDeclared(varNotDeclared: string): string {
-    return `Not Declared: ${varNotDeclared}`;
-  }
-
-  private static checkSingleton(env: L_Env, symbol: L_Singleton): boolean {
-    if (env.isSingletonDeclared(symbol.value)) return true;
-    else throw Error(this.messageVarNotDeclared(symbol.value));
   }
 }
