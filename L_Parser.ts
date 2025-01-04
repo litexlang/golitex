@@ -68,9 +68,9 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
   } catch (error) {
     if (error instanceof Error) env.report(error.message);
     env.report(
-      `error at ${tokens.getCurPos()} :: ${tokens.sc.slice(
+      `error at ${tokens.curTokIndex()} :: ${tokens.sc.slice(
         skipper.start,
-        tokens.getCurPos()
+        tokens.curTokIndex()
       )}`
     );
     throw error;
@@ -342,19 +342,23 @@ export function parseNodes(
   env: L_Env,
   tokens: L_Tokens,
   end: string | null
-): L_Node[] {
+): L_Structs.ParsedNode[] {
+  const skipper = new Skipper(env, tokens);
+
   try {
-    const out: L_Node[] = [];
+    const out: L_Structs.ParsedNode[] = [];
 
     if (end === null) {
       while (!tokens.isEnd()) {
         const node = parseSingleNode(env, tokens);
-        if (node !== null) out.push(node);
+        if (node !== null)
+          out.push(new L_Structs.ParsedNode(node, skipper.nodeString()));
       }
     } else {
       while (tokens.peek() !== end) {
         const node = parseSingleNode(env, tokens);
-        if (node !== null) out.push(node);
+        if (node !== null)
+          out.push(new L_Structs.ParsedNode(node, skipper.nodeString()));
       }
     }
 
