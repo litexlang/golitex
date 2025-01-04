@@ -453,13 +453,21 @@ export class L_Composite extends L_Symbol {
 
 export class FormalSymbol extends L_Singleton {}
 
-export class L_OptSymbol {
+export class OptSymbol {
   constructor(public name: string) {}
 
   toString() {
     return this.name;
   }
+
+  fix(optMap: Map<string, string>) {
+    const newName = optMap.get(this.name);
+    if (newName !== undefined) return new OptSymbol(newName);
+    else return this;
+  }
 }
+
+export class FreeOptSymbol extends OptSymbol {}
 
 export enum L_Out {
   Error,
