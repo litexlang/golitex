@@ -72,6 +72,7 @@ export const L_KW = {
   DefFunctional: "def_function",
   Are: "are",
   All: "all",
+  FreeConceptPrefix: "!",
 };
 
 export const builtinFactNames = new Set<string>();

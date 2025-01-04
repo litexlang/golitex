@@ -3,7 +3,8 @@ import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Report from "./L_Report";
-import { L_Out, L_Singleton, L_Symbol } from "./L_Structs";
+import { L_Out } from "./L_Structs";
+import { L_Singleton, L_Symbol } from "./L_Symbols";
 
 export const DEBUG_DICT = {
   newFact: true,

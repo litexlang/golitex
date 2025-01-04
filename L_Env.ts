@@ -2,6 +2,7 @@ import { L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Structs from "./L_Structs";
 import { L_KW } from "./L_Keywords";
+import { L_Singleton, L_Symbol } from "./L_Symbols";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;
@@ -16,7 +17,7 @@ export class L_Env {
   private literalOperators = new Map<string, L_Nodes.DefLiteralOptNode>();
 
   // TODO
-  private symbolAliases = new Map<string, L_Structs.L_Symbol[]>();
+  private symbolAliases = new Map<string, L_Symbol[]>();
   private formalSymbols = new Set<string>();
   // private functionalSymbols = new Map<
   //   string,
@@ -210,10 +211,7 @@ export class L_Env {
     this.formalSymbols.add(fix);
   }
 
-  tryNewAlias(
-    name: L_Structs.L_Singleton,
-    toBeAliased: L_Structs.L_Symbol[]
-  ): void {
+  tryNewAlias(name: L_Singleton, toBeAliased: L_Symbol[]): void {
     if (this.isSingletonDeclared(name.value)) {
       throw Error(
         `The variable "${name.value}" is already declared in this environment or its parent environments. Please use a different name.`
@@ -223,7 +221,7 @@ export class L_Env {
     this.symbolAliases.set(name.value, toBeAliased);
   }
 
-  getAlias(name: string): L_Structs.L_Symbol[] | undefined {
+  getAlias(name: string): L_Symbol[] | undefined {
     const out = this.symbolAliases.get(name);
     if (out === undefined) {
       if (this.parent !== undefined) {
