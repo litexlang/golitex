@@ -27,7 +27,7 @@ export type ExampleItem = {
   name: string;
   code: string[];
   debug: boolean;
-  print: boolean;
+  print?: boolean;
   // test?: string[] | undefined;
   // runTest?: boolean;
 };

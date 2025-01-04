@@ -17,7 +17,6 @@ const exampleList: ExampleItem[] = [
       "not $human(god);",
     ],
     debug: false,
-    print: true,
   },
   {
     name: "新的parser检查",
@@ -31,13 +30,11 @@ const exampleList: ExampleItem[] = [
       "if y: $p(y) {$q(y)};",
     ],
     debug: false,
-    print: true,
   },
   {
     name: "throw error system",
     code: ["concept $p(x); concept $q(x); concept $t(x); know $t(y);"],
     debug: false,
-    print: true,
   },
   {
     name: "is_property",
@@ -45,7 +42,6 @@ const exampleList: ExampleItem[] = [
       "concept $p(x); let x: $p(x); $is_concept(p; $p(x)); $is_concept(p; $p(z));",
     ],
     debug: false,
-    print: true,
   },
   {
     name: "is_form",
@@ -53,7 +49,6 @@ const exampleList: ExampleItem[] = [
       "concept $p(x); let x: $p(x); operator \\++{x}; let a; $is_form(\\++{a}; \\++{A}) ;",
     ],
     debug: false,
-    print: true,
   },
   {
     name: "checkFacts",
@@ -67,7 +62,6 @@ const exampleList: ExampleItem[] = [
       "[1,x: \\frac{1,2}, y: \\frac{1,3}] {\\frac{\\*{x,1}, \\*{y,1}} = \\frac{x,y}}; ",
     ],
     debug: false,
-    print: true,
   },
   {
     name: "new if expr",
@@ -76,7 +70,6 @@ const exampleList: ExampleItem[] = [
       `if [x(a, b): \\frac{\\frac{a,1}, b}]: $nat(a) {x = \\frac{a, b}};`,
     ],
     debug: false,
-    print: true,
   },
   {
     name: "",
@@ -85,7 +78,6 @@ const exampleList: ExampleItem[] = [
       "if a,b: all a,b are p {$q(a,b)} ;",
     ],
     debug: false,
-    print: true,
   },
   {
     name: "",
@@ -99,7 +91,6 @@ const exampleList: ExampleItem[] = [
       "1 * 2 is real;",
     ],
     debug: false,
-    print: true,
   },
   {
     name: "",
@@ -110,31 +101,21 @@ const exampleList: ExampleItem[] = [
       "a is real;",
     ],
     debug: true,
-    print: true,
   },
 ];
 
 function runExamples(
-  toJSON: boolean,
   logSourceCode: boolean = true,
   logMessages: boolean = true
 ) {
-  const env = new L_Env();
   for (const example of exampleList) {
+    const env = new L_Env();
     if (example.debug) {
       console.log(example.name);
       for (const expr of example.code) {
         runStringWithLogging(env, expr, logSourceCode, logMessages);
       }
     }
-  }
-  if (toJSON) envToJSON(env, "env.json");
-
-  function envToJSON(env: L_Env, fileName: string) {
-    const out = env.toJSON();
-    const jsonString = JSON.stringify(out, null, 2);
-    fs.writeFileSync(fileName, jsonString, "utf8");
-    return out;
   }
 }
 
@@ -156,7 +137,7 @@ function runLiTeXFile(filePath: string) {
 function runTest() {
   const args = process.argv.slice(2);
   if (!args || args.length === 0) {
-    runExamples(false);
+    runExamples();
   } else {
     runLiTeXFile(args[0]);
   }
