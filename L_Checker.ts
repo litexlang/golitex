@@ -11,7 +11,7 @@ import {
   FormulaFactNode,
   L_FactNode,
   FactsNode,
-} from "./L_Nodes";
+} from "./L_Facts";
 import { L_Env } from "./L_Env";
 import {
   FormulaKnownFactReq,

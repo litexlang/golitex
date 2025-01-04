@@ -4,8 +4,9 @@ import {
   L_ReportErr,
   messageVarNotDeclared,
 } from "./L_Report";
-import { LogicNode, OptFactNode, L_FactNode, L_Node } from "./L_Nodes";
+import { LogicNode, OptFactNode, L_FactNode } from "./L_Facts";
 import { checkFact } from "./L_Checker";
+import { L_Node } from "./L_Nodes";
 import { L_KW } from "./L_Keywords";
 import { L_Out } from "./L_Structs";
 

@@ -1,8 +1,8 @@
-import { L_ReportBoolErr, L_ReportErr } from "./L_Report";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Structs from "./L_Structs";
 import { L_KW } from "./L_Keywords";
 import { L_Singleton, L_Symbol } from "./L_Symbols";
+import * as L_Facts from "./L_Facts";
 
 export class L_Env {
   private parent: L_Env | undefined = undefined;
@@ -147,16 +147,16 @@ export class L_Env {
   }
 
   // used by checker and executor
-  tryFactDeclaredOrBuiltin(node: L_Nodes.L_FactNode): void {
-    if (node instanceof L_Nodes.BuiltinCheckNode) {
+  tryFactDeclaredOrBuiltin(node: L_Facts.L_FactNode): void {
+    if (node instanceof L_Facts.BuiltinCheckNode) {
       return;
-    } else if (node instanceof L_Nodes.OptFactNode) {
+    } else if (node instanceof L_Facts.OptFactNode) {
       if (this.getConcept(node.optSymbol.name) !== undefined) return;
       else throw Error(`operator ${node.optSymbol.name} is not declared`);
-    } else if (node instanceof L_Nodes.LogicNode) {
+    } else if (node instanceof L_Facts.LogicNode) {
       node.req.forEach((e) => this.tryFactDeclaredOrBuiltin(e));
       node.onlyIfs.forEach((e) => this.tryFactDeclaredOrBuiltin(e));
-    } else if (node instanceof L_Nodes.FormulaFactNode) {
+    } else if (node instanceof L_Facts.FormulaFactNode) {
       this.tryFactDeclaredOrBuiltin(node.left);
       this.tryFactDeclaredOrBuiltin(node.right);
     }

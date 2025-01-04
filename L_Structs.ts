@@ -1,4 +1,5 @@
-import { OptFactNode, L_FactNode, L_Node } from "./L_Nodes";
+import { OptFactNode, L_FactNode } from "./L_Facts";
+import { L_Node } from "./L_Nodes";
 
 export class OptSymbol {
   constructor(public name: string) {}

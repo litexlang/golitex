@@ -1,5 +1,5 @@
 import { L_Env } from "../L_Env";
-import { OptFactNode } from "../L_Nodes";
+import { OptFactNode } from "../L_Facts";
 import { L_Out } from "../L_Structs";
 import { L_Composite, L_Singleton, L_Symbol } from "../L_Symbols";
 

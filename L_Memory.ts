@@ -6,7 +6,7 @@ import {
   OptFactNode,
   L_FactNode,
   FactsNode,
-} from "./L_Nodes";
+} from "./L_Facts";
 import { L_Env } from "./L_Env";
 import { reportStoreErr } from "./L_Report";
 import {

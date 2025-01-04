@@ -5,7 +5,7 @@ import {
   L_FactNode,
   LogicNode,
   OptFactNode,
-} from "./L_Nodes";
+} from "./L_Facts";
 
 export class FactVarsDeclaredChecker {
   static check(env: L_Env, fact: L_FactNode): void {

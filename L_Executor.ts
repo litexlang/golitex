@@ -5,6 +5,7 @@ import * as L_Nodes from "./L_Nodes";
 import * as L_Report from "./L_Report";
 import { L_Out } from "./L_Structs";
 import { L_Singleton, L_Symbol } from "./L_Symbols";
+import { L_FactNode, IfNode, OptFactNode } from "./L_Facts";
 
 export const DEBUG_DICT = {
   newFact: true,
@@ -19,7 +20,7 @@ export const CheckFalse = true;
 
 export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   try {
-    if (node instanceof L_Nodes.L_FactNode) {
+    if (node instanceof L_FactNode) {
       return factExec(env, node);
     } else if (node instanceof L_Nodes.ProveNode) {
       return proveExec(env, node);
@@ -35,7 +36,7 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
   }
 }
 
-function factExec(env: L_Env, toCheck: L_Nodes.L_FactNode): L_Out {
+function factExec(env: L_Env, toCheck: L_FactNode): L_Out {
   try {
     // TODO: Implement check whether the given toCheck exists and given var exists.
 
@@ -111,9 +112,9 @@ function proveContradictExec(
 function proveExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
   try {
     const newEnv = new L_Env(env);
-    if (proveNode.toProve instanceof L_Nodes.IfNode) {
+    if (proveNode.toProve instanceof IfNode) {
       return proveIfExec(env, proveNode);
-    } else if (proveNode.toProve instanceof L_Nodes.OptFactNode) {
+    } else if (proveNode.toProve instanceof OptFactNode) {
       return proveOptExec(env, proveNode);
     }
 
@@ -152,7 +153,7 @@ function proveOptExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
 function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
   try {
     const newEnv = new L_Env(env);
-    const toProve = proveNode.toProve as L_Nodes.IfNode;
+    const toProve = proveNode.toProve as IfNode;
 
     // let ok = true;
     for (const v of toProve.vars) {
