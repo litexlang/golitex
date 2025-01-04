@@ -66,7 +66,7 @@ export const L_KW = {
   AnySymbol: "ANY", //* anySymbol can not be equal to EXIST, and it can equal to any other symbols
   LFactFormula: "\\[?",
   RFactFormula: "\\?]",
-  FunctionTypeFactOptPrefix: "$",
+  FunctionalOptPrefix: "$",
   LetAlias: "let_alias",
   DefFunctional: "def_function",
   Are: "are",
