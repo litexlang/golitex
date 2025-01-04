@@ -1,6 +1,6 @@
 import { L_Env } from "./L_Env";
 import { L_KW } from "./L_Keywords";
-import { L_Composite, L_OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
+import { L_Composite, OptSymbol, L_Singleton, L_Symbol } from "./L_Structs";
 
 export abstract class L_Node {}
 
@@ -232,7 +232,7 @@ export class IfReqNode {
 
 export class OptFactNode extends L_FactNode {
   constructor(
-    public optSymbol: L_OptSymbol,
+    public optSymbol: OptSymbol,
     public vars: L_Symbol[],
     isT: boolean = true,
     public checkVars: L_Symbol[][] | undefined

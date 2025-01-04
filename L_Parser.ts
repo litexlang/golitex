@@ -131,12 +131,12 @@ function singletonParse(env: L_Env, tokens: L_Tokens): L_Singleton {
   }
 }
 
-function optSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.L_OptSymbol {
+function optSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.OptSymbol {
   const skipper = new Skipper(env, tokens);
 
   try {
     const name = skipper.skip();
-    return new L_Structs.L_OptSymbol(name);
+    return new L_Structs.OptSymbol(name);
   } catch (error) {
     messageParsingError(optSymbolParse, error);
     throw error;
@@ -1570,7 +1570,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
     // * If The opt starts with $, then it's an opt written like a function
     if (isCurToken(tokens, L_KW.FunctionTypeFactOptPrefix)) {
       skipper.skip(L_KW.FunctionTypeFactOptPrefix);
-      const optSymbol: L_Structs.L_OptSymbol = optSymbolParse(env, tokens);
+      const optSymbol: L_Structs.OptSymbol = optSymbolParse(env, tokens);
       skipper.skip(L_KW.LBrace);
       const vars = arrParse<L_Symbol>(env, tokens, symbolParse, ")");
       skipper.skip(L_KW.RBrace);
@@ -1586,7 +1586,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
           skipper.skip("is");
           const optName = skipper.skip();
           // skipper.skip(  L_Keywords.FunctionalStructuredFactOptPrefix);
-          const optSymbol = new L_Structs.L_OptSymbol(optName);
+          const optSymbol = new L_Structs.OptSymbol(optName);
           let checkVars = checkVarsParse();
 
           return new OptFactNode(optSymbol, [var1], isT, checkVars);
@@ -1594,7 +1594,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
         // factual formulas like: a = b
         default: {
           const optName = skipper.skip();
-          const optSymbol = new L_Structs.L_OptSymbol(optName);
+          const optSymbol = new L_Structs.OptSymbol(optName);
           const var2 = symbolParse(env, tokens);
           let checkVars = checkVarsParse();
 
