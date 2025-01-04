@@ -1,7 +1,7 @@
 import { L_Env } from "./L_Env";
 import { IndexedSymbol, L_Composite, L_Singleton, L_Symbol } from "./L_Symbols";
 
-class SymbolDeclaredChecker {
+export class SymbolDeclaredChecker {
   static check(env: L_Env, symbol: L_Symbol): void {
     if (symbol instanceof L_Singleton) {
       return this.checkSingleton(env, symbol);
@@ -27,11 +27,13 @@ class SymbolDeclaredChecker {
     if (env.getCompositeVar(symbol.name) === undefined) return;
 
     for (const value of symbol.values) {
-      value.tryVarsDeclared(env);
+      // value.tryVarsDeclared(env);
+      this.check(env, value);
     }
   }
 
   private static checkIndexedSymbol(env: L_Env, symbol: IndexedSymbol): void {
-    symbol.given.tryVarsDeclared(env);
+    // symbol.given.tryVarsDeclared(env);
+    this.check(env, symbol.given);
   }
 }

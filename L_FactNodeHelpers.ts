@@ -6,6 +6,7 @@ import {
   LogicNode,
   OptFactNode,
 } from "./L_Facts";
+import { SymbolDeclaredChecker } from "./L_SymbolsHelper";
 
 export class FactVarsDeclaredChecker {
   static check(env: L_Env, fact: L_FactNode): void {
@@ -22,14 +23,16 @@ export class FactVarsDeclaredChecker {
 
   private static checkOpt(env: L_Env, fact: OptFactNode): void {
     for (const v of fact.vars) {
-      v.tryVarsDeclared(env);
+      // v.tryVarsDeclared(env);
+      SymbolDeclaredChecker.check(env, v);
     }
 
     if (fact.checkVars === undefined) return;
 
     for (const layer of fact.checkVars) {
       for (const v of layer) {
-        v.tryVarsDeclared(env);
+        // v.tryVarsDeclared(env);
+        SymbolDeclaredChecker.check(env, v);
       }
     }
 
@@ -59,7 +62,9 @@ export class FactVarsDeclaredChecker {
 
   private static checkFactsNode(env: L_Env, fact: FactsNode): void {
     for (const v of fact.varsPairs) {
-      v.forEach((e) => e[1].tryVarsDeclared(env));
+      // v.forEach((e) => e[1].tryVarsDeclared(env));
+      // v.forEach((e) => this.check(env, e[1]));
+      v.forEach((e) => SymbolDeclaredChecker.check(env, e[1]));
     }
 
     for (const f of fact.facts) {
