@@ -17,7 +17,6 @@ import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { builtinFactNames, L_KW } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
-import { L_Out } from "./L_Structs";
 import {
   L_Singleton,
   L_Composite,
@@ -62,26 +61,28 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
 
     switch (tokens.peek()) {
       case L_KW.Know:
-        if (knowParse(env, tokens) === L_Out.True) return null;
+        return knowParse(env, tokens);
       case L_KW.Let:
-        if (letParse(env, tokens) === L_Out.True) return null;
+        return letParse(env, tokens);
       case L_KW.DefConcept:
-        if (defConceptParse(env, tokens) === L_Out.True) return null;
+        return defConceptParse(env, tokens);
       case L_KW.DefOperator:
-        if (defOperatorParse(env, tokens) === L_Out.True) return null;
+        return defOperatorParse(env, tokens);
       case L_KW.Lets:
-        if (letsParse(env, tokens) === L_Out.True) return null;
+        return letsParse(env, tokens);
       case L_KW.Include:
-        if (includeParse(env, tokens) === L_Out.True) return null;
+        return includeParse(env, tokens);
       case L_KW.DefLiteralOperator:
-        if (defLiteralOperatorParse(env, tokens) === L_Out.True) return null;
+        return defLiteralOperatorParse(env, tokens);
       // case L_KW.LetFormal:
-      //   if (letFormalParse(env, tokens) === L_Out.True) return null;
+      //   if (letFormalParse(env, tokens) === L_Out.True) return ;
       case L_KW.LetAlias:
-        if (letAliasParse(env, tokens) === L_Out.True) return null;
+        return letAliasParse(env, tokens);
       case L_KW.Have:
         // TODO: vars declared
-        if (haveParse(env, tokens) === L_Out.True) return null;
+        return haveParse(env, tokens);
+      case L_KW.ConceptAlias:
+        return conceptAliasParse(env, tokens);
     }
 
     const fact = factParse(env, tokens);
@@ -389,7 +390,7 @@ export function parseNodes(
   }
 }
 
-function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
+function knowParse(env: L_Env, tokens: L_Tokens): null {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -406,7 +407,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
     throw error;
   }
 
-  function knowExec(env: L_Env, node: L_Nodes.KnowNode): L_Out {
+  function knowExec(env: L_Env, node: L_Nodes.KnowNode): null {
     try {
       node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
 
@@ -414,7 +415,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
         L_Memory.tryNewFact(env, onlyIf);
       }
 
-      return L_Out.True;
+      return null;
     } catch (error) {
       L_Report.L_ReportErr(env, knowExec, node);
       throw error;
@@ -422,7 +423,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): L_Out {
   }
 }
 
-function letParse(env: L_Env, tokens: L_Tokens): L_Out {
+function letParse(env: L_Env, tokens: L_Tokens): null {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -462,7 +463,7 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
     throw error;
   }
 
-  function letExec(env: L_Env, node: L_Nodes.LetNode): L_Out {
+  function letExec(env: L_Env, node: L_Nodes.LetNode): null {
     try {
       for (const e of node.vars) {
         env.tryNewPureSingleton(e);
@@ -476,15 +477,16 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
       }
 
       env.report(`[let] ${node}`);
-      return L_Out.True;
+      return null;
     } catch (error) {
-      return L_Report.L_ReportErr(env, letExec, node);
+      L_Report.L_ReportErr(env, letExec, node);
+      throw error;
     }
   }
 }
 
 // TODO: vars declared
-// function letFormalParse(env: L_Env, tokens: L_Tokens): L_Out {
+// function letFormalParse(env: L_Env, tokens: L_Tokens):null{
 //   const skipper = new Skipper(env, tokens);
 
 //   try {
@@ -527,7 +529,7 @@ function letParse(env: L_Env, tokens: L_Tokens): L_Out {
 //     throw error;
 //   }
 
-//   function letFormalExec(env: L_Env, node: L_Nodes.LetFormalSymbolNode): L_Out {
+//   function letFormalExec(env: L_Env, node: L_Nodes.LetFormalSymbolNode):null{
 //     try {
 //       for (const e of node.vars) {
 //         env.tryNewFormalSymbol(e);
@@ -838,7 +840,7 @@ function localEnvParse(env: L_Env, tokens: L_Tokens): L_Nodes.LocalEnvNode {
 }
 
 // TODO: vars declared
-function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
+function haveParse(env: L_Env, tokens: L_Tokens): null {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -856,7 +858,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     return out;
 
-    function haveExec(env: L_Env, node: L_Nodes.HaveNode): L_Out {
+    function haveExec(env: L_Env, node: L_Nodes.HaveNode): null {
       try {
         let existSymbolNum = 0;
         for (const v of node.fact.vars) {
@@ -869,7 +871,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
 
         const out = checkFact(env, node.fact);
 
-        if (out !== L_Out.True) return out;
+        if (out !== L_Structs.L_Out.True) throw Error();
 
         for (const v of node.vars) {
           env.tryNewPureSingleton(v.value);
@@ -894,9 +896,10 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
         );
 
         tryNewFact(env, opt);
-        return L_Out.True;
+        return null;
       } catch (error) {
-        return L_Report.L_ReportErr(env, haveExec, node);
+        L_Report.L_ReportErr(env, haveExec, node);
+        throw error;
       }
     }
   } catch (error) {
@@ -932,7 +935,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): L_Out {
 // }
 
 // TODO check vars introduced in def
-function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
+function defConceptParse(env: L_Env, tokens: L_Tokens): null {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -979,7 +982,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     const out = new L_Nodes.DefConceptNode(opt, cond, onlyIfs, commutative);
 
-    if (defConceptExec(env, out) === L_Structs.L_Out.True) return L_Out.True;
+    if (defConceptExec(env, out) === L_Structs.L_Out.True) return null;
     else throw Error();
   } catch (error) {
     messageParsingError(defConceptParse, error);
@@ -1086,7 +1089,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): L_Out {
 
 // --------------------------------------------------------
 // TODO varsDeclared
-export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
+export function defOperatorParse(env: L_Env, tokens: L_Tokens): null {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -1116,19 +1119,20 @@ export function defOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
       out = new L_Nodes.DefOperatorNode(composite, facts);
     }
 
-    if (defCompositeExec(env, out) === L_Out.True) return L_Out.True;
-    else throw Error();
+    return defCompositeExec(env, out);
   } catch (error) {
     messageParsingError(defOperatorParse, error);
     throw error;
   }
 
-  function defCompositeExec(env: L_Env, node: L_Nodes.DefOperatorNode): L_Out {
+  function defCompositeExec(env: L_Env, node: L_Nodes.DefOperatorNode): null {
     try {
       env.tryNewComposite(node.composite.name, node);
-      return env.report(`[new def_composite] ${node}`);
+      env.report(`[${L_KW.DefOperator}] ${node}`);
+      return null;
     } catch (error) {
-      return L_Report.L_ReportErr(env, defCompositeExec, node);
+      L_Report.L_ReportErr(env, defCompositeExec, node);
+      return null;
     }
   }
 }
@@ -1274,7 +1278,7 @@ function usePrecedenceToParseComposite(
   }
 }
 
-export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
+export function letsParse(env: L_Env, tokens: L_Tokens): null {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -1300,22 +1304,23 @@ export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
     }
 
     const out = letsExec(env, node);
-    return L_Report.reportL_Out(env, out, node);
+    return null;
   } catch (error) {
     messageParsingError(letsParse, error);
     throw error;
   }
 
-  function letsExec(env: L_Env, node: L_Nodes.LetsNode): L_Out {
+  function letsExec(env: L_Env, node: L_Nodes.LetsNode): null {
     try {
       env.tryNewLetsSymbol(node);
       for (const fact of node.facts) {
         tryNewFact(env, fact);
       }
       env.report(`<lets OK!> ${node.toString()}`);
-      return L_Out.True;
+      return null;
     } catch (error) {
-      return L_Report.L_ReportErr(env, letsExec, node);
+      L_Report.L_ReportErr(env, letsExec, node);
+      throw error;
     }
   }
 }
@@ -1345,7 +1350,7 @@ export function letsParse(env: L_Env, tokens: L_Tokens): L_Out {
 //   }
 // }
 
-export function includeParse(env: L_Env, tokens: L_Tokens): L_Out {
+export function includeParse(env: L_Env, tokens: L_Tokens): null {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -1365,12 +1370,14 @@ export function includeParse(env: L_Env, tokens: L_Tokens): L_Out {
 
     return out;
 
-    function includeExec(env: L_Env, node: L_Nodes.IncludeNode): L_Out {
+    function includeExec(env: L_Env, node: L_Nodes.IncludeNode): null {
       try {
         env.tryNewInclude(node.path);
-        return env.report(`[new lib included] ${node.toString()}`);
+        env.report(`[new lib included] ${node.toString()}`);
+        return null;
       } catch (error) {
-        return L_Report.L_ReportErr(env, includeExec, node);
+        L_Report.L_ReportErr(env, includeExec, node);
+        return null;
       }
     }
   } catch (error) {
@@ -1380,7 +1387,7 @@ export function includeParse(env: L_Env, tokens: L_Tokens): L_Out {
 }
 
 // TODO: vars declared
-export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
+export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): null {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -1430,12 +1437,14 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): L_Out {
   function defLiteralOptExec(
     env: L_Env,
     node: L_Nodes.DefLiteralOptNode
-  ): L_Out {
+  ): null {
     try {
       env.tryNewLiteralOpt(node);
-      return env.report(`[new ${L_KW.DefLiteralOperator}] ${node}`);
+      env.report(`[new ${L_KW.DefLiteralOperator}] ${node}`);
+      return null;
     } catch (error) {
-      return L_Report.L_ReportErr(env, defLiteralOptExec, node);
+      L_Report.L_ReportErr(env, defLiteralOptExec, node);
+      return null;
     }
   }
 }
@@ -1491,7 +1500,7 @@ export function symbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
 }
 
 // TODO: vars declared
-export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
+export function letAliasParse(env: L_Env, tokens: L_Tokens): null {
   const skipper = new Skipper(env, tokens);
 
   try {
@@ -1509,9 +1518,10 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
     const node = new L_Nodes.LetAliasNode(name, toBeAliased);
 
     const out = letAliasExec(env, node);
-    return L_Report.reportL_Out(env, out, node);
+    // L_Report.reportL_Out(env, out, node);
+    return null;
 
-    function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): L_Out {
+    function letAliasExec(env: L_Env, node: L_Nodes.LetAliasNode): null {
       try {
         // node.toBeAliased.every((e) => e.tryVarsDeclared(env));
         node.toBeAliased.every((e) => SymbolDeclaredChecker.check(env, e));
@@ -1520,7 +1530,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
 
         env.tryNewAlias(node.name, node.toBeAliased);
 
-        return L_Out.True;
+        return null;
       } catch (error) {
         messageParsingError(letAliasExec, error);
         throw error;
@@ -1532,7 +1542,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): L_Out {
   }
 }
 
-// function defFunctionParse(env: L_Env, tokens: L_Tokens): L_Out {
+// function defFunctionParse(env: L_Env, tokens: L_Tokens):null{
 //   const skipper = new Skipper(env, tokens);
 
 //   try {
@@ -1785,4 +1795,21 @@ function optFactParseVarsDeclared(env: L_Env, tokens: L_Tokens): OptFactNode {
   // node.tryFactVarsDeclared(env);
   FactVarsDeclaredChecker.check(env, fact);
   return fact;
+}
+
+function conceptAliasParse(env: L_Env, tokens: L_Tokens): null {
+  const skipper = new Skipper(env, tokens);
+
+  try {
+    skipper.skip(L_KW.ConceptAlias);
+    const name = skipper.skip();
+    const toBeAliased = skipper.skip();
+    skipper.skip(L_KW.L_End);
+    const node = new L_Nodes.ConceptAliasNode(name, toBeAliased);
+    env.tryNewConceptAlias(node);
+    return null;
+  } catch (error) {
+    messageParsingError(conceptAliasParse, error);
+    throw error;
+  }
 }
