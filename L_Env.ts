@@ -7,19 +7,15 @@ import * as L_Facts from "./L_Facts";
 export class L_Env {
   private parent: L_Env | undefined = undefined;
   private messages: string[] = [];
-  private pureSingletons = new Set<string>();
-  private defs = new Map<string, L_Nodes.DefConceptNode>();
+  private singletonVars = new Set<string>();
+  private concepts = new Map<string, L_Nodes.DefConceptNode>();
   private facts = new Map<string, L_Structs.L_KnownFactReq[]>();
-  private composites = new Map<string, L_Nodes.DefOperatorNode>();
+  private operators = new Map<string, L_Nodes.DefOperatorNode>();
   private regexSingletons = new Map<string, L_Nodes.LetsNode>();
-  // private macros = new Map<string, L_Nodes.MacroNode>();
   private includes: string[] = [];
   private literalOperators = new Map<string, L_Nodes.DefLiteralOptNode>();
-
-  // TODO
   private symbolAliases = new Map<string, L_Symbol[]>();
   private formalSymbols = new Set<string>();
-
   private conceptAliasMap = new Map<string, Set<string>>();
 
   constructor(parent: L_Env | undefined = undefined) {
@@ -94,7 +90,7 @@ export class L_Env {
       );
       // return L_ReportBoolErr(this, this.tryNewComposite);
     } else {
-      this.composites.set(key, fact);
+      this.operators.set(key, fact);
       // return true;
     }
   }
@@ -131,7 +127,7 @@ export class L_Env {
   // }
 
   getCompositeVar(key: string): undefined | L_Nodes.DefOperatorNode {
-    const out = this.composites.get(key);
+    const out = this.operators.get(key);
     if (out !== undefined) {
       return out;
     } else {
@@ -183,9 +179,9 @@ export class L_Env {
   clear() {
     this.parent = undefined;
     this.messages = [];
-    this.pureSingletons = new Set<string>();
+    this.singletonVars = new Set<string>();
     this.regexSingletons = new Map<string, L_Nodes.LetsNode>();
-    this.defs = new Map<string, L_Nodes.DefConceptNode>();
+    this.concepts = new Map<string, L_Nodes.DefConceptNode>();
   }
 
   // used by checker and executor
@@ -205,8 +201,8 @@ export class L_Env {
   }
 
   getConcept(s: string): L_Nodes.DefConceptNode | undefined {
-    if (this.defs.has(s)) {
-      return this.defs.get(s);
+    if (this.concepts.has(s)) {
+      return this.concepts.get(s);
     } else if (this.parent) {
       return this.parent.getConcept(s);
     } else {
@@ -222,7 +218,7 @@ export class L_Env {
       );
     }
 
-    this.defs.set(s, defNode);
+    this.concepts.set(s, defNode);
     this.report(`[${L_KW.DefConcept}] ${defNode}`);
   }
 
@@ -240,7 +236,7 @@ export class L_Env {
         `The variable "${fix}" is already declared in this environment or its parent environments. Please use a different name.`
       );
     }
-    this.pureSingletons.add(fix);
+    this.singletonVars.add(fix);
   }
 
   tryNewFormalSymbol(fix: string): void {
@@ -325,7 +321,7 @@ export class L_Env {
   }
 
   isPureSingletonDeclared(key: string): boolean {
-    if (this.pureSingletons.has(key)) {
+    if (this.singletonVars.has(key)) {
       return true;
     } else {
       if (!this.parent) return false;
@@ -334,7 +330,7 @@ export class L_Env {
   }
 
   optDeclared(key: string): boolean {
-    if (this.defs.get(key)) {
+    if (this.concepts.get(key)) {
       return true;
     } else {
       if (!this.parent) return false;
@@ -393,8 +389,8 @@ export class L_Env {
 
   toJSON() {
     return {
-      vars: Array.from(this.pureSingletons),
-      defs: Object.fromEntries(this.defs),
+      vars: Array.from(this.singletonVars),
+      defs: Object.fromEntries(this.concepts),
       facts: Object.fromEntries(this.facts),
     };
   }
