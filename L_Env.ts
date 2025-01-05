@@ -31,6 +31,15 @@ export class L_Env {
       throw Error(`The concept alias ${node.name} is already declared.`);
     } else {
       const relatedMap = this.getConceptAlias(node.toBeAliased);
+
+      let originalDef = this.getConcept(node.toBeAliased);
+      if (originalDef === undefined) {
+        throw Error(`${node.toBeAliased} is not declared.`);
+      } else {
+        // TODO
+        this.tryNewDef(node.name, originalDef);
+      }
+
       if (relatedMap === undefined) {
         const newMap = new Set<string>();
         newMap.add(node.toBeAliased);
@@ -144,6 +153,16 @@ export class L_Env {
 
   getFacts(key: string): undefined | L_Structs.L_KnownFactReq[] {
     let currentFacts = this.facts.get(key);
+    const aliases = this.getConceptAlias(key);
+    aliases?.forEach((alias) => {
+      if (currentFacts === undefined) {
+        currentFacts = this.facts.get(alias);
+      } else {
+        const aliasFacts = this.facts.get(alias);
+        if (aliasFacts !== undefined)
+          currentFacts = [...currentFacts, ...aliasFacts];
+      }
+    });
 
     if (currentFacts === undefined) {
       if (this.parent !== undefined) {
