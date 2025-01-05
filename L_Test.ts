@@ -116,6 +116,7 @@ const exampleList: ExampleItem[] = [
       `concept $real(x); operator \\frac{a,b}; let x,y: x is real;`,
       `concept_alias 实数 real;`,
       "x is 实数;",
+      "know if x :  x is 实数 {x is real};",
     ],
     debug: true,
   },
