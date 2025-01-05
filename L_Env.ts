@@ -19,26 +19,49 @@ export class L_Env {
   // TODO
   private symbolAliases = new Map<string, L_Symbol[]>();
   private formalSymbols = new Set<string>();
-  // private functionalSymbols = new Map<
-  //   string,
-  //   L_Nodes.DefFunctionalSymbolNode
-  // >();
+
+  private conceptAliasMap = new Map<string, Set<string>>();
 
   constructor(parent: L_Env | undefined = undefined) {
     this.parent = parent;
   }
 
+  tryNewConceptAlias(node: L_Nodes.ConceptAliasNode): void {
+    if (this.getCompositeVar(node.name) !== undefined) {
+      throw Error(`The concept alias ${node.name} is already declared.`);
+    } else {
+      const relatedMap = this.getConceptAlias(node.toBeAliased);
+      if (relatedMap === undefined) {
+        const newMap = new Set<string>();
+        newMap.add(node.toBeAliased);
+        this.conceptAliasMap.set(node.toBeAliased, newMap);
+        newMap.add(node.name);
+        this.conceptAliasMap.set(node.name, newMap);
+      } else {
+        relatedMap.add(node.name);
+        this.conceptAliasMap.set(node.name, relatedMap);
+      }
+    }
+  }
+
+  getConceptAlias(key: string): undefined | Set<string> {
+    const out = this.conceptAliasMap.get(key);
+    if (out !== undefined) {
+      return out;
+    } else {
+      if (this.parent !== undefined) {
+        return this.parent.getConceptAlias(key);
+      } else {
+        return undefined;
+      }
+    }
+  }
+
   tryNewLiteralOpt(node: L_Nodes.DefLiteralOptNode): void {
     if (this.getLiteralOpt(node.name)) {
       throw Error(`The literal operator ${node.name} is already declared.`);
-      // return L_ReportBoolErr(
-      //   this,
-      //   this.newLiteralOpt,
-      //   `The literal operator ${node.name} is already declared.`
-      // );
     } else {
       this.literalOperators.set(node.name, node);
-      // return true;
     }
   }
 

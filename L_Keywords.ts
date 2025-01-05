@@ -1,3 +1,5 @@
+import { ConceptAliasNode } from "./L_Nodes";
+
 export const specialChars = [
   "(",
   ")",
@@ -72,6 +74,7 @@ export const L_KW = {
   Are: "are",
   All: "all",
   FreeConceptPrefix: "!",
+  ConceptAlias: "concept_alias",
 };
 
 export const builtinFactNames = new Set<string>();
