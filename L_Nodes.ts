@@ -167,4 +167,14 @@ export class LetAliasNode extends L_Node {
   }
 }
 
+export class ConceptAliasNode extends L_Node {
+  constructor(public name: string, public toBeAliased: string) {
+    super();
+  }
+
+  toString() {
+    return `${L_KW.ConceptAlias} ${this.name} ${this.toBeAliased}`;
+  }
+}
+
 // The Followings are half implemented. --------------------------------------
