@@ -39,7 +39,7 @@ export class CompositeLogicVar extends LogicVar {
   constructor(
     name: L_Singleton,
     public freeVars: L_Singleton[],
-    public form: L_Symbol
+    public form: L_Composite
   ) {
     super(name);
   }
@@ -71,7 +71,7 @@ export abstract class LogicNode extends L_FactNode {
         const freeFixedPairs: [L_Symbol, L_Symbol][] = v.freeVars.map(
           (e, i) => [e, newFreeVars[i]]
         );
-        const newForm = v.form.fix(env, freeFixedPairs);
+        const newForm = v.form.fix(env, freeFixedPairs) as L_Composite;
         const newVar = new CompositeLogicVar(newKey, newFreeVars, newForm);
         newVars.push(newVar);
       }
@@ -158,7 +158,9 @@ export abstract class LogicNode extends L_FactNode {
       } else if (v instanceof CompositeLogicVar) {
         if (L_Symbol.weakStructurallyEql(v.form, fixed[i])) {
           out.push([v.name, fixed[i]]);
-          // TODO ???????
+          //! ????????
+        } else {
+          throw Error();
         }
       }
     }
