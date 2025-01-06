@@ -10,6 +10,7 @@ import {
   L_FactNode,
   IfNode,
   SingletonLogicVar,
+  CompositeLogicVar,
 } from "./L_Facts";
 import { checkFact } from "./L_Checker";
 import { L_KW } from "./L_Keywords";
@@ -330,6 +331,45 @@ export class IndexedSymbol extends L_Symbol {
 export class L_Composite extends L_Symbol {
   constructor(public name: string, public values: L_Symbol[]) {
     super();
+  }
+
+  extractGivenSingletonIndexArr(
+    env: L_Env,
+    given: L_Singleton
+  ): number[] | undefined {
+    let stored: L_Symbol[] = [];
+    for (const [i, v] of this.values.entries()) {
+      if (v instanceof L_Singleton) {
+        if (L_Symbol.literalEql(env, given, v)) return [i];
+        continue;
+      } else if (v instanceof L_Composite) {
+        const index = v.extractGivenSingletonIndexArr(env, given);
+        if (index !== undefined) return [i, ...index];
+        continue;
+      }
+    }
+  }
+
+  makeFreeFixUsingIfCompositeFreeVars(
+    env: L_Env,
+    compositeLogicVar: CompositeLogicVar
+  ): [L_Symbol, L_Symbol][] {
+    const out: [L_Symbol, L_Symbol][] = [];
+    const form = compositeLogicVar.form;
+    const key = compositeLogicVar.name;
+    for (const v of compositeLogicVar.freeVars) {
+      // TODO 这里没考虑到可能的 同一个 a 有多个实现，且多个实现并不相等
+      const indexes = form.extractGivenSingletonIndexArr(env, key);
+      if (!indexes) throw Error();
+
+      let curSymbol: L_Symbol = this;
+      for (const index of indexes) {
+        curSymbol = (curSymbol as L_Composite).values[index];
+      }
+      out.push([key, curSymbol]);
+    }
+
+    return out;
   }
 
   getCommutative(): L_Composite {

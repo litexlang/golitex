@@ -1365,7 +1365,7 @@ class VanillaParser {
       );
       skipper.skip(L_KW.RBrace);
       skipper.skip(L_KW.Colon);
-      const symbol = SymbolParser.symbolParse(env, tokens);
+      const symbol = SymbolParser.compositeParse(env, tokens);
       // varsForm.push({ key: singleton, freeVars: freeVars, form: symbol });
       skipper.skip(L_KW.RBracket);
 
