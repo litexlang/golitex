@@ -66,12 +66,12 @@ export abstract class L_Symbol {
   ): boolean {
     return (
       given.length === expected.length &&
-      given.every((e, i) => L_Symbol.literallyEql(env, e, expected[i]))
+      given.every((e, i) => L_Symbol.literalEql(env, e, expected[i]))
     );
   }
 
   // * ONE OF MAIN FUNCTION OF THE WHOLE PROJECT
-  static literallyEql(
+  static literalEql(
     env: L_Env,
     given: L_Symbol,
     expected: L_Symbol,
@@ -97,7 +97,7 @@ export abstract class L_Symbol {
 
       return false;
     } catch {
-      L_ReportErr(env, L_Symbol.literallyEql);
+      L_ReportErr(env, L_Symbol.literalEql);
       return false;
     }
 
@@ -108,7 +108,7 @@ export abstract class L_Symbol {
     ): boolean {
       if (given instanceof L_Singleton && env.isAlias(given.value)) {
         for (const alias of env.getAlias(given.value) as L_Symbol[]) {
-          if (L_Symbol.literallyEql(env, given, expected, false)) {
+          if (L_Symbol.literalEql(env, given, expected, false)) {
             return true;
           }
         }
@@ -116,7 +116,7 @@ export abstract class L_Symbol {
 
       if (expected instanceof L_Singleton && env.isAlias(expected.value)) {
         for (const alias of env.getAlias(expected.value) as L_Symbol[]) {
-          if (L_Symbol.literallyEql(env, given, expected, false)) {
+          if (L_Symbol.literalEql(env, given, expected, false)) {
             return true;
           }
         }
@@ -167,7 +167,7 @@ export abstract class L_Symbol {
           for (let i = 0; i < given.values.length; i++) {
             const giv = given.values[i];
             const exp = expected.values[i];
-            if (!L_Symbol.literallyEql(env, giv, exp)) return false;
+            if (!L_Symbol.literalEql(env, giv, exp)) return false;
           }
           return true;
         }
@@ -253,7 +253,7 @@ export class L_Singleton extends L_Symbol {
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     for (const freeFixed of freeFixedPairs) {
-      if (L_Symbol.literallyEql(env, freeFixed[0], this)) return freeFixed[1];
+      if (L_Symbol.literalEql(env, freeFixed[0], this)) return freeFixed[1];
     }
     return this;
   }
@@ -288,7 +288,7 @@ export class IndexedSymbol extends L_Symbol {
     let out: IndexedSymbol = this;
 
     for (const freeFixed of freeFixedPairs) {
-      if (L_Symbol.literallyEql(env, freeFixed[0], this.given)) {
+      if (L_Symbol.literalEql(env, freeFixed[0], this.given)) {
         out = new IndexedSymbol(freeFixed[1], this.indexes);
       }
     }
