@@ -159,7 +159,7 @@ function proveIfExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
     for (const v of toProve.vars) {
       //TODO how to composite?
       if (v instanceof L_Singleton) {
-        env.tryNewPureSingleton(v.value);
+        env.tryNewSingleton(v.value);
       }
     }
 

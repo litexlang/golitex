@@ -29,23 +29,23 @@ export type IfVarsFormReqType = {
   form: L_Symbol;
 };
 
-export interface LogicVar {}
-
-export class SingletonLogicVar implements LogicVar {
+export abstract class LogicVar {
   constructor(public name: L_Singleton) {}
 }
 
-export class CompositeLogicVar implements LogicVar {
+export class SingletonLogicVar extends LogicVar {}
+
+export class CompositeLogicVar extends LogicVar {
   constructor(
-    public key: L_Singleton,
+    name: L_Singleton,
     public freeVars: L_Singleton[],
     public form: L_Symbol
-  ) {}
+  ) {
+    super(name);
+  }
 }
 
-export class ConceptLogicVar implements LogicVar {
-  constructor(public name: L_Singleton) {}
-}
+export class ConceptLogicVar extends LogicVar {}
 
 export abstract class LogicNode extends L_FactNode {
   constructor(
@@ -65,7 +65,7 @@ export abstract class LogicNode extends L_FactNode {
       if (v instanceof SingletonLogicVar) {
         newVars.push(new SingletonLogicVar(v.name.withIfVarPrefix()));
       } else if (v instanceof CompositeLogicVar) {
-        const newKey = new SingletonLogicVar(v.key.withIfVarPrefix());
+        const newKey = new SingletonLogicVar(v.name.withIfVarPrefix());
         const newFreeVars = v.freeVars.map(
           (e) => new SingletonLogicVar(e.withIfVarPrefix())
         );
@@ -93,25 +93,43 @@ export abstract class LogicNode extends L_FactNode {
 
   fixUsingIfPrefix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): boolean {
     try {
-      let newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
-        e,
-        new L_Singleton(L_KW.IfVarPrefix + e.value),
-      ]);
-      for (const formReq of this.varsFormReq) {
-        for (const formFreeVar of formReq.freeVars) {
-          newFreeFixPairs.push([
-            formFreeVar,
-            new L_Singleton(L_KW.IfVarPrefix + formFreeVar.value),
-          ]);
+      let newFreeFixPairs: [L_Symbol, L_Symbol][] = [];
+
+      for (const v of this.vars) {
+        if (v instanceof SingletonLogicVar) {
+          freeFixPairs.push([v.name, v.name.withIfVarPrefix()]);
+        } else if (v instanceof CompositeLogicVar) {
+          for (const formFreeVar of v.freeVars) {
+            newFreeFixPairs.push([
+              formFreeVar,
+              new L_Singleton(L_KW.IfVarPrefix + formFreeVar.value),
+            ]);
+          }
+        } else if (v instanceof ConceptLogicVar) {
+          freeFixPairs.push([v.name, v.name.withIfVarPrefix()]);
         }
       }
+
+      // let newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
+      //   e,
+      //   new L_Singleton(L_KW.IfVarPrefix + e.value),
+      // ]);
+      // for (const formReq of this.varsFormReq) {
+      //   for (const formFreeVar of formReq.freeVars) {
+      //     newFreeFixPairs.push([
+      //       formFreeVar,
+      //       new L_Singleton(L_KW.IfVarPrefix + formFreeVar.value),
+      //     ]);
+      //   }
+      // }
+
       freeFixPairs = [...freeFixPairs, ...newFreeFixPairs];
       this.req = this.req.map((r) => r.fixByIfVars(env, freeFixPairs));
       this.onlyIfs = this.onlyIfs.map((onlyIf) =>
         onlyIf.fixByIfVars(env, freeFixPairs)
       );
 
-      this.varsFormReq.forEach((e) => (e.form = e.form.fix(env, freeFixPairs)));
+      // this.varsFormReq.forEach((e) => (e.form = e.form.fix(env, freeFixPairs)));
 
       this.addPrefixToVars();
 
@@ -162,49 +180,43 @@ export abstract class LogicNode extends L_FactNode {
   // }
 }
 
-export class IffNode extends LogicNode {
-  override fixByIfVars(
-    env: L_Env,
-    freeFixPairs: [L_Symbol, L_Symbol][]
-  ): LogicNode {
-    const newReq: L_FactNode[] = [];
-    for (const r of this.req) {
-      newReq.push(r.fixByIfVars(env, freeFixPairs));
-    }
+// export class IffNode extends LogicNode {
+//   override fixByIfVars(
+//     env: L_Env,
+//     freeFixPairs: [L_Symbol, L_Symbol][]
+//   ): LogicNode {
+//     const newReq: L_FactNode[] = [];
+//     for (const r of this.req) {
+//       newReq.push(r.fixByIfVars(env, freeFixPairs));
+//     }
 
-    const newOnlyIf: L_FactNode[] = [];
-    for (const onlyIf of this.onlyIfs) {
-      newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
-    }
+//     const newOnlyIf: L_FactNode[] = [];
+//     for (const onlyIf of this.onlyIfs) {
+//       newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
+//     }
 
-    return new IffNode(
-      this.vars,
-      newReq,
-      newOnlyIf,
-      this.isT,
-      this.varsFormReq
-    );
-  }
+//     return new IffNode(this.vars, newReq, newOnlyIf, this.isT);
+//   }
 
-  override copyWithIsTReverse(): IffNode {
-    return new IffNode(
-      this.vars,
-      this.req,
-      this.onlyIfs,
-      !this.isT,
-      this.varsFormReq
-    );
-  }
+//   override copyWithIsTReverse(): IffNode {
+//     return new IffNode(
+//       this.vars,
+//       this.req,
+//       this.onlyIfs,
+//       !this.isT,
+//       this.varsFormReq
+//     );
+//   }
 
-  override toString() {
-    const mainPart = `iff ${this.vars.toString()} : ${this.req} {${
-      this.onlyIfs
-    }}`;
-    const notPart = !this.isT ? "[not] " : "";
+//   override toString() {
+//     const mainPart = `iff ${this.vars.toString()} : ${this.req} {${
+//       this.onlyIfs
+//     }}`;
+//     const notPart = !this.isT ? "[not] " : "";
 
-    return notPart + mainPart;
-  }
-}
+//     return notPart + mainPart;
+//   }
+// }
 
 export class IfNode extends LogicNode {
   override fixByIfVars(
@@ -221,29 +233,15 @@ export class IfNode extends LogicNode {
       newOnlyIf.push(onlyIf.fixByIfVars(env, freeFixPairs));
     }
 
-    return new IfNode(this.vars, newReq, newOnlyIf, this.isT, this.varsFormReq);
+    return new IfNode(this.vars, newReq, newOnlyIf, this.isT);
   }
 
   override copyWithIsTReverse(): IfNode {
-    return new IfNode(
-      this.vars,
-      this.req,
-      this.onlyIfs,
-      !this.isT,
-      this.varsFormReq
-    );
+    return new IfNode(this.vars, this.req, this.onlyIfs, !this.isT);
   }
 
   override toString() {
     let varsFormReqStr: string = "";
-    if (this.varsFormReq.length > 0) {
-      varsFormReqStr =
-        "[" +
-        this.varsFormReq
-          .map((e) => `${e.key} (${e.freeVars}) : ${e.form}`)
-          .join(",") +
-        "]";
-    }
 
     const mainPart = `if ${this.vars.toString()} ${varsFormReqStr}: ${
       this.req
@@ -655,12 +653,17 @@ export class FactVarsDeclaredChecker {
   private static checkLogicNode(env: L_Env, fact: LogicNode): void {
     const newEnv = new L_Env(env);
     for (const v of fact.vars) {
-      newEnv.tryNewPureSingleton(v.value);
+      if (v instanceof SingletonLogicVar) {
+        newEnv.tryNewSingleton(v.name.value);
+      } else if (v instanceof CompositeLogicVar) {
+        newEnv.tryNewSingleton(v.name.value);
+        v.freeVars.forEach((e) => newEnv.tryNewSingleton(e.value));
+      }
     }
 
-    for (const formReq of fact.varsFormReq) {
-      formReq.freeVars.forEach((e) => newEnv.tryNewPureSingleton(e.value));
-    }
+    // for (const formReq of fact.varsFormReq) {
+    //   formReq.freeVars.forEach((e) => newEnv.tryNewPureSingleton(e.value));
+    // }
 
     for (const req of fact.req) {
       // req.tryFactVarsDeclared(newEnv);

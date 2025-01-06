@@ -365,7 +365,7 @@ function letParse(env: L_Env, tokens: L_Tokens): null {
   function letExec(env: L_Env, node: L_Nodes.LetNode): null {
     try {
       for (const e of node.vars) {
-        env.tryNewPureSingleton(e);
+        env.tryNewSingleton(e);
       }
 
       node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
@@ -714,7 +714,7 @@ function haveParse(env: L_Env, tokens: L_Tokens): null {
         if (out !== L_Structs.L_Out.True) throw Error();
 
         for (const v of node.vars) {
-          env.tryNewPureSingleton(v.value);
+          env.tryNewSingleton(v.value);
         }
 
         const newVars: L_Symbol[] = [];
@@ -769,9 +769,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): null {
 
     if (isCurToken(tokens, ":")) {
       const newEnv = new L_Env(env);
-      opt.vars.forEach((e) =>
-        newEnv.tryNewPureSingleton((e as L_Singleton).value)
-      );
+      opt.vars.forEach((e) => newEnv.tryNewSingleton((e as L_Singleton).value));
       skipper.skip(":");
       cond = parseFactsArrCheckVarsDeclFixIfPrefix(newEnv, tokens, [
         L_KW.L_End,
@@ -782,9 +780,7 @@ function defConceptParse(env: L_Env, tokens: L_Tokens): null {
     const onlyIfs: L_FactNode[] = [];
     if (isCurToken(tokens, "{")) {
       const newEnv = new L_Env(env);
-      opt.vars.forEach((e) =>
-        newEnv.tryNewPureSingleton((e as L_Singleton).value)
-      );
+      opt.vars.forEach((e) => newEnv.tryNewSingleton((e as L_Singleton).value));
       skipper.skip("{");
       onlyIfs.push(
         ...parseFactsArrCheckVarsDeclFixIfPrefix(newEnv, tokens, ["}"])
@@ -1282,7 +1278,7 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
   const newEnv = new L_Env(env);
   if (moreVars) {
     for (const moreVar of moreVars) {
-      newEnv.tryNewPureSingleton(moreVar.value);
+      newEnv.tryNewSingleton(moreVar.value);
     }
   }
 
