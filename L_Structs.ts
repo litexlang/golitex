@@ -1,4 +1,5 @@
 import { OptFactNode, L_FactNode } from "./L_Facts";
+import { L_KW } from "./L_Keywords";
 import { L_Node } from "./L_Nodes";
 
 export class OptSymbol {
@@ -16,6 +17,12 @@ export class OptSymbol {
 }
 
 export class FreeOptSymbol extends OptSymbol {}
+export class EqualOptSymbol extends OptSymbol {
+  constructor(name = L_KW.Equal) {
+    super(name);
+  }
+}
+export const EqualSymbol = new EqualOptSymbol();
 
 export enum L_Out {
   Error,
