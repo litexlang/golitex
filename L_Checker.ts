@@ -263,7 +263,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
         if (layer instanceof IfNode) {
           const currentPairs: [L_Symbol, L_Symbol][] =
             LogicNode.makeFreeFixPairs(
-              // env,
+              env,
               (givenOpt.checkVars as L_Symbol[][])[layerNum],
               layer
             );
