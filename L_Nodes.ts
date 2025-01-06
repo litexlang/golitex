@@ -1,6 +1,5 @@
 import { L_Env } from "./L_Env";
 import { L_KW } from "./L_Keywords";
-import { OptSymbol } from "./L_Structs";
 import { L_Composite, L_Singleton, L_Symbol } from "./L_Symbols";
 import { OptFactNode, L_FactNode } from "./L_Facts";
 
@@ -97,7 +96,11 @@ export class HaveNode extends L_Node {
 }
 
 export class DefOperatorNode extends L_Node {
-  constructor(public composite: L_Composite, public facts: L_FactNode[]) {
+  constructor(
+    public composite: L_Composite,
+    public facts: L_FactNode[],
+    public commutative: boolean
+  ) {
     super();
   }
 

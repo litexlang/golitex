@@ -33,6 +33,7 @@ import * as L_Memory from "./L_Memory";
 import { L_Tokens } from "./L_Lexer";
 import { FactVarsDeclaredChecker } from "./L_Facts";
 import { SymbolDeclaredChecker } from "./L_Symbols";
+import { EqualSymbol, FreeOptSymbol, OptSymbol } from "./L_OptSymbol";
 
 // The reason why the returned valued is L_Node[] is that when checking, there might be a list of facts.
 export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
@@ -123,19 +124,19 @@ function arrParse<T>(
   }
 }
 
-function optSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.OptSymbol {
+function optSymbolParse(env: L_Env, tokens: L_Tokens): OptSymbol {
   const skipper = new Skipper(env, tokens);
 
   try {
     if (tokens.peek() === L_KW.FreeConceptPrefix) {
       skipper.skip(L_KW.FreeConceptPrefix);
       const name = skipper.skip();
-      return new L_Structs.FreeOptSymbol(name);
+      return new FreeOptSymbol(name);
     } else if (isSpecialOptSymbol(tokens)) {
       return parseSpecialOptSymbol(tokens);
     } else {
       const name = skipper.skip();
-      return new L_Structs.OptSymbol(name);
+      return new OptSymbol(name);
     }
   } catch (error) {
     messageParsingError(optSymbolParse, error);
@@ -146,11 +147,11 @@ function optSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.OptSymbol {
     return [L_KW.Equal].includes(tokens.peek());
   }
 
-  function parseSpecialOptSymbol(tokens: L_Tokens): L_Structs.OptSymbol {
+  function parseSpecialOptSymbol(tokens: L_Tokens): OptSymbol {
     switch (tokens.peek()) {
       case L_KW.Equal: {
         skipper.skip(L_KW.Equal);
-        return L_Structs.EqualSymbol;
+        return EqualSymbol;
       }
     }
 
@@ -831,9 +832,14 @@ function defOperatorParse(env: L_Env, tokens: L_Tokens): null {
     skipper.skip(L_KW.DefOperator);
     const composite = SymbolParser.compositeParse(env, tokens);
 
+    let commutative: boolean = false;
+    if (tokens.peek() === L_KW.Commutative) {
+      commutative = true;
+    }
+
     if (isCurToken(tokens, L_KW.L_End)) {
       skipper.skip(L_KW.L_End);
-      out = new L_Nodes.DefOperatorNode(composite, []);
+      out = new L_Nodes.DefOperatorNode(composite, [], commutative);
     } else {
       skipper.skip(":");
       const facts: L_FactNode[] = parseFactsArrCheckVarsDeclFixIfPrefix(
@@ -844,7 +850,7 @@ function defOperatorParse(env: L_Env, tokens: L_Tokens): null {
       );
       skipper.skip(L_KW.L_End);
 
-      out = new L_Nodes.DefOperatorNode(composite, facts);
+      out = new L_Nodes.DefOperatorNode(composite, facts, commutative);
     }
 
     return defCompositeExec(env, out);
@@ -1166,7 +1172,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
     // * If The opt starts with $, then it's an opt written like a function
     if (isCurToken(tokens, L_KW.FunctionalOptPrefix)) {
       skipper.skip(L_KW.FunctionalOptPrefix);
-      const optSymbol: L_Structs.OptSymbol = optSymbolParse(env, tokens);
+      const optSymbol: OptSymbol = optSymbolParse(env, tokens);
       skipper.skip(L_KW.LBrace);
       const vars = arrParse<L_Symbol>(
         env,
@@ -1187,7 +1193,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
           skipper.skip("is");
           const optName = skipper.skip();
           // skipper.skip(  L_Keywords.FunctionalStructuredFactOptPrefix);
-          const optSymbol = new L_Structs.OptSymbol(optName);
+          const optSymbol = new OptSymbol(optName);
           let checkVars = checkVarsParse();
 
           return new OptFactNode(optSymbol, [var1], isT, checkVars);
@@ -1195,7 +1201,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
         // factual formulas like: a = b
         default: {
           const optName = skipper.skip();
-          const optSymbol = new L_Structs.OptSymbol(optName);
+          const optSymbol = new OptSymbol(optName);
           const var2 = SymbolParser.symbolParse(env, tokens);
           let checkVars = checkVarsParse();
 
