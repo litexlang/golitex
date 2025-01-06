@@ -14,6 +14,7 @@ import {
   EqualFact,
   SingletonLogicVar,
   CompositeLogicVar,
+  LogicVar,
 } from "./L_Facts";
 import { L_Env } from "./L_Env";
 import {
@@ -254,6 +255,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
       let successful = true;
       let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
       const newEnv = new L_Env(env);
+      if (givenOpt.checkVars === undefined) throw Error();
       for (let i = 0; i < roots.length - 1; i++) {
         //TODO check length
         const layer = roots[i];
@@ -261,6 +263,12 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
 
         // TODO if instanceof ToCheckFormulaNode
         if (layer instanceof IfNode) {
+          for (const [j, curGivenVar] of givenOpt.checkVars[i].entries()) {
+            if (!layer.vars[j].weakEql(curGivenVar)) {
+              return false;
+            }
+          }
+
           const currentPairs: [L_Symbol, L_Symbol][] =
             LogicNode.makeFreeFixPairs(
               env,
