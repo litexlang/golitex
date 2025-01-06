@@ -132,13 +132,13 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
   try {
     // TODO ? 需要验证一下toCheck的composite是否符合被定义时的要求
     for (const v of toCheck.vars) {
-      if (v instanceof L_Composite) {
-        env.report(`\n[check ${v} requirements]`);
-        if (!v.compositeSatisfyItsReq(env)) {
-          env.report(`[end of check ${v} requirements]\n`);
+      if (v instanceof CompositeLogicVar) {
+        env.report(`\n[check ${v.form} requirements]`);
+        if (!v.form.compositeSatisfyItsReq(env)) {
+          env.report(`[end of check ${v.form} requirements]\n`);
           return L_Out.Unknown;
         } else {
-          env.report(`[end of check ${v} requirements]\n`);
+          env.report(`[end of check ${v.form} requirements]\n`);
         }
       }
     }
@@ -268,6 +268,8 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
               layer
             );
 
+          //! ????????? 需要在这里检查一下，传入的 symbol 是否是 形如 所要求的那样
+
           // //* CHECK WHETHER THE GIVEN VAR SATISFIES ITS FORM.
           // for (const formReq of layer.varsFormReq) {
           //   let done = false;
@@ -346,6 +348,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
           return false;
         }
       }
+
       if (successful) {
         const fixed = roots[roots.length - 1].fixByIfVars(env, freeFixedPairs);
         if (
