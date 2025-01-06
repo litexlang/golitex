@@ -246,7 +246,7 @@ export class L_Env {
     this.regexSingletons.set(letsNode.name, letsNode);
   }
 
-  tryNewPureSingleton(fix: string): void {
+  tryNewSingleton(fix: string): void {
     // TO MAKE MY LIFE EASIER SO THAT I DO NOT NEED TO BIND ENV TO VARIABLE, I forbid redefining a variable with the same name with any visible variable.
     if (this.isSingletonDeclared(fix)) {
       throw Error(
