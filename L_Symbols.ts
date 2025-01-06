@@ -4,7 +4,13 @@ import {
   L_ReportErr,
   messageVarNotDeclared,
 } from "./L_Report";
-import { LogicNode, OptFactNode, L_FactNode } from "./L_Facts";
+import {
+  LogicNode,
+  OptFactNode,
+  L_FactNode,
+  IfNode,
+  SingletonLogicVar,
+} from "./L_Facts";
 import { checkFact } from "./L_Checker";
 import { L_KW } from "./L_Keywords";
 import { L_Out } from "./L_Structs";
@@ -13,13 +19,32 @@ export abstract class L_Symbol {
   // abstract tryVarsDeclared(env: L_Env): boolean;
   abstract fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol;
 
-  static structurallyIdentical(a: L_Symbol, b: L_Symbol): boolean {
+  // called by makeFreeFixedPairs
+  static weakStructurallyEql(given: L_Symbol, expected: L_Symbol): boolean {
+    if (expected instanceof L_Singleton) return true;
+
+    if (given instanceof L_Composite && expected instanceof L_Composite) {
+      if (
+        given.name === expected.name &&
+        given.values.length === expected.values.length
+      ) {
+        return given.values.every((v, i) =>
+          this.weakStructurallyEql(v, expected.values[i])
+        );
+      }
+      return false;
+    }
+
+    return false;
+  }
+
+  static strongStructurallyEql(a: L_Symbol, b: L_Symbol): boolean {
     if (a instanceof L_Singleton && b instanceof L_Singleton) {
       return true;
     } else if (a instanceof L_Composite && b instanceof L_Composite) {
       if (a.name === b.name && a.values.length === b.values.length) {
         return a.values.every((v, i) =>
-          this.structurallyIdentical(v, b.values[i])
+          this.strongStructurallyEql(v, b.values[i])
         );
       }
       return false;
@@ -337,9 +362,15 @@ export class L_Composite extends L_Symbol {
       }
 
       const freeFixPairs: [L_Symbol, L_Symbol][] = LogicNode.makeFreeFixPairs(
-        env,
         this.values,
-        declaration.composite.values
+        new IfNode(
+          declaration.composite.values.map(
+            (e) => new SingletonLogicVar(e as L_Singleton)
+          ),
+          [],
+          [],
+          true
+        )
       );
 
       const newFacts = declaration.facts.map((e) =>

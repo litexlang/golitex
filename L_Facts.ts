@@ -139,14 +139,25 @@ export abstract class LogicNode extends L_FactNode {
     }
   }
 
+  makeFreeFixPairs(env: L_Env) {}
+
   static makeFreeFixPairs(
-    env: L_Env,
     fixed: L_Symbol[],
-    free: L_Symbol[]
+    ifNode: IfNode
+    // free: L_Symbol[]
   ): [L_Symbol, L_Symbol][] {
     const out: [L_Symbol, L_Symbol][] = [];
-    for (let i = 0; i < free.length; i++) {
-      out.push([free[i], fixed[i]]);
+    if (fixed.length !== ifNode.vars.length) throw Error();
+
+    for (const [i, v] of ifNode.vars.entries()) {
+      if (v instanceof SingletonLogicVar) {
+        out.push([v.name, fixed[i]]);
+      } else if (v instanceof CompositeLogicVar) {
+        if (L_Symbol.weakStructurallyEql(v.form, fixed[i])) {
+          out.push([v.name, fixed[i]]);
+          // TODO ???????
+        }
+      }
     }
 
     return out;
