@@ -12,6 +12,9 @@ import {
   IfNode,
   IfVarsFormReqType,
   EqualFact,
+  LogicVar,
+  SingletonLogicVar,
+  CompositeLogicVar,
 } from "./L_Facts";
 import { L_Node } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
@@ -1323,14 +1326,15 @@ class VanillaParser {
       skipper.skip(L_KW.If);
 
       // Parse vars
-      const vars: L_Singleton[] = [];
-      const varsForm: IfVarsFormReqType[] = [];
+      const vars: LogicVar[] = [];
+      // const varsForm: IfVarsFormReqType[] = [];
       while (!isCurToken(tokens, [":"])) {
         if (!isCurToken(tokens, L_KW.LBracket)) {
           const singleton = SymbolParser.singletonParse(env, tokens);
-          vars.push(singleton);
+          vars.push(new SingletonLogicVar(singleton));
         } else {
-          parseBracketVars(env, tokens, vars, varsForm);
+          const compositeLogicVars = parseBracketVars(env, tokens);
+          vars.push(compositeLogicVars);
         }
         if (isCurToken(tokens, ",")) skipper.skip(",");
       }
@@ -1345,37 +1349,31 @@ class VanillaParser {
       const onlyIfs = arrParse<L_FactNode>(env, tokens, factParse, ["}"]);
       skipper.skip("}");
 
-      return new IfNode(vars, req, onlyIfs, true, varsForm);
+      return new IfNode(vars, req, onlyIfs, true);
     } catch (error) {
       env.getMessages().push(...env.getMessages());
       messageParsingError(ifParse, error);
       throw error;
     }
 
-    function parseBracketVars(
-      env: L_Env,
-      tokens: L_Tokens,
-      vars: L_Singleton[],
-      varsForm: IfVarsFormReqType[]
-    ) {
+    function parseBracketVars(env: L_Env, tokens: L_Tokens): CompositeLogicVar {
       skipper.skip(L_KW.LBracket);
-      while (!isCurToken(tokens, L_KW.RBracket)) {
-        const singleton = SymbolParser.singletonParse(env, tokens);
-        vars.push(singleton);
-        skipper.skip(L_KW.LBrace);
-        const freeVars = arrParse<L_Singleton>(
-          env,
-          tokens,
-          SymbolParser.singletonParse,
-          L_KW.RBrace
-        );
-        skipper.skip(L_KW.RBrace);
-        skipper.skip(L_KW.Colon);
-        const symbol = SymbolParser.symbolParse(env, tokens);
-        varsForm.push({ key: singleton, freeVars: freeVars, form: symbol });
-        if (isCurToken(tokens, L_KW.Comma)) skipper.skip(L_KW.Comma);
-      }
+      const singleton = SymbolParser.singletonParse(env, tokens);
+      const key = singleton;
+      skipper.skip(L_KW.LBrace);
+      const freeVars = arrParse<L_Singleton>(
+        env,
+        tokens,
+        SymbolParser.singletonParse,
+        L_KW.RBrace
+      );
+      skipper.skip(L_KW.RBrace);
+      skipper.skip(L_KW.Colon);
+      const symbol = SymbolParser.symbolParse(env, tokens);
+      // varsForm.push({ key: singleton, freeVars: freeVars, form: symbol });
       skipper.skip(L_KW.RBracket);
+
+      return new CompositeLogicVar(singleton, freeVars, symbol);
     }
   }
 }

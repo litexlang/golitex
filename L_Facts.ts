@@ -8,21 +8,18 @@ import {
 } from "./L_Symbols";
 import { L_KW } from "./L_Keywords";
 import { OptSymbol } from "./L_OptSymbol";
+import exp from "constants";
 
 export abstract class L_FactNode extends L_Node {
   constructor(public isT: boolean) {
     super();
   }
 
-  // called by L_Memory
-  // abstract tryFactVarsDeclared(env: L_Env): void;
-  // called by checker
   abstract fixByIfVars(
     env: L_Env,
     freeFixPairs: [L_Symbol, L_Symbol][]
   ): L_FactNode; // called by prove_by_contradiction
   abstract copyWithIsTReverse(): L_FactNode;
-  // called by "using known fact to check given fact. when doing so, get all root opts and filter opt with the same name."
   abstract getRootOptNodes(): [OptFactNode, L_FactNode[]][];
 }
 
@@ -31,25 +28,53 @@ export type IfVarsFormReqType = {
   freeVars: L_Singleton[];
   form: L_Symbol;
 };
+
+export interface LogicVar {}
+
+export class SingletonLogicVar implements LogicVar {
+  constructor(public name: L_Singleton) {}
+}
+
+export class CompositeLogicVar implements LogicVar {
+  constructor(
+    public key: L_Singleton,
+    public freeVars: L_Singleton[],
+    public form: L_Symbol
+  ) {}
+}
+
+export class ConceptLogicVar implements LogicVar {
+  constructor(public name: L_Singleton) {}
+}
+
 export abstract class LogicNode extends L_FactNode {
   constructor(
-    public vars: L_Singleton[] = [],
+    public vars: LogicVar[] = [],
     public req: L_FactNode[] = [],
     public onlyIfs: L_FactNode[] = [],
-    isT: boolean = true,
-    public varsFormReq: IfVarsFormReqType[] // public varsForm: [L_Singleton, L_Singleton[], L_Symbol][]
+    isT: boolean = true
+    // public varsFormReq: IfVarsFormReqType[] // public varsForm: [L_Singleton, L_Singleton[], L_Symbol][]
   ) {
     super(isT);
   }
 
   private addPrefixToVars(): boolean {
-    this.vars = this.vars.map((e) => new L_Singleton(L_KW.IfVarPrefix + e));
+    // this.vars = this.vars.map((e) => new L_Singleton(L_KW.IfVarPrefix + e));
+    const newVars: LogicVar[] = [];
+    for (const v of this.vars) {
+      if (v instanceof SingletonLogicVar) {
+        newVars.push(new SingletonLogicVar(v.name.withIfVarPrefix()));
+      } else if (v instanceof CompositeLogicVar) {
+        const newKey = new SingletonLogicVar(v.key.withIfVarPrefix());
+        const newFreeVars = v.freeVars.map(
+          (e) => new SingletonLogicVar(e.withIfVarPrefix())
+        );
+        // TODO form is not done
+        newVars.push(...newFreeVars);
+      }
 
-    // TODO form is not done
-    this.varsFormReq.forEach((e) => (e.key = e.key.withIfVarPrefix()));
-    this.varsFormReq.forEach(
-      (e) => (e.freeVars = e.freeVars.map((v) => v.withIfVarPrefix()))
-    );
+      this.vars = newVars;
+    }
 
     for (const r of this.req) {
       if (r instanceof LogicNode) {
@@ -386,7 +411,7 @@ export class IsFormNode extends BuiltinCheckNode {
   ): L_FactNode {
     let fixed: L_Symbol | undefined = undefined;
     for (const freeFix of freeFixPairs) {
-      if (L_Symbol.literallyEql(env, freeFix[0], this.candidate)) {
+      if (L_Symbol.literalEql(env, freeFix[0], this.candidate)) {
         fixed = freeFix[1];
       }
     }
