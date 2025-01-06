@@ -4,6 +4,7 @@ import * as L_Executor from "./L_Executor";
 import * as L_Parser from "./L_Parser";
 import * as fs from "fs";
 import { L_Tokens } from "./L_Lexer";
+import { L_UndefinedSymbol } from "./L_Symbols";
 
 const printEveryThing = true;
 
