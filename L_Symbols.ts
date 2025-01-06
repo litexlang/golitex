@@ -446,6 +446,8 @@ export class SymbolDeclaredChecker {
       return this.checkComposite(env, symbol);
     } else if (symbol instanceof IndexedSymbol) {
       return this.checkIndexedSymbol(env, symbol);
+    } else if (symbol instanceof L_UndefinedSymbol) {
+      return;
     }
 
     throw Error();
