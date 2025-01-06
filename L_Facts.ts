@@ -58,19 +58,22 @@ export abstract class LogicNode extends L_FactNode {
     super(isT);
   }
 
-  private addPrefixToVars(): boolean {
+  private addPrefixToVars(env: L_Env): boolean {
     // this.vars = this.vars.map((e) => new L_Singleton(L_KW.IfVarPrefix + e));
     const newVars: LogicVar[] = [];
     for (const v of this.vars) {
       if (v instanceof SingletonLogicVar) {
         newVars.push(new SingletonLogicVar(v.name.withIfVarPrefix()));
       } else if (v instanceof CompositeLogicVar) {
-        const newKey = new SingletonLogicVar(v.name.withIfVarPrefix());
-        const newFreeVars = v.freeVars.map(
-          (e) => new SingletonLogicVar(e.withIfVarPrefix())
-        );
+        const newKey = v.name.withIfVarPrefix();
+        const newFreeVars = v.freeVars.map((e) => e.withIfVarPrefix());
         // TODO form is not done
-        newVars.push(...newFreeVars);
+        const freeFixedPairs: [L_Symbol, L_Symbol][] = v.freeVars.map(
+          (e, i) => [e, newFreeVars[i]]
+        );
+        const newForm = v.form.fix(env, freeFixedPairs);
+        const newVar = new CompositeLogicVar(newKey, newFreeVars, newForm);
+        newVars.push(newVar);
       }
 
       this.vars = newVars;
@@ -78,13 +81,13 @@ export abstract class LogicNode extends L_FactNode {
 
     for (const r of this.req) {
       if (r instanceof LogicNode) {
-        r.addPrefixToVars();
+        r.addPrefixToVars(env);
       }
     }
 
     for (const onlyIf of this.onlyIfs) {
       if (onlyIf instanceof LogicNode) {
-        onlyIf.addPrefixToVars();
+        onlyIf.addPrefixToVars(env);
       }
     }
 
@@ -131,7 +134,7 @@ export abstract class LogicNode extends L_FactNode {
 
       // this.varsFormReq.forEach((e) => (e.form = e.form.fix(env, freeFixPairs)));
 
-      this.addPrefixToVars();
+      this.addPrefixToVars(env);
 
       return true;
     } catch (error) {
