@@ -66,12 +66,12 @@ export abstract class L_Symbol {
   ): boolean {
     return (
       given.length === expected.length &&
-      given.every((e, i) => L_Symbol.literallyIdentical(env, e, expected[i]))
+      given.every((e, i) => L_Symbol.literallyEql(env, e, expected[i]))
     );
   }
 
   // * ONE OF MAIN FUNCTION OF THE WHOLE PROJECT
-  static literallyIdentical(
+  static literallyEql(
     env: L_Env,
     given: L_Symbol,
     expected: L_Symbol,
@@ -88,7 +88,7 @@ export abstract class L_Symbol {
       //* ANY symbol is equal to any symbol, except EXIST
       if (provedByAny(env, given, expected)) return true;
       if (regexIdentical(env, given, expected)) return true;
-      if (pureSingleIdentical(env, given, expected)) return true;
+      if (singletonEql(env, given, expected)) return true;
       if (compareComposites(env, given, expected)) return true;
 
       if (useAlias) {
@@ -97,7 +97,7 @@ export abstract class L_Symbol {
 
       return false;
     } catch {
-      L_ReportErr(env, L_Symbol.literallyIdentical);
+      L_ReportErr(env, L_Symbol.literallyEql);
       return false;
     }
 
@@ -108,7 +108,7 @@ export abstract class L_Symbol {
     ): boolean {
       if (given instanceof L_Singleton && env.isAlias(given.value)) {
         for (const alias of env.getAlias(given.value) as L_Symbol[]) {
-          if (L_Symbol.literallyIdentical(env, given, expected, false)) {
+          if (L_Symbol.literallyEql(env, given, expected, false)) {
             return true;
           }
         }
@@ -116,7 +116,7 @@ export abstract class L_Symbol {
 
       if (expected instanceof L_Singleton && env.isAlias(expected.value)) {
         for (const alias of env.getAlias(expected.value) as L_Symbol[]) {
-          if (L_Symbol.literallyIdentical(env, given, expected, false)) {
+          if (L_Symbol.literallyEql(env, given, expected, false)) {
             return true;
           }
         }
@@ -131,7 +131,32 @@ export abstract class L_Symbol {
       expected: L_Symbol
     ): boolean {
       if (given instanceof L_Composite && expected instanceof L_Composite) {
-        // name of composite symbol must be equal
+        if (compare(env, given, expected)) return true;
+
+        const givenOp = env.getDefOperator(given.name);
+        const expectedOp = env.getDefOperator(expected.name);
+
+        const isGivenCommutative = givenOp?.commutative ?? false;
+        const isExpectedCommutative = expectedOp?.commutative ?? false;
+
+        if (isGivenCommutative) {
+          if (compare(env, given.getCommutative(), expected)) return true;
+          if (isExpectedCommutative) {
+            if (compare(env, given.getCommutative(), expected.getCommutative()))
+              return true;
+          }
+        }
+
+        if (isExpectedCommutative) {
+          if (compare(env, given, expected.getCommutative())) return true;
+        }
+
+        return false;
+      } else {
+        return false;
+      }
+
+      function compare(env: L_Env, given: L_Composite, expected: L_Composite) {
         if (given.name !== expected.name) {
           return false;
         }
@@ -142,12 +167,10 @@ export abstract class L_Symbol {
           for (let i = 0; i < given.values.length; i++) {
             const giv = given.values[i];
             const exp = expected.values[i];
-            if (!L_Symbol.literallyIdentical(env, giv, exp)) return false;
+            if (!L_Symbol.literallyEql(env, giv, exp)) return false;
           }
           return true;
         }
-      } else {
-        return false;
       }
     }
 
@@ -165,11 +188,7 @@ export abstract class L_Symbol {
       return false;
     }
 
-    function pureSingleIdentical(
-      env: L_Env,
-      given: L_Symbol,
-      expected: L_Symbol
-    ) {
+    function singletonEql(env: L_Env, given: L_Symbol, expected: L_Symbol) {
       if (given instanceof L_Singleton && expected instanceof L_Singleton) {
         return given.value === expected.value;
       }
@@ -234,8 +253,7 @@ export class L_Singleton extends L_Symbol {
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
     for (const freeFixed of freeFixedPairs) {
-      if (L_Symbol.literallyIdentical(env, freeFixed[0], this))
-        return freeFixed[1];
+      if (L_Symbol.literallyEql(env, freeFixed[0], this)) return freeFixed[1];
     }
     return this;
   }
@@ -270,7 +288,7 @@ export class IndexedSymbol extends L_Symbol {
     let out: IndexedSymbol = this;
 
     for (const freeFixed of freeFixedPairs) {
-      if (L_Symbol.literallyIdentical(env, freeFixed[0], this.given)) {
+      if (L_Symbol.literallyEql(env, freeFixed[0], this.given)) {
         out = new IndexedSymbol(freeFixed[1], this.indexes);
       }
     }
@@ -289,6 +307,11 @@ export class L_Composite extends L_Symbol {
     super();
   }
 
+  getCommutative(): L_Composite {
+    // TODO
+    return new L_Composite(this.name, [this.values[1], this.values[0]]);
+  }
+
   getIndexedSubNode(indexes: number[]): L_Symbol {
     let curComposite: L_Composite = this;
     for (let i = 0; i < indexes.length - 1; i++) {
@@ -301,7 +324,7 @@ export class L_Composite extends L_Symbol {
 
   compositeSatisfyItsReq(env: L_Env): boolean {
     try {
-      const declaration = env.getCompositeVar(this.name);
+      const declaration = env.getDefOperator(this.name);
 
       if (declaration === undefined) {
         env.report(`[Error] ${this.name} undeclared`);
@@ -463,7 +486,7 @@ export class SymbolDeclaredChecker {
   }
 
   private static checkComposite(env: L_Env, symbol: L_Composite): void {
-    if (env.getCompositeVar(symbol.name) === undefined) return;
+    if (env.getDefOperator(symbol.name) === undefined) return;
 
     for (const value of symbol.values) {
       // value.tryVarsDeclared(env);

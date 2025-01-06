@@ -40,7 +40,7 @@ export class L_Env {
   }
 
   tryNewConceptAlias(node: L_Nodes.ConceptAliasNode): void {
-    if (this.getCompositeVar(node.name) !== undefined) {
+    if (this.getDefOperator(node.name) !== undefined) {
       throw Error(`The concept alias ${node.name} is already declared.`);
     } else {
       const relatedMap = this.getConceptAlias(node.toBeAliased);
@@ -101,7 +101,7 @@ export class L_Env {
   }
 
   tryNewComposite(key: string, fact: L_Nodes.DefOperatorNode): void {
-    if (this.getCompositeVar(key)) {
+    if (this.getDefOperator(key)) {
       throw Error(
         `The variable "${key}" is already declared in this environment or its parent environments. Please use a different name.`
       );
@@ -143,13 +143,13 @@ export class L_Env {
   //   }
   // }
 
-  getCompositeVar(key: string): undefined | L_Nodes.DefOperatorNode {
+  getDefOperator(key: string): undefined | L_Nodes.DefOperatorNode {
     const out = this.operators.get(key);
     if (out !== undefined) {
       return out;
     } else {
       if (this.parent !== undefined) {
-        return this.parent.getCompositeVar(key);
+        return this.parent.getDefOperator(key);
       } else {
         return undefined;
       }
