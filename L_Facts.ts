@@ -386,7 +386,7 @@ export class IsFormNode extends BuiltinCheckNode {
   ): L_FactNode {
     let fixed: L_Symbol | undefined = undefined;
     for (const freeFix of freeFixPairs) {
-      if (L_Symbol.literallyIdentical(env, freeFix[0], this.candidate)) {
+      if (L_Symbol.literallyEql(env, freeFix[0], this.candidate)) {
         fixed = freeFix[1];
       }
     }

@@ -1386,7 +1386,7 @@ namespace SymbolParser {
 
     try {
       let left = singleSymbolParse(env, tokens);
-      while (env.getCompositeVar(tokens.peek())) {
+      while (env.getDefOperator(tokens.peek())) {
         const optName = skipper.skip();
         const right = singleSymbolParse(env, tokens);
         left = new L_Composite(optName, [left, right]);
