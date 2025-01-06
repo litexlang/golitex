@@ -253,7 +253,7 @@ export class OptFactNode extends L_FactNode {
     expects: OptFactNode
   ): boolean {
     if (given.optSymbol.name !== expects.optSymbol.name) return false;
-    return L_Symbol.symbolArrLiterallyIdentical(env, given.vars, expects.vars);
+    return L_Symbol.symbolArrLiteralEql(env, given.vars, expects.vars);
   }
 
   copyCommutatively(): OptFactNode | undefined {
@@ -267,40 +267,6 @@ export class OptFactNode extends L_FactNode {
   override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     return [[this, []]];
   }
-
-  // override tryFactVarsDeclared(env: L_Env): void {
-  //   for (const v of this.vars) {
-  //     try {
-  //       v.tryVarsDeclared(env);
-  //     } catch (error) {
-  //       if (error instanceof Error)
-  //         error.message += `variable ${v} in ${this} not declared.\n`;
-  //       throw error;
-  //     }
-  //     // if (!v.tryVarsDeclared(env)) {
-  //     //   return false;
-  //     // }
-  //   }
-
-  //   if (this.checkVars === undefined) return;
-
-  //   for (const layer of this.checkVars) {
-  //     for (const v of layer) {
-  //       try {
-  //         v.tryVarsDeclared(env);
-  //       } catch (error) {
-  //         if (error instanceof Error)
-  //           error.message += `variable ${v} in ${this} not declared.\n`;
-  //         throw error;
-  //       }
-  //       // if (!v.tryVarsDeclared(env)) {
-  //       //   return false;
-  //       // }
-  //     }
-  //   }
-
-  //   return;
-  // }
 
   override fixByIfVars(
     env: L_Env,
@@ -330,7 +296,6 @@ export class OptFactNode extends L_FactNode {
   }
 
   override toString() {
-    const mainPart = "$" + this.optSymbol.name + `(${this.vars})`;
     const notPart = !this.isT ? "[not] " : "";
     const checkVarsStr =
       this.checkVars === undefined
@@ -340,38 +305,26 @@ export class OptFactNode extends L_FactNode {
             .map((e) => e.map((j) => j.toString()).join(", "))
             .join("; ") +
           "]";
+    let mainPart = "";
+    if (this.vars.length === 2) {
+      mainPart = `${this.vars[0]} ${this.optSymbol.name} ${this.vars[1]}`;
+    } else if (this.vars.length === 1) {
+      mainPart = `${this.vars[0]} ${L_KW.Is} ${this.optSymbol.name}`;
+    } else {
+      mainPart = "$" + this.optSymbol.name + `(${this.vars})`;
+    }
     return notPart + mainPart + checkVarsStr;
   }
 }
 
 export class FreeOptNode extends OptFactNode {}
-
-export abstract class BuiltinCheckNode extends L_FactNode {}
-
-export class EqualFact extends BuiltinCheckNode {
-  constructor(public fact: OptFactNode) {
-    super(fact.isT);
-  }
-
-  override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
-    return this.fact.getRootOptNodes();
-  }
-
-  override copyWithIsTReverse(): L_FactNode {
-    return new EqualFact(this.fact.copyWithIsTReverse());
-  }
-
-  override fixByIfVars(
-    env: L_Env,
-    freeFixPairs: [L_Symbol, L_Symbol][]
-  ): L_FactNode {
-    return new EqualFact(this.fact.fixByIfVars(env, freeFixPairs));
-  }
-
-  toString() {
-    return this.fact.toString();
+export class EqualFact extends OptFactNode {
+  constructor(opt: OptFactNode) {
+    super(opt.optSymbol, opt.vars, opt.isT, opt.checkVars);
   }
 }
+
+export abstract class BuiltinCheckNode extends L_FactNode {}
 
 // TODO IsProperty logic is not implemented
 export class IsConceptNode extends BuiltinCheckNode {

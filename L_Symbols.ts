@@ -59,7 +59,7 @@ export abstract class L_Symbol {
     return symbol instanceof L_Singleton && symbol.value === L_KW.AnySymbol;
   }
 
-  static symbolArrLiterallyIdentical(
+  static symbolArrLiteralEql(
     env: L_Env,
     given: L_Symbol[],
     expected: L_Symbol[]

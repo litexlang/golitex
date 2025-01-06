@@ -11,6 +11,7 @@ import {
   FormulaFactNode,
   L_FactNode,
   FactsNode,
+  EqualFact,
 } from "./L_Facts";
 import { L_Env } from "./L_Env";
 import {
@@ -49,6 +50,8 @@ export function checkFact(env: L_Env, toCheck: L_FactNode): L_Out {
 
 function checkOptFact(env: L_Env, toCheck: OptFactNode): L_Out {
   try {
+    if (resolveBuiltinOpts(env, toCheck)) return L_Out.True;
+
     const concept = env.getConcept(toCheck.optSymbol.name);
     if (concept === undefined) {
       L_ReportErr(env, checkOptFact, `${toCheck} not declared`);
@@ -68,6 +71,18 @@ function checkOptFact(env: L_Env, toCheck: OptFactNode): L_Out {
     }
   } catch {
     return L_ReportCheckErr(env, checkOptFact, toCheck);
+  }
+
+  function resolveBuiltinOpts(env: L_Env, fact: OptFactNode): boolean {
+    if (fact instanceof EqualFact) {
+      if (L_Symbol.symbolArrLiteralEql(env, [fact.vars[0]], [fact.vars[1]])) {
+        env.report(
+          `[check by] ${fact.vars[0]} and ${fact.vars[1]} literally equal.`
+        );
+        return true;
+      }
+    }
+    return false;
   }
 }
 
@@ -327,7 +342,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
       if (successful) {
         const fixed = roots[roots.length - 1].fixByIfVars(env, freeFixedPairs);
         if (
-          L_Symbol.symbolArrLiterallyIdentical(
+          L_Symbol.symbolArrLiteralEql(
             env,
             (fixed as OptFactNode).vars,
             givenOpt.vars
@@ -414,11 +429,7 @@ function checkLiterally(env: L_Env, toCheck: L_FactNode): boolean {
         if (known instanceof OptKnownFactReq) {
           if (
             toCheck.isT === known.opt.isT &&
-            L_Symbol.symbolArrLiterallyIdentical(
-              env,
-              toCheck.vars,
-              known.opt.vars
-            )
+            L_Symbol.symbolArrLiteralEql(env, toCheck.vars, known.opt.vars)
           ) {
             return true;
           }

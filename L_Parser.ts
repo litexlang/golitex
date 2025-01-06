@@ -1178,7 +1178,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
 
       let checkVars = checkVarsParse();
 
-      return new OptFactNode(optSymbol, vars, isT, checkVars);
+      return resolveReturn(new OptFactNode(optSymbol, vars, isT, checkVars));
     } else {
       const var1 = SymbolParser.symbolParse(env, tokens);
 
@@ -1199,13 +1199,23 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
           const var2 = SymbolParser.symbolParse(env, tokens);
           let checkVars = checkVarsParse();
 
-          return new OptFactNode(optSymbol, [var1, var2], isT, checkVars);
+          return resolveReturn(
+            new OptFactNode(optSymbol, [var1, var2], isT, checkVars)
+          );
         }
       }
     }
   } catch (error) {
     messageParsingError(optFactParse, error);
     throw error;
+  }
+
+  function resolveReturn(opt: OptFactNode): OptFactNode {
+    switch (opt.optSymbol.name) {
+      case L_KW.Equal:
+        return new EqualFact(opt);
+    }
+    return opt;
   }
 
   function checkVarsParse(): L_Symbol[][] | undefined {
