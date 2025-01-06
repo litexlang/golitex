@@ -333,21 +333,51 @@ export class L_Composite extends L_Symbol {
     super();
   }
 
-  extractGivenSingletonIndexArr(
+  private extractGivenSingletonIndexArr(
     env: L_Env,
     given: L_Singleton
-  ): number[] | undefined {
-    let stored: L_Symbol[] = [];
+  ): number[][] | undefined {
+    const out: number[][] = [];
     for (const [i, v] of this.values.entries()) {
       if (v instanceof L_Singleton) {
-        if (L_Symbol.literalEql(env, given, v)) return [i];
+        if (L_Symbol.literalEql(env, given, v)) out.push([i]);
         continue;
       } else if (v instanceof L_Composite) {
-        const index = v.extractGivenSingletonIndexArr(env, given);
-        if (index !== undefined) return [i, ...index];
+        const indexes = v.extractGivenSingletonIndexArr(env, given);
+        if (indexes !== undefined) {
+          out.push(...indexes.map((index) => [i, ...index]));
+        }
         continue;
       }
     }
+
+    if (out.length === 0) return undefined;
+    else return out;
+  }
+
+  extractFixedGivenSingleton(env: L_Env, given: L_Singleton) {
+    const indexes = this.extractGivenSingletonIndexArr(env, given);
+    if (!indexes) throw Error();
+
+    let fixedSymbol: L_Symbol = this;
+    for (const index of indexes[0]) {
+      fixedSymbol = (fixedSymbol as L_Composite).values[index];
+    }
+
+    //! 这里没考虑到可能的 同一个 a 有多个实现，且多个实现并不相等
+    for (let i = 1; i < indexes.length; ++i) {
+      let curSymbol: L_Symbol = this;
+      for (const index of indexes[i]) {
+        curSymbol = (curSymbol as L_Composite).values[index];
+      }
+      if (!L_Symbol.literalEql(env, fixedSymbol, curSymbol, true)) {
+        throw Error(
+          `Error: ${given} is fixed by 2 different symbols ${fixedSymbol}, ${curSymbol}`
+        );
+      }
+    }
+
+    return fixedSymbol;
   }
 
   makeFreeFixUsingIfCompositeFreeVars(
@@ -358,15 +388,9 @@ export class L_Composite extends L_Symbol {
     const form = compositeLogicVar.form;
     const key = compositeLogicVar.name;
     for (const v of compositeLogicVar.freeVars) {
-      // TODO 这里没考虑到可能的 同一个 a 有多个实现，且多个实现并不相等
       const indexes = form.extractGivenSingletonIndexArr(env, key);
       if (!indexes) throw Error();
-
-      let curSymbol: L_Symbol = this;
-      for (const index of indexes) {
-        curSymbol = (curSymbol as L_Composite).values[index];
-      }
-      out.push([key, curSymbol]);
+      out.push([key, this.extractFixedGivenSingleton(env, v)]);
     }
 
     return out;
