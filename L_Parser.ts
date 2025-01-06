@@ -10,7 +10,6 @@ import {
   BuiltinCheckNode,
   IsFormNode,
   IfNode,
-  IfVarsFormReqType,
   EqualFact,
   LogicVar,
   SingletonLogicVar,

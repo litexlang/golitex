@@ -151,7 +151,11 @@ function runExamples(
   }
 }
 
-function runLiTeXFile(filePath: string) {
+function runLiTeXFile(
+  filePath: string,
+  logSourceCode = true,
+  logMessages = true
+) {
   try {
     const data = fs.readFileSync(filePath, "utf8");
     const env = new L_Env();
@@ -159,7 +163,7 @@ function runLiTeXFile(filePath: string) {
     const exprs = [data];
     for (let i = 0; i < exprs.length; i++) {
       const expr = exprs[i];
-      runString(env, expr);
+      runStringWithLogging(env, expr, logSourceCode, logMessages);
     }
   } catch (err) {
     console.error("Error:", err);
