@@ -130,6 +130,7 @@ const exampleList: ExampleItem[] = [
     code: [
       "concept $real(x); operator \\frac{x,y} ; ",
       "know if [x(a,b): \\frac{a,b}]: a is real, b is real {x is real};",
+      "if [x(a,b): \\frac{a,b}]: a is real, b is real {x is real};",
     ],
     debug: true,
   },

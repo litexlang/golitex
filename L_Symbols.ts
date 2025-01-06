@@ -355,7 +355,7 @@ export class L_Composite extends L_Symbol {
     else return out;
   }
 
-  extractFixedGivenSingleton(env: L_Env, given: L_Singleton) {
+  extractFixedGivenSingleton(env: L_Env, given: L_Singleton): L_Symbol {
     const indexes = this.extractGivenSingletonIndexArr(env, given);
     if (!indexes) throw Error();
 
@@ -426,6 +426,7 @@ export class L_Composite extends L_Symbol {
       }
 
       const freeFixPairs: [L_Symbol, L_Symbol][] = LogicNode.makeFreeFixPairs(
+        env,
         this.values,
         new IfNode(
           declaration.composite.values.map(

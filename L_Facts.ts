@@ -154,6 +154,7 @@ export abstract class LogicNode extends L_FactNode {
   makeFreeFixPairs(env: L_Env) {}
 
   static makeFreeFixPairs(
+    env: L_Env,
     fixed: L_Symbol[],
     ifNode: IfNode
     // free: L_Symbol[]
@@ -167,7 +168,12 @@ export abstract class LogicNode extends L_FactNode {
       } else if (v instanceof CompositeLogicVar) {
         if (L_Symbol.weakStructurallyEql(v.form, fixed[i])) {
           out.push([v.name, fixed[i]]);
-          //! ????????
+          for (const freeVar of v.freeVars) {
+            out.push([
+              freeVar,
+              v.form.extractFixedGivenSingleton(env, freeVar),
+            ]);
+          }
         } else {
           throw Error();
         }
