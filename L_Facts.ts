@@ -32,12 +32,18 @@ export type IfVarsFormReqType = {
 export abstract class LogicVar {
   constructor(public name: L_Singleton) {}
 
+  abstract weakEql(given: L_Symbol): boolean;
+
   toString() {
     return `${this.name.toString()}`;
   }
 }
 
-export class SingletonLogicVar extends LogicVar {}
+export class SingletonLogicVar extends LogicVar {
+  weakEql(given: L_Symbol): boolean {
+    return true;
+  }
+}
 
 export class CompositeLogicVar extends LogicVar {
   constructor(
@@ -48,12 +54,20 @@ export class CompositeLogicVar extends LogicVar {
     super(name);
   }
 
+  weakEql(given: L_Symbol): boolean {
+    return L_Symbol.weakStructurallyEql(given, this.form);
+  }
+
   toString(): string {
     return `[${this.name.toString()}(${this.freeVars}): ${this.form}]`;
   }
 }
 
-export class ConceptLogicVar extends LogicVar {}
+export class ConceptLogicVar extends LogicVar {
+  weakEql(given: L_Symbol): boolean {
+    return true;
+  }
+}
 
 export abstract class LogicNode extends L_FactNode {
   constructor(
