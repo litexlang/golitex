@@ -31,6 +31,10 @@ export type IfVarsFormReqType = {
 
 export abstract class LogicVar {
   constructor(public name: L_Singleton) {}
+
+  toString() {
+    return `${this.name.toString()}`;
+  }
 }
 
 export class SingletonLogicVar extends LogicVar {}
@@ -42,6 +46,10 @@ export class CompositeLogicVar extends LogicVar {
     public form: L_Composite
   ) {
     super(name);
+  }
+
+  toString(): string {
+    return `[${this.name.toString()}(${this.freeVars}): ${this.form}]`;
   }
 }
 
@@ -102,6 +110,7 @@ export abstract class LogicNode extends L_FactNode {
         if (v instanceof SingletonLogicVar) {
           freeFixPairs.push([v.name, v.name.withIfVarPrefix()]);
         } else if (v instanceof CompositeLogicVar) {
+          newFreeFixPairs.push([v.name, v.name.withIfVarPrefix()]);
           for (const formFreeVar of v.freeVars) {
             newFreeFixPairs.push([
               formFreeVar,

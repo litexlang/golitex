@@ -121,8 +121,16 @@ const exampleList: ExampleItem[] = [
     debug: false,
   },
   {
-    name: "",
+    name: "=",
     code: ["let x,y; x = x; x = y;"],
+    debug: false,
+  },
+  {
+    name: "",
+    code: [
+      "concept $real(x); operator \\frac{x,y} ; ",
+      "know if [x(a,b): \\frac{a,b}]: a is real, b is real {x is real};",
+    ],
     debug: true,
   },
 ];
