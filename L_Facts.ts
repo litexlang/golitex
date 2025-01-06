@@ -348,6 +348,31 @@ export class FreeOptNode extends OptFactNode {}
 
 export abstract class BuiltinCheckNode extends L_FactNode {}
 
+export class EqualFact extends BuiltinCheckNode {
+  constructor(public fact: OptFactNode) {
+    super(fact.isT);
+  }
+
+  override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
+    return this.fact.getRootOptNodes();
+  }
+
+  override copyWithIsTReverse(): L_FactNode {
+    return new EqualFact(this.fact.copyWithIsTReverse());
+  }
+
+  override fixByIfVars(
+    env: L_Env,
+    freeFixPairs: [L_Symbol, L_Symbol][]
+  ): L_FactNode {
+    return new EqualFact(this.fact.fixByIfVars(env, freeFixPairs));
+  }
+
+  toString() {
+    return this.fact.toString();
+  }
+}
+
 // TODO IsProperty logic is not implemented
 export class IsConceptNode extends BuiltinCheckNode {
   constructor(

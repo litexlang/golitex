@@ -120,6 +120,11 @@ const exampleList: ExampleItem[] = [
     ],
     debug: true,
   },
+  {
+    name: "",
+    code: ["let x,y: x = y;"],
+    debug: true,
+  },
 ];
 
 function runExamples(

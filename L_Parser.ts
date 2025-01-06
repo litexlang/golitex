@@ -11,6 +11,7 @@ import {
   IsFormNode,
   IfNode,
   IfVarsFormReqType,
+  EqualFact,
 } from "./L_Facts";
 import { L_Node } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
@@ -130,6 +131,8 @@ function optSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.OptSymbol {
       skipper.skip(L_KW.FreeConceptPrefix);
       const name = skipper.skip();
       return new L_Structs.FreeOptSymbol(name);
+    } else if (isSpecialOptSymbol(tokens)) {
+      return parseSpecialOptSymbol(tokens);
     } else {
       const name = skipper.skip();
       return new L_Structs.OptSymbol(name);
@@ -137,6 +140,21 @@ function optSymbolParse(env: L_Env, tokens: L_Tokens): L_Structs.OptSymbol {
   } catch (error) {
     messageParsingError(optSymbolParse, error);
     throw error;
+  }
+
+  function isSpecialOptSymbol(tokens: L_Tokens): boolean {
+    return [L_KW.Equal].includes(tokens.peek());
+  }
+
+  function parseSpecialOptSymbol(tokens: L_Tokens): L_Structs.OptSymbol {
+    switch (tokens.peek()) {
+      case L_KW.Equal: {
+        skipper.skip(L_KW.Equal);
+        return L_Structs.EqualSymbol;
+      }
+    }
+
+    throw Error();
   }
 }
 
