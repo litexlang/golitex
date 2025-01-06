@@ -22,6 +22,22 @@ export class L_Env {
     this.parent = parent;
   }
 
+  static constructWithInitialization(): L_Env {
+    const env = new L_Env();
+
+    // Initialize equal
+    const opt = new L_Facts.OptFactNode(
+      L_Structs.EqualSymbol,
+      [new L_Singleton("x"), new L_Singleton("y")],
+      true,
+      undefined
+    );
+    const equalOpt = new L_Facts.EqualFact(opt);
+    env.tryNewDef(L_KW.Equal, new L_Nodes.DefConceptNode(opt, [], [], true));
+
+    return env;
+  }
+
   tryNewConceptAlias(node: L_Nodes.ConceptAliasNode): void {
     if (this.getCompositeVar(node.name) !== undefined) {
       throw Error(`The concept alias ${node.name} is already declared.`);

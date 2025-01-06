@@ -118,11 +118,11 @@ const exampleList: ExampleItem[] = [
       "x is 实数;",
       "know if x :  x is 实数 {x is real};",
     ],
-    debug: true,
+    debug: false,
   },
   {
     name: "",
-    code: ["let x,y: x = y;"],
+    code: ["let x,y; x = x; x = y;"],
     debug: true,
   },
 ];
@@ -132,7 +132,7 @@ function runExamples(
   logMessages: boolean = true
 ) {
   for (const example of exampleList) {
-    const env = new L_Env();
+    const env = L_Env.constructWithInitialization();
     if (example.debug) {
       console.log(example.name);
       for (const expr of example.code) {
