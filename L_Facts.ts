@@ -7,7 +7,7 @@ import {
   SymbolDeclaredChecker,
 } from "./L_Symbols";
 import { L_KW } from "./L_Keywords";
-import { OptSymbol } from "./L_Structs";
+import { OptSymbol } from "./L_OptSymbol";
 
 export abstract class L_FactNode extends L_Node {
   constructor(public isT: boolean) {

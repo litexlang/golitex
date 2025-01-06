@@ -13,7 +13,6 @@ import {
   FormulaKnownFactReq,
   IfKnownFactReq,
   OptKnownFactReq,
-  OptSymbol,
 } from "./L_Structs";
 
 export function tryNewFact(env: L_Env, fact: L_FactNode): void {

@@ -2,6 +2,7 @@ import * as L_Nodes from "./L_Nodes";
 import * as L_Structs from "./L_Structs";
 import { L_KW } from "./L_Keywords";
 import { L_Singleton, L_Symbol } from "./L_Symbols";
+import { EqualSymbol, EqualOptSymbol } from "./L_OptSymbol";
 import * as L_Facts from "./L_Facts";
 
 export class L_Env {
@@ -27,7 +28,7 @@ export class L_Env {
 
     // Initialize equal
     const opt = new L_Facts.OptFactNode(
-      L_Structs.EqualSymbol,
+      EqualSymbol,
       [new L_Singleton("x"), new L_Singleton("y")],
       true,
       undefined
