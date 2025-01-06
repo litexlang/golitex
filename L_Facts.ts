@@ -23,12 +23,6 @@ export abstract class L_FactNode extends L_Node {
   abstract getRootOptNodes(): [OptFactNode, L_FactNode[]][];
 }
 
-export type IfVarsFormReqType = {
-  key: L_Singleton;
-  freeVars: L_Singleton[];
-  form: L_Symbol;
-};
-
 export abstract class LogicVar {
   constructor(public name: L_Singleton) {}
 
@@ -706,30 +700,21 @@ export class FactVarsDeclaredChecker {
       }
     }
 
-    // for (const formReq of fact.varsFormReq) {
-    //   formReq.freeVars.forEach((e) => newEnv.tryNewPureSingleton(e.value));
-    // }
-
     for (const req of fact.req) {
-      // req.tryFactVarsDeclared(newEnv);
       this.check(newEnv, req);
     }
 
     for (const onlyIf of fact.onlyIfs) {
-      // onlyIf.tryFactVarsDeclared(newEnv);
       this.check(newEnv, onlyIf);
     }
   }
 
   private static checkFactsNode(env: L_Env, fact: FactsNode): void {
     for (const v of fact.varsPairs) {
-      // v.forEach((e) => e[1].tryVarsDeclared(env));
-      // v.forEach((e) => this.check(env, e[1]));
       v.forEach((e) => SymbolDeclaredChecker.check(env, e[1]));
     }
 
     for (const f of fact.facts) {
-      // f.tryFactVarsDeclared(env);
       this.check(env, f);
     }
   }
