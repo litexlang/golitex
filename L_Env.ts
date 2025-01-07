@@ -267,7 +267,7 @@ export class L_Env {
   }
 
   tryNewAlias(name: L_Singleton, toBeAliased: L_Symbol[]): void {
-    if (this.isSingletonDeclared(name.value)) {
+    if (!this.isSingletonDeclared(name.value)) {
       throw Error(
         `The variable "${name.value}" is already declared in this environment or its parent environments. Please use a different name.`
       );

@@ -93,20 +93,12 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
   try {
     const newEnv = new L_Env(env);
     for (const v of toCheck.vars) {
-      // if (v instanceof L_Singleton) {
-      //   newEnv.tryNewPureSingleton(v.value);
-      //   for (const form of toCheck.varsFormReq) {
-      //     if (form.key.value === v.value) {
-      //       form.freeVars.forEach((e) => newEnv.tryNewPureSingleton(e.value));
-      //       break;
-      //     }
-      //   }
-      // }
       if (v instanceof SingletonLogicVar) {
         newEnv.tryNewSingleton(v.name.value);
       } else if (v instanceof CompositeLogicVar) {
         newEnv.tryNewSingleton(v.name.value);
         v.freeVars.forEach((e) => newEnv.tryNewSingleton(e.value));
+        newEnv.tryNewAlias(v.name, [v.form]);
       } else {
         env.report(`vars in if-expr must be singleton, got ${v}`);
         throw Error();
@@ -264,7 +256,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
         // TODO if instanceof ToCheckFormulaNode
         if (layer instanceof IfNode) {
           for (const [j, curGivenVar] of givenOpt.checkVars[i].entries()) {
-            if (!layer.vars[j].weakEql(curGivenVar)) {
+            if (!layer.vars[j].weakEql(env, curGivenVar)) {
               return false;
             }
           }
