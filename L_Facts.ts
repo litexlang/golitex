@@ -26,7 +26,7 @@ export abstract class L_FactNode extends L_Node {
 export abstract class LogicVar {
   constructor(public name: L_Singleton) {}
 
-  abstract weakEql(given: L_Symbol): boolean;
+  abstract weakEql(env: L_Env, given: L_Symbol): boolean;
 
   toString() {
     return `${this.name.toString()}`;
@@ -34,7 +34,7 @@ export abstract class LogicVar {
 }
 
 export class SingletonLogicVar extends LogicVar {
-  weakEql(given: L_Symbol): boolean {
+  weakEql(env: L_Env, given: L_Symbol): boolean {
     return true;
   }
 }
@@ -48,8 +48,15 @@ export class CompositeLogicVar extends LogicVar {
     super(name);
   }
 
-  weakEql(given: L_Symbol): boolean {
-    return L_Symbol.weakStructurallyEql(given, this.form);
+  weakEql(env: L_Env, given: L_Symbol): boolean {
+    let toTestArr = [given];
+    if (given instanceof L_Singleton) {
+      const aliases = env.getAlias(given.value);
+      if (aliases !== undefined) toTestArr = [...aliases, ...toTestArr];
+    }
+    return toTestArr.some((toTest) =>
+      L_Symbol.weakStructurallyEql(toTest, this.form)
+    );
   }
 
   toString(): string {
@@ -58,7 +65,7 @@ export class CompositeLogicVar extends LogicVar {
 }
 
 export class ConceptLogicVar extends LogicVar {
-  weakEql(given: L_Symbol): boolean {
+  weakEql(env: L_Env, given: L_Symbol): boolean {
     return true;
   }
 }
