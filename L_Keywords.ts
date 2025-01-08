@@ -73,7 +73,8 @@ export const L_KW = {
   DefFunctional: "def_function",
   Are: "are",
   All: "all",
-  FreeConceptPrefix: "!",
+  FreeConceptPrefix: "concept",
+  FreeOperatorPrefix: "operator",
   ConceptAlias: "concept_alias",
 };
 

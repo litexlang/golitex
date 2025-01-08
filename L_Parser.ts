@@ -1253,11 +1253,6 @@ function ifParse(env: L_Env, tokens: L_Tokens): IfNode {
   try {
     const out = VanillaParser.ifParse(env, tokens);
     if (!out.fixUsingIfPrefix(env, [])) throw Error();
-    // out.addPrefixToVars();
-
-    // if (!out.varsDeclared(env)) {
-    //   throw Error();
-    // }
 
     return out;
   } catch (error) {
@@ -1324,13 +1319,7 @@ class VanillaParser {
       const vars: LogicVar[] = [];
       // const varsForm: IfVarsFormReqType[] = [];
       while (!isCurToken(tokens, [":"])) {
-        if (!isCurToken(tokens, L_KW.LBracket)) {
-          const singleton = SymbolParser.singletonParse(env, tokens);
-          vars.push(new SingletonLogicVar(singleton));
-        } else {
-          const compositeLogicVars = parseBracketVars(env, tokens);
-          vars.push(compositeLogicVars);
-        }
+        vars.push(parseLogicVar(env, tokens));
         if (isCurToken(tokens, ",")) skipper.skip(",");
       }
       skipper.skip(":");
@@ -1349,6 +1338,15 @@ class VanillaParser {
       env.getMessages().push(...env.getMessages());
       messageParsingError(ifParse, error);
       throw error;
+    }
+
+    function parseLogicVar(env: L_Env, tokens: L_Tokens): LogicVar {
+      if (isCurToken(tokens, L_KW.LBracket)) {
+        const compositeLogicVars = parseBracketVars(env, tokens);
+        return compositeLogicVars;
+      }
+      const singleton = SymbolParser.singletonParse(env, tokens);
+      return new SingletonLogicVar(singleton);
     }
 
     function parseBracketVars(env: L_Env, tokens: L_Tokens): CompositeLogicVar {

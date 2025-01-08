@@ -70,6 +70,12 @@ export class ConceptLogicVar extends LogicVar {
   }
 }
 
+export class OperatorVar extends LogicVar {
+  weakEql(env: L_Env, given: L_Symbol): boolean {
+    return true;
+  }
+}
+
 export abstract class LogicNode extends L_FactNode {
   constructor(
     public vars: LogicVar[] = [],
