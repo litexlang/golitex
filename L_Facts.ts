@@ -103,6 +103,8 @@ export abstract class LogicNode extends L_FactNode {
         const newForm = v.form.fix(env, freeFixedPairs) as L_Composite;
         const newVar = new CompositeLogicVar(newKey, newFreeVars, newForm);
         newVars.push(newVar);
+      } else if (v instanceof ConceptLogicVar) {
+        newVars.push(v);
       }
 
       this.vars = newVars;
@@ -139,7 +141,6 @@ export abstract class LogicNode extends L_FactNode {
             ]);
           }
         } else if (v instanceof ConceptLogicVar) {
-          freeFixPairs.push([v.name, v.name.withIfVarPrefix()]);
         }
       }
 
@@ -728,3 +729,15 @@ export class FactVarsDeclaredChecker {
     }
   }
 }
+
+// export class OptSymbolFixer {
+//   private fix(
+//     fact: L_FactNode,
+//     freeFixPairs: [L_Singleton, L_Singleton][]
+//   ): L_FactNode {
+//     if (fact instanceof OptFactNode) {
+//     }
+//   }
+
+//   fixOpt() {}
+// }

@@ -136,7 +136,7 @@ const exampleList: ExampleItem[] = [
   },
   {
     name: "",
-    code: [`concept $P(x); know if P: is_concept(P) {P()}; let x; p()[p];`],
+    code: [`concept $P(x); if concept P: {};`],
     debug: true,
   },
 ];
