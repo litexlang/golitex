@@ -335,12 +335,14 @@ export class OptFactNode extends L_FactNode {
   }
 
   fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
-    return new OptFactNode(
-      this.optSymbol.fix(freeFixMap),
-      this.vars,
-      this.isT,
-      this.checkVars
-    );
+    if (freeFixMap.has(this.optSymbol.name))
+      return new OptFactNode(
+        this.optSymbol.fix(freeFixMap),
+        this.vars,
+        this.isT,
+        this.checkVars
+      );
+    else return this;
   }
 
   static literallyIdentical(
