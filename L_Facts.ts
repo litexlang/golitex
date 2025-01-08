@@ -15,6 +15,8 @@ export abstract class L_FactNode extends L_Node {
     super();
   }
 
+  abstract fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode;
+
   abstract fixByIfVars(
     env: L_Env,
     freeFixPairs: [L_Symbol, L_Symbol][]
@@ -289,6 +291,15 @@ export class IfNode extends LogicNode {
     return new IfNode(this.vars, newReq, newOnlyIf, this.isT);
   }
 
+  fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
+    return new IfNode(
+      this.vars,
+      this.req.map((e) => e.fixOpt(env, freeFixMap)),
+      this.onlyIfs,
+      this.isT
+    );
+  }
+
   override copyWithIsTReverse(): IfNode {
     return new IfNode(this.vars, this.req, this.onlyIfs, !this.isT);
   }
@@ -321,6 +332,15 @@ export class OptFactNode extends L_FactNode {
 
   newToChecks(checkVars: L_Symbol[][]): OptFactNode {
     return new OptFactNode(this.optSymbol, this.vars, this.isT, checkVars);
+  }
+
+  fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
+    return new OptFactNode(
+      this.optSymbol.fix(freeFixMap),
+      this.vars,
+      this.isT,
+      this.checkVars
+    );
   }
 
   static literallyIdentical(
@@ -423,6 +443,10 @@ export class IsConceptNode extends BuiltinCheckNode {
     return this;
   }
 
+  fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
+    return this;
+  }
+
   toString() {
     return `${L_KW.isConcept}(${this.concept})`;
   }
@@ -442,6 +466,10 @@ export class IsFormNode extends BuiltinCheckNode {
     isT: boolean
   ) {
     super(isT);
+  }
+
+  fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
+    return this;
   }
 
   override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
@@ -559,6 +587,14 @@ export class OrToCheckNode extends FormulaFactNode {
     return new OrToCheckNode(this.left, this.right, !this.isT);
   }
 
+  fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
+    return new OrToCheckNode(
+      this.left.fixOpt(env, freeFixMap) as OptFactNode | FormulaFactNode,
+      this.right.fixOpt(env, freeFixMap) as OptFactNode | FormulaFactNode,
+      this.isT
+    );
+  }
+
   override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     const out: [OptFactNode, L_FactNode[]][] = [];
     for (const node of this.getLeftRight()) {
@@ -601,6 +637,14 @@ export class AndToCheckNode extends FormulaFactNode {
     return new AndToCheckNode(this.left, this.right, !this.isT);
   }
 
+  fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
+    return new OrToCheckNode(
+      this.left.fixOpt(env, freeFixMap) as OptFactNode | FormulaFactNode,
+      this.right.fixOpt(env, freeFixMap) as OptFactNode | FormulaFactNode,
+      this.isT
+    );
+  }
+
   override getRootOptNodes(): [OptFactNode, L_FactNode[]][] {
     const out: [OptFactNode, L_FactNode[]][] = [];
     for (const node of this.getLeftRight()) {
@@ -627,6 +671,14 @@ export class FactsNode extends L_FactNode {
     isT: boolean
   ) {
     super(isT);
+  }
+
+  fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
+    return new FactsNode(
+      this.varsPairs,
+      this.facts.map((e) => e.fixOpt(env, freeFixMap)),
+      this.isT
+    );
   }
 
   // override tryFactVarsDeclared(env: L_Env): void {
@@ -729,15 +781,3 @@ export class FactVarsDeclaredChecker {
     }
   }
 }
-
-// export class OptSymbolFixer {
-//   private fix(
-//     fact: L_FactNode,
-//     freeFixPairs: [L_Singleton, L_Singleton][]
-//   ): L_FactNode {
-//     if (fact instanceof OptFactNode) {
-//     }
-//   }
-
-//   fixOpt() {}
-// }

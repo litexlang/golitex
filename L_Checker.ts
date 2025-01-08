@@ -101,7 +101,7 @@ function checkIfFact(env: L_Env, toCheck: IfNode): L_Out {
         v.freeVars.forEach((e) => newEnv.tryNewSingleton(e.value));
         newEnv.tryNewAlias(v.name, [v.form]);
       } else {
-        env.report(`vars in if-expr must be singleton, got ${v}`);
+        env.report(`Failed when manipulating var in ifNode ${toCheck}`);
         throw Error();
       }
     }
