@@ -1,0 +1,70 @@
+/* LaTeX version
+Define a property called "human", which takes in one parameter.
+Define a property called "mortal", which takes in one parameter.
+Define a variable called "Socrates", which has property human.
+*/
+
+/* Lean4 version
+variable (Human : Type)
+variable (Mortal : Human → Prop)
+variable (Socrates : Human)
+*/
+
+/* LiTeX version */
+concept something is human;
+concept something is mortal;
+let Socrates: Socrates is human;
+
+/* LaTeX version
+It is known fact that all human is mortal.
+Claim: Socrates is mortal.
+*/
+
+/* Lean4 version
+axiom all_humans_are_mortal : ∀ (x : Human), Mortal x
+theorem socrates_is_mortal : Mortal Socrates := by
+  apply all_humans_are_mortal
+#check socrates_is_mortal
+*/
+
+/* LiTeX version */
+know if x: x is human {
+  x is mortal
+};
+Socrates is mortal; 
+
+/* LaTeX version
+Claim: all human is mortal.
+*/
+
+/* Lean4 version
+def all_humans_will_die : Prop := ∀ (x : Human), Mortal x
+theorem prove_all_humans_will_die : all_humans_will_die := all_humans_are_mortal
+*/
+
+/* LiTeX version */
+if x: x is human {x is mortal};
+
+/* LaTeX version
+Define a variable called "god", it has property that it is not mortal.
+Prove by contradiction: god is not human.
+*/
+
+/* Lean4 version
+#check prove_all_humans_will_die
+variable (God : Type)
+variable (god : God)
+axiom god_is_immortal : ¬ Mortal God
+theorem god_is_not_human : God ≠ Human :=
+  by
+  intro h
+  have god_is_mortal : Mortal God := all_humans_are_mortal god,
+  contradiction
+*/
+
+/* LiTeX version */
+let god: not god is mortal;
+prove_by_contradiction not god is human {
+  god is mortal;
+}  god is human;
+not god is human;

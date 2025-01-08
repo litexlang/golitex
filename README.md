@@ -1,4 +1,4 @@
-# The LiTeX Proof System
++# The LiTeX Proof System
 
 <div align="center">
 <img src="assets/logo.png" alt="The LiTeX Logo" width="300">
