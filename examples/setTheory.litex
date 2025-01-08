@@ -65,14 +65,14 @@ i.e., it contains no elements.
 */
 
 let EMPTY_SET: $set(EMPTY_SET);
-know if x {
+know if x: {
     not $in(x,EMPTY_SET),
 };
 
 {
     let x : not $in(x, EMPTY_SET);
-    if _x {
-        not $in(_x,EMPTY_SET)[_x];
+    if x: {
+        not $in(x,EMPTY_SET)[x],
     };
 }
 
@@ -87,11 +87,11 @@ if y = a or y = b; we refer to this set as the pair set formed by a and b.
 
 operator \singleton{a};
 know if x, a: $in(x, \singleton{a}) {
-    $equal(x, a);
+    $equal(x, a),
 };
 
 know if x, a: $equal(x,a) {
-    $in(x, \singleton{a});
+    $in(x, \singleton{a}),
 };
 
 {
@@ -102,7 +102,7 @@ know if x, a: $equal(x,a) {
     $equal(x,a);
     $in(x, \singleton{a});
     if _x, _a: $equal(_x,_a) {
-        $in(_x, \singleton{_a})[_x, _a];
+        $in(_x, \singleton{_a})[_x, _a],
     };
 }
 
@@ -110,19 +110,19 @@ operator \pair{a,b};
 
 know if x, a, b: $in(x, \pair{a,b}) {
     if : not $equal(x, b) {
-        $equal(x, a);
-    };
+        $equal(x, a),
+    },
     if : not $equal(x, a) {
-        $equal(x, b);
-    };
+        $equal(x, b),
+    }
 };
 
 know if x, a, b: $equal(x,a) {
-    $in(x, \pair{a,b});
+    $in(x, \pair{a,b}),
 };
 
 know if x, a, b: $equal(x,b) {
-    $in(x, \pair{a,b});
+    $in(x, \pair{a,b}),
 };
 
 {
@@ -147,20 +147,20 @@ x \in A \cup B \iff (x \in A \lor x \in B).
 operator \union{x,y};
 know if x, y: $set(x), $set(y) {
     if z: $in(z, x) {
-        $in(z, \union{x, y});
-    };
+        $in(z, \union{x, y}),
+    },
     if z: $in(z, y) {
-        $in(z, \union{x,y});
-    };
+        $in(z, \union{x,y}),
+    },
 };
 
 know if x, y, z: $in(z, \union{x, y}) {
     if : not $in(z, x) {
-        $in(z, y);
-    };
+        $in(z, y),
+    },
     if : not $in(z, y) {
-        $in(z, x);
-    };
+        $in(z, x),
+    },
 };
 
 {
@@ -188,14 +188,14 @@ concept $subset(x,y);
 
 know if A,B: $subset(A,B) {
     if x: $in(x,A) {
-        $in(x,B);
-    };
+        $in(x,B),
+    },
 };
 
 know if A,B: if x: $in(x,A) {
-    $in(x,B);
+    $in(x,B),
 } {
-    $subset(A,B);
+    $subset(A,B),
 };
 
 {
@@ -219,10 +219,11 @@ y \in \{x \in A : P(x) \text{ is true}\} \iff (y \in A \text{ and } P(y) \text{ 
 \]
 */
 
+/* 
 operator \subset_with_property{A,P}: $set(A), $is_property(P);
 
 know if A, P: $is_property(P), $set(A) {
-    $subset(\subset_with_property{A,P}, A);
+    $subset(\subset_with_property{A,P}, A)
 };
 
 {
@@ -231,6 +232,7 @@ know if A, P: $is_property(P), $set(A) {
     let x: $set(x);
     $subset(\subset_with_property{x,p}, x)[x,p];
 }
+*/
 
 /*
 Definition 3.1.23 (Intersections). The intersection \(S_1 \cap S_2\) of two sets
@@ -247,12 +249,12 @@ x \in S_1 \cap S_2 \iff x \in S_1 \text{ and } x \in S_2.
 
 operator \intersection{a,b}; 
 know if x, a, b: a is set, b is set, $in(x,a), $in(x,b) {
-    $in(x, \intersection{a,b});
+    $in(x, \intersection{a,b})
 };
 
 know if x, a, b: $set(a), $set(b), $in(x, \intersection{a,b}) {
-    $in(x,a);
-    $in(x, b);
+    $in(x,a),
+    $in(x, b)
 };
 
 {
@@ -261,11 +263,11 @@ know if x, a, b: $set(a), $set(b), $in(x, \intersection{a,b}) {
     know $in(x,A), $in(x,B);
     $in(x, \intersection{A,B})[x,A,B];
     if X: $in(X,A), $in(X,B) {
-        $in(X, \intersection{A,B})[X,A,B];
+        $in(X, \intersection{A,B})[X,A,B]
     };
     if X: $in(X, \intersection{A,B}) {
-        $in(X,A)[X,A,B];
-        $in(X, B)[X,A,B];
+        $in(X,A)[X,A,B],
+        $in(X, B)[X,A,B]
     };
 }
 
@@ -281,7 +283,7 @@ A \setminus B := \{x \in A : x \notin B\}.
 operator \difference{a,b}: $set(a), $set(b);
 
 know if x, a, b: $set(a), $set(b), $in(x,a), not $in(x,b) {
-    $in(x, \difference{a,b});
+    $in(x, \difference{a,b})
 };
 
 /*
@@ -296,9 +298,10 @@ true for some } x \in A.
 \]
 */
 
+/*
 operator \replacement{a,p}: $set(a), $is_property(p), if x, a: $set(a), $in(x,a) {
     if y1, y2: $p(x, y1), $p(x, y2) {
-        $equal(y1, y2);
+        $equal(y1, y2)
     };
 };
 
@@ -307,13 +310,15 @@ operator \replacement_var{z,a,p} ;
 
 know if z, a, p: $set(a), $is_property(p), if x, a: $set(a), $in(x,a) {
     if y1, y2: $p(x, y1), $p(x, y2) {
-        $equal(y1, y2);
+        $equal(y1, y2)
     },
-    $in(z, \replacement{a,p});
+    $in(z, \replacement{a,p})
 } {
-    $p(\replacement_var{z,a,p}, z);
+    $p(\replacement_var{z,a,p}, z)
 };
 
+
+*/
 
 concept $disjoint(a,b);
 
@@ -365,26 +370,27 @@ let 0: 0 is natural;
 operator \++{n}: n is natural;
 
 know if n: n is natural {
-    \++{n} is natural;
+    \++{n} is natural
 };
 
-know if x {
-    not $nat_eq(0, \++{x});
+know if x: {
+    not $nat_eq(0, \++{x})
 };
 
 know if x,y: $nat_eq(x,y) {
-    $nat_eq(\++{x}, \++{y});
+    $nat_eq(\++{x}, \++{y})
 };
 
 know if x,y: $nat_eq(\++{x}, \++{y}) {
-    $nat_eq(x,y);
+    $nat_eq(x,y)
 };
 
+/*
 know if P: $is_property(P), $P(0), if n: n is natural, $P(n) {
-    $P(\++{n});
+    $P(\++{n})
 } {
     if m: m is natural {
-        $P(m);
+        $P(m)
     };
 };
-
+*/
