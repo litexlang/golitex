@@ -309,7 +309,8 @@ function knowParse(env: L_Env, tokens: L_Tokens): null {
 
   function knowExec(env: L_Env, node: L_Nodes.KnowNode): null {
     try {
-      node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
+      // TODO 因为现在有了 free Opt， 所以以前的测试方式有问题
+      // node.facts.forEach((e) => env.tryFactDeclaredOrBuiltin(e));
 
       for (const onlyIf of node.facts) {
         L_Memory.tryNewFact(env, onlyIf);
