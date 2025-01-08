@@ -150,6 +150,19 @@ know if a,b: $set(a), $set(b), $equal(a,b)  {
     $in(x,a)
   }
 };`,
+      `
+let EMPTY_SET: $set(EMPTY_SET);
+know if x: {
+    not $in(x,EMPTY_SET),
+};
+
+{
+    let x : not $in(x, EMPTY_SET);
+    if x: {
+        not $in(x,EMPTY_SET)[x],
+    };
+}
+      `,
     ],
     debug: true,
   },
