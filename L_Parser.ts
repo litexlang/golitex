@@ -1269,6 +1269,8 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
   end: string[],
   moreVars?: L_Singleton[]
 ): L_FactNode[] {
+  const skipper = new Skipper(env, tokens);
+
   const newEnv = new L_Env(env);
   if (moreVars) {
     for (const moreVar of moreVars) {
@@ -1277,6 +1279,7 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
   }
 
   const facts = factsArrParse(newEnv, tokens, end);
+  // skipper.skip(end);
 
   for (const fact of facts) {
     FactVarsDeclaredChecker.check(newEnv, fact);

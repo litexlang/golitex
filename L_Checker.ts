@@ -57,7 +57,7 @@ function checkOptFact(env: L_Env, toCheck: OptFactNode): L_Out {
 
     const concept = env.getConcept(toCheck.optSymbol.name);
     if (concept === undefined) {
-      L_ReportErr(env, checkOptFact, `${toCheck} not declared`);
+      L_ReportErr(env, checkOptFact, `fact ${toCheck} not declared`);
       throw Error();
     }
 

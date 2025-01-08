@@ -164,7 +164,7 @@ export function L_VarsInOptDoubleDeclErr(
 }
 
 export function messageVarNotDeclared(varNotDeclared: string): string {
-  return `Not Declared: ${varNotDeclared}`;
+  return `Variable Not Declared: ${varNotDeclared}`;
 }
 
 export function messageParsingError(func: Function, err: unknown): void {

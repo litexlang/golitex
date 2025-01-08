@@ -1,0 +1,22 @@
+concept $group(G);
+concept x in S;
+concept x eq y;
+
+operator \*{G,g1,g2}: G is group, g1 in G, g2 in G; 
+know if G, g1, g2: G is group, g1 in G, g2 in G {\*{G,g1,g2} in G};
+know if G, g1, g2, g3: G is group, g1 in G, g2 in G, g3 in G {
+  \*{G, \*{G, g1, g2}, g3} eq \*{G, g1, \*{G, g2, g3} }
+};
+
+operator \1{G}: G is group;
+know if G: G is group {\1{G} in G};
+know if G, g: G is group, g in G {
+  \*{G, \1{G}, g} eq g,
+  \*{G, g, \1{G} } eq g
+};
+
+operator \inv{G, g}: G is group, g in G;
+know if G, g: G is group, g in G {
+  \*{G, \inv{G, g}, g} eq \1{G},
+  \*{G, g, \inv{G, g} } eq \1{G}
+};

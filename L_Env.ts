@@ -47,7 +47,7 @@ export class L_Env {
 
       let originalDef = this.getConcept(node.toBeAliased);
       if (originalDef === undefined) {
-        throw Error(`${node.toBeAliased} is not declared.`);
+        throw Error(`variable alias ${node.toBeAliased} is not declared.`);
       } else {
         // TODO
         this.tryNewDef(node.name, originalDef);
