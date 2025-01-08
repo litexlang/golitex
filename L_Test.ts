@@ -132,6 +132,25 @@ const exampleList: ExampleItem[] = [
       "know if [x(a,b): \\frac{a,b}]: a is real, b is real {x is real};",
       "if [x(a,b): \\frac{a,b}]: a is real, b is real {x is real};",
     ],
+    debug: false,
+  },
+  {
+    name: "",
+    code: [
+      `
+      concept $object(x);
+concept $set(x);
+concept $equal(x,y);
+concept $in(x,y);
+know if a,b: $set(a), $set(b), $equal(a,b)  {
+  if x: $in(x,a) {
+    $in(x,b)
+  }, 
+  if x: $in(x,b) {
+    $in(x,a)
+  }
+};`,
+    ],
     debug: true,
   },
 ];

@@ -264,6 +264,7 @@ export class L_Singleton extends L_Symbol {
   }
 
   withIfVarPrefix() {
+    if (this.value.startsWith(L_KW.IfVarPrefix)) return this;
     return new L_Singleton(L_KW.IfVarPrefix + this.value);
   }
 

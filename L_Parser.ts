@@ -1283,7 +1283,7 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
 
   for (const fact of facts) {
     // TODO ?????????????????????? HOW TO CHECK VARS DECLARED?
-    // FactVarsDeclaredChecker.check(newEnv, fact);
+    FactVarsDeclaredChecker.check(newEnv, fact);
   }
 
   return facts;
