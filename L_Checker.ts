@@ -575,15 +575,8 @@ function useLibToCheckOpt(env: L_Env, opt: OptFactNode) {
 
 function checkIsConcept(env: L_Env, toCheck: IsConceptNode): L_Out {
   try {
-    for (const concept of toCheck.concepts) {
-      if (env.getConcept(concept.value) === undefined) {
-        throw Error(`${concept.value} is not a declared concept.`);
-      }
-    }
-
-    for (const fact of toCheck.facts) {
-      const out = checkFact(env, fact);
-      if (out !== L_Out.True) return out;
+    if (env.getConcept(toCheck.concept) === undefined) {
+      throw Error(`${toCheck.concept} is not a declared concept.`);
     }
 
     return L_Out.True;
