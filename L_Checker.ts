@@ -256,6 +256,21 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
 
         // TODO if instanceof ToCheckFormulaNode
         if (layer instanceof IfNode) {
+          const optFreeFixMap = new Map<string, string>();
+          for (const [j, v] of layer.vars.entries()) {
+            if (v instanceof LogicVar) {
+              if (!(givenOpt.checkVars[i][j] instanceof L_Singleton))
+                throw Error();
+
+              optFreeFixMap.set(
+                v.name.value,
+                (givenOpt.checkVars[i][j] as L_Singleton).value
+              );
+            }
+          }
+
+          layer.fixOpt(env, optFreeFixMap);
+
           for (const [j, curGivenVar] of givenOpt.checkVars[i].entries()) {
             if (!layer.vars[j].weakEql(env, curGivenVar)) {
               return false;
