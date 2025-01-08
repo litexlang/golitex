@@ -573,7 +573,7 @@ export class SymbolDeclaredChecker {
   }
 
   private static errMessage(varNotDeclared: string): string {
-    return `Not Declared: ${varNotDeclared}`;
+    return `Variable Not Declared: ${varNotDeclared}`;
   }
 
   private static checkSingleton(env: L_Env, symbol: L_Singleton): void {
