@@ -403,11 +403,7 @@ export abstract class BuiltinCheckNode extends L_FactNode {}
 
 // TODO IsProperty logic is not implemented
 export class IsConceptNode extends BuiltinCheckNode {
-  constructor(
-    public concepts: L_Singleton[],
-    public facts: L_FactNode[],
-    isT: boolean
-  ) {
+  constructor(public concept: string, isT: boolean) {
     super(isT);
   }
 
@@ -416,7 +412,7 @@ export class IsConceptNode extends BuiltinCheckNode {
   }
 
   override copyWithIsTReverse(): L_FactNode {
-    return new IsConceptNode(this.concepts, this.facts, !this.isT);
+    return new IsConceptNode(this.concept, !this.isT);
   }
 
   override fixByIfVars(
@@ -427,7 +423,7 @@ export class IsConceptNode extends BuiltinCheckNode {
   }
 
   toString() {
-    return `${L_KW.isConcept}(${this.concepts})`;
+    return `${L_KW.isConcept}(${this.concept})`;
   }
 
   // override tryFactVarsDeclared(env: L_Env): void {

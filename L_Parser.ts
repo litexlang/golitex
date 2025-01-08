@@ -14,6 +14,8 @@ import {
   LogicVar,
   SingletonLogicVar,
   CompositeLogicVar,
+  ConceptLogicVar,
+  OperatorVar,
 } from "./L_Facts";
 import { L_Node } from "./L_Nodes";
 import * as L_Nodes from "./L_Nodes";
@@ -876,23 +878,10 @@ export function isConceptParse(env: L_Env, tokens: L_Tokens): IsConceptNode {
     skipper.skip(L_KW.Dollar);
     skipper.skip(L_KW.isConcept);
     skipper.skip(L_KW.LBrace);
-    const vars = arrParse<L_Singleton>(
-      env,
-      tokens,
-      SymbolParser.singletonParse,
-      [L_KW.L_End, L_KW.RBrace]
-    );
+    const concept = skipper.skip();
+    skipper.skip(L_KW.RBrace);
 
-    let facts: L_FactNode[] = [];
-    if (isCurToken(tokens, L_KW.L_End)) {
-      skipper.skip(L_KW.L_End);
-      facts = arrParse<L_FactNode>(env, tokens, factParse, [L_KW.RBrace]);
-      skipper.skip(L_KW.RBrace);
-    } else if (isCurToken(tokens, L_KW.RBrace)) {
-      skipper.skip(L_KW.RBrace);
-    }
-
-    return new IsConceptNode(vars, facts, true);
+    return new IsConceptNode(concept, true);
   } catch (error) {
     messageParsingError(isConceptParse, error);
     throw error;
@@ -1350,6 +1339,17 @@ class VanillaParser {
         const compositeLogicVars = parseBracketVars(env, tokens);
         return compositeLogicVars;
       }
+
+      if (isCurToken(tokens, L_KW.DefConcept)) {
+        skipper.skip(L_KW.DefConcept);
+        return new ConceptLogicVar(new L_Singleton(skipper.skip()));
+      }
+
+      if (isCurToken(tokens, L_KW.DefOperator)) {
+        skipper.skip(L_KW.DefOperator);
+        return new OperatorVar(new L_Singleton(skipper.skip()));
+      }
+
       const singleton = SymbolParser.singletonParse(env, tokens);
       return new SingletonLogicVar(singleton);
     }

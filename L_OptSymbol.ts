@@ -15,6 +15,7 @@ export class OptSymbol {
 }
 
 export class FreeOptSymbol extends OptSymbol {}
+
 export class EqualOptSymbol extends OptSymbol {
   constructor(name = L_KW.Equal) {
     super(name);
