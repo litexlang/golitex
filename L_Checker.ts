@@ -15,6 +15,7 @@ import {
   SingletonLogicVar,
   CompositeLogicVar,
   LogicVar,
+  ConceptLogicVar,
 } from "./L_Facts";
 import { L_Env } from "./L_Env";
 import {
