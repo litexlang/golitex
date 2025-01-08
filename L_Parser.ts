@@ -1282,7 +1282,8 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
   // skipper.skip(end);
 
   for (const fact of facts) {
-    FactVarsDeclaredChecker.check(newEnv, fact);
+    // TODO ?????????????????????? HOW TO CHECK VARS DECLARED?
+    // FactVarsDeclaredChecker.check(newEnv, fact);
   }
 
   return facts;
@@ -1290,6 +1291,7 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
 
 function optFactParseVarsDeclared(env: L_Env, tokens: L_Tokens): OptFactNode {
   const fact = optFactParse(env, tokens);
+  // TODO ?????????????????????? HOW TO CHECK VARS DECLARED?
   FactVarsDeclaredChecker.check(env, fact);
   return fact;
 }

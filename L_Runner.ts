@@ -54,8 +54,10 @@ export function runStringWithLogging(
         continue;
       } else {
         const out = L_Executor.L_Exec(env, node);
-        if (out === L_Out.Error) return undefined;
-        else {
+        if (out === L_Out.Error) {
+          if (logMessages) console.log(env.getMessages());
+          return undefined;
+        } else {
           if (logMessages) {
             env.printClearMessage();
           }

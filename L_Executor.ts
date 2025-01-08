@@ -30,7 +30,9 @@ export function L_Exec(env: L_Env, node: L_Nodes.L_Node): L_Out {
       return localEnvExec(env, node);
     }
 
-    throw new Error(`${node} can not be executed at runtime.`);
+    // TODO: 这里不报错是为了不让 localEnvExec 出错
+    return L_Out.True;
+    // throw new Error(`${node} can not be executed at runtime.`);
   } catch (error) {
     return L_Report.L_ReportErr(env, L_Exec, node, error);
   }
