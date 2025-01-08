@@ -1,31 +1,20 @@
-import { writeFileSync } from "fs";
 import { L_Env } from "./L_Env";
 import { runString } from "./L_Runner";
 import { L_Out } from "./L_Structs";
 
-export function LiTeXnbInteract(
+export function L_InteractWithFrontend(
   env: L_Env,
   text: string
-): { newEnv: L_Env; messages: string[] } {
-  const newEnv = new L_Env(env);
-
+): { env: L_Env; messages: string[] } {
   try {
-    const outs = runString(newEnv, text);
+    const outs = runString(env, text);
     if (outs !== undefined) {
       for (const out of outs) {
         if (out !== L_Out.True) throw Error();
       }
-
-      return { newEnv: newEnv, messages: newEnv.getMessages() };
+      return { env: env, messages: env.getMessages() };
     } else throw Error();
   } catch {
-    return { newEnv: env, messages: newEnv.getMessages() };
+    return { env: env, messages: env.getMessages() };
   }
-}
-
-function envToJSON(env: L_Env, fileName: string) {
-  const out = env.toJSON();
-  const jsonString = JSON.stringify(out, null, 2);
-  writeFileSync(fileName, jsonString, "utf8");
-  return out;
 }

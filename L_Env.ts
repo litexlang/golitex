@@ -164,7 +164,7 @@ export class L_Env {
     }
   }
 
-  getFacts(key: string): undefined | L_Structs.L_KnownFactReq[] {
+  tryGetFacts(key: string): undefined | L_Structs.L_KnownFactReq[] {
     let currentFacts = this.facts.get(key);
     const aliases = this.getConceptAlias(key);
     aliases?.forEach((alias) => {
@@ -179,12 +179,12 @@ export class L_Env {
 
     if (currentFacts === undefined) {
       if (this.parent !== undefined) {
-        return this.parent.getFacts(key);
+        return this.parent.tryGetFacts(key);
       } else {
         return undefined;
       }
     } else {
-      const fromParent = this.parent?.getFacts(key);
+      const fromParent = this.parent?.tryGetFacts(key);
       if (fromParent === undefined) {
         return currentFacts;
       } else {
@@ -477,5 +477,37 @@ export class L_Env {
   pushMessagesFromEnvReturnFalse(env: L_Env): boolean {
     this.messages.push(...env.getMessages());
     return false;
+  }
+
+  getConcepts(): { key: string; value: string }[] {
+    const out: { key: string; value: string }[] = [];
+    for (const [key, value] of this.concepts) {
+      out.push({ key: key, value: value.toString() });
+    }
+    return out;
+  }
+
+  getFacts(): { key: string; value: string }[] {
+    const out: { key: string; value: string }[] = [];
+    for (const [key, value] of this.facts) {
+      out.push({ key: key, value: value.toString() });
+    }
+    return out;
+  }
+
+  getVars(): { key: string; value: string }[] {
+    const out: { key: string; value: string }[] = [];
+    for (const [key, value] of this.singletonVars) {
+      out.push({ key: key, value: value.toString() });
+    }
+    return out;
+  }
+
+  getOperators(): { key: string; value: string }[] {
+    const out: { key: string; value: string }[] = [];
+    for (const [key, value] of this.operators) {
+      out.push({ key: key, value: value.toString() });
+    }
+    return out;
   }
 }
