@@ -12,22 +12,20 @@
 _Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
 -- David Hilbert_
 
-LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to everyone, from elementary students to university professors. With a design as intuitive as natural language, LiTeX requires significantly less typing—about 50% less than LaTeX and 80% less than Lean4 (see examples/setTheory.litex for details). That's why unlike other formal proof languages, LiTeX is practical for everyday tasks, not just an auxiliary tool. Visit https://litexlang.org/ for more details.
-
 _The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."
 -- Structure and Interpretation of Computer Programs_
 
-LiTeX seamlessly bridges the gap between a user’s thought process and the expression of their logic by combining the structured clarity of LaTeX for mathematical notation with Lisp’s philosophy of “everything is a symbol.” This fusion empowers users to express complex ideas intuitively and fluidly.
+LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to EVERYONE. Unlike traditional formal languages that force users to distort their mathematical expressions to fit what the formal language can represent, LiTeX seamlessly bridges the gap between a user’s thought process and the expression of their logic by combining the structured clarity of LaTeX for mathematical notation with Lisp’s philosophy of “Everything is a symbol” (This is also the origin of LiTeX's name: a combination of Lisp semantics and LaTeX syntax) .
 
-Another factor that sets LiTeX from other proof systems apart is its commitment to declarative syntax. Users simply write what they believe to be true, leaving it to the interpreter to verify correctness. By striking a perfect balance between the imperative mindset of computer programming and the declarative elegance of mathematical writing, LiTeX redefines accessibility and intuitiveness in formal languages.
+The current state of LiTeX is that, it requires significantly less typing—about 50% less than LaTeX and 80% less than Lean4 to implement basic set theory, syllogisms, and fundamental natural number theory. For example, I chose to implement the opening chapters of Professor Terrence Tao’s _Analysis I_ as a case study. You can see a comparison of Lean4, LaTeX, and LiTeX on the LiTeX website. Please visit https://litexlang.org/ for more details.
+
+The project has been adopted early by several prominent entities, including being used as training material by DeepMath and OpenMMLab, leading Chinese institutions specializing in large mathematical models and language models, and as an interactive textbook by the Department of Mathematics at Fudan University.
+
+It’s exciting to see that, due to its intuitive syntax and shallow learning curve, LiTeX is not just an auxiliary tool but practical for everyday tasks. This opens up the potential for a much larger user base. With its low time cost, LiTeX can transform most mathematics textbooks into interactive ones and translate classical theorems. In the long term, LiTeX will enable large-scale mathematical collaborations, similar to how programmers collaborate on GitHub. Larger, more logically coherent datasets will make mathematical models and rule-based reasoning systems stronger and better at reasoning.
+
+Developing a new programming language often starts as the effort of a single individual, but its growth and long-term success depend on the strength of the community around it. A thriving language needs user feedback, collaborative creativity from developers, and tools to support its ecosystem, such as package management, website resources, and plugins for mainstream IDEs like VSCode. With the support of this funding, I will be able to focus on improving the user experience and iterating on LiTeX to make it more accessible and robust.
 
 <font color="red">Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!</font>
-
-The basic elements of **LiTeX** called `symbols` have roots in Lisp's fundamental approach, drawing inspiration from its powerful macro system to handle literal manipulations in math. `Symbols` can have `facts` related to them, with some facts leading to further facts—mirroring how mathematical reasoning naturally progresses. Read `A Tour of LiTeX` below for further information.
-
-## Why LiTeX matters
-
-**LiTeX** transforms mathematical collaboration by introducing rigorous verification into research workflows. By automating mechanical proof validation, the system enables mathematicians to focus on innovative aspects rather than tedious verification. It also makes interactive textbooks and large-scale collaborative projects possible. Full details are available at the [LiTeX GitHub Repository](https://github.com/litexlang/tslitex).
 
 ---
 
