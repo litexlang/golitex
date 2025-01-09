@@ -12,7 +12,7 @@
 _Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
 -- David Hilbert_
 
-LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to everyone, from elementary students to university professors. With a design as intuitive as natural language, LiTeX requires significantly less typing—about 50% less than LaTeX and 80% less than Lean4 (see examples/setTheory.litex for details). That's why unlike other formal proof languages, LiTeX is practical for everyday tasks, not just an auxiliary tool.
+LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to everyone, from elementary students to university professors. With a design as intuitive as natural language, LiTeX requires significantly less typing—about 50% less than LaTeX and 80% less than Lean4 (see examples/setTheory.litex for details). That's why unlike other formal proof languages, LiTeX is practical for everyday tasks, not just an auxiliary tool. Visit https://litexlang.org/ for more details.
 
 _The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."
 -- Structure and Interpretation of Computer Programs_
@@ -93,9 +93,9 @@ theorem socrates_is_mortal : Mortal Socrates := by
 
 /* LiTeX version */
 know if x: x is human {
-  x is mortal;
+  x is mortal
 };
-/* Socrates is mortal; */
+Socrates is mortal;
 
 /* LaTeX version
 Claim: all human is mortal.
@@ -107,7 +107,7 @@ theorem prove_all_humans_will_die : all_humans_will_die := all_humans_are_mortal
 */
 
 /* LiTeX version */
-/* if x: x is human {x is mortal}; */
+if x: x is human {x is mortal};
 
 /* LaTeX version
 Define a variable called "god", it has property that it is not mortal.
