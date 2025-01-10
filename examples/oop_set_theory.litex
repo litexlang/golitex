@@ -1,0 +1,37 @@
+concept object {}
+concept set {
+  relation has(x) {}
+  
+  static relation =(x, y): x is set, y is set {
+   iff =(x,y) <=> if z: x.has(z) {y.has(z)}, if z: y.has(z) {x.has(z)};
+  }
+
+  /*
+  static relation =(x, y): all x,y are set {
+    if x,y: all x,y are set {iff =(x,y) <=> if z: x.has(z) {y.has(z)}, if z: y.has(z) {x.has(z)} };
+  }
+  */
+
+  static var empty_set {
+    know empty_set is set;
+    if x: {not x empty_set.has(x)};
+  }
+}
+
+fn set::singleton(a)  => var {
+  this is set;
+  if z: this.has(z) {a = z};
+  this.has(a);
+}
+
+fn set::pair(a,b) => var {
+  this is set;
+  this.has(a,b);
+  if z: this.has(z) {
+    z = b or z = a
+  };
+}
+
+fn set::union(a, b) => var {
+  this is set;
+}

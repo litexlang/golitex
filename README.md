@@ -298,7 +298,9 @@ know if x,y: $nat_eq(\++{x}, \++{y}) {
 
 It's hard for a programmer to write clean and "elegant" code. It's even harder for a group of programmers work together and at the same write good code. When It comes to write "math code", i.e. proofs, things are even more complicated. Operators like +, \* overloads everywhere, Sometimes a symbol can have many meanings in the same paper, different people might give seemingly completely different definition and naming to two equivalent concepts.
 
-To help mathematicians share and organize their thoughts better, LiTeX is going to introduce an object oriented way of writing math, which can make the writing and reading process even more intuitive and maintainable.
+To help mathematicians share and organize their thoughts better, LiTeX is going to introduce an object oriented way of writing math, which can make the writing and reading process even more intuitive and maintainable. Different syntax, even if they are equivalent, have enormously different "psychological" hint to users, I hope I can design that better.
+
+See examples/oop_set_theory.litex for example.
 
 ### function can return concept, variable, relation, function
 
