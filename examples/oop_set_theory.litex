@@ -52,10 +52,21 @@ fn static set::intersection(a,b: all a,b are set) => var {
   iff z: this.has(z) <=> {a.has(z), b.has(z)}
 }
 
-// ?
-fn static fn set::replacement(A, relation P(x,y: A.has(x)): A is set, 
-if z,y1,y2: A.has(z), if : P(z,y1), P(z,y2) {y1 = y2}) => concept {
-  if S: S is this {S is set, iff z: S.has(z) {exist x: A.has(x) P(x,z)} }
+// P2 means fix the second parameter
+fn P2($P, z): P.parameters_number == 2 => relation(y) {
+  iff y: this(x) <=> $P(x, z)
+}
+
+fn replacement($P, A: A is set) => concept {
+  this is set;
+  iff z: this.has(z) {
+    exist P2($P, z)
+  }
+}
+
+know if A, $P: A is set, $P.parameters_number == 2, A.has($P.parameter[0]),
+if x, y1,y2: $P(x, y1), $P(x, y2) {y1 = y2} {
+  exist replacement($P, A)
 }
 
 know if A: A is set, A != set::empty_set {
