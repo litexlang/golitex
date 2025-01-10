@@ -45,5 +45,19 @@ relation static set::subset(a, b: all a,b are set)  {
 }
 
 fn static set::specification(A, relation P(x: A.has(x)): A is set, ) => concept {
-  know exist set::specification(A, relation P(x: A.has(x)): A is set);
+  know exist this;
+}
+
+fn static set::intersection(a,b: all a,b are set) => var {
+  iff z: this.has(z) <=> {a.has(z), b.has(z)}
+}
+
+// ?
+fn static fn set::replacement(A, relation P(x,y: A.has(x)): A is set, 
+if z,y1,y2: A.has(z), if : P(z,y1), P(z,y2) {y1 = y2}) => concept {
+  if S: S is this {S is set, iff z: S.has(z) {exist x: A.has(x) P(x,z)} }
+}
+
+know if A: A is set, A != set::empty_set {
+  exist x: not x is set or set::intersection(x,A) = set::empty_set;
 }
