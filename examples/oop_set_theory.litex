@@ -4,6 +4,7 @@ concept set {
   
   static relation =(x, y): x is set, y is set {
    iff =(x,y) <=> if z: x.has(z) {y.has(z)}, if z: y.has(z) {x.has(z)};
+   /* iff this <=> if z: x.has(z) {y.has(z)}, if z: y.has(z) {x.has(z)}; */
   }
 
   /*
@@ -18,13 +19,13 @@ concept set {
   }
 }
 
-fn set::singleton(a)  => var {
+fn static set::singleton(a)  => var {
   this is set;
   if z: this.has(z) {a = z};
   this.has(a);
 }
 
-fn set::pair(a,b) => var {
+fn static set::pair(a,b) => var {
   this is set;
   this.has(a,b);
   if z: this.has(z) {
@@ -32,6 +33,17 @@ fn set::pair(a,b) => var {
   };
 }
 
-fn set::union(a, b) => var {
+fn static set::union(a, b: all a,b are set) => var {
   this is set;
+  if z: this.has(z) {
+    a.has(z) or b.has(z)
+  }
+}
+
+relation static set::subset(a, b: all a,b are set)  {
+  know if z: a.has(z) {b.has(z)}
+}
+
+fn static set::specification(A, relation P(x: A.has(x)): A is set, ) => concept {
+  know exist set::specification(A, relation P(x: A.has(x)): A is set);
 }
