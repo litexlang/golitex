@@ -292,6 +292,18 @@ know if x,y: $nat_eq(\++{x}, \++{y}) {
 
 ```
 
+## TODO
+
+### Object Oriented Programming
+
+It's hard for a programmer to write clean and "elegant" code. It's even harder for a group of programmers work together and at the same write good code. When It comes to write "math code", i.e. proofs, things are even more complicated. Operators like +, \* overloads everywhere, Sometimes a symbol can have many meanings in the same paper, different people might give seemingly completely different definition and naming to two equivalent concepts.
+
+To help mathematicians share and organize their thoughts better, LiTeX is going to introduce an object oriented way of writing math, which can make the writing and reading process even more intuitive and maintainable.
+
+### function can return concept, variable, relation, function
+
+Math is a very generic language. Compared with traditional programming languages, LiTeX should be designed to be much more flexible to meet people's needs. It's extremely hard to strike the right balance between flexibility (easy for one man to write code) and organizable (easy for others to understand and work on the code). However, the basic idea behind math is pretty clear. As the simple notion of "Turing Machine" is theoretically equivalent to modern computers, the basic idea and element of math is pretty simple: 1. everything is a symbol 2. everything means a variable or a concept or a function or a relation. To make "something is related to something" and "something generates another thing" easier to express, I allow functions to have return all of them.
+
 ## More about LiTeX
 
 ### Advancing Collaborative Mathematics
