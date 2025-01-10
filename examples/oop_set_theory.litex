@@ -1,5 +1,6 @@
 concept object {}
 concept set {
+  symbols:
   relation has(x) {}
   
   static relation =(x, y): x is set, y is set {
@@ -17,6 +18,9 @@ concept set {
     know empty_set is set;
     if x: {not x empty_set.has(x)};
   }
+
+  facts:
+  this is object;
 }
 
 fn static set::singleton(a)  => var {
@@ -53,11 +57,18 @@ fn static set::intersection(a,b: all a,b are set) => var {
 }
 
 // P2 means fix the second parameter
-fn P2($P, z): P.parameters_number == 2 => relation(y) {
+// 为什么一定要引入 P2，因为 exist 必须是 作为某个 relation(concept) 的前缀出现的，你用given z exist $P(x,z) 是不行的
+
+// Axiom 3.6
+fn P2($P, z): P.parameters_number == 2 => relation {
+  facts:
   iff y: this(x) <=> $P(x, z)
 }
 
+// 通常我们说：存在一个东西，这个东西“怎么样”。但是因为 exist 必须是 作为某个 relation(concept) 的前缀出现的。 所以
+// 你要先 给 “怎么样” 取号了名字 Name，然后再 用 exist Name 来表示这个性质
 fn replacement($P, A: A is set) => concept {
+  facts:
   this is set;
   iff z: this.has(z) {
     exist P2($P, z)
@@ -69,6 +80,7 @@ if x, y1,y2: $P(x, y1), $P(x, y2) {y1 = y2} {
   exist replacement($P, A)
 }
 
+// Axiom 3.8
 know if A: A is set, A != set::empty_set {
   exist x: not x is set or set::intersection(x,A) = set::empty_set;
 }
