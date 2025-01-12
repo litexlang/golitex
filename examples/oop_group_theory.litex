@@ -3,9 +3,33 @@ import <set_theory>
 concept group G{
   G is set;
 
-  static relation =(x, y: all x,y are ) {}
+  static relation =(x, y: all x,y are group) {
+    if x,y: all x,y are group, x = y {y = x};
+    if x,y: all x,y are group, y = x {x = y};
+    
+    // = is transitive;
+    // = is reflective;
+  }
 
-  opt *(x,y: all x,y are set::G.has) => var result {
+  relation =(x,y: all x,y are set::G.has) {
+    // = is transitive and reflective
+  }
 
+  opt *(x,y: all x,y,z are set::G.has) => var result {
+    (x * y) * z G::= x * (y * z);
+    set::G.has(result);
+  }
+
+  var 1 {
+    set::G.has(1);
+    if x: set::G.has(x) {
+      x * 1 G::= x;
+      1 * x G::= x;
+    };
+  }
+
+  opt inv(x: set::G.has(x)) => var result {
+    result * x G::= G.1;
+    x * result G::= G.1;
   }
 }
