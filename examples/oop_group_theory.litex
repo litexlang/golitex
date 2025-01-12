@@ -1,0 +1,11 @@
+import <set_theory>
+
+concept group G{
+  G is set;
+
+  static relation =(x, y: all x,y are ) {}
+
+  opt *(x,y: all x,y are set::G.has) => var result {
+
+  }
+}
