@@ -2,7 +2,7 @@ package group_theory
 
 import ("set_theory")
 
-concept Group G {
+concept Group G extends Set {
   fn *(x G, y G) var G {
     * is commutative;
   }

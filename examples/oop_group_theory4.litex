@@ -1,0 +1,41 @@
+concept Group G {
+  // 定义运算
+  fn *(G x, G y) G;
+  fn inv(G x) G;
+
+  // 定义单位元
+  var G 1;
+}
+
+// 性质定义
+axioms for Group G {
+  // 交换律
+  ∀ G x, G y {...extra requirements} : x * y = y * x;
+
+  // 单位元性质
+  ∀ G x {}: x * 1 = x , 1 * x = x;
+
+  // 逆元性质
+  ∀ G x {}: inv(x) * x = 1 , x * inv(x) = 1;
+}
+
+concept Group G extends Set {
+  // 定义运算
+  fn *(x: G, y: G) -> G;
+  fn inv(x: G) -> G;
+
+  // 定义单位元
+  var 1: G;
+}
+
+// 性质定义
+axioms for Group G {
+  // 交换律
+  ∀x, y ∈ G: x * y = y * x;
+
+  // 单位元性质
+  ∀x ∈ G: x * 1 = x ∧ 1 * x = x;
+
+  // 逆元性质
+  ∀x ∈ G: inv(x) * x = 1 ∧ x * inv(x) = 1;
+}
