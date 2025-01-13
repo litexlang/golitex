@@ -1,18 +1,19 @@
-import <set_theory>
+import <set_theory> as set; // 可能存在很多的 set_theory的implement，这时你为了确认是哪个，得给他们分别取名
 
 concept group G{
   G is set;
 
   static relation =(x, y: all x,y are group) {
-    if x,y: all x,y are group, x = y {y = x};
-    if x,y: all x,y are group, y = x {x = y};
+    if x,y: all x,y are group, x group::= y {y group::= x};
+    if x,y: all x,y are group, y group::= x {x group::= y};
     
     // = is transitive;
     // = is reflective;
   }
 
   relation =(x,y: all x,y are set::G.has) {
-    // = is transitive and reflective
+    = is transitive;
+    = is reflective;
   }
 
   opt *(x,y: all x,y,z are set::G.has) => var result {
