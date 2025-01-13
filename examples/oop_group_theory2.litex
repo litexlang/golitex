@@ -1,0 +1,27 @@
+package group_theory
+
+import ("set_theory")
+
+concept Group G {
+  G is set_theory.set;
+
+  relation =(x,y: all x,y are G.has) {
+    = is transitive;
+    = is reflective;
+  }
+
+  fn *(x,y: all x,y,z are G.has) var result {
+    (x * y) * z G.= x * (y * z);  // 相当于 (x G.* y) G.* z G.= x G.* (y G.* z)
+    G.has(result)
+  }
+
+  var 1 {
+    G.has(1); // 相当于 G.has(G.1)
+    if x: G.has(x) {x * 1 = x; x = 1 * x;}
+  }
+
+  fn inv(x: G.has(x)) var result {
+    result * x G.= G.1;
+    x * result G.= G.1;
+  }
+}
