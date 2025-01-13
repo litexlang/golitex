@@ -8,16 +8,9 @@ concept Group G {
     = is reflective;
   }
 
-  fn *(x G, y G) result G {
-    if z G: {
-      result * z = x * (y * z);
-    }
-  }
-
-  // another 
   fn *(x G, y G) var G {
     if z G: {
-      (x * y) * z = x * ()
+      (x * y) * z = x * (y * z)
     }
   }
 
@@ -25,9 +18,9 @@ concept Group G {
     if x G: {x * 1 = x; x = 1 * x;}
   }
 
-  fn inv(x G) result G {
-    result * x = 1; // can be deduced that = means G.=
-    x * result = 1;
+  fn inv(x G) var G {
+    \inv(x) * x = 1; // can be deduced that = means G.=
+    x * \inv(x) = 1;
   }
 }
 
