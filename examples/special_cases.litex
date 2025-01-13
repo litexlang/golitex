@@ -32,3 +32,4 @@ know if set A, relation P(x, y): if var x, var y1, var y2: P(x, y1), P(x, y2) {y
  }
 }
 
+exist set S {iff var z {S.has(z)}: exist var x {A.has(x), P(x, z)} }
