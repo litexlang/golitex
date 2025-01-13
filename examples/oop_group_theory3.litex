@@ -3,7 +3,7 @@ package group_theory
 import ("set_theory")
 
 concept Group G {
-  fn *(x G, y G) G {
+  fn *(x G, y G) var G {
     * is commutative;
   }
 
@@ -11,7 +11,7 @@ concept Group G {
     if x G: {x * 1 = x; x = 1 * x;}
   }
 
-  fn inv(x G) G {
+  fn inv(x G) var G {
     \inv(x) * x = G.1;
     x * \inv(x) = G.1;
   }

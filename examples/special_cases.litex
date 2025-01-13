@@ -1,0 +1,8 @@
+// result(y var) 是返回的relation的类型，表示这里的relation是一个参数
+concept replacement(A set, P(x, y) relation) R {
+  iff z R: {exist x any: A.has(x), P(x, z)}
+}
+
+know if A set, P(x, y) relation: if x any ,y1 any, y2 any: P(x, y1), P(x, y2) {y1 = y2} {
+ exist x any: replacement(A, P)(x)
+}
