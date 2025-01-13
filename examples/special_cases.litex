@@ -1,8 +1,34 @@
 // result(y var) 是返回的relation的类型，表示这里的relation是一个参数
-concept replacement(A set, P(x, y) relation) R {
-  iff z R: {exist x any: A.has(x), P(x, z)}
+fn set_with_properties(set A, relation P(var x, var y), var z) relation R(var x) {
+  iff var z: R(z) {A.has(z), P(x, z)}
 }
 
-know if A set, P(x, y) relation: if x any ,y1 any, y2 any: P(x, y1), P(x, y2) {y1 = y2} {
- exist x any: replacement(A, P)(x)
+fn replacement(set A, relation P(var x, var y)) relation R(var x) {
+  iff var z: R(z) {exist var x: A.has(x), P(x, z)}
 }
+
+know if set A, relation P(x, y): if var x, var y1, var y2: P(x, y1), P(x, y2) {y1 = y2} {
+ exist var x: replacement(A, P)(x)
+}
+
+//---------------
+
+fn set_with_properties(set A, relation P(var x, var y), var z) relation R(var x) {
+  iff var z: R(z) {A.has(z), P(x, z)}
+}
+
+fn replacement(set A, relation P(var x, var y)) relation R(var x) {
+  iff var z: R(z) {exist var x: set_with_properties(A, P, z)(x)}
+}
+
+know if set A, relation P(x, y): if var x, var y1, var y2: P(x, y1), P(x, y2) {y1 = y2} {
+ exist var x: replacement(A, P)(x)
+}
+
+//---------------
+know if set A, relation P(x, y): if var x, var y1, var y2: P(x, y1), P(x, y2) {y1 = y2} {
+ exist set S: iff var z: S.has(z) {
+  exist var x: A.has(x), P(x, z)
+ }
+}
+
