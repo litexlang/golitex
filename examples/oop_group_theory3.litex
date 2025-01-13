@@ -3,24 +3,17 @@ package group_theory
 import ("set_theory")
 
 concept Group G {
-  relation =(x G, y G) {
-    = is transitive;
-    = is reflective;
-  }
-
-  fn *(x G, y G) var G {
-    if z G: {
-      (x * y) * z = x * (y * z)
-    }
+  fn *(x G, y G) G {
+    * is commutative;
   }
 
   var 1 G {
     if x G: {x * 1 = x; x = 1 * x;}
   }
 
-  fn inv(x G) var G {
-    \inv(x) * x = 1; // can be deduced that = means G.=
-    x * \inv(x) = 1;
+  fn inv(x G) G {
+    \inv(x) * x = G.1;
+    x * \inv(x) = G.1;
   }
 }
 
