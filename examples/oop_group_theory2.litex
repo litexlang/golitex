@@ -3,25 +3,21 @@ package group_theory
 import ("set_theory")
 
 concept Group G {
-  G is set_theory.set;
-
-  relation =(x,y: all x,y are G.has) {
+  relation =(x,y: G) {
     = is transitive;
     = is reflective;
   }
 
-  fn *(x,y: all x,y,z are G.has) var result {
-    (x * y) * z G.= x * (y * z);  // 相当于 (x G.* y) G.* z G.= x G.* (y G.* z)
-    G.has(result)
+  fn *(x,y: G) var result: G {
+    (x * y) * z = x * (y * z);
   }
 
-  var 1 {
-    G.has(1); // 相当于 G.has(G.1)
-    if x: G.has(x) {x * 1 = x; x = 1 * x;}
+  var 1: G {
+    if x: G {x * 1 = x; x = 1 * x;}
   }
 
-  fn inv(x: G.has(x)) var result {
-    result * x G.= G.1;
-    x * result G.= G.1;
+  fn inv(x: G) var result:G {
+    result * x = 1;
+    x * result = 1;
   }
 }
