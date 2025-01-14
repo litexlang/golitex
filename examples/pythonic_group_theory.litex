@@ -84,6 +84,13 @@ prove:
   (a * (b * inv(b))) * inv(a) = (a * G.1) * inv(a) = a * inv(a) = G.1
   inv(b) * inv(a) = inv(a * b)
 
+Claim:
+  if Group G:
+    G.1 = inv(G.1)
+prove:
+  inv(G.1) * G.1 = G.1
+  inv(G.1) * G.1 = inv(G.1)
+
 import ("nat")
 
 Fn ^(Nat n) fn F(G x) G:
