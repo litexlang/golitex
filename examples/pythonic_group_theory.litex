@@ -124,5 +124,24 @@ prove:
     power_of_inverse_is_inverse_of_power(G, x)(n)
   if Nat n: 
     power_of_inverse_is_inverse_of_power(G, x)(n)
-
   // 自动检查 claim 里的东西是否正确
+
+import ("set")
+
+// 像定义函数那样定义属性
+Property finite_order(G a):
+  G is Group
+  exist Nat n:
+    ^(n)(a) = G.1
+
+Claim:
+  if Group G, G a:: G.size is Nat:
+    finite_order(a)
+prove:
+  var Set s
+  know if Nat n:: n > 0, n <= s.size + 1:
+    s.has(^(n)(a))
+  know s.size in Nat  // in 貌似要比 is 好，is用在属性，in用在类型
+  if Nat n, m:: n > 0, n <= s.size + 1, m > 0, m <= s.size + 1, not ^(n)(a) = ^(m)(a):
+    
+
