@@ -1,0 +1,58 @@
+Concept Group G:
+  // define function
+  fn *(G x, G y) G
+  fn inv(G x) G
+
+  // define one
+  var G 1
+
+  // axioms
+  if G x, G y:
+    (x * y) * z = x * (y * z)
+  if G x:
+    x * G.1 = G.1 * x
+  if G x:
+    inv(x) * x = G.1
+    x * inv(x) = G.1
+
+Property Abelian of Group G:
+  if G x, G y:
+    x * y = y * x
+
+Concept AbelianGroup of Group G:
+  G is Abelian
+
+Concept Monoid M:
+  fn *(M x, M y) M;
+
+  var M 1;
+  
+  if M x, M y:
+    (x * y) * z = x * (y * z)
+  if M x:
+    M.1 * x = x * M.1
+
+Concept Semigroup S:
+  fn *(M x, M y) M;
+
+  if M x, M y:
+      (x * y) * z = x * (y * z)
+
+Property injective of fn F(any x):
+  if any x, any y: F(x) = F(y):
+    x = y
+
+Property surjective of fn F(any x):
+  if any y :: F.image.has(y):
+    exist any x:
+      F(x) = y
+
+Fn group_transformation(Group G, G a) fn F(G x) G:
+  group_transformation(G, a)(x) = a * x
+
+Claim:
+if Group G, G a:
+  fn group_transformation(G, a)(G x) F
+  F is injective
+prove:
+
