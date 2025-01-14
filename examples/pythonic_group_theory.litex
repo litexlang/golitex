@@ -19,11 +19,11 @@ Property Abelian of Group G:
   if G x, G y:
     x * y = y * x
 
-Concept AbelianGroup of Group G:
+Concept AbelianGroup inherit Group G:
   G is Abelian
 
 Concept Monoid M:
-  fn *(M x, M y) M;
+  fn *(M x, M y) M
 
   var M 1;
   
@@ -51,7 +51,7 @@ Fn group_transformation(Group G, G a) fn F(G x) G:
   group_transformation(G, a)(x) = a * x
 
 Claim:
-  if Group G, G a, fn group_transformation(G, a)(G x) F:
+  if Group G, G a, fn F :: F = group_transformation(G, a):
     F is injective
 prove:
   if G x1, G x2:: F(x1) = F(x2):
@@ -134,6 +134,8 @@ Property finite_order(G a):
   exist Nat n:
     ^(n)(a) = G.1
 
+// ??? 这里需要内置一下 自然数和 set 了
+
 Claim:
   if Group G, G a:: G.size is Nat:
     finite_order(a)
@@ -143,5 +145,7 @@ prove:
     s.has(^(n)(a))
   know s.size in Nat  // in 貌似要比 is 好，is用在属性，in用在类型
   if Nat n, m:: n > 0, n <= s.size + 1, m > 0, m <= s.size + 1, not ^(n)(a) = ^(m)(a):
-    
+    怎么说明 {a^1, ..., a^(n+1)} 如果里面的东西不一样，整个集合里面的元素的数量是n+1个？
+
+// ???
 

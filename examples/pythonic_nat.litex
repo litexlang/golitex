@@ -31,3 +31,4 @@ Concept Nat:
     :
       exist var x, var y:: C.has(x), C.has(y):: 
         x = y
+
