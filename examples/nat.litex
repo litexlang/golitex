@@ -1,0 +1,10 @@
+Concept Nat:
+  var Nat 0
+  vars Nat r'^[1-9]\d*$'
+
+  fn ++(Nat n) Nat
+
+  // TODO 形式化 字面量的++ 和 这里的++的关系
+
+
+
