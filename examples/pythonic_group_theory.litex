@@ -91,6 +91,17 @@ prove:
   inv(G.1) * G.1 = G.1
   inv(G.1) * G.1 = inv(G.1)
 
+/* Named Claim */
+Property inverse_of_one_is_one(Group G):
+  G.1 = inv(G.1)
+
+Claim:
+  if Group G:
+    inverse_of_one_is_one(G)
+prove:
+  inv(G.1) * G.1 = G.1
+  inv(G.1) * G.1 = inv(G.1)
+
 import ("nat")
 
 Fn ^(Nat n) fn F(G x) G:
