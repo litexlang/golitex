@@ -83,3 +83,28 @@ prove:
   (a * b) * (inv(b) * inv(a)) = ((a * b) * inv(b)) * inv(a) = \
   (a * (b * inv(b))) * inv(a) = (a * G.1) * inv(a) = a * inv(a) = G.1
   inv(b) * inv(a) = inv(a * b)
+
+import ("nat")
+
+Fn ^(Nat n) fn F(G x) G:
+  ^(++(n))(x) = ^(n)(x) * x
+  ^(0)(x) = G.1
+
+Fn power_of_inverse_is_inverse_of_power(Group G, G x) Property P(Nat n):
+  ^(n)(inv(x)) = inv(^(n)(x))
+
+Claim:
+  if Group G, G x, Nat n:
+    power_of_inverse_is_inverse_of_power(G, x)(n)
+prove:
+  ^(0)(inv(x)) = G.1 = inv(G.1) = inv(^(0)(x))
+
+  // 数学归纳法
+  P(G,x)(0)
+  if Nat n:: P(G,x)(n):
+    ^(++(n))(x) = ^(n)(x) * x
+    power_of_inverse_is_inverse_of_power(G, x)(n)
+  if Nat n: 
+    power_of_inverse_is_inverse_of_power(G, x)(n)
+
+  // 自动检查 claim 里的东西是否正确
