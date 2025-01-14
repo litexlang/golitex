@@ -13,6 +13,8 @@ Fn array(nat start, nat end, fn F, concept G, G g) Concept s:
 
   G.contains(s)
 
+  // 是否应该 引入语法 release，一下释放 某个性质里面的所有性质??
+
   if :: G.size in Nat, end - start > G.size:
     exist nat n, nat m:: n >= start, n < end, m >= start, m < end, not m = n:
       F(n)(g) = F(m)(g)
@@ -32,7 +34,4 @@ know:
   if nat start, nat end, fn F, concept G, G g, array(start, end, fn, concept) s::
     G.size in Nat, end - start > G.size
   :
-    exist var s1, var s2, nat n1, nat n2: s1 in s, s2 in s, n1 < n2, n1 >= start, n1 < end, n2 >= start, n2 < end:
-        s1 = s2
-        s1 = F(n1)(g)
-        s2 = F(n2)(g)
+    exist var s1, var s2, nat n1, nat n2:: s1 in s, s2 in s, n1 < n2, n1 >= start, n1 < end, n2 >= start, n2 < end, s1 = s2, s1 = F(n1)(g), s2 = F(n2)(g)

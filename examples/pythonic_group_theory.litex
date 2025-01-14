@@ -129,8 +129,7 @@ prove:
 import ("set")
 
 // 像定义函数那样定义属性
-Property finite_order(G a):
-  G is Group
+Property finite_order(Group G, G a):
   exist Nat n:
     ^(n)(a) = G.1
 
@@ -159,12 +158,12 @@ Claim:
 prove:
   var set s:
     s = array(1, G.size + 2, ^, a)
-  G.contains(s)
-  s.size <= G.size < G.size + 1 = G.size + 2 - 1
   have var s1, var s2, 1, G.size + 1, ^, Nat, s:
     s1 = s2
     s1 = ^(n1)(g)
     s2 = ^(n2)(g)
-  inv(^(n1)(g)) * ^(n1)(g) = inv(^(n1)(g)) * ^(n2)(g)
+  inv(^(n1)(g)) * ^(n1)(g) = inv(^(n1)(g)) * ^(n2)(g) // 我还没证明 右侧等于 ^(n2 - n1)(g)
   G.1 = ^(n2 - n1)(g)
-  finite_order(g)
+  prove_exist:
+    ^(n2 - n1)(g) = G.1
+  finite_order(G, g)
