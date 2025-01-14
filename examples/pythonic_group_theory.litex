@@ -136,6 +136,8 @@ Property finite_order(G a):
 
 // ??? 这里需要内置一下 自然数和 set 了
 
+/*
+
 Claim:
   if Group G, G a:: G.size is Nat:
     finite_order(a)
@@ -147,5 +149,22 @@ prove:
   if Nat n, m:: n > 0, n <= s.size + 1, m > 0, m <= s.size + 1, not ^(n)(a) = ^(m)(a):
     怎么说明 {a^1, ..., a^(n+1)} 如果里面的东西不一样，整个集合里面的元素的数量是n+1个？
 
-// ???
+*/
 
+using nat
+
+Claim:
+  if Group G, G g:: G.size is Nat:
+    finite_order(g)
+prove:
+  var set s:
+    s = array(1, G.size + 2, ^, a)
+  G.contains(s)
+  s.size <= G.size < G.size + 1 = G.size + 2 - 1
+  have var s1, var s2, 1, G.size + 1, ^, Nat, s:
+    s1 = s2
+    s1 = ^(n1)(g)
+    s2 = ^(n2)(g)
+  inv(^(n1)(g)) * ^(n1)(g) = inv(^(n1)(g)) * ^(n2)(g)
+  G.1 = ^(n2 - n1)(g)
+  finite_order(g)
