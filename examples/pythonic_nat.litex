@@ -1,0 +1,24 @@
+Concept Nat:
+  literals ArabicNumber Nat ^(0|[1-9]\d*)$
+
+  fn ++(Nat n) Nat
+
+  // TODO 形式化 字面量(作为正则表达式的)的++ 和 这里的++的关系，这里要引入JS或其他编程语言里的算法
+
+  if Nat x:
+    not 0 = ++(x)
+
+  if Nat x, Nat y:: not x = y:
+    not ++(x) = ++(y)
+  
+  if Nat x, Nat y:: not ++(x) = ++(y):
+    not x = y
+
+  if Property P(Nat n)::
+    P(0)
+    if Nat n:: P(n):
+      P(++(n))
+  :
+    if Nat n:
+      P(n)
+  
