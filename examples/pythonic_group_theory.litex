@@ -150,7 +150,7 @@ prove:
 
 */
 
-using nat
+use_vars nat.Nat // 让 在 nat 里定义的 var，不需要写成 nat.XXX，可以直接调用，比如1,2
 
 Claim:
   if Group G, G g:: G.size is Nat:
