@@ -6,6 +6,9 @@ Concept Group G:
   // define one
   var 1 G
 
+  // 注意到 var 1 G 等价于 fn 1(G Group) var; 然后后面出现的 G.1 都相当于变成 1(G) 就行
+  // 这样的好处是，我比较两个 symbol的时候，可以容易弄很多，只要考虑 method，或者说fn，不用考虑 . property()
+
   // axioms
   if x G, y G:
     (x * y) * z = x * (y * z)
