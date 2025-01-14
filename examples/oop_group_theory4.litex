@@ -108,11 +108,3 @@ prove if Group G, G a, G b : inv(a * b) = inv(b) * inv(a); {
   (a * (b * inv(b))) * inv(a) = (a * G.1) * inv(a) = a * inv(a) = G.1
   (inv(b) * inv(a)) = inv(a * b)
 }
-
-if R x {
-  ...
-}
-
-if R x : x > 1 {
-  ...
-}
