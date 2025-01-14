@@ -38,7 +38,7 @@ concept Monoid M {
   var M 1;
 
   axioms {
-    ∀ M x, M y: x * y * z x * (y * z);
+    ∀ M x, M y: x * y * z = x * (y * z);
     ∀ M x: 1 * x = x , x * 1 = x;
   }
 }
