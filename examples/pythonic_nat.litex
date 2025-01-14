@@ -14,7 +14,7 @@ Concept Nat:
   if Nat x, Nat y:: not ++(x) = ++(y):
     not x = y
 
-  if Property P(Nat n)::
+  if Property P(Nat x)::
     P(0)
     if Nat n:: P(n):
       P(++(n))
