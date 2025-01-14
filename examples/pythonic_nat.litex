@@ -22,3 +22,12 @@ Concept Nat:
     if Nat n:
       P(n)
   
+  // 鸽巢原理
+  if any C:: C.size is Nat: // any 是因为可能是concept，可能是作为集合出现的var
+    if any s::
+      if any x, s.has(x):
+        C.has(s)
+      s.size >= C.size  // 暂时没定义 nat的size。注意到，这里任何有属性size，有运算符>=的类型，都能被在这里做运算。
+    :
+      exist var x, var y:: C.has(x), C.has(y):: 
+        x = y
