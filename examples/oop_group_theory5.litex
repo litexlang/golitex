@@ -51,8 +51,32 @@ Fn group_transformation(Group G, G a) fn F(G x) G:
   group_transformation(G, a)(x) = a * x
 
 Claim:
-if Group G, G a:
-  fn group_transformation(G, a)(G x) F
-  F is injective
+  if Group G, G a, fn group_transformation(G, a)(G x) F:
+    F is injective
 prove:
+  if G x1, G x2:: F(x1) = F(x2):
+    a * x1 = F(x1)  // 对 F(x1) 进行实例化，实例化这一下，我可能能帮用户做，但用户自己做一下也可以
+    a * x2 = F(x2)
+    a * x1 = a * x2 // 实例化后才能知道这个对不对
+    // 这一步必须用户自己写了：下面需要用这个做中间桥梁连起来x1,x2，而引入inv(a) 是有“创造性”的
+    inv(a) * (a * x2) = inv(a) * (a * x1)
+    inv(a) * (a * x2) = (inv(a) * a) * x2 = 1 * x2 = x2
+    inv(a) * (a * x1) = (inv(a) * a) * x1 = 1 * x1 = x1
+    x2 = x1
+  
+Claim:
+  if Group G, G a, G b:: a * b = G.1:
+    b = inv(a)
+prove:
+  inv(a) * (a * b) = inv(a) * G.1
+  inv(a) * (a * b) = (inv(a) * a) * b = G.1 * b = b
+  inv(a) * G.1 = inv(a)
+  b = inv(a)
 
+Claim:
+  if Group G, G a, G b:
+    inv(a * b) = inv(b) * inv(a)
+prove:
+  (a * b) * (inv(b) * inv(a)) = ((a * b) * inv(b)) * inv(a) = \
+  (a * (b * inv(b))) * inv(a) = (a * G.1) * inv(a) = a * inv(a) = G.1
+  inv(b) * inv(a) = inv(a * b)
