@@ -1,60 +1,60 @@
 Concept Group G:
   // define function
-  fn *(G x, G y) G
-  fn inv(G x) G
+  fn *(x G, y G) G
+  fn inv(x G) G
 
   // define one
-  var G 1
+  var 1 G
 
   // axioms
-  if G x, G y:
+  if x G, y G:
     (x * y) * z = x * (y * z)
-  if G x:
+  if x G:
     x * G.1 = G.1 * x
-  if G x:
+  if x G:
     inv(x) * x = G.1
     x * inv(x) = G.1
 
-Property Abelian of Group G:
-  if G x, G y:
+Property Abelian(G Group):
+  if x G, y G:
     x * y = y * x
 
 Concept AbelianGroup inherit Group G:
   G is Abelian
 
 Concept Monoid M:
-  fn *(M x, M y) M
+  fn *(x M,y M) M
 
-  var M 1;
+  var 1 M;
   
-  if M x, M y:
+  if x M, y M:
     (x * y) * z = x * (y * z)
-  if M x:
+  if x M:
     M.1 * x = x * M.1
 
 Concept Semigroup S:
-  fn *(M x, M y) M;
+  fn *(x M,y M) M;
 
-  if M x, M y:
+  if x M, y M:
       (x * y) * z = x * (y * z)
 
-Property injective of fn F(any x):
-  if any x, any y: F(x) = F(y):
-    x = y
+Property injective(F fn(x var) var):
+  if x var, y var: F(x) = F(y):
+      x = y
 
-Property surjective of fn F(any x):
-  if any y :: F.image.has(y):
-    exist any x:
+Property surjective(F fn(x var) var):
+  if y var:: F.image.has(y):
+    exist x var:
       F(x) = y
 
-Fn group_transformation(Group G, G a) fn F(G x) G:
+Fn group_transformation(G Group, a G) F fn (x G) G:
   group_transformation(G, a)(x) = a * x
 
 Claim:
-  if Group G, G a, fn F :: F = group_transformation(G, a):
+  if G Group, a G, F fn:: F = group_transformation(G, a):
     F is injective
 prove:
-  if G x1, G x2:: F(x1) = F(x2):
+  if x1 G, x2 G:: F(x1) = F(x2):
     // 对 F(x1) 进行实例化，用户必须自己做这一步，因为这里有“创造性”：用户用了F(x1) = F(x2)
     // 才知道 a * x1 = a * x2. 用到 F(x1) = a * x1，而不是别的什么东西，是有创造力的
     a * x1 = F(x1)
@@ -68,7 +68,7 @@ prove:
     x2 = x1
   
 Claim:
-  if Group G, G a, G b:: a * b = G.1:
+  if G Group, a G, b G:: a * b = G.1:
     b = inv(a)
 prove:
   inv(a) * (a * b) = inv(a) * G.1
@@ -77,7 +77,7 @@ prove:
   b = inv(a)
 
 Claim:
-  if Group G, G a, G b:
+  if G Group, a G, b G:
     inv(a * b) = inv(b) * inv(a)
 prove:
   (a * b) * (inv(b) * inv(a)) = ((a * b) * inv(b)) * inv(a) = \
@@ -85,18 +85,18 @@ prove:
   inv(b) * inv(a) = inv(a * b)
 
 Claim:
-  if Group G:
+  if G Group:
     G.1 = inv(G.1)
 prove:
   inv(G.1) * G.1 = G.1
   inv(G.1) * G.1 = inv(G.1)
 
 /* Named Claim */
-Property inverse_of_one_is_one(Group G):
+Property inverse_of_one_is_one(G Group):
   G.1 = inv(G.1)
 
 Claim:
-  if Group G:
+  if G Group:
     inverse_of_one_is_one(G)
 prove:
   inv(G.1) * G.1 = G.1
@@ -104,15 +104,15 @@ prove:
 
 import ("nat")
 
-Fn ^(Nat n) fn F(G x) G:
+Fn ^(n Nat) F fn (x G) G:
   ^(++(n))(x) = ^(n)(x) * x
   ^(0)(x) = G.1
 
-Fn power_of_inverse_is_inverse_of_power(Group G, G x) Property P(Nat n):
+Fn power_of_inverse_is_inverse_of_power(G Group, x G) P Property (n Nat):
   ^(n)(inv(x)) = inv(^(n)(x))
 
 Claim:
-  if Group G, G x, Nat n:
+  if G Group, x G, n Nat:
     power_of_inverse_is_inverse_of_power(G, x)(n)
 prove:
   ^(0)(inv(x)) = G.1 = inv(G.1) = inv(^(0)(x))
@@ -129,8 +129,8 @@ prove:
 import ("set")
 
 // 像定义函数那样定义属性
-Property finite_order(Group G, G a):
-  exist Nat n:
+Property finite_order(G Group, a G):
+  exist n Nat:
     ^(n)(a) = G.1
 
 // ??? 这里需要内置一下 自然数和 set 了
@@ -138,7 +138,7 @@ Property finite_order(Group G, G a):
 /*
 
 Claim:
-  if Group G, G a:: G.size is Nat:
+  if G Group,a G:: G.size is Nat:
     finite_order(a)
 prove:
   var Set s
@@ -153,14 +153,14 @@ prove:
 use_vars nat.Nat // 让 在 nat 里定义的 var，不需要写成 nat.XXX，可以直接调用，比如1,2
 
 Claim:
-  if Group G, G g:: G.size is Nat:
+  if G Group, g G:: G.size is Nat:
     finite_order(g)
 prove:
   var set s:
     s = array(1, G.size + 2, ^, a)
-  have var s1, var s2, 1, G.size + 1, ^, Nat, s:
+  have s1 var, s2 var, 1, G.size + 1, ^, Nat, s:
     s1 = s2
-    s1 = ^(n1)(g)
+    s1 = ^(n1)(g) // 此时 s1 绑定上性质 G，同时作为字面量等于 ^(n1)(g)
     s2 = ^(n2)(g)
   inv(^(n1)(g)) * ^(n1)(g) = inv(^(n1)(g)) * ^(n2)(g) // 我还没证明 右侧等于 ^(n2 - n1)(g)
   G.1 = ^(n2 - n1)(g)

@@ -1,0 +1,18 @@
+Concept Point P:
+Concept Line L:
+Concept Plane P:
+
+fn line(A Point, B Point:: not A = B) L Line:
+  if A Point, B Point, C Point :: line(A, B) = line(B, C), not B = C:
+    line(B, C) = line(A, B)
+  
+  if A Point, B Point:: not A = B:
+    line(A, B) = line(B, A)
+
+fn plane(A Point, B Point, C Point:: not A = B, not A = C, not B = C, not line(A, B) = line(A, C), \
+  not line(A, B) = line(B, C), not line(A, C) = line(B, C) \
+) P Plane:
+  if A Point, B Point, C Point:: not A = B, not A = C, not B = C, not line(A, B) = line(A, C), \
+  not line(A, B) = line(B, C), not line(A, C) = line(B, C):
+    plane(A, B, C) = plane(A, C, B) = plane(B, A, C) = plane(B, C, A) = plane(C, A, B) = plane(C, B, A)
+
