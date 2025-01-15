@@ -18,9 +18,14 @@ Concept G Group:
     inv(x) * x = G.1
     x * inv(x) = G.1
 
-Property Abelian(G Group):
+Property Abelian[G Group]():
   if x G, y G:
     x * y = y * x
+
+Set G Group
+know $Abelian[G]()
+if x G, y G:
+  x * y = y * x
 
 Concept AbelianGroup inherit Group G:
   G is Abelian
@@ -51,11 +56,11 @@ Property surjective(F fn(x var) var):
       F(x) = y
 
 // 如何对 type 进行额外的要求？
-Fn group_transformation(G Group, a G) F fn (x G) G:
-  group_transformation(G, a)(x) = a * x
+Fn group_transformation[G Group](a G) F fn (x G) G:
+  group_transformation[G](a)(x) = a * x
 
 Claim:
-  if G Group, a G, F fn:: F = group_transformation(G, a):
+  if [G Group] a G, F fn:: F = group_transformation[G](a):
     F is injective
 prove:
   if x1 G, x2 G:: F(x1) = F(x2):
@@ -72,7 +77,7 @@ prove:
     x2 = x1
   
 Claim:
-  if G Group, a G, b G:: a * b = G.1:
+  if [G Group] a G, b G:: a * b = G.1:
     b = inv(a)
 prove:
   inv(a) * (a * b) = inv(a) * G.1
@@ -81,7 +86,7 @@ prove:
   b = inv(a)
 
 Claim:
-  if G Group, a G, b G:
+  if [G Group] a G, b G:
     inv(a * b) = inv(b) * inv(a)
 prove:
   (a * b) * (inv(b) * inv(a)) = ((a * b) * inv(b)) * inv(a) = \
@@ -89,8 +94,8 @@ prove:
   inv(b) * inv(a) = inv(a * b)
 
 Claim:
-  if G Group:
-    G.1 = inv(G.1)
+  if [G Group] :
+    G::1 = inv(G::1)
 prove:
   inv(G.1) * G.1 = G.1
   inv(G.1) * G.1 = inv(G.1)
@@ -112,12 +117,12 @@ Fn ^(n Nat) F fn (x G) G:
   ^(++(n))(x) = ^(n)(x) * x
   ^(0)(x) = G.1
 
-Fn power_of_inverse_is_inverse_of_power(G Group, x G) P Property (n Nat):
+Fn power_of_inverse_is_inverse_of_power[G Group](x G) P Property (n Nat):
   ^(n)(inv(x)) = inv(^(n)(x))
 
 Claim:
-  if G Group, x G, n Nat:
-    power_of_inverse_is_inverse_of_power(G, x)(n)
+  if [G Group] x G, n Nat:
+    power_of_inverse_is_inverse_of_power[G](x)(n)
 prove:
   ^(0)(inv(x)) = G.1 = inv(G.1) = inv(^(0)(x))
 
