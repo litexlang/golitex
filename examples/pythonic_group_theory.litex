@@ -1,3 +1,4 @@
+// 证明一个集合是符合某个concept的集合的方式是，prove_exist: 因为concept的实际含义也就是 存在 xxx计算符号，xxx元素
 Concept Group G:
   // define function
   fn *(x G, y G) G
