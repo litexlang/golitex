@@ -1,5 +1,3 @@
-// 证明一个集合是符合某个concept的集合的方式是，prove_exist: 因为concept的实际含义也就是 存在 xxx计算符号，xxx元素
-// 这里隐含的是 exist fn * ... ; exist var 1 ...
 Concept G Group:
   // define function
   fn *(x G, y G) G
@@ -37,7 +35,7 @@ Concept M Monoid:
   if x M:
     M.1 * x = x * M.1
 
-Concept Semigroup S:
+Concept M Semigroup:
   fn *(x M,y M) M;
 
   if x M, y M:
@@ -173,3 +171,11 @@ prove:
   prove_exist:
     ^(n2 - n1)(g) = G.1
   finite_order(G, g)
+
+
+var x G, y G:: x * y = y * x, x is R
+have x, y :
+  a G, b G :: a * b = b * a, a is R
+exist a G, b G :: a * b = b * a, a is R
+
+prove_is_concept 
