@@ -18,12 +18,13 @@ Concept G Group:
     inv(x) * x = G.1
     x * inv(x) = G.1
 
-Property Abelian[G Group]():
+set_property Abelian(G Group):
   if x G, y G:
     x * y = y * x
 
-Set G Group
-know $Abelian[G]()
+// 这个 Set 和 出现在var后面的Set，是两个完全不同的语义：这个set是作为变量的类型的类型出现的，另外一个是作为变量类型出现
+set_var G Group 
+know $Abelian(G)
 if x G, y G:
   x * y = y * x
 
