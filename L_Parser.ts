@@ -1,5 +1,4 @@
 import {
-  LogicNode,
   L_FactNode,
   OptFactNode,
   FormulaSubNode,
@@ -109,6 +108,7 @@ export function parseSingleNode(env: L_Env, tokens: L_Tokens): L_Node | null {
 function arrParse<T>(
   env: L_Env,
   tokens: L_Tokens,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   parseFunc: Function,
   end: string[] | string
 ): T[] {
@@ -198,36 +198,32 @@ export class Skipper {
   }
 
   skip(s: string | string[] = ""): string {
-    try {
-      if (typeof s === "string") {
-        if (s === "") {
-          const out = this.tokens.shift();
-          if (out === undefined) throw Error(`There is no more token.`);
-          this.curTokens.push(out);
-          return out;
-        } else if (s === this.tokens.peek()) {
-          const out = this.tokens.shift();
-          if (out === undefined) throw Error(`There is no more token.`);
-          this.curTokens.push(out);
-          return out;
-        } else {
-          // env.report("unexpected symbol: " + this.tokens.peek());
-          throw Error("unexpected symbol: " + this.tokens.peek());
-        }
+    if (typeof s === "string") {
+      if (s === "") {
+        const out = this.tokens.shift();
+        if (out === undefined) throw Error(`There is no more token.`);
+        this.curTokens.push(out);
+        return out;
+      } else if (s === this.tokens.peek()) {
+        const out = this.tokens.shift();
+        if (out === undefined) throw Error(`There is no more token.`);
+        this.curTokens.push(out);
+        return out;
       } else {
-        for (const value of s) {
-          if (value === this.tokens.peek()) {
-            const out = this.tokens.shift();
-            if (out === undefined) throw Error;
-            this.curTokens.push(out);
-            return out;
-          }
-        }
         // env.report("unexpected symbol: " + this.tokens.peek());
         throw Error("unexpected symbol: " + this.tokens.peek());
       }
-    } catch (error) {
-      throw Error();
+    } else {
+      for (const value of s) {
+        if (value === this.tokens.peek()) {
+          const out = this.tokens.shift();
+          if (out === undefined) throw Error;
+          this.curTokens.push(out);
+          return out;
+        }
+      }
+      // env.report("unexpected symbol: " + this.tokens.peek());
+      throw Error("unexpected symbol: " + this.tokens.peek());
     }
   }
 }

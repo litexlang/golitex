@@ -1,5 +1,3 @@
-import { ConceptAliasNode } from "./L_Nodes";
-
 export const specialChars = [
   "(",
   ")",

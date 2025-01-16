@@ -4,7 +4,7 @@ import * as L_Memory from "./L_Memory";
 import * as L_Nodes from "./L_Nodes";
 import * as L_Report from "./L_Report";
 import { L_Out } from "./L_Structs";
-import { L_Singleton, L_Symbol } from "./L_Symbols";
+import { L_Singleton } from "./L_Symbols";
 import { L_FactNode, IfNode, OptFactNode } from "./L_Facts";
 
 export const DEBUG_DICT = {
@@ -113,7 +113,7 @@ function proveContradictExec(
 
 function proveExec(env: L_Env, proveNode: L_Nodes.ProveNode): L_Out {
   try {
-    const newEnv = new L_Env(env);
+    // const newEnv = new L_Env(env);
     if (proveNode.toProve instanceof IfNode) {
       return proveIfExec(env, proveNode);
     } else if (proveNode.toProve instanceof OptFactNode) {

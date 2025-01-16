@@ -8,7 +8,6 @@ import {
 } from "./L_Symbols";
 import { L_KW } from "./L_Keywords";
 import { OptSymbol } from "./L_OptSymbol";
-import exp from "constants";
 
 export abstract class L_FactNode extends L_Node {
   constructor(public isT: boolean) {
@@ -37,7 +36,7 @@ export abstract class LogicVar {
 
 export class SingletonLogicVar extends LogicVar {
   weakEql(env: L_Env, given: L_Symbol): boolean {
-    return true;
+    throw Error(`${env}, ${given}`);
   }
 }
 
@@ -68,12 +67,14 @@ export class CompositeLogicVar extends LogicVar {
 
 export class ConceptLogicVar extends LogicVar {
   weakEql(env: L_Env, given: L_Symbol): boolean {
+    throw Error(`${env}, ${given}`);
     return true;
   }
 }
 
 export class OperatorVar extends LogicVar {
   weakEql(env: L_Env, given: L_Symbol): boolean {
+    throw Error(`${env}, ${given}`);
     return true;
   }
 }
@@ -128,54 +129,53 @@ export abstract class LogicNode extends L_FactNode {
   }
 
   fixUsingIfPrefix(env: L_Env, freeFixPairs: [L_Symbol, L_Symbol][]): boolean {
-    try {
-      let newFreeFixPairs: [L_Symbol, L_Symbol][] = [];
+    const newFreeFixPairs: [L_Symbol, L_Symbol][] = [];
 
-      for (const v of this.vars) {
-        if (v instanceof SingletonLogicVar) {
-          freeFixPairs.push([v.name, v.name.withIfVarPrefix()]);
-        } else if (v instanceof CompositeLogicVar) {
-          newFreeFixPairs.push([v.name, v.name.withIfVarPrefix()]);
-          for (const formFreeVar of v.freeVars) {
-            newFreeFixPairs.push([
-              formFreeVar,
-              new L_Singleton(L_KW.IfVarPrefix + formFreeVar.value),
-            ]);
-          }
-        } else if (v instanceof ConceptLogicVar) {
+    for (const v of this.vars) {
+      if (v instanceof SingletonLogicVar) {
+        freeFixPairs.push([v.name, v.name.withIfVarPrefix()]);
+      } else if (v instanceof CompositeLogicVar) {
+        newFreeFixPairs.push([v.name, v.name.withIfVarPrefix()]);
+        for (const formFreeVar of v.freeVars) {
+          newFreeFixPairs.push([
+            formFreeVar,
+            new L_Singleton(L_KW.IfVarPrefix + formFreeVar.value),
+          ]);
         }
+      } else if (v instanceof ConceptLogicVar) {
+        throw Error();
       }
-
-      // let newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
-      //   e,
-      //   new L_Singleton(L_KW.IfVarPrefix + e.value),
-      // ]);
-      // for (const formReq of this.varsFormReq) {
-      //   for (const formFreeVar of formReq.freeVars) {
-      //     newFreeFixPairs.push([
-      //       formFreeVar,
-      //       new L_Singleton(L_KW.IfVarPrefix + formFreeVar.value),
-      //     ]);
-      //   }
-      // }
-
-      freeFixPairs = [...freeFixPairs, ...newFreeFixPairs];
-      this.req = this.req.map((r) => r.fixByIfVars(env, freeFixPairs));
-      this.onlyIfs = this.onlyIfs.map((onlyIf) =>
-        onlyIf.fixByIfVars(env, freeFixPairs)
-      );
-
-      // this.varsFormReq.forEach((e) => (e.form = e.form.fix(env, freeFixPairs)));
-
-      this.addPrefixToVars(env);
-
-      return true;
-    } catch (error) {
-      return false;
     }
+
+    // let newFreeFixPairs: [L_Symbol, L_Symbol][] = this.vars.map((e) => [
+    //   e,
+    //   new L_Singleton(L_KW.IfVarPrefix + e.value),
+    // ]);
+    // for (const formReq of this.varsFormReq) {
+    //   for (const formFreeVar of formReq.freeVars) {
+    //     newFreeFixPairs.push([
+    //       formFreeVar,
+    //       new L_Singleton(L_KW.IfVarPrefix + formFreeVar.value),
+    //     ]);
+    //   }
+    // }
+
+    freeFixPairs = [...freeFixPairs, ...newFreeFixPairs];
+    this.req = this.req.map((r) => r.fixByIfVars(env, freeFixPairs));
+    this.onlyIfs = this.onlyIfs.map((onlyIf) =>
+      onlyIf.fixByIfVars(env, freeFixPairs)
+    );
+
+    // this.varsFormReq.forEach((e) => (e.form = e.form.fix(env, freeFixPairs)));
+
+    this.addPrefixToVars(env);
+
+    return true;
   }
 
-  makeFreeFixPairs(env: L_Env) {}
+  makeFreeFixPairs(env: L_Env) {
+    throw Error(`${env}`);
+  }
 
   static makeFreeFixPairs(
     env: L_Env,
@@ -305,7 +305,7 @@ export class IfNode extends LogicNode {
   }
 
   override toString() {
-    let varsFormReqStr: string = "";
+    const varsFormReqStr: string = "";
 
     const mainPart = `if ${this.vars.toString()} ${varsFormReqStr}: ${
       this.req
@@ -372,7 +372,7 @@ export class OptFactNode extends L_FactNode {
   ): OptFactNode {
     const newVars: L_Symbol[] = [];
     for (let v of this.vars) {
-      let fixed = false;
+      const fixed = false;
       v = v.fix(env, freeFixPairs); // if v is singleton, then fix itself; if v is composite, then fix its variables.
       if (!fixed) newVars.push(v);
     }
@@ -442,11 +442,12 @@ export class IsConceptNode extends BuiltinCheckNode {
     env: L_Env,
     freeFixPairs: [L_Symbol, L_Symbol][]
   ): L_FactNode {
-    return this;
+    throw Error(`${env}, ${freeFixPairs}`);
+    // return this;
   }
 
   fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
-    return this;
+    throw Error(`${env}, ${freeFixMap}`);
   }
 
   toString() {
@@ -471,6 +472,7 @@ export class IsFormNode extends BuiltinCheckNode {
   }
 
   fixOpt(env: L_Env, freeFixMap: Map<string, string>): L_FactNode {
+    throw Error(`${env}, ${freeFixMap}`);
     return this;
   }
 
