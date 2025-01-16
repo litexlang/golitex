@@ -1,6 +1,6 @@
-Concept Group[G]:
-  // concept 下的have会让这个G绑定下面出现的opt和var，可以用.调用
-  have fn *(x G, y G) G, fn inv(x G) G, var 1 G :
+Concept Group(G):
+  // 语义：concept 下的exist会让这个G绑定下面出现的opt和var，可以用.调用
+  exist fn *(x G, y G) G, fn inv(x G) G, var 1 G :
     if x G, y G:
       (x * y) * z = x * (y * z)
     if x G:
@@ -19,23 +19,20 @@ local:
   if x G, y G:
     x * y = y * x
 
-Concept AbelianGroup inherit Group G:
+Concept AbelianGroup(G):
+  G is Group // extends 就直接继承来 后面写的concept 的内容了。这种操作 和 is 很像，不知道是否要引入extends关键词
   G is Abelian
 
-Concept M Monoid:
-  fn *(x M,y M) M
-
-  var 1 M;
+Concept Monoid(M):
+  exist fn *(x M,y M) M, var 1 M:
+    if x M, y M:
+      (x * y) * z = x * (y * z)
+    if x M:
+      M.1 * x = x * M.1
   
-  if x M, y M:
-    (x * y) * z = x * (y * z)
-  if x M:
-    M.1 * x = x * M.1
-
-Concept M Semigroup:
-  fn *(x M,y M) M;
-
-  if x M, y M:
+Concept Semigroup(M):
+  exist fn *(x M,y M) M:
+    if x M, y M:
       (x * y) * z = x * (y * z)
 
 Property injective(F fn(x var) var):
@@ -43,7 +40,7 @@ Property injective(F fn(x var) var):
       x = y
 
 Property surjective(F fn(x var) var):
-  if y var:: F.image.has(y):
+  if y var:: F.images.has(y):
     exist x var:
       F(x) = y
 
