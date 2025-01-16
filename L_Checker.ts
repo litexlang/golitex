@@ -1,7 +1,6 @@
 import {
   AndToCheckNode,
   BuiltinCheckNode,
-  FormulaSubNode,
   IfNode,
   IsFormNode,
   IsConceptNode,
@@ -15,13 +14,11 @@ import {
   SingletonLogicVar,
   CompositeLogicVar,
   LogicVar,
-  ConceptLogicVar,
 } from "./L_Facts";
 import { L_Env } from "./L_Env";
 import {
   FormulaKnownFactReq,
   IfKnownFactReq,
-  L_KnownFactReq,
   L_Out,
   OptKnownFactReq,
 } from "./L_Structs";
@@ -65,9 +62,9 @@ function checkOptFact(env: L_Env, toCheck: OptFactNode): L_Out {
     if (!concept.commutative) {
       return checkOptFactNotCommutatively(env, toCheck);
     } else {
-      let out = checkOptFactNotCommutatively(env, toCheck);
+      const out = checkOptFactNotCommutatively(env, toCheck);
       if (out === L_Out.True || out === L_Out.Error) return out;
-      let interchanged = toCheck.copyCommutatively();
+      const interchanged = toCheck.copyCommutatively();
       if (interchanged === undefined) {
         return L_Out.Error;
       }
@@ -141,7 +138,8 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
 
     const relatedKnownFacts = env.tryGetFacts(toCheck.optSymbol.name);
     if (relatedKnownFacts === undefined) {
-      return useLibToCheckOpt(env, toCheck);
+      return L_Out.Unknown;
+      // return useLibToCheckOpt(env, toCheck);
     }
 
     //* First check opt-type facts then check if-type facts so that I can check if x: p(x) {p(x)};
@@ -173,7 +171,8 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
       }
     }
 
-    return useLibToCheckOpt(env, toCheck);
+    return L_Out.Unknown;
+    // return useLibToCheckOpt(env, toCheck);
   } catch {
     return L_ReportCheckErr(env, checkOptFactNotCommutatively, toCheck);
   }
@@ -243,7 +242,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
     try {
       // TODO: I guess in the future I should remove givenOpt.checkVars.length === 0
 
-      let roots: L_FactNode[] = known.req;
+      const roots: L_FactNode[] = known.req;
 
       let successful = true;
       let freeFixedPairs: [L_Symbol, L_Symbol][] = [];
@@ -338,7 +337,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
           }
         } else if (layer instanceof FormulaFactNode) {
           // ! 这里利用了Formula里不能用if的特性。这个约定可能未来就没了。事实上这里不用检查，因为 roots 在filter的时候已经相当于检查过了。放在这里只是为了自我提醒
-          let nextLayers = roots.slice(layerNum);
+          const nextLayers = roots.slice(layerNum);
 
           // fix every layer. the reason why we can not use known = nextLayers.map(e => e.fix(newEnv, freeFixedPairs)) as parameter of new FormulaKnownFactReq(known) is that address of left right does not correspond to layers of ToCheckNeck in that known array
           nextLayers[0] = nextLayers[0].fixByIfVars(newEnv, freeFixedPairs);
@@ -403,7 +402,7 @@ function checkOptFactNotCommutatively(env: L_Env, toCheck: OptFactNode): L_Out {
 
       let curEnv = new L_Env(env);
       for (let i = 0; i < known.req.length - 1; i++) {
-        let curReq = known.req[i];
+        const curReq = known.req[i];
 
         if (curReq instanceof OrToCheckNode) {
           const out = curReq.getWhereIsGivenFactAndAnotherBranch(
@@ -555,107 +554,93 @@ function checkToCheckFormula(env: L_Env, toCheck: FormulaFactNode): L_Out {
 //   }
 // }
 
-function useLibToCheckOpt(env: L_Env, opt: OptFactNode) {
-  try {
-    const paths = env.getIncludes();
+// function useLibToCheckOpt(env: L_Env, opt: OptFactNode) {
+//   try {
+//     const paths = env.getIncludes();
 
-    for (const path of paths) {
-      // Synchronously require the module
-      const external = require(path);
+//     for (const path of paths) {
+//       // Synchronously require the module
+//       const external = require(path);
 
-      // Assuming external is a module with functions, define the type
-      type ExternalModule = {
-        [key: string]: (...args: any[]) => any; // This defines that the module has string keys, and each value is a function
-      };
+//       // Assuming external is a module with functions, define the type
+//       type ExternalModule = {
+//         [key: string]: (...args: any[]) => any; // This defines that the module has string keys, and each value is a function
+//       };
 
-      const typedExternal = external as ExternalModule;
+//       const typedExternal = external as ExternalModule;
 
-      // Iterate over all properties in the typed external object
-      for (const prop in typedExternal) {
-        if (typeof typedExternal[prop] === "function") {
-          // console.log(`Found function: ${prop}`);
-          // You can call the function here if needed
-          const out = typedExternal[prop](env, opt); // Uncomment to run the function
-          if (out === L_Out.True || out === L_Out.False || out === L_Out.Error)
-            return out;
-        }
-      }
-    }
+//       // Iterate over all properties in the typed external object
+//       for (const prop in typedExternal) {
+//         if (typeof typedExternal[prop] === "function") {
+//           // console.log(`Found function: ${prop}`);
+//           // You can call the function here if needed
+//           const out = typedExternal[prop](env, opt); // Uncomment to run the function
+//           if (out === L_Out.True || out === L_Out.False || out === L_Out.Error)
+//             return out;
+//         }
+//       }
+//     }
 
-    return L_Out.Unknown;
-  } catch (err) {
-    env.report(`加载模块失败: ${err}`);
-    return L_Out.Error;
-  }
-}
+//     return L_Out.Unknown;
+//   } catch (err) {
+//     env.report(`加载模块失败: ${err}`);
+//     return L_Out.Error;
+//   }
+// }
 
 function checkIsConcept(env: L_Env, toCheck: IsConceptNode): L_Out {
-  try {
-    if (env.getConcept(toCheck.concept) === undefined) {
-      throw Error(`${toCheck.concept} is not a declared concept.`);
-    }
-
-    return L_Out.True;
-  } catch (error) {
-    throw error;
+  if (env.getConcept(toCheck.concept) === undefined) {
+    throw Error(`${toCheck.concept} is not a declared concept.`);
   }
+
+  return L_Out.True;
 }
 
 function checkIsForm(env: L_Env, toCheck: IsFormNode): L_Out {
-  try {
-    let correctForm = false;
-    if (
-      toCheck.baseline.values.every(
-        (e: L_Symbol) => e instanceof L_Singleton
-      ) &&
-      toCheck.candidate instanceof L_Composite &&
-      toCheck.candidate.name === toCheck.baseline.name &&
-      toCheck.candidate.values.length === toCheck.baseline.values.length
-    ) {
-      correctForm = true;
-    }
-
-    if (!correctForm) return L_Out.Unknown;
-
-    const freeFix: [L_Symbol, L_Symbol][] = [];
-    for (let i = 0; i < (toCheck.candidate as L_Composite).values.length; i++) {
-      freeFix.push([
-        toCheck.baseline.values[i],
-        (toCheck.candidate as L_Composite).values[i],
-      ]);
-    }
-
-    for (const fact of toCheck.facts) {
-      const fixed = fact.fixByIfVars(env, freeFix);
-      let out: L_Out = L_Out.Error;
-      out = checkFact(env, fixed);
-
-      if (out !== L_Out.True) {
-        env.report(`[Error] failed to check ${fixed}`);
-        return L_Out.Unknown;
-      }
-    }
-
-    return L_Out.True;
-  } catch (error) {
-    throw error;
+  let correctForm = false;
+  if (
+    toCheck.baseline.values.every((e: L_Symbol) => e instanceof L_Singleton) &&
+    toCheck.candidate instanceof L_Composite &&
+    toCheck.candidate.name === toCheck.baseline.name &&
+    toCheck.candidate.values.length === toCheck.baseline.values.length
+  ) {
+    correctForm = true;
   }
+
+  if (!correctForm) return L_Out.Unknown;
+
+  const freeFix: [L_Symbol, L_Symbol][] = [];
+  for (let i = 0; i < (toCheck.candidate as L_Composite).values.length; i++) {
+    freeFix.push([
+      toCheck.baseline.values[i],
+      (toCheck.candidate as L_Composite).values[i],
+    ]);
+  }
+
+  for (const fact of toCheck.facts) {
+    const fixed = fact.fixByIfVars(env, freeFix);
+    let out: L_Out = L_Out.Error;
+    out = checkFact(env, fixed);
+
+    if (out !== L_Out.True) {
+      env.report(`[Error] failed to check ${fixed}`);
+      return L_Out.Unknown;
+    }
+  }
+
+  return L_Out.True;
 }
 
 function checkFacts(env: L_Env, toCheck: FactsNode): L_Out {
-  try {
-    const newEnv = new L_Env(env);
-    const newCheckVars = toCheck.varsPairs.map((e) => e.map((v) => v[0]));
+  const newEnv = new L_Env(env);
+  const newCheckVars = toCheck.varsPairs.map((e) => e.map((v) => v[0]));
 
-    for (let fact of toCheck.facts) {
-      // TODO The original source code is changed. It's better to deep copy
-      fact.getRootOptNodes().forEach((e) => (e[0].checkVars = newCheckVars));
-      const out = checkFact(newEnv, fact);
-      if (out !== L_Out.True) return out;
-    }
-
-    return L_Out.True;
-  } catch (error) {
-    throw error;
+  for (const fact of toCheck.facts) {
+    // TODO The original source code is changed. It's better to deep copy
+    fact.getRootOptNodes().forEach((e) => (e[0].checkVars = newCheckVars));
+    const out = checkFact(newEnv, fact);
+    if (out !== L_Out.True) return out;
   }
+
+  return L_Out.True;
 }

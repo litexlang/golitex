@@ -2,7 +2,7 @@ import * as L_Nodes from "./L_Nodes";
 import * as L_Structs from "./L_Structs";
 import { L_KW } from "./L_Keywords";
 import { L_Singleton, L_Symbol } from "./L_Symbols";
-import { EqualSymbol, EqualOptSymbol } from "./L_OptSymbol";
+import { EqualSymbol } from "./L_OptSymbol";
 import * as L_Facts from "./L_Facts";
 
 export class L_Env {
@@ -33,7 +33,7 @@ export class L_Env {
       true,
       undefined
     );
-    const equalOpt = new L_Facts.EqualFact(opt);
+    // const equalOpt = new L_Facts.EqualFact(opt);
     env.tryNewDef(L_KW.Equal, new L_Nodes.DefConceptNode(opt, [], [], true));
 
     return env;
@@ -45,7 +45,7 @@ export class L_Env {
     } else {
       const relatedMap = this.getConceptAlias(node.toBeAliased);
 
-      let originalDef = this.getConcept(node.toBeAliased);
+      const originalDef = this.getConcept(node.toBeAliased);
       if (originalDef === undefined) {
         throw Error(`variable alias ${node.toBeAliased} is not declared.`);
       } else {
