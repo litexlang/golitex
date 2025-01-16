@@ -1,5 +1,4 @@
 import { OptFactNode, L_FactNode } from "./L_Facts";
-import { L_KW } from "./L_Keywords";
 import { L_Node } from "./L_Nodes";
 
 export enum L_Out {

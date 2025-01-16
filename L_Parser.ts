@@ -21,13 +21,7 @@ import * as L_Nodes from "./L_Nodes";
 import { L_Env } from "./L_Env";
 import { builtinFactNames, L_KW } from "./L_Keywords";
 import * as L_Structs from "./L_Structs";
-import {
-  L_Singleton,
-  L_Composite,
-  L_Symbol,
-  L_UndefinedSymbol,
-  IndexedSymbol,
-} from "./L_Symbols";
+import { L_Singleton, L_Composite, L_Symbol, IndexedSymbol } from "./L_Symbols";
 import { messageParsingError } from "./L_Report";
 import * as L_Report from "./L_Report";
 import { tryNewFact } from "./L_Memory";
@@ -230,20 +224,16 @@ export class Skipper {
 
 // used in regex parser
 function skipString(tokens: L_Tokens): string {
-  try {
-    if (tokens.peek() === '"') tokens.shift();
-    else throw Error();
-    let out = "";
-    while (!isCurToken(tokens, '"')) {
-      out += tokens.peek();
-      tokens.shift();
-    }
-    if (tokens.peek() === '"') tokens.shift();
-    else throw Error();
-    return out;
-  } catch (error) {
-    throw Error();
+  if (tokens.peek() === '"') tokens.shift();
+  else throw Error();
+  let out = "";
+  while (!isCurToken(tokens, '"')) {
+    out += tokens.peek();
+    tokens.shift();
   }
+  if (tokens.peek() === '"') tokens.shift();
+  else throw Error();
+  return out;
 }
 
 function isCurToken(tokens: L_Tokens, str: string | string[]) {
@@ -292,7 +282,7 @@ function knowParse(env: L_Env, tokens: L_Tokens): null {
   try {
     skipper.skip(L_KW.Know);
     const names: string[] = [];
-    let facts = parseFactsArrCheckVarsDeclFixIfPrefix(env, tokens, [
+    const facts = parseFactsArrCheckVarsDeclFixIfPrefix(env, tokens, [
       L_KW.L_End,
     ]);
     skipper.skip(L_KW.L_End);
@@ -327,7 +317,7 @@ function letParse(env: L_Env, tokens: L_Tokens): null {
     skipper.skip(L_KW.Let);
 
     const vars: string[] = [];
-    while (![L_KW.L_End, , ":"].includes(tokens.peek())) {
+    while (![L_KW.L_End, ":"].includes(tokens.peek())) {
       vars.push(skipper.skip());
       if (isCurToken(tokens, ",")) skipper.skip(",");
     }
@@ -428,8 +418,6 @@ function proveParse(env: L_Env, tokens: L_Tokens): L_Nodes.ProveNode {
 }
 
 function formulaSubNodeParse(env: L_Env, tokens: L_Tokens): FormulaSubNode {
-  const skipper = new Skipper(env, tokens);
-
   try {
     // parse boolean factual formula
     if (isCurToken(tokens, "(")) {
@@ -489,66 +477,56 @@ function factParse(env: L_Env, tokens: L_Tokens): L_FactNode {
   function allFactParse(env: L_Env, tokens: L_Tokens): FactsNode {
     const skipper = new Skipper(env, tokens);
 
-    try {
-      skipper.skip(L_KW.All);
-      const vars = arrParse<L_Symbol>(
-        env,
-        tokens,
-        SymbolParser.symbolParse,
-        L_KW.Are
-      );
-      skipper.skip(L_KW.Are);
-      const opt = optSymbolParse(env, tokens);
-      const facts = vars.map((e) => new OptFactNode(opt, [e], true, undefined));
-      return new FactsNode([], facts, true);
-    } catch (error) {
-      throw error;
-    }
+    skipper.skip(L_KW.All);
+    const vars = arrParse<L_Symbol>(
+      env,
+      tokens,
+      SymbolParser.symbolParse,
+      L_KW.Are
+    );
+    skipper.skip(L_KW.Are);
+    const opt = optSymbolParse(env, tokens);
+    const facts = vars.map((e) => new OptFactNode(opt, [e], true, undefined));
+    return new FactsNode([], facts, true);
   }
 
   function factsNodeParse(env: L_Env, tokens: L_Tokens): FactsNode {
     const skipper = new Skipper(env, tokens);
 
-    try {
-      skipper.skip(L_KW.LBracket);
-      const varsArrArr: [L_Singleton, L_Symbol][][] = [];
-      while (!isCurToken(tokens, L_KW.RBracket)) {
-        const varsArr: [L_Singleton, L_Symbol][] = [];
-        while (!isCurToken(tokens, [L_KW.L_End, L_KW.RBracket])) {
-          const single = SymbolParser.singletonParse(env, tokens);
+    skipper.skip(L_KW.LBracket);
+    const varsArrArr: [L_Singleton, L_Symbol][][] = [];
+    while (!isCurToken(tokens, L_KW.RBracket)) {
+      const varsArr: [L_Singleton, L_Symbol][] = [];
+      while (!isCurToken(tokens, [L_KW.L_End, L_KW.RBracket])) {
+        const single = SymbolParser.singletonParse(env, tokens);
 
-          // [key: value, key] is both ok. If there is only key, then its value is key itself.
-          let symbol: L_Symbol;
-          if (isCurToken(tokens, L_KW.Colon)) {
-            skipper.skip(L_KW.Colon);
-            symbol = SymbolParser.symbolParse(env, tokens);
-          } else {
-            symbol = single;
-          }
-
-          varsArr.push([single, symbol]);
-          if (isCurToken(tokens, L_KW.Comma)) skipper.skip(L_KW.Comma);
+        // [key: value, key] is both ok. If there is only key, then its value is key itself.
+        let symbol: L_Symbol;
+        if (isCurToken(tokens, L_KW.Colon)) {
+          skipper.skip(L_KW.Colon);
+          symbol = SymbolParser.symbolParse(env, tokens);
+        } else {
+          symbol = single;
         }
-        varsArrArr.push(varsArr);
-        if (isCurToken(tokens, L_KW.L_End)) skipper.skip(L_KW.L_End);
-      }
 
-      skipper.skip(L_KW.RBracket);
-      skipper.skip(L_KW.LCurlyBrace);
-      const facts = arrParse<L_FactNode>(env, tokens, factParse, [
-        L_KW.RCurlyBrace,
-      ]);
-      skipper.skip(L_KW.RCurlyBrace);
-      return new FactsNode(varsArrArr, facts, true);
-    } catch (error) {
-      throw error;
+        varsArr.push([single, symbol]);
+        if (isCurToken(tokens, L_KW.Comma)) skipper.skip(L_KW.Comma);
+      }
+      varsArrArr.push(varsArr);
+      if (isCurToken(tokens, L_KW.L_End)) skipper.skip(L_KW.L_End);
     }
+
+    skipper.skip(L_KW.RBracket);
+    skipper.skip(L_KW.LCurlyBrace);
+    const facts = arrParse<L_FactNode>(env, tokens, factParse, [
+      L_KW.RCurlyBrace,
+    ]);
+    skipper.skip(L_KW.RCurlyBrace);
+    return new FactsNode(varsArrArr, facts, true);
   }
 }
 
 function builtinFunctionParse(env: L_Env, tokens: L_Tokens): L_FactNode {
-  const skipper = new Skipper(env, tokens);
-
   try {
     switch (tokens.peek(1)) {
       case L_KW.isConcept:
@@ -585,8 +563,8 @@ function parseFactFormula(
   }
 
   let left: FormulaSubNode = formulaSubNodeParse(env, tokens);
-  let curOpt = skipper.skip([L_KW.Or, L_KW.And]);
-  let curPrecedence = precedence.get(curOpt) as number;
+  const curOpt = skipper.skip([L_KW.Or, L_KW.And]);
+  const curPrecedence = precedence.get(curOpt) as number;
 
   if (isCurToken(tokens, end)) {
     skipper.skip(end);
@@ -606,8 +584,8 @@ function parseFactFormula(
   }
 
   while (!isCurToken(tokens, end)) {
-    let nextOpt = skipper.skip([L_KW.Or, L_KW.And]);
-    let nextPrecedence = precedence.get(nextOpt) as number;
+    const nextOpt = skipper.skip([L_KW.Or, L_KW.And]);
+    const nextPrecedence = precedence.get(nextOpt) as number;
     if (curPrecedence > nextPrecedence) {
       // this is true, of course. there are only 2 opts, and andPrecedence > orPrecedence
       if (curOpt === L_KW.And) {
@@ -645,8 +623,6 @@ function factsArrParse(
   tokens: L_Tokens,
   end: string[]
 ): L_FactNode[] {
-  const skipper = new Skipper(env, tokens);
-
   try {
     const out = arrParse<L_FactNode>(env, tokens, factParse, end);
     return out;
@@ -863,7 +839,7 @@ function defOperatorParse(env: L_Env, tokens: L_Tokens): null {
       return null;
     } catch (error) {
       L_Report.L_ReportErr(env, defCompositeExec, node);
-      return null;
+      throw error;
     }
   }
 }
@@ -937,7 +913,7 @@ export function letsParse(env: L_Env, tokens: L_Tokens): null {
       node = new L_Nodes.LetsNode(name, regex, []);
     }
 
-    const out = letsExec(env, node);
+    letsExec(env, node);
     return null;
   } catch (error) {
     messageParsingError(letsParse, error);
@@ -986,7 +962,7 @@ export function includeParse(env: L_Env, tokens: L_Tokens): null {
         return null;
       } catch (error) {
         L_Report.L_ReportErr(env, includeExec, node);
-        return null;
+        throw error;
       }
     }
   } catch (error) {
@@ -1047,7 +1023,7 @@ export function defLiteralOperatorParse(env: L_Env, tokens: L_Tokens): null {
       return null;
     } catch (error) {
       L_Report.L_ReportErr(env, defLiteralOptExec, node);
-      return null;
+      throw error;
     }
   }
 }
@@ -1120,7 +1096,7 @@ export function letAliasParse(env: L_Env, tokens: L_Tokens): null {
 
     const node = new L_Nodes.LetAliasNode(name, toBeAliased);
 
-    const out = letAliasExec(env, node);
+    letAliasExec(env, node);
     // L_Report.reportL_Out(env, out, node);
     return null;
 
@@ -1149,7 +1125,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
   const skipper = new Skipper(env, tokens);
 
   try {
-    let isT = true;
+    const isT = true;
 
     //TODO CheckVars not implemented
 
@@ -1166,7 +1142,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
       );
       skipper.skip(L_KW.RBrace);
 
-      let checkVars = checkVarsParse();
+      const checkVars = checkVarsParse();
 
       return resolveReturn(new OptFactNode(optSymbol, vars, isT, checkVars));
     } else {
@@ -1178,7 +1154,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
           const optName = skipper.skip();
           // skipper.skip(  L_Keywords.FunctionalStructuredFactOptPrefix);
           const optSymbol = new OptSymbol(optName);
-          let checkVars = checkVarsParse();
+          const checkVars = checkVarsParse();
 
           return new OptFactNode(optSymbol, [var1], isT, checkVars);
         }
@@ -1187,7 +1163,7 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
           const optName = skipper.skip();
           const optSymbol = new OptSymbol(optName);
           const var2 = SymbolParser.symbolParse(env, tokens);
-          let checkVars = checkVarsParse();
+          const checkVars = checkVarsParse();
 
           return resolveReturn(
             new OptFactNode(optSymbol, [var1, var2], isT, checkVars)
@@ -1234,8 +1210,6 @@ function optFactParse(env: L_Env, tokens: L_Tokens): OptFactNode {
 }
 
 function ifParse(env: L_Env, tokens: L_Tokens): IfNode {
-  const skipper = new Skipper(env, tokens);
-
   try {
     const out = VanillaParser.ifParse(env, tokens);
     if (!out.fixUsingIfPrefix(env, [])) throw Error();
@@ -1255,8 +1229,6 @@ function parseFactsArrCheckVarsDeclFixIfPrefix(
   end: string[],
   moreVars?: L_Singleton[]
 ): L_FactNode[] {
-  const skipper = new Skipper(env, tokens);
-
   const newEnv = new L_Env(env);
   if (moreVars) {
     for (const moreVar of moreVars) {
@@ -1354,7 +1326,7 @@ class VanillaParser {
     function parseBracketVars(env: L_Env, tokens: L_Tokens): CompositeLogicVar {
       skipper.skip(L_KW.LBracket);
       const singleton = SymbolParser.singletonParse(env, tokens);
-      const key = singleton;
+      // const key = singleton;
       skipper.skip(L_KW.LBrace);
       const freeVars = arrParse<L_Singleton>(
         env,
@@ -1373,6 +1345,7 @@ class VanillaParser {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace SymbolParser {
   export function symbolParse(env: L_Env, tokens: L_Tokens): L_Symbol {
     const skipper = new Skipper(env, tokens);
@@ -1474,28 +1447,28 @@ namespace SymbolParser {
         throw Error();
       }
 
-      const external = require(defLiteralOpt.path);
-      type ExternalModule = {
-        [key: string]: (...args: any[]) => any;
-      };
+      // const external = require(defLiteralOpt.path);
+      // type ExternalModule = {
+      //   [key: string]: (...args: any[]) => any;
+      // };
 
-      const typedExternal = external as ExternalModule;
+      // const typedExternal = external as ExternalModule;
 
-      let out: L_Symbol | undefined = undefined;
-      for (const prop in typedExternal) {
-        if (
-          typeof typedExternal[prop] === "function" &&
-          prop === defLiteralOpt.name
-        ) {
-          out = typedExternal[prop](env, ...parameters);
-          if (out instanceof L_UndefinedSymbol) {
-            env.report(`Invalid call of ${defLiteralOpt.name}`);
-            throw Error();
-          } else {
-            return out as L_Symbol;
-          }
-        }
-      }
+      // let out: L_Symbol | undefined = undefined;
+      // for (const prop in typedExternal) {
+      //   if (
+      //     typeof typedExternal[prop] === "function" &&
+      //     prop === defLiteralOpt.name
+      //   ) {
+      //     out = typedExternal[prop](env, ...parameters);
+      //     if (out instanceof L_UndefinedSymbol) {
+      //       env.report(`Invalid call of ${defLiteralOpt.name}`);
+      //       throw Error();
+      //     } else {
+      //       return out as L_Symbol;
+      //     }
+      //   }
+      // }
 
       env.report(`literal operator ${defLiteralOpt.name} undeclared`);
       throw Error();
@@ -1526,6 +1499,7 @@ namespace SymbolParser {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function usePrecedenceToParseComposite(
     env: L_Env,
     tokens: L_Tokens,

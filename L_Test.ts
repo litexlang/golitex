@@ -1,7 +1,7 @@
 import { ExampleItem } from "./L_Structs";
 import { L_Env } from "./L_Env";
 import * as fs from "fs";
-import { runString, runStringWithLogging } from "./L_Runner";
+import { runStringWithLogging } from "./L_Runner";
 
 const exampleList: ExampleItem[] = [
   {

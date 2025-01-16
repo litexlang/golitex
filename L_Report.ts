@@ -6,6 +6,7 @@ import { L_Tokens } from "./L_Lexer";
 import { L_Node } from "./L_Nodes";
 import { Skipper } from "./L_Parser";
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 function reportFailedFunc(func: Function): string {
   return `<${func.name}> Failed`;
 }
@@ -86,6 +87,7 @@ export function reportFailedFunctionName(
 
 export function L_ReportErr(
   env: L_Env,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   func: Function,
   node?: L_Node | string,
   err?: unknown
@@ -98,6 +100,7 @@ export function L_ReportErr(
 
 export function L_ReportCheckErr(
   env: L_Env,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   func: Function,
   node?: L_Node | string
 ): L_Out {
@@ -108,6 +111,7 @@ export function L_ReportCheckErr(
 
 export function L_ReportBoolErr(
   env: L_Env,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   func: Function,
   node?: L_Node | string
 ): boolean {
@@ -120,6 +124,7 @@ export function L_ReportBoolErr(
 export function L_ReportParserErr(
   env: L_Env,
   tokens: L_Tokens,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   func: Function,
   skipper: Skipper,
   error?: unknown
@@ -135,6 +140,7 @@ export function L_ReportParserErr(
 
 export function L_VarsInOptNotDeclaredBool(
   env: L_Env,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   func: Function,
   node: L_FactNode | L_Symbol,
   error?: unknown
@@ -157,6 +163,7 @@ export function L_VarsInOptNotDeclaredBool(
 
 export function L_VarsInOptDoubleDeclErr(
   env: L_Env,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   func: Function,
   symbol: L_Symbol
 ): boolean {
@@ -167,6 +174,7 @@ export function messageVarNotDeclared(varNotDeclared: string): string {
   return `Variable Not Declared: ${varNotDeclared}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export function messageParsingError(func: Function, err: unknown): void {
   const out = `Parser Error: Invalid call of ${func.name}.\n`;
   if (err instanceof Error) err.message = out + err.message;

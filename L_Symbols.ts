@@ -6,8 +6,6 @@ import {
 } from "./L_Report";
 import {
   LogicNode,
-  OptFactNode,
-  L_FactNode,
   IfNode,
   SingletonLogicVar,
   CompositeLogicVar,
@@ -133,19 +131,19 @@ export abstract class L_Symbol {
       expected: L_Symbol
     ): boolean {
       if (given instanceof L_Singleton && env.isAlias(given.value)) {
-        for (const alias of env.getAlias(given.value) as L_Symbol[]) {
-          if (L_Symbol.literalEql(env, given, expected, false)) {
-            return true;
-          }
+        // for (const alias of env.getAlias(given.value) as L_Symbol[]) {
+        if (L_Symbol.literalEql(env, given, expected, false)) {
+          return true;
         }
+        // }
       }
 
       if (expected instanceof L_Singleton && env.isAlias(expected.value)) {
-        for (const alias of env.getAlias(expected.value) as L_Symbol[]) {
-          if (L_Symbol.literalEql(env, given, expected, false)) {
-            return true;
-          }
+        // for (const alias of env.getAlias(expected.value) as L_Symbol[]) {
+        if (L_Symbol.literalEql(env, given, expected, false)) {
+          return true;
         }
+        // }
       }
 
       return false;
@@ -228,7 +226,7 @@ export abstract class L_Symbol {
       expected: L_Symbol
     ): boolean {
       if (given instanceof L_Singleton && expected instanceof L_Singleton) {
-        let relatedLets = env.getLetsVar(expected.value);
+        const relatedLets = env.getLetsVar(expected.value);
         if (relatedLets !== undefined) {
           if (relatedLets.regex.test(given.value)) return true;
         }
@@ -246,11 +244,11 @@ export class L_UndefinedSymbol extends L_Symbol {
   }
 
   tryVarsDeclared(env: L_Env): boolean {
-    throw Error();
+    throw Error(`${env}`);
   }
 
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
-    throw Error();
+    throw Error(`${env}, ${freeFixedPairs}`);
   }
 }
 
@@ -286,8 +284,8 @@ export class L_Singleton extends L_Symbol {
   }
 }
 
-const ExistSymbol = new L_Singleton(L_KW.ExistSymbol);
-const AnySymbol = new L_Singleton(L_KW.And);
+// const ExistSymbol = new L_Singleton(L_KW.ExistSymbol);
+// const AnySymbol = new L_Singleton(L_KW.And);
 
 export class IndexedSymbol extends L_Symbol {
   constructor(public given: L_Symbol, public indexes: number[]) {
@@ -312,6 +310,7 @@ export class IndexedSymbol extends L_Symbol {
 
   // ! IndexedSymbol fix has 2 effects: 1. fix frees 2. return the symbol under the index
   fix(env: L_Env, freeFixedPairs: [L_Symbol, L_Symbol][]): L_Symbol {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let out: IndexedSymbol = this;
 
     for (const freeFixed of freeFixedPairs) {
@@ -360,6 +359,7 @@ export class L_Composite extends L_Symbol {
     const indexes = this.extractGivenSingletonIndexArr(env, given);
     if (!indexes) throw Error();
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let fixedSymbol: L_Symbol = this;
     for (const index of indexes[0]) {
       fixedSymbol = (fixedSymbol as L_Composite).values[index];
@@ -367,6 +367,7 @@ export class L_Composite extends L_Symbol {
 
     //! 这里没考虑到可能的 同一个 a 有多个实现，且多个实现并不相等
     for (let i = 1; i < indexes.length; ++i) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       let curSymbol: L_Symbol = this;
       for (const index of indexes[i]) {
         curSymbol = (curSymbol as L_Composite).values[index];
@@ -403,6 +404,7 @@ export class L_Composite extends L_Symbol {
   }
 
   getIndexedSubNode(indexes: number[]): L_Symbol {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let curComposite: L_Composite = this;
     for (let i = 0; i < indexes.length - 1; i++) {
       const cur = curComposite.values[indexes[i]];
