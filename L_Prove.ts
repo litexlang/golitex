@@ -1,7 +1,7 @@
 import { L_Out } from "./L_Structs";
 import { L_Env } from "./L_Env";
 import { L_Exec } from "./L_Executor";
-import { OptFactNode, L_FactNode } from "./L_Facts";
+import { OptFactNode } from "./L_Facts";
 import { L_Node } from "./L_Nodes";
 import * as L_Checker from "./L_Checker";
 import * as L_Memory from "./L_Memory";

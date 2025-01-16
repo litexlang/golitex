@@ -4,16 +4,15 @@ import * as L_Executor from "./L_Executor";
 import * as L_Parser from "./L_Parser";
 import * as fs from "fs";
 import { L_Tokens } from "./L_Lexer";
-import { L_UndefinedSymbol } from "./L_Symbols";
 
-const printEveryThing = true;
+// const printEveryThing = true;
 
 export function runString(env: L_Env, expr: string): L_Out[] | undefined {
   try {
     const tokens = new L_Tokens(expr);
 
     while (!tokens.isEnd()) {
-      const start = tokens.curTokIndex();
+      // const start = tokens.curTokIndex();
       const node = L_Parser.parseSingleNode(env, tokens);
 
       if (node === null) {
@@ -76,7 +75,7 @@ export function runFileWithLogging(
   fileName: string
 ): L_Out[] | undefined {
   try {
-    let fileContent: string = "";
+    const fileContent: string = "";
     fs.writeFileSync(fileName, fileContent, "utf8");
     // const fileContent = Deno.readTextFileSync(fileName);
     console.log(`Running file: ${fileName}\n`);
