@@ -15,6 +15,8 @@ Concept Group(G):
 property Abelian[G Group]():
   if x G, y G:
     x * y = y * x  
+
+用 set_property 的一大好处是，因为我未来让 如果一个性质只是绑定在一个变量上的，那可以做成method，而 你写成 Abelian[G Group]() 因为 变量压根不出现，所以你 不只是不能写 xxx is Abelian，而且你也不能 向G Group绑定 像方法那样的语法糖了
 */
 
 set_property Abelian(G Group):
