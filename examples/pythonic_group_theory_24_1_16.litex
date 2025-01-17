@@ -9,6 +9,14 @@ Concept Group(G):
       inv(x) * x = G.1
       x * inv(x) = G.1
 
+/* 
+这和 set_property 的一大区别是，你不能写 G is Abelian 了，只能写 $Abelian[G]()了
+
+property Abelian[G Group]():
+  if x G, y G:
+    x * y = y * x  
+*/
+
 set_property Abelian(G Group):
   if x G, y G:
     x * y = y * x
