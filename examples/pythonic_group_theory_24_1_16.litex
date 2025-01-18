@@ -12,6 +12,11 @@ Concept Group(G):
 /* 
 这和 set_property 的一大区别是，你不能写 G is Abelian 了，只能写 $Abelian[G]()了
 
+// 这样的写法就是让 所有的 要求 统一放在()里。但是这样的坏处是，普通变量的 method 写法不行了，因为你如果你是关于变量的性质，那注定又要写类型的类型，又要写类型。即()里有超过一个元素，虽然变量哪怕只有一个
+property Abelian(G Group):
+  if x G, y G:
+    x * y = y * x
+
 property Abelian[G Group]():
   if x G, y G:
     x * y = y * x  
