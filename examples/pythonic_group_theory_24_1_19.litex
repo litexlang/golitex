@@ -1,0 +1,19 @@
+concept Group(G):
+  exist:
+    fn *(x G, y G) G
+    fn inv(x G) G
+    var 1 G
+  
+  facts:
+    if x G, y G:
+      (x * y) * z = x * (y * z)
+    if x G:
+      x * G.1 = G.1 * x
+    if x G:
+      inv(x) * x = G.1
+      x * inv(x) = G.1
+
+set_property Abelian(G Group):
+  if x G, y G:
+    x * y = y * x
+
