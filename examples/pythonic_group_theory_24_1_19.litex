@@ -4,7 +4,7 @@ concept Group(G):
     fn inv(x G) G
     var 1 G
   
-  cprop:
+  ctr:
     if x G, y G:
       (x * y) * z = x * (y * z)
     if x G:
@@ -13,7 +13,7 @@ concept Group(G):
       inv(x) * x = G.1
       x * inv(x) = G.1
 
-cprop Abelian(G Group):
+ctr Abelian(G Group):
   if x G, y G:
     x * y = y * x
 
@@ -24,7 +24,7 @@ local:
     x * y = y * x
 
 concept AbelianGroup(G):
-  cprop:
+  concept_trait:
     G is Group
     G is Abelian
 
@@ -33,15 +33,20 @@ concept Monoid(M):
   fn *(x M,y M) M
   var 1 M
 
-  cprop:
+  concept_trait:
     if x M, y M:
       (x * y) * z = x * (y * z)
     if x M:
       M.1 * x = x * M.1
 
-vprop injective(F fn(x var) var):
+var_trait injective(F fn(x var) var):
   if x var, y var: F(x) = F(y):
       x = y
+
+vtr surjective(F fn(x var) var):
+  if y var:: F.images.has(y):
+    exist x var:
+      F(x) = y
 
 Claim:
   if [G Group] a G, F fn:: F = group_transformation[G](a):
