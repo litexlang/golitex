@@ -4,7 +4,7 @@ concept Group(G):
     fn inv(x G) G
     var 1 G
   
-  facts:
+  cprop:
     if x G, y G:
       (x * y) * z = x * (y * z)
     if x G:
@@ -13,7 +13,54 @@ concept Group(G):
       inv(x) * x = G.1
       x * inv(x) = G.1
 
-set_property Abelian(G Group):
+cprop Abelian(G Group):
   if x G, y G:
     x * y = y * x
 
+local:
+  set_var G Group 
+  know $Abelian(G)
+  if x G, y G:
+    x * y = y * x
+
+concept AbelianGroup(G):
+  cprop:
+    G is Group
+    G is Abelian
+
+concept Monoid(M):
+  exist:
+  fn *(x M,y M) M
+  var 1 M
+
+  cprop:
+    if x M, y M:
+      (x * y) * z = x * (y * z)
+    if x M:
+      M.1 * x = x * M.1
+
+vprop injective(F fn(x var) var):
+  if x var, y var: F(x) = F(y):
+      x = y
+
+Claim:
+  if [G Group] a G, F fn:: F = group_transformation[G](a):
+    F is injective
+prove:
+  if x1 G, x2 G:: F(x1) = F(x2):
+    a * x1 = F(x1)
+    a * x2 = F(x2)
+    a * x1 = a * x2 
+    inv(a) * (a * x2) = inv(a) * (a * x1)
+    inv(a) * (a * x2) = (inv(a) * a) * x2 = 1 * x2 = x2
+    inv(a) * (a * x1) = (inv(a) * a) * x1 = 1 * x1 = x1
+    x2 = x1
+
+import ("nat")
+
+Fn ^(n Nat) F fn (x G) G:
+  ^(++(n))(x) = ^(n)(x) * x
+  ^(0)(x) = G.1
+
+Fn power_of_inverse_is_inverse_of_power[G Group](x G) P Property (n Nat):
+  ^(n)(inv(x)) = inv(^(n)(x))
