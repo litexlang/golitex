@@ -1,4 +1,4 @@
-concept Group(G):
+pub concept Group(G):
   exist:
     fn *(x G, y G) G
     fn inv(x G) G
@@ -18,17 +18,17 @@ ctr Abelian(G Group):
     x * y = y * x
 
 local:
-  set_var G Group 
+  pri set_var G Group 
   know $Abelian(G)
   if x G, y G:
     x * y = y * x
 
-concept AbelianGroup(G):
+pub concept AbelianGroup(G):
   concept_trait:
     G is Group
     G is Abelian
 
-concept Monoid(M):
+pub concept Monoid(M):
   exist:
   fn *(x M,y M) M
   var 1 M
