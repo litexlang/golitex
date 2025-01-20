@@ -1,10 +1,16 @@
+/*
+因为 property 可以是带generic的，而concept相当于给property起了个名字，那concept也应该带generic吗？
+ctrait[]()
+vtrait[]()
+*/
+
 pub concept Group(G):
   exist:
     fn *(x G, y G) G
     fn inv(x G) G
     var 1 G
   
-  ctr:
+  ctrait:
     if x G, y G:
       (x * y) * z = x * (y * z)
     if x G:
@@ -13,7 +19,7 @@ pub concept Group(G):
       inv(x) * x = G.1
       x * inv(x) = G.1
 
-ctr Abelian(G Group):
+ctrait Abelian(G Group):
   if x G, y G:
     x * y = y * x
 
@@ -24,7 +30,7 @@ local:
     x * y = y * x
 
 pub concept AbelianGroup(G):
-  concept_trait:
+  ctrait:
     G is Group
     G is Abelian
 
@@ -33,7 +39,7 @@ pub concept Monoid(M):
   fn *(x M,y M) M
   var 1 M
 
-  concept_trait:
+  ctrait:
     if x M, y M:
       (x * y) * z = x * (y * z)
     if x M:
