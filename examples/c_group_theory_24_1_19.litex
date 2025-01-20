@@ -1,3 +1,5 @@
+// C 版本的看起来不咋地。要添加无数的;和, 让typing变得多，行数变多
+
 pub concept group(G) {
   exist {
     fn *(x G, y G) G,
