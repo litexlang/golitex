@@ -2,6 +2,16 @@
 因为 property 可以是带generic的，而concept相当于给property起了个名字，那concept也应该带generic吗？
 ctrait[]()
 vtrait[]()
+
+property 下面不能有 exist，exist只能出现在concept里
+concept 起到了Namespace + type 的作用
+
+property p()
+property q[]()
+property q[]
+property p() []()
+property q[] []()
+
 */
 
 pub concept Group(G):
