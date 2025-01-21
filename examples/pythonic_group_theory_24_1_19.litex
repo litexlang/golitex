@@ -9,8 +9,14 @@ concept 起到了Namespace + type 的作用
 property p()
 property q[]()
 property q[]
-property p() []()
-property q[] []()
+property () p[]()
+property [] q[]()
+
+claim () claimName[]():
+  ...
+prove
+
+
 
 */
 
