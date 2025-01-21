@@ -16,7 +16,16 @@ claim () claimName[]():
   ...
 prove
 
+暂时不要让 property 变成method
+让property也能绑定 exist
+property name[]():
+  exist:
+    ...
+  property:
+    ...
 
+property name[]():
+  ...
 
 */
 
