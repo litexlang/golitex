@@ -1,0 +1,17 @@
+def f():
+    // asdf
+    print(2)
+
+def g():
+    /*
+    asdf
+    */
+    print(1)
+
+def t():
+    
+    // adf
+    /* adf */
+    print(2)
+
+f()

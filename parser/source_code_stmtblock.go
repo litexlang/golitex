@@ -76,7 +76,7 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 			// 找到 */，可能跨越多行
 			j := i + 1
 			for j < len(lines) {
-				if strings.HasSuffix(trimLine, "*/") {
+				if strings.Contains(lines[j], "*/") {
 					break
 				}
 				j++
@@ -102,25 +102,51 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 			// 如果 trimLine 以 : 结尾，检查下一行的缩进
 			if strings.HasSuffix(trimLine, ":") {
 				i++
-				if i >= len(lines) {
+				// 找到下一个非空、非注释的行
+				nextLineIndex := i
+				for nextLineIndex < len(lines) {
+					nextLine := lines[nextLineIndex]
+					nextTrimLine := strings.TrimSpace(nextLine)
+
+					// 跳过空行和注释
+					if nextTrimLine == "" || strings.HasPrefix(nextTrimLine, "//") {
+						nextLineIndex++
+						continue
+					}
+
+					// 处理多行注释 /* ... */
+					if strings.HasPrefix(nextTrimLine, "/*") {
+						// 找到注释的结束位置 */
+						for nextLineIndex < len(lines) {
+							if strings.Contains(lines[nextLineIndex], "*/") {
+								nextLineIndex++
+								break
+							}
+							nextLineIndex++
+						}
+						continue
+					}
+
+					// 检查下一行的缩进是否等于 currentIndent + parseIndent
+					nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
+					if nextIndent != currentIndent+parseIndent {
+						return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望缩进 %d，实际缩进 %d", trimLine, currentIndent+parseIndent, nextIndent)
+					}
+
+					// 递归解析子块
+					subBlocks, nextIndex, err := parseStmtBlocks(lines, currentIndent+parseIndent, nextLineIndex)
+					if err != nil {
+						return nil, i, err
+					}
+					block.Body = subBlocks
+					i = nextIndex
+					break
+				}
+
+				// 如果没有找到有效的下一行，报错
+				if nextLineIndex >= len(lines) {
 					return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", trimLine)
 				}
-
-				nextLine := lines[i]
-				nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
-
-				// 检查下一行的缩进是否等于 currentIndent + parseIndent
-				if nextIndent != currentIndent+parseIndent {
-					return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望缩进 %d，实际缩进 %d", trimLine, currentIndent+parseIndent, nextIndent)
-				}
-
-				// 递归解析子块
-				subBlocks, nextIndex, err := parseStmtBlocks(lines, currentIndent+parseIndent, i)
-				if err != nil {
-					return nil, i, err
-				}
-				block.Body = subBlocks
-				i = nextIndex
 			} else {
 				// 否则，直接跳过该行
 				i++
