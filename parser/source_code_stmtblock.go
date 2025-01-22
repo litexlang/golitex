@@ -15,12 +15,12 @@ type SourceCodeStmtBlock struct {
 }
 
 // String 方法实现 fmt.Stringer 接口
-func (b SourceCodeStmtBlock) String() string {
+func (b *SourceCodeStmtBlock) String() string {
 	return b.stringWithIndent(0)
 }
 
 // stringWithIndent 递归生成带缩进的字符串表示
-func (b SourceCodeStmtBlock) stringWithIndent(indentLevel int) string {
+func (b *SourceCodeStmtBlock) stringWithIndent(indentLevel int) string {
 	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
 	result := fmt.Sprintf("%s%s\n", indent, b.Header)
 
@@ -33,7 +33,7 @@ func (b SourceCodeStmtBlock) stringWithIndent(indentLevel int) string {
 }
 
 // ParseFile 读取文件并解析为 StmtBlock 结构
-func ParseFile(filePath string) ([]SourceCodeStmtBlock, error) {
+func ParseFile(filePath string) (*SourceCodeStmtBlock, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("无法读取文件: %v", err)
@@ -42,7 +42,7 @@ func ParseFile(filePath string) ([]SourceCodeStmtBlock, error) {
 	lines := strings.Split((string(content)), "\n")
 
 	blocks, _ := parseStmtBlocks(lines, 0, 0)
-	return blocks, nil
+	return &SourceCodeStmtBlock{"", blocks}, nil
 }
 
 func ParseString(content string) ([]SourceCodeStmtBlock, error) {

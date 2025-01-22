@@ -61,7 +61,7 @@ func splitString(inputString string) []string {
 	return result
 }
 
-func TokenizeStmtBlock(b SourceCodeStmtBlock) (TokenStmtBlock, error) {
+func TokenizeStmtBlock(b *SourceCodeStmtBlock) (TokenStmtBlock, error) {
 	var body []TokenStmtBlock
 	var header []string
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
@@ -70,7 +70,7 @@ func TokenizeStmtBlock(b SourceCodeStmtBlock) (TokenStmtBlock, error) {
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Body 进行一些处理
 	// 例如，递归调用 ParseStmtBlock 处理 Body 中的每个元素
 	for _, subBlock := range b.Body {
-		parsedSubBlock, err := TokenizeStmtBlock(subBlock)
+		parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
 		if err != nil {
 			return TokenStmtBlock{}, err
 		}

@@ -6,13 +6,13 @@ import (
 )
 
 func TestLexer(t *testing.T) {
-	blocks, err := ParseFile("../examples/concept.litex")
+	block, err := ParseFile("../examples/concept.litex")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 
-	for _, block := range blocks {
-		fmt.Println(block)
+	for _, block := range block.Body {
+		fmt.Println(block.String())
 	}
 }
 

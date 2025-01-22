@@ -31,7 +31,7 @@ func TestParseStrStmtBlock(t *testing.T) {
 		},
 	}
 
-	parsedBlock, err := TokenizeStmtBlock(input)
+	parsedBlock, err := TokenizeStmtBlock(&input)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

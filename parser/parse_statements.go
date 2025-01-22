@@ -2,23 +2,23 @@ package parser
 
 import "fmt"
 
-func ParseStmt(TokenStmtBlock TokenStmtBlock) (Stmt, error) {
-	switch TokenStmtBlock.Header[0] {
+func ParseStmt(tokenStmtBlock *TokenStmtBlock) (Stmt, error) {
+	switch tokenStmtBlock.Header[0] {
 	case "concept":
-		return ParseConceptStmt(TokenStmtBlock)
+		return parseConceptStmt(tokenStmtBlock)
 	case "property":
-		return ParsePropertyStmt(TokenStmtBlock)
+		return parsePropertyStmt(tokenStmtBlock)
 	default:
-		return nil, fmt.Errorf(`Invalid Statement: %s`, &TokenStmtBlock.Header)
+		return nil, fmt.Errorf("Invalid statement: %s", tokenStmtBlock.String())
 	}
 }
 
-func ParseConceptStmt(TokenStmtBlock TokenStmtBlock) (*DefConceptStmt, error) {
+func parseConceptStmt(tokenStmtBlock *TokenStmtBlock) (*DefConceptStmt, error) {
 	// TODO: Implement parsing logic for concept statement
 	return nil, nil
 }
 
-func ParsePropertyStmt(TokenStmtBlock TokenStmtBlock) (*DefPropertyStmt, error) {
+func parsePropertyStmt(tokenStmtBlock *TokenStmtBlock) (*DefPropertyStmt, error) {
 	// TODO: Implement parsing logic for property statement
 	return nil, nil
 }
