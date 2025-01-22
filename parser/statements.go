@@ -1,8 +1,12 @@
 package parser
 
-import "golitex/symbol"
+import (
+	"fmt"
+	"golitex/symbol"
+)
 
 type Stmt interface {
+	setPubTrue() error
 }
 
 type TypeVarPair struct {
@@ -25,6 +29,11 @@ type DefConceptStmt struct {
 	Facts         []Fact
 }
 
+func (stmt *DefConceptStmt) setPubTrue() error {
+	stmt.pub = true
+	return nil
+}
+
 type DefPropertyStmt struct {
 	pub           bool
 	Name          string
@@ -35,9 +44,19 @@ type DefPropertyStmt struct {
 	Facts         []Fact
 }
 
+func (stmt *DefPropertyStmt) setPubTrue() error {
+	stmt.pub = true
+	return nil
+}
+
 type IfFactStmt struct {
 	pub bool
 	IfFact
+}
+
+func (stmt *IfFactStmt) setPubTrue() error {
+	stmt.pub = true
+	return nil
 }
 
 type IfFact struct {
@@ -53,6 +72,11 @@ type OptFactStmt struct {
 	OptFact
 }
 
+func (stmt *OptFactStmt) setPubTrue() error {
+	stmt.pub = true
+	return nil
+}
+
 type OptFact struct {
 	Name string
 	Args []symbol.Symbol
@@ -60,6 +84,10 @@ type OptFact struct {
 
 type LocalStmt struct {
 	Statements []Stmt
+}
+
+func (stmt *LocalStmt) setPubTrue() error {
+	return fmt.Errorf(`Local statement is by default private.`)
 }
 
 type DefFnStmt struct {
