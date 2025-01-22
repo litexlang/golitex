@@ -40,7 +40,7 @@ func splitString(inputString string) []string {
 	var buffer string
 	for _, char := range inputString {
 		switch char {
-		case '[', ']', '(', ')', ':', '$', ',', '=':
+		case '[', ']', '(', ')', ':', '$', ',', '=', '*', '+', '-', '/':
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""
