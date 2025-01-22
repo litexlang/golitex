@@ -41,18 +41,17 @@ func ParseFile(filePath string) (*SourceCodeStmtBlock, error) {
 
 	lines := strings.Split((string(content)), "\n")
 
-	blocks, _ := parseStmtBlocks(lines, 0, 0)
+	blocks, _, _ := parseStmtBlocks(lines, 0, 0)
 	return &SourceCodeStmtBlock{"", blocks}, nil
 }
 
 func ParseString(content string) ([]SourceCodeStmtBlock, error) {
 	lines := strings.Split((content), "\n")
-	blocks, _ := parseStmtBlocks(lines, 0, 0)
+	blocks, _, _ := parseStmtBlocks(lines, 0, 0)
 	return blocks, nil
 }
 
-func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]SourceCodeStmtBlock, int) {
-
+func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]SourceCodeStmtBlock, int, error) {
 	var blocks []SourceCodeStmtBlock
 	i := startIndex
 
@@ -60,21 +59,21 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 		line := lines[i]
 		trimLine := strings.TrimSpace(line)
 
-		// Skip empty lines
+		// 跳过空行
 		if trimLine == "" {
 			i++
 			continue
 		}
 
-		// skip comments
+		// 跳过单行注释
 		if strings.HasPrefix(trimLine, "//") {
 			i++
 			continue
 		}
 
-		// skip /* */ comments
+		// 跳过多行注释
 		if strings.HasPrefix(trimLine, "/*") {
-			// find the */, maybe */ is on another line
+			// 找到 */，可能跨越多行
 			j := i + 1
 			for j < len(lines) {
 				if strings.HasSuffix(trimLine, "*/") {
@@ -90,7 +89,7 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 
 		// 如果当前行的缩进小于当前块的缩进，返回
 		if indent < currentIndent {
-			return blocks, i
+			return blocks, i, nil
 		}
 
 		// 如果当前行的缩进等于当前块的缩进，创建一个新的块
@@ -100,17 +99,39 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 				Body:   []SourceCodeStmtBlock{},
 			}
 
-			// 递归解析子块
-			i++
-			subBlocks, nextIndex := parseStmtBlocks(lines, currentIndent+parseIndent, i)
-			block.Body = subBlocks
+			// 如果 trimLine 以 : 结尾，检查下一行的缩进
+			if strings.HasSuffix(trimLine, ":") {
+				i++
+				if i >= len(lines) {
+					return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", trimLine)
+				}
+
+				nextLine := lines[i]
+				nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
+
+				// 检查下一行的缩进是否等于 currentIndent + parseIndent
+				if nextIndent != currentIndent+parseIndent {
+					return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望缩进 %d，实际缩进 %d", trimLine, currentIndent+parseIndent, nextIndent)
+				}
+
+				// 递归解析子块
+				subBlocks, nextIndex, err := parseStmtBlocks(lines, currentIndent+parseIndent, i)
+				if err != nil {
+					return nil, i, err
+				}
+				block.Body = subBlocks
+				i = nextIndex
+			} else {
+				// 否则，直接跳过该行
+				i++
+			}
+
 			blocks = append(blocks, block)
-			i = nextIndex
 		} else {
 			// 如果缩进不符合预期，跳过该行
 			i++
 		}
 	}
 
-	return blocks, i
+	return blocks, i, nil
 }

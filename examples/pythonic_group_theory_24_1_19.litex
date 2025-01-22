@@ -1,34 +1,3 @@
-/*
-因为 property 可以是带generic的，而concept相当于给property起了个名字，那concept也应该带generic吗？
-ctrait[]()
-vtrait[]()
-
-property 下面不能有 exist，exist只能出现在concept里
-concept 起到了Namespace + type 的作用
-
-property p()
-property q[]()
-property q[]
-property () p[]()
-property [] q[]()
-
-claim () claimName[]():
-  ...
-prove
-
-暂时不要让 property 变成method
-让property也能绑定 exist
-property name[]():
-  exist:
-    ...
-  property:
-    ...
-
-property name[]():
-  ...
-
-*/
-
 pub concept [G Group]:
   exist:
     fn *(x G, y G) G
@@ -44,39 +13,37 @@ pub concept [G Group]:
       inv(x) * x = G.1
       x * inv(x) = G.1
 
-
-
-ctrait Abelian(G Group):
+property Abelian[G Group]:
   if x G, y G:
     x * y = y * x
 
 local:
-  pri set_var G Group 
+  let G Group 
   know $Abelian(G)
   if x G, y G:
     x * y = y * x
 
-pub concept AbelianGroup(G):
-  ctrait:
-    G is Group
+pub concept [G AbelianGroup]:
+  property:
+    G is Group // 这个语义需要好好斟酌一下
     G is Abelian
 
-pub concept Monoid(M):
+pub concept [M Monoid]:
   exist:
   fn *(x M,y M) M
-  var 1 M
+  let 1 M
 
-  ctrait:
+  property:
     if x M, y M:
       (x * y) * z = x * (y * z)
     if x M:
       M.1 * x = x * M.1
 
-var_trait injective(F fn(x var) var):
+property injective(F fn(x var) var):
   if x var, y var: F(x) = F(y):
       x = y
 
-vtr surjective(F fn(x var) var):
+property surjective(F fn(x var) var):
   if y var:: F.images.has(y):
     exist x var:
       F(x) = y
