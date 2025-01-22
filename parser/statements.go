@@ -9,7 +9,7 @@ type TypeVarPair struct {
 	Type string
 }
 
-type Fact struct{}
+type Fact interface{}
 type ExistFact struct{}
 
 type DefConceptStmt struct {
