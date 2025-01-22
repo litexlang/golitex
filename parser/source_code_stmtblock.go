@@ -41,14 +41,14 @@ func ParseFile(filePath string) (*SourceCodeStmtBlock, error) {
 
 	lines := strings.Split((string(content)), "\n")
 
-	blocks, _, _ := parseStmtBlocks(lines, 0, 0)
-	return &SourceCodeStmtBlock{"", blocks}, nil
+	blocks, _, err := parseStmtBlocks(lines, 0, 0)
+	return &SourceCodeStmtBlock{"", blocks}, err
 }
 
 func ParseString(content string) ([]SourceCodeStmtBlock, error) {
 	lines := strings.Split((content), "\n")
-	blocks, _, _ := parseStmtBlocks(lines, 0, 0)
-	return blocks, nil
+	blocks, _, err := parseStmtBlocks(lines, 0, 0)
+	return blocks, err
 }
 
 func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]SourceCodeStmtBlock, int, error) {
@@ -77,6 +77,9 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 			j := i + 1
 			for j < len(lines) {
 				if strings.Contains(lines[j], "*/") {
+					if !strings.HasSuffix(strings.TrimSpace(lines[j]), "*/") {
+						return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", lines[j])
+					}
 					break
 				}
 				j++
@@ -119,6 +122,9 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 						// 找到注释的结束位置 */
 						for nextLineIndex < len(lines) {
 							if strings.Contains(lines[nextLineIndex], "*/") {
+								if !strings.HasSuffix(strings.TrimSpace(lines[nextLineIndex]), "*/") {
+									return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%q", lines[nextLineIndex])
+								}
 								nextLineIndex++
 								break
 							}
