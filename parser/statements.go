@@ -14,6 +14,7 @@ type Fact interface{}
 type ExistFact struct{}
 
 type DefConceptStmt struct {
+	pub           bool
 	ConceptVar    string
 	ConceptName   string
 	ConceptParams []TypeVarPair
@@ -25,6 +26,7 @@ type DefConceptStmt struct {
 }
 
 type DefPropertyStmt struct {
+	pub           bool
 	Name          string
 	ConceptParams []TypeVarPair
 	ConceptFacts  []Fact
@@ -33,12 +35,22 @@ type DefPropertyStmt struct {
 	Facts         []Fact
 }
 
+type IfFactStmt struct {
+	pub bool
+	IfFact
+}
+
 type IfFact struct {
 	ConceptParams []TypeVarPair
 	ConceptFacts  []Fact
 	VarParams     []TypeVarPair
 	VarFacts      []Fact
 	Facts         []Fact
+}
+
+type OptFactStmt struct {
+	pub bool
+	OptFact
 }
 
 type OptFact struct {
@@ -51,6 +63,7 @@ type LocalStmt struct {
 }
 
 type DefFnStmt struct {
+	pub           bool
 	Name          string
 	ConceptParams []TypeVarPair
 	ConceptFacts  []Fact
