@@ -6,7 +6,7 @@ import (
 )
 
 func TestLexer(t *testing.T) {
-	blocks, err := ParseFile("../test/add.py")
+	blocks, err := ParseFile("../examples/concept.litex")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

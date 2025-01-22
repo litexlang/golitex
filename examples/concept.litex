@@ -1,0 +1,6 @@
+pub concept [G group]:
+    exist:
+        p(x)
+    
+    property:
+        q(x)

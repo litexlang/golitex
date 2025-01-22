@@ -1,6 +1,0 @@
-concept A is point;
-operator \line{A,B}: all A,B are point;
-concept commutative $=(A,B);
-know if A,B,C: all A,B,C are point, \line{A,B} = \line{A,C} {
-  \line{B,C} = \line{A,B};
-}
