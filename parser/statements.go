@@ -87,7 +87,7 @@ type LocalStmt struct {
 }
 
 func (stmt *LocalStmt) setPubTrue() error {
-	return fmt.Errorf(`Local statement is by default private.`)
+	return fmt.Errorf(`local statement is by default private.\n`)
 }
 
 type DefFnStmt struct {
@@ -98,4 +98,9 @@ type DefFnStmt struct {
 	VarParams     []TypeVarPair
 	VarFacts      []Fact
 	Facts         []Fact
+}
+
+func (stmt *DefFnStmt) setPubTrue() error {
+	stmt.pub = true
+	return nil
 }

@@ -2,13 +2,13 @@ package parser
 
 import "fmt"
 
-func ParseStmtWithPub(tokenStmtBlock *TokenStmt) (Stmt, error) {
+func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	pub := false
 	if tokenStmtBlock.Header[0] == Keywords["pub"] {
 		tokenStmtBlock.Header = tokenStmtBlock.Header[1:] // remove the leading 'pub'
 	}
 
-	stmt, err := ParseStmt(tokenStmtBlock)
+	stmt, err := ParseStmtWithoutPub(tokenStmtBlock)
 
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func ParseStmtWithPub(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	return stmt, nil
 }
 
-func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
+func ParseStmtWithoutPub(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	switch tokenStmtBlock.Header[0] {
 	case Keywords["concept"]:
 		return parseConceptStmt(tokenStmtBlock)
@@ -33,7 +33,7 @@ func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	case Keywords["fn"]:
 		return parseFnStmt(tokenStmtBlock)
 	default:
-		return nil, fmt.Errorf("Invalid statement: %s", tokenStmtBlock.String())
+		return nil, fmt.Errorf("invalid statement: %s", tokenStmtBlock.String())
 	}
 }
 
