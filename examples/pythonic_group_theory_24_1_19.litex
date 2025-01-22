@@ -44,6 +44,8 @@ pub concept Group(G):
       inv(x) * x = G.1
       x * inv(x) = G.1
 
+
+
 ctrait Abelian(G Group):
   if x G, y G:
     x * y = y * x

@@ -25,13 +25,11 @@ type DefConceptStmt struct {
 }
 
 type DefPropertyStmt struct {
-	ConceptVar    string
-	ConceptName   string
+	Name          string
 	ConceptParams []TypeVarPair
 	ConceptFacts  []Fact
 	VarParams     []TypeVarPair
 	VarFacts      []Fact
-	ExistFacts    []ExistFact
 	Facts         []Fact
 }
 
@@ -44,6 +42,19 @@ type IfFact struct {
 }
 
 type OptFact struct {
-	name string
-	args []symbol.Symbol
+	Name string
+	Args []symbol.Symbol
+}
+
+type LocalStmt struct {
+	Statements []Stmt
+}
+
+type DefFnStmt struct {
+	Name          string
+	ConceptParams []TypeVarPair
+	ConceptFacts  []Fact
+	VarParams     []TypeVarPair
+	VarFacts      []Fact
+	Facts         []Fact
 }
