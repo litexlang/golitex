@@ -2,15 +2,30 @@ package parser
 
 import "fmt"
 
-func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
-	var stmtKeyword string = ""
+func ParseStmtWithPub(tokenStmtBlock *TokenStmt) (Stmt, error) {
+	pub := false
 	if tokenStmtBlock.Header[0] == Keywords["pub"] {
-		stmtKeyword = tokenStmtBlock.Header[1]
-	} else {
-		stmtKeyword = tokenStmtBlock.Header[0]
+		tokenStmtBlock.Header = tokenStmtBlock.Header[1:] // remove the leading 'pub'
 	}
 
-	switch stmtKeyword {
+	stmt, err := ParseStmt(tokenStmtBlock)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if pub {
+		err = (stmt).setPubTrue()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return stmt, nil
+}
+
+func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
+	switch tokenStmtBlock.Header[0] {
 	case Keywords["concept"]:
 		return parseConceptStmt(tokenStmtBlock)
 	case Keywords["property"]:
