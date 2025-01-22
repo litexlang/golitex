@@ -1,0 +1,102 @@
+/*
+因为 property 可以是带generic的，而concept相当于给property起了个名字，那concept也应该带generic吗？
+ctrait[]()
+vtrait[]()
+
+property 下面不能有 exist，exist只能出现在concept里
+concept 起到了Namespace + type 的作用
+
+property p()
+property q[]()
+property q[]
+property () p[]()
+property [] q[]()
+
+claim () claimName[]():
+  ...
+prove
+
+暂时不要让 property 变成method
+让property也能绑定 exist
+property name[]():
+  exist:
+    ...
+  property:
+    ...
+
+property name[]():
+  ...
+
+*/
+
+pub concept Group(G):
+  exist:
+    fn *(x G, y G) G
+    fn inv(x G) G
+    var 1 G
+  
+  ctrait:
+    if x G, y G:
+      (x * y) * z = x * (y * z)
+    if x G:
+      x * G.1 = G.1 * x
+    if x G:
+      inv(x) * x = G.1
+      x * inv(x) = G.1
+
+ctrait Abelian(G Group):
+  if x G, y G:
+    x * y = y * x
+
+local:
+  pri set_var G Group 
+  know $Abelian(G)
+  if x G, y G:
+    x * y = y * x
+
+pub concept AbelianGroup(G):
+  ctrait:
+    G is Group
+    G is Abelian
+
+pub concept Monoid(M):
+  exist:
+  fn *(x M,y M) M
+  var 1 M
+
+  ctrait:
+    if x M, y M:
+      (x * y) * z = x * (y * z)
+    if x M:
+      M.1 * x = x * M.1
+
+var_trait injective(F fn(x var) var):
+  if x var, y var: F(x) = F(y):
+      x = y
+
+vtr surjective(F fn(x var) var):
+  if y var:: F.images.has(y):
+    exist x var:
+      F(x) = y
+
+Claim:
+  if [G Group] a G, F fn:: F = group_transformation[G](a):
+    F is injective
+prove:
+  if x1 G, x2 G:: F(x1) = F(x2):
+    a * x1 = F(x1)
+    a * x2 = F(x2)
+    a * x1 = a * x2 
+    inv(a) * (a * x2) = inv(a) * (a * x1)
+    inv(a) * (a * x2) = (inv(a) * a) * x2 = 1 * x2 = x2
+    inv(a) * (a * x1) = (inv(a) * a) * x1 = 1 * x1 = x1
+    x2 = x1
+
+import ("nat")
+
+Fn ^(n Nat) F fn (x G) G:
+  ^(++(n))(x) = ^(n)(x) * x
+  ^(0)(x) = G.1
+
+Fn power_of_inverse_is_inverse_of_power[G Group](x G) P Property (n Nat):
+  ^(n)(inv(x)) = inv(^(n)(x))

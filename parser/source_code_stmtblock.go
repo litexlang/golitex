@@ -58,10 +58,31 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 
 	for i < len(lines) {
 		line := lines[i]
+		trimLine := strings.TrimSpace(line)
 
 		// Skip empty lines
-		if strings.TrimSpace(line) == "" {
+		if trimLine == "" {
 			i++
+			continue
+		}
+
+		// skip comments
+		if strings.HasPrefix(trimLine, "//") {
+			i++
+			continue
+		}
+
+		// skip /* */ comments
+		if strings.HasPrefix(trimLine, "/*") {
+			// find the */, maybe */ is on another line
+			j := i + 1
+			for j < len(lines) {
+				if strings.HasSuffix(trimLine, "*/") {
+					break
+				}
+				j++
+			}
+			i = j + 1
 			continue
 		}
 
