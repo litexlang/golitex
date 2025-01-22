@@ -7,5 +7,11 @@ var Keywords = map[string]string{
 	"opt":      "opt",
 	"fn":       "fn",
 	"local":    "local",
-	"exists":   "exists",
+	"exist":    "exist",
+	"let":      "let",
+	"pub":      "pub",
+	"know":     "know",
+	"claim":    "claim",
+	"prove":    "prove",
+	"import":   "import",
 }

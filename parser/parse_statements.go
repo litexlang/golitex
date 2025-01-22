@@ -3,7 +3,14 @@ package parser
 import "fmt"
 
 func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
-	switch tokenStmtBlock.Header[0] {
+	var stmtKeyword string = ""
+	if tokenStmtBlock.Header[0] == Keywords["pub"] {
+		stmtKeyword = tokenStmtBlock.Header[1]
+	} else {
+		stmtKeyword = tokenStmtBlock.Header[0]
+	}
+
+	switch stmtKeyword {
 	case Keywords["concept"]:
 		return parseConceptStmt(tokenStmtBlock)
 	case Keywords["property"]:
