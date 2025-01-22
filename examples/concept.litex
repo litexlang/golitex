@@ -11,7 +11,7 @@ def g():
 def t():
     
     // adf
-    /* adf */ fsdfsa
+    /* adf */
     print(2)
 
 f()
