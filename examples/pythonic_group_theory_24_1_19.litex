@@ -23,6 +23,7 @@ local:
   if x G, y G:
     x * y = y * x
 
+// 我厌恶hierarchy，但在数学概念里，貌似用hierarchy很合理，毕竟数学概念不会经常变化。interface的好处是更新数据结构的时候容易，但数学你不会经常改定义。同时你把两个完全独立的concept同时组合在一个concept下面的话，可能会造成疑惑。
 pub concept [G AbelianGroup]:
   property:
     G is Group // 这个语义需要好好斟酌一下

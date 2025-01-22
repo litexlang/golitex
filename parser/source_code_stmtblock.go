@@ -123,7 +123,7 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 						for nextLineIndex < len(lines) {
 							if strings.Contains(lines[nextLineIndex], "*/") {
 								if !strings.HasSuffix(strings.TrimSpace(lines[nextLineIndex]), "*/") {
-									return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%q", lines[nextLineIndex])
+									return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", lines[nextLineIndex])
 								}
 								nextLineIndex++
 								break
