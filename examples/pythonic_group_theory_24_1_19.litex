@@ -29,13 +29,13 @@ property name[]():
 
 */
 
-pub concept Group(G):
+pub concept [G Group]:
   exist:
     fn *(x G, y G) G
     fn inv(x G) G
     var 1 G
   
-  ctrait:
+  property:
     if x G, y G:
       (x * y) * z = x * (y * z)
     if x G:
