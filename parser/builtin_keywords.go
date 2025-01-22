@@ -15,3 +15,7 @@ var Keywords = map[string]string{
 	"prove":    "prove",
 	"import":   "import",
 }
+
+var KeyChars = map[string]string{
+	":": ":",
+}
