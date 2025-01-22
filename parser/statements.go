@@ -1,7 +1,8 @@
 package parser
 
+import "golitex/symbol"
+
 type Stmt interface {
-	String() string
 }
 
 type TypeVarPair struct {
@@ -32,4 +33,17 @@ type DefPropertyStmt struct {
 	VarFacts      []Fact
 	ExistFacts    []ExistFact
 	Facts         []Fact
+}
+
+type IfFact struct {
+	ConceptParams []TypeVarPair
+	ConceptFacts  []Fact
+	VarParams     []TypeVarPair
+	VarFacts      []Fact
+	Facts         []Fact
+}
+
+type OptFact struct {
+	name string
+	args []symbol.Symbol
 }
