@@ -14,16 +14,16 @@ const (
 	TypeVar
 )
 
-type TokenStmtBlock struct {
+type TokenStmt struct {
 	Header []string
-	Body   []TokenStmtBlock
+	Body   []TokenStmt
 }
 
-func (b *TokenStmtBlock) String() string {
+func (b *TokenStmt) String() string {
 	return b.stringWithIndent(0)
 }
 
-func (b TokenStmtBlock) stringWithIndent(indentLevel int) string {
+func (b TokenStmt) stringWithIndent(indentLevel int) string {
 	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
 	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.Header, " "))
 
@@ -61,8 +61,8 @@ func splitString(inputString string) []string {
 	return result
 }
 
-func TokenizeStmtBlock(b *SourceCodeStmtBlock) (TokenStmtBlock, error) {
-	var body []TokenStmtBlock
+func TokenizeStmtBlock(b *SourceCodeStmtBlock) (TokenStmt, error) {
+	var body []TokenStmt
 	var header []string
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
 	// 例如，将 Header 中的元素转换为大写
@@ -72,11 +72,11 @@ func TokenizeStmtBlock(b *SourceCodeStmtBlock) (TokenStmtBlock, error) {
 	for _, subBlock := range b.Body {
 		parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
 		if err != nil {
-			return TokenStmtBlock{}, err
+			return TokenStmt{}, err
 		}
 		body = append(body, parsedSubBlock)
 	}
-	return TokenStmtBlock{
+	return TokenStmt{
 		Header: header,
 		Body:   body,
 	}, nil
