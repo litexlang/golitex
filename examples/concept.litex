@@ -5,13 +5,13 @@ def f():
 def g():
     /*
     asdf
-    */
+    */ 
     print(1)
 
 def t():
     
     // adf
-    /* adf */
+    /* adf */ fsdfsa
     print(2)
 
 f()
