@@ -26,40 +26,59 @@ func (b TokenStmt) stringWithIndent(indentLevel int) string {
 	return result
 }
 
+// 提取出的 nextToken 函数，用于识别下一个 token
+func nextToken(inputString string, start int) (string, int, error) {
+	// 如果下两个字符是 //，跳过直到结束
+	if start+1 < len(inputString) && inputString[start:start+2] == "//" {
+		return "", len(inputString), nil
+	}
+	// 如果下两个字符是 /*，报错
+	if start+1 < len(inputString) && inputString[start:start+2] == "/*" {
+		return "", 0, fmt.Errorf("invalid syntax: nested comment block")
+	}
+
+	potentialKeywordSymbol := getKeywordSymbol(inputString, start)
+	if potentialKeywordSymbol != "" {
+		return potentialKeywordSymbol, start + len(potentialKeywordSymbol), nil
+	}
+
+	if inputString[start] == ' ' {
+		return "", start + 1, nil
+	}
+
+	buffer := ""
+	for i := start; i < len(inputString); i++ {
+		if getKeywordSymbol(inputString, i) != "" || inputString[i] == ' ' {
+			break
+		}
+		buffer += string(inputString[i])
+	}
+	return buffer, start + len(buffer), nil
+}
+
 func splitString(inputString string) (*[]string, error) {
 	var result []string
 	var buffer string
 	for i := 0; i < len(inputString); {
-		// 如果下两个字符是 //，跳过直到结束
-		if i+1 < len(inputString) && inputString[i:i+2] == "//" {
-			break
+		token, nextIndex, err := nextToken(inputString, i)
+		if err != nil {
+			return nil, err
 		}
-		// 如果下两个字符是 /*，报错
-		if i+1 < len(inputString) && inputString[i:i+2] == "/*" {
-			return nil, fmt.Errorf("invalid syntax: nested comment block")
-		}
-		if isKeywordSymbol(inputString, i) {
-			for k, v := range KeywordSymbols {
-				if i+len(k) <= len(inputString) && inputString[i:i+len(k)] == v {
-					if buffer != "" {
-						result = append(result, buffer)
-						buffer = ""
-					}
-					result = append(result, v)
-					i += len(k)
-					break
-				}
-			}
-		} else if inputString[i] == ' ' {
+		if token == "" {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""
 			}
-			i++
+		} else if getKeywordSymbol(inputString, i) != "" {
+			if buffer != "" {
+				result = append(result, buffer)
+				buffer = ""
+			}
+			result = append(result, token)
 		} else {
-			buffer += string(inputString[i])
-			i++
+			buffer = token
 		}
+		i = nextIndex
 	}
 	if buffer != "" {
 		result = append(result, buffer)
