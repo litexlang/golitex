@@ -1,6 +1,8 @@
 package parser
 
-type Stmt interface{}
+type Stmt interface {
+	toTopStmt() TopStmt
+}
 
 type DefConceptStmt struct {
 	ConceptVar    string
