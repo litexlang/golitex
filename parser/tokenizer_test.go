@@ -15,7 +15,7 @@ func TestSplitString(t *testing.T) {
 			continue
 		}
 
-		for _, token := range tokens {
+		for _, token := range *tokens {
 			fmt.Println(token)
 		}
 	}
