@@ -39,7 +39,7 @@ func splitString(inputString string) (*[]string, error) {
 			return nil, fmt.Errorf("invalid syntax: nested comment block")
 		}
 		charStr := string(char)
-		if _, ok := KeyChars[charStr]; ok {
+		if _, ok := KeywordChars[charStr]; ok {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""

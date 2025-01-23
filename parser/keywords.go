@@ -18,7 +18,7 @@ var Keywords = map[string]string{
 	"return":         "return",
 }
 
-var KeyChars = map[string]string{
+var KeywordChars = map[string]string{
 	":": ":",
 	"[": "[",
 	"]": "]",
