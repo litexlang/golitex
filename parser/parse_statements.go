@@ -44,14 +44,52 @@ func parseConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 
 	var conceptParams *[]VarTypePair = nil
 	var err error
-	if tokenStmtBlock.Header[start] == KeyChars["["] {
+	if tokenStmtBlock.Header[start] == KeywordChars["["] {
 		conceptParams, err = parseTypeVarPairBracket(&tokenStmtBlock.Header, &start)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return &DefConceptStmt{conceptVar, conceptName, conceptParams, nil, nil, nil, nil, nil}, nil
+	var varParams *[]VarTypePair = nil
+	if tokenStmtBlock.Header[start] == KeywordChars["("] {
+		varParams, err = parseTypeVarPairBrace(&tokenStmtBlock.Header, &start)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	skip(&tokenStmtBlock.Header, &start, KeywordChars[":"])
+
+	var existFacts []ExistFactStmt = nil
+	var facts []FactStmt = nil
+	for _, stmt := range tokenStmtBlock.Body {
+		if stmt.Header[0] == Keywords["property"] {
+			for _, factBlock := range stmt.Body {
+				fact, err := parseFactStmt(&factBlock)
+				if err != nil {
+					return nil, err
+				}
+				facts = append(facts, fact)
+			}
+		} else if stmt.Header[0] == Keywords["exist"] {
+			for _, factBlock := range stmt.Body {
+				fact, err := parseExistFactStmt(&factBlock)
+				if err != nil {
+					return nil, err
+				}
+				facts = append(facts, fact)
+			}
+		} else {
+			fact, err := parseFactStmt(&stmt)
+			if err != nil {
+				return nil, err
+			}
+			facts = append(facts, fact)
+		}
+	}
+
+	return &DefConceptStmt{conceptVar, conceptName, conceptParams, nil, varParams, nil, &existFacts, &facts}, nil
 }
 
 func parseFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
@@ -68,7 +106,12 @@ func parseOptStmt(tokenStmtBlock *TokenStmt) (*CalledPropertyTopStmt, error) {
 	return nil, nil
 }
 
-func parseVar(tokenStmtBlock *TokenStmt) (*Var, error) {
-	// TODO: Implement parsing logic for symbol
+func parseFactStmt(tokenStmtBlock *TokenStmt) (*FactStmt, error) {
+	// TODO: Implement parsing logic for fact statement
+	return nil, nil
+}
+
+func parseExistFactStmt(tokenStmt *TokenStmt) (*ExistFactStmt, *Error) {
+	// TODO: Implement parsing logic for exist fact statement
 	return nil, nil
 }
