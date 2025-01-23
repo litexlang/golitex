@@ -10,13 +10,13 @@ type TopLevelStmtSlice struct {
 	body *[]SourceCodeStmtBlock
 }
 
-const parseIndent = 4
-
 // SourceCodeStmtBlock 结构体表示一个语句块
 type SourceCodeStmtBlock struct {
 	Header string
 	Body   *[]SourceCodeStmtBlock
 }
+
+const parseIndent = 4
 
 // String 方法实现 fmt.Stringer 接口
 func (b *SourceCodeStmtBlock) String() string {
