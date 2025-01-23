@@ -29,29 +29,36 @@ func (b TokenStmt) stringWithIndent(indentLevel int) string {
 func splitString(inputString string) (*[]string, error) {
 	var result []string
 	var buffer string
-	for i, char := range inputString {
+	for i := 0; i < len(inputString); {
 		// 如果下两个字符是 //，跳过直到结束
-		if (i+1) < len(inputString) && inputString[i:i+2] == "//" {
+		if i+1 < len(inputString) && inputString[i:i+2] == "//" {
 			break
 		}
 		// 如果下两个字符是 /*，报错
-		if (i+1) < len(inputString) && inputString[i:i+2] == "/*" {
+		if i+1 < len(inputString) && inputString[i:i+2] == "/*" {
 			return nil, fmt.Errorf("invalid syntax: nested comment block")
 		}
-		charStr := string(char)
-		if _, ok := KeywordChars[charStr]; ok {
+		if isKeywordSymbol(inputString, i) {
+			for k, v := range KeywordSymbols {
+				if i+len(k) <= len(inputString) && inputString[i:i+len(k)] == v {
+					if buffer != "" {
+						result = append(result, buffer)
+						buffer = ""
+					}
+					result = append(result, v)
+					i += len(k)
+					break
+				}
+			}
+		} else if inputString[i] == ' ' {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""
 			}
-			result = append(result, charStr)
-		} else if char == ' ' {
-			if buffer != "" {
-				result = append(result, buffer)
-				buffer = ""
-			}
+			i++
 		} else {
-			buffer += charStr
+			buffer += string(inputString[i])
+			i++
 		}
 	}
 	if buffer != "" {

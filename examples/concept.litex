@@ -2,4 +2,4 @@ concept G Group[v var :: 1<2 ](v var :: ):
     lt(1, v, G.1)
     1 < 2
 
-f(2)
+f(G::1)

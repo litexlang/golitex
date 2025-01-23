@@ -18,25 +18,36 @@ var Keywords = map[string]string{
 	"return":         "return",
 }
 
-var KeywordChars = map[string]string{
-	":": ":",
-	"[": "[",
-	"]": "]",
-	"(": "(",
-	")": ")",
-	",": ",",
-	"$": "$",
-	"=": "=",
-	"/": "/",
-	"+": "+",
-	"-": "-",
-	"*": "*",
-	"^": "^",
-	"<": "<",
-	">": ">",
-	"!": "!",
-	"|": "|",
-	"~": "~",
-	"&": "&",
-	".": ".", // postfix operator
+var KeywordSymbols = map[string]string{
+	":":  ":",
+	"[":  "[",
+	"]":  "]",
+	"(":  "(",
+	")":  ")",
+	",":  ",",
+	"$":  "$",
+	"=":  "=",
+	"/":  "/",
+	"+":  "+",
+	"-":  "-",
+	"*":  "*",
+	"^":  "^",
+	"<":  "<",
+	">":  ">",
+	"!":  "!",
+	"|":  "|",
+	"~":  "~",
+	"&":  "&",
+	".":  ".",
+	"::": "::",
+}
+
+// if inputString starting from position start is KeywordSymbols
+func isKeywordSymbol(inputString string, start int) bool {
+	for k, v := range KeywordSymbols {
+		if start+len(k) <= len(inputString) && inputString[start:start+len(k)] == v {
+			return true
+		}
+	}
+	return false
 }
