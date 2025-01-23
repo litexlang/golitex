@@ -12,7 +12,7 @@ func (t *IfStmt) toTopStmt() TopStmt {
 	return &IfFactTopStmt{true, *t}
 }
 
-func (t *CalledPropertyStmt) toTopStmt() TopStmt {
+func (t *PtyStmt) toTopStmt() TopStmt {
 	return &CalledPropertyTopStmt{true, *t}
 }
 
@@ -20,6 +20,6 @@ func (t *LocalStmt) toTopStmt() TopStmt {
 	return &LocalTopStmt{*t}
 }
 
-func (t *ExistFactStmt) toTopStmt() TopStmt {
+func (t *ExistStmt) toTopStmt() TopStmt {
 	return nil
 }

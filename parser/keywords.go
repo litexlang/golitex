@@ -43,6 +43,7 @@ var KeywordSymbols = map[string]string{
 	".":  ".",
 	"::": "::",
 }
+var sortedSymbols []string = sortKeywordSymbols()
 
 // 初始化排序后的符号列表
 func sortKeywordSymbols() []string {
@@ -57,7 +58,6 @@ func sortKeywordSymbols() []string {
 }
 
 // 缓存排序后的符号列表
-var sortedSymbols []string = sortKeywordSymbols()
 
 // 如果输入字符串从起始位置开始是符号，则返回该符号
 func getKeywordSymbol(inputString string, start int) string {
