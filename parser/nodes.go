@@ -5,9 +5,6 @@ type VarTypePair struct {
 	Type string
 }
 
-type Fact interface{}
-type ExistFact struct{}
-
 type Var interface {
 }
 

@@ -1,31 +1,33 @@
 package parser
 
+type Stmt interface{}
+
 type DefConceptStmt struct {
 	ConceptVar    string
 	ConceptName   string
-	ConceptParams []VarTypePair
-	ConceptFacts  []Fact
-	VarParams     []VarTypePair
-	VarFacts      []Fact
-	ExistFacts    []ExistFact
-	Facts         []Fact
+	ConceptParams *[]VarTypePair
+	ConceptFacts  *[]FactStmt
+	VarParams     *[]VarTypePair
+	VarFacts      *[]FactStmt
+	ExistFacts    *[]ExistFactStmt
+	Facts         *[]FactStmt
 }
 
 type DefPropertyStmt struct {
 	Name          string
 	ConceptParams []VarTypePair
-	ConceptFacts  []Fact
+	ConceptFacts  []FactStmt
 	VarParams     []VarTypePair
-	VarFacts      []Fact
-	Facts         []Fact
+	VarFacts      []FactStmt
+	Facts         []FactStmt
 }
 
 type IfStmt struct {
 	ConceptParams []VarTypePair
-	ConceptFacts  []Fact
+	ConceptFacts  []FactStmt
 	VarParams     []VarTypePair
-	VarFacts      []Fact
-	Facts         []Fact
+	VarFacts      []FactStmt
+	Facts         []FactStmt
 }
 
 type CalledPropertyStmt struct {
@@ -36,3 +38,6 @@ type CalledPropertyStmt struct {
 type LocalStmt struct {
 	Statements []TopStmt
 }
+
+type FactStmt interface{}
+type ExistFactStmt struct{}
