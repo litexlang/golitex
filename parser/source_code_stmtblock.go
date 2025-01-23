@@ -7,7 +7,7 @@ import (
 )
 
 type TopLevelStmtSlice struct {
-	body []SourceCodeStmtBlock
+	body *[]SourceCodeStmtBlock
 }
 
 const parseIndent = 4
@@ -15,7 +15,7 @@ const parseIndent = 4
 // SourceCodeStmtBlock 结构体表示一个语句块
 type SourceCodeStmtBlock struct {
 	Header string
-	Body   []SourceCodeStmtBlock
+	Body   *[]SourceCodeStmtBlock
 }
 
 // String 方法实现 fmt.Stringer 接口
@@ -29,8 +29,10 @@ func (b *SourceCodeStmtBlock) stringWithIndent(indentLevel int) string {
 	result := fmt.Sprintf("%s%s\n", indent, b.Header)
 
 	// 递归处理子块
-	for _, subBlock := range b.Body {
-		result += subBlock.stringWithIndent(indentLevel + 1)
+	if b.Body != nil {
+		for _, subBlock := range *b.Body {
+			result += subBlock.stringWithIndent(indentLevel + 1)
+		}
 	}
 
 	return result
@@ -52,7 +54,7 @@ func ParseString(content string) (*TopLevelStmtSlice, error) {
 	return &TopLevelStmtSlice{blocks}, err
 }
 
-func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]SourceCodeStmtBlock, int, error) {
+func parseStmtBlocks(lines []string, currentIndent int, startIndex int) (*[]SourceCodeStmtBlock, int, error) {
 	var blocks []SourceCodeStmtBlock
 	i := startIndex
 
@@ -93,14 +95,14 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 
 		// 如果当前行的缩进小于当前块的缩进，返回
 		if indent < currentIndent {
-			return blocks, i, nil
+			return &blocks, i, nil
 		}
 
 		// 如果当前行的缩进等于当前块的缩进，创建一个新的块
 		if indent == currentIndent {
 			block := SourceCodeStmtBlock{
 				Header: strings.TrimSpace(line),
-				Body:   []SourceCodeStmtBlock{},
+				Body:   nil,
 			}
 
 			// 如果 trimLine 以 : 结尾，检查下一行的缩进
@@ -166,5 +168,5 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]Sourc
 		}
 	}
 
-	return blocks, i, nil
+	return &blocks, i, nil
 }

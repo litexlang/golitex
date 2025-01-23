@@ -99,12 +99,14 @@ func TokenizeStmtBlock(b *SourceCodeStmtBlock) (*TokenStmt, error) {
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Body 进行一些处理
 	// 例如，递归调用 ParseStmtBlock 处理 Body 中的每个元素
-	for _, subBlock := range b.Body {
-		parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
-		if err != nil {
-			return nil, err
+	if b.Body != nil {
+		for _, subBlock := range *b.Body {
+			parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
+			if err != nil {
+				return nil, err
+			}
+			body = append(body, *parsedSubBlock)
 		}
-		body = append(body, *parsedSubBlock)
 	}
 	return &TokenStmt{
 		Header: *header,

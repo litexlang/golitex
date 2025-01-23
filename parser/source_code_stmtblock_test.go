@@ -11,8 +11,10 @@ func TestLexer(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	for _, block := range block.body {
-		fmt.Println(block.String())
+	if block.body != nil {
+		for _, block := range *block.body {
+			fmt.Println(block.String())
+		}
 	}
 }
 
@@ -27,8 +29,10 @@ def add(a, b):
 		t.Fatalf(err.Error())
 	}
 
-	for _, block := range blocks.body {
-		fmt.Println(block)
+	if blocks.body != nil {
+		for _, block := range *blocks.body {
+			fmt.Println(block.String())
+		}
 	}
 
 	// Test invalid syntax
