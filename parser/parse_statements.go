@@ -127,3 +127,36 @@ func parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
 
 	return &PtyStmt{name, params}, nil
 }
+
+func parseIfStmt(tokenStmt *TokenStmt) (*IfStmt, error) {
+	start := 0
+	skip(&tokenStmt.Header, &start, Keywords["if"])
+
+	var conceptParams *[]VarTypePair = nil
+	var err error = nil
+	if tokenStmt.Header[start] == KeywordSymbols["["] {
+		conceptParams, err = parseTypeVarPairBracket(&tokenStmt.Header, &start)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var varParams *[]VarTypePair = nil
+	if tokenStmt.Header[start] == KeywordSymbols["("] {
+		varParams, err = parseTypeVarPairBrace(&tokenStmt.Header, &start)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	facts := []FactStmt{}
+	for _, stmt := range tokenStmt.Body {
+		fact, err := parseFactStmt(&stmt)
+		if err != nil {
+			return nil, err
+		}
+		facts = append(facts, fact)
+	}
+
+	return &IfStmt{conceptParams, nil, varParams, nil, facts}, nil
+}
