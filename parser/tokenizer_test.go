@@ -8,7 +8,13 @@ import (
 func TestSplitString(t *testing.T) {
 	input := []string{"concept [G Group[G Set](v G)]:"}
 	for _, s := range input {
-		tokens := splitString(s)
+		tokens, err := splitString(s)
+
+		if err != nil {
+			t.Fatalf("Error splitting string: %s", err.Error())
+			continue
+		}
+
 		for _, token := range tokens {
 			fmt.Println(token)
 		}
