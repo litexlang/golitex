@@ -43,6 +43,6 @@ type IfStmt struct {
 }
 
 type PtyStmt struct {
-	Name string
-	Args *[]Var
+	Name   string
+	params *[]Var
 }
