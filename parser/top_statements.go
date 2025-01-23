@@ -39,7 +39,7 @@ func (stmt *IfFactTopStmt) setPubTrue() error {
 
 type CalledPropertyTopStmt struct {
 	pub bool
-	CalledPropertyStmt
+	PtyStmt
 }
 
 func (stmt *CalledPropertyTopStmt) setPubTrue() error {

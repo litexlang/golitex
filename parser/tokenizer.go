@@ -56,7 +56,7 @@ func nextToken(inputString string, start int) (string, int, error) {
 	return buffer, start + len(buffer), nil
 }
 
-func splitString(inputString string) (*[]string, error) {
+func tokenizeString(inputString string) (*[]string, error) {
 	var result []string
 	var buffer string
 	for i := 0; i < len(inputString); {
@@ -92,7 +92,7 @@ func TokenizeStmtBlock(b *SourceCodeStmtBlock) (*TokenStmt, error) {
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
 	// 例如，将 Header 中的元素转换为大写
-	header, err := splitString(b.Header)
+	header, err := tokenizeString(b.Header)
 	if err != nil {
 		return nil, err
 	}

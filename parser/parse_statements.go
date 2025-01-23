@@ -61,7 +61,7 @@ func parseConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 
 	skip(&tokenStmtBlock.Header, &start, KeywordSymbols[":"])
 
-	var existFacts []ExistFactStmt = nil
+	var existFacts []ExistStmt = nil
 	var facts []FactStmt = nil
 
 	for _, stmt := range tokenStmtBlock.Body {
@@ -107,12 +107,21 @@ func parseOptStmt(tokenStmtBlock *TokenStmt) (*CalledPropertyTopStmt, error) {
 	return nil, nil
 }
 
-func parseFactStmt(tokenStmtBlock *TokenStmt) (*FactStmt, error) {
-	// TODO: Implement parsing logic for fact statement
+func parseFactStmt(tokenStmtBlock *TokenStmt) (FactStmt, error) {
+	if tokenStmtBlock.Header[0] == KeywordSymbols["$"] {
+		return parseFuncPtyStmt(tokenStmtBlock)
+	}
 	return nil, nil
 }
 
-func parseExistFactStmt(tokenStmt *TokenStmt) (*ExistFactStmt, error) {
+func parseExistFactStmt(tokenStmt *TokenStmt) (*ExistStmt, error) {
 	// TODO: Implement parsing logic for exist fact statement
+	return nil, nil
+}
+
+func parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
+	var start = 0
+	skip(&tokenStmt.Header, &start, KeywordSymbols["$"])
+
 	return nil, nil
 }

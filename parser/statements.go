@@ -11,35 +11,38 @@ type DefConceptStmt struct {
 	ConceptFacts  *[]FactStmt
 	VarParams     *[]VarTypePair
 	VarFacts      *[]FactStmt
-	ExistFacts    *[]ExistFactStmt
+	ExistFacts    *[]ExistStmt
 	Facts         *[]FactStmt
 }
 
 type DefPropertyStmt struct {
 	Name          string
-	ConceptParams []VarTypePair
-	ConceptFacts  []FactStmt
-	VarParams     []VarTypePair
-	VarFacts      []FactStmt
+	ConceptParams *[]VarTypePair
+	ConceptFacts  *[]FactStmt
+	VarParams     *[]VarTypePair
+	VarFacts      *[]FactStmt
 	Facts         []FactStmt
-}
-
-type IfStmt struct {
-	ConceptParams []VarTypePair
-	ConceptFacts  []FactStmt
-	VarParams     []VarTypePair
-	VarFacts      []FactStmt
-	Facts         []FactStmt
-}
-
-type CalledPropertyStmt struct {
-	Name string
-	Args []Var
 }
 
 type LocalStmt struct {
-	Statements []TopStmt
+	Statements []Stmt
 }
 
-type FactStmt interface{}
-type ExistFactStmt struct{}
+type FactExprStmt interface{}
+type FactStmt interface {
+	toTopStmt() TopStmt
+}
+type ExistStmt struct{}
+
+type IfStmt struct {
+	ConceptParams *[]VarTypePair
+	ConceptFacts  *[]FactStmt
+	VarParams     *[]VarTypePair
+	VarFacts      *[]FactStmt
+	Facts         []FactStmt
+}
+
+type PtyStmt struct {
+	Name string
+	Args *[]Var
+}
