@@ -78,3 +78,35 @@ func parseTypeVarPairBrace(tokens *[]string, start *int) (*[]VarTypePair, error)
 
 	return nil, fmt.Errorf("expected ')', but got '%s'", (*tokens)[*start])
 }
+
+func parseVar(tokens *[]string, start *int) (Var, error) {
+	// TODO 现在只能 parse 单纯的 var
+	v := (*tokens)[*start]
+	*start += 1
+	return &v, nil
+}
+
+func parseBracedVars(tokens *[]string, start *int) (*[]Var, error) {
+	skip(tokens, start, KeywordSymbols["("])
+
+	vars := []Var{}
+	// parseVar from index start, skip , between, end when )
+	for *start < len(*tokens) {
+		v, err := parseVar(tokens, start)
+		if err != nil {
+			return nil, err
+		}
+		vars = append(vars, v)
+
+		if (*tokens)[*start] == KeywordSymbols[")"] {
+			*start++
+			return &vars, nil
+		}
+
+		if (*tokens)[*start] == KeywordSymbols[","] {
+			*start++
+		}
+	}
+
+	return nil, fmt.Errorf("expected ')', but got '%s'", (*tokens)[*start])
+}

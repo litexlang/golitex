@@ -122,6 +122,12 @@ func parseExistFactStmt(tokenStmt *TokenStmt) (*ExistStmt, error) {
 func parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
 	var start = 0
 	skip(&tokenStmt.Header, &start, KeywordSymbols["$"])
+	name := tokenStmt.Header[start]
+	start++
+	params, err := parseBracedVars(&tokenStmt.Header, &start)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return &PtyStmt{name, params}, nil
 }
