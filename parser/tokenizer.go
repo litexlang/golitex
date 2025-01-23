@@ -35,38 +35,55 @@ func (b TokenStmt) stringWithIndent(indentLevel int) string {
 	return result
 }
 
-func splitString(inputString string) []string {
+func splitString(inputString string) ([]string, error) {
 	var result []string
 	var buffer string
-	for _, char := range inputString {
-		switch char {
-		case '[', ']', '(', ')', ':', '$', ',', '=', '*', '+', '-', '/':
+	for i, char := range inputString {
+
+		// if the next 2 characters are //, skip until the end
+		if (i+1) < len(inputString) && inputString[i:i+2] == "//" {
+			break
+		}
+
+		// if the next 2 characters are /*, error
+		if (i+1) < len(inputString) && inputString[i:i+2] == "/*" {
+			return nil, fmt.Errorf("invalid syntax: nested comment block")
+		}
+
+		if _, ok := KeyChars[string(char)]; ok {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""
 			}
 			result = append(result, string(char))
-		case ' ':
+		}
+
+		if (char) == ' ' {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""
 			}
-		default:
-			buffer += string(char)
 		}
+		buffer += string(char)
 	}
 	if buffer != "" {
 		result = append(result, buffer)
 	}
-	return result
+	return result, nil
 }
 
 func TokenizeStmtBlock(b *SourceCodeStmtBlock) (TokenStmt, error) {
 	var body []TokenStmt
 	var header []string
+
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
 	// 例如，将 Header 中的元素转换为大写
-	header = append(header, splitString(b.Header)...)
+	headerToken, err := splitString(b.Header)
+	if err != nil {
+		return TokenStmt{}, err
+	}
+	header = append(header, headerToken...)
+
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Body 进行一些处理
 	// 例如，递归调用 ParseStmtBlock 处理 Body 中的每个元素
 	for _, subBlock := range b.Body {
