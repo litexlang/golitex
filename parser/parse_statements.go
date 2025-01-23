@@ -7,19 +7,20 @@ func ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (TopStmt, error) {
 	}
 
 	stmt, err := ParseStmt(tokenStmtBlock)
+	topStmt := stmt.toTopStmt()
 
 	if err != nil {
 		return nil, err
 	}
 
 	if pub {
-		err = (stmt).setPubTrue()
+		err = (topStmt).setPubTrue()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return stmt, nil
+	return topStmt, nil
 }
 
 func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
