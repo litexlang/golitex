@@ -1,14 +1,12 @@
 package parser
 
-import "fmt"
-
-func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
+func ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	pub := false
 	if tokenStmtBlock.Header[0] == Keywords["pub"] {
 		tokenStmtBlock.Header = tokenStmtBlock.Header[1:] // remove the leading 'pub'
 	}
 
-	stmt, err := ParseStmtWithoutPub(tokenStmtBlock)
+	stmt, err := ParseStmt(tokenStmtBlock)
 
 	if err != nil {
 		return nil, err
@@ -24,7 +22,7 @@ func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	return stmt, nil
 }
 
-func ParseStmtWithoutPub(tokenStmtBlock *TokenStmt) (Stmt, error) {
+func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	switch tokenStmtBlock.Header[0] {
 	case Keywords["concept"]:
 		return parseConceptStmt(tokenStmtBlock)
@@ -33,7 +31,7 @@ func ParseStmtWithoutPub(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	case Keywords["fn"]:
 		return parseFnStmt(tokenStmtBlock)
 	default:
-		return nil, fmt.Errorf("invalid statement: %s", tokenStmtBlock.String())
+		return parseOptStmt(tokenStmtBlock)
 	}
 }
 
@@ -49,5 +47,14 @@ func parseFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 
 func parsePropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyStmt, error) {
 	// TODO: Implement parsing logic for property statement
+	return nil, nil
+}
+
+func parseOptStmt(tokenStmtBlock *TokenStmt) (*FactTopStmt, error) {
+	return nil, nil
+}
+
+func parseVar(tokenStmtBlock *TokenStmt) (*Var, error) {
+	// TODO: Implement parsing logic for symbol
 	return nil, nil
 }

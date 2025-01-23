@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"golitex/symbol"
 )
 
 type Stmt interface {
@@ -67,19 +66,19 @@ type IfFact struct {
 	Facts         []Fact
 }
 
-type OptFactStmt struct {
+type FactTopStmt struct {
 	pub bool
-	OptFact
+	FactStmt
 }
 
-func (stmt *OptFactStmt) setPubTrue() error {
+func (stmt *FactTopStmt) setPubTrue() error {
 	stmt.pub = true
 	return nil
 }
 
-type OptFact struct {
+type FactStmt struct {
 	Name string
-	Args []symbol.Symbol
+	Args []Var
 }
 
 type LocalStmt struct {
@@ -103,4 +102,18 @@ type DefFnStmt struct {
 func (stmt *DefFnStmt) setPubTrue() error {
 	stmt.pub = true
 	return nil
+}
+
+type Var interface {
+}
+
+type PureVar string
+
+type FnReturnVar struct {
+	CalledFn
+}
+
+type CalledFn struct {
+	Name   string
+	Params []Var
 }

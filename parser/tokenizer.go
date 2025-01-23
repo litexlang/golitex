@@ -5,15 +5,6 @@ import (
 	"strings"
 )
 
-const (
-	Concept int = iota
-	Property
-	Var
-	Type
-	ConceptType
-	TypeVar
-)
-
 type TokenStmt struct {
 	Header []string
 	Body   []TokenStmt
@@ -35,11 +26,10 @@ func (b TokenStmt) stringWithIndent(indentLevel int) string {
 	return result
 }
 
-func splitString(inputString string) ([]string, error) {
+func splitString(inputString string) (*[]string, error) {
 	var result []string
 	var buffer string
 	for i, char := range inputString {
-
 		// if the next 2 characters are //, skip until the end
 		if (i+1) < len(inputString) && inputString[i:i+2] == "//" {
 			break
@@ -64,37 +54,37 @@ func splitString(inputString string) ([]string, error) {
 				buffer = ""
 			}
 		}
+
 		buffer += string(char)
 	}
 	if buffer != "" {
 		result = append(result, buffer)
 	}
-	return result, nil
+	return &result, nil
 }
 
-func TokenizeStmtBlock(b *SourceCodeStmtBlock) (TokenStmt, error) {
+func TokenizeStmtBlock(b *SourceCodeStmtBlock) (*TokenStmt, error) {
 	var body []TokenStmt
-	var header []string
+	var header *[]string
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
 	// 例如，将 Header 中的元素转换为大写
-	headerToken, err := splitString(b.Header)
+	header, err := splitString(b.Header)
 	if err != nil {
-		return TokenStmt{}, err
+		return nil, err
 	}
-	header = append(header, headerToken...)
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Body 进行一些处理
 	// 例如，递归调用 ParseStmtBlock 处理 Body 中的每个元素
 	for _, subBlock := range b.Body {
 		parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
 		if err != nil {
-			return TokenStmt{}, err
+			return nil, err
 		}
-		body = append(body, parsedSubBlock)
+		body = append(body, *parsedSubBlock)
 	}
-	return TokenStmt{
-		Header: header,
+	return &TokenStmt{
+		Header: *header,
 		Body:   body,
 	}, nil
 }
