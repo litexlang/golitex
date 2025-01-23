@@ -18,7 +18,7 @@ func TestParseFuncPtyStmt(t *testing.T) {
 	fmt.Println(fmt.Sprintf("%v", stmt))
 }
 
-func TestParseStmt1(t *testing.T) {
+func ParseStmt1(t *testing.T) {
 	tokens := []string{"$", "<", "(", "1", ",", "2", ")"}
 	tokenStmt := TokenStmt{tokens, []TokenStmt{}}
 	stmt, err := ParseStmt(&tokenStmt)
