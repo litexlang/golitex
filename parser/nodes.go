@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-type Stmt interface {
+type TopStmt interface {
 	setPubTrue() error
 }
 
@@ -16,7 +16,7 @@ type TypeVarPair struct {
 type Fact interface{}
 type ExistFact struct{}
 
-type DefConceptStmt struct {
+type DefConceptTopStmt struct {
 	pub           bool
 	ConceptVar    string
 	ConceptName   string
@@ -28,12 +28,12 @@ type DefConceptStmt struct {
 	Facts         []Fact
 }
 
-func (stmt *DefConceptStmt) setPubTrue() error {
+func (stmt *DefConceptTopStmt) setPubTrue() error {
 	stmt.pub = true
 	return nil
 }
 
-type DefPropertyStmt struct {
+type DefPropertyTopStmt struct {
 	pub           bool
 	Name          string
 	ConceptParams []TypeVarPair
@@ -43,22 +43,22 @@ type DefPropertyStmt struct {
 	Facts         []Fact
 }
 
-func (stmt *DefPropertyStmt) setPubTrue() error {
+func (stmt *DefPropertyTopStmt) setPubTrue() error {
 	stmt.pub = true
 	return nil
 }
 
-type IfFactStmt struct {
+type IfFactTopStmt struct {
 	pub bool
-	IfFact
+	IfStmt
 }
 
-func (stmt *IfFactStmt) setPubTrue() error {
+func (stmt *IfFactTopStmt) setPubTrue() error {
 	stmt.pub = true
 	return nil
 }
 
-type IfFact struct {
+type IfStmt struct {
 	ConceptParams []TypeVarPair
 	ConceptFacts  []Fact
 	VarParams     []TypeVarPair
@@ -66,30 +66,34 @@ type IfFact struct {
 	Facts         []Fact
 }
 
-type FactTopStmt struct {
+type CalledPropertyTopStmt struct {
 	pub bool
-	FactStmt
+	CalledPropertyStmt
 }
 
-func (stmt *FactTopStmt) setPubTrue() error {
+func (stmt *CalledPropertyTopStmt) setPubTrue() error {
 	stmt.pub = true
 	return nil
 }
 
-type FactStmt struct {
+type CalledPropertyStmt struct {
 	Name string
 	Args []Var
 }
 
-type LocalStmt struct {
-	Statements []Stmt
+type LocalTopStmt struct {
+	LocalStmt
 }
 
-func (stmt *LocalStmt) setPubTrue() error {
+type LocalStmt struct {
+	Statements []TopStmt
+}
+
+func (stmt *LocalTopStmt) setPubTrue() error {
 	return fmt.Errorf(`local statement is by default private.\n`)
 }
 
-type DefFnStmt struct {
+type DefFnTopStmt struct {
 	pub           bool
 	Name          string
 	ConceptParams []TypeVarPair
@@ -99,7 +103,7 @@ type DefFnStmt struct {
 	Facts         []Fact
 }
 
-func (stmt *DefFnStmt) setPubTrue() error {
+func (stmt *DefFnTopStmt) setPubTrue() error {
 	stmt.pub = true
 	return nil
 }

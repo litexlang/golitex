@@ -1,6 +1,6 @@
 package parser
 
-func ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
+func ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (TopStmt, error) {
 	pub := false
 	if tokenStmtBlock.Header[0] == Keywords["pub"] {
 		tokenStmtBlock.Header = tokenStmtBlock.Header[1:] // remove the leading 'pub'
@@ -22,7 +22,7 @@ func ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	return stmt, nil
 }
 
-func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
+func ParseStmt(tokenStmtBlock *TokenStmt) (TopStmt, error) {
 	switch tokenStmtBlock.Header[0] {
 	case Keywords["concept"]:
 		return parseConceptStmt(tokenStmtBlock)
@@ -35,22 +35,22 @@ func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	}
 }
 
-func parseConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
+func parseConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptTopStmt, error) {
 	// TODO: Implement parsing logic for concept statement
 	return nil, nil
 }
 
-func parseFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
+func parseFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptTopStmt, error) {
 	// TODO: Implement parsing logic for concept statement
 	return nil, nil
 }
 
-func parsePropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyStmt, error) {
+func parsePropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyTopStmt, error) {
 	// TODO: Implement parsing logic for property statement
 	return nil, nil
 }
 
-func parseOptStmt(tokenStmtBlock *TokenStmt) (*FactTopStmt, error) {
+func parseOptStmt(tokenStmtBlock *TokenStmt) (*CalledPropertyTopStmt, error) {
 	return nil, nil
 }
 

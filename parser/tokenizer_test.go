@@ -44,3 +44,21 @@ func TestParseStrStmtBlock(t *testing.T) {
 
 	fmt.Println(parsedBlock)
 }
+
+func TestFileTokenize(t *testing.T) {
+	filePath := "../examples/concept.litex"
+	block, err := ParseFile(filePath)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	for _, stmt := range block.body {
+		parsedBlock, err := TokenizeStmtBlock(&stmt)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		fmt.Println(parsedBlock.String())
+	}
+
+}

@@ -30,32 +30,29 @@ func splitString(inputString string) (*[]string, error) {
 	var result []string
 	var buffer string
 	for i, char := range inputString {
-		// if the next 2 characters are //, skip until the end
+		// 如果下两个字符是 //，跳过直到结束
 		if (i+1) < len(inputString) && inputString[i:i+2] == "//" {
 			break
 		}
-
-		// if the next 2 characters are /*, error
+		// 如果下两个字符是 /*，报错
 		if (i+1) < len(inputString) && inputString[i:i+2] == "/*" {
 			return nil, fmt.Errorf("invalid syntax: nested comment block")
 		}
-
-		if _, ok := KeyChars[string(char)]; ok {
+		charStr := string(char)
+		if _, ok := KeyChars[charStr]; ok {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""
 			}
-			result = append(result, string(char))
-		}
-
-		if (char) == ' ' {
+			result = append(result, charStr)
+		} else if char == ' ' {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""
 			}
+		} else {
+			buffer += charStr
 		}
-
-		buffer += string(char)
 	}
 	if buffer != "" {
 		result = append(result, buffer)
