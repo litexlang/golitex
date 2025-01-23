@@ -44,7 +44,7 @@ func parseConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 
 	var conceptParams *[]VarTypePair = nil
 	var err error
-	if tokenStmtBlock.Header[start] == KeywordChars["["] {
+	if tokenStmtBlock.Header[start] == KeywordSymbols["["] {
 		conceptParams, err = parseTypeVarPairBracket(&tokenStmtBlock.Header, &start)
 		if err != nil {
 			return nil, err
@@ -52,17 +52,18 @@ func parseConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 	}
 
 	var varParams *[]VarTypePair = nil
-	if tokenStmtBlock.Header[start] == KeywordChars["("] {
+	if tokenStmtBlock.Header[start] == KeywordSymbols["("] {
 		varParams, err = parseTypeVarPairBrace(&tokenStmtBlock.Header, &start)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	skip(&tokenStmtBlock.Header, &start, KeywordChars[":"])
+	skip(&tokenStmtBlock.Header, &start, KeywordSymbols[":"])
 
 	var existFacts []ExistFactStmt = nil
 	var facts []FactStmt = nil
+
 	for _, stmt := range tokenStmtBlock.Body {
 		if stmt.Header[0] == Keywords["property"] {
 			for _, factBlock := range stmt.Body {
@@ -111,7 +112,7 @@ func parseFactStmt(tokenStmtBlock *TokenStmt) (*FactStmt, error) {
 	return nil, nil
 }
 
-func parseExistFactStmt(tokenStmt *TokenStmt) (*ExistFactStmt, *Error) {
+func parseExistFactStmt(tokenStmt *TokenStmt) (*ExistFactStmt, error) {
 	// TODO: Implement parsing logic for exist fact statement
 	return nil, nil
 }
