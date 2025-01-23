@@ -38,4 +38,5 @@ var KeyChars = map[string]string{
 	"|": "|",
 	"~": "~",
 	"&": "&",
+	".": ".", // postfix operator
 }

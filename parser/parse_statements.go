@@ -36,7 +36,13 @@ func ParseStmt(tokenStmtBlock *TokenStmt) (TopStmt, error) {
 }
 
 func parseConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptTopStmt, error) {
-	// TODO: Implement parsing logic for concept statement
+	// conceptVar := tokenStmtBlock.Header[1]
+	// conceptName := tokenStmtBlock.Header[2]
+
+	if tokenStmtBlock.Header[3] == KeyChars["["] {
+
+	}
+
 	return nil, nil
 }
 
