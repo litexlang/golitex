@@ -26,17 +26,17 @@ func ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (TopStmt, error) {
 func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	switch tokenStmtBlock.Header[0] {
 	case Keywords["concept"]:
-		return parseConceptStmt(tokenStmtBlock)
+		return parseDefConceptStmt(tokenStmtBlock)
 	case Keywords["property"]:
-		return parsePropertyStmt(tokenStmtBlock)
+		return parseDefPropertyStmt(tokenStmtBlock)
 	case Keywords["fn"]:
-		return parseFnStmt(tokenStmtBlock)
+		return parseDefFnStmt(tokenStmtBlock)
 	default:
-		return parseOptStmt(tokenStmtBlock)
+		return parseFactStmt(tokenStmtBlock)
 	}
 }
 
-func parseConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
+func parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 	conceptVar := tokenStmtBlock.Header[1]
 	conceptName := tokenStmtBlock.Header[2]
 
@@ -93,17 +93,13 @@ func parseConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 	return &DefConceptStmt{conceptVar, conceptName, conceptParams, nil, varParams, nil, &existFacts, &facts}, nil
 }
 
-func parseFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
+func parseDefFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 	// TODO: Implement parsing logic for concept statement
 	return nil, nil
 }
 
-func parsePropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyStmt, error) {
+func parseDefPropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyStmt, error) {
 	// TODO: Implement parsing logic for property statement
-	return nil, nil
-}
-
-func parseOptStmt(tokenStmtBlock *TokenStmt) (*CalledPropertyTopStmt, error) {
 	return nil, nil
 }
 
