@@ -1,6 +1,6 @@
 package parser
 
-type TypeVarPair struct {
+type VarTypePair struct {
 	Var  string
 	Type string
 }

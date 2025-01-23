@@ -57,9 +57,9 @@ func (stmt *LocalTopStmt) setPubTrue() error {
 type DefFnTopStmt struct {
 	pub           bool
 	Name          string
-	ConceptParams []TypeVarPair
+	ConceptParams []VarTypePair
 	ConceptFacts  []Fact
-	VarParams     []TypeVarPair
+	VarParams     []VarTypePair
 	VarFacts      []Fact
 	Facts         []Fact
 }
