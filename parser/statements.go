@@ -3,9 +3,9 @@ package parser
 type DefConceptStmt struct {
 	ConceptVar    string
 	ConceptName   string
-	ConceptParams []TypeVarPair
+	ConceptParams []VarTypePair
 	ConceptFacts  []Fact
-	VarParams     []TypeVarPair
+	VarParams     []VarTypePair
 	VarFacts      []Fact
 	ExistFacts    []ExistFact
 	Facts         []Fact
@@ -13,17 +13,17 @@ type DefConceptStmt struct {
 
 type DefPropertyStmt struct {
 	Name          string
-	ConceptParams []TypeVarPair
+	ConceptParams []VarTypePair
 	ConceptFacts  []Fact
-	VarParams     []TypeVarPair
+	VarParams     []VarTypePair
 	VarFacts      []Fact
 	Facts         []Fact
 }
 
 type IfStmt struct {
-	ConceptParams []TypeVarPair
+	ConceptParams []VarTypePair
 	ConceptFacts  []Fact
-	VarParams     []TypeVarPair
+	VarParams     []VarTypePair
 	VarFacts      []Fact
 	Facts         []Fact
 }
