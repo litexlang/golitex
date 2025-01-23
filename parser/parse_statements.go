@@ -106,7 +106,10 @@ func parseDefPropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyStmt, error) {
 func parseFactStmt(tokenStmtBlock *TokenStmt) (FactStmt, error) {
 	if tokenStmtBlock.Header[0] == KeywordSymbols["$"] {
 		return parseFuncPtyStmt(tokenStmtBlock)
+	} else if tokenStmtBlock.Header[0] == Keywords["if"] {
+		return parseIfStmt(tokenStmtBlock)
 	}
+
 	return nil, nil
 }
 
@@ -132,8 +135,9 @@ func parseIfStmt(tokenStmt *TokenStmt) (*IfStmt, error) {
 	start := 0
 	skip(&tokenStmt.Header, &start, Keywords["if"])
 
-	var conceptParams *[]VarTypePair = nil
-	var err error = nil
+	var err error
+
+	var conceptParams *[]VarTypePair
 	if tokenStmt.Header[start] == KeywordSymbols["["] {
 		conceptParams, err = parseTypeVarPairBracket(&tokenStmt.Header, &start)
 		if err != nil {
@@ -141,7 +145,7 @@ func parseIfStmt(tokenStmt *TokenStmt) (*IfStmt, error) {
 		}
 	}
 
-	var varParams *[]VarTypePair = nil
+	var varParams *[]VarTypePair
 	if tokenStmt.Header[start] == KeywordSymbols["("] {
 		varParams, err = parseTypeVarPairBrace(&tokenStmt.Header, &start)
 		if err != nil {
