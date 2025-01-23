@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+type TopLevelStmtSlice struct {
+	body []SourceCodeStmtBlock
+}
+
 const parseIndent = 4
 
 // SourceCodeStmtBlock 结构体表示一个语句块
@@ -33,22 +37,19 @@ func (b *SourceCodeStmtBlock) stringWithIndent(indentLevel int) string {
 }
 
 // ParseFile 读取文件并解析为 StmtBlock 结构
-func ParseFile(filePath string) (*SourceCodeStmtBlock, error) {
+func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("无法读取文件: %v", err)
 	}
 
-	lines := strings.Split((string(content)), "\n")
-
-	blocks, _, err := parseStmtBlocks(lines, 0, 0)
-	return &SourceCodeStmtBlock{"", blocks}, err
+	return ParseString(string(content))
 }
 
-func ParseString(content string) ([]SourceCodeStmtBlock, error) {
+func ParseString(content string) (*TopLevelStmtSlice, error) {
 	lines := strings.Split((content), "\n")
 	blocks, _, err := parseStmtBlocks(lines, 0, 0)
-	return blocks, err
+	return &TopLevelStmtSlice{blocks}, err
 }
 
 func parseStmtBlocks(lines []string, currentIndent int, startIndex int) ([]SourceCodeStmtBlock, int, error) {

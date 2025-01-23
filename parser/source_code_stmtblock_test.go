@@ -11,7 +11,7 @@ func TestLexer(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	for _, block := range block.Body {
+	for _, block := range block.body {
 		fmt.Println(block.String())
 	}
 }
@@ -27,7 +27,7 @@ def add(a, b):
 		t.Fatalf(err.Error())
 	}
 
-	for _, block := range blocks {
+	for _, block := range blocks.body {
 		fmt.Println(block)
 	}
 

@@ -1,17 +1,5 @@
-def f():
-    // asdf
-    print(2)
+concept f[G Group](v G):
+    lt(1, v, G.1)
+    1 < 2
 
-def g():
-    /*
-    asdf
-    */ 
-    print(1)
-
-def t():
-    
-    // adf
-    /* adf */
-    print(2)
-
-f()
+f(2)
