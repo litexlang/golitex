@@ -3,6 +3,7 @@ package parser
 import "fmt"
 
 type TopStmt interface {
+	Stmt
 	setPubTrue() error
 }
 
@@ -58,10 +59,10 @@ type DefFnTopStmt struct {
 	pub           bool
 	Name          string
 	ConceptParams []VarTypePair
-	ConceptFacts  []Fact
+	ConceptFacts  []FactStmt
 	VarParams     []VarTypePair
-	VarFacts      []Fact
-	Facts         []Fact
+	VarFacts      []FactStmt
+	Facts         []FactStmt
 }
 
 func (stmt *DefFnTopStmt) setPubTrue() error {
