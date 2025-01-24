@@ -18,6 +18,8 @@ var Keywords = map[string]string{
 	"package":        "package",
 	"exist_property": "exist_property",
 	"return":         "return",
+	"member":         "member",
+	"var":            "var",
 }
 
 var KeywordSymbols = map[string]string{
