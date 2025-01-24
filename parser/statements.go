@@ -8,7 +8,7 @@ type DefConceptStmt struct {
 	ConceptVar    string
 	ConceptName   string
 	ConceptParams []VarTypePair
-	ConceptFacts  []FactStmt
+	ConceptFacts  []FactExprStmt
 	VarParams     []VarTypePair
 	VarFacts      []FactStmt
 	ExistFacts    []ExistStmt
@@ -36,7 +36,7 @@ type ExistStmt struct{}
 
 type IfStmt struct {
 	ConceptParams []VarTypePair
-	ConceptFacts  []FactStmt
+	ConceptFacts  []FactExprStmt
 	VarParams     []VarTypePair
 	VarFacts      []FactStmt
 	Facts         []FactStmt

@@ -13,8 +13,9 @@ func skip(tokens *[]string, start *int, expected string) error {
 	return nil
 }
 
-func parseTypeVarPairBracket(tokens *[]string, start *int) ([]VarTypePair, error) {
-	vals := []VarTypePair{}
+func parseTypeVarPairBracket(tokens *[]string, start *int) (*varTypePairBracketBrace, error) {
+	pairs := []VarTypePair{}
+	facts := []FactExprStmt{}
 
 	err := skip(tokens, start, KeywordSymbols["["])
 	if err != nil {
@@ -28,13 +29,17 @@ func parseTypeVarPairBracket(tokens *[]string, start *int) ([]VarTypePair, error
 		t := (*tokens)[*start]
 		typeVarPair := VarTypePair{v, t}
 
-		vals = append(vals, typeVarPair)
+		pairs = append(pairs, typeVarPair)
 
 		*start++
 
 		if (*tokens)[*start] == KeywordSymbols["]"] {
 			*start++
-			return vals, nil
+			break
+		}
+
+		if (*tokens)[*start] == KeywordSymbols["::"] {
+			break
 		}
 
 		err := skip(tokens, start, KeywordSymbols[","])
@@ -43,7 +48,34 @@ func parseTypeVarPairBracket(tokens *[]string, start *int) ([]VarTypePair, error
 		}
 	}
 
-	return nil, fmt.Errorf("expected ']', but got '%s'", (*tokens)[*start])
+	if (*tokens)[*start] == KeywordSymbols["::"] {
+		*start++
+		for *start < len(*tokens) && (*tokens)[*start] != KeywordSymbols["]"] {
+			fact, err := parseFactExprStmt(tokens, start)
+			if err != nil {
+				return nil, err
+			}
+
+			facts = append(facts, fact)
+
+			if (*tokens)[*start] == KeywordSymbols["]"] {
+				*start++
+				break
+			}
+
+			err = skip(tokens, start, KeywordSymbols[","])
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return &varTypePairBracketBrace{pairs, facts}, nil
+}
+
+func parseFactExprStmt(tokens *[]string, start *int) (*FactExprStmt, error) {
+	// TODO
+	return nil, nil
 }
 
 func parseTypeVarPairBrace(tokens *[]string, start *int) ([]VarTypePair, error) {
