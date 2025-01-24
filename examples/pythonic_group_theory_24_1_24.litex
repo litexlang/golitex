@@ -73,12 +73,17 @@ pub concept G Group:
 
 pub concept G FiniteGroup:
     inherit:
+        // 如果 Group, Set 有同名的method，或2个同名的func调用一个symbol，而这个symbol刚好有2个type都符合这两个func，解决方式就像ts一样，用 as xxx，或用 G Group G.* 这样的方法解决
+        // (G as Group)::finite()
+        // (g as TypeName)::property()
+        // as(g, Group)::finite()
+        这个东西进入 if 的时候，会自动 踏缩到 if 里的那个type，所以踏缩完后不会出错
         Group
+        Set 
     
     property:
-        G is finite
+        G::finite() // G 作为 set 是 finite 的，如何指定这个finite是G的呢？
         
     extra:
         var_member:
             var order Nat // 单一元素的阶数
-            
