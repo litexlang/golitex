@@ -38,7 +38,7 @@ type IfStmt struct {
 	ConceptParams []VarTypePair
 	ConceptFacts  []FactExprStmt
 	VarParams     []VarTypePair
-	VarFacts      []FactStmt
+	VarFacts      []FactExprStmt
 	Facts         []FactStmt
 }
 
