@@ -1,5 +1,10 @@
 package parser
 
+type varTypePairBracketBrace struct {
+	pairs []VarTypePair
+	facts []FactExprStmt
+}
+
 type VarTypePair struct {
 	Var  string
 	Type string
