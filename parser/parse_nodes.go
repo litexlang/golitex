@@ -13,7 +13,7 @@ func skip(tokens *[]string, start *int, expected string) error {
 	return nil
 }
 
-func parseTypeVarPairBracket(tokens *[]string, start *int) (*[]VarTypePair, error) {
+func parseTypeVarPairBracket(tokens *[]string, start *int) ([]VarTypePair, error) {
 	var vals []VarTypePair
 
 	err := skip(tokens, start, KeywordSymbols["["])
@@ -34,7 +34,7 @@ func parseTypeVarPairBracket(tokens *[]string, start *int) (*[]VarTypePair, erro
 
 		if (*tokens)[*start] == KeywordSymbols["]"] {
 			*start++
-			return &vals, nil
+			return vals, nil
 		}
 
 		err := skip(tokens, start, KeywordSymbols[","])
@@ -46,7 +46,7 @@ func parseTypeVarPairBracket(tokens *[]string, start *int) (*[]VarTypePair, erro
 	return nil, fmt.Errorf("expected ']', but got '%s'", (*tokens)[*start])
 }
 
-func parseTypeVarPairBrace(tokens *[]string, start *int) (*[]VarTypePair, error) {
+func parseTypeVarPairBrace(tokens *[]string, start *int) ([]VarTypePair, error) {
 	var vals []VarTypePair
 
 	err := skip(tokens, start, KeywordSymbols["("])
@@ -67,7 +67,7 @@ func parseTypeVarPairBrace(tokens *[]string, start *int) (*[]VarTypePair, error)
 
 		if (*tokens)[*start] == KeywordSymbols[")"] {
 			*start++
-			return &vals, nil
+			return vals, nil
 		}
 
 		err := skip(tokens, start, KeywordSymbols[","])
@@ -86,7 +86,7 @@ func parseVar(tokens *[]string, start *int) (Var, error) {
 	return &v, nil
 }
 
-func parseBracedVars(tokens *[]string, start *int) (*[]Var, error) {
+func parseBracedVars(tokens *[]string, start *int) ([]Var, error) {
 	skip(tokens, start, KeywordSymbols["("])
 
 	vars := []Var{}
@@ -100,7 +100,7 @@ func parseBracedVars(tokens *[]string, start *int) (*[]Var, error) {
 
 		if (*tokens)[*start] == KeywordSymbols[")"] {
 			*start++
-			return &vars, nil
+			return vars, nil
 		}
 
 		if (*tokens)[*start] == KeywordSymbols[","] {

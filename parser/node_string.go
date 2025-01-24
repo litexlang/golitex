@@ -6,7 +6,7 @@ import (
 
 func (t *PtyStmt) String() string {
 	paramsStr := ""
-	for _, p := range *t.params {
+	for _, p := range t.params {
 		paramsStr += fmt.Sprintf("%s", p)
 	}
 

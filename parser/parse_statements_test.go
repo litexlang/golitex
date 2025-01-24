@@ -8,7 +8,7 @@ import (
 // Test function for parseFuncPtyStmt
 func TestParseFuncPtyStmt(t *testing.T) {
 	tokens := []string{"$", "<", "(", "1", ",", "2", ")"}
-	tokenStmt := TokenStmt{tokens, []TokenStmt{}}
+	tokenStmt := TokenStmt{tokens, nil}
 	stmt, err := parseFuncPtyStmt(&tokenStmt)
 	if err != nil {
 		t.Error(err)
@@ -20,7 +20,7 @@ func TestParseFuncPtyStmt(t *testing.T) {
 
 func TestParsePtyStmt(t *testing.T) {
 	tokens := []string{"$", "<", "(", "1", ",", "2", ")"}
-	tokenStmt := TokenStmt{tokens, []TokenStmt{}}
+	tokenStmt := TokenStmt{tokens, nil}
 	stmt, err := ParseStmt(&tokenStmt)
 	if err != nil {
 		t.Error(err)
@@ -31,9 +31,10 @@ func TestParsePtyStmt(t *testing.T) {
 func TestParseIfStmt(t *testing.T) {
 	tokens := []string{"if", "[", "G", "Group", "]", "(", "v", "G", ")", ":"}
 	tokens2 := []string{"$", "<", "(", "1", ",", "2", ")"}
-	tokenStmt2 := TokenStmt{tokens2, []TokenStmt{}}
+	tokenStmt2 := TokenStmt{tokens2, nil}
 
-	tokenStmt := TokenStmt{tokens, []TokenStmt{tokenStmt2}}
+	body := []TokenStmt{tokenStmt2}
+	tokenStmt := TokenStmt{tokens, &body}
 	stmt, err := ParseStmt(&tokenStmt)
 	if err != nil {
 		t.Error(err)

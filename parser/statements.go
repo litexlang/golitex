@@ -7,20 +7,20 @@ type Stmt interface {
 type DefConceptStmt struct {
 	ConceptVar    string
 	ConceptName   string
-	ConceptParams *[]VarTypePair
-	ConceptFacts  *[]FactStmt
-	VarParams     *[]VarTypePair
-	VarFacts      *[]FactStmt
-	ExistFacts    *[]ExistStmt
-	Facts         *[]FactStmt
+	ConceptParams []VarTypePair
+	ConceptFacts  []FactStmt
+	VarParams     []VarTypePair
+	VarFacts      []FactStmt
+	ExistFacts    []ExistStmt
+	Facts         []FactStmt
 }
 
 type DefPropertyStmt struct {
 	Name          string
-	ConceptParams *[]VarTypePair
-	ConceptFacts  *[]FactStmt
-	VarParams     *[]VarTypePair
-	VarFacts      *[]FactStmt
+	ConceptParams []VarTypePair
+	ConceptFacts  []FactStmt
+	VarParams     []VarTypePair
+	VarFacts      []FactStmt
 	Facts         []FactStmt
 }
 
@@ -35,14 +35,14 @@ type FactStmt interface {
 type ExistStmt struct{}
 
 type IfStmt struct {
-	ConceptParams *[]VarTypePair
-	ConceptFacts  *[]FactStmt
-	VarParams     *[]VarTypePair
-	VarFacts      *[]FactStmt
+	ConceptParams []VarTypePair
+	ConceptFacts  []FactStmt
+	VarParams     []VarTypePair
+	VarFacts      []FactStmt
 	Facts         []FactStmt
 }
 
 type PtyStmt struct {
 	Name   string
-	params *[]Var
+	params []Var
 }
