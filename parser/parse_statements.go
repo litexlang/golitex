@@ -44,7 +44,6 @@ func parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 
 	conceptParams := []VarTypePair{}
 	conceptFacts := []FactExprStmt{}
-	var err error
 	if tokenStmtBlock.Header[start] == KeywordSymbols["["] {
 		bracket, err := parseTypeVarPairBracket(&tokenStmtBlock.Header, &start)
 		if err != nil {
@@ -55,11 +54,14 @@ func parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 	}
 
 	varParams := []VarTypePair{}
+	varFacts := []FactExprStmt{}
 	if tokenStmtBlock.Header[start] == KeywordSymbols["("] {
-		varParams, err = parseTypeVarPairBrace(&tokenStmtBlock.Header, &start)
+		bracket, err := parseTypeVarPairBrace(&tokenStmtBlock.Header, &start)
 		if err != nil {
 			return nil, err
 		}
+		varParams = bracket.pairs
+		varFacts = varFacts
 	}
 
 	skip(&tokenStmtBlock.Header, &start, KeywordSymbols[":"])
@@ -144,8 +146,6 @@ func parseIfStmt(tokenStmt *TokenStmt) (*IfStmt, error) {
 	start := 0
 	skip(&tokenStmt.Header, &start, Keywords["if"])
 
-	var err error
-
 	conceptParams := []VarTypePair{}
 	conceptFacts := []FactExprStmt{}
 	if tokenStmt.Header[start] == KeywordSymbols["["] {
@@ -158,11 +158,14 @@ func parseIfStmt(tokenStmt *TokenStmt) (*IfStmt, error) {
 	}
 
 	varParams := []VarTypePair{}
+	varFacts := []FactExprStmt{}
 	if tokenStmt.Header[start] == KeywordSymbols["("] {
-		varParams, err = parseTypeVarPairBrace(&tokenStmt.Header, &start)
+		bracket, err := parseTypeVarPairBrace(&tokenStmt.Header, &start)
 		if err != nil {
 			return nil, err
 		}
+		varParams = bracket.pairs
+		varFacts = bracket.facts
 	}
 
 	facts := []FactStmt{}
@@ -176,5 +179,5 @@ func parseIfStmt(tokenStmt *TokenStmt) (*IfStmt, error) {
 		}
 	}
 
-	return &IfStmt{conceptParams, conceptFacts, varParams, nil, facts}, nil
+	return &IfStmt{conceptParams, conceptFacts, varParams, varFacts, facts}, nil
 }
