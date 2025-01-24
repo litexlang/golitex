@@ -20,7 +20,7 @@ pub concept G Group:
 
 // 内部表示
 pub concept G Group:
-    member [G Group] fn *(x G, y G) G
+    member [G Group] fn *(x G, y G) G   // member 的 []()里不能有 ::。因为 这是直接跟着 type 的
     member [G Group] fn inv(x G) G
     member [G Group] var 1 G
 
@@ -36,3 +36,49 @@ pub concept G Group:
         x * x.inv = G.1
     member [G Group](x G) fn getInv() G:
         x.getInv() = x.inv
+
+pub concept G FiniteGroup extends Group:    // 用extend是继承 Group的Operator和性质。不用 composite 是为了不让 Operator 打架
+    G is finite
+
+    // 上面是 iff , :: 后面是onlyIf
+    ::
+        member (x G) var order Nat
+
+// a new version
+// 正常的编程语言，全部都是 then，因为不用验证；而我们需要分离 concept的 iff 和 推论
+pub concept G Group:
+    inherit:
+        Set
+
+    concept_member:
+        fn *(x G, y G) G
+        fn inv(x G) G
+        var 1 G
+
+    var_member:
+        var inv G
+        fn getInv() G
+
+    property:
+        if x G, y G:
+            (x * y) * z = x * (y * z)
+        if x G:
+            x * G.1 = G.1 * x
+            inv(x) * x = G.1
+            x * inv(x) = G.1
+            x.inv * x = G.1
+            x * x.inv = G.1
+            x.getInv() * x = G.1
+            x * x.getInv() = G.1
+
+pub concept G FiniteGroup:
+    inherit:
+        Group
+    
+    property:
+        G is finite
+        
+    extra:
+        var_member:
+            var order Nat // 单一元素的阶数
+            
