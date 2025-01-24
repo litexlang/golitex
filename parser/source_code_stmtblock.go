@@ -7,13 +7,13 @@ import (
 )
 
 type TopLevelStmtSlice struct {
-	body *[]SourceCodeStmtBlock
+	body []SourceCodeStmtBlock
 }
 
 // SourceCodeStmtBlock 结构体表示一个语句块
 type SourceCodeStmtBlock struct {
 	Header string
-	Body   *[]SourceCodeStmtBlock
+	Body   []SourceCodeStmtBlock
 }
 
 const parseIndent = 4
@@ -29,10 +29,8 @@ func (b *SourceCodeStmtBlock) stringWithIndent(indentLevel int) string {
 	result := fmt.Sprintf("%s%s\n", indent, b.Header)
 
 	// 递归处理子块
-	if b.Body != nil {
-		for _, subBlock := range *b.Body {
-			result += subBlock.stringWithIndent(indentLevel + 1)
-		}
+	for _, subBlock := range b.Body {
+		result += subBlock.stringWithIndent(indentLevel + 1)
 	}
 
 	return result
@@ -51,11 +49,12 @@ func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
 func ParseString(content string) (*TopLevelStmtSlice, error) {
 	lines := strings.Split((content), "\n")
 	blocks, _, err := parseStmtBlocks(lines, 0, 0)
-	return &TopLevelStmtSlice{blocks}, err
+
+	return &TopLevelStmtSlice{*blocks}, err
 }
 
 func parseStmtBlocks(lines []string, currentIndent int, startIndex int) (*[]SourceCodeStmtBlock, int, error) {
-	var blocks []SourceCodeStmtBlock
+	blocks := []SourceCodeStmtBlock{}
 	i := startIndex
 
 	for i < len(lines) {
@@ -147,7 +146,7 @@ func parseStmtBlocks(lines []string, currentIndent int, startIndex int) (*[]Sour
 					if err != nil {
 						return nil, i, err
 					}
-					block.Body = subBlocks
+					block.Body = *subBlocks
 					i = nextIndex
 					break
 				}

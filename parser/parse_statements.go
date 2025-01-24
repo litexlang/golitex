@@ -42,7 +42,7 @@ func parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 
 	start := 3
 
-	var conceptParams []VarTypePair
+	conceptParams := []VarTypePair{}
 	var err error
 	if tokenStmtBlock.Header[start] == KeywordSymbols["["] {
 		conceptParams, err = parseTypeVarPairBracket(&tokenStmtBlock.Header, &start)
@@ -51,7 +51,7 @@ func parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 		}
 	}
 
-	var varParams []VarTypePair
+	varParams := []VarTypePair{}
 	if tokenStmtBlock.Header[start] == KeywordSymbols["("] {
 		varParams, err = parseTypeVarPairBrace(&tokenStmtBlock.Header, &start)
 		if err != nil {
@@ -61,8 +61,8 @@ func parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 
 	skip(&tokenStmtBlock.Header, &start, KeywordSymbols[":"])
 
-	var existFacts []ExistStmt = nil
-	var facts []FactStmt = nil
+	existFacts := []ExistStmt{}
+	facts := []FactStmt{}
 
 	if tokenStmtBlock.Body != nil {
 		for _, stmt := range *tokenStmtBlock.Body {
@@ -125,7 +125,7 @@ func parseExistFactStmt(tokenStmt *TokenStmt) (*ExistStmt, error) {
 }
 
 func parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
-	var start = 0
+	start := 0
 	skip(&tokenStmt.Header, &start, KeywordSymbols["$"])
 	name := tokenStmt.Header[start]
 	start++
@@ -143,7 +143,7 @@ func parseIfStmt(tokenStmt *TokenStmt) (*IfStmt, error) {
 
 	var err error
 
-	var conceptParams []VarTypePair
+	conceptParams := []VarTypePair{}
 	if tokenStmt.Header[start] == KeywordSymbols["["] {
 		conceptParams, err = parseTypeVarPairBracket(&tokenStmt.Header, &start)
 		if err != nil {
@@ -151,7 +151,7 @@ func parseIfStmt(tokenStmt *TokenStmt) (*IfStmt, error) {
 		}
 	}
 
-	var varParams []VarTypePair
+	varParams := []VarTypePair{}
 	if tokenStmt.Header[start] == KeywordSymbols["("] {
 		varParams, err = parseTypeVarPairBrace(&tokenStmt.Header, &start)
 		if err != nil {

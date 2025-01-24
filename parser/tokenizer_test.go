@@ -31,12 +31,12 @@ func TestParseStrStmtBlock(t *testing.T) {
 	body := []SourceCodeStmtBlock{
 		{
 			Header: "concept [G Set](v G):",
-			Body:   &subBody,
+			Body:   subBody,
 		},
 	}
 	input := SourceCodeStmtBlock{
 		Header: "concept [G Group[G Set](v G)]:",
-		Body:   &body,
+		Body:   body,
 	}
 
 	parsedBlock, err := TokenizeStmtBlock(&input)
@@ -54,14 +54,12 @@ func TestFileTokenize(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	if block.body != nil {
-		for _, stmt := range *block.body {
-			parsedBlock, err := TokenizeStmtBlock(&stmt)
-			if err != nil {
-				t.Fatalf(err.Error())
-			}
-
-			fmt.Println(parsedBlock.String())
+	for _, stmt := range block.body {
+		parsedBlock, err := TokenizeStmtBlock(&stmt)
+		if err != nil {
+			t.Fatalf(err.Error())
 		}
+
+		fmt.Println(parsedBlock.String())
 	}
 }

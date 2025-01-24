@@ -59,12 +59,12 @@ func nextToken(inputString string, start int) (string, int, error) {
 }
 
 func tokenizeString(inputString string) (*[]string, error) {
-	var result []string
-	var buffer string
+	result := []string{}
+	buffer := ""
 	for i := 0; i < len(inputString); {
 		token, nextIndex, err := nextToken(inputString, i)
 		if err != nil {
-			return nil, err
+			return &result, err
 		}
 		if token == "" {
 			if buffer != "" {
@@ -89,29 +89,29 @@ func tokenizeString(inputString string) (*[]string, error) {
 }
 
 func TokenizeStmtBlock(b *SourceCodeStmtBlock) (*TokenStmt, error) {
-	var body []TokenStmt
-	var header *[]string
+	body := []TokenStmt{}
+	var header []string = []string{}
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
 	// 例如，将 Header 中的元素转换为大写
-	header, err := tokenizeString(b.Header)
-	if err != nil {
+	headerPtr, err := tokenizeString(b.Header)
+	header = *headerPtr
+
+	if err != nil || header == nil {
 		return nil, err
 	}
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Body 进行一些处理
 	// 例如，递归调用 ParseStmtBlock 处理 Body 中的每个元素
-	if b.Body != nil {
-		for _, subBlock := range *b.Body {
-			parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
-			if err != nil {
-				return nil, err
-			}
-			body = append(body, *parsedSubBlock)
+	for _, subBlock := range b.Body {
+		parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
+		if err != nil {
+			return nil, err
 		}
+		body = append(body, *parsedSubBlock)
 	}
 	return &TokenStmt{
-		Header: *header,
+		Header: header,
 		Body:   &body,
 	}, nil
 }
