@@ -14,7 +14,7 @@ func skip(tokens *[]string, start *int, expected string) error {
 }
 
 func parseTypeVarPairBracket(tokens *[]string, start *int) ([]VarTypePair, error) {
-	var vals []VarTypePair
+	vals := []VarTypePair{}
 
 	err := skip(tokens, start, KeywordSymbols["["])
 	if err != nil {
@@ -47,7 +47,7 @@ func parseTypeVarPairBracket(tokens *[]string, start *int) ([]VarTypePair, error
 }
 
 func parseTypeVarPairBrace(tokens *[]string, start *int) ([]VarTypePair, error) {
-	var vals []VarTypePair
+	vals := []VarTypePair{}
 
 	err := skip(tokens, start, KeywordSymbols["("])
 	if err != nil {
