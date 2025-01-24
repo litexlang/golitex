@@ -42,6 +42,12 @@ var KeywordSymbols = map[string]string{
 	"&":  "&",
 	".":  ".",
 	"::": "::",
+	"++": "++",
+	"--": "--",
+	"&&": "&&",
+	"||": "||",
+	"==": "==",
+	"!=": "!=",
 }
 var sortedSymbols []string = sortKeywordSymbols()
 

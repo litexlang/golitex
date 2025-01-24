@@ -9,7 +9,7 @@ func TestParseTypeVarPairBracketWithoutFacts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(*pairs) != 2 || (*pairs)[0].Var != "g" || (*pairs)[0].Type != "Group" || (*pairs)[1].Var != "v" || (*pairs)[1].Type != "Group" {
+	if len(pairs) != 2 || (pairs)[0].Var != "g" || (pairs)[0].Type != "Group" || (pairs)[1].Var != "v" || (pairs)[1].Type != "Group" {
 		t.Error("Expected pairs: [{g Group}, {v Group}], but got: ", pairs)
 	}
 
@@ -26,7 +26,7 @@ func TestParseTypeVarPairBraceWithoutFacts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(*pairs) != 2 || (*pairs)[0].Var != "g" || (*pairs)[0].Type != "Group" || (*pairs)[1].Var != "v" || (*pairs)[1].Type != "Group" {
+	if len(pairs) != 2 || (pairs)[0].Var != "g" || (pairs)[0].Type != "Group" || (pairs)[1].Var != "v" || (pairs)[1].Type != "Group" {
 		t.Error("Expected pairs: [{g Group}, {v Group}], but got: ", pairs)
 	}
 }

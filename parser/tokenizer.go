@@ -7,7 +7,7 @@ import (
 
 type TokenStmt struct {
 	Header []string
-	Body   []TokenStmt
+	Body   *[]TokenStmt
 }
 
 func (b *TokenStmt) String() string {
@@ -19,8 +19,10 @@ func (b TokenStmt) stringWithIndent(indentLevel int) string {
 	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.Header, " "))
 
 	// 递归处理子块
-	for _, subBlock := range b.Body {
-		result += subBlock.stringWithIndent(indentLevel + 1)
+	if b.Body != nil {
+		for _, subBlock := range *b.Body {
+			result += subBlock.stringWithIndent(indentLevel + 1)
+		}
 	}
 
 	return result
@@ -110,6 +112,6 @@ func TokenizeStmtBlock(b *SourceCodeStmtBlock) (*TokenStmt, error) {
 	}
 	return &TokenStmt{
 		Header: *header,
-		Body:   body,
+		Body:   &body,
 	}, nil
 }
