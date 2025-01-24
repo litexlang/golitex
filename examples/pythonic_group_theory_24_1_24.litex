@@ -1,0 +1,38 @@
+pub concept G Group:
+    member: // 这里自动往member里绑定 member [G Group]
+        fn *(x G, y G) G
+        fn inv(x G) G
+        var 1 G
+    
+    property:   // 这里自动往if 和 member 里绑定 [G Group]
+        if x G, y G:
+            (x * y) * z = x * (y * z)
+        if x G:
+            x * G.1 = G.1 * x
+        if x G:
+            inv(x) * x = G.1
+            x * inv(x) = G.1
+        member (x G) var inv G:
+            x.inv * x = G.1
+            x * x.inv = G.1
+        member (x G) fn getInv() G:
+            x.getInv() = x.inv
+
+// 内部表示
+pub concept G Group:
+    member [G Group] fn *(x G, y G) G
+    member [G Group] fn inv(x G) G
+    member [G Group] var 1 G
+
+    if [G Group] x G, y G:
+        (x * y) * z = x * (y * z)
+    if [G Group] x G:
+        x * G.1 = G.1 * x
+    if [G Group] x G:
+        inv(x) * x = G.1
+        x * inv(x) = G.1
+    member [G Group](x G) var inv G:
+        x.inv * x = G.1
+        x * x.inv = G.1
+    member [G Group](x G) fn getInv() G:
+        x.getInv() = x.inv
