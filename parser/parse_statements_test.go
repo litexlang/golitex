@@ -9,8 +9,8 @@ import (
 func TestParseFuncPtyStmt(t *testing.T) {
 	tokens := []string{"$", "<", "(", "1", ",", "2", ")"}
 	tokenStmt := TokenStmt{tokens, nil}
-	stmt, err := parseFuncPtyStmt(&tokenStmt)
-	if err != nil {
+	stmt := LitexParser.parseFuncPtyStmt(&tokenStmt)
+	if err := LitexParser.Err(); err != nil {
 		t.Error(err)
 	}
 
@@ -21,8 +21,8 @@ func TestParseFuncPtyStmt(t *testing.T) {
 func TestParsePtyStmt(t *testing.T) {
 	tokens := []string{"$", "<", "(", "1", ",", "2", ")"}
 	tokenStmt := TokenStmt{tokens, nil}
-	stmt, err := ParseStmt(&tokenStmt)
-	if err != nil {
+	stmt := LitexParser.ParseStmt(&tokenStmt)
+	if err := LitexParser.Err(); err != nil {
 		t.Error(err)
 	}
 	fmt.Println(fmt.Sprintf("%v", stmt))
@@ -35,8 +35,8 @@ func TestParseIfStmt(t *testing.T) {
 
 	body := []TokenStmt{tokenStmt2}
 	tokenStmt := TokenStmt{tokens, &body}
-	stmt, err := ParseStmt(&tokenStmt)
-	if err != nil {
+	stmt := LitexParser.ParseStmt(&tokenStmt)
+	if err := LitexParser.Err(); err != nil {
 		t.Error(err)
 	}
 	fmt.Println(fmt.Sprintf("%v", stmt))

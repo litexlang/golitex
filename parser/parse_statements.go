@@ -1,60 +1,68 @@
 package parser
 
-func ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (*TopStmt, error) {
+type Parser struct {
+	err error
+}
+
+func (parser Parser) Err() error {
+	return parser.err
+}
+
+var LitexParser = Parser{err: nil}
+
+func (parser Parser) ParseTopLevelStmt(tokenStmtBlock *TokenStmt) *TopStmt {
 	pub := false
 	if tokenStmtBlock.Header[0] == Keywords["pub"] {
 		tokenStmtBlock.Header = tokenStmtBlock.Header[1:] // remove the leading 'pub'
 		pub = true
 	}
 
-	stmt, err := ParseStmt(tokenStmtBlock)
-	if err != nil {
-		return nil, err
+	stmt := parser.ParseStmt(tokenStmtBlock)
+
+	if parser.Err() != nil {
+		return nil
 	}
-
-	topStmt := &TopStmt{stmt, pub}
-
-	return topStmt, nil
+	return &TopStmt{stmt, pub}
 }
 
-func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
+func (parser Parser) ParseStmt(tokenStmtBlock *TokenStmt) Stmt {
 	switch tokenStmtBlock.Header[0] {
 	case Keywords["concept"]:
-		return parseDefConceptStmt(tokenStmtBlock)
+		return parser.parseDefConceptStmt(tokenStmtBlock)
 	case Keywords["property"]:
-		return parseDefPropertyStmt(tokenStmtBlock)
+		return parser.parseDefPropertyStmt(tokenStmtBlock)
 	case Keywords["fn"]:
-		return parseDefFnStmt(tokenStmtBlock)
+		return parser.parseDefFnStmt(tokenStmtBlock)
 	default:
-		return parseFactStmt(tokenStmtBlock)
+		return parser.parseFactStmt(tokenStmtBlock)
 	}
 }
 
-func parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
-	return nil, nil
+func (parser Parser) parseDefConceptStmt(tokenStmtBlock *TokenStmt) *DefConceptStmt {
+	return nil
 }
 
-func parseDefFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
+func (parser Parser) parseDefFnStmt(tokenStmtBlock *TokenStmt) *DefConceptStmt {
 	// TODO: Implement parsing logic for concept statement
-	return nil, nil
+	return nil
 }
 
-func parseDefPropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyStmt, error) {
+func (parser Parser) parseDefPropertyStmt(tokenStmtBlock *TokenStmt) *DefPropertyStmt {
 	// TODO: Implement parsing logic for property statement
-	return nil, nil
+	return nil
 }
 
-func parseFactStmt(tokenStmtBlock *TokenStmt) (FactStmt, error) {
+func (parser Parser) parseFactStmt(tokenStmtBlock *TokenStmt) FactStmt {
 	if tokenStmtBlock.Header[0] == KeywordSymbols["$"] {
-		return parseFuncPtyStmt(tokenStmtBlock)
+		return LitexParser.parseFuncPtyStmt(tokenStmtBlock)
 	} else if tokenStmtBlock.Header[0] == Keywords["if"] {
-		return parseIfStmt(tokenStmtBlock)
+		return LitexParser.parseIfStmt(tokenStmtBlock)
 	}
 
-	return nil, nil
+	return nil
 }
 
-func parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
+func (parser Parser) parseFuncPtyStmt(tokenStmt *TokenStmt) *PtyStmt {
 	start := 0
 	var err error
 
@@ -65,20 +73,20 @@ func parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
 	if tokenStmt.Header[start] == KeywordSymbols["["] {
 		typeParams, err = ParseSingletonVarBracket(&tokenStmt.Header, &start)
 		if err != nil {
-			return nil, err
+			return nil
 		}
 	}
 
 	start++
 	params, err := parseBracedVars(&tokenStmt.Header, &start)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
-	return &PtyStmt{name, *typeParams, params}, nil
+	return &PtyStmt{name, *typeParams, params}
 }
 
-func parseIfStmt(tokenStmt *TokenStmt) (*ForallStmt, error) {
+func (parser Parser) parseIfStmt(tokenStmt *TokenStmt) *ForallStmt {
 	// TODO
-	return nil, nil
+	return nil
 }
