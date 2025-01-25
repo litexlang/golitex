@@ -8,7 +8,7 @@ type Parser struct {
 }
 
 func (p *Parser) getSlice() []string {
-	return p.slice[p.index:]
+	return p.slice
 }
 
 func (p *Parser) setIndex(i int) error {
@@ -81,33 +81,3 @@ func (it *Parser) skip(expected ...string) error {
 
 	return nil
 }
-
-type bracketedVarTypePair struct {
-	pairs []varTypePair
-}
-
-type varTypePair struct {
-	Var  string
-	Type string
-}
-
-type SingletonVar string
-
-type FnReturnVar struct {
-	FcFnRetVal
-}
-
-type FcFnRetVal struct {
-	fn         Fc
-	typeParams []FcStr
-	varParams  []Fc
-}
-
-type Declaration interface{}
-
-// 变量和函数是一等公民。它们的表现形式是：1. 单纯的string 2. 函数返回值
-type Fc interface{}
-
-type FcStr string
-
-type Var interface{}
