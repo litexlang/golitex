@@ -10,9 +10,6 @@ type VarTypePair struct {
 	Type string
 }
 
-type Var interface {
-}
-
 type SingletonVar string
 
 type FnReturnVar struct {
@@ -20,8 +17,21 @@ type FnReturnVar struct {
 }
 
 type CalledFn struct {
-	Name   string
-	Params []Var
+	fn         FirstClassEntity
+	typeParams []FirstClassEntity
+	varParams  []FirstClassEntity
 }
 
 type Declaration interface{}
+
+// 变量和函数是一等公民。它们的表现形式是：1. 单纯的string 2. 函数返回值
+type FirstClassEntity interface {
+}
+
+type FirstClassStr string
+
+type FnReturnValue struct {
+	fn         FirstClassEntity
+	typeParams []FirstClassEntity
+	varParams  []FirstClassEntity
+}
