@@ -1,6 +1,6 @@
 package parser
 
-func (parser Parser) ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (*TopStmt, error) {
+func (parser *Parser) ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (*TopStmt, error) {
 	pub := false
 	if tokenStmtBlock.Header.is(KeySyms["pub"]) {
 		err := tokenStmtBlock.Header.setIndex(1)
@@ -18,7 +18,7 @@ func (parser Parser) ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (*TopStmt, err
 	return &TopStmt{stmt, pub}, nil
 }
 
-func (parser Parser) ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
+func (parser *Parser) ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	cur, err := tokenStmtBlock.Header.currentToken()
 	if err != nil {
 		return nil, err
@@ -36,40 +36,29 @@ func (parser Parser) ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 	}
 }
 
-func (parser Parser) parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
+func (parser *Parser) parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 	return nil, nil
 }
 
-func (parser Parser) parseDefFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
+func (parser *Parser) parseDefFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
 	// TODO: Implement parsing logic for concept statement
 	return nil, nil
 }
 
-func (parser Parser) parseDefPropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyStmt, error) {
+func (parser *Parser) parseDefPropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyStmt, error) {
 	// TODO: Implement parsing logic for property statement
 	return nil, nil
 }
 
-func (parser Parser) parseFactStmt(tokenStmtBlock *TokenStmt) (FactStmt, error) {
-	cur, err := tokenStmtBlock.Header.currentToken()
-	if err != nil {
-		return nil, err
-	}
-
-	if cur == KeySyms["$"] {
-		return parser.parseFuncPtyStmt(tokenStmtBlock)
-	} else if cur == Keywords["if"] {
-		return parser.parseIfStmt(tokenStmtBlock)
-	}
-
+func (parser *Parser) parseFactStmt(tokenStmtBlock *TokenStmt) (FactStmt, error) {
 	return nil, nil
 }
 
-func (parser Parser) parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
+func (parser *Parser) parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
 	return nil, nil
 }
 
-func (parser Parser) parseIfStmt(tokenStmt *TokenStmt) (*ForallStmt, error) {
+func (parser *Parser) parseIfStmt(tokenStmt *TokenStmt) (*ForallStmt, error) {
 	// TODO
 	return nil, nil
 }

@@ -30,17 +30,28 @@ type LocalStmt struct {
 }
 
 type FactStmt interface {
+	isT() bool
 }
 
 type ForallStmt struct {
+	isTrue     bool
 	typeParams []varTypePair
 	varParams  []varTypePair
 	ifFacts    []FactStmt
 	thenFacts  []FactStmt
 }
 
+func (f *ForallStmt) IsT() bool {
+	return f.isTrue
+}
+
 type PtyStmt struct {
+	isTrue     bool
 	Name       string
 	typeParams []string
 	varParams  []Var
+}
+
+func (f *PtyStmt) isT() bool {
+	return f.isTrue
 }
