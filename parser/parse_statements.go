@@ -54,60 +54,31 @@ func parseFactStmt(tokenStmtBlock *TokenStmt) (FactStmt, error) {
 	return nil, nil
 }
 
-func parseExistFactStmt(tokenStmt *TokenStmt) (*ExistStmt, error) {
-	// TODO: Implement parsing logic for exist fact statement
-	return nil, nil
-}
-
 func parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
 	start := 0
+	var err error
+
 	skip(&tokenStmt.Header, &start, KeywordSymbols["$"])
 	name := tokenStmt.Header[start]
+
+	typeParams := &[]string{}
+	if tokenStmt.Header[start] == KeywordSymbols["["] {
+		typeParams, err = ParseSingletonVarBracket(&tokenStmt.Header, &start)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	start++
 	params, err := parseBracedVars(&tokenStmt.Header, &start)
 	if err != nil {
 		return nil, err
 	}
 
-	return &PtyStmt{name, params}, nil
+	return &PtyStmt{name, *typeParams, params}, nil
 }
 
-func parseIfStmt(tokenStmt *TokenStmt) (*IfStmt, error) {
-	start := 0
-	skip(&tokenStmt.Header, &start, Keywords["if"])
-
-	conceptParams := []VarTypePair{}
-	conceptFacts := []FactExprStmt{}
-	if tokenStmt.Header[start] == KeywordSymbols["["] {
-		bracket, err := parseTypeVarPairBracket(&tokenStmt.Header, &start)
-		if err != nil {
-			return nil, err
-		}
-		conceptParams = bracket.pairs
-		conceptFacts = bracket.facts
-	}
-
-	varParams := []VarTypePair{}
-	varFacts := []FactExprStmt{}
-	if tokenStmt.Header[start] == KeywordSymbols["("] {
-		bracket, err := parseTypeVarPairBrace(&tokenStmt.Header, &start)
-		if err != nil {
-			return nil, err
-		}
-		varParams = bracket.pairs
-		varFacts = bracket.facts
-	}
-
-	facts := []FactStmt{}
-	if tokenStmt.Body != nil {
-		for _, stmt := range *tokenStmt.Body {
-			fact, err := parseFactStmt(&stmt)
-			if err != nil {
-				return nil, err
-			}
-			facts = append(facts, fact)
-		}
-	}
-
-	return &IfStmt{conceptParams, conceptFacts, varParams, varFacts, facts}, nil
+func parseIfStmt(tokenStmt *TokenStmt) (*ForallStmt, error) {
+	// TODO
+	return nil, nil
 }

@@ -9,43 +9,38 @@ type TopStmt struct {
 }
 
 type DefConceptStmt struct {
-	ConceptVar    string
-	ConceptName   string
-	ConceptParams []VarTypePair
-	ConceptFacts  []FactExprStmt
-	VarParams     []VarTypePair
-	VarFacts      []FactStmt
-	ExistFacts    []ExistStmt
-	Facts         []FactStmt
+	conceptVar  string
+	conceptName string
+	typeMember  []Declaration
+	varMember   []Declaration
+	inherit     []string
+	thenFacts   []FactStmt
 }
 
 type DefPropertyStmt struct {
-	Name          string
-	ConceptParams []VarTypePair
-	ConceptFacts  []FactStmt
-	VarParams     []VarTypePair
-	VarFacts      []FactStmt
-	Facts         []FactStmt
+	name       string
+	typeParams []VarTypePair
+	varParams  []VarTypePair
+	ifFacts    []FactStmt
+	thenFacts  []FactStmt
 }
 
 type LocalStmt struct {
 	Statements []Stmt
 }
 
-type FactExprStmt interface{}
 type FactStmt interface {
 }
-type ExistStmt struct{}
 
-type IfStmt struct {
-	ConceptParams []VarTypePair
-	ConceptFacts  []FactExprStmt
-	VarParams     []VarTypePair
-	VarFacts      []FactExprStmt
-	Facts         []FactStmt
+type ForallStmt struct {
+	typeParams []VarTypePair
+	varParams  []VarTypePair
+	ifFacts    []FactStmt
+	thenFacts  []FactStmt
 }
 
 type PtyStmt struct {
-	Name   string
-	params []Var
+	Name       string
+	typeParams []string
+	varParams  []Var
 }
