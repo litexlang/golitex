@@ -53,7 +53,7 @@ func (parser Parser) parseDefPropertyStmt(tokenStmtBlock *TokenStmt) *DefPropert
 }
 
 func (parser Parser) parseFactStmt(tokenStmtBlock *TokenStmt) FactStmt {
-	if tokenStmtBlock.Header[0] == KeywordSymbols["$"] {
+	if tokenStmtBlock.Header[0] == KeySyms["$"] {
 		return LitexParser.parseFuncPtyStmt(tokenStmtBlock)
 	} else if tokenStmtBlock.Header[0] == Keywords["if"] {
 		return LitexParser.parseIfStmt(tokenStmtBlock)
@@ -66,11 +66,11 @@ func (parser Parser) parseFuncPtyStmt(tokenStmt *TokenStmt) *PtyStmt {
 	start := 0
 	var err error
 
-	skip(&tokenStmt.Header, &start, KeywordSymbols["$"])
+	skip(&tokenStmt.Header, &start, KeySyms["$"])
 	name := tokenStmt.Header[start]
 
 	typeParams := &[]string{}
-	if tokenStmt.Header[start] == KeywordSymbols["["] {
+	if tokenStmt.Header[start] == KeySyms["["] {
 		typeParams, err = ParseSingletonVarBracket(&tokenStmt.Header, &start)
 		if err != nil {
 			return nil
