@@ -1,11 +1,12 @@
 package parser
 
 type Stmt interface {
+	stmt()
 }
 
 type TopStmt struct {
 	stmt  Stmt
-	isTop bool
+	isPub bool
 }
 
 type DefConceptStmt struct {
@@ -17,6 +18,8 @@ type DefConceptStmt struct {
 	thenFacts   []FactStmt
 }
 
+func (c *DefConceptStmt) stmt() {}
+
 type DefPropertyStmt struct {
 	name       string
 	typeParams []varTypePair
@@ -25,11 +28,16 @@ type DefPropertyStmt struct {
 	thenFacts  []FactStmt
 }
 
+func (c *DefPropertyStmt) stmt() {}
+
 type LocalStmt struct {
 	Statements []Stmt
 }
 
+func (l *LocalStmt) stmt() {}
+
 type FactStmt interface {
+	stmt()
 	isT() bool
 }
 
@@ -41,6 +49,8 @@ type ForallStmt struct {
 	thenFacts  []FactStmt
 }
 
+func (l *ForallStmt) stmt() {}
+
 func (f *ForallStmt) IsT() bool {
 	return f.isTrue
 }
@@ -51,6 +61,8 @@ type PtyStmt struct {
 	typeParams []string
 	varParams  []Var
 }
+
+func (p *PtyStmt) stmt() {}
 
 func (f *PtyStmt) isT() bool {
 	return f.isTrue
