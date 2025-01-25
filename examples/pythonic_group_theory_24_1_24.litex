@@ -77,7 +77,7 @@ pub concept G FiniteGroup:
         // (G as Group)::finite()
         // (g as TypeName)::property()
         // as(g, Group)::finite()
-        这个东西进入 if 的时候，会自动 踏缩到 if 里的那个type，所以踏缩完后不会出错
+        // 这个东西进入 if 的时候，会自动 踏缩到 if 里的那个type，所以踏缩完后不会出错
         Group
         Set 
     
