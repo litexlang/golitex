@@ -10,13 +10,13 @@ func skip(tokens *[]string, start *int, expected ...string) error {
 
 	// 情况1：没有传入expected参数时直接递增
 	if len(expected) == 0 {
-		*start++ // ✅ 直接递增
+		*start++
 		return nil
 	}
 
 	// 情况2：有expected参数时执行原有逻辑
 	if (*tokens)[*start] == expected[0] {
-		*start++ // ✅ 匹配成功后递增
+		*start++
 	} else {
 		return fmt.Errorf("expected '%s', but got '%s'", expected[0], (*tokens)[*start])
 	}
@@ -205,7 +205,7 @@ func ParseSingletonVarBracket(tokens *[]string, start *int) (*[]string, error) {
 
 func parseFCC(tokens *[]string, start *int) (*FCC, error) {
 	var fcc FCC
-	var firstSymbol FCStr = FCStr((*tokens)[*start])
+	var firstSymbol FCCStr = FCCStr((*tokens)[*start])
 	fcc = firstSymbol
 	*start++
 
@@ -219,7 +219,8 @@ func parseFCC(tokens *[]string, start *int) (*FCC, error) {
 				*start++
 			} else {
 				for {
-					var fc FCStr = FCStr((*tokens)[*start])
+
+					var fc FCCStr = FCCStr((*tokens)[*start])
 					typeParams = append(typeParams, fc)
 					*start++
 
@@ -264,4 +265,64 @@ func parseFCC(tokens *[]string, start *int) (*FCC, error) {
 	}
 
 	return &fcc, nil
+}
+
+func parseBracketedFCCString(tokens *[]string, start *int) (*[]FCCStr, error) {
+	typeParams := []FCCStr{}
+	skip(tokens, start, KeywordSymbols["["])
+
+	for {
+		fcStr, err := parseFCStr(tokens, start)
+
+		if err != nil {
+			return nil, err
+		}
+
+		typeParams = append(typeParams, *fcStr)
+
+		if t, err := isCurToken(tokens, start, KeywordSymbols["]"]); t == true {
+			*start++
+			break
+		} else if err != nil {
+			return nil, err
+		}
+
+		if err := expectCurToken(tokens, start, KeywordSymbols[","]); err != nil {
+			return nil, err
+		} else {
+			*start++
+		}
+	}
+
+	return &typeParams, nil
+}
+
+func parseFCStr(tokens *[]string, start *int) (*FCCStr, error) {
+	if (*start) >= len(*tokens) {
+		return nil, fmt.Errorf("unexpected end of input")
+	}
+
+	fc := FCCStr((*tokens)[*start])
+	*start++
+	return &fc, nil
+}
+
+func expectCurToken(tokens *[]string, start *int, expected string) error {
+	if (*start) >= len(*tokens) {
+		return fmt.Errorf("unexpected end of input")
+	}
+
+	if (*tokens)[*start] != expected {
+		return fmt.Errorf("expected %s, get %s instead", expected, (*tokens)[*start])
+	}
+
+	return nil
+}
+
+func isCurToken(tokens *[]string, start *int, expected string) (bool, error) {
+	if (*start) >= len(*tokens) {
+		return false, fmt.Errorf("unexpected end of input")
+	}
+
+	return (*tokens)[*start] == expected, nil
 }
