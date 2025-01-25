@@ -4,22 +4,27 @@ import "sort"
 
 var Keywords = map[string]string{
 	"concept":        "concept",
+	"inherit":        "inherit",
+	"type_member":    "type_member",
+	"var_member":     "var_member",
 	"property":       "property",
-	"if":             "if",
+	"if":             "cond",
+	"then":           "then",
+	"forall":         "forall",
+	"exist_property": "exist_property",
+	"have":           "have",
+	"var":            "var",
+	"type":           "type",
 	"fn":             "fn",
 	"local":          "local",
-	"exist":          "exist",
-	"let":            "let",
 	"pub":            "pub",
 	"know":           "know",
 	"claim":          "claim",
 	"prove":          "prove",
 	"import":         "import",
 	"package":        "package",
-	"exist_property": "exist_property",
 	"return":         "return",
-	"member":         "member",
-	"var":            "var",
+	"not":            "not",
 }
 
 var KeywordSymbols = map[string]string{
