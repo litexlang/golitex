@@ -36,7 +36,7 @@ func (parser *Parser) parseFc() (Fc, error) {
 		previousFc = curFcc
 	}
 
-	return firstSymbolPtr, nil
+	return previousFc, nil
 }
 
 func (parser *Parser) parseBracketedFcString() (*[]FcStr, error) {
@@ -95,4 +95,33 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 		return "", err
 	}
 	return FcStr(tok), nil
+}
+
+func (parser *Parser) parseBracketedVarTypePair() (*bracketedVarTypePair, error) {
+	pairs := []varTypePair{}
+	parser.skip(KeySyms["["])
+
+	for {
+		varName, err := parser.next()
+		if err != nil {
+			return nil, err
+		}
+
+		typeName, err := parser.next()
+		if err != nil {
+			return nil, err
+		}
+
+		pairs = append(pairs, varTypePair{varName, typeName})
+
+		if parser.isAndSkip(KeySyms["]"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(KeySyms[","]); err != nil {
+			return nil, err
+		}
+	}
+
+	return &bracketedVarTypePair{pairs}, nil
 }
