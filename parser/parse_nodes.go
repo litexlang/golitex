@@ -258,7 +258,7 @@ func parseBracedFcArr(tokens *[]string, start *int) (*[]Fc, error) {
 	return &typeParams, nil
 }
 
-func parseBracketedVarTypePair(tokens *[]string, start *int) (*varTypePairBracket, error) {
+func parseBracketedVarTypePair(tokens *[]string, start *int) (*bracketedVarTypePair, error) {
 	skip(tokens, start, KeySyms["["])
 
 	pairs := []varTypePair{}
@@ -285,10 +285,10 @@ func parseBracketedVarTypePair(tokens *[]string, start *int) (*varTypePairBracke
 		}
 	}
 
-	return &varTypePairBracket{pairs}, nil
+	return &bracketedVarTypePair{pairs}, nil
 }
 
-func parseBracedVarTypePair(tokens *[]string, start *int) (*varTypePairBracket, error) {
+func parseBracedVarTypePair(tokens *[]string, start *int) (*bracketedVarTypePair, error) {
 	skip(tokens, start, KeySyms["("])
 
 	pairs := []varTypePair{}
@@ -315,7 +315,7 @@ func parseBracedVarTypePair(tokens *[]string, start *int) (*varTypePairBracket, 
 		}
 	}
 
-	return &varTypePairBracket{pairs}, nil
+	return &bracketedVarTypePair{pairs}, nil
 }
 
 func parseVarTypePair(tokens *[]string, start *int) (*varTypePair, error) {

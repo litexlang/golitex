@@ -69,7 +69,7 @@ func (it *Parser) skip(expected ...string) error {
 	return nil
 }
 
-type varTypePairBracket struct {
+type bracketedVarTypePair struct {
 	pairs []varTypePair
 }
 
