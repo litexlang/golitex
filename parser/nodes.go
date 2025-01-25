@@ -2,33 +2,64 @@ package parser
 
 import "fmt"
 
-type StrIterator struct {
+type Parser struct {
 	index int
 	slice []string
 }
 
-func (i *StrIterator) next() (string, error) {
-	if i.index >= len(i.slice) {
-		return "", fmt.Errorf("unexpected end of slice %v", i.slice)
+func (p *Parser) currentToken() (string, error) {
+	if p.index >= len(p.slice) {
+		return "", fmt.Errorf("unexpected end of slice %v", p.slice)
 	}
-	i.index++
-	return i.slice[i.index-1], nil
+	return p.slice[p.index], nil
 }
 
-func (i *StrIterator) skip(expected ...string) error {
-	if i.index >= len(i.slice) {
-		return fmt.Errorf("unexpected end of slice %v", i.slice)
+func (it *Parser) testAndSkip(s string) error {
+	if it.index >= len(it.slice) {
+		return fmt.Errorf("unexpected end of slice %v", it.slice)
+	}
+	if it.slice[it.index] == s {
+		it.index++
+		return nil
+	}
+	return fmt.Errorf("expected '%s', but got '%s'", s, it.slice[it.index])
+}
+
+func (it *Parser) next() (string, error) {
+	if it.index >= len(it.slice) {
+		return "", fmt.Errorf("unexpected end of slice %v", it.slice)
+	}
+	it.index++
+	return it.slice[it.index-1], nil
+}
+
+func (it *Parser) isAndSkip(expected string) bool {
+	if it.index < len(it.slice) && it.slice[it.index] == expected {
+		it.index++
+		return true
+	} else {
+		return false
+	}
+}
+
+func (it *Parser) isEnd() bool {
+	return it.index == len(it.slice)
+}
+
+func (it *Parser) skip(expected ...string) error {
+	if it.index >= len(it.slice) {
+		return fmt.Errorf("unexpected end of slice %v", it.slice)
 	}
 
 	if len(expected) == 0 {
-		i.index++
+		it.index++
 		return nil
 	}
 
-	if i.slice[i.index] == expected[0] {
-		i.index++
+	if it.slice[it.index] == expected[0] {
+		it.index++
 	} else {
-		return fmt.Errorf("expected '%s', but got '%s'", expected[0], i.slice[i.index])
+		return fmt.Errorf("expected '%s', but got '%s'", expected[0], it.slice[it.index])
 	}
 
 	return nil

@@ -1,15 +1,5 @@
 package parser
 
-type Parser struct {
-	err error
-}
-
-func (parser Parser) Err() error {
-	return parser.err
-}
-
-var LitexParser = Parser{err: nil}
-
 func (parser Parser) ParseTopLevelStmt(tokenStmtBlock *TokenStmt) *TopStmt {
 	pub := false
 	if tokenStmtBlock.Header[0] == Keywords["pub"] {
@@ -19,9 +9,6 @@ func (parser Parser) ParseTopLevelStmt(tokenStmtBlock *TokenStmt) *TopStmt {
 
 	stmt := parser.ParseStmt(tokenStmtBlock)
 
-	if parser.Err() != nil {
-		return nil
-	}
 	return &TopStmt{stmt, pub}
 }
 
@@ -54,9 +41,9 @@ func (parser Parser) parseDefPropertyStmt(tokenStmtBlock *TokenStmt) *DefPropert
 
 func (parser Parser) parseFactStmt(tokenStmtBlock *TokenStmt) FactStmt {
 	if tokenStmtBlock.Header[0] == KeySyms["$"] {
-		return LitexParser.parseFuncPtyStmt(tokenStmtBlock)
+		return parser.parseFuncPtyStmt(tokenStmtBlock)
 	} else if tokenStmtBlock.Header[0] == Keywords["if"] {
-		return LitexParser.parseIfStmt(tokenStmtBlock)
+		return parser.parseIfStmt(tokenStmtBlock)
 	}
 
 	return nil
