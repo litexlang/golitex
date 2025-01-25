@@ -33,6 +33,10 @@ func (it *Parser) next() (string, error) {
 	return it.slice[it.index-1], nil
 }
 
+func (it *Parser) is(s string) bool {
+	return it.index < len(it.slice) && it.slice[it.index] == s
+}
+
 func (it *Parser) isAndSkip(expected string) bool {
 	if it.index < len(it.slice) && it.slice[it.index] == expected {
 		it.index++
