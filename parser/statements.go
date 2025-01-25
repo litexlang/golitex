@@ -1,7 +1,11 @@
 package parser
 
 type Stmt interface {
-	toTopStmt() TopStmt
+}
+
+type TopStmt struct {
+	stmt  Stmt
+	isTop bool
 }
 
 type DefConceptStmt struct {
@@ -30,7 +34,6 @@ type LocalStmt struct {
 
 type FactExprStmt interface{}
 type FactStmt interface {
-	toTopStmt() TopStmt
 }
 type ExistStmt struct{}
 

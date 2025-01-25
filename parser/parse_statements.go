@@ -1,24 +1,18 @@
 package parser
 
-func ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (TopStmt, error) {
+func ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (*TopStmt, error) {
 	pub := false
 	if tokenStmtBlock.Header[0] == Keywords["pub"] {
 		tokenStmtBlock.Header = tokenStmtBlock.Header[1:] // remove the leading 'pub'
+		pub = true
 	}
 
 	stmt, err := ParseStmt(tokenStmtBlock)
-	topStmt := stmt.toTopStmt()
-
 	if err != nil {
 		return nil, err
 	}
 
-	if pub {
-		err = (topStmt).setPubTrue()
-		if err != nil {
-			return nil, err
-		}
-	}
+	topStmt := &TopStmt{stmt, pub}
 
 	return topStmt, nil
 }
@@ -37,71 +31,7 @@ func ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
 }
 
 func parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
-	conceptVar := tokenStmtBlock.Header[1]
-	conceptName := tokenStmtBlock.Header[2]
-
-	start := 3
-
-	conceptParams := []VarTypePair{}
-	conceptFacts := []FactExprStmt{}
-	if tokenStmtBlock.Header[start] == KeywordSymbols["["] {
-		bracket, err := parseTypeVarPairBracket(&tokenStmtBlock.Header, &start)
-		if err != nil {
-			return nil, err
-		}
-		conceptParams = bracket.pairs
-		conceptFacts = bracket.facts
-	}
-
-	varParams := []VarTypePair{}
-	varFacts := []FactExprStmt{}
-	if tokenStmtBlock.Header[start] == KeywordSymbols["("] {
-		bracket, err := parseTypeVarPairBrace(&tokenStmtBlock.Header, &start)
-		if err != nil {
-			return nil, err
-		}
-		varParams = bracket.pairs
-		varFacts = varFacts
-	}
-
-	skip(&tokenStmtBlock.Header, &start, KeywordSymbols[":"])
-
-	existFacts := []ExistStmt{}
-	facts := []FactStmt{}
-
-	if tokenStmtBlock.Body != nil {
-		for _, stmt := range *tokenStmtBlock.Body {
-			if stmt.Header[0] == Keywords["property"] {
-				if stmt.Body != nil {
-					for _, factBlock := range *stmt.Body {
-						fact, err := parseFactStmt(&factBlock)
-						if err != nil {
-							return nil, err
-						}
-						facts = append(facts, fact)
-					}
-				}
-			} else if stmt.Header[0] == Keywords["exist"] {
-				if stmt.Body != nil {
-					for _, factBlock := range *stmt.Body {
-						fact, err := parseExistFactStmt(&factBlock)
-						if err != nil {
-							return nil, err
-						}
-						facts = append(facts, fact)
-					}
-				}
-			} else {
-				fact, err := parseFactStmt(&stmt)
-				if err != nil {
-					return nil, err
-				}
-				facts = append(facts, fact)
-			}
-		}
-	}
-
-	return &DefConceptStmt{conceptVar, conceptName, conceptParams, conceptFacts, varParams, nil, existFacts, facts}, nil
+	return nil, nil
 }
 
 func parseDefFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
