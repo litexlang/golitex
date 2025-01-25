@@ -2,6 +2,15 @@ package parser
 
 import "fmt"
 
+func shiftTokenArr(token *[]string, start *int) (string, error) {
+	if *start >= len(*token) {
+		return "", fmt.Errorf("unexpected end of input")
+	}
+	cur := (*token)[*start]
+	*start++
+	return cur, nil
+}
+
 func skip(tokens *[]string, start *int, expected ...string) error {
 	// 边界检查：start不能越界
 	if *start >= len(*tokens) {
@@ -22,125 +31,6 @@ func skip(tokens *[]string, start *int, expected ...string) error {
 	}
 
 	return nil
-}
-
-func parseTypeVarPairBracket(tokens *[]string, start *int) (*varTypePairBracketBrace, error) {
-	pairs := []VarTypePair{}
-	facts := []FactStmt{}
-
-	err := skip(tokens, start, KeySyms["["])
-	if err != nil {
-		return nil, err
-	}
-
-	for *start < len(*tokens) {
-		v := (*tokens)[*start]
-		*start++
-		t := (*tokens)[*start]
-		typeVarPair := VarTypePair{v, t}
-
-		pairs = append(pairs, typeVarPair)
-
-		*start++
-
-		if (*tokens)[*start] == KeySyms["]"] {
-			*start++
-			break
-		}
-
-		if (*tokens)[*start] == KeySyms["::"] {
-			break
-		}
-
-		err := skip(tokens, start, KeySyms[","])
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if *start < len(*tokens) && (*tokens)[*start] == KeySyms["::"] {
-		*start++
-		for *start < len(*tokens) && (*tokens)[*start] != KeySyms["]"] {
-			fact, err := parseFactExprStmt(tokens, start)
-			if err != nil {
-				return nil, err
-			}
-
-			facts = append(facts, fact)
-
-			if (*tokens)[*start] == KeySyms["]"] {
-				*start++
-				break
-			}
-
-			err = skip(tokens, start, KeySyms[","])
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return &varTypePairBracketBrace{pairs, facts}, nil
-}
-
-func parseTypeVarPairBrace(tokens *[]string, start *int) (*varTypePairBracketBrace, error) {
-	pairs := []VarTypePair{}
-	facts := []FactStmt{}
-
-	err := skip(tokens, start, KeySyms["("])
-	if err != nil {
-		return nil, err
-	}
-
-	for *start < len(*tokens) {
-
-		v := (*tokens)[*start]
-		*start++
-		t := (*tokens)[*start]
-		typeVarPair := VarTypePair{v, t}
-
-		pairs = append(pairs, typeVarPair)
-
-		*start++
-
-		if (*tokens)[*start] == KeySyms[")"] {
-			*start++
-			break
-		}
-
-		if (*tokens)[*start] == KeySyms["::"] {
-			break
-		}
-
-		err := skip(tokens, start, KeySyms[","])
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if *start < len(*tokens) && (*tokens)[*start] == KeySyms["::"] {
-		*start++
-		for *start < len(*tokens) && (*tokens)[*start] != KeySyms[")"] {
-			fact, err := parseFactExprStmt(tokens, start)
-			if err != nil {
-				return nil, err
-			}
-
-			facts = append(facts, fact)
-
-			if (*tokens)[*start] == KeySyms[")"] {
-				*start++
-				break
-			}
-
-			err = skip(tokens, start, KeySyms[","])
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return &varTypePairBracketBrace{pairs, facts}, nil
 }
 
 func parseFactExprStmt(tokens *[]string, start *int) (*FactStmt, error) {
@@ -366,4 +256,78 @@ func parseBracedFcArr(tokens *[]string, start *int) (*[]Fc, error) {
 	}
 
 	return &typeParams, nil
+}
+
+func parseBracketedVarTypePair(tokens *[]string, start *int) (*varTypePairBracket, error) {
+	skip(tokens, start, KeySyms["["])
+
+	pairs := []varTypePair{}
+	for {
+		varTypePair, err := parseVarTypePair(tokens, start)
+
+		if err != nil {
+			return nil, err
+		}
+
+		pairs = append(pairs, *varTypePair)
+
+		if t, err := isCurToken(tokens, start, KeySyms["]"]); t {
+			*start++
+			break
+		} else if err != nil {
+			return nil, err
+		}
+
+		if err := expectCurToken(tokens, start, KeySyms[","]); err != nil {
+			return nil, err
+		} else {
+			*start++
+		}
+	}
+
+	return &varTypePairBracket{pairs}, nil
+}
+
+func parseBracedVarTypePair(tokens *[]string, start *int) (*varTypePairBracket, error) {
+	skip(tokens, start, KeySyms["("])
+
+	pairs := []varTypePair{}
+	for {
+		varTypePair, err := parseVarTypePair(tokens, start)
+
+		if err != nil {
+			return nil, err
+		}
+
+		pairs = append(pairs, *varTypePair)
+
+		if t, err := isCurToken(tokens, start, KeySyms[")"]); t {
+			*start++
+			break
+		} else if err != nil {
+			return nil, err
+		}
+
+		if err := expectCurToken(tokens, start, KeySyms[","]); err != nil {
+			return nil, err
+		} else {
+			*start++
+		}
+	}
+
+	return &varTypePairBracket{pairs}, nil
+}
+
+func parseVarTypePair(tokens *[]string, start *int) (*varTypePair, error) {
+	v, err := shiftTokenArr(tokens, start)
+	if err != nil {
+		return nil, err
+	}
+
+	curType, err := shiftTokenArr(tokens, start)
+	if err != nil {
+		return nil, err
+	}
+
+	return &varTypePair{v, curType}, nil
 }

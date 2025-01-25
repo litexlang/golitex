@@ -19,8 +19,8 @@ type DefConceptStmt struct {
 
 type DefPropertyStmt struct {
 	name       string
-	typeParams []VarTypePair
-	varParams  []VarTypePair
+	typeParams []varTypePair
+	varParams  []varTypePair
 	ifFacts    []FactStmt
 	thenFacts  []FactStmt
 }
@@ -33,8 +33,8 @@ type FactStmt interface {
 }
 
 type ForallStmt struct {
-	typeParams []VarTypePair
-	varParams  []VarTypePair
+	typeParams []varTypePair
+	varParams  []varTypePair
 	ifFacts    []FactStmt
 	thenFacts  []FactStmt
 }
