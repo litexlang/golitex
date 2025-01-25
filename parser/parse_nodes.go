@@ -28,7 +28,7 @@ func parseTypeVarPairBracket(tokens *[]string, start *int) (*varTypePairBracketB
 	pairs := []VarTypePair{}
 	facts := []FactStmt{}
 
-	err := skip(tokens, start, KeywordSymbols["["])
+	err := skip(tokens, start, KeySyms["["])
 	if err != nil {
 		return nil, err
 	}
@@ -43,24 +43,24 @@ func parseTypeVarPairBracket(tokens *[]string, start *int) (*varTypePairBracketB
 
 		*start++
 
-		if (*tokens)[*start] == KeywordSymbols["]"] {
+		if (*tokens)[*start] == KeySyms["]"] {
 			*start++
 			break
 		}
 
-		if (*tokens)[*start] == KeywordSymbols["::"] {
+		if (*tokens)[*start] == KeySyms["::"] {
 			break
 		}
 
-		err := skip(tokens, start, KeywordSymbols[","])
+		err := skip(tokens, start, KeySyms[","])
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if *start < len(*tokens) && (*tokens)[*start] == KeywordSymbols["::"] {
+	if *start < len(*tokens) && (*tokens)[*start] == KeySyms["::"] {
 		*start++
-		for *start < len(*tokens) && (*tokens)[*start] != KeywordSymbols["]"] {
+		for *start < len(*tokens) && (*tokens)[*start] != KeySyms["]"] {
 			fact, err := parseFactExprStmt(tokens, start)
 			if err != nil {
 				return nil, err
@@ -68,12 +68,12 @@ func parseTypeVarPairBracket(tokens *[]string, start *int) (*varTypePairBracketB
 
 			facts = append(facts, fact)
 
-			if (*tokens)[*start] == KeywordSymbols["]"] {
+			if (*tokens)[*start] == KeySyms["]"] {
 				*start++
 				break
 			}
 
-			err = skip(tokens, start, KeywordSymbols[","])
+			err = skip(tokens, start, KeySyms[","])
 			if err != nil {
 				return nil, err
 			}
@@ -87,7 +87,7 @@ func parseTypeVarPairBrace(tokens *[]string, start *int) (*varTypePairBracketBra
 	pairs := []VarTypePair{}
 	facts := []FactStmt{}
 
-	err := skip(tokens, start, KeywordSymbols["("])
+	err := skip(tokens, start, KeySyms["("])
 	if err != nil {
 		return nil, err
 	}
@@ -103,24 +103,24 @@ func parseTypeVarPairBrace(tokens *[]string, start *int) (*varTypePairBracketBra
 
 		*start++
 
-		if (*tokens)[*start] == KeywordSymbols[")"] {
+		if (*tokens)[*start] == KeySyms[")"] {
 			*start++
 			break
 		}
 
-		if (*tokens)[*start] == KeywordSymbols["::"] {
+		if (*tokens)[*start] == KeySyms["::"] {
 			break
 		}
 
-		err := skip(tokens, start, KeywordSymbols[","])
+		err := skip(tokens, start, KeySyms[","])
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if *start < len(*tokens) && (*tokens)[*start] == KeywordSymbols["::"] {
+	if *start < len(*tokens) && (*tokens)[*start] == KeySyms["::"] {
 		*start++
-		for *start < len(*tokens) && (*tokens)[*start] != KeywordSymbols[")"] {
+		for *start < len(*tokens) && (*tokens)[*start] != KeySyms[")"] {
 			fact, err := parseFactExprStmt(tokens, start)
 			if err != nil {
 				return nil, err
@@ -128,12 +128,12 @@ func parseTypeVarPairBrace(tokens *[]string, start *int) (*varTypePairBracketBra
 
 			facts = append(facts, fact)
 
-			if (*tokens)[*start] == KeywordSymbols[")"] {
+			if (*tokens)[*start] == KeySyms[")"] {
 				*start++
 				break
 			}
 
-			err = skip(tokens, start, KeywordSymbols[","])
+			err = skip(tokens, start, KeySyms[","])
 			if err != nil {
 				return nil, err
 			}
@@ -156,7 +156,7 @@ func parseVar(tokens *[]string, start *int) (Var, error) {
 }
 
 func parseBracedVars(tokens *[]string, start *int) ([]Var, error) {
-	skip(tokens, start, KeywordSymbols["("])
+	skip(tokens, start, KeySyms["("])
 
 	vars := []Var{}
 	// parseVar from index start, skip , between, end when )
@@ -167,12 +167,12 @@ func parseBracedVars(tokens *[]string, start *int) ([]Var, error) {
 		}
 		vars = append(vars, v)
 
-		if (*tokens)[*start] == KeywordSymbols[")"] {
+		if (*tokens)[*start] == KeySyms[")"] {
 			*start++
 			return vars, nil
 		}
 
-		if (*tokens)[*start] == KeywordSymbols[","] {
+		if (*tokens)[*start] == KeySyms[","] {
 			*start++
 		}
 	}
@@ -181,7 +181,7 @@ func parseBracedVars(tokens *[]string, start *int) ([]Var, error) {
 }
 
 func ParseSingletonVarBracket(tokens *[]string, start *int) (*[]string, error) {
-	skip(tokens, start, KeywordSymbols["["])
+	skip(tokens, start, KeySyms["["])
 
 	typeVars := []string{}
 	// parseVar from index start, skip , between, end when )
@@ -190,12 +190,12 @@ func ParseSingletonVarBracket(tokens *[]string, start *int) (*[]string, error) {
 		*start += 1
 		typeVars = append(typeVars, v)
 
-		if (*tokens)[*start] == KeywordSymbols["]"] {
+		if (*tokens)[*start] == KeySyms["]"] {
 			*start++
 			return &typeVars, nil
 		}
 
-		if (*tokens)[*start] == KeywordSymbols[","] {
+		if (*tokens)[*start] == KeySyms[","] {
 			*start++
 		}
 	}
@@ -203,76 +203,57 @@ func ParseSingletonVarBracket(tokens *[]string, start *int) (*[]string, error) {
 	return nil, fmt.Errorf("expected ']', but got '%s'", (*tokens)[*start])
 }
 
-func parseFCC(tokens *[]string, start *int) (*FCC, error) {
-	var fcc FCC
-	var firstSymbol FCCStr = FCCStr((*tokens)[*start])
-	fcc = firstSymbol
-	*start++
-
-	for {
-		typeParams := []FCC{}
-		varParams := []FCC{}
-
-		if (*tokens)[*start] == KeywordSymbols["["] {
-			skip(tokens, start, KeywordSymbols["["])
-			if (*tokens)[*start] == KeywordSymbols["]"] {
-				*start++
-			} else {
-				for {
-
-					var fc FCCStr = FCCStr((*tokens)[*start])
-					typeParams = append(typeParams, fc)
-					*start++
-
-					if (*tokens)[*start] == KeywordSymbols[")"] {
-						*start++
-						break
-					}
-
-					if (*tokens)[*start] == KeywordSymbols[","] {
-						*start++
-					}
-				}
-			}
-		}
-
-		if (*tokens)[*start] == KeywordSymbols["("] {
-			skip(tokens, start, KeywordSymbols["("])
-			if (*tokens)[*start] == KeywordSymbols[")"] {
-				*start++
-			} else {
-				for {
-					fc, err := parseFCC(tokens, start)
-
-					if err != nil {
-						return nil, err
-					}
-
-					varParams = append(varParams, fc)
-					*start++
-
-					if (*tokens)[*start] == KeywordSymbols[")"] {
-						*start++
-						break
-					}
-
-					if (*tokens)[*start] == KeywordSymbols[","] {
-						*start++
-					}
-				}
-			}
-		}
+func parseFc(tokens *[]string, start *int) (Fc, error) {
+	firstSymbolPtr, err := parseFcStr(tokens, start)
+	if err != nil {
+		return nil, err
 	}
 
-	return &fcc, nil
+	if (*start < len(*tokens) && !((*tokens)[*start] == KeySyms["["] || (*tokens)[*start] == KeySyms["("])) || *start >= len(*tokens) {
+		return firstSymbolPtr, nil
+	}
+
+	var previousFc Fc = firstSymbolPtr
+
+	for *start < len(*tokens) && ((*tokens)[*start] == KeySyms["["] || (*tokens)[*start] == KeySyms["("]) {
+		curFcc := FcFnRetVal{previousFc, []FcStr{}, []Fc{}}
+
+		typeParams := []FcStr{}
+		if t, err := isCurToken(tokens, start, KeySyms["["]); t {
+			typeParamsPtr, err := parseBracketedFcString(tokens, start)
+			typeParams = *typeParamsPtr
+			if err != nil {
+				return nil, err
+			}
+		} else if err != nil {
+			return nil, err
+		}
+
+		varParams := []Fc{}
+		if t, err := isCurToken(tokens, start, KeySyms["("]); t {
+			varParamsPtr, err := parseBracedFc(tokens, start)
+			varParams = *varParamsPtr
+			if err != nil {
+				return nil, err
+			}
+		} else if err != nil {
+			return nil, err
+		}
+
+		curFcc.typeParams = typeParams
+		curFcc.varParams = varParams
+		previousFc = curFcc
+	}
+
+	return &previousFc, nil
 }
 
-func parseBracketedFCCString(tokens *[]string, start *int) (*[]FCCStr, error) {
-	typeParams := []FCCStr{}
-	skip(tokens, start, KeywordSymbols["["])
+func parseBracketedFcString(tokens *[]string, start *int) (*[]FcStr, error) {
+	typeParams := []FcStr{}
+	skip(tokens, start, KeySyms["["])
 
 	for {
-		fcStr, err := parseFCStr(tokens, start)
+		fcStr, err := parseFcStr(tokens, start)
 
 		if err != nil {
 			return nil, err
@@ -280,14 +261,14 @@ func parseBracketedFCCString(tokens *[]string, start *int) (*[]FCCStr, error) {
 
 		typeParams = append(typeParams, *fcStr)
 
-		if t, err := isCurToken(tokens, start, KeywordSymbols["]"]); t == true {
+		if t, err := isCurToken(tokens, start, KeySyms["]"]); t == true {
 			*start++
 			break
 		} else if err != nil {
 			return nil, err
 		}
 
-		if err := expectCurToken(tokens, start, KeywordSymbols[","]); err != nil {
+		if err := expectCurToken(tokens, start, KeySyms[","]); err != nil {
 			return nil, err
 		} else {
 			*start++
@@ -297,12 +278,42 @@ func parseBracketedFCCString(tokens *[]string, start *int) (*[]FCCStr, error) {
 	return &typeParams, nil
 }
 
-func parseFCStr(tokens *[]string, start *int) (*FCCStr, error) {
+func parseBracedFcString(tokens *[]string, start *int) (*[]FcStr, error) {
+	typeParams := []FcStr{}
+	skip(tokens, start, KeySyms["("])
+
+	for {
+		fcStr, err := parseFcStr(tokens, start)
+
+		if err != nil {
+			return nil, err
+		}
+
+		typeParams = append(typeParams, *fcStr)
+
+		if t, err := isCurToken(tokens, start, KeySyms[")"]); t == true {
+			*start++
+			break
+		} else if err != nil {
+			return nil, err
+		}
+
+		if err := expectCurToken(tokens, start, KeySyms[","]); err != nil {
+			return nil, err
+		} else {
+			*start++
+		}
+	}
+
+	return &typeParams, nil
+}
+
+func parseFcStr(tokens *[]string, start *int) (*FcStr, error) {
 	if (*start) >= len(*tokens) {
 		return nil, fmt.Errorf("unexpected end of input")
 	}
 
-	fc := FCCStr((*tokens)[*start])
+	fc := FcStr((*tokens)[*start])
 	*start++
 	return &fc, nil
 }
@@ -325,4 +336,34 @@ func isCurToken(tokens *[]string, start *int, expected string) (bool, error) {
 	}
 
 	return (*tokens)[*start] == expected, nil
+}
+
+func parseBracedFc(tokens *[]string, start *int) (*[]Fc, error) {
+	skip(tokens, start, KeySyms["("])
+
+	typeParams := []Fc{}
+	for {
+		fc, err := parseFc(tokens, start)
+
+		if err != nil {
+			return nil, err
+		}
+
+		typeParams = append(typeParams, fc)
+
+		if t, err := isCurToken(tokens, start, KeySyms[")"]); t == true {
+			*start++
+			break
+		} else if err != nil {
+			return nil, err
+		}
+
+		if err := expectCurToken(tokens, start, KeySyms[","]); err != nil {
+			return nil, err
+		} else {
+			*start++
+		}
+	}
+
+	return &typeParams, nil
 }

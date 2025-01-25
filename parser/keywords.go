@@ -27,7 +27,7 @@ var Keywords = map[string]string{
 	"not":            "not",
 }
 
-var KeywordSymbols = map[string]string{
+var KeySyms = map[string]string{
 	":":  ":",
 	"[":  "[",
 	"]":  "]",
@@ -60,8 +60,8 @@ var sortedSymbols []string = sortKeywordSymbols()
 
 // 初始化排序后的符号列表
 func sortKeywordSymbols() []string {
-	symbols := make([]string, 0, len(KeywordSymbols))
-	for k := range KeywordSymbols {
+	symbols := make([]string, 0, len(KeySyms))
+	for k := range KeySyms {
 		symbols = append(symbols, k)
 	}
 	sort.Slice(symbols, func(i, j int) bool {

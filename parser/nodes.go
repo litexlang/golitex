@@ -13,20 +13,20 @@ type VarTypePair struct {
 type SingletonVar string
 
 type FnReturnVar struct {
-	FCCFnRetVal
+	FcFnRetVal
 }
 
-type FCCFnRetVal struct {
-	fn         FCC
-	typeParams []FCC
-	varParams  []FCC
+type FcFnRetVal struct {
+	fn         Fc
+	typeParams []FcStr
+	varParams  []Fc
 }
 
 type Declaration interface{}
 
 // 变量和函数是一等公民。它们的表现形式是：1. 单纯的string 2. 函数返回值
-type FCC interface{}
+type Fc interface{}
 
-type FCCStr string
+type FcStr string
 
 type Var interface{}
