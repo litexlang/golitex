@@ -40,7 +40,7 @@ func (parser *Parser) parseFc() (Fc, error) {
 }
 
 func (parser *Parser) parseBracketedFcString() (*[]FcStr, error) {
-	typeParams := []FcStr{}
+	params := []FcStr{}
 	parser.skip(KeySyms["["])
 
 	for {
@@ -50,7 +50,7 @@ func (parser *Parser) parseBracketedFcString() (*[]FcStr, error) {
 			return nil, err
 		}
 
-		typeParams = append(typeParams, fcStr)
+		params = append(params, fcStr)
 
 		if parser.isAndSkip(KeySyms["]"]) {
 			break
@@ -61,27 +61,38 @@ func (parser *Parser) parseBracketedFcString() (*[]FcStr, error) {
 		}
 	}
 
-	return &typeParams, nil
+	return &params, nil
 }
 
 func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
-	typeParams := []FcStr{}
+	params := []Fc{}
 	parser.skip(KeySyms["("])
 
 	for {
-		fcStr, err := parser.parseFcStr()
+		fc, err := parser.parseFc()
 
 		if err != nil {
 			return nil, err
 		}
 
-		typeParams = append(typeParams, fcStr)
+		params = append(params, fc)
 
+		if parser.isAndSkip(KeySyms[")"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(KeySyms[","]); err != nil {
+			return nil, err
+		}
 	}
 
-	return &typeParams, nil
+	return &params, nil
 }
 
 func (parser *Parser) parseFcStr() (FcStr, error) {
-	return nil, nil
+	tok, err := parser.next()
+	if err != nil {
+		return "", err
+	}
+	return FcStr(tok), nil
 }
