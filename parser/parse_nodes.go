@@ -231,7 +231,7 @@ func parseFc(tokens *[]string, start *int) (Fc, error) {
 
 		varParams := []Fc{}
 		if t, err := isCurToken(tokens, start, KeySyms["("]); t {
-			varParamsPtr, err := parseBracedFc(tokens, start)
+			varParamsPtr, err := parseBracedFcArr(tokens, start)
 			varParams = *varParamsPtr
 			if err != nil {
 				return nil, err
@@ -259,7 +259,7 @@ func parseBracketedFcString(tokens *[]string, start *int) (*[]FcStr, error) {
 			return nil, err
 		}
 
-		typeParams = append(typeParams, *fcStr)
+		typeParams = append(typeParams, fcStr)
 
 		if t, err := isCurToken(tokens, start, KeySyms["]"]); t == true {
 			*start++
@@ -289,7 +289,7 @@ func parseBracedFcString(tokens *[]string, start *int) (*[]FcStr, error) {
 			return nil, err
 		}
 
-		typeParams = append(typeParams, *fcStr)
+		typeParams = append(typeParams, fcStr)
 
 		if t, err := isCurToken(tokens, start, KeySyms[")"]); t == true {
 			*start++
@@ -308,14 +308,14 @@ func parseBracedFcString(tokens *[]string, start *int) (*[]FcStr, error) {
 	return &typeParams, nil
 }
 
-func parseFcStr(tokens *[]string, start *int) (*FcStr, error) {
+func parseFcStr(tokens *[]string, start *int) (FcStr, error) {
 	if (*start) >= len(*tokens) {
-		return nil, fmt.Errorf("unexpected end of input")
+		return FcStr(""), fmt.Errorf("unexpected end of input")
 	}
 
 	fc := FcStr((*tokens)[*start])
 	*start++
-	return &fc, nil
+	return fc, nil
 }
 
 func expectCurToken(tokens *[]string, start *int, expected string) error {
@@ -338,7 +338,7 @@ func isCurToken(tokens *[]string, start *int, expected string) (bool, error) {
 	return (*tokens)[*start] == expected, nil
 }
 
-func parseBracedFc(tokens *[]string, start *int) (*[]Fc, error) {
+func parseBracedFcArr(tokens *[]string, start *int) (*[]Fc, error) {
 	skip(tokens, start, KeySyms["("])
 
 	typeParams := []Fc{}
