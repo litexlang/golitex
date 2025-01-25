@@ -2,12 +2,23 @@ package parser
 
 import "fmt"
 
-func skip(tokens *[]string, start *int, expected string) error {
-	// if current token is expected, start ++, else throw an error
-	if (*tokens)[*start] == expected {
-		*start++
+func skip(tokens *[]string, start *int, expected ...string) error {
+	// 边界检查：start不能越界
+	if *start >= len(*tokens) {
+		return fmt.Errorf("unexpected end of input")
+	}
+
+	// 情况1：没有传入expected参数时直接递增
+	if len(expected) == 0 {
+		*start++ // ✅ 直接递增
+		return nil
+	}
+
+	// 情况2：有expected参数时执行原有逻辑
+	if (*tokens)[*start] == expected[0] {
+		*start++ // ✅ 匹配成功后递增
 	} else {
-		return fmt.Errorf("expected '%s', but got '%s'", expected, (*tokens)[*start])
+		return fmt.Errorf("expected '%s', but got '%s'", expected[0], (*tokens)[*start])
 	}
 
 	return nil
@@ -190,4 +201,67 @@ func ParseSingletonVarBracket(tokens *[]string, start *int) (*[]string, error) {
 	}
 
 	return nil, fmt.Errorf("expected ']', but got '%s'", (*tokens)[*start])
+}
+
+func parseFCC(tokens *[]string, start *int) (*FCC, error) {
+	var fcc FCC
+	var firstSymbol FCStr = FCStr((*tokens)[*start])
+	fcc = firstSymbol
+	*start++
+
+	for {
+		typeParams := []FCC{}
+		varParams := []FCC{}
+
+		if (*tokens)[*start] == KeywordSymbols["["] {
+			skip(tokens, start, KeywordSymbols["["])
+			if (*tokens)[*start] == KeywordSymbols["]"] {
+				*start++
+			} else {
+				for {
+					var fc FCStr = FCStr((*tokens)[*start])
+					typeParams = append(typeParams, fc)
+					*start++
+
+					if (*tokens)[*start] == KeywordSymbols[")"] {
+						*start++
+						break
+					}
+
+					if (*tokens)[*start] == KeywordSymbols[","] {
+						*start++
+					}
+				}
+			}
+		}
+
+		if (*tokens)[*start] == KeywordSymbols["("] {
+			skip(tokens, start, KeywordSymbols["("])
+			if (*tokens)[*start] == KeywordSymbols[")"] {
+				*start++
+			} else {
+				for {
+					fc, err := parseFCC(tokens, start)
+
+					if err != nil {
+						return nil, err
+					}
+
+					varParams = append(varParams, fc)
+					*start++
+
+					if (*tokens)[*start] == KeywordSymbols[")"] {
+						*start++
+						break
+					}
+
+					if (*tokens)[*start] == KeywordSymbols[","] {
+						*start++
+					}
+				}
+			}
+		}
+	}
+
+	return &fcc, nil
 }
