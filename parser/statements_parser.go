@@ -100,22 +100,17 @@ func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 		return nil, err
 	}
 
-	err = stmt.Header.skip(BuiltinSyms[":"])
-	if err != nil {
-		return nil, err
-	}
-
 	ifFacts := &[]FactStmt{}
 	thenFacts := &[]FactStmt{}
 
 	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["if"]) {
-		ifFacts, err = stmt.parseFactsBlock()
+		ifFacts, err = stmt.Body[0].parseFactsBlock()
 		if err != nil {
 			return nil, err
 		}
 
 		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(Keywords["then"]) {
-			thenFacts, err = stmt.parseFactsBlock()
+			thenFacts, err = stmt.Body[1].parseFactsBlock()
 			if err != nil {
 				return nil, err
 			}
@@ -156,8 +151,8 @@ func (stmt *TokenStmt) parseFactsBlock() (*[]FactStmt, error) {
 		return nil, err
 	}
 
-	for _, stmt := range stmt.Body {
-		fact, err := stmt.parseFactStmt()
+	for _, curStmt := range stmt.Body {
+		fact, err := curStmt.parseFactStmt()
 		if err != nil {
 			return nil, err
 		}
@@ -183,13 +178,12 @@ func (stmt *TokenStmt) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 		}
 	}
 
-	varParams, err := stmt.Header.parseVarTypePairArrEndWithColon()
+	varParams, err := stmt.Header.parseBracedVarTypePair()
 	if err != nil {
 		return nil, err
 	}
 
-	err = stmt.Header.skip(BuiltinSyms[":"])
-	if err != nil {
+	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, err
 	}
 
@@ -197,13 +191,13 @@ func (stmt *TokenStmt) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 	thenFacts := &[]FactStmt{}
 
 	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["if"]) {
-		ifFacts, err = stmt.parseFactsBlock()
+		ifFacts, err = stmt.Body[0].parseFactsBlock()
 		if err != nil {
 			return nil, err
 		}
 
 		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(Keywords["then"]) {
-			thenFacts, err = stmt.parseFactsBlock()
+			thenFacts, err = stmt.Body[1].parseFactsBlock()
 			if err != nil {
 				return nil, err
 			}
