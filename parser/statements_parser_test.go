@@ -10,7 +10,7 @@ func TestForallStmt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tokenized2, err := tokenizeString("f[G, B](a, b)[C, D](c, d)")
+	tokenized2, err := tokenizeString("$f[G, B](a, b)[C, D](c, d)")
 	if err != nil {
 		t.Fatal(err)
 	}
