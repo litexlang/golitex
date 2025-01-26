@@ -37,8 +37,8 @@ type LocalStmt struct {
 func (l *LocalStmt) stmt() {}
 
 type FactStmt interface {
+	factStmt()
 	stmt()
-	isT() bool
 }
 
 type ForallStmt struct {
@@ -49,21 +49,17 @@ type ForallStmt struct {
 	thenFacts  []FactStmt
 }
 
-func (l *ForallStmt) stmt() {}
+func (l *ForallStmt) factStmt() {}
+func (l *ForallStmt) stmt()     {}
 
-func (f *ForallStmt) IsT() bool {
-	return f.isTrue
+type FuncPtyStmt struct {
+	isTrue bool
+	fc     Fc
 }
 
-type PtyStmt struct {
-	isTrue     bool
-	Name       string
-	typeParams []string
-	varParams  []Var
-}
+func (p *FuncPtyStmt) factStmt() {}
+func (p *FuncPtyStmt) stmt()     {}
 
-func (p *PtyStmt) stmt() {}
-
-func (f *PtyStmt) isT() bool {
-	return f.isTrue
+func (f *FuncPtyStmt) setT(b bool) {
+	f.isTrue = b
 }
