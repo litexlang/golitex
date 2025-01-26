@@ -6,13 +6,14 @@ import (
 )
 
 type typeConceptPair struct {
-	Var  FcStr
-	Type typeType
+	Var  typeVar
+	Type typeConcept
 }
+type typeVar string
 
 type varTypePair struct {
 	Var  FcStr
-	Type typeType
+	Type varType
 }
 
 type SingletonVar string
@@ -72,11 +73,11 @@ func (f *FcMemberAccessExpr) String() string {
 	return ret + fmt.Sprintf("%s", (*f)[len(*f)-1])
 }
 
-type typeType string
+type typeConcept string
 type varType string
 type fnType struct {
-	typeParamsTypes typeType
-	varParamsTypes  varType
+	typeParamsTypes []typeConcept
+	varParamsTypes  []varType
 	retType         fnRetType
 }
 
