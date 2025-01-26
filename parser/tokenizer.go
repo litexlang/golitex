@@ -2,31 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"strings"
 )
-
-type TokenStmt struct {
-	Header Parser
-	Body   []TokenStmt
-}
-
-func (b *TokenStmt) String() string {
-	return b.stringWithIndent(0)
-}
-
-func (b TokenStmt) stringWithIndent(indentLevel int) string {
-	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
-	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.Header.getSlice(), " "))
-
-	// 递归处理子块
-	if b.Body != nil {
-		for _, subBlock := range b.Body {
-			result += subBlock.stringWithIndent(indentLevel + 1)
-		}
-	}
-
-	return result
-}
 
 // 提取出的 nextToken 函数，用于识别下一个 token
 func nextToken(inputString string, start int) (string, int, error) {
@@ -88,8 +64,8 @@ func tokenizeString(inputString string) (*[]string, error) {
 	return &result, nil
 }
 
-func TokenizeStmtBlock(b *SourceCodeStmtBlock) (*TokenStmt, error) {
-	body := []TokenStmt{}
+func TokenizeStmtBlock(b *StrBlock) (*tokenBlock, error) {
+	body := []tokenBlock{}
 	var header []string = []string{}
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
@@ -110,7 +86,7 @@ func TokenizeStmtBlock(b *SourceCodeStmtBlock) (*TokenStmt, error) {
 		}
 		body = append(body, *parsedSubBlock)
 	}
-	return &TokenStmt{
+	return &tokenBlock{
 		Header: Parser{0, header},
 		Body:   body,
 	}, nil
