@@ -28,3 +28,7 @@ type Fc interface{}
 type FcStr string
 
 type Var interface{}
+
+type FcMemberAccessExpr struct {
+	Fc []Fc
+}
