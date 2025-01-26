@@ -5,10 +5,7 @@ import "fmt"
 func (stmt *TokenStmt) ParseTopLevelStmt() (*TopStmt, error) {
 	pub := false
 	if stmt.Header.is(KeySyms["pub"]) {
-		err := stmt.Header.setIndex(1)
-		if err != nil {
-			return nil, err
-		}
+		stmt.Header.skip()
 		pub = true
 	}
 
@@ -92,5 +89,7 @@ func (stmt *TokenStmt) parseFuncPtyStmt() (*FuncPtyStmt, error) {
 }
 
 func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
+	stmt.Header.skip(Keywords["forall"])
+
 	return nil, nil
 }
