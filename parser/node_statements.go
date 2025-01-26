@@ -41,6 +41,12 @@ type FactStmt interface {
 	stmt()
 }
 
+type ptyStmt interface {
+	setT()
+	factStmt()
+	stmt()
+}
+
 type ForallStmt struct {
 	isTrue     bool
 	typeParams []varTypePair
