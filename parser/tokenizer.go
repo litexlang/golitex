@@ -7,7 +7,7 @@ import (
 
 type TokenStmt struct {
 	Header Parser
-	Body   *[]TokenStmt
+	Body   []TokenStmt
 }
 
 func (b *TokenStmt) String() string {
@@ -20,7 +20,7 @@ func (b TokenStmt) stringWithIndent(indentLevel int) string {
 
 	// 递归处理子块
 	if b.Body != nil {
-		for _, subBlock := range *b.Body {
+		for _, subBlock := range b.Body {
 			result += subBlock.stringWithIndent(indentLevel + 1)
 		}
 	}
@@ -112,6 +112,6 @@ func TokenizeStmtBlock(b *SourceCodeStmtBlock) (*TokenStmt, error) {
 	}
 	return &TokenStmt{
 		Header: Parser{0, header},
-		Body:   &body,
+		Body:   body,
 	}, nil
 }
