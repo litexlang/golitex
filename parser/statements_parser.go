@@ -4,7 +4,7 @@ import "fmt"
 
 func (stmt *TokenStmt) ParseTopLevelStmt() (*TopStmt, error) {
 	pub := false
-	if stmt.Header.is(KeySyms["pub"]) {
+	if stmt.Header.is(BuiltinSyms["pub"]) {
 		stmt.Header.skip()
 		pub = true
 	}
@@ -62,7 +62,7 @@ func (stmt *TokenStmt) parseFactStmt() (FactStmt, error) {
 }
 
 func (stmt *TokenStmt) parsePtyStmt() (*FuncPtyStmt, error) {
-	if stmt.Header.is(Keywords["$"]) {
+	if stmt.Header.is(BuiltinSyms["$"]) {
 		return stmt.parseFuncPtyStmt()
 	}
 
@@ -80,7 +80,7 @@ func (stmt *TokenStmt) parseNotFactStmt() (FactStmt, error) {
 }
 
 func (stmt *TokenStmt) parseFuncPtyStmt() (*FuncPtyStmt, error) {
-	stmt.Header.skip(KeySyms["$"])
+	stmt.Header.skip(BuiltinSyms["$"])
 	fc, err := stmt.Header.parseFc()
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 
 	typeParams := &[]varTypePair{}
 	var err error = nil
-	if stmt.Header.is(KeySyms["["]) {
+	if stmt.Header.is(BuiltinSyms["["]) {
 		typeParams, err = stmt.Header.parseBracketedVarTypePair()
 		if err != nil {
 			return nil, err
@@ -138,7 +138,7 @@ func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 func (stmt *TokenStmt) parseFactsBlock() (*[]FactStmt, error) {
 	ifFacts := &[]FactStmt{}
 	stmt.Header.skip()
-	if err := stmt.Header.testAndSkip(KeySyms[":"]); err != nil {
+	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, err
 	}
 
