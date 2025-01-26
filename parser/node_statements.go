@@ -22,7 +22,7 @@ func (c *DefConceptStmt) stmt() {}
 
 type DefPropertyStmt struct {
 	name       string
-	typeParams []varTypePair
+	typeParams []typeConceptPair
 	varParams  []varTypePair
 	ifFacts    []FactStmt
 	thenFacts  []FactStmt
@@ -48,7 +48,7 @@ type ptyStmt interface {
 }
 
 type ForallStmt struct {
-	typeParams []varTypePair
+	typeParams []typeConceptPair
 	varParams  []varTypePair
 	ifFacts    []FactStmt
 	thenFacts  []FactStmt

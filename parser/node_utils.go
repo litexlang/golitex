@@ -5,12 +5,13 @@ import (
 	"strings"
 )
 
-type bracketedVarTypePair struct {
-	pairs []varTypePair
+type typeConceptPair struct {
+	Var  FcStr
+	Type FcStr
 }
 
 type varTypePair struct {
-	Var  FcStr
+	Var  Fc
 	Type FcStr
 }
 

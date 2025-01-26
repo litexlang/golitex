@@ -127,8 +127,8 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 	return FcStr(tok), nil
 }
 
-func (parser *Parser) parseBracketedVarTypePair() (*[]varTypePair, error) {
-	pairs := []varTypePair{}
+func (parser *Parser) parseBracketedVarTypePair() (*[]typeConceptPair, error) {
+	pairs := []typeConceptPair{}
 	parser.skip(BuiltinSyms["["])
 
 	for {
@@ -142,7 +142,7 @@ func (parser *Parser) parseBracketedVarTypePair() (*[]varTypePair, error) {
 			return nil, err
 		}
 
-		pairs = append(pairs, varTypePair{(varName), (typeName)})
+		pairs = append(pairs, typeConceptPair{varName, typeName})
 
 		if parser.isAndSkip(BuiltinSyms["]"]) {
 			break
@@ -185,11 +185,11 @@ func (parser *Parser) parseBracedVarTypePair() (*[]varTypePair, error) {
 	return &pairs, nil
 }
 
-func (parser *Parser) parseVarTypePairArr() (*[]varTypePair, error) {
+func (parser *Parser) parseVarTypePairArrEndWithColon() (*[]varTypePair, error) {
 	pairs := []varTypePair{}
 
 	for {
-		varName, err := parser.parseFcStr()
+		varName, err := parser.parseFc()
 		if err != nil {
 			return nil, err
 		}
