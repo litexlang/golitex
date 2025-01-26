@@ -1,5 +1,7 @@
 package parser
 
+import "fmt"
+
 func (stmt *TokenStmt) ParseTopLevelStmt() (*TopStmt, error) {
 	pub := false
 	if stmt.Header.is(KeySyms["pub"]) {
@@ -51,28 +53,44 @@ func (stmt *TokenStmt) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 }
 
 func (stmt *TokenStmt) parseFactStmt() (FactStmt, error) {
-	if stmt.Header.is(Keywords["if"]) {
-		return stmt.parseIfStmt()
+	if stmt.Header.is(Keywords["forall"]) {
+		return stmt.parseForallStmt()
 	}
 
-	return nil, nil
+	if stmt.Header.is(Keywords["not"]) {
+		return stmt.parseNotFactStmt()
+	}
+
+	return stmt.parsePtyStmt()
+}
+
+func (stmt *TokenStmt) parsePtyStmt() (*FuncPtyStmt, error) {
+	if stmt.Header.is(Keywords["$"]) {
+		return stmt.parseFuncPtyStmt()
+	}
+
+	return nil, fmt.Errorf("invalid function")
+}
+
+func (stmt *TokenStmt) parseNotFactStmt() (FactStmt, error) {
+	stmt.Header.skip(Keywords["not"])
+	ret, err := stmt.parsePtyStmt()
+	if err != nil {
+		return nil, err
+	}
+	ret.setT(false)
+	return ret, nil
 }
 
 func (stmt *TokenStmt) parseFuncPtyStmt() (*FuncPtyStmt, error) {
-	isT := true
-	if stmt.Header.is(KeySyms["not"]) {
-		isT = false
-		stmt.Header.next()
-	}
-
 	stmt.Header.skip(KeySyms["$"])
 	fc, err := stmt.Header.parseFc()
 	if err != nil {
 		return nil, err
 	}
-	return &FuncPtyStmt{isT, fc}, nil
+	return &FuncPtyStmt{true, fc}, nil
 }
 
-func (stmt *TokenStmt) parseIfStmt() (*ForallStmt, error) {
+func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 	return nil, nil
 }
