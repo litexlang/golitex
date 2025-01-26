@@ -1,64 +1,78 @@
 package parser
 
-func (parser *Parser) ParseTopLevelStmt(tokenStmtBlock *TokenStmt) (*TopStmt, error) {
+func (stmt *TokenStmt) ParseTopLevelStmt() (*TopStmt, error) {
 	pub := false
-	if tokenStmtBlock.Header.is(KeySyms["pub"]) {
-		err := tokenStmtBlock.Header.setIndex(1)
+	if stmt.Header.is(KeySyms["pub"]) {
+		err := stmt.Header.setIndex(1)
 		if err != nil {
 			return nil, err
 		}
 		pub = true
 	}
 
-	stmt, err := parser.ParseStmt(tokenStmtBlock)
+	ret, err := stmt.ParseStmt()
 	if err != nil {
 		return nil, err
 	}
 
-	return &TopStmt{stmt, pub}, nil
+	return &TopStmt{ret, pub}, nil
 }
 
-func (parser *Parser) ParseStmt(tokenStmtBlock *TokenStmt) (Stmt, error) {
-	cur, err := tokenStmtBlock.Header.currentToken()
+func (stmt *TokenStmt) ParseStmt() (Stmt, error) {
+	cur, err := stmt.Header.currentToken()
 	if err != nil {
 		return nil, err
 	}
 
 	switch cur {
 	case Keywords["concept"]:
-		return parser.parseDefConceptStmt(tokenStmtBlock)
+		return stmt.parseDefConceptStmt()
 	case Keywords["property"]:
-		return parser.parseDefPropertyStmt(tokenStmtBlock)
+		return stmt.parseDefPropertyStmt()
 	case Keywords["fn"]:
-		return parser.parseDefFnStmt(tokenStmtBlock)
+		return stmt.parseDefFnStmt()
 	default:
-		return parser.parseFactStmt(tokenStmtBlock)
+		return stmt.parseFactStmt()
 	}
 }
 
-func (parser *Parser) parseDefConceptStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
+func (stmt *TokenStmt) parseDefConceptStmt() (*DefConceptStmt, error) {
 	return nil, nil
 }
 
-func (parser *Parser) parseDefFnStmt(tokenStmtBlock *TokenStmt) (*DefConceptStmt, error) {
+func (stmt *TokenStmt) parseDefFnStmt() (*DefConceptStmt, error) {
 	// TODO: Implement parsing logic for concept statement
 	return nil, nil
 }
 
-func (parser *Parser) parseDefPropertyStmt(tokenStmtBlock *TokenStmt) (*DefPropertyStmt, error) {
+func (stmt *TokenStmt) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 	// TODO: Implement parsing logic for property statement
 	return nil, nil
 }
 
-func (parser *Parser) parseFactStmt(tokenStmtBlock *TokenStmt) (FactStmt, error) {
+func (stmt *TokenStmt) parseFactStmt() (FactStmt, error) {
+	if stmt.Header.is(Keywords["if"]) {
+		return stmt.parseIfStmt()
+	}
+
 	return nil, nil
 }
 
-func (parser *Parser) parseFuncPtyStmt(tokenStmt *TokenStmt) (*PtyStmt, error) {
-	return nil, nil
+func (stmt *TokenStmt) parseFuncPtyStmt() (*FuncPtyStmt, error) {
+	isT := true
+	if stmt.Header.is(KeySyms["not"]) {
+		isT = false
+		stmt.Header.next()
+	}
+
+	stmt.Header.skip(KeySyms["$"])
+	fc, err := stmt.Header.parseFc()
+	if err != nil {
+		return nil, err
+	}
+	return &FuncPtyStmt{isT, fc}, nil
 }
 
-func (parser *Parser) parseIfStmt(tokenStmt *TokenStmt) (*ForallStmt, error) {
-	// TODO
+func (stmt *TokenStmt) parseIfStmt() (*ForallStmt, error) {
 	return nil, nil
 }

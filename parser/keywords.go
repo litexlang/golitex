@@ -55,6 +55,7 @@ var KeySyms = map[string]string{
 	"||": "||",
 	"==": "==",
 	"!=": "!=",
+	"is": "is",
 }
 var sortedSymbols []string = sortKeywordSymbols()
 
