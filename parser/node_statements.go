@@ -48,7 +48,6 @@ type ptyStmt interface {
 }
 
 type ForallStmt struct {
-	isTrue     bool
 	typeParams []varTypePair
 	varParams  []varTypePair
 	ifFacts    []FactStmt

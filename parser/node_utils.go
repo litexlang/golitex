@@ -10,8 +10,8 @@ type bracketedVarTypePair struct {
 }
 
 type varTypePair struct {
-	Var  string
-	Type string
+	Var  FcStr
+	Type FcStr
 }
 
 type SingletonVar string

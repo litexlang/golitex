@@ -91,5 +91,19 @@ func (stmt *TokenStmt) parseFuncPtyStmt() (*FuncPtyStmt, error) {
 func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 	stmt.Header.skip(Keywords["forall"])
 
-	return nil, nil
+	typeParams := &[]varTypePair{}
+	var err error = nil
+	if stmt.Header.is(KeySyms["["]) {
+		typeParams, err = stmt.Header.parseBracketedVarTypePair()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	varParams, err := stmt.Header.parseVarTypePairArr()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ForallStmt{*typeParams, *varParams, nil, nil}, nil
 }
