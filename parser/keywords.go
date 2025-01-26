@@ -8,7 +8,7 @@ var Keywords = map[string]string{
 	"type_member":    "type_member",
 	"var_member":     "var_member",
 	"property":       "property",
-	"if":             "cond",
+	"if":             "if",
 	"then":           "then",
 	"forall":         "forall",
 	"exist_property": "exist_property",
