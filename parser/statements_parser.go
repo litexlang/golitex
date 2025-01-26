@@ -108,13 +108,13 @@ func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 	ifFacts := &[]FactStmt{}
 	thenFacts := &[]FactStmt{}
 
-	if len(*stmt.Body) > 0 && (*stmt.Body)[0].Header.is(Keywords["if"]) {
+	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["if"]) {
 		ifFacts, err = stmt.parseFactsBlock()
 		if err != nil {
 			return nil, err
 		}
 
-		if len(*stmt.Body) == 2 && (*stmt.Body)[1].Header.is(Keywords["then"]) {
+		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(Keywords["then"]) {
 			thenFacts, err = stmt.parseFactsBlock()
 			if err != nil {
 				return nil, err
@@ -123,7 +123,7 @@ func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 			return nil, fmt.Errorf("expected 'then'")
 		}
 	} else {
-		for _, f := range *stmt.Body {
+		for _, f := range stmt.Body {
 			fact, err := f.parseFactStmt()
 			if err != nil {
 				return nil, err
@@ -142,7 +142,7 @@ func (stmt *TokenStmt) parseFactsBlock() (*[]FactStmt, error) {
 		return nil, err
 	}
 
-	for _, stmt := range *stmt.Body {
+	for _, stmt := range stmt.Body {
 		fact, err := stmt.parseFactStmt()
 		if err != nil {
 			return nil, err
