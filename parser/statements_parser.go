@@ -4,8 +4,8 @@ import "fmt"
 
 func (stmt *tokenBlock) ParseTopLevelStmt() (*TopStmt, error) {
 	pub := false
-	if stmt.Header.is(BuiltinSyms["pub"]) {
-		stmt.Header.skip()
+	if stmt.header.is(BuiltinSyms["pub"]) {
+		stmt.header.skip()
 		pub = true
 	}
 
@@ -18,7 +18,7 @@ func (stmt *tokenBlock) ParseTopLevelStmt() (*TopStmt, error) {
 }
 
 func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
-	cur, err := stmt.Header.currentToken()
+	cur, err := stmt.header.currentToken()
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,36 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 }
 
 func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
-	return nil, nil
+	stmt.header.skip()
+
+	conceptVar, err := stmt.header.next()
+	if err != nil {
+		return nil, err
+	}
+
+	conceptName, err := stmt.header.next()
+	if err != nil {
+		return nil, err
+	}
+
+	inherit := &[]typeConcept{}
+	typeVarMember := &[]varType{}
+	typeFnMember := &[]fnType{}
+	varMember := &[]varType{}
+	fnMember := &[]fnType{}
+	thenFacts := &[]FactStmt{}
+
+	for _, curStmt := range stmt.body {
+		if curStmt.header.is(Keywords["inherit"]) {
+			inherit, err = stmt.parseInherit()
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return &DefConceptStmt{varType(conceptVar), typeConcept(conceptName), *inherit, *typeVarMember, *typeFnMember, *varMember, *fnMember, *thenFacts}, nil
+
 }
 
 func (stmt *tokenBlock) parseDefFnStmt() (*DefConceptStmt, error) {
@@ -45,11 +74,11 @@ func (stmt *tokenBlock) parseDefFnStmt() (*DefConceptStmt, error) {
 }
 
 func (stmt *tokenBlock) parseFactStmt() (FactStmt, error) {
-	if stmt.Header.is(Keywords["forall"]) {
+	if stmt.header.is(Keywords["forall"]) {
 		return stmt.parseForallStmt()
 	}
 
-	if stmt.Header.is(Keywords["not"]) {
+	if stmt.header.is(Keywords["not"]) {
 		return stmt.parseNotFactStmt()
 	}
 
@@ -57,7 +86,7 @@ func (stmt *tokenBlock) parseFactStmt() (FactStmt, error) {
 }
 
 func (stmt *tokenBlock) parsePtyStmt() (*FuncPtyStmt, error) {
-	if stmt.Header.is(BuiltinSyms["$"]) {
+	if stmt.header.is(BuiltinSyms["$"]) {
 		return stmt.parseFuncPtyStmt()
 	}
 
@@ -65,7 +94,7 @@ func (stmt *tokenBlock) parsePtyStmt() (*FuncPtyStmt, error) {
 }
 
 func (stmt *tokenBlock) parseNotFactStmt() (FactStmt, error) {
-	stmt.Header.skip(Keywords["not"])
+	stmt.header.skip(Keywords["not"])
 	ret, err := stmt.parsePtyStmt()
 	if err != nil {
 		return nil, err
@@ -75,8 +104,8 @@ func (stmt *tokenBlock) parseNotFactStmt() (FactStmt, error) {
 }
 
 func (stmt *tokenBlock) parseFuncPtyStmt() (*FuncPtyStmt, error) {
-	stmt.Header.skip(BuiltinSyms["$"])
-	fc, err := stmt.Header.parseFc()
+	stmt.header.skip(BuiltinSyms["$"])
+	fc, err := stmt.header.parseFc()
 	if err != nil {
 		return nil, err
 	}
@@ -84,18 +113,18 @@ func (stmt *tokenBlock) parseFuncPtyStmt() (*FuncPtyStmt, error) {
 }
 
 func (stmt *tokenBlock) parseForallStmt() (*ForallStmt, error) {
-	stmt.Header.skip(Keywords["forall"])
+	stmt.header.skip(Keywords["forall"])
 
 	typeParams := &[]typeConceptPair{}
 	var err error = nil
-	if stmt.Header.is(BuiltinSyms["["]) {
-		typeParams, err = stmt.Header.parseBracketedVarTypePair()
+	if stmt.header.is(BuiltinSyms["["]) {
+		typeParams, err = stmt.header.parseBracketedVarTypePair()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	varParams, err := stmt.Header.parseVarTypePairArrEndWithColon()
+	varParams, err := stmt.header.parseVarTypePairArrEndWithColon()
 	if err != nil {
 		return nil, err
 	}
@@ -103,14 +132,14 @@ func (stmt *tokenBlock) parseForallStmt() (*ForallStmt, error) {
 	ifFacts := &[]FactStmt{}
 	thenFacts := &[]FactStmt{}
 
-	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["if"]) {
-		ifFacts, err = stmt.Body[0].parseFactsBlock()
+	if len(stmt.body) > 0 && (stmt.body)[0].header.is(Keywords["if"]) {
+		ifFacts, err = stmt.body[0].parseFactsBlock()
 		if err != nil {
 			return nil, err
 		}
 
-		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(Keywords["then"]) {
-			thenFacts, err = stmt.Body[1].parseFactsBlock()
+		if len(stmt.body) == 2 && (stmt.body)[1].header.is(Keywords["then"]) {
+			thenFacts, err = stmt.body[1].parseFactsBlock()
 			if err != nil {
 				return nil, err
 			}
@@ -128,12 +157,12 @@ func (stmt *tokenBlock) parseForallStmt() (*ForallStmt, error) {
 }
 
 func (stmt *tokenBlock) parseBodyFacts() (*[]FactStmt, error) {
-	if len(stmt.Body) == 0 {
+	if len(stmt.body) == 0 {
 		return &[]FactStmt{}, nil
 	}
 
 	facts := &[]FactStmt{}
-	for _, f := range stmt.Body {
+	for _, f := range stmt.body {
 		fact, err := f.parseFactStmt()
 		if err != nil {
 			return nil, err
@@ -146,12 +175,12 @@ func (stmt *tokenBlock) parseBodyFacts() (*[]FactStmt, error) {
 
 func (stmt *tokenBlock) parseFactsBlock() (*[]FactStmt, error) {
 	ifFacts := &[]FactStmt{}
-	stmt.Header.skip()
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+	stmt.header.skip()
+	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, err
 	}
 
-	for _, curStmt := range stmt.Body {
+	for _, curStmt := range stmt.body {
 		fact, err := curStmt.parseFactStmt()
 		if err != nil {
 			return nil, err
@@ -163,41 +192,41 @@ func (stmt *tokenBlock) parseFactsBlock() (*[]FactStmt, error) {
 }
 
 func (stmt *tokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
-	stmt.Header.skip(Keywords["property"])
+	stmt.header.skip(Keywords["property"])
 
-	name, err := stmt.Header.next()
+	name, err := stmt.header.next()
 	if err != nil {
 		return nil, err
 	}
 
 	typeParams := &[]typeConceptPair{}
-	if stmt.Header.is(BuiltinSyms["["]) {
-		typeParams, err = stmt.Header.parseBracketedVarTypePair()
+	if stmt.header.is(BuiltinSyms["["]) {
+		typeParams, err = stmt.header.parseBracketedVarTypePair()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	varParams, err := stmt.Header.parseBracedVarTypePair()
+	varParams, err := stmt.header.parseBracedVarTypePair()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, err
 	}
 
 	ifFacts := &[]FactStmt{}
 	thenFacts := &[]FactStmt{}
 
-	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["if"]) {
-		ifFacts, err = stmt.Body[0].parseFactsBlock()
+	if len(stmt.body) > 0 && (stmt.body)[0].header.is(Keywords["if"]) {
+		ifFacts, err = stmt.body[0].parseFactsBlock()
 		if err != nil {
 			return nil, err
 		}
 
-		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(Keywords["then"]) {
-			thenFacts, err = stmt.Body[1].parseFactsBlock()
+		if len(stmt.body) == 2 && (stmt.body)[1].header.is(Keywords["then"]) {
+			thenFacts, err = stmt.body[1].parseFactsBlock()
 			if err != nil {
 				return nil, err
 			}
@@ -211,5 +240,26 @@ func (stmt *tokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 		}
 	}
 
-	return &DefPropertyStmt{name, *typeParams, *varParams, *ifFacts, *thenFacts}, nil
+	return &DefPropertyStmt{propertyName(name), *typeParams, *varParams, *ifFacts, *thenFacts}, nil
+}
+
+func (stmt *tokenBlock) parseInherit() (*[]typeConcept, error) {
+	stmt.header.skip()
+
+	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		return nil, err
+	}
+
+	types := []typeConcept{}
+	for _, curStmt := range stmt.body {
+		cur, err := curStmt.header.next()
+		if err != nil {
+			return nil, err
+		}
+		types = append(types, typeConcept(cur))
+		if !curStmt.header.isEnd() {
+			return nil, fmt.Errorf("expect one string in inherit")
+		}
+	}
+	return &types, nil
 }

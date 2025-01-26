@@ -74,6 +74,7 @@ func (f *FcMemberAccessExpr) String() string {
 }
 
 type typeConcept string
+type propertyName string
 type varType string
 type fnType struct {
 	typeParamsTypes []typeConcept

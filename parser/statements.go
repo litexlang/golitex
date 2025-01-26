@@ -10,9 +10,9 @@ type TopStmt struct {
 }
 
 type DefConceptStmt struct {
-	conceptVar    string
-	conceptName   string
-	inherit       []string
+	conceptVar    varType
+	conceptName   typeConcept
+	inherit       []typeConcept
 	typeVarMember []varType
 	typeFnMember  []fnType
 	varMember     []varType
@@ -23,7 +23,7 @@ type DefConceptStmt struct {
 func (c *DefConceptStmt) stmt() {}
 
 type DefPropertyStmt struct {
-	name       string
+	name       propertyName
 	typeParams []typeConceptPair
 	varParams  []varTypePair
 	ifFacts    []FactStmt
