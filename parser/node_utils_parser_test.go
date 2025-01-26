@@ -6,13 +6,23 @@ import (
 )
 
 func TestParseFc(t *testing.T) {
-	tokens := []string{"f", "[", "G", ",", "B", "]", "(", "a", ",", "b", ")", "[", "G", ",", "B", "]", "(", "a", ",", "b", ")"}
-	parser := Parser{0, tokens}
-	fc, err := parser.parseFc()
-	if err != nil {
-		t.Fatal(err)
+	strings := []string{
+		"f[G, B](a, b)[C, D](c, d)",
+		"f[G, B](a, b).g[G, B].t(a, b)",
 	}
-	fmt.Println(fc)
+
+	for _, s := range strings {
+		tokens, err := tokenizeString(s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		parser := Parser{0, *tokens}
+		fc, err := parser.parseFc()
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(fc)
+	}
 }
 
 func TestParseBracketVarTypePair(t *testing.T) {

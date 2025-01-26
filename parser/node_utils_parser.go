@@ -1,6 +1,34 @@
 package parser
 
 func (parser *Parser) parseFc() (Fc, error) {
+	curFc, err := parser.parseFcStrAndFcFnRetVal()
+	if err != nil {
+		return nil, err
+	}
+
+	if !parser.is(KeySyms["."]) {
+		return curFc, nil
+	}
+
+	fcArr := []Fc{curFc}
+	for !parser.isEnd() && parser.is(KeySyms["."]) {
+		err = parser.skip(KeySyms["."])
+		if err != nil {
+			return nil, err
+		}
+
+		curFc, err = parser.parseFcStrAndFcFnRetVal()
+		if err != nil {
+			return nil, err
+		}
+
+		fcArr = append(fcArr, curFc)
+	}
+
+	return fcArr, nil
+}
+
+func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
 	firstSymbolPtr, err := parser.parseFcStr()
 	if err != nil {
 		return nil, err
@@ -15,7 +43,7 @@ func (parser *Parser) parseFc() (Fc, error) {
 	for !parser.isEnd() && (parser.is(KeySyms["["]) || parser.is(KeySyms["("])) {
 		curFcc := FcFnRetVal{previousFc, []FcStr{}, []Fc{}}
 
-		var typeParamsPtr *[]FcStr
+		typeParamsPtr := &[]FcStr{}
 		if parser.is(KeySyms["["]) {
 			typeParamsPtr, err = parser.parseBracketedFcString()
 			if err != nil {
@@ -23,7 +51,7 @@ func (parser *Parser) parseFc() (Fc, error) {
 			}
 		}
 
-		var varParamsPtr *[]Fc
+		varParamsPtr := &[]Fc{}
 		if parser.is(KeySyms["("]) {
 			varParamsPtr, err = parser.parseBracedFcArr()
 			if err != nil {
