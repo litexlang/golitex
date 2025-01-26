@@ -87,7 +87,7 @@ func TokenizeStmtBlock(b *StrBlock) (*tokenBlock, error) {
 		body = append(body, *parsedSubBlock)
 	}
 	return &tokenBlock{
-		Header: Parser{0, header},
-		Body:   body,
+		header: Parser{0, header},
+		body:   body,
 	}, nil
 }

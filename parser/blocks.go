@@ -7,8 +7,8 @@ import (
 )
 
 type tokenBlock struct {
-	Header Parser
-	Body   []tokenBlock
+	header Parser
+	body   []tokenBlock
 }
 
 func (b *tokenBlock) String() string {
@@ -17,11 +17,11 @@ func (b *tokenBlock) String() string {
 
 func (b *tokenBlock) stringWithIndent(indentLevel int) string {
 	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
-	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.Header.getSlice(), " "))
+	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.header.getSlice(), " "))
 
 	// 递归处理子块
-	if b.Body != nil {
-		for _, subBlock := range b.Body {
+	if b.body != nil {
+		for _, subBlock := range b.body {
 			result += subBlock.stringWithIndent(indentLevel + 1)
 		}
 	}
