@@ -44,11 +44,6 @@ func (stmt *TokenStmt) parseDefFnStmt() (*DefConceptStmt, error) {
 	return nil, nil
 }
 
-func (stmt *TokenStmt) parseDefPropertyStmt() (*DefPropertyStmt, error) {
-	// TODO: Implement parsing logic for property statement
-	return nil, nil
-}
-
 func (stmt *TokenStmt) parseFactStmt() (FactStmt, error) {
 	if stmt.Header.is(Keywords["forall"]) {
 		return stmt.parseForallStmt()
@@ -91,7 +86,7 @@ func (stmt *TokenStmt) parseFuncPtyStmt() (*FuncPtyStmt, error) {
 func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 	stmt.Header.skip(Keywords["forall"])
 
-	typeParams := &[]varTypePair{}
+	typeParams := &[]typeConceptPair{}
 	var err error = nil
 	if stmt.Header.is(BuiltinSyms["["]) {
 		typeParams, err = stmt.Header.parseBracketedVarTypePair()
@@ -100,7 +95,12 @@ func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 		}
 	}
 
-	varParams, err := stmt.Header.parseVarTypePairArr()
+	varParams, err := stmt.Header.parseVarTypePairArrEndWithColon()
+	if err != nil {
+		return nil, err
+	}
+
+	err = stmt.Header.skip(BuiltinSyms[":"])
 	if err != nil {
 		return nil, err
 	}
@@ -123,16 +123,30 @@ func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 			return nil, fmt.Errorf("expected 'then'")
 		}
 	} else {
-		for _, f := range stmt.Body {
-			fact, err := f.parseFactStmt()
-			if err != nil {
-				return nil, err
-			}
-			*thenFacts = append(*thenFacts, fact)
+		thenFacts, err = stmt.parseBodyFacts()
+		if err != nil {
+			return nil, err
 		}
 	}
 
 	return &ForallStmt{*typeParams, *varParams, *ifFacts, *thenFacts}, nil
+}
+
+func (stmt *TokenStmt) parseBodyFacts() (*[]FactStmt, error) {
+	if len(stmt.Body) == 0 {
+		return &[]FactStmt{}, nil
+	}
+
+	facts := &[]FactStmt{}
+	for _, f := range stmt.Body {
+		fact, err := f.parseFactStmt()
+		if err != nil {
+			return nil, err
+		}
+		*facts = append(*facts, fact)
+	}
+
+	return facts, nil
 }
 
 func (stmt *TokenStmt) parseFactsBlock() (*[]FactStmt, error) {
@@ -151,4 +165,57 @@ func (stmt *TokenStmt) parseFactsBlock() (*[]FactStmt, error) {
 	}
 
 	return ifFacts, nil
+}
+
+func (stmt *TokenStmt) parseDefPropertyStmt() (*DefPropertyStmt, error) {
+	stmt.Header.skip(Keywords["property"])
+
+	name, err := stmt.Header.next()
+	if err != nil {
+		return nil, err
+	}
+
+	typeParams := &[]typeConceptPair{}
+	if stmt.Header.is(BuiltinSyms["["]) {
+		typeParams, err = stmt.Header.parseBracketedVarTypePair()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	varParams, err := stmt.Header.parseVarTypePairArrEndWithColon()
+	if err != nil {
+		return nil, err
+	}
+
+	err = stmt.Header.skip(BuiltinSyms[":"])
+	if err != nil {
+		return nil, err
+	}
+
+	ifFacts := &[]FactStmt{}
+	thenFacts := &[]FactStmt{}
+
+	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["if"]) {
+		ifFacts, err = stmt.parseFactsBlock()
+		if err != nil {
+			return nil, err
+		}
+
+		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(Keywords["then"]) {
+			thenFacts, err = stmt.parseFactsBlock()
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("expected 'then'")
+		}
+	} else {
+		thenFacts, err = stmt.parseBodyFacts()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &DefPropertyStmt{name, *typeParams, *varParams, *ifFacts, *thenFacts}, nil
 }
