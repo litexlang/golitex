@@ -127,22 +127,22 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 	return FcStr(tok), nil
 }
 
-func (parser *Parser) parseBracketedVarTypePair() (*bracketedVarTypePair, error) {
+func (parser *Parser) parseBracketedVarTypePair() (*[]varTypePair, error) {
 	pairs := []varTypePair{}
 	parser.skip(KeySyms["["])
 
 	for {
-		varName, err := parser.next()
+		varName, err := parser.parseFcStr()
 		if err != nil {
 			return nil, err
 		}
 
-		typeName, err := parser.next()
+		typeName, err := parser.parseFcStr()
 		if err != nil {
 			return nil, err
 		}
 
-		pairs = append(pairs, varTypePair{varName, typeName})
+		pairs = append(pairs, varTypePair{(varName), (typeName)})
 
 		if parser.isAndSkip(KeySyms["]"]) {
 			break
@@ -153,5 +153,62 @@ func (parser *Parser) parseBracketedVarTypePair() (*bracketedVarTypePair, error)
 		}
 	}
 
-	return &bracketedVarTypePair{pairs}, nil
+	return &pairs, nil
+}
+
+func (parser *Parser) parseBracedVarTypePair() (*[]varTypePair, error) {
+	pairs := []varTypePair{}
+	parser.skip(KeySyms["("])
+
+	for {
+		varName, err := parser.parseFcStr()
+		if err != nil {
+			return nil, err
+		}
+
+		typeName, err := parser.parseFcStr()
+		if err != nil {
+			return nil, err
+		}
+
+		pairs = append(pairs, varTypePair{(varName), (typeName)})
+
+		if parser.isAndSkip(KeySyms[")"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(KeySyms[","]); err != nil {
+			return nil, err
+		}
+	}
+
+	return &pairs, nil
+}
+
+func (parser *Parser) parseVarTypePairArr() (*[]varTypePair, error) {
+	pairs := []varTypePair{}
+
+	for {
+		varName, err := parser.parseFcStr()
+		if err != nil {
+			return nil, err
+		}
+
+		typeName, err := parser.parseFcStr()
+		if err != nil {
+			return nil, err
+		}
+
+		pairs = append(pairs, varTypePair{(varName), (typeName)})
+
+		if parser.isAndSkip(KeySyms[":"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(KeySyms[","]); err != nil {
+			return nil, err
+		}
+	}
+
+	return &pairs, nil
 }
