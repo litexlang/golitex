@@ -25,7 +25,9 @@ func (parser *Parser) parseFc() (Fc, error) {
 		fcArr = append(fcArr, curFc)
 	}
 
-	return fcArr, nil
+	ret := FcMemberAccessExpr(fcArr)
+
+	return &ret, nil
 }
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
@@ -61,7 +63,7 @@ func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
 
 		curFcc.typeParams = *typeParamsPtr
 		curFcc.varParams = *varParamsPtr
-		previousFc = curFcc
+		previousFc = &curFcc
 	}
 
 	return previousFc, nil
