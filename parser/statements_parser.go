@@ -2,7 +2,7 @@ package parser
 
 import "fmt"
 
-func (stmt *TokenStmt) ParseTopLevelStmt() (*TopStmt, error) {
+func (stmt *tokenBlock) ParseTopLevelStmt() (*TopStmt, error) {
 	pub := false
 	if stmt.Header.is(BuiltinSyms["pub"]) {
 		stmt.Header.skip()
@@ -17,7 +17,7 @@ func (stmt *TokenStmt) ParseTopLevelStmt() (*TopStmt, error) {
 	return &TopStmt{ret, pub}, nil
 }
 
-func (stmt *TokenStmt) ParseStmt() (Stmt, error) {
+func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 	cur, err := stmt.Header.currentToken()
 	if err != nil {
 		return nil, err
@@ -35,16 +35,16 @@ func (stmt *TokenStmt) ParseStmt() (Stmt, error) {
 	}
 }
 
-func (stmt *TokenStmt) parseDefConceptStmt() (*DefConceptStmt, error) {
+func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	return nil, nil
 }
 
-func (stmt *TokenStmt) parseDefFnStmt() (*DefConceptStmt, error) {
+func (stmt *tokenBlock) parseDefFnStmt() (*DefConceptStmt, error) {
 	// TODO: Implement parsing logic for concept statement
 	return nil, nil
 }
 
-func (stmt *TokenStmt) parseFactStmt() (FactStmt, error) {
+func (stmt *tokenBlock) parseFactStmt() (FactStmt, error) {
 	if stmt.Header.is(Keywords["forall"]) {
 		return stmt.parseForallStmt()
 	}
@@ -56,7 +56,7 @@ func (stmt *TokenStmt) parseFactStmt() (FactStmt, error) {
 	return stmt.parsePtyStmt()
 }
 
-func (stmt *TokenStmt) parsePtyStmt() (*FuncPtyStmt, error) {
+func (stmt *tokenBlock) parsePtyStmt() (*FuncPtyStmt, error) {
 	if stmt.Header.is(BuiltinSyms["$"]) {
 		return stmt.parseFuncPtyStmt()
 	}
@@ -64,7 +64,7 @@ func (stmt *TokenStmt) parsePtyStmt() (*FuncPtyStmt, error) {
 	return nil, fmt.Errorf("invalid function")
 }
 
-func (stmt *TokenStmt) parseNotFactStmt() (FactStmt, error) {
+func (stmt *tokenBlock) parseNotFactStmt() (FactStmt, error) {
 	stmt.Header.skip(Keywords["not"])
 	ret, err := stmt.parsePtyStmt()
 	if err != nil {
@@ -74,7 +74,7 @@ func (stmt *TokenStmt) parseNotFactStmt() (FactStmt, error) {
 	return ret, nil
 }
 
-func (stmt *TokenStmt) parseFuncPtyStmt() (*FuncPtyStmt, error) {
+func (stmt *tokenBlock) parseFuncPtyStmt() (*FuncPtyStmt, error) {
 	stmt.Header.skip(BuiltinSyms["$"])
 	fc, err := stmt.Header.parseFc()
 	if err != nil {
@@ -83,7 +83,7 @@ func (stmt *TokenStmt) parseFuncPtyStmt() (*FuncPtyStmt, error) {
 	return &FuncPtyStmt{true, fc}, nil
 }
 
-func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
+func (stmt *tokenBlock) parseForallStmt() (*ForallStmt, error) {
 	stmt.Header.skip(Keywords["forall"])
 
 	typeParams := &[]typeConceptPair{}
@@ -127,7 +127,7 @@ func (stmt *TokenStmt) parseForallStmt() (*ForallStmt, error) {
 	return &ForallStmt{*typeParams, *varParams, *ifFacts, *thenFacts}, nil
 }
 
-func (stmt *TokenStmt) parseBodyFacts() (*[]FactStmt, error) {
+func (stmt *tokenBlock) parseBodyFacts() (*[]FactStmt, error) {
 	if len(stmt.Body) == 0 {
 		return &[]FactStmt{}, nil
 	}
@@ -144,7 +144,7 @@ func (stmt *TokenStmt) parseBodyFacts() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenStmt) parseFactsBlock() (*[]FactStmt, error) {
+func (stmt *tokenBlock) parseFactsBlock() (*[]FactStmt, error) {
 	ifFacts := &[]FactStmt{}
 	stmt.Header.skip()
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
@@ -162,7 +162,7 @@ func (stmt *TokenStmt) parseFactsBlock() (*[]FactStmt, error) {
 	return ifFacts, nil
 }
 
-func (stmt *TokenStmt) parseDefPropertyStmt() (*DefPropertyStmt, error) {
+func (stmt *tokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 	stmt.Header.skip(Keywords["property"])
 
 	name, err := stmt.Header.next()

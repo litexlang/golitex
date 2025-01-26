@@ -10,12 +10,14 @@ type TopStmt struct {
 }
 
 type DefConceptStmt struct {
-	conceptVar  string
-	conceptName string
-	typeMember  []Declaration
-	varMember   []Declaration
-	inherit     []string
-	thenFacts   []FactStmt
+	conceptVar    string
+	conceptName   string
+	inherit       []string
+	typeVarMember []varType
+	typeFnMember  []fnType
+	varMember     []varType
+	fnMember      []fnType
+	thenFacts     []FactStmt
 }
 
 func (c *DefConceptStmt) stmt() {}
@@ -31,7 +33,7 @@ type DefPropertyStmt struct {
 func (c *DefPropertyStmt) stmt() {}
 
 type LocalStmt struct {
-	Statements []Stmt
+	statements []Stmt
 }
 
 func (l *LocalStmt) stmt() {}

@@ -22,19 +22,19 @@ func TestSplitString(t *testing.T) {
 }
 
 func TestParseStrStmtBlock(t *testing.T) {
-	subBody := []SourceCodeStmtBlock{
+	subBody := []StrBlock{
 		{
 			Header: "concept [v G](v G):",
 			Body:   nil,
 		},
 	}
-	body := []SourceCodeStmtBlock{
+	body := []StrBlock{
 		{
 			Header: "concept [G Set](v G):",
 			Body:   subBody,
 		},
 	}
-	input := SourceCodeStmtBlock{
+	input := StrBlock{
 		Header: "concept [G Group[G Set](v G)]:",
 		Body:   body,
 	}

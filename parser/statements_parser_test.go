@@ -16,16 +16,16 @@ func TestForallStmt(t *testing.T) {
 	}
 
 	block :=
-		TokenStmt{
+		tokenBlock{
 			Parser{0, *tokenized1},
-			[]TokenStmt{
-				TokenStmt{
+			[]tokenBlock{
+				tokenBlock{
 					Parser{0, *tokenized2},
-					[]TokenStmt{},
+					[]tokenBlock{},
 				},
-				TokenStmt{
+				tokenBlock{
 					Parser{0, *tokenized2},
-					[]TokenStmt{},
+					[]tokenBlock{},
 				},
 			},
 		}
@@ -48,35 +48,35 @@ func TestForallStmt(t *testing.T) {
 	}
 
 	block2 :=
-		TokenStmt{
+		tokenBlock{
 			Parser{0, *tokenized1},
-			[]TokenStmt{
-				TokenStmt{
+			[]tokenBlock{
+				tokenBlock{
 					Parser{0, *tokenizedIf},
-					[]TokenStmt{
-						TokenStmt{
+					[]tokenBlock{
+						tokenBlock{
 							Parser{0, *tokenized2},
-							[]TokenStmt{},
+							[]tokenBlock{},
 						},
 					},
 				},
-				TokenStmt{
+				tokenBlock{
 					Parser{0, *tokenizedThen},
-					[]TokenStmt{
-						TokenStmt{
+					[]tokenBlock{
+						tokenBlock{
 							Parser{0, *tokenized2},
-							[]TokenStmt{},
+							[]tokenBlock{},
 						},
-						TokenStmt{
+						tokenBlock{
 							Parser{0, *tokenized1},
-							[]TokenStmt{
-								TokenStmt{
+							[]tokenBlock{
+								tokenBlock{
 									Parser{0, *tokenized2},
-									[]TokenStmt{},
+									[]tokenBlock{},
 								},
-								TokenStmt{
+								tokenBlock{
 									Parser{0, *tokenized2},
-									[]TokenStmt{},
+									[]tokenBlock{},
 								},
 							},
 						},
@@ -103,16 +103,16 @@ func TestDefPropertyStmt(t *testing.T) {
 	}
 
 	block :=
-		TokenStmt{
+		tokenBlock{
 			Parser{0, *tokenized1},
-			[]TokenStmt{
-				TokenStmt{
+			[]tokenBlock{
+				tokenBlock{
 					Parser{0, *tokenized2},
-					[]TokenStmt{},
+					[]tokenBlock{},
 				},
-				TokenStmt{
+				tokenBlock{
 					Parser{0, *tokenized2},
-					[]TokenStmt{},
+					[]tokenBlock{},
 				},
 			},
 		}
@@ -130,24 +130,24 @@ func TestDefPropertyStmt(t *testing.T) {
 	}
 
 	block2 :=
-		TokenStmt{
+		tokenBlock{
 			Parser{0, *tokenized1},
-			[]TokenStmt{
-				TokenStmt{
+			[]tokenBlock{
+				tokenBlock{
 					Parser{0, *tokenizedIf},
-					[]TokenStmt{
-						TokenStmt{
+					[]tokenBlock{
+						tokenBlock{
 							Parser{0, *tokenized2},
-							[]TokenStmt{},
+							[]tokenBlock{},
 						},
 					},
 				},
-				TokenStmt{
+				tokenBlock{
 					Parser{0, *tokenizedThen},
-					[]TokenStmt{
-						TokenStmt{
+					[]tokenBlock{
+						tokenBlock{
 							Parser{0, *tokenized2},
-							[]TokenStmt{},
+							[]tokenBlock{},
 						},
 					},
 				},
