@@ -160,3 +160,49 @@ func TestDefPropertyStmt(t *testing.T) {
 
 	fmt.Sprintf("%v", cur)
 }
+
+func TestDefConceptStmt(t *testing.T) {
+	code := `
+concept G Group:
+	inherit:
+		set
+		group
+	
+	type_member:
+		var 1 G
+		fn f[G Group, G2 Group](x G, y G) G
+		property f[G Group, G2 Group](x G, y G)
+
+	var_member:
+		var 1 G
+		fn f[G Group, G2 Group](x G, y G) G
+		property f[G Group, G2 Group](x G, y G)
+
+	then:
+		$p[G, G2](x, y)
+		
+`
+
+	slice, err := getTopLevelStmtSlice(code)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	blocks := []tokenBlock{}
+	for _, strBlock := range slice.body {
+		block, err := TokenizeStmtBlock(&strBlock)
+		if err != nil {
+			t.Fatal(err)
+		}
+		blocks = append(blocks, *block)
+	}
+
+	for _, block := range blocks {
+		cur, err := block.ParseStmt()
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Printf("%v\n", cur)
+	}
+
+}

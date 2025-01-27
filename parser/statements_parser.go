@@ -48,6 +48,10 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 		return nil, err
 	}
 
+	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		return nil, err
+	}
+
 	inherit := &[]typeConcept{}
 	typeVarMember := &[]fcVarDecl{}
 	typeFnMember := &[]fcFnDecl{}
@@ -117,7 +121,7 @@ func (stmt *tokenBlock) parsePtyStmt() (*FuncPtyStmt, error) {
 }
 
 func (stmt *tokenBlock) parseNotFactStmt() (FactStmt, error) {
-	stmt.header.skip(Keywords["not"])
+	stmt.header.skip()
 	ret, err := stmt.parsePtyStmt()
 	if err != nil {
 		return nil, err
@@ -127,7 +131,7 @@ func (stmt *tokenBlock) parseNotFactStmt() (FactStmt, error) {
 }
 
 func (stmt *tokenBlock) parseFuncPtyStmt() (*FuncPtyStmt, error) {
-	stmt.header.skip(BuiltinSyms["$"])
+	stmt.header.skip()
 	fc, err := stmt.header.parseFc()
 	if err != nil {
 		return nil, err
@@ -136,7 +140,7 @@ func (stmt *tokenBlock) parseFuncPtyStmt() (*FuncPtyStmt, error) {
 }
 
 func (stmt *tokenBlock) parseForallStmt() (*ForallStmt, error) {
-	stmt.header.skip(Keywords["forall"])
+	stmt.header.skip()
 
 	typeParams := &[]typeConceptPair{}
 	var err error = nil
@@ -215,7 +219,7 @@ func (stmt *tokenBlock) parseFactsBlock() (*[]FactStmt, error) {
 }
 
 func (stmt *tokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
-	stmt.header.skip(Keywords["property"])
+	stmt.header.skip()
 
 	name, err := stmt.header.next()
 	if err != nil {

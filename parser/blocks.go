@@ -66,10 +66,10 @@ func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
 		return nil, fmt.Errorf("无法读取文件: %v", err)
 	}
 
-	return ParseString(string(content))
+	return getTopLevelStmtSlice(string(content))
 }
 
-func ParseString(content string) (*TopLevelStmtSlice, error) {
+func getTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
 	lines := strings.Split((content), "\n")
 	blocks, _, err := parseStrBlocks(lines, 0, 0)
 
