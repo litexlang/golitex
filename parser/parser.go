@@ -11,15 +11,6 @@ func (p *Parser) getSlice() []string {
 	return p.slice
 }
 
-func (p *Parser) setIndex(i int) error {
-	if p.index >= len(p.slice) || p.index < 0 {
-		return fmt.Errorf("index out of range")
-	}
-
-	p.index = i
-	return nil
-}
-
 func (p *Parser) currentToken() (string, error) {
 	if p.index >= len(p.slice) {
 		return "", fmt.Errorf("unexpected end of slice %v", p.slice)

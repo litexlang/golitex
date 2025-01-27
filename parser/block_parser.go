@@ -12,7 +12,7 @@ func (p *tokenBlock) parseMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl, 
 
 	for _, curStmt := range p.body {
 		if curStmt.header.is(Keywords["var"]) {
-			member, err := curStmt.parseVarDecl()
+			member, err := curStmt.header.parseVarDecl()
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -24,7 +24,7 @@ func (p *tokenBlock) parseMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl, 
 			}
 			*fnMember = append(*fnMember, *member)
 		} else if curStmt.header.is(Keywords["property"]) {
-			member, err := curStmt.parsePropertyDecl()
+			member, err := curStmt.header.parsePropertyDecl()
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -33,42 +33,6 @@ func (p *tokenBlock) parseMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl, 
 	}
 
 	return varMember, fnMember, propertyMember, nil
-}
-
-func (stmt *tokenBlock) parseVarDecl() (*fcVarDecl, error) {
-	stmt.header.next()
-	name, err := stmt.header.next()
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO
-	typ, err := stmt.header.parseFcVarType()
-	if err != nil {
-		return nil, err
-	}
-
-	return &fcVarDecl{name, typ}, nil
-}
-
-func (stmt *tokenBlock) parsePropertyDecl() (*propertyDecl, error) {
-	stmt.header.next()
-	name, err := stmt.header.next()
-	if err != nil {
-		return nil, err
-	}
-
-	typeParams, err := stmt.header.parseBracketedTypeConceptPairArray()
-	if err != nil {
-		return nil, err
-	}
-
-	varParams, err := stmt.header.parseBracedForallVarTypePairArr()
-	if err != nil {
-		return nil, err
-	}
-
-	return &propertyDecl{name, propertyType{*typeParams, *varParams}}, nil
 }
 
 func (stmt *tokenBlock) parseThenFacts() (*[]FactStmt, error) {

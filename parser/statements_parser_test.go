@@ -20,11 +20,11 @@ func TestForallStmt(t *testing.T) {
 		tokenBlock{
 			Parser{0, *tokenized1},
 			[]tokenBlock{
-				tokenBlock{
+				{
 					Parser{0, *tokenized2},
 					[]tokenBlock{},
 				},
-				tokenBlock{
+				{
 					Parser{0, *tokenized2},
 					[]tokenBlock{},
 				},
@@ -36,7 +36,7 @@ func TestForallStmt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Sprintf("%v", cur)
+	fmt.Printf("%v", cur)
 
 	tokenizedIf, err := tokenizeString("if:")
 	if err != nil {
@@ -52,30 +52,30 @@ func TestForallStmt(t *testing.T) {
 		tokenBlock{
 			Parser{0, *tokenized1},
 			[]tokenBlock{
-				tokenBlock{
+				{
 					Parser{0, *tokenizedIf},
 					[]tokenBlock{
-						tokenBlock{
+						{
 							Parser{0, *tokenized2},
 							[]tokenBlock{},
 						},
 					},
 				},
-				tokenBlock{
+				{
 					Parser{0, *tokenizedThen},
 					[]tokenBlock{
-						tokenBlock{
+						{
 							Parser{0, *tokenized2},
 							[]tokenBlock{},
 						},
-						tokenBlock{
+						{
 							Parser{0, *tokenized1},
 							[]tokenBlock{
-								tokenBlock{
+								{
 									Parser{0, *tokenized2},
 									[]tokenBlock{},
 								},
-								tokenBlock{
+								{
 									Parser{0, *tokenized2},
 									[]tokenBlock{},
 								},
@@ -90,7 +90,7 @@ func TestForallStmt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Sprintf("%v", cur)
+	fmt.Printf("%v", cur)
 }
 
 func TestDefPropertyStmt(t *testing.T) {
@@ -107,11 +107,11 @@ func TestDefPropertyStmt(t *testing.T) {
 		tokenBlock{
 			Parser{0, *tokenized1},
 			[]tokenBlock{
-				tokenBlock{
+				{
 					Parser{0, *tokenized2},
 					[]tokenBlock{},
 				},
-				tokenBlock{
+				{
 					Parser{0, *tokenized2},
 					[]tokenBlock{},
 				},
@@ -119,6 +119,10 @@ func TestDefPropertyStmt(t *testing.T) {
 		}
 
 	cur, err := block.parseDefPropertyStmt()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("%v", cur)
 
 	tokenizedIf, err := tokenizeString("if:")
 	if err != nil {
@@ -134,19 +138,19 @@ func TestDefPropertyStmt(t *testing.T) {
 		tokenBlock{
 			Parser{0, *tokenized1},
 			[]tokenBlock{
-				tokenBlock{
+				{
 					Parser{0, *tokenizedIf},
 					[]tokenBlock{
-						tokenBlock{
+						{
 							Parser{0, *tokenized2},
 							[]tokenBlock{},
 						},
 					},
 				},
-				tokenBlock{
+				{
 					Parser{0, *tokenizedThen},
 					[]tokenBlock{
-						tokenBlock{
+						{
 							Parser{0, *tokenized2},
 							[]tokenBlock{},
 						},
@@ -159,7 +163,7 @@ func TestDefPropertyStmt(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fmt.Sprintf("%v", cur)
+	fmt.Printf("%v", cur)
 }
 
 func TestDefConceptStmt(t *testing.T) {
