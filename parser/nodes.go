@@ -56,6 +56,8 @@ type DefFnStmt struct {
 	thenFacts []FactStmt
 }
 
+func (f *DefFnStmt) stmt() {}
+
 func (c *DefPropertyStmt) stmt() {}
 
 type localStmt struct {
