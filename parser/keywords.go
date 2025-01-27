@@ -2,32 +2,6 @@ package parser
 
 import "sort"
 
-var Keywords = map[string]string{
-	"concept":        "concept",
-	"inherit":        "inherit",
-	"type_member":    "type_member",
-	"var_member":     "var_member",
-	"property":       "property",
-	"if":             "if",
-	"then":           "then",
-	"forall":         "forall",
-	"exist_property": "exist_property",
-	"have":           "have",
-	"var":            "var",
-	"type":           "type",
-	"fn":             "fn",
-	"local":          "local",
-	"pub":            "pub",
-	"know":           "know",
-	"claim":          "claim",
-	"prove":          "prove",
-	"import":         "import",
-	"package":        "package",
-	"return":         "return",
-	"not":            "not",
-	"is":             "is",
-}
-
 var BuiltinSyms = map[string]string{
 	":":  ":",
 	"[":  "[",
@@ -57,6 +31,43 @@ var BuiltinSyms = map[string]string{
 	"==": "==",
 	"!=": "!=",
 }
+
+func putBuiltinIntoKeywords() *map[string]string {
+	var Keywords = map[string]string{
+		"concept":        "concept",
+		"inherit":        "inherit",
+		"type_member":    "type_member",
+		"var_member":     "var_member",
+		"property":       "property",
+		"if":             "if",
+		"then":           "then",
+		"forall":         "forall",
+		"exist_property": "exist_property",
+		"have":           "have",
+		"var":            "var",
+		"type":           "type",
+		"fn":             "fn",
+		"local":          "local",
+		"pub":            "pub",
+		"know":           "know",
+		"claim":          "claim",
+		"prove":          "prove",
+		"import":         "import",
+		"package":        "package",
+		"return":         "return",
+		"not":            "not",
+		"is":             "is",
+	}
+
+	for k, v := range BuiltinSyms {
+		Keywords[v] = k
+	}
+
+	return &Keywords
+}
+
+var Keywords map[string]string = *putBuiltinIntoKeywords()
+
 var sortedSymbols []string = sortKeywordSymbols()
 
 // 初始化排序后的符号列表
