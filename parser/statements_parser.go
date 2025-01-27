@@ -49,10 +49,10 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	}
 
 	inherit := &[]typeConcept{}
-	typeVarMember := &[]varType{}
-	typeFnMember := &[]fnType{}
-	varMember := &[]varType{}
-	fnMember := &[]fnType{}
+	typeVarMember := &[]fcType{}
+	typeFnMember := &[]fnFcType{}
+	varMember := &[]fcType{}
+	fnMember := &[]fnFcType{}
 	thenFacts := &[]FactStmt{}
 
 	for _, curStmt := range stmt.body {
@@ -64,7 +64,7 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 		}
 	}
 
-	return &DefConceptStmt{varType(conceptVar), typeConcept(conceptName), *inherit, *typeVarMember, *typeFnMember, *varMember, *fnMember, *thenFacts}, nil
+	return &DefConceptStmt{typeVar(conceptVar), typeConcept(conceptName), *inherit, *typeVarMember, *typeFnMember, *varMember, *fnMember, *thenFacts}, nil
 
 }
 
