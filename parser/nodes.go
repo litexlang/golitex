@@ -29,17 +29,17 @@ type DefConceptStmt struct {
 
 type fcVarDecl struct {
 	name string
-	typ  fcVarType
+	tp   fcVarType
 }
 
 type fcFnDecl struct {
 	name string
-	typ  fcFnType
+	tp   fcFnType
 }
 
 type propertyDecl struct {
 	name string
-	typ  propertyType
+	tp   propertyType
 }
 
 func (c *DefConceptStmt) stmt() {}
@@ -184,7 +184,7 @@ func (f fcVarType) fcType()        {}
 func (f fcVarType) forallVarType() {}
 
 type fcFnType struct {
-	typeParamsTypes []typeConcept
+	typeParamsTypes []typeConceptPair
 	varParamsTypes  []fcTypePair
 	retType         fcType
 }
@@ -193,7 +193,7 @@ func (f *fcFnType) fcType()        {}
 func (f *fcFnType) forallVarType() {}
 
 type propertyType struct {
-	typeParams []typeConcept
+	typeParams []typeConceptPair
 	varParams  []forallVarTypePair
 }
 
