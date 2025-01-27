@@ -67,23 +67,17 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 			if err != nil {
 				return nil, err
 			}
-		}
-
-		if curStmt.header.is(Keywords["type_member"]) {
+		} else if curStmt.header.is(Keywords["type_member"]) {
 			typeVarMember, typeFnMember, typePropertyMember, err = curStmt.parseMember()
 			if err != nil {
 				return nil, err
 			}
-		}
-
-		if curStmt.header.is(Keywords["var_member"]) {
+		} else if curStmt.header.is(Keywords["var_member"]) {
 			varMember, fnMember, propertyMember, err = curStmt.parseMember()
 			if err != nil {
 				return nil, err
 			}
-		}
-
-		if curStmt.header.is(Keywords["then"]) {
+		} else if curStmt.header.is(Keywords["then"]) {
 			thenFacts, err = curStmt.parseThenFacts()
 			if err != nil {
 				return nil, err
@@ -234,7 +228,7 @@ func (stmt *tokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 		}
 	}
 
-	varParams, err := stmt.header.parseBracedForallVarTypePair()
+	varParams, err := stmt.header.parseBracedForallVarTypePairArr()
 	if err != nil {
 		return nil, err
 	}

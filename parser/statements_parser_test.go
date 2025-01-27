@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -162,8 +163,7 @@ func TestDefPropertyStmt(t *testing.T) {
 }
 
 func TestDefConceptStmt(t *testing.T) {
-	code := `
-concept G Group:
+	code := `concept G Group:
 	inherit:
 		set
 		group
@@ -182,6 +182,7 @@ concept G Group:
 		$p[G, G2](x, y)
 		
 `
+	code = strings.ReplaceAll(code, "\t", "    ")
 
 	slice, err := getTopLevelStmtSlice(code)
 	if err != nil {
@@ -204,5 +205,4 @@ concept G Group:
 		}
 		fmt.Printf("%v\n", cur)
 	}
-
 }

@@ -72,6 +72,9 @@ func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
 func getTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
 	lines := strings.Split((content), "\n")
 	blocks, _, err := parseStrBlocks(lines, 0, 0)
+	if err != nil {
+		return nil, err
+	}
 
 	return &TopLevelStmtSlice{*blocks}, err
 }
