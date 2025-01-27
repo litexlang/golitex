@@ -54,11 +54,11 @@ type DefPropertyStmt struct {
 
 func (c *DefPropertyStmt) stmt() {}
 
-type LocalStmt struct {
+type localStmt struct {
 	statements []Stmt
 }
 
-func (l *LocalStmt) stmt() {}
+func (l *localStmt) stmt() {}
 
 type FactStmt interface {
 	factStmt()
