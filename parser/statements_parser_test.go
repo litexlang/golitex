@@ -278,3 +278,36 @@ local:
 	}
 
 }
+
+func TestDefPropertyStmt2(t *testing.T) {
+	code := `
+property P[G Group, G2 Group](g G, g2 G2):
+	if:
+    	$f[G, B](g.g1, g2.g2)
+	then:
+		$f[G, B](g.g1, g2.g2)
+`
+	code = strings.ReplaceAll(code, "\t", "    ")
+
+	slice, err := getTopLevelStmtSlice(code)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	blocks := []tokenBlock{}
+	for _, strBlock := range slice.body {
+		block, err := TokenizeStmtBlock(&strBlock)
+		if err != nil {
+			t.Fatal(err)
+		}
+		blocks = append(blocks, *block)
+	}
+
+	for _, block := range blocks {
+		cur, err := block.ParseStmt()
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Printf("%v\n", cur)
+	}
+}
