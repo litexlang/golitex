@@ -71,8 +71,8 @@ type FactStmt interface {
 	stmt()
 }
 
-type propertyStmt interface {
-	setT()
+type propertyFactStmt interface {
+	setT(b bool)
 	factStmt()
 	stmt()
 }
@@ -178,7 +178,7 @@ func (f *FcMemberAccessExpr) String() string {
 }
 
 type typeConcept string
-type propertyName string
+
 type fcType interface {
 	fcType()
 	forallVarType()

@@ -100,10 +100,10 @@ func (stmt *tokenBlock) parseFactStmt() (FactStmt, error) {
 		return stmt.parseNotFactStmt()
 	}
 
-	return stmt.parsePtyStmt()
+	return stmt.parsePropertyFactStmt()
 }
 
-func (stmt *tokenBlock) parsePtyStmt() (*FuncPtyStmt, error) {
+func (stmt *tokenBlock) parsePropertyFactStmt() (propertyFactStmt, error) {
 	if stmt.header.is(BuiltinSyms["$"]) {
 		return stmt.parseFuncPtyStmt()
 	}
@@ -113,7 +113,7 @@ func (stmt *tokenBlock) parsePtyStmt() (*FuncPtyStmt, error) {
 
 func (stmt *tokenBlock) parseNotFactStmt() (FactStmt, error) {
 	stmt.header.skip()
-	ret, err := stmt.parsePtyStmt()
+	ret, err := stmt.parsePropertyFactStmt()
 	if err != nil {
 		return nil, err
 	}

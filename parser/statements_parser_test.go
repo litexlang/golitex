@@ -323,6 +323,8 @@ fn P[G Group, G2 Group](g G, g2 G2) fn [G Group, G2 Group](g G, g2 G2):
     	$f[G, B](g.g1, g2.g2)
 	then:
 		$f[G, B](g.g1, g2.g2)
+
+$f[G, B](g.g1, g2.g2)
 `
 	code = strings.ReplaceAll(code, "\t", "    ")
 
