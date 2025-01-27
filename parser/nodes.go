@@ -18,13 +18,28 @@ type DefConceptStmt struct {
 	conceptVar         typeVar
 	conceptName        typeConcept
 	inherit            []typeConcept
-	typeVarMember      []fcType
-	typeFnMember       []fcFnType
-	typePropertyMember []propertyType
-	varMember          []fcType
-	fnMember           []fcFnType
-	propertyMember     []propertyType
+	typeVarMember      []fcVarDecl
+	typeFnMember       []fcFnDecl
+	typePropertyMember []propertyDecl
+	varMember          []fcVarDecl
+	fnMember           []fcFnDecl
+	propertyMember     []propertyDecl
 	thenFacts          []FactStmt
+}
+
+type fcVarDecl struct {
+	name string
+	typ  fcVarType
+}
+
+type fcFnDecl struct {
+	name string
+	typ  fcFnType
+}
+
+type propertyDecl struct {
+	name string
+	typ  propertyType
 }
 
 func (c *DefConceptStmt) stmt() {}

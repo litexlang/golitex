@@ -127,17 +127,17 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 	return FcStr(tok), nil
 }
 
-func (parser *Parser) parseVarType() (fcType, error) {
-	if parser.is(Keywords["fn"]) {
-		return parser.parseFcFnType()
-	}
+// func (parser *Parser) parseVarType() (fcType, error) {
+// 	if parser.is(Keywords["fn"]) {
+// 		return parser.parseFcFnType()
+// 	}
 
-	tok, err := parser.next()
-	if err != nil {
-		return fcVarType(""), err
-	}
-	return fcVarType(tok), nil
-}
+// 	tok, err := parser.next()
+// 	if err != nil {
+// 		return fcVarType(""), err
+// 	}
+// 	return fcVarType(tok), nil
+// }
 
 func (parser *Parser) parseConceptTypeStruct() (typeConcept, error) {
 	tok, err := parser.next()
@@ -242,7 +242,7 @@ func (parser *Parser) parseForallVarTypePairArrEndWithColon() (*[]forallVarTypeP
 }
 
 func (parser *Parser) parseFcFnType() (*fcFnType, error) {
-	parser.skip(Keywords["fn"])
+	parser.skip() // 不能是 parser.skip(Keywords["fn"]) 因为parse fnDeclStmt的时候，我skip的其实是函数名
 
 	typeParamsTypes := &[]typeConcept{}
 	var err error = nil
@@ -282,7 +282,7 @@ func (parser *Parser) parseFcType() (fcType, error) {
 }
 
 func (parser *Parser) parsePropertyType() (*propertyType, error) {
-	parser.skip(Keywords["property"])
+	parser.skip()
 
 	typeParams, err := parser.parseBracketedTypeConceptArray()
 	if err != nil {
