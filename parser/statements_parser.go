@@ -26,6 +26,8 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 	switch cur {
 	case Keywords["concept"]:
 		return stmt.parseDefConceptStmt()
+	case Keywords["type"]:
+		return stmt.parseDefTypeStmt()
 	case Keywords["property"]:
 		return stmt.parseDefPropertyStmt()
 	case Keywords["fn"]:
@@ -40,7 +42,7 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	stmt.header.skip()
 
-	conceptVar, err := stmt.header.next()
+	typeVariable, err := stmt.header.next()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +89,52 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 		}
 	}
 
-	return &DefConceptStmt{typeVar(conceptVar), typeConcept(conceptName), *inherit, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+	return &DefConceptStmt{typeVar(typeVariable), typeConcept(conceptName), *inherit, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+
+}
+
+func (stmt *tokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
+	stmt.header.skip()
+
+	typeVariable, err := stmt.header.next()
+	if err != nil {
+		return nil, err
+	}
+
+	conceptName, err := stmt.header.next()
+	if err != nil {
+		return nil, err
+	}
+
+	if !stmt.header.is(BuiltinSyms[":"]) {
+		return &DefTypeStmt{typeVar(typeVariable), typeConcept(conceptName), []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []FactStmt{}}, fmt.Errorf("expected ':' after type variable")
+	} else {
+		stmt.header.next()
+	}
+
+	varMember := &[]fcVarDecl{}
+	fnMember := &[]fcFnDecl{}
+	propertyMember := &[]propertyDecl{}
+	thenFacts := &[]FactStmt{}
+
+	if len(stmt.body) == 2 && stmt.body[0].header.is(Keywords["var_member"]) && stmt.body[1].header.is(Keywords["then"]) {
+		varMember, fnMember, propertyMember, err = stmt.body[0].parseMember()
+		if err != nil {
+			return nil, err
+		}
+
+		thenFacts, err = stmt.body[1].parseThenFacts()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		thenFacts, err = stmt.parseBodyFacts()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &DefTypeStmt{typeVar(typeVariable), typeConcept(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 
 }
 

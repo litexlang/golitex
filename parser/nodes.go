@@ -15,7 +15,7 @@ type TopStmt struct {
 }
 
 type DefConceptStmt struct {
-	conceptVar         typeVar
+	typeVar            typeVar
 	conceptName        typeConcept
 	inherit            []typeConcept
 	typeVarMember      []fcVarDecl
@@ -26,6 +26,17 @@ type DefConceptStmt struct {
 	propertyMember     []propertyDecl
 	thenFacts          []FactStmt
 }
+
+type DefTypeStmt struct {
+	typeVar        typeVar
+	conceptName    typeConcept
+	varMember      []fcVarDecl
+	fnMember       []fcFnDecl
+	propertyMember []propertyDecl
+	thenFacts      []FactStmt
+}
+
+func (t *DefTypeStmt) stmt() {}
 
 type fcVarDecl struct {
 	name string
