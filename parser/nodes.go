@@ -15,14 +15,16 @@ type TopStmt struct {
 }
 
 type DefConceptStmt struct {
-	conceptVar    typeVar
-	conceptName   typeConcept
-	inherit       []typeConcept
-	typeVarMember []fcType
-	typeFnMember  []fnFcType
-	varMember     []fcType
-	fnMember      []fnFcType
-	thenFacts     []FactStmt
+	conceptVar         typeVar
+	conceptName        typeConcept
+	inherit            []typeConcept
+	typeVarMember      []fcType
+	typeFnMember       []fcFnType
+	typePropertyMember []propertyType
+	varMember          []fcType
+	fnMember           []fcFnType
+	propertyMember     []propertyType
+	thenFacts          []FactStmt
 }
 
 func (c *DefConceptStmt) stmt() {}
@@ -30,7 +32,7 @@ func (c *DefConceptStmt) stmt() {}
 type DefPropertyStmt struct {
 	name       propertyName
 	typeParams []typeConceptPair
-	varParams  []fcTypePair
+	varParams  []forallVarTypePair
 	ifFacts    []FactStmt
 	thenFacts  []FactStmt
 }
@@ -56,7 +58,7 @@ type ptyStmt interface {
 
 type ForallStmt struct {
 	typeParams []typeConceptPair
-	varParams  []fcTypePair
+	varParams  []forallVarTypePair
 	ifFacts    []FactStmt
 	thenFacts  []FactStmt
 }
@@ -86,7 +88,7 @@ type typeConceptPair struct {
 }
 
 type forallVarTypePair struct {
-	Var  typeVar
+	Var  Fc
 	Type forallVarType
 }
 
@@ -161,16 +163,23 @@ type fcType interface {
 	forallVarType()
 }
 
-type varFcType string
+type fcVarType string
 
-func (f varFcType) fcType()        {}
-func (f varFcType) forallVarType() {}
+func (f fcVarType) fcType()        {}
+func (f fcVarType) forallVarType() {}
 
-type fnFcType struct {
+type fcFnType struct {
 	typeParamsTypes []typeConcept
 	varParamsTypes  []fcType
 	retType         fcType
 }
 
-func (f *fnFcType) fcType()        {}
-func (f *fnFcType) forallVarType() {}
+func (f *fcFnType) fcType()        {}
+func (f *fcFnType) forallVarType() {}
+
+type propertyType struct {
+	typeParams []typeConceptPair
+	varParams  []fcTypePair
+}
+
+func (f *propertyType) forallVarType() {}

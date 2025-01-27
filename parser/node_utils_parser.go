@@ -134,9 +134,9 @@ func (parser *Parser) parseVarType() (fcType, error) {
 
 	tok, err := parser.next()
 	if err != nil {
-		return varFcType(""), err
+		return fcVarType(""), err
 	}
-	return varFcType(tok), nil
+	return fcVarType(tok), nil
 }
 
 func (parser *Parser) parseConceptTypeStruct() (typeConcept, error) {
@@ -184,8 +184,8 @@ func (parser *Parser) parseBracketedVarTypePair() (*[]typeConceptPair, error) {
 	return &pairs, nil
 }
 
-func (parser *Parser) parseBracedForallVarTypePair() (*[]fcTypePair, error) {
-	pairs := []fcTypePair{}
+func (parser *Parser) parseBracedForallVarTypePair() (*[]forallVarTypePair, error) {
+	pairs := []forallVarTypePair{}
 	parser.skip(BuiltinSyms["("])
 
 	for {
@@ -199,7 +199,7 @@ func (parser *Parser) parseBracedForallVarTypePair() (*[]fcTypePair, error) {
 			return nil, err
 		}
 
-		pairs = append(pairs, fcTypePair{(varName), (typeName)})
+		pairs = append(pairs, forallVarTypePair{(varName), (typeName)})
 
 		if parser.isAndSkip(BuiltinSyms[")"]) {
 			break
@@ -213,8 +213,8 @@ func (parser *Parser) parseBracedForallVarTypePair() (*[]fcTypePair, error) {
 	return &pairs, nil
 }
 
-func (parser *Parser) parseForallVarTypePairArrEndWithColon() (*[]fcTypePair, error) {
-	pairs := []fcTypePair{}
+func (parser *Parser) parseForallVarTypePairArrEndWithColon() (*[]forallVarTypePair, error) {
+	pairs := []forallVarTypePair{}
 
 	for {
 		varName, err := parser.parseFcStr()
@@ -227,7 +227,7 @@ func (parser *Parser) parseForallVarTypePairArrEndWithColon() (*[]fcTypePair, er
 			return nil, err
 		}
 
-		pairs = append(pairs, fcTypePair{(varName), (typeName)})
+		pairs = append(pairs, forallVarTypePair{(varName), (typeName)})
 
 		if parser.isAndSkip(BuiltinSyms[":"]) {
 			break
@@ -241,12 +241,25 @@ func (parser *Parser) parseForallVarTypePairArrEndWithColon() (*[]fcTypePair, er
 	return &pairs, nil
 }
 
-func (parser *Parser) parseFnFcType() (*varFcType, error) {
+func (parser *Parser) parseFnFcType() (*fcVarType, error) {
 	// TODO
 	return nil, nil
 }
 
-func (parser *Parser) parseForallVarType() (*varFcType, error) {
-	// TODO
+func (parser *Parser) parseForallVarType() (forallVarType, error) {
+	if parser.is(Keywords["fn"]) {
+		return parser.parseFnFcType()
+	} else if parser.is(Keywords["property"]) {
+		return parser.parsePropertyType()
+	} else {
+		return parser.parseFcVarType()
+	}
+}
+
+func (parser *Parser) parsePropertyType() (*propertyType, error) {
+	return nil, nil
+}
+
+func (parser *Parser) parseFcVarType() (*propertyType, error) {
 	return nil, nil
 }
