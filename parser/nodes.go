@@ -45,11 +45,15 @@ type propertyDecl struct {
 func (c *DefConceptStmt) stmt() {}
 
 type DefPropertyStmt struct {
-	name       propertyName
-	typeParams []typeConceptPair
-	varParams  []forallVarTypePair
-	ifFacts    []FactStmt
-	thenFacts  []FactStmt
+	decl      propertyDecl
+	ifFacts   []FactStmt
+	thenFacts []FactStmt
+}
+
+type DefFnStmt struct {
+	decl      fcFnDecl
+	ifFacts   []FactStmt
+	thenFacts []FactStmt
 }
 
 func (c *DefPropertyStmt) stmt() {}

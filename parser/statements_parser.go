@@ -215,55 +215,45 @@ func (stmt *tokenBlock) parseFactsBlock() (*[]FactStmt, error) {
 }
 
 func (stmt *tokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
-	stmt.header.skip()
-
-	name, err := stmt.header.next()
+	decl, err := stmt.header.parsePropertyDecl()
 	if err != nil {
-		return nil, err
-	}
-
-	typeParams := &[]typeConceptPair{}
-	if stmt.header.is(BuiltinSyms["["]) {
-		typeParams, err = stmt.header.parseBracketedVarTypePair()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	varParams, err := stmt.header.parseBracedForallVarTypePairArr()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, err
 	}
 
 	ifFacts := &[]FactStmt{}
 	thenFacts := &[]FactStmt{}
+	if stmt.header.is(BuiltinSyms[":"]) {
+		stmt.header.skip()
 
-	if len(stmt.body) > 0 && (stmt.body)[0].header.is(Keywords["if"]) {
-		ifFacts, err = stmt.body[0].parseFactsBlock()
-		if err != nil {
-			return nil, err
-		}
+		if len(stmt.body) == 2 && stmt.body[0].header.is(Keywords["if"]) && stmt.body[1].header.is(Keywords["then"]) {
+			stmt.body[0].header.skip()
+			if err := stmt.body[0].header.testAndSkip(BuiltinSyms[":"]); err != nil {
+				return nil, err
+			}
 
-		if len(stmt.body) == 2 && (stmt.body)[1].header.is(Keywords["then"]) {
-			thenFacts, err = stmt.body[1].parseFactsBlock()
+			ifFacts, err = stmt.body[0].parseBodyFacts()
+			if err != nil {
+				return nil, err
+			}
+
+			stmt.body[1].header.skip()
+			if err := stmt.body[1].header.testAndSkip(BuiltinSyms[":"]); err != nil {
+				return nil, err
+			}
+
+			thenFacts, err = stmt.body[1].parseBodyFacts()
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			return nil, fmt.Errorf("expected 'then'")
-		}
-	} else {
-		thenFacts, err = stmt.parseBodyFacts()
-		if err != nil {
-			return nil, err
+			thenFacts, err = stmt.parseBodyFacts()
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	return &DefPropertyStmt{propertyName(name), *typeParams, *varParams, *ifFacts, *thenFacts}, nil
+	return &DefPropertyStmt{*decl, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *tokenBlock) parseInherit() (*[]typeConcept, error) {
