@@ -178,8 +178,8 @@ func (f *fcFnType) fcType()        {}
 func (f *fcFnType) forallVarType() {}
 
 type propertyType struct {
-	typeParams []typeConceptPair
-	varParams  []fcTypePair
+	typeParams []typeConcept
+	varParams  []forallVarType
 }
 
 func (f *propertyType) forallVarType() {}
