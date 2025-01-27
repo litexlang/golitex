@@ -124,7 +124,7 @@ func (stmt *tokenBlock) parseForallStmt() (*ForallStmt, error) {
 		}
 	}
 
-	varParams, err := stmt.header.parseVarTypePairArrEndWithColon()
+	varParams, err := stmt.header.parseForallVarTypePairArrEndWithColon()
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (stmt *tokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 		}
 	}
 
-	varParams, err := stmt.header.parseBracedVarTypePair()
+	varParams, err := stmt.header.parseBracedForallVarTypePair()
 	if err != nil {
 		return nil, err
 	}
