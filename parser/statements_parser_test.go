@@ -387,6 +387,8 @@ forall [G Group] x g:
 func TestParseDefTypeStmt(t *testing.T) {
 	code :=
 		`
+type G Group
+
 type G Group:
 	var_member:
 		var 1 G
@@ -398,8 +400,8 @@ type G Group:
 
 type G Group:
 	$p[G, G2](x, y)
-
 `
+
 	code = strings.ReplaceAll(code, "\t", "    ")
 
 	slice, err := getTopLevelStmtSlice(code)

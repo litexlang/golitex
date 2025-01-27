@@ -52,8 +52,10 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 		return nil, err
 	}
 
-	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, err
+	if !stmt.header.is(BuiltinSyms[":"]) {
+		return &DefConceptStmt{typeVar(typeVariable), typeConcept(conceptName), []typeConcept{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []FactStmt{}}, nil
+	} else {
+		stmt.header.next()
 	}
 
 	inherit := &[]typeConcept{}
@@ -107,7 +109,7 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	}
 
 	if !stmt.header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{typeVar(typeVariable), typeConcept(conceptName), []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []FactStmt{}}, fmt.Errorf("expected ':' after type variable")
+		return &DefTypeStmt{typeVar(typeVariable), typeConcept(conceptName), []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []FactStmt{}}, nil
 	} else {
 		stmt.header.next()
 	}
