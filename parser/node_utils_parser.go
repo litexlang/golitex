@@ -242,7 +242,7 @@ func (parser *Parser) parseForallVarTypePairArrEndWithColon() (*[]forallVarTypeP
 }
 
 func (parser *Parser) parseFcFnType() (*fcFnType, error) {
-	parser.skip() // 不能是 parser.skip(Keywords["fn"]) 因为parse fnDeclStmt的时候，我skip的其实是函数名
+	parser.skip()
 
 	typeParamsTypes := &[]typeConceptPair{}
 	var err error = nil
@@ -263,12 +263,15 @@ func (parser *Parser) parseFcFnType() (*fcFnType, error) {
 	}
 
 	retType, err := parser.parseFcType()
+	if err != nil {
+		return nil, err
+	}
 
 	return &fcFnType{*typeParamsTypes, *varParamsTypes, retType}, nil
 }
 
 func (parser *Parser) parseFcFnDecl() (*fcFnDecl, error) {
-	parser.skip() // 不能是 parser.skip(Keywords["fn"]) 因为parse fnDeclStmt的时候，我skip的其实是函数名
+	parser.skip()
 
 	name, err := parser.next()
 	if err != nil {
@@ -379,54 +382,6 @@ func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]typeConceptPair, 
 	return &concepts, nil
 }
 
-func (parser *Parser) parseBracedFcTypeArray() (*[]fcType, error) {
-	types := []fcType{}
-	parser.skip(BuiltinSyms["("])
-
-	for {
-		t, err := parser.parseFcType()
-		if err != nil {
-			return nil, err
-		}
-
-		types = append(types, t)
-
-		if parser.isAndSkip(BuiltinSyms[")"]) {
-			break
-		}
-
-		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
-			return nil, err
-		}
-	}
-
-	return &types, nil
-}
-
-func (parser *Parser) parseBracedForallVarTypeArray() (*[]forallVarType, error) {
-	varTypes := []forallVarType{}
-	parser.skip(BuiltinSyms["("])
-
-	for {
-		t, err := parser.parseForallVarType()
-		if err != nil {
-			return nil, err
-		}
-
-		varTypes = append(varTypes, t)
-
-		if parser.isAndSkip(BuiltinSyms[")"]) {
-			break
-		}
-
-		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
-			return nil, err
-		}
-	}
-
-	return &varTypes, nil
-}
-
 func (parser *Parser) parseBracedFcTypePairArray() (*[]fcTypePair, error) {
 	pairs := []fcTypePair{}
 	parser.skip(BuiltinSyms["("])
@@ -454,4 +409,40 @@ func (parser *Parser) parseBracedFcTypePairArray() (*[]fcTypePair, error) {
 	}
 
 	return &pairs, nil
+}
+
+func (parser *Parser) parseVarDecl() (*fcVarDecl, error) {
+	parser.next()
+	name, err := parser.next()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO
+	typ, err := parser.parseFcVarType()
+	if err != nil {
+		return nil, err
+	}
+
+	return &fcVarDecl{name, typ}, nil
+}
+
+func (parser *Parser) parsePropertyDecl() (*propertyDecl, error) {
+	parser.next()
+	name, err := parser.next()
+	if err != nil {
+		return nil, err
+	}
+
+	typeParams, err := parser.parseBracketedTypeConceptPairArray()
+	if err != nil {
+		return nil, err
+	}
+
+	varParams, err := parser.parseBracedForallVarTypePairArr()
+	if err != nil {
+		return nil, err
+	}
+
+	return &propertyDecl{name, propertyType{*typeParams, *varParams}}, nil
 }

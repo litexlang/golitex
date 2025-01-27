@@ -65,7 +65,7 @@ type FactStmt interface {
 	stmt()
 }
 
-type ptyStmt interface {
+type propertyStmt interface {
 	setT()
 	factStmt()
 	stmt()
@@ -168,7 +168,7 @@ func (f *FcMemberAccessExpr) String() string {
 	for i := 0; i < len(*f)-1; i++ {
 		ret += fmt.Sprintf("%s.", (*f)[i])
 	}
-	return ret + fmt.Sprintf("%s", (*f)[len(*f)-1])
+	return ret + (*f)[len(*f)-1].String()
 }
 
 type typeConcept string
