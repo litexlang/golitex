@@ -91,11 +91,6 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 
 }
 
-func (stmt *tokenBlock) parseDefFnStmt() (*DefConceptStmt, error) {
-	// TODO: Implement parsing logic for concept statement
-	return nil, nil
-}
-
 func (stmt *tokenBlock) parseFactStmt() (FactStmt, error) {
 	if stmt.header.is(Keywords["forall"]) {
 		return stmt.parseForallStmt()
@@ -224,32 +219,9 @@ func (stmt *tokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 	thenFacts := &[]FactStmt{}
 	if stmt.header.is(BuiltinSyms[":"]) {
 		stmt.header.skip()
-
-		if len(stmt.body) == 2 && stmt.body[0].header.is(Keywords["if"]) && stmt.body[1].header.is(Keywords["then"]) {
-			stmt.body[0].header.skip()
-			if err := stmt.body[0].header.testAndSkip(BuiltinSyms[":"]); err != nil {
-				return nil, err
-			}
-
-			ifFacts, err = stmt.body[0].parseBodyFacts()
-			if err != nil {
-				return nil, err
-			}
-
-			stmt.body[1].header.skip()
-			if err := stmt.body[1].header.testAndSkip(BuiltinSyms[":"]); err != nil {
-				return nil, err
-			}
-
-			thenFacts, err = stmt.body[1].parseBodyFacts()
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			thenFacts, err = stmt.parseBodyFacts()
-			if err != nil {
-				return nil, err
-			}
+		ifFacts, thenFacts, err = stmt.parseBodyIfFactsThenFacts()
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -294,4 +266,61 @@ func (stmt *tokenBlock) parseLocalStmt() (*localStmt, error) {
 	}
 
 	return &localStmt{localStatements}, nil
+}
+
+func (stmt *tokenBlock) parseBodyIfFactsThenFacts() (*[]FactStmt, *[]FactStmt, error) {
+	ifFacts := &[]FactStmt{}
+	thenFacts := &[]FactStmt{}
+	var err error = nil
+
+	if len(stmt.body) == 2 && stmt.body[0].header.is(Keywords["if"]) && stmt.body[1].header.is(Keywords["then"]) {
+		stmt.body[0].header.skip()
+		if err := stmt.body[0].header.testAndSkip(BuiltinSyms[":"]); err != nil {
+			return nil, nil, err
+		}
+
+		ifFacts, err = stmt.body[0].parseBodyFacts()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		stmt.body[1].header.skip()
+		if err := stmt.body[1].header.testAndSkip(BuiltinSyms[":"]); err != nil {
+			return nil, nil, err
+		}
+
+		thenFacts, err = stmt.body[1].parseBodyFacts()
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		thenFacts, err = stmt.parseBodyFacts()
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return ifFacts, thenFacts, nil
+}
+
+func (stmt *tokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
+	stmt.header.skip(Keywords["fn"])
+
+	decl, err := stmt.header.parseFcFnDecl()
+	if err != nil {
+		return nil, err
+	}
+
+	ifFacts := &[]FactStmt{}
+	thenFacts := &[]FactStmt{}
+
+	if stmt.header.is(BuiltinSyms[":"]) {
+		stmt.header.skip()
+		ifFacts, thenFacts, err = stmt.parseBodyIfFactsThenFacts()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &DefFnStmt{*decl, *ifFacts, *thenFacts}, nil
 }
