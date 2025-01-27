@@ -350,3 +350,78 @@ $f[G, B](g.g1, g2.g2)
 		fmt.Printf("%v\n", cur)
 	}
 }
+
+func TestFactStmts(t *testing.T) {
+	code := `
+$f[G, B](g.g1, g2.g2)
+
+forall [G Group] x g:
+	$f[G, B](g.g1, g2.g2)
+
+`
+	code = strings.ReplaceAll(code, "\t", "    ")
+
+	slice, err := getTopLevelStmtSlice(code)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	blocks := []tokenBlock{}
+	for _, strBlock := range slice.body {
+		block, err := TokenizeStmtBlock(&strBlock)
+		if err != nil {
+			t.Fatal(err)
+		}
+		blocks = append(blocks, *block)
+	}
+
+	for _, block := range blocks {
+		cur, err := block.ParseStmt()
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Printf("%v\n", cur)
+	}
+}
+
+func TestParseDefTypeStmt(t *testing.T) {
+	code :=
+		`
+type G Group:
+	var_member:
+		var 1 G
+		fn f[G Group, G2 Group](x G, y G) G
+		property f[G Group, G2 Group](x G, y G)
+
+	then:
+		$p[G, G2](x, y)
+
+type G Group:
+	$p[G, G2](x, y)
+
+`
+	code = strings.ReplaceAll(code, "\t", "    ")
+
+	slice, err := getTopLevelStmtSlice(code)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	blocks := []tokenBlock{}
+	for _, strBlock := range slice.body {
+		block, err := TokenizeStmtBlock(&strBlock)
+		if err != nil {
+			t.Fatal(err)
+		}
+		blocks = append(blocks, *block)
+	}
+
+	for _, block := range blocks {
+		cur, err := block.ParseStmt()
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Printf("%v\n", cur)
+	}
+
+}
