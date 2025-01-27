@@ -13,7 +13,7 @@ type typeVar string
 
 type varTypePair struct {
 	Var  FcStr
-	Type varType
+	Type fcType
 }
 
 type SingletonVar string
@@ -75,17 +75,18 @@ func (f *FcMemberAccessExpr) String() string {
 
 type typeConcept string
 type propertyName string
-type varType string
-type fnType struct {
+type fcType interface {
+	fcType()
+}
+
+type varFcType string
+
+func (f varFcType) fcType() {}
+
+type fnFcType struct {
 	typeParamsTypes []typeConcept
-	varParamsTypes  []varType
-	retType         fnRetType
+	varParamsTypes  []fcType
+	retType         fcType
 }
 
-type fnRetType interface {
-	fnRetType()
-}
-
-func (f *fnType) fnRetType() {}
-
-func (v *varType) fnRetType() {}
+func (f *fnFcType) fcType() {}

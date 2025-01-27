@@ -10,13 +10,13 @@ type TopStmt struct {
 }
 
 type DefConceptStmt struct {
-	conceptVar    varType
+	conceptVar    typeVar
 	conceptName   typeConcept
 	inherit       []typeConcept
-	typeVarMember []varType
-	typeFnMember  []fnType
-	varMember     []varType
-	fnMember      []fnType
+	typeVarMember []fcType
+	typeFnMember  []fnFcType
+	varMember     []fcType
+	fnMember      []fnFcType
 	thenFacts     []FactStmt
 }
 

@@ -127,12 +127,16 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 	return FcStr(tok), nil
 }
 
-func (parser *Parser) parseVarType() (varType, error) {
+func (parser *Parser) parseVarType() (fcType, error) {
+	if parser.is(Keywords["fn"]) {
+		return parser.parseFnFcType()
+	}
+
 	tok, err := parser.next()
 	if err != nil {
-		return "", err
+		return varFcType(""), err
 	}
-	return varType(tok), nil
+	return varFcType(tok), nil
 }
 
 func (parser *Parser) parseConceptTypeStruct() (typeConcept, error) {
@@ -235,4 +239,8 @@ func (parser *Parser) parseVarTypePairArrEndWithColon() (*[]varTypePair, error) 
 	}
 
 	return &pairs, nil
+}
+
+func (parser *Parser) parseFnFcType() (*varFcType, error) {
+	return nil, nil
 }
