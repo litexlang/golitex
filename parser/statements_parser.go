@@ -49,22 +49,45 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	}
 
 	inherit := &[]typeConcept{}
-	typeVarMember := &[]fcType{}
-	typeFnMember := &[]fcFnType{}
-	varMember := &[]fcType{}
-	fnMember := &[]fcFnType{}
+	typeVarMember := &[]fcVarDecl{}
+	typeFnMember := &[]fcFnDecl{}
+	typePropertyMember := &[]propertyDecl{}
+	varMember := &[]fcVarDecl{}
+	fnMember := &[]fcFnDecl{}
+	propertyMember := &[]propertyDecl{}
 	thenFacts := &[]FactStmt{}
 
 	for _, curStmt := range stmt.body {
 		if curStmt.header.is(Keywords["inherit"]) {
-			inherit, err = stmt.parseInherit()
+			inherit, err = curStmt.parseInherit()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if curStmt.header.is(Keywords["type_member"]) {
+			typeVarMember, typeFnMember, typePropertyMember, err = curStmt.parseMember()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if curStmt.header.is(Keywords["var_member"]) {
+			varMember, fnMember, propertyMember, err = curStmt.parseMember()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if curStmt.header.is(Keywords["then"]) {
+			thenFacts, err = curStmt.parseThenFacts()
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
 
-	return &DefConceptStmt{typeVar(conceptVar), typeConcept(conceptName), *inherit, *typeVarMember, *typeFnMember, nil, *varMember, *fnMember, nil, *thenFacts}, nil
+	return &DefConceptStmt{typeVar(conceptVar), typeConcept(conceptName), *inherit, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 
 }
 
