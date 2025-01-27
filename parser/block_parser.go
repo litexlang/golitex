@@ -42,6 +42,7 @@ func (stmt *tokenBlock) parseVarDecl() (*fcVarDecl, error) {
 		return nil, err
 	}
 
+	// TODO
 	typ, err := stmt.header.parseFcVarType()
 	if err != nil {
 		return nil, err
@@ -57,12 +58,14 @@ func (stmt *tokenBlock) parseFnDecl() (*fcFnDecl, error) {
 		return nil, err
 	}
 
+	// TODO
 	typ, err := stmt.header.parseFcFnType()
 	if err != nil {
 		return nil, err
 	}
 
 	return &fcFnDecl{name, *typ}, nil
+
 }
 
 func (stmt *tokenBlock) parsePropertyDecl() (*propertyDecl, error) {
@@ -72,6 +75,7 @@ func (stmt *tokenBlock) parsePropertyDecl() (*propertyDecl, error) {
 		return nil, err
 	}
 
+	// TODO
 	typ, err := stmt.header.parsePropertyType()
 	if err != nil {
 		return nil, err

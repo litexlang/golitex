@@ -22,7 +22,7 @@ func TestLexerFromString(t *testing.T) {
 def add(a, b):
     return a + b
 `
-	blocks, err := ParseString(content)
+	blocks, err := getTopLevelStmtSlice(content)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -32,7 +32,7 @@ def add(a, b):
 	}
 
 	// Test invalid syntax
-	_, err = ParseString(content)
+	_, err = getTopLevelStmtSlice(content)
 	if err != nil {
 		t.Fatalf("Expected error for invalid syntax")
 	}
