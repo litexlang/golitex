@@ -129,7 +129,7 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 
 func (parser *Parser) parseVarType() (fcType, error) {
 	if parser.is(Keywords["fn"]) {
-		return parser.parseFnFcType()
+		return parser.parseFcFnType()
 	}
 
 	tok, err := parser.next()
@@ -241,14 +241,31 @@ func (parser *Parser) parseForallVarTypePairArrEndWithColon() (*[]forallVarTypeP
 	return &pairs, nil
 }
 
-func (parser *Parser) parseFnFcType() (*fcVarType, error) {
-	// TODO
-	return nil, nil
+func (parser *Parser) parseFcFnType() (*fcFnType, error) {
+	parser.skip(Keywords["fn"])
+
+	typeParamsTypes := &[]typeConcept{}
+	var err error = nil
+	if parser.is(BuiltinSyms["["]) {
+		typeParamsTypes, err = parser.parseBracketedTypeConceptArray()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	varParamsTypes, err := parser.parseBracedFcTypeArray()
+	if err != nil {
+		return nil, err
+	}
+
+	retType, err := parser.parseFcType()
+
+	return &fcFnType{*typeParamsTypes, *varParamsTypes, retType}, nil
 }
 
 func (parser *Parser) parseForallVarType() (forallVarType, error) {
 	if parser.is(Keywords["fn"]) {
-		return parser.parseFnFcType()
+		return parser.parseFcFnType()
 	} else if parser.is(Keywords["property"]) {
 		return parser.parsePropertyType()
 	} else {
@@ -256,10 +273,114 @@ func (parser *Parser) parseForallVarType() (forallVarType, error) {
 	}
 }
 
-func (parser *Parser) parsePropertyType() (*propertyType, error) {
-	return nil, nil
+func (parser *Parser) parseFcType() (fcType, error) {
+	if parser.is(Keywords["fn"]) {
+		return parser.parseFcFnType()
+	} else {
+		return parser.parseFcVarType()
+	}
 }
 
-func (parser *Parser) parseFcVarType() (*propertyType, error) {
-	return nil, nil
+func (parser *Parser) parsePropertyType() (*propertyType, error) {
+	parser.skip(Keywords["property"])
+
+	typeParams, err := parser.parseBracketedTypeConceptArray()
+	if err != nil {
+		return nil, err
+	}
+
+	varParams, err := parser.parseBracedForallVarTypeArray()
+	if err != nil {
+		return nil, err
+	}
+
+	return &propertyType{*typeParams, *varParams}, nil
+}
+
+func (parser *Parser) parseFcVarType() (fcVarType, error) {
+	v, err := parser.next()
+	if err != nil {
+		return fcVarType(""), err
+	}
+	return fcVarType(v), nil
+}
+
+func (parser *Parser) parseTypeConcept() (typeConcept, error) {
+	tok, err := parser.next()
+	if err != nil {
+		return "", err
+	}
+	return typeConcept(tok), nil
+}
+
+func (parser *Parser) parseBracketedTypeConceptArray() (*[]typeConcept, error) {
+	concepts := []typeConcept{}
+	parser.skip(BuiltinSyms["["])
+
+	for {
+		concept, err := parser.parseTypeConcept()
+		if err != nil {
+			return nil, err
+		}
+
+		concepts = append(concepts, concept)
+
+		if parser.isAndSkip(BuiltinSyms["]"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+			return nil, err
+		}
+	}
+
+	return &concepts, nil
+}
+
+func (parser *Parser) parseBracedFcTypeArray() (*[]fcType, error) {
+	types := []fcType{}
+	parser.skip(BuiltinSyms["("])
+
+	for {
+		t, err := parser.parseFcType()
+		if err != nil {
+			return nil, err
+		}
+
+		types = append(types, t)
+
+		if parser.isAndSkip(BuiltinSyms[")"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+			return nil, err
+		}
+	}
+
+	return &types, nil
+}
+
+func (parser *Parser) parseBracedForallVarTypeArray() (*[]forallVarType, error) {
+	varTypes := []forallVarType{}
+	parser.skip(BuiltinSyms["("])
+
+	for {
+		t, err := parser.parseForallVarType()
+		if err != nil {
+			return nil, err
+		}
+
+		varTypes = append(varTypes, t)
+
+		if parser.isAndSkip(BuiltinSyms[")"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+			return nil, err
+		}
+	}
+
+	return &varTypes, nil
 }
