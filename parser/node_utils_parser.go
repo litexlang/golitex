@@ -184,7 +184,7 @@ func (parser *Parser) parseBracketedVarTypePair() (*[]typeConceptPair, error) {
 	return &pairs, nil
 }
 
-func (parser *Parser) parseBracedForallVarTypePair() (*[]forallVarTypePair, error) {
+func (parser *Parser) parseBracedForallVarTypePairArr() (*[]forallVarTypePair, error) {
 	pairs := []forallVarTypePair{}
 	parser.skip(BuiltinSyms["("])
 
@@ -253,7 +253,7 @@ func (parser *Parser) parseFcFnType() (*fcFnType, error) {
 		}
 	}
 
-	varParamsTypes, err := parser.parseBracedFcTypeArray()
+	varParamsTypes, err := parser.parseBracedFcTypePairArray()
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +289,7 @@ func (parser *Parser) parsePropertyType() (*propertyType, error) {
 		return nil, err
 	}
 
-	varParams, err := parser.parseBracedForallVarTypeArray()
+	varParams, err := parser.parseBracedForallVarTypePairArr()
 	if err != nil {
 		return nil, err
 	}
@@ -383,4 +383,30 @@ func (parser *Parser) parseBracedForallVarTypeArray() (*[]forallVarType, error) 
 	}
 
 	return &varTypes, nil
+}
+
+func (parser *Parser) parseBracedFcTypePairArray() (*[]fcTypePair, error) {
+	pairs := []fcTypePair{}
+	parser.skip(BuiltinSyms["("])
+
+	for {
+		fcStr, err := parser.parseFcStr()
+		if err != nil {
+			return nil, err
+		}
+
+		fcType, err := parser.parseFcType()
+
+		pairs = append(pairs, fcTypePair{fcStr, fcType})
+
+		if parser.isAndSkip(BuiltinSyms[")"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+			return nil, err
+		}
+	}
+
+	return &pairs, nil
 }

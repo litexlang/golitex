@@ -2,7 +2,7 @@ package parser
 
 func (p *tokenBlock) parseMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl, error) {
 	p.header.next()
-	if err := p.header.testAndSkip(Keywords[":"]); err != nil {
+	if err := p.header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, nil, nil, err
 	}
 
@@ -12,19 +12,19 @@ func (p *tokenBlock) parseMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl, 
 
 	for _, curStmt := range p.body {
 		if curStmt.header.is(Keywords["var"]) {
-			member, err := p.parseVarDecl()
+			member, err := curStmt.parseVarDecl()
 			if err != nil {
 				return nil, nil, nil, err
 			}
 			*varMember = append(*varMember, *member)
 		} else if curStmt.header.is(Keywords["fn"]) {
-			member, err := p.parseFnDecl()
+			member, err := curStmt.parseFnDecl()
 			if err != nil {
 				return nil, nil, nil, err
 			}
 			*fnMember = append(*fnMember, *member)
 		} else if curStmt.header.is(Keywords["property"]) {
-			member, err := p.parsePropertyDecl()
+			member, err := curStmt.parsePropertyDecl()
 			if err != nil {
 				return nil, nil, nil, err
 			}
