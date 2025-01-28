@@ -172,3 +172,9 @@ type defAliasStmt struct {
 }
 
 func (f *defAliasStmt) stmt() {}
+
+type knowStmt struct {
+	facts []FactStmt
+}
+
+func (f *knowStmt) stmt() {}

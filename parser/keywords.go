@@ -54,7 +54,6 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"proof":          "proof",
 		"import":         "import",
 		"package":        "package",
-		"return":         "return",
 		"not":            "not",
 		"is":             "is",
 		"alias":          "alias",
