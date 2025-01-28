@@ -166,32 +166,34 @@ func TestDefPropertyStmt(t *testing.T) {
 	fmt.Printf("%v", cur)
 }
 
-func parserTester(code string) error {
+func parserTester(code string) (*[]Stmt, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
 	slice, err := getTopLevelStmtSlice(code)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	blocks := []tokenBlock{}
 	for _, strBlock := range slice.body {
 		block, err := TokenizeStmtBlock(&strBlock)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		blocks = append(blocks, *block)
 	}
 
+	ret := []Stmt{}
 	for _, block := range blocks {
 		cur, err := block.ParseStmt()
 		if err != nil {
-			return err
+			return nil, err
 		}
+		ret = append(ret, cur)
 		fmt.Printf("%v\n", cur)
 	}
 
-	return nil
+	return &ret, nil
 }
 
 func TestDefConceptStmt(t *testing.T) {
@@ -214,8 +216,10 @@ func TestDefConceptStmt(t *testing.T) {
 		$p[G, G2](x, y)
 		
 `
-	err := parserTester(code)
-	if err != nil {
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
 		t.Fatal(err)
 	}
 }
@@ -262,8 +266,10 @@ local:
 				$p[G, G2](x, y)
 
 `
-	err := parserTester(code)
-	if err != nil {
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
 		t.Fatal(err)
 	}
 }
@@ -280,8 +286,10 @@ property P[G Group, G2 Group](g G, g2 G2):
 	$f[G, B](g.g1, g2.g2)
 
 `
-	err := parserTester(code)
-	if err != nil {
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
 		t.Fatal(err)
 	}
 }
@@ -296,8 +304,10 @@ fn P[G Group, G2 Group](g G, g2 G2) fn [G Group, G2 Group](g G, g2 G2):
 
 $f[G, B](g.g1, g2.g2)
 `
-	err := parserTester(code)
-	if err != nil {
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
 		t.Fatal(err)
 	}
 }
@@ -310,8 +320,10 @@ forall [G Group] x g:
 	$f[G, B](g.g1, g2.g2)
 
 `
-	err := parserTester(code)
-	if err != nil {
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
 		t.Fatal(err)
 	}
 }
@@ -334,8 +346,10 @@ type G Group:
 	$p[G, G2](x, y)
 `
 
-	err := parserTester(code)
-	if err != nil {
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
 		t.Fatal(err)
 	}
 }
@@ -353,10 +367,17 @@ forall [G Group, G2 Group] g g, g2 g2:
 		$p[G, G2](x, y)
 	then:
 	    $p[G, G2](x, y)
-
+		forall [G Group, G2 Group] g g, g2 g2:
+			if:
+				$p[G, G2](x, y)
+			then:
+				$p[G, G2](x, y)
+		
 `
-	err := parserTester(code)
-	if err != nil {
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
 		t.Fatal(err)
 	}
 

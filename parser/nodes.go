@@ -1,10 +1,5 @@
 package parser
 
-import (
-	"fmt"
-	"strings"
-)
-
 type Stmt interface {
 	stmt()
 }
@@ -113,10 +108,6 @@ func (f *FuncPtyStmt) setT(b bool) {
 func (f *FuncPtyStmt) propertyFactStmt() {
 }
 
-type forallVarType interface {
-	forallVarType()
-}
-
 type typeConceptPair struct {
 	Var  typeVar
 	Type typeConcept
@@ -124,7 +115,7 @@ type typeConceptPair struct {
 
 type forallVarTypePair struct {
 	Var  Fc
-	Type forallVarType
+	Type fcType
 }
 
 type typeVar string
@@ -139,70 +130,15 @@ type SingletonVar string
 type Declaration interface{}
 type Var interface{}
 
-type Fc interface {
-	fc()
-	String() string
-}
-
-// used for variables that are returned by called function
-type FcFnRetVal struct {
-	fn         Fc
-	typeParams []FcStr
-	varParams  []Fc
-}
-
-func (f *FcFnRetVal) fc() {}
-func (f *FcFnRetVal) String() string {
-	typeParams := []string{}
-	for _, p := range f.typeParams {
-		typeParams = append(typeParams, string(p))
-	}
-	strTypeParams := ""
-	if len(typeParams) > 0 {
-		strTypeParams = fmt.Sprintf("[%s]", strings.Join(typeParams, ", "))
-	}
-
-	varParams := []string{}
-	for _, p := range f.varParams {
-		varParams = append(varParams, p.String())
-	}
-	strVarParams := ""
-	if len(varParams) > 0 {
-		strVarParams = fmt.Sprintf("(%s)", strings.Join(varParams, ", "))
-	}
-
-	return fmt.Sprintf("%s%s%s", f.fn, strTypeParams, strVarParams)
-}
-
-type FcStr string
-
-func (f FcStr) fc() {}
-func (f FcStr) String() string {
-	return string(f)
-}
-
-type FcMemberAccessExpr []Fc
-
-func (f *FcMemberAccessExpr) fc() {}
-func (f *FcMemberAccessExpr) String() string {
-	ret := ""
-	for i := 0; i < len(*f)-1; i++ {
-		ret += fmt.Sprintf("%s.", (*f)[i])
-	}
-	return ret + (*f)[len(*f)-1].String()
-}
-
 type typeConcept string
 
 type fcType interface {
 	fcType()
-	forallVarType()
 }
 
 type fcVarType string
 
-func (f fcVarType) fcType()        {}
-func (f fcVarType) forallVarType() {}
+func (f fcVarType) fcType() {}
 
 type fcFnType struct {
 	typeParamsTypes []typeConceptPair
@@ -210,12 +146,11 @@ type fcFnType struct {
 	retType         fcType
 }
 
-func (f *fcFnType) fcType()        {}
-func (f *fcFnType) forallVarType() {}
+func (f *fcFnType) fcType() {}
 
 type propertyType struct {
 	typeParams []typeConceptPair
 	varParams  []forallVarTypePair
 }
 
-func (f *propertyType) forallVarType() {}
+func (f *propertyType) fcType() {}
