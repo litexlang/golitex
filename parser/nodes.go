@@ -27,6 +27,8 @@ type DefConceptStmt struct {
 	thenFacts          []FactStmt
 }
 
+func (c *DefConceptStmt) stmt() {}
+
 type DefTypeStmt struct {
 	typeVar        typeVar
 	conceptName    typeConcept
@@ -53,13 +55,13 @@ type propertyDecl struct {
 	tp   propertyType
 }
 
-func (c *DefConceptStmt) stmt() {}
-
 type DefPropertyStmt struct {
 	decl      propertyDecl
 	ifFacts   []FactStmt
 	thenFacts []FactStmt
 }
+
+func (c *DefPropertyStmt) stmt() {}
 
 type DefFnStmt struct {
 	decl      fcFnDecl
@@ -69,8 +71,6 @@ type DefFnStmt struct {
 
 func (f *DefFnStmt) stmt() {}
 
-func (c *DefPropertyStmt) stmt() {}
-
 type localStmt struct {
 	statements []Stmt
 }
@@ -78,12 +78,6 @@ type localStmt struct {
 func (l *localStmt) stmt() {}
 
 type FactStmt interface {
-	factStmt()
-	stmt()
-}
-
-type propertyFactStmt interface {
-	setT(b bool)
 	factStmt()
 	stmt()
 }
@@ -103,11 +97,20 @@ type FuncPtyStmt struct {
 	fc     Fc
 }
 
+type propertyFactStmt interface {
+	setT(b bool)
+	factStmt()
+	stmt()
+	propertyFactStmt()
+}
+
 func (p *FuncPtyStmt) factStmt() {}
 func (p *FuncPtyStmt) stmt()     {}
 
 func (f *FuncPtyStmt) setT(b bool) {
 	f.isTrue = b
+}
+func (f *FuncPtyStmt) propertyFactStmt() {
 }
 
 type forallVarType interface {
@@ -141,6 +144,7 @@ type Fc interface {
 	String() string
 }
 
+// used for variables that are returned by called function
 type FcFnRetVal struct {
 	fn         Fc
 	typeParams []FcStr
