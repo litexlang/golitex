@@ -40,6 +40,8 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 		return stmt.parseClaimStmt()
 	case Keywords["alias"]:
 		return stmt.parseDefAliasStmt()
+	case Keywords["know"]:
+		return stmt.parseKnowStmt()
 	default:
 		return stmt.parseFactStmt()
 	}
@@ -455,4 +457,19 @@ func (stmt *tokenBlock) parseDefAliasStmt() (*defAliasStmt, error) {
 	}
 
 	return &defAliasStmt{name, variable}, nil
+}
+
+func (stmt *tokenBlock) parseKnowStmt() (*knowStmt, error) {
+	stmt.header.skip(Keywords["know"])
+
+	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		return nil, err
+	}
+
+	facts, err := stmt.parseBodyFacts()
+	if err != nil {
+		return nil, err
+	}
+
+	return &knowStmt{*facts}, nil
 }
