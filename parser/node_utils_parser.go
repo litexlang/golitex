@@ -25,7 +25,7 @@ func (parser *Parser) parseFc() (Fc, error) {
 		fcArr = append(fcArr, curFc)
 	}
 
-	ret := FcMemberAccessExpr(fcArr)
+	ret := FcExpr(fcArr)
 
 	return &ret, nil
 }
@@ -303,7 +303,7 @@ func (parser *Parser) parseFcFnDecl() (*fcFnDecl, error) {
 	return &fcFnDecl{name, fcFnType{*typeParamsTypes, *varParamsTypes, retType}}, nil
 }
 
-func (parser *Parser) parseForallVarType() (forallVarType, error) {
+func (parser *Parser) parseForallVarType() (fcType, error) {
 	if parser.is(Keywords["fn"]) {
 		return parser.parseFcFnType()
 	} else if parser.is(Keywords["property"]) {
