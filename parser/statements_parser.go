@@ -36,6 +36,8 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 		return stmt.parseLocalStmt()
 	case Keywords["var"]:
 		return stmt.parseDefVarStmt()
+	case Keywords["claim"]:
+		return stmt.parseClaimStmt()
 	default:
 		return stmt.parseFactStmt()
 	}
@@ -393,4 +395,54 @@ func (stmt *tokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
 	}
 
 	return &DefVarStmt{*decl, *ifFacts}, nil
+}
+
+func (stmt *tokenBlock) parseClaimStmt() (*claimStmt, error) {
+	stmt.header.skip()
+	var err error = nil
+
+	name := ""
+	if !stmt.header.is(BuiltinSyms[":"]) {
+		name, err = stmt.header.next()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		return nil, err
+	}
+
+	toCheck := &[]FactStmt{}
+	proof := &[]Stmt{}
+
+	for i := 0; i < len(stmt.body)-1; i++ {
+		if !stmt.header.is(Keywords["proof"]) {
+			fact, err := stmt.body[i].parseFactStmt()
+			if err != nil {
+				return nil, err
+			}
+			*toCheck = append(*toCheck, fact)
+		}
+	}
+
+	err = stmt.body[len(stmt.body)-1].header.testAndSkip(Keywords["proof"])
+	if err != nil {
+		return nil, err
+	}
+
+	err = stmt.body[len(stmt.body)-1].header.testAndSkip(Keywords[":"])
+	if err != nil {
+		return nil, err
+	}
+
+	for _, block := range stmt.body[len(stmt.body)-1].body {
+		curStmt, err := block.ParseStmt()
+		if err != nil {
+			return nil, err
+		}
+		*proof = append(*proof, curStmt)
+	}
+
+	return &claimStmt{name, *toCheck, *proof}, nil
 }

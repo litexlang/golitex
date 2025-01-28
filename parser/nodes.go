@@ -158,3 +158,11 @@ type fnRetType interface {
 
 func (f fcVarType) fnRetType() {}
 func (f *fcFnType) fnRetType() {}
+
+type claimStmt struct {
+	name    string
+	toCheck []FactStmt
+	proof   []Stmt
+}
+
+func (f *claimStmt) stmt() {}
