@@ -165,3 +165,10 @@ type claimStmt struct {
 }
 
 func (f *claimStmt) stmt() {}
+
+type defAliasStmt struct {
+	name     string
+	variable Fc
+}
+
+func (f *defAliasStmt) stmt() {}
