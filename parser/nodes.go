@@ -11,6 +11,13 @@ type TopStmt struct {
 
 type typeConcept string
 
+type DefVarStmt struct {
+	decl  fcVarDecl
+	facts []FactStmt
+}
+
+func (stmt *DefVarStmt) stmt() {}
+
 type DefConceptStmt struct {
 	typeVar            typeVar
 	conceptName        typeConcept

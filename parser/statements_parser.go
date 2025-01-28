@@ -34,6 +34,8 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 		return stmt.parseDefFnStmt()
 	case Keywords["local"]:
 		return stmt.parseLocalStmt()
+	case Keywords["var"]:
+		return stmt.parseDefVarStmt()
 	default:
 		return stmt.parseFactStmt()
 	}
@@ -372,4 +374,23 @@ func (stmt *tokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 	}
 
 	return &DefFnStmt{*decl, *ifFacts, *thenFacts}, nil
+}
+
+func (stmt *tokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
+	decl, err := stmt.header.parseVarDecl()
+	if err != nil {
+		return nil, err
+	}
+
+	ifFacts := &[]FactStmt{}
+
+	if stmt.header.is(BuiltinSyms[":"]) {
+		stmt.header.skip()
+		ifFacts, err = stmt.parseBodyFacts()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &DefVarStmt{*decl, *ifFacts}, nil
 }
