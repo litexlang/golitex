@@ -191,7 +191,7 @@ func (stmt *tokenBlock) parseForallStmt() (*ForallStmt, error) {
 		}
 	}
 
-	varParams, err := stmt.header.parseForallVarTypePairArrEndWithColon()
+	varParams, err := stmt.header.parseFcVarTypePairArrEndWithColon()
 	if err != nil {
 		return nil, err
 	}
