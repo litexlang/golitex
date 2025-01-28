@@ -178,3 +178,13 @@ type knowStmt struct {
 }
 
 func (f *knowStmt) stmt() {}
+
+type defExistStmt struct {
+	decl      propertyDecl
+	ifFacts   []FactStmt
+	fnMember  []fcFnDecl
+	varMember []fcVarDecl
+	thenFacts []FactStmt
+}
+
+func (s *defExistStmt) stmt() {}

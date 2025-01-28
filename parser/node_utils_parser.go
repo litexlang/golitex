@@ -391,7 +391,22 @@ func (parser *Parser) parseVarDecl() (*fcVarDecl, error) {
 }
 
 func (parser *Parser) parsePropertyDecl() (*propertyDecl, error) {
-	parser.next()
+	parser.skip(Keywords["property"])
+	name, err := parser.next()
+	if err != nil {
+		return nil, err
+	}
+
+	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
+	if err != nil {
+		return nil, err
+	}
+
+	return &propertyDecl{name, propertyType{*typeParams, *varParams}}, nil
+}
+
+func (parser *Parser) parseExistDecl() (*propertyDecl, error) {
+	parser.skip(Keywords["exist"])
 	name, err := parser.next()
 	if err != nil {
 		return nil, err

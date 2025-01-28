@@ -1,6 +1,8 @@
 package parser
 
-func (p *tokenBlock) parseMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl, error) {
+import "fmt"
+
+func (p *tokenBlock) parseFcMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl, error) {
 	p.header.next()
 	if err := p.header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, nil, nil, err
@@ -54,4 +56,34 @@ func (stmt *tokenBlock) parseThenFacts() (*[]FactStmt, error) {
 	}
 
 	return facts, nil
+}
+
+func (p *tokenBlock) parseFnVarMember() (*[]fcVarDecl, *[]fcFnDecl, error) {
+	p.header.next()
+	if err := p.header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		return nil, nil, err
+	}
+
+	varMember := &[]fcVarDecl{}
+	fnMember := &[]fcFnDecl{}
+
+	for _, curStmt := range p.body {
+		if curStmt.header.is(Keywords["var"]) {
+			member, err := curStmt.header.parseVarDecl()
+			if err != nil {
+				return nil, nil, err
+			}
+			*varMember = append(*varMember, *member)
+		} else if curStmt.header.is(Keywords["fn"]) {
+			member, err := curStmt.header.parseFcFnDecl()
+			if err != nil {
+				return nil, nil, err
+			}
+			*fnMember = append(*fnMember, *member)
+		} else {
+			return nil, nil, fmt.Errorf("unexpected declaration %v", curStmt.header)
+		}
+	}
+
+	return varMember, fnMember, nil
 }

@@ -42,6 +42,8 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 		return stmt.parseDefAliasStmt()
 	case Keywords["know"]:
 		return stmt.parseKnowStmt()
+	case Keywords["exist"]:
+		return stmt.parseExistStmt()
 	default:
 		return stmt.parseFactStmt()
 	}
@@ -82,12 +84,12 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 				return nil, err
 			}
 		} else if curStmt.header.is(Keywords["type_member"]) {
-			typeVarMember, typeFnMember, typePropertyMember, err = curStmt.parseMember()
+			typeVarMember, typeFnMember, typePropertyMember, err = curStmt.parseFcMember()
 			if err != nil {
 				return nil, err
 			}
 		} else if curStmt.header.is(Keywords["var_member"]) {
-			varMember, fnMember, propertyMember, err = curStmt.parseMember()
+			varMember, fnMember, propertyMember, err = curStmt.parseFcMember()
 			if err != nil {
 				return nil, err
 			}
@@ -128,7 +130,7 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	thenFacts := &[]FactStmt{}
 
 	if len(stmt.body) == 2 && stmt.body[0].header.is(Keywords["var_member"]) && stmt.body[1].header.is(Keywords["then"]) {
-		varMember, fnMember, propertyMember, err = stmt.body[0].parseMember()
+		varMember, fnMember, propertyMember, err = stmt.body[0].parseFcMember()
 		if err != nil {
 			return nil, err
 		}
@@ -472,4 +474,47 @@ func (stmt *tokenBlock) parseKnowStmt() (*knowStmt, error) {
 	}
 
 	return &knowStmt{*facts}, nil
+}
+
+func (stmt *tokenBlock) parseExistStmt() (*defExistStmt, error) {
+	decl, err := stmt.header.parseExistDecl()
+	if err != nil {
+		return nil, err
+	}
+
+	ifFacts := &[]FactStmt{}
+	varMember := &[]fcVarDecl{}
+	fnMember := &[]fcFnDecl{}
+	thenFacts := &[]FactStmt{}
+	if !stmt.header.is(BuiltinSyms[":"]) {
+		return nil, fmt.Errorf("expected ':‘")
+	}
+
+	stmt.header.skip(BuiltinSyms[":"])
+
+	for _, curStmt := range stmt.body {
+		if curStmt.header.is(Keywords["if"]) {
+			ifFacts, err = curStmt.parseBodyFacts()
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+		if curStmt.header.is(Keywords["then"]) {
+			thenFacts, err = curStmt.parseBodyFacts()
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+		if curStmt.header.is(Keywords["members"]) {
+			varMember, fnMember, err = curStmt.parseFnVarMember()
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+	}
+
+	return &defExistStmt{*decl, *ifFacts, *fnMember, *varMember, *thenFacts}, nil
 }
