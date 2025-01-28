@@ -441,3 +441,17 @@ claim:
 	}
 
 }
+
+func TestParseDefAliasStmt(t *testing.T) {
+	code :=
+		`
+alias a p[G, G2](x, y)
+`
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
