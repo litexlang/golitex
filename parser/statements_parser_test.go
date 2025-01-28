@@ -400,35 +400,38 @@ var g G:
 }
 
 func TestParseClaimStmt(t *testing.T) {
-	// 	claim someClaim:
-	// 	$p[G, G2](x, y)
-
-	// 	proof:
-	// 	    $p[G, G2](x, y)
-
-	// claim someClaim2:
-	// 	forall [G Group, G2 Group] g g, g2 g2:
-	// 		if:
-	// 			$p[G, G2](x, y)
-	// 		then:
-	// 			$p[G, G2](x, y)
-	// 			forall [G Group, G2 Group] g g, g2 g2:
-	// 				if:
-	// 					$p[G, G2](x, y)
-	// 				then:
-	// 					$p[G, G2](x, y)
-
-	//     proof:
-	// 	    $p[G, G2](x, y)
 
 	code :=
 		`
-claim someClaim3:
-	$p[G, G2](x, y)
+claim :
 	$p[G, G2](x, y)
 
 	proof:
 		$p[G, G2](x, y)
+
+claim :
+	forall [G Group, G2 Group] g g, g2 g2:
+		if:
+			$p[G, G2](x, y)
+		then:
+			$p[G, G2](x, y)
+			forall [G Group, G2 Group] g g, g2 g2:
+				if:
+					$p[G, G2](x, y)
+				then:
+					$p[G, G2](x, y)
+
+	proof:
+		$p[G, G2](x, y)
+
+claim:
+	$p[G, G2](x, y)
+	$p[G, G2](x, y)
+		
+	proof:
+		$p[G, G2](x, y)
+		
+
 `
 	statements, err := parserTester(code)
 	if err == nil {
