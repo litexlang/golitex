@@ -312,7 +312,7 @@ $f[G, B](g.g1, g2.g2)
 	}
 }
 
-func TestFactStmts(t *testing.T) {
+func TestFactStatements(t *testing.T) {
 	code := `
 $f[G, B](g.g1, g2.g2)
 
