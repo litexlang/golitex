@@ -401,14 +401,6 @@ func (stmt *tokenBlock) parseClaimStmt() (*claimStmt, error) {
 	stmt.header.skip()
 	var err error = nil
 
-	name := ""
-	if !stmt.header.is(BuiltinSyms[":"]) {
-		name, err = stmt.header.next()
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, err
 	}
@@ -444,5 +436,5 @@ func (stmt *tokenBlock) parseClaimStmt() (*claimStmt, error) {
 		*proof = append(*proof, curStmt)
 	}
 
-	return &claimStmt{name, *toCheck, *proof}, nil
+	return &claimStmt{*toCheck, *proof}, nil
 }
