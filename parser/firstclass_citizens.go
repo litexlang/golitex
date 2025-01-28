@@ -11,14 +11,14 @@ type Fc interface {
 }
 
 // used for variables that are returned by called function
-type FcFnRetVal struct {
+type calledFcFnRetValue struct {
 	fn         Fc
 	typeParams []FcStr
 	varParams  []Fc
 }
 
-func (f *FcFnRetVal) fc() {}
-func (f *FcFnRetVal) String() string {
+func (f *calledFcFnRetValue) fc() {}
+func (f *calledFcFnRetValue) String() string {
 	typeParams := []string{}
 	for _, p := range f.typeParams {
 		typeParams = append(typeParams, string(p))

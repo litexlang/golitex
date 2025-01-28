@@ -9,6 +9,8 @@ type TopStmt struct {
 	isPub bool
 }
 
+type typeConcept string
+
 type DefConceptStmt struct {
 	typeVar            typeVar
 	conceptName        typeConcept
@@ -79,7 +81,7 @@ type FactStmt interface {
 
 type ForallStmt struct {
 	typeParams []typeConceptPair
-	varParams  []forallVarTypePair
+	varParams  []fcTypePair
 	ifFacts    []FactStmt
 	thenFacts  []FactStmt
 }
@@ -113,24 +115,12 @@ type typeConceptPair struct {
 	Type typeConcept
 }
 
-type forallVarTypePair struct {
-	Var  Fc
-	Type fcType
-}
-
 type typeVar string
 
 type fcTypePair struct {
 	Var  FcStr
 	Type fcType
 }
-
-type SingletonVar string
-
-type Declaration interface{}
-type Var interface{}
-
-type typeConcept string
 
 type fcType interface {
 	fcType()
@@ -143,14 +133,21 @@ func (f fcVarType) fcType() {}
 type fcFnType struct {
 	typeParamsTypes []typeConceptPair
 	varParamsTypes  []fcTypePair
-	retType         fcType
+	retType         fnRetType
 }
 
 func (f *fcFnType) fcType() {}
 
 type propertyType struct {
 	typeParams []typeConceptPair
-	varParams  []forallVarTypePair
+	varParams  []fcTypePair
 }
 
 func (f *propertyType) fcType() {}
+
+type fnRetType interface {
+	fnRetType()
+}
+
+func (f fcVarType) fnRetType() {}
+func (f *fcFnType) fnRetType() {}
