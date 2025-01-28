@@ -480,3 +480,31 @@ know:
 	}
 
 }
+
+func TestExistStmt(t *testing.T) {
+	code :=
+		`
+exist P[G Group, G2 Group](g1 G, g2 G2):
+	if:
+		$p[G, G2](x, y)
+		forall [G Group, G2 Group] g g, g2 g2:
+			if:
+				$p[G, G2](x, y)
+			then:
+				$p[G, G2](x, y)
+
+	var_member:
+	    var 1 G
+		fn f[G Group, G2 Group](x G, y G) G
+
+	then:
+	    $p[G, G2](x, y)
+`
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
