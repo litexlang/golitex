@@ -419,3 +419,21 @@ func (parser *Parser) parseExistDecl() (*propertyDecl, error) {
 
 	return &propertyDecl{name, propertyType{*typeParams, *varParams}}, nil
 }
+
+func (parser *Parser) parseStringArr() (*[]string, error) {
+	members := &[]string{}
+
+	for {
+		member, err := parser.next()
+		if err != nil {
+			return nil, err
+		}
+		*members = append(*members, member)
+		if !parser.is(BuiltinSyms[","]) {
+			break
+		}
+		parser.skip()
+	}
+
+	return members, nil
+}
