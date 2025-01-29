@@ -508,3 +508,18 @@ exist P[G Group, G2 Group](g1 G, g2 G2):
 	}
 
 }
+
+func TestHaveStmt(t *testing.T) {
+	code :=
+		`
+have $P[G , G2 ](g1 , g2 ):
+	g1, g2
+`
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}

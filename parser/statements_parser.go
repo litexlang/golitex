@@ -44,6 +44,8 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 		return stmt.parseKnowStmt()
 	case Keywords["exist"]:
 		return stmt.parseExistStmt()
+	case Keywords["have"]:
+		return stmt.parseHaveStmt()
 	default:
 		return stmt.parseFactStmt()
 	}
@@ -516,4 +518,39 @@ func (stmt *tokenBlock) parseExistStmt() (*defExistStmt, error) {
 	}
 
 	return &defExistStmt{*decl, *ifFacts, *member, *thenFacts}, nil
+}
+
+func (stmt *tokenBlock) parseHaveStmt() (*haveStmt, error) {
+	stmt.header.skip(Keywords["have"])
+	propertyStmt, err := stmt.parsePropertyFactStmt()
+	if err != nil {
+		return nil, err
+	}
+
+	members := &[]string{}
+	if !stmt.header.is(BuiltinSyms[":"]) {
+		return nil, fmt.Errorf("expected ':'")
+	}
+
+	if len(stmt.body) != 1 {
+		return nil, fmt.Errorf("expect one string in members")
+	}
+
+	for {
+		member, err := stmt.body[0].header.next()
+		if err != nil {
+			return nil, err
+		}
+		*members = append(*members, member)
+		if !stmt.body[0].header.is(BuiltinSyms[","]) {
+			break
+		}
+		stmt.body[0].header.skip()
+	}
+
+	if !stmt.body[0].header.isEnd() {
+		return nil, fmt.Errorf("expected end of block")
+	}
+
+	return &haveStmt{propertyStmt, *members}, nil
 }
