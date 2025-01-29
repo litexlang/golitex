@@ -58,32 +58,32 @@ func (stmt *tokenBlock) parseThenFacts() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-func (p *tokenBlock) parseFnVarMember() (*[]fcVarDecl, *[]fcFnDecl, error) {
+func (p *tokenBlock) parseFnRetTypeMember() (*[]fnRetTypeMemberDecl, error) {
 	p.header.next()
 	if err := p.header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	varMember := &[]fcVarDecl{}
-	fnMember := &[]fcFnDecl{}
+	member := &[]fnRetTypeMemberDecl{}
 
 	for _, curStmt := range p.body {
 		if curStmt.header.is(Keywords["var"]) {
-			member, err := curStmt.header.parseVarDecl()
+			v, err := curStmt.header.parseVarDecl()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
-			*varMember = append(*varMember, *member)
+			*member = append(*member, v)
 		} else if curStmt.header.is(Keywords["fn"]) {
-			member, err := curStmt.header.parseFcFnDecl()
+			v, err := curStmt.header.parseFcFnDecl()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
-			*fnMember = append(*fnMember, *member)
+			*member = append(*member, v)
+
 		} else {
-			return nil, nil, fmt.Errorf("unexpected declaration %v", curStmt.header)
+			return nil, fmt.Errorf("unexpected declaration %v", curStmt.header)
 		}
 	}
 
-	return varMember, fnMember, nil
+	return member, nil
 }

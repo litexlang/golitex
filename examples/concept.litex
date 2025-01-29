@@ -8,7 +8,7 @@ concept G Group:
 		fn f[G Group, G2 Group](x G, y G) G
 		property f[G Group, G2 Group](x G, y G)
 
-	var_member:
+	member:
 		var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
 		property f[G Group, G2 Group](x G, y G)

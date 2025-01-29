@@ -66,12 +66,11 @@ func tokenizeString(inputString string) (*[]string, error) {
 
 func TokenizeStmtBlock(b *StrBlock) (*tokenBlock, error) {
 	body := []tokenBlock{}
-	var header []string = []string{}
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
 	// 例如，将 Header 中的元素转换为大写
 	headerPtr, err := tokenizeString(b.Header)
-	header = *headerPtr
+	header := *headerPtr
 
 	if err != nil || header == nil {
 		return nil, err

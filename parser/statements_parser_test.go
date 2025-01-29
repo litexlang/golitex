@@ -207,7 +207,7 @@ func TestDefConceptStmt(t *testing.T) {
 		fn f[G Group, G2 Group](x G, y G) G
 		property f[G Group, G2 Group](x G, y G)
 
-	var_member:
+	member:
 		var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
 		property f[G Group, G2 Group](x G, y G)
@@ -238,7 +238,7 @@ local:
 			fn f[G Group, G2 Group](x G, y G) G
 			property f[G Group, G2 Group](x G, y G)
 
-		var_member:
+		member:
 			var 1 G
 			fn f[G Group, G2 Group](x G, y G) G
 			property f[G Group, G2 Group](x G, y G)
@@ -257,7 +257,7 @@ local:
 				fn f[G Group, G2 Group](x G, y G) G
 				property f[G Group, G2 Group](x G, y G)
 
-			var_member:
+			member:
 				var 1 G
 				fn f[G Group, G2 Group](x G, y G) G
 				property f[G Group, G2 Group](x G, y G)
@@ -334,7 +334,7 @@ func TestParseDefTypeStmt(t *testing.T) {
 type G Group
 
 type G Group:
-	var_member:
+	member:
 		var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
 		property f[G Group, G2 Group](x G, y G)
@@ -493,7 +493,7 @@ exist P[G Group, G2 Group](g1 G, g2 G2):
 			then:
 				$p[G, G2](x, y)
 
-	var_member:
+	member:
 	    var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
 

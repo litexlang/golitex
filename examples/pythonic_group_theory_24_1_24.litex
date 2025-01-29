@@ -55,7 +55,7 @@ pub concept G Group:
         fn inv(x G) G
         var 1 G
 
-    var_member:
+    member:
         var inv G
         fn getInv() G
 
@@ -85,5 +85,5 @@ pub concept G FiniteGroup:
         G::finite() // G 作为 set 是 finite 的，如何指定这个finite是G的呢？
         
     extra:
-        var_member:
+        member:
             var order Nat // 单一元素的阶数

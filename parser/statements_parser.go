@@ -88,7 +88,7 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 			if err != nil {
 				return nil, err
 			}
-		} else if curStmt.header.is(Keywords["var_member"]) {
+		} else if curStmt.header.is(Keywords["member"]) {
 			varMember, fnMember, propertyMember, err = curStmt.parseFcMember()
 			if err != nil {
 				return nil, err
@@ -129,7 +129,7 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	propertyMember := &[]propertyDecl{}
 	thenFacts := &[]FactStmt{}
 
-	if len(stmt.body) == 2 && stmt.body[0].header.is(Keywords["var_member"]) && stmt.body[1].header.is(Keywords["then"]) {
+	if len(stmt.body) == 2 && stmt.body[0].header.is(Keywords["member"]) && stmt.body[1].header.is(Keywords["then"]) {
 		varMember, fnMember, propertyMember, err = stmt.body[0].parseFcMember()
 		if err != nil {
 			return nil, err
@@ -483,8 +483,7 @@ func (stmt *tokenBlock) parseExistStmt() (*defExistStmt, error) {
 	}
 
 	ifFacts := &[]FactStmt{}
-	varMember := &[]fcVarDecl{}
-	fnMember := &[]fcFnDecl{}
+	member := &[]fnRetTypeMemberDecl{}
 	thenFacts := &[]FactStmt{}
 	if !stmt.header.is(BuiltinSyms[":"]) {
 		return nil, fmt.Errorf("expected ':‘")
@@ -508,7 +507,7 @@ func (stmt *tokenBlock) parseExistStmt() (*defExistStmt, error) {
 			continue
 		}
 		if curStmt.header.is(Keywords["members"]) {
-			varMember, fnMember, err = curStmt.parseFnVarMember()
+			member, err = curStmt.parseFnRetTypeMember()
 			if err != nil {
 				return nil, err
 			}
@@ -516,5 +515,5 @@ func (stmt *tokenBlock) parseExistStmt() (*defExistStmt, error) {
 		}
 	}
 
-	return &defExistStmt{*decl, *ifFacts, *fnMember, *varMember, *thenFacts}, nil
+	return &defExistStmt{*decl, *ifFacts, *member, *thenFacts}, nil
 }

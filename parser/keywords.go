@@ -37,7 +37,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"concept":     "concept",
 		"inherit":     "inherit",
 		"type_member": "type_member",
-		"var_member":  "var_member",
+		"member":      "member",
 		"property":    "property",
 		"if":          "if",
 		"then":        "then",
