@@ -194,3 +194,10 @@ type defExistStmt struct {
 }
 
 func (s *defExistStmt) stmt() {}
+
+type haveStmt struct {
+	propertyStmt propertyFactStmt
+	member       []string
+}
+
+func (s *haveStmt) stmt() {}
