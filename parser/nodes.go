@@ -179,11 +179,17 @@ type knowStmt struct {
 
 func (f *knowStmt) stmt() {}
 
+type fnRetTypeMemberDecl interface {
+	fnRetTypeMemberDecl()
+}
+
+func (f *fcVarDecl) fnRetTypeMemberDecl() {}
+func (f *fcFnDecl) fnRetTypeMemberDecl()  {}
+
 type defExistStmt struct {
 	decl      propertyDecl
 	ifFacts   []FactStmt
-	fnMember  []fcFnDecl
-	varMember []fcVarDecl
+	member    []fnRetTypeMemberDecl
 	thenFacts []FactStmt
 }
 
