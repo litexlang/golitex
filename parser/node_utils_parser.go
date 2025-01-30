@@ -385,19 +385,37 @@ func (parser *Parser) parseBracedFcTypePairArray() (*[]fcTypePair, error) {
 }
 
 func (parser *Parser) parseVarDecl() (*fcVarDecl, error) {
-	parser.next()
+	parser.skip(Keywords["var"])
+
+	pairs := []fcTypePair{}
+
 	name, err := parser.next()
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO
 	typ, err := parser.parseFcVarType()
 	if err != nil {
 		return nil, err
 	}
 
-	return &fcVarDecl{name, typ}, nil
+	pairs = append(pairs, fcTypePair{FcStr(name), typ})
+
+	for parser.is(BuiltinSyms[","]) {
+		name, err := parser.next()
+		if err != nil {
+			return nil, err
+		}
+
+		typ, err := parser.parseFcVarType()
+		if err != nil {
+			return nil, err
+		}
+
+		pairs = append(pairs, fcTypePair{FcStr(name), typ})
+	}
+
+	return &fcVarDecl{pairs}, nil
 }
 
 func (parser *Parser) parsePropertyDecl() (*propertyDecl, error) {
