@@ -72,3 +72,7 @@ func (it *Parser) skip(expected ...string) error {
 
 	return nil
 }
+
+func (it *Parser) curTokenBeginWithNumber(expected ...string) error {
+
+}

@@ -35,3 +35,25 @@ func TestParseBracketVarTypePair(t *testing.T) {
 
 	fmt.Println(fc)
 }
+
+func TestParseBuiltinFnRetValue(t *testing.T) {
+	strings := []string{
+		"f[G, B](a, b)[C, D](c, d) + 6 * 5",
+		"-1 + 2 ^ 3 * 4 / 5 + 6",
+	}
+
+	for _, s := range strings {
+		tokens, err := tokenizeString(s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		parser := Parser{0, *tokens}
+
+		fc, err := parser.parseBuiltinFnRetValue()
+
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(fc)
+	}
+}
