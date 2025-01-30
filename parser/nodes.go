@@ -1,5 +1,7 @@
 package parser
 
+import "fmt"
+
 type Stmt interface {
 	stmt()
 }
@@ -223,3 +225,17 @@ type defTypeMemberStmt struct {
 }
 
 func (s *defTypeMemberStmt) stmt() {}
+
+type parseErr struct {
+	previous error
+	header   Parser
+}
+
+func (e *parseErr) Error() string {
+	curTok, err := e.header.currentToken()
+	if err != nil {
+		return fmt.Sprintf("error at %s, column %d: %s", e.header.String(), e.header.getIndex(), e.previous.Error())
+	} else {
+		return fmt.Sprintf("error at %s, column %d, at '%s': %s", e.header.String(), e.header.getIndex(), curTok, e.previous.Error())
+	}
+}

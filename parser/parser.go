@@ -1,10 +1,21 @@
 package parser
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Parser struct {
 	index int
 	slice []string
+}
+
+func (p *Parser) String() string {
+	return fmt.Sprintf("%s", strings.Join(p.slice, " "))
+}
+
+func (p *Parser) getIndex() int {
+	return p.index
 }
 
 func (p *Parser) getSlice() []string {
