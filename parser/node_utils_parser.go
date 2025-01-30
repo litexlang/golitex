@@ -437,3 +437,101 @@ func (parser *Parser) parseStringArr() (*[]string, error) {
 
 	return members, nil
 }
+
+func (parser *Parser) parseBuiltinFnRetValue() (Fc, error) {
+	return parser.parseAddition()
+}
+
+func (parser *Parser) parseAddition() (Fc, error) {
+	node, err := parser.parseMultiplication()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if parser.is(BuiltinSyms["+"]) || parser.is(BuiltinSyms["-"]) {
+			cur, _ := parser.next()
+
+			right, err := parser.parseMultiplication()
+			if err != nil {
+				return nil, err
+			}
+			node = &calledFcFnRetValue{
+				FcStr(cur),
+				[]FcStr{},
+				[]Fc{node, right},
+			}
+		} else {
+			break
+		}
+	}
+
+	return node, nil
+}
+
+func (parser *Parser) parseMultiplication() (Fc, error) {
+	node, err := parser.parseUnary()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if parser.is(BuiltinSyms["*"]) || parser.is(BuiltinSyms["/"]) {
+			cur, _ := parser.next()
+
+			right, err := parser.parseUnary()
+			if err != nil {
+				return nil, err
+			}
+			node = &calledFcFnRetValue{
+				FcStr(cur),
+				[]FcStr{},
+				[]Fc{node, right},
+			}
+		} else {
+			break
+		}
+	}
+
+	return node, nil
+}
+
+func (parser *Parser) parseUnary() (Fc, error) {
+	if parser.is(BuiltinSyms["-"]) {
+		cur, _ := parser.next()
+
+		right, err := parser.parseExponentiation()
+		if err != nil {
+			return nil, err
+		}
+		return &calledFcFnRetValue{
+			FcStr(cur),
+			[]FcStr{},
+			[]Fc{right},
+		}, nil
+	}
+
+	return parser.parseExponentiation()
+}
+
+func (parser *Parser) parseExponentiation() (Fc, error) {
+	node, err := parser.parseFc()
+	if err != nil {
+		return nil, err
+	}
+
+	if parser.is(BuiltinSyms["^"]) {
+		cur, _ := parser.next()
+		right, err := parser.parseExponentiation()
+		if err != nil {
+			return nil, err
+		}
+		node = &calledFcFnRetValue{
+			FcStr(cur),
+			[]FcStr{},
+			[]Fc{right},
+		}
+	}
+
+	return node, nil
+}
