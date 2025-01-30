@@ -1,6 +1,15 @@
 package parser
 
+import (
+	"fmt"
+	"strconv"
+)
+
 func (parser *Parser) parseFc() (Fc, error) {
+	if parser.curTokenBeginWithNumber() {
+		return parser.parseNumberStr()
+	}
+
 	curFc, err := parser.parseFcStrAndFcFnRetVal()
 	if err != nil {
 		return nil, err
@@ -31,16 +40,16 @@ func (parser *Parser) parseFc() (Fc, error) {
 }
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
-	firstSymbolPtr, err := parser.parseFcStr()
+	firstSymbol, err := parser.parseFcStr()
 	if err != nil {
 		return nil, err
 	}
 
 	if !parser.is(BuiltinSyms["["]) && !parser.is(BuiltinSyms["("]) {
-		return firstSymbolPtr, nil
+		return firstSymbol, nil
 	}
 
-	var previousFc Fc = firstSymbolPtr
+	var previousFc Fc = firstSymbol
 
 	for !parser.isEnd() && (parser.is(BuiltinSyms["["]) || parser.is(BuiltinSyms["("])) {
 		curFcc := calledFcFnRetValue{previousFc, []FcStr{}, []Fc{}}
@@ -120,6 +129,7 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 }
 
 func (parser *Parser) parseFcStr() (FcStr, error) {
+
 	tok, err := parser.next()
 	if err != nil {
 		return "", err
@@ -534,4 +544,39 @@ func (parser *Parser) parseExponentiation() (Fc, error) {
 	}
 
 	return node, nil
+}
+
+func (parser *Parser) parseNumberStr() (FcStr, error) {
+	left, err := parser.next()
+
+	if err != nil {
+		return "", err
+	}
+
+	if left[0] == '0' {
+		return "", fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
+	}
+
+	_, err = strconv.Atoi(left)
+	if err != nil {
+		return "", fmt.Errorf("invalid number: %s", left)
+	}
+
+	if parser.is(BuiltinSyms["."]) {
+		parser.skip()
+		right, err := parser.next()
+
+		if err != nil {
+			return "", err
+		}
+
+		_, err = strconv.Atoi(right)
+		if err != nil {
+			return "", fmt.Errorf("invalid number: %s", right)
+		}
+
+		return FcStr(left) + "." + FcStr(right), nil
+	}
+
+	return FcStr(left), nil
 }

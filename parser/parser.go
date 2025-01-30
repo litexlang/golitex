@@ -73,6 +73,14 @@ func (it *Parser) skip(expected ...string) error {
 	return nil
 }
 
-func (it *Parser) curTokenBeginWithNumber(expected ...string) error {
+func (it *Parser) curTokenBeginWithNumber() bool {
+	if it.index >= len(it.slice) {
+		return false
+	}
 
+	if it.slice[it.index][0] >= '0' && it.slice[it.index][0] <= '9' {
+		return true
+	} else {
+		return false
+	}
 }
