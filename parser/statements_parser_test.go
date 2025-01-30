@@ -523,3 +523,20 @@ have $P[G , G2 ](g1 , g2 ):
 	}
 
 }
+
+func Test(t *testing.T) {
+	code :=
+		`
+var g1 G, g2 G
+
+var a G,  b G:
+	$p[g](a)
+`
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
