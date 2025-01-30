@@ -6,6 +6,154 @@ import (
 	"testing"
 )
 
+func TestLexer(t *testing.T) {
+	block, err := ParseFile("../examples/concept.litex")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	for _, block := range block.body {
+		fmt.Println(block.String())
+	}
+}
+
+// Test given string
+func TestLexerFromString(t *testing.T) {
+	content := `
+def add(a, b):
+    return a + b
+`
+	blocks, err := getTopLevelStmtSlice(content)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	for _, block := range blocks.body {
+		fmt.Println(block.String())
+	}
+
+	// Test invalid syntax
+	_, err = getTopLevelStmtSlice(content)
+	if err != nil {
+		t.Fatalf("Expected error for invalid syntax")
+	}
+}
+
+func TestSplitString(t *testing.T) {
+	input := []string{"concept [G Group[G Set](v G)]:"}
+	for _, s := range input {
+		tokens, err := tokenizeString(s)
+
+		if err != nil {
+			t.Fatalf("Error splitting string: %s", err.Error())
+			continue
+		}
+
+		for _, token := range *tokens {
+			fmt.Println(token)
+		}
+	}
+}
+
+func TestParseStrStmtBlock(t *testing.T) {
+	subBody := []StrBlock{
+		{
+			Header: "concept [v G](v G):",
+			Body:   nil,
+		},
+	}
+	body := []StrBlock{
+		{
+			Header: "concept [G Set](v G):",
+			Body:   subBody,
+		},
+	}
+	input := StrBlock{
+		Header: "concept [G Group[G Set](v G)]:",
+		Body:   body,
+	}
+
+	parsedBlock, err := TokenizeStmtBlock(&input)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	fmt.Println(parsedBlock)
+}
+
+func TestFileTokenize(t *testing.T) {
+	filePath := "../examples/concept.litex"
+	block, err := ParseFile(filePath)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	for _, stmt := range block.body {
+		parsedBlock, err := TokenizeStmtBlock(&stmt)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+
+		fmt.Println(parsedBlock.String())
+	}
+}
+
+func TestParseFc(t *testing.T) {
+	strings := []string{
+		"f[G, B](a, b)[C, D](c, d)",
+		"f[G, B](a, b).g[G, B].t(a, b)",
+	}
+
+	for _, s := range strings {
+		tokens, err := tokenizeString(s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		parser := Parser{0, *tokens}
+		fc, err := parser.parseFc()
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(fc)
+	}
+}
+
+func TestParseBracketVarTypePair(t *testing.T) {
+	tokens := []string{"[", "g", "Group", ",", "v", "Group", "]"}
+	parser := Parser{0, tokens}
+	fc, err := parser.parseBracketedVarTypePair()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(fc)
+}
+
+func TestParseBuiltinFnRetValue(t *testing.T) {
+	strings := []string{
+		"-1 + 2 ^ 3 * 4 / 5 + 6 + f[G, B](a, b).g[G, B].t(a, b) * f[G, B](a, b)[C, D](c, d)",
+		"f[G, B](a, b).g[G, B].t(a, b) + 1.2",
+		"1.2 + 1.3 * 14.2",
+		"f[G, B](a, b)[C, D](c, d) + 6 * 5",
+		"-1 + 2 ^ 3 * 4 / 5 + 6",
+	}
+
+	for _, s := range strings {
+		tokens, err := tokenizeString(s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		parser := Parser{0, *tokens}
+
+		fc, err := parser.parseBuiltinFnRetValue()
+
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(fc)
+	}
+}
+
 func TestForallStmt(t *testing.T) {
 	tokenized1, err := tokenizeString("forall [G Group] g1 G, g2 G:")
 	if err != nil {

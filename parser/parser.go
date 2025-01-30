@@ -11,7 +11,7 @@ type Parser struct {
 }
 
 func (p *Parser) String() string {
-	return fmt.Sprintf("%s", strings.Join(p.slice, " "))
+	return strings.Join(p.slice, " ")
 }
 
 func (p *Parser) getIndex() int {
