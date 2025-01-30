@@ -473,12 +473,12 @@ func (stmt *tokenBlock) parseKnowStmt() (*knowStmt, error) {
 	stmt.header.skip(Keywords["know"])
 
 	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, err
+		return nil, &parseErr{err, stmt.header}
 	}
 
 	facts, err := stmt.parseBodyFacts()
 	if err != nil {
-		return nil, err
+		return nil, &parseErr{err, stmt.header}
 	}
 
 	return &knowStmt{*facts}, nil
