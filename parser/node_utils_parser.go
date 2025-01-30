@@ -402,6 +402,8 @@ func (parser *Parser) parseVarDecl() (*fcVarDecl, error) {
 	pairs = append(pairs, fcTypePair{FcStr(name), typ})
 
 	for parser.is(BuiltinSyms[","]) {
+		parser.skip(BuiltinSyms[","])
+
 		name, err := parser.next()
 		if err != nil {
 			return nil, err
@@ -413,6 +415,7 @@ func (parser *Parser) parseVarDecl() (*fcVarDecl, error) {
 		}
 
 		pairs = append(pairs, fcTypePair{FcStr(name), typ})
+
 	}
 
 	return &fcVarDecl{pairs}, nil

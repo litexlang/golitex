@@ -400,6 +400,8 @@ func (stmt *tokenBlock) parseDefVarStmt() (*defVarStmt, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else if !stmt.header.isEnd() {
+		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
 	return &defVarStmt{*decl, *ifFacts}, nil
