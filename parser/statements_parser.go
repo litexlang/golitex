@@ -48,6 +48,8 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 		return stmt.parseHaveStmt()
 	case Keywords["member"]:
 		return stmt.parseMemberStmt()
+	case Keywords["type_member"]:
+		return stmt.parseTypeMemberStmt()
 	default:
 		return stmt.parseFactStmt()
 	}
@@ -611,4 +613,55 @@ func (stmt *tokenBlock) parseMemberStmt() (*defMemberStmt, error) {
 	}
 
 	return &defMemberStmt{typeConcept, varType, decl, *facts}, nil
+}
+
+func (stmt *tokenBlock) parseTypeMemberStmt() (*defTypeMemberStmt, error) {
+	stmt.header.skip(Keywords["type_member"])
+
+	typeConcepts, err := stmt.header.parseBracketedTypeConceptPairArray()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(*typeConcepts) != 1 {
+		return nil, fmt.Errorf("expect one type concept in members")
+	}
+
+	typeConcept := (*typeConcepts)[0]
+
+	var decl fcDecl
+
+	if stmt.header.is(Keywords["var"]) {
+		decl, err = stmt.header.parseVarDecl()
+		if err != nil {
+			return nil, err
+		}
+	} else if stmt.header.is(Keywords["fn"]) {
+		decl, err = stmt.header.parseFcFnDecl()
+		if err != nil {
+			return nil, err
+		}
+	} else if stmt.header.is(Keywords["property"]) {
+		decl, err = stmt.header.parsePropertyDecl()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("expect 'var', 'fn', or 'property'")
+	}
+
+	if stmt.header.isEnd() {
+		return &defTypeMemberStmt{typeConcept, decl, []factStmt{}}, nil
+	}
+
+	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		return nil, err
+	}
+
+	facts, err := stmt.parseBodyFacts()
+	if err != nil {
+		return nil, err
+	}
+
+	return &defTypeMemberStmt{typeConcept, decl, *facts}, nil
 }

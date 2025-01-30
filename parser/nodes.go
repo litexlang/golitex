@@ -215,3 +215,11 @@ type defMemberStmt struct {
 }
 
 func (s *defMemberStmt) stmt() {}
+
+type defTypeMemberStmt struct {
+	typeConcept typeConceptPair
+	member      fcDecl
+	facts       []factStmt
+}
+
+func (s *defTypeMemberStmt) stmt() {}
