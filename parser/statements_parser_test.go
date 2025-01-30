@@ -524,13 +524,31 @@ have $P[G , G2 ](g1 , g2 ):
 
 }
 
-func Test(t *testing.T) {
+func TestVarDeclStmt(t *testing.T) {
 	code :=
 		`
 var g1 G, g2 G
 
 var a G,  b G:
 	$p[g](a)
+`
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
+
+func TestMember(t *testing.T) {
+	code :=
+		`
+member [G Group](g G) 		var 1 G:
+	$p[g](a)
+member [G Group](g G) 		fn f[G Group, G2 Group](x G, y G) G:
+    $p[g](a)
+member [G Group](g G) 		property f[G Group, G2 Group](x G, y G)
 `
 	statements, err := parserTester(code)
 	if err == nil {

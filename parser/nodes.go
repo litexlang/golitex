@@ -200,3 +200,18 @@ type haveStmt struct {
 }
 
 func (s *haveStmt) stmt() {}
+
+type fcDecl interface{ fcDecl() }
+
+func (f *fcVarDecl) fcDecl()    {}
+func (f *fcFnDecl) fcDecl()     {}
+func (f *propertyDecl) fcDecl() {}
+
+type defMemberStmt struct {
+	typeConcept typeConceptPair
+	varType     fcTypePair
+	member      fcDecl
+	facts       []factStmt
+}
+
+func (s *defMemberStmt) stmt() {}
