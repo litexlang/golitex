@@ -38,6 +38,9 @@ func TestParseBracketVarTypePair(t *testing.T) {
 
 func TestParseBuiltinFnRetValue(t *testing.T) {
 	strings := []string{
+		"-1 + 2 ^ 3 * 4 / 5 + 6 + f[G, B](a, b).g[G, B].t(a, b) * f[G, B](a, b)[C, D](c, d)",
+		"f[G, B](a, b).g[G, B].t(a, b) + 1.2",
+		"1.2 + 1.3 * 14.2",
 		"f[G, B](a, b)[C, D](c, d) + 6 * 5",
 		"-1 + 2 ^ 3 * 4 / 5 + 6",
 	}
