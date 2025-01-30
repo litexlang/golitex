@@ -4,21 +4,21 @@ type Stmt interface {
 	stmt()
 }
 
-type TopStmt struct {
+type topStmt struct {
 	stmt  Stmt
 	isPub bool
 }
 
 type typeConcept string
 
-type DefVarStmt struct {
+type defVarStmt struct {
 	decl  fcVarDecl
-	facts []FactStmt
+	facts []factStmt
 }
 
-func (stmt *DefVarStmt) stmt() {}
+func (stmt *defVarStmt) stmt() {}
 
-type DefConceptStmt struct {
+type defConceptStmt struct {
 	typeVar            typeVar
 	conceptName        typeConcept
 	inherit            []typeConcept
@@ -28,25 +28,24 @@ type DefConceptStmt struct {
 	varMember          []fcVarDecl
 	fnMember           []fcFnDecl
 	propertyMember     []propertyDecl
-	thenFacts          []FactStmt
+	thenFacts          []factStmt
 }
 
-func (c *DefConceptStmt) stmt() {}
+func (c *defConceptStmt) stmt() {}
 
-type DefTypeStmt struct {
+type defTypeStmt struct {
 	typeVar        typeVar
 	conceptName    typeConcept
 	varMember      []fcVarDecl
 	fnMember       []fcFnDecl
 	propertyMember []propertyDecl
-	thenFacts      []FactStmt
+	thenFacts      []factStmt
 }
 
-func (t *DefTypeStmt) stmt() {}
+func (f *defTypeStmt) stmt() {}
 
 type fcVarDecl struct {
-	name string
-	tp   fcVarType
+	varTypePairs []fcTypePair
 }
 
 type fcFnDecl struct {
@@ -59,21 +58,21 @@ type propertyDecl struct {
 	tp   propertyType
 }
 
-type DefPropertyStmt struct {
+type defPropertyStmt struct {
 	decl      propertyDecl
-	ifFacts   []FactStmt
-	thenFacts []FactStmt
+	ifFacts   []factStmt
+	thenFacts []factStmt
 }
 
-func (c *DefPropertyStmt) stmt() {}
+func (c *defPropertyStmt) stmt() {}
 
-type DefFnStmt struct {
+type defFnStmt struct {
 	decl      fcFnDecl
-	ifFacts   []FactStmt
-	thenFacts []FactStmt
+	ifFacts   []factStmt
+	thenFacts []factStmt
 }
 
-func (f *DefFnStmt) stmt() {}
+func (f *defFnStmt) stmt() {}
 
 type localStmt struct {
 	statements []Stmt
@@ -81,22 +80,22 @@ type localStmt struct {
 
 func (l *localStmt) stmt() {}
 
-type FactStmt interface {
+type factStmt interface {
 	factStmt()
 	stmt()
 }
 
-type ForallStmt struct {
+type forallStmt struct {
 	typeParams []typeConceptPair
 	varParams  []fcTypePair
-	ifFacts    []FactStmt
-	thenFacts  []FactStmt
+	ifFacts    []factStmt
+	thenFacts  []factStmt
 }
 
-func (l *ForallStmt) factStmt() {}
-func (l *ForallStmt) stmt()     {}
+func (l *forallStmt) factStmt() {}
+func (l *forallStmt) stmt()     {}
 
-type FuncPtyStmt struct {
+type funcPtyStmt struct {
 	isTrue bool
 	fc     Fc
 }
@@ -108,13 +107,13 @@ type propertyFactStmt interface {
 	propertyFactStmt()
 }
 
-func (p *FuncPtyStmt) factStmt() {}
-func (p *FuncPtyStmt) stmt()     {}
+func (p *funcPtyStmt) factStmt() {}
+func (p *funcPtyStmt) stmt()     {}
 
-func (f *FuncPtyStmt) setT(b bool) {
+func (f *funcPtyStmt) setT(b bool) {
 	f.isTrue = b
 }
-func (f *FuncPtyStmt) propertyFactStmt() {
+func (f *funcPtyStmt) propertyFactStmt() {
 }
 
 type typeConceptPair struct {
@@ -160,7 +159,7 @@ func (f fcVarType) fnRetType() {}
 func (f *fcFnType) fnRetType() {}
 
 type claimStmt struct {
-	toCheck []FactStmt
+	toCheck []factStmt
 	proof   []Stmt
 }
 
@@ -174,7 +173,7 @@ type defAliasStmt struct {
 func (f *defAliasStmt) stmt() {}
 
 type knowStmt struct {
-	facts []FactStmt
+	facts []factStmt
 }
 
 func (f *knowStmt) stmt() {}
@@ -188,9 +187,9 @@ func (f *fcFnDecl) fnRetTypeMemberDecl()  {}
 
 type defExistStmt struct {
 	decl      propertyDecl
-	ifFacts   []FactStmt
+	ifFacts   []factStmt
 	member    []fnRetTypeMemberDecl
-	thenFacts []FactStmt
+	thenFacts []factStmt
 }
 
 func (s *defExistStmt) stmt() {}

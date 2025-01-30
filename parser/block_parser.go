@@ -37,13 +37,13 @@ func (p *tokenBlock) parseFcMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl
 	return varMember, fnMember, propertyMember, nil
 }
 
-func (stmt *tokenBlock) parseThenFacts() (*[]FactStmt, error) {
+func (stmt *tokenBlock) parseThenFacts() (*[]factStmt, error) {
 	stmt.header.next()
 	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, err
 	}
 
-	facts := &[]FactStmt{}
+	facts := &[]factStmt{}
 
 	for _, curStmt := range stmt.body {
 		if curStmt.header.is(Keywords["fact"]) {
