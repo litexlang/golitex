@@ -228,14 +228,14 @@ func (s *defTypeMemberStmt) stmt() {}
 
 type parseErr struct {
 	previous error
-	header   Parser
+	stmt     tokenBlock
 }
 
 func (e *parseErr) Error() string {
-	curTok, err := e.header.currentToken()
+	curTok, err := e.stmt.header.currentToken()
 	if err != nil {
-		return fmt.Sprintf("error at %s, column %d: %s", e.header.String(), e.header.getIndex(), e.previous.Error())
+		return fmt.Sprintf("error at %s, column %d: %s", e.stmt.header.String(), e.stmt.header.getIndex(), e.previous.Error())
 	} else {
-		return fmt.Sprintf("error at %s, column %d, at '%s': %s", e.header.String(), e.header.getIndex(), curTok, e.previous.Error())
+		return fmt.Sprintf("error at %s, column %d, at '%s': %s", e.stmt.header.String(), e.stmt.header.getIndex(), curTok, e.previous.Error())
 	}
 }
