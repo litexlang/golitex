@@ -54,7 +54,7 @@ func (parser *Parser) parseBracedFc() (Fc, error) {
 }
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
-	strAtSecondPosition, err := parser.getString(1)
+	strAtSecondPosition, err := parser.getNext(1)
 
 	if err != nil {
 		return nil, err

@@ -738,10 +738,14 @@ p[g](a) + 2 < (2 + 3) * 10 + 4 < 100
 }
 
 func TestIsStmt(t *testing.T) {
+	// 	3 is p[g](a)
+	// $p[g](a)
+
 	code :=
 		`
-(p[g](a) + 2 ) is q
-3 is p[g](a)
+( p[g](a) + 2 ) is q
+1 * ( p[g](a) + 2 ) is q
+
 `
 	statements, err := parseSourceCode(code)
 	if err == nil {
