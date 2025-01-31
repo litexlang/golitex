@@ -54,16 +54,26 @@ func (parser *Parser) parseBracedFc() (Fc, error) {
 }
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
-	firstSymbol, err := parser.parseFcStr()
+	strAtSecondPosition, err := parser.getString(1)
+
 	if err != nil {
-		return nil, &parserErr{err, parser}
+		return nil, err
 	}
 
-	if !parser.is(BuiltinSyms["["]) && !parser.is(BuiltinSyms["("]) {
-		return firstSymbol, nil
+	if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] {
+		return parser.parseFcStr()
+	} else {
+		return parser.parseFcFnRetVal()
 	}
 
-	var previousFc Fc = firstSymbol
+}
+
+func (parser *Parser) parseFcFnRetVal() (Fc, error) {
+	var previousFc Fc
+	previousFc, err := parser.parseFcStr()
+	if err != nil {
+		return nil, err
+	}
 
 	for !parser.isEnd() && (parser.is(BuiltinSyms["["]) || parser.is(BuiltinSyms["("])) {
 		curFcc := calledFcFnRetValue{previousFc, []FcStr{}, []Fc{}}
