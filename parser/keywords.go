@@ -32,6 +32,10 @@ var BuiltinSyms = map[string]string{
 	"!=": "!=",
 }
 
+func isBuiltinRelationalOperator(op string) bool {
+	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!="
+}
+
 func putBuiltinIntoKeywords() *map[string]string {
 	var Keywords = map[string]string{
 		"concept":     "concept",
