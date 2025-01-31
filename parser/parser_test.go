@@ -736,3 +736,18 @@ p[g](a) + 2 < (2 + 3) * 10 + 4 < 100
 	}
 
 }
+
+func TestIsStmt(t *testing.T) {
+	code :=
+		`
+(p[g](a) + 2 ) is q
+3 is p[g](a)
+`
+	statements, err := parseSourceCode(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}

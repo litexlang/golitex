@@ -616,18 +616,25 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 	return FcStr(left), nil
 }
 
-func (parser *Parser) parseIsExpr(left *FcExpr) (factStmt, error) {
-	if !parser.isAndSkip(BuiltinSyms["is"]) {
-		return nil, fmt.Errorf("expected 'is'")
-	}
-
+func (parser *Parser) parseIsExpr(left Fc) (*funcPtyStmt, error) {
 	opt, err := parser.next()
 
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
 
-	fc := &calledFcFnRetValue{FcStr(opt), []FcStr{}, []Fc{left}}
+	typeParams := &[]FcStr{}
+	if parser.is(BuiltinSyms["["]) {
+		typeParams, err = parser.parseBracketedFcString()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
 
+		if len(*typeParams) != 1 {
+			return nil, &parserErr{fmt.Errorf("expect one type parameter"), parser}
+		}
+	}
+
+	fc := &calledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}
 	return &funcPtyStmt{true, fc}, nil
 }
