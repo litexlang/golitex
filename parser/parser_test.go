@@ -728,7 +728,7 @@ func TestRelationalFactStmt(t *testing.T) {
 p[g](a) + 2 < (2 + 3) * 10 + 4 < 100
 10 = p[g](a) = p[g](a)
 `
-	statements, err := parserTester(code)
+	statements, err := parseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
