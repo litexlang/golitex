@@ -793,7 +793,7 @@ func (stmt *tokenBlock) parseTypeMemberStmt() (*defTypeMemberStmt, error) {
 	return &defTypeMemberStmt{typeConcept, decl, *facts}, nil
 }
 
-func (stmt *tokenBlock) parseRelationalFactStmt() (*relationFactStmt, error) {
+func (stmt *tokenBlock) parseRelationalFactStmt() (notFactStmt, error) {
 	fc, err := stmt.header.parseFcExpr()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -805,7 +805,7 @@ func (stmt *tokenBlock) parseRelationalFactStmt() (*relationFactStmt, error) {
 	}
 
 	if opt == Keywords["is"] {
-
+		return stmt.header.parseIsExpr(fc)
 	}
 
 	if !isBuiltinRelationalOperator(opt) {
