@@ -282,7 +282,7 @@ func (stmt *tokenBlock) parseFuncPropertyFactStmt() (*funcPtyStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fc, err := stmt.header.parseFc()
+	fc, err := stmt.header.parseFcExpr()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -555,7 +555,7 @@ func (stmt *tokenBlock) parseDefUseStmt() (*defuseStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	variable, err := stmt.header.parseFc()
+	variable, err := stmt.header.parseFcAtom()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -761,7 +761,7 @@ func (stmt *tokenBlock) parseTypeMemberStmt() (*defTypeMemberStmt, error) {
 }
 
 func (stmt *tokenBlock) parseRelationalFactStmt() (*relationFactStmt, error) {
-	fc, err := stmt.header.parseFc()
+	fc, err := stmt.header.parseFcExpr()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -774,7 +774,7 @@ func (stmt *tokenBlock) parseRelationalFactStmt() (*relationFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fc2, err := stmt.header.parseFc()
+	fc2, err := stmt.header.parseFcExpr()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -782,7 +782,7 @@ func (stmt *tokenBlock) parseRelationalFactStmt() (*relationFactStmt, error) {
 	vars := []Fc{fc, fc2}
 	for stmt.header.is(opt) {
 		stmt.header.skip()
-		fc, err := stmt.header.parseFc()
+		fc, err := stmt.header.parseFcExpr()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
