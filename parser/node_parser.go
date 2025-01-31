@@ -615,3 +615,19 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 
 	return FcStr(left), nil
 }
+
+func (parser *Parser) parseIsExpr(left *FcExpr) (factStmt, error) {
+	if !parser.isAndSkip(BuiltinSyms["is"]) {
+		return nil, fmt.Errorf("expected 'is'")
+	}
+
+	opt, err := parser.next()
+
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	fc := &calledFcFnRetValue{FcStr(opt), []FcStr{}, []Fc{left}}
+
+	return &funcPtyStmt{true, fc}, nil
+}

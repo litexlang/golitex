@@ -60,7 +60,8 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"package":     "package",
 		"not":         "not",
 		"is":          "is",
-		"use":         "alias",
+		"use":         "use",
+		"impl":        "impl",
 	}
 
 	for k, v := range BuiltinSyms {
