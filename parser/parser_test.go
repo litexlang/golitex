@@ -590,10 +590,10 @@ claim:
 
 }
 
-func TestParseDefAliasStmt(t *testing.T) {
+func TestParseDefuseStmt(t *testing.T) {
 	code :=
 		`
-alias a p[G, G2](x, y)
+use a p[G, G2](x, y)
 `
 	statements, err := parserTester(code)
 	if err == nil {

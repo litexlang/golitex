@@ -178,12 +178,12 @@ type claimStmt struct {
 
 func (f *claimStmt) stmt() {}
 
-type defAliasStmt struct {
+type defuseStmt struct {
 	name     string
 	variable Fc
 }
 
-func (f *defAliasStmt) stmt() {}
+func (f *defuseStmt) stmt() {}
 
 type knowStmt struct {
 	facts []factStmt
