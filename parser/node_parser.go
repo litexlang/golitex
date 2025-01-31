@@ -483,7 +483,7 @@ func (parser *Parser) parseStringArr() (*[]string, error) {
 	return members, nil
 }
 
-func (parser *Parser) parseBuiltinFnRetValue() (Fc, error) {
+func (parser *Parser) parseFcExpr() (Fc, error) {
 	return parser.parseAddition()
 }
 

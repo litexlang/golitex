@@ -247,33 +247,41 @@ func (stmt *tokenBlock) parseFactStmt() (factStmt, error) {
 		return stmt.parseForallStmt()
 	}
 
-	if stmt.header.is(Keywords["not"]) {
-		return stmt.parseNotFactStmt()
-	}
-
-	return stmt.parsePropertyFactStmt()
+	return stmt.parseNotFactStmt()
 }
 
-func (stmt *tokenBlock) parsePropertyFactStmt() (propertyFactStmt, error) {
+func (stmt *tokenBlock) parseNotFactStmt() (propertyFactStmt, error) {
+	isTrue := true
+	if stmt.header.is(BuiltinSyms["not"]) {
+		err := stmt.header.skip(BuiltinSyms["not"])
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		isTrue = false
+	}
+
+	var ret propertyFactStmt
+	var err error = nil
 	if stmt.header.is(BuiltinSyms["$"]) {
-		return stmt.parseFuncPtyStmt()
+		ret, err = stmt.parseFuncPropertyFactStmt()
+	} else {
+		ret, err = stmt.parseRelationalFactStmt()
 	}
 
-	return nil, fmt.Errorf("invalid function")
-}
-
-func (stmt *tokenBlock) parseNotFactStmt() (factStmt, error) {
-	stmt.header.skip()
-	ret, err := stmt.parsePropertyFactStmt()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
-	ret.setT(false)
+
+	ret.setT(isTrue)
 	return ret, nil
 }
 
-func (stmt *tokenBlock) parseFuncPtyStmt() (*funcPtyStmt, error) {
-	stmt.header.skip()
+func (stmt *tokenBlock) parseFuncPropertyFactStmt() (*funcPtyStmt, error) {
+	err := stmt.header.skip(BuiltinSyms["$"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
 	fc, err := stmt.header.parseFc()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -614,7 +622,7 @@ func (stmt *tokenBlock) parseExistStmt() (*defExistStmt, error) {
 
 func (stmt *tokenBlock) parseHaveStmt() (*haveStmt, error) {
 	stmt.header.skip(Keywords["have"])
-	propertyStmt, err := stmt.parsePropertyFactStmt()
+	propertyStmt, err := stmt.parseFuncPropertyFactStmt()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -750,4 +758,26 @@ func (stmt *tokenBlock) parseTypeMemberStmt() (*defTypeMemberStmt, error) {
 	}
 
 	return &defTypeMemberStmt{typeConcept, decl, *facts}, nil
+}
+
+func (stmt *tokenBlock) parseRelationalFactStmt() (*funcPtyStmt, error) {
+	fc, err := stmt.header.parseFc()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	opt, err := stmt.header.next()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+	if !isBuiltinRelationalOperator(opt) {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	fc2, err := stmt.header.parseFc()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	return &funcPtyStmt{true, &calledFcFnRetValue{FcStr(opt), []FcStr{}, []Fc{fc, fc2}}}, nil
 }

@@ -145,7 +145,7 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 		}
 		parser := Parser{0, *tokens}
 
-		fc, err := parser.parseBuiltinFnRetValue()
+		fc, err := parser.parseFcExpr()
 
 		if err != nil {
 			t.Fatal(err)
