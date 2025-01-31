@@ -10,7 +10,9 @@ type Parser struct {
 	slice []string
 }
 
-func (p *Parser) getString(i int) (string, error) {
+func (p *Parser) getNext(i int) (string, error) {
+	i = p.index + i
+
 	if i < 0 || i >= len(p.slice) {
 		return "", fmt.Errorf("index out of range")
 	}
