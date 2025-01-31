@@ -6,6 +6,10 @@ import (
 )
 
 func (parser *Parser) parseFc() (Fc, error) {
+	if parser.is(BuiltinSyms["("]) {
+		return parser.parseBracedFc()
+	}
+
 	if parser.curTokenBeginWithNumber() {
 		return parser.parseNumberStr()
 	}
@@ -37,6 +41,16 @@ func (parser *Parser) parseFc() (Fc, error) {
 	ret := FcExpr(fcArr)
 
 	return &ret, nil
+}
+
+func (parser *Parser) parseBracedFc() (Fc, error) {
+	parser.skip(BuiltinSyms["("])
+	fc, err := parser.parseFc()
+	if err != nil {
+		return nil, err
+	}
+	parser.skip(BuiltinSyms[")"])
+	return fc, nil
 }
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
