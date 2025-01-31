@@ -226,12 +226,12 @@ type defTypeMemberStmt struct {
 
 func (s *defTypeMemberStmt) stmt() {}
 
-type parseErr struct {
+type parseStmtErr struct {
 	previous error
 	stmt     tokenBlock
 }
 
-func (e *parseErr) Error() string {
+func (e *parseStmtErr) Error() string {
 	curTok, err := e.stmt.header.currentToken()
 	if err != nil {
 		return fmt.Sprintf("error at %s, column %d: %s", e.stmt.header.String(), e.stmt.header.getIndex(), e.previous.Error())
