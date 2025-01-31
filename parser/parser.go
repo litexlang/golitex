@@ -10,6 +10,13 @@ type Parser struct {
 	slice []string
 }
 
+func (p *Parser) getString(i int) (string, error) {
+	if i < 0 || i >= len(p.slice) {
+		return "", fmt.Errorf("index out of range")
+	}
+	return p.slice[i], nil
+}
+
 func (p *Parser) String() string {
 	return strings.Join(p.slice, " ")
 }

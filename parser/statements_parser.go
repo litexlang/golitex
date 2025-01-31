@@ -315,7 +315,7 @@ func (stmt *tokenBlock) parseFuncPropertyFactStmt() (*funcPtyStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fc, err := stmt.header.parseFcExpr()
+	fc, err := stmt.header.parseFcFnRetVal()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
