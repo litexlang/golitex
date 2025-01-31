@@ -102,6 +102,7 @@ type funcPtyStmt struct {
 	fc     Fc
 }
 
+// 1 = 2 -1 = 1 * 1, vars = [1, 2 -1, 1 * 1], opt = "="
 type relationFactStmt struct {
 	isTrue bool
 	vars   []Fc

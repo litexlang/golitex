@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func (parser *Parser) parseFc() (Fc, error) {
+func (parser *Parser) parseFcAtom() (Fc, error) {
 	if parser.is(BuiltinSyms["("]) {
 		return parser.parseBracedFc()
 	}
@@ -45,7 +45,7 @@ func (parser *Parser) parseFc() (Fc, error) {
 
 func (parser *Parser) parseBracedFc() (Fc, error) {
 	parser.skip(BuiltinSyms["("])
-	fc, err := parser.parseFc()
+	fc, err := parser.parseFcExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -122,7 +122,7 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	parser.skip(BuiltinSyms["("])
 
 	for {
-		fc, err := parser.parseFc()
+		fc, err := parser.parseFcAtom()
 
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -560,7 +560,7 @@ func (parser *Parser) parseUnary() (Fc, error) {
 }
 
 func (parser *Parser) parseExponentiation() (Fc, error) {
-	node, err := parser.parseFc()
+	node, err := parser.parseFcAtom()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}

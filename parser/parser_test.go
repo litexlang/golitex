@@ -110,7 +110,7 @@ func TestParseFc(t *testing.T) {
 			t.Fatal(err)
 		}
 		parser := Parser{0, *tokens}
-		fc, err := parser.parseFc()
+		fc, err := parser.parseFcAtom()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -712,6 +712,21 @@ func TestConceptMemberStmt(t *testing.T) {
 		`
 type_member [G Group]		var 1 G:
 	$p[g](a)
+`
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
+
+func TestRelationalFactStmt(t *testing.T) {
+	code :=
+		`
+p[g](a) + 2 < (2 + 3) * 10 + 4 < 100
+10 = p[g](a) = p[g](a)
 `
 	statements, err := parserTester(code)
 	if err == nil {
