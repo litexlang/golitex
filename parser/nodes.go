@@ -102,7 +102,18 @@ type funcPtyStmt struct {
 	fc     Fc
 }
 
-type propertyFactStmt interface {
+type relationFactStmt struct {
+	isTrue bool
+	vars   []Fc
+	opt    Fc
+}
+
+func (r *relationFactStmt) factStmt()         {}
+func (r *relationFactStmt) stmt()             {}
+func (r *relationFactStmt) setT(b bool)       { r.isTrue = b }
+func (r *relationFactStmt) propertyFactStmt() {}
+
+type notFactStmt interface {
 	setT(b bool)
 	factStmt()
 	stmt()
@@ -197,7 +208,7 @@ type defExistStmt struct {
 func (s *defExistStmt) stmt() {}
 
 type haveStmt struct {
-	propertyStmt propertyFactStmt
+	propertyStmt notFactStmt
 	member       []string
 }
 
