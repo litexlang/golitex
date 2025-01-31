@@ -803,6 +803,11 @@ func (stmt *tokenBlock) parseRelationalFactStmt() (*relationFactStmt, error) {
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
+
+	if opt == Keywords["is"] {
+
+	}
+
 	if !isBuiltinRelationalOperator(opt) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
