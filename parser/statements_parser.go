@@ -1,6 +1,39 @@
 package parser
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
+
+func parseSourceCode(code string) (*[]topStmt, error) {
+	code = strings.ReplaceAll(code, "\t", "    ")
+
+	slice, err := getTopLevelStmtSlice(code)
+	if err != nil {
+		return nil, err
+	}
+
+	blocks := []tokenBlock{}
+	for _, strBlock := range slice.body {
+		block, err := TokenizeStmtBlock(&strBlock)
+		if err != nil {
+			return nil, err
+		}
+		blocks = append(blocks, *block)
+	}
+
+	ret := []topStmt{}
+	for _, block := range blocks {
+		cur, err := block.ParseTopLevelStmt()
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, *cur)
+		fmt.Printf("%v\n", cur)
+	}
+
+	return &ret, nil
+}
 
 func (stmt *tokenBlock) ParseTopLevelStmt() (*topStmt, error) {
 	pub := false
