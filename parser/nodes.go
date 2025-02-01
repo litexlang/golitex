@@ -123,9 +123,9 @@ type notFactStmt interface {
 
 type typedFuncPtyStmt struct {
 	isTrue      bool
-	name        string
 	typeParams  []typeVar
 	fcTypePairs []fcTypePair
+	fc          Fc
 }
 
 func (p *typedFuncPtyStmt) factStmt() {}
