@@ -54,7 +54,7 @@ func (parser *Parser) parseBracedFc() (Fc, error) {
 }
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
-	strAtSecondPosition, err := parser.getNext(1)
+	strAtSecondPosition, err := parser.atIndex(1)
 
 	if err != nil {
 		return nil, err
@@ -206,8 +206,8 @@ func (parser *Parser) parseBracketedVarTypePair() (*[]typeConceptPair, error) {
 	return &pairs, nil
 }
 
-func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]fcTypePair, error) {
-	pairs := []fcTypePair{}
+func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]fcStrTypePair, error) {
+	pairs := []fcStrTypePair{}
 
 	for {
 		varName, err := parser.parseFcStr()
@@ -220,7 +220,7 @@ func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]fcTypePair, error)
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, fcTypePair{(varName), (typeName)})
+		pairs = append(pairs, fcStrTypePair{(varName), (typeName)})
 
 		if parser.isAndSkip(BuiltinSyms[":"]) {
 			break
@@ -246,9 +246,9 @@ func (parser *Parser) parseFcFnType() (*fcFnType, error) {
 		}
 	}
 
-	varParamsTypes := &[]fcTypePair{}
+	varParamsTypes := &[]fcStrTypePair{}
 	if parser.is(BuiltinSyms["("]) {
-		varParamsTypes, err = parser.parseBracedFcTypePairArray()
+		varParamsTypes, err = parser.parseBracedFcStrTypePairArray()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
@@ -263,7 +263,7 @@ func (parser *Parser) parseFcFnType() (*fcFnType, error) {
 	return &fcFnType{*typeParamsTypes, *varParamsTypes, retType}, nil
 }
 
-func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedFcTypePairArr() (*[]typeConceptPair, *[]fcTypePair, error) {
+func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedFcTypePairArr() (*[]typeConceptPair, *[]fcStrTypePair, error) {
 	typeParamsTypes := &[]typeConceptPair{}
 	var err error = nil
 	if parser.is(BuiltinSyms["["]) {
@@ -273,9 +273,9 @@ func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedFcTypePairArr() (
 		}
 	}
 
-	varParamsTypes := &[]fcTypePair{}
+	varParamsTypes := &[]fcStrTypePair{}
 	if parser.is(BuiltinSyms["("]) {
-		varParamsTypes, err = parser.parseBracedFcTypePairArray()
+		varParamsTypes, err = parser.parseBracedFcStrTypePairArray()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -379,8 +379,8 @@ func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]typeConceptPair, 
 	return &concepts, nil
 }
 
-func (parser *Parser) parseBracedFcTypePairArray() (*[]fcTypePair, error) {
-	pairs := []fcTypePair{}
+func (parser *Parser) parseBracedFcStrTypePairArray() (*[]fcStrTypePair, error) {
+	pairs := []fcStrTypePair{}
 	parser.skip(BuiltinSyms["("])
 
 	for {
@@ -394,7 +394,7 @@ func (parser *Parser) parseBracedFcTypePairArray() (*[]fcTypePair, error) {
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, fcTypePair{fcStr, fcType})
+		pairs = append(pairs, fcStrTypePair{fcStr, fcType})
 
 		if parser.isAndSkip(BuiltinSyms[")"]) {
 			break
@@ -411,7 +411,7 @@ func (parser *Parser) parseBracedFcTypePairArray() (*[]fcTypePair, error) {
 func (parser *Parser) parseVarDecl() (*fcVarDecl, error) {
 	parser.skip(Keywords["var"])
 
-	pairs := []fcTypePair{}
+	pairs := []fcStrTypePair{}
 
 	name, err := parser.next()
 	if err != nil {
@@ -423,7 +423,7 @@ func (parser *Parser) parseVarDecl() (*fcVarDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	pairs = append(pairs, fcTypePair{FcStr(name), typ})
+	pairs = append(pairs, fcStrTypePair{FcStr(name), typ})
 
 	for parser.is(BuiltinSyms[","]) {
 		parser.skip(BuiltinSyms[","])
@@ -438,7 +438,7 @@ func (parser *Parser) parseVarDecl() (*fcVarDecl, error) {
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, fcTypePair{FcStr(name), typ})
+		pairs = append(pairs, fcStrTypePair{FcStr(name), typ})
 
 	}
 

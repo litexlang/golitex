@@ -296,7 +296,11 @@ func (stmt *tokenBlock) parseNotFactStmt() (notFactStmt, error) {
 	var ret notFactStmt
 	var err error = nil
 	if stmt.header.is(BuiltinSyms["$"]) {
-		ret, err = stmt.parseFuncPropertyFactStmt()
+		if !stmt.header.isAtIndex(1, BuiltinSyms["$"]) {
+			ret, err = stmt.parseFuncPropertyFactStmt()
+		} else {
+			ret, err = stmt.parseTypedFuncPtyStmt()
+		}
 	} else {
 		ret, err = stmt.parseRelationalFactStmt()
 	}
@@ -694,7 +698,7 @@ func (stmt *tokenBlock) parseMemberStmt() (*defMemberStmt, error) {
 
 	typeConcept := (*typeConcepts)[0]
 
-	varTypes, err := stmt.header.parseBracedFcTypePairArray()
+	varTypes, err := stmt.header.parseBracedFcStrTypePairArray()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -828,4 +832,18 @@ func (stmt *tokenBlock) parseRelationalFactStmt() (notFactStmt, error) {
 	}
 
 	return &relationFactStmt{true, vars, FcStr(opt)}, nil
+}
+
+func (stmt *tokenBlock) parseTypedFuncPtyStmt() (*typedFuncPtyStmt, error) {
+	err := stmt.header.skip(BuiltinSyms["$"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	err = stmt.header.skip(BuiltinSyms["$"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	return nil, nil
 }
