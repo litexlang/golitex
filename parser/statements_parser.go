@@ -337,11 +337,6 @@ func (stmt *tokenBlock) parseTypedFuncPtyStmt() (*typedFuncPtyStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	name, err := stmt.header.next()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
 	conceptTypes, err := stmt.header.parseBracketedTypeVars()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -352,7 +347,9 @@ func (stmt *tokenBlock) parseTypedFuncPtyStmt() (*typedFuncPtyStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &typedFuncPtyStmt{true, name, *conceptTypes, *bracedFcTypeArrPtr}, nil
+	fc, err := stmt.header.parseFcExpr()
+
+	return &typedFuncPtyStmt{true, *conceptTypes, *bracedFcTypeArrPtr, fc}, nil
 }
 
 func (stmt *tokenBlock) parseForallStmt() (*forallStmt, error) {

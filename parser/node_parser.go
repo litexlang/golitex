@@ -188,12 +188,12 @@ func (parser *Parser) parseBracedFcTypeArr() (*[]fcTypePair, error) {
 			return nil, &parserErr{err, parser}
 		}
 
-		tp, err := parser.next()
+		tp, err := parser.parseFcType()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
 
-		ret = append(ret, fcTypePair{fc, fcVarType(tp)})
+		ret = append(ret, fcTypePair{fc, tp})
 
 		if parser.isAndSkip(BuiltinSyms[")"]) {
 			break

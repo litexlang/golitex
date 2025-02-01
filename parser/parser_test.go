@@ -755,3 +755,17 @@ func TestIsStmt(t *testing.T) {
 	}
 
 }
+
+func TestTypedFuncPtyStmt(t *testing.T) {
+	code :=
+		`
+$$p [g](a)
+`
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
