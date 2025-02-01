@@ -123,7 +123,7 @@ type notFactStmt interface {
 
 type typedFuncPtyStmt struct {
 	isTrue      bool
-	typeParams  []typeVar
+	typeParams  []typeConceptPair
 	fcTypePairs []fcTypePair
 	fc          Fc
 }

@@ -121,7 +121,7 @@ func TestParseFc(t *testing.T) {
 func TestParseBracketVarTypePair(t *testing.T) {
 	tokens := []string{"[", "g", "Group", ",", "v", "Group", "]"}
 	parser := Parser{0, tokens}
-	fc, err := parser.parseBracketedVarTypePair()
+	fc, err := parser.parseBracketedTypeConceptPairArray()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -760,6 +760,9 @@ func TestTypedFuncPtyStmt(t *testing.T) {
 	code :=
 		`
 $$p [g](a)
+$$[g G] p[g](a)
+$$[G Group](g G) p[g](a)
+$$[G Group](g G, x T) p[g](a)
 `
 	statements, err := parserTester(code)
 	if err == nil {
