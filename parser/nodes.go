@@ -47,7 +47,7 @@ type defTypeStmt struct {
 func (f *defTypeStmt) stmt() {}
 
 type fcVarDecl struct {
-	varTypePairs []fcTypePair
+	varTypePairs []fcStrTypePair
 }
 
 type fcFnDecl struct {
@@ -89,7 +89,7 @@ type factStmt interface {
 
 type forallStmt struct {
 	typeParams []typeConceptPair
-	varParams  []fcTypePair
+	varParams  []fcStrTypePair
 	ifFacts    []factStmt
 	thenFacts  []factStmt
 }
@@ -121,6 +121,17 @@ type notFactStmt interface {
 	propertyFactStmt()
 }
 
+type typedFuncPtyStmt struct {
+	name        string
+	typeParams  []typeVar
+	fcTypePairs []fcTypePair
+}
+
+type fcTypePair struct {
+	fc Fc
+	tp fcType
+}
+
 func (p *funcPtyStmt) factStmt() {}
 func (p *funcPtyStmt) stmt()     {}
 
@@ -137,7 +148,7 @@ type typeConceptPair struct {
 
 type typeVar string
 
-type fcTypePair struct {
+type fcStrTypePair struct {
 	Var  FcStr
 	Type fcType
 }
@@ -152,15 +163,16 @@ func (f fcVarType) fcType() {}
 
 type fcFnType struct {
 	typeParamsTypes []typeConceptPair
-	varParamsTypes  []fcTypePair
+	varParamsTypes  []fcStrTypePair
 	retType         fnRetType
 }
 
 func (f *fcFnType) fcType() {}
 
+// 需要让 property 不能是 fctype
 type propertyType struct {
 	typeParams []typeConceptPair
-	varParams  []fcTypePair
+	varParams  []fcStrTypePair
 }
 
 func (f *propertyType) fcType() {}
@@ -223,7 +235,7 @@ func (f *propertyDecl) fcDecl() {}
 
 type defMemberStmt struct {
 	typeConcept typeConceptPair
-	varType     fcTypePair
+	varType     fcStrTypePair
 	member      fcDecl
 	facts       []factStmt
 }
