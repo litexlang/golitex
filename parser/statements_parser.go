@@ -337,17 +337,26 @@ func (stmt *tokenBlock) parseTypedFuncPtyStmt() (*typedFuncPtyStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	conceptTypes, err := stmt.header.parseBracketedTypeVars()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
+	conceptTypes := &[]typeConceptPair{}
+	if stmt.header.is(BuiltinSyms["["]) {
+		conceptTypes, err = stmt.header.parseBracketedTypeConceptPairArray()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
 	}
 
-	bracedFcTypeArrPtr, err := stmt.header.parseBracedFcTypeArr()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
+	bracedFcTypeArrPtr := &[]fcTypePair{}
+	if stmt.header.is(BuiltinSyms["("]) {
+		bracedFcTypeArrPtr, err = stmt.header.parseBracedFcTypeArr()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
 	}
 
 	fc, err := stmt.header.parseFcExpr()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
 
 	return &typedFuncPtyStmt{true, *conceptTypes, *bracedFcTypeArrPtr, fc}, nil
 }
@@ -358,7 +367,7 @@ func (stmt *tokenBlock) parseForallStmt() (*forallStmt, error) {
 	typeParams := &[]typeConceptPair{}
 	var err error = nil
 	if stmt.header.is(BuiltinSyms["["]) {
-		typeParams, err = stmt.header.parseBracketedVarTypePair()
+		typeParams, err = stmt.header.parseBracketedTypeConceptPairArray()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
