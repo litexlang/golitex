@@ -127,6 +127,31 @@ func (parser *Parser) parseBracketedFcString() (*[]FcStr, error) {
 	return &params, nil
 }
 
+func (parser *Parser) parseBracketedTypeVars() (*[]typeVar, error) {
+	params := []typeVar{}
+	parser.skip(BuiltinSyms["["])
+
+	for {
+		s, err := parser.next()
+
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+
+		params = append(params, typeVar(s))
+
+		if parser.isAndSkip(BuiltinSyms["]"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+			return nil, &parserErr{err, parser}
+		}
+	}
+
+	return &params, nil
+}
+
 func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	params := []Fc{}
 	parser.skip(BuiltinSyms["("])
@@ -150,6 +175,36 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	}
 
 	return &params, nil
+}
+
+func (parser *Parser) parseBracedFcTypeArr() (*[]fcTypePair, error) {
+	ret := []fcTypePair{}
+	parser.skip(BuiltinSyms["("])
+
+	for {
+		fc, err := parser.parseFcExpr()
+
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+
+		tp, err := parser.next()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+
+		ret = append(ret, fcTypePair{fc, fcVarType(tp)})
+
+		if parser.isAndSkip(BuiltinSyms[")"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+			return nil, &parserErr{err, parser}
+		}
+	}
+
+	return &ret, nil
 }
 
 func (parser *Parser) parseFcStr() (FcStr, error) {

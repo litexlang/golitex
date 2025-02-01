@@ -122,9 +122,19 @@ type notFactStmt interface {
 }
 
 type typedFuncPtyStmt struct {
+	isTrue      bool
 	name        string
 	typeParams  []typeVar
 	fcTypePairs []fcTypePair
+}
+
+func (p *typedFuncPtyStmt) factStmt() {}
+func (p *typedFuncPtyStmt) stmt()     {}
+
+func (f *typedFuncPtyStmt) setT(b bool) {
+	f.isTrue = b
+}
+func (f *typedFuncPtyStmt) propertyFactStmt() {
 }
 
 type fcTypePair struct {
