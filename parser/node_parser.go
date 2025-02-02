@@ -197,7 +197,7 @@ func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]fcStrTypePair, err
 	return &pairs, nil
 }
 
-func (parser *Parser) parseFcFnType() (*fcFnType, error) {
+func (parser *Parser) parseFcFnVar() (*fcFnType, error) {
 	parser.skip(Keywords["fn"])
 
 	typeParamsTypes := &[]typeConceptPair{}
@@ -270,9 +270,22 @@ func (parser *Parser) parseFcFnDecl() (*fcFnDecl, error) {
 
 func (parser *Parser) parseFcType() (fcType, error) {
 	if parser.is(Keywords["fn"]) {
-		return parser.parseFcFnType()
+		return parser.parseFcFnVar()
+	} else {
+		return parser.parseFcVarType()
+	}
+}
+
+func (parser *Parser) parsePropertyType() (propertyVarType, error) {
+	if parser.is(Keywords["fn"]) {
+		return parser.parseFcFnVar()
 	} else if parser.is(Keywords["property"]) {
-		return parser.parsePropertyType()
+		decl, err := parser.parsePropertyType()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+		ret := propertyVarType(decl)
+		return ret, nil
 	} else {
 		return parser.parseFcVarType()
 	}
@@ -280,7 +293,7 @@ func (parser *Parser) parseFcType() (fcType, error) {
 
 func (parser *Parser) parseFnRetType() (fnRetType, error) {
 	if parser.is(Keywords["fn"]) {
-		return parser.parseFcFnType()
+		return parser.parseFcFnVar()
 	} else {
 		return parser.parseFcVarType()
 	}
@@ -655,7 +668,7 @@ func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
 
 	parser.skip(BuiltinSyms["["])
 
-	for {
+	for !parser.is(BuiltinSyms["]"]) {
 		tv, err := parser.parseTypeVar()
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -664,16 +677,31 @@ func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
 
 		if parser.is(BuiltinSyms[","]) {
 			parser.skip()
-			continue
 		}
 
-		if parser.is(BuiltinSyms["]"]) {
-			parser.skip()
-			break
-		} else {
-			return nil, &parserErr{fmt.Errorf("expect ',' or ']'"), parser}
+	}
+
+	parser.skip(BuiltinSyms["]"])
+	return arr, nil
+}
+
+func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr() (*[]typeConceptPair, *[]propertyVarTypePair, error) {
+	typeParamsTypes := &[]typeConceptPair{}
+	var err error = nil
+	if parser.is(BuiltinSyms["["]) {
+		typeParamsTypes, err = parser.parseBracketedTypeConceptPairArray()
+		if err != nil {
+			return nil, nil, err
 		}
 	}
 
-	return arr, nil
+	varParamsTypes := &[]propertyVarType{}
+	if parser.is(BuiltinSyms["("]) {
+		varParamsTypes, err = parser.parseBracedFcStrTypePairArray()
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return typeParamsTypes, varParamsTypes, nil
 }
