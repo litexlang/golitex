@@ -276,21 +276,6 @@ func (parser *Parser) parseFcType() (fcType, error) {
 	}
 }
 
-func (parser *Parser) parsePropertyType() (propertyVarType, error) {
-	if parser.is(Keywords["fn"]) {
-		return parser.parseFcFnVar()
-	} else if parser.is(Keywords["property"]) {
-		decl, err := parser.parsePropertyType()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-		ret := propertyVarType(decl)
-		return ret, nil
-	} else {
-		return parser.parseFcVarType()
-	}
-}
-
 func (parser *Parser) parseFnRetType() (fnRetType, error) {
 	if parser.is(Keywords["fn"]) {
 		return parser.parseFcFnVar()
@@ -302,7 +287,7 @@ func (parser *Parser) parseFnRetType() (fnRetType, error) {
 func (parser *Parser) parsePropertyType() (*propertyType, error) {
 	parser.skip()
 
-	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
+	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -428,7 +413,7 @@ func (parser *Parser) parsePropertyDecl() (*propertyDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
+	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -443,7 +428,7 @@ func (parser *Parser) parseExistDecl() (*propertyDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
+	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -695,13 +680,43 @@ func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePa
 		}
 	}
 
-	varParamsTypes := &[]propertyVarType{}
+	varParamsTypes := &[]propertyVarTypePair{}
 	if parser.is(BuiltinSyms["("]) {
-		varParamsTypes, err = parser.parseBracedFcStrTypePairArray()
+		varParamsTypes, err = parser.parseBracedPropertyVarTypePairArr()
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
 	return typeParamsTypes, varParamsTypes, nil
+}
+
+func (parser *Parser) parseBracedPropertyVarTypePairArr() (*[]propertyVarTypePair, error) {
+	arr := &[]propertyVarTypePair{}
+	err := parser.skip(BuiltinSyms["("])
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	for !parser.is(BuiltinSyms[")"]) {
+		tv, err := parser.next()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+
+		pt, err := parser.parsePropertyType()
+
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+
+		*arr = append(*arr, propertyVarTypePair{tv, pt})
+
+		if parser.is(BuiltinSyms[","]) {
+			parser.skip()
+		}
+	}
+
+	err = parser.skip(BuiltinSyms[")"])
+	return arr, nil
 }
