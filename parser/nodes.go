@@ -198,7 +198,7 @@ func (f *fcFnType) propertyVarType()     {}
 func (f *propertyType) propertyVarType() {}
 
 type propertyVarTypePair struct {
-	value propertyVar
+	value string
 	tp    propertyVarType
 }
 
