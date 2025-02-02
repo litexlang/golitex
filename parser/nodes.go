@@ -171,6 +171,8 @@ type typedTypeVar struct {
 	concept typeConceptStr
 }
 
+func (f *typedTypeVar) typeVar() {}
+
 type fcStrTypePair struct {
 	Var  FcStr
 	Type fcType

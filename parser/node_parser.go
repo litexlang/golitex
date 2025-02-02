@@ -224,14 +224,6 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 	return FcStr(tok), nil
 }
 
-func (parser *Parser) parseTypeVar() (typeVarStr, error) {
-	tok, err := parser.next()
-	if err != nil {
-		return "", err
-	}
-	return typeVarStr(tok), nil
-}
-
 func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]fcStrTypePair, error) {
 	pairs := []fcStrTypePair{}
 
@@ -673,4 +665,48 @@ func (parser *Parser) parseIsExpr(left Fc) (*funcPtyStmt, error) {
 
 	fc := &calledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}
 	return &funcPtyStmt{true, fc}, nil
+}
+
+func (parser *Parser) parseTypeVar() (typeVar, error) {
+	if parser.is(Keywords["as"]) {
+		return parser.parseTypedTypeVar()
+	} else {
+		return parser.parseTypeVarStr()
+	}
+}
+
+func (parser *Parser) parseTypedTypeVar() (*typedTypeVar, error) {
+	parser.skip(Keywords["as"])
+	parser.skip(BuiltinSyms["("])
+	value, err := parser.parseTypeVarStr()
+
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	parser.skip(BuiltinSyms[","])
+	concept, err := parser.parseTypeConcept()
+
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	parser.skip(BuiltinSyms[")"])
+
+	return &typedTypeVar{value, concept}, nil
+}
+
+func (parser *Parser) parseTypeVarStr() (typeVarStr, error) {
+	name, err := parser.next()
+	if err != nil {
+		return "", &parserErr{err, parser}
+	}
+
+	return typeVarStr(name), nil
+}
+
+func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
+	arr := &[]typeVar{}
+
+	return arr, nil
 }
