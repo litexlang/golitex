@@ -160,36 +160,6 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	return &params, nil
 }
 
-func (parser *Parser) parseBracedFcTypeArr() (*[]fcTypePair, error) {
-	ret := []fcTypePair{}
-	parser.skip(BuiltinSyms["("])
-
-	for {
-		fc, err := parser.parseFcExpr()
-
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-
-		tp, err := parser.parseFcType()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-
-		ret = append(ret, fcTypePair{fc, tp})
-
-		if parser.isAndSkip(BuiltinSyms[")"]) {
-			break
-		}
-
-		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
-			return nil, &parserErr{err, parser}
-		}
-	}
-
-	return &ret, nil
-}
-
 func (parser *Parser) parseFcStr() (FcStr, error) {
 
 	tok, err := parser.next()
