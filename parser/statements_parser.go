@@ -496,8 +496,6 @@ func (stmt *tokenBlock) parseBodyIfFactsThenFacts() (*[]factStmt, *[]factStmt, e
 }
 
 func (stmt *tokenBlock) parseDefFnStmt() (*defFnStmt, error) {
-	stmt.header.skip(Keywords["fn"])
-
 	decl, err := stmt.header.parseFcFnDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}

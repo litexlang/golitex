@@ -718,5 +718,10 @@ func (parser *Parser) parseBracedPropertyVarTypePairArr() (*[]propertyVarTypePai
 	}
 
 	err = parser.skip(BuiltinSyms[")"])
+
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
 	return arr, nil
 }
