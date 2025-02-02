@@ -161,7 +161,8 @@ type fcType interface {
 
 type fcVarType string
 
-func (f fcVarType) fcType() {}
+func (f fcVarType) fcType()       {}
+func (f fcVarType) propertyType() {}
 
 type fcFnType struct {
 	typeParamsTypes []typeConceptPair
@@ -169,15 +170,39 @@ type fcFnType struct {
 	retType         fnRetType
 }
 
-func (f *fcFnType) fcType() {}
+func (f *fcFnType) fcType()       {}
+func (f *fcFnType) propertyType() {}
 
 // 需要让 property 不能是 fc type
 type propertyType struct {
 	typeParams []typeConceptPair
-	varParams  []fcStrTypePair
+	varParams  []propertyVarTypePair // TODO not fcType!
 }
 
-func (f *propertyType) fcType() {}
+func (f *propertyType) propertyType()
+
+type propertyVar interface {
+	propertyVar()
+}
+
+type propertyPropertyVar propertyDecl
+
+func (f propertyPropertyVar) propertyVar() {}
+
+type propertyVarType interface {
+	propertyVarType()
+}
+
+func (f fcVarType) propertyVarType()     {}
+func (f *fcFnType) propertyVarType()     {}
+func (f *propertyType) propertyVarType() {}
+
+type propertyVarTypePair struct {
+	value propertyVar
+	tp    propertyVarType
+}
+
+// func (f *propertyType) fcType() {}
 
 type fnRetType interface {
 	fnRetType()

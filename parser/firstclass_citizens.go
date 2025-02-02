@@ -8,6 +8,7 @@ import (
 type Fc interface {
 	fc()
 	String() string
+	propertyVar()
 }
 
 type typedFc struct {
@@ -19,8 +20,9 @@ func (fc *typedFc) String() string {
 	return fmt.Sprintf("@(%s,%s)", fc.value.String(), fc.tp)
 }
 
-func (fc *typedFc) fc() {
-}
+func (fc *typedFc) fc() {}
+
+func (fc *typedFc) propertyVar() {}
 
 // used for variables that are returned by called function
 type calledFcFnRetValue struct {
@@ -29,7 +31,8 @@ type calledFcFnRetValue struct {
 	varParams  []Fc
 }
 
-func (f *calledFcFnRetValue) fc() {}
+func (f *calledFcFnRetValue) propertyVar() {}
+func (f *calledFcFnRetValue) fc()          {}
 func (f *calledFcFnRetValue) String() string {
 	typeParams := []string{}
 	for _, p := range f.typeParams {
@@ -60,11 +63,13 @@ func (f FcStr) fc() {}
 func (f FcStr) String() string {
 	return string(f)
 }
+func (f FcStr) propertyVar() {}
 
 // used for variables that are returned by called function
 type FcExpr []Fc
 
-func (f *FcExpr) fc() {}
+func (f *FcExpr) fc()          {}
+func (f *FcExpr) propertyVar() {}
 func (f *FcExpr) String() string {
 	ret := ""
 	for i := 0; i < len(*f)-1; i++ {
