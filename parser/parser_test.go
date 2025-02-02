@@ -784,5 +784,18 @@ as(p [g](a), nat) is red
 	} else {
 		t.Fatal(err)
 	}
+}
 
+func TestTypedTypeVar(t *testing.T) {
+	code :=
+		`
+as( p[as(g, G), as(g2, G)](a, as(p [g](a), nat)) , G ) is red
+`
+
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
 }

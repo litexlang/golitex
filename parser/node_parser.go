@@ -697,10 +697,11 @@ func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
 			continue
 		}
 
-		if !parser.is(BuiltinSyms["]"]) {
-			return nil, &parserErr{fmt.Errorf("expect ',' or ']'"), parser}
-		} else {
+		if parser.is(BuiltinSyms["]"]) {
+			parser.skip()
 			break
+		} else {
+			return nil, &parserErr{fmt.Errorf("expect ',' or ']'"), parser}
 		}
 	}
 
