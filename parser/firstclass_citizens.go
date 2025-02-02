@@ -10,6 +10,12 @@ type Fc interface {
 	String() string
 }
 
+type typedFcFnRetValue struct {
+	fn               Fc
+	typeConceptPairs []typeConceptPair
+	fcTypePairs      []fcTypePair
+}
+
 // used for variables that are returned by called function
 type calledFcFnRetValue struct {
 	fn         Fc
