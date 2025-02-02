@@ -25,7 +25,7 @@ func (fc *typedFc) fc() {
 // used for variables that are returned by called function
 type calledFcFnRetValue struct {
 	fn         Fc
-	typeParams []FcStr
+	typeParams []typeVar
 	varParams  []Fc
 }
 
@@ -33,7 +33,9 @@ func (f *calledFcFnRetValue) fc() {}
 func (f *calledFcFnRetValue) String() string {
 	typeParams := []string{}
 	for _, p := range f.typeParams {
-		typeParams = append(typeParams, string(p))
+		if s, ok := p.(typeVarStr); ok {
+			typeParams = append(typeParams, string(s))
+		}
 	}
 	strTypeParams := ""
 	if len(typeParams) > 0 {

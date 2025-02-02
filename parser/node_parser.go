@@ -113,9 +113,7 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 	}
 
 	for !parser.isEnd() && (parser.is(BuiltinSyms["["]) || parser.is(BuiltinSyms["("])) {
-		curFcc := calledFcFnRetValue{previousFc, []FcStr{}, []Fc{}}
-
-		typeParamsPtr := &[]FcStr{}
+		typeParamsPtr := &[]typeVar{}
 		if parser.is(BuiltinSyms["["]) {
 			typeParamsPtr, err = parser.parseBracketedFcString()
 			if err != nil {
@@ -131,9 +129,7 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 			}
 		}
 
-		curFcc.typeParams = *typeParamsPtr
-		curFcc.varParams = *varParamsPtr
-		previousFc = &curFcc
+		previousFc = &calledFcFnRetValue{previousFc, *typeParamsPtr, *varParamsPtr}
 	}
 
 	return previousFc, nil
@@ -228,12 +224,12 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 	return FcStr(tok), nil
 }
 
-func (parser *Parser) parseTypeVar() (typeVar, error) {
+func (parser *Parser) parseTypeVar() (typeVarStr, error) {
 	tok, err := parser.next()
 	if err != nil {
 		return "", err
 	}
-	return typeVar(tok), nil
+	return typeVarStr(tok), nil
 }
 
 func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]fcStrTypePair, error) {
@@ -372,12 +368,12 @@ func (parser *Parser) parseFcVarType() (fcVarType, error) {
 	return fcVarType(v), nil
 }
 
-func (parser *Parser) parseTypeConcept() (typeConcept, error) {
+func (parser *Parser) parseTypeConcept() (typeConceptStr, error) {
 	tok, err := parser.next()
 	if err != nil {
 		return "", err
 	}
-	return typeConcept(tok), nil
+	return typeConceptStr(tok), nil
 }
 
 func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]typeConceptPair, error) {

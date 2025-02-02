@@ -11,7 +11,9 @@ type topStmt struct {
 	isPub bool
 }
 
-type typeConcept string
+type typeConceptStr string
+
+func (t typeConceptStr) typeConcept() {}
 
 type defVarStmt struct {
 	decl  fcVarDecl
@@ -21,9 +23,9 @@ type defVarStmt struct {
 func (stmt *defVarStmt) stmt() {}
 
 type defConceptStmt struct {
-	typeVar            typeVar
-	conceptName        typeConcept
-	inherit            []typeConcept
+	typeVar            typeVarStr
+	conceptName        typeConceptStr
+	inherit            []typeConceptStr
 	typeVarMember      []fcVarDecl
 	typeFnMember       []fcFnDecl
 	typePropertyMember []propertyDecl
@@ -36,8 +38,8 @@ type defConceptStmt struct {
 func (c *defConceptStmt) stmt() {}
 
 type defTypeStmt struct {
-	typeVar        typeVar
-	conceptName    typeConcept
+	typeVar        typeVarStr
+	conceptName    typeConceptStr
 	varMember      []fcVarDecl
 	fnMember       []fcFnDecl
 	propertyMember []propertyDecl
@@ -152,11 +154,22 @@ func (f *funcPtyStmt) propertyFactStmt() {
 }
 
 type typeConceptPair struct {
-	Var  typeVar
-	Type typeConcept
+	Var  typeVarStr
+	Type typeConceptStr
 }
 
-type typeVar string
+type typeVar interface {
+	typeVar()
+}
+
+type typeVarStr string
+
+func (f typeVarStr) typeVar() {}
+
+type typedTypeVar struct {
+	value   typeVarStr
+	concept typeConceptStr
+}
 
 type fcStrTypePair struct {
 	Var  FcStr
