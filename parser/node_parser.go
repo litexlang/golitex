@@ -115,7 +115,7 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 	for !parser.isEnd() && (parser.is(BuiltinSyms["["]) || parser.is(BuiltinSyms["("])) {
 		typeParamsPtr := &[]typeVar{}
 		if parser.is(BuiltinSyms["["]) {
-			typeParamsPtr, err = parser.parseBracketedFcString()
+			typeParamsPtr, err = parser.parseBracketedTypeVarArr()
 			if err != nil {
 				return nil, &parserErr{err, parser}
 			}
@@ -133,31 +133,6 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 	}
 
 	return previousFc, nil
-}
-
-func (parser *Parser) parseBracketedFcString() (*[]FcStr, error) {
-	params := []FcStr{}
-	parser.skip(BuiltinSyms["["])
-
-	for {
-		fcStr, err := parser.parseFcStr()
-
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-
-		params = append(params, fcStr)
-
-		if parser.isAndSkip(BuiltinSyms["]"]) {
-			break
-		}
-
-		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
-			return nil, &parserErr{err, parser}
-		}
-	}
-
-	return &params, nil
 }
 
 func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
@@ -373,7 +348,7 @@ func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]typeConceptPair, 
 	parser.skip(BuiltinSyms["["])
 
 	for {
-		name, err := parser.parseTypeVar()
+		name, err := parser.parseTypeVarStr()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
@@ -531,7 +506,7 @@ func (parser *Parser) parseAddition() (Fc, error) {
 			}
 			node = &calledFcFnRetValue{
 				FcStr(cur),
-				[]FcStr{},
+				[]typeVar{},
 				[]Fc{node, right},
 			}
 		} else {
@@ -558,7 +533,7 @@ func (parser *Parser) parseMultiplication() (Fc, error) {
 			}
 			node = &calledFcFnRetValue{
 				FcStr(cur),
-				[]FcStr{},
+				[]typeVar{},
 				[]Fc{node, right},
 			}
 		} else {
@@ -579,7 +554,7 @@ func (parser *Parser) parseUnary() (Fc, error) {
 		}
 		return &calledFcFnRetValue{
 			FcStr(cur),
-			[]FcStr{},
+			[]typeVar{},
 			[]Fc{right},
 		}, nil
 	}
@@ -601,7 +576,7 @@ func (parser *Parser) parseExponentiation() (Fc, error) {
 		}
 		node = &calledFcFnRetValue{
 			FcStr(cur),
-			[]FcStr{},
+			[]typeVar{},
 			[]Fc{right},
 		}
 	}
@@ -651,9 +626,9 @@ func (parser *Parser) parseIsExpr(left Fc) (*funcPtyStmt, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	typeParams := &[]FcStr{}
+	typeParams := &[]typeVar{}
 	if parser.is(BuiltinSyms["["]) {
-		typeParams, err = parser.parseBracketedFcString()
+		typeParams, err = parser.parseBracketedTypeVarArr()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
@@ -707,6 +682,27 @@ func (parser *Parser) parseTypeVarStr() (typeVarStr, error) {
 
 func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
 	arr := &[]typeVar{}
+
+	parser.skip(BuiltinSyms["["])
+
+	for {
+		tv, err := parser.parseTypeVar()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+		*arr = append(*arr, tv)
+
+		if parser.is(BuiltinSyms[","]) {
+			parser.skip()
+			continue
+		}
+
+		if !parser.is(BuiltinSyms["]"]) {
+			return nil, &parserErr{fmt.Errorf("expect ',' or ']'"), parser}
+		} else {
+			break
+		}
+	}
 
 	return arr, nil
 }
