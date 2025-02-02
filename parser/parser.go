@@ -10,10 +10,6 @@ type Parser struct {
 	slice []string
 }
 
-func (p *Parser) isAtIndex(i int, s string) bool {
-	return i >= 0 && i < len(p.slice) && p.slice[i] == s
-}
-
 func (p *Parser) atIndex(i int) (string, error) {
 	i = p.index + i
 

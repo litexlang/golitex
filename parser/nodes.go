@@ -121,27 +121,6 @@ type notFactStmt interface {
 	propertyFactStmt()
 }
 
-type typedFuncPtyStmt struct {
-	isTrue           bool
-	typeConceptPairs []typeConceptPair
-	fcTypePairs      []fcTypePair
-	fc               Fc
-}
-
-func (p *typedFuncPtyStmt) factStmt() {}
-func (p *typedFuncPtyStmt) stmt()     {}
-
-func (f *typedFuncPtyStmt) setT(b bool) {
-	f.isTrue = b
-}
-func (f *typedFuncPtyStmt) propertyFactStmt() {
-}
-
-type fcTypePair struct {
-	fc Fc
-	tp fcType
-}
-
 func (p *funcPtyStmt) factStmt() {}
 func (p *funcPtyStmt) stmt()     {}
 
