@@ -60,12 +60,19 @@ func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
 		return nil, err
 	}
 
-	if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] {
+	if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] && strAtSecondPosition != BuiltinSyms["!"] {
 		return parser.parseFcStr()
-	} else {
+	} else if strAtSecondPosition != BuiltinSyms["!"] {
 		return parser.parseFcFnRetVal()
+	} else {
+		return parser.parseTypedFcRetVal()
 	}
 
+}
+
+func (parser *Parser) parseTypedFcRetVal() (Fc, error) {
+	parser.skip(BuiltinSyms["!"])
+	return nil, nil
 }
 
 func (parser *Parser) parseFcFnRetVal() (Fc, error) {

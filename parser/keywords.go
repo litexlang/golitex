@@ -30,6 +30,7 @@ var BuiltinSyms = map[string]string{
 	"||": "||",
 	"==": "==",
 	"!=": "!=",
+	"\\": "\\",
 }
 
 func isBuiltinRelationalOperator(op string) bool {
