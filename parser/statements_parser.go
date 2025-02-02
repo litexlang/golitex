@@ -188,12 +188,12 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*defConceptStmt, error) {
 	}
 
 	if !stmt.header.is(BuiltinSyms[":"]) {
-		return &defConceptStmt{typeVar(typeVariable), typeConcept(conceptName), []typeConcept{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
+		return &defConceptStmt{typeVarStr(typeVariable), typeConceptStr(conceptName), []typeConceptStr{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.header.next()
 	}
 
-	inherit := &[]typeConcept{}
+	inherit := &[]typeConceptStr{}
 	typeVarMember := &[]fcVarDecl{}
 	typeFnMember := &[]fcFnDecl{}
 	typePropertyMember := &[]propertyDecl{}
@@ -226,7 +226,7 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*defConceptStmt, error) {
 		}
 	}
 
-	return &defConceptStmt{typeVar(typeVariable), typeConcept(conceptName), *inherit, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+	return &defConceptStmt{typeVarStr(typeVariable), typeConceptStr(conceptName), *inherit, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 
 }
 
@@ -244,7 +244,7 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*defTypeStmt, error) {
 	}
 
 	if !stmt.header.is(BuiltinSyms[":"]) {
-		return &defTypeStmt{typeVar(typeVariable), typeConcept(conceptName), []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
+		return &defTypeStmt{typeVarStr(typeVariable), typeConceptStr(conceptName), []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.header.next()
 	}
@@ -271,7 +271,7 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*defTypeStmt, error) {
 		}
 	}
 
-	return &defTypeStmt{typeVar(typeVariable), typeConcept(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+	return &defTypeStmt{typeVarStr(typeVariable), typeConceptStr(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 
 }
 
@@ -459,20 +459,20 @@ func (stmt *tokenBlock) parseDefPropertyStmt() (*defPropertyStmt, error) {
 	return &defPropertyStmt{*decl, *ifFacts, *thenFacts}, nil
 }
 
-func (stmt *tokenBlock) parseInherit() (*[]typeConcept, error) {
+func (stmt *tokenBlock) parseInherit() (*[]typeConceptStr, error) {
 	stmt.header.skip(Keywords["inherit"])
 
 	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	types := []typeConcept{}
+	types := []typeConceptStr{}
 	for _, curStmt := range stmt.body {
 		cur, err := curStmt.header.next()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		types = append(types, typeConcept(cur))
+		types = append(types, typeConceptStr(cur))
 		if !curStmt.header.isEnd() {
 			return nil, fmt.Errorf("expect one string in inherit")
 		}
