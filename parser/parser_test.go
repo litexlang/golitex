@@ -799,3 +799,24 @@ as( p[as(g, G), as(g2, G)](a, as(p [g](a), nat)) , G ) is red
 		t.Fatal(err)
 	}
 }
+
+func TestPropertyVar(t *testing.T) {
+	// fn ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+	// 1 is red
+
+	code :=
+		`
+fn ha [G Group] (g1 G, g2 G) red:
+	1 is red
+property ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+	1 is red
+
+`
+
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}
