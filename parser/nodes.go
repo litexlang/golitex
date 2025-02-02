@@ -13,8 +13,6 @@ type topStmt struct {
 
 type typeConceptStr string
 
-func (t typeConceptStr) typeConcept() {}
-
 type defVarStmt struct {
 	decl  fcVarDecl
 	facts []factStmt
@@ -194,7 +192,7 @@ type fcFnType struct {
 
 func (f *fcFnType) fcType() {}
 
-// 需要让 property 不能是 fctype
+// 需要让 property 不能是 fc type
 type propertyType struct {
 	typeParams []typeConceptPair
 	varParams  []fcStrTypePair
