@@ -10,6 +10,10 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		return parser.parseBracedFcExpr()
 	}
 
+	if parser.is(Keywords["as"]) {
+		return parser.parseTypedFcWithPrefixAs()
+	}
+
 	if parser.curTokenBeginWithNumber() {
 		return parser.parseNumberStr()
 	}
@@ -43,6 +47,40 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 	return &ret, nil
 }
 
+func (parser *Parser) parseTypedFcWithPrefixAs() (*typedFc, error) {
+	err := parser.skip(Keywords["as"])
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	err = parser.skip(BuiltinSyms["("])
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	fc, err := parser.parseFcExpr()
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	err = parser.skip(BuiltinSyms[","])
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	fcType, err := parser.parseFcType()
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	err = parser.skip(BuiltinSyms[")"])
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	return &typedFc{fc, fcType}, nil
+}
+
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	parser.skip(BuiltinSyms["("])
 	fc, err := parser.parseFcExpr()
@@ -60,19 +98,11 @@ func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
 		return nil, err
 	}
 
-	if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] && strAtSecondPosition != BuiltinSyms["!"] {
+	if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] {
 		return parser.parseFcStr()
-	} else if strAtSecondPosition != BuiltinSyms["!"] {
-		return parser.parseFcFnRetVal()
 	} else {
-		return parser.parseTypedFcRetVal()
+		return parser.parseFcFnRetVal()
 	}
-
-}
-
-func (parser *Parser) parseTypedFcRetVal() (Fc, error) {
-	parser.skip(BuiltinSyms["!"])
-	return nil, nil
 }
 
 func (parser *Parser) parseFcFnRetVal() (Fc, error) {

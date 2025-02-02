@@ -10,10 +10,16 @@ type Fc interface {
 	String() string
 }
 
-type typedFcFnRetValue struct {
-	fn               Fc
-	typeConceptPairs []typeConceptPair
-	fcTypePairs      []fcTypePair
+type typedFc struct {
+	value Fc
+	tp    fcType
+}
+
+func (fc *typedFc) String() string {
+	return fmt.Sprintf("@(%s,%s)", fc.value.String(), fc.tp)
+}
+
+func (fc *typedFc) fc() {
 }
 
 // used for variables that are returned by called function
