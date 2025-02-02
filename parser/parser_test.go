@@ -772,3 +772,17 @@ $$[G Group](g G) p[g](a)
 	}
 
 }
+
+func TestTypedFcFnRetStmt(t *testing.T) {
+	code :=
+		`
+as(p [g](a), nat) is red
+`
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
