@@ -13,7 +13,7 @@ type Fc interface {
 
 type typedFc struct {
 	value Fc
-	tp    fcType
+	tp    propertyType
 }
 
 func (fc *typedFc) String() string {
