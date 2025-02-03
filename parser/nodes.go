@@ -98,8 +98,10 @@ func (l *forallStmt) factStmt() {}
 func (l *forallStmt) stmt()     {}
 
 type funcPtyStmt struct {
-	isTrue bool
-	fc     Fc
+	isTrue      bool
+	name        string
+	typeParams  []typeVar
+	propertyVar []propertyVar
 }
 
 // 1 = 2 -1 = 1 * 1, vars = [1, 2 -1, 1 * 1], opt = "="
@@ -287,3 +289,5 @@ type typedPropertyVar struct {
 	value Fc
 	tp    propertyVarType
 }
+
+func (v *typedPropertyVar) propertyVar() {}
