@@ -5,6 +5,20 @@ import (
 	"strings"
 )
 
+type parseStmtErr struct {
+	previous error
+	stmt     tokenBlock
+}
+
+func (e *parseStmtErr) Error() string {
+	curTok, err := e.stmt.header.currentToken()
+	if err != nil {
+		return fmt.Sprintf("error at %s, column %d: %s", e.stmt.header.String(), e.stmt.header.getIndex(), e.previous.Error())
+	} else {
+		return fmt.Sprintf("error at %s, column %d, at '%s': %s", e.stmt.header.String(), e.stmt.header.getIndex(), curTok, e.previous.Error())
+	}
+}
+
 func parseSourceCode(code string) (*[]topStmt, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
@@ -316,7 +330,7 @@ func (stmt *tokenBlock) parseNotFactStmt() (notFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ret.setT(isTrue)
+	ret.notFactStmtSetT(isTrue)
 	return ret, nil
 }
 
