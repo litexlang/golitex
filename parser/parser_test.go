@@ -800,7 +800,7 @@ as( p[as(g, G), as(g2, G)](a, as(p [g](a), nat)) , G ) is red
 	}
 }
 
-func TestPropertyVar(t *testing.T) {
+func TestDefPropertyVar(t *testing.T) {
 	// fn ha [G Group] (g1 G, g2 property [g Group](t G)) red:
 	// 1 is red
 
@@ -811,6 +811,24 @@ fn ha [G Group] (g1 G, g2 G) red:
 property ha [G Group] (g1 G, g2 property [g Group](t G)) red:
 	1 is red
 
+`
+
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}
+
+func TestPropertyVar(t *testing.T) {
+	// fn ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+	// 1 is red
+
+	code :=
+		`
+$p[g, as(g2, G)](f, g)
+$p[g, as(g2, G)](f, as(g3, property [g Group](t G) ))
 `
 
 	statements, err := parserTester(code)
