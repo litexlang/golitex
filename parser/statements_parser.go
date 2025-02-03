@@ -56,36 +56,47 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
+	var ret Stmt
 	switch cur {
 	case Keywords["concept"]:
-		return stmt.parseDefConceptStmt()
+		ret, err = stmt.parseDefConceptStmt()
 	case Keywords["type"]:
-		return stmt.parseDefTypeStmt()
+		ret, err = stmt.parseDefTypeStmt()
 	case Keywords["property"]:
-		return stmt.parseDefPropertyStmt()
+		ret, err = stmt.parseDefPropertyStmt()
 	case Keywords["fn"]:
-		return stmt.parseDefFnStmt()
+		ret, err = stmt.parseDefFnStmt()
 	case Keywords["local"]:
-		return stmt.parseLocalStmt()
+		ret, err = stmt.parseLocalStmt()
 	case Keywords["var"]:
-		return stmt.parseDefVarStmt()
+		ret, err = stmt.parseDefVarStmt()
 	case Keywords["claim"]:
-		return stmt.parseClaimStmt()
+		ret, err = stmt.parseClaimStmt()
 	case Keywords["use"]:
-		return stmt.parseDefUseStmt()
+		ret, err = stmt.parseDefUseStmt()
 	case Keywords["know"]:
-		return stmt.parseKnowStmt()
+		ret, err = stmt.parseKnowStmt()
 	case Keywords["exist"]:
-		return stmt.parseExistStmt()
+		ret, err = stmt.parseExistStmt()
 	case Keywords["have"]:
-		return stmt.parseHaveStmt()
+		ret, err = stmt.parseHaveStmt()
 	case Keywords["member"]:
-		return stmt.parseMemberStmt()
+		ret, err = stmt.parseMemberStmt()
 	case Keywords["type_member"]:
-		return stmt.parseTypeMemberStmt()
+		ret, err = stmt.parseTypeMemberStmt()
 	default:
-		return stmt.parseFactStmt()
+		ret, err = stmt.parseFactStmt()
 	}
+
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	if !stmt.header.isEnd() {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	return ret, nil
 }
 
 func (p *tokenBlock) parseFcMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl, error) {
