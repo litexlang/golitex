@@ -68,7 +68,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*typedFc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	fcType, err := parser.parseFcType()
+	propertyType, err := parser.parsePropertyType()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -78,7 +78,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*typedFc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &typedFc{fc, fcType}, nil
+	return &typedFc{fc, *propertyType}, nil
 }
 
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
@@ -674,7 +674,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*funcPtyStmt, error) {
 		}
 	}
 
-	return &funcPtyStmt{true, opt, *typeParams, []propertyVar{left}}, nil
+	return &funcPtyStmt{true, &calledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}}, nil
 }
 
 func (parser *Parser) parseTypeVar() (typeVar, error) {

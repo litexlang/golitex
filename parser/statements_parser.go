@@ -326,22 +326,12 @@ func (stmt *tokenBlock) parseFuncPropertyFactStmt() (*funcPtyStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	name, err := stmt.header.next()
+	fc, err := stmt.header.parseFcExpr()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	typeParams, err := stmt.header.parseBracketedTypeVarArr()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	propertyVars, err := stmt.header.parseBracedPropertyVarArr()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	return &funcPtyStmt{true, name, *typeParams, *propertyVars}, nil
+	return &funcPtyStmt{true, fc}, nil
 }
 
 func (stmt *tokenBlock) parseForallStmt() (*forallStmt, error) {
