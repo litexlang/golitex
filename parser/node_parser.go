@@ -135,73 +135,73 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 	return previousFc, nil
 }
 
-func (parser *Parser) parseBracedPropertyVarArr() (*[]propertyVar, error) {
-	params := []propertyVar{}
-	parser.skip(BuiltinSyms["("])
+// func (parser *Parser) parseBracedPropertyVarArr() (*[]propertyVar, error) {
+// 	params := []propertyVar{}
+// 	parser.skip(BuiltinSyms["("])
 
-	for !parser.is(BuiltinSyms[")"]) {
-		fc, err := parser.parsePropertyVar()
+// 	for !parser.is(BuiltinSyms[")"]) {
+// 		fc, err := parser.parsePropertyVar()
 
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
 
-		params = append(params, fc)
+// 		params = append(params, fc)
 
-		if parser.isAndSkip(BuiltinSyms[")"]) {
-			break
-		}
+// 		if parser.isAndSkip(BuiltinSyms[")"]) {
+// 			break
+// 		}
 
-		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
-			return nil, &parserErr{err, parser}
-		}
-	}
+// 		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
+// 	}
 
-	return &params, nil
-}
+// 	return &params, nil
+// }
 
-func (parser *Parser) parsePropertyVar() (propertyVar, error) {
-	if parser.is(Keywords["as"]) {
-		return parser.parseTypedPropertyVar()
-	} else {
-		return parser.parseFcExpr()
-	}
-}
+// func (parser *Parser) parsePropertyVar() (propertyVar, error) {
+// 	if parser.is(Keywords["as"]) {
+// 		return parser.parseTypedPropertyVar()
+// 	} else {
+// 		return parser.parseFcExpr()
+// 	}
+// }
 
-func (parser *Parser) parseTypedPropertyVar() (propertyVar, error) {
-	err := parser.skip(Keywords["as"])
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// func (parser *Parser) parseTypedPropertyVar() (propertyVar, error) {
+// 	err := parser.skip(Keywords["as"])
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	err = parser.skip(BuiltinSyms["("])
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// 	err = parser.skip(BuiltinSyms["("])
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	fc, err := parser.parseFcExpr()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// 	fc, err := parser.parseFcExpr()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	err = parser.skip(BuiltinSyms[","])
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// 	err = parser.skip(BuiltinSyms[","])
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	tp, err := parser.parsePropertyType()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// 	tp, err := parser.parsePropertyType()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	err = parser.skip(BuiltinSyms[")"])
+// 	err = parser.skip(BuiltinSyms[")"])
 
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	return &typedPropertyVar{fc, tp}, nil
-}
+// 	return &typedPropertyVar{fc, tp}, nil
+// }
 
 func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	params := []Fc{}
