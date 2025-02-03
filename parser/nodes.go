@@ -278,3 +278,12 @@ func (e *parseStmtErr) Error() string {
 		return fmt.Sprintf("error at %s, column %d, at '%s': %s", e.stmt.header.String(), e.stmt.header.getIndex(), curTok, e.previous.Error())
 	}
 }
+
+type propertyVar interface {
+	propertyVar()
+}
+
+type typedPropertyVar struct {
+	value Fc
+	tp    propertyVarType
+}
