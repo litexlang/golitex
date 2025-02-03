@@ -135,12 +135,80 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 	return previousFc, nil
 }
 
+func (parser *Parser) parseBracedPropertyVarArr() (*[]propertyVar, error) {
+	params := []propertyVar{}
+	parser.skip(BuiltinSyms["("])
+
+	for !parser.is(BuiltinSyms[")"]) {
+		fc, err := parser.parsePropertyVar()
+
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+
+		params = append(params, fc)
+
+		if parser.isAndSkip(BuiltinSyms[")"]) {
+			break
+		}
+
+		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+			return nil, &parserErr{err, parser}
+		}
+	}
+
+	return &params, nil
+}
+
+func (parser *Parser) parsePropertyVar() (propertyVar, error) {
+	if parser.is(Keywords["as"]) {
+		return parser.parseTypedPropertyVar()
+	} else {
+		return parser.parseFcExpr()
+	}
+}
+
+func (parser *Parser) parseTypedPropertyVar() (propertyVar, error) {
+	err := parser.skip(Keywords["as"])
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	err = parser.skip(BuiltinSyms["("])
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	fc, err := parser.parseFcExpr()
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	err = parser.skip(BuiltinSyms[","])
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	tp, err := parser.parsePropertyType()
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	err = parser.skip(BuiltinSyms[")"])
+
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	return &typedPropertyVar{fc, tp}, nil
+}
+
 func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	params := []Fc{}
 	parser.skip(BuiltinSyms["("])
 
-	for {
-		fc, err := parser.parseFcAtom()
+	for !parser.is(BuiltinSyms[")"]) {
+		fc, err := parser.parseFcExpr()
 
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -606,8 +674,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*funcPtyStmt, error) {
 		}
 	}
 
-	fc := &calledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}
-	return &funcPtyStmt{true, fc}, nil
+	return &funcPtyStmt{true, opt, *typeParams, []propertyVar{left}}, nil
 }
 
 func (parser *Parser) parseTypeVar() (typeVar, error) {
