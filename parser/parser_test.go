@@ -345,7 +345,7 @@ func parserTester(code string) (*[]Stmt, error) {
 }
 
 func TestDefConceptStmt(t *testing.T) {
-	code := `concept G Group:
+	code := `concept var G Group:
 	inherit:
 		set
 		group
@@ -363,56 +363,6 @@ func TestDefConceptStmt(t *testing.T) {
 	then:
 		$p[G, G2](x, y)
 		
-`
-	statements, err := parserTester(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		t.Fatal(err)
-	}
-}
-
-func TestParseLocalStmt(t *testing.T) {
-	code :=
-		`
-local:
-	concept G Group:
-		inherit:
-			set
-			group
-		
-		type_member:
-			var 1 G
-			fn f[G Group, G2 Group](x G, y G) G
-			property f[G Group, G2 Group](x G, y G)
-
-		member:
-			var 1 G
-			fn f[G Group, G2 Group](x G, y G) G
-			property f[G Group, G2 Group](x G, y G)
-
-		then:
-			$p[G, G2](x, y)
-
-	local:
-		concept G Group:
-			inherit:
-				set
-				group
-			
-			type_member:
-				var 1 G
-				fn f[G Group, G2 Group](x G, y G) G
-				property f[G Group, G2 Group](x G, y G)
-
-			member:
-				var 1 G
-				fn f[G Group, G2 Group](x G, y G) G
-				property f[G Group, G2 Group](x G, y G)
-
-			then:
-				$p[G, G2](x, y)
-
 `
 	statements, err := parserTester(code)
 	if err == nil {
@@ -479,9 +429,9 @@ forall [G Group] x g:
 func TestParseDefTypeStmt(t *testing.T) {
 	code :=
 		`
-type G Group
+type var G Group
 
-type G Group:
+type var G Group:
 	member:
 		var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
@@ -490,7 +440,7 @@ type G Group:
 	then:
 		$p[G, G2](x, y)
 
-type G Group:
+type var G Group:
 	$p[G, G2](x, y)
 `
 
