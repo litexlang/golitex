@@ -80,8 +80,6 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseDefPropertyStmt()
 	case Keywords["fn"]:
 		ret, err = stmt.parseDefFnStmt()
-	case Keywords["local"]:
-		ret, err = stmt.parseLocalStmt()
 	case Keywords["var"]:
 		ret, err = stmt.parseDefVarStmt()
 	case Keywords["claim"]:
@@ -465,25 +463,6 @@ func (stmt *tokenBlock) parseInherit() (*[]typeConceptStr, error) {
 		}
 	}
 	return &types, nil
-}
-
-func (stmt *tokenBlock) parseLocalStmt() (*localStmt, error) {
-	stmt.header.skip(Keywords["local"])
-
-	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	localStatements := []Stmt{}
-	for _, curStmt := range stmt.body {
-		localStmt, err := curStmt.ParseStmt()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		localStatements = append(localStatements, localStmt)
-	}
-
-	return &localStmt{localStatements}, nil
 }
 
 func (stmt *tokenBlock) parseBodyIfFactsThenFacts() (*[]factStmt, *[]factStmt, error) {
