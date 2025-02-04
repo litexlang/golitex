@@ -818,3 +818,21 @@ $f[G, B](a, b).g[G, B].t(a, b)
 		t.Fatal(err)
 	}
 }
+
+func TestProofClaim(t *testing.T) {
+	// fn ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+	// 1 is red
+
+	code :=
+		`
+proof:
+	1 is red
+`
+
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}

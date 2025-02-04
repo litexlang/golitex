@@ -84,6 +84,8 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseDefVarStmt()
 	case Keywords["claim"]:
 		ret, err = stmt.parseClaimStmt()
+	case Keywords["proof"]:
+		ret, err = stmt.parseProofClaimStmt()
 	case Keywords["use"]:
 		ret, err = stmt.parseDefUseStmt()
 	case Keywords["know"]:
@@ -591,6 +593,24 @@ func (stmt *tokenBlock) parseClaimStmt() (*claimStmt, error) {
 	}
 
 	return &claimStmt{*toCheck, *proof}, nil
+}
+
+func (stmt *tokenBlock) parseProofClaimStmt() (*claimStmt, error) {
+	stmt.header.skip(Keywords["proof"])
+	if err := stmt.header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	innerStmtArr := []Stmt{}
+	for _, innerStmt := range stmt.body {
+		curStmt, err := innerStmt.ParseStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		innerStmtArr = append(innerStmtArr, curStmt)
+	}
+
+	return &claimStmt{[]factStmt{}, innerStmtArr}, nil
 }
 
 func (stmt *tokenBlock) parseDefUseStmt() (*defuseStmt, error) {
