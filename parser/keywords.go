@@ -53,7 +53,6 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"var":         "var",
 		"type":        "type",
 		"fn":          "fn",
-		"local":       "local",
 		"pub":         "pub",
 		"know":        "know",
 		"claim":       "claim",
@@ -66,6 +65,8 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"impl":        "impl",
 		"any":         "any",
 		"as":          "as",
+		"is_type":     "is_type",
+		"is_concept":  "is_concept",
 	}
 
 	for k, v := range BuiltinSyms {
