@@ -3,17 +3,12 @@ package parser
 type Fc interface {
 	fc()
 	String() string
-	propertyVar()
 }
 
-func (fc *typedFc) fc()                    {}
-func (fc *typedFc) propertyVar()           {}
-func (f *calledFcFnRetValue) fc()          {}
-func (f *calledFcFnRetValue) propertyVar() {}
-func (f FcStr) fc()                        {}
-func (f FcStr) propertyVar()               {}
-func (f *FcExpr) fc()                      {}
-func (f *FcExpr) propertyVar()             {}
+func (fc *typedFc) fc()           {}
+func (f *calledFcFnRetValue) fc() {}
+func (f FcStr) fc()               {}
+func (f *FcExpr) fc()             {}
 
 type Stmt interface {
 	stmt()
@@ -65,16 +60,9 @@ type fcType interface {
 	fcType()
 }
 
-func (f fcVarType) fcType() {}
-func (f *fcFnType) fcType() {}
-
-type propertyVarType interface {
-	propertyVarType()
-}
-
-func (f fcVarType) propertyVarType()     {}
-func (f *fcFnType) propertyVarType()     {}
-func (f *propertyType) propertyVarType() {}
+func (f fcVarType) fcType()     {}
+func (f *fcFnType) fcType()     {}
+func (f *propertyType) fcType() {}
 
 type fnRetType interface {
 	fnRetType()

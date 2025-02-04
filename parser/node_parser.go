@@ -339,6 +339,8 @@ func (parser *Parser) parseFcFnDecl() (*fcFnDecl, error) {
 func (parser *Parser) parseFcType() (fcType, error) {
 	if parser.is(Keywords["fn"]) {
 		return parser.parseFcFnVar()
+	} else if parser.is(Keywords["property"]) {
+		return parser.parsePropertyType()
 	} else {
 		return parser.parseFcVarType()
 	}
@@ -355,7 +357,7 @@ func (parser *Parser) parseFnRetType() (fnRetType, error) {
 func (parser *Parser) parsePropertyType() (*propertyType, error) {
 	parser.skip()
 
-	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr()
+	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -481,7 +483,7 @@ func (parser *Parser) parsePropertyDecl() (*propertyDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr()
+	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -496,7 +498,7 @@ func (parser *Parser) parseExistDecl() (*propertyDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr()
+	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -737,58 +739,58 @@ func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
 	return arr, nil
 }
 
-func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr() (*[]typeConceptPair, *[]propertyVarTypePair, error) {
-	typeParamsTypes := &[]typeConceptPair{}
-	var err error = nil
-	if parser.is(BuiltinSyms["["]) {
-		typeParamsTypes, err = parser.parseBracketedTypeConceptPairArray()
-		if err != nil {
-			return nil, nil, err
-		}
-	}
+// func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr() (*[]typeConceptPair, *[]propertyVarTypePair, error) {
+// 	typeParamsTypes := &[]typeConceptPair{}
+// 	var err error = nil
+// 	if parser.is(BuiltinSyms["["]) {
+// 		typeParamsTypes, err = parser.parseBracketedTypeConceptPairArray()
+// 		if err != nil {
+// 			return nil, nil, err
+// 		}
+// 	}
 
-	varParamsTypes := &[]propertyVarTypePair{}
-	if parser.is(BuiltinSyms["("]) {
-		varParamsTypes, err = parser.parseBracedPropertyVarTypePairArr()
-		if err != nil {
-			return nil, nil, err
-		}
-	}
+// 	varParamsTypes := &[]propertyVarTypePair{}
+// 	if parser.is(BuiltinSyms["("]) {
+// 		varParamsTypes, err = parser.parseBracedPropertyVarTypePairArr()
+// 		if err != nil {
+// 			return nil, nil, err
+// 		}
+// 	}
 
-	return typeParamsTypes, varParamsTypes, nil
-}
+// 	return typeParamsTypes, varParamsTypes, nil
+// }
 
-func (parser *Parser) parseBracedPropertyVarTypePairArr() (*[]propertyVarTypePair, error) {
-	arr := &[]propertyVarTypePair{}
-	err := parser.skip(BuiltinSyms["("])
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// func (parser *Parser) parseBracedPropertyVarTypePairArr() (*[]propertyVarTypePair, error) {
+// 	arr := &[]propertyVarTypePair{}
+// 	err := parser.skip(BuiltinSyms["("])
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	for !parser.is(BuiltinSyms[")"]) {
-		tv, err := parser.next()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
+// 	for !parser.is(BuiltinSyms[")"]) {
+// 		tv, err := parser.next()
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
 
-		pt, err := parser.parsePropertyType()
+// 		pt, err := parser.parsePropertyType()
 
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
 
-		*arr = append(*arr, propertyVarTypePair{tv, pt})
+// 		*arr = append(*arr, propertyVarTypePair{tv, pt})
 
-		if parser.is(BuiltinSyms[","]) {
-			parser.skip()
-		}
-	}
+// 		if parser.is(BuiltinSyms[","]) {
+// 			parser.skip()
+// 		}
+// 	}
 
-	err = parser.skip(BuiltinSyms[")"])
+// 	err = parser.skip(BuiltinSyms[")"])
 
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	return arr, nil
-}
+// 	return arr, nil
+// }
