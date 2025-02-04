@@ -205,13 +205,18 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*defConceptStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
+	fcType, err := stmt.header.parseFcType()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
 	conceptName, err := stmt.header.next()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
 	if !stmt.header.is(BuiltinSyms[":"]) {
-		return &defConceptStmt{typeVarStr(typeVariable), typeConceptStr(conceptName), []typeConceptStr{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
+		return &defConceptStmt{typeVarStr(typeVariable), fcType, typeConceptStr(conceptName), []typeConceptStr{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.header.next()
 	}
@@ -249,7 +254,7 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*defConceptStmt, error) {
 		}
 	}
 
-	return &defConceptStmt{typeVarStr(typeVariable), typeConceptStr(conceptName), *inherit, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+	return &defConceptStmt{typeVarStr(typeVariable), fcType, typeConceptStr(conceptName), *inherit, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 
 }
 
@@ -261,13 +266,18 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*defTypeStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
+	fcType, err := stmt.header.parseFcType()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
 	conceptName, err := stmt.header.next()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
 	if !stmt.header.is(BuiltinSyms[":"]) {
-		return &defTypeStmt{typeVarStr(typeVariable), typeConceptStr(conceptName), []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
+		return &defTypeStmt{typeVarStr(typeVariable), fcType, typeConceptStr(conceptName), []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.header.next()
 	}
@@ -294,7 +304,7 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*defTypeStmt, error) {
 		}
 	}
 
-	return &defTypeStmt{typeVarStr(typeVariable), typeConceptStr(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+	return &defTypeStmt{typeVarStr(typeVariable), fcType, typeConceptStr(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 
 }
 
