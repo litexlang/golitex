@@ -205,7 +205,7 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*defConceptStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fcType, err := stmt.header.parseFcType()
+	fcType, err := stmt.header.parseFnRetType()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -266,7 +266,7 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*defTypeStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fcType, err := stmt.header.parseFcType()
+	fcType, err := stmt.header.parseFnRetType()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
