@@ -286,7 +286,7 @@ func (parser *Parser) parseFcFnVar() (*fcFnType, error) {
 
 	}
 
-	retType, err := parser.parseFnRetType()
+	retType, err := parser.parseFcType()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -328,7 +328,7 @@ func (parser *Parser) parseFcFnDecl() (*fcFnDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	retType, err := parser.parseFnRetType()
+	retType, err := parser.parseFcType()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -366,13 +366,13 @@ func (parser *Parser) parseUndefinedFcType() (fcUndefinedType, error) {
 	return nil, &parserErr{fmt.Errorf("expect 'fn', 'property', 'var' after '?'"), parser}
 }
 
-func (parser *Parser) parseFnRetType() (fnRetType, error) {
-	if parser.is(Keywords["fn"]) {
-		return parser.parseFcFnVar()
-	} else {
-		return parser.parseFcVarType()
-	}
-}
+// func (parser *Parser) parseFnRetType() (fnRetType, error) {
+// 	if parser.is(Keywords["fn"]) {
+// 		return parser.parseFcFnVar()
+// 	} else {
+// 		return parser.parseFcVarType()
+// 	}
+// }
 
 func (parser *Parser) parsePropertyType() (*propertyType, error) {
 	parser.skip()

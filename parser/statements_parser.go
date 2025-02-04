@@ -169,35 +169,35 @@ func (stmt *tokenBlock) parseThenFacts() (*[]factStmt, error) {
 	return facts, nil
 }
 
-func (p *tokenBlock) parseFnRetTypeMember() (*[]fnRetTypeMemberDecl, error) {
-	p.header.next()
-	if err := p.header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, err
-	}
+// func (p *tokenBlock) parseFnRetTypeMember() (*[]fnRetTypeMemberDecl, error) {
+// 	p.header.next()
+// 	if err := p.header.testAndSkip(BuiltinSyms[":"]); err != nil {
+// 		return nil, err
+// 	}
 
-	member := &[]fnRetTypeMemberDecl{}
+// 	member := &[]fnRetTypeMemberDecl{}
 
-	for _, curStmt := range p.body {
-		if curStmt.header.is(Keywords["var"]) {
-			v, err := curStmt.header.parseVarDecl()
-			if err != nil {
-				return nil, err
-			}
-			*member = append(*member, v)
-		} else if curStmt.header.is(Keywords["fn"]) {
-			v, err := curStmt.header.parseFcFnDecl()
-			if err != nil {
-				return nil, err
-			}
-			*member = append(*member, v)
+// 	for _, curStmt := range p.body {
+// 		if curStmt.header.is(Keywords["var"]) {
+// 			v, err := curStmt.header.parseVarDecl()
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			*member = append(*member, v)
+// 		} else if curStmt.header.is(Keywords["fn"]) {
+// 			v, err := curStmt.header.parseFcFnDecl()
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			*member = append(*member, v)
 
-		} else {
-			return nil, fmt.Errorf("unexpected declaration %v", curStmt.header)
-		}
-	}
+// 		} else {
+// 			return nil, fmt.Errorf("unexpected declaration %v", curStmt.header)
+// 		}
+// 	}
 
-	return member, nil
-}
+// 	return member, nil
+// }
 
 func (stmt *tokenBlock) parseDefConceptStmt() (*defConceptStmt, error) {
 	stmt.header.skip()
@@ -207,7 +207,7 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*defConceptStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fcType, err := stmt.header.parseFnRetType()
+	fcType, err := stmt.header.parseFcType()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -268,7 +268,7 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*defTypeStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fcType, err := stmt.header.parseFnRetType()
+	fcType, err := stmt.header.parseFcType()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -651,7 +651,7 @@ func (stmt *tokenBlock) parseExistStmt() (*defExistStmt, error) {
 	}
 
 	ifFacts := &[]factStmt{}
-	member := &[]fnRetTypeMemberDecl{}
+	member := &[]fcDecl{}
 	thenFacts := &[]factStmt{}
 	if !stmt.header.is(BuiltinSyms[":"]) {
 		return nil, fmt.Errorf("expected ':‘")
@@ -675,7 +675,7 @@ func (stmt *tokenBlock) parseExistStmt() (*defExistStmt, error) {
 			continue
 		}
 		if curStmt.header.is(Keywords["members"]) {
-			member, err = curStmt.parseFnRetTypeMember()
+			member, err = curStmt.parseFcDecl()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
@@ -684,6 +684,34 @@ func (stmt *tokenBlock) parseExistStmt() (*defExistStmt, error) {
 	}
 
 	return &defExistStmt{*decl, *ifFacts, *member, *thenFacts}, nil
+}
+
+func (stmt *tokenBlock) parseFcDecl() (*[]fcDecl, error) {
+	ret := []fcDecl{}
+
+	for _, curStmt := range stmt.body {
+		if curStmt.header.is(Keywords["fn"]) {
+			decl, err := stmt.header.parseFcFnDecl()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+			ret = append(ret, decl)
+		} else if curStmt.header.is(Keywords["var"]) {
+			decl, err := stmt.header.parseVarDecl()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+			ret = append(ret, decl)
+		} else if curStmt.header.is(Keywords["property"]) {
+			decl, err := stmt.header.parsePropertyDecl()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+			ret = append(ret, decl)
+		}
+	}
+
+	return &ret, nil
 }
 
 func (stmt *tokenBlock) parseHaveStmt() (*haveStmt, error) {

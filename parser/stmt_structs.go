@@ -12,7 +12,7 @@ type defVarStmt struct {
 
 type defConceptStmt struct {
 	typeVar            typeVarStr
-	fcType             fnRetType
+	fcType             fcType
 	conceptName        typeConceptStr
 	inherit            []typeConceptStr
 	typeVarMember      []fcVarDecl
@@ -26,7 +26,7 @@ type defConceptStmt struct {
 
 type defTypeStmt struct {
 	typeVar        typeVarStr
-	fcType         fnRetType
+	fcType         fcType
 	conceptName    typeConceptStr
 	varMember      []fcVarDecl
 	fnMember       []fcFnDecl
@@ -82,7 +82,7 @@ type knowStmt struct {
 type defExistStmt struct {
 	decl      propertyDecl
 	ifFacts   []factStmt
-	member    []fnRetTypeMemberDecl
+	member    []fcDecl
 	thenFacts []factStmt
 }
 

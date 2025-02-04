@@ -75,19 +75,19 @@ func (f *undefinedFnType) fcUndefinedType()       {}
 func (f *undefinedVarType) fcUndefinedType()      {}
 func (f *undefinedPropertyType) fcUndefinedType() {}
 
-type fnRetType interface {
-	fnRetType()
-}
+// type fnRetType interface {
+// 	fnRetType()
+// }
 
-func (f fcVarType) fnRetType() {}
-func (f *fcFnType) fnRetType() {}
+// func (f fcVarType) fnRetType() {}
+// func (f *fcFnType) fnRetType() {}
 
-type fnRetTypeMemberDecl interface {
-	fnRetTypeMemberDecl()
-}
+// type fnRetTypeMemberDecl interface {
+// 	fnRetTypeMemberDecl()
+// }
 
-func (f *fcVarDecl) fnRetTypeMemberDecl() {}
-func (f *fcFnDecl) fnRetTypeMemberDecl()  {}
+// func (f *fcVarDecl) fnRetTypeMemberDecl() {}
+// func (f *fcFnDecl) fnRetTypeMemberDecl()  {}
 
 type fcDecl interface {
 	fcDecl()
