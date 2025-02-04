@@ -847,6 +847,11 @@ func TestFnDecl(t *testing.T) {
 		`
 fn ha [G Group] (g1 G, g2 property [g G, g2 G] (t G) ) red:
     1 is red
+
+claim :
+	proof:
+		$p[G, G2](x, y)
+
 `
 
 	statements, err := parserTester(code)

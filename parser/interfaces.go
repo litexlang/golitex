@@ -19,7 +19,6 @@ func (c *defConceptStmt) stmt()    {}
 func (f *defTypeStmt) stmt()       {}
 func (c *defPropertyStmt) stmt()   {}
 func (f *defFnStmt) stmt()         {}
-func (l *localStmt) stmt()         {}
 func (l *forallStmt) stmt()        {}
 func (r *relationFactStmt) stmt()  {}
 func (p *funcPtyStmt) stmt()       {}
