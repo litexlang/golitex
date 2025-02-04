@@ -838,3 +838,21 @@ $p[g, as(g2, G)](f, as(g3, property [g Group](t G) ))
 		t.Fatal(err)
 	}
 }
+
+func TestFnDecl(t *testing.T) {
+	// fn ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+	// 1 is red
+
+	code :=
+		`
+fn ha [G Group] (g1 G, g2 property [g G, g2 G] (t G) ) red:
+    1 is red
+`
+
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}

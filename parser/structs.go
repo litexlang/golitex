@@ -111,12 +111,7 @@ type fcFnType struct {
 // 需要让 property 不能是 fc type
 type propertyType struct {
 	typeParams []typeConceptPair
-	varParams  []propertyVarTypePair // TODO not fcType!
-}
-
-type propertyVarTypePair struct {
-	value string
-	tp    propertyVarType
+	varParams  []fcStrTypePair // TODO not fcType!
 }
 
 type claimStmt struct {
