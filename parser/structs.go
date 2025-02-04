@@ -45,3 +45,15 @@ type propertyType struct {
 	typeParams []typeConceptPair
 	varParams  []fcStrTypePair
 }
+
+type undefinedFnType struct{}
+
+var undefinedFnTypeInstance *undefinedFnType = &undefinedFnType{}
+
+type undefinedVarType struct{}
+
+var undefinedVarTypeInstance *undefinedVarType = &undefinedVarType{}
+
+type undefinedPropertyType struct{}
+
+var undefinedPropertyTypeInstance *undefinedPropertyType = &undefinedPropertyType{}

@@ -845,12 +845,19 @@ func TestFnDecl(t *testing.T) {
 
 	code :=
 		`
+fn ha [G Group] (g1 G, g2 ?property, g3 ? var, g4 ? fn) red:
+    1 is red
+
+		
 fn ha [G Group] (g1 G, g2 property [g G, g2 G] (t G) ) red:
     1 is red
 
 claim :
 	proof:
 		$p[G, G2](x, y)
+
+$f[G, B](a, b).g[G, B].t(a, b)
+
 
 `
 

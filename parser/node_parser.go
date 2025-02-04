@@ -316,7 +316,7 @@ func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedFcTypePairArr() (
 }
 
 func (parser *Parser) parseFcFnDecl() (*fcFnDecl, error) {
-	parser.skip()
+	parser.skip(Keywords["fn"])
 
 	name, err := parser.next()
 	if err != nil {
@@ -337,6 +337,10 @@ func (parser *Parser) parseFcFnDecl() (*fcFnDecl, error) {
 }
 
 func (parser *Parser) parseFcType() (fcType, error) {
+	if parser.is(BuiltinSyms["?"]) {
+		return parser.parseUndefinedFcType()
+	}
+
 	if parser.is(Keywords["fn"]) {
 		return parser.parseFcFnVar()
 	} else if parser.is(Keywords["property"]) {
@@ -344,6 +348,22 @@ func (parser *Parser) parseFcType() (fcType, error) {
 	} else {
 		return parser.parseFcVarType()
 	}
+}
+
+func (parser *Parser) parseUndefinedFcType() (fcUndefinedType, error) {
+	parser.skip(BuiltinSyms["?"])
+	if parser.is(Keywords["fn"]) {
+		parser.skip()
+		return undefinedFnTypeInstance, nil
+	} else if parser.is(Keywords["property"]) {
+		parser.skip()
+		return undefinedVarTypeInstance, nil
+	} else if parser.is(Keywords["var"]) {
+		parser.skip()
+		return undefinedPropertyTypeInstance, nil
+	}
+
+	return nil, &parserErr{fmt.Errorf("expect 'fn', 'property', 'var' after '?'"), parser}
 }
 
 func (parser *Parser) parseFnRetType() (fnRetType, error) {
