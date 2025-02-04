@@ -38,7 +38,7 @@ type fcVarType string
 type fcFnType struct {
 	typeParamsTypes []typeConceptPair
 	varParamsTypes  []fcStrTypePair
-	retType         fnRetType
+	retType         fcType
 }
 
 type propertyType struct {
