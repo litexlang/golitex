@@ -59,9 +59,21 @@ type fcType interface {
 	fcType()
 }
 
-func (f fcVarType) fcType()     {}
-func (f *fcFnType) fcType()     {}
-func (f *propertyType) fcType() {}
+func (f fcVarType) fcType()              {}
+func (f *fcFnType) fcType()              {}
+func (f *propertyType) fcType()          {}
+func (f *undefinedFnType) fcType()       {}
+func (f *undefinedVarType) fcType()      {}
+func (f *undefinedPropertyType) fcType() {}
+
+type fcUndefinedType interface {
+	fcUndefinedType()
+	fcType()
+}
+
+func (f *undefinedFnType) fcUndefinedType()       {}
+func (f *undefinedVarType) fcUndefinedType()      {}
+func (f *undefinedPropertyType) fcUndefinedType() {}
 
 type fnRetType interface {
 	fnRetType()
