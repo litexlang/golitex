@@ -6,9 +6,9 @@ type Fc interface {
 }
 
 func (fc *typedFc) fc()           {}
-func (f *calledFcFnRetValue) fc() {}
+func (f *CalledFcFnRetValue) fc() {}
 func (f FcStr) fc()               {}
-func (f *FcExpr) fc()             {}
+func (f *FcFnCallChain) fc()      {}
 
 type Stmt interface {
 	stmt()
@@ -39,7 +39,7 @@ func (l *forallStmt) factStmt()       {}
 func (r *relationFactStmt) factStmt() {}
 func (p *funcPtyStmt) factStmt()      {}
 
-type notFactStmt interface {
+type NotFactStmt interface {
 	notFactStmtSetT(b bool)
 	factStmt()
 	stmt()
@@ -61,7 +61,7 @@ type fcType interface {
 
 func (f fcVarType) fcType()              {}
 func (f *fcFnType) fcType()              {}
-func (f *propertyType) fcType()          {}
+func (f *PropertyType) fcType()          {}
 func (f *undefinedFnType) fcType()       {}
 func (f *undefinedVarType) fcType()      {}
 func (f *undefinedPropertyType) fcType() {}

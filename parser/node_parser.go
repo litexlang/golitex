@@ -42,7 +42,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		fcArr = append(fcArr, curFc)
 	}
 
-	ret := FcExpr(fcArr)
+	ret := FcFnCallChain(fcArr)
 
 	return &ret, nil
 }
@@ -68,7 +68,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*typedFc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	propertyType, err := parser.parsePropertyType()
+	PropertyType, err := parser.parsePropertyType()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -78,7 +78,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*typedFc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &typedFc{fc, *propertyType}, nil
+	return &typedFc{fc, *PropertyType}, nil
 }
 
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
@@ -129,7 +129,7 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 			}
 		}
 
-		previousFc = &calledFcFnRetValue{previousFc, *typeParamsPtr, *varParamsPtr}
+		previousFc = &CalledFcFnRetValue{previousFc, *typeParamsPtr, *varParamsPtr}
 	}
 
 	return previousFc, nil
@@ -374,7 +374,7 @@ func (parser *Parser) parseUndefinedFcType() (fcUndefinedType, error) {
 // 	}
 // }
 
-func (parser *Parser) parsePropertyType() (*propertyType, error) {
+func (parser *Parser) parsePropertyType() (*PropertyType, error) {
 	parser.skip()
 
 	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
@@ -382,7 +382,7 @@ func (parser *Parser) parsePropertyType() (*propertyType, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &propertyType{*typeParams, *varParams}, nil
+	return &PropertyType{*typeParams, *varParams}, nil
 }
 
 func (parser *Parser) parseFcVarType() (fcVarType, error) {
@@ -508,7 +508,7 @@ func (parser *Parser) parsePropertyDecl() (*propertyDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &propertyDecl{name, propertyType{*typeParams, *varParams}}, nil
+	return &propertyDecl{name, PropertyType{*typeParams, *varParams}}, nil
 }
 
 func (parser *Parser) parseExistDecl() (*propertyDecl, error) {
@@ -523,7 +523,7 @@ func (parser *Parser) parseExistDecl() (*propertyDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &propertyDecl{name, propertyType{*typeParams, *varParams}}, nil
+	return &propertyDecl{name, PropertyType{*typeParams, *varParams}}, nil
 }
 
 func (parser *Parser) parseStringArr() (*[]string, error) {
@@ -562,7 +562,7 @@ func (parser *Parser) parseAddition() (Fc, error) {
 			if err != nil {
 				return nil, &parserErr{err, parser}
 			}
-			node = &calledFcFnRetValue{
+			node = &CalledFcFnRetValue{
 				FcStr(cur),
 				[]typeVar{},
 				[]Fc{node, right},
@@ -589,7 +589,7 @@ func (parser *Parser) parseMultiplication() (Fc, error) {
 			if err != nil {
 				return nil, &parserErr{err, parser}
 			}
-			node = &calledFcFnRetValue{
+			node = &CalledFcFnRetValue{
 				FcStr(cur),
 				[]typeVar{},
 				[]Fc{node, right},
@@ -610,7 +610,7 @@ func (parser *Parser) parseUnary() (Fc, error) {
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
-		return &calledFcFnRetValue{
+		return &CalledFcFnRetValue{
 			FcStr(cur),
 			[]typeVar{},
 			[]Fc{right},
@@ -632,7 +632,7 @@ func (parser *Parser) parseExponentiation() (Fc, error) {
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
-		node = &calledFcFnRetValue{
+		node = &CalledFcFnRetValue{
 			FcStr(cur),
 			[]typeVar{},
 			[]Fc{right},
@@ -696,7 +696,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*funcPtyStmt, error) {
 		}
 	}
 
-	return &funcPtyStmt{true, &calledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}}, nil
+	return &funcPtyStmt{true, &CalledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}}, nil
 }
 
 func (parser *Parser) parseTypeVar() (typeVar, error) {

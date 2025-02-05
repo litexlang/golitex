@@ -7,7 +7,7 @@ import (
 
 type typedFc struct {
 	value Fc
-	tp    propertyType
+	tp    PropertyType
 }
 
 func (fc *typedFc) String() string {
@@ -15,13 +15,13 @@ func (fc *typedFc) String() string {
 }
 
 // used for variables that are returned by called function
-type calledFcFnRetValue struct {
+type CalledFcFnRetValue struct {
 	fn         Fc
 	typeParams []typeVar
 	varParams  []Fc
 }
 
-func (f *calledFcFnRetValue) String() string {
+func (f *CalledFcFnRetValue) String() string {
 	typeParams := []string{}
 	for _, p := range f.typeParams {
 		if s, ok := p.(typeVarStr); ok {
@@ -51,10 +51,10 @@ func (f FcStr) String() string {
 	return string(f)
 }
 
-// used for variables that are returned by called function
-type FcExpr []Fc
+// used for variables that are returned by called function, e,g. f[]()[]()[]()
+type FcFnCallChain []Fc
 
-func (f *FcExpr) String() string {
+func (f *FcFnCallChain) String() string {
 	ret := ""
 	for i := 0; i < len(*f)-1; i++ {
 		ret += fmt.Sprintf("%s.", (*f)[i])
