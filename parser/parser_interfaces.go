@@ -5,7 +5,7 @@ type Fc interface {
 	String() string
 }
 
-func (fc *typedFc) fc()           {}
+func (fc *TypedFc) fc()           {}
 func (f *CalledFcFnRetValue) fc() {}
 func (f FcStr) fc()               {}
 func (f *FcFnCallChain) fc()      {}
@@ -14,21 +14,21 @@ type Stmt interface {
 	stmt()
 }
 
-func (stmt *defVarStmt) stmt()     {}
-func (c *defConceptStmt) stmt()    {}
-func (f *defTypeStmt) stmt()       {}
-func (c *defPropertyStmt) stmt()   {}
-func (f *defFnStmt) stmt()         {}
+func (stmt *DefVarStmt) stmt()     {}
+func (c *DefConceptStmt) stmt()    {}
+func (f *DefTypeStmt) stmt()       {}
+func (c *DefPropertyStmt) stmt()   {}
+func (f *DefFnStmt) stmt()         {}
 func (l *ForallStmt) stmt()        {}
-func (r *relationFactStmt) stmt()  {}
-func (p *funcPtyStmt) stmt()       {}
-func (f *claimStmt) stmt()         {}
-func (f *defuseStmt) stmt()        {}
-func (f *knowStmt) stmt()          {}
-func (s *defExistStmt) stmt()      {}
-func (s *haveStmt) stmt()          {}
-func (s *defMemberStmt) stmt()     {}
-func (s *defTypeMemberStmt) stmt() {}
+func (r *RelationFactStmt) stmt()  {}
+func (p *FuncPtyStmt) stmt()       {}
+func (f *ClaimStmt) stmt()         {}
+func (f *DefuseStmt) stmt()        {}
+func (f *KnowStmt) stmt()          {}
+func (s *DefExistStmt) stmt()      {}
+func (s *HaveStmt) stmt()          {}
+func (s *DefMemberStmt) stmt()     {}
+func (s *DefTypeMemberStmt) stmt() {}
 
 type factStmt interface {
 	factStmt()
@@ -36,8 +36,8 @@ type factStmt interface {
 }
 
 func (l *ForallStmt) factStmt()       {}
-func (r *relationFactStmt) factStmt() {}
-func (p *funcPtyStmt) factStmt()      {}
+func (r *RelationFactStmt) factStmt() {}
+func (p *FuncPtyStmt) factStmt()      {}
 
 type NotFactStmt interface {
 	notFactStmtSetT(b bool)
@@ -45,15 +45,15 @@ type NotFactStmt interface {
 	stmt()
 }
 
-func (r *relationFactStmt) notFactStmtSetT(b bool) { r.isTrue = b }
-func (f *funcPtyStmt) notFactStmtSetT(b bool)      { f.isTrue = b }
+func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.isTrue = b }
+func (f *FuncPtyStmt) notFactStmtSetT(b bool)      { f.isTrue = b }
 
 type typeVar interface {
 	typeVar()
 }
 
-func (f typeVarStr) typeVar()    {}
-func (f *typedTypeVar) typeVar() {}
+func (f TypeVarStr) typeVar()    {}
+func (f *TypedTypeVar) typeVar() {}
 
 type fcType interface {
 	fcType()
@@ -62,18 +62,18 @@ type fcType interface {
 func (f FcVarType) fcType()              {}
 func (f *FcFnType) fcType()              {}
 func (f *PropertyType) fcType()          {}
-func (f *undefinedFnType) fcType()       {}
-func (f *undefinedVarType) fcType()      {}
-func (f *undefinedPropertyType) fcType() {}
+func (f *UndefinedFnType) fcType()       {}
+func (f *UndefinedVarType) fcType()      {}
+func (f *UndefinedPropertyType) fcType() {}
 
 type fcUndefinedType interface {
 	fcUndefinedType()
 	fcType()
 }
 
-func (f *undefinedFnType) fcUndefinedType()       {}
-func (f *undefinedVarType) fcUndefinedType()      {}
-func (f *undefinedPropertyType) fcUndefinedType() {}
+func (f *UndefinedFnType) fcUndefinedType()       {}
+func (f *UndefinedVarType) fcUndefinedType()      {}
+func (f *UndefinedPropertyType) fcUndefinedType() {}
 
 // type fnRetType interface {
 // 	fnRetType()

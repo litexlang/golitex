@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-type typedFc struct {
+type TypedFc struct {
 	value Fc
 	tp    PropertyType
 }
 
-func (fc *typedFc) String() string {
+func (fc *TypedFc) String() string {
 	return fmt.Sprintf("@(%s,%s)", fc.value.String(), fc.tp)
 }
 
@@ -24,7 +24,7 @@ type CalledFcFnRetValue struct {
 func (f *CalledFcFnRetValue) String() string {
 	typeParams := []string{}
 	for _, p := range f.typeParams {
-		if s, ok := p.(typeVarStr); ok {
+		if s, ok := p.(TypeVarStr); ok {
 			typeParams = append(typeParams, string(s))
 		}
 	}

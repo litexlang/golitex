@@ -4,26 +4,20 @@ import (
 	"golitex/parser"
 )
 
-type Fc = parser.Fc
-type PropertyType = parser.PropertyType
-type NotFactStmt = parser.NotFactStmt
-type ForallStmt = parser.ForallStmt
-
-type SpecificMemory map[string]SpecificMemEntry
-
-type ForallMemory map[string]ForallMemEntry
+type SpecificFactMemory map[string]SpecificMemEntry
+type ForallFactMemory map[string]ForallMemEntry
 
 type SpecificMemEntry struct {
-	tp    PropertyType
+	tp    parser.PropertyType
 	facts []SpecificFact
 }
 
 type SpecificFact struct {
-	fact NotFactStmt
+	fact parser.NotFactStmt
 }
 
 type ForallMemEntry struct {
-	tp    PropertyType
+	tp    parser.PropertyType
 	facts []ForallFact
 }
 
@@ -42,8 +36,8 @@ type VarMemoryEntry struct {
 type PropertyMemory map[string]PropertyMemoryEntry
 
 type PropertyMemoryEntry struct {
-	tp    PropertyType
-	types []PropertyType
+	tp    parser.PropertyType
+	types []parser.PropertyType
 	decl  parser.PropertyDecl
 }
 

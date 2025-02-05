@@ -47,7 +47,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 	return &ret, nil
 }
 
-func (parser *Parser) parseTypedFcWithPrefixAs() (*typedFc, error) {
+func (parser *Parser) parseTypedFcWithPrefixAs() (*TypedFc, error) {
 	err := parser.skip(Keywords["as"])
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -78,7 +78,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*typedFc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &typedFc{fc, *PropertyType}, nil
+	return &TypedFc{fc, *PropertyType}, nil
 }
 
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
@@ -393,12 +393,12 @@ func (parser *Parser) parseFcVarType() (FcVarType, error) {
 	return FcVarType(v), nil
 }
 
-func (parser *Parser) parseTypeConcept() (typeConceptStr, error) {
+func (parser *Parser) parseTypeConcept() (TypeConceptStr, error) {
 	tok, err := parser.next()
 	if err != nil {
 		return "", err
 	}
-	return typeConceptStr(tok), nil
+	return TypeConceptStr(tok), nil
 }
 
 func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]TypeConceptPair, error) {
@@ -677,7 +677,7 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 	return FcStr(left), nil
 }
 
-func (parser *Parser) parseIsExpr(left Fc) (*funcPtyStmt, error) {
+func (parser *Parser) parseIsExpr(left Fc) (*FuncPtyStmt, error) {
 	opt, err := parser.next()
 
 	if err != nil {
@@ -696,7 +696,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*funcPtyStmt, error) {
 		}
 	}
 
-	return &funcPtyStmt{true, &CalledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}}, nil
+	return &FuncPtyStmt{true, &CalledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}}, nil
 }
 
 func (parser *Parser) parseTypeVar() (typeVar, error) {
@@ -707,7 +707,7 @@ func (parser *Parser) parseTypeVar() (typeVar, error) {
 	}
 }
 
-func (parser *Parser) parseTypedTypeVar() (*typedTypeVar, error) {
+func (parser *Parser) parseTypedTypeVar() (*TypedTypeVar, error) {
 	parser.skip(Keywords["as"])
 	parser.skip(BuiltinSyms["("])
 	value, err := parser.parseTypeVarStr()
@@ -725,16 +725,16 @@ func (parser *Parser) parseTypedTypeVar() (*typedTypeVar, error) {
 
 	parser.skip(BuiltinSyms[")"])
 
-	return &typedTypeVar{value, concept}, nil
+	return &TypedTypeVar{value, concept}, nil
 }
 
-func (parser *Parser) parseTypeVarStr() (typeVarStr, error) {
+func (parser *Parser) parseTypeVarStr() (TypeVarStr, error) {
 	name, err := parser.next()
 	if err != nil {
 		return "", &parserErr{err, parser}
 	}
 
-	return typeVarStr(name), nil
+	return TypeVarStr(name), nil
 }
 
 func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
