@@ -33,7 +33,6 @@ var BuiltinSyms = map[string]string{
 	"\\": "\\",
 	"?":  "?",
 	"**": "**",
-	"_^": "_^",
 }
 
 var CustomizableOperators = map[string]string{
@@ -90,7 +89,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"impl":        "impl",
 		"any":         "any",
 		"as":          "as",
-		"extend":      "extend",
+		"extend":      "extend", // A inherit B: A 是 B的子集；B extend A: A 是B 的子集
 	}
 
 	for k, v := range BuiltinSyms {
