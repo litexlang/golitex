@@ -9,14 +9,10 @@ type MemoryErr struct {
 }
 
 type SpecificFactMemory struct {
-	entries map[string][]SpecFactMemEntry
-}
-type ForallFactMemory struct {
-	entries map[string][]ForallFactMemEntry
+	entries map[string]SpecFactMemEntry
 }
 
 type SpecFactMemEntry struct {
-	tp    parser.PropertyType
 	facts []SpecMemFact
 }
 
@@ -24,8 +20,11 @@ type SpecMemFact struct {
 	fact parser.NotFactStmt
 }
 
+type ForallFactMemory struct {
+	entries map[string]ForallFactMemEntry
+}
+
 type ForallFactMemEntry struct {
-	tp    parser.PropertyType
 	facts []ForallMemFact
 }
 
