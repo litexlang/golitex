@@ -113,15 +113,15 @@ func (stmt *tokenBlock) ParseStmt() (Stmt, error) {
 	return ret, nil
 }
 
-func (p *tokenBlock) parseFcMember() (*[]fcVarDecl, *[]fcFnDecl, *[]propertyDecl, error) {
+func (p *tokenBlock) parseFcMember() (*[]FcVarDecl, *[]FcFnDecl, *[]PropertyDecl, error) {
 	p.header.next()
 	if err := p.header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, nil, nil, err
 	}
 
-	varMember := &[]fcVarDecl{}
-	fnMember := &[]fcFnDecl{}
-	propertyMember := &[]propertyDecl{}
+	varMember := &[]FcVarDecl{}
+	fnMember := &[]FcFnDecl{}
+	propertyMember := &[]PropertyDecl{}
 
 	for _, curStmt := range p.body {
 		if curStmt.header.is(Keywords["var"]) {
@@ -218,18 +218,18 @@ func (stmt *tokenBlock) parseDefConceptStmt() (*defConceptStmt, error) {
 	}
 
 	if !stmt.header.is(BuiltinSyms[":"]) {
-		return &defConceptStmt{typeVarStr(typeVariable), fcType, typeConceptStr(conceptName), []typeConceptStr{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
+		return &defConceptStmt{typeVarStr(typeVariable), fcType, typeConceptStr(conceptName), []typeConceptStr{}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.header.next()
 	}
 
 	inherit := &[]typeConceptStr{}
-	typeVarMember := &[]fcVarDecl{}
-	typeFnMember := &[]fcFnDecl{}
-	typePropertyMember := &[]propertyDecl{}
-	varMember := &[]fcVarDecl{}
-	fnMember := &[]fcFnDecl{}
-	propertyMember := &[]propertyDecl{}
+	typeVarMember := &[]FcVarDecl{}
+	typeFnMember := &[]FcFnDecl{}
+	typePropertyMember := &[]PropertyDecl{}
+	varMember := &[]FcVarDecl{}
+	fnMember := &[]FcFnDecl{}
+	propertyMember := &[]PropertyDecl{}
 	thenFacts := &[]factStmt{}
 
 	for _, curStmt := range stmt.body {
@@ -279,14 +279,14 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*defTypeStmt, error) {
 	}
 
 	if !stmt.header.is(BuiltinSyms[":"]) {
-		return &defTypeStmt{typeVarStr(typeVariable), fcType, typeConceptStr(conceptName), []fcVarDecl{}, []fcFnDecl{}, []propertyDecl{}, []factStmt{}}, nil
+		return &defTypeStmt{typeVarStr(typeVariable), fcType, typeConceptStr(conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.header.next()
 	}
 
-	varMember := &[]fcVarDecl{}
-	fnMember := &[]fcFnDecl{}
-	propertyMember := &[]propertyDecl{}
+	varMember := &[]FcVarDecl{}
+	fnMember := &[]FcFnDecl{}
+	propertyMember := &[]PropertyDecl{}
 	thenFacts := &[]factStmt{}
 
 	if len(stmt.body) == 2 && stmt.body[0].header.is(Keywords["member"]) && stmt.body[1].header.is(Keywords["then"]) {
@@ -358,7 +358,7 @@ func (stmt *tokenBlock) parseFuncPropertyFactStmt() (*funcPtyStmt, error) {
 	return &funcPtyStmt{true, fc}, nil
 }
 
-func (stmt *tokenBlock) parseForallStmt() (*forallStmt, error) {
+func (stmt *tokenBlock) parseForallStmt() (*ForallStmt, error) {
 	stmt.header.skip()
 
 	typeParams := &[]TypeConceptPair{}
@@ -399,7 +399,7 @@ func (stmt *tokenBlock) parseForallStmt() (*forallStmt, error) {
 		}
 	}
 
-	return &forallStmt{*typeParams, *varParams, *ifFacts, *thenFacts}, nil
+	return &ForallStmt{*typeParams, *varParams, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *tokenBlock) parseBodyFacts() (*[]factStmt, error) {

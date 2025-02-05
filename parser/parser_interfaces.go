@@ -19,7 +19,7 @@ func (c *defConceptStmt) stmt()    {}
 func (f *defTypeStmt) stmt()       {}
 func (c *defPropertyStmt) stmt()   {}
 func (f *defFnStmt) stmt()         {}
-func (l *forallStmt) stmt()        {}
+func (l *ForallStmt) stmt()        {}
 func (r *relationFactStmt) stmt()  {}
 func (p *funcPtyStmt) stmt()       {}
 func (f *claimStmt) stmt()         {}
@@ -35,7 +35,7 @@ type factStmt interface {
 	stmt()
 }
 
-func (l *forallStmt) factStmt()       {}
+func (l *ForallStmt) factStmt()       {}
 func (r *relationFactStmt) factStmt() {}
 func (p *funcPtyStmt) factStmt()      {}
 
@@ -59,8 +59,8 @@ type fcType interface {
 	fcType()
 }
 
-func (f fcVarType) fcType()              {}
-func (f *fcFnType) fcType()              {}
+func (f FcVarType) fcType()              {}
+func (f *FcFnType) fcType()              {}
 func (f *PropertyType) fcType()          {}
 func (f *undefinedFnType) fcType()       {}
 func (f *undefinedVarType) fcType()      {}
@@ -93,6 +93,6 @@ type fcDecl interface {
 	fcDecl()
 }
 
-func (f *fcVarDecl) fcDecl()    {}
-func (f *fcFnDecl) fcDecl()     {}
-func (f *propertyDecl) fcDecl() {}
+func (f *FcVarDecl) fcDecl()    {}
+func (f *FcFnDecl) fcDecl()     {}
+func (f *PropertyDecl) fcDecl() {}
