@@ -13,7 +13,7 @@ type fcFnDecl struct {
 
 type propertyDecl struct {
 	name string
-	tp   propertyType
+	tp   PropertyType
 }
 
 type TypeConceptPair struct {
@@ -41,7 +41,7 @@ type fcFnType struct {
 	retType         fcType
 }
 
-type propertyType struct {
+type PropertyType struct {
 	typeParams []TypeConceptPair
 	varParams  []FcStrTypePair
 }

@@ -836,3 +836,17 @@ proof:
 		t.Fatal(err)
 	}
 }
+
+func TestSequenceOfFcCallingOneAnother(t *testing.T) {
+	code :=
+		`
+$f[G, B](a, b).g[G, B].t(a, b)
+`
+
+	statements, err := parserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}

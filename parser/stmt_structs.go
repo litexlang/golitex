@@ -87,7 +87,7 @@ type defExistStmt struct {
 }
 
 type haveStmt struct {
-	propertyStmt notFactStmt
+	propertyStmt NotFactStmt
 	member       []string
 }
 

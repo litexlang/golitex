@@ -318,7 +318,7 @@ func (stmt *tokenBlock) parseFactStmt() (factStmt, error) {
 	return stmt.parseNotFactStmt()
 }
 
-func (stmt *tokenBlock) parseNotFactStmt() (notFactStmt, error) {
+func (stmt *tokenBlock) parseNotFactStmt() (NotFactStmt, error) {
 	isTrue := true
 	if stmt.header.is(BuiltinSyms["not"]) {
 		err := stmt.header.skip(BuiltinSyms["not"])
@@ -328,7 +328,7 @@ func (stmt *tokenBlock) parseNotFactStmt() (notFactStmt, error) {
 		isTrue = false
 	}
 
-	var ret notFactStmt
+	var ret NotFactStmt
 	var err error = nil
 	if stmt.header.is(BuiltinSyms["$"]) {
 		ret, err = stmt.parseFuncPropertyFactStmt()
@@ -854,7 +854,7 @@ func (stmt *tokenBlock) parseTypeMemberStmt() (*defTypeMemberStmt, error) {
 	return &defTypeMemberStmt{typeConcept, decl, *facts}, nil
 }
 
-func (stmt *tokenBlock) parseRelationalFactStmt() (notFactStmt, error) {
+func (stmt *tokenBlock) parseRelationalFactStmt() (NotFactStmt, error) {
 	fc, err := stmt.header.parseFcExpr()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
