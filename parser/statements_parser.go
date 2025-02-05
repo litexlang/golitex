@@ -361,7 +361,7 @@ func (stmt *tokenBlock) parseFuncPropertyFactStmt() (*funcPtyStmt, error) {
 func (stmt *tokenBlock) parseForallStmt() (*forallStmt, error) {
 	stmt.header.skip()
 
-	typeParams := &[]typeConceptPair{}
+	typeParams := &[]TypeConceptPair{}
 	var err error = nil
 	if stmt.header.is(BuiltinSyms["["]) {
 		typeParams, err = stmt.header.parseBracketedTypeConceptPairArray()
