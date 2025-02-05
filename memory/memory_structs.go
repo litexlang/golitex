@@ -56,3 +56,9 @@ type FnMemoryEntry struct {
 	types []parser.FcFnType
 	decl  parser.FcFnDecl
 }
+
+type AliasMemory map[string]AliasMemoryEntry
+
+type AliasMemoryEntry struct {
+	values *[]parser.Fc
+}
