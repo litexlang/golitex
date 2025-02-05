@@ -47,8 +47,8 @@ type defFnStmt struct {
 }
 
 type forallStmt struct {
-	typeParams []typeConceptPair
-	varParams  []fcStrTypePair
+	typeParams []TypeConceptPair
+	varParams  []FcStrTypePair
 	ifFacts    []factStmt
 	thenFacts  []factStmt
 }
@@ -92,14 +92,14 @@ type haveStmt struct {
 }
 
 type defMemberStmt struct {
-	typeConcept typeConceptPair
-	varType     fcStrTypePair
+	typeConcept TypeConceptPair
+	varType     FcStrTypePair
 	member      fcDecl
 	facts       []factStmt
 }
 
 type defTypeMemberStmt struct {
-	typeConcept typeConceptPair
+	typeConcept TypeConceptPair
 	member      fcDecl
 	facts       []factStmt
 }
