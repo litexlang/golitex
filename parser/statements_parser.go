@@ -278,8 +278,10 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
+	var extendTypeName TypeVarStr = ""
+
 	if !stmt.header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{TypeVarStr(typeVariable), fcType, TypeConceptStr(conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
+		return &DefTypeStmt{TypeVarStr(typeVariable), fcType, extendTypeName, TypeConceptStr(conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.header.next()
 	}
@@ -289,25 +291,21 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	propertyMember := &[]PropertyDecl{}
 	thenFacts := &[]factStmt{}
 
-	if len(stmt.body) == 2 && stmt.body[0].header.is(Keywords["member"]) && stmt.body[1].header.is(Keywords["then"]) {
-		varMember, fnMember, propertyMember, err = stmt.body[0].parseFcMember()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-
-		thenFacts, err = stmt.body[1].parseThenFacts()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	} else {
-		thenFacts, err = stmt.parseBodyFacts()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
+	for _, curBody := range stmt.body {
+		if curBody.header.is(Keywords["member"]) {
+			varMember, fnMember, propertyMember, err = curBody.parseFcMember()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+		} else if curBody.header.is(Keywords["then"]) {
+			thenFacts, err = curBody.parseThenFacts()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
 		}
 	}
 
-	return &DefTypeStmt{TypeVarStr(typeVariable), fcType, TypeConceptStr(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
-
+	return &DefTypeStmt{TypeVarStr(typeVariable), fcType, extendTypeName, TypeConceptStr(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 }
 
 func (stmt *tokenBlock) parseFactStmt() (factStmt, error) {
