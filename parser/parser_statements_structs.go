@@ -27,7 +27,6 @@ type DefConceptStmt struct {
 type DefTypeStmt struct {
 	typeVar        TypeVarStr
 	fcType         fcType
-	extendTypeName TypeVarStr // 方便继承操作符和接口，比如复数extend了实数，那复数的性质实数都有
 	conceptName    TypeConceptStr
 	varMember      []FcVarDecl
 	fnMember       []FcFnDecl

@@ -278,10 +278,8 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	var extendTypeName TypeVarStr = ""
-
 	if !stmt.header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{TypeVarStr(typeVariable), fcType, extendTypeName, TypeConceptStr(conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
+		return &DefTypeStmt{TypeVarStr(typeVariable), fcType, TypeConceptStr(conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.header.next()
 	}
@@ -305,7 +303,7 @@ func (stmt *tokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		}
 	}
 
-	return &DefTypeStmt{TypeVarStr(typeVariable), fcType, extendTypeName, TypeConceptStr(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+	return &DefTypeStmt{TypeVarStr(typeVariable), fcType, TypeConceptStr(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 }
 
 func (stmt *tokenBlock) parseFactStmt() (factStmt, error) {
