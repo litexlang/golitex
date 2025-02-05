@@ -32,6 +32,31 @@ var BuiltinSyms = map[string]string{
 	"!=": "!=",
 	"\\": "\\",
 	"?":  "?",
+	"**": "**",
+	"_^": "_^",
+}
+
+var CustomizableOperators = map[string]string{
+	"/":  "__div__",
+	"+":  "__add__",
+	"-":  "__sub__",
+	"*":  "__mul__",
+	"^":  "__xor__",
+	"<":  "__lt__",
+	">":  "__gt__",
+	"!":  "__not__",
+	"|":  "__or__",
+	"&":  "__and__",
+	"~":  "__invert__",
+	"++": "__add_add__",
+	"--": "__sub_sub__",
+	"&&": "__and__",
+	"||": "__or_or__",
+	"==": "__eq_eq__",
+	"!=": "__ne__",
+	"**": "__pow__",
+	"<=": "__lt_eq__",
+	">=": "__gt_eq__",
 }
 
 func isBuiltinRelationalOperator(op string) bool {
