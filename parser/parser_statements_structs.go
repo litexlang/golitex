@@ -1,20 +1,20 @@
 package parser
 
-type topStmt struct {
+type TopStmt struct {
 	stmt  Stmt
 	isPub bool
 }
 
-type defVarStmt struct {
+type DefVarStmt struct {
 	decl  FcVarDecl
 	facts []factStmt
 }
 
-type defConceptStmt struct {
-	typeVar            typeVarStr
+type DefConceptStmt struct {
+	typeVar            TypeVarStr
 	fcType             fcType
-	conceptName        typeConceptStr
-	inherit            []typeConceptStr
+	conceptName        TypeConceptStr
+	inherit            []TypeConceptStr
 	typeVarMember      []FcVarDecl
 	typeFnMember       []FcFnDecl
 	typePropertyMember []PropertyDecl
@@ -24,23 +24,23 @@ type defConceptStmt struct {
 	thenFacts          []factStmt
 }
 
-type defTypeStmt struct {
-	typeVar        typeVarStr
+type DefTypeStmt struct {
+	typeVar        TypeVarStr
 	fcType         fcType
-	conceptName    typeConceptStr
+	conceptName    TypeConceptStr
 	varMember      []FcVarDecl
 	fnMember       []FcFnDecl
 	propertyMember []PropertyDecl
 	thenFacts      []factStmt
 }
 
-type defPropertyStmt struct {
+type DefPropertyStmt struct {
 	decl      PropertyDecl
 	ifFacts   []factStmt
 	thenFacts []factStmt
 }
 
-type defFnStmt struct {
+type DefFnStmt struct {
 	decl      FcFnDecl
 	ifFacts   []factStmt
 	thenFacts []factStmt
@@ -53,52 +53,52 @@ type ForallStmt struct {
 	thenFacts  []factStmt
 }
 
-type funcPtyStmt struct {
+type FuncPtyStmt struct {
 	isTrue bool
 	fc     Fc
 }
 
 // 1 = 2 -1 = 1 * 1, vars = [1, 2 -1, 1 * 1], opt = "="
-type relationFactStmt struct {
+type RelationFactStmt struct {
 	isTrue bool
 	vars   []Fc
 	opt    Fc
 }
 
-type claimStmt struct {
+type ClaimStmt struct {
 	toCheck []factStmt
 	proof   []Stmt
 }
 
-type defuseStmt struct {
+type DefuseStmt struct {
 	name     string
 	variable Fc
 }
 
-type knowStmt struct {
+type KnowStmt struct {
 	facts []factStmt
 }
 
-type defExistStmt struct {
+type DefExistStmt struct {
 	decl      PropertyDecl
 	ifFacts   []factStmt
 	member    []fcDecl
 	thenFacts []factStmt
 }
 
-type haveStmt struct {
+type HaveStmt struct {
 	propertyStmt NotFactStmt
 	member       []string
 }
 
-type defMemberStmt struct {
+type DefMemberStmt struct {
 	typeConcept TypeConceptPair
 	varType     FcStrTypePair
 	member      fcDecl
 	facts       []factStmt
 }
 
-type defTypeMemberStmt struct {
+type DefTypeMemberStmt struct {
 	typeConcept TypeConceptPair
 	member      fcDecl
 	facts       []factStmt

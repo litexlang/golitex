@@ -1,6 +1,6 @@
 package parser
 
-type typeConceptStr string
+type TypeConceptStr string
 
 type FcVarDecl struct {
 	varTypePairs []FcStrTypePair
@@ -17,15 +17,15 @@ type PropertyDecl struct {
 }
 
 type TypeConceptPair struct {
-	Var  typeVarStr
-	Type typeConceptStr
+	Var  TypeVarStr
+	Type TypeConceptStr
 }
 
-type typeVarStr string
+type TypeVarStr string
 
-type typedTypeVar struct {
-	value   typeVarStr
-	concept typeConceptStr
+type TypedTypeVar struct {
+	value   TypeVarStr
+	concept TypeConceptStr
 }
 
 type FcStrTypePair struct {
@@ -46,14 +46,14 @@ type PropertyType struct {
 	varParams  []FcStrTypePair
 }
 
-type undefinedFnType struct{}
+type UndefinedFnType struct{}
 
-var undefinedFnTypeInstance *undefinedFnType = &undefinedFnType{}
+var undefinedFnTypeInstance *UndefinedFnType = &UndefinedFnType{}
 
-type undefinedVarType struct{}
+type UndefinedVarType struct{}
 
-var undefinedVarTypeInstance *undefinedVarType = &undefinedVarType{}
+var undefinedVarTypeInstance *UndefinedVarType = &UndefinedVarType{}
 
-type undefinedPropertyType struct{}
+type UndefinedPropertyType struct{}
 
-var undefinedPropertyTypeInstance *undefinedPropertyType = &undefinedPropertyType{}
+var undefinedPropertyTypeInstance *UndefinedPropertyType = &UndefinedPropertyType{}
