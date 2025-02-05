@@ -4,24 +4,32 @@ import (
 	"golitex/parser"
 )
 
-type SpecificFactMemory map[string]SpecificMemEntry
-type ForallFactMemory map[string]ForallMemEntry
-
-type SpecificMemEntry struct {
-	tp    parser.PropertyType
-	facts []SpecificFact
+type MemoryErr struct {
+	err error
 }
 
-type SpecificFact struct {
+type SpecificFactMemory struct {
+	entries map[string][]SpecFactMemEntry
+}
+type ForallFactMemory struct {
+	entries map[string][]ForallFactMemEntry
+}
+
+type SpecFactMemEntry struct {
+	tp    parser.PropertyType
+	facts []SpecMemFact
+}
+
+type SpecMemFact struct {
 	fact parser.NotFactStmt
 }
 
-type ForallMemEntry struct {
+type ForallFactMemEntry struct {
 	tp    parser.PropertyType
-	facts []ForallFact
+	facts []ForallMemFact
 }
 
-type ForallFact struct {
+type ForallMemFact struct {
 	fact parser.ForallStmt
 }
 
