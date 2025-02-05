@@ -2,16 +2,16 @@ package parser
 
 type typeConceptStr string
 
-type fcVarDecl struct {
+type FcVarDecl struct {
 	varTypePairs []FcStrTypePair
 }
 
-type fcFnDecl struct {
+type FcFnDecl struct {
 	name string
-	tp   fcFnType
+	tp   FcFnType
 }
 
-type propertyDecl struct {
+type PropertyDecl struct {
 	name string
 	tp   PropertyType
 }
@@ -33,9 +33,9 @@ type FcStrTypePair struct {
 	Type fcType
 }
 
-type fcVarType string
+type FcVarType string
 
-type fcFnType struct {
+type FcFnType struct {
 	typeParamsTypes []TypeConceptPair
 	varParamsTypes  []FcStrTypePair
 	retType         fcType

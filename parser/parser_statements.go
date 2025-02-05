@@ -6,7 +6,7 @@ type topStmt struct {
 }
 
 type defVarStmt struct {
-	decl  fcVarDecl
+	decl  FcVarDecl
 	facts []factStmt
 }
 
@@ -15,12 +15,12 @@ type defConceptStmt struct {
 	fcType             fcType
 	conceptName        typeConceptStr
 	inherit            []typeConceptStr
-	typeVarMember      []fcVarDecl
-	typeFnMember       []fcFnDecl
-	typePropertyMember []propertyDecl
-	varMember          []fcVarDecl
-	fnMember           []fcFnDecl
-	propertyMember     []propertyDecl
+	typeVarMember      []FcVarDecl
+	typeFnMember       []FcFnDecl
+	typePropertyMember []PropertyDecl
+	varMember          []FcVarDecl
+	fnMember           []FcFnDecl
+	propertyMember     []PropertyDecl
 	thenFacts          []factStmt
 }
 
@@ -28,25 +28,25 @@ type defTypeStmt struct {
 	typeVar        typeVarStr
 	fcType         fcType
 	conceptName    typeConceptStr
-	varMember      []fcVarDecl
-	fnMember       []fcFnDecl
-	propertyMember []propertyDecl
+	varMember      []FcVarDecl
+	fnMember       []FcFnDecl
+	propertyMember []PropertyDecl
 	thenFacts      []factStmt
 }
 
 type defPropertyStmt struct {
-	decl      propertyDecl
+	decl      PropertyDecl
 	ifFacts   []factStmt
 	thenFacts []factStmt
 }
 
 type defFnStmt struct {
-	decl      fcFnDecl
+	decl      FcFnDecl
 	ifFacts   []factStmt
 	thenFacts []factStmt
 }
 
-type forallStmt struct {
+type ForallStmt struct {
 	typeParams []TypeConceptPair
 	varParams  []FcStrTypePair
 	ifFacts    []factStmt
@@ -80,7 +80,7 @@ type knowStmt struct {
 }
 
 type defExistStmt struct {
-	decl      propertyDecl
+	decl      PropertyDecl
 	ifFacts   []factStmt
 	member    []fcDecl
 	thenFacts []factStmt
