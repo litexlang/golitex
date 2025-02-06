@@ -58,7 +58,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*TypedFc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	fc, err := parser.parseFcExpr()
+	fc, err := parser.ParseFcExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -83,7 +83,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*TypedFc, error) {
 
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	parser.skip(BuiltinSyms["("])
-	fc, err := parser.parseFcExpr()
+	fc, err := parser.ParseFcExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -208,7 +208,7 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	parser.skip(BuiltinSyms["("])
 
 	for !parser.is(BuiltinSyms[")"]) {
-		fc, err := parser.parseFcExpr()
+		fc, err := parser.ParseFcExpr()
 
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -544,7 +544,7 @@ func (parser *Parser) parseStringArr() (*[]string, error) {
 	return members, nil
 }
 
-func (parser *Parser) parseFcExpr() (Fc, error) {
+func (parser *Parser) ParseFcExpr() (Fc, error) {
 	return parser.parseAddition()
 }
 

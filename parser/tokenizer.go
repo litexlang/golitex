@@ -64,8 +64,8 @@ func tokenizeString(inputString string) (*[]string, error) {
 	return &result, nil
 }
 
-func TokenizeStmtBlock(b *StrBlock) (*tokenBlock, error) {
-	body := []tokenBlock{}
+func TokenizeStmtBlock(b *StrBlock) (*TokenBlock, error) {
+	body := []TokenBlock{}
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
 	// 例如，将 Header 中的元素转换为大写
@@ -85,8 +85,8 @@ func TokenizeStmtBlock(b *StrBlock) (*tokenBlock, error) {
 		}
 		body = append(body, *parsedSubBlock)
 	}
-	return &tokenBlock{
-		header: Parser{0, header},
-		body:   body,
+	return &TokenBlock{
+		Header: Parser{0, header},
+		Body:   body,
 	}, nil
 }
