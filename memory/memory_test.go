@@ -34,3 +34,27 @@ f(t) is red
 		t.Log(key)
 	}
 }
+
+func TestGetMemKey2(t *testing.T) {
+	code := `
+f(t)
+f(h[a](b).g[c](d).t)
+`
+	tokenBlocks, err := parser.ParseSourceCodeGetTokenBlock(code)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, block := range *tokenBlocks {
+		it := block.Header
+		fc, err := it.ParseFcExpr()
+		if err != nil {
+			t.Fatal(err)
+		}
+		memKey, err := getMemoryKey(fc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(memKey)
+	}
+}

@@ -6,22 +6,22 @@ import (
 	"strings"
 )
 
-type tokenBlock struct {
-	header Parser
-	body   []tokenBlock
+type TokenBlock struct {
+	Header Parser
+	Body   []TokenBlock
 }
 
-func (b *tokenBlock) String() string {
+func (b *TokenBlock) String() string {
 	return b.stringWithIndent(0)
 }
 
-func (b *tokenBlock) stringWithIndent(indentLevel int) string {
+func (b *TokenBlock) stringWithIndent(indentLevel int) string {
 	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
-	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.header.getSlice(), " "))
+	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.Header.getSlice(), " "))
 
 	// 递归处理子块
-	if b.body != nil {
-		for _, subBlock := range b.body {
+	if b.Body != nil {
+		for _, subBlock := range b.Body {
 			result += subBlock.stringWithIndent(indentLevel + 1)
 		}
 	}
@@ -57,26 +57,6 @@ func (b *strBlock) stringWithIndent(indentLevel int) string {
 	}
 
 	return result
-}
-
-func GetSourceCodeTokenBlock(code string) (*[]tokenBlock, error) {
-	code = strings.ReplaceAll(code, "\t", "    ")
-
-	slice, err := getTopLevelStmtSlice(code)
-	if err != nil {
-		return nil, err
-	}
-
-	blocks := []tokenBlock{}
-	for _, strBlock := range slice.body {
-		block, err := TokenizeStmtBlock(&strBlock)
-		if err != nil {
-			return nil, err
-		}
-		blocks = append(blocks, *block)
-	}
-
-	return &blocks, nil
 }
 
 // ParseFile 读取文件并解析为 StmtBlock 结构
@@ -214,4 +194,23 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBl
 	}
 
 	return &blocks, i, nil
+}
+
+func ParseSourceCodeGetTokenBlock(code string) (*[]TokenBlock, error) {
+	lines := strings.Split(code, "\n")
+	strBlocks, _, err := parseStrBlocks(lines, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenBlocks := []TokenBlock{}
+	for _, strBlock := range *strBlocks {
+		block, err := TokenizeStmtBlock(&strBlock)
+		if err != nil {
+			return nil, err
+		}
+		tokenBlocks = append(tokenBlocks, *block)
+	}
+
+	return &tokenBlocks, nil
 }

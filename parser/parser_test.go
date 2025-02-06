@@ -165,16 +165,16 @@ func TestForallStmt(t *testing.T) {
 	}
 
 	block :=
-		tokenBlock{
+		TokenBlock{
 			Parser{0, *tokenized1},
-			[]tokenBlock{
+			[]TokenBlock{
 				{
 					Parser{0, *tokenized2},
-					[]tokenBlock{},
+					[]TokenBlock{},
 				},
 				{
 					Parser{0, *tokenized2},
-					[]tokenBlock{},
+					[]TokenBlock{},
 				},
 			},
 		}
@@ -197,35 +197,35 @@ func TestForallStmt(t *testing.T) {
 	}
 
 	block2 :=
-		tokenBlock{
+		TokenBlock{
 			Parser{0, *tokenized1},
-			[]tokenBlock{
+			[]TokenBlock{
 				{
 					Parser{0, *tokenizedIf},
-					[]tokenBlock{
+					[]TokenBlock{
 						{
 							Parser{0, *tokenized2},
-							[]tokenBlock{},
+							[]TokenBlock{},
 						},
 					},
 				},
 				{
 					Parser{0, *tokenizedThen},
-					[]tokenBlock{
+					[]TokenBlock{
 						{
 							Parser{0, *tokenized2},
-							[]tokenBlock{},
+							[]TokenBlock{},
 						},
 						{
 							Parser{0, *tokenized1},
-							[]tokenBlock{
+							[]TokenBlock{
 								{
 									Parser{0, *tokenized2},
-									[]tokenBlock{},
+									[]TokenBlock{},
 								},
 								{
 									Parser{0, *tokenized2},
-									[]tokenBlock{},
+									[]TokenBlock{},
 								},
 							},
 						},
@@ -252,16 +252,16 @@ func TestDefPropertyStmt(t *testing.T) {
 	}
 
 	block :=
-		tokenBlock{
+		TokenBlock{
 			Parser{0, *tokenized1},
-			[]tokenBlock{
+			[]TokenBlock{
 				{
 					Parser{0, *tokenized2},
-					[]tokenBlock{},
+					[]TokenBlock{},
 				},
 				{
 					Parser{0, *tokenized2},
-					[]tokenBlock{},
+					[]TokenBlock{},
 				},
 			},
 		}
@@ -283,24 +283,24 @@ func TestDefPropertyStmt(t *testing.T) {
 	}
 
 	block2 :=
-		tokenBlock{
+		TokenBlock{
 			Parser{0, *tokenized1},
-			[]tokenBlock{
+			[]TokenBlock{
 				{
 					Parser{0, *tokenizedIf},
-					[]tokenBlock{
+					[]TokenBlock{
 						{
 							Parser{0, *tokenized2},
-							[]tokenBlock{},
+							[]TokenBlock{},
 						},
 					},
 				},
 				{
 					Parser{0, *tokenizedThen},
-					[]tokenBlock{
+					[]TokenBlock{
 						{
 							Parser{0, *tokenized2},
-							[]tokenBlock{},
+							[]TokenBlock{},
 						},
 					},
 				},
@@ -322,7 +322,7 @@ func ParserTester(code string) (*[]Stmt, error) {
 		return nil, err
 	}
 
-	blocks := []tokenBlock{}
+	blocks := []TokenBlock{}
 	for _, strBlock := range slice.body {
 		block, err := TokenizeStmtBlock(&strBlock)
 		if err != nil {
