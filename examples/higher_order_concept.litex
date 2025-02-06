@@ -1,0 +1,22 @@
+type set_containing_all_groups G:
+    member:
+        property has(x any)
+        fn mul(x any, y any) any:
+            if:
+                G.has(x)
+                G.has(y)
+            then:
+                G.has(G.mul(x, y))
+
+    then:
+        forall x any, y any, z any:
+            if:
+                G.has(x)
+                G.has(y)
+                G.has(z)
+            then:
+                G.mul(G.mul(x,y), z) = G.mul(x, G.mul(y,z))
+        
+
+
+    
