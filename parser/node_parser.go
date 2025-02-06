@@ -92,11 +92,8 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 }
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
-	strAtSecondPosition, err := parser.atIndex(1)
-
-	if err != nil {
-		return nil, err
-	}
+	// 如果 1 out of range了，那返回值是 “”
+	strAtSecondPosition := parser.getStrAtNextIndexPosEmptyStrWhenOutOfScope(1)
 
 	if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] {
 		return parser.parseFcStr()
