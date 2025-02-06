@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const fcFnCallChainMemKeyLinker = "."
+const fcFnCallChainMemKeyLinker = "~"
 const calledFcFnRetValueKeyMemKeySpecifier = "@"
 
 func getMemoryKey(fc parser.Fc) (string, error) {
