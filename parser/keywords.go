@@ -65,7 +65,8 @@ func isBuiltinRelationalOperator(op string) bool {
 func putBuiltinIntoKeywords() *map[string]string {
 	var Keywords = map[string]string{
 		"concept":     "concept", // 用在两个地方：声明；作为property判定一个东西是不是特定concept
-		"inherit":     "inherit", // 用在两个地方：声明；作为property判定一个东西是不是特定type
+		"type":        "type",    // 用在两个地方：声明；作为property判定一个东西是不是特定type.
+		"inherit":     "inherit",
 		"type_member": "type_member",
 		"member":      "member",
 		"property":    "property",
@@ -75,7 +76,6 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"exist":       "exist",
 		"have":        "have",
 		"var":         "var",
-		"type":        "type",
 		"fn":          "fn",
 		"pub":         "pub",
 		"know":        "know",
