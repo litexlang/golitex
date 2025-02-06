@@ -11,7 +11,7 @@ const calledFcFnRetValueKeyMemKeySpecifier = "@"
 
 func getMemoryKey(fc parser.Fc) (string, error) {
 	if value, ok := fc.(*parser.CalledFcFnRetValue); ok {
-		ret, err := getMemoryKey(value)
+		ret, err := getMemoryKey(value.Fn)
 		if err != nil {
 			return "", err
 		}

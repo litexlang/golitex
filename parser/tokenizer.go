@@ -64,12 +64,12 @@ func tokenizeString(inputString string) (*[]string, error) {
 	return &result, nil
 }
 
-func TokenizeStmtBlock(b *StrBlock) (*TokenBlock, error) {
-	body := []TokenBlock{}
+func TokenizeStmtBlock(b *strBlock) (*tokenBlock, error) {
+	body := []tokenBlock{}
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
 	// 例如，将 Header 中的元素转换为大写
-	headerPtr, err := tokenizeString(b.Header)
+	headerPtr, err := tokenizeString(b.header)
 	header := *headerPtr
 
 	if err != nil || header == nil {
@@ -78,15 +78,15 @@ func TokenizeStmtBlock(b *StrBlock) (*TokenBlock, error) {
 
 	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Body 进行一些处理
 	// 例如，递归调用 ParseStmtBlock 处理 Body 中的每个元素
-	for _, subBlock := range b.Body {
+	for _, subBlock := range b.body {
 		parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
 		if err != nil {
 			return nil, err
 		}
 		body = append(body, *parsedSubBlock)
 	}
-	return &TokenBlock{
-		Header: Parser{0, header},
-		Body:   body,
+	return &tokenBlock{
+		header: Parser{0, header},
+		body:   body,
 	}, nil
 }

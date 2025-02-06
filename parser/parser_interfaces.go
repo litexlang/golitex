@@ -46,7 +46,7 @@ type NotFactStmt interface {
 }
 
 func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.isTrue = b }
-func (f *FuncPtyStmt) notFactStmtSetT(b bool)      { f.isTrue = b }
+func (f *FuncPtyStmt) notFactStmtSetT(b bool)      { f.IsTrue = b }
 
 type typeVar interface {
 	typeVar()

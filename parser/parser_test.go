@@ -56,21 +56,21 @@ func TestSplitString(t *testing.T) {
 }
 
 func TestParseStrStmtBlock(t *testing.T) {
-	subBody := []StrBlock{
+	subBody := []strBlock{
 		{
-			Header: "concept [v G](v G):",
-			Body:   nil,
+			header: "concept [v G](v G):",
+			body:   nil,
 		},
 	}
-	body := []StrBlock{
+	body := []strBlock{
 		{
-			Header: "concept [G Set](v G):",
-			Body:   subBody,
+			header: "concept [G Set](v G):",
+			body:   subBody,
 		},
 	}
-	input := StrBlock{
-		Header: "concept [G Group[G Set](v G)]:",
-		Body:   body,
+	input := strBlock{
+		header: "concept [G Group[G Set](v G)]:",
+		body:   body,
 	}
 
 	parsedBlock, err := TokenizeStmtBlock(&input)
@@ -165,16 +165,16 @@ func TestForallStmt(t *testing.T) {
 	}
 
 	block :=
-		TokenBlock{
+		tokenBlock{
 			Parser{0, *tokenized1},
-			[]TokenBlock{
+			[]tokenBlock{
 				{
 					Parser{0, *tokenized2},
-					[]TokenBlock{},
+					[]tokenBlock{},
 				},
 				{
 					Parser{0, *tokenized2},
-					[]TokenBlock{},
+					[]tokenBlock{},
 				},
 			},
 		}
@@ -197,35 +197,35 @@ func TestForallStmt(t *testing.T) {
 	}
 
 	block2 :=
-		TokenBlock{
+		tokenBlock{
 			Parser{0, *tokenized1},
-			[]TokenBlock{
+			[]tokenBlock{
 				{
 					Parser{0, *tokenizedIf},
-					[]TokenBlock{
+					[]tokenBlock{
 						{
 							Parser{0, *tokenized2},
-							[]TokenBlock{},
+							[]tokenBlock{},
 						},
 					},
 				},
 				{
 					Parser{0, *tokenizedThen},
-					[]TokenBlock{
+					[]tokenBlock{
 						{
 							Parser{0, *tokenized2},
-							[]TokenBlock{},
+							[]tokenBlock{},
 						},
 						{
 							Parser{0, *tokenized1},
-							[]TokenBlock{
+							[]tokenBlock{
 								{
 									Parser{0, *tokenized2},
-									[]TokenBlock{},
+									[]tokenBlock{},
 								},
 								{
 									Parser{0, *tokenized2},
-									[]TokenBlock{},
+									[]tokenBlock{},
 								},
 							},
 						},
@@ -252,16 +252,16 @@ func TestDefPropertyStmt(t *testing.T) {
 	}
 
 	block :=
-		TokenBlock{
+		tokenBlock{
 			Parser{0, *tokenized1},
-			[]TokenBlock{
+			[]tokenBlock{
 				{
 					Parser{0, *tokenized2},
-					[]TokenBlock{},
+					[]tokenBlock{},
 				},
 				{
 					Parser{0, *tokenized2},
-					[]TokenBlock{},
+					[]tokenBlock{},
 				},
 			},
 		}
@@ -283,24 +283,24 @@ func TestDefPropertyStmt(t *testing.T) {
 	}
 
 	block2 :=
-		TokenBlock{
+		tokenBlock{
 			Parser{0, *tokenized1},
-			[]TokenBlock{
+			[]tokenBlock{
 				{
 					Parser{0, *tokenizedIf},
-					[]TokenBlock{
+					[]tokenBlock{
 						{
 							Parser{0, *tokenized2},
-							[]TokenBlock{},
+							[]tokenBlock{},
 						},
 					},
 				},
 				{
 					Parser{0, *tokenizedThen},
-					[]TokenBlock{
+					[]tokenBlock{
 						{
 							Parser{0, *tokenized2},
-							[]TokenBlock{},
+							[]tokenBlock{},
 						},
 					},
 				},
@@ -314,7 +314,7 @@ func TestDefPropertyStmt(t *testing.T) {
 	fmt.Printf("%v", cur)
 }
 
-func parserTester(code string) (*[]Stmt, error) {
+func ParserTester(code string) (*[]Stmt, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
 	slice, err := getTopLevelStmtSlice(code)
@@ -322,7 +322,7 @@ func parserTester(code string) (*[]Stmt, error) {
 		return nil, err
 	}
 
-	blocks := []TokenBlock{}
+	blocks := []tokenBlock{}
 	for _, strBlock := range slice.body {
 		block, err := TokenizeStmtBlock(&strBlock)
 		if err != nil {
@@ -364,7 +364,7 @@ func TestDefConceptStmt(t *testing.T) {
 		$p[G, G2](x, y)
 		
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -384,7 +384,7 @@ property P[G Group, G2 Group](g G, g2 G2):
 	$f[G, B](g.g1, g2.g2)
 
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -402,7 +402,7 @@ fn P[G Group, G2 Group](g G, g2 G2) fn [G Group, G2 Group](g G, g2 G2):
 
 $f[G, B](g.g1, g2.g2)
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -418,7 +418,7 @@ forall [G Group] x g:
 	$f[G, B](g.g1, g2.g2)
 
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -444,7 +444,7 @@ type var G Group:
 	$p[G, G2](x, y)
 `
 
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -472,7 +472,7 @@ forall [G Group, G2 Group] g g, g2 g2:
 				$p[G, G2](x, y)
 		
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -488,7 +488,7 @@ var g G
 var g G:
     $p[G, G2](x, y)
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -531,7 +531,7 @@ claim:
 		
 
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -545,7 +545,7 @@ func TestParseDefuseStmt(t *testing.T) {
 		`
 use a p[G, G2](x, y)
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -570,7 +570,7 @@ know:
 				then:
 					$p[G, G2](x, y)
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -598,7 +598,7 @@ exist P[G Group, G2 Group](g1 G, g2 G2):
 	then:
 	    $p[G, G2](x, y)
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -613,7 +613,7 @@ func TestHaveStmt(t *testing.T) {
 have $P[G , G2 ](g1 , g2 ):
 	g1, g2
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -630,7 +630,7 @@ var g1 G, g2 G
 var a G,  b G:
 	$p[g](a)
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -648,7 +648,7 @@ member [G Group](g G) 		fn f[G Group, G2 Group](x G, y G) G:
     $p[g](a)
 member [G Group](g G) 		property f[G Group, G2 Group](x G, y G)
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -663,7 +663,7 @@ func TestConceptMemberStmt(t *testing.T) {
 type_member [G Group]		var 1 G:
 	$p[g](a)
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -678,7 +678,7 @@ func TestRelationalFactStmt(t *testing.T) {
 p[g](a) + 2 < (2 + 3) * 10 + 4 < 100
 10 = p[g](a) = p[g](a)
 `
-	statements, err := parseSourceCode(code)
+	statements, err := ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -697,7 +697,7 @@ func TestIsStmt(t *testing.T) {
 1 * ( p[g](a) + 2 ) is q
 
 `
-	statements, err := parseSourceCode(code)
+	statements, err := ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -714,7 +714,7 @@ $$p [g](a)
 $$[g G] p[g](a)
 $$[G Group](g G) p[g](a)
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -728,7 +728,7 @@ func TestTypedFcFnRetStmt(t *testing.T) {
 		`
 as(p [g](a), nat) is red
 `
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -742,7 +742,7 @@ func TestTypedTypeVar(t *testing.T) {
 as( p[as(g, G), as(g2, G)](a, as(p [g](a), nat)) , G ) is red
 `
 
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -763,7 +763,7 @@ property ha [G Group] (g1 G, g2 property [g Group](t G)) red:
 
 `
 
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -781,7 +781,7 @@ $p[g, as(g2, G)](f, g)
 $p[g, as(g2, G)](f, as(g3, property [g Group](t G) ))
 `
 
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -811,7 +811,7 @@ $f[G, B](a, b).g[G, B].t(a, b)
 
 `
 
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -829,7 +829,7 @@ proof:
 	1 is red
 `
 
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -840,10 +840,13 @@ proof:
 func TestSequenceOfFcCallingOneAnother(t *testing.T) {
 	code :=
 		`
-$f[G, B](a, b).g[G, B].t(a, b)
+f[G, B](a, b).g[G, B].t(a, b) is red
+h[]().g[]().t is red
+f() is red
+
 `
 
-	statements, err := parserTester(code)
+	statements, err := ParserTester(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {

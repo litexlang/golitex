@@ -1,8 +1,8 @@
 package parser
 
 type TopStmt struct {
-	stmt  Stmt
-	isPub bool
+	Stmt  Stmt
+	IsPub bool
 }
 
 type DefVarStmt struct {
@@ -54,8 +54,8 @@ type ForallStmt struct {
 }
 
 type FuncPtyStmt struct {
-	isTrue bool
-	fc     Fc
+	IsTrue bool
+	Fc     Fc
 }
 
 // 1 = 2 -1 = 1 * 1, vars = [1, 2 -1, 1 * 1], opt = "="
