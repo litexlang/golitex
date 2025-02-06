@@ -1,35 +1,36 @@
 package memory
 
 import (
-	"fmt"
 	"golitex/parser"
 	"testing"
 )
 
 func TestGetMemKey(t *testing.T) {
 	code := `
-f()
+h[a](b).g[c](d).t is red
+f(t) is red
 `
-	tokenBlocks, err := parser.GetSourceCodeTokenBlock(code)
+	statements, err := parser.ParseSourceCode(code)
+
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	keys := []string{}
-	for _, block := range *tokenBlocks {
-		it := (block.Header)
-		fc, err := it.ParseFcExpr()
+	for _, topStatement := range *statements {
+		statement := topStatement.Stmt
+		stmt := statement.(*parser.FuncPtyStmt)
+		propertyFc := stmt.Fc.(*parser.CalledFcFnRetValue)
+		fc := propertyFc.VarParams[0]
+		memKey, err := getMemoryKey(fc)
 		if err != nil {
 			t.Fatal(err)
 		}
-		key, err := getMemoryKey(fc)
-		if err != nil {
-			t.Fatal(err)
-		}
-		keys = append(keys, key)
+
+		keys = append(keys, memKey)
 	}
 
 	for _, key := range keys {
-		fmt.Println(key)
+		t.Log(key)
 	}
 }

@@ -6,22 +6,22 @@ import (
 	"strings"
 )
 
-type TokenBlock struct {
-	Header Parser
-	Body   []TokenBlock
+type tokenBlock struct {
+	header Parser
+	body   []tokenBlock
 }
 
-func (b *TokenBlock) String() string {
+func (b *tokenBlock) String() string {
 	return b.stringWithIndent(0)
 }
 
-func (b *TokenBlock) stringWithIndent(indentLevel int) string {
+func (b *tokenBlock) stringWithIndent(indentLevel int) string {
 	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
-	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.Header.getSlice(), " "))
+	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.header.getSlice(), " "))
 
 	// 递归处理子块
-	if b.Body != nil {
-		for _, subBlock := range b.Body {
+	if b.body != nil {
+		for _, subBlock := range b.body {
 			result += subBlock.stringWithIndent(indentLevel + 1)
 		}
 	}
@@ -29,37 +29,37 @@ func (b *TokenBlock) stringWithIndent(indentLevel int) string {
 	return result
 }
 
-type TopLevelStmtSlice struct {
-	body []StrBlock
+type topLevelStmtSlice struct {
+	body []strBlock
 }
 
-// StrBlock 结构体表示一个语句块
-type StrBlock struct {
-	Header string
-	Body   []StrBlock
+// strBlock 结构体表示一个语句块
+type strBlock struct {
+	header string
+	body   []strBlock
 }
 
 const parseIndent = 4
 
 // String 方法实现 fmt.Stringer 接口
-func (b *StrBlock) String() string {
+func (b *strBlock) String() string {
 	return b.stringWithIndent(0)
 }
 
 // stringWithIndent 递归生成带缩进的字符串表示
-func (b *StrBlock) stringWithIndent(indentLevel int) string {
+func (b *strBlock) stringWithIndent(indentLevel int) string {
 	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
-	result := fmt.Sprintf("%s%s\n", indent, b.Header)
+	result := fmt.Sprintf("%s%s\n", indent, b.header)
 
 	// 递归处理子块
-	for _, subBlock := range b.Body {
+	for _, subBlock := range b.body {
 		result += subBlock.stringWithIndent(indentLevel + 1)
 	}
 
 	return result
 }
 
-func GetSourceCodeTokenBlock(code string) (*[]TokenBlock, error) {
+func GetSourceCodeTokenBlock(code string) (*[]tokenBlock, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
 	slice, err := getTopLevelStmtSlice(code)
@@ -67,7 +67,7 @@ func GetSourceCodeTokenBlock(code string) (*[]TokenBlock, error) {
 		return nil, err
 	}
 
-	blocks := []TokenBlock{}
+	blocks := []tokenBlock{}
 	for _, strBlock := range slice.body {
 		block, err := TokenizeStmtBlock(&strBlock)
 		if err != nil {
@@ -80,7 +80,7 @@ func GetSourceCodeTokenBlock(code string) (*[]TokenBlock, error) {
 }
 
 // ParseFile 读取文件并解析为 StmtBlock 结构
-func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
+func ParseFile(filePath string) (*topLevelStmtSlice, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("无法读取文件: %v", err)
@@ -89,18 +89,18 @@ func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
 	return getTopLevelStmtSlice(string(content))
 }
 
-func getTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
+func getTopLevelStmtSlice(content string) (*topLevelStmtSlice, error) {
 	lines := strings.Split((content), "\n")
 	blocks, _, err := parseStrBlocks(lines, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TopLevelStmtSlice{*blocks}, err
+	return &topLevelStmtSlice{*blocks}, err
 }
 
-func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]StrBlock, int, error) {
-	blocks := []StrBlock{}
+func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBlock, int, error) {
+	blocks := []strBlock{}
 	i := startIndex
 
 	for i < len(lines) {
@@ -145,9 +145,9 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]StrBl
 
 		// 如果当前行的缩进等于当前块的缩进，创建一个新的块
 		if indent == currentIndent {
-			block := StrBlock{
-				Header: strings.TrimSpace(line),
-				Body:   nil,
+			block := strBlock{
+				header: strings.TrimSpace(line),
+				body:   nil,
 			}
 
 			// 如果 trimLine 以 : 结尾，检查下一行的缩进
@@ -192,7 +192,7 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]StrBl
 					if err != nil {
 						return nil, i, err
 					}
-					block.Body = *subBlocks
+					block.body = *subBlocks
 					i = nextIndex
 					break
 				}
