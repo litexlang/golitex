@@ -16,14 +16,14 @@ func (fc *TypedFc) String() string {
 
 // used for variables that are returned by called function
 type CalledFcFnRetValue struct {
-	fn         Fc
-	typeParams []typeVar
-	varParams  []Fc
+	Fn         Fc
+	TypeParams []typeVar
+	VarParams  []Fc
 }
 
 func (f *CalledFcFnRetValue) String() string {
 	typeParams := []string{}
-	for _, p := range f.typeParams {
+	for _, p := range f.TypeParams {
 		if s, ok := p.(TypeVarStr); ok {
 			typeParams = append(typeParams, string(s))
 		}
@@ -34,7 +34,7 @@ func (f *CalledFcFnRetValue) String() string {
 	}
 
 	varParams := []string{}
-	for _, p := range f.varParams {
+	for _, p := range f.VarParams {
 		varParams = append(varParams, p.String())
 	}
 	strVarParams := ""
@@ -42,7 +42,7 @@ func (f *CalledFcFnRetValue) String() string {
 		strVarParams = fmt.Sprintf("(%s)", strings.Join(varParams, ", "))
 	}
 
-	return fmt.Sprintf("%s%s%s", f.fn, strTypeParams, strVarParams)
+	return fmt.Sprintf("%s%s%s", f.Fn, strTypeParams, strVarParams)
 }
 
 type FcStr string
