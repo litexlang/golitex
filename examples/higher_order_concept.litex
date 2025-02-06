@@ -1,4 +1,4 @@
-type set_containing_all_groups G:
+type group G:
     member:
         property has(x any)
         fn mul(x any, y any) any:
@@ -16,7 +16,23 @@ type set_containing_all_groups G:
                 G.has(z)
             then:
                 G.mul(G.mul(x,y), z) = G.mul(x, G.mul(y,z))
-        
+
+exist group_related_elements(g any): 
+    member:
+        var e any
+        fn mul(x any, y any) any
+        property has(x any)
+
+    then:
+        forall x any, y any, z any:
+            if:
+                has(x)
+                has(y)
+                has(z)
+            then:
+                mul(mul(x,y), z) = mul(x,mul(y,z))
 
 
-    
+type GroupSet G:
+    then:
+        group_related_elements(G)
