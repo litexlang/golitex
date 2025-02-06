@@ -8,6 +8,10 @@ type MemoryErr struct {
 	err error
 }
 
+func (e *MemoryErr) Error() string {
+	return e.err.Error()
+}
+
 type SpecificFactMemory struct {
 	entries map[string]SpecFactMemEntry
 }
