@@ -96,3 +96,10 @@ type fcDecl interface {
 func (f *FcVarDecl) fcDecl()    {}
 func (f *FcFnDecl) fcDecl()     {}
 func (f *PropertyDecl) fcDecl() {}
+
+type FcVarTypeValue interface {
+	fcVarTypeValue()
+}
+
+func (f FcVarTypeStrValue) fcVarTypeValue()   {}
+func (f *FcVarTypeFuncValue) fcVarTypeValue() {}

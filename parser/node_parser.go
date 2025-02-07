@@ -388,11 +388,48 @@ func (parser *Parser) parsePropertyType() (*FcPropertyType, error) {
 }
 
 func (parser *Parser) parseFcVarType() (FcVarType, error) {
-	v, err := parser.next()
+	packageName := ""
+	name, err := parser.next()
+
 	if err != nil {
-		return FcVarType(""), err
+		return FcVarType{"", nil}, err
 	}
-	return FcVarType(v), nil
+
+	if parser.is(BuiltinSyms["::"]) {
+		parser.skip()
+		packageName = name
+
+		name, err = parser.next()
+		if err != nil {
+			return FcVarType{"", nil}, err
+		}
+	}
+
+	isFunc := false
+	typeParams := &[]typeVar{}
+	varParams := &[]Fc{}
+	if parser.is(BuiltinSyms["["]) {
+		typeParams, err = parser.parseBracketedTypeVarArr()
+		if err != nil {
+			return FcVarType{"", nil}, err
+		}
+		isFunc = true
+	}
+
+	if parser.is(BuiltinSyms["("]) {
+		varParams, err = parser.parseBracedFcArr()
+		if err != nil {
+			return FcVarType{"", nil}, err
+		}
+		isFunc = true
+	}
+
+	if isFunc {
+		return FcVarType{packageName, &FcVarTypeFuncValue{name, *typeParams, *varParams}}, nil
+	} else {
+		return FcVarType{packageName, FcVarTypeStrValue(name)}, nil
+	}
+
 }
 
 func (parser *Parser) parseTypeConcept() (TypeConceptStr, error) {
