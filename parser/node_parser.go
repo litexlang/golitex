@@ -213,14 +213,19 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 
 		params = append(params, fc)
 
-		if parser.isAndSkip(BuiltinSyms[")"]) {
-			break
+		if !parser.is(BuiltinSyms[","]) {
+			if !parser.is(BuiltinSyms[")"]) {
+				return nil, &parserErr{err, parser}
+			} else {
+				break
+			}
+		} else {
+			parser.next()
 		}
 
-		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
-			return nil, &parserErr{err, parser}
-		}
 	}
+
+	parser.skip(BuiltinSyms[")"])
 
 	return &params, nil
 }
