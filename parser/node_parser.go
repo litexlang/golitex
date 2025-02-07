@@ -501,38 +501,37 @@ func (parser *Parser) parseBracedFcStrTypePairArray() (*[]StrTypePair, error) {
 func (parser *Parser) parseVarDecl() (*FcVarDecl, error) {
 	parser.skip(Keywords["var"])
 
-	pairs := []StrTypePair{}
+	pairs := []FcVarDeclPair{}
 
-	name, err := parser.next()
+	pair, err := parser.parseFcVarPair()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
-
-	typ, err := parser.parseFcVarType()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	pairs = append(pairs, StrTypePair{(name), typ})
+	pairs = append(pairs, *pair)
 
 	for parser.is(BuiltinSyms[","]) {
-		parser.skip(BuiltinSyms[","])
-
-		name, err := parser.next()
+		pair, err := parser.parseFcVarPair()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
-
-		typ, err := parser.parseFcVarType()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-
-		pairs = append(pairs, StrTypePair{(name), typ})
-
+		pairs = append(pairs, *pair)
 	}
 
 	return &FcVarDecl{pairs}, nil
+}
+
+func (parser *Parser) parseFcVarPair() (*FcVarDeclPair, error) {
+	v, err := parser.next()
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	tp, err := parser.parseFcVarType()
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	return &FcVarDeclPair{v, tp}, nil
 }
 
 func (parser *Parser) parsePropertyDecl() (*PropertyDecl, error) {
