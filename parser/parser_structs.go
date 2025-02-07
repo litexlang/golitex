@@ -3,7 +3,7 @@ package parser
 type TypeConceptStr string
 
 type FcVarDecl struct {
-	VarTypePairs []StrTypePair
+	VarTypePairs []StrTypePair // TODO 有严重问题：不一定是StrType而是 f[a](b) 这样
 }
 
 type FcFnDecl struct {
