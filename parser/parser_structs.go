@@ -33,7 +33,17 @@ type StrTypePair struct {
 	Type fcType
 }
 
-type FcVarType string
+type FcVarType struct {
+	PackageName string
+	Value       FcVarTypeValue
+}
+
+type FcVarTypeStrValue string
+type FcVarTypeFuncValue struct {
+	Name       string
+	TypeParams []typeVar
+	VarParams  []Fc
+}
 
 type FcFnType struct {
 	typeParamsTypes []TypeConceptPair
