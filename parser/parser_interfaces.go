@@ -61,7 +61,7 @@ type fcType interface {
 
 func (f FcVarType) fcType()              {}
 func (f *FcFnType) fcType()              {}
-func (f *PropertyType) fcType()          {}
+func (f *FcPropertyType) fcType()        {}
 func (f *UndefinedFnType) fcType()       {}
 func (f *UndefinedVarType) fcType()      {}
 func (f *UndefinedPropertyType) fcType() {}

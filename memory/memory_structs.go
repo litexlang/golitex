@@ -12,43 +12,30 @@ func (e *MemoryErr) Error() string {
 	return e.err.Error()
 }
 
-type SpecificFactMemory struct {
-	entries map[string]SpecFactMemEntry
-}
+type SpecificFactMemory map[string]SpecFactMemEntry
 
-type SpecFactMemEntry struct {
-	facts []SpecMemFact
-}
+type SpecFactMemEntry []SpecMemFact
 
-type SpecMemFact struct {
-	fact parser.NotFactStmt
-}
+type SpecMemFact struct{ parser.NotFactStmt }
 
-type ForallFactMemory struct {
-	entries map[string]ForallFactMemEntry
-}
+type ForallFactMemory map[string]ForallFactMemEntry
 
-type ForallFactMemEntry struct {
-	facts []ForallMemFact
-}
+type ForallFactMemEntry []ForallMemFact
 
-type ForallMemFact struct {
-	fact parser.ForallStmt
-}
+type ForallMemFact struct{ parser.ForallStmt }
 
 type VarMemory map[string]VarMemoryEntry
 
 type VarMemoryEntry struct {
 	tp    parser.FcVarType
 	types []parser.FcVarType
-	decl  parser.FcVarDecl
 }
 
 type PropertyMemory map[string]PropertyMemoryEntry
 
 type PropertyMemoryEntry struct {
-	tp    parser.PropertyType
-	types []parser.PropertyType
+	tp    parser.FcPropertyType
+	types []parser.FcPropertyType
 	decl  parser.PropertyDecl
 }
 
