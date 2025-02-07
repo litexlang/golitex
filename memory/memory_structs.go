@@ -12,19 +12,19 @@ func (e *MemoryErr) Error() string {
 	return e.err.Error()
 }
 
-type SpecificFactMemory map[string]SpecFactMemEntry
+type SpecificFactMemory struct{ entries map[string]SpecFactMemEntry }
 
-type SpecFactMemEntry []SpecMemFact
+type SpecFactMemEntry struct{ facts []SpecMemFact }
 
-type SpecMemFact struct{ parser.NotFactStmt }
+type SpecMemFact struct{ fact parser.NotFactStmt }
 
-type ForallFactMemory map[string]ForallFactMemEntry
+type ForallFactMemory struct{ entires map[string]ForallFactMemEntry }
 
-type ForallFactMemEntry []ForallMemFact
+type ForallFactMemEntry struct{ facts []ForallMemFact }
 
-type ForallMemFact struct{ parser.ForallStmt }
+type ForallMemFact struct{ fact parser.ForallStmt }
 
-type VarMemory map[string]VarMemoryEntry
+type VarMemory struct{ entries map[string]VarMemoryEntry }
 
 type VarMemoryEntry struct {
 	tp    parser.FcVarType
