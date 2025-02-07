@@ -840,9 +840,9 @@ proof:
 func TestSequenceOfFcCallingOneAnother(t *testing.T) {
 	code :=
 		`
+h[]().g[c](d).t is red
 f[G, B](a, b).g[G, B].t(a, b) is red
-h[]().g[]().t is red
-f() is red
+f(t) is red
 
 `
 
