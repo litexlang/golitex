@@ -7,7 +7,7 @@ import (
 
 type TypedFc struct {
 	value Fc
-	tp    PropertyType
+	tp    FcPropertyType
 }
 
 func (fc *TypedFc) String() string {

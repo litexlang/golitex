@@ -2,23 +2,29 @@ package executor
 
 import (
 	"fmt"
+	"golitex/env"
 	"golitex/parser"
 )
 
-func ExecTopLevelStmt(stmt *parser.TopStmt) (*ExecValue, error) {
-	return execStmt(&stmt.Stmt)
+func ExecTopLevelStmt(env *env.Env, stmt *parser.TopStmt) (*ExecValue, error) {
+	return execStmt(env, &stmt.Stmt)
 }
 
-func execStmt(stmt *parser.Stmt) (*ExecValue, error) {
+func execStmt(env *env.Env, stmt *parser.Stmt) (*ExecValue, error) {
 	switch (*stmt).(type) {
 	case *parser.DefVarStmt:
-		return execDefVarStmt((*stmt).(*parser.DefVarStmt))
+		return execDefVarStmt(env, (*stmt).(*parser.DefVarStmt))
 	}
 
 	return nil, fmt.Errorf("unknown statement type: %T", stmt)
 }
 
-func execDefVarStmt(stmt *parser.DefVarStmt) (*ExecValue, error) {
-	// TODO
+func execDefVarStmt(env *env.Env, stmt *parser.DefVarStmt) (*ExecValue, error) {
+	for _, pair := range stmt.Decl.VarTypePairs {
+		err := env.NewVar(&pair)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return nil, nil
 }

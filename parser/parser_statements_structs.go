@@ -6,8 +6,8 @@ type TopStmt struct {
 }
 
 type DefVarStmt struct {
-	decl  FcVarDecl
-	facts []factStmt
+	Decl  FcVarDecl
+	Facts []factStmt
 }
 
 type DefConceptStmt struct {
@@ -48,7 +48,7 @@ type DefFnStmt struct {
 
 type ForallStmt struct {
 	typeParams []TypeConceptPair
-	varParams  []FcStrTypePair
+	varParams  []StrTypePair
 	ifFacts    []factStmt
 	thenFacts  []factStmt
 }
@@ -93,7 +93,7 @@ type HaveStmt struct {
 
 type DefMemberStmt struct {
 	typeConcept TypeConceptPair
-	varType     FcStrTypePair
+	varType     StrTypePair
 	member      fcDecl
 	facts       []factStmt
 }
