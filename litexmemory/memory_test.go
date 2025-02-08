@@ -1,7 +1,7 @@
-package memory
+package litexmemory
 
 import (
-	"golitex/parser"
+	parser "golitex/litexparser"
 	"testing"
 )
 

@@ -1,8 +1,8 @@
-package memory
+package litexmemory
 
 import (
 	"fmt"
-	"golitex/parser"
+	parser "golitex/litexparser"
 	"strings"
 )
 

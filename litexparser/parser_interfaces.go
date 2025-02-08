@@ -1,4 +1,4 @@
-package parser
+package litexparser
 
 type Fc interface {
 	fc()

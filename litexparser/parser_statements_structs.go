@@ -1,4 +1,4 @@
-package parser
+package litexparser
 
 type TopStmt struct {
 	Stmt  Stmt

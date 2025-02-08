@@ -1,4 +1,4 @@
-package executor
+package litexexecutor
 
 type ExecStatus uint8
 
