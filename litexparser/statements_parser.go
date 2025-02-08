@@ -106,7 +106,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	if !stmt.Header.isEnd() {
+	if !stmt.Header.ExceedEnd() {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
@@ -466,7 +466,7 @@ func (stmt *TokenBlock) parseInherit() (*[]TypeConceptStr, error) {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		types = append(types, TypeConceptStr(cur))
-		if !curStmt.Header.isEnd() {
+		if !curStmt.Header.ExceedEnd() {
 			return nil, fmt.Errorf("expect one string in inherit")
 		}
 	}
@@ -542,7 +542,7 @@ func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-	} else if !stmt.Header.isEnd() {
+	} else if !stmt.Header.ExceedEnd() {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
@@ -730,7 +730,7 @@ func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	if !stmt.Body[0].Header.isEnd() {
+	if !stmt.Body[0].Header.ExceedEnd() {
 		return nil, fmt.Errorf("expected end of block")
 	}
 
@@ -783,7 +783,7 @@ func (stmt *TokenBlock) parseMemberStmt() (*DefMemberStmt, error) {
 		return nil, fmt.Errorf("expect 'var', 'fn', or 'property'")
 	}
 
-	if stmt.Header.isEnd() {
+	if stmt.Header.ExceedEnd() {
 		return &DefMemberStmt{typeConcept, varType, decl, []factStmt{}}, nil
 	}
 
@@ -834,7 +834,7 @@ func (stmt *TokenBlock) parseTypeMemberStmt() (*DefTypeMemberStmt, error) {
 		return nil, fmt.Errorf("expect 'var', 'fn', or 'property'")
 	}
 
-	if stmt.Header.isEnd() {
+	if stmt.Header.ExceedEnd() {
 		return &DefTypeMemberStmt{typeConcept, decl, []factStmt{}}, nil
 	}
 

@@ -26,5 +26,5 @@ func execDefVarStmt(env *env.Env, stmt *parser.DefVarStmt) (*ExecValue, error) {
 			return nil, err
 		}
 	}
-	return nil, nil
+	return &ExecValue{ExecTrue, ""}, nil
 }

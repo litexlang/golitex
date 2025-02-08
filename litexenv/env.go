@@ -13,9 +13,21 @@ type Env struct {
 	varMemory        memory.VarMemory
 	propertyMemory   memory.PropertyMemory
 	fnMemory         memory.FnMemory
+	aliasMemory      memory.AliasMemory
 	specFactMemory   memory.SpecificFactMemory
 	forallFactMemory memory.ForallFactMemory
-	aliasMemory      memory.AliasMemory
+}
+
+func NewEnv() *Env {
+	return &Env{
+		parent:           nil,
+		varMemory:        *memory.NewVarMemory(),
+		propertyMemory:   *memory.NewPropertyMemory(),
+		fnMemory:         *memory.NewFnMemory(),
+		aliasMemory:      *memory.NewAliasMemory(),
+		specFactMemory:   *memory.NewSpecificFactMemory(),
+		forallFactMemory: *memory.NewForallFactMemory(),
+	}
 }
 
 func (env *Env) isNameUsed(name string) (bool, error) {
@@ -36,6 +48,10 @@ func (env *Env) isNameUsed(name string) (bool, error) {
 	}
 
 	if _, got := env.propertyMemory.Get(name); got {
+		return true, fmt.Errorf("%v is already defined", name)
+	}
+
+	if _, got := env.aliasMemory.Get(name); got {
 		return true, fmt.Errorf("%v is already defined", name)
 	}
 

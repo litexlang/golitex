@@ -3,8 +3,8 @@ package litexexecutor
 type ExecStatus uint8
 
 const (
-	TRUE ExecStatus = iota
-	UNKNOWN
+	ExecTrue ExecStatus = iota
+	ExecUnknown
 )
 
 type ExecValue struct {
