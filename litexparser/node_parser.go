@@ -28,7 +28,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 	}
 
 	fcArr := []Fc{curFc}
-	for !parser.isEnd() && parser.is(BuiltinSyms["."]) {
+	for !parser.ExceedEnd() && parser.is(BuiltinSyms["."]) {
 		err = parser.skip(BuiltinSyms["."])
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -109,7 +109,7 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 		return nil, err
 	}
 
-	for !parser.isEnd() && (parser.is(BuiltinSyms["["]) || parser.is(BuiltinSyms["("])) {
+	for !parser.ExceedEnd() && (parser.is(BuiltinSyms["["]) || parser.is(BuiltinSyms["("])) {
 		typeParamsPtr := &[]typeVar{}
 		if parser.is(BuiltinSyms["["]) {
 			typeParamsPtr, err = parser.parseBracketedTypeVarArr()

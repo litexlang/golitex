@@ -71,8 +71,8 @@ func (it *Parser) isAndSkip(expected string) bool {
 	}
 }
 
-func (it *Parser) isEnd() bool {
-	return it.index == len(it.slice)
+func (it *Parser) ExceedEnd() bool {
+	return it.index >= len(it.slice)
 }
 
 func (it *Parser) skip(expected ...string) error {

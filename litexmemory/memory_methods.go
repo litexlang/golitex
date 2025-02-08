@@ -20,12 +20,17 @@ func (mem *VarMemory) Set(pair *parser.FcVarDeclPair) (*VarMemoryEntry, error) {
 	return &toStore, nil
 }
 
-func (mem *PropertyMemory) Get(s string) (*VarMemoryEntry, bool) {
+func (mem *PropertyMemory) Get(s string) (*PropertyMemoryEntry, bool) {
 	// TODO
 	return nil, false
 }
 
-func (mem *FnMemory) Get(s string) (*VarMemoryEntry, bool) {
+func (mem *FnMemory) Get(s string) (*FnMemoryEntry, bool) {
 	//TODO
+	return nil, false
+}
+
+func (mem *AliasMemory) Get(s string) (*AliasMemoryEntry, bool) {
+	// TODO
 	return nil, false
 }
