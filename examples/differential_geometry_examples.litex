@@ -9,3 +9,15 @@ type I open_interval(1)
 var C curve(3, 2, M, I)
 C.local_representation(t, 1) = (x(1)`C)(t)
 
+// 用 OOP
+type[M manifold, I open_interval] fn (t I) M curve:
+    member:
+        fn local_representation(t I, i nat) R:
+            forall 1 < i < M.dim:
+                local_representation(t, i) = (x(i)`self)(t)
+
+// 注意到 不能有临时变量；比如，不能写 curve(new manifold(), new I(1)) 这样的
+type M manifold(3,2)
+type I open_interval(1)
+var C curve(M, I)
+C.local_representation(t, 1) = (x(1)`C)(t)
