@@ -1,9 +1,9 @@
-package executor
+package litexexecutor
 
 import (
 	"fmt"
-	"golitex/env"
-	"golitex/parser"
+	env "golitex/litexenv"
+	parser "golitex/litexparser"
 )
 
 func ExecTopLevelStmt(env *env.Env, stmt *parser.TopStmt) (*ExecValue, error) {

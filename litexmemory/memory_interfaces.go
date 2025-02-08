@@ -1,4 +1,4 @@
-package memory
+package litexmemory
 
 type MemFact interface {
 	MemFact()

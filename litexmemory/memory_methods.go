@@ -1,6 +1,6 @@
-package memory
+package litexmemory
 
-import "golitex/parser"
+import parser "golitex/litexparser"
 
 func (mem *VarMemory) Get(s string) (*VarMemoryEntry, bool) {
 	ret, ok := mem.entries[s]
