@@ -21,4 +21,7 @@ func TestStoreNewVar(t *testing.T) {
 		}
 		fmt.Println(value)
 	}
+
+	entry, _ := env.VarMemory.Get("a")
+	println(string(entry.Tp.Value.(parser.FcVarTypeStrValue)))
 }
