@@ -9,12 +9,18 @@ type I open_interval(1)
 var C curve(3, 2, M, I)
 C.local_representation(t, 1) = (x(1)`C)(t)
 
-// 用 OOP
-type[M manifold, I open_interval] fn (t I) M curve:
+// 用 OOP; 我不清楚[] 是否必要，因为[]的用处仅仅是往一个符号绑定信息，那()也能起到这样的效果
+// type[]() 是必要的；大部分编程语言都把type的type放在<>里，而不是作为参数出现在()里，是有道理的；我还是遵循习惯法更安全
+// 另外，有时候type初始化确实需要传入参数，所以[]()是必须的
+// type的作用是，绑定member；其他时候不要用type用Property
+// 不能用 self，因为比如下面用self的话，C是self,然后fn里的local_representation(t,i)也是self，这会造成问题
+type[M manifold, I open_interval] fn (t I) M curve C:
     member:
-        fn local_representation(t I, i nat) R:
-            forall 1 < i < M.dim:
-                local_representation(t, i) = (x(i)`self)(t)
+        fn local_representation(t I, i nat) R: // 语义：t 和 i 都被声明好了
+            if:
+                1 < i < M.dim
+            then:
+                local_representation(t, k) = (x(k)`C)(t)
 
 // 注意到 不能有临时变量；比如，不能写 curve(new manifold(), new I(1)) 这样的
 type M manifold(3,2)
