@@ -1,0 +1,10 @@
+type open_interval(a R)
+type M manifold(k)
+fn curve(s nat, M manifold(s) , I open_interval(a R)) M
+
+type fn (s nat, M manifold(s) , I open_interval(a R)) M curve C:
+    member:
+        fn local_representation(t I) R:
+            local_representation(t) = (x`C)(t)
+
+
