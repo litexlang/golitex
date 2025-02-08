@@ -12,39 +12,39 @@ func (e *MemoryErr) Error() string {
 	return e.err.Error()
 }
 
-type SpecificFactMemory struct{ entries map[string]SpecFactMemEntry }
+type SpecificFactMemory struct{ Entries map[string]SpecFactMemEntry }
 
 func NewSpecificFactMemory() *SpecificFactMemory {
-	return &SpecificFactMemory{entries: map[string]SpecFactMemEntry{}}
+	return &SpecificFactMemory{Entries: map[string]SpecFactMemEntry{}}
 }
 
-type SpecFactMemEntry struct{ facts []SpecMemFact }
+type SpecFactMemEntry struct{ Facts []SpecMemFact }
 
-type SpecMemFact struct{ fact parser.NotFactStmt }
+type SpecMemFact struct{ Fact parser.NotFactStmt }
 
-type ForallFactMemory struct{ entires map[string]ForallFactMemEntry }
+type ForallFactMemory struct{ Entires map[string]ForallFactMemEntry }
 
 func NewForallFactMemory() *ForallFactMemory {
 	return &ForallFactMemory{map[string]ForallFactMemEntry{}}
 }
 
-type ForallFactMemEntry struct{ facts []ForallMemFact }
+type ForallFactMemEntry struct{ Facts []ForallMemFact }
 
-type ForallMemFact struct{ fact parser.ForallStmt }
+type ForallMemFact struct{ Fact parser.ForallStmt }
 
-type VarMemory struct{ entries map[string]VarMemoryEntry }
+type VarMemory struct{ Entries map[string]VarMemoryEntry }
 
 func NewVarMemory() *VarMemory {
-	return &VarMemory{entries: map[string]VarMemoryEntry{}}
+	return &VarMemory{Entries: map[string]VarMemoryEntry{}}
 }
 
 type VarMemoryEntry struct {
-	tp    parser.FcVarType
-	types []parser.FcVarType
+	Tp    parser.FcVarType
+	Types []parser.FcVarType
 }
 
 type PropertyMemory struct {
-	entires map[string]PropertyMemoryEntry
+	Entires map[string]PropertyMemoryEntry
 }
 
 func NewPropertyMemory() *PropertyMemory {
@@ -52,9 +52,9 @@ func NewPropertyMemory() *PropertyMemory {
 }
 
 type PropertyMemoryEntry struct {
-	tp    parser.FcPropertyType
-	types []parser.FcPropertyType
-	decl  parser.PropertyDecl
+	Tp    parser.FcPropertyType
+	Types []parser.FcPropertyType
+	Decl  parser.PropertyDecl
 }
 
 type FnMemory struct{ entries map[string]FnMemoryEntry }
@@ -64,9 +64,9 @@ func NewFnMemory() *FnMemory {
 }
 
 type FnMemoryEntry struct {
-	tp    parser.FcFnType
-	types []parser.FcFnType
-	decl  parser.FcFnDecl
+	Tp    parser.FcFnType
+	Types []parser.FcFnType
+	Decl  parser.FcFnDecl
 }
 
 type AliasMemory struct{ entries map[string]AliasMemoryEntry }
@@ -76,5 +76,5 @@ func NewAliasMemory() *AliasMemory {
 }
 
 type AliasMemoryEntry struct {
-	values *[]parser.Fc
+	Values *[]parser.Fc
 }

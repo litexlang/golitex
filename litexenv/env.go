@@ -9,24 +9,24 @@ import (
 )
 
 type Env struct {
-	parent           *Env
-	varMemory        memory.VarMemory
-	propertyMemory   memory.PropertyMemory
-	fnMemory         memory.FnMemory
-	aliasMemory      memory.AliasMemory
-	specFactMemory   memory.SpecificFactMemory
-	forallFactMemory memory.ForallFactMemory
+	Parent           *Env
+	VarMemory        memory.VarMemory
+	PropertyMemory   memory.PropertyMemory
+	FnMemory         memory.FnMemory
+	AliasMemory      memory.AliasMemory
+	SpecFactMemory   memory.SpecificFactMemory
+	ForallFactMemory memory.ForallFactMemory
 }
 
 func NewEnv() *Env {
 	return &Env{
-		parent:           nil,
-		varMemory:        *memory.NewVarMemory(),
-		propertyMemory:   *memory.NewPropertyMemory(),
-		fnMemory:         *memory.NewFnMemory(),
-		aliasMemory:      *memory.NewAliasMemory(),
-		specFactMemory:   *memory.NewSpecificFactMemory(),
-		forallFactMemory: *memory.NewForallFactMemory(),
+		Parent:           nil,
+		VarMemory:        *memory.NewVarMemory(),
+		PropertyMemory:   *memory.NewPropertyMemory(),
+		FnMemory:         *memory.NewFnMemory(),
+		AliasMemory:      *memory.NewAliasMemory(),
+		SpecFactMemory:   *memory.NewSpecificFactMemory(),
+		ForallFactMemory: *memory.NewForallFactMemory(),
 	}
 }
 
@@ -39,19 +39,19 @@ func (env *Env) isNameUsed(name string) (bool, error) {
 		return true, fmt.Errorf("%v is a reserved symbol", name)
 	}
 
-	if _, got := env.varMemory.Get(name); got {
+	if _, got := env.VarMemory.Get(name); got {
 		return true, fmt.Errorf("%v is already defined", name)
 	}
 
-	if _, got := env.fnMemory.Get(name); got {
+	if _, got := env.FnMemory.Get(name); got {
 		return true, fmt.Errorf("%v is already defined", name)
 	}
 
-	if _, got := env.propertyMemory.Get(name); got {
+	if _, got := env.PropertyMemory.Get(name); got {
 		return true, fmt.Errorf("%v is already defined", name)
 	}
 
-	if _, got := env.aliasMemory.Get(name); got {
+	if _, got := env.AliasMemory.Get(name); got {
 		return true, fmt.Errorf("%v is already defined", name)
 	}
 
@@ -63,12 +63,12 @@ func (env *Env) isNameUsed(name string) (bool, error) {
 }
 
 func (e *Env) isVarDefined(name string) bool {
-	_, ok := e.varMemory.Get(name)
+	_, ok := e.VarMemory.Get(name)
 	if ok {
 		return true
 	} else {
-		if e.parent != nil {
-			return e.parent.isVarDefined(name)
+		if e.Parent != nil {
+			return e.Parent.isVarDefined(name)
 		}
 		return false
 	}
@@ -79,6 +79,6 @@ func (e *Env) NewVar(pair *parser.FcVarDeclPair) error {
 		return fmt.Errorf("%v is defined", pair.Var)
 	}
 
-	_, err := e.varMemory.Set(pair)
+	_, err := e.VarMemory.Set(pair)
 	return err
 }
