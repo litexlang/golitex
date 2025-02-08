@@ -69,21 +69,20 @@ func putBuiltinIntoKeywords() *map[string]string {
 	var Keywords = map[string]string{
 		"concept":     "concept", // 用在两个地方：声明；作为property判定一个东西是不是特定concept
 		"type":        "type",    // 用在两个地方：声明；作为property判定一个东西是不是特定type.
-		"inherit":     "inherit",
 		"type_member": "type_member",
 		"member":      "member",
-		"property":    "property",
+		"forall":      "forall",
 		"if":          "if",
 		"then":        "then",
-		"forall":      "forall",
-		"exist":       "exist",
-		"have":        "have",
 		"var":         "var",
 		"fn":          "fn",
-		"pub":         "pub",
+		"property":    "property",
 		"know":        "know",
+		"exist":       "exist",
+		"have":        "have",
 		"claim":       "claim",
 		"proof":       "proof",
+		"pub":         "pub",
 		"import":      "import",
 		"package":     "package",
 		"not":         "not",
@@ -91,8 +90,9 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"use":         "use",
 		"impl":        "impl",
 		"any":         "any",
-		"as":          "as",
+		"as":          "as",     // 可能没必要
 		"extend":      "extend", // A inherit B: A 是 B的子集；B extend A: A 是B 的子集
+		"inherit":     "inherit",
 	}
 
 	for k, v := range BuiltinSyms {
