@@ -652,6 +652,16 @@ func (stmt *TokenBlock) parseDefUseStmt() (*DefuseStmt, error) {
 func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
 	stmt.Header.skip(Keywords["know"])
 
+	if !stmt.Header.is(BuiltinSyms[":"]) {
+		facts := []factStmt{}
+		fact, err := stmt.parseFactStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
+		return &KnowStmt{facts}, nil
+	}
+
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
