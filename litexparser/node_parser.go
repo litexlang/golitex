@@ -501,23 +501,12 @@ func (parser *Parser) parseBracedFcStrTypePairArray() (*[]StrTypePair, error) {
 func (parser *Parser) parseVarDecl() (*FcVarDecl, error) {
 	parser.skip(Keywords["var"])
 
-	pairs := []FcVarDeclPair{}
-
 	pair, err := parser.parseFcVarPair()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
-	pairs = append(pairs, *pair)
 
-	for parser.is(BuiltinSyms[","]) {
-		pair, err := parser.parseFcVarPair()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-		pairs = append(pairs, *pair)
-	}
-
-	return &FcVarDecl{pairs}, nil
+	return &FcVarDecl{*pair}, nil
 }
 
 func (parser *Parser) parseFcVarPair() (*FcVarDeclPair, error) {

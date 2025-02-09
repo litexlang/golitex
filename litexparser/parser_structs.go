@@ -3,7 +3,7 @@ package litexparser
 type TypeConceptStr string
 
 type FcVarDecl struct {
-	VarTypePairs []FcVarDeclPair
+	VarTypePair FcVarDeclPair
 }
 
 type FcVarDeclPair struct {

@@ -853,3 +853,29 @@ f(t) is red
 		t.Fatal(err)
 	}
 }
+
+func TestDefTypeStmt(t *testing.T) {
+	code := `
+type G
+type G impl Group
+know $Group(G)
+type var A G:
+	fact:
+		know $Group(G)
+type fn f[G Group, G2 Group](x G, y G) G:
+	fact:
+		know $Group(G)
+type property f[G Group, G2 Group](x G, y G):
+	fact:
+		know $Group(G)
+
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}

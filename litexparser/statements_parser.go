@@ -261,25 +261,49 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 }
 
 func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
-	stmt.Header.skip()
-
-	typeVariable, err := stmt.Header.next()
+	err := stmt.Header.skip(Keywords["type"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fcType, err := stmt.Header.parseFcType()
+	if !stmt.Header.is(Keywords["fn"]) && !stmt.Header.is(Keywords["property"]) && !stmt.Header.is(Keywords["var"]) {
+		typeName, err := stmt.Header.next()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+
+		decl := FcVarDecl{FcVarDeclPair{"", FcVarType{"", FcVarTypeStrValue(typeName)}}}
+
+		conceptNameStr := ""
+		if stmt.Header.is(Keywords["impl"]) {
+			stmt.Header.next()
+			conceptNameStr, err = stmt.Header.next()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+		}
+		conceptName := TypeConceptStr(conceptNameStr)
+
+		return &DefTypeStmt{&decl, conceptName, []TypeConceptStr{conceptName}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
+	}
+
+	decl, err := stmt.parseFcDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	conceptName, err := stmt.Header.next()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
+	conceptNameStr := ""
+	if stmt.Header.is(Keywords["impl"]) {
+		stmt.Header.next()
+		conceptNameStr, err = stmt.Header.next()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
 	}
+	conceptName := TypeConceptStr(conceptNameStr)
 
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{TypeVarStr(typeVariable), fcType, TypeConceptStr(conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
+		return &DefTypeStmt{decl, conceptName, []TypeConceptStr{conceptName}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.Header.next()
 	}
@@ -303,7 +327,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		}
 	}
 
-	return &DefTypeStmt{TypeVarStr(typeVariable), fcType, TypeConceptStr(conceptName), *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+	return &DefTypeStmt{decl, conceptName, []TypeConceptStr{conceptName}, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseFactStmt() (factStmt, error) {
@@ -671,7 +695,7 @@ func (stmt *TokenBlock) parseExistStmt() (*DefExistStmt, error) {
 			continue
 		}
 		if curStmt.Header.is(Keywords["members"]) {
-			member, err = curStmt.parseFcDecl()
+			member, err = curStmt.parseFcDecls()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
@@ -682,32 +706,30 @@ func (stmt *TokenBlock) parseExistStmt() (*DefExistStmt, error) {
 	return &DefExistStmt{*decl, *ifFacts, *member, *thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseFcDecl() (*[]fcDecl, error) {
+func (stmt *TokenBlock) parseFcDecls() (*[]fcDecl, error) {
 	ret := []fcDecl{}
 
 	for _, curStmt := range stmt.Body {
-		if curStmt.Header.is(Keywords["fn"]) {
-			decl, err := stmt.Header.parseFcFnDecl()
-			if err != nil {
-				return nil, &parseStmtErr{err, *stmt}
-			}
-			ret = append(ret, decl)
-		} else if curStmt.Header.is(Keywords["var"]) {
-			decl, err := stmt.Header.parseVarDecl()
-			if err != nil {
-				return nil, &parseStmtErr{err, *stmt}
-			}
-			ret = append(ret, decl)
-		} else if curStmt.Header.is(Keywords["property"]) {
-			decl, err := stmt.Header.parsePropertyDecl()
-			if err != nil {
-				return nil, &parseStmtErr{err, *stmt}
-			}
-			ret = append(ret, decl)
+		cur, err := curStmt.parseFcDecl()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
 		}
+		ret = append(ret, cur)
 	}
 
 	return &ret, nil
+}
+
+func (stmt *TokenBlock) parseFcDecl() (fcDecl, error) {
+	if stmt.Header.is(Keywords["fn"]) {
+		return stmt.Header.parseFcFnDecl()
+	} else if stmt.Header.is(Keywords["var"]) {
+		return stmt.Header.parseVarDecl()
+	} else if stmt.Header.is(Keywords["property"]) {
+		return stmt.Header.parsePropertyDecl()
+	}
+
+	return nil, fmt.Errorf("expect 'fn', 'var', or 'property'")
 }
 
 func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
