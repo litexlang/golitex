@@ -859,14 +859,16 @@ func TestDefTypeStmt(t *testing.T) {
 type G
 type G impl Group
 know $Group(G)
+know forall G Group:
+	$Group(G)
 type var A G:
-	fact:
+	then:
 		know $Group(G)
 type fn f[G Group, G2 Group](x G, y G) G:
-	fact:
+	then:
 		know $Group(G)
 type property f[G Group, G2 Group](x G, y G):
-	fact:
+	then:
 		know $Group(G)
 
 `
