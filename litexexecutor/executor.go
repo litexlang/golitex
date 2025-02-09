@@ -20,11 +20,9 @@ func execStmt(env *env.Env, stmt *parser.Stmt) (*ExecValue, error) {
 }
 
 func execDefVarStmt(env *env.Env, stmt *parser.DefVarStmt) (*ExecValue, error) {
-	for _, pair := range stmt.Decl.VarTypePairs {
-		err := env.NewVar(&pair)
-		if err != nil {
-			return nil, err
-		}
+	err := env.NewVar(&stmt.Decl.VarTypePair)
+	if err != nil {
+		return nil, err
 	}
 	return &ExecValue{ExecTrue, ""}, nil
 }
