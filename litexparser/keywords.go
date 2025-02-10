@@ -90,9 +90,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"use":         "use",
 		"impl":        "impl",
 		"any":         "any",
-		"as":          "as",     // 可能没必要
-		"extend":      "extend", // A inherit B: A 是 B的子集；B extend A: A 是B 的子集
-		"inherit":     "inherit",
+		"as":          "as", // 可能没必要
 	}
 
 	for k, v := range BuiltinSyms {
