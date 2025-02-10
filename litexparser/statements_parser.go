@@ -284,7 +284,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		}
 		conceptName := TypeConceptStr(conceptNameStr)
 
-		return &DefTypeStmt{&decl, conceptName, []TypeConceptStr{conceptName}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
+		return &DefTypeStmt{&decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
 	}
 
 	decl, err := stmt.parseFcDecl()
@@ -303,31 +303,38 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	conceptName := TypeConceptStr(conceptNameStr)
 
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{decl, conceptName, []TypeConceptStr{conceptName}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
+		return &DefTypeStmt{decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.Header.next()
 	}
 
+	typeVarMember := &[]FcVarDecl{}
+	typeFnMember := &[]FcFnDecl{}
+	typePropertyMember := &[]PropertyDecl{}
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
 	propertyMember := &[]PropertyDecl{}
 	thenFacts := &[]factStmt{}
 
-	for _, curBody := range stmt.Body {
-		if curBody.Header.is(Keywords["member"]) {
-			varMember, fnMember, propertyMember, err = curBody.parseFcMember()
+	for _, curStmt := range stmt.Body {
+		if curStmt.Header.is(Keywords["type_member"]) {
+			typeVarMember, typeFnMember, typePropertyMember, err = curStmt.parseFcMember()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
-		} else if curBody.Header.is(Keywords["then"]) {
-			thenFacts, err = curBody.parseThenFacts()
+		} else if curStmt.Header.is(Keywords["member"]) {
+			varMember, fnMember, propertyMember, err = curStmt.parseFcMember()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+		} else if curStmt.Header.is(Keywords["then"]) {
+			thenFacts, err = curStmt.parseThenFacts()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
 		}
 	}
-
-	return &DefTypeStmt{decl, conceptName, []TypeConceptStr{conceptName}, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+	return &DefTypeStmt{decl, conceptName, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseFactStmt() (factStmt, error) {
