@@ -10,11 +10,11 @@ type DefVarStmt struct {
 	Facts []factStmt
 }
 
+// if concept and type has more conceptTypes, use know impl
+
 type DefConceptStmt struct {
-	typeVar            TypeVarStr
-	fcType             fcType
+	decl               fcDecl
 	conceptName        TypeConceptStr
-	inherit            []TypeConceptStr
 	typeVarMember      []FcVarDecl
 	typeFnMember       []FcFnDecl
 	typePropertyMember []PropertyDecl

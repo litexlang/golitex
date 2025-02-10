@@ -870,6 +870,9 @@ type fn f[G Group, G2 Group](x G, y G) G:
 type property f[G Group, G2 Group](x G, y G):
 	then:
 		know $Group(G)
+type var A G:
+	member:
+
 
 `
 
