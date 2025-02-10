@@ -25,13 +25,15 @@ type DefConceptStmt struct {
 }
 
 type DefTypeStmt struct {
-	fcType          fcDecl // 可以是 fn, 比如 type m Matrix(a nat, b nat) fn m(i nat, b nat) nat: 1 <= i <= a, 1 <= j <= b then: m(i,j) = xxx(i,j) ...。这也可以看到有下标的都是 函数
-	conceptName     TypeConceptStr
-	satisfyConcepts []TypeConceptStr
-	varMember       []FcVarDecl
-	fnMember        []FcFnDecl
-	propertyMember  []PropertyDecl
-	thenFacts       []factStmt
+	decl               fcDecl
+	conceptName        TypeConceptStr
+	typeVarMember      []FcVarDecl
+	typeFnMember       []FcFnDecl
+	typePropertyMember []PropertyDecl
+	varMember          []FcVarDecl
+	fnMember           []FcFnDecl
+	propertyMember     []PropertyDecl
+	thenFacts          []factStmt
 }
 
 type DefPropertyStmt struct {

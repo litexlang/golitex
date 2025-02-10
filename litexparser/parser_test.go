@@ -861,7 +861,7 @@ type G impl Group
 know $Group(G)
 know forall G Group:
 	$Group(G)
-type var A G:
+type var A G:	// type name is G, A is name for "self"
 	then:
 		know $Group(G)
 type fn f[G Group, G2 Group](x G, y G) G:
