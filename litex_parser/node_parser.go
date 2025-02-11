@@ -523,7 +523,7 @@ func (parser *Parser) parseFcVarPair() (*FcVarDeclPair, error) {
 	return &FcVarDeclPair{v, tp}, nil
 }
 
-func (parser *Parser) parsePropertyDecl() (*PropertyDecl, error) {
+func (parser *Parser) parsePropertyDecl() (*PropDecl, error) {
 	parser.skip(Keywords["prop"])
 	name, err := parser.next()
 	if err != nil {
@@ -535,10 +535,10 @@ func (parser *Parser) parsePropertyDecl() (*PropertyDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &PropertyDecl{name, FcPropertyType{*typeParams, *varParams}}, nil
+	return &PropDecl{name, FcPropertyType{*typeParams, *varParams}}, nil
 }
 
-func (parser *Parser) parseExistDecl() (*PropertyDecl, error) {
+func (parser *Parser) parseExistDecl() (*PropDecl, error) {
 	parser.skip(Keywords["exist"])
 	name, err := parser.next()
 	if err != nil {
@@ -550,7 +550,7 @@ func (parser *Parser) parseExistDecl() (*PropertyDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &PropertyDecl{name, FcPropertyType{*typeParams, *varParams}}, nil
+	return &PropDecl{name, FcPropertyType{*typeParams, *varParams}}, nil
 }
 
 func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {

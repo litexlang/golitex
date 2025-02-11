@@ -17,10 +17,10 @@ type DefConceptStmt struct {
 	conceptName        TypeConceptStr
 	typeVarMember      []FcVarDecl
 	typeFnMember       []FcFnDecl
-	typePropertyMember []PropertyDecl
+	typePropertyMember []PropDecl
 	varMember          []FcVarDecl
 	fnMember           []FcFnDecl
-	propertyMember     []PropertyDecl
+	propertyMember     []PropDecl
 	thenFacts          []factStmt
 }
 
@@ -29,15 +29,15 @@ type DefTypeStmt struct {
 	conceptName        TypeConceptStr
 	typeVarMember      []FcVarDecl
 	typeFnMember       []FcFnDecl
-	typePropertyMember []PropertyDecl
+	typePropertyMember []PropDecl
 	varMember          []FcVarDecl
 	fnMember           []FcFnDecl
-	propertyMember     []PropertyDecl
+	propertyMember     []PropDecl
 	thenFacts          []factStmt
 }
 
 type DefPropertyStmt struct {
-	decl      PropertyDecl
+	decl      PropDecl
 	ifFacts   []factStmt
 	thenFacts []factStmt
 }
@@ -87,7 +87,7 @@ type KnowStmt struct {
 }
 
 type DefExistStmt struct {
-	decl      PropertyDecl
+	decl      PropDecl
 	ifFacts   []factStmt
 	member    []fcDecl
 	thenFacts []factStmt
@@ -111,6 +111,10 @@ type DefTypeMemberStmt struct {
 	facts       []factStmt
 }
 
-type AxiomStmt struct {
-	prop DefPropertyStmt
+type AxiomDefPropStmt struct {
+	decl DefPropertyStmt
+}
+
+type AxiomDefExistStmt struct {
+	decl DefExistStmt
 }

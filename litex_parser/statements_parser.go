@@ -91,7 +91,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	case Keywords["know"]:
 		ret, err = stmt.parseKnowStmt()
 	case Keywords["exist"]:
-		ret, err = stmt.parseExistStmt()
+		ret, err = stmt.parseDefExistStmt()
 	case Keywords["have"]:
 		ret, err = stmt.parseHaveStmt()
 	case Keywords["member"]:
@@ -115,7 +115,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	return ret, nil
 }
 
-func (p *TokenBlock) parseFcMember() (*[]FcVarDecl, *[]FcFnDecl, *[]PropertyDecl, error) {
+func (p *TokenBlock) parseFcMember() (*[]FcVarDecl, *[]FcFnDecl, *[]PropDecl, error) {
 	p.Header.next()
 	if err := p.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, nil, nil, err
@@ -123,7 +123,7 @@ func (p *TokenBlock) parseFcMember() (*[]FcVarDecl, *[]FcFnDecl, *[]PropertyDecl
 
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
-	propertyMember := &[]PropertyDecl{}
+	propertyMember := &[]PropDecl{}
 
 	for _, curStmt := range p.Body {
 		if curStmt.Header.is(Keywords["var"]) {
@@ -220,17 +220,17 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	conceptName := TypeConceptStr(conceptNameStr)
 
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		return &DefConceptStmt{decl, (conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
+		return &DefConceptStmt{decl, (conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.Header.next()
 	}
 
 	typeVarMember := &[]FcVarDecl{}
 	typeFnMember := &[]FcFnDecl{}
-	typePropertyMember := &[]PropertyDecl{}
+	typePropertyMember := &[]PropDecl{}
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
-	propertyMember := &[]PropertyDecl{}
+	propertyMember := &[]PropDecl{}
 	thenFacts := &[]factStmt{}
 
 	for _, curStmt := range stmt.Body {
@@ -280,7 +280,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		}
 		conceptName := TypeConceptStr(conceptNameStr)
 
-		return &DefTypeStmt{&decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
+		return &DefTypeStmt{&decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []factStmt{}}, nil
 	}
 
 	decl, err := stmt.parseFcDecl()
@@ -299,17 +299,17 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	conceptName := TypeConceptStr(conceptNameStr)
 
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropertyDecl{}, []factStmt{}}, nil
+		return &DefTypeStmt{decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []factStmt{}}, nil
 	} else {
 		stmt.Header.next()
 	}
 
 	typeVarMember := &[]FcVarDecl{}
 	typeFnMember := &[]FcFnDecl{}
-	typePropertyMember := &[]PropertyDecl{}
+	typePropertyMember := &[]PropDecl{}
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
-	propertyMember := &[]PropertyDecl{}
+	propertyMember := &[]PropDecl{}
 	thenFacts := &[]factStmt{}
 
 	for _, curStmt := range stmt.Body {
@@ -663,7 +663,7 @@ func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
 	return &KnowStmt{*facts}, nil
 }
 
-func (stmt *TokenBlock) parseExistStmt() (*DefExistStmt, error) {
+func (stmt *TokenBlock) parseDefExistStmt() (*DefExistStmt, error) {
 	decl, err := stmt.Header.parseExistDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -904,11 +904,22 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (NotFactStmt, error) {
 	return &RelationFactStmt{true, vars, FcStr(opt)}, nil
 }
 
-func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {
+func (stmt *TokenBlock) parseAxiomStmt() (AxiomStmt, error) {
 	stmt.Header.skip(Keywords["axiom"])
-	prop, err := stmt.parseDefPropertyStmt()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
+
+	if stmt.Header.is(Keywords["prop"]) {
+		prop, err := stmt.parseDefPropertyStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		return &AxiomDefPropStmt{*prop}, nil
+	} else if stmt.Header.is(Keywords["exist"]) {
+		exist, err := stmt.parseDefExistStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		return &AxiomDefExistStmt{*exist}, nil
 	}
-	return &AxiomStmt{*prop}, nil
+
+	return nil, fmt.Errorf("expect 'prop' or 'exist'")
 }

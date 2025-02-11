@@ -16,7 +16,7 @@ type FcFnDecl struct {
 	tp   FcFnType
 }
 
-type PropertyDecl struct {
+type PropDecl struct {
 	name string
 	tp   FcPropertyType
 }

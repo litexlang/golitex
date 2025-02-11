@@ -30,7 +30,8 @@ func (s *HaveStmt) stmt()                   {}
 func (s *DefMemberStmt) stmt()              {}
 func (s *DefTypeMemberStmt) stmt()          {}
 func (s *ClaimProveByContradictStmt) stmt() {}
-func (s *AxiomStmt) stmt()                  {}
+func (s *AxiomDefPropStmt) stmt()           {}
+func (s *AxiomDefExistStmt) stmt()          {}
 
 type factStmt interface {
 	factStmt()
@@ -95,9 +96,9 @@ type fcDecl interface {
 	fcDecl()
 }
 
-func (f *FcVarDecl) fcDecl()    {}
-func (f *FcFnDecl) fcDecl()     {}
-func (f *PropertyDecl) fcDecl() {}
+func (f *FcVarDecl) fcDecl() {}
+func (f *FcFnDecl) fcDecl()  {}
+func (f *PropDecl) fcDecl()  {}
 
 type FcVarTypeValue interface {
 	fcVarTypeValue()
@@ -111,5 +112,13 @@ type ClaimStmt interface {
 	stmt()
 }
 
-func (c *ClaimProveByContradictStmt) claimStmt() {}
-func (c *ClaimProveStmt) claimStmt()             {}
+func (s *ClaimProveStmt) claimStmt()             {}
+func (s *ClaimProveByContradictStmt) claimStmt() {}
+
+type AxiomStmt interface {
+	axiomStmt()
+	stmt()
+}
+
+func (s *AxiomDefExistStmt) axiomStmt() {}
+func (s *AxiomDefPropStmt) axiomStmt()  {}
