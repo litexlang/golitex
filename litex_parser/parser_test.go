@@ -383,6 +383,16 @@ prop P[G Group, G2 Group](g G, g2 G2):
 prop P[G Group, G2 Group](g G, g2 G2):
 	$f[G, B](g.g1, g2.g2)
 
+axiom prop P[G Group, G2 Group](g G, g2 G2):
+	if:
+    	$f[G, B](g.g1, g2.g2)
+	then:
+		$f[G, B](g.g1, g2.g2)
+
+axiom prop P[G Group, G2 Group](g G, g2 G2):
+	$f[G, B](g.g1, g2.g2)
+
+
 `
 	statements, err := ParserTester(code)
 	if err == nil {
