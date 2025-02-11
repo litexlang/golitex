@@ -504,7 +504,7 @@ func TestParseClaimStmt(t *testing.T) {
 claim :
 	$p[G, G2](x, y)
 
-	proof:
+	prove:
 		$p[G, G2](x, y)
 
 claim :
@@ -519,14 +519,14 @@ claim :
 				then:
 					$p[G, G2](x, y)
 
-	proof:
+	prove:
 		$p[G, G2](x, y)
 
 claim:
 	$p[G, G2](x, y)
 	$p[G, G2](x, y)
 		
-	proof:
+	prove:
 		$p[G, G2](x, y)
 		
 
@@ -803,7 +803,11 @@ fn ha [G Group] (g1 G, g2 prop [g G, g2 G] (t G) ) red:
     1 is red
 
 claim :
-	proof:
+	prove:
+		$p[G, G2](x, y)
+
+claim:
+	prove_by_contradiction:
 		$p[G, G2](x, y)
 
 $f[G, B](a, b).g[G, B].t(a, b)
@@ -825,7 +829,7 @@ func TestProofClaim(t *testing.T) {
 
 	code :=
 		`
-proof:
+prove:
 	1 is red
 `
 

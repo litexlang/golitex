@@ -67,7 +67,12 @@ type RelationFactStmt struct {
 	opt    Fc
 }
 
-type ClaimStmt struct {
+type ClaimProveByContradictStmt struct {
+	toCheck []factStmt
+	proof   []Stmt
+}
+
+type ClaimProveStmt struct {
 	toCheck []factStmt
 	proof   []Stmt
 }

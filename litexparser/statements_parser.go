@@ -84,8 +84,8 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseDefVarStmt()
 	case Keywords["claim"]:
 		ret, err = stmt.parseClaimStmt()
-	case Keywords["proof"]:
-		ret, err = stmt.parseProofClaimStmt()
+	case Keywords["prove"]:
+		ret, err = stmt.parseProveClaimStmt()
 	case Keywords["use"]:
 		ret, err = stmt.parseDefUseStmt()
 	case Keywords["know"]:
@@ -553,7 +553,7 @@ func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
 	return &DefVarStmt{*decl, *ifFacts}, nil
 }
 
-func (stmt *TokenBlock) parseClaimStmt() (*ClaimStmt, error) {
+func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
 	stmt.Header.skip()
 	var err error = nil
 
@@ -565,7 +565,7 @@ func (stmt *TokenBlock) parseClaimStmt() (*ClaimStmt, error) {
 	proof := &[]Stmt{}
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
-		if !stmt.Header.is(Keywords["proof"]) {
+		if !stmt.Header.is(Keywords["prove"]) && !stmt.Header.is(Keywords["prove_by_contradiction"]) {
 			fact, err := stmt.Body[i].parseFactStmt()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
@@ -574,10 +574,13 @@ func (stmt *TokenBlock) parseClaimStmt() (*ClaimStmt, error) {
 		}
 	}
 
-	err = stmt.Body[len(stmt.Body)-1].Header.testAndSkip(Keywords["proof"])
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
+	isProve := true
+	if stmt.Body[len(stmt.Body)-1].Header.is(Keywords["prove_by_contradiction"]) {
+		isProve = false
+	} else if !stmt.Body[len(stmt.Body)-1].Header.is(Keywords["prove"]) {
+		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
 	}
+	stmt.Body[len(stmt.Body)-1].Header.skip()
 
 	err = stmt.Body[len(stmt.Body)-1].Header.testAndSkip(Keywords[":"])
 	if err != nil {
@@ -592,11 +595,15 @@ func (stmt *TokenBlock) parseClaimStmt() (*ClaimStmt, error) {
 		*proof = append(*proof, curStmt)
 	}
 
-	return &ClaimStmt{*toCheck, *proof}, nil
+	if isProve {
+		return &ClaimProveStmt{*toCheck, *proof}, nil
+	} else {
+		return &ClaimProveByContradictStmt{*toCheck, *proof}, nil
+	}
 }
 
-func (stmt *TokenBlock) parseProofClaimStmt() (*ClaimStmt, error) {
-	stmt.Header.skip(Keywords["proof"])
+func (stmt *TokenBlock) parseProveClaimStmt() (*ClaimProveStmt, error) {
+	stmt.Header.skip(Keywords["prove"])
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -610,7 +617,7 @@ func (stmt *TokenBlock) parseProofClaimStmt() (*ClaimStmt, error) {
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
 
-	return &ClaimStmt{[]factStmt{}, innerStmtArr}, nil
+	return &ClaimProveStmt{[]factStmt{}, innerStmtArr}, nil
 }
 
 func (stmt *TokenBlock) parseDefUseStmt() (*DefuseStmt, error) {
