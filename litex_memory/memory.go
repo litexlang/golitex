@@ -2,7 +2,7 @@ package litexmemory
 
 import (
 	"fmt"
-	parser "golitex/litexparser"
+	parser "golitex/litex_parser"
 	"strings"
 )
 
@@ -31,5 +31,5 @@ func getMemoryKey(fc parser.Fc) (string, error) {
 		return strings.Join(fcs, fcFnCallChainMemKeyLinker), nil
 	}
 
-	return "", &MemoryErr{fmt.Errorf("Invalid Fc type")}
+	return "", &MemoryErr{fmt.Errorf("invalid Fc type")}
 }
