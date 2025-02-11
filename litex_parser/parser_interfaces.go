@@ -30,6 +30,7 @@ func (s *HaveStmt) stmt()                   {}
 func (s *DefMemberStmt) stmt()              {}
 func (s *DefTypeMemberStmt) stmt()          {}
 func (s *ClaimProveByContradictStmt) stmt() {}
+func (s *AxiomStmt) stmt()                  {}
 
 type factStmt interface {
 	factStmt()

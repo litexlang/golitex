@@ -110,3 +110,7 @@ type DefTypeMemberStmt struct {
 	member      fcDecl
 	facts       []factStmt
 }
+
+type AxiomStmt struct {
+	prop DefPropertyStmt
+}

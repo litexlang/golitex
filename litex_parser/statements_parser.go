@@ -98,6 +98,8 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseMemberStmt()
 	case Keywords["type_member"]:
 		ret, err = stmt.parseTypeMemberStmt()
+	case Keywords["axiom"]:
+		ret, err = stmt.parseAxiomStmt()
 	default:
 		ret, err = stmt.parseFactStmt()
 	}
@@ -900,4 +902,13 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (NotFactStmt, error) {
 	}
 
 	return &RelationFactStmt{true, vars, FcStr(opt)}, nil
+}
+
+func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {
+	stmt.Header.skip(Keywords["axiom"])
+	prop, err := stmt.parseDefPropertyStmt()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+	return &AxiomStmt{*prop}, nil
 }
