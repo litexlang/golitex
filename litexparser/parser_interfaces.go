@@ -14,21 +14,22 @@ type Stmt interface {
 	stmt()
 }
 
-func (stmt *DefVarStmt) stmt()     {}
-func (c *DefConceptStmt) stmt()    {}
-func (f *DefTypeStmt) stmt()       {}
-func (c *DefPropertyStmt) stmt()   {}
-func (f *DefFnStmt) stmt()         {}
-func (l *ForallStmt) stmt()        {}
-func (r *RelationFactStmt) stmt()  {}
-func (p *FuncPtyStmt) stmt()       {}
-func (f *ClaimStmt) stmt()         {}
-func (f *DefuseStmt) stmt()        {}
-func (f *KnowStmt) stmt()          {}
-func (s *DefExistStmt) stmt()      {}
-func (s *HaveStmt) stmt()          {}
-func (s *DefMemberStmt) stmt()     {}
-func (s *DefTypeMemberStmt) stmt() {}
+func (stmt *DefVarStmt) stmt()              {}
+func (c *DefConceptStmt) stmt()             {}
+func (f *DefTypeStmt) stmt()                {}
+func (c *DefPropertyStmt) stmt()            {}
+func (f *DefFnStmt) stmt()                  {}
+func (l *ForallStmt) stmt()                 {}
+func (r *RelationFactStmt) stmt()           {}
+func (p *FuncPtyStmt) stmt()                {}
+func (f *ClaimProveStmt) stmt()             {}
+func (f *DefuseStmt) stmt()                 {}
+func (f *KnowStmt) stmt()                   {}
+func (s *DefExistStmt) stmt()               {}
+func (s *HaveStmt) stmt()                   {}
+func (s *DefMemberStmt) stmt()              {}
+func (s *DefTypeMemberStmt) stmt()          {}
+func (s *ClaimProveByContradictStmt) stmt() {}
 
 type factStmt interface {
 	factStmt()
@@ -103,3 +104,11 @@ type FcVarTypeValue interface {
 
 func (f FcVarTypeStrValue) fcVarTypeValue()   {}
 func (f *FcVarTypeFuncValue) fcVarTypeValue() {}
+
+type ClaimStmt interface {
+	claimStmt()
+	stmt()
+}
+
+func (c *ClaimProveByContradictStmt) claimStmt() {}
+func (c *ClaimProveStmt) claimStmt()             {}
