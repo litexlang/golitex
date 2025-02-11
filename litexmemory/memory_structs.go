@@ -78,3 +78,9 @@ func NewAliasMemory() *AliasMemory {
 type AliasMemoryEntry struct {
 	Values *[]parser.Fc
 }
+
+type FcVarTypeMemory struct{ entries map[string][]parser.FcVarType }
+
+func NewFcVarTypeMemory() *FcVarTypeMemory {
+	return &FcVarTypeMemory{entries: map[string][]parser.FcVarType{}}
+}

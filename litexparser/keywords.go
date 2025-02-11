@@ -67,8 +67,8 @@ func isBuiltinRelationalOperator(op string) bool {
 
 func putBuiltinIntoKeywords() *map[string]string {
 	var Keywords = map[string]string{
-		"concept":     "concept", // 用在两个地方：声明；作为property判定一个东西是不是特定concept
-		"type":        "type",    // 用在两个地方：声明；作为property判定一个东西是不是特定type.
+		"concept":     "concept",
+		"type":        "type",
 		"type_member": "type_member",
 		"member":      "member",
 		"forall":      "forall",
@@ -90,7 +90,8 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"use":         "use",
 		"impl":        "impl",
 		"any":         "any",
-		"as":          "as", // 可能没必要
+		"as":          "as",
+		"axiom":       "axiom",
 	}
 
 	for k, v := range BuiltinSyms {
