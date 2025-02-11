@@ -16,6 +16,7 @@ type Env struct {
 	AliasMemory      memory.AliasMemory
 	SpecFactMemory   memory.SpecificFactMemory
 	ForallFactMemory memory.ForallFactMemory
+	VarTypeMemory    memory.FcVarTypeMemory
 }
 
 func NewEnv() *Env {
@@ -27,6 +28,7 @@ func NewEnv() *Env {
 		AliasMemory:      *memory.NewAliasMemory(),
 		SpecFactMemory:   *memory.NewSpecificFactMemory(),
 		ForallFactMemory: *memory.NewForallFactMemory(),
+		VarTypeMemory:    *memory.NewFcVarTypeMemory(),
 	}
 }
 
