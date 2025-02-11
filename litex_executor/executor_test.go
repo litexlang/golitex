@@ -2,8 +2,8 @@ package litexexecutor
 
 import (
 	"fmt"
-	env "golitex/litexenv"
-	parser "golitex/litexparser"
+	env "golitex/litex_env"
+	parser "golitex/litex_parser"
 	"testing"
 )
 

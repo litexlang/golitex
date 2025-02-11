@@ -3,9 +3,9 @@ package litexenv
 
 import (
 	"fmt"
-	memory "golitex/litexmemory"
-	pack "golitex/litexpackage"
-	parser "golitex/litexparser"
+	memory "golitex/litex_memory"
+	pack "golitex/litex_package_management"
+	parser "golitex/litex_parser"
 )
 
 type Env struct {
