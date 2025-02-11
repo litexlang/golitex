@@ -72,7 +72,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"type_member":            "type_member",
 		"member":                 "member",
 		"forall":                 "forall",
-		"if":                     "if",
+		"cond":                   "cond",
 		"then":                   "then",
 		"var":                    "var",
 		"fn":                     "fn",

@@ -115,6 +115,7 @@ type ClaimStmt interface {
 func (s *ClaimProveStmt) claimStmt()             {}
 func (s *ClaimProveByContradictStmt) claimStmt() {}
 
+// syntax sugar for prop exist decl followed by forall such prop is valid.
 type AxiomStmt interface {
 	axiomStmt()
 	stmt()

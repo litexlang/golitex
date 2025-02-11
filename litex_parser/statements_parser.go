@@ -401,7 +401,7 @@ func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
 	ifFacts := &[]factStmt{}
 	thenFacts := &[]factStmt{}
 
-	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["if"]) {
+	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["cond"]) {
 		ifFacts, err = stmt.Body[0].parseFactsBlock()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
@@ -470,7 +470,7 @@ func (stmt *TokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 	thenFacts := &[]factStmt{}
 	if stmt.Header.is(BuiltinSyms[":"]) {
 		stmt.Header.skip()
-		ifFacts, thenFacts, err = stmt.parseBodyIfFactsThenFacts()
+		ifFacts, thenFacts, err = stmt.parseBodyCondFactsThenFacts()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -479,12 +479,12 @@ func (stmt *TokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 	return &DefPropertyStmt{*decl, *ifFacts, *thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseBodyIfFactsThenFacts() (*[]factStmt, *[]factStmt, error) {
+func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]factStmt, *[]factStmt, error) {
 	ifFacts := &[]factStmt{}
 	thenFacts := &[]factStmt{}
 	var err error = nil
 
-	if len(stmt.Body) == 2 && stmt.Body[0].Header.is(Keywords["if"]) && stmt.Body[1].Header.is(Keywords["then"]) {
+	if len(stmt.Body) == 2 && stmt.Body[0].Header.is(Keywords["cond"]) && stmt.Body[1].Header.is(Keywords["then"]) {
 		stmt.Body[0].Header.skip()
 		if err := stmt.Body[0].Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 			return nil, nil, err
@@ -525,7 +525,7 @@ func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 
 	if stmt.Header.is(BuiltinSyms[":"]) {
 		stmt.Header.skip()
-		ifFacts, thenFacts, err = stmt.parseBodyIfFactsThenFacts()
+		ifFacts, thenFacts, err = stmt.parseBodyCondFactsThenFacts()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -679,7 +679,7 @@ func (stmt *TokenBlock) parseDefExistStmt() (*DefExistStmt, error) {
 	stmt.Header.skip(BuiltinSyms[":"])
 
 	for _, curStmt := range stmt.Body {
-		if curStmt.Header.is(Keywords["if"]) {
+		if curStmt.Header.is(Keywords["cond"]) {
 			ifFacts, err = curStmt.parseBodyFacts()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
