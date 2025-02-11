@@ -54,7 +54,7 @@ func NewPropertyMemory() *PropertyMemory {
 type PropertyMemoryEntry struct {
 	Tp    parser.FcPropertyType
 	Types []parser.FcPropertyType
-	Decl  parser.PropertyDecl
+	Decl  parser.PropDecl
 }
 
 type FnMemory struct{ entries map[string]FnMemoryEntry }
