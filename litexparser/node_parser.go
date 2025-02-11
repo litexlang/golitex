@@ -242,7 +242,7 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]StrTypePair, error) {
 	pairs := []StrTypePair{}
 
-	for {
+	for !parser.is(BuiltinSyms[":"]) {
 		varName, err := parser.next()
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -444,7 +444,7 @@ func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]TypeConceptPair, 
 	concepts := []TypeConceptPair{}
 	parser.skip(BuiltinSyms["["])
 
-	for {
+	for !parser.is(BuiltinSyms["]"]) {
 		name, err := parser.parseTypeVarStr()
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -473,7 +473,7 @@ func (parser *Parser) parseBracedFcStrTypePairArray() (*[]StrTypePair, error) {
 	pairs := []StrTypePair{}
 	parser.skip(BuiltinSyms["("])
 
-	for {
+	for !parser.is(BuiltinSyms[")"]) {
 		s, err := parser.next()
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -553,7 +553,7 @@ func (parser *Parser) parseExistDecl() (*PropertyDecl, error) {
 	return &PropertyDecl{name, FcPropertyType{*typeParams, *varParams}}, nil
 }
 
-func (parser *Parser) parseStringArr() (*[]string, error) {
+func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 	members := &[]string{}
 
 	for {
@@ -566,6 +566,10 @@ func (parser *Parser) parseStringArr() (*[]string, error) {
 			break
 		}
 		parser.skip()
+	}
+
+	if !parser.ExceedEnd() {
+		return nil, &parserErr{fmt.Errorf("expected comma or end of string array"), parser}
 	}
 
 	return members, nil
@@ -581,21 +585,17 @@ func (parser *Parser) parseAddition() (Fc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	for {
-		if parser.is(BuiltinSyms["+"]) || parser.is(BuiltinSyms["-"]) {
-			cur, _ := parser.next()
+	for parser.is(BuiltinSyms["+"]) || parser.is(BuiltinSyms["-"]) {
+		cur, _ := parser.next()
 
-			right, err := parser.parseMultiplication()
-			if err != nil {
-				return nil, &parserErr{err, parser}
-			}
-			node = &CalledFcFnRetValue{
-				FcStr(cur),
-				[]typeVar{},
-				[]Fc{node, right},
-			}
-		} else {
-			break
+		right, err := parser.parseMultiplication()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+		node = &CalledFcFnRetValue{
+			FcStr(cur),
+			[]typeVar{},
+			[]Fc{node, right},
 		}
 	}
 
@@ -608,21 +608,17 @@ func (parser *Parser) parseMultiplication() (Fc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	for {
-		if parser.is(BuiltinSyms["*"]) || parser.is(BuiltinSyms["/"]) {
-			cur, _ := parser.next()
+	for parser.is(BuiltinSyms["*"]) || parser.is(BuiltinSyms["/"]) {
+		cur, _ := parser.next()
 
-			right, err := parser.parseUnary()
-			if err != nil {
-				return nil, &parserErr{err, parser}
-			}
-			node = &CalledFcFnRetValue{
-				FcStr(cur),
-				[]typeVar{},
-				[]Fc{node, right},
-			}
-		} else {
-			break
+		right, err := parser.parseUnary()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+		node = &CalledFcFnRetValue{
+			FcStr(cur),
+			[]typeVar{},
+			[]Fc{node, right},
 		}
 	}
 

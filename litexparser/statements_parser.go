@@ -737,13 +737,9 @@ func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 		return nil, fmt.Errorf("expect one string in members")
 	}
 
-	members, err := stmt.Body[0].Header.parseStringArr()
+	members, err := stmt.Body[0].Header.parseStringArrUntilEnd()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	if !stmt.Body[0].Header.ExceedEnd() {
-		return nil, fmt.Errorf("expected end of block")
 	}
 
 	return &HaveStmt{propertyStmt, *members}, nil

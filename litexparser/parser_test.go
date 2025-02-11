@@ -872,8 +872,8 @@ type prop f[G Group, G2 Group](x G, y G):
 		know $Group(G)
 type var A G:
 	member:
-
-
+		prop f[]()
+		prop f[G Group, G2 Group](x G, y G)
 `
 
 	statements, err := ParserTester(code)
