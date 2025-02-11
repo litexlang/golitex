@@ -76,7 +76,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseDefConceptStmt()
 	case Keywords["type"]:
 		ret, err = stmt.parseDefTypeStmt()
-	case Keywords["property"]:
+	case Keywords["prop"]:
 		ret, err = stmt.parseDefPropertyStmt()
 	case Keywords["fn"]:
 		ret, err = stmt.parseDefFnStmt()
@@ -136,7 +136,7 @@ func (p *TokenBlock) parseFcMember() (*[]FcVarDecl, *[]FcFnDecl, *[]PropertyDecl
 				return nil, nil, nil, err
 			}
 			*fnMember = append(*fnMember, *member)
-		} else if curStmt.Header.is(Keywords["property"]) {
+		} else if curStmt.Header.is(Keywords["prop"]) {
 			member, err := curStmt.Header.parsePropertyDecl()
 			if err != nil {
 				return nil, nil, nil, err
@@ -260,7 +260,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	if !stmt.Header.is(Keywords["fn"]) && !stmt.Header.is(Keywords["property"]) && !stmt.Header.is(Keywords["var"]) {
+	if !stmt.Header.is(Keywords["fn"]) && !stmt.Header.is(Keywords["prop"]) && !stmt.Header.is(Keywords["var"]) {
 		typeName, err := stmt.Header.next()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
@@ -715,7 +715,7 @@ func (stmt *TokenBlock) parseFcDecl() (fcDecl, error) {
 		return stmt.Header.parseFcFnDecl()
 	} else if stmt.Header.is(Keywords["var"]) {
 		return stmt.Header.parseVarDecl()
-	} else if stmt.Header.is(Keywords["property"]) {
+	} else if stmt.Header.is(Keywords["prop"]) {
 		return stmt.Header.parsePropertyDecl()
 	}
 
@@ -786,7 +786,7 @@ func (stmt *TokenBlock) parseMemberStmt() (*DefMemberStmt, error) {
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-	} else if stmt.Header.is(Keywords["property"]) {
+	} else if stmt.Header.is(Keywords["prop"]) {
 		decl, err = stmt.Header.parsePropertyDecl()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
@@ -837,7 +837,7 @@ func (stmt *TokenBlock) parseTypeMemberStmt() (*DefTypeMemberStmt, error) {
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-	} else if stmt.Header.is(Keywords["property"]) {
+	} else if stmt.Header.is(Keywords["prop"]) {
 		decl, err = stmt.Header.parsePropertyDecl()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
