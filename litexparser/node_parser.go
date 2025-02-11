@@ -345,7 +345,7 @@ func (parser *Parser) parseFcType() (fcType, error) {
 
 	if parser.is(Keywords["fn"]) {
 		return parser.parseFcFnVar()
-	} else if parser.is(Keywords["property"]) {
+	} else if parser.is(Keywords["prop"]) {
 		return parser.parsePropertyType()
 	} else {
 		return parser.parseFcVarType()
@@ -357,7 +357,7 @@ func (parser *Parser) parseUndefinedFcType() (fcUndefinedType, error) {
 	if parser.is(Keywords["fn"]) {
 		parser.skip()
 		return undefinedFnTypeInstance, nil
-	} else if parser.is(Keywords["property"]) {
+	} else if parser.is(Keywords["prop"]) {
 		parser.skip()
 		return undefinedVarTypeInstance, nil
 	} else if parser.is(Keywords["var"]) {
@@ -524,7 +524,7 @@ func (parser *Parser) parseFcVarPair() (*FcVarDeclPair, error) {
 }
 
 func (parser *Parser) parsePropertyDecl() (*PropertyDecl, error) {
-	parser.skip(Keywords["property"])
+	parser.skip(Keywords["prop"])
 	name, err := parser.next()
 	if err != nil {
 		return nil, &parserErr{err, parser}

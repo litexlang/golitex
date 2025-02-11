@@ -76,7 +76,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"then":        "then",
 		"var":         "var",
 		"fn":          "fn",
-		"property":    "property",
+		"prop":        "prop",
 		"know":        "know",
 		"exist":       "exist",
 		"have":        "have",

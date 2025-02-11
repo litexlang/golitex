@@ -76,4 +76,4 @@ var undefinedPropertyTypeInstance *UndefinedPropertyType = &UndefinedPropertyTyp
 var AnyType = Keywords["any"]
 var VarType = Keywords["var"]
 var FnType = Keywords["fn"]
-var PropertyType = Keywords["property"]
+var PropertyType = Keywords["prop"]

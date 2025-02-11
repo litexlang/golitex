@@ -242,7 +242,7 @@ func TestForallStmt(t *testing.T) {
 }
 
 func TestDefPropertyStmt(t *testing.T) {
-	tokenized1, err := tokenizeString("property ha [G Group] (g1 G, g2 G):")
+	tokenized1, err := tokenizeString("prop ha [G Group] (g1 G, g2 G):")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -353,12 +353,12 @@ func TestDefConceptStmt(t *testing.T) {
 	type_member:
 		var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
-		property f[G Group, G2 Group](x G, y G)
+		prop f[G Group, G2 Group](x G, y G)
 
 	member:
 		var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
-		property f[G Group, G2 Group](x G, y G)
+		prop f[G Group, G2 Group](x G, y G)
 
 	then:
 		$p[G, G2](x, y)
@@ -374,13 +374,13 @@ func TestDefConceptStmt(t *testing.T) {
 
 func TestDefPropertyStmt2(t *testing.T) {
 	code := `
-property P[G Group, G2 Group](g G, g2 G2):
+prop P[G Group, G2 Group](g G, g2 G2):
 	if:
     	$f[G, B](g.g1, g2.g2)
 	then:
 		$f[G, B](g.g1, g2.g2)
 
-property P[G Group, G2 Group](g G, g2 G2):
+prop P[G Group, G2 Group](g G, g2 G2):
 	$f[G, B](g.g1, g2.g2)
 
 `
@@ -435,7 +435,7 @@ type var G Group:
 	member:
 		var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
-		property f[G Group, G2 Group](x G, y G)
+		prop f[G Group, G2 Group](x G, y G)
 
 	then:
 		$p[G, G2](x, y)
@@ -646,7 +646,7 @@ member [G Group](g G) 		var 1 G:
 	$p[g](a)
 member [G Group](g G) 		fn f[G Group, G2 Group](x G, y G) G:
     $p[g](a)
-member [G Group](g G) 		property f[G Group, G2 Group](x G, y G)
+member [G Group](g G) 		prop f[G Group, G2 Group](x G, y G)
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -751,14 +751,14 @@ as( p[as(g, G), as(g2, G)](a, as(p [g](a), nat)) , G ) is red
 }
 
 func TestDefPropertyVar(t *testing.T) {
-	// fn ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	// 1 is red
 
 	code :=
 		`
 fn ha [G Group] (g1 G, g2 G) red:
 	1 is red
-property ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+prop ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	1 is red
 
 `
@@ -772,13 +772,13 @@ property ha [G Group] (g1 G, g2 property [g Group](t G)) red:
 }
 
 func TestPropertyVar(t *testing.T) {
-	// fn ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	// 1 is red
 
 	code :=
 		`
 $p[g, as(g2, G)](f, g)
-$p[g, as(g2, G)](f, as(g3, property [g Group](t G) ))
+$p[g, as(g2, G)](f, as(g3, prop [g Group](t G) ))
 `
 
 	statements, err := ParserTester(code)
@@ -790,16 +790,16 @@ $p[g, as(g2, G)](f, as(g3, property [g Group](t G) ))
 }
 
 func TestFnDecl(t *testing.T) {
-	// fn ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	// 1 is red
 
 	code :=
 		`
-fn ha [G Group] (g1 G, g2 ?property, g3 ? var, g4 ? fn) red:
+fn ha [G Group] (g1 G, g2 ?prop, g3 ? var, g4 ? fn) red:
     1 is red
 
 		
-fn ha [G Group] (g1 G, g2 property [g G, g2 G] (t G) ) red:
+fn ha [G Group] (g1 G, g2 prop [g G, g2 G] (t G) ) red:
     1 is red
 
 claim :
@@ -820,7 +820,7 @@ $f[G, B](a, b).g[G, B].t(a, b)
 }
 
 func TestProofClaim(t *testing.T) {
-	// fn ha [G Group] (g1 G, g2 property [g Group](t G)) red:
+	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	// 1 is red
 
 	code :=
@@ -867,7 +867,7 @@ type var A G:	// type name is G, A is name for "self"
 type fn f[G Group, G2 Group](x G, y G) G:
 	then:
 		know $Group(G)
-type property f[G Group, G2 Group](x G, y G):
+type prop f[G Group, G2 Group](x G, y G):
 	then:
 		know $Group(G)
 type var A G:
