@@ -186,7 +186,7 @@ func TestForallStmt(t *testing.T) {
 	}
 	fmt.Printf("%v", cur)
 
-	tokenizedIf, err := tokenizeString("if:")
+	tokenizedCond, err := tokenizeString("cond:")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,7 +201,7 @@ func TestForallStmt(t *testing.T) {
 			Parser{0, *tokenized1},
 			[]TokenBlock{
 				{
-					Parser{0, *tokenizedIf},
+					Parser{0, *tokenizedCond},
 					[]TokenBlock{
 						{
 							Parser{0, *tokenized2},
@@ -272,7 +272,7 @@ func TestDefPropertyStmt(t *testing.T) {
 	}
 	fmt.Printf("%v", cur)
 
-	tokenizedIf, err := tokenizeString("if:")
+	tokenizedCond, err := tokenizeString("cond:")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,7 +287,7 @@ func TestDefPropertyStmt(t *testing.T) {
 			Parser{0, *tokenized1},
 			[]TokenBlock{
 				{
-					Parser{0, *tokenizedIf},
+					Parser{0, *tokenizedCond},
 					[]TokenBlock{
 						{
 							Parser{0, *tokenized2},
@@ -375,7 +375,7 @@ func TestDefConceptStmt(t *testing.T) {
 func TestDefPropertyStmt2(t *testing.T) {
 	code := `
 prop P[G Group, G2 Group](g G, g2 G2):
-	if:
+	cond:
     	$f[G, B](g.g1, g2.g2)
 	then:
 		$f[G, B](g.g1, g2.g2)
@@ -384,13 +384,19 @@ prop P[G Group, G2 Group](g G, g2 G2):
 	$f[G, B](g.g1, g2.g2)
 
 axiom prop P[G Group, G2 Group](g G, g2 G2):
-	if:
+	cond:
     	$f[G, B](g.g1, g2.g2)
 	then:
 		$f[G, B](g.g1, g2.g2)
 
 axiom prop P[G Group, G2 Group](g G, g2 G2):
 	$f[G, B](g.g1, g2.g2)
+
+forall x G:
+	cond:
+    	$f[G, B](g.g1, g2.g2)
+	then:
+		$f[G, B](g.g1, g2.g2)
 
 
 `
@@ -405,7 +411,7 @@ axiom prop P[G Group, G2 Group](g G, g2 G2):
 func TestDefFnStmt(t *testing.T) {
 	code := `
 fn P[G Group, G2 Group](g G, g2 G2) fn [G Group, G2 Group](g G, g2 G2):
-	if:
+	cond:
     	$f[G, B](g.g1, g2.g2)
 	then:
 		$f[G, B](g.g1, g2.g2)
@@ -425,8 +431,11 @@ func TestFactStatements(t *testing.T) {
 $f[G, B](g.g1, g2.g2)
 
 forall [G Group] x g:
-	$f[G, B](g.g1, g2.g2)
-
+	cond: 
+		$f[]()
+	then:
+		$f[G, B](g.g1, g2.g2)
+	
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -471,12 +480,12 @@ forall [G Group, G2 Group] g G, g2 G2:
     $p[G, G2](x, y)
 
 forall [G Group, G2 Group] g g, g2 g2:
-	if:
+	cond:
 		$p[G, G2](x, y)
 	then:
 	    $p[G, G2](x, y)
 		forall [G Group, G2 Group] g g, g2 g2:
-			if:
+			cond:
 				$p[G, G2](x, y)
 			then:
 				$p[G, G2](x, y)
@@ -519,12 +528,12 @@ claim :
 
 claim :
 	forall [G Group, G2 Group] g g, g2 g2:
-		if:
+		cond:
 			$p[G, G2](x, y)
 		then:
 			$p[G, G2](x, y)
 			forall [G Group, G2 Group] g g, g2 g2:
-				if:
+				cond:
 					$p[G, G2](x, y)
 				then:
 					$p[G, G2](x, y)
@@ -570,12 +579,12 @@ func TestKnowStmt(t *testing.T) {
 know:
 	$p[G, G2](x, y)
 	forall [G Group, G2 Group] g g, g2 g2:
-		if:
+		cond:
 			$p[G, G2](x, y)
 		then:
 			$p[G, G2](x, y)
 			forall [G Group, G2 Group] g g, g2 g2:
-				if:
+				cond:
 					$p[G, G2](x, y)
 				then:
 					$p[G, G2](x, y)
@@ -593,10 +602,10 @@ func TestExistStmt(t *testing.T) {
 	code :=
 		`
 exist P[G Group, G2 Group](g1 G, g2 G2):
-	if:
+	cond:
 		$p[G, G2](x, y)
 		forall [G Group, G2 Group] g g, g2 g2:
-			if:
+			cond:
 				$p[G, G2](x, y)
 			then:
 				$p[G, G2](x, y)
