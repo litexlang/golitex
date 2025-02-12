@@ -409,7 +409,7 @@ func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
 	}
 
 	ifFacts := &[]InlineFactStmt{}
-	thenFacts := &[]InlineFactStmt{}
+	thenFacts := &[]BaseFactStmt{}
 
 	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["cond"]) {
 		ifFacts, err = stmt.Body[0].parseInlineFactsBlock()
@@ -418,7 +418,7 @@ func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
 		}
 
 		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(Keywords["then"]) {
-			thenFacts, err = stmt.Body[1].parseInlineFactsBlock()
+			thenFacts, err = stmt.Body[1].parseBaseFactsBlock()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
@@ -426,7 +426,7 @@ func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
 			return nil, fmt.Errorf("expected 'then'")
 		}
 	} else {
-		thenFacts, err = stmt.parseBodyInlineFacts()
+		thenFacts, err = stmt.parseBaseFactsBlock()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -452,22 +452,22 @@ func (stmt *TokenBlock) parseBodyFacts() (*[]factStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseBodyInlineFacts() (*[]InlineFactStmt, error) {
-	if len(stmt.Body) == 0 {
-		return &[]InlineFactStmt{}, nil
-	}
+// func (stmt *TokenBlock) parseBodyInlineFacts() (*[]InlineFactStmt, error) {
+// 	if len(stmt.Body) == 0 {
+// 		return &[]InlineFactStmt{}, nil
+// 	}
 
-	facts := &[]InlineFactStmt{}
-	for _, f := range stmt.Body {
-		fact, err := f.parseInlineFactStmt()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		*facts = append(*facts, fact)
-	}
+// 	facts := &[]InlineFactStmt{}
+// 	for _, f := range stmt.Body {
+// 		fact, err := f.parseInlineFactStmt()
+// 		if err != nil {
+// 			return nil, &parseStmtErr{err, *stmt}
+// 		}
+// 		*facts = append(*facts, fact)
+// 	}
 
-	return facts, nil
-}
+// 	return facts, nil
+// }
 
 func (stmt *TokenBlock) parseInlineFactsBlock() (*[]InlineFactStmt, error) {
 	facts := &[]InlineFactStmt{}
@@ -487,22 +487,22 @@ func (stmt *TokenBlock) parseInlineFactsBlock() (*[]InlineFactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseFactsBlock() (*[]factStmt, error) {
-	ifFacts := &[]factStmt{}
+func (stmt *TokenBlock) parseBaseFactsBlock() (*[]BaseFactStmt, error) {
+	facts := &[]BaseFactStmt{}
 	stmt.Header.skip()
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
 	for _, curStmt := range stmt.Body {
-		fact, err := curStmt.parseFactStmt()
+		fact, err := curStmt.parseBaseFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		*ifFacts = append(*ifFacts, fact)
+		*facts = append(*facts, fact)
 	}
 
-	return ifFacts, nil
+	return facts, nil
 }
 
 func (stmt *TokenBlock) parseDefPropertyStmt() (*DefPropStmt, error) {
