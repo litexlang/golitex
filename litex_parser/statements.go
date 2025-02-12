@@ -51,8 +51,8 @@ type DefFnStmt struct {
 type ForallStmt struct {
 	typeParams []TypeConceptPair
 	varParams  []StrTypePair
-	cond       []factStmt
-	then       []factStmt
+	cond       []InlineFactStmt
+	then       []InlineFactStmt
 }
 
 type FuncPropStmt struct {
