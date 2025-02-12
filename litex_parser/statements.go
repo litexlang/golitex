@@ -52,7 +52,7 @@ type ForallStmt struct {
 	typeParams []TypeConceptPair
 	varParams  []StrTypePair
 	cond       []InlineFactStmt
-	then       []InlineFactStmt
+	then       []BaseFactStmt
 }
 
 type FuncPropStmt struct {
