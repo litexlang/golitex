@@ -38,6 +38,8 @@ var BuiltinSyms = map[string]string{
 	"`":  "`",
 	"=>": "=>",
 	";":  ";",
+	"{":  "{",
+	"}":  "}",
 }
 
 var CustomizableOperators = map[string]string{
