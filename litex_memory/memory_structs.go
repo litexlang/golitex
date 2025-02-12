@@ -20,7 +20,7 @@ func NewSpecificFactMemory() *SpecificFactMemory {
 
 type SpecFactMemEntry struct{ Facts []SpecMemFact }
 
-type SpecMemFact struct{ Fact parser.NotFactStmt }
+type SpecMemFact struct{ Fact parser.BaseFactStmt }
 
 type ForallFactMemory struct{ Entires map[string]ForallFactMemEntry }
 

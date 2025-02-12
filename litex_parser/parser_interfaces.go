@@ -39,15 +39,16 @@ type factStmt interface {
 	stmt()
 }
 
-func (l *ForallStmt) factStmt()        {}
-func (r *RelationFactStmt) factStmt()  {}
-func (p *FuncPropStmt) factStmt()      {}
-func (p *InlineIfFactStmt) factsStmt() {}
+func (l *ForallStmt) factStmt()       {}
+func (r *RelationFactStmt) factStmt() {}
+func (p *FuncPropStmt) factStmt()     {}
+func (p *InlineIfFactStmt) factStmt() {}
 
-type NotFactStmt interface {
+type BaseFactStmt interface {
 	notFactStmtSetT(b bool)
 	factStmt()
 	stmt()
+	inlineFactStmt()
 }
 
 func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.isTrue = b }
@@ -129,6 +130,7 @@ func (s *DefPropStmt) defPropExistDeclStmt()  {}
 
 type InlineFactStmt interface {
 	inlineFactStmt()
+	factStmt()
 	stmt()
 }
 
