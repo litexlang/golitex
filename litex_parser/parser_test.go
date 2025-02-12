@@ -934,12 +934,12 @@ func TestInlineIfStmt(t *testing.T) {
 	code := `
 prop P[G Group, G2 Group](g G, g2 G2):
 	cond:
-		if $p() => $f[G, B](g.g1, g2.g2)
+		if $f[G, B](g.g1, g2.g2), if $f[G, B](g.g1, g2.g2) => {$p()} => $p()
 	then:
-		if $p() => $f[G, B](g.g1, g2.g2)
+		$p()
 prove:
 	if $f[G, B](g.g1, g2.g2) => $p()
-	$f[G, B](g.g1, g2.g2) => $p()
+	if $f[G, B](g.g1, g2.g2) => $p()
 `
 
 	statements, err := ParserTester(code)

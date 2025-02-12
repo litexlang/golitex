@@ -122,6 +122,7 @@ type ThmStmt struct {
 	proof []Stmt
 }
 
+// TODO 需要写一下 什么类型的事实写成什么样
 type InlineIfFactStmt struct {
 	condFacts []InlineFactStmt
 	thenFacts []BaseFactStmt
