@@ -408,17 +408,17 @@ func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ifFacts := &[]factStmt{}
-	thenFacts := &[]factStmt{}
+	ifFacts := &[]InlineFactStmt{}
+	thenFacts := &[]InlineFactStmt{}
 
 	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["cond"]) {
-		ifFacts, err = stmt.Body[0].parseFactsBlock()
+		ifFacts, err = stmt.Body[0].parseInlineFactsBlock()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 
 		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(Keywords["then"]) {
-			thenFacts, err = stmt.Body[1].parseFactsBlock()
+			thenFacts, err = stmt.Body[1].parseInlineFactsBlock()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
@@ -426,7 +426,7 @@ func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
 			return nil, fmt.Errorf("expected 'then'")
 		}
 	} else {
-		thenFacts, err = stmt.parseBodyFacts()
+		thenFacts, err = stmt.parseBodyInlineFacts()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -443,6 +443,41 @@ func (stmt *TokenBlock) parseBodyFacts() (*[]factStmt, error) {
 	facts := &[]factStmt{}
 	for _, f := range stmt.Body {
 		fact, err := f.parseFactStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		*facts = append(*facts, fact)
+	}
+
+	return facts, nil
+}
+
+func (stmt *TokenBlock) parseBodyInlineFacts() (*[]InlineFactStmt, error) {
+	if len(stmt.Body) == 0 {
+		return &[]InlineFactStmt{}, nil
+	}
+
+	facts := &[]InlineFactStmt{}
+	for _, f := range stmt.Body {
+		fact, err := f.parseInlineFactStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		*facts = append(*facts, fact)
+	}
+
+	return facts, nil
+}
+
+func (stmt *TokenBlock) parseInlineFactsBlock() (*[]InlineFactStmt, error) {
+	facts := &[]InlineFactStmt{}
+	stmt.Header.skip()
+	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	for _, curStmt := range stmt.Body {
+		fact, err := curStmt.parseInlineFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
