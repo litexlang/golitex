@@ -94,7 +94,7 @@ type DefExistStmt struct {
 }
 
 type HaveStmt struct {
-	propertyStmt NotFactStmt
+	propertyStmt BaseFactStmt
 	member       []string
 }
 
@@ -123,6 +123,6 @@ type ThmStmt struct {
 }
 
 type InlineIfFactStmt struct {
-	cond []InlineFactStmt
-	then []InlineFactStmt
+	condFacts []InlineFactStmt
+	thenFacts []BaseFactStmt
 }

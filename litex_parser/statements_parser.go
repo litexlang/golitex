@@ -340,10 +340,18 @@ func (stmt *TokenBlock) parseFactStmt() (factStmt, error) {
 		return stmt.parseForallStmt()
 	}
 
-	return stmt.parseNotFactStmt()
+	return stmt.parseInlineFactStmt()
 }
 
-func (stmt *TokenBlock) parseNotFactStmt() (NotFactStmt, error) {
+func (stmt *TokenBlock) parseInlineFactStmt() (InlineFactStmt, error) {
+	if stmt.Header.is(Keywords["if"]) {
+		return stmt.parseInlineIfFactStmt()
+	}
+
+	return stmt.parseBaseFactStmt()
+}
+
+func (stmt *TokenBlock) parseBaseFactStmt() (BaseFactStmt, error) {
 	isTrue := true
 	if stmt.Header.is(BuiltinSyms["not"]) {
 		err := stmt.Header.skip(BuiltinSyms["not"])
@@ -353,7 +361,7 @@ func (stmt *TokenBlock) parseNotFactStmt() (NotFactStmt, error) {
 		isTrue = false
 	}
 
-	var ret NotFactStmt
+	var ret BaseFactStmt
 	var err error = nil
 	if stmt.Header.is(BuiltinSyms["$"]) {
 		ret, err = stmt.parseFuncPropertyFactStmt()
@@ -876,7 +884,7 @@ func (stmt *TokenBlock) parseTypeMemberStmt() (*DefTypeMemberStmt, error) {
 	return &DefTypeMemberStmt{typeConcept, decl, *facts}, nil
 }
 
-func (stmt *TokenBlock) parseRelationalFactStmt() (NotFactStmt, error) {
+func (stmt *TokenBlock) parseRelationalFactStmt() (BaseFactStmt, error) {
 	fc, err := stmt.Header.ParseFcExpr()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -951,4 +959,52 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 	}
 
 	return &ThmStmt{decl, *facts}, nil
+}
+
+func (stmt *TokenBlock) parseInlineIfFactStmt() (*InlineIfFactStmt, error) {
+	err := stmt.Header.skip(Keywords["if"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	baseFacts := []InlineFactStmt{}
+	for !stmt.Header.is(BuiltinSyms["=>"]) {
+		fact, err := stmt.parseInlineFactStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		baseFacts = append(baseFacts, fact)
+
+		if stmt.Header.is(BuiltinSyms[","]) {
+			stmt.Header.skip()
+		}
+	}
+
+	err = stmt.Header.skip(BuiltinSyms["=>"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	thenFacts := []BaseFactStmt{}
+	for !stmt.Header.ExceedEnd() && !stmt.Header.is(BuiltinSyms[";"]) {
+		fact, err := stmt.parseBaseFactStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		thenFacts = append(thenFacts, fact)
+
+		if stmt.Header.is(BuiltinSyms[","]) {
+			stmt.Header.skip()
+		}
+	}
+
+	if stmt.Header.is(BuiltinSyms[";"]) {
+		stmt.Header.skip()
+	}
+
+	if !stmt.Header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
+
+	return &InlineIfFactStmt{baseFacts, thenFacts}, nil
 }
