@@ -607,6 +607,14 @@ func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
 }
 
 func (stmt *TokenBlock) parseProveClaimStmt() (*ClaimProveStmt, error) {
+	innerStmtArr, err := stmt.parseProveBlock()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+	return &ClaimProveStmt{[]factStmt{}, *innerStmtArr}, nil
+}
+
+func (stmt *TokenBlock) parseProveBlock() (*[]Stmt, error) {
 	stmt.Header.skip(Keywords["prove"])
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -620,8 +628,7 @@ func (stmt *TokenBlock) parseProveClaimStmt() (*ClaimProveStmt, error) {
 		}
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
-
-	return &ClaimProveStmt{[]factStmt{}, innerStmtArr}, nil
+	return &innerStmtArr, nil
 }
 
 func (stmt *TokenBlock) parseDefUseStmt() (*DefuseStmt, error) {
@@ -908,22 +915,12 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (NotFactStmt, error) {
 
 func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {
 	stmt.Header.skip(Keywords["axiom"])
-
-	if stmt.Header.is(Keywords["prop"]) {
-		prop, err := stmt.parseDefPropertyStmt()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		return &AxiomStmt{prop}, nil
-	} else if stmt.Header.is(Keywords["exist"]) {
-		exist, err := stmt.parseDefExistStmt()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		return &AxiomStmt{exist}, nil
+	decl, err := stmt.parseDefPropExistStmt()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return nil, fmt.Errorf("expect 'prop' or 'exist'")
+	return &AxiomStmt{decl}, nil
 }
 
 func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
@@ -943,8 +940,15 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 		return nil, fmt.Errorf("expect two statements in thm")
 	}
 
-	for _, bodyStmt := range stmt.Body {
-
+	decl, err := stmt.Body[0].parseDefPropExistStmt()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
 	}
 
+	facts, err := stmt.Body[1].parseProveBlock()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	return &ThmStmt{decl, *facts}, nil
 }

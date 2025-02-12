@@ -117,10 +117,10 @@ func (s *ClaimProveByContradictStmt) claimStmt() {}
 
 // syntax sugar for prop exist decl followed by forall such prop is valid.
 
-type PropExistDecl interface {
-	propExistDecl()
+type DefPropExistDeclStmt interface {
+	defPropExistDeclStmt()
 	stmt()
 }
 
-func (s *DefExistStmt) propExistDecl() {}
-func (s *DefPropStmt) propExistDecl()  {}
+func (s *DefExistStmt) defPropExistDeclStmt() {}
+func (s *DefPropStmt) defPropExistDeclStmt()  {}
