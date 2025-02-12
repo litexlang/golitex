@@ -36,6 +36,7 @@ var BuiltinSyms = map[string]string{
 	"\"": "\"",
 	"'":  "'",
 	"`":  "`",
+	"=>": "=>",
 }
 
 var CustomizableOperators = map[string]string{
@@ -94,6 +95,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"axiom":                  "axiom",
 		"prove_by_contradiction": "prove_by_contradiction",
 		"thm":                    "thm",
+		"if":                     "if",
 	}
 
 	for k, v := range BuiltinSyms {

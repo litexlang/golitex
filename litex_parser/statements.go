@@ -51,11 +51,11 @@ type DefFnStmt struct {
 type ForallStmt struct {
 	typeParams []TypeConceptPair
 	varParams  []StrTypePair
-	ifFacts    []factStmt
-	thenFacts  []factStmt
+	cond       []factStmt
+	then       []factStmt
 }
 
-type FuncPtyStmt struct {
+type FuncPropStmt struct {
 	IsTrue bool
 	Fc     Fc
 }
@@ -75,11 +75,6 @@ type ClaimProveByContradictStmt struct {
 type ClaimProveStmt struct {
 	toCheck []factStmt
 	proof   []Stmt
-}
-
-type ThmStmt struct {
-	decl  DefPropExistDeclStmt
-	proof []Stmt
 }
 
 type DefuseStmt struct {
@@ -116,6 +111,18 @@ type DefTypeMemberStmt struct {
 	facts       []factStmt
 }
 
+// syntax sugar for defining propExist + claim forall true
 type AxiomStmt struct {
 	decl DefPropExistDeclStmt
+}
+
+// syntax sugar for defining propExist + claim forall true
+type ThmStmt struct {
+	decl  DefPropExistDeclStmt
+	proof []Stmt
+}
+
+type InlineIfFactStmt struct {
+	cond []InlineFactStmt
+	then []InlineFactStmt
 }

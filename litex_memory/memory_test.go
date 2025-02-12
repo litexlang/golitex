@@ -19,7 +19,7 @@ f(t) is red
 	keys := []string{}
 	for _, topStatement := range *statements {
 		statement := topStatement.Stmt
-		stmt := statement.(*parser.FuncPtyStmt)
+		stmt := statement.(*parser.FuncPropStmt)
 		propertyFc := stmt.Fc.(*parser.CalledFcFnRetValue)
 		fc := propertyFc.VarParams[0]
 		memKey, err := getMemoryKey(fc)
