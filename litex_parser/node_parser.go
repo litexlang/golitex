@@ -782,58 +782,20 @@ func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
 	return arr, nil
 }
 
-// func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedPropertyVarTypePairArr() (*[]typeConceptPair, *[]propertyVarTypePair, error) {
-// 	typeParamsTypes := &[]typeConceptPair{}
-// 	var err error = nil
-// 	if parser.is(BuiltinSyms["["]) {
-// 		typeParamsTypes, err = parser.parseBracketedTypeConceptPairArray()
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 	}
+func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
+	if stmt.Header.is(Keywords["prop"]) {
+		prop, err := stmt.parseDefPropertyStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		return prop, nil
+	} else if stmt.Header.is(Keywords["exist"]) {
+		exist, err := stmt.parseDefExistStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		return exist, nil
+	}
 
-// 	varParamsTypes := &[]propertyVarTypePair{}
-// 	if parser.is(BuiltinSyms["("]) {
-// 		varParamsTypes, err = parser.parseBracedPropertyVarTypePairArr()
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 	}
-
-// 	return typeParamsTypes, varParamsTypes, nil
-// }
-
-// func (parser *Parser) parseBracedPropertyVarTypePairArr() (*[]propertyVarTypePair, error) {
-// 	arr := &[]propertyVarTypePair{}
-// 	err := parser.skip(BuiltinSyms["("])
-// 	if err != nil {
-// 		return nil, &parserErr{err, parser}
-// 	}
-
-// 	for !parser.is(BuiltinSyms[")"]) {
-// 		tv, err := parser.next()
-// 		if err != nil {
-// 			return nil, &parserErr{err, parser}
-// 		}
-
-// 		pt, err := parser.parsePropertyType()
-
-// 		if err != nil {
-// 			return nil, &parserErr{err, parser}
-// 		}
-
-// 		*arr = append(*arr, propertyVarTypePair{tv, pt})
-
-// 		if parser.is(BuiltinSyms[","]) {
-// 			parser.skip()
-// 		}
-// 	}
-
-// 	err = parser.skip(BuiltinSyms[")"])
-
-// 	if err != nil {
-// 		return nil, &parserErr{err, parser}
-// 	}
-
-// 	return arr, nil
-// }
+	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
+}

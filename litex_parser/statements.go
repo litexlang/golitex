@@ -78,7 +78,7 @@ type ClaimProveStmt struct {
 }
 
 type ThmStmt struct {
-	decl  PropExistDecl
+	decl  DefPropExistDeclStmt
 	proof []Stmt
 }
 
@@ -117,5 +117,5 @@ type DefTypeMemberStmt struct {
 }
 
 type AxiomStmt struct {
-	decl PropExistDecl
+	decl DefPropExistDeclStmt
 }
