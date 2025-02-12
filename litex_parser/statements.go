@@ -36,7 +36,7 @@ type DefTypeStmt struct {
 	thenFacts          []factStmt
 }
 
-type DefPropertyStmt struct {
+type DefPropStmt struct {
 	decl      PropDecl
 	ifFacts   []factStmt
 	thenFacts []factStmt
@@ -77,6 +77,11 @@ type ClaimProveStmt struct {
 	proof   []Stmt
 }
 
+type ThmStmt struct {
+	decl  PropExistDecl
+	proof []Stmt
+}
+
 type DefuseStmt struct {
 	name     string
 	variable Fc
@@ -111,10 +116,6 @@ type DefTypeMemberStmt struct {
 	facts       []factStmt
 }
 
-type AxiomDefPropStmt struct {
-	decl DefPropertyStmt
-}
-
-type AxiomDefExistStmt struct {
-	decl DefExistStmt
+type AxiomStmt struct {
+	decl PropExistDecl
 }
