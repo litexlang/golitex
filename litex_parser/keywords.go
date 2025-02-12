@@ -92,7 +92,8 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"any":                    "any",
 		"as":                     "as",
 		"axiom":                  "axiom",
-		"prove_by_contradiction": "prove_by_contradiction", // TODO
+		"prove_by_contradiction": "prove_by_contradiction",
+		"thm":                    "thm",
 	}
 
 	for k, v := range BuiltinSyms {

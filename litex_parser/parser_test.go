@@ -907,3 +907,25 @@ type var A G:
 	}
 
 }
+
+func TestNamedClaimStmt(t *testing.T) {
+	code := `
+thm: 
+	prop P[G Group, G2 Group](g G, g2 G2):
+		cond:
+			$f[G, B](g.g1, g2.g2)
+		then:
+			$f[G, B](g.g1, g2.g2)
+	prove:
+		$f[G, B](g.g1, g2.g2)
+		$f[G, B](g.g1, g2.g2)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}

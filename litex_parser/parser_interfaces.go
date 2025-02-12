@@ -17,7 +17,7 @@ type Stmt interface {
 func (stmt *DefVarStmt) stmt()              {}
 func (c *DefConceptStmt) stmt()             {}
 func (f *DefTypeStmt) stmt()                {}
-func (c *DefPropertyStmt) stmt()            {}
+func (c *DefPropStmt) stmt()                {}
 func (f *DefFnStmt) stmt()                  {}
 func (l *ForallStmt) stmt()                 {}
 func (r *RelationFactStmt) stmt()           {}
@@ -30,8 +30,8 @@ func (s *HaveStmt) stmt()                   {}
 func (s *DefMemberStmt) stmt()              {}
 func (s *DefTypeMemberStmt) stmt()          {}
 func (s *ClaimProveByContradictStmt) stmt() {}
-func (s *AxiomDefPropStmt) stmt()           {}
-func (s *AxiomDefExistStmt) stmt()          {}
+func (s *AxiomStmt) stmt()                  {}
+func (s *ThmStmt) stmt()                    {}
 
 type factStmt interface {
 	factStmt()
@@ -116,10 +116,11 @@ func (s *ClaimProveStmt) claimStmt()             {}
 func (s *ClaimProveByContradictStmt) claimStmt() {}
 
 // syntax sugar for prop exist decl followed by forall such prop is valid.
-type AxiomStmt interface {
-	axiomStmt()
+
+type PropExistDecl interface {
+	propExistDecl()
 	stmt()
 }
 
-func (s *AxiomDefExistStmt) axiomStmt() {}
-func (s *AxiomDefPropStmt) axiomStmt()  {}
+func (s *DefExistStmt) propExistDecl() {}
+func (s *DefPropStmt) propExistDecl()  {}

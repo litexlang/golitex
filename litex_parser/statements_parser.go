@@ -100,6 +100,8 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseTypeMemberStmt()
 	case Keywords["axiom"]:
 		ret, err = stmt.parseAxiomStmt()
+	case Keywords["thm"]:
+		ret, err = stmt.parseThmStmt()
 	default:
 		ret, err = stmt.parseFactStmt()
 	}
@@ -460,7 +462,7 @@ func (stmt *TokenBlock) parseFactsBlock() (*[]factStmt, error) {
 	return ifFacts, nil
 }
 
-func (stmt *TokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
+func (stmt *TokenBlock) parseDefPropertyStmt() (*DefPropStmt, error) {
 	decl, err := stmt.Header.parsePropertyDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -476,7 +478,7 @@ func (stmt *TokenBlock) parseDefPropertyStmt() (*DefPropertyStmt, error) {
 		}
 	}
 
-	return &DefPropertyStmt{*decl, *ifFacts, *thenFacts}, nil
+	return &DefPropStmt{*decl, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]factStmt, *[]factStmt, error) {
@@ -904,7 +906,7 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (NotFactStmt, error) {
 	return &RelationFactStmt{true, vars, FcStr(opt)}, nil
 }
 
-func (stmt *TokenBlock) parseAxiomStmt() (AxiomStmt, error) {
+func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {
 	stmt.Header.skip(Keywords["axiom"])
 
 	if stmt.Header.is(Keywords["prop"]) {
@@ -912,14 +914,37 @@ func (stmt *TokenBlock) parseAxiomStmt() (AxiomStmt, error) {
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		return &AxiomDefPropStmt{*prop}, nil
+		return &AxiomStmt{prop}, nil
 	} else if stmt.Header.is(Keywords["exist"]) {
 		exist, err := stmt.parseDefExistStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		return &AxiomDefExistStmt{*exist}, nil
+		return &AxiomStmt{exist}, nil
 	}
 
 	return nil, fmt.Errorf("expect 'prop' or 'exist'")
+}
+
+func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
+	err := stmt.Header.skip(Keywords["thm"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+	err = stmt.Header.skip(BuiltinSyms[":"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+	if !stmt.Header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
+
+	if len(stmt.Body) != 2 {
+		return nil, fmt.Errorf("expect two statements in thm")
+	}
+
+	for _, bodyStmt := range stmt.Body {
+
+	}
+
 }
