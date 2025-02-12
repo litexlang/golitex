@@ -700,7 +700,7 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 	return FcStr(left), nil
 }
 
-func (parser *Parser) parseIsExpr(left Fc) (*FuncPtyStmt, error) {
+func (parser *Parser) parseIsExpr(left Fc) (*FuncPropStmt, error) {
 	opt, err := parser.next()
 
 	if err != nil {
@@ -719,7 +719,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncPtyStmt, error) {
 		}
 	}
 
-	return &FuncPtyStmt{true, &CalledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}}, nil
+	return &FuncPropStmt{true, &CalledFcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}}, nil
 }
 
 func (parser *Parser) parseTypeVar() (typeVar, error) {

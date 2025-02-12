@@ -21,7 +21,7 @@ func (c *DefPropStmt) stmt()                {}
 func (f *DefFnStmt) stmt()                  {}
 func (l *ForallStmt) stmt()                 {}
 func (r *RelationFactStmt) stmt()           {}
-func (p *FuncPtyStmt) stmt()                {}
+func (p *FuncPropStmt) stmt()               {}
 func (f *ClaimProveStmt) stmt()             {}
 func (f *DefuseStmt) stmt()                 {}
 func (f *KnowStmt) stmt()                   {}
@@ -32,15 +32,17 @@ func (s *DefTypeMemberStmt) stmt()          {}
 func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
+func (s *InlineIfFactStmt) stmt()           {}
 
 type factStmt interface {
 	factStmt()
 	stmt()
 }
 
-func (l *ForallStmt) factStmt()       {}
-func (r *RelationFactStmt) factStmt() {}
-func (p *FuncPtyStmt) factStmt()      {}
+func (l *ForallStmt) factStmt()        {}
+func (r *RelationFactStmt) factStmt()  {}
+func (p *FuncPropStmt) factStmt()      {}
+func (p *InlineIfFactStmt) factsStmt() {}
 
 type NotFactStmt interface {
 	notFactStmtSetT(b bool)
@@ -49,7 +51,7 @@ type NotFactStmt interface {
 }
 
 func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.isTrue = b }
-func (f *FuncPtyStmt) notFactStmtSetT(b bool)      { f.IsTrue = b }
+func (f *FuncPropStmt) notFactStmtSetT(b bool)     { f.IsTrue = b }
 
 type typeVar interface {
 	typeVar()
@@ -124,3 +126,12 @@ type DefPropExistDeclStmt interface {
 
 func (s *DefExistStmt) defPropExistDeclStmt() {}
 func (s *DefPropStmt) defPropExistDeclStmt()  {}
+
+type InlineFactStmt interface {
+	inlineFactStmt()
+	stmt()
+}
+
+func (r *RelationFactStmt) inlineFactStmt() {}
+func (p *FuncPropStmt) inlineFactStmt()     {}
+func (p *InlineIfFactStmt) inlineFactStmt() {}

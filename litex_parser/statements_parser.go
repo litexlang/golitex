@@ -369,7 +369,7 @@ func (stmt *TokenBlock) parseNotFactStmt() (NotFactStmt, error) {
 	return ret, nil
 }
 
-func (stmt *TokenBlock) parseFuncPropertyFactStmt() (*FuncPtyStmt, error) {
+func (stmt *TokenBlock) parseFuncPropertyFactStmt() (*FuncPropStmt, error) {
 	err := stmt.Header.skip(BuiltinSyms["$"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -380,7 +380,7 @@ func (stmt *TokenBlock) parseFuncPropertyFactStmt() (*FuncPtyStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &FuncPtyStmt{true, fc}, nil
+	return &FuncPropStmt{true, fc}, nil
 }
 
 func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
