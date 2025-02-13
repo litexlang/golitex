@@ -33,16 +33,18 @@ func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
 func (s *InlineIfFactStmt) stmt()           {}
+func (s *InlineForallSubStmt) stmt()        {}
 
 type FactStmt interface {
 	factStmt()
 	stmt()
 }
 
-func (l *ForallStmt) factStmt()       {}
-func (r *RelationFactStmt) factStmt() {}
-func (p *FuncPropStmt) factStmt()     {}
-func (p *InlineIfFactStmt) factStmt() {}
+func (l *ForallStmt) factStmt()          {}
+func (r *RelationFactStmt) factStmt()    {}
+func (p *FuncPropStmt) factStmt()        {}
+func (p *InlineIfFactStmt) factStmt()    {}
+func (p *InlineForallSubStmt) factStmt() {}
 
 type BaseFactStmt interface {
 	notFactStmtSetT(b bool)
@@ -134,6 +136,7 @@ type InlineFactStmt interface {
 	stmt()
 }
 
-func (r *RelationFactStmt) inlineFactStmt() {}
-func (p *FuncPropStmt) inlineFactStmt()     {}
-func (p *InlineIfFactStmt) inlineFactStmt() {}
+func (r *RelationFactStmt) inlineFactStmt()    {}
+func (p *FuncPropStmt) inlineFactStmt()        {}
+func (p *InlineIfFactStmt) inlineFactStmt()    {}
+func (p *InlineForallSubStmt) inlineFactStmt() {}

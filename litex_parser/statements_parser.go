@@ -346,9 +346,51 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 func (stmt *TokenBlock) parseInlineFactStmt() (InlineFactStmt, error) {
 	if stmt.Header.is(Keywords["if"]) {
 		return stmt.parseInlineIfFactStmt()
+	} else if stmt.Header.is(Keywords["forall"]) {
+		return stmt.parseInlineForallStmt()
 	}
 
 	return stmt.parseBaseFactStmt()
+}
+
+func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallSubStmt, error) {
+	err := stmt.Header.skip(Keywords["forall"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	typeParams := &[]TypeConceptPair{}
+	varParams := &[]StrTypePair{}
+	condFacts := []InlineFactStmt{}
+	thenFacts := []BaseFactStmt{}
+
+	typeParams, varParams, err = stmt.Header.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
+
+	for !stmt.Header.is(BuiltinSyms["{"]) {
+		fact, err := stmt.parseInlineFactStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		condFacts = append(condFacts, fact)
+	}
+	err = stmt.Header.skip(BuiltinSyms["{"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	for !stmt.Header.is(BuiltinSyms["}"]) {
+		fact, err := stmt.parseBaseFactStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		thenFacts = append(thenFacts, fact)
+	}
+	err = stmt.Header.parseGivenWordsThenExceedEnd(&[]string{BuiltinSyms["}"]})
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	return &InlineForallSubStmt{*typeParams, *varParams, condFacts, thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseBaseFactStmt() (BaseFactStmt, error) {
