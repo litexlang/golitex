@@ -127,3 +127,11 @@ type InlineIfFactStmt struct {
 	condFacts []InlineFactStmt
 	thenFacts []BaseFactStmt
 }
+
+// forall []() cond {then}
+type InlineForallSubStmt struct {
+	typeParams []TypeConceptPair
+	varParams  []StrTypePair
+	cond       []InlineFactStmt
+	then       []BaseFactStmt
+}
