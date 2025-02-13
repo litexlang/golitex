@@ -152,13 +152,13 @@ func (p *TokenBlock) parseFcMember() (*[]FcVarDecl, *[]FcFnDecl, *[]PropDecl, er
 	return varMember, fnMember, propertyMember, nil
 }
 
-func (stmt *TokenBlock) parseThenFacts() (*[]factStmt, error) {
+func (stmt *TokenBlock) parseThenFacts() (*[]FactStmt, error) {
 	stmt.Header.next()
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, err
 	}
 
-	facts := &[]factStmt{}
+	facts := &[]FactStmt{}
 
 	for _, curStmt := range stmt.Body {
 		if curStmt.Header.is(Keywords["fact"]) {
@@ -222,7 +222,7 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	conceptName := TypeConceptStr(conceptNameStr)
 
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		return &DefConceptStmt{decl, (conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []factStmt{}}, nil
+		return &DefConceptStmt{decl, (conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
 	} else {
 		stmt.Header.next()
 	}
@@ -233,7 +233,7 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
 	propertyMember := &[]PropDecl{}
-	thenFacts := &[]factStmt{}
+	thenFacts := &[]FactStmt{}
 
 	for _, curStmt := range stmt.Body {
 		if curStmt.Header.is(Keywords["type_member"]) {
@@ -282,7 +282,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		}
 		conceptName := TypeConceptStr(conceptNameStr)
 
-		return &DefTypeStmt{&decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []factStmt{}}, nil
+		return &DefTypeStmt{&decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
 	}
 
 	decl, err := stmt.parseFcDecl()
@@ -301,7 +301,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	conceptName := TypeConceptStr(conceptNameStr)
 
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []factStmt{}}, nil
+		return &DefTypeStmt{decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
 	} else {
 		stmt.Header.next()
 	}
@@ -312,7 +312,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
 	propertyMember := &[]PropDecl{}
-	thenFacts := &[]factStmt{}
+	thenFacts := &[]FactStmt{}
 
 	for _, curStmt := range stmt.Body {
 		if curStmt.Header.is(Keywords["type_member"]) {
@@ -335,7 +335,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	return &DefTypeStmt{decl, conceptName, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseFactStmt() (factStmt, error) {
+func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	if stmt.Header.is(Keywords["forall"]) {
 		return stmt.parseForallStmt()
 	}
@@ -408,11 +408,11 @@ func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ifFacts := &[]InlineFactStmt{}
+	ifFacts := &[]FactStmt{}
 	thenFacts := &[]BaseFactStmt{}
 
 	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["cond"]) {
-		ifFacts, err = stmt.Body[0].parseInlineFactsBlock()
+		ifFacts, err = stmt.Body[0].parseForallCondFactsBlock()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -435,12 +435,8 @@ func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
 	return &ForallStmt{*typeParams, *varParams, *ifFacts, *thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseBodyFacts() (*[]factStmt, error) {
-	if len(stmt.Body) == 0 {
-		return &[]factStmt{}, nil
-	}
-
-	facts := &[]factStmt{}
+func (stmt *TokenBlock) parseBodyFacts() (*[]FactStmt, error) {
+	facts := &[]FactStmt{}
 	for _, f := range stmt.Body {
 		fact, err := f.parseFactStmt()
 		if err != nil {
@@ -450,6 +446,16 @@ func (stmt *TokenBlock) parseBodyFacts() (*[]factStmt, error) {
 	}
 
 	return facts, nil
+}
+
+func (stmt *TokenBlock) parseForallCondFactsBlock() (*[]FactStmt, error) {
+	err := stmt.Header.parseGivenWordsThenExceedEnd(&[]string{Keywords["cond"], BuiltinSyms[":"]})
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	facts, err := stmt.parseBodyFacts()
+	return facts, err
 }
 
 // func (stmt *TokenBlock) parseBodyInlineFacts() (*[]InlineFactStmt, error) {
@@ -469,23 +475,23 @@ func (stmt *TokenBlock) parseBodyFacts() (*[]factStmt, error) {
 // 	return facts, nil
 // }
 
-func (stmt *TokenBlock) parseInlineFactsBlock() (*[]InlineFactStmt, error) {
-	facts := &[]InlineFactStmt{}
-	stmt.Header.skip()
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
+// func (stmt *TokenBlock) parseInlineFactsBlock() (*[]InlineFactStmt, error) {
+// 	facts := &[]InlineFactStmt{}
+// 	stmt.Header.skip()
+// 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+// 		return nil, &parseStmtErr{err, *stmt}
+// 	}
 
-	for _, curStmt := range stmt.Body {
-		fact, err := curStmt.parseInlineFactStmt()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		*facts = append(*facts, fact)
-	}
+// 	for _, curStmt := range stmt.Body {
+// 		fact, err := curStmt.parseInlineFactStmt()
+// 		if err != nil {
+// 			return nil, &parseStmtErr{err, *stmt}
+// 		}
+// 		*facts = append(*facts, fact)
+// 	}
 
-	return facts, nil
-}
+// 	return facts, nil
+// }
 
 func (stmt *TokenBlock) parseBaseFactsBlock() (*[]BaseFactStmt, error) {
 	facts := &[]BaseFactStmt{}
@@ -511,8 +517,8 @@ func (stmt *TokenBlock) parseDefPropertyStmt() (*DefPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ifFacts := &[]factStmt{}
-	thenFacts := &[]factStmt{}
+	ifFacts := &[]FactStmt{}
+	thenFacts := &[]FactStmt{}
 	if stmt.Header.is(BuiltinSyms[":"]) {
 		stmt.Header.skip()
 		ifFacts, thenFacts, err = stmt.parseBodyCondFactsThenFacts()
@@ -524,9 +530,9 @@ func (stmt *TokenBlock) parseDefPropertyStmt() (*DefPropStmt, error) {
 	return &DefPropStmt{*decl, *ifFacts, *thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]factStmt, *[]factStmt, error) {
-	ifFacts := &[]factStmt{}
-	thenFacts := &[]factStmt{}
+func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]FactStmt, *[]FactStmt, error) {
+	ifFacts := &[]FactStmt{}
+	thenFacts := &[]FactStmt{}
 	var err error = nil
 
 	if len(stmt.Body) == 2 && stmt.Body[0].Header.is(Keywords["cond"]) && stmt.Body[1].Header.is(Keywords["then"]) {
@@ -565,8 +571,8 @@ func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ifFacts := &[]factStmt{}
-	thenFacts := &[]factStmt{}
+	ifFacts := &[]FactStmt{}
+	thenFacts := &[]FactStmt{}
 
 	if stmt.Header.is(BuiltinSyms[":"]) {
 		stmt.Header.skip()
@@ -585,7 +591,7 @@ func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ifFacts := &[]factStmt{}
+	ifFacts := &[]FactStmt{}
 
 	if stmt.Header.is(BuiltinSyms[":"]) {
 		stmt.Header.skip()
@@ -608,7 +614,7 @@ func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	toCheck := &[]factStmt{}
+	toCheck := &[]FactStmt{}
 	proof := &[]Stmt{}
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
@@ -654,7 +660,7 @@ func (stmt *TokenBlock) parseProveClaimStmt() (*ClaimProveStmt, error) {
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
-	return &ClaimProveStmt{[]factStmt{}, *innerStmtArr}, nil
+	return &ClaimProveStmt{[]FactStmt{}, *innerStmtArr}, nil
 }
 
 func (stmt *TokenBlock) parseProveBlock() (*[]Stmt, error) {
@@ -694,7 +700,7 @@ func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
 	stmt.Header.skip(Keywords["know"])
 
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		facts := []factStmt{}
+		facts := []FactStmt{}
 		fact, err := stmt.parseFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
@@ -721,9 +727,9 @@ func (stmt *TokenBlock) parseDefExistStmt() (*DefExistStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ifFacts := &[]factStmt{}
+	ifFacts := &[]FactStmt{}
 	member := &[]fcDecl{}
-	thenFacts := &[]factStmt{}
+	thenFacts := &[]FactStmt{}
 	if !stmt.Header.is(BuiltinSyms[":"]) {
 		return nil, fmt.Errorf("expected ':‘")
 	}
@@ -853,7 +859,7 @@ func (stmt *TokenBlock) parseMemberStmt() (*DefMemberStmt, error) {
 	}
 
 	if stmt.Header.ExceedEnd() {
-		return &DefMemberStmt{typeConcept, varType, decl, []factStmt{}}, nil
+		return &DefMemberStmt{typeConcept, varType, decl, []FactStmt{}}, nil
 	}
 
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
@@ -904,7 +910,7 @@ func (stmt *TokenBlock) parseTypeMemberStmt() (*DefTypeMemberStmt, error) {
 	}
 
 	if stmt.Header.ExceedEnd() {
-		return &DefTypeMemberStmt{typeConcept, decl, []factStmt{}}, nil
+		return &DefTypeMemberStmt{typeConcept, decl, []FactStmt{}}, nil
 	}
 
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {

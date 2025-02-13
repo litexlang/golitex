@@ -106,6 +106,19 @@ func (it *Parser) curTokenBeginWithNumber() bool {
 	}
 }
 
+func (it *Parser) parseGivenWordsThenExceedEnd(words *[]string) error {
+	for _, word := range *words {
+		if err := it.testAndSkip(word); err != nil {
+			return err
+		}
+	}
+	if it.ExceedEnd() {
+		return nil
+	} else {
+		return fmt.Errorf("expected %v, but got %s", *words, it.slice[it.index])
+	}
+}
+
 type parserErr struct {
 	previous error
 	parser   *Parser
