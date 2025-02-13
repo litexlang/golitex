@@ -365,6 +365,9 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallSubStmt, error) {
 	thenFacts := []BaseFactStmt{}
 
 	typeParams, varParams, err = stmt.Header.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
 
 	for !stmt.Header.is(BuiltinSyms["{"]) {
 		fact, err := stmt.parseInlineFactStmt()
@@ -385,7 +388,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallSubStmt, error) {
 		}
 		thenFacts = append(thenFacts, fact)
 	}
-	err = stmt.Header.parseGivenWordsThenExceedEnd(&[]string{BuiltinSyms["}"]})
+	err = stmt.Header.skip(BuiltinSyms["}"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
