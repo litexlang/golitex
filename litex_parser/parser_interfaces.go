@@ -34,7 +34,7 @@ func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
 func (s *InlineIfFactStmt) stmt()           {}
 
-type factStmt interface {
+type FactStmt interface {
 	factStmt()
 	stmt()
 }

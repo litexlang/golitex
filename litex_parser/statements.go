@@ -7,7 +7,7 @@ type TopStmt struct {
 
 type DefVarStmt struct {
 	Decl  FcVarDecl
-	Facts []factStmt
+	Facts []FactStmt
 }
 
 // if concept and type has more conceptTypes, use know impl
@@ -21,7 +21,7 @@ type DefConceptStmt struct {
 	varMember          []FcVarDecl
 	fnMember           []FcFnDecl
 	propertyMember     []PropDecl
-	thenFacts          []factStmt
+	thenFacts          []FactStmt
 }
 
 type DefTypeStmt struct {
@@ -33,25 +33,25 @@ type DefTypeStmt struct {
 	varMember          []FcVarDecl
 	fnMember           []FcFnDecl
 	propertyMember     []PropDecl
-	thenFacts          []factStmt
+	thenFacts          []FactStmt
 }
 
 type DefPropStmt struct {
 	decl      PropDecl
-	ifFacts   []factStmt
-	thenFacts []factStmt
+	ifFacts   []FactStmt
+	thenFacts []FactStmt
 }
 
 type DefFnStmt struct {
 	decl      FcFnDecl
-	ifFacts   []factStmt
-	thenFacts []factStmt
+	ifFacts   []FactStmt
+	thenFacts []FactStmt
 }
 
 type ForallStmt struct {
 	typeParams []TypeConceptPair
 	varParams  []StrTypePair
-	cond       []InlineFactStmt
+	cond       []FactStmt
 	then       []BaseFactStmt
 }
 
@@ -68,12 +68,12 @@ type RelationFactStmt struct {
 }
 
 type ClaimProveByContradictStmt struct {
-	toCheck []factStmt
+	toCheck []FactStmt
 	proof   []Stmt
 }
 
 type ClaimProveStmt struct {
-	toCheck []factStmt
+	toCheck []FactStmt
 	proof   []Stmt
 }
 
@@ -83,14 +83,14 @@ type DefuseStmt struct {
 }
 
 type KnowStmt struct {
-	facts []factStmt
+	facts []FactStmt
 }
 
 type DefExistStmt struct {
 	decl      PropDecl
-	ifFacts   []factStmt
+	ifFacts   []FactStmt
 	member    []fcDecl
-	thenFacts []factStmt
+	thenFacts []FactStmt
 }
 
 type HaveStmt struct {
@@ -102,13 +102,13 @@ type DefMemberStmt struct {
 	typeConcept TypeConceptPair
 	varType     StrTypePair
 	member      fcDecl
-	facts       []factStmt
+	facts       []FactStmt
 }
 
 type DefTypeMemberStmt struct {
 	typeConcept TypeConceptPair
 	member      fcDecl
-	facts       []factStmt
+	facts       []FactStmt
 }
 
 // syntax sugar for defining propExist + claim forall true
