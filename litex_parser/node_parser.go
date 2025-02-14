@@ -575,25 +575,155 @@ func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 	return members, nil
 }
 
+// func (parser *Parser) ParseFcExpr() (Fc, error) {
+// 	return parser.parseAddition()
+// }
+
+// func (parser *Parser) parseAddition() (Fc, error) {
+// 	node, err := parser.parseMultiplication()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
+
+// 	for parser.is(BuiltinSyms["+"]) || parser.is(BuiltinSyms["-"]) {
+// 		cur, _ := parser.next()
+
+// 		right, err := parser.parseMultiplication()
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
+// 		node = &CalledFcFnRetValue{
+// 			FcStr(cur),
+// 			[]typeVar{},
+// 			[]Fc{node, right},
+// 		}
+// 	}
+
+// 	return node, nil
+// }
+
+// func (parser *Parser) parseMultiplication() (Fc, error) {
+// 	node, err := parser.parseUnary()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
+
+// 	for parser.is(BuiltinSyms["*"]) || parser.is(BuiltinSyms["/"]) {
+// 		cur, _ := parser.next()
+
+// 		right, err := parser.parseUnary()
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
+// 		node = &CalledFcFnRetValue{
+// 			FcStr(cur),
+// 			[]typeVar{},
+// 			[]Fc{node, right},
+// 		}
+// 	}
+
+// 	return node, nil
+// }
+
+// func (parser *Parser) parseUnary() (Fc, error) {
+// 	if parser.is(BuiltinSyms["-"]) {
+// 		cur, _ := parser.next()
+
+// 		right, err := parser.parseExponentiation()
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
+// 		return &CalledFcFnRetValue{
+// 			FcStr(cur),
+// 			[]typeVar{},
+// 			[]Fc{right},
+// 		}, nil
+// 	}
+
+// 	return parser.parseExponentiation()
+// }
+
+// func (parser *Parser) parseExponentiation() (Fc, error) {
+// 	node, err := parser.parseFcAtom()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
+
+// 	if parser.is(BuiltinSyms["^"]) {
+// 		cur, _ := parser.next()
+// 		right, err := parser.parseExponentiation()
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
+// 		node = &CalledFcFnRetValue{
+// 			FcStr(cur),
+// 			[]typeVar{},
+// 			[]Fc{right},
+// 		}
+// 	}
+
+// 	return node, nil
+// }
+
+type precedence int
+
+const (
+	precLowest         precedence = iota
+	precAssignment                // =
+	precOr                        // or
+	precAnd                       // and
+	precEquality                  // == !=
+	precComparison                // < > <= >=
+	precAddition                  // + -
+	precMultiplication            // * /
+	precUnary                     // ! -
+	precExponentiation            // ^
+	// precCall                      // . ()
+)
+
+var precedenceMap = map[string]precedence{
+	"+": precAddition,
+	"-": precAddition, // 二元减法
+	"*": precMultiplication,
+	"/": precMultiplication,
+	"^": precExponentiation,
+}
+
+// 特别记录一元运算符的优先级
+var unaryPrecedence = map[string]precedence{
+	"-": precUnary, // 一元负号
+}
+
 func (parser *Parser) ParseFcExpr() (Fc, error) {
-	return parser.parseAddition()
+	return parser.parseFcInfixExpr(precLowest)
 }
 
-func (parser *Parser) parseAddition() (Fc, error) {
-	node, err := parser.parseMultiplication()
+func (parser *Parser) parseFcInfixExpr(currentPrec precedence) (Fc, error) {
+	node, err := parser.parseFcUnaryExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
 
-	for parser.is(BuiltinSyms["+"]) || parser.is(BuiltinSyms["-"]) {
-		cur, _ := parser.next()
+	//  循环处理二元运算符（如 +, -, *, /, ^）
+	for {
+		curToken, err := parser.currentToken()
+		if err != nil {
+			return node, nil
+		}
 
-		right, err := parser.parseMultiplication()
+		curPrec, isBinary := precedenceMap[curToken]
+		if !isBinary || curPrec <= currentPrec {
+			break
+		}
+
+		parser.skip() // 消耗运算符
+		right, err := parser.parseFcInfixExpr(curPrec)
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
+
 		node = &CalledFcFnRetValue{
-			FcStr(cur),
+			FcStr(curToken),
 			[]typeVar{},
 			[]Fc{node, right},
 		}
@@ -602,67 +732,30 @@ func (parser *Parser) parseAddition() (Fc, error) {
 	return node, nil
 }
 
-func (parser *Parser) parseMultiplication() (Fc, error) {
-	node, err := parser.parseUnary()
+func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
+
+	// 先尝试解析一元运算符（如 -x）
+	unaryOp, err := parser.currentToken()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
 
-	for parser.is(BuiltinSyms["*"]) || parser.is(BuiltinSyms["/"]) {
-		cur, _ := parser.next()
-
-		right, err := parser.parseUnary()
+	if prec, isUnary := unaryPrecedence[unaryOp]; isUnary {
+		parser.skip()
+		right, err := parser.parseFcInfixExpr(prec)
 		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-		node = &CalledFcFnRetValue{
-			FcStr(cur),
-			[]typeVar{},
-			[]Fc{node, right},
-		}
-	}
-
-	return node, nil
-}
-
-func (parser *Parser) parseUnary() (Fc, error) {
-	if parser.is(BuiltinSyms["-"]) {
-		cur, _ := parser.next()
-
-		right, err := parser.parseExponentiation()
-		if err != nil {
-			return nil, &parserErr{err, parser}
+			return nil, err
 		}
 		return &CalledFcFnRetValue{
-			FcStr(cur),
+			FcStr(unaryOp),
 			[]typeVar{},
-			[]Fc{right},
+			[]Fc{right}, // 一元运算符只有一个操作数
 		}, nil
+	} else {
+		//  解析原子表达式（如数字、变量、括号等）
+		return parser.parseFcAtom()
 	}
 
-	return parser.parseExponentiation()
-}
-
-func (parser *Parser) parseExponentiation() (Fc, error) {
-	node, err := parser.parseFcAtom()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	if parser.is(BuiltinSyms["^"]) {
-		cur, _ := parser.next()
-		right, err := parser.parseExponentiation()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-		node = &CalledFcFnRetValue{
-			FcStr(cur),
-			[]typeVar{},
-			[]Fc{right},
-		}
-	}
-
-	return node, nil
 }
 
 func (parser *Parser) parseNumberStr() (FcStr, error) {
