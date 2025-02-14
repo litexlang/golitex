@@ -979,6 +979,7 @@ func TestPrecedence(t *testing.T) {
 -1 is red
 1 + 2 * 3 is red
 1 + (1 -3) * 8 -7 is red
+a.b.c.d.e.f is red
 `
 
 	statements, err := ParserTester(code)
