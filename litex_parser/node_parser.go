@@ -9,7 +9,7 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	parser.skip(BuiltinSyms["("])
 
 	for !parser.is(BuiltinSyms[")"]) {
-		fc, err := parser.ParseFcExpr()
+		fc, err := parser.ParseFc()
 
 		if err != nil {
 			return nil, &parserErr{err, parser}

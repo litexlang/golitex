@@ -23,7 +23,7 @@ func (l *ForallStmt) stmt()                 {}
 func (r *RelationFactStmt) stmt()           {}
 func (p *FuncPropStmt) stmt()               {}
 func (f *ClaimProveStmt) stmt()             {}
-func (f *DefuseStmt) stmt()                 {}
+func (f *DefAliasStmt) stmt()               {}
 func (f *KnowStmt) stmt()                   {}
 func (s *DefExistStmt) stmt()               {}
 func (s *HaveStmt) stmt()                   {}

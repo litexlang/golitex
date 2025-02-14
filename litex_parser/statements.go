@@ -77,7 +77,7 @@ type ClaimProveStmt struct {
 	proof   []Stmt
 }
 
-type DefuseStmt struct {
+type DefAliasStmt struct {
 	name     string
 	variable Fc
 }

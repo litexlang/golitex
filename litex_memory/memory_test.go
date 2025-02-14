@@ -48,7 +48,7 @@ h[a](b).g[c](d).t
 	for _, block := range *tokenBlocks {
 		it := block.Header
 		// 单独把node拿出来parse可能会有问题：因为我在parse时默认在parse stmt，所以你想要单独parse fc是会出错的。比如parse "h[a](b).g[c](d).t"时，我解释器会往t后面读东西以确定现在在什么位置，但如果 它 单独出现，那t就在最后了，就会 out of range。我这里的implement让 out of range 不可能，但以后不确定
-		fc, err := it.ParseFcExpr()
+		fc, err := it.ParseFc()
 		if err != nil {
 			t.Fatal(err)
 		}
