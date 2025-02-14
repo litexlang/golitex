@@ -77,7 +77,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	parser.skip(BuiltinSyms["("])
-	fc, err := parser.ParseFcExpr()
+	fc, err := parser.ParseFc()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -96,7 +96,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*TypedFc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	fc, err := parser.ParseFcExpr()
+	fc, err := parser.ParseFc()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -169,7 +169,7 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 	return FcStr(tok), nil
 }
 
-func (parser *Parser) ParseFcExpr() (Fc, error) {
+func (parser *Parser) ParseFc() (Fc, error) {
 	return parser.parseFcInfixExpr(precLowest)
 }
 

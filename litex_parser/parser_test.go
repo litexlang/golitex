@@ -145,7 +145,7 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 		}
 		parser := Parser{0, *tokens}
 
-		fc, err := parser.ParseFcExpr()
+		fc, err := parser.ParseFc()
 
 		if err != nil {
 			t.Fatal(err)
@@ -559,10 +559,10 @@ claim:
 
 }
 
-func TestParseDefuseStmt(t *testing.T) {
+func TestParseDefAliasStmt(t *testing.T) {
 	code :=
 		`
-use a p[G, G2](x, y)
+alias a p[G, G2](x, y)
 `
 	statements, err := ParserTester(code)
 	if err == nil {

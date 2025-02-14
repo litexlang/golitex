@@ -86,8 +86,8 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseClaimStmt()
 	case Keywords["prove"]:
 		ret, err = stmt.parseProveClaimStmt()
-	case Keywords["use"]:
-		ret, err = stmt.parseDefUseStmt()
+	case Keywords["alias"]:
+		ret, err = stmt.parseDefAliasStmt()
 	case Keywords["know"]:
 		ret, err = stmt.parseKnowStmt()
 	case Keywords["exist"]:
@@ -428,7 +428,7 @@ func (stmt *TokenBlock) parseFuncPropertyFactStmt() (*FuncPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fc, err := stmt.Header.ParseFcExpr()
+	fc, err := stmt.Header.ParseFc()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -725,20 +725,20 @@ func (stmt *TokenBlock) parseProveBlock() (*[]Stmt, error) {
 	return &innerStmtArr, nil
 }
 
-func (stmt *TokenBlock) parseDefUseStmt() (*DefuseStmt, error) {
-	stmt.Header.skip(Keywords["use"])
+func (stmt *TokenBlock) parseDefAliasStmt() (*DefAliasStmt, error) {
+	stmt.Header.skip(Keywords["alias"])
 
 	name, err := stmt.Header.next()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	variable, err := stmt.Header.parseFcAtom()
+	variable, err := stmt.Header.ParseFc()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &DefuseStmt{name, variable}, nil
+	return &DefAliasStmt{name, variable}, nil
 }
 
 func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
@@ -971,7 +971,7 @@ func (stmt *TokenBlock) parseTypeMemberStmt() (*DefTypeMemberStmt, error) {
 }
 
 func (stmt *TokenBlock) parseRelationalFactStmt() (BaseFactStmt, error) {
-	fc, err := stmt.Header.ParseFcExpr()
+	fc, err := stmt.Header.ParseFc()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -989,7 +989,7 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (BaseFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fc2, err := stmt.Header.ParseFcExpr()
+	fc2, err := stmt.Header.ParseFc()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -997,7 +997,7 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (BaseFactStmt, error) {
 	vars := []Fc{fc, fc2}
 	for stmt.Header.is(opt) {
 		stmt.Header.skip()
-		fc, err := stmt.Header.ParseFcExpr()
+		fc, err := stmt.Header.ParseFc()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
