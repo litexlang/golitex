@@ -933,6 +933,17 @@ thm:
 func TestInlineIfStmt(t *testing.T) {
 	code := `
 if $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()} => $p()
+
+forall g G:
+	cond:
+		$p()
+		forall g B:
+			cond:
+				$q()
+			then:
+				$t()
+	then:
+		$t()
 	
 prop P[G Group, G2 Group](g G, g2 G2):
 	cond:
@@ -949,6 +960,25 @@ forall [G Group, G2 Group] g g, g2 g2:
 		if $f[G, B](g.g1, g2.g2) => $p()
 	then:
 	    $p[G, G2](x, y)
+
+-1 is red
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
+
+func TestPrecedence(t *testing.T) {
+	code := `
+-1 * 2 is red
+-1 is red
+1 + 2 * 3 is red
+1 + (1 -3) * 8 -7 is red
 `
 
 	statements, err := ParserTester(code)
