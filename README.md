@@ -40,21 +40,19 @@ Stroustrup: My best tool for efficiency and performance is abstraction.
 2. run and debug
 3. read others' code and share my code
 
-
+nn
 #### Differences
 
 _The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."
 -- Structure and Interpretation of Computer Programs_
 
 ##### The tasks
-1. Codes are used to be executed, to have effects of any forms including arithmetic calculation, data manipulation, system control, user interaction and more. Execution in math verification means searching old relationships and build new relationships on top of them. Since building relationships is only one form of effects that programs can have, we can use programming to do math verification. So math can be viewed as a domain language which does not need to be as universal as programming languages. Functionalities like doing arithmetic operations can be implemented as plugins instead of the main part of the language. We take advantage of this property to create a language that is more close to math than traditional turing-complete-language formal languages by restricting ourselves to functionalities that mathematical reasoning only needs.
+1. Codes are used to be executed, to have effects of any forms including arithmetic calculation, data manipulation, system control, user interaction and more. Execution in math verification means searching old relationships and build new relationships on top of them. Since building relationships is only one form of effects that programs can have, we can use programming to do math verification. So math can be viewed as a domain language which does not need to be as universal as programming languages. Functionalities like doing arithmetic operations can be implemented as plugins instead of the main part of the language. We take advantage of this property to create a language that is more close to math than traditional turing-complete-language formal languages by restricting ourselves to functionalities that mathematical reasoning only needs.but many functionalities in programming languages, like loops, flexible execution (数学里只有找并用旧的事实建立新事实，不需要这么数值计算、字符串计算等),  are unnecessary in math proofs. they are better treated as plugins。比如litex里每个expr只可能返回 true, false, unknown, error，这和普通语言是完完全全不一样的. fn in litex does not execute, it is just a way of combining previously defined symbols.
 2. Math is for explaining, Programming is for making a difference.
 3. As formal 
 4. 
 
 #### Relationships with mainstream programming languages
-
-
 
 _If I have seen further, it is by standing on the shoulders of giants.
 -- Isaac Newton_
@@ -62,6 +60,12 @@ _If I have seen further, it is by standing on the shoulders of giants.
 The design of Litex is inspired mainly by designs of existing programming languages like Python, GoLang, C, C++, Rust, JavaScript/TypeScript, Lisp instead of theoretical logic. I implemented this language for everyday usage, not mental entertainment. Unlike predecessors, Litex uses programming principles to understand mathematical reasoning, rather than the other way around.
 
 ##### Main syntax design includes
+
+_Beautiful is better than ugly.
+Explicit is better than implicit.
+Simple is better than complex.
+-- The Zen of Python_
+
 1. Python scope, Python "less typing approach"
 2. Go type syntax, package management
 3. Concept inspired by C++ Concept, Python Protocol, Go Generics
@@ -71,7 +75,11 @@ The design of Litex is inspired mainly by designs of existing programming langua
 7. programmers work with one another. package system helps you maintain your own proofs and easily import others' result.
 
 ##### Corresponding between math and programming
-1. basic element of math: var, fn, prop. they are all represented as symbols
+
+_Simplicity is the ultimate sophistication.
+-- Leonardo da Vinci_
+
+1.  Basic components are easy, easy to combine basic components. The Litex way favors composability as opposed to monolithic design. basic element of math: var, fn, prop. they are all represented as symbols
 2. Math set == type. types are used to define members, including methods, propositions, operator overloads. this is where oop lies.
 3. a class of sets: concept
 4. fact: forall => introduce new vars, if => introduce further condition, basic prop: called just as if a function that returns bool
@@ -83,29 +91,25 @@ The design of Litex is inspired mainly by designs of existing programming langua
 11. when user input a fact, it's verified by the interpreter. If it's true, it's remembered for future use. Otherwise nothing happens.
 12. forall facts can be "called" to verify a input fact without giving it a name.
 13. = is special factual operation. Its validation can be done by 2 different ways: 1. symbolically the same, which means under the same function and parameters are = 2. it's verified by other facts, just like other kinds of factual expressions.
+14.
 
 #### Simplicity is the core of Litex
 
-_Beautiful is better than ugly.
-Explicit is better than implicit.
-Simple is better than complex.
--- The Zen of Python_
-
-_Beauty is the first test: there is no permanent place in this world for ugly mathematics
--- G.H. Hardy_
-
-_Simplicity is complicated.
--- the Go programming language team_
-
 _Simplify, Simplify, Simplify.
-- Steve Jobs_
+-- Steve Jobs_
 
 A good tool encourage its user to follow a good practice. One can not put too much emphasis on how important a good workflow and routine is. That's why some programmers are 10x more efficient than his colleagues and why great mathematicians stand out. You have to be clear about what you are talking about, otherwise nobody pays attention.
 
-To make Litex code clear and straightforward, Litex itself must be clear and straightforward in the first place. That's why simplicity is the single most important aspect of Litex and why Litex adopt the minimalism design principle. Minimalism does not mean weakness. It means any keyword or syntax does one thing and does it very well which leads to a uniform way of coding. Some languages, particularly traditional formal languages, do a lot of things half well and consists of ideas that are mutually exclusive. Such defects caused by poor language design leads to codes are unnecessarily hard to understand. Math is already hard enough, no extra mental burden is allowed in Litex. So instead of randomly selecting a subset of the language, users should use Litex as a whole. No feature that should exist does not exist, and no feature in Litex is redundant. 
+Traditional formal languages are great because they informs of people that programming and doing have a tight relationship. But all of them have bad reputations for complexity. Newton does not need to learn type theory to invent calculus and children do not need to learn Curry-Howard Isomorphism to write their first line of math. People are born to have a sense of how math works. So there must exist a design for a formal language that allows anyone to quickly understand and use it. That's why Litex is designed by common sense, by diving down the most obscure similarity difference between math and programming that people can always tend to ignore. I am sure there are not many people think more about what programming and mathematical reasoning actually means than me.
+
+To make Litex code clear and straightforward, Litex itself must be clear and straightforward in the first place. That's why simplicity is the single most important aspect of Litex and why Litex adopt the minimalism design principle. Minimalism does not mean weakness. It means any keyword or syntax does one thing and does it very well which leads to a uniform way of coding. Some languages, particularly traditional formal languages, do a lot of things half well and consists of ideas that are mutually exclusive. Such defects lies in the root of ugly code. So instead of randomly selecting a half good subset of the language, users should use Litex as a whole. No feature that should exist does not exist, and no feature in Litex is redundant. The users are prohibit from writing twisted logic and writing vague expressions at language level. They can rely on their intuition and common sense.
 
 
 ### Potentials
+
+_Beauty is the first test: there is no permanent place in this world for ugly mathematics.
+-- G.H. Hardy_
+
 
 Github has already shown us the huge influence of large-scale online co-operation. 
 
