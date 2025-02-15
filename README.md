@@ -3,19 +3,24 @@
 <div align="center">
 <img src="assets/logo.png" alt="The LiTeX Logo" width="300">
 
-<small>The LiTeX logo is a tree for two symbolic reasons: 1) binary tree is the basic data structure of Lisp , and LiTeX is strongly influenced by Lisp 2) it evokes the sense of "something leads to another thing" in mathematical discovery and software development. </small>
+<small>The LiTeX logo is a binary tree for two symbolic reasons: 1) Binary trees are a perfect demonstration of how abstraction is handled, and the concept abstraction plays a fundamental role in both mathematics and programming.  2) It evokes the sense of "something leads to another thing" in mathematical discovery and software development. </small>
 
 </div>
 
 ## About
 
-_Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
+Litex is a simple, user-friendly, universal formal language, designed to better manage the rising level of abstraction in mathematics and to bring the mathematical community into the digital age. It is daily tool to effortlessly to read, write, verify, and share mathematics.
+
+Since even children can express mathematics, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language. While twisted syntax and semantics of traditional formal languages often causes a significant mental drain, Litex adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by formal languages. 
+
+<!-- _Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
 -- David Hilbert_
 
 _The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."
--- Structure and Interpretation of Computer Programs_
+-- Structure and Interpretation of Computer Programs_ -->
 
-LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to EVERYONE. Unlike traditional formal languages that force users to distort their mathematical expressions to fit what the formal language can represent, LiTeX seamlessly bridges the gap between a user’s thought process and the expression of their logic by combining the structured clarity of LaTeX for mathematical notation with Lisp’s philosophy of “Everything is a symbol” (This is also the origin of LiTeX's name: a combination of Lisp semantics and LaTeX syntax) .
+
+<!-- LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to EVERYONE. Unlike traditional formal languages that force users to distort their mathematical expressions to fit what the formal language can represent, LiTeX seamlessly bridges the gap between a user’s thought process and the expression of their logic by combining the structured clarity of LaTeX for mathematical notation with Lisp’s philosophy of “Everything is a symbol” (This is also the origin of LiTeX's name: a combination of Lisp semantics and LaTeX syntax) .
 
 The current state of LiTeX is that, it requires significantly less typing—about 50% less than LaTeX and 80% less than Lean4 to implement basic set theory, syllogisms, and fundamental natural number theory. For example, I chose to implement the opening chapters of Professor Terrence Tao’s _Analysis I_ as a case study. You can see a comparison of Lean4, LaTeX, and LiTeX on the LiTeX website. Please visit https://litexlang.org/ for more details.
 
@@ -23,7 +28,7 @@ The project has been adopted early by several prominent entities, including bein
 
 It’s exciting to see that, due to its intuitive syntax and shallow learning curve, LiTeX is not just an auxiliary tool but practical for everyday tasks. This opens up the potential for a much larger user base. With its low time cost, LiTeX can transform most mathematics textbooks into interactive ones and translate classical theorems. In the long term, LiTeX will enable large-scale mathematical collaborations, similar to how programmers collaborate on GitHub. Larger, more logically coherent datasets will make mathematical models and rule-based reasoning systems stronger and better at reasoning.
 
-Developing a new programming language often starts as the effort of a single individual, but its growth and long-term success depend on the strength of the community around it. A thriving language needs user feedback, collaborative creativity from developers, and tools to support its ecosystem, such as package management, website resources, and plugins for mainstream IDEs like VSCode. With the support of this funding, I will be able to focus on improving the user experience and iterating on LiTeX to make it more accessible and robust.
+Developing a new programming language often starts as the effort of a single individual, but its growth and long-term success depend on the strength of the community around it. A thriving language needs user feedback, collaborative creativity from developers, and tools to support its ecosystem, such as package management, website resources, and plugins for mainstream IDEs like VSCode. With the support of this funding, I will be able to focus on improving the user experience and iterating on LiTeX to make it more accessible and robust. -->
 
 <font color="red">Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!</font>
 
