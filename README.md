@@ -54,23 +54,23 @@ _The computer revolution is a revolution in the way we think and in the way we e
 
 #### Relationships with mainstream programming languages
 
-_Simplify, Simplify, Simplify.
-- Steve Jobs_
+
 
 _If I have seen further, it is by standing on the shoulders of giants.
 -- Isaac Newton_
 
 The design of Litex is inspired mainly by designs of existing programming languages like Python, GoLang, C, C++, Rust, JavaScript/TypeScript, Lisp instead of theoretical logic. I implemented this language for everyday usage, not mental entertainment. Unlike predecessors, Litex uses programming principles to understand mathematical reasoning, rather than the other way around.
 
-Main syntax design includes
+##### Main syntax design includes
 1. Python scope, Python "less typing approach"
 2. Go type syntax, package management
 3. Concept inspired by C++ Concept, Python Protocol, Go Generics
 4. Tex separation of logical expressions (normal words) and mathematical expressions.
 5. Everything is a symbol and everything(var, fn, prop) is first-citizen inspired by Lisp and its descendants.
 6. Introduce OOP to math. OOP built by interface instead of inheritance.
+7. programmers work with one another. package system helps you maintain your own proofs and easily import others' result.
 
-Corresponding between math and programming
+##### Corresponding between math and programming
 1. basic element of math: var, fn, prop. they are all represented as symbols
 2. Math set == type. types are used to define members, including methods, propositions, operator overloads. this is where oop lies.
 3. a class of sets: concept
@@ -80,20 +80,34 @@ Corresponding between math and programming
 7. prop combined with other prop leads to new prop
 8. prop is named fact. there are also unnamed facts.
 9. exist is a special prop. it should be referred to as how normal props are referenced.
-10. programmers work with one another. package system helps you maintain your own proofs and easily import others' result.
 11. when user input a fact, it's verified by the interpreter. If it's true, it's remembered for future use. Otherwise nothing happens.
-11. forall facts can be "called" to verify a input fact without giving it a name.
+12. forall facts can be "called" to verify a input fact without giving it a name.
+13. = is special factual operation. Its validation can be done by 2 different ways: 1. symbolically the same, which means under the same function and parameters are = 2. it's verified by other facts, just like other kinds of factual expressions.
 
 #### Simplicity is the core of Litex
 
 _Beautiful is better than ugly.
 Explicit is better than implicit.
 Simple is better than complex.
-The Zen of Python_
+-- The Zen of Python_
 
-_The most important single aspect of software development is to be clear about what you are trying to build.
--- Bjarne Stroustrup, inventor of C++_
+_Beauty is the first test: there is no permanent place in this world for ugly mathematics
+-- G.H. Hardy_
 
+_Simplicity is complicated.
+-- the Go programming language team_
+
+_Simplify, Simplify, Simplify.
+- Steve Jobs_
+
+A good tool encourage its user to follow a good practice. One can not put too much emphasis on how important a good workflow and routine is. That's why some programmers are 10x more efficient than his colleagues and why great mathematicians stand out. You have to be clear about what you are talking about, otherwise nobody pays attention.
+
+To make Litex code clear and straightforward, Litex itself must be clear and straightforward in the first place. That's why simplicity is the single most important aspect of Litex and why Litex adopt the minimalism design principle. Minimalism does not mean weakness. It means any keyword or syntax does one thing and does it very well which leads to a uniform way of coding. Some languages, particularly traditional formal languages, do a lot of things half well and consists of ideas that are mutually exclusive. Such defects caused by poor language design leads to codes are unnecessarily hard to understand. Math is already hard enough, no extra mental burden is allowed in Litex. So instead of randomly selecting a subset of the language, users should use Litex as a whole. No feature that should exist does not exist, and no feature in Litex is redundant. 
+
+
+### Potentials
+
+Github has already shown us the huge influence of large-scale online co-operation. 
 
 <!-- LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to EVERYONE. Unlike traditional formal languages that force users to distort their mathematical expressions to fit what the formal language can represent, LiTeX seamlessly bridges the gap between a user’s thought process and the expression of their logic by combining the structured clarity of LaTeX for mathematical notation with Lisp’s philosophy of “Everything is a symbol” (This is also the origin of LiTeX's name: a combination of Lisp semantics and LaTeX syntax) .
 
