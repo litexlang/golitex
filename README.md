@@ -1,9 +1,9 @@
-# The LiTeX Proof System
+# The Litex Proof System
 
 <div align="center">
 <img src="assets/logo.png" alt="The LiTeX Logo" width="300">
 
-<small>The LiTeX logo is a binary tree for two symbolic reasons: 1) Binary trees are a perfect demonstration of how abstraction is handled, and the concept abstraction plays a fundamental role in both mathematics and programming.  2) It evokes the sense of "something leads to another thing" in mathematical discovery and software development. </small>
+<small>The Litex logo is a binary tree for two symbolic reasons: 1) As as data structure, binary trees are a perfect demonstration of how abstraction is handled, and the concept abstraction plays a fundamental role in both mathematics and programming.  2) As a diagram of procedures, it evokes the sense of "something leads to another thing" in mathematical discovery and software development. </small>
 
 </div>
 
@@ -11,13 +11,37 @@
 
 Litex is a simple, user-friendly, universal formal language, designed to better manage the rising level of abstraction in mathematics and to bring the mathematical community into the digital age. It is daily tool to effortlessly to read, write, verify, and share mathematics.
 
-Since even children can express mathematics, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language. While twisted syntax and semantics of traditional formal languages often causes a significant mental drain, Litex adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by formal languages. 
+**Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language.** While twisted syntax and semantics of traditional formal languages often causes a significant mental drain, Litex adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by formal languages.
 
-<!-- _Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
+## Design principles of Litex
+
+### Similarities and differences between math and programming
+Litex is the bridge between the programming world and math world. We start by investigating similarities and differences between math and programming.
+
+#### Similarities
+
+_Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
 -- David Hilbert_
 
+##### The tasks
+1. The basic elements are symbols with properties. In most cases property means relationship with other symbols.
+2. They both follow a rather small rule sets that everyone understands but turns out to be rather difficult and complicated when symbols combined with one another and leads to new symbols and rules leads to new rules(procedures combined with other procedures and leads to new procedures)
+3. Fundamentally, CS == science of abstraction and math == abstraction.
+
+##### The practice od programming and doing math
+1. write code 
+2. run and debug
+3. read others' code and share my code
+
+
+#### Differences
+
 _The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."
--- Structure and Interpretation of Computer Programs_ -->
+-- Structure and Interpretation of Computer Programs_
+
+##### The tasks
+1. People write code to have effects. People write math to generate new relationships. So programming is more general than doing math verification.
+2. 
 
 
 <!-- LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to EVERYONE. Unlike traditional formal languages that force users to distort their mathematical expressions to fit what the formal language can represent, LiTeX seamlessly bridges the gap between a user’s thought process and the expression of their logic by combining the structured clarity of LaTeX for mathematical notation with Lisp’s philosophy of “Everything is a symbol” (This is also the origin of LiTeX's name: a combination of Lisp semantics and LaTeX syntax) .
