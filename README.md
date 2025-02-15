@@ -9,14 +9,20 @@
 
 ## About
 
+_That language is an instrument of human reason, and not merely a medium for the expression of thought, is a truth generally admitted.
+– George Boole_
+
 Litex is a simple, user-friendly, universal formal language, designed to better manage the rising level of abstraction in mathematics and to bring the mathematical community into the digital age. It is daily tool to effortlessly to read, write, verify, and share mathematics.
 
-**Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language.** While twisted syntax and semantics of traditional formal languages often causes a significant mental drain, Litex adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by formal languages.
+**Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language.** While twisted syntax and semantics of traditional formal languages often causes a significant mental drain and a huge loss of clarity of proofs, Litex adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by formal languages.
 
 ## Design principles of Litex
 
+_Conceptual integrity is central to product quality.
+-- Fred Brooks, Turing award recipient_
+
 ### Similarities and differences between math and programming
-Litex is the bridge between the programming world and math world. We start by investigating similarities and differences between math and programming.
+Litex is the bridge between the programming world and math world. The reason Litex can achieve a uniform language with such concise syntax and semantics to express the complex world of mathematics is that it clearly recognizes both the differences and commonalities between mathematics and programming.We start by investigating similarities and differences between math and programming.
 
 #### Similarities
 
@@ -27,6 +33,7 @@ _Mathematics... is nothing more than a game played according to certain simple r
 1. The basic elements are symbols with properties. In most cases property means relationship with other symbols.
 2. They both follow a rather small rule sets that everyone understands but turns out to be rather difficult and complicated when symbols combined with one another and leads to new symbols and rules leads to new rules(procedures combined with other procedures and leads to new procedures)
 3. Fundamentally, CS == science of abstraction and math == abstraction.
+Stroustrup: My best tool for efficiency and performance is abstraction.
 
 ##### The practice od programming and doing math
 1. write code 
@@ -40,8 +47,38 @@ _The computer revolution is a revolution in the way we think and in the way we e
 -- Structure and Interpretation of Computer Programs_
 
 ##### The tasks
-1. People write code to have effects. People write math to generate new relationships. So programming is more general than doing math verification.
-2. 
+1. Codes are used to be executed, to have effects of any forms including arithmetic calculation, data manipulation, system control, user interaction and more. Execution in math verification means searching old relationships and build new relationships on top of them. Since building relationships is only one form of effects that programs can have, we can use programming to do math verification. So math can be viewed as a domain language which does not need to be as universal as programming languages. Functionalities like doing arithmetic operations can be implemented as plugins instead of the main part of the language. We take advantage of this property to create a language that is more close to math than traditional turing-complete-language formal languages by restricting ourselves to functionalities that mathematical reasoning only needs.
+2. Math is for explaining, Programming is for making a difference.
+3. As formal 
+4. 
+
+#### Relationships with mainstream programming languages
+
+_Simplify, Simplify, Simplify.
+- Steve Jobs_
+
+_If I have seen further, it is by standing on the shoulders of giants.
+-- Isaac Newton_
+
+The design of Litex is inspired mainly by designs of existing programming languages like Python, GoLang, C, C++, Rust, JavaScript/TypeScript, Lisp instead of theoretical logic. I implemented this language for everyday usage, not mental entertainment. Unlike predecessors, Litex uses programming principles to understand mathematical reasoning, rather than the other way around.
+
+Main syntax design includes
+1. Python scope, Python "less typing approach"
+2. Go type syntax, package management
+3. Concept inspired by C++ Concept, Python Protocol, Go Generics
+4. Tex separation of logical expressions (normal words) and mathematical expressions.
+5. Everything is a symbol and everything is first-citizen inspired by Lisp and its descendants.
+6. Introduce OOP to math. OOP built by interface instead of inheritance.
+
+#### Simplicity is the core of Litex
+
+_Beautiful is better than ugly.
+Explicit is better than implicit.
+Simple is better than complex.
+The Zen of Python_
+
+_The most important single aspect of software development is to be clear about what you are trying to build.
+-- Bjarne Stroustrup, inventor of C++_
 
 
 <!-- LiTeX is a formal proof management system that makes expressing and verifying mathematics accessible to EVERYONE. Unlike traditional formal languages that force users to distort their mathematical expressions to fit what the formal language can represent, LiTeX seamlessly bridges the gap between a user’s thought process and the expression of their logic by combining the structured clarity of LaTeX for mathematical notation with Lisp’s philosophy of “Everything is a symbol” (This is also the origin of LiTeX's name: a combination of Lisp semantics and LaTeX syntax) .
