@@ -91,7 +91,9 @@ It’s exciting to see that, due to its intuitive syntax and shallow learning cu
 
 Developing a new programming language often starts as the effort of a single individual, but its growth and long-term success depend on the strength of the community around it. A thriving language needs user feedback, collaborative creativity from developers, and tools to support its ecosystem, such as package management, website resources, and plugins for mainstream IDEs like VSCode. With the support of this funding, I will be able to focus on improving the user experience and iterating on LiTeX to make it more accessible and robust. -->
 
-<font color="red">Feel free to share your suggestions and ideas to help me improve this open-source project—your feedback is invaluable!</font>
+
+## About the author
+The inventor of Litex Jiachen Shen is a hacker and has a math degree. The development and design process of Litex is no different than most softwares: design, implement, test, debug, publish, receive feedback and redesign. The original version of Litex is very different to what it is today. Since Litex is still under development, it's inevitable that today's Litex might be even more different than what it is in the future. The language will never be a success without its users and contributors. Feel free to issue your suggestions and ideas to help me improve this open-source project—your feedback is invaluable.
 
 ---
 
