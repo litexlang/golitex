@@ -67,8 +67,22 @@ Main syntax design includes
 2. Go type syntax, package management
 3. Concept inspired by C++ Concept, Python Protocol, Go Generics
 4. Tex separation of logical expressions (normal words) and mathematical expressions.
-5. Everything is a symbol and everything is first-citizen inspired by Lisp and its descendants.
+5. Everything is a symbol and everything(var, fn, prop) is first-citizen inspired by Lisp and its descendants.
 6. Introduce OOP to math. OOP built by interface instead of inheritance.
+
+Corresponding between math and programming
+1. basic element of math: var, fn, prop. they are all represented as symbols
+2. Math set == type. types are used to define members, including methods, propositions, operator overloads. this is where oop lies.
+3. a class of sets: concept
+4. fact: forall => introduce new vars, if => introduce further condition, basic prop: called just as if a function that returns bool
+5. every expression return 4 kinds of values: True, Unknown, False, Error
+6. symbols can be combined to be new symbols. The way is using operators(functions). fn in litex does not execute, it is just a way of combining previously defined symbols.
+7. prop combined with other prop leads to new prop
+8. prop is named fact. there are also unnamed facts.
+9. exist is a special prop. it should be referred to as how normal props are referenced.
+10. programmers work with one another. package system helps you maintain your own proofs and easily import others' result.
+11. when user input a fact, it's verified by the interpreter. If it's true, it's remembered for future use. Otherwise nothing happens.
+11. forall facts can be "called" to verify a input fact without giving it a name.
 
 #### Simplicity is the core of Litex
 
@@ -92,8 +106,8 @@ It’s exciting to see that, due to its intuitive syntax and shallow learning cu
 Developing a new programming language often starts as the effort of a single individual, but its growth and long-term success depend on the strength of the community around it. A thriving language needs user feedback, collaborative creativity from developers, and tools to support its ecosystem, such as package management, website resources, and plugins for mainstream IDEs like VSCode. With the support of this funding, I will be able to focus on improving the user experience and iterating on LiTeX to make it more accessible and robust. -->
 
 
-## About the author
-The inventor of Litex Jiachen Shen is a hacker and has a math degree. The development and design process of Litex is no different than most softwares: design, implement, test, debug, publish, receive feedback and redesign. The original version of Litex is very different to what it is today. Since Litex is still under development, it's inevitable that today's Litex might be even more different than what it is in the future. The language will never be a success without its users and contributors. Feel free to issue your suggestions and ideas to help me improve this open-source project—your feedback is invaluable.
+## About the author and join Litex Project
+The inventor of Litex Jiachen Shen is a hacker with a math degree. The development and design process of Litex is no different than most softwares: design, implement, test, debug, publish, receive feedback and redesign. The original version of Litex is very different to what it is today. Since Litex is still under development, it's inevitable that today's Litex might be even more different than what it is in the future. The language will never be a success without its users and contributors. Feel free to issue your suggestions and ideas to help me improve this open-source project—your feedback is invaluable.
 
 ---
 
