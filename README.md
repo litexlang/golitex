@@ -53,11 +53,21 @@ Previous formal languages failed to recognize the subtle differences between mat
 
 **Litex thrives in the sunlight of the common ground between math and programming, while also growing in the subtle gaps that highlight their differences.**
 
-##### The tasks
 1. **Litex as a Domain-Specific Language**
-Litex is designed to align closely with math. For example, every expression can only return true, false, unknown, or error, and functions don’t "execute" but instead combine predefined symbols. This makes Litex a domain-specific language, like SQL or LaTeX, tailored for specific problems rather than a general-purpose language like C or Python.
-2. Many programming features, such as loops or string manipulation, are unnecessary for math proofs, which focus on deriving new facts from existing ones. These features are better implemented as plugins rather than core components of a math-focused language.
 
+Litex is designed to align closely with math. For example, every Litex expression can only return 'true', 'false', 'unknown', or 'error. This is because Litex is fundamentally a **verifier**, not a general-purpose programming language. Its primary role is to validate whether mathematical statements or proofs are correct, not to perform arbitrary computations. **This makes Litex a domain-specific language, like SQL or LaTeX, tailored for specific problems rather than a general-purpose language like C or Python.**
+
+2. **Function as symbol combination, not an algorithm for future execution**
+
+**Also, functions in Litex don’t "execute" in the traditional sense; instead, they serve as tools to combine predefined symbols and relationships.** After all, many mathematical expressions are written using free variables like *a* and *b*, which inherently lack fixed values. Even when using fixed variables, many integrals or expressions cannot be strictly computed to exact values. This aligns with Litex's purpose: it focuses on verifying the logical structure and relationships within mathematical reasoning, rather than performing numerical computations or evaluations.
+
+3. **No control program flow**  
+
+In math, constructs like while loops or switch statements—used to control program flow are unnecessary. Mathematical reasoning focuses on deriving truths from existing facts, not on directing execution paths. This is why Litex avoids such features, treating them as irrelevant to its core purpose of verification and logical transformation.
+
+4. **Math as Structured String Transformation**
+
+Math often resembles "transforming strings that match specific structures (like regular expressions)." Symbols that meet certain conditions can be combined with other qualified symbols in permitted ways. The three fundamental elements—functions, arguments, and propositions—can all be represented as symbols, enabling a unified and structured approach to mathematical reasoning.
 
 #### Basic Syntax
 
