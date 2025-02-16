@@ -96,18 +96,18 @@ _Simplicity is the ultimate sophistication.
 14. standard library: natural number package, set package.
 15. not, or, and. notice not-and is equivalent to or-not. So or is syntax sugar. notice exist is equivalent to not forall. Litex does not allow not forall for uniformness of syntax design, users should use exist to express not forall.
 
-#### Simplicity is the core of Litex
+#### Simplicity of Litex design
 
 _Simplify, Simplify, Simplify.
 -- Steve Jobs_
 
 A good tool encourages its user to follow good practices because clarity stems from consistency, simplicity, and intentional design. You have to be clear about what you are talking about, otherwise nobody pays attention to your work.
 
-Traditional formal languages are useful because they emphasize the connection between programming and problem-solving. However, they are often criticized for being overly complex. These languages are typically designed to explain mathematical theories rather than serve as practical, everyday tools. As a result, using them for math or programming can feel unnatural and unintuitive.
+Traditional formal languages are useful because they emphasize the connection between programming and math. However, they are often criticized for being overwhelmingly unclear. These languages are typically designed to explain mathematical theories rather than serve as practical, everyday tools. As a result, using them for math or programming can feel unnatural and unintuitive. This is why they are not widely adopted.
 
-Newton does not need to learn type theory to invent calculus and children do not need to learn Curry-Howard Isomorphism to write their first line of math.  People are born to have a sense of how math works. So there must exist a design for a formal language that allows anyone to quickly understand and use it. That's why Litex is designed by common sense, by diving down the most obscure similarity difference between math and programming that people can always tend to ignore. I am sure there are not many people think more about what programming and mathematical reasoning actually means than me.
+In my opinion, Newton didn’t need type theory to invent calculus, and children don’t need the Curry-Howard Isomorphism to write their first line of math. People naturally have an intuition for how math works. Therefore, there must be a way to design a formal language that is easy for anyone to understand and use. This is why Litex is built on common sense, focusing on the subtle yet often overlooked connections between math and programming. I’m confident that few have thought more deeply about what programming and mathematical reasoning truly mean than I have.
 
-To make Litex code clear and straightforward, Litex itself must be clear and straightforward in the first place. That's why simplicity is the single most important aspect of Litex and why Litex adopt the minimalism design principle. Minimalism does not mean weakness. It means any keyword or syntax does one thing and does it very well which leads to a uniform way of coding. Some languages, particularly traditional formal languages, do a lot of things half well and consists of ideas that are mutually exclusive. Such defects lies in the root of ugly code. So instead of randomly selecting a half good subset of the language, users should use Litex as a whole. No feature that should exist does not exist, and no feature in Litex is redundant. The users are prohibit from writing twisted logic and writing vague expressions at language level. They can rely on their intuition and common sense.
+To ensure Litex code is clear and straightforward, Litex itself must be clear and straightforward. That’s why simplicity is the core principle of Litex, guided by minimalism. Minimalism doesn’t mean weakness; it means every keyword or syntax does one thing exceptionally well, creating a consistent coding style. Unlike traditional formal ones, which try to do many things partially and often include conflicting ideas—leading to messy code, Litex avoids this entirely. Users should embrace Litex as a complete system, not a random subset. Every feature in Litex is essential, with nothing missing or redundant. The language prevents convoluted logic and vague expressions, allowing users to rely on intuition and common sense.
 
 
 ### Transform the way we express math
