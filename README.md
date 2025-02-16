@@ -43,7 +43,6 @@ Mathematics and programming are very similar in terms of **core principles** and
     Because the mathematical community is currently grappling with significant challenges related to abstraction, it is reasonable for it to draw insights and experiences from the programming world. Programming has developed robust frameworks and tools for managing complexity through abstraction, such as modular design, type systems, and reusable libraries. By adopting these principles, mathematics can potentially streamline its own processes, making abstract concepts more accessible and easier to work with.
 
 
-
 #### Differences
 
 _The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."
@@ -89,9 +88,10 @@ To better understand Litex, let’s first look at what Litex has borrowed from o
 2. Go's type syntax and "simplicity is complicated" design.
 3. Concepts inspired by C++ Concepts, Python Protocols, Go Generics, and Rust Generics.  
 4. TeX-like separation of logical expressions (plain text) and mathematical expressions.  
-5. Everything is a symbol, and everything (variables, functions, properties) is a first-class citizen, inspired by Lisp and its descendants.  
+5. Everything is a symbol, and everything (variables, functions, properties) is a first-class citizen, inspired by Lisp and its descendants. Everything in lisp is nothing but symbol and list. Newcomers can learn Lisp in less than 5 minutes. Notice how the success of Lisp teaches us "Complex structure stem from well-organized simple elements."
 6. Introducing OOP to math, with OOP built on interfaces rather than inheritance.  
 7. A package system inspired by Go that helps programmers collaborate, maintain their proofs, and easily import others' results.
+
 
 ##### Corresponding between math and programming
 
@@ -130,13 +130,12 @@ Below are the core principles of syntax design. **The specific syntax may change
 
 14. Logical operators include `not`, `or`, and `and`. `Not-and` is equivalent to `or-not`, making `or` syntactic sugar. `Exist` is equivalent to `not forall`, but Litex enforces `exist` for uniformity, disallowing `not forall`.
 
+15. A symbol may have many types, but it's its main type that tells the Litex interpreter what functions or propositions can "call" it. It works in the same way how the Macintosh works: you can open many windows at the same time, but there is only one main window that you are working on.
+
 #### Return to common sense and simplicity
 
 _Common sense is not so common.
 --Voltaire_
-
-_Simplify, Simplify, Simplify.
--- Steve Jobs_
 
 A good tool encourages its user to follow good practices because clarity stems from consistency, simplicity, and intentional design. You have to be clear about what you are talking about, otherwise nobody pays attention to your work.
 
@@ -157,8 +156,12 @@ the practice
 
 ### Potentials
 
-_Beauty is the first test: there is no permanent place in this world for ugly mathematics.
--- G.H. Hardy_
+_The best way to predict the future is to invent it.
+-- Alan Kay_
+
+The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. This shift eliminates paper review time, as Litex can verify the correctness of proofs. It enables global collaboration on an unprecedented scale, fostering trust among mathematicians worldwide (again, as Litex verifies the proofs). This transformation redefines the essence of math, aligning with Hilbert's view that mathematics is a game played with simple rules and meaningless marks, but now with a deeper, more accessible understanding.
+
+**Due to the similarities between programming and mathematics, we can anticipate that the mathematical community may retrace the path that the programming world has taken from the 1950s to today, transitioning from paper-and-pencil work to automated processes with broader participation.**
 
 Litex emphasize building simple, clear, modular and extensible code that can be read, written, shared by developers rather than its creator.
 
@@ -168,7 +171,13 @@ There are many "small" facts that are natural for humans but needs extra efforts
 
 
 ## Join the Litex Project
+
+_Give a man a fish and you feed him for a day; teach a man to fish and you feed him for a lifetime.
+-- Chinese Proverb_
+
 The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, 
 Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
 
 Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. That's why Litex will never be a success without its users and contributors. Feel free to issue your suggestions and ideas to help me improve this open-source project—your feedback is invaluable.
+
+Visit [the Litex website](www.litexlang.com) for more information. Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
