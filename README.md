@@ -12,7 +12,7 @@
 _That language is an instrument of human reason, and not merely a medium for the expression of thought, is a truth generally admitted.
 – George Boole_
 
-Litex is a simple, user-friendly, universal formal language, designed to better manage the rising level of abstraction in mathematics and to bring the mathematical community into the digital age. It is daily tool to effortlessly to read, write, verify, and share mathematics.
+**Litex is a simple, user-friendly, universal formal language, designed to better manage the rising level of abstraction in mathematics and to bring the mathematical community into the digital age. It is daily tool to effortlessly to read, write, verify, and share mathematics.**
 
 **Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language.** While twisted syntax and semantics of traditional formal languages often causes a significant mental drain and a huge loss of clarity of proofs, Litex adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by formal languages.
 
@@ -21,37 +21,42 @@ Litex is a simple, user-friendly, universal formal language, designed to better 
 _Conceptual integrity is central to product quality.
 -- Fred Brooks, Turing award recipient_
 
-### Similarities and differences between math and programming
-Litex is the bridge between the programming world and math world. The reason Litex can achieve a uniform language with such concise syntax and semantics to express the complex world of mathematics is that it clearly recognizes both the differences and commonalities between mathematics and programming.We start by investigating similarities and differences between math and programming.
+Litex is the bridge between the programming world and math world. The reason Litex can achieve a uniform language with such concise syntax and semantics to express the complex world of mathematics is that it clearly recognizes both the differences and commonalities between mathematics and programming.We start by investigating **similarities and differences between math and programming**.
 
 #### Similarities
 
 _Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
 -- David Hilbert_
 
-##### The tasks
-1. The basic elements are symbols with properties. In most cases property means relationship with other symbols.
-2. They both follow a rather small rule sets that everyone understands but turns out to be rather difficult and complicated when symbols combined with one another and leads to new symbols and rules leads to new rules(procedures combined with other procedures and leads to new procedures)
-3. Fundamentally, CS == science of abstraction and math == abstraction.
-Stroustrup: My best tool for efficiency and performance is abstraction.
+Mathematics and programming are very similar in terms of **core principles** and the **workflow practices** of practitioners.
 
-##### The practice od programming and doing math
-1. write code 
-2. run and debug
-3. read others' code and share my code
-4. 
+1. **The basic elements are symbols. Symbols have properties. In most cases, properties define relationships with other symbols.**
+   Note that certain operations can only be applied to elements with specific properties. For example, '/' can only be used with 'invertible symbols'.  
 
-nn
+2. **Both math and programming follow small, universally understood rule sets. However, when symbols combine, they create new symbols and rules, leading to complexity (similarly, combining procedures creates new procedures).**
+   Operator overloading is everywhere in math. For instance, '+' can mean adding numbers, combining vectors, or uniting sets. Litex embraces this flexibility, allowing operators to adapt to specific needs while maintaining clarity and intuition.  
+
+3. **Both programming and mathematics share a deeply interconnected workflow, blending creativity, precision, and collaboration.**
+    For example, programmers run code to test and debug, ensuring it works as intended. Similarly, mathematicians "compile" proofs step by step in their minds, "debugging" potential errors in their logic. With Litex, the "debugging" process here can be automated.
+
+4. **Fundamentally, computer science is the science of abstraction, and math is abstraction itself.**
+    Because the mathematical community is currently grappling with significant challenges related to abstraction, it is reasonable for it to draw insights and experiences from the programming world. Programming has developed robust frameworks and tools for managing complexity through abstraction, such as modular design, type systems, and reusable libraries. By adopting these principles, mathematics can potentially streamline its own processes, making abstract concepts more accessible and easier to work with.
+
+
+
 #### Differences
 
 _The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."
 -- Structure and Interpretation of Computer Programs_
 
+Previous formal languages failed to recognize the subtle differences between math and programming. Key properties of math were not fully exploited to improve syntax and semantics, while the automation potential offered by programming was not fully utilized.
+
+**Litex thrives in the sunlight of the common ground between math and programming, while also growing in the subtle gaps that highlight their differences.**
+
 ##### The tasks
-1. Codes are used to be executed, to have effects of any forms including arithmetic calculation, data manipulation, system control, user interaction and more. Execution in math verification means searching old relationships and build new relationships on top of them. Since building relationships is only one form of effects that programs can have, we can use programming to do math verification. So math can be viewed as a domain language which does not need to be as universal as programming languages. Functionalities like doing arithmetic operations can be implemented as plugins instead of the main part of the language. We take advantage of this property to create a language that is more close to math than traditional turing-complete-language formal languages by restricting ourselves to functionalities that mathematical reasoning only needs.but many functionalities in programming languages, like loops, flexible execution (数学里只有找并用旧的事实建立新事实，不需要这么数值计算、字符串计算等),  are unnecessary in math proofs. they are better treated as plugins。比如litex里每个expr只可能返回 true, false, unknown, error，这和普通语言是完完全全不一样的. fn in litex does not execute, it is just a way of combining previously defined symbols. That's why Litex is a domain language that is designed to solve a particular set of problems  like SQL and LaTeX rather than a do-everything programming language like C or Python.
-2. Math is for explaining, Programming is for making a difference.
-3. As formal 
-4. 
+1. **Litex as a Domain-Specific Language**
+Litex is designed to align closely with math. For example, every expression can only return true, false, unknown, or error, and functions don’t "execute" but instead combine predefined symbols. This makes Litex a domain-specific language, like SQL or LaTeX, tailored for specific problems rather than a general-purpose language like C or Python.
+2. Many programming features, such as loops or string manipulation, are unnecessary for math proofs, which focus on deriving new facts from existing ones. These features are better implemented as plugins rather than core components of a math-focused language.
 
 
 #### Basic Syntax
@@ -104,11 +109,11 @@ Below are the core principles of syntax design. The specific syntax may change, 
 
 #### Return to common sense and simplicity
 
+_Common sense is not so common.
+--Voltaire_
+
 _Simplify, Simplify, Simplify.
 -- Steve Jobs_
-
-_Common sense is not so common
---Voltaire_
 
 A good tool encourages its user to follow good practices because clarity stems from consistency, simplicity, and intentional design. You have to be clear about what you are talking about, otherwise nobody pays attention to your work.
 
