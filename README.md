@@ -54,32 +54,38 @@ _The computer revolution is a revolution in the way we think and in the way we e
 4. 
 
 
-#### Relationships with mainstream programming languages
+#### Basic Syntax
 
 _If I have seen further, it is by standing on the shoulders of giants.
 -- Isaac Newton_
 
-The design of Litex is inspired mainly by designs of existing programming languages like Python, GoLang, C, C++, Rust, JavaScript/TypeScript, Lisp instead of theoretical logic. I implemented this language for everyday usage, not mental entertainment. Unlike predecessors, Litex uses programming principles to understand mathematical reasoning, rather than the other way around.
+The design of Litex is inspired mainly by designs of existing programming languages like Python, GoLang, C, C++, Rust, JavaScript/TypeScript, Lisp, LaTeX instead of mathematical logic. Unlike other formal languages, Litex uses programming thinking to understand mathematical proofs, not the other way around.
 
-##### Main syntax design includes
+##### Learn from other programming languages
 
 _Beautiful is better than ugly.
 Explicit is better than implicit.
 Simple is better than complex.
 -- The Zen of Python_
 
-1. Python scope, Python "less typing approach"
-2. Go type syntax, package management
-3. Concept inspired by C++ Concept, Python Protocol, Go Generics and Rust Generics
-4. Tex separation of logical expressions (normal words) and mathematical expressions.
-5. Everything is a symbol and everything(var, fn, prop) is first-citizen inspired by Lisp and its descendants.
-6. Introduce OOP to math. OOP built by interface instead of inheritance.
-7. programmers work with one another. package system helps you maintain your own proofs and easily import others' result.
+To better understand Litex, let’s first look at what Litex has borrowed from other languages.
+
+1. Python's scoping rules and its "less typing" philosophy.  
+2. Go's type syntax and "simplicity is complicated" design.
+3. Concepts inspired by C++ Concepts, Python Protocols, Go Generics, and Rust Generics.  
+4. TeX-like separation of logical expressions (plain text) and mathematical expressions.  
+5. Everything is a symbol, and everything (variables, functions, properties) is a first-class citizen, inspired by Lisp and its descendants.  
+6. Introducing OOP to math, with OOP built on interfaces rather than inheritance.  
+7. A package system inspired by Go that helps programmers collaborate, maintain their proofs, and easily import others' results.
 
 ##### Corresponding between math and programming
 
-_Simplicity is the ultimate sophistication.
--- Leonardo da Vinci_
+_Science is what we understand well enough to explain to a computer. Art is everything else we do.
+-- Donald Knuth_
+
+The same idea, expressed in different ways, can feel entirely distinct. As a result, the syntax of different programming languages encourages vastly different coding styles. Litex must strike a balance between simplicity, intuitiveness, mathematical alignment, and programming conventions. Intuition behind this design is more like art -— difficult to explain in words, yet its impact is the most profound.
+
+Below are the core principles of syntax design. The specific syntax may change, but these fundamental design principles will remain unchanged.
 
 1.  Basic components are easy, easy to combine basic components. The Litex way favors composability as opposed to monolithic design. basic element of math: var, fn, prop. they are all represented as symbols. Main statements are limited to : define: var, fn, prop, type, concept; fact; claim-prove; know.
 2. Math set == type. types are used to define members, including methods, propositions, operator overloads. this is where oop lies.
@@ -96,10 +102,13 @@ _Simplicity is the ultimate sophistication.
 14. standard library: natural number package, set package.
 15. not, or, and. notice not-and is equivalent to or-not. So or is syntax sugar. notice exist is equivalent to not forall. Litex does not allow not forall for uniformness of syntax design, users should use exist to express not forall.
 
-#### Simplicity of Litex design
+#### Return to common sense and simplicity
 
 _Simplify, Simplify, Simplify.
 -- Steve Jobs_
+
+_Common sense is not so common
+--Voltaire_
 
 A good tool encourages its user to follow good practices because clarity stems from consistency, simplicity, and intentional design. You have to be clear about what you are talking about, otherwise nobody pays attention to your work.
 
