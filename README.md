@@ -72,6 +72,12 @@ In math, constructs like while loops or switch statements—used to control prog
 
 Math often resembles "transforming strings that match specific structures (like regular expressions)." Symbols that meet certain conditions can be combined with other qualified symbols in permitted ways. The three fundamental elements—functions, arguments, and propositions—can all be represented as symbols, enabling a unified and structured approach to mathematical reasoning.
 
+5. **Existence of variables**
+
+In programming, we can create as many variables as we want with no restriction. Meanwhile, in math, we must prove their existence first. Sure, We can definitely create an integer called x because there certainly exist many integers. However, existence of many other variables are extremely difficult to test.
+
+In Litex, existence is a special kind of proposition. The only differences is that users can "call" a existence-proposition and introduce new variables. Read user manual for more details.
+
 ## Syntax ans Semantics
 
 _Beautiful is better than ugly._
