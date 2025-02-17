@@ -11,13 +11,24 @@ type Parser struct {
 }
 
 func (p *Parser) strAt(index int) string {
-	i := p.index + index
+	if index >= 0 {
+		i := p.index + index
 
-	if i < 0 || i >= len(p.slice) {
-		return ""
+		if i < 0 || i >= len(p.slice) {
+			return ""
+		} else {
+			return p.slice[i]
+		}
 	} else {
-		return p.slice[i]
+		i := len(p.slice) + index
+
+		if i < 0 || i >= len(p.slice) {
+			return ""
+		} else {
+			return p.slice[i]
+		}
 	}
+
 }
 
 func (p *Parser) String() string {

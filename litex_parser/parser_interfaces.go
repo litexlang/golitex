@@ -9,7 +9,8 @@ func (fc *TypedFc) fc()           {}
 func (f *CalledFcFnRetValue) fc() {}
 func (f FcStr) fc()               {}
 func (f *FcFnCallChain) fc()      {}
-func (f *FcLambdaFn) fc()         {}
+
+// func (f *FcLambdaFn) fc()         {}
 
 type Stmt interface {
 	stmt()
@@ -20,7 +21,7 @@ func (c *DefConceptStmt) stmt()             {}
 func (f *DefTypeStmt) stmt()                {}
 func (c *DefPropStmt) stmt()                {}
 func (f *DefFnStmt) stmt()                  {}
-func (l *ForallStmt) stmt()                 {}
+func (l *BlockForallStmt) stmt()            {}
 func (r *RelationFactStmt) stmt()           {}
 func (p *FuncPropStmt) stmt()               {}
 func (f *ClaimProveStmt) stmt()             {}
@@ -34,18 +35,18 @@ func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
 func (s *InlineIfFactStmt) stmt()           {}
-func (s *InlineForallSubStmt) stmt()        {}
+func (s *InlineForallStmt) stmt()           {}
 
 type FactStmt interface {
 	factStmt()
 	stmt()
 }
 
-func (l *ForallStmt) factStmt()          {}
-func (r *RelationFactStmt) factStmt()    {}
-func (p *FuncPropStmt) factStmt()        {}
-func (p *InlineIfFactStmt) factStmt()    {}
-func (p *InlineForallSubStmt) factStmt() {}
+func (l *BlockForallStmt) factStmt()  {}
+func (r *RelationFactStmt) factStmt() {}
+func (p *FuncPropStmt) factStmt()     {}
+func (p *InlineIfFactStmt) factStmt() {}
+func (p *InlineForallStmt) factStmt() {}
 
 type BaseFactStmt interface {
 	notFactStmtSetT(b bool)
@@ -137,7 +138,7 @@ type InlineFactStmt interface {
 	stmt()
 }
 
-func (r *RelationFactStmt) inlineFactStmt()    {}
-func (p *FuncPropStmt) inlineFactStmt()        {}
-func (p *InlineIfFactStmt) inlineFactStmt()    {}
-func (p *InlineForallSubStmt) inlineFactStmt() {}
+func (r *RelationFactStmt) inlineFactStmt() {}
+func (p *FuncPropStmt) inlineFactStmt()     {}
+func (p *InlineIfFactStmt) inlineFactStmt() {}
+func (p *InlineForallStmt) inlineFactStmt() {}

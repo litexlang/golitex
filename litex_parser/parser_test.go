@@ -990,3 +990,30 @@ a.b.c.d.e.f is red
 	}
 
 }
+
+func TestForall(t *testing.T) {
+	code := `
+forall [G Group, G2 Group] g g, g2 g2:
+	cond:
+		$p[G, G2](x, y)
+		if $f[G, B](g.g1, g2.g2) {$p()}
+	then:
+		$p[G, G2](x, y)
+`
+
+	// forall [G Group, G2 Group] g g, g2 g2:
+	// 	cond:
+	// 		$p[G, G2](x, y)
+	// 		if $f[G, B](g.g1, g2.g2) {$p()}
+	// 	then:
+	// 	    $p[G, G2](x, y)
+	// if $f[G, B](g.g1, g2.g2) {$p()}
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}

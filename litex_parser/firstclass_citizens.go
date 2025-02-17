@@ -62,12 +62,12 @@ func (f *FcFnCallChain) String() string {
 	return ret + (*f)[len(*f)-1].String()
 }
 
-type FcLambdaFn struct {
-	tp        FcFnType
-	ifFacts   []FactStmt
-	thenFacts []FactStmt
-}
+// type FcLambdaFn struct {
+// 	tp        FcFnType
+// 	ifFacts   []FactStmt
+// 	thenFacts []FactStmt
+// }
 
-func (f *FcLambdaFn) String() string {
-	return fmt.Sprintf("%s => {cond: %s, then: %s}", f.tp, f.ifFacts, f.thenFacts)
-}
+// func (f *FcLambdaFn) String() string {
+// 	return fmt.Sprintf("%s => {cond: %s, then: %s}", f.tp, f.ifFacts, f.thenFacts)
+// }
