@@ -38,6 +38,10 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		return parser.parseBracedFcExpr()
 	}
 
+	if parser.is(BuiltinSyms["["]) {
+		return parser.parseFcLambdaFn()
+	}
+
 	if parser.is(Keywords["as"]) {
 		return parser.parseTypedFcWithPrefixAs()
 	}
@@ -263,4 +267,8 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 	}
 
 	return FcStr(left), nil
+}
+
+func (parser *Parser) parseFcLambdaFn() (*FcLambdaFn, error) {
+	return nil, nil
 }

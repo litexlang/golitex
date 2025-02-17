@@ -9,6 +9,7 @@ func (fc *TypedFc) fc()           {}
 func (f *CalledFcFnRetValue) fc() {}
 func (f FcStr) fc()               {}
 func (f *FcFnCallChain) fc()      {}
+func (f *FcLambdaFn) fc()         {}
 
 type Stmt interface {
 	stmt()

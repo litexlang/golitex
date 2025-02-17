@@ -43,7 +43,9 @@ type DefPropStmt struct {
 }
 
 type DefFnStmt struct {
-	decl      FcFnDecl
+	name string
+	tp   FcFnType
+	// decl      FcFnDecl
 	ifFacts   []FactStmt
 	thenFacts []FactStmt
 }
