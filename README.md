@@ -58,7 +58,7 @@ Previous formal languages failed to recognize the subtle differences between mat
 
 1. **Litex is a verifier. It is a domain-specific language.**
 
-Litex is designed to align closely with math. For example, every Litex expression can only return `true`, `false`, `unknown`, or `error`. This is because Litex is fundamentally a **verifier**, not a general-purpose programming language. Its primary role is to validate whether mathematical statements are correct, not to perform arbitrary computations. **This makes Litex a domain-specific language, like SQL or LaTeX, tailored for specific problems rather than a general-purpose language like C or Python.**
+Litex is designed to align closely with math. For example, every Litex expression can only return `true`, `false`, `unknown`, or `error`. This is because Litex is fundamentally a **verifier**, not a general-purpose programming language. Its primary role is to validate whether mathematical statements are correct, not to perform arbitrary computations. That's how "execution" in Litex differs from what it means in mainstream programming languages. **This makes Litex a domain-specific language, like SQL or LaTeX, tailored for specific problems rather than a general-purpose language like C or Python.**
 
 2. **Function as symbol combination, not an algorithm for future execution**
 
@@ -78,11 +78,7 @@ In programming, we can create as many variables as we want with no restriction. 
 
 In Litex, existence is a special kind of proposition. The only differences is that users can "call" a existence-proposition and introduce new variables. Read user manual for more details.
 
-6. **How is a fact verified in Litex.**
-
-Naming each fact is intended to allow quick reference in the future. However, for mathematical proofs, such low-level operations should be abstracted away, much like how modern programming languages handle memory management automatically. In the past, programmers had to manually find available memory addresses to allocate (as in assembly) or manage memory allocation and deallocation themselves (as in C). Similarly, when you declare a fact, the system should automatically locate the relevant facts that can derive it (or throw an "unknown" error if none are found). This "search" can happen in two ways: 1. If an identical fact (as a string) is stored, it is validated; 2. If a universal fact (e.g., a "forall" statement) is stored, and the parameters match the requirements of the universal statement, it is validated. This approach streamlines the process, allowing mathematicians to focus on higher-level reasoning rather than manual fact management.
-
-## Syntax ans Semantics
+## Syntax and Semantics
 
 _Beautiful is better than ugly._
 
@@ -134,6 +130,8 @@ Below are the core principles of syntax design. **The specific syntax may change
 
 15. A symbol may have many types, but it's its main type that tells the Litex interpreter what functions or propositions can "call" it. It works in the same way how the Macintosh works: you can open many windows at the same time, but there is only one main window that you are working on.
 
+16. In traditional formal languages, naming each fact is intended to allow quick reference in the future. However, for mathematical proofs, such low-level operations should be abstracted away, much like how modern programming languages handle memory management automatically. In the past, programmers had to manually find available memory addresses to allocate (as in assembly) or manage memory allocation and deallocation themselves (as in C). Similarly, when you declare a fact, the system should automatically locate the relevant facts that can derive it (or throw an "unknown" error if none are found). This "search" can happen in two ways: 1. If an identical fact (as a string) is stored, it is validated; 2. If a universal fact (e.g., a "forall" statement) is stored, and the parameters match the requirements of the universal statement, it is validated. This approach streamlines the process, allowing mathematicians to focus on higher-level reasoning rather than manual fact management.
+
 ### Return to common sense and simplicity
 
 _Common sense is not so common._
@@ -164,21 +162,23 @@ Litex is designed to be an everyday tool, which is why its learning curve should
 6. Introducing OOP to math, with OOP built on interfaces rather than inheritance.  
 7. A package system inspired by Go that helps programmers collaborate, maintain their proofs, and easily import others' results.
 
-### Litex is for mathematicians
+### Litex is a daily tool for every mathematics users, not just for experts.
 
-_Give a man a fish and you feed him for a day; teach a man to fish and you feed him for a lifetime._
+_We shape our tools, and thereafter our tools shape us._
 
-_-- Chinese Proverb_
+_-- Marshall McLuhan_
 
-The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. Individuals no longer have to worry about hard-to-detect, potentially fatal proof errors that can undermine their work. Litex code is both human-readable and machine-efficient, so you can rely on it as a daily tool.
+The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. Individuals no longer have to worry about hard-to-detect, potentially fatal proof errors that can undermine their work. Huge efforts can be saved by just adopting Litex.
 
-When studying a new area, the most overwhelming part is often learning its conventions—symbols, basic theorems, and concepts. Authors may assume you know these, but gaps can make proofs hard to follow. **With Litex, relationships between symbols can be visualized or guided by the IDE, allowing you to easily jump to definitions. The Litex Interpreter verifies each step, helping you stay on track even with unfamiliar proofs. This showcases the potential of "math in the digital age." All people, ranging from university professors to elementary school students, can benefit from functionality.**
+When studying a new area, the most overwhelming part is often learning its conventions—symbols, basic theorems, and concepts. Authors may assume you know these, but gaps can make proofs hard to follow. **With Litex, relationships between symbols can be visualized or guided by the IDE, allowing you to easily jump to definitions. The Litex Interpreter verifies each step, helping you stay on track even with unfamiliar proofs. This showcases the potential of "math in the digital age.".**
 
 This shift eliminates paper review time, as Litex can verify the correctness of proofs. With the integration of automated verification tools and collaborative platforms, any error can be identified and corrected early in the process. 
 
 Global collaboration can be expected on an unprecedented scale, fostering trust among mathematicians worldwide (again, as Litex verifies the proofs). That's why I am looking for a Github for mathematicians.
 
 **Due to the similarities between programming and mathematics, the mathematical community may follow the programming world's path, shifting from paper-and-pencil work to automated, collaborative processes. This could transform mathematical discovery, making it more dynamic, transparent, and accessible.**
+
+Litex code is both human-readable and machine-efficient. This means more users. More users mean a better Litex. Previous formal languages failed to bring true transformation because of their complexity, but Litex, being simple enough, can have a deeper impact on the mathematical community.
 
 ### What is to be done
 
