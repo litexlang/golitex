@@ -168,6 +168,8 @@ _-- Chinese Proverb_
 
 The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. Individuals no longer have to worry about hard-to-detect, potentially fatal proof errors that can undermine their work. Litex code is both human-readable and machine-efficient, so you can rely on it as a daily tool.
 
+When studying a new area, the most overwhelming part is often learning its conventions—symbols, basic theorems, and concepts. Authors may assume you know these, but gaps can make proofs hard to follow. **With Litex, relationships between symbols can be visualized or guided by the IDE, allowing you to easily jump to definitions. The Litex Interpreter verifies each step, helping you stay on track even with unfamiliar proofs.** This showcases the potential of "math in the digital age."
+
 This shift eliminates paper review time, as Litex can verify the correctness of proofs. With the integration of automated verification tools and collaborative platforms, any error can be identified and corrected early in the process. 
 
 Global collaboration can be expected on an unprecedented scale, fostering trust among mathematicians worldwide (again, as Litex verifies the proofs). That's why I am looking for a Github for mathematicians.
