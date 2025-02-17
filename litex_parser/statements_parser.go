@@ -1054,7 +1054,7 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*InlineIfFactStmt, error) {
 	}
 
 	condFacts := []InlineFactStmt{}
-	for !stmt.Header.is(BuiltinSyms["=>"]) {
+	for !stmt.Header.is(BuiltinSyms["{"]) {
 		fact, err := stmt.parseInlineFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
@@ -1066,30 +1066,12 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*InlineIfFactStmt, error) {
 		}
 	}
 
-	err = stmt.Header.skip(BuiltinSyms["=>"])
+	thenFacts := []BaseFactStmt{}
+
+	err = stmt.Header.skip(BuiltinSyms["{"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
-
-	thenFacts := []BaseFactStmt{}
-
-	if !stmt.Header.is(BuiltinSyms["{"]) {
-		for !stmt.Header.ExceedEnd() {
-			fact, err := stmt.parseBaseFactStmt()
-			if err != nil {
-				return nil, &parseStmtErr{err, *stmt}
-			}
-			thenFacts = append(thenFacts, fact)
-
-			if stmt.Header.is(BuiltinSyms[","]) {
-				stmt.Header.skip()
-			}
-		}
-
-		return &InlineIfFactStmt{condFacts, thenFacts}, nil
-	}
-
-	stmt.Header.skip(BuiltinSyms["{"])
 
 	for !stmt.Header.is(BuiltinSyms["}"]) {
 		fact, err := stmt.parseBaseFactStmt()

@@ -932,7 +932,7 @@ thm:
 
 func TestInlineIfStmt(t *testing.T) {
 	code := `
-if $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()} => $p()
+if $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()} { $p()}
 
 forall g G:
 	cond:
@@ -947,17 +947,17 @@ forall g G:
 	
 prop P[G Group, G2 Group](g G, g2 G2):
 	cond:
-		if $f[G, B](g.g1, g2.g2), if $f[G, B](g.g1, g2.g2) => {$p()} => $p()
+		if $f[G, B](g.g1, g2.g2), if $f[G, B](g.g1, g2.g2) {$p()}  {$p()}
 	then:
 		$p()
 prove:
-	if $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()} => $p()
-	if $f[G, B](g.g1, g2.g2) => $p()
+	if $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()}  {$p()}
+	if $f[G, B](g.g1, g2.g2) { $p()}
 
 forall [G Group, G2 Group] g g, g2 g2:
 	cond:
 		$p[G, G2](x, y)
-		if $f[G, B](g.g1, g2.g2) => $p()
+		if $f[G, B](g.g1, g2.g2) {$p()}
 	then:
 	    $p[G, G2](x, y)
 
