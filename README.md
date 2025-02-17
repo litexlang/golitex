@@ -9,8 +9,9 @@
 
 ## About
 
-_That language is an instrument of human reason, and not merely a medium for the expression of thought, is a truth generally admitted.
-– George Boole_
+_That language is an instrument of human reason, and not merely a medium for the expression of thought, is a truth generally admitted._
+
+_–- George Boole_
 
 **Litex is a simple, user-friendly, universal formal language, designed to better manage the rising level of abstraction in mathematics and to bring the mathematical community into the digital age. It is daily tool to effortlessly to read, write, verify, and share mathematics.**
 
@@ -18,15 +19,17 @@ _That language is an instrument of human reason, and not merely a medium for the
 
 ## Design principles of Litex
 
-_Conceptual integrity is central to product quality.
--- Fred Brooks_
+_God is in the details._
+
+_-- Don Knuth_
 
 Litex is the bridge between the programming world and math world. The reason Litex can achieve a uniform language with such concise syntax and semantics to express the complex world of mathematics is that it clearly recognizes both the differences and commonalities between mathematics and programming.We start by investigating **similarities and differences between math and programming**.
 
-#### Similarities
+### Similarities
 
-_Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper.
--- David Hilbert_
+_Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
+
+_-- David Hilbert_
 
 Mathematics and programming are very similar in terms of **core principles** and the **workflow practices** of practitioners.
 
@@ -43,10 +46,11 @@ Mathematics and programming are very similar in terms of **core principles** and
     Because the mathematical community is currently grappling with significant challenges related to abstraction, it is reasonable for it to draw insights and experiences from the programming world. Programming has developed robust frameworks and tools for managing complexity through abstraction, such as modular design, type systems, and reusable libraries. By adopting these principles, mathematics can potentially streamline its own processes, making abstract concepts more accessible and easier to work with.
 
 
-#### Differences
+### Differences
 
-_The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."
--- Structure and Interpretation of Computer Programs_
+_The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."_
+
+_-- Structure and Interpretation of Computer Programs_
 
 Previous formal languages failed to recognize the subtle differences between math and programming. Key properties of math were not fully exploited to improve syntax and semantics, while the automation potential offered by programming was not fully utilized.
 
@@ -68,19 +72,23 @@ In math, constructs like while loops or switch statements—used to control prog
 
 Math often resembles "transforming strings that match specific structures (like regular expressions)." Symbols that meet certain conditions can be combined with other qualified symbols in permitted ways. The three fundamental elements—functions, arguments, and propositions—can all be represented as symbols, enabling a unified and structured approach to mathematical reasoning.
 
-#### Basic Syntax
+### Basic Syntax
 
-_If I have seen further, it is by standing on the shoulders of giants.
--- Isaac Newton_
+_If I have seen further, it is by standing on the shoulders of giants._
+
+_-- Isaac Newton_
 
 The design of Litex is inspired mainly by designs of existing programming languages like Python, GoLang, C, C++, Rust, JavaScript/TypeScript, Lisp, LaTeX instead of mathematical logic. Unlike other formal languages, Litex uses programming thinking to understand mathematical proofs, not the other way around.
 
-##### Learn from other programming languages
+#### Learn from other programming languages
 
-_Beautiful is better than ugly.
-Explicit is better than implicit.
-Simple is better than complex.
--- The Zen of Python_
+_Beautiful is better than ugly._
+
+_Explicit is better than implicit._
+
+_Simple is better than complex._
+
+_-- The Zen of Python_
 
 To better understand Litex, let’s first look at what Litex has borrowed from other languages.
 
@@ -93,10 +101,11 @@ To better understand Litex, let’s first look at what Litex has borrowed from o
 7. A package system inspired by Go that helps programmers collaborate, maintain their proofs, and easily import others' results.
 
 
-##### Corresponding between math and programming
+#### A Tour of Syntax and Semantics of Litex
 
-_Science is what we understand well enough to explain to a computer. Art is everything else we do.
--- Donald Knuth_
+_Simplify, simplify, simplify._
+
+_--Steve Jobs_
 
 The same idea, expressed in different ways, can feel entirely distinct. As a result, the syntax of different programming languages encourages vastly different coding styles. **Litex must strike a balance between simplicity, intuitiveness, mathematical alignment, and programming conventions.** Intuition behind this design is more like art -— difficult to explain in words, yet its impact is the most profound.
 
@@ -132,10 +141,11 @@ Below are the core principles of syntax design. **The specific syntax may change
 
 15. A symbol may have many types, but it's its main type that tells the Litex interpreter what functions or propositions can "call" it. It works in the same way how the Macintosh works: you can open many windows at the same time, but there is only one main window that you are working on.
 
-#### Return to common sense and simplicity
+### Return to common sense and simplicity
 
-_Common sense is not so common.
---Voltaire_
+_Common sense is not so common._
+
+_--Voltaire_
 
 A good tool encourages its user to follow good practices because clarity stems from consistency, simplicity, and intentional design. You have to be clear about what you are talking about, otherwise nobody pays attention to your work.
 
@@ -147,8 +157,9 @@ Traditional formal languages are useful because they emphasize the connection be
 
 ### Litex is for mathematicians
 
-_Give a man a fish and you feed him for a day; teach a man to fish and you feed him for a lifetime.
--- Chinese Proverb_
+_Give a man a fish and you feed him for a day; teach a man to fish and you feed him for a lifetime._
+
+_-- Chinese Proverb_
 
 The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. Individuals no longer have to worry about hard-to-detect, potentially fatal proof errors that can undermine their work. Litex code is both human-readable and machine-efficient, so you can rely on it as a daily tool.
 
@@ -160,8 +171,9 @@ Global collaboration can be expected on an unprecedented scale, fostering trust 
 
 ### What is to be done
 
-_A journey of a thousand miles begins with a single step.
---Chinese Proverb_
+_A journey of a thousand miles begins with a single step._
+
+_--Chinese Proverb_
 
 Litex is solving a problem that nobody has ever solved or even imagined. Small, occasional pitfalls are to be expected.
 
@@ -174,8 +186,9 @@ Addressing these challenges will require ongoing collaboration between the user 
 
 ## Join the Litex Project
 
-_The best way to predict the future is to invent it.
--- Alan Kay_
+_The best way to predict the future is to invent it._
+
+_-- Alan Kay_
 
 The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
 
