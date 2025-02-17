@@ -353,7 +353,7 @@ func (stmt *TokenBlock) parseInlineFactStmt() (InlineFactStmt, error) {
 	return stmt.parseBaseFactStmt()
 }
 
-func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallSubStmt, error) {
+func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallStmt, error) {
 	err := stmt.Header.skip(Keywords["forall"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -375,7 +375,12 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallSubStmt, error) {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		condFacts = append(condFacts, fact)
+
+		if stmt.Header.is(BuiltinSyms[","]) {
+			stmt.Header.next()
+		}
 	}
+
 	err = stmt.Header.skip(BuiltinSyms["{"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -387,13 +392,17 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallSubStmt, error) {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		thenFacts = append(thenFacts, fact)
+
+		if stmt.Header.is(BuiltinSyms[","]) {
+			stmt.Header.next()
+		}
 	}
 	err = stmt.Header.skip(BuiltinSyms["}"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &InlineForallSubStmt{*typeParams, *varParams, condFacts, thenFacts}, nil
+	return &InlineForallStmt{*typeParams, *varParams, condFacts, thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseBaseFactStmt() (BaseFactStmt, error) {
@@ -436,11 +445,13 @@ func (stmt *TokenBlock) parseFuncPropertyFactStmt() (*FuncPropStmt, error) {
 	return &FuncPropStmt{true, fc}, nil
 }
 
-func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
-	stmt.Header.skip()
+func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
+	err := stmt.Header.skip(Keywords["forall"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
 
 	typeParams := &[]TypeConceptPair{}
-	var err error = nil
 	if stmt.Header.is(BuiltinSyms["["]) {
 		typeParams, err = stmt.Header.parseBracketedTypeConceptPairArray()
 		if err != nil {
@@ -477,7 +488,15 @@ func (stmt *TokenBlock) parseForallStmt() (*ForallStmt, error) {
 		}
 	}
 
-	return &ForallStmt{*typeParams, *varParams, *ifFacts, *thenFacts}, nil
+	return &BlockForallStmt{*typeParams, *varParams, *ifFacts, *thenFacts}, nil
+}
+
+func (stmt *TokenBlock) parseForallStmt() (FactStmt, error) {
+	if stmt.Header.strAt(-1) != BuiltinSyms[":"] {
+		return stmt.parseInlineForallStmt()
+	} else {
+		return stmt.parseBlockedForall()
+	}
 }
 
 func (stmt *TokenBlock) parseBodyFacts() (*[]FactStmt, error) {

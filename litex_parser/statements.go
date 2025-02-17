@@ -50,7 +50,7 @@ type DefFnStmt struct {
 	thenFacts []FactStmt
 }
 
-type ForallStmt struct {
+type BlockForallStmt struct {
 	typeParams []TypeConceptPair
 	varParams  []StrTypePair
 	cond       []FactStmt
@@ -131,7 +131,7 @@ type InlineIfFactStmt struct {
 }
 
 // forall []() cond {then}
-type InlineForallSubStmt struct {
+type InlineForallStmt struct {
 	typeParams []TypeConceptPair
 	varParams  []StrTypePair
 	cond       []InlineFactStmt

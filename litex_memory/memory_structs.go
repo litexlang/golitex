@@ -30,7 +30,7 @@ func NewForallFactMemory() *ForallFactMemory {
 
 type ForallFactMemEntry struct{ Facts []ForallMemFact }
 
-type ForallMemFact struct{ Fact parser.ForallStmt }
+type ForallMemFact struct{ Fact parser.BlockForallStmt }
 
 type VarMemory struct{ Entries map[string]VarMemoryEntry }
 
