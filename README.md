@@ -145,38 +145,39 @@ Traditional formal languages are useful because they emphasize the connection be
 
 **The design of Litex is strictly guided by minimalism principle.** Minimalism doesn’t mean weakness; it means every keyword or syntax does one thing exceptionally well, creating a consistent coding style. Users should embrace Litex as a complete system, not a random subset. Every feature in Litex is essential, with nothing missing or redundant. The language prevents convoluted logic and vague expressions, allowing users to rely on intuition and common sense. I hope users can find pleasure in reading and writing Litex.
 
-
-### Transform the way we express math
-
-the practice
-1. The beauty of programming and math both lies in its unique blend of problem solving, creativity and endless possibilities. There are plenty of programming languages that programmers enjoy, but rarely mathematicians find pleasure in using existing formal languages as everyday tools.
-2. share, big math
-3. CS learn from math, but math seldom take advantage of the continuously advancing information technology.
-
-
-### Potentials
-
-_The best way to predict the future is to invent it.
--- Alan Kay_
-
-The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. This shift eliminates paper review time, as Litex can verify the correctness of proofs. It enables global collaboration on an unprecedented scale, fostering trust among mathematicians worldwide (again, as Litex verifies the proofs). This transformation redefines the essence of math, aligning with Hilbert's view that mathematics is a game played with simple rules and meaningless marks, but now with a deeper, more accessible understanding.
-
-**Due to the similarities between programming and mathematics, we can anticipate that the mathematical community may retrace the path that the programming world has taken from the 1950s to today, transitioning from paper-and-pencil work to automated processes with broader participation.**
-
-Litex emphasize building simple, clear, modular and extensible code that can be read, written, shared by developers rather than its creator.
-
-Github has already shown us the huge influence of large-scale online co-operation. 
-
-There are many "small" facts that are natural for humans but needs extra efforts  to be implemented in advance to improve user experience. That's why the standard library(STL) is essential. If STL does not provide you with the facts you need, just use "know" keyword to "skip" this local fact for future implementation or just know it by default.
-
-
-## Join the Litex Project
+### Litex is for mathematicians
 
 _Give a man a fish and you feed him for a day; teach a man to fish and you feed him for a lifetime.
 -- Chinese Proverb_
 
-The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, 
-Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
+The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. Individuals no longer have to worry about hard-to-detect, potentially fatal proof errors that can undermine their work. Litex code is both human-readable and machine-efficient, so you can rely on it as a daily tool.
+
+This shift eliminates paper review time, as Litex can verify the correctness of proofs. With the integration of automated verification tools and collaborative platforms, any error can be identified and corrected early in the process. 
+
+Global collaboration can be expected on an unprecedented scale, fostering trust among mathematicians worldwide (again, as Litex verifies the proofs). That's why I am looking for a Github for mathematicians.
+
+**Due to the similarities between programming and mathematics, the mathematical community may follow the programming world's path, shifting from paper-and-pencil work to automated, collaborative processes. This could transform mathematical discovery, making it more dynamic, transparent, and accessible.**
+
+### What is to be done
+
+_A journey of a thousand miles begins with a single step.
+--Chinese Proverb_
+
+Litex is solving a problem that nobody has ever solved or even imagined. Small, occasional pitfalls are to be expected.
+
+Litex itself is far from perfect. Its current syntax may not yet be comprehensive enough to express all mathematical concepts seamlessly. Additionally, as Litex adoption grows and more users contribute to large-scale projects, there is a risk of inconsistencies in the codebase. 
+
+The Standard Library (STL) is essential because it handles many "small" facts that are intuitive for humans but require extra effort to implement. It is under development, and it needs help from the community. These pre-built components improve user experience by simplifying common tasks. If the STL doesn't cover a specific fact you need, use the **"know" keyword** to skip it for future implementation or assume it by default, allowing you to focus on higher-level logic without getting stuck on details.
+
+Addressing these challenges will require ongoing collaboration between the user and developer communities, ensuring that Litex evolves to meet the diverse needs of mathematicians while maintaining clarity, modularity, and extensibility. 
+
+
+## Join the Litex Project
+
+_The best way to predict the future is to invent it.
+-- Alan Kay_
+
+The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
 
 Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. That's why Litex will never be a success without its users and contributors. Feel free to issue your suggestions and ideas to help me improve this open-source project—your feedback is invaluable.
 
