@@ -121,7 +121,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*TypedFc, error) {
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
 	// 如果 1 out of range了，那返回值是 “”
-	strAtSecondPosition := parser.getStrAtNextIndexPosEmptyStrWhenOutOfScope(1)
+	strAtSecondPosition := parser.strAt(1)
 
 	if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] {
 		return parser.parseFcStr()

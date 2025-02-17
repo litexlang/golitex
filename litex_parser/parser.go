@@ -10,7 +10,7 @@ type Parser struct {
 	slice []string
 }
 
-func (p *Parser) getStrAtNextIndexPosEmptyStrWhenOutOfScope(index int) string {
+func (p *Parser) strAt(index int) string {
 	i := p.index + index
 
 	if i < 0 || i >= len(p.slice) {

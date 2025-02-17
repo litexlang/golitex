@@ -19,7 +19,7 @@ _That language is an instrument of human reason, and not merely a medium for the
 ## Design principles of Litex
 
 _Conceptual integrity is central to product quality.
--- Fred Brooks, Turing award recipient_
+-- Fred Brooks_
 
 Litex is the bridge between the programming world and math world. The reason Litex can achieve a uniform language with such concise syntax and semantics to express the complex world of mathematics is that it clearly recognizes both the differences and commonalities between mathematics and programming.We start by investigating **similarities and differences between math and programming**.
 
