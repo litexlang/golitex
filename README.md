@@ -72,15 +72,7 @@ In math, constructs like while loops or switch statements—used to control prog
 
 Math often resembles "transforming strings that match specific structures (like regular expressions)." Symbols that meet certain conditions can be combined with other qualified symbols in permitted ways. The three fundamental elements—functions, arguments, and propositions—can all be represented as symbols, enabling a unified and structured approach to mathematical reasoning.
 
-### Basic Syntax
-
-_If I have seen further, it is by standing on the shoulders of giants._
-
-_-- Isaac Newton_
-
-The design of Litex is inspired mainly by designs of existing programming languages like Python, GoLang, C, C++, Rust, JavaScript/TypeScript, Lisp, LaTeX instead of mathematical logic. Unlike other formal languages, Litex uses programming thinking to understand mathematical proofs, not the other way around.
-
-#### Learn from other programming languages
+## Syntax ans Semantics
 
 _Beautiful is better than ugly._
 
@@ -90,16 +82,7 @@ _Simple is better than complex._
 
 _-- The Zen of Python_
 
-To better understand Litex, let’s first look at what Litex has borrowed from other languages.
-
-1. Python's scoping rules and its "less typing" philosophy.  
-2. Go's type syntax and "simplicity is complicated" design.
-3. Concepts inspired by C++ Concepts, Python Protocols, Go Generics, and Rust Generics.  
-4. TeX-like separation of logical expressions (plain text) and mathematical expressions.  
-5. Everything is a symbol, and everything (variables, functions, properties) is a first-class citizen, inspired by Lisp and its descendants. Everything in lisp is nothing but symbol and list. Newcomers can learn Lisp in less than 5 minutes. Notice how the success of Lisp teaches us "Complex structure stem from well-organized simple elements."
-6. Introducing OOP to math, with OOP built on interfaces rather than inheritance.  
-7. A package system inspired by Go that helps programmers collaborate, maintain their proofs, and easily import others' results.
-
+The design of Litex is inspired mainly by designs of existing programming languages like Python, GoLang, C, C++, Rust, JavaScript/TypeScript, Lisp, LaTeX instead of mathematical logic. Unlike other formal languages, Litex uses programming thinking to understand mathematical proofs, not the other way around.
 
 #### A Tour of Syntax and Semantics of Litex
 
@@ -154,6 +137,22 @@ Traditional formal languages are useful because they emphasize the connection be
 **Newton didn’t need type theory to invent calculus, and children don’t need the Curry-Howard Isomorphism to write their first line of math. People naturally have an intuition for how math works. Therefore, there must be a way to design a formal language that is usable for everyone instead of just for experts. This is why Litex is built on common sense, focusing on the subtle yet often overlooked connections between math and programming.**
 
 **The design of Litex is strictly guided by minimalism principle.** Minimalism doesn’t mean weakness; it means every keyword or syntax does one thing exceptionally well, creating a consistent coding style. Users should embrace Litex as a complete system, not a random subset. Every feature in Litex is essential, with nothing missing or redundant. The language prevents convoluted logic and vague expressions, allowing users to rely on intuition and common sense. I hope users can find pleasure in reading and writing Litex.
+
+### Learn from other programming languages
+
+_If I have seen further, it is by standing on the shoulders of giants._
+
+_-- Isaac Newton_
+
+Litex is designed to be an everyday tool, which is why its learning curve should be as gentle as possible for newcomers. People find it easier to learn concepts similar to what they already know, which is why Litex incorporates many great ideas from mainstream programming languages. In fact, the name "Litex" is derived from Lisp + TeX, as Litex is heavily inspired by both of them. Here are some examples:
+
+1. Python's scoping rules and its "less typing" philosophy.  
+2. Go's type syntax and "simplicity is complicated" design.
+3. Concepts inspired by C++ Concepts, Python Protocols, Go Generics, and Rust Generics.  
+4. TeX-like separation of logical expressions (plain text) and mathematical expressions.  
+5. Everything is a symbol, and everything (variables, functions, properties) is a first-class citizen, inspired by Lisp and its descendants. Everything in lisp is nothing but symbol and list. Newcomers can learn Lisp in less than 5 minutes. Notice how the success of Lisp teaches us "Complex structure stem from well-organized simple elements."
+6. Introducing OOP to math, with OOP built on interfaces rather than inheritance.  
+7. A package system inspired by Go that helps programmers collaborate, maintain their proofs, and easily import others' results.
 
 ### Litex is for mathematicians
 
