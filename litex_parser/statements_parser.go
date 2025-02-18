@@ -264,6 +264,24 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
+	var inheritNamePtr *FcVarType = nil
+	var conceptNamePtr *TypeConceptStr = nil
+
+	if stmt.Header.is(Keywords["inherit"]) {
+		stmt.Header.next()
+		*inheritNamePtr, err = stmt.Header.parseFcVarType()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+	} else if stmt.Header.is(Keywords["impl"]) {
+		stmt.Header.next()
+		conceptNameStr, err := stmt.Header.next()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		*conceptNamePtr = TypeConceptStr(conceptNameStr)
+	}
+
 	if !stmt.Header.is(Keywords["fn"]) && !stmt.Header.is(Keywords["prop"]) && !stmt.Header.is(Keywords["var"]) {
 		typeName, err := stmt.Header.next()
 		if err != nil {
@@ -272,17 +290,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 
 		decl := FcVarDecl{FcVarDeclPair{"", FcVarType{"", FcVarTypeStrValue(typeName)}}}
 
-		conceptNameStr := ""
-		if stmt.Header.is(Keywords["impl"]) {
-			stmt.Header.next()
-			conceptNameStr, err = stmt.Header.next()
-			if err != nil {
-				return nil, &parseStmtErr{err, *stmt}
-			}
-		}
-		conceptName := TypeConceptStr(conceptNameStr)
-
-		return &DefTypeStmt{&decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
+		return &DefTypeStmt{&decl, inheritNamePtr, conceptNamePtr, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
 	}
 
 	decl, err := stmt.parseFcDecl()
@@ -290,18 +298,8 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	conceptNameStr := ""
-	if stmt.Header.is(Keywords["impl"]) {
-		stmt.Header.next()
-		conceptNameStr, err = stmt.Header.next()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	}
-	conceptName := TypeConceptStr(conceptNameStr)
-
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{decl, conceptName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
+		return &DefTypeStmt{decl, inheritNamePtr, conceptNamePtr, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
 	} else {
 		stmt.Header.next()
 	}
@@ -332,7 +330,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 			}
 		}
 	}
-	return &DefTypeStmt{decl, conceptName, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
+	return &DefTypeStmt{decl, inheritNamePtr, conceptNamePtr, *typeVarMember, *typeFnMember, *typePropertyMember, *varMember, *fnMember, *propertyMember, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {

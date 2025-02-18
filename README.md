@@ -15,7 +15,8 @@ _–- George Boole_
 
 **Litex is a simple, user-friendly, universal formal language, designed to better manage the rising level of abstraction in mathematics and to bring the mathematical community into the digital age. It is daily tool to effortlessly to read, write, verify, and share mathematics.**
 
-**Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language.** While twisted syntax and semantics of traditional formal languages often causes a significant mental drain and a huge loss of clarity of proofs, Litex adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by formal languages.
+**Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language.** While twisted syntax and semantics of traditional formal languages often causes a significant mental drain ;
+and a huge loss of clarity of proofs, Litex adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by formal languages.
 
 ## Design principles of Litex
 
@@ -162,13 +163,13 @@ Litex is designed to be an everyday tool, which is why its learning curve should
 6. Introducing OOP to math, with OOP built on interfaces rather than inheritance.  
 7. A package system inspired by Go that helps programmers collaborate, maintain their proofs, and easily import others' results.
 
-### Litex is a daily tool for every mathematics users, not just for experts.
+### What's to be expected.
 
 _We shape our tools, and thereafter our tools shape us._
 
 _-- Marshall McLuhan_
 
-The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. Individuals no longer have to worry about hard-to-detect, potentially fatal proof errors that can undermine their work. Huge efforts can be saved by just adopting Litex.
+The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. Individuals no longer have to worry about hard-to-detect, potentially fatal proof errors that can undermine their work. Huge efforts can be saved by just adopting Litex. 
 
 When studying a new area, the most overwhelming part is often learning its conventions—symbols, basic theorems, and concepts. Authors may assume you know these, but gaps can make proofs hard to follow. **With Litex, relationships between symbols can be visualized or guided by the IDE, allowing you to easily jump to definitions. The Litex Interpreter verifies each step, helping you stay on track even with unfamiliar proofs. This showcases the potential of "math in the digital age.".**
 
@@ -178,7 +179,7 @@ Global collaboration can be expected on an unprecedented scale, fostering trust 
 
 **Due to the similarities between programming and mathematics, the mathematical community may follow the programming world's path, shifting from paper-and-pencil work to automated, collaborative processes. This could transform mathematical discovery, making it more dynamic, transparent, and accessible.**
 
-Litex code is both human-readable and machine-efficient. This means more users. More users mean a better Litex. Previous formal languages failed to bring true transformation because of their complexity, but Litex, being simple enough, can have a deeper impact on the mathematical community.
+Litex is a daily tool designed for every mathematics users, not just for experts.That's why it is both human-readable and machine-efficient. More users mean a better Litex. Previous formal languages failed to bring true transformation because of their complexity, but Litex, being simple enough, can have a deeper impact on the mathematical community. 
 
 ### What is to be done
 
