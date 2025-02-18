@@ -77,3 +77,8 @@ var AnyType = Keywords["any"]
 var VarType = Keywords["var"]
 var FnType = Keywords["fn"]
 var PropertyType = Keywords["prop"]
+
+type NamedFcType struct {
+	typeNameArr []string // packageName.packageName.typeName
+	params      []Fc
+}

@@ -26,8 +26,7 @@ type DefConceptStmt struct {
 
 type DefTypeStmt struct {
 	decl               fcDecl
-	inheritNamePtr     *FcVarType
-	conceptNamePtr     *TypeConceptStr
+	implType           NamedFcType
 	typeVarMember      []FcVarDecl
 	typeFnMember       []FcFnDecl
 	typePropertyMember []PropDecl
