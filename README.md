@@ -3,7 +3,7 @@
 <div align="center">
 <img src="assets/logo.png" alt="The LiTeX Logo" width="300">
 
-<small>The Litex logo is a binary tree for two symbolic reasons: 1) As as data structure, binary trees are a perfect demonstration of how abstraction is handled, and the concept abstraction plays a fundamental role in both mathematics and programming.  2) As a diagram of procedures, it evokes the sense of "something leads to another thing" in mathematical discovery and software development. </small>
+<small>The Litex logo is a binary tree for two symbolic reasons: 1) As as data structure, binary trees are a perfect demonstration of how abstraction is handled, and the concept abstraction plays a fundamental role in both mathematics and programming.  2) As a procedural diagram, it illustrates how facts generate new facts, with each validation relying on an interconnected network -— mirroring mathematical discovery and how procedures call one another in a computer program. </small>
 
 </div>
 
@@ -131,7 +131,7 @@ Below are the core principles of syntax design. **The specific syntax may change
 
 15. A symbol may have many types, but it's its main type that tells the Litex interpreter what functions or propositions can "call" it. It works in the same way how the Macintosh works: you can open many windows at the same time, but there is only one main window that you are working on.
 
-16. In traditional formal languages, naming each fact is intended to allow quick reference in the future. However, for mathematical proofs, such low-level operations should be abstracted away, much like how modern programming languages handle memory management automatically. In the past, programmers had to manually find available memory addresses to allocate (as in assembly) or manage memory allocation and deallocation themselves (as in C). Similarly, when you declare a fact, the system should automatically locate the relevant facts that can derive it (or throw an "unknown" error if none are found). This "search" can happen in two ways: 1. If an identical fact (as a string) is stored, it is validated; 2. If a universal fact (e.g., a "forall" statement) is stored, and the parameters match the requirements of the universal statement, it is validated. This approach streamlines the process, allowing mathematicians to focus on higher-level reasoning rather than manual fact management.
+16. In traditional formal languages, naming each fact is intended to allow quick reference in the future. However, for mathematical proofs, such low-level operations should be abstracted away, much like how modern programming languages handle memory management automatically. In the past, programmers had to manually find available memory addresses to allocate (as in assembly) or manage memory allocation and deallocation themselves (as in C). Similarly, when you declare a fact, **the system should automatically locate(search) the relevant facts that can derive it (or throw an "unknown" error if none are found). This "search" can happen in two ways: 1. If an identical fact (as a string) is stored, it is validated; 2. If a universal fact (e.g., a "forall" statement) is stored, and the parameters match the requirements of the universal statement, it is validated.** If there does exist a fact that verifies your claim, then the output is `True`, if not the output is `Unknown`. This approach streamlines the process, allowing mathematicians to focus on higher-level reasoning rather than manual fact management.
 
 ### Return to common sense and simplicity
 
@@ -202,8 +202,8 @@ _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
 
-The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, Shanghai JiaoTong University, openMMLab, deepmath.cn etc.
+The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
 
 Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. That's why Litex will never be a success without its users and contributors. Feel free to issue your suggestions and ideas to help me improve this open-source project—your feedback is invaluable.
 
-Visit [the Litex website](www.litexlang.com) for more information. Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
+Visit [the Litex website](https://litexlang.org) for more information. Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
