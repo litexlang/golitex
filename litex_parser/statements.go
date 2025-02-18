@@ -25,7 +25,9 @@ type DefConceptStmt struct {
 }
 
 type DefTypeStmt struct {
-	decl               fcDecl
+	decl fcDecl
+	// implType can be concept, or type, because a new type can either
+	// implement a concept or just be a subset of a type
 	implType           NamedFcType
 	typeVarMember      []FcVarDecl
 	typeFnMember       []FcFnDecl
@@ -80,8 +82,8 @@ type ClaimProveStmt struct {
 }
 
 type DefAliasStmt struct {
-	name     string
-	variable Fc
+	PreviousName string
+	NewName      string
 }
 
 type KnowStmt struct {

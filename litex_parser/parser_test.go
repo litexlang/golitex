@@ -1014,23 +1014,18 @@ forall [a A] $p() {$p()}
 
 func TestTypeInit(t *testing.T) {
 	code := `
-type impl G var A S:	// type name is G, A is name for "self"
+// Group is a concept, 
+type impl Group var A G:
 	then:
 		$S(A)
 		know $Group(G)
 
-type inherit EuclidSpace var A S:	// type name is G, A is name for "self"
+type impl EuclidSpace var A S:	// type name is G, A is name for "self"
 	then:
 		$S(A)
 		know $Group(G)
 
 	
-forall [G Group, G2 EuclidSpace(n)] g g, g2 g2:
-	cond:
-		$p[G, G2](x, y)
-		if $f[G, B](g.g1, g2.g2) {$p()}
-	then:
-		$p[G, G2](x, y)
 `
 
 	statements, err := ParserTester(code)
