@@ -737,17 +737,17 @@ func (stmt *TokenBlock) parseProveBlock() (*[]Stmt, error) {
 func (stmt *TokenBlock) parseDefAliasStmt() (*DefAliasStmt, error) {
 	stmt.Header.skip(Keywords["alias"])
 
-	name, err := stmt.Header.next()
+	previous, err := stmt.Header.next()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	variable, err := stmt.Header.ParseFc()
+	newName, err := stmt.Header.next()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &DefAliasStmt{name, variable}, nil
+	return &DefAliasStmt{previous, newName}, nil
 }
 
 func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
