@@ -106,6 +106,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"prove_by_contradiction": "prove_by_contradiction",
 		"thm":                    "thm",
 		"if":                     "if",
+		"inherit":                "inherit",
 	}
 
 	for k, v := range BuiltinSyms {
