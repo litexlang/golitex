@@ -13,10 +13,11 @@ _That language is an instrument of human reason, and not merely a medium for the
 
 _–- George Boole_
 
-**LiTeX is a formal proof verification system designed for everyone. It seeks to manage the increasing level of abstraction in mathematics and bring the mathematical community into the digital age. The language is so simple and powerful that the learning curve is no higher than that of Python and LaTeX. Through automated verification, LiTeX ensures that everyone can benefit from the rigor and reliability of mathematics.**
+LiTeX is a formal proof verification system designed for everyone. It seeks to manage the increasing level of abstraction in mathematics and help everyone, ranging from mathematicians, AI experts to high-school students, benefit from automated verification.
 
-**Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language.** While twisted syntax and semantics of traditional formal languages often causes a significant mental drain ;
-and a huge loss of clarity of proofs, Litex adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by formal languages.
+**Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language. The implementation approach leverages a profound understanding of the commonalities and distinctions between formal languages and mathematics.** 
+
+Litex is designed to be as simple and intuitive as Python or LaTeX, with a minimal learning curve. Users can rely on common sense rather than complex theories like type theory to write Litex, making mathematical rigor and reliability accessible to everyone.
 
 ## Design principles of Litex
 
@@ -24,7 +25,9 @@ _God is in the details._
 
 _-- Don Knuth_
 
-Litex is the bridge between the programming world and math world. The reason Litex can achieve a uniform language with such concise syntax and semantics to express the complex world of mathematics is that it clearly recognizes both the differences and commonalities between mathematics and programming.We start by investigating **similarities and differences between math and programming**.
+Litex is the bridge between the programming world and math world. It adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by tradition formal languages.
+
+The reason Litex can achieve a uniform language with such concise syntax and semantics to express the complex world of mathematics is that it clearly recognizes both the differences and commonalities between mathematics and programming.We start by investigating **similarities and differences between math and programming**.
 
 ### Similarities
 
