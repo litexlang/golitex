@@ -139,13 +139,15 @@ _Common sense is not so common._
 
 _--Voltaire_
 
-A good tool encourages its user to follow good practices because clarity stems from consistency, simplicity, and intentional design. You have to be clear about what you are talking about, otherwise nobody pays attention to your work.
+A good tool promotes good practices by ensuring clarity through consistency, simplicity, and intentional design. Clarity is essential; without it, your work will go unnoticed.
 
-Traditional formal languages are useful because they emphasize the connection between programming and math. However, they are often criticized for being overwhelmingly unclear. These languages are typically designed to explain mathematical theories rather than serve as practical, everyday tools. **Previous formal languages are all too difficult to understand, and we cannot expect users to write good proofs without a clear understanding. This is why they are not widely adopted.**
+Traditional formal languages link programming to math but are often criticized for being unclear, as they prioritize explaining mathematical theories over practical use. **Previous formal languages are too complex, making it hard for users to write good proofs without clear understanding, limiting their adoption.**
 
-**Newton didn’t need type theory to invent calculus, and children don’t need the Curry-Howard Isomorphism to write their first line of math. People naturally have an intuition for how math works. Therefore, there must be a way to design a formal language that is usable for everyone instead of just for experts. This is why Litex is built on common sense, focusing on the subtle yet often overlooked connections between math and programming.**
+**A key insight supporting Litex's minimalism is that verification logic across mathematical disciplines differs little. Surface-level variations stem from abstraction, not fundamental logic.**
 
-**The design of Litex is strictly guided by minimalism principle.** Minimalism doesn’t mean weakness; it means every keyword or syntax does one thing exceptionally well, creating a consistent coding style. Users should embrace Litex as a complete system, not a random subset. Every feature in Litex is essential, with nothing missing or redundant. The language prevents convoluted logic and vague expressions, allowing users to rely on intuition and common sense. I hope users can find pleasure in reading and writing Litex.
+**Newton didn’t need type theory for calculus, and children don’t need the Curry-Howard Isomorphism to start math. People naturally grasp math intuitively. Thus, a formal language should be accessible to all, not just experts. Litex is built on common sense, emphasizing the subtle connections between math and programming.**
+
+**Litex adheres to minimalism—every keyword or syntax excels at one task, ensuring consistency. It’s a complete system, with no missing or redundant features, preventing convoluted logic and vague expressions. Users can rely on intuition, making reading and writing Litex a pleasure.**
 
 ### Learn from other programming languages
 
