@@ -5,24 +5,25 @@
 e.g.
 concept Rn S:   // suppose S is a Rn
     type_member:
-        var dim nat
+        var dim Pos_Nat // dim is positive natural number
+    member:
+        fn __at__(n Pos_Nat) Real: // define @, which means the nth index of the vector. Notice the return type is Real
     cond:
-        nat > 0
         forall v1 S, v2 S:
-            forall k nat:
+            forall k Pos_Nat:
                 cond:
-                    0 < k
                     k <= S.dim
                 (v1 + v2)@k = v1@k + v2@k
+        
 
 concept Group G: // suppose G is a group
     type_member:
-        fn __mul__(g G, g2 G) G
-        var I G
+        fn __mul__(g G, g2 G) G // define *
+        var I G // define identity
     member:
         fn inv() G
     cond:
-        forall v1 G, v2 G, v3 G:
+        forall v1 G, v2 G, v3 G: // equivalent to G.__mu__ is associative 
             (v1 * v2) * v3 = v1 * (v2 * v3)
         forall v G:
             v * v.inv() = G.I
@@ -35,9 +36,8 @@ concept Group G: // suppose G is a group
 Litex:
 // Define the result of summing 2 vectors
 know forall [S Rn] v1 S, v2 S:
-    forall k nat:
+    forall k Pos_Nat:
         cond:
-            0 < k
             k <= S.dim
         (v1 + v2)@k = v1@k + v2@k
 Python:
@@ -49,3 +49,13 @@ def vector_add(v1, v2):
     for i in range(len(v1)):
         result.append(v1[i] + v2[i])
     return result
+8. type in Litex works like set in math. In Litex has one single responsibility: own member and type_member, as in all programming languages. member is owned by variable and type_member is owned by type itself. It's essential for operator overloading. . Actually, type in ordinary programming languages also works like set in math.
+9. concept == type of type
+10. ! I should give user keyword commutative and associative otherwise Litex can not verify (v1 + v2)@k = v2@k + v1@k even we we know (v1 + v2)@k = v1@k + v2@k
+11. IMPORTANT: every time you encounter x of y, it means you should give a member to y called x. That is why OOP is very important in Litex
+12. set is builtin concept, nat and pos_nat and float is builtin type Litex
+13. you can view concept as set of sets; view type as set
+13. the difference between concept and type is concept is a type of type (set of set), and type is one specific set. For example, nat is a type, because there is one set called natural numbers. group is a concept, because there are many groups.
+13. such expression as "S is a set of variables of type Y" occurs very often. in litex it writes like
+var S Set:
+    $Set.type[Y]

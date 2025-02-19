@@ -106,7 +106,7 @@ Below are the core principles of syntax design. **The specific syntax may change
 
 1. The basic elements of math -— variables, functions, and propositions —- are all represented as symbols. Main statements are limited to defining variables, functions, propositions, types, and concepts; stating facts; making claims and proofs; and accessing knowledge. Basic components of Litex are simple and easy to combine, favoring composability over monolithic design.
 
-2. In Litex, a mathematical set is equivalent to a type. Types define members, including methods, propositions, and operator overloads, which is where object-oriented principles (OOP) are applied.  
+2. In Litex, a mathematical set is equivalent to a type. Types define members, including methods, propositions, and operator overloads, which is where object-oriented principles (OOP) are applied. For example, every time you encounter expression "x of y", it means you should give a member to y called x.
 
 3. A class of sets is represented as a *concept*.  
 
