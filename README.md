@@ -143,7 +143,7 @@ A good tool promotes good practices by ensuring clarity through consistency, sim
 
 Traditional formal languages link programming to math but are often criticized for being unclear, as they prioritize explaining mathematical theories over practical use. **Previous formal languages are too complex, making it hard for users to write good proofs without clear understanding, limiting their adoption.**
 
-**A key insight supporting Litex's minimalism is that verification logic across mathematical disciplines differs little. Surface-level variations stem from abstraction, not fundamental logic.**
+**A key insight supporting Litex's minimalism is that verification logic across mathematical disciplines differs little. Surface-level variations stem from abstraction and writing conventions, not fundamental logic.**
 
 **Newton didn’t need type theory for calculus, and children don’t need the Curry-Howard Isomorphism to start math. People naturally grasp math intuitively. Thus, a formal language should be accessible to all, not just experts. Litex is built on common sense, emphasizing the subtle connections between math and programming.**
 
