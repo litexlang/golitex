@@ -13,7 +13,7 @@ _That language is an instrument of human reason, and not merely a medium for the
 
 _–- George Boole_
 
-LiTeX is a formal proof verification system designed for everyone. It seeks to manage the increasing level of abstraction in mathematics and help everyone, ranging from mathematicians, AI experts to high-school students, benefit from automated verification.
+LiTeX is a formal proof verification system designed for everyone. It seeks to manage the increasing level of abstraction and complexity in mathematics and help everyone, ranging from mathematicians, AI experts to high-school students, benefit from automated verification.
 
 **Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language. The implementation approach leverages a profound understanding of the commonalities and distinctions between formal languages and mathematics.** 
 
@@ -46,8 +46,8 @@ Mathematics and programming are very similar in terms of **core principles** and
 3. **Both programming and mathematics share a deeply interconnected workflow, blending creativity, precision, and collaboration.**
     For example, programmers run code to test and debug, ensuring it works as intended. Similarly, mathematicians "compile" proofs step by step in their minds, "debugging" potential errors in their logic. With Litex, the "debugging" process here can be automated.
 
-4. **Fundamentally, computer science is the science of abstraction, and math is abstraction itself.**
-    Because the mathematical community is currently grappling with significant challenges related to abstraction, it is reasonable for it to draw insights and experiences from the programming world. Programming has developed robust frameworks and tools for managing complexity through abstraction, such as modular design, type systems, and reusable libraries. By adopting these principles, mathematics can potentially streamline its own processes, making abstract concepts more accessible and easier to work with.
+4. **Fundamentally, computer science is the science of abstraction, and math is the study of abstract structures and relationships.**  
+   At their core, programming and mathematical problem-solving address similar problems. Programming has developed robust frameworks like object-oriented programming, modular design, and reusable libraries to manage complexity caused by abstraction. By adopting these principles, mathematics can streamline its processes, making abstract concepts more accessible and easier to handle.
 
 
 ### Differences

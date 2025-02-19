@@ -2,6 +2,50 @@
 1. fn domain == fn cond
 2. fn type in principle should include cond. but since we use C-like struct(no parameter in type) instead of Rust-like type(you can use generics to have parameters in type), if you want to express "fn is a fn that has a domain that satisfies properties xxx ", you should give that class of functions a name and make it a new type. In short you should not pass parameters in type. You should make it a new type.
 3. Rn is a concept, not type. Rn is a concept and it has member dim nat. Group is a concept, not type, it has member *, inverse, 1. They are all concepts. But in practice, mathematicians write R^{n} to represent a Rn and write G is Group instead of G^{*,inv,1}. REMEMBER ANY "TYPE" THAT HAS A PARAMETER IS A CONCEPT, WRITTEN IN XXX{parameters} IN DAILY WRITING.
+e.g.
+concept Rn S:   // suppose S is a Rn
+    type_member:
+        var dim nat
+    cond:
+        nat > 0
+        forall v1 S, v2 S:
+            forall k nat:
+                cond:
+                    0 < k
+                    k <= S.dim
+                (v1 + v2)@k = v1@k + v2@k
+
+concept Group G: // suppose G is a group
+    type_member:
+        fn __mul__(g G, g2 G) G
+        var I G
+    member:
+        fn inv() G
+    cond:
+        forall v1 G, v2 G, v3 G:
+            (v1 * v2) * v3 = v1 * (v2 * v3)
+        forall v G:
+            v * v.inv() = G.I
+            v.inv() * v = G.I
+
 4. The benefit of using concept is that you can write fn [s T] x s, y s to ensure x and y are eql type. The user should define what does x = y mean when x and y are of the same type, just like C++ programmers define == in class.
 5. There is a major difference between template in C++ and concept in Litex: the template T must be initialized when used as parameter of a type. But member of a type of a concept needn't, because it's usually the member, not the instantiation of that member, has relation with other members and has some properties.
 6. = is a special kind of prop. besides facts that the user defines to be equal to =, there are builtin ways to check =: 1. when a and b are literally the same 2. when b is alias of a. 3. you don't need to implement = every time you define a new type, = is automatically generated for you, just like = is automatically by C++ for you when you define a class without defining it.
+7. as for vector plus vector, it works very like how it works in programming:
+Litex:
+// Define the result of summing 2 vectors
+know forall [S Rn] v1 S, v2 S:
+    forall k nat:
+        cond:
+            0 < k
+            k <= S.dim
+        (v1 + v2)@k = v1@k + v2@k
+Python:
+// Return the result of summing 2 vectors
+def vector_add(v1, v2):
+    if len(v1) != len(v2):
+        raise ValueError("Vectors must be of the same length")
+    result = []
+    for i in range(len(v1)):
+        result.append(v1[i] + v2[i])
+    return result
