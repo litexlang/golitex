@@ -45,6 +45,7 @@ var BuiltinSyms = map[string]string{
 	"#":     "#",
 	"\\in":  "\\in",
 	"\\has": "\\has",
+	"@":     "@", // v@n represents v[n]
 }
 
 var CustomizableOperators = map[string]string{
