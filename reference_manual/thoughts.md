@@ -1,4 +1,7 @@
+25.2.19
 1. fn domain == fn cond
 2. fn type in principle should include cond. but since we use C-like struct(no parameter in type) instead of Rust-like type(you can use generics to have parameters in type), if you want to express "fn is a fn that has a domain that satisfies properties xxx ", you should give that class of functions a name and make it a new type. In short you should not pass parameters in type. You should make it a new type.
 3. Rn is a concept, not type. Rn is a concept and it has member dim nat. Group is a concept, not type, it has member *, inverse, 1. They are all concepts. But in practice, mathematicians write R^{n} to represent a Rn and write G is Group instead of G^{*,inv,1}. REMEMBER ANY "TYPE" THAT HAS A PARAMETER IS A CONCEPT, WRITTEN IN XXX{parameters} IN DAILY WRITING.
 4. The benefit of using concept is that you can write fn [s T] x s, y s to ensure x and y are eql type. The user should define what does x = y mean when x and y are of the same type, just like C++ programmers define == in class.
+5. There is a major difference between template in C++ and concept in Litex: the template T must be initialized when used as parameter of a type. But member of a type of a concept needn't, because it's usually the member, not the instantiation of that member, has relation with other members and has some properties.
+6. 
