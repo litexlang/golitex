@@ -175,15 +175,12 @@ _Either mathematics is too big for the human mind or the human mind is more than
 
 _--Kurt Godel_
 
-**The simplicity and elegance of Litex position it as a promising tool for AI in mathematics. Its clean and straightforward design minimizes ambiguity when converting natural language mathematics into formal proofs, making the process no harder than translating pseudocode into Python.**
+**Litex’s elegance and minimalism make it uniquely suited for AI-driven mathematics. Its clean syntax reduces ambiguity when translating natural language into formal proofs -— akin to converting pseudocode into Python -— while maintaining mathematical rigor.**
 
-Litex revolutionizes AI for mathematics in three key ways. First, it eliminates the reliance on human-generated data by dramatically improving the efficiency of translating math textbooks into formalized representations. This creates datasets that scale in both breadth—matching the volume of existing textbooks—and depth, covering advanced mathematics previously difficult to formalize. Such capability bypasses the historical challenges of formal languages, which were often hindered by their complexity and lack of accessible datasets.
+By streamlining the conversion of textbooks into structured data, Litex bypasses the need for human-annotated training sets. This enables expansive datasets that mirror the breadth of mathematical literature while capturing intricate concepts previously deemed too complex for formalization. **Accurate formalization of hundreds of math textbooks by LLMs can be expected**.
 
-Second, Litex’s simplicity bridges the gap between humans and machines. Its human-readable yet machine-friendly design fosters seamless collaboration, allowing mathematicians to focus on creativity while AI handles formalization and verification, accelerating discovery.
+With vast high-quality datasets and Litex’s expressiveness, AI systems gain unprecedented capacity for exploring advanced theorems. The resulting feedback loop—where machines propose proofs and refine strategies autonomously—pushes mathematical reasoning into uncharted territories.
 
-<!-- I should mention reward function here. -->
-
-Finally, Litex significantly enhances machine reasoning quality. With access to vast, high-quality datasets and the ability to formalize complex proofs effortlessly, AI can autonomously tackle advanced theorems and even discover proofs independently, pushing the boundaries of mathematical reasoning.
 
 ### What's to be expected.
 
