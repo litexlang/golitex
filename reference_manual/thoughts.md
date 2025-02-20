@@ -108,3 +108,10 @@ Given the expression:
 This system allows for a clear, hierarchical representation of complex ideas by breaking them down into simpler, reusable components.
 
 15. Rust explicitly encodes all possible states in its type system using nested generics (e.g., `Result<Option<Vec<Result<T, E>>>, io::Error>`), forcing the caller to handle errors at compile time. In contrast, C uses simple type names but hides complexity inside structs, requiring manual checks and documentation to interpret NULL values and error codes. Rust ensures safety and clarity aka "minimalism when debugging", while C prioritizes "minimalism at first sight for its reader" but increases debugging complexity. In math, there is simply too many layers of abstraction that it's nearly impossible to explicit encode all states in its type system like Rust. What's more, Litex has 0 requirement for traditional debugging, SO I ADOPT C's type philosophy.
+
+16. I guess It's reasonable to use "set" instead of "type" as "type declaration keyword" because set has a much stronger mental hind. the word "type" is rarely used in Math. And "inherit" in Litex is represented "subset_of". "subset" is used in type and concept, for example forall \[RnBall subset(Rn) \]  .
+
+17. There is no control flow in Litex. THAT IS THE MAIN CORE BEHIND NEARLY ALL OF THE DIFFERENCE OF PL AND LITEX.
+e.g.
+    1. no traditional sense of debugging
+    2. no need to worry about traditional sense of efficiency of Litex(because many "speed tests" use speed of loops and if-elses to measure)
