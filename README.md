@@ -10,12 +10,12 @@
 - [The Litex Formal Proof Verification System](#the-litex-formal-proof-verification-system)
   - [About](#about)
   - [Design principles of Litex](#design-principles-of-litex)
-    - [Similarities](#similarities)
-    - [Differences](#differences)
+    - [Similarities between math and programming](#similarities-between-math-and-programming)
+    - [Differences between math and programming](#differences-between-math-and-programming)
   - [Syntax and Semantics](#syntax-and-semantics)
       - [A Tour of Syntax and Semantics of Litex](#a-tour-of-syntax-and-semantics-of-litex)
-    - [Return to common sense and simplicity](#return-to-common-sense-and-simplicity)
-    - [Learn from other programming languages](#learn-from-other-programming-languages)
+    - [Why another formal language? Litex is special for its simplicity and intuitive syntax.](#why-another-formal-language-litex-is-special-for-its-simplicity-and-intuitive-syntax)
+    - [Litex has its root in existing programming languages.](#litex-has-its-root-in-existing-programming-languages)
   - [Impact of AI for Math with Litex](#impact-of-ai-for-math-with-litex)
   - [What's to be expected.](#whats-to-be-expected)
   - [What is to be done](#what-is-to-be-done)
@@ -44,7 +44,7 @@ Litex is the bridge between the programming world and math world. It adopts a mi
 
 The reason Litex can achieve a uniform language with such concise syntax and semantics to express the complex world of mathematics is that it clearly recognizes both the differences and commonalities between mathematics and programming.We start by investigating **similarities and differences between math and programming**.
 
-### Similarities
+### Similarities between math and programming
 
 _Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
 
@@ -65,7 +65,7 @@ Mathematics and programming are very similar in terms of **core principles** and
    At their core, programming and mathematical problem-solving address similar problems. Programming has developed robust frameworks like object-oriented programming, modular design, and reusable libraries to manage complexity caused by abstraction. By adopting these principles, mathematics can streamline its processes, making abstract concepts more accessible and easier to handle.
 
 
-### Differences
+### Differences between math and programming
 
 _The computer revolution is a revolution in the way we think and in the way we express what we think. The essence of this change is the emergence of what might best be called procedural epistemology­ the study of the structure of knowledge from an imperative point of view, as opposed to the more declarative point of view taken by classical mathematical subjects. Mathematics provides a framework for dealing precisely with notions of "what is." Computation provides a framework for dealing precisely with notions of "how to."_
 
@@ -75,11 +75,13 @@ Previous formal languages failed to recognize the subtle differences between mat
 
 **Litex thrives in the sunlight of the common ground between math and programming, while also growing in the subtle gaps that highlight their differences.**
 
-1. **Litex is a verifier. It is a domain-specific language.**
+1. **Litex is a verifier. It is a domain-specific language rather than a general-purpose language.**
 
-Litex is designed to align closely with math. For example, every Litex expression can only return `true`, `false`, `unknown`, or `error`. This is because Litex is fundamentally a **verifier**, not a general-purpose programming language. Its primary role is to validate whether mathematical statements are correct, not to perform arbitrary computations. That's how "execution" in Litex differs from what it means in mainstream programming languages. **This makes Litex a domain-specific language, like SQL or LaTeX, tailored for specific problems rather than a general-purpose language like C or Python.**
+**LiTeX is designed to closely align with the field of mathematics. Each LiTeX expression only returns "true", "false", "unknown", or "error". Execution in LiTeX is about validating formalized reasoning, rather than performing arbitrary calculations or controlling the flow of operations. For instance, no one would manually iterate 10,000 times to construct a proof. Instead, the iteration is encapsulated as a single formal step. This is how people typically work in mathematics, and it's also how LiTeX operates.**
 
-2. **Function as symbol combination, not an algorithm for future execution**
+**This makes LiTeX a domain - specific language tailored for verification, unlike general-purpose programming languages such as C or Python. In many respects, LiTeX functions more like a regular expression matcher, as it validates structured statements according to formal rules. Adding unnecessary features will only reduce its expressive power.**
+
+1. **Function as symbol combination, not an algorithm for future execution**
 
 **Also, functions in Litex don’t "execute" in the traditional sense; instead, they serve as tools to combine predefined symbols and relationships.** After all, many mathematical expressions are written using free variables like *a* and *b*, which inherently lack fixed values. Even when using fixed variables, many integrals or expressions cannot be strictly computed to exact values. This aligns with Litex's purpose: it focuses on verifying the logical structure rather than performing computations.
 
@@ -151,7 +153,7 @@ Below are the core principles of syntax design. **The specific syntax may change
 
 16. In traditional formal languages, naming each fact is intended to allow quick reference in the future. However, for mathematical proofs, such low-level operations should be abstracted away, much like how modern programming languages handle memory management automatically. In the past, programmers had to manually find available memory addresses to allocate (as in assembly) or manage memory allocation and deallocation themselves (as in C). Similarly, when you declare a fact, **the system should automatically locate(search) the relevant facts that can derive it (or throw an "unknown" error if none are found). This "search" can happen in two ways: 1. If an identical fact (as a string) is stored, it is validated; 2. If a universal fact (e.g., a "forall" statement) is stored, and the parameters match the requirements of the universal statement, it is validated.** If there does exist a fact that verifies your claim, then the output is `True`, if not the output is `Unknown`. This approach streamlines the process, allowing mathematicians to focus on higher-level reasoning rather than manual fact management.
 
-### Return to common sense and simplicity
+### Why another formal language? Litex is special for its simplicity and intuitive syntax.
 
 _Common sense is not so common._
 
@@ -167,7 +169,7 @@ Traditional formal languages link programming to math but are often criticized f
 
 **Litex adheres to minimalism—every keyword or syntax excels at one task, ensuring consistency. It’s a complete system, with no missing or redundant features, preventing convoluted logic and vague expressions. Users can rely on intuition, making reading and writing Litex a pleasure.**
 
-### Learn from other programming languages
+### Litex has its root in existing programming languages.
 
 _If I have seen further, it is by standing on the shoulders of giants._
 
@@ -186,17 +188,15 @@ Litex is designed to be an everyday tool, which is why its learning curve should
 
 ## Impact of AI for Math with Litex  
 
-_Either mathematics is too big for the human mind or the human mind is more than a machine._
+_We must know. We will know.._
 
-_--Kurt Godel_
+_--David Hilbert_
 
-**Litex’s elegance and minimalism make it uniquely suited for AI-driven mathematics. Its clean syntax reduces ambiguity when translating natural language into formal proofs -— akin to converting pseudocode into Python -— while maintaining mathematical rigor.**
-
-By streamlining the conversion of textbooks into structured data, Litex bypasses the need for human-annotated training sets. This enables expansive datasets that mirror the breadth of mathematical literature while capturing intricate concepts previously deemed too complex for formalization. **Accurate formalization of hundreds of math textbooks by LLMs can be expected**.
+**Litex’s elegance and minimalism make it uniquely suited for AI-driven mathematics. Unlike traditional formal languages, which are too complex for LLMs to translate math textbooks effectively, Litex’s clean syntax drastically reduces ambiguity when converting natural language into formal proofs. This process becomes as straightforward as translating pseudocode into Python, while preserving full mathematical rigor. Litex thus bridges the gap between human-readable math and machine-verifiable proofs, enabling scalable and accurate formalization. Accurate formalization of hundreds of math textbooks by LLMs can be expected.**
 
 Verification via formal language is key to the reward function in RL training for models like DeepSeek-r1, AlphaProof, and AlphaGeometry. Litex acts as a cross-model framework, streamlining verification and enabling scalable, precise training for increasingly complex models.
 
-With vast high-quality datasets and Litex’s expressiveness, AI systems will gain unprecedented capacity for exploring advanced theorems. The resulting feedback loop -- machines propose proofs and refine strategies autonomously -- pushes mathematical reasoning into uncharted territories.
+**With vast high-quality datasets and Litex’s expressiveness, AI systems will gain unprecedented capacity for exploring advanced theorems. The resulting feedback loop -- machines propose proofs and refine strategies autonomously -- pushes mathematical reasoning into uncharted territories.**
 
 
 ## What's to be expected.
