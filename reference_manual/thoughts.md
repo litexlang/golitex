@@ -7,7 +7,7 @@ concept Rn S:   // suppose S is a Rn
     type_member:
         var dim Pos_Nat // dim is positive natural number
     member:
-        fn __at__(n Pos_Nat) Real: // define @, which means the nth index of the vector. Notice the return type is Real
+        fn \_\_at\_\_(n Pos_Nat) Real: // define @, which means the nth index of the vector. Notice the return type is Real
     cond:
         forall v1 S, v2 S:
             forall k Pos_Nat:
@@ -18,12 +18,12 @@ concept Rn S:   // suppose S is a Rn
 
 concept Group G: // suppose G is a group
     type_member:
-        fn __mul__(g G, g2 G) G // define *
+        fn \_\_mul\_\_(g G, g2 G) G // define *
         var I G // define identity
     member:
         fn inv() G
     cond:
-        forall v1 G, v2 G, v3 G: // equivalent to G.__mu__ is associative 
+        forall v1 G, v2 G, v3 G: // equivalent to G.\_\_mu\_\_ is associative 
             (v1 * v2) * v3 = v1 * (v2 * v3)
         forall v G:
             v * v.inv() = G.I
@@ -59,3 +59,52 @@ def vector_add(v1, v2):
 13. such expression as "S is a set of variables of type Y" occurs very often. in litex it writes like
 var S Set:
     $Set.type[Y]
+14.The essence of the concept and type system in Litex is to break down a set represented by composed symbols in natural language into simpler **concepts** and **types**. This process is analogous to decomposing a complex structure (like a `struct` in programming) into smaller, more manageable substructures. Just as you might access a member of a higher-level struct using multiple dots (e.g., `structA.structB.member`), Litex allows you to retrieve or define components of a higher-level concept by breaking it down into its constituent parts.
+
+### Example Breakdown:
+Given the expression:  
+**"forall c and d are real numbers and S = [1,2]*[c,d]"**, Litex decomposes it as follows:
+
+1. **Define a concept for a product space**:  
+   A product space is a concept that consists of two sets, `left` and `right`.  
+   ```plaintext
+   concept product_space:
+       type_member:
+           var left set
+           var right set
+   ```
+
+2. **Define a concept for an interval**:  
+   An interval is a concept that consists of two real numbers, `left` and `right`.  
+   ```plaintext
+   concept interval:
+       type_member:
+           var left Real
+           var right Real
+   ```
+
+3. **Apply the concepts to the given expression**:  
+   For all instances of `S` that are of type `product_space`, the following conditions must hold:  
+   - The `left` and `right` members of `S` must be intervals.  
+   - The `left` interval of `S` must have `left = 1` and `right = 2`.  
+   ```plaintext
+   forall [S product_space]:
+       cond:
+           $interval(S.left)
+           $interval(S.right)
+           S.left.left = 1
+           S.left.right = 2
+   ```
+
+### Explanation:
+- **Concepts**: These are high-level abstractions (e.g., `product_space`, `interval`) that define the structure of types.  
+- **Types**: These are the specific instances or members of a concept (e.g., `left` and `right` in `interval`).  
+- **Decomposition**: The expression `S = [1,2]*[c,d]` is broken down into its constituent parts using the defined concepts and types.  
+  - `S` is a `product_space` with `left` and `right` members.  
+  - `S.left` is an interval `[1,2]`, and `S.right` is an interval `[c,d]`.  
+  - The conditions ensure that the structure adheres to the defined concepts and types.
+- **No need to specify c and d**:  In Litex, the forall in natural language corresponds to free variables, which do not require explicit initialization. This allows direct access to their members (e.g., .left and .right) through the structure of concepts and types. This design makes Litex more flexible and concise.
+
+This system allows for a clear, hierarchical representation of complex ideas by breaking them down into simpler, reusable components.
+
+
