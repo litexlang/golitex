@@ -115,3 +115,5 @@ This system allows for a clear, hierarchical representation of complex ideas by 
 e.g.
     1. no traditional sense of debugging
     2. no need to worry about traditional sense of efficiency of Litex(because many "speed tests" use speed of loops and if-elses to measure)
+
+18. claim == writing return value on the top line of a "function"

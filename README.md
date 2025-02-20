@@ -168,6 +168,23 @@ Litex is designed to be an everyday tool, which is why its learning curve should
 6. Introducing OOP to math, with OOP built on interfaces rather than inheritance. This saves user from relying on layers of layers of imported "basic types". For example,you can define division without defining an ordered field, since humans invented division before defining ordered fields. This greatly simplifies the program, allowing users to solve problems starting from the abstract layer they're interested in, without having to worry about the underlying details. 
 7. A package system inspired by Go that helps programmers collaborate, maintain their proofs, and easily import others' results.
 
+
+### Impact of AI for Math with Litex  
+
+_Either mathematics is too big for the human mind or the human mind is more than a machine._
+
+_--Kurt Godel_
+
+**The simplicity and elegance of Litex position it as a promising tool for AI in mathematics. Its clean and straightforward design minimizes ambiguity when converting natural language mathematics into formal proofs, making the process no harder than translating pseudocode into Python.**
+
+Litex revolutionizes AI for mathematics in three key ways. First, it eliminates the reliance on human-generated data by dramatically improving the efficiency of translating math textbooks into formalized representations. This creates datasets that scale in both breadth—matching the volume of existing textbooks—and depth, covering advanced mathematics previously difficult to formalize. Such capability bypasses the historical challenges of formal languages, which were often hindered by their complexity and lack of accessible datasets.
+
+Second, Litex’s simplicity bridges the gap between humans and machines. Its human-readable yet machine-friendly design fosters seamless collaboration, allowing mathematicians to focus on creativity while AI handles formalization and verification, accelerating discovery.
+
+<!-- I should mention reward function here. -->
+
+Finally, Litex significantly enhances machine reasoning quality. With access to vast, high-quality datasets and the ability to formalize complex proofs effortlessly, AI can autonomously tackle advanced theorems and even discover proofs independently, pushing the boundaries of mathematical reasoning.
+
 ### What's to be expected.
 
 _We shape our tools, and thereafter our tools shape us._
