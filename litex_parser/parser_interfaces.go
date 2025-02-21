@@ -35,7 +35,8 @@ func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
 func (s *InlineIfFactStmt) stmt()           {}
-func (s *InlineForallStmt) stmt()           {}
+
+// func (s *InlineForallStmt) stmt()           {}
 
 type FactStmt interface {
 	factStmt()
@@ -46,7 +47,8 @@ func (l *BlockForallStmt) factStmt()  {}
 func (r *RelationFactStmt) factStmt() {}
 func (p *FuncPropStmt) factStmt()     {}
 func (p *InlineIfFactStmt) factStmt() {}
-func (p *InlineForallStmt) factStmt() {}
+
+// func (p *InlineForallStmt) factStmt() {}
 
 type BaseFactStmt interface {
 	notFactStmtSetT(b bool)
@@ -141,4 +143,5 @@ type InlineFactStmt interface {
 func (r *RelationFactStmt) inlineFactStmt() {}
 func (p *FuncPropStmt) inlineFactStmt()     {}
 func (p *InlineIfFactStmt) inlineFactStmt() {}
-func (p *InlineForallStmt) inlineFactStmt() {}
+
+// func (p *InlineForallStmt) inlineFactStmt() {}

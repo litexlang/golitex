@@ -99,6 +99,11 @@ In programming, we can create as many variables as we want with no restriction. 
 
 In Litex, existence is a special kind of proposition. The only differences is that users can "call" a existence-proposition and introduce new variables. Read user manual for more details.
 
+4. **What does "call a function" mean?**
+In programming, people encapsulate a piece of logic into a function and use it by passing variables and calling its name. In Litex, there is nothing about "function execution" because function name in math is nothing by a symbols that binds different other symbols together. The only difference between symbols that represent variables and functions is that symbols representing functions are written before () and other symbols are written inside (). However, execution do happen when the user call a proposition. For example, when the user inputs "Socrates is human", the interpreter searches all existing specific and forall facts related to human and watches if Socrates is human can be derived.
+
+5. **Nothing is behind the scenes**
+
 ## Syntax and Semantics
 
 _Beautiful is better than ugly._

@@ -128,14 +128,14 @@ type ThmStmt struct {
 
 // TODO 需要写一下 什么类型的事实写成什么样
 type InlineIfFactStmt struct {
-	condFacts []InlineFactStmt
+	condFacts []FactStmt
 	thenFacts []BaseFactStmt
 }
 
 // forall []() cond {then}
-type InlineForallStmt struct {
-	typeParams []TypeConceptPair
-	varParams  []StrTypePair
-	cond       []InlineFactStmt
-	then       []BaseFactStmt
-}
+// type InlineForallStmt struct {
+// 	typeParams []TypeConceptPair
+// 	varParams  []StrTypePair
+// 	cond       []InlineFactStmt
+// 	then       []BaseFactStmt
+// }

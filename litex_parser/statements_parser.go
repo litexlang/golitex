@@ -333,7 +333,7 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	return stmt.parseInlineFactStmt()
 }
 
-func (stmt *TokenBlock) parseInlineFactStmt() (InlineFactStmt, error) {
+func (stmt *TokenBlock) parseInlineFactStmt() (FactStmt, error) {
 	if stmt.Header.is(Keywords["if"]) {
 		return stmt.parseInlineIfFactStmt()
 	} else if stmt.Header.is(Keywords["forall"]) {
@@ -343,7 +343,7 @@ func (stmt *TokenBlock) parseInlineFactStmt() (InlineFactStmt, error) {
 	return stmt.parseBaseFactStmt()
 }
 
-func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallStmt, error) {
+func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 	err := stmt.Header.skip(Keywords["forall"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -351,7 +351,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallStmt, error) {
 
 	typeParams := &[]TypeConceptPair{}
 	varParams := &[]StrTypePair{}
-	condFacts := []InlineFactStmt{}
+	condFacts := []FactStmt{}
 	thenFacts := []BaseFactStmt{}
 
 	typeParams, varParams, err = stmt.Header.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
@@ -392,7 +392,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*InlineForallStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &InlineForallStmt{*typeParams, *varParams, condFacts, thenFacts}, nil
+	return &BlockForallStmt{*typeParams, *varParams, condFacts, thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseBaseFactStmt() (BaseFactStmt, error) {
@@ -1062,7 +1062,7 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*InlineIfFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	condFacts := []InlineFactStmt{}
+	condFacts := []FactStmt{}
 	for !stmt.Header.is(BuiltinSyms["{"]) {
 		fact, err := stmt.parseInlineFactStmt()
 		if err != nil {

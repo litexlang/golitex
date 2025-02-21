@@ -137,3 +137,4 @@ know EMPTYSET.size = 0
 2.21
 1. There are only a relatively small number of famous software written in functional programming languages. A huge reason is that they are poor at modularity. They require the user to be smart enough, they encourage the programmer to write "smart" while unmaintainable code.
 2. Functional languages are by themselves hard to understand. People can write locally smart code while write globally unsustainable code. Math is already very hard, traditional formal proof languages which all based on functional programming languages makes it even harder.
+3. I think the separation of passing type and passing interface (in C++, it means passing template in <> and pass variables in ()) is really necessary. Type can be "guessed" by the interpreter from the variables, but variables are called only when they are called.
