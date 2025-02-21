@@ -24,15 +24,15 @@
 
 ## About
 
-_That language is an instrument of human reason, and not merely a medium for the expression of thought, is a truth generally admitted._
+_That language is an instrument of human reason, and not merely a medium for the expression of thought._
 
 _–- George Boole_
 
-LiTeX is a formal proof verification system designed for everyone. It seeks to manage the increasing level of abstraction and complexity in mathematics and help everyone, ranging from mathematicians, AI experts to high-school students, benefit from automated verification.
+**LiTeX is a formal proof verification system designed for everyone. It seeks to manage the increasing level of abstraction and complexity in mathematics and help everyone, ranging from mathematicians, AI experts to high-school students, benefit from automated verification.**
 
 **Since even children can express mathematics naturally, there must exist a design for a formal language that allows anyone to quickly understand and use it. The goal of Litex is to invent such a language. The implementation approach leverages a profound understanding of the commonalities and distinctions between formal languages and mathematics.** 
 
-Litex is designed to be as simple and intuitive as Python or LaTeX, with a minimal learning curve. Users can rely on common sense rather than complex theories like type theory to write Litex, making mathematical rigor and reliability accessible to everyone.
+**Litex is designed to be as simple and intuitive as Python or LaTeX, with a minimal learning curve. Users can rely on common sense rather than complex theories like type theory to write Litex, making mathematical rigor and reliability accessible to everyone.**
 
 ## Design principles of Litex
 
@@ -196,11 +196,11 @@ _We must know. We will know.._
 
 _--David Hilbert_
 
-**Litex’s elegance and minimalism make it uniquely suited for AI-driven mathematics. Unlike traditional formal languages, which are too complex for LLMs to translate math textbooks effectively, Litex’s clean syntax drastically reduces ambiguity when converting natural language into formal proofs. This process becomes as straightforward as translating pseudocode into Python, while preserving full mathematical rigor. Litex thus bridges the gap between human-readable math and machine-verifiable proofs, enabling scalable and accurate formalization. Accurate formalization of hundreds of math textbooks by LLMs can be expected.**
+**Litex's simplicity and clarity make it ideal for AI-driven mathematics. Its clean syntax minimizes ambiguity when converting natural language into formal proofs, making the process as straightforward as translating pseudocode into Python while preserving mathematical rigor. This automation is key to scaling up mathematical pipelines, enabling the translation of vast numbers of math textbooks and papers into formal languages, which enriches datasets and supports large-scale automation.**
 
-Verification via formal language is key to the reward function in RL training for models like DeepSeek-r1, AlphaProof, and AlphaGeometry. Litex acts as a cross-model framework, streamlining verification and enabling scalable, precise training for increasingly complex models.
+**In the training stage, Litex's automation is equally transformative. Formal language verification is essential for the reward function in RL training for models like DeepSeek-r1, AlphaProof, and AlphaGeometry. Currently, human supervision is required to ensure logical correctness, but this approach doesn't scale. Litex, as a software tool, provides automatic verification, making it a highly compatible and extensible solution. It acts as a cross-model framework, streamlining verification and enabling scalable, precise training for increasingly complex models.**
 
-**With vast high-quality datasets and Litex’s expressiveness, AI systems will gain unprecedented capacity for exploring advanced theorems. The resulting feedback loop -- machines propose proofs and refine strategies autonomously -- pushes mathematical reasoning into uncharted territories.**
+**With access to extensive high-quality datasets and Litex's expressive power, AI systems will gain unprecedented capabilities in exploring advanced theorems. This creates a feedback loop where machines autonomously propose and refine proofs, pushing the boundaries of mathematical reasoning into uncharted territories.**
 
 
 ## What's to be expected.
@@ -209,7 +209,7 @@ _We shape our tools, and thereafter our tools shape us._
 
 _-- Marshall McLuhan_
 
-The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming. Individuals no longer have to worry about hard-to-detect, potentially fatal proof errors that can undermine their work. Huge efforts can be saved by just adopting Litex. 
+The computer revolution is the revolution of automation. People do not need to pay attention to repetitive parts of their work and only focus on the creative part. The ultimate potential of Litex is to revolutionize the math community by transitioning from traditional paper-pencil methods to computer programming, empower them with automatic verification. Individuals no longer have to worry about hard-to-detect, potentially fatal proof errors that can undermine their work. Huge efforts can be saved by just adopting Litex. 
 
 When studying a new area, the most overwhelming part is often learning its conventions—symbols, basic theorems, and concepts. Authors may assume you know these, but gaps can make proofs hard to follow. **With Litex, relationships between symbols can be visualized or guided by the IDE, allowing you to easily jump to definitions. The Litex Interpreter verifies each step, helping you stay on track even with unfamiliar proofs. This showcases the potential of "math in the digital age.".**
 
