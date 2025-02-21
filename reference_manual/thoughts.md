@@ -59,6 +59,8 @@ def vector_add(v1, v2):
 13. such expression as "S is a set of variables of type Y" occurs very often. in litex it writes like
 var S Set:
     $Set.type[Y]
+
+2.20
 14.The essence of the concept and type system in Litex is to break down a set represented by composed symbols in natural language into simpler **concepts** and **types**. This process is analogous to decomposing a complex structure (like a `struct` in programming) into smaller, more manageable substructures. Just as you might access a member of a higher-level struct using multiple dots (e.g., `structA.structB.member`), Litex allows you to retrieve or define components of a higher-level concept by breaking it down into its constituent parts.
 
 ### Example Breakdown:
@@ -69,7 +71,7 @@ Given the expression:
    A product space is a concept that consists of two sets, `left` and `right`.  
    ```plaintext
    concept product_space:
-       type_member:
+    nnn   type_member:
            var left set
            var right set
    ```
@@ -117,3 +119,21 @@ e.g.
     2. no need to worry about traditional sense of efficiency of Litex(because many "speed tests" use speed of loops and if-elses to measure)
 
 18. claim == writing return value on the top line of a "function"
+
+19. type overload == type implement interface in go == type impl concept. 
+e.g. // Builtin concepts and types
+concept OrdinalNumber
+concept Set:
+    type_member:
+        var size OrdinalNumber
+know Nat impl OrdinalNumber
+
+// a set is finite
+$Nat(s)
+// empty set
+set EMPTYSET
+know EMPTYSET.size = 0
+
+2.21
+1. There are only a relatively small number of famous software written in functional programming languages. A huge reason is that they are poor at modularity. They require the user to be smart enough, they encourage the programmer to write "smart" while unmaintainable code.
+2. Functional languages are by themselves hard to understand. People can write locally smart code while write globally unsustainable code. Math is already very hard, traditional formal proof languages which all based on functional programming languages makes it even harder.
