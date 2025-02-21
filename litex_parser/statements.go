@@ -127,7 +127,7 @@ type ThmStmt struct {
 }
 
 // TODO 需要写一下 什么类型的事实写成什么样
-type InlineIfFactStmt struct {
+type IfFactStmt struct {
 	condFacts []FactStmt
 	thenFacts []BaseFactStmt
 }
