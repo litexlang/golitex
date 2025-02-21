@@ -20,7 +20,10 @@ func NewSpecificFactMemory() *SpecificFactMemory {
 
 type SpecFactMemEntry struct{ Facts []SpecMemFact }
 
-type SpecMemFact struct{ Fact parser.BaseFactStmt }
+type SpecMemFact struct {
+	cond *[]parser.FactStmt  // use pointer to share memory
+	then parser.BaseFactStmt // second field is single statement not []
+}
 
 type ForallFactMemory struct{ Entires map[string]ForallFactMemEntry }
 
@@ -30,7 +33,12 @@ func NewForallFactMemory() *ForallFactMemory {
 
 type ForallFactMemEntry struct{ Facts []ForallMemFact }
 
-type ForallMemFact struct{ Fact parser.BlockForallStmt }
+type ForallMemFact struct {
+	typeParams *[]parser.TypeConceptPair
+	varParams  *[]parser.StrTypePair
+	cond       *[]parser.FactStmt
+	then       *[]parser.BaseFactStmt
+}
 
 type VarMemory struct{ Entries map[string]VarMemoryEntry }
 
