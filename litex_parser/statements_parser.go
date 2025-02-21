@@ -1056,7 +1056,7 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 	return &ThmStmt{decl, *facts}, nil
 }
 
-func (stmt *TokenBlock) parseInlineIfFactStmt() (*InlineIfFactStmt, error) {
+func (stmt *TokenBlock) parseInlineIfFactStmt() (*IfFactStmt, error) {
 	err := stmt.Header.skip(Keywords["if"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -1099,5 +1099,5 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*InlineIfFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &InlineIfFactStmt{condFacts, thenFacts}, nil
+	return &IfFactStmt{condFacts, thenFacts}, nil
 }

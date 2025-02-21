@@ -71,15 +71,13 @@ _The computer revolution is a revolution in the way we think and in the way we e
 
 _-- Structure and Interpretation of Computer Programs_
 
-Previous formal languages failed to recognize the subtle differences between math and programming. Key properties of math were not fully exploited to improve syntax and semantics, while the automation potential offered by programming was not fully utilized.
-
-**Litex thrives in the sunlight of the common ground between math and programming, while also growing in the subtle gaps that highlight their differences.**
+**LiTeX thrives in the intersection of mathematics and programming, leveraging their common ground to enable formal verification. However, what truly sets LiTeX apart is its focus on the subtle differences between the two fields. While the shared foundation allows for formal proving, it is LiTeX's attention to these distinctions that makes it unique compared to previous formal languages.**
 
 1. **Litex is a verifier. It is a domain-specific language rather than a general-purpose language.**
 
 **LiTeX is designed to closely align with the field of mathematics. Each LiTeX expression only returns "true", "false", "unknown", or "error". Execution in LiTeX is about validating formalized reasoning, rather than performing arbitrary calculations or controlling the flow of operations. For instance, no one would manually iterate 10,000 times to construct a proof. Instead, such iteration is encapsulated as a single formal step using keyword `forall`. This is how people typically work in mathematics, and it's also how LiTeX operates.**
 
-**This makes LiTeX a domain - specific language tailored for verification, unlike general-purpose programming languages such as C or Python. In many respects, LiTeX functions more like a regular expression matcher, as it validates structured statements according to formal rules. Adding unnecessary features will only reduce its expressive power.**
+**This makes LiTeX a domain - specific language tailored for verification, unlike general-purpose programming languages such as Lean4 or Coq. Previous formal languages, while better at formalizing proofs than mainstream languages like C or Python, are still general-purpose. This forces them to handle both execution/control-flow and verification, making their syntax cumbersome. LiTeX, free from the burden of execution, operates more like a regex matcher, validating structured statements against formal rules. Adding unnecessary features would only weaken its expressive power. Execution in LiTeX is possible but is handled through plugins, not the language itself.**
 
 1. **Function as symbol combination, not an algorithm for future execution**
 
@@ -103,6 +101,7 @@ In Litex, existence is a special kind of proposition. The only differences is th
 In programming, people encapsulate a piece of logic into a function and use it by passing variables and calling its name. In Litex, there is nothing about "function execution" because function name in math is nothing by a symbols that binds different other symbols together. The only difference between symbols that represent variables and functions is that symbols representing functions are written before () and other symbols are written inside (). However, execution do happen when the user call a proposition. For example, when the user inputs "Socrates is human", the interpreter searches all existing specific and forall facts related to human and watches if Socrates is human can be derived.
 
 5. **Nothing is behind the scenes**
+In mathematical verification, every step of the verification process is explicitly written. What you write is exactly, not more, not less, than what you have written. In programming, you might write while loops, and may thousands of steps of execution is "represented" by this while loop. Or you might write if-else, and when in actual execution, only some branch is visited.
 
 ## Syntax and Semantics
 
