@@ -77,7 +77,7 @@ Previous formal languages failed to recognize the subtle differences between mat
 
 1. **Litex is a verifier. It is a domain-specific language rather than a general-purpose language.**
 
-**LiTeX is designed to closely align with the field of mathematics. Each LiTeX expression only returns "true", "false", "unknown", or "error". Execution in LiTeX is about validating formalized reasoning, rather than performing arbitrary calculations or controlling the flow of operations. For instance, no one would manually iterate 10,000 times to construct a proof. Instead, the iteration is encapsulated as a single formal step. This is how people typically work in mathematics, and it's also how LiTeX operates.**
+**LiTeX is designed to closely align with the field of mathematics. Each LiTeX expression only returns "true", "false", "unknown", or "error". Execution in LiTeX is about validating formalized reasoning, rather than performing arbitrary calculations or controlling the flow of operations. For instance, no one would manually iterate 10,000 times to construct a proof. Instead, such iteration is encapsulated as a single formal step using keyword `forall`. This is how people typically work in mathematics, and it's also how LiTeX operates.**
 
 **This makes LiTeX a domain - specific language tailored for verification, unlike general-purpose programming languages such as C or Python. In many respects, LiTeX functions more like a regular expression matcher, as it validates structured statements according to formal rules. Adding unnecessary features will only reduce its expressive power.**
 
