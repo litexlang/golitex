@@ -157,4 +157,6 @@ know x real, y real:
         y < 0
     then:
         x + y < x
-$$
+
+2.22
+1. never try to pass parameters to types. Such Type< Type< Type<> >, Type<>> would not lead to necessary complexity. People never get used to generics programming. Stick to one word type name like C instead.
