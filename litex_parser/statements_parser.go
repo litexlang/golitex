@@ -350,7 +350,7 @@ func (stmt *TokenBlock) parseInlineFactStmt() (FactStmt, error) {
 		return stmt.parseInlineForallStmt()
 	}
 
-	return stmt.parseBaseFactStmt()
+	return stmt.parseInstantiatedFactStmt()
 }
 
 func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
@@ -362,7 +362,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 	typeParams := &[]TypeConceptPair{}
 	varParams := &[]StrTypePair{}
 	condFacts := []FactStmt{}
-	thenFacts := []BaseFactStmt{}
+	thenFacts := []InstantiatedFactStmt{}
 
 	typeParams, varParams, err = stmt.Header.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
 	if err != nil {
@@ -387,7 +387,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 	}
 
 	for !stmt.Header.is(BuiltinSyms["}"]) {
-		fact, err := stmt.parseBaseFactStmt()
+		fact, err := stmt.parseInstantiatedFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -405,7 +405,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 	return &BlockForallStmt{*typeParams, *varParams, condFacts, thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseBaseFactStmt() (BaseFactStmt, error) {
+func (stmt *TokenBlock) parseInstantiatedFactStmt() (InstantiatedFactStmt, error) {
 	isTrue := true
 	if stmt.Header.is(BuiltinSyms["not"]) {
 		err := stmt.Header.skip(BuiltinSyms["not"])
@@ -415,7 +415,7 @@ func (stmt *TokenBlock) parseBaseFactStmt() (BaseFactStmt, error) {
 		isTrue = false
 	}
 
-	var ret BaseFactStmt
+	var ret InstantiatedFactStmt
 	var err error = nil
 	if stmt.Header.is(BuiltinSyms["$"]) {
 		ret, err = stmt.parseFuncPropertyFactStmt()
@@ -465,7 +465,7 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 	}
 
 	ifFacts := &[]FactStmt{}
-	thenFacts := &[]BaseFactStmt{}
+	thenFacts := &[]InstantiatedFactStmt{}
 
 	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(Keywords["cond"]) {
 		ifFacts, err = stmt.Body[0].parseForallCondFactsBlock()
@@ -474,7 +474,7 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 		}
 
 		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(Keywords["then"]) {
-			thenFacts, err = stmt.Body[1].parseBaseFactsBlock()
+			thenFacts, err = stmt.Body[1].parseInstantiatedFactsBlock()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
@@ -482,7 +482,7 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 			return nil, fmt.Errorf("expected 'then'")
 		}
 	} else {
-		thenFacts, err = stmt.parseBaseFactsBlock()
+		thenFacts, err = stmt.parseInstantiatedFactsBlock()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -557,15 +557,15 @@ func (stmt *TokenBlock) parseForallCondFactsBlock() (*[]FactStmt, error) {
 // 	return facts, nil
 // }
 
-func (stmt *TokenBlock) parseBaseFactsBlock() (*[]BaseFactStmt, error) {
-	facts := &[]BaseFactStmt{}
+func (stmt *TokenBlock) parseInstantiatedFactsBlock() (*[]InstantiatedFactStmt, error) {
+	facts := &[]InstantiatedFactStmt{}
 	stmt.Header.skip()
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
 	for _, curStmt := range stmt.Body {
-		fact, err := curStmt.parseBaseFactStmt()
+		fact, err := curStmt.parseInstantiatedFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -989,7 +989,7 @@ func (stmt *TokenBlock) parseTypeMemberStmt() (*DefTypeMemberStmt, error) {
 	return &DefTypeMemberStmt{typeConcept, decl, *facts}, nil
 }
 
-func (stmt *TokenBlock) parseRelationalFactStmt() (BaseFactStmt, error) {
+func (stmt *TokenBlock) parseRelationalFactStmt() (InstantiatedFactStmt, error) {
 	fc, err := stmt.Header.ParseFc()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -1085,7 +1085,7 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*IfFactStmt, error) {
 		}
 	}
 
-	thenFacts := []BaseFactStmt{}
+	thenFacts := []InstantiatedFactStmt{}
 
 	err = stmt.Header.skip(BuiltinSyms["{"])
 	if err != nil {
@@ -1093,7 +1093,7 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*IfFactStmt, error) {
 	}
 
 	for !stmt.Header.is(BuiltinSyms["}"]) {
-		fact, err := stmt.parseBaseFactStmt()
+		fact, err := stmt.parseInstantiatedFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -1126,10 +1126,10 @@ func (stmt *TokenBlock) parseBlockIfStmt() (*IfFactStmt, error) {
 	}
 
 	condFacts := []FactStmt{}
-	thenFacts := []BaseFactStmt{}
+	thenFacts := []InstantiatedFactStmt{}
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
-		fact, err := stmt.Body[i].parseBaseFactStmt()
+		fact, err := stmt.Body[i].parseInstantiatedFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -1146,7 +1146,7 @@ func (stmt *TokenBlock) parseBlockIfStmt() (*IfFactStmt, error) {
 	}
 
 	for i := len(stmt.Body[len(stmt.Body)-1].Body) - 1; i >= 0; i-- {
-		fact, err := stmt.Body[len(stmt.Body)-1].Body[i].parseBaseFactStmt()
+		fact, err := stmt.Body[len(stmt.Body)-1].Body[i].parseInstantiatedFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}

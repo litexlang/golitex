@@ -9,26 +9,27 @@ import (
 )
 
 type Env struct {
-	Parent           *Env
-	VarMemory        memory.VarMemory
-	PropertyMemory   memory.PropertyMemory
-	FnMemory         memory.FnMemory
-	AliasMemory      memory.AliasMemory
-	SpecFactMemory   memory.SpecificFactMemory
-	ForallFactMemory memory.ForallFactMemory
-	VarTypeMemory    memory.FcVarTypeMemory
+	Parent                 *Env
+	VarMemory              memory.VarMemory
+	PropertyMemory         memory.PropertyMemory
+	FnMemory               memory.FnMemory
+	AliasMemory            memory.AliasMemory
+	InstantiatedFactMemory memory.InstantiatedFactMemory
+	ConditionalFactMemory  memory.ConditionalFactMemory
+	UniversalFactMemory    memory.UniversalFactMemory
+	VarTypeMemory          memory.FcVarTypeMemory
 }
 
 func NewEnv() *Env {
 	return &Env{
-		Parent:           nil,
-		VarMemory:        *memory.NewVarMemory(),
-		PropertyMemory:   *memory.NewPropertyMemory(),
-		FnMemory:         *memory.NewFnMemory(),
-		AliasMemory:      *memory.NewAliasMemory(),
-		SpecFactMemory:   *memory.NewSpecificFactMemory(),
-		ForallFactMemory: *memory.NewForallFactMemory(),
-		VarTypeMemory:    *memory.NewFcVarTypeMemory(),
+		Parent:                 nil,
+		VarMemory:              *memory.NewVarMemory(),
+		PropertyMemory:         *memory.NewPropMemory(),
+		FnMemory:               *memory.NewFnMemory(),
+		AliasMemory:            *memory.NewAliasMemory(),
+		InstantiatedFactMemory: *memory.NewInstantiatedFactMemory(),
+		UniversalFactMemory:    *memory.NewUniversalFactMemory(),
+		VarTypeMemory:          *memory.NewFcVarTypeMemory(),
 	}
 }
 

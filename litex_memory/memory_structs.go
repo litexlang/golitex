@@ -12,23 +12,39 @@ func (e *MemoryErr) Error() string {
 	return e.err.Error()
 }
 
-type SpecificFactMemory struct{ Entries map[string]SpecFactMemEntry }
-
-func NewSpecificFactMemory() *SpecificFactMemory {
-	return &SpecificFactMemory{Entries: map[string]SpecFactMemEntry{}}
+type InstantiatedFactMemory struct {
+	Entries map[string]InstantiatedFactMemEntry
 }
 
-type SpecFactMemEntry struct{ Facts []SpecMemFact }
-
-type SpecMemFact struct {
-	cond *[]parser.FactStmt  // use pointer to share memory
-	then parser.BaseFactStmt // second field is single statement not []
+func NewInstantiatedFactMemory() *InstantiatedFactMemory {
+	return &InstantiatedFactMemory{Entries: map[string]InstantiatedFactMemEntry{}}
 }
 
-type ForallFactMemory struct{ Entires map[string]ForallFactMemEntry }
+type InstantiatedFactMemEntry struct{ Facts []InstantiatedMemoryFact }
 
-func NewForallFactMemory() *ForallFactMemory {
-	return &ForallFactMemory{map[string]ForallFactMemEntry{}}
+type InstantiatedMemoryFact struct {
+	then parser.InstantiatedFactStmt // second field is single statement not []
+}
+
+type ConditionalFactMemory struct {
+	Entries map[string]ConditionalFactMemoryEntry
+}
+
+func NewConditionalFactMemory() *ConditionalFactMemory {
+	return &ConditionalFactMemory{Entries: map[string]ConditionalFactMemoryEntry{}}
+}
+
+type ConditionalFactMemoryEntry struct{ Facts []ConditionalFactMemoryFact }
+
+type ConditionalFactMemoryFact struct {
+	cond *[]parser.FactStmt
+	then parser.FactStmt
+}
+
+type UniversalFactMemory struct{ Entires map[string]ForallFactMemEntry }
+
+func NewUniversalFactMemory() *UniversalFactMemory {
+	return &UniversalFactMemory{map[string]ForallFactMemEntry{}}
 }
 
 type ForallFactMemEntry struct{ Facts []ForallMemFact }
@@ -37,7 +53,7 @@ type ForallMemFact struct {
 	typeParams *[]parser.TypeConceptPair
 	varParams  *[]parser.StrTypePair
 	cond       *[]parser.FactStmt
-	then       *[]parser.BaseFactStmt
+	then       *[]parser.InstantiatedFactStmt
 }
 
 type VarMemory struct{ Entries map[string]VarMemoryEntry }
@@ -55,7 +71,7 @@ type PropertyMemory struct {
 	Entires map[string]PropertyMemoryEntry
 }
 
-func NewPropertyMemory() *PropertyMemory {
+func NewPropMemory() *PropertyMemory {
 	return &PropertyMemory{map[string]PropertyMemoryEntry{}}
 }
 

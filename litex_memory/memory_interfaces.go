@@ -4,5 +4,5 @@ type MemFact interface {
 	MemFact()
 }
 
-func (m *SpecMemFact) MemFact()   {}
-func (m *ForallMemFact) MemFact() {}
+func (m *InstantiatedMemoryFact) MemFact() {}
+func (m *ForallMemFact) MemFact()          {}
