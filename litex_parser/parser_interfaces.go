@@ -50,11 +50,10 @@ func (p *IfFactStmt) factStmt()       {}
 
 // func (p *InlineForallStmt) factStmt() {}
 
-type BaseFactStmt interface {
+type InstantiatedFactStmt interface {
 	notFactStmtSetT(b bool)
 	factStmt()
 	stmt()
-	inlineFactStmt()
 }
 
 func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.isTrue = b }

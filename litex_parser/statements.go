@@ -56,7 +56,7 @@ type BlockForallStmt struct {
 	typeParams []TypeConceptPair
 	varParams  []StrTypePair
 	cond       []FactStmt
-	then       []BaseFactStmt
+	then       []InstantiatedFactStmt
 }
 
 type FuncPropStmt struct {
@@ -98,7 +98,7 @@ type DefExistStmt struct {
 }
 
 type HaveStmt struct {
-	propertyStmt BaseFactStmt
+	propertyStmt InstantiatedFactStmt
 	member       []string
 }
 
@@ -129,7 +129,7 @@ type ThmStmt struct {
 // TODO 需要写一下 什么类型的事实写成什么样
 type IfFactStmt struct {
 	condFacts []FactStmt
-	thenFacts []BaseFactStmt
+	thenFacts []InstantiatedFactStmt
 }
 
 // forall []() cond {then}
