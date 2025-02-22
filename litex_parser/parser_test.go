@@ -1025,7 +1025,10 @@ type impl EuclidSpace var A S:	// type name is G, A is name for "self"
 		$S(A)
 		know $Group(G)
 
-	
+if:
+	Socratic is human
+	then:
+		Socratic is mortal	
 `
 
 	statements, err := ParserTester(code)

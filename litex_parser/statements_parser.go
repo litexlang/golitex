@@ -328,9 +328,19 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	if stmt.Header.is(Keywords["forall"]) {
 		return stmt.parseForallStmt()
+	} else if stmt.Header.is(Keywords["if"]) {
+		return stmt.parseIfStmt()
 	}
 
 	return stmt.parseInlineFactStmt()
+}
+
+func (stmt *TokenBlock) parseIfStmt() (FactStmt, error) {
+	if stmt.Header.strAt(-1) == BuiltinSyms[":"] {
+		return stmt.parseBlockIfStmt()
+	} else {
+		return stmt.parseInlineIfFactStmt()
+	}
 }
 
 func (stmt *TokenBlock) parseInlineFactStmt() (FactStmt, error) {
@@ -1097,6 +1107,50 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*IfFactStmt, error) {
 	err = stmt.Header.skip(BuiltinSyms["}"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	return &IfFactStmt{condFacts, thenFacts}, nil
+}
+
+func (stmt *TokenBlock) parseBlockIfStmt() (*IfFactStmt, error) {
+	err := stmt.Header.skip(Keywords["if"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+	err = stmt.Header.skip(BuiltinSyms[":"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+	if !stmt.Header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
+	}
+
+	condFacts := []FactStmt{}
+	thenFacts := []BaseFactStmt{}
+
+	for i := 0; i < len(stmt.Body)-1; i++ {
+		fact, err := stmt.Body[i].parseBaseFactStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		condFacts = append(condFacts, fact)
+	}
+
+	err = stmt.Body[len(stmt.Body)-1].Header.skip(Keywords["then"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+	err = stmt.Body[len(stmt.Body)-1].Header.skip(BuiltinSyms[":"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	for i := len(stmt.Body[len(stmt.Body)-1].Body) - 1; i >= 0; i-- {
+		fact, err := stmt.Body[len(stmt.Body)-1].Body[i].parseBaseFactStmt()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		thenFacts = append(thenFacts, fact)
 	}
 
 	return &IfFactStmt{condFacts, thenFacts}, nil
