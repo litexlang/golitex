@@ -160,3 +160,4 @@ know x real, y real:
 
 2.22
 1. never try to pass parameters to types. Such Type< Type< Type<> >, Type<>> would not lead to necessary complexity. People never get used to generics programming. Stick to one word type name like C instead.
+2. Maybe my readme for now is a good introduction of Litex when Litex is well-known. But certainly, for now, my readme is just too hard to understand and my focus on "design philosophy" seems to be very strange and lofty when nothing concrete is introduced.
