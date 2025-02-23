@@ -5,14 +5,14 @@
 e.g.
 concept Rn S:   // suppose S is a Rn
     type_member:
-        var dim Pos_Nat // dim is positive natural number
+        var dim Nat // dim is positive natural number
     member:
-        fn \_\_at\_\_(n Pos_Nat) Real: // define @, which means the nth index of the vector. Notice the return type is Real
+        fn \_\_at\_\_(n Nat) Real: // define @, which means the nth index of the 
+            cond:
+                n < S.dim
     cond:
         forall v1 S, v2 S:
-            forall k Pos_Nat:
-                cond:
-                    k <= S.dim
+            forall k Nat:
                 (v1 + v2)@k = v1@k + v2@k
         
 
@@ -29,14 +29,14 @@ concept Group G: // suppose G is a group
             v * v.inv() = G.I
             v.inv() * v = G.I
 
-4. The benefit of using concept is that you can write fn [s T] x s, y s to ensure x and y are eql type. The user should define what does x = y mean when x and y are of the same type, just like C++ programmers define == in class.
-5. There is a major difference between template in C++ and concept in Litex: the template T must be initialized when used as parameter of a type. But member of a type of a concept needn't, because it's usually the member, not the instantiation of that member, has relation with other members and has some properties.
-6. = is a special kind of prop. besides facts that the user defines to be equal to =, there are builtin ways to check =: 1. when a and b are literally the same 2. when b is alias of a. 3. you don't need to implement = every time you define a new type, = is automatically generated for you, just like = is automatically by C++ for you when you define a class without defining it.
-7. as for vector plus vector, it works very like how it works in programming:
+1. The benefit of using concept is that you can write fn [s T] x s, y s to ensure x and y are eql type. The user should define what does x = y mean when x and y are of the same type, just like C++ programmers define == in class.
+2. There is a major difference between template in C++ and concept in Litex: the template T must be initialized when used as parameter of a type. But member of a type of a concept needn't, because it's usually the member, not the instantiation of that member, has relation with other members and has some properties.
+3. = is a special kind of prop. besides facts that the user defines to be equal to =, there are builtin ways to check =: 1. when a and b are literally the same 2. when b is alias of a. 3. you don't need to implement = every time you define a new type, = is automatically generated for you, just like = is automatically by C++ for you when you define a class without defining it.
+4. as for vector plus vector, it works very like how it works in programming:
 Litex:
 // Define the result of summing 2 vectors
 know forall [S Rn] v1 S, v2 S:
-    forall k Pos_Nat:
+    forall k Nat:
         cond:
             k <= S.dim
         (v1 + v2)@k = v1@k + v2@k
@@ -49,14 +49,14 @@ def vector_add(v1, v2):
     for i in range(len(v1)):
         result.append(v1[i] + v2[i])
     return result
-8. type in Litex works like set in math. In Litex has one single responsibility: own member and type_member, as in all programming languages. member is owned by variable and type_member is owned by type itself. It's essential for operator overloading. . Actually, type in ordinary programming languages also works like set in math.
-9. concept == type of type
-10. ! I should give user keyword commutative and associative otherwise Litex can not verify (v1 + v2)@k = v2@k + v1@k even we we know (v1 + v2)@k = v1@k + v2@k
-11. IMPORTANT: every time you encounter x of y, it means you should give a member to y called x. That is why OOP is very important in Litex
-12. set is builtin concept, nat and pos_nat and float is builtin type Litex
-13. you can view concept as set of sets; view type as set
-13. the difference between concept and type is concept is a type of type (set of set), and type is one specific set. For example, nat is a type, because there is one set called natural numbers. group is a concept, because there are many groups.
-13. such expression as "S is a set of variables of type Y" occurs very often. in litex it writes like
+1. type in Litex works like set in math. In Litex has one single responsibility: own member and type_member, as in all programming languages. member is owned by variable and type_member is owned by type itself. It's essential for operator overloading. . Actually, type in ordinary programming languages also works like set in math.
+2. concept == type of type
+3.  ! I should give user keyword commutative and associative otherwise Litex can not verify (v1 + v2)@k = v2@k + v1@k even we we know (v1 + v2)@k = v1@k + v2@k
+4.  IMPORTANT: every time you encounter x of y, it means you should give a member to y called x. That is why OOP is very important in Litex
+5.  set is builtin concept, nat and pos_nat and float is builtin type Litex
+6.  you can view concept as set of sets; view type as set
+7.  the difference between concept and type is concept is a type of type (set of set), and type is one specific set. For example, nat is a type, because there is one set called natural numbers. group is a concept, because there are many groups.
+8.  such expression as "S is a set of variables of type Y" occurs very often. in litex it writes like
 var S Set:
     $Set.type[Y]
 
@@ -161,3 +161,11 @@ know x real, y real:
 2.22
 1. never try to pass parameters to types. Such Type< Type< Type<> >, Type<>> would not lead to necessary complexity. People never get used to generics programming. Stick to one word type name like C instead.
 2. Maybe my readme for now is a good introduction of Litex when Litex is well-known. But certainly, for now, my readme is just too hard to understand and my focus on "design philosophy" seems to be very strange and lofty when nothing concrete is introduced.
+
+2.23
+1. type hierarchy makes "a type implements a concept" or "a set satisfies requirements of a set of sets" (e.g. Integers are group. Here integer is a type and group is a concept) extremely hard for the users to write.
+2. people no longer need to worry about naming overload, which occurs very often when you read poorly-written math books
+3. math itself is cot, that is why training LLMs on Litex is very reasonable
+4. A good piece of code or textbooks keeps the reader "guessing" what is next and feeling natural about they does guess correctly. Even when they don't guess correctly, they still quickly understand what is correct and why they failed to guess.
+5. Build connections between 2 packages: first prove 2 things in each package is equivalent (concept, type, prop), then only prove theories about one thing, and at the end of the program says "this theory applies to the other thing"
+6. If you worry facts about one thing are too many, give it a name, and only use the name name to prove theories and at the end of the program says "this theory applies to the other thing".
