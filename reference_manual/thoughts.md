@@ -152,11 +152,41 @@ var shen any
 know shen is human
 shen is mortal
 
-know x real, y real:
+import "real"
+
+know forall x real, y real:
     cond:
         y < 0
     then:
         x + y < x
+
+forall b real:
+    -1 + b < b
+
+-1 + 2 < 2
+
+` vs lean4, litex is much much simpler
+import Mathlib.Data.Real.Basic
+
+theorem add_pos_gt {a b : ℝ} (h : b > 0) : a + b > a :=
+begin
+  calc a + b > a + 0 : by { apply add_lt_add_left, exact h }
+         ... = a     : by { rw add_zero }
+end
+
+-- use add_pos_gt to prove -1 + b < b
+theorem neg_one_add_lt {b : ℝ} (h : b > 0) : -1 + b < b :=
+begin
+  have h1 : -1 + b > -1, from add_pos_gt h,
+  linarith,
+end
+
+example : -1 + 2 < 2 :=
+begin
+  apply neg_one_add_lt,
+  norm_num,
+end
+`
 
 2.22
 1. never try to pass parameters to types. Such Type< Type< Type<> >, Type<>> would not lead to necessary complexity. People never get used to generics programming. Stick to one word type name like C instead.
@@ -169,3 +199,11 @@ know x real, y real:
 4. A good piece of code or textbooks keeps the reader "guessing" what is next and feeling natural about they does guess correctly. Even when they don't guess correctly, they still quickly understand what is correct and why they failed to guess.
 5. Build connections between 2 packages: first prove 2 things in each package is equivalent (concept, type, prop), then only prove theories about one thing, and at the end of the program says "this theory applies to the other thing"
 6. If you worry facts about one thing are too many, give it a name, and only use the name name to prove theories and at the end of the program says "this theory applies to the other thing".
+7. MAJOR UPDATE: interface in go is used to be "implemented" by types. If the type of a given parameter implements the interface(in this case: have all the required methods of that interface). SO CONCEPT ACTUALLY DOES NOT MEAN GENERICS IN LITEX, INSTEAD IT MEANS INTERFACE. HOWEVER, I still should not give up on passing type parameters and just using concept name because 2 types that both implement that concept and I should make sure it is THAT THE SAME type that is used as parameter type.
+e.g. 
+prop group_multiply_commutative\[ G Group\] (g1 G, g2 G):
+    g1 * g2 = g2 * g1
+
+// If only us concept
+prop group_multiply_commutative(g1 Group, g2 Group): // g1 and g2 might belong to 2 different groups, which is not our intention.
+    g1 * g2 = g2 * g1
