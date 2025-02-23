@@ -108,6 +108,9 @@ In mathematical verification, every step of the verification process is explicit
 6. **The interpreter tells the user how a statement is verified, which makes interactive math textbook possible.**
 The Litex interpreter follows strict rules to check the validity of a statement. If the statement is indeed `true`, the interpreter will tell the user how previous `true` statements leads to the correctness of the statement. Just like programmers rely on intellisense to program, soon everyone can take advantage of that functionality to interact with the Litex code and understand math better.
 
+7. **Different meanings of symbols**
+In math, = means equal, which is represented by "==" in programming languages like Python. It works along with < > <= >= as a proposition. In programming, = means "variable initialization". Litex does not require every variable to be initialized because some properties does not rely on initialization.
+
 ## Syntax and Semantics
 
 _Beautiful is better than ugly._
