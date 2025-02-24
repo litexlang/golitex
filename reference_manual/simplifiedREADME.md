@@ -48,35 +48,29 @@ Litex, free from execution constraints, functions like a regex matcher or SQL qu
 ### First Example
 
 
-<table>
+<table style="border-collapse: collapse; width: 100%;">
   <tr>
-    <th width="30%">Litex</th>
-    <th width="30%">Lean 4</th>
-    <th width="40%">Plain English</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 40%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 60%;">Lean 4</th>
   </tr>
   <tr>
-    <td>
-      <code>type Human</code> <br> <br>
-      <code>prop self_aware(x Human)</code> <br> <br>
-      <code>know forall x Human:</code> <br>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>type Human</code> <br><br>
+      <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;x is self_aware</code> <br> <br>
       <code>var Bob Human</code> <br> <br>
       <code>Bob is self_aware</code>
     </td>
-    <td>
+    <td style="border: 3px solid black; padding: 8px;">
       <code>def Human := Type</code> <br><br>
       <code>def self_aware (x : Human) : Prop := true</code> <br><br>
-      <code>axiom self_aware_all : ∀ (x : Human), self_aware x</code> <br><br>
+      <code>axiom self_aware_all :</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;∀ (x : Human), self_aware x</code> <br><br>
       <code>def Bob : Human := Human</code> <br><br>
       <code>example : self_aware Bob := self_aware_all Bob</code>
     </td>
-    <td>
-      <code>Human</code> is a type representing all Humans. <br>
-      In mathematical language, you can think of <code>Human</code> as the set containing all Humans. <br>
-      Self-awareness is a property indicating an object is self-aware. <br>
-      All Humans are self-aware (axiom). <br>
-      Bob is a Human. <br>
-      Therefore, Bob is self-aware.
-    </td>
   </tr>
 </table>
+
+For now, you don't need to understand everything; you only need to conceptually know what it is doing. `Human` is a type representing all humans. Mathematically, you can think of `Human` as the set containing all humans. All humans are set to be `self_aware` by the user as a fact (i.e. true expression) using `know` keyword. `Bob` is `Human`. Therefore, `Bob is self_aware` is a true expression. This is a classic example of syllogism (三段论).
+
