@@ -84,6 +84,8 @@ Litex, free from execution constraints, functions like a regex matcher or SQL qu
 There are different kinds of factual expressions: specific (instantiated), conditional (begin with keyword `if`) and universal expressions (begin with keyword `forall`):
 
 ```plaintext
+// Comments are written after "//".
+
 // specific
 Bob is self_aware
 
@@ -109,8 +111,68 @@ When the user input a universal expression, the interpreter first opens a new pr
 
 When the user inputs a specific expression, the interpreter searches the current proof environment for known facts with the same proposition name. These facts may be specific, conditional, or universal. If the given specific fact exactly matches a known specific fact or satisfies a conditional or universal expression, it is considered true. Otherwise, the specific expression remains unknown.
 
+In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden. Litex, on the other hand, automatically searches all known facts to verify the current input, eliminating the need to manually recall and reference fact names. While users can still name facts if desired, it is no longer mandatory. This approach significantly improves the writing experience and makes Litex code cleaner and more intuitive compared to traditional proof assistants.
+
 When the inverse of input factual expression is true, the interpreter outputs false. When the input does not obey syntax rule of Litex, the interpreter outputs error.
 
 #### Constructive Expressions
 
-Every fact must be associated with some concrete object or entity; it cannot exist independently without being tied to something specific.
+Every fact must be associated with some concrete object or entity; it cannot exist independently without being tied to something specific. There are three kinds of entities in Litex: variable(var), function(fn), and proposition(prop). The user must first declare a variable before using it. Any entity has a type.
+
+<!-- TODO: I have not implemented the type of function and prop yet. -->
+
+```plaintext
+// declare a type
+
+type Human:
+    member:
+        var age Natural
+
+// declare a variable
+
+var Bob Human: // variable name is Bob, variable type is Human
+    Bob.age = 10 // Age of Bob is known by the user to be 10
+
+// declare a function
+
+// input 2 variables with type Real, output variable with type Real
+fn add(a Real, b Real) Real
+
+// declare a proposition
+
+prop younger(a Human, b Human):
+    cond:
+        a.age < b.age
+```
+
+
+
+```plaintext
+// declare a concept
+
+concept Group G: // suppose G is a group
+    type_member:
+        fn __mul__(g G, g2 G) G // define *
+        var I G // define identity
+    member:
+        fn inv() G  // inverse a given group element
+    cond:
+        forall v1 G, v2 G, v3 G: // equivalent to G.__mul__ is associative 
+            (v1 * v2) * v3 = v1 * (v2 * v3)
+        forall v G:
+            v * v.inv() = G.I
+            v.inv() * v = G.I
+
+
+// declare a function with type requirements
+
+fn [G Group] multiply(g G, g2 G) G: // Type G must satisfy concept Group
+    multiply(g, g2) = g * g2
+
+// declare a proposition with type requirements
+
+prop [G Group] element_wise_commutative(g G, g2 G) G:
+    cond:
+        g * g2 = g2 * g
+```
+
