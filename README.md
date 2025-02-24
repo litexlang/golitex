@@ -173,13 +173,15 @@ In programming, a type is typically called a "struct" (in C) or a "class" (in C+
 
 <!-- function that returns new functions or new propositions are not implemented -->
 
+<!-- TODO: below are not well written -->
+
 Everything in Litex is represented by a symbol(a single word). Variables, Functions, Types, propositions are all represented by a single symbol or composited symbol. Function, variable and proposition are called first-class citizens of Litex, because they can be passed to function/proposition parameters and behave as return value.
 
 In mathematics, a variable is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Variables are used in factual expressions. 
 
 Functions in Litex are not executed. Instead, they are just composer of other symbols. Function parameter list can receive first-class citizens. Function type list can receive type concept pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
 
-All specific factual expressions have related proposition name. For example, a = b have related proposition =, a < b have proposition <, red(a) have proposition red, subsetOf(x,y) have related proposition subsetOf. Actually you can view Litex proposition as Functions in mainstream programming languages.
+All specific factual expressions have related proposition name. For example, a = b have related proposition =, a < b have proposition <, red(a) have proposition red, subsetOf(x,y) have related proposition subsetOf. Actually you can view Litex proposition as Functions in mainstream programming languages because the "execution" of a "called proposition" (factual expression) outputs outputs: true, false, error, unknown.
 
 <!-- There is no concept parameter list because you can infinitely iterate over that and If you truly what to bind properties to a concept, you should invent math in Litex and make what you are thinking about in variable and add layer to that variable. -->
 
@@ -215,3 +217,8 @@ prop [G Group] element_wise_commutative(g G, g2 G) G:
         g * g2 = g2 * g
 ```
 
+Types in golang implements interface. Implement means types have required members. Types in Litex implements concept. Implement also means types have required members.
+
+One type might extend another type. For example, complex number extend real number. What does this extend mean? It means there is an injection from all variables from one type to another, and members of type implements the extended type.
+
+If you view type as set, then you might consider one set is another set's subset. For example, the set represented by type1 might be subset of the set represented by type2. In Litex, that means type1 implements type2.
