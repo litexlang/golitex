@@ -207,3 +207,5 @@ prop group_multiply_commutative\[ G Group\] (g1 G, g2 G):
 // If only us concept
 prop group_multiply_commutative(g1 Group, g2 Group): // g1 and g2 might belong to 2 different groups, which is not our intention.
     g1 * g2 = g2 * g1
+
+8. Concepts do not usually come as self-contained entities. On the contrary , most concepts relate to other concepts in a variety of ways

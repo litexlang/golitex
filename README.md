@@ -61,7 +61,9 @@ Mathematics and programming are very similar in terms of **core principles** and
 3. **Both programming and mathematics share a deeply interconnected workflow, blending creativity, precision, and collaboration.**
     For example, programmers run code to test and debug, ensuring it works as intended. Similarly, mathematicians "compile" proofs step by step in their minds, "debugging" potential errors in their logic. With Litex, the "debugging" process here can be automated.
 
-4. **Fundamentally, computer science is the science of abstraction, and math is the study of abstract structures and relationships.**  
+4. **In Litex, each object has a type and a value. The type defines the operations that can be applied to the value and the members the value has. Some types also have related "type_members," similar to how `static` works in C++ classes.  Like in many programming languages, you can use the dot `.` operator to access members of an object**
+
+5. **Fundamentally, computer science is the science of abstraction, and math is the study of abstract structures and relationships.**  
    At their core, programming and mathematical problem-solving address similar problems. Programming has developed robust frameworks like object-oriented programming, modular design, and reusable libraries to manage complexity caused by abstraction. By adopting these principles, mathematics can streamline its processes, making abstract concepts more accessible and easier to handle.
 
 
