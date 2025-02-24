@@ -145,7 +145,16 @@ prop younger(a Human, b Human):
         a.age < b.age
 ```
 
+In Litex, `type` has the following functionalities:
 
+- **Set Membership**:
+The statement var x type_name means that x has the type type_name. Mathematically, this means x belongs to the set called type_name. For example, `var n Real` means n is a real number, i.e., n is in the set of all real numbers. As in most programming languages, every object has a type. However, the object might not have a specific "value" because, in many cases, it is the type of the variable (not its value) that determines its relationships with other objects. For example, no matter what a positive number equals to, it is larger than 0. Since a variable can belong to multiple sets (e.g. 1 is both a real number and a natural number), a variable can have multiple types.
+
+- **Determine Meaning of Operations**:
+Objects of different types support different operations and propositions. For example, when a and b are positive natural numbers, expressions like a^b (multiplying a by itself b times) and a < b are well-defined and meaningful. However, when a and b are matrices, operations like a^b and a < b are not standard notations and may not make sense. Importantly, an object should never be passed to a proposition or function if the parameter types do not match the type of that object. This ensures that operations and functions are applied only in contexts where they are well-defined.
+
+- **Own Members**:
+In programming, a type is typically called a "struct" (in C) or a "class" (in C++ or Python). Objects of different types can have different members. For example, a human Bob might have an attribute Bob.age. Additionally, the type itself can have members. For example, `S Rn` means S is an Euclidean space and S.dim could represent the dimension of the space.
 
 ```plaintext
 // declare a concept
