@@ -18,11 +18,18 @@ Traditional proof assistants lack the fluidity and ease needed to scale formal p
 
 Litex has the potential to greatly impact both mathematics and AI:
 
-- **For Mathematics**: It simplifies complex proofs and ensures correctness, eliminating the need for paper reviews. This enables trust and large-scale collaboration, like a "GitHub for Math," and supports interactive math textbooks.
+- **For Mathematics**: 
+  - **For individual researchers**, it provides peace of mind by reducing the risk of subtle errors undermining their proofs.
+  - **For the whole mathematics community**, since Litex ensures correctness, the need for paper reviews is eliminated. This fosters trust and enables large-scale collaboration, akin to a "GitHub for Math," while also supporting interactive math textbooks.
 
-- **For AI**: It improves formal reasoning and proof automation, essential for AI training. Its simplicity will attract users, increasing the availability of formal datasets, which are currently limited.
+- **For AI**:
+  - **More Formal Data**:
+Because Litex is an order of magnitude simpler than traditional proof assistants, LLMs may require far fewer datasets to develop the ability to translate existing mathematics into Litex, accelerating formal data growth. The potential large user community also helps provide high-quality data.
 
-In short, Litex can transform math collaboration and boost AI's reasoning with more formal data. The core of Litex is simplicity.
+  - **Automated Verification**:
+Litex can automatically verify LLM outputs for math problems, providing a reliable way to validate and refine their reasoning. This capability is crucial for improving the accuracy and robustness of LLMs in mathematical tasks.
+
+In short, Litex can transform workflow and collaboration of mathematicians. It boost AI's reasoning with more formal data and a super efficient verifier. More people will adopt Litex because of its simplicity and powerful capabilities.
 
 ## Getting Started
 
