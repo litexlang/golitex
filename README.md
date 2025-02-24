@@ -132,7 +132,7 @@ When the inverse of input factual expression is true, the interpreter outputs fa
 
 Every fact must be associated with some concrete object or entity; it cannot exist independently without being tied to something specific. There are three kinds of entities in Litex: variable(var), function(fn), and proposition(prop). The user must first declare a variable before using it. Any entity has a type.
 
-<!-- TODO: I have not implemented the type of function and prop yet. -->
+<!-- TODO: I have not implemented the type of function and prop yet. The major obstacle is: if I view cond as a component of a prop or fn, how to implement this? Or should I just pass undefined f like fun(f fun) and wait till the runtime to check validation of type? I guess f fn wait of doing is every reasonable -->
 
 ```plaintext
 // declare a type
@@ -149,7 +149,9 @@ var Bob Human: // variable name is Bob, variable type is Human
 // declare a function
 
 // input 2 variables with type Real, output variable with type Real
-fn add(a Real, b Real) Real
+fn add(a Real, b Real) Real:
+    then:
+        add(a, b) = add(b, a)   // facts about function add
 
 // declare a proposition
 
@@ -160,7 +162,7 @@ prop younger(a Human, b Human):
 <!-- TODO: Better -->
 In Litex, `type` has the following functionalities:
 
-- **Set Membership**:
+- **As as Set**:
 The statement var x type_name means that x has the type type_name. Mathematically, this means x belongs to the set called type_name. For example, `var n Real` means n is a real number, i.e., n is in the set of all real numbers. As in most programming languages, every object has a type. However, the object might not have a specific "value" because, in many cases, it is the type of the variable (not its value) that determines its relationships with other objects. For example, no matter what a positive number equals to, it is larger than 0. Since a variable can belong to multiple sets (e.g. 1 is both a real number and a natural number), a variable can have multiple types.
 
 - **Determine Meaning of Operations**:
@@ -169,6 +171,19 @@ Objects of different types support different operations and propositions. For ex
 - **Own Members**:
 In programming, a type is typically called a "struct" (in C) or a "class" (in C++ or Python). Objects of different types can have different members. For example, a human Bob might have an attribute Bob.age. Additionally, the type itself can have members. For example, `S Rn` means S is an Euclidean space and S.dim could represent the dimension of the space.
 
+<!-- function that returns new functions or new propositions are not implemented -->
+
+Everything in Litex is represented by a symbol(a single word). Variables, Functions, Types, propositions are all represented by a single symbol or composited symbol. Function, variable and proposition are called first-class citizens of Litex, because they can be passed to function/proposition parameters and behave as return value.
+
+In mathematics, a variable is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Variables are used in factual expressions. 
+
+Functions in Litex are not executed. Instead, they are just composer of other symbols. Function parameter list can receive first-class citizens. Function type list can receive type concept pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
+
+All specific factual expressions have related proposition name. For example, a = b have related proposition =, a < b have proposition <, red(a) have proposition red, subsetOf(x,y) have related proposition subsetOf. Actually you can view Litex proposition as Functions in mainstream programming languages.
+
+<!-- There is no concept parameter list because you can infinitely iterate over that and If you truly what to bind properties to a concept, you should invent math in Litex and make what you are thinking about in variable and add layer to that variable. -->
+
+<!-- You can make everything a function, because function are just variables that can appear before the () in expressions like f(). If you bind no extra features to that function, e.g. fn f() any. then f works like a variable. -->
 
 
 ```plaintext
