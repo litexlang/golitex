@@ -20,30 +20,11 @@ In short, Litex can transform math collaboration and boost AI's reasoning with m
 
 ## Getting Started
 
-_Mathematics... is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
+_Mathematics is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
 
 _-- David Hilbert_
 
 Let us begin with a quick introduction to Litex. Our aim is to show the essential elements of the language, but without getting bogged down in details, rules, and exceptions.
-
-### Litex Expressions
-
-Every expression of Litex has just four kinds of outcomes: true, false, unknown, error. 
-
-- **True**: Litex confirms your expression based on known facts.
-
-- **False**: Litex disproves your expression based on known facts.
-
-- **Unknown**: Litex cannot find relevant facts to conclude.
-
-- **Error**: Your input is incorrect, e.g., a typing mistake.
-
-This mirrors how Humans think when reading proofs: confirming correctness (true), spotting errors (false), being unsure (unknown), or encountering input issues (error). 
-
-Previous formal languages(proof assistants), such as Lean4 and Coq, are still general-purpose languages. They support execution, arithmetic, and control flow, which prevents their syntax from focusing solely on theorem proving and requires them to accommodate other functionalities. This results in highly redundant syntax.
-
-Litex, free from execution constraints, functions like a regex matcher or SQL query processor, validating structured statements against formal rules. Adding unnecessary features would dilute its expressive power, that is why Litex expressions only have four outcomes. Execution in Litex is possible but delegated to plugins, not the language itself.
-
 
 ### First Example
 
@@ -72,5 +53,32 @@ Litex, free from execution constraints, functions like a regex matcher or SQL qu
   </tr>
 </table>
 
-For now, you don't need to understand everything; you only need to conceptually know what it is doing. `Human` is a type representing all humans. Mathematically, you can think of `Human` as the set containing all humans. All humans are set to be `self_aware` by the user as a fact (i.e. true expression) using `know` keyword. `Bob` is `Human`. Therefore, `Bob is self_aware` is a true expression. This is a classic example of syllogism (三段论).
+For now, you don't need to understand everything; you only need to conceptually know what the example is doing. I put both Litex code and Lean4 (another popular proof assistant) code here to clarify fundamentals of Litex. We will refer to this example from time to time.
 
+`Human` is a type representing all humans. Mathematically, you can think of `Human` as the set containing all humans. All humans are set to be `self_aware` by the user as a fact (i.e. true expression) using `know` keyword. `Bob` is `Human`. Therefore, `Bob is self_aware` is a true expression.
+
+This is a classic example of syllogism (三段论), which demonstrates some core features and ideas of Litex very well. Notice Litex significantly reduces the amount of typing required by the user, involves fewer keywords and symbols, and is therefore more intuitive.
+
+### Litex Expressions
+
+There are only two kinds of expressions in Litex: constructive expressions and factual expressions. Constructive expressions are for introducing new elements in proofs, such as new types, new variables, new functions, or new concepts. Factual expressions are used by the user to declare some facts as true. Litex then verifies whether these facts are indeed correct. If they are correct, these new facts are added to the proof environment, where they can be used to verify subsequent facts.
+
+#### Factual Expressions
+
+Every Factual expression of Litex has just four kinds of outcomes: true, false, unknown, error. 
+
+- **True**: Litex confirms your expression based on known facts.
+
+- **False**: Litex disproves your expression based on known facts.
+
+- **Unknown**: Litex cannot find relevant facts to conclude.
+
+- **Error**: Your input is incorrect, e.g., a typing mistake.
+
+This mirrors how Humans think when reading proofs: confirming correctness (true), spotting errors (false), being unsure (unknown), or encountering input issues (error). 
+
+Previous formal languages(proof assistants), such as Lean4 and Coq, are still general-purpose languages. They support execution, arithmetic, and control flow, which prevents their syntax from focusing solely on theorem proving and requires them to accommodate other functionalities. This results in highly redundant syntax.
+
+Litex, free from execution constraints, functions like a regex matcher or SQL query processor, validating structured statements against formal rules. Adding unnecessary features would dilute its expressive power, that is why Litex expressions only have four outcomes. Execution in Litex is possible but delegated to plugins, not the language itself.
+
+#### Constructive Expressions
