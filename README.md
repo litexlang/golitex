@@ -1,7 +1,7 @@
 # Litex: A Minimalist Proof Assistant
 
 <div align="center">
-<img src="assets/logo.png" alt="The LiTeX Logo" width="300">
+<img src="assets/logo.png" alt="The Litex Logo" width="300">
 
 </div>
 
@@ -14,7 +14,7 @@ _–- George Boole_
 
 Litex is a minimalist proof assistant (formal language). Since even children grasp math naturally, a formal language design should exist that's easily understood and used by anyone. The goal of Litex is to invent such a language. The implementation approach leverages a profound understanding of the commonalities and distinctions between programming and mathematics.
 
-Traditional proof assistants lack the fluidity and ease needed to scale formal proofs, while Litex handles the growing complexity of modern mathematics effectively through its well-designed syntax. Litex is designed to be as  intuitive as Python or LaTeX, with a minimal learning curve. Users can trust their common sense to write Litex.
+Traditional proof assistants lack the fluidity and ease needed to scale formal proofs, while Litex handles the growing complexity of modern mathematics effectively through its well-designed syntax. Litex is designed to be as intuitive as Python or LaTeX, with a minimal learning curve. Users can trust their common sense to write Litex.
 
 Litex has the potential to greatly impact both mathematics and AI:
 
@@ -37,7 +37,7 @@ _Mathematics is nothing more than a game played according to certain simple rule
 
 _-- David Hilbert_
 
-Let us begin with a quick introduction to Litex. Our aim is to show the essential elements of the language, but without getting bogged down in details, rules, and exceptions.
+Let us begin with a quick introduction to Litex. The role of Litex is to serve as a daily tool for users, rather than to prove or demonstrate a certain theory. For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions. Please refer to reference manual for more information.
 
 ### First Example
 
