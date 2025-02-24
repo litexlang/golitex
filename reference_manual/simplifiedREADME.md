@@ -61,7 +61,7 @@ This is a classic example of syllogism (三段论), which demonstrates some core
 
 ### Litex Expressions
 
-There are only two kinds of expressions in Litex: constructive expressions and factual expressions. Constructive expressions are for introducing new elements in proofs, such as new types, new variables, new functions, or new concepts. Factual expressions are used by the user to declare some facts as true. Litex then verifies whether these facts are indeed correct. If they are correct, these new facts are added to the proof environment, where they can be used to verify subsequent facts.
+There are only two kinds of expressions in Litex: constructive expressions and factual expressions. Factual expressions are used by the user to declare some facts as true. Litex then verifies whether these facts are indeed correct. If they are correct, these new facts are added to the proof environment, where they can be used to verify subsequent facts. Constructive expressions are for introducing new elements in proofs, such as new types, new variables, new functions, or new concepts.
 
 #### Factual Expressions
 
@@ -75,10 +75,42 @@ Every Factual expression of Litex has just four kinds of outcomes: true, false, 
 
 - **Error**: Your input is incorrect, e.g., a typing mistake.
 
-This mirrors how Humans think when reading proofs: confirming correctness (true), spotting errors (false), being unsure (unknown), or encountering input issues (error). 
+This mirrors how Humans think when reading proofs: confirming correctness (true), spotting errors (false), being unsure (unknown), or encountering input issues (error).
 
 Previous formal languages(proof assistants), such as Lean4 and Coq, are still general-purpose languages. They support execution, arithmetic, and control flow, which prevents their syntax from focusing solely on theorem proving and requires them to accommodate other functionalities. This results in highly redundant syntax.
 
 Litex, free from execution constraints, functions like a regex matcher or SQL query processor, validating structured statements against formal rules. Adding unnecessary features would dilute its expressive power, that is why Litex expressions only have four outcomes. Execution in Litex is possible but delegated to plugins, not the language itself.
 
+There are different kinds of factual expressions: specific (instantiated), conditional (begin with keyword `if`) and universal expressions (begin with keyword `forall`):
+
+```plaintext
+// specific
+Bob is self_aware
+
+// conditional
+if:
+    Bob.age = 10    // conditions
+    then:
+        Bob is young    // results
+
+// universal
+forall x Human, y Human:    // declare variables in the universal expression
+    cond:
+        x.age < y.age   // conditions
+    then:
+        $younger(x,y)   // results
+```
+
+Different factual expressions have distinct meanings and are processed differently by the Litex interpreter. This means they are verified differently and, when stored in the proof environment, are used in unique ways to prove newly input facts.
+
+When the user input a conditional expression, the interpreter first opens a new proof environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the conditional expression is true.
+
+When the user input a universal expression, the interpreter first opens a new proof environment and declare variables written after the 'forall' keyword in this new environment. In this new environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the universal expression is true. Notice the main difference between the conditional expression and the universal expression is whether new variables are involved.
+
+When the user inputs a specific expression, the interpreter searches the current proof environment for known facts with the same proposition name. These facts may be specific, conditional, or universal. If the given specific fact exactly matches a known specific fact or satisfies a conditional or universal expression, it is considered true. Otherwise, the specific expression remains unknown.
+
+When the inverse of input factual expression is true, the interpreter outputs false. When the input does not obey syntax rule of Litex, the interpreter outputs error.
+
 #### Constructive Expressions
+
+Every fact must be associated with some concrete object or entity; it cannot exist independently without being tied to something specific.
