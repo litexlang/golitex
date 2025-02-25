@@ -248,15 +248,28 @@ In mathematics, to extend a structure (like the real numbers) means to create a 
 
 That is what "type implement another type" means in Litex. What does this extend mean? It means there is an injection from all variables from one type to another, members of original type implements the extended type and maintain its original features.
 
+### Litex Statements
+
+Congratulations, you have already learned most of important ideas about Litex. Feel free to try to write a some Litex code! You will be amazed at the fact that math is nothing but arrangement of symbols and propositions based on simple rules. That is what Litex is all about: just enough syntax to express math. Redundant features have no place in Litex.
+
+There are some more Litex statements that I have not mentioned yet.
+
+#### Existential Factual Expression
+
+
 ## How to write good Litex code
 
 _Beauty is the first test: there is no permanent place in the world for ugly mathematics._
 
 _-- G.H. Hardy_
 
-It is important to write clean and understandable proof. From my experience, there are several obstacles preventing you from writing good Litex code:
+It is important to write clean and understandable proof. From my experience, there are several traps preventing you from writing good Litex code. You should key in mind not to fall into them:
 
-- When translating a poorly written book into Litex, you may encounter issues such as undeclared notation overloading, undefined symbols, new concepts appearing unexpectedly, and an abundance of vague statements like 'too simple to prove.' It's best not to translate such books directly into Litex. Instead, take the time to clarify your thoughts before writing them down. In the near future, these poorly written books will fade away, as Litex offers a much clearer option for readers.
+- When translating a bad book written in natural language into Litex, you may encounter issues such as undeclared notation overloading, undefined symbols, new concepts appearing unexpectedly, and an abundance of vague statements like 'too simple to prove.' It's best not to translate such books directly into Litex. Instead, take the time to clarify your thoughts before writing them down.
+
+- Don't generalize at the very beginning. Instead of generalizing your proposition or type members to Euclid Space of all dimensions, stick to special cases like R2 or R3 first. After that, use "impl" keyword to implement them into more generalized cases. Litex is flexible enough for you to start your proof from any level of abstraction.
+
+In the near future, these poorly written books will fade away, as Litex offers a much clearer option for readers: how notations and theorems relate to one another can be visualized by Litex. No error would exist in any working Litex code.
 
 ## Conclusions
 
