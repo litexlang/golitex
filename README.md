@@ -167,7 +167,7 @@ The statement var x type_name means that x has the type type_name. Mathematicall
 Objects of different types support different operations and propositions. For example, when a and b are positive natural numbers, expressions like a^b (multiplying a by itself b times) and a < b are well-defined and meaningful. However, when a and b are matrices, operations like a^b and a < b are not standard notations and may not make sense. Importantly, an object should never be passed to a proposition or function if the parameter types do not match the type of that object. This ensures that operations and functions are applied only in contexts where they are well-defined.
 
 - **Own Members**:
-In programming, a type is typically called a "struct" (in C) or a "class" (in C++ or Python). Such technique of organizing code is called "object oriented programming (OOP)". Objects of different types can have different members. For example, a human Bob might have an attribute Bob.age. Additionally, the type itself can have members. For example, If S is an Euclidean space, then S.dim could represent the dimension of the space. Notice how undefined variables "x" or "n" are "hidden" as a member of another symbol here: typically we write "Let S is R^{n}, where n can be any natural number", now we write "S Euclid" and S.dim is automatically reserved for us. That is why OOP is crucial for simplicity and strictness of Litex.
+In programming, a type is typically called a "struct" (in C) or a "class" (in C++ or Python). Such technique of organizing code is called "object oriented programming (OOP)". Objects of different types can have different members. For example, a human Bob might have an attribute Bob.age. Additionally, the type itself can have members.
 
 - **implement a concept or extend existing types**:
 
@@ -203,7 +203,11 @@ concept Euclid_Space S:   // suppose S is a Rn
 
 ```
 
-Sometimes it is crucial to pass "the type of the type" to a proposition or function. For example, Euclidean space is a set of finite dimensional spaces. "Forall Euclidean space S and x in S" in math can be translated to "forall [S Euclid_Space] x S: " in Litex. Here S is a type and Euclid_Space is the type of S, i.e. type of type.
+In this example, we define a concept called Euclidean Space. Sometimes it is crucial to pass "the type of the type" to a proposition, just like how programmers uses templates to pass parameter types to functions. That is where concept comes into place.
+
+Euclidean space is a set of all finite dimensional spaces. S.dim represents the dimension of the space. Typically we write "Let S is R^{n}, where n can be any natural number", now we just write "S Euclid" and S.dim is automatically reserved for us. Notice how undefined variables "x" or "n" are "hidden" as a member of another symbol here. That is why OOP is crucial for simplicity and strictness of Litex.
+
+"Forall Euclidean space S and x in S" in math can be translated to "forall [S Euclid_Space] x S: " in Litex. Here S is a type and Euclid_Space is the type of S, i.e. type of type.
 
 ```plaintext
 // declare a concept
@@ -258,6 +262,38 @@ There are some more Litex statements that I have not mentioned yet.
 
 #### Existential Factual Expression
 
+
+## Interesting Examples
+
+The Litex syntax is extremely simple and well designed. It is flexible and universal enough to tackle any problem you might encounter, and is strict enough to avoid error in any form. Everything is done by using just a fairly minimal number of expressions.
+
+1. Formalize Mathematical Induction
+
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>axiom mathematical_induction(p prop(n Nat)):</code> <br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;cond:</code> <br>      
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$p(0)</code> <br> 
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;forall (n Nat) $p(n) {$p(n+1)}</code> <br> 
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;then:</code> <br> 
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;forall n Nat {$p(n)}</code> <br>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>theorem mathematical_induction {P : Nat → Prop} (base : P 0) (step : ∀ n, P n → P (n + 1)) : ∀ n, P n := by</code> <br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;intro n</code> <br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;induction n with</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;| zero => exact base</code> <br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;| succ k ih => exact step k ih</code> <br>
+    </td>
+  </tr>
+</table>
+
+As you can see in the example, it takes far fewer typing for Litex to formalize a theorem. You don't need to remember and type in all those "base", "step", "intro", "induction", "exact", "succ" keywords. Any logical expression can be formalized using just a few Litex keywords. You should never worry about anything unrelated to your main purpose.
 
 ## How to write good Litex code
 
