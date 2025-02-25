@@ -2,9 +2,7 @@
 
 <div align="center">
 <img src="assets/logo.png" alt="The Litex Logo" width="300">
-
 </div>
-
 
 ## About
 
@@ -14,13 +12,13 @@ _–- George Boole_
 
 Litex is a minimalist proof assistant (formal language). Since even children grasp math naturally, a formal language design should exist that's easily understood and used by anyone. The goal of Litex is to invent such a language. The implementation approach leverages a profound understanding of the commonalities and distinctions between programming and mathematics.
 
-Traditional proof assistants lack the fluidity and ease needed to scale formal proofs, while Litex handles the growing complexity of modern mathematics effectively through its well-designed syntax. Litex is designed to be as intuitive as Python or LaTeX, with a minimal learning curve. Users can trust their common sense to write Litex.
+Traditional proof assistants lack the fluidity and ease needed to scale formal proofs, while Litex handles the growing complexity of modern mathematics effectively through its clean syntax. Litex is designed to be as intuitive as Python or LaTeX, with a minimal learning curve. Users can trust their common sense to write Litex.
 
 Litex has the potential to greatly impact both mathematics and AI:
 
 - **For Mathematics**: 
-  - **For individual researchers**, it provides peace of mind by reducing the risk of subtle errors undermining their proofs.
-  - **For the whole mathematics community**, since Litex ensures correctness, the need for paper reviews is eliminated. This fosters trust and enables large-scale collaboration, akin to a "GitHub for Math," while also supporting interactive math textbooks.
+  - **For individual researchers**, it provides peace of mind by reducing the risk of subtle errors undermining their proofs. With it, interactive textbooks can be created, enabling learners to study more efficiently and innovate.
+  - **For the whole mathematics community**, since Litex ensures correctness, the need for paper reviews is eliminated. This fosters trust and enables large-scale collaboration, akin to a "GitHub for Math", because strangers can trust each other's proofs and collaborate to solve problems.
 
 - **For AI**:
   - **More Formal Data**:
@@ -29,7 +27,7 @@ Because Litex is an order of magnitude simpler than traditional proof assistants
   - **Automated Verification**:
 Litex can automatically verify LLM outputs for math problems, providing a reliable way to validate and refine their reasoning. This capability is crucial for improving the accuracy and robustness of LLMs in mathematical tasks.
 
-In short, Litex can transform workflow and collaboration of mathematicians. It boost AI's reasoning with more formal data and a super efficient verifier. More people will adopt Litex because of its simplicity and powerful capabilities.
+In short, Litex can transform workflow and collaboration of mathematicians. It boost AI's reasoning with more formal data and a super efficient verifier. The core design principle of Litex is simplicity and user-friendliness.
 
 ## Getting Started
 
@@ -37,7 +35,7 @@ _Mathematics is nothing more than a game played according to certain simple rule
 
 _-- David Hilbert_
 
-Let us begin with a quick introduction to Litex. The role of Litex is to serve as a daily tool for users, rather than to prove or demonstrate a certain theory. For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions. Please refer to reference manual for more information.
+Let us begin with a quick introduction to Litex. The role of Litex is to serve as a daily tool for users, rather than to demonstrate a certain theory. For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions. Please refer to reference manual for more information.
 
 ### First Example
 
@@ -187,6 +185,23 @@ All specific factual expressions have related proposition name. For example, a =
 
 <!-- You can make everything a function, because function are just variables that can appear before the () in expressions like f(). If you bind no extra features to that function, e.g. fn f() any. then f works like a variable. -->
 
+```plaintext
+concept Euclid_Space S:   // suppose S is a Rn
+    type_member:
+        var dim Nat // dim is positive natural number
+        fn __add__(v1 S, v2 S) Real
+    member:
+        fn __at__(n Nat) Real: // define @, which means the nth index of the 
+            cond:
+                n < S.dim
+    cond:
+        forall v1 S, v2 S:  // define addition of two vectors
+            forall k Nat:
+                (v1 + v2)@k = v1@k + v2@k
+
+```
+
+Sometimes it is crucial to pass "the type of the type" to a proposition or function. For example, Euclidean space is a set of finite dimensional spaces. "Forall Euclidean space S and x in S" in math can be translated to "forall [S Euclid_Space] x S: " in Litex. Here S is a type and Euclid_Space is the type of S, i.e. type of type.
 
 ```plaintext
 // declare a concept
@@ -217,8 +232,10 @@ prop [G Group] element_wise_commutative(g G, g2 G) G:
         g * g2 = g2 * g
 ```
 
+
 Types in golang implements interface. Implement means types have required members. Types in Litex implements concept. Implement also means types have required members.
 
 One type might extend another type. For example, complex number extend real number. What does this extend mean? It means there is an injection from all variables from one type to another, and members of type implements the extended type.
 
 If you view type as set, then you might consider one set is another set's subset. For example, the set represented by type1 might be subset of the set represented by type2. In Litex, that means type1 implements type2.
+
