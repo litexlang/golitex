@@ -232,9 +232,9 @@ prop [G Group] element_wise_commutative(g G, g2 G) G:
         g * g2 = g2 * g
 ```
 
-In Litex, how do we describe the situation where certain sets can "implement" the concept (like group), meaning they can be endowed with a group structure?
+In Litex, how do we describe the situation where certain sets can "implement" the concept (like group), meaning they can be endowed with a group structure? What does it mean when we say R1, R2 and R3 are Euclidean Space?
 
-If you view a type as a set, then a concept is a "type of type" or a "set of sets". Mathematically, it means certain sets being able to implement a category. For example, the concept of a group can be thought of as the set of all sets that can be groups. Real is a type because there's only one set named Real, while there are multiple groups that implement the Group concept.
+If you view a type as a set, then a concept is a "type of type" or a "set of sets". For example, the concept of a group can be thought of as the set of all sets that can be groups. Real is a type because there's only one set named Real, while there are multiple groups that implement the Group concept. R1, R2 and R3 are Euclidean Space actually means R1, R2 and R3 implements all features of Euclid Space. (Mathematically, it means certain sets being able to implement a category.)
 
 Such ideas already exist in mainstream programming world for practical purposes. Types in Go (the Go programming language) implements interface. Implement means types have required members. Types in Litex implements concept. Implement also means types have required members.
 
@@ -246,7 +246,18 @@ Another question is, how do we describe the situation where one set "extends" an
 
 In mathematics, to extend a structure (like the real numbers) means to create a larger structure (like the complex numbers) that includes the original structure as a subset while preserving its properties and adding new features (In category theory it is called embedding).
 
-That is what "type implement another type" means in Litex. For example, complex number extend real number. What does this extend mean? It means there is an injection from all variables from one type to another, members of original type implements the extended type and maintain its original features.
+That is what "type implement another type" means in Litex. What does this extend mean? It means there is an injection from all variables from one type to another, members of original type implements the extended type and maintain its original features.
 
-If you view type as set, then you might consider one set is another set's subset. For example, the set represented by type1 might be subset of the set represented by type2. In Litex, that means type1 implements type2.
+## How to write good Litex code
 
+_Beauty is the first test: there is no permanent place in the world for ugly mathematics._
+
+_-- G.H. Hardy_
+
+It is important to write clean and understandable proof. From my experience, there are several obstacles preventing you from writing good Litex code:
+
+- When translating a poorly written book into Litex, you may encounter issues such as undeclared notation overloading, undefined symbols, new concepts appearing unexpectedly, and an abundance of vague statements like 'too simple to prove.' It's best not to translate such books directly into Litex. Instead, take the time to clarify your thoughts before writing them down. In the near future, these poorly written books will fade away, as Litex offers a much clearer option for readers.
+
+## Conclusions
+
+Litex is simple to write, easy to read, It facilitates the construction of new concepts, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
