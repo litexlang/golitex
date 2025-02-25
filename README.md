@@ -235,6 +235,8 @@ prop [G Group] element_wise_commutative(g G, g2 G) G:
 
 Types in golang implements interface. Implement means types have required members. Types in Litex implements concept. Implement also means types have required members.
 
+However, interfaces in golang can be passed as type of parameters directly. In Litex, a concept should used in that way. For example, "fn f[G Group, G2 Group](g1 G, g2 G2)" cannot be written as "fn(g1 Group, g2 Group)" otherwise there is no signal of "g1 and g2 might in different groups". From this perspective, concept in Litex works like a stricter concept, a looser generics. Type can be inferred, for example when calling f[G Group, G2 Group](g G, g2 G2), you only need to write f(g, g2) instead of f[G, G2] (g, g2) because G and G2 can be inferred.
+
 One type might extend another type. For example, complex number extend real number. What does this extend mean? It means there is an injection from all variables from one type to another, and members of type implements the extended type.
 
 If you view type as set, then you might consider one set is another set's subset. For example, the set represented by type1 might be subset of the set represented by type2. In Litex, that means type1 implements type2.
