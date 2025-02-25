@@ -232,12 +232,21 @@ prop [G Group] element_wise_commutative(g G, g2 G) G:
         g * g2 = g2 * g
 ```
 
+In Litex, how do we describe the situation where certain sets can "implement" the concept (like group), meaning they can be endowed with a group structure?
 
-Types in golang implements interface. Implement means types have required members. Types in Litex implements concept. Implement also means types have required members.
+If you view a type as a set, then a concept is a "type of type" or a "set of sets". Mathematically, it means certain sets being able to implement a category. For example, the concept of a group can be thought of as the set of all sets that can be groups. Real is a type because there's only one set named Real, while there are multiple groups that implement the Group concept.
 
-However, interfaces in golang can be passed as type of parameters directly. In Litex, a concept should used in that way. For example, "fn f[G Group, G2 Group](g1 G, g2 G2)" cannot be written as "fn(g1 Group, g2 Group)" otherwise there is no signal of "g1 and g2 might in different groups". From this perspective, concept in Litex works like a stricter concept, a looser generics. Type can be inferred, for example when calling f[G Group, G2 Group](g G, g2 G2), you only need to write f(g, g2) instead of f[G, G2] (g, g2) because G and G2 can be inferred.
+Such ideas already exist in mainstream programming world for practical purposes. Types in Go (the Go programming language) implements interface. Implement means types have required members. Types in Litex implements concept. Implement also means types have required members.
 
-One type might extend another type. For example, complex number extend real number. What does this extend mean? It means there is an injection from all variables from one type to another, and members of type implements the extended type.
+In Go, interfaces can be directly passed as parameter types. In Litex, a concept should not used in that way. For instance, a function like "fn f[G Group, G2 Group](g1 G, g2 G2)" can't be written as "fn(g1 Group, g2 Group)". If written that way, there's no indication that "g1 and g2 might belong to different groups". That is why, in Litex, concept acts as a stricter interface and as a looser version of generics.
+
+Type inference is possible. When calling f[G Group, G2 Group](g G, g2 G2), you can just write f(g, g2) instead of f[G, G2](g, g2) since G and G2 can be inferred.
+
+Another question is, how do we describe the situation where one set "extends" another set (like complex number extend real number)?
+
+In mathematics, to extend a structure (like the real numbers) means to create a larger structure (like the complex numbers) that includes the original structure as a subset while preserving its properties and adding new features (In category theory it is called embedding).
+
+That is what "type implement another type" means in Litex. For example, complex number extend real number. What does this extend mean? It means there is an injection from all variables from one type to another, members of original type implements the extended type and maintain its original features.
 
 If you view type as set, then you might consider one set is another set's subset. For example, the set represented by type1 might be subset of the set represented by type2. In Litex, that means type1 implements type2.
 
