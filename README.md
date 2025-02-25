@@ -167,7 +167,9 @@ The statement var x type_name means that x has the type type_name. Mathematicall
 Objects of different types support different operations and propositions. For example, when a and b are positive natural numbers, expressions like a^b (multiplying a by itself b times) and a < b are well-defined and meaningful. However, when a and b are matrices, operations like a^b and a < b are not standard notations and may not make sense. Importantly, an object should never be passed to a proposition or function if the parameter types do not match the type of that object. This ensures that operations and functions are applied only in contexts where they are well-defined.
 
 - **Own Members**:
-In programming, a type is typically called a "struct" (in C) or a "class" (in C++ or Python). Objects of different types can have different members. For example, a human Bob might have an attribute Bob.age. Additionally, the type itself can have members. For example, `S Rn` means S is an Euclidean space and S.dim could represent the dimension of the space.
+In programming, a type is typically called a "struct" (in C) or a "class" (in C++ or Python). Such technique of organizing code is called "object oriented programming (OOP)". Objects of different types can have different members. For example, a human Bob might have an attribute Bob.age. Additionally, the type itself can have members. For example, If S is an Euclidean space, then S.dim could represent the dimension of the space. Notice how undefined variables "x" or "n" are "hidden" as a member of another symbol here: typically we write "Let S is R^{n}, where n can be any natural number", now we write "S Euclid" and S.dim is automatically reserved for us. That is why OOP is crucial for simplicity and strictness of Litex.
+
+- **implement a concept or extend existing types**:
 
 <!-- function that returns new functions or new propositions are not implemented -->
 
