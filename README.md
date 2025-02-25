@@ -122,7 +122,9 @@ When the user input a universal expression, the interpreter first opens a new pr
 
 When the user inputs a specific expression, the interpreter searches the current proof environment for known facts with the same proposition name. These facts may be specific, conditional, or universal. If the given specific fact exactly matches a known specific fact or satisfies a conditional or universal expression, it is considered true. Otherwise, the specific expression remains unknown.
 
-In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden. Litex, on the other hand, automatically searches all known facts to verify the current input, eliminating the need to manually recall and reference fact names. While users can still name facts if desired, it is no longer mandatory. This approach significantly improves the writing experience and makes Litex code cleaner and more intuitive compared to traditional proof assistants.
+In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden.
+
+Litex, on the other hand, automatically searches all known facts to verify the current input, eliminating the need to manually recall and reference fact names. While users can still name facts if desired, it is no longer mandatory. This approach significantly improves the writing experience and makes Litex code cleaner and more intuitive compared to traditional proof assistants.
 
 When the inverse of input factual expression is true, the interpreter outputs false. When the input does not obey syntax rule of Litex, the interpreter outputs error.
 
@@ -266,11 +268,13 @@ There are some more Litex statements that I have not mentioned yet.
 
 ## Interesting Examples
 
-_Simplify, simplify, simplify._
+_Theory and practice sometimes clash. And when that happens, theory loses. Every single time._
 
-_--Steve Jobs_
+_--Linus Torvalds_
 
-The Litex syntax is extremely simple and well designed. It is flexible and universal enough to tackle any problem you might encounter, and is strict enough to avoid error in any form.
+The Litex syntax is extremely simple and well designed. It is universal enough to tackle any problem you might encounter, and is strict enough to avoid errors.
+
+Nobody can learn programming just by reading manuals. So, follow the examples, write some code, get your hands dirty, and experience the miracle of Litex!
 
 1. Formalize Mathematical Induction
 
@@ -312,7 +316,13 @@ It is important to write clean and understandable proof. From my experience, the
 
 - Don't generalize at the very beginning. Instead of generalizing your proposition or type members to Euclid Space of all dimensions, stick to special cases like R2 or R3 first. After that, use "impl" keyword to implement them into more generalized cases. Litex is flexible enough for you to start your proof from any level of abstraction.
 
+- Global variables are dangerous. Only the most important variables, like empty_set, should be used globally. Temporary variables like 'x' or 'n' must be enclosed in a local scope.
+
+- Detailed Naming is recommended. When you formalize a new concept, a new function, or a new variable, please write the meaning or purpose of that symbol in its name. Otherwise, people soon forgets what function "f()" means.
+
 In the near future, these poorly written books will fade away, as Litex offers a much clearer option for readers: how notations and theorems relate to one another can be visualized by Litex. No error would exist in any working Litex code.
+
+Finally, do not forget to improve yourself through practice, that is, by writing lots of code and read lots of code.
 
 ## Conclusions
 
