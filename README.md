@@ -262,10 +262,15 @@ There are some more Litex statements that I have not mentioned yet.
 
 #### Existential Factual Expression
 
+<!-- TODO -->
 
 ## Interesting Examples
 
-The Litex syntax is extremely simple and well designed. It is flexible and universal enough to tackle any problem you might encounter, and is strict enough to avoid error in any form. Everything is done by using just a fairly minimal number of expressions.
+_Simplify, simplify, simplify._
+
+_--Steve Jobs_
+
+The Litex syntax is extremely simple and well designed. It is flexible and universal enough to tackle any problem you might encounter, and is strict enough to avoid error in any form.
 
 1. Formalize Mathematical Induction
 
@@ -276,7 +281,7 @@ The Litex syntax is extremely simple and well designed. It is flexible and unive
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
-      <code>axiom mathematical_induction(p prop(n Nat)):</code> <br>
+      <code>axiom mathematical_induction(p prop):</code> <br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;cond:</code> <br>      
       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$p(0)</code> <br> 
       <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;forall (n Nat) $p(n) {$p(n+1)}</code> <br> 
@@ -293,7 +298,7 @@ The Litex syntax is extremely simple and well designed. It is flexible and unive
   </tr>
 </table>
 
-As you can see in the example, it takes far fewer typing for Litex to formalize a theorem. You don't need to remember and type in all those "base", "step", "intro", "induction", "exact", "succ" keywords. You don't need to remember unintuitive syntax. You don't need worry about anything unrelated to your main purpose. Any expression in Litex can be written using just a few Litex keywords straightforwardly. The only complexity comes from math itself, not the language you use.
+As you can see in the example, it takes far less mental burden to formalize a theorem in Litex than in other languages. You don't need to remember and type in all those "base", "step", "intro", "induction", "exact", "succ" keywords. You don't need to remember unintuitive syntax. You don't need worry about anything unrelated to your main purpose. Just use a few Litex keywords then everything gets done. The only complexity comes from math itself, not from Litex.
 
 ## How to write good Litex code
 
@@ -310,5 +315,9 @@ It is important to write clean and understandable proof. From my experience, the
 In the near future, these poorly written books will fade away, as Litex offers a much clearer option for readers: how notations and theorems relate to one another can be visualized by Litex. No error would exist in any working Litex code.
 
 ## Conclusions
+
+_The best way to predict the future is to invent it._
+
+_-- Alan Kay_
 
 Litex is simple to write, easy to read, It facilitates the construction of new concepts, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
