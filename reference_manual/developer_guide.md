@@ -30,9 +30,9 @@ _–- George Boole_
 
 ## Design principles of Litex
 
-_God is in the details._
+_Theory and practice sometimes clash. And when that happens, theory loses. Every single time._
 
-_-- Don Knuth_
+_-- Linus Torvalds_
 
 Litex is the bridge between the programming world and math world. It adopts a minimalism approach in language design so that the complexity of writing mathematics does not exceed that of mathematical reasoning itself, allowing users to focus without being distracted by limitations imposed by tradition formal languages.
 
