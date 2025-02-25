@@ -293,7 +293,7 @@ The Litex syntax is extremely simple and well designed. It is flexible and unive
   </tr>
 </table>
 
-As you can see in the example, it takes far fewer typing for Litex to formalize a theorem. You don't need to remember and type in all those "base", "step", "intro", "induction", "exact", "succ" keywords. Any logical expression can be formalized using just a few Litex keywords. You should never worry about anything unrelated to your main purpose.
+As you can see in the example, it takes far fewer typing for Litex to formalize a theorem. You don't need to remember and type in all those "base", "step", "intro", "induction", "exact", "succ" keywords. You don't need to remember unintuitive syntax. You don't need worry about anything unrelated to your main purpose. Any expression in Litex can be written using just a few Litex keywords straightforwardly. The only complexity comes from math itself, not the language you use.
 
 ## How to write good Litex code
 
