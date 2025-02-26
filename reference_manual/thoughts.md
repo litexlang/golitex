@@ -209,3 +209,51 @@ prop group_multiply_commutative(g1 Group, g2 Group): // g1 and g2 might belong t
     g1 * g2 = g2 * g1
 
 8. Concepts do not usually come as self-contained entities. On the contrary , most concepts relate to other concepts in a variety of ways
+
+2.26
+1. exist a typeName :  $p(x, y) 
+
+prop relation(x typeName2)
+exist_prop y typeName has_relation_with(x typeName2):
+    y < x
+
+have $has_relation_with(x): y
+
+
+var 1 Nat
+var 2 Nat 
+var 3 Nat
+
+var-regex [0-9]* Nat
+
+1p
+
+(a + b)^ 2 = (a + b) * (a + b) = a * (a+b) + b * (a + b) =
+a^2 + 2 * a * b + b ^ 2
+
+<!-- fn introduction -->
+
+typeName1 impl conceptName:
+    proof:
+        ....
+
+prop math_induc:
+
+know forall p prop:
+    $math_induc(p)
+
+Alice is human
+human(Alice) is red
+1 + 2 = 3
+$=(1+ 2, 3)
+$Real.__equal__(1+2,3)
+
+f(1 < 2) 
+
+self define bool
+
+f(a bool)
+
+return value of factual expressions goes to another world, can not use f(1 < 2) here, please by yourself define bool first
+
+more examples

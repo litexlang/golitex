@@ -86,7 +86,7 @@ Every Factual expression of Litex has just four kinds of outcomes: true, false, 
 
 - **Error**: Your input is incorrect, e.g., a typing mistake.
 
-This mirrors how Humans think when reading proofs: confirming correctness (true), spotting errors (false), being unsure (unknown), or encountering input issues (error).
+This mirrors how Humans think when reading proofs: confirming correctness (true), spotting falseness (false), being unsure (unknown), or encountering input issues like syntax error (error).
 
 Previous formal languages(proof assistants), such as Lean4 and Coq, are still general-purpose languages. They support execution, arithmetic, and control flow, which prevents their syntax from focusing solely on theorem proving and requires them to accommodate other functionalities. This results in highly redundant syntax.
 
@@ -96,6 +96,7 @@ There are different kinds of factual expressions: specific (instantiated), condi
 
 ```plaintext
 // Comments are written after "//".
+var Bob Human
 
 // specific
 Bob is self_aware
@@ -130,7 +131,9 @@ When the user inputs a specific expression, the interpreter searches the current
 
 In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden.
 
-Litex, on the other hand, automatically searches all known facts to verify the current input, eliminating the need to manually recall and reference fact names. While users can still name facts if desired, it is no longer mandatory. This approach significantly improves the writing experience and makes Litex code cleaner and more intuitive compared to traditional proof assistants.
+Litex, on the other hand, automatically searches all known related facts (facts that have the same proposition name) to verify the current input, eliminating the need to manually recall and reference fact names. While users can still name facts if desired, it is no longer mandatory. This approach significantly improves the writing experience and makes Litex code cleaner and more intuitive compared to traditional proof assistants.
+
+You can understand the aforementioned functionality in this way. Low-level programming languages, such as C, require users to manually manage memory. In contrast, modern languages like Python feature garbage collection, eliminating the need for users to name every newly allocated memory block or handle them with excessive caution. In our case, traditional proof assistants require users to manually "call" known facts to prove new facts. Litex eliminates that need. 
 
 When the inverse of input factual expression is true, the interpreter outputs false. When the input does not obey syntax rule of Litex, the interpreter outputs error.
 
@@ -146,24 +149,6 @@ Every fact must be associated with some concrete object or entity; it cannot exi
 type Human:
     member:
         var age Natural
-
-// declare a variable
-
-var Bob Human: // variable name is Bob, variable type is Human
-    Bob.age = 10 // Age of Bob is known by the user to be 10
-
-// declare a function
-
-// input 2 variables with type Real, output variable with type Real
-fn add(a Real, b Real) Real:
-    then:
-        add(a, b) = add(b, a)   // facts about function add
-
-// declare a proposition
-
-prop younger(a Human, b Human):
-    cond:
-        a.age < b.age
 ```
 <!-- TODO: Better -->
 In Litex, `type` has the following functionalities:
@@ -185,11 +170,41 @@ In programming, a type is typically called a "struct" (in C) or a "class" (in C+
 
 Everything in Litex is represented by a symbol(a single word). Variables, Functions, Types, propositions are all represented by a single symbol or composited symbol. Function, variable and proposition are called first-class citizens of Litex, because they can be passed to function/proposition parameters and behave as return value.
 
+``` text
+// declare a variable
+
+var Bob Human: // variable name is Bob, variable type is Human
+    Bob.age = 10 // Age of Bob is known by the user to be 10
+
 In mathematics, a variable is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Variables are used in factual expressions. 
+``` 
+
+```plaintext
+// declare a function
+
+// input 2 variables with type Real, output variable with type Real
+fn add(a Real, b Real) Real:
+    then:
+        add(a, b) = add(b, a)   // facts about function add
+
+// use "return" value as parameters of a factual expression: equal expression.
+add(1 ,2) = add(2, 1)
+1 + 2 = 2 + 1
+```
 
 Functions in Litex are not executed. Instead, they are just composer of other symbols. Function parameter list can receive first-class citizens. Function type list can receive type concept pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
 
+``` text
+// declare a proposition
+
+prop younger(a Human, b Human):
+    cond:
+        a.age < b.age
+```
+
 All specific factual expressions have related proposition name. For example, a = b have related proposition =, a < b have proposition <, red(a) have proposition red, subsetOf(x,y) have related proposition subsetOf. Actually you can view Litex proposition as Functions in mainstream programming languages because the "execution" of a "called proposition" (factual expression) outputs outputs: true, false, error, unknown.
+
+The difference between a proposition (prop) and a factual expression is that a prop simply assigns a name to a statement, without determining its validity. On the other hand, a factual expression is meant to be evaluated, yielding an output value of true, false, unknown, or error.
 
 <!-- There is no concept parameter list because you can infinitely iterate over that and If you truly what to bind properties to a concept, you should invent math in Litex and make what you are thinking about in variable and add layer to that variable. -->
 
@@ -335,7 +350,6 @@ Finally, do not forget to improve yourself through practice, that is, by writing
 ## Conclusions
 
 Litex is simple to write, easy to read, It facilitates the construction of new concepts, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
-
 
 ## Join the Litex Project
 
