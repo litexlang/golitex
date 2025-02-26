@@ -117,17 +117,51 @@ forall x Human, y Human:    // declare variables in the universal expression
 
 Different factual expressions have distinct meanings and are processed differently by the Litex interpreter. This means they are verified differently and, when stored in the proof environment, are used in unique ways to prove newly input facts.
 
-There are several different ways to call a factual expression:
+```
+if:
+    Bob.age = 10    // conditions
+    then:
+        Bob is young    // results
+```
+
+When the user input a conditional expression, the interpreter first opens a new proof environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the conditional expression is true.
+
+```
+forall x Human, y Human:    // declare variables in the universal expression
+    cond:
+        x.age < y.age   // conditions
+    then:
+        $younger(x,y)   // results
+
+forall x Human:
+    x is self_aware // If there is no further condition, 'cond' and 'then' can be eliminated
+```
+
+When the user input a universal expression, the interpreter first opens a new proof environment and declare variables written after the 'forall' keyword in this new environment. In this new environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the universal expression is true. Notice the main difference between the conditional expression and the universal expression is whether new variables are involved.
+
+```
+// Different forms of specific factual expressions
+
+Bob is self_aware
+
+$self_aware(Bob)    // equivalent to Bob is self_aware
+
+1 < 2
+
+$less_than(1,2) // If a proposition receives more than one argument, you should use $ as prefix for proposition name.
+
+$Real.__lt__(1,2) // equivalent to 1 < 2. Notice a type can have propositions as member.
+```
+
+When the user inputs a specific expression, the interpreter searches the current proof environment for known facts with the same proposition name. These facts may be specific, conditional, or universal. If the given specific fact exactly matches a known specific fact or satisfies a conditional or universal expression, it is considered true. Otherwise, the specific expression remains unknown.
+
+There are several different ways to call a specific factual expression:
 
 - If there is only one parameter, you can write parameterName is propositionName
 
 - If there rae more than one parameter, you write $propositionalName(parameters)
 
-When the user input a conditional expression, the interpreter first opens a new proof environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the conditional expression is true.
-
-When the user input a universal expression, the interpreter first opens a new proof environment and declare variables written after the 'forall' keyword in this new environment. In this new environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the universal expression is true. Notice the main difference between the conditional expression and the universal expression is whether new variables are involved.
-
-When the user inputs a specific expression, the interpreter searches the current proof environment for known facts with the same proposition name. These facts may be specific, conditional, or universal. If the given specific fact exactly matches a known specific fact or satisfies a conditional or universal expression, it is considered true. Otherwise, the specific expression remains unknown.
+The difference between propositions and factual expressions is that a proposition is a set of factual expressions awaiting future use, while a factual expression is a verified instance of a proposition. For example, "1 = 1" means the proposition named "=" with parameters 1 and 1 is being verified.
 
 In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden.
 
@@ -137,11 +171,13 @@ You can understand the aforementioned functionality in this way. Low-level progr
 
 When the inverse of input factual expression is true, the interpreter outputs false. When the input does not obey syntax rule of Litex, the interpreter outputs error.
 
+##### Existential Factual Expression
+
 #### Constructive Expressions
 
 Every fact must be associated with some concrete object or entity; it cannot exist independently without being tied to something specific. There are three kinds of entities in Litex: variable(var), function(fn), and proposition(prop). The user must first declare a variable before using it. Any entity has a type.
 
-<!-- TODO: I have not implemented the type of function and prop yet. The major obstacle is: if I view cond as a component of a prop or fn, how to implement this? Or should I just pass undefined f like fun(f fun) and wait till the runtime to check validation of type? I guess f fn wait of doing is every reasonable -->
+<!-- TODO: I have not implemented the type of function and prop yet. The major obstacle is: if I view cond as a component of a prop or fn, how to implement this? Or should I just pass undefined f like fun(f fun) and wait till the runtime to check validation of type? I guess f fn wait of doing is every reasonable    existential propositions are used in the same way as how ordinary propositions. The only difference between existential propositions. exist is eql to not forall-->
 
 ```plaintext
 // declare a type
@@ -210,6 +246,8 @@ The difference between a proposition (prop) and a factual expression is that a p
 
 <!-- You can make everything a function, because function are just variables that can appear before the () in expressions like f(). If you bind no extra features to that function, e.g. fn f() any. then f works like a variable. -->
 
+<!-- challenge: how to implement or as syntax sugar?  -->
+
 ```plaintext
 concept Euclid_Space S:   // suppose S is a Rn
     type_member:
@@ -223,7 +261,6 @@ concept Euclid_Space S:   // suppose S is a Rn
         forall v1 S, v2 S:  // define addition of two vectors
             forall k Nat:
                 (v1 + v2)@k = v1@k + v2@k
-
 ```
 
 In this example, we define a concept called Euclidean Space. Sometimes it is crucial to pass "the type of the type" to a proposition, just like how programmers uses templates to pass parameter types to functions. That is where concept comes into place.
@@ -282,8 +319,6 @@ That is what "type implement another type" means in Litex. What does this extend
 Congratulations, you have already learned most of important ideas about Litex. Feel free to try to write a some Litex code! You will be amazed at the fact that math is nothing but arrangement of symbols and propositions based on simple rules. That is what Litex is all about: just enough syntax to express math. Redundant features have no place in Litex.
 
 There are some more Litex statements that I have not mentioned yet.
-
-#### Existential Factual Expression
 
 <!-- TODO -->
 
