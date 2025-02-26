@@ -241,7 +241,7 @@ have m Nat: $exist_nat_lss_than(2)
 
 In mathematics, a variable is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Variables are used in factual expressions.
 
-Notice the variable you introduce to current environment might not exist. To make variable declaration safe, you can use "have" statement. "have" statement is valid only when the related existential factual expression is true.
+Notice the variable you introduce to current environment might not exist. For example, the type of your variable might be an empty set. To make variable declaration safe, you can use "have" statement. "have" statement is valid only when the related existential factual expression is true.
 
 <!-- HERE WE LACK HOW TO INTRODUCE A GROUP OF VARIABLES LIKE NAT USING REGEX -->
 
@@ -426,7 +426,11 @@ The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex p
 
 I do this for fun. I have strong belief that there is only a small gap between programming and mathematical reasoning. The more I program this project, the firmer my belief becomes. I also believe that both the AI community and the math community will benefit from Litex.
 
-If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 1500 git commits are all pushed by me), I have no time to implement a complicated one. However, such severe restriction on time and budget forces me to go back to common sense, polish my ideas again and again until Litex is as simple as possible. That is where the clean syntax comes from: belief in minimalism, high focus, full passion.
+If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 1500 git commits are all pushed by me), I have no time to implement a complicated one.
+
+However, such severe restriction on time and no budget forces me to go back to common sense, polish my ideas again and again until Litex is as simple as possible. That is where the clean syntax comes from: belief in minimalism, high focus, full passion.
+
+There are only two types of programming languages: to prove an idea, or to get things done. Litex is definitely of the second type. Litex is, and will remain to be, very pragmatic. Curious people might ask me "what theory is Litex based on". My answer is "Litex is invented by common sense, not by theory". The only "theory" of Litex is that there is no theory.
 
 Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. That's why Litex will never be a success without its users and contributors. Feel free to issue your suggestions and ideas to help me improve this open-source project—your feedback is invaluable.
 
