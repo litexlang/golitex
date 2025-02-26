@@ -334,8 +334,21 @@ Finally, do not forget to improve yourself through practice, that is, by writing
 
 ## Conclusions
 
+Litex is simple to write, easy to read, It facilitates the construction of new concepts, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
+
+
+## Join the Litex Project
+
 _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
 
-Litex is simple to write, easy to read, It facilitates the construction of new concepts, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
+The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
+
+I do this for fun. I have strong belief that there is only a small gap between programming and mathematical reasoning. The more I program this project, the firmer my belief becomes. I also believe that both the AI community and the math community will benefit from Litex.
+
+If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 1500 git commits are all pushed by me), I have no time to implement a complicated one. However, such severe restriction on time and budget forces me to go back to common sense, polish my ideas again and again until Litex is as simple as possible. That is where the clean syntax comes from: belief in minimalism, high focus, full passion.
+
+Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. That's why Litex will never be a success without its users and contributors. Feel free to issue your suggestions and ideas to help me improve this open-source project—your feedback is invaluable.
+
+Visit [the Litex website](https://litexlang.org) for more information. Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
