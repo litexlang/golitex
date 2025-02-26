@@ -192,25 +192,6 @@ have m Nat: $exist_nat_lss_than(2)   // Introduce new variable, m, to current pr
 
 Notice when being verified as a specific factual expression, there is no difference between existential factual expressions and ordinary specific expressions. The only difference between existential factual expressions and ordinary specific expressions is, it can be called in "have statement", which is a safe way to introduce new variables in current environment.
 
-#### Thoughts on Litex Factual Expressions
-
-#### How is a fact verified by Litex
-
-In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden.
-
-Litex, on the other hand, automatically searches all known related facts (facts that have the same proposition name) to verify the current input, eliminating the need to manually recall and reference fact names. While users can still name facts if desired, it is no longer mandatory. This approach significantly improves the writing experience and makes Litex code cleaner and more intuitive compared to traditional proof assistants.
-
-You can understand the aforementioned functionality in this way. Low-level programming languages, such as C, require users to manually manage memory. In contrast, modern languages like Python feature garbage collection, eliminating the need for users to name every newly allocated memory block or handle them with excessive caution. In our case, traditional proof assistants require users to manually "call" known facts to prove new facts. Litex eliminates that need. 
-
-When the inverse of input factual expression is true, the interpreter outputs false. When the input does not obey syntax rule of Litex, the interpreter outputs error.
-
-#### Values of Factual Expressions are not "Values" of Functions
-
-In Python, it is legal to write f(1 < 2), here the function f receives the result of 1 < 2 as input.
-
-In Litex, passing a factual expression like "1 < 2" to a function is illegal because its output is emitted outside the Litex runtime. Only variables, functions, and propositions can be passed. To use boolean values, you must first formalize boolean theory within Litex. Avoid conflating internal function "values" with "external world" values.
-
-Actually, Any mechanical algorithm can be formalized by math. Ideally, since Litex is mechanical, and since Litex is designed to formalize math, the users should be able to formalize Litex in Litex.
 
 ### Constructive Expressions
 
@@ -432,6 +413,34 @@ Finally, do not forget to improve yourself through practice, that is, by writing
 ## Conclusions
 
 Litex is simple to write, easy to read, It facilitates the construction of new concepts, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
+
+## How is Litex designed as it is.
+
+The followings are design choices of Litex and how they are made. Designing a language is fun, because there are both lots of high-level ideas and low-level details involved. If you just want to have a glimpse of Litex, you can the following part. If you want to have a deeper understanding, the following will serve as a very good mental entertainment.
+
+### What makes Litex Factual Expressions easier to use
+
+In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden.
+
+Litex, on the other hand, automatically searches all known related facts (facts that have the same proposition name) to verify the current input, eliminating the need to manually recall and reference fact names. While users can still name facts if desired, it is no longer mandatory. This approach significantly improves the writing experience and makes Litex code cleaner and more intuitive compared to traditional proof assistants.
+
+You can understand the aforementioned functionality in this way. Low-level programming languages, such as C, require users to manually manage memory. In contrast, modern languages like Python feature garbage collection, eliminating the need for users to name every newly allocated memory block or handle them with excessive caution. In our case, traditional proof assistants require users to manually "call" known facts to prove new facts. Litex eliminates that need. 
+
+When the inverse of input factual expression is true, the interpreter outputs false. When the input does not obey syntax rule of Litex, the interpreter outputs error.
+
+### Values of Factual Expressions are not "Values" of Functions
+
+In Python, it is legal to write f(1 < 2), here the function f receives the result of 1 < 2 as input.
+
+In Litex, passing a factual expression like "1 < 2" to a function is illegal because its output is emitted outside the Litex runtime. Only variables, functions, and propositions can be passed. To use boolean values, you must first formalize boolean theory within Litex. Avoid conflating internal function "values" with "external world" values.
+
+Any mechanical algorithm can be formalized by math. Ideally, since Litex is mechanical, and since Litex is designed to formalize math, the users should be able to formalize Litex in Litex.
+
+### When are mechanical algorithms necessary?
+
+The Litex runtime does not include control flow (loops and branches) because people do not them when verifying codes. After all, nobody iterates over the same procedure in his/her brain for thousands of times to when they read a new line of proof. Instead, they use `forall` statements to "represent" the whole iteration process.
+
+However, Litex still enables you to do mechanical things through language plugin. You can call a mechanical algorithm to help you generate text. This text can be implicitly embedded to your current line of your proof. In this way, Litex becomes "Turing complete" while vanilla Litex is not.
 
 ## Join the Litex Project
 
