@@ -161,6 +161,30 @@ There are several different ways to call a specific factual expression:
 
 - If there rae more than one parameter, you write $propositionalName(parameters)
 
+There is one important kind of specific factual expression: existential factual expressions:
+
+```
+// declare a existential proposition
+
+exist_prop exist_nat_less_than(n Nat):
+    have:
+        var m Nat
+    then:
+        m < n
+
+know forall n Nat:
+    cond:
+        n > 0
+    then:
+        exist_nat_less_than(n)
+
+$exist_nat_less_than(100) // As a specific factual expression, it is true. Notice when being verified as a specific factual expression, there is no difference between existential factual expressions and ordinary specific expressions.
+
+have m Nat: exist_nat_lss_than(2)   // Introduce new variable, m, to current proof environment
+```
+
+
+
 The difference between propositions and factual expressions is that a proposition is a set of factual expressions awaiting future use, while a factual expression is a verified instance of a proposition. For example, "1 = 1" means the proposition named "=" with parameters 1 and 1 is being verified.
 
 In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden.
@@ -170,8 +194,6 @@ Litex, on the other hand, automatically searches all known related facts (facts 
 You can understand the aforementioned functionality in this way. Low-level programming languages, such as C, require users to manually manage memory. In contrast, modern languages like Python feature garbage collection, eliminating the need for users to name every newly allocated memory block or handle them with excessive caution. In our case, traditional proof assistants require users to manually "call" known facts to prove new facts. Litex eliminates that need. 
 
 When the inverse of input factual expression is true, the interpreter outputs false. When the input does not obey syntax rule of Litex, the interpreter outputs error.
-
-##### Existential Factual Expression
 
 #### Constructive Expressions
 
