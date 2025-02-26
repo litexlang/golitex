@@ -210,6 +210,8 @@ In Python, it is legal to write f(1 < 2), here the function f receives the resul
 
 In Litex, passing a factual expression like "1 < 2" to a function is illegal because its output is emitted outside the Litex runtime. Only variables, functions, and propositions can be passed. To use boolean values, you must first formalize boolean theory within Litex. Avoid conflating internal function "values" with "external world" values.
 
+Actually, Any mechanical algorithm can be formalized by math. Ideally, since Litex is mechanical, and since Litex is designed to formalize math, the users should be able to formalize Litex in Litex.
+
 ### Constructive Expressions
 
 Every fact must be associated with some concrete object or entity; it cannot exist independently without being tied to something specific. There are three kinds of entities in Litex: variable(var), function(fn), and proposition(prop). The user must first declare a variable before using it. Any entity has a type.
