@@ -159,7 +159,7 @@ There are several different ways to call a specific factual expression:
 
 - If there is only one parameter, you can write parameterName is propositionName
 
-- If there rae more than one parameter, you write $propositionalName(parameters)
+- If there rae more than one parameter, you write $propositionalName(parameters). "$"  has no extra meanings. It is just a symbols used by a user to distinguish between functions and propositions.
 
 There is one important kind of specific factual expression: existential factual expressions:
 
@@ -167,7 +167,7 @@ There is one important kind of specific factual expression: existential factual 
 // declare a existential proposition
 
 exist_prop exist_nat_less_than(n Nat):
-    have:
+    have: // when being called by have statement, variables below will be introduced in proof environment
         var m Nat
     then:
         m < n
@@ -178,14 +178,14 @@ know forall n Nat:
     then:
         exist_nat_less_than(n)
 
-$exist_nat_less_than(100) // As a specific factual expression, it is true. Notice when being verified as a specific factual expression, there is no difference between existential factual expressions and ordinary specific expressions.
+$exist_nat_less_than(100) // As a specific factual expression, it is true.
 
-have m Nat: exist_nat_lss_than(2)   // Introduce new variable, m, to current proof environment
+have m Nat: $exist_nat_lss_than(2)   // Introduce new variable, m, to current proof environment
 ```
 
+Notice when being verified as a specific factual expression, there is no difference between existential factual expressions and ordinary specific expressions. The only difference between existential factual expressions and ordinary specific expressions is, it can be called in "have statement", which is a safe way to introduce new variables in current environment.
 
-
-The difference between propositions and factual expressions is that a proposition is a set of factual expressions awaiting future use, while a factual expression is a verified instance of a proposition. For example, "1 = 1" means the proposition named "=" with parameters 1 and 1 is being verified.
+##### Thoughts on Litex Factual Expressions
 
 In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden.
 
@@ -232,10 +232,18 @@ Everything in Litex is represented by a symbol(a single word). Variables, Functi
 // declare a variable
 
 var Bob Human: // variable name is Bob, variable type is Human
-    Bob.age = 10 // Age of Bob is known by the user to be 10
+    Bob.age = 10 // Age of Bob is known to be 10
 
-In mathematics, a variable is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Variables are used in factual expressions. 
+var Alice Human // just declare a variable, no extra known factual expressions involved
+
+have m Nat: $exist_nat_lss_than(2)
 ``` 
+
+In mathematics, a variable is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Variables are used in factual expressions.
+
+Notice the variable you introduce to current environment might not exist. To make variable declaration safe, you can use "have" statement. "have" statement is valid only when the related existential factual expression is true.
+
+<!-- HERE WE LACK HOW TO INTRODUCE A GROUP OF VARIABLES LIKE NAT USING REGEX -->
 
 ```plaintext
 // declare a function
