@@ -116,6 +116,12 @@ forall x Human, y Human:    // declare variables in the universal expression
 
 Different factual expressions have distinct meanings and are processed differently by the Litex interpreter. This means they are verified differently and, when stored in the proof environment, are used in unique ways to prove newly input facts.
 
+There are several different ways to call a factual expression:
+
+- If there is only one parameter, you can write parameterName is propositionName
+
+- If there rae more than one parameter, you write $propositionalName(parameters)
+
 When the user input a conditional expression, the interpreter first opens a new proof environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the conditional expression is true.
 
 When the user input a universal expression, the interpreter first opens a new proof environment and declare variables written after the 'forall' keyword in this new environment. In this new environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the universal expression is true. Notice the main difference between the conditional expression and the universal expression is whether new variables are involved.
@@ -274,7 +280,7 @@ _--Linus Torvalds_
 
 The Litex syntax is extremely simple and well designed. It is universal enough to tackle any problem you might encounter, and is strict enough to avoid errors.
 
-Nobody can learn programming just by reading manuals. So, follow the examples, write some code, get your hands dirty, and experience the miracle of Litex!
+Nobody can learn programming just by reading manuals. Practice is the sole criterion for testing truth. So, follow the examples, write some code, get your hands dirty, and experience the miracle of Litex!
 
 1. Formalize Mathematical Induction
 
@@ -319,6 +325,8 @@ It is important to write clean and understandable proof. From my experience, the
 - Global variables are dangerous. Only the most important variables, like empty_set, should be used globally. Temporary variables like 'x' or 'n' must be enclosed in a local scope.
 
 - Detailed Naming is recommended. When you formalize a new concept, a new function, or a new variable, please write the meaning or purpose of that symbol in its name. Otherwise, people soon forgets what function "f()" means.
+
+As you can see, the good practice of writing Litex closely aligns with the good practice of writing any programming language. Clean code is always more maintainable, more extensible and more understandable. Following a good practice is the premise of clean code.
 
 In the near future, these poorly written books will fade away, as Litex offers a much clearer option for readers: how notations and theorems relate to one another can be visualized by Litex. No error would exist in any working Litex code.
 
