@@ -37,7 +37,7 @@ _-- David Hilbert_
 
 Let us begin with a quick introduction to Litex. The role of Litex is to serve as a daily tool for users, rather than to demonstrate a certain theory. For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions. Please refer to reference manual for more information.
 
-### First Example
+## First Example
 
 
 <table style="border-collapse: collapse; width: 100%;">
@@ -70,11 +70,13 @@ For now, you don't need to understand everything; you only need to conceptually 
 
 This is a classic example of syllogism (三段论), which demonstrates some core features and ideas of Litex very well. Notice Litex significantly reduces the amount of typing required by the user, involves fewer keywords and symbols, and is therefore more intuitive.
 
-### Litex Expressions
+## Litex Expressions
 
 There are only two kinds of expressions in Litex: constructive expressions and factual expressions. Factual expressions are used by the user to declare some facts as true. Litex then verifies whether these facts are indeed correct. If they are correct, these new facts are added to the proof environment, where they can be used to verify subsequent facts. Constructive expressions are for introducing new elements in proofs, such as new types, new variables, new functions, or new concepts.
 
-#### Factual Expressions
+### Factual Expressions
+
+#### Outputs of Factual Expressions
 
 Every Factual expression of Litex has just four kinds of outcomes: true, false, unknown, error. 
 
@@ -91,6 +93,8 @@ This mirrors how Humans think when reading proofs: confirming correctness (true)
 Previous formal languages(proof assistants), such as Lean4 and Coq, are still general-purpose languages. They support execution, arithmetic, and control flow, which prevents their syntax from focusing solely on theorem proving and requires them to accommodate other functionalities. This results in highly redundant syntax.
 
 Litex, free from execution constraints, functions like a regex matcher or SQL query processor, validating structured statements against formal rules. Adding unnecessary features would dilute its expressive power, that is why Litex expressions only have four outcomes. Execution in Litex is possible but delegated to plugins, not the language itself.
+
+#### Specific, Conditional, Universal Factual Expressions
 
 There are different kinds of factual expressions: specific (instantiated), conditional (begin with keyword `if`) and universal expressions (begin with keyword `forall`):
 
@@ -161,6 +165,9 @@ There are several different ways to call a specific factual expression:
 
 - If there rae more than one parameter, you write $propositionalName(parameters). "$"  has no extra meanings. It is just a symbols used by a user to distinguish between functions and propositions.
 
+
+#### Existential Factual Expressions
+
 There is one important kind of specific factual expression: existential factual expressions:
 
 ```
@@ -185,7 +192,9 @@ have m Nat: $exist_nat_lss_than(2)   // Introduce new variable, m, to current pr
 
 Notice when being verified as a specific factual expression, there is no difference between existential factual expressions and ordinary specific expressions. The only difference between existential factual expressions and ordinary specific expressions is, it can be called in "have statement", which is a safe way to introduce new variables in current environment.
 
-##### Thoughts on Litex Factual Expressions
+#### Thoughts on Litex Factual Expressions
+
+#### How is a fact verified by Litex
 
 In Lean 4, every fact must have a name, and users must explicitly reference these names to use them in proofs. This forces users to remember even the most trivial facts, often with long and complex names, creating unnecessary burden.
 
@@ -195,7 +204,13 @@ You can understand the aforementioned functionality in this way. Low-level progr
 
 When the inverse of input factual expression is true, the interpreter outputs false. When the input does not obey syntax rule of Litex, the interpreter outputs error.
 
-#### Constructive Expressions
+#### Values of Factual Expressions are not "Values" of Functions
+
+In Python, it is legal to write f(1 < 2), here the function f receives the result of 1 < 2 as input.
+
+In Litex, passing a factual expression like "1 < 2" to a function is illegal because its output is emitted outside the Litex runtime. Only variables, functions, and propositions can be passed. To use boolean values, you must first formalize boolean theory within Litex. Avoid conflating internal function "values" with "external world" values.
+
+### Constructive Expressions
 
 Every fact must be associated with some concrete object or entity; it cannot exist independently without being tied to something specific. There are three kinds of entities in Litex: variable(var), function(fn), and proposition(prop). The user must first declare a variable before using it. Any entity has a type.
 
