@@ -404,6 +404,8 @@ It is important to write clean and understandable proof. From my experience, the
 
 - Detailed Naming is recommended. When you formalize a new concept, a new function, or a new variable, please write the meaning or purpose of that symbol in its name. Otherwise, people soon forgets what function "f()" means.
 
+- If the same pattern of proof appear again and again, you should enclose such kind of proof in a single `forall` expression or a proposition.
+
 As you can see, the good practice of writing Litex closely aligns with the good practice of writing any programming language. Clean code is always more maintainable, more extensible and more understandable. Following a good practice is the premise of clean code.
 
 In the near future, these poorly written books will fade away, as Litex offers a much clearer option for readers: how notations and theorems relate to one another can be visualized by Litex. No error would exist in any working Litex code.
@@ -415,6 +417,10 @@ Finally, do not forget to improve yourself through practice, that is, by writing
 Litex is simple to write, easy to read, It facilitates the construction of new concepts, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
 
 ## How is Litex designed as it is.
+
+_Simplify, simplify, simplify._
+
+_-- Steve Jobs_
 
 The followings are design choices of Litex and how they are made. Designing a language is fun, because there are both lots of high-level ideas and low-level details involved. If you just want to have a glimpse of Litex, you can the following part. If you want to have a deeper understanding, the following will serve as a very good mental entertainment.
 
@@ -441,6 +447,13 @@ Any mechanical algorithm can be formalized by math. Ideally, since Litex is mech
 The Litex runtime does not include control flow (loops and branches) because people do not them when verifying codes. After all, nobody iterates over the same procedure in his/her brain for thousands of times to when they read a new line of proof. Instead, they use `forall` statements to "represent" the whole iteration process.
 
 However, Litex still enables you to do mechanical things through language plugin. You can call a mechanical algorithm to help you generate text. This text can be implicitly embedded to your current line of your proof. In this way, Litex becomes "Turing complete" while vanilla Litex is not.
+
+
+### C-flavored Type Naming. No Generics.
+
+There is no generics in Litex, at least for the time being. I prefer single-word type name, rather than type with layers of layers of "<>"s, as how code looks like in C++ and other languages with generics. 
+
+Generics helps you to expose every layer of data-structure. It is great in many cases, but may cause serious trouble in Litex. The reason is simple: there are just so many layers of abstraction in math, too many to imagine. Exposing all the abstraction layers in type would make the code overly redundant. Users do not need to delve into concepts that are too low-level.
 
 ## Join the Litex Project
 
