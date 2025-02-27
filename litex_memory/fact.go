@@ -12,27 +12,24 @@ const (
 	FcFnCallChainEnum
 )
 
+type FactParamsContainer struct {
+}
+
 type FcEnumsFactsKVPair struct {
-	Types []FcEnum
-	Facts PropFactValues
+	ParamEnums      []FcEnum
+	ParamsContainer FactParamsContainer
 }
 
 // Define type PropName to signify functionality of a string variable
 type PropName string
 
 type SpecFactMemory struct {
-	PropFactsMap map[PropName]PropFacts
+	PropFactsMap map[PropName]FcEnumFactsKVPairs
 }
 
-type PropFacts []FcEnumsFactsKVPair
+type FcEnumFactsKVPairs []FcEnumsFactsKVPair
 
 // TODO
-type PropFactValues interface {
-	propFactValues()
-}
-
-type SpecMemoryFact struct {
-}
 
 type CondFactMemory struct {
 	KVs map[PropName]CondFactMemEntry
@@ -59,7 +56,7 @@ type UniMemFact struct {
 }
 
 func NewSpecFactMemory() *SpecFactMemory {
-	return &SpecFactMemory{PropFactsMap: map[PropName]PropFacts{}}
+	return &SpecFactMemory{PropFactsMap: map[PropName]FcEnumFactsKVPairs{}}
 }
 
 func NewUniFactMemory() *UniFactMemory {
