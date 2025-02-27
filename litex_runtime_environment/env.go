@@ -1,4 +1,4 @@
-// 约定：var, fn, property 名不能冲突，即不能有一个变量是var，同时也是Property
+// 约定：var, fn, prop 名不能冲突，即不能有一个变量是var，同时也是Prop
 package litexenv
 
 import (
@@ -11,12 +11,12 @@ import (
 type Env struct {
 	Parent                 *Env
 	VarMemory              memory.VarMemory
-	PropertyMemory         memory.PropertyMemory
+	PropMemory             memory.PropMemory
 	FnMemory               memory.FnMemory
 	AliasMemory            memory.AliasMemory
-	InstantiatedFactMemory memory.InstantiatedFactMemory
-	ConditionalFactMemory  memory.ConditionalFactMemory
-	UniversalFactMemory    memory.UniversalFactMemory
+	InstantiatedFactMemory memory.SpecFactMemory
+	ConditionalFactMemory  memory.CondFactMemory
+	UniversalFactMemory    memory.UniFactMemory
 	VarTypeMemory          memory.FcVarTypeMemory
 }
 
@@ -24,7 +24,7 @@ func NewEnv() *Env {
 	return &Env{
 		Parent:                 nil,
 		VarMemory:              *memory.NewVarMemory(),
-		PropertyMemory:         *memory.NewPropMemory(),
+		PropMemory:             *memory.NewPropMemory(),
 		FnMemory:               *memory.NewFnMemory(),
 		AliasMemory:            *memory.NewAliasMemory(),
 		InstantiatedFactMemory: *memory.NewInstantiatedFactMemory(),
@@ -50,7 +50,7 @@ func (env *Env) isNameUsed(name string) (bool, error) {
 		return true, fmt.Errorf("%v is already defined", name)
 	}
 
-	if _, got := env.PropertyMemory.Get(name); got {
+	if _, got := env.PropMemory.Get(name); got {
 		return true, fmt.Errorf("%v is already defined", name)
 	}
 

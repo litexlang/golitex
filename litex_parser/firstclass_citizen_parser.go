@@ -110,7 +110,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*TypedFc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	PropertyType, err := parser.parsePropertyType()
+	PropType, err := parser.parsePropType()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -120,7 +120,7 @@ func (parser *Parser) parseTypedFcWithPrefixAs() (*TypedFc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &TypedFc{fc, *PropertyType}, nil
+	return &TypedFc{fc, *PropType}, nil
 }
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
