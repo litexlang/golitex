@@ -10,28 +10,18 @@ type Fc interface {
 	String() string
 }
 
-func (fc *TypedFc) fc()           {} // 我或许把这个做成像go的append一样的内置函数，比把它做成单独一个数据结构，要合理
-func (f *CalledFcFnRetValue) fc() {}
-func (f FcStr) fc()               {}
-func (f *FcFnCallChain) fc()      {}
-
-type TypedFc struct {
-	value Fc
-	tp    FcPropType
-}
-
-func (fc *TypedFc) String() string {
-	return fmt.Sprintf("@(%s,%s)", fc.value.String(), fc.tp)
-}
+func (f FcStr) fc()         {}
+func (f *FcFnRetValue) fc() {}
+func (f *FcMemChain) fc()   {}
 
 // used for variables that are returned by called function
-type CalledFcFnRetValue struct {
+type FcFnRetValue struct {
 	Fn         Fc
 	TypeParams []typeVar
 	VarParams  []Fc
 }
 
-func (f *CalledFcFnRetValue) String() string {
+func (f *FcFnRetValue) String() string {
 	typeParams := []string{}
 	for _, p := range f.TypeParams {
 		if s, ok := p.(TypeVarStr); ok {
@@ -62,9 +52,9 @@ func (f FcStr) String() string {
 }
 
 // used for variables that are returned by called function, e,g. f().g().h().  The chain is connected by dots
-type FcFnCallChain []Fc
+type FcMemChain []Fc
 
-func (f *FcFnCallChain) String() string {
+func (f *FcMemChain) String() string {
 	ret := ""
 	for i := 0; i < len(*f)-1; i++ {
 		ret += fmt.Sprintf("%s.", (*f)[i])

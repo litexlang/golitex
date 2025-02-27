@@ -4,23 +4,29 @@ import (
 	parser "golitex/litex_parser"
 )
 
-type MemoryErr struct {
-	err error
-}
+// type FnPropParaMemTree struct {
+// 	FcStr []parser.FcStr
+// }
 
-func (e *MemoryErr) Error() string {
-	return e.err.Error()
-}
+type FcEnumType uint8
+
+const (
+	FcStrEnum FcEnumType = iota
+	FcFnRetValueEnum
+	FcFnCallChainEnum
+)
 
 // Define type PropName to signify functionality of a string variable
 type PropName string
 
 type SpecFactMemory struct {
-	FactsWithPropName map[PropName]PropFacts
+	PropFactsMap map[PropName]PropFacts
 }
 
-type PropFacts struct {
-}
+type PropFacts map[FcEnumType]PropFactValues
+
+// TODO
+type PropFactValues struct{}
 
 type SpecMemoryFact struct {
 }
@@ -111,5 +117,13 @@ func NewFcVarTypeMemory() *FcVarTypeMemory {
 }
 
 func NewSpecFactMemory() *SpecFactMemory {
-	return &SpecFactMemory{FactsWithPropName: map[PropName]PropFacts{}}
+	return &SpecFactMemory{PropFactsMap: map[PropName]PropFacts{}}
+}
+
+type MemoryErr struct {
+	err error
+}
+
+func (e *MemoryErr) Error() string {
+	return e.err.Error()
 }
