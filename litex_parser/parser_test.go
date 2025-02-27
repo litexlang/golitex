@@ -1039,3 +1039,17 @@ if:
 	}
 
 }
+
+func TestFc2(t *testing.T) {
+	code := `
+f(1,2)(3,v).F(a.b.c(4,5),6) is red	
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
