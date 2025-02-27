@@ -18,7 +18,7 @@ type FcFnDecl struct {
 
 type PropDecl struct {
 	name string
-	tp   FcPropertyType
+	tp   FcPropType
 }
 
 type TypeConceptPair struct {
@@ -56,7 +56,7 @@ type FcFnType struct {
 	retType         fcType
 }
 
-type FcPropertyType struct {
+type FcPropType struct {
 	typeParams []TypeConceptPair
 	varParams  []StrTypePair
 }
@@ -69,14 +69,14 @@ type UndefinedVarType struct{}
 
 var undefinedVarTypeInstance *UndefinedVarType = &UndefinedVarType{}
 
-type UndefinedPropertyType struct{}
+type UndefinedPropType struct{}
 
-var undefinedPropertyTypeInstance *UndefinedPropertyType = &UndefinedPropertyType{}
+var undefinedPropTypeInstance *UndefinedPropType = &UndefinedPropType{}
 
 var AnyType = Keywords["any"]
 var VarType = Keywords["var"]
 var FnType = Keywords["fn"]
-var PropertyType = Keywords["prop"]
+var PropType = Keywords["prop"]
 
 type NamedFcType struct {
 	typeNameArr []string // packageName.packageName.typeName

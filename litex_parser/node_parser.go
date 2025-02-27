@@ -141,7 +141,7 @@ func (parser *Parser) parseFcType() (fcType, error) {
 	if parser.is(Keywords["fn"]) {
 		return parser.parseFcFnVar()
 	} else if parser.is(Keywords["prop"]) {
-		return parser.parsePropertyType()
+		return parser.parsePropType()
 	} else {
 		return parser.parseFcVarType()
 	}
@@ -157,10 +157,10 @@ func (parser *Parser) parseUndefinedFcType() (fcUndefinedType, error) {
 		return undefinedVarTypeInstance, nil
 	} else if parser.is(Keywords["var"]) {
 		parser.skip()
-		return undefinedPropertyTypeInstance, nil
+		return undefinedPropTypeInstance, nil
 	}
 
-	return nil, &parserErr{fmt.Errorf("expect 'fn', 'property', 'var' after '?'"), parser}
+	return nil, &parserErr{fmt.Errorf("expect 'fn', 'prop', 'var' after '?'"), parser}
 }
 
 // func (parser *Parser) parseFnRetType() (fnRetType, error) {
@@ -171,7 +171,7 @@ func (parser *Parser) parseUndefinedFcType() (fcUndefinedType, error) {
 // 	}
 // }
 
-func (parser *Parser) parsePropertyType() (*FcPropertyType, error) {
+func (parser *Parser) parsePropType() (*FcPropType, error) {
 	parser.skip()
 
 	typeParams, varParams, err := parser.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
@@ -179,7 +179,7 @@ func (parser *Parser) parsePropertyType() (*FcPropertyType, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &FcPropertyType{*typeParams, *varParams}, nil
+	return &FcPropType{*typeParams, *varParams}, nil
 }
 
 func (parser *Parser) parseFcVarType() (FcVarType, error) {
@@ -318,7 +318,7 @@ func (parser *Parser) parseFcVarPair() (*FcVarDeclPair, error) {
 	return &FcVarDeclPair{v, tp}, nil
 }
 
-func (parser *Parser) parsePropertyDecl() (*PropDecl, error) {
+func (parser *Parser) parsePropDecl() (*PropDecl, error) {
 	parser.skip(Keywords["prop"])
 	name, err := parser.next()
 	if err != nil {
@@ -330,7 +330,7 @@ func (parser *Parser) parsePropertyDecl() (*PropDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &PropDecl{name, FcPropertyType{*typeParams, *varParams}}, nil
+	return &PropDecl{name, FcPropType{*typeParams, *varParams}}, nil
 }
 
 func (parser *Parser) parseExistDecl() (*PropDecl, error) {
@@ -345,7 +345,7 @@ func (parser *Parser) parseExistDecl() (*PropDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &PropDecl{name, FcPropertyType{*typeParams, *varParams}}, nil
+	return &PropDecl{name, FcPropType{*typeParams, *varParams}}, nil
 }
 
 func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
@@ -454,7 +454,7 @@ func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 	if stmt.Header.is(Keywords["prop"]) {
-		prop, err := stmt.parseDefPropertyStmt()
+		prop, err := stmt.parseDefPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}

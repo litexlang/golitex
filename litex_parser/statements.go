@@ -13,29 +13,29 @@ type DefVarStmt struct {
 // if concept and type has more conceptTypes, use know impl
 
 type DefConceptStmt struct {
-	decl               fcDecl
-	conceptName        TypeConceptStr
-	typeVarMember      []FcVarDecl
-	typeFnMember       []FcFnDecl
-	typePropertyMember []PropDecl
-	varMember          []FcVarDecl
-	fnMember           []FcFnDecl
-	propertyMember     []PropDecl
-	thenFacts          []FactStmt
+	decl           fcDecl
+	conceptName    TypeConceptStr
+	typeVarMember  []FcVarDecl
+	typeFnMember   []FcFnDecl
+	typePropMember []PropDecl
+	varMember      []FcVarDecl
+	fnMember       []FcFnDecl
+	propMember     []PropDecl
+	thenFacts      []FactStmt
 }
 
 type DefTypeStmt struct {
 	decl fcDecl
 	// implType can be concept, or type, because a new type can either
 	// implement a concept or just be a subset of a type
-	implType           NamedFcType
-	typeVarMember      []FcVarDecl
-	typeFnMember       []FcFnDecl
-	typePropertyMember []PropDecl
-	varMember          []FcVarDecl
-	fnMember           []FcFnDecl
-	propertyMember     []PropDecl
-	thenFacts          []FactStmt
+	implType       NamedFcType
+	typeVarMember  []FcVarDecl
+	typeFnMember   []FcFnDecl
+	typePropMember []PropDecl
+	varMember      []FcVarDecl
+	fnMember       []FcFnDecl
+	propMember     []PropDecl
+	thenFacts      []FactStmt
 }
 
 type DefPropStmt struct {
@@ -56,7 +56,7 @@ type BlockForallStmt struct {
 	typeParams []TypeConceptPair
 	varParams  []StrTypePair
 	cond       []FactStmt
-	then       []InstantiatedFactStmt
+	then       []SpecFactStmt
 }
 
 type FuncPropStmt struct {
@@ -98,8 +98,8 @@ type DefExistStmt struct {
 }
 
 type HaveStmt struct {
-	propertyStmt InstantiatedFactStmt
-	member       []string
+	propStmt SpecFactStmt
+	member   []string
 }
 
 type DefMemberStmt struct {
@@ -129,7 +129,7 @@ type ThmStmt struct {
 // TODO 需要写一下 什么类型的事实写成什么样
 type IfFactStmt struct {
 	condFacts []FactStmt
-	thenFacts []InstantiatedFactStmt
+	thenFacts []SpecFactStmt
 }
 
 // forall []() cond {then}

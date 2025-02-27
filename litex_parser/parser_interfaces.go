@@ -50,7 +50,7 @@ func (p *IfFactStmt) factStmt()       {}
 
 // func (p *InlineForallStmt) factStmt() {}
 
-type InstantiatedFactStmt interface {
+type SpecFactStmt interface {
 	notFactStmtSetT(b bool)
 	factStmt()
 	stmt()
@@ -70,21 +70,21 @@ type fcType interface {
 	fcType()
 }
 
-func (f FcVarType) fcType()              {}
-func (f *FcFnType) fcType()              {}
-func (f *FcPropertyType) fcType()        {}
-func (f *UndefinedFnType) fcType()       {}
-func (f *UndefinedVarType) fcType()      {}
-func (f *UndefinedPropertyType) fcType() {}
+func (f FcVarType) fcType()          {}
+func (f *FcFnType) fcType()          {}
+func (f *FcPropType) fcType()        {}
+func (f *UndefinedFnType) fcType()   {}
+func (f *UndefinedVarType) fcType()  {}
+func (f *UndefinedPropType) fcType() {}
 
 type fcUndefinedType interface {
 	fcUndefinedType()
 	fcType()
 }
 
-func (f *UndefinedFnType) fcUndefinedType()       {}
-func (f *UndefinedVarType) fcUndefinedType()      {}
-func (f *UndefinedPropertyType) fcUndefinedType() {}
+func (f *UndefinedFnType) fcUndefinedType()   {}
+func (f *UndefinedVarType) fcUndefinedType()  {}
+func (f *UndefinedPropType) fcUndefinedType() {}
 
 // type fnRetType interface {
 // 	fnRetType()

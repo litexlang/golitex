@@ -14,7 +14,7 @@ Litex is a minimalist proof assistant (formal language). Since even children gra
 
 Traditional proof assistants lack the fluidity and ease needed to scale formal proofs, while Litex handles the growing complexity of modern mathematics effectively through its clean syntax. Litex is designed to be as intuitive as Python or LaTeX, with a minimal learning curve. Users can trust their common sense to write Litex.
 
-Litex has the potential to greatly impact both mathematics and AI:
+Why should you learn Litex? Litex has the potential to greatly impact both mathematics and AI:
 
 - **For Mathematics**: 
   - **For individual researchers**, it provides peace of mind by reducing the risk of subtle errors undermining their proofs. With it, interactive textbooks can be created, enabling learners to study more efficiently and innovate.
@@ -26,6 +26,8 @@ Because Litex is an order of magnitude simpler than traditional proof assistants
 
   - **Automated Verification**:
 Litex can automatically verify LLM outputs for math problems, providing a reliable way to validate and refine their reasoning. This capability is crucial for improving the accuracy and robustness of LLMs in mathematical tasks.
+
+From a higher point of view, Litex allows you to perceive math from a completely new perspective.
 
 In short, Litex can transform workflow and collaboration of mathematicians. It boost AI's reasoning with more formal data and a super efficient verifier. The core design principle of Litex is simplicity and user-friendliness.
 
@@ -422,7 +424,7 @@ _Simplify, simplify, simplify._
 
 _-- Steve Jobs_
 
-The followings are design choices of Litex and how they are made. Designing a language is fun, because there are both lots of high-level ideas and low-level details involved. If you just want to have a glimpse of Litex, you can the following part. If you want to have a deeper understanding, the following will serve as a very good mental entertainment.
+The followings are design choices of Litex and how they are made. As Bjarne Stroustrup(inventor of C++) said: "Language design is a curious mixture of grand ideas and fiddly details". If you want to have a deeper understanding of Litex, the following will serve as a very good mental entertainment.
 
 ### What makes Litex Factual Expressions easier to use
 
@@ -449,9 +451,9 @@ The Litex runtime does not include control flow (loops and branches) because peo
 However, Litex still enables you to do mechanical things through language plugin. You can call a mechanical algorithm to help you generate text. This text can be implicitly embedded to your current line of your proof. In this way, Litex becomes "Turing complete" while vanilla Litex is not.
 
 
-### C-flavored Type Naming. No Generics.
+### C-flavored Type Naming Instead of Generics.
 
-There is no generics in Litex, at least for the time being. I prefer single-word type name, rather than type with layers of layers of "<>"s, as how code looks like in C++ and other languages with generics. 
+There is no generics in Litex, at least for the time being. I prefer single-word type name as how C works, rather than type with layers of layers of "<>"s, as how code looks like in C++ and other languages with generics(templates). 
 
 Generics helps you to expose every layer of data-structure. It is great in many cases, but may cause serious trouble in Litex. The reason is simple: there are just so many layers of abstraction in math, too many to imagine. Exposing all the abstraction layers in type would make the code overly redundant. Users do not need to delve into concepts that are too low-level.
 

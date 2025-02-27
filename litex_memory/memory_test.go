@@ -20,8 +20,8 @@ f(t) is red
 	for _, topStatement := range *statements {
 		statement := topStatement.Stmt
 		stmt := statement.(*parser.FuncPropStmt)
-		propertyFc := stmt.Fc.(*parser.CalledFcFnRetValue)
-		fc := propertyFc.VarParams[0]
+		propFc := stmt.Fc.(*parser.CalledFcFnRetValue)
+		fc := propFc.VarParams[0]
 		memKey, err := getMemoryKey(fc)
 		if err != nil {
 			t.Fatal(err)

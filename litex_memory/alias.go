@@ -7,7 +7,7 @@ func (m *AliasMemory) newItem(previousName string, newName string) {
 		*entry.Values = append(*entry.Values, newName)
 		m.entries[newName] = entry
 	} else {
-		m.entries[newName] = AliasMemoryEntry{Values: &[]string{newName}}
+		m.entries[newName] = AliasMemEntry{Values: &[]string{newName}}
 	}
 
 }

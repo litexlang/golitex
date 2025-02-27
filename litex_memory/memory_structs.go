@@ -12,48 +12,48 @@ func (e *MemoryErr) Error() string {
 	return e.err.Error()
 }
 
-type InstantiatedFactMemory struct {
-	Entries map[string]InstantiatedFactMemEntry
+type SpecFactMemory struct {
+	Entries map[string]SpecFactMemEntry
 }
 
-func NewInstantiatedFactMemory() *InstantiatedFactMemory {
-	return &InstantiatedFactMemory{Entries: map[string]InstantiatedFactMemEntry{}}
+func NewInstantiatedFactMemory() *SpecFactMemory {
+	return &SpecFactMemory{Entries: map[string]SpecFactMemEntry{}}
 }
 
-type InstantiatedFactMemEntry struct{ Facts []InstantiatedMemoryFact }
+type SpecFactMemEntry struct{ Facts []SpecMemoryFact }
 
-type InstantiatedMemoryFact struct {
-	then parser.InstantiatedFactStmt // second field is single statement not []
+type SpecMemoryFact struct {
+	then parser.SpecFactStmt // second field is single statement not []
 }
 
-type ConditionalFactMemory struct {
-	Entries map[string]ConditionalFactMemoryEntry
+type CondFactMemory struct {
+	Entries map[string]CondFactMemEntry
 }
 
-func NewConditionalFactMemory() *ConditionalFactMemory {
-	return &ConditionalFactMemory{Entries: map[string]ConditionalFactMemoryEntry{}}
+func NewConditionalFactMemory() *CondFactMemory {
+	return &CondFactMemory{Entries: map[string]CondFactMemEntry{}}
 }
 
-type ConditionalFactMemoryEntry struct{ Facts []ConditionalFactMemoryFact }
+type CondFactMemEntry struct{ Facts []CondFactMemFact }
 
-type ConditionalFactMemoryFact struct {
+type CondFactMemFact struct {
 	cond *[]parser.FactStmt
 	then parser.FactStmt
 }
 
-type UniversalFactMemory struct{ Entires map[string]ForallFactMemEntry }
+type UniFactMemory struct{ Entires map[string]UniFactMemEntry }
 
-func NewUniversalFactMemory() *UniversalFactMemory {
-	return &UniversalFactMemory{map[string]ForallFactMemEntry{}}
+func NewUniversalFactMemory() *UniFactMemory {
+	return &UniFactMemory{map[string]UniFactMemEntry{}}
 }
 
-type ForallFactMemEntry struct{ Facts []ForallMemFact }
+type UniFactMemEntry struct{ Facts []UniMemFact }
 
-type ForallMemFact struct {
+type UniMemFact struct {
 	typeParams *[]parser.TypeConceptPair
 	varParams  *[]parser.StrTypePair
 	cond       *[]parser.FactStmt
-	then       *[]parser.InstantiatedFactStmt
+	then       *[]parser.SpecFactStmt
 }
 
 type VarMemory struct{ Entries map[string]VarMemoryEntry }
@@ -67,39 +67,39 @@ type VarMemoryEntry struct {
 	Types []parser.FcVarType
 }
 
-type PropertyMemory struct {
-	Entires map[string]PropertyMemoryEntry
+type PropMemory struct {
+	Entires map[string]PropMemoryEntry
 }
 
-func NewPropMemory() *PropertyMemory {
-	return &PropertyMemory{map[string]PropertyMemoryEntry{}}
+func NewPropMemory() *PropMemory {
+	return &PropMemory{map[string]PropMemoryEntry{}}
 }
 
-type PropertyMemoryEntry struct {
-	Tp    parser.FcPropertyType
-	Types []parser.FcPropertyType
+type PropMemoryEntry struct {
+	Tp    parser.FcPropType
+	Types []parser.FcPropType
 	Decl  parser.PropDecl
 }
 
-type FnMemory struct{ entries map[string]FnMemoryEntry }
+type FnMemory struct{ entries map[string]FnMemEntry }
 
 func NewFnMemory() *FnMemory {
-	return &FnMemory{entries: map[string]FnMemoryEntry{}}
+	return &FnMemory{entries: map[string]FnMemEntry{}}
 }
 
-type FnMemoryEntry struct {
+type FnMemEntry struct {
 	Tp    parser.FcFnType
 	Types []parser.FcFnType
 	Decl  parser.FcFnDecl
 }
 
-type AliasMemory struct{ entries map[string]AliasMemoryEntry }
+type AliasMemory struct{ entries map[string]AliasMemEntry }
 
 func NewAliasMemory() *AliasMemory {
-	return &AliasMemory{map[string]AliasMemoryEntry{}}
+	return &AliasMemory{map[string]AliasMemEntry{}}
 }
 
-type AliasMemoryEntry struct {
+type AliasMemEntry struct {
 	Values *[]string
 }
 

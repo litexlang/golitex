@@ -241,7 +241,7 @@ func TestForallStmt(t *testing.T) {
 	fmt.Printf("%v", cur)
 }
 
-func TestDefPropertyStmt(t *testing.T) {
+func TestDefPropStmt(t *testing.T) {
 	tokenized1, err := tokenizeString("prop ha [G Group] (g1 G, g2 G):")
 	if err != nil {
 		t.Fatal(err)
@@ -266,7 +266,7 @@ func TestDefPropertyStmt(t *testing.T) {
 			},
 		}
 
-	cur, err := block.parseDefPropertyStmt()
+	cur, err := block.parseDefPropStmt()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -306,7 +306,7 @@ func TestDefPropertyStmt(t *testing.T) {
 				},
 			}}
 
-	cur, err = block2.parseDefPropertyStmt()
+	cur, err = block2.parseDefPropStmt()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -372,7 +372,7 @@ func TestDefConceptStmt(t *testing.T) {
 	}
 }
 
-func TestDefPropertyStmt2(t *testing.T) {
+func TestDefPropStmt2(t *testing.T) {
 	code := `
 prop P[G Group, G2 Group](g G, g2 G2):
 	cond:
@@ -769,7 +769,7 @@ as( p[as(g, G), as(g2, G)](a, as(p [g](a), nat)) , G ) is red
 	}
 }
 
-func TestDefPropertyVar(t *testing.T) {
+func TestDefPropVar(t *testing.T) {
 	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	// 1 is red
 
@@ -790,7 +790,7 @@ prop ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	}
 }
 
-func TestPropertyVar(t *testing.T) {
+func TestPropVar(t *testing.T) {
 	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	// 1 is red
 
