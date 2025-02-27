@@ -10,7 +10,7 @@ const fcFnCallChainMemKeyLinker = "~"
 const calledFcFnRetValueKeyMemKeySpecifier = "@"
 
 func getMemoryKey(fc parser.Fc) (string, error) {
-	if value, ok := fc.(*parser.CalledFcFnRetValue); ok {
+	if value, ok := fc.(*parser.FcFnRetValue); ok {
 		ret, err := getMemoryKey(value.Fn)
 		if err != nil {
 			return "", err
@@ -19,7 +19,7 @@ func getMemoryKey(fc parser.Fc) (string, error) {
 		return calledFcFnRetValueKeyMemKeySpecifier + ret, nil
 	} else if value, ok := fc.(parser.FcStr); ok {
 		return string(value), nil
-	} else if value, ok := fc.(*parser.FcFnCallChain); ok {
+	} else if value, ok := fc.(*parser.FcMemChain); ok {
 		fcs := []string{}
 		for _, fc := range *(value) {
 			key, err := getMemoryKey(fc)

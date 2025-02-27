@@ -42,10 +42,6 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 	// 	return parser.parseFcLambdaFn()
 	// }
 
-	if parser.is(Keywords["as"]) {
-		return parser.parseTypedFcWithPrefixAs()
-	}
-
 	if parser.curTokenBeginWithNumber() {
 		return parser.parseNumberStr()
 	}
@@ -74,7 +70,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		fcArr = append(fcArr, curFc)
 	}
 
-	ret := FcFnCallChain(fcArr)
+	ret := FcMemChain(fcArr)
 
 	return &ret, nil
 }
@@ -87,40 +83,6 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	}
 	parser.skip(BuiltinSyms[")"])
 	return fc, nil
-}
-
-func (parser *Parser) parseTypedFcWithPrefixAs() (*TypedFc, error) {
-	err := parser.skip(Keywords["as"])
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	err = parser.skip(BuiltinSyms["("])
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	fc, err := parser.ParseFc()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	err = parser.skip(BuiltinSyms[","])
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	PropType, err := parser.parsePropType()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	err = parser.skip(BuiltinSyms[")"])
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	return &TypedFc{fc, *PropType}, nil
 }
 
 func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
@@ -158,7 +120,7 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 			}
 		}
 
-		previousFc = &CalledFcFnRetValue{previousFc, *typeParamsPtr, *varParamsPtr}
+		previousFc = &FcFnRetValue{previousFc, *typeParamsPtr, *varParamsPtr}
 	}
 
 	return previousFc, nil
@@ -201,7 +163,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 			return nil, &parserErr{err, parser}
 		}
 
-		node = &CalledFcFnRetValue{
+		node = &FcFnRetValue{
 			FcStr(curToken),
 			[]typeVar{},
 			[]Fc{node, right},
@@ -223,7 +185,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &CalledFcFnRetValue{
+		return &FcFnRetValue{
 			FcStr(unaryOp),
 			[]typeVar{},
 			[]Fc{right},
