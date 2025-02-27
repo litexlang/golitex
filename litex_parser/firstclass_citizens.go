@@ -10,7 +10,7 @@ type Fc interface {
 	String() string
 }
 
-func (fc *TypedFc) fc()           {}
+func (fc *TypedFc) fc()           {} // 我或许把这个做成像go的append一样的内置函数，比把它做成单独一个数据结构，要合理
 func (f *CalledFcFnRetValue) fc() {}
 func (f FcStr) fc()               {}
 func (f *FcFnCallChain) fc()      {}

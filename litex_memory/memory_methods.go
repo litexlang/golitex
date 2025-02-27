@@ -3,7 +3,7 @@ package litexmemory
 import parser "golitex/litex_parser"
 
 func (mem *VarMemory) Get(s string) (*VarMemoryEntry, bool) {
-	ret, ok := mem.Entries[s]
+	ret, ok := mem.KVs[s]
 	if !ok {
 		return nil, false
 	}
@@ -15,7 +15,7 @@ func (mem *VarMemory) Set(pair *parser.FcVarDeclPair) (*VarMemoryEntry, error) {
 		pair.Tp,
 		[]parser.FcVarType{pair.Tp},
 	}
-	mem.Entries[pair.Var] = toStore
+	mem.KVs[pair.Var] = toStore
 
 	return &toStore, nil
 }

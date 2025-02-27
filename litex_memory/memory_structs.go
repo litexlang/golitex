@@ -12,26 +12,25 @@ func (e *MemoryErr) Error() string {
 	return e.err.Error()
 }
 
+// Define type PropName to signify functionality of a string variable
+type PropName string
+
 type SpecFactMemory struct {
-	Entries map[string]SpecFactMemEntry
+	FactsWithPropName map[PropName]PropFacts
 }
 
-func NewSpecFactMemory() *SpecFactMemory {
-	return &SpecFactMemory{Entries: map[string]SpecFactMemEntry{}}
+type PropFacts struct {
 }
-
-type SpecFactMemEntry struct{ Facts []SpecMemoryFact }
 
 type SpecMemoryFact struct {
-	then parser.SpecFactStmt // second field is single statement not []
 }
 
 type CondFactMemory struct {
-	Entries map[string]CondFactMemEntry
+	KVs map[PropName]CondFactMemEntry
 }
 
 func NewConditionalFactMemory() *CondFactMemory {
-	return &CondFactMemory{Entries: map[string]CondFactMemEntry{}}
+	return &CondFactMemory{KVs: map[PropName]CondFactMemEntry{}}
 }
 
 type CondFactMemEntry struct{ Facts []CondFactMemFact }
@@ -41,10 +40,12 @@ type CondFactMemFact struct {
 	then parser.FactStmt
 }
 
-type UniFactMemory struct{ Entires map[string]UniFactMemEntry }
+type UniFactMemory struct {
+	Entires map[PropName]UniFactMemEntry
+}
 
 func NewUniFactMemory() *UniFactMemory {
-	return &UniFactMemory{map[string]UniFactMemEntry{}}
+	return &UniFactMemory{map[PropName]UniFactMemEntry{}}
 }
 
 type UniFactMemEntry struct{ Facts []UniMemFact }
@@ -56,10 +57,10 @@ type UniMemFact struct {
 	then       *[]parser.SpecFactStmt
 }
 
-type VarMemory struct{ Entries map[string]VarMemoryEntry }
+type VarMemory struct{ KVs map[string]VarMemoryEntry }
 
 func NewVarMemory() *VarMemory {
-	return &VarMemory{Entries: map[string]VarMemoryEntry{}}
+	return &VarMemory{KVs: map[string]VarMemoryEntry{}}
 }
 
 type VarMemoryEntry struct {
@@ -107,4 +108,8 @@ type FcVarTypeMemory struct{ entries map[string][]parser.FcVarType }
 
 func NewFcVarTypeMemory() *FcVarTypeMemory {
 	return &FcVarTypeMemory{entries: map[string][]parser.FcVarType{}}
+}
+
+func NewSpecFactMemory() *SpecFactMemory {
+	return &SpecFactMemory{FactsWithPropName: map[PropName]PropFacts{}}
 }
