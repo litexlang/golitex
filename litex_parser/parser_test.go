@@ -1043,6 +1043,7 @@ if:
 func TestFc2(t *testing.T) {
 	code := `
 f(1,2)(3,v).F(a.b.c(4,5),6) is red	
+f(1,2)(3,v).F(a.b.c(4,5),6) is red
 `
 
 	statements, err := ParserTester(code)
