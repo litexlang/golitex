@@ -8,67 +8,6 @@ import (
 // 	FcStr []parser.FcStr
 // }
 
-type FcEnumType uint8
-
-const (
-	FcStrEnum FcEnumType = iota
-	FcFnRetValueEnum
-	FcFnCallChainEnum
-)
-
-// Define type PropName to signify functionality of a string variable
-type PropName string
-
-type SpecFactMemory struct {
-	PropFactsMap map[PropName]PropFacts
-}
-
-type PropFacts map[FcEnumType]PropFactValues
-
-// TODO
-type PropFactValues struct{}
-
-type SpecMemoryFact struct {
-}
-
-type CondFactMemory struct {
-	KVs map[PropName]CondFactMemEntry
-}
-
-func NewConditionalFactMemory() *CondFactMemory {
-	return &CondFactMemory{KVs: map[PropName]CondFactMemEntry{}}
-}
-
-type CondFactMemEntry struct{ Facts []CondFactMemFact }
-
-type CondFactMemFact struct {
-	cond *[]parser.FactStmt
-	then parser.FactStmt
-}
-
-type UniFactMemory struct {
-	Entires map[PropName]UniFactMemEntry
-}
-
-func NewUniFactMemory() *UniFactMemory {
-	return &UniFactMemory{map[PropName]UniFactMemEntry{}}
-}
-
-type UniFactMemEntry struct{ Facts []UniMemFact }
-
-type UniMemFact struct {
-	typeParams *[]parser.TypeConceptPair
-	varParams  *[]parser.StrTypePair
-	cond       *[]parser.FactStmt
-	then       *[]parser.SpecFactStmt
-}
-
-type VarMemory struct{ KVs map[string]VarMemoryEntry }
-
-func NewVarMemory() *VarMemory {
-	return &VarMemory{KVs: map[string]VarMemoryEntry{}}
-}
-
 type VarMemoryEntry struct {
 	Tp    parser.FcVarType
 	Types []parser.FcVarType
@@ -116,14 +55,16 @@ func NewFcVarTypeMemory() *FcVarTypeMemory {
 	return &FcVarTypeMemory{entries: map[string][]parser.FcVarType{}}
 }
 
-func NewSpecFactMemory() *SpecFactMemory {
-	return &SpecFactMemory{PropFactsMap: map[PropName]PropFacts{}}
-}
-
 type MemoryErr struct {
 	err error
 }
 
 func (e *MemoryErr) Error() string {
 	return e.err.Error()
+}
+
+type VarMemory struct{ KVs map[string]VarMemoryEntry }
+
+func NewVarMemory() *VarMemory {
+	return &VarMemory{KVs: map[string]VarMemoryEntry{}}
 }
