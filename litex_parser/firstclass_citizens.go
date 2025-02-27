@@ -5,6 +5,16 @@ import (
 	"strings"
 )
 
+type Fc interface {
+	fc()
+	String() string
+}
+
+func (fc *TypedFc) fc()           {}
+func (f *CalledFcFnRetValue) fc() {}
+func (f FcStr) fc()               {}
+func (f *FcFnCallChain) fc()      {}
+
 type TypedFc struct {
 	value Fc
 	tp    FcPropType
@@ -51,7 +61,7 @@ func (f FcStr) String() string {
 	return string(f)
 }
 
-// used for variables that are returned by called function, e,g. f[]()[]()[]()
+// used for variables that are returned by called function, e,g. f().g().h().  The chain is connected by dots
 type FcFnCallChain []Fc
 
 func (f *FcFnCallChain) String() string {
@@ -62,12 +72,11 @@ func (f *FcFnCallChain) String() string {
 	return ret + (*f)[len(*f)-1].String()
 }
 
-// type FcLambdaFn struct {
-// 	tp        FcFnType
-// 	ifFacts   []FactStmt
-// 	thenFacts []FactStmt
-// }
+type fcUndefinedType interface {
+	fcUndefinedType()
+	fcType()
+}
 
-// func (f *FcLambdaFn) String() string {
-// 	return fmt.Sprintf("%s => {cond: %s, then: %s}", f.tp, f.ifFacts, f.thenFacts)
-// }
+func (f *UndefinedFnType) fcUndefinedType()   {}
+func (f *UndefinedVarType) fcUndefinedType()  {}
+func (f *UndefinedPropType) fcUndefinedType() {}

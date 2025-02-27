@@ -1,17 +1,5 @@
 package litexparser
 
-type Fc interface {
-	fc()
-	String() string
-}
-
-func (fc *TypedFc) fc()           {}
-func (f *CalledFcFnRetValue) fc() {}
-func (f FcStr) fc()               {}
-func (f *FcFnCallChain) fc()      {}
-
-// func (f *FcLambdaFn) fc()         {}
-
 type Stmt interface {
 	stmt()
 }
@@ -76,29 +64,6 @@ func (f *FcPropType) fcType()        {}
 func (f *UndefinedFnType) fcType()   {}
 func (f *UndefinedVarType) fcType()  {}
 func (f *UndefinedPropType) fcType() {}
-
-type fcUndefinedType interface {
-	fcUndefinedType()
-	fcType()
-}
-
-func (f *UndefinedFnType) fcUndefinedType()   {}
-func (f *UndefinedVarType) fcUndefinedType()  {}
-func (f *UndefinedPropType) fcUndefinedType() {}
-
-// type fnRetType interface {
-// 	fnRetType()
-// }
-
-// func (f fcVarType) fnRetType() {}
-// func (f *fcFnType) fnRetType() {}
-
-// type fnRetTypeMemberDecl interface {
-// 	fnRetTypeMemberDecl()
-// }
-
-// func (f *fcVarDecl) fnRetTypeMemberDecl() {}
-// func (f *fcFnDecl) fnRetTypeMemberDecl()  {}
 
 type fcDecl interface {
 	fcDecl()

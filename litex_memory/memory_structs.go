@@ -16,7 +16,7 @@ type SpecFactMemory struct {
 	Entries map[string]SpecFactMemEntry
 }
 
-func NewInstantiatedFactMemory() *SpecFactMemory {
+func NewSpecFactMemory() *SpecFactMemory {
 	return &SpecFactMemory{Entries: map[string]SpecFactMemEntry{}}
 }
 
@@ -43,7 +43,7 @@ type CondFactMemFact struct {
 
 type UniFactMemory struct{ Entires map[string]UniFactMemEntry }
 
-func NewUniversalFactMemory() *UniFactMemory {
+func NewUniFactMemory() *UniFactMemory {
 	return &UniFactMemory{map[string]UniFactMemEntry{}}
 }
 
