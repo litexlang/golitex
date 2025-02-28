@@ -8,7 +8,7 @@ import (
 type PropName string
 
 type SpecFactMemory struct {
-	KnownFactsMap map[PropName]PropFactContainer
+	KnownFacts map[PropName]PropFactContainer
 }
 
 type PropFactContainer struct {
@@ -40,7 +40,7 @@ type UniMemFact struct {
 }
 
 func NewSpecFactMemory() *SpecFactMemory {
-	return &SpecFactMemory{KnownFactsMap: map[PropName]PropFactContainer{}}
+	return &SpecFactMemory{KnownFacts: map[PropName]PropFactContainer{}}
 }
 
 func NewUniFactMemory() *UniFactMemory {
