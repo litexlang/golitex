@@ -40,6 +40,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 
 	var curFc Fc
 	var err error
+
 	if parser.curTokenBeginWithNumber() {
 		curFc, err = parser.parseNumberStr()
 		if err != nil {
@@ -98,11 +99,24 @@ func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
 }
 
 func (parser *Parser) parseFcFnRetVal() (Fc, error) {
-	var previousFc Fc
-	previousFc, err := parser.parseFcStr()
+	optName, err := parser.parseFcStr()
 	if err != nil {
 		return nil, err
 	}
+
+	typeParamsVarParamsPairs, err := parser.parseTypeParamsVarParamsPairs()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &FcFnRetValue{optName, *typeParamsVarParamsPairs}, nil
+}
+
+func (parser *Parser) parseTypeParamsVarParamsPairs() (*[]TypeParamsAndParamsPair, error) {
+	var err error
+
+	pairs := []TypeParamsAndParamsPair{}
 
 	for !parser.ExceedEnd() && (parser.is(BuiltinSyms["["]) || parser.is(BuiltinSyms["("])) {
 		typeParamsPtr := &[]typeVar{}
@@ -121,10 +135,10 @@ func (parser *Parser) parseFcFnRetVal() (Fc, error) {
 			}
 		}
 
-		previousFc = &FcFnRetValue{previousFc, *typeParamsPtr, *varParamsPtr}
+		pairs = append(pairs, TypeParamsAndParamsPair{*typeParamsPtr, *varParamsPtr})
 	}
 
-	return previousFc, nil
+	return &pairs, nil
 }
 
 func (parser *Parser) parseFcStr() (FcStr, error) {
@@ -141,7 +155,7 @@ func (parser *Parser) ParseFc() (Fc, error) {
 }
 
 func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, error) {
-	node, err := parser.parseFcUnaryExpr()
+	left, err := parser.parseFcUnaryExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -150,7 +164,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 	for {
 		curToken, err := parser.currentToken()
 		if err != nil {
-			return node, nil
+			return left, nil
 		}
 
 		curPrec, isBinary := precedenceMap[curToken]
@@ -164,14 +178,13 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 			return nil, &parserErr{err, parser}
 		}
 
-		node = &FcFnRetValue{
+		left = &FcFnRetValue{
 			FcStr(curToken),
-			[]typeVar{},
-			[]Fc{node, right},
+			[]TypeParamsAndParamsPair{{[]typeVar{}, []Fc{left, right}}},
 		}
 	}
 
-	return node, nil
+	return left, nil
 }
 
 func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
@@ -188,8 +201,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 		}
 		return &FcFnRetValue{
 			FcStr(unaryOp),
-			[]typeVar{},
-			[]Fc{right},
+			[]TypeParamsAndParamsPair{{[]typeVar{}, []Fc{right}}},
 		}, nil
 	} else {
 		return parser.parseFcAtom()

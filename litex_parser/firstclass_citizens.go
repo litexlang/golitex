@@ -2,7 +2,6 @@ package litexparser
 
 import (
 	"fmt"
-	"strings"
 )
 
 type Fc interface {
@@ -14,48 +13,48 @@ func (f FcStr) fc()         {}
 func (f *FcFnRetValue) fc() {}
 func (f *FcMemChain) fc()   {}
 
-// type TypeParamsAndParamsPair struct {
-// 	TypeParams []typeVar
-// 	VarParams  []Fc
-// }
-
-// type FcFnRetValue struct {
-// 	FnName                       string
-// 	TypeParamsAndParamsPairSlice []TypeParamsAndParamsPair
-// 	TypeParams                   []typeVar
-// 	VarParams                    []Fc
-// }
-
-type FcFnRetValue struct {
-	Fn         Fc
+type TypeParamsAndParamsPair struct {
 	TypeParams []typeVar
 	VarParams  []Fc
 }
 
+type FcFnRetValue struct {
+	FnName                   FcStr
+	TypeParamsVarParamsPairs []TypeParamsAndParamsPair
+}
+
+// type FcFnRetValue struct {
+// 	Fn         Fc
+// 	TypeParams []typeVar
+// 	VarParams  []Fc
+// }
+
 // used for variables that are returned by called function
 
 func (f *FcFnRetValue) String() string {
-	typeParams := []string{}
-	for _, p := range f.TypeParams {
-		if s, ok := p.(TypeVarStr); ok {
-			typeParams = append(typeParams, string(s))
-		}
-	}
-	strTypeParams := ""
-	if len(typeParams) > 0 {
-		strTypeParams = fmt.Sprintf("[%s]", strings.Join(typeParams, ", "))
-	}
+	return ""
 
-	varParams := []string{}
-	for _, p := range f.VarParams {
-		varParams = append(varParams, p.String())
-	}
-	strVarParams := ""
-	if len(varParams) > 0 {
-		strVarParams = fmt.Sprintf("(%s)", strings.Join(varParams, ", "))
-	}
+	// typeParams := []string{}
+	// for _, p := range f.TypeParams {
+	// 	if s, ok := p.(TypeVarStr); ok {
+	// 		typeParams = append(typeParams, string(s))
+	// 	}
+	// }
+	// strTypeParams := ""
+	// if len(typeParams) > 0 {
+	// 	strTypeParams = fmt.Sprintf("[%s]", strings.Join(typeParams, ", "))
+	// }
 
-	return fmt.Sprintf("%s%s%s", f.Fn, strTypeParams, strVarParams)
+	// varParams := []string{}
+	// for _, p := range f.VarParams {
+	// 	varParams = append(varParams, p.String())
+	// }
+	// strVarParams := ""
+	// if len(varParams) > 0 {
+	// 	strVarParams = fmt.Sprintf("(%s)", strings.Join(varParams, ", "))
+	// }
+
+	// return fmt.Sprintf("%s%s%s", f.Fn, strTypeParams, strVarParams)
 }
 
 type FcStr string
