@@ -4,20 +4,11 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (c *KnownSpecPropFactContainer) put(fact parser.SpecFactStmt) error {
-	c.facts = append(c.facts, fact)
-
+func (c *PropFactContainer) put(fact parser.SpecFactStmt) error {
 	return nil
 }
 
-func (c *KnownSpecPropFactContainer) IsKnown(fact parser.SpecFactStmt) (bool, error) {
-	for _, knownFact := range c.facts {
-		comp := CompSpecFactParams(knownFact, fact)
-		if comp == 0 {
-			return true, nil
-		}
-	}
-
+func (c *PropFactContainer) IsKnown(fact parser.SpecFactStmt) (bool, error) {
 	return false, nil
 }
 

@@ -8,12 +8,11 @@ import (
 type PropName string
 
 type SpecFactMemory struct {
-	KnownFactsMap map[PropName]KnownSpecPropFactContainer
+	KnownFactsMap map[PropName]PropFactContainer
 }
 
-// The dumbest implementation of KnownSpecPropFactContainer: a slice.
-type KnownSpecPropFactContainer struct {
-	facts []parser.SpecFactStmt
+type PropFactContainer struct {
+	Memory RedBlackTree
 }
 
 type CondFactMemory struct {
@@ -41,7 +40,7 @@ type UniMemFact struct {
 }
 
 func NewSpecFactMemory() *SpecFactMemory {
-	return &SpecFactMemory{KnownFactsMap: map[PropName]KnownSpecPropFactContainer{}}
+	return &SpecFactMemory{KnownFactsMap: map[PropName]PropFactContainer{}}
 }
 
 func NewUniFactMemory() *UniFactMemory {
