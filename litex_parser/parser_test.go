@@ -1131,3 +1131,25 @@ func TestNewFnRetValue(t *testing.T) {
 		}
 	}
 }
+
+func TestNewParseFcAtom(t *testing.T) {
+	code := `
+a is red
+a.b is red
+a.f() is red
+a()() is red
+a.b.c.d.e.f() is red
+a.b.c.d.e.f[x,y]() is red
+a.b.c.d()().e.f[x,y](z)() is red
+1.b is red
+1.2.b()().c.d.e.f() is red
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
