@@ -62,11 +62,6 @@ func (f *FcMemChain) String() string {
 	return ret + (*f)[len(*f)-1].String()
 }
 
-type fcUndefinedType interface {
-	fcUndefinedType()
-	fcType()
+func CompareParamsInSpecFact(knownFact SpecFactStmt, givenFact SpecFactStmt) int {
+	return 0
 }
-
-func (f *UndefinedFnType) fcUndefinedType()   {}
-func (f *UndefinedVarType) fcUndefinedType()  {}
-func (f *UndefinedPropType) fcUndefinedType() {}

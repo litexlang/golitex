@@ -82,3 +82,12 @@ type NamedFcType struct {
 	typeNameArr []string // packageName.packageName.typeName
 	params      []Fc
 }
+
+type fcUndefinedType interface {
+	fcUndefinedType()
+	fcType()
+}
+
+func (f *UndefinedFnType) fcUndefinedType()   {}
+func (f *UndefinedVarType) fcUndefinedType()  {}
+func (f *UndefinedPropType) fcUndefinedType() {}
