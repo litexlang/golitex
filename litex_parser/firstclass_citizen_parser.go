@@ -38,17 +38,18 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		return parser.parseBracedFcExpr()
 	}
 
-	// if parser.is(BuiltinSyms["["]) {
-	// 	return parser.parseFcLambdaFn()
-	// }
-
+	var curFc Fc
+	var err error
 	if parser.curTokenBeginWithNumber() {
-		return parser.parseNumberStr()
-	}
-
-	curFc, err := parser.parseFcStrAndFcFnRetVal()
-	if err != nil {
-		return nil, &parserErr{err, parser}
+		curFc, err = parser.parseNumberStr()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+	} else {
+		curFc, err = parser.parseFcStrAndFcFnRetVal()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
 	}
 
 	if !parser.is(BuiltinSyms["."]) {
@@ -213,19 +214,23 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 	}
 
 	if parser.is(BuiltinSyms["."]) {
-		parser.skip()
-		right, err := parser.next()
-
+		// The member after . might be a member or a number
+		_, err := strconv.Atoi(parser.strAt(1))
 		if err != nil {
-			return "", err
-		}
+			return FcStr(left), nil
+		} else {
+			parser.skip()
+			right, err := parser.next()
 
-		_, err = strconv.Atoi(right)
-		if err != nil {
-			return "", fmt.Errorf("invalid number: %s", right)
-		}
+			if err != nil {
+				return "", err
+			}
+			if err != nil {
+				return "", fmt.Errorf("invalid number: %s", right)
+			}
 
-		return FcStr(left) + "." + FcStr(right), nil
+			return FcStr(left) + "." + FcStr(right), nil
+		}
 	}
 
 	return FcStr(left), nil
