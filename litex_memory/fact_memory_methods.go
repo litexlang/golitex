@@ -10,13 +10,17 @@ func (c *KnownSpecPropFactContainer) put(fact parser.SpecFactStmt) error {
 	return nil
 }
 
-func (c *KnownSpecPropFactContainer) match(fact parser.SpecFactStmt) (bool, error) {
+func (c *KnownSpecPropFactContainer) IsKnown(fact parser.SpecFactStmt) (bool, error) {
 	for _, knownFact := range c.facts {
-		comp := parser.CompareParamsInSpecFact(knownFact, fact)
+		comp := CompSpecFactParams(knownFact, fact)
 		if comp == 0 {
 			return true, nil
 		}
 	}
 
 	return false, nil
+}
+
+func CompSpecFactParams(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt) int {
+	return 0
 }

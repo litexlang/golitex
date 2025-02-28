@@ -1,6 +1,7 @@
 package litexmemory
 
 import (
+	"fmt"
 	parser "golitex/litex_parser"
 	"testing"
 )
@@ -58,4 +59,16 @@ h[a](b).g[c](d).t
 		}
 		t.Log(memKey)
 	}
+}
+
+func TestRedBlackTree(t *testing.T) {
+	tree := &PropFactRedBlackTree{}
+	keys := []PropFactTreeNodeKey{10, 20, 30, 15, 25, 5}
+	for _, key := range keys {
+		tree.insert(key)
+	}
+
+	fmt.Println("Inorder Traversal:")
+	tree.inorderTraversal(tree.root)
+	fmt.Println()
 }

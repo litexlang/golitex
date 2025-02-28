@@ -61,7 +61,3 @@ func (f *FcMemChain) String() string {
 	}
 	return ret + (*f)[len(*f)-1].String()
 }
-
-func CompareParamsInSpecFact(knownFact SpecFactStmt, givenFact SpecFactStmt) int {
-	return 0
-}
