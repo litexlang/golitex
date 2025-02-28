@@ -10,18 +10,38 @@ func CompSpecFactParams(knownFact parser.SpecFactStmt, givenFact parser.SpecFact
 }
 
 func SpecFactCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactStmt) (int, error) {
+	// when two given spec facts are the same in type
+	knownRelationFact, ok := (*knownFact).(*parser.RelationFactStmt)
+	givenRelationFact, ok2 := (*givenFact).(*parser.RelationFactStmt)
+	if ok && ok2 {
+		return specRelationFactCompare(knownRelationFact, givenRelationFact)
+	}
+
+	knownFuncFact, ok := (*knownFact).(*parser.FuncFactStmt)
+	givenFuncFact, ok2 := (*givenFact).(*parser.FuncFactStmt)
+	if ok && ok2 {
+		return specFuncFactCompare(knownFuncFact, givenFuncFact)
+	}
+
+	// when two given spec functions are different in type
 	specTypeCompareResult, err := specFactTypeCompare(knownFact, givenFact)
 	if err != nil {
 		return 0, err
 	}
+	if specTypeCompareResult != 0 {
+		return specTypeCompareResult, nil
+	}
 
-	return specTypeCompareResult, nil
+	return 0, fmt.Errorf("unknown specFactStmt")
 }
 
-const (
-	RelationSpecFactStmtEnum = 0
-	FuncSpecFactEnum         = 1
-)
+func specRelationFactCompare(knownFact *parser.RelationFactStmt, givenFact *parser.RelationFactStmt) (int, error) {
+	return 0, nil
+}
+
+func specFuncFactCompare(knownFact *parser.FuncFactStmt, givenFact *parser.FuncFactStmt) (int, error) {
+	return 0, nil
+}
 
 func specFactTypeCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactStmt) (int, error) {
 	knownFactType, err := getSpecFactEnum(knownFact)
@@ -37,15 +57,21 @@ func specFactTypeCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecF
 	return knownFactType - givenFactType, nil
 }
 
+const (
+	relationSpecFactStmtEnum = 0
+	funcSpecFactEnum         = 1
+)
+
 func getSpecFactEnum(fact *parser.SpecFactStmt) (int, error) {
+
 	switch (*fact).(type) {
 	case *parser.RelationFactStmt:
-		return RelationSpecFactStmtEnum, nil
+		return relationSpecFactStmtEnum, nil
 	case *parser.FuncFactStmt:
-		return FuncSpecFactEnum, nil
+		return funcSpecFactEnum, nil
 	}
 
-	return 0, fmt.Errorf("Unknown SpecFactStmt type: %T", *fact)
+	return 0, fmt.Errorf("unknown SpecFactStmt type: %T", *fact)
 }
 
 func NewSpecFactMemory() *SpecFactMemory {
