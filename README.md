@@ -393,6 +393,13 @@ Nobody can learn programming just by reading manuals. Practice is the sole crite
 
 As you can see in the example, it takes far less mental burden to formalize a theorem in Litex than in other languages. You don't need to remember and type in all those "base", "step", "intro", "induction", "exact", "succ" keywords. You don't need to remember unintuitive syntax. You don't need worry about anything unrelated to your main purpose. Just use a few Litex keywords then everything gets done. The only complexity comes from math itself, not from Litex.
 
+<!-- TODO -->
+<!-- 2. an array of countable numbers of variables of the same type: Array      \[ typeName \]( numberOfVariables ) -->
+
+<!-- 3. Expansion of Polynomials -->
+
+<!-- need to showcase: Litex can let users to begin his proof from any level of abstraction, instead of forcing him to deal with things he does not need to care -->
+   
 ## How to write good Litex code
 
 _Beauty is the first test: there is no permanent place in the world for ugly mathematics._
@@ -468,7 +475,7 @@ _-- Alan Kay_
 
 The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
 
-I do this for fun. I have strong belief that there is only a small gap between programming and mathematical reasoning. The more I program this project, the firmer my belief becomes. I also believe that both the AI community and the math community will benefit from Litex.
+I do this for fun. I have strong belief that there is only a small gap between programming and mathematical reasoning. I also strongly believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes.
 
 If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 1500 git commits are all pushed by me), I have no time to implement a complicated one.
 
@@ -476,6 +483,8 @@ However, such severe restriction on time and no budget forces me to go back to c
 
 There are only two types of programming languages: to prove an idea, or to get things done. Litex is definitely of the second type. Litex is, and will remain to be, very pragmatic. Curious people might ask me "what theory is Litex based on". My answer is "Litex is invented by common sense, not by theory". The only "theory" of Litex is that there is no theory.
 
-Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. That's why Litex will never be a success without its users and contributors. Feel free to issue your suggestions and ideas to help me improve this open-source project—your feedback is invaluable.
+Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. 
+
+There is no doubt that both the AI community and the math community will benefit from Litex. Litex is a highly interdisciplinary projects: programming languages, mathematics, and the AI community. Litex will never succeed without an active community. Feel free to issue your suggestions and ideas to help me improve this open-source project. Your feedback is invaluable.
 
 Visit [the Litex website](https://litexlang.org) for more information. Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
