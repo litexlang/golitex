@@ -38,6 +38,11 @@ func (p *IfFactStmt) factStmt()       {}
 
 // func (p *InlineForallStmt) factStmt() {}
 
+type SpecFactParams struct {
+	TypeParams []typeVar
+	VarParams  []Fc
+}
+
 type SpecFactStmt interface {
 	notFactStmtSetT(b bool)
 	factStmt()
@@ -52,11 +57,6 @@ func (f *RelationFactStmt) GetTypeParamsAndParams() *SpecFactParams {
 }
 func (f *FuncPropStmt) GetTypeParamsAndParams() *SpecFactParams {
 	return &SpecFactParams{[]typeVar{}, []Fc{}}
-}
-
-type SpecFactParams struct {
-	TypeParams []typeVar
-	VarParams  []Fc
 }
 
 type typeVar interface {
