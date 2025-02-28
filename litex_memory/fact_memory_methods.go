@@ -10,7 +10,7 @@ func CompSpecFactParams(knownFact parser.SpecFactStmt, givenFact parser.SpecFact
 }
 
 func SpecFactCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactStmt) (int, error) {
-	// when two given spec facts are the same in type
+	// when two given spec facts are the same in type, compare the value
 	knownRelationFact, ok := (*knownFact).(*parser.RelationFactStmt)
 	givenRelationFact, ok2 := (*givenFact).(*parser.RelationFactStmt)
 	if ok && ok2 {
@@ -23,7 +23,7 @@ func SpecFactCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactS
 		return specFuncFactCompare(knownFuncFact, givenFuncFact)
 	}
 
-	// when two given spec functions are different in type
+	// when two given spec functions are different in type, compare type
 	specTypeCompareResult, err := specFactTypeCompare(knownFact, givenFact)
 	if err != nil {
 		return 0, err
