@@ -4,30 +4,14 @@ import (
 	parser "golitex/litex_parser"
 )
 
-type FcEnum uint8
-
-const (
-	FcStrEnum FcEnum = iota
-	FcFnRetValueEnum
-	FcFnCallChainEnum
-)
-
-type FactParamsContainer struct {
-}
-
-type FcEnumsFactsKVPair struct {
-	ParamEnums      []FcEnum
-	ParamsContainer FactParamsContainer
-}
-
 // Define type PropName to signify functionality of a string variable
 type PropName string
 
 type SpecFactMemory struct {
-	PropFactsMap map[PropName]FcEnumFactsKVPairs
+	PropFactsMap map[PropName]KnownPropFactContainer
 }
 
-type FcEnumFactsKVPairs []FcEnumsFactsKVPair
+type KnownPropFactContainer struct{}
 
 // TODO
 
@@ -56,7 +40,7 @@ type UniMemFact struct {
 }
 
 func NewSpecFactMemory() *SpecFactMemory {
-	return &SpecFactMemory{PropFactsMap: map[PropName]FcEnumFactsKVPairs{}}
+	return &SpecFactMemory{PropFactsMap: map[PropName]KnownPropFactContainer{}}
 }
 
 func NewUniFactMemory() *UniFactMemory {

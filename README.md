@@ -299,6 +299,9 @@ Euclidean space is a set of all finite dimensional spaces. S.dim represents the 
 
 "Forall Euclidean space S and x in S" in math can be translated to "forall [S Euclid_Space] x S: " in Litex. Here S is a type and Euclid_Space is the type of S, i.e. type of type.
 
+<!-- TODO: Explain why operator is important here. 
+Explain every time you define a type, a special member is automatically generated for you _ -->
+
 ```plaintext
 // declare a concept
 
