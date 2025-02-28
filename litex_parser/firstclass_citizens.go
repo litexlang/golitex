@@ -14,7 +14,7 @@ func (f *FcFnRetValue) fc() {}
 func (f *FcMemChain) fc()   {}
 
 type TypeParamsAndParamsPair struct {
-	TypeParams []typeVar
+	TypeParams []TypeVarStr
 	VarParams  []Fc
 }
 
@@ -25,14 +25,16 @@ type FcFnRetValue struct {
 
 // type FcFnRetValue struct {
 // 	Fn         Fc
-// 	TypeParams []typeVar
+// 	TypeParams []TypeVarStr
 // 	VarParams  []Fc
 // }
 
 // used for variables that are returned by called function
 
 func (f *FcFnRetValue) String() string {
-	return ""
+	outPut := ""
+
+	return outPut
 
 	// typeParams := []string{}
 	// for _, p := range f.TypeParams {

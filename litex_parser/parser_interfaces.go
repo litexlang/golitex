@@ -39,7 +39,7 @@ func (p *IfFactStmt) factStmt()       {}
 // func (p *InlineForallStmt) factStmt() {}
 
 type SpecFactParams struct {
-	TypeParams []typeVar
+	TypeParams []TypeVarStr
 	VarParams  []Fc
 }
 
@@ -56,15 +56,8 @@ func (f *RelationFactStmt) GetTypeParamsAndParams() *SpecFactParams {
 	panic("TODO: Implement type specific operator overloading first")
 }
 func (f *FuncPropStmt) GetTypeParamsAndParams() *SpecFactParams {
-	return &SpecFactParams{[]typeVar{}, []Fc{}}
+	return &SpecFactParams{[]TypeVarStr{}, []Fc{}}
 }
-
-type typeVar interface {
-	typeVar()
-}
-
-func (f TypeVarStr) typeVar()    {}
-func (f *TypedTypeVar) typeVar() {}
 
 type fcType interface {
 	fcType()

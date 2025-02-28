@@ -182,7 +182,7 @@ type FcVarType struct {
 type FcVarTypeStrValue string
 type FcVarTypeFuncValue struct {
 	Name       string
-	TypeParams []typeVar
+	TypeParams []TypeVarStr
 	VarParams  []Fc
 }
 
