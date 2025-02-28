@@ -389,7 +389,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncPropStmt, error) {
 		}
 	}
 
-	return &FuncPropStmt{true, &FcFnRetValue{FcStr(opt), *typeParams, []Fc{left}}}, nil
+	return &FuncPropStmt{true, &FcFnRetValue{FcStr(opt), []TypeParamsAndParamsPair{{*typeParams, []Fc{left}}}}}, nil
 }
 
 func (parser *Parser) parseTypeVar() (typeVar, error) {
