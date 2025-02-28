@@ -2,6 +2,7 @@ package litexparser
 
 import (
 	"fmt"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -1097,4 +1098,36 @@ func TestHowManyCPUCores2(t *testing.T) {
 	timeEnd := time.Now()
 
 	fmt.Printf("Time used: %v\n", timeEnd.Sub(timeStart))
+}
+
+func TestNewFnRetValue(t *testing.T) {
+	input := "opt1[para1](value1)[para2](value2).opt2[para3](value3)[para4](value4).opt3[para5](value5)[para6](value6)"
+
+	// 按 . 分割字符串
+	blocks := strings.Split(input, ".")
+
+	// 定义正则表达式来提取 opt 和 [paras](paras) 对
+	re := regexp.MustCompile(`^([^\[\]]+)((?:\[[^\]]+\]\([^\)]+\))*)$`)
+
+	for _, block := range blocks {
+		matches := re.FindStringSubmatch(block)
+		if len(matches) < 3 {
+			fmt.Println("Invalid block:", block)
+			continue
+		}
+
+		name := matches[1]
+		pairs := matches[2]
+
+		// 提取 [paras](paras) 对
+		pairRe := regexp.MustCompile(`\[([^\]]+)\]\(([^\)]+)\)`)
+		pairMatches := pairRe.FindAllStringSubmatch(pairs, -1)
+
+		fmt.Printf("Name: %s\n", name)
+		for _, pair := range pairMatches {
+			key := pair[1]
+			value := pair[2]
+			fmt.Printf("  Pair: [%s](%s)\n", key, value)
+		}
+	}
 }
