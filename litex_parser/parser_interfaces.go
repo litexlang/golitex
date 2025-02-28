@@ -42,15 +42,15 @@ type SpecFactStmt interface {
 	notFactStmtSetT(b bool)
 	factStmt()
 	stmt()
-	getSpecFactParams() *SpecFactParams
+	GetTypeParamsAndParams() *SpecFactParams
 }
 
 func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.isTrue = b }
 func (f *FuncPropStmt) notFactStmtSetT(b bool)     { f.IsTrue = b }
-func (f *RelationFactStmt) getSpecFactParams() *SpecFactParams {
-	return &SpecFactParams{[]typeVar{}, []Fc{}}
+func (f *RelationFactStmt) GetTypeParamsAndParams() *SpecFactParams {
+	panic("TODO: Implement type specific operator overloading first")
 }
-func (f *FuncPropStmt) getSpecFactParams() *SpecFactParams {
+func (f *FuncPropStmt) GetTypeParamsAndParams() *SpecFactParams {
 	return &SpecFactParams{[]typeVar{}, []Fc{}}
 }
 
