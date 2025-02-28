@@ -2,8 +2,11 @@ package litexparser
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestLexer(t *testing.T) {
@@ -1052,5 +1055,46 @@ f(1,2)(3,v).F(a.b.c(4,5),6) is red
 	} else {
 		t.Fatal(err)
 	}
+}
 
+func TestHowManyCPUCores(t *testing.T) {
+	fmt.Println("CPU:", runtime.NumCPU())
+
+	timeStart := time.Now()
+	var wg sync.WaitGroup
+	for i := 0; i < 1000000; i++ { // 尝试创建 100 万个 goroutine
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			time.Sleep(5 * time.Second) // 模拟任务
+			fmt.Printf("Goroutine %d done\n", id)
+		}(i)
+	}
+	wg.Wait()
+	fmt.Println("All goroutines done")
+	timeEnd := time.Now()
+
+	fmt.Printf("Time used: %v\n", timeEnd.Sub(timeStart))
+}
+
+func TestHowManyCPUCores2(t *testing.T) {
+	var wg sync.WaitGroup
+	runtime.GOMAXPROCS(2)
+	// time start
+	timeStart := time.Now()
+	// time end
+
+	for i := 0; i < 1000000; i++ { // 尝试创建 100 万个 goroutine
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			time.Sleep(5 * time.Second) // 模拟任务
+			fmt.Printf("Goroutine %d done\n", id)
+		}(i)
+	}
+	wg.Wait()
+	fmt.Println("All goroutines done")
+	timeEnd := time.Now()
+
+	fmt.Printf("Time used: %v\n", timeEnd.Sub(timeStart))
 }
