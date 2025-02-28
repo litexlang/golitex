@@ -1,37 +1,43 @@
 package litexmemory
 
-import (
-	"fmt"
-)
-
 const (
 	RED   = true
 	BLACK = false
 )
 
-type PropFactTreeNodeKey int
-
-type PropFactTreeNode struct {
-	key    PropFactTreeNodeKey
-	color  bool
-	left   *PropFactTreeNode
-	right  *PropFactTreeNode
-	parent *PropFactTreeNode
+// Node represents a node in the Red-Black Tree
+type Node struct {
+	key    interface{} // Key can be of any type
+	color  bool        // Color of the node (RED or BLACK)
+	left   *Node       // Left child
+	right  *Node       // Right child
+	parent *Node       // Parent node
 }
 
-type PropFactRedBlackTree struct {
-	root *PropFactTreeNode
+// RedBlackTree represents the Red-Black Tree
+type RedBlackTree struct {
+	root    *Node                      // Root of the tree
+	compare func(a, b interface{}) int // Comparison function
 }
 
-func NewPropFactTreeNode(key PropFactTreeNodeKey, color bool) *PropFactTreeNode {
-	return &PropFactTreeNode{
+// NewRedBlackTree creates a new Red-Black Tree with a custom comparison function
+func NewRedBlackTree(compare func(a, b interface{}) int) *RedBlackTree {
+	return &RedBlackTree{
+		compare: compare,
+	}
+}
+
+// NewNode creates a new node with the given key and color
+func NewNode(key interface{}, color bool) *Node {
+	return &Node{
 		key:   key,
 		color: color,
 	}
 }
 
-func (t *PropFactRedBlackTree) insert(key PropFactTreeNodeKey) {
-	newNode := NewPropFactTreeNode(key, RED)
+// Insert inserts a new key into the Red-Black Tree
+func (t *RedBlackTree) Insert(key interface{}) {
+	newNode := NewNode(key, RED)
 	if t.root == nil {
 		t.root = newNode
 	} else {
@@ -40,8 +46,9 @@ func (t *PropFactRedBlackTree) insert(key PropFactTreeNodeKey) {
 	t.insertFixup(newNode)
 }
 
-func (t *PropFactRedBlackTree) insertNode(root, newNode *PropFactTreeNode) {
-	if newNode.key < root.key {
+// insertNode inserts a new node into the tree
+func (t *RedBlackTree) insertNode(root, newNode *Node) {
+	if t.compare(newNode.key, root.key) < 0 {
 		if root.left == nil {
 			root.left = newNode
 			newNode.parent = root
@@ -58,11 +65,12 @@ func (t *PropFactRedBlackTree) insertNode(root, newNode *PropFactTreeNode) {
 	}
 }
 
-func (t *PropFactRedBlackTree) insertFixup(node *PropFactTreeNode) {
-	for node.parent != nil && node.parent.color == RED {
+// insertFixup fixes the Red-Black Tree properties after insertion
+func (t *RedBlackTree) insertFixup(node *Node) {
+	for node.parent != nil && node.parent.color {
 		if node.parent == node.parent.parent.left {
 			uncle := node.parent.parent.right
-			if uncle != nil && uncle.color == RED {
+			if uncle != nil && uncle.color {
 				node.parent.color = BLACK
 				uncle.color = BLACK
 				node.parent.parent.color = RED
@@ -78,7 +86,7 @@ func (t *PropFactRedBlackTree) insertFixup(node *PropFactTreeNode) {
 			}
 		} else {
 			uncle := node.parent.parent.left
-			if uncle != nil && uncle.color == RED {
+			if uncle != nil && uncle.color {
 				node.parent.color = BLACK
 				uncle.color = BLACK
 				node.parent.parent.color = RED
@@ -97,7 +105,8 @@ func (t *PropFactRedBlackTree) insertFixup(node *PropFactTreeNode) {
 	t.root.color = BLACK
 }
 
-func (t *PropFactRedBlackTree) rotateLeft(x *PropFactTreeNode) {
+// rotateLeft performs a left rotation
+func (t *RedBlackTree) rotateLeft(x *Node) {
 	y := x.right
 	x.right = y.left
 	if y.left != nil {
@@ -115,7 +124,8 @@ func (t *PropFactRedBlackTree) rotateLeft(x *PropFactTreeNode) {
 	x.parent = y
 }
 
-func (t *PropFactRedBlackTree) rotateRight(x *PropFactTreeNode) {
+// rotateRight performs a right rotation
+func (t *RedBlackTree) rotateRight(x *Node) {
 	y := x.left
 	x.left = y.right
 	if y.right != nil {
@@ -133,10 +143,11 @@ func (t *PropFactRedBlackTree) rotateRight(x *PropFactTreeNode) {
 	x.parent = y
 }
 
-func (t *PropFactRedBlackTree) inorderTraversal(node *PropFactTreeNode) {
+// InOrderTraversal performs an inorder traversal of the tree
+func (t *RedBlackTree) InOrderTraversal(node *Node, visit func(key interface{})) {
 	if node != nil {
-		t.inorderTraversal(node.left)
-		fmt.Printf("%d ", node.key)
-		t.inorderTraversal(node.right)
+		t.InOrderTraversal(node.left, visit)
+		visit(node.key)
+		t.InOrderTraversal(node.right, visit)
 	}
 }
