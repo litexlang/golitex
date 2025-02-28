@@ -16,12 +16,12 @@ type Node struct {
 
 // RedBlackTree represents the Red-Black Tree
 type RedBlackTree struct {
-	root    *Node                      // Root of the tree
-	compare func(a, b interface{}) int // Comparison function
+	root    *Node                               // Root of the tree
+	compare func(a, b interface{}) (int, error) // Comparison function with error
 }
 
 // NewRedBlackTree creates a new Red-Black Tree with a custom comparison function
-func NewRedBlackTree(compare func(a, b interface{}) int) *RedBlackTree {
+func NewRedBlackTree(compare func(a, b interface{}) (int, error)) *RedBlackTree {
 	return &RedBlackTree{
 		compare: compare,
 	}
@@ -36,37 +36,46 @@ func NewNode(key interface{}, color bool) *Node {
 }
 
 // Insert inserts a new key into the Red-Black Tree
-func (t *RedBlackTree) Insert(key interface{}) {
+func (t *RedBlackTree) Insert(key interface{}) error {
 	newNode := NewNode(key, RED)
 	if t.root == nil {
 		t.root = newNode
 	} else {
-		t.insertNode(t.root, newNode)
+		err := t.insertNode(t.root, newNode)
+		if err != nil {
+			return err
+		}
 	}
-	t.insertFixup(newNode)
+	return t.insertFixup(newNode)
 }
 
 // insertNode inserts a new node into the tree
-func (t *RedBlackTree) insertNode(root, newNode *Node) {
-	if t.compare(newNode.key, root.key) < 0 {
+func (t *RedBlackTree) insertNode(root, newNode *Node) error {
+	compareResult, err := t.compare(newNode.key, root.key)
+	if err != nil {
+		return err
+	}
+
+	if compareResult < 0 {
 		if root.left == nil {
 			root.left = newNode
 			newNode.parent = root
 		} else {
-			t.insertNode(root.left, newNode)
+			return t.insertNode(root.left, newNode)
 		}
 	} else {
 		if root.right == nil {
 			root.right = newNode
 			newNode.parent = root
 		} else {
-			t.insertNode(root.right, newNode)
+			return t.insertNode(root.right, newNode)
 		}
 	}
+	return nil
 }
 
 // insertFixup fixes the Red-Black Tree properties after insertion
-func (t *RedBlackTree) insertFixup(node *Node) {
+func (t *RedBlackTree) insertFixup(node *Node) error {
 	for node.parent != nil && node.parent.color {
 		if node.parent == node.parent.parent.left {
 			uncle := node.parent.parent.right
@@ -103,6 +112,7 @@ func (t *RedBlackTree) insertFixup(node *Node) {
 		}
 	}
 	t.root.color = BLACK
+	return nil
 }
 
 // rotateLeft performs a left rotation
@@ -144,10 +154,17 @@ func (t *RedBlackTree) rotateRight(x *Node) {
 }
 
 // InOrderTraversal performs an inorder traversal of the tree
-func (t *RedBlackTree) InOrderTraversal(node *Node, visit func(key interface{})) {
+func (t *RedBlackTree) InOrderTraversal(node *Node, visit func(key interface{}) error) error {
 	if node != nil {
-		t.InOrderTraversal(node.left, visit)
-		visit(node.key)
-		t.InOrderTraversal(node.right, visit)
+		if err := t.InOrderTraversal(node.left, visit); err != nil {
+			return err
+		}
+		if err := visit(node.key); err != nil {
+			return err
+		}
+		if err := t.InOrderTraversal(node.right, visit); err != nil {
+			return err
+		}
 	}
+	return nil
 }

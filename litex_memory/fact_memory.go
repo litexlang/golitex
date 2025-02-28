@@ -11,10 +11,6 @@ type SpecFactMemory struct {
 	KnownFacts RedBlackTree
 }
 
-type PropFactContainer struct {
-	Memory RedBlackTree
-}
-
 type CondFactMemory struct {
 	KVs map[PropName]CondFactMemEntry
 }
@@ -37,16 +33,4 @@ type UniMemFact struct {
 	varParams  *[]parser.StrTypePair
 	cond       *[]parser.FactStmt
 	then       *[]parser.SpecFactStmt
-}
-
-func NewSpecFactMemory() *SpecFactMemory {
-	return &SpecFactMemory{KnownFacts: RedBlackTree{}}
-}
-
-func NewUniFactMemory() *UniFactMemory {
-	return &UniFactMemory{map[PropName]UniFactMemEntry{}}
-}
-
-func NewCondFactMemory() *CondFactMemory {
-	return &CondFactMemory{KVs: map[PropName]CondFactMemEntry{}}
 }

@@ -370,7 +370,7 @@ func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 	return members, nil
 }
 
-func (parser *Parser) parseIsExpr(left Fc) (*FuncPropStmt, error) {
+func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 	err := parser.skip(Keywords["is"])
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -394,7 +394,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncPropStmt, error) {
 		}
 	}
 
-	return &FuncPropStmt{true, &FcFnRetValue{FcStr(opt), []TypeParamsAndParamsPair{{*typeParams, []Fc{left}}}}}, nil
+	return &FuncFactStmt{true, &FcFnRetValue{FcStr(opt), []TypeParamsAndParamsPair{{*typeParams, []Fc{left}}}}}, nil
 }
 
 func (parser *Parser) parseTypeVar() (TypeVarStr, error) {
