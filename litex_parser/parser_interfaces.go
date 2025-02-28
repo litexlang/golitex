@@ -42,10 +42,22 @@ type SpecFactStmt interface {
 	notFactStmtSetT(b bool)
 	factStmt()
 	stmt()
+	getSpecFactParams() *SpecFactParams
 }
 
 func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.isTrue = b }
 func (f *FuncPropStmt) notFactStmtSetT(b bool)     { f.IsTrue = b }
+func (f *RelationFactStmt) getSpecFactParams() *SpecFactParams {
+	return &SpecFactParams{[]typeVar{}, []Fc{}}
+}
+func (f *FuncPropStmt) getSpecFactParams() *SpecFactParams {
+	return &SpecFactParams{[]typeVar{}, []Fc{}}
+}
+
+type SpecFactParams struct {
+	TypeParams []typeVar
+	VarParams  []Fc
+}
 
 type typeVar interface {
 	typeVar()
