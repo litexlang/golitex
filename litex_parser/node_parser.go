@@ -201,7 +201,7 @@ func (parser *Parser) parseFcVarType() (FcVarType, error) {
 	}
 
 	isFunc := false
-	typeParams := &[]typeVar{}
+	typeParams := &[]TypeVarStr{}
 	varParams := &[]Fc{}
 	if parser.is(BuiltinSyms["["]) {
 		typeParams, err = parser.parseBracketedTypeVarArr()
@@ -371,13 +371,18 @@ func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 }
 
 func (parser *Parser) parseIsExpr(left Fc) (*FuncPropStmt, error) {
-	opt, err := parser.next()
+	err := parser.skip(Keywords["is"])
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	opt, err := parser.next() // get the operator.
 
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
 
-	typeParams := &[]typeVar{}
+	typeParams := &[]TypeVarStr{}
 	if parser.is(BuiltinSyms["["]) {
 		typeParams, err = parser.parseBracketedTypeVarArr()
 		if err != nil {
@@ -392,12 +397,8 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncPropStmt, error) {
 	return &FuncPropStmt{true, &FcFnRetValue{FcStr(opt), []TypeParamsAndParamsPair{{*typeParams, []Fc{left}}}}}, nil
 }
 
-func (parser *Parser) parseTypeVar() (typeVar, error) {
-	if parser.is(Keywords["as"]) {
-		return parser.parseTypedTypeVar()
-	} else {
-		return parser.parseTypeVarStr()
-	}
+func (parser *Parser) parseTypeVar() (TypeVarStr, error) {
+	return parser.parseTypeVarStr()
 }
 
 func (parser *Parser) parseTypedTypeVar() (*TypedTypeVar, error) {
@@ -430,8 +431,8 @@ func (parser *Parser) parseTypeVarStr() (TypeVarStr, error) {
 	return TypeVarStr(name), nil
 }
 
-func (parser *Parser) parseBracketedTypeVarArr() (*[]typeVar, error) {
-	arr := &[]typeVar{}
+func (parser *Parser) parseBracketedTypeVarArr() (*[]TypeVarStr, error) {
+	arr := &[]TypeVarStr{}
 
 	parser.skip(BuiltinSyms["["])
 

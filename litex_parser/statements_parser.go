@@ -995,13 +995,13 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
+	if stmt.Header.strAt(0) == Keywords["is"] {
+		return stmt.Header.parseIsExpr(fc)
+	}
+
 	opt, err := stmt.Header.next()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	if opt == Keywords["is"] {
-		return stmt.Header.parseIsExpr(fc)
 	}
 
 	if !isBuiltinRelationalOperator(opt) {
