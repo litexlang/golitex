@@ -34,29 +34,29 @@ type FcFnRetValue struct {
 func (f *FcFnRetValue) String() string {
 	outPut := ""
 
+	for _, pair := range f.TypeParamsVarParamsPairs {
+		if len(pair.TypeParams) > 0 {
+			outPut += "["
+			for i := 0; i < len(pair.TypeParams)-1; i++ {
+				outPut += string(pair.TypeParams[i])
+				outPut += ", "
+			}
+			outPut += string(pair.TypeParams[len(pair.TypeParams)-1])
+			outPut += "]"
+		}
+
+		if len(pair.VarParams) > 0 {
+			outPut += "("
+			for i := 0; i < len(pair.VarParams)-1; i++ {
+				outPut += pair.VarParams[i].String()
+				outPut += ", "
+			}
+			outPut += pair.VarParams[len(pair.VarParams)-1].String()
+			outPut += ")"
+		}
+	}
+
 	return outPut
-
-	// typeParams := []string{}
-	// for _, p := range f.TypeParams {
-	// 	if s, ok := p.(TypeVarStr); ok {
-	// 		typeParams = append(typeParams, string(s))
-	// 	}
-	// }
-	// strTypeParams := ""
-	// if len(typeParams) > 0 {
-	// 	strTypeParams = fmt.Sprintf("[%s]", strings.Join(typeParams, ", "))
-	// }
-
-	// varParams := []string{}
-	// for _, p := range f.VarParams {
-	// 	varParams = append(varParams, p.String())
-	// }
-	// strVarParams := ""
-	// if len(varParams) > 0 {
-	// 	strVarParams = fmt.Sprintf("(%s)", strings.Join(varParams, ", "))
-	// }
-
-	// return fmt.Sprintf("%s%s%s", f.Fn, strTypeParams, strVarParams)
 }
 
 type FcStr string
