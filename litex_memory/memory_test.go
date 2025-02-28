@@ -1,33 +1,43 @@
 package litexmemory
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 )
 
 func TestRedBlackTree(t *testing.T) {
-	// Example usage with string keys
-	compareStrings := func(a, b interface{}) int {
-		sa := a.(string)
-		sb := b.(string)
-		if sa < sb {
-			return -1
-		} else if sa > sb {
-			return 1
+	// 定义比较函数
+	compare := func(a, b interface{}) (int, error) {
+		keyA, okA := a.(int)
+		keyB, okB := b.(int)
+		if !okA || !okB {
+			return 0, errors.New("invalid key type")
 		}
-		return 0
+		if keyA < keyB {
+			return -1, nil
+		} else if keyA > keyB {
+			return 1, nil
+		}
+		return 0, nil
 	}
 
-	tree := NewRedBlackTree(compareStrings)
-	keys := []string{"apple", "banana", "cherry", "date", "elderberry"}
+	// 创建红黑树
+	tree := NewRedBlackTree(compare)
+
+	// 插入键
+	keys := []int{10, 20, 30, 15, 25}
 	for _, key := range keys {
-		tree.Insert(key)
+		if err := tree.Insert(key); err != nil {
+			fmt.Println("Insert error:", err)
+			return
+		}
 	}
 
-	fmt.Println("InOrder Traversal:")
-	tree.InOrderTraversal(tree.root, func(key interface{}) {
-		fmt.Printf("%s ", key)
+	// 中序遍历
+	fmt.Println("In-order traversal:")
+	tree.InOrderTraversal(tree.root, func(key interface{}) error {
+		fmt.Println(key)
+		return nil
 	})
-	fmt.Println()
-
 }

@@ -431,7 +431,7 @@ func (stmt *TokenBlock) parseInstantiatedFactStmt() (SpecFactStmt, error) {
 	return ret, nil
 }
 
-func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncPropStmt, error) {
+func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
 	err := stmt.Header.skip(BuiltinSyms["$"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -442,7 +442,7 @@ func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &FuncPropStmt{true, fc}, nil
+	return &FuncFactStmt{true, fc}, nil
 }
 
 func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {

@@ -59,7 +59,7 @@ type BlockForallStmt struct {
 	then       []SpecFactStmt
 }
 
-type FuncPropStmt struct {
+type FuncFactStmt struct {
 	IsTrue bool
 	Fc     Fc
 }

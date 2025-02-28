@@ -11,7 +11,7 @@ func (c *DefPropStmt) stmt()                {}
 func (f *DefFnStmt) stmt()                  {}
 func (l *BlockForallStmt) stmt()            {}
 func (r *RelationFactStmt) stmt()           {}
-func (p *FuncPropStmt) stmt()               {}
+func (p *FuncFactStmt) stmt()               {}
 func (f *ClaimProveStmt) stmt()             {}
 func (f *DefAliasStmt) stmt()               {}
 func (f *KnowStmt) stmt()                   {}
@@ -33,7 +33,7 @@ type FactStmt interface {
 
 func (l *BlockForallStmt) factStmt()  {}
 func (r *RelationFactStmt) factStmt() {}
-func (p *FuncPropStmt) factStmt()     {}
+func (p *FuncFactStmt) factStmt()     {}
 func (p *IfFactStmt) factStmt()       {}
 
 // func (p *InlineForallStmt) factStmt() {}
@@ -51,11 +51,11 @@ type SpecFactStmt interface {
 }
 
 func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.isTrue = b }
-func (f *FuncPropStmt) notFactStmtSetT(b bool)     { f.IsTrue = b }
+func (f *FuncFactStmt) notFactStmtSetT(b bool)     { f.IsTrue = b }
 func (f *RelationFactStmt) GetTypeParamsAndParams() *SpecFactParams {
 	panic("TODO: Implement type specific operator overloading first")
 }
-func (f *FuncPropStmt) GetTypeParamsAndParams() *SpecFactParams {
+func (f *FuncFactStmt) GetTypeParamsAndParams() *SpecFactParams {
 	return &SpecFactParams{[]TypeVarStr{}, []Fc{}}
 }
 
@@ -110,7 +110,7 @@ type InlineFactStmt interface {
 }
 
 func (r *RelationFactStmt) inlineFactStmt() {}
-func (p *FuncPropStmt) inlineFactStmt()     {}
+func (p *FuncFactStmt) inlineFactStmt()     {}
 func (p *IfFactStmt) inlineFactStmt()       {}
 
 // func (p *InlineForallStmt) inlineFactStmt() {}
