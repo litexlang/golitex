@@ -36,11 +36,44 @@ func SpecFactCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactS
 }
 
 func specRelationFactCompare(knownFact *parser.RelationFactStmt, givenFact *parser.RelationFactStmt) (int, error) {
-	return 0, nil
+	panic("TODO not implemented")
+}
+
+const (
+	isTrueEnum    = 0
+	isNotTrueEnum = 1
+)
+
+func specFuncIsTrueCompare(knownFact *parser.FuncFactStmt, givenFact *parser.FuncFactStmt) int {
+	knownFactIsTrueEnum := isTrueEnum
+	if !knownFact.IsTrue {
+		knownFactIsTrueEnum = isNotTrueEnum
+	}
+
+	givenFactIsTrueEnum := isTrueEnum
+	if !givenFact.IsTrue {
+		givenFactIsTrueEnum = isNotTrueEnum
+	}
+
+	return knownFactIsTrueEnum - givenFactIsTrueEnum
 }
 
 func specFuncFactCompare(knownFact *parser.FuncFactStmt, givenFact *parser.FuncFactStmt) (int, error) {
-	return 0, nil
+	if isTrueComp := specFuncIsTrueCompare(knownFact, givenFact); isTrueComp != 0 {
+		return isTrueComp, nil
+	}
+
+	return compareFc(knownFact.Fc, givenFact.Fc)
+}
+
+const (
+	fcStrEnum        = 0
+	fcFnRetValueEnum = 1
+	FcMemChainEnum   = 2
+)
+
+func compareFc(knownFact parser.Fc, givenFact parser.Fc) (int, error) {
+	panic("")
 }
 
 func specFactTypeCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactStmt) (int, error) {
