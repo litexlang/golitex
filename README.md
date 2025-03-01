@@ -16,11 +16,15 @@ Traditional proof assistants struggle to scale formal proofs due to their lack o
 
 In contrast, Litex is a language specifically designed for mathematical verification, with syntax entirely grounded in everyday mathematical expressions. It aims to be as intuitive as Python or LaTeX, offering a minimal learning curve. Everything in Litex revolves around common sense, which is why it is so intuitive.
 
+Good writing simplifies math, while poor writing complicates it. Leibniz's calculus notation $\frac{dy}{dx}$ surpassed Newton's $\dot{y}$ for its clarity, just as Arabic numerals (1, 2, 3) outperformed Roman numerals (I, II, III) in simplicity.  Litex’s intuitive, everyday math-based syntax makes formal verification accessible and fluid, advancing reasoning and proof scalability.
+
 Why should you learn Litex? Litex has the potential to greatly impact both mathematics and AI:
 
 - **For Mathematics**: 
   - **For individual researchers**, it provides peace of mind by reducing the risk of subtle errors undermining their proofs. With it, interactive textbooks can be created, enabling learners to study more efficiently and innovate.
   - **For the whole mathematics community**, since Litex ensures correctness, the need for paper reviews is eliminated. This fosters trust and enables large-scale collaboration, akin to a "GitHub for Math", because strangers can trust each other's proofs and collaborate to solve problems.
+  - **For AI-Driven Math Exploration**: AI excels at solving a wide range of problems quickly. Instead of proving single facts, some mathematicians are trying to expand AI's generalization in math, allowing it to solve thousands of issues simultaneously. AlphaProof is a great example. Litex can greatly speed up this progress, because it addresses many currently insurmountable bottlenecks in AI training.
+  
 
 - **For AI**:
   - **More Formal Data**:
@@ -29,9 +33,7 @@ Because Litex is an order of magnitude simpler than traditional proof assistants
   - **Automated Verification**:
 Litex can automatically verify LLM outputs for math problems, providing a reliable way to validate and refine their reasoning. This capability is crucial for improving the accuracy and robustness of LLMs in mathematical tasks.
 
-Good writing simplifies math, while poor writing complicates it. Leibniz's calculus notation $\frac{dy}{dx}$ surpassed Newton's $\dot{y}$ for its clarity, just as Arabic numerals (1, 2, 3) outperformed Roman numerals (I, II, III) in simplicity.  Litex’s intuitive, everyday math-based design makes formal verification accessible and fluid, advancing reasoning and proof scalability.
-
-<!-- Emphasize how important notation of math is -->
+Finally, Litex itself is a tool of exquisite innovation, using it is as enjoyable as programming; it embodies human reasoning itself, not merely serving as a simple vehicle.
 
 In short, Litex can transform workflow and collaboration of mathematicians. It boost AI's reasoning with more formal data and a super efficient verifier. The core design principle of Litex is simplicity.
 
@@ -480,6 +482,8 @@ _-- Alan Kay_
 The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
 
 I do this for fun. I have strong belief that there is only a small gap between programming and mathematical reasoning. I also strongly believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes.
+
+In computer science history, Overly complex and sophisticated software is often threatened by unknown, seemingly "simple" newcomers that rise unexpectedly. For instance, CISC is now significantly challenged by RISC—a shift that seemed improbable just a decade ago. Litex is a similar case.
 
 If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 1500 git commits are all pushed by me), I have no time to implement a complicated one.
 
