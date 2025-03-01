@@ -10,6 +10,17 @@ func CompSpecFactParams(knownFact parser.SpecFactStmt, givenFact parser.SpecFact
 }
 
 func SpecFactCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactStmt) (int, error) {
+	if specTypeCompareResult, err := specFactTypeCompare(knownFact, givenFact); err != nil || specTypeCompareResult != 0 {
+		if err != nil {
+			return 0, err
+		}
+		return specTypeCompareResult, nil
+	}
+
+	return specFactWithTheSameTypeCompare(knownFact, givenFact)
+}
+
+func specFactWithTheSameTypeCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactStmt) (int, error) {
 	// when two given spec facts are the same in type, compare the value
 	knownRelationFact, ok := (*knownFact).(*parser.RelationFactStmt)
 	givenRelationFact, ok2 := (*givenFact).(*parser.RelationFactStmt)
@@ -23,16 +34,7 @@ func SpecFactCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactS
 		return specFuncFactCompare(knownFuncFact, givenFuncFact)
 	}
 
-	// when two given spec functions are different in type, compare type
-	specTypeCompareResult, err := specFactTypeCompare(knownFact, givenFact)
-	if err != nil {
-		return 0, err
-	}
-	if specTypeCompareResult != 0 {
-		return specTypeCompareResult, nil
-	}
-
-	return 0, fmt.Errorf("unknown specFactStmt")
+	return 0, fmt.Errorf("unknown spec fact")
 }
 
 func specRelationFactCompare(knownFact *parser.RelationFactStmt, givenFact *parser.RelationFactStmt) (int, error) {
@@ -76,7 +78,24 @@ func compareFc(knownFact parser.Fc, givenFact parser.Fc) (int, error) {
 	panic("")
 }
 
+const (
+	relationSpecFactStmtEnum = 0
+	funcSpecFactEnum         = 1
+)
+
 func specFactTypeCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactStmt) (int, error) {
+
+	getSpecFactEnum := func(fact *parser.SpecFactStmt) (int, error) {
+		switch (*fact).(type) {
+		case *parser.RelationFactStmt:
+			return relationSpecFactStmtEnum, nil
+		case *parser.FuncFactStmt:
+			return funcSpecFactEnum, nil
+		default:
+			return 0, fmt.Errorf("unknown SpecFactStmt type: %T", *fact)
+		}
+	}
+
 	knownFactType, err := getSpecFactEnum(knownFact)
 	if err != nil {
 		return 0, err
@@ -88,23 +107,6 @@ func specFactTypeCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecF
 	}
 
 	return knownFactType - givenFactType, nil
-}
-
-const (
-	relationSpecFactStmtEnum = 0
-	funcSpecFactEnum         = 1
-)
-
-func getSpecFactEnum(fact *parser.SpecFactStmt) (int, error) {
-
-	switch (*fact).(type) {
-	case *parser.RelationFactStmt:
-		return relationSpecFactStmtEnum, nil
-	case *parser.FuncFactStmt:
-		return funcSpecFactEnum, nil
-	}
-
-	return 0, fmt.Errorf("unknown SpecFactStmt type: %T", *fact)
 }
 
 func NewSpecFactMemory() *SpecFactMemory {
