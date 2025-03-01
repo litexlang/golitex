@@ -99,7 +99,7 @@ func compareFc(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 }
 
 func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
-	panic("TODO")
+	panic("")
 }
 
 func compareFcType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {

@@ -10,9 +10,11 @@ _That language is an instrument of Human reason, and not merely a medium for the
 
 _–- George Boole_
 
-Litex is a minimalist proof assistant (formal language). Since even children grasp math naturally, a formal language design should exist that's easily understood and used by anyone. The goal of Litex is to invent such a language. The implementation approach leverages a profound understanding of the commonalities and distinctions between programming and mathematics.
+Litex is a minimalist proof assistant (formal language). Since even children grasp math naturally, a formal language design should exist that's easily understood and used by anyone. The goal of Litex is to invent such a language. The design of Litex leverages a profound understanding of the commonalities and distinctions between programming and mathematics.
 
-Traditional proof assistants lack the fluidity and ease needed to scale formal proofs, while Litex handles the growing complexity of modern mathematics effectively through its clean syntax. Litex is designed to be as intuitive as Python or LaTeX, with a minimal learning curve. Users can trust their common sense to write Litex.
+Traditional proof assistants struggle to scale formal proofs due to their lack of fluidity and ease, as they are general-purpose languages that must compromise on syntax unrelated to mathematical proofs.
+
+In contrast, Litex is a language specifically designed for mathematical verification, with syntax entirely grounded in everyday mathematical expressions. It aims to be as intuitive as Python or LaTeX, offering a minimal learning curve. Everything in Litex revolves around common sense, which is why it is so intuitive.
 
 Why should you learn Litex? Litex has the potential to greatly impact both mathematics and AI:
 
@@ -27,9 +29,11 @@ Because Litex is an order of magnitude simpler than traditional proof assistants
   - **Automated Verification**:
 Litex can automatically verify LLM outputs for math problems, providing a reliable way to validate and refine their reasoning. This capability is crucial for improving the accuracy and robustness of LLMs in mathematical tasks.
 
-From a higher point of view, Litex allows you to perceive math from a completely new perspective.
+Good writing simplifies math, while poor writing complicates it. Leibniz's calculus notation $\frac{dy}{dx}$ surpassed Newton's $\dot{y}$ for its clarity, just as Arabic numerals (1, 2, 3) outperformed Roman numerals (I, II, III) in simplicity.  Litex’s intuitive, everyday math-based design makes formal verification accessible and fluid, advancing reasoning and proof scalability.
 
-In short, Litex can transform workflow and collaboration of mathematicians. It boost AI's reasoning with more formal data and a super efficient verifier. The core design principle of Litex is simplicity and user-friendliness.
+<!-- Emphasize how important notation of math is -->
+
+In short, Litex can transform workflow and collaboration of mathematicians. It boost AI's reasoning with more formal data and a super efficient verifier. The core design principle of Litex is simplicity.
 
 ## Getting Started
 
