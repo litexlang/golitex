@@ -153,7 +153,7 @@ func (t *RedBlackTree) rotateRight(x *Node) {
 	x.parent = y
 }
 
-// InOrderTraversal performs an inorder traversal of the tree
+// InOrderTraversal performs an in order traversal of the tree
 func (t *RedBlackTree) InOrderTraversal(node *Node, visit func(key interface{}) error) error {
 	if node != nil {
 		if err := t.InOrderTraversal(node.left, visit); err != nil {

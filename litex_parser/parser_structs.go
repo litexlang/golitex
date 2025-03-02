@@ -164,11 +164,6 @@ type TypeConceptPair struct {
 
 type TypeVarStr string
 
-type TypedTypeVar struct {
-	value   TypeVarStr
-	concept TypeConceptStr
-}
-
 type StrTypePair struct {
 	Var  string
 	Type fcType

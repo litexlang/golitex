@@ -235,9 +235,6 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 			right, err := parser.next()
 
 			if err != nil {
-				return "", err
-			}
-			if err != nil {
 				return "", fmt.Errorf("invalid number: %s", right)
 			}
 
