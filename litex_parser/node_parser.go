@@ -401,27 +401,6 @@ func (parser *Parser) parseTypeVar() (TypeVarStr, error) {
 	return parser.parseTypeVarStr()
 }
 
-func (parser *Parser) parseTypedTypeVar() (*TypedTypeVar, error) {
-	parser.skip(Keywords["as"])
-	parser.skip(BuiltinSyms["("])
-	value, err := parser.parseTypeVarStr()
-
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	parser.skip(BuiltinSyms[","])
-	concept, err := parser.parseTypeConcept()
-
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	parser.skip(BuiltinSyms[")"])
-
-	return &TypedTypeVar{value, concept}, nil
-}
-
 func (parser *Parser) parseTypeVarStr() (TypeVarStr, error) {
 	name, err := parser.next()
 	if err != nil {
