@@ -7,6 +7,7 @@ import (
 
 type FcInfixOptPrecedence int
 
+// TODO: implement other operators. How logical operators work is also not implemented
 const (
 	precLowest         FcInfixOptPrecedence = iota
 	precAssignment                          // =

@@ -224,7 +224,7 @@ The statement var x type_name means that x has the type type_name. Mathematicall
 Objects of different types support different operations and propositions. For example, when a and b are positive natural numbers, expressions like a^b (multiplying a by itself b times) and a < b are well-defined and meaningful. However, when a and b are matrices, operations like a^b and a < b are not standard notations and may not make sense. Importantly, an object should never be passed to a proposition or function if the parameter types do not match the type of that object. This ensures that operations and functions are applied only in contexts where they are well-defined.
 
 - **Own Members**:
-In programming, a type is typically called a "struct" (in C) or a "class" (in C++ or Python). Such technique of organizing code is called "object oriented programming (OOP)". Objects of different types can have different members. For example, a human Bob might have an attribute Bob.age. Additionally, the type itself can have members.
+In programming, a type is typically called a "struct" (in C) or a "class" (in C++ or Python). Such technique of organizing code is called "object oriented programming (OOP)". Objects of different types can have different members. For example, a human Bob might have an attribute Bob.age. Additionally, the type itself can have members, which works like "static member" in C++. (Actually, you can view member as "there exist an unique object which has some properties". So "member" can be seen as a syntax sugar of "uniquely exist".)
 
 - **implement a concept or extend existing types**:
 
@@ -264,7 +264,11 @@ add(1 ,2) = add(2, 1)
 1 + 2 = 2 + 1
 ```
 
-Functions in Litex are not executed. Instead, they are just composer of other symbols. Function parameter list can receive first-class citizens. Function type list can receive type concept pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
+Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a variable, with the distinctive feature being its ability to be positioned before the (). 
+
+Function parameter list can receive first-class citizens. Function type list can receive type concept pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
+
+In Litex, `var` could essentially be entirely replaced by `fn`, `fn` variable is simply a more versatile version of `var` variable: `fn` has the capability to precede parentheses (). For the time being, Litex retains `var`, but its future necessity remains uncertain.
 
 ``` text
 // declare a proposition
