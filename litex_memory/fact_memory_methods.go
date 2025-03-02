@@ -99,7 +99,37 @@ func compareFc(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 }
 
 func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
-	panic("")
+	knownFcStr, ok := knownFc.(parser.FcStr)
+	givenFcStr, ok2 := givenFc.(parser.FcStr)
+	if ok && ok2 {
+		return compareFcStr(knownFcStr, givenFcStr)
+	}
+
+	knownFcFnRetValue, ok := knownFc.(*parser.FcFnRetValue)
+	givenFcFnRetValue, ok2 := givenFc.(*parser.FcFnRetValue)
+	if ok && ok2 {
+		return compareFcFnRetValue(knownFcFnRetValue, givenFcFnRetValue)
+	}
+
+	knownFcMemChain, ok := knownFc.(*parser.FcMemChain)
+	givenFcMemChain, ok2 := givenFc.(*parser.FcMemChain)
+	if ok && ok2 {
+		return compareFcMemChain(knownFcMemChain, givenFcMemChain)
+	}
+
+	return 0, fmt.Errorf("unknown fc type")
+}
+
+func compareFcStr(knownFc parser.FcStr, givenFc parser.FcStr) (int, error) {
+	panic("TODO")
+}
+
+func compareFcFnRetValue(knownFc *parser.FcFnRetValue, givenFc *parser.FcFnRetValue) (int, error) {
+	panic("TODO")
+}
+
+func compareFcMemChain(knownFc *parser.FcMemChain, givenFc *parser.FcMemChain) (int, error) {
+	panic("TODO")
 }
 
 func compareFcType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
