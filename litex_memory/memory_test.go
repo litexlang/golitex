@@ -166,3 +166,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc10, fc11): expected positive value, got %d", result)
 	}
 }
+
+func TestCompareSpecFact(t *testing.T) {
+
+}
