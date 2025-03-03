@@ -36,8 +36,11 @@ func (mem *AliasMemory) Get(s string) (*AliasMemEntry, bool) {
 }
 
 func (mem *SpecFactMemory) NewFuncFact(fact *parser.FuncFactStmt) error {
-	mem.KnownFacts.Insert(fact)
-	panic("")
+	err := mem.KnownFacts.Insert(fact)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (mem *SpecFactMemory) NewRelationFact(fact *parser.RelationFactStmt) error {
