@@ -220,25 +220,25 @@ func TestCompareSpecFact(t *testing.T) {
 		}
 	}
 
-	res, err := specFactCompare(&(facts[0]), &(facts[1]))
+	res, err := SpecFactCompare((facts[0]), (facts[1]))
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Printf("t: %v\n", res)
 
-	res, err = specFactCompare(&(facts[0]), &(facts[0]))
+	res, err = SpecFactCompare((facts[0]), (facts[0]))
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Printf("t: %v\n", res)
 
-	res, err = specFactCompare(&(facts[0]), &(facts[2]))
+	res, err = SpecFactCompare((facts[0]), (facts[2]))
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Printf("t: %v\n", res)
 
-	res, err = specFactCompare(&(facts[4]), &(facts[5]))
+	res, err = SpecFactCompare((facts[4]), (facts[5]))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -248,7 +248,7 @@ func TestCompareSpecFact(t *testing.T) {
 	for i := 0; i < 10000000; i++ {
 		j := rand.Intn(len(facts))
 		k := rand.Intn(len(facts))
-		specFactCompare(&(facts[j]), &(facts[k]))
+		SpecFactCompare((facts[j]), (facts[k]))
 	}
 	// 1.8s
 	fmt.Printf("Random Compare Time taken: %v\n", time.Since(start))
@@ -257,21 +257,21 @@ func TestCompareSpecFact(t *testing.T) {
 	for i := 0; i < 10000000; i++ {
 		j := rand.Intn(len(facts))
 		k := rand.Intn(len(facts))
-		SpecFactCompareAdapter(&(facts[j]), &(facts[k]))
+		SpecFactCompareAdapter((facts[j]), (facts[k]))
 	}
 	// 1.9s
 	fmt.Printf("Random Compare Adaptor Time taken: %v\n", time.Since(start))
 
 	start = time.Now()
 	for i := 0; i < 10000000; i++ {
-		specFactCompare(&(facts[12]), &(facts[13]))
+		SpecFactCompare((facts[12]), (facts[13]))
 	}
 	// 7.3s
 	fmt.Printf("Compare Very long the same fact Time taken: %v\n", time.Since(start))
 
 	start = time.Now()
 	for i := 0; i < 10000000; i++ {
-		SpecFactCompareAdapter(&(facts[12]), &(facts[13]))
+		SpecFactCompareAdapter((facts[12]), (facts[13]))
 	}
 	// 7.5s, 可见强制类型转换会带来很大的开销
 	fmt.Printf("Random Compare Adaptor Time taken: %v\n", time.Since(start))
@@ -283,5 +283,5 @@ func SpecFactCompareAdapter(a, b interface{}) (int, error) {
 	if !ok1 || !ok2 {
 		return 0, fmt.Errorf("expected *parser.SpecFactStmt, got %T and %T", a, b)
 	}
-	return specFactCompare(knownFact, givenFact)
+	return SpecFactCompare(*knownFact, *givenFact)
 }
