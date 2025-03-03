@@ -43,7 +43,6 @@ func ParseSourceCode(code string) (*[]TopStmt, error) {
 			return nil, err
 		}
 		ret = append(ret, *cur)
-		fmt.Printf("%v\n", cur)
 	}
 
 	return &ret, nil

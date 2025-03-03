@@ -168,5 +168,43 @@ func TestCompareFc(t *testing.T) {
 }
 
 func TestCompareSpecFact(t *testing.T) {
+	factStrings := []string{
+		"$p(a)",
+		"$p(b)",
+		"$t(a)",
+		"$q(a, b)",
+	}
 
+	facts := []parser.SpecFactStmt{}
+	for _, factString := range factStrings {
+		topStmtSlice, err := parser.ParseSourceCode(factString)
+		if err != nil {
+			t.Fatalf("ParseSpecFactStmt(%q) error: %v", factString, err)
+		}
+		for _, stmt := range *topStmtSlice {
+			asSpecFact, ok := (stmt.Stmt).(parser.SpecFactStmt)
+			if !ok {
+				t.Fatalf("stmt.parseSpecFactStmt() error: %v", err)
+			}
+			facts = append(facts, asSpecFact)
+		}
+	}
+
+	res, err := SpecFactCompare(&(facts[0]), &(facts[1]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("t: %v\n", res)
+
+	res, err = SpecFactCompare(&(facts[0]), &(facts[0]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("t: %v\n", res)
+
+	res, err = SpecFactCompare(&(facts[0]), &(facts[2]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("t: %v\n", res)
 }
