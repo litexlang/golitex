@@ -14,12 +14,14 @@ func TestStoreNewVar(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := memory.NewEnv()
+	executor := Executor{env, []string{}, ExecTrue}
 	for _, topStmt := range *statements {
-		value, err := ExecTopLevelStmt(env, &topStmt)
+		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(value)
+		fmt.Println(executor.output)
+		fmt.Println(executor.message)
 	}
 
 	entry, _ := env.VarMemory.Get("a")
