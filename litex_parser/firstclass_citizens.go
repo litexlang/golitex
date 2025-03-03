@@ -13,12 +13,12 @@ func (f FcStr) fc()         {}
 func (f *FcFnRetValue) fc() {}
 func (f *FcMemChain) fc()   {}
 
+type FcStr string
+
 type FcFnRetValue struct {
 	FnName                   FcStr
 	TypeParamsVarParamsPairs []TypeParamsAndParamsPair
 }
-
-type FcStr string
 
 type FcMemChain []Fc
 
