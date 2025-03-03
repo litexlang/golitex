@@ -34,3 +34,11 @@ func (mem *AliasMemory) Get(s string) (*AliasMemEntry, bool) {
 	// TODO
 	return nil, false
 }
+
+func (mem *SpecFactMemory) NewFuncFact(fact *parser.FuncFactStmt) error {
+	return nil
+}
+
+func (mem *SpecFactMemory) NewRelationFact(fact *parser.RelationFactStmt) error {
+	return nil
+}
