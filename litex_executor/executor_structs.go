@@ -30,3 +30,22 @@ func (e *Executor) unknown(format string, args ...any) {
 	e.message = append(e.message, message)
 	e.output = ExecUnknown
 }
+
+func (e *Executor) println() {
+	if e.output == ExecTrue {
+		fmt.Println("True")
+	} else if e.output == ExecUnknown {
+		fmt.Println("Unknown")
+	} else if e.output == ExecError {
+		fmt.Println("Error")
+	}
+
+	for _, msg := range e.message {
+		fmt.Println(msg)
+	}
+}
+
+func (e *Executor) clearMessages() {
+	e.message = nil
+	e.output = ExecError
+}
