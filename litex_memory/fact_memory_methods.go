@@ -249,11 +249,6 @@ func getSpecFactEnum(fact *parser.SpecFactStmt) (int, error) {
 	return 0, fmt.Errorf("unknown SpecFactStmt type: %T", *fact)
 }
 
-func NewSpecFactMemory() *SpecFactMemory {
-
-	return &SpecFactMemory{KnownFacts: RedBlackTree{}}
-}
-
 func NewUniFactMemory() *UniFactMemory {
 	return &UniFactMemory{map[PropName]UniFactMemEntry{}}
 }

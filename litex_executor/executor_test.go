@@ -2,8 +2,8 @@ package litexexecutor
 
 import (
 	"fmt"
+	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
-	env "golitex/litex_runtime_environment"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func TestStoreNewVar(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	env := env.NewEnv()
+	env := memory.NewEnv()
 	for _, topStmt := range *statements {
 		value, err := ExecTopLevelStmt(env, &topStmt)
 		if err != nil {

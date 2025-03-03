@@ -2,24 +2,34 @@ package litexexecutor
 
 import (
 	"fmt"
+	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
-	env "golitex/litex_runtime_environment"
 )
 
-func ExecTopLevelStmt(env *env.Env, stmt *parser.TopStmt) (*ExecValue, error) {
+func ExecTopLevelStmt(env *mem.Env, stmt *parser.TopStmt) (*ExecValue, error) {
 	return execStmt(env, &stmt.Stmt)
 }
 
-func execStmt(env *env.Env, stmt *parser.Stmt) (*ExecValue, error) {
-	switch (*stmt).(type) {
-	case *parser.DefVarStmt:
-		return execDefVarStmt(env, (*stmt).(*parser.DefVarStmt))
-	}
+func execStmt(env *mem.Env, stmt *parser.Stmt) (*ExecValue, error) {
+	switch stmt := (*stmt).(type) {
+	case *parser.KnowStmt:
+		return execKnowStmt(env, stmt)
 
-	return nil, fmt.Errorf("unknown statement type: %T", stmt)
+	default:
+		return nil, fmt.Errorf("unknown statement type: %T", stmt)
+	}
 }
 
-func execDefVarStmt(env *env.Env, stmt *parser.DefVarStmt) (*ExecValue, error) {
+func execKnowStmt(env *mem.Env, stmt *parser.KnowStmt) (*ExecValue, error) {
+	// TODO verify whether stmt is valid, for example all symbols are declared.
+	if err := env.NewKnownFact(stmt); err != nil {
+		return &ExecValue{ExecError, ""}, nil
+	}
+
+	return &ExecValue{ExecTrue, ""}, nil
+}
+
+func execDefVarStmt(env *mem.Env, stmt *parser.DefVarStmt) (*ExecValue, error) {
 	err := env.NewVar(&stmt.Decl.VarTypePair)
 	if err != nil {
 		return nil, err

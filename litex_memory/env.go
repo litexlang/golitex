@@ -1,35 +1,34 @@
 // 约定：var, fn, prop 名不能冲突，即不能有一个变量是var，同时也是Prop
-package litexenv
+package litexmemory
 
 import (
 	"fmt"
-	memory "golitex/litex_memory"
 	pack "golitex/litex_package_management"
 	parser "golitex/litex_parser"
 )
 
 type Env struct {
 	Parent         *Env
-	VarMemory      memory.VarMemory
-	PropMemory     memory.PropMemory
-	FnMemory       memory.FnMemory
-	AliasMemory    memory.AliasMemory
-	SpecFactMemory memory.SpecFactMemory
-	CondFactMemory memory.CondFactMemory
-	UniFactMemory  memory.UniFactMemory
-	VarTypeMemory  memory.FcVarTypeMemory
+	VarMemory      VarMemory
+	PropMemory     PropMemory
+	FnMemory       FnMemory
+	AliasMemory    AliasMemory
+	SpecFactMemory SpecFactMemory
+	CondFactMemory CondFactMemory
+	UniFactMemory  UniFactMemory
+	VarTypeMemory  FcVarTypeMemory
 }
 
 func NewEnv() *Env {
 	return &Env{
 		Parent:         nil,
-		VarMemory:      *memory.NewVarMemory(),
-		PropMemory:     *memory.NewPropMemory(),
-		FnMemory:       *memory.NewFnMemory(),
-		AliasMemory:    *memory.NewAliasMemory(),
-		SpecFactMemory: *memory.NewSpecFactMemory(),
-		UniFactMemory:  *memory.NewUniFactMemory(),
-		VarTypeMemory:  *memory.NewFcVarTypeMemory(),
+		VarMemory:      *NewVarMemory(),
+		PropMemory:     *NewPropMemory(),
+		FnMemory:       *NewFnMemory(),
+		AliasMemory:    *NewAliasMemory(),
+		SpecFactMemory: SpecFactMemory{KnownFacts: RedBlackTree{}},
+		UniFactMemory:  *NewUniFactMemory(),
+		VarTypeMemory:  *NewFcVarTypeMemory(),
 	}
 }
 
@@ -65,23 +64,33 @@ func (env *Env) isNameUsed(name string) (bool, error) {
 	return false, nil
 }
 
-func (e *Env) isVarDefined(name string) bool {
-	_, ok := e.VarMemory.Get(name)
+func (env *Env) isVarDefined(name string) bool {
+	_, ok := env.VarMemory.Get(name)
 	if ok {
 		return true
 	} else {
-		if e.Parent != nil {
-			return e.Parent.isVarDefined(name)
+		if env.Parent != nil {
+			return env.Parent.isVarDefined(name)
 		}
 		return false
 	}
 }
 
-func (e *Env) NewVar(pair *parser.FcVarDeclPair) error {
-	if e.isVarDefined(pair.Var) {
+func (env *Env) NewVar(pair *parser.FcVarDeclPair) error {
+	if env.isVarDefined(pair.Var) {
 		return fmt.Errorf("%v is defined", pair.Var)
 	}
 
-	_, err := e.VarMemory.Set(pair)
+	_, err := env.VarMemory.Set(pair)
 	return err
+}
+
+func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
+	for _, fact := range stmt.Facts {
+		switch (fact).(type) {
+		case parser.SpecFactStmt:
+			panic("TODO push into spec fact mem")
+		}
+	}
+	return nil
 }
