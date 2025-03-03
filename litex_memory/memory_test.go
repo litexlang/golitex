@@ -183,10 +183,17 @@ func TestCompareSpecFact(t *testing.T) {
 		"$q[a,b](c).t[k](f[]().g[](), t)",
 		"$q[a,b](c).t[k](f[]().g[](), t)",
 		"$t[a,d,c](k,g,f[]())",
+		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)()",
+		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)()",
+		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)()",
+		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
 		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
 		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
 		"$ff()[](f[](), a.b.c.g().f[]())()()",
 		"$a.b.c.g().f[]()",
+		"$ff()[](f[](), a.b.c.g().f[]())()()",
+		"$ff()[](f[](), a.b.c.g().f[]())()()",
+		"$ff()[](f[](), a.b.c.g().f[]())()()",
 		"$ff()[](f[](), a.b.c.g().f[]())()()",
 		"$a.b.c.g().f[]()",
 		"$f()()()()",
@@ -239,11 +246,17 @@ func TestCompareSpecFact(t *testing.T) {
 
 	start := time.Now()
 	for i := 0; i < 10000000; i++ {
-		// randomly generate int from 0 to len(facts)
 		j := rand.Intn(len(facts))
 		k := rand.Intn(len(facts))
 		SpecFactCompare(&(facts[j]), &(facts[k]))
 	}
-	fmt.Printf("Time taken: %v\n", time.Since(start))
+	// 1.8s
+	fmt.Printf("Random Compare Time taken: %v\n", time.Since(start))
 
+	start = time.Now()
+	for i := 0; i < 10000000; i++ {
+		SpecFactCompare(&(facts[12]), &(facts[13]))
+	}
+	// 7.3s
+	fmt.Printf("Compare Very long the same fact Time taken: %v\n", time.Since(start))
 }

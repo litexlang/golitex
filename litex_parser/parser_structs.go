@@ -87,7 +87,7 @@ type DefAliasStmt struct {
 }
 
 type KnowStmt struct {
-	facts []FactStmt
+	Facts []FactStmt
 }
 
 type DefExistStmt struct {
