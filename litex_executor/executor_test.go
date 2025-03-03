@@ -59,8 +59,7 @@ func TestVerifier(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(executor.output)
-		fmt.Println(executor.message)
+		executor.printlnOutputMessage()
 	}
 
 	testCodes := "$p(b)\n$p(a)"
@@ -74,6 +73,6 @@ func TestVerifier(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		executor.println()
+		executor.printlnOutputMessage()
 	}
 }

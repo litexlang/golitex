@@ -28,7 +28,7 @@ func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
 		return err
 	}
 	// TODO
-	exec.success(stmt.String())
+	exec.success("%v", stmt)
 	return nil
 }
 

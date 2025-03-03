@@ -31,7 +31,7 @@ func (e *Executor) unknown(format string, args ...any) {
 	e.output = ExecUnknown
 }
 
-func (e *Executor) println() {
+func (e *Executor) printlnOutputMessage() {
 	if e.output == ExecTrue {
 		fmt.Println("True")
 	} else if e.output == ExecUnknown {

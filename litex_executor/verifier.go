@@ -10,7 +10,7 @@ func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 		return err
 	}
 	if searchedNode != nil {
-		exec.success("%v is true, verified by %v", stmt, searchedNode)
+		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
 	} else {
 		exec.unknown("%v is unknown", stmt)
 	}

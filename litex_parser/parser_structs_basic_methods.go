@@ -8,8 +8,8 @@ func (stmt *KnowStmt) String() string {
 
 func (stmt *FuncFactStmt) String() string {
 	if stmt.IsTrue {
-		return fmt.Sprintf("%v", stmt.Fc)
+		return fmt.Sprintf("$%v", stmt.Fc)
 	} else {
-		return fmt.Sprintf("not %v", stmt.Fc)
+		return fmt.Sprintf("not $%v", stmt.Fc)
 	}
 }
