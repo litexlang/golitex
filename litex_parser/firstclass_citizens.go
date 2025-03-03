@@ -28,7 +28,7 @@ type TypeParamsAndParamsPair struct {
 }
 
 func (f *FcFnRetValue) String() string {
-	outPut := ""
+	outPut := string(f.FnName)
 
 	for _, pair := range f.TypeParamsVarParamsPairs {
 		if len(pair.TypeParams) > 0 {
