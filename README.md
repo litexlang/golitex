@@ -20,7 +20,9 @@ Why should you learn Litex? Litex has the potential to greatly impact both mathe
 
 - **For Mathematics**: 
   - **For individual researchers**, it provides peace of mind by reducing the risk of subtle errors undermining their proofs. With it, interactive textbooks can be created, enabling learners to study more efficiently and innovate.
+  
   - **For the whole mathematics community**, since Litex ensures correctness, the need for paper reviews is eliminated. This fosters trust and enables large-scale collaboration, akin to a "GitHub for Math", because strangers can trust each other's proofs and collaborate to solve problems.
+  
   - **For AI-Driven Math Exploration**: AI excels at solving a wide range of problems quickly. Instead of proving single facts, some mathematicians are trying to expand AI's generalization in math, allowing it to solve thousands of issues simultaneously. AlphaProof is a great example. Litex can greatly speed up this progress, because it addresses many currently insurmountable bottlenecks in AI training.
   
 
