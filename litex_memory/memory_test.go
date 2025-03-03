@@ -87,6 +87,19 @@ func TestCompareFc(t *testing.T) {
 		},
 	}
 
+	fc8 := parser.FcMemChain{
+		fc1, fc2,
+	}
+	fc9 := parser.FcMemChain{
+		fc3, fc2,
+	}
+	fc10 := parser.FcMemChain{
+		&fc4, &fc6,
+	}
+	fc11 := parser.FcMemChain{
+		&fc4, &fc7,
+	}
+
 	// 测试 FcStr 的比较
 	result, err := compareFc(fc1, fc2)
 	if err != nil {
@@ -135,5 +148,21 @@ func TestCompareFc(t *testing.T) {
 	}
 	if result >= 0 {
 		t.Fatalf("compareFc(fc4, fc7): expected neg value, got %d", result)
+	}
+
+	result, err = compareFc(&fc8, &fc9)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != 0 {
+		t.Fatalf("compareFc(fc8, fc9): expected positive value, got %d", result)
+	}
+
+	result, err = compareFc(&fc10, &fc11)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result >= 0 {
+		t.Fatalf("compareFc(fc10, fc11): expected positive value, got %d", result)
 	}
 }
