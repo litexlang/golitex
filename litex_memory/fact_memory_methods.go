@@ -9,7 +9,7 @@ func CompSpecFactParams(knownFact parser.SpecFactStmt, givenFact parser.SpecFact
 	return 0
 }
 
-func SpecFactCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactStmt) (int, error) {
+func specFactCompare(knownFact *parser.SpecFactStmt, givenFact *parser.SpecFactStmt) (int, error) {
 	if specTypeCompareResult, err := specFactTypeCompare(knownFact, givenFact); specTypeCompareResult != 0 || err != nil {
 		return specTypeCompareResult, err
 	}

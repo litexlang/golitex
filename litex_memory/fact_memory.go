@@ -8,7 +8,7 @@ import (
 type PropName string
 
 type SpecFactMemory struct {
-	KnownFacts RedBlackTree
+	KnownFacts RedBlackTree[*parser.SpecFactStmt]
 }
 
 type CondFactMemory struct {
