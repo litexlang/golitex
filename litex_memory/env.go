@@ -87,9 +87,17 @@ func (env *Env) NewVar(pair *parser.FcVarDeclPair) error {
 
 func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 	for _, fact := range stmt.Facts {
-		switch (fact).(type) {
-		case parser.SpecFactStmt:
-			panic("TODO push into spec fact mem")
+		switch f := fact.(type) {
+		case *parser.FuncFactStmt:
+			if err := env.SpecFactMemory.NewFuncFact(f); err != nil {
+				return err
+			}
+		case *parser.RelationFactStmt:
+			if err := env.SpecFactMemory.NewRelationFact(f); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unknown fact type: %T", fact)
 		}
 	}
 	return nil
