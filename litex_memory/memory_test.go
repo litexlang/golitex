@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	parser "golitex/litex_parser"
+	"math/rand"
 	"testing"
+	"time"
 )
 
 func TestRedBlackTree(t *testing.T) {
@@ -171,8 +173,29 @@ func TestCompareSpecFact(t *testing.T) {
 	factStrings := []string{
 		"$p(a)",
 		"$p(b)",
+		"$p(a)",
+		"$p(b)",
 		"$t(a)",
 		"$q(a, b)",
+		"$q[a,b]().t[]()",
+		"$q(a, b)",
+		"$q[a,b]().t[]()",
+		"$q[a,b](c).t[k](f[]().g[](), t)",
+		"$q[a,b](c).t[k](f[]().g[](), t)",
+		"$t[a,d,c](k,g,f[]())",
+		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
+		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
+		"$ff()[](f[](), a.b.c.g().f[]())()()",
+		"$a.b.c.g().f[]()",
+		"$ff()[](f[](), a.b.c.g().f[]())()()",
+		"$a.b.c.g().f[]()",
+		"$f()()()()",
+		"$f[]()",
+		"$f[]().t[k](f[]().g[](), t)",
+		"$f[]()",
+		"$f[]().t[k](f[]().g[](), t)",
+		"$f[]().t().g[](g[]())()()",
+		"$f[]().t().g[](g[]())()()",
 	}
 
 	facts := []parser.SpecFactStmt{}
@@ -207,4 +230,20 @@ func TestCompareSpecFact(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Printf("t: %v\n", res)
+
+	res, err = SpecFactCompare(&(facts[4]), &(facts[5]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("t: %v\n", res)
+
+	start := time.Now()
+	for i := 0; i < 10000000; i++ {
+		// randomly generate int from 0 to len(facts)
+		j := rand.Intn(len(facts))
+		k := rand.Intn(len(facts))
+		SpecFactCompare(&(facts[j]), &(facts[k]))
+	}
+	fmt.Printf("Time taken: %v\n", time.Since(start))
+
 }
