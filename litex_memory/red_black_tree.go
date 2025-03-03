@@ -168,3 +168,28 @@ func (t *RedBlackTree[T]) InOrderTraversal(node *Node[T], visit func(key T) erro
 	}
 	return nil
 }
+
+// Search searches for a key in the Red-Black Tree and returns the corresponding node if found.
+func (t *RedBlackTree[T]) Search(key T) (*Node[T], error) {
+	return t.searchNode(t.root, key)
+}
+
+// searchNode recursively searches for a key in the tree and returns the corresponding node if found.
+func (t *RedBlackTree[T]) searchNode(node *Node[T], key T) (*Node[T], error) {
+	if node == nil {
+		return nil, nil
+	}
+
+	compareResult, err := t.compare(key, node.key)
+	if err != nil {
+		return nil, err
+	}
+
+	if compareResult == 0 {
+		return node, nil // 返回找到的节点
+	} else if compareResult < 0 {
+		return t.searchNode(node.left, key)
+	} else {
+		return t.searchNode(node.right, key)
+	}
+}

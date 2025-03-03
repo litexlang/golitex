@@ -6,11 +6,13 @@ import (
 )
 
 func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
-	return exec.stmt(&stmt.Stmt)
+	return exec.stmt(stmt.Stmt)
 }
 
-func (exec *Executor) stmt(stmt *parser.Stmt) error {
-	switch stmt := (*stmt).(type) {
+func (exec *Executor) stmt(stmt parser.Stmt) error {
+	switch stmt := (stmt).(type) {
+	case *parser.FuncFactStmt:
+		return exec.verifyFuncFact(stmt)
 	case *parser.KnowStmt:
 		return exec.knowStmt(stmt)
 
