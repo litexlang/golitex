@@ -13,23 +13,19 @@ func (f FcStr) fc()         {}
 func (f *FcFnRetValue) fc() {}
 func (f *FcMemChain) fc()   {}
 
-type TypeParamsAndParamsPair struct {
-	TypeParams []TypeVarStr
-	VarParams  []Fc
-}
-
 type FcFnRetValue struct {
 	FnName                   FcStr
 	TypeParamsVarParamsPairs []TypeParamsAndParamsPair
 }
 
-// type FcFnRetValue struct {
-// 	Fn         Fc
-// 	TypeParams []TypeVarStr
-// 	VarParams  []Fc
-// }
+type FcStr string
 
-// used for variables that are returned by called function
+type FcMemChain []Fc
+
+type TypeParamsAndParamsPair struct {
+	TypeParams []TypeVarStr
+	VarParams  []Fc
+}
 
 func (f *FcFnRetValue) String() string {
 	outPut := ""
@@ -59,14 +55,11 @@ func (f *FcFnRetValue) String() string {
 	return outPut
 }
 
-type FcStr string
-
 func (f FcStr) String() string {
 	return string(f)
 }
 
 // used for variables that are returned by called function, e,g. f().g().h().  The chain is connected by dots
-type FcMemChain []Fc
 
 func (f *FcMemChain) String() string {
 	ret := ""
