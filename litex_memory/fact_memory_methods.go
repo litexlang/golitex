@@ -121,11 +121,41 @@ func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 }
 
 func compareFcStr(knownFc parser.FcStr, givenFc parser.FcStr) (int, error) {
+	minLen := len(knownFc)
+	if len(givenFc) < minLen {
+		minLen = len(givenFc)
+	}
+
+	for i := 0; i < minLen; i++ {
+		if knownFc[i] != givenFc[i] {
+			return int(knownFc[i]) - int(givenFc[i]), nil
+		}
+	}
+
+	return len(knownFc) - len(givenFc), nil
+}
+
+func compareTypeParamsAndParamsPair(knownPair parser.TypeParamsAndParamsPair, givenPair parser.TypeParamsAndParamsPair) (int, error) {
 	panic("TODO")
 }
 
 func compareFcFnRetValue(knownFc *parser.FcFnRetValue, givenFc *parser.FcFnRetValue) (int, error) {
-	panic("TODO")
+	if comp, err := compareFcStr(knownFc.FnName, givenFc.FnName); comp != 0 || err != nil {
+		return comp, err
+	}
+
+	minLen := len(knownFc.TypeParamsVarParamsPairs)
+	if len(givenFc.TypeParamsVarParamsPairs) < minLen {
+		minLen = len(givenFc.TypeParamsVarParamsPairs)
+	}
+
+	for i := 0; i < minLen; i++ {
+		if comp, err := compareTypeParamsAndParamsPair(knownFc.TypeParamsVarParamsPairs[i], givenFc.TypeParamsVarParamsPairs[i]); comp != 0 || err != nil {
+			return comp, err
+		}
+	}
+
+	return len(knownFc.TypeParamsVarParamsPairs) - len(givenFc.TypeParamsVarParamsPairs), nil
 }
 
 func compareFcMemChain(knownFc *parser.FcMemChain, givenFc *parser.FcMemChain) (int, error) {
