@@ -12,9 +12,9 @@ _–- George Boole_
 
 Litex is a minimalist proof assistant (formal language). Mathematics and the ability to understand it are built-in capabilities of the human brain. Since even children grasp math naturally, a formal language for mathematics that's easily understood and used by anyone should exist. The goal of Litex is to invent such a language.
 
-Litex is special as it focuses solely on mathematical verification with intuitive syntax, unlike traditional proof assistants, which are actually general-purpose programming languages, that include unrelated complexities.
+Mathematics is about abstraction, and computer science is the discipline that studies abstraction. Litex brings tools from the world of programming into the world of mathematics. Designed to be as intuitive as Python or LaTeX, Litex offers a minimal learning curve.
 
-Designed to be as intuitive as Python or LaTeX, Litex offers a minimal learning curve. It is language built around common sense rather than sophisticated theories. 
+Litex is unique in two ways, unlike traditional proof assistants. First, it focuses solely on mathematical verification, whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. Second, Litex is built around common sense rather than sophisticated mathematical theories. 
 
 Why should you learn Litex? Litex has the potential to greatly impact both mathematics and AI:
 
@@ -504,6 +504,13 @@ However, Litex still enables you to do mechanical things through language plugin
 There is no generics in Litex, at least for the time being. I prefer single-word type name as how C works, rather than type with layers of layers of "<>"s, as how code looks like in C++ and other languages with generics(templates). 
 
 Generics helps you to expose every layer of data-structure. It is great in many cases, but may cause serious trouble in Litex. The reason is simple: there are just so many layers of abstraction in math, too many to imagine. Exposing all the abstraction layers in type would make the code overly redundant. Users do not need to delve into concepts that are too low-level.
+
+### Users can start his proof from any abstraction layer.
+
+In modern math, many facts are derived from set theory, a highly abstract foundation. However, math historically evolved differently. Natural numbers emerged in prehistory, and calculus was developed by Newton and Leibniz without set theory. A formal language that forces users to start from a fixed abstraction layer is limiting.
+
+Mathematical discovery occurs in two ways: inventing abstract concepts and finding concrete examples, or identifying patterns in facts and summarizing them into abstract concepts. Both top-down and bottom-up approaches coexist in math, which is why Litex is designed to handle all levels of abstraction effectively.
+
 
 ## Answers for typical questions
 
