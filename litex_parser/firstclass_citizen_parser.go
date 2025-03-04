@@ -73,7 +73,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		fcArr = append(fcArr, curFc)
 	}
 
-	ret := FcMemChain(fcArr)
+	ret := FcMemChain{fcArr}
 
 	return &ret, nil
 }

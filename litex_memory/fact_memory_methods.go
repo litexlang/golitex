@@ -191,12 +191,12 @@ func compareFcFnRetValue(knownFc *parser.FcFnRetValue, givenFc *parser.FcFnRetVa
 }
 
 func compareFcMemChain(knownFc *parser.FcMemChain, givenFc *parser.FcMemChain) (int, error) {
-	if len(*knownFc) != len(*givenFc) {
-		return len(*knownFc) - len(*givenFc), nil
+	if len(knownFc.Chain) != len(givenFc.Chain) {
+		return len(knownFc.Chain) - len(givenFc.Chain), nil
 	}
 
-	for i := 0; i < len(*knownFc); i++ {
-		if comp, err := compareFc((*knownFc)[i], (*givenFc)[i]); comp != 0 || err != nil {
+	for i := 0; i < len(knownFc.Chain); i++ {
+		if comp, err := compareFc((knownFc.Chain)[i], (givenFc.Chain)[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
@@ -251,8 +251,4 @@ func getSpecFactEnum(fact parser.SpecFactStmt) (int, error) {
 
 func NewUniFactMemory() *UniFactMemory {
 	return &UniFactMemory{map[PropName]UniFactMemEntry{}}
-}
-
-func NewCondFactMemory() *CondFactMemory {
-	return &CondFactMemory{KVs: map[PropName]CondFactMemEntry{}}
 }

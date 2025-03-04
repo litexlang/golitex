@@ -154,12 +154,13 @@ func TestKnowSpeed(t *testing.T) {
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
+	// 数量级为 n*log(n)，因为走一遍是log(n), 走 rounds 次差不多就是 n * log(n)
 	rounds := 10000
 	for i := 0; i < rounds; i++ {
 		stmt := randFuncFact()
-		knowStmt := parser.KnowStmt{[]parser.FactStmt{stmt}}
-		topKnow := parser.TopStmt{&knowStmt, true}
-		topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{stmt, true})
+		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
+		topKnow := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
+		topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
 		topStatements = append(topStatements, &topKnow)
 	}
 
@@ -172,13 +173,12 @@ func TestKnowSpeed(t *testing.T) {
 	}
 	// 1000 rounds 3.8-4.5ms
 	// 10000 rounds 51ms
-	// 数量级为 n*log(n)
 	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
 
 	start = time.Now()
 	for _, topStmt := range topVerifyStatements {
 		err := executor.TopLevelStmt(topStmt)
-		if err != nil {
+		if err != nil || executor.output != ExecTrue {
 			t.Fatal(err)
 		}
 
@@ -189,22 +189,11 @@ func TestKnowSpeed(t *testing.T) {
 }
 
 func randFuncFact() *parser.FuncFactStmt {
-	stmt := parser.FuncFactStmt{true, randomFcGenerator()}
+	stmt := parser.FuncFactStmt{IsTrue: true, Fc: randomFcGenerator()}
 	return &stmt
 }
 
-func randomKnowStmt() *parser.KnowStmt {
-	stmt := randFuncFact()
-	knowStmt := parser.KnowStmt{[]parser.FactStmt{stmt}}
-	return &knowStmt
-}
-
 func randomFcGenerator() parser.Fc {
-	const (
-		strEnum   = 0
-		fnRetEnum = 1
-		chainEnum = 2
-	)
 
 	e := rand.Intn(3)
 
@@ -229,8 +218,7 @@ func randFcChain() *parser.FcMemChain {
 	for i := 0; i < round; i++ {
 		fcArr = append(fcArr, randFcFnRetValue())
 	}
-	a := parser.FcMemChain(fcArr)
-	return &a
+	return &parser.FcMemChain{Chain: fcArr}
 }
 
 func randFcString() parser.FcStr {
@@ -247,9 +235,9 @@ func randFcFnRetValue() *parser.FcFnRetValue {
 	round := rand.Intn(3) + 1
 	typeParamVarParamsPairs := []parser.TypeParamsAndParamsPair{}
 	for i := 0; i < round; i++ {
-		typeParamVarParamsPairs = append(typeParamVarParamsPairs, parser.TypeParamsAndParamsPair{*randTypeParams(), *randVarParams()})
+		typeParamVarParamsPairs = append(typeParamVarParamsPairs, parser.TypeParamsAndParamsPair{TypeParams: *randTypeParams(), VarParams: *randVarParams()})
 	}
-	return &parser.FcFnRetValue{fnName, typeParamVarParamsPairs}
+	return &parser.FcFnRetValue{FnName: fnName, TypeParamsVarParamsPairs: typeParamVarParamsPairs}
 }
 
 func randTypeParams() *[]parser.TypeVarStr {
