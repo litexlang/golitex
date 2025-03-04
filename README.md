@@ -12,7 +12,9 @@ _–- George Boole_
 
 Litex is a minimalist proof assistant (formal language). Mathematics and the ability to understand it are built-in capabilities of the human brain. Since even children grasp math naturally, a formal language for mathematics that's easily understood and used by anyone should exist. The goal of Litex is to invent such a language.
 
-Designed to be as intuitive as Python or LaTeX, Litex offers a minimal learning curve. It is language built around common sense rather than sophisticated theories.
+Litex is special as it focuses solely on mathematical verification with intuitive syntax, unlike traditional proof assistants, which are actually general-purpose programming languages, that include unrelated complexities.
+
+Designed to be as intuitive as Python or LaTeX, Litex offers a minimal learning curve. It is language built around common sense rather than sophisticated theories. 
 
 Why should you learn Litex? Litex has the potential to greatly impact both mathematics and AI:
 
@@ -41,11 +43,11 @@ In short, Litex can transform workflow and collaboration of mathematicians. It b
 
 Mathematics involves two different major tasks: arithmetic computation and verification. Computation, handled by programming languages, alters memory states and requires control flow (e.g. loops, conditionals) and literal transformations to manage operations.
 
-Verification is akin to searching a dictionary—using a specific key to retrieve corresponding information. Although mathematical verification involves more rules than a simple dictionary lookup, the core idea remains the same. Just as flipping through a dictionary doesn’t change it, searching for facts in mathematical verification doesn’t alter memory states.
+Verification is akin to searching a dictionary using a specific key to retrieve corresponding information. Although mathematical verification involves more rules than a simple dictionary lookup, the core idea remains the same. Just as flipping through a dictionary doesn’t change it, searching for facts in mathematical verification doesn’t alter memory states. The implementation of Litex is based on the observations mentioned above.
 
-Proof assistants are designed for mathematical verification. However, traditional proof assistants struggle to scale formal proofs effectively due to their lack of fluidity and ease. This is because they are built as general-purpose languages, requiring them to include syntax unrelated to mathematical proofs such as memory state alterations—which adds unnecessary complexity.
+Proof assistants are designed for mathematical verification. However, traditional proof assistants struggle to scale formal proofs effectively. This is because they are built as general-purpose languages, requiring them to include syntax unrelated to mathematical proofs such as memory state alterations (control flows, arithmetics), which adds unnecessary complexity.
 
-Litex is a language specifically designed for mathematical verification. Its syntax is entirely grounded in everyday mathematical expressions, without compromising its clarity for unrelated functionalities.
+Litex is a language specifically designed for mathematical verification. Its syntax is entirely grounded in everyday mathematical expressions, without compromising its clarity for unrelated functionalities. That is why Litex expressions have just four outputs: `true`, `false`, `unknown`, and `error`. General-purpose functionalities are implemented as plugins instead of builtin syntax to avoid distracting from the core task of verification.
 
 By leveraging a deep understanding of the similarities and differences between programming and mathematics, Litex provides a seamless experience tailored to mathematical verification.
 
