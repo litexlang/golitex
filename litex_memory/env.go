@@ -27,6 +27,7 @@ func NewEnv() *Env {
 		FnMemory:       *NewFnMemory(),
 		AliasMemory:    *NewAliasMemory(),
 		SpecFactMemory: SpecFactMemory{KnownFacts: *NewRedBlackTree(SpecFactCompare)},
+		CondFactMemory: CondFactMemory{KnownFacts: *NewRedBlackTree(CondFactMemoryTreeNodeCompare)},
 		UniFactMemory:  *NewUniFactMemory(),
 		VarTypeMemory:  *NewFcVarTypeMemory(),
 	}

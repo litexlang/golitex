@@ -12,7 +12,7 @@ type SpecFactMemory struct {
 }
 
 type CondFactMemory struct {
-	KnownFacts RedBlackTree[CondFactMemoryTreeNode]
+	KnownFacts RedBlackTree[*CondFactMemoryTreeNode]
 }
 
 type CondFactMemoryTreeNode struct {
