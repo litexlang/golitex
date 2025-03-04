@@ -237,6 +237,8 @@ For example, the set of integers can be equipped with a structure that includes 
 
 The same set can have different structures on it. For example, C[0,1] (the set of continuous functions on the interval [0,1]), different norms (such as the L1 norm or the L^∞ norm) impose different structures on the same set. Even though the underlying set is the same, the additional structure (the norm) defines different properties (such as convergence or completeness), making them distinct mathematical objects. 
 
+The analogy between "program = data structure + algorithm" and "type = set + structure" highlights a fundamental similarity: both concepts combine static properties (data structure or set) with dynamic behaviors (algorithm or structure) to define a complete entity. In programming, this forms the basis of functionality, while in math, it defines the characteristics and constraints of objects.
+
 So, When the underlying set is different, the type must be different. Even if the sets are the same, if the structures imposed on them are different, they are considered distinct types.
 
 `type` has the following functionalities:
