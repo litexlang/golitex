@@ -155,7 +155,7 @@ func TestKnowSpeed(t *testing.T) {
 	topVerifyStatements := []*parser.TopStmt{}
 
 	// 数量级为 n*log(n)，因为走一遍是log(n), 走 rounds 次差不多就是 n * log(n)
-	rounds := 10000
+	rounds := 1000000
 	for i := 0; i < rounds; i++ {
 		stmt := randFuncFact()
 		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
