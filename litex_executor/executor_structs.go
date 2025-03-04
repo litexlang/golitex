@@ -19,6 +19,20 @@ type Executor struct {
 	output  ExecOutput
 }
 
+func (e *Executor) newEnv() {
+	newEnv := mem.NewEnv()
+	newEnv.Parent = e.env
+	e.env = newEnv
+}
+
+func (e *Executor) deleteEnv() error {
+	if e.env.Parent != nil {
+		e.env = e.env.Parent
+		return nil
+	}
+	return fmt.Errorf("no parent environment to release")
+}
+
 func (e *Executor) success(format string, args ...any) {
 	message := fmt.Sprintf(format, args...) // 使用 fmt.Sprintf 格式化字符串
 	e.message = append(e.message, message)
