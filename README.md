@@ -33,7 +33,7 @@ Because Litex is an order of magnitude simpler than traditional proof assistants
   - **Automated Verification**:
 Litex can automatically verify LLM outputs for math problems, providing a reliable way to validate and refine their reasoning. This capability is crucial for improving the accuracy and robustness of LLMs in mathematical tasks.
 
-  - **The bridge between symbolic and neural AI**: While neural networks dominate machine learning today, we must not overlook symbolic AI's profound contributions, such as modern programming languages. From a broader perspective, Litex serves as a solid bridge between these two seemingly disparate fields. 
+  - **The bridge between symbolic and neural AI**: While neural network AIs dominate machine learning today, we must not overlook symbolic AI's profound contributions, such as modern programming languages. Litex serves as a solid bridge between these two seemingly disparate fields. Integrating verification (search) into existing AI systems that currently focus only on training (computation) can be a very promising starting point. 
 
 Finally, Litex itself is a tool of exquisite innovation. It embodies human reasoning itself, not merely serving as a simple vehicle. Writing in Litex is enjoyable because it eliminates extra mental burden from the language itself, allowing users to fully immerse themselves in the elegance of mathematics.
 
@@ -43,7 +43,7 @@ In short, Litex can transform workflow and collaboration of mathematicians. It b
 
 Mathematics involves two different major tasks: arithmetic computation and verification. Computation, handled by programming languages, alters memory states and requires control flow (e.g. loops, conditionals) and literal transformations to manage operations.
 
-Verification is akin to searching a dictionary using a specific key to retrieve corresponding information. Although mathematical verification involves more rules than a simple dictionary lookup, the core idea remains the same. Just as flipping through a dictionary doesn’t change it, searching for facts in mathematical verification doesn’t alter memory states. The implementation of Litex is based on the observations mentioned above.
+Verification is like searching a dictionary: you use a specific key to retrieve relevant information. In mathematical verification, you take a factual expression and search a base of known facts to find supporting evidence. While it involves more rules than a simple dictionary lookup (e.g., satisfying additional conditions), the core idea remains unchanged. Litex’s implementation builds on these observations. The major difference between computation and verification is that searching for facts in verification doesn’t change memory states.
 
 Proof assistants are designed for mathematical verification. However, traditional proof assistants struggle to scale formal proofs effectively. This is because they are built as general-purpose languages, requiring them to include syntax unrelated to mathematical proofs such as memory state alterations (control flows, arithmetics), which adds unnecessary complexity.
 
