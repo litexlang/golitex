@@ -41,7 +41,7 @@ In short, Litex can transform workflow and collaboration of mathematicians. It b
 
 ## What makes Litex Special
 
-Mathematics involves two different major tasks: arithmetic computation and verification. Computation, handled by programming languages, alters memory states and requires control flow (e.g. loops, conditionals) and literal transformations to manage operations.
+Mathematics involves two different major tasks: computation and verification. Computation (e.g. arithmetic computation, symbolic computation), handled by programming languages, alters memory states and requires control flow (e.g. loops, conditionals) and literal transformations to manage operations.
 
 Verification is like searching a dictionary: you use a specific key to retrieve relevant information. In mathematical verification, you take a factual expression and search a base of known facts to find supporting evidence. While it involves more rules than a simple dictionary lookup (e.g., satisfying additional conditions), the core idea remains unchanged. Litex’s implementation builds on these observations. The major difference between computation and verification is that searching for facts in verification doesn’t change memory states.
 
@@ -49,7 +49,7 @@ Proof assistants are designed for mathematical verification. However, traditiona
 
 Litex is a language specifically designed for mathematical verification. Its syntax is entirely grounded in everyday mathematical expressions, without compromising its clarity for unrelated functionalities. That is why Litex expressions have just four outputs: `true`, `false`, `unknown`, and `error`. General-purpose functionalities are implemented as plugins instead of builtin syntax to avoid distracting from the core task of verification.
 
-By leveraging a deep understanding of the similarities and differences between programming and mathematics, Litex provides a seamless experience tailored to mathematical verification.
+By leveraging a deep understanding of the similarities and differences between programming and mathematics, Litex provides a seamless experience tailored to mathematical verification. That is why Litex is so different from other proof assistants.
 
 The core design principle of Litex is simplicity. The complexity of writing mathematics in Litex should not exceed the complexity of mathematics itself. As a result, using Litex is enjoyable, smooth, inspiring.
 
@@ -231,7 +231,15 @@ type Human:
         var age Natural
 ```
 <!-- TODO: Better -->
-In Litex, `type` has the following functionalities:
+In Litex, `type` = `set` + `structure`. The set defines the possible values of the data, while the structure (such as operations, special elements, or axioms) gives the data specific behaviors or constraints. The way to define a structure is by specifying different `type_member` and `member`.
+
+For example, the set of integers can be equipped with a structure that includes the operations of addition (+), subtraction (−), and multiplication (×). This combination of a set (ℤ) and its operations (+, −, ×) along with special elements (like 0) defines the structure of the set of integers.
+
+The same set can have different structures on it. For example, C[0,1] (the set of continuous functions on the interval [0,1]), different norms (such as the L1 norm or the L^∞ norm) impose different structures on the same set. Even though the underlying set is the same, the additional structure (the norm) defines different properties (such as convergence or completeness), making them distinct mathematical objects. 
+
+So, When the underlying set is different, the type must be different. Even if the sets are the same, if the structures imposed on them are different, they are considered distinct types.
+
+`type` has the following functionalities:
 
 - **As as Set**:
 The statement var x type_name means that x has the type type_name. Mathematically, this means x belongs to the set called type_name. For example, `var n Real` means n is a real number, i.e., n is in the set of all real numbers. As in most programming languages, every object has a type. However, the object might not have a specific "value" because, in many cases, it is the type of the variable (not its value) that determines its relationships with other objects. For example, no matter what a positive number equals to, it is larger than 0. Since a variable can belong to multiple sets (e.g. 1 is both a real number and a natural number), a variable can have multiple types.

@@ -5,10 +5,6 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func CompSpecFactParams(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt) int {
-	return 0
-}
-
 func SpecFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt) (int, error) {
 	if specTypeCompareResult, err := specFactTypeCompare(knownFact, givenFact); specTypeCompareResult != 0 || err != nil {
 		return specTypeCompareResult, err

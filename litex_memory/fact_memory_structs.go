@@ -12,14 +12,12 @@ type SpecFactMemory struct {
 }
 
 type CondFactMemory struct {
-	KnownFacts RedBlackTree[parser.SpecFactStmt]
+	KnownFacts RedBlackTree[CondFactMemoryTreeNode]
 }
 
-type CondFactMemEntry struct{ Facts []CondFactMemFact }
-
-type CondFactMemFact struct {
-	cond *[]parser.FactStmt
-	then parser.FactStmt
+type CondFactMemoryTreeNode struct {
+	ThenFact  parser.SpecFactStmt
+	CondFacts []*parser.IfFactStmt
 }
 
 type UniFactMemory struct {
