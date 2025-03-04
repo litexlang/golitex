@@ -12,7 +12,7 @@ type SpecFactMemory struct {
 }
 
 type CondFactMemory struct {
-	KVs map[PropName]CondFactMemEntry
+	KnownFacts RedBlackTree[parser.SpecFactStmt]
 }
 
 type CondFactMemEntry struct{ Facts []CondFactMemFact }

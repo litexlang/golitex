@@ -16,6 +16,8 @@ func (exec *Executor) stmt(stmt parser.Stmt) error {
 		return exec.verifyFuncFact(stmt)
 	case *parser.KnowStmt:
 		return exec.knowStmt(stmt)
+	case *parser.DefVarStmt:
+		return exec.defVarStmt(stmt)
 
 	default:
 		return fmt.Errorf("unknown statement type: %T", stmt)

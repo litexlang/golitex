@@ -90,16 +90,19 @@ func TestCompareFc(t *testing.T) {
 	}
 
 	fc8 := parser.FcMemChain{
-		fc1, fc2,
+		[]parser.Fc{fc1, fc2},
 	}
 	fc9 := parser.FcMemChain{
-		fc3, fc2,
+		// fc3, fc2,
+		[]parser.Fc{fc3, fc2},
 	}
 	fc10 := parser.FcMemChain{
-		&fc4, &fc6,
+		// &fc4, &fc6,
+		[]parser.Fc{&fc4, &fc6},
 	}
 	fc11 := parser.FcMemChain{
-		&fc4, &fc7,
+		// &fc4, &fc7,
+		[]parser.Fc{&fc4, &fc7},
 	}
 
 	// 测试 FcStr 的比较
