@@ -151,28 +151,51 @@ func TestVerifier2(t *testing.T) {
 func TestKnowSpeed(t *testing.T) {
 	env := memory.NewEnv()
 	executor := Executor{env, []string{}, ExecTrue}
-	statements := []*parser.TopStmt{}
+	topStatements := []*parser.TopStmt{}
+	topVerifyStatements := []*parser.TopStmt{}
 
-	rounds := 1000
+	rounds := 10000
 	for i := 0; i < rounds; i++ {
-		top := parser.TopStmt{randomKnowStmt(), true}
-		statements = append(statements, &top)
+		stmt := randFuncFact()
+		knowStmt := parser.KnowStmt{[]parser.FactStmt{stmt}}
+		topKnow := parser.TopStmt{&knowStmt, true}
+		topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{stmt, true})
+		topStatements = append(topStatements, &topKnow)
 	}
 
 	start := time.Now()
-	for _, topStmt := range statements {
+	for _, topStmt := range topStatements {
 		err := executor.TopLevelStmt(topStmt)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
-	fmt.Printf("%d rounds taken: %v\n", rounds, time.Since(start))
+	// 1000 rounds 3.8-4.5ms
+	// 10000 rounds 51ms
+	// 数量级为 n*log(n)
+	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
 
+	start = time.Now()
+	for _, topStmt := range topVerifyStatements {
+		err := executor.TopLevelStmt(topStmt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+	}
+	// 1000 rounds:6.5-7ms 大约是插入的两倍。因为你树建立完后，再遍历地去检查，确实会导致平均路过的节点数比原来多
+	// 10000 69ms
+	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
+}
+
+func randFuncFact() *parser.FuncFactStmt {
+	stmt := parser.FuncFactStmt{true, randomFcGenerator()}
+	return &stmt
 }
 
 func randomKnowStmt() *parser.KnowStmt {
-	stmt := parser.FuncFactStmt{true, randomFcGenerator()}
-	knowStmt := parser.KnowStmt{[]parser.FactStmt{&stmt}}
+	stmt := randFuncFact()
+	knowStmt := parser.KnowStmt{[]parser.FactStmt{stmt}}
 	return &knowStmt
 }
 
@@ -182,6 +205,7 @@ func randomFcGenerator() parser.Fc {
 		fnRetEnum = 1
 		chainEnum = 2
 	)
+
 	e := rand.Intn(3)
 
 	if e == 0 {
@@ -203,7 +227,7 @@ func randFcChain() *parser.FcMemChain {
 	fcArr := []parser.Fc{}
 	round := rand.Intn(3) + 2
 	for i := 0; i < round; i++ {
-		fcArr = append(fcArr, randomFcGenerator())
+		fcArr = append(fcArr, randFcFnRetValue())
 	}
 	a := parser.FcMemChain(fcArr)
 	return &a
@@ -246,7 +270,7 @@ func randVarParams() *[]parser.Fc {
 	round := rand.Intn(3) + 1
 	varParams := []parser.Fc{}
 	for i := 0; i < round; i++ {
-		varParams = append(varParams, randomFcGenerator())
+		varParams = append(varParams, randFcString()) // 这里必须是randFcString不能是randFc，否则会因为内存溢出停掉
 	}
 	return &varParams
 }
