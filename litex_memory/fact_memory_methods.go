@@ -248,3 +248,22 @@ func getSpecFactEnum(fact parser.SpecFactStmt) (int, error) {
 func NewUniFactMemory() *UniFactMemory {
 	return &UniFactMemory{map[PropName]UniFactMemEntry{}}
 }
+
+func (mem *CondFactMemory) NewFact(fact *parser.IfFactStmt) error {
+	for _, f := range fact.ThenFacts {
+		// If the fact already exists
+		node, err := mem.KnownFacts.Search(CondFactMemoryTreeNode{f, []*parser.IfFactStmt{}})
+		if err != nil {
+			return err
+		}
+		if node != nil {
+			node.Key.CondFacts = append(node.Key.CondFacts, fact)
+		} else {
+			err := mem.KnownFacts.Insert(CondFactMemoryTreeNode{f, []*parser.IfFactStmt{fact}})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
