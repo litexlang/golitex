@@ -128,8 +128,8 @@ type ThmStmt struct {
 
 // TODO 需要写一下 什么类型的事实写成什么样
 type IfFactStmt struct {
-	condFacts []FactStmt
-	thenFacts []SpecFactStmt
+	CondFacts []FactStmt
+	ThenFacts []SpecFactStmt
 }
 
 /*

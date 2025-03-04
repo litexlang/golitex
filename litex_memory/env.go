@@ -97,9 +97,9 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 				return err
 			}
 		case *parser.IfFactStmt:
-			// if err := env.CondFactMemory.NewIfFact(f); err != nil {
-			// 	return err
-			// }
+			if err := env.CondFactMemory.NewFact(f); err != nil {
+				return err
+			}
 		default:
 			return fmt.Errorf("unknown fact type: %T", fact)
 		}

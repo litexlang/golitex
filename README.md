@@ -35,7 +35,7 @@ Litex can automatically verify LLM outputs for math problems, providing a reliab
 
   - **The bridge between symbolic and neural AI**: While neural network AIs dominate machine learning today, we must not overlook symbolic AI's profound contributions, such as modern programming languages. Litex serves as a solid bridge between these two seemingly disparate fields. Integrating verification (search) into existing AI systems that currently focus only on training (computation) can be a very promising starting point. 
 
-Finally, Litex itself is a tool of exquisite innovation. It embodies human reasoning itself, not merely serving as a simple vehicle. Writing in Litex is enjoyable because it eliminates extra mental burden from the language itself, allowing users to fully immerse themselves in the elegance of mathematics.
+Finally, Litex itself is a tool of exquisite innovation. Writing in Litex is enjoyable because it eliminates extra mental burden from the language itself, allowing users to fully immerse themselves in the elegance of mathematics.
 
 In short, Litex can transform workflow and collaboration of mathematicians. It boost AI's reasoning with more formal data and a super efficient verifier. The core design principle of Litex is simplicity.
 
@@ -240,6 +240,10 @@ The same set can have different structures on it. For example, C[0,1] (the set o
 The analogy between "program = data structure + algorithm" and "type = set + structure" highlights a fundamental similarity: both concepts combine static properties (data structure or set) with dynamic behaviors (algorithm or structure) to define a complete entity. In programming, this forms the basis of functionality, while in math, it defines the characteristics and constraints of objects.
 
 So, When the underlying set is different, the type must be different. Even if the sets are the same, if the structures imposed on them are different, they are considered distinct types.
+
+<!-- TODO: "A impl B" is where abstraction layer changes: B is higher abstraction, A is lower. If you want to jump between abstraction layer, use impl. Here A can be concept or type, B is concept. NEED TO EMPHASIZE THAT JUMPING BETWEEN DIFFERENT ABSTRACTION LAYER IS DONE BY impl -->
+
+<!-- TODO: NEED TO EMPHASIZE HOW TO "RELATE" fc with TYPE: Type has var_member; HOW to "relate"  fc1 (type1) with fc2 (type2) : type1 has var_member fc2 type2; -->
 
 `type` has the following functionalities:
 
