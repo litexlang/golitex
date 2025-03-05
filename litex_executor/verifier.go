@@ -16,12 +16,25 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 }
 
 func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
+	exec.searchRound++
+	defer exec.roundMinusOne()
+
 	err := exec.useSpecFactToVerifyFuncFact(stmt)
 	if err != nil {
 		return err
 	}
-	if exec.True() {
+	if exec.true() {
 		return nil
+	}
+
+	if exec.round0() {
+		err := useCondFactToVerifyFuncFact(stmt)
+		if err != nil {
+			return err
+		}
+		if exec.true() {
+			return nil
+		}
 	}
 
 	return nil
@@ -55,7 +68,7 @@ func (exec *Executor) verifyCondFact(stmt *parser.IfFactStmt) error {
 		if err != nil {
 			return err
 		}
-		if !exec.True() {
+		if !exec.true() {
 			exec.unknown("%v is unknown", stmt)
 			return nil
 		}
