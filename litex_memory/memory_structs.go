@@ -70,5 +70,6 @@ func NewVarMemory() *VarMemory {
 }
 
 func NewUniFactMemory() *UniFactMemory {
-	panic("not implemented")
+	// panic("not implemented")
+	return &UniFactMemory{}
 }

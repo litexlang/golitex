@@ -11,7 +11,7 @@ import (
 
 func TestRedBlackTree(t *testing.T) {
 	// 定义比较函数
-	compare := func(a, b interface{}) (int, error) {
+	compare := func(a, b interface{}, env *Env) (int, error) {
 		keyA, okA := a.(int)
 		keyB, okB := b.(int)
 		if !okA || !okB {
@@ -26,12 +26,14 @@ func TestRedBlackTree(t *testing.T) {
 	}
 
 	// 创建红黑树
-	tree := NewRedBlackTree(compare)
+	env := NewEnv()
+
+	tree := NewRedBlackTree(env, compare)
 
 	// 插入键
 	keys := []int{10, 20, 30, 15, 25}
 	for _, key := range keys {
-		if err := tree.Insert(key); err != nil {
+		if err := tree.Insert(env, key); err != nil {
 			fmt.Println("Insert error:", err)
 			return
 		}
@@ -223,25 +225,27 @@ func TestCompareSpecFact(t *testing.T) {
 		}
 	}
 
-	res, err := specFactCompare((facts[0]), (facts[1]))
+	env := NewEnv()
+
+	res, err := specFactCompare((facts[0]), (facts[1]), env)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Printf("t: %v\n", res)
 
-	res, err = specFactCompare((facts[0]), (facts[0]))
+	res, err = specFactCompare((facts[0]), (facts[0]), env)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Printf("t: %v\n", res)
 
-	res, err = specFactCompare((facts[0]), (facts[2]))
+	res, err = specFactCompare((facts[0]), (facts[2]), env)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Printf("t: %v\n", res)
 
-	res, err = specFactCompare((facts[4]), (facts[5]))
+	res, err = specFactCompare((facts[4]), (facts[5]), env)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +255,7 @@ func TestCompareSpecFact(t *testing.T) {
 	for i := 0; i < 10000000; i++ {
 		j := rand.Intn(len(facts))
 		k := rand.Intn(len(facts))
-		specFactCompare((facts[j]), (facts[k]))
+		specFactCompare((facts[j]), (facts[k]), env)
 	}
 	// 1.8s
 	fmt.Printf("Random Compare Time taken: %v\n", time.Since(start))
@@ -267,7 +271,7 @@ func TestCompareSpecFact(t *testing.T) {
 
 	start = time.Now()
 	for i := 0; i < 10000000; i++ {
-		specFactCompare((facts[12]), (facts[13]))
+		specFactCompare((facts[12]), (facts[13]), env)
 	}
 	// 7.3s
 	fmt.Printf("Compare Very long the same fact Time taken: %v\n", time.Since(start))
@@ -286,5 +290,6 @@ func SpecFactCompareAdapter(a, b interface{}) (int, error) {
 	if !ok1 || !ok2 {
 		return 0, fmt.Errorf("expected *parser.SpecFactStmt, got %T and %T", a, b)
 	}
-	return specFactCompare(*knownFact, *givenFact)
+	env := NewEnv()
+	return specFactCompare(*knownFact, *givenFact, env)
 }

@@ -5,7 +5,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func specFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt) (int, error) {
+func specFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt, env *Env) (int, error) {
 	// First, compare the types of the facts
 	if specTypeCompareResult, err := specFactTypeCompare(knownFact, givenFact); specTypeCompareResult != 0 || err != nil {
 		return specTypeCompareResult, err
@@ -15,11 +15,11 @@ func specFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStm
 	switch known := knownFact.(type) {
 	case *parser.RelationFactStmt:
 		if given, ok := givenFact.(*parser.RelationFactStmt); ok {
-			return specRelationFactCompare(known, given)
+			return specRelationFactCompare(known, given, env)
 		}
 	case *parser.FuncFactStmt:
 		if given, ok := givenFact.(*parser.FuncFactStmt); ok {
-			return specFuncFactCompare(known, given)
+			return specFuncFactCompare(known, given, env)
 		}
 	default:
 		return 0, fmt.Errorf("unknown spec fact type")
@@ -28,7 +28,7 @@ func specFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStm
 	return 0, fmt.Errorf("unknown spec fact")
 }
 
-func specRelationFactCompare(knownFact *parser.RelationFactStmt, givenFact *parser.RelationFactStmt) (int, error) {
+func specRelationFactCompare(knownFact *parser.RelationFactStmt, givenFact *parser.RelationFactStmt, env *Env) (int, error) {
 	panic("TODO not implemented")
 }
 
@@ -51,7 +51,7 @@ func specFuncIsTrueCompare(knownFact *parser.FuncFactStmt, givenFact *parser.Fun
 	return knownFactIsTrueEnum - givenFactIsTrueEnum
 }
 
-func specFuncFactCompare(knownFact *parser.FuncFactStmt, givenFact *parser.FuncFactStmt) (int, error) {
+func specFuncFactCompare(knownFact *parser.FuncFactStmt, givenFact *parser.FuncFactStmt, env *Env) (int, error) {
 	if isTrueComp := specFuncIsTrueCompare(knownFact, givenFact); isTrueComp != 0 {
 		return isTrueComp, nil
 	}
@@ -246,16 +246,16 @@ func getSpecFactEnum(fact parser.SpecFactStmt) (int, error) {
 	return 0, fmt.Errorf("unknown SpecFactStmt type: %T", fact)
 }
 
-func (mem *CondFactMemory) NewFact(fact *parser.CondFactStmt) error {
+func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		node, err := mem.Mem.Search(&CondFactMemoryTreeNode{f, []*parser.CondFactStmt{}})
+		node, err := env.CondFactMemory.Mem.Search(env, &CondFactMemoryTreeNode{f, []*parser.CondFactStmt{}})
 		if err != nil {
 			return err
 		}
 		if node != nil {
 			node.Key.CondFacts = append(node.Key.CondFacts, fact)
 		} else {
-			err := mem.Mem.Insert(&CondFactMemoryTreeNode{f, []*parser.CondFactStmt{fact}})
+			err := env.CondFactMemory.Mem.Insert(env, &CondFactMemoryTreeNode{f, []*parser.CondFactStmt{fact}})
 			if err != nil {
 				return err
 			}
@@ -264,6 +264,6 @@ func (mem *CondFactMemory) NewFact(fact *parser.CondFactStmt) error {
 	return nil
 }
 
-func CondFactMemoryTreeNodeCompare(knownFact *CondFactMemoryTreeNode, givenFact *CondFactMemoryTreeNode) (int, error) {
-	return specFactCompare(knownFact.ThenFact, givenFact.ThenFact)
+func CondFactMemoryTreeNodeCompare(knownFact *CondFactMemoryTreeNode, givenFact *CondFactMemoryTreeNode, env *Env) (int, error) {
+	return specFactCompare(knownFact.ThenFact, givenFact.ThenFact, env)
 }
