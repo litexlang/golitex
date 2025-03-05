@@ -22,7 +22,7 @@ type RedBlackTree[T any] struct {
 }
 
 // NewRedBlackTree creates a new Red-Black Tree with a custom comparison function
-func NewRedBlackTree[T any](env *Env, compare func(env *Env, a, b T) (int, error)) *RedBlackTree[T] {
+func NewRedBlackTree[T any](compare func(env *Env, a, b T) (int, error)) *RedBlackTree[T] {
 	return &RedBlackTree[T]{
 		compare: compare,
 	}

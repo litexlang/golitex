@@ -28,7 +28,7 @@ func TestRedBlackTree(t *testing.T) {
 	// 创建红黑树
 	env := NewEnv()
 
-	tree := NewRedBlackTree(env, compare)
+	tree := NewRedBlackTree(compare)
 
 	// 插入键
 	keys := []int{10, 20, 30, 15, 25}
