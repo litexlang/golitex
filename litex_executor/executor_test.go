@@ -17,7 +17,7 @@ func TestStoreNewVar(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := memory.NewEnv()
-	executor := Executor{env, []string{}, ExecTrue, 0}
+	executor := Executor{env, []string{}, execError, 0}
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -182,7 +182,7 @@ func TestKnowSpeed(t *testing.T) {
 	start = time.Now()
 	for _, topStmt := range topVerifyStatements {
 		err := executor.TopLevelStmt(topStmt)
-		if err != nil || executor.output != ExecTrue {
+		if err != nil || !executor.true() {
 			t.Fatal(err)
 		}
 
@@ -314,7 +314,7 @@ func TestKnowCondFactSpeed(t *testing.T) {
 	start = time.Now()
 	for _, topStmt := range topVerifyStatements {
 		err := executor.TopLevelStmt(topStmt)
-		if err != nil || executor.output != ExecTrue {
+		if err != nil || !executor.true() {
 			t.Fatal(err)
 		}
 

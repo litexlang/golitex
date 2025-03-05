@@ -8,9 +8,9 @@ import (
 type ExecOutput uint8
 
 const (
-	ExecTrue ExecOutput = iota
-	ExecUnknown
-	ExecError
+	execTrue ExecOutput = iota
+	execUnknown
+	execError
 )
 
 type Executor struct {
@@ -21,12 +21,12 @@ type Executor struct {
 }
 
 func newExecutor() *Executor {
-	return &Executor{env: mem.NewEnv(), message: []string{}, output: ExecError, searchRound: 0}
+	return &Executor{env: mem.NewEnv(), message: []string{}, output: execError, searchRound: 0}
 }
 
 func (e *Executor) clear() {
 	e.message = []string{}
-	e.output = ExecError
+	e.output = execError
 	e.searchRound = 0
 }
 
@@ -41,7 +41,7 @@ func (e *Executor) deleteEnv() {
 }
 
 func (e *Executor) true() bool {
-	return e.output == ExecTrue
+	return e.output == execTrue
 }
 
 func (e *Executor) round1() bool {
@@ -55,21 +55,21 @@ func (e *Executor) roundMinusOne() {
 func (e *Executor) success(format string, args ...any) {
 	message := fmt.Sprintf(format, args...) // 使用 fmt.Sprintf 格式化字符串
 	e.message = append(e.message, message)
-	e.output = ExecTrue
+	e.output = execTrue
 }
 
 func (e *Executor) unknown(format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
 	e.message = append(e.message, message)
-	e.output = ExecUnknown
+	e.output = execUnknown
 }
 
 func (e *Executor) printlnOutputMessage() {
-	if e.output == ExecTrue {
+	if e.output == execTrue {
 		fmt.Println("True")
-	} else if e.output == ExecUnknown {
+	} else if e.output == execUnknown {
 		fmt.Println("Unknown")
-	} else if e.output == ExecError {
+	} else if e.output == execError {
 		fmt.Println("Error")
 	}
 

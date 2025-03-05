@@ -38,6 +38,8 @@ func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 		}
 	}
 
+	exec.unknown("%v is unknown", stmt)
+
 	return nil
 }
 
@@ -47,25 +49,25 @@ func (exec *Executor) useKnownCondFactsToVerifyFuncFact(stmt *parser.FuncFactStm
 	if err != nil {
 		return err
 	}
-	if searchNode != nil {
-		for _, condStmt := range searchNode.Key.CondFacts {
-			verified := true
-			for _, condFactsInStmt := range condStmt.CondFacts {
-				if err := exec.verifyFactStmt(condFactsInStmt); err != nil {
-					return err
-				}
-				if !exec.true() {
-					verified = false
-					break
-				}
+	if searchNode == nil {
+		return nil
+	}
+
+	for _, condStmt := range searchNode.Key.CondFacts {
+		verified := true
+		for _, condFactsInStmt := range condStmt.CondFacts {
+			if err := exec.verifyFactStmt(condFactsInStmt); err != nil {
+				return err
 			}
-			if verified {
-				exec.success("%v is true, verified by %v", stmt, condStmt)
-				return nil
+			if !exec.true() {
+				verified = false
+				break
 			}
 		}
-	} else {
-		exec.unknown("%v is unknown", stmt)
+		if verified {
+			exec.success("%v is true, verified by %v", stmt, condStmt)
+			return nil
+		}
 	}
 
 	return nil
@@ -78,10 +80,7 @@ func (exec *Executor) useKnownSpecFactsToVerifyFuncFact(stmt *parser.FuncFactStm
 	}
 	if searchedNode != nil {
 		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
-	} else {
-		exec.unknown("%v is unknown", stmt)
 	}
-
 	return nil
 }
 
@@ -100,10 +99,13 @@ func (exec *Executor) verifyCondFact(stmt *parser.IfFactStmt) error {
 			return err
 		}
 		if !exec.true() {
-			exec.unknown("%v is unknown", stmt)
 			return nil
+		} else {
+			exec.unknown("%v is unknown: %v is unknown", stmt, thenFact)
 		}
 	}
+
+	exec.success("%v is true", stmt)
 
 	return nil
 }
