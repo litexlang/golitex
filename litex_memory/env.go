@@ -99,7 +99,7 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 			if err := env.RelationFactMemory.NewRelationFact(f); err != nil {
 				return err
 			}
-		case *parser.IfFactStmt:
+		case *parser.CondFactStmt:
 			if err := env.CondFactMemory.NewFact(f); err != nil {
 				return err
 			}

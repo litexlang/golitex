@@ -249,16 +249,16 @@ func NewUniFactMemory() *UniFactMemory {
 	return &UniFactMemory{map[PropName]UniFactMemEntry{}}
 }
 
-func (mem *CondFactMemory) NewFact(fact *parser.IfFactStmt) error {
+func (mem *CondFactMemory) NewFact(fact *parser.CondFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		node, err := mem.Mem.Search(&CondFactMemoryTreeNode{f, []*parser.IfFactStmt{}})
+		node, err := mem.Mem.Search(&CondFactMemoryTreeNode{f, []*parser.CondFactStmt{}})
 		if err != nil {
 			return err
 		}
 		if node != nil {
 			node.Key.CondFacts = append(node.Key.CondFacts, fact)
 		} else {
-			err := mem.Mem.Insert(&CondFactMemoryTreeNode{f, []*parser.IfFactStmt{fact}})
+			err := mem.Mem.Insert(&CondFactMemoryTreeNode{f, []*parser.CondFactStmt{fact}})
 			if err != nil {
 				return err
 			}

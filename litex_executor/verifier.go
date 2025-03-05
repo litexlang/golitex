@@ -11,7 +11,7 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 		return exec.verifyFuncFact(stmt)
 	case *parser.RelationFactStmt:
 		panic("")
-	case *parser.IfFactStmt:
+	case *parser.CondFactStmt:
 		return exec.verifyCondFact(stmt)
 	default:
 		return nil
@@ -19,7 +19,7 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 }
 
 func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
-	exec.searchRound++
+	exec.roundAddOne()
 	defer exec.roundMinusOne()
 
 	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
@@ -94,7 +94,7 @@ func (exec *Executor) useSpecFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt 
 	return nil
 }
 
-func (exec *Executor) verifyCondFact(stmt *parser.IfFactStmt) error {
+func (exec *Executor) verifyCondFact(stmt *parser.CondFactStmt) error {
 	exec.newEnv()
 	defer exec.deleteEnv()
 

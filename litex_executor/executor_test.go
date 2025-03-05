@@ -226,7 +226,7 @@ func randVarParams() *[]parser.Fc {
 	return &varParams
 }
 
-func randCondStmt() *parser.IfFactStmt {
+func randCondStmt() *parser.CondFactStmt {
 	randomNumberOfCondFacts := rand.Intn(3) + 1
 	randomNumberOfThenFacts := rand.Intn(3) + 1
 	condFacts := []parser.FactStmt{}
@@ -240,7 +240,7 @@ func randCondStmt() *parser.IfFactStmt {
 		thenFacts = append(thenFacts, randFuncFact())
 	}
 
-	return &parser.IfFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
+	return &parser.CondFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
 }
 
 func TestKnowVerifyFuncFactSpeed(t *testing.T) {
@@ -307,7 +307,7 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	// 100000 round know taken: 1.677706542s
+	// 100000 rounds know taken: 1.677706542s
 	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
 
 	start = time.Now()
@@ -318,6 +318,6 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 		}
 
 	}
-	// 100000 round verify taken: 10.808512542s
+	// 100000 rounds verify taken: 10.808512542s
 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
 }

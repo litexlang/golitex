@@ -25,7 +25,7 @@ type CondFactMemory struct {
 
 type CondFactMemoryTreeNode struct {
 	ThenFact  parser.SpecFactStmt
-	CondFacts []*parser.IfFactStmt
+	CondFacts []*parser.CondFactStmt
 }
 
 type UniFactMemory struct {
