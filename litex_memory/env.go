@@ -7,7 +7,8 @@ import (
 )
 
 type Env struct {
-	Parent        *Env
+	Parent *Env
+
 	VarMemory     VarMemory
 	PropMemory    PropMemory
 	FnMemory      FnMemory
@@ -20,19 +21,20 @@ type Env struct {
 	UniFactMemory      UniFactMemory
 }
 
-func NewEnv() *Env {
+func NewEnv(parent *Env) *Env {
 	env := &Env{
-		Parent:        nil,
+		Parent: parent,
+
 		VarMemory:     *NewVarMemory(),
 		PropMemory:    *NewPropMemory(),
 		FnMemory:      *NewFnMemory(),
 		AliasMemory:   *NewAliasMemory(),
-		UniFactMemory: *NewUniFactMemory(),
 		VarTypeMemory: *NewFcVarTypeMemory(),
 
 		FuncFactMemory:     FuncFactMemory{Mem: *NewRedBlackTree(specFuncFactCompare)},
 		RelationFactMemory: RelationFactMemory{Mem: *NewRedBlackTree(specRelationFactCompare)},
 		CondFactMemory:     CondFactMemory{Mem: *NewRedBlackTree(CondFactMemoryTreeNodeCompare)},
+		UniFactMemory:      *NewUniFactMemory(),
 	}
 
 	return env

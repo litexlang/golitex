@@ -21,7 +21,7 @@ type Executor struct {
 }
 
 func newExecutor() *Executor {
-	return &Executor{env: mem.NewEnv(), message: []string{}, output: execError, searchRound: 0}
+	return &Executor{env: mem.NewEnv(nil), message: []string{}, output: execError, searchRound: 0}
 }
 
 func (e *Executor) roundAddOne() {
@@ -35,7 +35,7 @@ func (e *Executor) clear() {
 }
 
 func (e *Executor) newEnv() {
-	newEnv := mem.NewEnv()
+	newEnv := mem.NewEnv(nil)
 	newEnv.Parent = e.env
 	e.env = newEnv
 }

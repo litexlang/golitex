@@ -16,7 +16,7 @@ func TestStoreNewVar(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	env := memory.NewEnv()
+	env := memory.NewEnv(nil)
 	executor := Executor{env, []string{}, execError, 0}
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
@@ -37,7 +37,7 @@ func TestKnow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	env := memory.NewEnv()
+	env := memory.NewEnv(nil)
 	executor := *newExecutor()
 	executor.env = env
 	for _, topStmt := range *statements {
@@ -56,7 +56,7 @@ func TestVerifier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	env := memory.NewEnv()
+	env := memory.NewEnv(nil)
 	executor := *newExecutor()
 	executor.env = env
 	for _, topStmt := range *statements {
@@ -123,7 +123,7 @@ func TestVerifier2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	env := memory.NewEnv()
+	env := memory.NewEnv(nil)
 	executor := *newExecutor()
 	executor.env = env
 	for _, topStmt := range *statements {
@@ -244,7 +244,7 @@ func randCondStmt() *parser.CondFactStmt {
 }
 
 func TestKnowVerifyFuncFactSpeed(t *testing.T) {
-	env := memory.NewEnv()
+	env := memory.NewEnv(nil)
 	executor := *newExecutor()
 	executor.env = env
 	topStatements := []*parser.TopStmt{}
@@ -291,7 +291,7 @@ func TestKnowVerifyFuncFactSpeed(t *testing.T) {
 }
 
 func TestKnowVerifyCondFactSpeed(t *testing.T) {
-	env := memory.NewEnv()
+	env := memory.NewEnv(nil)
 	executor := *newExecutor()
 	executor.env = env
 	topStatements := []*parser.TopStmt{}
