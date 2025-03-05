@@ -274,7 +274,7 @@ func TestKnowVerifyFuncFactSpeed(t *testing.T) {
 	// 1000 rounds 3.8-4.5ms
 	// 10000 rounds 51ms
 	// 1000000 round know taken: 7.88127275s
-	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
+	fmt.Printf("%d rounds know taken: %v\n", rounds, time.Since(start))
 
 	start = time.Now()
 	for _, topStmt := range topVerifyStatements {
@@ -287,7 +287,7 @@ func TestKnowVerifyFuncFactSpeed(t *testing.T) {
 	// 1000 rounds:6.5-7ms 大约是插入的两倍。因为你树建立完后，再遍历地去检查，确实会导致平均路过的节点数比原来多
 	// 10000 69ms
 	// 1000000 round verify taken: 8.866167667s
-	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
+	fmt.Printf("%d rounds verify taken: %v\n", rounds, time.Since(start))
 }
 
 func TestKnowVerifyCondFactSpeed(t *testing.T) {

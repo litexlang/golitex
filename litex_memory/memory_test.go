@@ -11,7 +11,7 @@ import (
 
 func TestRedBlackTree(t *testing.T) {
 	// 定义比较函数
-	compare := func(a, b interface{}, env *Env) (int, error) {
+	compare := func(env *Env, a, b interface{}) (int, error) {
 		keyA, okA := a.(int)
 		keyB, okB := b.(int)
 		if !okA || !okB {

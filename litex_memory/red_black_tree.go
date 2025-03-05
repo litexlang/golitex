@@ -17,12 +17,12 @@ type Node[T any] struct {
 // RedBlackTree represents the Red-Black Tree
 type RedBlackTree[T any] struct {
 	root    *Node[T]                            // Root of the tree
-	compare func(a, b T, env *Env) (int, error) // Comparison function with error
+	compare func(env *Env, a, b T) (int, error) // Comparison function with error
 
 }
 
 // NewRedBlackTree creates a new Red-Black Tree with a custom comparison function
-func NewRedBlackTree[T any](env *Env, compare func(a, b T, env *Env) (int, error)) *RedBlackTree[T] {
+func NewRedBlackTree[T any](env *Env, compare func(env *Env, a, b T) (int, error)) *RedBlackTree[T] {
 	return &RedBlackTree[T]{
 		compare: compare,
 	}
@@ -52,7 +52,7 @@ func (t *RedBlackTree[T]) Insert(env *Env, key T) error {
 
 // insertNode inserts a new node into the tree
 func (t *RedBlackTree[T]) insertNode(env *Env, root, newNode *Node[T]) error {
-	compareResult, err := t.compare(newNode.Key, root.Key, env)
+	compareResult, err := t.compare(env, newNode.Key, root.Key)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (t *RedBlackTree[T]) searchNode(env *Env, node *Node[T], key T) (*Node[T], 
 		return nil, nil
 	}
 
-	compareResult, err := t.compare(key, node.Key, env)
+	compareResult, err := t.compare(env, key, node.Key)
 	if err != nil {
 		return nil, err
 	}
