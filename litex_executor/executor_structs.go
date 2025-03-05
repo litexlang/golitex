@@ -14,9 +14,20 @@ const (
 type ExecOutput uint8
 
 type Executor struct {
-	env     *mem.Env
-	message []string
-	output  ExecOutput
+	env         *mem.Env
+	message     []string
+	output      ExecOutput
+	searchRound uint8
+}
+
+func newExecutor() *Executor {
+	return &Executor{env: mem.NewEnv(), message: []string{}, output: ExecError, searchRound: 0}
+}
+
+func (e *Executor) clear() {
+	e.message = nil
+	e.output = ExecError
+	e.searchRound = 0
 }
 
 func (e *Executor) newEnv() {
@@ -25,12 +36,12 @@ func (e *Executor) newEnv() {
 	e.env = newEnv
 }
 
-func (e *Executor) deleteEnv() error {
-	if e.env.Parent != nil {
-		e.env = e.env.Parent
-		return nil
-	}
-	return fmt.Errorf("no parent environment to release")
+func (e *Executor) deleteEnv() {
+	e.env = e.env.Parent
+}
+
+func (e *Executor) True() bool {
+	return e.output == ExecTrue
 }
 
 func (e *Executor) success(format string, args ...any) {
@@ -57,9 +68,4 @@ func (e *Executor) printlnOutputMessage() {
 	for _, msg := range e.message {
 		fmt.Println(msg)
 	}
-}
-
-func (e *Executor) clearMessages() {
-	e.message = nil
-	e.output = ExecError
 }

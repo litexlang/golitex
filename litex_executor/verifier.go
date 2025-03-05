@@ -16,6 +16,18 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 }
 
 func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
+	err := exec.useSpecFactToVerifyFuncFact(stmt)
+	if err != nil {
+		return err
+	}
+	if exec.True() {
+		return nil
+	}
+
+	return nil
+}
+
+func (exec *Executor) useSpecFactToVerifyFuncFact(stmt *parser.FuncFactStmt) error {
 	searchedNode, err := exec.env.SpecFactMemory.KnownFacts.Search(stmt)
 	if err != nil {
 		return err
@@ -43,7 +55,7 @@ func (exec *Executor) verifyCondFact(stmt *parser.IfFactStmt) error {
 		if err != nil {
 			return err
 		}
-		if exec.output != ExecTrue {
+		if !exec.True() {
 			exec.unknown("%v is unknown", stmt)
 			return nil
 		}
