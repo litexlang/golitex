@@ -8,11 +8,19 @@ import (
 type PropName string
 
 type SpecFactMemory struct {
-	KnownFacts RedBlackTree[parser.SpecFactStmt]
+	Mem RedBlackTree[parser.SpecFactStmt]
+}
+
+type FuncFactMemory struct {
+	Mem RedBlackTree[*parser.FuncFactStmt]
+}
+
+type RelationFactMemory struct {
+	Mem RedBlackTree[*parser.RelationFactStmt]
 }
 
 type CondFactMemory struct {
-	KnownFacts RedBlackTree[*CondFactMemoryTreeNode]
+	Mem RedBlackTree[*CondFactMemoryTreeNode]
 }
 
 type CondFactMemoryTreeNode struct {

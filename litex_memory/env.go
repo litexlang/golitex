@@ -8,28 +8,30 @@ import (
 )
 
 type Env struct {
-	Parent         *Env
-	VarMemory      VarMemory
-	PropMemory     PropMemory
-	FnMemory       FnMemory
-	AliasMemory    AliasMemory
-	SpecFactMemory SpecFactMemory
-	CondFactMemory CondFactMemory
-	UniFactMemory  UniFactMemory
-	VarTypeMemory  FcVarTypeMemory
+	Parent             *Env
+	VarMemory          VarMemory
+	PropMemory         PropMemory
+	FnMemory           FnMemory
+	AliasMemory        AliasMemory
+	FuncFactMemory     FuncFactMemory
+	RelationFactMemory RelationFactMemory
+	CondFactMemory     CondFactMemory
+	UniFactMemory      UniFactMemory
+	VarTypeMemory      FcVarTypeMemory
 }
 
 func NewEnv() *Env {
 	return &Env{
-		Parent:         nil,
-		VarMemory:      *NewVarMemory(),
-		PropMemory:     *NewPropMemory(),
-		FnMemory:       *NewFnMemory(),
-		AliasMemory:    *NewAliasMemory(),
-		SpecFactMemory: SpecFactMemory{KnownFacts: *NewRedBlackTree(SpecFactCompare)},
-		CondFactMemory: CondFactMemory{KnownFacts: *NewRedBlackTree(CondFactMemoryTreeNodeCompare)},
-		UniFactMemory:  *NewUniFactMemory(),
-		VarTypeMemory:  *NewFcVarTypeMemory(),
+		Parent:             nil,
+		VarMemory:          *NewVarMemory(),
+		PropMemory:         *NewPropMemory(),
+		FnMemory:           *NewFnMemory(),
+		AliasMemory:        *NewAliasMemory(),
+		FuncFactMemory:     FuncFactMemory{Mem: *NewRedBlackTree(specFuncFactCompare)},
+		RelationFactMemory: RelationFactMemory{Mem: *NewRedBlackTree(specRelationFactCompare)},
+		CondFactMemory:     CondFactMemory{Mem: *NewRedBlackTree(CondFactMemoryTreeNodeCompare)},
+		UniFactMemory:      *NewUniFactMemory(),
+		VarTypeMemory:      *NewFcVarTypeMemory(),
 	}
 }
 
@@ -90,11 +92,11 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 	for _, fact := range stmt.Facts {
 		switch f := fact.(type) {
 		case *parser.FuncFactStmt:
-			if err := env.SpecFactMemory.NewFuncFact(f); err != nil {
+			if err := env.FuncFactMemory.NewFuncFact(f); err != nil {
 				return err
 			}
 		case *parser.RelationFactStmt:
-			if err := env.SpecFactMemory.NewRelationFact(f); err != nil {
+			if err := env.RelationFactMemory.NewRelationFact(f); err != nil {
 				return err
 			}
 		case *parser.IfFactStmt:

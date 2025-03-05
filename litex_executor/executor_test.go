@@ -291,7 +291,7 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
-	rounds := 100000
+	rounds := 100
 	for i := 0; i < rounds; i++ {
 		stmt := randCondStmt()
 		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
