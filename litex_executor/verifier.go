@@ -19,6 +19,18 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 }
 
 func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
+	// TODO : If there are symbols inside prop list that have aliases and equals,we loop over all the possible equivalent situations and verify literally
+
+	return exec.verifyFuncFactLiterally(stmt)
+}
+
+func (exec *Executor) verifyCondFact(stmt *parser.CondFactStmt) error {
+	// TODO : If there are symbols inside prop list that have aliases and equals,we loop over all the possible equivalent situations and verify literally
+
+	return exec.verifyCondFactLiterally(stmt)
+}
+
+func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 	exec.roundAddOne()
 	defer exec.roundMinusOne()
 
@@ -94,7 +106,7 @@ func (exec *Executor) useSpecFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt 
 	return nil
 }
 
-func (exec *Executor) verifyCondFact(stmt *parser.CondFactStmt) error {
+func (exec *Executor) verifyCondFactLiterally(stmt *parser.CondFactStmt) error {
 	exec.newEnv()
 	defer exec.deleteEnv()
 
