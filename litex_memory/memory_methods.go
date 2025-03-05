@@ -35,14 +35,14 @@ func (mem *AliasMemory) Get(s string) (*AliasMemEntry, bool) {
 	return nil, false
 }
 
-func (mem *SpecFactMemory) NewFuncFact(fact *parser.FuncFactStmt) error {
-	err := mem.KnownFacts.Insert(fact)
+func (mem *FuncFactMemory) NewFuncFact(fact *parser.FuncFactStmt) error {
+	err := mem.Mem.Insert(fact)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (mem *SpecFactMemory) NewRelationFact(fact *parser.RelationFactStmt) error {
-	return nil
+func (mem *RelationFactMemory) NewRelationFact(fact *parser.RelationFactStmt) error {
+	panic("")
 }

@@ -251,14 +251,14 @@ func NewUniFactMemory() *UniFactMemory {
 
 func (mem *CondFactMemory) NewFact(fact *parser.IfFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		node, err := mem.KnownFacts.Search(&CondFactMemoryTreeNode{f, []*parser.IfFactStmt{}})
+		node, err := mem.Mem.Search(&CondFactMemoryTreeNode{f, []*parser.IfFactStmt{}})
 		if err != nil {
 			return err
 		}
 		if node != nil {
 			node.Key.CondFacts = append(node.Key.CondFacts, fact)
 		} else {
-			err := mem.KnownFacts.Insert(&CondFactMemoryTreeNode{f, []*parser.IfFactStmt{fact}})
+			err := mem.Mem.Insert(&CondFactMemoryTreeNode{f, []*parser.IfFactStmt{fact}})
 			if err != nil {
 				return err
 			}

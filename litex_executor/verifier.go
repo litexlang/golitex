@@ -9,6 +9,8 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 	switch stmt := stmt.(type) {
 	case *parser.FuncFactStmt:
 		return exec.verifyFuncFact(stmt)
+	case *parser.RelationFactStmt:
+		panic("")
 	case *parser.IfFactStmt:
 		return exec.verifyCondFact(stmt)
 	default:
@@ -51,7 +53,7 @@ func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 
 func (exec *Executor) useCondFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
 	key := memory.CondFactMemoryTreeNode{ThenFact: stmt, CondFacts: nil}
-	searchNode, err := env.CondFactMemory.KnownFacts.Search(&key)
+	searchNode, err := env.CondFactMemory.Mem.Search(&key)
 	if err != nil {
 		return err
 	}
@@ -80,7 +82,7 @@ func (exec *Executor) useCondFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt 
 }
 
 func (exec *Executor) useSpecFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
-	searchedNode, err := env.SpecFactMemory.KnownFacts.Search(stmt)
+	searchedNode, err := env.FuncFactMemory.Mem.Search(stmt)
 	if err != nil {
 		return err
 	}
