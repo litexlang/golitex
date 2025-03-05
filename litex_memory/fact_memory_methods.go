@@ -5,26 +5,24 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func SpecFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt) (int, error) {
+func specFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt) (int, error) {
+	// First, compare the types of the facts
 	if specTypeCompareResult, err := specFactTypeCompare(knownFact, givenFact); specTypeCompareResult != 0 || err != nil {
 		return specTypeCompareResult, err
 	}
 
-	return specFactWithTheSameTypeCompare(knownFact, givenFact)
-}
-
-func specFactWithTheSameTypeCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt) (int, error) {
-	// when two given spec facts are the same in type, compare the value
-	knownRelationFact, ok := (knownFact).(*parser.RelationFactStmt)
-	givenRelationFact, ok2 := (givenFact).(*parser.RelationFactStmt)
-	if ok && ok2 {
-		return specRelationFactCompare(knownRelationFact, givenRelationFact)
-	}
-
-	knownFuncFact, ok := (knownFact).(*parser.FuncFactStmt)
-	givenFuncFact, ok2 := (givenFact).(*parser.FuncFactStmt)
-	if ok && ok2 {
-		return specFuncFactCompare(knownFuncFact, givenFuncFact)
+	// If the types are the same, compare the values based on the specific type
+	switch known := knownFact.(type) {
+	case *parser.RelationFactStmt:
+		if given, ok := givenFact.(*parser.RelationFactStmt); ok {
+			return specRelationFactCompare(known, given)
+		}
+	case *parser.FuncFactStmt:
+		if given, ok := givenFact.(*parser.FuncFactStmt); ok {
+			return specFuncFactCompare(known, given)
+		}
+	default:
+		return 0, fmt.Errorf("unknown spec fact type")
 	}
 
 	return 0, fmt.Errorf("unknown spec fact")
@@ -87,6 +85,9 @@ func getFcEnum(fc parser.Fc) (int, error) {
 }
 
 func compareFc(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
+	// TODO: 万一knownFc和givenFc是等于关系，那怎么compare？
+	// TODO: 万一二者有alias关系，那怎么compare？
+
 	if typeComp, err := compareFcType(knownFc, givenFc); typeComp != 0 || err != nil {
 		return typeComp, err
 	}
@@ -268,5 +269,5 @@ func (mem *CondFactMemory) NewFact(fact *parser.CondFactStmt) error {
 }
 
 func CondFactMemoryTreeNodeCompare(knownFact *CondFactMemoryTreeNode, givenFact *CondFactMemoryTreeNode) (int, error) {
-	return SpecFactCompare(knownFact.ThenFact, givenFact.ThenFact)
+	return specFactCompare(knownFact.ThenFact, givenFact.ThenFact)
 }

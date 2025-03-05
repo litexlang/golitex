@@ -3,7 +3,6 @@ package litexmemory
 
 import (
 	"fmt"
-	pack "golitex/litex_package_management"
 	parser "golitex/litex_parser"
 )
 
@@ -33,59 +32,6 @@ func NewEnv() *Env {
 		UniFactMemory:      *NewUniFactMemory(),
 		VarTypeMemory:      *NewFcVarTypeMemory(),
 	}
-}
-
-func (env *Env) isNameUsed(name string) (bool, error) {
-	if _, ok := parser.Keywords[name]; ok {
-		return true, fmt.Errorf("%v is a reserved keyword", name)
-	}
-
-	if _, ok := parser.BuiltinSyms[name]; ok {
-		return true, fmt.Errorf("%v is a reserved symbol", name)
-	}
-
-	if _, got := env.VarMemory.Get(name); got {
-		return true, fmt.Errorf("%v is already defined", name)
-	}
-
-	if _, got := env.FnMemory.Get(name); got {
-		return true, fmt.Errorf("%v is already defined", name)
-	}
-
-	if _, got := env.PropMemory.Get(name); got {
-		return true, fmt.Errorf("%v is already defined", name)
-	}
-
-	if _, got := env.AliasMemory.Get(name); got {
-		return true, fmt.Errorf("%v is already defined", name)
-	}
-
-	if _, got := pack.ImportedPackDict.Get(name); got {
-		return true, fmt.Errorf("%v is already imported", name)
-	}
-
-	return false, nil
-}
-
-func (env *Env) isVarDefined(name string) bool {
-	_, ok := env.VarMemory.Get(name)
-	if ok {
-		return true
-	} else {
-		if env.Parent != nil {
-			return env.Parent.isVarDefined(name)
-		}
-		return false
-	}
-}
-
-func (env *Env) NewVar(pair *parser.FcVarDeclPair) error {
-	if env.isVarDefined(pair.Var) {
-		return fmt.Errorf("%v is defined", pair.Var)
-	}
-
-	_, err := env.VarMemory.Set(pair)
-	return err
 }
 
 func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
