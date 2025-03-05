@@ -1,6 +1,7 @@
 package litexexecutor
 
 import (
+	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
 
@@ -19,7 +20,7 @@ func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	exec.searchRound++
 	defer exec.roundMinusOne()
 
-	err := exec.useSpecFactToVerifyFuncFact(stmt)
+	err := exec.useKnownSpecFactsToVerifyFuncFact(stmt)
 	if err != nil {
 		return err
 	}
@@ -27,8 +28,8 @@ func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 		return nil
 	}
 
-	if exec.round0() {
-		err := useCondFactToVerifyFuncFact(stmt)
+	if exec.round1() {
+		err := exec.useKnownCondFactsToVerifyFuncFact(stmt)
 		if err != nil {
 			return err
 		}
@@ -40,7 +41,37 @@ func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	return nil
 }
 
-func (exec *Executor) useSpecFactToVerifyFuncFact(stmt *parser.FuncFactStmt) error {
+func (exec *Executor) useKnownCondFactsToVerifyFuncFact(stmt *parser.FuncFactStmt) error {
+	key := memory.CondFactMemoryTreeNode{ThenFact: stmt, CondFacts: nil}
+	searchNode, err := exec.env.CondFactMemory.KnownFacts.Search(&key)
+	if err != nil {
+		return err
+	}
+	if searchNode != nil {
+		for _, condStmt := range searchNode.Key.CondFacts {
+			verified := true
+			for _, condFactsInStmt := range condStmt.CondFacts {
+				if err := exec.verifyFactStmt(condFactsInStmt); err != nil {
+					return err
+				}
+				if !exec.true() {
+					verified = false
+					break
+				}
+			}
+			if verified {
+				exec.success("%v is true, verified by %v", stmt, condStmt)
+				return nil
+			}
+		}
+	} else {
+		exec.unknown("%v is unknown", stmt)
+	}
+
+	return nil
+}
+
+func (exec *Executor) useKnownSpecFactsToVerifyFuncFact(stmt *parser.FuncFactStmt) error {
 	searchedNode, err := exec.env.SpecFactMemory.KnownFacts.Search(stmt)
 	if err != nil {
 		return err
