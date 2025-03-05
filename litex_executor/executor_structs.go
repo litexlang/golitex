@@ -17,7 +17,7 @@ type Executor struct {
 	env         *mem.Env
 	message     []string
 	output      ExecOutput
-	searchRound int8
+	searchRound uint8
 }
 
 func newExecutor() *Executor {
@@ -27,7 +27,7 @@ func newExecutor() *Executor {
 func (e *Executor) clear() {
 	e.message = []string{}
 	e.output = ExecError
-	e.searchRound = -1
+	e.searchRound = 0
 }
 
 func (e *Executor) newEnv() {
@@ -44,8 +44,8 @@ func (e *Executor) true() bool {
 	return e.output == ExecTrue
 }
 
-func (e *Executor) round0() bool {
-	return e.searchRound == 0
+func (e *Executor) round1() bool {
+	return e.searchRound == 1
 }
 
 func (e *Executor) roundMinusOne() {
