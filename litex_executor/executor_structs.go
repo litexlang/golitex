@@ -5,19 +5,19 @@ import (
 	mem "golitex/litex_memory"
 )
 
+type ExecOutput uint8
+
 const (
 	ExecTrue ExecOutput = iota
 	ExecUnknown
 	ExecError
 )
 
-type ExecOutput uint8
-
 type Executor struct {
 	env         *mem.Env
 	message     []string
 	output      ExecOutput
-	searchRound uint8
+	searchRound int8
 }
 
 func newExecutor() *Executor {
@@ -25,9 +25,9 @@ func newExecutor() *Executor {
 }
 
 func (e *Executor) clear() {
-	e.message = nil
+	e.message = []string{}
 	e.output = ExecError
-	e.searchRound = 0
+	e.searchRound = -1
 }
 
 func (e *Executor) newEnv() {
@@ -40,8 +40,16 @@ func (e *Executor) deleteEnv() {
 	e.env = e.env.Parent
 }
 
-func (e *Executor) True() bool {
+func (e *Executor) true() bool {
 	return e.output == ExecTrue
+}
+
+func (e *Executor) round0() bool {
+	return e.searchRound == 0
+}
+
+func (e *Executor) roundMinusOne() {
+	e.searchRound--
 }
 
 func (e *Executor) success(format string, args ...any) {
