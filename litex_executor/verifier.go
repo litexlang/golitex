@@ -20,16 +20,23 @@ func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	exec.searchRound++
 	defer exec.roundMinusOne()
 
-	err := exec.useKnownSpecFactsToVerifyFuncFact(stmt)
-	if err != nil {
-		return err
+	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
+		err := exec.useSpecFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
+		if err != nil {
+			return err
+		}
+		if exec.true() {
+			return nil
+		}
 	}
-	if exec.true() {
+
+	if !exec.round1() {
+		exec.unknown("%v is unknown", stmt)
 		return nil
 	}
 
-	if exec.round1() {
-		err := exec.useKnownCondFactsToVerifyFuncFact(stmt)
+	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
+		err := exec.useCondFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
 		if err != nil {
 			return err
 		}
@@ -39,13 +46,12 @@ func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	}
 
 	exec.unknown("%v is unknown", stmt)
-
 	return nil
 }
 
-func (exec *Executor) useKnownCondFactsToVerifyFuncFact(stmt *parser.FuncFactStmt) error {
+func (exec *Executor) useCondFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
 	key := memory.CondFactMemoryTreeNode{ThenFact: stmt, CondFacts: nil}
-	searchNode, err := exec.env.CondFactMemory.KnownFacts.Search(&key)
+	searchNode, err := env.CondFactMemory.KnownFacts.Search(&key)
 	if err != nil {
 		return err
 	}
@@ -73,14 +79,16 @@ func (exec *Executor) useKnownCondFactsToVerifyFuncFact(stmt *parser.FuncFactStm
 	return nil
 }
 
-func (exec *Executor) useKnownSpecFactsToVerifyFuncFact(stmt *parser.FuncFactStmt) error {
-	searchedNode, err := exec.env.SpecFactMemory.KnownFacts.Search(stmt)
+func (exec *Executor) useSpecFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
+	searchedNode, err := env.SpecFactMemory.KnownFacts.Search(stmt)
 	if err != nil {
 		return err
 	}
 	if searchedNode != nil {
 		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
+		return nil
 	}
+
 	return nil
 }
 
