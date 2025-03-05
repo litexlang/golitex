@@ -20,25 +20,28 @@ type Env struct {
 }
 
 func NewEnv() *Env {
-	return &Env{
-		Parent:             nil,
-		VarMemory:          *NewVarMemory(),
-		PropMemory:         *NewPropMemory(),
-		FnMemory:           *NewFnMemory(),
-		AliasMemory:        *NewAliasMemory(),
-		FuncFactMemory:     FuncFactMemory{Mem: *NewRedBlackTree(specFuncFactCompare)},
-		RelationFactMemory: RelationFactMemory{Mem: *NewRedBlackTree(specRelationFactCompare)},
-		CondFactMemory:     CondFactMemory{Mem: *NewRedBlackTree(CondFactMemoryTreeNodeCompare)},
-		UniFactMemory:      *NewUniFactMemory(),
-		VarTypeMemory:      *NewFcVarTypeMemory(),
+	env := &Env{
+		Parent:        nil,
+		VarMemory:     *NewVarMemory(),
+		PropMemory:    *NewPropMemory(),
+		FnMemory:      *NewFnMemory(),
+		AliasMemory:   *NewAliasMemory(),
+		UniFactMemory: *NewUniFactMemory(),
+		VarTypeMemory: *NewFcVarTypeMemory(),
 	}
+
+	env.FuncFactMemory = FuncFactMemory{Mem: *NewRedBlackTree(env, specFuncFactCompare)}
+	env.RelationFactMemory = RelationFactMemory{Mem: *NewRedBlackTree(env, specRelationFactCompare)}
+	env.CondFactMemory = CondFactMemory{Mem: *NewRedBlackTree(env, CondFactMemoryTreeNodeCompare)}
+
+	return env
 }
 
 func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 	for _, fact := range stmt.Facts {
 		switch f := fact.(type) {
 		case *parser.FuncFactStmt:
-			if err := env.FuncFactMemory.NewFuncFact(f); err != nil {
+			if err := env.NewFuncFact(f); err != nil {
 				return err
 			}
 		case *parser.RelationFactStmt:
@@ -46,7 +49,7 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 				return err
 			}
 		case *parser.CondFactStmt:
-			if err := env.CondFactMemory.NewFact(f); err != nil {
+			if err := env.NewCondFact(f); err != nil {
 				return err
 			}
 		default:

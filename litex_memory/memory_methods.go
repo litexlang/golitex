@@ -35,8 +35,8 @@ func (mem *AliasMemory) Get(s string) (*AliasMemEntry, bool) {
 	return nil, false
 }
 
-func (mem *FuncFactMemory) NewFuncFact(fact *parser.FuncFactStmt) error {
-	err := mem.Mem.Insert(fact)
+func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
+	err := env.FuncFactMemory.Mem.Insert(env, fact)
 	if err != nil {
 		return err
 	}
