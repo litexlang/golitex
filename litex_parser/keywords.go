@@ -106,7 +106,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"axiom":                  "axiom",
 		"prove_by_contradiction": "prove_by_contradiction",
 		"thm":                    "thm",
-		"if":                     "if",
+		"when":                   "when",
 		// I should give user keyword commutative and associative otherwise Litex can not verify (v1 + v2)@k = v2@k + v1@k even we we know (v1 + v2)@k = v1@k + v2@k
 		"commutative": "commutative",
 		"associative": "associative",

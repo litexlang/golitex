@@ -936,7 +936,7 @@ thm:
 
 func TestInlineIfStmt(t *testing.T) {
 	code := `
-if $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()} { $p()}
+when $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()} { $p()}
 
 forall g G:
 	cond:
@@ -951,17 +951,17 @@ forall g G:
 	
 prop P[G Group, G2 Group](g G, g2 G2):
 	cond:
-		if $f[G, B](g.g1, g2.g2), if $f[G, B](g.g1, g2.g2) {$p()}  {$p()}
+		when $f[G, B](g.g1, g2.g2), when $f[G, B](g.g1, g2.g2) {$p()}  {$p()}
 	then:
 		$p()
 prove:
-	if $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()}  {$p()}
-	if $f[G, B](g.g1, g2.g2) { $p()}
+	when $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()}  {$p()}
+	when $f[G, B](g.g1, g2.g2) { $p()}
 
 forall [G Group, G2 Group] g g, g2 g2:
 	cond:
 		$p[G, G2](x, y)
-		if $f[G, B](g.g1, g2.g2) {$p()}
+		when $f[G, B](g.g1, g2.g2) {$p()}
 	then:
 	    $p[G, G2](x, y)
 
@@ -1000,10 +1000,10 @@ func TestForall(t *testing.T) {
 forall [G Group, G2 Group] g g, g2 g2:
 	cond:
 		$p[G, G2](x, y)
-		if $f[G, B](g.g1, g2.g2) {$p()}
+		when $f[G, B](g.g1, g2.g2) {$p()}
 	then:
 		$p[G, G2](x, y)
-if $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()}  {$p()}
+when $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()}  {$p()}
 forall [a A] $p() {$p()}
 `
 
@@ -1029,7 +1029,7 @@ type impl EuclidSpace var A S:	// type name is G, A is name for "self"
 		$S(A)
 		know $Group(G)
 
-if:
+when:
 	Socratic is human
 	then:
 		Socratic is mortal	

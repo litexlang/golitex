@@ -327,7 +327,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	if stmt.Header.is(Keywords["forall"]) {
 		return stmt.parseForallStmt()
-	} else if stmt.Header.is(Keywords["if"]) {
+	} else if stmt.Header.is(Keywords["when"]) {
 		return stmt.parseIfStmt()
 	}
 
@@ -343,7 +343,7 @@ func (stmt *TokenBlock) parseIfStmt() (FactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseInlineFactStmt() (FactStmt, error) {
-	if stmt.Header.is(Keywords["if"]) {
+	if stmt.Header.is(Keywords["when"]) {
 		return stmt.parseInlineIfFactStmt()
 	} else if stmt.Header.is(Keywords["forall"]) {
 		return stmt.parseInlineForallStmt()
@@ -1065,8 +1065,8 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 	return &ThmStmt{decl, *facts}, nil
 }
 
-func (stmt *TokenBlock) parseInlineIfFactStmt() (*IfFactStmt, error) {
-	err := stmt.Header.skip(Keywords["if"])
+func (stmt *TokenBlock) parseInlineIfFactStmt() (*CondFactStmt, error) {
+	err := stmt.Header.skip(Keywords["when"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -1108,11 +1108,11 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*IfFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &IfFactStmt{condFacts, thenFacts}, nil
+	return &CondFactStmt{condFacts, thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseBlockIfStmt() (*IfFactStmt, error) {
-	err := stmt.Header.skip(Keywords["if"])
+func (stmt *TokenBlock) parseBlockIfStmt() (*CondFactStmt, error) {
+	err := stmt.Header.skip(Keywords["when"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -1152,5 +1152,5 @@ func (stmt *TokenBlock) parseBlockIfStmt() (*IfFactStmt, error) {
 		thenFacts = append(thenFacts, fact)
 	}
 
-	return &IfFactStmt{condFacts, thenFacts}, nil
+	return &CondFactStmt{condFacts, thenFacts}, nil
 }

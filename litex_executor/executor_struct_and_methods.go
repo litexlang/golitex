@@ -24,6 +24,10 @@ func newExecutor() *Executor {
 	return &Executor{env: mem.NewEnv(), message: []string{}, output: execError, searchRound: 0}
 }
 
+func (e *Executor) roundAddOne() {
+	e.searchRound++
+}
+
 func (e *Executor) clear() {
 	e.message = []string{}
 	e.output = execError
