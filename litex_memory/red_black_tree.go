@@ -16,13 +16,13 @@ type Node[T any] struct {
 
 // RedBlackTree represents the Red-Black Tree
 type RedBlackTree[T any] struct {
-	root    *Node[T]                            // Root of the tree
-	compare func(env *Env, a, b T) (int, error) // Comparison function with error
+	root    *Node[T]                  // Root of the tree
+	compare func(a, b T) (int, error) // Comparison function with error
 
 }
 
 // NewRedBlackTree creates a new Red-Black Tree with a custom comparison function
-func NewRedBlackTree[T any](compare func(env *Env, a, b T) (int, error)) *RedBlackTree[T] {
+func NewRedBlackTree[T any](compare func(a, b T) (int, error)) *RedBlackTree[T] {
 	return &RedBlackTree[T]{
 		compare: compare,
 	}
@@ -37,12 +37,12 @@ func NewNode[T any](key T, color bool) *Node[T] {
 }
 
 // Insert inserts a new key into the Red-Black Tree
-func (t *RedBlackTree[T]) Insert(env *Env, key T) error {
+func (t *RedBlackTree[T]) Insert(key T) error {
 	newNode := NewNode(key, RED)
 	if t.root == nil {
 		t.root = newNode
 	} else {
-		err := t.insertNode(env, t.root, newNode)
+		err := t.insertNode(t.root, newNode)
 		if err != nil {
 			return err
 		}
@@ -51,8 +51,8 @@ func (t *RedBlackTree[T]) Insert(env *Env, key T) error {
 }
 
 // insertNode inserts a new node into the tree
-func (t *RedBlackTree[T]) insertNode(env *Env, root, newNode *Node[T]) error {
-	compareResult, err := t.compare(env, newNode.Key, root.Key)
+func (t *RedBlackTree[T]) insertNode(root, newNode *Node[T]) error {
+	compareResult, err := t.compare(newNode.Key, root.Key)
 	if err != nil {
 		return err
 	}
@@ -62,14 +62,14 @@ func (t *RedBlackTree[T]) insertNode(env *Env, root, newNode *Node[T]) error {
 			root.left = newNode
 			newNode.parent = root
 		} else {
-			return t.insertNode(env, root.left, newNode)
+			return t.insertNode(root.left, newNode)
 		}
 	} else {
 		if root.right == nil {
 			root.right = newNode
 			newNode.parent = root
 		} else {
-			return t.insertNode(env, root.right, newNode)
+			return t.insertNode(root.right, newNode)
 		}
 	}
 	return nil
@@ -171,17 +171,17 @@ func (t *RedBlackTree[T]) InOrderTraversal(node *Node[T], visit func(key T) erro
 }
 
 // Search searches for a key in the Red-Black Tree and returns the corresponding node if found.
-func (t *RedBlackTree[T]) Search(env *Env, key T) (*Node[T], error) {
-	return t.searchNode(env, t.root, key)
+func (t *RedBlackTree[T]) Search(key T) (*Node[T], error) {
+	return t.searchNode(t.root, key)
 }
 
 // searchNode recursively searches for a key in the tree and returns the corresponding node if found.
-func (t *RedBlackTree[T]) searchNode(env *Env, node *Node[T], key T) (*Node[T], error) {
+func (t *RedBlackTree[T]) searchNode(node *Node[T], key T) (*Node[T], error) {
 	if node == nil {
 		return nil, nil
 	}
 
-	compareResult, err := t.compare(env, key, node.Key)
+	compareResult, err := t.compare(key, node.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -189,8 +189,8 @@ func (t *RedBlackTree[T]) searchNode(env *Env, node *Node[T], key T) (*Node[T], 
 	if compareResult == 0 {
 		return node, nil // 返回找到的节点
 	} else if compareResult < 0 {
-		return t.searchNode(env, node.left, key)
+		return t.searchNode(node.left, key)
 	} else {
-		return t.searchNode(env, node.right, key)
+		return t.searchNode(node.right, key)
 	}
 }
