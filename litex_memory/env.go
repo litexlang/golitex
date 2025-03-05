@@ -7,16 +7,17 @@ import (
 )
 
 type Env struct {
-	Parent             *Env
-	VarMemory          VarMemory
-	PropMemory         PropMemory
-	FnMemory           FnMemory
-	AliasMemory        AliasMemory
+	Parent        *Env
+	VarMemory     VarMemory
+	PropMemory    PropMemory
+	FnMemory      FnMemory
+	AliasMemory   AliasMemory
+	VarTypeMemory FcVarTypeMemory
+
 	FuncFactMemory     FuncFactMemory
-	RelationFactMemory RelationFactMemory
 	CondFactMemory     CondFactMemory
+	RelationFactMemory RelationFactMemory
 	UniFactMemory      UniFactMemory
-	VarTypeMemory      FcVarTypeMemory
 }
 
 func NewEnv() *Env {
@@ -28,11 +29,11 @@ func NewEnv() *Env {
 		AliasMemory:   *NewAliasMemory(),
 		UniFactMemory: *NewUniFactMemory(),
 		VarTypeMemory: *NewFcVarTypeMemory(),
-	}
 
-	env.FuncFactMemory = FuncFactMemory{Mem: *NewRedBlackTree(env, specFuncFactCompare)}
-	env.RelationFactMemory = RelationFactMemory{Mem: *NewRedBlackTree(env, specRelationFactCompare)}
-	env.CondFactMemory = CondFactMemory{Mem: *NewRedBlackTree(env, CondFactMemoryTreeNodeCompare)}
+		FuncFactMemory:     FuncFactMemory{Mem: *NewRedBlackTree(specFuncFactCompare)},
+		RelationFactMemory: RelationFactMemory{Mem: *NewRedBlackTree(specRelationFactCompare)},
+		CondFactMemory:     CondFactMemory{Mem: *NewRedBlackTree(CondFactMemoryTreeNodeCompare)},
+	}
 
 	return env
 }
