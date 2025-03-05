@@ -6,7 +6,7 @@ import (
 )
 
 func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
-	exec.clearMessages()
+	exec.clear()
 	return exec.stmt(stmt.Stmt)
 }
 
@@ -25,11 +25,9 @@ func (exec *Executor) stmt(stmt parser.Stmt) error {
 }
 
 func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
-	// TODO verify whether stmt is valid, for example all symbols are declared.
 	if err := exec.env.NewKnownFact(stmt); err != nil {
 		return err
 	}
-	// TODO
 	exec.success("%v", stmt)
 	return nil
 }

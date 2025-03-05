@@ -251,7 +251,6 @@ func NewUniFactMemory() *UniFactMemory {
 
 func (mem *CondFactMemory) NewFact(fact *parser.IfFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		// If the fact already exists
 		node, err := mem.KnownFacts.Search(&CondFactMemoryTreeNode{f, []*parser.IfFactStmt{}})
 		if err != nil {
 			return err

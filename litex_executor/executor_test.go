@@ -17,7 +17,7 @@ func TestStoreNewVar(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := memory.NewEnv()
-	executor := Executor{env, []string{}, ExecTrue}
+	executor := Executor{env, []string{}, ExecTrue, 0}
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -38,7 +38,8 @@ func TestKnow(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := memory.NewEnv()
-	executor := Executor{env, []string{}, ExecTrue}
+	executor := *newExecutor()
+	executor.env = env
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -56,7 +57,8 @@ func TestVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := memory.NewEnv()
-	executor := Executor{env, []string{}, ExecTrue}
+	executor := *newExecutor()
+	executor.env = env
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -122,7 +124,8 @@ func TestVerifier2(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := memory.NewEnv()
-	executor := Executor{env, []string{}, ExecTrue}
+	executor := *newExecutor()
+	executor.env = env
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -150,7 +153,8 @@ func TestVerifier2(t *testing.T) {
 
 func TestKnowSpeed(t *testing.T) {
 	env := memory.NewEnv()
-	executor := Executor{env, []string{}, ExecTrue}
+	executor := *newExecutor()
+	executor.env = env
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
@@ -261,4 +265,61 @@ func randVarParams() *[]parser.Fc {
 		varParams = append(varParams, randFcString()) // 这里必须是randFcString不能是randFc，否则会因为内存溢出停掉
 	}
 	return &varParams
+}
+
+func randCondStmt() *parser.IfFactStmt {
+	randomNumberOfCondFacts := rand.Intn(3) + 1
+	randomNumberOfThenFacts := rand.Intn(3) + 1
+	condFacts := []parser.FactStmt{}
+	thenFacts := []parser.SpecFactStmt{}
+
+	for i := 0; i < randomNumberOfCondFacts; i++ {
+		condFacts = append(condFacts, randFuncFact())
+	}
+
+	for i := 0; i < randomNumberOfThenFacts; i++ {
+		thenFacts = append(thenFacts, randFuncFact())
+	}
+
+	return &parser.IfFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
+}
+
+func TestKnowCondFactSpeed(t *testing.T) {
+	env := memory.NewEnv()
+	executor := *newExecutor()
+	executor.env = env
+	topStatements := []*parser.TopStmt{}
+	topVerifyStatements := []*parser.TopStmt{}
+
+	rounds := 1
+	for i := 0; i < rounds; i++ {
+		stmt := randCondStmt()
+		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
+		topKnow := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
+		topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+		topStatements = append(topStatements, &topKnow)
+	}
+
+	start := time.Now()
+	for _, topStmt := range topStatements {
+		err := executor.TopLevelStmt(topStmt)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	// 1000 rounds 3.8-4.5ms
+	// 10000 rounds 51ms
+	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
+
+	start = time.Now()
+	for _, topStmt := range topVerifyStatements {
+		err := executor.TopLevelStmt(topStmt)
+		if err != nil || executor.output != ExecTrue {
+			t.Fatal(err)
+		}
+
+	}
+	// 1000 rounds:6.5-7ms 大约是插入的两倍。因为你树建立完后，再遍历地去检查，确实会导致平均路过的节点数比原来多
+	// 10000 69ms
+	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
 }
