@@ -16,8 +16,6 @@ func (exec *Executor) stmt(stmt parser.Stmt) error {
 		return exec.verifyFactStmt(stmt)
 	case *parser.KnowStmt:
 		return exec.knowStmt(stmt)
-	case *parser.DefVarStmt:
-		return exec.defVarStmt(stmt)
 
 	default:
 		return fmt.Errorf("unknown statement type: %T", stmt)
@@ -29,14 +27,5 @@ func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
 		return err
 	}
 	exec.success("%v", stmt)
-	return nil
-}
-
-func (exec *Executor) defVarStmt(stmt *parser.DefVarStmt) error {
-	err := exec.env.NewVar(&stmt.Decl.VarTypePair)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
