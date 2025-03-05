@@ -68,3 +68,7 @@ type VarMemory struct{ KVs map[string]VarMemoryEntry }
 func NewVarMemory() *VarMemory {
 	return &VarMemory{KVs: map[string]VarMemoryEntry{}}
 }
+
+func NewUniFactMemory() *UniFactMemory {
+	panic("not implemented")
+}

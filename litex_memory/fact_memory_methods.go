@@ -188,12 +188,12 @@ func compareFcFnRetValue(knownFc *parser.FcFnRetValue, givenFc *parser.FcFnRetVa
 }
 
 func compareFcMemChain(knownFc *parser.FcMemChain, givenFc *parser.FcMemChain) (int, error) {
-	if len(knownFc.Chain) != len(givenFc.Chain) {
-		return len(knownFc.Chain) - len(givenFc.Chain), nil
+	if len(knownFc.ChainOfMembers) != len(givenFc.ChainOfMembers) {
+		return len(knownFc.ChainOfMembers) - len(givenFc.ChainOfMembers), nil
 	}
 
-	for i := 0; i < len(knownFc.Chain); i++ {
-		if comp, err := compareFc((knownFc.Chain)[i], (givenFc.Chain)[i]); comp != 0 || err != nil {
+	for i := 0; i < len(knownFc.ChainOfMembers); i++ {
+		if comp, err := compareFc((knownFc.ChainOfMembers)[i], (givenFc.ChainOfMembers)[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
@@ -244,10 +244,6 @@ func getSpecFactEnum(fact parser.SpecFactStmt) (int, error) {
 	}
 
 	return 0, fmt.Errorf("unknown SpecFactStmt type: %T", fact)
-}
-
-func NewUniFactMemory() *UniFactMemory {
-	return &UniFactMemory{map[PropName]UniFactMemEntry{}}
 }
 
 func (mem *CondFactMemory) NewFact(fact *parser.CondFactStmt) error {

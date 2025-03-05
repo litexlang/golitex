@@ -181,7 +181,7 @@ func randFcChain() *parser.FcMemChain {
 	for i := 0; i < round; i++ {
 		fcArr = append(fcArr, randFcFnRetValue())
 	}
-	return &parser.FcMemChain{Chain: fcArr}
+	return &parser.FcMemChain{ChainOfMembers: fcArr}
 }
 
 func randFcString() parser.FcStr {

@@ -29,14 +29,9 @@ type CondFactMemoryTreeNode struct {
 }
 
 type UniFactMemory struct {
-	Entires map[PropName]UniFactMemEntry
+	Mem RedBlackTree[*UniFactMemoryTreeNode]
 }
 
-type UniFactMemEntry struct{ Facts []UniMemFact }
-
-type UniMemFact struct {
-	typeParams *[]parser.TypeConceptPair
-	varParams  *[]parser.StrTypePair
-	cond       *[]parser.FactStmt
-	then       *[]parser.SpecFactStmt
+type UniFactMemoryTreeNode struct {
+	// TODO
 }
