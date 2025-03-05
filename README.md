@@ -41,9 +41,15 @@ In short, Litex can transform workflow and collaboration of mathematicians. It b
 
 ## What makes Litex Special
 
+### Litex Approach: A Fancy Dictionary (Database) of Mathematical Facts
+
 Mathematics involves two different major tasks: computation and verification. Computation (e.g. arithmetic computation, symbolic computation), handled by programming languages, alters memory states and requires control flow (e.g. loops, conditionals) and literal transformations to manage operations.
 
-Verification is like searching a dictionary: you use a specific key to retrieve relevant information. In mathematical verification, you take a factual expression and search a base of known facts to find supporting evidence. While it involves more rules than a simple dictionary lookup (e.g., satisfying additional conditions), the core idea remains unchanged. Litex’s implementation builds on these observations. The major difference between computation and verification is that searching for facts in verification doesn’t change memory states.
+Verification is akin to searching a dictionary: you use a key to find relevant information. In mathematical verification, you take an expression and search a dictionary of known facts for supporting evidence. While it involves more rules than a simple lookup, the core idea remains the same. Unlike computation, verification doesn’t alter memory states. Litex’s implementation is based on these principles.
+
+When you find evidence for an expression, it becomes `true` and is added to the dictionary of known facts. Math works this way: you create new "keys," search for facts to verify them, and if successful, the key joins the dictionary. What is why Litex is implemented as a fancy "dictionary" ("database") of known facts allowing users to search (verify) and insert (store new facts) easily.
+
+### Difference between Litex and Traditional Proof Assistants
 
 Proof assistants are designed for mathematical verification. However, traditional proof assistants struggle to scale formal proofs effectively. This is because they are built as general-purpose languages, requiring them to include syntax unrelated to mathematical proofs such as memory state alterations (control flows, arithmetics), which adds unnecessary complexity.
 
