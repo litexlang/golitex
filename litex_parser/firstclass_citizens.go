@@ -20,7 +20,7 @@ type FcFnRetValue struct {
 	TypeParamsVarParamsPairs []TypeParamsAndParamsPair
 }
 
-type FcMemChain struct{ Chain []Fc }
+type FcMemChain struct{ ChainOfMembers []Fc }
 
 type TypeParamsAndParamsPair struct {
 	TypeParams []TypeVarStr
@@ -63,8 +63,8 @@ func (f FcStr) String() string {
 
 func (f *FcMemChain) String() string {
 	ret := ""
-	for i := 0; i < len(f.Chain)-1; i++ {
-		ret += fmt.Sprintf("%s.", (f.Chain)[i])
+	for i := 0; i < len(f.ChainOfMembers)-1; i++ {
+		ret += fmt.Sprintf("%s.", (f.ChainOfMembers)[i])
 	}
-	return ret + (f.Chain)[len(f.Chain)-1].String()
+	return ret + (f.ChainOfMembers)[len(f.ChainOfMembers)-1].String()
 }
