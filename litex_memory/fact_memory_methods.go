@@ -15,11 +15,11 @@ func specFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStm
 	switch known := knownFact.(type) {
 	case *parser.RelationFactStmt:
 		if given, ok := givenFact.(*parser.RelationFactStmt); ok {
-			return specRelationFactCompare(known, given, env)
+			return specRelationFactCompare(env, known, given)
 		}
 	case *parser.FuncFactStmt:
 		if given, ok := givenFact.(*parser.FuncFactStmt); ok {
-			return specFuncFactCompare(known, given, env)
+			return specFuncFactCompare(env, known, given)
 		}
 	default:
 		return 0, fmt.Errorf("unknown spec fact type")
@@ -28,7 +28,7 @@ func specFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStm
 	return 0, fmt.Errorf("unknown spec fact")
 }
 
-func specRelationFactCompare(knownFact *parser.RelationFactStmt, givenFact *parser.RelationFactStmt, env *Env) (int, error) {
+func specRelationFactCompare(env *Env, knownFact *parser.RelationFactStmt, givenFact *parser.RelationFactStmt) (int, error) {
 	panic("TODO not implemented")
 }
 
@@ -51,7 +51,7 @@ func specFuncIsTrueCompare(knownFact *parser.FuncFactStmt, givenFact *parser.Fun
 	return knownFactIsTrueEnum - givenFactIsTrueEnum
 }
 
-func specFuncFactCompare(knownFact *parser.FuncFactStmt, givenFact *parser.FuncFactStmt, env *Env) (int, error) {
+func specFuncFactCompare(env *Env, knownFact *parser.FuncFactStmt, givenFact *parser.FuncFactStmt) (int, error) {
 	if isTrueComp := specFuncIsTrueCompare(knownFact, givenFact); isTrueComp != 0 {
 		return isTrueComp, nil
 	}
@@ -264,6 +264,6 @@ func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
 	return nil
 }
 
-func CondFactMemoryTreeNodeCompare(knownFact *CondFactMemoryTreeNode, givenFact *CondFactMemoryTreeNode, env *Env) (int, error) {
+func CondFactMemoryTreeNodeCompare(env *Env, knownFact *CondFactMemoryTreeNode, givenFact *CondFactMemoryTreeNode) (int, error) {
 	return specFactCompare(knownFact.ThenFact, givenFact.ThenFact, env)
 }
