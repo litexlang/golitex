@@ -247,9 +247,9 @@ The analogy between "program = data structure + algorithm" and "type = set + str
 
 So, When the underlying set is different, the type must be different. Even if the sets are the same, if the structures imposed on them are different, they are considered distinct types.
 
-In traditional math writing, people tend to write every information literally. This is common in programming because symbols like 1,2,3 does contain all their information literally. 
+In traditional mathematical notation, it is common to embed all relevant information directly into symbols. This practice is somewhat analogous to programming, where symbols like `1`, `2`, or `3` literally encode their own values. However, sometimes this approach can lead to confusion, particularly in formal contexts. For example, the notation \( \math{R}^n \) represents an \( n \)-dimensional space, where \( n \) can be any number. This introduces ambiguity because \( n \) is merely a placeholder for the dimension, and many properties of Euclidean spaces do not depend on the specific value of \( n \). 
 
-However, writing everything literally makes confusions, especially in formal language. For example, R^{n} represents n dimensional space, here n can be any number, which loses strictness. What's more, such `n` is just a symbol of dimension of that space. And many of properties of Euclidean spaces does not depend on the actual value of that dim.
+In programming, such information is typically encapsulated within an instance of a type, separating the object itself from its properties. Adopting a similar approach in mathematical notation could improve clarity and rigor by distinguishing between the structure (e.g., the space) and its metadata (e.g., its dimension). This would make it easier to reason about mathematical objects in a more abstract and formal way, making Litex code more modular and sharable across different users.
 
 <!-- TODO: "A impl B" is where abstraction layer changes: B is higher abstraction, A is lower. If you want to jump between abstraction layer, use impl. Here A can be concept or type, B is concept. NEED TO EMPHASIZE THAT JUMPING BETWEEN DIFFERENT ABSTRACTION LAYER IS DONE BY impl -->
 

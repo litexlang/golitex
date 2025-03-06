@@ -85,8 +85,6 @@ func getFcEnum(fc parser.Fc) (int, error) {
 }
 
 func compareFc(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
-	// TODO: 万一knownFc和givenFc是等于关系，那怎么compare？
-
 	if typeComp, err := compareFcType(knownFc, givenFc); typeComp != 0 || err != nil {
 		return typeComp, err
 	}
