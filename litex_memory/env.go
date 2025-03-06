@@ -47,7 +47,7 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 				return err
 			}
 		case *parser.RelationFactStmt:
-			if err := env.RelationFactMemory.NewRelationFact(f); err != nil {
+			if err := env.NewRelationFact(f); err != nil {
 				return err
 			}
 		case *parser.CondFactStmt:
@@ -58,5 +58,47 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 			return fmt.Errorf("unknown fact type: %T", fact)
 		}
 	}
+	return nil
+}
+
+func (env *Env) NewRelationFact(stmt *parser.RelationFactStmt) error {
+	if string(stmt.Opt) == (parser.Keywords["="]) {
+		return env.NewEqualFact(stmt)
+	}
+
+	panic(fmt.Sprintf("%v not implemented", string(stmt.Opt)))
+}
+
+func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
+	left := &EqualFactMemoryTreeNode{
+		stmt.Vars[0],
+		[]*parser.Fc{&stmt.Vars[1]},
+	}
+
+	right := &EqualFactMemoryTreeNode{
+		stmt.Vars[1],
+		[]*parser.Fc{&stmt.Vars[0]},
+	}
+
+	leftSearched, err := env.EqualMemory.Mem.Search(left)
+	if err != nil {
+		return err
+	}
+	if leftSearched != nil {
+		leftSearched.Key.Values = append(leftSearched.Key.Values, &stmt.Vars[1])
+	} else {
+		env.EqualMemory.Mem.Insert(left)
+	}
+
+	rightSearched, err := env.EqualMemory.Mem.Search(right)
+	if err != nil {
+		return err
+	}
+	if rightSearched != nil {
+		rightSearched.Key.Values = append(rightSearched.Key.Values, &stmt.Vars[0])
+	} else {
+		env.EqualMemory.Mem.Insert(right)
+	}
+
 	return nil
 }

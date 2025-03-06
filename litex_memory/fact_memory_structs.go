@@ -24,15 +24,18 @@ type CondFactMemory struct {
 }
 
 type CondFactMemoryNode struct {
-	ThenFact  parser.SpecFactStmt
-	CondFacts []*parser.CondFactStmt
+	ThenFactAsKey parser.SpecFactStmt
+	CondFacts     []*parser.CondFactStmt
 }
 
 type UniFactMemory struct {
 	Mem RedBlackTree[*UniFactMemoryTreeNode]
 }
 
-type EqualFactMemoryTreeNode parser.Fc
+type EqualFactMemoryTreeNode struct {
+	FcAsKey parser.Fc
+	Values  []*parser.Fc
+}
 
 type EqualFactMemory struct {
 	Mem RedBlackTree[*EqualFactMemoryTreeNode]
