@@ -64,7 +64,7 @@ func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 }
 
 func (exec *Executor) useCondFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
-	key := memory.CondFactMemoryNodeStruct{ThenFact: stmt, CondFacts: nil}
+	key := memory.CondFactMemoryNode{ThenFact: stmt, CondFacts: nil}
 	searchNode, err := env.CondFactMemory.Mem.SearchInEnv(env, &key)
 	if err != nil {
 		return err
