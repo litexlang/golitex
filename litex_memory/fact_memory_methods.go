@@ -262,5 +262,5 @@ func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
 }
 
 func CondFactMemoryTreeNodeCompare(knownFact *CondFactMemoryNode, givenFact *CondFactMemoryNode) (int, error) {
-	return specFactCompare(knownFact.ThenFact, givenFact.ThenFact)
+	return specFactCompare(knownFact.ThenFactAsKey, givenFact.ThenFactAsKey)
 }

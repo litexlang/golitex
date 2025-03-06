@@ -66,9 +66,9 @@ type FuncFactStmt struct {
 
 // 1 = 2 -1 = 1 * 1, vars = [1, 2 -1, 1 * 1], opt = "="
 type RelationFactStmt struct {
-	isTrue bool
-	vars   []Fc
-	opt    Fc
+	IsTrue bool
+	Vars   []Fc
+	Opt    FcStr
 }
 
 type ClaimProveByContradictStmt struct {
