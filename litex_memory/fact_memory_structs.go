@@ -7,28 +7,26 @@ import (
 // Define type PropName to signify functionality of a string variable
 type PropName string
 
-type FuncFactMemoryNode *parser.FuncFactStmt
+type FuncFactMemoryNode = parser.FuncFactStmt
 
 type FuncFactMemory struct {
-	Mem RedBlackTree[FuncFactMemoryNode]
+	Mem RedBlackTree[*FuncFactMemoryNode]
 }
 
-type RelationFactMemoryNode *parser.RelationFactStmt
+type RelationFactMemoryNode = parser.RelationFactStmt
 
 type RelationFactMemory struct {
-	Mem RedBlackTree[RelationFactMemoryNode]
+	Mem RedBlackTree[*RelationFactMemoryNode]
 }
 
 type CondFactMemory struct {
-	Mem RedBlackTree[CondFactMemoryNode]
+	Mem RedBlackTree[*CondFactMemoryNode]
 }
 
-type CondFactMemoryNodeStruct struct {
+type CondFactMemoryNode struct {
 	ThenFact  parser.SpecFactStmt
 	CondFacts []*parser.CondFactStmt
 }
-
-type CondFactMemoryNode *CondFactMemoryNodeStruct
 
 type UniFactMemory struct {
 	Mem RedBlackTree[*UniFactMemoryTreeNode]

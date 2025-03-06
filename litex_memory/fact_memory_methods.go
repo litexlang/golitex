@@ -28,7 +28,7 @@ func specFactCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStm
 	return 0, fmt.Errorf("unknown spec fact")
 }
 
-func specRelationFactCompare(knownFact RelationFactMemoryNode, givenFact RelationFactMemoryNode) (int, error) {
+func specRelationFactCompare(knownFact *RelationFactMemoryNode, givenFact *RelationFactMemoryNode) (int, error) {
 	panic("TODO not implemented")
 }
 
@@ -51,7 +51,7 @@ func specFuncIsTrueCompare(knownFact *parser.FuncFactStmt, givenFact *parser.Fun
 	return knownFactIsTrueEnum - givenFactIsTrueEnum
 }
 
-func specFuncFactCompare(knownFact FuncFactMemoryNode, givenFact FuncFactMemoryNode) (int, error) {
+func specFuncFactCompare(knownFact *FuncFactMemoryNode, givenFact *FuncFactMemoryNode) (int, error) {
 	if isTrueComp := specFuncIsTrueCompare(knownFact, givenFact); isTrueComp != 0 {
 		return isTrueComp, nil
 	}
@@ -248,14 +248,14 @@ func getSpecFactEnum(fact parser.SpecFactStmt) (int, error) {
 
 func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		node, err := env.CondFactMemory.Mem.Search(&CondFactMemoryNodeStruct{f, []*parser.CondFactStmt{}})
+		node, err := env.CondFactMemory.Mem.Search(&CondFactMemoryNode{f, []*parser.CondFactStmt{}})
 		if err != nil {
 			return err
 		}
 		if node != nil {
 			node.Key.CondFacts = append(node.Key.CondFacts, fact)
 		} else {
-			err := env.CondFactMemory.Mem.Insert(&CondFactMemoryNodeStruct{f, []*parser.CondFactStmt{fact}})
+			err := env.CondFactMemory.Mem.Insert(&CondFactMemoryNode{f, []*parser.CondFactStmt{fact}})
 			if err != nil {
 				return err
 			}
@@ -264,6 +264,6 @@ func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
 	return nil
 }
 
-func CondFactMemoryTreeNodeCompare(knownFact CondFactMemoryNode, givenFact CondFactMemoryNode) (int, error) {
+func CondFactMemoryTreeNodeCompare(knownFact *CondFactMemoryNode, givenFact *CondFactMemoryNode) (int, error) {
 	return specFactCompare(knownFact.ThenFact, givenFact.ThenFact)
 }
