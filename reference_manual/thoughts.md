@@ -31,7 +31,7 @@ concept Group G: // suppose G is a group
 
 1. The benefit of using concept is that you can write fn [s T] x s, y s to ensure x and y are eql type. The user should define what does x = y mean when x and y are of the same type, just like C++ programmers define == in class.
 2. There is a major difference between template in C++ and concept in Litex: the template T must be initialized when used as parameter of a type. But member of a type of a concept needn't, because it's usually the member, not the instantiation of that member, has relation with other members and has some properties.
-3. = is a special kind of prop. besides facts that the user defines to be equal to =, there are builtin ways to check =: 1. when a and b are literally the same 2. when b is alias of a. 3. you don't need to implement = every time you define a new type, = is automatically generated for you, just like = is automatically by C++ for you when you define a class without defining it.
+3. = is a special kind of prop. besides facts that the user defines to be equal to =, there are builtin ways to check =: 1. when a and b are literally the same 2. when b = a. 3. you don't need to implement = every time you define a new type, = is automatically generated for you, just like = is automatically by C++ for you when you define a class without defining it.
 4. as for vector plus vector, it works very like how it works in programming:
 Litex:
 // Define the result of summing 2 vectors

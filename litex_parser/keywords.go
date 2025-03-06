@@ -99,7 +99,6 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"package":                "package",
 		"not":                    "not",
 		"is":                     "is",
-		"alias":                  "alias",
 		"impl":                   "impl",
 		"any":                    "any",
 		"as":                     "as",

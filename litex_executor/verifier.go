@@ -19,13 +19,13 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 }
 
 func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
-	// TODO : If there are symbols inside prop list that have aliases and equals,we loop over all the possible equivalent situations and verify literally
+	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
 	return exec.verifyFuncFactLiterally(stmt)
 }
 
 func (exec *Executor) verifyCondFact(stmt *parser.CondFactStmt) error {
-	// TODO : If there are symbols inside prop list that have aliases and equals,we loop over all the possible equivalent situations and verify literally
+	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
 	return exec.verifyCondFactLiterally(stmt)
 }

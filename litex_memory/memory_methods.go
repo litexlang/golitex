@@ -30,11 +30,6 @@ func (mem *FnMemory) Get(s string) (*FnMemEntry, bool) {
 	return nil, false
 }
 
-func (mem *AliasMemory) Get(s string) (*AliasMemEntry, bool) {
-	// TODO
-	return nil, false
-}
-
 func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
 	err := env.FuncFactMemory.Mem.Insert(fact)
 	if err != nil {
