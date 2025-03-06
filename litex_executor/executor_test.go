@@ -328,7 +328,7 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
 }
 
-func TestCompareDifferentCondFact(t *testing.T) {
+func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 	env := memory.NewEnv(nil)
 	executor := *newExecutor()
 	executor.env = env

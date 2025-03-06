@@ -19,6 +19,7 @@ type Env struct {
 	CondFactMemory     CondFactMemory
 	RelationFactMemory RelationFactMemory
 	UniFactMemory      UniFactMemory
+	EqualMemory        EqualFactMemory
 }
 
 func NewEnv(parent *Env) *Env {
