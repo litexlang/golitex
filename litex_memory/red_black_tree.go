@@ -1,3 +1,5 @@
+// Basic red black tree.
+
 package litexmemory
 
 const (
