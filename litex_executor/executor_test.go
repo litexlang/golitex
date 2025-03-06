@@ -327,3 +327,47 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 	// 100000 rounds verify taken: 10.808512542s
 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
 }
+
+func TestCompareDifferentCondFact(t *testing.T) {
+	env := memory.NewEnv(nil)
+	executor := *newExecutor()
+	executor.env = env
+	topKnowStatements := []*parser.TopStmt{}
+	topVerifyStatements := []*parser.TopStmt{}
+
+	rounds := 100
+	for i := 0; i < rounds; i++ {
+		stmt := randCondStmt()
+		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
+		topKnow := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
+		if i < rounds/2 {
+			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+			topKnowStatements = append(topKnowStatements, &topKnow)
+		} else {
+			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+		}
+	}
+
+	start := time.Now()
+	for _, topStmt := range topKnowStatements {
+		err := executor.TopLevelStmt(topStmt)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
+
+	start = time.Now()
+	notVerifiedCount := 0
+	notVerifiedIndexes := []int{}
+	for i, topStmt := range topVerifyStatements {
+		err := executor.TopLevelStmt(topStmt)
+		if err != nil || !executor.true() {
+			notVerifiedCount++
+			notVerifiedIndexes = append(notVerifiedIndexes, i)
+		}
+	}
+	fmt.Printf("%d statements not verified, %v\n", notVerifiedCount, notVerifiedIndexes)
+
+	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
+}
