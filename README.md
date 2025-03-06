@@ -247,6 +247,10 @@ The analogy between "program = data structure + algorithm" and "type = set + str
 
 So, When the underlying set is different, the type must be different. Even if the sets are the same, if the structures imposed on them are different, they are considered distinct types.
 
+In traditional math writing, people tend to write every information literally. This is common in programming because symbols like 1,2,3 does contain all their information literally. 
+
+However, writing everything literally makes confusions, especially in formal language. For example, R^{n} represents n dimensional space, here n can be any number, which loses strictness. What's more, such `n` is just a symbol of dimension of that space. And many of properties of Euclidean spaces does not depend on the actual value of that dim.
+
 <!-- TODO: "A impl B" is where abstraction layer changes: B is higher abstraction, A is lower. If you want to jump between abstraction layer, use impl. Here A can be concept or type, B is concept. NEED TO EMPHASIZE THAT JUMPING BETWEEN DIFFERENT ABSTRACTION LAYER IS DONE BY impl -->
 
 <!-- TODO: NEED TO EMPHASIZE HOW TO "RELATE" fc with TYPE: Type has var_member; HOW to "relate"  fc1 (type1) with fc2 (type2) : type1 has var_member fc2 type2; -->
