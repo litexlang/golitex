@@ -34,6 +34,7 @@ func NewEnv(parent *Env) *Env {
 		RelationFactMemory: RelationFactMemory{Mem: *NewRedBlackTree(specRelationFactCompare)},
 		CondFactMemory:     CondFactMemory{Mem: *NewRedBlackTree(CondFactMemoryTreeNodeCompare)},
 		UniFactMemory:      *NewUniFactMemory(),
+		EqualMemory:        EqualFactMemory{Mem: *NewRedBlackTree(EqualFactMemoryTreeNodeCompare)},
 	}
 
 	return env
