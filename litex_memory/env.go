@@ -12,7 +12,6 @@ type Env struct {
 	VarMemory     VarMemory
 	PropMemory    PropMemory
 	FnMemory      FnMemory
-	AliasMemory   AliasMemory
 	VarTypeMemory FcVarTypeMemory
 
 	FuncFactMemory     FuncFactMemory
@@ -29,7 +28,6 @@ func NewEnv(parent *Env) *Env {
 		VarMemory:     *NewVarMemory(),
 		PropMemory:    *NewPropMemory(),
 		FnMemory:      *NewFnMemory(),
-		AliasMemory:   *NewAliasMemory(),
 		VarTypeMemory: *NewFcVarTypeMemory(),
 
 		FuncFactMemory:     FuncFactMemory{Mem: *NewRedBlackTree(specFuncFactCompare)},

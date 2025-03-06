@@ -563,20 +563,6 @@ claim:
 
 }
 
-func TestParseDefAliasStmt(t *testing.T) {
-	code :=
-		`
-alias a p[G, G2](x, y)
-`
-	statements, err := ParserTester(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		t.Fatal(err)
-	}
-
-}
-
 func TestKnowStmt(t *testing.T) {
 	code :=
 		`

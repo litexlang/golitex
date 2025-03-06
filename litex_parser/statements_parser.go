@@ -85,8 +85,6 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseClaimStmt()
 	case Keywords["prove"]:
 		ret, err = stmt.parseProveClaimStmt()
-	case Keywords["alias"]:
-		ret, err = stmt.parseDefAliasStmt()
 	case Keywords["know"]:
 		ret, err = stmt.parseKnowStmt()
 	case Keywords["exist"]:
@@ -741,22 +739,6 @@ func (stmt *TokenBlock) parseProveBlock() (*[]Stmt, error) {
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
 	return &innerStmtArr, nil
-}
-
-func (stmt *TokenBlock) parseDefAliasStmt() (*DefAliasStmt, error) {
-	stmt.Header.skip(Keywords["alias"])
-
-	previous, err := stmt.Header.next()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	newName, err := stmt.Header.next()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	return &DefAliasStmt{previous, newName}, nil
 }
 
 func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {

@@ -39,16 +39,6 @@ type FnMemEntry struct {
 	Decl  parser.FcFnDecl
 }
 
-type AliasMemory struct{ entries map[string]AliasMemEntry }
-
-func NewAliasMemory() *AliasMemory {
-	return &AliasMemory{map[string]AliasMemEntry{}}
-}
-
-type AliasMemEntry struct {
-	Values *[]string
-}
-
 type FcVarTypeMemory struct{ entries map[string][]parser.FcVarType }
 
 func NewFcVarTypeMemory() *FcVarTypeMemory {
