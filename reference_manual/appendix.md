@@ -69,12 +69,25 @@
 
 ### Short Summary
 
-1. **Mathematics**: Comprises sets and their elements. 
-2. **Basic Elements**: Propositions, variables, and functions. They are written as symbols. The role of functions is to take in several other basic elements (props, vars, fns) and form new symbols.
-3. **Types and Concepts**: In Litex, sets are represented by types.Types combine structures and sets, allowing relationships like **R** implementing **C**. A set of types with the same structure is called concept.
-4. **Factual Expressions**: Specific (exist, ordinary), conditional, and universal (`forall`).
-5. **Proof Methods**: Direct proof and proof by contradiction, generating new facts or relationships.
-6. **Verification**: Pattern-based matching of known facts, without naming every fact. The difference between a proposition and a factual expression is that a proposition is a collection of factual expressions meant to be verified later by invoking its name.
-7. **Generics**: Sets as parameters, with conditions on types or elements.
-8. **Mathematics vs. Programming**: Math focuses on search and existence, not execution. **Litex** types are more powerful than programming types.
-9. **Litex vs. Standard Math**: Sets (as types) cannot be passed like variables due to their structural responsibilities.
+1. **Mathematics**: Properties of sets and their items. In Litex, a set item is called a first citizen and a set is called a type.
+2. **Basic Elements**: 3 kinds of first citizens: Propositions, variables, and functions. 
+   1. Variables are basic elements of math. symbols like 1, x, 1 + x are all called variables.
+   2. The role of functions is to combine several other first-class citizens (props, vars, fns) and form new first-class citizens.
+   3. a proposition is a collection of factual expressions meant to be verified later by invoking its name
+3. **Types and Concepts**: In Litex, type = set + structure.
+   1. What do you mean by "structure"? 
+      1. By analogy, in the language of programming, the members of a class in OOP (Object-Oriented Programming) represent the structure of the class.
+      2. In analogy to mathematics, a **structure** is also defined through **elements** (such as variables, functions and propositions) with given properties.
+   2. The same set can have different structures. 
+      1. e.g. C[0,1] with L^1 norm or L^{\infinity} norm has different structure, thus have different properties. However, they are the same as set.
+   3. Relationships between types
+      1. the structure of one type might implement another type's structure
+         1. e.g. R implements structure of C, so items in R are also in C.
+4. A set of types with the same structure is called concept.
+   1. Group is a set of sets that have identity, inverse operation, and multiplication operation.
+5. **Factual Expressions**: Specific (exist, ordinary), conditional, and universal (`forall`).
+6. **Proof Methods**: Direct proof and proof by contradiction, generating new facts or relationships.
+7. **Verification**: Pattern-based matching of known facts, without naming every fact.
+8.  **Generics**: Sets as parameters, with conditions on types or elements.
+9.  **Mathematics vs. Programming**: Math focuses on search and existence, not execution. **Litex** types are more powerful than programming types.
+10. **Litex vs. Standard Math**: Sets (as types) cannot be passed like variables due to their structural responsibilities.
