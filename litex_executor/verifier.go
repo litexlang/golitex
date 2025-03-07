@@ -10,7 +10,7 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 	case *parser.FuncFactStmt:
 		return exec.verifyFuncFact(stmt)
 	case *parser.RelationFactStmt:
-		panic("")
+		return exec.verifyRelationFact(stmt)
 	case *parser.CondFactStmt:
 		return exec.verifyCondFact(stmt)
 	default:
@@ -24,38 +24,6 @@ func (exec *Executor) verifyRelationFact(stmt *parser.RelationFactStmt) error {
 	return exec.verifyRelationFactLiterally(stmt)
 }
 
-func (exec *Executor) verifyRelationFactLiterally(stmt *parser.RelationFactStmt) error {
-	exec.roundAddOne()
-	defer exec.roundMinusOne()
-	// for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
-	// 	err := exec.useSpecFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if exec.true() {
-	// 		return nil
-	// 	}
-	// }
-
-	// if !exec.round1() {
-	// 	exec.unknown("%v is unknown", stmt)
-	// 	return nil
-	// }
-
-	// for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
-	// 	err := exec.useCondFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if exec.true() {
-	// 		return nil
-	// 	}
-	// }
-
-	// exec.unknown("%v is unknown", stmt)
-	return nil
-}
-
 func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
@@ -66,6 +34,33 @@ func (exec *Executor) verifyCondFact(stmt *parser.CondFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
 	return exec.verifyCondFactLiterally(stmt)
+}
+
+func (exec *Executor) verifyRelationFactLiterally(stmt *parser.RelationFactStmt) error {
+	exec.roundAddOne()
+	defer exec.roundMinusOne()
+
+	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
+		err := exec.verifyRelationFactSpecifically(curEnv, stmt)
+		if err != nil {
+			return err
+		}
+		if exec.true() {
+			return nil
+		}
+	}
+
+	if !exec.round1() {
+		return nil
+	}
+
+	return exec.FirstRoundVerifyRelationFactLiterally(stmt)
+}
+
+func (exec *Executor) FirstRoundVerifyRelationFactLiterally(stmt *parser.RelationFactStmt) error {
+	// TODO Use Cond Fact
+	// TODO USE UNI FACT TO PROVE
+	return nil
 }
 
 func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
@@ -83,10 +78,13 @@ func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 	}
 
 	if !exec.round1() {
-		exec.unknown("%v is unknown", stmt)
 		return nil
 	}
 
+	return exec.FirstRoundVerifyFuncFactLiterally(stmt)
+}
+
+func (exec *Executor) FirstRoundVerifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
 		err := exec.useCondFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
 		if err != nil {
@@ -96,8 +94,7 @@ func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 			return nil
 		}
 	}
-
-	exec.unknown("%v is unknown", stmt)
+	// TODO USE UNI FACT TO PROVE
 	return nil
 }
 
@@ -144,7 +141,11 @@ func (exec *Executor) useSpecFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt 
 	return nil
 }
 
-func (exec *Executor) useRelationFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.RelationFactStmt) error {
+func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
+	if string(stmt.Opt) == parser.Keywords["="] {
+		return exec.verifyEqualFactSpecifically(env, stmt)
+	}
+
 	searchedNode, err := env.RelationFactMemory.Mem.SearchInEnv(env, stmt)
 	if err != nil {
 		return err
@@ -152,6 +153,35 @@ func (exec *Executor) useRelationFactMemToVerifyFuncFactAtEnv(env *memory.Env, s
 	if searchedNode != nil {
 		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
 		return nil
+	}
+
+	return nil
+}
+
+func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
+	key := memory.EqualFactMemoryTreeNode{stmt.Vars[0], nil}
+
+	searchedNode, err := env.EqualMemory.Mem.SearchInEnv(env, &key)
+
+	comp, err := memory.CompareFc(stmt.Vars[0], stmt.Vars[1])
+
+	if err != nil {
+		return err
+	}
+	if comp == 0 {
+		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
+		return nil
+	}
+
+	for _, equalFc := range searchedNode.Key.Values {
+		comp, err := memory.CompareFc(stmt.Vars[1], *equalFc)
+		if err != nil {
+			return err
+		}
+		if comp == 0 {
+			exec.success("%v is true, verified by %v", stmt, equalFc)
+			return nil
+		}
 	}
 
 	return nil

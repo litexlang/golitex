@@ -105,7 +105,7 @@ func TestCompareFc(t *testing.T) {
 	}
 
 	// 测试 FcStr 的比较
-	result, err := compareFc(fc1, fc2)
+	result, err := CompareFc(fc1, fc2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc1, fc2): expected negative value, got %d", result)
 	}
 
-	result, err = compareFc(fc1, fc3)
+	result, err = CompareFc(fc1, fc3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestCompareFc(t *testing.T) {
 	}
 
 	// 测试 FcFnRetValue 的比较
-	result, err = compareFc(&fc4, &fc5)
+	result, err = CompareFc(&fc4, &fc5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +130,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc4, fc5): expected negative value, got %d", result)
 	}
 
-	result, err = compareFc(&fc4, &fc6)
+	result, err = CompareFc(&fc4, &fc6)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc4, fc6): expected 0, got %d", result)
 	}
 
-	result, err = compareFc(&fc5, &fc6)
+	result, err = CompareFc(&fc5, &fc6)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc5, fc6): expected positive value, got %d", result)
 	}
 
-	result, err = compareFc(&fc4, &fc7)
+	result, err = CompareFc(&fc4, &fc7)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -154,7 +154,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc4, fc7): expected neg value, got %d", result)
 	}
 
-	result, err = compareFc(&fc8, &fc9)
+	result, err = CompareFc(&fc8, &fc9)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,7 +162,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc8, fc9): expected positive value, got %d", result)
 	}
 
-	result, err = compareFc(&fc10, &fc11)
+	result, err = CompareFc(&fc10, &fc11)
 	if err != nil {
 		t.Fatal(err)
 	}

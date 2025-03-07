@@ -56,7 +56,7 @@ func specFuncFactCompare(knownFact *FuncFactMemoryNode, givenFact *FuncFactMemor
 		return isTrueComp, nil
 	}
 
-	return compareFc(knownFact.Fc, givenFact.Fc)
+	return CompareFc(knownFact.Fc, givenFact.Fc)
 }
 
 const (
@@ -84,7 +84,7 @@ func getFcEnum(fc parser.Fc) (int, error) {
 	return 0, fmt.Errorf("unknown Fc type: %T", fc)
 }
 
-func compareFc(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
+func CompareFc(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 	if typeComp, err := compareFcType(knownFc, givenFc); typeComp != 0 || err != nil {
 		return typeComp, err
 	}
@@ -158,7 +158,7 @@ func compareTypeParamsAndParamsPair(knownPair parser.TypeParamsAndParamsPair, gi
 	}
 
 	for i := 0; i < len(knownPair.VarParams); i++ {
-		if comp, err := compareFc(knownPair.VarParams[i], givenPair.VarParams[i]); comp != 0 || err != nil {
+		if comp, err := CompareFc(knownPair.VarParams[i], givenPair.VarParams[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
@@ -190,7 +190,7 @@ func compareFcMemChain(knownFc *parser.FcMemChain, givenFc *parser.FcMemChain) (
 	}
 
 	for i := 0; i < len(knownFc.ChainOfMembers); i++ {
-		if comp, err := compareFc((knownFc.ChainOfMembers)[i], (givenFc.ChainOfMembers)[i]); comp != 0 || err != nil {
+		if comp, err := CompareFc((knownFc.ChainOfMembers)[i], (givenFc.ChainOfMembers)[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
@@ -266,5 +266,5 @@ func CondFactMemoryTreeNodeCompare(knownFact *CondFactMemoryNode, givenFact *Con
 }
 
 func EqualFactMemoryTreeNodeCompare(knownFact *EqualFactMemoryTreeNode, givenFact *EqualFactMemoryTreeNode) (int, error) {
-	return compareFc(knownFact.FcAsKey, givenFact.FcAsKey)
+	return CompareFc(knownFact.FcAsKey, givenFact.FcAsKey)
 }
