@@ -379,14 +379,14 @@ func TestEqualFactMemory(t *testing.T) {
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
-	rounds := 10
+	rounds := 20
 	for i := 0; i < rounds; i++ {
 		stmt := randEqualFact()
 		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
-		topKnow := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
+		topKnowStmt := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
 		if i < rounds/2 {
 			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
-			topKnowStatements = append(topKnowStatements, &topKnow)
+			topKnowStatements = append(topKnowStatements, &topKnowStmt)
 		} else {
 			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
 		}
@@ -415,11 +415,6 @@ func TestEqualFactMemory(t *testing.T) {
 
 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
 
-	if rounds < 20 {
-		for _, fact := range topVerifyStatements {
-			fmt.Printf("Fact: %v\n", fact)
-		}
-	}
 }
 
 func randEqualFact() *parser.RelationFactStmt {
