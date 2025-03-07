@@ -477,15 +477,19 @@ Finally, do not forget to improve yourself through practice, that is, by writing
 
 ## Conclusions
 
+_Simplify, simplify, simplify._
+
+_-- Steve Jobs_
+
 Litex is simple to write, easy to read, It facilitates the construction of new concepts, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
 
 Good writing simplifies math, while poor writing complicates it. Leibniz's calculus notation $\frac{dy}{dx}$ surpassed Newton's $\dot{y}$ for its clarity, just as Arabic numerals (1, 2, 3) outperformed Roman numerals (I, II, III) in simplicity.  Litex’s intuitive, everyday math-based syntax makes formal verification accessible and fluid, advancing reasoning and proof scalability.
 
 ## How is Litex designed as it is.
 
-_Simplify, simplify, simplify._
+_Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away. _
 
-_-- Steve Jobs_
+_--Antoine de Saint-Exupéry_
 
 The followings are design choices of Litex and how they are made. As Bjarne Stroustrup(inventor of C++) said: "Language design is a curious mixture of grand ideas and fiddly details". If you want to have a deeper understanding of Litex, the following will serve as a very good mental entertainment.
 

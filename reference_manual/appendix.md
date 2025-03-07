@@ -75,18 +75,21 @@
    2. The role of functions is to combine several other first-class citizens (props, vars, fns) and form new first-class citizens.
    3. a proposition is a collection of factual expressions meant to be verified later by invoking its name
 3. **Types and Concepts**: In Litex, type = set + structure.
-   1. What do you mean by "structure"? 
+   1. Types work very like how types work in everyday programming languages like C.
+   2. You can understand a set in math as a type with no structure. However, sets like R and N do have structure.
+   3. What do you mean by "structure"? 
       1. By analogy, in the language of programming, the members of a class in OOP (Object-Oriented Programming) represent the structure of the class.
       2. In analogy to mathematics, a **structure** is also defined through **elements** (such as variables, functions and propositions) with given properties.
-   2. The same set can have different structures. 
+         1. e.g. Z has structure: it has operator +, -, *, /, and 0.
+   4. The same set can have different structures. 
       1. e.g. C[0,1] with L^1 norm or L^{\infinity} norm has different structure, thus have different properties. However, they are the same as set.
-   3. Relationships between types
+   5. Relationships between types
       1. the structure of one type might implement another type's structure
          1. e.g. R implements structure of C, so items in R are also in C.
 4. A set of types with the same structure is called concept.
    1. Group is a set of sets that have identity, inverse operation, and multiplication operation.
 5. **Factual Expressions**: Specific (exist, ordinary), conditional, and universal (`forall`).
-6. **Proof Methods**: Direct proof and proof by contradiction, generating new facts or relationships.
+6. **Proof Methods**: Direct proof and proof by contradiction, generating new facts.
 7. **Verification**: Pattern-based matching of known facts, without naming every fact.
 8.  **Generics**: Sets as parameters, with conditions on types or elements.
 9.  **Mathematics vs. Programming**: Math focuses on search and existence, not execution. **Litex** types are more powerful than programming types.
