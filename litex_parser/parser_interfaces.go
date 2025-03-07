@@ -2,6 +2,7 @@ package litexparser
 
 type Stmt interface {
 	stmt()
+	String() string
 }
 
 func (stmt *DefVarStmt) stmt()              {}
@@ -29,6 +30,7 @@ func (s *CondFactStmt) stmt()               {}
 type FactStmt interface {
 	factStmt()
 	stmt()
+	String() string
 }
 
 func (l *BlockForallStmt) factStmt()  {}
@@ -48,6 +50,7 @@ type SpecFactStmt interface {
 	factStmt()
 	stmt()
 	GetTypeParamsAndParams() *SpecFactParams
+	String() string
 }
 
 func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.IsTrue = b }
@@ -88,6 +91,7 @@ func (f *FcVarTypeFuncValue) fcVarTypeValue() {}
 type ClaimStmt interface {
 	claimStmt()
 	stmt()
+	String() string
 }
 
 func (s *ClaimProveStmt) claimStmt()             {}
