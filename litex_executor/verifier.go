@@ -54,13 +54,7 @@ func (exec *Executor) verifyRelationFactLiterally(stmt *parser.RelationFactStmt)
 		return nil
 	}
 
-	return exec.FirstRoundVerifyRelationFactLiterally(stmt)
-}
-
-func (exec *Executor) FirstRoundVerifyRelationFactLiterally(stmt *parser.RelationFactStmt) error {
-	// TODO Use Cond Fact
-	// TODO USE UNI FACT TO PROVE
-	return nil
+	return exec.firstRoundVerifySpecFactLiterally(stmt)
 }
 
 func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
@@ -68,7 +62,7 @@ func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 	defer exec.roundMinusOne()
 
 	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
-		err := exec.useSpecFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
+		err := exec.useFuncFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
 		if err != nil {
 			return err
 		}
@@ -81,12 +75,12 @@ func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 		return nil
 	}
 
-	return exec.FirstRoundVerifyFuncFactLiterally(stmt)
+	return exec.firstRoundVerifySpecFactLiterally(stmt)
 }
 
-func (exec *Executor) FirstRoundVerifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
+func (exec *Executor) firstRoundVerifySpecFactLiterally(stmt parser.SpecFactStmt) error {
 	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
-		err := exec.useCondFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
+		err := exec.useCondFactMemToVerifySpecFactAtEnv(curEnv, stmt)
 		if err != nil {
 			return err
 		}
@@ -98,7 +92,7 @@ func (exec *Executor) FirstRoundVerifyFuncFactLiterally(stmt *parser.FuncFactStm
 	return nil
 }
 
-func (exec *Executor) useCondFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
+func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *memory.Env, stmt parser.SpecFactStmt) error {
 	key := memory.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
 	searchNode, err := env.CondFactMemory.Mem.SearchInEnv(env, &key)
 	if err != nil {
@@ -128,7 +122,7 @@ func (exec *Executor) useCondFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt 
 	return nil
 }
 
-func (exec *Executor) useSpecFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
+func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
 	searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
 	if err != nil {
 		return err
