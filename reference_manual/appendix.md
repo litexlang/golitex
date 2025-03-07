@@ -74,7 +74,7 @@
 3. **Types and Concepts**: In Litex, sets are represented by types.Types combine structures and sets, allowing relationships like **R** implementing **C**. A set of types with the same structure is called concept.
 4. **Factual Expressions**: Specific (exist, ordinary), conditional, and universal (`forall`).
 5. **Proof Methods**: Direct proof and proof by contradiction, generating new facts or relationships.
-6. **Verification**: Pattern-based matching of known facts, without naming every fact.
+6. **Verification**: Pattern-based matching of known facts, without naming every fact. The difference between a proposition and a factual expression is that a proposition is a collection of factual expressions meant to be verified later by invoking its name.
 7. **Generics**: Sets as parameters, with conditions on types or elements.
 8. **Mathematics vs. Programming**: Math focuses on search and existence, not execution. **Litex** types are more powerful than programming types.
 9. **Litex vs. Standard Math**: Sets (as types) cannot be passed like variables due to their structural responsibilities.

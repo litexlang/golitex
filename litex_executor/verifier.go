@@ -18,6 +18,44 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 	}
 }
 
+func (exec *Executor) verifyRelationFact(stmt *parser.RelationFactStmt) error {
+	// TODO:  : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
+
+	return exec.verifyRelationFactLiterally(stmt)
+}
+
+func (exec *Executor) verifyRelationFactLiterally(stmt *parser.RelationFactStmt) error {
+	exec.roundAddOne()
+	defer exec.roundMinusOne()
+	// for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
+	// 	err := exec.useSpecFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	if exec.true() {
+	// 		return nil
+	// 	}
+	// }
+
+	// if !exec.round1() {
+	// 	exec.unknown("%v is unknown", stmt)
+	// 	return nil
+	// }
+
+	// for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
+	// 	err := exec.useCondFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	if exec.true() {
+	// 		return nil
+	// 	}
+	// }
+
+	// exec.unknown("%v is unknown", stmt)
+	return nil
+}
+
 func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
@@ -95,6 +133,19 @@ func (exec *Executor) useCondFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt 
 
 func (exec *Executor) useSpecFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
 	searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
+	if err != nil {
+		return err
+	}
+	if searchedNode != nil {
+		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
+		return nil
+	}
+
+	return nil
+}
+
+func (exec *Executor) useRelationFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.RelationFactStmt) error {
+	searchedNode, err := env.RelationFactMemory.Mem.SearchInEnv(env, stmt)
 	if err != nil {
 		return err
 	}
