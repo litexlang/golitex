@@ -16,6 +16,8 @@ Mathematics is about abstraction, and computer science is the discipline that st
 
 Litex is unique in two ways, unlike traditional proof assistants. First, it focuses solely on mathematical verification, whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. Second, Litex is built around common sense rather than sophisticated mathematical theories. 
 
+The “de Bruijn factor” (the ratio between the difficulty of writing a correct formal proof and a correct informal proof) of Litex is predicted to be 0.5 ~ 1.5. This would be transformative to the math world.
+
 Why should you learn Litex? Litex has the potential to greatly impact both mathematics and AI:
 
 - **For Mathematics**: 
@@ -492,6 +494,10 @@ _Perfection is achieved, not when there is nothing more to add, but when there i
 _--Antoine de Saint-Exupéry_
 
 The followings are design choices of Litex and how they are made. As Bjarne Stroustrup(inventor of C++) said: "Language design is a curious mixture of grand ideas and fiddly details". If you want to have a deeper understanding of Litex, the following will serve as a very good mental entertainment.
+
+Why could Litex be so simple 
+
+Fundamental reason: The simple reason is that the rules that governs human reasoning are not that many. Only three factual expressions are possible. Only 4 outputs of factual expressions.
 
 ### What makes Litex Factual Expressions easier to use
 
