@@ -152,11 +152,11 @@ func TestVerifier2(t *testing.T) {
 }
 
 func randFuncFact() *parser.FuncFactStmt {
-	stmt := parser.FuncFactStmt{IsTrue: true, Fc: randomFcGenerator()}
+	stmt := parser.FuncFactStmt{IsTrue: true, Fc: randomFc()}
 	return &stmt
 }
 
-func randomFcGenerator() parser.Fc {
+func randomFc() parser.Fc {
 
 	e := rand.Intn(3)
 
@@ -370,4 +370,61 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 	fmt.Printf("%d statements not verified, %v\n", notVerifiedCount, notVerifiedIndexes)
 
 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
+}
+
+func TestEqualFactMemory(t *testing.T) {
+	env := memory.NewEnv(nil)
+	executor := *newExecutor()
+	executor.env = env
+	topKnowStatements := []*parser.TopStmt{}
+	topVerifyStatements := []*parser.TopStmt{}
+
+	rounds := 10
+	for i := 0; i < rounds; i++ {
+		stmt := randEqualFact()
+		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
+		topKnow := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
+		if i < rounds/2 {
+			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+			topKnowStatements = append(topKnowStatements, &topKnow)
+		} else {
+			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+		}
+	}
+
+	start := time.Now()
+	for _, topStmt := range topKnowStatements {
+		err := executor.TopLevelStmt(topStmt)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
+
+	start = time.Now()
+	notVerifiedCount := 0
+	notVerifiedIndexes := []int{}
+	for i, topStmt := range topVerifyStatements {
+		err := executor.TopLevelStmt(topStmt)
+		if err != nil || !executor.true() {
+			notVerifiedCount++
+			notVerifiedIndexes = append(notVerifiedIndexes, i)
+		}
+	}
+	fmt.Printf("%d statements not verified, %v\n", notVerifiedCount, notVerifiedIndexes)
+
+	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
+
+	if rounds < 20 {
+		for _, fact := range topVerifyStatements {
+			fmt.Printf("Fact: %v\n", fact)
+		}
+	}
+}
+
+func randEqualFact() *parser.RelationFactStmt {
+	left := randomFc()
+	right := randomFc()
+
+	return &parser.RelationFactStmt{true, []parser.Fc{left, right}, parser.FcStr("=")}
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
-	exec.clear()
+	defer exec.clear()
 	return exec.stmt(stmt.Stmt)
 }
 
