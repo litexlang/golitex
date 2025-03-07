@@ -50,7 +50,7 @@
 2. Introducing variables is allowed by default.
 3. Define new types, variables, functions, and propositions.
 4. **Generics**:
-   1. Pass sets as parameters.
+   1. Pass types sets as parameters.
       1. Some types must meet conditions, e.g., a set must be a group.
    2. Adding conditions to variables is easier than to types because propositions and functions have `cond` for validation, while types do not.
       1. Although types cannot impose conditions directly, their elements can.
@@ -73,9 +73,11 @@
 2. **Basic Elements**: 3 kinds of first citizens: Propositions, variables, and functions. 
    1. Variables are basic elements of math. symbols like 1, x, 1 + x are all called variables.
    2. The role of functions is to combine several other first-class citizens (props, vars, fns) and form new first-class citizens.
+      1. Only when first-citizens satisfy the condition of the function, they can be combined together into a single symbol using the function
+      2. The combination of first-class citizens under a function are bound with extra features that appears in function definition.
    3. a proposition is a collection of factual expressions meant to be verified later by invoking its name
 3. **Types and Concepts**: In Litex, type = set + structure.
-   1. Types work very like how types work in everyday programming languages like C.
+   1. Types work very like how types work in everyday programming languages like C. Syntax of type works very much the same way as the Go programming language.
    2. You can understand a set in math as a type with no structure. However, sets like R and N do have structure.
    3. What do you mean by "structure"? 
       1. By analogy, in the language of programming, the members of a class in OOP (Object-Oriented Programming) represent the structure of the class.
