@@ -153,9 +153,13 @@ func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *pars
 }
 
 func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
-	key := memory.EqualFactMemoryTreeNode{stmt.Vars[0], nil}
+	key := memory.EqualFactMemoryTreeNode{FcAsKey: stmt.Vars[0], Values: []*parser.Fc{}}
 
 	searchedNode, err := env.EqualMemory.Mem.SearchInEnv(env, &key)
+
+	if err != nil {
+		return err
+	}
 
 	comp, err := memory.CompareFc(stmt.Vars[0], stmt.Vars[1])
 
@@ -164,6 +168,10 @@ func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.
 	}
 	if comp == 0 {
 		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
+		return nil
+	}
+
+	if searchedNode == nil {
 		return nil
 	}
 
