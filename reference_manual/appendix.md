@@ -1,5 +1,106 @@
 # Appendix
 
+Here’s a **short summary** of basic Litex elements, condensed for clarity:
+
+---
+
+### 1. **Mathematics Basics**
+- **Sets and Types**: In Litex, a set is called a **type**, and its elements are called **first citizens**.
+- **First Citizens**: Three kinds:
+  1. **Variables**: Basic elements like `1`, `x`, or `1 + x`.
+  2. **Functions**: Combine first citizens (propositions, variables, or other functions) into new first citizens, provided they satisfy the function's conditions.
+  3. **Propositions**: Collections of factual expressions to be verified later by invoking their names.
+
+---
+
+### 2. **Types and Structures**
+- **Types**: A type = a set + a structure.
+  - Types in Litex work like types in programming languages (e.g., C, Go).
+  - A set in math is a type with no structure, but sets like ℝ or ℕ have structures.
+- **Structure**: Defined by elements (variables, functions, propositions) with specific properties.
+  - Example: ℤ has structure with operations `+`, `-`, `*`, `/`, and identity `0`.
+  - The same set can have different structures (e.g., `C[0,1]` with `L¹` vs. `L^∞` norms).
+- **Relationships**: One type's structure can implement another's (e.g., ℝ implements ℂ's structure).
+- **Generics**: Sets, i.e. types in Litex, can be parameters in propositions and functions, with conditions on types or elements.
+
+---
+
+### 3. **Concepts**
+- A **concept** is a set of types with the same structure.
+  - Example: A **group** is a set of sets with identity, inverse, and multiplication operations.
+- A type can also implement a concept
+  - Example: The set of real numbers is a ring.
+
+---
+
+### 4. **Factual Expressions**
+- Three kinds:
+  1. **Specific**: Existential or ordinary facts.
+  2. **Conditional**: Facts with conditions.
+  3. **Universal**: Facts using `forall`.
+
+---
+
+### 5. **Proof Methods**
+- **Direct Proof**: Deriving new facts directly.
+- **Proof by Contradiction**: Assuming the opposite to derive a contradiction.
+  - This builds a bridge between existential facts and universal facts: not exist is equivalent to forall.
+
+---
+
+### 6. **Verification**
+- Litex Uses **pattern-based matching** of known facts, allowing users no to explicitly name every fact. Verification is akin to searching a dictionary: you use a key to find relevant information.
+
+---
+
+### 7. **Mathematics vs. Programming**
+- Math focuses on **search**, not execution.
+- Existence of variables must be considered in math.
+- **Litex types** are more powerful than programming types.
+
+---
+
+This summary captures the core ideas while keeping it concise. Let me know if you need further clarification!
+
+## Getting Started
+
+Let us begin with a quick introduction to Litex. For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions.
+
+## First Example
+
+
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 40%;">Litex</th>
+    <th style="border: 3px solid black; padding: 8px; text-align: left; width: 60%;">Lean 4</th>
+  </tr>
+  <tr>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>type Human</code> <br><br>
+      <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;x is self_aware</code> <br> <br>
+      <code>var Bob Human</code> <br> <br>
+      <code>Bob is self_aware</code>
+    </td>
+    <td style="border: 3px solid black; padding: 8px;">
+      <code>def Human := Type</code> <br><br>
+      <code>def self_aware (x : Human) : Prop := true</code> <br><br>
+      <code>axiom self_aware_all :</code><br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;∀ (x : Human), self_aware x</code> <br><br>
+      <code>def Bob : Human := Human</code> <br><br>
+      <code>example : self_aware Bob := self_aware_all Bob</code>
+    </td>
+  </tr>
+</table>
+
+For now, you don't need to understand everything; you only need to conceptually know what the example is doing. I put both Litex code and Lean4 (another popular proof assistant) code here to clarify fundamentals of Litex. We will refer to this example from time to time.
+
+`Human` is a type representing all humans. Mathematically, you can think of `Human` as the set containing all humans. All humans are set to be `self_aware` by the user as a fact (i.e. true expression) using `know` keyword. `Bob` is `Human`. Therefore, `Bob is self_aware` is a true expression.
+
+This is a classic example of syllogism (三段论), which demonstrates some core features and ideas of Litex very well. Notice Litex significantly reduces the amount of typing required by the user, involves fewer keywords and symbols, and is therefore more intuitive.
+
+
+
 #### 1. In mathematics, there are only two things: sets and elements of sets.
 1. **Type = Structure + Set**
    1. **Structure**: Operator overloading, members, type members.

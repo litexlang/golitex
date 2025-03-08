@@ -71,7 +71,7 @@ _Mathematics is nothing more than a game played according to certain simple rule
 
 _-- David Hilbert_
 
-Let us begin with a quick introduction to Litex. The role of Litex is to serve as a daily tool for users, rather than to demonstrate a certain theory. For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions. Please refer to reference manual for more information.
+Let us begin with a quick introduction to Litex. For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions. Please refer to reference manual for more information.
 
 ## First Example
 
