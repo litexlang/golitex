@@ -539,6 +539,25 @@ In modern math, many facts are derived from set theory, a highly abstract founda
 
 Mathematical discovery occurs in two ways: inventing abstract concepts and finding concrete examples, or identifying patterns in facts and summarizing them into abstract concepts. Both top-down and bottom-up approaches coexist in math, which is why Litex is designed to handle all levels of abstraction effectively.
 
+### Formalize Litex in Litex
+
+One of the most interesting concept in Computer Science is recursion. Since any mathematical process, including the Litex interpreter, can be formalized by math, and math can be formalized by Litex, I am looking forward to formalizing the pipeline Litex in Litex.
+
+Don Knuth's marvelous book the art of computer programming taught us the mathematical definition of computer programming. For fun, take a look at it:
+
+A mathematical definition of an **algorithm** in terms of set theory defines a **computational method** as a quadruple \((Q, I, \Omega, f)\), where:
+
+- \( Q \) is a set containing subsets \( I \) (the set of inputs) and \( \Omega \) (the set of outputs).
+- \( f \) is a function from \( Q \) to itself.
+- \( f \) leaves \( \Omega \) **pointwise fixed**, meaning \( f(q) = q \) for all \( q \in \Omega \).
+
+A **computational sequence** is then defined recursively as:
+\[
+x_0 = x, \quad x_{k+1} = f(x_k) \quad \text{for } k \geq 0.
+\]
+A computational sequence **terminates in \( k \) steps** if \( x_k \) is in \( \Omega \) for the smallest such \( k \). The **output** of the computation is \( x_k \). 
+
+Finally, an **algorithm** is a computational method that **terminates in finitely many steps for all inputs in \( I \)**.
 
 ## Answers for typical questions
 

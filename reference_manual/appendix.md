@@ -60,7 +60,6 @@ Here’s a **short summary** of basic Litex elements, condensed for clarity:
 
 ---
 
-This summary captures the core ideas while keeping it concise. Let me know if you need further clarification!
 
 ## Getting Started
 
@@ -98,8 +97,6 @@ For now, you don't need to understand everything; you only need to conceptually 
 `Human` is a type representing all humans. Mathematically, you can think of `Human` as the set containing all humans. All humans are set to be `self_aware` by the user as a fact (i.e. true expression) using `know` keyword. `Bob` is `Human`. Therefore, `Bob is self_aware` is a true expression.
 
 This is a classic example of syllogism (三段论), which demonstrates some core features and ideas of Litex very well. Notice Litex significantly reduces the amount of typing required by the user, involves fewer keywords and symbols, and is therefore more intuitive.
-
-
 
 #### 1. In mathematics, there are only two things: sets and elements of sets.
 1. **Type = Structure + Set**
