@@ -53,14 +53,15 @@ When you find evidence for an expression, it becomes `true` and is added to the 
 
 ### Difference between Litex and Traditional Proof Assistants
 
-The complexity of writing mathematics in Litex aims to not exceed the complexity of mathematics itself. As a result, using Litex is enjoyable, smooth, inspiring.
+One of the most innovative mind of out time, Steve Jobs, said: If you define the problem correctly, you almost have the solution. The whole Litex project is an exploration of what does “minimalist formal proof assistant” actually mean.
 
 Existing formal languages are notoriously hard to read and write, even for the most talented mathematicians. This is because they are built as general-purpose languages, requiring them to include syntax unrelated to mathematical proofs such as memory state alterations (control flows, arithmetics), which adds unnecessary complexity. 
 
-Litex is focused on verification and does not support general-purpose computation, as a design decision. Its syntax is entirely grounded in everyday mathematical expressions, without compromising its clarity for unrelated functionalities. That is how Litex brings simplicity to the extreme: it just four outputs: `true`, `false`, `unknown`, and `error`; it just has no more than 20 keywords; it just has 3 factual expressions: specific, conditional and universal. Having one extra feature is redundant, while missing one might make users uncomfortable or prevent certain logics from being implemented. General-purpose functionalities are implemented as plugins instead of builtin syntax to avoid distracting from the core task of verification.
+Litex is focused on verification and does not support general-purpose computation, as a design decision. Its syntax is entirely grounded in everyday mathematical expressions, without compromising its clarity for unrelated functionalities. Besides, Litex takes huge effort to figure out what logical rules are governing mathematical reasoning. It amazingly turned out that there aren’t many of them. From hindsight, such small number is predictable: even a 5-year-old child have a natural grasp of how reasoning works, and he/she does not need even to be taught how to do that!
 
+That is how Litex brings simplicity to the extreme: it just four outputs: `true`, `false`, `unknown`, and `error`; it just has no more than 20 keywords; it just has 3 factual expressions: specific, conditional and universal. Having one extra feature is redundant, while missing one might make users uncomfortable or prevent certain logics from being implemented. General-purpose functionalities are implemented as plugins instead of builtin syntax to avoid distracting from the core task of verification.
 
-By leveraging a deep understanding of the similarities and differences between programming and mathematics, Litex provides a seamless experience tailored to mathematical verification.
+<!-- 这里我需要添加一些基本的设计，比如3个fc，比如type=set+structure -->
 
 ## Getting Started
 
