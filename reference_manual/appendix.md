@@ -194,3 +194,10 @@ This is a classic example of syllogism (三段论), which demonstrates some core
 8.  **Generics**: Sets as parameters, with conditions on types or elements.
 9.  **Mathematics vs. Programming**: Math focuses on search and existence, not execution. **Litex** types are more powerful than programming types.
 10. **Litex vs. Standard Math**: Sets (as types) cannot be passed like variables due to their structural responsibilities.
+
+
+Math = facts built on top of facts
+
+Math symbols = var + fn + prop
+
+Litex Type = set + structure
