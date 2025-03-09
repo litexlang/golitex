@@ -198,6 +198,12 @@ This is a classic example of syllogism (三段论), which demonstrates some core
 
 Math = facts built on top of facts
 
-Math symbols = var + fn + prop
+Facts are just combinations of symbols.
+
+There are 3 basic symbols: var, fn, prop, type. 
+
+Another kind of symbol is called type.
+
+There are three basic elements in math: var, fn, and prop.
 
 Litex Type = set + structure
