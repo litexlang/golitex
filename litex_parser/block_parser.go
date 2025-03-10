@@ -29,14 +29,14 @@ func (b *TokenBlock) stringWithIndent(indentLevel int) string {
 	return result
 }
 
-type topLevelStmtSlice struct {
-	body []strBlock
+type TopLevelStmtSlice struct {
+	Body []strBlock
 }
 
 // strBlock 结构体表示一个语句块
 type strBlock struct {
-	header string
-	body   []strBlock
+	Header string
+	Body   []strBlock
 }
 
 const parseIndent = 4
@@ -49,10 +49,10 @@ func (b *strBlock) String() string {
 // stringWithIndent 递归生成带缩进的字符串表示
 func (b *strBlock) stringWithIndent(indentLevel int) string {
 	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
-	result := fmt.Sprintf("%s%s\n", indent, b.header)
+	result := fmt.Sprintf("%s%s\n", indent, b.Header)
 
 	// 递归处理子块
-	for _, subBlock := range b.body {
+	for _, subBlock := range b.Body {
 		result += subBlock.stringWithIndent(indentLevel + 1)
 	}
 
@@ -60,23 +60,23 @@ func (b *strBlock) stringWithIndent(indentLevel int) string {
 }
 
 // ParseFile 读取文件并解析为 StmtBlock 结构
-func ParseFile(filePath string) (*topLevelStmtSlice, error) {
+func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("无法读取文件: %v", err)
 	}
 
-	return getTopLevelStmtSlice(string(content))
+	return GetTopLevelStmtSlice(string(content))
 }
 
-func getTopLevelStmtSlice(content string) (*topLevelStmtSlice, error) {
+func GetTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
 	lines := strings.Split((content), "\n")
 	blocks, _, err := parseStrBlocks(lines, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	return &topLevelStmtSlice{*blocks}, err
+	return &TopLevelStmtSlice{*blocks}, err
 }
 
 func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBlock, int, error) {
@@ -126,8 +126,8 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBl
 		// 如果当前行的缩进等于当前块的缩进，创建一个新的块
 		if indent == currentIndent {
 			block := strBlock{
-				header: strings.TrimSpace(line),
-				body:   nil,
+				Header: strings.TrimSpace(line),
+				Body:   nil,
 			}
 
 			// 如果 trimLine 以 : 结尾，检查下一行的缩进
@@ -172,7 +172,7 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBl
 					if err != nil {
 						return nil, i, err
 					}
-					block.body = *subBlocks
+					block.Body = *subBlocks
 					i = nextIndex
 					break
 				}

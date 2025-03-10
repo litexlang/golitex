@@ -20,8 +20,12 @@ type Executor struct {
 	searchRound uint8
 }
 
-func newExecutor() *Executor {
-	return &Executor{env: mem.NewEnv(nil), message: []string{}, output: execError, searchRound: 0}
+func newExecutor(env *mem.Env) *Executor {
+	if env == nil {
+		return &Executor{env: mem.NewEnv(nil), message: []string{}, output: execError, searchRound: 0}
+	} else {
+		return &Executor{env: env, message: []string{}, output: execUnknown, searchRound: 0}
+	}
 }
 
 func (e *Executor) roundAddOne() {

@@ -22,13 +22,13 @@ func (e *parseStmtErr) Error() string {
 func ParseSourceCode(code string) (*[]TopStmt, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
-	slice, err := getTopLevelStmtSlice(code)
+	slice, err := GetTopLevelStmtSlice(code)
 	if err != nil {
 		return nil, err
 	}
 
 	blocks := []TokenBlock{}
-	for _, strBlock := range slice.body {
+	for _, strBlock := range slice.Body {
 		block, err := TokenizeStmtBlock(&strBlock)
 		if err != nil {
 			return nil, err

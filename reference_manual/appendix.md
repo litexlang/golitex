@@ -207,3 +207,5 @@ Another kind of symbol is called type.
 There are three basic elements in math: var, fn, and prop.
 
 Litex Type = set + structure
+
+举例：banach 代数。说明一下我这种定义方式是有很强的泛化性的
