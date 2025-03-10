@@ -247,7 +247,7 @@ func TestKnowVerifyFuncFactSpeed(t *testing.T) {
 	topVerifyStatements := []*parser.TopStmt{}
 
 	// 数量级为 n*log(n)，因为走一遍是log(n), 走 rounds 次差不多就是 n * log(n)
-	rounds := 1000000
+	rounds := 100
 
 	start := time.Now()
 	for i := 0; i < rounds; i++ {
@@ -375,7 +375,7 @@ func TestEqualFactMemory(t *testing.T) {
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
-	rounds := 2
+	rounds := 200
 	for i := 0; i < rounds; i++ {
 		stmt := randEqualFact()
 		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
@@ -407,21 +407,24 @@ func TestEqualFactMemory(t *testing.T) {
 			notVerifiedIndexes = append(notVerifiedIndexes, i)
 		}
 	}
-	fmt.Printf("%d statements not verified, %v\n", notVerifiedCount, notVerifiedIndexes)
+	fmt.Printf("%d statements not verified\n", notVerifiedCount)
 
 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
 
-	fmt.Println("know:")
-	for i, topKnowStatement := range topKnowStatements {
-		fmt.Printf("%d: %v\n", i, topKnowStatement)
+	if rounds < 20 {
+		fmt.Printf("%d statements not verified, %v\n", notVerifiedCount, notVerifiedIndexes)
+
+		fmt.Println("know:")
+		for i, topKnowStatement := range topKnowStatements {
+			fmt.Printf("%d: %v\n", i, topKnowStatement)
+		}
+
+		fmt.Println("verify:")
+
+		for i, topVerifyStmt := range topVerifyStatements {
+			fmt.Printf("%d: %v\n", i, topVerifyStmt)
+		}
 	}
-
-	fmt.Println("verify:")
-
-	for i, topVerifyStmt := range topVerifyStatements {
-		fmt.Printf("%d: %v\n", i, topVerifyStmt)
-	}
-
 }
 
 func randEqualFact() *parser.RelationFactStmt {

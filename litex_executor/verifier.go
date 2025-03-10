@@ -94,7 +94,7 @@ func (exec *Executor) firstRoundVerifySpecFactLiterally(stmt parser.SpecFactStmt
 
 func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *memory.Env, stmt parser.SpecFactStmt) error {
 	key := memory.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
-	searchNode, err := env.CondFactMemory.Mem.SearchInEnv(env, &key)
+	searchNode, err := env.CondFactMemory.Mem.SearchInEnvLayerByLayer(env, &key)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,8 @@ func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *memory.Env, stmt 
 }
 
 func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
-	searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
+	// searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
+	searchedNode, err := env.FuncFactMemory.Mem.SearchInEnvLayerByLayer(env, stmt)
 	if err != nil {
 		return err
 	}
@@ -140,7 +141,7 @@ func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *pars
 		return exec.verifyEqualFactSpecifically(env, stmt)
 	}
 
-	searchedNode, err := env.RelationFactMemory.Mem.SearchInEnv(env, stmt)
+	searchedNode, err := env.RelationFactMemory.Mem.SearchInEnvLayerByLayer(env, stmt)
 	if err != nil {
 		return err
 	}
@@ -155,7 +156,7 @@ func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *pars
 func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: stmt.Vars[0], Values: []*parser.Fc{}}
 
-	searchedNode, err := env.EqualMemory.Mem.SearchInEnv(env, &key)
+	searchedNode, err := env.EqualMemory.Mem.SearchInEnvLayerByLayer(env, &key)
 
 	if err != nil {
 		return err
