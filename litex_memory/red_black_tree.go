@@ -196,3 +196,22 @@ func (t *RedBlackTree[T]) searchNode(node *Node[T], key T) (*Node[T], error) {
 		return t.searchNode(node.right, key)
 	}
 }
+
+func (t *RedBlackTree[T]) SearchOneLayer(node *Node[T], key T) (*Node[T], error, bool) {
+	if node == nil {
+		return nil, nil, false
+	}
+
+	compareResult, err := t.compare(key, node.Key)
+	if err != nil {
+		return nil, err, false
+	}
+
+	if compareResult == 0 {
+		return node, nil, true // 返回找到的节点, 找到返回true
+	} else if compareResult < 0 {
+		return node.left, nil, false
+	} else {
+		return node.right, nil, false
+	}
+}

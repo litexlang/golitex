@@ -91,6 +91,7 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 		env.EqualMemory.Mem.Insert(left)
 	}
 
+	// left = right is eql to right = left, so we memorize both left = right and right = left
 	rightSearched, err := env.EqualMemory.Mem.Search(right)
 	if err != nil {
 		return err
