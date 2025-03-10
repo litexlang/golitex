@@ -38,8 +38,7 @@ func TestKnow(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := memory.NewEnv(nil)
-	executor := *newExecutor()
-	executor.env = env
+	executor := *newExecutor(env)
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -57,8 +56,7 @@ func TestVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := memory.NewEnv(nil)
-	executor := *newExecutor()
-	executor.env = env
+	executor := *newExecutor(env)
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -124,8 +122,7 @@ func TestVerifier2(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := memory.NewEnv(nil)
-	executor := *newExecutor()
-	executor.env = env
+	executor := *newExecutor(env)
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -245,8 +242,7 @@ func randCondStmt() *parser.CondFactStmt {
 
 func TestKnowVerifyFuncFactSpeed(t *testing.T) {
 	env := memory.NewEnv(nil)
-	executor := *newExecutor()
-	executor.env = env
+	executor := *newExecutor(env)
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
@@ -292,7 +288,7 @@ func TestKnowVerifyFuncFactSpeed(t *testing.T) {
 
 func TestKnowVerifyCondFactSpeed(t *testing.T) {
 	env := memory.NewEnv(nil)
-	executor := *newExecutor()
+	executor := *newExecutor(env)
 	executor.env = env
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
@@ -330,7 +326,7 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 
 func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 	env := memory.NewEnv(nil)
-	executor := *newExecutor()
+	executor := *newExecutor(env)
 	executor.env = env
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
@@ -374,7 +370,7 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 
 func TestEqualFactMemory(t *testing.T) {
 	env := memory.NewEnv(nil)
-	executor := *newExecutor()
+	executor := *newExecutor(env)
 	executor.env = env
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
@@ -433,4 +429,34 @@ func randEqualFact() *parser.RelationFactStmt {
 	right := randomFc()
 
 	return &parser.RelationFactStmt{IsTrue: true, Vars: []parser.Fc{left, right}, Opt: parser.FcStr("=")}
+}
+
+func TestVerificationUsingEqual(t *testing.T) {
+	env := memory.NewEnv(nil)
+	executor := *newExecutor(env)
+
+	code :=
+		`
+know:
+	x = y
+	$p(x)
+
+$p(x)
+`
+	topStatements, err := parser.ParseSourceCode(code)
+
+	start := time.Now()
+	for _, topStmt := range *topStatements {
+		err := executor.TopLevelStmt(&topStmt)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	fmt.Printf("%d rounds top stmt exec taken: %v\n", len(*topStatements), time.Since(start))
+
+	if err == nil {
+		fmt.Printf("%v\n", topStatements)
+	} else {
+		t.Fatal(err)
+	}
 }

@@ -16,7 +16,7 @@ func TestLexer(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	for _, block := range block.body {
+	for _, block := range block.Body {
 		fmt.Println(block.String())
 	}
 }
@@ -27,17 +27,17 @@ func TestLexerFromString(t *testing.T) {
 def add(a, b):
     return a + b
 `
-	blocks, err := getTopLevelStmtSlice(content)
+	blocks, err := GetTopLevelStmtSlice(content)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 
-	for _, block := range blocks.body {
+	for _, block := range blocks.Body {
 		fmt.Println(block.String())
 	}
 
 	// Test invalid syntax
-	_, err = getTopLevelStmtSlice(content)
+	_, err = GetTopLevelStmtSlice(content)
 	if err != nil {
 		t.Fatalf("Expected error for invalid syntax")
 	}
@@ -62,19 +62,19 @@ func TestSplitString(t *testing.T) {
 func TestParseStrStmtBlock(t *testing.T) {
 	subBody := []strBlock{
 		{
-			header: "concept [v G](v G):",
-			body:   nil,
+			Header: "concept [v G](v G):",
+			Body:   nil,
 		},
 	}
 	body := []strBlock{
 		{
-			header: "concept [G Set](v G):",
-			body:   subBody,
+			Header: "concept [G Set](v G):",
+			Body:   subBody,
 		},
 	}
 	input := strBlock{
-		header: "concept [G Group[G Set](v G)]:",
-		body:   body,
+		Header: "concept [G Group[G Set](v G)]:",
+		Body:   body,
 	}
 
 	parsedBlock, err := TokenizeStmtBlock(&input)
@@ -92,7 +92,7 @@ func TestFileTokenize(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	for _, stmt := range block.body {
+	for _, stmt := range block.Body {
 		parsedBlock, err := TokenizeStmtBlock(&stmt)
 		if err != nil {
 			t.Fatalf(err.Error())
@@ -321,13 +321,13 @@ func TestDefPropStmt(t *testing.T) {
 func ParserTester(code string) (*[]Stmt, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
-	slice, err := getTopLevelStmtSlice(code)
+	slice, err := GetTopLevelStmtSlice(code)
 	if err != nil {
 		return nil, err
 	}
 
 	blocks := []TokenBlock{}
-	for _, strBlock := range slice.body {
+	for _, strBlock := range slice.Body {
 		block, err := TokenizeStmtBlock(&strBlock)
 		if err != nil {
 			return nil, err
