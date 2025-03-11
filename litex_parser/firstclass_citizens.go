@@ -11,7 +11,7 @@ type Fc interface {
 
 func (f FcStr) fc()         {}
 func (f *FcFnRetValue) fc() {}
-func (f *FcMemChain) fc()   {}
+func (f *FcChain) fc()      {}
 
 type FcStr string
 
@@ -20,7 +20,16 @@ type FcFnRetValue struct {
 	TypeParamsVarParamsPairs []TypeParamsAndParamsPair
 }
 
-type FcMemChain struct{ ChainOfMembers []Fc }
+type FcChainMem interface {
+	fc()
+	fcMemChainMemType()
+	String() string
+}
+
+func (f FcStr) fcMemChainMemType()         {}
+func (f *FcFnRetValue) fcMemChainMemType() {}
+
+type FcChain struct{ ChainOfMembers []FcChainMem }
 
 type TypeParamsAndParamsPair struct {
 	TypeParams []TypeVarStr
@@ -61,7 +70,7 @@ func (f FcStr) String() string {
 
 // used for variables that are returned by called function, e,g. f().g().h().  The chain is connected by dots
 
-func (f *FcMemChain) String() string {
+func (f *FcChain) String() string {
 	ret := ""
 	for i := 0; i < len(f.ChainOfMembers)-1; i++ {
 		ret += fmt.Sprintf("%s.", (f.ChainOfMembers)[i])

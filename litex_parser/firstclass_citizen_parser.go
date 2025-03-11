@@ -39,7 +39,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		return parser.parseBracedFcExpr()
 	}
 
-	var curFc Fc
+	var curFc FcChainMem
 	var err error
 
 	if parser.curTokenBeginWithNumber() {
@@ -48,7 +48,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 			return nil, &parserErr{err, parser}
 		}
 	} else {
-		curFc, err = parser.parseFcStrAndFcFnRetVal()
+		curFc, err = parser.parseFcChainMem()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
@@ -58,14 +58,19 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		return curFc, nil
 	}
 
-	fcArr := []Fc{curFc}
+	return parser.parseFcChain(curFc)
+}
+
+func (parser *Parser) parseFcChain(curFc FcChainMem) (*FcChain, error) {
+	fcArr := []FcChainMem{curFc}
+	var err error = nil
 	for !parser.ExceedEnd() && parser.is(BuiltinSyms["."]) {
 		err = parser.skip(BuiltinSyms["."])
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
 
-		curFc, err = parser.parseFcStrAndFcFnRetVal()
+		curFc, err = parser.parseFcChainMem()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
@@ -73,8 +78,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		fcArr = append(fcArr, curFc)
 	}
 
-	ret := FcMemChain{fcArr}
-
+	ret := FcChain{fcArr}
 	return &ret, nil
 }
 
@@ -88,7 +92,7 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	return fc, nil
 }
 
-func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
+func (parser *Parser) parseFcChainMem() (FcChainMem, error) {
 	// 如果 1 out of range了，那返回值是 “”
 	strAtSecondPosition := parser.strAt(1)
 
@@ -99,7 +103,7 @@ func (parser *Parser) parseFcStrAndFcFnRetVal() (Fc, error) {
 	}
 }
 
-func (parser *Parser) parseFcFnRetVal() (Fc, error) {
+func (parser *Parser) parseFcFnRetVal() (*FcFnRetValue, error) {
 	optName, err := parser.parseFcStr()
 	if err != nil {
 		return nil, err

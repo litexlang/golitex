@@ -172,13 +172,13 @@ func randomFc() parser.Fc {
 	return nil
 }
 
-func randFcChain() *parser.FcMemChain {
-	fcArr := []parser.Fc{}
+func randFcChain() *parser.FcChain {
+	fcArr := []parser.FcChainMem{}
 	round := rand.Intn(3) + 2
 	for i := 0; i < round; i++ {
 		fcArr = append(fcArr, randFcFnRetValue())
 	}
-	return &parser.FcMemChain{ChainOfMembers: fcArr}
+	return &parser.FcChain{ChainOfMembers: fcArr}
 }
 
 func randFcString() parser.FcStr {

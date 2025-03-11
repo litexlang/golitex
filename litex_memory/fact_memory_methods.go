@@ -76,7 +76,7 @@ func getFcEnum(fc parser.Fc) (int, error) {
 		return fcFnRetValueEnum, nil
 	}
 
-	_, ok = fc.(*parser.FcMemChain)
+	_, ok = fc.(*parser.FcChain)
 	if ok {
 		return FcMemChainEnum, nil
 	}
@@ -105,8 +105,8 @@ func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 		return compareFcFnRetValue(knownFcFnRetValue, givenFcFnRetValue)
 	}
 
-	knownFcMemChain, ok := knownFc.(*parser.FcMemChain)
-	givenFcMemChain, ok2 := givenFc.(*parser.FcMemChain)
+	knownFcMemChain, ok := knownFc.(*parser.FcChain)
+	givenFcMemChain, ok2 := givenFc.(*parser.FcChain)
 	if ok && ok2 {
 		return compareFcMemChain(knownFcMemChain, givenFcMemChain)
 	}
@@ -184,7 +184,7 @@ func compareFcFnRetValue(knownFc *parser.FcFnRetValue, givenFc *parser.FcFnRetVa
 	return 0, nil
 }
 
-func compareFcMemChain(knownFc *parser.FcMemChain, givenFc *parser.FcMemChain) (int, error) {
+func compareFcMemChain(knownFc *parser.FcChain, givenFc *parser.FcChain) (int, error) {
 	if len(knownFc.ChainOfMembers) != len(givenFc.ChainOfMembers) {
 		return len(knownFc.ChainOfMembers) - len(givenFc.ChainOfMembers), nil
 	}
