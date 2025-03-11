@@ -38,7 +38,7 @@ func TestRedBlackTree(t *testing.T) {
 
 	// 中序遍历
 	fmt.Println("In-order traversal:")
-	tree.InOrderTraversal(tree.root, func(key interface{}) error {
+	tree.InOrderTraversal(tree.Root, func(key interface{}) error {
 		fmt.Println(key)
 		return nil
 	})

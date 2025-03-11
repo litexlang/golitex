@@ -62,7 +62,7 @@ func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 	defer exec.roundMinusOne()
 
 	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
-		searchedNode, err := exec.env.UseFuncFactMemToVerifyFuncFactAtEnvNodeByNode(stmt)
+		searchedNode, err := exec.useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(stmt)
 		if err != nil {
 			return err
 		}
@@ -121,6 +121,26 @@ func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *memory.Env, stmt 
 	}
 
 	return nil
+}
+
+func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.FuncFactStmt) (*memory.Node[*parser.FuncFactStmt], error) {
+	curNode := exec.env.FuncFactMemory.Mem.Root
+	var err error = nil
+	searched := false
+	for curNode != nil {
+		// * 这里需要遍历当前的curNode的所有的参数，把参数替换成和该参数相等的参数，然后看下是否有相关的事实
+
+		curNode, err, searched = exec.env.FuncFactMemory.Mem.SearchOneLayer(curNode, key)
+		if err != nil {
+			return nil, err
+		}
+
+		if searched {
+			return curNode, nil
+		}
+	}
+
+	return nil, nil
 }
 
 // func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {

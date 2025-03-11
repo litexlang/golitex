@@ -18,7 +18,7 @@ type Node[T any] struct {
 
 // RedBlackTree represents the Red-Black Tree
 type RedBlackTree[T any] struct {
-	root    *Node[T]                  // Root of the tree
+	Root    *Node[T]                  // Root of the tree
 	compare func(a, b T) (int, error) // Comparison function with error
 
 }
@@ -41,10 +41,10 @@ func NewNode[T any](key T, color bool) *Node[T] {
 // Insert inserts a new key into the Red-Black Tree
 func (t *RedBlackTree[T]) Insert(key T) error {
 	newNode := NewNode(key, RED)
-	if t.root == nil {
-		t.root = newNode
+	if t.Root == nil {
+		t.Root = newNode
 	} else {
-		err := t.insertNode(t.root, newNode)
+		err := t.insertNode(t.Root, newNode)
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func (t *RedBlackTree[T]) insertFixup(node *Node[T]) error {
 			}
 		}
 	}
-	t.root.color = BLACK
+	t.Root.color = BLACK
 	return nil
 }
 
@@ -127,7 +127,7 @@ func (t *RedBlackTree[T]) rotateLeft(x *Node[T]) {
 	}
 	y.parent = x.parent
 	if x.parent == nil {
-		t.root = y
+		t.Root = y
 	} else if x == x.parent.left {
 		x.parent.left = y
 	} else {
@@ -146,7 +146,7 @@ func (t *RedBlackTree[T]) rotateRight(x *Node[T]) {
 	}
 	y.parent = x.parent
 	if x.parent == nil {
-		t.root = y
+		t.Root = y
 	} else if x == x.parent.right {
 		x.parent.right = y
 	} else {
@@ -174,7 +174,7 @@ func (t *RedBlackTree[T]) InOrderTraversal(node *Node[T], visit func(key T) erro
 
 // Search searches for a key in the Red-Black Tree and returns the corresponding node if found.
 func (t *RedBlackTree[T]) Search(key T) (*Node[T], error) {
-	return t.searchNode(t.root, key)
+	return t.searchNode(t.Root, key)
 }
 
 // searchNode recursively searches for a key in the tree and returns the corresponding node if found.
