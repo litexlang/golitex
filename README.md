@@ -14,7 +14,7 @@ Litex is a minimalist proof assistant (formal language). Since even children gra
 
 Mathematics is about abstraction, and computer science is the discipline that studies abstraction. Litex brings tools and ideas from the world of programming into the world of mathematics. Designed to be as intuitive as Python or LaTeX, Litex offers a minimal learning curve.
 
-Litex is unique in two ways, unlike traditional proof assistants. First, it focuses solely on mathematical verification, whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. Second, Litex is built around common sense rather than sophisticated mathematical theories. 
+Litex is unique in two ways, unlike traditional proof assistants. First, it focuses solely on mathematical verification, whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. Second, Litex is built around common sense rather than sophisticated mathematical theories. Technically, you can think of Litex = math + programming language + data base.
 
 The “de Bruijn factor” (the ratio between the difficulty of writing a correct formal proof and a correct informal proof) of Litex is predicted to be 0.5 ~ 1.5. This would be transformative to the math world.
 

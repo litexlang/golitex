@@ -95,7 +95,7 @@ func (exec *Executor) firstRoundVerifySpecFactLiterally(stmt parser.SpecFactStmt
 
 func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *memory.Env, stmt parser.SpecFactStmt) error {
 	key := memory.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
-	searchNode, err := env.CondFactMemory.Mem.SearchInEnvLayerByLayer(env, &key)
+	searchNode, err := env.CondFactMemory.Mem.SearchInEnv(env, &key)
 	if err != nil {
 		return err
 	}
@@ -129,6 +129,7 @@ func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.
 	searched := false
 	for curNode != nil {
 		// * 这里需要遍历当前的curNode的所有的参数，把参数替换成和该参数相等的参数，然后看下是否有相关的事实
+		// * 类似数据库把有特定pattern的事实先全部搜到，然后遍历一遍些事实看看哪些能匹配上
 
 		curNode, err, searched = exec.env.FuncFactMemory.Mem.SearchOneLayer(curNode, key)
 		if err != nil {
@@ -168,7 +169,7 @@ func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *pars
 func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: stmt.Vars[0], Values: []*parser.Fc{}}
 
-	searchedNode, err := env.EqualMemory.Mem.SearchInEnvLayerByLayer(env, &key)
+	searchedNode, err := env.EqualMemory.Mem.SearchInEnv(env, &key)
 
 	if err != nil {
 		return err
