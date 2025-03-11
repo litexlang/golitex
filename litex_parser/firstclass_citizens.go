@@ -17,7 +17,7 @@ type FcStr string
 
 type FcFnRetValue struct {
 	FnName                   FcStr
-	TypeParamsVarParamsPairs []TypeParamsAndParamsPair
+	TypeParamsVarParamsPairs []TypeParamsAndVarParamsPair
 }
 
 type FcChainMem interface {
@@ -31,7 +31,7 @@ func (f *FcFnRetValue) fcMemChainMemType() {}
 
 type FcChain struct{ ChainOfMembers []FcChainMem }
 
-type TypeParamsAndParamsPair struct {
+type TypeParamsAndVarParamsPair struct {
 	TypeParams []TypeVarStr
 	VarParams  []Fc
 }

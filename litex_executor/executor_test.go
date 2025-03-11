@@ -193,9 +193,9 @@ func randFcString() parser.FcStr {
 func randFcFnRetValue() *parser.FcFnRetValue {
 	fnName := randFcString()
 	round := rand.Intn(3) + 1
-	typeParamVarParamsPairs := []parser.TypeParamsAndParamsPair{}
+	typeParamVarParamsPairs := []parser.TypeParamsAndVarParamsPair{}
 	for i := 0; i < round; i++ {
-		typeParamVarParamsPairs = append(typeParamVarParamsPairs, parser.TypeParamsAndParamsPair{TypeParams: *randTypeParams(), VarParams: *randVarParams()})
+		typeParamVarParamsPairs = append(typeParamVarParamsPairs, parser.TypeParamsAndVarParamsPair{TypeParams: *randTypeParams(), VarParams: *randVarParams()})
 	}
 	return &parser.FcFnRetValue{FnName: fnName, TypeParamsVarParamsPairs: typeParamVarParamsPairs}
 }

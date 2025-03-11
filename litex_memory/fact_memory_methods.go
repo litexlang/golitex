@@ -142,7 +142,7 @@ func compareTypeVarStr(knownFc parser.TypeVarStr, givenFc parser.TypeVarStr) (in
 	return 0, nil
 }
 
-func compareTypeParamsAndParamsPair(knownPair parser.TypeParamsAndParamsPair, givenPair parser.TypeParamsAndParamsPair) (int, error) {
+func compareTypeParamsAndParamsPair(knownPair parser.TypeParamsAndVarParamsPair, givenPair parser.TypeParamsAndVarParamsPair) (int, error) {
 	if len(knownPair.TypeParams) != len(givenPair.TypeParams) {
 		return len(knownPair.TypeParams) - len(givenPair.TypeParams), nil
 	}
