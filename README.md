@@ -57,11 +57,13 @@ One of the most innovative mind of out time, Steve Jobs, said: If you define the
 
 Existing formal languages are notoriously hard to read and write, even for the most talented mathematicians. This is because they are built as general-purpose languages, requiring them to include syntax unrelated to mathematical proofs such as memory state alterations (control flows, arithmetics), which adds unnecessary complexity. 
 
-Technically, Litex is focused on verification and does not support general-purpose computation, as a design decision. Its syntax is entirely grounded in everyday mathematical expressions, without compromising its clarity for unrelated functionalities. 
+Technically, Litex is focused on verification and does not support general-purpose computation, as a design decision. Its syntax is entirely grounded in everyday mathematical expressions, without compromising its clarity for unrelated functionalities. Within other proof assistants, there is a much smaller and cleaner language akin to Litex struggling to get out.
 
 At a deeper level, it is the inherent simplicity of mathematical reasoning or verification itself that makes Litex simple. Litex takes huge effort to figure out what logical rules are governing mathematical reasoning. It amazingly turned out that there aren’t many of them. From hindsight, such small number is predictable: even a 5-year-old child have a natural grasp of how reasoning works, and he/she does not need even to be taught how to do that!
 
 That is how Litex brings simplicity to the extreme: it just four outputs: `true`, `false`, `unknown`, and `error`; it just has no more than 20 keywords; it just has 3 factual expressions: specific, conditional and universal. Having one extra feature is redundant, while missing one might make users uncomfortable or prevent certain logics from being implemented. General-purpose functionalities are implemented as plugins instead of builtin syntax to avoid distracting from the core task of verification.
+
+In short, **The fundamental difference** between Litex and traditional proof assistants (e.g., Lean4, Coq) is this: Litex applies programming techniques to mathematics, while others apply mathematical techniques to programming. This is why tools like Lean4 require users to learn advanced math, such as type theory, whereas Litex only requires basic programming skills — no harder than Python or LaTeX — and their innate ability to reason.
 
 <!-- 这里我需要添加一些基本的设计，比如3个fc，比如type=set+structure -->
 

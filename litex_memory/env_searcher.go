@@ -39,10 +39,10 @@ type TypeParamsAndVarParamsEqlPairs struct {
 }
 
 type FcChainEql struct {
-	// REMARK: 如果某一位的member是 FcStr 类型的，那跳过这一位，只保存FcFnRetValueEql
-	FcFnRetValueMembersEql []FcFnRetValueEql
+	FcFnRetValueMembersEql []*FcFnRetValueEql // 如果fc的某位member是fcStr，这里放nil
 }
 
+// 这里的逻辑不太完整，因为可能两个prop等价，但是我这里不考虑。不允许prop相等, 否则就出现 f(a,b) = g 这样的情况。那样一来，就会在search $f(a,b)(c)  的时候还要搜索 $g(c) ，这有点太麻烦了，特别是未来做forall的时候更是麻烦到极点。或者说如果他们相等，只有在 prop 作为 param 的时候我才考虑他们相等，而不是作为 被call 的东西时。你要让 2个propName 作为 prop 被视作一样的东西，那用forall
 func (env *Env) searchEquivalentFcFnRetFuncFactParamsInAllEnvs(key *parser.FcFnRetValue) (TypeParamsAndVarParamsEqlPairs, error) {
 	panic("")
 }
