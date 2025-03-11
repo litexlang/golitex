@@ -29,11 +29,29 @@ func (mem *RedBlackTree[T]) SearchInEnvLayerByLayer(env *Env, key T) (*Node[T], 
 	return nil, nil
 }
 
-func (env *Env) searchEquivalentFuncFacts(key *parser.FuncFactStmt, curNode *Node[*parser.FuncFactStmt]) (bool, error) {
-	switch key.Fc.(type) {
-	case parser.FcStr:
-		return false, fmt.Errorf("Invalid FuncFact %v", key.Fc)
+type FcChainParamEql *[]FcRetValParamEql
 
-	}
-	panic("")
+type FcRetValParamEql struct {
+	typeParamEql [][]parser.Fc
+	varParamEql  [][]parser.Fc
+}
+
+// func (env *Env) searchEquivalentFuncFactParamsInAllEnvs(key *parser.FuncFactStmt) (searchEquivalentFuncFactReturn, error) {
+// 	switch key.Fc.(type) {
+// 	case parser.FcStr:
+// 		return nil, fmt.Errorf("Invalid FuncFact %v", key.Fc)
+// 	case *parser.FcFnRetValue:
+// 		return searchEquivalentFcFnRetFuncFactParamsInAllEnvs(key.Fc.(*parser.FcFnRetValue))
+// 	case *parser.FcChain:
+// 		return searchEquivalentFcChainFuncFactParamsInAllEnvs(key.Fc.(*parser.FcChain))
+// 	}
+// 	panic("")
+// }
+
+func searchEquivalentFcFnRetFuncFactParamsInAllEnvs(key *parser.FcFnRetValue) (FcRetValParamEql, error) {
+	return FcRetValParamEql{}, fmt.Errorf("Invalid FuncFact %v", key)
+}
+
+func searchEquivalentFcChainFuncFactParamsInAllEnvs(key *parser.FcChain) (FcRetValParamEql, error) {
+	return FcRetValParamEql{}, fmt.Errorf("Invalid FuncFact %v", key)
 }
