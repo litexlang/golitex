@@ -1,7 +1,6 @@
 package litexmemory
 
 import (
-	"fmt"
 	parser "golitex/litex_parser"
 )
 
@@ -29,29 +28,25 @@ func (mem *RedBlackTree[T]) SearchInEnvLayerByLayer(env *Env, key T) (*Node[T], 
 	return nil, nil
 }
 
-type FcChainParamEql *[]FcRetValParamEql
+type FcFnRetValueEql struct {
+	FnName                 parser.FcStr
+	TypeParamsVarParamsEql []TypeParamsAndVarParamsEqlPairs
+}
 
-type FcRetValParamEql struct {
-	typeParamEql [][]parser.Fc
+type TypeParamsAndVarParamsEqlPairs struct {
+	typeParamEql [][]parser.TypeVarStr
 	varParamEql  [][]parser.Fc
 }
 
-// func (env *Env) searchEquivalentFuncFactParamsInAllEnvs(key *parser.FuncFactStmt) (searchEquivalentFuncFactReturn, error) {
-// 	switch key.Fc.(type) {
-// 	case parser.FcStr:
-// 		return nil, fmt.Errorf("Invalid FuncFact %v", key.Fc)
-// 	case *parser.FcFnRetValue:
-// 		return searchEquivalentFcFnRetFuncFactParamsInAllEnvs(key.Fc.(*parser.FcFnRetValue))
-// 	case *parser.FcChain:
-// 		return searchEquivalentFcChainFuncFactParamsInAllEnvs(key.Fc.(*parser.FcChain))
-// 	}
-// 	panic("")
-// }
-
-func searchEquivalentFcFnRetFuncFactParamsInAllEnvs(key *parser.FcFnRetValue) (FcRetValParamEql, error) {
-	return FcRetValParamEql{}, fmt.Errorf("Invalid FuncFact %v", key)
+type FcChainEql struct {
+	// REMARK: 如果某一位的member是 FcStr 类型的，那跳过这一位，只保存FcFnRetValueEql
+	FcFnRetValueMembersEql []FcFnRetValueEql
 }
 
-func searchEquivalentFcChainFuncFactParamsInAllEnvs(key *parser.FcChain) (FcRetValParamEql, error) {
-	return FcRetValParamEql{}, fmt.Errorf("Invalid FuncFact %v", key)
+func (env *Env) searchEquivalentFcFnRetFuncFactParamsInAllEnvs(key *parser.FcFnRetValue) (TypeParamsAndVarParamsEqlPairs, error) {
+	panic("")
+}
+
+func (env *Env) searchEquivalentFcChainFuncFactParamsInAllEnvs(key *parser.FcChain) (TypeParamsAndVarParamsEqlPairs, error) {
+	panic("")
 }
