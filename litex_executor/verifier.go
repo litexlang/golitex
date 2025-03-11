@@ -62,11 +62,12 @@ func (exec *Executor) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 	defer exec.roundMinusOne()
 
 	for curEnv := exec.env; curEnv != nil; curEnv = curEnv.Parent {
-		err := exec.useFuncFactMemToVerifyFuncFactAtEnv(curEnv, stmt)
+		searchedNode, err := exec.env.UseFuncFactMemToVerifyFuncFactAtEnvNodeByNode(stmt)
 		if err != nil {
 			return err
 		}
-		if exec.true() {
+		if searchedNode != nil {
+			exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
 			return nil
 		}
 	}
@@ -122,35 +123,26 @@ func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *memory.Env, stmt 
 	return nil
 }
 
-func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
-	// searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
-	searchedNode, err := env.FuncFactMemory.Mem.SearchInEnvLayerByLayer(env, stmt)
-	if err != nil {
-		return err
-	}
-	if searchedNode != nil {
-		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
-		return nil
-	}
+// func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
+// 	// searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
+// 	searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if searchedNode != nil {
+// 		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
+// 		return nil
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
 	if string(stmt.Opt) == parser.Keywords["="] {
 		return exec.verifyEqualFactSpecifically(env, stmt)
 	}
 
-	searchedNode, err := env.RelationFactMemory.Mem.SearchInEnvLayerByLayer(env, stmt)
-	if err != nil {
-		return err
-	}
-	if searchedNode != nil {
-		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
-		return nil
-	}
-
-	return nil
+	panic("not implemented")
 }
 
 func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
