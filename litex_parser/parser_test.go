@@ -453,12 +453,12 @@ func TestParseDefTypeStmt(t *testing.T) {
 	code :=
 		`
 type var G Group
-
 type var G Group:
 	type_member:
 		var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
-		prop f[G Group, G2 Group](x G, y G)
+		prop p[G Group, G2 Group](x G, y G):
+			G.f[G, G2](x, y)		// 不能写p,必须写G.p
 		type var G Group2:
 			type_member:
 				var 3 G
@@ -478,7 +478,7 @@ type var G Group:
 		fn f[G Group, G2 Group](x G, y G) G
 		prop f[G Group, G2 Group](x G, y G)
 
-	then:
+	know:
 		$p[G, G2](x, y)
 
 type var G Group:

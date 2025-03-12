@@ -184,36 +184,6 @@ func (stmt *TokenBlock) parseThenFacts() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-// func (p *tokenBlock) parseFnRetTypeMember() (*[]fnRetTypeMemberDecl, error) {
-// 	p.header.next()
-// 	if err := p.header.testAndSkip(BuiltinSyms[":"]); err != nil {
-// 		return nil, err
-// 	}
-
-// 	member := &[]fnRetTypeMemberDecl{}
-
-// 	for _, curStmt := range p.body {
-// 		if curStmt.header.is(Keywords["var"]) {
-// 			v, err := curStmt.header.parseVarDecl()
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			*member = append(*member, v)
-// 		} else if curStmt.header.is(Keywords["fn"]) {
-// 			v, err := curStmt.header.parseFcFnDecl()
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			*member = append(*member, v)
-
-// 		} else {
-// 			return nil, fmt.Errorf("unexpected declaration %v", curStmt.header)
-// 		}
-// 	}
-
-// 	return member, nil
-// }
-
 func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	stmt.Header.skip(Keywords["concept"])
 
@@ -245,7 +215,7 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
 	propMember := &[]PropDecl{}
-	thenFacts := &[]FactStmt{}
+	knowFacts := &[]FactStmt{}
 
 	for _, curStmt := range stmt.Body {
 		if curStmt.Header.is(Keywords["type_member"]) {
@@ -262,15 +232,15 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
-		} else if curStmt.Header.is(Keywords["then"]) {
-			thenFacts, err = curStmt.parseThenFacts()
+		} else if curStmt.Header.is(Keywords["know"]) {
+			knowFacts, err = curStmt.parseThenFacts()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
 		}
 	}
 
-	return &DefConceptStmt{decl, (conceptName), *typeVarMember, *typeFnMember, *typePropMember, *typeTypeMember, *varMember, *fnMember, *propMember, *thenFacts}, nil
+	return &DefConceptStmt{decl, (conceptName), *typeVarMember, *typeFnMember, *typePropMember, *typeTypeMember, *varMember, *fnMember, *propMember, *knowFacts}, nil
 
 }
 
@@ -319,7 +289,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
 	propMember := &[]PropDecl{}
-	thenFacts := &[]FactStmt{}
+	knowFacts := &[]FactStmt{}
 
 	for _, curStmt := range stmt.Body {
 		if curStmt.Header.is(Keywords["type_member"]) {
@@ -336,14 +306,14 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
-		} else if curStmt.Header.is(Keywords["then"]) {
-			thenFacts, err = curStmt.parseThenFacts()
+		} else if curStmt.Header.is(Keywords["know"]) {
+			knowFacts, err = curStmt.parseThenFacts()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
 		}
 	}
-	return &DefTypeStmt{decl, *implName, *typeVarMember, *typeFnMember, *typePropMember, *typeTypeMember, *varMember, *fnMember, *propMember, *thenFacts}, nil
+	return &DefTypeStmt{decl, *implName, *typeVarMember, *typeFnMember, *typePropMember, *typeTypeMember, *varMember, *fnMember, *propMember, *knowFacts}, nil
 }
 
 func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
