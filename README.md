@@ -197,6 +197,15 @@ concept Group G: // suppose G is a group
 
 In Litex, a type = set + structure. The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `concept` is a "type of type" or a "set of sets sharing the same structure". `type`s and `concept`s work together to enable abstraction built on abstractions.
 
+<!-- TODO: Interplay of set and type -->
+
+<!-- var s make_set[Nat]  // 把所有的Nat放到这个叫s的集合里
+var all_sets make_set[Set] // 把所有集合放到集合里。这在现代集合论里是有问题的，但是litex不会报错，因为var是一个默认你声明的东西存在的关键词
+
+know forall x *T :
+	x in make_set[T]
+	 -->
+
 ```
 claim:
       forall (x Human) {x is self_aware}
