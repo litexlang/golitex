@@ -12,32 +12,33 @@ type DefVarStmt struct {
 
 // if concept and type has more conceptTypes, use know impl
 
+// TODO 取消掉所有的这里的decl，改用直接的DeclStmt。同时保留用户声明的顺序不要乱了.
 type DefConceptStmt struct {
-	decl           fcDecl
-	conceptName    TypeConceptStr
-	typeVarMember  []FcVarDecl
-	typeFnMember   []FcFnDecl
-	typePropMember []PropDecl
-	typeTypeMember []TypeDecl
-	varMember      []FcVarDecl
-	fnMember       []FcFnDecl
-	propMember     []PropDecl
-	knowFacts      []FactStmt
+	decl               fcDecl
+	conceptName        TypeConceptStr
+	typeVarMember      []FcVarDecl
+	typeFnMember       []FcFnDecl
+	typePropMember     []PropDecl
+	typeTypeMember     []TypeDecl
+	instanceVarMember  []FcVarDecl
+	instanceFn         []FcFnDecl
+	instancePropMember []PropDecl
+	knowFacts          []FactStmt
 }
 
 type DefTypeStmt struct {
 	decl fcDecl
 	// implType can be concept, or type, because a new type can either
 	// implement a concept or just be a subset of a type
-	implType       NamedFcType
-	typeVarMember  []FcVarDecl
-	typeFnMember   []FcFnDecl
-	typePropMember []PropDecl
-	typeTypeMember []TypeDecl
-	varMember      []FcVarDecl
-	fnMember       []FcFnDecl
-	propMember     []PropDecl
-	knowFacts      []FactStmt
+	implType           NamedFcType
+	typeVarMember      []FcVarDecl
+	typeFnMember       []FcFnDecl
+	typePropMember     []PropDecl
+	typeTypeMember     []TypeDecl
+	instanceVarMember  []FcVarDecl
+	instanceFnMember   []FcFnDecl
+	instancePropMember []PropDecl
+	knowFacts          []FactStmt
 }
 
 type DefPropStmt struct {
