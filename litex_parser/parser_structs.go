@@ -104,19 +104,6 @@ type HaveStmt struct {
 	member   []string
 }
 
-type DefMemberStmt struct {
-	typeConcept TypeConceptPair
-	varType     StrTypePair
-	member      fcDecl
-	facts       []FactStmt
-}
-
-type DefTypeMemberStmt struct {
-	typeConcept TypeConceptPair
-	member      fcDecl
-	facts       []FactStmt
-}
-
 // syntax sugar for defining propExist + claim forall true
 type AxiomStmt struct {
 	decl DefPropExistDeclStmt

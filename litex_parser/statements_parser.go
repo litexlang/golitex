@@ -91,10 +91,6 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseDefExistStmt()
 	case Keywords["have"]:
 		ret, err = stmt.parseHaveStmt()
-	case Keywords["member"]:
-		ret, err = stmt.parseMemberStmt()
-	case Keywords["type_member"]:
-		ret, err = stmt.parseTypeMemberStmt()
 	case Keywords["axiom"]:
 		ret, err = stmt.parseAxiomStmt()
 	case Keywords["thm"]:
@@ -257,11 +253,11 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
-		} else if curStmt.Header.is(Keywords["member"]) {
+		} else if curStmt.Header.is(Keywords["instance_member"]) {
 			tmp := &[]TypeDecl{}
 			varMember, fnMember, propMember, tmp, err = curStmt.parseFcMember()
 			if len(*tmp) > 0 {
-				return nil, &parseStmtErr{fmt.Errorf("var_member does not have type member"), *stmt}
+				return nil, &parseStmtErr{fmt.Errorf("instance_member does not have type member"), *stmt}
 			}
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
@@ -331,11 +327,11 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
-		} else if curStmt.Header.is(Keywords["member"]) {
+		} else if curStmt.Header.is(Keywords["instance_member"]) {
 			tmp := &[]TypeDecl{}
 			varMember, fnMember, propMember, tmp, err = curStmt.parseFcMember()
 			if len(*tmp) > 0 {
-				return nil, &parseStmtErr{fmt.Errorf("var_member does not have type member"), *stmt}
+				return nil, &parseStmtErr{fmt.Errorf("instance_member does not have type member"), *stmt}
 			}
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
@@ -883,119 +879,6 @@ func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 	}
 
 	return &HaveStmt{propStmt, *members}, nil
-}
-
-func (stmt *TokenBlock) parseMemberStmt() (*DefMemberStmt, error) {
-	stmt.Header.skip(Keywords["member"])
-
-	typeConcepts, err := stmt.Header.parseBracketedTypeConceptPairArray()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	if len(*typeConcepts) != 1 {
-		return nil, fmt.Errorf("expect one type concept in members")
-	}
-
-	typeConcept := (*typeConcepts)[0]
-
-	varTypes, err := stmt.Header.parseBracedFcStrTypePairArray()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	if len(*varTypes) != 1 {
-		return nil, fmt.Errorf("expect one type in members")
-	}
-
-	varType := (*varTypes)[0]
-
-	var decl fcDecl
-
-	if stmt.Header.is(Keywords["var"]) {
-		decl, err = stmt.Header.parseVarDecl()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	} else if stmt.Header.is(Keywords["fn"]) {
-		decl, err = stmt.Header.parseFcFnDecl()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	} else if stmt.Header.is(Keywords["prop"]) {
-		decl, err = stmt.Header.parsePropDecl()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	} else {
-		return nil, fmt.Errorf("expect 'var', 'fn', or 'prop'")
-	}
-
-	if stmt.Header.ExceedEnd() {
-		return &DefMemberStmt{typeConcept, varType, decl, []FactStmt{}}, nil
-	}
-
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	facts, err := stmt.parseBodyFacts()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	return &DefMemberStmt{typeConcept, varType, decl, *facts}, nil
-}
-
-func (stmt *TokenBlock) parseTypeMemberStmt() (*DefTypeMemberStmt, error) {
-	stmt.Header.skip(Keywords["type_member"])
-
-	typeConcepts, err := stmt.Header.parseBracketedTypeConceptPairArray()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	if len(*typeConcepts) != 1 {
-		return nil, fmt.Errorf("expect one type concept in members")
-	}
-
-	typeConcept := (*typeConcepts)[0]
-
-	var decl fcDecl
-
-	if stmt.Header.is(Keywords["var"]) {
-		decl, err = stmt.Header.parseVarDecl()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	} else if stmt.Header.is(Keywords["fn"]) {
-		decl, err = stmt.Header.parseFcFnDecl()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	} else if stmt.Header.is(Keywords["prop"]) {
-		decl, err = stmt.Header.parsePropDecl()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	} else {
-		return nil, fmt.Errorf("expect 'var', 'fn', or 'prop'")
-	}
-
-	if stmt.Header.ExceedEnd() {
-		return &DefTypeMemberStmt{typeConcept, decl, []FactStmt{}}, nil
-	}
-
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	facts, err := stmt.parseBodyFacts()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	return &DefTypeMemberStmt{typeConcept, decl, *facts}, nil
 }
 
 func (stmt *TokenBlock) parseRelationalFactStmt() (SpecFactStmt, error) {
