@@ -49,28 +49,36 @@ var BuiltinSyms = map[string]string{
 }
 
 var CustomizableOperators = map[string]string{
-	"/":     "__div__",
-	"+":     "__add__",
-	"-":     "__sub__",
-	"*":     "__mul__",
-	"^":     "__xor__",
-	"<":     "__lt__",
-	">":     "__gt__",
-	"!":     "__not__",
-	"|":     "__or__",
-	"&":     "__and__",
-	"~":     "__invert__",
-	"++":    "__add_add__",
-	"--":    "__sub_sub__",
-	"&&":    "__and__",
-	"||":    "__or_or__",
-	"==":    "__eq_eq__",
-	"!=":    "__ne__",
-	"**":    "__pow__",
-	"<=":    "__lt_eq__",
-	">=":    "__gt_eq__",
-	"\\in":  "__in__",
-	"\\has": "__has__",
+	"/":              "__div__",
+	"+":              "__add__",
+	"-":              "__sub__",
+	"*":              "__mul__",
+	"^":              "__xor__",
+	"<":              "__lt__",
+	">":              "__gt__",
+	"!":              "__not__",
+	"|":              "__or__",
+	"&":              "__and__",
+	"~":              "__invert__",
+	"++":             "__add_add__",
+	"--":             "__sub_sub__",
+	"&&":             "__and__",
+	"||":             "__or_or__",
+	"==":             "__eq_eq__",
+	"!=":             "__ne__",
+	"**":             "__pow__",
+	"<=":             "__lt_eq__",
+	">=":             "__gt_eq__",
+	"\\in":           "__in__",
+	"\\has":          "__has__",
+	"\\union":        "__union__",
+	"\\intersection": "__intersection__",
+	"\\subset_eq":    "__subset_eq__",
+	"\\supset_eq":    "__supset_eq__",
+	"\\subset":       "__subset__",
+	"\\supset":       "__supset__",
+	"->":             "__sub_gt__",
+	"=>":             "__eq_gt__",
 }
 
 func isBuiltinRelationalOperator(op string) bool {
@@ -113,8 +121,10 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"to_set": "to_set",
 
 		// The followings are builtin types.
-		"Nat": "Nat",
-		"Set": "Set",
+		"Nat":   "Nat",   // e.g. 0
+		"Int":   "Int",   // e.g. -1
+		"Float": "Float", // e.g. -1.1
+		"Set":   "Set",   // e.g. to_set(AnyType)
 	}
 
 	for k, v := range BuiltinSyms {
