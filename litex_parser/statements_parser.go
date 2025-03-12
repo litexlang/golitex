@@ -258,7 +258,11 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 				return nil, &parseStmtErr{err, *stmt}
 			}
 		} else if curStmt.Header.is(Keywords["member"]) {
-			varMember, fnMember, propMember, _, err = curStmt.parseFcMember()
+			tmp := &[]TypeDecl{}
+			varMember, fnMember, propMember, tmp, err = curStmt.parseFcMember()
+			if len(*tmp) > 0 {
+				return nil, &parseStmtErr{fmt.Errorf("var_member does not have type member"), *stmt}
+			}
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
@@ -328,7 +332,11 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 				return nil, &parseStmtErr{err, *stmt}
 			}
 		} else if curStmt.Header.is(Keywords["member"]) {
-			varMember, fnMember, propMember, _, err = curStmt.parseFcMember()
+			tmp := &[]TypeDecl{}
+			varMember, fnMember, propMember, tmp, err = curStmt.parseFcMember()
+			if len(*tmp) > 0 {
+				return nil, &parseStmtErr{fmt.Errorf("var_member does not have type member"), *stmt}
+			}
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
