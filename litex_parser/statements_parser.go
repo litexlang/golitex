@@ -114,39 +114,57 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	return ret, nil
 }
 
-func (p *TokenBlock) parseFcMember() (*[]FcVarDecl, *[]FcFnDecl, *[]PropDecl, error) {
+func (p *TokenBlock) parseFcMember() (*[]FcVarDecl, *[]FcFnDecl, *[]PropDecl, *[]TypeDecl, error) {
 	p.Header.next()
 	if err := p.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
 	propMember := &[]PropDecl{}
+	typeMember := &[]TypeDecl{}
 
 	for _, curStmt := range p.Body {
 		if curStmt.Header.is(Keywords["var"]) {
 			member, err := curStmt.Header.parseVarDecl()
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, nil, nil, err
 			}
 			*varMember = append(*varMember, *member)
 		} else if curStmt.Header.is(Keywords["fn"]) {
 			member, err := curStmt.Header.parseFcFnDecl()
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, nil, nil, err
 			}
 			*fnMember = append(*fnMember, *member)
 		} else if curStmt.Header.is(Keywords["prop"]) {
 			member, err := curStmt.Header.parsePropDecl()
 			if err != nil {
-				return nil, nil, nil, err
+				return nil, nil, nil, nil, err
 			}
 			*propMember = append(*propMember, *member)
+		} else if curStmt.Header.is(Keywords["type"]) {
+			member, err := curStmt.parseTypeDecl()
+			if err != nil {
+				return nil, nil, nil, nil, err
+			}
+			*typeMember = append(*typeMember, *member)
+		} else {
+			return nil, nil, nil, nil, fmt.Errorf("expected keyword 'var', 'fn', 'prop', or 'type'")
 		}
 	}
 
-	return varMember, fnMember, propMember, nil
+	return varMember, fnMember, propMember, typeMember, nil
+}
+
+func (stmt *TokenBlock) parseTypeDecl() (*TypeDecl, error) {
+	ret, err := stmt.parseDefTypeStmt()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	return &TypeDecl{*ret}, nil
 }
 
 func (stmt *TokenBlock) parseThenFacts() (*[]FactStmt, error) {
@@ -219,7 +237,7 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	conceptName := TypeConceptStr(conceptNameStr)
 
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		return &DefConceptStmt{decl, (conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
+		return &DefConceptStmt{decl, (conceptName), []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []TypeDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
 	} else {
 		stmt.Header.next()
 	}
@@ -227,6 +245,7 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 	typeVarMember := &[]FcVarDecl{}
 	typeFnMember := &[]FcFnDecl{}
 	typePropMember := &[]PropDecl{}
+	typeTypeMember := &[]TypeDecl{}
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
 	propMember := &[]PropDecl{}
@@ -234,12 +253,12 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 
 	for _, curStmt := range stmt.Body {
 		if curStmt.Header.is(Keywords["type_member"]) {
-			typeVarMember, typeFnMember, typePropMember, err = curStmt.parseFcMember()
+			typeVarMember, typeFnMember, typePropMember, typeTypeMember, err = curStmt.parseFcMember()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
 		} else if curStmt.Header.is(Keywords["member"]) {
-			varMember, fnMember, propMember, err = curStmt.parseFcMember()
+			varMember, fnMember, propMember, _, err = curStmt.parseFcMember()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
@@ -251,7 +270,7 @@ func (stmt *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 		}
 	}
 
-	return &DefConceptStmt{decl, (conceptName), *typeVarMember, *typeFnMember, *typePropMember, *varMember, *fnMember, *propMember, *thenFacts}, nil
+	return &DefConceptStmt{decl, (conceptName), *typeVarMember, *typeFnMember, *typePropMember, *typeTypeMember, *varMember, *fnMember, *propMember, *thenFacts}, nil
 
 }
 
@@ -279,7 +298,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 
 		decl := FcVarDecl{FcVarDeclPair{"", FcVarType{"", FcVarTypeStrValue(typeName)}}}
 
-		return &DefTypeStmt{&decl, *implName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
+		return &DefTypeStmt{&decl, *implName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []TypeDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
 	}
 
 	decl, err := stmt.parseFcDecl()
@@ -288,7 +307,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	}
 
 	if !stmt.Header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{decl, *implName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
+		return &DefTypeStmt{decl, *implName, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []TypeDecl{}, []FcVarDecl{}, []FcFnDecl{}, []PropDecl{}, []FactStmt{}}, nil
 	} else {
 		stmt.Header.next()
 	}
@@ -296,6 +315,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	typeVarMember := &[]FcVarDecl{}
 	typeFnMember := &[]FcFnDecl{}
 	typePropMember := &[]PropDecl{}
+	typeTypeMember := &[]TypeDecl{}
 	varMember := &[]FcVarDecl{}
 	fnMember := &[]FcFnDecl{}
 	propMember := &[]PropDecl{}
@@ -303,12 +323,12 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 
 	for _, curStmt := range stmt.Body {
 		if curStmt.Header.is(Keywords["type_member"]) {
-			typeVarMember, typeFnMember, typePropMember, err = curStmt.parseFcMember()
+			typeVarMember, typeFnMember, typePropMember, typeTypeMember, err = curStmt.parseFcMember()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
 		} else if curStmt.Header.is(Keywords["member"]) {
-			varMember, fnMember, propMember, err = curStmt.parseFcMember()
+			varMember, fnMember, propMember, _, err = curStmt.parseFcMember()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
@@ -319,7 +339,7 @@ func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 			}
 		}
 	}
-	return &DefTypeStmt{decl, *implName, *typeVarMember, *typeFnMember, *typePropMember, *varMember, *fnMember, *propMember, *thenFacts}, nil
+	return &DefTypeStmt{decl, *implName, *typeVarMember, *typeFnMember, *typePropMember, *typeTypeMember, *varMember, *fnMember, *propMember, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {

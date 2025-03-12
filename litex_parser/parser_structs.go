@@ -18,6 +18,7 @@ type DefConceptStmt struct {
 	typeVarMember  []FcVarDecl
 	typeFnMember   []FcFnDecl
 	typePropMember []PropDecl
+	typeTypeMember []TypeDecl
 	varMember      []FcVarDecl
 	fnMember       []FcFnDecl
 	propMember     []PropDecl
@@ -32,6 +33,7 @@ type DefTypeStmt struct {
 	typeVarMember  []FcVarDecl
 	typeFnMember   []FcFnDecl
 	typePropMember []PropDecl
+	typeTypeMember []TypeDecl
 	varMember      []FcVarDecl
 	fnMember       []FcFnDecl
 	propMember     []PropDecl
@@ -155,6 +157,10 @@ type FcFnDecl struct {
 type PropDecl struct {
 	name string
 	tp   FcPropType
+}
+
+type TypeDecl struct {
+	DefType DefTypeStmt
 }
 
 type TypeConceptPair struct {
