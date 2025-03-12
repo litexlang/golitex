@@ -48,6 +48,7 @@ var BuiltinSyms = map[string]string{
 	"@":     "@", // v@n represents v[n]
 }
 
+// TODO: 还没有和type联动起来
 var CustomizableOperators = map[string]string{
 	"/":              "__div__",
 	"+":              "__add__",
@@ -114,17 +115,22 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"prove_by_contradiction": "prove_by_contradiction",
 		"thm":                    "thm",
 		"when":                   "when",
+
+		// Syntax and Semantics Sugar
 		// I should give user keyword commutative and associative otherwise Litex can not verify (v1 + v2)@k = v2@k + v1@k even we we know (v1 + v2)@k = v1@k + v2@k
 		"commutative": "commutative",
 		"associative": "associative",
-		// Set is a special type in Litex. The only difference between set and user-defined type is: types can be transformed into a set. If 2 type do manipulate, I by default cancel all the structures that have, and view them as plain sets. An instance of a type can be passed here and there. Users can define their own union or intersection operator. 即如果两个type要做集合运算，他们上面的结构自动消失变成纯集合。同时我可能还要设计一个额外的语法，让一个给定的集合上面可以绑定结构，让它变成type。set不能出现在的parameter list的 var-type pair 里，不能出现在 type parameters，它是纯粹的实例，只不过绑定了in这个Operator。这个set关键词解决了type的用途重载的问题：本来集合只能被表示成type，而type又是有结构的，即type同时有结构+集合两重意思。如果a TypeName，则a自动满足 a in to_set(TypeName)
-		"to_set": "to_set",
 
 		// The followings are builtin types.
 		"Nat":   "Nat",   // e.g. 0
 		"Int":   "Int",   // e.g. -1
 		"Float": "Float", // e.g. -1.1
 		"Set":   "Set",   // e.g. to_set(AnyType)
+
+		// Builtin functions
+
+		// Set is a special type in Litex. The only difference between set and user-defined type is: types can be transformed into a set. If 2 type do manipulate, I by default cancel all the structures that have, and view them as plain sets. An instance of a type can be passed here and there. Users can define their own union or intersection operator. 即如果两个type要做集合运算，他们上面的结构自动消失变成纯集合。同时我可能还要设计一个额外的语法，让一个给定的集合上面可以绑定结构，让它变成type。set不能出现在的parameter list的 var-type pair 里，不能出现在 type parameters，它是纯粹的实例，只不过绑定了in这个Operator。这个set关键词解决了type的用途重载的问题：本来集合只能被表示成type，而type又是有结构的，即type同时有结构+集合两重意思。如果a TypeName，则a自动满足 a in make_set[TypeName]
+		"make_set": "make_set", // e.g. make_set[TypeName]
 	}
 
 	for k, v := range BuiltinSyms {
