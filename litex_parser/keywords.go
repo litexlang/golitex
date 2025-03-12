@@ -109,6 +109,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		// I should give user keyword commutative and associative otherwise Litex can not verify (v1 + v2)@k = v2@k + v1@k even we we know (v1 + v2)@k = v1@k + v2@k
 		"commutative": "commutative",
 		"associative": "associative",
+		"set":         "set", // Set is a special type in Litex. The only difference between set and user-defined type is: types can be transformed into a set. If 2 type do manipulate, I by default cancel all the structures that have, and view them as plain sets. An instance of a type can be passed here and there.
 	}
 
 	for k, v := range BuiltinSyms {
