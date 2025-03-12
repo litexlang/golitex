@@ -82,7 +82,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 		"concept":                "concept",
 		"type":                   "type",
 		"type_member":            "type_member",
-		"member":                 "member",
+		"instance_member":        "instance_member",
 		"forall":                 "forall",
 		"cond":                   "cond",
 		"then":                   "then",

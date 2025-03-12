@@ -28,8 +28,6 @@ func (f *ClaimProveStmt) String() string             { panic("") }
 func (f *DefAliasStmt) String() string               { panic("") }
 func (s *DefExistStmt) String() string               { panic("") }
 func (s *HaveStmt) String() string                   { panic("") }
-func (s *DefMemberStmt) String() string              { panic("") }
-func (s *DefTypeMemberStmt) String() string          { panic("") }
 func (s *ClaimProveByContradictStmt) String() string { panic("") }
 func (s *AxiomStmt) String() string                  { panic("") }
 func (s *ThmStmt) String() string                    { panic("") }

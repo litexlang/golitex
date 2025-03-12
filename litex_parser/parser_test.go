@@ -359,7 +359,7 @@ func TestDefConceptStmt(t *testing.T) {
 		fn f[G Group, G2 Group](x G, y G) G
 		prop f[G Group, G2 Group](x G, y G)
 
-	member:
+	instance_member:
 		var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
 		prop f[G Group, G2 Group](x G, y G)
@@ -460,7 +460,12 @@ type var G Group:
 		fn f[G Group, G2 Group](x G, y G) G
 		prop f[G Group, G2 Group](x G, y G)
 		type var G Group2:
-			member:
+			type_member:
+				var 3 G
+				fn f[G Group, G2 Group](x G, y G) G
+				prop f[G Group, G2 Group](x G, y G)
+		
+			instance_member:
 				var 1 G
 				fn f[G Group, G2 Group](x G, y G) G
 				prop f[G Group, G2 Group](x G, y G)
@@ -468,7 +473,7 @@ type var G Group:
 			then:
 				$p[G, G2](x, y)
 	
-	member:
+	instance_member:
 		var 2 G
 		fn f[G Group, G2 Group](x G, y G) G
 		prop f[G Group, G2 Group](x G, y G)
@@ -613,7 +618,7 @@ exist P[G Group, G2 Group](g1 G, g2 G2):
 			then:
 				$p[G, G2](x, y)
 
-	member:
+	instance_member:
 	    var 1 G
 		fn f[G Group, G2 Group](x G, y G) G
 
@@ -650,39 +655,6 @@ func TestVarDeclStmt(t *testing.T) {
 var g1 G, g2 G
 
 var a G,  b G:
-	$p[g](a)
-`
-	statements, err := ParserTester(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		t.Fatal(err)
-	}
-
-}
-
-func TestMemberStmt(t *testing.T) {
-	code :=
-		`
-member [G Group](g G) 		var 1 G:
-	$p[g](a)
-member [G Group](g G) 		fn f[G Group, G2 Group](x G, y G) G:
-    $p[g](a)
-member [G Group](g G) 		prop f[G Group, G2 Group](x G, y G)
-`
-	statements, err := ParserTester(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		t.Fatal(err)
-	}
-
-}
-
-func TestConceptMemberStmt(t *testing.T) {
-	code :=
-		`
-type_member [G Group]		var 1 G:
 	$p[g](a)
 `
 	statements, err := ParserTester(code)
@@ -897,7 +869,7 @@ type prop f[G Group, G2 Group](x G, y G):
 	then:
 		know $Group(G)
 type var A G:
-	member:
+	instance_member:
 		prop f[]()
 		prop f[G Group, G2 Group](x G, y G)
 `

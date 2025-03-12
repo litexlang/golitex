@@ -18,8 +18,6 @@ func (f *DefAliasStmt) stmt()               {}
 func (f *KnowStmt) stmt()                   {}
 func (s *DefExistStmt) stmt()               {}
 func (s *HaveStmt) stmt()                   {}
-func (s *DefMemberStmt) stmt()              {}
-func (s *DefTypeMemberStmt) stmt()          {}
 func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
