@@ -22,7 +22,7 @@ type DefConceptStmt struct {
 	varMember      []FcVarDecl
 	fnMember       []FcFnDecl
 	propMember     []PropDecl
-	thenFacts      []FactStmt
+	knowFacts      []FactStmt
 }
 
 type DefTypeStmt struct {
@@ -37,7 +37,7 @@ type DefTypeStmt struct {
 	varMember      []FcVarDecl
 	fnMember       []FcFnDecl
 	propMember     []PropDecl
-	thenFacts      []FactStmt
+	knowFacts      []FactStmt
 }
 
 type DefPropStmt struct {
