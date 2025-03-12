@@ -81,7 +81,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
 
 Consider `Human` as the set of all humans. Using `know`, we establish the axiom: all humans are self-aware. Since Bob is in `Human`, "Bob is self-aware" is inherently true. This reflects the classic paradigm of mathematical reasoning: from universal to specific.
 
-Litex reduces typing by eliminating the need to name or recall individual facts. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. When writing factual expressions, Litex automatically searches for relevant facts using the proposition name and parameters, akin to a regex-based search in a large database.
+Litex reduces typing by eliminating the need to name or recall individual facts. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. When writing done factual expressions for verification, Litex automatically searches for relevant facts using the proposition name and parameters, akin to a regex-based search in a large database. In this system, facts themselves do not possess names; only propositions (collections of facts to be verified) are named. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
 
 ### Factual Expressions
 
@@ -230,7 +230,7 @@ Special proof statements include existential proof (proving the existence of var
     <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Litex</th>
     <th style="border: 3px solid black; padding: 8px; text-align: left; width: 50%;">Lean 4</th>
   </tr>
-  <tr>
+  <tr> 
     <td style="border: 3px solid black; padding: 8px;">
       <code>axiom mathematical_induction(p prop):</code> <br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;cond:</code> <br>      
@@ -248,6 +248,7 @@ Special proof statements include existential proof (proving the existence of var
     </td>
   </tr>
 </table>
+
 
 Litex significantly reduces the mental effort to formalize theorems compared to other languages. You don’t need to recall or type keywords like "base," "intro," or "induction." Despite its simplicity, Litex syntax is remarkably powerful and general, reflecting the inherent simplicity of math. The main contribution of Litex is uncovering the inherent simplicity of mathematics and designing an equally simple formal language based on it.
 
@@ -283,7 +284,7 @@ Existing formal languages are complex, even for mathematicians, as they include 
 
 To put it in another way, traditional proof assistant are implemented to prove some hardcore mathematical theories, while Litex is designed to solve practical problems for everyone. Within traditional proof assistants, there is a much smaller and cleaner language akin to Litex struggling to get out.
 
-Litex’s syntax uses just ~20 keywords: `var`, `fn`, `prop`, `type`, `concept`, `forall`, `cond`, `if`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`, `instance_member`, `type_member`, `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`. This design ensures a smooth learning curve.
+Litex’s syntax uses just ~20 keywords: `var`, `fn`, `prop`, `type`, `concept`, `forall`, `cond`, `if`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`, `instance_member`, `type_member`, `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
 
 By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification.
 
