@@ -271,6 +271,22 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 
 <!-- need to showcase: Litex can let users to begin his proof from any level of abstraction, instead of forcing him to deal with things he does not need to care -->
 
+## What makes Litex innovative or novel?
+
+_Common sense is not so common._
+
+_--Voltaire_
+
+Steve Jobs once said, "If you define the problem correctly, you almost have the solution." Litex embodies this by exploring what a “minimalist formal proof assistant” truly means.
+
+Existing formal languages are complex, even for mathematicians, as they include unrelated functionalities like memory state alterations. Litex, however, focuses solely on verification, excluding general-purpose computation. Its syntax mirrors everyday math, ensuring clarity and simplicity. Litex identifies the few core logical rules governing math—intuitive even to a 5-year-old.
+
+To put it in another way, traditional proof assistant are implemented to prove some hardcore mathematical theories, while Litex is designed to solve practical problems for everyone. Within traditional proof assistants, there is a much smaller and cleaner language akin to Litex struggling to get out.
+
+Litex’s syntax uses just ~20 keywords: `var`, `fn`, `prop`, `type`, `concept`, `forall`, `cond`, `if`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`, `instance_member`, `type_member`, `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`. This design ensures a smooth learning curve.
+
+By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification.
+
 ## Join the Litex Project
 
 _The best way to predict the future is to invent it._
