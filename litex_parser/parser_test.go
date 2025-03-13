@@ -456,9 +456,16 @@ type var G Group
 type var G Group:
 	type_member:
 		var 1 G
-		fn f[G Group, G2 Group](x G, y G) G
-		prop p[G Group, G2 Group](x G, y G):
-			G.f[G, G2](x, y)		// 不能写p,必须写G.p
+		fn P[G Group, G2 Group](g G, g2 G2) fn [G Group, G2 Group](g G, g2 G2):
+			cond:
+				$f[G, B](g.g1, g2.g2)
+			then:
+				$f[G, B](g.g1, g2.g2)
+		prop P[G Group, G2 Group](g G, g2 G2):
+			cond:
+				$f[G, B](g.g1, g2.g2)
+			then:
+				$f[G, B](g.g1, g2.g2)
 		type var G Group2:
 			type_member:
 				var 3 G
@@ -475,8 +482,16 @@ type var G Group:
 	
 	instance_member:
 		var 2 G
-		fn f[G Group, G2 Group](x G, y G) G
-		prop f[G Group, G2 Group](x G, y G)
+		fn P[G Group, G2 Group](g G, g2 G2) fn [G Group, G2 Group](g G, g2 G2):
+			cond:
+				$f[G, B](g.g1, g2.g2)
+			then:
+				$f[G, B](g.g1, g2.g2)
+		prop P[G Group, G2 Group](g G, g2 G2):
+			cond:
+				$f[G, B](g.g1, g2.g2)
+			then:
+				$f[G, B](g.g1, g2.g2)
 
 	know:
 		$p[G, G2](x, y)
