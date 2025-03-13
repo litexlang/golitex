@@ -110,59 +110,6 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	return ret, nil
 }
 
-func (p *TokenBlock) parseFcMember() (*[]FcVarDecl, *[]FcFnDecl, *[]PropDecl, *[]TypeDecl, error) {
-	p.Header.next()
-	if err := p.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
-		return nil, nil, nil, nil, err
-	}
-
-	varMember := &[]FcVarDecl{}
-	fnMember := &[]FcFnDecl{}
-	propMember := &[]PropDecl{}
-	typeMember := &[]TypeDecl{}
-
-	for _, curStmt := range p.Body {
-		if curStmt.Header.is(Keywords["var"]) {
-			member, err := curStmt.Header.parseVarDecl()
-			if err != nil {
-				return nil, nil, nil, nil, err
-			}
-			*varMember = append(*varMember, *member)
-		} else if curStmt.Header.is(Keywords["fn"]) {
-			member, err := curStmt.Header.parseFcFnDecl()
-			if err != nil {
-				return nil, nil, nil, nil, err
-			}
-			*fnMember = append(*fnMember, *member)
-		} else if curStmt.Header.is(Keywords["prop"]) {
-			member, err := curStmt.Header.parsePropDecl()
-			if err != nil {
-				return nil, nil, nil, nil, err
-			}
-			*propMember = append(*propMember, *member)
-		} else if curStmt.Header.is(Keywords["type"]) {
-			member, err := curStmt.parseTypeDecl()
-			if err != nil {
-				return nil, nil, nil, nil, err
-			}
-			*typeMember = append(*typeMember, *member)
-		} else {
-			return nil, nil, nil, nil, fmt.Errorf("expected keyword 'var', 'fn', 'prop', or 'type'")
-		}
-	}
-
-	return varMember, fnMember, propMember, typeMember, nil
-}
-
-func (stmt *TokenBlock) parseTypeDecl() (*TypeDecl, error) {
-	ret, err := stmt.parseDefTypeStmt()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	return &TypeDecl{*ret}, nil
-}
-
 func (stmt *TokenBlock) parseThenFacts() (*[]FactStmt, error) {
 	stmt.Header.next()
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
@@ -208,13 +155,6 @@ func (block *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 		block.Header.next()
 	}
 
-	// typeVarMember := &[]FcVarDecl{}
-	// typeFnMember := &[]FcFnDecl{}
-	// typePropMember := &[]PropDecl{}
-	// typeTypeMember := &[]TypeDecl{}
-	// varMember := &[]FcVarDecl{}
-	// fnMember := &[]FcFnDecl{}
-	// propMember := &[]PropDecl{}
 	typeMembers := []TypeMember{}
 	instanceMembers := []InstanceMember{}
 	knowFacts := &[]FactStmt{}
@@ -228,11 +168,6 @@ func (block *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 				}
 				typeMembers = append(typeMembers, typeMember)
 			}
-
-			// typeVarMember, typeFnMember, typePropMember, typeTypeMember, err = curStmt.parseFcMember()
-			// if err != nil {
-			// 	return nil, &parseStmtErr{err, *stmt}
-			// }
 		} else if curStmt.Header.is(Keywords["instance_member"]) {
 			for _, member := range curStmt.Body {
 				instanceMember, err := member.parseInstanceMember()
@@ -241,15 +176,6 @@ func (block *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 				}
 				instanceMembers = append(instanceMembers, instanceMember)
 			}
-
-			// tmp := &[]TypeDecl{}
-			// varMember, fnMember, propMember, tmp, err = curStmt.parseFcMember()
-			// if len(*tmp) > 0 {
-			// 	return nil, &parseStmtErr{fmt.Errorf("instance_member does not have type member"), *stmt}
-			// }
-			// if err != nil {
-			// 	return nil, &parseStmtErr{err, *stmt}
-			// }
 		} else if curStmt.Header.is(Keywords["know"]) {
 			knowFacts, err = curStmt.parseThenFacts()
 			if err != nil {
@@ -290,13 +216,6 @@ func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	}
 
 	typeMembers := []TypeMember{}
-	// typeVarMember := &[]FcVarDecl{}
-	// typeFnMember := &[]FcFnDecl{}
-	// typePropMember := &[]PropDecl{}
-	// typeTypeMember := &[]TypeDecl{}
-	// varMember := &[]FcVarDecl{}
-	// fnMember := &[]FcFnDecl{}
-	// propMember := &[]PropDecl{}
 	instanceMembers := []InstanceMember{}
 	knowFacts := &[]FactStmt{}
 
@@ -310,10 +229,6 @@ func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 				typeMembers = append(typeMembers, typeMember)
 			}
 
-			// typeVarMember, typeFnMember, typePropMember, typeTypeMember, err = curStmt.parseFcMember()
-			// if err != nil {
-			// 	return nil, &parseStmtErr{err, *stmt}
-			// }
 		} else if curStmt.Header.is(Keywords["instance_member"]) {
 			for _, member := range curStmt.Body {
 				instanceMember, err := member.parseInstanceMember()
@@ -323,41 +238,12 @@ func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 				instanceMembers = append(instanceMembers, instanceMember)
 			}
 
-			// tmp := &[]TypeDecl{}
-			// varMember, fnMember, propMember, tmp, err = curStmt.parseFcMember()
-			// if len(*tmp) > 0 {
-			// 	return nil, &parseStmtErr{fmt.Errorf("instance_member does not have type member"), *stmt}
-			// }
-			// if err != nil {
-			// 	return nil, &parseStmtErr{err, *stmt}
-			// }
 		} else if curStmt.Header.is(Keywords["know"]) {
 			knowFacts, err = curStmt.parseThenFacts()
 			if err != nil {
 				return nil, &parseStmtErr{err, *block}
 			}
 		}
-		// if curStmt.Header.is(Keywords["type_member"]) {
-
-		// 	// typeVarMember, typeFnMember, typePropMember, typeTypeMember, err = curStmt.parseFcMember()
-		// 	// if err != nil {
-		// 	// 	return nil, &parseStmtErr{err, *stmt}
-		// 	// }
-		// } else if curStmt.Header.is(Keywords["instance_member"]) {
-		// 	tmp := &[]TypeDecl{}
-		// 	varMember, fnMember, propMember, tmp, err = curStmt.parseFcMember()
-		// 	if len(*tmp) > 0 {
-		// 		return nil, &parseStmtErr{fmt.Errorf("instance_member does not have type member"), *stmt}
-		// 	}
-		// 	if err != nil {
-		// 		return nil, &parseStmtErr{err, *stmt}
-		// 	}
-		// } else if curStmt.Header.is(Keywords["know"]) {
-		// 	knowFacts, err = curStmt.parseThenFacts()
-		// 	if err != nil {
-		// 		return nil, &parseStmtErr{err, *stmt}
-		// 	}
-		// }
 	}
 	return &DefTypeStmt{decl, *implName, typeMembers, instanceMembers, *knowFacts}, nil
 }
