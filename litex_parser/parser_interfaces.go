@@ -115,4 +115,19 @@ func (r *RelationFactStmt) inlineFactStmt() {}
 func (p *FuncFactStmt) inlineFactStmt()     {}
 func (p *CondFactStmt) inlineFactStmt()     {}
 
-// func (p *InlineForallStmt) inlineFactStmt() {}
+type TypeMember interface {
+	typeMember()
+}
+
+func (s *DefVarStmt) typeMember()  {}
+func (s *DefFnStmt) typeMember()   {}
+func (s *DefPropStmt) typeMember() {}
+func (s *DefTypeStmt) typeMember() {}
+
+type InstanceMember interface {
+	instanceMember()
+}
+
+func (s *DefVarStmt) instanceMember()  {}
+func (s *DefFnStmt) instanceMember()   {}
+func (s *DefPropStmt) instanceMember() {}

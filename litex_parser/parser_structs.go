@@ -12,7 +12,8 @@ type DefVarStmt struct {
 
 // if concept and type has more conceptTypes, use know impl
 
-// TODO 取消掉所有的这里的decl，改用直接的DeclStmt。同时保留用户声明的顺序不要乱了.
+// TODO 取消掉所有的这里的decl，改用直接的DeclStmt。同时保留用户声明的顺序不要乱了
+
 type DefConceptStmt struct {
 	decl               fcDecl
 	conceptName        TypeConceptStr

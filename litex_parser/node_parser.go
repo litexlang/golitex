@@ -479,3 +479,28 @@ func (parser *Parser) parseNamedFcType() (*NamedFcType, error) {
 
 	return &NamedFcType{typeNameArr, params}, nil
 }
+
+func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
+	if block.Header.is(Keywords["var"]) {
+		return block.parseDefVarStmt()
+	} else if block.Header.is(Keywords["fn"]) {
+		return block.parseDefFnStmt()
+	} else if block.Header.is(Keywords["prop"]) {
+		return block.parseDefPropStmt()
+	} else if block.Header.is(Keywords["type"]) {
+		return block.parseDefTypeStmt()
+	}
+
+	return nil, fmt.Errorf("var, fn, prop, type expected")
+}
+
+func (block *TokenBlock) parseInstanceMember() (InstanceMember, error) {
+	if block.Header.is(Keywords["var"]) {
+		return block.parseDefVarStmt()
+	} else if block.Header.is(Keywords["fn"]) {
+		return block.parseDefFnStmt()
+	} else if block.Header.is(Keywords["prop"]) {
+		return block.parseDefPropStmt()
+	}
+	return nil, fmt.Errorf("var, fn, prop expected")
+}

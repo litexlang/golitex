@@ -195,7 +195,7 @@ concept Group G: // suppose G is a group
             v.inv() * v = G.I
 ```
 
-In Litex, a type = set + structure. The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `concept` is a "type of type" or a "set of sets sharing the same structure". `type`s and `concept`s work together to enable abstraction built on abstractions.
+In Litex, a type = set + structure (This is inspired by Niklaus Wirth's "Algorithms + Data Structure = Programs"). The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `concept` is a "type of type" or a "set of sets sharing the same structure". `type`s and `concept`s work together to enable abstraction built on abstractions.
 
 <!-- TODO: Interplay of set and type -->
 

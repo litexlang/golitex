@@ -485,3 +485,9 @@ However, Severe restriction on time and no budget forces me to go back to common
 Litex is based on what theory?
 
 There are only two types of programming languages: to prove an idea, or to get things done. Litex is definitely of the second type. Litex is, and will remain to be, very pragmatic. Curious people might ask me "what theory is Litex based on". My answer is "Litex is invented by common sense, not by theory". The only "theory" of Litex is that there is no theory.
+
+Does some math exist that Litex can not express?
+
+Litex is supposed to be able to express ANY math. People might doubt that it is impossible to express all math with so few keywords. My answer is, with so few keywords, Python is Turing complete and in theory able to express programming.
+
+When time is suitable, I will prove any Lean4 or Coq code can be written in Litex and through that way to prove logical completeness of Litex. The doubt is reasonable and it's exciting to conquer that problem.
