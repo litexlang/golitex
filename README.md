@@ -293,7 +293,10 @@ fn f(z EuclidSpace):
 	f = (id@0)^2 + (id@1)^2 // 用函数id(z)=z 是绕过z这种具体值，直接把函数看成被操作对象
 
 forall z EuclidSpace:
-	d(f, 0)(z) = 2 * (z@0) -->
+	d(f, 0)(z) = 2 * (z@0) 
+    
+d(f, 0) = 2 * (id@0)
+    -->
 
 ## What makes Litex innovative or novel?
 
