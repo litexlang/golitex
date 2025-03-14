@@ -283,6 +283,18 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 
 <!-- need to showcase: Litex can let users to begin his proof from any level of abstraction, instead of forcing him to deal with things he does not need to care -->
 
+<!-- 
+how to represent X is R2, derivate (x,y) by y
+
+// z EuclidSpace, z.dim = 2, z[0] 表示z的第一位
+fn f(z EuclidSpace):
+	f(z) = (z@0)^2 + (z@1)^2 // or f(z) = (z[0])^2 + (z[1])^2
+	// 注意到微分几何里，为了让符号不乱，也是像下面这样写的
+	f = (id@0)^2 + (id@1)^2 // 用函数id(z)=z 是绕过z这种具体值，直接把函数看成被操作对象
+
+forall z EuclidSpace:
+	d(f, 0)(z) = 2 * (z@0) -->
+
 ## What makes Litex innovative or novel?
 
 _Common sense is not so common._
