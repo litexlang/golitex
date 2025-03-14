@@ -10,6 +10,14 @@ import (
 	"time"
 )
 
+const (
+	SmallRound       = 10
+	MediumRound      = 20
+	HundredRound     = 100
+	TenThousandRound = 10000
+	TenMillionRound  = 10000000
+)
+
 func TestStoreNewVar(t *testing.T) {
 	code := `var a G`
 	statements, err := parser.ParseSourceCode(code)
@@ -132,7 +140,7 @@ func TestVerifier2(t *testing.T) {
 
 	testCodes := "$ff()[](f[](), a.b.c.g().f[]())()()"
 	start := time.Now()
-	for i := 0; i < 100; i++ {
+	for i := 0; i < HundredRound; i++ {
 		testStatements, err := parser.ParseSourceCode(testCodes)
 		for _, testCode := range *testStatements {
 			err := executor.TopLevelStmt(&testCode)
@@ -247,7 +255,7 @@ func TestKnowVerifyFuncFactSpeed(t *testing.T) {
 	topVerifyStatements := []*parser.TopStmt{}
 
 	// 数量级为 n*log(n)，因为走一遍是log(n), 走 rounds 次差不多就是 n * log(n)
-	rounds := 100
+	rounds := HundredRound
 
 	start := time.Now()
 	for i := 0; i < rounds; i++ {
@@ -293,7 +301,7 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
-	rounds := 100
+	rounds := HundredRound
 	for i := 0; i < rounds; i++ {
 		stmt := randCondStmt()
 		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
@@ -331,7 +339,7 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
-	rounds := 100
+	rounds := HundredRound
 	for i := 0; i < rounds; i++ {
 		stmt := randCondStmt()
 		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
@@ -375,7 +383,7 @@ func TestEqualFactMemory(t *testing.T) {
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
-	rounds := 200
+	rounds := HundredRound
 	for i := 0; i < rounds; i++ {
 		stmt := randEqualFact()
 		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
@@ -411,7 +419,7 @@ func TestEqualFactMemory(t *testing.T) {
 
 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
 
-	if rounds < 20 {
+	if rounds < MediumRound {
 		fmt.Printf("%d statements not verified, %v\n", notVerifiedCount, notVerifiedIndexes)
 
 		fmt.Println("know:")
