@@ -77,3 +77,12 @@ func (f *FcChain) String() string {
 	}
 	return ret + (f.ChainOfMembers)[len(f.ChainOfMembers)-1].String()
 }
+
+type ReversedFc struct {
+	// TODO
+}
+
+// TODO: Fc 可能还要加一个函数，reverse，即从parameters作为第一位的key。这样貌似做compare更容易
+func Reverse(f Fc) *ReversedFc {
+	panic("")
+}

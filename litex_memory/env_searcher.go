@@ -5,21 +5,3 @@ func (mem *RedBlackTree[T]) SearchInEnv(env *Env, key T) (*Node[T], error) {
 
 	return mem.Search(key)
 }
-
-// func (mem *RedBlackTree[T]) SearchInEnvLayerByLayer(env *Env, key T) (*Node[T], error) {
-// 	curNode := mem.Root
-// 	var err error = nil
-// 	searched := false
-// 	for curNode != nil {
-// 		curNode, err, searched = mem.SearchOneLayer(curNode, key)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		if searched {
-// 			return curNode, nil
-// 		}
-// 	}
-
-// 	return nil, nil
-// }
