@@ -6,7 +6,7 @@
 
 ## About
 
-_That language is an instrument of Human reason, and not merely a medium for the expression of thought._
+_That language is an instrument of Human reason, and not merely a medium for the expression of thought, is a truth generally admitted._
 
 _–- George Boole_
 
@@ -205,6 +205,8 @@ var all_sets make_set[Set] // 把所有集合放到集合里。这在现代集�
 know forall x *T :
 	x in make_set[T]
 	 -->
+
+<!-- 永远永远永远记住：涉及到集合运算（type运算），先把原来的type的结构消灭掉，把它当做集合。才能进一步在新的集合上构建结构。不要尝试在新结构里保留旧结构-->
 
 ```
 claim:
