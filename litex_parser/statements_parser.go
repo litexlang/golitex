@@ -71,7 +71,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 
 	var ret Stmt
 	switch cur {
-	case Keywords["concept"]:
+	case Keywords["struct"]:
 		ret, err = stmt.parseDefConceptStmt()
 	case Keywords["type"]:
 		ret, err = stmt.parseDefTypeStmt()
@@ -131,26 +131,26 @@ func (stmt *TokenBlock) parseThenFacts() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-func (block *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
-	block.Header.skip(Keywords["concept"])
+func (block *TokenBlock) parseDefConceptStmt() (*DefStructStmt, error) {
+	block.Header.skip(Keywords["struct"])
 
 	decl, err := block.parseFcDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *block}
 	}
 
-	conceptNameStr := ""
+	structNameStr := ""
 	if block.Header.is(Keywords["impl"]) {
 		block.Header.next()
-		conceptNameStr, err = block.Header.next()
+		structNameStr, err = block.Header.next()
 		if err != nil {
 			return nil, &parseStmtErr{err, *block}
 		}
 	}
-	conceptName := TypeConceptStr(conceptNameStr)
+	structName := TypeConceptStr(structNameStr)
 
 	if !block.Header.is(BuiltinSyms[":"]) {
-		return &DefConceptStmt{decl, conceptName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
+		return &DefStructStmt{decl, structName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
 	} else {
 		block.Header.next()
 	}
@@ -184,7 +184,7 @@ func (block *TokenBlock) parseDefConceptStmt() (*DefConceptStmt, error) {
 		}
 	}
 
-	return &DefConceptStmt{decl, conceptName, typeMembers, instanceMembers, *knowFacts}, nil
+	return &DefStructStmt{decl, structName, typeMembers, instanceMembers, *knowFacts}, nil
 
 }
 
