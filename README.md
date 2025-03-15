@@ -167,8 +167,8 @@ type Human:
       member:
           var age Nat
 
-// declare a concept
-concept Euclid_Space S:
+// declare a struct
+struct Euclid_Space S:
     type_member:
         var dim Nat
         fn __add__(v1 S, v2 S) real
@@ -181,7 +181,7 @@ concept Euclid_Space S:
               forall k Nat:
                   (v1 + v2)@k = v1@k + v2@k
 
-concept Group G: // suppose G is a group
+struct Group G: // suppose G is a group
     type_member:
         fn __mul__(g G, g2 G) G // define *
         var I G // define identity
@@ -195,7 +195,7 @@ concept Group G: // suppose G is a group
             v.inv() * v = G.I
 ```
 
-In Litex, a type = set + structure (This is inspired by Niklaus Wirth's "Algorithms + Data Structure = Programs"). The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `concept` is a "type of type" or a "set of sets sharing the same structure". `type`s and `concept`s work together to enable abstraction built on abstractions.
+In Litex, a type = set + structure (This is inspired by Niklaus Wirth's "Algorithms + Data Structure = Programs"). The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `struct` is a "type of type" or a "set of sets sharing the same structure". `type`s and `struct`s work together to enable abstraction built on abstractions.
 
 <!-- TODO: Interplay of set and type -->
 
@@ -232,7 +232,7 @@ prove_exist  exist_nat_less_than(100) 99:
 
 Sometimes, we want to prove a fact without letting the lengthy proof process clutter the main environment. In such cases, we use the `claim` keyword, followed by the `prove` keyword to conduct the proof within it. Ultimately, only the main fact proven under the `claim` will remain in the main environment.
 
-Special proof statements include existential proof (proving the existence of variables) and implementation proof (showing a type's structure aligns with another type or concept). Implementation builds relationships (`type impl type`) or abstractions (`type impl concept`).
+Special proof statements include existential proof (proving the existence of variables) and implementation proof (showing a type's structure aligns with another type or struct). Implementation builds relationships (`type impl type`) or abstractions (`type impl struct`).
 
 ### Another example
 
@@ -268,7 +268,7 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 0. Basic Elements: Propositions, variables, and functions, each with a type.
 1. Type: A type = set + structure.
 2. Concept: A set of types sharing the same structure.
-3. Abstraction: Built via the `impl` keyword, defining relationships between types, concepts, and structures.
+3. Abstraction: Built via the `impl` keyword, defining relationships between types, structs, and structures.
 4. Factual Expressions: Three types—specific (exist, ordinary), conditional, and universal (forall). Litex verifies new facts by searching the fact base and adds them if true.
 5. Proof Methods: Direct proof and proof by contradiction, generating new facts.
 6. Verification: Uses pattern-based matching of known facts, eliminating the need to name every fact.
@@ -310,7 +310,7 @@ Existing formal languages are complex, even for mathematicians, as they include 
 
 To put it in another way, traditional proof assistant are implemented to prove some hardcore mathematical theories, while Litex is designed to solve practical problems for everyone. Within traditional proof assistants, there is a much smaller and cleaner language akin to Litex struggling to get out.
 
-Litex’s syntax uses just ~20 keywords: `var`, `fn`, `prop`, `type`, `concept`, `forall`, `cond`, `if`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`, `instance_member`, `type_member`, `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
+Litex’s syntax uses just ~20 keywords: `var`, `fn`, `prop`, `type`, `struct`, `forall`, `cond`, `if`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`, `instance_member`, `type_member`, `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
 
 By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification.
 

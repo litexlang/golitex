@@ -19,7 +19,7 @@ func (stmt *RelationFactStmt) String() string {
 }
 
 func (stmt *DefVarStmt) String() string              { panic("") }
-func (c *DefConceptStmt) String() string             { panic("") }
+func (c *DefStructStmt) String() string              { panic("") }
 func (f *DefTypeStmt) String() string                { panic("") }
 func (c *DefPropStmt) String() string                { panic("") }
 func (f *DefFnStmt) String() string                  { panic("") }

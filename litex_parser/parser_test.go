@@ -10,17 +10,6 @@ import (
 	"time"
 )
 
-func TestLexer(t *testing.T) {
-	block, err := ParseFile("../examples/concept.litex")
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	for _, block := range block.Body {
-		fmt.Println(block.String())
-	}
-}
-
 // Test given string
 func TestLexerFromString(t *testing.T) {
 	content := `
@@ -44,7 +33,7 @@ def add(a, b):
 }
 
 func TestSplitString(t *testing.T) {
-	input := []string{"concept [G Group[G Set](v G)]:"}
+	input := []string{"struct [G Group[G Set](v G)]:"}
 	for _, s := range input {
 		tokens, err := tokenizeString(s)
 
@@ -62,18 +51,18 @@ func TestSplitString(t *testing.T) {
 func TestParseStrStmtBlock(t *testing.T) {
 	subBody := []strBlock{
 		{
-			Header: "concept [v G](v G):",
+			Header: "struct [v G](v G):",
 			Body:   nil,
 		},
 	}
 	body := []strBlock{
 		{
-			Header: "concept [G Set](v G):",
+			Header: "struct [G Set](v G):",
 			Body:   subBody,
 		},
 	}
 	input := strBlock{
-		Header: "concept [G Group[G Set](v G)]:",
+		Header: "struct [G Group[G Set](v G)]:",
 		Body:   body,
 	}
 
@@ -83,23 +72,6 @@ func TestParseStrStmtBlock(t *testing.T) {
 	}
 
 	fmt.Println(parsedBlock)
-}
-
-func TestFileTokenize(t *testing.T) {
-	filePath := "../examples/concept.litex"
-	block, err := ParseFile(filePath)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	for _, stmt := range block.Body {
-		parsedBlock, err := TokenizeStmtBlock(&stmt)
-		if err != nil {
-			t.Fatalf(err.Error())
-		}
-
-		fmt.Println(parsedBlock.String())
-	}
 }
 
 func TestParseFc(t *testing.T) {
@@ -349,7 +321,7 @@ func ParserTester(code string) (*[]Stmt, error) {
 }
 
 func TestDefConceptStmt(t *testing.T) {
-	code := `concept var G Group:
+	code := `struct var G Group:
 	inherit:
 		set
 		group
@@ -1004,7 +976,7 @@ forall [a A] $p() {$p()}
 
 func TestTypeInit(t *testing.T) {
 	code := `
-// Group is a concept, 
+// Group is a struct, 
 type impl Group var A G:
 	then:
 		$S(A)

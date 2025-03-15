@@ -236,7 +236,7 @@ func (parser *Parser) parseTypeConcept() (TypeConceptStr, error) {
 }
 
 func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]TypeConceptPair, error) {
-	concepts := []TypeConceptPair{}
+	structures := []TypeConceptPair{}
 	parser.skip(BuiltinSyms["["])
 
 	for !parser.is(BuiltinSyms["]"]) {
@@ -245,12 +245,12 @@ func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]TypeConceptPair, 
 			return nil, &parserErr{err, parser}
 		}
 
-		concept, err := parser.parseTypeConcept()
+		structure, err := parser.parseTypeConcept()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
 
-		concepts = append(concepts, TypeConceptPair{name, concept})
+		structures = append(structures, TypeConceptPair{name, structure})
 
 		if parser.isAndSkip(BuiltinSyms["]"]) {
 			break
@@ -261,7 +261,7 @@ func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]TypeConceptPair, 
 		}
 	}
 
-	return &concepts, nil
+	return &structures, nil
 }
 
 func (parser *Parser) parseBracedFcStrTypePairArray() (*[]StrTypePair, error) {

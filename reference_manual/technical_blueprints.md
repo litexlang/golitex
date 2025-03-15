@@ -26,7 +26,7 @@ In short, **The fundamental difference** between Litex and traditional proof ass
 
 ## Litex Expressions
 
-There are only two kinds of expressions in Litex: constructive expressions and factual expressions. Factual expressions are used by the user to declare some facts as true. Litex then verifies whether these facts are indeed correct. If they are correct, these new facts are added to the proof environment, where they can be used to verify subsequent facts. Constructive expressions are for introducing new elements in proofs, such as new types, new variables, new functions, or new concepts.
+There are only two kinds of expressions in Litex: constructive expressions and factual expressions. Factual expressions are used by the user to declare some facts as true. Litex then verifies whether these facts are indeed correct. If they are correct, these new facts are added to the proof environment, where they can be used to verify subsequent facts. Constructive expressions are for introducing new elements in proofs, such as new types, new variables, new functions, or new structs.
 
 ### Factual Expressions
 
@@ -167,7 +167,7 @@ For example, the set of integers can be equipped with a structure that includes 
 
 The same set can have different structures on it. For example, C[0,1] (the set of continuous functions on the interval [0,1]), different norms (such as the L1 norm or the L^∞ norm) impose different structures on the same set. Even though the underlying set is the same, the additional structure (the norm) defines different properties (such as convergence or completeness), making them distinct mathematical objects. 
 
-The analogy between "program = data structure + algorithm" and "type = set + structure" highlights a fundamental similarity: both concepts combine static properties (data structure or set) with dynamic behaviors (algorithm or structure) to define a complete entity. In programming, this forms the basis of functionality, while in math, it defines the characteristics and constraints of objects.
+The analogy between "program = data structure + algorithm" and "type = set + structure" highlights a fundamental similarity: both structs combine static properties (data structure or set) with dynamic behaviors (algorithm or structure) to define a complete entity. In programming, this forms the basis of functionality, while in math, it defines the characteristics and constraints of objects.
 
 So, When the underlying set is different, the type must be different. Even if the sets are the same, if the structures imposed on them are different, they are considered distinct types.
 
@@ -175,7 +175,7 @@ In traditional mathematical notation, it is common to embed all relevant informa
 
 In programming, such information is typically encapsulated within an instance of a type, separating the object itself from its properties. Adopting a similar approach in mathematical notation could improve clarity and rigor by distinguishing between the structure (e.g., the space) and its metadata (e.g., its dimension). This would make it easier to reason about mathematical objects in a more abstract and formal way, making Litex code more modular and sharable across different users.
 
-<!-- TODO: "A impl B" is where abstraction layer changes: B is higher abstraction, A is lower. If you want to jump between abstraction layer, use impl. Here A can be concept or type, B is concept. NEED TO EMPHASIZE THAT JUMPING BETWEEN DIFFERENT ABSTRACTION LAYER IS DONE BY impl -->
+<!-- TODO: "A impl B" is where abstraction layer changes: B is higher abstraction, A is lower. If you want to jump between abstraction layer, use impl. Here A can be struct or type, B is struct. NEED TO EMPHASIZE THAT JUMPING BETWEEN DIFFERENT ABSTRACTION LAYER IS DONE BY impl -->
 
 <!-- TODO: NEED TO EMPHASIZE HOW TO "RELATE" fc with TYPE: Type has var_member; HOW to "relate"  fc1 (type1) with fc2 (type2) : type1 has var_member fc2 type2; -->
 
@@ -190,7 +190,7 @@ Objects of different types support different operations and propositions. For ex
 - **Own Members**:
 In programming, a type is typically called a "struct" (in C) or a "class" (in C++ or Python). Such technique of organizing code is called "object oriented programming (OOP)". Objects of different types have different members. For example, a human Bob might have an attribute Bob.age. Additionally, the type itself can have members, which works like "static member" in C++. (A Member can be viewed as "there exist an unique object with certain properties". So "member" is a syntax sugar of "uniquely exist". Uniqueness is essential because strictness of math comes from uniqueness, i.e. no other choices.)
 
-- **implement a concept or extend existing types**:
+- **implement a struct or extend existing types**:
 
 <!-- function that returns new functions or new propositions are not implemented -->
 
@@ -230,7 +230,7 @@ add(1 ,2) = add(2, 1)
 
 Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a variable, with the distinctive feature being its ability to be positioned before the (). 
 
-Function parameter list can receive first-class citizens. Function type list can receive type concept pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
+Function parameter list can receive first-class citizens. Function type list can receive type struct pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
 
 In Litex, `var` could essentially be entirely replaced by `fn`, `fn` variable is simply a more versatile version of `var` variable: `fn` has the capability to precede parentheses (). For the time being, Litex retains `var`, but its future necessity remains uncertain.
 
@@ -246,14 +246,14 @@ All specific factual expressions have related proposition name. For example, a =
 
 The difference between a proposition (prop) and a factual expression is that a prop simply assigns a name to a statement, without determining its validity. On the other hand, a factual expression is meant to be evaluated, yielding an output value of true, false, unknown, or error.
 
-<!-- There is no concept parameter list because you can infinitely iterate over that and If you truly what to bind properties to a concept, you should invent math in Litex and make what you are thinking about in variable and add layer to that variable. -->
+<!-- There is no struct parameter list because you can infinitely iterate over that and If you truly what to bind properties to a struct, you should invent math in Litex and make what you are thinking about in variable and add layer to that variable. -->
 
 <!-- You can make everything a function, because function are just variables that can appear before the () in expressions like f(). If you bind no extra features to that function, e.g. fn f() any. then f works like a variable. -->
 
 <!-- challenge: how to implement or as syntax sugar?  -->
 
 ```plaintext
-concept Euclid_Space S:   // suppose S is a Rn
+struct Euclid_Space S:   // suppose S is a Rn
     type_member:
         var dim Nat // dim is positive natural number
         fn __add__(v1 S, v2 S) Real
@@ -267,7 +267,7 @@ concept Euclid_Space S:   // suppose S is a Rn
                 (v1 + v2)@k = v1@k + v2@k
 ```
 
-In this example, we define a concept called Euclidean Space. Sometimes it is crucial to pass "the type of the type" to a proposition, just like how programmers uses templates to pass parameter types to functions. That is where concept comes into place.
+In this example, we define a struct called Euclidean Space. Sometimes it is crucial to pass "the type of the type" to a proposition, just like how programmers uses templates to pass parameter types to functions. That is where struct comes into place.
 
 Euclidean space is a set of all finite dimensional spaces. S.dim represents the dimension of the space. Typically we write "Let S is R^{n}, where n can be any natural number", now we just write "S Euclid" and S.dim is automatically reserved for us. Notice how undefined variables "x" or "n" are "hidden" as a member of another symbol here. That is why OOP is crucial for simplicity and strictness of Litex.
 
@@ -277,9 +277,9 @@ Euclidean space is a set of all finite dimensional spaces. S.dim represents the 
 Explain every time you define a type, a special member is automatically generated for you _ -->
 
 ```plaintext
-// declare a concept
+// declare a struct
 
-concept Group G: // suppose G is a group
+struct Group G: // suppose G is a group
     type_member:
         fn __mul__(g G, g2 G) G // define *
         var I G // define identity
@@ -295,7 +295,7 @@ concept Group G: // suppose G is a group
 
 // declare a function with type requirements
 
-fn [G Group] multiply(g G, g2 G) G: // Type G must satisfy concept Group
+fn [G Group] multiply(g G, g2 G) G: // Type G must satisfy struct Group
     multiply(g, g2) = g * g2
 
 // declare a proposition with type requirements
@@ -305,13 +305,13 @@ prop [G Group] element_wise_commutative(g G, g2 G) G:
         g * g2 = g2 * g
 ```
 
-In Litex, how do we describe the situation where certain sets can "implement" the concept (like group), meaning they can be endowed with a group structure? What does it mean when we say R1, R2 and R3 are Euclidean Space?
+In Litex, how do we describe the situation where certain sets can "implement" the struct (like group), meaning they can be endowed with a group structure? What does it mean when we say R1, R2 and R3 are Euclidean Space?
 
-If you view a type as a set, then a concept is a "type of type" or a "set of sets". For example, the concept of a group can be thought of as the set of all sets that can be groups. Real is a type because there's only one set named Real, while there are multiple groups that implement the Group concept. R1, R2 and R3 are Euclidean Space actually means R1, R2 and R3 implements all features of Euclid Space. (Mathematically, it means certain sets being able to implement a category.)
+If you view a type as a set, then a struct is a "type of type" or a "set of sets". For example, the struct of a group can be thought of as the set of all sets that can be groups. Real is a type because there's only one set named Real, while there are multiple groups that implement the Group struct. R1, R2 and R3 are Euclidean Space actually means R1, R2 and R3 implements all features of Euclid Space. (Mathematically, it means certain sets being able to implement a category.)
 
-Such ideas already exist in mainstream programming world for practical purposes. Types in Go (the Go programming language) implements interface. Implement means types have required members. Types in Litex implements concept. Implement also means types have required members.
+Such ideas already exist in mainstream programming world for practical purposes. Types in Go (the Go programming language) implements interface. Implement means types have required members. Types in Litex implements struct. Implement also means types have required members.
 
-In Go, interfaces can be directly passed as parameter types. In Litex, a concept should not used in that way. For instance, a function like "fn f[G Group, G2 Group](g1 G, g2 G2)" can't be written as "fn(g1 Group, g2 Group)". If written that way, there's no indication that "g1 and g2 might belong to different groups". That is why, in Litex, concept acts as a stricter interface and as a looser version of generics.
+In Go, interfaces can be directly passed as parameter types. In Litex, a struct should not used in that way. For instance, a function like "fn f[G Group, G2 Group](g1 G, g2 G2)" can't be written as "fn(g1 Group, g2 Group)". If written that way, there's no indication that "g1 and g2 might belong to different groups". That is why, in Litex, struct acts as a stricter interface and as a looser version of generics.
 
 Type inference is possible. When calling f[G Group, G2 Group](g G, g2 G2), you can just write f(g, g2) instead of f[G, G2](g, g2) since G and G2 can be inferred.
 
@@ -375,13 +375,13 @@ _-- G.H. Hardy_
 
 It is important to write clean and understandable proof. From my experience, there are several traps preventing you from writing good Litex code. You should key in mind not to fall into them:
 
-- When translating a bad book written in natural language into Litex, you may encounter issues such as undeclared notation overloading, undefined symbols, new concepts appearing unexpectedly, and an abundance of vague statements like 'too simple to prove.' It's best not to translate such books directly into Litex. Instead, take the time to clarify your thoughts before writing them down.
+- When translating a bad book written in natural language into Litex, you may encounter issues such as undeclared notation overloading, undefined symbols, new structs appearing unexpectedly, and an abundance of vague statements like 'too simple to prove.' It's best not to translate such books directly into Litex. Instead, take the time to clarify your thoughts before writing them down.
 
 - Don't generalize at the very beginning. Instead of generalizing your proposition or type members to Euclid Space of all dimensions, stick to special cases like R2 or R3 first. After that, use "impl" keyword to implement them into more generalized cases. Litex is flexible enough for you to start your proof from any level of abstraction.
 
 - Global variables are dangerous. Only the most important variables, like empty_set, should be used globally. Temporary variables like 'x' or 'n' must be enclosed in a local scope.
 
-- Detailed Naming is recommended. When you formalize a new concept, a new function, or a new variable, please write the meaning or purpose of that symbol in its name. Otherwise, people soon forgets what function "f()" means.
+- Detailed Naming is recommended. When you formalize a new struct, a new function, or a new variable, please write the meaning or purpose of that symbol in its name. Otherwise, people soon forgets what function "f()" means.
 
 - If the same pattern of proof appear again and again, you should enclose such kind of proof in a single `forall` expression or a proposition.
 
@@ -397,7 +397,7 @@ _Simplify, simplify, simplify._
 
 _-- Steve Jobs_
 
-Litex is simple to write, easy to read, It facilitates the construction of new concepts, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
+Litex is simple to write, easy to read, It facilitates the construction of new structs, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
 
 Good writing simplifies math, while poor writing complicates it. Leibniz's calculus notation $\frac{dy}{dx}$ surpassed Newton's $\dot{y}$ for its clarity, just as Arabic numerals (1, 2, 3) outperformed Roman numerals (I, II, III) in simplicity.  Litex’s intuitive, everyday math-based syntax makes formal verification accessible and fluid, advancing reasoning and proof scalability.
 
@@ -442,17 +442,17 @@ However, Litex still enables you to do mechanical things through language plugin
 
 There is no generics in Litex, at least for the time being. I prefer single-word type name as how C works, rather than type with layers of layers of "<>"s, as how code looks like in C++ and other languages with generics(templates). 
 
-Generics helps you to expose every layer of data-structure. It is great in many cases, but may cause serious trouble in Litex. The reason is simple: there are just so many layers of abstraction in math, too many to imagine. Exposing all the abstraction layers in type would make the code overly redundant. Users do not need to delve into concepts that are too low-level.
+Generics helps you to expose every layer of data-structure. It is great in many cases, but may cause serious trouble in Litex. The reason is simple: there are just so many layers of abstraction in math, too many to imagine. Exposing all the abstraction layers in type would make the code overly redundant. Users do not need to delve into structs that are too low-level.
 
 ### Users can start his proof from any abstraction layer.
 
 In modern math, many facts are derived from set theory, a highly abstract foundation. However, math historically evolved differently. Natural numbers emerged in prehistory, and calculus was developed by Newton and Leibniz without set theory. A formal language that forces users to start from a fixed abstraction layer is limiting.
 
-Mathematical discovery occurs in two ways: inventing abstract concepts and finding concrete examples, or identifying patterns in facts and summarizing them into abstract concepts. Both top-down and bottom-up approaches coexist in math, which is why Litex is designed to handle all levels of abstraction effectively.
+Mathematical discovery occurs in two ways: inventing abstract structs and finding concrete examples, or identifying patterns in facts and summarizing them into abstract structs. Both top-down and bottom-up approaches coexist in math, which is why Litex is designed to handle all levels of abstraction effectively.
 
 ### Formalize Litex in Litex
 
-One of the most interesting concept in Computer Science is recursion. Since any mathematical process, including the Litex interpreter, can be formalized by math, and math can be formalized by Litex, I am looking forward to formalizing the pipeline Litex in Litex.
+One of the most interesting struct in Computer Science is recursion. Since any mathematical process, including the Litex interpreter, can be formalized by math, and math can be formalized by Litex, I am looking forward to formalizing the pipeline Litex in Litex.
 
 Don Knuth's marvelous book the art of computer programming taught us the mathematical definition of computer programming. For fun, take a look at it:
 
