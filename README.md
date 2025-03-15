@@ -104,6 +104,10 @@ prop younger(a Human, b Human):
 
 Every fact in Litex must be tied to a concrete entity: variable (`var`), function (`fn`), or proposition (`prop`). Users must declare variables before use, and every entity has a type.
 
+Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a variable, with the distinctive feature being its ability to be positioned before the ().
+
+Users can think of a function as something that takes parameters that satisfy the condition of fn and combines them to form a new symbol of symbols. It works like struct in C: allows users to group together variables of satisfying certain conditions under a single name. 
+
 ```
 var Bob Human
 

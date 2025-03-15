@@ -228,7 +228,7 @@ add(1 ,2) = add(2, 1)
 1 + 2 = 2 + 1
 ```
 
-Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a variable, with the distinctive feature being its ability to be positioned before the (). 
+Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a variable, with the distinctive feature being its ability to be positioned before the ().
 
 Function parameter list can receive first-class citizens. Function type list can receive type struct pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
 
