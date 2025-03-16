@@ -224,7 +224,7 @@ claim:
           x is Human  // In this situation, it is true, because we are proving by contradiction
           x is self_aware // Litex finds that x is both not self_aware and self_aware, which contradicts
 
-prove_impl Interger Group:
+prove_impl Integer Group:
     Integer.__add__ impl G.__mul__
     Integer.0 impl G.I
     forall x Integer:

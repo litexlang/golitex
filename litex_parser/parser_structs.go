@@ -61,10 +61,10 @@ type DefFnStmt struct {
 }
 
 type BlockForallStmt struct {
-	typeParams []TypeConceptPair
-	varParams  []StrTypePair
-	cond       []FactStmt
-	then       []SpecFactStmt
+	// typeParams []TypeConceptPair
+	varParams []StrTypePair
+	cond      []FactStmt
+	then      []SpecFactStmt
 }
 
 type FuncFactStmt struct {

@@ -96,7 +96,6 @@ func (parser *Parser) parseFcChainMem() (FcChainMem, error) {
 	// 如果 1 out of range了，那返回值是 “”
 	strAtSecondPosition := parser.strAt(1)
 
-	// if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] {
 	if strAtSecondPosition != BuiltinSyms["("] {
 		return parser.parseFcStr()
 	} else {
