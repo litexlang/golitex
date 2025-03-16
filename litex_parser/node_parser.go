@@ -347,15 +347,6 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 	return &FuncFactStmt{true, &FcFnRetValue{FcStr(opt), []TypeParamsAndVarParamsPair{{[]Fc{left}}}}}, nil
 }
 
-func (parser *Parser) parseTypeVarStr() (TypeVarStr, error) {
-	name, err := parser.next()
-	if err != nil {
-		return "", &parserErr{err, parser}
-	}
-
-	return TypeVarStr(name), nil
-}
-
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 	if stmt.Header.is(Keywords["prop"]) {
 		prop, err := stmt.parseDefPropStmt()

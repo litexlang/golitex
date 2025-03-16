@@ -110,7 +110,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	return ret, nil
 }
 
-func (stmt *TokenBlock) parseThenFacts() (*[]FactStmt, error) {
+func (stmt *TokenBlock) parseTypeConceptDeclStmtKnows() (*[]FactStmt, error) {
 	stmt.Header.next()
 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
 		return nil, err
@@ -119,13 +119,11 @@ func (stmt *TokenBlock) parseThenFacts() (*[]FactStmt, error) {
 	facts := &[]FactStmt{}
 
 	for _, curStmt := range stmt.Body {
-		if curStmt.Header.is(Keywords["fact"]) {
-			fact, err := curStmt.parseFactStmt()
-			if err != nil {
-				return nil, err
-			}
-			*facts = append(*facts, fact)
+		fact, err := curStmt.parseFactStmt()
+		if err != nil {
+			return nil, err
 		}
+		*facts = append(*facts, fact)
 	}
 
 	return facts, nil
@@ -177,7 +175,7 @@ func (block *TokenBlock) parseDefConceptStmt() (*DefStructStmt, error) {
 				instanceMembers = append(instanceMembers, instanceMember)
 			}
 		} else if curStmt.Header.is(Keywords["know"]) {
-			knowFacts, err = curStmt.parseThenFacts()
+			knowFacts, err = curStmt.parseTypeConceptDeclStmtKnows()
 			if err != nil {
 				return nil, &parseStmtErr{err, *block}
 			}
@@ -239,10 +237,12 @@ func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 			}
 
 		} else if curStmt.Header.is(Keywords["know"]) {
-			knowFacts, err = curStmt.parseThenFacts()
+			knowFacts, err = curStmt.parseTypeConceptDeclStmtKnows()
 			if err != nil {
 				return nil, &parseStmtErr{err, *block}
 			}
+		} else {
+			return nil, &parseStmtErr{fmt.Errorf("expected type_member or instance_member, got %s", curStmt.Header.strAtCurIndexPlus(0)), *block}
 		}
 	}
 	return &DefTypeStmt{decl, *implName, typeMembers, instanceMembers, *knowFacts}, nil
@@ -259,7 +259,7 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseIfStmt() (FactStmt, error) {
-	if stmt.Header.strAt(-1) == BuiltinSyms[":"] {
+	if stmt.Header.strAtCurIndexPlus(-1) == BuiltinSyms[":"] {
 		return stmt.parseBlockIfStmt()
 	} else {
 		return stmt.parseInlineIfFactStmt()
@@ -285,10 +285,6 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 	varParams := &[]StrTypePair{}
 	condFacts := []FactStmt{}
 	thenFacts := []SpecFactStmt{}
-
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
 
 	for !stmt.Header.is(BuiltinSyms["{"]) {
 		fact, err := stmt.parseInlineFactStmt()
@@ -363,7 +359,12 @@ func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &FuncFactStmt{true, fc}, nil
+	// * 为了防止 $p[a,b) 这样不小心把左括号输入错误了，然后fc取成p了，让)作为终止符
+	if stmt.Header.strAtCurIndexPlus(-1) == BuiltinSyms[")"] {
+		return &FuncFactStmt{true, fc}, nil
+	} else {
+		return nil, fmt.Errorf("expected ')', get %v", stmt.Header.strAtCurIndexPlus(-1))
+	}
 }
 
 func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
@@ -405,7 +406,7 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseForallStmt() (FactStmt, error) {
-	if stmt.Header.strAt(-1) != BuiltinSyms[":"] {
+	if stmt.Header.strAtCurIndexPlus(-1) != BuiltinSyms[":"] {
 		return stmt.parseInlineForallStmt()
 	} else {
 		return stmt.parseBlockedForall()
@@ -779,7 +780,7 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	if stmt.Header.strAt(0) == Keywords["is"] {
+	if stmt.Header.strAtCurIndexPlus(0) == Keywords["is"] {
 		return stmt.Header.parseIsExpr(fc)
 	}
 
