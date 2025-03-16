@@ -10,58 +10,36 @@ type DefVarStmt struct {
 	Facts []FactStmt
 }
 
-// if struct and type has more structTypes, use know impl
-
-// TODO 取消掉所有的这里的decl，改用直接的DeclStmt。同时保留用户声明的顺序不要乱了
-
 type DefStructStmt struct {
-	decl       fcDecl
-	structName TypeConceptStr
-	// typeVarMember      []FcVarDecl
-	// typeFnMember       []FcFnDecl
-	// typePropMember     []PropDecl
-	// typeTypeMember     []TypeDecl
-	typeMembers []TypeMember
-	// instanceVarMember  []FcVarDecl
-	// instanceFn         []FcFnDecl
-	// instancePropMember []PropDecl
+	decl            fcDecl
+	structName      TypeConceptStr
+	typeMembers     []TypeMember
 	instanceMembers []InstanceMember
 	knowFacts       []FactStmt
 }
 
 type DefTypeStmt struct {
-	decl fcDecl
-	// implType can be struct, or type, because a new type can either
-	// implement a struct or just be a subset of a type
-	implType NamedFcType
-	// typeVarMember      []FcVarDecl
-	// typeFnMember       []FcFnDecl
-	// typePropMember     []PropDecl
-	// typeTypeMember     []TypeDecl
-	typeMembers []TypeMember
-	// instanceVarMember  []FcVarDecl
-	// instanceFnMember   []FcFnDecl
-	// instancePropMember []PropDecl
+	decl            fcDecl
+	implType        NamedFcType
+	typeMembers     []TypeMember
 	instanceMembers []InstanceMember
 	knowFacts       []FactStmt
 }
 
 type DefPropStmt struct {
 	decl      PropDecl
-	ifFacts   []FactStmt
+	condFacts []FactStmt
 	thenFacts []FactStmt
 }
 
 type DefFnStmt struct {
-	name string
-	tp   FcFnType
-	// decl      FcFnDecl
+	name      string
+	tp        FcFnType
 	ifFacts   []FactStmt
 	thenFacts []FactStmt
 }
 
 type BlockForallStmt struct {
-	// typeParams []TypeConceptPair
 	varParams []StrTypePair
 	cond      []FactStmt
 	then      []SpecFactStmt
@@ -72,7 +50,6 @@ type FuncFactStmt struct {
 	Fc     Fc
 }
 
-// 1 = 2 -1 = 1 * 1, vars = [1, 2 -1, 1 * 1], opt = "="
 type RelationFactStmt struct {
 	IsTrue bool
 	Vars   []Fc
@@ -175,20 +152,20 @@ type FcVarType struct {
 
 type FcVarTypeStrValue string
 type FcVarTypeFuncValue struct {
-	Name       string
-	TypeParams []TypeVarStr
-	VarParams  []Fc
+	Name string
+	// TypeParams []TypeVarStr
+	VarParams []Fc
 }
 
 type FcFnType struct {
-	typeParamsTypes []TypeConceptPair
-	varParamsTypes  []StrTypePair
-	retType         fcType
+	// typeParamsTypes []TypeConceptPair
+	varParamsTypes []StrTypePair
+	retType        fcType
 }
 
 type FcPropType struct {
-	typeParams []TypeConceptPair
-	varParams  []StrTypePair
+	// typeParams []TypeConceptPair
+	varParams []StrTypePair
 }
 
 type UndefinedFnType struct{}
