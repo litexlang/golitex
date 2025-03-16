@@ -96,7 +96,8 @@ func (parser *Parser) parseFcChainMem() (FcChainMem, error) {
 	// 如果 1 out of range了，那返回值是 “”
 	strAtSecondPosition := parser.strAt(1)
 
-	if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] {
+	// if strAtSecondPosition != BuiltinSyms["["] && strAtSecondPosition != BuiltinSyms["("] {
+	if strAtSecondPosition != BuiltinSyms["("] {
 		return parser.parseFcStr()
 	} else {
 		return parser.parseFcFnRetVal()
@@ -123,13 +124,11 @@ func (parser *Parser) parseTypeParamsVarParamsPairs() (*[]TypeParamsAndVarParams
 
 	pairs := []TypeParamsAndVarParamsPair{}
 
-	for !parser.ExceedEnd() && (parser.is(BuiltinSyms["["]) || parser.is(BuiltinSyms["("])) {
+	for !parser.ExceedEnd() && (parser.is(BuiltinSyms["("])) {
 		varParamsPtr := &[]Fc{}
-		if parser.is(BuiltinSyms["("]) {
-			varParamsPtr, err = parser.parseBracedFcArr()
-			if err != nil {
-				return nil, &parserErr{err, parser}
-			}
+		varParamsPtr, err = parser.parseBracedFcArr()
+		if err != nil {
+			return nil, &parserErr{err, parser}
 		}
 
 		pairs = append(pairs, TypeParamsAndVarParamsPair{*varParamsPtr})
