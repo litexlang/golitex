@@ -124,14 +124,6 @@ func (parser *Parser) parseTypeParamsVarParamsPairs() (*[]TypeParamsAndVarParams
 	pairs := []TypeParamsAndVarParamsPair{}
 
 	for !parser.ExceedEnd() && (parser.is(BuiltinSyms["["]) || parser.is(BuiltinSyms["("])) {
-		typeParamsPtr := &[]TypeVarStr{}
-		if parser.is(BuiltinSyms["["]) {
-			typeParamsPtr, err = parser.parseBracketedTypeVarArr()
-			if err != nil {
-				return nil, &parserErr{err, parser}
-			}
-		}
-
 		varParamsPtr := &[]Fc{}
 		if parser.is(BuiltinSyms["("]) {
 			varParamsPtr, err = parser.parseBracedFcArr()
@@ -140,7 +132,7 @@ func (parser *Parser) parseTypeParamsVarParamsPairs() (*[]TypeParamsAndVarParams
 			}
 		}
 
-		pairs = append(pairs, TypeParamsAndVarParamsPair{*typeParamsPtr, *varParamsPtr})
+		pairs = append(pairs, TypeParamsAndVarParamsPair{*varParamsPtr})
 	}
 
 	return &pairs, nil
@@ -185,7 +177,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 
 		left = &FcFnRetValue{
 			FcStr(curToken),
-			[]TypeParamsAndVarParamsPair{{[]TypeVarStr{}, []Fc{left, right}}},
+			[]TypeParamsAndVarParamsPair{{[]Fc{left, right}}},
 		}
 	}
 
@@ -206,7 +198,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 		}
 		return &FcFnRetValue{
 			FcStr(unaryOp),
-			[]TypeParamsAndVarParamsPair{{[]TypeVarStr{}, []Fc{right}}},
+			[]TypeParamsAndVarParamsPair{{[]Fc{right}}},
 		}, nil
 	} else {
 		return parser.parseFcAtom()

@@ -32,23 +32,14 @@ func (f *FcFnRetValue) fcMemChainMemType() {}
 type FcChain struct{ ChainOfMembers []FcChainMem }
 
 type TypeParamsAndVarParamsPair struct {
-	TypeParams []TypeVarStr
-	VarParams  []Fc
+	// TypeParams []TypeVarStr
+	VarParams []Fc
 }
 
 func (f *FcFnRetValue) String() string {
 	outPut := string(f.FnName)
 
 	for _, pair := range f.TypeParamsVarParamsPairs {
-		if len(pair.TypeParams) > 0 {
-			outPut += "["
-			for i := 0; i < len(pair.TypeParams)-1; i++ {
-				outPut += string(pair.TypeParams[i])
-				outPut += ", "
-			}
-			outPut += string(pair.TypeParams[len(pair.TypeParams)-1])
-			outPut += "]"
-		}
 
 		if len(pair.VarParams) > 0 {
 			outPut += "("
