@@ -168,18 +168,6 @@ type FcPropType struct {
 	varParams []StrTypePair
 }
 
-type UndefinedFnType struct{}
-
-var undefinedFnTypeInstance *UndefinedFnType = &UndefinedFnType{}
-
-type UndefinedVarType struct{}
-
-var undefinedVarTypeInstance *UndefinedVarType = &UndefinedVarType{}
-
-type UndefinedPropType struct{}
-
-var undefinedPropTypeInstance *UndefinedPropType = &UndefinedPropType{}
-
 var AnyType = Keywords["any"]
 var VarType = Keywords["var"]
 var FnType = Keywords["fn"]
@@ -189,12 +177,3 @@ type NamedFcType struct {
 	typeNameArr []string // packageName.packageName.typeName
 	params      []Fc
 }
-
-type fcUndefinedType interface {
-	fcUndefinedType()
-	fcType()
-}
-
-func (f *UndefinedFnType) fcUndefinedType()   {}
-func (f *UndefinedVarType) fcUndefinedType()  {}
-func (f *UndefinedPropType) fcUndefinedType() {}

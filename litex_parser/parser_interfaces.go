@@ -64,12 +64,9 @@ type fcType interface {
 	fcType()
 }
 
-func (f FcVarType) fcType()          {}
-func (f *FcFnType) fcType()          {}
-func (f *FcPropType) fcType()        {}
-func (f *UndefinedFnType) fcType()   {}
-func (f *UndefinedVarType) fcType()  {}
-func (f *UndefinedPropType) fcType() {}
+func (f FcVarType) fcType()   {}
+func (f *FcFnType) fcType()   {}
+func (f *FcPropType) fcType() {}
 
 type fcDecl interface {
 	fcDecl()
