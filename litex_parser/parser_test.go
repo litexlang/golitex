@@ -455,7 +455,7 @@ type var G Group:
 				$f(g.g1, g2.g2)
 
 	know:
-		$p[G, G2](x, y)
+		$p(x, y)
 `
 
 	statements, err := ParserTester(code)
@@ -469,21 +469,21 @@ type var G Group:
 func TestParseFactStmt(t *testing.T) {
 	code :=
 		`
-$p[G, G2](x, y)
+$p(x, y)
 
-forall [G Group, G2 Group] g G, g2 G2:
-    $p[G, G2](x, y)
+forall g G, g2 G2 :
+    $p(x, y)
 
-forall [G Group, G2 Group] g g, g2 g2:
+forall g g, g2 g2:
 	cond:
-		$p[G, G2](x, y)
+		$p(x, y)
 	then:
-	    $p[G, G2](x, y)
-		forall [G Group, G2 Group] g g, g2 g2:
+	    $p(x, y)
+		forall g g, g2 g2:
 			cond:
-				$p[G, G2](x, y)
+				$p(x, y)
 			then:
-				$p[G, G2](x, y)
+				$p(x, y)
 		
 `
 	statements, err := ParserTester(code)
@@ -1088,6 +1088,22 @@ a.b.c.d.e.f() is red
 a.b.c.d()().e.f(z)() is red
 1.b is red
 1.2.b()().c.d.e.f() is red
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
+
+func TestForallStmt2(t *testing.T) {
+	code := `
+forall g G, g2 G2 :
+    $p(x, y)
+
 `
 
 	statements, err := ParserTester(code)
