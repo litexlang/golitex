@@ -460,7 +460,7 @@ A mathematical definition of an **algorithm** in terms of set theory defines a *
 
 - \( Q \) is a set containing subsets \( I \) (the set of inputs) and \( \Omega \) (the set of outputs).
 - \( f \) is a function from \( Q \) to itself.
-- \( f \) leaves \( \Omega \) **pointwise fixed**, meaning \( f(q) = q \) for all \( q \in \Omega \).
+- \( f \) leaves \( \Omega \) **point-wise fixed**, meaning \( f(q) = q \) for all \( q \in \Omega \).
 
 A **computational sequence** is then defined recursively as:
 \[

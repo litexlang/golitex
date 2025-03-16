@@ -282,12 +282,10 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	typeParams := &[]TypeConceptPair{}
 	varParams := &[]StrTypePair{}
 	condFacts := []FactStmt{}
 	thenFacts := []SpecFactStmt{}
 
-	typeParams, varParams, err = stmt.Header.parseBracketedTypeConceptPairArrAndBracedFcTypePairArr()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -325,7 +323,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &BlockForallStmt{*typeParams, *varParams, condFacts, thenFacts}, nil
+	return &BlockForallStmt{*varParams, condFacts, thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseInstantiatedFactStmt() (SpecFactStmt, error) {
@@ -374,14 +372,6 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	typeParams := &[]TypeConceptPair{}
-	if stmt.Header.is(BuiltinSyms["["]) {
-		typeParams, err = stmt.Header.parseBracketedTypeConceptPairArray()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	}
-
 	varParams, err := stmt.Header.parseFcVarTypePairArrEndWithColon()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -411,7 +401,7 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 		}
 	}
 
-	return &BlockForallStmt{*typeParams, *varParams, *ifFacts, *thenFacts}, nil
+	return &BlockForallStmt{*varParams, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseForallStmt() (FactStmt, error) {
