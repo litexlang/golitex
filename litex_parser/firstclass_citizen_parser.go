@@ -94,7 +94,7 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 
 func (parser *Parser) parseFcChainMem() (FcChainMem, error) {
 	// 如果 1 out of range了，那返回值是 “”
-	strAtSecondPosition := parser.strAt(1)
+	strAtSecondPosition := parser.strAtCurIndexPlus(1)
 
 	if strAtSecondPosition != BuiltinSyms["("] {
 		return parser.parseFcStr()
@@ -222,7 +222,7 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 
 	if parser.is(BuiltinSyms["."]) {
 		// The member after . might be a member or a number
-		_, err := strconv.Atoi(parser.strAt(1))
+		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {
 			return FcStr(left), nil
 		} else {

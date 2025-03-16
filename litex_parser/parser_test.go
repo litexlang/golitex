@@ -438,8 +438,8 @@ type var G Group:
 				fn f(x G, y G) G
 				prop f(x G, y G)
 
-			then:
-				$p[G, G2](x, y)
+			know:
+				$p(x, y)
 	
 	instance_member:
 		var 2 G
@@ -456,9 +456,6 @@ type var G Group:
 
 	know:
 		$p[G, G2](x, y)
-
-type var G Group:
-	$p[G, G2](x, y)
 `
 
 	statements, err := ParserTester(code)

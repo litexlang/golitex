@@ -11,7 +11,7 @@ type Parser struct {
 	// In many ways there should be one more field: err []string to store the error. It should be done this way because all parsing functions in parser is a method of parser, and if we do so, we can use nil as return value as the error indicator and never return 2 fields in each function.
 }
 
-func (p *Parser) strAt(index int) string {
+func (p *Parser) strAtCurIndexPlus(index int) string {
 	if index >= 0 {
 		i := p.index + index
 
