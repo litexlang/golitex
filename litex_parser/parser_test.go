@@ -33,7 +33,7 @@ def add(a, b):
 }
 
 func TestSplitString(t *testing.T) {
-	input := []string{"struct [G Group[G Set](v G)]:"}
+	input := []string{"struct (v G):"}
 	for _, s := range input {
 		tokens, err := tokenizeString(s)
 
@@ -51,18 +51,18 @@ func TestSplitString(t *testing.T) {
 func TestParseStrStmtBlock(t *testing.T) {
 	subBody := []strBlock{
 		{
-			Header: "struct [v G](v G):",
+			Header: "struct (v G):",
 			Body:   nil,
 		},
 	}
 	body := []strBlock{
 		{
-			Header: "struct [G Set](v G):",
+			Header: "struct (v G):",
 			Body:   subBody,
 		},
 	}
 	input := strBlock{
-		Header: "struct [G Group[G Set](v G)]:",
+		Header: "struct (v G):",
 		Body:   body,
 	}
 
@@ -76,8 +76,8 @@ func TestParseStrStmtBlock(t *testing.T) {
 
 func TestParseFc(t *testing.T) {
 	strings := []string{
-		"f[G, B](a, b)[C, D](c, d)",
-		"f[G, B](a, b).g[G, B].t(a, b)",
+		"f(a, b)(c, d)",
+		"f(a, b).g.t(a, b)",
 	}
 
 	for _, s := range strings {
@@ -94,23 +94,12 @@ func TestParseFc(t *testing.T) {
 	}
 }
 
-func TestParseBracketVarTypePair(t *testing.T) {
-	tokens := []string{"[", "g", "Group", ",", "v", "Group", "]"}
-	parser := Parser{0, tokens}
-	fc, err := parser.parseBracketedTypeConceptPairArray()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Println(fc)
-}
-
 func TestParseBuiltinFnRetValue(t *testing.T) {
 	strings := []string{
-		"-1 + 2 ^ 3 * 4 / 5 + 6 + f[G, B](a, b).g[G, B].t(a, b) * f[G, B](a, b)[C, D](c, d)",
-		"f[G, B](a, b).g[G, B].t(a, b) + 1.2",
+		"-1 + 2 ^ 3 * 4 / 5 + 6 + f(a, b).g.t(a, b) * f(a, b)(c, d)",
+		"f(a, b).g.t(a, b) + 1.2",
 		"1.2 + 1.3 * 14.2",
-		"f[G, B](a, b)[C, D](c, d) + 6 * 5",
+		"f(a, b)(c, d) + 6 * 5",
 		"-1 + 2 ^ 3 * 4 / 5 + 6",
 	}
 
@@ -131,11 +120,11 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 }
 
 func TestForallStmt(t *testing.T) {
-	tokenized1, err := tokenizeString("forall [G Group] g1 G, g2 G:")
+	tokenized1, err := tokenizeString("forall g1 G, g2 G:")
 	if err != nil {
 		t.Fatal(err)
 	}
-	tokenized2, err := tokenizeString("$f[G, B](a, b)[C, D](c, d)")
+	tokenized2, err := tokenizeString("$f(a, b)(c, d)")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,11 +207,11 @@ func TestForallStmt(t *testing.T) {
 }
 
 func TestDefPropStmt(t *testing.T) {
-	tokenized1, err := tokenizeString("prop ha [G Group] (g1 G, g2 G):")
+	tokenized1, err := tokenizeString("prop ha (g1 G, g2 G):")
 	if err != nil {
 		t.Fatal(err)
 	}
-	tokenized2, err := tokenizeString("$f[G, B](a, b)[C, D](c, d)")
+	tokenized2, err := tokenizeString("$f(a, b)(c, d)")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -328,16 +317,16 @@ func TestDefConceptStmt(t *testing.T) {
 	
 	type_member:
 		var 1 G
-		fn f[G Group, G2 Group](x G, y G) G
-		prop f[G Group, G2 Group](x G, y G)
+		fn f(x G, y G) G
+		prop f(x G, y G)
 
 	instance_member:
 		var 1 G
-		fn f[G Group, G2 Group](x G, y G) G
-		prop f[G Group, G2 Group](x G, y G)
+		fn f(x G, y G) G
+		prop f(x G, y G)
 
 	then:
-		$p[G, G2](x, y)
+		$p(x, y)
 		
 `
 	statements, err := ParserTester(code)
@@ -350,29 +339,29 @@ func TestDefConceptStmt(t *testing.T) {
 
 func TestDefPropStmt2(t *testing.T) {
 	code := `
-prop P[G Group, G2 Group](g G, g2 G2):
+prop P(g G, g2 G2):
 	cond:
-    	$f[G, B](g.g1, g2.g2)
+    	$f(g.g1, g2.g2)
 	then:
-		$f[G, B](g.g1, g2.g2)
+		$f(g.g1, g2.g2)
 
-prop P[G Group, G2 Group](g G, g2 G2):
-	$f[G, B](g.g1, g2.g2)
+prop P(g G, g2 G2):
+	$f(g.g1, g2.g2)
 
-axiom prop P[G Group, G2 Group](g G, g2 G2):
+axiom prop P(g G, g2 G2):
 	cond:
-    	$f[G, B](g.g1, g2.g2)
+    	$f(g.g1, g2.g2)
 	then:
-		$f[G, B](g.g1, g2.g2)
+		$f(g.g1, g2.g2)
 
-axiom prop P[G Group, G2 Group](g G, g2 G2):
-	$f[G, B](g.g1, g2.g2)
+axiom prop P(g G, g2 G2):
+	$f(g.g1, g2.g2)
 
 forall x G:
 	cond:
-    	$f[G, B](g.g1, g2.g2)
+    	$f(g.g1, g2.g2)
 	then:
-		$f[G, B](g.g1, g2.g2)
+		$f(g.g1, g2.g2)
 
 
 `
@@ -386,13 +375,13 @@ forall x G:
 
 func TestDefFnStmt(t *testing.T) {
 	code := `
-fn P[G Group, G2 Group](g G, g2 G2) fn [G Group, G2 Group](g G, g2 G2):
+fn P(g G, g2 G2) fn (g G, g2 G2):
 	cond:
-    	$f[G, B](g.g1, g2.g2)
+    	$f(g.g1, g2.g2)
 	then:
-		$f[G, B](g.g1, g2.g2)
+		$f(g.g1, g2.g2)
 
-$f[G, B](g.g1, g2.g2)
+$f(g.g1, g2.g2)
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -404,13 +393,13 @@ $f[G, B](g.g1, g2.g2)
 
 func TestFactStatements(t *testing.T) {
 	code := `
-$f[G, B](g.g1, g2.g2)
+$f(g.g1, g2.g2)
 
-forall [G Group] x g:
+forall  x g:
 	cond: 
-		$f[]()
+		$f()
 	then:
-		$f[G, B](g.g1, g2.g2)
+		$f(g.g1, g2.g2)
 	
 `
 	statements, err := ParserTester(code)
@@ -428,42 +417,42 @@ type var G Group
 type var G Group:
 	type_member:
 		var 1 G
-		fn P[G Group, G2 Group](g G, g2 G2) fn [G Group, G2 Group](g G, g2 G2):
+		fn P(g G, g2 G2) fn (g G, g2 G2):
 			cond:
-				$f[G, B](g.g1, g2.g2)
+				$f(g.g1, g2.g2)
 			then:
-				$f[G, B](g.g1, g2.g2)
-		prop P[G Group, G2 Group](g G, g2 G2):
+				$f(g.g1, g2.g2)
+		prop P(g G, g2 G2):
 			cond:
-				$f[G, B](g.g1, g2.g2)
+				$f(g.g1, g2.g2)
 			then:
-				$f[G, B](g.g1, g2.g2)
+				$f(g.g1, g2.g2)
 		type var G Group2:
 			type_member:
 				var 3 G
-				fn f[G Group, G2 Group](x G, y G) G
-				prop f[G Group, G2 Group](x G, y G)
+				fn f(x G, y G) G
+				prop f(x G, y G)
 		
 			instance_member:
 				var 1 G
-				fn f[G Group, G2 Group](x G, y G) G
-				prop f[G Group, G2 Group](x G, y G)
+				fn f(x G, y G) G
+				prop f(x G, y G)
 
 			then:
 				$p[G, G2](x, y)
 	
 	instance_member:
 		var 2 G
-		fn P[G Group, G2 Group](g G, g2 G2) fn [G Group, G2 Group](g G, g2 G2):
+		fn P(g G, g2 G2) fn (g G, g2 G2):
 			cond:
-				$f[G, B](g.g1, g2.g2)
+				$f(g.g1, g2.g2)
 			then:
-				$f[G, B](g.g1, g2.g2)
-		prop P[G Group, G2 Group](g G, g2 G2):
+				$f(g.g1, g2.g2)
+		prop P(g G, g2 G2):
 			cond:
-				$f[G, B](g.g1, g2.g2)
+				$f(g.g1, g2.g2)
 			then:
-				$f[G, B](g.g1, g2.g2)
+				$f(g.g1, g2.g2)
 
 	know:
 		$p[G, G2](x, y)
@@ -791,7 +780,7 @@ claim:
 	prove_by_contradiction:
 		$p[G, G2](x, y)
 
-$f[G, B](a, b).g[G, B].t(a, b)
+$f(a, b).g.t(a, b)
 
 
 `
@@ -826,7 +815,7 @@ func TestSequenceOfFcCallingOneAnother(t *testing.T) {
 	code :=
 		`
 h[]().g[c](d).t is red
-f[G, B](a, b).g[G, B].t(a, b) is red
+f(a, b).g.t(a, b) is red
 f(t) is red
 
 `
@@ -875,12 +864,12 @@ func TestNamedClaimStmt(t *testing.T) {
 thm: 
 	prop P[G Group, G2 Group](g G, g2 G2):
 		cond:
-			$f[G, B](g.g1, g2.g2)
+			$f(g.g1, g2.g2)
 		then:
-			$f[G, B](g.g1, g2.g2)
+			$f(g.g1, g2.g2)
 	prove:
-		$f[G, B](g.g1, g2.g2)
-		$f[G, B](g.g1, g2.g2)
+		$f(g.g1, g2.g2)
+		$f(g.g1, g2.g2)
 `
 
 	statements, err := ParserTester(code)
@@ -894,7 +883,7 @@ thm:
 
 func TestInlineIfStmt(t *testing.T) {
 	code := `
-when $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()} { $p()}
+when $f(g.g1, g2.g2), forall $p() {$p()} { $p()}
 
 forall g G:
 	cond:
@@ -907,21 +896,21 @@ forall g G:
 	then:
 		$t()
 	
-prop P[G Group, G2 Group](g G, g2 G2):
+prop P(g G, g2 G2):
 	cond:
-		when $f[G, B](g.g1, g2.g2), when $f[G, B](g.g1, g2.g2) {$p()}  {$p()}
+		when $f(g.g1, g2.g2), when $f(g.g1, g2.g2) {$p()}  {$p()}
 	then:
 		$p()
 prove:
-	when $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()}  {$p()}
-	when $f[G, B](g.g1, g2.g2) { $p()}
+	when $f(g.g1, g2.g2), forall $p() {$p()}  {$p()}
+	when $f(g.g1, g2.g2) { $p()}
 
-forall [G Group, G2 Group] g g, g2 g2:
+forall g g, g2 g2:
 	cond:
-		$p[G, G2](x, y)
-		when $f[G, B](g.g1, g2.g2) {$p()}
+		$p(x, y)
+		when $f(g.g1, g2.g2) {$p()}
 	then:
-	    $p[G, G2](x, y)
+	    $p(x, y)
 
 -1 is red
 `
@@ -955,14 +944,14 @@ a.b.c.d.e.f is red
 
 func TestForall(t *testing.T) {
 	code := `
-forall [G Group, G2 Group] g g, g2 g2:
+forall g g, g2 g2:
 	cond:
-		$p[G, G2](x, y)
-		when $f[G, B](g.g1, g2.g2) {$p()}
+		$p(x, y)
+		when $f(g.g1, g2.g2) {$p()}
 	then:
-		$p[G, G2](x, y)
-when $f[G, B](g.g1, g2.g2), forall [a A] $p() {$p()}  {$p()}
-forall [a A] $p() {$p()}
+		$p(x, y)
+when $f(g.g1, g2.g2), forall $p() {$p()}  {$p()}
+forall $p() {$p()}
 `
 
 	statements, err := ParserTester(code)
@@ -1097,8 +1086,8 @@ a.b is red
 a.f() is red
 a()() is red
 a.b.c.d.e.f() is red
-a.b.c.d.e.f[x,y]() is red
-a.b.c.d()().e.f[x,y](z)() is red
+a.b.c.d.e.f() is red
+a.b.c.d()().e.f(z)() is red
 1.b is red
 1.2.b()().c.d.e.f() is red
 `
