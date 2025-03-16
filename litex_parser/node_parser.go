@@ -67,12 +67,12 @@ func (parser *Parser) parseFcFnVar() (*FcFnType, error) {
 
 	typeParamsTypes := &[]TypeConceptPair{}
 	var err error = nil
-	if parser.is(BuiltinSyms["["]) {
-		typeParamsTypes, err = parser.parseBracketedTypeConceptPairArray()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-	}
+	// if parser.is(BuiltinSyms["["]) {
+	// 	typeParamsTypes, err = parser.parseBracketedTypeConceptPairArray()
+	// 	if err != nil {
+	// 		return nil, &parserErr{err, parser}
+	// 	}
+	// }
 
 	varParamsTypes := &[]StrTypePair{}
 	if parser.is(BuiltinSyms["("]) {
@@ -94,12 +94,12 @@ func (parser *Parser) parseFcFnVar() (*FcFnType, error) {
 func (parser *Parser) parseBracketedTypeConceptPairArrAndBracedFcTypePairArr() (*[]TypeConceptPair, *[]StrTypePair, error) {
 	typeParamsTypes := &[]TypeConceptPair{}
 	var err error = nil
-	if parser.is(BuiltinSyms["["]) {
-		typeParamsTypes, err = parser.parseBracketedTypeConceptPairArray()
-		if err != nil {
-			return nil, nil, err
-		}
-	}
+	// if parser.is(BuiltinSyms["["]) {
+	// 	typeParamsTypes, err = parser.parseBracketedTypeConceptPairArray()
+	// 	if err != nil {
+	// 		return nil, nil, err
+	// 	}
+	// }
 
 	varParamsTypes := &[]StrTypePair{}
 	if parser.is(BuiltinSyms["("]) {
@@ -203,13 +203,13 @@ func (parser *Parser) parseFcVarType() (FcVarType, error) {
 	isFunc := false
 	typeParams := &[]TypeVarStr{}
 	varParams := &[]Fc{}
-	if parser.is(BuiltinSyms["["]) {
-		typeParams, err = parser.parseBracketedTypeVarArr()
-		if err != nil {
-			return FcVarType{"", nil}, err
-		}
-		isFunc = true
-	}
+	// if parser.is(BuiltinSyms["["]) {
+	// 	typeParams, err = parser.parseBracketedTypeVarArr()
+	// 	if err != nil {
+	// 		return FcVarType{"", nil}, err
+	// 	}
+	// 	isFunc = true
+	// }
 
 	if parser.is(BuiltinSyms["("]) {
 		varParams, err = parser.parseBracedFcArr()
@@ -380,18 +380,6 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 
 	if err != nil {
 		return nil, &parserErr{err, parser}
-	}
-
-	typeParams := &[]TypeVarStr{}
-	if parser.is(BuiltinSyms["["]) {
-		typeParams, err = parser.parseBracketedTypeVarArr()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-
-		if len(*typeParams) != 1 {
-			return nil, &parserErr{fmt.Errorf("expect one type parameter"), parser}
-		}
 	}
 
 	return &FuncFactStmt{true, &FcFnRetValue{FcStr(opt), []TypeParamsAndVarParamsPair{{[]Fc{left}}}}}, nil
