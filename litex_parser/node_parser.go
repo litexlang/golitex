@@ -93,12 +93,6 @@ func (parser *Parser) parseFcFnVar() (*FcFnType, error) {
 
 func (parser *Parser) parseBracedFcTypePairArr() (*[]StrTypePair, error) {
 	var err error = nil
-	// if parser.is(BuiltinSyms["["]) {
-	// 	typeParamsTypes, err = parser.parseBracketedTypeConceptPairArray()
-	// 	if err != nil {
-	// 		return nil, nil, err
-	// 	}
-	// }
 
 	varParamsTypes := &[]StrTypePair{}
 	varParamsTypes, err = parser.parseBracedFcStrTypePairArray()
@@ -131,13 +125,13 @@ func (parser *Parser) parseFcFnDecl() (*FcFnDecl, error) {
 }
 
 func (parser *Parser) parseFcType() (fcType, error) {
-	if parser.is(Keywords["fn"]) {
-		return parser.parseFcFnVar()
-	} else if parser.is(Keywords["prop"]) {
-		return parser.parsePropType()
-	} else {
-		return parser.parseFcVarType()
-	}
+	// if parser.is(Keywords["fn"]) {
+	// 	return parser.parseFcFnVar()
+	// } else if parser.is(Keywords["prop"]) {
+	// 	return parser.parsePropType()
+	// } else {
+	return parser.parseFcVarType()
+	// }
 }
 
 // func (parser *Parser) parseFnRetType() (fnRetType, error) {

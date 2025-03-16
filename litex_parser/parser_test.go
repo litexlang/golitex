@@ -767,7 +767,7 @@ prove:
 func TestSequenceOfFcCallingOneAnother(t *testing.T) {
 	code :=
 		`
-h[]().g[c](d).t is red
+h().g(d).t is red
 f(a, b).g.t(a, b) is red
 f(t) is red
 
@@ -781,41 +781,10 @@ f(t) is red
 	}
 }
 
-func TestDefTypeStmt(t *testing.T) {
-	code := `
-type G
-type G impl Group
-know $Group(G)
-know forall G Group:
-	$Group(G)
-type var A G:	// type name is G, A is name for "self"
-	then:
-		know $Group(G)
-type fn f[G Group, G2 Group](x G, y G) G:
-	then:
-		know $Group(G)
-type prop f[G Group, G2 Group](x G, y G):
-	then:
-		know $Group(G)
-type var A G:
-	instance_member:
-		prop f[]()
-		prop f[G Group, G2 Group](x G, y G)
-`
-
-	statements, err := ParserTester(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		t.Fatal(err)
-	}
-
-}
-
 func TestNamedClaimStmt(t *testing.T) {
 	code := `
 thm: 
-	prop P[G Group, G2 Group](g G, g2 G2):
+	prop P(g G, g2 G2):
 		cond:
 			$f(g.g1, g2.g2)
 		then:
@@ -918,16 +887,6 @@ forall $p() {$p()}
 
 func TestTypeInit(t *testing.T) {
 	code := `
-// Group is a struct, 
-type impl Group var A G:
-	then:
-		$S(A)
-		know $Group(G)
-
-type impl EuclidSpace var A S:	// type name is G, A is name for "self"
-	then:
-		$S(A)
-		know $Group(G)
 
 when:
 	Socratic is human
@@ -1001,7 +960,7 @@ func TestHowManyCPUCores2(t *testing.T) {
 }
 
 func TestNewFnRetValue(t *testing.T) {
-	input := "opt1[para1](value1)[para2](value2).opt2[para3](value3)[para4](value4).opt3[para5](value5)[para6](value6)"
+	input := "opt1(value1)(value2).opt2(value3)(value4).opt3(value5)(value6)"
 
 	// 按 . 分割字符串
 	blocks := strings.Split(input, ".")

@@ -403,9 +403,6 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 			}
 			*thenFacts = append(*thenFacts, fact)
 		}
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
 	}
 
 	return &BlockForallStmt{*varParams, *ifFacts, *thenFacts}, nil
