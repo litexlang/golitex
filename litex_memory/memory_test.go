@@ -55,8 +55,8 @@ func TestCompareFc(t *testing.T) {
 		FnName: "ghi",
 		TypeParamsVarParamsPairs: []parser.TypeParamsAndVarParamsPair{
 			{
-				TypeParams: []parser.TypeVarStr{"t"}, // 初始化 TypeParams
-				VarParams:  []parser.Fc{fc1},         // 初始化 VarParams
+				// TypeParams: []parser.TypeVarStr{"t"}, // 初始化 TypeParams
+				VarParams: []parser.Fc{fc1}, // 初始化 VarParams
 			},
 		},
 	}
@@ -64,8 +64,8 @@ func TestCompareFc(t *testing.T) {
 		FnName: "jkl",
 		TypeParamsVarParamsPairs: []parser.TypeParamsAndVarParamsPair{
 			{
-				TypeParams: []parser.TypeVarStr{}, // 初始化 TypeParams
-				VarParams:  []parser.Fc{},         // 初始化 VarParams
+				// TypeParams: []parser.TypeVarStr{}, // 初始化 TypeParams
+				VarParams: []parser.Fc{}, // 初始化 VarParams
 			},
 		},
 	}
@@ -73,8 +73,8 @@ func TestCompareFc(t *testing.T) {
 		FnName: "ghi",
 		TypeParamsVarParamsPairs: []parser.TypeParamsAndVarParamsPair{
 			{
-				TypeParams: []parser.TypeVarStr{"t"}, // 初始化 TypeParams
-				VarParams:  []parser.Fc{fc3},         // 初始化 VarParams
+				// TypeParams: []parser.TypeVarStr{"t"}, // 初始化 TypeParams
+				VarParams: []parser.Fc{fc3}, // 初始化 VarParams
 			},
 		},
 	}
@@ -82,8 +82,8 @@ func TestCompareFc(t *testing.T) {
 		FnName: "ghi",
 		TypeParamsVarParamsPairs: []parser.TypeParamsAndVarParamsPair{
 			{
-				TypeParams: []parser.TypeVarStr{"t"}, // 初始化 TypeParams
-				VarParams:  []parser.Fc{fc2},         // 初始化 VarParams
+				// TypeParams: []parser.TypeVarStr{"t"}, // 初始化 TypeParams
+				VarParams: []parser.Fc{fc2}, // 初始化 VarParams
 			},
 		},
 	}

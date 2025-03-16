@@ -203,7 +203,7 @@ func randFcFnRetValue() *parser.FcFnRetValue {
 	round := rand.Intn(3) + 1
 	typeParamVarParamsPairs := []parser.TypeParamsAndVarParamsPair{}
 	for i := 0; i < round; i++ {
-		typeParamVarParamsPairs = append(typeParamVarParamsPairs, parser.TypeParamsAndVarParamsPair{TypeParams: *randTypeParams(), VarParams: *randVarParams()})
+		typeParamVarParamsPairs = append(typeParamVarParamsPairs, parser.TypeParamsAndVarParamsPair{VarParams: *randVarParams()})
 	}
 	return &parser.FcFnRetValue{FnName: fnName, TypeParamsVarParamsPairs: typeParamVarParamsPairs}
 }

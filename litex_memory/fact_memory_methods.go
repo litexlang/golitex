@@ -143,15 +143,15 @@ func compareTypeVarStr(knownFc parser.TypeVarStr, givenFc parser.TypeVarStr) (in
 }
 
 func compareTypeParamsAndParamsPair(knownPair parser.TypeParamsAndVarParamsPair, givenPair parser.TypeParamsAndVarParamsPair) (int, error) {
-	if len(knownPair.TypeParams) != len(givenPair.TypeParams) {
-		return len(knownPair.TypeParams) - len(givenPair.TypeParams), nil
-	}
+	// if len(knownPair.TypeParams) != len(givenPair.TypeParams) {
+	// 	return len(knownPair.TypeParams) - len(givenPair.TypeParams), nil
+	// }
 
-	for i := 0; i < len(knownPair.TypeParams); i++ {
-		if comp, err := compareTypeVarStr(knownPair.TypeParams[i], givenPair.TypeParams[i]); comp != 0 || err != nil {
-			return comp, err
-		}
-	}
+	// for i := 0; i < len(knownPair.TypeParams); i++ {
+	// 	if comp, err := compareTypeVarStr(knownPair.TypeParams[i], givenPair.TypeParams[i]); comp != 0 || err != nil {
+	// 		return comp, err
+	// 	}
+	// }
 
 	if len(knownPair.VarParams) != len(givenPair.VarParams) {
 		return len(knownPair.VarParams) - len(givenPair.VarParams), nil
