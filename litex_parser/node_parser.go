@@ -101,11 +101,9 @@ func (parser *Parser) parseBracedFcTypePairArr() (*[]StrTypePair, error) {
 	// }
 
 	varParamsTypes := &[]StrTypePair{}
-	if parser.is(BuiltinSyms["("]) {
-		varParamsTypes, err = parser.parseBracedFcStrTypePairArray()
-		if err != nil {
-			return nil, err
-		}
+	varParamsTypes, err = parser.parseBracedFcStrTypePairArray()
+	if err != nil {
+		return nil, err
 	}
 
 	return varParamsTypes, nil
@@ -133,10 +131,6 @@ func (parser *Parser) parseFcFnDecl() (*FcFnDecl, error) {
 }
 
 func (parser *Parser) parseFcType() (fcType, error) {
-	if parser.is(BuiltinSyms["?"]) {
-		return parser.parseUndefinedFcType()
-	}
-
 	if parser.is(Keywords["fn"]) {
 		return parser.parseFcFnVar()
 	} else if parser.is(Keywords["prop"]) {
@@ -144,22 +138,6 @@ func (parser *Parser) parseFcType() (fcType, error) {
 	} else {
 		return parser.parseFcVarType()
 	}
-}
-
-func (parser *Parser) parseUndefinedFcType() (fcUndefinedType, error) {
-	parser.skip(BuiltinSyms["?"])
-	if parser.is(Keywords["fn"]) {
-		parser.skip()
-		return undefinedFnTypeInstance, nil
-	} else if parser.is(Keywords["prop"]) {
-		parser.skip()
-		return undefinedVarTypeInstance, nil
-	} else if parser.is(Keywords["var"]) {
-		parser.skip()
-		return undefinedPropTypeInstance, nil
-	}
-
-	return nil, &parserErr{fmt.Errorf("expect 'fn', 'prop', 'var' after '?'"), parser}
 }
 
 // func (parser *Parser) parseFnRetType() (fnRetType, error) {
