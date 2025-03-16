@@ -226,43 +226,6 @@ func (parser *Parser) parseFcVarType() (FcVarType, error) {
 
 }
 
-func (parser *Parser) parseTypeConcept() (TypeConceptStr, error) {
-	tok, err := parser.next()
-	if err != nil {
-		return "", err
-	}
-	return TypeConceptStr(tok), nil
-}
-
-func (parser *Parser) parseBracketedTypeConceptPairArray() (*[]TypeConceptPair, error) {
-	structures := []TypeConceptPair{}
-	parser.skip(BuiltinSyms["["])
-
-	for !parser.is(BuiltinSyms["]"]) {
-		name, err := parser.parseTypeVarStr()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-
-		structure, err := parser.parseTypeConcept()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-
-		structures = append(structures, TypeConceptPair{name, structure})
-
-		if parser.isAndSkip(BuiltinSyms["]"]) {
-			break
-		}
-
-		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
-			return nil, &parserErr{err, parser}
-		}
-	}
-
-	return &structures, nil
-}
-
 func (parser *Parser) parseBracedFcStrTypePairArray() (*[]StrTypePair, error) {
 	pairs := []StrTypePair{}
 	parser.skip(BuiltinSyms["("])
