@@ -11,25 +11,40 @@ type Parser struct {
 	// In many ways there should be one more field: err []string to store the error. It should be done this way because all parsing functions in parser is a method of parser, and if we do so, we can use nil as return value as the error indicator and never return 2 fields in each function.
 }
 
-func (p *Parser) strAtCurIndexPlus(index int) string {
-	if index >= 0 {
-		i := p.index + index
+func (p *Parser) strAtCurIndexPlus(plusIndex int) string {
+	// if plusIndex >= 0 {
+	i := p.index + plusIndex
 
-		if i < 0 || i >= len(p.slice) {
-			return ""
-		} else {
-			return p.slice[i]
-		}
+	if i < 0 || i >= len(p.slice) {
+		return ""
 	} else {
-		i := len(p.slice) + index
+		return p.slice[i]
+	}
+	// } else {
+	// 	i := len(p.slice) + plusIndex
 
-		if i < 0 || i >= len(p.slice) {
+	// 	if i < 0 || i >= len(p.slice) {
+	// 		return ""
+	// 	} else {
+	// 		return p.slice[i]
+	// 	}
+	// }
+}
+
+func (p *Parser) strAtIndex(givenIndex int) string {
+	if givenIndex < 0 {
+		i := len(p.slice) + givenIndex
+
+		if i < 0 {
 			return ""
 		} else {
 			return p.slice[i]
 		}
+	} else if givenIndex < len(p.slice) {
+		return p.slice[givenIndex]
+	} else {
+		return "" // givenIndex exceeds len(p.slice)
 	}
-
 }
 
 func (p *Parser) String() string {

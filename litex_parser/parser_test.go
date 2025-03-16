@@ -1078,6 +1078,7 @@ func TestNewFnRetValue(t *testing.T) {
 
 func TestNewParseFcAtom(t *testing.T) {
 	code := `
+$p(x, y)
 a is red
 a.b is red
 a.f() is red

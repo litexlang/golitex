@@ -259,7 +259,7 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseIfStmt() (FactStmt, error) {
-	if stmt.Header.strAtCurIndexPlus(-1) == BuiltinSyms[":"] {
+	if stmt.Header.strAtIndex(-1) == BuiltinSyms[":"] {
 		return stmt.parseBlockIfStmt()
 	} else {
 		return stmt.parseInlineIfFactStmt()
@@ -406,7 +406,7 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseForallStmt() (FactStmt, error) {
-	if stmt.Header.strAtCurIndexPlus(-1) != BuiltinSyms[":"] {
+	if stmt.Header.strAtIndex(-1) != BuiltinSyms[":"] {
 		return stmt.parseInlineForallStmt()
 	} else {
 		return stmt.parseBlockedForall()
