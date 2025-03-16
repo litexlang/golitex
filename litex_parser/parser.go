@@ -12,7 +12,6 @@ type Parser struct {
 }
 
 func (p *Parser) strAtCurIndexPlus(plusIndex int) string {
-	// if plusIndex >= 0 {
 	i := p.index + plusIndex
 
 	if i < 0 || i >= len(p.slice) {
@@ -20,15 +19,6 @@ func (p *Parser) strAtCurIndexPlus(plusIndex int) string {
 	} else {
 		return p.slice[i]
 	}
-	// } else {
-	// 	i := len(p.slice) + plusIndex
-
-	// 	if i < 0 || i >= len(p.slice) {
-	// 		return ""
-	// 	} else {
-	// 		return p.slice[i]
-	// 	}
-	// }
 }
 
 func (p *Parser) strAtIndex(givenIndex int) string {
@@ -38,7 +28,8 @@ func (p *Parser) strAtIndex(givenIndex int) string {
 		if i < 0 {
 			return ""
 		} else {
-			return p.slice[i]
+			ret := p.slice[i]
+			return ret
 		}
 	} else if givenIndex < len(p.slice) {
 		return p.slice[givenIndex]

@@ -396,7 +396,13 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 			return nil, fmt.Errorf("expected 'then'")
 		}
 	} else {
-		thenFacts, err = stmt.parseInstantiatedFactsBlock()
+		for _, curStmt := range stmt.Body {
+			fact, err := curStmt.parseInstantiatedFactStmt()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+			*thenFacts = append(*thenFacts, fact)
+		}
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
