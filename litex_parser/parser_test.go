@@ -479,11 +479,7 @@ forall g g, g2 g2:
 		$p(x, y)
 	then:
 	    $p(x, y)
-		forall g g, g2 g2:
-			cond:
-				$p(x, y)
-			then:
-				$p(x, y)
+		
 		
 `
 	statements, err := ParserTester(code)
@@ -500,7 +496,7 @@ func TestParseVarStmt(t *testing.T) {
 		`
 var g G
 var g G:
-    $p[G, G2](x, y)
+    $p(x, y)
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -516,32 +512,28 @@ func TestParseClaimStmt(t *testing.T) {
 	code :=
 		`
 claim :
-	$p[G, G2](x, y)
+	$p(x, y)
 
 	prove:
-		$p[G, G2](x, y)
+		$p(x, y)
 
 claim :
-	forall [G Group, G2 Group] g g, g2 g2:
+	forall  g g, g2 g2:
 		cond:
-			$p[G, G2](x, y)
+			$p(x, y)
 		then:
-			$p[G, G2](x, y)
-			forall [G Group, G2 Group] g g, g2 g2:
-				cond:
-					$p[G, G2](x, y)
-				then:
-					$p[G, G2](x, y)
+			$p(x, y)
+	
 
 	prove:
-		$p[G, G2](x, y)
+		$p(x, y)
 
 claim:
-	$p[G, G2](x, y)
-	$p[G, G2](x, y)
+	$p(x, y)
+	$p(x, y)
 		
 	prove:
-		$p[G, G2](x, y)
+		$p(x, y)
 		
 
 `
@@ -558,17 +550,13 @@ func TestKnowStmt(t *testing.T) {
 	code :=
 		`
 know:
-	$p[G, G2](x, y)
-	forall [G Group, G2 Group] g g, g2 g2:
+	$p(x, y)
+	forall g g, g2 g2:
 		cond:
-			$p[G, G2](x, y)
+			$p(x, y)
 		then:
-			$p[G, G2](x, y)
-			forall [G Group, G2 Group] g g, g2 g2:
-				cond:
-					$p[G, G2](x, y)
-				then:
-					$p[G, G2](x, y)
+			$p(x, y)
+	
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -582,36 +570,21 @@ know:
 func TestExistStmt(t *testing.T) {
 	code :=
 		`
-exist P[G Group, G2 Group](g1 G, g2 G2):
+exist P(g1 G, g2 G2):
 	cond:
-		$p[G, G2](x, y)
-		forall [G Group, G2 Group] g g, g2 g2:
+		$p(x, y)
+		forall  g g, g2 g2:
 			cond:
-				$p[G, G2](x, y)
+				$p(x, y)
 			then:
-				$p[G, G2](x, y)
+				$p(x, y)
 
 	instance_member:
 	    var 1 G
-		fn f[G Group, G2 Group](x G, y G) G
+		fn f(x G, y G) G
 
 	then:
-	    $p[G, G2](x, y)
-`
-	statements, err := ParserTester(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		t.Fatal(err)
-	}
-
-}
-
-func TestHaveStmt(t *testing.T) {
-	code :=
-		`
-have $P[G , G2 ](g1 , g2 ):
-	g1, g2
+	    $p(x, y)
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -625,10 +598,10 @@ have $P[G , G2 ](g1 , g2 ):
 func TestVarDeclStmt(t *testing.T) {
 	code :=
 		`
-var g1 G, g2 G
+var g1 G
 
-var a G,  b G:
-	$p[g](a)
+var a G:
+	$p(a)
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -642,8 +615,8 @@ var a G,  b G:
 func TestRelationalFactStmt(t *testing.T) {
 	code :=
 		`
-p[g](a) + 2 < (2 + 3) * 10 + 4 < 100
-10 = p[g](a) = p[g](a)
+p(a) + 2 < (2 + 3) * 10 + 4 < 100
+10 = p(a) = p(a)
 `
 	statements, err := ParseSourceCode(code)
 	if err == nil {
@@ -660,8 +633,8 @@ func TestIsStmt(t *testing.T) {
 
 	code :=
 		`
-( p[g](a) + 2 ) is q
-1 * ( p[g](a) + 2 ) is q
+( p(a) + 2 ) is q
+1 * ( p(a) + 2 ) is q
 
 `
 	statements, err := ParseSourceCode(code)
@@ -673,27 +646,10 @@ func TestIsStmt(t *testing.T) {
 
 }
 
-func TestTypedFuncPtyStmt(t *testing.T) {
-	code :=
-		`
-$$[G Group](x fn [x g](t a) t) p[g](a)
-$$p [g](a)
-$$[g G] p[g](a)
-$$[G Group](g G) p[g](a)
-`
-	statements, err := ParserTester(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		t.Fatal(err)
-	}
-
-}
-
 func TestTypedFcFnRetStmt(t *testing.T) {
 	code :=
 		`
-as(p [g](a), nat) is red
+as(p (a), nat) is red
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -706,7 +662,7 @@ as(p [g](a), nat) is red
 func TestTypedTypeVar(t *testing.T) {
 	code :=
 		`
-as( p[as(g, G), as(g2, G)](a, as(p [g](a), nat)) , G ) is red
+as( p(a, as(p (a), nat)) , G ) is red
 `
 
 	statements, err := ParserTester(code)
@@ -723,9 +679,9 @@ func TestDefPropVar(t *testing.T) {
 
 	code :=
 		`
-fn ha [G Group] (g1 G, g2 G) red:
+fn ha (g1 G, g2 G) red:
 	1 is red
-prop ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
+prop ha (g1 G, g2 prop ) :
 	1 is red
 
 `
@@ -744,8 +700,8 @@ func TestPropVar(t *testing.T) {
 
 	code :=
 		`
-$p[g, as(g2, G)](f, g)
-$p[g, as(g2, G)](f, as(g3, prop [g Group](t G) ))
+$p(f, g)
+$p(f, as(g3, prop ))
 `
 
 	statements, err := ParserTester(code)
@@ -762,20 +718,20 @@ func TestFnDecl(t *testing.T) {
 
 	code :=
 		`
-fn ha [G Group] (g1 G, g2 ?prop, g3 ? var, g4 ? fn) red:
+fn ha  (g1 G, g2 prop, g3 var, g4 fn) red:
     1 is red
 
 		
-fn ha [G Group] (g1 G, g2 prop [g G, g2 G] (t G) ) red:
+fn ha  (g1 G, g2 G) red:
     1 is red
 
 claim :
 	prove:
-		$p[G, G2](x, y)
+		$p(x, y)
 
 claim:
 	prove_by_contradiction:
-		$p[G, G2](x, y)
+		$p(x, y)
 
 $f(a, b).g.t(a, b)
 
