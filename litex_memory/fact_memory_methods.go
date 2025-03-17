@@ -128,19 +128,19 @@ func compareFcStr(knownFc parser.FcStr, givenFc parser.FcStr) (int, error) {
 	return 0, nil
 }
 
-func compareTypeVarStr(knownFc parser.TypeVarStr, givenFc parser.TypeVarStr) (int, error) {
-	if len(knownFc) != len(givenFc) {
-		return len(knownFc) - len(givenFc), nil
-	}
+// func compareTypeVarStr(knownFc parser.TypeVarStr, givenFc parser.TypeVarStr) (int, error) {
+// 	if len(knownFc) != len(givenFc) {
+// 		return len(knownFc) - len(givenFc), nil
+// 	}
 
-	for i := 0; i < len(knownFc); i++ {
-		if knownFc[i] != givenFc[i] {
-			return int(knownFc[i]) - int(givenFc[i]), nil
-		}
-	}
+// 	for i := 0; i < len(knownFc); i++ {
+// 		if knownFc[i] != givenFc[i] {
+// 			return int(knownFc[i]) - int(givenFc[i]), nil
+// 		}
+// 	}
 
-	return 0, nil
-}
+// 	return 0, nil
+// }
 
 func compareTypeParamsAndParamsPair(knownPair parser.TypeParamsAndVarParamsPair, givenPair parser.TypeParamsAndVarParamsPair) (int, error) {
 	// if len(knownPair.TypeParams) != len(givenPair.TypeParams) {

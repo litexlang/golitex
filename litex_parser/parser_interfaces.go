@@ -39,8 +39,8 @@ func (p *CondFactStmt) factStmt()     {}
 // func (p *InlineForallStmt) factStmt() {}
 
 type SpecFactParams struct {
-	TypeParams []TypeVarStr
-	VarParams  []Fc
+	// TypeParams []TypeVarStr
+	VarParams []Fc
 }
 
 type SpecFactStmt interface {
@@ -56,8 +56,10 @@ func (f *FuncFactStmt) notFactStmtSetT(b bool)     { f.IsTrue = b }
 func (f *RelationFactStmt) GetTypeParamsAndParams() *SpecFactParams {
 	panic("TODO: Implement type specific operator overloading first")
 }
+
 func (f *FuncFactStmt) GetTypeParamsAndParams() *SpecFactParams {
-	return &SpecFactParams{[]TypeVarStr{}, []Fc{}}
+	// return &SpecFactParams{[]TypeVarStr{}, []Fc{}}
+	return &SpecFactParams{[]Fc{}}
 }
 
 // type fcType interface {

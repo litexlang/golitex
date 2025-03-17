@@ -208,19 +208,19 @@ func randFcFnRetValue() *parser.FcFnRetValue {
 	return &parser.FcFnRetValue{FnName: fnName, TypeParamsVarParamsPairs: typeParamVarParamsPairs}
 }
 
-func randTypeParams() *[]parser.TypeVarStr {
-	round := rand.Intn(3) + 1
-	typeVars := []parser.TypeVarStr{}
-	for i := 0; i < round; i++ {
-		length := rand.Intn(10) + 1
-		bytes := make([]byte, length)
-		for i := 0; i < length; i++ {
-			bytes[i] = byte(rand.Intn(26) + 65)
-		}
-		typeVars = append(typeVars, parser.TypeVarStr(bytes))
-	}
-	return &typeVars
-}
+// func randTypeParams() *[]parser.TypeVarStr {
+// 	round := rand.Intn(3) + 1
+// 	typeVars := []parser.TypeVarStr{}
+// 	for i := 0; i < round; i++ {
+// 		length := rand.Intn(10) + 1
+// 		bytes := make([]byte, length)
+// 		for i := 0; i < length; i++ {
+// 			bytes[i] = byte(rand.Intn(26) + 65)
+// 		}
+// 		typeVars = append(typeVars, parser.TypeVarStr(bytes))
+// 	}
+// 	return &typeVars
+// }
 
 func randVarParams() *[]parser.Fc {
 	round := rand.Intn(3) + 1
