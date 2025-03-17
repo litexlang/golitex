@@ -51,18 +51,18 @@ func TestSplitString(t *testing.T) {
 func TestParseStrStmtBlock(t *testing.T) {
 	subBody := []strBlock{
 		{
-			Header: "struct (v G):",
+			Header: "struct (v ):",
 			Body:   nil,
 		},
 	}
 	body := []strBlock{
 		{
-			Header: "struct (v G):",
+			Header: "struct (v ):",
 			Body:   subBody,
 		},
 	}
 	input := strBlock{
-		Header: "struct (v G):",
+		Header: "struct (v ):",
 		Body:   body,
 	}
 
@@ -679,9 +679,10 @@ func TestDefPropVar(t *testing.T) {
 
 	code :=
 		`
-fn ha (g1 G, g2 G) red:
+fn ha (g1 , g2 ) :
 	1 is red
-prop ha (g1 G, g2 prop ) :
+	ret is red
+prop ha (g1 , g2  ) :
 	1 is red
 
 `
@@ -718,12 +719,13 @@ func TestFnDecl(t *testing.T) {
 
 	code :=
 		`
-fn ha  (g1 G, g2 prop, g3 var, g4 fn) red:
-    1 is red
+// fn ha  (g1 , g2 , g3 , g4 ) red:  // 不行，因为现在不把返回值直接写在后面
+//    1 is red
 
 		
-fn ha  (g1 G, g2 G) red:
+fn ha  (g1 , g2 ) :
     1 is red
+	ret is red
 
 claim :
 	prove:
@@ -784,7 +786,7 @@ f(t) is red
 func TestNamedClaimStmt(t *testing.T) {
 	code := `
 thm: 
-	prop P(g G, g2 G2):
+	prop P(g , g2):
 		cond:
 			$f(g.g1, g2.g2)
 		then:
@@ -807,10 +809,10 @@ func TestInlineIfStmt(t *testing.T) {
 	code := `
 when $f(g.g1, g2.g2), forall $p() {$p()} { $p()}
 
-forall g G:
+forall g :
 	cond:
 		$p()
-		forall g B:
+		forall g :
 			cond:
 				$q()
 			then:
@@ -818,7 +820,7 @@ forall g G:
 	then:
 		$t()
 	
-prop P(g G, g2 G2):
+prop P(g , g2 ):
 	cond:
 		when $f(g.g1, g2.g2), when $f(g.g1, g2.g2) {$p()}  {$p()}
 	then:
@@ -827,7 +829,7 @@ prove:
 	when $f(g.g1, g2.g2), forall $p() {$p()}  {$p()}
 	when $f(g.g1, g2.g2) { $p()}
 
-forall g g, g2 g2:
+forall g , g2:
 	cond:
 		$p(x, y)
 		when $f(g.g1, g2.g2) {$p()}
@@ -866,8 +868,10 @@ a.b.c.d.e.f is red
 
 func TestForall(t *testing.T) {
 	code := `
-forall g g, g2 g2:
+forall g , g2:
 	cond:
+		$G(g)
+		$G(g2)
 		$p(x, y)
 		when $f(g.g1, g2.g2) {$p()}
 	then:
@@ -1016,7 +1020,11 @@ a.b.c.d()().e.f(z)() is red
 
 func TestForallStmt2(t *testing.T) {
 	code := `
-forall g G, g2 G2 :
+// since for the time being, type system is eliminated
+// forall g G, g2 G2 :
+//    $p(x, y)
+
+forall g, g2:
     $p(x, y)
 
 `
