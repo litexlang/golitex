@@ -17,7 +17,7 @@ func (mem *VarMemory) Get(s string) (*VarMemoryEntry, bool) {
 	panic("TODO")
 }
 
-func (mem *VarMemory) Set(pair *parser.FcVarDeclPair) (*VarMemoryEntry, error) {
+func (mem *VarMemory) Set(pair string) (*VarMemoryEntry, error) {
 	panic("Todo")
 }
 
