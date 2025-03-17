@@ -127,24 +127,14 @@ type FcFnDecl struct {
 type PropDecl struct {
 	name string
 	tp   []string
-	// tp   FcPropType
 }
 
-type TypeDecl struct {
-	DefType DefTypeStmt
-}
-
-type TypeConceptPair struct {
-	Var  TypeVarStr
-	Type TypeConceptStr
-}
-
-type TypeVarStr string
-
-// type StrTypePair struct {
-// 	Var  string
-// 	Type fcType
+// type TypeConceptPair struct {
+// 	Var  TypeVarStr
+// 	Type TypeConceptStr
 // }
+
+// type TypeVarStr string
 
 type FcVarType struct {
 	PackageName string
