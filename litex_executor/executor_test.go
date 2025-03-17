@@ -36,7 +36,7 @@ func TestStoreNewVar(t *testing.T) {
 	}
 
 	entry, _ := env.VarMemory.Get("a")
-	println(string(entry.Tp.Value.(parser.FcVarTypeStrValue)))
+	println((entry))
 }
 
 func TestKnow(t *testing.T) {

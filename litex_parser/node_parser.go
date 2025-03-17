@@ -308,12 +308,12 @@ func (parser *Parser) parseFcVarPair() (*FcVarDeclPair, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	tp, err := parser.parseFcVarType()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+	// tp, err := parser.parseFcVarType()
+	// if err != nil {
+	// 	return nil, &parserErr{err, parser}
+	// }
 
-	return &FcVarDeclPair{v, tp}, nil
+	return &FcVarDeclPair{v}, nil
 }
 
 func (parser *Parser) parsePropDecl() (*PropDecl, error) {

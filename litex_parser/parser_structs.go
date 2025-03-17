@@ -116,53 +116,29 @@ type FcVarDecl struct {
 
 type FcVarDeclPair struct {
 	Var string
-	Tp  FcVarType
+	// Tp  FcVarType
 }
-
-type FcFnDecl struct {
-	name string
-	tp   []string
-}
-
-type PropDecl struct {
-	name string
-	tp   []string
-}
-
-// type TypeConceptPair struct {
-// 	Var  TypeVarStr
-// 	Type TypeConceptStr
-// }
-
-// type TypeVarStr string
 
 type FcVarType struct {
 	PackageName string
 	Value       FcVarTypeValue
 }
 
-type FcVarTypeStrValue string
-type FcVarTypeFuncValue struct {
-	Name string
-	// TypeParams []TypeVarStr
-	VarParams []Fc
+type FcFnDecl struct {
+	name string
+	vars []string
 }
 
-// type FcFnType struct {
-// 	// typeParamsTypes []TypeConceptPair
-// 	varParamsTypes []StrTypePair
-// 	retType        fcType
-// }
+type PropDecl struct {
+	name string
+	vars []string
+}
 
-// type FcPropType struct {
-// 	// typeParams []TypeConceptPair
-// 	varParams []StrTypePair
-// }
-
-var AnyType = Keywords["any"]
-var VarType = Keywords["var"]
-var FnType = Keywords["fn"]
-var PropType = Keywords["prop"]
+type FcVarTypeStrValue string
+type FcVarTypeFuncValue struct {
+	Name      string
+	VarParams []Fc
+}
 
 type NamedFcType struct {
 	typeNameArr []string // packageName.packageName.typeName
