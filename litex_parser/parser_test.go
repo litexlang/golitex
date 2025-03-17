@@ -33,7 +33,7 @@ def add(a, b):
 }
 
 func TestSplitString(t *testing.T) {
-	input := []string{"struct (v G):"}
+	input := []string{"struct (v ):"}
 	for _, s := range input {
 		tokens, err := tokenizeString(s)
 
@@ -119,95 +119,8 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 	}
 }
 
-func TestForallStmt(t *testing.T) {
-	tokenized1, err := tokenizeString("forall g1 G, g2 G:")
-	if err != nil {
-		t.Fatal(err)
-	}
-	tokenized2, err := tokenizeString("$f(a, b)(c, d)")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	block :=
-		TokenBlock{
-			Parser{0, *tokenized1},
-			[]TokenBlock{
-				{
-					Parser{0, *tokenized2},
-					[]TokenBlock{},
-				},
-				{
-					Parser{0, *tokenized2},
-					[]TokenBlock{},
-				},
-			},
-		}
-
-	cur, err := block.parseForallStmt()
-
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("%v", cur)
-
-	tokenizedCond, err := tokenizeString("cond:")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	tokenizedThen, err := tokenizeString("then:")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	block2 :=
-		TokenBlock{
-			Parser{0, *tokenized1},
-			[]TokenBlock{
-				{
-					Parser{0, *tokenizedCond},
-					[]TokenBlock{
-						{
-							Parser{0, *tokenized2},
-							[]TokenBlock{},
-						},
-					},
-				},
-				{
-					Parser{0, *tokenizedThen},
-					[]TokenBlock{
-						{
-							Parser{0, *tokenized2},
-							[]TokenBlock{},
-						},
-						{
-							Parser{0, *tokenized1},
-							[]TokenBlock{
-								{
-									Parser{0, *tokenized2},
-									[]TokenBlock{},
-								},
-								{
-									Parser{0, *tokenized2},
-									[]TokenBlock{},
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-
-	cur, err = block2.parseForallStmt()
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("%v", cur)
-}
-
 func TestDefPropStmt(t *testing.T) {
-	tokenized1, err := tokenizeString("prop ha (g1 G, g2 G):")
+	tokenized1, err := tokenizeString("prop ha (g1 , g2 ):")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -317,13 +230,13 @@ func TestDefConceptStmt(t *testing.T) {
 	
 	type_member:
 		var 1 G
-		fn f(x G, y G) G
-		prop f(x G, y G)
+		fn f(x , y ) 
+		prop f(x , y )
 
 	instance_member:
 		var 1 G
-		fn f(x G, y G) G
-		prop f(x G, y G)
+		fn f(x , y ) 
+		prop f(x , y )
 
 	then:
 		$p(x, y)
@@ -339,25 +252,25 @@ func TestDefConceptStmt(t *testing.T) {
 
 func TestDefPropStmt2(t *testing.T) {
 	code := `
-prop P(g G, g2 G2):
+prop P(g , g2 ):
 	cond:
     	$f(g.g1, g2.g2)
 	then:
 		$f(g.g1, g2.g2)
 
-prop P(g G, g2 G2):
+prop P(g ,  G2):
 	$f(g.g1, g2.g2)
 
-axiom prop P(g G, g2 G2):
+axiom prop P(g ,  G2):
 	cond:
     	$f(g.g1, g2.g2)
 	then:
 		$f(g.g1, g2.g2)
 
-axiom prop P(g G, g2 G2):
+axiom prop P(g , g2 ):
 	$f(g.g1, g2.g2)
 
-forall x G:
+forall x :
 	cond:
     	$f(g.g1, g2.g2)
 	then:
@@ -375,7 +288,7 @@ forall x G:
 
 func TestDefFnStmt(t *testing.T) {
 	code := `
-fn P(g G, g2 G2) fn (g G, g2 G2):
+fn P(g , g2 ) :
 	cond:
     	$f(g.g1, g2.g2)
 	then:
@@ -395,7 +308,7 @@ func TestFactStatements(t *testing.T) {
 	code := `
 $f(g.g1, g2.g2)
 
-forall  x g:
+forall  x :
 	cond: 
 		$f()
 	then:
@@ -417,12 +330,12 @@ type var G Group
 type var G Group:
 	type_member:
 		var 1 G
-		fn P(g G, g2 G2) fn (g G, g2 G2):
+		fn P(g , g2 ) fn (g , g2 ):
 			cond:
 				$f(g.g1, g2.g2)
 			then:
 				$f(g.g1, g2.g2)
-		prop P(g G, g2 G2):
+		prop P(g , g2 ):
 			cond:
 				$f(g.g1, g2.g2)
 			then:
@@ -430,25 +343,25 @@ type var G Group:
 		type var G Group2:
 			type_member:
 				var 3 G
-				fn f(x G, y G) G
-				prop f(x G, y G)
+				fn f(x , y ) 
+				prop f(x , y )
 		
 			instance_member:
 				var 1 G
-				fn f(x G, y G) G
-				prop f(x G, y G)
+				fn f(x, y ) 
+				prop f(x , y )
 
 			know:
 				$p(x, y)
 	
 	instance_member:
 		var 2 G
-		fn P(g G, g2 G2) fn (g G, g2 G2):
+		fn P(g, g2 ) fn (g , g2 ):
 			cond:
 				$f(g.g1, g2.g2)
 			then:
 				$f(g.g1, g2.g2)
-		prop P(g G, g2 G2):
+		prop P(g , g2 ):
 			cond:
 				$f(g.g1, g2.g2)
 			then:
@@ -471,10 +384,10 @@ func TestParseFactStmt(t *testing.T) {
 		`
 $p(x, y)
 
-forall g G, g2 G2 :
+forall g , g2  :
     $p(x, y)
 
-forall g g, g2 g2:
+forall g , g2:
 	cond:
 		$p(x, y)
 	then:
@@ -518,7 +431,7 @@ claim :
 		$p(x, y)
 
 claim :
-	forall  g g, g2 g2:
+	forall  g, g2 :
 		cond:
 			$p(x, y)
 		then:
@@ -551,7 +464,7 @@ func TestKnowStmt(t *testing.T) {
 		`
 know:
 	$p(x, y)
-	forall g g, g2 g2:
+	forall g , g2 :
 		cond:
 			$p(x, y)
 		then:
@@ -570,10 +483,10 @@ know:
 func TestExistStmt(t *testing.T) {
 	code :=
 		`
-exist P(g1 G, g2 G2):
+exist P(g1 , g2 ):
 	cond:
 		$p(x, y)
-		forall  g g, g2 g2:
+		forall  g , g2 :
 			cond:
 				$p(x, y)
 			then:
@@ -581,7 +494,7 @@ exist P(g1 G, g2 G2):
 
 	instance_member:
 	    var 1 G
-		fn f(x G, y G) G
+		fn f(x , y ) 
 
 	then:
 	    $p(x, y)
@@ -598,7 +511,7 @@ exist P(g1 G, g2 G2):
 func TestVarDeclStmt(t *testing.T) {
 	code :=
 		`
-var g1 G
+var g1 G	
 
 var a G:
 	$p(a)
