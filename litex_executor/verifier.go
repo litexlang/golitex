@@ -11,7 +11,7 @@ func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
 		return exec.verifyFuncFact(stmt)
 	case *parser.RelationFactStmt:
 		return exec.verifyRelationFact(stmt)
-	case *parser.CondFactStmt:
+	case *parser.WhenCondFactStmt:
 		return exec.verifyCondFact(stmt)
 	default:
 		return nil
@@ -30,7 +30,7 @@ func (exec *Executor) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	return exec.verifyFuncFactLiterally(stmt)
 }
 
-func (exec *Executor) verifyCondFact(stmt *parser.CondFactStmt) error {
+func (exec *Executor) verifyCondFact(stmt *parser.WhenCondFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
 	return exec.verifyCondFactLiterally(stmt)
@@ -203,7 +203,7 @@ func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.
 	return nil
 }
 
-func (exec *Executor) verifyCondFactLiterally(stmt *parser.CondFactStmt) error {
+func (exec *Executor) verifyCondFactLiterally(stmt *parser.WhenCondFactStmt) error {
 	exec.newEnv()
 	defer exec.deleteEnv()
 
