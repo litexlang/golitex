@@ -19,8 +19,8 @@ type DefStructStmt struct {
 }
 
 type DefTypeStmt struct {
-	decl            string
-	implType        NamedFcType
+	decl string
+	// implType        NamedFcType
 	typeMembers     []TypeMember
 	instanceMembers []InstanceMember
 	knowFacts       []FactStmt
@@ -109,14 +109,6 @@ Data structures below are not statement nodes.
 
 type TypeConceptStr string
 
-// type FcVarDecl struct {
-// 	VarTypePair string
-// }
-
-// type FcVarDeclPair struct {
-// 	Var string
-// }
-
 type FcFnDecl struct {
 	name string
 	vars []string
@@ -133,7 +125,7 @@ type FcVarTypeFuncValue struct {
 	VarParams []Fc
 }
 
-type NamedFcType struct {
-	typeNameArr []string // packageName.packageName.typeName
-	params      []Fc
-}
+// type NamedFcType struct {
+// 	typeNameArr []string // packageName.packageName.typeName
+// 	params      []Fc
+// }

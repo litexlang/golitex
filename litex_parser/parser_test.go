@@ -326,8 +326,8 @@ forall  x :
 func TestParseDefTypeStmt(t *testing.T) {
 	code :=
 		`
-type var  T
-type var  T:
+// type  T2
+type   T:
 	type_member:
 		var 1 
 		fn P(g , g2 ) :
@@ -340,7 +340,7 @@ type var  T:
 				$f(g.g1, g2.g2)
 			then:
 				$f(g.g1, g2.g2)
-		type var  T:
+		type  T:
 			type_member:
 				var 3 
 				fn f(x , y ) 
