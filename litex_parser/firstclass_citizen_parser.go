@@ -239,8 +239,3 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 
 	return FcStr(left), nil
 }
-
-// func (parser *Parser) parseFcLambdaFn() (*FcLambdaFn, error) {
-
-// 	return nil, nil
-// }

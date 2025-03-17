@@ -1,4 +1,4 @@
-// 约定：var, fn, prop 名不能冲突，即不能有一个变量是var，同时也是Prop
+// * 约定：var, fn, prop 名不能冲突，即不能有一个变量是var，同时也是Prop
 package litexmemory
 
 import (
@@ -12,7 +12,6 @@ type Env struct {
 	VarMemory  VarMemory
 	PropMemory PropMemory
 	FnMemory   FnMemory
-	// VarTypeMemory FcVarTypeMemory
 
 	FuncFactMemory     FuncFactMemory
 	CondFactMemory     CondFactMemory
@@ -28,13 +27,13 @@ func NewEnv(parent *Env) *Env {
 		VarMemory:  *NewVarMemory(),
 		PropMemory: *NewPropMemory(),
 		FnMemory:   *NewFnMemory(),
-		// VarTypeMemory: *NewFcVarTypeMemory(),
 
 		FuncFactMemory:     FuncFactMemory{Mem: *NewRedBlackTree(specFuncFactCompare)},
 		RelationFactMemory: RelationFactMemory{Mem: *NewRedBlackTree(specRelationFactCompare)},
 		CondFactMemory:     CondFactMemory{Mem: *NewRedBlackTree(CondFactMemoryTreeNodeCompare)},
-		UniFactMemory:      *NewUniFactMemory(),
-		EqualMemory:        EqualFactMemory{Mem: *NewRedBlackTree(EqualFactMemoryTreeNodeCompare)},
+		// UniFactMemory:      *NewUniFactMemory(),
+		UniFactMemory: UniFactMemory{Mem: *NewRedBlackTree(UniFactMemoryTreeNodeCompare)},
+		EqualMemory:   EqualFactMemory{Mem: *NewRedBlackTree(EqualFactMemoryTreeNodeCompare)},
 	}
 
 	return env
@@ -51,7 +50,7 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 			if err := env.NewRelationFact(f); err != nil {
 				return err
 			}
-		case *parser.CondFactStmt:
+		case *parser.WhenCondFactStmt:
 			if err := env.NewCondFact(f); err != nil {
 				return err
 			}

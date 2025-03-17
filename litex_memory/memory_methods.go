@@ -2,6 +2,17 @@ package litexmemory
 
 import parser "golitex/litex_parser"
 
+func NewPropMemory() *PropMemory {
+	return &PropMemory{}
+}
+func NewFnMemory() *FnMemory {
+	return &FnMemory{}
+}
+
+func NewVarMemory() *VarMemory {
+	return &VarMemory{}
+}
+
 func (mem *VarMemory) Get(s string) (*VarMemoryEntry, bool) {
 	panic("TODO")
 }

@@ -223,18 +223,18 @@ func ParserTester(code string) (*[]Stmt, error) {
 }
 
 func TestDefConceptStmt(t *testing.T) {
-	code := `struct var G Group:
+	code := `struct var G :
 	inherit:
 		set
 		group
 	
 	type_member:
-		var 1 G
+		var 1 
 		fn f(x , y ) 
 		prop f(x , y )
 
 	instance_member:
-		var 1 G
+		var 1 
 		fn f(x , y ) 
 		prop f(x , y )
 
@@ -326,11 +326,11 @@ forall  x :
 func TestParseDefTypeStmt(t *testing.T) {
 	code :=
 		`
-type var G Group
-type var G Group:
+type var  T
+type var  T:
 	type_member:
-		var 1 G
-		fn P(g , g2 ) fn (g , g2 ):
+		var 1 
+		fn P(g , g2 ) :
 			cond:
 				$f(g.g1, g2.g2)
 			then:
@@ -340,14 +340,14 @@ type var G Group:
 				$f(g.g1, g2.g2)
 			then:
 				$f(g.g1, g2.g2)
-		type var G Group2:
+		type var  T:
 			type_member:
-				var 3 G
+				var 3 
 				fn f(x , y ) 
 				prop f(x , y )
 		
 			instance_member:
-				var 1 G
+				var 1 
 				fn f(x, y ) 
 				prop f(x , y )
 
@@ -355,8 +355,8 @@ type var G Group:
 				$p(x, y)
 	
 	instance_member:
-		var 2 G
-		fn P(g, g2 ) fn (g , g2 ):
+		var 2 
+		fn P(g, g2 ) :
 			cond:
 				$f(g.g1, g2.g2)
 			then:
@@ -407,8 +407,8 @@ forall g , g2:
 func TestParseVarStmt(t *testing.T) {
 	code :=
 		`
-var g G
-var g G:
+var g 
+var g :
     $p(x, y)
 `
 	statements, err := ParserTester(code)
@@ -493,7 +493,7 @@ exist P(g1 , g2 ):
 				$p(x, y)
 
 	instance_member:
-	    var 1 G
+	    var 1 
 		fn f(x , y ) 
 
 	then:
@@ -511,9 +511,9 @@ exist P(g1 , g2 ):
 func TestVarDeclStmt(t *testing.T) {
 	code :=
 		`
-var g1 G	
+var g1
 
-var a G:
+var a :
 	$p(a)
 `
 	statements, err := ParserTester(code)

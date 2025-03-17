@@ -21,9 +21,7 @@ func (s *HaveStmt) stmt()                   {}
 func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
-func (s *CondFactStmt) stmt()               {}
-
-// func (s *InlineForallStmt) stmt()           {}
+func (s *WhenCondFactStmt) stmt()           {}
 
 type FactStmt interface {
 	factStmt()
@@ -34,12 +32,9 @@ type FactStmt interface {
 func (l *BlockForallStmt) factStmt()  {}
 func (r *RelationFactStmt) factStmt() {}
 func (p *FuncFactStmt) factStmt()     {}
-func (p *CondFactStmt) factStmt()     {}
-
-// func (p *InlineForallStmt) factStmt() {}
+func (p *WhenCondFactStmt) factStmt() {}
 
 type SpecFactParams struct {
-	// TypeParams []TypeVarStr
 	VarParams []Fc
 }
 
@@ -58,17 +53,8 @@ func (f *RelationFactStmt) GetTypeParamsAndParams() *SpecFactParams {
 }
 
 func (f *FuncFactStmt) GetTypeParamsAndParams() *SpecFactParams {
-	// return &SpecFactParams{[]TypeVarStr{}, []Fc{}}
 	return &SpecFactParams{[]Fc{}}
 }
-
-// type fcType interface {
-// 	fcType()
-// }
-
-// func (f FcVarType) fcType()   {}
-// func (f *FcFnType) fcType()   {}
-// func (f *FcPropType) fcType() {}
 
 type fcDecl interface {
 	fcDecl()
@@ -94,8 +80,6 @@ type ClaimStmt interface {
 func (s *ClaimProveStmt) claimStmt()             {}
 func (s *ClaimProveByContradictStmt) claimStmt() {}
 
-// syntax sugar for prop exist decl followed by forall such prop is valid.
-
 type DefPropExistDeclStmt interface {
 	defPropExistDeclStmt()
 	stmt()
@@ -112,7 +96,7 @@ type InlineFactStmt interface {
 
 func (r *RelationFactStmt) inlineFactStmt() {}
 func (p *FuncFactStmt) inlineFactStmt()     {}
-func (p *CondFactStmt) inlineFactStmt()     {}
+func (p *WhenCondFactStmt) inlineFactStmt() {}
 
 type TypeMember interface {
 	typeMember()

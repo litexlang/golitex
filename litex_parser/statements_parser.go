@@ -439,41 +439,6 @@ func (stmt *TokenBlock) parseForallCondFactsBlock() (*[]FactStmt, error) {
 	return facts, err
 }
 
-// func (stmt *TokenBlock) parseBodyInlineFacts() (*[]InlineFactStmt, error) {
-// 	if len(stmt.Body) == 0 {
-// 		return &[]InlineFactStmt{}, nil
-// 	}
-
-// 	facts := &[]InlineFactStmt{}
-// 	for _, f := range stmt.Body {
-// 		fact, err := f.parseInlineFactStmt()
-// 		if err != nil {
-// 			return nil, &parseStmtErr{err, *stmt}
-// 		}
-// 		*facts = append(*facts, fact)
-// 	}
-
-// 	return facts, nil
-// }
-
-// func (stmt *TokenBlock) parseInlineFactsBlock() (*[]InlineFactStmt, error) {
-// 	facts := &[]InlineFactStmt{}
-// 	stmt.Header.skip()
-// 	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
-// 		return nil, &parseStmtErr{err, *stmt}
-// 	}
-
-// 	for _, curStmt := range stmt.Body {
-// 		fact, err := curStmt.parseInlineFactStmt()
-// 		if err != nil {
-// 			return nil, &parseStmtErr{err, *stmt}
-// 		}
-// 		*facts = append(*facts, fact)
-// 	}
-
-// 	return facts, nil
-// }
-
 func (stmt *TokenBlock) parseInstantiatedFactsBlock() (*[]SpecFactStmt, error) {
 	facts := &[]SpecFactStmt{}
 	stmt.Header.skip()
@@ -854,7 +819,7 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 	return &ThmStmt{decl, *facts}, nil
 }
 
-func (stmt *TokenBlock) parseInlineIfFactStmt() (*CondFactStmt, error) {
+func (stmt *TokenBlock) parseInlineIfFactStmt() (*WhenCondFactStmt, error) {
 	err := stmt.Header.skip(Keywords["when"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -897,10 +862,10 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*CondFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &CondFactStmt{condFacts, thenFacts}, nil
+	return &WhenCondFactStmt{condFacts, thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseBlockIfStmt() (*CondFactStmt, error) {
+func (stmt *TokenBlock) parseBlockIfStmt() (*WhenCondFactStmt, error) {
 	err := stmt.Header.skip(Keywords["when"])
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -941,5 +906,5 @@ func (stmt *TokenBlock) parseBlockIfStmt() (*CondFactStmt, error) {
 		thenFacts = append(thenFacts, fact)
 	}
 
-	return &CondFactStmt{condFacts, thenFacts}, nil
+	return &WhenCondFactStmt{condFacts, thenFacts}, nil
 }

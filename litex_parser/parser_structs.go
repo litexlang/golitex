@@ -87,19 +87,18 @@ type HaveStmt struct {
 	member   []string
 }
 
-// syntax sugar for defining propExist + claim forall true
+// syntax sugar for defining spec prop + claim forall true
 type AxiomStmt struct {
 	decl DefPropExistDeclStmt
 }
 
-// syntax sugar for defining propExist + claim forall true
+// syntax sugar for defining spec prop + claim forall true + prove it
 type ThmStmt struct {
 	decl  DefPropExistDeclStmt
 	proof []Stmt
 }
 
-// TODO 需要写一下 什么类型的事实写成什么样
-type CondFactStmt struct {
+type WhenCondFactStmt struct {
 	CondFacts []FactStmt
 	ThenFacts []SpecFactStmt
 }
@@ -116,13 +115,7 @@ type FcVarDecl struct {
 
 type FcVarDeclPair struct {
 	Var string
-	// Tp  FcVarType
 }
-
-// type FcVarType struct {
-// 	PackageName string
-// 	Value       FcVarTypeValue
-// }
 
 type FcFnDecl struct {
 	name string

@@ -243,16 +243,16 @@ func getSpecFactEnum(fact parser.SpecFactStmt) (int, error) {
 	return 0, fmt.Errorf("unknown SpecFactStmt type: %T", fact)
 }
 
-func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
+func (env *Env) NewCondFact(fact *parser.WhenCondFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		node, err := env.CondFactMemory.Mem.Search(&CondFactMemoryNode{f, []*parser.CondFactStmt{}})
+		node, err := env.CondFactMemory.Mem.Search(&CondFactMemoryNode{f, []*parser.WhenCondFactStmt{}})
 		if err != nil {
 			return err
 		}
 		if node != nil {
 			node.Key.CondFacts = append(node.Key.CondFacts, fact)
 		} else {
-			err := env.CondFactMemory.Mem.Insert(&CondFactMemoryNode{f, []*parser.CondFactStmt{fact}})
+			err := env.CondFactMemory.Mem.Insert(&CondFactMemoryNode{f, []*parser.WhenCondFactStmt{fact}})
 			if err != nil {
 				return err
 			}
@@ -267,4 +267,8 @@ func CondFactMemoryTreeNodeCompare(knownFact *CondFactMemoryNode, givenFact *Con
 
 func EqualFactMemoryTreeNodeCompare(knownFact *EqualFactMemoryTreeNode, givenFact *EqualFactMemoryTreeNode) (int, error) {
 	return CompareFc(knownFact.FcAsKey, givenFact.FcAsKey)
+}
+
+func UniFactMemoryTreeNodeCompare(knownFact *UniFactMemoryTreeNode, givenFact *UniFactMemoryTreeNode) (int, error) {
+	panic("")
 }
