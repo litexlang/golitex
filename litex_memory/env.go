@@ -9,10 +9,10 @@ import (
 type Env struct {
 	Parent *Env
 
-	VarMemory     VarMemory
-	PropMemory    PropMemory
-	FnMemory      FnMemory
-	VarTypeMemory FcVarTypeMemory
+	VarMemory  VarMemory
+	PropMemory PropMemory
+	FnMemory   FnMemory
+	// VarTypeMemory FcVarTypeMemory
 
 	FuncFactMemory     FuncFactMemory
 	CondFactMemory     CondFactMemory
@@ -25,10 +25,10 @@ func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent: parent,
 
-		VarMemory:     *NewVarMemory(),
-		PropMemory:    *NewPropMemory(),
-		FnMemory:      *NewFnMemory(),
-		VarTypeMemory: *NewFcVarTypeMemory(),
+		VarMemory:  *NewVarMemory(),
+		PropMemory: *NewPropMemory(),
+		FnMemory:   *NewFnMemory(),
+		// VarTypeMemory: *NewFcVarTypeMemory(),
 
 		FuncFactMemory:     FuncFactMemory{Mem: *NewRedBlackTree(specFuncFactCompare)},
 		RelationFactMemory: RelationFactMemory{Mem: *NewRedBlackTree(specRelationFactCompare)},

@@ -119,10 +119,10 @@ type FcVarDeclPair struct {
 	// Tp  FcVarType
 }
 
-type FcVarType struct {
-	PackageName string
-	Value       FcVarTypeValue
-}
+// type FcVarType struct {
+// 	PackageName string
+// 	Value       FcVarTypeValue
+// }
 
 type FcFnDecl struct {
 	name string
