@@ -3,21 +3,11 @@ package litexmemory
 import parser "golitex/litex_parser"
 
 func (mem *VarMemory) Get(s string) (*VarMemoryEntry, bool) {
-	ret, ok := mem.KVs[s]
-	if !ok {
-		return nil, false
-	}
-	return &ret, true
+	panic("TODO")
 }
 
 func (mem *VarMemory) Set(pair *parser.FcVarDeclPair) (*VarMemoryEntry, error) {
-	toStore := VarMemoryEntry{
-		pair.Tp,
-		[]parser.FcVarType{pair.Tp},
-	}
-	mem.KVs[pair.Var] = toStore
-
-	return &toStore, nil
+	panic("Todo")
 }
 
 func (mem *PropMemory) Get(s string) (*PropMemoryEntry, bool) {

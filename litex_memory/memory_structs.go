@@ -9,8 +9,8 @@ import (
 // }
 
 type VarMemoryEntry struct {
-	Tp    parser.FcVarType
-	Types []parser.FcVarType
+	// Tp    parser.FcVarType
+	// Types []parser.FcVarType
 }
 
 type PropMemory struct {
