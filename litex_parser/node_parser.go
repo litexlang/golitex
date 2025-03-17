@@ -114,24 +114,24 @@ func (parser *Parser) parseBracedFcStrTypePairArray() (*[]string, error) {
 	return &fcSlice, nil
 }
 
-func (parser *Parser) parseVarDecl() (*FcVarDecl, error) {
-	parser.skip(Keywords["var"])
+// func (parser *Parser) parseVarDecl() (*FcVarDecl, error) {
+// 	parser.skip(Keywords["var"])
 
-	pair, err := parser.parseFcVarPair()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// 	pair, err := parser.next()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	return &FcVarDecl{*pair}, nil
-}
+// 	return &FcVarDecl{pair}, nil
+// }
 
-func (parser *Parser) parseFcVarPair() (*FcVarDeclPair, error) {
-	v, err := parser.next()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-	return &FcVarDeclPair{v}, nil
-}
+// func (parser *Parser) parseFcVarPair() (*FcVarDeclPair, error) {
+// 	v, err := parser.next()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
+// 	return &FcVarDeclPair{v}, nil
+// }
 
 func (parser *Parser) parsePropDecl() (*PropDecl, error) {
 	parser.skip(Keywords["prop"])

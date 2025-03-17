@@ -532,13 +532,23 @@ func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 }
 
 func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
-	decl, err := stmt.Header.parseVarDecl()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
+	varNames := []string{}
+
+	for !stmt.Header.is(BuiltinSyms[":"]) && !stmt.Header.ExceedEnd() {
+		decl, err := stmt.Header.next()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		err = stmt.Header.skip(Keywords[","])
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		varNames = append(varNames, decl)
 	}
 
 	ifFacts := &[]FactStmt{}
 
+	var err error = nil
 	if stmt.Header.is(BuiltinSyms[":"]) {
 		stmt.Header.skip()
 		ifFacts, err = stmt.parseBodyFacts()
@@ -549,7 +559,7 @@ func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
-	return &DefVarStmt{*decl, *ifFacts}, nil
+	return &DefVarStmt{varNames, *ifFacts}, nil
 }
 
 func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
@@ -711,7 +721,8 @@ func (stmt *TokenBlock) parseFcDecl() (fcDecl, error) {
 	if stmt.Header.is(Keywords["fn"]) {
 		return stmt.Header.parseFcFnDecl()
 	} else if stmt.Header.is(Keywords["var"]) {
-		return stmt.Header.parseVarDecl()
+		// return stmt.Header.parseVarDecl()
+		panic("unexpected var declaration")
 	} else if stmt.Header.is(Keywords["prop"]) {
 		return stmt.Header.parsePropDecl()
 	}

@@ -6,7 +6,7 @@ type TopStmt struct {
 }
 
 type DefVarStmt struct {
-	Decl  FcVarDecl
+	Decl  []string
 	Facts []FactStmt
 }
 
@@ -109,13 +109,13 @@ Data structures below are not statement nodes.
 
 type TypeConceptStr string
 
-type FcVarDecl struct {
-	VarTypePair FcVarDeclPair
-}
+// type FcVarDecl struct {
+// 	VarTypePair string
+// }
 
-type FcVarDeclPair struct {
-	Var string
-}
+// type FcVarDeclPair struct {
+// 	Var string
+// }
 
 type FcFnDecl struct {
 	name string

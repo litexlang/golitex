@@ -60,9 +60,9 @@ type fcDecl interface {
 	fcDecl()
 }
 
-func (f *FcVarDecl) fcDecl() {}
-func (f *FcFnDecl) fcDecl()  {}
-func (f *PropDecl) fcDecl()  {}
+// func (f *FcVarDecl) fcDecl() {}
+func (f *FcFnDecl) fcDecl() {}
+func (f *PropDecl) fcDecl() {}
 
 type FcVarTypeValue interface {
 	fcVarTypeValue()
