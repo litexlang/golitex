@@ -22,9 +22,9 @@ func NewPropMemory() *PropMemory {
 }
 
 type PropMemoryEntry struct {
-	Tp    parser.FcPropType
-	Types []parser.FcPropType
-	Decl  parser.PropDecl
+	// Tp    parser.FcPropType
+	// Types []parser.FcPropType
+	Decl parser.PropDecl
 }
 
 type FnMemory struct{ entries map[string]FnMemEntry }
@@ -34,9 +34,9 @@ func NewFnMemory() *FnMemory {
 }
 
 type FnMemEntry struct {
-	Tp    parser.FcFnType
-	Types []parser.FcFnType
-	Decl  parser.FcFnDecl
+	// Tp    parser.FcFnType
+	// Types []parser.FcFnType
+	Decl parser.FcFnDecl
 }
 
 type FcVarTypeMemory struct{ entries map[string][]parser.FcVarType }
