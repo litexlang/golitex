@@ -192,15 +192,15 @@ func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		return nil, &parseStmtErr{err, *block}
 	}
 
-	implName := &NamedFcType{}
+	// implName := &NamedFcType{}
 
-	if block.Header.is(Keywords["impl"]) {
-		block.Header.next()
-		implName, err = block.Header.parseNamedFcType()
-		if err != nil {
-			return nil, &parseStmtErr{err, *block}
-		}
-	}
+	// if block.Header.is(Keywords["impl"]) {
+	// 	block.Header.next()
+	// 	implName, err = block.Header.parseNamedFcType()
+	// 	if err != nil {
+	// 		return nil, &parseStmtErr{err, *block}
+	// 	}
+	// }
 
 	decl, err := block.Header.next()
 	if err != nil {
@@ -208,7 +208,7 @@ func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 	}
 
 	if !block.Header.is(BuiltinSyms[":"]) {
-		return &DefTypeStmt{decl, *implName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
+		return &DefTypeStmt{decl, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
 	} else {
 		block.Header.next()
 	}
@@ -245,7 +245,7 @@ func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 			return nil, &parseStmtErr{fmt.Errorf("expected type_member or instance_member, got %s", curStmt.Header.strAtCurIndexPlus(0)), *block}
 		}
 	}
-	return &DefTypeStmt{decl, *implName, typeMembers, instanceMembers, *knowFacts}, nil
+	return &DefTypeStmt{decl, typeMembers, instanceMembers, *knowFacts}, nil
 }
 
 func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
@@ -532,6 +532,11 @@ func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 }
 
 func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
+	err := stmt.Header.skip(Keywords["var"])
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
 	varNames := []string{}
 
 	for !stmt.Header.is(BuiltinSyms[":"]) && !stmt.Header.ExceedEnd() {
@@ -539,17 +544,18 @@ func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		err = stmt.Header.skip(Keywords[","])
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
+		if stmt.Header.is(BuiltinSyms[","]) {
+			err = stmt.Header.skip(Keywords[","])
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
 		}
 		varNames = append(varNames, decl)
 	}
 
 	ifFacts := &[]FactStmt{}
 
-	var err error = nil
-	if stmt.Header.is(BuiltinSyms[":"]) {
+	if !stmt.Header.ExceedEnd() && stmt.Header.is(BuiltinSyms[":"]) {
 		stmt.Header.skip()
 		ifFacts, err = stmt.parseBodyFacts()
 		if err != nil {

@@ -218,35 +218,35 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
 }
 
-func (parser *Parser) parseNamedFcType() (*NamedFcType, error) {
-	name, err := parser.next()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// func (parser *Parser) parseNamedFcType() (*NamedFcType, error) {
+// 	name, err := parser.next()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	typeNameArr := []string{name}
-	params := []Fc{}
+// 	typeNameArr := []string{name}
+// 	params := []Fc{}
 
-	for parser.is(BuiltinSyms["."]) {
-		parser.skip()
-		name, err := parser.next()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-		typeNameArr = append(typeNameArr, name)
-	}
+// 	for parser.is(BuiltinSyms["."]) {
+// 		parser.skip()
+// 		name, err := parser.next()
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
+// 		typeNameArr = append(typeNameArr, name)
+// 	}
 
-	if parser.is(BuiltinSyms["("]) {
-		paramsPtr, err := parser.parseBracedFcArr()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-		params = *paramsPtr
-		parser.skip(BuiltinSyms[")"])
-	}
+// 	if parser.is(BuiltinSyms["("]) {
+// 		paramsPtr, err := parser.parseBracedFcArr()
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
+// 		params = *paramsPtr
+// 		parser.skip(BuiltinSyms[")"])
+// 	}
 
-	return &NamedFcType{typeNameArr, params}, nil
-}
+// 	return &NamedFcType{typeNameArr, params}, nil
+// }
 
 func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
 	if block.Header.is(Keywords["var"]) {
