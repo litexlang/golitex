@@ -282,7 +282,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	varParams := &[]StrTypePair{}
+	varParams := &[]string{}
 	condFacts := []FactStmt{}
 	thenFacts := []SpecFactStmt{}
 

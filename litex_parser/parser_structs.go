@@ -34,13 +34,13 @@ type DefPropStmt struct {
 
 type DefFnStmt struct {
 	name      string
-	tp        FcFnType
+	tp        []string
 	ifFacts   []FactStmt
 	thenFacts []FactStmt
 }
 
 type BlockForallStmt struct {
-	varParams []StrTypePair
+	varParams []string
 	cond      []FactStmt
 	then      []SpecFactStmt
 }
@@ -121,12 +121,13 @@ type FcVarDeclPair struct {
 
 type FcFnDecl struct {
 	name string
-	tp   FcFnType
+	tp   []string
 }
 
 type PropDecl struct {
 	name string
-	tp   FcPropType
+	tp   []string
+	// tp   FcPropType
 }
 
 type TypeDecl struct {
@@ -140,10 +141,10 @@ type TypeConceptPair struct {
 
 type TypeVarStr string
 
-type StrTypePair struct {
-	Var  string
-	Type fcType
-}
+// type StrTypePair struct {
+// 	Var  string
+// 	Type fcType
+// }
 
 type FcVarType struct {
 	PackageName string
@@ -157,16 +158,16 @@ type FcVarTypeFuncValue struct {
 	VarParams []Fc
 }
 
-type FcFnType struct {
-	// typeParamsTypes []TypeConceptPair
-	varParamsTypes []StrTypePair
-	retType        fcType
-}
+// type FcFnType struct {
+// 	// typeParamsTypes []TypeConceptPair
+// 	varParamsTypes []StrTypePair
+// 	retType        fcType
+// }
 
-type FcPropType struct {
-	// typeParams []TypeConceptPair
-	varParams []StrTypePair
-}
+// type FcPropType struct {
+// 	// typeParams []TypeConceptPair
+// 	varParams []StrTypePair
+// }
 
 var AnyType = Keywords["any"]
 var VarType = Keywords["var"]
