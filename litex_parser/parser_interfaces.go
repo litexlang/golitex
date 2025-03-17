@@ -56,14 +56,6 @@ func (f *FuncFactStmt) GetTypeParamsAndParams() *SpecFactParams {
 	return &SpecFactParams{[]Fc{}}
 }
 
-// type fcDeclStmt interface {
-// 	fcDecl()
-// }
-
-// // func (f *FcVarDecl) fcDecl() {}
-// func (f *FcFnDecl) fcDecl() {}
-// func (f *PropDecl) fcDecl() {}
-
 type FcVarTypeValue interface {
 	fcVarTypeValue()
 }
