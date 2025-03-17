@@ -11,7 +11,7 @@ type DefVarStmt struct {
 }
 
 type DefStructStmt struct {
-	decl            fcDecl
+	decl            string
 	structName      TypeConceptStr
 	typeMembers     []TypeMember
 	instanceMembers []InstanceMember
@@ -19,7 +19,7 @@ type DefStructStmt struct {
 }
 
 type DefTypeStmt struct {
-	decl            fcDecl
+	decl            string
 	implType        NamedFcType
 	typeMembers     []TypeMember
 	instanceMembers []InstanceMember
@@ -78,7 +78,7 @@ type KnowStmt struct {
 type DefExistStmt struct {
 	decl      PropDecl
 	ifFacts   []FactStmt
-	member    []fcDecl
+	member    []InstanceMember
 	thenFacts []FactStmt
 }
 

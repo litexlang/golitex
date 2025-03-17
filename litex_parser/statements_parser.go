@@ -132,7 +132,7 @@ func (stmt *TokenBlock) parseTypeConceptDeclStmtKnows() (*[]FactStmt, error) {
 func (block *TokenBlock) parseDefConceptStmt() (*DefStructStmt, error) {
 	block.Header.skip(Keywords["struct"])
 
-	decl, err := block.parseFcDecl()
+	decl, err := block.Header.next()
 	if err != nil {
 		return nil, &parseStmtErr{err, *block}
 	}
@@ -202,7 +202,7 @@ func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		}
 	}
 
-	decl, err := block.parseFcDecl()
+	decl, err := block.Header.next()
 	if err != nil {
 		return nil, &parseStmtErr{err, *block}
 	}
@@ -668,7 +668,7 @@ func (stmt *TokenBlock) parseDefExistStmt() (*DefExistStmt, error) {
 	}
 
 	ifFacts := &[]FactStmt{}
-	member := &[]fcDecl{}
+	members := &[]InstanceMember{}
 	thenFacts := &[]FactStmt{}
 	if !stmt.Header.is(BuiltinSyms[":"]) {
 		return nil, fmt.Errorf("expected ':‘")
@@ -692,43 +692,47 @@ func (stmt *TokenBlock) parseDefExistStmt() (*DefExistStmt, error) {
 			continue
 		}
 		if curStmt.Header.is(Keywords["members"]) {
-			member, err = curStmt.parseFcDecls()
-			if err != nil {
-				return nil, &parseStmtErr{err, *stmt}
+			for _, memberStmt := range curStmt.Body {
+				member, err := memberStmt.parseInstanceMember()
+				if err != nil {
+					return nil, &parseStmtErr{err, curStmt}
+				}
+				*members = append(*members, member)
 			}
+
 			continue
 		}
 	}
 
-	return &DefExistStmt{*decl, *ifFacts, *member, *thenFacts}, nil
+	return &DefExistStmt{*decl, *ifFacts, *members, *thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseFcDecls() (*[]fcDecl, error) {
-	ret := []fcDecl{}
+// func (stmt *TokenBlock) parseFcDecls() (*[]fcDecl, error) {
+// 	ret := []fcDecl{}
 
-	for _, curStmt := range stmt.Body {
-		cur, err := curStmt.parseFcDecl()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		ret = append(ret, cur)
-	}
+// 	for _, curStmt := range stmt.Body {
+// 		cur, err := curStmt.parseFcDecl()
+// 		if err != nil {
+// 			return nil, &parseStmtErr{err, *stmt}
+// 		}
+// 		ret = append(ret, cur)
+// 	}
 
-	return &ret, nil
-}
+// 	return &ret, nil
+// }
 
-func (stmt *TokenBlock) parseFcDecl() (fcDecl, error) {
-	if stmt.Header.is(Keywords["fn"]) {
-		return stmt.Header.parseFcFnDecl()
-	} else if stmt.Header.is(Keywords["var"]) {
-		// return stmt.Header.parseVarDecl()
-		panic("unexpected var declaration")
-	} else if stmt.Header.is(Keywords["prop"]) {
-		return stmt.Header.parsePropDecl()
-	}
+// func (stmt *TokenBlock) parseFcDecl() (fcDecl, error) {
+// 	if stmt.Header.is(Keywords["fn"]) {
+// 		return stmt.Header.parseFcFnDecl()
+// 	} else if stmt.Header.is(Keywords["var"]) {
+// 		// return stmt.Header.parseVarDecl()
+// 		panic("unexpected var declaration")
+// 	} else if stmt.Header.is(Keywords["prop"]) {
+// 		return stmt.Header.parsePropDecl()
+// 	}
 
-	return nil, fmt.Errorf("expect 'fn', 'var', or 'prop'")
-}
+// 	return nil, fmt.Errorf("expect 'fn', 'var', or 'prop'")
+// }
 
 func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 	stmt.Header.skip(Keywords["have"])
