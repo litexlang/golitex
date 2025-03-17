@@ -1,9 +1,5 @@
 package litexmemory
 
-import (
-	parser "golitex/litex_parser"
-)
-
 // type FnPropParaMemTree struct {
 // 	FcStr []parser.FcStr
 // }
@@ -14,29 +10,33 @@ type VarMemoryEntry struct {
 }
 
 type PropMemory struct {
-	Entires map[string]PropMemoryEntry
+	// Entires map[string]PropMemoryEntry
 }
 
 func NewPropMemory() *PropMemory {
-	return &PropMemory{map[string]PropMemoryEntry{}}
+	// return &PropMemory{map[string]PropMemoryEntry{}}
+	return &PropMemory{}
 }
 
 type PropMemoryEntry struct {
 	// Tp    parser.FcPropType
 	// Types []parser.FcPropType
-	Decl parser.PropDecl
+	// Decl parser.PropDecl
 }
 
-type FnMemory struct{ entries map[string]FnMemEntry }
+type FnMemory struct {
+	// entries map[string]FnMemEntry
+}
 
 func NewFnMemory() *FnMemory {
-	return &FnMemory{entries: map[string]FnMemEntry{}}
+	// return &FnMemory{entries: map[string]FnMemEntry{}}
+	return &FnMemory{}
 }
 
 type FnMemEntry struct {
 	// Tp    parser.FcFnType
 	// Types []parser.FcFnType
-	Decl parser.FcFnDecl
+	// Decl parser.FcFnDecl
 }
 
 // type FcVarTypeMemory struct{ entries map[string][]parser.FcVarType }
@@ -53,10 +53,13 @@ func (e *MemoryErr) Error() string {
 	return e.err.Error()
 }
 
-type VarMemory struct{ KVs map[string]VarMemoryEntry }
+type VarMemory struct {
+	// KVs map[string]VarMemoryEntry
+}
 
 func NewVarMemory() *VarMemory {
-	return &VarMemory{KVs: map[string]VarMemoryEntry{}}
+	// return &VarMemory{KVs: map[string]VarMemoryEntry{}}
+	return &VarMemory{}
 }
 
 func NewUniFactMemory() *UniFactMemory {
