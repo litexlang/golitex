@@ -188,50 +188,50 @@ func (parser *Parser) parseFcFnDecl() (*FcFnDecl, error) {
 // 	return &FcPropType{*varParams}, nil
 // }
 
-func (parser *Parser) parseFcVarType() (FcVarType, error) {
-	packageName := ""
-	name, err := parser.next()
+// func (parser *Parser) parseFcVarType() (FcVarType, error) {
+// 	packageName := ""
+// 	name, err := parser.next()
 
-	if err != nil {
-		return FcVarType{"", nil}, err
-	}
+// 	if err != nil {
+// 		return FcVarType{"", nil}, err
+// 	}
 
-	if parser.is(BuiltinSyms["::"]) {
-		parser.skip()
-		packageName = name
+// 	if parser.is(BuiltinSyms["::"]) {
+// 		parser.skip()
+// 		packageName = name
 
-		name, err = parser.next()
-		if err != nil {
-			return FcVarType{"", nil}, err
-		}
-	}
+// 		name, err = parser.next()
+// 		if err != nil {
+// 			return FcVarType{"", nil}, err
+// 		}
+// 	}
 
-	isFunc := false
-	// typeParams := &[]TypeVarStr{}
-	varParams := &[]Fc{}
-	// if parser.is(BuiltinSyms["["]) {
-	// 	typeParams, err = parser.parseBracketedTypeVarArr()
-	// 	if err != nil {
-	// 		return FcVarType{"", nil}, err
-	// 	}
-	// 	isFunc = true
-	// }
+// 	isFunc := false
+// 	// typeParams := &[]TypeVarStr{}
+// 	varParams := &[]Fc{}
+// 	// if parser.is(BuiltinSyms["["]) {
+// 	// 	typeParams, err = parser.parseBracketedTypeVarArr()
+// 	// 	if err != nil {
+// 	// 		return FcVarType{"", nil}, err
+// 	// 	}
+// 	// 	isFunc = true
+// 	// }
 
-	if parser.is(BuiltinSyms["("]) {
-		varParams, err = parser.parseBracedFcArr()
-		if err != nil {
-			return FcVarType{"", nil}, err
-		}
-		isFunc = true
-	}
+// 	if parser.is(BuiltinSyms["("]) {
+// 		varParams, err = parser.parseBracedFcArr()
+// 		if err != nil {
+// 			return FcVarType{"", nil}, err
+// 		}
+// 		isFunc = true
+// 	}
 
-	if isFunc {
-		return FcVarType{packageName, &FcVarTypeFuncValue{name, *varParams}}, nil
-	} else {
-		return FcVarType{packageName, FcVarTypeStrValue(name)}, nil
-	}
+// 	if isFunc {
+// 		return FcVarType{packageName, &FcVarTypeFuncValue{name, *varParams}}, nil
+// 	} else {
+// 		return FcVarType{packageName, FcVarTypeStrValue(name)}, nil
+// 	}
 
-}
+// }
 
 // func (parser *Parser) parseBracedFcStrTypePairArray() (*[]StrTypePair, error) {
 // 	pairs := []StrTypePair{}

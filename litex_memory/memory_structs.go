@@ -39,11 +39,11 @@ type FnMemEntry struct {
 	Decl parser.FcFnDecl
 }
 
-type FcVarTypeMemory struct{ entries map[string][]parser.FcVarType }
+// type FcVarTypeMemory struct{ entries map[string][]parser.FcVarType }
 
-func NewFcVarTypeMemory() *FcVarTypeMemory {
-	return &FcVarTypeMemory{entries: map[string][]parser.FcVarType{}}
-}
+// func NewFcVarTypeMemory() *FcVarTypeMemory {
+// 	return &FcVarTypeMemory{entries: map[string][]parser.FcVarType{}}
+// }
 
 type MemoryErr struct {
 	err error
