@@ -26,6 +26,22 @@
    5. 函数返回值是prop，这个事情本质上是诡异的。函数返回值是返回来一个符号，符号是不能被运行的。但prop是能被运行的。
    6. 函数是能写在()前面的符号，其他性质和var是一样的
 
-package Group
-fn id(G):
-    $Set(G)
+package GroupTheory
+
+struct Group:
+    fn id(s)
+    fn mul(x,y)
+    fn inv(x)
+
+    know:
+        forall x:
+            x in this
+            then:
+                mul(x , id(this)) = mul(id(this), x)
+                mul(x, inv(x)) = mul(inv(x), x) = id(this)
+        forall x,y:
+            x in this
+            y in this
+            then:
+                mul(mul(x, y),z) = mul(x,mul(y,z))
+                
