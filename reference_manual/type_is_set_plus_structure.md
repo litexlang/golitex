@@ -17,6 +17,9 @@
          2. litex里函数某种程度上起到了OOP的作用：把其他符号放在一起
       3. 坏处
          1. 不能用到现代的编程技术
+   6. 注：不引入oop的话，管理struct和type和set太乱了，对我的编译器设计起到巨大抑制作用。还是需要OOP的。
+   7. litex必须要用OOP，否则很多东西没法弄。
+      1. 如果不存在同名函数（不同类型的参数列表对应不同的函数），那class就是没意义的。你想同时 让class 没有，然后让函数可以同名，这是做不到的。但数学刚好有无数多的同名函数，比如+，所以必须引入OOP。
 2. 数学里函数的返回值是函数很常见
    1. 求导运算，读入函数，输出函数
    2. 函数(运算符) * 既可以作用在数上，也能作用在函数上。比如 f * 2 相当于输入函数f和2，输出函数2f
@@ -71,7 +74,7 @@ fn Id(s):
 fn Inv(x)
 fn mul(x,y)
 
-prop Group(s, idFunc, mulFunc):
+prop Group(s, idFunc, GroupRingStructOnRealNumbers):
     // 其实这三个没必要：x in s 已经说明s是集合；mulFunc(x,y)说明mulFunc是fn
     s is set
     idFunc is fn
@@ -200,3 +203,27 @@ Search 时，需要处理同名的情况
 3. 到底有哪些信息是运行时判断的？哪些是编译时的？
    1. 如果定义prop和fn的时候，我不能从cond里判断出来我可以调用then种的prop和fn，那报错
       1. 这么做是本质的：如果涉及到的运算符是structure of set的运算符，那
+   
+----------------------------------------------------------------
+上述想法已经过期了，正确想法是
+1. 现有集合
+2. 函数可以定义在集合上
+3. 有个关键词叫type，type作用在某个集合上，然后里面放一些东西，放完东西之后说明这个type impl 哪些 struct
+如
+type real impl GroupRingStructOnRealNumbers: // 定义新类型GroupRingStructOnRealNumbers
+    0 impl Group::Id
+    + impl Group::Mul
+    0 impl Ring::Id
+    + impl Ring::Add
+    * impl Ring::Mul
+    prove:
+        ....
+
+// 在这里声明我们从这一行开始，把real视作有结构GroupRingStructOnRealNumbers的
+real impl GroupRingStructOnRealNumbers
+
+// 如果未来有个fe，它涉及到的结构有多个，那就手动定义一个type，impl了多个结构，然后继续写。
+
+这么干的好处是，不需要给每个事实都取个名字了：否则你每次传函数参数，一传就是集合，涉及到的opt，一股脑一起传；
+
+我还在怀疑我oop是否有必要加进去.
