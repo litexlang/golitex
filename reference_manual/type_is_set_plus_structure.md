@@ -45,7 +45,8 @@ struct Group:
             then:
                 mul(mul(x, y),z) = mul(x,mul(y,z))
                 
-fn Id(s)
+fn Id(s):
+    s is Set
 fn Inv(x)
 
 // 引入一个集合，这个集合有群结构
@@ -58,4 +59,32 @@ know G impl Group:
 // ??如何处理builtin Operator overload
 // ??比如这里 \_\_mul\_\_(G) 表示，函数mul读入了参数G，返回一个新函数，这个函数impl Group::mul
 
-我们在这里可以看到神奇的一点。Id看起来不像是函数，因为它的定义域是不固定的，任何参数都能传到这个Id的参数列表里。这简直就是超级generics：根本不管type，直接用。它像是一个能放入任何东西的标记符号，或者说类似C里的struct，而不是函数。
+我们在这里可以看到神奇的一点。Id看起来不像是函数，因为它的定义域是不固定的，任何参数都能传到这个Id的参数列表里。这简直就是超级generics：根本不管type，直接用。相当于超级函数名重载。它像是一个能放入任何东西的标记符号，或者说类似C里的struct，而不是函数。
+如果不在 fn 在定义的时候就加好cond，那就回出现上述情况
+
+// 另外一种写法
+package GroupTheory
+
+fn Id(s):
+    s is Set
+
+fn Inv(x)
+fn mul(x,y)
+
+prop Group(s, idFunc, mulFunc):
+    // 其实这三个没必要：x in s 已经说明s是集合；mulFunc(x,y)说明mulFunc是fn
+    s is set
+    idFunc is fn
+    mulFunc is fn
+
+    then:
+        forall x:
+            x in s
+            then:
+                mulFunc(x , idFunc(this)) = mulFunc(idFunc(this), x)
+                mulFunc(x, inv(x)) = mulFunc(inv(x), x) = idFunc(this)
+        forall x,y:
+            x in s
+            y in s
+            then:
+                mulFunc(mulFunc(x, y),z) = mulFunc(x,mulFunc(y,z))
