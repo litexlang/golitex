@@ -112,3 +112,11 @@ prop isGroup(s):
         y in s
         then:
             mul(mul(x, y),z) = mul(x,mul(y,z))
+
+// 第一种写法更合理
+Search 时，需要处理同名的情况
+1. 同一个var有不同的名字
+2. 一个opt1，可能因为它impl了另外一个opt2，而另外的opt可能长相不是opt1，导致最后找不到了
+   1. 比如R上+ impl 了 Group 的 *
+3. 到底有哪些信息是运行时判断的？哪些是编译时的？
+   1. 如果定义prop和fn的时候，我不能从cond里判断出来我可以调用then种的prop和fn，那报错
