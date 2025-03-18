@@ -237,3 +237,18 @@ real impl GroupRingStructOnRealNumbers
 struct 是对 不同集合，及其上的运算，的pattern的归总。相当于一种简写。因为你也可以每次写相关命题时，都写成 $Group(s, id, mul)。但每次这么写，一方面累，一方面我searcher不太好search。litex的type是对searcher更好search的一种妥协。
 
 所以本质上type，struct是不必要的。可以用prop和claim模拟出来。但是为了语法糖和让我search更容易（用户不需要给每个事实取个名字），我引入type和struct
+
+写在函数里面的cond，应该以set形式写在函数外面
+// 不好
+fn f(x):
+    cond:
+        $R(x)
+        x > 1
+    ...
+
+// 好：注意到这里 相当于 domain_of_f = {x in R | x > 1}。我这里默认下面是<=>关系，而不是 =>。所以不需要写 for all x R 如果 x > 1 那 x in domain_of_f
+set domain_of_f:
+    domain_of_f subsetOf R
+    for x domain_of_f:
+        x > 1
+    
