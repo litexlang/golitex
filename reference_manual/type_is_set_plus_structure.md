@@ -88,3 +88,27 @@ prop Group(s, idFunc, mulFunc):
             y in s
             then:
                 mulFunc(mulFunc(x, y),z) = mulFunc(x,mulFunc(y,z))
+
+
+// 第三种写法
+package GroupTheory
+
+fn Id(s):
+    s is Set
+
+fn Inv(x)
+fn mul(x,y)
+
+prop isGroup(s):
+    s is set
+    then:
+      forall x:
+        x in s
+        then:
+            mul(x , id(s)) = mul(id(s), x)
+            mul(x, inv(x)) = mul(inv(x), x) = id(s)
+      forall x,y:
+        x in s
+        y in s
+        then:
+            mul(mul(x, y),z) = mul(x,mul(y,z))
