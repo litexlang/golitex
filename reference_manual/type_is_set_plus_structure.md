@@ -264,3 +264,37 @@ fn和prop里，正常情况下，都是只有var有自由度，可以是“任�
 不能直接完完全全把struct看成go的interface 因为有时候，必须是要知道a和b是同一个集合中的，才能工作。哪怕struct一样，来自的函数可能不一样，那就彻底G了。我们的类型系统要比编程语言这种只需要执行的，要严格一点.
 fn P(a StructName, b StructName):
     ... 
+
+因为struct不过是语法糖，实在不行你用prop+claim来写就行。
+
+疑问：如何判断带generics的fn和prop，是否与同名嗲fn和prop冲突呢？特别是一开始定义prop的时候还没证明set impl 某struct，等过了一会再证明。那这个时候必冲突了。
+1. 一个选择：runtime的时候再次遍历一下，看看有没有符合。
+2. 因为prop里都是关于var的事实，所以不会影响search
+
+3. 函数重载解析规则
+C++ 编译器会根据函数重载解析规则来选择最合适的函数。具体规则如下：
+
+非模板函数优先：如果有一个非模板函数和一个模板函数都能匹配调用，编译器会优先选择非模板函数。
+
+模板特化：如果模板函数有特化版本，且特化版本更匹配调用，编译器会选择特化版本。
+
+模板参数推导：如果只有模板函数匹配调用，编译器会通过模板参数推导来实例化模板函数。
+
+2. 显式指定模板参数
+如果希望调用模板函数而不是非模板函数，可以通过显式指定模板参数来强制调用模板函数。
+
+template <typename T>
+void foo(T) {
+    std::cout << "Template function" << std::endl;
+}
+
+void foo(int) {
+    std::cout << "Non-template function" << std::endl;
+}
+
+int main() {
+    foo(42);            // 调用非模板函数
+    foo<int>(42);       // 显式调用模板函数
+}
+
+或者索性不让任何带generic的prop和fn与其他的fn和prop重名
