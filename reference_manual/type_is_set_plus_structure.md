@@ -260,3 +260,7 @@ fn [T StructName, P StructName] P(a T, b P):
 如果你想让a有两个struct T1, T2，那对不起，请你定义一个struct T3, T3 包含了T1, T2 的所有性质。我的所有关于参数的性质，全部包含在typeParams, varParams 里了。
 上面这样做的意义是，如果 then 里出现的 函数，我默认是 StructName 相关的函数/prop。理论上a和b是不能被作用任何的prop和fn的，但是因为有了T, P 做Struct保障，那它们就能有相关的函数和prop。我们在环境里直接用这些struct相关的函数名。
 fn和prop里，正常情况下，都是只有var有自由度，可以是“任意”。但是有时候我想让set也是“任意”，把一大类的set共有的性质取个名字，放在一起。让set也有自由度。注意到set是很诡异的变量：它虽然是变量，但可以出现在type所在的位置
+
+不能直接完完全全把struct看成go的interface 因为有时候，必须是要知道a和b是同一个集合中的，才能工作。哪怕struct一样，来自的函数可能不一样，那就彻底G了。我们的类型系统要比编程语言这种只需要执行的，要严格一点.
+fn P(a StructName, b StructName):
+    ... 
