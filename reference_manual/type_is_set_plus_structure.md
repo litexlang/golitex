@@ -77,17 +77,24 @@ prop Group(s, idFunc, mulFunc):
     idFunc is fn
     mulFunc is fn
 
+    forall x:
+        x in s
+        then:
+            mulFunc(x , idFunc(this)) = mulFunc(idFunc(this), x)
+            mulFunc(x, inv(x)) = mulFunc(inv(x), x) = idFunc(this)
+    forall x,y:
+        x in s
+        y in s
+        then:
+            mulFunc(mulFunc(x, y),z) = mulFunc(x,mulFunc(y,z))
+    
     then:
-        forall x:
-            x in s
-            then:
-                mulFunc(x , idFunc(this)) = mulFunc(idFunc(this), x)
-                mulFunc(x, inv(x)) = mulFunc(inv(x), x) = idFunc(this)
-        forall x,y:
-            x in s
-            y in s
-            then:
-                mulFunc(mulFunc(x, y),z) = mulFunc(x,mulFunc(y,z))
+        // 这里的impl表示，Id 和 idFunc 在一样的定义域上，是等价的。如果x只在Id定义域，不在idFunc，那就G了
+        idFunc impl Id
+        idFunc impl Id
+        idFunc impl Id
+
+// 如何说 (G, F1, F2) impl Group
 
 
 // 第三种写法
@@ -113,6 +120,10 @@ prop isGroup(s):
         then:
             mul(mul(x, y),z) = mul(x,mul(y,z))
 
+// 这时候如何说(s,id,f)是群
+know $isGroup(s), id = Id, f = mul
+
+
 // 第一种写法更合理
 Search 时，需要处理同名的情况
 1. 同一个var有不同的名字
@@ -120,3 +131,4 @@ Search 时，需要处理同名的情况
    1. 比如R上+ impl 了 Group 的 *
 3. 到底有哪些信息是运行时判断的？哪些是编译时的？
    1. 如果定义prop和fn的时候，我不能从cond里判断出来我可以调用then种的prop和fn，那报错
+      1. 这么做是本质的：如果涉及到的运算符是structure of set的运算符，那
