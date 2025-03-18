@@ -91,11 +91,43 @@ prop Group(s, idFunc, mulFunc):
     then:
         // 这里的impl表示，Id 和 idFunc 在一样的定义域上，是等价的。如果x只在Id定义域，不在idFunc，那就G了
         idFunc impl Id
-        idFunc impl Id
-        idFunc impl Id
+        mulFunc impl mul
 
 // 如何说 (G, F1, F2) impl Group
 
+疑难杂症:如果我也像lean一样，让用户自己给每个事实都取个名字，那我日子会好过多了，因为我不用search了
+比如下面这个，如果我能传：集合，id函数，mul函数，那我就舒服多了。
+这里有硬伤：then 里面的表达式，没有涉及到id(mul可以直接得到；s可以从x所在集合得到；id？？？)
+claim factName(s,id,mul):
+    $Group(s, id, mul)
+    then:
+        forall x, y:
+            x in s, y in s
+            then:
+                mul(mul(x, y),z) = mul(x,mul(y,z))
+    prove:
+        mul(mul(x, y),z) = mul(x,mul(y,z))
+
+如果有OOP的话，上述问题较好解决：我定义一个东西叫type(set+structure),type里保存了一些field，这些field能和prop Group里的要求对应
+
+type GroupType {
+    fn Id(x)
+    fn mul(x,y)
+}
+know forall s:
+    s impl GroupType
+    then:
+        $Group(s, s::id, s::mul)
+
+var s GroupType // 自动是集合，同时它可以写s::Id, s::mul
+know $Group(s, s::Id, s::mul)
+
+// 于是上述的claim就不需要写成prop格式，能执行局调用了
+forall x,y:
+    type_of(x) impl GroupType
+    type_of(x) = type_of(y)
+    then:
+        type_of(x)::mul(type_of(x)::mul(x, y),z) = type_of(x)::mul(x,type_of(x)::mul(y,z))
 
 // 第三种写法
 package GroupTheory
