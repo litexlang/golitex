@@ -108,7 +108,7 @@ claim factName(s,id,mul):
     prove:
         mul(mul(x, y),z) = mul(x,mul(y,z))
 
-如果有OOP的话，上述问题较好解决：我定义一个东西叫type(set+structure),type里保存了一些field，这些field能和prop Group里的要求对应
+如果有OOP的话，上述问题较好解决：我定义一个东西叫type(set+structure),type里保存了一些field，这些field能和prop Group里的要求对应。如果把相关的信息绑定在变量上，那我search就可以运行了，不需要用户自己写claim啥的了
 
 type GroupType {
     fn Id(x)
@@ -128,6 +128,42 @@ forall x,y:
     type_of(x) = type_of(y)
     then:
         type_of(x)::mul(type_of(x)::mul(x, y),z) = type_of(x)::mul(x,type_of(x)::mul(y,z))
+
+// 另外一种写法：不用OOP
+fn fn_as_group_mul(s):
+    s is set
+    then:
+        ret is fn
+fn fn_as_group_id(s):
+    s is set
+    then:
+        ret is fn
+
+var s set:
+    know $Group(s, fn_as_group_mul(s), fn_as_group_id(s))
+
+// 或者索性把Group定义成下面的形状
+prop Group(s):
+    s is set
+    fn_as_group_id(s) is fn
+    fn_as_group_mul(s) is fn
+
+    forall x:
+        x in s
+        then:
+            fn_as_group_mul(s)(x , fn_as_group_id(s)()) = fn_as_group_mul(s)(fn_as_group_id(s)(), x)
+            fn_as_group_mul(s)(x, inv(x)) = fn_as_group_mul(s)(inv(x), x) = fn_as_group_id(s)()
+    forall x,y:
+        x in s
+        y in s
+        then:
+            fn_as_group_mul(s)(fn_as_group_mul(s)(x, y),z) = fn_as_group_mul(s)(x,fn_as_group_mul(s)(y,z))
+    
+    then:
+        fn_as_group_id(s) impl Id
+        fn_as_group_mul(s) impl mul
+
+------------------------------------------------
 
 // 第三种写法
 package GroupTheory
