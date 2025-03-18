@@ -252,3 +252,9 @@ set domain_of_f:
     for x domain_of_f:
         x > 1
     
+注：struct除了对set有，“set有没有某member”的要求，还可能对set里的元素有没有一些性质的要求。这些东西统称为struct。set"有没有member"这是相当特殊的性质。这种性质不是普通的用户定义的prop的这种性质，而是内存在解释器里的，工作原理和普通prop不一样。这也是为什么impl这个关键词怪怪的。
+
+for < T StructName, P StructName> P(a T, b P):
+    .... // 全部是then，没cond
+
+如果你想让a有两个struct T1, T2，那对不起，请你定义一个struct T3, T3 包含了T1, T2 的所有性质。我的所有关于参数的性质，全部包含在typeParams, varParams 里了。
