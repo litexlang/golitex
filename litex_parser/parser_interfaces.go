@@ -56,12 +56,12 @@ func (f *FuncFactStmt) GetTypeParamsAndParams() *SpecFactParams {
 	return &SpecFactParams{[]Fc{}}
 }
 
-type FcVarTypeValue interface {
-	fcVarTypeValue()
-}
+// type FcVarTypeValue interface {
+// 	fcVarTypeValue()
+// }
 
-func (f FcVarTypeStrValue) fcVarTypeValue()   {}
-func (f *FcVarTypeFuncValue) fcVarTypeValue() {}
+// func (f FcVarTypeStrValue) fcVarTypeValue()   {}
+// func (f *FcVarTypeFuncValue) fcVarTypeValue() {}
 
 type ClaimStmt interface {
 	claimStmt()

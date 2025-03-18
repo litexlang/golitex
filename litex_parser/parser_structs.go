@@ -19,8 +19,7 @@ type DefStructStmt struct {
 }
 
 type DefTypeStmt struct {
-	decl string
-	// implType        NamedFcType
+	decl            string
 	typeMembers     []TypeMember
 	instanceMembers []InstanceMember
 	knowFacts       []FactStmt
@@ -119,13 +118,8 @@ type PropDecl struct {
 	vars []string
 }
 
-type FcVarTypeStrValue string
-type FcVarTypeFuncValue struct {
-	Name      string
-	VarParams []Fc
-}
-
-// type NamedFcType struct {
-// 	typeNameArr []string // packageName.packageName.typeName
-// 	params      []Fc
+// type FcVarTypeStrValue string
+// type FcVarTypeFuncValue struct {
+// 	Name      string
+// 	VarParams []Fc
 // }
