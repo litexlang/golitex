@@ -6,7 +6,7 @@ type Stmt interface {
 }
 
 func (stmt *DefVarStmt) stmt()              {}
-func (c *DefStructStmt) stmt()              {}
+func (c *DefSetStructStmt) stmt()           {}
 func (f *DefTypeStmt) stmt()                {}
 func (c *DefPropStmt) stmt()                {}
 func (f *DefFnStmt) stmt()                  {}
