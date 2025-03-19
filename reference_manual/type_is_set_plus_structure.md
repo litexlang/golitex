@@ -304,3 +304,17 @@ int main() {
 貌似type这个关键词是没意义的
 可以直接拿来 (集合，fc，fc，...) impl struct 来说明它有这个的结构
 这样的话，一个集合可以同时impl很多结构，而且也不会打架：因为我验证一条事实FE的时候，我读到你的涉及的函数和prop，然后我只搜到关于这个函数的struct，然后我只搜到关于这样的结构的 generic_opt，然后再得到关于这个generic_opt的generic_prop。所以type在这里不需要出现。就像是同一个type可以impl不同的interface，然后在不同的情况下让它代表不同的interface以传入到不同的函数里。我们这里，如果你要impl一个interface（struct），你需要自己手动地证明一下能impl。然后我们“调用”带有自由度的函数也是和直接call函数名不一样的：我们隐式地搜索你所用的符号涉及到的结构，然后看看满足这种结构的所有的东西的事实，能不能match上你现在所在的地方所需要用的。
+
+这貌似有问题：如果我一个集合上有很多不同的impl一个结构的方式，我去call某个结构相关的事实时，我不能分辨是哪个impl的方式去call了。看来还是只能引入type这个关键词，让同一集合的不同的impl结构的方式去impl一下那个type。
+
+如果你遇到同一个变量所处集合可能有很多的结构，然后我又刚好要用到很多的结构，那你写这样: 虽然这里的a,b,c其实都是一个东西，但是你写成不一样的
+prop f< T Struct1, T2 Struct2, T3 Struct3 >(a T, b T2, c T3):
+    ...
+
+forall < T Struct1, T2 Struct2, T3 Struct3 > a T, b T2, c T3:
+    $f(a,b,c)
+
+var s set
+var a s
+//... 这里让 s impl 了 T1, T2, T3，而 T1, T2, T3 又impl Struct1, Struct2, Struct3
+$f(a,a,a) // 这里涉及到的 forall < T Struct1, T2 Struct2, T3 Struct3 > a T, b T2, c T3: 自动定位到了a同时在3个type里，type分别有3个性质，所以能找到
