@@ -10,7 +10,7 @@ type DefVarStmt struct {
 	Facts []FactStmt
 }
 
-type DefStructStmt struct {
+type DefSetStructStmt struct {
 	decl            string
 	structName      TypeConceptStr
 	typeMembers     []TypeMember

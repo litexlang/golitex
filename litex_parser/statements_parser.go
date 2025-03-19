@@ -71,8 +71,8 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 
 	var ret Stmt
 	switch cur {
-	case Keywords["struct"]:
-		ret, err = stmt.parseDefConceptStmt()
+	case Keywords["set_struct"]:
+		ret, err = stmt.parseDefSetStructStmt()
 	case Keywords["type"]:
 		ret, err = stmt.parseDefTypeStmt()
 	case Keywords["prop"]:
@@ -129,8 +129,8 @@ func (stmt *TokenBlock) parseTypeConceptDeclStmtKnows() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-func (block *TokenBlock) parseDefConceptStmt() (*DefStructStmt, error) {
-	block.Header.skip(Keywords["struct"])
+func (block *TokenBlock) parseDefSetStructStmt() (*DefSetStructStmt, error) {
+	block.Header.skip(Keywords["set_struct"])
 
 	decl, err := block.Header.next()
 	if err != nil {
@@ -148,7 +148,7 @@ func (block *TokenBlock) parseDefConceptStmt() (*DefStructStmt, error) {
 	structName := TypeConceptStr(structNameStr)
 
 	if !block.Header.is(BuiltinSyms[":"]) {
-		return &DefStructStmt{decl, structName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
+		return &DefSetStructStmt{decl, structName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
 	} else {
 		block.Header.next()
 	}
@@ -182,7 +182,7 @@ func (block *TokenBlock) parseDefConceptStmt() (*DefStructStmt, error) {
 		}
 	}
 
-	return &DefStructStmt{decl, structName, typeMembers, instanceMembers, *knowFacts}, nil
+	return &DefSetStructStmt{decl, structName, typeMembers, instanceMembers, *knowFacts}, nil
 
 }
 

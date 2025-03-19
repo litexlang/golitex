@@ -88,7 +88,7 @@ func isBuiltinRelationalOperator(op string) bool {
 
 func putBuiltinIntoKeywords() *map[string]string {
 	var Keywords = map[string]string{
-		"struct":                 "struct",
+		"set_struct":             "set_struct",
 		"type":                   "type",
 		"type_member":            "type_member",
 		"instance_member":        "instance_member",
