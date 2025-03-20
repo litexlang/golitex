@@ -318,3 +318,19 @@ var s set
 var a s
 //... 这里让 s impl 了 T1, T2, T3，而 T1, T2, T3 又impl Struct1, Struct2, Struct3
 $f(a,a,a) // 这里涉及到的 forall < T Struct1, T2 Struct2, T3 Struct3 > a T, b T2, c T3: 自动定位到了a同时在3个type里，type分别有3个性质，所以能找到
+
+-----
+3.20
+哪种更好？
+1. domain的要求放在cond里
+2. 像数学一样，在定义函数前，先把函数的定义域集合给定义好，（或者在定义函数前就把generics定义好一类集合。始终记得generics是prop的语法糖，其实nothing special）。
+我觉得2更好
+1. cond容易把generics和普通要求，混在一起
+
+哪里会出现generics
+1. S 是 R 的子集。是子集这个事情就是generics：因为有很多的R的子集。
+2. S 是欧几里得空间，dim(S) = 某个大于1整数
+3. S 是 R 中的可测集
+4. S 是一个群
+
+貌似把所有的set_structure改名叫interface更合理。
