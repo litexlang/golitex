@@ -70,7 +70,7 @@ func (parser *Parser) parseBracedFcTypePairArr() (*[]string, error) {
 }
 
 func (parser *Parser) parseFcFnDecl() (*FcFnDecl, error) {
-	parser.skip(Keywords["fn"])
+	parser.skip(KeywordFn)
 
 	name, err := parser.next()
 	if err != nil {
@@ -114,27 +114,8 @@ func (parser *Parser) parseBracedFcStrTypePairArray() (*[]string, error) {
 	return &fcSlice, nil
 }
 
-// func (parser *Parser) parseVarDecl() (*FcVarDecl, error) {
-// 	parser.skip(Keywords["var"])
-
-// 	pair, err := parser.next()
-// 	if err != nil {
-// 		return nil, &parserErr{err, parser}
-// 	}
-
-// 	return &FcVarDecl{pair}, nil
-// }
-
-// func (parser *Parser) parseFcVarPair() (*FcVarDeclPair, error) {
-// 	v, err := parser.next()
-// 	if err != nil {
-// 		return nil, &parserErr{err, parser}
-// 	}
-// 	return &FcVarDeclPair{v}, nil
-// }
-
 func (parser *Parser) parsePropDecl() (*PropDecl, error) {
-	parser.skip(Keywords["prop"])
+	parser.skip(KeywordProp)
 	name, err := parser.next()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -149,7 +130,7 @@ func (parser *Parser) parsePropDecl() (*PropDecl, error) {
 }
 
 func (parser *Parser) parseExistDecl() (*PropDecl, error) {
-	parser.skip(Keywords["exist"])
+	parser.skip(KeywordExist)
 	name, err := parser.next()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -186,7 +167,7 @@ func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 }
 
 func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
-	err := parser.skip(Keywords["is"])
+	err := parser.skip(KeywordIs)
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -201,13 +182,13 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
-	if stmt.Header.is(Keywords["prop"]) {
+	if stmt.Header.is(KeywordProp) {
 		prop, err := stmt.parseDefPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		return prop, nil
-	} else if stmt.Header.is(Keywords["exist"]) {
+	} else if stmt.Header.is(KeywordExist) {
 		exist, err := stmt.parseDefExistStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
@@ -249,13 +230,13 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 // }
 
 func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
-	if block.Header.is(Keywords["var"]) {
+	if block.Header.is(KeywordVar) {
 		return block.parseDefVarStmt()
-	} else if block.Header.is(Keywords["fn"]) {
+	} else if block.Header.is(KeywordFn) {
 		return block.parseDefFnStmt()
-	} else if block.Header.is(Keywords["prop"]) {
+	} else if block.Header.is(KeywordProp) {
 		return block.parseDefPropStmt()
-	} else if block.Header.is(Keywords["type"]) {
+	} else if block.Header.is(KeywordType) {
 		return block.parseDefTypeStmt()
 	}
 
@@ -263,11 +244,11 @@ func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
 }
 
 func (block *TokenBlock) parseInstanceMember() (InstanceMember, error) {
-	if block.Header.is(Keywords["var"]) {
+	if block.Header.is(KeywordVar) {
 		return block.parseDefVarStmt()
-	} else if block.Header.is(Keywords["fn"]) {
+	} else if block.Header.is(KeywordFn) {
 		return block.parseDefFnStmt()
-	} else if block.Header.is(Keywords["prop"]) {
+	} else if block.Header.is(KeywordProp) {
 		return block.parseDefPropStmt()
 	}
 	return nil, fmt.Errorf("var, fn, prop expected")

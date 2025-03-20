@@ -71,29 +71,29 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 
 	var ret Stmt
 	switch cur {
-	case Keywords["set_struct"]:
+	case KeywordSetStruct:
 		ret, err = stmt.parseDefSetStructStmt()
-	case Keywords["type"]:
+	case KeywordType:
 		ret, err = stmt.parseDefTypeStmt()
-	case Keywords["prop"]:
+	case KeywordProp:
 		ret, err = stmt.parseDefPropStmt()
-	case Keywords["fn"]:
+	case KeywordFn:
 		ret, err = stmt.parseDefFnStmt()
-	case Keywords["var"]:
+	case KeywordVar:
 		ret, err = stmt.parseDefVarStmt()
-	case Keywords["claim"]:
+	case KeywordClaim:
 		ret, err = stmt.parseClaimStmt()
-	case Keywords["prove"]:
+	case KeywordProve:
 		ret, err = stmt.parseProveClaimStmt()
-	case Keywords["know"]:
+	case KeywordKnow:
 		ret, err = stmt.parseKnowStmt()
-	case Keywords["exist"]:
+	case KeywordExist:
 		ret, err = stmt.parseDefExistStmt()
-	case Keywords["have"]:
+	case KeywordHave:
 		ret, err = stmt.parseHaveStmt()
-	case Keywords["axiom"]:
+	case KeywordAxiom:
 		ret, err = stmt.parseAxiomStmt()
-	case Keywords["thm"]:
+	case KeywordThm:
 		ret, err = stmt.parseThmStmt()
 	default:
 		ret, err = stmt.parseFactStmt()
@@ -130,7 +130,7 @@ func (stmt *TokenBlock) parseTypeConceptDeclStmtKnows() (*[]FactStmt, error) {
 }
 
 func (block *TokenBlock) parseDefSetStructStmt() (*DefSetStructStmt, error) {
-	block.Header.skip(Keywords["set_struct"])
+	block.Header.skip(KeywordSetStruct)
 
 	decl, err := block.Header.next()
 	if err != nil {
