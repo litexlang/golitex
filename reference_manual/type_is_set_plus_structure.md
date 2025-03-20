@@ -344,3 +344,21 @@ fn f<G Group>(g G, g2 G) G:
 // 不能写成下面，因为我想在编译时，就知道你写的 f(a,b) 是不是有问题；万一你传入的a和b压根就是两个集合的，那根本没法运算。我要约束一下你g和g2来自同一个集合（类型）(类型相同，一定来自同一个集合)
 fn f(g Group, g2 Group) Group:
     ret = g * g2
+
+最后剩下的golang的struct-type-interface系统和litex的区别：数学里，一个变量可以出现在很多类型里，比如0可以出现在nat, 可以出现在natAsGroup, natAsRing里。golang的解决方法有两个
+1. 
+type SelfInt int
+var s int = 1
+selfInt := SelfInt(s) // 引入新变量
+2. 使用接口（interface）或者类型断言
+func printValue(s interface{}) {
+    switch v := s.(type) {
+    case SelfInt:
+        // ...
+    case int:
+        // ...
+    }
+}
+typescript 的解法是
+varName as typeName
+litex 采用 ts 的做法
