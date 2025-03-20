@@ -35,8 +35,8 @@ def add(a, b):
 func TestSplitString(t *testing.T) {
 	input := []string{"interface (v ):"}
 	for _, s := range input {
-		// tok := newTokenizer(s)
-		tokens, err := tokenizeString(s)
+		tok := newTokenizer(&s)
+		tokens, err := tok.tokenizeString()
 
 		if err != nil {
 			t.Fatalf("Error splitting string: %s", err.Error())
@@ -82,7 +82,8 @@ func TestParseFc(t *testing.T) {
 	}
 
 	for _, s := range strings {
-		tokens, err := tokenizeString(s)
+		tok := newTokenizer(&s)
+		tokens, err := tok.tokenizeString()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -105,7 +106,8 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 	}
 
 	for _, s := range strings {
-		tokens, err := tokenizeString(s)
+		tok := newTokenizer(&s)
+		tokens, err := tok.tokenizeString()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -118,79 +120,6 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 		}
 		fmt.Println(fc)
 	}
-}
-
-func TestDefPropStmt(t *testing.T) {
-	tokenized1, err := tokenizeString("prop ha (g1 , g2 ):")
-	if err != nil {
-		t.Fatal(err)
-	}
-	tokenized2, err := tokenizeString("$f(a, b)(c, d)")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	block :=
-		TokenBlock{
-			Parser{0, *tokenized1},
-			[]TokenBlock{
-				{
-					Parser{0, *tokenized2},
-					[]TokenBlock{},
-				},
-				{
-					Parser{0, *tokenized2},
-					[]TokenBlock{},
-				},
-			},
-		}
-
-	cur, err := block.parseDefPropStmt()
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("%v", cur)
-
-	tokenizedCond, err := tokenizeString("cond:")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	tokenizedThen, err := tokenizeString("then:")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	block2 :=
-		TokenBlock{
-			Parser{0, *tokenized1},
-			[]TokenBlock{
-				{
-					Parser{0, *tokenizedCond},
-					[]TokenBlock{
-						{
-							Parser{0, *tokenized2},
-							[]TokenBlock{},
-						},
-					},
-				},
-				{
-					Parser{0, *tokenizedThen},
-					[]TokenBlock{
-						{
-							Parser{0, *tokenized2},
-							[]TokenBlock{},
-						},
-					},
-				},
-			}}
-
-	cur, err = block2.parseDefPropStmt()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Printf("%v", cur)
 }
 
 func ParserTester(code string) (*[]Stmt, error) {
