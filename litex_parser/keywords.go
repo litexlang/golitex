@@ -141,7 +141,7 @@ func putBuiltinIntoKeywords() *map[string]string {
 	return &Keywords
 }
 
-var Keywords map[string]string = *putBuiltinIntoKeywords()
+// var Keywords map[string]string = *putBuiltinIntoKeywords()
 
 var sortedSymbols []string = sortKeywordSymbols()
 
