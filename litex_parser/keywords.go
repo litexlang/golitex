@@ -3,7 +3,7 @@ package litexparser
 import "sort"
 
 const (
-	KeywordSetStruct            = "set_struct"
+	KeywordInterface            = "interface"
 	KeywordType                 = "type"
 	KeywordTypeMember           = "type_member"
 	KeywordInstanceMember       = "instance_member"

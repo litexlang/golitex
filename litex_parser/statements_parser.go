@@ -71,7 +71,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 
 	var ret Stmt
 	switch cur {
-	case KeywordSetStruct:
+	case KeywordInterface:
 		ret, err = stmt.parseDefSetStructStmt()
 	case KeywordType:
 		ret, err = stmt.parseDefTypeStmt()
@@ -130,7 +130,7 @@ func (stmt *TokenBlock) parseTypeConceptDeclStmtKnows() (*[]FactStmt, error) {
 }
 
 func (block *TokenBlock) parseDefSetStructStmt() (*DefSetStructStmt, error) {
-	block.Header.skip(KeywordSetStruct)
+	block.Header.skip(KeywordInterface)
 
 	decl, err := block.Header.next()
 	if err != nil {

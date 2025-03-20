@@ -33,8 +33,9 @@ def add(a, b):
 }
 
 func TestSplitString(t *testing.T) {
-	input := []string{"set_struct (v ):"}
+	input := []string{"interface (v ):"}
 	for _, s := range input {
+		// tok := newTokenizer(s)
 		tokens, err := tokenizeString(s)
 
 		if err != nil {
@@ -51,18 +52,18 @@ func TestSplitString(t *testing.T) {
 func TestParseStrStmtBlock(t *testing.T) {
 	subBody := []strBlock{
 		{
-			Header: "set_struct (v ):",
+			Header: "interface (v ):",
 			Body:   nil,
 		},
 	}
 	body := []strBlock{
 		{
-			Header: "set_struct (v ):",
+			Header: "interface (v ):",
 			Body:   subBody,
 		},
 	}
 	input := strBlock{
-		Header: "set_struct (v ):",
+		Header: "interface (v ):",
 		Body:   body,
 	}
 
@@ -223,7 +224,7 @@ func ParserTester(code string) (*[]Stmt, error) {
 }
 
 func TestDefConceptStmt(t *testing.T) {
-	code := `set_struct G :
+	code := `interface G :
 	inherit:
 		set
 		group
