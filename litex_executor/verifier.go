@@ -159,7 +159,7 @@ func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.
 // }
 
 func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
-	if string(stmt.Opt) == parser.Keywords["="] {
+	if string(stmt.Opt) == parser.KeywordEqual {
 		return exec.verifyEqualFactSpecifically(env, stmt)
 	}
 
