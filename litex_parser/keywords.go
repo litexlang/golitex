@@ -1,86 +1,6 @@
 package litexparser
 
-// var BuiltinSyms = map[string]string{
-// 	":":     ":",
-// 	"[":     "[",
-// 	"]":     "]",
-// 	"(":     "(",
-// 	")":     ")",
-// 	",":     ",",
-// 	"$":     "$",
-// 	"=":     "=",
-// 	"/":     "/",
-// 	"+":     "+",
-// 	"-":     "-",
-// 	"*":     "*",
-// 	"^":     "^",
-// 	"<":     "<",
-// 	">":     ">",
-// 	"!":     "!",
-// 	"|":     "|",
-// 	"~":     "~",
-// 	"&":     "&",
-// 	".":     ".",
-// 	"::":    "::",
-// 	"++":    "++",
-// 	"--":    "--",
-// 	"&&":    "&&",
-// 	"||":    "||",
-// 	"==":    "==",
-// 	"!=":    "!=",
-// 	"\\":    "\\",
-// 	"?":     "?",
-// 	"**":    "**",
-// 	"\"":    "\"",
-// 	"'":     "'",
-// 	"`":     "`",
-// 	"=>":    "=>",
-// 	";":     ";",
-// 	"{":     "{",
-// 	"}":     "}",
-// 	"\\[":   "\\[",
-// 	"\\]":   "\\]",
-// 	"#":     "#",
-// 	"\\in":  "\\in",
-// 	"\\has": "\\has",
-// 	"@":     "@", // v@n represents v[n]
-// }
-
-// var sortedSymbols []string = sortKeywordSymbols()
-
-// // 初始化排序后的符号列表
-// func sortKeywordSymbols() *[]string {
-// 	symbols := make([]string, 0, len(BuiltinSyms))
-// 	for k := range BuiltinSyms {
-// 		symbols = append(symbols, k)
-// 	}
-// 	sort.Slice(symbols, func(i, j int) bool {
-// 		return len(symbols[i]) > len(symbols[j])
-// 	})
-// 	return &symbols
-// }
-
-// // 缓存排序后的符号列表
-
-// // 如果输入字符串从起始位置开始是符号，则返回该符号
-// func getKeywordSymbol(inputString string, start int) string {
-// 	for _, k := range sortedSymbols {
-// 		end := start + len(k)
-// 		if end <= len(inputString) {
-// 			match := true
-// 			for i := 0; i < len(k); i++ {
-// 				if inputString[start+i] != k[i] {
-// 					match = false
-// 					break
-// 				}
-// 			}
-// 			if match {
-// 				return k
-// 			}
-// 		}
-// 	}
-// 	return ""
-// }
+import "sort"
 
 const (
 	KeywordSetStruct            = "set_struct"
@@ -117,17 +37,15 @@ const (
 	KeywordAssociative = "associative"
 
 	// Builtin Types
-	KeywordNat   = "Nat"   // e.g. 0
-	KeywordInt   = "Int"   // e.g. -1
-	KeywordFloat = "Float" // e.g. -1.1
-	KeywordSet   = "Set"   // e.g. to_set(AnyType)
+	KeywordNat   = "nat"   // e.g. 0
+	KeywordInt   = "int"   // e.g. -1
+	KeywordFloat = "float" // e.g. -1.1
+	KeywordSet   = "set"   // e.g. to_set(AnyType)
 
 	// Builtin Functions
-	KeywordMakeSet = "make_set" // e.g. make_set[TypeName]
-	KeywordIn      = "in"
+	KeywordIn = "in"
 )
 
-// 当引入新的符号的时候，要特别注意getBuiltinSymbol这个函数要重新写
 const (
 	// Builtin Symbols
 	KeywordColon                  = ":"
@@ -170,10 +88,55 @@ const (
 	KeywordRightCurly             = "}"
 	KeywordHash                   = "#"
 	KeywordAt                     = "@"
+	//! 每次引入新的Symbol，要往getBuiltinSymbol里加东西
 )
 
+var BuiltinSymbolArray = []string{
+	KeywordEqualGreaterRightArrow, // "=>"
+	KeywordMinusGreaterRightArrow, // "->"
+	KeywordColonColon,             // "::"
+	KeywordPlusPlus,               // "++"
+	KeywordMinusMinus,             // "--"
+	KeywordAndAnd,                 // "&&"
+	KeywordPipePipe,               // "||"
+	KeywordEqualEqual,             // "=="
+	KeywordNotEqual,               // "!="
+	KeywordStarStar,               // "**"
+	KeywordColon,                  // ":"
+	KeywordLeftBracket,            // "["
+	KeywordRightBracket,           // "]"
+	KeywordLeftParen,              // "("
+	KeywordRightParen,             // ")"
+	KeywordComma,                  // ","
+	KeywordDollar,                 // "$"
+	KeywordEqual,                  // "="
+	KeywordSlash,                  // "/"
+	KeywordPlus,                   // "+"
+	KeywordMinus,                  // "-"
+	KeywordStar,                   // "*"
+	KeywordCaret,                  // "^"
+	KeywordLess,                   // "<"
+	KeywordGreater,                // ">"
+	KeywordExclaim,                // "!"
+	KeywordPipe,                   // "|"
+	KeywordTilde,                  // "~"
+	KeywordAnd,                    // "&"
+	KeywordDot,                    // "."
+	KeywordBackslash,              // "\\"
+	KeywordQuestion,               // "?"
+	KeywordDoubleQuote,            // "\""
+	KeywordSingleQuote,            // "'"
+	KeywordBacktick,               // "`"
+	KeywordSemicolon,              // ";"
+	KeywordLeftCurly,              // "{"
+	KeywordRightCurly,             // "}"
+	KeywordHash,                   // "#"
+	KeywordAt,                     // "@"
+}
+
+// Customizable Operators
+
 const (
-	// Customizable Operators
 	Keyword__Div__          = "__div__"
 	Keyword__Add__          = "__add__"
 	Keyword__Sub__          = "__sub__"
@@ -208,53 +171,10 @@ func getBuiltinSymbol(inputString string, start int) string {
 		return ""
 	}
 
-	// Define all possible keywords in order of decreasing length
-	// TODO 定义一个函数，手动sort，而不是像这样硬编码地sort
-	keywords := []string{
-		KeywordEqualGreaterRightArrow, // "=>"
-		KeywordMinusGreaterRightArrow, // "->"
-		KeywordColonColon,             // "::"
-		KeywordPlusPlus,               // "++"
-		KeywordMinusMinus,             // "--"
-		KeywordAndAnd,                 // "&&"
-		KeywordPipePipe,               // "||"
-		KeywordEqualEqual,             // "=="
-		KeywordNotEqual,               // "!="
-		KeywordStarStar,               // "**"
-		KeywordColon,                  // ":"
-		KeywordLeftBracket,            // "["
-		KeywordRightBracket,           // "]"
-		KeywordLeftParen,              // "("
-		KeywordRightParen,             // ")"
-		KeywordComma,                  // ","
-		KeywordDollar,                 // "$"
-		KeywordEqual,                  // "="
-		KeywordSlash,                  // "/"
-		KeywordPlus,                   // "+"
-		KeywordMinus,                  // "-"
-		KeywordStar,                   // "*"
-		KeywordCaret,                  // "^"
-		KeywordLess,                   // "<"
-		KeywordGreater,                // ">"
-		KeywordExclaim,                // "!"
-		KeywordPipe,                   // "|"
-		KeywordTilde,                  // "~"
-		KeywordAnd,                    // "&"
-		KeywordDot,                    // "."
-		KeywordBackslash,              // "\\"
-		KeywordQuestion,               // "?"
-		KeywordDoubleQuote,            // "\""
-		KeywordSingleQuote,            // "'"
-		KeywordBacktick,               // "`"
-		KeywordSemicolon,              // ";"
-		KeywordLeftCurly,              // "{"
-		KeywordRightCurly,             // "}"
-		KeywordHash,                   // "#"
-		KeywordAt,                     // "@"
-	}
+	sort.Strings(BuiltinSymbolArray) // 为了安全性，sort一下
 
 	// Iterate through keywords and try to match the longest possible
-	for _, keyword := range keywords {
+	for _, keyword := range BuiltinSymbolArray {
 		end := start + len(keyword)
 		if end <= len(inputString) && inputString[start:end] == keyword {
 			return keyword
