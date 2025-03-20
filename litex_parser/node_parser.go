@@ -6,9 +6,9 @@ import (
 
 func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	params := []Fc{}
-	parser.skip(BuiltinSyms["("])
+	parser.skip(KeywordLeftParen)
 
-	for !parser.is(BuiltinSyms[")"]) {
+	for !parser.is(KeywordRightParen) {
 		fc, err := parser.ParseFc()
 
 		if err != nil {
@@ -17,8 +17,8 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 
 		params = append(params, fc)
 
-		if !parser.is(BuiltinSyms[","]) {
-			if !parser.is(BuiltinSyms[")"]) {
+		if !parser.is(KeywordComma) {
+			if !parser.is(KeywordRightParen) {
 				return nil, &parserErr{err, parser}
 			} else {
 				break
@@ -29,7 +29,7 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 
 	}
 
-	parser.skip(BuiltinSyms[")"])
+	parser.skip(KeywordRightParen)
 
 	return &params, nil
 }
@@ -37,7 +37,7 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]string, error) {
 	pairs := []string{}
 
-	for !parser.is(BuiltinSyms[":"]) {
+	for !parser.is(KeywordColon) {
 		varName, err := parser.next()
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -45,11 +45,11 @@ func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]string, error) {
 
 		pairs = append(pairs, varName)
 
-		if parser.isAndSkip(BuiltinSyms[":"]) {
+		if parser.isAndSkip(KeywordColon) {
 			break
 		}
 
-		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+		if err := parser.testAndSkip(KeywordComma); err != nil {
 			return nil, &parserErr{err, parser}
 		}
 	}
@@ -87,9 +87,9 @@ func (parser *Parser) parseFcFnDecl() (*FcFnDecl, error) {
 
 func (parser *Parser) parseBracedFcStrTypePairArray() (*[]string, error) {
 	fcSlice := []string{}
-	parser.skip(BuiltinSyms["("])
+	parser.skip(KeywordLeftParen)
 
-	for !parser.is(BuiltinSyms[")"]) {
+	for !parser.is(KeywordRightParen) {
 		s, err := parser.next()
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -102,11 +102,11 @@ func (parser *Parser) parseBracedFcStrTypePairArray() (*[]string, error) {
 
 		fcSlice = append(fcSlice, s)
 
-		if parser.isAndSkip(BuiltinSyms[")"]) {
+		if parser.isAndSkip(KeywordRightParen) {
 			break
 		}
 
-		if err := parser.testAndSkip(BuiltinSyms[","]); err != nil {
+		if err := parser.testAndSkip(KeywordComma); err != nil {
 			return nil, &parserErr{err, parser}
 		}
 	}
@@ -153,7 +153,7 @@ func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 			return nil, &parserErr{err, parser}
 		}
 		*members = append(*members, member)
-		if !parser.is(BuiltinSyms[","]) {
+		if !parser.is(KeywordComma) {
 			break
 		}
 		parser.skip()
@@ -208,7 +208,7 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 // 	typeNameArr := []string{name}
 // 	params := []Fc{}
 
-// 	for parser.is(BuiltinSyms["."]) {
+// 	for parser.is(KeywordDot) {
 // 		parser.skip()
 // 		name, err := parser.next()
 // 		if err != nil {
@@ -217,13 +217,13 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 // 		typeNameArr = append(typeNameArr, name)
 // 	}
 
-// 	if parser.is(BuiltinSyms["("]) {
+// 	if parser.is(KeywordLeftParen) {
 // 		paramsPtr, err := parser.parseBracedFcArr()
 // 		if err != nil {
 // 			return nil, &parserErr{err, parser}
 // 		}
 // 		params = *paramsPtr
-// 		parser.skip(BuiltinSyms[")"])
+// 		parser.skip(KeywordRightParen)
 // 	}
 
 // 	return &NamedFcType{typeNameArr, params}, nil

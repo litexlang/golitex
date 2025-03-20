@@ -35,7 +35,7 @@ var unaryPrecedence = map[string]FcInfixOptPrecedence{
 }
 
 func (parser *Parser) parseFcAtom() (Fc, error) {
-	if parser.is(BuiltinSyms["("]) {
+	if parser.is(KeywordLeftParen) {
 		return parser.parseBracedFcExpr()
 	}
 
@@ -54,7 +54,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		}
 	}
 
-	if !parser.is(BuiltinSyms["."]) {
+	if !parser.is(KeywordDot) {
 		return curFc, nil
 	}
 
@@ -64,8 +64,8 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 func (parser *Parser) parseFcChain(curFc FcChainMem) (*FcChain, error) {
 	fcArr := []FcChainMem{curFc}
 	var err error = nil
-	for !parser.ExceedEnd() && parser.is(BuiltinSyms["."]) {
-		err = parser.skip(BuiltinSyms["."])
+	for !parser.ExceedEnd() && parser.is(KeywordDot) {
+		err = parser.skip(KeywordDot)
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
@@ -83,12 +83,12 @@ func (parser *Parser) parseFcChain(curFc FcChainMem) (*FcChain, error) {
 }
 
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
-	parser.skip(BuiltinSyms["("])
+	parser.skip(KeywordLeftParen)
 	fc, err := parser.ParseFc()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
-	parser.skip(BuiltinSyms[")"])
+	parser.skip(KeywordRightParen)
 	return fc, nil
 }
 
@@ -96,7 +96,7 @@ func (parser *Parser) parseFcChainMem() (FcChainMem, error) {
 	// 如果 1 out of range了，那返回值是 “”
 	strAtSecondPosition := parser.strAtCurIndexPlus(1)
 
-	if strAtSecondPosition != BuiltinSyms["("] {
+	if strAtSecondPosition != KeywordLeftParen {
 		return parser.parseFcStr()
 	} else {
 		return parser.parseFcFnRetVal()
@@ -123,7 +123,7 @@ func (parser *Parser) parseTypeParamsVarParamsPairs() (*[]TypeParamsAndVarParams
 
 	pairs := []TypeParamsAndVarParamsPair{}
 
-	for !parser.ExceedEnd() && (parser.is(BuiltinSyms["("])) {
+	for !parser.ExceedEnd() && (parser.is(KeywordLeftParen)) {
 		varParamsPtr := &[]Fc{}
 		varParamsPtr, err = parser.parseBracedFcArr()
 		if err != nil {
@@ -220,7 +220,7 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 		return "", fmt.Errorf("invalid number: %s", left)
 	}
 
-	if parser.is(BuiltinSyms["."]) {
+	if parser.is(KeywordDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {

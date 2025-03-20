@@ -50,7 +50,7 @@ func ParseSourceCode(code string) (*[]TopStmt, error) {
 
 func (stmt *TokenBlock) ParseTopLevelStmt() (*TopStmt, error) {
 	pub := false
-	if stmt.Header.is(BuiltinSyms["pub"]) {
+	if stmt.Header.is(KeywordPub) {
 		stmt.Header.skip()
 		pub = true
 	}
@@ -112,7 +112,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 
 func (stmt *TokenBlock) parseTypeConceptDeclStmtKnows() (*[]FactStmt, error) {
 	stmt.Header.next()
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+	if err := stmt.Header.testAndSkip(KeywordColon); err != nil {
 		return nil, err
 	}
 
@@ -147,7 +147,7 @@ func (block *TokenBlock) parseDefSetStructStmt() (*DefSetStructStmt, error) {
 	}
 	structName := TypeConceptStr(structNameStr)
 
-	if !block.Header.is(BuiltinSyms[":"]) {
+	if !block.Header.is(KeywordColon) {
 		return &DefSetStructStmt{decl, structName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
 	} else {
 		block.Header.next()
@@ -207,7 +207,7 @@ func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
 		return nil, &parseStmtErr{err, *block}
 	}
 
-	if !block.Header.is(BuiltinSyms[":"]) {
+	if !block.Header.is(KeywordColon) {
 		return &DefTypeStmt{decl, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
 	} else {
 		block.Header.next()
@@ -259,7 +259,7 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseIfStmt() (FactStmt, error) {
-	if stmt.Header.strAtIndex(-1) == BuiltinSyms[":"] {
+	if stmt.Header.strAtIndex(-1) == KeywordColon {
 		return stmt.parseBlockIfStmt()
 	} else {
 		return stmt.parseInlineIfFactStmt()
@@ -286,35 +286,35 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 	condFacts := []FactStmt{}
 	thenFacts := []SpecFactStmt{}
 
-	for !stmt.Header.is(BuiltinSyms["{"]) {
+	for !stmt.Header.is(KeywordLeftCurly) {
 		fact, err := stmt.parseInlineFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		condFacts = append(condFacts, fact)
 
-		if stmt.Header.is(BuiltinSyms[","]) {
+		if stmt.Header.is(KeywordComma) {
 			stmt.Header.next()
 		}
 	}
 
-	err = stmt.Header.skip(BuiltinSyms["{"])
+	err = stmt.Header.skip(KeywordLeftCurly)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	for !stmt.Header.is(BuiltinSyms["}"]) {
+	for !stmt.Header.is(KeywordRightCurly) {
 		fact, err := stmt.parseInstantiatedFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		thenFacts = append(thenFacts, fact)
 
-		if stmt.Header.is(BuiltinSyms[","]) {
+		if stmt.Header.is(KeywordComma) {
 			stmt.Header.next()
 		}
 	}
-	err = stmt.Header.skip(BuiltinSyms["}"])
+	err = stmt.Header.skip(KeywordRightCurly)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -324,8 +324,8 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 
 func (stmt *TokenBlock) parseInstantiatedFactStmt() (SpecFactStmt, error) {
 	isTrue := true
-	if stmt.Header.is(BuiltinSyms["not"]) {
-		err := stmt.Header.skip(BuiltinSyms["not"])
+	if stmt.Header.is(KeywordNot) {
+		err := stmt.Header.skip(KeywordNot)
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -334,7 +334,7 @@ func (stmt *TokenBlock) parseInstantiatedFactStmt() (SpecFactStmt, error) {
 
 	var ret SpecFactStmt
 	var err error = nil
-	if stmt.Header.is(BuiltinSyms["$"]) {
+	if stmt.Header.is(KeywordDollar) {
 		ret, err = stmt.parseFuncPropFactStmt()
 	} else {
 		ret, err = stmt.parseRelationalFactStmt()
@@ -349,7 +349,7 @@ func (stmt *TokenBlock) parseInstantiatedFactStmt() (SpecFactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
-	err := stmt.Header.skip(BuiltinSyms["$"])
+	err := stmt.Header.skip(KeywordDollar)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -360,7 +360,7 @@ func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
 	}
 
 	// * 为了防止 $p[a,b) 这样不小心把左括号输入错误了，然后fc取成p了，让)作为终止符
-	if stmt.Header.strAtCurIndexPlus(-1) == BuiltinSyms[")"] {
+	if stmt.Header.strAtCurIndexPlus(-1) == KeywordRightParen {
 		return &FuncFactStmt{true, fc}, nil
 	} else {
 		return nil, fmt.Errorf("expected ')', get %v", stmt.Header.strAtCurIndexPlus(-1))
@@ -409,7 +409,7 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseForallStmt() (FactStmt, error) {
-	if stmt.Header.strAtIndex(-1) != BuiltinSyms[":"] {
+	if stmt.Header.strAtIndex(-1) != KeywordColon {
 		return stmt.parseInlineForallStmt()
 	} else {
 		return stmt.parseBlockedForall()
@@ -430,7 +430,7 @@ func (stmt *TokenBlock) parseBodyFacts() (*[]FactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseForallCondFactsBlock() (*[]FactStmt, error) {
-	err := stmt.Header.parseGivenWordsThenExceedEnd(&[]string{KeywordCond, BuiltinSyms[":"]})
+	err := stmt.Header.parseGivenWordsThenExceedEnd(&[]string{KeywordCond, KeywordColon})
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -442,7 +442,7 @@ func (stmt *TokenBlock) parseForallCondFactsBlock() (*[]FactStmt, error) {
 func (stmt *TokenBlock) parseInstantiatedFactsBlock() (*[]SpecFactStmt, error) {
 	facts := &[]SpecFactStmt{}
 	stmt.Header.skip()
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+	if err := stmt.Header.testAndSkip(KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
@@ -465,7 +465,7 @@ func (stmt *TokenBlock) parseDefPropStmt() (*DefPropStmt, error) {
 
 	ifFacts := &[]FactStmt{}
 	thenFacts := &[]FactStmt{}
-	if stmt.Header.is(BuiltinSyms[":"]) {
+	if stmt.Header.is(KeywordColon) {
 		stmt.Header.skip()
 		ifFacts, thenFacts, err = stmt.parseBodyCondFactsThenFacts()
 		if err != nil {
@@ -483,7 +483,7 @@ func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]FactStmt, *[]FactStmt,
 
 	if len(stmt.Body) == 2 && stmt.Body[0].Header.is(KeywordCond) && stmt.Body[1].Header.is(KeywordThen) {
 		stmt.Body[0].Header.skip()
-		if err := stmt.Body[0].Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		if err := stmt.Body[0].Header.testAndSkip(KeywordColon); err != nil {
 			return nil, nil, err
 		}
 
@@ -493,7 +493,7 @@ func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]FactStmt, *[]FactStmt,
 		}
 
 		stmt.Body[1].Header.skip()
-		if err := stmt.Body[1].Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+		if err := stmt.Body[1].Header.testAndSkip(KeywordColon); err != nil {
 			return nil, nil, err
 		}
 
@@ -520,7 +520,7 @@ func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 	ifFacts := &[]FactStmt{}
 	thenFacts := &[]FactStmt{}
 
-	if stmt.Header.is(BuiltinSyms[":"]) {
+	if stmt.Header.is(KeywordColon) {
 		stmt.Header.skip()
 		ifFacts, thenFacts, err = stmt.parseBodyCondFactsThenFacts()
 		if err != nil {
@@ -539,12 +539,12 @@ func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
 
 	varNames := []string{}
 
-	for !stmt.Header.is(BuiltinSyms[":"]) && !stmt.Header.ExceedEnd() {
+	for !stmt.Header.is(KeywordColon) && !stmt.Header.ExceedEnd() {
 		decl, err := stmt.Header.next()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		if stmt.Header.is(BuiltinSyms[","]) {
+		if stmt.Header.is(KeywordComma) {
 			err = stmt.Header.skip(KeywordColon)
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
@@ -555,7 +555,7 @@ func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
 
 	ifFacts := &[]FactStmt{}
 
-	if !stmt.Header.ExceedEnd() && stmt.Header.is(BuiltinSyms[":"]) {
+	if !stmt.Header.ExceedEnd() && stmt.Header.is(KeywordColon) {
 		stmt.Header.skip()
 		ifFacts, err = stmt.parseBodyFacts()
 		if err != nil {
@@ -572,7 +572,7 @@ func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
 	stmt.Header.skip()
 	var err error = nil
 
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+	if err := stmt.Header.testAndSkip(KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
@@ -627,7 +627,7 @@ func (stmt *TokenBlock) parseProveClaimStmt() (*ClaimProveStmt, error) {
 
 func (stmt *TokenBlock) parseProveBlock() (*[]Stmt, error) {
 	stmt.Header.skip(KeywordProve)
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+	if err := stmt.Header.testAndSkip(KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
@@ -645,7 +645,7 @@ func (stmt *TokenBlock) parseProveBlock() (*[]Stmt, error) {
 func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
 	stmt.Header.skip(KeywordKnow)
 
-	if !stmt.Header.is(BuiltinSyms[":"]) {
+	if !stmt.Header.is(KeywordColon) {
 		facts := []FactStmt{}
 		fact, err := stmt.parseFactStmt()
 		if err != nil {
@@ -655,7 +655,7 @@ func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
 		return &KnowStmt{facts}, nil
 	}
 
-	if err := stmt.Header.testAndSkip(BuiltinSyms[":"]); err != nil {
+	if err := stmt.Header.testAndSkip(KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
@@ -676,11 +676,11 @@ func (stmt *TokenBlock) parseDefExistStmt() (*DefExistStmt, error) {
 	ifFacts := &[]FactStmt{}
 	members := &[]InstanceMember{}
 	thenFacts := &[]FactStmt{}
-	if !stmt.Header.is(BuiltinSyms[":"]) {
+	if !stmt.Header.is(KeywordColon) {
 		return nil, fmt.Errorf("expected ':‘")
 	}
 
-	stmt.Header.skip(BuiltinSyms[":"])
+	stmt.Header.skip(KeywordColon)
 
 	for _, curStmt := range stmt.Body {
 		if curStmt.Header.is(KeywordCond) {
@@ -747,7 +747,7 @@ func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	if !stmt.Header.is(BuiltinSyms[":"]) {
+	if !stmt.Header.is(KeywordColon) {
 		return nil, fmt.Errorf("expected ':'")
 	}
 
@@ -816,7 +816,7 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
-	err = stmt.Header.skip(BuiltinSyms[":"])
+	err = stmt.Header.skip(KeywordColon)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -848,38 +848,38 @@ func (stmt *TokenBlock) parseInlineIfFactStmt() (*WhenCondFactStmt, error) {
 	}
 
 	condFacts := []FactStmt{}
-	for !stmt.Header.is(BuiltinSyms["{"]) {
+	for !stmt.Header.is(KeywordLeftCurly) {
 		fact, err := stmt.parseInlineFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		condFacts = append(condFacts, fact)
 
-		if stmt.Header.is(BuiltinSyms[","]) {
+		if stmt.Header.is(KeywordComma) {
 			stmt.Header.skip()
 		}
 	}
 
 	thenFacts := []SpecFactStmt{}
 
-	err = stmt.Header.skip(BuiltinSyms["{"])
+	err = stmt.Header.skip(KeywordLeftCurly)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	for !stmt.Header.is(BuiltinSyms["}"]) {
+	for !stmt.Header.is(KeywordRightCurly) {
 		fact, err := stmt.parseInstantiatedFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		thenFacts = append(thenFacts, fact)
 
-		if stmt.Header.is(BuiltinSyms[","]) {
+		if stmt.Header.is(KeywordComma) {
 			stmt.Header.skip()
 		}
 	}
 
-	err = stmt.Header.skip(BuiltinSyms["}"])
+	err = stmt.Header.skip(KeywordRightCurly)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -892,7 +892,7 @@ func (stmt *TokenBlock) parseBlockIfStmt() (*WhenCondFactStmt, error) {
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
-	err = stmt.Header.skip(BuiltinSyms[":"])
+	err = stmt.Header.skip(KeywordColon)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -915,7 +915,7 @@ func (stmt *TokenBlock) parseBlockIfStmt() (*WhenCondFactStmt, error) {
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
-	err = stmt.Body[len(stmt.Body)-1].Header.skip(BuiltinSyms[":"])
+	err = stmt.Body[len(stmt.Body)-1].Header.skip(KeywordColon)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
