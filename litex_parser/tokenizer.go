@@ -4,41 +4,58 @@ import (
 	"fmt"
 )
 
-// 提取出的 nextToken 函数，用于识别下一个 token
-func nextToken(inputString string, start int) (string, int, error) {
+// tokenizer 结构体封装了 inputString 和 start
+type tokenizer struct {
+	inputString *string // 使用指针以提高性能
+	start       int
+}
+
+// newTokenizer 创建一个新的 tokenizer 实例
+func newTokenizer(inputString *string) *tokenizer {
+	return &tokenizer{
+		inputString: inputString,
+		start:       0,
+	}
+}
+
+// nextToken 方法用于识别下一个 token
+func (t *tokenizer) nextToken() (string, int, error) {
+	input := *t.inputString // 解引用指针
 	// 如果下两个字符是 //，跳过直到结束
-	if start+1 < len(inputString) && inputString[start:start+2] == "//" {
-		return "", len(inputString), nil
+	if t.start+1 < len(input) && input[t.start:t.start+2] == "//" {
+		return "", len(input), nil
 	}
 	// 如果下两个字符是 /*，报错
-	if start+1 < len(inputString) && inputString[start:start+2] == "/*" {
+	if t.start+1 < len(input) && input[t.start:t.start+2] == "/*" {
 		return "", 0, fmt.Errorf("invalid syntax: nested comment block")
 	}
 
-	potentialKeywordSymbol := getBuiltinSymbol(inputString, start)
+	potentialKeywordSymbol := getBuiltinSymbol(input, t.start)
 	if potentialKeywordSymbol != "" {
-		return potentialKeywordSymbol, start + len(potentialKeywordSymbol), nil
+		return potentialKeywordSymbol, t.start + len(potentialKeywordSymbol), nil
 	}
 
-	if inputString[start] == ' ' {
-		return "", start + 1, nil
+	if input[t.start] == ' ' {
+		return "", t.start + 1, nil
 	}
 
 	buffer := ""
-	for i := start; i < len(inputString); i++ {
-		if getBuiltinSymbol(inputString, i) != "" || inputString[i] == ' ' {
+	for i := t.start; i < len(input); i++ {
+		if getBuiltinSymbol(input, i) != "" || input[i] == ' ' {
 			break
 		}
-		buffer += string(inputString[i])
+		buffer += string(input[i])
 	}
-	return buffer, start + len(buffer), nil
+	return buffer, t.start + len(buffer), nil
 }
 
-func tokenizeString(inputString string) (*[]string, error) {
+// tokenizeString 方法用于将输入字符串 tokenize
+func (t *tokenizer) tokenizeString() (*[]string, error) {
+	input := *t.inputString // 解引用指针
 	result := []string{}
 	buffer := ""
-	for i := 0; i < len(inputString); {
-		token, nextIndex, err := nextToken(inputString, i)
+	for t.start < len(input) {
+		token, nextIndex, err := t.nextToken()
 		if err != nil {
 			return &result, err
 		}
@@ -47,7 +64,7 @@ func tokenizeString(inputString string) (*[]string, error) {
 				result = append(result, buffer)
 				buffer = ""
 			}
-		} else if getBuiltinSymbol(inputString, i) != "" {
+		} else if getBuiltinSymbol(input, t.start) != "" {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""
@@ -56,7 +73,7 @@ func tokenizeString(inputString string) (*[]string, error) {
 		} else {
 			buffer = token
 		}
-		i = nextIndex
+		t.start = nextIndex
 	}
 	if buffer != "" {
 		result = append(result, buffer)
@@ -64,20 +81,20 @@ func tokenizeString(inputString string) (*[]string, error) {
 	return &result, nil
 }
 
+// TokenizeStmtBlock 函数保持不变
 func TokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
 	body := []TokenBlock{}
 
-	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Header 进行一些处理
-	// 例如，将 Header 中的元素转换为大写
-	headerPtr, err := tokenizeString(b.Header)
+	// 创建一个新的 tokenizer 实例
+	t := newTokenizer(&b.Header) // 传递字符串的指针
+	headerPtr, err := t.tokenizeString()
 	header := *headerPtr
 
 	if err != nil || header == nil {
 		return nil, err
 	}
 
-	// 这里假设我们需要对输入的 StrArrStmtBlock 的 Body 进行一些处理
-	// 例如，递归调用 ParseStmtBlock 处理 Body 中的每个元素
+	// 处理 Body 中的每个元素
 	for _, subBlock := range b.Body {
 		parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
 		if err != nil {
