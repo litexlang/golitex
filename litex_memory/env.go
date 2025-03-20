@@ -62,7 +62,7 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 }
 
 func (env *Env) NewRelationFact(stmt *parser.RelationFactStmt) error {
-	if string(stmt.Opt) == (parser.Keywords["="]) {
+	if string(stmt.Opt) == (parser.KeywordEqual) {
 		return env.NewEqualFact(stmt)
 	}
 
