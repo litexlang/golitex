@@ -1,7 +1,5 @@
 package litexparser
 
-import "sort"
-
 var BuiltinSyms = map[string]string{
 	":":     ":",
 	"[":     "[",
@@ -48,45 +46,41 @@ var BuiltinSyms = map[string]string{
 	"@":     "@", // v@n represents v[n]
 }
 
-func isBuiltinRelationalOperator(op string) bool {
-	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!="
-}
+// var sortedSymbols []string = sortKeywordSymbols()
 
-var sortedSymbols []string = sortKeywordSymbols()
+// // 初始化排序后的符号列表
+// func sortKeywordSymbols() *[]string {
+// 	symbols := make([]string, 0, len(BuiltinSyms))
+// 	for k := range BuiltinSyms {
+// 		symbols = append(symbols, k)
+// 	}
+// 	sort.Slice(symbols, func(i, j int) bool {
+// 		return len(symbols[i]) > len(symbols[j])
+// 	})
+// 	return &symbols
+// }
 
-// 初始化排序后的符号列表
-func sortKeywordSymbols() []string {
-	symbols := make([]string, 0, len(BuiltinSyms))
-	for k := range BuiltinSyms {
-		symbols = append(symbols, k)
-	}
-	sort.Slice(symbols, func(i, j int) bool {
-		return len(symbols[i]) > len(symbols[j])
-	})
-	return symbols
-}
+// // 缓存排序后的符号列表
 
-// 缓存排序后的符号列表
-
-// 如果输入字符串从起始位置开始是符号，则返回该符号
-func getKeywordSymbol(inputString string, start int) string {
-	for _, k := range sortedSymbols {
-		end := start + len(k)
-		if end <= len(inputString) {
-			match := true
-			for i := 0; i < len(k); i++ {
-				if inputString[start+i] != k[i] {
-					match = false
-					break
-				}
-			}
-			if match {
-				return k
-			}
-		}
-	}
-	return ""
-}
+// // 如果输入字符串从起始位置开始是符号，则返回该符号
+// func getKeywordSymbol(inputString string, start int) string {
+// 	for _, k := range sortedSymbols {
+// 		end := start + len(k)
+// 		if end <= len(inputString) {
+// 			match := true
+// 			for i := 0; i < len(k); i++ {
+// 				if inputString[start+i] != k[i] {
+// 					match = false
+// 					break
+// 				}
+// 			}
+// 			if match {
+// 				return k
+// 			}
+// 		}
+// 	}
+// 	return ""
+// }
 
 const (
 	KeywordSetStruct            = "set_struct"
@@ -133,6 +127,7 @@ const (
 	KeywordIn      = "in"
 )
 
+// 当引入新的符号的时候，要特别注意getBuiltinSymbol这个函数要重新写
 const (
 	// Builtin Symbols
 	KeywordColon                  = ":"
@@ -209,20 +204,67 @@ const (
 )
 
 func getBuiltinSymbol(inputString string, start int) string {
-	for _, k := range sortedSymbols {
-		end := start + len(k)
-		if end <= len(inputString) {
-			match := true
-			for i := 0; i < len(k); i++ {
-				if inputString[start+i] != k[i] {
-					match = false
-					break
-				}
-			}
-			if match {
-				return k
-			}
+	if start < 0 || start >= len(inputString) {
+		return ""
+	}
+
+	// Define all possible keywords in order of decreasing length
+	// TODO 定义一个函数，手动sort，而不是像这样硬编码地sort
+	keywords := []string{
+		KeywordEqualGreaterRightArrow, // "=>"
+		KeywordMinusGreaterRightArrow, // "->"
+		KeywordColonColon,             // "::"
+		KeywordPlusPlus,               // "++"
+		KeywordMinusMinus,             // "--"
+		KeywordAndAnd,                 // "&&"
+		KeywordPipePipe,               // "||"
+		KeywordEqualEqual,             // "=="
+		KeywordNotEqual,               // "!="
+		KeywordStarStar,               // "**"
+		KeywordColon,                  // ":"
+		KeywordLeftBracket,            // "["
+		KeywordRightBracket,           // "]"
+		KeywordLeftParen,              // "("
+		KeywordRightParen,             // ")"
+		KeywordComma,                  // ","
+		KeywordDollar,                 // "$"
+		KeywordEqual,                  // "="
+		KeywordSlash,                  // "/"
+		KeywordPlus,                   // "+"
+		KeywordMinus,                  // "-"
+		KeywordStar,                   // "*"
+		KeywordCaret,                  // "^"
+		KeywordLess,                   // "<"
+		KeywordGreater,                // ">"
+		KeywordExclaim,                // "!"
+		KeywordPipe,                   // "|"
+		KeywordTilde,                  // "~"
+		KeywordAnd,                    // "&"
+		KeywordDot,                    // "."
+		KeywordBackslash,              // "\\"
+		KeywordQuestion,               // "?"
+		KeywordDoubleQuote,            // "\""
+		KeywordSingleQuote,            // "'"
+		KeywordBacktick,               // "`"
+		KeywordSemicolon,              // ";"
+		KeywordLeftCurly,              // "{"
+		KeywordRightCurly,             // "}"
+		KeywordHash,                   // "#"
+		KeywordAt,                     // "@"
+	}
+
+	// Iterate through keywords and try to match the longest possible
+	for _, keyword := range keywords {
+		end := start + len(keyword)
+		if end <= len(inputString) && inputString[start:end] == keyword {
+			return keyword
 		}
 	}
+
+	// No match found
 	return ""
+}
+
+func isBuiltinRelationalOperator(op string) bool {
+	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!="
 }

@@ -15,7 +15,7 @@ func nextToken(inputString string, start int) (string, int, error) {
 		return "", 0, fmt.Errorf("invalid syntax: nested comment block")
 	}
 
-	potentialKeywordSymbol := getKeywordSymbol(inputString, start)
+	potentialKeywordSymbol := getBuiltinSymbol(inputString, start)
 	if potentialKeywordSymbol != "" {
 		return potentialKeywordSymbol, start + len(potentialKeywordSymbol), nil
 	}
@@ -26,7 +26,7 @@ func nextToken(inputString string, start int) (string, int, error) {
 
 	buffer := ""
 	for i := start; i < len(inputString); i++ {
-		if getKeywordSymbol(inputString, i) != "" || inputString[i] == ' ' {
+		if getBuiltinSymbol(inputString, i) != "" || inputString[i] == ' ' {
 			break
 		}
 		buffer += string(inputString[i])
@@ -47,7 +47,7 @@ func tokenizeString(inputString string) (*[]string, error) {
 				result = append(result, buffer)
 				buffer = ""
 			}
-		} else if getKeywordSymbol(inputString, i) != "" {
+		} else if getBuiltinSymbol(inputString, i) != "" {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""
