@@ -9,7 +9,7 @@ import (
 type Env struct {
 	Parent *Env
 
-	VarMemory  VarMemory
+	ObjMemory  ObjMemory
 	PropMemory PropMemory
 	FnMemory   FnMemory
 
@@ -24,7 +24,7 @@ func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent: parent,
 
-		VarMemory:  *NewVarMemory(),
+		ObjMemory:  *NewObjMemory(),
 		PropMemory: *NewPropMemory(),
 		FnMemory:   *NewFnMemory(),
 
@@ -71,13 +71,13 @@ func (env *Env) NewRelationFact(stmt *parser.RelationFactStmt) error {
 
 func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 	left := &EqualFactMemoryTreeNode{
-		stmt.Vars[0],
-		[]*parser.Fc{&stmt.Vars[1]},
+		stmt.Objs[0],
+		[]*parser.Fc{&stmt.Objs[1]},
 	}
 
 	right := &EqualFactMemoryTreeNode{
-		stmt.Vars[1],
-		[]*parser.Fc{&stmt.Vars[0]},
+		stmt.Objs[1],
+		[]*parser.Fc{&stmt.Objs[0]},
 	}
 
 	leftSearched, err := env.EqualMemory.Mem.Search(left)
@@ -85,7 +85,7 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 		return err
 	}
 	if leftSearched != nil {
-		leftSearched.Key.Values = append(leftSearched.Key.Values, &stmt.Vars[1])
+		leftSearched.Key.Values = append(leftSearched.Key.Values, &stmt.Objs[1])
 	} else {
 		env.EqualMemory.Mem.Insert(left)
 	}
@@ -96,7 +96,7 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 		return err
 	}
 	if rightSearched != nil {
-		rightSearched.Key.Values = append(rightSearched.Key.Values, &stmt.Vars[0])
+		rightSearched.Key.Values = append(rightSearched.Key.Values, &stmt.Objs[0])
 	} else {
 		env.EqualMemory.Mem.Insert(right)
 	}

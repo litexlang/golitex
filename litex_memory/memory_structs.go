@@ -8,7 +8,7 @@ func (e *MemoryErr) Error() string {
 	return e.err.Error()
 }
 
-type VarMemoryEntry struct {
+type ObjMemoryEntry struct {
 }
 
 type PropMemory struct {
@@ -23,5 +23,5 @@ type FnMemory struct {
 type FnMemEntry struct {
 }
 
-type VarMemory struct {
+type ObjMemory struct {
 }

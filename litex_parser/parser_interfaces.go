@@ -5,7 +5,7 @@ type Stmt interface {
 	String() string
 }
 
-func (stmt *DefVarStmt) stmt()              {}
+func (stmt *DefObjStmt) stmt()              {}
 func (c *DefSetStructStmt) stmt()           {}
 func (f *DefTypeStmt) stmt()                {}
 func (c *DefPropStmt) stmt()                {}
@@ -35,7 +35,7 @@ func (p *FuncFactStmt) factStmt()     {}
 func (p *WhenCondFactStmt) factStmt() {}
 
 type SpecFactParams struct {
-	VarParams []Fc
+	ObjParams []Fc
 }
 
 type SpecFactStmt interface {
@@ -56,12 +56,12 @@ func (f *FuncFactStmt) GetTypeParamsAndParams() *SpecFactParams {
 	return &SpecFactParams{[]Fc{}}
 }
 
-// type FcVarTypeValue interface {
-// 	fcVarTypeValue()
+// type FcObjTypeValue interface {
+// 	fcObjTypeValue()
 // }
 
-// func (f FcVarTypeStrValue) fcVarTypeValue()   {}
-// func (f *FcVarTypeFuncValue) fcVarTypeValue() {}
+// func (f FcObjTypeStrValue) fcObjTypeValue()   {}
+// func (f *FcObjTypeFuncValue) fcObjTypeValue() {}
 
 type ClaimStmt interface {
 	claimStmt()
@@ -94,7 +94,7 @@ type TypeMember interface {
 	typeMember()
 }
 
-func (s *DefVarStmt) typeMember()  {}
+func (s *DefObjStmt) typeMember()  {}
 func (s *DefFnStmt) typeMember()   {}
 func (s *DefPropStmt) typeMember() {}
 func (s *DefTypeStmt) typeMember() {}
@@ -103,6 +103,6 @@ type InstanceMember interface {
 	instanceMember()
 }
 
-func (s *DefVarStmt) instanceMember()  {}
+func (s *DefObjStmt) instanceMember()  {}
 func (s *DefFnStmt) instanceMember()   {}
 func (s *DefPropStmt) instanceMember() {}

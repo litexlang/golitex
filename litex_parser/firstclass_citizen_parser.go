@@ -109,19 +109,19 @@ func (parser *Parser) parseFcFnRetVal() (*FcFnRetValue, error) {
 		return nil, err
 	}
 
-	typeParamsVarParamsPairs, err := parser.parseTypeParamsVarParamsPairs()
+	typeParamsObjParamsPairs, err := parser.parseTypeParamsObjParamsPairs()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &FcFnRetValue{optName, *typeParamsVarParamsPairs}, nil
+	return &FcFnRetValue{optName, *typeParamsObjParamsPairs}, nil
 }
 
-func (parser *Parser) parseTypeParamsVarParamsPairs() (*[]TypeParamsAndVarParamsPair, error) {
+func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]TypeParamsAndObjParamsPair, error) {
 	var err error
 
-	pairs := []TypeParamsAndVarParamsPair{}
+	pairs := []TypeParamsAndObjParamsPair{}
 
 	for !parser.ExceedEnd() && (parser.is(KeywordLeftParen)) {
 		varParamsPtr := &[]Fc{}
@@ -130,7 +130,7 @@ func (parser *Parser) parseTypeParamsVarParamsPairs() (*[]TypeParamsAndVarParams
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, TypeParamsAndVarParamsPair{*varParamsPtr})
+		pairs = append(pairs, TypeParamsAndObjParamsPair{*varParamsPtr})
 	}
 
 	return &pairs, nil
@@ -175,7 +175,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 
 		left = &FcFnRetValue{
 			FcStr(curToken),
-			[]TypeParamsAndVarParamsPair{{[]Fc{left, right}}},
+			[]TypeParamsAndObjParamsPair{{[]Fc{left, right}}},
 		}
 	}
 
@@ -196,7 +196,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 		}
 		return &FcFnRetValue{
 			FcStr(unaryOp),
-			[]TypeParamsAndVarParamsPair{{[]Fc{right}}},
+			[]TypeParamsAndObjParamsPair{{[]Fc{right}}},
 		}, nil
 	} else {
 		return parser.parseFcAtom()

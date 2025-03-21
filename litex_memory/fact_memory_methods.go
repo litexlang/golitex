@@ -128,7 +128,7 @@ func compareFcStr(knownFc parser.FcStr, givenFc parser.FcStr) (int, error) {
 	return 0, nil
 }
 
-// func compareTypeVarStr(knownFc parser.TypeVarStr, givenFc parser.TypeVarStr) (int, error) {
+// func compareTypeObjStr(knownFc parser.TypeObjStr, givenFc parser.TypeObjStr) (int, error) {
 // 	if len(knownFc) != len(givenFc) {
 // 		return len(knownFc) - len(givenFc), nil
 // 	}
@@ -142,23 +142,23 @@ func compareFcStr(knownFc parser.FcStr, givenFc parser.FcStr) (int, error) {
 // 	return 0, nil
 // }
 
-func compareTypeParamsAndParamsPair(knownPair parser.TypeParamsAndVarParamsPair, givenPair parser.TypeParamsAndVarParamsPair) (int, error) {
+func compareTypeParamsAndParamsPair(knownPair parser.TypeParamsAndObjParamsPair, givenPair parser.TypeParamsAndObjParamsPair) (int, error) {
 	// if len(knownPair.TypeParams) != len(givenPair.TypeParams) {
 	// 	return len(knownPair.TypeParams) - len(givenPair.TypeParams), nil
 	// }
 
 	// for i := 0; i < len(knownPair.TypeParams); i++ {
-	// 	if comp, err := compareTypeVarStr(knownPair.TypeParams[i], givenPair.TypeParams[i]); comp != 0 || err != nil {
+	// 	if comp, err := compareTypeObjStr(knownPair.TypeParams[i], givenPair.TypeParams[i]); comp != 0 || err != nil {
 	// 		return comp, err
 	// 	}
 	// }
 
-	if len(knownPair.VarParams) != len(givenPair.VarParams) {
-		return len(knownPair.VarParams) - len(givenPair.VarParams), nil
+	if len(knownPair.ObjParams) != len(givenPair.ObjParams) {
+		return len(knownPair.ObjParams) - len(givenPair.ObjParams), nil
 	}
 
-	for i := 0; i < len(knownPair.VarParams); i++ {
-		if comp, err := CompareFc(knownPair.VarParams[i], givenPair.VarParams[i]); comp != 0 || err != nil {
+	for i := 0; i < len(knownPair.ObjParams); i++ {
+		if comp, err := CompareFc(knownPair.ObjParams[i], givenPair.ObjParams[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
@@ -171,12 +171,12 @@ func compareFcFnRetValue(knownFc *parser.FcFnRetValue, givenFc *parser.FcFnRetVa
 		return comp, err
 	}
 
-	if len(knownFc.TypeParamsVarParamsPairs) != len(givenFc.TypeParamsVarParamsPairs) {
-		return len(knownFc.TypeParamsVarParamsPairs) - len(givenFc.TypeParamsVarParamsPairs), nil
+	if len(knownFc.TypeParamsObjParamsPairs) != len(givenFc.TypeParamsObjParamsPairs) {
+		return len(knownFc.TypeParamsObjParamsPairs) - len(givenFc.TypeParamsObjParamsPairs), nil
 	}
 
-	for i := 0; i < len(knownFc.TypeParamsVarParamsPairs); i++ {
-		if comp, err := compareTypeParamsAndParamsPair(knownFc.TypeParamsVarParamsPairs[i], givenFc.TypeParamsVarParamsPairs[i]); comp != 0 || err != nil {
+	for i := 0; i < len(knownFc.TypeParamsObjParamsPairs); i++ {
+		if comp, err := compareTypeParamsAndParamsPair(knownFc.TypeParamsObjParamsPairs[i], givenFc.TypeParamsObjParamsPairs[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}

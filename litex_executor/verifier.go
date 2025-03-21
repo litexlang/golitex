@@ -167,7 +167,7 @@ func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *pars
 }
 
 func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
-	key := memory.EqualFactMemoryTreeNode{FcAsKey: stmt.Vars[0], Values: []*parser.Fc{}}
+	key := memory.EqualFactMemoryTreeNode{FcAsKey: stmt.Objs[0], Values: []*parser.Fc{}}
 
 	searchedNode, err := env.EqualMemory.Mem.SearchInEnv(env, &key)
 
@@ -175,7 +175,7 @@ func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.
 		return err
 	}
 
-	comp, err := memory.CompareFc(stmt.Vars[0], stmt.Vars[1])
+	comp, err := memory.CompareFc(stmt.Objs[0], stmt.Objs[1])
 
 	if err != nil {
 		return err
@@ -190,7 +190,7 @@ func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.
 	}
 
 	for _, equalFc := range searchedNode.Key.Values {
-		comp, err := memory.CompareFc(stmt.Vars[1], *equalFc)
+		comp, err := memory.CompareFc(stmt.Objs[1], *equalFc)
 		if err != nil {
 			return err
 		}
