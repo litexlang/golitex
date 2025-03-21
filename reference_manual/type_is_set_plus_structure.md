@@ -431,11 +431,13 @@ set S3 exist_x_st_P_is_valid
       1. 这也是为什么要引入type：不能直接建立set 和 interface 之间的关系：因为同一个set，可能有很多实现interface的方法。必须有个中间层type，来说明一下是以哪种方法实现的。
 
 set R
-type RAsGroup R Group:
+type RAsGroup R Group: // 表示 集合R上的Type RAsGroup implement  interface叫Group
     __add__ impl __mul__
     0 impl id
     __neg__ impl __inverse__
 R impl RAsGroup // 之后 R 会被默认以RAsGroup的方式impl Group。于是Group相关的事实可以被运用在R上
+
+注：在golang和Java中，一个类(type)可能implement很多interface；implement的方式是：这个类实现了这个interface所有对应的函数。litex里，一个set可能实现很多type，一个type可能实现很多interface；这么看来一个set可能以很多方式implement一个interface。litex的 type implement interface 的方式是：这些函数和prop的相关事实，和interface要求的刚好”对上“
 
 值得一提的是，符号以下条件的fn可能有无数个
 // 定义一个 返回值 大于0 的函数
@@ -471,4 +473,5 @@ f = d
             then:
                 $g(x,y)
         然后你先证明$h(a,b)，然后手动说明一下 $g(a,b)
+        或许我可以引入iff这个语法糖，让上面的操作（search）自动进行
     3. 
