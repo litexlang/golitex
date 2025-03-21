@@ -5,16 +5,18 @@ import "sort"
 const (
 	KeywordInterface            = "interface"
 	KeywordType                 = "type"
+	KeywordSet                  = "set"
 	KeywordTypeMember           = "type_member"
 	KeywordInstanceMember       = "instance_member"
 	KeywordForall               = "forall"
-	KeywordCond                 = "cond"
-	KeywordThen                 = "then"
+	KeywordWhen                 = "when"
+	KeywordCond                 = "cond" // TODO: 未来会删除
+	KeywordThen                 = "then" // TODO: 因为没有cond了，所以未来会删除
 	KeywordObj                  = "obj"
 	KeywordFn                   = "fn"
 	KeywordProp                 = "prop"
 	KeywordKnow                 = "know"
-	KeywordExist                = "exist"
+	KeywordExistProp            = "exist_prop"
 	KeywordHave                 = "have"
 	KeywordClaim                = "claim"
 	KeywordProve                = "prove"
@@ -22,15 +24,12 @@ const (
 	KeywordImport               = "import"
 	KeywordPackage              = "package"
 	KeywordNot                  = "not"
-	KeywordIs                   = "is"
 	KeywordImpl                 = "impl"
-	KeywordAny                  = "any"
 	KeywordAs                   = "as"
-	KeywordAxiom                = "axiom"
+	KeywordAxiom                = "axiom" // syntax sugar for: prop + know forall
 	KeywordProveByContradiction = "prove_by_contradiction"
-	KeywordThm                  = "thm"
-	KeywordWhen                 = "when"
-	KeywordRet                  = "ret"
+	KeywordThm                  = "thm"  // syntax sugar for: prop + prove
+	KeywordSelf                 = "self" // return value of a function; refer to an instance of the type or set we are defining
 
 	// Syntax and Semantics Sugar
 	KeywordCommutative = "commutative"
@@ -40,9 +39,10 @@ const (
 	KeywordNat   = "nat"   // e.g. 0
 	KeywordInt   = "int"   // e.g. -1
 	KeywordFloat = "float" // e.g. -1.1
-	KeywordSet   = "set"   // e.g. to_set(AnyType)
+	KeywordReal  = "real"  // e.g. pi
 
 	// Builtin Functions
+	KeywordIs = "is"
 	KeywordIn = "in"
 )
 

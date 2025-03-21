@@ -43,7 +43,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseProveClaimStmt()
 	case KeywordKnow:
 		ret, err = stmt.parseKnowStmt()
-	case KeywordExist:
+	case KeywordExistProp:
 		ret, err = stmt.parseDefExistStmt()
 	case KeywordHave:
 		ret, err = stmt.parseHaveStmt()
