@@ -34,7 +34,7 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	return &params, nil
 }
 
-func (parser *Parser) parseFcVarTypePairArrEndWithColon() (*[]string, error) {
+func (parser *Parser) parseFcObjTypePairArrEndWithColon() (*[]string, error) {
 	pairs := []string{}
 
 	for !parser.is(KeywordColon) {
@@ -178,7 +178,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &FuncFactStmt{true, &FcFnRetValue{FcStr(opt), []TypeParamsAndVarParamsPair{{[]Fc{left}}}}}, nil
+	return &FuncFactStmt{true, &FcFnRetValue{FcStr(opt), []TypeParamsAndObjParamsPair{{[]Fc{left}}}}}, nil
 }
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
@@ -231,7 +231,7 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 
 func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
 	if block.Header.is(KeywordObj) {
-		return block.parseDefVarStmt()
+		return block.parseDefObjStmt()
 	} else if block.Header.is(KeywordFn) {
 		return block.parseDefFnStmt()
 	} else if block.Header.is(KeywordProp) {
@@ -245,7 +245,7 @@ func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
 
 func (block *TokenBlock) parseInstanceMember() (InstanceMember, error) {
 	if block.Header.is(KeywordObj) {
-		return block.parseDefVarStmt()
+		return block.parseDefObjStmt()
 	} else if block.Header.is(KeywordFn) {
 		return block.parseDefFnStmt()
 	} else if block.Header.is(KeywordProp) {

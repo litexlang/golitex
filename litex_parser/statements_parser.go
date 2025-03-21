@@ -36,7 +36,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	case KeywordFn:
 		ret, err = stmt.parseDefFnStmt()
 	case KeywordObj:
-		ret, err = stmt.parseDefVarStmt()
+		ret, err = stmt.parseDefObjStmt()
 	case KeywordClaim:
 		ret, err = stmt.parseClaimStmt()
 	case KeywordProve:
@@ -329,7 +329,7 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	varParams, err := stmt.Header.parseFcVarTypePairArrEndWithColon()
+	varParams, err := stmt.Header.parseFcObjTypePairArrEndWithColon()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -487,7 +487,7 @@ func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 	return &DefFnStmt{decl.name, decl.vars, *ifFacts, *thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
+func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
 	err := stmt.Header.skip(KeywordObj)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -521,7 +521,7 @@ func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
-	return &DefVarStmt{varNames, *ifFacts}, nil
+	return &DefObjStmt{varNames, *ifFacts}, nil
 }
 
 func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
@@ -687,7 +687,7 @@ func (stmt *TokenBlock) parseDefExistStmt() (*DefExistStmt, error) {
 // 	if stmt.Header.is(Keywords["fn"]) {
 // 		return stmt.Header.parseFcFnDecl()
 // 	} else if stmt.Header.is(Keywords["var"]) {
-// 		// return stmt.Header.parseVarDecl()
+// 		// return stmt.Header.parseObjDecl()
 // 		panic("unexpected var declaration")
 // 	} else if stmt.Header.is(Keywords["prop"]) {
 // 		return stmt.Header.parsePropDecl()

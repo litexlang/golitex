@@ -285,7 +285,7 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 9. Litex vs. Standard Math: Sets (as types) cannot be passed like variables due to their structural roles.
 
 <!-- TODO -->
-<!-- 2. an array of countable numbers of variables of the same type: Array      \[ typeName \]( numberOfVariables ) -->
+<!-- 2. an array of countable numbers of variables of the same type: Array      \[ typeName \]( numberOfObjiables ) -->
 
 <!-- 3. Expansion of Polynomials -->
 

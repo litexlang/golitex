@@ -5,7 +5,6 @@ import (
 	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
 	"math/rand"
-	"strings"
 	"testing"
 	"time"
 )
@@ -18,7 +17,7 @@ const (
 	TenMillionRound  = 10000000
 )
 
-func TestStoreNewVar(t *testing.T) {
+func TestStoreNewObj(t *testing.T) {
 	code := `var a G`
 	statements, err := parser.ParseSourceCode(&code)
 	if err != nil {
@@ -35,7 +34,7 @@ func TestStoreNewVar(t *testing.T) {
 		fmt.Println(executor.message)
 	}
 
-	entry, _ := env.VarMemory.Get("a")
+	entry, _ := env.ObjMemory.Get("a")
 	println((entry))
 }
 
@@ -88,74 +87,6 @@ func TestVerifier(t *testing.T) {
 	}
 }
 
-func TestVerifier2(t *testing.T) {
-	factStrings := []string{
-		"know $p(a)",
-		"know $p(b)",
-		"know $p(a)",
-		"know $p(b)",
-		"know $t(a)",
-		"know $q(a, b)",
-		"know $q[a,b]().t[]()",
-		"know $q(a, b)",
-		"know $q[a,b]().t[]()",
-		"know $q[a,b](c).t[k](f[]().g[](), t)",
-		"know $q[a,b](c).t[k](f[]().g[](), t)",
-		"know $t[a,d,c](k,g,f[]())",
-		"know $t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)()",
-		"know $t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)()",
-		"know $t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)()",
-		"know $t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
-		"know $t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
-		"know $t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
-		"know $ff()[](f[](), a.b.c.g().f[]())()()",
-		"know $a.b.c.g().f[]()",
-		"know $ff()[](f[](), a.b.c.g().f[]())()()",
-		"know $ff()[](f[](), a.b.c.g().f[]())()()",
-		"know $ff()[](f[](), a.b.c.g().f[]())()()",
-		"know $ff()[](f[](), a.b.c.g().f[]())()()",
-		"know $a.b.c.g().f[]()",
-		"know $f()()()()",
-		"know $f[]()",
-		"know $f[]().t[k](f[]().g[](), t)",
-		"know $f[]()",
-		"know $f[]().t[k](f[]().g[](), t)",
-		"know $f[]().t().g[](g[]())()()",
-		"know $f[]().t().g[](g[]())()()",
-	}
-
-	code := strings.Join(factStrings, "\n")
-	statements, err := parser.ParseSourceCode(&code)
-	if err != nil {
-		t.Fatal(err)
-	}
-	env := memory.NewEnv(nil)
-	executor := *newExecutor(env)
-	for _, topStmt := range *statements {
-		err := executor.TopLevelStmt(&topStmt)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	testCodes := "$ff()[](f[](), a.b.c.g().f[]())()()"
-	start := time.Now()
-	for i := 0; i < HundredRound; i++ {
-		testStatements, err := parser.ParseSourceCode(&testCodes)
-		for _, testCode := range *testStatements {
-			err := executor.TopLevelStmt(&testCode)
-			if err != nil {
-				t.Fatal(err)
-			}
-		}
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	// 2.6ms
-	fmt.Printf("Check Time taken: %v\n", time.Since(start))
-}
-
 func randFuncFact() *parser.FuncFactStmt {
 	stmt := parser.FuncFactStmt{IsTrue: true, Fc: randomFc()}
 	return &stmt
@@ -201,28 +132,28 @@ func randFcString() parser.FcStr {
 func randFcFnRetValue() *parser.FcFnRetValue {
 	fnName := randFcString()
 	round := rand.Intn(3) + 1
-	typeParamVarParamsPairs := []parser.TypeParamsAndVarParamsPair{}
+	typeParamObjParamsPairs := []parser.TypeParamsAndObjParamsPair{}
 	for i := 0; i < round; i++ {
-		typeParamVarParamsPairs = append(typeParamVarParamsPairs, parser.TypeParamsAndVarParamsPair{VarParams: *randVarParams()})
+		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.TypeParamsAndObjParamsPair{ObjParams: *randObjParams()})
 	}
-	return &parser.FcFnRetValue{FnName: fnName, TypeParamsVarParamsPairs: typeParamVarParamsPairs}
+	return &parser.FcFnRetValue{FnName: fnName, TypeParamsObjParamsPairs: typeParamObjParamsPairs}
 }
 
-// func randTypeParams() *[]parser.TypeVarStr {
+// func randTypeParams() *[]parser.TypeObjStr {
 // 	round := rand.Intn(3) + 1
-// 	typeVars := []parser.TypeVarStr{}
+// 	typeObjs := []parser.TypeObjStr{}
 // 	for i := 0; i < round; i++ {
 // 		length := rand.Intn(10) + 1
 // 		bytes := make([]byte, length)
 // 		for i := 0; i < length; i++ {
 // 			bytes[i] = byte(rand.Intn(26) + 65)
 // 		}
-// 		typeVars = append(typeVars, parser.TypeVarStr(bytes))
+// 		typeObjs = append(typeObjs, parser.TypeObjStr(bytes))
 // 	}
-// 	return &typeVars
+// 	return &typeObjs
 // }
 
-func randVarParams() *[]parser.Fc {
+func randObjParams() *[]parser.Fc {
 	round := rand.Intn(3) + 1
 	varParams := []parser.Fc{}
 	for i := 0; i < round; i++ {
@@ -439,7 +370,7 @@ func randEqualFact() *parser.RelationFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.RelationFactStmt{IsTrue: true, Vars: []parser.Fc{left, right}, Opt: parser.FcStr("=")}
+	return &parser.RelationFactStmt{IsTrue: true, Objs: []parser.Fc{left, right}, Opt: parser.FcStr("=")}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

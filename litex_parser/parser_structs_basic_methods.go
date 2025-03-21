@@ -15,10 +15,10 @@ func (stmt *FuncFactStmt) String() string {
 }
 
 func (stmt *RelationFactStmt) String() string {
-	return fmt.Sprintf("%v %v %v", stmt.Vars[0], stmt.Opt, stmt.Vars[1])
+	return fmt.Sprintf("%v %v %v", stmt.Objs[0], stmt.Opt, stmt.Objs[1])
 }
 
-func (stmt *DefVarStmt) String() string              { panic("") }
+func (stmt *DefObjStmt) String() string              { panic("") }
 func (c *DefSetStructStmt) String() string           { panic("") }
 func (f *DefTypeStmt) String() string                { panic("") }
 func (c *DefPropStmt) String() string                { panic("") }

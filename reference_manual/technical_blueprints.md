@@ -196,7 +196,7 @@ In programming, a type is typically called a "interface" (in C) or a "class" (in
 
 <!-- TODO: below are not well written -->
 
-Everything in Litex is represented by a symbol(a single word). Variables, Functions, Types, propositions are all represented by a single symbol or composited symbol. Function, variable and proposition are called first-class citizens of Litex, because they can be passed to function/proposition parameters and behave as return value.
+Everything in Litex is represented by a symbol(a single word). Objiables, Functions, Types, propositions are all represented by a single symbol or composited symbol. Function, variable and proposition are called first-class citizens of Litex, because they can be passed to function/proposition parameters and behave as return value.
 
 ``` text
 // declare a variable
@@ -209,7 +209,7 @@ var Alice Human // just declare a variable, no extra known factual expressions i
 have m Nat: $exist_nat_lss_than(2)
 ``` 
 
-In mathematics, a variable is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Variables are used in factual expressions.
+In mathematics, a variable is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Objiables are used in factual expressions.
 
 Notice the variable you introduce to current environment might not exist. For example, the type of your variable might be an empty set. To make variable declaration safe, you can use "have" statement. "have" statement is valid only when the related existential factual expression is true.
 

@@ -9,15 +9,15 @@ func NewFnMemory() *FnMemory {
 	return &FnMemory{}
 }
 
-func NewVarMemory() *VarMemory {
-	return &VarMemory{}
+func NewObjMemory() *ObjMemory {
+	return &ObjMemory{}
 }
 
-func (mem *VarMemory) Get(s string) (*VarMemoryEntry, bool) {
+func (mem *ObjMemory) Get(s string) (*ObjMemoryEntry, bool) {
 	panic("TODO")
 }
 
-func (mem *VarMemory) Set(pair string) (*VarMemoryEntry, error) {
+func (mem *ObjMemory) Set(pair string) (*ObjMemoryEntry, error) {
 	panic("Todo")
 }
 

@@ -5,7 +5,7 @@ type TopStmt struct {
 	IsPub bool
 }
 
-type DefVarStmt struct {
+type DefObjStmt struct {
 	Decl  []string
 	Facts []FactStmt
 }
@@ -51,7 +51,7 @@ type FuncFactStmt struct {
 
 type RelationFactStmt struct {
 	IsTrue bool
-	Vars   []Fc
+	Objs   []Fc
 	Opt    FcStr
 }
 
@@ -118,8 +118,8 @@ type PropDecl struct {
 	vars []string
 }
 
-// type FcVarTypeStrValue string
-// type FcVarTypeFuncValue struct {
+// type FcObjTypeStrValue string
+// type FcObjTypeFuncValue struct {
 // 	Name      string
-// 	VarParams []Fc
+// 	ObjParams []Fc
 // }
