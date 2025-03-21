@@ -442,3 +442,33 @@ R impl RAsGroup // 之后 R 会被默认以RAsGroup的方式impl Group。于是G
 fn f(x R) R:
     self > 0
 
+如何search事实: 
+1. 相等型事实
+f(a,b)(c,d) = g(e,f) 是否成立？
+know f(a,b) =g 
+e = c
+f = d
+
+对应 e 和 c，f和d
+   1. 对上了，则考虑 g 和 f(a,b) 是否相等
+      1. g = f(a,b) 作为函数相等，则相等
+      2. 如果不等，那直接比较 f(a,b)(c,d) = g(e,f) 是否成立
+   2. 没对上，则考虑 f(a,b)(c,d) = g(e,f) 作为整体是否相等
+      1. 相等，则OK
+      2. 不相等，则确实不可能相等
+
+1. $g(a,b) 是否成立?
+   1. 看看有没有已知的事实$g(c,d)，c和a相等，b和d相等
+   2. 看下有没有h和g等价；如果h和g等价，$h(a,b)成立，那就成立
+      1. 我可能不想引入iff这个关键词；请你全部写成 
+        forall x A, y B:
+            $g(x,y) // 这里也可以看到，cond是必要的：否则每次都在外面定义一个集合，太烦了
+            then:
+                $h(x,y)
+
+        forall x A, y B:
+            $h(x,y)
+            then:
+                $g(x,y)
+        然后你先证明$h(a,b)，然后手动说明一下 $g(a,b)
+    3. 
