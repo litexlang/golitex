@@ -20,7 +20,7 @@ const (
 
 func TestStoreNewVar(t *testing.T) {
 	code := `var a G`
-	statements, err := parser.ParseSourceCode(code)
+	statements, err := parser.ParseSourceCode(&code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func TestStoreNewVar(t *testing.T) {
 
 func TestKnow(t *testing.T) {
 	code := `know $p(a)`
-	statements, err := parser.ParseSourceCode(code)
+	statements, err := parser.ParseSourceCode(&code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestKnow(t *testing.T) {
 
 func TestVerifier(t *testing.T) {
 	code := `know $p(a)`
-	statements, err := parser.ParseSourceCode(code)
+	statements, err := parser.ParseSourceCode(&code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestVerifier(t *testing.T) {
 	}
 
 	testCodes := "$p(b)\n$p(a)"
-	testStatements, err := parser.ParseSourceCode(testCodes)
+	testStatements, err := parser.ParseSourceCode(&testCodes)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func TestVerifier2(t *testing.T) {
 	}
 
 	code := strings.Join(factStrings, "\n")
-	statements, err := parser.ParseSourceCode(code)
+	statements, err := parser.ParseSourceCode(&code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +141,7 @@ func TestVerifier2(t *testing.T) {
 	testCodes := "$ff()[](f[](), a.b.c.g().f[]())()()"
 	start := time.Now()
 	for i := 0; i < HundredRound; i++ {
-		testStatements, err := parser.ParseSourceCode(testCodes)
+		testStatements, err := parser.ParseSourceCode(&testCodes)
 		for _, testCode := range *testStatements {
 			err := executor.TopLevelStmt(&testCode)
 			if err != nil {
@@ -454,7 +454,7 @@ know:
 
 $p(x)
 `
-	topStatements, err := parser.ParseSourceCode(code)
+	topStatements, err := parser.ParseSourceCode(&code)
 
 	start := time.Now()
 	for _, topStmt := range *topStatements {

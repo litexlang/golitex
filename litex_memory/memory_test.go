@@ -209,7 +209,7 @@ func TestCompareSpecFact(t *testing.T) {
 
 	facts := []parser.SpecFactStmt{}
 	for _, factString := range factStrings {
-		topStmtSlice, err := parser.ParseSourceCode(factString)
+		topStmtSlice, err := parser.ParseSourceCode(&factString)
 		if err != nil {
 			t.Fatalf("ParseSpecFactStmt(%q) error: %v", factString, err)
 		}
