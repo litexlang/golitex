@@ -387,11 +387,15 @@ litex 采用 ts 的做法
 3.21
 1. set 的声明
    1. 根据陶哲轩分析1，set只有3种定义方式：
-      1. 一个有限集合，集合里是已经声明了的东西；
+      1. 一个有限集合，集合里是已经声明了的东西
       2. 给定一个集合，取该集合的符合特定条件的子集
+         1. 必须先给定一个集合，否则会出现”包含所有集合的集合”这样的悖论
       3. axiom replacement: 有一个prop叫P(x,y)，其中x在集合A中，y任意，那存在一个集合S，它满足：forall y in S, exit x in A s.t. P(x,y) is true
+         1. 这样的几何的构造方式，对应函数的值域
    2. 集合之间能运算：交并补
    3. 不是所有东西都是集合，见axiom regularity
+   4. 值得一提的是，每当用户声明一个set，我都在环境里赠送给用户一个判断符=。你可以直接用。但是我会认为，同一个obj，出现在不同的集合里，它也是不同的obj。你如果要让他们相等，要么是集合1能impl集合2；要么是你as一下。
+   5. 一个obj可以在很多集合里，同时该obj在每个时刻，只被视作在某个集合（类型）里。
 
 // 定义法1
 set S {1,2,3}
@@ -405,10 +409,22 @@ set S2 nat:
     ret < 100
 
 // 定义法3
-prop P(x S, y any):
+prop P(x S, y S2):
     // ...
 
-exist_prop exist_x_st_P_is_valid(y any):
-    // ? Todo
+exist_prop exist_x_st_P_is_valid(y S2):
+    // ? Todo: exist x in S s.t. $P(x,y)
 
 set S3 exist_x_st_P_is_valid
+
+2. type 的声明
+   1. (set, opts, props) 一起impl 一个type
+      1. prop也是impl：比如说 <, > 这种，只要有结构，它可能有不同的意思，但是运算符号的性质可能是共通的
+   2. type impl interface
+      1. 一个时刻，type可以impl很多的interface
+   3. 一个时刻，一个obj只能出现在一个type里
+   4. 类型被看做集合，但是如果 set1 impl type1，那type1和set1被视为不同集合
+
+3. interface：一族type
+   1. type->interface本质上是语法糖，是为了让litex去search fact的时候能实现自动（如果不引入这个语法糖，那每次用户都要给一个事实取名了）。
+   2. 
