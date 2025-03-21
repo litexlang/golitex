@@ -130,7 +130,7 @@ func (parser *Parser) parsePropDecl() (*PropDecl, error) {
 }
 
 func (parser *Parser) parseExistDecl() (*PropDecl, error) {
-	parser.skip(KeywordExist)
+	parser.skip(KeywordExistProp)
 	name, err := parser.next()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -188,7 +188,7 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		return prop, nil
-	} else if stmt.Header.is(KeywordExist) {
+	} else if stmt.Header.is(KeywordExistProp) {
 		exist, err := stmt.parseDefExistStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}

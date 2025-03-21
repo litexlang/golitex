@@ -413,7 +413,7 @@ know:
 func TestExistStmt(t *testing.T) {
 	code :=
 		`
-exist P(g1 , g2 ):
+exist_prop P(g1 , g2 ):
 	cond:
 		$p(x, y)
 		forall  g , g2 :
