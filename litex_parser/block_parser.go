@@ -66,12 +66,13 @@ func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
 		return nil, fmt.Errorf("无法读取文件: %v", err)
 	}
 
-	return GetTopLevelStmtSlice(string(content))
+	s := string(content)
+	return GetTopLevelStmtSlice(&s)
 }
 
-func GetTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
-	lines := strings.Split((content), "\n")
-	blocks, _, err := parseStrBlocks(lines, 0, 0)
+func GetTopLevelStmtSlice(content *string) (*TopLevelStmtSlice, error) {
+	lines := strings.Split((*content), "\n")
+	blocks, _, err := parseStrBlocks(&lines, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -79,12 +80,12 @@ func GetTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
 	return &TopLevelStmtSlice{*blocks}, err
 }
 
-func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBlock, int, error) {
+func parseStrBlocks(lines *[]string, currentIndent int, startIndex int) (*[]strBlock, int, error) {
 	blocks := []strBlock{}
 	i := startIndex
 
-	for i < len(lines) {
-		line := lines[i]
+	for i < len(*lines) {
+		line := (*lines)[i]
 		trimLine := strings.TrimSpace(line)
 
 		// 跳过空行
@@ -103,10 +104,10 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBl
 		if strings.HasPrefix(trimLine, "/*") {
 			// 找到 */，可能跨越多行
 			j := i + 1
-			for j < len(lines) {
-				if strings.Contains(lines[j], "*/") {
-					if !strings.HasSuffix(strings.TrimSpace(lines[j]), "*/") {
-						return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", lines[j])
+			for j < len((*lines)) {
+				if strings.Contains((*lines)[j], "*/") {
+					if !strings.HasSuffix(strings.TrimSpace((*lines)[j]), "*/") {
+						return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", (*lines)[j])
 					}
 					break
 				}
@@ -135,8 +136,8 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBl
 				i++
 				// 找到下一个非空、非注释的行
 				nextLineIndex := i
-				for nextLineIndex < len(lines) {
-					nextLine := lines[nextLineIndex]
+				for nextLineIndex < len((*lines)) {
+					nextLine := (*lines)[nextLineIndex]
 					nextTrimLine := strings.TrimSpace(nextLine)
 
 					// 跳过空行和注释
@@ -148,10 +149,10 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBl
 					// 处理多行注释 /* ... */
 					if strings.HasPrefix(nextTrimLine, "/*") {
 						// 找到注释的结束位置 */
-						for nextLineIndex < len(lines) {
-							if strings.Contains(lines[nextLineIndex], "*/") {
-								if !strings.HasSuffix(strings.TrimSpace(lines[nextLineIndex]), "*/") {
-									return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", lines[nextLineIndex])
+						for nextLineIndex < len((*lines)) {
+							if strings.Contains((*lines)[nextLineIndex], "*/") {
+								if !strings.HasSuffix(strings.TrimSpace((*lines)[nextLineIndex]), "*/") {
+									return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", (*lines)[nextLineIndex])
 								}
 								nextLineIndex++
 								break
@@ -178,7 +179,7 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBl
 				}
 
 				// 如果没有找到有效的下一行，报错
-				if nextLineIndex >= len(lines) {
+				if nextLineIndex >= len(*lines) {
 					return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", trimLine)
 				}
 			} else {
@@ -194,23 +195,4 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) (*[]strBl
 	}
 
 	return &blocks, i, nil
-}
-
-func ParseSourceCodeGetTokenBlock(code string) (*[]TokenBlock, error) {
-	lines := strings.Split(code, "\n")
-	strBlocks, _, err := parseStrBlocks(lines, 0, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenBlocks := []TokenBlock{}
-	for _, strBlock := range *strBlocks {
-		block, err := TokenizeStmtBlock(&strBlock)
-		if err != nil {
-			return nil, err
-		}
-		tokenBlocks = append(tokenBlocks, *block)
-	}
-
-	return &tokenBlocks, nil
 }
