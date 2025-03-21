@@ -230,7 +230,7 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 // }
 
 func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
-	if block.Header.is(KeywordVar) {
+	if block.Header.is(KeywordObj) {
 		return block.parseDefVarStmt()
 	} else if block.Header.is(KeywordFn) {
 		return block.parseDefFnStmt()
@@ -244,7 +244,7 @@ func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
 }
 
 func (block *TokenBlock) parseInstanceMember() (InstanceMember, error) {
-	if block.Header.is(KeywordVar) {
+	if block.Header.is(KeywordObj) {
 		return block.parseDefVarStmt()
 	} else if block.Header.is(KeywordFn) {
 		return block.parseDefFnStmt()

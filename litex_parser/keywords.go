@@ -10,7 +10,7 @@ const (
 	KeywordForall               = "forall"
 	KeywordCond                 = "cond"
 	KeywordThen                 = "then"
-	KeywordVar                  = "var"
+	KeywordObj                  = "obj"
 	KeywordFn                   = "fn"
 	KeywordProp                 = "prop"
 	KeywordKnow                 = "know"

@@ -35,7 +35,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseDefPropStmt()
 	case KeywordFn:
 		ret, err = stmt.parseDefFnStmt()
-	case KeywordVar:
+	case KeywordObj:
 		ret, err = stmt.parseDefVarStmt()
 	case KeywordClaim:
 		ret, err = stmt.parseClaimStmt()
@@ -488,7 +488,7 @@ func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 }
 
 func (stmt *TokenBlock) parseDefVarStmt() (*DefVarStmt, error) {
-	err := stmt.Header.skip(KeywordVar)
+	err := stmt.Header.skip(KeywordObj)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
