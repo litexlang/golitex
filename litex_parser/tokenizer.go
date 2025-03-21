@@ -86,8 +86,8 @@ func TokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
 	body := []TokenBlock{}
 
 	// 创建一个新的 tokenizer 实例
-	t := newTokenizer(&b.Header) // 传递字符串的指针
-	headerPtr, err := t.tokenizeString()
+	curTokenizer := newTokenizer(&b.Header) // 传递字符串的指针
+	headerPtr, err := curTokenizer.tokenizeString()
 	header := *headerPtr
 
 	if err != nil || header == nil {

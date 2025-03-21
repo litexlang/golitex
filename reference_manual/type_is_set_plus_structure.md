@@ -383,3 +383,32 @@ litex 采用 ts 的做法
 
 为了方便某个type可以随时加入新的结构（只要新结构没有和已经有同名的旧有结构打架，），我应该像golang一样能随时向type里绑定新结构（用impl来证明这种绑定的正确性）
 
+--------------------
+3.21
+1. set 的声明
+   1. 根据陶哲轩分析1，set只有3种定义方式：
+      1. 一个有限集合，集合里是已经声明了的东西；
+      2. 给定一个集合，取该集合的符合特定条件的子集
+      3. axiom replacement: 有一个prop叫P(x,y)，其中x在集合A中，y任意，那存在一个集合S，它满足：forall y in S, exit x in A s.t. P(x,y) is true
+   2. 集合之间能运算：交并补
+   3. 不是所有东西都是集合，见axiom regularity
+
+// 定义法1
+set S {1,2,3}
+
+// 定义法2
+set S1 real:
+    ret > 0
+
+set S2 nat:
+    ret > 0
+    ret < 100
+
+// 定义法3
+prop P(x S, y any):
+    // ...
+
+exist_prop exist_x_st_P_is_valid(y any):
+    // ? Todo
+
+set S3 exist_x_st_P_is_valid
