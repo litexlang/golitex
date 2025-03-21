@@ -427,4 +427,18 @@ set S3 exist_x_st_P_is_valid
 
 3. interface：一族type
    1. type->interface本质上是语法糖，是为了让litex去search fact的时候能实现自动（如果不引入这个语法糖，那每次用户都要给一个事实取名了）。
+   2. interface 中的函数的一大特点是，很多函数都可能可以满足interface中的对该函数的要求。比如吃int上可以定义很多群结构：正常的+；取余数+；它们都符合群的定义。
+      1. 这也是为什么要引入type：不能直接建立set 和 interface 之间的关系：因为同一个set，可能有很多实现interface的方法。必须有个中间层type，来说明一下是以哪种方法实现的。
+
+set R
+type RAsGroup R Group:
+    __add__ impl __mul__
+    0 impl id
+    __neg__ impl __inverse__
+R impl RAsGroup // 之后 R 会被默认以RAsGroup的方式impl Group。于是Group相关的事实可以被运用在R上
+
+值得一提的是，符号以下条件的fn可能有无数个
+// 定义一个 返回值 大于0 的函数
+fn f(x R) R:
+    self > 0
 

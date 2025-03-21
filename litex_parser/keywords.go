@@ -6,8 +6,8 @@ const (
 	KeywordInterface            = "interface"
 	KeywordType                 = "type"
 	KeywordSet                  = "set"
-	KeywordTypeMember           = "type_member"
-	KeywordInstanceMember       = "instance_member"
+	KeywordTypeMember           = "type_member"     // TODO: 因为没有oop了，所以以后没了
+	KeywordInstanceMember       = "instance_member" // TODO: 待删
 	KeywordForall               = "forall"
 	KeywordWhen                 = "when"
 	KeywordCond                 = "cond" // TODO: 未来会删除
