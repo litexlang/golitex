@@ -159,12 +159,12 @@ func TestDefConceptStmt(t *testing.T) {
 		group
 	
 	type_member:
-		var 1 
+		obj 1 
 		fn f(x , y ) 
 		prop f(x , y )
 
 	instance_member:
-		var 1 
+		obj 1 
 		fn f(x , y ) 
 		prop f(x , y )
 
@@ -259,7 +259,7 @@ func TestParseDefTypeStmt(t *testing.T) {
 // type  T2
 type   T:
 	type_member:
-		var 1 
+		obj 1 
 		fn P(g , g2 ) :
 			cond:
 				$f(g.g1, g2.g2)
@@ -272,12 +272,12 @@ type   T:
 				$f(g.g1, g2.g2)
 		type  T:
 			type_member:
-				var 3 
+				obj 3 
 				fn f(x , y ) 
 				prop f(x , y )
 		
 			instance_member:
-				var 1 
+				obj 1 
 				fn f(x, y ) 
 				prop f(x , y )
 
@@ -285,7 +285,7 @@ type   T:
 				$p(x, y)
 	
 	instance_member:
-		var 2 
+		obj 2 
 		fn P(g, g2 ) :
 			cond:
 				$f(g.g1, g2.g2)
@@ -334,11 +334,11 @@ forall g , g2:
 
 }
 
-func TestParseVarStmt(t *testing.T) {
+func TestParseObjStmt(t *testing.T) {
 	code :=
 		`
-var g 
-var g :
+obj g 
+obj g :
     $p(x, y)
 `
 	statements, err := ParserTester(code)
@@ -423,7 +423,7 @@ exist P(g1 , g2 ):
 				$p(x, y)
 
 	instance_member:
-	    var 1 
+	    obj 1 
 		fn f(x , y ) 
 
 	then:
@@ -438,12 +438,12 @@ exist P(g1 , g2 ):
 
 }
 
-func TestVarDeclStmt(t *testing.T) {
+func TestObjDeclStmt(t *testing.T) {
 	code :=
 		`
-var g1
+obj g1
 
-var a :
+obj a :
 	$p(a)
 `
 	statements, err := ParserTester(code)
@@ -502,7 +502,7 @@ as(p (a), nat) is red
 	}
 }
 
-func TestTypedTypeVar(t *testing.T) {
+func TestTypedTypeObj(t *testing.T) {
 	code :=
 		`
 as( p(a, as(p (a), nat)) , G ) is red
@@ -516,7 +516,7 @@ as( p(a, as(p (a), nat)) , G ) is red
 	}
 }
 
-func TestDefPropVar(t *testing.T) {
+func TestDefPropObj(t *testing.T) {
 	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	// 1 is red
 
@@ -538,7 +538,7 @@ prop ha (g1 , g2  ) :
 	}
 }
 
-func TestPropVar(t *testing.T) {
+func TestPropObj(t *testing.T) {
 	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
 	// 1 is red
 

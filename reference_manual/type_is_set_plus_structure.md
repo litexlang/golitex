@@ -427,4 +427,4 @@ set S3 exist_x_st_P_is_valid
 
 3. interface：一族type
    1. type->interface本质上是语法糖，是为了让litex去search fact的时候能实现自动（如果不引入这个语法糖，那每次用户都要给一个事实取名了）。
-   2. 
+
