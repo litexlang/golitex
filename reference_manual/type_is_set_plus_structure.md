@@ -488,6 +488,7 @@ f = d
 zzy
 1. interface 之间的继承
    1. semi-group impl group
+   2. 不只是set之间的继承：R to C
    
 know prop fact_about_a_group(s set, id fn, inv fn, __mul__ fn, x s, y s, z s):
     cond:
@@ -529,4 +530,44 @@ fn exist_nat_less_than
 
 exist_nat_less_than(100) > 2
 
-目前先送给用户数归法这个prop，日后实现prop generator
+目前先送给用户数归法这个prop，日后实现prop generator：prop generator 和 普通prop的本质不同是，prop generator能读入fact作为参数
+
+prop 能读入prop，但是fn不能？
+fn：按集合论的定义，不涉及到prop；但是prop貌似需要？因为本质上prop和fn就不是一种东西，所以prop能读入prop，fn不能读入prop，也没有破坏对称性
+1. 如果你把prop放在type里（比如你把<放入类型），那相当于也就是往prop里传prop参数
+2. 如果你允许prop能读入prop，那一些事实的实现会非常容易，比如数学归纳法
+
+prop mathematical_induction(p prop):
+    $p(0)
+    forall n nat:
+        $p(n)
+        then:
+            $p(n+1)
+    then:
+        forall n nat;
+            $p(n)
+
+know forall p prop:  // 这里有个怪异的地方：forall我会认为你输入的，都是一个集合里的东西，但是你这里的prop，代表的是一个集合吗？？？需要思考一下会不会导致严重问题
+    $mathematical_induction(p)
+
+如果说引入新的keyword：
+prop_prop mathematical_induction(p prop):
+    $p(0)
+    forall n nat:
+        $p(n)
+        then:
+            $p(n+1)
+    then:
+        forall n nat;
+            $p(n)
+
+know forall_prop  p prop: 
+    $mathematical_induction(p)
+
+// mathematical induction 也能被当做prop被传到prop prop里
+prop_prop Q(p prop):
+    //...
+
+$Q(mathematical_induction)
+
+思考一下如果我不允许函数和prop的名字冲突，那我$是否必要呢??
