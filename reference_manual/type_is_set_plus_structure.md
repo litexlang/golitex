@@ -238,6 +238,15 @@ struct 是对 不同集合，及其上的运算，的pattern的归总。相当�
 
 所以本质上type，struct是不必要的。可以用prop和claim模拟出来。但是为了语法糖和让我search更容易（用户不需要给每个事实取个名字），我引入type和struct
 
+e.g. 形式化论断：对于任何集合，对于任何在该集合中的元素，这个元素在这个集合
+prop forall_set_forall_element_in_set(s set):
+    forall x s:
+        x in s
+
+// 用interface。注意到set既可以视作类型，也能视作interface
+forall < s set > x s:
+    x in s
+
 写在函数里面的cond，应该以set形式写在函数外面
 // 不好
 fn f(x):
