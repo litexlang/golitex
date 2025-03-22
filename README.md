@@ -169,6 +169,8 @@ One important type of specific factual expression is the existential factual exp
 
 ### Constructive Expressions
 
+<!-- TODO: THIS SECTION IS OBSOLETE -->
+
 ```
 // declare a type
 type Human:
@@ -193,7 +195,6 @@ struct Group G: // suppose G is a group
     type_member:
         fn __mul__(g G, g2 G) G // define *
         obj I G // define identity
-    member:
         fn inv() G  // inverse a given group element
     cond:
         forall v1 G, v2 G, v3 G: // equivalent to G.__mul__ is associative
@@ -218,9 +219,9 @@ know forall x *T :
 
 ```
 claim:
-      forall (x Human) {x is self_aware}
-      prove:
-            x is self_aware // if x Human, then x is self_aware immediately
+    forall (x Human) {x is self_aware}
+    prove:
+        x is self_aware // if x Human, then x is self_aware immediately
 
 claim:
     forall (x any) x is not self_aware { x is not Human}
