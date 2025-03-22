@@ -20,7 +20,7 @@ The potential impacts of Litex include: enabling proof verification (including L
 
 Mathematics is fundamentally about abstraction, and computer science is the discipline that studies abstraction. At its core, all other impacts of Litex are extensions of this foundational idea. Technically, Litex = math + programming language + data base. The ultimate goal of Litex is to harness programming concepts and tools to tackle challenges in mathematics, making the elegance of math accessible and enjoyable for everyone.
 
-## Why should you learn Litex?
+## Why learn Litex?
 
 Litex has the potential to greatly impact both mathematics and AI:
 
@@ -29,7 +29,7 @@ Litex has the potential to greatly impact both mathematics and AI:
   
   - **For the whole mathematics community**, since Litex ensures correctness, the need for paper reviews is eliminated. This fosters trust and enables large-scale collaboration, akin to a "GitHub for Math", because strangers can trust each other's proofs and collaborate to solve problems.
   
-  - **For AI-Driven Math Exploration**: AI excels at solving a wide range of problems quickly. Instead of proving single facts, some mathematicians are trying to expand AI's generalization in math, allowing it to solve thousands of issues simultaneously. AlphaProof is a great example. Litex can greatly speed up this progress, because it addresses many currently insurmountable bottlenecks in AI training.
+  - **For AI-Driven Math Exploration**: AI excels at solving a wide range of problems quickly. Instead of proving single facts, mathematicians are now trying to expand AI's generalization in math, allowing it to solve thousands of issues simultaneously. AlphaProof is a great example. Litex can greatly speed up this progress, because it addresses many insurmountable bottlenecks in AI training: dataset, reward function and so on.
   
 
 - **For AI**:
@@ -39,7 +39,7 @@ Because Litex is an order of magnitude simpler than traditional proof assistants
   - **Automated Verification**:
 Litex can automatically verify LLM outputs for math problems, providing a reliable way to validate and refine their reasoning. This capability is crucial for improving the accuracy and robustness of LLMs in mathematical tasks, e.g. It can act as a universal solution for value function for Reinforcement Learning.
 
-  - **The bridge between symbolic and neural AI**: While neural network AIs dominate machine learning today, we must not overlook symbolic AI's profound contributions, such as modern programming languages. Litex serves as a solid bridge between these two seemingly disparate fields. Integrating verification (search) into existing AI systems that currently focus only on training (computation) can be a very promising starting point. 
+  - **The bridge between symbolic and neural AI**: While neural network AIs dominate machine learning today, we must not overlook symbolic AI's profound contributions. Litex serves as a solid bridge between these two seemingly disparate fields. Integrating verification (searching) into existing AI systems that currently focus only on training (computation) can be a very promising starting point. 
 
 Mathematics and the ability to understand it are built-in capabilities of the human brain . Litex itself is a tool of exquisite innovation. Writing in Litex is enjoyable because it eliminates extra mental burden from the language itself, allowing users to fully immerse themselves in the elegance of mathematics. 
 
@@ -51,7 +51,7 @@ _Mathematics is nothing more than a game played according to certain simple rule
 
 _-- David Hilbert_
 
-Litex is a language which strikes the right balance between power and simplicity. The goal in this section is to show the essential elements of the language through examples. To learn more, visit https://github.com/litexlang/golitex . There are already nearly 2000 commits in this Github repo. The official Litex website https://litexlang.org is under development. 
+Litex is a language which strikes the right balance between expressiveness and simplicity. The goal in this section is to show the essential elements of the language through examples. To learn more, visit https://github.com/litexlang/golitex . There are already nearly 2000 commits in this Github repo. The official Litex website https://litexlang.org is under development. 
 
 For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions.
 
@@ -69,7 +69,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
       <code>type Human</code> <br><br>
       <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;x is self_aware</code> <br> <br>
-      <code>var Bob Human</code> <br> <br>
+      <code>obj Bob Human</code> <br> <br>
       <code>Bob is self_aware</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
@@ -89,13 +89,13 @@ Litex reduces typing by eliminating the need to name or recall individual facts.
 
 ### Factual Expressions
 
-In Litex, expressions are divided into two types: factual and constructive. Factual expressions declare truths, which Litex verifies, enabling "facts built on facts." Constructive expressions introduce new elements like types, variables, functions, or propositions, on which facts are established.
+In Litex, expressions are divided into two types: factual and constructive. Factual expressions declare truths, which Litex verifies, enabling "facts built on facts." Constructive expressions introduce new elements like types, objects, functions, or propositions, on which facts are established.
 
 ```
-var Bob Human:
+obj Bob Human:
     Bob.age = 10
 
-var Alice Human // Declaring a variable without giving values to its members is valid.
+obj Alice Human // Declaring a object without giving values to its members is valid.
 
 fn add(a Real, b Real) Real:
     then:
@@ -106,26 +106,26 @@ prop younger(a Human, b Human):
         a.age < b.age
 ```
 
-Every fact in Litex must be tied to a concrete entity: variable (`var`), function (`fn`), or proposition (`prop`). Users must declare variables before use, and every entity has a type.
+Every fact in Litex must be tied to a concrete entity: object (`obj`), function (`fn`), or proposition (`prop`). Users must declare objects before use. Any object must belong to a set.
 
-Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a variable, with the distinctive feature being its ability to be positioned before the ().
+Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
 
-Users can think of a function as something that takes parameters that satisfy the condition of fn and combines them to form a new symbol of symbols. It works like struct in C: allows users to group together variables of satisfying certain conditions under a single name. 
+Users can think of a function as something that takes parameters that satisfy the condition of fn and combines them to form a new symbol of symbols. It works like struct in C: allows users to group together objects of satisfying certain conditions under a single name. 
 
 ```
-var Bob Human
+obj Bob Human
 
-// specific
+// specific factual expression
 Bob is self_aware
 
-// conditional
-if:
+// conditional factual expression
+when:
     Bob.age = 10    // conditions
     then:
         Bob is young    // true
 
-// universal
-forall x Human, y Human:    // declare variables in the universal expression
+// universal factual expression
+forall x Human, y Human:    // declare objects in the universal expression
     cond:
         x.age < y.age   // conditions
     then:
@@ -137,7 +137,7 @@ Litex supports three types of factual expressions. Once verified or known to be 
    - `$younger(x, y)` where `$` is followed by the proposition name `younger` and parameters `x, y`.
    - If there’s only one parameter, it can be written as `parameter is prop name`, like `Bob is young`.
    - For built-in operators (e.g., `<`), simply write expressions like `1 < 2`.
-2. Conditional: Begins with the keyword `if`.
+2. Conditional: Begins with the keyword `when`.
 3. Universal: Begins with the keyword `forall`.
 Different types of factual expressions are stored, retrieved, verified differently.
 
@@ -151,7 +151,7 @@ This design mirrors human reasoning when evaluating proofs: confirming correctne
 ```
 exist_prop exist_nat_less_than(n Nat):
     have:
-         var m Nat
+         obj m Nat
     then:
         m < n
 
@@ -162,10 +162,10 @@ know forall n Nat:
         $exist_nat_less_than(n)
 
 $exist_nat_less_than(100) // As a specific factual expression, it is true.
-have m Nat: $exist_nat_less_than(2)   // Introduce new variable, m, to current proof environment
+have m Nat: $exist_nat_less_than(2)   // Introduce new object, m, to current proof environment
 ```
 
-One important type of specific factual expression is the existential factual expression. When verified, existential expressions behave identically to ordinary specific expressions. The key distinction lies in their use within a have statement, which provides a safe mechanism to introduce new variables into the current environment.
+One important type of specific factual expression is the existential factual expression. When verified, existential expressions behave identically to ordinary specific expressions. The key distinction lies in their use within a have statement, which provides a safe mechanism to introduce new objects into the current environment.
 
 ### Constructive Expressions
 
@@ -173,12 +173,12 @@ One important type of specific factual expression is the existential factual exp
 // declare a type
 type Human:
       member:
-          var age Nat
+          obj age Nat
 
 // declare a struct
 struct Euclid_Space S:
     type_member:
-        var dim Nat
+        obj dim Nat
         fn __add__(v1 S, v2 S) real
     member:
         fn __at__(n Nat) Real:
@@ -192,7 +192,7 @@ struct Euclid_Space S:
 struct Group G: // suppose G is a group
     type_member:
         fn __mul__(g G, g2 G) G // define *
-        var I G // define identity
+        obj I G // define identity
     member:
         fn inv() G  // inverse a given group element
     cond:
@@ -207,8 +207,8 @@ In Litex, a type = set + structure (This is inspired by Niklaus Wirth's "Algorit
 
 <!-- TODO: Interplay of set and type -->
 
-<!-- var s make_set[Nat]  // 把所有的Nat放到这个叫s的集合里
-var all_sets make_set[Set] // 把所有集合放到集合里。这在现代集合论里是有问题的，但是litex不会报错，因为var是一个默认你声明的东西存在的关键词
+<!-- obj s make_set[Nat]  // 把所有的Nat放到这个叫s的集合里
+obj all_sets make_set[Set] // 把所有集合放到集合里。这在现代集合论里是有问题的，但是litex不会报错，因为obj是一个默认你声明的东西存在的关键词
 
 know forall x *T :
 	x in make_set[T]
@@ -240,7 +240,7 @@ prove_exist  exist_nat_less_than(100) 99:
 
 Sometimes, we want to prove a fact without letting the lengthy proof process clutter the main environment. In such cases, we use the `claim` keyword, followed by the `prove` keyword to conduct the proof within it. Ultimately, only the main fact proven under the `claim` will remain in the main environment.
 
-Special proof statements include existential proof (proving the existence of variables) and implementation proof (showing a type's structure aligns with another type or struct). Implementation builds relationships (`type impl type`) or abstractions (`type impl struct`).
+Special proof statements include existential proof (proving the existence of objects) and implementation proof (showing a type's structure aligns with another type or struct). Implementation builds relationships (`type impl type`) or abstractions (`type impl struct`).
 
 ### Another example
 
@@ -273,7 +273,7 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 
 ### Summary
 
-0. Basic Elements: Propositions, variables, and functions, each with a type.
+0. Basic Elements: Propositions, objects, and functions, each with a type.
 1. Type: A type = set + structure.
 2. Concept: A set of types sharing the same structure.
 3. Abstraction: Built via the `impl` keyword, defining relationships between types, structs, and structures.
@@ -282,10 +282,10 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 6. Verification: Uses pattern-based matching of known facts, eliminating the need to name every fact.
 7. Generics: Sets as parameters with conditions on types or elements.
 8. Math vs. Programming: Math focuses on search and existence, not execution. Litex types are more expressive than programming types.
-9. Litex vs. Standard Math: Sets (as types) cannot be passed like variables due to their structural roles.
+9. Litex vs. Standard Math: Sets (as types) cannot be passed like objects due to their structural roles.
 
 <!-- TODO -->
-<!-- 2. an array of countable numbers of variables of the same type: Array      \[ typeName \]( numberOfObjiables ) -->
+<!-- 2. an array of countable numbers of objects of the same type: Array      \[ typeName \]( numberOfObjiables ) -->
 
 <!-- 3. Expansion of Polynomials -->
 
@@ -318,7 +318,7 @@ Existing formal languages are complex, even for mathematicians, as they include 
 
 To put it in another way, traditional proof assistant are implemented to prove some hardcore mathematical theories, while Litex is designed to solve practical problems for everyone. Within traditional proof assistants, there is a much smaller and cleaner language akin to Litex struggling to get out.
 
-Litex’s syntax uses just ~20 keywords: `var`, `fn`, `prop`, `type`, `struct`, `forall`, `cond`, `if`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`, `instance_member`, `type_member`, `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
+Litex’s syntax uses just ~20 keywords: `obj`, `fn`, `prop`, `type`, `struct`, `forall`, `cond`, `if`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`, `instance_member`, `type_member`, `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
 
 By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification.
 
@@ -326,7 +326,7 @@ By understanding the interplay between programming and math, Litex delivers a se
 
 Litex is significantly influenced by the Go programming language, particularly in its "set=>type=>interface" system, which closely mirrors Go's "struct=>type=>interface" paradigm. Additionally, Litex's function declaration syntax bears a resemblance to Go's. Most importantly, the minimalism design choice of Go strongly resonates with the Litex's inventor.
 
-Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to variable and function scope.
+Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope.
 
 The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. This influence is evident in Litex's design, where every statement is treated as an expression a direct nod to Lisp's expressive power. The marvelous "structure and interpretation of computer programs", a book on Lisp, strongly shapes the inventor's view of what programming actually means.
 
