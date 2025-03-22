@@ -440,7 +440,7 @@ set S3 exist_x_st_P_is_valid
       1. 这也是为什么要引入type：不能直接建立set 和 interface 之间的关系：因为同一个set，可能有很多实现interface的方法。必须有个中间层type，来说明一下是以哪种方法实现的。
 
 set R
-type RAsGroup R Group: // 表示 集合R上的Type RAsGroup implement  interface叫Group
+    type RAsGroup R implements Group: // 表示 集合R上的Type RAsGroup implement  interface叫Group
     __add__ impl __mul__
     0 impl id
     __neg__ impl __inverse__
@@ -483,4 +483,50 @@ f = d
                 $g(x,y)
         然后你先证明$h(a,b)，然后手动说明一下 $g(a,b)
         或许我可以引入iff这个语法糖，让上面的操作（search）自动进行
-    3. 
+
+3.22
+zzy
+1. interface 之间的继承
+   1. semi-group impl group
+   
+know prop fact_about_a_group(s set, id fn, inv fn, __mul__ fn, x s, y s, z s):
+    cond:
+        $Group(s,id,inv,fn)
+    then:
+        x * y * z = x * (y * z)
+
+
+int impl IntAsGroup // 从这个时刻开始，把int看成type IntAsGroup
+IntAsGroup impl Group
+know forall < G Group > x G, y G, z G:
+    x * y * z = x * (y * z)
+
+// ...
+1 * 2 * 3 = 1 * (2  * 3)
+
+2 > 1
+
+add(1,2) + add(2,3) > 1000
+
+exist_prop exist_nat_less_than(n Nat):
+    have:
+         obj m Nat
+    then:
+        m < n
+
+know forall n Nat:
+    cond:
+        n > 0
+    then:
+        $exist_nat_less_than(n)
+
+$exist_nat_less_than(100) // As a specific factual expression, it is true.
+have m Nat: $exist_nat_less_than(2)   // Introduce new object, m, to current proof environment
+
+exist_nat_less_than(100) = (1 = 1) // 实现这个功能没有意义，同时会混淆=的语义
+
+fn exist_nat_less_than
+
+exist_nat_less_than(100) > 2
+
+目前先送给用户数归法这个prop，日后实现prop generator
