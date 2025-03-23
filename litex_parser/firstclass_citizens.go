@@ -53,7 +53,7 @@ func (f *FcFnRet) String() string {
 	return outPut
 }
 
-// used for variables that are returned by called function, e,g. f().g().h().  The chain is connected by dots
+// used for objects that are returned by called function, e,g. f().g().h().  The chain is connected by dots
 
 // func (f *FcChain) String() string {
 // 	ret := ""

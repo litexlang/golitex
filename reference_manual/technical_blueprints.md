@@ -26,7 +26,7 @@ In short, **The fundamental difference** between Litex and traditional proof ass
 
 ## Litex Expressions
 
-There are only two kinds of expressions in Litex: constructive expressions and factual expressions. Factual expressions are used by the user to declare some facts as true. Litex then verifies whether these facts are indeed correct. If they are correct, these new facts are added to the proof environment, where they can be used to verify subsequent facts. Constructive expressions are for introducing new elements in proofs, such as new types, new variables, new functions, or new structs.
+There are only two kinds of expressions in Litex: constructive expressions and factual expressions. Factual expressions are used by the user to declare some facts as true. Litex then verifies whether these facts are indeed correct. If they are correct, these new facts are added to the proof environment, where they can be used to verify subsequent facts. Constructive expressions are for introducing new elements in proofs, such as new types, new objects, new functions, or new structs.
 
 ### Factual Expressions
 
@@ -54,7 +54,7 @@ There are different kinds of factual expressions: specific (instantiated), condi
 
 ```plaintext
 // Comments are written after "//".
-var Bob Human
+obj Bob Human
 
 // specific
 Bob is self_aware
@@ -66,7 +66,7 @@ if:
         Bob is young    // results
 
 // universal
-forall x Human, y Human:    // declare variables in the universal expression
+forall x Human, y Human:    // declare objects in the universal expression
     cond:
         x.age < y.age   // conditions
     then:
@@ -85,7 +85,7 @@ if:
 When the user input a conditional expression, the interpreter first opens a new proof environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the conditional expression is true.
 
 ```
-forall x Human, y Human:    // declare variables in the universal expression
+forall x Human, y Human:    // declare objects in the universal expression
     cond:
         x.age < y.age   // conditions
     then:
@@ -95,7 +95,7 @@ forall x Human:
     x is self_aware // If there is no further condition, 'cond' and 'then' can be eliminated
 ```
 
-When the user input a universal expression, the interpreter first opens a new proof environment and declare variables written after the 'forall' keyword in this new environment. In this new environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the universal expression is true. Notice the main difference between the conditional expression and the universal expression is whether new variables are involved.
+When the user input a universal expression, the interpreter first opens a new proof environment and declare objects written after the 'forall' keyword in this new environment. In this new environment, the interpreter set all conditions to be true and verifies resulting factual expressions. If all results are true, the universal expression is true. Notice the main difference between the conditional expression and the universal expression is whether new objects are involved.
 
 ```
 // Different forms of specific factual expressions
@@ -128,8 +128,8 @@ There is one important kind of specific factual expression: existential factual 
 // declare a existential proposition
 
 exist_prop exist_nat_less_than(n Nat):
-    have: // when being called by have statement, variables below will be introduced in proof environment
-        var m Nat
+    have: // when being called by have statement, objects below will be introduced in proof environment
+        obj m Nat
     then:
         m < n
 
@@ -141,15 +141,15 @@ know forall n Nat:
 
 $exist_nat_less_than(100) // As a specific factual expression, it is true.
 
-have m Nat: $exist_nat_lss_than(2)   // Introduce new variable, m, to current proof environment
+have m Nat: $exist_nat_lss_than(2)   // Introduce new object, m, to current proof environment
 ```
 
-Notice when being verified as a specific factual expression, there is no difference between existential factual expressions and ordinary specific expressions. The only difference between existential factual expressions and ordinary specific expressions is, it can be called in "have statement", which is a safe way to introduce new variables in current environment.
+Notice when being verified as a specific factual expression, there is no difference between existential factual expressions and ordinary specific expressions. The only difference between existential factual expressions and ordinary specific expressions is, it can be called in "have statement", which is a safe way to introduce new objects in current environment.
 
 
 ### Constructive Expressions
 
-Every fact must be associated with some concrete object or entity; it cannot exist independently without being tied to something specific. There are three kinds of entities in Litex: variable(var), function(fn), and proposition(prop). The user must first declare a variable before using it. Any entity has a type.
+Every fact must be associated with some concrete object or entity; it cannot exist independently without being tied to something specific. There are three kinds of entities in Litex: object(obj), function(fn), and proposition(prop). The user must first declare a object before using it. Any entity has a type.
 
 <!-- TODO: I have not implemented the type of function and prop yet. The major obstacle is: if I view cond as a component of a prop or fn, how to implement this? Or should I just pass undefined f like fun(f fun) and wait till the runtime to check validation of type? I guess f fn wait of doing is every reasonable    existential propositions are used in the same way as how ordinary propositions. The only difference between existential propositions. exist is eql to not forall-->
 
@@ -158,7 +158,7 @@ Every fact must be associated with some concrete object or entity; it cannot exi
 
 type Human:
     member:
-        var age Natural
+        obj age Natural
 ```
 <!-- TODO: Better -->
 In Litex, `type` = `set` + `structure`. The set defines the possible values of the data, while the structure (such as operations, special elements, or axioms) gives the data specific behaviors or constraints. The way to define a structure is by specifying different `type_member` and `member`.
@@ -177,12 +177,11 @@ In programming, such information is typically encapsulated within an instance of
 
 <!-- TODO: "A impl B" is where abstraction layer changes: B is higher abstraction, A is lower. If you want to jump between abstraction layer, use impl. Here A can be struct or type, B is struct. NEED TO EMPHASIZE THAT JUMPING BETWEEN DIFFERENT ABSTRACTION LAYER IS DONE BY impl -->
 
-<!-- TODO: NEED TO EMPHASIZE HOW TO "RELATE" fc with TYPE: Type has var_member; HOW to "relate"  fc1 (type1) with fc2 (type2) : type1 has var_member fc2 type2; -->
 
 `type` has the following functionalities:
 
 - **As as Set**:
-The statement var x type_name means that x has the type type_name. Mathematically, this means x belongs to the set called type_name. For example, `var n Real` means n is a real number, i.e., n is in the set of all real numbers. As in most programming languages, every object has a type. However, the object might not have a specific "value" because, in many cases, it is the type of the variable (not its value) that determines its relationships with other objects. For example, no matter what a positive number equals to, it is larger than 0. Since a variable can belong to multiple sets (e.g. 1 is both a real number and a natural number), a variable can have multiple types.
+The statement obj x type_name means that x has the type type_name. Mathematically, this means x belongs to the set called type_name. For example, `obj n Real` means n is a real number, i.e., n is in the set of all real numbers. As in most programming languages, every object has a type. However, the object might not have a specific "value" because, in many cases, it is the type of the object (not its value) that determines its relationships with other objects. For example, no matter what a positive number equals to, it is larger than 0. Since a object can belong to multiple sets (e.g. 1 is both a real number and a natural number), a object can have multiple types.
 
 - **Determine Meaning of Operations**:
 Objects of different types support different operations and propositions. For example, when a and b are positive natural numbers, expressions like a^b (multiplying a by itself b times) and a < b are well-defined and meaningful. However, when a and b are matrices, operations like a^b and a < b are not standard notations and may not make sense. Importantly, an object should never be passed to a proposition or function if the parameter types do not match the type of that object. This ensures that operations and functions are applied only in contexts where they are well-defined.
@@ -196,29 +195,29 @@ In programming, a type is typically called a "interface" (in C) or a "class" (in
 
 <!-- TODO: below are not well written -->
 
-Everything in Litex is represented by a symbol(a single word). Objiables, Functions, Types, propositions are all represented by a single symbol or composited symbol. Function, variable and proposition are called first-class citizens of Litex, because they can be passed to function/proposition parameters and behave as return value.
+Everything in Litex is represented by a symbol(a single word). Objiables, Functions, Types, propositions are all represented by a single symbol or composited symbol. Function, object and proposition are called first-class citizens of Litex, because they can be passed to function/proposition parameters and behave as return value.
 
 ``` text
-// declare a variable
+// declare a object
 
-var Bob Human: // variable name is Bob, variable type is Human
+obj Bob Human: // object name is Bob, object type is Human
     Bob.age = 10 // Age of Bob is known to be 10
 
-var Alice Human // just declare a variable, no extra known factual expressions involved
+obj Alice Human // just declare a object, no extra known factual expressions involved
 
 have m Nat: $exist_nat_lss_than(2)
 ``` 
 
-In mathematics, a variable is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Objiables are used in factual expressions.
+In mathematics, a object is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Objiables are used in factual expressions.
 
-Notice the variable you introduce to current environment might not exist. For example, the type of your variable might be an empty set. To make variable declaration safe, you can use "have" statement. "have" statement is valid only when the related existential factual expression is true.
+Notice the object you introduce to current environment might not exist. For example, the type of your object might be an empty set. To make object declaration safe, you can use "have" statement. "have" statement is valid only when the related existential factual expression is true.
 
 <!-- HERE WE LACK HOW TO INTRODUCE A GROUP OF VARIABLES LIKE NAT USING REGEX -->
 
 ```plaintext
 // declare a function
 
-// input 2 variables with type Real, output variable with type Real
+// input 2 objects with type Real, output object with type Real
 fn add(a Real, b Real) Real:
     then:
         add(a, b) = add(b, a)   // facts about function add
@@ -228,11 +227,11 @@ add(1 ,2) = add(2, 1)
 1 + 2 = 2 + 1
 ```
 
-Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a variable, with the distinctive feature being its ability to be positioned before the ().
+Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
 
 Function parameter list can receive first-class citizens. Function type list can receive type struct pair. You can bind conditions to parameters that appear in function parameters list. The result of the function output have some properties, which appear in then block.
 
-In Litex, `var` could essentially be entirely replaced by `fn`, `fn` variable is simply a more versatile version of `var` variable: `fn` has the capability to precede parentheses (). For the time being, Litex retains `var`, but its future necessity remains uncertain.
+In Litex, `obj` could essentially be entirely replaced by `fn`, `fn` object is simply a more versatile version of `obj` object: `fn` has the capability to precede parentheses (). For the time being, Litex retains `obj`, but its future necessity remains uncertain.
 
 ``` text
 // declare a proposition
@@ -246,16 +245,16 @@ All specific factual expressions have related proposition name. For example, a =
 
 The difference between a proposition (prop) and a factual expression is that a prop simply assigns a name to a statement, without determining its validity. On the other hand, a factual expression is meant to be evaluated, yielding an output value of true, false, unknown, or error.
 
-<!-- There is no struct parameter list because you can infinitely iterate over that and If you truly what to bind properties to a struct, you should invent math in Litex and make what you are thinking about in variable and add layer to that variable. -->
+<!-- There is no struct parameter list because you can infinitely iterate over that and If you truly what to bind properties to a struct, you should invent math in Litex and make what you are thinking about in object and add layer to that object. -->
 
-<!-- You can make everything a function, because function are just variables that can appear before the () in expressions like f(). If you bind no extra features to that function, e.g. fn f() any. then f works like a variable. -->
+<!-- You can make everything a function, because function are just objects that can appear before the () in expressions like f(). If you bind no extra features to that function, e.g. fn f() any. then f works like a object. -->
 
 <!-- challenge: how to implement or as syntax sugar?  -->
 
 ```plaintext
 struct Euclid_Space S:   // suppose S is a Rn
     type_member:
-        var dim Nat // dim is positive natural number
+        obj dim Nat // dim is positive natural number
         fn __add__(v1 S, v2 S) Real
     member:
         fn __at__(n Nat) Real: // define @, which means the nth index of the 
@@ -269,7 +268,7 @@ struct Euclid_Space S:   // suppose S is a Rn
 
 In this example, we define a struct called Euclidean Space. Sometimes it is crucial to pass "the type of the type" to a proposition, just like how programmers uses templates to pass parameter types to functions. That is where struct comes into place.
 
-Euclidean space is a set of all finite dimensional spaces. S.dim represents the dimension of the space. Typically we write "Let S is R^{n}, where n can be any natural number", now we just write "S Euclid" and S.dim is automatically reserved for us. Notice how undefined variables "x" or "n" are "hidden" as a member of another symbol here. That is why OOP is crucial for simplicity and strictness of Litex.
+Euclidean space is a set of all finite dimensional spaces. S.dim represents the dimension of the space. Typically we write "Let S is R^{n}, where n can be any natural number", now we just write "S Euclid" and S.dim is automatically reserved for us. Notice how undefined objects "x" or "n" are "hidden" as a member of another symbol here. That is why OOP is crucial for simplicity and strictness of Litex.
 
 "Forall Euclidean space S and x in S" in math can be translated to "forall [S Euclid_Space] x S: " in Litex. Here S is a type and Euclid_Space is the type of S, i.e. type of type.
 
@@ -282,7 +281,7 @@ Explain every time you define a type, a special member is automatically generate
 struct Group G: // suppose G is a group
     type_member:
         fn __mul__(g G, g2 G) G // define *
-        var I G // define identity
+        obj I G // define identity
     member:
         fn inv() G  // inverse a given group element
     cond:
@@ -319,7 +318,7 @@ Another question is, how do we describe the situation where one set "extends" an
 
 In mathematics, to extend a structure (like the real numbers) means to create a larger structure (like the complex numbers) that includes the original structure as a subset while preserving its properties and adding new features (In category theory it is called embedding).
 
-That is what "type implement another type" means in Litex. What does this extend mean? It means there is an injection from all variables from one type to another, members of original type implements the extended type and maintain its original features.
+That is what "type implement another type" means in Litex. What does this extend mean? It means there is an injection from all objects from one type to another, members of original type implements the extended type and maintain its original features.
 
 ### Litex Statements
 
@@ -379,9 +378,9 @@ It is important to write clean and understandable proof. From my experience, the
 
 - Don't generalize at the very beginning. Instead of generalizing your proposition or type members to Euclid Space of all dimensions, stick to special cases like R2 or R3 first. After that, use "impl" keyword to implement them into more generalized cases. Litex is flexible enough for you to start your proof from any level of abstraction.
 
-- Global variables are dangerous. Only the most important variables, like empty_set, should be used globally. Temporary variables like 'x' or 'n' must be enclosed in a local scope.
+- Global objects are dangerous. Only the most important objects, like empty_set, should be used globally. Temporary objects like 'x' or 'n' must be enclosed in a local scope.
 
-- Detailed Naming is recommended. When you formalize a new struct, a new function, or a new variable, please write the meaning or purpose of that symbol in its name. Otherwise, people soon forgets what function "f()" means.
+- Detailed Naming is recommended. When you formalize a new struct, a new function, or a new object, please write the meaning or purpose of that symbol in its name. Otherwise, people soon forgets what function "f()" means.
 
 - If the same pattern of proof appear again and again, you should enclose such kind of proof in a single `forall` expression or a proposition.
 
@@ -427,7 +426,7 @@ When the inverse of input factual expression is true, the interpreter outputs fa
 
 In Python, it is legal to write f(1 < 2), here the function f receives the result of 1 < 2 as input.
 
-In Litex, passing a factual expression like "1 < 2" to a function is illegal because its output is emitted outside the Litex runtime. Only variables, functions, and propositions can be passed. To use boolean values, you must first formalize boolean theory within Litex. Avoid conflating internal function "values" with "external world" values.
+In Litex, passing a factual expression like "1 < 2" to a function is illegal because its output is emitted outside the Litex runtime. Only objects, functions, and propositions can be passed. To use boolean values, you must first formalize boolean theory within Litex. Avoid conflating internal function "values" with "external world" values.
 
 Any mechanical algorithm can be formalized by math. Ideally, since Litex is mechanical, and since Litex is designed to formalize math, the users should be able to formalize Litex in Litex.
 

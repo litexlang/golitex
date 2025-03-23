@@ -31,7 +31,7 @@ func (parser *Parser) parseFcAtomAndFcFnRet() (Fc, error) {
 
 // func (parser *Parser) parseFcChain(curFc FcChainMem) (*FcChain, error) {
 // 	fcArr := []FcChainMem{curFc}
-// 	var err error = nil
+// 		err := error(nil)
 // 	for !parser.ExceedEnd() && parser.is(KeywordDot) {
 // 		err = parser.skip(KeywordDot)
 // 		if err != nil {
@@ -82,7 +82,7 @@ func (parser *Parser) parseFcFnRetVal(optName FcAtom) (*FcFnRet, error) {
 }
 
 func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]FcFnParams, error) {
-	var err error
+	err := error(nil)
 
 	pairs := []FcFnParams{}
 

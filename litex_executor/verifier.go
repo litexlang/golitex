@@ -125,7 +125,7 @@ func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *memory.Env, stmt 
 
 func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.FuncFactStmt) (*memory.Node[*parser.FuncFactStmt], error) {
 	curNode := exec.env.FuncFactMemory.Mem.Root
-	var err error = nil
+	err := error(nil)
 	searched := false
 	for curNode != nil {
 		// * 这里需要遍历当前的curNode的所有的参数，把参数替换成和该参数相等的参数，然后看下是否有相关的事实
