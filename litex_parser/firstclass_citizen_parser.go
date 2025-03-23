@@ -87,13 +87,13 @@ func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]FcFnParams, error) {
 	pairs := []FcFnParams{}
 
 	for !parser.ExceedEnd() && (parser.is(KeywordLeftParen)) {
-		varParamsPtr := &[]Fc{}
-		varParamsPtr, err = parser.parseBracedFcArr()
+		objParamsPtr := &[]Fc{}
+		objParamsPtr, err = parser.parseBracedFcArr()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, FcFnParams{*varParamsPtr})
+		pairs = append(pairs, FcFnParams{*objParamsPtr})
 	}
 
 	return &pairs, nil

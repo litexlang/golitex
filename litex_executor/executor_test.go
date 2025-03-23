@@ -18,7 +18,7 @@ const (
 )
 
 func TestStoreNewObj(t *testing.T) {
-	code := `var a G`
+	code := `obj a G`
 	statements, err := parser.ParseSourceCode(&code)
 	if err != nil {
 		t.Fatal(err)
@@ -163,11 +163,11 @@ func randFcFnRetValue() *parser.FcFnRet {
 
 func randObjParams() *[]parser.Fc {
 	round := rand.Intn(3) + 1
-	varParams := []parser.Fc{}
+	objParams := []parser.Fc{}
 	for i := 0; i < round; i++ {
-		varParams = append(varParams, randFcAtom()) // 这里必须是randFcString不能是randFc，否则会因为内存溢出停掉
+		objParams = append(objParams, randFcAtom()) // 这里必须是randFcString不能是randFc，否则会因为内存溢出停掉
 	}
-	return &varParams
+	return &objParams
 }
 
 func randCondStmt() *parser.WhenCondFactStmt {
