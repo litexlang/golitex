@@ -66,12 +66,12 @@ const (
 )
 
 func getFcEnum(fc parser.Fc) (int, error) {
-	_, ok := fc.(parser.FcStr)
+	_, ok := fc.(parser.FcAtom)
 	if ok {
 		return fcStrEnum, nil
 	}
 
-	_, ok = fc.(*parser.FcFnRetValue)
+	_, ok = fc.(*parser.FcFnRet)
 	if ok {
 		return fcFnRetValueEnum, nil
 	}
@@ -93,14 +93,14 @@ func CompareFc(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 }
 
 func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
-	knownFcStr, ok := knownFc.(parser.FcStr)
-	givenFcStr, ok2 := givenFc.(parser.FcStr)
+	knownFcStr, ok := knownFc.(parser.FcAtom)
+	givenFcStr, ok2 := givenFc.(parser.FcAtom)
 	if ok && ok2 {
 		return compareFcStr(knownFcStr, givenFcStr)
 	}
 
-	knownFcFnRetValue, ok := knownFc.(*parser.FcFnRetValue)
-	givenFcFnRetValue, ok2 := givenFc.(*parser.FcFnRetValue)
+	knownFcFnRetValue, ok := knownFc.(*parser.FcFnRet)
+	givenFcFnRetValue, ok2 := givenFc.(*parser.FcFnRet)
 	if ok && ok2 {
 		return compareFcFnRetValue(knownFcFnRetValue, givenFcFnRetValue)
 	}
@@ -114,7 +114,7 @@ func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 	return 0, fmt.Errorf("unknown fc type")
 }
 
-func compareFcStr(knownFc parser.FcStr, givenFc parser.FcStr) (int, error) {
+func compareFcStr(knownFc parser.FcAtom, givenFc parser.FcAtom) (int, error) {
 	if len(knownFc.Value) != len(givenFc.Value) {
 		return len(knownFc.Value) - len(givenFc.Value), nil
 	}
@@ -166,17 +166,17 @@ func compareTypeParamsAndParamsPair(knownPair parser.ObjParams, givenPair parser
 	return 0, nil
 }
 
-func compareFcFnRetValue(knownFc *parser.FcFnRetValue, givenFc *parser.FcFnRetValue) (int, error) {
+func compareFcFnRetValue(knownFc *parser.FcFnRet, givenFc *parser.FcFnRet) (int, error) {
 	if comp, err := compareFcStr(knownFc.FnName, givenFc.FnName); comp != 0 || err != nil {
 		return comp, err
 	}
 
-	if len(knownFc.TypeParamsObjParamsPairs) != len(givenFc.TypeParamsObjParamsPairs) {
-		return len(knownFc.TypeParamsObjParamsPairs) - len(givenFc.TypeParamsObjParamsPairs), nil
+	if len(knownFc.Params) != len(givenFc.Params) {
+		return len(knownFc.Params) - len(givenFc.Params), nil
 	}
 
-	for i := 0; i < len(knownFc.TypeParamsObjParamsPairs); i++ {
-		if comp, err := compareTypeParamsAndParamsPair(knownFc.TypeParamsObjParamsPairs[i], givenFc.TypeParamsObjParamsPairs[i]); comp != 0 || err != nil {
+	for i := 0; i < len(knownFc.Params); i++ {
+		if comp, err := compareTypeParamsAndParamsPair(knownFc.Params[i], givenFc.Params[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}

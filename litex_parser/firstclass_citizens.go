@@ -1,35 +1,36 @@
 package litexparser
 
+import "fmt"
+
 type Fc interface {
 	fc()
 	String() string
 	PkgName() string
 }
 
-func (f FcStr) fc()                     {}
-func (f *FcFnRetValue) fc()             {}
-func (f FcStr) PkgName() string         { return f.FromPkg }
-func (f *FcFnRetValue) PkgName() string { return f.FnName.FromPkg }
+func (f FcAtom) fc()               {}
+func (f *FcFnRet) fc()             {}
+func (f FcAtom) PkgName() string   { return f.FromPkg }
+func (f *FcFnRet) PkgName() string { return f.FnName.FromPkg }
 
-type FcStr struct {
+type FcAtom struct {
 	FromPkg string
 	Value   string
 }
 
-type FcFnRetValue struct {
-	FnName                   FcStr
-	TypeParamsObjParamsPairs []ObjParams
+type FcFnRet struct {
+	FnName FcAtom
+	Params []ObjParams
 }
 
 type ObjParams struct {
 	ObjParams []Fc
 }
 
-func (f *FcFnRetValue) String() string {
+func (f *FcFnRet) String() string {
 	outPut := string(f.FnName.Value)
 
-	for _, pair := range f.TypeParamsObjParamsPairs {
-
+	for _, pair := range f.Params {
 		if len(pair.ObjParams) > 0 {
 			outPut += "("
 			for i := 0; i < len(pair.ObjParams)-1; i++ {
@@ -44,9 +45,12 @@ func (f *FcFnRetValue) String() string {
 	return outPut
 }
 
-func (f FcStr) String() string {
-	// TODO: PackageName
-	return string(f.Value)
+func (f FcAtom) String() string {
+	if f.FromPkg == "" {
+		return string(f.Value)
+	} else {
+		return fmt.Sprintf("%s::%s", f.FromPkg, string(f.Value))
+	}
 }
 
 // used for variables that are returned by called function, e,g. f().g().h().  The chain is connected by dots
@@ -58,15 +62,6 @@ func (f FcStr) String() string {
 // 	}
 // 	return ret + (f.ChainOfMembers)[len(f.ChainOfMembers)-1].String()
 // }
-
-type ReversedFc struct {
-	// TODO
-}
-
-// TODO: Fc 可能还要加一个函数，reverse，即从parameters作为第一位的key。这样貌似做compare更容易
-func Reverse(f Fc) *ReversedFc {
-	panic("")
-}
 
 // func (f *FcChain) fc() {}
 // type FcChainMem interface {

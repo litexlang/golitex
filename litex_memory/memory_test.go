@@ -46,41 +46,41 @@ func TestRedBlackTree(t *testing.T) {
 
 func TestCompareFc(t *testing.T) {
 	// 初始化 FcStr
-	fc1 := parser.FcStr{Value: "abc"}
-	fc2 := parser.FcStr{Value: "def"}
-	fc3 := parser.FcStr{Value: "abc"}
+	fc1 := parser.FcAtom{Value: "abc"}
+	fc2 := parser.FcAtom{Value: "def"}
+	fc3 := parser.FcAtom{Value: "abc"}
 
 	// 初始化 FcFnRetValue
-	fc4 := parser.FcFnRetValue{
-		FnName: parser.FcStr{Value: "ghi"},
-		TypeParamsObjParamsPairs: []parser.ObjParams{
+	fc4 := parser.FcFnRet{
+		FnName: parser.FcAtom{Value: "ghi"},
+		Params: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
 				ObjParams: []parser.Fc{fc1}, // 初始化 ObjParams
 			},
 		},
 	}
-	fc5 := parser.FcFnRetValue{
-		FnName: parser.FcStr{Value: "jkl"},
-		TypeParamsObjParamsPairs: []parser.ObjParams{
+	fc5 := parser.FcFnRet{
+		FnName: parser.FcAtom{Value: "jkl"},
+		Params: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{}, // 初始化 TypeParams
 				ObjParams: []parser.Fc{}, // 初始化 ObjParams
 			},
 		},
 	}
-	fc6 := parser.FcFnRetValue{
-		FnName: parser.FcStr{Value: "ghi"},
-		TypeParamsObjParamsPairs: []parser.ObjParams{
+	fc6 := parser.FcFnRet{
+		FnName: parser.FcAtom{Value: "ghi"},
+		Params: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
 				ObjParams: []parser.Fc{fc3}, // 初始化 ObjParams
 			},
 		},
 	}
-	fc7 := parser.FcFnRetValue{
-		FnName: parser.FcStr{Value: "ghi"},
-		TypeParamsObjParamsPairs: []parser.ObjParams{
+	fc7 := parser.FcFnRet{
+		FnName: parser.FcAtom{Value: "ghi"},
+		Params: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
 				ObjParams: []parser.Fc{fc2}, // 初始化 ObjParams
