@@ -768,7 +768,7 @@ func TestHowManyCPUCores(t *testing.T) {
 	fmt.Println("CPU:", runtime.NumCPU())
 
 	timeStart := time.Now()
-	var wg sync.WaitGroup
+	wg := sync.WaitGroup{}
 	for i := 0; i < 1000000; i++ { // 尝试创建 100 万个 goroutine
 		wg.Add(1)
 		go func(id int) {
@@ -785,7 +785,7 @@ func TestHowManyCPUCores(t *testing.T) {
 }
 
 func TestHowManyCPUCores2(t *testing.T) {
-	var wg sync.WaitGroup
+	wg := sync.WaitGroup{}
 	runtime.GOMAXPROCS(2)
 	// time start
 	timeStart := time.Now()

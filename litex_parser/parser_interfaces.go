@@ -105,6 +105,7 @@ type InstanceMember interface {
 	instanceMember()
 }
 
-func (s *DefObjStmt) instanceMember()  {}
-func (s *DefFnStmt) instanceMember()   {}
-func (s *DefPropStmt) instanceMember() {}
+func (s *DefObjStmt) instanceMember()   {}
+func (s *DefFnStmt) instanceMember()    {}
+func (s *DefPropStmt) instanceMember()  {}
+func (s *DefExistStmt) instanceMember() {}

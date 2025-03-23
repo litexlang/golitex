@@ -58,7 +58,7 @@ func (parser *Parser) parseFcObjTypePairArrEndWithColon() (*[]string, error) {
 }
 
 func (parser *Parser) parseBracedFcTypePairArr() (*[]string, error) {
-	var err error = nil
+	err := error(nil)
 
 	objParams := &[]string{}
 	objParams, err = parser.parseBracedFcStrTypePairArray()
@@ -77,12 +77,12 @@ func (parser *Parser) parseFcFnDecl() (*FcFnDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	varParamsTypes, err := parser.parseBracedFcTypePairArr()
+	paramsTypes, err := parser.parseBracedFcTypePairArr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &FcFnDecl{name, *varParamsTypes}, nil
+	return &FcFnDecl{name, *paramsTypes}, nil
 }
 
 func (parser *Parser) parseBracedFcStrTypePairArray() (*[]string, error) {
@@ -121,12 +121,12 @@ func (parser *Parser) parsePropDecl() (*PropDeclHeader, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	varParams, err := parser.parseBracedFcTypePairArr()
+	params, err := parser.parseBracedFcTypePairArr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &PropDeclHeader{name, *varParams}, nil
+	return &PropDeclHeader{name, *params}, nil
 }
 
 func (parser *Parser) parseExistDecl() (*PropDeclHeader, error) {
@@ -136,12 +136,12 @@ func (parser *Parser) parseExistDecl() (*PropDeclHeader, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	varParams, err := parser.parseBracedFcTypePairArr()
+	params, err := parser.parseBracedFcTypePairArr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &PropDeclHeader{name, *varParams}, nil
+	return &PropDeclHeader{name, *params}, nil
 }
 
 func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
@@ -229,18 +229,6 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
 // 	return &NamedFcType{typeNameArr, params}, nil
 // }
 
-func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
-	if block.Header.is(KeywordObj) {
-		return block.parseDefObjStmt()
-	} else if block.Header.is(KeywordFn) {
-		return block.parseDefFnStmt()
-	} else if block.Header.is(KeywordProp) {
-		return block.parseDefPropStmt()
-	}
-
-	return nil, fmt.Errorf("var, fn, prop, type expected")
-}
-
 func (block *TokenBlock) parseInstanceMember() (InstanceMember, error) {
 	if block.Header.is(KeywordObj) {
 		return block.parseDefObjStmt()
@@ -248,6 +236,8 @@ func (block *TokenBlock) parseInstanceMember() (InstanceMember, error) {
 		return block.parseDefFnStmt()
 	} else if block.Header.is(KeywordProp) {
 		return block.parseDefPropStmt()
+	} else if block.Header.is(KeywordExistProp) {
+		return block.parseDefExistStmt()
 	}
-	return nil, fmt.Errorf("var, fn, prop expected")
+	return nil, fmt.Errorf("%v, %v, %v expected", KeywordObj, KeywordFn, KeywordProp)
 }

@@ -4,7 +4,7 @@
       1. to emphasize "B belong to A", "C belong to B", we write C_of_B(B_of_A(A))
       2. OOP System is better for user understanding and readability, but it is harder for the language designer to implement
    2. A(x,y).B(z).C(k) <=> C_of_B(B_of_A(A(x, y), z), k)
-   3. 像 struct A {field1; field2; field3} 在litex里直接表示成 fn A(field1, field2, field3) 了，fn在litex，或者说在数学里，起到"a collection of variables satisfying certain conditions"的作用
+   3. 像 struct A {field1; field2; field3} 在litex里直接表示成 fn A(field1, field2, field3) 了，fn在litex，或者说在数学里，起到"a collection of objects satisfying certain conditions"的作用
       1. C最初也没struct关键词。可以自己设置一个void**来存不同类型的东西，比如我们脑子里记住第0位表示field1 *,第1位表示field2 *
    4. 由此可见，litex根本不需要实现oop
    5. litex不实现oop的好处坏处中立
@@ -27,7 +27,7 @@
    3. 主流编程语言也都支持f(1, 2)(3)(4)这样的写法
    4. 我认为让 $f 也支持链式返回值貌似，即$f(a)(b)(c)，没意义，因为不清楚$f(a)的返回值是什么：难道也是一个prop吗？那$f(a)这个prop是对的还是错的呢？写成$f(a,b,c)貌似也起到了一样的效果
    5. 函数返回值是prop，这个事情本质上是诡异的。函数返回值是返回来一个符号，符号是不能被运行的。但prop是能被运行的。
-   6. 函数是能写在()前面的符号，其他性质和var是一样的
+   6. 函数是能写在()前面的符号，其他性质和obj是一样的
 
 package GroupTheory
 
@@ -53,7 +53,7 @@ fn Id(s):
 fn Inv(x)
 
 // 引入一个集合，这个集合有群结构
-var G Set
+obj G Set
 know G impl Group:
     Id impl Group::id
     \_\_mul\_\_ impl Group::mul
@@ -122,7 +122,7 @@ know forall s:
     then:
         $Group(s, s::id, s::mul)
 
-var s GroupType // 自动是集合，同时它可以写s::Id, s::mul
+obj s GroupType // 自动是集合，同时它可以写s::Id, s::mul
 know $Group(s, s::Id, s::mul)
 
 // 于是上述的claim就不需要写成prop格式，能执行局调用了
@@ -142,7 +142,7 @@ fn fn_as_group_id(s):
     then:
         ret is fn
 
-var s set:
+obj s set:
     know $Group(s, fn_as_group_mul(s), fn_as_group_id(s))
 
 // 或者索性把Group定义成下面的形状
@@ -197,7 +197,7 @@ know $isGroup(s), id = Id, f = mul
 
 // 第一种写法更合理
 Search 时，需要处理同名的情况
-1. 同一个var有不同的名字
+1. 同一个obj有不同的名字
 2. 一个opt1，可能因为它impl了另外一个opt2，而另外的opt可能长相不是opt1，导致最后找不到了
    1. 比如R上+ impl 了 Group 的 *
 3. 到底有哪些信息是运行时判断的？哪些是编译时的？
@@ -266,9 +266,9 @@ set domain_of_f:
 fn [T StructName, P StructName] P(a T, b P):
     .... // 全部是then，没cond
 
-如果你想让a有两个struct T1, T2，那对不起，请你定义一个struct T3, T3 包含了T1, T2 的所有性质。我的所有关于参数的性质，全部包含在typeParams, varParams 里了。
+如果你想让a有两个struct T1, T2，那对不起，请你定义一个struct T3, T3 包含了T1, T2 的所有性质。我的所有关于参数的性质，全部包含在typeParams, objParams 里了。
 上面这样做的意义是，如果 then 里出现的 函数，我默认是 StructName 相关的函数/prop。理论上a和b是不能被作用任何的prop和fn的，但是因为有了T, P 做Struct保障，那它们就能有相关的函数和prop。我们在环境里直接用这些struct相关的函数名。
-fn和prop里，正常情况下，都是只有var有自由度，可以是“任意”。但是有时候我想让set也是“任意”，把一大类的set共有的性质取个名字，放在一起。让set也有自由度。注意到set是很诡异的变量：它虽然是变量，但可以出现在type所在的位置
+fn和prop里，正常情况下，都是只有obj有自由度，可以是“任意”。但是有时候我想让set也是“任意”，把一大类的set共有的性质取个名字，放在一起。让set也有自由度。注意到set是很诡异的变量：它虽然是变量，但可以出现在type所在的位置
 
 不能直接完完全全把struct看成go的interface 因为有时候，必须是要知道a和b是同一个集合中的，才能工作。哪怕struct一样，来自的函数可能不一样，那就彻底G了。我们的类型系统要比编程语言这种只需要执行的，要严格一点.
 fn P(a StructName, b StructName):
@@ -278,7 +278,7 @@ fn P(a StructName, b StructName):
 
 疑问：如何判断带generics的fn和prop，是否与同名嗲fn和prop冲突呢？特别是一开始定义prop的时候还没证明set impl 某struct，等过了一会再证明。那这个时候必冲突了。
 1. 一个选择：runtime的时候再次遍历一下，看看有没有符合。
-2. 因为prop里都是关于var的事实，所以不会影响search
+2. 因为prop里都是关于obj的事实，所以不会影响search
 
 3. 函数重载解析规则
 C++ 编译器会根据函数重载解析规则来选择最合适的函数。具体规则如下：
@@ -323,8 +323,8 @@ prop f< T Struct1, T2 Struct2, T3 Struct3 >(a T, b T2, c T3):
 forall < T Struct1, T2 Struct2, T3 Struct3 > a T, b T2, c T3:
     $f(a,b,c)
 
-var s set
-var a s
+obj s set
+obj a s
 //... 这里让 s impl 了 T1, T2, T3，而 T1, T2, T3 又impl Struct1, Struct2, Struct3
 $f(a,a,a) // 这里涉及到的 forall < T Struct1, T2 Struct2, T3 Struct3 > a T, b T2, c T3: 自动定位到了a同时在3个type里，type分别有3个性质，所以能找到
 
@@ -357,7 +357,7 @@ fn f(g Group, g2 Group) Group:
 最后剩下的golang的struct-type-interface系统和litex的区别：数学里，一个变量可以出现在很多类型里，比如0可以出现在nat, 可以出现在natAsGroup, natAsRing里。golang的解决方法有两个
 1. 
 type SelfInt int
-var s int = 1
+obj s int = 1
 selfInt := SelfInt(s) // 引入新变量
 1. 使用接口（interface）或者类型断言
 func printValue(s interface{}) {
@@ -369,7 +369,7 @@ func printValue(s interface{}) {
     }
 }
 typescript 的解法是
-varName as typeName
+objName as typeName
 litex 采用 ts 的做法
 
 嵌入
