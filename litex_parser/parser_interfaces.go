@@ -5,16 +5,18 @@ type Stmt interface {
 	String() string
 }
 
-func (stmt *DefObjStmt) stmt()              {}
-func (c *DefInterfaceStmt) stmt()           {}
-func (f *DefTypeStmt) stmt()                {}
-func (c *DefPropStmt) stmt()                {}
-func (f *DefFnStmt) stmt()                  {}
-func (l *BlockForallStmt) stmt()            {}
-func (r *RelationFactStmt) stmt()           {}
-func (p *FuncFactStmt) stmt()               {}
-func (f *ClaimProveStmt) stmt()             {}
-func (f *DefAliasStmt) stmt()               {}
+func (stmt *DefObjStmt) stmt() {}
+
+func (c *DefInterfaceStmt) stmt() {}
+func (f *DefTypeStmt) stmt()      {}
+func (c *DefPropStmt) stmt()      {}
+func (f *DefFnStmt) stmt()        {}
+func (l *BlockForallStmt) stmt()  {}
+func (r *RelationFactStmt) stmt() {}
+func (p *FuncFactStmt) stmt()     {}
+func (f *ClaimProveStmt) stmt()   {}
+
+// func (f *DefAliasStmt) stmt()               {}
 func (f *KnowStmt) stmt()                   {}
 func (s *DefExistStmt) stmt()               {}
 func (s *HaveStmt) stmt()                   {}

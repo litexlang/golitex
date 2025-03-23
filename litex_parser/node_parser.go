@@ -236,8 +236,6 @@ func (block *TokenBlock) parseTypeMember() (TypeMember, error) {
 		return block.parseDefFnStmt()
 	} else if block.Header.is(KeywordProp) {
 		return block.parseDefPropStmt()
-	} else if block.Header.is(KeywordType) {
-		return block.parseDefTypeStmt()
 	}
 
 	return nil, fmt.Errorf("var, fn, prop, type expected")
