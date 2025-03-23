@@ -1,4 +1,4 @@
-// * 约定：var, fn, prop 名不能冲突，即不能有一个变量是var，同时也是Prop
+// * obj, fn, prop 名不能冲突，即不能有一个变量是obj，同时也是Prop
 package litexmemory
 
 import (

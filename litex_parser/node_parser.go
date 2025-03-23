@@ -38,12 +38,12 @@ func (parser *Parser) parseFcObjTypePairArrEndWithColon() (*[]string, error) {
 	pairs := []string{}
 
 	for !parser.is(KeywordColon) {
-		varName, err := parser.next()
+		objName, err := parser.next()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, varName)
+		pairs = append(pairs, objName)
 
 		if parser.isAndSkip(KeywordColon) {
 			break
@@ -60,13 +60,13 @@ func (parser *Parser) parseFcObjTypePairArrEndWithColon() (*[]string, error) {
 func (parser *Parser) parseBracedFcTypePairArr() (*[]string, error) {
 	var err error = nil
 
-	varParams := &[]string{}
-	varParams, err = parser.parseBracedFcStrTypePairArray()
+	objParams := &[]string{}
+	objParams, err = parser.parseBracedFcStrTypePairArray()
 	if err != nil {
 		return nil, err
 	}
 
-	return varParams, nil
+	return objParams, nil
 }
 
 func (parser *Parser) parseFcFnDecl() (*FcFnDecl, error) {

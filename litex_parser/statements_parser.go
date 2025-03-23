@@ -501,7 +501,7 @@ func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 		}
 	}
 
-	return &DefFnStmt{decl.name, decl.vars, *ifFacts, *thenFacts}, nil
+	return &DefFnStmt{decl.Name, decl.Params, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {

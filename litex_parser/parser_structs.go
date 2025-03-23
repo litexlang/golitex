@@ -25,6 +25,7 @@ type DefTypeStmt struct {
 	knowFacts       []FactStmt
 }
 
+// TODO: Generics
 type DefPropStmt struct {
 	DeclHeader PropDeclHeader
 	CondFacts  []FactStmt
@@ -38,6 +39,7 @@ type DefFnStmt struct {
 	ThenFacts []FactStmt
 }
 
+// TODO: Generics
 type BlockForallStmt struct {
 	VarParams []string
 	CondFacts []FactStmt
@@ -110,13 +112,13 @@ Data structures below are not statement nodes.
 type TypeConceptStr string
 
 type FcFnDecl struct {
-	name string
-	vars []string
+	Name   string
+	Params []string
 }
 
 type PropDeclHeader struct {
-	name string
-	vars []string
+	Name   string
+	Params []string
 }
 
 // type FcObjTypeStrValue string
