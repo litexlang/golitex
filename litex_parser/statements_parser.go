@@ -754,7 +754,7 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (SpecFactStmt, error) {
 		vars = append(vars, fc)
 	}
 
-	return &RelationFactStmt{true, vars, FcStr(opt)}, nil
+	return &RelationFactStmt{true, vars, FcStr{opt}}, nil
 }
 
 func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {

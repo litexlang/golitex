@@ -46,13 +46,13 @@ func TestRedBlackTree(t *testing.T) {
 
 func TestCompareFc(t *testing.T) {
 	// 初始化 FcStr
-	fc1 := parser.FcStr("abc")
-	fc2 := parser.FcStr("def")
-	fc3 := parser.FcStr("abc")
+	fc1 := parser.FcStr{"abc"}
+	fc2 := parser.FcStr{"def"}
+	fc3 := parser.FcStr{"abc"}
 
 	// 初始化 FcFnRetValue
 	fc4 := parser.FcFnRetValue{
-		FnName: "ghi",
+		FnName: parser.FcStr{"ghi"},
 		TypeParamsObjParamsPairs: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
@@ -61,7 +61,7 @@ func TestCompareFc(t *testing.T) {
 		},
 	}
 	fc5 := parser.FcFnRetValue{
-		FnName: "jkl",
+		FnName: parser.FcStr{"jkl"},
 		TypeParamsObjParamsPairs: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{}, // 初始化 TypeParams
@@ -70,7 +70,7 @@ func TestCompareFc(t *testing.T) {
 		},
 	}
 	fc6 := parser.FcFnRetValue{
-		FnName: "ghi",
+		FnName: parser.FcStr{"ghi"},
 		TypeParamsObjParamsPairs: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
@@ -79,7 +79,7 @@ func TestCompareFc(t *testing.T) {
 		},
 	}
 	fc7 := parser.FcFnRetValue{
-		FnName: "ghi",
+		FnName: parser.FcStr{"ghi"},
 		TypeParamsObjParamsPairs: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams

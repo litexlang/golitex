@@ -62,11 +62,11 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 }
 
 func (env *Env) NewRelationFact(stmt *parser.RelationFactStmt) error {
-	if string(stmt.Opt) == (parser.KeywordEqual) {
+	if string(stmt.Opt.Value) == (parser.KeywordEqual) {
 		return env.NewEqualFact(stmt)
 	}
 
-	panic(fmt.Sprintf("%v not implemented", string(stmt.Opt)))
+	panic(fmt.Sprintf("%v not implemented", string(stmt.Opt.Value)))
 }
 
 func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {

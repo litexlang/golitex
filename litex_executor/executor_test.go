@@ -126,7 +126,8 @@ func randFcString() parser.FcStr {
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(rand.Intn(26) + 65)
 	}
-	return parser.FcStr(bytes)
+	ret := parser.FcStr{Value: string(bytes)}
+	return ret
 }
 
 func randFcFnRetValue() *parser.FcFnRetValue {
@@ -370,7 +371,7 @@ func randEqualFact() *parser.RelationFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.RelationFactStmt{IsTrue: true, Objs: []parser.Fc{left, right}, Opt: parser.FcStr("=")}
+	return &parser.RelationFactStmt{IsTrue: true, Objs: []parser.Fc{left, right}, Opt: parser.FcStr{"="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {
