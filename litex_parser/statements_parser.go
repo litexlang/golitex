@@ -310,17 +310,34 @@ func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	fc, err := stmt.Header.ParseFc()
+	opt, err := stmt.Header.parseFcAtom()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	// * 为了防止 $p[a,b) 这样不小心把左括号输入错误了，然后fc取成p了，让)作为终止符
-	if stmt.Header.strAtCurIndexPlus(-1) == KeywordRightParen {
-		return &FuncFactStmt{true, fc}, nil
-	} else {
-		return nil, fmt.Errorf("expected ')', get %v", stmt.Header.strAtCurIndexPlus(-1))
+	params := []Fc{}
+	err = stmt.Header.skip(KeywordLeftParen)
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
 	}
+
+	for !stmt.Header.is(KeywordRightParen) {
+		param, err := stmt.Header.ParseFc()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		params = append(params, param)
+		if stmt.Header.is(KeywordComma) {
+			stmt.Header.next()
+		}
+	}
+
+	err = stmt.Header.skip(KeywordRightParen)
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	return &FuncFactStmt{true, opt, params}, nil
 }
 
 func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {

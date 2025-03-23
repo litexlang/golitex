@@ -46,7 +46,8 @@ type BlockForallStmt struct {
 
 type FuncFactStmt struct {
 	IsTrue bool
-	Fc     Fc
+	Fc     FcAtom
+	Params []Fc
 }
 
 type RelationFactStmt struct {

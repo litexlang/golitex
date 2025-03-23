@@ -178,9 +178,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	ret := FcFnRet{opt, []FcFnParams{{[]Fc{left}}}}
-
-	return &FuncFactStmt{true, &ret}, nil
+	return &FuncFactStmt{true, opt, []Fc{left}}, nil
 }
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
