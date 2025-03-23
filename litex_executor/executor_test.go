@@ -88,7 +88,14 @@ func TestVerifier(t *testing.T) {
 }
 
 func randFuncFact() *parser.FuncFactStmt {
-	stmt := parser.FuncFactStmt{IsTrue: true, Fc: randomFc()}
+	// randomly generate n random Fc
+	n := rand.Intn(10) + 1
+	params := make([]parser.Fc, n)
+	for i := 0; i < n; i++ {
+		params[i] = randomFc()
+	}
+
+	stmt := parser.FuncFactStmt{IsTrue: true, Fc: *randFcAtom(), Params: params}
 	return &stmt
 }
 
@@ -98,7 +105,7 @@ func randomFc() parser.Fc {
 
 	if e == 0 {
 		// generate a random number from 1 to 10
-		return randFcString()
+		return randFcAtom()
 	}
 
 	if e == 1 {
@@ -120,7 +127,7 @@ func randomFc() parser.Fc {
 // 	return &parser.FcChain{ChainOfMembers: fcArr}
 // }
 
-func randFcString() *parser.FcAtom {
+func randFcAtom() *parser.FcAtom {
 	length := rand.Intn(10) + 1
 	bytes := make([]byte, length)
 	for i := 0; i < length; i++ {
@@ -131,7 +138,7 @@ func randFcString() *parser.FcAtom {
 }
 
 func randFcFnRetValue() *parser.FcFnRet {
-	fnName := randFcString()
+	fnName := randFcAtom()
 	round := rand.Intn(3) + 1
 	typeParamObjParamsPairs := []parser.FcFnParams{}
 	for i := 0; i < round; i++ {
@@ -158,7 +165,7 @@ func randObjParams() *[]parser.Fc {
 	round := rand.Intn(3) + 1
 	varParams := []parser.Fc{}
 	for i := 0; i < round; i++ {
-		varParams = append(varParams, randFcString()) // 这里必须是randFcString不能是randFc，否则会因为内存溢出停掉
+		varParams = append(varParams, randFcAtom()) // 这里必须是randFcString不能是randFc，否则会因为内存溢出停掉
 	}
 	return &varParams
 }
