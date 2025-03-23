@@ -120,24 +120,24 @@ func randomFc() parser.Fc {
 // 	return &parser.FcChain{ChainOfMembers: fcArr}
 // }
 
-func randFcString() parser.FcStr {
+func randFcString() parser.FcAtom {
 	length := rand.Intn(10) + 1
 	bytes := make([]byte, length)
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(rand.Intn(26) + 65)
 	}
-	ret := parser.FcStr{Value: string(bytes)}
+	ret := parser.FcAtom{Value: string(bytes)}
 	return ret
 }
 
-func randFcFnRetValue() *parser.FcFnRetValue {
+func randFcFnRetValue() *parser.FcFnRet {
 	fnName := randFcString()
 	round := rand.Intn(3) + 1
 	typeParamObjParamsPairs := []parser.ObjParams{}
 	for i := 0; i < round; i++ {
 		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.ObjParams{ObjParams: *randObjParams()})
 	}
-	return &parser.FcFnRetValue{FnName: fnName, TypeParamsObjParamsPairs: typeParamObjParamsPairs}
+	return &parser.FcFnRet{FnName: fnName, Params: typeParamObjParamsPairs}
 }
 
 // func randTypeParams() *[]parser.TypeObjStr {
@@ -371,7 +371,7 @@ func randEqualFact() *parser.RelationFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.RelationFactStmt{IsTrue: true, Objs: []parser.Fc{left, right}, Opt: parser.FcStr{FromPkg: "", Value: "="}}
+	return &parser.RelationFactStmt{IsTrue: true, Objs: []parser.Fc{left, right}, Opt: parser.FcAtom{FromPkg: "", Value: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

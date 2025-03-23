@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func (parser *Parser) parseFcAtom() (Fc, error) {
+func (parser *Parser) parseFcAtomAndFcFnRet() (Fc, error) {
 	if parser.is(KeywordLeftParen) {
 		return parser.parseBracedFcExpr()
 	}
@@ -15,7 +15,7 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 	}
 
 	// TODO: 这里需要考虑xxx::yyy这种情况
-	fcStr, err := parser.parseFcStr()
+	fcStr, err := parser.parseFcAtom()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -71,14 +71,14 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 // 	}
 // }
 
-func (parser *Parser) parseFcFnRetVal(optName FcStr) (*FcFnRetValue, error) {
+func (parser *Parser) parseFcFnRetVal(optName FcAtom) (*FcFnRet, error) {
 	typeParamsObjParamsPairs, err := parser.parseTypeParamsObjParamsPairs()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &FcFnRetValue{optName, *typeParamsObjParamsPairs}, nil
+	return &FcFnRet{optName, *typeParamsObjParamsPairs}, nil
 }
 
 func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]ObjParams, error) {
@@ -99,10 +99,10 @@ func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]ObjParams, error) {
 	return &pairs, nil
 }
 
-func (parser *Parser) parseFcStr() (FcStr, error) {
+func (parser *Parser) parseFcAtom() (FcAtom, error) {
 	value, err := parser.next()
 	if err != nil {
-		return FcStr{Value: ""}, err
+		return FcAtom{Value: ""}, err
 	}
 
 	fromPkg := ""
@@ -110,15 +110,15 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 		fromPkg = value
 		err := parser.skip(KeywordColonColon)
 		if err != nil {
-			return FcStr{Value: ""}, err
+			return FcAtom{Value: ""}, err
 		}
 		value, err = parser.next()
 		if err != nil {
-			return FcStr{Value: ""}, err
+			return FcAtom{Value: ""}, err
 		}
 	}
 
-	return FcStr{FromPkg: fromPkg, Value: value}, nil
+	return FcAtom{FromPkg: fromPkg, Value: value}, nil
 }
 
 type FcInfixOptPrecedence int
@@ -178,8 +178,8 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 			return nil, &parserErr{err, parser}
 		}
 
-		left = &FcFnRetValue{
-			FcStr{Value: curToken},
+		left = &FcFnRet{
+			FcAtom{Value: curToken},
 			[]ObjParams{{[]Fc{left, right}}},
 		}
 	}
@@ -199,48 +199,48 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &FcFnRetValue{
-			FcStr{Value: unaryOp},
+		return &FcFnRet{
+			FcAtom{Value: unaryOp},
 			[]ObjParams{{[]Fc{right}}},
 		}, nil
 	} else {
-		return parser.parseFcAtom()
+		return parser.parseFcAtomAndFcFnRet()
 	}
 
 }
 
-func (parser *Parser) parseNumberStr() (FcStr, error) {
+func (parser *Parser) parseNumberStr() (FcAtom, error) {
 	left, err := parser.next()
 
 	if err != nil {
-		return FcStr{Value: ""}, err
+		return FcAtom{Value: ""}, err
 	}
 
 	if left[0] == '0' {
-		return FcStr{Value: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
+		return FcAtom{Value: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
 	}
 
 	_, err = strconv.Atoi(left)
 	if err != nil {
-		return FcStr{Value: ""}, fmt.Errorf("invalid number: %s", left)
+		return FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
 	}
 
 	if parser.is(KeywordDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {
-			return FcStr{Value: left}, nil
+			return FcAtom{Value: left}, nil
 		} else {
 			parser.skip()
 			right, err := parser.next()
 
 			if err != nil {
-				return FcStr{Value: ""}, fmt.Errorf("invalid number: %s", right)
+				return FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", right)
 			}
 
-			return FcStr{Value: left + "." + right}, nil
+			return FcAtom{Value: left + "." + right}, nil
 		}
 	}
 
-	return FcStr{Value: left}, nil
+	return FcAtom{Value: left}, nil
 }

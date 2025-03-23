@@ -52,7 +52,7 @@ type FuncFactStmt struct {
 type RelationFactStmt struct {
 	IsTrue bool
 	Objs   []Fc
-	Opt    FcStr
+	Opt    FcAtom
 }
 
 type ClaimProveByContradictStmt struct {

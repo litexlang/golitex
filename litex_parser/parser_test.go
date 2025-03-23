@@ -88,7 +88,7 @@ func TestParseFc(t *testing.T) {
 			t.Fatal(err)
 		}
 		parser := Parser{0, *tokens}
-		fc, err := parser.parseFcAtom()
+		fc, err := parser.parseFcAtomAndFcFnRet()
 		if err != nil {
 			t.Fatal(err)
 		}
