@@ -11,18 +11,9 @@ type DefObjStmt struct {
 }
 
 type DefInterfaceStmt struct {
-	decl            string
-	structName      TypeConceptStr
-	typeMembers     []TypeMember
-	instanceMembers []InstanceMember
-	knowFacts       []FactStmt
 }
 
 type DefTypeStmt struct {
-	decl            string
-	typeMembers     []TypeMember
-	instanceMembers []InstanceMember
-	knowFacts       []FactStmt
 }
 
 // TODO: Generics
@@ -32,6 +23,7 @@ type DefPropStmt struct {
 	ThenFacts  []FactStmt
 }
 
+// TODO: Generics
 type DefFnStmt struct {
 	name      string
 	tp        []string
@@ -68,20 +60,20 @@ type ClaimProveStmt struct {
 	proof   []Stmt
 }
 
-type DefAliasStmt struct {
-	PreviousName string
-	NewName      string
-}
+// type DefAliasStmt struct {
+// 	PreviousName string
+// 	NewName      string
+// }
 
 type KnowStmt struct {
 	Facts []FactStmt
 }
 
 type DefExistStmt struct {
-	decl      PropDeclHeader
-	ifFacts   []FactStmt
-	member    []InstanceMember
-	thenFacts []FactStmt
+	DeclHeader PropDeclHeader
+	CondFacts  []FactStmt
+	Members    []InstanceMember
+	ThenFacts  []FactStmt
 }
 
 type HaveStmt struct {
@@ -109,7 +101,7 @@ type WhenCondFactStmt struct {
 Data structures below are not statement nodes.
 */
 
-type TypeConceptStr string
+// type TypeConceptStr string
 
 type FcFnDecl struct {
 	Name   string

@@ -28,7 +28,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	var ret Stmt
 	switch cur {
 	case KeywordInterface:
-		ret, err = stmt.parseDefSetStructStmt()
+		ret, err = stmt.parseDefInterfaceStmt()
 	case KeywordType:
 		ret, err = stmt.parseDefTypeStmt()
 	case KeywordProp:
@@ -85,124 +85,124 @@ func (stmt *TokenBlock) parseTypeConceptDeclStmtKnows() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-func (block *TokenBlock) parseDefSetStructStmt() (*DefInterfaceStmt, error) {
-	block.Header.skip(KeywordInterface)
+// func (block *TokenBlock) parseDefSetStructStmt() (*DefInterfaceStmt, error) {
+// 	block.Header.skip(KeywordInterface)
 
-	decl, err := block.Header.next()
-	if err != nil {
-		return nil, &parseStmtErr{err, *block}
-	}
+// 	decl, err := block.Header.next()
+// 	if err != nil {
+// 		return nil, &parseStmtErr{err, *block}
+// 	}
 
-	structNameStr := ""
-	if block.Header.is(KeywordImpl) {
-		block.Header.next()
-		structNameStr, err = block.Header.next()
-		if err != nil {
-			return nil, &parseStmtErr{err, *block}
-		}
-	}
-	structName := TypeConceptStr(structNameStr)
+// 	structNameStr := ""
+// 	if block.Header.is(KeywordImpl) {
+// 		block.Header.next()
+// 		structNameStr, err = block.Header.next()
+// 		if err != nil {
+// 			return nil, &parseStmtErr{err, *block}
+// 		}
+// 	}
+// 	structName := TypeConceptStr(structNameStr)
 
-	if !block.Header.is(KeywordColon) {
-		return &DefInterfaceStmt{decl, structName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
-	} else {
-		block.Header.next()
-	}
+// 	if !block.Header.is(KeywordColon) {
+// 		return &DefInterfaceStmt{decl, structName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
+// 	} else {
+// 		block.Header.next()
+// 	}
 
-	typeMembers := []TypeMember{}
-	instanceMembers := []InstanceMember{}
-	knowFacts := &[]FactStmt{}
+// 	typeMembers := []TypeMember{}
+// 	instanceMembers := []InstanceMember{}
+// 	knowFacts := &[]FactStmt{}
 
-	for _, curStmt := range block.Body {
-		if curStmt.Header.is(KeywordTypeMember) {
-			for _, member := range curStmt.Body {
-				typeMember, err := member.parseTypeMember()
-				if err != nil {
-					return nil, &parseStmtErr{err, *block}
-				}
-				typeMembers = append(typeMembers, typeMember)
-			}
-		} else if curStmt.Header.is(KeywordInstanceMember) {
-			for _, member := range curStmt.Body {
-				instanceMember, err := member.parseInstanceMember()
-				if err != nil {
-					return nil, &parseStmtErr{err, *block}
-				}
-				instanceMembers = append(instanceMembers, instanceMember)
-			}
-		} else if curStmt.Header.is(KeywordKnow) {
-			knowFacts, err = curStmt.parseTypeConceptDeclStmtKnows()
-			if err != nil {
-				return nil, &parseStmtErr{err, *block}
-			}
-		}
-	}
+// 	for _, curStmt := range block.Body {
+// 		if curStmt.Header.is(KeywordTypeMember) {
+// 			for _, member := range curStmt.Body {
+// 				typeMember, err := member.parseTypeMember()
+// 				if err != nil {
+// 					return nil, &parseStmtErr{err, *block}
+// 				}
+// 				typeMembers = append(typeMembers, typeMember)
+// 			}
+// 		} else if curStmt.Header.is(KeywordInstanceMember) {
+// 			for _, member := range curStmt.Body {
+// 				instanceMember, err := member.parseInstanceMember()
+// 				if err != nil {
+// 					return nil, &parseStmtErr{err, *block}
+// 				}
+// 				instanceMembers = append(instanceMembers, instanceMember)
+// 			}
+// 		} else if curStmt.Header.is(KeywordKnow) {
+// 			knowFacts, err = curStmt.parseTypeConceptDeclStmtKnows()
+// 			if err != nil {
+// 				return nil, &parseStmtErr{err, *block}
+// 			}
+// 		}
+// 	}
 
-	return &DefInterfaceStmt{decl, structName, typeMembers, instanceMembers, *knowFacts}, nil
+// 	return &DefInterfaceStmt{decl, structName, typeMembers, instanceMembers, *knowFacts}, nil
 
-}
+// }
 
-func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
-	err := block.Header.skip(KeywordType)
-	if err != nil {
-		return nil, &parseStmtErr{err, *block}
-	}
+// func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
+// 	err := block.Header.skip(KeywordType)
+// 	if err != nil {
+// 		return nil, &parseStmtErr{err, *block}
+// 	}
 
-	// implName := &NamedFcType{}
+// 	// implName := &NamedFcType{}
 
-	// if block.Header.is(Keywords["impl"]) {
-	// 	block.Header.next()
-	// 	implName, err = block.Header.parseNamedFcType()
-	// 	if err != nil {
-	// 		return nil, &parseStmtErr{err, *block}
-	// 	}
-	// }
+// 	// if block.Header.is(Keywords["impl"]) {
+// 	// 	block.Header.next()
+// 	// 	implName, err = block.Header.parseNamedFcType()
+// 	// 	if err != nil {
+// 	// 		return nil, &parseStmtErr{err, *block}
+// 	// 	}
+// 	// }
 
-	decl, err := block.Header.next()
-	if err != nil {
-		return nil, &parseStmtErr{err, *block}
-	}
+// 	decl, err := block.Header.next()
+// 	if err != nil {
+// 		return nil, &parseStmtErr{err, *block}
+// 	}
 
-	if !block.Header.is(KeywordColon) {
-		return &DefTypeStmt{decl, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
-	} else {
-		block.Header.next()
-	}
+// 	if !block.Header.is(KeywordColon) {
+// 		return &DefTypeStmt{decl, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
+// 	} else {
+// 		block.Header.next()
+// 	}
 
-	typeMembers := []TypeMember{}
-	instanceMembers := []InstanceMember{}
-	knowFacts := &[]FactStmt{}
+// 	typeMembers := []TypeMember{}
+// 	instanceMembers := []InstanceMember{}
+// 	knowFacts := &[]FactStmt{}
 
-	for _, curStmt := range block.Body {
-		if curStmt.Header.is(KeywordTypeMember) {
-			for _, member := range curStmt.Body {
-				typeMember, err := member.parseTypeMember()
-				if err != nil {
-					return nil, &parseStmtErr{err, *block}
-				}
-				typeMembers = append(typeMembers, typeMember)
-			}
+// 	for _, curStmt := range block.Body {
+// 		if curStmt.Header.is(KeywordTypeMember) {
+// 			for _, member := range curStmt.Body {
+// 				typeMember, err := member.parseTypeMember()
+// 				if err != nil {
+// 					return nil, &parseStmtErr{err, *block}
+// 				}
+// 				typeMembers = append(typeMembers, typeMember)
+// 			}
 
-		} else if curStmt.Header.is(KeywordInstanceMember) {
-			for _, member := range curStmt.Body {
-				instanceMember, err := member.parseInstanceMember()
-				if err != nil {
-					return nil, &parseStmtErr{err, *block}
-				}
-				instanceMembers = append(instanceMembers, instanceMember)
-			}
+// 		} else if curStmt.Header.is(KeywordInstanceMember) {
+// 			for _, member := range curStmt.Body {
+// 				instanceMember, err := member.parseInstanceMember()
+// 				if err != nil {
+// 					return nil, &parseStmtErr{err, *block}
+// 				}
+// 				instanceMembers = append(instanceMembers, instanceMember)
+// 			}
 
-		} else if curStmt.Header.is(KeywordKnow) {
-			knowFacts, err = curStmt.parseTypeConceptDeclStmtKnows()
-			if err != nil {
-				return nil, &parseStmtErr{err, *block}
-			}
-		} else {
-			return nil, &parseStmtErr{fmt.Errorf("expected type_member or instance_member, got %s", curStmt.Header.strAtCurIndexPlus(0)), *block}
-		}
-	}
-	return &DefTypeStmt{decl, typeMembers, instanceMembers, *knowFacts}, nil
-}
+// 		} else if curStmt.Header.is(KeywordKnow) {
+// 			knowFacts, err = curStmt.parseTypeConceptDeclStmtKnows()
+// 			if err != nil {
+// 				return nil, &parseStmtErr{err, *block}
+// 			}
+// 		} else {
+// 			return nil, &parseStmtErr{fmt.Errorf("expected type_member or instance_member, got %s", curStmt.Header.strAtCurIndexPlus(0)), *block}
+// 		}
+// 	}
+// 	return &DefTypeStmt{decl, typeMembers, instanceMembers, *knowFacts}, nil
+// }
 
 func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	if stmt.Header.is(KeywordForall) {
@@ -902,4 +902,12 @@ func (stmt *TokenBlock) parseBlockIfStmt() (*WhenCondFactStmt, error) {
 	}
 
 	return &WhenCondFactStmt{condFacts, thenFacts}, nil
+}
+
+func (stmt *TokenBlock) parseDefInterfaceStmt() (*DefInterfaceStmt, error) {
+	panic("")
+}
+
+func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
+	panic("")
 }
