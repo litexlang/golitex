@@ -8,18 +8,18 @@ func (stmt *KnowStmt) String() string {
 
 func (stmt *FuncFactStmt) String() string {
 	if stmt.IsTrue {
-		return fmt.Sprintf("$%v", stmt.Fc)
+		return fmt.Sprintf("$%v", stmt.Opt)
 	} else {
-		return fmt.Sprintf("not $%v", stmt.Fc)
+		return fmt.Sprintf("not $%v", stmt.Opt)
 	}
 }
 
 func (stmt *RelationFactStmt) String() string {
-	return fmt.Sprintf("%v %v %v", stmt.Objs[0], stmt.Opt, stmt.Objs[1])
+	return fmt.Sprintf("%v %v %v", stmt.Params[0], stmt.Opt, stmt.Params[1])
 }
 
 func (stmt *DefObjStmt) String() string              { panic("") }
-func (c *DefSetStructStmt) String() string           { panic("") }
+func (c *DefInterfaceStmt) String() string           { panic("") }
 func (f *DefTypeStmt) String() string                { panic("") }
 func (c *DefPropStmt) String() string                { panic("") }
 func (f *DefFnStmt) String() string                  { panic("") }
