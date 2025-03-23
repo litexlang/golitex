@@ -5,35 +5,6 @@ import (
 	"strconv"
 )
 
-type FcInfixOptPrecedence int
-
-// TODO: implement other operators. How logical operators work is also not implemented
-const (
-	precLowest         FcInfixOptPrecedence = iota
-	precAssignment                          // =
-	precOr                                  // or
-	precAnd                                 // and
-	precEquality                            // == !=
-	precComparison                          // < > <= >=
-	precAddition                            // + -
-	precMultiplication                      // / *
-	precUnary                               // - !
-	precExponentiation                      // ^
-)
-
-var precedenceMap = map[string]FcInfixOptPrecedence{
-	"+": precAddition,
-	"-": precAddition,
-	"*": precMultiplication,
-	"/": precMultiplication,
-	"^": precExponentiation,
-}
-
-// All Unary operators have higher precedence than infix operators
-var unaryPrecedence = map[string]FcInfixOptPrecedence{
-	"-": precUnary,
-}
-
 func (parser *Parser) parseFcAtom() (Fc, error) {
 	if parser.is(KeywordLeftParen) {
 		return parser.parseBracedFcExpr()
@@ -44,13 +15,17 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 	}
 
 	// TODO: 这里需要考虑xxx::yyy这种情况
+	fcStr, err := parser.parseFcStr()
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
 
-	strAtSecondPosition := parser.strAtCurIndexPlus(1)
+	strAtSecondPosition := parser.strAtCurIndexPlus(0)
 
 	if strAtSecondPosition != KeywordLeftParen {
-		return parser.parseFcStr()
+		return fcStr, nil
 	} else {
-		return parser.parseFcFnRetVal()
+		return parser.parseFcFnRetVal(fcStr)
 	}
 }
 
@@ -96,12 +71,7 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 // 	}
 // }
 
-func (parser *Parser) parseFcFnRetVal() (*FcFnRetValue, error) {
-	optName, err := parser.parseFcStr()
-	if err != nil {
-		return nil, err
-	}
-
+func (parser *Parser) parseFcFnRetVal(optName FcStr) (*FcFnRetValue, error) {
 	typeParamsObjParamsPairs, err := parser.parseTypeParamsObjParamsPairs()
 
 	if err != nil {
@@ -130,12 +100,54 @@ func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]ObjParams, error) {
 }
 
 func (parser *Parser) parseFcStr() (FcStr, error) {
-
-	tok, err := parser.next()
+	value, err := parser.next()
 	if err != nil {
-		return FcStr{""}, err
+		return FcStr{Value: ""}, err
 	}
-	return FcStr{tok}, nil
+
+	fromPkg := ""
+	if parser.is(KeywordColonColon) {
+		fromPkg = value
+		err := parser.skip(KeywordColonColon)
+		if err != nil {
+			return FcStr{Value: ""}, err
+		}
+		value, err = parser.next()
+		if err != nil {
+			return FcStr{Value: ""}, err
+		}
+	}
+
+	return FcStr{FromPkg: fromPkg, Value: value}, nil
+}
+
+type FcInfixOptPrecedence int
+
+// TODO: implement other operators. How logical operators work is also not implemented
+const (
+	precLowest         FcInfixOptPrecedence = iota
+	precAssignment                          // =
+	precOr                                  // or
+	precAnd                                 // and
+	precEquality                            // == !=
+	precComparison                          // < > <= >=
+	precAddition                            // + -
+	precMultiplication                      // / *
+	precUnary                               // - !
+	precExponentiation                      // ^
+)
+
+var precedenceMap = map[string]FcInfixOptPrecedence{
+	"+": precAddition,
+	"-": precAddition,
+	"*": precMultiplication,
+	"/": precMultiplication,
+	"^": precExponentiation,
+}
+
+// All Unary operators have higher precedence than infix operators
+var unaryPrecedence = map[string]FcInfixOptPrecedence{
+	"-": precUnary,
 }
 
 func (parser *Parser) ParseFc() (Fc, error) {
@@ -167,7 +179,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 		}
 
 		left = &FcFnRetValue{
-			FcStr{curToken},
+			FcStr{Value: curToken},
 			[]ObjParams{{[]Fc{left, right}}},
 		}
 	}
@@ -188,7 +200,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 			return nil, err
 		}
 		return &FcFnRetValue{
-			FcStr{unaryOp},
+			FcStr{Value: unaryOp},
 			[]ObjParams{{[]Fc{right}}},
 		}, nil
 	} else {
@@ -201,34 +213,34 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 	left, err := parser.next()
 
 	if err != nil {
-		return FcStr{""}, err
+		return FcStr{Value: ""}, err
 	}
 
 	if left[0] == '0' {
-		return FcStr{""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
+		return FcStr{Value: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
 	}
 
 	_, err = strconv.Atoi(left)
 	if err != nil {
-		return FcStr{""}, fmt.Errorf("invalid number: %s", left)
+		return FcStr{Value: ""}, fmt.Errorf("invalid number: %s", left)
 	}
 
 	if parser.is(KeywordDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {
-			return FcStr{left}, nil
+			return FcStr{Value: left}, nil
 		} else {
 			parser.skip()
 			right, err := parser.next()
 
 			if err != nil {
-				return FcStr{""}, fmt.Errorf("invalid number: %s", right)
+				return FcStr{Value: ""}, fmt.Errorf("invalid number: %s", right)
 			}
 
-			return FcStr{left + "." + right}, nil
+			return FcStr{Value: left + "." + right}, nil
 		}
 	}
 
-	return FcStr{left}, nil
+	return FcStr{Value: left}, nil
 }

@@ -342,7 +342,7 @@ $f(a,a,a) // 这里涉及到的 forall < T Struct1, T2 Struct2, T3 Struct3 > a T
 3. S 是 R 中的可测集
 4. S 是一个群
 
-貌似把所有的interfaceure改名叫interface更合理。
+貌似把所有的set_struct改名叫interface更合理。
 type和set都能出现在litex的参数列表的类型要求里。
 虽然它叫interface，但是它有个核心的地方和golang的interface不一样：你不能直接把interface当做一个参数类型传入。你只能在函数头里像写template那样写一下。原因是，有时候你必须要说明一下两个type是出自同一个interface，而不能像go一样，两个type只要都impl一个interface，那就行。
 
@@ -359,7 +359,7 @@ fn f(g Group, g2 Group) Group:
 type SelfInt int
 var s int = 1
 selfInt := SelfInt(s) // 引入新变量
-2. 使用接口（interface）或者类型断言
+1. 使用接口（interface）或者类型断言
 func printValue(s interface{}) {
     switch v := s.(type) {
     case SelfInt:

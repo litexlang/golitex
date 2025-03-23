@@ -3,13 +3,18 @@ package litexparser
 type Fc interface {
 	fc()
 	String() string
-	// PackageName() string
+	PkgName() string
 }
 
-func (f FcStr) fc()         {}
-func (f *FcFnRetValue) fc() {}
+func (f FcStr) fc()                     {}
+func (f *FcFnRetValue) fc()             {}
+func (f FcStr) PkgName() string         { return f.FromPkg }
+func (f *FcFnRetValue) PkgName() string { return f.FnName.FromPkg }
 
-type FcStr struct{ Value string }
+type FcStr struct {
+	FromPkg string
+	Value   string
+}
 
 type FcFnRetValue struct {
 	FnName                   FcStr
