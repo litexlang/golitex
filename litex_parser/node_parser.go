@@ -172,13 +172,15 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	opt, err := parser.next() // get the operator.
+	opt, err := parser.parseFcAtom() // get the operator.
 
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &FuncFactStmt{true, &FcFnRet{FcAtom{Value: opt}, []ObjParams{{[]Fc{left}}}}}, nil
+	ret := FcFnRet{opt, []ObjParams{{[]Fc{left}}}}
+
+	return &FuncFactStmt{true, &ret}, nil
 }
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {

@@ -56,7 +56,7 @@ func TestCompareFc(t *testing.T) {
 		Params: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
-				ObjParams: []parser.Fc{fc1}, // 初始化 ObjParams
+				Params: []parser.Fc{fc1}, // 初始化 ObjParams
 			},
 		},
 	}
@@ -65,7 +65,7 @@ func TestCompareFc(t *testing.T) {
 		Params: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{}, // 初始化 TypeParams
-				ObjParams: []parser.Fc{}, // 初始化 ObjParams
+				Params: []parser.Fc{}, // 初始化 ObjParams
 			},
 		},
 	}
@@ -74,7 +74,7 @@ func TestCompareFc(t *testing.T) {
 		Params: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
-				ObjParams: []parser.Fc{fc3}, // 初始化 ObjParams
+				Params: []parser.Fc{fc3}, // 初始化 ObjParams
 			},
 		},
 	}
@@ -83,7 +83,7 @@ func TestCompareFc(t *testing.T) {
 		Params: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
-				ObjParams: []parser.Fc{fc2}, // 初始化 ObjParams
+				Params: []parser.Fc{fc2}, // 初始化 ObjParams
 			},
 		},
 	}

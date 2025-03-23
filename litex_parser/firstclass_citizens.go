@@ -24,20 +24,20 @@ type FcFnRet struct {
 }
 
 type ObjParams struct {
-	ObjParams []Fc
+	Params []Fc
 }
 
 func (f *FcFnRet) String() string {
 	outPut := string(f.FnName.Value)
 
 	for _, pair := range f.Params {
-		if len(pair.ObjParams) > 0 {
+		if len(pair.Params) > 0 {
 			outPut += "("
-			for i := 0; i < len(pair.ObjParams)-1; i++ {
-				outPut += pair.ObjParams[i].String()
+			for i := 0; i < len(pair.Params)-1; i++ {
+				outPut += pair.Params[i].String()
 				outPut += ", "
 			}
-			outPut += pair.ObjParams[len(pair.ObjParams)-1].String()
+			outPut += pair.Params[len(pair.Params)-1].String()
 			outPut += ")"
 		}
 	}
