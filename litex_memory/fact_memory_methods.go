@@ -153,12 +153,12 @@ func compareTypeParamsAndParamsPair(knownPair parser.ObjParams, givenPair parser
 	// 	}
 	// }
 
-	if len(knownPair.ObjParams) != len(givenPair.ObjParams) {
-		return len(knownPair.ObjParams) - len(givenPair.ObjParams), nil
+	if len(knownPair.Params) != len(givenPair.Params) {
+		return len(knownPair.Params) - len(givenPair.Params), nil
 	}
 
-	for i := 0; i < len(knownPair.ObjParams); i++ {
-		if comp, err := CompareFc(knownPair.ObjParams[i], givenPair.ObjParams[i]); comp != 0 || err != nil {
+	for i := 0; i < len(knownPair.Params); i++ {
+		if comp, err := CompareFc(knownPair.Params[i], givenPair.Params[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}

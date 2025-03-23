@@ -135,7 +135,7 @@ func randFcFnRetValue() *parser.FcFnRet {
 	round := rand.Intn(3) + 1
 	typeParamObjParamsPairs := []parser.ObjParams{}
 	for i := 0; i < round; i++ {
-		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.ObjParams{ObjParams: *randObjParams()})
+		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.ObjParams{Params: *randObjParams()})
 	}
 	return &parser.FcFnRet{FnName: fnName, Params: typeParamObjParamsPairs}
 }
