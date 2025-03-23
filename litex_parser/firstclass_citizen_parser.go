@@ -133,9 +133,9 @@ func (parser *Parser) parseFcStr() (FcStr, error) {
 
 	tok, err := parser.next()
 	if err != nil {
-		return "", err
+		return FcStr{""}, err
 	}
-	return FcStr(tok), nil
+	return FcStr{tok}, nil
 }
 
 func (parser *Parser) ParseFc() (Fc, error) {
@@ -167,7 +167,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 		}
 
 		left = &FcFnRetValue{
-			FcStr(curToken),
+			FcStr{curToken},
 			[]ObjParams{{[]Fc{left, right}}},
 		}
 	}
@@ -188,7 +188,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 			return nil, err
 		}
 		return &FcFnRetValue{
-			FcStr(unaryOp),
+			FcStr{unaryOp},
 			[]ObjParams{{[]Fc{right}}},
 		}, nil
 	} else {
@@ -201,34 +201,34 @@ func (parser *Parser) parseNumberStr() (FcStr, error) {
 	left, err := parser.next()
 
 	if err != nil {
-		return "", err
+		return FcStr{""}, err
 	}
 
 	if left[0] == '0' {
-		return "", fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
+		return FcStr{""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
 	}
 
 	_, err = strconv.Atoi(left)
 	if err != nil {
-		return "", fmt.Errorf("invalid number: %s", left)
+		return FcStr{""}, fmt.Errorf("invalid number: %s", left)
 	}
 
 	if parser.is(KeywordDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {
-			return FcStr(left), nil
+			return FcStr{left}, nil
 		} else {
 			parser.skip()
 			right, err := parser.next()
 
 			if err != nil {
-				return "", fmt.Errorf("invalid number: %s", right)
+				return FcStr{""}, fmt.Errorf("invalid number: %s", right)
 			}
 
-			return FcStr(left) + "." + FcStr(right), nil
+			return FcStr{left + "." + right}, nil
 		}
 	}
 
-	return FcStr(left), nil
+	return FcStr{left}, nil
 }

@@ -3,38 +3,25 @@ package litexparser
 type Fc interface {
 	fc()
 	String() string
+	// PackageName() string
 }
 
 func (f FcStr) fc()         {}
 func (f *FcFnRetValue) fc() {}
 
-// func (f *FcChain) fc() {}
-
-type FcStr string
+type FcStr struct{ Value string }
 
 type FcFnRetValue struct {
 	FnName                   FcStr
 	TypeParamsObjParamsPairs []ObjParams
 }
 
-// type FcChainMem interface {
-// 	fc()
-// 	fcMemChainMemType()
-// 	String() string
-// }
-
-// func (f FcStr) fcMemChainMemType()         {}
-// func (f *FcFnRetValue) fcMemChainMemType() {}
-
-// type FcChain struct{ ChainOfMembers []FcChainMem }
-
 type ObjParams struct {
-	// TypeParams []TypeObjStr
 	ObjParams []Fc
 }
 
 func (f *FcFnRetValue) String() string {
-	outPut := string(f.FnName)
+	outPut := string(f.FnName.Value)
 
 	for _, pair := range f.TypeParamsObjParamsPairs {
 
@@ -53,7 +40,8 @@ func (f *FcFnRetValue) String() string {
 }
 
 func (f FcStr) String() string {
-	return string(f)
+	// TODO: PackageName
+	return string(f.Value)
 }
 
 // used for variables that are returned by called function, e,g. f().g().h().  The chain is connected by dots
@@ -74,3 +62,15 @@ type ReversedFc struct {
 func Reverse(f Fc) *ReversedFc {
 	panic("")
 }
+
+// func (f *FcChain) fc() {}
+// type FcChainMem interface {
+// 	fc()
+// 	fcMemChainMemType()
+// 	String() string
+// }
+
+// func (f FcStr) fcMemChainMemType()         {}
+// func (f *FcFnRetValue) fcMemChainMemType() {}
+
+// type FcChain struct{ ChainOfMembers []FcChainMem }

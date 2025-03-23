@@ -115,13 +115,13 @@ func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 }
 
 func compareFcStr(knownFc parser.FcStr, givenFc parser.FcStr) (int, error) {
-	if len(knownFc) != len(givenFc) {
-		return len(knownFc) - len(givenFc), nil
+	if len(knownFc.Value) != len(givenFc.Value) {
+		return len(knownFc.Value) - len(givenFc.Value), nil
 	}
 
-	for i := 0; i < len(knownFc); i++ {
-		if knownFc[i] != givenFc[i] {
-			return int(knownFc[i]) - int(givenFc[i]), nil
+	for i := 0; i < len(knownFc.Value); i++ {
+		if knownFc.Value[i] != givenFc.Value[i] {
+			return int(knownFc.Value[i]) - int(givenFc.Value[i]), nil
 		}
 	}
 
