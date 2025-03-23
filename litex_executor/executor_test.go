@@ -120,24 +120,24 @@ func randomFc() parser.Fc {
 // 	return &parser.FcChain{ChainOfMembers: fcArr}
 // }
 
-func randFcString() parser.FcAtom {
+func randFcString() *parser.FcAtom {
 	length := rand.Intn(10) + 1
 	bytes := make([]byte, length)
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(rand.Intn(26) + 65)
 	}
 	ret := parser.FcAtom{Value: string(bytes)}
-	return ret
+	return &ret
 }
 
 func randFcFnRetValue() *parser.FcFnRet {
 	fnName := randFcString()
 	round := rand.Intn(3) + 1
-	typeParamObjParamsPairs := []parser.ObjParams{}
+	typeParamObjParamsPairs := []parser.FcFnParams{}
 	for i := 0; i < round; i++ {
-		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.ObjParams{Params: *randObjParams()})
+		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.FcFnParams{Params: *randObjParams()})
 	}
-	return &parser.FcFnRet{FnName: fnName, Params: typeParamObjParamsPairs}
+	return &parser.FcFnRet{FnName: *fnName, Params: typeParamObjParamsPairs}
 }
 
 // func randTypeParams() *[]parser.TypeObjStr {

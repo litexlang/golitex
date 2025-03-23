@@ -66,7 +66,7 @@ const (
 )
 
 func getFcEnum(fc parser.Fc) (int, error) {
-	_, ok := fc.(parser.FcAtom)
+	_, ok := fc.(*parser.FcAtom)
 	if ok {
 		return fcStrEnum, nil
 	}
@@ -93,8 +93,8 @@ func CompareFc(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 }
 
 func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
-	knownFcStr, ok := knownFc.(parser.FcAtom)
-	givenFcStr, ok2 := givenFc.(parser.FcAtom)
+	knownFcStr, ok := knownFc.(*parser.FcAtom)
+	givenFcStr, ok2 := givenFc.(*parser.FcAtom)
 	if ok && ok2 {
 		return compareFcStr(knownFcStr, givenFcStr)
 	}
@@ -114,7 +114,7 @@ func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 	return 0, fmt.Errorf("unknown fc type")
 }
 
-func compareFcStr(knownFc parser.FcAtom, givenFc parser.FcAtom) (int, error) {
+func compareFcStr(knownFc *parser.FcAtom, givenFc *parser.FcAtom) (int, error) {
 	if len(knownFc.Value) != len(givenFc.Value) {
 		return len(knownFc.Value) - len(givenFc.Value), nil
 	}
@@ -142,7 +142,7 @@ func compareFcStr(knownFc parser.FcAtom, givenFc parser.FcAtom) (int, error) {
 // 	return 0, nil
 // }
 
-func compareTypeParamsAndParamsPair(knownPair parser.ObjParams, givenPair parser.ObjParams) (int, error) {
+func compareTypeParamsAndParamsPair(knownPair parser.FcFnParams, givenPair parser.FcFnParams) (int, error) {
 	// if len(knownPair.TypeParams) != len(givenPair.TypeParams) {
 	// 	return len(knownPair.TypeParams) - len(givenPair.TypeParams), nil
 	// }
@@ -167,7 +167,7 @@ func compareTypeParamsAndParamsPair(knownPair parser.ObjParams, givenPair parser
 }
 
 func compareFcFnRetValue(knownFc *parser.FcFnRet, givenFc *parser.FcFnRet) (int, error) {
-	if comp, err := compareFcStr(knownFc.FnName, givenFc.FnName); comp != 0 || err != nil {
+	if comp, err := compareFcStr(&knownFc.FnName, &givenFc.FnName); comp != 0 || err != nil {
 		return comp, err
 	}
 

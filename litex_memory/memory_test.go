@@ -53,16 +53,16 @@ func TestCompareFc(t *testing.T) {
 	// 初始化 FcFnRetValue
 	fc4 := parser.FcFnRet{
 		FnName: parser.FcAtom{Value: "ghi"},
-		Params: []parser.ObjParams{
+		Params: []parser.FcFnParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
-				Params: []parser.Fc{fc1}, // 初始化 ObjParams
+				Params: []parser.Fc{&fc1}, // 初始化 ObjParams
 			},
 		},
 	}
 	fc5 := parser.FcFnRet{
 		FnName: parser.FcAtom{Value: "jkl"},
-		Params: []parser.ObjParams{
+		Params: []parser.FcFnParams{
 			{
 				// TypeParams: []parser.TypeObjStr{}, // 初始化 TypeParams
 				Params: []parser.Fc{}, // 初始化 ObjParams
@@ -71,19 +71,19 @@ func TestCompareFc(t *testing.T) {
 	}
 	fc6 := parser.FcFnRet{
 		FnName: parser.FcAtom{Value: "ghi"},
-		Params: []parser.ObjParams{
+		Params: []parser.FcFnParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
-				Params: []parser.Fc{fc3}, // 初始化 ObjParams
+				Params: []parser.Fc{&fc3}, // 初始化 ObjParams
 			},
 		},
 	}
 	fc7 := parser.FcFnRet{
 		FnName: parser.FcAtom{Value: "ghi"},
-		Params: []parser.ObjParams{
+		Params: []parser.FcFnParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
-				Params: []parser.Fc{fc2}, // 初始化 ObjParams
+				Params: []parser.Fc{&fc2}, // 初始化 ObjParams
 			},
 		},
 	}
@@ -105,7 +105,7 @@ func TestCompareFc(t *testing.T) {
 	// }
 
 	// 测试 FcStr 的比较
-	result, err := CompareFc(fc1, fc2)
+	result, err := CompareFc(&fc1, &fc2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc1, fc2): expected negative value, got %d", result)
 	}
 
-	result, err = CompareFc(fc1, fc3)
+	result, err = CompareFc(&fc1, &fc3)
 	if err != nil {
 		t.Fatal(err)
 	}

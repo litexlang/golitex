@@ -23,7 +23,7 @@ func (parser *Parser) parseFcAtomAndFcFnRet() (Fc, error) {
 	strAtSecondPosition := parser.strAtCurIndexPlus(0)
 
 	if strAtSecondPosition != KeywordLeftParen {
-		return fcStr, nil
+		return &fcStr, nil
 	} else {
 		return parser.parseFcFnRetVal(fcStr)
 	}
@@ -81,10 +81,10 @@ func (parser *Parser) parseFcFnRetVal(optName FcAtom) (*FcFnRet, error) {
 	return &FcFnRet{optName, *typeParamsObjParamsPairs}, nil
 }
 
-func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]ObjParams, error) {
+func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]FcFnParams, error) {
 	var err error
 
-	pairs := []ObjParams{}
+	pairs := []FcFnParams{}
 
 	for !parser.ExceedEnd() && (parser.is(KeywordLeftParen)) {
 		varParamsPtr := &[]Fc{}
@@ -93,7 +93,7 @@ func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]ObjParams, error) {
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, ObjParams{*varParamsPtr})
+		pairs = append(pairs, FcFnParams{*varParamsPtr})
 	}
 
 	return &pairs, nil
@@ -180,7 +180,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 
 		left = &FcFnRet{
 			FcAtom{Value: curToken},
-			[]ObjParams{{[]Fc{left, right}}},
+			[]FcFnParams{{[]Fc{left, right}}},
 		}
 	}
 
@@ -201,7 +201,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 		}
 		return &FcFnRet{
 			FcAtom{Value: unaryOp},
-			[]ObjParams{{[]Fc{right}}},
+			[]FcFnParams{{[]Fc{right}}},
 		}, nil
 	} else {
 		return parser.parseFcAtomAndFcFnRet()
@@ -209,38 +209,38 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 
 }
 
-func (parser *Parser) parseNumberStr() (FcAtom, error) {
+func (parser *Parser) parseNumberStr() (*FcAtom, error) {
 	left, err := parser.next()
 
 	if err != nil {
-		return FcAtom{Value: ""}, err
+		return &FcAtom{Value: ""}, err
 	}
 
 	if left[0] == '0' {
-		return FcAtom{Value: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
+		return &FcAtom{Value: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
 	}
 
 	_, err = strconv.Atoi(left)
 	if err != nil {
-		return FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
+		return &FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
 	}
 
 	if parser.is(KeywordDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {
-			return FcAtom{Value: left}, nil
+			return &FcAtom{Value: left}, nil
 		} else {
 			parser.skip()
 			right, err := parser.next()
 
 			if err != nil {
-				return FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", right)
+				return &FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", right)
 			}
 
-			return FcAtom{Value: left + "." + right}, nil
+			return &FcAtom{Value: left + "." + right}, nil
 		}
 	}
 
-	return FcAtom{Value: left}, nil
+	return &FcAtom{Value: left}, nil
 }
