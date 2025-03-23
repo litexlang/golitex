@@ -880,3 +880,17 @@ forall g, g2:
 	}
 
 }
+
+func TestFcWithPkgName(t *testing.T) {
+	code := `
+a::b is red
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}

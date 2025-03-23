@@ -171,7 +171,13 @@ func getBuiltinSymbol(inputString string, start int) string {
 		return ""
 	}
 
-	sort.Strings(BuiltinSymbolArray) // 为了安全性，sort一下
+	// 自定义排序规则，确保较长的符号排在前面
+	sort.Slice(BuiltinSymbolArray, func(i, j int) bool {
+		if len(BuiltinSymbolArray[i]) != len(BuiltinSymbolArray[j]) {
+			return len(BuiltinSymbolArray[i]) > len(BuiltinSymbolArray[j])
+		}
+		return BuiltinSymbolArray[i] < BuiltinSymbolArray[j]
+	})
 
 	// Iterate through keywords and try to match the longest possible
 	for _, keyword := range BuiltinSymbolArray {
