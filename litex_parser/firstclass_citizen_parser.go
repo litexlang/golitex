@@ -39,48 +39,41 @@ func (parser *Parser) parseFcAtom() (Fc, error) {
 		return parser.parseBracedFcExpr()
 	}
 
-	var curFc FcChainMem
-	var err error
-
 	if parser.curTokenBeginWithNumber() {
-		curFc, err = parser.parseNumberStr()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
+		return parser.parseNumberStr()
+	}
+
+	// TODO: 这里需要考虑xxx::yyy这种情况
+
+	strAtSecondPosition := parser.strAtCurIndexPlus(1)
+
+	if strAtSecondPosition != KeywordLeftParen {
+		return parser.parseFcStr()
 	} else {
-		curFc, err = parser.parseFcChainMem()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
+		return parser.parseFcFnRetVal()
 	}
-
-	if !parser.is(KeywordDot) {
-		return curFc, nil
-	}
-
-	return parser.parseFcChain(curFc)
 }
 
-func (parser *Parser) parseFcChain(curFc FcChainMem) (*FcChain, error) {
-	fcArr := []FcChainMem{curFc}
-	var err error = nil
-	for !parser.ExceedEnd() && parser.is(KeywordDot) {
-		err = parser.skip(KeywordDot)
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
+// func (parser *Parser) parseFcChain(curFc FcChainMem) (*FcChain, error) {
+// 	fcArr := []FcChainMem{curFc}
+// 	var err error = nil
+// 	for !parser.ExceedEnd() && parser.is(KeywordDot) {
+// 		err = parser.skip(KeywordDot)
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
 
-		curFc, err = parser.parseFcChainMem()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
+// 		curFc, err = parser.parseFcChainMem()
+// 		if err != nil {
+// 			return nil, &parserErr{err, parser}
+// 		}
 
-		fcArr = append(fcArr, curFc)
-	}
+// 		fcArr = append(fcArr, curFc)
+// 	}
 
-	ret := FcChain{fcArr}
-	return &ret, nil
-}
+// 	ret := FcChain{fcArr}
+// 	return &ret, nil
+// }
 
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	parser.skip(KeywordLeftParen)
@@ -92,16 +85,16 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	return fc, nil
 }
 
-func (parser *Parser) parseFcChainMem() (FcChainMem, error) {
-	// 如果 1 out of range了，那返回值是 “”
-	strAtSecondPosition := parser.strAtCurIndexPlus(1)
+// func (parser *Parser) parseFcChainMem() (FcChainMem, error) {
+// 	// 如果 1 out of range了，那返回值是 “”
+// 	strAtSecondPosition := parser.strAtCurIndexPlus(1)
 
-	if strAtSecondPosition != KeywordLeftParen {
-		return parser.parseFcStr()
-	} else {
-		return parser.parseFcFnRetVal()
-	}
-}
+// 	if strAtSecondPosition != KeywordLeftParen {
+// 		return parser.parseFcStr()
+// 	} else {
+// 		return parser.parseFcFnRetVal()
+// 	}
+// }
 
 func (parser *Parser) parseFcFnRetVal() (*FcFnRetValue, error) {
 	optName, err := parser.parseFcStr()
@@ -118,10 +111,10 @@ func (parser *Parser) parseFcFnRetVal() (*FcFnRetValue, error) {
 	return &FcFnRetValue{optName, *typeParamsObjParamsPairs}, nil
 }
 
-func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]TypeParamsAndObjParamsPair, error) {
+func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]ObjParams, error) {
 	var err error
 
-	pairs := []TypeParamsAndObjParamsPair{}
+	pairs := []ObjParams{}
 
 	for !parser.ExceedEnd() && (parser.is(KeywordLeftParen)) {
 		varParamsPtr := &[]Fc{}
@@ -130,7 +123,7 @@ func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]TypeParamsAndObjParams
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, TypeParamsAndObjParamsPair{*varParamsPtr})
+		pairs = append(pairs, ObjParams{*varParamsPtr})
 	}
 
 	return &pairs, nil
@@ -175,7 +168,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 
 		left = &FcFnRetValue{
 			FcStr(curToken),
-			[]TypeParamsAndObjParamsPair{{[]Fc{left, right}}},
+			[]ObjParams{{[]Fc{left, right}}},
 		}
 	}
 
@@ -196,7 +189,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 		}
 		return &FcFnRetValue{
 			FcStr(unaryOp),
-			[]TypeParamsAndObjParamsPair{{[]Fc{right}}},
+			[]ObjParams{{[]Fc{right}}},
 		}, nil
 	} else {
 		return parser.parseFcAtom()

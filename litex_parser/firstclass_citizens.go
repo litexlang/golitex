@@ -1,9 +1,5 @@
 package litexparser
 
-import (
-	"fmt"
-)
-
 type Fc interface {
 	fc()
 	String() string
@@ -11,27 +7,28 @@ type Fc interface {
 
 func (f FcStr) fc()         {}
 func (f *FcFnRetValue) fc() {}
-func (f *FcChain) fc()      {}
+
+// func (f *FcChain) fc() {}
 
 type FcStr string
 
 type FcFnRetValue struct {
 	FnName                   FcStr
-	TypeParamsObjParamsPairs []TypeParamsAndObjParamsPair
+	TypeParamsObjParamsPairs []ObjParams
 }
 
-type FcChainMem interface {
-	fc()
-	fcMemChainMemType()
-	String() string
-}
+// type FcChainMem interface {
+// 	fc()
+// 	fcMemChainMemType()
+// 	String() string
+// }
 
-func (f FcStr) fcMemChainMemType()         {}
-func (f *FcFnRetValue) fcMemChainMemType() {}
+// func (f FcStr) fcMemChainMemType()         {}
+// func (f *FcFnRetValue) fcMemChainMemType() {}
 
-type FcChain struct{ ChainOfMembers []FcChainMem }
+// type FcChain struct{ ChainOfMembers []FcChainMem }
 
-type TypeParamsAndObjParamsPair struct {
+type ObjParams struct {
 	// TypeParams []TypeObjStr
 	ObjParams []Fc
 }
@@ -61,13 +58,13 @@ func (f FcStr) String() string {
 
 // used for variables that are returned by called function, e,g. f().g().h().  The chain is connected by dots
 
-func (f *FcChain) String() string {
-	ret := ""
-	for i := 0; i < len(f.ChainOfMembers)-1; i++ {
-		ret += fmt.Sprintf("%s.", (f.ChainOfMembers)[i])
-	}
-	return ret + (f.ChainOfMembers)[len(f.ChainOfMembers)-1].String()
-}
+// func (f *FcChain) String() string {
+// 	ret := ""
+// 	for i := 0; i < len(f.ChainOfMembers)-1; i++ {
+// 		ret += fmt.Sprintf("%s.", (f.ChainOfMembers)[i])
+// 	}
+// 	return ret + (f.ChainOfMembers)[len(f.ChainOfMembers)-1].String()
+// }
 
 type ReversedFc struct {
 	// TODO

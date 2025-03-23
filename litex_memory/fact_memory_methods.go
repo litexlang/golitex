@@ -62,7 +62,7 @@ func specFuncFactCompare(knownFact *FuncFactMemoryNode, givenFact *FuncFactMemor
 const (
 	fcStrEnum        = 0
 	fcFnRetValueEnum = 1
-	FcMemChainEnum   = 2
+	// FcMemChainEnum   = 2
 )
 
 func getFcEnum(fc parser.Fc) (int, error) {
@@ -76,10 +76,10 @@ func getFcEnum(fc parser.Fc) (int, error) {
 		return fcFnRetValueEnum, nil
 	}
 
-	_, ok = fc.(*parser.FcChain)
-	if ok {
-		return FcMemChainEnum, nil
-	}
+	// _, ok = fc.(*parser.FcChain)
+	// if ok {
+	// 	return FcMemChainEnum, nil
+	// }
 
 	return 0, fmt.Errorf("unknown Fc type: %T", fc)
 }
@@ -105,11 +105,11 @@ func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 		return compareFcFnRetValue(knownFcFnRetValue, givenFcFnRetValue)
 	}
 
-	knownFcMemChain, ok := knownFc.(*parser.FcChain)
-	givenFcMemChain, ok2 := givenFc.(*parser.FcChain)
-	if ok && ok2 {
-		return compareFcMemChain(knownFcMemChain, givenFcMemChain)
-	}
+	// knownFcMemChain, ok := knownFc.(*parser.FcChain)
+	// givenFcMemChain, ok2 := givenFc.(*parser.FcChain)
+	// if ok && ok2 {
+	// 	return compareFcMemChain(knownFcMemChain, givenFcMemChain)
+	// }
 
 	return 0, fmt.Errorf("unknown fc type")
 }
@@ -142,7 +142,7 @@ func compareFcStr(knownFc parser.FcStr, givenFc parser.FcStr) (int, error) {
 // 	return 0, nil
 // }
 
-func compareTypeParamsAndParamsPair(knownPair parser.TypeParamsAndObjParamsPair, givenPair parser.TypeParamsAndObjParamsPair) (int, error) {
+func compareTypeParamsAndParamsPair(knownPair parser.ObjParams, givenPair parser.ObjParams) (int, error) {
 	// if len(knownPair.TypeParams) != len(givenPair.TypeParams) {
 	// 	return len(knownPair.TypeParams) - len(givenPair.TypeParams), nil
 	// }
@@ -184,19 +184,19 @@ func compareFcFnRetValue(knownFc *parser.FcFnRetValue, givenFc *parser.FcFnRetVa
 	return 0, nil
 }
 
-func compareFcMemChain(knownFc *parser.FcChain, givenFc *parser.FcChain) (int, error) {
-	if len(knownFc.ChainOfMembers) != len(givenFc.ChainOfMembers) {
-		return len(knownFc.ChainOfMembers) - len(givenFc.ChainOfMembers), nil
-	}
+// func compareFcMemChain(knownFc *parser.FcChain, givenFc *parser.FcChain) (int, error) {
+// 	if len(knownFc.ChainOfMembers) != len(givenFc.ChainOfMembers) {
+// 		return len(knownFc.ChainOfMembers) - len(givenFc.ChainOfMembers), nil
+// 	}
 
-	for i := 0; i < len(knownFc.ChainOfMembers); i++ {
-		if comp, err := CompareFc((knownFc.ChainOfMembers)[i], (givenFc.ChainOfMembers)[i]); comp != 0 || err != nil {
-			return comp, err
-		}
-	}
+// 	for i := 0; i < len(knownFc.ChainOfMembers); i++ {
+// 		if comp, err := CompareFc((knownFc.ChainOfMembers)[i], (givenFc.ChainOfMembers)[i]); comp != 0 || err != nil {
+// 			return comp, err
+// 		}
+// 	}
 
-	return 0, nil
-}
+// 	return 0, nil
+// }
 
 func compareFcType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
 	knownFcEnum, err := getFcEnum(knownFc)
