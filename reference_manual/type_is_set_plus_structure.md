@@ -571,3 +571,6 @@ prop_prop Q(p prop):
 $Q(mathematical_induction)
 
 思考一下如果我不允许函数和prop的名字冲突，那我$是否必要呢??
+
+25.3.23
+1. 我们不像lean一样，先定义群再定义nat。我们可以随时定义任何集合（比如nat），然后说明nat的一些操作impl了群的结构

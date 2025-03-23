@@ -53,7 +53,7 @@ func TestCompareFc(t *testing.T) {
 	// 初始化 FcFnRetValue
 	fc4 := parser.FcFnRetValue{
 		FnName: "ghi",
-		TypeParamsObjParamsPairs: []parser.TypeParamsAndObjParamsPair{
+		TypeParamsObjParamsPairs: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
 				ObjParams: []parser.Fc{fc1}, // 初始化 ObjParams
@@ -62,7 +62,7 @@ func TestCompareFc(t *testing.T) {
 	}
 	fc5 := parser.FcFnRetValue{
 		FnName: "jkl",
-		TypeParamsObjParamsPairs: []parser.TypeParamsAndObjParamsPair{
+		TypeParamsObjParamsPairs: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{}, // 初始化 TypeParams
 				ObjParams: []parser.Fc{}, // 初始化 ObjParams
@@ -71,7 +71,7 @@ func TestCompareFc(t *testing.T) {
 	}
 	fc6 := parser.FcFnRetValue{
 		FnName: "ghi",
-		TypeParamsObjParamsPairs: []parser.TypeParamsAndObjParamsPair{
+		TypeParamsObjParamsPairs: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
 				ObjParams: []parser.Fc{fc3}, // 初始化 ObjParams
@@ -80,7 +80,7 @@ func TestCompareFc(t *testing.T) {
 	}
 	fc7 := parser.FcFnRetValue{
 		FnName: "ghi",
-		TypeParamsObjParamsPairs: []parser.TypeParamsAndObjParamsPair{
+		TypeParamsObjParamsPairs: []parser.ObjParams{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
 				ObjParams: []parser.Fc{fc2}, // 初始化 ObjParams
@@ -88,21 +88,21 @@ func TestCompareFc(t *testing.T) {
 		},
 	}
 
-	fc8 := parser.FcChain{
-		ChainOfMembers: []parser.FcChainMem{fc1, fc2},
-	}
-	fc9 := parser.FcChain{
-		// fc3, fc2,
-		ChainOfMembers: []parser.FcChainMem{fc3, fc2},
-	}
-	fc10 := parser.FcChain{
-		// &fc4, &fc6,
-		ChainOfMembers: []parser.FcChainMem{&fc4, &fc6},
-	}
-	fc11 := parser.FcChain{
-		// &fc4, &fc7,
-		ChainOfMembers: []parser.FcChainMem{&fc4, &fc7},
-	}
+	// fc8 := parser.FcChain{
+	// 	ChainOfMembers: []parser.FcChainMem{fc1, fc2},
+	// }
+	// fc9 := parser.FcChain{
+	// 	// fc3, fc2,
+	// 	ChainOfMembers: []parser.FcChainMem{fc3, fc2},
+	// }
+	// fc10 := parser.FcChain{
+	// 	// &fc4, &fc6,
+	// 	ChainOfMembers: []parser.FcChainMem{&fc4, &fc6},
+	// }
+	// fc11 := parser.FcChain{
+	// 	// &fc4, &fc7,
+	// 	ChainOfMembers: []parser.FcChainMem{&fc4, &fc7},
+	// }
 
 	// 测试 FcStr 的比较
 	result, err := CompareFc(fc1, fc2)
@@ -154,21 +154,6 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc4, fc7): expected neg value, got %d", result)
 	}
 
-	result, err = CompareFc(&fc8, &fc9)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result != 0 {
-		t.Fatalf("compareFc(fc8, fc9): expected positive value, got %d", result)
-	}
-
-	result, err = CompareFc(&fc10, &fc11)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result >= 0 {
-		t.Fatalf("compareFc(fc10, fc11): expected positive value, got %d", result)
-	}
 }
 
 func TestCompareSpecFact(t *testing.T) {

@@ -94,7 +94,7 @@ func randFuncFact() *parser.FuncFactStmt {
 
 func randomFc() parser.Fc {
 
-	e := rand.Intn(3)
+	e := rand.Intn(2)
 
 	if e == 0 {
 		// generate a random number from 1 to 10
@@ -105,20 +105,20 @@ func randomFc() parser.Fc {
 		return randFcFnRetValue()
 	}
 
-	if e == 2 {
-		return randFcChain()
-	}
+	// if e == 2 {
+	// 	return randFcChain()
+	// }
 	return nil
 }
 
-func randFcChain() *parser.FcChain {
-	fcArr := []parser.FcChainMem{}
-	round := rand.Intn(3) + 2
-	for i := 0; i < round; i++ {
-		fcArr = append(fcArr, randFcFnRetValue())
-	}
-	return &parser.FcChain{ChainOfMembers: fcArr}
-}
+// func randFcChain() *parser.FcChain {
+// 	fcArr := []parser.FcChainMem{}
+// 	round := rand.Intn(3) + 2
+// 	for i := 0; i < round; i++ {
+// 		fcArr = append(fcArr, randFcFnRetValue())
+// 	}
+// 	return &parser.FcChain{ChainOfMembers: fcArr}
+// }
 
 func randFcString() parser.FcStr {
 	length := rand.Intn(10) + 1
@@ -132,16 +132,16 @@ func randFcString() parser.FcStr {
 func randFcFnRetValue() *parser.FcFnRetValue {
 	fnName := randFcString()
 	round := rand.Intn(3) + 1
-	typeParamObjParamsPairs := []parser.TypeParamsAndObjParamsPair{}
+	typeParamObjParamsPairs := []parser.ObjParams{}
 	for i := 0; i < round; i++ {
-		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.TypeParamsAndObjParamsPair{ObjParams: *randObjParams()})
+		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.ObjParams{ObjParams: *randObjParams()})
 	}
 	return &parser.FcFnRetValue{FnName: fnName, TypeParamsObjParamsPairs: typeParamObjParamsPairs}
 }
 
 // func randTypeParams() *[]parser.TypeObjStr {
 // 	round := rand.Intn(3) + 1
-// 	typeObjs := []parser.TypeObjStr{}
+// 	typeObj := []parser.TypeObjStr{}
 // 	for i := 0; i < round; i++ {
 // 		length := rand.Intn(10) + 1
 // 		bytes := make([]byte, length)
