@@ -178,7 +178,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	ret := FcFnRet{opt, []ObjParams{{[]Fc{left}}}}
+	ret := FcFnRet{opt, []FcFnParams{{[]Fc{left}}}}
 
 	return &FuncFactStmt{true, &ret}, nil
 }

@@ -884,6 +884,7 @@ forall g, g2:
 func TestFcWithPkgName(t *testing.T) {
 	code := `
 a::b is red::blue
+$p(x, y)(red::blue, f(1,2)(3,4))
 `
 
 	statements, err := ParserTester(code)

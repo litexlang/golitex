@@ -8,11 +8,6 @@ type Fc interface {
 	PkgName() string
 }
 
-func (f FcAtom) fc()               {}
-func (f *FcFnRet) fc()             {}
-func (f FcAtom) PkgName() string   { return f.FromPkg }
-func (f *FcFnRet) PkgName() string { return f.FnName.FromPkg }
-
 type FcAtom struct {
 	FromPkg string
 	Value   string
@@ -20,11 +15,24 @@ type FcAtom struct {
 
 type FcFnRet struct {
 	FnName FcAtom
-	Params []ObjParams
+	Params []FcFnParams
 }
 
-type ObjParams struct {
+type FcFnParams struct {
 	Params []Fc
+}
+
+func (f *FcAtom) fc()              {}
+func (f *FcFnRet) fc()             {}
+func (f *FcAtom) PkgName() string  { return f.FromPkg }
+func (f *FcFnRet) PkgName() string { return f.FnName.FromPkg }
+
+func (f *FcAtom) String() string {
+	if f.FromPkg == "" {
+		return string(f.Value)
+	} else {
+		return fmt.Sprintf("%s::%s", f.FromPkg, string(f.Value))
+	}
 }
 
 func (f *FcFnRet) String() string {
@@ -43,14 +51,6 @@ func (f *FcFnRet) String() string {
 	}
 
 	return outPut
-}
-
-func (f FcAtom) String() string {
-	if f.FromPkg == "" {
-		return string(f.Value)
-	} else {
-		return fmt.Sprintf("%s::%s", f.FromPkg, string(f.Value))
-	}
 }
 
 // used for variables that are returned by called function, e,g. f().g().h().  The chain is connected by dots
