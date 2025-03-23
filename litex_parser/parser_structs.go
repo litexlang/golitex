@@ -6,11 +6,11 @@ type TopStmt struct {
 }
 
 type DefObjStmt struct {
-	Decl  []string
+	Objs  []string
 	Facts []FactStmt
 }
 
-type DefSetStructStmt struct {
+type DefInterfaceStmt struct {
 	decl            string
 	structName      TypeConceptStr
 	typeMembers     []TypeMember
@@ -26,34 +26,34 @@ type DefTypeStmt struct {
 }
 
 type DefPropStmt struct {
-	decl      PropDecl
-	condFacts []FactStmt
-	thenFacts []FactStmt
+	DeclHeader PropDeclHeader
+	CondFacts  []FactStmt
+	ThenFacts  []FactStmt
 }
 
 type DefFnStmt struct {
 	name      string
 	tp        []string
-	ifFacts   []FactStmt
-	thenFacts []FactStmt
+	CondFacts []FactStmt
+	ThenFacts []FactStmt
 }
 
 type BlockForallStmt struct {
-	varParams []string
-	cond      []FactStmt
-	then      []SpecFactStmt
+	VarParams []string
+	CondFacts []FactStmt
+	ThenFacts []SpecFactStmt
 }
 
 type FuncFactStmt struct {
 	IsTrue bool
-	Fc     FcAtom
+	Opt    FcAtom
 	Params []Fc
 }
 
 type RelationFactStmt struct {
 	IsTrue bool
-	Objs   []Fc
 	Opt    FcAtom
+	Params []Fc
 }
 
 type ClaimProveByContradictStmt struct {
@@ -76,7 +76,7 @@ type KnowStmt struct {
 }
 
 type DefExistStmt struct {
-	decl      PropDecl
+	decl      PropDeclHeader
 	ifFacts   []FactStmt
 	member    []InstanceMember
 	thenFacts []FactStmt
@@ -114,7 +114,7 @@ type FcFnDecl struct {
 	vars []string
 }
 
-type PropDecl struct {
+type PropDeclHeader struct {
 	name string
 	vars []string
 }

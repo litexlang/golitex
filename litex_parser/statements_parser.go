@@ -85,7 +85,7 @@ func (stmt *TokenBlock) parseTypeConceptDeclStmtKnows() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-func (block *TokenBlock) parseDefSetStructStmt() (*DefSetStructStmt, error) {
+func (block *TokenBlock) parseDefSetStructStmt() (*DefInterfaceStmt, error) {
 	block.Header.skip(KeywordInterface)
 
 	decl, err := block.Header.next()
@@ -104,7 +104,7 @@ func (block *TokenBlock) parseDefSetStructStmt() (*DefSetStructStmt, error) {
 	structName := TypeConceptStr(structNameStr)
 
 	if !block.Header.is(KeywordColon) {
-		return &DefSetStructStmt{decl, structName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
+		return &DefInterfaceStmt{decl, structName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
 	} else {
 		block.Header.next()
 	}
@@ -138,7 +138,7 @@ func (block *TokenBlock) parseDefSetStructStmt() (*DefSetStructStmt, error) {
 		}
 	}
 
-	return &DefSetStructStmt{decl, structName, typeMembers, instanceMembers, *knowFacts}, nil
+	return &DefInterfaceStmt{decl, structName, typeMembers, instanceMembers, *knowFacts}, nil
 
 }
 
@@ -761,17 +761,17 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	vars := []Fc{fc, fc2}
+	params := []Fc{fc, fc2}
 	for stmt.Header.is(opt) {
 		stmt.Header.skip()
 		fc, err := stmt.Header.ParseFc()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		vars = append(vars, fc)
+		params = append(params, fc)
 	}
 
-	return &RelationFactStmt{true, vars, FcAtom{Value: opt}}, nil
+	return &RelationFactStmt{true, FcAtom{Value: opt}, params}, nil
 }
 
 func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {

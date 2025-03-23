@@ -71,13 +71,13 @@ func (env *Env) NewRelationFact(stmt *parser.RelationFactStmt) error {
 
 func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 	left := &EqualFactMemoryTreeNode{
-		stmt.Objs[0],
-		[]*parser.Fc{&stmt.Objs[1]},
+		stmt.Params[0],
+		[]*parser.Fc{&stmt.Params[1]},
 	}
 
 	right := &EqualFactMemoryTreeNode{
-		stmt.Objs[1],
-		[]*parser.Fc{&stmt.Objs[0]},
+		stmt.Params[1],
+		[]*parser.Fc{&stmt.Params[0]},
 	}
 
 	leftSearched, err := env.EqualMemory.Mem.Search(left)
@@ -85,7 +85,7 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 		return err
 	}
 	if leftSearched != nil {
-		leftSearched.Key.Values = append(leftSearched.Key.Values, &stmt.Objs[1])
+		leftSearched.Key.Values = append(leftSearched.Key.Values, &stmt.Params[1])
 	} else {
 		env.EqualMemory.Mem.Insert(left)
 	}
@@ -96,7 +96,7 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 		return err
 	}
 	if rightSearched != nil {
-		rightSearched.Key.Values = append(rightSearched.Key.Values, &stmt.Objs[0])
+		rightSearched.Key.Values = append(rightSearched.Key.Values, &stmt.Params[0])
 	} else {
 		env.EqualMemory.Mem.Insert(right)
 	}

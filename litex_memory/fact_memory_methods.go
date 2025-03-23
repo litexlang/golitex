@@ -56,7 +56,7 @@ func specFuncFactCompare(knownFact *FuncFactMemoryNode, givenFact *FuncFactMemor
 		return isTrueComp, nil
 	}
 
-	return CompareFc(&knownFact.Fc, &givenFact.Fc)
+	return CompareFc(&knownFact.Opt, &givenFact.Opt)
 }
 
 const (

@@ -114,7 +114,7 @@ func (parser *Parser) parseBracedFcStrTypePairArray() (*[]string, error) {
 	return &fcSlice, nil
 }
 
-func (parser *Parser) parsePropDecl() (*PropDecl, error) {
+func (parser *Parser) parsePropDecl() (*PropDeclHeader, error) {
 	parser.skip(KeywordProp)
 	name, err := parser.next()
 	if err != nil {
@@ -126,10 +126,10 @@ func (parser *Parser) parsePropDecl() (*PropDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &PropDecl{name, *varParams}, nil
+	return &PropDeclHeader{name, *varParams}, nil
 }
 
-func (parser *Parser) parseExistDecl() (*PropDecl, error) {
+func (parser *Parser) parseExistDecl() (*PropDeclHeader, error) {
 	parser.skip(KeywordExistProp)
 	name, err := parser.next()
 	if err != nil {
@@ -141,7 +141,7 @@ func (parser *Parser) parseExistDecl() (*PropDecl, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &PropDecl{name, *varParams}, nil
+	return &PropDeclHeader{name, *varParams}, nil
 }
 
 func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {

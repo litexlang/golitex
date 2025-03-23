@@ -95,7 +95,7 @@ func randFuncFact() *parser.FuncFactStmt {
 		params[i] = randomFc()
 	}
 
-	stmt := parser.FuncFactStmt{IsTrue: true, Fc: *randFcAtom(), Params: params}
+	stmt := parser.FuncFactStmt{IsTrue: true, Opt: *randFcAtom(), Params: params}
 	return &stmt
 }
 
@@ -378,7 +378,7 @@ func randEqualFact() *parser.RelationFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.RelationFactStmt{IsTrue: true, Objs: []parser.Fc{left, right}, Opt: parser.FcAtom{FromPkg: "", Value: "="}}
+	return &parser.RelationFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{FromPkg: "", Value: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {
