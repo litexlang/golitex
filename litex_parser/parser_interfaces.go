@@ -23,7 +23,7 @@ func (s *HaveStmt) stmt()                   {}
 func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
-func (s *WhenCondFactStmt) stmt()           {}
+func (s *ConditionalFactStmt) stmt()        {}
 func (s *GenericForallStmt) stmt()          {}
 
 type FactStmt interface {
@@ -32,11 +32,11 @@ type FactStmt interface {
 	String() string
 }
 
-func (l *ConcreteForallStmt) factStmt() {}
-func (r *RelationFactStmt) factStmt()   {}
-func (p *FuncFactStmt) factStmt()       {}
-func (p *WhenCondFactStmt) factStmt()   {}
-func (p *GenericForallStmt) factStmt()  {}
+func (r *RelationFactStmt) factStmt()    {}
+func (p *FuncFactStmt) factStmt()        {}
+func (p *ConditionalFactStmt) factStmt() {}
+func (l *ConcreteForallStmt) factStmt()  {}
+func (p *GenericForallStmt) factStmt()   {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
@@ -90,9 +90,9 @@ type InlineFactStmt interface {
 	stmt()
 }
 
-func (r *RelationFactStmt) inlineFactStmt() {}
-func (p *FuncFactStmt) inlineFactStmt()     {}
-func (p *WhenCondFactStmt) inlineFactStmt() {}
+func (r *RelationFactStmt) inlineFactStmt()    {}
+func (p *FuncFactStmt) inlineFactStmt()        {}
+func (p *ConditionalFactStmt) inlineFactStmt() {}
 
 type TypeMember interface {
 	typeMember()

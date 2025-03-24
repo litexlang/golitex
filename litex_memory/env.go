@@ -50,7 +50,7 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 			if err := env.NewRelationFact(f); err != nil {
 				return err
 			}
-		case *parser.WhenCondFactStmt:
+		case *parser.ConditionalFactStmt:
 			if err := env.NewCondFact(f); err != nil {
 				return err
 			}
