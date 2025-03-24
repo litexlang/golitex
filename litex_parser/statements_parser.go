@@ -208,98 +208,31 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	if stmt.Header.is(KeywordForall) {
 		return stmt.parseForallStmt()
 	} else if stmt.Header.is(KeywordWhen) {
-		return stmt.parseIfStmt()
+		return stmt.parseWhenStmt()
 	}
 	return stmt.parseInstantiatedFactStmt()
 }
 
-func (stmt *TokenBlock) parseIfStmt() (FactStmt, error) {
+func (stmt *TokenBlock) parseWhenStmt() (FactStmt, error) {
 	if stmt.Header.strAtIndex(-1) == KeywordColon {
-		return stmt.parseBlockIfStmt()
+		return stmt.parseBlockWhenStmt()
 	} else {
-		return stmt.parseInlineIfFactStmt()
+		return stmt.parseInlineWhenFactStmt()
 	}
 }
 
-func (stmt *TokenBlock) parseInlineFactStmt() (FactStmt, error) {
-	if stmt.Header.is(KeywordWhen) {
-		return stmt.parseInlineIfFactStmt()
-	} else if stmt.Header.is(KeywordForall) {
-		return stmt.parseInlineForallStmt()
-	}
+// func (stmt *TokenBlock) parseInlineFactStmt() (FactStmt, error) {
+// if stmt.Header.is(KeywordWhen) {
+// 	return stmt.parseInlineWhenFactStmt()
+// } else if stmt.Header.is(KeywordForall) {
+// 	return stmt.parseInlineForallStmt()
+// }
 
-	return stmt.parseInstantiatedFactStmt()
-}
+// return stmt.parseInstantiatedFactStmt()
+// }
 
 func (stmt *TokenBlock) parseInlineForallStmt() (ForallStmt, error) {
-	err := stmt.Header.skip(KeywordForall)
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	typeParams := &[]string{}
-	typeInterfaces := &[]FcAtom{}
-
-	if stmt.Header.is(KeywordLess) {
-		stmt.Header.next()
-		typeParams, typeInterfaces, err = stmt.Header.parseTypeListInDeclsAndSkipEnd(KeywordGreater)
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-	}
-
-	condFacts := []FactStmt{}
-	thenFacts := []SpecFactStmt{}
-
-	// skip ()
-	err = stmt.Header.skip(KeywordLeftParen)
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-	params, paramTypes, err := stmt.Header.parseParamListInDeclsAndSkipEnd(KeywordRightParen)
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	for !stmt.Header.is(KeywordLeftCurly) {
-		fact, err := stmt.parseInlineFactStmt()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		condFacts = append(condFacts, fact)
-
-		if stmt.Header.is(KeywordComma) {
-			stmt.Header.next()
-		}
-	}
-
-	err = stmt.Header.skip(KeywordLeftCurly)
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	for !stmt.Header.is(KeywordRightCurly) {
-		fact, err := stmt.parseInstantiatedFactStmt()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		thenFacts = append(thenFacts, fact)
-
-		if stmt.Header.is(KeywordComma) {
-			stmt.Header.next()
-		}
-	}
-	err = stmt.Header.skip(KeywordRightCurly)
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	if len(*typeParams) > 0 {
-		return &GenericForallStmt{*typeParams, *typeInterfaces, *params, *paramTypes, condFacts, thenFacts}, nil
-	} else {
-		return &ConcreteForallStmt{*params, *paramTypes, condFacts, thenFacts}, nil
-	}
-
+	panic("not implemented")
 }
 
 func (stmt *TokenBlock) parseInstantiatedFactStmt() (SpecFactStmt, error) {
@@ -827,53 +760,11 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 	return &ThmStmt{decl, *facts}, nil
 }
 
-func (stmt *TokenBlock) parseInlineIfFactStmt() (*WhenCondFactStmt, error) {
-	err := stmt.Header.skip(KeywordWhen)
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	condFacts := []FactStmt{}
-	for !stmt.Header.is(KeywordLeftCurly) {
-		fact, err := stmt.parseInlineFactStmt()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		condFacts = append(condFacts, fact)
-
-		if stmt.Header.is(KeywordComma) {
-			stmt.Header.skip()
-		}
-	}
-
-	thenFacts := []SpecFactStmt{}
-
-	err = stmt.Header.skip(KeywordLeftCurly)
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	for !stmt.Header.is(KeywordRightCurly) {
-		fact, err := stmt.parseInstantiatedFactStmt()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		thenFacts = append(thenFacts, fact)
-
-		if stmt.Header.is(KeywordComma) {
-			stmt.Header.skip()
-		}
-	}
-
-	err = stmt.Header.skip(KeywordRightCurly)
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	return &WhenCondFactStmt{condFacts, thenFacts}, nil
+func (stmt *TokenBlock) parseInlineWhenFactStmt() (*ConditionalFactStmt, error) {
+	panic("not implemented")
 }
 
-func (stmt *TokenBlock) parseBlockIfStmt() (*WhenCondFactStmt, error) {
+func (stmt *TokenBlock) parseBlockWhenStmt() (*ConditionalFactStmt, error) {
 	err := stmt.Header.skip(KeywordWhen)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -914,7 +805,7 @@ func (stmt *TokenBlock) parseBlockIfStmt() (*WhenCondFactStmt, error) {
 		thenFacts = append(thenFacts, fact)
 	}
 
-	return &WhenCondFactStmt{condFacts, thenFacts}, nil
+	return &ConditionalFactStmt{condFacts, thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseDefInterfaceStmt() (*DefInterfaceStmt, error) {

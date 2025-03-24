@@ -102,7 +102,7 @@ type ThmStmt struct {
 	proof []Stmt
 }
 
-type WhenCondFactStmt struct {
+type ConditionalFactStmt struct {
 	CondFacts []FactStmt
 	ThenFacts []SpecFactStmt
 }

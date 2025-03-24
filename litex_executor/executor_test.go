@@ -170,7 +170,7 @@ func randObjParams() *[]parser.Fc {
 	return &objParams
 }
 
-func randCondStmt() *parser.WhenCondFactStmt {
+func randCondStmt() *parser.ConditionalFactStmt {
 	randomNumberOfCondFacts := rand.Intn(3) + 1
 	randomNumberOfThenFacts := rand.Intn(3) + 1
 	condFacts := []parser.FactStmt{}
@@ -184,7 +184,7 @@ func randCondStmt() *parser.WhenCondFactStmt {
 		thenFacts = append(thenFacts, randFuncFact())
 	}
 
-	return &parser.WhenCondFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
+	return &parser.ConditionalFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
 }
 
 func TestKnowVerifyFuncFactSpeed(t *testing.T) {
