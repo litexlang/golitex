@@ -17,7 +17,7 @@ type DefTypeStmt struct {
 }
 
 // TODO: Generics
-type DefPropStmt struct {
+type DefSpecPropStmt struct {
 	DeclHeader PropDeclHeader
 	CondFacts  []FactStmt
 	ThenFacts  []FactStmt
@@ -79,7 +79,7 @@ type KnowStmt struct {
 	Facts []FactStmt
 }
 
-type DefExistStmt struct {
+type DefExistPropStmt struct {
 	DeclHeader PropDeclHeader
 	CondFacts  []FactStmt
 	Members    []InstanceMember
@@ -93,12 +93,12 @@ type HaveStmt struct {
 
 // syntax sugar for defining spec prop + claim forall true
 type AxiomStmt struct {
-	decl DefPropExistDeclStmt
+	decl DefPropStmt
 }
 
 // syntax sugar for defining spec prop + claim forall true + prove it
 type ThmStmt struct {
-	decl  DefPropExistDeclStmt
+	decl  DefPropStmt
 	proof []Stmt
 }
 

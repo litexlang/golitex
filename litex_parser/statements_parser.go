@@ -31,8 +31,10 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseDefInterfaceStmt()
 	case KeywordType:
 		ret, err = stmt.parseDefTypeStmt()
-	case KeywordProp:
-		ret, err = stmt.parseDefPropStmt()
+	case KeywordSpecProp:
+		ret, err = stmt.parseDefSpecPropStmt()
+	case KeywordExistProp:
+		ret, err = stmt.parseDefExistPropStmt()
 	case KeywordFn:
 		ret, err = stmt.parseDefFnStmt()
 	case KeywordObj:
@@ -43,8 +45,6 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseProveClaimStmt()
 	case KeywordKnow:
 		ret, err = stmt.parseKnowStmt()
-	case KeywordExistProp:
-		ret, err = stmt.parseDefExistStmt()
 	case KeywordHave:
 		ret, err = stmt.parseHaveStmt()
 	case KeywordAxiom:
@@ -66,173 +66,13 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	return ret, nil
 }
 
-// func (stmt *TokenBlock) parseTypeConceptDeclStmtKnows() (*[]FactStmt, error) {
-// 	stmt.Header.next()
-// 	if err := stmt.Header.testAndSkip(KeywordColon); err != nil {
-// 		return nil, err
-// 	}
-
-// 	facts := &[]FactStmt{}
-
-// 	for _, curStmt := range stmt.Body {
-// 		fact, err := curStmt.parseFactStmt()
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		*facts = append(*facts, fact)
-// 	}
-
-// 	return facts, nil
-// }
-
-// func (block *TokenBlock) parseDefSetStructStmt() (*DefInterfaceStmt, error) {
-// 	block.Header.skip(KeywordInterface)
-
-// 	decl, err := block.Header.next()
-// 	if err != nil {
-// 		return nil, &parseStmtErr{err, *block}
-// 	}
-
-// 	structNameStr := ""
-// 	if block.Header.is(KeywordImpl) {
-// 		block.Header.next()
-// 		structNameStr, err = block.Header.next()
-// 		if err != nil {
-// 			return nil, &parseStmtErr{err, *block}
-// 		}
-// 	}
-// 	structName := TypeConceptStr(structNameStr)
-
-// 	if !block.Header.is(KeywordColon) {
-// 		return &DefInterfaceStmt{decl, structName, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
-// 	} else {
-// 		block.Header.next()
-// 	}
-
-// 	typeMembers := []TypeMember{}
-// 	instanceMembers := []InstanceMember{}
-// 	knowFacts := &[]FactStmt{}
-
-// 	for _, curStmt := range block.Body {
-// 		if curStmt.Header.is(KeywordTypeMember) {
-// 			for _, member := range curStmt.Body {
-// 				typeMember, err := member.parseTypeMember()
-// 				if err != nil {
-// 					return nil, &parseStmtErr{err, *block}
-// 				}
-// 				typeMembers = append(typeMembers, typeMember)
-// 			}
-// 		} else if curStmt.Header.is(KeywordInstanceMember) {
-// 			for _, member := range curStmt.Body {
-// 				instanceMember, err := member.parseInstanceMember()
-// 				if err != nil {
-// 					return nil, &parseStmtErr{err, *block}
-// 				}
-// 				instanceMembers = append(instanceMembers, instanceMember)
-// 			}
-// 		} else if curStmt.Header.is(KeywordKnow) {
-// 			knowFacts, err = curStmt.parseTypeConceptDeclStmtKnows()
-// 			if err != nil {
-// 				return nil, &parseStmtErr{err, *block}
-// 			}
-// 		}
-// 	}
-
-// 	return &DefInterfaceStmt{decl, structName, typeMembers, instanceMembers, *knowFacts}, nil
-
-// }
-
-// func (block *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
-// 	err := block.Header.skip(KeywordType)
-// 	if err != nil {
-// 		return nil, &parseStmtErr{err, *block}
-// 	}
-
-// 	// implName := &NamedFcType{}
-
-// 	// if block.Header.is(Keywords["impl"]) {
-// 	// 	block.Header.next()
-// 	// 	implName, err = block.Header.parseNamedFcType()
-// 	// 	if err != nil {
-// 	// 		return nil, &parseStmtErr{err, *block}
-// 	// 	}
-// 	// }
-
-// 	decl, err := block.Header.next()
-// 	if err != nil {
-// 		return nil, &parseStmtErr{err, *block}
-// 	}
-
-// 	if !block.Header.is(KeywordColon) {
-// 		return &DefTypeStmt{decl, []TypeMember{}, []InstanceMember{}, []FactStmt{}}, nil
-// 	} else {
-// 		block.Header.next()
-// 	}
-
-// 	typeMembers := []TypeMember{}
-// 	instanceMembers := []InstanceMember{}
-// 	knowFacts := &[]FactStmt{}
-
-// 	for _, curStmt := range block.Body {
-// 		if curStmt.Header.is(KeywordTypeMember) {
-// 			for _, member := range curStmt.Body {
-// 				typeMember, err := member.parseTypeMember()
-// 				if err != nil {
-// 					return nil, &parseStmtErr{err, *block}
-// 				}
-// 				typeMembers = append(typeMembers, typeMember)
-// 			}
-
-// 		} else if curStmt.Header.is(KeywordInstanceMember) {
-// 			for _, member := range curStmt.Body {
-// 				instanceMember, err := member.parseInstanceMember()
-// 				if err != nil {
-// 					return nil, &parseStmtErr{err, *block}
-// 				}
-// 				instanceMembers = append(instanceMembers, instanceMember)
-// 			}
-
-// 		} else if curStmt.Header.is(KeywordKnow) {
-// 			knowFacts, err = curStmt.parseTypeConceptDeclStmtKnows()
-// 			if err != nil {
-// 				return nil, &parseStmtErr{err, *block}
-// 			}
-// 		} else {
-// 			return nil, &parseStmtErr{fmt.Errorf("expected type_member or instance_member, got %s", curStmt.Header.strAtCurIndexPlus(0)), *block}
-// 		}
-// 	}
-// 	return &DefTypeStmt{decl, typeMembers, instanceMembers, *knowFacts}, nil
-// }
-
 func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	if stmt.Header.is(KeywordForall) {
 		return stmt.parseForallStmt()
 	} else if stmt.Header.is(KeywordWhen) {
-		return stmt.parseWhenStmt()
+		return stmt.parseConditionalStmt()
 	}
 	return stmt.parseSpecFactStmt()
-}
-
-func (stmt *TokenBlock) parseWhenStmt() (FactStmt, error) {
-	if stmt.Header.strAtIndex(-1) == KeywordColon {
-		return stmt.parseBlockWhenStmt()
-	} else {
-		return stmt.parseInlineWhenFactStmt()
-	}
-}
-
-// func (stmt *TokenBlock) parseInlineFactStmt() (FactStmt, error) {
-// if stmt.Header.is(KeywordWhen) {
-// 	return stmt.parseInlineWhenFactStmt()
-// } else if stmt.Header.is(KeywordForall) {
-// 	return stmt.parseInlineForallStmt()
-// }
-
-// return stmt.parseInstantiatedFactStmt()
-// }
-
-func (stmt *TokenBlock) parseInlineForallStmt() (ForallStmt, error) {
-	panic("not implemented")
 }
 
 func (stmt *TokenBlock) parseSpecFactStmt() (SpecFactStmt, error) {
@@ -297,7 +137,7 @@ func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
 	return &FuncFactStmt{true, opt, params}, nil
 }
 
-func (stmt *TokenBlock) parseBlockedForall() (ForallStmt, error) {
+func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 	err := stmt.Header.skip(KeywordForall)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -376,13 +216,9 @@ func (stmt *TokenBlock) parseBlockedForall() (ForallStmt, error) {
 
 }
 
-func (stmt *TokenBlock) parseForallStmt() (FactStmt, error) {
-	if stmt.Header.strAtIndex(-1) != KeywordColon {
-		return stmt.parseInlineForallStmt()
-	} else {
-		return stmt.parseBlockedForall()
-	}
-}
+// func (stmt *TokenBlock) parseForallStmt() (FactStmt, error) {
+// 	return stmt.parseBlockedForall()
+// }
 
 func (stmt *TokenBlock) parseBodyFacts() (*[]FactStmt, error) {
 	facts := &[]FactStmt{}
@@ -415,7 +251,7 @@ func (stmt *TokenBlock) parseThenBlockSpecFacts() (*[]SpecFactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseDefPropStmt() (*DefPropStmt, error) {
+func (stmt *TokenBlock) parseDefSpecPropStmt() (*DefSpecPropStmt, error) {
 	decl, err := stmt.Header.parsePropDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -431,7 +267,7 @@ func (stmt *TokenBlock) parseDefPropStmt() (*DefPropStmt, error) {
 		}
 	}
 
-	return &DefPropStmt{*decl, *ifFacts, *thenFacts}, nil
+	return &DefSpecPropStmt{*decl, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]FactStmt, *[]FactStmt, error) {
@@ -625,7 +461,7 @@ func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
 	return &KnowStmt{*facts}, nil
 }
 
-func (stmt *TokenBlock) parseDefExistStmt() (*DefExistStmt, error) {
+func (stmt *TokenBlock) parseDefExistPropStmt() (*DefExistPropStmt, error) {
 	decl, err := stmt.Header.parseExistDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -668,7 +504,7 @@ func (stmt *TokenBlock) parseDefExistStmt() (*DefExistStmt, error) {
 		}
 	}
 
-	return &DefExistStmt{*decl, *ifFacts, *members, *thenFacts}, nil
+	return &DefExistPropStmt{*decl, *ifFacts, *members, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
@@ -772,11 +608,7 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 	return &ThmStmt{decl, *facts}, nil
 }
 
-func (stmt *TokenBlock) parseInlineWhenFactStmt() (*ConditionalFactStmt, error) {
-	panic("not implemented")
-}
-
-func (stmt *TokenBlock) parseBlockWhenStmt() (*ConditionalFactStmt, error) {
+func (stmt *TokenBlock) parseConditionalStmt() (*ConditionalFactStmt, error) {
 	err := stmt.Header.skip(KeywordWhen)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}

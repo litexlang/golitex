@@ -122,7 +122,7 @@ func (parser *Parser) parseBracedFcStrTypePairArray() (*[]string, error) {
 }
 
 func (parser *Parser) parsePropDecl() (*PropDeclHeader, error) {
-	parser.skip(KeywordProp)
+	parser.skip(KeywordSpecProp)
 	name, err := parser.next()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -188,15 +188,15 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 	return &FuncFactStmt{true, opt, []Fc{left}}, nil
 }
 
-func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropExistDeclStmt, error) {
-	if stmt.Header.is(KeywordProp) {
-		prop, err := stmt.parseDefPropStmt()
+func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
+	if stmt.Header.is(KeywordSpecProp) {
+		prop, err := stmt.parseDefSpecPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		return prop, nil
 	} else if stmt.Header.is(KeywordExistProp) {
-		exist, err := stmt.parseDefExistStmt()
+		exist, err := stmt.parseDefExistPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -241,12 +241,12 @@ func (block *TokenBlock) parseInstanceMember() (InstanceMember, error) {
 		return block.parseDefObjStmt()
 	} else if block.Header.is(KeywordFn) {
 		return block.parseDefFnStmt()
-	} else if block.Header.is(KeywordProp) {
-		return block.parseDefPropStmt()
+	} else if block.Header.is(KeywordSpecProp) {
+		return block.parseDefSpecPropStmt()
 	} else if block.Header.is(KeywordExistProp) {
-		return block.parseDefExistStmt()
+		return block.parseDefExistPropStmt()
 	}
-	return nil, fmt.Errorf("%v, %v, %v expected", KeywordObj, KeywordFn, KeywordProp)
+	return nil, fmt.Errorf("%v, %v, %v expected", KeywordObj, KeywordFn, KeywordSpecProp)
 }
 
 func (parser *Parser) parseTypeListInDeclsAndSkipEnd(endWith string) (*[]string, *[]FcAtom, error) {
