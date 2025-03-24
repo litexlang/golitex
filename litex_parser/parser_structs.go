@@ -17,29 +17,30 @@ type DefTypeStmt struct {
 }
 
 type DefConcreteNormalPropStmt struct {
-	DefHeader ConcreteDefHeader
-	CondFacts []FactStmt
-	ThenFacts []FactStmt
+	DefHeader      ConcreteDefHeader
+	ParamCondFacts []FactStmt
+	ThenFacts      []FactStmt
 }
 
 type DefConcreteExistPropStmt struct {
-	DefHeader ConcreteDefHeader
-	Members   []DefMember
-	CondFacts []FactStmt
-	ThenFacts []FactStmt
+	DefHeader         ConcreteDefHeader
+	ExistObjOrFn      []string
+	ExistObjOrFnTypes []FcAtom
+	ParamCondFacts    []FactStmt
+	ThenFacts         []FactStmt
 }
 
 type DefConcreteFnStmt struct {
-	DefHeader ConcreteDefHeader
-	CondFacts []FactStmt
-	ThenFacts []FactStmt
+	DefHeader      ConcreteDefHeader
+	ParamCondFacts []FactStmt
+	ThenFacts      []FactStmt
 }
 
 type ConcreteForallStmt struct {
-	Params     []string
-	ParamTypes []Fc // 注意到函数的返回值也可以是集合，所以这里是Fc，而不是string
-	CondFacts  []FactStmt
-	ThenFacts  []SpecFactStmt
+	Params         []string
+	ParamTypes     []Fc // 注意到函数的返回值也可以是集合，所以这里是Fc，而不是string
+	ParamCondFacts []FactStmt
+	ThenFacts      []SpecFactStmt
 }
 
 type GenericForallStmt struct {
@@ -47,7 +48,7 @@ type GenericForallStmt struct {
 	TypeInterfaces []FcAtom
 	Params         []string
 	ParamTypes     []Fc
-	CondFacts      []FactStmt
+	ParamCondFacts []FactStmt
 	ThenFacts      []SpecFactStmt
 }
 

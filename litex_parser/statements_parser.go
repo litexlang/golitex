@@ -252,17 +252,39 @@ func (stmt *TokenBlock) parseDefConcreteNormalPropStmt() (*DefConcreteNormalProp
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ifFacts := &[]FactStmt{}
+	err = stmt.Header.skip(KeywordColon)
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	condFacts := &[]FactStmt{}
 	thenFacts := &[]FactStmt{}
-	if stmt.Header.is(KeywordColon) {
-		stmt.Header.skip()
-		ifFacts, thenFacts, err = stmt.parseBodyCondFactsThenFacts()
+
+	if stmt.Body[len(stmt.Body)-1].Header.is(KeywordThen) {
+		for i := 0; i < len(stmt.Body)-1; i++ {
+			curStmt, err := stmt.Body[i].parseFactStmt()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+			*condFacts = append(*condFacts, curStmt)
+		}
+
+		thenFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockFacts()
+
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
+	} else {
+		for i := 0; i < len(stmt.Body); i++ {
+			curStmt, err := stmt.Body[i].parseSpecFactStmt()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+			*thenFacts = append(*thenFacts, curStmt)
+		}
 	}
 
-	return &DefConcreteNormalPropStmt{*decl, *ifFacts, *thenFacts}, nil
+	return &DefConcreteNormalPropStmt{*decl, *condFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]FactStmt, *[]FactStmt, error) {
@@ -467,14 +489,32 @@ func (stmt *TokenBlock) parseDefConcreteExistPropStmt() (*DefConcreteExistPropSt
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	condFacts := &[]FactStmt{}
-	members := &[]DefMember{}
-	thenFacts := &[]FactStmt{}
-	if !stmt.Header.is(KeywordColon) {
-		return nil, fmt.Errorf("expected ':‘")
+	existObjOrFn := []string{}
+	existObjOrFnTypes := []FcAtom{}
+
+	for !stmt.Header.is(KeywordColon) && !stmt.Header.ExceedEnd() {
+		decl, err := stmt.Header.next()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		tp, err := stmt.Header.parseFcAtom()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		existObjOrFn = append(existObjOrFn, decl)
+		existObjOrFnTypes = append(existObjOrFnTypes, tp)
+		if stmt.Header.is(KeywordComma) {
+			stmt.Header.skip()
+		}
 	}
 
-	stmt.Header.skip(KeywordColon)
+	err = stmt.Header.skip(KeywordColon)
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	condFacts := &[]FactStmt{}
+	thenFacts := &[]FactStmt{}
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(KeywordThen) {
 		for i := 0; i < len(stmt.Body)-1; i++ {
@@ -484,7 +524,9 @@ func (stmt *TokenBlock) parseDefConcreteExistPropStmt() (*DefConcreteExistPropSt
 			}
 			*condFacts = append(*condFacts, curStmt)
 		}
+
 		thenFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockFacts()
+
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -498,7 +540,7 @@ func (stmt *TokenBlock) parseDefConcreteExistPropStmt() (*DefConcreteExistPropSt
 		}
 	}
 
-	return &DefConcreteExistPropStmt{*decl, *members, *condFacts, *thenFacts}, nil
+	return &DefConcreteExistPropStmt{*decl, existObjOrFn, existObjOrFnTypes, *condFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
