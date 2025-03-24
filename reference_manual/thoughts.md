@@ -580,7 +580,12 @@ $Q(mathematical_induction)
 1. 有限个obj
 2. {x in S| Q(x)}
     forall x S:
+        Q(x)
+    prop 偶数(x R):
+        x in nat // 这里相当于取定义域是 {x in R| x in nat}
+
     这里的S对应x in S, condition Q(x) 对应|右边的Q(x)
+
 3. {x in A| exist y in B s.t. P(x,y) 成立}
     forall x A:
         exist_P_x_y_y(x,y)
@@ -675,6 +680,10 @@ Generics（interface）的语义
 1. 过于困难，之后再说
    1. 困难之处在于，不知道怎么search。怕和正常的语法语义有冲突
    2. 另外一大困难是，我在证明关于Generics的性质时，我怎么去做证明。我这时候开的局部环境和正常的大环境是截然不同的：大环境是具体的set，而Generic 环境里，我不知道你所谓的集合导致是哪个集合
+   3. 要把 prop 做成type的member：因为=也是跟着type的。
+   4. forall < G Group::Group > g G, g2 G:
+        G::Abel(g, g2) // 自动判断出是g所属的G的Abel函数
+
 2. 注意到interface真的只是set+opt+prop的语法糖：当我输入一条concrete的事实时，我新生成的事实是，关于最最原始的set+opt+prop的事实。
 3. 如何定义impl
    1. 有时候impl需要作为factual expression出现
@@ -685,3 +694,4 @@ Generics（interface）的语义
    2. 这相当于是语法糖的语法糖：interface是set+opt+prop的语法糖；interface impl interface 是更强的语法糖：比如半群相关的事实，当我现在是群是，立刻满足，而不需要我手动去再说明一下。即任何关于一个群的事实，我都会拿来关于半群的事实去验证一下他。
 2. commutative, associative
    1. 只有你声明过了，同时我检查过了你说它有这些性质确实都有了，那我会在检查的时候帮你用可能的情况都检查一下。你颠倒着写不要紧。
+

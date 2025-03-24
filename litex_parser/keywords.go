@@ -10,8 +10,7 @@ const (
 	KeywordInstanceMember       = "instance_member" // TODO: 待删
 	KeywordForall               = "forall"
 	KeywordWhen                 = "when"
-	KeywordCond                 = "cond" // TODO: 未来会删除
-	KeywordThen                 = "then" // TODO: 因为没有cond了，所以未来会删除
+	KeywordThen                 = "then"
 	KeywordObj                  = "obj"
 	KeywordFn                   = "fn"
 	KeywordSpecProp             = "prop"
@@ -36,10 +35,10 @@ const (
 	KeywordAssociative = "associative"
 
 	// Builtin Types
-	KeywordNat   = "nat"   // e.g. 0
-	KeywordInt   = "int"   // e.g. -1
-	KeywordFloat = "float" // e.g. -1.1
-	KeywordReal  = "real"  // e.g. pi
+	KeywordNat      = "nat"      // e.g. 0
+	KeywordInt      = "int"      // e.g. -1
+	KeywordRational = "rational" // e.g. -1.1
+	KeywordReal     = "real"     // e.g. pi
 
 	// Builtin Functions
 	KeywordIs = "is"
