@@ -184,30 +184,6 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 		}
 	}
 
-	// if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(KeywordCond) {
-	// 	ifFacts, err = stmt.Body[0].parseForallCondFactsBlock()
-	// 	if err != nil {
-	// 		return nil, &parseStmtErr{err, *stmt}
-	// 	}
-
-	// 	if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(KeywordThen) {
-	// 		thenFacts, err = stmt.Body[1].parseInstantiatedFactsBlock()
-	// 		if err != nil {
-	// 			return nil, &parseStmtErr{err, *stmt}
-	// 		}
-	// 	} else {
-	// 		return nil, fmt.Errorf("expected 'then'")
-	// 	}
-	// } else {
-	// 	for _, curStmt := range stmt.Body {
-	// 		fact, err := curStmt.parseInstantiatedFactStmt()
-	// 		if err != nil {
-	// 			return nil, &parseStmtErr{err, *stmt}
-	// 		}
-	// 		*thenFacts = append(*thenFacts, fact)
-	// 	}
-	// }
-
 	if len(*typeParams) > 0 {
 		return &GenericForallStmt{*typeParams, *typeInterfaces, *params, *paramTypes, *condFacts, *thenFacts}, nil
 	} else {
@@ -215,10 +191,6 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 	}
 
 }
-
-// func (stmt *TokenBlock) parseForallStmt() (FactStmt, error) {
-// 	return stmt.parseBlockedForall()
-// }
 
 func (stmt *TokenBlock) parseBodyFacts() (*[]FactStmt, error) {
 	facts := &[]FactStmt{}
@@ -504,7 +476,7 @@ func (stmt *TokenBlock) parseDefExistPropStmt() (*DefExistPropStmt, error) {
 		}
 	}
 
-	return &DefExistPropStmt{*decl, *ifFacts, *members, *thenFacts}, nil
+	return &DefExistPropStmt{*decl, *members, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {

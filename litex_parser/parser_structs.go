@@ -24,6 +24,14 @@ type DefSpecPropStmt struct {
 }
 
 // TODO: Generics
+type DefExistPropStmt struct {
+	DeclHeader PropDeclHeader
+	Members    []DefMember
+	CondFacts  []FactStmt
+	ThenFacts  []FactStmt
+}
+
+// TODO: Generics
 type DefFnStmt struct {
 	name      string
 	tp        []string
@@ -31,7 +39,6 @@ type DefFnStmt struct {
 	ThenFacts []FactStmt
 }
 
-// TODO: Generics
 type ConcreteForallStmt struct {
 	Params     []string
 	ParamTypes []Fc
@@ -70,20 +77,8 @@ type ClaimProveStmt struct {
 	proof   []Stmt
 }
 
-// type DefAliasStmt struct {
-// 	PreviousName string
-// 	NewName      string
-// }
-
 type KnowStmt struct {
 	Facts []FactStmt
-}
-
-type DefExistPropStmt struct {
-	DeclHeader PropDeclHeader
-	CondFacts  []FactStmt
-	Members    []DefMember
-	ThenFacts  []FactStmt
 }
 
 type HaveStmt struct {
