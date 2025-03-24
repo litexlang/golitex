@@ -17,13 +17,13 @@ type DefTypeStmt struct {
 }
 
 type DefConcreteNormalPropStmt struct {
-	DeclHeader PropDeclHeader
-	CondFacts  []FactStmt
-	ThenFacts  []FactStmt
+	Header    ConcreteDefHeader
+	CondFacts []FactStmt
+	ThenFacts []FactStmt
 }
 
 type DefConcreteExistPropStmt struct {
-	DeclHeader PropDeclHeader
+	DeclHeader ConcreteDefHeader
 	Members    []DefMember
 	CondFacts  []FactStmt
 	ThenFacts  []FactStmt
@@ -110,9 +110,10 @@ type FcFnDecl struct {
 	Params []string
 }
 
-type PropDeclHeader struct {
-	Name   string
-	Params []string
+type ConcreteDefHeader struct {
+	Name       string
+	Params     []string
+	TypeParams []FcAtom
 }
 
 // type FcObjTypeStrValue string

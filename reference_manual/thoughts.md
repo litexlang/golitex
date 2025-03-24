@@ -626,8 +626,8 @@ Set 的几大功能
 1. =的验证：等号的验证需要和事实的推理的验证独立开,即符号相等的验证，和forall，specific fact 的验证是很不一的
    1. param的比较: a = b, f(a) = f(b)
    2. 函数作为整体的比较: f(a) = g, f(a)(b) = g(b)
-2. prop之间的等价，不用=。即我不写prop=prop。我只写fn=fn，obj=obj
-   1. 我甚至也不想引入iff：你直接把iff的意思全部写出来就行
+~~2. prop之间的等价，不用=。即我不写prop=prop。我只写fn=fn，obj=obj~~
+   ~~1. 我甚至也不想引入iff：你直接把iff的意思全部写出来就行~~
 3. forall 如何工作
    1. 最大问题：怎么search
       1. forall a A, b B:
@@ -642,19 +642,19 @@ Set 的几大功能
    1. fn对传入的参数做检查
       1. fn的参数列表里能写type，也能写set。但我建议你写set
          1. 我或许应该禁止用户写type。
-   2. know f(a) = 2
-      1. 如果a压根不满足f的cond，那用户这样写，我是不是要警告一下用户呢
-   3. 特别是，用forall 进行search的时候，我把当前的参数代入到已知的forall事实里，这个时候各种可能的难点就出来了。具体可能碰到哪些问题需要思考一下
-   4. 疑问：我要引入fn的类型吗？
+      2. know f(a) = 2
+         1. 如果a压根不满足f的cond，那用户这样写，我是不是要警告一下用户呢
+   2. 特别是，用forall 进行search的时候，我把当前的参数代入到已知的forall事实里，这个时候各种可能的难点就出来了。具体可能碰到哪些问题需要思考一下
+   3. 疑问：我要引入fn的类型吗？
       1. 貌似不用：如果我传入了不符合规定的参数，那我会报错的。至少说我不会让你通过
-   5. 函数只能读入集合和函数（函数本身也是一种集合），绝对不能读入prop，也不能返回prop
-   6. 想让函数有某种Generic性质，即读入“任何符合类型的集合 的参数”，而不是读入“某个集合参数”，那就用interface
-5. prop 本质上和 fn 是不一样的
-   1. prop：起到普通PL的函数的作用，输出值：true, false, unknown, error
-   2. fn: 起到C中的struct的作用，把一符号放在一起形成新符号
-   3. prop能读入prop作为参数，虽然我现在不太想实现这个功能
+   4. 函数只能读入集合和函数（函数本身也是一种集合），绝对不能读入prop，也不能返回prop
+   5. 想让函数有某种Generic性质，即读入“任何符合类型的集合 的参数”，而不是读入“某个集合参数”，那就用interface
+~~5. prop 本质上和 fn 是不一样的~~
+   ~~1. prop：起到普通PL的函数的作用，输出值：true, false, unknown, error~~
+   ~~2. fn: 起到C中的struct的作用，把一符号放在一起形成新符号~~
+   1. prop能读入prop作为参数，虽然我现在不太想实现这个功能
       1. 我可能先送给用户数归法这个prop generator。但是让用户自己定义prop generator我可能暂时不想这么干.
-6. 内置集合（类型）
+1. 内置集合（类型）
    1. nat
       1. real, int 都是从nat来的。这些可以由用户自定义
    2. rational
@@ -665,12 +665,12 @@ Set 的几大功能
    4. set
       1. in
       2. 作为interface，集合，
-7. relational和FnRet函数的分离；relational spec fact 和 func spec fact 的分离
-8. 超级大问题：search和store时如何compare
+2. relational和FnRet函数的分离；relational spec fact 和 func spec fact 的分离
+3. 超级大问题：search和store时如何compare
    1. 需要仔细想一想
-9. as
+4. as
    1.  as(obj, typeName/setName) 之所以可以读入setName是因为一个obj可以被放在很多的集合里
-10. subset of
+5.  subset of
     1.  把一个集合视作另外一个集合的子集
     2.  比如R可以看成C的子集；nat看做rational的子集
     3.  这种“看成子集“，怎么证明呢，有哪些语义方面的问题？
@@ -683,9 +683,13 @@ Generics（interface）的语义
    3. 要把 prop 做成type的member：因为=也是跟着type的。
    4. forall < G Group::Group > g G, g2 G:
         G::Abel(g, g2) // 自动判断出是g所属的G的Abel函数
+2. generic 声明或许也能写成这样
+prop Q(S Group, g1 S, g2 S):
+    //...
+这时候S也能从g1,g2推理出来，无非是 prop Q < S Group >(g1 S, g2 S) 换种写法
 
-2. 注意到interface真的只是set+opt+prop的语法糖：当我输入一条concrete的事实时，我新生成的事实是，关于最最原始的set+opt+prop的事实。
-3. 如何定义impl
+3. 注意到interface真的只是set+opt+prop的语法糖：当我输入一条concrete的事实时，我新生成的事实是，关于最最原始的set+opt+prop的事实。
+4. 如何定义impl
    1. 有时候impl需要作为factual expression出现
 
 实现的目的是做成语法糖的功能
@@ -695,3 +699,4 @@ Generics（interface）的语义
 2. commutative, associative
    1. 只有你声明过了，同时我检查过了你说它有这些性质确实都有了，那我会在检查的时候帮你用可能的情况都检查一下。你颠倒着写不要紧。
 
+注：xxx of yyy 唯一出现的地方是，member of interface。其他地方一律不会出现。那这样一来，因为任何generics函数里，我都会写成 prop Q< S InterfaceName >(x S) ，然后涉及到的函数也是写成 S::__add__ 这种，所以不会导致需要连续2个::的情况：packageName::interfaceName::memberName是不会有的，只有typeThatImplInterface::memberName
