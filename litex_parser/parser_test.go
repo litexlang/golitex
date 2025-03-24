@@ -929,3 +929,22 @@ forall <G Group, G2 Group> g G, g2 G2:
 	}
 
 }
+
+func TestForallStmt4(t *testing.T) {
+	code := `
+forall <G Group, G2 Group> g G, g2 G2:
+	$G(g); $G(g2);
+	$G(g); $G(g2);$P(x, y);
+	$p(x, y)
+	then:
+		$p(x, y)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
