@@ -13,7 +13,7 @@ const (
 	KeywordThen                 = "then"
 	KeywordObj                  = "obj"
 	KeywordFn                   = "fn"
-	KeywordSpecProp             = "prop"
+	KeywordProp                 = "prop"
 	KeywordKnow                 = "know"
 	KeywordExistProp            = "exist_prop"
 	KeywordHave                 = "have"

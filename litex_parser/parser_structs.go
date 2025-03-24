@@ -17,21 +17,20 @@ type DefTypeStmt struct {
 }
 
 type DefConcreteNormalPropStmt struct {
-	Header    ConcreteDefHeader
+	DefHeader ConcreteDefHeader
 	CondFacts []FactStmt
 	ThenFacts []FactStmt
 }
 
 type DefConcreteExistPropStmt struct {
-	DeclHeader ConcreteDefHeader
-	Members    []DefMember
-	CondFacts  []FactStmt
-	ThenFacts  []FactStmt
+	DefHeader ConcreteDefHeader
+	Members   []DefMember
+	CondFacts []FactStmt
+	ThenFacts []FactStmt
 }
 
 type DefConcreteFnStmt struct {
-	Name      string
-	Params    []string
+	DefHeader ConcreteDefHeader
 	CondFacts []FactStmt
 	ThenFacts []FactStmt
 }

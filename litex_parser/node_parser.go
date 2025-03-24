@@ -64,63 +64,6 @@ func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) (*[]string
 	return &paramName, &paramTypes, nil
 }
 
-func (parser *Parser) parseBracedFcTypePairArr() (*[]string, error) {
-	err := error(nil)
-
-	objParams := &[]string{}
-	objParams, err = parser.parseBracedFcStrTypePairArray()
-	if err != nil {
-		return nil, err
-	}
-
-	return objParams, nil
-}
-
-func (parser *Parser) parseFcFnDecl() (*FcFnDecl, error) {
-	parser.skip(KeywordFn)
-
-	name, err := parser.next()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	paramsTypes, err := parser.parseBracedFcTypePairArr()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	return &FcFnDecl{name, *paramsTypes}, nil
-}
-
-func (parser *Parser) parseBracedFcStrTypePairArray() (*[]string, error) {
-	fcSlice := []string{}
-	parser.skip(KeywordLeftParen)
-
-	for !parser.is(KeywordRightParen) {
-		s, err := parser.next()
-		if err != nil {
-			return nil, &parserErr{err, parser}
-		}
-
-		// fcType, err := parser.parseFcType()
-		// if err != nil {
-		// 	return nil, &parserErr{err, parser}
-		// }
-
-		fcSlice = append(fcSlice, s)
-
-		if parser.isAndSkip(KeywordRightParen) {
-			break
-		}
-
-		if err := parser.testAndSkip(KeywordComma); err != nil {
-			return nil, &parserErr{err, parser}
-		}
-	}
-
-	return &fcSlice, nil
-}
-
 // func (parser *Parser) parsePropDecl() (*ConcreteDefHeader, error) {
 // 	parser.skip(KeywordSpecProp)
 // 	name, err := parser.next()
@@ -179,7 +122,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
-	if stmt.Header.is(KeywordSpecProp) {
+	if stmt.Header.is(KeywordProp) {
 		prop, err := stmt.parseDefConcreteNormalPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
