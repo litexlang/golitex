@@ -621,6 +621,41 @@ Set 的几大功能
 1. =的验证：等号的验证需要和事实的推理的验证独立开,即符号相等的验证，和forall，specific fact 的验证是很不一的
    1. param的比较: a = b, f(a) = f(b)
    2. 函数作为整体的比较: f(a) = g, f(a)(b) = g(b)
+2. prop之间的等价，不用=。即我不写prop=prop。我只写fn=fn，obj=obj
+   1. 我甚至也不想引入iff：你直接把iff的意思全部写出来就行
+3. forall 如何工作
+   1. 最大问题：怎么search
+      1. forall a A, b B:
+            Q(a,b)
+      2. forall a A, f fn:
+            Q(a, f(a))
+      3. 相当严重的问题：如果传入的东西里有prop怎么处理（我暂时先只考虑1.,2.）
+         1. forall a A, f fn, p prop:
+                p(a,f,p)
+   2. forall或者fn里，我的“自由变量”如何当做其他什么东西的同名函数
+4. fn相关
+   1. fn对传入的参数做检查
+   2. know f(a) = 2
+      1. 如果a压根不满足f的cond，那用户这样写，我是不是要警告一下用户呢
+   3. 特别是，用forall 进行search的时候，我把当前的参数代入到已知的forall事实里，这个时候各种可能的难点就出来了。具体可能碰到哪些问题需要思考一下
+   4. 疑问：我要引入fn的类型吗？
+      1. 貌似不用：如果我传入了不符合规定的参数，那我会报错的。至少说我不会让你通过
+5. prop 本质上和 fn 是不一样的
+   1. prop：起到普通PL的函数的作用，输出值：true, false, unknown, error
+   2. fn: 起到C中的struct的作用，把一符号放在一起形成新符号
+6. 内置集合（类型）
+   1. nat
+      1. real, int 都是从nat来的。这些可以由用户自定义
+   2. rational
+      1. rational也能由nat诱导而来，所以也只要用户自定义就行。但是像1.2这种数是内置在系统里的，所以rational只能由系统送给用户
+   3. nat rational
+      1. +-*/的定义，是需要内置的。因为只有1,2.3这种obj，它的字面量是有意义的，其他东西的字面量都没意义。只有1+1=2这种，需要我解释器帮你验证
+      2. nat和rational这种，一下子引入了无数多的obj，这也是用户一个个引入普通obj所做不到的
+   4. set
+      1. in
+      2. 作为interface，集合，
+7. relational和FnRet函数的分离；relational spec fact 和 func spec fact 的分离
 
 Generics的语义
 1. 过于困难，之后再说
+   1. 困难之处在于，不知道怎么search。怕和正常的语法语义有冲突

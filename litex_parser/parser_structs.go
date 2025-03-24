@@ -16,7 +16,7 @@ type DefInterfaceStmt struct {
 type DefTypeStmt struct {
 }
 
-type DefConcreteSpecPropStmt struct {
+type DefConcreteNormalPropStmt struct {
 	DeclHeader PropDeclHeader
 	CondFacts  []FactStmt
 	ThenFacts  []FactStmt
@@ -30,15 +30,15 @@ type DefConcreteExistPropStmt struct {
 }
 
 type DefConcreteFnStmt struct {
-	name      string
-	tp        []string
+	Name      string
+	Params    []string
 	CondFacts []FactStmt
 	ThenFacts []FactStmt
 }
 
 type ConcreteForallStmt struct {
 	Params     []string
-	ParamTypes []Fc
+	ParamTypes []Fc // 注意到函数的返回值也可以是集合，所以这里是Fc，而不是string
 	CondFacts  []FactStmt
 	ThenFacts  []SpecFactStmt
 }

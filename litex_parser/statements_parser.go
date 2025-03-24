@@ -32,7 +32,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	case KeywordType:
 		ret, err = stmt.parseDefTypeStmt()
 	case KeywordSpecProp:
-		ret, err = stmt.parseDefConcreteSpecPropStmt()
+		ret, err = stmt.parseDefConcreteNormalPropStmt()
 	case KeywordExistProp:
 		ret, err = stmt.parseDefConcreteExistPropStmt()
 	case KeywordFn:
@@ -223,7 +223,7 @@ func (stmt *TokenBlock) parseThenBlockSpecFacts() (*[]SpecFactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseDefConcreteSpecPropStmt() (*DefConcreteSpecPropStmt, error) {
+func (stmt *TokenBlock) parseDefConcreteNormalPropStmt() (*DefConcreteNormalPropStmt, error) {
 	decl, err := stmt.Header.parsePropDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -239,7 +239,7 @@ func (stmt *TokenBlock) parseDefConcreteSpecPropStmt() (*DefConcreteSpecPropStmt
 		}
 	}
 
-	return &DefConcreteSpecPropStmt{*decl, *ifFacts, *thenFacts}, nil
+	return &DefConcreteNormalPropStmt{*decl, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]FactStmt, *[]FactStmt, error) {
