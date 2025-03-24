@@ -948,3 +948,30 @@ forall <G Group, G2 Group> g G, g2 G2:
 	}
 
 }
+
+func TestFnPropExistProp(t *testing.T) {
+	code := `
+fn f(x S, y G):
+	$G(g); $G(g2);
+	$G(g); $G(g2);$P(x, y);
+	$p(x, y)
+	then:
+		$p(x, y)
+
+prop f(x S, y G):
+	$G(g); $G(g2);
+	$G(g); $G(g2);$P(x, y);
+	$p(x, y)
+	then:
+		$p(x, y)
+
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}

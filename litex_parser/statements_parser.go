@@ -31,7 +31,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 		ret, err = stmt.parseDefInterfaceStmt()
 	case KeywordType:
 		ret, err = stmt.parseDefTypeStmt()
-	case KeywordSpecProp:
+	case KeywordProp:
 		ret, err = stmt.parseDefConcreteNormalPropStmt()
 	case KeywordExistProp:
 		ret, err = stmt.parseDefConcreteExistPropStmt()
@@ -242,6 +242,11 @@ func (stmt *TokenBlock) parseThenBlockFacts() (*[]FactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseDefConcreteNormalPropStmt() (*DefConcreteNormalPropStmt, error) {
+	err := stmt.Header.skip(KeywordProp)
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
 	decl, err := stmt.parseConcreteDefHeader()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -291,7 +296,12 @@ func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]FactStmt, *[]FactStmt,
 }
 
 func (stmt *TokenBlock) parseDefConcreteFnStmt() (*DefConcreteFnStmt, error) {
-	decl, err := stmt.Header.parseFcFnDecl()
+	err := stmt.Header.skip(KeywordFn)
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	decl, err := stmt.parseConcreteDefHeader()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -307,7 +317,7 @@ func (stmt *TokenBlock) parseDefConcreteFnStmt() (*DefConcreteFnStmt, error) {
 		}
 	}
 
-	return &DefConcreteFnStmt{decl.Name, decl.Params, *ifFacts, *thenFacts}, nil
+	return &DefConcreteFnStmt{*decl, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
@@ -447,6 +457,11 @@ func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
 }
 
 func (stmt *TokenBlock) parseDefConcreteExistPropStmt() (*DefConcreteExistPropStmt, error) {
+	err := stmt.Header.skip(KeywordExistProp)
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
+
 	decl, err := stmt.parseConcreteDefHeader()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -645,7 +660,7 @@ func (stmt *TokenBlock) parseConcreteDefHeader() (*ConcreteDefHeader, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	err = stmt.Header.skip(KeywordLess)
+	err = stmt.Header.skip(KeywordLeftParen)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -653,7 +668,7 @@ func (stmt *TokenBlock) parseConcreteDefHeader() (*ConcreteDefHeader, error) {
 	params := []string{}
 	typeParams := []FcAtom{}
 
-	for !stmt.Header.is(KeywordGreater) {
+	for !stmt.Header.is(KeywordRightParen) {
 		param, err := stmt.Header.next()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
@@ -672,7 +687,7 @@ func (stmt *TokenBlock) parseConcreteDefHeader() (*ConcreteDefHeader, error) {
 		}
 	}
 
-	err = stmt.Header.skip(KeywordGreater)
+	err = stmt.Header.skip(KeywordRightParen)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
