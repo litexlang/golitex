@@ -20,23 +20,6 @@ func (p *Parser) strAtCurIndexPlus(plusIndex int) string {
 	}
 }
 
-func (p *Parser) strAtIndex(givenIndex int) string {
-	if givenIndex < 0 {
-		i := len(p.slice) + givenIndex
-
-		if i < 0 {
-			return ""
-		} else {
-			ret := p.slice[i]
-			return ret
-		}
-	} else if givenIndex < len(p.slice) {
-		return p.slice[givenIndex]
-	} else {
-		return "" // givenIndex exceeds len(p.slice)
-	}
-}
-
 func (p *Parser) String() string {
 	return strings.Join(p.slice, " ")
 }

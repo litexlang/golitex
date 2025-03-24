@@ -9,7 +9,7 @@ func (stmt *DefObjStmt) stmt() {}
 
 func (c *DefInterfaceStmt) stmt()   {}
 func (f *DefTypeStmt) stmt()        {}
-func (c *DefPropStmt) stmt()        {}
+func (c *DefSpecPropStmt) stmt()    {}
 func (f *DefFnStmt) stmt()          {}
 func (l *ConcreteForallStmt) stmt() {}
 func (r *RelationFactStmt) stmt()   {}
@@ -18,7 +18,7 @@ func (f *ClaimProveStmt) stmt()     {}
 
 // func (f *DefAliasStmt) stmt()               {}
 func (f *KnowStmt) stmt()                   {}
-func (s *DefExistStmt) stmt()               {}
+func (s *DefExistPropStmt) stmt()           {}
 func (s *HaveStmt) stmt()                   {}
 func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
@@ -76,13 +76,13 @@ type ClaimStmt interface {
 func (s *ClaimProveStmt) claimStmt()             {}
 func (s *ClaimProveByContradictStmt) claimStmt() {}
 
-type DefPropExistDeclStmt interface {
+type DefPropStmt interface {
 	defPropExistDeclStmt()
 	stmt()
 }
 
-func (s *DefExistStmt) defPropExistDeclStmt() {}
-func (s *DefPropStmt) defPropExistDeclStmt()  {}
+func (s *DefExistPropStmt) defPropExistDeclStmt() {}
+func (s *DefSpecPropStmt) defPropExistDeclStmt()  {}
 
 type InlineFactStmt interface {
 	inlineFactStmt()
@@ -98,19 +98,19 @@ type TypeMember interface {
 	typeMember()
 }
 
-func (s *DefObjStmt) typeMember()  {}
-func (s *DefFnStmt) typeMember()   {}
-func (s *DefPropStmt) typeMember() {}
-func (s *DefTypeStmt) typeMember() {}
+func (s *DefObjStmt) typeMember()      {}
+func (s *DefFnStmt) typeMember()       {}
+func (s *DefSpecPropStmt) typeMember() {}
+func (s *DefTypeStmt) typeMember()     {}
 
 type InstanceMember interface {
 	instanceMember()
 }
 
-func (s *DefObjStmt) instanceMember()   {}
-func (s *DefFnStmt) instanceMember()    {}
-func (s *DefPropStmt) instanceMember()  {}
-func (s *DefExistStmt) instanceMember() {}
+func (s *DefObjStmt) instanceMember()       {}
+func (s *DefFnStmt) instanceMember()        {}
+func (s *DefSpecPropStmt) instanceMember()  {}
+func (s *DefExistPropStmt) instanceMember() {}
 
 type ForallStmt interface {
 	factStmt()

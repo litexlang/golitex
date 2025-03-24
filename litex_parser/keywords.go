@@ -14,7 +14,7 @@ const (
 	KeywordThen                 = "then" // TODO: 因为没有cond了，所以未来会删除
 	KeywordObj                  = "obj"
 	KeywordFn                   = "fn"
-	KeywordProp                 = "prop"
+	KeywordSpecProp             = "prop"
 	KeywordKnow                 = "know"
 	KeywordExistProp            = "exist_prop"
 	KeywordHave                 = "have"
