@@ -190,7 +190,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 	if stmt.Header.is(KeywordSpecProp) {
-		prop, err := stmt.parseDefConcreteSpecPropStmt()
+		prop, err := stmt.parseDefConcreteNormalPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -242,7 +242,7 @@ func (block *TokenBlock) parseInstanceMember() (DefMember, error) {
 	} else if block.Header.is(KeywordFn) {
 		return block.parseDefConcreteFnStmt()
 	} else if block.Header.is(KeywordSpecProp) {
-		return block.parseDefConcreteSpecPropStmt()
+		return block.parseDefConcreteNormalPropStmt()
 	} else if block.Header.is(KeywordExistProp) {
 		return block.parseDefConcreteExistPropStmt()
 	}
