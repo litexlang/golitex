@@ -121,35 +121,25 @@ func (parser *Parser) parseBracedFcStrTypePairArray() (*[]string, error) {
 	return &fcSlice, nil
 }
 
-func (parser *Parser) parsePropDecl() (*PropDeclHeader, error) {
-	parser.skip(KeywordSpecProp)
-	name, err := parser.next()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// func (parser *Parser) parsePropDecl() (*ConcreteDefHeader, error) {
+// 	parser.skip(KeywordSpecProp)
+// 	name, err := parser.next()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	params, err := parser.parseBracedFcTypePairArr()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
+// 	params, err := parser.parseBracedFcTypePairArr()
+// 	if err != nil {
+// 		return nil, &parserErr{err, parser}
+// 	}
 
-	return &PropDeclHeader{name, *params}, nil
-}
+// 	return &ConcreteDefHeader{name, *params}, nil
+// }
 
-func (parser *Parser) parseExistDecl() (*PropDeclHeader, error) {
-	parser.skip(KeywordExistProp)
-	name, err := parser.next()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	params, err := parser.parseBracedFcTypePairArr()
-	if err != nil {
-		return nil, &parserErr{err, parser}
-	}
-
-	return &PropDeclHeader{name, *params}, nil
-}
+// func (parser *Parser) parseExistDecl() (*ConcreteDefHeader, error) {
+// 	parser.skip(KeywordExistProp)
+// 	panic("")
+// }
 
 func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 	members := &[]string{}
