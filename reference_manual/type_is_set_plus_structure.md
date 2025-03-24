@@ -574,3 +574,13 @@ $Q(mathematical_induction)
 
 25.3.23
 1. 我们litex不像lean一样，先定义群再定义nat。我们可以随时定义任何集合（比如nat），然后说明nat的一些操作impl了群的结构
+
+25.3.24
+有三种定义集合的方法
+1. 有限个obj
+2. {x in S| x 满足一些条件}
+3. {x in A| exist y in B s.t. P(x,y) 成立}
+
+这是很本质的观察：
+1. 2.中出现了forall
+2. 3.中出现了exist；这种写法和y是f(A)的值域中的元素对应上了
