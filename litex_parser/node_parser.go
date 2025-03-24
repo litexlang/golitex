@@ -236,7 +236,7 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 // 	return &NamedFcType{typeNameArr, params}, nil
 // }
 
-func (block *TokenBlock) parseInstanceMember() (InstanceMember, error) {
+func (block *TokenBlock) parseInstanceMember() (DefMember, error) {
 	if block.Header.is(KeywordObj) {
 		return block.parseDefObjStmt()
 	} else if block.Header.is(KeywordFn) {
