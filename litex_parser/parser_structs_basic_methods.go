@@ -20,15 +20,15 @@ func (stmt *RelationFactStmt) String() string {
 
 func (stmt *DefObjStmt) String() string { panic("") }
 
-func (c *DefInterfaceStmt) String() string   { panic("") }
-func (f *DefTypeStmt) String() string        { panic("") }
-func (c *DefSpecPropStmt) String() string    { panic("") }
-func (f *DefFnStmt) String() string          { panic("") }
-func (l *ConcreteForallStmt) String() string { panic("") }
-func (f *ClaimProveStmt) String() string     { panic("") }
+func (c *DefInterfaceStmt) String() string        { panic("") }
+func (f *DefTypeStmt) String() string             { panic("") }
+func (c *DefConcreteSpecPropStmt) String() string { panic("") }
+func (f *DefConcreteFnStmt) String() string       { panic("") }
+func (l *ConcreteForallStmt) String() string      { panic("") }
+func (f *ClaimProveStmt) String() string          { panic("") }
 
 // func (f *DefAliasStmt) String() string               { panic("") }
-func (s *DefExistPropStmt) String() string           { panic("") }
+func (s *DefConcreteExistPropStmt) String() string   { panic("") }
 func (s *HaveStmt) String() string                   { panic("") }
 func (s *ClaimProveByContradictStmt) String() string { panic("") }
 func (s *AxiomStmt) String() string                  { panic("") }

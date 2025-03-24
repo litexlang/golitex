@@ -9,14 +9,14 @@ func (stmt *DefObjStmt) stmt() {}
 
 func (c *DefInterfaceStmt) stmt()           {}
 func (f *DefTypeStmt) stmt()                {}
-func (c *DefSpecPropStmt) stmt()            {}
-func (f *DefFnStmt) stmt()                  {}
+func (c *DefConcreteSpecPropStmt) stmt()    {}
+func (f *DefConcreteFnStmt) stmt()          {}
 func (l *ConcreteForallStmt) stmt()         {}
 func (r *RelationFactStmt) stmt()           {}
 func (p *FuncFactStmt) stmt()               {}
 func (f *ClaimProveStmt) stmt()             {}
 func (f *KnowStmt) stmt()                   {}
-func (s *DefExistPropStmt) stmt()           {}
+func (s *DefConcreteExistPropStmt) stmt()   {}
 func (s *HaveStmt) stmt()                   {}
 func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
@@ -64,17 +64,17 @@ type DefPropStmt interface {
 	stmt()
 }
 
-func (s *DefExistPropStmt) defPropStmt() {}
-func (s *DefSpecPropStmt) defPropStmt()  {}
+func (s *DefConcreteExistPropStmt) defPropStmt() {}
+func (s *DefConcreteSpecPropStmt) defPropStmt()  {}
 
 type DefMember interface {
 	defMember()
 }
 
-func (s *DefObjStmt) defMember()       {}
-func (s *DefFnStmt) defMember()        {}
-func (s *DefSpecPropStmt) defMember()  {}
-func (s *DefExistPropStmt) defMember() {}
+func (s *DefObjStmt) defMember()               {}
+func (s *DefConcreteFnStmt) defMember()        {}
+func (s *DefConcreteSpecPropStmt) defMember()  {}
+func (s *DefConcreteExistPropStmt) defMember() {}
 
 type ForallStmt interface {
 	factStmt()

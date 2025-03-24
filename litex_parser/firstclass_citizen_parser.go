@@ -121,35 +121,6 @@ func (parser *Parser) parseFcAtom() (FcAtom, error) {
 	return FcAtom{FromPkg: fromPkg, Value: value}, nil
 }
 
-type FcInfixOptPrecedence int
-
-// TODO: implement other operators. How logical operators work is also not implemented
-const (
-	precLowest         FcInfixOptPrecedence = iota
-	precAssignment                          // =
-	precOr                                  // or
-	precAnd                                 // and
-	precEquality                            // == !=
-	precComparison                          // < > <= >=
-	precAddition                            // + -
-	precMultiplication                      // / *
-	precUnary                               // - !
-	precExponentiation                      // ^
-)
-
-var precedenceMap = map[string]FcInfixOptPrecedence{
-	"+": precAddition,
-	"-": precAddition,
-	"*": precMultiplication,
-	"/": precMultiplication,
-	"^": precExponentiation,
-}
-
-// All Unary operators have higher precedence than infix operators
-var unaryPrecedence = map[string]FcInfixOptPrecedence{
-	"-": precUnary,
-}
-
 func (parser *Parser) ParseFc() (Fc, error) {
 	return parser.parseFcInfixExpr(precLowest)
 }
