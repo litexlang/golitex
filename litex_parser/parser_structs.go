@@ -16,23 +16,20 @@ type DefInterfaceStmt struct {
 type DefTypeStmt struct {
 }
 
-// TODO: Generics
-type DefSpecPropStmt struct {
+type DefConcreteSpecPropStmt struct {
 	DeclHeader PropDeclHeader
 	CondFacts  []FactStmt
 	ThenFacts  []FactStmt
 }
 
-// TODO: Generics
-type DefExistPropStmt struct {
+type DefConcreteExistPropStmt struct {
 	DeclHeader PropDeclHeader
 	Members    []DefMember
 	CondFacts  []FactStmt
 	ThenFacts  []FactStmt
 }
 
-// TODO: Generics
-type DefFnStmt struct {
+type DefConcreteFnStmt struct {
 	name      string
 	tp        []string
 	CondFacts []FactStmt

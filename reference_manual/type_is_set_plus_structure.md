@@ -580,7 +580,6 @@ $Q(mathematical_induction)
 1. 有限个obj
 2. {x in S| Q(x)}
     forall x S:
-        Q(x)
     这里的S对应x in S, condition Q(x) 对应|右边的Q(x)
 3. {x in A| exist y in B s.t. P(x,y) 成立}
     forall x A:
@@ -595,3 +594,33 @@ $Q(mathematical_induction)
 1. 2.中出现了forall
 2. 3.中出现了exist；这种写法和y是f(A)的值域中的元素对应上了
 3. 1. 中是最常见的定义set的方式
+
+Set 的几大功能
+1. 作为参数类型
+    forall x Set
+2. 作为Generics中的type的interface
+    forall < S Set > x S
+3. 内置了in函数
+    x in A
+4. 任何type都能视作set
+    type RAsGroup R
+    1 in RAsGroup   // 自动检查是否1在集合RAsGroup所处于的集合R里
+5. 只有set上能绑定函数，而不是type上
+    因为我会认为type是语法糖，而按照数学的基本定义，函数就是定义在set上的
+
+还缺什么语法
+1. type def
+2. interface def
+3. prove type impl interface
+4. exist def
+5. have exist: introduce new object
+6. prove obj satisfy exist factual expression
+
+还缺什么语义
+不带Generics
+1. =的验证：等号的验证需要和事实的推理的验证独立开,即符号相等的验证，和forall，specific fact 的验证是很不一的
+   1. param的比较: a = b, f(a) = f(b)
+   2. 函数作为整体的比较: f(a) = g, f(a)(b) = g(b)
+
+Generics的语义
+1. 过于困难，之后再说

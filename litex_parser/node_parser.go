@@ -190,13 +190,13 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 	if stmt.Header.is(KeywordSpecProp) {
-		prop, err := stmt.parseDefSpecPropStmt()
+		prop, err := stmt.parseDefConcreteSpecPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		return prop, nil
 	} else if stmt.Header.is(KeywordExistProp) {
-		exist, err := stmt.parseDefExistPropStmt()
+		exist, err := stmt.parseDefConcreteExistPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -240,11 +240,11 @@ func (block *TokenBlock) parseInstanceMember() (DefMember, error) {
 	if block.Header.is(KeywordObj) {
 		return block.parseDefObjStmt()
 	} else if block.Header.is(KeywordFn) {
-		return block.parseDefFnStmt()
+		return block.parseDefConcreteFnStmt()
 	} else if block.Header.is(KeywordSpecProp) {
-		return block.parseDefSpecPropStmt()
+		return block.parseDefConcreteSpecPropStmt()
 	} else if block.Header.is(KeywordExistProp) {
-		return block.parseDefExistPropStmt()
+		return block.parseDefConcreteExistPropStmt()
 	}
 	return nil, fmt.Errorf("%v, %v, %v expected", KeywordObj, KeywordFn, KeywordSpecProp)
 }

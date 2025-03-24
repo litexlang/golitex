@@ -32,11 +32,11 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	case KeywordType:
 		ret, err = stmt.parseDefTypeStmt()
 	case KeywordSpecProp:
-		ret, err = stmt.parseDefSpecPropStmt()
+		ret, err = stmt.parseDefConcreteSpecPropStmt()
 	case KeywordExistProp:
-		ret, err = stmt.parseDefExistPropStmt()
+		ret, err = stmt.parseDefConcreteExistPropStmt()
 	case KeywordFn:
-		ret, err = stmt.parseDefFnStmt()
+		ret, err = stmt.parseDefConcreteFnStmt()
 	case KeywordObj:
 		ret, err = stmt.parseDefObjStmt()
 	case KeywordClaim:
@@ -223,7 +223,7 @@ func (stmt *TokenBlock) parseThenBlockSpecFacts() (*[]SpecFactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseDefSpecPropStmt() (*DefSpecPropStmt, error) {
+func (stmt *TokenBlock) parseDefConcreteSpecPropStmt() (*DefConcreteSpecPropStmt, error) {
 	decl, err := stmt.Header.parsePropDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -239,7 +239,7 @@ func (stmt *TokenBlock) parseDefSpecPropStmt() (*DefSpecPropStmt, error) {
 		}
 	}
 
-	return &DefSpecPropStmt{*decl, *ifFacts, *thenFacts}, nil
+	return &DefConcreteSpecPropStmt{*decl, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]FactStmt, *[]FactStmt, error) {
@@ -277,7 +277,7 @@ func (stmt *TokenBlock) parseBodyCondFactsThenFacts() (*[]FactStmt, *[]FactStmt,
 	return ifFacts, thenFacts, nil
 }
 
-func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
+func (stmt *TokenBlock) parseDefConcreteFnStmt() (*DefConcreteFnStmt, error) {
 	decl, err := stmt.Header.parseFcFnDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -294,7 +294,7 @@ func (stmt *TokenBlock) parseDefFnStmt() (*DefFnStmt, error) {
 		}
 	}
 
-	return &DefFnStmt{decl.Name, decl.Params, *ifFacts, *thenFacts}, nil
+	return &DefConcreteFnStmt{decl.Name, decl.Params, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
@@ -433,7 +433,7 @@ func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
 	return &KnowStmt{*facts}, nil
 }
 
-func (stmt *TokenBlock) parseDefExistPropStmt() (*DefExistPropStmt, error) {
+func (stmt *TokenBlock) parseDefConcreteExistPropStmt() (*DefConcreteExistPropStmt, error) {
 	decl, err := stmt.Header.parseExistDecl()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -476,7 +476,7 @@ func (stmt *TokenBlock) parseDefExistPropStmt() (*DefExistPropStmt, error) {
 		}
 	}
 
-	return &DefExistPropStmt{*decl, *members, *ifFacts, *thenFacts}, nil
+	return &DefConcreteExistPropStmt{*decl, *members, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
