@@ -70,9 +70,45 @@ func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
 	return GetTopLevelStmtSlice(&s)
 }
 
+func splitAndReplaceSemicolons(input *string) *[]string {
+	// 按行分割字符串
+	lines := strings.Split(*input, "\n")
+
+	// 创建一个新的切片来存储处理后的行
+	transformedLines := make([]string, 0, len(lines))
+
+	// 遍历每一行
+	for _, line := range lines {
+		// 查找行头的空白字符
+		indent := ""
+		for _, char := range line {
+			if char == ' ' || char == '\t' {
+				indent += string(char)
+			} else {
+				break
+			}
+		}
+
+		// 如果行中包含 `;`，则进行替换
+		if strings.Contains(line, ";") {
+			// 将 `;` 替换为 `\n` + 行头空白
+			transformedLine := strings.ReplaceAll(line, ";", "\n"+indent)
+			// 将替换后的行按换行符分割，并添加到新的切片中
+			transformedLines = append(transformedLines, strings.Split(transformedLine, "\n")...)
+		} else {
+			// 如果行中没有 `;`，直接添加到新的切片中
+			transformedLines = append(transformedLines, line)
+		}
+	}
+
+	// 返回新的切片的指针
+	return &transformedLines
+}
+
 func GetTopLevelStmtSlice(content *string) (*TopLevelStmtSlice, error) {
-	lines := strings.Split((*content), "\n")
-	blocks, _, err := parseStrBlocks(&lines, 0, 0)
+	// lines := strings.Split((*content), "\n")
+	lines := splitAndReplaceSemicolons(content)
+	blocks, _, err := parseStrBlocks(lines, 0, 0)
 	if err != nil {
 		return nil, err
 	}

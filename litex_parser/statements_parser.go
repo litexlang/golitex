@@ -210,7 +210,7 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	} else if stmt.Header.is(KeywordWhen) {
 		return stmt.parseWhenStmt()
 	}
-	return stmt.parseInstantiatedFactStmt()
+	return stmt.parseSpecFactStmt()
 }
 
 func (stmt *TokenBlock) parseWhenStmt() (FactStmt, error) {
@@ -235,7 +235,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (ForallStmt, error) {
 	panic("not implemented")
 }
 
-func (stmt *TokenBlock) parseInstantiatedFactStmt() (SpecFactStmt, error) {
+func (stmt *TokenBlock) parseSpecFactStmt() (SpecFactStmt, error) {
 	isTrue := true
 	if stmt.Header.is(KeywordNot) {
 		err := stmt.Header.skip(KeywordNot)
@@ -319,37 +319,59 @@ func (stmt *TokenBlock) parseBlockedForall() (ForallStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ifFacts := &[]FactStmt{}
+	condFacts := &[]FactStmt{}
 	thenFacts := &[]SpecFactStmt{}
 
-	if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(KeywordCond) {
-		ifFacts, err = stmt.Body[0].parseForallCondFactsBlock()
+	if stmt.Body[len(stmt.Body)-1].Header.is(KeywordThen) {
+		for i := 0; i < len(stmt.Body)-1; i++ {
+			curStmt, err := stmt.Body[i].parseFactStmt()
+			if err != nil {
+				return nil, &parseStmtErr{err, *stmt}
+			}
+			*condFacts = append(*condFacts, curStmt)
+		}
+		thenFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockSpecFacts()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-
-		if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(KeywordThen) {
-			thenFacts, err = stmt.Body[1].parseInstantiatedFactsBlock()
-			if err != nil {
-				return nil, &parseStmtErr{err, *stmt}
-			}
-		} else {
-			return nil, fmt.Errorf("expected 'then'")
-		}
 	} else {
-		for _, curStmt := range stmt.Body {
-			fact, err := curStmt.parseInstantiatedFactStmt()
+		for i := 0; i < len(stmt.Body); i++ {
+			curStmt, err := stmt.Body[i].parseSpecFactStmt()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
-			*thenFacts = append(*thenFacts, fact)
+			*thenFacts = append(*thenFacts, curStmt)
 		}
 	}
 
+	// if len(stmt.Body) > 0 && (stmt.Body)[0].Header.is(KeywordCond) {
+	// 	ifFacts, err = stmt.Body[0].parseForallCondFactsBlock()
+	// 	if err != nil {
+	// 		return nil, &parseStmtErr{err, *stmt}
+	// 	}
+
+	// 	if len(stmt.Body) == 2 && (stmt.Body)[1].Header.is(KeywordThen) {
+	// 		thenFacts, err = stmt.Body[1].parseInstantiatedFactsBlock()
+	// 		if err != nil {
+	// 			return nil, &parseStmtErr{err, *stmt}
+	// 		}
+	// 	} else {
+	// 		return nil, fmt.Errorf("expected 'then'")
+	// 	}
+	// } else {
+	// 	for _, curStmt := range stmt.Body {
+	// 		fact, err := curStmt.parseInstantiatedFactStmt()
+	// 		if err != nil {
+	// 			return nil, &parseStmtErr{err, *stmt}
+	// 		}
+	// 		*thenFacts = append(*thenFacts, fact)
+	// 	}
+	// }
+
 	if len(*typeParams) > 0 {
-		return &GenericForallStmt{*typeParams, *typeInterfaces, *params, *paramTypes, *ifFacts, *thenFacts}, nil
+		return &GenericForallStmt{*typeParams, *typeInterfaces, *params, *paramTypes, *condFacts, *thenFacts}, nil
 	} else {
-		return &ConcreteForallStmt{*params, *paramTypes, *ifFacts, *thenFacts}, nil
+		return &ConcreteForallStmt{*params, *paramTypes, *condFacts, *thenFacts}, nil
 	}
 
 }
@@ -375,25 +397,15 @@ func (stmt *TokenBlock) parseBodyFacts() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseForallCondFactsBlock() (*[]FactStmt, error) {
-	err := stmt.Header.parseGivenWordsThenExceedEnd(&[]string{KeywordCond, KeywordColon})
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-
-	facts, err := stmt.parseBodyFacts()
-	return facts, err
-}
-
-func (stmt *TokenBlock) parseInstantiatedFactsBlock() (*[]SpecFactStmt, error) {
+func (stmt *TokenBlock) parseThenBlockSpecFacts() (*[]SpecFactStmt, error) {
 	facts := &[]SpecFactStmt{}
-	stmt.Header.skip()
+	stmt.Header.skip() // skip "then"
 	if err := stmt.Header.testAndSkip(KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
 	for _, curStmt := range stmt.Body {
-		fact, err := curStmt.parseInstantiatedFactStmt()
+		fact, err := curStmt.parseSpecFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -781,7 +793,7 @@ func (stmt *TokenBlock) parseBlockWhenStmt() (*ConditionalFactStmt, error) {
 	thenFacts := []SpecFactStmt{}
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
-		fact, err := stmt.Body[i].parseInstantiatedFactStmt()
+		fact, err := stmt.Body[i].parseSpecFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -798,7 +810,7 @@ func (stmt *TokenBlock) parseBlockWhenStmt() (*ConditionalFactStmt, error) {
 	}
 
 	for i := len(stmt.Body[len(stmt.Body)-1].Body) - 1; i >= 0; i-- {
-		fact, err := stmt.Body[len(stmt.Body)-1].Body[i].parseInstantiatedFactStmt()
+		fact, err := stmt.Body[len(stmt.Body)-1].Body[i].parseSpecFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
