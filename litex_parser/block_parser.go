@@ -91,10 +91,26 @@ func splitAndReplaceSemicolons(input *string) *[]string {
 
 		// 如果行中包含 `;`，则进行替换
 		if strings.Contains(line, ";") {
-			// 将 `;` 替换为 `\n` + 行头空白
-			transformedLine := strings.ReplaceAll(line, ";", "\n"+indent)
-			// 将替换后的行按换行符分割，并添加到新的切片中
-			transformedLines = append(transformedLines, strings.Split(transformedLine, "\n")...)
+			// 将 `;` 和它后面的空白字符一起替换为 `\n` + 行头空白
+			transformedLine := ""
+			for i := 0; i < len(line); i++ {
+				if line[i] == ';' {
+					// 找到 `;`，替换为 `\n` + 行头空白
+					transformedLine += "\n" + indent
+					// 跳过 `;` 后面的空白字符
+					for i+1 < len(line) && (line[i+1] == ' ' || line[i+1] == '\t') {
+						i++
+					}
+				} else {
+					// 如果不是 `;`，直接追加字符
+					transformedLine += string(line[i])
+				}
+			}
+
+			// 将替换后的行按换行符分割
+			splitLines := strings.Split(transformedLine, "\n")
+			// 将处理后的行添加到新的切片中
+			transformedLines = append(transformedLines, splitLines...)
 		} else {
 			// 如果行中没有 `;`，直接添加到新的切片中
 			transformedLines = append(transformedLines, line)
