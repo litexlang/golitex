@@ -34,7 +34,7 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	return &params, nil
 }
 
-func (parser *Parser) parseParamListInDeclsAndKeepEnd(endWith string) (*[]string, *[]Fc, error) {
+func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) (*[]string, *[]Fc, error) {
 	paramName := []string{}
 	paramTypes := []Fc{}
 
@@ -247,4 +247,34 @@ func (block *TokenBlock) parseInstanceMember() (InstanceMember, error) {
 		return block.parseDefExistStmt()
 	}
 	return nil, fmt.Errorf("%v, %v, %v expected", KeywordObj, KeywordFn, KeywordProp)
+}
+
+func (parser *Parser) parseTypeListInDeclsAndSkipEnd(endWith string) (*[]string, *[]FcAtom, error) {
+	paramName := []string{}
+	paramTypes := []FcAtom{}
+
+	for !parser.is(endWith) {
+		objName, err := parser.next()
+		if err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
+
+		tp, err := parser.parseFcAtom()
+		if err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
+
+		paramName = append(paramName, objName)
+		paramTypes = append(paramTypes, tp)
+
+		if parser.isAndSkip(endWith) {
+			break
+		}
+
+		if err := parser.testAndSkip(KeywordComma); err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
+	}
+
+	return &paramName, &paramTypes, nil
 }
