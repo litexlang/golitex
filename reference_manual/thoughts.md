@@ -635,14 +635,20 @@ Set 的几大功能
    2. forall或者fn里，我的“自由变量”如何当做其他什么东西的同名函数
 4. fn相关
    1. fn对传入的参数做检查
+      1. fn的参数列表里能写type，也能写set。但我建议你写set
+         1. 我或许应该禁止用户写type。
    2. know f(a) = 2
       1. 如果a压根不满足f的cond，那用户这样写，我是不是要警告一下用户呢
    3. 特别是，用forall 进行search的时候，我把当前的参数代入到已知的forall事实里，这个时候各种可能的难点就出来了。具体可能碰到哪些问题需要思考一下
    4. 疑问：我要引入fn的类型吗？
       1. 貌似不用：如果我传入了不符合规定的参数，那我会报错的。至少说我不会让你通过
+   5. 函数只能读入集合和函数（函数本身也是一种集合），绝对不能读入prop，也不能返回prop
+   6. 想让函数有某种Generic性质，即读入“任何符合类型的集合 的参数”，而不是读入“某个集合参数”，那就用interface
 5. prop 本质上和 fn 是不一样的
    1. prop：起到普通PL的函数的作用，输出值：true, false, unknown, error
    2. fn: 起到C中的struct的作用，把一符号放在一起形成新符号
+   3. prop能读入prop作为参数，虽然我现在不太想实现这个功能
+      1. 我可能先送给用户数归法这个prop generator。但是让用户自己定义prop generator我可能暂时不想这么干.
 6. 内置集合（类型）
    1. nat
       1. real, int 都是从nat来的。这些可以由用户自定义
@@ -655,7 +661,27 @@ Set 的几大功能
       1. in
       2. 作为interface，集合，
 7. relational和FnRet函数的分离；relational spec fact 和 func spec fact 的分离
+8. 超级大问题：search和store时如何compare
+   1. 需要仔细想一想
+9. as
+   1.  as(obj, typeName/setName) 之所以可以读入setName是因为一个obj可以被放在很多的集合里
+10. subset of
+    1.  把一个集合视作另外一个集合的子集
+    2.  比如R可以看成C的子集；nat看做rational的子集
+    3.  这种“看成子集“，怎么证明呢，有哪些语义方面的问题？
+        1.  语义：比如我现在fn是读入参数为C的，那我输入1，应该也要能通过
 
-Generics的语义
+Generics（interface）的语义
 1. 过于困难，之后再说
    1. 困难之处在于，不知道怎么search。怕和正常的语法语义有冲突
+   2. 另外一大困难是，我在证明关于Generics的性质时，我怎么去做证明。我这时候开的局部环境和正常的大环境是截然不同的：大环境是具体的set，而Generic 环境里，我不知道你所谓的集合导致是哪个集合
+2. 注意到interface真的只是set+opt+prop的语法糖：当我输入一条concrete的事实时，我新生成的事实是，关于最最原始的set+opt+prop的事实。
+3. 如何定义impl
+   1. 有时候impl需要作为factual expression出现
+
+实现的目的是做成语法糖的功能
+1. interface impl interface
+   1. 比如群impl半群
+   2. 这相当于是语法糖的语法糖：interface是set+opt+prop的语法糖；interface impl interface 是更强的语法糖：比如半群相关的事实，当我现在是群是，立刻满足，而不需要我手动去再说明一下。即任何关于一个群的事实，我都会拿来关于半群的事实去验证一下他。
+2. commutative, associative
+   1. 只有你声明过了，同时我检查过了你说它有这些性质确实都有了，那我会在检查的时候帮你用可能的情况都检查一下。你颠倒着写不要紧。
