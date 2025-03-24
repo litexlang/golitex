@@ -965,6 +965,12 @@ prop f(x S, y G):
 	then:
 		$p(x, y)
 
+exist_prop f(x S, y G) a fn, b S, c G:
+	$G(g); $G(g2);
+	$G(g); $G(g2);$P(x, y);
+	$p(x, y)
+	then:
+		$p(x, y)
 `
 
 	statements, err := ParserTester(code)
