@@ -210,8 +210,7 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	} else if stmt.Header.is(KeywordWhen) {
 		return stmt.parseIfStmt()
 	}
-
-	return stmt.parseInlineFactStmt()
+	return stmt.parseInstantiatedFactStmt()
 }
 
 func (stmt *TokenBlock) parseIfStmt() (FactStmt, error) {
@@ -232,10 +231,21 @@ func (stmt *TokenBlock) parseInlineFactStmt() (FactStmt, error) {
 	return stmt.parseInstantiatedFactStmt()
 }
 
-func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
+func (stmt *TokenBlock) parseInlineForallStmt() (ForallStmt, error) {
 	err := stmt.Header.skip(KeywordForall)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
+	}
+
+	typeParams := &[]string{}
+	typeInterfaces := &[]FcAtom{}
+
+	if stmt.Header.is(KeywordLess) {
+		stmt.Header.next()
+		typeParams, typeInterfaces, err = stmt.Header.parseTypeListInDeclsAndSkipEnd(KeywordGreater)
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
 	}
 
 	condFacts := []FactStmt{}
@@ -246,11 +256,7 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
-	params, paramTypes, err := stmt.Header.parseParamListInDeclsAndKeepEnd(KeywordRightParen)
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
-	err = stmt.Header.skip(KeywordRightParen)
+	params, paramTypes, err := stmt.Header.parseParamListInDeclsAndSkipEnd(KeywordRightParen)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -288,7 +294,12 @@ func (stmt *TokenBlock) parseInlineForallStmt() (*BlockForallStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &BlockForallStmt{*params, *paramTypes, condFacts, thenFacts}, nil
+	if len(*typeParams) > 0 {
+		return &GenericForallStmt{*typeParams, *typeInterfaces, *params, *paramTypes, condFacts, thenFacts}, nil
+	} else {
+		return &ConcreteForallStmt{*params, *paramTypes, condFacts, thenFacts}, nil
+	}
+
 }
 
 func (stmt *TokenBlock) parseInstantiatedFactStmt() (SpecFactStmt, error) {
@@ -353,13 +364,24 @@ func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
 	return &FuncFactStmt{true, opt, params}, nil
 }
 
-func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
+func (stmt *TokenBlock) parseBlockedForall() (ForallStmt, error) {
 	err := stmt.Header.skip(KeywordForall)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	params, paramTypes, err := stmt.Header.parseParamListInDeclsAndKeepEnd(KeywordColon)
+	typeParams := &[]string{}
+	typeInterfaces := &[]FcAtom{}
+
+	if stmt.Header.is(KeywordLess) {
+		stmt.Header.next()
+		typeParams, typeInterfaces, err = stmt.Header.parseTypeListInDeclsAndSkipEnd(KeywordGreater)
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+	}
+
+	params, paramTypes, err := stmt.Header.parseParamListInDeclsAndSkipEnd(KeywordColon)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -391,7 +413,12 @@ func (stmt *TokenBlock) parseBlockedForall() (FactStmt, error) {
 		}
 	}
 
-	return &BlockForallStmt{*params, *paramTypes, *ifFacts, *thenFacts}, nil
+	if len(*typeParams) > 0 {
+		return &GenericForallStmt{*typeParams, *typeInterfaces, *params, *paramTypes, *ifFacts, *thenFacts}, nil
+	} else {
+		return &ConcreteForallStmt{*params, *paramTypes, *ifFacts, *thenFacts}, nil
+	}
+
 }
 
 func (stmt *TokenBlock) parseForallStmt() (FactStmt, error) {
