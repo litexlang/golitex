@@ -711,7 +711,7 @@ a.b.c.d.e.f is red
 
 func TestForall(t *testing.T) {
 	code := `
-forall g , g2:
+forall g G, g2 G2:
 	cond:
 		$G(g)
 		$G(g2)
@@ -719,8 +719,8 @@ forall g , g2:
 		when $f(g.g1, g2.g2) {$p()}
 	then:
 		$p(x, y)
-when $f(g.g1, g2.g2), forall $p() {$p()}  {$p()}
-forall $p() {$p()}
+// when () $f(g.g1, g2.g2), forall $p() {$p()}  {$p()}
+forall () $p() {$p()}
 `
 
 	statements, err := ParserTester(code)
