@@ -34,27 +34,34 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	return &params, nil
 }
 
-func (parser *Parser) parseFcObjTypePairArrEndWithColon() (*[]string, error) {
-	pairs := []string{}
+func (parser *Parser) parseParamListInDeclsAndKeepEnd(endWith string) (*[]string, *[]Fc, error) {
+	paramName := []string{}
+	paramTypes := []Fc{}
 
-	for !parser.is(KeywordColon) {
+	for !parser.is(endWith) {
 		objName, err := parser.next()
 		if err != nil {
-			return nil, &parserErr{err, parser}
+			return nil, nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, objName)
+		tp, err := parser.ParseFc()
+		if err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
 
-		if parser.isAndSkip(KeywordColon) {
+		paramName = append(paramName, objName)
+		paramTypes = append(paramTypes, tp)
+
+		if parser.isAndSkip(endWith) {
 			break
 		}
 
 		if err := parser.testAndSkip(KeywordComma); err != nil {
-			return nil, &parserErr{err, parser}
+			return nil, nil, &parserErr{err, parser}
 		}
 	}
 
-	return &pairs, nil
+	return &paramName, &paramTypes, nil
 }
 
 func (parser *Parser) parseBracedFcTypePairArr() (*[]string, error) {

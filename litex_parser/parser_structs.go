@@ -33,9 +33,10 @@ type DefFnStmt struct {
 
 // TODO: Generics
 type BlockForallStmt struct {
-	VarParams []string
-	CondFacts []FactStmt
-	ThenFacts []SpecFactStmt
+	Params     []string
+	ParamTypes []Fc
+	CondFacts  []FactStmt
+	ThenFacts  []SpecFactStmt
 }
 
 type FuncFactStmt struct {
