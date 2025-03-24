@@ -7,16 +7,14 @@ type Stmt interface {
 
 func (stmt *DefObjStmt) stmt() {}
 
-func (c *DefInterfaceStmt) stmt()   {}
-func (f *DefTypeStmt) stmt()        {}
-func (c *DefSpecPropStmt) stmt()    {}
-func (f *DefFnStmt) stmt()          {}
-func (l *ConcreteForallStmt) stmt() {}
-func (r *RelationFactStmt) stmt()   {}
-func (p *FuncFactStmt) stmt()       {}
-func (f *ClaimProveStmt) stmt()     {}
-
-// func (f *DefAliasStmt) stmt()               {}
+func (c *DefInterfaceStmt) stmt()           {}
+func (f *DefTypeStmt) stmt()                {}
+func (c *DefSpecPropStmt) stmt()            {}
+func (f *DefFnStmt) stmt()                  {}
+func (l *ConcreteForallStmt) stmt()         {}
+func (r *RelationFactStmt) stmt()           {}
+func (p *FuncFactStmt) stmt()               {}
+func (f *ClaimProveStmt) stmt()             {}
 func (f *KnowStmt) stmt()                   {}
 func (s *DefExistPropStmt) stmt()           {}
 func (s *HaveStmt) stmt()                   {}
@@ -43,29 +41,14 @@ type SpecFactParams struct {
 }
 
 type SpecFactStmt interface {
-	notFactStmtSetT(b bool)
+	specFactStmtSetT(b bool)
 	factStmt()
 	stmt()
-	GetTypeParamsAndParams() *SpecFactParams
 	String() string
 }
 
-func (r *RelationFactStmt) notFactStmtSetT(b bool) { r.IsTrue = b }
-func (f *FuncFactStmt) notFactStmtSetT(b bool)     { f.IsTrue = b }
-func (f *RelationFactStmt) GetTypeParamsAndParams() *SpecFactParams {
-	panic("TODO: Implement type specific operator overloading first")
-}
-
-func (f *FuncFactStmt) GetTypeParamsAndParams() *SpecFactParams {
-	return &SpecFactParams{[]Fc{}}
-}
-
-// type FcObjTypeValue interface {
-// 	fcObjTypeValue()
-// }
-
-// func (f FcObjTypeStrValue) fcObjTypeValue()   {}
-// func (f *FcObjTypeFuncValue) fcObjTypeValue() {}
+func (r *RelationFactStmt) specFactStmtSetT(b bool) { r.IsTrue = b }
+func (f *FuncFactStmt) specFactStmtSetT(b bool)     { f.IsTrue = b }
 
 type ClaimStmt interface {
 	claimStmt()
@@ -77,40 +60,21 @@ func (s *ClaimProveStmt) claimStmt()             {}
 func (s *ClaimProveByContradictStmt) claimStmt() {}
 
 type DefPropStmt interface {
-	defPropExistDeclStmt()
+	defPropStmt()
 	stmt()
 }
 
-func (s *DefExistPropStmt) defPropExistDeclStmt() {}
-func (s *DefSpecPropStmt) defPropExistDeclStmt()  {}
+func (s *DefExistPropStmt) defPropStmt() {}
+func (s *DefSpecPropStmt) defPropStmt()  {}
 
-type InlineFactStmt interface {
-	inlineFactStmt()
-	factStmt()
-	stmt()
+type DefMember interface {
+	defMember()
 }
 
-func (r *RelationFactStmt) inlineFactStmt()    {}
-func (p *FuncFactStmt) inlineFactStmt()        {}
-func (p *ConditionalFactStmt) inlineFactStmt() {}
-
-type TypeMember interface {
-	typeMember()
-}
-
-func (s *DefObjStmt) typeMember()      {}
-func (s *DefFnStmt) typeMember()       {}
-func (s *DefSpecPropStmt) typeMember() {}
-func (s *DefTypeStmt) typeMember()     {}
-
-type InstanceMember interface {
-	instanceMember()
-}
-
-func (s *DefObjStmt) instanceMember()       {}
-func (s *DefFnStmt) instanceMember()        {}
-func (s *DefSpecPropStmt) instanceMember()  {}
-func (s *DefExistPropStmt) instanceMember() {}
+func (s *DefObjStmt) defMember()       {}
+func (s *DefFnStmt) defMember()        {}
+func (s *DefSpecPropStmt) defMember()  {}
+func (s *DefExistPropStmt) defMember() {}
 
 type ForallStmt interface {
 	factStmt()

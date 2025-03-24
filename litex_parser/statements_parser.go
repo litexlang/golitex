@@ -97,7 +97,7 @@ func (stmt *TokenBlock) parseSpecFactStmt() (SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	ret.notFactStmtSetT(isTrue)
+	ret.specFactStmtSetT(isTrue)
 	return ret, nil
 }
 
@@ -468,7 +468,7 @@ func (stmt *TokenBlock) parseDefExistPropStmt() (*DefExistPropStmt, error) {
 	}
 
 	ifFacts := &[]FactStmt{}
-	members := &[]InstanceMember{}
+	members := &[]DefMember{}
 	thenFacts := &[]FactStmt{}
 	if !stmt.Header.is(KeywordColon) {
 		return nil, fmt.Errorf("expected ':‘")

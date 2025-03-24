@@ -82,7 +82,7 @@ type KnowStmt struct {
 type DefExistPropStmt struct {
 	DeclHeader PropDeclHeader
 	CondFacts  []FactStmt
-	Members    []InstanceMember
+	Members    []DefMember
 	ThenFacts  []FactStmt
 }
 
