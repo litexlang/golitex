@@ -578,9 +578,20 @@ $Q(mathematical_induction)
 25.3.24
 有三种定义集合的方法
 1. 有限个obj
-2. {x in S| x 满足一些条件}
+2. {x in S| Q(x)}
+    forall x S:
+        Q(x)
+    这里的S对应x in S, condition Q(x) 对应|右边的Q(x)
 3. {x in A| exist y in B s.t. P(x,y) 成立}
+    forall x A:
+        exist_P_x_y_y(x,y)
+    // 定义：y在函数f的值域里: f: x in A -> y in B
+    prop exist_x_fx_equals_y(y B):
+        var x A
+        then:
+            f(x) = y
 
 这是很本质的观察：
 1. 2.中出现了forall
 2. 3.中出现了exist；这种写法和y是f(A)的值域中的元素对应上了
+3. 1. 中是最常见的定义set的方式
