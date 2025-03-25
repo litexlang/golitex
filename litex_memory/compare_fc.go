@@ -25,7 +25,7 @@ func compareFcType(left, right parser.Fc) (int, error) {
 	switch left.(type) {
 	case *parser.FcAtom:
 		knownEnum = fcStrEnum
-	case *parser.FcFnCall:
+	case *parser.FcFnCallPipe:
 		knownEnum = fcFnRetValueEnum
 	default:
 		return 0, fmt.Errorf("unknown Fc type: %T", left)
@@ -36,7 +36,7 @@ func compareFcType(left, right parser.Fc) (int, error) {
 	switch right.(type) {
 	case *parser.FcAtom:
 		givenEnum = fcStrEnum
-	case *parser.FcFnCall:
+	case *parser.FcFnCallPipe:
 		givenEnum = fcFnRetValueEnum
 	default:
 		return 0, fmt.Errorf("unknown Fc type: %T", right)
@@ -52,8 +52,8 @@ func compareFcOfTheSameType(left, right parser.Fc) (int, error) {
 		return compareFcAtom(knownFcAtom, givenFcAtom)
 	}
 
-	knownFcFnCall, ok := left.(*parser.FcFnCall)
-	givenFcFnCall, ok2 := right.(*parser.FcFnCall)
+	knownFcFnCall, ok := left.(*parser.FcFnCallPipe)
+	givenFcFnCall, ok2 := right.(*parser.FcFnCallPipe)
 	if ok && ok2 {
 		return compareFcFnCall(knownFcFnCall, givenFcFnCall)
 	}
@@ -85,22 +85,31 @@ func compareFcAtom(left, right *parser.FcAtom) (int, error) {
 	return 0, nil
 }
 
-func compareFcFnCall(left, right *parser.FcFnCall) (int, error) {
-
-	// TODO 25-3-25: REFACTOR
-
-	// 从后往前比较
-
+func compareFcFnCall(left, right *parser.FcFnCallPipe) (int, error) {
 	if comp, err := compareFcAtom(&left.FnName, &right.FnName); comp != 0 || err != nil {
 		return comp, err
 	}
 
-	if len(left.ParamPipe) != len(right.ParamPipe) {
-		return len(left.ParamPipe) - len(right.ParamPipe), nil
+	if len(left.CallPipe) != len(right.CallPipe) {
+		return len(left.CallPipe) - len(right.CallPipe), nil
 	}
 
-	for i := 0; i < len(left.ParamPipe); i++ {
-		if comp, err := compareFcFnParams(left.ParamPipe[i], right.ParamPipe[i]); comp != 0 || err != nil {
+	for i := 0; i < len(left.CallPipe); i++ {
+		if comp, err := compareFcFnCallPipeSeg(&left.CallPipe[i], &right.CallPipe[i]); comp != 0 || err != nil {
+			return comp, err
+		}
+	}
+
+	return 0, nil
+}
+
+func compareFcFnCallPipeSeg(left, right *parser.FcFnCallPipeSeg) (int, error) {
+	if len(left.Params) != len(right.Params) {
+		return len(left.Params) - len(right.Params), nil
+	}
+
+	for i := 0; i < len(left.Params); i++ {
+		if comp, err := CompareFc(left.Params[i], right.Params[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
