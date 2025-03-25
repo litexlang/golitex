@@ -675,6 +675,7 @@ Set 的几大功能
     2.  比如R可以看成C的子集；nat看做rational的子集
     3.  这种“看成子集“，怎么证明呢，有哪些语义方面的问题？
         1.  语义：比如我现在fn是读入参数为C的，那我输入1，应该也要能通过
+6. 定义set上的builtin opt：比如__add__，语法咋样
 
 Generics（interface）的语义
 1. 过于困难，之后再说
@@ -700,3 +701,23 @@ prop Q(S Group, g1 S, g2 S):
    1. 只有你声明过了，同时我检查过了你说它有这些性质确实都有了，那我会在检查的时候帮你用可能的情况都检查一下。你颠倒着写不要紧。
 
 注：xxx of yyy 唯一出现的地方是，member of interface。其他地方一律不会出现。那这样一来，因为任何generics函数里，我都会写成 prop Q< S InterfaceName >(x S) ，然后涉及到的函数也是写成 S::__add__ 这种，所以不会导致需要连续2个::的情况：packageName::interfaceName::memberName是不会有的，只有typeThatImplInterface::memberName
+
+3.25
+如何声明set
+严格的方法：对应3个定义方式
+    定义法1：有限集合 
+        set s :
+            1,2,a,b // 把所有的元素写在第二行
+    法2: S 是 S2的子集，满足一些性质(可以是普通性质，可以是存在性质)
+        set s s2:
+            P(inst)
+            exist_p(inst)
+    法3：其他集合的交并补
+        set s = s1 union s2 intersection s3
+不严格：直接定义(现在先这样定义；未来成熟之后，用严格定义法引入新的定义方式。因为我也确实不知道怎么严格定义“矩阵集合”这样的集合)
+var nat_matrix_2_2 set
+fn nat_matrix_2_2::at(a nat, b nat) nat:
+    0 < a < 2
+    0 < b < 2
+    then:
+        

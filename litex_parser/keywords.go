@@ -10,6 +10,7 @@ const (
 	KeywordInstanceMember       = "instance_member" // TODO: 待删
 	KeywordForall               = "forall"
 	KeywordWhen                 = "when"
+	KeywordCond                 = "cond" // 必须存在，因为有时候只有要求没then
 	KeywordThen                 = "then"
 	KeywordObj                  = "obj"
 	KeywordFn                   = "fn"

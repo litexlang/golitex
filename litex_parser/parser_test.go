@@ -965,6 +965,12 @@ prop f(x S, y G):
 	then:
 		$p(x, y)
 
+fn at(a nat, b nat) :
+	cond:
+    	$p(x, y)
+	$Q(x,y)
+
+
 exist_prop f(x S, y G) a fn, b S, c G:
 	$G(g); $G(g2);
 	$G(g); $G(g2);$P(x, y);
