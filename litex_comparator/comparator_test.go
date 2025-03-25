@@ -1,7 +1,6 @@
 package litexcomparator
 
 import (
-	"fmt"
 	parser "golitex/litex_parser"
 	"math/rand"
 	"testing"
@@ -156,13 +155,4 @@ func TestCompareSpecFact(t *testing.T) {
 		}
 		println(i, out, facts[n].String(), facts[m].String())
 	}
-}
-
-func SpecFactCompareAdapter(a, b interface{}) (int, error) {
-	knownFact, ok1 := a.(*parser.SpecFactStmt)
-	givenFact, ok2 := b.(*parser.SpecFactStmt)
-	if !ok1 || !ok2 {
-		return 0, fmt.Errorf("expected *parser.SpecFactStmt, got %T and %T", a, b)
-	}
-	return CmpSpecFact(*knownFact, *givenFact)
 }

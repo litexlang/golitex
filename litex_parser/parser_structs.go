@@ -52,6 +52,7 @@ type GenericForallStmt struct {
 	ThenFacts      []SpecFactStmt
 }
 
+// 这里不需要分Concrete FuncFact, Generic FuncFact. 因为FuncFact的基本form都是下面这个样子。你到底是Concrete还是Generic取决于外部条件而不是它自己：外部条件包括：forall里的Generic，fn或prop的Generic
 type FuncFactStmt struct {
 	IsTrue bool
 	Opt    FcAtom

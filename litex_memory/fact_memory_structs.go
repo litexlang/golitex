@@ -10,17 +10,17 @@ type PropName string
 
 type FuncFactMemoryNode = parser.FuncFactStmt
 
-type FuncFactMemory struct {
+type ConcreteFuncFactMemory struct {
 	Mem ds.RedBlackTree[*FuncFactMemoryNode]
 }
 
 type RelationFactMemoryNode = parser.RelationFactStmt
 
-type RelationFactMemory struct {
+type ConcreteRelationFactMemory struct {
 	Mem ds.RedBlackTree[*RelationFactMemoryNode]
 }
 
-type CondFactMemory struct {
+type ConcreteCondFactMemory struct {
 	Mem ds.RedBlackTree[*CondFactMemoryNode]
 }
 
@@ -29,7 +29,7 @@ type CondFactMemoryNode struct {
 	CondFacts     []*parser.ConditionalFactStmt
 }
 
-type UniFactMemory struct {
+type ConcreteUniFactMemory struct {
 }
 
 // ! 如果一个opt是读入2个参数，同时有交换性的，那可以以该fc为key，存所有和它等价的东西的列表
@@ -41,7 +41,7 @@ type EqualFactMemoryTreeNode struct {
 	Values  []*parser.Fc
 }
 
-type EqualFactMemory struct {
+type ConcreteEqualFactMemory struct {
 	Mem ds.RedBlackTree[*EqualFactMemoryTreeNode]
 }
 

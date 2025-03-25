@@ -15,11 +15,12 @@ type Env struct {
 	PropMemory mem.PropMemory
 	FnMemory   mem.FnMemory
 
-	FuncFactMemory     mem.FuncFactMemory
-	CondFactMemory     mem.CondFactMemory
-	RelationFactMemory mem.RelationFactMemory
-	UniFactMemory      mem.UniFactMemory
-	EqualMemory        mem.EqualFactMemory
+	// 这里必须区分Concrete和Generic
+	ConcreteFuncFactMemory     mem.ConcreteFuncFactMemory
+	ConcreteCondFactMemory     mem.ConcreteCondFactMemory
+	ConcreteRelationFactMemory mem.ConcreteRelationFactMemory
+	ConcreteUniFactMemory      mem.ConcreteUniFactMemory
+	ConcreteEqualMemory        mem.ConcreteEqualFactMemory
 }
 
 func NewEnv(parent *Env) *Env {
@@ -30,12 +31,12 @@ func NewEnv(parent *Env) *Env {
 		PropMemory: *mem.NewPropMemory(),
 		FnMemory:   *mem.NewFnMemory(),
 
-		FuncFactMemory:     mem.FuncFactMemory{Mem: *ds.NewRedBlackTree(cmp.CmpSpecFuncFact)}, // 需要把env包和memory包分离的一个原因就是，这里会引入cmp，而cmp包要用mem的节点，会cyclic
-		RelationFactMemory: mem.RelationFactMemory{Mem: *ds.NewRedBlackTree(cmp.SpecRelationFactCompare)},
-		CondFactMemory:     mem.CondFactMemory{Mem: *ds.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
+		ConcreteFuncFactMemory:     mem.ConcreteFuncFactMemory{Mem: *ds.NewRedBlackTree(cmp.CmpSpecFuncFact)}, // 需要把env包和memory包分离的一个原因就是，这里会引入cmp，而cmp包要用mem的节点，会cyclic
+		ConcreteRelationFactMemory: mem.ConcreteRelationFactMemory{Mem: *ds.NewRedBlackTree(cmp.SpecRelationFactCompare)},
+		ConcreteCondFactMemory:     mem.ConcreteCondFactMemory{Mem: *ds.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
 		// UniFactMemory:      *NewUniFactMemory(),
-		UniFactMemory: mem.UniFactMemory{},
-		EqualMemory:   mem.EqualFactMemory{Mem: *ds.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
+		ConcreteUniFactMemory: mem.ConcreteUniFactMemory{},
+		ConcreteEqualMemory:   mem.ConcreteEqualFactMemory{Mem: *ds.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
 	}
 
 	return env
@@ -64,7 +65,7 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 }
 
 func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
-	err := env.FuncFactMemory.Mem.Insert(fact)
+	err := env.ConcreteFuncFactMemory.Mem.Insert(fact)
 	if err != nil {
 		return err
 	}
@@ -90,25 +91,25 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 		Values:  []*parser.Fc{&stmt.Params[0]},
 	}
 
-	leftSearched, err := env.EqualMemory.Mem.Search(left)
+	leftSearched, err := env.ConcreteEqualMemory.Mem.Search(left)
 	if err != nil {
 		return err
 	}
 	if leftSearched != nil {
 		leftSearched.Key.Values = append(leftSearched.Key.Values, &stmt.Params[1])
 	} else {
-		env.EqualMemory.Mem.Insert(left)
+		env.ConcreteEqualMemory.Mem.Insert(left)
 	}
 
 	// left = right is eql to right = left, so we memorize both left = right and right = left
-	rightSearched, err := env.EqualMemory.Mem.Search(right)
+	rightSearched, err := env.ConcreteEqualMemory.Mem.Search(right)
 	if err != nil {
 		return err
 	}
 	if rightSearched != nil {
 		rightSearched.Key.Values = append(rightSearched.Key.Values, &stmt.Params[0])
 	} else {
-		env.EqualMemory.Mem.Insert(right)
+		env.ConcreteEqualMemory.Mem.Insert(right)
 	}
 
 	return nil
@@ -116,14 +117,14 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 
 func (env *Env) NewCondFact(fact *parser.ConditionalFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		node, err := env.CondFactMemory.Mem.Search(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{}})
+		node, err := env.ConcreteCondFactMemory.Mem.Search(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{}})
 		if err != nil {
 			return err
 		}
 		if node != nil {
 			node.Key.CondFacts = append(node.Key.CondFacts, fact)
 		} else {
-			err := env.CondFactMemory.Mem.Insert(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{fact}})
+			err := env.ConcreteCondFactMemory.Mem.Insert(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{fact}})
 			if err != nil {
 				return err
 			}
