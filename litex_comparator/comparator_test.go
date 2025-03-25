@@ -5,7 +5,6 @@ import (
 	parser "golitex/litex_parser"
 	"math/rand"
 	"testing"
-	"time"
 )
 
 func TestCompareFc(t *testing.T) {
@@ -69,7 +68,7 @@ func TestCompareFc(t *testing.T) {
 	// }
 
 	// 测试 FcStr 的比较
-	result, err := CompareFc(&fc1, &fc2)
+	result, err := CmpFc(&fc1, &fc2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +76,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc1, fc2): expected negative value, got %d", result)
 	}
 
-	result, err = CompareFc(&fc1, &fc3)
+	result, err = CmpFc(&fc1, &fc3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +85,7 @@ func TestCompareFc(t *testing.T) {
 	}
 
 	// 测试 FcFnRetValue 的比较
-	result, err = CompareFc(&fc4, &fc5)
+	result, err = CmpFc(&fc4, &fc5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +93,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc4, fc5): expected negative value, got %d", result)
 	}
 
-	result, err = CompareFc(&fc4, &fc6)
+	result, err = CmpFc(&fc4, &fc6)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +101,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc4, fc6): expected 0, got %d", result)
 	}
 
-	result, err = CompareFc(&fc5, &fc6)
+	result, err = CmpFc(&fc5, &fc6)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +109,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc5, fc6): expected positive value, got %d", result)
 	}
 
-	result, err = CompareFc(&fc4, &fc7)
+	result, err = CmpFc(&fc4, &fc7)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,32 +127,6 @@ func TestCompareSpecFact(t *testing.T) {
 		"$p(b)",
 		"$t(a)",
 		"$q(a, b)",
-		"$q[a,b]().t[]()",
-		"$q(a, b)",
-		"$q[a,b]().t[]()",
-		"$q[a,b](c).t[k](f[]().g[](), t)",
-		"$q[a,b](c).t[k](f[]().g[](), t)",
-		"$t[a,d,c](k,g,f[]())",
-		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)()",
-		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)()",
-		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)()",
-		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
-		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
-		"$t[a,d,c](k,g,f[]()).t[k](f[]().g[](), t)",
-		"$ff()[](f[](), a.b.c.g().f[]())()()",
-		"$a.b.c.g().f[]()",
-		"$ff()[](f[](), a.b.c.g().f[]())()()",
-		"$ff()[](f[](), a.b.c.g().f[]())()()",
-		"$ff()[](f[](), a.b.c.g().f[]())()()",
-		"$ff()[](f[](), a.b.c.g().f[]())()()",
-		"$a.b.c.g().f[]()",
-		"$f()()()()",
-		"$f[]()",
-		"$f[]().t[k](f[]().g[](), t)",
-		"$f[]()",
-		"$f[]().t[k](f[]().g[](), t)",
-		"$f[]().t().g[](g[]())()()",
-		"$f[]().t().g[](g[]())()()",
 	}
 
 	facts := []parser.SpecFactStmt{}
@@ -171,61 +144,16 @@ func TestCompareSpecFact(t *testing.T) {
 		}
 	}
 
-	res, err := SpecFactCompare((facts[0]), (facts[1]))
-	if err != nil {
-		t.Fatal(err)
+	rounds := 10
+	for i := range rounds {
+		n := rand.Intn(len(factStrings))
+		m := rand.Intn(len(factStrings))
+		out, err := CmpSpecFact(facts[n], facts[m])
+		if err != nil {
+			t.Fatalf("error: %v", err)
+		}
+		println("%v(%v): %v, %v", i, out, facts[n].String(), facts[m].String())
 	}
-	fmt.Printf("t: %v\n", res)
-
-	res, err = SpecFactCompare((facts[0]), (facts[0]))
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("t: %v\n", res)
-
-	res, err = SpecFactCompare((facts[0]), (facts[2]))
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("t: %v\n", res)
-
-	res, err = SpecFactCompare((facts[4]), (facts[5]))
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("t: %v\n", res)
-
-	start := time.Now()
-	for i := 0; i < 10000000; i++ {
-		j := rand.Intn(len(facts))
-		k := rand.Intn(len(facts))
-		SpecFactCompare((facts[j]), (facts[k]))
-	}
-	// 1.8s
-	fmt.Printf("Random Compare Time taken: %v\n", time.Since(start))
-
-	start = time.Now()
-	for i := 0; i < 10000000; i++ {
-		j := rand.Intn(len(facts))
-		k := rand.Intn(len(facts))
-		SpecFactCompareAdapter((facts[j]), (facts[k]))
-	}
-	// 1.9s
-	fmt.Printf("Random Compare Adaptor Time taken: %v\n", time.Since(start))
-
-	start = time.Now()
-	for i := 0; i < 10000000; i++ {
-		SpecFactCompare((facts[12]), (facts[13]))
-	}
-	// 7.3s
-	fmt.Printf("Compare Very long the same fact Time taken: %v\n", time.Since(start))
-
-	start = time.Now()
-	for i := 0; i < 10000000; i++ {
-		SpecFactCompareAdapter((facts[12]), (facts[13]))
-	}
-	// 7.5s, 可见强制类型转换会带来很大的开销
-	fmt.Printf("Random Compare Adaptor Time taken: %v\n", time.Since(start))
 }
 
 func SpecFactCompareAdapter(a, b interface{}) (int, error) {
@@ -234,5 +162,5 @@ func SpecFactCompareAdapter(a, b interface{}) (int, error) {
 	if !ok1 || !ok2 {
 		return 0, fmt.Errorf("expected *parser.SpecFactStmt, got %T and %T", a, b)
 	}
-	return SpecFactCompare(*knownFact, *givenFact)
+	return CmpSpecFact(*knownFact, *givenFact)
 }

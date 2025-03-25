@@ -31,7 +31,7 @@ func NewEnv(parent *Env) *Env {
 		PropMemory: *mem.NewPropMemory(),
 		FnMemory:   *mem.NewFnMemory(),
 
-		FuncFactMemory:     mem.FuncFactMemory{Mem: *ds.NewRedBlackTree(cmp.SpecFuncFactCompare)},
+		FuncFactMemory:     mem.FuncFactMemory{Mem: *ds.NewRedBlackTree(cmp.CmpSpecFuncFact)},
 		RelationFactMemory: mem.RelationFactMemory{Mem: *ds.NewRedBlackTree(cmp.SpecRelationFactCompare)},
 		CondFactMemory:     mem.CondFactMemory{Mem: *ds.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
 		// UniFactMemory:      *NewUniFactMemory(),

@@ -9,11 +9,11 @@ func SpecRelationFactCompare(left, right *mem.RelationFactMemoryNode) (int, erro
 }
 
 func CondFactMemoryTreeNodeCompare(left, right *mem.CondFactMemoryNode) (int, error) {
-	return SpecFactCompare(left.ThenFactAsKey, right.ThenFactAsKey)
+	return CmpSpecFact(left.ThenFactAsKey, right.ThenFactAsKey)
 }
 
 func EqualFactMemoryTreeNodeCompare(knownFact, givenFact *mem.EqualFactMemoryTreeNode) (int, error) {
-	return CompareFc(knownFact.FcAsKey, givenFact.FcAsKey)
+	return CmpFc(knownFact.FcAsKey, givenFact.FcAsKey)
 }
 
 func UniFactMemoryTreeNodeCompare(knownFact, givenFact *mem.UniFactMemoryTreeNode) (int, error) {
