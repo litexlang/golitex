@@ -6,6 +6,7 @@ import (
 	cmp "golitex/litex_comparator"
 	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
+	structure "golitex/litex_structure"
 )
 
 type Env struct {
@@ -30,12 +31,12 @@ func NewEnv(parent *Env) *Env {
 		PropMemory: *mem.NewPropMemory(),
 		FnMemory:   *mem.NewFnMemory(),
 
-		FuncFactMemory:     mem.FuncFactMemory{Mem: *mem.NewRedBlackTree(cmp.SpecFuncFactCompare)},
-		RelationFactMemory: mem.RelationFactMemory{Mem: *mem.NewRedBlackTree(cmp.SpecRelationFactCompare)},
-		CondFactMemory:     mem.CondFactMemory{Mem: *mem.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
+		FuncFactMemory:     mem.FuncFactMemory{Mem: *structure.NewRedBlackTree(cmp.SpecFuncFactCompare)},
+		RelationFactMemory: mem.RelationFactMemory{Mem: *structure.NewRedBlackTree(cmp.SpecRelationFactCompare)},
+		CondFactMemory:     mem.CondFactMemory{Mem: *structure.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
 		// UniFactMemory:      *NewUniFactMemory(),
-		UniFactMemory: mem.UniFactMemory{Mem: *mem.NewRedBlackTree(cmp.UniFactMemoryTreeNodeCompare)},
-		EqualMemory:   mem.EqualFactMemory{Mem: *mem.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
+		UniFactMemory: mem.UniFactMemory{Mem: *structure.NewRedBlackTree(cmp.UniFactMemoryTreeNodeCompare)},
+		EqualMemory:   mem.EqualFactMemory{Mem: *structure.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
 	}
 
 	return env
@@ -81,13 +82,13 @@ func (env *Env) NewRelationFact(stmt *parser.RelationFactStmt) error {
 
 func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 	left := &mem.EqualFactMemoryTreeNode{
-		stmt.Params[0],
-		[]*parser.Fc{&stmt.Params[1]},
+		FcAsKey: stmt.Params[0],
+		Values:  []*parser.Fc{&stmt.Params[1]},
 	}
 
 	right := &mem.EqualFactMemoryTreeNode{
-		stmt.Params[1],
-		[]*parser.Fc{&stmt.Params[0]},
+		FcAsKey: stmt.Params[1],
+		Values:  []*parser.Fc{&stmt.Params[0]},
 	}
 
 	leftSearched, err := env.EqualMemory.Mem.Search(left)
@@ -116,14 +117,14 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 
 func (env *Env) NewCondFact(fact *parser.ConditionalFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		node, err := env.CondFactMemory.Mem.Search(&mem.CondFactMemoryNode{f, []*parser.ConditionalFactStmt{}})
+		node, err := env.CondFactMemory.Mem.Search(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{}})
 		if err != nil {
 			return err
 		}
 		if node != nil {
 			node.Key.CondFacts = append(node.Key.CondFacts, fact)
 		} else {
-			err := env.CondFactMemory.Mem.Insert(&mem.CondFactMemoryNode{f, []*parser.ConditionalFactStmt{fact}})
+			err := env.CondFactMemory.Mem.Insert(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{fact}})
 			if err != nil {
 				return err
 			}

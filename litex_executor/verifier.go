@@ -4,6 +4,7 @@ import (
 	cmp "golitex/litex_comparator"
 	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
+	structure "golitex/litex_structure"
 )
 
 func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
@@ -124,7 +125,7 @@ func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *Env, stmt parser.
 	return nil
 }
 
-func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.FuncFactStmt) (*memory.Node[*parser.FuncFactStmt], error) {
+func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.FuncFactStmt) (*structure.Node[*parser.FuncFactStmt], error) {
 	curNode := exec.env.FuncFactMemory.Mem.Root
 	err := error(nil)
 	searched := false
