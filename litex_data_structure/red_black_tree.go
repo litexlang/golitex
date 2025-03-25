@@ -1,6 +1,6 @@
 // Basic red black tree.
 
-package litexstructure
+package litexdatastructure
 
 const (
 	RED   = true
