@@ -103,3 +103,21 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 
 	return nil
 }
+
+func (env *Env) NewCondFact(fact *parser.ConditionalFactStmt) error {
+	for _, f := range fact.ThenFacts {
+		node, err := env.CondFactMemory.Mem.Search(&CondFactMemoryNode{f, []*parser.ConditionalFactStmt{}})
+		if err != nil {
+			return err
+		}
+		if node != nil {
+			node.Key.CondFacts = append(node.Key.CondFacts, fact)
+		} else {
+			err := env.CondFactMemory.Mem.Insert(&CondFactMemoryNode{f, []*parser.ConditionalFactStmt{fact}})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

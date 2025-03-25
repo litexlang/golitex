@@ -13,19 +13,19 @@ type FcAtom struct {
 	Value   string
 }
 
-type FcFnCall struct {
-	FnName    FcAtom
-	ParamPipe []FcFnSeg
+type FcFnCallPipe struct {
+	FnName   FcAtom
+	CallPipe []FcFnCallPipeSeg
 }
 
-type FcFnSeg struct {
+type FcFnCallPipeSeg struct {
 	Params []Fc
 }
 
-func (f *FcAtom) fc()               {}
-func (f *FcFnCall) fc()             {}
-func (f *FcAtom) PkgName() string   { return f.FromPkg }
-func (f *FcFnCall) PkgName() string { return f.FnName.FromPkg }
+func (f *FcAtom) fc()                   {}
+func (f *FcFnCallPipe) fc()             {}
+func (f *FcAtom) PkgName() string       { return f.FromPkg }
+func (f *FcFnCallPipe) PkgName() string { return f.FnName.FromPkg }
 
 func (f *FcAtom) String() string {
 	if f.FromPkg == "" {
@@ -35,10 +35,10 @@ func (f *FcAtom) String() string {
 	}
 }
 
-func (f *FcFnCall) String() string {
+func (f *FcFnCallPipe) String() string {
 	outPut := string(f.FnName.Value)
 
-	for _, pair := range f.ParamPipe {
+	for _, pair := range f.CallPipe {
 		if len(pair.Params) > 0 {
 			outPut += "("
 			for i := 0; i < len(pair.Params)-1; i++ {

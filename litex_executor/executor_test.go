@@ -137,14 +137,14 @@ func randFcAtom() *parser.FcAtom {
 	return &ret
 }
 
-func randFcFnRetValue() *parser.FcFnCall {
+func randFcFnRetValue() *parser.FcFnCallPipe {
 	fnName := randFcAtom()
 	round := rand.Intn(3) + 1
-	typeParamObjParamsPairs := []parser.FcFnSeg{}
+	typeParamObjParamsPairs := []parser.FcFnCallPipeSeg{}
 	for i := 0; i < round; i++ {
-		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.FcFnSeg{Params: *randObjParams()})
+		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.FcFnCallPipeSeg{Params: *randObjParams()})
 	}
-	return &parser.FcFnCall{FnName: *fnName, ParamPipe: typeParamObjParamsPairs}
+	return &parser.FcFnCallPipe{FnName: *fnName, CallPipe: typeParamObjParamsPairs}
 }
 
 // func randTypeParams() *[]parser.TypeObjStr {
