@@ -23,15 +23,16 @@ type DefConcreteNormalPropStmt struct {
 }
 
 type DefConcreteExistPropStmt struct {
-	DefHeader         ConcreteDefHeader
-	ExistObjOrFn      []string
-	ExistObjOrFnTypes []FcAtom
-	ParamCondFacts    []FactStmt
-	ThenFacts         []FactStmt
+	DefHeader      ConcreteDefHeader
+	ExistFc        []string // 只允许是存在函数和obj，不能是prop
+	ExistFcTypes   []FcAtom
+	ParamCondFacts []FactStmt
+	ThenFacts      []FactStmt
 }
 
 type DefConcreteFnStmt struct {
 	DefHeader      ConcreteDefHeader
+	retType        FcAtom
 	ParamCondFacts []FactStmt
 	ThenFacts      []FactStmt
 }

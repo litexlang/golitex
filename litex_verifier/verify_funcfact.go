@@ -52,7 +52,8 @@ func (verifier *Verifier) firstRoundVerifySpecFactLiterally(stmt parser.SpecFact
 
 func (exec *Verifier) useCondFactMemToVerifySpecFactAtEnv(curEnv *env.Env, stmt parser.SpecFactStmt) error {
 	key := mem.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
-	searchNode, err := SearchInEnv(curEnv, &curEnv.ConcreteCondFactMemory.Mem, &key)
+	// searchNode, err := SearchInEnv(curEnv, &curEnv.ConcreteCondFactMemory.Mem, &key)
+	searchNode, err := curEnv.ConcreteCondFactMemory.Mem.Search(&key)
 	if err != nil {
 		return err
 	}
