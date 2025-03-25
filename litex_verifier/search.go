@@ -1,4 +1,4 @@
-package litexsearcher
+package litexverifier
 
 import (
 	ds "golitex/litex_data_structure"
