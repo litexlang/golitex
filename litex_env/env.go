@@ -1,5 +1,4 @@
-// * obj, fn, prop 名不能冲突，即不能有一个变量是obj，同时也是Prop
-package litexenv
+package litexmemory
 
 import (
 	"fmt"
@@ -31,12 +30,12 @@ func NewEnv(parent *Env) *Env {
 		PropMemory: *mem.NewPropMemory(),
 		FnMemory:   *mem.NewFnMemory(),
 
-		FuncFactMemory:     mem.FuncFactMemory{Mem: *ds.NewRedBlackTree(cmp.CmpSpecFuncFact)},
+		FuncFactMemory:     mem.FuncFactMemory{Mem: *ds.NewRedBlackTree(cmp.CmpSpecFuncFact)}, // 需要把env包和memory包分离的一个原因就是，这里会引入cmp，而cmp包要用mem的节点，会cyclic
 		RelationFactMemory: mem.RelationFactMemory{Mem: *ds.NewRedBlackTree(cmp.SpecRelationFactCompare)},
 		CondFactMemory:     mem.CondFactMemory{Mem: *ds.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
 		// UniFactMemory:      *NewUniFactMemory(),
-		UniFactMemory: mem.UniFactMemory{Mem: *ds.NewRedBlackTree(cmp.UniFactMemoryTreeNodeCompare)},
-		EqualMemory:   mem.EqualFactMemory{Mem: *ds.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
+		UniFactMemory: mem.UniFactMemory{},
+		EqualMemory:   mem.EqualFactMemory{},
 	}
 
 	return env
@@ -132,9 +131,3 @@ func (env *Env) NewCondFact(fact *parser.ConditionalFactStmt) error {
 	}
 	return nil
 }
-
-// func (tree *mem.RedBlackTree[T]) SearchInEnv(env *Env, key T) (*mem.Node[T], error) {
-// 	// TODO: even when given key is different as tree key, we might still view them as the same. For example, when we know x = y, and we have $p(x), we now are verifying $p(y). As tree node, $p(x) is different from $p(y), but since x = y they are the same. So $p(y) should also be verified.
-
-// 	return tree.Search(key)
-// }

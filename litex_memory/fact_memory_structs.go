@@ -30,7 +30,6 @@ type CondFactMemoryNode struct {
 }
 
 type UniFactMemory struct {
-	Mem ds.RedBlackTree[*UniFactMemoryTreeNode]
 }
 
 // ! 如果一个opt是读入2个参数，同时有交换性的，那可以以该fc为key，存所有和它等价的东西的列表

@@ -27,6 +27,10 @@ func CmpSpecFact(left, right parser.SpecFactStmt) (int, error) {
 	return 0, fmt.Errorf("unknown spec fact")
 }
 
+func SpecRelationFactCompare(left, right *mem.RelationFactMemoryNode) (int, error) {
+	panic("TODO not implemented")
+}
+
 func cmpSpecFactType(left, right parser.SpecFactStmt) (int, error) {
 	const (
 		funcSpecFactEnum         = 0
