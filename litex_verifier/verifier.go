@@ -178,7 +178,7 @@ func (exec *Verifier) verifyEqualFactSpecifically(curEnv *env.Env, stmt *parser.
 		return err
 	}
 
-	comp, err := cmp.CompareFc(stmt.Params[0], stmt.Params[1])
+	comp, err := cmp.CmpFc(stmt.Params[0], stmt.Params[1])
 
 	if err != nil {
 		return err
@@ -193,7 +193,7 @@ func (exec *Verifier) verifyEqualFactSpecifically(curEnv *env.Env, stmt *parser.
 	}
 
 	for _, equalFc := range searchedNode.Key.Values {
-		comp, err := cmp.CompareFc(stmt.Params[1], *equalFc)
+		comp, err := cmp.CmpFc(stmt.Params[1], *equalFc)
 		if err != nil {
 			return err
 		}

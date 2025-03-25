@@ -1,4 +1,3 @@
-// REMARK：Compare和Search是分离的。Compare函数不能引入env信息。只是纯的Fc比较，和env无关。
 package litexcomparator
 
 import (
@@ -7,17 +6,15 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func SpecFactCompare(left, right parser.SpecFactStmt) (int, error) {
-	// First, compare the types of the facts
-	if specTypeCompareResult, err := specFactTypeCompare(left, right); specTypeCompareResult != 0 || err != nil {
+func CmpSpecFact(left, right parser.SpecFactStmt) (int, error) {
+	if specTypeCompareResult, err := cmpSpecFactType(left, right); specTypeCompareResult != 0 || err != nil {
 		return specTypeCompareResult, err
 	}
 
-	// If the types are the same, compare the values based on the specific type
 	switch known := left.(type) {
 	case *parser.FuncFactStmt:
 		if given, ok := right.(*parser.FuncFactStmt); ok {
-			return SpecFuncFactCompare(known, given)
+			return CmpSpecFuncFact(known, given)
 		}
 	case *parser.RelationFactStmt:
 		if given, ok := right.(*parser.RelationFactStmt); ok {
@@ -30,14 +27,13 @@ func SpecFactCompare(left, right parser.SpecFactStmt) (int, error) {
 	return 0, fmt.Errorf("unknown spec fact")
 }
 
-func specFactTypeCompare(left, right parser.SpecFactStmt) (int, error) {
+func cmpSpecFactType(left, right parser.SpecFactStmt) (int, error) {
 	const (
 		funcSpecFactEnum         = 0
 		relationSpecFactStmtEnum = 1
 	)
 
-	// Process knownFact
-	var knownFactType int
+	knownFactType := 0
 	switch left.(type) {
 	case *parser.RelationFactStmt:
 		knownFactType = relationSpecFactStmtEnum
@@ -47,8 +43,7 @@ func specFactTypeCompare(left, right parser.SpecFactStmt) (int, error) {
 		return 0, fmt.Errorf("unknown SpecFactStmt type: %T", left)
 	}
 
-	// Process givenFact
-	var givenFactType int
+	givenFactType := 0
 	switch right.(type) {
 	case *parser.RelationFactStmt:
 		givenFactType = relationSpecFactStmtEnum
@@ -61,15 +56,40 @@ func specFactTypeCompare(left, right parser.SpecFactStmt) (int, error) {
 	return knownFactType - givenFactType, nil
 }
 
-func SpecFuncFactCompare(left, right *mem.FuncFactMemoryNode) (int, error) {
-	if isTrueComp := specFuncIsTrueCompare(left, right); isTrueComp != 0 {
+func CmpSpecFuncFact(left, right *mem.FuncFactMemoryNode) (int, error) {
+	if isTrueComp := cmpSpecFuncIsTrue(left, right); isTrueComp != 0 {
 		return isTrueComp, nil
 	}
 
-	return CompareFc(&left.Opt, &right.Opt)
+	optCmpOut, err := CmpFc(&left.Opt, &right.Opt)
+	if err != nil {
+		return 0, err
+	}
+	if optCmpOut != 0 {
+		return optCmpOut, nil
+	}
+
+	leftParamLen := len(left.Params)
+	rightParamLen := len(right.Params)
+
+	if leftParamLen != rightParamLen {
+		return leftParamLen - rightParamLen, nil
+	}
+
+	for i := 0; i < leftParamLen; i++ {
+		out, err := CmpFc(left.Params[i], right.Params[i])
+		if err != nil {
+			return 0, err
+		}
+		if out != 0 {
+			return out, nil
+		}
+	}
+
+	return 0, nil
 }
 
-func specFuncIsTrueCompare(left, right *parser.FuncFactStmt) int {
+func cmpSpecFuncIsTrue(left, right *parser.FuncFactStmt) int {
 	const (
 		isTrueEnum    = 0
 		isNotTrueEnum = 1

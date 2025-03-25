@@ -5,7 +5,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func CompareFc(left, right parser.Fc) (int, error) {
+func CmpFc(left, right parser.Fc) (int, error) {
 	if typeComp, err := compareFcType(left, right); typeComp != 0 || err != nil {
 		return typeComp, err
 	}
@@ -54,7 +54,7 @@ func compareFcOfTheSameType(left, right parser.Fc) (int, error) {
 	knownFcFnCall, ok := left.(*parser.FcFnCallPipe)
 	givenFcFnCall, ok2 := right.(*parser.FcFnCallPipe)
 	if ok && ok2 {
-		return compareFcFnCall(knownFcFnCall, givenFcFnCall)
+		return compareFcFnCallPipe(knownFcFnCall, givenFcFnCall)
 	}
 
 	return 0, fmt.Errorf("unknown fc type")
@@ -84,7 +84,7 @@ func compareFcAtom(left, right *parser.FcAtom) (int, error) {
 	return 0, nil
 }
 
-func compareFcFnCall(left, right *parser.FcFnCallPipe) (int, error) {
+func compareFcFnCallPipe(left, right *parser.FcFnCallPipe) (int, error) {
 	if comp, err := compareFcAtom(&left.FnName, &right.FnName); comp != 0 || err != nil {
 		return comp, err
 	}
@@ -108,7 +108,7 @@ func compareFcFnCallPipeSeg(left, right *parser.FcFnCallPipeSeg) (int, error) {
 	}
 
 	for i := 0; i < len(left.Params); i++ {
-		if comp, err := CompareFc(left.Params[i], right.Params[i]); comp != 0 || err != nil {
+		if comp, err := CmpFc(left.Params[i], right.Params[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
