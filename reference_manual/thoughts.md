@@ -676,6 +676,7 @@ Set 的几大功能
     3.  这种“看成子集“，怎么证明呢，有哪些语义方面的问题？
         1.  语义：比如我现在fn是读入参数为C的，那我输入1，应该也要能通过
 6. 定义set上的builtin opt：比如__add__，语法咋样
+7. 貌似还不能parse 1 < b
 
 Generics（interface）的语义
 1. 过于困难，之后再说
@@ -717,7 +718,7 @@ prop Q(S Group, g1 S, g2 S):
 不严格：直接定义(现在先这样定义；未来成熟之后，用严格定义法引入新的定义方式。因为我也确实不知道怎么严格定义“矩阵集合”这样的集合)
 var nat_matrix_2_2 set
 fn nat_matrix_2_2::at(a nat, b nat) nat:
-    0 < a < 2
-    0 < b < 2
-    then:
+    cond:
+        0 < a < 2
+        0 < b < 2
         

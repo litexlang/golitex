@@ -32,127 +32,7 @@ func specRelationFactCompare(knownFact *RelationFactMemoryNode, givenFact *Relat
 	panic("TODO not implemented")
 }
 
-const (
-	isTrueEnum    = 0
-	isNotTrueEnum = 1
-)
-
-func specFuncIsTrueCompare(knownFact *parser.FuncFactStmt, givenFact *parser.FuncFactStmt) int {
-	knownFactIsTrueEnum := isTrueEnum
-	if !knownFact.IsTrue {
-		knownFactIsTrueEnum = isNotTrueEnum
-	}
-
-	givenFactIsTrueEnum := isTrueEnum
-	if !givenFact.IsTrue {
-		givenFactIsTrueEnum = isNotTrueEnum
-	}
-
-	return knownFactIsTrueEnum - givenFactIsTrueEnum
-}
-
-func specFuncFactCompare(knownFact *FuncFactMemoryNode, givenFact *FuncFactMemoryNode) (int, error) {
-	if isTrueComp := specFuncIsTrueCompare(knownFact, givenFact); isTrueComp != 0 {
-		return isTrueComp, nil
-	}
-
-	return CompareFc(&knownFact.Opt, &givenFact.Opt)
-}
-
-const (
-	fcStrEnum        = 0
-	fcFnRetValueEnum = 1
-	// FcMemChainEnum   = 2
-)
-
-func getFcEnum(fc parser.Fc) (int, error) {
-	_, ok := fc.(*parser.FcAtom)
-	if ok {
-		return fcStrEnum, nil
-	}
-
-	_, ok = fc.(*parser.FcFnRet)
-	if ok {
-		return fcFnRetValueEnum, nil
-	}
-
-	// _, ok = fc.(*parser.FcChain)
-	// if ok {
-	// 	return FcMemChainEnum, nil
-	// }
-
-	return 0, fmt.Errorf("unknown Fc type: %T", fc)
-}
-
-func CompareFc(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
-	if typeComp, err := compareFcType(knownFc, givenFc); typeComp != 0 || err != nil {
-		return typeComp, err
-	}
-
-	return compareFcOfTheSameType(knownFc, givenFc)
-}
-
-func compareFcOfTheSameType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
-	knownFcStr, ok := knownFc.(*parser.FcAtom)
-	givenFcStr, ok2 := givenFc.(*parser.FcAtom)
-	if ok && ok2 {
-		return compareFcStr(knownFcStr, givenFcStr)
-	}
-
-	knownFcFnRetValue, ok := knownFc.(*parser.FcFnRet)
-	givenFcFnRetValue, ok2 := givenFc.(*parser.FcFnRet)
-	if ok && ok2 {
-		return compareFcFnRetValue(knownFcFnRetValue, givenFcFnRetValue)
-	}
-
-	// knownFcMemChain, ok := knownFc.(*parser.FcChain)
-	// givenFcMemChain, ok2 := givenFc.(*parser.FcChain)
-	// if ok && ok2 {
-	// 	return compareFcMemChain(knownFcMemChain, givenFcMemChain)
-	// }
-
-	return 0, fmt.Errorf("unknown fc type")
-}
-
-func compareFcStr(knownFc *parser.FcAtom, givenFc *parser.FcAtom) (int, error) {
-	if len(knownFc.Value) != len(givenFc.Value) {
-		return len(knownFc.Value) - len(givenFc.Value), nil
-	}
-
-	for i := 0; i < len(knownFc.Value); i++ {
-		if knownFc.Value[i] != givenFc.Value[i] {
-			return int(knownFc.Value[i]) - int(givenFc.Value[i]), nil
-		}
-	}
-
-	return 0, nil
-}
-
-// func compareTypeObjStr(knownFc parser.TypeObjStr, givenFc parser.TypeObjStr) (int, error) {
-// 	if len(knownFc) != len(givenFc) {
-// 		return len(knownFc) - len(givenFc), nil
-// 	}
-
-// 	for i := 0; i < len(knownFc); i++ {
-// 		if knownFc[i] != givenFc[i] {
-// 			return int(knownFc[i]) - int(givenFc[i]), nil
-// 		}
-// 	}
-
-// 	return 0, nil
-// }
-
 func compareTypeParamsAndParamsPair(knownPair parser.FcFnParams, givenPair parser.FcFnParams) (int, error) {
-	// if len(knownPair.TypeParams) != len(givenPair.TypeParams) {
-	// 	return len(knownPair.TypeParams) - len(givenPair.TypeParams), nil
-	// }
-
-	// for i := 0; i < len(knownPair.TypeParams); i++ {
-	// 	if comp, err := compareTypeObjStr(knownPair.TypeParams[i], givenPair.TypeParams[i]); comp != 0 || err != nil {
-	// 		return comp, err
-	// 	}
-	// }
-
 	if len(knownPair.Params) != len(givenPair.Params) {
 		return len(knownPair.Params) - len(givenPair.Params), nil
 	}
@@ -167,7 +47,7 @@ func compareTypeParamsAndParamsPair(knownPair parser.FcFnParams, givenPair parse
 }
 
 func compareFcFnRetValue(knownFc *parser.FcFnRet, givenFc *parser.FcFnRet) (int, error) {
-	if comp, err := compareFcStr(&knownFc.FnName, &givenFc.FnName); comp != 0 || err != nil {
+	if comp, err := compareFcAtom(&knownFc.FnName, &givenFc.FnName); comp != 0 || err != nil {
 		return comp, err
 	}
 
@@ -198,25 +78,6 @@ func compareFcFnRetValue(knownFc *parser.FcFnRet, givenFc *parser.FcFnRet) (int,
 // 	return 0, nil
 // }
 
-func compareFcType(knownFc parser.Fc, givenFc parser.Fc) (int, error) {
-	knownFcEnum, err := getFcEnum(knownFc)
-	if err != nil {
-		return 0, err
-	}
-
-	givenFcEnum, err := getFcEnum(givenFc)
-	if err != nil {
-		return 0, err
-	}
-
-	return knownFcEnum - givenFcEnum, nil
-}
-
-const (
-	relationSpecFactStmtEnum = 0
-	funcSpecFactEnum         = 1
-)
-
 func specFactTypeCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt) (int, error) {
 	knownFactType, err := getSpecFactEnum(knownFact)
 	if err != nil {
@@ -232,7 +93,10 @@ func specFactTypeCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFac
 }
 
 func getSpecFactEnum(fact parser.SpecFactStmt) (int, error) {
-
+	const (
+		relationSpecFactStmtEnum = 0
+		funcSpecFactEnum         = 1
+	)
 	switch (fact).(type) {
 	case *parser.RelationFactStmt:
 		return relationSpecFactStmtEnum, nil
