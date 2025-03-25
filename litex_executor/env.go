@@ -4,9 +4,9 @@ package litexexecutor
 import (
 	"fmt"
 	cmp "golitex/litex_comparator"
+	ds "golitex/litex_data_structure"
 	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
-	structure "golitex/litex_structure"
 )
 
 type Env struct {
@@ -31,12 +31,12 @@ func NewEnv(parent *Env) *Env {
 		PropMemory: *mem.NewPropMemory(),
 		FnMemory:   *mem.NewFnMemory(),
 
-		FuncFactMemory:     mem.FuncFactMemory{Mem: *structure.NewRedBlackTree(cmp.SpecFuncFactCompare)},
-		RelationFactMemory: mem.RelationFactMemory{Mem: *structure.NewRedBlackTree(cmp.SpecRelationFactCompare)},
-		CondFactMemory:     mem.CondFactMemory{Mem: *structure.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
+		FuncFactMemory:     mem.FuncFactMemory{Mem: *ds.NewRedBlackTree(cmp.SpecFuncFactCompare)},
+		RelationFactMemory: mem.RelationFactMemory{Mem: *ds.NewRedBlackTree(cmp.SpecRelationFactCompare)},
+		CondFactMemory:     mem.CondFactMemory{Mem: *ds.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
 		// UniFactMemory:      *NewUniFactMemory(),
-		UniFactMemory: mem.UniFactMemory{Mem: *structure.NewRedBlackTree(cmp.UniFactMemoryTreeNodeCompare)},
-		EqualMemory:   mem.EqualFactMemory{Mem: *structure.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
+		UniFactMemory: mem.UniFactMemory{Mem: *ds.NewRedBlackTree(cmp.UniFactMemoryTreeNodeCompare)},
+		EqualMemory:   mem.EqualFactMemory{Mem: *ds.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
 	}
 
 	return env
