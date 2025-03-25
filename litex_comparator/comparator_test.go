@@ -125,8 +125,10 @@ func TestCompareSpecFact(t *testing.T) {
 		"$p(b)",
 		"$p(a)",
 		"$p(b)",
-		"$t(a)",
+		"$t(a,f::b(1,k()(1,2)))",
 		"$q(a, b)",
+		"$p::t(a,b)",
+		"$Q::P(a,b)",
 	}
 
 	facts := []parser.SpecFactStmt{}
@@ -152,7 +154,7 @@ func TestCompareSpecFact(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error: %v", err)
 		}
-		println("%v(%v): %v, %v", i, out, facts[n].String(), facts[m].String())
+		println(i, out, facts[n].String(), facts[m].String())
 	}
 }
 

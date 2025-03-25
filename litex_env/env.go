@@ -35,7 +35,7 @@ func NewEnv(parent *Env) *Env {
 		CondFactMemory:     mem.CondFactMemory{Mem: *ds.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
 		// UniFactMemory:      *NewUniFactMemory(),
 		UniFactMemory: mem.UniFactMemory{},
-		EqualMemory:   mem.EqualFactMemory{},
+		EqualMemory:   mem.EqualFactMemory{Mem: *ds.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
 	}
 
 	return env
