@@ -1,11 +1,71 @@
 package litexverifier
 
 import (
-	cmp "golitex/litex_comparator"
+	"fmt"
 	env "golitex/litex_env"
-	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
+
+type VerifierOutput uint8
+
+const (
+	VerifierTrue VerifierOutput = iota
+	VerifierUnknown
+	VerifierError
+)
+
+type Verifier struct {
+	env         *env.Env
+	Message     *[]string
+	Output      VerifierOutput
+	searchRound uint8
+}
+
+func NewVerifier(curEnv *env.Env) *Verifier {
+	if curEnv == nil {
+		return &Verifier{env: env.NewEnv(nil), Message: &[]string{}, Output: VerifierUnknown, searchRound: 0}
+	} else {
+		return &Verifier{env: curEnv, Message: &[]string{}, Output: VerifierUnknown, searchRound: 0}
+	}
+}
+
+func (e *Verifier) roundAddOne() {
+	e.searchRound++
+}
+
+func (e *Verifier) roundMinusOne() {
+	e.searchRound--
+}
+
+func (e *Verifier) true() bool {
+	return e.Output == VerifierTrue
+}
+
+func (e *Verifier) round1() bool {
+	return e.searchRound == 1
+}
+
+func (e *Verifier) success(format string, args ...any) {
+	message := fmt.Sprintf(format, args...) // 使用 fmt.Sprintf 格式化字符串
+	*e.Message = append(*e.Message, message)
+	e.Output = VerifierTrue
+}
+
+func (e *Verifier) newEnv() {
+	newEnv := env.NewEnv(nil)
+	newEnv.Parent = e.env
+	e.env = newEnv
+}
+
+func (e *Verifier) deleteEnv() {
+	e.env = e.env.Parent
+}
+
+func (e *Verifier) unknown(format string, args ...any) {
+	message := fmt.Sprintf(format, args...)
+	*e.Message = append(*e.Message, message)
+	e.Output = VerifierUnknown
+}
 
 func (verifier *Verifier) VerifyFactStmt(stmt parser.FactStmt) error {
 	switch stmt := stmt.(type) {
@@ -18,139 +78,4 @@ func (verifier *Verifier) VerifyFactStmt(stmt parser.FactStmt) error {
 	default:
 		return nil
 	}
-}
-
-func (verifier *Verifier) verifyCondFact(stmt *parser.ConditionalFactStmt) error {
-	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
-
-	return verifier.verifyCondFactLiterally(stmt)
-}
-
-func (verifier *Verifier) firstRoundVerifySpecFactLiterally(stmt parser.SpecFactStmt) error {
-	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		err := verifier.useCondFactMemToVerifySpecFactAtEnv(curEnv, stmt)
-		if err != nil {
-			return err
-		}
-		if verifier.true() {
-			return nil
-		}
-	}
-	// TODO USE UNI FACT TO PROVE
-	return nil
-}
-
-func (exec *Verifier) useCondFactMemToVerifySpecFactAtEnv(curEnv *env.Env, stmt parser.SpecFactStmt) error {
-	key := memory.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
-	searchNode, err := SearchInEnv(curEnv, &curEnv.ConcreteCondFactMemory.Mem, &key)
-	if err != nil {
-		return err
-	}
-	if searchNode == nil {
-		return nil
-	}
-
-	for _, condStmt := range searchNode.Key.CondFacts {
-		verified := true
-		for _, condFactsInStmt := range condStmt.CondFacts {
-			if err := exec.VerifyFactStmt(condFactsInStmt); err != nil {
-				return err
-			}
-			if !exec.true() {
-				verified = false
-				break
-			}
-		}
-		if verified {
-			exec.success("%v is true, verified by %v", stmt, condStmt)
-			return nil
-		}
-	}
-
-	return nil
-}
-
-// func (exec *Verifier) useFuncFactMemToVerifyFuncFactAtEnv(env *Env, stmt *parser.FuncFactStmt) error {
-// 	// searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
-// 	searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if searchedNode != nil {
-// 		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
-// 		return nil
-// 	}
-
-// 	return nil
-// }
-
-func (exec *Verifier) verifyRelationFactSpecifically(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
-	if string(stmt.Opt.Value) == parser.KeywordEqual {
-		return exec.verifyEqualFactSpecifically(curEnv, stmt)
-	}
-
-	panic("not implemented")
-}
-
-func (exec *Verifier) verifyEqualFactSpecifically(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
-	key := memory.EqualFactMemoryTreeNode{FcAsKey: stmt.Params[0], Values: []*parser.Fc{}}
-
-	searchedNode, err := SearchInEnv(curEnv, &curEnv.ConcreteEqualMemory.Mem, &key)
-
-	if err != nil {
-		return err
-	}
-
-	comp, err := cmp.CmpFc(stmt.Params[0], stmt.Params[1])
-
-	if err != nil {
-		return err
-	}
-	if comp == 0 {
-		exec.success("%v is true, verified by %v", stmt, searchedNode.Key)
-		return nil
-	}
-
-	if searchedNode == nil {
-		return nil
-	}
-
-	for _, equalFc := range searchedNode.Key.Values {
-		comp, err := cmp.CmpFc(stmt.Params[1], *equalFc)
-		if err != nil {
-			return err
-		}
-		if comp == 0 {
-			exec.success("%v is true, verified by %v", stmt, equalFc)
-			return nil
-		}
-	}
-
-	return nil
-}
-
-func (exec *Verifier) verifyCondFactLiterally(stmt *parser.ConditionalFactStmt) error {
-	exec.newEnv()
-	defer exec.deleteEnv()
-
-	err := exec.env.NewKnownFact(&parser.KnowStmt{Facts: stmt.CondFacts})
-	if err != nil {
-		return err
-	}
-
-	for _, thenFact := range stmt.ThenFacts {
-		err := exec.VerifyFactStmt(thenFact)
-		if err != nil {
-			return err
-		}
-		if !exec.true() {
-			return nil
-		} else {
-			exec.unknown("%v is unknown: %v is unknown", stmt, thenFact)
-		}
-	}
-
-	exec.success("%v is true", stmt)
-
-	return nil
 }
