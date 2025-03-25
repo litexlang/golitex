@@ -47,6 +47,8 @@ func (f *FcFnCallPipe) String() string {
 			}
 			outPut += pair.Params[len(pair.Params)-1].String()
 			outPut += ")"
+		} else {
+			outPut += "()"
 		}
 	}
 
