@@ -2,7 +2,6 @@ package litexexecutor
 
 import (
 	"fmt"
-	mem "golitex/litex_memory"
 )
 
 type ExecOutput uint8
@@ -14,15 +13,15 @@ const (
 )
 
 type Executor struct {
-	env         *mem.Env
+	env         *Env
 	message     []string
 	output      ExecOutput
 	searchRound uint8
 }
 
-func newExecutor(env *mem.Env) *Executor {
+func newExecutor(env *Env) *Executor {
 	if env == nil {
-		return &Executor{env: mem.NewEnv(nil), message: []string{}, output: execError, searchRound: 0}
+		return &Executor{env: NewEnv(nil), message: []string{}, output: execError, searchRound: 0}
 	} else {
 		return &Executor{env: env, message: []string{}, output: execUnknown, searchRound: 0}
 	}
@@ -39,7 +38,7 @@ func (e *Executor) clear() {
 }
 
 func (e *Executor) newEnv() {
-	newEnv := mem.NewEnv(nil)
+	newEnv := NewEnv(nil)
 	newEnv.Parent = e.env
 	e.env = newEnv
 }

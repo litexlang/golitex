@@ -1,39 +1,41 @@
 // * obj, fn, prop 名不能冲突，即不能有一个变量是obj，同时也是Prop
-package litexmemory
+package litexexecutor
 
 import (
 	"fmt"
+	cmp "golitex/litex_comparator"
+	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
 
 type Env struct {
 	Parent *Env
 
-	ObjMemory  ObjMemory
-	PropMemory PropMemory
-	FnMemory   FnMemory
+	ObjMemory  mem.ObjMemory
+	PropMemory mem.PropMemory
+	FnMemory   mem.FnMemory
 
-	FuncFactMemory     FuncFactMemory
-	CondFactMemory     CondFactMemory
-	RelationFactMemory RelationFactMemory
-	UniFactMemory      UniFactMemory
-	EqualMemory        EqualFactMemory
+	FuncFactMemory     mem.FuncFactMemory
+	CondFactMemory     mem.CondFactMemory
+	RelationFactMemory mem.RelationFactMemory
+	UniFactMemory      mem.UniFactMemory
+	EqualMemory        mem.EqualFactMemory
 }
 
 func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent: parent,
 
-		ObjMemory:  *NewObjMemory(),
-		PropMemory: *NewPropMemory(),
-		FnMemory:   *NewFnMemory(),
+		ObjMemory:  *mem.NewObjMemory(),
+		PropMemory: *mem.NewPropMemory(),
+		FnMemory:   *mem.NewFnMemory(),
 
-		FuncFactMemory:     FuncFactMemory{Mem: *NewRedBlackTree(specFuncFactCompare)},
-		RelationFactMemory: RelationFactMemory{Mem: *NewRedBlackTree(specRelationFactCompare)},
-		CondFactMemory:     CondFactMemory{Mem: *NewRedBlackTree(CondFactMemoryTreeNodeCompare)},
+		FuncFactMemory:     mem.FuncFactMemory{Mem: *mem.NewRedBlackTree(cmp.SpecFuncFactCompare)},
+		RelationFactMemory: mem.RelationFactMemory{Mem: *mem.NewRedBlackTree(cmp.SpecRelationFactCompare)},
+		CondFactMemory:     mem.CondFactMemory{Mem: *mem.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
 		// UniFactMemory:      *NewUniFactMemory(),
-		UniFactMemory: UniFactMemory{Mem: *NewRedBlackTree(UniFactMemoryTreeNodeCompare)},
-		EqualMemory:   EqualFactMemory{Mem: *NewRedBlackTree(EqualFactMemoryTreeNodeCompare)},
+		UniFactMemory: mem.UniFactMemory{Mem: *mem.NewRedBlackTree(cmp.UniFactMemoryTreeNodeCompare)},
+		EqualMemory:   mem.EqualFactMemory{Mem: *mem.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
 	}
 
 	return env
@@ -61,6 +63,14 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 	return nil
 }
 
+func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
+	err := env.FuncFactMemory.Mem.Insert(fact)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (env *Env) NewRelationFact(stmt *parser.RelationFactStmt) error {
 	if string(stmt.Opt.Value) == (parser.KeywordEqual) {
 		return env.NewEqualFact(stmt)
@@ -70,12 +80,12 @@ func (env *Env) NewRelationFact(stmt *parser.RelationFactStmt) error {
 }
 
 func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
-	left := &EqualFactMemoryTreeNode{
+	left := &mem.EqualFactMemoryTreeNode{
 		stmt.Params[0],
 		[]*parser.Fc{&stmt.Params[1]},
 	}
 
-	right := &EqualFactMemoryTreeNode{
+	right := &mem.EqualFactMemoryTreeNode{
 		stmt.Params[1],
 		[]*parser.Fc{&stmt.Params[0]},
 	}
@@ -106,14 +116,14 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 
 func (env *Env) NewCondFact(fact *parser.ConditionalFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		node, err := env.CondFactMemory.Mem.Search(&CondFactMemoryNode{f, []*parser.ConditionalFactStmt{}})
+		node, err := env.CondFactMemory.Mem.Search(&mem.CondFactMemoryNode{f, []*parser.ConditionalFactStmt{}})
 		if err != nil {
 			return err
 		}
 		if node != nil {
 			node.Key.CondFacts = append(node.Key.CondFacts, fact)
 		} else {
-			err := env.CondFactMemory.Mem.Insert(&CondFactMemoryNode{f, []*parser.ConditionalFactStmt{fact}})
+			err := env.CondFactMemory.Mem.Insert(&mem.CondFactMemoryNode{f, []*parser.ConditionalFactStmt{fact}})
 			if err != nil {
 				return err
 			}
@@ -121,3 +131,9 @@ func (env *Env) NewCondFact(fact *parser.ConditionalFactStmt) error {
 	}
 	return nil
 }
+
+// func (tree *mem.RedBlackTree[T]) SearchInEnv(env *Env, key T) (*mem.Node[T], error) {
+// 	// TODO: even when given key is different as tree key, we might still view them as the same. For example, when we know x = y, and we have $p(x), we now are verifying $p(y). As tree node, $p(x) is different from $p(y), but since x = y they are the same. So $p(y) should also be verified.
+
+// 	return tree.Search(key)
+// }
