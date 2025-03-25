@@ -3,8 +3,10 @@ package litexexecutor
 import (
 	cmp "golitex/litex_comparator"
 	ds "golitex/litex_data_structure"
+	env "golitex/litex_env"
 	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
+	searcher "golitex/litex_searcher"
 )
 
 func (exec *Executor) verifyFactStmt(stmt parser.FactStmt) error {
@@ -95,9 +97,9 @@ func (exec *Executor) firstRoundVerifySpecFactLiterally(stmt parser.SpecFactStmt
 	return nil
 }
 
-func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *Env, stmt parser.SpecFactStmt) error {
+func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(curEnv *env.Env, stmt parser.SpecFactStmt) error {
 	key := memory.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
-	searchNode, err := SearchInEnv(env, &env.CondFactMemory.Mem, &key)
+	searchNode, err := searcher.SearchInEnv(curEnv, &curEnv.CondFactMemory.Mem, &key)
 	if err != nil {
 		return err
 	}
@@ -160,18 +162,18 @@ func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.
 // 	return nil
 // }
 
-func (exec *Executor) verifyRelationFactSpecifically(env *Env, stmt *parser.RelationFactStmt) error {
+func (exec *Executor) verifyRelationFactSpecifically(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
 	if string(stmt.Opt.Value) == parser.KeywordEqual {
-		return exec.verifyEqualFactSpecifically(env, stmt)
+		return exec.verifyEqualFactSpecifically(curEnv, stmt)
 	}
 
 	panic("not implemented")
 }
 
-func (exec *Executor) verifyEqualFactSpecifically(env *Env, stmt *parser.RelationFactStmt) error {
+func (exec *Executor) verifyEqualFactSpecifically(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: stmt.Params[0], Values: []*parser.Fc{}}
 
-	searchedNode, err := SearchInEnv(env, &env.EqualMemory.Mem, &key)
+	searchedNode, err := searcher.SearchInEnv(curEnv, &curEnv.EqualMemory.Mem, &key)
 
 	if err != nil {
 		return err
