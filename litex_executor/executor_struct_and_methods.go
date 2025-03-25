@@ -3,6 +3,7 @@ package litexexecutor
 import (
 	"fmt"
 	env "golitex/litex_env"
+	verifier "golitex/litex_verifier"
 )
 
 type ExecOutput uint8
@@ -14,62 +15,32 @@ const (
 )
 
 type Executor struct {
-	env         *env.Env
-	message     []string
-	output      ExecOutput
-	searchRound uint8
+	env     *env.Env
+	message *[]string
+	output  ExecOutput
 }
 
 func newExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil), message: []string{}, output: execError, searchRound: 0}
+		return &Executor{env: env.NewEnv(nil), message: &[]string{}, output: execUnknown}
 	} else {
-		return &Executor{env: curEnv, message: []string{}, output: execUnknown, searchRound: 0}
+		return &Executor{env: curEnv, message: &[]string{}, output: execUnknown}
 	}
 }
 
-func (e *Executor) roundAddOne() {
-	e.searchRound++
-}
-
 func (e *Executor) clear() {
-	e.message = []string{}
-	e.output = execError
-	e.searchRound = 0
-}
-
-func (e *Executor) newEnv() {
-	newEnv := env.NewEnv(nil)
-	newEnv.Parent = e.env
-	e.env = newEnv
-}
-
-func (e *Executor) deleteEnv() {
-	e.env = e.env.Parent
+	e.message = &[]string{}
+	e.output = execUnknown
 }
 
 func (e *Executor) true() bool {
 	return e.output == execTrue
 }
 
-func (e *Executor) round1() bool {
-	return e.searchRound == 1
-}
-
-func (e *Executor) roundMinusOne() {
-	e.searchRound--
-}
-
 func (e *Executor) success(format string, args ...any) {
 	message := fmt.Sprintf(format, args...) // 使用 fmt.Sprintf 格式化字符串
-	e.message = append(e.message, message)
+	*e.message = append(*e.message, message)
 	e.output = execTrue
-}
-
-func (e *Executor) unknown(format string, args ...any) {
-	message := fmt.Sprintf(format, args...)
-	e.message = append(e.message, message)
-	e.output = execUnknown
 }
 
 func (e *Executor) printlnOutputMessage() {
@@ -81,7 +52,20 @@ func (e *Executor) printlnOutputMessage() {
 		fmt.Println("Error")
 	}
 
-	for _, msg := range e.message {
+	for _, msg := range *e.message {
 		fmt.Println(msg)
 	}
+}
+
+func (e *Executor) readFromVerifier(readFrom *verifier.Verifier) {
+	switch readFrom.Output {
+	case verifier.VerifierTrue:
+		e.output = execTrue
+	case verifier.VerifierError:
+		e.output = execError
+	case verifier.VerifierUnknown:
+		e.output = execUnknown
+	}
+
+	e.message = readFrom.Message
 }

@@ -3,6 +3,7 @@ package litexexecutor
 import (
 	"fmt"
 	parser "golitex/litex_parser"
+	verifier "golitex/litex_verifier"
 )
 
 func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
@@ -13,7 +14,7 @@ func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
 func (exec *Executor) stmt(stmt parser.Stmt) error {
 	switch stmt := (stmt).(type) {
 	case parser.FactStmt:
-		return exec.verifyFactStmt(stmt)
+		return exec.execFactStmt(stmt)
 	case *parser.KnowStmt:
 		return exec.knowStmt(stmt)
 
@@ -27,5 +28,16 @@ func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
 		return err
 	}
 	exec.success("%v", stmt)
+	return nil
+}
+
+func (exec *Executor) execFactStmt(stmt parser.FactStmt) error {
+	curVerifier := verifier.NewVerifier(exec.env)
+	err := curVerifier.VerifyFactStmt(stmt)
+	if err != nil {
+		return err
+	}
+	exec.readFromVerifier(curVerifier)
+
 	return nil
 }

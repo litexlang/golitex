@@ -24,7 +24,7 @@ func TestStoreNewObj(t *testing.T) {
 		t.Fatal(err)
 	}
 	curEnv := env.NewEnv(nil)
-	executor := Executor{curEnv, []string{}, execError, 0}
+	executor := Executor{curEnv, &[]string{}, execError}
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -100,32 +100,13 @@ func randFuncFact() *parser.FuncFactStmt {
 }
 
 func randomFc() parser.Fc {
-
 	e := rand.Intn(2)
-
 	if e == 0 {
-		// generate a random number from 1 to 10
 		return randFcAtom()
-	}
-
-	if e == 1 {
+	} else {
 		return randFcFnRetValue()
 	}
-
-	// if e == 2 {
-	// 	return randFcChain()
-	// }
-	return nil
 }
-
-// func randFcChain() *parser.FcChain {
-// 	fcArr := []parser.FcChainMem{}
-// 	round := rand.Intn(3) + 2
-// 	for i := 0; i < round; i++ {
-// 		fcArr = append(fcArr, randFcFnRetValue())
-// 	}
-// 	return &parser.FcChain{ChainOfMembers: fcArr}
-// }
 
 func randFcAtom() *parser.FcAtom {
 	length := rand.Intn(10) + 1

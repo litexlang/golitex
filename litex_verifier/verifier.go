@@ -1,4 +1,4 @@
-package litexsearcher
+package litexverifier
 
 import (
 	cmp "golitex/litex_comparator"
@@ -8,7 +8,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) verifyFactStmt(stmt parser.FactStmt) error {
+func (verifier *Verifier) VerifyFactStmt(stmt parser.FactStmt) error {
 	switch stmt := stmt.(type) {
 	case *parser.FuncFactStmt:
 		return verifier.verifyFuncFact(stmt)
@@ -109,7 +109,7 @@ func (exec *Verifier) useCondFactMemToVerifySpecFactAtEnv(curEnv *env.Env, stmt 
 	for _, condStmt := range searchNode.Key.CondFacts {
 		verified := true
 		for _, condFactsInStmt := range condStmt.CondFacts {
-			if err := exec.verifyFactStmt(condFactsInStmt); err != nil {
+			if err := exec.VerifyFactStmt(condFactsInStmt); err != nil {
 				return err
 			}
 			if !exec.true() {
@@ -216,7 +216,7 @@ func (exec *Verifier) verifyCondFactLiterally(stmt *parser.ConditionalFactStmt) 
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		err := exec.verifyFactStmt(thenFact)
+		err := exec.VerifyFactStmt(thenFact)
 		if err != nil {
 			return err
 		}
