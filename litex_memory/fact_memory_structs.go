@@ -2,6 +2,7 @@ package litexmemory
 
 import (
 	parser "golitex/litex_parser"
+	structure "golitex/litex_structure"
 )
 
 // Define type PropName to signify functionality of a string
@@ -10,17 +11,17 @@ type PropName string
 type FuncFactMemoryNode = parser.FuncFactStmt
 
 type FuncFactMemory struct {
-	Mem RedBlackTree[*FuncFactMemoryNode]
+	Mem structure.RedBlackTree[*FuncFactMemoryNode]
 }
 
 type RelationFactMemoryNode = parser.RelationFactStmt
 
 type RelationFactMemory struct {
-	Mem RedBlackTree[*RelationFactMemoryNode]
+	Mem structure.RedBlackTree[*RelationFactMemoryNode]
 }
 
 type CondFactMemory struct {
-	Mem RedBlackTree[*CondFactMemoryNode]
+	Mem structure.RedBlackTree[*CondFactMemoryNode]
 }
 
 type CondFactMemoryNode struct {
@@ -29,7 +30,7 @@ type CondFactMemoryNode struct {
 }
 
 type UniFactMemory struct {
-	Mem RedBlackTree[*UniFactMemoryTreeNode]
+	Mem structure.RedBlackTree[*UniFactMemoryTreeNode]
 }
 
 // ! 如果一个opt是读入2个参数，同时有交换性的，那可以以该fc为key，存所有和它等价的东西的列表
@@ -42,7 +43,7 @@ type EqualFactMemoryTreeNode struct {
 }
 
 type EqualFactMemory struct {
-	Mem RedBlackTree[*EqualFactMemoryTreeNode]
+	Mem structure.RedBlackTree[*EqualFactMemoryTreeNode]
 }
 
 type UniFactMemoryTreeNode struct {

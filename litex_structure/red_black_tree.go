@@ -1,6 +1,6 @@
 // Basic red black tree.
 
-package litexmemory
+package litexstructure
 
 const (
 	RED   = true

@@ -1,4 +1,4 @@
-package litexmemory
+package litexstruct
 
 import (
 	"errors"
