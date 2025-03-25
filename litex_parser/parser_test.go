@@ -951,7 +951,7 @@ forall <G Group, G2 Group> g G, g2 G2:
 
 func TestFnPropExistProp(t *testing.T) {
 	code := `
-fn f(x S, y G):
+fn f(x S, y G) nat:
 	$G(g); $G(g2);
 	$G(g); $G(g2);$P(x, y);
 	$p(x, y)
@@ -965,7 +965,7 @@ prop f(x S, y G):
 	then:
 		$p(x, y)
 
-fn at(a nat, b nat) :
+fn at(a nat, b nat) nat:
 	cond:
     	$p(x, y)
 	$Q(x,y)

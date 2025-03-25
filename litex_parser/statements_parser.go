@@ -331,6 +331,11 @@ func (stmt *TokenBlock) parseDefConcreteFnStmt() (*DefConcreteFnStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
+	retType, err := stmt.Header.parseFcAtom()
+	if err != nil {
+		return nil, err
+	}
+
 	ifFacts := &[]FactStmt{}
 	thenFacts := &[]FactStmt{}
 
@@ -342,7 +347,7 @@ func (stmt *TokenBlock) parseDefConcreteFnStmt() (*DefConcreteFnStmt, error) {
 		}
 	}
 
-	return &DefConcreteFnStmt{*decl, *ifFacts, *thenFacts}, nil
+	return &DefConcreteFnStmt{*decl, retType, *ifFacts, *thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
