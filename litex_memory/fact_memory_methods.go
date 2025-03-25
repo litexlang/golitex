@@ -32,7 +32,7 @@ func specRelationFactCompare(knownFact *RelationFactMemoryNode, givenFact *Relat
 	panic("TODO not implemented")
 }
 
-func compareTypeParamsAndParamsPair(knownPair parser.FcFnParams, givenPair parser.FcFnParams) (int, error) {
+func compareFcFnParams(knownPair parser.FcFnSeg, givenPair parser.FcFnSeg) (int, error) {
 	if len(knownPair.Params) != len(givenPair.Params) {
 		return len(knownPair.Params) - len(givenPair.Params), nil
 	}
@@ -45,38 +45,6 @@ func compareTypeParamsAndParamsPair(knownPair parser.FcFnParams, givenPair parse
 
 	return 0, nil
 }
-
-func compareFcFnRetValue(knownFc *parser.FcFnRet, givenFc *parser.FcFnRet) (int, error) {
-	if comp, err := compareFcAtom(&knownFc.FnName, &givenFc.FnName); comp != 0 || err != nil {
-		return comp, err
-	}
-
-	if len(knownFc.Params) != len(givenFc.Params) {
-		return len(knownFc.Params) - len(givenFc.Params), nil
-	}
-
-	for i := 0; i < len(knownFc.Params); i++ {
-		if comp, err := compareTypeParamsAndParamsPair(knownFc.Params[i], givenFc.Params[i]); comp != 0 || err != nil {
-			return comp, err
-		}
-	}
-
-	return 0, nil
-}
-
-// func compareFcMemChain(knownFc *parser.FcChain, givenFc *parser.FcChain) (int, error) {
-// 	if len(knownFc.ChainOfMembers) != len(givenFc.ChainOfMembers) {
-// 		return len(knownFc.ChainOfMembers) - len(givenFc.ChainOfMembers), nil
-// 	}
-
-// 	for i := 0; i < len(knownFc.ChainOfMembers); i++ {
-// 		if comp, err := CompareFc((knownFc.ChainOfMembers)[i], (givenFc.ChainOfMembers)[i]); comp != 0 || err != nil {
-// 			return comp, err
-// 		}
-// 	}
-
-// 	return 0, nil
-// }
 
 func specFactTypeCompare(knownFact parser.SpecFactStmt, givenFact parser.SpecFactStmt) (int, error) {
 	knownFactType, err := getSpecFactEnum(knownFact)
