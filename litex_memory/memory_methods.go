@@ -31,14 +31,6 @@ func (mem *FnMemory) Get(s string) (*FnMemEntry, bool) {
 	return nil, false
 }
 
-func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
-	err := env.FuncFactMemory.Mem.Insert(fact)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (mem *RelationFactMemory) NewRelationFact(fact *parser.RelationFactStmt) error {
 	panic("")
 }

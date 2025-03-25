@@ -1,6 +1,7 @@
 package litexexecutor
 
 import (
+	cmp "golitex/litex_comparator"
 	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
@@ -93,9 +94,9 @@ func (exec *Executor) firstRoundVerifySpecFactLiterally(stmt parser.SpecFactStmt
 	return nil
 }
 
-func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *memory.Env, stmt parser.SpecFactStmt) error {
+func (exec *Executor) useCondFactMemToVerifySpecFactAtEnv(env *Env, stmt parser.SpecFactStmt) error {
 	key := memory.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
-	searchNode, err := env.CondFactMemory.Mem.SearchInEnv(env, &key)
+	searchNode, err := SearchInEnv(env, &env.CondFactMemory.Mem, &key)
 	if err != nil {
 		return err
 	}
@@ -144,7 +145,7 @@ func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.
 	return nil, nil
 }
 
-// func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnv(env *memory.Env, stmt *parser.FuncFactStmt) error {
+// func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnv(env *Env, stmt *parser.FuncFactStmt) error {
 // 	// searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
 // 	searchedNode, err := env.FuncFactMemory.Mem.SearchInEnv(env, stmt)
 // 	if err != nil {
@@ -158,7 +159,7 @@ func (exec *Executor) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.
 // 	return nil
 // }
 
-func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
+func (exec *Executor) verifyRelationFactSpecifically(env *Env, stmt *parser.RelationFactStmt) error {
 	if string(stmt.Opt.Value) == parser.KeywordEqual {
 		return exec.verifyEqualFactSpecifically(env, stmt)
 	}
@@ -166,16 +167,16 @@ func (exec *Executor) verifyRelationFactSpecifically(env *memory.Env, stmt *pars
 	panic("not implemented")
 }
 
-func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.RelationFactStmt) error {
+func (exec *Executor) verifyEqualFactSpecifically(env *Env, stmt *parser.RelationFactStmt) error {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: stmt.Params[0], Values: []*parser.Fc{}}
 
-	searchedNode, err := env.EqualMemory.Mem.SearchInEnv(env, &key)
+	searchedNode, err := SearchInEnv(env, &env.EqualMemory.Mem, &key)
 
 	if err != nil {
 		return err
 	}
 
-	comp, err := memory.CompareFc(stmt.Params[0], stmt.Params[1])
+	comp, err := cmp.CompareFc(stmt.Params[0], stmt.Params[1])
 
 	if err != nil {
 		return err
@@ -190,7 +191,7 @@ func (exec *Executor) verifyEqualFactSpecifically(env *memory.Env, stmt *parser.
 	}
 
 	for _, equalFc := range searchedNode.Key.Values {
-		comp, err := memory.CompareFc(stmt.Params[1], *equalFc)
+		comp, err := cmp.CompareFc(stmt.Params[1], *equalFc)
 		if err != nil {
 			return err
 		}

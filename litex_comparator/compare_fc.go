@@ -1,8 +1,7 @@
-package litexmemory
+package litexcomparator
 
 import (
 	"fmt"
-
 	parser "golitex/litex_parser"
 )
 

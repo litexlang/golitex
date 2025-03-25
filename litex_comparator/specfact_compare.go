@@ -1,12 +1,13 @@
 // REMARK：Compare和Search是分离的。Compare函数不能引入env信息。只是纯的Fc比较，和env无关。
-package litexmemory
+package litexcomparator
 
 import (
 	"fmt"
+	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
 
-func specFactCompare(left, right parser.SpecFactStmt) (int, error) {
+func SpecFactCompare(left, right parser.SpecFactStmt) (int, error) {
 	// First, compare the types of the facts
 	if specTypeCompareResult, err := specFactTypeCompare(left, right); specTypeCompareResult != 0 || err != nil {
 		return specTypeCompareResult, err
@@ -16,11 +17,11 @@ func specFactCompare(left, right parser.SpecFactStmt) (int, error) {
 	switch known := left.(type) {
 	case *parser.FuncFactStmt:
 		if given, ok := right.(*parser.FuncFactStmt); ok {
-			return specFuncFactCompare(known, given)
+			return SpecFuncFactCompare(known, given)
 		}
 	case *parser.RelationFactStmt:
 		if given, ok := right.(*parser.RelationFactStmt); ok {
-			return specRelationFactCompare(known, given)
+			return SpecRelationFactCompare(known, given)
 		}
 	default:
 		return 0, fmt.Errorf("unknown spec fact type")
@@ -60,7 +61,7 @@ func specFactTypeCompare(left, right parser.SpecFactStmt) (int, error) {
 	return knownFactType - givenFactType, nil
 }
 
-func specFuncFactCompare(left, right *FuncFactMemoryNode) (int, error) {
+func SpecFuncFactCompare(left, right *mem.FuncFactMemoryNode) (int, error) {
 	if isTrueComp := specFuncIsTrueCompare(left, right); isTrueComp != 0 {
 		return isTrueComp, nil
 	}

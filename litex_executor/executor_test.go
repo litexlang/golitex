@@ -2,7 +2,6 @@ package litexexecutor
 
 import (
 	"fmt"
-	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
 	"math/rand"
 	"testing"
@@ -23,7 +22,7 @@ func TestStoreNewObj(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	env := memory.NewEnv(nil)
+	env := NewEnv(nil)
 	executor := Executor{env, []string{}, execError, 0}
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
@@ -44,7 +43,7 @@ func TestKnow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	env := memory.NewEnv(nil)
+	env := NewEnv(nil)
 	executor := *newExecutor(env)
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
@@ -62,7 +61,7 @@ func TestVerifier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	env := memory.NewEnv(nil)
+	env := NewEnv(nil)
 	executor := *newExecutor(env)
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
@@ -188,7 +187,7 @@ func randCondStmt() *parser.ConditionalFactStmt {
 }
 
 func TestKnowVerifyFuncFactSpeed(t *testing.T) {
-	env := memory.NewEnv(nil)
+	env := NewEnv(nil)
 	executor := *newExecutor(env)
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
@@ -234,7 +233,7 @@ func TestKnowVerifyFuncFactSpeed(t *testing.T) {
 }
 
 func TestKnowVerifyCondFactSpeed(t *testing.T) {
-	env := memory.NewEnv(nil)
+	env := NewEnv(nil)
 	executor := *newExecutor(env)
 	executor.env = env
 	topStatements := []*parser.TopStmt{}
@@ -272,7 +271,7 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 }
 
 func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
-	env := memory.NewEnv(nil)
+	env := NewEnv(nil)
 	executor := *newExecutor(env)
 	executor.env = env
 	topKnowStatements := []*parser.TopStmt{}
@@ -316,7 +315,7 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 }
 
 func TestEqualFactMemory(t *testing.T) {
-	env := memory.NewEnv(nil)
+	env := NewEnv(nil)
 	executor := *newExecutor(env)
 	executor.env = env
 	topKnowStatements := []*parser.TopStmt{}
@@ -382,7 +381,7 @@ func randEqualFact() *parser.RelationFactStmt {
 }
 
 func TestVerificationUsingEqual(t *testing.T) {
-	env := memory.NewEnv(nil)
+	env := NewEnv(nil)
 	executor := *newExecutor(env)
 
 	code :=
