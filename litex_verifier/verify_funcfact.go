@@ -41,7 +41,7 @@ func (verifier *Verifier) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) err
 		}
 
 		for _, knownFact := range searchedNode.Facts {
-			verified, err := verifier.twoParamSliceHaveEqualParams(&knownFact.Params, &stmt.Params)
+			verified, err := verifier.paramSliceHaveEqualSpecifically(&knownFact.Params, &stmt.Params)
 
 			if err != nil {
 				return err

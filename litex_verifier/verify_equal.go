@@ -8,9 +8,9 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) verifyTwoFcEqual(left, right parser.Fc) (bool, error) {
+func (verifier *Verifier) verifyTwoFcEqualSpecifically(left, right parser.Fc) (bool, error) {
 	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		verified, err := verifier.verifyTwoFcEqualAtGivenEnv(curEnv, left, right)
+		verified, err := verifier.verifyTwoFcEqualSpecificallyAtEnv(curEnv, left, right)
 		if err != nil {
 			return false, err
 		}
@@ -21,7 +21,7 @@ func (verifier *Verifier) verifyTwoFcEqual(left, right parser.Fc) (bool, error) 
 	return false, nil
 }
 
-func (exec *Verifier) verifyTwoFcEqualAtGivenEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
+func (exec *Verifier) verifyTwoFcEqualSpecificallyAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: left, Values: []*parser.Fc{}}
 
 	// searchedNode, err := SearchInEnv(curEnv, &curEnv.ConcreteEqualMemory.Mem, &key)
@@ -57,19 +57,7 @@ func (exec *Verifier) verifyTwoFcEqualAtGivenEnv(curEnv *env.Env, left parser.Fc
 	return false, nil
 }
 
-func (verifier *Verifier) verifyEqualFactSpecifically(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
-	verified, err := verifier.verifyTwoFcEqualAtGivenEnv(curEnv, stmt.Params[0], stmt.Params[1])
-	if err != nil {
-		return err
-	}
-	if verified {
-		verifier.success("%v is true, verified by %v", stmt, stmt.Params[0])
-		return nil
-	}
-	return nil
-}
-
-func (verifier *Verifier) twoParamSliceHaveEqualParams(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
+func (verifier *Verifier) paramSliceHaveEqualSpecifically(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
 
 	// TODO: 25-3-26: 这里检查长度，未来确定不能让不同长度的f出现时，我去掉这一条
 	if len(*left) != len(*right) {
@@ -78,7 +66,7 @@ func (verifier *Verifier) twoParamSliceHaveEqualParams(left *[]parser.Fc, right 
 
 	twoFuncFactHaveEqualParams := true
 	for i, knownParam := range *left {
-		verified, err := verifier.verifyTwoFcEqual(knownParam, (*left)[i])
+		verified, err := verifier.verifyTwoFcEqualSpecifically(knownParam, (*left)[i])
 		if err != nil {
 			return false, err
 		}
