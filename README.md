@@ -319,11 +319,15 @@ Existing formal languages are complex, even for mathematicians, as they include 
 
 To put it in another way, traditional proof assistant are implemented to prove some hardcore mathematical theories, while Litex is designed to solve practical problems for everyone. Within traditional proof assistants, there is a much smaller and cleaner language akin to Litex struggling to get out.
 
-Litex’s syntax uses just ~20 keywords: `obj`, `fn`, `prop`, `type`, `struct`, `forall`, `cond`, `if`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`, `instance_member`, `type_member`, `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
+Litex’s syntax uses just ~20 keywords: `obj`, `fn`, `prop`, `type`, `interface`, `forall`, `cond`, `when`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`,  `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
 
 By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification.
 
 ## Key Design Choices
+
+_Language design is a curious mixture of grand ideas and fiddly details._
+
+_-- Bjarne Stroustrup__
 
 Litex is significantly influenced by the Go programming language, particularly in its "set=>type=>interface" system, which closely mirrors Go's "struct=>type=>interface" paradigm. Additionally, Litex's function declaration syntax bears a resemblance to Go's. Most importantly, the minimalism design choice of Go strongly resonates with the Litex's inventor.
 
