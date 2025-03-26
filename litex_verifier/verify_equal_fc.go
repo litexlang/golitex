@@ -66,7 +66,7 @@ func (verifier *Verifier) verifyParamSliceEqualSpecifically(left *[]parser.Fc, r
 
 	twoFuncFactHaveEqualParams := true
 	for i, knownParam := range *left {
-		verified, err := verifier.verifyTwoFcEqualSpecifically(knownParam, (*left)[i])
+		verified, err := verifier.verifyTwoFcEqualSpecifically(knownParam, (*right)[i])
 		if err != nil {
 			return false, err
 		}

@@ -369,10 +369,12 @@ func TestVerificationUsingEqual(t *testing.T) {
 	code :=
 		`
 know:
-//	x = y
+	x = y
 	$p(x)
 
+$p(z)
 $p(x)
+$p(y)
 `
 	topStatements, err := parser.ParseSourceCode(&code)
 
@@ -381,6 +383,9 @@ $p(x)
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if _, ok := topStmt.Stmt.(parser.FactStmt); ok {
+			fmt.Println(executor.message)
 		}
 	}
 	fmt.Printf("%d rounds top stmt exec taken: %v\n", len(*topStatements), time.Since(start))
