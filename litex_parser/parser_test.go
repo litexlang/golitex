@@ -455,7 +455,7 @@ obj a :
 
 }
 
-func TestRelationalFactStmt(t *testing.T) {
+func TestRelaFactStmt(t *testing.T) {
 	code :=
 		`
 p(a) + 2 < (2 + 3) * 10 + 4 < 100

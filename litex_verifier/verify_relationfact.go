@@ -5,13 +5,13 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) verifyRelationFact(stmt *parser.RelationFactStmt) error {
+func (verifier *Verifier) RelaFact(stmt *parser.RelaFactStmt) error {
 	// TODO:  : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
 	verifier.roundAddOne()
 	defer verifier.roundMinusOne()
 
-	err := verifier.verifyRelationFactSpecifically(stmt)
+	err := verifier.RelaFactSpec(stmt)
 	if err != nil {
 		return err
 	}
@@ -20,12 +20,12 @@ func (verifier *Verifier) verifyRelationFact(stmt *parser.RelationFactStmt) erro
 		return nil
 	}
 
-	return verifier.verifyFuncFactUseCondFacts(stmt)
+	return verifier.FuncFactCond(stmt)
 }
 
-func (verifier *Verifier) verifyRelationFactSpecifically(stmt *parser.RelationFactStmt) error {
+func (verifier *Verifier) RelaFactSpec(stmt *parser.RelaFactStmt) error {
 	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		err := verifier.verifyRelationFactSpecificallyAtEnv(curEnv, stmt)
+		err := verifier.RelaFactSpecAtEnv(curEnv, stmt)
 		if err != nil {
 			return err
 		}
@@ -36,9 +36,9 @@ func (verifier *Verifier) verifyRelationFactSpecifically(stmt *parser.RelationFa
 	return nil
 }
 
-func (verifier *Verifier) verifyRelationFactSpecificallyAtEnv(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
+func (verifier *Verifier) RelaFactSpecAtEnv(curEnv *env.Env, stmt *parser.RelaFactStmt) error {
 	if string(stmt.Opt.Value) == parser.KeywordEqual {
-		return verifier.verifyEqualFactSpecificallyAtEnv(curEnv, stmt)
+		return verifier.EqualFactSpecAtEnv(curEnv, stmt)
 	}
 
 	panic("not implemented")

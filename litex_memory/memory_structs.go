@@ -11,17 +11,17 @@ func (e *MemoryErr) Error() string {
 type ObjMemoryEntry struct {
 }
 
-type PropMemory struct {
+type PropMem struct {
 }
 
 type PropMemoryEntry struct {
 }
 
-type FnMemory struct {
+type FnMem struct {
 }
 
 type FnMemEntry struct {
 }
 
-type ObjMemory struct {
+type ObjMem struct {
 }

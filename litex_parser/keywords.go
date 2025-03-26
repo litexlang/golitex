@@ -191,7 +191,7 @@ func getBuiltinSymbol(inputString string, start int) string {
 	return ""
 }
 
-func isBuiltinRelationalOperator(op string) bool {
+func isBuiltinRelaOpt(op string) bool {
 	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!="
 }
 

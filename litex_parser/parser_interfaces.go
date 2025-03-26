@@ -12,7 +12,7 @@ func (f *DefTypeStmt) stmt()                {}
 func (c *DefConcreteNormalPropStmt) stmt()  {}
 func (f *DefConcreteFnStmt) stmt()          {}
 func (l *ConcreteForallStmt) stmt()         {}
-func (r *RelationFactStmt) stmt()           {}
+func (r *RelaFactStmt) stmt()               {}
 func (p *FuncFactStmt) stmt()               {}
 func (f *ClaimProveStmt) stmt()             {}
 func (f *KnowStmt) stmt()                   {}
@@ -30,7 +30,7 @@ type FactStmt interface {
 	String() string
 }
 
-func (r *RelationFactStmt) factStmt()    {}
+func (r *RelaFactStmt) factStmt()        {}
 func (p *FuncFactStmt) factStmt()        {}
 func (p *ConditionalFactStmt) factStmt() {}
 func (l *ConcreteForallStmt) factStmt()  {}
@@ -47,8 +47,8 @@ type SpecFactStmt interface {
 	String() string
 }
 
-func (r *RelationFactStmt) specFactStmtSetT(b bool) { r.IsTrue = b }
-func (f *FuncFactStmt) specFactStmtSetT(b bool)     { f.IsTrue = b }
+func (r *RelaFactStmt) specFactStmtSetT(b bool) { r.IsTrue = b }
+func (f *FuncFactStmt) specFactStmtSetT(b bool) { f.IsTrue = b }
 
 type ClaimStmt interface {
 	claimStmt()

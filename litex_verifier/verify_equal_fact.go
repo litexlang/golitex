@@ -5,8 +5,8 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) verifyEqualFactSpecificallyAtEnv(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
-	verified, err := verifier.verifyTwoFcEqualSpecificallyAtEnv(curEnv, stmt.Params[0], stmt.Params[1])
+func (verifier *Verifier) EqualFactSpecAtEnv(curEnv *env.Env, stmt *parser.RelaFactStmt) error {
+	verified, err := verifier.TwoFcEqualSpecAtEnv(curEnv, stmt.Params[0], stmt.Params[1])
 	if err != nil {
 		return err
 	}

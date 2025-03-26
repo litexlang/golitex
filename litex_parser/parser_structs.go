@@ -60,7 +60,7 @@ type FuncFactStmt struct {
 	Params []Fc
 }
 
-type RelationFactStmt struct {
+type RelaFactStmt struct {
 	IsTrue bool
 	Opt    FcAtom
 	Params []Fc

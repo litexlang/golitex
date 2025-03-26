@@ -34,7 +34,7 @@ func TestStoreNewObj(t *testing.T) {
 		fmt.Println(executor.message)
 	}
 
-	entry, _ := curEnv.ObjMemory.Get("a")
+	entry, _ := curEnv.ObjMem.Get("a")
 	println((entry))
 }
 
@@ -355,11 +355,11 @@ func TestEqualFactMemory(t *testing.T) {
 	}
 }
 
-func randEqualFact() *parser.RelationFactStmt {
+func randEqualFact() *parser.RelaFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.RelationFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", Value: "="}}
+	return &parser.RelaFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", Value: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

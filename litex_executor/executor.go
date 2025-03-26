@@ -33,7 +33,7 @@ func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
 
 func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 	curVerifier := verifyPgk.NewVerifier(exec.env)
-	err := curVerifier.VerifyFactStmt(stmt)
+	err := curVerifier.FactStmt(stmt)
 	if err != nil {
 		return err
 	}

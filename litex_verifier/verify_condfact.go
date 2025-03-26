@@ -2,13 +2,13 @@ package litexverifier
 
 import parser "golitex/litex_parser"
 
-func (verifier *Verifier) verifyCondFact(stmt *parser.ConditionalFactStmt) error {
+func (verifier *Verifier) CondFact(stmt *parser.ConditionalFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
-	return verifier.verifyCondFactLiterally(stmt)
+	return verifier.CondFactSpec(stmt)
 }
 
-func (verifier *Verifier) verifyCondFactLiterally(stmt *parser.ConditionalFactStmt) error {
+func (verifier *Verifier) CondFactSpec(stmt *parser.ConditionalFactStmt) error {
 	verifier.newEnv()
 	defer verifier.deleteEnv()
 
@@ -18,7 +18,7 @@ func (verifier *Verifier) verifyCondFactLiterally(stmt *parser.ConditionalFactSt
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		err := verifier.VerifyFactStmt(thenFact)
+		err := verifier.FactStmt(thenFact)
 		if err != nil {
 			return err
 		}

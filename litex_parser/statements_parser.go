@@ -90,7 +90,7 @@ func (stmt *TokenBlock) parseSpecFactStmt() (SpecFactStmt, error) {
 	if stmt.Header.is(KeywordDollar) {
 		ret, err = stmt.parseFuncPropFactStmt()
 	} else {
-		ret, err = stmt.parseRelationalFactStmt()
+		ret, err = stmt.parseRelaFactStmt()
 	}
 
 	if err != nil {
@@ -552,7 +552,7 @@ func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 	return &HaveStmt{propStmt, *members}, nil
 }
 
-func (stmt *TokenBlock) parseRelationalFactStmt() (SpecFactStmt, error) {
+func (stmt *TokenBlock) parseRelaFactStmt() (SpecFactStmt, error) {
 	fc, err := stmt.Header.ParseFc()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -568,7 +568,7 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	if !isBuiltinRelationalOperator(opt) {
+	if !isBuiltinRelaOpt(opt) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
@@ -587,7 +587,7 @@ func (stmt *TokenBlock) parseRelationalFactStmt() (SpecFactStmt, error) {
 		params = append(params, fc)
 	}
 
-	return &RelationFactStmt{true, FcAtom{Value: opt}, params}, nil
+	return &RelaFactStmt{true, FcAtom{Value: opt}, params}, nil
 }
 
 func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {
