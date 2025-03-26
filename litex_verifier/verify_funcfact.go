@@ -22,13 +22,13 @@ func (verifier *Verifier) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 		return nil
 	}
 
-	err = verifier.verifyFuncFactUseCondFacts(stmt)
-	if err != nil {
-		return err
-	}
-	if verifier.true() {
-		return nil
-	}
+	// err = verifier.verifyFuncFactUseCondFacts(stmt)
+	// if err != nil {
+	// 	return err
+	// }
+	// if verifier.true() {
+	// 	return nil
+	// }
 
 	return nil
 }
