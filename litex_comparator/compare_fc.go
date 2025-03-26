@@ -61,13 +61,13 @@ func compareFcOfTheSameType(left, right parser.Fc) (int, error) {
 }
 
 func compareFcAtom(left, right *parser.FcAtom) (int, error) {
-	if len(left.FromPkg) != len(right.FromPkg) {
-		return len(left.FromPkg) - len(right.FromPkg), nil
+	if len(left.PkgName) != len(right.PkgName) {
+		return len(left.PkgName) - len(right.PkgName), nil
 	}
 
-	for i := 0; i < len(left.FromPkg); i++ {
-		if left.FromPkg[i] != right.FromPkg[i] {
-			return int(left.FromPkg[i]) - int(right.FromPkg[i]), nil
+	for i := 0; i < len(left.PkgName); i++ {
+		if left.PkgName[i] != right.PkgName[i] {
+			return int(left.PkgName[i]) - int(right.PkgName[i]), nil
 		}
 	}
 

@@ -8,11 +8,30 @@ import (
 // Define type PropName to signify functionality of a string
 type PropName string
 
-type FuncMemoryItem struct{ facts [][]parser.SpecFactParams }
-type ConcreteFuncFactMemory struct{ dict map[string]FuncMemoryItem }
+type StoredFuncFact struct {
+	IsTrue bool
+	Params []parser.Fc
+}
 
-func NewConcreteFuncFactMemory() ConcreteFuncFactMemory {
-	return ConcreteFuncFactMemory{map[string]FuncMemoryItem{}}
+type StoredFuncMemDictNode struct{ Facts []StoredFuncFact }
+type FuncFactMemDict struct {
+	Dict map[string]map[string]StoredFuncMemDictNode
+}
+
+func NewConcreteFuncFactMemDict() FuncFactMemDict {
+	return FuncFactMemDict{map[string]map[string]StoredFuncMemDictNode{}}
+}
+
+func (f *FuncFactMemDict) GetNode(stmt *parser.FuncFactStmt) (*StoredFuncMemDictNode, bool) {
+	pkgMap, pkgExists := f.Dict[stmt.Opt.PkgName] // 检查 pkgName 是否存在
+	if !pkgExists {
+		return nil, false // 返回零值
+	}
+	node, nodeExists := pkgMap[stmt.Opt.Value] // 检查 value 是否存在
+	if !nodeExists {
+		return nil, false // 返回零值
+	}
+	return &node, true
 }
 
 // type FuncFactMemoryNode = parser.FuncFactStmt

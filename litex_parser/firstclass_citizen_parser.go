@@ -118,7 +118,7 @@ func (parser *Parser) parseFcAtom() (FcAtom, error) {
 		}
 	}
 
-	return FcAtom{FromPkg: fromPkg, Value: value}, nil
+	return FcAtom{PkgName: fromPkg, Value: value}, nil
 }
 
 func (parser *Parser) ParseFc() (Fc, error) {

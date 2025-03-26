@@ -34,21 +34,40 @@ func (verifier *Verifier) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 }
 
 func (verifier *Verifier) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
-	panic("not implemented")
+	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
+		searchedNode, got := curEnv.ConcreteFuncFactMemory.GetNode(stmt)
+		if !got {
+			continue
+		}
+
+		for _, knownFact := range searchedNode.Facts {
+			verified, err := verifier.twoParamSliceHaveEqualParams(&knownFact.Params, &stmt.Params)
+
+			if err != nil {
+				return err
+			}
+
+			if verified {
+				verifier.success("%v is true, verified by %v", stmt, knownFact)
+				return nil
+			}
+		}
+	}
+
 	// for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-	// searchedNode, err := verifier.useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(stmt)
-	//! 25-3-26 这里要用更好的search方式来搜索已知的信息
-	// searchedNode, err := curEnv.ConcreteFuncFactMemory.Mem.TreeSearch(stmt)
-	// if err != nil {
-	// 	return err
-	// }
-	// if searchedNode != nil {
-	// 	verifier.success("%v is true, verified by %v", stmt, searchedNode.Key)
-	// 	return nil
-	// }
+	// 	searchedNode, err := verifier.useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(stmt)
+	// 	// ! 25-3-26 这里要用更好的search方式来搜索已知的信息
+	// 	searchedNode, err := curEnv.ConcreteFuncFactMemory.Mem.TreeSearch(stmt)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	if searchedNode != nil {
+	// 		verifier.success("%v is true, verified by %v", stmt, searchedNode.Key)
+	// 		return nil
+	// 	}
 	// }
 
-	// return nil
+	return nil
 }
 
 func (verifier *Verifier) verifyFuncFactUseCondFacts(stmt parser.SpecFactStmt) error {
