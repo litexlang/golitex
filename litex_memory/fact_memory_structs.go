@@ -1,6 +1,7 @@
 package litexmemory
 
 import (
+	"fmt"
 	ds "golitex/litex_data_structure"
 	parser "golitex/litex_parser"
 )
@@ -11,6 +12,13 @@ type PropName string
 type StoredFuncFact struct {
 	IsTrue bool
 	Params []parser.Fc
+}
+
+func (fact *StoredFuncFact) String(atom parser.FcAtom) string {
+	if fact.IsTrue {
+		return fmt.Sprintf("%v%s(%s)", parser.KeywordDollar, atom.String(), parser.FcSliceString(&fact.Params))
+	}
+	return fmt.Sprintf("not %v%s(%s)", parser.KeywordDollar, atom.String(), parser.FcSliceString(&fact.Params))
 }
 
 type StoredFuncMemDictNode struct{ Facts []StoredFuncFact }

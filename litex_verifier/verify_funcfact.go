@@ -30,6 +30,7 @@ func (verifier *Verifier) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	// 	return nil
 	// }
 
+	verifier.unknown("%s is unknown", stmt.String())
 	return nil
 }
 
@@ -48,25 +49,11 @@ func (verifier *Verifier) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) err
 			}
 
 			if verified {
-				verifier.success("%v is true, verified by %v", stmt, knownFact)
+				verifier.success("%v is true, verified by %v", stmt.String(), knownFact.String(stmt.Opt))
 				return nil
 			}
 		}
 	}
-
-	// for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-	// 	searchedNode, err := verifier.useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(stmt)
-	// 	// ! 25-3-26 这里要用更好的search方式来搜索已知的信息
-	// 	searchedNode, err := curEnv.ConcreteFuncFactMemory.Mem.TreeSearch(stmt)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if searchedNode != nil {
-	// 		verifier.success("%v is true, verified by %v", stmt, searchedNode.Key)
-	// 		return nil
-	// 	}
-	// }
-
 	return nil
 }
 

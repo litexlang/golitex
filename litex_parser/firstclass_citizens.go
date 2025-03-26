@@ -1,6 +1,9 @@
 package litexparser
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Fc interface {
 	fc()
@@ -20,6 +23,14 @@ type FcFnCallPipe struct {
 
 type FcFnCallPipeSeg struct {
 	Params []Fc
+}
+
+func FcSliceString(params *[]Fc) string {
+	output := make([]string, len(*params))
+	for i, param := range *params {
+		output[i] = param.String()
+	}
+	return strings.Join(output, ", ")
 }
 
 func (f *FcAtom) fc()                      {}
