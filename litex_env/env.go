@@ -69,7 +69,11 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 }
 
 func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
-	panic("not implemented")
+	err := env.ConcreteFuncFactMemory.InsertConcreteFuncFact(fact)
+	if err != nil {
+		return err
+	}
+	return nil
 	// err := env.ConcreteFuncFactMemory.Mem.Insert(fact)
 	// if err != nil {
 	// 	return err
