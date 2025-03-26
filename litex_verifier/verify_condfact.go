@@ -8,28 +8,28 @@ func (verifier *Verifier) verifyCondFact(stmt *parser.ConditionalFactStmt) error
 	return verifier.verifyCondFactLiterally(stmt)
 }
 
-func (exec *Verifier) verifyCondFactLiterally(stmt *parser.ConditionalFactStmt) error {
-	exec.newEnv()
-	defer exec.deleteEnv()
+func (verifier *Verifier) verifyCondFactLiterally(stmt *parser.ConditionalFactStmt) error {
+	verifier.newEnv()
+	defer verifier.deleteEnv()
 
-	err := exec.env.NewKnownFact(&parser.KnowStmt{Facts: stmt.CondFacts})
+	err := verifier.env.NewKnownFact(&parser.KnowStmt{Facts: stmt.CondFacts})
 	if err != nil {
 		return err
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		err := exec.VerifyFactStmt(thenFact)
+		err := verifier.VerifyFactStmt(thenFact)
 		if err != nil {
 			return err
 		}
-		if !exec.true() {
+		if !verifier.true() {
 			return nil
 		} else {
-			exec.unknown("%v is unknown: %v is unknown", stmt, thenFact)
+			verifier.unknown("%v is unknown: %v is unknown", stmt, thenFact)
 		}
 	}
 
-	exec.success("%v is true", stmt)
+	verifier.success("%v is true", stmt)
 
 	return nil
 }

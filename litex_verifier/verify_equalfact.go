@@ -8,50 +8,65 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (exec *Verifier) verifyFcEqual(left, right parser.Fc) error {
-	panic("")
+func (verifier *Verifier) verifyTwoFcEqual(left, right parser.Fc) (bool, error) {
+	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
+		verified, err := verifier.verifyTwoFcEqualAtGivenEnv(curEnv, left, right)
+		if err != nil {
+			return false, err
+		}
+		if verified {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
-func (exec *Verifier) verifyTwoFcEqual(curEnv *env.Env, left parser.Fc, right parser.Fc) error {
+func (exec *Verifier) verifyTwoFcEqualAtGivenEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: left, Values: []*parser.Fc{}}
 
 	// searchedNode, err := SearchInEnv(curEnv, &curEnv.ConcreteEqualMemory.Mem, &key)
 	searchedNode, err := curEnv.ConcreteEqualMemory.Mem.TreeSearch(&key)
 
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	comp, err := cmp.CmpFc(left, right)
 
 	if err != nil {
-		return err
+		return false, err
 	}
 	if comp == 0 {
-		exec.success("%s = %s, verified by %v", left, right, searchedNode.Key)
-		return nil
+		return true, nil
 	}
 
 	if searchedNode == nil {
-		return nil
+		return false, nil
 	}
 
 	for _, equalFc := range searchedNode.Key.Values {
 		comp, err := cmp.CmpFc(right, *equalFc)
 		if err != nil {
-			return err
+			return false, err
 		}
 		if comp == 0 {
-			exec.success("%s = %s, verified by %v", left, right, equalFc)
-			return nil
+			return true, nil
 		}
 	}
 
-	return nil
+	return false, nil
 }
 
-func (exec *Verifier) verifyEqualFactSpecifically(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
-	return exec.verifyTwoFcEqual(curEnv, stmt.Params[0], stmt.Params[1])
+func (verifier *Verifier) verifyEqualFactSpecifically(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
+	verified, err := verifier.verifyTwoFcEqualAtGivenEnv(curEnv, stmt.Params[0], stmt.Params[1])
+	if err != nil {
+		return err
+	}
+	if verified {
+		verifier.success("%v is true, verified by %v", stmt, stmt.Params[0])
+		return nil
+	}
+	return nil
 }
 
 func (verifier *Verifier) twoParamSliceHaveEqualParams(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
@@ -63,11 +78,11 @@ func (verifier *Verifier) twoParamSliceHaveEqualParams(left *[]parser.Fc, right 
 
 	twoFuncFactHaveEqualParams := true
 	for i, knownParam := range *left {
-		err := verifier.verifyFcEqual(knownParam, (*left)[i])
+		verified, err := verifier.verifyTwoFcEqual(knownParam, (*left)[i])
 		if err != nil {
 			return false, err
 		}
-		if !verifier.true() {
+		if !verified {
 			twoFuncFactHaveEqualParams = false
 			break
 		}
