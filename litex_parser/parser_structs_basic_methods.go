@@ -2,29 +2,26 @@ package litexparser
 
 import (
 	"fmt"
-	"strings"
 )
 
 func (stmt *KnowStmt) String() string {
-	return fmt.Sprintf("know %s", stmt.Facts)
+	ret := "know:\n"
+	for _, fact := range stmt.Facts {
+		ret += fmt.Sprintf("    %s\n", fact.String())
+	}
+	return ret
 }
 
 func (stmt *FuncFactStmt) String() string {
-	paramStrList := []string{}
-	for _, param := range stmt.Params {
-		paramStrList = append(paramStrList, param.String())
-	}
-	paramStr := strings.Join(paramStrList, ", ")
-
 	if stmt.IsTrue {
-		return fmt.Sprintf("$%v(%v)", stmt.Opt.String(), paramStr)
+		return fmt.Sprintf("$%v(%v)", stmt.Opt.String(), FcSliceString(&stmt.Params))
 	} else {
-		return fmt.Sprintf("not $%v(%v)", stmt.Opt.String(), paramStr)
+		return fmt.Sprintf("not $%v(%v)", stmt.Opt.String(), FcSliceString(&stmt.Params))
 	}
 }
 
 func (stmt *RelationFactStmt) String() string {
-	return fmt.Sprintf("%v %v %v", stmt.Params[0].String(), stmt.Opt, stmt.Params[1].String())
+	return fmt.Sprintf("%v %v %v", stmt.Params[0].String(), stmt.Opt.String(), stmt.Params[1].String())
 }
 
 func (stmt *DefObjStmt) String() string { panic("") }

@@ -45,7 +45,7 @@ func (verifier *Verifier) verifyTwoFcEqualSpecificallyAtEnv(curEnv *env.Env, lef
 	}
 
 	for _, equalFc := range searchedNode.Key.Values {
-		comp, err := cmp.CmpFc(right, *equalFc)
+		comp, err := cmp.CmpFc(*equalFc, right)
 		if err != nil {
 			return false, err
 		}

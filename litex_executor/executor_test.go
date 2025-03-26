@@ -373,6 +373,7 @@ know:
 	$p(x)
 
 $p(z)
+$q(x)
 $p(x)
 $p(y)
 `
@@ -385,13 +386,17 @@ $p(y)
 			t.Fatal(err)
 		}
 		if _, ok := topStmt.Stmt.(parser.FactStmt); ok {
-			fmt.Println(executor.message)
+			for _, message := range *executor.message {
+				fmt.Println(message)
+			}
 		}
 	}
 	fmt.Printf("%d rounds top stmt exec taken: %v\n", len(*topStatements), time.Since(start))
 
 	if err == nil {
-		fmt.Printf("%v\n", topStatements)
+		for _, stmt := range *topStatements {
+			fmt.Printf("%v\n", stmt.Stmt.String())
+		}
 	} else {
 		t.Fatal(err)
 	}
