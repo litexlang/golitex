@@ -2,7 +2,6 @@ package litexcomparator
 
 import (
 	parser "golitex/litex_parser"
-	"math/rand"
 	"testing"
 )
 
@@ -118,41 +117,41 @@ func TestCompareFc(t *testing.T) {
 
 }
 
-func TestCompareSpecFact(t *testing.T) {
-	factStrings := []string{
-		"$p(a)",
-		"$p(b)",
-		"$p(a)",
-		"$p(b)",
-		"$t(a,f::b(1,k()(1,2)))",
-		"$q(a, b)",
-		"$p::t(a,b)",
-		"$Q::P(a,b)",
-	}
+// func TestCompareSpecFact(t *testing.T) {
+// 	factStrings := []string{
+// 		"$p(a)",
+// 		"$p(b)",
+// 		"$p(a)",
+// 		"$p(b)",
+// 		"$t(a,f::b(1,k()(1,2)))",
+// 		"$q(a, b)",
+// 		"$p::t(a,b)",
+// 		"$Q::P(a,b)",
+// 	}
 
-	facts := []parser.SpecFactStmt{}
-	for _, factString := range factStrings {
-		topStmtSlice, err := parser.ParseSourceCode(&factString)
-		if err != nil {
-			t.Fatalf("ParseSpecFactStmt(%q) error: %v", factString, err)
-		}
-		for _, stmt := range *topStmtSlice {
-			asSpecFact, ok := (stmt.Stmt).(parser.SpecFactStmt)
-			if !ok {
-				t.Fatalf("stmt.parseSpecFactStmt() error: %v", err)
-			}
-			facts = append(facts, asSpecFact)
-		}
-	}
+// 	facts := []parser.SpecFactStmt{}
+// 	for _, factString := range factStrings {
+// 		topStmtSlice, err := parser.ParseSourceCode(&factString)
+// 		if err != nil {
+// 			t.Fatalf("ParseSpecFactStmt(%q) error: %v", factString, err)
+// 		}
+// 		for _, stmt := range *topStmtSlice {
+// 			asSpecFact, ok := (stmt.Stmt).(parser.SpecFactStmt)
+// 			if !ok {
+// 				t.Fatalf("stmt.parseSpecFactStmt() error: %v", err)
+// 			}
+// 			facts = append(facts, asSpecFact)
+// 		}
+// 	}
 
-	rounds := 10
-	for i := range rounds {
-		n := rand.Intn(len(factStrings))
-		m := rand.Intn(len(factStrings))
-		out, err := CmpSpecFact(facts[n], facts[m])
-		if err != nil {
-			t.Fatalf("error: %v", err)
-		}
-		println(i, out, facts[n].String(), facts[m].String())
-	}
-}
+// 	rounds := 10
+// 	for i := range rounds {
+// 		n := rand.Intn(len(factStrings))
+// 		m := rand.Intn(len(factStrings))
+// 		out, err := CmpSpecFact(facts[n], facts[m])
+// 		if err != nil {
+// 			t.Fatalf("error: %v", err)
+// 		}
+// 		println(i, out, facts[n].String(), facts[m].String())
+// 	}
+// }

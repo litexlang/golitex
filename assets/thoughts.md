@@ -727,5 +727,5 @@ interface impl interface。或者说有 “xx的yy” 的情况，需要引入 x
 注意到， 默认右边的  函数名，对应的是 interface 名的那个需要被impl的函数，就能避免这个问题
 // 群是半群
 prove < G Group::Group > G impl Group::SemiGroup:
-    G::__mul__ impl __mul__  // 默认mul指代的是SemiGroup的mul
+    G::__mul__ impl __mul__  // 默认mul指代的是SemiGroup的mul // 那或者说左边的 __mul__ 也是默认的，不用写 G::__mul__了
 如何让两个type，形成一个语法糖，能impl一个新的东西呢: 不太能，要么你定义新的type把原来的这两个type包裹进去；要么全部统一用prop来一个个地表示满足这些性质的东西怎么搞
