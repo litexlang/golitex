@@ -6,6 +6,19 @@ import (
 	parser "golitex/litex_parser"
 )
 
+func (verifier *Verifier) VerifyFactStmt(stmt parser.FactStmt) error {
+	switch stmt := stmt.(type) {
+	case *parser.FuncFactStmt:
+		return verifier.verifyFuncFact(stmt)
+	case *parser.RelationFactStmt:
+		return verifier.verifyRelationFact(stmt)
+	case *parser.ConditionalFactStmt:
+		return verifier.verifyCondFact(stmt)
+	default:
+		return nil
+	}
+}
+
 type VerifierOutput uint8
 
 const (
@@ -65,17 +78,4 @@ func (e *Verifier) unknown(format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
 	*e.Message = append(*e.Message, message)
 	e.Output = VerifierUnknown
-}
-
-func (verifier *Verifier) VerifyFactStmt(stmt parser.FactStmt) error {
-	switch stmt := stmt.(type) {
-	case *parser.FuncFactStmt:
-		return verifier.verifyFuncFact(stmt)
-	case *parser.RelationFactStmt:
-		return verifier.verifyRelationFact(stmt)
-	case *parser.ConditionalFactStmt:
-		return verifier.verifyCondFact(stmt)
-	default:
-		return nil
-	}
 }
