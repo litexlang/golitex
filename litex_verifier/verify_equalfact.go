@@ -11,7 +11,7 @@ func (exec *Verifier) verifyEqualFactSpecifically(curEnv *env.Env, stmt *parser.
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: stmt.Params[0], Values: []*parser.Fc{}}
 
 	// searchedNode, err := SearchInEnv(curEnv, &curEnv.ConcreteEqualMemory.Mem, &key)
-	searchedNode, err := curEnv.ConcreteEqualMemory.Mem.Search(&key)
+	searchedNode, err := curEnv.ConcreteEqualMemory.Mem.TreeSearch(&key)
 
 	if err != nil {
 		return err

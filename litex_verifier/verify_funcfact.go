@@ -8,17 +8,37 @@ import (
 
 func (verifier *Verifier) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
-
-	return verifier.verifyFuncFactLiterally(stmt)
-}
-
-func (verifier *Verifier) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 	verifier.roundAddOne()
 	defer verifier.roundMinusOne()
 
+	err := verifier.verifyFuncFactLiterally(stmt)
+	if err != nil {
+		return err
+	}
+	if verifier.true() {
+		return nil
+	}
+
+	if !verifier.round1() {
+		return nil
+	}
+
+	err = verifier.verifyFuncFactUseCondFacts(stmt)
+	if err != nil {
+		return err
+	}
+	if verifier.true() {
+		return nil
+	}
+
+	return nil
+}
+
+func (verifier *Verifier) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
 	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
 		// searchedNode, err := verifier.useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(stmt)
-		searchedNode, err := curEnv.ConcreteFuncFactMemory.Mem.Search(stmt)
+		//! 25-3-26 这里要用更好的search方式来搜索已知的信息
+		searchedNode, err := curEnv.ConcreteFuncFactMemory.Mem.TreeSearch(stmt)
 		if err != nil {
 			return err
 		}
@@ -28,17 +48,13 @@ func (verifier *Verifier) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) err
 		}
 	}
 
-	if !verifier.round1() {
-		return nil
-	}
-
-	return verifier.firstRoundVerifySpecFactLiterally(stmt)
+	return nil
 }
 
-func (verifier *Verifier) firstRoundVerifySpecFactLiterally(stmt parser.SpecFactStmt) error {
+func (verifier *Verifier) verifyFuncFactUseCondFacts(stmt parser.SpecFactStmt) error {
 	// Use cond fact to verify
 	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		err := verifier.useCondFactMemToVerifySpecFactAtEnv(curEnv, stmt)
+		err := verifier.verifyFuncFactUseCondFactsAtGivenEnv(curEnv, stmt)
 		if err != nil {
 			return err
 		}
@@ -46,14 +62,13 @@ func (verifier *Verifier) firstRoundVerifySpecFactLiterally(stmt parser.SpecFact
 			return nil
 		}
 	}
-	// TODO USE UNI FACT TO PROVE
 	return nil
 }
 
-func (exec *Verifier) useCondFactMemToVerifySpecFactAtEnv(curEnv *env.Env, stmt parser.SpecFactStmt) error {
+func (exec *Verifier) verifyFuncFactUseCondFactsAtGivenEnv(curEnv *env.Env, stmt parser.SpecFactStmt) error {
 	key := mem.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
 	// searchNode, err := SearchInEnv(curEnv, &curEnv.ConcreteCondFactMemory.Mem, &key)
-	searchNode, err := curEnv.ConcreteCondFactMemory.Mem.Search(&key)
+	searchNode, err := curEnv.ConcreteCondFactMemory.Mem.TreeSearch(&key)
 	if err != nil {
 		return err
 	}
@@ -80,24 +95,3 @@ func (exec *Verifier) useCondFactMemToVerifySpecFactAtEnv(curEnv *env.Env, stmt 
 
 	return nil
 }
-
-// func (exec *Verifier) useFuncFactMemToVerifyFuncFactAtEnvNodeByNode(key *parser.FuncFactStmt) (*ds.Node[*parser.FuncFactStmt], error) {
-// 	curNode := exec.env.FuncFactMemory.Mem.Root
-// 	err := error(nil)
-// 	searched := false
-// 	for curNode != nil {
-// 		// * 这里需要遍历当前的curNode的所有的参数，把参数替换成和该参数相等的参数，然后看下是否有相关的事实
-// 		// * 类似数据库把有特定pattern的事实先全部搜到，然后遍历一遍些事实看看哪些能匹配上
-
-// 		curNode, err, searched = exec.env.FuncFactMemory.Mem.SearchOneLayer(curNode, key)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		if searched {
-// 			return curNode, nil
-// 		}
-// 	}
-
-// 	return nil, nil
-// }

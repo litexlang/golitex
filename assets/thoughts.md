@@ -722,3 +722,10 @@ fn nat_matrix_2_2::at(a nat, b nat) nat:
         0 < a < 2
         0 < b < 2
         
+3.26
+interface impl interface。或者说有 “xx的yy” 的情况，需要引入 xxx::uuu::yyy, 单独一个::不够了。比如我要实现 Group::Group的mul，
+注意到， 默认右边的  函数名，对应的是 interface 名的那个需要被impl的函数，就能避免这个问题
+// 群是半群
+prove < G Group::Group > G impl Group::SemiGroup:
+    G::__mul__ impl __mul__  // 默认mul指代的是SemiGroup的mul
+如何让两个type，形成一个语法糖，能impl一个新的东西呢: 不太能，要么你定义新的type把原来的这两个type包裹进去；要么全部统一用prop来一个个地表示满足这些性质的东西怎么搞
