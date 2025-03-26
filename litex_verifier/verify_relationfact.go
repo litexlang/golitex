@@ -36,9 +36,9 @@ func (verifier *Verifier) verifyRelationFactSpecifically(stmt *parser.RelationFa
 	return nil
 }
 
-func (exec *Verifier) verifyRelationFactSpecificallyAtEnv(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
+func (verifier *Verifier) verifyRelationFactSpecificallyAtEnv(curEnv *env.Env, stmt *parser.RelationFactStmt) error {
 	if string(stmt.Opt.Value) == parser.KeywordEqual {
-		return exec.verifyEqualFactSpecificallyAtEnv(curEnv, stmt)
+		return verifier.verifyEqualFactSpecificallyAtEnv(curEnv, stmt)
 	}
 
 	panic("not implemented")

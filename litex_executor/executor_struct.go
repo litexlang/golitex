@@ -3,7 +3,7 @@ package litexexecutor
 import (
 	"fmt"
 	env "golitex/litex_env"
-	verifier "golitex/litex_verifier"
+	verifyPkg "golitex/litex_verifier"
 )
 
 type ExecOutput uint8
@@ -57,13 +57,13 @@ func (e *Executor) printlnOutputMessage() {
 	}
 }
 
-func (e *Executor) readFromVerifier(readFrom *verifier.Verifier) {
+func (e *Executor) readFromVerifier(readFrom *verifyPkg.Verifier) {
 	switch readFrom.Output {
-	case verifier.VerifierTrue:
+	case verifyPkg.VerifierTrue:
 		e.output = execTrue
-	case verifier.VerifierError:
+	case verifyPkg.VerifierError:
 		e.output = execError
-	case verifier.VerifierUnknown:
+	case verifyPkg.VerifierUnknown:
 		e.output = execUnknown
 	}
 

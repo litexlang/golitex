@@ -41,7 +41,7 @@ func (verifier *Verifier) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) err
 		}
 
 		for _, knownFact := range searchedNode.Facts {
-			verified, err := verifier.paramSliceHaveEqualSpecifically(&knownFact.Params, &stmt.Params)
+			verified, err := verifier.verifyParamSliceEqualSpecifically(&knownFact.Params, &stmt.Params)
 
 			if err != nil {
 				return err
@@ -84,7 +84,7 @@ func (verifier *Verifier) verifyFuncFactUseCondFacts(stmt parser.SpecFactStmt) e
 	return nil
 }
 
-func (exec *Verifier) verifyFuncFactUseCondFactsAtGivenEnv(curEnv *env.Env, stmt parser.SpecFactStmt) error {
+func (verifier *Verifier) verifyFuncFactUseCondFactsAtGivenEnv(curEnv *env.Env, stmt parser.SpecFactStmt) error {
 	panic("not implemented")
 	// key := mem.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
 	// // searchNode, err := SearchInEnv(curEnv, &curEnv.ConcreteCondFactMemory.Mem, &key)

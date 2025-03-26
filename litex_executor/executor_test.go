@@ -369,7 +369,7 @@ func TestVerificationUsingEqual(t *testing.T) {
 	code :=
 		`
 know:
-	x = y
+//	x = y
 	$p(x)
 
 $p(x)

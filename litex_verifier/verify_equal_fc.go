@@ -21,7 +21,7 @@ func (verifier *Verifier) verifyTwoFcEqualSpecifically(left, right parser.Fc) (b
 	return false, nil
 }
 
-func (exec *Verifier) verifyTwoFcEqualSpecificallyAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
+func (verifier *Verifier) verifyTwoFcEqualSpecificallyAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: left, Values: []*parser.Fc{}}
 
 	// searchedNode, err := SearchInEnv(curEnv, &curEnv.ConcreteEqualMemory.Mem, &key)
@@ -57,7 +57,7 @@ func (exec *Verifier) verifyTwoFcEqualSpecificallyAtEnv(curEnv *env.Env, left pa
 	return false, nil
 }
 
-func (verifier *Verifier) paramSliceHaveEqualSpecifically(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
+func (verifier *Verifier) verifyParamSliceEqualSpecifically(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
 
 	// TODO: 25-3-26: 这里检查长度，未来确定不能让不同长度的f出现时，我去掉这一条
 	if len(*left) != len(*right) {
