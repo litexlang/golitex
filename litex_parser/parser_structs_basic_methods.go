@@ -20,7 +20,7 @@ func (stmt *FuncFactStmt) String() string {
 	}
 }
 
-func (stmt *RelationFactStmt) String() string {
+func (stmt *RelaFactStmt) String() string {
 	return fmt.Sprintf("%v %v %v", stmt.Params[0].String(), stmt.Opt.String(), stmt.Params[1].String())
 }
 

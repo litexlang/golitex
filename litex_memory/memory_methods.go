@@ -2,35 +2,35 @@ package litexmemory
 
 import parser "golitex/litex_parser"
 
-func NewPropMemory() *PropMemory {
-	return &PropMemory{}
+func NewPropMemory() *PropMem {
+	return &PropMem{}
 }
-func NewFnMemory() *FnMemory {
-	return &FnMemory{}
-}
-
-func NewObjMemory() *ObjMemory {
-	return &ObjMemory{}
+func NewFnMemory() *FnMem {
+	return &FnMem{}
 }
 
-func (mem *ObjMemory) Get(s string) (*ObjMemoryEntry, bool) {
+func NewObjMemory() *ObjMem {
+	return &ObjMem{}
+}
+
+func (mem *ObjMem) Get(s string) (*ObjMemoryEntry, bool) {
 	panic("TODO")
 }
 
-func (mem *ObjMemory) Set(pair string) (*ObjMemoryEntry, error) {
+func (mem *ObjMem) Set(pair string) (*ObjMemoryEntry, error) {
 	panic("Todo")
 }
 
-func (mem *PropMemory) Get(s string) (*PropMemoryEntry, bool) {
+func (mem *PropMem) Get(s string) (*PropMemoryEntry, bool) {
 	// TODO
 	return nil, false
 }
 
-func (mem *FnMemory) Get(s string) (*FnMemEntry, bool) {
+func (mem *FnMem) Get(s string) (*FnMemEntry, bool) {
 	//TODO
 	return nil, false
 }
 
-func (mem *ConcreteRelationFactMemory) NewRelationFact(fact *parser.RelationFactStmt) error {
+func (mem *RelaFactMemory) NewRelaFact(fact *parser.RelaFactStmt) error {
 	panic("")
 }

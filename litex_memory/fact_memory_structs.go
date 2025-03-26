@@ -26,7 +26,7 @@ type FuncFactMemDict struct {
 	Dict map[string]map[string]StoredFuncMemDictNode
 }
 
-func NewConcreteFuncFactMemDict() FuncFactMemDict {
+func NewFuncFactMemDict() FuncFactMemDict {
 	return FuncFactMemDict{map[string]map[string]StoredFuncMemDictNode{}}
 }
 func (factMem *FuncFactMemDict) InsertConcreteFuncFact(stmt *parser.FuncFactStmt) error {
@@ -73,9 +73,9 @@ func (factMem *FuncFactMemDict) GetNode(stmt *parser.FuncFactStmt) (*StoredFuncM
 // 	Mem ds.RedBlackTree[*FuncFactMemoryNode]
 // }
 
-type ConcreteRelationFactMemory struct{}
+type RelaFactMemory struct{}
 
-type ConcreteCondFactMemory struct{}
+type CondFactMemory struct{}
 
 // type RelationFactMemoryNode = parser.RelationFactStmt
 
@@ -92,7 +92,7 @@ type ConcreteCondFactMemory struct{}
 // 	CondFacts     []*parser.ConditionalFactStmt
 // }
 
-type ConcreteUniFactMemory struct {
+type UniFactMemory struct {
 }
 
 // ! 如果一个opt是读入2个参数，同时有交换性的，那可以以该fc为key，存所有和它等价的东西的列表
@@ -104,7 +104,7 @@ type EqualFactMemoryTreeNode struct {
 	Values  []*parser.Fc
 }
 
-type ConcreteEqualFactMemory struct {
+type EqualFactMemory struct {
 	Mem ds.RedBlackTree[*EqualFactMemoryTreeNode]
 }
 

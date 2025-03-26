@@ -8,9 +8,9 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) verifyTwoFcEqualSpecifically(left, right parser.Fc) (bool, error) {
+func (verifier *Verifier) TwoFcEqualSpec(left, right parser.Fc) (bool, error) {
 	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		verified, err := verifier.verifyTwoFcEqualSpecificallyAtEnv(curEnv, left, right)
+		verified, err := verifier.TwoFcEqualSpecAtEnv(curEnv, left, right)
 		if err != nil {
 			return false, err
 		}
@@ -21,11 +21,11 @@ func (verifier *Verifier) verifyTwoFcEqualSpecifically(left, right parser.Fc) (b
 	return false, nil
 }
 
-func (verifier *Verifier) verifyTwoFcEqualSpecificallyAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
+func (verifier *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: left, Values: []*parser.Fc{}}
 
 	// searchedNode, err := SearchInEnv(curEnv, &curEnv.ConcreteEqualMemory.Mem, &key)
-	searchedNode, err := curEnv.ConcreteEqualMemory.Mem.TreeSearch(&key)
+	searchedNode, err := curEnv.EqualFactMem.Mem.TreeSearch(&key)
 
 	if err != nil {
 		return false, err
@@ -57,7 +57,7 @@ func (verifier *Verifier) verifyTwoFcEqualSpecificallyAtEnv(curEnv *env.Env, lef
 	return false, nil
 }
 
-func (verifier *Verifier) verifyParamSliceEqualSpecifically(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
+func (verifier *Verifier) FcSliceEqualSpec(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
 
 	// TODO: 25-3-26: 这里检查长度，未来确定不能让不同长度的f出现时，我去掉这一条
 	if len(*left) != len(*right) {
@@ -66,7 +66,7 @@ func (verifier *Verifier) verifyParamSliceEqualSpecifically(left *[]parser.Fc, r
 
 	twoFuncFactHaveEqualParams := true
 	for i, knownParam := range *left {
-		verified, err := verifier.verifyTwoFcEqualSpecifically(knownParam, (*right)[i])
+		verified, err := verifier.TwoFcEqualSpec(knownParam, (*right)[i])
 		if err != nil {
 			return false, err
 		}

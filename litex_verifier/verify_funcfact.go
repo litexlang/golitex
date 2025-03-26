@@ -5,12 +5,12 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) verifyFuncFact(stmt *parser.FuncFactStmt) error {
+func (verifier *Verifier) FuncFact(stmt *parser.FuncFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 	verifier.roundAddOne()
 	defer verifier.roundMinusOne()
 
-	err := verifier.verifyFuncFactLiterally(stmt)
+	err := verifier.FuncFactSpec(stmt)
 	if err != nil {
 		return err
 	}
@@ -34,15 +34,15 @@ func (verifier *Verifier) verifyFuncFact(stmt *parser.FuncFactStmt) error {
 	return nil
 }
 
-func (verifier *Verifier) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) error {
+func (verifier *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) error {
 	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		searchedNode, got := curEnv.ConcreteFuncFactMemory.GetNode(stmt)
+		searchedNode, got := curEnv.FuncFactMem.GetNode(stmt)
 		if !got {
 			continue
 		}
 
 		for _, knownFact := range searchedNode.Facts {
-			verified, err := verifier.verifyParamSliceEqualSpecifically(&knownFact.Params, &stmt.Params)
+			verified, err := verifier.FcSliceEqualSpec(&knownFact.Params, &stmt.Params)
 
 			if err != nil {
 				return err
@@ -57,10 +57,10 @@ func (verifier *Verifier) verifyFuncFactLiterally(stmt *parser.FuncFactStmt) err
 	return nil
 }
 
-func (verifier *Verifier) verifyFuncFactUseCondFacts(stmt parser.SpecFactStmt) error {
+func (verifier *Verifier) FuncFactCond(stmt parser.SpecFactStmt) error {
 	// Use cond fact to verify
 	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		err := verifier.verifyFuncFactUseCondFactsAtGivenEnv(curEnv, stmt)
+		err := verifier.FuncFactCondAtEnv(curEnv, stmt)
 		if err != nil {
 			return err
 		}
@@ -71,7 +71,7 @@ func (verifier *Verifier) verifyFuncFactUseCondFacts(stmt parser.SpecFactStmt) e
 	return nil
 }
 
-func (verifier *Verifier) verifyFuncFactUseCondFactsAtGivenEnv(curEnv *env.Env, stmt parser.SpecFactStmt) error {
+func (verifier *Verifier) FuncFactCondAtEnv(curEnv *env.Env, stmt parser.SpecFactStmt) error {
 	panic("not implemented")
 	// key := mem.CondFactMemoryNode{ThenFactAsKey: stmt, CondFacts: nil}
 	// // searchNode, err := SearchInEnv(curEnv, &curEnv.ConcreteCondFactMemory.Mem, &key)

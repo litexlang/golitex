@@ -1,3 +1,4 @@
+// verifier 的方法的命名方式：factType+?UseWhatMemToVerify+?atEnv, 比如 RelaFactSpecAtEnv 就是说 证明 relaFact, 方法是用SpecFact，在当前环境里.
 package litexverifier
 
 import (
@@ -6,14 +7,14 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) VerifyFactStmt(stmt parser.FactStmt) error {
+func (verifier *Verifier) FactStmt(stmt parser.FactStmt) error {
 	switch stmt := stmt.(type) {
 	case *parser.FuncFactStmt:
-		return verifier.verifyFuncFact(stmt)
-	case *parser.RelationFactStmt:
-		return verifier.verifyRelationFact(stmt)
+		return verifier.FuncFact(stmt)
+	case *parser.RelaFactStmt:
+		return verifier.RelaFact(stmt)
 	case *parser.ConditionalFactStmt:
-		return verifier.verifyCondFact(stmt)
+		return verifier.CondFact(stmt)
 	default:
 		return nil
 	}
