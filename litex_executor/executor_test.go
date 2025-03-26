@@ -359,7 +359,7 @@ func randEqualFact() *parser.RelationFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.RelationFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{FromPkg: "", Value: "="}}
+	return &parser.RelationFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", Value: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

@@ -16,7 +16,7 @@ type Env struct {
 	FnMemory   mem.FnMemory
 
 	// 这里必须区分Concrete和Generic
-	ConcreteFuncFactMemory     mem.ConcreteFuncFactMemory
+	ConcreteFuncFactMemory     mem.FuncFactMemDict
 	ConcreteCondFactMemory     mem.ConcreteCondFactMemory
 	ConcreteRelationFactMemory mem.ConcreteRelationFactMemory
 	ConcreteUniFactMemory      mem.ConcreteUniFactMemory
@@ -31,7 +31,7 @@ func NewEnv(parent *Env) *Env {
 		PropMemory: *mem.NewPropMemory(),
 		FnMemory:   *mem.NewFnMemory(),
 
-		ConcreteFuncFactMemory:     mem.NewConcreteFuncFactMemory(),
+		ConcreteFuncFactMemory:     mem.NewConcreteFuncFactMemDict(),
 		ConcreteRelationFactMemory: mem.ConcreteRelationFactMemory{},
 		ConcreteCondFactMemory:     mem.ConcreteCondFactMemory{},
 

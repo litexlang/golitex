@@ -5,11 +5,11 @@ import "fmt"
 type Fc interface {
 	fc()
 	String() string
-	PkgName() string
+	GetPkgName() string
 }
 
 type FcAtom struct {
-	FromPkg string
+	PkgName string
 	Value   string
 }
 
@@ -22,16 +22,16 @@ type FcFnCallPipeSeg struct {
 	Params []Fc
 }
 
-func (f *FcAtom) fc()                   {}
-func (f *FcFnCallPipe) fc()             {}
-func (f *FcAtom) PkgName() string       { return f.FromPkg }
-func (f *FcFnCallPipe) PkgName() string { return f.FnName.FromPkg }
+func (f *FcAtom) fc()                      {}
+func (f *FcFnCallPipe) fc()                {}
+func (f *FcAtom) GetPkgName() string       { return f.PkgName }
+func (f *FcFnCallPipe) GetPkgName() string { return f.FnName.PkgName }
 
 func (f *FcAtom) String() string {
-	if f.FromPkg == "" {
+	if f.PkgName == "" {
 		return string(f.Value)
 	} else {
-		return fmt.Sprintf("%s::%s", f.FromPkg, string(f.Value))
+		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Value))
 	}
 }
 
