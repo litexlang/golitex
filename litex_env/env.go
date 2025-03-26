@@ -31,9 +31,13 @@ func NewEnv(parent *Env) *Env {
 		PropMemory: *mem.NewPropMemory(),
 		FnMemory:   *mem.NewFnMemory(),
 
-		ConcreteFuncFactMemory:     mem.ConcreteFuncFactMemory{Mem: *ds.NewRedBlackTree(cmp.CmpSpecFuncFact)}, // 需要把env包和memory包分离的一个原因就是，这里会引入cmp，而cmp包要用mem的节点，会cyclic
-		ConcreteRelationFactMemory: mem.ConcreteRelationFactMemory{Mem: *ds.NewRedBlackTree(cmp.SpecRelationFactCompare)},
-		ConcreteCondFactMemory:     mem.ConcreteCondFactMemory{Mem: *ds.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
+		ConcreteFuncFactMemory:     mem.NewConcreteFuncFactMemory(),
+		ConcreteRelationFactMemory: mem.ConcreteRelationFactMemory{},
+		ConcreteCondFactMemory:     mem.ConcreteCondFactMemory{},
+
+		// ConcreteFuncFactMemory:     mem.ConcreteFuncFactMemory{Mem: *ds.NewRedBlackTree(cmp.CmpSpecFuncFact)}, // 需要把env包和memory包分离的一个原因就是，这里会引入cmp，而cmp包要用mem的节点，会cyclic
+		// ConcreteRelationFactMemory: mem.ConcreteRelationFactMemory{Mem: *ds.NewRedBlackTree(cmp.SpecRelationFactCompare)},
+		// ConcreteCondFactMemory:     mem.ConcreteCondFactMemory{Mem: *ds.NewRedBlackTree(cmp.CondFactMemoryTreeNodeCompare)},
 		// UniFactMemory:      *NewUniFactMemory(),
 		ConcreteUniFactMemory: mem.ConcreteUniFactMemory{},
 		ConcreteEqualMemory:   mem.ConcreteEqualFactMemory{Mem: *ds.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
@@ -65,11 +69,12 @@ func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
 }
 
 func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
-	err := env.ConcreteFuncFactMemory.Mem.Insert(fact)
-	if err != nil {
-		return err
-	}
-	return nil
+	panic("not implemented")
+	// err := env.ConcreteFuncFactMemory.Mem.Insert(fact)
+	// if err != nil {
+	// 	return err
+	// }
+	// return nil
 }
 
 func (env *Env) NewRelationFact(stmt *parser.RelationFactStmt) error {
@@ -116,19 +121,20 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 }
 
 func (env *Env) NewCondFact(fact *parser.ConditionalFactStmt) error {
-	for _, f := range fact.ThenFacts {
-		node, err := env.ConcreteCondFactMemory.Mem.TreeSearch(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{}})
-		if err != nil {
-			return err
-		}
-		if node != nil {
-			node.Key.CondFacts = append(node.Key.CondFacts, fact)
-		} else {
-			err := env.ConcreteCondFactMemory.Mem.Insert(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{fact}})
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	panic("not implemented")
+	// for _, f := range fact.ThenFacts {
+	// node, err := env.ConcreteCondFactMemory.Mem.TreeSearch(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{}})
+	// if err != nil {
+	// 	return err
+	// }
+	// if node != nil {
+	// 	node.Key.CondFacts = append(node.Key.CondFacts, fact)
+	// } else {
+	// 	err := env.ConcreteCondFactMemory.Mem.Insert(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{fact}})
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+	// }
+	// return nil
 }

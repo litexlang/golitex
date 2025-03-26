@@ -8,26 +8,37 @@ import (
 // Define type PropName to signify functionality of a string
 type PropName string
 
-type FuncFactMemoryNode = parser.FuncFactStmt
+type FuncMemoryItem struct{ facts [][]parser.SpecFactParams }
+type ConcreteFuncFactMemory struct{ dict map[string]FuncMemoryItem }
 
-type ConcreteFuncFactMemory struct {
-	Mem ds.RedBlackTree[*FuncFactMemoryNode]
+func NewConcreteFuncFactMemory() ConcreteFuncFactMemory {
+	return ConcreteFuncFactMemory{map[string]FuncMemoryItem{}}
 }
 
-type RelationFactMemoryNode = parser.RelationFactStmt
+// type FuncFactMemoryNode = parser.FuncFactStmt
 
-type ConcreteRelationFactMemory struct {
-	Mem ds.RedBlackTree[*RelationFactMemoryNode]
-}
+// type ConcreteFuncFactMemory struct {
+// 	Mem ds.RedBlackTree[*FuncFactMemoryNode]
+// }
 
-type ConcreteCondFactMemory struct {
-	Mem ds.RedBlackTree[*CondFactMemoryNode]
-}
+type ConcreteRelationFactMemory struct{}
 
-type CondFactMemoryNode struct {
-	ThenFactAsKey parser.SpecFactStmt
-	CondFacts     []*parser.ConditionalFactStmt
-}
+type ConcreteCondFactMemory struct{}
+
+// type RelationFactMemoryNode = parser.RelationFactStmt
+
+// type ConcreteRelationFactMemory struct {
+// 	Mem ds.RedBlackTree[*RelationFactMemoryNode]
+// }
+
+// type ConcreteCondFactMemory struct {
+// 	Mem ds.RedBlackTree[*CondFactMemoryNode]
+// }
+
+// type CondFactMemoryNode struct {
+// 	ThenFactAsKey parser.SpecFactStmt
+// 	CondFacts     []*parser.ConditionalFactStmt
+// }
 
 type ConcreteUniFactMemory struct {
 }
