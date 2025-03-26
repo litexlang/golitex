@@ -172,8 +172,8 @@ func (t *RedBlackTree[T]) InOrderTraversal(node *Node[T], visit func(key T) erro
 	return nil
 }
 
-// Search searches for a key in the Red-Black Tree and returns the corresponding node if found.
-func (t *RedBlackTree[T]) Search(key T) (*Node[T], error) {
+// TreeSearch searches for a key in the Red-Black Tree and returns the corresponding node if found.
+func (t *RedBlackTree[T]) TreeSearch(key T) (*Node[T], error) {
 	return t.searchNode(t.Root, key)
 }
 

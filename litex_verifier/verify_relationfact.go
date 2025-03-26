@@ -29,7 +29,7 @@ func (verifier *Verifier) verifyRelationFactLiterally(stmt *parser.RelationFactS
 		return nil
 	}
 
-	return verifier.firstRoundVerifySpecFactLiterally(stmt)
+	return verifier.verifyFuncFactUseCondFacts(stmt)
 }
 
 func (exec *Verifier) verifyRelationFactSpecifically(curEnv *env.Env, stmt *parser.RelationFactStmt) error {

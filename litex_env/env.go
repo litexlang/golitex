@@ -91,7 +91,7 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 		Values:  []*parser.Fc{&stmt.Params[0]},
 	}
 
-	leftSearched, err := env.ConcreteEqualMemory.Mem.Search(left)
+	leftSearched, err := env.ConcreteEqualMemory.Mem.TreeSearch(left)
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 	}
 
 	// left = right is eql to right = left, so we memorize both left = right and right = left
-	rightSearched, err := env.ConcreteEqualMemory.Mem.Search(right)
+	rightSearched, err := env.ConcreteEqualMemory.Mem.TreeSearch(right)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (env *Env) NewEqualFact(stmt *parser.RelationFactStmt) error {
 
 func (env *Env) NewCondFact(fact *parser.ConditionalFactStmt) error {
 	for _, f := range fact.ThenFacts {
-		node, err := env.ConcreteCondFactMemory.Mem.Search(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{}})
+		node, err := env.ConcreteCondFactMemory.Mem.TreeSearch(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{}})
 		if err != nil {
 			return err
 		}
