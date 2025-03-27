@@ -24,8 +24,11 @@ func (exec *Executor) stmt(stmt parser.Stmt) error {
 }
 
 func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
-	if err := exec.env.NewKnownFact(stmt); err != nil {
-		return err
+	for _, fact := range stmt.Facts {
+		err := exec.env.NewFact(fact)
+		if err != nil {
+			return err
+		}
 	}
 	exec.success("%v", stmt)
 	return nil

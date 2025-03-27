@@ -6,27 +6,25 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (env *Env) NewKnownFact(stmt *parser.KnowStmt) error {
-	for _, fact := range stmt.Facts {
-		switch f := fact.(type) {
-		case *parser.FuncFactStmt:
-			if err := env.NewFuncFact(f); err != nil {
-				return err
-			}
-		case *parser.RelaFactStmt:
-			if err := env.NewRelaFact(f); err != nil {
-				return err
-			}
-		case *parser.ConditionalFactStmt:
-			if err := env.NewCondFact(f); err != nil {
-				return err
-			}
-		default:
-			return fmt.Errorf("unknown fact type: %T", fact)
-		}
+func (env *Env) NewFact(stmt parser.FactStmt) error {
+	switch f := stmt.(type) {
+	case *parser.FuncFactStmt:
+		return env.NewFuncFact(f)
+	case *parser.RelaFactStmt:
+		return env.NewRelaFact(f)
+	case *parser.ConditionalFactStmt:
+		return env.NewCondFact(f)
+	default:
+		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
-	return nil
 }
+
+// func (env *Env) ExecKnowStmt(stmt *parser.KnowStmt) error {
+// 	for _, fact := range stmt.Facts {
+// 		env.NewFact(fact)
+// 	}
+// 	return nil
+// }
 
 func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
 	err := env.FuncFactMem.InsertConcreteFuncFact(fact)

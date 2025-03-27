@@ -4,17 +4,30 @@ import parser "golitex/litex_parser"
 
 func (verifier *Verifier) CondFact(stmt *parser.ConditionalFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
+	verifier.roundAddOne()
+	defer verifier.roundMinusOne()
 
-	return verifier.CondFactSpec(stmt)
+	err := verifier.CondFactSpec(stmt)
+	if err != nil {
+		return err
+	}
+
+	if !verifier.round1() {
+		return nil
+	}
+
+	return verifier.CondFactCond(stmt)
 }
 
 func (verifier *Verifier) CondFactSpec(stmt *parser.ConditionalFactStmt) error {
 	verifier.newEnv()
 	defer verifier.deleteEnv()
 
-	err := verifier.env.NewKnownFact(&parser.KnowStmt{Facts: stmt.CondFacts})
-	if err != nil {
-		return err
+	for _, condFact := range stmt.CondFacts {
+		err := verifier.env.NewFact(condFact)
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
@@ -23,13 +36,16 @@ func (verifier *Verifier) CondFactSpec(stmt *parser.ConditionalFactStmt) error {
 			return err
 		}
 		if !verifier.true() {
-			return nil
-		} else {
 			verifier.unknown("%v is unknown: %v is unknown", stmt, thenFact)
+			return nil
 		}
 	}
 
 	verifier.success("%v is true", stmt)
 
 	return nil
+}
+
+func (verifier *Verifier) CondFactCond(stmt *parser.ConditionalFactStmt) error {
+	panic("")
 }
