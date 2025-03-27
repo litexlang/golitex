@@ -102,7 +102,7 @@ func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]FcFnCallPipeSeg, error
 func (parser *Parser) parseFcAtom() (FcAtom, error) {
 	value, err := parser.next()
 	if err != nil {
-		return FcAtom{Value: ""}, err
+		return FcAtom{OptName: ""}, err
 	}
 
 	fromPkg := ""
@@ -110,15 +110,15 @@ func (parser *Parser) parseFcAtom() (FcAtom, error) {
 		fromPkg = value
 		err := parser.skip(KeywordColonColon)
 		if err != nil {
-			return FcAtom{Value: ""}, err
+			return FcAtom{OptName: ""}, err
 		}
 		value, err = parser.next()
 		if err != nil {
-			return FcAtom{Value: ""}, err
+			return FcAtom{OptName: ""}, err
 		}
 	}
 
-	return FcAtom{PkgName: fromPkg, Value: value}, nil
+	return FcAtom{PkgName: fromPkg, OptName: value}, nil
 }
 
 func (parser *Parser) ParseFc() (Fc, error) {
@@ -150,7 +150,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 		}
 
 		left = &FcFnCallPipe{
-			FcAtom{Value: curToken},
+			FcAtom{OptName: curToken},
 			[]FcFnCallPipeSeg{{[]Fc{left, right}}},
 		}
 	}
@@ -171,7 +171,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 			return nil, err
 		}
 		return &FcFnCallPipe{
-			FcAtom{Value: unaryOp},
+			FcAtom{OptName: unaryOp},
 			[]FcFnCallPipeSeg{{[]Fc{right}}},
 		}, nil
 	} else {
@@ -184,34 +184,34 @@ func (parser *Parser) parseNumberStr() (*FcAtom, error) {
 	left, err := parser.next()
 
 	if err != nil {
-		return &FcAtom{Value: ""}, err
+		return &FcAtom{OptName: ""}, err
 	}
 
 	if left[0] == '0' {
-		return &FcAtom{Value: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
+		return &FcAtom{OptName: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
 	}
 
 	_, err = strconv.Atoi(left)
 	if err != nil {
-		return &FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
+		return &FcAtom{OptName: ""}, fmt.Errorf("invalid number: %s", left)
 	}
 
 	if parser.is(KeywordDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {
-			return &FcAtom{Value: left}, nil
+			return &FcAtom{OptName: left}, nil
 		} else {
 			parser.skip()
 			right, err := parser.next()
 
 			if err != nil {
-				return &FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", right)
+				return &FcAtom{OptName: ""}, fmt.Errorf("invalid number: %s", right)
 			}
 
-			return &FcAtom{Value: left + "." + right}, nil
+			return &FcAtom{OptName: left + "." + right}, nil
 		}
 	}
 
-	return &FcAtom{Value: left}, nil
+	return &FcAtom{OptName: left}, nil
 }

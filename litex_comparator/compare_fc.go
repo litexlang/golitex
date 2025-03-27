@@ -71,13 +71,13 @@ func compareFcAtom(left, right *parser.FcAtom) (int, error) {
 		}
 	}
 
-	if len(left.Value) != len(right.Value) {
-		return len(left.Value) - len(right.Value), nil
+	if len(left.OptName) != len(right.OptName) {
+		return len(left.OptName) - len(right.OptName), nil
 	}
 
-	for i := 0; i < len(left.Value); i++ {
-		if left.Value[i] != right.Value[i] {
-			return int(left.Value[i]) - int(right.Value[i]), nil
+	for i := 0; i < len(left.OptName); i++ {
+		if left.OptName[i] != right.OptName[i] {
+			return int(left.OptName[i]) - int(right.OptName[i]), nil
 		}
 	}
 

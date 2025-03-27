@@ -37,7 +37,7 @@ func (verifier *Verifier) RelaFactSpec(stmt *parser.RelaFactStmt) error {
 }
 
 func (verifier *Verifier) RelaFactSpecAtEnv(curEnv *env.Env, stmt *parser.RelaFactStmt) error {
-	if string(stmt.Opt.Value) == parser.KeywordEqual {
+	if string(stmt.Opt.OptName) == parser.KeywordEqual {
 		return verifier.EqualFactSpecAtEnv(curEnv, stmt)
 	}
 
