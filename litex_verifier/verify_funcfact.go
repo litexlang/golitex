@@ -7,8 +7,6 @@ import (
 
 func (verifier *Verifier) FuncFact(stmt *parser.FuncFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
-	verifier.roundAddOne()
-	defer verifier.roundMinusOne()
 
 	err := verifier.FuncFactSpec(stmt)
 	if err != nil {
@@ -76,13 +74,16 @@ func (verifier *Verifier) FuncFactCondAtEnv(curEnv *env.Env, stmt *parser.FuncFa
 		return nil
 	}
 
+LoopOverFacts:
 	for _, knownFact := range searched.Facts {
 		for _, f := range knownFact.Fact.CondFacts {
 			err := verifier.FactStmt(f)
 			if err != nil {
 				return err
 			}
-			verifier.clear()
+			if !verifier.true() {
+				continue LoopOverFacts
+			}
 		}
 
 		verified, err := verifier.FcSliceEqualSpec(&knownFact.Params, &stmt.Params)

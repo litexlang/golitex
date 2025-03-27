@@ -7,6 +7,9 @@ import (
 )
 
 func (verifier *Verifier) FactStmt(stmt parser.FactStmt) error {
+	verifier.roundAddOne()
+	defer verifier.roundMinusOne()
+
 	switch stmt := stmt.(type) {
 	case *parser.FuncFactStmt:
 		return verifier.FuncFact(stmt)

@@ -8,9 +8,6 @@ import (
 func (verifier *Verifier) RelaFact(stmt *parser.RelaFactStmt) error {
 	// TODO:  : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
-	verifier.roundAddOne()
-	defer verifier.roundMinusOne()
-
 	err := verifier.RelaFactSpec(stmt)
 	if err != nil {
 		return err
