@@ -2,26 +2,42 @@ package litexmemory
 
 import (
 	"fmt"
+	msg "golitex/litex_messages"
 	parser "golitex/litex_parser"
+	"strings"
 )
 
 func (fact *StoredFuncFact) String(atom parser.FcAtom) string {
-	ret := ""
+	var builder strings.Builder
+
 	if !fact.IsTrue {
-		ret = "not"
+		builder.WriteString("not")
 	}
-	ret += parser.KeywordDollar + atom.String() + "(" + parser.FcSliceString(&fact.Params) + ")"
-	return ret
+
+	builder.WriteString(parser.KeywordDollar)
+	builder.WriteString(atom.String())
+	builder.WriteByte('(')
+	builder.WriteString(parser.FcSliceString(&fact.Params))
+	builder.WriteByte(')')
+
+	return builder.String()
 }
 
 func (fact *StoredCondFuncFact) String(atom parser.FcAtom) string {
-	ret := "when:\n"
+	var builder strings.Builder
+
+	builder.WriteString("when:\n")
 	for _, condFact := range *fact.CondFacts {
-		ret += fmt.Sprintf("    %s\n", condFact.String())
+		builder.WriteString(msg.LineHead4Indents(condFact.String(), 1))
+		builder.WriteByte('\n')
 	}
+
 	newFact := &StoredFuncFact{fact.IsTrue, fact.Params}
-	ret += fmt.Sprintf("    then:\n        %s\n", newFact.String(atom))
-	return ret
+	builder.WriteString("    then:\n")
+	builder.WriteString(msg.LineHead4Indents(newFact.String(atom), 2))
+	builder.WriteByte('\n')
+
+	return builder.String()
 }
 
 func NewFuncFactMemDict() *FuncFactMemDict {

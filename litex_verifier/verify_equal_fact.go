@@ -11,7 +11,7 @@ func (verifier *Verifier) EqualFactSpecAtEnv(curEnv *env.Env, stmt *parser.RelaF
 		return err
 	}
 	if verified {
-		verifier.success("%v is true, verified by %v", stmt, stmt.Params[0])
+		verifier.success(stmt.String(), stmt.Params[0].String())
 		return nil
 	}
 	return nil
