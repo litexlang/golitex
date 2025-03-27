@@ -6,10 +6,22 @@ import (
 )
 
 func (fact *StoredFuncFact) String(atom parser.FcAtom) string {
-	if fact.IsTrue {
-		return fmt.Sprintf("%v%s(%s)", parser.KeywordDollar, atom.String(), parser.FcSliceString(&fact.Params))
+	ret := ""
+	if !fact.IsTrue {
+		ret = "not"
 	}
-	return fmt.Sprintf("not %v%s(%s)", parser.KeywordDollar, atom.String(), parser.FcSliceString(&fact.Params))
+	ret += parser.KeywordDollar + atom.String() + "(" + parser.FcSliceString(&fact.Params) + ")"
+	return ret
+}
+
+func (fact *StoredCondFuncFact) String(atom parser.FcAtom) string {
+	ret := "when:\n"
+	for _, condFact := range *fact.CondFacts {
+		ret += fmt.Sprintf("    %s\n", condFact.String())
+	}
+	newFact := &StoredFuncFact{fact.IsTrue, fact.Params}
+	ret += fmt.Sprintf("    then:\n        %s\n", newFact.String(atom))
+	return ret
 }
 
 func NewFuncFactMemDict() *FuncFactMemDict {
@@ -92,9 +104,35 @@ func (factMem *CondFactMemDict) insertFuncFact(condStmt *parser.CondFactStmt, st
 		}
 	}
 
-	node.Facts = append(node.Facts, StoredCondFuncFact{stmt.IsTrue, &stmt.Params, &condStmt.CondFacts})
+	node.Facts = append(node.Facts, StoredCondFuncFact{stmt.IsTrue, stmt.Params, &condStmt.CondFacts})
 
 	// 更新回字典
 	factMem.FuncFactsDict[pkgName][optName] = node
 	return nil
+}
+
+func (factMem *CondFactMemDict) GetNode(stmt parser.SpecFactStmt) (StoredCondMemDictNode, bool) {
+	switch s := stmt.(type) {
+	case *parser.FuncFactStmt:
+		return factMem.GetFuncFactNode(s)
+	case *parser.RelaFactStmt:
+		panic("not implemented")
+	default:
+		panic("invalid type")
+	}
+}
+
+func (factMem *CondFactMemDict) GetFuncFactNode(stmt *parser.FuncFactStmt) (*StoredCondFuncMemDictNode, bool) {
+	pkgName := stmt.Opt.PkgName
+	optName := stmt.Opt.OptName
+
+	if _, pkgExists := factMem.FuncFactsDict[pkgName]; !pkgExists {
+		return &StoredCondFuncMemDictNode{}, false
+	}
+
+	if ret, optExists := factMem.FuncFactsDict[pkgName][optName]; !optExists {
+		return &StoredCondFuncMemDictNode{}, false
+	} else {
+		return &ret, true
+	}
 }

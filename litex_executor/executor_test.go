@@ -417,15 +417,13 @@ func TestCondVerifier(t *testing.T) {
 	code :=
 		`
 know:
-	x = y
-
-when:
-	$p(y)
-	then:
-		$p(x)
+	when:
+		$q(a)
+		then:
+			$p(x)
 
 know:
-	$p(y)
+	$q(a)
 
 $p(x)
 `

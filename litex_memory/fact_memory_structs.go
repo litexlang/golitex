@@ -21,9 +21,14 @@ type FuncFactMemDict struct {
 //		Mem ds.RedBlackTree[*FuncFactMemoryNode]
 //	}
 
+type StoredCondMemDictNode interface{ storedCondFuncFact() }
+
+func (m *StoredCondFuncMemDictNode) storedCondFuncFact() {}
+func (m *StoredCondRelaMemDictNode) storedCondFuncFact() {}
+
 type StoredCondFuncFact struct {
 	IsTrue    bool
-	Params    *[]parser.Fc
+	Params    []parser.Fc
 	CondFacts *[]parser.FactStmt
 }
 
