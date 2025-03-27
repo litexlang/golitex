@@ -21,18 +21,21 @@ type FuncFactMemDict struct {
 //		Mem ds.RedBlackTree[*FuncFactMemoryNode]
 //	}
 
-type StoredCondFact struct {
+type StoredCondFuncFact struct {
 	IsTrue    bool
 	Params    *[]parser.Fc
 	CondFacts *[]parser.FactStmt
 }
 
-type StoredCondMemDictNode struct {
-	Facts []StoredCondFact
+type StoredCondFuncMemDictNode struct {
+	Facts []StoredCondFuncFact
 }
 
+type StoredCondRelaMemDictNode struct{}
+
 type CondFactMemDict struct {
-	Dict map[string]map[string]StoredCondMemDictNode
+	FuncFactsDict map[string]map[string]StoredCondFuncMemDictNode
+	RelaFactsDict map[string]map[string]StoredCondRelaMemDictNode
 }
 
 type RelaFactMem struct{}

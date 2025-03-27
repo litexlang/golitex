@@ -424,8 +424,10 @@ when:
 	then:
 		$p(x)
 
-$p(y)
-		
+know:
+	$p(y)
+
+$p(x)
 `
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)

@@ -55,38 +55,46 @@ func (factMem *FuncFactMemDict) GetNode(stmt *parser.FuncFactStmt) (*StoredFuncM
 }
 
 func NewCondFactMemDict() *CondFactMemDict {
-	return &CondFactMemDict{map[string]map[string]StoredCondMemDictNode{}}
+	return &CondFactMemDict{map[string]map[string]StoredCondFuncMemDictNode{}, map[string]map[string]StoredCondRelaMemDictNode{}}
 }
 
 func (factMem *CondFactMemDict) Insert(condStmt *parser.CondFactStmt) error {
 	for _, stmt := range condStmt.ThenFacts {
 		switch s := stmt.(type) {
 		case *parser.FuncFactStmt:
-			// 检查 pkgName 是否存在，不存在则初始化
-			pkgName := s.Opt.PkgName
-			optName := s.Opt.OptName
-
-			if _, pkgExists := factMem.Dict[pkgName]; !pkgExists {
-				factMem.Dict[pkgName] = make(map[string]StoredCondMemDictNode)
+			err := factMem.insertFuncFact(condStmt, s)
+			if err != nil {
+				return err
 			}
-
-			// 获取或初始化节点
-			node, nodeExists := factMem.Dict[pkgName][optName]
-			if !nodeExists {
-				node = StoredCondMemDictNode{
-					Facts: []StoredCondFact{},
-				}
-			}
-
-			// TODO: 处理 FuncFactStmt 并更新 node.Facts
-			node.Facts = append(node.Facts, StoredCondFact{s.IsTrue, &s.Params, &condStmt.CondFacts})
-
-			// 更新回字典
-			factMem.Dict[pkgName][optName] = node
-
+		case *parser.RelaFactStmt:
+			panic("not implemented")
 		default:
 			return fmt.Errorf("unknown fact type: %T", stmt)
 		}
 	}
+	return nil
+}
+
+func (factMem *CondFactMemDict) insertFuncFact(condStmt *parser.CondFactStmt, stmt *parser.FuncFactStmt) error {
+	// 检查 pkgName 是否存在，不存在则初始化
+	pkgName := stmt.Opt.PkgName
+	optName := stmt.Opt.OptName
+
+	if _, pkgExists := factMem.FuncFactsDict[pkgName]; !pkgExists {
+		factMem.FuncFactsDict[pkgName] = make(map[string]StoredCondFuncMemDictNode)
+	}
+
+	// 获取或初始化节点
+	node, nodeExists := factMem.FuncFactsDict[pkgName][optName]
+	if !nodeExists {
+		node = StoredCondFuncMemDictNode{
+			Facts: []StoredCondFuncFact{},
+		}
+	}
+
+	node.Facts = append(node.Facts, StoredCondFuncFact{stmt.IsTrue, &stmt.Params, &condStmt.CondFacts})
+
+	// 更新回字典
+	factMem.FuncFactsDict[pkgName][optName] = node
 	return nil
 }
