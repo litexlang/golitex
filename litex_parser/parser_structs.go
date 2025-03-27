@@ -37,14 +37,14 @@ type DefConcreteFnStmt struct {
 	ThenFacts      []FactStmt
 }
 
-type ConcreteForallStmt struct {
+type UniFactStmt struct {
 	Params         []string
 	ParamTypes     []Fc // 注意到函数的返回值也可以是集合，所以这里是Fc，而不是string
 	ParamCondFacts []FactStmt
 	ThenFacts      []SpecFactStmt
 }
 
-type GenericForallStmt struct {
+type GenericUniStmt struct {
 	TypeParams     []string
 	TypeInterfaces []FcAtom
 	Params         []string

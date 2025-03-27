@@ -38,7 +38,7 @@ func (c *DefInterfaceStmt) String() string           { panic("") }
 func (f *DefTypeStmt) String() string                { panic("") }
 func (c *DefConcreteNormalPropStmt) String() string  { panic("") }
 func (f *DefConcreteFnStmt) String() string          { panic("") }
-func (l *ConcreteForallStmt) String() string         { panic("") }
+func (l *UniFactStmt) String() string                { panic("") }
 func (f *ClaimProveStmt) String() string             { panic("") }
 func (s *DefConcreteExistPropStmt) String() string   { panic("") }
 func (s *HaveStmt) String() string                   { panic("") }
@@ -66,4 +66,4 @@ func (fact *CondFactStmt) String() string {
 	}
 	return builder.String()
 }
-func (s *GenericForallStmt) String() string { panic("") }
+func (s *GenericUniStmt) String() string { panic("") }
