@@ -77,6 +77,14 @@ func (verifier *Verifier) FuncFactCondAtEnv(curEnv *env.Env, stmt *parser.FuncFa
 	}
 
 	for _, knownFact := range searched.Facts {
+		for _, f := range knownFact.Fact.CondFacts {
+			err := verifier.FactStmt(f)
+			if err != nil {
+				return err
+			}
+			verifier.clear()
+		}
+
 		verified, err := verifier.FcSliceEqualSpec(&knownFact.Params, &stmt.Params)
 
 		if err != nil {
@@ -84,7 +92,7 @@ func (verifier *Verifier) FuncFactCondAtEnv(curEnv *env.Env, stmt *parser.FuncFa
 		}
 
 		if verified {
-			verifier.success(stmt.String(), knownFact.String(stmt.Opt))
+			verifier.success(stmt.String(), knownFact.Fact.String())
 			return nil
 		}
 	}

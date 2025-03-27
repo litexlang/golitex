@@ -77,3 +77,8 @@ func (e *Verifier) unknown(format string, args ...any) {
 	e.unknownMsg(format, args...)
 	e.Output = VerifierUnknown
 }
+
+func (verifier *Verifier) clear() {
+	verifier.Message = &[]string{}
+	verifier.Output = VerifierUnknown
+}
