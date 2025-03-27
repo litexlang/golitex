@@ -2,7 +2,6 @@
 package litexverifier
 
 import (
-	"fmt"
 	env "golitex/litex_env"
 	parser "golitex/litex_parser"
 )
@@ -43,12 +42,6 @@ func NewVerifier(curEnv *env.Env) *Verifier {
 	}
 }
 
-func (e *Verifier) newMessage(format string, args ...interface{}) {
-	msg := fmt.Sprintf(format, args...)
-	// *e.Message = append(*e.Message, msg) // 新消息插在后面
-	*e.Message = append([]string{msg}, *e.Message...) // 新消息插入到最前面
-}
-
 func (e *Verifier) roundAddOne() {
 	e.searchRound++
 }
@@ -66,8 +59,7 @@ func (e *Verifier) round1() bool {
 }
 
 func (e *Verifier) success(stmtString, storedStmtString string) {
-	message := fmt.Sprintf("true:\n%v\nverified by\n%v", stmtString, storedStmtString)
-	*e.Message = append(*e.Message, message)
+	e.successMsg(stmtString, storedStmtString)
 	e.Output = VerifierTrue
 }
 
@@ -82,8 +74,6 @@ func (e *Verifier) deleteEnv() {
 }
 
 func (e *Verifier) unknown(format string, args ...any) {
-	message := fmt.Sprintf(format, args...)
-	*e.Message = append([]string{message}, *e.Message...) // 新消息插入到最前面
-	// *e.Message = append(*e.Message, message) // 新消息插在后面
+	e.unknownMsg(format, args...)
 	e.Output = VerifierUnknown
 }
