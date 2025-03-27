@@ -7,11 +7,17 @@ import (
 )
 
 func (stmt *KnowStmt) String() string {
-	ret := "know:\n"
-	for _, fact := range stmt.Facts {
-		ret += fmt.Sprintf("    %s\n", fact.String())
+	var builder strings.Builder
+
+	builder.WriteString("know:\n")
+	if len(stmt.Facts) > 0 {
+		for i := 0; i < len(stmt.Facts)-1; i++ {
+			builder.WriteString(msg.LineHead4Indents(stmt.Facts[i].String(), 1))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(msg.LineHead4Indents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
 	}
-	return ret
+	return builder.String()
 }
 
 func (stmt *FuncFactStmt) String() string {
@@ -48,12 +54,16 @@ func (fact *CondFactStmt) String() string {
 		builder.WriteByte('\n')
 	}
 
-	builder.WriteString("    then:\n")
-	for _, thenFact := range fact.ThenFacts {
-		builder.WriteString(msg.LineHead4Indents(thenFact.String(), 2))
-		builder.WriteByte('\n')
+	builder.WriteString(msg.LineHead4Indents("then:\n", 1))
+	if len(fact.ThenFacts) > 0 {
+		// 遍历前 n-1 个元素，每个后面加换行
+		for i := 0; i < len(fact.ThenFacts)-1; i++ {
+			builder.WriteString(msg.LineHead4Indents(fact.ThenFacts[i].String(), 1))
+			builder.WriteByte('\n')
+		}
+		// 单独处理最后一个元素，不加换行
+		builder.WriteString(msg.LineHead4Indents(fact.ThenFacts[len(fact.ThenFacts)-1].String(), 1))
 	}
-
 	return builder.String()
 }
 func (s *GenericForallStmt) String() string { panic("") }
