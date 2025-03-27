@@ -433,3 +433,24 @@ $p(x)
 	messages := execStmtTest(topStmtSlice, t)
 	execMessageTest(messages)
 }
+
+func TestUniVerifier(t *testing.T) {
+	code :=
+		`
+know:
+	for a A:
+		$p(a)
+		then:
+			$q(a)
+
+know:
+	$q(a)
+	x = y
+
+$p(y)
+$p(x)
+`
+	topStmtSlice := parseStmtTest(&code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	execMessageTest(messages)
+}

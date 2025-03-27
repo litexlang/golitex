@@ -119,5 +119,42 @@ func (factMem *CondFactMemDict) GetFuncFactNode(stmt *parser.FuncFactStmt) (*Sto
 }
 
 func (factMem *UniFactMemDict) Insert(fact *parser.UniFactStmt) error {
-	panic("unimplemented")
+	for _, stmt := range fact.ThenFacts {
+		switch s := stmt.(type) {
+		case *parser.FuncFactStmt:
+			err := factMem.insertFuncFact(fact, s)
+			if err != nil {
+				return err
+			}
+		case *parser.RelaFactStmt:
+			panic("not implemented")
+		default:
+			return fmt.Errorf("unknown fact type: %T", stmt)
+		}
+	}
+	return nil
+}
+
+func (factMem *UniFactMemDict) insertFuncFact(uniStmt *parser.UniFactStmt, stmt *parser.FuncFactStmt) error {
+	// 检查 pkgName 是否存在，不存在则初始化
+	pkgName := stmt.Opt.PkgName
+	optName := stmt.Opt.OptName
+
+	if _, pkgExists := factMem.FuncFactsDict[pkgName]; !pkgExists {
+		factMem.FuncFactsDict[pkgName] = make(map[string]StoredUniFuncMemDictNode)
+	}
+
+	// 获取或初始化节点
+	node, nodeExists := factMem.FuncFactsDict[pkgName][optName]
+	if !nodeExists {
+		node = StoredUniFuncMemDictNode{
+			Facts: []StoredUniFuncFact{},
+		}
+	}
+
+	node.Facts = append(node.Facts, StoredUniFuncFact{stmt.IsTrue, stmt.Params, uniStmt})
+
+	// 更新回字典
+	factMem.FuncFactsDict[pkgName][optName] = node
+	return nil
 }
