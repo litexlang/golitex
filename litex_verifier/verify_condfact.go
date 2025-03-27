@@ -11,6 +11,9 @@ func (verifier *Verifier) CondFact(stmt *parser.ConditionalFactStmt) error {
 	if err != nil {
 		return err
 	}
+	if verifier.true() {
+		return nil
+	}
 
 	if !verifier.round1() {
 		return nil
@@ -41,11 +44,12 @@ func (verifier *Verifier) CondFactSpec(stmt *parser.ConditionalFactStmt) error {
 		}
 	}
 
-	verifier.success("%v is true", stmt)
+	verifier.success("%v is true", stmt.String())
 
 	return nil
 }
 
 func (verifier *Verifier) CondFactCond(stmt *parser.ConditionalFactStmt) error {
-	panic("")
+	// TODO
+	return nil
 }

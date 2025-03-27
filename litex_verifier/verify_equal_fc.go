@@ -37,6 +37,7 @@ func (verifier *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, r
 		return false, err
 	}
 	if comp == 0 {
+		verifier.newMessage("%v = %v", left.String(), right.String())
 		return true, nil
 	}
 
@@ -50,6 +51,7 @@ func (verifier *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, r
 			return false, err
 		}
 		if comp == 0 {
+			verifier.newMessage("%v = %v", left.String(), right.String())
 			return true, nil
 		}
 	}
