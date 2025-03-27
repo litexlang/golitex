@@ -22,15 +22,14 @@ func (verifier *Verifier) FuncFact(stmt *parser.FuncFactStmt) error {
 		return nil
 	}
 
-	// err = verifier.verifyFuncFactUseCondFacts(stmt)
-	// if err != nil {
-	// 	return err
-	// }
-	// if verifier.true() {
-	// 	return nil
-	// }
+	err = verifier.FuncFactCond(stmt)
+	if err != nil {
+		return err
+	}
+	if verifier.true() {
+		return nil
+	}
 
-	verifier.unknown("%s is unknown", stmt.String())
 	return nil
 }
 
