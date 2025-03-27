@@ -96,7 +96,7 @@ type ThmStmt struct {
 	proof []Stmt
 }
 
-type ConditionalFactStmt struct {
+type CondFactStmt struct {
 	CondFacts []FactStmt
 	ThenFacts []SpecFactStmt
 }

@@ -630,7 +630,7 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 	return &ThmStmt{decl, *facts}, nil
 }
 
-func (stmt *TokenBlock) parseConditionalStmt() (*ConditionalFactStmt, error) {
+func (stmt *TokenBlock) parseConditionalStmt() (*CondFactStmt, error) {
 	err := stmt.Header.skip(KeywordWhen)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -671,7 +671,7 @@ func (stmt *TokenBlock) parseConditionalStmt() (*ConditionalFactStmt, error) {
 		thenFacts = append(thenFacts, fact)
 	}
 
-	return &ConditionalFactStmt{condFacts, thenFacts}, nil
+	return &CondFactStmt{condFacts, thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseDefInterfaceStmt() (*DefInterfaceStmt, error) {

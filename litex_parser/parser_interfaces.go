@@ -21,7 +21,7 @@ func (s *HaveStmt) stmt()                   {}
 func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
-func (s *ConditionalFactStmt) stmt()        {}
+func (s *CondFactStmt) stmt()               {}
 func (s *GenericForallStmt) stmt()          {}
 
 type FactStmt interface {
@@ -30,11 +30,11 @@ type FactStmt interface {
 	String() string
 }
 
-func (r *RelaFactStmt) factStmt()        {}
-func (p *FuncFactStmt) factStmt()        {}
-func (p *ConditionalFactStmt) factStmt() {}
-func (l *ConcreteForallStmt) factStmt()  {}
-func (p *GenericForallStmt) factStmt()   {}
+func (r *RelaFactStmt) factStmt()       {}
+func (p *FuncFactStmt) factStmt()       {}
+func (p *CondFactStmt) factStmt()       {}
+func (l *ConcreteForallStmt) factStmt() {}
+func (p *GenericForallStmt) factStmt()  {}
 
 type SpecFactParams struct {
 	ObjParams []Fc

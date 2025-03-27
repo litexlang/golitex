@@ -37,7 +37,7 @@ func (s *HaveStmt) String() string                   { panic("") }
 func (s *ClaimProveByContradictStmt) String() string { panic("") }
 func (s *AxiomStmt) String() string                  { panic("") }
 func (s *ThmStmt) String() string                    { panic("") }
-func (s *ConditionalFactStmt) String() string {
+func (s *CondFactStmt) String() string {
 	return ""
 }
 func (s *GenericForallStmt) String() string { panic("") }

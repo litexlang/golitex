@@ -2,7 +2,7 @@ package litexverifier
 
 import parser "golitex/litex_parser"
 
-func (verifier *Verifier) CondFact(stmt *parser.ConditionalFactStmt) error {
+func (verifier *Verifier) CondFact(stmt *parser.CondFactStmt) error {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 	verifier.roundAddOne()
 	defer verifier.roundMinusOne()
@@ -22,7 +22,7 @@ func (verifier *Verifier) CondFact(stmt *parser.ConditionalFactStmt) error {
 	return verifier.CondFactCond(stmt)
 }
 
-func (verifier *Verifier) CondFactSpec(stmt *parser.ConditionalFactStmt) error {
+func (verifier *Verifier) CondFactSpec(stmt *parser.CondFactStmt) error {
 	verifier.newEnv()
 	defer verifier.deleteEnv()
 
@@ -49,7 +49,7 @@ func (verifier *Verifier) CondFactSpec(stmt *parser.ConditionalFactStmt) error {
 	return nil
 }
 
-func (verifier *Verifier) CondFactCond(stmt *parser.ConditionalFactStmt) error {
+func (verifier *Verifier) CondFactCond(stmt *parser.CondFactStmt) error {
 	// TODO
 	return nil
 }

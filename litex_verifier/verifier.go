@@ -13,7 +13,7 @@ func (verifier *Verifier) FactStmt(stmt parser.FactStmt) error {
 		return verifier.FuncFact(stmt)
 	case *parser.RelaFactStmt:
 		return verifier.RelaFact(stmt)
-	case *parser.ConditionalFactStmt:
+	case *parser.CondFactStmt:
 		return verifier.CondFact(stmt)
 	default:
 		return nil

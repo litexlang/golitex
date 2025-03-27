@@ -42,5 +42,10 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 	}
 	exec.readFromVerifier(curVerifier)
 
+	err = exec.env.NewFact(stmt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
