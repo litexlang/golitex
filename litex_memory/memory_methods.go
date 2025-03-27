@@ -31,6 +31,6 @@ func (mem *FnMem) Get(s string) (*FnMemEntry, bool) {
 	return nil, false
 }
 
-func (mem *RelaFactMemory) NewRelaFact(fact *parser.RelaFactStmt) error {
+func (mem *RelaFactMem) NewRelaFact(fact *parser.RelaFactStmt) error {
 	panic("")
 }

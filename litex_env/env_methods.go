@@ -12,7 +12,7 @@ func (env *Env) NewFact(stmt parser.FactStmt) error {
 		return env.NewFuncFact(f)
 	case *parser.RelaFactStmt:
 		return env.NewRelaFact(f)
-	case *parser.ConditionalFactStmt:
+	case *parser.CondFactStmt:
 		return env.NewCondFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
@@ -70,7 +70,7 @@ func (env *Env) NewEqualFact(stmt *parser.RelaFactStmt) error {
 	return nil
 }
 
-func (env *Env) NewCondFact(fact *parser.ConditionalFactStmt) error {
+func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
 	panic("not implemented")
 	// for _, f := range fact.ThenFacts {
 	// node, err := env.ConcreteCondFactMemory.Mem.TreeSearch(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{}})
