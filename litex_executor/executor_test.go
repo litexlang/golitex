@@ -25,29 +25,27 @@ func parseStmtTest(code *string, t *testing.T) *[]parser.TopStmt {
 	return topStatements
 }
 
-func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) *[]string {
+func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) *[][]string {
 	env := env.NewEnv(nil)
 	executor := *newExecutor(env)
 
-	messages := []string{}
+	messages := [][]string{}
 	for _, topStmt := range *topStmt {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
 		}
-		messages = append(messages, *executor.message...)
-		// if _, ok := topStmt.Stmt.(parser.FactStmt); ok {
-		// 	for _, message := range *executor.message {
-		// 		fmt.Println(message)
-		// 	}
-		// }
+		messages = append(messages, *executor.message)
 	}
 	return &messages
 }
 
-func execMessageTest(messages *[]string) {
-	for _, message := range *messages {
-		fmt.Println(message)
+func execMessageTest(messageSliceSlice *[][]string) {
+	for _, messageSlice := range *messageSliceSlice {
+		for i := len(messageSlice) - 1; i >= 0; i-- {
+			fmt.Println(messageSlice[i])
+		}
+		fmt.Println()
 	}
 }
 

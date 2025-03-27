@@ -24,17 +24,20 @@ func (exec *Executor) stmt(stmt parser.Stmt) error {
 }
 
 func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
+	defer exec.newMessage(stmt.String())
+
 	for _, fact := range stmt.Facts {
 		err := exec.env.NewFact(fact)
 		if err != nil {
 			return err
 		}
 	}
-	exec.success("%v", stmt)
 	return nil
 }
 
 func (exec *Executor) factStmt(stmt parser.FactStmt) error {
+	defer exec.newMessage(stmt.String())
+
 	curVerifier := verifyPgk.NewVerifier(exec.env)
 	err := curVerifier.FactStmt(stmt)
 	if err != nil {

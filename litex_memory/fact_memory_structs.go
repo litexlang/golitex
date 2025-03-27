@@ -25,9 +25,9 @@ func (m *StoredCondFuncMemDictNode) storedCondFuncFact() {}
 func (m *StoredCondRelaMemDictNode) storedCondFuncFact() {}
 
 type StoredCondFuncFact struct {
-	IsTrue    bool
-	Params    []parser.Fc
-	CondFacts *[]parser.FactStmt
+	IsTrue bool
+	Params []parser.Fc
+	Fact   *parser.CondFactStmt
 }
 
 type StoredCondFuncMemDictNode struct {

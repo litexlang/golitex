@@ -85,7 +85,7 @@ func (factMem *CondFactMemDict) insertFuncFact(condStmt *parser.CondFactStmt, st
 		}
 	}
 
-	node.Facts = append(node.Facts, StoredCondFuncFact{stmt.IsTrue, stmt.Params, &condStmt.CondFacts})
+	node.Facts = append(node.Facts, StoredCondFuncFact{stmt.IsTrue, stmt.Params, condStmt})
 
 	// 更新回字典
 	factMem.FuncFactsDict[pkgName][optName] = node

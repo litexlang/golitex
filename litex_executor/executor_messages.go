@@ -15,3 +15,7 @@ func (e *Executor) printlnExecOutput() {
 		fmt.Println(msg)
 	}
 }
+
+func (e *Executor) newMessage(msg string) {
+	*e.message = append(*e.message, msg)
+}
