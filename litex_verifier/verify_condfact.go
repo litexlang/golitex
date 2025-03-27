@@ -3,7 +3,6 @@ package litexverifier
 import parser "golitex/litex_parser"
 
 func (verifier *Verifier) CondFact(stmt *parser.CondFactStmt) error {
-	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 	verifier.roundAddOne()
 	defer verifier.roundMinusOne()
 
@@ -20,6 +19,8 @@ func (verifier *Verifier) CondFact(stmt *parser.CondFactStmt) error {
 	}
 
 	return verifier.CondFactCond(stmt)
+
+	// TODO: CondFactUni
 }
 
 func (verifier *Verifier) CondFactSpec(stmt *parser.CondFactStmt) error {
