@@ -424,9 +424,10 @@ know:
 
 know:
 	$q(a)
+	x = y
 
-$p(x)
 $p(y)
+$p(x)
 `
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)
