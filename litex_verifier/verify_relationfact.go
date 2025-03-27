@@ -20,7 +20,8 @@ func (verifier *Verifier) RelaFact(stmt *parser.RelaFactStmt) error {
 		return nil
 	}
 
-	return verifier.FuncFactCond(stmt)
+	panic("")
+	// return verifier.FuncFactCond(stmt)
 }
 
 func (verifier *Verifier) RelaFactSpec(stmt *parser.RelaFactStmt) error {
