@@ -71,20 +71,9 @@ func (env *Env) NewEqualFact(stmt *parser.RelaFactStmt) error {
 }
 
 func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
-	panic("not implemented")
-	// for _, f := range fact.ThenFacts {
-	// node, err := env.ConcreteCondFactMemory.Mem.TreeSearch(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{}})
-	// if err != nil {
-	// 	return err
-	// }
-	// if node != nil {
-	// 	node.Key.CondFacts = append(node.Key.CondFacts, fact)
-	// } else {
-	// 	err := env.ConcreteCondFactMemory.Mem.Insert(&mem.CondFactMemoryNode{ThenFactAsKey: f, CondFacts: []*parser.ConditionalFactStmt{fact}})
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// }
-	// return nil
+	err := env.CondFactMem.Insert(fact)
+	if err != nil {
+		return err
+	}
+	return nil
 }
