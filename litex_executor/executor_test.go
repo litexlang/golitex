@@ -426,6 +426,7 @@ know:
 	$q(a)
 
 $p(x)
+$p(y)
 `
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)

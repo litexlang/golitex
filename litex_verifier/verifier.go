@@ -65,12 +65,18 @@ func (e *Verifier) round1() bool {
 	return e.searchRound == 1
 }
 
-func (e *Verifier) success(format string, args ...any) {
-	message := fmt.Sprintf(format, args...) // 使用 fmt.Sprintf 格式化字符串
-	// *e.Message = append([]string{message}, *e.Message...) // 新消息插入到最前面
+func (e *Verifier) success(stmtString, storedStmtString string) {
+	message := fmt.Sprintf("%v\nis true, verified by\n%v", stmtString, storedStmtString)
 	*e.Message = append(*e.Message, message)
 	e.Output = VerifierTrue
 }
+
+// func (e *Verifier) success(format string, args ...any) {
+// 	message := fmt.Sprintf(format, args...) // 使用 fmt.Sprintf 格式化字符串
+// 	// *e.Message = append([]string{message}, *e.Message...) // 新消息插入到最前面
+// 	*e.Message = append(*e.Message, message)
+// 	e.Output = VerifierTrue
+// }
 
 func (e *Verifier) newEnv() {
 	newEnv := env.NewEnv(nil)

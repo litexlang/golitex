@@ -48,7 +48,7 @@ func (verifier *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) error {
 			}
 
 			if verified {
-				verifier.success("%v is true, verified by %v", stmt.String(), knownFact.String(stmt.Opt))
+				verifier.success(stmt.String(), knownFact.String(stmt.Opt))
 				return nil
 			}
 		}
@@ -84,7 +84,7 @@ func (verifier *Verifier) FuncFactCondAtEnv(curEnv *env.Env, stmt *parser.FuncFa
 		}
 
 		if verified {
-			verifier.success("%v is true, verified by %v", stmt.String(), knownFact.String(stmt.Opt))
+			verifier.success(stmt.String(), knownFact.String(stmt.Opt))
 			return nil
 		}
 	}

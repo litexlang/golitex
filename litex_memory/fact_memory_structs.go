@@ -5,6 +5,10 @@ import (
 	parser "golitex/litex_parser"
 )
 
+type StoredFactStmt interface {
+	String(atom parser.FcAtom) string
+}
+
 type StoredFuncFact struct {
 	IsTrue bool
 	Params []parser.Fc
