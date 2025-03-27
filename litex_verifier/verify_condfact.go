@@ -3,9 +3,6 @@ package litexverifier
 import parser "golitex/litex_parser"
 
 func (verifier *Verifier) CondFact(stmt *parser.CondFactStmt) error {
-	verifier.roundAddOne()
-	defer verifier.roundMinusOne()
-
 	err := verifier.CondFactSpec(stmt)
 	if err != nil {
 		return err

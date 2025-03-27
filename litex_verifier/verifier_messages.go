@@ -4,7 +4,7 @@ import "fmt"
 
 func (e *Verifier) successMsg(stmtString, storedStmtString string) {
 	if e.round1() {
-		message := fmt.Sprintf("[true]\n%v\n[verified by]\n%v", stmtString, storedStmtString)
+		message := fmt.Sprintf("[verified by]\n%v", storedStmtString)
 		*e.Message = append(*e.Message, message) // 新消息插在后面
 	}
 }
