@@ -14,6 +14,8 @@ func (env *Env) NewFact(stmt parser.FactStmt) error {
 		return env.NewRelaFact(f)
 	case *parser.CondFactStmt:
 		return env.NewCondFact(f)
+	case *parser.UniFactStmt:
+		return env.NewUniFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
@@ -72,6 +74,14 @@ func (env *Env) NewEqualFact(stmt *parser.RelaFactStmt) error {
 
 func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
 	err := env.CondFactMem.Insert(fact)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (env *Env) NewUniFact(fact *parser.UniFactStmt) error {
+	err := env.UniFactMem.Insert(fact)
 	if err != nil {
 		return err
 	}

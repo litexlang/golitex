@@ -117,3 +117,7 @@ func (factMem *CondFactMemDict) GetFuncFactNode(stmt *parser.FuncFactStmt) (*Sto
 		return &ret, true
 	}
 }
+
+func (factMem *UniFactMemDict) Insert(fact *parser.UniFactStmt) error {
+	panic("unimplemented")
+}

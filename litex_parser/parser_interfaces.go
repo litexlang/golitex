@@ -11,7 +11,7 @@ func (c *DefInterfaceStmt) stmt()           {}
 func (f *DefTypeStmt) stmt()                {}
 func (c *DefConcreteNormalPropStmt) stmt()  {}
 func (f *DefConcreteFnStmt) stmt()          {}
-func (l *ConcreteForallStmt) stmt()         {}
+func (l *UniFactStmt) stmt()                {}
 func (r *RelaFactStmt) stmt()               {}
 func (p *FuncFactStmt) stmt()               {}
 func (f *ClaimProveStmt) stmt()             {}
@@ -22,7 +22,7 @@ func (s *ClaimProveByContradictStmt) stmt() {}
 func (s *AxiomStmt) stmt()                  {}
 func (s *ThmStmt) stmt()                    {}
 func (s *CondFactStmt) stmt()               {}
-func (s *GenericForallStmt) stmt()          {}
+func (s *GenericUniStmt) stmt()             {}
 
 type FactStmt interface {
 	factStmt()
@@ -30,11 +30,11 @@ type FactStmt interface {
 	String() string
 }
 
-func (r *RelaFactStmt) factStmt()       {}
-func (p *FuncFactStmt) factStmt()       {}
-func (p *CondFactStmt) factStmt()       {}
-func (l *ConcreteForallStmt) factStmt() {}
-func (p *GenericForallStmt) factStmt()  {}
+func (r *RelaFactStmt) factStmt()   {}
+func (p *FuncFactStmt) factStmt()   {}
+func (p *CondFactStmt) factStmt()   {}
+func (l *UniFactStmt) factStmt()    {}
+func (p *GenericUniStmt) factStmt() {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
@@ -83,5 +83,5 @@ type ForallStmt interface {
 	forallStmt()
 }
 
-func (s *ConcreteForallStmt) forallStmt() {}
-func (s *GenericForallStmt) forallStmt()  {}
+func (s *UniFactStmt) forallStmt()    {}
+func (s *GenericUniStmt) forallStmt() {}

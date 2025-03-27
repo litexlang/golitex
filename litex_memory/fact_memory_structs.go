@@ -19,12 +19,6 @@ type FuncFactMemDict struct {
 	Dict map[string]map[string]StoredFuncMemDictNode
 }
 
-// type FuncFactMemoryNode = parser.FuncFactStmt
-
-//	type ConcreteFuncFactMemory struct {
-//		Mem ds.RedBlackTree[*FuncFactMemoryNode]
-//	}
-
 type StoredCondMemDictNode interface{ storedCondFuncFact() }
 
 func (m *StoredCondFuncMemDictNode) storedCondFuncFact() {}
@@ -40,37 +34,26 @@ type StoredCondFuncMemDictNode struct {
 	Facts []StoredCondFuncFact
 }
 
-type StoredCondRelaMemDictNode struct{}
-
 type CondFactMemDict struct {
 	FuncFactsDict map[string]map[string]StoredCondFuncMemDictNode
 	RelaFactsDict map[string]map[string]StoredCondRelaMemDictNode
 }
 
-type RelaFactMem struct{}
-
-// type RelationFactMemoryNode = parser.RelationFactStmt
-
-// type ConcreteRelationFactMemory struct {
-// 	Mem ds.RedBlackTree[*RelationFactMemoryNode]
-// }
-
-// type ConcreteCondFactMemory struct {
-// 	Mem ds.RedBlackTree[*CondFactMemoryNode]
-// }
-
-// type CondFactMemoryNode struct {
-// 	ThenFactAsKey parser.SpecFactStmt
-// 	CondFacts     []*parser.ConditionalFactStmt
-// }
-
-type UniFactMem struct {
+type StoredUniFuncFact struct {
+	IsTrue bool
+	Params []parser.Fc
+	Fact   *parser.UniFactStmt
 }
 
-// ! 如果一个opt是读入2个参数，同时有交换性的，那可以以该fc为key，存所有和它等价的东西的列表
-// ! 我感觉这样不太通用。如果是func类型的可交换的prop，那在search的时候有额外能力比较好
-// ! 另外，iff 相当于prop 的之间的等于，和obj，fn的等号的语义是一样的
-// ! equalMemory单独拿出来是必要的。它甚至不能和有 ”同时有交换律，结合律“的opt放在一起。原因是 只有 equal 这个性质，会被用于 证明的时候 对一个符号进行等量变换
+type StoredUniFuncMemDictNode struct {
+	Facts []StoredUniFuncFact
+}
+
+type UniFactMemDict struct {
+	FuncFactsDict   map[string]map[string]StoredUniFuncMemDictNode
+	RelaFactMemDict map[string]map[string]StoredUniRelaMemDictNode
+}
+
 type EqualFactMemoryTreeNode struct {
 	FcAsKey parser.Fc
 	Values  []*parser.Fc
@@ -80,6 +63,7 @@ type EqualFactMem struct {
 	Mem ds.RedBlackTree[*EqualFactMemoryTreeNode]
 }
 
-type UniFactMemoryTreeNode struct {
-	// TODO
-}
+type RelaFactMemDict struct{}
+
+type StoredCondRelaMemDictNode struct{}
+type StoredUniRelaMemDictNode struct{}

@@ -185,9 +185,9 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 	}
 
 	if len(*typeParams) > 0 {
-		return &GenericForallStmt{*typeParams, *typeInterfaces, *params, *paramTypes, *condFacts, *thenFacts}, nil
+		return &GenericUniStmt{*typeParams, *typeInterfaces, *params, *paramTypes, *condFacts, *thenFacts}, nil
 	} else {
-		return &ConcreteForallStmt{*params, *paramTypes, *condFacts, *thenFacts}, nil
+		return &UniFactStmt{*params, *paramTypes, *condFacts, *thenFacts}, nil
 	}
 
 }
