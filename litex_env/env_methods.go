@@ -19,32 +19,20 @@ func (env *Env) NewFact(stmt parser.FactStmt) error {
 	}
 }
 
-// func (env *Env) ExecKnowStmt(stmt *parser.KnowStmt) error {
-// 	for _, fact := range stmt.Facts {
-// 		env.NewFact(fact)
-// 	}
-// 	return nil
-// }
-
 func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
-	err := env.FuncFactMem.InsertConcreteFuncFact(fact)
+	err := env.FuncFactMem.Insert(fact)
 	if err != nil {
 		return err
 	}
 	return nil
-	// err := env.ConcreteFuncFactMemory.Mem.Insert(fact)
-	// if err != nil {
-	// 	return err
-	// }
-	// return nil
 }
 
 func (env *Env) NewRelaFact(stmt *parser.RelaFactStmt) error {
-	if string(stmt.Opt.Value) == (parser.KeywordEqual) {
+	if string(stmt.Opt.OptName) == (parser.KeywordEqual) {
 		return env.NewEqualFact(stmt)
 	}
 
-	panic(fmt.Sprintf("%v not implemented", string(stmt.Opt.Value)))
+	panic(fmt.Sprintf("%v not implemented", string(stmt.Opt.OptName)))
 }
 
 func (env *Env) NewEqualFact(stmt *parser.RelaFactStmt) error {

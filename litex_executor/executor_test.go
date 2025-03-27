@@ -17,6 +17,40 @@ const (
 	TenMillionRound  = 10000000
 )
 
+func parseStmtTest(code *string, t *testing.T) *[]parser.TopStmt {
+	topStatements, err := parser.ParseSourceCode(code)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return topStatements
+}
+
+func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) *[]string {
+	env := env.NewEnv(nil)
+	executor := *newExecutor(env)
+
+	messages := []string{}
+	for _, topStmt := range *topStmt {
+		err := executor.TopLevelStmt(&topStmt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		messages = append(messages, *executor.message...)
+		// if _, ok := topStmt.Stmt.(parser.FactStmt); ok {
+		// 	for _, message := range *executor.message {
+		// 		fmt.Println(message)
+		// 	}
+		// }
+	}
+	return &messages
+}
+
+func execMessageTest(messages *[]string) {
+	for _, message := range *messages {
+		fmt.Println(message)
+	}
+}
+
 func TestStoreNewObj(t *testing.T) {
 	code := `obj a G`
 	statements, err := parser.ParseSourceCode(&code)
@@ -114,7 +148,7 @@ func randFcAtom() *parser.FcAtom {
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(rand.Intn(26) + 65)
 	}
-	ret := parser.FcAtom{Value: string(bytes)}
+	ret := parser.FcAtom{OptName: string(bytes)}
 	return &ret
 }
 
@@ -359,13 +393,10 @@ func randEqualFact() *parser.RelaFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.RelaFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", Value: "="}}
+	return &parser.RelaFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", OptName: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {
-	env := env.NewEnv(nil)
-	executor := *newExecutor(env)
-
 	code :=
 		`
 know:
@@ -377,27 +408,25 @@ $q(x)
 $p(x)
 $p(y)
 `
-	topStatements, err := parser.ParseSourceCode(&code)
+	topStmtSlice := parseStmtTest(&code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	execMessageTest(messages)
+}
 
-	start := time.Now()
-	for _, topStmt := range *topStatements {
-		err := executor.TopLevelStmt(&topStmt)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if _, ok := topStmt.Stmt.(parser.FactStmt); ok {
-			for _, message := range *executor.message {
-				fmt.Println(message)
-			}
-		}
-	}
-	fmt.Printf("%d rounds top stmt exec taken: %v\n", len(*topStatements), time.Since(start))
+func TestCondVerifier(t *testing.T) {
+	code :=
+		`
+know:
+	x = y
 
-	if err == nil {
-		for _, stmt := range *topStatements {
-			fmt.Printf("%v\n", stmt.Stmt.String())
-		}
-	} else {
-		t.Fatal(err)
-	}
+// when:
+// 	$p(y)
+// 	then:
+// 		$p(x)
+
+
+`
+	topStmtSlice := parseStmtTest(&code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	execMessageTest(messages)
 }

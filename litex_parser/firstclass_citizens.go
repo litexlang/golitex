@@ -13,7 +13,7 @@ type Fc interface {
 
 type FcAtom struct {
 	PkgName string
-	Value   string
+	OptName string
 }
 
 type FcFnCallPipe struct {
@@ -40,14 +40,14 @@ func (f *FcFnCallPipe) GetPkgName() string { return f.FnName.PkgName }
 
 func (f *FcAtom) String() string {
 	if f.PkgName == "" {
-		return string(f.Value)
+		return string(f.OptName)
 	} else {
-		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Value))
+		return fmt.Sprintf("%s::%s", f.PkgName, string(f.OptName))
 	}
 }
 
 func (f *FcFnCallPipe) String() string {
-	outPut := string(f.FnName.Value)
+	outPut := string(f.FnName.OptName)
 
 	for _, pair := range f.CallPipe {
 		if len(pair.Params) > 0 {
