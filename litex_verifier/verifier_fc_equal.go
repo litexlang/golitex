@@ -8,7 +8,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) FcEqual(left, right parser.Fc) (bool, error) {
+func (ver *Verifier) FcEqual(left, right parser.Fc, specMode bool) (bool, error) {
 	ver.addRound()
 	defer ver.minusRound()
 
@@ -47,15 +47,8 @@ func (ver *Verifier) fcFnCallPipeEqual(left, right *parser.FcFnCallPipe, specMod
 			return false, nil
 		}
 
-		var compareFunc func(a, b parser.Fc) (bool, error)
-		if specMode {
-			compareFunc = ver.fcEqualSpec
-		} else {
-			compareFunc = ver.FcEqual
-		}
-
 		for j := 0; j < len(left.CallPipe[i].Params); j++ {
-			ok, err := compareFunc(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j])
+			ok, err := ver.FcEqual(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j], specMode)
 			if err != nil {
 				return false, err
 			}
