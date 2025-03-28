@@ -36,6 +36,7 @@ type Verifier struct {
 	Message     *[]string
 	Output      VerifierOutput
 	searchRound uint8
+	uniParams   map[string]parser.Fc
 }
 
 func NewVerifier(curEnv *env.Env) *Verifier {
@@ -84,4 +85,17 @@ func (ver *Verifier) unknownWithMsg(format string, args ...any) {
 
 func (ver *Verifier) unknownNoMsg() {
 	ver.Output = VerifierUnknown
+}
+
+func (ver *Verifier) getUniParam(fc parser.Fc) parser.Fc {
+	fcAsAtom := fc.(*parser.FcAtom)
+	if fcAsAtom == nil {
+		return nil
+	}
+
+	if fcAsAtom.PkgName != "" {
+		return nil
+	}
+
+	return ver.uniParams[fcAsAtom.OptName]
 }
