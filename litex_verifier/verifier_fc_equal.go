@@ -3,6 +3,8 @@ package litexverifier
 import (
 	"fmt"
 	cmp "golitex/litex_comparator"
+	env "golitex/litex_env"
+	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
 
@@ -45,13 +47,15 @@ func (ver *Verifier) fcFnCallPipeEqual(left, right *parser.FcFnCallPipe, specMod
 			return false, nil
 		}
 
+		var compareFunc func(a, b parser.Fc) (bool, error)
+		if specMode {
+			compareFunc = ver.fcEqualSpec
+		} else {
+			compareFunc = ver.FcEqual
+		}
+
 		for j := 0; j < len(left.CallPipe[i].Params); j++ {
-			var ok bool
-			if specMode {
-				ok, err = ver.fcEqualSpec(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j])
-			} else {
-				ok, err = ver.FcEqual(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j])
-			}
+			ok, err := compareFunc(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j])
 			if err != nil {
 				return false, err
 			}
@@ -59,6 +63,7 @@ func (ver *Verifier) fcFnCallPipeEqual(left, right *parser.FcFnCallPipe, specMod
 				return false, nil
 			}
 		}
+
 	}
 
 	if ver.round1() {
@@ -68,4 +73,37 @@ func (ver *Verifier) fcFnCallPipeEqual(left, right *parser.FcFnCallPipe, specMod
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) FcEqualSpecInSpecMemAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
+	key := memory.EqualFactMemoryTreeNode{FcAsKey: left, Values: []*parser.Fc{}}
+
+	searchedNode, err := curEnv.EqualFactMem.Mem.TreeSearch(&key)
+
+	if err != nil {
+		return false, err
+	}
+
+	if searchedNode == nil {
+		return false, nil
+	}
+
+	// var compareFunc func(a, b parser.Fc) (bool, error)
+	// if specMode {
+	// 	compareFunc = ver.fcEqualSpec
+	// } else {
+	// 	compareFunc = ver.FcEqual
+	// }
+
+	for _, equalFc := range searchedNode.Key.Values {
+		ok, err := ver.fcEqualSpec(*equalFc, right)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
