@@ -2,11 +2,12 @@
 package litexverifier
 
 import (
+	"fmt"
 	env "golitex/litex_env"
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) FactStmt(stmt parser.FactStmt) error {
+func (verifier *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 	verifier.addRound()
 	defer verifier.minusRound()
 
@@ -14,11 +15,12 @@ func (verifier *Verifier) FactStmt(stmt parser.FactStmt) error {
 	case *parser.FuncFactStmt:
 		return verifier.FuncFact(stmt)
 	case *parser.RelaFactStmt:
-		return verifier.RelaFact(stmt)
+		panic("")
+		// return verifier.RelaFact(stmt)
 	case *parser.CondFactStmt:
 		return verifier.CondFact(stmt)
 	default:
-		return nil
+		return false, fmt.Errorf("unexpected")
 	}
 }
 

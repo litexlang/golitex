@@ -39,15 +39,17 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 	defer exec.newMessage(stmt.String())
 
 	curVerifier := verifyPgk.NewVerifier(exec.env)
-	err := curVerifier.FactStmt(stmt)
+	ok, err := curVerifier.FactStmt(stmt)
 	if err != nil {
 		return err
 	}
 	exec.readFromVerifier(curVerifier)
 
-	err = exec.env.NewFact(stmt)
-	if err != nil {
-		return err
+	if ok {
+		err = exec.env.NewFact(stmt)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
