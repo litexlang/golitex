@@ -3,29 +3,10 @@ package litexverifier
 import (
 	"fmt"
 	cmp "golitex/litex_comparator"
+	env "golitex/litex_env"
+	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
-
-func (ver *Verifier) FcEqual(left, right parser.Fc, addRound bool) (bool, error) {
-	if addRound {
-		ver.addRound()
-		defer ver.minusRound()
-	}
-
-	ok, err := ver.fcEqualSpec(left, right)
-	if err != nil {
-		return false, nil
-	}
-	if ok {
-		return true, nil
-	}
-
-	if !ver.round1() {
-		return false, nil
-	}
-
-	return false, nil
-}
 
 func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 	// Case: 完全一样
@@ -37,6 +18,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 		return true, nil
 	}
 
+	// Case: 用已知事实
 	ok, err := ver.fcEqualSpecInSpecMem(left, right)
 	if err != nil {
 		return false, err
@@ -45,6 +27,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 		return true, nil
 	}
 
+	// Case: 如果left, right都是 FcFn，那一位位比较一下
 	cmpRet, fcEnum, err := cmp.CmpFcType(left, right)
 	if err != nil {
 		return false, nil
@@ -54,61 +37,72 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 		ver.unknownNoMsg()
 	}
 
-	if fcEnum == cmp.FcAtomEnum {
-		return ver.fcAtomEqualSpec(left.(*parser.FcAtom), right.(*parser.FcAtom))
-	} else if fcEnum == cmp.FcFnCallPipeEnum {
-		return ver.fcFnCallPipeEqualSpec(left.(*parser.FcFnCallPipe), right.(*parser.FcFnCallPipe))
+	if fcEnum == cmp.FcFnCallPipeEnum {
+		return ver.fcFnCallPipeEqual(left.(*parser.FcFnCallPipe), right.(*parser.FcFnCallPipe), true)
 	}
 
 	return false, fmt.Errorf("unexpected")
 }
 
 func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc) (bool, error) {
-	// 如果之前显式地说过 left = right，那就直接成立
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		verified, err := ver.FcEqualInSpecMemAtEnv(curEnv, left, right)
+		if err != nil {
+			return false, err
+		}
+		if verified {
+			return true, nil
+		}
+	}
 	return false, nil
 }
 
-func (ver *Verifier) fcAtomEqualSpec(left, right *parser.FcAtom) (bool, error) {
-	return false, nil
-}
+func (ver *Verifier) FcEqualInSpecMemAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
+	key := memory.EqualFactMemoryTreeNode{FcAsKey: left, Values: []*parser.Fc{}}
 
-func (ver *Verifier) fcFnCallPipeEqualSpec(left, right *parser.FcFnCallPipe) (bool, error) {
-	// 如果两个函数的名字一样，每个参数都一样，那也行
-	ret, err := cmp.CmpFc(&left.FnHead, &right.FnHead)
+	searchedNode, err := curEnv.EqualFactMem.Mem.TreeSearch(&key)
+
 	if err != nil {
 		return false, err
 	}
 
-	if ret != 0 {
+	if searchedNode == nil {
 		return false, nil
 	}
 
-	if len(left.CallPipe) != len(right.CallPipe) {
-		return false, nil
-	}
-
-	for i := 0; i < len(left.CallPipe); i++ {
-		if len(left.CallPipe[i].Params) != len(right.CallPipe[i].Params) {
-			return false, nil
+	for _, equalFc := range searchedNode.Key.Values {
+		ok, err := ver.FcEqual(*equalFc, right)
+		if err != nil {
+			return false, err
 		}
-
-		for j := 0; j < len(left.CallPipe[i].Params); j++ {
-			ver.unknownNoMsg() // clear verifier
-			ok, err := ver.fcEqualSpec(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j])
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				return false, nil
-			}
+		if ok {
+			return true, nil
 		}
 	}
 
-	if ver.round1() {
-		ver.successMsg(fmt.Sprintf("%v = %v", left.String(), right.String()), "use known facts")
-	} else {
-		ver.successNoMsg()
+	return false, nil
+}
+
+func (ver *Verifier) FcSliceEqual(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
+	if len(*left) != len(*right) {
+		return false, fmt.Errorf("%v and %v have different length", *left, *right)
 	}
 
-	return true, nil
+	twoFuncFactHaveEqualParams := true
+	for i, knownParam := range *left {
+		verified, err := ver.FcEqual(knownParam, (*right)[i])
+		if err != nil {
+			return false, err
+		}
+		if !verified {
+			twoFuncFactHaveEqualParams = false
+			break
+		}
+	}
+
+	if twoFuncFactHaveEqualParams {
+		return true, nil
+	}
+
+	return false, nil
 }
