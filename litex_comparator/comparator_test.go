@@ -13,7 +13,7 @@ func TestCompareFc(t *testing.T) {
 
 	// 初始化 FcFnRetValue
 	fc4 := parser.FcFnCallPipe{
-		FnName: parser.FcAtom{OptName: "ghi"},
+		FnHead: parser.FcAtom{OptName: "ghi"},
 		CallPipe: []parser.FcFnCallPipeSeg{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
@@ -22,7 +22,7 @@ func TestCompareFc(t *testing.T) {
 		},
 	}
 	fc5 := parser.FcFnCallPipe{
-		FnName: parser.FcAtom{OptName: "jkl"},
+		FnHead: parser.FcAtom{OptName: "jkl"},
 		CallPipe: []parser.FcFnCallPipeSeg{
 			{
 				// TypeParams: []parser.TypeObjStr{}, // 初始化 TypeParams
@@ -31,7 +31,7 @@ func TestCompareFc(t *testing.T) {
 		},
 	}
 	fc6 := parser.FcFnCallPipe{
-		FnName: parser.FcAtom{OptName: "ghi"},
+		FnHead: parser.FcAtom{OptName: "ghi"},
 		CallPipe: []parser.FcFnCallPipeSeg{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams
@@ -40,7 +40,7 @@ func TestCompareFc(t *testing.T) {
 		},
 	}
 	fc7 := parser.FcFnCallPipe{
-		FnName: parser.FcAtom{OptName: "ghi"},
+		FnHead: parser.FcAtom{OptName: "ghi"},
 		CallPipe: []parser.FcFnCallPipeSeg{
 			{
 				// TypeParams: []parser.TypeObjStr{"t"}, // 初始化 TypeParams

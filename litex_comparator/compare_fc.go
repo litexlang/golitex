@@ -77,7 +77,7 @@ func cmpFcAtom(left, right *parser.FcAtom) (int, error) {
 }
 
 func cmpFcFnCallPipe(left, right *parser.FcFnCallPipe) (int, error) {
-	if comp, err := cmpFcAtom(&left.FnName, &right.FnName); comp != 0 || err != nil {
+	if comp, err := cmpFcAtom(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}
 

@@ -157,7 +157,7 @@ func randFcFnRetValue() *parser.FcFnCallPipe {
 	for i := 0; i < round; i++ {
 		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.FcFnCallPipeSeg{Params: *randObjParams()})
 	}
-	return &parser.FcFnCallPipe{FnName: *fnName, CallPipe: typeParamObjParamsPairs}
+	return &parser.FcFnCallPipe{FnHead: *fnName, CallPipe: typeParamObjParamsPairs}
 }
 
 // func randTypeParams() *[]parser.TypeObjStr {
