@@ -5,18 +5,18 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) EqualFactSpecAtEnv(curEnv *env.Env, stmt *parser.RelaFactStmt) error {
-	verified, err := verifier.TwoFcEqualSpecAtEnv(curEnv, stmt.Params[0], stmt.Params[1])
+func (ver *Verifier) EqualFactSpecAtEnv(curEnv *env.Env, stmt *parser.RelaFactStmt) (bool, error) {
+	verified, err := ver.TwoFcEqualSpecAtEnv(curEnv, stmt.Params[0], stmt.Params[1])
 	if err != nil {
-		return err
+		return false, err
 	}
 	if verified {
-		if verifier.round1() {
-			verifier.successWithMsg(stmt.String(), stmt.Params[0].String())
+		if ver.round1() {
+			ver.successWithMsg(stmt.String(), stmt.Params[0].String())
 		} else {
-			verifier.successNoMsg()
+			ver.successNoMsg()
 		}
-		return nil
+		return true, nil
 	}
-	return nil
+	return false, nil
 }
