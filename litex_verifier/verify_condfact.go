@@ -2,8 +2,8 @@ package litexverifier
 
 import parser "golitex/litex_parser"
 
-func (verifier *Verifier) CondFact(stmt *parser.CondFactStmt) (bool, error) {
-	ok, err := verifier.CondFactSpec(stmt)
+func (ver *Verifier) CondFact(stmt *parser.CondFactStmt) (bool, error) {
+	ok, err := ver.CondFactSpec(stmt)
 	if err != nil {
 		return false, err
 	}
@@ -11,52 +11,52 @@ func (verifier *Verifier) CondFact(stmt *parser.CondFactStmt) (bool, error) {
 		return true, nil
 	}
 
-	if !verifier.round1() {
+	if !ver.round1() {
 		return false, nil
 	}
 
-	return verifier.CondFactCond(stmt)
+	return ver.CondFactCond(stmt)
 
 	// TODO: CondFactUni
 }
 
-func (verifier *Verifier) CondFactSpec(stmt *parser.CondFactStmt) (bool, error) {
-	verifier.newEnv()
-	defer verifier.deleteEnv()
+func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt) (bool, error) {
+	ver.newEnv()
+	defer ver.deleteEnv()
 
 	for _, condFact := range stmt.CondFacts {
-		err := verifier.env.NewFact(condFact)
+		err := ver.env.NewFact(condFact)
 		if err != nil {
 			return false, err
 		}
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := verifier.FactStmt(thenFact)
+		ok, err := ver.FactStmt(thenFact)
 		if err != nil {
 			return false, err
 		}
 		if !ok {
-			if verifier.round1() {
-				verifier.unknownWithMsg("%v is unknown: %v is unknown", stmt, thenFact)
+			if ver.round1() {
+				ver.unknownWithMsg("%v is unknown: %v is unknown", stmt, thenFact)
 				return false, nil
 			} else {
-				verifier.unknownNoMsg()
+				ver.unknownNoMsg()
 				return false, nil
 			}
 		}
 	}
 
-	if verifier.round1() {
-		verifier.successWithMsg("%v is true", stmt.String())
+	if ver.round1() {
+		ver.successWithMsg("%v is true", stmt.String())
 		return true, nil
 	} else {
-		verifier.successNoMsg()
+		ver.successNoMsg()
 		return true, nil
 	}
 }
 
-func (verifier *Verifier) CondFactCond(stmt *parser.CondFactStmt) (bool, error) {
+func (ver *Verifier) CondFactCond(stmt *parser.CondFactStmt) (bool, error) {
 	// TODO
 	return false, nil
 }

@@ -7,18 +7,17 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
-	verifier.addRound()
-	defer verifier.minusRound()
+func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
+	ver.addRound()
+	defer ver.minusRound()
 
 	switch stmt := stmt.(type) {
 	case *parser.FuncFactStmt:
-		return verifier.FuncFact(stmt)
+		return ver.FuncFact(stmt)
 	case *parser.RelaFactStmt:
-		panic("")
-		// return verifier.RelaFact(stmt)
+		return ver.RelaFact(stmt)
 	case *parser.CondFactStmt:
-		return verifier.CondFact(stmt)
+		return ver.CondFact(stmt)
 	default:
 		return false, fmt.Errorf("unexpected")
 	}
@@ -47,46 +46,42 @@ func NewVerifier(curEnv *env.Env) *Verifier {
 	}
 }
 
-func (e *Verifier) addRound() {
-	e.searchRound++
+func (ver *Verifier) addRound() {
+	ver.searchRound++
 }
 
-func (e *Verifier) minusRound() {
-	e.searchRound--
+func (ver *Verifier) minusRound() {
+	ver.searchRound--
 }
 
-func (e *Verifier) true() bool {
-	return e.Output == VerifierTrue
+func (ver *Verifier) round1() bool {
+	return ver.searchRound == 1
 }
 
-func (e *Verifier) round1() bool {
-	return e.searchRound == 1
+func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
+	ver.successMsg(stmtString, storedStmtString)
+	ver.Output = VerifierTrue
 }
 
-func (e *Verifier) successWithMsg(stmtString, storedStmtString string) {
-	e.successMsg(stmtString, storedStmtString)
-	e.Output = VerifierTrue
+func (ver *Verifier) successNoMsg() {
+	ver.Output = VerifierTrue
 }
 
-func (e *Verifier) successNoMsg() {
-	e.Output = VerifierTrue
-}
-
-func (e *Verifier) newEnv() {
+func (ver *Verifier) newEnv() {
 	newEnv := env.NewEnv(nil)
-	newEnv.Parent = e.env
-	e.env = newEnv
+	newEnv.Parent = ver.env
+	ver.env = newEnv
 }
 
-func (e *Verifier) deleteEnv() {
-	e.env = e.env.Parent
+func (ver *Verifier) deleteEnv() {
+	ver.env = ver.env.Parent
 }
 
-func (e *Verifier) unknownWithMsg(format string, args ...any) {
-	e.unknownMsg(format, args...)
-	e.Output = VerifierUnknown
+func (ver *Verifier) unknownWithMsg(format string, args ...any) {
+	ver.unknownMsg(format, args...)
+	ver.Output = VerifierUnknown
 }
 
-func (e *Verifier) unknownNoMsg() {
-	e.Output = VerifierUnknown
+func (ver *Verifier) unknownNoMsg() {
+	ver.Output = VerifierUnknown
 }

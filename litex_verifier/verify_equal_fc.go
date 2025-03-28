@@ -7,9 +7,9 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) TwoFcEqualSpec(left, right parser.Fc) (bool, error) {
-	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		verified, err := verifier.TwoFcEqualSpecAtEnv(curEnv, left, right)
+func (ver *Verifier) TwoFcEqualSpec(left, right parser.Fc) (bool, error) {
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		verified, err := ver.TwoFcEqualSpecAtEnv(curEnv, left, right)
 		if err != nil {
 			return false, err
 		}
@@ -20,7 +20,7 @@ func (verifier *Verifier) TwoFcEqualSpec(left, right parser.Fc) (bool, error) {
 	return false, nil
 }
 
-func (verifier *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
+func (ver *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: left, Values: []*parser.Fc{}}
 
 	// searchedNode, err := SearchInEnv(curEnv, &curEnv.ConcreteEqualMemory.Mem, &key)
@@ -30,7 +30,7 @@ func (verifier *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, r
 		return false, err
 	}
 
-	ok, err := verifier.FcEqual(left, right, true)
+	ok, err := ver.FcEqual(left, right, true)
 
 	if err != nil {
 		return false, err
@@ -45,7 +45,7 @@ func (verifier *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, r
 	}
 
 	for _, equalFc := range searchedNode.Key.Values {
-		ok, err := verifier.FcEqual(*equalFc, right, true)
+		ok, err := ver.FcEqual(*equalFc, right, true)
 		if err != nil {
 			return false, err
 		}
@@ -58,7 +58,7 @@ func (verifier *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, r
 	return false, nil
 }
 
-func (verifier *Verifier) FcSliceEqualSpec(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
+func (ver *Verifier) FcSliceEqualSpec(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
 
 	// TODO: 25-3-26: 这里检查长度，未来确定不能让不同长度的f出现时，我去掉这一条
 	if len(*left) != len(*right) {
@@ -67,7 +67,7 @@ func (verifier *Verifier) FcSliceEqualSpec(left *[]parser.Fc, right *[]parser.Fc
 
 	twoFuncFactHaveEqualParams := true
 	for i, knownParam := range *left {
-		verified, err := verifier.TwoFcEqualSpec(knownParam, (*right)[i])
+		verified, err := ver.TwoFcEqualSpec(knownParam, (*right)[i])
 		if err != nil {
 			return false, err
 		}

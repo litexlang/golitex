@@ -3,7 +3,7 @@ package litexexecutor
 import (
 	"fmt"
 	parser "golitex/litex_parser"
-	verifyPgk "golitex/litex_verifier"
+	verifier "golitex/litex_verifier"
 )
 
 func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
@@ -38,7 +38,7 @@ func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
 func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 	defer exec.newMessage(stmt.String())
 
-	curVerifier := verifyPgk.NewVerifier(exec.env)
+	curVerifier := verifier.NewVerifier(exec.env)
 	ok, err := curVerifier.FactStmt(stmt)
 	if err != nil {
 		return err

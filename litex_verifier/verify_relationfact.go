@@ -5,38 +5,41 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) RelaFact(stmt *parser.RelaFactStmt) error {
+func (ver *Verifier) RelaFact(stmt *parser.RelaFactStmt) (bool, error) {
 	// TODO:  : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
-	err := verifier.RelaFactSpec(stmt)
+	ok, err := ver.RelaFactSpec(stmt)
 	if err != nil {
-		return err
+		return false, err
+	}
+	if ok {
+		return true, nil
 	}
 
-	if !verifier.round1() {
-		return nil
+	if !ver.round1() {
+		return false, nil
 	}
 
 	panic("")
 	// return verifier.FuncFactCond(stmt)
 }
 
-func (verifier *Verifier) RelaFactSpec(stmt *parser.RelaFactStmt) error {
-	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		err := verifier.RelaFactSpecAtEnv(curEnv, stmt)
+func (ver *Verifier) RelaFactSpec(stmt *parser.RelaFactStmt) (bool, error) {
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		ok, err := ver.RelaFactSpecAtEnv(curEnv, stmt)
 		if err != nil {
-			return err
+			return false, err
 		}
-		if verifier.true() {
-			return nil
+		if ok {
+			return true, nil
 		}
 	}
-	return nil
+	return false, nil
 }
 
-func (verifier *Verifier) RelaFactSpecAtEnv(curEnv *env.Env, stmt *parser.RelaFactStmt) error {
+func (ver *Verifier) RelaFactSpecAtEnv(curEnv *env.Env, stmt *parser.RelaFactStmt) (bool, error) {
 	if string(stmt.Opt.OptName) == parser.KeywordEqual {
-		return verifier.EqualFactSpecAtEnv(curEnv, stmt)
+		return ver.EqualFactSpecAtEnv(curEnv, stmt)
 	}
 
 	panic("not implemented")

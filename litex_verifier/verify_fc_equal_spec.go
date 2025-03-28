@@ -6,13 +6,13 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) FcEqual(left, right parser.Fc, addRound bool) (bool, error) {
+func (ver *Verifier) FcEqual(left, right parser.Fc, addRound bool) (bool, error) {
 	if addRound {
-		verifier.addRound()
-		defer verifier.minusRound()
+		ver.addRound()
+		defer ver.minusRound()
 	}
 
-	ok, err := verifier.fcEqualSpec(left, right)
+	ok, err := ver.fcEqualSpec(left, right)
 	if err != nil {
 		return false, nil
 	}
@@ -20,7 +20,7 @@ func (verifier *Verifier) FcEqual(left, right parser.Fc, addRound bool) (bool, e
 		return true, nil
 	}
 
-	if !verifier.round1() {
+	if !ver.round1() {
 		return false, nil
 	}
 
@@ -68,11 +68,11 @@ func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc) (bool, error) {
 	return false, nil
 }
 
-func (verifier *Verifier) fcAtomEqualSpec(left, right *parser.FcAtom) (bool, error) {
+func (ver *Verifier) fcAtomEqualSpec(left, right *parser.FcAtom) (bool, error) {
 	return false, nil
 }
 
-func (verifier *Verifier) fcFnCallPipeEqualSpec(left, right *parser.FcFnCallPipe) (bool, error) {
+func (ver *Verifier) fcFnCallPipeEqualSpec(left, right *parser.FcFnCallPipe) (bool, error) {
 	// 如果两个函数的名字一样，每个参数都一样，那也行
 	ret, err := cmp.CmpFc(&left.FnHead, &right.FnHead)
 	if err != nil {
@@ -93,8 +93,8 @@ func (verifier *Verifier) fcFnCallPipeEqualSpec(left, right *parser.FcFnCallPipe
 		}
 
 		for j := 0; j < len(left.CallPipe[i].Params); j++ {
-			verifier.unknownNoMsg() // clear verifier
-			ok, err := verifier.fcEqualSpec(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j])
+			ver.unknownNoMsg() // clear verifier
+			ok, err := ver.fcEqualSpec(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j])
 			if err != nil {
 				return false, err
 			}
@@ -104,10 +104,10 @@ func (verifier *Verifier) fcFnCallPipeEqualSpec(left, right *parser.FcFnCallPipe
 		}
 	}
 
-	if verifier.round1() {
-		verifier.successMsg(fmt.Sprintf("%v = %v", left.String(), right.String()), "use known facts")
+	if ver.round1() {
+		ver.successMsg(fmt.Sprintf("%v = %v", left.String(), right.String()), "use known facts")
 	} else {
-		verifier.successNoMsg()
+		ver.successNoMsg()
 	}
 
 	return true, nil
