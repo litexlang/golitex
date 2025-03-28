@@ -46,7 +46,11 @@ func (verifier *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) error {
 			}
 
 			if verified {
-				verifier.success(stmt.String(), knownFact.String(stmt.Opt))
+				if verifier.round1() {
+					verifier.successWithMsg(stmt.String(), knownFact.String(stmt.Opt))
+				} else {
+					verifier.successNoMsg()
+				}
 				return nil
 			}
 		}
@@ -93,7 +97,11 @@ LoopOverFacts:
 		}
 
 		if verified {
-			verifier.success(stmt.String(), knownFact.Fact.String())
+			if verifier.round1() {
+				verifier.successWithMsg(stmt.String(), knownFact.Fact.String())
+			} else {
+				verifier.successNoMsg()
+			}
 			return nil
 		}
 	}

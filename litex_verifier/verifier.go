@@ -61,8 +61,12 @@ func (e *Verifier) round1() bool {
 	return e.searchRound == 1
 }
 
-func (e *Verifier) success(stmtString, storedStmtString string) {
+func (e *Verifier) successWithMsg(stmtString, storedStmtString string) {
 	e.successMsg(stmtString, storedStmtString)
+	e.Output = VerifierTrue
+}
+
+func (e *Verifier) successNoMsg() {
 	e.Output = VerifierTrue
 }
 
@@ -76,7 +80,11 @@ func (e *Verifier) deleteEnv() {
 	e.env = e.env.Parent
 }
 
-func (e *Verifier) unknown(format string, args ...any) {
+func (e *Verifier) unknownWithMsg(format string, args ...any) {
 	e.unknownMsg(format, args...)
+	e.Output = VerifierUnknown
+}
+
+func (e *Verifier) unknownNoMsg() {
 	e.Output = VerifierUnknown
 }

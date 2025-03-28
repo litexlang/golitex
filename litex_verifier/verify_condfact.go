@@ -37,12 +37,21 @@ func (verifier *Verifier) CondFactSpec(stmt *parser.CondFactStmt) error {
 			return err
 		}
 		if !verifier.true() {
-			verifier.unknown("%v is unknown: %v is unknown", stmt, thenFact)
-			return nil
+			if verifier.round1() {
+				verifier.unknownWithMsg("%v is unknown: %v is unknown", stmt, thenFact)
+				return nil
+			} else {
+				verifier.unknownNoMsg()
+				return nil
+			}
 		}
 	}
 
-	verifier.success("%v is true", stmt.String())
+	if verifier.round1() {
+		verifier.successWithMsg("%v is true", stmt.String())
+	} else {
+		verifier.successNoMsg()
+	}
 
 	return nil
 }

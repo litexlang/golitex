@@ -11,7 +11,11 @@ func (verifier *Verifier) EqualFactSpecAtEnv(curEnv *env.Env, stmt *parser.RelaF
 		return err
 	}
 	if verified {
-		verifier.success(stmt.String(), stmt.Params[0].String())
+		if verifier.round1() {
+			verifier.successWithMsg(stmt.String(), stmt.Params[0].String())
+		} else {
+			verifier.successNoMsg()
+		}
 		return nil
 	}
 	return nil
