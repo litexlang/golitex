@@ -39,7 +39,7 @@ func (ver *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) (bool, error) {
 		}
 
 		for _, knownFact := range searchedNode.Facts {
-			ok, err := ver.FcSliceEqualSpec(&knownFact.Params, &stmt.Params)
+			ok, err := ver.FcSliceEqual(&knownFact.Params, &stmt.Params)
 
 			if err != nil {
 				return false, err
@@ -90,7 +90,7 @@ LoopOverFacts:
 			}
 		}
 
-		verified, err := ver.FcSliceEqualSpec(&knownFact.Params, &stmt.Params)
+		verified, err := ver.FcSliceEqual(&knownFact.Params, &stmt.Params)
 
 		if err != nil {
 			return false, err
