@@ -5,33 +5,33 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) FuncFact(stmt *parser.FuncFactStmt) error {
+func (verifier *Verifier) FuncFact(stmt *parser.FuncFactStmt) (bool, error) {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
-	err := verifier.FuncFactSpec(stmt)
+	ok, err := verifier.FuncFactSpec(stmt)
 	if err != nil {
-		return err
+		return false, err
 	}
-	if verifier.true() {
-		return nil
+	if ok {
+		return true, nil
 	}
 
 	if !verifier.round1() {
-		return nil
+		return false, nil
 	}
 
-	err = verifier.FuncFactCond(stmt)
+	ok, err = verifier.FuncFactCond(stmt)
 	if err != nil {
-		return err
+		return false, nil
 	}
-	if verifier.true() {
-		return nil
+	if ok {
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
 
-func (verifier *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) error {
+func (verifier *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) (bool, error) {
 	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
 		searchedNode, got := curEnv.FuncFactMem.GetNode(stmt)
 		if !got {
@@ -39,53 +39,53 @@ func (verifier *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) error {
 		}
 
 		for _, knownFact := range searchedNode.Facts {
-			verified, err := verifier.FcSliceEqualSpec(&knownFact.Params, &stmt.Params)
+			ok, err := verifier.FcSliceEqualSpec(&knownFact.Params, &stmt.Params)
 
 			if err != nil {
-				return err
+				return false, err
 			}
 
-			if verified {
+			if ok {
 				if verifier.round1() {
 					verifier.successWithMsg(stmt.String(), knownFact.String(stmt.Opt))
 				} else {
 					verifier.successNoMsg()
 				}
-				return nil
+				return true, nil
 			}
 		}
 	}
-	return nil
+	return false, nil
 }
 
-func (verifier *Verifier) FuncFactCond(stmt *parser.FuncFactStmt) error {
+func (verifier *Verifier) FuncFactCond(stmt *parser.FuncFactStmt) (bool, error) {
 	// Use cond fact to verify
 	for curEnv := verifier.env; curEnv != nil; curEnv = curEnv.Parent {
-		err := verifier.FuncFactCondAtEnv(curEnv, stmt)
+		ok, err := verifier.FuncFactCondAtEnv(curEnv, stmt)
 		if err != nil {
-			return err
+			return false, err
 		}
-		if verifier.true() {
-			return nil
+		if ok {
+			return true, nil
 		}
 	}
-	return nil
+	return false, nil
 }
 
-func (verifier *Verifier) FuncFactCondAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt) error {
+func (verifier *Verifier) FuncFactCondAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt) (bool, error) {
 	searched, got := curEnv.CondFactMem.GetFuncFactNode(stmt)
 	if !got {
-		return nil
+		return false, nil
 	}
 
 LoopOverFacts:
 	for _, knownFact := range searched.Facts {
 		for _, f := range knownFact.Fact.CondFacts {
-			err := verifier.FactStmt(f)
+			ok, err := verifier.FactStmt(f)
 			if err != nil {
-				return err
+				return false, err
 			}
-			if !verifier.true() {
+			if !ok {
 				continue LoopOverFacts
 			}
 		}
@@ -93,7 +93,7 @@ LoopOverFacts:
 		verified, err := verifier.FcSliceEqualSpec(&knownFact.Params, &stmt.Params)
 
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		if verified {
@@ -102,9 +102,9 @@ LoopOverFacts:
 			} else {
 				verifier.successNoMsg()
 			}
-			return nil
+			return true, nil
 		}
 	}
 
-	return nil
+	return false, nil
 }
