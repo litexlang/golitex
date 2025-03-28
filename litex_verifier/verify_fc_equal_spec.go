@@ -6,29 +6,48 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (verifier *Verifier) fcEqual(left, right parser.Fc, addRound bool) error {
+func (verifier *Verifier) FcEqual(left, right parser.Fc, addRound bool) (bool, error) {
 	if addRound {
 		verifier.addRound()
 		defer verifier.minusRound()
 	}
 
-	err := verifier.fcEqualSpec(left, right)
+	ok, err := verifier.fcEqualSpec(left, right)
 	if err != nil {
-		return nil
+		return false, nil
+	}
+	if ok {
+		return true, nil
 	}
 
-	return nil
+	if !verifier.round1() {
+		return false, nil
+	}
+
+	return false, nil
 }
 
-func (ver *Verifier) fcEqualSpec(left, right parser.Fc) error {
-	err := ver.fcEqualSpecDirectly(left, right)
+func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
+	// Case: 完全一样
+	cmpRet, err := cmp.CmpFc(left, right)
 	if err != nil {
-		return err
+		return false, err
+	}
+	if cmpRet == 0 {
+		return true, nil
+	}
+
+	ok, err := ver.fcEqualSpecInSpecMem(left, right)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
 	}
 
 	cmpRet, fcEnum, err := cmp.CmpFcType(left, right)
 	if err != nil {
-		return nil
+		return false, nil
 	}
 
 	if cmpRet != 0 {
@@ -41,54 +60,46 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) error {
 		return ver.fcFnCallPipeEqualSpec(left.(*parser.FcFnCallPipe), right.(*parser.FcFnCallPipe))
 	}
 
-	return nil
+	return false, fmt.Errorf("unexpected")
 }
 
-func (ver *Verifier) fcEqualSpecDirectly(left, right parser.Fc) error {
-	// 完全一样
-	cmpRet, err := cmp.CmpFc(left, right)
-	if err != nil {
-		return err
-	}
-	if cmpRet == 0 {
-		return nil
-	}
-
+func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc) (bool, error) {
 	// 如果之前显式地说过 left = right，那就直接成立
-	return nil
+	return false, nil
 }
 
-func (verifier *Verifier) fcAtomEqualSpec(left, right *parser.FcAtom) error {
-	return nil
+func (verifier *Verifier) fcAtomEqualSpec(left, right *parser.FcAtom) (bool, error) {
+	return false, nil
 }
 
-func (verifier *Verifier) fcFnCallPipeEqualSpec(left, right *parser.FcFnCallPipe) error {
+func (verifier *Verifier) fcFnCallPipeEqualSpec(left, right *parser.FcFnCallPipe) (bool, error) {
 	// 如果两个函数的名字一样，每个参数都一样，那也行
 	ret, err := cmp.CmpFc(&left.FnHead, &right.FnHead)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if ret != 0 {
-		return nil
+		return false, nil
 	}
 
 	if len(left.CallPipe) != len(right.CallPipe) {
-		return nil
+		return false, nil
 	}
 
 	for i := 0; i < len(left.CallPipe); i++ {
 		if len(left.CallPipe[i].Params) != len(right.CallPipe[i].Params) {
-			return nil
+			return false, nil
 		}
 
 		for j := 0; j < len(left.CallPipe[i].Params); j++ {
-			err := verifier.fcEqualSpec(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j])
+			verifier.unknownNoMsg() // clear verifier
+			ok, err := verifier.fcEqualSpec(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j])
 			if err != nil {
-				return err
+				return false, err
 			}
-			if !verifier.true() {
-				return nil
+			if !ok {
+				return false, nil
 			}
 		}
 	}
@@ -99,5 +110,5 @@ func (verifier *Verifier) fcFnCallPipeEqualSpec(left, right *parser.FcFnCallPipe
 		verifier.successNoMsg()
 	}
 
-	return nil
+	return true, nil
 }
