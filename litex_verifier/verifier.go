@@ -7,8 +7,8 @@ import (
 )
 
 func (verifier *Verifier) FactStmt(stmt parser.FactStmt) error {
-	verifier.roundAddOne()
-	defer verifier.roundMinusOne()
+	verifier.addRound()
+	defer verifier.minusRound()
 
 	switch stmt := stmt.(type) {
 	case *parser.FuncFactStmt:
@@ -45,11 +45,11 @@ func NewVerifier(curEnv *env.Env) *Verifier {
 	}
 }
 
-func (e *Verifier) roundAddOne() {
+func (e *Verifier) addRound() {
 	e.searchRound++
 }
 
-func (e *Verifier) roundMinusOne() {
+func (e *Verifier) minusRound() {
 	e.searchRound--
 }
 
