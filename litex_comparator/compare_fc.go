@@ -17,7 +17,7 @@ func CmpFc(left, right parser.Fc) (int, error) {
 		return cmpFcFnCallPipe(left.(*parser.FcFnCallPipe), right.(*parser.FcFnCallPipe))
 	}
 
-	return CmpFcOfTheSameType(left, right)
+	return 0, fmt.Errorf("")
 }
 
 type FcEnum uint8
@@ -28,7 +28,6 @@ const (
 )
 
 func CmpFcType(left, right parser.Fc) (int, FcEnum, error) {
-	// Process left
 	var knownEnum FcEnum
 	switch left.(type) {
 	case *parser.FcAtom:
@@ -51,22 +50,6 @@ func CmpFcType(left, right parser.Fc) (int, FcEnum, error) {
 	}
 
 	return int(knownEnum - givenEnum), knownEnum, nil
-}
-
-func CmpFcOfTheSameType(left, right parser.Fc) (int, error) {
-	knownFcAtom, ok := left.(*parser.FcAtom)
-	givenFcAtom, ok2 := right.(*parser.FcAtom)
-	if ok && ok2 {
-		return cmpFcAtom(knownFcAtom, givenFcAtom)
-	}
-
-	knownFcFnCall, ok := left.(*parser.FcFnCallPipe)
-	givenFcFnCall, ok2 := right.(*parser.FcFnCallPipe)
-	if ok && ok2 {
-		return cmpFcFnCallPipe(knownFcFnCall, givenFcFnCall)
-	}
-
-	return 0, fmt.Errorf("unknown fc type")
 }
 
 func cmpFcAtom(left, right *parser.FcAtom) (int, error) {
