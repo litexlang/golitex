@@ -2,7 +2,6 @@ package litexverifier
 
 import (
 	"fmt"
-	cmp "golitex/litex_comparator"
 	env "golitex/litex_env"
 	memory "golitex/litex_memory"
 	parser "golitex/litex_parser"
@@ -31,12 +30,12 @@ func (verifier *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, r
 		return false, err
 	}
 
-	comp, err := cmp.CmpFc(left, right)
+	ok, err := verifier.FcEqual(left, right, true)
 
 	if err != nil {
 		return false, err
 	}
-	if comp == 0 {
+	if ok {
 		// verifier.newMessage("true:%v = %v", left.String(), right.String())
 		return true, nil
 	}
@@ -46,11 +45,11 @@ func (verifier *Verifier) TwoFcEqualSpecAtEnv(curEnv *env.Env, left parser.Fc, r
 	}
 
 	for _, equalFc := range searchedNode.Key.Values {
-		comp, err := cmp.CmpFc(*equalFc, right)
+		ok, err := verifier.FcEqual(*equalFc, right, true)
 		if err != nil {
 			return false, err
 		}
-		if comp == 0 {
+		if ok {
 			// verifier.newMessage("true:%v = %v", left.String(), right.String())
 			return true, nil
 		}

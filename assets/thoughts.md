@@ -732,4 +732,5 @@ prove < G Group::Group > G impl Group::SemiGroup:
 
 3.28
 1. 为了统一性，让所有的atom都形如pkgName::name 我让用户定义在某个type上的__add__时，定义方式是__add__typeName__ 之后你想把这个函数作为参数传递也是用这个名字
-2. 
+2. 数学是一层又一层的抽象。人类做抽象的方法其实是只是在某几个方向做抽象，还有大量的方式没做
+   1. 比如人们做抽象，经常是 keyword1 -> keyword2 -> keyword3 ... 这样一层层做；但逻辑上，keyword3 -> keyword1 -> keyword2 -> ... 可能也是能通过的。之所以后者不受重视，是因为不能对应到现实生活中。
