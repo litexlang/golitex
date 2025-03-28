@@ -55,14 +55,14 @@ func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) FcSliceEqual(left *[]parser.Fc, right *[]parser.Fc) (bool, error) {
+func (ver *Verifier) FcSliceEqual(left *[]parser.Fc, right *[]parser.Fc, specMode bool) (bool, error) {
 	if len(*left) != len(*right) {
 		return false, fmt.Errorf("%v and %v have different length", *left, *right)
 	}
 
 	twoFuncFactHaveEqualParams := true
 	for i, knownParam := range *left {
-		verified, err := ver.FcEqual(knownParam, (*right)[i])
+		verified, err := ver.FcEqual(knownParam, (*right)[i], specMode)
 		if err != nil {
 			return false, err
 		}
