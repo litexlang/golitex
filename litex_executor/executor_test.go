@@ -462,3 +462,23 @@ x < y
 	messages := execStmtTest(topStmtSlice, t)
 	execMessageTest(messages)
 }
+
+func TestWhenVerifier3(t *testing.T) {
+	code :=
+		`
+know:
+	when:
+		x = 1
+		then:
+			x < y
+	x = 1
+	a = x
+
+// x < y
+a < y
+// b < y
+`
+	topStmtSlice := parseStmtTest(&code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	execMessageTest(messages)
+}

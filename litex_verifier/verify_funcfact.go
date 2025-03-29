@@ -107,7 +107,7 @@ LoopOverFacts:
 
 		if verified {
 			if ver.round1() {
-				ver.successWithMsg(stmt.String(), knownFact.Fact.String())
+				ver.successWithMsg("", knownFact.Fact.String())
 			} else {
 				ver.successNoMsg()
 			}
