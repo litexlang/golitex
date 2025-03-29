@@ -1,7 +1,6 @@
 package litexparser
 
 import (
-	"fmt"
 	msg "golitex/litex_messages"
 	"strings"
 )
@@ -45,9 +44,9 @@ func (stmt *FuncFactStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *RelaFactStmt) String() string {
-	return fmt.Sprintf("%v %v %v", stmt.Params[0].String(), stmt.Opt.String(), stmt.Params[1].String())
-}
+// func (stmt *RelaFactStmt) String() string {
+// 	return fmt.Sprintf("%v %v %v", stmt.Params[0].String(), stmt.Opt.String(), stmt.Params[1].String())
+// }
 
 func (stmt *DefObjStmt) String() string { panic("") }
 

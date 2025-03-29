@@ -1,7 +1,5 @@
 package litexmemory
 
-import parser "golitex/litex_parser"
-
 func NewPropMemory() *PropMem {
 	return &PropMem{}
 }
@@ -31,6 +29,6 @@ func (mem *FnMem) Get(s string) (*FnMemEntry, bool) {
 	return nil, false
 }
 
-func (mem *RelaFactMemDict) NewRelaFact(fact *parser.RelaFactStmt) error {
-	panic("")
-}
+// func (mem *RelaFactMemDict) NewRelaFact(fact *parser.RelaFactStmt) error {
+// 	panic("")
+// }

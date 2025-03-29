@@ -59,8 +59,8 @@ func (factMem *CondFactMemDict) Insert(condStmt *parser.CondFactStmt) error {
 			if err != nil {
 				return err
 			}
-		case *parser.RelaFactStmt:
-			panic("not implemented")
+		// case *parser.RelaFactStmt:
+		// 	panic("not implemented")
 		default:
 			return fmt.Errorf("unknown fact type: %T", stmt)
 		}
@@ -96,8 +96,8 @@ func (factMem *CondFactMemDict) GetNode(stmt parser.SpecFactStmt) (StoredCondMem
 	switch s := stmt.(type) {
 	case *parser.FuncFactStmt:
 		return factMem.GetFuncFactNode(s)
-	case *parser.RelaFactStmt:
-		panic("not implemented")
+	// case *parser.RelaFactStmt:
+	// 	panic("not implemented")
 	default:
 		panic("invalid type")
 	}
@@ -126,8 +126,8 @@ func (factMem *UniFactMemDict) Insert(fact *parser.UniFactStmt) error {
 			if err != nil {
 				return err
 			}
-		case *parser.RelaFactStmt:
-			panic("not implemented")
+		// case *parser.RelaFactStmt:
+		// 	panic("not implemented")
 		default:
 			return fmt.Errorf("unknown fact type: %T", stmt)
 		}

@@ -10,8 +10,8 @@ func (env *Env) NewFact(stmt parser.FactStmt) error {
 	switch f := stmt.(type) {
 	case *parser.FuncFactStmt:
 		return env.NewFuncFact(f)
-	case *parser.RelaFactStmt:
-		return env.NewRelaFact(f)
+	// case *parser.RelaFactStmt:
+	// 	return env.NewRelaFact(f)
 	case *parser.CondFactStmt:
 		return env.NewCondFact(f)
 	case *parser.UniFactStmt:
@@ -22,7 +22,7 @@ func (env *Env) NewFact(stmt parser.FactStmt) error {
 }
 
 func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
-	if string(fact.Opt.OptName) == (parser.KeywordEqual) {
+	if fact.IsEqualFact() {
 		return env.NewEqualFact(fact)
 	}
 
@@ -33,9 +33,9 @@ func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
 	return nil
 }
 
-func (env *Env) NewRelaFact(stmt *parser.RelaFactStmt) error {
-	panic(fmt.Sprintf("%v not implemented", string(stmt.Opt.OptName)))
-}
+// func (env *Env) NewRelaFact(stmt *parser.RelaFactStmt) error {
+// 	panic(fmt.Sprintf("%v not implemented", string(stmt.Opt.OptName)))
+// }
 
 func (env *Env) NewEqualFact(stmt *parser.FuncFactStmt) error {
 	left := &mem.EqualFactMemoryTreeNode{

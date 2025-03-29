@@ -387,11 +387,11 @@ func TestEqualFactMemory(t *testing.T) {
 	}
 }
 
-func randEqualFact() *parser.RelaFactStmt {
+func randEqualFact() *parser.FuncFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.RelaFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", OptName: "="}}
+	return &parser.FuncFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", OptName: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {
@@ -432,7 +432,7 @@ $p(x)
 	execMessageTest(messages)
 }
 
-func TestRelaVerifier(t *testing.T) {
+func TestEqualVerifier(t *testing.T) {
 	code :=
 		`
 know:
@@ -440,6 +440,23 @@ know:
 	x = a
 
 a < y
+`
+	topStmtSlice := parseStmtTest(&code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	execMessageTest(messages)
+}
+
+func TestWhenVerifier2(t *testing.T) {
+	code :=
+		`
+know:
+	when:
+		x = 1
+		then:
+			x < y
+	x = 1
+
+x < y
 `
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)
