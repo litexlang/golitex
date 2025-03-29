@@ -12,6 +12,15 @@ func (fact *StoredFuncFact) String(atom parser.FcAtom) string {
 		builder.WriteString("not")
 	}
 
+	if atom.PkgName == "" && parser.IsBuiltinSymbol(atom.OptName) {
+		builder.WriteString(fact.Params[0].String())
+		builder.WriteByte(' ')
+		builder.WriteString(atom.OptName)
+		builder.WriteByte(' ')
+		builder.WriteString(fact.Params[1].String())
+		return builder.String()
+	}
+
 	builder.WriteString(parser.KeywordDollar)
 	builder.WriteString(atom.String())
 	builder.WriteByte('(')

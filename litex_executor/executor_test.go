@@ -422,10 +422,24 @@ know:
 
 know:
 	$q(a)
-	// x = y
+	x = y
 
 $p(y)
 $p(x)
+`
+	topStmtSlice := parseStmtTest(&code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	execMessageTest(messages)
+}
+
+func TestRelaVerifier(t *testing.T) {
+	code :=
+		`
+know:
+	x < y
+	x = a
+
+a < y
 `
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)
