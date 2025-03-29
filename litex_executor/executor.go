@@ -50,6 +50,10 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		if curVerifier.Output == verifier.VerifierUnknown {
+			exec.newMessage("is unknown.")
+		}
 	}
 
 	return nil

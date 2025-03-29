@@ -28,6 +28,7 @@ func (ver *Verifier) FuncFact(stmt *parser.FuncFactStmt) (bool, error) {
 		return true, nil
 	}
 
+	ver.unknownNoMsg()
 	return false, nil
 }
 
