@@ -587,11 +587,11 @@ func (stmt *TokenBlock) parseRelaFactStmt() (SpecFactStmt, error) {
 		params = append(params, fc)
 	}
 
-	if opt != "=" {
-		return &FuncFactStmt{true, FcAtom{OptName: opt}, params}, nil
-	} else {
-		return &RelaFactStmt{false, FcAtom{OptName: opt}, params}, nil
-	}
+	// if opt != "=" {
+	return &FuncFactStmt{true, FcAtom{OptName: opt}, params}, nil
+	// } else {
+	// 	return &RelaFactStmt{false, FcAtom{OptName: opt}, params}, nil
+	// }
 	// return &RelaFactStmt{true, FcAtom{OptName: opt}, params}, nil
 }
 

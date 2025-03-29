@@ -14,8 +14,8 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 	switch stmt := stmt.(type) {
 	case *parser.FuncFactStmt:
 		return ver.FuncFact(stmt)
-	case *parser.RelaFactStmt:
-		return ver.RelaFact(stmt)
+	// case *parser.RelaFactStmt:
+	// 	return ver.RelaFact(stmt)
 	case *parser.CondFactStmt:
 		return ver.CondFact(stmt)
 	default:

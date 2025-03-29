@@ -34,6 +34,10 @@ func (ver *Verifier) FuncFact(stmt *parser.FuncFactStmt) (bool, error) {
 
 func (ver *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		if stmt.Opt.PkgName == "" && stmt.Opt.OptName == parser.KeywordEqual {
+			return ver.EqualFactSpecAtEnv(curEnv, stmt)
+		}
+
 		searchedNode, got := curEnv.FuncFactMem.GetNode(stmt)
 		if !got {
 			continue
