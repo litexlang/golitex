@@ -40,6 +40,10 @@ func (ver *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) (bool, error) {
 		}
 
 		for _, knownFact := range searchedNode.Facts {
+			if stmt.IsTrue != knownFact.IsTrue {
+				continue
+			}
+
 			ok, err := ver.FcSliceEqual(&knownFact.Params, &stmt.Params, false)
 
 			if err != nil {
@@ -48,7 +52,7 @@ func (ver *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) (bool, error) {
 
 			if ok {
 				if ver.round1() {
-					ver.successWithMsg(stmt.String(), knownFact.String(stmt.Opt))
+					ver.successWithMsg("", knownFact.String(stmt.Opt))
 				} else {
 					ver.successNoMsg()
 				}

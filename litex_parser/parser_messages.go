@@ -21,11 +21,28 @@ func (stmt *KnowStmt) String() string {
 }
 
 func (stmt *FuncFactStmt) String() string {
-	if stmt.IsTrue {
-		return fmt.Sprintf("$%v(%v)", stmt.Opt.String(), FcSliceString(&stmt.Params))
-	} else {
-		return fmt.Sprintf("not $%v(%v)", stmt.Opt.String(), FcSliceString(&stmt.Params))
+	var builder strings.Builder
+
+	if !stmt.IsTrue {
+		builder.WriteString("not ")
 	}
+
+	if stmt.Opt.PkgName == "" && IsBuiltinSymbol(stmt.Opt.OptName) {
+		builder.WriteString(stmt.Params[0].String())
+		builder.WriteByte(' ')
+		builder.WriteString(stmt.Opt.String())
+		builder.WriteByte(' ')
+		builder.WriteString(stmt.Params[1].String())
+		return builder.String()
+	}
+
+	builder.WriteByte('$')
+	builder.WriteString(stmt.Opt.String())
+	builder.WriteByte('(')
+	builder.WriteString(FcSliceString(&stmt.Params))
+	builder.WriteByte(')')
+
+	return builder.String()
 }
 
 func (stmt *RelaFactStmt) String() string {

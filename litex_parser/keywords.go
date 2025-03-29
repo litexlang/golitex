@@ -134,6 +134,15 @@ var BuiltinSymbolArray = []string{
 	KeywordAt,                     // "@"
 }
 
+func IsBuiltinSymbol(name string) bool {
+	for _, s := range BuiltinSymbolArray {
+		if s == name {
+			return true
+		}
+	}
+	return false
+}
+
 // Customizable Operators
 
 const (
