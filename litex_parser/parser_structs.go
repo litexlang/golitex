@@ -60,11 +60,15 @@ type FuncFactStmt struct {
 	Params []Fc
 }
 
-type RelaFactStmt struct {
-	IsTrue bool
-	Opt    FcAtom
-	Params []Fc
+func (f *FuncFactStmt) IsEqualFact() bool {
+	return f.Opt.OptName == KeywordEqual && f.Opt.PkgName == ""
 }
+
+// type RelaFactStmt struct {
+// 	IsTrue bool
+// 	Opt    FcAtom
+// 	Params []Fc
+// }
 
 type ClaimProveByContradictStmt struct {
 	toCheck []FactStmt
