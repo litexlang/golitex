@@ -987,3 +987,19 @@ exist_prop f(x S, y G) a fn, b S, c G:
 	}
 
 }
+
+func TestRelaFactStmt2(t *testing.T) {
+	code := `
+$p(x, y)
+x < y
+1 = 2
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
