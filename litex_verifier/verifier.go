@@ -18,6 +18,8 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 	// 	return ver.RelaFact(stmt)
 	case *parser.CondFactStmt:
 		return ver.CondFact(stmt)
+	case *parser.UniFactStmt:
+		return ver.UniFact(stmt)
 	default:
 		return false, fmt.Errorf("unexpected")
 	}
