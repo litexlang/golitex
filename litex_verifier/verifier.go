@@ -43,9 +43,9 @@ type Verifier struct {
 
 func NewVerifier(curEnv *env.Env) *Verifier {
 	if curEnv == nil {
-		return &Verifier{env: env.NewEnv(nil), Message: &[]string{}, Output: VerifierUnknown, searchRound: 0}
+		return &Verifier{env: env.NewEnv(nil), Message: &[]string{}, Output: VerifierUnknown, searchRound: 0, uniParams: make(map[string]parser.Fc)}
 	} else {
-		return &Verifier{env: curEnv, Message: &[]string{}, Output: VerifierUnknown, searchRound: 0}
+		return &Verifier{env: curEnv, Message: &[]string{}, Output: VerifierUnknown, searchRound: 0, uniParams: make(map[string]parser.Fc)}
 	}
 }
 
@@ -116,5 +116,10 @@ func (ver *Verifier) isDeclared(fc string) (bool, error) {
 }
 
 func (ver *Verifier) newUniParam(key string, value parser.Fc) error {
+	_, got := ver.uniParams[key]
+	if got {
+		return fmt.Errorf("%s is already a uni param", key)
+	}
+	ver.uniParams[key] = value
 	return nil
 }

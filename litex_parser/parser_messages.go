@@ -69,15 +69,16 @@ func (fact *CondFactStmt) String() string {
 		builder.WriteByte('\n')
 	}
 
-	builder.WriteString(msg.LineHead4Indents("then:\n", 1))
+	builder.WriteString(msg.LineHead4Indents("then:", 1))
+	builder.WriteByte('\n')
 	if len(fact.ThenFacts) > 0 {
 		// 遍历前 n-1 个元素，每个后面加换行
 		for i := 0; i < len(fact.ThenFacts)-1; i++ {
-			builder.WriteString(msg.LineHead4Indents(fact.ThenFacts[i].String(), 1))
+			builder.WriteString(msg.LineHead4Indents(fact.ThenFacts[i].String(), 2))
 			builder.WriteByte('\n')
 		}
 		// 单独处理最后一个元素，不加换行
-		builder.WriteString(msg.LineHead4Indents(fact.ThenFacts[len(fact.ThenFacts)-1].String(), 1))
+		builder.WriteString(msg.LineHead4Indents(fact.ThenFacts[len(fact.ThenFacts)-1].String(), 2))
 	}
 	return builder.String()
 }
@@ -103,9 +104,11 @@ func (l *UniFactStmt) String() string {
 		builder.WriteString(msg.LineHead4Indents(condFact.String(), 1))
 		builder.WriteByte('\n')
 	}
-	builder.WriteString(msg.LineHead4Indents("then:\n", 1))
+	builder.WriteString(msg.LineHead4Indents("then:", 1))
+	builder.WriteByte('\n')
 	for _, thenFact := range l.ThenFacts {
-		builder.WriteString(msg.LineHead4Indents(thenFact.String(), 1))
+		builder.WriteString(msg.LineHead4Indents(thenFact.String(), 2))
+		builder.WriteByte('\n')
 	}
 	return builder.String()
 }
