@@ -166,6 +166,15 @@ func (factMem *UniFactMemDict) GetFuncFactNode(stmt *parser.FuncFactStmt) (*Stor
 	}
 }
 
-func (knownFact *StoredUniFuncFact) Match(stmt *parser.FuncFactStmt) (bool, *map[string]parser.Fc, error) {
+func (knownFact *StoredUniFuncFact) Match(stmt *parser.FuncFactStmt) (bool, *map[string][]parser.Fc, error) { // 之所以是*map[string][]parser.Fc而不是 *map[string]parser.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
+	if len(stmt.Params) != len(*knownFact.FuncParams) {
+		// TODO 之后要根除不匹配的情况
+		return false, nil, nil
+	}
+
+	for i, knownFactParam := range *knownFact.FuncParams {
+		_, _ = i, knownFactParam
+	}
+
 	return false, nil, nil
 }
