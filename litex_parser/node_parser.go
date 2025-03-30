@@ -106,7 +106,7 @@ func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 	return members, nil
 }
 
-func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
+func (parser *Parser) parseIsExpr(left Fc) (*SpecFactStmt, error) {
 	err := parser.skip(KeywordIs)
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -118,7 +118,7 @@ func (parser *Parser) parseIsExpr(left Fc) (*FuncFactStmt, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	return &FuncFactStmt{true, opt, []Fc{left}}, nil
+	return &SpecFactStmt{true, opt, []Fc{left}}, nil
 }
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {

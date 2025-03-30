@@ -119,7 +119,7 @@ func TestVerifier(t *testing.T) {
 	}
 }
 
-func randFuncFact() *parser.FuncFactStmt {
+func randSpecFact() *parser.SpecFactStmt {
 	// randomly generate n random Fc
 	n := rand.Intn(10) + 1
 	params := make([]parser.Fc, n)
@@ -127,7 +127,7 @@ func randFuncFact() *parser.FuncFactStmt {
 		params[i] = randomFc()
 	}
 
-	stmt := parser.FuncFactStmt{IsTrue: true, Opt: *randFcAtom(), Params: params}
+	stmt := parser.SpecFactStmt{IsTrue: true, Opt: *randFcAtom(), Params: params}
 	return &stmt
 }
 
@@ -188,20 +188,20 @@ func randCondStmt() *parser.CondFactStmt {
 	randomNumberOfThenFacts := rand.Intn(3) + 1
 	condFacts := []parser.FactStmt{}
 	// thenFacts := []parser.SpecFactStmt{}
-	thenFacts := []parser.FuncFactStmt{}
+	thenFacts := []parser.SpecFactStmt{}
 
 	for i := 0; i < randomNumberOfCondFacts; i++ {
-		condFacts = append(condFacts, randFuncFact())
+		condFacts = append(condFacts, randSpecFact())
 	}
 
 	for i := 0; i < randomNumberOfThenFacts; i++ {
-		thenFacts = append(thenFacts, *randFuncFact())
+		thenFacts = append(thenFacts, *randSpecFact())
 	}
 
 	return &parser.CondFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
 }
 
-func TestKnowVerifyFuncFactSpeed(t *testing.T) {
+func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	env := env.NewEnv(nil, nil)
 	executor := *newExecutor(env)
 	topStatements := []*parser.TopStmt{}
@@ -212,7 +212,7 @@ func TestKnowVerifyFuncFactSpeed(t *testing.T) {
 
 	start := time.Now()
 	for i := 0; i < rounds; i++ {
-		stmt := randFuncFact()
+		stmt := randSpecFact()
 		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
 		topKnow := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
 		topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
@@ -388,11 +388,11 @@ func TestEqualFactMemory(t *testing.T) {
 	}
 }
 
-func randEqualFact() *parser.FuncFactStmt {
+func randEqualFact() *parser.SpecFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.FuncFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", OptName: "="}}
+	return &parser.SpecFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", OptName: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

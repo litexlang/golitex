@@ -19,7 +19,7 @@ func (stmt *KnowStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *FuncFactStmt) String() string {
+func (stmt *SpecFactStmt) String() string {
 	var builder strings.Builder
 
 	if !stmt.IsTrue {

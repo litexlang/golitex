@@ -8,8 +8,8 @@ import (
 
 func (env *Env) NewFact(stmt parser.FactStmt) error {
 	switch f := stmt.(type) {
-	case *parser.FuncFactStmt:
-		return env.NewFuncFact(f)
+	case *parser.SpecFactStmt:
+		return env.NewSpecFact(f)
 	// case *parser.RelaFactStmt:
 	// 	return env.NewRelaFact(f)
 	case *parser.CondFactStmt:
@@ -21,12 +21,12 @@ func (env *Env) NewFact(stmt parser.FactStmt) error {
 	}
 }
 
-func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
+func (env *Env) NewSpecFact(fact *parser.SpecFactStmt) error {
 	if fact.IsEqualFact() {
 		return env.NewEqualFact(fact)
 	}
 
-	err := env.FuncFactMem.Insert(fact)
+	err := env.SpecFactMem.Insert(fact)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (env *Env) NewFuncFact(fact *parser.FuncFactStmt) error {
 // 	panic(fmt.Sprintf("%v not implemented", string(stmt.Opt.OptName)))
 // }
 
-func (env *Env) NewEqualFact(stmt *parser.FuncFactStmt) error {
+func (env *Env) NewEqualFact(stmt *parser.SpecFactStmt) error {
 	left := &mem.EqualFactMemoryTreeNode{
 		FcAsKey: stmt.Params[0],
 		Values:  []*parser.Fc{&stmt.Params[1]},

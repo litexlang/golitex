@@ -12,8 +12,8 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 	defer ver.minusRound()
 
 	switch stmt := stmt.(type) {
-	case *parser.FuncFactStmt:
-		return ver.FuncFact(stmt)
+	case *parser.SpecFactStmt:
+		return ver.SpecFact(stmt)
 	// case *parser.RelaFactStmt:
 	// 	return ver.RelaFact(stmt)
 	case *parser.CondFactStmt:
