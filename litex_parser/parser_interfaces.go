@@ -50,7 +50,7 @@ type SpecFactParams struct {
 // }
 
 // func (r *RelaFactStmt) specFactStmtSetT(b bool) { r.IsTrue = b }
-func (f *FuncFactStmt) specFactStmtSetT(b bool) { f.IsTrue = b }
+// func (f *FuncFactStmt) specFactStmtSetT(b bool) { f.IsTrue = b }
 
 type ClaimStmt interface {
 	claimStmt()

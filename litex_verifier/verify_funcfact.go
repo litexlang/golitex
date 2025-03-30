@@ -2,6 +2,7 @@ package litexverifier
 
 import (
 	env "golitex/litex_env"
+	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
 
@@ -147,8 +148,26 @@ func (ver *Verifier) FuncFactUniAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt
 
 	for _, knownFact := range searched.Facts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
-		_ = knownFact
+		ok, paramMap, err := knownFact.Match(stmt)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
+		}
+
+		ok, err = ver.FuncFactGivenUni(knownFact, paramMap)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			ver.successWithMsg("", knownFact.String())
+		}
 	}
 
+	return false, nil
+}
+
+func (ver *Verifier) FuncFactGivenUni(knownFact mem.StoredUniFuncFact, paramMap *map[string]parser.Fc) (bool, error) {
 	return false, nil
 }

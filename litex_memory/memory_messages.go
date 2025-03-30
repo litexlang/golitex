@@ -30,6 +30,10 @@ func (fact *StoredFuncFact) String(atom parser.FcAtom) string {
 	return builder.String()
 }
 
-func (fact *StoredCondFuncFact) String(atom parser.FcAtom) string {
+func (fact *StoredCondFuncFact) String() string {
+	return fact.Fact.String()
+}
+
+func (fact *StoredUniFuncFact) String() string {
 	return fact.Fact.String()
 }

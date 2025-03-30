@@ -103,6 +103,10 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 // }
 
 func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
+	if !stmt.Header.is(KeywordDollar) {
+		return stmt.parseRelaFactStmt()
+	}
+
 	err := stmt.Header.skip(KeywordDollar)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -553,48 +557,48 @@ func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 	return &HaveStmt{*propStmt, *members}, nil
 }
 
-// func (stmt *TokenBlock) parseRelaFactStmt() (SpecFactStmt, error) {
-// 	fc, err := stmt.Header.ParseFc()
-// 	if err != nil {
-// 		return nil, &parseStmtErr{err, *stmt}
-// 	}
+func (stmt *TokenBlock) parseRelaFactStmt() (*FuncFactStmt, error) {
+	fc, err := stmt.Header.ParseFc()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
 
-// 	if stmt.Header.strAtCurIndexPlus(0) == KeywordIs {
-// 		return stmt.Header.parseIsExpr(fc)
-// 	}
-// 	// TODO 这里可以考虑和 Relational opt 的处理合并
+	if stmt.Header.strAtCurIndexPlus(0) == KeywordIs {
+		return stmt.Header.parseIsExpr(fc)
+	}
+	// TODO 这里可以考虑和 Relational opt 的处理合并
 
-// 	opt, err := stmt.Header.next()
-// 	if err != nil {
-// 		return nil, &parseStmtErr{err, *stmt}
-// 	}
+	opt, err := stmt.Header.next()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
 
-// 	if !isBuiltinRelaOpt(opt) {
-// 		return nil, &parseStmtErr{err, *stmt}
-// 	}
+	if !isBuiltinRelaOpt(opt) {
+		return nil, &parseStmtErr{err, *stmt}
+	}
 
-// 	fc2, err := stmt.Header.ParseFc()
-// 	if err != nil {
-// 		return nil, &parseStmtErr{err, *stmt}
-// 	}
+	fc2, err := stmt.Header.ParseFc()
+	if err != nil {
+		return nil, &parseStmtErr{err, *stmt}
+	}
 
-// 	params := []Fc{fc, fc2}
-// 	for stmt.Header.is(opt) {
-// 		stmt.Header.skip()
-// 		fc, err := stmt.Header.ParseFc()
-// 		if err != nil {
-// 			return nil, &parseStmtErr{err, *stmt}
-// 		}
-// 		params = append(params, fc)
-// 	}
+	params := []Fc{fc, fc2}
+	for stmt.Header.is(opt) {
+		stmt.Header.skip()
+		fc, err := stmt.Header.ParseFc()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		params = append(params, fc)
+	}
 
-// 	// if opt != "=" {
-// 	return &FuncFactStmt{true, FcAtom{OptName: opt}, params}, nil
-// 	// } else {
-// 	// 	return &RelaFactStmt{false, FcAtom{OptName: opt}, params}, nil
-// 	// }
-// 	// return &RelaFactStmt{true, FcAtom{OptName: opt}, params}, nil
-// }
+	// if opt != "=" {
+	return &FuncFactStmt{true, FcAtom{OptName: opt}, params}, nil
+	// } else {
+	// 	return &RelaFactStmt{false, FcAtom{OptName: opt}, params}, nil
+	// }
+	// return &RelaFactStmt{true, FcAtom{OptName: opt}, params}, nil
+}
 
 func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {
 	stmt.Header.skip(KeywordAxiom)
