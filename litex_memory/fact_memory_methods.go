@@ -166,6 +166,6 @@ func (factMem *UniFactMemDict) GetFuncFactNode(stmt *parser.FuncFactStmt) (*Stor
 	}
 }
 
-func (knownFact *StoredUniFuncFact) match(stmt *parser.FuncFactStmt) (bool, *map[string]parser.Fc, error) {
+func (knownFact *StoredUniFuncFact) Match(stmt *parser.FuncFactStmt) (bool, *map[string]parser.Fc, error) {
 	return false, nil, nil
 }
