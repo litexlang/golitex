@@ -16,3 +16,8 @@ func (ver *Verifier) unknownMsg(format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
 	*ver.Message = append(*ver.Message, message)
 }
+
+func (ver *Verifier) newMsg(format string, args ...any) {
+	message := fmt.Sprintf(format, args...)
+	*ver.Message = append(*ver.Message, message)
+}

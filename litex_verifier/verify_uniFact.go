@@ -45,5 +45,6 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt) (bool, error) {
 		}
 	}
 
-	return false, nil
+	ver.newMsg("is true")
+	return true, nil
 }
