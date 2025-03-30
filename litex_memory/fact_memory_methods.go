@@ -152,5 +152,20 @@ func NewUniFactMemDict() *UniFactMemDict {
 }
 
 func (factMem *UniFactMemDict) GetFuncFactNode(stmt *parser.FuncFactStmt) (*StoredUniFuncMemDictNode, bool) {
-	return nil, false
+	pkgName := stmt.Opt.PkgName
+	optName := stmt.Opt.OptName
+
+	if _, pkgExists := factMem.FuncFactsDict[pkgName]; !pkgExists {
+		return &StoredUniFuncMemDictNode{}, false
+	}
+
+	if ret, optExists := factMem.FuncFactsDict[pkgName][optName]; !optExists {
+		return &StoredUniFuncMemDictNode{}, false
+	} else {
+		return &ret, true
+	}
+}
+
+func (knownFact *StoredUniFuncFact) match(stmt *parser.FuncFactStmt) (bool, *map[string]parser.Fc, error) {
+	return false, nil, nil
 }

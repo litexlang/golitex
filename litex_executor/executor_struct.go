@@ -21,7 +21,7 @@ type Executor struct {
 
 func newExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil), message: &[]string{}, output: execUnknown}
+		return &Executor{env: env.NewEnv(nil, nil), message: &[]string{}, output: execUnknown}
 	} else {
 		return &Executor{env: curEnv, message: &[]string{}, output: execUnknown}
 	}
