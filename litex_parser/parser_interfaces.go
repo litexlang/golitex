@@ -42,12 +42,12 @@ type SpecFactParams struct {
 	ObjParams []Fc
 }
 
-type SpecFactStmt interface {
-	specFactStmtSetT(b bool)
-	factStmt()
-	stmt()
-	String() string
-}
+// type SpecFactStmt interface {
+// 	specFactStmtSetT(b bool)
+// 	factStmt()
+// 	stmt()
+// 	String() string
+// }
 
 // func (r *RelaFactStmt) specFactStmtSetT(b bool) { r.IsTrue = b }
 func (f *FuncFactStmt) specFactStmtSetT(b bool) { f.IsTrue = b }

@@ -115,11 +115,11 @@ func (ver *Verifier) isDeclared(fc string) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) newUniParam(key string, value parser.Fc) error {
-	_, got := ver.uniParams[key]
-	if got {
-		return fmt.Errorf("%s is already a uni param", key)
-	}
-	ver.uniParams[key] = value
-	return nil
-}
+// func (ver *Verifier) newUniParam(key string, value parser.Fc) error {
+// 	_, got := ver.uniParams[key]
+// 	if got {
+// 		return fmt.Errorf("%s is already a uni param", key)
+// 	}
+// 	ver.uniParams[key] = value
+// 	return nil
+// }

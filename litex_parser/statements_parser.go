@@ -72,34 +72,35 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	} else if stmt.Header.is(KeywordWhen) {
 		return stmt.parseConditionalStmt()
 	}
-	return stmt.parseSpecFactStmt()
+	// return stmt.parseSpecFactStmt()
+	return stmt.parseFuncPropFactStmt()
 }
 
-func (stmt *TokenBlock) parseSpecFactStmt() (SpecFactStmt, error) {
-	isTrue := true
-	if stmt.Header.is(KeywordNot) {
-		err := stmt.Header.skip(KeywordNot)
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		isTrue = false
-	}
+// func (stmt *TokenBlock) parseSpecFactStmt() (SpecFactStmt, error) {
+// 	isTrue := true
+// 	if stmt.Header.is(KeywordNot) {
+// 		err := stmt.Header.skip(KeywordNot)
+// 		if err != nil {
+// 			return nil, &parseStmtErr{err, *stmt}
+// 		}
+// 		isTrue = false
+// 	}
 
-	var ret SpecFactStmt
-	err := error(nil)
-	if stmt.Header.is(KeywordDollar) {
-		ret, err = stmt.parseFuncPropFactStmt()
-	} else {
-		ret, err = stmt.parseRelaFactStmt()
-	}
+// 	var ret SpecFactStmt
+// 	err := error(nil)
+// 	if stmt.Header.is(KeywordDollar) {
+// 		ret, err = stmt.parseFuncPropFactStmt()
+// 	} else {
+// 		ret, err = stmt.parseRelaFactStmt()
+// 	}
 
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
+// 	if err != nil {
+// 		return nil, &parseStmtErr{err, *stmt}
+// 	}
 
-	ret.specFactStmtSetT(isTrue)
-	return ret, nil
-}
+// 	ret.specFactStmtSetT(isTrue)
+// 	return ret, nil
+// }
 
 func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
 	err := stmt.Header.skip(KeywordDollar)
@@ -160,7 +161,7 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 	}
 
 	condFacts := &[]FactStmt{}
-	thenFacts := &[]SpecFactStmt{}
+	thenFacts := &[]FuncFactStmt{}
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(KeywordThen) {
 		for i := 0; i < len(stmt.Body)-1; i++ {
@@ -176,11 +177,11 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 		}
 	} else {
 		for i := 0; i < len(stmt.Body); i++ {
-			curStmt, err := stmt.Body[i].parseSpecFactStmt()
+			curStmt, err := stmt.Body[i].parseFuncPropFactStmt()
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
-			*thenFacts = append(*thenFacts, curStmt)
+			*thenFacts = append(*thenFacts, *curStmt)
 		}
 	}
 
@@ -205,19 +206,19 @@ func (stmt *TokenBlock) parseBodyFacts() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseThenBlockSpecFacts() (*[]SpecFactStmt, error) {
-	facts := &[]SpecFactStmt{}
+func (stmt *TokenBlock) parseThenBlockSpecFacts() (*[]FuncFactStmt, error) {
+	facts := &[]FuncFactStmt{}
 	stmt.Header.skip() // skip "then"
 	if err := stmt.Header.testAndSkip(KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
 	for _, curStmt := range stmt.Body {
-		fact, err := curStmt.parseSpecFactStmt()
+		fact, err := curStmt.parseFuncPropFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		*facts = append(*facts, fact)
+		*facts = append(*facts, *fact)
 	}
 
 	return facts, nil
@@ -549,51 +550,51 @@ func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &HaveStmt{propStmt, *members}, nil
+	return &HaveStmt{*propStmt, *members}, nil
 }
 
-func (stmt *TokenBlock) parseRelaFactStmt() (SpecFactStmt, error) {
-	fc, err := stmt.Header.ParseFc()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
+// func (stmt *TokenBlock) parseRelaFactStmt() (SpecFactStmt, error) {
+// 	fc, err := stmt.Header.ParseFc()
+// 	if err != nil {
+// 		return nil, &parseStmtErr{err, *stmt}
+// 	}
 
-	if stmt.Header.strAtCurIndexPlus(0) == KeywordIs {
-		return stmt.Header.parseIsExpr(fc)
-	}
-	// TODO 这里可以考虑和 Relational opt 的处理合并
+// 	if stmt.Header.strAtCurIndexPlus(0) == KeywordIs {
+// 		return stmt.Header.parseIsExpr(fc)
+// 	}
+// 	// TODO 这里可以考虑和 Relational opt 的处理合并
 
-	opt, err := stmt.Header.next()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
+// 	opt, err := stmt.Header.next()
+// 	if err != nil {
+// 		return nil, &parseStmtErr{err, *stmt}
+// 	}
 
-	if !isBuiltinRelaOpt(opt) {
-		return nil, &parseStmtErr{err, *stmt}
-	}
+// 	if !isBuiltinRelaOpt(opt) {
+// 		return nil, &parseStmtErr{err, *stmt}
+// 	}
 
-	fc2, err := stmt.Header.ParseFc()
-	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
-	}
+// 	fc2, err := stmt.Header.ParseFc()
+// 	if err != nil {
+// 		return nil, &parseStmtErr{err, *stmt}
+// 	}
 
-	params := []Fc{fc, fc2}
-	for stmt.Header.is(opt) {
-		stmt.Header.skip()
-		fc, err := stmt.Header.ParseFc()
-		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
-		}
-		params = append(params, fc)
-	}
+// 	params := []Fc{fc, fc2}
+// 	for stmt.Header.is(opt) {
+// 		stmt.Header.skip()
+// 		fc, err := stmt.Header.ParseFc()
+// 		if err != nil {
+// 			return nil, &parseStmtErr{err, *stmt}
+// 		}
+// 		params = append(params, fc)
+// 	}
 
-	// if opt != "=" {
-	return &FuncFactStmt{true, FcAtom{OptName: opt}, params}, nil
-	// } else {
-	// 	return &RelaFactStmt{false, FcAtom{OptName: opt}, params}, nil
-	// }
-	// return &RelaFactStmt{true, FcAtom{OptName: opt}, params}, nil
-}
+// 	// if opt != "=" {
+// 	return &FuncFactStmt{true, FcAtom{OptName: opt}, params}, nil
+// 	// } else {
+// 	// 	return &RelaFactStmt{false, FcAtom{OptName: opt}, params}, nil
+// 	// }
+// 	// return &RelaFactStmt{true, FcAtom{OptName: opt}, params}, nil
+// }
 
 func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {
 	stmt.Header.skip(KeywordAxiom)
@@ -649,10 +650,10 @@ func (stmt *TokenBlock) parseConditionalStmt() (*CondFactStmt, error) {
 	}
 
 	condFacts := []FactStmt{}
-	thenFacts := []SpecFactStmt{}
+	thenFacts := []FuncFactStmt{}
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
-		fact, err := stmt.Body[i].parseSpecFactStmt()
+		fact, err := stmt.Body[i].parseFuncPropFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -669,11 +670,11 @@ func (stmt *TokenBlock) parseConditionalStmt() (*CondFactStmt, error) {
 	}
 
 	for i := len(stmt.Body[len(stmt.Body)-1].Body) - 1; i >= 0; i-- {
-		fact, err := stmt.Body[len(stmt.Body)-1].Body[i].parseSpecFactStmt()
+		fact, err := stmt.Body[len(stmt.Body)-1].Body[i].parseFuncPropFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		thenFacts = append(thenFacts, fact)
+		thenFacts = append(thenFacts, *fact)
 	}
 
 	return &CondFactStmt{condFacts, thenFacts}, nil

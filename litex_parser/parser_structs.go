@@ -41,7 +41,7 @@ type UniFactStmt struct {
 	Params         []string
 	ParamTypes     []Fc // 注意到函数的返回值也可以是集合，所以这里是Fc，而不是string
 	ParamCondFacts []FactStmt
-	ThenFacts      []SpecFactStmt
+	ThenFacts      []FuncFactStmt //      []SpecFactStmt
 }
 
 type GenericUniStmt struct {
@@ -50,7 +50,7 @@ type GenericUniStmt struct {
 	Params         []string
 	ParamTypes     []Fc
 	ParamCondFacts []FactStmt
-	ThenFacts      []SpecFactStmt
+	ThenFacts      []FuncFactStmt // []SpecFactStmt
 }
 
 // 这里不需要分Concrete FuncFact, Generic FuncFact. 因为FuncFact的基本form都是下面这个样子。你到底是Concrete还是Generic取决于外部条件而不是它自己：外部条件包括：forall里的Generic，fn或prop的Generic
@@ -85,7 +85,8 @@ type KnowStmt struct {
 }
 
 type HaveStmt struct {
-	propStmt SpecFactStmt
+	// PropStmt SpecFactStmt
+	PropStmt FuncFactStmt
 	member   []string
 }
 
@@ -102,7 +103,7 @@ type ThmStmt struct {
 
 type CondFactStmt struct {
 	CondFacts []FactStmt
-	ThenFacts []SpecFactStmt
+	ThenFacts []FuncFactStmt // []SpecFactStmt
 }
 
 /*

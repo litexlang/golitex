@@ -1,7 +1,6 @@
 package litexmemory
 
 import (
-	"fmt"
 	parser "golitex/litex_parser"
 )
 
@@ -53,22 +52,22 @@ func NewCondFactMemDict() *CondFactMemDict {
 
 func (factMem *CondFactMemDict) Insert(condStmt *parser.CondFactStmt) error {
 	for _, stmt := range condStmt.ThenFacts {
-		switch s := stmt.(type) {
-		case *parser.FuncFactStmt:
-			err := factMem.insertFuncFact(condStmt, s)
-			if err != nil {
-				return err
-			}
+		// switch s := stmt.(type) {
+		// case *parser.FuncFactStmt:
+		err := factMem.InsertFuncFact(condStmt, &stmt)
+		if err != nil {
+			return err
+		}
 		// case *parser.RelaFactStmt:
 		// 	panic("not implemented")
-		default:
-			return fmt.Errorf("unknown fact type: %T", stmt)
-		}
+		// default:
+		// 	return fmt.Errorf("unknown fact type: %T", stmt)
+		// }
 	}
 	return nil
 }
 
-func (factMem *CondFactMemDict) insertFuncFact(condStmt *parser.CondFactStmt, stmt *parser.FuncFactStmt) error {
+func (factMem *CondFactMemDict) InsertFuncFact(condStmt *parser.CondFactStmt, stmt *parser.FuncFactStmt) error {
 	// 检查 pkgName 是否存在，不存在则初始化
 	pkgName := stmt.Opt.PkgName
 	optName := stmt.Opt.OptName
@@ -92,17 +91,6 @@ func (factMem *CondFactMemDict) insertFuncFact(condStmt *parser.CondFactStmt, st
 	return nil
 }
 
-func (factMem *CondFactMemDict) GetNode(stmt parser.SpecFactStmt) (StoredCondMemDictNode, bool) {
-	switch s := stmt.(type) {
-	case *parser.FuncFactStmt:
-		return factMem.GetFuncFactNode(s)
-	// case *parser.RelaFactStmt:
-	// 	panic("not implemented")
-	default:
-		panic("invalid type")
-	}
-}
-
 func (factMem *CondFactMemDict) GetFuncFactNode(stmt *parser.FuncFactStmt) (*StoredCondFuncMemDictNode, bool) {
 	pkgName := stmt.Opt.PkgName
 	optName := stmt.Opt.OptName
@@ -120,17 +108,17 @@ func (factMem *CondFactMemDict) GetFuncFactNode(stmt *parser.FuncFactStmt) (*Sto
 
 func (factMem *UniFactMemDict) Insert(fact *parser.UniFactStmt) error {
 	for _, stmt := range fact.ThenFacts {
-		switch s := stmt.(type) {
-		case *parser.FuncFactStmt:
-			err := factMem.insertFuncFact(fact, s)
-			if err != nil {
-				return err
-			}
+		// switch s := stmt.(type) {
+		// case *parser.FuncFactStmt:
+		err := factMem.insertFuncFact(fact, &stmt)
+		if err != nil {
+			return err
+		}
 		// case *parser.RelaFactStmt:
 		// 	panic("not implemented")
-		default:
-			return fmt.Errorf("unknown fact type: %T", stmt)
-		}
+		// default:
+		// 	return fmt.Errorf("unknown fact type: %T", stmt)
+		// }
 	}
 	return nil
 }
@@ -161,4 +149,8 @@ func (factMem *UniFactMemDict) insertFuncFact(uniStmt *parser.UniFactStmt, stmt 
 
 func NewUniFactMemDict() *UniFactMemDict {
 	return &UniFactMemDict{map[string]map[string]StoredUniFuncMemDictNode{}}
+}
+
+func (factMem *UniFactMemDict) GetFuncFactNode(stmt *parser.FuncFactStmt) (*StoredUniFuncMemDictNode, bool) {
+	return nil, false
 }

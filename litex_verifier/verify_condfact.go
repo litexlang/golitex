@@ -32,7 +32,7 @@ func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt) (bool, error) {
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(thenFact)
+		ok, err := ver.FactStmt(&thenFact)
 		if err != nil {
 			return false, err
 		}
