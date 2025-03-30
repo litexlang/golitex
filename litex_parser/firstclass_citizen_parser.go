@@ -2,11 +2,12 @@ package litexparser
 
 import (
 	"fmt"
+	glob "golitex/litex_globals"
 	"strconv"
 )
 
 func (parser *Parser) parseFcAtomAndFcFnRet() (Fc, error) {
-	if parser.is(KeywordLeftParen) {
+	if parser.is(glob.KeywordLeftParen) {
 		return parser.parseBracedFcExpr()
 	}
 
@@ -22,7 +23,7 @@ func (parser *Parser) parseFcAtomAndFcFnRet() (Fc, error) {
 
 	strAtSecondPosition := parser.strAtCurIndexPlus(0)
 
-	if strAtSecondPosition != KeywordLeftParen {
+	if strAtSecondPosition != glob.KeywordLeftParen {
 		return &fcStr, nil
 	} else {
 		return parser.parseFcFnRetVal(fcStr)
@@ -32,8 +33,8 @@ func (parser *Parser) parseFcAtomAndFcFnRet() (Fc, error) {
 // func (parser *Parser) parseFcChain(curFc FcChainMem) (*FcChain, error) {
 // 	fcArr := []FcChainMem{curFc}
 // 		err := error(nil)
-// 	for !parser.ExceedEnd() && parser.is(KeywordDot) {
-// 		err = parser.skip(KeywordDot)
+// 	for !parser.ExceedEnd() && parser.is(glob.KeywordDot) {
+// 		err = parser.skip(glob.KeywordDot)
 // 		if err != nil {
 // 			return nil, &parserErr{err, parser}
 // 		}
@@ -51,12 +52,12 @@ func (parser *Parser) parseFcAtomAndFcFnRet() (Fc, error) {
 // }
 
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
-	parser.skip(KeywordLeftParen)
+	parser.skip(glob.KeywordLeftParen)
 	fc, err := parser.ParseFc()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
-	parser.skip(KeywordRightParen)
+	parser.skip(glob.KeywordRightParen)
 	return fc, nil
 }
 
@@ -64,7 +65,7 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 // 	// 如果 1 out of range了，那返回值是 “”
 // 	strAtSecondPosition := parser.strAtCurIndexPlus(1)
 
-// 	if strAtSecondPosition != KeywordLeftParen {
+// 	if strAtSecondPosition != glob.glob.KeywordLeftParen {
 // 		return parser.parseFcStr()
 // 	} else {
 // 		return parser.parseFcFnRetVal()
@@ -86,7 +87,7 @@ func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]FcFnCallPipeSeg, error
 
 	pairs := []FcFnCallPipeSeg{}
 
-	for !parser.ExceedEnd() && (parser.is(KeywordLeftParen)) {
+	for !parser.ExceedEnd() && (parser.is(glob.KeywordLeftParen)) {
 		objParamsPtr := &[]Fc{}
 		objParamsPtr, err = parser.parseBracedFcArr()
 		if err != nil {
@@ -106,9 +107,9 @@ func (parser *Parser) parseFcAtom() (FcAtom, error) {
 	}
 
 	fromPkg := ""
-	if parser.is(KeywordColonColon) {
+	if parser.is(glob.KeywordColonColon) {
 		fromPkg = value
-		err := parser.skip(KeywordColonColon)
+		err := parser.skip(glob.KeywordColonColon)
 		if err != nil {
 			return FcAtom{OptName: ""}, err
 		}
@@ -122,10 +123,10 @@ func (parser *Parser) parseFcAtom() (FcAtom, error) {
 }
 
 func (parser *Parser) ParseFc() (Fc, error) {
-	return parser.parseFcInfixExpr(precLowest)
+	return parser.parseFcInfixExpr(glob.PrecLowest)
 }
 
-func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, error) {
+func (parser *Parser) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (Fc, error) {
 	left, err := parser.parseFcUnaryExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -138,7 +139,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec FcInfixOptPrecedence) (Fc, er
 			return left, nil
 		}
 
-		curPrec, isBinary := precedenceMap[curToken]
+		curPrec, isBinary := glob.PrecedenceMap[curToken]
 		if !isBinary || curPrec <= currentPrec {
 			break
 		}
@@ -164,7 +165,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	if prec, isUnary := unaryPrecedence[unaryOp]; isUnary {
+	if prec, isUnary := glob.UnaryPrecedence[unaryOp]; isUnary {
 		parser.skip()
 		right, err := parser.parseFcInfixExpr(prec)
 		if err != nil {
@@ -196,7 +197,7 @@ func (parser *Parser) parseNumberStr() (*FcAtom, error) {
 		return &FcAtom{OptName: ""}, fmt.Errorf("invalid number: %s", left)
 	}
 
-	if parser.is(KeywordDot) {
+	if parser.is(glob.KeywordDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {

@@ -1,6 +1,8 @@
-package litexmessages
+package litexglobals
 
-import "strings"
+import (
+	"strings"
+)
 
 func LineHead4Indents(line string, n uint32) string {
 	if n == 0 {
