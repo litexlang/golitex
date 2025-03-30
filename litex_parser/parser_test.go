@@ -1008,6 +1008,8 @@ func TestUniFactStmt3(t *testing.T) {
 	code := `
 forall x A:
 	$p(x)
+	then:
+		$p(x)
 `
 
 	statements, err := ParserTester(code)
