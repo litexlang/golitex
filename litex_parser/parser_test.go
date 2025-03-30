@@ -1003,3 +1003,18 @@ x < y
 	}
 
 }
+
+func TestUniFactStmt3(t *testing.T) {
+	code := `
+forall x A:
+	$p(x)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
