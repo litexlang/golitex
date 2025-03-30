@@ -87,3 +87,13 @@ func (env *Env) NewUniFact(fact *parser.UniFactStmt) error {
 	}
 	return nil
 }
+
+func (env *Env) IsDeclared(name string) (bool, error) {
+	// TODO: 不允许变量，函数，prop，type，或者任何名冲突
+	return false, nil
+}
+
+func (env *Env) Declare(stmt parser.Stmt, name string) error {
+	// TODO: 声明obj，也可能是fn，甚至可能是prop
+	return nil
+}

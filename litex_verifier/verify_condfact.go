@@ -21,7 +21,7 @@ func (ver *Verifier) CondFact(stmt *parser.CondFactStmt) (bool, error) {
 }
 
 func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt) (bool, error) {
-	ver.newEnv()
+	ver.newEnv(nil)
 	defer ver.deleteEnv()
 
 	for _, condFact := range stmt.CondFacts {
