@@ -1,11 +1,63 @@
 package litexmemory
 
-type MemoryErr struct {
-	err error
+import (
+	ds "golitex/litex_data_structure"
+	parser "golitex/litex_parser"
+)
+
+type StoredFactStmt interface {
+	String(atom parser.FcAtom) string
 }
 
-func (e *MemoryErr) Error() string {
-	return e.err.Error()
+type StoredFuncFact struct {
+	IsTrue bool
+	Params []parser.Fc
+}
+
+type StoredFuncMemDictNode struct{ Facts []StoredFuncFact }
+type FuncFactMemDict struct {
+	Dict map[string]map[string]StoredFuncMemDictNode
+}
+
+type StoredCondMemDictNode interface{ storedCondFuncFact() }
+
+func (m *StoredCondFuncMemDictNode) storedCondFuncFact() {}
+
+type StoredCondFuncFact struct {
+	IsTrue bool
+	Params []parser.Fc
+	Fact   *parser.CondFactStmt
+}
+
+type StoredCondFuncMemDictNode struct {
+	Facts []StoredCondFuncFact
+}
+
+type CondFactMemDict struct {
+	FuncFactsDict map[string]map[string]StoredCondFuncMemDictNode
+}
+
+type StoredUniFuncFact struct {
+	IsTrue bool
+	Params []parser.Fc
+	Fact   *parser.UniFactStmt
+}
+
+type StoredUniFuncMemDictNode struct {
+	Facts []StoredUniFuncFact
+}
+
+type UniFactMemDict struct {
+	FuncFactsDict map[string]map[string]StoredUniFuncMemDictNode
+}
+
+type EqualFactMemoryTreeNode struct {
+	FcAsKey parser.Fc
+	Values  []*parser.Fc
+}
+
+type EqualFactMem struct {
+	Mem ds.RedBlackTree[*EqualFactMemoryTreeNode]
 }
 
 type ObjMemoryEntry struct {

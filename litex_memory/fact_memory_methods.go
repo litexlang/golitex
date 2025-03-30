@@ -48,7 +48,7 @@ func (factMem *FuncFactMemDict) GetNode(stmt *parser.FuncFactStmt) (*StoredFuncM
 }
 
 func NewCondFactMemDict() *CondFactMemDict {
-	return &CondFactMemDict{map[string]map[string]StoredCondFuncMemDictNode{}, map[string]map[string]StoredCondRelaMemDictNode{}}
+	return &CondFactMemDict{map[string]map[string]StoredCondFuncMemDictNode{}}
 }
 
 func (factMem *CondFactMemDict) Insert(condStmt *parser.CondFactStmt) error {
