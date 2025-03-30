@@ -468,6 +468,8 @@ func TestForallVerifier(t *testing.T) {
 		`
 forall x A:
 	$p(x)
+	then:
+		$p(x)
 `
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)
