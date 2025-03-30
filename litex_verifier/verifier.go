@@ -38,14 +38,13 @@ type Verifier struct {
 	Message     *[]string
 	Output      VerifierOutput
 	searchRound uint8
-	uniParams   map[string]parser.Fc
 }
 
 func NewVerifier(curEnv *env.Env) *Verifier {
 	if curEnv == nil {
-		return &Verifier{env: env.NewEnv(nil), Message: &[]string{}, Output: VerifierUnknown, searchRound: 0, uniParams: make(map[string]parser.Fc)}
+		return &Verifier{env: env.NewEnv(nil, nil), Message: &[]string{}, Output: VerifierUnknown, searchRound: 0}
 	} else {
-		return &Verifier{env: curEnv, Message: &[]string{}, Output: VerifierUnknown, searchRound: 0, uniParams: make(map[string]parser.Fc)}
+		return &Verifier{env: curEnv, Message: &[]string{}, Output: VerifierUnknown, searchRound: 0}
 	}
 }
 
@@ -70,8 +69,8 @@ func (ver *Verifier) successNoMsg() {
 	ver.Output = VerifierTrue
 }
 
-func (ver *Verifier) newEnv(parent *env.Env) {
-	newEnv := env.NewEnv(parent)
+func (ver *Verifier) newEnv(parent *env.Env, uniParamsMap *map[string]parser.Fc) {
+	newEnv := env.NewEnv(parent, uniParamsMap)
 	newEnv.Parent = ver.env
 	ver.env = newEnv
 }
@@ -99,7 +98,7 @@ func (ver *Verifier) asConcreteFc(fc parser.Fc) parser.Fc {
 		return nil
 	}
 
-	return ver.uniParams[fcAsAtom.OptName]
+	return ver.env.UniParamMap[fcAsAtom.OptName]
 }
 
 func (ver *Verifier) isDeclared(fc string) (bool, error) {

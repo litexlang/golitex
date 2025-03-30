@@ -4,6 +4,7 @@ import (
 	cmp "golitex/litex_comparator"
 	ds "golitex/litex_data_structure"
 	mem "golitex/litex_memory"
+	parser "golitex/litex_parser"
 )
 
 type Env struct {
@@ -19,9 +20,16 @@ type Env struct {
 	// RelaFactMem  mem.RelaFactMemDict
 	UniFactMem   mem.UniFactMemDict
 	EqualFactMem mem.EqualFactMem
+
+	UniParamMap map[string]parser.Fc
 }
 
-func NewEnv(parent *Env) *Env {
+func NewEnv(parent *Env, uniParamMapPtr *map[string]parser.Fc) *Env {
+	if uniParamMapPtr == nil {
+		uniParamMap := make(map[string]parser.Fc)
+		uniParamMapPtr = &uniParamMap
+	}
+
 	env := &Env{
 		Parent: parent,
 
@@ -39,6 +47,7 @@ func NewEnv(parent *Env) *Env {
 		// UniFactMemory:      *NewUniFactMemory(),
 		UniFactMem:   *mem.NewUniFactMemDict(),
 		EqualFactMem: mem.EqualFactMem{Mem: *ds.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
+		UniParamMap:  *uniParamMapPtr,
 	}
 
 	return env

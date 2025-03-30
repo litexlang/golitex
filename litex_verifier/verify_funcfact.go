@@ -146,7 +146,7 @@ func (ver *Verifier) FuncFactUniAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt
 	}
 
 	for _, knownFact := range searched.Facts {
-		// TODO
+		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
 		_ = knownFact
 	}
 
