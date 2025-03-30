@@ -85,7 +85,7 @@ func (factMem *CondFactMemDict) insertFuncFact(condStmt *parser.CondFactStmt, st
 		}
 	}
 
-	node.Facts = append(node.Facts, StoredCondFuncFact{stmt.IsTrue, stmt.Params, condStmt})
+	node.Facts = append(node.Facts, StoredCondFuncFact{stmt.IsTrue, &stmt.Params, condStmt})
 
 	// 更新回字典
 	factMem.FuncFactsDict[pkgName][optName] = node
@@ -152,7 +152,7 @@ func (factMem *UniFactMemDict) insertFuncFact(uniStmt *parser.UniFactStmt, stmt 
 		}
 	}
 
-	node.Facts = append(node.Facts, StoredUniFuncFact{stmt.IsTrue, stmt.Params, uniStmt})
+	node.Facts = append(node.Facts, StoredUniFuncFact{stmt.IsTrue, &stmt.Params, &uniStmt.Params, uniStmt})
 
 	// 更新回字典
 	factMem.FuncFactsDict[pkgName][optName] = node

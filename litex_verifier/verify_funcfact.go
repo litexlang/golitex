@@ -99,7 +99,7 @@ LoopOverFacts:
 			}
 		}
 
-		verified, err := ver.FcSliceEqual(&knownFact.Params, &stmt.Params, false)
+		verified, err := ver.FcSliceEqual(knownFact.Params, &stmt.Params, false)
 
 		if err != nil {
 			return false, err

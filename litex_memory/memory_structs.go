@@ -25,7 +25,7 @@ func (m *StoredCondFuncMemDictNode) storedCondFuncFact() {}
 
 type StoredCondFuncFact struct {
 	IsTrue bool
-	Params []parser.Fc
+	Params *[]parser.Fc
 	Fact   *parser.CondFactStmt
 }
 
@@ -38,9 +38,10 @@ type CondFactMemDict struct {
 }
 
 type StoredUniFuncFact struct {
-	IsTrue bool
-	Params []parser.Fc
-	Fact   *parser.UniFactStmt
+	IsTrue     bool
+	FuncParams *[]parser.Fc
+	UniParams  *[]string
+	Fact       *parser.UniFactStmt
 }
 
 type StoredUniFuncMemDictNode struct {
