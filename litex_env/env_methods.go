@@ -81,7 +81,7 @@ func (env *Env) NewCondFact(fact *parser.CondFactStmt) error {
 }
 
 func (env *Env) NewUniFact(fact *parser.UniFactStmt) error {
-	return nil
+	// return nil
 	err := env.UniFactMem.Insert(fact)
 	if err != nil {
 		return err
