@@ -6,10 +6,10 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) FuncFact(stmt *parser.FuncFactStmt) (bool, error) {
+func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
 	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
 
-	ok, err := ver.FuncFactSpec(stmt)
+	ok, err := ver.SpecFactSpec(stmt)
 	if err != nil {
 		return false, err
 	}
@@ -21,7 +21,7 @@ func (ver *Verifier) FuncFact(stmt *parser.FuncFactStmt) (bool, error) {
 		return false, nil
 	}
 
-	ok, err = ver.FuncFactCond(stmt)
+	ok, err = ver.SpecFactCond(stmt)
 	if err != nil {
 		return false, nil
 	}
@@ -29,7 +29,7 @@ func (ver *Verifier) FuncFact(stmt *parser.FuncFactStmt) (bool, error) {
 		return true, nil
 	}
 
-	ok, err = ver.FuncFactUni(stmt)
+	ok, err = ver.SpecFactUni(stmt)
 	if err != nil {
 		return false, nil
 	}
@@ -41,13 +41,13 @@ func (ver *Verifier) FuncFact(stmt *parser.FuncFactStmt) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) (bool, error) {
+func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		if stmt.IsEqualFact() {
 			return ver.EqualFactSpecAtEnv(curEnv, stmt)
 		}
 
-		searchedNode, got := curEnv.FuncFactMem.GetNode(stmt)
+		searchedNode, got := curEnv.SpecFactMem.GetNode(stmt)
 		if !got {
 			continue
 		}
@@ -76,10 +76,10 @@ func (ver *Verifier) FuncFactSpec(stmt *parser.FuncFactStmt) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) FuncFactCond(stmt *parser.FuncFactStmt) (bool, error) {
+func (ver *Verifier) SpecFactCond(stmt *parser.SpecFactStmt) (bool, error) {
 	// Use cond fact to verify
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		ok, err := ver.FuncFactCondAtEnv(curEnv, stmt)
+		ok, err := ver.SpecFactCondAtEnv(curEnv, stmt)
 		if err != nil {
 			return false, err
 		}
@@ -90,8 +90,8 @@ func (ver *Verifier) FuncFactCond(stmt *parser.FuncFactStmt) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) FuncFactCondAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt) (bool, error) {
-	searched, got := curEnv.CondFactMem.GetFuncFactNode(stmt)
+func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt) (bool, error) {
+	searched, got := curEnv.CondFactMem.GetSpecFactNode(stmt)
 	if !got {
 		return false, nil
 	}
@@ -127,9 +127,9 @@ LoopOverFacts:
 	return false, nil
 }
 
-func (ver *Verifier) FuncFactUni(stmt *parser.FuncFactStmt) (bool, error) {
+func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		ok, err := ver.FuncFactUniAtEnv(curEnv, stmt)
+		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt)
 		if err != nil {
 			return false, err
 		}
@@ -140,8 +140,8 @@ func (ver *Verifier) FuncFactUni(stmt *parser.FuncFactStmt) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) FuncFactUniAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt) (bool, error) {
-	searched, got := curEnv.UniFactMem.GetFuncFactNode(stmt)
+func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt) (bool, error) {
+	searched, got := curEnv.UniFactMem.GetSpecFactNode(stmt)
 	if !got {
 		return false, nil
 	}
@@ -158,7 +158,6 @@ func (ver *Verifier) FuncFactUniAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt
 
 		// 如果一个freeObj对应多个concreteObj,那要确保这些都一样，否则也不行
 		newMap := map[string]parser.Fc{}
-
 	LoopParamArrMap:
 		for key, value := range *paramArrMap {
 			if len(value) == 1 {
@@ -178,7 +177,7 @@ func (ver *Verifier) FuncFactUniAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt
 			newMap[key] = value[0]
 		}
 
-		ok, err = ver.FuncFactGivenUni(knownFact, &newMap)
+		ok, err = ver.SpecFactGivenUni(knownFact, &newMap)
 		if err != nil {
 			return false, err
 		}
@@ -190,6 +189,7 @@ func (ver *Verifier) FuncFactUniAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt
 	return false, nil
 }
 
-func (ver *Verifier) FuncFactGivenUni(knownFact mem.StoredUniFuncFact, paramMap *map[string]parser.Fc) (bool, error) {
+func (ver *Verifier) SpecFactGivenUni(knownFact mem.StoredUniSpecFact, paramMap *map[string]parser.Fc) (bool, error) {
+	// TODO
 	return false, nil
 }

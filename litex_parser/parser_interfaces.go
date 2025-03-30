@@ -14,7 +14,7 @@ func (f *DefConcreteFnStmt) stmt()         {}
 func (l *UniFactStmt) stmt()               {}
 
 // func (r *RelaFactStmt) stmt()               {}
-func (p *FuncFactStmt) stmt()               {}
+func (p *SpecFactStmt) stmt()               {}
 func (f *ClaimProveStmt) stmt()             {}
 func (f *KnowStmt) stmt()                   {}
 func (s *DefConcreteExistPropStmt) stmt()   {}
@@ -33,7 +33,7 @@ type FactStmt interface {
 }
 
 // func (r *RelaFactStmt) factStmt()   {}
-func (p *FuncFactStmt) factStmt()   {}
+func (p *SpecFactStmt) factStmt()   {}
 func (p *CondFactStmt) factStmt()   {}
 func (l *UniFactStmt) factStmt()    {}
 func (p *GenericUniStmt) factStmt() {}
@@ -41,16 +41,6 @@ func (p *GenericUniStmt) factStmt() {}
 type SpecFactParams struct {
 	ObjParams []Fc
 }
-
-// type SpecFactStmt interface {
-// 	specFactStmtSetT(b bool)
-// 	factStmt()
-// 	stmt()
-// 	String() string
-// }
-
-// func (r *RelaFactStmt) specFactStmtSetT(b bool) { r.IsTrue = b }
-// func (f *FuncFactStmt) specFactStmtSetT(b bool) { f.IsTrue = b }
 
 type ClaimStmt interface {
 	claimStmt()

@@ -9,35 +9,31 @@ type StoredFactStmt interface {
 	String(atom parser.FcAtom) string
 }
 
-type StoredFuncFact struct {
+type StoredSpecFact struct {
 	IsTrue bool
 	Params []parser.Fc
 }
 
-type StoredFuncMemDictNode struct{ Facts []StoredFuncFact }
-type FuncFactMemDict struct {
-	Dict map[string]map[string]StoredFuncMemDictNode
+type StoredSpecMemDictNode struct{ Facts []StoredSpecFact }
+type SpecFactMemDict struct {
+	Dict map[string]map[string]StoredSpecMemDictNode
 }
 
-type StoredCondMemDictNode interface{ storedCondFuncFact() }
-
-func (m *StoredCondFuncMemDictNode) storedCondFuncFact() {}
-
-type StoredCondFuncFact struct {
+type StoredCondSpecFact struct {
 	IsTrue bool
 	Params *[]parser.Fc
 	Fact   *parser.CondFactStmt
 }
 
 type StoredCondFuncMemDictNode struct {
-	Facts []StoredCondFuncFact
+	Facts []StoredCondSpecFact
 }
 
 type CondFactMemDict struct {
-	FuncFactsDict map[string]map[string]StoredCondFuncMemDictNode
+	SpecFactsDict map[string]map[string]StoredCondFuncMemDictNode
 }
 
-type StoredUniFuncFact struct {
+type StoredUniSpecFact struct {
 	IsTrue     bool
 	FuncParams *[]parser.Fc
 	UniParams  *[]string
@@ -45,11 +41,11 @@ type StoredUniFuncFact struct {
 }
 
 type StoredUniFuncMemDictNode struct {
-	Facts []StoredUniFuncFact
+	Facts []StoredUniSpecFact
 }
 
 type UniFactMemDict struct {
-	FuncFactsDict map[string]map[string]StoredUniFuncMemDictNode
+	SpecFactsDict map[string]map[string]StoredUniFuncMemDictNode
 }
 
 type EqualFactMemoryTreeNode struct {

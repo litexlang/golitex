@@ -102,7 +102,7 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 // 	return ret, nil
 // }
 
-func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
+func (stmt *TokenBlock) parseFuncPropFactStmt() (*SpecFactStmt, error) {
 	if !stmt.Header.is(KeywordDollar) {
 		return stmt.parseRelaFactStmt()
 	}
@@ -139,7 +139,7 @@ func (stmt *TokenBlock) parseFuncPropFactStmt() (*FuncFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &FuncFactStmt{true, opt, params}, nil
+	return &SpecFactStmt{true, opt, params}, nil
 }
 
 func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
@@ -165,7 +165,7 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 	}
 
 	condFacts := &[]FactStmt{}
-	thenFacts := &[]FuncFactStmt{}
+	thenFacts := &[]SpecFactStmt{}
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(KeywordThen) {
 		for i := 0; i < len(stmt.Body)-1; i++ {
@@ -210,8 +210,8 @@ func (stmt *TokenBlock) parseBodyFacts() (*[]FactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseThenBlockSpecFacts() (*[]FuncFactStmt, error) {
-	facts := &[]FuncFactStmt{}
+func (stmt *TokenBlock) parseThenBlockSpecFacts() (*[]SpecFactStmt, error) {
+	facts := &[]SpecFactStmt{}
 	stmt.Header.skip() // skip "then"
 	if err := stmt.Header.testAndSkip(KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -557,7 +557,7 @@ func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 	return &HaveStmt{*propStmt, *members}, nil
 }
 
-func (stmt *TokenBlock) parseRelaFactStmt() (*FuncFactStmt, error) {
+func (stmt *TokenBlock) parseRelaFactStmt() (*SpecFactStmt, error) {
 	fc, err := stmt.Header.ParseFc()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -592,7 +592,7 @@ func (stmt *TokenBlock) parseRelaFactStmt() (*FuncFactStmt, error) {
 	}
 
 	// if opt != "=" {
-	return &FuncFactStmt{true, FcAtom{OptName: opt}, params}, nil
+	return &SpecFactStmt{true, FcAtom{OptName: opt}, params}, nil
 	// } else {
 	// 	return &RelaFactStmt{false, FcAtom{OptName: opt}, params}, nil
 	// }
@@ -653,7 +653,7 @@ func (stmt *TokenBlock) parseConditionalStmt() (*CondFactStmt, error) {
 	}
 
 	condFacts := []FactStmt{}
-	thenFacts := []FuncFactStmt{}
+	thenFacts := []SpecFactStmt{}
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
 		fact, err := stmt.Body[i].parseFuncPropFactStmt()

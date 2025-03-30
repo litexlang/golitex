@@ -2,38 +2,17 @@ package litexmemory
 
 import (
 	parser "golitex/litex_parser"
-	"strings"
 )
 
-func (fact *StoredFuncFact) String(atom parser.FcAtom) string {
-	var builder strings.Builder
-
-	if !fact.IsTrue {
-		builder.WriteString("not")
-	}
-
-	if atom.PkgName == "" && parser.IsBuiltinSymbol(atom.OptName) {
-		builder.WriteString(fact.Params[0].String())
-		builder.WriteByte(' ')
-		builder.WriteString(atom.OptName)
-		builder.WriteByte(' ')
-		builder.WriteString(fact.Params[1].String())
-		return builder.String()
-	}
-
-	builder.WriteString(parser.KeywordDollar)
-	builder.WriteString(atom.String())
-	builder.WriteByte('(')
-	builder.WriteString(parser.FcSliceString(&fact.Params))
-	builder.WriteByte(')')
-
-	return builder.String()
+func (fact *StoredSpecFact) String(atom parser.FcAtom) string {
+	knownFact := parser.SpecFactStmt{IsTrue: fact.IsTrue, Opt: atom, Params: fact.Params}
+	return knownFact.String()
 }
 
-func (fact *StoredCondFuncFact) String() string {
+func (fact *StoredCondSpecFact) String() string {
 	return fact.Fact.String()
 }
 
-func (fact *StoredUniFuncFact) String() string {
+func (fact *StoredUniSpecFact) String() string {
 	return fact.Fact.String()
 }

@@ -60,19 +60,19 @@ func (ver *Verifier) FcSliceEqual(left *[]parser.Fc, right *[]parser.Fc, specMod
 		return false, fmt.Errorf("%v and %v have different length", *left, *right)
 	}
 
-	twoFuncFactHaveEqualParams := true
+	twoSpecFactHaveEqualParams := true
 	for i, knownParam := range *left {
 		verified, err := ver.FcEqual(knownParam, (*right)[i], specMode)
 		if err != nil {
 			return false, err
 		}
 		if !verified {
-			twoFuncFactHaveEqualParams = false
+			twoSpecFactHaveEqualParams = false
 			break
 		}
 	}
 
-	if twoFuncFactHaveEqualParams {
+	if twoSpecFactHaveEqualParams {
 		return true, nil
 	}
 
