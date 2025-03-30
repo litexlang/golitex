@@ -158,3 +158,7 @@ func (factMem *UniFactMemDict) insertFuncFact(uniStmt *parser.UniFactStmt, stmt 
 	factMem.FuncFactsDict[pkgName][optName] = node
 	return nil
 }
+
+func NewUniFactMemDict() *UniFactMemDict {
+	return &UniFactMemDict{map[string]map[string]StoredUniFuncMemDictNode{}}
+}
