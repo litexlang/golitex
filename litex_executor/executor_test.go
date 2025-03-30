@@ -470,7 +470,16 @@ forall x A:
 	$p(x)
 	x = y
 	then:
+		$p(x)
 		$p(y)
+
+forall x A:
+	$p(x)
+	x = y
+	then:
+		$p(b)
+
+$p(x)
 `
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)
