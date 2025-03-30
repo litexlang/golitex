@@ -1,6 +1,8 @@
-package litexparser
+package litexglobals
 
 import "sort"
+
+const ScopeIndent = "    "
 
 const (
 	KeywordInterface            = "interface"
@@ -175,7 +177,7 @@ const (
 	Keyword__EqGT__         = "__eq_gt__"
 )
 
-func getBuiltinSymbol(inputString string, start int) string {
+func GetBuiltinSymbol(inputString string, start int) string {
 	if start < 0 || start >= len(inputString) {
 		return ""
 	}
@@ -200,7 +202,7 @@ func getBuiltinSymbol(inputString string, start int) string {
 	return ""
 }
 
-func isBuiltinRelaOpt(op string) bool {
+func IsBuiltinRelaOpt(op string) bool {
 	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!="
 }
 
@@ -208,27 +210,27 @@ type FcInfixOptPrecedence int
 
 // TODO: implement other operators. How logical operators work is also not implemented
 const (
-	precLowest         FcInfixOptPrecedence = iota
-	precAssignment                          // =
-	precOr                                  // or
-	precAnd                                 // and
-	precEquality                            // == !=
-	precComparison                          // < > <= >=
-	precAddition                            // + -
-	precMultiplication                      // / *
-	precUnary                               // - !
-	precExponentiation                      // ^
+	PrecLowest         FcInfixOptPrecedence = iota
+	PrecAssignment                          // =
+	PrecOr                                  // or
+	PrecAnd                                 // and
+	PrecEquality                            // == !=
+	PrecComparison                          // < > <= >=
+	PrecAddition                            // + -
+	PrecMultiplication                      // / *
+	PrecUnary                               // - !
+	PrecExponentiation                      // ^
 )
 
-var precedenceMap = map[string]FcInfixOptPrecedence{
-	"+": precAddition,
-	"-": precAddition,
-	"*": precMultiplication,
-	"/": precMultiplication,
-	"^": precExponentiation,
+var PrecedenceMap = map[string]FcInfixOptPrecedence{
+	"+": PrecAddition,
+	"-": PrecAddition,
+	"*": PrecMultiplication,
+	"/": PrecMultiplication,
+	"^": PrecExponentiation,
 }
 
-// All Unary operators have higher precedence than infix operators
-var unaryPrecedence = map[string]FcInfixOptPrecedence{
-	"-": precUnary,
+// All Unary operators have higher Precedence than infix operators
+var UnaryPrecedence = map[string]FcInfixOptPrecedence{
+	"-": PrecUnary,
 }

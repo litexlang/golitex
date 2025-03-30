@@ -1,7 +1,7 @@
 package litexparser
 
 import (
-	msg "golitex/litex_messages"
+	glob "golitex/litex_globals"
 	"strings"
 )
 
@@ -11,10 +11,10 @@ func (stmt *KnowStmt) String() string {
 	builder.WriteString("know:\n")
 	if len(stmt.Facts) > 0 {
 		for i := 0; i < len(stmt.Facts)-1; i++ {
-			builder.WriteString(msg.LineHead4Indents(stmt.Facts[i].String(), 1))
+			builder.WriteString(glob.LineHead4Indents(stmt.Facts[i].String(), 1))
 			builder.WriteByte('\n')
 		}
-		builder.WriteString(msg.LineHead4Indents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
+		builder.WriteString(glob.LineHead4Indents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
 	}
 	return builder.String()
 }
@@ -26,7 +26,7 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteString("not ")
 	}
 
-	if stmt.Opt.PkgName == "" && IsBuiltinSymbol(stmt.Opt.OptName) {
+	if stmt.Opt.PkgName == "" && glob.IsBuiltinSymbol(stmt.Opt.OptName) {
 		builder.WriteString(stmt.Params[0].String())
 		builder.WriteByte(' ')
 		builder.WriteString(stmt.Opt.String())
@@ -65,20 +65,20 @@ func (fact *CondFactStmt) String() string {
 
 	builder.WriteString("when:\n")
 	for _, condFact := range fact.CondFacts {
-		builder.WriteString(msg.LineHead4Indents(condFact.String(), 1))
+		builder.WriteString(glob.LineHead4Indents(condFact.String(), 1))
 		builder.WriteByte('\n')
 	}
 
-	builder.WriteString(msg.LineHead4Indents("then:", 1))
+	builder.WriteString(glob.LineHead4Indents("then:", 1))
 	builder.WriteByte('\n')
 	if len(fact.ThenFacts) > 0 {
 		// 遍历前 n-1 个元素，每个后面加换行
 		for i := 0; i < len(fact.ThenFacts)-1; i++ {
-			builder.WriteString(msg.LineHead4Indents(fact.ThenFacts[i].String(), 2))
+			builder.WriteString(glob.LineHead4Indents(fact.ThenFacts[i].String(), 2))
 			builder.WriteByte('\n')
 		}
 		// 单独处理最后一个元素，不加换行
-		builder.WriteString(msg.LineHead4Indents(fact.ThenFacts[len(fact.ThenFacts)-1].String(), 2))
+		builder.WriteString(glob.LineHead4Indents(fact.ThenFacts[len(fact.ThenFacts)-1].String(), 2))
 	}
 	return builder.String()
 }
@@ -101,13 +101,13 @@ func (l *UniFactStmt) String() string {
 	}
 	builder.WriteString(":\n")
 	for _, condFact := range l.ParamCondFacts {
-		builder.WriteString(msg.LineHead4Indents(condFact.String(), 1))
+		builder.WriteString(glob.LineHead4Indents(condFact.String(), 1))
 		builder.WriteByte('\n')
 	}
-	builder.WriteString(msg.LineHead4Indents("then:", 1))
+	builder.WriteString(glob.LineHead4Indents("then:", 1))
 	builder.WriteByte('\n')
 	for _, thenFact := range l.ThenFacts {
-		builder.WriteString(msg.LineHead4Indents(thenFact.String(), 2))
+		builder.WriteString(glob.LineHead4Indents(thenFact.String(), 2))
 		builder.WriteByte('\n')
 	}
 	return builder.String()

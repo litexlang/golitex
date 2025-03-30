@@ -2,6 +2,7 @@ package litexparser
 
 import (
 	"fmt"
+	glob "golitex/litex_globals"
 )
 
 // tokenizer 结构体封装了 inputString 和 start
@@ -30,7 +31,7 @@ func (t *tokenizer) nextToken() (string, int, error) {
 		return "", 0, fmt.Errorf("invalid syntax: nested comment block")
 	}
 
-	potentialKeywordSymbol := getBuiltinSymbol(input, t.start)
+	potentialKeywordSymbol := glob.GetBuiltinSymbol(input, t.start)
 	if potentialKeywordSymbol != "" {
 		return potentialKeywordSymbol, t.start + len(potentialKeywordSymbol), nil
 	}
@@ -41,7 +42,7 @@ func (t *tokenizer) nextToken() (string, int, error) {
 
 	buffer := ""
 	for i := t.start; i < len(input); i++ {
-		if getBuiltinSymbol(input, i) != "" || input[i] == ' ' {
+		if glob.GetBuiltinSymbol(input, i) != "" || input[i] == ' ' {
 			break
 		}
 		buffer += string(input[i])
@@ -64,7 +65,7 @@ func (t *tokenizer) tokenizeString() (*[]string, error) {
 				result = append(result, buffer)
 				buffer = ""
 			}
-		} else if getBuiltinSymbol(input, t.start) != "" {
+		} else if glob.GetBuiltinSymbol(input, t.start) != "" {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""

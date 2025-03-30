@@ -2,13 +2,14 @@ package litexparser
 
 import (
 	"fmt"
+	glob "golitex/litex_globals"
 )
 
 func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 	params := []Fc{}
-	parser.skip(KeywordLeftParen)
+	parser.skip(glob.KeywordLeftParen)
 
-	for !parser.is(KeywordRightParen) {
+	for !parser.is(glob.KeywordRightParen) {
 		fc, err := parser.ParseFc()
 
 		if err != nil {
@@ -17,8 +18,8 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 
 		params = append(params, fc)
 
-		if !parser.is(KeywordComma) {
-			if !parser.is(KeywordRightParen) {
+		if !parser.is(glob.KeywordComma) {
+			if !parser.is(glob.KeywordRightParen) {
 				return nil, &parserErr{err, parser}
 			} else {
 				break
@@ -29,7 +30,7 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 
 	}
 
-	parser.skip(KeywordRightParen)
+	parser.skip(glob.KeywordRightParen)
 
 	return &params, nil
 }
@@ -56,7 +57,7 @@ func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) (*[]string
 			break
 		}
 
-		if err := parser.testAndSkip(KeywordComma); err != nil {
+		if err := parser.testAndSkip(glob.KeywordComma); err != nil {
 			return nil, nil, &parserErr{err, parser}
 		}
 	}
@@ -65,7 +66,7 @@ func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) (*[]string
 }
 
 // func (parser *Parser) parsePropDecl() (*ConcreteDefHeader, error) {
-// 	parser.skip(KeywordSpecProp)
+// 	parser.skip(glob.KeywordSpecProp)
 // 	name, err := parser.next()
 // 	if err != nil {
 // 		return nil, &parserErr{err, parser}
@@ -80,7 +81,7 @@ func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) (*[]string
 // }
 
 // func (parser *Parser) parseExistDecl() (*ConcreteDefHeader, error) {
-// 	parser.skip(KeywordExistProp)
+// 	parser.skip(glob.KeywordExistProp)
 // 	panic("")
 // }
 
@@ -93,7 +94,7 @@ func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 			return nil, &parserErr{err, parser}
 		}
 		*members = append(*members, member)
-		if !parser.is(KeywordComma) {
+		if !parser.is(glob.KeywordComma) {
 			break
 		}
 		parser.skip()
@@ -107,7 +108,7 @@ func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 }
 
 func (parser *Parser) parseIsExpr(left Fc) (*SpecFactStmt, error) {
-	err := parser.skip(KeywordIs)
+	err := parser.skip(glob.KeywordIs)
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -122,13 +123,13 @@ func (parser *Parser) parseIsExpr(left Fc) (*SpecFactStmt, error) {
 }
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
-	if stmt.Header.is(KeywordProp) {
+	if stmt.Header.is(glob.KeywordProp) {
 		prop, err := stmt.parseDefConcreteNormalPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		return prop, nil
-	} else if stmt.Header.is(KeywordExistProp) {
+	} else if stmt.Header.is(glob.KeywordExistProp) {
 		exist, err := stmt.parseDefConcreteExistPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
@@ -148,7 +149,7 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 // 	typeNameArr := []string{name}
 // 	params := []Fc{}
 
-// 	for parser.is(KeywordDot) {
+// 	for parser.is(glob.KeywordDot) {
 // 		parser.skip()
 // 		name, err := parser.next()
 // 		if err != nil {
@@ -157,29 +158,29 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 // 		typeNameArr = append(typeNameArr, name)
 // 	}
 
-// 	if parser.is(KeywordLeftParen) {
+// 	if parser.is(glob.KeywordLeftParen) {
 // 		paramsPtr, err := parser.parseBracedFcArr()
 // 		if err != nil {
 // 			return nil, &parserErr{err, parser}
 // 		}
 // 		params = *paramsPtr
-// 		parser.skip(KeywordRightParen)
+// 		parser.skip(glob.KeywordRightParen)
 // 	}
 
 // 	return &NamedFcType{typeNameArr, params}, nil
 // }
 
 // func (block *TokenBlock) parseInstanceMember() (DefMember, error) {
-// 	if block.Header.is(KeywordObj) {
+// 	if block.Header.is(glob.KeywordObj) {
 // 		return block.parseDefObjStmt()
-// 	} else if block.Header.is(KeywordFn) {
+// 	} else if block.Header.is(glob.KeywordFn) {
 // 		return block.parseDefConcreteFnStmt()
-// 	} else if block.Header.is(KeywordSpecProp) {
+// 	} else if block.Header.is(glob.KeywordSpecProp) {
 // 		return block.parseDefConcreteNormalPropStmt()
-// 	} else if block.Header.is(KeywordExistProp) {
+// 	} else if block.Header.is(glob.KeywordExistProp) {
 // 		return block.parseDefConcreteExistPropStmt()
 // 	}
-// 	return nil, fmt.Errorf("%v, %v, %v expected", KeywordObj, KeywordFn, KeywordSpecProp)
+// 	return nil, fmt.Errorf("%v, %v, %v expected", glob.KeywordObj, glob.KeywordFn, glob.KeywordSpecProp)
 // }
 
 func (parser *Parser) parseTypeListInDeclsAndSkipEnd(endWith string) (*[]string, *[]FcAtom, error) {
@@ -204,7 +205,7 @@ func (parser *Parser) parseTypeListInDeclsAndSkipEnd(endWith string) (*[]string,
 			break
 		}
 
-		if err := parser.testAndSkip(KeywordComma); err != nil {
+		if err := parser.testAndSkip(glob.KeywordComma); err != nil {
 			return nil, nil, &parserErr{err, parser}
 		}
 	}

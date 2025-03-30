@@ -1,5 +1,9 @@
 package litexparser
 
+import (
+	glob "golitex/litex_globals"
+)
+
 type TopStmt struct {
 	Stmt  Stmt
 	IsPub bool
@@ -60,7 +64,7 @@ type SpecFactStmt struct {
 }
 
 func (f *SpecFactStmt) IsEqualFact() bool {
-	return f.Opt.OptName == KeywordEqual && f.Opt.PkgName == ""
+	return f.Opt.OptName == glob.KeywordEqual && f.Opt.PkgName == ""
 }
 
 // type RelaFactStmt struct {
