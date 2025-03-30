@@ -34,7 +34,7 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt) (bool, error) {
 
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(thenFact)
+		ok, err := ver.FactStmt(&thenFact)
 		if err != nil {
 			return false, nil
 		}

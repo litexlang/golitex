@@ -28,6 +28,14 @@ func (ver *Verifier) FuncFact(stmt *parser.FuncFactStmt) (bool, error) {
 		return true, nil
 	}
 
+	ok, err = ver.FuncFactUni(stmt)
+	if err != nil {
+		return false, nil
+	}
+	if ok {
+		return true, nil
+	}
+
 	ver.unknownNoMsg()
 	return false, nil
 }
@@ -113,6 +121,33 @@ LoopOverFacts:
 			}
 			return true, nil
 		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) FuncFactUni(stmt *parser.FuncFactStmt) (bool, error) {
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		ok, err := ver.FuncFactUniAtEnv(curEnv, stmt)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (ver *Verifier) FuncFactUniAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt) (bool, error) {
+	searched, got := curEnv.UniFactMem.GetFuncFactNode(stmt)
+	if !got {
+		return false, nil
+	}
+
+	for _, knownFact := range searched.Facts {
+		// TODO
+		_ = knownFact
 	}
 
 	return false, nil

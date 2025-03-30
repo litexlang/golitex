@@ -187,14 +187,15 @@ func randCondStmt() *parser.CondFactStmt {
 	randomNumberOfCondFacts := rand.Intn(3) + 1
 	randomNumberOfThenFacts := rand.Intn(3) + 1
 	condFacts := []parser.FactStmt{}
-	thenFacts := []parser.SpecFactStmt{}
+	// thenFacts := []parser.SpecFactStmt{}
+	thenFacts := []parser.FuncFactStmt{}
 
 	for i := 0; i < randomNumberOfCondFacts; i++ {
 		condFacts = append(condFacts, randFuncFact())
 	}
 
 	for i := 0; i < randomNumberOfThenFacts; i++ {
-		thenFacts = append(thenFacts, randFuncFact())
+		thenFacts = append(thenFacts, *randFuncFact())
 	}
 
 	return &parser.CondFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
