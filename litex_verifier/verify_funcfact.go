@@ -148,7 +148,7 @@ func (ver *Verifier) FuncFactUniAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt
 
 	for _, knownFact := range searched.Facts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
-		ok, paramMap, err := knownFact.Match(stmt)
+		ok, paramArrMap, err := knownFact.Match(stmt)
 		if err != nil {
 			return false, err
 		}
@@ -156,7 +156,29 @@ func (ver *Verifier) FuncFactUniAtEnv(curEnv *env.Env, stmt *parser.FuncFactStmt
 			continue
 		}
 
-		ok, err = ver.FuncFactGivenUni(knownFact, paramMap)
+		// 如果一个freeObj对应多个concreteObj,那要确保这些都一样，否则也不行
+		newMap := map[string]parser.Fc{}
+
+	LoopParamArrMap:
+		for key, value := range *paramArrMap {
+			if len(value) == 1 {
+				continue
+			}
+
+			for i := 1; i < len(value); i++ {
+				ok, err := ver.fcEqualSpec(value[0], value[i])
+				if err != nil {
+					return false, err
+				}
+				if !ok {
+					continue LoopParamArrMap
+				}
+			}
+
+			newMap[key] = value[0]
+		}
+
+		ok, err = ver.FuncFactGivenUni(knownFact, &newMap)
 		if err != nil {
 			return false, err
 		}

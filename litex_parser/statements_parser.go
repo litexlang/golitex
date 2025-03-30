@@ -566,7 +566,6 @@ func (stmt *TokenBlock) parseRelaFactStmt() (*FuncFactStmt, error) {
 	if stmt.Header.strAtCurIndexPlus(0) == KeywordIs {
 		return stmt.Header.parseIsExpr(fc)
 	}
-	// TODO 这里可以考虑和 Relational opt 的处理合并
 
 	opt, err := stmt.Header.next()
 	if err != nil {
