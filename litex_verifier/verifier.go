@@ -70,8 +70,8 @@ func (ver *Verifier) successNoMsg() {
 	ver.Output = VerifierTrue
 }
 
-func (ver *Verifier) newEnv() {
-	newEnv := env.NewEnv(nil)
+func (ver *Verifier) newEnv(parent *env.Env) {
+	newEnv := env.NewEnv(parent)
 	newEnv.Parent = ver.env
 	ver.env = newEnv
 }
@@ -100,4 +100,17 @@ func (ver *Verifier) asConcreteFc(fc parser.Fc) parser.Fc {
 	}
 
 	return ver.uniParams[fcAsAtom.OptName]
+}
+
+func (ver *Verifier) isDeclared(fc string) (bool, error) {
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		ok, err := ver.env.IsDeclared(fc)
+		if err != nil {
+			return false, nil
+		}
+		if ok {
+			return ok, nil
+		}
+	}
+	return false, nil
 }

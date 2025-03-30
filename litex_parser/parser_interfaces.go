@@ -25,6 +25,7 @@ func (s *ThmStmt) stmt()                    {}
 func (s *CondFactStmt) stmt()               {}
 func (s *GenericUniStmt) stmt()             {}
 
+// 主要有3个执行时要考虑的事情：1. know fact 2. check fact3. use known facts to check current fact
 type FactStmt interface {
 	factStmt()
 	stmt()
