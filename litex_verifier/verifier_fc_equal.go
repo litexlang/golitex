@@ -24,7 +24,7 @@ func (ver *Verifier) FcEqual(left, right parser.Fc, specMode bool) (bool, error)
 
 	ok, err := ver.fcEqualSpec(left, right)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	if ok {
 		return true, nil

@@ -8,15 +8,19 @@ import (
 
 func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
 	// TODO 判断一下传入进来的stmt是不是prop prop，就像数学归纳法这种。prop prop的特点是，它是prop，参数列表里也有prop。如果是的话，那就用其他方式来验证
-	if isPropProp, err := ver.IsPropProp(stmt); err != nil {
+	isPropProp, err := ver.IsPropProp(stmt)
+	if err != nil {
 		return false, err
-	} else if isPropProp {
+	}
+	if isPropProp {
 		return ver.PropPropFact(stmt)
 	}
 
-	if ok, err := ver.SpecFactSpec(stmt); err != nil {
+	ok, err := ver.SpecFactSpec(stmt)
+	if err != nil {
 		return false, err
-	} else if ok {
+	}
+	if ok {
 		return true, nil
 	}
 
@@ -24,15 +28,19 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
 		return false, nil
 	}
 
-	if ok, err := ver.SpecFactCond(stmt); err != nil {
-		return false, nil
-	} else if ok {
+	ok, err = ver.SpecFactCond(stmt)
+	if err != nil {
+		return false, err
+	}
+	if ok {
 		return true, nil
 	}
 
-	if ok, err := ver.SpecFactUni(stmt); err != nil {
-		return false, nil
-	} else if ok {
+	ok, err = ver.SpecFactUni(stmt)
+	if err != nil {
+		return false, err
+	}
+	if ok {
 		return true, nil
 	}
 
@@ -202,5 +210,6 @@ LoopParamArrMap:
 }
 
 func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, stmt *parser.SpecFactStmt, uniConMap *map[string]parser.Fc) (bool, error) {
+	// TODO
 	return false, nil
 }

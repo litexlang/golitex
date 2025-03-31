@@ -105,7 +105,7 @@ func (ver *Verifier) isDeclared(fc string) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		ok, err := ver.env.IsDeclared(fc)
 		if err != nil {
-			return false, nil
+			return false, err
 		}
 		if ok {
 			return ok, nil

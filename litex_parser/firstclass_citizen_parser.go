@@ -136,7 +136,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (F
 	for {
 		curToken, err := parser.currentToken()
 		if err != nil {
-			return left, nil
+			return left, err
 		}
 
 		curPrec, isBinary := glob.PrecedenceMap[curToken]
@@ -201,7 +201,7 @@ func (parser *Parser) parseNumberStr() (*FcAtom, error) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {
-			return &FcAtom{OptName: left}, nil
+			return &FcAtom{OptName: left}, err
 		} else {
 			parser.skip()
 			right, err := parser.next()
