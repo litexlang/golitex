@@ -1,4 +1,4 @@
-package litexglobals
+package litexglobal
 
 import (
 	"strings"

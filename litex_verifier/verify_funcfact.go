@@ -147,7 +147,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 
 	for _, knownFact := range searched.Facts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
-		ok, paramArrMap, err := knownFact.Match(stmt)
+		paramArrMap, ok, err := knownFact.Match(stmt)
 		if err != nil {
 			return false, err
 		}
@@ -176,7 +176,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 			newMap[key] = value[0]
 		}
 
-		ok, err = ver.SpecFactGivenUni(knownFact, &newMap)
+		ok, err = ver.SpecFactMatchedUni(knownFact, &newMap)
 		if err != nil {
 			return false, err
 		}
@@ -188,7 +188,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactGivenUni(knownFact mem.StoredUniSpecFact, paramMap *map[string]parser.Fc) (bool, error) {
+func (ver *Verifier) SpecFactMatchedUni(knownFact mem.StoredUniSpecFact, paramMap *map[string]parser.Fc) (bool, error) {
 	// TODO
 	return false, nil
 }

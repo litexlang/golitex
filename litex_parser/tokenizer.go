@@ -2,7 +2,7 @@ package litexparser
 
 import (
 	"fmt"
-	glob "golitex/litex_globals"
+	glob "golitex/litex_global"
 )
 
 // tokenizer 结构体封装了 inputString 和 start

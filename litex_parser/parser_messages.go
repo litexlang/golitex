@@ -1,7 +1,7 @@
 package litexparser
 
 import (
-	glob "golitex/litex_globals"
+	glob "golitex/litex_global"
 	"strings"
 )
 
