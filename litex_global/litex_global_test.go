@@ -1,19 +1,15 @@
 package litexglobal
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 )
 
 func TestRedBlackTree(t *testing.T) {
 	// 定义比较函数
-	compare := func(a, b interface{}) (int, error) {
-		keyA, okA := a.(int)
-		keyB, okB := b.(int)
-		if !okA || !okB {
-			return 0, errors.New("invalid key type")
-		}
+	compare := func(a, b int) (int, error) {
+		keyA := a
+		keyB := b
 		if keyA < keyB {
 			return -1, nil
 		} else if keyA > keyB {
@@ -35,7 +31,7 @@ func TestRedBlackTree(t *testing.T) {
 
 	// 中序遍历
 	fmt.Println("In-order traversal:")
-	tree.InOrderTraversal(tree.Root, func(key interface{}) error {
+	tree.InOrderTraversal(tree.Root, func(key int) error {
 		fmt.Println(key)
 		return nil
 	})

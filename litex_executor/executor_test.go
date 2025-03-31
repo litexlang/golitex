@@ -523,7 +523,8 @@ func TestEqual(t *testing.T) {
 	code :=
 		`
 know:
-	t = f
+	$p(t(x))
+$p(g(x))
 `
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)

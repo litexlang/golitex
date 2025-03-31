@@ -62,8 +62,8 @@ func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *parser.FcAtom, conFuncPara
 func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *parser.FcFnCallPipe, conFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {
 	retMap := map[string][]parser.Fc{}
 
-	conParamAsFcFn := conFuncParam.(*parser.FcFnCallPipe)
-	if conParamAsFcFn == nil {
+	conParamAsFcFn, ok := conFuncParam.(*parser.FcFnCallPipe)
+	if !ok {
 		return nil, false, nil
 	}
 
