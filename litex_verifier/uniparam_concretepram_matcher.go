@@ -13,14 +13,15 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 	}
 
 	for i, uniParam := range *knownFact.FuncParams {
-		if matchMap, matched, err := ver.matchUniConParams(uniParam, stmt.Params[i], knownFact.UniParams); err != nil {
+		matchMap, matched, err := ver.matchUniConParams(uniParam, stmt.Params[i], knownFact.UniParams)
+		if err != nil {
 			return nil, false, nil
-		} else if !matched {
-			return nil, false, nil
-		} else {
-			// TODO
-			_ = matchMap
 		}
+		if !matched {
+			return nil, false, nil
+		}
+		// TODO
+		_ = matchMap
 	}
 
 	return nil, false, nil
@@ -46,9 +47,11 @@ func (ver *Verifier) matchAtomUniConParams(uniFuncFcAtom *parser.FcAtom, conFunc
 		return &retMap, true, nil
 	}
 
-	if ok, err := ver.fcEqualSpec(uniFuncFcAtom, conFuncParam); err != nil {
+	ok, err := ver.fcEqualSpec(uniFuncFcAtom, conFuncParam)
+	if err != nil {
 		return nil, false, err
-	} else if ok {
+	}
+	if ok {
 		return &retMap, true, nil
 	}
 
@@ -68,9 +71,11 @@ func (ver *Verifier) matchFnUniConParams(uniFuncFcFn *parser.FcFnCallPipe, conFu
 		_ = matchedStr
 	}
 
-	if ok, err := ver.fcEqualSpec(&uniFuncFcFn.FnHead, &conParamAsFcFn.FnHead); err != nil {
+	ok, err := ver.fcEqualSpec(&uniFuncFcFn.FnHead, &conParamAsFcFn.FnHead)
+	if err != nil {
 		return nil, false, err
-	} else if !ok {
+	}
+	if !ok {
 		return nil, false, nil
 	}
 
