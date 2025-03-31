@@ -12,6 +12,8 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 		return nil, false, nil
 	}
 
+	retMap := map[string][]parser.Fc{}
+
 	for i, uniParam := range *knownFact.FuncParams {
 		matchMap, matched, err := ver.matchUniConFc(uniParam, stmt.Params[i], knownFact.UniParams)
 		if err != nil {
@@ -21,10 +23,10 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 			return nil, false, nil
 		}
 		// TODO
-		_ = matchMap
+		mergeMatchMaps(matchMap, &retMap)
 	}
 
-	return nil, false, nil
+	return &retMap, true, nil
 }
 
 func (ver *Verifier) matchUniConFc(uniFuncParam parser.Fc, concreteFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {

@@ -488,3 +488,22 @@ $p(x)
 	messages := execStmtTest(topStmtSlice, t)
 	execMessageTest(messages)
 }
+
+func TestUseForallToCheck(t *testing.T) {
+	code :=
+		`
+know forall x A:
+	then:
+		$p(y)
+$p(x)
+
+know forall x A:
+	then:
+		$p(x)
+
+$p(x)
+`
+	topStmtSlice := parseStmtTest(&code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	execMessageTest(messages)
+}
