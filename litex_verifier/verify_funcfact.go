@@ -135,17 +135,16 @@ LoopOverFacts:
 }
 
 func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt) (bool, error) {
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
 	return false, nil
-	// TODO
-	// for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-	// 	ok, err := ver.SpecFactUniAtEnv(curEnv, stmt)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	if ok {
-	// 		return true, nil
-	// 	}
-	// }
 }
 
 func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt) (bool, error) {
@@ -173,7 +172,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 			continue
 		}
 
-		ok, err = ver.specFactUniWithUniConMap(&knownFact, stmt, uniConMap)
+		ok, err = ver.specFactUniWithUniConMap(&knownFact, uniConMap)
 		if err != nil {
 			return false, err
 		}
@@ -210,7 +209,8 @@ LoopParamArrMap:
 	return &newMap, true, nil
 }
 
-func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, stmt *parser.SpecFactStmt, uniConMap *map[string]parser.Fc) (bool, error) {
+// 神奇的是，这个函数我不用传涉及到要验证的specFact，因为它的信息全在uniConMap里了，然后只要forall的cond全通过，就行
+func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap *map[string]parser.Fc) (bool, error) {
 	ver.newEnv(ver.env, uniConMap)
 	defer ver.parentEnv() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
 
@@ -224,5 +224,5 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 		}
 	}
 
-	return false, nil
+	return true, nil
 }
