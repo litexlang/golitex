@@ -1,18 +1,19 @@
 package litexverifier
 
 import (
+	"fmt"
 	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
 
-func MatchStoredUniSpaceFactAndSpecFact(knownFact mem.StoredUniSpecFact, stmt *parser.SpecFactStmt) (*map[string][]parser.Fc, bool, error) { // 之所以是*map[string][]parser.Fc而不是 *map[string]parser.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
+// Con means Concrete
+func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact, stmt *parser.SpecFactStmt) (*map[string][]parser.Fc, bool, error) { // 之所以是*map[string][]parser.Fc而不是 *map[string]parser.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
 	if len(stmt.Params) != len(*knownFact.FuncParams) {
-		// TODO 之后要根除不匹配的情况
 		return nil, false, nil
 	}
 
 	for i, uniParam := range *knownFact.FuncParams {
-		if matchMap, matched, err := MatchUniConcreteParams(uniParam, stmt.Params[i], knownFact.UniParams); err != nil {
+		if matchMap, matched, err := ver.matchUniConParams(uniParam, stmt.Params[i], knownFact.UniParams); err != nil {
 			return nil, false, nil
 		} else if !matched {
 			return nil, false, nil
@@ -25,26 +26,37 @@ func MatchStoredUniSpaceFactAndSpecFact(knownFact mem.StoredUniSpecFact, stmt *p
 	return nil, false, nil
 }
 
-func MatchUniConcreteParams(uniFuncParam parser.Fc, concreteFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {
-	retMap := make(map[string][]parser.Fc)
-
+func (ver *Verifier) matchUniConParams(uniFuncParam parser.Fc, concreteFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {
 	if asAtom := uniFuncParam.(*parser.FcAtom); asAtom != nil {
-		return matchAtomUniConcreteParams(asAtom, concreteFuncParam, possibleUniParams)
+		return ver.matchAtomUniConParams(asAtom, concreteFuncParam, possibleUniParams)
 	}
 
-	return &retMap, true, nil
+	if asFn := uniFuncParam.(*parser.FcFnCallPipe); asFn != nil {
+		return ver.matchFnUniConParams(asFn, concreteFuncParam, possibleUniParams)
+	}
+
+	return nil, false, fmt.Errorf("unexpected type of %v", uniFuncParam.String())
 }
 
-func matchAtomUniConcreteParams(uniFuncAtom *parser.FcAtom, concreteFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {
+func (ver *Verifier) matchAtomUniConParams(uniFuncFcAtom *parser.FcAtom, conFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {
 	retMap := make(map[string][]parser.Fc)
 
-	if matchStr, ok := isUniParam(uniFuncAtom, possibleUniParams); ok {
-		retMap[matchStr] = []parser.Fc{concreteFuncParam}
+	if matchStr, ok := isUniParam(uniFuncFcAtom, possibleUniParams); ok {
+		retMap[matchStr] = []parser.Fc{conFuncParam}
 		return &retMap, true, nil
 	}
 
-	// TODO: Verify uniFuncAtom 是否和 concreteFuncParam 是一样的
+	if ok, err := ver.fcEqualSpec(uniFuncFcAtom, conFuncParam); err != nil {
+		return nil, false, err
+	} else if ok {
+		return &retMap, true, nil
+	}
 
+	return nil, false, nil
+}
+
+func (ver *Verifier) matchFnUniConParams(uniFuncFcFn *parser.FcFnCallPipe, conFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {
+	// TODO
 	return nil, false, nil
 }
 

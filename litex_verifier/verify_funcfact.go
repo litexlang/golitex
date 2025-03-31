@@ -147,7 +147,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 
 	for _, knownFact := range searched.Facts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
-		paramArrMap, ok, err := MatchStoredUniSpaceFactAndSpecFact(knownFact, stmt)
+		paramArrMap, ok, err := ver.matchStoredUniConSpecFacts(knownFact, stmt)
 		if err != nil {
 			return false, err
 		}
