@@ -492,16 +492,38 @@ $p(x)
 func TestUseForallToCheck(t *testing.T) {
 	code :=
 		`
-know forall x A:
-	then:
-		$p(y)
-$p(x)
+// know forall x A:
+// 	then:
+// 		$p(y)
+// $p(x)
 
-know forall x A:
-	then:
-		$p(x)
+// know forall x A:
+// 	then:
+// 		$p(x)
+// $p(x)
 
-$p(x)
+know:
+	forall x A:
+		then:
+			$p(f(x))
+
+know:
+	t = f
+			
+$p(t(x))
+$p(g(x))
+$p(f(x))
+`
+	topStmtSlice := parseStmtTest(&code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	execMessageTest(messages)
+}
+
+func TestEqual(t *testing.T) {
+	code :=
+		`
+know:
+	t = f
 `
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)

@@ -1020,3 +1020,17 @@ forall x A:
 	}
 
 }
+func TestUniFactStmt4(t *testing.T) {
+	code := `
+know:
+	t = f
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+
+}
