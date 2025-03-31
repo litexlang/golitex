@@ -92,15 +92,18 @@ func (ver *Verifier) unknownNoMsg() {
 }
 
 func (ver *Verifier) asConcreteFc(fc parser.Fc) parser.Fc {
-	fcAsAtom := fc.(*parser.FcAtom)
-	if fcAsAtom == nil {
+	// Safe type assertion
+	fcAsAtom, ok := fc.(*parser.FcAtom)
+	if !ok {
 		return nil
 	}
 
+	// Early return if it's a package-qualified name
 	if fcAsAtom.PkgName != "" {
 		return nil
 	}
 
+	// Look up in the universal parameter map
 	return ver.env.UniParamMap[fcAsAtom.OptName]
 }
 
