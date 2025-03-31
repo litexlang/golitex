@@ -30,27 +30,6 @@ func (parser *Parser) parseFcAtomAndFcFnRet() (Fc, error) {
 	}
 }
 
-// func (parser *Parser) parseFcChain(curFc FcChainMem) (*FcChain, error) {
-// 	fcArr := []FcChainMem{curFc}
-// 		err := error(nil)
-// 	for !parser.ExceedEnd() && parser.is(glob.KeywordDot) {
-// 		err = parser.skip(glob.KeywordDot)
-// 		if err != nil {
-// 			return nil, &parserErr{err, parser}
-// 		}
-
-// 		curFc, err = parser.parseFcChainMem()
-// 		if err != nil {
-// 			return nil, &parserErr{err, parser}
-// 		}
-
-// 		fcArr = append(fcArr, curFc)
-// 	}
-
-// 	ret := FcChain{fcArr}
-// 	return &ret, nil
-// }
-
 func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	parser.skip(glob.KeywordLeftParen)
 	fc, err := parser.ParseFc()
@@ -60,17 +39,6 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	parser.skip(glob.KeywordRightParen)
 	return fc, nil
 }
-
-// func (parser *Parser) parseFcChainMem() (FcChainMem, error) {
-// 	// 如果 1 out of range了，那返回值是 “”
-// 	strAtSecondPosition := parser.strAtCurIndexPlus(1)
-
-// 	if strAtSecondPosition != glob.glob.KeywordLeftParen {
-// 		return parser.parseFcStr()
-// 	} else {
-// 		return parser.parseFcFnRetVal()
-// 	}
-// }
 
 func (parser *Parser) parseFcFnRetVal(optName FcAtom) (*FcFnCallPipe, error) {
 	typeParamsObjParamsPairs, err := parser.parseTypeParamsObjParamsPairs()

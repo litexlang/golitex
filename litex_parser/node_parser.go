@@ -65,26 +65,6 @@ func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) (*[]string
 	return &paramName, &paramTypes, nil
 }
 
-// func (parser *Parser) parsePropDecl() (*ConcreteDefHeader, error) {
-// 	parser.skip(glob.KeywordSpecProp)
-// 	name, err := parser.next()
-// 	if err != nil {
-// 		return nil, &parserErr{err, parser}
-// 	}
-
-// 	params, err := parser.parseBracedFcTypePairArr()
-// 	if err != nil {
-// 		return nil, &parserErr{err, parser}
-// 	}
-
-// 	return &ConcreteDefHeader{name, *params}, nil
-// }
-
-// func (parser *Parser) parseExistDecl() (*ConcreteDefHeader, error) {
-// 	parser.skip(glob.KeywordExistProp)
-// 	panic("")
-// }
-
 func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
 	members := &[]string{}
 
@@ -124,13 +104,13 @@ func (parser *Parser) parseIsExpr(left Fc) (*SpecFactStmt, error) {
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 	if stmt.Header.is(glob.KeywordProp) {
-		prop, err := stmt.parseDefConcreteNormalPropStmt()
+		prop, err := stmt.parseDefConPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		return prop, nil
 	} else if stmt.Header.is(glob.KeywordExistProp) {
-		exist, err := stmt.parseDefConcreteExistPropStmt()
+		exist, err := stmt.parseDefConExistPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}

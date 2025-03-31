@@ -91,7 +91,7 @@ func (ver *Verifier) unknownNoMsg() {
 	ver.Output = VerifierUnknown
 }
 
-func (ver *Verifier) asConcreteFc(fc parser.Fc) parser.Fc {
+func (ver *Verifier) asConFc(fc parser.Fc) parser.Fc {
 	// Safe type assertion
 	fcAsAtom, ok := fc.(*parser.FcAtom)
 	if !ok {

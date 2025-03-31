@@ -1,4 +1,3 @@
-// Con means Concrete
 package litexverifier
 
 import (

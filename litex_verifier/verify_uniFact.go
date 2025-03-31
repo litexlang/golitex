@@ -26,7 +26,7 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt) (bool, error) {
 	}
 
 	// know cond facts
-	for _, condFact := range stmt.ParamCondFacts {
+	for _, condFact := range stmt.DomFacts {
 		err := ver.env.NewFact(condFact)
 		if err != nil {
 			return false, err

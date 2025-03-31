@@ -20,32 +20,32 @@ type DefInterfaceStmt struct {
 type DefTypeStmt struct {
 }
 
-type DefConcreteNormalPropStmt struct {
-	DefHeader      ConcreteDefHeader
-	ParamCondFacts []FactStmt
-	ThenFacts      []FactStmt
+type DefConPropStmt struct {
+	DefHeader ConDefHeader
+	DomFacts  []FactStmt
+	ThenFacts []FactStmt
 }
 
-type DefConcreteExistPropStmt struct {
-	DefHeader      ConcreteDefHeader
-	ExistFc        []string
-	ExistFcTypes   []FcAtom
-	ParamCondFacts []FactStmt
-	ThenFacts      []FactStmt
+type DefConExistPropStmt struct {
+	DefHeader    ConDefHeader
+	ExistFc      []string
+	ExistFcTypes []FcAtom
+	DomFacts     []FactStmt
+	ThenFacts    []FactStmt
 }
 
-type DefConcreteFnStmt struct {
-	DefHeader      ConcreteDefHeader
-	retType        FcAtom
-	ParamCondFacts []FactStmt
-	ThenFacts      []FactStmt
+type DefConFnStmt struct {
+	DefHeader ConDefHeader
+	retType   FcAtom
+	DomFacts  []FactStmt
+	ThenFacts []FactStmt
 }
 
 type UniFactStmt struct {
-	Params         []string
-	ParamTypes     []Fc
-	ParamCondFacts []FactStmt
-	ThenFacts      []SpecFactStmt
+	Params     []string
+	ParamTypes []Fc
+	DomFacts   []FactStmt
+	ThenFacts  []SpecFactStmt
 }
 
 type GenericUniStmt struct {
@@ -53,7 +53,7 @@ type GenericUniStmt struct {
 	TypeInterfaces []FcAtom
 	Params         []string
 	ParamTypes     []Fc
-	ParamCondFacts []FactStmt
+	DomFacts       []FactStmt
 	ThenFacts      []SpecFactStmt
 }
 
@@ -107,7 +107,7 @@ type FcFnDecl struct {
 	Params []string
 }
 
-type ConcreteDefHeader struct {
+type ConDefHeader struct {
 	Name       string
 	Params     []string
 	TypeParams []FcAtom

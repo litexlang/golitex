@@ -10,7 +10,7 @@ const (
 	KeywordSet                  = "set"
 	KeywordForall               = "forall"
 	KeywordWhen                 = "when"
-	KeywordCond                 = "cond" // 必须存在，因为有时候只有要求没then
+	KeywordDom                  = "dom" // 必须存在，因为有时候只有要求没then
 	KeywordThen                 = "then"
 	KeywordObj                  = "obj"
 	KeywordFn                   = "fn"
