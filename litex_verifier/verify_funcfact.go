@@ -210,6 +210,18 @@ LoopParamArrMap:
 }
 
 func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, stmt *parser.SpecFactStmt, uniConMap *map[string]parser.Fc) (bool, error) {
-	// TODO
+	ver.newEnv(ver.env, uniConMap)
+	defer ver.parentEnv() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
+
+	for _, condFact := range knownStmt.Fact.ParamCondFacts {
+		ok, err := ver.FactStmt(condFact)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
 	return false, nil
 }
