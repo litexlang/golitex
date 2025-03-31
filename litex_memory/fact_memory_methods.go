@@ -152,15 +152,19 @@ func (factMem *UniFactMemDict) GetSpecFactNode(stmt *parser.SpecFactStmt) (*Stor
 	}
 }
 
-func (knownFact *StoredUniSpecFact) Match(stmt *parser.SpecFactStmt) (bool, *map[string][]parser.Fc, error) { // 之所以是*map[string][]parser.Fc而不是 *map[string]parser.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
+func (knownFact *StoredUniSpecFact) Match(stmt *parser.SpecFactStmt) (*map[string][]parser.Fc, bool, error) { // 之所以是*map[string][]parser.Fc而不是 *map[string]parser.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
 	if len(stmt.Params) != len(*knownFact.FuncParams) {
 		// TODO 之后要根除不匹配的情况
-		return false, nil, nil
+		return nil, false, nil
 	}
 
-	for i, knownFactParam := range *knownFact.FuncParams {
-		_, _ = i, knownFactParam
+	for i, uniParam := range *knownFact.FuncParams {
+		if matched, err := parser.UniParamConcreteParamMatch(uniParam, stmt.Params[i]); err != nil {
+			return nil, false, nil
+		} else if !matched {
+			return nil, false, nil
+		}
 	}
 
-	return false, nil, nil
+	return nil, false, nil
 }
