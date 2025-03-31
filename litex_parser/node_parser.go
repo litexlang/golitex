@@ -140,49 +140,6 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
 }
 
-// func (parser *Parser) parseNamedFcType() (*NamedFcType, error) {
-// 	name, err := parser.next()
-// 	if err != nil {
-// 		return nil, &parserErr{err, parser}
-// 	}
-
-// 	typeNameArr := []string{name}
-// 	params := []Fc{}
-
-// 	for parser.is(glob.KeywordDot) {
-// 		parser.skip()
-// 		name, err := parser.next()
-// 		if err != nil {
-// 			return nil, &parserErr{err, parser}
-// 		}
-// 		typeNameArr = append(typeNameArr, name)
-// 	}
-
-// 	if parser.is(glob.KeywordLeftParen) {
-// 		paramsPtr, err := parser.parseBracedFcArr()
-// 		if err != nil {
-// 			return nil, &parserErr{err, parser}
-// 		}
-// 		params = *paramsPtr
-// 		parser.skip(glob.KeywordRightParen)
-// 	}
-
-// 	return &NamedFcType{typeNameArr, params}, nil
-// }
-
-// func (block *TokenBlock) parseInstanceMember() (DefMember, error) {
-// 	if block.Header.is(glob.KeywordObj) {
-// 		return block.parseDefObjStmt()
-// 	} else if block.Header.is(glob.KeywordFn) {
-// 		return block.parseDefConcreteFnStmt()
-// 	} else if block.Header.is(glob.KeywordSpecProp) {
-// 		return block.parseDefConcreteNormalPropStmt()
-// 	} else if block.Header.is(glob.KeywordExistProp) {
-// 		return block.parseDefConcreteExistPropStmt()
-// 	}
-// 	return nil, fmt.Errorf("%v, %v, %v expected", glob.KeywordObj, glob.KeywordFn, glob.KeywordSpecProp)
-// }
-
 func (parser *Parser) parseTypeListInDeclsAndSkipEnd(endWith string) (*[]string, *[]FcAtom, error) {
 	paramName := []string{}
 	paramTypes := []FcAtom{}

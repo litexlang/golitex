@@ -30,7 +30,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 	// Case: 如果left, right都是 FcFn，那一位位比较一下
 	cmpRet, fcEnum, err := cmp.CmpFcType(left, right)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	if cmpRet != 0 {

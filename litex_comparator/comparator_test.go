@@ -1,6 +1,7 @@
-package litexcomparator
+package litexcomparator_test
 
 import (
+	cmp "golitex/litex_comparator"
 	parser "golitex/litex_parser"
 	"testing"
 )
@@ -66,7 +67,7 @@ func TestCompareFc(t *testing.T) {
 	// }
 
 	// 测试 FcStr 的比较
-	result, err := CmpFc(&fc1, &fc2)
+	result, err := cmp.CmpFc(&fc1, &fc2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +75,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc1, fc2): expected negative value, got %d", result)
 	}
 
-	result, err = CmpFc(&fc1, &fc3)
+	result, err = cmp.CmpFc(&fc1, &fc3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +84,7 @@ func TestCompareFc(t *testing.T) {
 	}
 
 	// 测试 FcFnRetValue 的比较
-	result, err = CmpFc(&fc4, &fc5)
+	result, err = cmp.CmpFc(&fc4, &fc5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +92,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc4, fc5): expected negative value, got %d", result)
 	}
 
-	result, err = CmpFc(&fc4, &fc6)
+	result, err = cmp.CmpFc(&fc4, &fc6)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +100,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc4, fc6): expected 0, got %d", result)
 	}
 
-	result, err = CmpFc(&fc5, &fc6)
+	result, err = cmp.CmpFc(&fc5, &fc6)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +108,7 @@ func TestCompareFc(t *testing.T) {
 		t.Fatalf("compareFc(fc5, fc6): expected positive value, got %d", result)
 	}
 
-	result, err = CmpFc(&fc4, &fc7)
+	result, err = cmp.CmpFc(&fc4, &fc7)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,42 +117,3 @@ func TestCompareFc(t *testing.T) {
 	}
 
 }
-
-// func TestCompareSpecFact(t *testing.T) {
-// 	factStrings := []string{
-// 		"$p(a)",
-// 		"$p(b)",
-// 		"$p(a)",
-// 		"$p(b)",
-// 		"$t(a,f::b(1,k()(1,2)))",
-// 		"$q(a, b)",
-// 		"$p::t(a,b)",
-// 		"$Q::P(a,b)",
-// 	}
-
-// 	facts := []parser.SpecFactStmt{}
-// 	for _, factString := range factStrings {
-// 		topStmtSlice, err := parser.ParseSourceCode(&factString)
-// 		if err != nil {
-// 			t.Fatalf("ParseSpecFactStmt(%q) error: %v", factString, err)
-// 		}
-// 		for _, stmt := range *topStmtSlice {
-// 			asSpecFact, ok := (stmt.Stmt).(parser.SpecFactStmt)
-// 			if !ok {
-// 				t.Fatalf("stmt.parseSpecFactStmt() error: %v", err)
-// 			}
-// 			facts = append(facts, asSpecFact)
-// 		}
-// 	}
-
-// 	rounds := 10
-// 	for i := range rounds {
-// 		n := rand.Intn(len(factStrings))
-// 		m := rand.Intn(len(factStrings))
-// 		out, err := CmpSpecFact(facts[n], facts[m])
-// 		if err != nil {
-// 			t.Fatalf("error: %v", err)
-// 		}
-// 		println(i, out, facts[n].String(), facts[m].String())
-// 	}
-// }

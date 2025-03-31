@@ -36,7 +36,7 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt) (bool, error) {
 	for _, thenFact := range stmt.ThenFacts {
 		ok, err := ver.FactStmt(&thenFact)
 		if err != nil {
-			return false, nil
+			return false, err
 		}
 		if !ok {
 			ver.unknownMsg("%s is unknown", thenFact.String())
