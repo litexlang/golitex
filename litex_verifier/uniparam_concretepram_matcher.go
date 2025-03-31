@@ -56,8 +56,46 @@ func (ver *Verifier) matchAtomUniConParams(uniFuncFcAtom *parser.FcAtom, conFunc
 }
 
 func (ver *Verifier) matchFnUniConParams(uniFuncFcFn *parser.FcFnCallPipe, conFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {
-	// TODO
-	return nil, false, nil
+	retMap := map[string][]parser.Fc{}
+
+	conParamAsFcFn := conFuncParam.(*parser.FcFnCallPipe)
+	if conParamAsFcFn == nil {
+		return nil, false, nil
+	}
+
+	if matchedStr, ok := isUniParam(&uniFuncFcFn.FnHead, possibleUniParams); ok {
+		// TODO
+		_ = matchedStr
+	}
+
+	if ok, err := ver.fcEqualSpec(&uniFuncFcFn.FnHead, &conParamAsFcFn.FnHead); err != nil {
+		return nil, false, err
+	} else if !ok {
+		return nil, false, nil
+	}
+
+	if len(conParamAsFcFn.CallPipe) != len(uniFuncFcFn.CallPipe) {
+		return nil, false, fmt.Errorf("expect length of %v equal to length of %v", conParamAsFcFn.CallPipe, uniFuncFcFn.CallPipe)
+	}
+
+	for i, uniPipe := range uniFuncFcFn.CallPipe {
+		if len(uniPipe.Params) != len(conParamAsFcFn.CallPipe[i].Params) {
+			return nil, false, fmt.Errorf("expect length of %v equal to length of %v", uniPipe.Params, conParamAsFcFn.CallPipe[i].Params)
+		}
+
+		for j, param := range uniPipe.Params {
+			matchMap, ok, err := ver.matchUniConParams(param, conParamAsFcFn.CallPipe[i].Params[j], possibleUniParams)
+			if err != nil {
+				return nil, false, err
+			}
+			if !ok {
+				return nil, false, nil
+			}
+			mergeMatchMaps(matchMap, &retMap)
+		}
+	}
+
+	return &retMap, true, nil
 }
 
 func isUniParam(uniFuncAtom *parser.FcAtom, possibleUniParams *[]string) (string, bool) { // ret: matched possible uniParam string; isMatched?
@@ -67,4 +105,13 @@ func isUniParam(uniFuncAtom *parser.FcAtom, possibleUniParams *[]string) (string
 		}
 	}
 	return "", false
+}
+
+func mergeMatchMaps(from *map[string][]parser.Fc, to *map[string][]parser.Fc) {
+	for key, value := range *from {
+		if _, ok := (*to)[key]; ok {
+			(*to)[key] = append((*to)[key], value...)
+		}
+		(*to)[key] = value
+	}
 }
