@@ -1,4 +1,4 @@
-package litexdatastructure
+package litexglobal
 
 import (
 	"errors"

@@ -39,6 +39,8 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 
 	if fcEnum == cmp.FcFnCallPipeEnum {
 		return ver.fcFnCallPipeEqual(left.(*parser.FcFnCallPipe), right.(*parser.FcFnCallPipe), true)
+	} else if fcEnum == cmp.FcAtomEnum {
+		return false, nil
 	}
 
 	return false, fmt.Errorf("unexpected")

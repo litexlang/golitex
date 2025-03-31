@@ -84,10 +84,6 @@ func (ver *Verifier) parentEnv() error {
 	}
 }
 
-func (ver *Verifier) deleteEnv() {
-	ver.env = ver.env.Parent
-}
-
 func (ver *Verifier) unknownWithMsg(format string, args ...any) {
 	ver.unknownMsg(format, args...)
 	ver.Output = VerifierUnknown

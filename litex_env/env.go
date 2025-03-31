@@ -2,7 +2,7 @@ package litexmemory
 
 import (
 	cmp "golitex/litex_comparator"
-	ds "golitex/litex_data_structure"
+	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
@@ -40,7 +40,7 @@ func NewEnv(parent *Env, uniParamMapPtr *map[string]parser.Fc) *Env {
 		SpecFactMem:  *mem.NewSpecFactMemDict(),
 		CondFactMem:  *mem.NewCondFactMemDict(),
 		UniFactMem:   *mem.NewUniFactMemDict(),
-		EqualFactMem: mem.EqualFactMem{Mem: *ds.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
+		EqualFactMem: mem.EqualFactMem{Mem: *glob.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
 		UniParamMap:  *uniParamMapPtr,
 	}
 

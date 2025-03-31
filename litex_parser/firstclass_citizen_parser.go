@@ -132,11 +132,18 @@ func (parser *Parser) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (F
 		return nil, &parserErr{err, parser}
 	}
 
-	// process infix operators recursively
+	if parser.ExceedEnd() {
+		return left, nil
+	}
+
 	for {
 		curToken, err := parser.currentToken()
 		if err != nil {
-			return left, err
+			return nil, err // 捕获错误并退出
+		}
+
+		if !glob.IsBuiltinRelaOpt(curToken) {
+			break // 不是内置运算符，跳出循环
 		}
 
 		curPrec, isBinary := glob.PrecedenceMap[curToken]
