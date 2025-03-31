@@ -7,7 +7,7 @@ import (
 )
 
 func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
-	exec.clear()
+	exec.clearMsgAndOutput()
 	return exec.stmt(stmt.Stmt)
 }
 

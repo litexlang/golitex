@@ -27,7 +27,7 @@ func newExecutor(curEnv *env.Env) *Executor {
 	}
 }
 
-func (e *Executor) clear() {
+func (e *Executor) clearMsgAndOutput() {
 	e.message = &[]string{}
 	e.output = execUnknown
 }

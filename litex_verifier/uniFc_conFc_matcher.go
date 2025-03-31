@@ -22,7 +22,6 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 		if !matched {
 			return nil, false, nil
 		}
-		// TODO
 		mergeMatchMaps(matchMap, &retMap)
 	}
 
@@ -30,15 +29,15 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 }
 
 func (ver *Verifier) matchUniConFc(uniFuncParam parser.Fc, concreteFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {
-	if asAtom := uniFuncParam.(*parser.FcAtom); asAtom != nil {
-		return ver.matchAtomUniConFc(asAtom, concreteFuncParam, possibleUniParams)
+	// Safe type switching
+	switch param := uniFuncParam.(type) {
+	case *parser.FcAtom:
+		return ver.matchAtomUniConFc(param, concreteFuncParam, possibleUniParams)
+	case *parser.FcFnCallPipe:
+		return ver.matchFnUniConFc(param, concreteFuncParam, possibleUniParams)
+	default:
+		return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, uniFuncParam.String())
 	}
-
-	if asFn := uniFuncParam.(*parser.FcFnCallPipe); asFn != nil {
-		return ver.matchFnUniConFc(asFn, concreteFuncParam, possibleUniParams)
-	}
-
-	return nil, false, fmt.Errorf("unexpected type of %v", uniFuncParam.String())
 }
 
 func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *parser.FcAtom, conFuncParam parser.Fc, possibleUniParams *[]string) (*map[string][]parser.Fc, bool, error) {
