@@ -35,6 +35,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 
 	if cmpRet != 0 {
 		ver.unknownNoMsg()
+		return false, nil
 	}
 
 	if fcEnum == cmp.FcFnCallPipeEnum {
