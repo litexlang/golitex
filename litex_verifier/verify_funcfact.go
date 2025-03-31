@@ -7,13 +7,16 @@ import (
 )
 
 func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
-	// TODO : If there are symbols inside prop list that have  equals,we loop over all the possible equivalent situations and verify literally
-
-	ok, err := ver.SpecFactSpec(stmt)
-	if err != nil {
+	// TODO 判断一下传入进来的stmt是不是prop prop，就像数学归纳法这种。prop prop的特点是，它是prop，参数列表里也有prop。如果是的话，那就用其他方式来验证
+	if isPropProp, err := ver.IsPropProp(stmt); err != nil {
 		return false, err
+	} else if isPropProp {
+		return ver.PropPropFact(stmt)
 	}
-	if ok {
+
+	if ok, err := ver.SpecFactSpec(stmt); err != nil {
+		return false, err
+	} else if ok {
 		return true, nil
 	}
 
@@ -21,19 +24,15 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
 		return false, nil
 	}
 
-	ok, err = ver.SpecFactCond(stmt)
-	if err != nil {
+	if ok, err := ver.SpecFactCond(stmt); err != nil {
 		return false, nil
-	}
-	if ok {
+	} else if ok {
 		return true, nil
 	}
 
-	ok, err = ver.SpecFactUni(stmt)
-	if err != nil {
+	if ok, err := ver.SpecFactUni(stmt); err != nil {
 		return false, nil
-	}
-	if ok {
+	} else if ok {
 		return true, nil
 	}
 
