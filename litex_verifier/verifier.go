@@ -14,8 +14,6 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 	switch stmt := stmt.(type) {
 	case *parser.SpecFactStmt:
 		return ver.SpecFact(stmt)
-	// case *parser.RelaFactStmt:
-	// 	return ver.RelaFact(stmt)
 	case *parser.CondFactStmt:
 		return ver.CondFact(stmt)
 	case *parser.UniFactStmt:
@@ -118,12 +116,3 @@ func (ver *Verifier) isDeclared(fc string) (bool, error) {
 	}
 	return false, nil
 }
-
-// func (ver *Verifier) newUniParam(key string, value parser.Fc) error {
-// 	_, got := ver.uniParams[key]
-// 	if got {
-// 		return fmt.Errorf("%s is already a uni param", key)
-// 	}
-// 	ver.uniParams[key] = value
-// 	return nil
-// }

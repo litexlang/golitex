@@ -14,12 +14,12 @@ type Env struct {
 	PropMem mem.PropMem
 	FnMem   mem.FnMem
 
-	// 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic
-	SpecFactMem mem.SpecFactMemDict
-	CondFactMem mem.CondFactMemDict
-	// RelaFactMem  mem.RelaFactMemDict
+	SpecFactMem  mem.SpecFactMemDict
+	CondFactMem  mem.CondFactMemDict
 	UniFactMem   mem.UniFactMemDict
 	EqualFactMem mem.EqualFactMem
+
+	//TODO 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic
 
 	UniParamMap map[string]parser.Fc
 }

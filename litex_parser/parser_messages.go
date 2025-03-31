@@ -106,9 +106,12 @@ func (l *UniFactStmt) String() string {
 	}
 	builder.WriteString(glob.LineHead4Indents("then:", 1))
 	builder.WriteByte('\n')
-	for _, thenFact := range l.ThenFacts {
-		builder.WriteString(glob.LineHead4Indents(thenFact.String(), 2))
-		builder.WriteByte('\n')
+	if len(l.ThenFacts) > 0 {
+		for i := 0; i < len(l.ThenFacts)-1; i++ {
+			builder.WriteString(glob.LineHead4Indents(l.ThenFacts[i].String(), 2))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(glob.LineHead4Indents(l.ThenFacts[len(l.ThenFacts)-1].String(), 2))
 	}
 	return builder.String()
 }

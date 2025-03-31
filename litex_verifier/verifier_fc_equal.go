@@ -95,13 +95,6 @@ func (ver *Verifier) FcEqualSpecInSpecMemAtEnv(curEnv *env.Env, left parser.Fc, 
 		return false, nil
 	}
 
-	// var compareFunc func(a, b parser.Fc) (bool, error)
-	// if specMode {
-	// 	compareFunc = ver.fcEqualSpec
-	// } else {
-	// 	compareFunc = ver.FcEqual
-	// }
-
 	for _, equalFc := range searchedNode.Key.Values {
 		cmpRet, err := cmp.CmpFc(*equalFc, right) // 只能用直接比较法
 		// ok, err := ver.fcEqualSpec(*equalFc, right) // 这会导致无限循环
