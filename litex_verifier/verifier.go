@@ -75,6 +75,15 @@ func (ver *Verifier) newEnv(parent *env.Env, uniParamsMap *map[string]parser.Fc)
 	ver.env = newEnv
 }
 
+func (ver *Verifier) parentEnv() error {
+	if ver.env.Parent != nil {
+		ver.env = ver.env.Parent
+		return nil
+	} else {
+		return fmt.Errorf("parent env does not exist")
+	}
+}
+
 func (ver *Verifier) deleteEnv() {
 	ver.env = ver.env.Parent
 }
