@@ -40,9 +40,13 @@ func NewEnv(parent *Env, uniParamMapPtr *map[string]parser.Fc) *Env {
 		SpecFactMem:  *mem.NewSpecFactMemDict(),
 		CondFactMem:  *mem.NewCondFactMemDict(),
 		UniFactMem:   *mem.NewUniFactMemDict(),
-		EqualFactMem: mem.EqualFactMem{Mem: *glob.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)},
+		EqualFactMem: *newEqualFactMem(),
 		UniParamMap:  *uniParamMapPtr,
 	}
 
 	return env
+}
+
+func newEqualFactMem() *mem.EqualFactMem {
+	return &mem.EqualFactMem{Mem: *glob.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)}
 }
