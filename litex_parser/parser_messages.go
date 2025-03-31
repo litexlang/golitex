@@ -52,10 +52,10 @@ func (stmt *DefObjStmt) String() string { panic("") }
 
 func (c *DefInterfaceStmt) String() string           { panic("") }
 func (f *DefTypeStmt) String() string                { panic("") }
-func (c *DefConcreteNormalPropStmt) String() string  { panic("") }
-func (f *DefConcreteFnStmt) String() string          { panic("") }
+func (c *DefConPropStmt) String() string             { panic("") }
+func (f *DefConFnStmt) String() string               { panic("") }
 func (f *ClaimProveStmt) String() string             { panic("") }
-func (s *DefConcreteExistPropStmt) String() string   { panic("") }
+func (s *DefConExistPropStmt) String() string        { panic("") }
 func (s *HaveStmt) String() string                   { panic("") }
 func (s *ClaimProveByContradictStmt) String() string { panic("") }
 func (s *AxiomStmt) String() string                  { panic("") }
@@ -100,7 +100,7 @@ func (l *UniFactStmt) String() string {
 		builder.WriteString(l.ParamTypes[len(l.Params)-1].String())
 	}
 	builder.WriteString(":\n")
-	for _, condFact := range l.ParamCondFacts {
+	for _, condFact := range l.DomFacts {
 		builder.WriteString(glob.LineHead4Indents(condFact.String(), 1))
 		builder.WriteByte('\n')
 	}

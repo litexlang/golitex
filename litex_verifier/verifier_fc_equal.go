@@ -13,11 +13,11 @@ func (ver *Verifier) FcEqual(left, right parser.Fc, specMode bool) (bool, error)
 	defer ver.minusRound()
 
 	// check whether given left or right is uniParam
-	concreteLeft := ver.asConcreteFc(left)
+	concreteLeft := ver.asConFc(left)
 	if concreteLeft != nil {
 		left = concreteLeft
 	}
-	concreteRight := ver.asConcreteFc(right)
+	concreteRight := ver.asConFc(right)
 	if concreteRight != nil {
 		right = concreteRight
 	}
