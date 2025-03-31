@@ -145,6 +145,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 		return false, nil
 	}
 
+	uniConMap := &map[string]parser.Fc{}
 	for _, knownFact := range searched.Facts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
 		paramArrMap, ok, err := ver.matchStoredUniConSpecFacts(knownFact, stmt)
@@ -155,40 +156,51 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 			continue
 		}
 
-		// 如果一个freeObj对应多个concreteObj,那要确保这些都一样，否则也不行
-		newMap := map[string]parser.Fc{}
-	LoopParamArrMap:
-		for key, value := range *paramArrMap {
-			if len(value) == 1 {
-				continue
-			}
-
-			for i := 1; i < len(value); i++ {
-				ok, err := ver.fcEqualSpec(value[0], value[i])
-				if err != nil {
-					return false, err
-				}
-				if !ok {
-					continue LoopParamArrMap
-				}
-			}
-
-			newMap[key] = value[0]
+		uniConMap, ok, err = ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			continue
 		}
 
-		ok, err = ver.SpecFactMatchedUni(knownFact, &newMap)
+		ok, err = ver.specFactUniWithUniConMap(&knownFact, stmt, uniConMap)
 		if err != nil {
 			return false, err
 		}
 		if ok {
 			ver.successWithMsg("", knownFact.String())
+			return true, nil
 		}
 	}
 
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactMatchedUni(knownFact mem.StoredUniSpecFact, paramMap *map[string]parser.Fc) (bool, error) {
-	// TODO
+func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap *map[string][]parser.Fc) (*map[string]parser.Fc, bool, error) {
+	newMap := map[string]parser.Fc{}
+LoopParamArrMap:
+	for key, value := range *paramArrMap {
+		if len(value) == 1 {
+			continue
+		}
+
+		for i := 1; i < len(value); i++ {
+			ok, err := ver.fcEqualSpec(value[0], value[i])
+			if err != nil {
+				return nil, false, err
+			}
+			if !ok {
+				continue LoopParamArrMap
+			}
+		}
+
+		newMap[key] = value[0]
+	}
+
+	return &newMap, true, nil
+}
+
+func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, stmt *parser.SpecFactStmt, uniConMap *map[string]parser.Fc) (bool, error) {
 	return false, nil
 }
