@@ -22,7 +22,7 @@ func (ver *Verifier) CondFact(stmt *parser.CondFactStmt) (bool, error) {
 
 func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt) (bool, error) {
 	ver.newEnv(nil, nil)
-	defer ver.deleteEnv()
+	defer ver.parentEnv() // 万一cond里有condFact，那要保证能回到原来的环境
 
 	for _, condFact := range stmt.CondFacts {
 		err := ver.env.NewFact(condFact)

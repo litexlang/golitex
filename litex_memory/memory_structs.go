@@ -1,7 +1,7 @@
 package litexmemory
 
 import (
-	ds "golitex/litex_data_structure"
+	glob "golitex/litex_global"
 	parser "golitex/litex_parser"
 )
 
@@ -54,7 +54,7 @@ type EqualFactMemoryTreeNode struct {
 }
 
 type EqualFactMem struct {
-	Mem ds.RedBlackTree[*EqualFactMemoryTreeNode]
+	Mem glob.RedBlackTree[*EqualFactMemoryTreeNode]
 }
 
 type ObjMemoryEntry struct {
