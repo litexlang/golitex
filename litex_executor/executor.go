@@ -52,7 +52,7 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 		}
 	} else {
 		if curVerifier.Output == verifier.VerifierUnknown {
-			exec.newMessage("is unknown.")
+			exec.newMessage("is unknown")
 		}
 	}
 

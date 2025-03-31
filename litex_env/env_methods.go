@@ -10,8 +10,6 @@ func (env *Env) NewFact(stmt parser.FactStmt) error {
 	switch f := stmt.(type) {
 	case *parser.SpecFactStmt:
 		return env.NewSpecFact(f)
-	// case *parser.RelaFactStmt:
-	// 	return env.NewRelaFact(f)
 	case *parser.CondFactStmt:
 		return env.NewCondFact(f)
 	case *parser.UniFactStmt:
@@ -32,10 +30,6 @@ func (env *Env) NewSpecFact(fact *parser.SpecFactStmt) error {
 	}
 	return nil
 }
-
-// func (env *Env) NewRelaFact(stmt *parser.RelaFactStmt) error {
-// 	panic(fmt.Sprintf("%v not implemented", string(stmt.Opt.OptName)))
-// }
 
 func (env *Env) NewEqualFact(stmt *parser.SpecFactStmt) error {
 	left := &mem.EqualFactMemoryTreeNode{

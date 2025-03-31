@@ -43,6 +43,7 @@ func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) *[][]string {
 func execMessageTest(messageSliceSlice *[][]string) {
 	for _, messageSlice := range *messageSliceSlice {
 		for i := len(messageSlice) - 1; i >= 0; i-- {
+			// fmt.Println(strings.TrimSpace(messageSlice[i]))
 			fmt.Println(messageSlice[i])
 		}
 		fmt.Println()

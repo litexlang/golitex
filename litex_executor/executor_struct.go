@@ -36,12 +36,6 @@ func (e *Executor) true() bool {
 	return e.output == execTrue
 }
 
-// func (e *Executor) success(format string, args ...any) {
-// 	message := fmt.Sprintf(format, args...) // 使用 fmt.Sprintf 格式化字符串
-// 	*e.message = append(*e.message, message)
-// 	e.output = execTrue
-// }
-
 func (e *Executor) readFromVerifier(readFrom *verifier.Verifier) {
 	switch readFrom.Output {
 	case verifier.VerifierTrue:

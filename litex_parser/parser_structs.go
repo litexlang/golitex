@@ -28,7 +28,7 @@ type DefConcreteNormalPropStmt struct {
 
 type DefConcreteExistPropStmt struct {
 	DefHeader      ConcreteDefHeader
-	ExistFc        []string // 只允许是存在函数和obj，不能是prop
+	ExistFc        []string
 	ExistFcTypes   []FcAtom
 	ParamCondFacts []FactStmt
 	ThenFacts      []FactStmt
@@ -43,9 +43,9 @@ type DefConcreteFnStmt struct {
 
 type UniFactStmt struct {
 	Params         []string
-	ParamTypes     []Fc // 注意到函数的返回值也可以是集合，所以这里是Fc，而不是string
+	ParamTypes     []Fc
 	ParamCondFacts []FactStmt
-	ThenFacts      []SpecFactStmt //      []SpecFactStmt
+	ThenFacts      []SpecFactStmt
 }
 
 type GenericUniStmt struct {
@@ -54,7 +54,7 @@ type GenericUniStmt struct {
 	Params         []string
 	ParamTypes     []Fc
 	ParamCondFacts []FactStmt
-	ThenFacts      []SpecFactStmt // []SpecFactStmt
+	ThenFacts      []SpecFactStmt
 }
 
 type SpecFactStmt struct {
@@ -66,12 +66,6 @@ type SpecFactStmt struct {
 func (f *SpecFactStmt) IsEqualFact() bool {
 	return f.Opt.OptName == glob.KeywordEqual && f.Opt.PkgName == ""
 }
-
-// type RelaFactStmt struct {
-// 	IsTrue bool
-// 	Opt    FcAtom
-// 	Params []Fc
-// }
 
 type ClaimProveByContradictStmt struct {
 	toCheck []FactStmt
@@ -88,7 +82,6 @@ type KnowStmt struct {
 }
 
 type HaveStmt struct {
-	// PropStmt SpecFactStmt
 	PropStmt SpecFactStmt
 	member   []string
 }
@@ -106,14 +99,8 @@ type ThmStmt struct {
 
 type CondFactStmt struct {
 	CondFacts []FactStmt
-	ThenFacts []SpecFactStmt // []SpecFactStmt
+	ThenFacts []SpecFactStmt
 }
-
-/*
-Data structures below are not statement nodes.
-*/
-
-// type TypeConceptStr string
 
 type FcFnDecl struct {
 	Name   string
@@ -125,9 +112,3 @@ type ConcreteDefHeader struct {
 	Params     []string
 	TypeParams []FcAtom
 }
-
-// type FcObjTypeStrValue string
-// type FcObjTypeFuncValue struct {
-// 	Name      string
-// 	ObjParams []Fc
-// }

@@ -28,7 +28,3 @@ func (mem *FnMem) Get(s string) (*FnMemEntry, bool) {
 	//TODO
 	return nil, false
 }
-
-// func (mem *RelaFactMemDict) NewRelaFact(fact *parser.RelaFactStmt) error {
-// 	panic("")
-// }
