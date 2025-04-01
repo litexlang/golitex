@@ -5,6 +5,7 @@ import (
 	env "golitex/litex_env"
 	parser "golitex/litex_parser"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 )
@@ -525,4 +526,15 @@ $p(g(x))
 	topStmtSlice := parseStmtTest(&code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	execMessageTest(messages)
+}
+
+func TestReadFile(t *testing.T) {
+	filePath := "../litex_code_examples/fact.litex"
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+	fmt.Printf("%v content:\n", filePath)
+	fmt.Println(string(content))
 }

@@ -773,3 +773,26 @@ prop p(x A):
     iff: // dom 上的额外要求. dom满足时 p(x)则q(x), t(x), q(x) && t(x) 则 p(x)
         $q(x)
         $t(x)
+3. 如果把forall里加iff，会发生什么
+完整版
+forall x A:
+    dom:
+        DOM
+    when:
+        WHEN
+    then/iff:
+        THEN/IFF
+
+略去when
+forall x B:
+    DOM
+    then/iff:
+        THEN/IFF
+
+全略去
+forall x B:
+    THEN/IFF
+
+巨大问题：when里必须要全是 specFact，否则因为 THEN/IFF 要求你全是SpecFact，而when需要和iff有语义上的并行关系，所以WHEN也必须spec
+
+litex 0.2 前不加入这个功能
