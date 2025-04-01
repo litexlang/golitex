@@ -23,7 +23,7 @@ type DefTypeStmt struct {
 type DefConPropStmt struct {
 	DefHeader ConDefHeader
 	DomFacts  []FactStmt
-	ThenFacts []FactStmt
+	IffFacts  []FactStmt
 }
 
 type DefConExistPropStmt struct {
