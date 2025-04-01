@@ -87,3 +87,7 @@ func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
 
 	return nil
 }
+
+func (exec *Executor) GetMsgAsStr0ToEnd() string {
+	return strings.Join(exec.env.Msgs, "\n")
+}
