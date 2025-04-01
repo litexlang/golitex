@@ -10,6 +10,7 @@ prove:
     $p(0)
     $p0(a)
     // a < b
+
 $p0(a) // local scope does not affect global
 
 // 2 个一样的东西匹配同一位
@@ -81,3 +82,10 @@ prove:
         a = t
         k = g
     $p(k(a))
+
+prove:
+    know forall x R:
+        $p(x)
+    $pppp(f(1))
+    $p(0)
+    $p(g(1))
