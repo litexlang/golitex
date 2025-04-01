@@ -54,5 +54,6 @@ func (e *Executor) readFromVerifier(readFrom *verifier.Verifier) {
 		e.output = execUnknown
 	}
 
-	e.message = readFrom.Message
+	// e.message = readFrom.Message
+	*e.message = append(*e.message, *readFrom.Message...)
 }
