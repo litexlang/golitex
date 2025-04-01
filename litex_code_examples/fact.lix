@@ -31,3 +31,11 @@ prove:
         b < d
     a < d // unknown 二元事实搜不到潜在的三元forall事实
 
+prove:
+    know forall x R:
+        $p(x)
+        then:
+            $p(f(x))
+    $p(f(x))
+    know $p(x)
+    $p(f(x))

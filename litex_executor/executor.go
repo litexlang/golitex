@@ -66,7 +66,7 @@ func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	exec.readFromVerifier(curVerifier)
+	exec.readFromVerifier(curVerifier, false)
 	return ok, err
 }
 

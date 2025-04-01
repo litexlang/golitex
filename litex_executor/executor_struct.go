@@ -14,16 +14,17 @@ const (
 )
 
 type Executor struct {
-	env     *env.Env
-	message *[]string
-	output  ExecOutput
+	env *env.Env
+	// parent  *Executor
+	msgSliceSlice []string
+	output        ExecOutput
 }
 
 func newExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil, nil), message: &[]string{}, output: execUnknown}
+		return &Executor{env: env.NewEnv(nil, nil), msgSliceSlice: []string{}, output: execUnknown}
 	} else {
-		return &Executor{env: curEnv, message: &[]string{}, output: execUnknown}
+		return &Executor{env: curEnv, msgSliceSlice: []string{}, output: execUnknown}
 	}
 }
 
@@ -36,7 +37,7 @@ func (e *Executor) deleteEnv() {
 }
 
 func (e *Executor) clearMsgAndOutput() {
-	e.message = &[]string{}
+	e.msgSliceSlice = []string{}
 	e.output = execUnknown
 }
 
@@ -44,7 +45,7 @@ func (e *Executor) true() bool {
 	return e.output == execTrue
 }
 
-func (e *Executor) readFromVerifier(readFrom *verifier.Verifier) {
+func (e *Executor) readFromVerifier(readFrom *verifier.Verifier, putMsgReverseOrder bool) {
 	switch readFrom.Output {
 	case verifier.VerifierTrue:
 		e.output = execTrue
@@ -55,5 +56,7 @@ func (e *Executor) readFromVerifier(readFrom *verifier.Verifier) {
 	}
 
 	// e.message = readFrom.Message
-	*e.message = append(*e.message, *readFrom.Message...)
+	// slices.Reverse(*readFrom.Message)
+	// *e.message = append(*e.message, strings.Join(*readFrom.Message, "\n"))
+	e.msgSliceSlice = append(e.msgSliceSlice, *readFrom.Message...)
 }
