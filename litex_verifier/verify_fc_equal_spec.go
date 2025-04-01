@@ -10,7 +10,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 	// Case: 全部都是builtin类型：int,float
 
 	// Case: 完全一样
-	cmpRet, err := cmp.CmpFc(left, right)
+	cmpRet, err := cmp.CmpFcLiterally(left, right)
 	if err != nil {
 		return false, err
 	}

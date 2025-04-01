@@ -5,7 +5,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func CmpFc(left, right parser.Fc) (int, error) {
+func CmpFcLiterally(left, right parser.Fc) (int, error) {
 	typeComp, fcEnum, err := CmpFcType(left, right)
 	if typeComp != 0 || err != nil {
 		return typeComp, err
@@ -100,7 +100,7 @@ func compareFcFnCallPipeSeg(left, right *parser.FcFnCallPipeSeg) (int, error) {
 	}
 
 	for i := 0; i < len(left.Params); i++ {
-		if comp, err := CmpFc(left.Params[i], right.Params[i]); comp != 0 || err != nil {
+		if comp, err := CmpFcLiterally(left.Params[i], right.Params[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}

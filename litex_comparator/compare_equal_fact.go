@@ -5,5 +5,5 @@ import (
 )
 
 func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (int, error) {
-	return CmpFc(left.FcAsKey, right.FcAsKey)
+	return CmpFcLiterally(left.FcAsKey, right.FcAsKey)
 }

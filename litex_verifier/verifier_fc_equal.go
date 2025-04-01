@@ -43,12 +43,13 @@ func (ver *Verifier) FcEqual(left, right parser.Fc, specMode bool) (bool, error)
 
 func (ver *Verifier) fcFnCallPipeEqual(left, right *parser.FcFnCallPipe, specMode bool) (bool, error) {
 	// 如果两个函数的名字一样，每个参数都一样，那也行
-	ret, err := cmp.CmpFc(&left.FnHead, &right.FnHead)
+	// ret, err := cmp.CmpFcLiterally(&left.FnHead, &right.FnHead)
+	ret, err := ver.FactStmt(&parser.SpecFactStmt{IsTrue: true, Opt: parser.FcAtom{PkgName: "", OptName: "="}, Params: []parser.Fc{&left.FnHead, &right.FnHead}})
 	if err != nil {
 		return false, err
 	}
 
-	if ret != 0 {
+	if !ret {
 		return false, nil
 	}
 
@@ -96,7 +97,7 @@ func (ver *Verifier) FcEqualSpecInSpecMemAtEnv(curEnv *env.Env, left parser.Fc, 
 	}
 
 	for _, equalFc := range searchedNode.Key.Values {
-		cmpRet, err := cmp.CmpFc(*equalFc, right) // 只能用直接比较法
+		cmpRet, err := cmp.CmpFcLiterally(*equalFc, right) // 只能用直接比较法
 		// ok, err := ver.fcEqualSpec(*equalFc, right) // 这会导致无限循环
 		if err != nil {
 			return false, err
