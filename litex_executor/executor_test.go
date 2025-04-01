@@ -579,12 +579,18 @@ func readFile(filePath string) string {
 func TestFacts2(t *testing.T) {
 	code :=
 		`
-know:
-	x = y
-	f = t
-	$p(f(x))
+know forall x R, f fn:
+	x = t
+	f = g
+	then:
+		$p(f(x))
 
-$p(t(y))
+//$p(k(a))
+
+know:
+	a = t
+	k = g
+$p(k(a))
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)

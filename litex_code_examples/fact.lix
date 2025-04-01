@@ -59,3 +59,25 @@ prove:
 
     $p(ha)
     $p(g(x, 100))
+
+prove:
+    know:
+        x = y
+        f = t
+        $p(f(x))
+
+    $p(t(y))   
+
+prove:
+    know forall x R, f fn:
+        x = t
+        f = g
+        then:
+            $p(f(x))
+
+    $p(k(a))
+
+    know:
+        a = t
+        k = g
+    $p(k(a))

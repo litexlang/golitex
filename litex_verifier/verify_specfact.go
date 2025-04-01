@@ -50,10 +50,14 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
 }
 
 func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt) (bool, error) {
+	if stmt.IsEqualFact() {
+		return ver.FcEqual(stmt.Params[0], stmt.Params[1], true)
+	}
+
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		if stmt.IsEqualFact() {
-			return ver.EqualFactSpecAtEnv(curEnv, stmt)
-		}
+		// if stmt.IsEqualFact() {
+		// 	return ver.EqualFactSpecAtEnv(curEnv, stmt)
+		// }
 
 		searchedNode, got := curEnv.SpecFactMem.GetNode(stmt)
 		if !got {
@@ -223,7 +227,7 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 	}
 
 	for _, condFact := range knownStmt.Fact.DomFacts {
-		ok, err := ver.FactStmt(condFact)
+		ok, err := ver.FactStmt(condFact) // TODO: 这里最好要标注一下是specFact
 		if err != nil {
 			return false, err
 		}
