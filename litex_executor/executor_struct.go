@@ -2,7 +2,6 @@ package litexexecutor
 
 import (
 	env "golitex/litex_env"
-	verifier "golitex/litex_verifier"
 )
 
 type ExecOutput uint8
@@ -44,22 +43,6 @@ func (e *Executor) clearMsgAndOutput() {
 
 func (e *Executor) true() bool {
 	return e.output == execTrue
-}
-
-func (e *Executor) readFromVerifier(readFrom *verifier.Verifier, putMsgReverseOrder bool) {
-	switch readFrom.Output {
-	case verifier.VerifierTrue:
-		e.output = execTrue
-	case verifier.VerifierError:
-		e.output = execError
-	case verifier.VerifierUnknown:
-		e.output = execUnknown
-	}
-
-	// e.message = readFrom.Message
-	// slices.Reverse(*readFrom.Message)
-	// *e.message = append(*e.message, strings.Join(*readFrom.Message, "\n"))
-	e.env.Msgs = append(e.env.Msgs, *readFrom.Messages...)
 }
 
 func (e *Executor) getMsgs() []string {

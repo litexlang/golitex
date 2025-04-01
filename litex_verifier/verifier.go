@@ -59,7 +59,7 @@ func (ver *Verifier) round1() bool {
 }
 
 func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
-	ver.successMsg(stmtString, storedStmtString)
+	ver.successMsgEnd(stmtString, storedStmtString)
 	ver.Output = VerifierTrue
 }
 
@@ -83,7 +83,7 @@ func (ver *Verifier) parentEnv() error {
 }
 
 func (ver *Verifier) unknownWithMsg(format string, args ...any) {
-	ver.unknownMsg(format, args...)
+	ver.unknownMsgEnd(format, args...)
 	ver.Output = VerifierUnknown
 }
 
