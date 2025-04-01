@@ -40,11 +40,11 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt) (bool, error) {
 			return false, err
 		}
 		if !ok {
-			ver.unknownMsg("%s is unknown", thenFact.String())
+			ver.unknownMsgEnd("%s is unknown", thenFact.String())
 			return false, nil
 		}
 	}
 
-	ver.newMsg("is true")
+	ver.newMsgEnd("is true")
 	return true, nil
 }

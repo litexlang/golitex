@@ -74,7 +74,7 @@ func (ver *Verifier) fcFnCallPipeEqual(left, right *parser.FcFnCallPipe, specMod
 	}
 
 	if ver.round1() {
-		ver.successMsg(fmt.Sprintf("%v = %v", left.String(), right.String()), "use known facts")
+		ver.successMsgEnd(fmt.Sprintf("%v = %v", left.String(), right.String()), "use known facts")
 	} else {
 		ver.successNoMsg()
 	}

@@ -28,14 +28,14 @@ func (exec *Executor) stmt(stmt parser.Stmt) error {
 }
 
 func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
-	defer exec.newMsgAtEnd(stmt.String())
-
 	for _, fact := range stmt.Facts {
 		err := exec.env.NewFact(fact)
 		if err != nil {
 			return err
 		}
 	}
+
+	exec.newMsgEnd(stmt.String())
 	return nil
 }
 
@@ -43,20 +43,19 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 	ok, curVerifier, err := exec.checkFactStmt(stmt)
 
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if ok {
-		// exec.readFromVerifier(curVerifier, false)
 		slices.Reverse(*curVerifier.Messages) // TODO 需要吗？
-		exec.newMsgAtEnd(stmt.String() + "\n" + strings.Join(*curVerifier.Messages, "\n"))
+		exec.newMsgEnd(stmt.String() + "\n" + curVerifier.GetMsgAsStr())
 		err = exec.env.NewFact(stmt)
 		if err != nil {
 			return err
 		}
 	} else {
 		if !ok {
-			exec.newMsgAtEnd(stmt.String() + "\nis unknown")
+			exec.newMsgEnd(stmt.String() + "\nis unknown")
 		}
 	}
 
