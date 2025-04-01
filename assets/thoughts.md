@@ -734,3 +734,42 @@ prove < G Group::Group > G impl Group::SemiGroup:
 1. 为了统一性，让所有的atom都形如pkgName::name 我让用户定义在某个type上的__add__时，定义方式是__add__typeName__ 之后你想把这个函数作为参数传递也是用这个名字
 2. 数学是一层又一层的抽象。人类做抽象的方法其实是只是在某几个方向做抽象，还有大量的方式没做
    1. 比如人们做抽象，经常是 keyword1 -> keyword2 -> keyword3 ... 这样一层层做；但逻辑上，keyword3 -> keyword1 -> keyword2 -> ... 可能也是能通过的。之所以后者不受重视，是因为不能对应到现实生活中。
+
+4.1
+1. forall 中要不要添加新的field：when
+now
+forall x A:
+    dom:
+        $p(x)
+        $t(x)
+    then:
+        $q(x)
+?
+forall x A:
+    dom:
+        $p(x)
+    when:
+        $t(x)
+    then:
+        $q(x)
+dom 和 when 分离：一个专门表示定义域，一个表示在定义域基础上，还有额外要求
+写在一起，在语义上，本质上是一样的，但是写一下貌似更分明？还是说确实有语义上的细微不同导致我必须分离他们？
+这样一大好处是，可以引入iff
+forall x A:
+    dom:
+        $p(x)
+    when:
+        $t(x)
+    iff:
+        $q(x)
+2. prop
+prop x A:
+    $p(x)
+    then:
+        $q(x)
+vs
+prop p(x A):
+    $p(x) // dom
+    iff: // dom 上的额外要求. dom满足时 p(x)则q(x), t(x), q(x) && t(x) 则 p(x)
+        $q(x)
+        $t(x)

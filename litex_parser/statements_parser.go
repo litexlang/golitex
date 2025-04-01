@@ -236,7 +236,7 @@ func (stmt *TokenBlock) parseDefConPropStmt() (*DefConPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	condFacts, thenFacts, err := stmt.parseBodyDomWhenThenFacts()
+	condFacts, thenFacts, err := stmt.parseBodyDomThenFacts()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -244,115 +244,60 @@ func (stmt *TokenBlock) parseDefConPropStmt() (*DefConPropStmt, error) {
 	return &DefConPropStmt{*decl, *condFacts, *thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseBodyDomWhenThenFacts() (*[]FactStmt, *[]FactStmt, error) {
-	condFacts := &[]FactStmt{}
-	thenFacts := &[]FactStmt{}
-	err := error(nil)
+// func (stmt *TokenBlock) parseBodyWhenFactsThenFacts() (*[]FactStmt, *[]FactStmt, error) {
+// 	condFacts := &[]FactStmt{}
+// 	thenFacts := &[]FactStmt{}
+// 	err := error(nil)
 
-	if stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordThen) {
-		for i := 0; i < len(stmt.Body)-1; i++ {
-			curStmt, err := stmt.Body[i].parseFactStmt()
-			if err != nil {
-				return nil, nil, &parseStmtErr{err, *stmt}
-			}
-			*condFacts = append(*condFacts, curStmt)
-		}
-		thenFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockFacts()
-		if err != nil {
-			return nil, nil, &parseStmtErr{err, *stmt}
-		}
-	} else if stmt.Body[0].Header.is(glob.KeywordWhen) {
-		err = stmt.Body[0].Header.skip(glob.KeywordWhen)
-		if err != nil {
-			return nil, nil, &parseStmtErr{err, *stmt}
-		}
-		err = stmt.Body[0].Header.skip(glob.KeywordColon)
-		if err != nil {
-			return nil, nil, &parseStmtErr{err, *stmt}
-		}
+// 	if stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordThen) {
+// 		for i := 0; i < len(stmt.Body)-1; i++ {
+// 			curStmt, err := stmt.Body[i].parseFactStmt()
+// 			if err != nil {
+// 				return nil, nil, &parseStmtErr{err, *stmt}
+// 			}
+// 			*condFacts = append(*condFacts, curStmt)
+// 		}
+// 		thenFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockFacts()
+// 		if err != nil {
+// 			return nil, nil, &parseStmtErr{err, *stmt}
+// 		}
+// 	} else if stmt.Body[0].Header.is(glob.KeywordWhen) {
+// 		err = stmt.Body[0].Header.skip(glob.KeywordWhen)
+// 		if err != nil {
+// 			return nil, nil, &parseStmtErr{err, *stmt}
+// 		}
+// 		err = stmt.Body[0].Header.skip(glob.KeywordColon)
+// 		if err != nil {
+// 			return nil, nil, &parseStmtErr{err, *stmt}
+// 		}
 
-		for _, condFact := range stmt.Body[0].Body {
-			curStmt, err := condFact.parseFactStmt()
-			if err != nil {
-				return nil, nil, &parseStmtErr{err, *stmt}
-			}
-			*condFacts = append(*condFacts, curStmt)
-		}
+// 		for _, condFact := range stmt.Body[0].Body {
+// 			curStmt, err := condFact.parseFactStmt()
+// 			if err != nil {
+// 				return nil, nil, &parseStmtErr{err, *stmt}
+// 			}
+// 			*condFacts = append(*condFacts, curStmt)
+// 		}
 
-		for i := 1; i < len(stmt.Body); i++ {
-			curStmt, err := stmt.Body[i].parseFactStmt()
-			if err != nil {
-				return nil, nil, &parseStmtErr{err, *stmt}
-			}
-			*thenFacts = append(*thenFacts, curStmt)
-		}
-	} else {
-		for i := 0; i < len(stmt.Body); i++ {
-			curStmt, err := stmt.Body[i].parseFactStmt()
-			if err != nil {
-				return nil, nil, &parseStmtErr{err, *stmt}
-			}
-			*thenFacts = append(*thenFacts, curStmt)
-		}
-	}
+// 		for i := 1; i < len(stmt.Body); i++ {
+// 			curStmt, err := stmt.Body[i].parseFactStmt()
+// 			if err != nil {
+// 				return nil, nil, &parseStmtErr{err, *stmt}
+// 			}
+// 			*thenFacts = append(*thenFacts, curStmt)
+// 		}
+// 	} else {
+// 		for i := 0; i < len(stmt.Body); i++ {
+// 			curStmt, err := stmt.Body[i].parseFactStmt()
+// 			if err != nil {
+// 				return nil, nil, &parseStmtErr{err, *stmt}
+// 			}
+// 			*thenFacts = append(*thenFacts, curStmt)
+// 		}
+// 	}
 
-	return condFacts, thenFacts, nil
-}
-
-func (stmt *TokenBlock) parseBodyWhenFactsThenFacts() (*[]FactStmt, *[]FactStmt, error) {
-	condFacts := &[]FactStmt{}
-	thenFacts := &[]FactStmt{}
-	err := error(nil)
-
-	if stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordThen) {
-		for i := 0; i < len(stmt.Body)-1; i++ {
-			curStmt, err := stmt.Body[i].parseFactStmt()
-			if err != nil {
-				return nil, nil, &parseStmtErr{err, *stmt}
-			}
-			*condFacts = append(*condFacts, curStmt)
-		}
-		thenFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockFacts()
-		if err != nil {
-			return nil, nil, &parseStmtErr{err, *stmt}
-		}
-	} else if stmt.Body[0].Header.is(glob.KeywordWhen) {
-		err = stmt.Body[0].Header.skip(glob.KeywordWhen)
-		if err != nil {
-			return nil, nil, &parseStmtErr{err, *stmt}
-		}
-		err = stmt.Body[0].Header.skip(glob.KeywordColon)
-		if err != nil {
-			return nil, nil, &parseStmtErr{err, *stmt}
-		}
-
-		for _, condFact := range stmt.Body[0].Body {
-			curStmt, err := condFact.parseFactStmt()
-			if err != nil {
-				return nil, nil, &parseStmtErr{err, *stmt}
-			}
-			*condFacts = append(*condFacts, curStmt)
-		}
-
-		for i := 1; i < len(stmt.Body); i++ {
-			curStmt, err := stmt.Body[i].parseFactStmt()
-			if err != nil {
-				return nil, nil, &parseStmtErr{err, *stmt}
-			}
-			*thenFacts = append(*thenFacts, curStmt)
-		}
-	} else {
-		for i := 0; i < len(stmt.Body); i++ {
-			curStmt, err := stmt.Body[i].parseFactStmt()
-			if err != nil {
-				return nil, nil, &parseStmtErr{err, *stmt}
-			}
-			*thenFacts = append(*thenFacts, curStmt)
-		}
-	}
-
-	return condFacts, thenFacts, nil
-}
+// 	return condFacts, thenFacts, nil
+// }
 
 func (stmt *TokenBlock) parseBodyDomThenFacts() (*[]FactStmt, *[]FactStmt, error) {
 	condFacts := &[]FactStmt{}
@@ -371,8 +316,8 @@ func (stmt *TokenBlock) parseBodyDomThenFacts() (*[]FactStmt, *[]FactStmt, error
 		if err != nil {
 			return nil, nil, &parseStmtErr{err, *stmt}
 		}
-	} else if stmt.Body[0].Header.is(glob.KeywordWhen) {
-		err = stmt.Body[0].Header.skip(glob.KeywordWhen)
+	} else if stmt.Body[0].Header.is(glob.KeywordDom) {
+		err = stmt.Body[0].Header.skip(glob.KeywordDom)
 		if err != nil {
 			return nil, nil, &parseStmtErr{err, *stmt}
 		}
@@ -610,7 +555,7 @@ func (stmt *TokenBlock) parseDefConExistPropStmt() (*DefConExistPropStmt, error)
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	condFacts, thenFacts, err := stmt.parseBodyWhenFactsThenFacts()
+	condFacts, thenFacts, err := stmt.parseBodyDomThenFacts()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
