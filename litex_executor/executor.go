@@ -40,12 +40,11 @@ func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
 func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 	defer exec.newMessage(stmt.String())
 
-	curVerifier := verifier.NewVerifier(exec.env)
-	ok, err := curVerifier.FactStmt(stmt)
+	ok, err := exec.checkFactStmt(stmt)
+
 	if err != nil {
-		return err
+		return nil
 	}
-	exec.readFromVerifier(curVerifier)
 
 	if ok {
 		err = exec.env.NewFact(stmt)
@@ -53,7 +52,7 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 			return err
 		}
 	} else {
-		if curVerifier.Output == verifier.VerifierUnknown {
+		if !ok {
 			exec.newMessage("is unknown")
 		}
 	}
@@ -61,11 +60,20 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 	return nil
 }
 
+func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, error) {
+	curVerifier := verifier.NewVerifier(exec.env)
+	ok, err := curVerifier.FactStmt(stmt)
+	if err != nil {
+		return false, err
+	}
+	exec.readFromVerifier(curVerifier)
+	return ok, err
+}
+
 func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
-	exec.newEnv()
+	exec.newEnv() // 在子环境中做所有操作，不影响外部世界
 	defer exec.newMessage(stmt.String())
 
-	// 在子环境中做所有操作，不影响外部世界
 	for _, curStmt := range stmt.Proofs {
 		err := exec.stmt(curStmt)
 		if err != nil {
