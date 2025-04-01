@@ -33,7 +33,7 @@ func (e *Executor) newEnv() {
 }
 
 func (e *Executor) deleteEnv() {
-	e.env.Parent.Msgs = append(e.env.Parent.Msgs, e.env.Msgs...)
+	// e.env.Parent.Msgs = append(e.env.Parent.Msgs, e.env.Msgs...)
 	e.env = e.env.Parent
 }
 
@@ -60,4 +60,8 @@ func (e *Executor) readFromVerifier(readFrom *verifier.Verifier, putMsgReverseOr
 	// slices.Reverse(*readFrom.Message)
 	// *e.message = append(*e.message, strings.Join(*readFrom.Message, "\n"))
 	e.env.Msgs = append(e.env.Msgs, *readFrom.Messages...)
+}
+
+func (e *Executor) getMsgs() []string {
+	return e.env.Msgs
 }
