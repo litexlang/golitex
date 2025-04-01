@@ -11,11 +11,15 @@ func (e *Executor) printlnExecOutput() {
 		fmt.Println("Error")
 	}
 
-	for _, msg := range e.msgSliceSlice {
+	for _, msg := range e.env.Msgs {
 		fmt.Println(msg)
 	}
 }
 
 func (e *Executor) newMessage(msg string) {
-	e.msgSliceSlice = append(e.msgSliceSlice, msg)
+	e.env.Msgs = append(e.env.Msgs, msg)
+}
+
+func (e *Executor) newMsgAt0(msg string) {
+	e.env.Msgs = append([]string{msg}, e.env.Msgs...)
 }

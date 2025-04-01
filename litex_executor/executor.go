@@ -4,6 +4,7 @@ import (
 	"fmt"
 	parser "golitex/litex_parser"
 	verifier "golitex/litex_verifier"
+	"strings"
 )
 
 func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
@@ -38,41 +39,39 @@ func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
 }
 
 func (exec *Executor) factStmt(stmt parser.FactStmt) error {
-	defer exec.newMessage(stmt.String())
-
-	ok, err := exec.checkFactStmt(stmt)
+	ok, curVerifier, err := exec.checkFactStmt(stmt)
 
 	if err != nil {
 		return nil
 	}
 
 	if ok {
+		// exec.readFromVerifier(curVerifier, false)
+		exec.newMessage(stmt.String() + "\n" + strings.Join(*curVerifier.Messages, "\n"))
 		err = exec.env.NewFact(stmt)
 		if err != nil {
 			return err
 		}
 	} else {
 		if !ok {
-			exec.newMessage("is unknown")
+			exec.newMessage(stmt.String() + "\nis unknown")
 		}
 	}
 
 	return nil
 }
 
-func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, error) {
+func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, *verifier.Verifier, error) {
 	curVerifier := verifier.NewVerifier(exec.env)
 	ok, err := curVerifier.FactStmt(stmt)
 	if err != nil {
-		return false, err
+		return false, curVerifier, err
 	}
-	exec.readFromVerifier(curVerifier, false)
-	return ok, err
+	return ok, curVerifier, err
 }
 
 func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
 	exec.newEnv() // 在子环境中做所有操作，不影响外部世界
-	defer exec.newMessage(stmt.String())
 
 	for _, curStmt := range stmt.Proofs {
 		err := exec.stmt(curStmt)
@@ -84,6 +83,6 @@ func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
 	// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里
 
 	exec.deleteEnv()
-
+	exec.newMsgAt0(stmt.String())
 	return nil
 }
