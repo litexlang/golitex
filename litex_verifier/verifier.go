@@ -23,26 +23,26 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 	}
 }
 
-type VerifierOutput uint8
+// type VerifierOutput uint8
 
-const (
-	VerifierTrue VerifierOutput = iota
-	VerifierUnknown
-	VerifierError
-)
+// const (
+// 	VerifierTrue VerifierOutput = iota
+// 	VerifierUnknown
+// 	VerifierError
+// )
 
 type Verifier struct {
 	env *env.Env
 	// Messages    *[]string
-	Output      VerifierOutput
+	// Output      VerifierOutput
 	searchRound uint8
 }
 
 func NewVerifier(curEnv *env.Env) *Verifier {
 	if curEnv == nil {
-		return &Verifier{env: env.NewEnv(nil, nil), Output: VerifierUnknown, searchRound: 0}
+		return &Verifier{env: env.NewEnv(nil, nil), searchRound: 0}
 	} else {
-		return &Verifier{env: curEnv, Output: VerifierUnknown, searchRound: 0}
+		return &Verifier{env: curEnv, searchRound: 0}
 	}
 }
 
@@ -60,11 +60,9 @@ func (ver *Verifier) round1() bool {
 
 func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
 	ver.successMsgEnd(stmtString, storedStmtString)
-	ver.Output = VerifierTrue
 }
 
 func (ver *Verifier) successNoMsg() {
-	ver.Output = VerifierTrue
 }
 
 func (ver *Verifier) newEnv(parent *env.Env, uniParamsMap *map[string]parser.Fc) {
@@ -84,11 +82,11 @@ func (ver *Verifier) parentEnv() error {
 
 func (ver *Verifier) unknownWithMsg(format string, args ...any) {
 	ver.unknownMsgEnd(format, args...)
-	ver.Output = VerifierUnknown
+	// ver.Output = VerifierUnknown
 }
 
 func (ver *Verifier) unknownNoMsg() {
-	ver.Output = VerifierUnknown
+	// ver.Output = VerifierUnknown
 }
 
 func (ver *Verifier) asConFc(fc parser.Fc) parser.Fc {
