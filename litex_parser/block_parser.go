@@ -67,12 +67,12 @@ func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
 	}
 
 	s := string(content)
-	return GetTopLevelStmtSlice(&s)
+	return GetTopLevelStmtSlice(s)
 }
 
-func splitAndReplaceSemicolons(input *string) *[]string {
+func splitAndReplaceSemicolons(input string) *[]string {
 	// 按行分割字符串
-	lines := strings.Split(*input, "\n")
+	lines := strings.Split(input, "\n")
 
 	// 创建一个新的切片来存储处理后的行
 	transformedLines := make([]string, 0, len(lines))
@@ -121,7 +121,7 @@ func splitAndReplaceSemicolons(input *string) *[]string {
 	return &transformedLines
 }
 
-func GetTopLevelStmtSlice(content *string) (*TopLevelStmtSlice, error) {
+func GetTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
 	// lines := strings.Split((*content), "\n")
 	lines := splitAndReplaceSemicolons(content)
 	blocks, _, err := parseStrBlocks(lines, 0, 0)

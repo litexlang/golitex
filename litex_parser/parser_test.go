@@ -16,7 +16,7 @@ func TestLexerFromString(t *testing.T) {
 def add(a, b):
     return a + b
 `
-	blocks, err := GetTopLevelStmtSlice(&content)
+	blocks, err := GetTopLevelStmtSlice(content)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -26,7 +26,7 @@ def add(a, b):
 	}
 
 	// Test invalid syntax
-	_, err = GetTopLevelStmtSlice(&content)
+	_, err = GetTopLevelStmtSlice(content)
 	if err != nil {
 		t.Fatalf("Expected error for invalid syntax")
 	}
@@ -35,7 +35,7 @@ def add(a, b):
 func TestSplitString(t *testing.T) {
 	input := []string{"interface (v ):"}
 	for _, s := range input {
-		tok := newTokenizer(&s)
+		tok := newTokenizer(s)
 		tokens, err := tok.tokenizeString()
 
 		if err != nil {
@@ -82,7 +82,7 @@ func TestParseFc(t *testing.T) {
 	}
 
 	for _, s := range strings {
-		tok := newTokenizer(&s)
+		tok := newTokenizer(s)
 		tokens, err := tok.tokenizeString()
 		if err != nil {
 			t.Fatal(err)
@@ -106,7 +106,7 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 	}
 
 	for _, s := range strings {
-		tok := newTokenizer(&s)
+		tok := newTokenizer(s)
 		tokens, err := tok.tokenizeString()
 		if err != nil {
 			t.Fatal(err)
@@ -125,7 +125,7 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 func ParserTester(code string) (*[]Stmt, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
-	slice, err := GetTopLevelStmtSlice(&code)
+	slice, err := GetTopLevelStmtSlice(code)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +461,7 @@ func TestRelaFactStmt(t *testing.T) {
 p(a) + 2 < (2 + 3) * 10 + 4 < 100
 10 = p(a) = p(a)
 `
-	statements, err := ParseSourceCode(&code)
+	statements, err := ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -480,7 +480,7 @@ func TestIsStmt(t *testing.T) {
 1 * ( p(a) + 2 ) is q
 
 `
-	statements, err := ParseSourceCode(&code)
+	statements, err := ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {

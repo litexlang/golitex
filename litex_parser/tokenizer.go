@@ -7,12 +7,12 @@ import (
 
 // tokenizer 结构体封装了 inputString 和 start
 type tokenizer struct {
-	inputString *string // 使用指针以提高性能
+	inputString string // 使用指针以提高性能
 	start       int
 }
 
 // newTokenizer 创建一个新的 tokenizer 实例
-func newTokenizer(inputString *string) *tokenizer {
+func newTokenizer(inputString string) *tokenizer {
 	return &tokenizer{
 		inputString: inputString,
 		start:       0,
@@ -21,38 +21,38 @@ func newTokenizer(inputString *string) *tokenizer {
 
 // nextToken 方法用于识别下一个 token
 func (t *tokenizer) nextToken() (string, int, error) {
-	input := *t.inputString // 解引用指针
+	// input := t.inputString // 解引用指针
 	// 如果下两个字符是 //，跳过直到结束
-	if t.start+1 < len(input) && input[t.start:t.start+2] == "//" {
-		return "", len(input), nil
+	if t.start+1 < len(t.inputString) && t.inputString[t.start:t.start+2] == "//" {
+		return "", len(t.inputString), nil
 	}
 	// 如果下两个字符是 /*，报错
-	if t.start+1 < len(input) && input[t.start:t.start+2] == "/*" {
+	if t.start+1 < len(t.inputString) && t.inputString[t.start:t.start+2] == "/*" {
 		return "", 0, fmt.Errorf("invalid syntax: nested comment block")
 	}
 
-	potentialKeywordSymbol := glob.GetBuiltinSymbol(input, t.start)
+	potentialKeywordSymbol := glob.GetBuiltinSymbol(t.inputString, t.start)
 	if potentialKeywordSymbol != "" {
 		return potentialKeywordSymbol, t.start + len(potentialKeywordSymbol), nil
 	}
 
-	if input[t.start] == ' ' {
+	if t.inputString[t.start] == ' ' {
 		return "", t.start + 1, nil
 	}
 
 	buffer := ""
-	for i := t.start; i < len(input); i++ {
-		if glob.GetBuiltinSymbol(input, i) != "" || input[i] == ' ' {
+	for i := t.start; i < len(t.inputString); i++ {
+		if glob.GetBuiltinSymbol(t.inputString, i) != "" || t.inputString[i] == ' ' {
 			break
 		}
-		buffer += string(input[i])
+		buffer += string(t.inputString[i])
 	}
 	return buffer, t.start + len(buffer), nil
 }
 
 // tokenizeString 方法用于将输入字符串 tokenize
 func (t *tokenizer) tokenizeString() (*[]string, error) {
-	input := *t.inputString // 解引用指针
+	input := t.inputString // 解引用指针
 	result := []string{}
 	buffer := ""
 	for t.start < len(input) {
@@ -87,7 +87,7 @@ func TokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
 	body := []TokenBlock{}
 
 	// 创建一个新的 tokenizer 实例
-	curTokenizer := newTokenizer(&b.Header) // 传递字符串的指针
+	curTokenizer := newTokenizer(b.Header) // 传递字符串的指针
 	headerPtr, err := curTokenizer.tokenizeString()
 	header := *headerPtr
 
