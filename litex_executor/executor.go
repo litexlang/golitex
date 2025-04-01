@@ -17,6 +17,8 @@ func (exec *Executor) stmt(stmt parser.Stmt) error {
 		return exec.factStmt(stmt)
 	case *parser.KnowStmt:
 		return exec.knowStmt(stmt)
+	case *parser.ClaimProveStmt:
+		return exec.claimProveStmt(stmt)
 
 	default:
 		return fmt.Errorf("unknown statement type: %T", stmt)
@@ -55,6 +57,25 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 			exec.newMessage("is unknown")
 		}
 	}
+
+	return nil
+}
+
+func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
+	exec.newEnv()
+	defer exec.newMessage(stmt.String())
+
+	// 在子环境中做所有操作，不影响外部世界
+	for _, curStmt := range stmt.Proofs {
+		err := exec.stmt(curStmt)
+		if err != nil {
+			return err
+		}
+	}
+
+	// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里
+
+	exec.deleteEnv()
 
 	return nil
 }

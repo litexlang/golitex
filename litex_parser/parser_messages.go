@@ -50,11 +50,24 @@ func (stmt *SpecFactStmt) String() string {
 
 func (stmt *DefObjStmt) String() string { panic("") }
 
-func (c *DefInterfaceStmt) String() string           { panic("") }
-func (f *DefTypeStmt) String() string                { panic("") }
-func (c *DefConPropStmt) String() string             { panic("") }
-func (f *DefConFnStmt) String() string               { panic("") }
-func (f *ClaimProveStmt) String() string             { panic("") }
+func (c *DefInterfaceStmt) String() string { panic("") }
+func (f *DefTypeStmt) String() string      { panic("") }
+func (c *DefConPropStmt) String() string   { panic("") }
+func (f *DefConFnStmt) String() string     { panic("") }
+func (f *ClaimProveStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProve)
+	builder.WriteString(":\n")
+	if len(f.ToCheckFacts) != 0 {
+		panic("TODO")
+	} else {
+		for _, fact := range f.Proofs {
+			builder.WriteString(glob.LineHead4Indents(fact.String(), 1))
+			builder.WriteByte('\n')
+		}
+	}
+	return strings.TrimSpace(builder.String())
+}
 func (s *DefConExistPropStmt) String() string        { panic("") }
 func (s *HaveStmt) String() string                   { panic("") }
 func (s *ClaimProveByContradictStmt) String() string { panic("") }
@@ -63,7 +76,8 @@ func (s *ThmStmt) String() string                    { panic("") }
 func (fact *CondFactStmt) String() string {
 	var builder strings.Builder
 
-	builder.WriteString("when:\n")
+	builder.WriteString(glob.KeywordWhen)
+	builder.WriteString(":\n")
 	for _, condFact := range fact.CondFacts {
 		builder.WriteString(glob.LineHead4Indents(condFact.String(), 1))
 		builder.WriteByte('\n')

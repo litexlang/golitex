@@ -27,6 +27,14 @@ func newExecutor(curEnv *env.Env) *Executor {
 	}
 }
 
+func (e *Executor) newEnv() {
+	e.env = env.NewEnv(e.env, nil)
+}
+
+func (e *Executor) deleteEnv() {
+	e.env = e.env.Parent
+}
+
 func (e *Executor) clearMsgAndOutput() {
 	e.message = &[]string{}
 	e.output = execUnknown

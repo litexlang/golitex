@@ -541,3 +541,17 @@ func TestFactCode(t *testing.T) {
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
+
+func TestProve(t *testing.T) {
+	code :=
+		`
+prove:
+	know $p(x)
+	$p(x) // unknown
+
+$p(x) // unknown
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}

@@ -215,6 +215,7 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 	defer ver.parentEnv() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
 
 	// 传入的map必须能和所有的uniFact的param一一对应
+	// e.g. 不等号传递性因此不能直接被使用，只能给传递性这个事实取个名字
 	twoSlicesEqual := glob.SlicesEqualUnordered(glob.MapKeys(*uniConMap), *knownStmt.UniParams)
 	if !twoSlicesEqual {
 		return false, nil
