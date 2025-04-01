@@ -2,6 +2,7 @@ package litexverifier
 
 import (
 	env "golitex/litex_env"
+	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
@@ -212,6 +213,12 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap *map[string][
 func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap *map[string]parser.Fc) (bool, error) {
 	ver.newEnv(ver.env, uniConMap)
 	defer ver.parentEnv() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
+
+	// 传入的map必须能和所有的uniFact的param一一对应
+	twoSlicesEqual := glob.SlicesEqualUnordered(glob.MapKeys(*uniConMap), *knownStmt.UniParams)
+	if !twoSlicesEqual {
+		return false, nil
+	}
 
 	for _, condFact := range knownStmt.Fact.DomFacts {
 		ok, err := ver.FactStmt(condFact)
