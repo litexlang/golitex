@@ -183,7 +183,7 @@ func TestDefConceptStmt(t *testing.T) {
 func TestDefPropStmt2(t *testing.T) {
 	code := `
 prop P(g , g2 ):
-	cond:
+	dom:
     	$f(g.g1, g2.g2)
 	then:
 		$f(g.g1, g2.g2)
@@ -192,7 +192,7 @@ prop P(g ,  G2):
 	$f(g.g1, g2.g2)
 
 axiom prop P(g ,  G2):
-	cond:
+	dom:
     	$f(g.g1, g2.g2)
 	then:
 		$f(g.g1, g2.g2)
@@ -201,7 +201,7 @@ axiom prop P(g , g2 ):
 	$f(g.g1, g2.g2)
 
 forall x :
-	cond:
+	when:
     	$f(g.g1, g2.g2)
 	then:
 		$f(g.g1, g2.g2)
@@ -219,7 +219,7 @@ forall x :
 func TestDefFnStmt(t *testing.T) {
 	code := `
 fn P(g , g2 ) :
-	cond:
+	dom:
     	$f(g.g1, g2.g2)
 	then:
 		$f(g.g1, g2.g2)
@@ -239,7 +239,7 @@ func TestFactStatements(t *testing.T) {
 $f(g.g1, g2.g2)
 
 forall  x :
-	cond: 
+	when: 
 		$f()
 	then:
 		$f(g.g1, g2.g2)
@@ -261,12 +261,12 @@ type   T:
 	type_member:
 		obj 1 
 		fn P(g , g2 ) :
-			cond:
+			dom:
 				$f(g.g1, g2.g2)
 			then:
 				$f(g.g1, g2.g2)
 		prop P(g , g2 ):
-			cond:
+			dom:
 				$f(g.g1, g2.g2)
 			then:
 				$f(g.g1, g2.g2)
@@ -287,12 +287,12 @@ type   T:
 	instance_member:
 		obj 2 
 		fn P(g, g2 ) :
-			cond:
+			dom:
 				$f(g.g1, g2.g2)
 			then:
 				$f(g.g1, g2.g2)
 		prop P(g , g2 ):
-			cond:
+			when:
 				$f(g.g1, g2.g2)
 			then:
 				$f(g.g1, g2.g2)
@@ -318,7 +318,7 @@ forall g , g2  :
     $p(x, y)
 
 forall g , g2:
-	cond:
+	when:
 		$p(x, y)
 	then:
 	    $p(x, y)
@@ -362,7 +362,7 @@ claim :
 
 claim :
 	forall  g, g2 :
-		cond:
+		when:
 			$p(x, y)
 		then:
 			$p(x, y)
@@ -395,7 +395,7 @@ func TestKnowStmt(t *testing.T) {
 know:
 	$p(x, y)
 	forall g , g2 :
-		cond:
+		when:
 			$p(x, y)
 		then:
 			$p(x, y)
@@ -414,10 +414,10 @@ func TestExistStmt(t *testing.T) {
 	code :=
 		`
 exist_prop P(g1 , g2 ):
-	cond:
+	when:
 		$p(x, y)
 		forall  g , g2 :
-			cond:
+			when:
 				$p(x, y)
 			then:
 				$p(x, y)
@@ -630,7 +630,7 @@ func TestNamedClaimStmt(t *testing.T) {
 	code := `
 thm: 
 	prop P(g , g2):
-		cond:
+		when:
 			$f(g.g1, g2.g2)
 		then:
 			$f(g.g1, g2.g2)
@@ -653,10 +653,10 @@ func TestInlineIfStmt(t *testing.T) {
 when $f(g.g1, g2.g2), forall $p() {$p()} { $p()}
 
 forall g :
-	cond:
+	when:
 		$p()
 		forall g :
-			cond:
+			when:
 				$q()
 			then:
 				$t()
@@ -664,7 +664,7 @@ forall g :
 		$t()
 	
 prop P(g , g2 ):
-	cond:
+	when:
 		when $f(g.g1, g2.g2), when $f(g.g1, g2.g2) {$p()}  {$p()}
 	then:
 		$p()
@@ -673,7 +673,7 @@ prove:
 	when $f(g.g1, g2.g2) { $p()}
 
 forall g , g2:
-	cond:
+	when:
 		$p(x, y)
 		when $f(g.g1, g2.g2) {$p()}
 	then:
@@ -712,7 +712,7 @@ a.b.c.d.e.f is red
 func TestForall(t *testing.T) {
 	code := `
 forall g G, g2 G2:
-	cond:
+	when:
 		$G(g)
 		$G(g2)
 		$p(x, y)
@@ -966,7 +966,7 @@ prop f(x S, y G):
 		$p(x, y)
 
 fn at(a nat, b nat) nat:
-	cond:
+	when:
     	$p(x, y)
 	$Q(x,y)
 

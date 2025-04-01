@@ -30,6 +30,7 @@ const (
 	KeywordProveByContradiction = "prove_by_contradiction"
 	KeywordThm                  = "thm"  // syntax sugar for: prop + prove
 	KeywordSelf                 = "self" // return value of a function; refer to an instance of the type or set we are defining
+	KeywordIff                  = "iff"
 
 	// Syntax and Semantics Sugar
 	KeywordCommutative = "commutative"
