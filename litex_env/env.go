@@ -9,7 +9,7 @@ import (
 
 type Env struct {
 	Parent *Env
-	// Msg    []string
+	Msgs   []string
 
 	ObjMem  mem.ObjMem
 	PropMem mem.PropMem
@@ -33,7 +33,7 @@ func NewEnv(parent *Env, uniParamMapPtr *map[string]parser.Fc) *Env {
 
 	env := &Env{
 		Parent: parent,
-		// Msg:    []string{},
+		Msgs:   []string{},
 
 		ObjMem:  *mem.NewObjMemory(),
 		PropMem: *mem.NewPropMemory(),

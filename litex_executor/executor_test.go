@@ -6,6 +6,8 @@ import (
 	parser "golitex/litex_parser"
 	"math/rand"
 	"os"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 )
@@ -26,28 +28,32 @@ func parseStmtTest(code string, t *testing.T) *[]parser.TopStmt {
 	return topStatements
 }
 
-func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) *[][]string {
+func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) []string {
 	env := env.NewEnv(nil, nil)
 	executor := *newExecutor(env)
 
-	messages := [][]string{}
+	messages := []string{}
 	for _, topStmt := range *topStmt {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// messages = append(messages, *executor.msgSliceSlice)
-		messages = append(messages, executor.msgSliceSlice)
+		// slices.Reverse(executor.env.Msgs)
+		// slices.Reverse()
+		messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
 	}
-	return &messages
+	slices.Reverse(messages)
+	return messages
 }
 
-func printExecMsg(messageSliceSlice *[][]string) {
-	for _, messageSlice := range *messageSliceSlice {
-		for i := len(messageSlice) - 1; i >= 0; i-- {
-			fmt.Println(messageSlice[i])
-		}
-		fmt.Println()
+func printExecMsg(messageSlice []string) {
+	for _, msg := range messageSlice {
+		// for i := len(messageSlice) - 1; i >= 0; i-- {
+		// 	fmt.Println(messageSlice[i])
+		// }
+		// fmt.Println()
+		fmt.Println(msg)
 	}
 }
 
@@ -66,7 +72,7 @@ func TestStoreNewObj(t *testing.T) {
 			t.Fatal(err)
 		}
 		fmt.Println(executor.output)
-		fmt.Println(executor.msgSliceSlice)
+		fmt.Println(executor.env.Msgs)
 	}
 
 	entry, _ := curEnv.ObjMem.Get("a")
@@ -87,7 +93,7 @@ func TestKnow(t *testing.T) {
 			t.Fatal(err)
 		}
 		fmt.Println(executor.output)
-		fmt.Println(executor.msgSliceSlice)
+		fmt.Println(executor.env.Msgs)
 	}
 }
 

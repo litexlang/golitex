@@ -16,15 +16,15 @@ const (
 type Executor struct {
 	env *env.Env
 	// parent  *Executor
-	msgSliceSlice []string
-	output        ExecOutput
+	// msgs   []string
+	output ExecOutput
 }
 
 func newExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil, nil), msgSliceSlice: []string{}, output: execUnknown}
+		return &Executor{env: env.NewEnv(nil, nil), output: execUnknown}
 	} else {
-		return &Executor{env: curEnv, msgSliceSlice: []string{}, output: execUnknown}
+		return &Executor{env: curEnv, output: execUnknown}
 	}
 }
 
@@ -33,11 +33,12 @@ func (e *Executor) newEnv() {
 }
 
 func (e *Executor) deleteEnv() {
+	e.env.Parent.Msgs = append(e.env.Parent.Msgs, e.env.Msgs...)
 	e.env = e.env.Parent
 }
 
 func (e *Executor) clearMsgAndOutput() {
-	e.msgSliceSlice = []string{}
+	e.env.Msgs = []string{}
 	e.output = execUnknown
 }
 
@@ -58,5 +59,5 @@ func (e *Executor) readFromVerifier(readFrom *verifier.Verifier, putMsgReverseOr
 	// e.message = readFrom.Message
 	// slices.Reverse(*readFrom.Message)
 	// *e.message = append(*e.message, strings.Join(*readFrom.Message, "\n"))
-	e.msgSliceSlice = append(e.msgSliceSlice, *readFrom.Message...)
+	e.env.Msgs = append(e.env.Msgs, *readFrom.Messages...)
 }
