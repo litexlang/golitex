@@ -573,11 +573,8 @@ prove:
 func TestFacts(t *testing.T) {
 	code :=
 		`
-$p(t(x))
-$p(g(x))
-$p(f(x))
-$p(ha)
-$p(g(x, 100))
+know $p(x)
+$p(x)
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)

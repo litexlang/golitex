@@ -73,7 +73,7 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt) (bool, error) {
 
 			if ok {
 				if ver.round1() {
-					ver.successWithMsg("", knownFact.String(stmt.Opt))
+					ver.successWithMsg(stmt.String(), knownFact.String(stmt.Opt))
 				} else {
 					ver.successNoMsg()
 				}
@@ -124,7 +124,7 @@ LoopOverFacts:
 
 		if verified {
 			if ver.round1() {
-				ver.successWithMsg("", knownFact.Fact.String())
+				ver.successWithMsg(stmt.String(), knownFact.Fact.String())
 			} else {
 				ver.successNoMsg()
 			}
@@ -178,7 +178,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 			return false, err
 		}
 		if ok {
-			ver.successWithMsg("", knownFact.String())
+			ver.successWithMsg(stmt.String(), knownFact.String())
 			return true, nil
 		}
 	}
