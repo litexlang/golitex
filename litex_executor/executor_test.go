@@ -36,7 +36,8 @@ func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) *[][]string {
 		if err != nil {
 			t.Fatal(err)
 		}
-		messages = append(messages, *executor.message)
+		// messages = append(messages, *executor.msgSliceSlice)
+		messages = append(messages, executor.msgSliceSlice)
 	}
 	return &messages
 }
@@ -57,14 +58,15 @@ func TestStoreNewObj(t *testing.T) {
 		t.Fatal(err)
 	}
 	curEnv := env.NewEnv(nil, nil)
-	executor := Executor{curEnv, &[]string{}, execError}
+	executor := newExecutor(curEnv)
+	// executor := Executor{curEnv, &[]string{}, execError}
 	for _, topStmt := range *statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
 		}
 		fmt.Println(executor.output)
-		fmt.Println(executor.message)
+		fmt.Println(executor.msgSliceSlice)
 	}
 
 	entry, _ := curEnv.ObjMem.Get("a")
@@ -85,7 +87,7 @@ func TestKnow(t *testing.T) {
 			t.Fatal(err)
 		}
 		fmt.Println(executor.output)
-		fmt.Println(executor.message)
+		fmt.Println(executor.msgSliceSlice)
 	}
 }
 
@@ -546,10 +548,13 @@ func TestProve(t *testing.T) {
 	code :=
 		`
 prove:
-	know $p(x)
-	$p(x) // true
-
-$p(x) // unknown
+    know forall x R:
+        $p(x)
+        then:
+            $p(f(x))
+    $p(f(x))
+    know $p(x)
+    $p(f(x))
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)

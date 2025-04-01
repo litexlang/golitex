@@ -11,11 +11,11 @@ func (e *Executor) printlnExecOutput() {
 		fmt.Println("Error")
 	}
 
-	for _, msg := range *e.message {
+	for _, msg := range e.msgSliceSlice {
 		fmt.Println(msg)
 	}
 }
 
 func (e *Executor) newMessage(msg string) {
-	*e.message = append(*e.message, msg)
+	e.msgSliceSlice = append(e.msgSliceSlice, msg)
 }
