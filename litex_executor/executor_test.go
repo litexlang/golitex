@@ -18,7 +18,7 @@ const (
 	TenMillionRound  = 10000000
 )
 
-func parseStmtTest(code *string, t *testing.T) *[]parser.TopStmt {
+func parseStmtTest(code string, t *testing.T) *[]parser.TopStmt {
 	topStatements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
@@ -41,10 +41,9 @@ func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) *[][]string {
 	return &messages
 }
 
-func execMessageTest(messageSliceSlice *[][]string) {
+func printExecMsg(messageSliceSlice *[][]string) {
 	for _, messageSlice := range *messageSliceSlice {
 		for i := len(messageSlice) - 1; i >= 0; i-- {
-			// fmt.Println(strings.TrimSpace(messageSlice[i]))
 			fmt.Println(messageSlice[i])
 		}
 		fmt.Println()
@@ -53,7 +52,7 @@ func execMessageTest(messageSliceSlice *[][]string) {
 
 func TestStoreNewObj(t *testing.T) {
 	code := `obj a G`
-	statements, err := parser.ParseSourceCode(&code)
+	statements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +73,7 @@ func TestStoreNewObj(t *testing.T) {
 
 func TestKnow(t *testing.T) {
 	code := `know $p(a)`
-	statements, err := parser.ParseSourceCode(&code)
+	statements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +91,7 @@ func TestKnow(t *testing.T) {
 
 func TestVerifier(t *testing.T) {
 	code := `know $p(a)`
-	statements, err := parser.ParseSourceCode(&code)
+	statements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +106,7 @@ func TestVerifier(t *testing.T) {
 	}
 
 	testCodes := "$p(b)\n$p(a)"
-	testStatements, err := parser.ParseSourceCode(&testCodes)
+	testStatements, err := parser.ParseSourceCode(testCodes)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -409,9 +408,9 @@ $q(x)
 $p(x)
 $p(y)
 `
-	topStmtSlice := parseStmtTest(&code, t)
+	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
-	execMessageTest(messages)
+	printExecMsg(messages)
 }
 
 func TestCondVerifier(t *testing.T) {
@@ -431,9 +430,9 @@ $p(z)
 $p(y)
 $p(x)
 `
-	topStmtSlice := parseStmtTest(&code, t)
+	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
-	execMessageTest(messages)
+	printExecMsg(messages)
 }
 
 func TestEqualVerifier(t *testing.T) {
@@ -445,9 +444,9 @@ know:
 
 a < y
 `
-	topStmtSlice := parseStmtTest(&code, t)
+	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
-	execMessageTest(messages)
+	printExecMsg(messages)
 }
 
 func TestWhenVerifier2(t *testing.T) {
@@ -462,9 +461,9 @@ know:
 
 x < y
 `
-	topStmtSlice := parseStmtTest(&code, t)
+	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
-	execMessageTest(messages)
+	printExecMsg(messages)
 }
 
 func TestForallVerifier(t *testing.T) {
@@ -485,9 +484,9 @@ forall x A:
 
 $p(x)
 `
-	topStmtSlice := parseStmtTest(&code, t)
+	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
-	execMessageTest(messages)
+	printExecMsg(messages)
 }
 
 func TestUseForallToCheck(t *testing.T) {
@@ -511,9 +510,9 @@ know:
 $p(ha)
 $p(g(x, 100))
 `
-	topStmtSlice := parseStmtTest(&code, t)
+	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
-	execMessageTest(messages)
+	printExecMsg(messages)
 }
 
 func TestEqual(t *testing.T) {
@@ -523,18 +522,22 @@ know:
 	$p(t(x))
 $p(g(x))
 `
-	topStmtSlice := parseStmtTest(&code, t)
+	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
-	execMessageTest(messages)
+	printExecMsg(messages)
+}
+
+func readFile(filePath string) string {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		panic(fmt.Sprintf("Error reading file: %v", err))
+	}
+	return string(content)
 }
 
 func TestReadFile(t *testing.T) {
-	filePath := "../litex_code_examples/fact.litex"
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return
-	}
-	fmt.Printf("%v content:\n", filePath)
-	fmt.Println(string(content))
+	code := readFile("../litex_code_examples/fact.litex")
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
 }

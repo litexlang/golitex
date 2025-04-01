@@ -19,12 +19,11 @@ func (e *parseStmtErr) Error() string {
 	}
 }
 
-func ParseSourceCode(codePtr *string) (*[]TopStmt, error) {
+func ParseSourceCode(code string) (*[]TopStmt, error) {
 	// 解引用指针以获取实际的字符串内容
-	code := *codePtr
 	code = strings.ReplaceAll(code, "\t", "    ")
 
-	slice, err := GetTopLevelStmtSlice(&code)
+	slice, err := GetTopLevelStmtSlice(code)
 	if err != nil {
 		return nil, err
 	}
