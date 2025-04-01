@@ -67,16 +67,15 @@ func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *parser.FcFnCallPipe, conFuncPa
 	}
 
 	if matchedStr, ok := isUniParam(&uniFuncFcFn.FnHead, possibleUniParams); ok {
-		// TODO
-		_ = matchedStr
-	}
-
-	ok, err := ver.fcEqualSpec(&uniFuncFcFn.FnHead, &conParamAsFcFn.FnHead)
-	if err != nil {
-		return nil, false, err
-	}
-	if !ok {
-		return nil, false, nil
+		retMap[matchedStr] = []parser.Fc{&conParamAsFcFn.FnHead}
+	} else {
+		ok, err := ver.fcEqualSpec(&uniFuncFcFn.FnHead, &conParamAsFcFn.FnHead)
+		if err != nil {
+			return nil, false, err
+		}
+		if !ok {
+			return nil, false, nil
+		}
 	}
 
 	if len(conParamAsFcFn.CallPipe) != len(uniFuncFcFn.CallPipe) {
