@@ -163,9 +163,9 @@ func (parser *Parser) parseNumberStr() (*FcAtom, error) {
 		return &FcAtom{OptName: ""}, err
 	}
 
-	if left[0] == '0' {
-		return &FcAtom{OptName: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
-	}
+	// if left[0] == '0' {
+	// 	return &FcAtom{OptName: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
+	// }
 
 	_, err = strconv.Atoi(left)
 	if err != nil {

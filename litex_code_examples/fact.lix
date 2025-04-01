@@ -1,0 +1,33 @@
+// 25.4.1
+
+// Most common case
+prove:
+    $p0(a)   // most common specific fact
+    a < b   // most common relational fact
+    know:
+        $p0(a)
+        a < b
+    $p(0)
+    $p0(a)
+    // a < b
+
+// 2 个一样的东西匹配同一位
+prove:
+    know:
+        forall x A:
+            $p1(x,x)
+    $p1(1,1)
+    $p1(1,2)
+
+prove:
+    know forall x R, y R, z R:
+        x < y
+        y < z
+        then:
+            x < z
+
+    know:
+        a < b
+        b < d
+    a < d // unknown 二元事实搜不到潜在的三元forall事实
+

@@ -536,7 +536,7 @@ func readFile(filePath string) string {
 }
 
 func TestFactCode(t *testing.T) {
-	code := readFile("../litex_code_examples/fact.litex")
+	code := readFile("../litex_code_examples/fact.lix")
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
