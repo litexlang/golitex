@@ -57,6 +57,8 @@ func printExecMsg(messageSlice []string) {
 	// }
 	for i := len(messageSlice) - 1; i >= 0; i-- {
 		fmt.Println(messageSlice[i])
+		fmt.Println()
+		fmt.Println()
 	}
 }
 
@@ -546,13 +548,6 @@ func readFile(filePath string) string {
 	return string(content)
 }
 
-func TestFactCode(t *testing.T) {
-	code := readFile("../litex_code_examples/fact.lix")
-	topStmtSlice := parseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
-	printExecMsg(messages)
-}
-
 func TestProve(t *testing.T) {
 	code :=
 		`
@@ -576,6 +571,13 @@ func TestFacts(t *testing.T) {
 know $p(x)
 $p(x)
 `
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
+
+func TestFactCode(t *testing.T) {
+	code := readFile("../litex_code_examples/fact.lix")
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)

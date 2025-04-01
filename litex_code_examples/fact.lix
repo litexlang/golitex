@@ -10,6 +10,7 @@ prove:
     $p(0)
     $p0(a)
     // a < b
+$p0(a) // local scope does not affect global
 
 // 2 个一样的东西匹配同一位
 prove:
@@ -39,3 +40,22 @@ prove:
     $p(f(x))
     know $p(x)
     $p(f(x))
+
+prove:
+    know:
+        forall x A:
+            $p(f(x))
+
+    know:
+        t = f
+                
+    $p(t(x))
+    $p(g(x))
+    $p(f(x))
+
+    know:
+        forall x A:
+            $p(x)
+
+    $p(ha)
+    $p(g(x, 100))
