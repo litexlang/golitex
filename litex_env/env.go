@@ -52,3 +52,7 @@ func NewEnv(parent *Env, uniParamMapPtr *map[string]parser.Fc) *Env {
 func newEqualFactMem() *mem.EqualFactMem {
 	return &mem.EqualFactMem{Mem: *glob.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)}
 }
+
+func (e *Env) NewMsg(s string) {
+	e.Msgs = append(e.Msgs, s)
+}
