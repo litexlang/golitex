@@ -187,7 +187,6 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 
 func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap *map[string][]parser.Fc) (*map[string]parser.Fc, bool, error) {
 	newMap := map[string]parser.Fc{}
-LoopParamArrMap:
 	for key, value := range *paramArrMap {
 		if len(value) == 1 {
 			continue
@@ -199,7 +198,7 @@ LoopParamArrMap:
 				return nil, false, err
 			}
 			if !ok {
-				continue LoopParamArrMap
+				return nil, false, nil
 			}
 		}
 
