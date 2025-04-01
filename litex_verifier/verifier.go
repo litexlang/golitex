@@ -32,17 +32,17 @@ const (
 )
 
 type Verifier struct {
-	env         *env.Env
-	Messages    *[]string
+	env *env.Env
+	// Messages    *[]string
 	Output      VerifierOutput
 	searchRound uint8
 }
 
 func NewVerifier(curEnv *env.Env) *Verifier {
 	if curEnv == nil {
-		return &Verifier{env: env.NewEnv(nil, nil), Messages: &[]string{}, Output: VerifierUnknown, searchRound: 0}
+		return &Verifier{env: env.NewEnv(nil, nil), Output: VerifierUnknown, searchRound: 0}
 	} else {
-		return &Verifier{env: curEnv, Messages: &[]string{}, Output: VerifierUnknown, searchRound: 0}
+		return &Verifier{env: curEnv, Output: VerifierUnknown, searchRound: 0}
 	}
 }
 

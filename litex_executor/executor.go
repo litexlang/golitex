@@ -4,7 +4,6 @@ import (
 	"fmt"
 	parser "golitex/litex_parser"
 	verifier "golitex/litex_verifier"
-	"slices"
 	"strings"
 )
 
@@ -40,15 +39,13 @@ func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
 }
 
 func (exec *Executor) factStmt(stmt parser.FactStmt) error {
-	ok, curVerifier, err := exec.checkFactStmt(stmt)
+	ok, _, err := exec.checkFactStmt(stmt)
 
 	if err != nil {
 		return err
 	}
 
 	if ok {
-		slices.Reverse(*curVerifier.Messages) // TODO 需要吗？
-		exec.newMsgEnd(stmt.String() + "\n" + curVerifier.GetMsgAsStr())
 		err = exec.env.NewFact(stmt)
 		if err != nil {
 			return err
