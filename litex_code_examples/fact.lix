@@ -86,6 +86,71 @@ prove:
 prove:
     know forall x R:
         $p(x)
+        then:
+            $p(x)
     $pppp(f(1))
     $p(0)
     $p(g(1))
+    know:
+        $p(0)
+    $p(0)
+
+prove:
+    know forall x R:
+        $p(x)
+    $p(0)
+    $pp(1)
+
+// 三种事实
+prove:
+    know:
+        $p(1)
+        when:
+            $p(2)
+            then:
+                $p(3)
+        forall x R:
+            $p3(x)
+    $p(1)
+    $p(2)
+
+prove:
+    know:
+        forall x R:
+            $p(f(1)(x))
+//    $p(f(2))
+//    $p(f(1))
+    $p(f(2)(3))
+    $p(f(1)(2))
+    $p(f(1)(g()(2)(4)(h)))
+
+    know:
+        f(1) = k(2)(3)
+
+    forall x R:
+    // 网络寻址最长头部匹配原则：litex是最长尾部匹配
+    // 字符串最后的匹配，剩下的是头部（函数）。
+    // 如果最后一位甚至不相等，那就是整个是头部匹配
+    // 头部匹配：要找ip地址：192.168.100.2
+    // 网络里有很多的地址，也以192.168开头，但是有些是最长的192.168.100，然后我就去找100
+        f(1)(x) = k(2)(3)(x) // unknown
+    
+    $p(f(1)(1))
+    f(1)(1) = k(2)(3)(1)
+    $p(k(2)(3)(1)) // unknown
+
+    know:
+        f = k(2)
+    $p(k(2)(1)(2))
+
+// f.m.d
+// f(m)(d)
+
+1 = 1 // 不能打印
+a = a 
+
+prove:
+    know forall a A, b B, c C, d D:
+        a(b)(c) = d(c)(a)
+    
+    a(b)(c) = d(c)(a)
