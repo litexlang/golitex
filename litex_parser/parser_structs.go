@@ -88,12 +88,12 @@ type HaveStmt struct {
 
 // syntax sugar for defining spec prop + claim forall true
 type AxiomStmt struct {
-	decl DefPropStmt
+	Decl DefPropStmt
 }
 
 // syntax sugar for defining spec prop + claim forall true + prove it
 type ThmStmt struct {
-	decl  DefPropStmt
+	Decl  DefPropStmt
 	proof []Stmt
 }
 
