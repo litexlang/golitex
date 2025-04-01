@@ -48,13 +48,6 @@ func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) []string {
 }
 
 func printExecMsg(messageSlice []string) {
-	// for _, msg := range messageSlice {
-	// for i := len(messageSlice) - 1; i >= 0; i-- {
-	// 	fmt.Println(messageSlice[i])
-	// }
-	// fmt.Println()
-	// fmt.Println(msg)
-	// }
 	for i := len(messageSlice) - 1; i >= 0; i-- {
 		fmt.Println(messageSlice[i])
 		fmt.Println()
@@ -581,4 +574,19 @@ func readFile(filePath string) string {
 		panic("")
 	}
 	return string(content)
+}
+
+func TestFacts2(t *testing.T) {
+	code :=
+		`
+know:
+	x = y
+	f = t
+	$p(f(x))
+
+$p(t(y))
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
 }
