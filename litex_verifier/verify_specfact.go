@@ -190,6 +190,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap *map[string][
 	newMap := map[string]parser.Fc{}
 	for key, value := range *paramArrMap {
 		if len(value) == 1 {
+			newMap[key] = value[0]
 			continue
 		}
 
