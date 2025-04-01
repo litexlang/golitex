@@ -4,7 +4,6 @@ import (
 	env "golitex/litex_env"
 	exe "golitex/litex_executor"
 	parser "golitex/litex_parser"
-	"slices"
 	"strings"
 )
 
@@ -33,7 +32,7 @@ func ExecuteCodeAndReturnMessageSlice(code string) ([]string, error) {
 		}
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 	}
-	slices.Reverse(msgOfTopStatements)
+	// slices.Reverse(msgOfTopStatements)
 
 	return msgOfTopStatements, nil
 }
