@@ -16,7 +16,7 @@ func (e *Executor) printlnExecOutput() {
 	}
 }
 
-func (e *Executor) newMessage(msg string) {
+func (e *Executor) newMsgAtEnd(msg string) {
 	e.env.Msgs = append(e.env.Msgs, msg)
 }
 

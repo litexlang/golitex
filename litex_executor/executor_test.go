@@ -48,12 +48,15 @@ func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) []string {
 }
 
 func printExecMsg(messageSlice []string) {
-	for _, msg := range messageSlice {
-		// for i := len(messageSlice) - 1; i >= 0; i-- {
-		// 	fmt.Println(messageSlice[i])
-		// }
-		// fmt.Println()
-		fmt.Println(msg)
+	// for _, msg := range messageSlice {
+	// for i := len(messageSlice) - 1; i >= 0; i-- {
+	// 	fmt.Println(messageSlice[i])
+	// }
+	// fmt.Println()
+	// fmt.Println(msg)
+	// }
+	for i := len(messageSlice) - 1; i >= 0; i-- {
+		fmt.Println(messageSlice[i])
 	}
 }
 
@@ -561,6 +564,20 @@ prove:
     $p(f(x))
     know $p(x)
     $p(f(x))
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
+
+func TestFacts(t *testing.T) {
+	code :=
+		`
+$p(t(x))
+$p(g(x))
+$p(f(x))
+$p(ha)
+$p(g(x, 100))
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
