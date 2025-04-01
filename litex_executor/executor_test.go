@@ -547,7 +547,7 @@ func TestProve(t *testing.T) {
 		`
 prove:
 	know $p(x)
-	$p(x) // unknown
+	$p(x) // true
 
 $p(x) // unknown
 `
