@@ -19,7 +19,7 @@ type Executor struct {
 	output ExecOutput
 }
 
-func newExecutor(curEnv *env.Env) *Executor {
+func NewExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
 		return &Executor{env: env.NewEnv(nil, nil), output: execUnknown}
 	} else {
