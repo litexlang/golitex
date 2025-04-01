@@ -116,7 +116,8 @@ func mergeMatchMaps(from *map[string][]parser.Fc, to *map[string][]parser.Fc) {
 	for key, value := range *from {
 		if _, ok := (*to)[key]; ok {
 			(*to)[key] = append((*to)[key], value...)
+		} else {
+			(*to)[key] = value
 		}
-		(*to)[key] = value
 	}
 }

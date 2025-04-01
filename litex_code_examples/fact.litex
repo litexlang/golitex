@@ -1,3 +1,10 @@
 // 25.4.1
 
-$f(a)
+// $f(a)   // most common specific fact
+// a < b   // most common relational fact
+
+know:
+    forall x A:
+        $p(x,x)
+
+$p(1,2)
