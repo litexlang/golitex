@@ -1034,3 +1034,17 @@ know:
 	}
 
 }
+
+func TestProve(t *testing.T) {
+	code := `
+prove:
+	$p(x)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}

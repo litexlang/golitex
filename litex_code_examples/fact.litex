@@ -1,11 +1,25 @@
 // 25.4.1
 
-$p0(a)   // most common specific fact
-a < b   // most common relational fact
+// // Most common case
+// $p0(a)   // most common specific fact
+// a < b   // most common relational fact
+// 
+// // 2 个一样的东西匹配同一位
+// know:
+//     forall x A:
+//         $p1(x,x)
+// 
+// $p1(1,1)
+// $p1(1,2)
 
-know:
-    forall x A:
-        $p1(x,x)
+// know forall x R, y R, z R:
+//     x < y
+//     y < z
+//     then:
+//         x < z
+// 
+// know:
+//     a < b
+//     b < d
+// a < d // unknown 二元事实搜不到潜在的三元forall事实
 
-$p1(1,1)
-$p1(1,2)

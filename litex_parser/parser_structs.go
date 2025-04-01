@@ -73,8 +73,8 @@ type ClaimProveByContradictStmt struct {
 }
 
 type ClaimProveStmt struct {
-	toCheck []FactStmt
-	proof   []Stmt
+	ToCheckFacts []FactStmt
+	Proofs       []Stmt
 }
 
 type KnowStmt struct {
