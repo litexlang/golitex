@@ -41,7 +41,7 @@ func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt) (bool, error) {
 				ver.unknownWithMsg("%v is unknown: %v is unknown", stmt, thenFact)
 				return false, nil
 			} else {
-				ver.unknownNoMsg()
+				// ver.unknownNoMsg()
 				return false, nil
 			}
 		}

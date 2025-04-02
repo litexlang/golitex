@@ -14,7 +14,7 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 
 	switch stmt := stmt.(type) {
 	case *parser.SpecFactStmt:
-		return ver.SpecFact(stmt)
+		return ver.SpecFact(stmt, anyMsg)
 	case *parser.CondFactStmt:
 		return ver.CondFact(stmt)
 	case *parser.UniFactStmt:
@@ -76,10 +76,6 @@ func (ver *Verifier) unknownWithMsg(format string, args ...any) {
 	// ver.Output = VerifierUnknown
 }
 
-func (ver *Verifier) unknownNoMsg() {
-	// ver.Output = VerifierUnknown
-}
-
 func (ver *Verifier) asConFc(fc parser.Fc) parser.Fc {
 	// Safe type assertion
 	fcAsAtom, ok := fc.(*parser.FcAtom)
@@ -132,6 +128,16 @@ func (e verState) isSpec() bool {
 	} else {
 		return false
 	}
+}
+
+func (e verState) toSpec() verState {
+	if e == anyMsg {
+		return specMsg
+	}
+	if e == anyNoMsg {
+		return specNoMsg
+	}
+	return e
 }
 
 func (ver *Verifier) newMsgAtParent(s string) error {
