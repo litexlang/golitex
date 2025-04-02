@@ -4,7 +4,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) IsPropProp(stmt *parser.SpecFactStmt) (bool, error) {
+func (ver *Verifier) IsPropProp(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	// TODO
 	return false, nil
 }

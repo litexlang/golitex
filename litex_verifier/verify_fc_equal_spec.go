@@ -6,7 +6,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
+func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, error) {
 	// Case: 全部都是builtin类型：int,float
 
 	// Case: 完全一样
@@ -15,11 +15,14 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 		return false, err
 	}
 	if cmpRet == 0 {
+		if state.requireMsg() {
+			ver.appendMsg("%s = %s directly", left.String(), right.String())
+		}
 		return true, nil
 	}
 
 	// Case: 用已知事实
-	ok, err := ver.fcEqualSpecInSpecMem(left, right)
+	ok, err := ver.fcEqualSpecInSpecMem(left, right, state.spec())
 	if err != nil {
 		return false, err
 	}
@@ -47,9 +50,9 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 	return false, fmt.Errorf("unexpected")
 }
 
-func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc) (bool, error) {
+func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc, state VerState) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		verified, err := ver.FcEqualSpecInSpecMemAtEnv(curEnv, left, right)
+		verified, err := ver.FcEqualSpecInSpecMemAtEnv(curEnv, left, right, state.spec())
 		if err != nil {
 			return false, err
 		}

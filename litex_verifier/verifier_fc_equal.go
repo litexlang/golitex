@@ -21,7 +21,7 @@ func (ver *Verifier) FcEqual(left, right parser.Fc, state VerState) (bool, error
 		right = concreteRight
 	}
 
-	ok, err := ver.fcEqualSpec(left, right)
+	ok, err := ver.fcEqualSpec(left, right, state.spec())
 	if err != nil {
 		return false, err
 	}
@@ -40,7 +40,7 @@ func (ver *Verifier) FcEqual(left, right parser.Fc, state VerState) (bool, error
 	return false, nil
 }
 
-func (ver *Verifier) FcEqualSpecInSpecMemAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc) (bool, error) {
+func (ver *Verifier) FcEqualSpecInSpecMemAtEnv(curEnv *env.Env, left parser.Fc, right parser.Fc, state VerState) (bool, error) {
 	key := memory.EqualFactMemoryTreeNode{FcAsKey: left, Values: []*parser.Fc{}}
 
 	searchedNode, err := curEnv.EqualFactMem.Mem.TreeSearch(&key)
@@ -60,6 +60,9 @@ func (ver *Verifier) FcEqualSpecInSpecMemAtEnv(curEnv *env.Env, left parser.Fc, 
 			return false, err
 		}
 		if cmpRet == 0 {
+			if state.requireMsg() {
+				ver.appendMsg("%s = %s literally", (*equalFc).String(), right.String())
+			}
 			return true, nil
 		}
 	}

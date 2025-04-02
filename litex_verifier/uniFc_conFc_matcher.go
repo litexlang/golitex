@@ -6,6 +6,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
+// match 函数不需要传入state: 没有any, spec 之分，也不需要打印
 func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact, stmt *parser.SpecFactStmt) (map[string][]parser.Fc, bool, error) { // 之所以是map[string][]parser.Fc而不是 map[string]parser.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
 	if len(stmt.Params) != len(knownFact.FuncParams) {
 		return nil, false, nil
@@ -47,7 +48,7 @@ func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *parser.FcAtom, conFuncPara
 		return retMap, true, nil
 	}
 
-	ok, err := ver.fcEqualSpec(uniFuncFcAtom, conFuncParam)
+	ok, err := ver.fcEqualSpec(uniFuncFcAtom, conFuncParam, SpecNoMsg)
 	if err != nil {
 		return nil, false, err
 	}
@@ -69,7 +70,7 @@ func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *parser.FcFnPipe, conFuncParam 
 	if matchedStr, ok := isUniParam(&uniFuncFcFn.FnHead, possibleUniParams); ok {
 		retMap[matchedStr] = []parser.Fc{&conParamAsFcFn.FnHead}
 	} else {
-		ok, err := ver.fcEqualSpec(&uniFuncFcFn.FnHead, &conParamAsFcFn.FnHead)
+		ok, err := ver.fcEqualSpec(&uniFuncFcFn.FnHead, &conParamAsFcFn.FnHead, SpecNoMsg)
 		if err != nil {
 			return nil, false, err
 		}

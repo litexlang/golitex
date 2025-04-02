@@ -15,7 +15,9 @@ func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, 
 		return false, nil
 	}
 
-	return ver.CondFactCond(stmt)
+	// TODO
+
+	return ver.CondFactCond(stmt, state)
 
 	// TODO: CondFactUni
 }
@@ -56,7 +58,7 @@ func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt, state VerState) (bo
 	}
 }
 
-func (ver *Verifier) CondFactCond(stmt *parser.CondFactStmt) (bool, error) {
+func (ver *Verifier) CondFactCond(stmt *parser.CondFactStmt, state VerState) (bool, error) {
 	// TODO
 	return false, nil
 }
