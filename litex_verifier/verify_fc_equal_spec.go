@@ -39,7 +39,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 	}
 
 	if fcEnum == cmp.FcFnCallPipeEnum {
-		return ver.fcFnPipeEqual(left.(*parser.FcFnPipe), right.(*parser.FcFnPipe), true)
+		return ver.fcFnPipeEqual(left.(*parser.FcFnPipe), right.(*parser.FcFnPipe), specMsg)
 	} else if fcEnum == cmp.FcAtomEnum {
 		return false, nil
 	}
@@ -60,7 +60,7 @@ func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) FcSliceEqual(left []parser.Fc, right []parser.Fc, specMode bool) (bool, error) {
+func (ver *Verifier) FcSliceEqual(left []parser.Fc, right []parser.Fc, specMode verState) (bool, error) {
 	if len(left) != len(right) {
 		return false, fmt.Errorf("%v and %v have different length", left, right)
 	}

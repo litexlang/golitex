@@ -7,7 +7,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) FcEqual(left, right parser.Fc, specMode bool) (bool, error) {
+func (ver *Verifier) FcEqual(left, right parser.Fc, state verState) (bool, error) {
 	ver.addRound()
 	defer ver.minusRound()
 
@@ -29,7 +29,7 @@ func (ver *Verifier) FcEqual(left, right parser.Fc, specMode bool) (bool, error)
 		return true, nil
 	}
 
-	if specMode {
+	if state.isSpec() {
 		return false, nil
 	}
 
