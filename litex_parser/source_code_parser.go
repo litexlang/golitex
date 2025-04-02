@@ -19,7 +19,7 @@ func (e *parseStmtErr) Error() string {
 	}
 }
 
-func ParseSourceCode(code string) (*[]TopStmt, error) {
+func ParseSourceCode(code string) ([]TopStmt, error) {
 	// 解引用指针以获取实际的字符串内容
 	code = strings.ReplaceAll(code, "\t", "    ")
 
@@ -46,5 +46,5 @@ func ParseSourceCode(code string) (*[]TopStmt, error) {
 		ret = append(ret, *cur)
 	}
 
-	return &ret, nil
+	return ret, nil
 }

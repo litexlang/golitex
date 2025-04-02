@@ -21,7 +21,7 @@ type SpecFactMemDict struct {
 
 type StoredCondSpecFact struct {
 	IsTrue bool
-	Params *[]parser.Fc
+	Params []parser.Fc
 	Fact   *parser.CondFactStmt
 }
 
@@ -35,9 +35,9 @@ type CondFactMemDict struct {
 
 type StoredUniSpecFact struct {
 	IsTrue     bool
-	FuncParams *[]parser.Fc
-	UniParams  *[]string
-	Fact       *parser.UniFactStmt
+	FuncParams []parser.Fc // 和存在Fact里的FuncFact共享slice，所以是指针
+	// UniParams  *[]string
+	Fact *parser.UniFactStmt
 }
 
 type StoredUniFuncMemDictNode struct {

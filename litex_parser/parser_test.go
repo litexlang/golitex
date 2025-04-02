@@ -43,7 +43,7 @@ func TestSplitString(t *testing.T) {
 			continue
 		}
 
-		for _, token := range *tokens {
+		for _, token := range tokens {
 			fmt.Println(token)
 		}
 	}
@@ -87,7 +87,7 @@ func TestParseFc(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		parser := Parser{0, *tokens}
+		parser := Parser{0, tokens}
 		fc, err := parser.parseFcAtomAndFcFnRet()
 		if err != nil {
 			t.Fatal(err)
@@ -111,7 +111,7 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		parser := Parser{0, *tokens}
+		parser := Parser{0, tokens}
 
 		fc, err := parser.ParseFc()
 
@@ -122,7 +122,7 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 	}
 }
 
-func ParserTester(code string) (*[]Stmt, error) {
+func ParserTester(code string) ([]Stmt, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
 	slice, err := GetTopLevelStmtSlice(code)
@@ -149,7 +149,7 @@ func ParserTester(code string) (*[]Stmt, error) {
 		fmt.Printf("%v\n", cur)
 	}
 
-	return &ret, nil
+	return ret, nil
 }
 
 func TestDefConceptStmt(t *testing.T) {

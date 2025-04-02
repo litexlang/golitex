@@ -38,7 +38,7 @@ func (stmt *SpecFactStmt) String() string {
 	builder.WriteByte('$')
 	builder.WriteString(stmt.Opt.String())
 	builder.WriteByte('(')
-	builder.WriteString(FcSliceString(&stmt.Params))
+	builder.WriteString(FcSliceString(stmt.Params))
 	builder.WriteByte(')')
 
 	return builder.String()

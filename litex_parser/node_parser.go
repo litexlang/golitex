@@ -5,7 +5,7 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
+func (parser *Parser) parseBracedFcArr() ([]Fc, error) {
 	params := []Fc{}
 	parser.skip(glob.KeywordLeftParen)
 
@@ -32,10 +32,10 @@ func (parser *Parser) parseBracedFcArr() (*[]Fc, error) {
 
 	parser.skip(glob.KeywordRightParen)
 
-	return &params, nil
+	return params, nil
 }
 
-func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) (*[]string, *[]Fc, error) {
+func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) ([]string, []Fc, error) {
 	paramName := []string{}
 	paramTypes := []Fc{}
 
@@ -62,18 +62,18 @@ func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) (*[]string
 		}
 	}
 
-	return &paramName, &paramTypes, nil
+	return paramName, paramTypes, nil
 }
 
-func (parser *Parser) parseStringArrUntilEnd() (*[]string, error) {
-	members := &[]string{}
+func (parser *Parser) parseStringArrUntilEnd() ([]string, error) {
+	members := []string{}
 
 	for {
 		member, err := parser.next()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
-		*members = append(*members, member)
+		members = append(members, member)
 		if !parser.is(glob.KeywordComma) {
 			break
 		}
@@ -120,7 +120,7 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
 }
 
-func (parser *Parser) parseTypeListInDeclsAndSkipEnd(endWith string) (*[]string, *[]FcAtom, error) {
+func (parser *Parser) parseTypeListInDeclsAndSkipEnd(endWith string) ([]string, []FcAtom, error) {
 	paramName := []string{}
 	paramTypes := []FcAtom{}
 
@@ -147,5 +147,5 @@ func (parser *Parser) parseTypeListInDeclsAndSkipEnd(endWith string) (*[]string,
 		}
 	}
 
-	return &paramName, &paramTypes, nil
+	return paramName, paramTypes, nil
 }
