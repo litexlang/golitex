@@ -20,7 +20,7 @@ const (
 	TenMillionRound  = 10000000
 )
 
-func parseStmtTest(code string, t *testing.T) *[]parser.TopStmt {
+func parseStmtTest(code string, t *testing.T) []parser.TopStmt {
 	topStatements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
@@ -28,12 +28,12 @@ func parseStmtTest(code string, t *testing.T) *[]parser.TopStmt {
 	return topStatements
 }
 
-func execStmtTest(topStmt *[]parser.TopStmt, t *testing.T) []string {
+func execStmtTest(topStmt []parser.TopStmt, t *testing.T) []string {
 	env := env.NewEnv(nil, nil)
 	executor := *NewExecutor(env)
 
 	messages := []string{}
-	for _, topStmt := range *topStmt {
+	for _, topStmt := range topStmt {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
@@ -64,7 +64,7 @@ func TestStoreNewObj(t *testing.T) {
 	curEnv := env.NewEnv(nil, nil)
 	executor := NewExecutor(curEnv)
 	// executor := Executor{curEnv, &[]string{}, execError}
-	for _, topStmt := range *statements {
+	for _, topStmt := range statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
@@ -85,7 +85,7 @@ func TestKnow(t *testing.T) {
 	}
 	env := env.NewEnv(nil, nil)
 	executor := *NewExecutor(env)
-	for _, topStmt := range *statements {
+	for _, topStmt := range statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
@@ -103,7 +103,7 @@ func TestVerifier(t *testing.T) {
 	}
 	env := env.NewEnv(nil, nil)
 	executor := *NewExecutor(env)
-	for _, topStmt := range *statements {
+	for _, topStmt := range statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
@@ -117,7 +117,7 @@ func TestVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, testCode := range *testStatements {
+	for _, testCode := range testStatements {
 		err := executor.TopLevelStmt(&testCode)
 		if err != nil {
 			t.Fatal(err)
@@ -162,32 +162,18 @@ func randFcFnRetValue() *parser.FcFnCallPipe {
 	round := rand.Intn(3) + 1
 	typeParamObjParamsPairs := []parser.FcFnCallPipeSeg{}
 	for i := 0; i < round; i++ {
-		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.FcFnCallPipeSeg{Params: *randObjParams()})
+		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.FcFnCallPipeSeg{Params: randObjParams()})
 	}
 	return &parser.FcFnCallPipe{FnHead: *fnName, CallPipe: typeParamObjParamsPairs}
 }
 
-// func randTypeParams() *[]parser.TypeObjStr {
-// 	round := rand.Intn(3) + 1
-// 	typeObj := []parser.TypeObjStr{}
-// 	for i := 0; i < round; i++ {
-// 		length := rand.Intn(10) + 1
-// 		bytes := make([]byte, length)
-// 		for i := 0; i < length; i++ {
-// 			bytes[i] = byte(rand.Intn(26) + 65)
-// 		}
-// 		typeObjs = append(typeObjs, parser.TypeObjStr(bytes))
-// 	}
-// 	return &typeObjs
-// }
-
-func randObjParams() *[]parser.Fc {
+func randObjParams() []parser.Fc {
 	round := rand.Intn(3) + 1
 	objParams := []parser.Fc{}
 	for i := 0; i < round; i++ {
 		objParams = append(objParams, randFcAtom()) // 这里必须是randFcString不能是randFc，否则会因为内存溢出停掉
 	}
-	return &objParams
+	return objParams
 }
 
 func randCondStmt() *parser.CondFactStmt {

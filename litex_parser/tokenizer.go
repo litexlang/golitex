@@ -51,14 +51,14 @@ func (t *tokenizer) nextToken() (string, int, error) {
 }
 
 // tokenizeString 方法用于将输入字符串 tokenize
-func (t *tokenizer) tokenizeString() (*[]string, error) {
+func (t *tokenizer) tokenizeString() ([]string, error) {
 	input := t.inputString // 解引用指针
 	result := []string{}
 	buffer := ""
 	for t.start < len(input) {
 		token, nextIndex, err := t.nextToken()
 		if err != nil {
-			return &result, err
+			return result, err
 		}
 		if token == "" {
 			if buffer != "" {
@@ -79,7 +79,7 @@ func (t *tokenizer) tokenizeString() (*[]string, error) {
 	if buffer != "" {
 		result = append(result, buffer)
 	}
-	return &result, nil
+	return result, nil
 }
 
 // TokenizeStmtBlock 函数保持不变
@@ -89,7 +89,7 @@ func TokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
 	// 创建一个新的 tokenizer 实例
 	curTokenizer := newTokenizer(b.Header) // 传递字符串的指针
 	headerPtr, err := curTokenizer.tokenizeString()
-	header := *headerPtr
+	header := headerPtr
 
 	if err != nil || header == nil {
 		return nil, err

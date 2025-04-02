@@ -47,25 +47,25 @@ func (parser *Parser) parseFcFnRetVal(optName FcAtom) (*FcFnCallPipe, error) {
 		return nil, err
 	}
 
-	return &FcFnCallPipe{optName, *typeParamsObjParamsPairs}, nil
+	return &FcFnCallPipe{optName, typeParamsObjParamsPairs}, nil
 }
 
-func (parser *Parser) parseTypeParamsObjParamsPairs() (*[]FcFnCallPipeSeg, error) {
+func (parser *Parser) parseTypeParamsObjParamsPairs() ([]FcFnCallPipeSeg, error) {
 	err := error(nil)
 
 	pairs := []FcFnCallPipeSeg{}
 
 	for !parser.ExceedEnd() && (parser.is(glob.KeywordLeftParen)) {
-		objParamsPtr := &[]Fc{}
+		objParamsPtr := []Fc{}
 		objParamsPtr, err = parser.parseBracedFcArr()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, FcFnCallPipeSeg{*objParamsPtr})
+		pairs = append(pairs, FcFnCallPipeSeg{objParamsPtr})
 	}
 
-	return &pairs, nil
+	return pairs, nil
 }
 
 func (parser *Parser) parseFcAtom() (FcAtom, error) {

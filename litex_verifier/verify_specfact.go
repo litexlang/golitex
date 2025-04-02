@@ -75,7 +75,7 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt) (bool, error) {
 				continue
 			}
 
-			ok, err := ver.FcSliceEqual(&knownFact.Params, &stmt.Params, false)
+			ok, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, false)
 
 			if err != nil {
 				return false, err
@@ -126,7 +126,7 @@ LoopOverFacts:
 			}
 		}
 
-		verified, err := ver.FcSliceEqual(knownFact.Params, &stmt.Params, false)
+		verified, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, false)
 
 		if err != nil {
 			return false, err
@@ -227,7 +227,7 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 
 	// 传入的map必须能和所有的uniFact的param一一对应
 	// e.g. 不等号传递性因此不能直接被使用，只能给传递性这个事实取个名字
-	twoSlicesEqual := glob.SlicesEqualUnordered(glob.MapKeys(*uniConMap), *knownStmt.UniParams)
+	twoSlicesEqual := glob.SlicesEqualUnordered(glob.MapKeys(*uniConMap), knownStmt.Fact.Params)
 	if !twoSlicesEqual {
 		return false, nil
 	}
