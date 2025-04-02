@@ -591,12 +591,12 @@ prove:
         forall x R:
             $p(f(1)(x))
 		f(1) = k(2)(3)
-	$p(f(1)(0))
-	$p(k(2)(3)(0))
-	// forall x R:
-	// 	$p(f(1)(x))
-	// 	then:
-	// 		$p(k(2)(3)(x))
+	// $p(f(1)(0))
+	// $p(k(2)(3)(0))
+	forall x R:
+		$p(f(1)(x))
+		then:
+			$p(k(2)(3)(x))
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)

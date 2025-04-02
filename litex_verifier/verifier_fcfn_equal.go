@@ -19,7 +19,7 @@ func (ver *Verifier) fcFnPipeEqual(left, right *parser.FcFnPipe, specMode bool) 
 }
 
 func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, specMode bool, leftTailLen int) (bool, error) {
-	if leftTailLen == 0 {
+	if leftTailLen == 0 { // 必须存在，否则死循环
 		if len(left.CallPipe) != len(right.CallPipe) {
 			return false, nil
 		}
