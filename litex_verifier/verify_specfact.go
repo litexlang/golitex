@@ -29,6 +29,7 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, 
 		return false, nil
 	}
 
+	// 必须要spec一下，否则iff的时候，会永远循环下去。同时不能省略state，因为msg信息在里面
 	ok, err = ver.SpecFactCond(stmt, state.spec())
 	if err != nil {
 		return false, err
