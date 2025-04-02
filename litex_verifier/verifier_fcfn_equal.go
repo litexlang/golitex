@@ -4,9 +4,9 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) fcFnPipeEqual(left, right *parser.FcFnPipe, specMode VerState) (bool, error) {
+func (ver *Verifier) fcFnPipeEqual(left, right *parser.FcFnPipe, state VerState) (bool, error) {
 	for leftTailLen := 0; leftTailLen <= len(left.CallPipe); leftTailLen++ {
-		ok, err := ver.fcFnPipeHeadTailEqual(left, right, specMode, leftTailLen)
+		ok, err := ver.fcFnPipeHeadTailEqual(left, right, state, leftTailLen)
 		if err != nil {
 			return false, err
 		}
@@ -18,7 +18,7 @@ func (ver *Verifier) fcFnPipeEqual(left, right *parser.FcFnPipe, specMode VerSta
 	return true, nil
 }
 
-func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, specMode VerState, leftTailLen int) (bool, error) {
+func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, state VerState, leftTailLen int) (bool, error) {
 	if leftTailLen == 0 { // 必须存在，否则死循环
 		if len(left.CallPipe) != len(right.CallPipe) {
 			return false, nil
@@ -30,7 +30,7 @@ func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, specMod
 			}
 
 			for j := 0; j < len(left.CallPipe[i].Params); j++ {
-				ok, err := ver.FcEqual(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j], specMode)
+				ok, err := ver.FcEqual(left.CallPipe[i].Params[j], right.CallPipe[i].Params[j], state)
 				if err != nil {
 					return false, err
 				}
@@ -59,7 +59,7 @@ func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, specMod
 		}
 
 		for j := 0; j < curLen; j++ {
-			ok, err := ver.FcEqual(leftTails[i].Params[j], rightTails[i].Params[j], specMode)
+			ok, err := ver.FcEqual(leftTails[i].Params[j], rightTails[i].Params[j], state)
 			if err != nil {
 				return false, err
 			}
@@ -83,7 +83,7 @@ func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, specMod
 		rightHead = &parser.FcFnPipe{FnHead: right.FnHead, CallPipe: right.CallPipe[:rightHeadLen]}
 	}
 
-	ok, err := ver.FcEqual(leftHead, rightHead, specMode)
+	ok, err := ver.FcEqual(leftHead, rightHead, state)
 	if err != nil {
 		return false, err
 	}

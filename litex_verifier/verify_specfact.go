@@ -9,7 +9,7 @@ import (
 
 func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	// TODO 判断一下传入进来的stmt是不是prop prop，就像数学归纳法这种。prop prop的特点是，它是prop，参数列表里也有prop。如果是的话，那就用其他方式来验证
-	isPropProp, err := ver.IsPropProp(stmt)
+	isPropProp, err := ver.IsPropProp(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -208,7 +208,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		}
 
 		for i := 1; i < len(value); i++ {
-			ok, err := ver.fcEqualSpec(value[0], value[i])
+			ok, err := ver.fcEqualSpec(value[0], value[i], state.spec())
 			if err != nil {
 				return nil, false, err
 			}
