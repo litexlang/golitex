@@ -55,3 +55,7 @@ func (e *ErrLink) Error() string {
 func NewErrLink(next error, msg string, a ...any) *ErrLink {
 	return &ErrLink{next, fmt.Sprintf(msg, a...)}
 }
+
+func InterpreterBug(msg string, a ...any) error {
+	return fmt.Errorf(msg, a...)
+}

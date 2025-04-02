@@ -84,11 +84,7 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state VerState) (bo
 				} else {
 					ver.successNoMsg()
 				}
-				// if ver.round1() {
-				// 	ver.successWithMsg(stmt.String(), knownFact.String(stmt.Opt))
-				// } else {
-				// 	ver.successNoMsg()
-				// }
+
 				return true, nil
 			}
 		}
@@ -97,8 +93,6 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state VerState) (bo
 }
 
 func (ver *Verifier) SpecFactCond(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
-	// Use cond fact to verify
-	// TODO STATE
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		ok, err := ver.SpecFactCondAtEnv(curEnv, stmt, state)
 		if err != nil {
@@ -120,7 +114,7 @@ func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *parser.SpecFactStm
 LoopOverFacts:
 	for _, knownFact := range searched.Facts {
 		for _, f := range knownFact.Fact.CondFacts {
-			ok, err := ver.FactStmt(f, state)
+			ok, err := ver.FactStmt(f, state.spec())
 			if err != nil {
 				return false, err
 			}
@@ -237,7 +231,7 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 	}
 
 	for _, condFact := range knownStmt.Fact.DomFacts {
-		ok, err := ver.FactStmt(condFact, state) // TODO: 这里最好要标注一下是specFact
+		ok, err := ver.FactStmt(condFact, state.spec()) // TODO: 这里最好要标注一下是specFact
 		if err != nil {
 			return false, err
 		}
