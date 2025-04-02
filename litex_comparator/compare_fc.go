@@ -14,7 +14,7 @@ func CmpFcLiterally(left, right parser.Fc) (int, error) {
 	if fcEnum == FcAtomEnum {
 		return cmpFcAtom(left.(*parser.FcAtom), right.(*parser.FcAtom))
 	} else if fcEnum == FcFnCallPipeEnum {
-		return cmpFcFnCallPipe(left.(*parser.FcFnCallPipe), right.(*parser.FcFnCallPipe))
+		return cmpFcFnCallPipe(left.(*parser.FcFnPipe), right.(*parser.FcFnPipe))
 	}
 
 	return 0, fmt.Errorf("")
@@ -32,7 +32,7 @@ func CmpFcType(left, right parser.Fc) (int, FcEnum, error) {
 	switch left.(type) {
 	case *parser.FcAtom:
 		knownEnum = FcAtomEnum
-	case *parser.FcFnCallPipe:
+	case *parser.FcFnPipe:
 		knownEnum = FcFnCallPipeEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
@@ -43,7 +43,7 @@ func CmpFcType(left, right parser.Fc) (int, FcEnum, error) {
 	switch right.(type) {
 	case *parser.FcAtom:
 		givenEnum = FcAtomEnum
-	case *parser.FcFnCallPipe:
+	case *parser.FcFnPipe:
 		givenEnum = FcFnCallPipeEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
@@ -76,7 +76,7 @@ func cmpFcAtom(left, right *parser.FcAtom) (int, error) {
 	return 0, nil
 }
 
-func cmpFcFnCallPipe(left, right *parser.FcFnCallPipe) (int, error) {
+func cmpFcFnCallPipe(left, right *parser.FcFnPipe) (int, error) {
 	if comp, err := cmpFcAtom(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}
@@ -94,7 +94,7 @@ func cmpFcFnCallPipe(left, right *parser.FcFnCallPipe) (int, error) {
 	return 0, nil
 }
 
-func compareFcFnCallPipeSeg(left, right *parser.FcFnCallPipeSeg) (int, error) {
+func compareFcFnCallPipeSeg(left, right *parser.FcFnPipeSeg) (int, error) {
 	if len(left.Params) != len(right.Params) {
 		return len(left.Params) - len(right.Params), nil
 	}

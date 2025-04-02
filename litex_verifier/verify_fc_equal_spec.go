@@ -39,7 +39,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc) (bool, error) {
 	}
 
 	if fcEnum == cmp.FcFnCallPipeEnum {
-		return ver.fcFnCallPipeEqual(left.(*parser.FcFnCallPipe), right.(*parser.FcFnCallPipe), true)
+		return ver.fcFnPipeEqual(left.(*parser.FcFnPipe), right.(*parser.FcFnPipe), true)
 	} else if fcEnum == cmp.FcAtomEnum {
 		return false, nil
 	}

@@ -40,29 +40,26 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	return fc, nil
 }
 
-func (parser *Parser) parseFcFnRetVal(optName FcAtom) (*FcFnCallPipe, error) {
+func (parser *Parser) parseFcFnRetVal(optName FcAtom) (*FcFnPipe, error) {
 	typeParamsObjParamsPairs, err := parser.parseTypeParamsObjParamsPairs()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &FcFnCallPipe{optName, typeParamsObjParamsPairs}, nil
+	return &FcFnPipe{optName, typeParamsObjParamsPairs}, nil
 }
 
-func (parser *Parser) parseTypeParamsObjParamsPairs() ([]FcFnCallPipeSeg, error) {
-	err := error(nil)
-
-	pairs := []FcFnCallPipeSeg{}
+func (parser *Parser) parseTypeParamsObjParamsPairs() ([]FcFnPipeSeg, error) {
+	pairs := []FcFnPipeSeg{}
 
 	for !parser.ExceedEnd() && (parser.is(glob.KeywordLeftParen)) {
-		objParamsPtr := []Fc{}
-		objParamsPtr, err = parser.parseBracedFcArr()
+		objParamsPtr, err := parser.parseBracedFcArr()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, FcFnCallPipeSeg{objParamsPtr})
+		pairs = append(pairs, FcFnPipeSeg{objParamsPtr})
 	}
 
 	return pairs, nil
@@ -125,9 +122,9 @@ func (parser *Parser) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (F
 			return nil, &parserErr{err, parser}
 		}
 
-		left = &FcFnCallPipe{
+		left = &FcFnPipe{
 			FcAtom{OptName: curToken},
-			[]FcFnCallPipeSeg{{[]Fc{left, right}}},
+			[]FcFnPipeSeg{{[]Fc{left, right}}},
 		}
 	}
 
@@ -146,9 +143,9 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &FcFnCallPipe{
+		return &FcFnPipe{
 			FcAtom{OptName: unaryOp},
-			[]FcFnCallPipeSeg{{[]Fc{right}}},
+			[]FcFnPipeSeg{{[]Fc{right}}},
 		}, nil
 	} else {
 		return parser.parseFcAtomAndFcFnRet()
