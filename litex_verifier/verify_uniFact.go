@@ -38,7 +38,7 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt, state VerState) (bool, er
 
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(&thenFact, state)
+		ok, err := ver.FactStmt(&thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
 		if err != nil {
 			return false, err
 		}

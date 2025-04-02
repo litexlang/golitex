@@ -618,9 +618,9 @@ know forall a A:
 		x = a
 know $q(b)
 
-$p(b)
+$p(b) // unknown
 x = b
-$p(b)
+$p(b) // true
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
