@@ -18,7 +18,7 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 	case *parser.CondFactStmt:
 		return ver.CondFact(stmt)
 	case *parser.UniFactStmt:
-		return ver.UniFact(stmt)
+		return ver.UniFact(stmt, anyMsg)
 	default:
 		return false, fmt.Errorf("unexpected")
 	}
@@ -109,17 +109,25 @@ func (ver *Verifier) isDeclared(fc string) (bool, error) {
 	return false, nil
 }
 
-type verEnum uint8
+type verState uint8
 
 const (
-	specMsg   verEnum = iota
-	specNoMsg         = iota
-	anyMsg            = iota
-	anyNoMsg          = iota
+	specMsg   verState = iota
+	specNoMsg          = iota
+	anyMsg             = iota
+	anyNoMsg           = iota
 )
 
-func (ver *Verifier) requireMsg(e verEnum) bool {
+func (e verState) requireMsg() bool {
 	if e == specMsg || e == anyMsg {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (e verState) isSpec() bool {
+	if e == specMsg || e == specNoMsg {
 		return true
 	} else {
 		return false
@@ -136,5 +144,5 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 }
 
 func verifyStageStmtErr(next error, stmt parser.Stmt) *glob.ErrLink {
-	return glob.NewErrLink(next, "%s\n verify-stage error", stmt.String())
+	return glob.NewErrLink(next, "%s\nverify-stage error", stmt.String())
 }

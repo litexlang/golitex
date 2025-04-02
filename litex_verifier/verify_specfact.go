@@ -51,7 +51,7 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
 
 func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt) (bool, error) {
 	if stmt.IsEqualFact() {
-		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], true)
+		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], specMsg)
 		if err != nil {
 			return false, err
 		}
@@ -75,7 +75,7 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt) (bool, error) {
 				continue
 			}
 
-			ok, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, false)
+			ok, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, specMsg)
 
 			if err != nil {
 				return false, err
@@ -126,7 +126,7 @@ LoopOverFacts:
 			}
 		}
 
-		verified, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, false)
+		verified, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, anyMsg)
 
 		if err != nil {
 			return false, err
