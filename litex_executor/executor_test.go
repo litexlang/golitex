@@ -602,3 +602,27 @@ prove:
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
+
+func TestVerifierState(t *testing.T) {
+	code :=
+		`
+know $p(x)
+$p(x)
+
+know y = x
+$p(y)
+
+know forall a A:
+	$q(a)
+	then:
+		x = a
+know $q(b)
+
+$p(b)
+x = b
+$p(b)
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
