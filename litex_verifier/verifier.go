@@ -4,6 +4,7 @@ package litexverifier
 import (
 	"fmt"
 	env "golitex/litex_env"
+	glob "golitex/litex_global"
 	parser "golitex/litex_parser"
 )
 
@@ -22,14 +23,6 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 		return false, fmt.Errorf("unexpected")
 	}
 }
-
-// type VerifierOutput uint8
-
-// const (
-// 	VerifierTrue VerifierOutput = iota
-// 	VerifierUnknown
-// 	VerifierError
-// )
 
 type Verifier struct {
 	env         *env.Env
@@ -140,4 +133,8 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 		ver.env.Parent.NewMsg(s)
 		return nil
 	}
+}
+
+func verifyStageStmtErr(next error, stmt parser.Stmt) *glob.ErrLink {
+	return glob.NewErrLink(next, "%s\n verify-stage error", stmt.String())
 }
