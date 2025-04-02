@@ -1,6 +1,7 @@
 package litexglobal
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -33,15 +34,15 @@ func LineHead4Indents(line string, n uint32) string {
 }
 
 type ErrLink struct {
-	previous *ErrLink
-	msg      string
+	next error // Last in First out
+	msg  string
 }
 
 func (e *ErrLink) Error() string {
 	var builder strings.Builder
 
 	builder.WriteString(e.msg)
-	previous := e.previous
+	previous := e.next
 
 	if previous != nil {
 		builder.WriteByte('\n')
@@ -49,4 +50,8 @@ func (e *ErrLink) Error() string {
 	}
 
 	return builder.String()
+}
+
+func NewErrLink(next error, msg string, a ...any) *ErrLink {
+	return &ErrLink{next, fmt.Sprintf(msg, a...)}
 }

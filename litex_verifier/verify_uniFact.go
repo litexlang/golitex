@@ -10,7 +10,7 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt) (bool, error) {
 	for _, param := range stmt.Params {
 		ok, err := ver.isDeclared(param)
 		if err != nil {
-			return false, err
+			return false, verifyStageStmtErr(err, stmt)
 		}
 		if ok {
 			ver.unknownWithMsg("%s is already declared", param)
