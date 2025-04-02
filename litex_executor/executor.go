@@ -83,11 +83,20 @@ func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
 	// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里
 
 	localMsgs := exec.getMsgs()
-	exec.env.Parent.NewMsg(stmt.String() + "\n" + strings.Join(localMsgs, "\n"))
+	exec.newMsgAtParent(stmt.String() + "\n" + strings.Join(localMsgs, "\n"))
 
 	return nil
 }
 
 func (exec *Executor) GetMsgAsStr0ToEnd() string {
 	return strings.Join(exec.env.Msgs, "\n")
+}
+
+func (exec *Executor) newMsgAtParent(s string) error {
+	if exec.env.Parent == nil {
+		return fmt.Errorf("no parent env")
+	} else {
+		exec.env.Parent.NewMsg(s)
+		return nil
+	}
 }

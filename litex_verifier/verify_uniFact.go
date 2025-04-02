@@ -1,6 +1,7 @@
 package litexverifier
 
 import (
+	"fmt"
 	parser "golitex/litex_parser"
 )
 
@@ -45,6 +46,9 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt) (bool, error) {
 		}
 	}
 
-	ver.newMsgEnd("is true")
+	err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt.String()))
+	if err != nil {
+		return false, err
+	}
 	return true, nil
 }

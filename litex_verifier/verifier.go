@@ -134,3 +134,12 @@ func (ver *Verifier) requireMsg(e verEnum) bool {
 		return false
 	}
 }
+
+func (ver *Verifier) newMsgAtParent(s string) error {
+	if ver.env.Parent == nil {
+		return fmt.Errorf("no parent env")
+	} else {
+		ver.env.Parent.NewMsg(s)
+		return nil
+	}
+}

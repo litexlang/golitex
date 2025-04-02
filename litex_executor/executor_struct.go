@@ -32,7 +32,6 @@ func (e *Executor) newEnv() {
 }
 
 func (e *Executor) deleteEnv() {
-	// e.env.Parent.Msgs = append(e.env.Parent.Msgs, e.env.Msgs...)
 	e.env = e.env.Parent
 }
 
