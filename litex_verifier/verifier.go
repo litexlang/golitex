@@ -65,7 +65,7 @@ func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
 func (ver *Verifier) successNoMsg() {
 }
 
-func (ver *Verifier) newEnv(parent *env.Env, uniParamsMap *map[string]parser.Fc) {
+func (ver *Verifier) newEnv(parent *env.Env, uniParamsMap map[string]parser.Fc) {
 	newEnv := env.NewEnv(parent, uniParamsMap)
 	newEnv.Parent = ver.env
 	ver.env = newEnv

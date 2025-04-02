@@ -164,7 +164,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 		return false, nil
 	}
 
-	uniConMap := &map[string]parser.Fc{}
+	// uniConMap := map[string]parser.Fc{}
 	for _, knownFact := range searched.Facts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
 		paramArrMap, ok, err := ver.matchStoredUniConSpecFacts(knownFact, stmt)
@@ -175,7 +175,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 			continue
 		}
 
-		uniConMap, ok, err = ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap)
+		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap)
 		if err != nil {
 			return false, err
 		}
@@ -196,9 +196,9 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 	return false, nil
 }
 
-func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap *map[string][]parser.Fc) (*map[string]parser.Fc, bool, error) {
+func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]parser.Fc) (map[string]parser.Fc, bool, error) {
 	newMap := map[string]parser.Fc{}
-	for key, value := range *paramArrMap {
+	for key, value := range paramArrMap {
 		if len(value) == 1 {
 			newMap[key] = value[0]
 			continue
@@ -217,17 +217,17 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap *map[string][
 		newMap[key] = value[0]
 	}
 
-	return &newMap, true, nil
+	return newMap, true, nil
 }
 
 // 神奇的是，这个函数我不用传涉及到要验证的specFact，因为它的信息全在uniConMap里了，然后只要forall的cond全通过，就行
-func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap *map[string]parser.Fc) (bool, error) {
+func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap map[string]parser.Fc) (bool, error) {
 	ver.newEnv(ver.env, uniConMap)
 	defer ver.parentEnv() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
 
 	// 传入的map必须能和所有的uniFact的param一一对应
 	// e.g. 不等号传递性因此不能直接被使用，只能给传递性这个事实取个名字
-	twoSlicesEqual := glob.SlicesEqualUnordered(glob.MapKeys(*uniConMap), knownStmt.Fact.Params)
+	twoSlicesEqual := glob.SlicesEqualUnordered(glob.MapKeys(uniConMap), knownStmt.Fact.Params)
 	if !twoSlicesEqual {
 		return false, nil
 	}

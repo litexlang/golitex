@@ -25,10 +25,9 @@ type Env struct {
 	UniParamMap map[string]parser.Fc
 }
 
-func NewEnv(parent *Env, uniParamMapPtr *map[string]parser.Fc) *Env {
-	if uniParamMapPtr == nil {
-		uniParamMap := make(map[string]parser.Fc)
-		uniParamMapPtr = &uniParamMap
+func NewEnv(parent *Env, uniParamMap map[string]parser.Fc) *Env {
+	if uniParamMap == nil {
+		uniParamMap = make(map[string]parser.Fc)
 	}
 
 	env := &Env{
@@ -43,7 +42,7 @@ func NewEnv(parent *Env, uniParamMapPtr *map[string]parser.Fc) *Env {
 		CondFactMem:  *mem.NewCondFactMemDict(),
 		UniFactMem:   *mem.NewUniFactMemDict(),
 		EqualFactMem: *newEqualFactMem(),
-		UniParamMap:  *uniParamMapPtr,
+		UniParamMap:  uniParamMap,
 	}
 
 	return env
