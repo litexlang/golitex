@@ -51,7 +51,13 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
 
 func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt) (bool, error) {
 	if stmt.IsEqualFact() {
-		return ver.FcEqual(stmt.Params[0], stmt.Params[1], true)
+		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], true)
+		if err != nil {
+			return false, err
+		}
+		// TODO 引入 verEnum系统后，会删掉下面这个
+		ver.newMsgEnd("%s\nis true", stmt.String())
+		return ok, err
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
