@@ -5,15 +5,12 @@ type Stmt interface {
 	String() string
 }
 
-func (stmt *DefObjStmt) stmt() {}
-
-func (c *DefInterfaceStmt) stmt() {}
-func (f *DefTypeStmt) stmt()      {}
-func (c *DefConPropStmt) stmt()   {}
-func (f *DefConFnStmt) stmt()     {}
-func (l *UniFactStmt) stmt()      {}
-
-// func (r *RelaFactStmt) stmt()               {}
+func (stmt *DefObjStmt) stmt()              {}
+func (c *DefInterfaceStmt) stmt()           {}
+func (f *DefTypeStmt) stmt()                {}
+func (c *DefConPropStmt) stmt()             {}
+func (f *DefConFnStmt) stmt()               {}
+func (l *UniFactStmt) stmt()                {}
 func (p *SpecFactStmt) stmt()               {}
 func (f *ClaimProveStmt) stmt()             {}
 func (f *KnowStmt) stmt()                   {}

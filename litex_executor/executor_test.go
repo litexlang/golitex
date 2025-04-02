@@ -596,3 +596,13 @@ $p(k(a))
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
+
+func TestFacts3(t *testing.T) {
+	code :=
+		`
+1 = 1
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}

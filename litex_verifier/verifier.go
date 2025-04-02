@@ -117,3 +117,20 @@ func (ver *Verifier) isDeclared(fc string) (bool, error) {
 	}
 	return false, nil
 }
+
+type verEnum uint8
+
+const (
+	specMsg   verEnum = iota
+	specNoMsg         = iota
+	anyMsg            = iota
+	anyNoMsg          = iota
+)
+
+func (ver *Verifier) requireMsg(e verEnum) bool {
+	if e == specMsg || e == anyMsg {
+		return true
+	} else {
+		return false
+	}
+}
