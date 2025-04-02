@@ -7,17 +7,17 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
+func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state verState) (bool, error) {
 	// TODO 判断一下传入进来的stmt是不是prop prop，就像数学归纳法这种。prop prop的特点是，它是prop，参数列表里也有prop。如果是的话，那就用其他方式来验证
 	isPropProp, err := ver.IsPropProp(stmt)
 	if err != nil {
 		return false, err
 	}
 	if isPropProp {
-		return ver.PropPropFact(stmt)
+		return ver.PropPropFact(stmt, state)
 	}
 
-	ok, err := ver.SpecFactSpec(stmt)
+	ok, err := ver.SpecFactSpec(stmt, state.toSpec())
 	if err != nil {
 		return false, err
 	}
@@ -45,26 +45,22 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt) (bool, error) {
 		return true, nil
 	}
 
-	ver.unknownNoMsg()
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt) (bool, error) {
+func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state verState) (bool, error) {
 	if stmt.IsEqualFact() {
-		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], specMsg)
+		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state)
 		if err != nil {
 			return false, err
 		}
-		// TODO 引入 verEnum系统后，会删掉下面这个
-		ver.newMsgEnd("%s\nis true", stmt.String())
+		if state.requireMsg() {
+			ver.appendMsg("%s\nis true", stmt.String())
+		}
 		return ok, err
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		// if stmt.IsEqualFact() {
-		// 	return ver.EqualFactSpecAtEnv(curEnv, stmt)
-		// }
-
 		searchedNode, got := curEnv.SpecFactMem.GetNode(stmt)
 		if !got {
 			continue
@@ -75,18 +71,23 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt) (bool, error) {
 				continue
 			}
 
-			ok, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, specMsg)
+			ok, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, state)
 
 			if err != nil {
 				return false, err
 			}
 
 			if ok {
-				if ver.round1() {
+				if state.requireMsg() {
 					ver.successWithMsg(stmt.String(), knownFact.String(stmt.Opt))
 				} else {
 					ver.successNoMsg()
 				}
+				// if ver.round1() {
+				// 	ver.successWithMsg(stmt.String(), knownFact.String(stmt.Opt))
+				// } else {
+				// 	ver.successNoMsg()
+				// }
 				return true, nil
 			}
 		}
