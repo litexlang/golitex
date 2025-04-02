@@ -31,3 +31,22 @@ func LineHead4Indents(line string, n uint32) string {
 
 	return builder.String()
 }
+
+type ErrLink struct {
+	previous *ErrLink
+	msg      string
+}
+
+func (e *ErrLink) Error() string {
+	var builder strings.Builder
+
+	builder.WriteString(e.msg)
+	previous := e.previous
+
+	if previous != nil {
+		builder.WriteByte('\n')
+		builder.WriteString(previous.Error())
+	}
+
+	return builder.String()
+}

@@ -32,9 +32,7 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
 // )
 
 type Verifier struct {
-	env *env.Env
-	// Messages    *[]string
-	// Output      VerifierOutput
+	env         *env.Env
 	searchRound uint8
 }
 
