@@ -4,7 +4,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) fcFnPipeEqual(left, right *parser.FcFnPipe, specMode verState) (bool, error) {
+func (ver *Verifier) fcFnPipeEqual(left, right *parser.FcFnPipe, specMode VerState) (bool, error) {
 	for leftTailLen := 0; leftTailLen <= len(left.CallPipe); leftTailLen++ {
 		ok, err := ver.fcFnPipeHeadTailEqual(left, right, specMode, leftTailLen)
 		if err != nil {
@@ -18,7 +18,7 @@ func (ver *Verifier) fcFnPipeEqual(left, right *parser.FcFnPipe, specMode verSta
 	return true, nil
 }
 
-func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, specMode verState, leftTailLen int) (bool, error) {
+func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, specMode VerState, leftTailLen int) (bool, error) {
 	if leftTailLen == 0 { // 必须存在，否则死循环
 		if len(left.CallPipe) != len(right.CallPipe) {
 			return false, nil

@@ -2,8 +2,8 @@ package litexverifier
 
 import parser "golitex/litex_parser"
 
-func (ver *Verifier) CondFact(stmt *parser.CondFactStmt) (bool, error) {
-	ok, err := ver.CondFactSpec(stmt)
+func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, error) {
+	ok, err := ver.CondFactSpec(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -20,7 +20,7 @@ func (ver *Verifier) CondFact(stmt *parser.CondFactStmt) (bool, error) {
 	// TODO: CondFactUni
 }
 
-func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt) (bool, error) {
+func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt, state VerState) (bool, error) {
 	ver.newEnv(nil, nil)
 	defer ver.parentEnv() // 万一cond里有condFact，那要保证能回到原来的环境
 
@@ -32,7 +32,7 @@ func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt) (bool, error) {
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(&thenFact)
+		ok, err := ver.FactStmt(&thenFact, state.spec())
 		if err != nil {
 			return false, err
 		}
