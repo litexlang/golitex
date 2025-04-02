@@ -157,14 +157,14 @@ func randFcAtom() *parser.FcAtom {
 	return &ret
 }
 
-func randFcFnRetValue() *parser.FcFnCallPipe {
+func randFcFnRetValue() *parser.FcFnPipe {
 	fnName := randFcAtom()
 	round := rand.Intn(3) + 1
-	typeParamObjParamsPairs := []parser.FcFnCallPipeSeg{}
+	typeParamObjParamsPairs := []parser.FcFnPipeSeg{}
 	for i := 0; i < round; i++ {
-		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.FcFnCallPipeSeg{Params: randObjParams()})
+		typeParamObjParamsPairs = append(typeParamObjParamsPairs, parser.FcFnPipeSeg{Params: randObjParams()})
 	}
-	return &parser.FcFnCallPipe{FnHead: *fnName, CallPipe: typeParamObjParamsPairs}
+	return &parser.FcFnPipe{FnHead: *fnName, CallPipe: typeParamObjParamsPairs}
 }
 
 func randObjParams() []parser.Fc {
@@ -583,10 +583,20 @@ $p(k(a))
 	printExecMsg(messages)
 }
 
-func TestFacts3(t *testing.T) {
+func TestLongestTailMatch(t *testing.T) {
 	code :=
 		`
-1 = 1
+prove:
+    know:
+        forall x R:
+            $p(f(1)(x))
+		f(1) = k(2)(3)
+	$p(f(1)(0))
+	$p(k(2)(3)(0))
+	// forall x R:
+	// 	$p(f(1)(x))
+	// 	then:
+	// 		$p(k(2)(3)(x))
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)

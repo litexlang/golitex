@@ -16,12 +16,12 @@ type FcAtom struct {
 	OptName string
 }
 
-type FcFnCallPipe struct {
+type FcFnPipe struct {
 	FnHead   FcAtom
-	CallPipe []FcFnCallPipeSeg
+	CallPipe []FcFnPipeSeg
 }
 
-type FcFnCallPipeSeg struct {
+type FcFnPipeSeg struct {
 	Params []Fc
 }
 
@@ -33,10 +33,10 @@ func FcSliceString(params []Fc) string {
 	return strings.Join(output, ", ")
 }
 
-func (f *FcAtom) fc()                      {}
-func (f *FcFnCallPipe) fc()                {}
-func (f *FcAtom) GetPkgName() string       { return f.PkgName }
-func (f *FcFnCallPipe) GetPkgName() string { return f.FnHead.PkgName }
+func (f *FcAtom) fc()                  {}
+func (f *FcFnPipe) fc()                {}
+func (f *FcAtom) GetPkgName() string   { return f.PkgName }
+func (f *FcFnPipe) GetPkgName() string { return f.FnHead.PkgName }
 
 func (f *FcAtom) String() string {
 	if f.PkgName == "" {
@@ -46,7 +46,7 @@ func (f *FcAtom) String() string {
 	}
 }
 
-func (f *FcFnCallPipe) String() string {
+func (f *FcFnPipe) String() string {
 	outPut := string(f.FnHead.OptName)
 
 	for _, pair := range f.CallPipe {
