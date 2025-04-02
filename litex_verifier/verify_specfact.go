@@ -7,7 +7,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state verState) (bool, error) {
+func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	// TODO 判断一下传入进来的stmt是不是prop prop，就像数学归纳法这种。prop prop的特点是，它是prop，参数列表里也有prop。如果是的话，那就用其他方式来验证
 	isPropProp, err := ver.IsPropProp(stmt)
 	if err != nil {
@@ -17,7 +17,7 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state verState) (bool, 
 		return ver.PropPropFact(stmt, state)
 	}
 
-	ok, err := ver.SpecFactSpec(stmt, state.toSpec())
+	ok, err := ver.SpecFactSpec(stmt, state.spec())
 	if err != nil {
 		return false, err
 	}
@@ -29,7 +29,7 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state verState) (bool, 
 		return false, nil
 	}
 
-	ok, err = ver.SpecFactCond(stmt)
+	ok, err = ver.SpecFactCond(stmt, state.spec())
 	if err != nil {
 		return false, err
 	}
@@ -37,7 +37,7 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state verState) (bool, 
 		return true, nil
 	}
 
-	ok, err = ver.SpecFactUni(stmt)
+	ok, err = ver.SpecFactUni(stmt, state.spec())
 	if err != nil {
 		return false, err
 	}
@@ -48,7 +48,7 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state verState) (bool, 
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state verState) (bool, error) {
+func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsEqualFact() {
 		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state)
 		if err != nil {
@@ -95,10 +95,11 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state verState) (bo
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactCond(stmt *parser.SpecFactStmt) (bool, error) {
+func (ver *Verifier) SpecFactCond(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	// Use cond fact to verify
+	// TODO STATE
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		ok, err := ver.SpecFactCondAtEnv(curEnv, stmt)
+		ok, err := ver.SpecFactCondAtEnv(curEnv, stmt, state)
 		if err != nil {
 			return false, err
 		}
@@ -109,7 +110,7 @@ func (ver *Verifier) SpecFactCond(stmt *parser.SpecFactStmt) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt) (bool, error) {
+func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	searched, got := curEnv.CondFactMem.GetSpecFactNode(stmt)
 	if !got {
 		return false, nil
@@ -118,7 +119,7 @@ func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *parser.SpecFactStm
 LoopOverFacts:
 	for _, knownFact := range searched.Facts {
 		for _, f := range knownFact.Fact.CondFacts {
-			ok, err := ver.FactStmt(f)
+			ok, err := ver.FactStmt(f, state)
 			if err != nil {
 				return false, err
 			}
@@ -127,7 +128,7 @@ LoopOverFacts:
 			}
 		}
 
-		verified, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, anyMsg)
+		verified, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, AnyMsg)
 
 		if err != nil {
 			return false, err
@@ -146,9 +147,10 @@ LoopOverFacts:
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt) (bool, error) {
+func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
+	// TODO STATE
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt)
+		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, state.spec())
 		if err != nil {
 			return false, err
 		}
@@ -159,7 +161,7 @@ func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt) (bool, error) {
+func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	searched, got := curEnv.UniFactMem.GetSpecFactNode(stmt)
 	if !got {
 		return false, nil
@@ -176,7 +178,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 			continue
 		}
 
-		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap)
+		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
 		if err != nil {
 			return false, err
 		}
@@ -184,7 +186,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 			continue
 		}
 
-		ok, err = ver.specFactUniWithUniConMap(&knownFact, uniConMap)
+		ok, err = ver.specFactUniWithUniConMap(&knownFact, uniConMap, state)
 		if err != nil {
 			return false, err
 		}
@@ -197,7 +199,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 	return false, nil
 }
 
-func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]parser.Fc) (map[string]parser.Fc, bool, error) {
+func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]parser.Fc, state VerState) (map[string]parser.Fc, bool, error) {
 	newMap := map[string]parser.Fc{}
 	for key, value := range paramArrMap {
 		if len(value) == 1 {
@@ -222,7 +224,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 }
 
 // 神奇的是，这个函数我不用传涉及到要验证的specFact，因为它的信息全在uniConMap里了，然后只要forall的cond全通过，就行
-func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap map[string]parser.Fc) (bool, error) {
+func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap map[string]parser.Fc, state VerState) (bool, error) {
 	ver.newEnv(ver.env, uniConMap)
 	defer ver.parentEnv() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
 
@@ -234,7 +236,7 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 	}
 
 	for _, condFact := range knownStmt.Fact.DomFacts {
-		ok, err := ver.FactStmt(condFact) // TODO: 这里最好要标注一下是specFact
+		ok, err := ver.FactStmt(condFact, state) // TODO: 这里最好要标注一下是specFact
 		if err != nil {
 			return false, err
 		}

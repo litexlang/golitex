@@ -5,7 +5,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) UniFact(stmt *parser.UniFactStmt, state verState) (bool, error) {
+func (ver *Verifier) UniFact(stmt *parser.UniFactStmt, state VerState) (bool, error) {
 	// 默认不允许局部的变量名和外部的变量名冲突了。如果你冲突了，那我报错
 	for _, param := range stmt.Params {
 		ok, err := ver.isDeclared(param)
@@ -38,7 +38,7 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt, state verState) (bool, er
 
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(&thenFact)
+		ok, err := ver.FactStmt(&thenFact, state)
 		if err != nil {
 			return false, err
 		}

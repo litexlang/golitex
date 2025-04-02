@@ -7,7 +7,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) FcEqual(left, right parser.Fc, state verState) (bool, error) {
+func (ver *Verifier) FcEqual(left, right parser.Fc, state VerState) (bool, error) {
 	ver.addRound()
 	defer ver.minusRound()
 

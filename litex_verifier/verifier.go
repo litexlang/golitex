@@ -8,17 +8,17 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (ver *Verifier) FactStmt(stmt parser.FactStmt) (bool, error) {
+func (ver *Verifier) FactStmt(stmt parser.FactStmt, state VerState) (bool, error) {
 	ver.addRound()
 	defer ver.minusRound()
 
 	switch stmt := stmt.(type) {
 	case *parser.SpecFactStmt:
-		return ver.SpecFact(stmt, anyMsg)
+		return ver.SpecFact(stmt, state)
 	case *parser.CondFactStmt:
-		return ver.CondFact(stmt)
+		return ver.CondFact(stmt, state)
 	case *parser.UniFactStmt:
-		return ver.UniFact(stmt, anyMsg)
+		return ver.UniFact(stmt, state)
 	default:
 		return false, fmt.Errorf("unexpected")
 	}
@@ -103,41 +103,6 @@ func (ver *Verifier) isDeclared(fc string) (bool, error) {
 		}
 	}
 	return false, nil
-}
-
-type verState uint8
-
-const (
-	specMsg   verState = iota
-	specNoMsg          = iota
-	anyMsg             = iota
-	anyNoMsg           = iota
-)
-
-func (e verState) requireMsg() bool {
-	if e == specMsg || e == anyMsg {
-		return true
-	} else {
-		return false
-	}
-}
-
-func (e verState) isSpec() bool {
-	if e == specMsg || e == specNoMsg {
-		return true
-	} else {
-		return false
-	}
-}
-
-func (e verState) toSpec() verState {
-	if e == anyMsg {
-		return specMsg
-	}
-	if e == anyNoMsg {
-		return specNoMsg
-	}
-	return e
 }
 
 func (ver *Verifier) newMsgAtParent(s string) error {

@@ -61,7 +61,7 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 
 func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, *verifier.Verifier, error) {
 	curVerifier := verifier.NewVerifier(exec.env)
-	ok, err := curVerifier.FactStmt(stmt)
+	ok, err := curVerifier.FactStmt(stmt, verifier.AnyMsg)
 	if err != nil {
 		return false, curVerifier, err
 	}
