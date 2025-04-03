@@ -25,7 +25,7 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, 
 		return true, nil
 	}
 
-	if !ver.round1() {
+	if state.isSpec() {
 		return false, nil
 	}
 
@@ -128,7 +128,7 @@ LoopOverFacts:
 		}
 
 		if verified {
-			if ver.round1() {
+			if state.requireMsg() {
 				ver.successWithMsg(stmt.String(), knownFact.Fact.String())
 			} else {
 				ver.successNoMsg()
@@ -149,7 +149,9 @@ func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt, state VerState) (boo
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, state.spec())
+		nextState := state.spec()
+
+		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, nextState)
 		if err != nil {
 			return false, err
 		}
@@ -159,7 +161,7 @@ func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt, state VerState) (boo
 
 		// 处理可交换的prop
 		if isCom {
-			ok, err := ver.SpecFactUniAtEnv(curEnv, reverseStmt, state.spec())
+			ok, err := ver.SpecFactUniAtEnv(curEnv, reverseStmt, nextState)
 			if err != nil {
 				return false, err
 			}
@@ -237,7 +239,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 // 神奇的是，这个函数我不用传涉及到要验证的specFact，因为它的信息全在uniConMap里了，然后只要forall的cond全通过，就行
 func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap map[string]parser.Fc, state VerState) (bool, error) {
 	ver.newEnv(uniConMap)
-	defer ver.deleteEnv() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
+	defer ver.deleteEnvAndRetainMsg() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
 
 	// 传入的map必须能和所有的uniFact的param一一对应
 	// e.g. 不等号传递性因此不能直接被使用，只能给传递性这个事实取个名字
@@ -247,7 +249,8 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 	}
 
 	for _, condFact := range knownStmt.Fact.DomFacts {
-		ok, err := ver.FactStmt(condFact, state.spec()) // TODO: 这里最好要标注一下是specFact
+		ok, err := ver.FactStmt(condFact, state.spec().noMsg()) // TODO: 这里最好要标注一下是specFact
+		// ok, err := ver.FactStmt(condFact, state.spec())
 		if err != nil {
 			return false, err
 		}
