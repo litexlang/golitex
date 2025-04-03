@@ -56,6 +56,7 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 
 	if ok {
 		err = exec.env.NewFact(stmt)
+		exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("%s\nis true", stmt.String()))
 		if err != nil {
 			return err
 		}

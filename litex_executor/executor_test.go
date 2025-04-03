@@ -679,3 +679,22 @@ f = 3
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
+
+func TestFormulaAfterFormula2(t *testing.T) {
+	code :=
+		`
+know forall x R:
+	sin(x)^2 + cos(x)^2 = 1
+
+forall y R:
+	1 = sin(y)^2 + cos(y)^2
+	diff(y^2)(1) = diff(y^2)(sin(y)^2 + cos(y)^2 )
+		
+know:
+	sin(x)^2 + cos(x)^2 = 1
+diff(y^2)(1) = diff(y^2)(sin(x)^2 + cos(x)^2 )
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}

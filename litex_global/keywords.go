@@ -206,7 +206,7 @@ func IsBuiltinRelaProp(op string) bool {
 }
 
 func IsBuiltinRelaFn(op string) bool {
-	return op == "+" || op == "-" || op == "*" || op == "/"
+	return op == "+" || op == "-" || op == "*" || op == "/" || op == "^"
 }
 
 type FcInfixOptPrecedence int
