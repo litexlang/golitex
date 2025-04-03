@@ -638,3 +638,16 @@ y = x
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
+
+func TestAssociative(t *testing.T) {
+	code :=
+		`
+forall x A, y A, z A:
+	(x + y) + z = x + (y + z)
+
+(1+2)+2=1+(2+2)
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}

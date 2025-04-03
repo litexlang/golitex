@@ -201,8 +201,12 @@ func GetBuiltinSymbol(inputString string, start int) string {
 	return ""
 }
 
-func IsBuiltinRelaOpt(op string) bool {
+func IsBuiltinRelaProp(op string) bool {
 	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!="
+}
+
+func IsBuiltinRelaFn(op string) bool {
+	return op == "+" || op == "-" || op == "*" || op == "/"
 }
 
 type FcInfixOptPrecedence int
