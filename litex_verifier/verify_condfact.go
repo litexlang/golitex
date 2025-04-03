@@ -41,17 +41,11 @@ func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, 
 			return false, err
 		}
 		if !ok {
-			// 			if ver.round1() {
-			// 	ver.unknownWithMsg("%v is unknown: %v is unknown", stmt, thenFact)
-			// 	return false, nil
-			// }
-			// if state.isSpec()() {
-			// 	ver.unknownWithMsg("%v is unknown: %v is unknown", stmt, thenFact)
-			// 	return false, nil
-			// } else {
-			// ver.unknownNoMsg()
 			return false, nil
-			// }
+		}
+		err = ver.env.NewFact(&thenFact)
+		if err != nil {
+			return false, err
 		}
 	}
 

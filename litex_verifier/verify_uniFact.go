@@ -46,6 +46,12 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt, state VerState) (bool, er
 			ver.unknownMsgEnd("%s is unknown", thenFact.String())
 			return false, nil
 		}
+
+		// if true, store it
+		err = ver.env.NewFact(&thenFact)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt.String()))
