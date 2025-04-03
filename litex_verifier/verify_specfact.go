@@ -51,12 +51,10 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, 
 
 func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsEqualFact() {
+		// ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state.noMsg())
 		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state)
 		if err != nil {
 			return false, err
-		}
-		if state.requireMsg() {
-			ver.appendMsg("%s\nis true", stmt.String())
 		}
 		return ok, err
 	}

@@ -626,3 +626,15 @@ $p(b) // true
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
+
+func TestKnow2(t *testing.T) {
+	code :=
+		`
+know x = y
+x = y
+y = x 
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
