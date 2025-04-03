@@ -105,14 +105,14 @@ func (env *Env) Declare(stmt parser.Stmt, name string) error {
 	return nil
 }
 
-func (env *Env) IsSpecFactPropCom(fact *parser.SpecFactStmt) bool {
+func (env *Env) IsSpecFactPropCommutative(fact *parser.SpecFactStmt) bool {
 	if len(fact.Params) != 2 {
 		return false
 	}
-	return env.isPropCom(&fact.PropName)
+	return env.isPropCommutative(&fact.PropName)
 }
 
-func (env *Env) isPropCom(opt parser.Fc) bool {
+func (env *Env) isPropCommutative(opt parser.Fc) bool {
 	if parser.IsEqualOpt(opt) {
 		return true
 	}

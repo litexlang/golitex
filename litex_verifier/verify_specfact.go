@@ -144,7 +144,7 @@ LoopOverFacts:
 
 func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	// 处理可交换的prop
-	isCom := ver.env.IsSpecFactPropCom(stmt)
+	isCom := ver.env.IsSpecFactPropCommutative(stmt)
 	var reverseStmt *parser.SpecFactStmt = nil
 	if isCom {
 		reverseStmt = &parser.SpecFactStmt{IsTrue: stmt.IsTrue, PropName: stmt.PropName, Params: []parser.Fc{stmt.Params[1], stmt.Params[0]}}
