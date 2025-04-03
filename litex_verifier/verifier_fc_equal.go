@@ -22,7 +22,8 @@ func (ver *Verifier) FcEqual(left, right parser.Fc, state VerState) (bool, error
 		right = concreteRight
 	}
 
-	ok, err := ver.fcEqualSpec(left, right, state.spec())
+	nextState := state.spec()
+	ok, err := ver.fcEqualSpec(left, right, nextState)
 	if err != nil {
 		return false, err
 	}
