@@ -2,6 +2,7 @@ package litexexecutor
 
 import (
 	"fmt"
+	glob "golitex/litex_global"
 	parser "golitex/litex_parser"
 	verifier "golitex/litex_verifier"
 	"strings"
@@ -13,16 +14,24 @@ func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
 }
 
 func (exec *Executor) stmt(stmt parser.Stmt) error {
+	var err error = nil
+
 	switch stmt := (stmt).(type) {
 	case parser.FactStmt:
-		return exec.factStmt(stmt)
+		err = exec.factStmt(stmt)
 	case *parser.KnowStmt:
-		return exec.knowStmt(stmt)
+		err = exec.knowStmt(stmt)
 	case *parser.ClaimProveStmt:
-		return exec.claimProveStmt(stmt)
+		err = exec.claimProveStmt(stmt)
 
 	default:
-		return fmt.Errorf("unknown statement type: %T", stmt)
+		err = fmt.Errorf("unknown statement type: %T", stmt)
+	}
+
+	if err != nil {
+		return glob.NewErrLink(err, "%s\nexecution error", stmt.String())
+	} else {
+		return nil
 	}
 }
 
@@ -71,7 +80,7 @@ func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, *verifier.Verif
 func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
 	exec.newEnv() // 在子环境中做所有操作，不影响外部世界
 
-	defer exec.deleteEnv()
+	defer exec.deleteEnvAndRetainMsg()
 
 	for _, curStmt := range stmt.Proofs {
 		err := exec.stmt(curStmt)
