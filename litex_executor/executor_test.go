@@ -619,7 +619,7 @@ know forall a A:
 know $q(b)
 
 $p(b) // unknown
-x = b
+b =x
 $p(b) // true
 `
 	topStmtSlice := parseStmtTest(code, t)

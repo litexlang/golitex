@@ -141,7 +141,13 @@ LoopOverFacts:
 }
 
 func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
-	// TODO STATE
+	// 处理可交换的prop
+	isCom := ver.env.IsSpecFactOptCom(stmt)
+	var reverseStmt *parser.SpecFactStmt = nil
+	if isCom {
+		reverseStmt = &parser.SpecFactStmt{IsTrue: stmt.IsTrue, Opt: stmt.Opt, Params: []parser.Fc{stmt.Params[1], stmt.Params[0]}}
+	}
+
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, state.spec())
 		if err != nil {
@@ -150,7 +156,19 @@ func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt, state VerState) (boo
 		if ok {
 			return true, nil
 		}
+
+		// 处理可交换的prop
+		if isCom {
+			ok, err := ver.SpecFactUniAtEnv(curEnv, reverseStmt, state.spec())
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
+			}
+		}
 	}
+
 	return false, nil
 }
 

@@ -92,3 +92,20 @@ func (env *Env) Declare(stmt parser.Stmt, name string) error {
 	// TODO: 声明obj，也可能是fn，甚至可能是prop
 	return nil
 }
+
+func (env *Env) IsSpecFactOptCom(fact *parser.SpecFactStmt) bool {
+	if len(fact.Params) != 2 {
+		return false
+	}
+	return env.isOptCom(&fact.Opt)
+}
+
+func (env *Env) isOptCom(opt parser.Fc) bool {
+	if parser.IsEqualOpt(opt) {
+		return true
+	}
+
+	// TODO
+	_ = opt
+	return false
+}
