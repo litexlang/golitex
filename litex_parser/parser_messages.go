@@ -26,17 +26,17 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteString("not ")
 	}
 
-	if stmt.Opt.PkgName == "" && glob.IsBuiltinSymbol(stmt.Opt.OptName) {
+	if stmt.PropName.PkgName == "" && glob.IsBuiltinSymbol(stmt.PropName.OptName) {
 		builder.WriteString(stmt.Params[0].String())
 		builder.WriteByte(' ')
-		builder.WriteString(stmt.Opt.String())
+		builder.WriteString(stmt.PropName.String())
 		builder.WriteByte(' ')
 		builder.WriteString(stmt.Params[1].String())
 		return builder.String()
 	}
 
 	builder.WriteByte('$')
-	builder.WriteString(stmt.Opt.String())
+	builder.WriteString(stmt.PropName.String())
 	builder.WriteByte('(')
 	builder.WriteString(FcSliceString(stmt.Params))
 	builder.WriteByte(')')

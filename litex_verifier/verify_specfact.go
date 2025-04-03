@@ -78,7 +78,7 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state VerState) (bo
 
 			if ok {
 				if state.requireMsg() {
-					ver.successWithMsg(stmt.String(), knownFact.String(stmt.Opt))
+					ver.successWithMsg(stmt.String(), knownFact.String(stmt.PropName))
 				} else {
 					ver.successNoMsg()
 				}
@@ -142,10 +142,10 @@ LoopOverFacts:
 
 func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	// 处理可交换的prop
-	isCom := ver.env.IsSpecFactOptCom(stmt)
+	isCom := ver.env.IsSpecFactPropCom(stmt)
 	var reverseStmt *parser.SpecFactStmt = nil
 	if isCom {
-		reverseStmt = &parser.SpecFactStmt{IsTrue: stmt.IsTrue, Opt: stmt.Opt, Params: []parser.Fc{stmt.Params[1], stmt.Params[0]}}
+		reverseStmt = &parser.SpecFactStmt{IsTrue: stmt.IsTrue, PropName: stmt.PropName, Params: []parser.Fc{stmt.Params[1], stmt.Params[0]}}
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {

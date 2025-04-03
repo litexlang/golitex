@@ -58,13 +58,13 @@ type GenericUniStmt struct {
 }
 
 type SpecFactStmt struct {
-	IsTrue bool
-	Opt    FcAtom
-	Params []Fc
+	IsTrue   bool
+	PropName FcAtom
+	Params   []Fc
 }
 
 func (f *SpecFactStmt) IsEqualFact() bool {
-	return f.Opt.OptName == glob.KeywordEqual && f.Opt.PkgName == ""
+	return f.PropName.OptName == glob.KeywordEqual && f.PropName.PkgName == ""
 }
 
 type ClaimProveByContradictStmt struct {
