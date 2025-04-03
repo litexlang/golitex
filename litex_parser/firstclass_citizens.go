@@ -51,6 +51,10 @@ func (f *FcAtom) String() string {
 func (f *FcFnPipe) String() string {
 	outPut := string(f.FnHead.Value)
 
+	if glob.IsBuiltinRelaFn(outPut) {
+		return fmt.Sprintf("%s %s %s", f.CallPipe[0].Params[0], outPut, f.CallPipe[0].Params[1])
+	}
+
 	for _, pair := range f.CallPipe {
 		if len(pair.Params) > 0 {
 			outPut += "("

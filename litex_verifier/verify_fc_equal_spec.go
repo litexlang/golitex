@@ -24,9 +24,10 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, e
 		return false, err
 	}
 	if cmpRet == 0 {
-		if state.requireMsg() {
-			ver.appendMsg("%s = %s directly", left.String(), right.String())
-		}
+		// 直接相等貌似没什么好打印的，显然
+		// if state.requireMsg() {
+		// ver.appendMsg("%s = %s directly", left.String(), right.String())
+		// }
 		return true, nil
 	}
 

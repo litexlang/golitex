@@ -54,9 +54,12 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt, state VerState) (bool, er
 		}
 	}
 
-	err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt.String()))
-	if err != nil {
-		return false, err
+	if state.requireMsg() {
+		err := ver.newMsgAtParent(fmt.Sprintf("%s\nis true", stmt.String()))
+		if err != nil {
+			return false, err
+		}
 	}
+
 	return true, nil
 }
