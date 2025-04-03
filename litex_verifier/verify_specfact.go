@@ -5,6 +5,7 @@ import (
 	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
+	"runtime"
 )
 
 func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
@@ -54,7 +55,8 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state VerState) (bo
 		// ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state.noMsg())
 		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state)
 		if err != nil {
-			return false, err
+			pc, _, _, _ := runtime.Caller(0)
+			return false, glob.NewErrLinkAtFunc(err, runtime.FuncForPC(pc).Name(), "")
 		}
 		return ok, err
 	}
@@ -73,7 +75,7 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state VerState) (bo
 			ok, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, state)
 
 			if err != nil {
-				return false, err
+				return false, glob.NewErrLink(err, "error at SpecFactSpec: fail to compare %s and %s", knownFact.Params, stmt.Params)
 			}
 
 			if ok {
@@ -114,7 +116,7 @@ LoopOverFacts:
 		for _, f := range knownFact.Fact.CondFacts {
 			ok, err := ver.FactStmt(f, state.spec())
 			if err != nil {
-				return false, err
+				return false, glob.NewErrLink(err, "error at SpecFactCondAtEnv: fail to verify %s", f.String())
 			}
 			if !ok {
 				continue LoopOverFacts
@@ -124,7 +126,7 @@ LoopOverFacts:
 		verified, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, AnyMsg)
 
 		if err != nil {
-			return false, err
+			return false, glob.NewErrLink(err, "error at SpecFactCondAtEnv: fail to compare %s and %s", knownFact.Params, stmt.Params)
 		}
 
 		if verified {
@@ -185,7 +187,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *parser.SpecFactStmt
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
 		paramArrMap, ok, err := ver.matchStoredUniConSpecFacts(knownFact, stmt)
 		if err != nil {
-			return false, err
+			return false, glob.NewErrLink(err, "error at S")
 		}
 		if !ok {
 			continue
