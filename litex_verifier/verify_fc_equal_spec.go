@@ -8,6 +8,15 @@ import (
 
 func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, error) {
 	// Case: 全部都是builtin类型：int,float
+	if parser.IsNumber(left) || parser.IsNumber(right) {
+		ok, err := cmp.CmpNumber(left, right)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
 
 	// Case: 完全一样
 	cmpRet, err := cmp.CmpFcLiterally(left, right)
