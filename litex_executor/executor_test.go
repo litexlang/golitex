@@ -134,7 +134,7 @@ func randSpecFact() *parser.SpecFactStmt {
 		params[i] = randomFc()
 	}
 
-	stmt := parser.SpecFactStmt{IsTrue: true, Opt: *randFcAtom(), Params: params}
+	stmt := parser.SpecFactStmt{IsTrue: true, PropName: *randFcAtom(), Params: params}
 	return &stmt
 }
 
@@ -385,7 +385,7 @@ func randEqualFact() *parser.SpecFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.SpecFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, Opt: parser.FcAtom{PkgName: "", OptName: "="}}
+	return &parser.SpecFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, PropName: parser.FcAtom{PkgName: "", OptName: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {
@@ -620,7 +620,7 @@ know $q(b)
 
 $p(b) // unknown
 b =x
-$p(b) // true
+$p(b) // true. 因为 = 有交换性，而我确实实现了可交换的符号能在用uniFact验证时用上可交换性，所以只用 b = x，而不是 x = b 就能运行.
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)

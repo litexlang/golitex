@@ -9,16 +9,16 @@ func NewSpecFactMemDict() *SpecFactMemDict {
 }
 
 func (factMem *SpecFactMemDict) Insert(stmt *parser.SpecFactStmt) error {
-	pkgMap, pkgExists := factMem.Dict[stmt.Opt.PkgName] // 检查 pkgName 是否存在
+	pkgMap, pkgExists := factMem.Dict[stmt.PropName.PkgName] // 检查 pkgName 是否存在
 
 	// 如果包不存在，初始化包映射
 	if !pkgExists {
-		factMem.Dict[stmt.Opt.PkgName] = make(map[string]StoredSpecMemDictNode)
-		pkgMap = factMem.Dict[stmt.Opt.PkgName]
+		factMem.Dict[stmt.PropName.PkgName] = make(map[string]StoredSpecMemDictNode)
+		pkgMap = factMem.Dict[stmt.PropName.PkgName]
 	}
 
 	// 获取或创建节点
-	node, nodeExists := pkgMap[stmt.Opt.OptName]
+	node, nodeExists := pkgMap[stmt.PropName.OptName]
 	if !nodeExists {
 		node = StoredSpecMemDictNode{
 			Facts: []StoredSpecFact{},
@@ -29,17 +29,17 @@ func (factMem *SpecFactMemDict) Insert(stmt *parser.SpecFactStmt) error {
 	node.Facts = append(node.Facts, StoredSpecFact{stmt.IsTrue, stmt.Params})
 
 	// 更新映射中的节点
-	pkgMap[stmt.Opt.OptName] = node
+	pkgMap[stmt.PropName.OptName] = node
 
 	return nil
 }
 
 func (factMem *SpecFactMemDict) GetNode(stmt *parser.SpecFactStmt) (*StoredSpecMemDictNode, bool) {
-	pkgMap, pkgExists := factMem.Dict[stmt.Opt.PkgName] // 检查 pkgName 是否存在
+	pkgMap, pkgExists := factMem.Dict[stmt.PropName.PkgName] // 检查 pkgName 是否存在
 	if !pkgExists {
 		return nil, false // 返回零值
 	}
-	node, nodeExists := pkgMap[stmt.Opt.OptName] // 检查 value 是否存在
+	node, nodeExists := pkgMap[stmt.PropName.OptName] // 检查 value 是否存在
 	if !nodeExists {
 		return nil, false // 返回零值
 	}
@@ -62,8 +62,8 @@ func (factMem *CondFactMemDict) Insert(condStmt *parser.CondFactStmt) error {
 
 func (factMem *CondFactMemDict) InsertSpecFact(condStmt *parser.CondFactStmt, stmt *parser.SpecFactStmt) error {
 	// 检查 pkgName 是否存在，不存在则初始化
-	pkgName := stmt.Opt.PkgName
-	optName := stmt.Opt.OptName
+	pkgName := stmt.PropName.PkgName
+	optName := stmt.PropName.OptName
 
 	if _, pkgExists := factMem.SpecFactsDict[pkgName]; !pkgExists {
 		factMem.SpecFactsDict[pkgName] = make(map[string]StoredCondFuncMemDictNode)
@@ -85,8 +85,8 @@ func (factMem *CondFactMemDict) InsertSpecFact(condStmt *parser.CondFactStmt, st
 }
 
 func (factMem *CondFactMemDict) GetSpecFactNode(stmt *parser.SpecFactStmt) (*StoredCondFuncMemDictNode, bool) {
-	pkgName := stmt.Opt.PkgName
-	optName := stmt.Opt.OptName
+	pkgName := stmt.PropName.PkgName
+	optName := stmt.PropName.OptName
 
 	if _, pkgExists := factMem.SpecFactsDict[pkgName]; !pkgExists {
 		return &StoredCondFuncMemDictNode{}, false
@@ -111,8 +111,8 @@ func (factMem *UniFactMemDict) Insert(fact *parser.UniFactStmt) error {
 
 func (factMem *UniFactMemDict) insertSpecFact(uniStmt *parser.UniFactStmt, stmt *parser.SpecFactStmt) error {
 	// 检查 pkgName 是否存在，不存在则初始化
-	pkgName := stmt.Opt.PkgName
-	optName := stmt.Opt.OptName
+	pkgName := stmt.PropName.PkgName
+	optName := stmt.PropName.OptName
 
 	if _, pkgExists := factMem.SpecFactsDict[pkgName]; !pkgExists {
 		factMem.SpecFactsDict[pkgName] = make(map[string]StoredUniFuncMemDictNode)
@@ -138,8 +138,8 @@ func NewUniFactMemDict() *UniFactMemDict {
 }
 
 func (factMem *UniFactMemDict) GetSpecFactNode(stmt *parser.SpecFactStmt) (*StoredUniFuncMemDictNode, bool) {
-	pkgName := stmt.Opt.PkgName
-	optName := stmt.Opt.OptName
+	pkgName := stmt.PropName.PkgName
+	optName := stmt.PropName.OptName
 
 	if _, pkgExists := factMem.SpecFactsDict[pkgName]; !pkgExists {
 		return &StoredUniFuncMemDictNode{}, false

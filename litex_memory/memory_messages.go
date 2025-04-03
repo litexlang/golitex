@@ -5,7 +5,7 @@ import (
 )
 
 func (fact *StoredSpecFact) String(atom parser.FcAtom) string {
-	knownFact := parser.SpecFactStmt{IsTrue: fact.IsTrue, Opt: atom, Params: fact.Params}
+	knownFact := parser.SpecFactStmt{IsTrue: fact.IsTrue, PropName: atom, Params: fact.Params}
 	return knownFact.String()
 }
 
