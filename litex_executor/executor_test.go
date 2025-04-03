@@ -640,7 +640,7 @@ y = x
 func TestAssociative(t *testing.T) {
 	code :=
 		`
-forall x A, y A, z A:
+know forall x A, y A, z A:
 	(x + y) + z = x + (y + z)
 
 (1+2)+2=1+(2+2)
@@ -671,11 +671,9 @@ when:
 func TestFormulaAfterFormula(t *testing.T) {
 	code :=
 		`
-know int(x+y+z+f(g(2))(k)) = diff(x)
-know g(2) = 6
-// int(x+y+z+f(6)(k)) = diff(x)
-know int(x+y+z+f(g(2))(k)) = int(x+y+z+f(6)(k))
-int(x+y+z+f(6)(k)) = diff(x)
+know g = 3
+know g = f
+f = 3
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)

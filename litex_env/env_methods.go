@@ -34,12 +34,12 @@ func (env *Env) NewSpecFact(fact *parser.SpecFactStmt) error {
 func (env *Env) NewEqualFact(stmt *parser.SpecFactStmt) error {
 	left := &mem.EqualFactMemoryTreeNode{
 		FcAsKey: stmt.Params[0],
-		Values:  []*parser.Fc{&stmt.Params[1]},
+		Values:  &[]*parser.Fc{&stmt.Params[1]},
 	}
 
 	right := &mem.EqualFactMemoryTreeNode{
 		FcAsKey: stmt.Params[1],
-		Values:  []*parser.Fc{&stmt.Params[0]},
+		Values:  &[]*parser.Fc{&stmt.Params[0]},
 	}
 
 	leftSearched, err := env.EqualFactMem.Mem.TreeSearch(left)
@@ -47,7 +47,7 @@ func (env *Env) NewEqualFact(stmt *parser.SpecFactStmt) error {
 		return err
 	}
 	if leftSearched != nil {
-		leftSearched.Key.Values = append(leftSearched.Key.Values, &stmt.Params[1])
+		*leftSearched.Key.Values = append(*leftSearched.Key.Values, &stmt.Params[1])
 	} else {
 		env.EqualFactMem.Mem.Insert(left)
 	}
@@ -58,7 +58,7 @@ func (env *Env) NewEqualFact(stmt *parser.SpecFactStmt) error {
 		return err
 	}
 	if rightSearched != nil {
-		rightSearched.Key.Values = append(rightSearched.Key.Values, &stmt.Params[0])
+		*rightSearched.Key.Values = append(*rightSearched.Key.Values, &stmt.Params[0])
 	} else {
 		env.EqualFactMem.Mem.Insert(right)
 	}
