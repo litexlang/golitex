@@ -236,8 +236,8 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 
 // 神奇的是，这个函数我不用传涉及到要验证的specFact，因为它的信息全在uniConMap里了，然后只要forall的cond全通过，就行
 func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap map[string]parser.Fc, state VerState) (bool, error) {
-	ver.newEnv(ver.env, uniConMap)
-	defer ver.parentEnv() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
+	ver.newEnv(uniConMap)
+	defer ver.deleteEnv() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
 
 	// 传入的map必须能和所有的uniFact的param一一对应
 	// e.g. 不等号传递性因此不能直接被使用，只能给传递性这个事实取个名字

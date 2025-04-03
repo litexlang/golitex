@@ -651,3 +651,21 @@ forall x A, y A, z A:
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
+
+func TestCondFact(t *testing.T) {
+	code :=
+		`
+know forall a A:
+	$p(a)
+	then:
+		$q(a)
+		
+when:
+	$p(x)
+	then:
+		$q(x)
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}

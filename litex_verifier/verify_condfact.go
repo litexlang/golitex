@@ -3,28 +3,28 @@ package litexverifier
 import parser "golitex/litex_parser"
 
 func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, error) {
-	ok, err := ver.CondFactSpec(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+	// 	ok, err := ver.CondFactSpec(stmt, state)
+	// 	if err != nil {
+	// 		return false, err
+	// 	}
+	// 	if ok {
+	// 		return true, nil
+	// 	}
 
-	if !ver.round1() {
-		return false, nil
-	}
+	// 	if !ver.round1() {
+	// 		return false, nil
+	// 	}
 
-	// TODO
+	// 	// TODO
 
-	return ver.CondFactCond(stmt, state)
+	// 	return ver.CondFactCond(stmt, state)
 
-	// TODO: CondFactUni
-}
+	// 	// TODO: CondFactUni
+	// }
 
-func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt, state VerState) (bool, error) {
-	ver.newEnv(nil, nil)
-	defer ver.parentEnv() // 万一cond里有condFact，那要保证能回到原来的环境
+	// func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt, state VerState) (bool, error) {
+	ver.newEnv(nil)
+	defer ver.deleteEnv() // 万一cond里有condFact，那要保证能回到原来的环境
 
 	for _, condFact := range stmt.CondFacts {
 		err := ver.env.NewFact(condFact)
@@ -34,7 +34,7 @@ func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt, state VerState) (bo
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(&thenFact, state.spec())
+		ok, err := ver.FactStmt(&thenFact, state) // 貌似这里不用把state换成spec，比如用户输入condFact，然后下面的事实都正常运行，只不过需要现知道一下condFacts
 		if err != nil {
 			return false, err
 		}
@@ -56,9 +56,4 @@ func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt, state VerState) (bo
 		ver.successNoMsg()
 		return true, nil
 	}
-}
-
-func (ver *Verifier) CondFactCond(stmt *parser.CondFactStmt, state VerState) (bool, error) {
-	// TODO
-	return false, nil
 }

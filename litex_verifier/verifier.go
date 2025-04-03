@@ -58,13 +58,13 @@ func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
 func (ver *Verifier) successNoMsg() {
 }
 
-func (ver *Verifier) newEnv(parent *env.Env, uniParamsMap map[string]parser.Fc) {
-	newEnv := env.NewEnv(parent, uniParamsMap)
-	newEnv.Parent = ver.env
+func (ver *Verifier) newEnv(uniParamsMap map[string]parser.Fc) {
+	newEnv := env.NewEnv(ver.env, uniParamsMap)
+	// newEnv.Parent = ver.env
 	ver.env = newEnv
 }
 
-func (ver *Verifier) parentEnv() error {
+func (ver *Verifier) deleteEnv() error {
 	if ver.env.Parent != nil {
 		ver.env = ver.env.Parent
 		return nil
