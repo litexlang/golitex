@@ -3,6 +3,7 @@ package litexparser
 import (
 	"fmt"
 	glob "golitex/litex_global"
+	"strconv"
 	"strings"
 )
 
@@ -14,7 +15,7 @@ type Fc interface {
 
 type FcAtom struct {
 	PkgName string
-	OptName string
+	Value   string
 }
 
 type FcFnPipe struct {
@@ -41,14 +42,14 @@ func (f *FcFnPipe) GetPkgName() string { return f.FnHead.PkgName }
 
 func (f *FcAtom) String() string {
 	if f.PkgName == "" {
-		return string(f.OptName)
+		return string(f.Value)
 	} else {
-		return fmt.Sprintf("%s::%s", f.PkgName, string(f.OptName))
+		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Value))
 	}
 }
 
 func (f *FcFnPipe) String() string {
-	outPut := string(f.FnHead.OptName)
+	outPut := string(f.FnHead.Value)
 
 	for _, pair := range f.CallPipe {
 		if len(pair.Params) > 0 {
@@ -72,7 +73,16 @@ func IsEqualOpt(f Fc) bool {
 	if !ok {
 		return false
 	}
-	return ptr.OptName == glob.KeywordEqual && ptr.PkgName == ""
+	return ptr.Value == glob.KeywordEqual && ptr.PkgName == ""
+}
+
+func IsNumber(f Fc) bool {
+	ptr, ok := f.(*FcAtom)
+	if !ok {
+		return false
+	}
+	_, err := strconv.ParseFloat(ptr.Value, 64)
+	return err == nil
 }
 
 // used for objects that are returned by called function, e,g. f().g().h().  The chain is connected by dots

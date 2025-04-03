@@ -64,7 +64,7 @@ type SpecFactStmt struct {
 }
 
 func (f *SpecFactStmt) IsEqualFact() bool {
-	return f.PropName.OptName == glob.KeywordEqual && f.PropName.PkgName == ""
+	return f.PropName.Value == glob.KeywordEqual && f.PropName.PkgName == ""
 }
 
 type ClaimProveByContradictStmt struct {
