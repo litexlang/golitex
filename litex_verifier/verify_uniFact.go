@@ -22,7 +22,7 @@ func (ver *Verifier) UniFact(stmt *parser.UniFactStmt, state VerState) (bool, er
 
 	// 在局部环境声明新变量
 	ver.newEnv(nil)
-	defer ver.deleteEnv()
+	defer ver.deleteEnvAndRetainMsg()
 	for _, param := range stmt.Params {
 		// TODO: nil => concrete stuff
 		ver.env.Declare(nil, param)

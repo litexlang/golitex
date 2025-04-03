@@ -13,7 +13,7 @@ func (ver *Verifier) EqualFactSpecAtEnv(curEnv *env.Env, stmt *parser.SpecFactSt
 		return false, err
 	}
 	if verified {
-		if ver.round1() {
+		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), stmt.Params[0].String())
 		} else {
 			ver.successNoMsg()

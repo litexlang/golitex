@@ -9,8 +9,8 @@ import (
 )
 
 func (ver *Verifier) FcEqual(left, right parser.Fc, state VerState) (bool, error) {
-	ver.addRound()
-	defer ver.minusRound()
+	// ver.addRound()
+	// defer ver.minusRound()
 
 	// check whether given left or right is uniParam
 	concreteLeft := ver.asConFc(left)
@@ -34,9 +34,11 @@ func (ver *Verifier) FcEqual(left, right parser.Fc, state VerState) (bool, error
 		return false, nil
 	}
 
-	if !ver.round1() {
-		return false, nil
-	}
+	// TODO
+
+	// if !ver.round1() {
+	// 	return false, nil
+	// }
 
 	return false, nil
 }

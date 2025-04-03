@@ -1,6 +1,8 @@
 package litexverifier
 
-import parser "golitex/litex_parser"
+import (
+	parser "golitex/litex_parser"
+)
 
 func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, error) {
 	// 	ok, err := ver.CondFactSpec(stmt, state)
@@ -24,7 +26,7 @@ func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, 
 
 	// func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt, state VerState) (bool, error) {
 	ver.newEnv(nil)
-	defer ver.deleteEnv() // 万一cond里有condFact，那要保证能回到原来的环境
+	defer ver.deleteEnvAndRetainMsg() // 万一cond里有condFact，那要保证能回到原来的环境
 
 	for _, condFact := range stmt.CondFacts {
 		err := ver.env.NewFact(condFact)
@@ -39,18 +41,31 @@ func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, 
 			return false, err
 		}
 		if !ok {
-			if ver.round1() {
-				ver.unknownWithMsg("%v is unknown: %v is unknown", stmt, thenFact)
-				return false, nil
-			} else {
-				// ver.unknownNoMsg()
-				return false, nil
-			}
+			// 			if ver.round1() {
+			// 	ver.unknownWithMsg("%v is unknown: %v is unknown", stmt, thenFact)
+			// 	return false, nil
+			// }
+			// if state.isSpec()() {
+			// 	ver.unknownWithMsg("%v is unknown: %v is unknown", stmt, thenFact)
+			// 	return false, nil
+			// } else {
+			// ver.unknownNoMsg()
+			return false, nil
+			// }
 		}
 	}
 
-	if ver.round1() {
-		ver.successWithMsg("%v is true", stmt.String())
+	// if ver.round1() {
+	// 	ver.successWithMsg("%v is true", stmt.String())
+	// 	return true, nil
+	// } else {
+	// 	ver.successNoMsg()
+	// 	return true, nil
+	// }
+
+	if state.requireMsg() {
+		ver.successMsgEnd(stmt.String(), "")
+		// ver.env.Parent.NewMsg(fmt.Sprintf("%v\nis true", stmt.String()))
 		return true, nil
 	} else {
 		ver.successNoMsg()
