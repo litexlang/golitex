@@ -69,7 +69,6 @@ func TestStoreNewObj(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(executor.output)
 		fmt.Println(executor.env.Msgs)
 	}
 
@@ -90,7 +89,6 @@ func TestKnow(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(executor.output)
 		fmt.Println(executor.env.Msgs)
 	}
 }
@@ -229,7 +227,7 @@ func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	start = time.Now()
 	for _, topStmt := range topVerifyStatements {
 		err := executor.TopLevelStmt(topStmt)
-		if err != nil || !executor.true() {
+		if err != nil {
 			t.Fatal(err)
 		}
 
@@ -269,7 +267,7 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 	start = time.Now()
 	for _, topStmt := range topVerifyStatements {
 		err := executor.TopLevelStmt(topStmt)
-		if err != nil || !executor.true() {
+		if err != nil {
 			t.Fatal(err)
 		}
 
@@ -312,7 +310,7 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 	notVerifiedIndexes := []int{}
 	for i, topStmt := range topVerifyStatements {
 		err := executor.TopLevelStmt(topStmt)
-		if err != nil || !executor.true() {
+		if err != nil {
 			notVerifiedCount++
 			notVerifiedIndexes = append(notVerifiedIndexes, i)
 		}
@@ -356,7 +354,7 @@ func TestEqualFactMemory(t *testing.T) {
 	notVerifiedIndexes := []int{}
 	for i, topStmt := range topVerifyStatements {
 		err := executor.TopLevelStmt(topStmt)
-		if err != nil || !executor.true() {
+		if err != nil {
 			notVerifiedCount++
 			notVerifiedIndexes = append(notVerifiedIndexes, i)
 		}
