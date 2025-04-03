@@ -30,8 +30,11 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, e
 		return true, nil
 	}
 
+	// 完全一样的匹配，以及内置的自然数的匹配，是equal这个specProp和普通specProp的唯一的区别
+
 	// Case: 用已知事实
-	ok, err := ver.fcEqualSpecInSpecMem(left, right, state.spec())
+	nextState := state.spec()
+	ok, err := ver.fcEqualSpecInSpecMem(left, right, nextState)
 	if err != nil {
 		return false, err
 	}

@@ -667,3 +667,17 @@ when:
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
+
+func TestFormulaAfterFormula(t *testing.T) {
+	code :=
+		`
+know int(x+y+z+f(g(2))(k)) = diff(x)
+know g(2) = 6
+// int(x+y+z+f(6)(k)) = diff(x)
+know int(x+y+z+f(g(2))(k)) = int(x+y+z+f(6)(k))
+int(x+y+z+f(6)(k)) = diff(x)
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
