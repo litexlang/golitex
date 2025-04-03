@@ -84,7 +84,7 @@ func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, state V
 		rightHead = &parser.FcFnPipe{FnHead: right.FnHead, CallPipe: right.CallPipe[:rightHeadLen]}
 	}
 
-	ok, err := ver.FcEqual(leftHead, rightHead, state)
+	ok, err := ver.fcHeadEqual(leftHead, rightHead, leftTails[0].Params, state)
 	if err != nil {
 		return false, err
 	}
@@ -93,4 +93,12 @@ func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, state V
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) fcHeadEqual(leftHead parser.Fc, rightHead parser.Fc, params []parser.Fc, state VerState) (bool, error) {
+	ok, err := ver.FcEqual(leftHead, rightHead, state)
+	_ = params
+	return ok, err
+
+	// TODO 以后引入新的keyword专门用来证明函数头相等，2个函数在params所在的某domain里，刚好相等
 }
