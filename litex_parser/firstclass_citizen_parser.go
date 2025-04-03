@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (parser *Parser) parseFcAtomAndFcFnRet() (Fc, error) {
+func (parser *Parser) parseFcAtomAndFcFnRetAndBracedFc() (Fc, error) {
 	if parser.is(glob.KeywordLeftParen) {
 		return parser.parseBracedFcExpr()
 	}
@@ -97,17 +97,13 @@ func (parser *Parser) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (F
 		return nil, &parserErr{err, parser}
 	}
 
-	if parser.ExceedEnd() {
-		return left, nil
-	}
-
-	for {
+	for !parser.ExceedEnd() {
 		curToken, err := parser.currentToken()
 		if err != nil {
 			return nil, err // 捕获错误并退出
 		}
 
-		if !glob.IsBuiltinRelaOpt(curToken) {
+		if !glob.IsBuiltinRelaFn(curToken) {
 			break // 不是内置运算符，跳出循环
 		}
 
@@ -148,7 +144,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 			[]FcFnPipeSeg{{[]Fc{right}}},
 		}, nil
 	} else {
-		return parser.parseFcAtomAndFcFnRet()
+		return parser.parseFcAtomAndFcFnRetAndBracedFc()
 	}
 
 }

@@ -577,7 +577,7 @@ func (stmt *TokenBlock) parseRelaFactStmt() (*SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	if !glob.IsBuiltinRelaOpt(opt) {
+	if !glob.IsBuiltinRelaProp(opt) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
