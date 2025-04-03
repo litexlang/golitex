@@ -686,13 +686,12 @@ func TestFormulaAfterFormula2(t *testing.T) {
 know forall x R:
 	sin(x)^2 + cos(x)^2 = 1
 
-forall y R:
+forall y R, f fn:
 	1 = sin(y)^2 + cos(y)^2
-	diff(y^2)(1) = diff(y^2)(sin(y)^2 + cos(y)^2 )
+	diff(f^2)(1) = diff(f^2)(sin(y)^2 + cos(y)^2 )
 		
-know:
-	sin(x)^2 + cos(x)^2 = 1
-diff(y^2)(1) = diff(y^2)(sin(x)^2 + cos(x)^2 )
+sin(2)^2 + cos(2)^2 = 1
+diff(y^2)(1) = diff(y^2)(sin(2)^2 + cos(2)^2 )
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
