@@ -1,6 +1,7 @@
 package litexverifier
 
 import (
+	"fmt"
 	cmp "golitex/litex_comparator"
 	env "golitex/litex_env"
 	memory "golitex/litex_memory"
@@ -61,7 +62,9 @@ func (ver *Verifier) FcEqualSpecInSpecMemAtEnv(curEnv *env.Env, left parser.Fc, 
 		}
 		if cmpRet == 0 {
 			if state.requireMsg() {
-				ver.appendMsg("%s = %s literally", (*equalFc).String(), right.String())
+				msg := fmt.Sprintf("%s = %s", left.String(), right.String())
+				ver.successWithMsg(msg, msg)
+				// ver.appendMsg("%s = %s\nverified by %s = %s", left.String(), right.String(), left.String(), right.String())
 			}
 			return true, nil
 		}

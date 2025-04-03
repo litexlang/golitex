@@ -30,9 +30,17 @@ func (e VerState) isSpec() bool {
 func (e VerState) spec() VerState {
 	if e == AnyMsg {
 		return SpecMsg
-	}
-	if e == AnyNoMsg {
+	} else if e == AnyNoMsg {
 		return SpecNoMsg
+	}
+	return e
+}
+
+func (e VerState) noMsg() VerState {
+	if e == SpecMsg {
+		return SpecNoMsg
+	} else if e == AnyMsg {
+		return AnyNoMsg
 	}
 	return e
 }
