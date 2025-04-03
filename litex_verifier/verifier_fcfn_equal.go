@@ -15,7 +15,8 @@ func (ver *Verifier) fcFnPipeEqual(left, right *parser.FcFnPipe, state VerState)
 		}
 	}
 
-	return true, nil
+	// return true,nil
+	return false, nil
 }
 
 func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, state VerState, leftTailLen int) (bool, error) {
