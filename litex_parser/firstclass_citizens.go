@@ -2,6 +2,7 @@ package litexparser
 
 import (
 	"fmt"
+	glob "golitex/litex_global"
 	"strings"
 )
 
@@ -64,6 +65,14 @@ func (f *FcFnPipe) String() string {
 	}
 
 	return outPut
+}
+
+func IsEqualOpt(f Fc) bool {
+	ptr, ok := f.(*FcAtom)
+	if !ok {
+		return false
+	}
+	return ptr.OptName == glob.KeywordEqual && ptr.PkgName == ""
 }
 
 // used for objects that are returned by called function, e,g. f().g().h().  The chain is connected by dots
