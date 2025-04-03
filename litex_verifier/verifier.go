@@ -96,7 +96,7 @@ func (ver *Verifier) asConFc(fc parser.Fc) parser.Fc {
 	}
 
 	// Look up in the universal parameter map
-	return ver.env.UniParamMap[fcAsAtom.OptName]
+	return ver.env.UniParamMap[fcAsAtom.Value]
 }
 
 func (ver *Verifier) isDeclared(fc string) (bool, error) {

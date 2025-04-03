@@ -597,7 +597,7 @@ func (stmt *TokenBlock) parseRelaFactStmt() (*SpecFactStmt, error) {
 	}
 
 	// if opt != "=" {
-	return &SpecFactStmt{true, FcAtom{OptName: opt}, params}, nil
+	return &SpecFactStmt{true, FcAtom{Value: opt}, params}, nil
 	// } else {
 	// 	return &RelaFactStmt{false, FcAtom{OptName: opt}, params}, nil
 	// }

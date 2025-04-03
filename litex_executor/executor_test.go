@@ -151,7 +151,7 @@ func randFcAtom() *parser.FcAtom {
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(rand.Intn(26) + 65)
 	}
-	ret := parser.FcAtom{OptName: string(bytes)}
+	ret := parser.FcAtom{Value: string(bytes)}
 	return &ret
 }
 
@@ -383,7 +383,7 @@ func randEqualFact() *parser.SpecFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.SpecFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, PropName: parser.FcAtom{PkgName: "", OptName: "="}}
+	return &parser.SpecFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, PropName: parser.FcAtom{PkgName: "", Value: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

@@ -2,8 +2,13 @@ package litexcomparator
 
 import (
 	"fmt"
+	mem "golitex/litex_memory"
 	parser "golitex/litex_parser"
 )
+
+func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (int, error) {
+	return CmpFcLiterally(left.FcAsKey, right.FcAsKey)
+}
 
 func CmpFcLiterally(left, right parser.Fc) (int, error) {
 	typeComp, fcEnum, err := CmpFcType(left, right)
@@ -63,13 +68,13 @@ func cmpFcAtom(left, right *parser.FcAtom) (int, error) {
 		}
 	}
 
-	if len(left.OptName) != len(right.OptName) {
-		return len(left.OptName) - len(right.OptName), nil
+	if len(left.Value) != len(right.Value) {
+		return len(left.Value) - len(right.Value), nil
 	}
 
-	for i := 0; i < len(left.OptName); i++ {
-		if left.OptName[i] != right.OptName[i] {
-			return int(left.OptName[i]) - int(right.OptName[i]), nil
+	for i := 0; i < len(left.Value); i++ {
+		if left.Value[i] != right.Value[i] {
+			return int(left.Value[i]) - int(right.Value[i]), nil
 		}
 	}
 

@@ -105,7 +105,7 @@ func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *parser.FcFnPipe, conFuncParam 
 
 func isUniParam(uniFuncAtom *parser.FcAtom, possibleUniParams []string) (string, bool) { // ret: matched possible uniParam string; isMatched?
 	for _, possible := range possibleUniParams {
-		if possible == uniFuncAtom.OptName && uniFuncAtom.PkgName == "" {
+		if possible == uniFuncAtom.Value && uniFuncAtom.PkgName == "" {
 			return possible, true
 		}
 	}

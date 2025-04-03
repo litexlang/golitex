@@ -68,7 +68,7 @@ func (parser *Parser) parseTypeParamsObjParamsPairs() ([]FcFnPipeSeg, error) {
 func (parser *Parser) parseFcAtom() (FcAtom, error) {
 	value, err := parser.next()
 	if err != nil {
-		return FcAtom{OptName: ""}, err
+		return FcAtom{Value: ""}, err
 	}
 
 	fromPkg := ""
@@ -76,15 +76,15 @@ func (parser *Parser) parseFcAtom() (FcAtom, error) {
 		fromPkg = value
 		err := parser.skip(glob.KeywordColonColon)
 		if err != nil {
-			return FcAtom{OptName: ""}, err
+			return FcAtom{Value: ""}, err
 		}
 		value, err = parser.next()
 		if err != nil {
-			return FcAtom{OptName: ""}, err
+			return FcAtom{Value: ""}, err
 		}
 	}
 
-	return FcAtom{PkgName: fromPkg, OptName: value}, nil
+	return FcAtom{PkgName: fromPkg, Value: value}, nil
 }
 
 func (parser *Parser) ParseFc() (Fc, error) {
@@ -119,7 +119,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (F
 		}
 
 		left = &FcFnPipe{
-			FcAtom{OptName: curToken},
+			FcAtom{Value: curToken},
 			[]FcFnPipeSeg{{[]Fc{left, right}}},
 		}
 	}
@@ -140,7 +140,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 			return nil, err
 		}
 		return &FcFnPipe{
-			FcAtom{OptName: unaryOp},
+			FcAtom{Value: unaryOp},
 			[]FcFnPipeSeg{{[]Fc{right}}},
 		}, nil
 	} else {
@@ -153,7 +153,7 @@ func (parser *Parser) parseNumberStr() (*FcAtom, error) {
 	left, err := parser.next()
 
 	if err != nil {
-		return &FcAtom{OptName: ""}, err
+		return &FcAtom{Value: ""}, err
 	}
 
 	// if left[0] == '0' {
@@ -162,25 +162,25 @@ func (parser *Parser) parseNumberStr() (*FcAtom, error) {
 
 	_, err = strconv.Atoi(left)
 	if err != nil {
-		return &FcAtom{OptName: ""}, fmt.Errorf("invalid number: %s", left)
+		return &FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
 	}
 
 	if parser.is(glob.KeywordDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {
-			return &FcAtom{OptName: left}, err
+			return &FcAtom{Value: left}, err
 		} else {
 			parser.skip()
 			right, err := parser.next()
 
 			if err != nil {
-				return &FcAtom{OptName: ""}, fmt.Errorf("invalid number: %s", right)
+				return &FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", right)
 			}
 
-			return &FcAtom{OptName: left + "." + right}, nil
+			return &FcAtom{Value: left + "." + right}, nil
 		}
 	}
 
-	return &FcAtom{OptName: left}, nil
+	return &FcAtom{Value: left}, nil
 }
