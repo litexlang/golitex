@@ -63,7 +63,7 @@ func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnv(curEnv *env.Env, left pa
 }
 
 func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv *env.Env, keyFc parser.Fc, fcToComp parser.Fc, state VerState) (bool, error) {
-	key := memory.EqualFactMemoryTreeNode{FcAsKey: keyFc, Values: &[]*parser.Fc{}}
+	key := memory.EqualFactMemoryTreeNode{FcAsKey: keyFc, Values: &[]parser.Fc{}}
 
 	searchedNode, err := curEnv.EqualFactMem.Mem.TreeSearch(&key)
 
@@ -76,7 +76,7 @@ func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv *env.Env, 
 	}
 
 	for _, equalFc := range *searchedNode.Key.Values {
-		cmpRet, err := cmp.CmpFcLiterally(*equalFc, fcToComp) // 只能用直接比较法
+		cmpRet, err := cmp.CmpFcLiterally(equalFc, fcToComp) // 只能用直接比较法
 		// ok, err := ver.fcEqualSpec(*equalFc, toBeCompared) // 这会导致无限循环
 		if err != nil {
 			return false, err

@@ -50,7 +50,7 @@ type UniFactMemDict struct {
 
 type EqualFactMemoryTreeNode struct {
 	FcAsKey parser.Fc
-	Values  *[]*parser.Fc // VERY IMPORTANT: THIS IS PTR TO SLICE, NOT SLICE
+	Values  *[]parser.Fc // VERY IMPORTANT: THIS IS PTR TO SLICE, NOT SLICE
 }
 
 type EqualFactMem struct {
