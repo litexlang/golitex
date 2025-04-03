@@ -64,7 +64,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, e
 
 func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc, state VerState) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		verified, err := ver.FcEqualSpecInSpecMemAtEnv(curEnv, left, right, state.spec())
+		verified, err := ver.FcEqualSpecInSpecMemLiterallyAtEnv(curEnv, left, right, state)
 		if err != nil {
 			return false, err
 		}
