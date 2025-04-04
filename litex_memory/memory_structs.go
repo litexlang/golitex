@@ -62,7 +62,10 @@ type EqualFactMem struct {
 type ObjMemoryEntry struct {
 }
 
+type StoredPropMemDictNode struct{ Def *parser.DefConPropStmt }
+
 type PropMem struct {
+	Dict map[string]map[string]StoredPropMemDictNode
 }
 
 type PropMemoryEntry struct {

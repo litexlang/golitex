@@ -122,37 +122,7 @@ func (env *Env) isPropCommutative(opt parser.Fc) bool {
 	return false
 }
 
-// func (env *Env) NewEqualFact(stmt *parser.SpecFactStmt) error {
-// 	left := &mem.EqualFactMemoryTreeNode{
-// 		FcAsKey: stmt.Params[0],
-// 		Values:  []*parser.Fc{&stmt.Params[1]},
-// 	}
-
-// 	right := &mem.EqualFactMemoryTreeNode{
-// 		FcAsKey: stmt.Params[1],
-// 		Values:  []*parser.Fc{&stmt.Params[0]},
-// 	}
-
-// 	leftSearched, err := env.EqualFactMem.Mem.TreeSearch(left)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if leftSearched != nil {
-// 		leftSearched.Key.Values = append(leftSearched.Key.Values, &stmt.Params[1])
-// 	} else {
-// 		env.EqualFactMem.Mem.Insert(left)
-// 	}
-
-// 	// left = right is eql to right = left, so we memorize both left = right and right = left
-// 	rightSearched, err := env.EqualFactMem.Mem.TreeSearch(right)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if rightSearched != nil {
-// 		rightSearched.Key.Values = append(rightSearched.Key.Values, &stmt.Params[0])
-// 	} else {
-// 		env.EqualFactMem.Mem.Insert(right)
-// 	}
-
-// 	return nil
-// }
+func (env *Env) newConProp(stmt *parser.DefConPropStmt) error {
+	// TODO
+	return nil
+}
