@@ -23,6 +23,8 @@ func (exec *Executor) stmt(stmt parser.Stmt) error {
 		err = exec.knowStmt(stmt)
 	case *parser.ClaimProveStmt:
 		err = exec.claimProveStmt(stmt)
+	case *parser.DefConPropStmt:
+		err = exec.defConPropStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -104,4 +106,9 @@ func (exec *Executor) newMsgAtParent(s string) error {
 		exec.env.Parent.NewMsg(s)
 		return nil
 	}
+}
+
+func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
+	// TODO
+	return nil
 }
