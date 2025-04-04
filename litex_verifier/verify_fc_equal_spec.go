@@ -7,15 +7,13 @@ import (
 )
 
 func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, error) {
-	// Case: 全部都是builtin类型：int,float
-	if parser.IsNumber(left) || parser.IsNumber(right) {
-		ok, err := cmp.CmpNumber(left, right)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
+	// Case: 全部都是builtin类型：比如int,float。如果传入的压根不包含builtinFc那就返回false
+	ok, err := ver.builtinFcEqual(left, right)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
 	}
 
 	// Case: 完全一样
@@ -35,7 +33,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, e
 
 	// Case: 用已知事实
 	nextState := state.spec()
-	ok, err := ver.fcEqualSpecInSpecMem(left, right, nextState)
+	ok, err = ver.fcEqualSpecInSpecMem(left, right, nextState)
 	if err != nil {
 		return false, err
 	}
@@ -97,5 +95,37 @@ func (ver *Verifier) FcSliceEqual(left []parser.Fc, right []parser.Fc, specMode 
 		return true, nil
 	}
 
+	return false, nil
+}
+
+func (ver *Verifier) leftAsNumberStrCmp(left, right parser.Fc) (bool, error) {
+	numberAsStr := ""
+	var toCmp parser.Fc = nil
+
+	leftAsNumberStr, leftIsNumber := parser.IsNumber(left)
+	if leftIsNumber {
+		numberAsStr = leftAsNumberStr
+		toCmp = right
+	} else {
+		rightAsNumberStr, rightIsNumber := parser.IsNumber(right)
+		if rightIsNumber {
+			numberAsStr = rightAsNumberStr
+			toCmp = left
+		} else {
+			return false, nil
+		}
+	}
+
+	return cmp.CmpNumber(numberAsStr, toCmp)
+}
+
+func (ver *Verifier) builtinFcEqual(left, right parser.Fc) (bool, error) {
+	ok, err := ver.leftAsNumberStrCmp(left, right)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
 	return false, nil
 }
