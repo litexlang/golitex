@@ -274,8 +274,8 @@ func (stmt *TokenBlock) parseDefConPropStmt() (*DefConPropStmt, error) {
 }
 
 func (stmt *TokenBlock) parseBodyTwoFactSections(kw string) ([]FactStmt, []FactStmt, error) {
-	condFacts := []FactStmt{}
-	thenFacts := []FactStmt{}
+	section1Facts := []FactStmt{}
+	section2Facts := []FactStmt{}
 	err := error(nil)
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(kw) {
@@ -284,9 +284,9 @@ func (stmt *TokenBlock) parseBodyTwoFactSections(kw string) ([]FactStmt, []FactS
 			if err != nil {
 				return nil, nil, &parseStmtErr{err, *stmt}
 			}
-			condFacts = append(condFacts, curStmt)
+			section1Facts = append(section1Facts, curStmt)
 		}
-		thenFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockFacts()
+		section2Facts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockFacts()
 		if err != nil {
 			return nil, nil, &parseStmtErr{err, *stmt}
 		}
@@ -296,11 +296,11 @@ func (stmt *TokenBlock) parseBodyTwoFactSections(kw string) ([]FactStmt, []FactS
 			if err != nil {
 				return nil, nil, &parseStmtErr{err, *stmt}
 			}
-			thenFacts = append(thenFacts, curStmt)
+			section2Facts = append(section2Facts, curStmt)
 		}
 	}
 
-	return condFacts, thenFacts, nil
+	return section1Facts, section2Facts, nil
 }
 
 func (stmt *TokenBlock) parseDefConFnStmt() (*DefConFnStmt, error) {
@@ -504,12 +504,12 @@ func (stmt *TokenBlock) parseDefConExistPropStmt() (*DefConExistPropStmt, error)
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	condFacts, thenFacts, err := stmt.parseBodyTwoFactSections(glob.KeywordIff)
+	domFacts, thenFacts, err := stmt.parseBodyTwoFactSections(glob.KeywordIff)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &DefConExistPropStmt{*decl, existObjOrFn, existObjOrFnTypes, condFacts, thenFacts}, nil
+	return &DefConExistPropStmt{*decl, existObjOrFn, existObjOrFnTypes, domFacts, thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
@@ -711,8 +711,8 @@ func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
 }
 
 func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]FactStmt, []SpecFactStmt, error) {
-	condFacts := []FactStmt{}
-	thenFacts := []SpecFactStmt{}
+	section1Facts := []FactStmt{}
+	section2SpecFacts := []SpecFactStmt{}
 	err := error(nil)
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(kw) {
@@ -721,9 +721,9 @@ func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]FactSt
 			if err != nil {
 				return nil, nil, &parseStmtErr{err, *stmt}
 			}
-			condFacts = append(condFacts, curStmt)
+			section1Facts = append(section1Facts, curStmt)
 		}
-		thenFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockSpecFacts()
+		section2SpecFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockSpecFacts()
 		if err != nil {
 			return nil, nil, &parseStmtErr{err, *stmt}
 		}
@@ -733,9 +733,9 @@ func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]FactSt
 			if err != nil {
 				return nil, nil, &parseStmtErr{err, *stmt}
 			}
-			thenFacts = append(thenFacts, *curStmt)
+			section2SpecFacts = append(section2SpecFacts, *curStmt)
 		}
 	}
 
-	return condFacts, thenFacts, nil
+	return section1Facts, section2SpecFacts, nil
 }

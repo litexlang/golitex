@@ -7,7 +7,7 @@ import (
 )
 
 type TokenBlock struct {
-	Header Parser
+	Header StrSliceCursor
 	Body   []TokenBlock
 }
 

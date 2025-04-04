@@ -87,7 +87,7 @@ func TestParseFc(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		parser := Parser{0, tokens}
+		parser := StrSliceCursor{0, tokens}
 		fc, err := parser.parseFcAtomAndFcFnRetAndBracedFc()
 		if err != nil {
 			t.Fatal(err)
@@ -111,7 +111,7 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		parser := Parser{0, tokens}
+		parser := StrSliceCursor{0, tokens}
 
 		fc, err := parser.ParseFc()
 

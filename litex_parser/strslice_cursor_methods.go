@@ -5,7 +5,7 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (parser *Parser) parseBracedFcArr() ([]Fc, error) {
+func (parser *StrSliceCursor) parseBracedFcArr() ([]Fc, error) {
 	params := []Fc{}
 	parser.skip(glob.KeywordLeftParen)
 
@@ -35,7 +35,7 @@ func (parser *Parser) parseBracedFcArr() ([]Fc, error) {
 	return params, nil
 }
 
-func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) ([]string, []Fc, error) {
+func (parser *StrSliceCursor) parseParamListInDeclsAndSkipEnd(endWith string) ([]string, []Fc, error) {
 	paramName := []string{}
 	paramTypes := []Fc{}
 
@@ -65,7 +65,7 @@ func (parser *Parser) parseParamListInDeclsAndSkipEnd(endWith string) ([]string,
 	return paramName, paramTypes, nil
 }
 
-func (parser *Parser) parseStringArrUntilEnd() ([]string, error) {
+func (parser *StrSliceCursor) parseStringArrUntilEnd() ([]string, error) {
 	members := []string{}
 
 	for {
@@ -87,7 +87,7 @@ func (parser *Parser) parseStringArrUntilEnd() ([]string, error) {
 	return members, nil
 }
 
-func (parser *Parser) parseIsExpr(left Fc) (*SpecFactStmt, error) {
+func (parser *StrSliceCursor) parseIsExpr(left Fc) (*SpecFactStmt, error) {
 	err := parser.skip(glob.KeywordIs)
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -120,7 +120,7 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
 }
 
-func (parser *Parser) parseTypeListInDeclsAndSkipEnd(endWith string) ([]string, []FcAtom, error) {
+func (parser *StrSliceCursor) parseTypeListInDeclsAndSkipEnd(endWith string) ([]string, []FcAtom, error) {
 	paramName := []string{}
 	paramTypes := []FcAtom{}
 
