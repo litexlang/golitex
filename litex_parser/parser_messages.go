@@ -74,14 +74,14 @@ func (fact *DefConPropStmt) String() string {
 	builder.WriteByte('\n') // 把 \n 单独拿出来，否则会让下面一行多空几格子
 
 	if len(fact.IffFacts) > 0 {
-		builder.WriteString(strOfNonEmptyFactStmtSlice(fact.IffFacts, 2))
+		// builder.WriteString(strOfNonEmptyFactStmtSlice(fact.IffFacts, 2))
 		// // 遍历前 n-1 个元素，每个后面加换行
-		// for i := 0; i < len(fact.IffFacts)-1; i++ {
-		// 	builder.WriteString(glob.LineHead4Indents(fact.IffFacts[i].String(), 2))
-		// 	builder.WriteByte('\n')
-		// }
-		// // 单独处理最后一个元素，不加换行
-		// builder.WriteString(glob.LineHead4Indents(fact.IffFacts[len(fact.IffFacts)-1].String(), 2))
+		for i := 0; i < len(fact.IffFacts)-1; i++ {
+			builder.WriteString(glob.LineHead4Indents(fact.IffFacts[i].String(), 2))
+			builder.WriteByte('\n')
+		}
+		// 单独处理最后一个元素，不加换行
+		builder.WriteString(glob.LineHead4Indents(fact.IffFacts[len(fact.IffFacts)-1].String(), 2))
 	}
 
 	return builder.String()
