@@ -122,7 +122,7 @@ func (env *Env) isPropCommutative(opt parser.Fc) bool {
 	return false
 }
 
-func (env *Env) newConProp(stmt *parser.DefConPropStmt) error {
-	// TODO
-	return nil
+func (env *Env) NewDefConProp(stmt *parser.DefConPropStmt, pkgName string) error {
+	// TODO 要防止重名
+	return env.PropMem.Insert(stmt, pkgName)
 }

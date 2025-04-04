@@ -566,3 +566,17 @@ func TestLastFactCode(t *testing.T) {
 	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:], t)
 	printExecMsg(messages)
 }
+
+func TestPropDef(t *testing.T) {
+	code :=
+		`
+prop q(x A):
+	$p(x)
+	iff:
+		$t(x)
+
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}

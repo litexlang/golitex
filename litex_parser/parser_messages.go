@@ -52,8 +52,13 @@ func (stmt *DefObjStmt) String() string { panic("") }
 
 func (c *DefInterfaceStmt) String() string { panic("") }
 func (f *DefTypeStmt) String() string      { panic("") }
-func (c *DefConPropStmt) String() string   { panic("") }
-func (f *DefConFnStmt) String() string     { panic("") }
+func (c *DefConPropStmt) String() string {
+	// TODO
+	return ""
+}
+func (f *DefConFnStmt) String() string {
+	return ""
+}
 func (f *ClaimProveStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProve)

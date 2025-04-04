@@ -109,6 +109,9 @@ func (exec *Executor) newMsgAtParent(s string) error {
 }
 
 func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
-	// TODO
+	err := exec.env.NewDefConProp(stmt, "")
+	if err != nil {
+		return err
+	}
 	return nil
 }
