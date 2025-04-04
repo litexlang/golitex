@@ -33,7 +33,3 @@ func (e *Executor) deleteEnvAndRetainMsg() {
 func (e *Executor) clearMsgAndOutput() {
 	e.env.Msgs = []string{}
 }
-
-func (e *Executor) getMsgs() []string {
-	return e.env.Msgs
-}
