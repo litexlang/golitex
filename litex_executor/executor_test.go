@@ -575,6 +575,17 @@ prop q(x A):
 	iff:
 		$t(x)
 
+know:
+	$q(1)
+	$p(1)
+
+$t(1)
+
+know:
+	$t(2)
+	$p(2)
+
+$q(2)
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)

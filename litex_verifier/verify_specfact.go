@@ -19,16 +19,9 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, 
 		return ver.PropPropFact(stmt, state)
 	}
 
-	// ? 能放在 state.isSpec() 前面吗
-	// ok, err := ver.specDef(stmt, state)
-	// if err != nil {
-	// 	return false, err
-	// }
-	// if ok {
-	// 	return true, nil
-	// }
+	nextState := state.spec()
 
-	ok, err := ver.SpecFactSpec(stmt, state.spec())
+	ok, err := ver.SpecFactSpec(stmt, nextState)
 	if err != nil {
 		return false, err
 	}
@@ -41,7 +34,7 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, 
 	}
 
 	// 必须要spec一下，否则iff的时候，会永远循环下去。同时不能省略state，因为msg信息在里面
-	ok, err = ver.SpecFactCond(stmt, state.spec())
+	ok, err = ver.SpecFactCond(stmt, nextState)
 	if err != nil {
 		return false, err
 	}
@@ -49,7 +42,7 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, 
 		return true, nil
 	}
 
-	ok, err = ver.SpecFactUni(stmt, state.spec())
+	ok, err = ver.SpecFactUni(stmt, nextState)
 	if err != nil {
 		return false, err
 	}
@@ -163,9 +156,8 @@ func (ver *Verifier) SpecFactUni(stmt *parser.SpecFactStmt, state VerState) (boo
 		reverseStmt = &parser.SpecFactStmt{IsTrue: stmt.IsTrue, PropName: stmt.PropName, Params: []parser.Fc{stmt.Params[1], stmt.Params[0]}}
 	}
 
+	nextState := state.spec()
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		nextState := state.spec()
-
 		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, nextState)
 		if err != nil {
 			return false, err

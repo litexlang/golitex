@@ -145,10 +145,11 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 		return err
 	}
 
-	// TODO 从 prop 到 dom和iff
-	PropLeadToIff := parser.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: append(uniFactDomFacts, &propAsSpecFact), ThenFacts: iffFacts}
+	domFacts := append(stmt.DomFacts, &propAsSpecFact)
 
-	exec.env.NewFact(&PropLeadToIff)
+	PropLeadToIff := parser.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: domFacts, ThenFacts: iffFacts}
+
+	err = exec.env.NewFact(&PropLeadToIff)
 	if err != nil {
 		return err
 	}
