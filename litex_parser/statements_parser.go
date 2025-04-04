@@ -265,7 +265,7 @@ func (stmt *TokenBlock) parseDefConPropStmt() (*DefConPropStmt, error) {
 	// 	}
 	// }
 
-	domFacts, iffFacts, err := stmt.parseBodyTwoFactSections(glob.KeywordIff)
+	domFacts, iffFacts, err := stmt.parseBodyFactSectionSpecFactSection(glob.KeywordIff)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -299,33 +299,6 @@ func (stmt *TokenBlock) parseBodyTwoFactSections(kw string) ([]FactStmt, []FactS
 			thenFacts = append(thenFacts, curStmt)
 		}
 	}
-
-	// else if stmt.Body[0].Header.is(glob.KeywordDom) {
-	// 	err = stmt.Body[0].Header.skip(glob.KeywordDom)
-	// 	if err != nil {
-	// 		return nil, nil, &parseStmtErr{err, *stmt}
-	// 	}
-	// 	err = stmt.Body[0].Header.skip(glob.KeywordColon)
-	// 	if err != nil {
-	// 		return nil, nil, &parseStmtErr{err, *stmt}
-	// 	}
-
-	// 	for _, condFact := range stmt.Body[0].Body {
-	// 		curStmt, err := condFact.parseFactStmt()
-	// 		if err != nil {
-	// 			return nil, nil, &parseStmtErr{err, *stmt}
-	// 		}
-	// 		*condFacts = append(*condFacts, curStmt)
-	// 	}
-
-	// 	for i := 1; i < len(stmt.Body); i++ {
-	// 		curStmt, err := stmt.Body[i].parseFactStmt()
-	// 		if err != nil {
-	// 			return nil, nil, &parseStmtErr{err, *stmt}
-	// 		}
-	// 		*thenFacts = append(*thenFacts, curStmt)
-	// 	}
-	// }
 
 	return condFacts, thenFacts, nil
 }
@@ -735,4 +708,34 @@ func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
 	}
 
 	return &ConDefHeader{name, params, typeParams}, nil
+}
+
+func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]FactStmt, []SpecFactStmt, error) {
+	condFacts := []FactStmt{}
+	thenFacts := []SpecFactStmt{}
+	err := error(nil)
+
+	if stmt.Body[len(stmt.Body)-1].Header.is(kw) {
+		for i := 0; i < len(stmt.Body)-1; i++ {
+			curStmt, err := stmt.Body[i].parseFactStmt()
+			if err != nil {
+				return nil, nil, &parseStmtErr{err, *stmt}
+			}
+			condFacts = append(condFacts, curStmt)
+		}
+		thenFacts, err = stmt.Body[len(stmt.Body)-1].parseThenBlockSpecFacts()
+		if err != nil {
+			return nil, nil, &parseStmtErr{err, *stmt}
+		}
+	} else {
+		for i := 0; i < len(stmt.Body); i++ {
+			curStmt, err := stmt.Body[i].parseSpecFactStmt()
+			if err != nil {
+				return nil, nil, &parseStmtErr{err, *stmt}
+			}
+			thenFacts = append(thenFacts, *curStmt)
+		}
+	}
+
+	return condFacts, thenFacts, nil
 }
