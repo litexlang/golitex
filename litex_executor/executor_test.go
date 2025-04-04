@@ -545,13 +545,6 @@ $p(x)
 	printExecMsg(messages)
 }
 
-func TestFactCode(t *testing.T) {
-	code := readFile("../litex_code_examples/fact.lix")
-	topStmtSlice := parseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice, t)
-	printExecMsg(messages)
-}
-
 func readFile(filePath string) string {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
@@ -722,5 +715,19 @@ diff(y^2)(1) = diff(y^2)(sin(2)^2 + cos(2)^2 )
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
+
+func TestAllFactCode(t *testing.T) {
+	code := readFile("../litex_code_examples/fact.lix")
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
+
+func TestLastFactCode(t *testing.T) {
+	code := readFile("../litex_code_examples/fact.lix")
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:], t)
 	printExecMsg(messages)
 }

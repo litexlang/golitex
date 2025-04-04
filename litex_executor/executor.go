@@ -73,7 +73,8 @@ func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, *verifier.Verif
 }
 
 func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
-	exec.newEnv() // 在子环境中做所有操作，不影响外部世界
+	exec.newEnv()                 // 在子环境中做所有操作，不影响外部世界
+	exec.newMsgEnd(stmt.String()) // 在子函数里管理string
 
 	defer exec.deleteEnvAndRetainMsg()
 
@@ -86,8 +87,8 @@ func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
 
 	// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里
 
-	localMsgs := exec.getMsgs()
-	exec.newMsgAtParent(stmt.String() + "\n" + strings.Join(localMsgs, "\n"))
+	// localMsgs := exec.getMsgs()
+	// exec.newMsgAtParent(stmt.String() + "\n" + strings.Join(localMsgs, "\n\n"))
 
 	return nil
 }
