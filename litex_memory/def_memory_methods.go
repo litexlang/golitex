@@ -9,6 +9,7 @@ func (factMem *PropMem) Insert(stmt *parser.DefConPropStmt, PkgName string) erro
 
 	// 如果包不存在，初始化包映射
 	if !pkgExists {
+		// factMem.Dict[PkgName] = map[string]StoredPropMemDictNode{}
 		factMem.Dict[PkgName] = make(map[string]StoredPropMemDictNode)
 		pkgMap = factMem.Dict[PkgName]
 	}
@@ -16,7 +17,7 @@ func (factMem *PropMem) Insert(stmt *parser.DefConPropStmt, PkgName string) erro
 	// 获取或创建节点
 	node, nodeExists := pkgMap[stmt.DefHeader.Name]
 	if !nodeExists {
-		node = StoredPropMemDictNode{stmt}
+		node = StoredPropMemDictNode{}
 	}
 
 	// 更新映射中的节点

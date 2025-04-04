@@ -1037,8 +1037,11 @@ know:
 
 func TestProve(t *testing.T) {
 	code := `
-prove:
+prop q(x A):
 	$p(x)
+	iff:
+		$t(x)
+
 `
 
 	statements, err := ParserTester(code)

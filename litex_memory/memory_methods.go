@@ -1,7 +1,7 @@
 package litexmemory
 
 func NewPropMemory() *PropMem {
-	return &PropMem{}
+	return &PropMem{map[string]map[string]StoredPropMemDictNode{}}
 }
 func NewFnMemory() *FnMem {
 	return &FnMem{}
