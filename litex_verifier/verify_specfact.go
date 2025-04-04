@@ -1,6 +1,7 @@
 package litexverifier
 
 import (
+	"fmt"
 	env "golitex/litex_env"
 	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
@@ -57,6 +58,9 @@ func (ver *Verifier) SpecFactSpec(stmt *parser.SpecFactStmt, state VerState) (bo
 		if err != nil {
 			pc, _, _, _ := runtime.Caller(0)
 			return false, glob.NewErrLinkAtFunc(err, runtime.FuncForPC(pc).Name(), "")
+		}
+		if state.requireMsg() && ok {
+			ver.successMsgEnd(fmt.Sprintf("%s = %s", stmt.Params[0], stmt.Params[1]), "")
 		}
 		return ok, err
 	}

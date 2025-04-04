@@ -11,6 +11,9 @@ func (ver *Verifier) successMsgEnd(stmtStr, stmtVerifiedBy string) {
 	if stmtVerifiedBy != "" {
 		message := fmt.Sprintf("is true. proved by\n%v", stmtVerifiedBy)
 		ver.env.Msgs = append(ver.env.Msgs, message)
+	} else {
+		message := fmt.Sprintf("is true.")
+		ver.env.Msgs = append(ver.env.Msgs, message)
 	}
 }
 

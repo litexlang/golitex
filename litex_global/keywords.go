@@ -31,6 +31,7 @@ const (
 	KeywordThm                  = "thm"  // syntax sugar for: prop + prove
 	KeywordSelf                 = "self" // return value of a function; refer to an instance of the type or set we are defining
 	KeywordIff                  = "iff"
+	KeywordProveFnEqual         = "prove_fn_equal" // 在特定的domain里，两个函数处处相等，这里的验证方式和通常的验证方式貌似不太一样，需要独立出一个关键词
 
 	// Syntax and Semantics Sugar
 	KeywordCommutative = "commutative"

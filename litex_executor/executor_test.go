@@ -697,3 +697,30 @@ diff(y^2)(1) = diff(y^2)(sin(2)^2 + cos(2)^2 )
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
+
+func TestTransitivity(t *testing.T) {
+	code :=
+		`
+know forall x A:
+	$p(x)
+	then:
+		$q(x)
+know $p(a)
+$q(a)
+
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
+
+func TestEqual2(t *testing.T) {
+	code :=
+		`
+know sin(2)^2 + cos(2)^2 = 1
+diff(y^2)(1) = diff(y^2)(sin(2)^2 + cos(2)^2 )
+`
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
