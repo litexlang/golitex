@@ -113,5 +113,6 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 	if err != nil {
 		return err
 	}
+	exec.newMsgEnd(stmt.String())
 	return nil
 }
