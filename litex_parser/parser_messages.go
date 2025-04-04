@@ -188,15 +188,25 @@ func (head ConDefHeader) String() string {
 	return builder.String()
 }
 
-func strOfNonEmptyFactStmtSlice(stmtSlice []FactStmt, indent uint32) string {
+// Stringer 是标准库的接口，要求实现 String() string
+type Stringer interface {
+	String() string
+}
+
+// 修改后的泛型函数，支持 T 或 *T 只要它们实现 String()
+func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string {
 	var builder strings.Builder
 
-	// 遍历前 n-1 个元素，每个后面加换行
+	if len(stmtSlice) == 0 {
+		return ""
+	}
+
+	// 前 n-1 个元素加换行
 	for i := 0; i < len(stmtSlice)-1; i++ {
 		builder.WriteString(glob.LineHead4Indents(stmtSlice[i].String(), indent))
 		builder.WriteByte('\n')
 	}
-	// 单独处理最后一个元素，不加换行
+	// 最后一个元素不加换行（但你的代码里仍然加了 \n？）
 	builder.WriteString(glob.LineHead4Indents(stmtSlice[len(stmtSlice)-1].String(), indent))
 	builder.WriteByte('\n')
 
