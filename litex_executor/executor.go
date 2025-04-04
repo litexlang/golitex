@@ -56,6 +56,8 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 
 	if !ok {
 		exec.newMsgEnd(stmt.String() + "\nis unknown")
+	} else {
+		exec.env.NewFact(stmt)
 	}
 
 	return nil

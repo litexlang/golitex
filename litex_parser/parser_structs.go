@@ -22,8 +22,8 @@ type DefTypeStmt struct {
 
 type DefConPropStmt struct {
 	DefHeader ConDefHeader
-	DomFacts  []FactStmt
-	IffFacts  []FactStmt
+	DomFacts  []FactStmt // 如果输入的参数不满足dom，那就是error
+	IffFacts  []FactStmt // 如果输入参数满足dom，满足iff，那就true
 }
 
 type DefConExistPropStmt struct {
