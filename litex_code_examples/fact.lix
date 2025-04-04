@@ -159,3 +159,16 @@ prove:
 // pkg::p
 // p
 // pkg.f.m.h().g
+
+prove:
+    know:
+        forall x A:
+            $p(x)
+            then:
+                $q(x)
+    
+    when:
+        $p(a)
+        then:
+            $q(a)
+        
