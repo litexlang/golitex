@@ -99,15 +99,6 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 	return strings.Join(exec.env.Msgs, "\n")
 }
 
-func (exec *Executor) newMsgAtParent(s string) error {
-	if exec.env.Parent == nil {
-		return fmt.Errorf("no parent env")
-	} else {
-		exec.env.Parent.NewMsg(s)
-		return nil
-	}
-}
-
 func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 	err := exec.env.NewDefConProp(stmt, "")
 	if err != nil {

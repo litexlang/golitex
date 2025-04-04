@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (parser *Parser) parseFcAtomAndFcFnRetAndBracedFc() (Fc, error) {
+func (parser *StrSliceCursor) parseFcAtomAndFcFnRetAndBracedFc() (Fc, error) {
 	if parser.is(glob.KeywordLeftParen) {
 		return parser.parseBracedFcExpr()
 	}
@@ -30,7 +30,7 @@ func (parser *Parser) parseFcAtomAndFcFnRetAndBracedFc() (Fc, error) {
 	}
 }
 
-func (parser *Parser) parseBracedFcExpr() (Fc, error) {
+func (parser *StrSliceCursor) parseBracedFcExpr() (Fc, error) {
 	parser.skip(glob.KeywordLeftParen)
 	fc, err := parser.ParseFc()
 	if err != nil {
@@ -40,7 +40,7 @@ func (parser *Parser) parseBracedFcExpr() (Fc, error) {
 	return fc, nil
 }
 
-func (parser *Parser) parseFcFnRetVal(optName FcAtom) (*FcFnPipe, error) {
+func (parser *StrSliceCursor) parseFcFnRetVal(optName FcAtom) (*FcFnPipe, error) {
 	typeParamsObjParamsPairs, err := parser.parseTypeParamsObjParamsPairs()
 
 	if err != nil {
@@ -50,7 +50,7 @@ func (parser *Parser) parseFcFnRetVal(optName FcAtom) (*FcFnPipe, error) {
 	return &FcFnPipe{optName, typeParamsObjParamsPairs}, nil
 }
 
-func (parser *Parser) parseTypeParamsObjParamsPairs() ([]FcFnPipeSeg, error) {
+func (parser *StrSliceCursor) parseTypeParamsObjParamsPairs() ([]FcFnPipeSeg, error) {
 	pairs := []FcFnPipeSeg{}
 
 	for !parser.ExceedEnd() && (parser.is(glob.KeywordLeftParen)) {
@@ -65,7 +65,7 @@ func (parser *Parser) parseTypeParamsObjParamsPairs() ([]FcFnPipeSeg, error) {
 	return pairs, nil
 }
 
-func (parser *Parser) parseFcAtom() (FcAtom, error) {
+func (parser *StrSliceCursor) parseFcAtom() (FcAtom, error) {
 	value, err := parser.next()
 	if err != nil {
 		return FcAtom{Value: ""}, err
@@ -87,11 +87,11 @@ func (parser *Parser) parseFcAtom() (FcAtom, error) {
 	return FcAtom{PkgName: fromPkg, Value: value}, nil
 }
 
-func (parser *Parser) ParseFc() (Fc, error) {
+func (parser *StrSliceCursor) ParseFc() (Fc, error) {
 	return parser.parseFcInfixExpr(glob.PrecLowest)
 }
 
-func (parser *Parser) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (Fc, error) {
+func (parser *StrSliceCursor) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (Fc, error) {
 	left, err := parser.parseFcUnaryExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -127,7 +127,7 @@ func (parser *Parser) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (F
 	return left, nil
 }
 
-func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
+func (parser *StrSliceCursor) parseFcUnaryExpr() (Fc, error) {
 	unaryOp, err := parser.currentToken()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -149,7 +149,7 @@ func (parser *Parser) parseFcUnaryExpr() (Fc, error) {
 
 }
 
-func (parser *Parser) parseNumberStr() (*FcAtom, error) {
+func (parser *StrSliceCursor) parseNumberStr() (*FcAtom, error) {
 	left, err := parser.next()
 
 	if err != nil {
