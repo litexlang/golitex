@@ -52,9 +52,37 @@ func (stmt *DefObjStmt) String() string { panic("") }
 
 func (c *DefInterfaceStmt) String() string { panic("") }
 func (f *DefTypeStmt) String() string      { panic("") }
-func (c *DefConPropStmt) String() string {
-	// TODO
-	return ""
+func (fact *DefConPropStmt) String() string {
+	var builder strings.Builder
+
+	builder.WriteString(fact.DefHeader.String())
+	builder.WriteByte('\n')
+
+	if len(fact.DomFacts) > 0 {
+		// 遍历前 n-1 个元素，每个后面加换行
+		for i := 0; i < len(fact.DomFacts)-1; i++ {
+			builder.WriteString(glob.LineHead4Indents(fact.DomFacts[i].String(), 1))
+			builder.WriteByte('\n')
+		}
+		// 单独处理最后一个元素，不加换行
+		builder.WriteString(glob.LineHead4Indents(fact.DomFacts[len(fact.DomFacts)-1].String(), 1))
+		builder.WriteByte('\n')
+	}
+
+	builder.WriteString(glob.LineHead4Indents("iff:", 1))
+	builder.WriteByte('\n') // 把 \n 单独拿出来，否则会让下面一行多空几格子
+
+	if len(fact.IffFacts) > 0 {
+		// 遍历前 n-1 个元素，每个后面加换行
+		for i := 0; i < len(fact.IffFacts)-1; i++ {
+			builder.WriteString(glob.LineHead4Indents(fact.IffFacts[i].String(), 2))
+			builder.WriteByte('\n')
+		}
+		// 单独处理最后一个元素，不加换行
+		builder.WriteString(glob.LineHead4Indents(fact.IffFacts[len(fact.IffFacts)-1].String(), 2))
+	}
+
+	return builder.String()
 }
 func (f *DefConFnStmt) String() string {
 	return ""
@@ -132,5 +160,27 @@ func (l *UniFactStmt) String() string {
 		}
 		builder.WriteString(glob.LineHead4Indents(l.ThenFacts[len(l.ThenFacts)-1].String(), 2))
 	}
+	return builder.String()
+}
+
+func (head ConDefHeader) String() string {
+	var builder strings.Builder
+	builder.WriteString("prop ")
+	builder.WriteString(head.Name)
+	builder.WriteString(" (")
+
+	if len(head.Params) > 0 {
+		for i := 0; i < len(head.Params)-1; i++ {
+			builder.WriteString(head.Params[i])
+			builder.WriteString(" ")
+			builder.WriteString(head.TypeParams[i].String())
+			builder.WriteString(",")
+		}
+		builder.WriteString(head.Params[len(head.Params)-1])
+		builder.WriteString(" ")
+		builder.WriteString(head.TypeParams[len(head.Params)-1].String())
+	}
+
+	builder.WriteString("):")
 	return builder.String()
 }
