@@ -114,5 +114,27 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 		return err
 	}
 	exec.newMsgEnd(stmt.String())
+
+	// new uni fact
+	uniFactParamTypes := []parser.Fc{}
+	for _, tp := range stmt.DefHeader.TypeParams {
+		uniFactParamTypes = append(uniFactParamTypes, &tp)
+	}
+
+	uniFactDomFacts := []parser.FactStmt{}
+	uniFactDomFacts = append(uniFactDomFacts, stmt.DomFacts...)
+	uniFactDomFacts = append(uniFactDomFacts, stmt.IffFacts...)
+
+	specFactParams := []parser.Fc{}
+	for _, param := range stmt.DefHeader.Params {
+		specFactParams = append(specFactParams, &parser.FcAtom{PkgName: "", Value: param})
+	}
+
+	propLeadToIff := parser.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: uniFactDomFacts, ThenFacts: []parser.SpecFactStmt{{IsTrue: true, PropName: parser.FcAtom{PkgName: "", Value: stmt.DefHeader.Name}, Params: specFactParams}}}
+
+	exec.env.NewFact(&propLeadToIff)
+
+	// TODO 从 prop 到 dom和iff
+
 	return nil
 }
