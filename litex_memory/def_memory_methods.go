@@ -17,7 +17,7 @@ func (factMem *PropMem) Insert(stmt *parser.DefConPropStmt, PkgName string) erro
 	// 获取或创建节点
 	node, nodeExists := pkgMap[stmt.DefHeader.Name]
 	if !nodeExists {
-		node = StoredPropMemDictNode{}
+		node = StoredPropMemDictNode{stmt}
 	}
 
 	// 更新映射中的节点

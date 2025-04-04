@@ -19,6 +19,15 @@ func (ver *Verifier) SpecFact(stmt *parser.SpecFactStmt, state VerState) (bool, 
 		return ver.PropPropFact(stmt, state)
 	}
 
+	// ? 能放在 state.isSpec() 前面吗
+	// ok, err := ver.specDef(stmt, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if ok {
+	// 	return true, nil
+	// }
+
 	ok, err := ver.SpecFactSpec(stmt, state.spec())
 	if err != nil {
 		return false, err

@@ -64,6 +64,20 @@ type ObjMemoryEntry struct {
 
 type StoredPropMemDictNode struct{ Def *parser.DefConPropStmt }
 
+// func (node *StoredPropMemDictNode) toUniFact() parser.UniFactStmt {
+// 	typeParams := []parser.Fc{}
+// 	for _, tp := range node.Def.DefHeader.TypeParams {
+// 		typeParams = append(typeParams, &tp)
+// 	}
+
+// 	return parser.UniFactStmt{
+// 		node.Def.DefHeader.Params,
+// 		typeParams,
+// 		node.Def.DomFacts,
+// 		node.Def.IffFacts,
+// 	}
+// }
+
 type PropMem struct {
 	Dict map[string]map[string]StoredPropMemDictNode
 }
