@@ -59,27 +59,29 @@ func (fact *DefConPropStmt) String() string {
 	builder.WriteByte('\n')
 
 	if len(fact.DomFacts) > 0 {
-		// 遍历前 n-1 个元素，每个后面加换行
-		for i := 0; i < len(fact.DomFacts)-1; i++ {
-			builder.WriteString(glob.LineHead4Indents(fact.DomFacts[i].String(), 1))
-			builder.WriteByte('\n')
-		}
-		// 单独处理最后一个元素，不加换行
-		builder.WriteString(glob.LineHead4Indents(fact.DomFacts[len(fact.DomFacts)-1].String(), 1))
-		builder.WriteByte('\n')
+		builder.WriteString(strOfNonEmptyFactStmtSlice(fact.DomFacts, 1))
+		// // 遍历前 n-1 个元素，每个后面加换行
+		// for i := 0; i < len(fact.DomFacts)-1; i++ {
+		// 	builder.WriteString(glob.LineHead4Indents(fact.DomFacts[i].String(), 1))
+		// 	builder.WriteByte('\n')
+		// }
+		// // 单独处理最后一个元素，不加换行
+		// builder.WriteString(glob.LineHead4Indents(fact.DomFacts[len(fact.DomFacts)-1].String(), 1))
+		// builder.WriteByte('\n')
 	}
 
 	builder.WriteString(glob.LineHead4Indents("iff:", 1))
 	builder.WriteByte('\n') // 把 \n 单独拿出来，否则会让下面一行多空几格子
 
 	if len(fact.IffFacts) > 0 {
-		// 遍历前 n-1 个元素，每个后面加换行
-		for i := 0; i < len(fact.IffFacts)-1; i++ {
-			builder.WriteString(glob.LineHead4Indents(fact.IffFacts[i].String(), 2))
-			builder.WriteByte('\n')
-		}
-		// 单独处理最后一个元素，不加换行
-		builder.WriteString(glob.LineHead4Indents(fact.IffFacts[len(fact.IffFacts)-1].String(), 2))
+		builder.WriteString(strOfNonEmptyFactStmtSlice(fact.IffFacts, 2))
+		// // 遍历前 n-1 个元素，每个后面加换行
+		// for i := 0; i < len(fact.IffFacts)-1; i++ {
+		// 	builder.WriteString(glob.LineHead4Indents(fact.IffFacts[i].String(), 2))
+		// 	builder.WriteByte('\n')
+		// }
+		// // 单独处理最后一个元素，不加换行
+		// builder.WriteString(glob.LineHead4Indents(fact.IffFacts[len(fact.IffFacts)-1].String(), 2))
 	}
 
 	return builder.String()
@@ -119,6 +121,7 @@ func (fact *CondFactStmt) String() string {
 	builder.WriteString(glob.LineHead4Indents("then:", 1))
 	builder.WriteByte('\n')
 	if len(fact.ThenFacts) > 0 {
+		// builder.WriteString(strOfNonEmptyFactStmtSlice(fact.ThenFacts, 2))
 		// 遍历前 n-1 个元素，每个后面加换行
 		for i := 0; i < len(fact.ThenFacts)-1; i++ {
 			builder.WriteString(glob.LineHead4Indents(fact.ThenFacts[i].String(), 2))
@@ -182,5 +185,20 @@ func (head ConDefHeader) String() string {
 	}
 
 	builder.WriteString("):")
+	return builder.String()
+}
+
+func strOfNonEmptyFactStmtSlice(stmtSlice []FactStmt, indent uint32) string {
+	var builder strings.Builder
+
+	// 遍历前 n-1 个元素，每个后面加换行
+	for i := 0; i < len(stmtSlice)-1; i++ {
+		builder.WriteString(glob.LineHead4Indents(stmtSlice[i].String(), indent))
+		builder.WriteByte('\n')
+	}
+	// 单独处理最后一个元素，不加换行
+	builder.WriteString(glob.LineHead4Indents(stmtSlice[len(stmtSlice)-1].String(), indent))
+	builder.WriteByte('\n')
+
 	return builder.String()
 }
