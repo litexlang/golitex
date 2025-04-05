@@ -26,6 +26,15 @@ func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *parser.FcFnPipe, state V
 		}
 
 		for i := 0; i < len(left.CallPipe); i++ {
+			// ? 这里应该是fcEqualSpec还是 fcCmpLiterally??
+			ok, err := ver.fcEqualSpec(&left.FnHead, &right.FnHead, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
+
 			if len(left.CallPipe[i].Params) != len(right.CallPipe[i].Params) {
 				return false, nil
 			}

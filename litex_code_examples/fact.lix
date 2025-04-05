@@ -235,3 +235,20 @@ prove:
         $p(x)
     x in A
     $p(x)
+
+prove:
+    forall x A, a A:
+        f(x)(a) = g(x)(a)
+
+    know:
+        forall x A:
+            f(x) = g(x)
+    
+    forall x A, a A:
+        f(x) = g(x) // 必须写一下，因为我在比较的时候，我不会用forall来验证你下面的f(x) = g(x) 。或许未来我会加入这个功能，但不是现在
+        f(x)(a) = g(x)(a)
+
+    forall x A, a A, e A:
+        f(x)(a) = g(x)(a) // 必须写一下
+        f(x)(a)(e) = g(x)(a)(e)
+
