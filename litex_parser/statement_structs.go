@@ -22,8 +22,8 @@ type DefTypeStmt struct {
 
 type DefConPropStmt struct {
 	DefHeader ConDefHeader
-	DomFacts  []FactStmt     // 如果输入的参数不满足dom，那就是error
-	IffFacts  []SpecFactStmt // 如果输入参数满足dom，满足iff，那就true. 这里必须是spec，因为我需要 know forall x: prop+dom => iffFacts，而iffFacts出现在了then的位置
+	DomFacts  []FactStmt      // 如果输入的参数不满足dom，那就是error
+	IffFacts  []*SpecFactStmt // 如果输入参数满足dom，满足iff，那就true. 这里必须是spec，因为我需要 know forall x: prop+dom => iffFacts，而iffFacts出现在了then的位置
 }
 
 type DefConExistPropStmt struct {
@@ -45,7 +45,7 @@ type UniFactStmt struct {
 	Params     []string
 	ParamTypes []Fc
 	DomFacts   []FactStmt
-	ThenFacts  []SpecFactStmt
+	ThenFacts  []*SpecFactStmt
 }
 
 type GenericUniStmt struct {
@@ -54,7 +54,7 @@ type GenericUniStmt struct {
 	Params         []string
 	ParamTypes     []Fc
 	DomFacts       []FactStmt
-	ThenFacts      []SpecFactStmt
+	ThenFacts      []*SpecFactStmt
 }
 
 type SpecFactStmt struct {

@@ -113,12 +113,12 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 		uniFactParamTypes = append(uniFactParamTypes, &tp)
 	}
 
-	uniFactDomFacts := []parser.FactStmt{}
-	uniFactDomFacts = append(uniFactDomFacts, stmt.DomFacts...)
+	iffLeadToPropUniFactDomFacts := []parser.FactStmt{}
+	iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, stmt.DomFacts...)
 
-	iffFacts := []parser.SpecFactStmt{}
+	iffFacts := []*parser.SpecFactStmt{}
 	for _, fact := range stmt.IffFacts {
-		uniFactDomFacts = append(uniFactDomFacts, &fact)
+		iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, fact)
 		iffFacts = append(iffFacts, fact)
 	}
 
@@ -129,7 +129,7 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 
 	propAsSpecFact := parser.SpecFactStmt{IsTrue: true, PropName: parser.FcAtom{PkgName: "", Value: stmt.DefHeader.Name}, Params: specFactParams}
 
-	IffLeadToProp := parser.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: uniFactDomFacts, ThenFacts: []parser.SpecFactStmt{propAsSpecFact}}
+	IffLeadToProp := parser.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []*parser.SpecFactStmt{&propAsSpecFact}}
 
 	err = exec.env.NewFact(&IffLeadToProp)
 	if err != nil {
@@ -147,3 +147,52 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 
 	return nil
 }
+
+// func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
+// 	err := exec.env.NewDefConProp(stmt, "")
+// 	if err != nil {
+// 		return err
+// 	}
+// 	exec.newMsgEnd(stmt.String())
+
+// 	// new uni fact
+// 	// TODO 这里因为我是用 ptr 来实现某个interface的，所以这里非常愚蠢地需要重新变化一下
+// 	uniFactParamTypes := []parser.Fc{}
+// 	for _, tp := range stmt.DefHeader.TypeParams {
+// 		uniFactParamTypes = append(uniFactParamTypes, &tp)
+// 	}
+
+// 	uniFactDomFacts := []parser.FactStmt{}
+// 	uniFactDomFacts = append(uniFactDomFacts, stmt.DomFacts...)
+
+// 	iffFacts := []*parser.SpecFactStmt{}
+// 	for _, fact := range stmt.IffFacts {
+// 		uniFactDomFacts = append(uniFactDomFacts, &fact)
+// 		iffFacts = append(iffFacts, fact)
+// 	}
+
+// 	specFactParams := []parser.Fc{}
+// 	for _, param := range stmt.DefHeader.Params {
+// 		specFactParams = append(specFactParams, &parser.FcAtom{PkgName: "", Value: param})
+// 	}
+
+// 	propAsSpecFact := parser.SpecFactStmt{IsTrue: true, PropName: parser.FcAtom{PkgName: "", Value: stmt.DefHeader.Name}, Params: specFactParams}
+
+// 	IffLeadToProp := parser.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: uniFactDomFacts, ThenFacts: []parser.SpecFactStmt{propAsSpecFact}}
+
+// 	err = exec.env.NewFact(&IffLeadToProp)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	domFacts := append(stmt.DomFacts, &propAsSpecFact)
+
+// 	PropLeadToIff := parser.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: domFacts, ThenFacts: iffFacts}
+
+// 	err = exec.env.NewFact(&PropLeadToIff)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }

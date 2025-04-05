@@ -101,7 +101,7 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *parser.SpecFactStmt) (*Sto
 
 func (factMem *UniFactMemDict) Insert(fact *parser.UniFactStmt) error {
 	for _, stmt := range fact.ThenFacts {
-		err := factMem.insertSpecFact(fact, &stmt)
+		err := factMem.insertSpecFact(fact, stmt)
 		if err != nil {
 			return err
 		}
