@@ -48,7 +48,24 @@ func (stmt *SpecFactStmt) String() string {
 // 	return fmt.Sprintf("%v %v %v", stmt.Params[0].String(), stmt.Opt.String(), stmt.Params[1].String())
 // }
 
-func (stmt *DefObjStmt) String() string { panic("") }
+func (stmt *DefObjStmt) String() string {
+	var builder strings.Builder
+
+	builder.WriteString("obj ")
+	for i, objName := range stmt.Objs {
+		builder.WriteString(objName)
+		builder.WriteByte(' ')
+		builder.WriteString(stmt.ObjSets[i].String())
+	}
+
+	if len(stmt.Facts) > 0 {
+		builder.WriteString(" :")
+		builder.WriteByte('\n')
+		builder.WriteString(strOfNonEmptyFactStmtSlice(stmt.Facts, 1))
+	}
+
+	return builder.String()
+}
 
 func (c *DefInterfaceStmt) String() string { panic("") }
 func (f *DefTypeStmt) String() string      { panic("") }
@@ -74,7 +91,7 @@ func (fact *DefConPropStmt) String() string {
 	builder.WriteByte('\n') // 把 \n 单独拿出来，否则会让下面一行多空几格子
 
 	if len(fact.IffFacts) > 0 {
-		// builder.WriteString(strOfNonEmptyFactStmtSlice(fact.IffFacts, 2))
+		// builder.WriteStr 2))
 		// // 遍历前 n-1 个元素，每个后面加换行
 		for i := 0; i < len(fact.IffFacts)-1; i++ {
 			builder.WriteString(glob.LineHead4Indents(fact.IffFacts[i].String(), 2))
