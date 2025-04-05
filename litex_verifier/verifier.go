@@ -10,9 +10,6 @@ import (
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
 func (ver *Verifier) FactStmt(stmt parser.FactStmt, state VerState) (bool, error) {
-	// ver.addRound()
-	// defer ver.minusRound()
-
 	switch stmt := stmt.(type) {
 	// 只有这里的三大函数+FcEqual+propProp验证，可能读入anyState；也只有这三个函数，用得到 state,isSpec()，其他函数貌似都用不到？
 	case *parser.SpecFactStmt:
@@ -28,30 +25,15 @@ func (ver *Verifier) FactStmt(stmt parser.FactStmt, state VerState) (bool, error
 
 type Verifier struct {
 	env *env.Env
-	// searchRound uint8
 }
 
 func NewVerifier(curEnv *env.Env, pkgName string) *Verifier {
 	if curEnv == nil {
-		// return &Verifier{env: env.NewEnv(nil, nil), searchRound: 0}
 		return &Verifier{env: env.NewEnv(nil, nil, pkgName)}
 	} else {
-		// return &Verifier{env: curEnv, searchRound: 0}
 		return &Verifier{env: curEnv}
 	}
 }
-
-// func (ver *Verifier) addRound() {
-// 	ver.searchRound++
-// }
-
-// func (ver *Verifier) minusRound() {
-// 	ver.searchRound--
-// }
-
-// func (ver *Verifier) round1() bool {
-// 	return ver.searchRound == 1
-// }
 
 func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
 	ver.successMsgEnd(stmtString, storedStmtString)
@@ -62,7 +44,6 @@ func (ver *Verifier) successNoMsg() {
 
 func (ver *Verifier) newEnv(uniParamsMap map[string]parser.Fc) {
 	newEnv := env.NewEnv(ver.env, uniParamsMap, ver.env.CurPkg)
-	// newEnv.Parent = ver.env
 	ver.env = newEnv
 }
 
@@ -80,22 +61,18 @@ func (ver *Verifier) deleteEnvAndRetainMsg() error {
 
 func (ver *Verifier) unknownWithMsg(format string, args ...any) {
 	ver.unknownMsgEnd(format, args...)
-	// ver.Output = VerifierUnknown
 }
 
 func (ver *Verifier) asConFc(fc parser.Fc) parser.Fc {
-	// Safe type assertion
 	fcAsAtom, ok := fc.(*parser.FcAtom)
 	if !ok {
 		return nil
 	}
 
-	// Early return if it's a package-qualified name
 	if fcAsAtom.PkgName != "" {
 		return nil
 	}
 
-	// Look up in the universal parameter map
 	return ver.env.UniParamMap[fcAsAtom.Value]
 }
 

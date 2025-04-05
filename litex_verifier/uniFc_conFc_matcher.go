@@ -81,13 +81,11 @@ func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *parser.FcFnPipe, conFuncParam 
 
 	if len(conParamAsFcFn.CallPipe) != len(uniFuncFcFn.CallPipe) {
 		return nil, false, nil //? 不清楚应该报错还是说直接返回不对，应该是返回不对
-		// return nil, false, fmt.Errorf("expect length of %v equal to length of %v", conParamAsFcFn.CallPipe, uniFuncFcFn.CallPipe)
 	}
 
 	for i, uniPipe := range uniFuncFcFn.CallPipe {
 		if len(uniPipe.Params) != len(conParamAsFcFn.CallPipe[i].Params) {
 			return nil, false, nil
-			// return nil, false, fmt.Errorf("expect length of %v equal to length of %v", uniPipe.Params, conParamAsFcFn.CallPipe[i].Params)
 		}
 
 		for j, param := range uniPipe.Params {

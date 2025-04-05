@@ -13,6 +13,7 @@ func (exec *Executor) TopLevelStmt(stmt *parser.TopStmt) error {
 	return exec.stmt(stmt.Stmt)
 }
 
+// 在子函数里管理msg，即比如现在是TypeStmt，那在处理TypeStmt的地方处理它的string，二不是在这里
 func (exec *Executor) stmt(stmt parser.Stmt) error {
 	var err error = nil
 
@@ -47,7 +48,7 @@ func (exec *Executor) knowStmt(stmt *parser.KnowStmt) error {
 		}
 	}
 
-	exec.newMsgEnd(stmt.String())
+	exec.appendNewMsg(stmt.String())
 	return nil
 }
 
@@ -59,7 +60,7 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 	}
 
 	if !ok {
-		exec.newMsgEnd(stmt.String() + "\nis unknown")
+		exec.appendNewMsg(stmt.String() + "\nis unknown")
 	} else {
 		exec.env.NewFact(stmt)
 	}
@@ -77,8 +78,8 @@ func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, *verifier.Verif
 }
 
 func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
-	exec.newEnv(exec.env.CurPkg)  // 在子环境中做所有操作，不影响外部世界
-	exec.newMsgEnd(stmt.String()) // 在子函数里管理string
+	exec.newEnv(exec.env.CurPkg)
+	exec.appendNewMsg(stmt.String())
 
 	defer exec.deleteEnvAndRetainMsg()
 
@@ -90,10 +91,6 @@ func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
 	}
 
 	// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里
-
-	// localMsgs := exec.getMsgs()
-	// exec.newMsgAtParent(stmt.String() + "\n" + strings.Join(localMsgs, "\n\n"))
-
 	return nil
 }
 
@@ -102,7 +99,7 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 }
 
 func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
-	defer exec.newMsgEnd(stmt.String())
+	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefConProp(stmt, exec.env.CurPkg)
 	if err != nil {
 		return err
@@ -151,7 +148,7 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 }
 
 func (exec *Executor) defObjStmt(stmt *parser.DefObjStmt) error {
-	defer exec.newMsgEnd(stmt.String())
+	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefObj(stmt, exec.env.CurPkg)
 	if err != nil {
 		return err

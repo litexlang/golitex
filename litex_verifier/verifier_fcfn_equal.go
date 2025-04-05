@@ -14,8 +14,6 @@ func (ver *Verifier) fcFnPipeEqual(left, right *parser.FcFnPipe, state VerState)
 			return true, nil
 		}
 	}
-
-	// return true,nil
 	return false, nil
 }
 
@@ -109,5 +107,5 @@ func (ver *Verifier) fcHeadEqual(leftHead parser.Fc, rightHead parser.Fc, params
 	_ = params
 	return ok, err
 
-	// TODO 以后引入新的keyword专门用来证明函数头相等，2个函数在params所在的某domain里，刚好相等
+	// TODO 以后引入新的keyword专门用来证明函数头相等，2个函数在params所在的某domain里，刚好相等? 或者我还是不引入？
 }

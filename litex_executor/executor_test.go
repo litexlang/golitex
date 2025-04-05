@@ -30,7 +30,7 @@ func parseStmtTest(code string, t *testing.T) []parser.TopStmt {
 
 func execStmtTest(topStmt []parser.TopStmt, t *testing.T) []string {
 	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env, "")
+	executor := *NewExecutor(env)
 
 	messages := []string{}
 	for _, topStmt := range topStmt {
@@ -38,9 +38,6 @@ func execStmtTest(topStmt []parser.TopStmt, t *testing.T) []string {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// messages = append(messages, *executor.msgSliceSlice)
-		// slices.Reverse(executor.env.Msgs)
-		// slices.Reverse()
 		messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
 	}
 	slices.Reverse(messages)
@@ -62,8 +59,7 @@ func TestStoreNewObj(t *testing.T) {
 		t.Fatal(err)
 	}
 	curEnv := env.NewEnv(nil, nil, "")
-	executor := NewExecutor(curEnv, "")
-	// executor := Executor{curEnv, &[]string{}, execError}
+	executor := NewExecutor(curEnv)
 	for _, topStmt := range statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -83,7 +79,7 @@ func TestKnow(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env, "")
+	executor := *NewExecutor(env)
 	for _, topStmt := range statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -100,13 +96,12 @@ func TestVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env, "")
+	executor := *NewExecutor(env)
 	for _, topStmt := range statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
 		}
-		// executor.printlnExecOutput()
 	}
 
 	testCodes := "$p(b)\n$p(a)"
@@ -120,12 +115,10 @@ func TestVerifier(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// executor.printlnExecOutput()
 	}
 }
 
 func randSpecFact() *parser.SpecFactStmt {
-	// randomly generate n random Fc
 	n := rand.Intn(10) + 1
 	params := make([]parser.Fc, n)
 	for i := 0; i < n; i++ {
@@ -178,7 +171,6 @@ func randCondStmt() *parser.CondFactStmt {
 	randomNumberOfCondFacts := rand.Intn(3) + 1
 	randomNumberOfThenFacts := rand.Intn(3) + 1
 	condFacts := []parser.FactStmt{}
-	// thenFacts := []parser.SpecFactStmt{}
 	thenFacts := []*parser.SpecFactStmt{}
 
 	for i := 0; i < randomNumberOfCondFacts; i++ {
@@ -194,7 +186,7 @@ func randCondStmt() *parser.CondFactStmt {
 
 func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env, "")
+	executor := *NewExecutor(env)
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
@@ -240,7 +232,7 @@ func TestKnowVerifySpecFactSpeed(t *testing.T) {
 
 func TestKnowVerifyCondFactSpeed(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env, "")
+	executor := *NewExecutor(env)
 	executor.env = env
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
@@ -278,7 +270,7 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 
 func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env, "")
+	executor := *NewExecutor(env)
 	executor.env = env
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
@@ -322,7 +314,7 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 
 func TestEqualFactMemory(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env, "")
+	executor := *NewExecutor(env)
 	executor.env = env
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}

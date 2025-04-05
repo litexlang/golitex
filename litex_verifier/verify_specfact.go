@@ -257,7 +257,6 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 
 	for _, condFact := range knownStmt.Fact.DomFacts {
 		ok, err := ver.FactStmt(condFact, state.spec().noMsg()) // TODO: 这里最好要标注一下是specFact
-		// ok, err := ver.FactStmt(condFact, state.spec())
 		if err != nil {
 			return false, err
 		}

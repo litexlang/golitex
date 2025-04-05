@@ -903,14 +903,6 @@ $p(x, y)(red::blue, g::f(1,2)(3,4))
 
 }
 
-// forall <G Group, G2 Group> g G, g2 G2:
-// 	$G(g)
-// 	$G(g2)
-// 	$p(x, y)
-// 	when $f(g.g1, g2.g2) {$p()}
-// 	then:
-// 		$p(x, y)
-
 func TestForallStmt3(t *testing.T) {
 	code := `
 forall <G Group, G2 Group> g G, g2 G2:

@@ -22,14 +22,8 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, e
 		return false, err
 	}
 	if cmpRet == 0 {
-		// 直接相等貌似没什么好打印的，显然
-		// if state.requireMsg() {
-		// ver.appendMsg("%s = %s directly", left.String(), right.String())
-		// }
 		return true, nil
 	}
-
-	// 完全一样的匹配，以及内置的自然数的匹配，是equal这个specProp和普通specProp的唯一的区别
 
 	// Case: 用已知事实
 	nextState := state.spec()

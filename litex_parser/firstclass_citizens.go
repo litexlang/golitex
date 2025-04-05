@@ -114,25 +114,3 @@ func IsNumber(f Fc) (string, bool) {
 
 	return s, true
 }
-
-// used for objects that are returned by called function, e,g. f().g().h().  The chain is connected by dots
-
-// func (f *FcChain) String() string {
-// 	ret := ""
-// 	for i := 0; i < len(f.ChainOfMembers)-1; i++ {
-// 		ret += fmt.Sprintf("%s.", (f.ChainOfMembers)[i])
-// 	}
-// 	return ret + (f.ChainOfMembers)[len(f.ChainOfMembers)-1].String()
-// }
-
-// func (f *FcChain) fc() {}
-// type FcChainMem interface {
-// 	fc()
-// 	fcMemChainMemType()
-// 	String() string
-// }
-
-// func (f FcStr) fcMemChainMemType()         {}
-// func (f *FcFnRetValue) fcMemChainMemType() {}
-
-// type FcChain struct{ ChainOfMembers []FcChainMem }
