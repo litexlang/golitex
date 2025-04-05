@@ -123,7 +123,7 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 	}
 
 	typeParams := []string{}
-	typeInterfaces := []FcAtom{}
+	typeInterfaces := []*FcAtom{}
 
 	if stmt.Header.is(glob.KeywordLess) {
 		stmt.Header.next()
@@ -330,7 +330,7 @@ func (stmt *TokenBlock) parseDefConFnStmt() (*DefConFnStmt, error) {
 		}
 	}
 
-	return &DefConFnStmt{*decl, retType, ifFacts, thenFacts}, nil
+	return &DefConFnStmt{*decl, &retType, ifFacts, thenFacts}, nil
 }
 
 func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
@@ -481,7 +481,7 @@ func (stmt *TokenBlock) parseDefConExistPropStmt() (*DefConExistPropStmt, error)
 	}
 
 	existObjOrFn := []string{}
-	existObjOrFnTypes := []FcAtom{}
+	existObjOrFnTypes := []*FcAtom{}
 
 	for !stmt.Header.is(glob.KeywordColon) && !stmt.Header.ExceedEnd() {
 		decl, err := stmt.Header.next()
@@ -493,7 +493,7 @@ func (stmt *TokenBlock) parseDefConExistPropStmt() (*DefConExistPropStmt, error)
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		existObjOrFn = append(existObjOrFn, decl)
-		existObjOrFnTypes = append(existObjOrFnTypes, tp)
+		existObjOrFnTypes = append(existObjOrFnTypes, &tp)
 		if stmt.Header.is(glob.KeywordComma) {
 			stmt.Header.skip()
 		}
@@ -631,7 +631,7 @@ func (stmt *TokenBlock) parseConditionalStmt() (*CondFactStmt, error) {
 	}
 
 	condFacts := []FactStmt{}
-	thenFacts := []SpecFactStmt{}
+	thenFacts := []*SpecFactStmt{}
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
 		fact, err := stmt.Body[i].parseSpecFactStmt()
@@ -655,7 +655,7 @@ func (stmt *TokenBlock) parseConditionalStmt() (*CondFactStmt, error) {
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		thenFacts = append(thenFacts, *fact)
+		thenFacts = append(thenFacts, fact)
 	}
 
 	return &CondFactStmt{condFacts, thenFacts}, nil
@@ -681,7 +681,7 @@ func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
 	}
 
 	params := []string{}
-	typeParams := []FcAtom{}
+	typeParams := []*FcAtom{}
 
 	for !stmt.Header.is(glob.KeywordRightParen) {
 		param, err := stmt.Header.next()
@@ -695,7 +695,7 @@ func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 
-		typeParams = append(typeParams, typeParam)
+		typeParams = append(typeParams, &typeParam)
 
 		if stmt.Header.is(glob.KeywordComma) {
 			stmt.Header.skip()
