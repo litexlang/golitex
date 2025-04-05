@@ -225,3 +225,7 @@ prove:
     b =x
     $p(b) // true. 因为 = 有交换性，而我确实实现了可交换的符号能在用uniFact验证时用上可交换性，所以只用 b = x，而不是 x = b 就能运行.
 
+
+prove:
+    know x in A
+    x in A

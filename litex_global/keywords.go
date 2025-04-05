@@ -203,11 +203,17 @@ func GetBuiltinSymbol(inputString string, start int) string {
 }
 
 func IsBuiltinRelaProp(op string) bool {
-	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!="
+	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!=" || op == "in"
 }
 
 func IsBuiltinRelaFn(op string) bool {
-	return op == "+" || op == "-" || op == "*" || op == "/" || op == "^"
+	// return op == "+" || op == "-" || op == "*" || op == "/" || op == "^"
+	for key := range PrecedenceMap {
+		if op == key {
+			return true
+		}
+	}
+	return false
 }
 
 type FcInfixOptPrecedence int
@@ -227,14 +233,14 @@ const (
 )
 
 var PrecedenceMap = map[string]FcInfixOptPrecedence{
-	"+": PrecAddition,
-	"-": PrecAddition,
-	"*": PrecMultiplication,
-	"/": PrecMultiplication,
-	"^": PrecExponentiation,
+	KeywordPlus:  PrecAddition,
+	KeywordMinus: PrecAddition,
+	KeywordStar:  PrecMultiplication,
+	KeywordSlash: PrecMultiplication,
+	KeywordCaret: PrecExponentiation,
 }
 
 // All Unary operators have higher Precedence than infix operators
 var UnaryPrecedence = map[string]FcInfixOptPrecedence{
-	"-": PrecUnary,
+	KeywordMinus: PrecUnary,
 }

@@ -560,13 +560,6 @@ func TestAllFactCode(t *testing.T) {
 	printExecMsg(messages)
 }
 
-func TestLastFactCode(t *testing.T) {
-	code := readFile("../litex_code_examples/fact.lix")
-	topStmtSlice := parseStmtTest(code, t)
-	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:], t)
-	printExecMsg(messages)
-}
-
 func TestPropDef(t *testing.T) {
 	code :=
 		`
@@ -589,5 +582,12 @@ $q(2)
 `
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
+
+func TestLastFactCode(t *testing.T) {
+	code := readFile("../litex_code_examples/fact.lix")
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:], t)
 	printExecMsg(messages)
 }
