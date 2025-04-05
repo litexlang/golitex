@@ -10,7 +10,7 @@ func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (i
 	return CmpFcLiterally(left.FcAsKey, right.FcAsKey)
 }
 
-// 注：像1+1=2这种字面量的比较，我不比。我是比完完全全一样的
+// 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
 func CmpFcLiterally(left, right parser.Fc) (int, error) {
 	typeComp, fcEnum, err := CmpFcType(left, right)
 	if typeComp != 0 || err != nil {
