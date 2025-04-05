@@ -101,10 +101,7 @@ func (ver *Verifier) asConFc(fc parser.Fc) parser.Fc {
 
 func (ver *Verifier) isDeclared(fc string) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		ok, err := ver.env.IsDeclared(fc)
-		if err != nil {
-			return false, err
-		}
+		ok := ver.env.IsDeclared(fc)
 		if ok {
 			return ok, nil
 		}

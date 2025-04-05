@@ -8,13 +8,13 @@ import (
 
 // match 函数不需要传入state: 没有any, spec 之分，也不需要打印
 func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact, stmt *parser.SpecFactStmt) (map[string][]parser.Fc, bool, error) { // 之所以是map[string][]parser.Fc而不是 map[string]parser.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
-	if len(stmt.Params) != len(knownFact.FuncParams) {
+	if len(stmt.Params) != len(*knownFact.FuncParams) {
 		return nil, false, nil
 	}
 
 	retMap := map[string][]parser.Fc{}
 
-	for i, uniParam := range knownFact.FuncParams {
+	for i, uniParam := range *knownFact.FuncParams {
 		matchMap, matched, err := ver.matchUniConFc(uniParam, stmt.Params[i], knownFact.Fact.Params)
 		if err != nil {
 			return nil, false, err

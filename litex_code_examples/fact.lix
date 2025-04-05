@@ -229,3 +229,6 @@ prove:
 prove:
     know x in A
     x in A
+
+prove:
+    obj x A

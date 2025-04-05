@@ -35,9 +35,8 @@ type CondFactMemDict struct {
 
 type StoredUniSpecFact struct {
 	IsTrue     bool
-	FuncParams []parser.Fc // 和存在Fact里的FuncFact共享slice，但因为后续不再修改了，所以这里不用取 *[]parser.Fc
-	// UniParams  *[]string
-	Fact *parser.UniFactStmt
+	FuncParams *[]parser.Fc // 和存在Fact里的FuncFact共享slice，只要是共享，那我就用*[]，虽然确实 Fact里的 FuncFact 日后不会改变，且二者再也不相见了
+	Fact       *parser.UniFactStmt
 }
 
 type StoredUniFuncMemDictNode struct {
@@ -64,20 +63,6 @@ type ObjMemoryEntry struct {
 
 type StoredPropMemDictNode struct{ Def *parser.DefConPropStmt }
 
-// func (node *StoredPropMemDictNode) toUniFact() parser.UniFactStmt {
-// 	typeParams := []parser.Fc{}
-// 	for _, tp := range node.Def.DefHeader.TypeParams {
-// 		typeParams = append(typeParams, &tp)
-// 	}
-
-// 	return parser.UniFactStmt{
-// 		node.Def.DefHeader.Params,
-// 		typeParams,
-// 		node.Def.DomFacts,
-// 		node.Def.IffFacts,
-// 	}
-// }
-
 type PropMem struct {
 	Dict map[string]map[string]StoredPropMemDictNode
 }
@@ -91,5 +76,7 @@ type FnMem struct {
 type FnMemEntry struct {
 }
 
+type StoredObjMemDictNode struct{ Def *parser.DefObjStmt }
 type ObjMem struct {
+	Dict map[string]map[string]StoredObjMemDictNode
 }
