@@ -102,11 +102,11 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 }
 
 func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
+	defer exec.newMsgEnd(stmt.String())
 	err := exec.env.NewDefConProp(stmt, exec.curPkg)
 	if err != nil {
 		return err
 	}
-	exec.newMsgEnd(stmt.String())
 
 	// new uni fact
 	// TODO 这里因为我是用 ptr 来实现某个interface的，所以这里非常愚蠢地需要重新变化一下
@@ -151,6 +151,18 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 }
 
 func (exec *Executor) defObjStmt(stmt *parser.DefObjStmt) error {
-	// TODO
+	defer exec.newMsgEnd(stmt.String())
+	err := exec.env.NewDefObj(stmt, exec.curPkg)
+	if err != nil {
+		return err
+	}
+
+	for _, fact := range stmt.Facts {
+		err := exec.env.NewFact(fact)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

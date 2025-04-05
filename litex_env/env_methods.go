@@ -131,7 +131,13 @@ func (env *Env) NewDefConProp(stmt *parser.DefConPropStmt, pkgName string) error
 	return env.PropMem.Insert(stmt, pkgName)
 }
 
-func (env *Env) NewDefObj(stmt *parser.DefObjStmt) error {
-	// TODO
-	return nil
+func (env *Env) NewDefObj(stmt *parser.DefObjStmt, pkgName string) error {
+	for _, objName := range stmt.Objs {
+		isDeclared := env.IsDeclared(objName)
+		if isDeclared {
+			return fmt.Errorf("%s is already declared", objName)
+		}
+	}
+
+	return env.ObjMem.Insert(stmt, pkgName)
 }
