@@ -6,15 +6,12 @@ import (
 
 type Executor struct {
 	env *env.Env
-	// curPkg string
-	// parent  *Executor
-	// msgs   []string
-	// output ExecOutput
 }
 
-func NewExecutor(curEnv *env.Env, curPkg string) *Executor {
+// 如果你传入的是nil，那默认这个exec里的env的curPkg是""
+func NewExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil, nil, curPkg)}
+		return &Executor{env: env.NewEnv(nil, nil, "")}
 	} else {
 		return &Executor{env: curEnv}
 	}

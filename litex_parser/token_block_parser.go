@@ -236,35 +236,6 @@ func (stmt *TokenBlock) parseDefConPropStmt() (*DefConPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	// domFacts := []FactStmt{}
-	// iffFacts := []FactStmt{}
-
-	// if stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordIff) {
-	// 	for i := 0; i < len(stmt.Body)-1; i++ {
-	// 		curStmt, err := stmt.Body[i].parseFactStmt()
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		domFacts = append(domFacts, curStmt)
-	// 	}
-	// 	err := stmt.Body[len(stmt.Body)-1].Header.skip(glob.KeywordIff)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	err = stmt.Body[len(stmt.Body)-1].Header.skip(glob.KeywordColon)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// } else {
-	// 	for i := 0; i < len(stmt.Body); i++ {
-	// 		curStmt, err := stmt.Body[i].parseFactStmt()
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		iffFacts = append(iffFacts, curStmt)
-	// 	}
-	// }
-
 	domFacts, iffFacts, err := stmt.parseBodyFactSectionSpecFactSection(glob.KeywordIff)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -575,12 +546,7 @@ func (stmt *TokenBlock) parseRelaFactStmt() (*SpecFactStmt, error) {
 		params = append(params, fc)
 	}
 
-	// if opt != "=" {
 	return &SpecFactStmt{true, FcAtom{Value: opt}, params}, nil
-	// } else {
-	// 	return &RelaFactStmt{false, FcAtom{OptName: opt}, params}, nil
-	// }
-	// return &RelaFactStmt{true, FcAtom{OptName: opt}, params}, nil
 }
 
 func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {

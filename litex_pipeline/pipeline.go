@@ -22,7 +22,7 @@ func ExecuteCodeAndReturnMessageSlice(code string) ([]string, error) {
 		return nil, err
 	}
 	env := env.NewEnv(nil, nil, "")
-	executor := *exe.NewExecutor(env, "")
+	executor := *exe.NewExecutor(env)
 
 	msgOfTopStatements := []string{}
 	for _, topStmt := range topStmtSlice {

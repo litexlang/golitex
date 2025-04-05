@@ -5,26 +5,6 @@ import (
 )
 
 func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, error) {
-	// 	ok, err := ver.CondFactSpec(stmt, state)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	if ok {
-	// 		return true, nil
-	// 	}
-
-	// 	if !ver.round1() {
-	// 		return false, nil
-	// 	}
-
-	// 	// TODO
-
-	// 	return ver.CondFactCond(stmt, state)
-
-	// 	// TODO: CondFactUni
-	// }
-
-	// func (ver *Verifier) CondFactSpec(stmt *parser.CondFactStmt, state VerState) (bool, error) {
 	ver.newEnv(nil)
 	defer ver.deleteEnvAndRetainMsg() // 万一cond里有condFact，那要保证能回到原来的环境
 
@@ -49,17 +29,8 @@ func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, 
 		}
 	}
 
-	// if ver.round1() {
-	// 	ver.successWithMsg("%v is true", stmt.String())
-	// 	return true, nil
-	// } else {
-	// 	ver.successNoMsg()
-	// 	return true, nil
-	// }
-
 	if state.requireMsg() {
 		ver.successMsgEnd(stmt.String(), "")
-		// ver.env.Parent.NewMsg(fmt.Sprintf("%v\nis true", stmt.String()))
 		return true, nil
 	} else {
 		ver.successNoMsg()

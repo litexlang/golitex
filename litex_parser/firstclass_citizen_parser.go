@@ -15,7 +15,6 @@ func (parser *StrSliceCursor) parseFcAtomAndFcFnRetAndBracedFc() (Fc, error) {
 		return parser.parseNumberStr()
 	}
 
-	// TODO: 这里需要考虑xxx::yyy这种情况
 	fcStr, err := parser.parseFcAtom()
 	if err != nil {
 		return nil, &parserErr{err, parser}

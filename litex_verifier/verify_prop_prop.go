@@ -4,6 +4,7 @@ import (
 	parser "golitex/litex_parser"
 )
 
+// 就像 async func 和 func 在python中被分离开来，我也分离prop和prop_prop
 func (ver *Verifier) IsPropProp(stmt *parser.SpecFactStmt, state VerState) (bool, error) {
 	// TODO
 	return false, nil
