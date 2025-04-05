@@ -102,7 +102,7 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 }
 
 func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
-	err := exec.env.NewDefConProp(stmt, "")
+	err := exec.env.NewDefConProp(stmt, exec.curPkg)
 	if err != nil {
 		return err
 	}
@@ -151,5 +151,6 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 }
 
 func (exec *Executor) defObjStmt(stmt *parser.DefObjStmt) error {
+	// TODO
 	return nil
 }

@@ -30,7 +30,7 @@ func parseStmtTest(code string, t *testing.T) []parser.TopStmt {
 
 func execStmtTest(topStmt []parser.TopStmt, t *testing.T) []string {
 	env := env.NewEnv(nil, nil)
-	executor := *NewExecutor(env)
+	executor := *NewExecutor(env, "")
 
 	messages := []string{}
 	for _, topStmt := range topStmt {
@@ -62,7 +62,7 @@ func TestStoreNewObj(t *testing.T) {
 		t.Fatal(err)
 	}
 	curEnv := env.NewEnv(nil, nil)
-	executor := NewExecutor(curEnv)
+	executor := NewExecutor(curEnv, "")
 	// executor := Executor{curEnv, &[]string{}, execError}
 	for _, topStmt := range statements {
 		err := executor.TopLevelStmt(&topStmt)
@@ -83,7 +83,7 @@ func TestKnow(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := env.NewEnv(nil, nil)
-	executor := *NewExecutor(env)
+	executor := *NewExecutor(env, "")
 	for _, topStmt := range statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -100,7 +100,7 @@ func TestVerifier(t *testing.T) {
 		t.Fatal(err)
 	}
 	env := env.NewEnv(nil, nil)
-	executor := *NewExecutor(env)
+	executor := *NewExecutor(env, "")
 	for _, topStmt := range statements {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
@@ -194,7 +194,7 @@ func randCondStmt() *parser.CondFactStmt {
 
 func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	env := env.NewEnv(nil, nil)
-	executor := *NewExecutor(env)
+	executor := *NewExecutor(env, "")
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
 
@@ -240,7 +240,7 @@ func TestKnowVerifySpecFactSpeed(t *testing.T) {
 
 func TestKnowVerifyCondFactSpeed(t *testing.T) {
 	env := env.NewEnv(nil, nil)
-	executor := *NewExecutor(env)
+	executor := *NewExecutor(env, "")
 	executor.env = env
 	topStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
@@ -278,7 +278,7 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 
 func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 	env := env.NewEnv(nil, nil)
-	executor := *NewExecutor(env)
+	executor := *NewExecutor(env, "")
 	executor.env = env
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}
@@ -322,7 +322,7 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 
 func TestEqualFactMemory(t *testing.T) {
 	env := env.NewEnv(nil, nil)
-	executor := *NewExecutor(env)
+	executor := *NewExecutor(env, "")
 	executor.env = env
 	topKnowStatements := []*parser.TopStmt{}
 	topVerifyStatements := []*parser.TopStmt{}

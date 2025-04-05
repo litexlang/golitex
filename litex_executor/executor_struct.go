@@ -5,17 +5,18 @@ import (
 )
 
 type Executor struct {
-	env *env.Env
+	env    *env.Env
+	curPkg string
 	// parent  *Executor
 	// msgs   []string
 	// output ExecOutput
 }
 
-func NewExecutor(curEnv *env.Env) *Executor {
+func NewExecutor(curEnv *env.Env, curPkg string) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil, nil)}
+		return &Executor{env: env.NewEnv(nil, nil), curPkg: curPkg}
 	} else {
-		return &Executor{env: curEnv}
+		return &Executor{env: curEnv, curPkg: curPkg}
 	}
 }
 

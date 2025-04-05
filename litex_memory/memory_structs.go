@@ -64,6 +64,7 @@ type ObjMemoryEntry struct {
 type StoredPropMemDictNode struct{ Def *parser.DefConPropStmt }
 
 type PropMem struct {
+	// 之所以是 map[string][string] 而不是 map[string]，因为虽然用户在当前的项目里，始终第一个key是""，但如果我读入了来自其他地方的包，那就是另外一个名字了
 	Dict map[string]map[string]StoredPropMemDictNode
 }
 
