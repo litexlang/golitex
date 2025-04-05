@@ -231,4 +231,7 @@ prove:
     x in A
 
 prove:
-    obj x A
+    obj x A:
+        $p(x)
+    x in A
+    $p(x)
