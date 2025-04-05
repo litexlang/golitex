@@ -29,14 +29,14 @@ type DefConPropStmt struct {
 type DefConExistPropStmt struct {
 	DefHeader    ConDefHeader
 	ExistFc      []string
-	ExistFcTypes []FcAtom
+	ExistFcTypes []*FcAtom
 	DomFacts     []FactStmt
 	ThenFacts    []FactStmt
 }
 
 type DefConFnStmt struct {
 	DefHeader ConDefHeader
-	retType   FcAtom
+	retType   *FcAtom
 	DomFacts  []FactStmt
 	ThenFacts []FactStmt
 }
@@ -50,7 +50,7 @@ type UniFactStmt struct {
 
 type GenericUniStmt struct {
 	TypeParams     []string
-	TypeInterfaces []FcAtom
+	TypeInterfaces []*FcAtom
 	Params         []string
 	ParamTypes     []Fc
 	DomFacts       []FactStmt
@@ -99,7 +99,7 @@ type ThmStmt struct {
 
 type CondFactStmt struct {
 	CondFacts []FactStmt
-	ThenFacts []SpecFactStmt
+	ThenFacts []*SpecFactStmt
 }
 
 type FcFnDecl struct {
@@ -110,5 +110,5 @@ type FcFnDecl struct {
 type ConDefHeader struct {
 	Name       string
 	Params     []string
-	TypeParams []FcAtom
+	TypeParams []*FcAtom
 }

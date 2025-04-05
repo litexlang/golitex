@@ -52,7 +52,7 @@ func NewCondFactMemDict() *CondFactMemDict {
 
 func (factMem *CondFactMemDict) Insert(condStmt *parser.CondFactStmt) error {
 	for _, stmt := range condStmt.ThenFacts {
-		err := factMem.InsertSpecFact(condStmt, &stmt)
+		err := factMem.InsertSpecFact(condStmt, stmt)
 		if err != nil {
 			return err
 		}

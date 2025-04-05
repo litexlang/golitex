@@ -110,7 +110,7 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 	// TODO 这里因为我是用 ptr 来实现某个interface的，所以这里非常愚蠢地需要重新变化一下
 	uniFactParamTypes := []parser.Fc{}
 	for _, tp := range stmt.DefHeader.TypeParams {
-		uniFactParamTypes = append(uniFactParamTypes, &tp)
+		uniFactParamTypes = append(uniFactParamTypes, tp)
 	}
 
 	iffLeadToPropUniFactDomFacts := []parser.FactStmt{}

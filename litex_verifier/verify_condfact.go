@@ -36,14 +36,14 @@ func (ver *Verifier) CondFact(stmt *parser.CondFactStmt, state VerState) (bool, 
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(&thenFact, state) // 貌似这里不用把state换成spec，比如用户输入condFact，然后下面的事实都正常运行，只不过需要现知道一下condFacts
+		ok, err := ver.FactStmt(thenFact, state) // 貌似这里不用把state换成spec，比如用户输入condFact，然后下面的事实都正常运行，只不过需要现知道一下condFacts
 		if err != nil {
 			return false, err
 		}
 		if !ok {
 			return false, nil
 		}
-		err = ver.env.NewFact(&thenFact)
+		err = ver.env.NewFact(thenFact)
 		if err != nil {
 			return false, err
 		}

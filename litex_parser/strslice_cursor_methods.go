@@ -120,9 +120,9 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (DefPropStmt, error) {
 	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
 }
 
-func (parser *StrSliceCursor) parseTypeListInDeclsAndSkipEnd(endWith string) ([]string, []FcAtom, error) {
+func (parser *StrSliceCursor) parseTypeListInDeclsAndSkipEnd(endWith string) ([]string, []*FcAtom, error) {
 	paramName := []string{}
-	paramTypes := []FcAtom{}
+	paramTypes := []*FcAtom{}
 
 	for !parser.is(endWith) {
 		objName, err := parser.next()
@@ -136,7 +136,7 @@ func (parser *StrSliceCursor) parseTypeListInDeclsAndSkipEnd(endWith string) ([]
 		}
 
 		paramName = append(paramName, objName)
-		paramTypes = append(paramTypes, tp)
+		paramTypes = append(paramTypes, &tp)
 
 		if parser.isAndSkip(endWith) {
 			break
