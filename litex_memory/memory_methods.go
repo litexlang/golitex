@@ -12,10 +12,10 @@ func NewFnMemory() *FnMem {
 }
 
 func NewObjMemory() *ObjMem {
-	return &ObjMem{}
+	return &ObjMem{map[string]map[string]StoredObjMemDictNode{}}
 }
 
-func (mem *ObjMem) Get(s string) (*ObjMemoryEntry, bool) {
+func (mem *ObjMem) Get(stmt string) (*ObjMemoryEntry, bool) {
 	panic("TODO")
 }
 

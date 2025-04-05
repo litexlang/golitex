@@ -4,14 +4,14 @@ import (
 	parser "golitex/litex_parser"
 )
 
-func (factMem *PropMem) Insert(stmt *parser.DefConPropStmt, PkgName string) error {
-	pkgMap, pkgExists := factMem.Dict[PkgName] // 检查 pkgName 是否存在
+func (factMem *PropMem) Insert(stmt *parser.DefConPropStmt, pkgName string) error {
+	pkgMap, pkgExists := factMem.Dict[pkgName] // 检查 pkgName 是否存在
 
 	// 如果包不存在，初始化包映射
 	if !pkgExists {
 		// factMem.Dict[PkgName] = map[string]StoredPropMemDictNode{}
-		factMem.Dict[PkgName] = make(map[string]StoredPropMemDictNode)
-		pkgMap = factMem.Dict[PkgName]
+		factMem.Dict[pkgName] = make(map[string]StoredPropMemDictNode)
+		pkgMap = factMem.Dict[pkgName]
 	}
 
 	// 获取或创建节点
@@ -23,5 +23,10 @@ func (factMem *PropMem) Insert(stmt *parser.DefConPropStmt, PkgName string) erro
 	// 更新映射中的节点
 	pkgMap[stmt.DefHeader.Name] = node
 
+	return nil
+}
+
+func (objMem *ObjMem) Insert(stmt *parser.DefObjStmt, pkgName string) error {
+	// TODO
 	return nil
 }
