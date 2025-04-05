@@ -80,12 +80,14 @@ func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *parser.FcFnPipe, conFuncParam 
 	}
 
 	if len(conParamAsFcFn.CallPipe) != len(uniFuncFcFn.CallPipe) {
-		return nil, false, fmt.Errorf("expect length of %v equal to length of %v", conParamAsFcFn.CallPipe, uniFuncFcFn.CallPipe)
+		return nil, false, nil
+		// return nil, false, fmt.Errorf("expect length of %v equal to length of %v", conParamAsFcFn.CallPipe, uniFuncFcFn.CallPipe)
 	}
 
 	for i, uniPipe := range uniFuncFcFn.CallPipe {
 		if len(uniPipe.Params) != len(conParamAsFcFn.CallPipe[i].Params) {
-			return nil, false, fmt.Errorf("expect length of %v equal to length of %v", uniPipe.Params, conParamAsFcFn.CallPipe[i].Params)
+			return nil, false, nil
+			// return nil, false, fmt.Errorf("expect length of %v equal to length of %v", uniPipe.Params, conParamAsFcFn.CallPipe[i].Params)
 		}
 
 		for j, param := range uniPipe.Params {
