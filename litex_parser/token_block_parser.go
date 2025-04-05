@@ -339,7 +339,8 @@ func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	paramNames := []string{}
+	objNames := []string{}
+	objSets := []Fc{}
 
 	for !stmt.Header.is(glob.KeywordColon) && !stmt.Header.ExceedEnd() {
 		decl, err := stmt.Header.next()
@@ -352,14 +353,19 @@ func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
 				return nil, &parseStmtErr{err, *stmt}
 			}
 		}
-		paramNames = append(paramNames, decl)
+		objNames = append(objNames, decl)
+		tp, err := stmt.Header.ParseFc()
+		if err != nil {
+			return nil, &parseStmtErr{err, *stmt}
+		}
+		objSets = append(objSets, tp)
 	}
 
-	ifFacts := []FactStmt{}
+	facts := []FactStmt{}
 
 	if !stmt.Header.ExceedEnd() && stmt.Header.is(glob.KeywordColon) {
 		stmt.Header.skip()
-		ifFacts, err = stmt.parseBodyFacts()
+		facts, err = stmt.parseBodyFacts()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -367,7 +373,7 @@ func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
-	return &DefObjStmt{paramNames, ifFacts}, nil
+	return &DefObjStmt{objNames, objSets, facts}, nil
 }
 
 func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
