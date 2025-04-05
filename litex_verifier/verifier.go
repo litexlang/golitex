@@ -31,10 +31,10 @@ type Verifier struct {
 	// searchRound uint8
 }
 
-func NewVerifier(curEnv *env.Env) *Verifier {
+func NewVerifier(curEnv *env.Env, pkgName string) *Verifier {
 	if curEnv == nil {
 		// return &Verifier{env: env.NewEnv(nil, nil), searchRound: 0}
-		return &Verifier{env: env.NewEnv(nil, nil)}
+		return &Verifier{env: env.NewEnv(nil, nil, pkgName)}
 	} else {
 		// return &Verifier{env: curEnv, searchRound: 0}
 		return &Verifier{env: curEnv}
@@ -61,7 +61,7 @@ func (ver *Verifier) successNoMsg() {
 }
 
 func (ver *Verifier) newEnv(uniParamsMap map[string]parser.Fc) {
-	newEnv := env.NewEnv(ver.env, uniParamsMap)
+	newEnv := env.NewEnv(ver.env, uniParamsMap, ver.env.CurPkg)
 	// newEnv.Parent = ver.env
 	ver.env = newEnv
 }

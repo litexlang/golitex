@@ -5,8 +5,8 @@ import (
 )
 
 type Executor struct {
-	env    *env.Env
-	curPkg string
+	env *env.Env
+	// curPkg string
 	// parent  *Executor
 	// msgs   []string
 	// output ExecOutput
@@ -14,14 +14,14 @@ type Executor struct {
 
 func NewExecutor(curEnv *env.Env, curPkg string) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil, nil), curPkg: curPkg}
+		return &Executor{env: env.NewEnv(nil, nil, curPkg)}
 	} else {
-		return &Executor{env: curEnv, curPkg: curPkg}
+		return &Executor{env: curEnv}
 	}
 }
 
-func (e *Executor) newEnv() {
-	e.env = env.NewEnv(e.env, nil)
+func (e *Executor) newEnv(curPkg string) {
+	e.env = env.NewEnv(e.env, nil, curPkg)
 }
 
 func (e *Executor) deleteEnvAndRetainMsg() {
