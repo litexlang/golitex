@@ -1051,3 +1051,19 @@ prop q(x A):
 		t.Fatal(err)
 	}
 }
+
+func TestIn(t *testing.T) {
+	code := `
+prove:
+    know:
+		x in A
+    x in A
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}
