@@ -139,7 +139,7 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 	}
 
 	domainFacts := []FactStmt{}
-	thenFacts := []SpecFactStmt{}
+	thenFacts := []*SpecFactStmt{}
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordThen) {
 		for i := 0; i < len(stmt.Body)-1; i++ {
@@ -159,7 +159,7 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
-			thenFacts = append(thenFacts, *curStmt)
+			thenFacts = append(thenFacts, curStmt)
 		}
 	}
 
@@ -184,8 +184,8 @@ func (stmt *TokenBlock) parseBodyFacts() ([]FactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseThenBlockSpecFacts() ([]SpecFactStmt, error) {
-	facts := []SpecFactStmt{}
+func (stmt *TokenBlock) parseThenBlockSpecFacts() ([]*SpecFactStmt, error) {
+	facts := []*SpecFactStmt{}
 	stmt.Header.skip() // skip "then"
 	if err := stmt.Header.testAndSkip(glob.KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -196,7 +196,7 @@ func (stmt *TokenBlock) parseThenBlockSpecFacts() ([]SpecFactStmt, error) {
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		facts = append(facts, *fact)
+		facts = append(facts, fact)
 	}
 
 	return facts, nil
@@ -710,9 +710,9 @@ func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
 	return &ConDefHeader{name, params, typeParams}, nil
 }
 
-func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]FactStmt, []SpecFactStmt, error) {
+func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]FactStmt, []*SpecFactStmt, error) {
 	section1Facts := []FactStmt{}
-	section2SpecFacts := []SpecFactStmt{}
+	section2SpecFacts := []*SpecFactStmt{}
 	err := error(nil)
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(kw) {
@@ -733,7 +733,7 @@ func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]FactSt
 			if err != nil {
 				return nil, nil, &parseStmtErr{err, *stmt}
 			}
-			section2SpecFacts = append(section2SpecFacts, *curStmt)
+			section2SpecFacts = append(section2SpecFacts, curStmt)
 		}
 	}
 

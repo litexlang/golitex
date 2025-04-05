@@ -19,7 +19,7 @@ type FcAtom struct {
 
 type FcFnPipe struct {
 	FnHead   FcAtom
-	CallPipe []FcFnPipeSeg
+	CallPipe []*FcFnPipeSeg
 }
 
 type FcFnPipeSeg struct {

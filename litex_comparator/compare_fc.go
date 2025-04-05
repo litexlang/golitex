@@ -92,7 +92,7 @@ func cmpFcFnCallPipe(left, right *parser.FcFnPipe) (int, error) {
 	}
 
 	for i := 0; i < len(left.CallPipe); i++ {
-		if comp, err := compareFcFnCallPipeSeg(&left.CallPipe[i], &right.CallPipe[i]); comp != 0 || err != nil {
+		if comp, err := compareFcFnCallPipeSeg(left.CallPipe[i], right.CallPipe[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
