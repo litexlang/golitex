@@ -10,8 +10,9 @@ type TopStmt struct {
 }
 
 type DefObjStmt struct {
-	Objs  []string
-	Facts []FactStmt
+	Objs    []string
+	ObjSets []Fc
+	Facts   []FactStmt
 }
 
 type DefInterfaceStmt struct {

@@ -157,6 +157,21 @@ func (exec *Executor) defObjStmt(stmt *parser.DefObjStmt) error {
 		return err
 	}
 
+	for i, objSet := range stmt.ObjSets {
+		objInSetFact := parser.SpecFactStmt{
+			IsTrue: true,
+			PropName: parser.FcAtom{
+				PkgName: "",
+				Value:   "in",
+			},
+			Params: []parser.Fc{stmt.ObjSets[i], objSet},
+		}
+		err := exec.env.NewFact(&objInSetFact)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, fact := range stmt.Facts {
 		err := exec.env.NewFact(fact)
 		if err != nil {
