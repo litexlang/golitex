@@ -796,3 +796,8 @@ forall x B:
 巨大问题：when里必须要全是 specFact，否则因为 THEN/IFF 要求你全是SpecFact，而when需要和iff有语义上的并行关系，所以WHEN也必须spec
 
 litex 0.2 前不加入这个功能
+
+
+25.4.5
+1. 本项目是regex matcher。而且是超级加强版，用户可以自己定义 regex的特殊符号（用来match 自由变量），而只是regex里面的只有 []*+ 这种，它们能自己定义 litex 里面的 特殊符号和相应match规则。
+   1. 本质上 这些特殊符号就是 forall x X: conditions then: 某特殊符号能match这个x
