@@ -23,6 +23,8 @@ type Env struct {
 	//TODO 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic
 
 	UniParamMap map[string]parser.Fc
+
+	// curPkg string
 }
 
 func NewEnv(parent *Env, uniParamMap map[string]parser.Fc) *Env {
@@ -42,7 +44,10 @@ func NewEnv(parent *Env, uniParamMap map[string]parser.Fc) *Env {
 		CondFactMem:  *mem.NewCondFactMemDict(),
 		UniFactMem:   *mem.NewUniFactMemDict(),
 		EqualFactMem: *newEqualFactMem(),
-		UniParamMap:  uniParamMap,
+
+		UniParamMap: uniParamMap,
+
+		// curPkg: curPkg,
 	}
 
 	return env
