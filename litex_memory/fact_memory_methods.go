@@ -126,7 +126,7 @@ func (factMem *UniFactMemDict) insertSpecFact(uniStmt *parser.UniFactStmt, stmt 
 		}
 	}
 
-	node.Facts = append(node.Facts, StoredUniSpecFact{stmt.IsTrue, stmt.Params, uniStmt})
+	node.Facts = append(node.Facts, StoredUniSpecFact{stmt.IsTrue, &stmt.Params, uniStmt})
 
 	// 更新回字典
 	factMem.SpecFactsDict[pkgName][optName] = node

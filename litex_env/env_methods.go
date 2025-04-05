@@ -95,9 +95,9 @@ func (env *Env) NewUniFact(fact *parser.UniFactStmt) error {
 	return nil
 }
 
-func (env *Env) IsDeclared(name string) (bool, error) {
+func (env *Env) IsDeclared(name string) bool {
 	// TODO: 不允许变量，函数，prop，type，或者任何名冲突
-	return false, nil
+	return false
 }
 
 func (env *Env) Declare(stmt parser.Stmt, name string) error {
@@ -123,6 +123,15 @@ func (env *Env) isPropCommutative(opt parser.Fc) bool {
 }
 
 func (env *Env) NewDefConProp(stmt *parser.DefConPropStmt, pkgName string) error {
-	// TODO 要防止重名
+	isDeclared := env.IsDeclared(stmt.DefHeader.Name)
+	if isDeclared {
+		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)
+	}
+
 	return env.PropMem.Insert(stmt, pkgName)
+}
+
+func (env *Env) NewDefObj(stmt *parser.DefObjStmt) error {
+	// TODO
+	return nil
 }
