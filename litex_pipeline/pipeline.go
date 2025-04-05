@@ -21,7 +21,7 @@ func ExecuteCodeAndReturnMessageSlice(code string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	env := env.NewEnv(nil, nil)
+	env := env.NewEnv(nil, nil, "")
 	executor := *exe.NewExecutor(env, "")
 
 	msgOfTopStatements := []string{}

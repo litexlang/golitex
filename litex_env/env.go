@@ -24,10 +24,10 @@ type Env struct {
 
 	UniParamMap map[string]parser.Fc
 
-	// curPkg string
+	CurPkg string
 }
 
-func NewEnv(parent *Env, uniParamMap map[string]parser.Fc) *Env {
+func NewEnv(parent *Env, uniParamMap map[string]parser.Fc, curPkg string) *Env {
 	if uniParamMap == nil {
 		uniParamMap = make(map[string]parser.Fc)
 	}
@@ -47,7 +47,7 @@ func NewEnv(parent *Env, uniParamMap map[string]parser.Fc) *Env {
 
 		UniParamMap: uniParamMap,
 
-		// curPkg: curPkg,
+		CurPkg: curPkg,
 	}
 
 	return env

@@ -68,7 +68,7 @@ func (exec *Executor) factStmt(stmt parser.FactStmt) error {
 }
 
 func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, *verifier.Verifier, error) {
-	curVerifier := verifier.NewVerifier(exec.env)
+	curVerifier := verifier.NewVerifier(exec.env, exec.env.CurPkg)
 	ok, err := curVerifier.FactStmt(stmt, verifier.AnyMsg)
 	if err != nil {
 		return false, curVerifier, err
@@ -77,7 +77,7 @@ func (exec *Executor) checkFactStmt(stmt parser.FactStmt) (bool, *verifier.Verif
 }
 
 func (exec *Executor) claimProveStmt(stmt *parser.ClaimProveStmt) error {
-	exec.newEnv()                 // 在子环境中做所有操作，不影响外部世界
+	exec.newEnv(exec.env.CurPkg)  // 在子环境中做所有操作，不影响外部世界
 	exec.newMsgEnd(stmt.String()) // 在子函数里管理string
 
 	defer exec.deleteEnvAndRetainMsg()
@@ -103,7 +103,7 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 
 func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 	defer exec.newMsgEnd(stmt.String())
-	err := exec.env.NewDefConProp(stmt, exec.curPkg)
+	err := exec.env.NewDefConProp(stmt, exec.env.CurPkg)
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func (exec *Executor) defConPropStmt(stmt *parser.DefConPropStmt) error {
 
 func (exec *Executor) defObjStmt(stmt *parser.DefObjStmt) error {
 	defer exec.newMsgEnd(stmt.String())
-	err := exec.env.NewDefObj(stmt, exec.curPkg)
+	err := exec.env.NewDefObj(stmt, exec.env.CurPkg)
 	if err != nil {
 		return err
 	}
@@ -162,9 +162,9 @@ func (exec *Executor) defObjStmt(stmt *parser.DefObjStmt) error {
 			IsTrue: true,
 			PropName: parser.FcAtom{
 				PkgName: "",
-				Value:   "in",
+				Value:   glob.KeywordIn,
 			},
-			Params: []parser.Fc{&parser.FcAtom{PkgName: exec.curPkg, Value: objName}, stmt.ObjSets[i]},
+			Params: []parser.Fc{&parser.FcAtom{PkgName: exec.env.CurPkg, Value: objName}, stmt.ObjSets[i]},
 		}
 		err := exec.env.NewFact(&objInSetFact)
 		if err != nil {
