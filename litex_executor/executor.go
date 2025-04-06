@@ -188,7 +188,24 @@ func (exec *Executor) defConFnStmt(stmt *parser.DefConFnStmt) error {
 		return err
 	}
 
-	// uniFact := parser.UniFactStmt{[]parser.Fc{stmt.DefHeader.Params}}
+	fcFnParams := []parser.Fc{}
+	for _, fc := range stmt.DefHeader.Params {
+		fcFnParams = append(fcFnParams, &parser.FcAtom{PkgName: "", Value: fc})
+	}
+
+	fcFn := parser.FcFnPipe{FnHead: parser.FcAtom{PkgName: exec.env.CurPkg, Value: stmt.DefHeader.Name}, CallPipe: []*parser.FcFnPipeSeg{{Params: fcFnParams}}}
+
+	retFact := parser.SpecFactStmt{IsTrue: true, PropName: parser.FcAtom{PkgName: "", Value: glob.KeywordIn}, Params: []parser.Fc{&fcFn}}
+
+	uniFactThen := []*parser.SpecFactStmt{&retFact}
+	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
+
+	uniFact := parser.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: stmt.DefHeader.TypeParams, DomFacts: stmt.DomFacts, ThenFacts: uniFactThen}
+	err = exec.env.NewFact(&uniFact)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

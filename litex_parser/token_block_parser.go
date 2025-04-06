@@ -291,11 +291,11 @@ func (stmt *TokenBlock) parseDefConFnStmt() (*DefConFnStmt, error) {
 	}
 
 	domFacts := []FactStmt{}
-	thenFacts := []FactStmt{}
+	thenFacts := []*SpecFactStmt{}
 
 	if stmt.Header.is(glob.KeywordColon) {
 		stmt.Header.skip()
-		domFacts, thenFacts, err = stmt.parseBodyTwoFactSections(glob.KeywordThen)
+		domFacts, thenFacts, err = stmt.parseBodyFactSectionSpecFactSection(glob.KeywordThen)
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -653,7 +653,7 @@ func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
 	}
 
 	params := []string{}
-	typeParams := []*FcAtom{}
+	typeParams := []Fc{}
 
 	for !stmt.Header.is(glob.KeywordRightParen) {
 		param, err := stmt.Header.next()
@@ -662,12 +662,12 @@ func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
 		}
 		params = append(params, param)
 
-		typeParam, err := stmt.Header.parseFcAtom()
+		typeParam, err := stmt.Header.ParseFc()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 
-		typeParams = append(typeParams, &typeParam)
+		typeParams = append(typeParams, typeParam)
 
 		if stmt.Header.is(glob.KeywordComma) {
 			stmt.Header.skip()
