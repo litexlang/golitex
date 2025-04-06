@@ -125,41 +125,6 @@ func trimLeftZero(s string) string {
 	return s
 }
 
-// 判断大小：返回 1 if a > b, -1 if a < b, 0 if a==b
-func CompareBigFloat(a, b string) int {
-	aInt, aFrac := splitNumberToIntPartFracPart(a)
-	bInt, bFrac := splitNumberToIntPartFracPart(b)
-
-	aInt = trimLeftZero(aInt)
-	bInt = trimLeftZero(bInt)
-
-	if len(aInt) > len(bInt) {
-		return 1
-	}
-	if len(aInt) < len(bInt) {
-		return -1
-	}
-	if aInt > bInt {
-		return 1
-	}
-	if aInt < bInt {
-		return -1
-	}
-
-	// 补齐小数部分长度
-	maxLen := max(len(aFrac), len(bFrac))
-	aFrac = padRight(aFrac, maxLen, '0')
-	bFrac = padRight(bFrac, maxLen, '0')
-
-	if aFrac > bFrac {
-		return 1
-	}
-	if aFrac < bFrac {
-		return -1
-	}
-	return 0
-}
-
 // 字符串大数减法
 func subBigFloat(a, b string) string {
 	if CompareBigFloat(a, b) == -1 {
@@ -280,4 +245,39 @@ func mulStrings(a, b string) string {
 		return "0"
 	}
 	return sb.String()
+}
+
+// 判断大小：返回 1 if a > b, -1 if a < b, 0 if a==b
+func CompareBigFloat(a, b string) int {
+	aInt, aFrac := splitNumberToIntPartFracPart(a)
+	bInt, bFrac := splitNumberToIntPartFracPart(b)
+
+	aInt = trimLeftZero(aInt)
+	bInt = trimLeftZero(bInt)
+
+	if len(aInt) > len(bInt) {
+		return 1
+	}
+	if len(aInt) < len(bInt) {
+		return -1
+	}
+	if aInt > bInt {
+		return 1
+	}
+	if aInt < bInt {
+		return -1
+	}
+
+	// 补齐小数部分长度
+	maxLen := max(len(aFrac), len(bFrac))
+	aFrac = padRight(aFrac, maxLen, '0')
+	bFrac = padRight(bFrac, maxLen, '0')
+
+	if aFrac > bFrac {
+		return 1
+	}
+	if aFrac < bFrac {
+		return -1
+	}
+	return 0
 }
