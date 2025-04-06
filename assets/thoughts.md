@@ -801,3 +801,5 @@ litex 0.2 前不加入这个功能
 25.4.5
 1. 本项目是regex matcher。而且是超级加强版，用户可以自己定义 regex的特殊符号（用来match 自由变量），而只是regex里面的只有 []*+ 这种，它们能自己定义 litex 里面的 特殊符号和相应match规则。
    1. 本质上 这些特殊符号就是 forall x X: conditions then: 某特殊符号能match这个x
+   2. 普通regex matcher 是 静态的代码去match（match的规则固定，写在了解释器里），而我因为要让用户用到自己之前已经知道的事实，所以是 动态环境下的match
+      1. 有点类似 struct 静态写好了field名；dict能让用户在runtime随时改变field名
