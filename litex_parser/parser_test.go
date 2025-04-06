@@ -1059,3 +1059,19 @@ prove:
 		t.Fatal(err)
 	}
 }
+
+func TestFnDef(t *testing.T) {
+	code := `
+fn f(x A) B:
+	$p(x)
+	then:
+		$q(f(x))
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}

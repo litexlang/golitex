@@ -52,26 +52,6 @@ func printExecMsg(messageSlice []string) {
 	}
 }
 
-func TestStoreNewObj(t *testing.T) {
-	code := `obj a G`
-	statements, err := parser.ParseSourceCode(code)
-	if err != nil {
-		t.Fatal(err)
-	}
-	curEnv := env.NewEnv(nil, nil, "")
-	executor := NewExecutor(curEnv)
-	for _, topStmt := range statements {
-		err := executor.TopLevelStmt(&topStmt)
-		if err != nil {
-			t.Fatal(err)
-		}
-		fmt.Println(executor.env.Msgs)
-	}
-
-	entry, _ := curEnv.ObjMem.Get("a")
-	println((entry))
-}
-
 func TestKnow(t *testing.T) {
 	code := `know $p(a)`
 	statements, err := parser.ParseSourceCode(code)

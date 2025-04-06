@@ -37,7 +37,7 @@ type DefConExistPropStmt struct {
 
 type DefConFnStmt struct {
 	DefHeader ConDefHeader
-	retType   *FcAtom
+	retType   Fc
 	DomFacts  []FactStmt
 	ThenFacts []FactStmt
 }

@@ -58,9 +58,6 @@ type EqualFactMem struct {
 	Mem glob.RedBlackTree[*EqualFactMemoryTreeNode]
 }
 
-type ObjMemoryEntry struct {
-}
-
 type StoredPropMemDictNode struct{ Def *parser.DefConPropStmt }
 
 type PropMem struct {
@@ -68,16 +65,13 @@ type PropMem struct {
 	Dict map[string]map[string]StoredPropMemDictNode
 }
 
-type PropMemoryEntry struct {
-}
-
-type FnMem struct {
-}
-
-type FnMemEntry struct {
-}
-
 type StoredObjMemDictNode struct{ Def *parser.DefObjStmt }
 type ObjMem struct {
 	Dict map[string]map[string]StoredObjMemDictNode
 }
+
+type FnMem struct {
+	Dict map[string]map[string]StoredFnMemDictNode
+}
+
+type StoredFnMemDictNode struct{ Def *parser.DefConFnStmt }

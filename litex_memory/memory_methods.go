@@ -8,19 +8,11 @@ func NewPropMemory() *PropMem {
 	return &PropMem{map[string]map[string]StoredPropMemDictNode{}}
 }
 func NewFnMemory() *FnMem {
-	return &FnMem{}
+	return &FnMem{map[string]map[string]StoredFnMemDictNode{}}
 }
 
 func NewObjMemory() *ObjMem {
 	return &ObjMem{map[string]map[string]StoredObjMemDictNode{}}
-}
-
-func (mem *ObjMem) Get(stmt string) (*ObjMemoryEntry, bool) {
-	panic("TODO")
-}
-
-func (mem *ObjMem) Set(pair string) (*ObjMemoryEntry, error) {
-	panic("Todo")
 }
 
 func (mem *PropMem) GetNode(stmt parser.SpecFactStmt) (*StoredPropMemDictNode, bool) {
@@ -33,9 +25,4 @@ func (mem *PropMem) GetNode(stmt parser.SpecFactStmt) (*StoredPropMemDictNode, b
 		return nil, false // 返回零值
 	}
 	return &node, true
-}
-
-func (mem *FnMem) Get(s string) (*FnMemEntry, bool) {
-	//TODO
-	return nil, false
 }
