@@ -110,7 +110,7 @@ func (ver *Verifier) leftAsNumberStrCmp(left, right parser.Fc) (bool, error) {
 		}
 	}
 
-	return cmp.CmpNumber(numberAsStr, toCmp)
+	return cmp.CmpNumberBuiltin(numberAsStr, toCmp)
 }
 
 func (ver *Verifier) builtinFcEqual(left, right parser.Fc) (bool, error) {
