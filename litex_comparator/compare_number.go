@@ -3,13 +3,63 @@ package litexcomparator
 import (
 	"errors"
 	"fmt"
+	glob "golitex/litex_global"
 	parser "golitex/litex_parser"
 	"strconv"
 	"strings"
 )
 
+type NumberFc struct {
+	Left        *NumberFc
+	OptOrNumber string
+	Right       *NumberFc
+}
+
+func IsNumberFcWithBuiltinInfixOpt(fc parser.Fc) (*NumberFc, bool, error) {
+	asStr, ok := parser.IsNumberAtom(fc)
+	if ok {
+		return &NumberFc{nil, asStr, nil}, true, nil
+	}
+
+	asFcFn, ok := fc.(*parser.FcFnPipe)
+	if !ok {
+		return nil, false, fmt.Errorf("")
+	}
+
+	opt := asFcFn.FnHead.Value
+	if !glob.IsBuiltinRelaFn(opt) {
+		return nil, false, nil
+	}
+
+	if len(asFcFn.CallPipe) != 1 {
+		return nil, false, nil
+	}
+
+	if len(asFcFn.CallPipe[0].Params) != 2 {
+		return nil, false, nil
+	}
+
+	left, ok, err := IsNumberFcWithBuiltinInfixOpt(asFcFn.CallPipe[0].Params[0])
+	if err != nil {
+		return nil, false, err
+	}
+	if !ok {
+		return nil, false, nil
+	}
+
+	right, ok, err := IsNumberFcWithBuiltinInfixOpt(asFcFn.CallPipe[0].Params[1])
+	if err != nil {
+		return nil, false, err
+	}
+	if !ok {
+		return nil, false, nil
+	}
+
+	return &NumberFc{left, opt, right}, true, nil
+}
+
 // EvaluateNumberFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
-func EvaluateNumberFc(node *parser.NumberFc) (string, error) {
+func EvaluateNumberFc(node *NumberFc) (string, error) {
 	// 叶子节点
 	if node.Left == nil && node.Right == nil {
 		return node.OptOrNumber, nil

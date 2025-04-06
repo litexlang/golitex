@@ -19,7 +19,7 @@ func (ver *Verifier) fcEqualBuiltin(left, right parser.Fc) (bool, error) {
 }
 
 func cmpTwoBuiltinNumberExpressions(left, right parser.Fc) (bool, error) {
-	leftAsNumberFc, ok, err := parser.IsNumberFcWithBuiltinInfixOpt(left)
+	leftAsNumberFc, ok, err := cmp.IsNumberFcWithBuiltinInfixOpt(left)
 	if err != nil {
 		return false, err
 	}
@@ -27,7 +27,7 @@ func cmpTwoBuiltinNumberExpressions(left, right parser.Fc) (bool, error) {
 		return false, nil
 	}
 
-	rightAsNumberFc, ok, err := parser.IsNumberFcWithBuiltinInfixOpt(right)
+	rightAsNumberFc, ok, err := cmp.IsNumberFcWithBuiltinInfixOpt(right)
 	if err != nil {
 		return false, err
 	}
