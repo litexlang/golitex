@@ -195,7 +195,7 @@ func (exec *Executor) defConFnStmt(stmt *parser.DefConFnStmt) error {
 
 	fcFn := parser.FcFnPipe{FnHead: parser.FcAtom{PkgName: exec.env.CurPkg, Value: stmt.DefHeader.Name}, CallPipe: []*parser.FcFnPipeSeg{{Params: fcFnParams}}}
 
-	retFact := parser.SpecFactStmt{IsTrue: true, PropName: parser.FcAtom{PkgName: "", Value: glob.KeywordIn}, Params: []parser.Fc{&fcFn}}
+	retFact := parser.SpecFactStmt{IsTrue: true, PropName: parser.FcAtom{PkgName: "", Value: glob.KeywordIn}, Params: []parser.Fc{&fcFn, stmt.RetType}}
 
 	uniFactThen := []*parser.SpecFactStmt{&retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
