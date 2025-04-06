@@ -200,6 +200,19 @@ func (exec *Executor) defConFnStmt(stmt *parser.DefConFnStmt) error {
 	uniFactThen := []*parser.SpecFactStmt{&retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
 
+	uniFactDom := []parser.SpecFactStmt{}
+	for i, paramSet := range stmt.DefHeader.TypeParams {
+		objInSetFact := parser.SpecFactStmt{
+			IsTrue: true,
+			PropName: parser.FcAtom{
+				PkgName: "",
+				Value:   glob.KeywordIn,
+			},
+			Params: []parser.Fc{&parser.FcAtom{PkgName: exec.env.CurPkg, Value: stmt.DefHeader.Params[i]}, paramSet},
+		}
+		uniFactDom = append(uniFactDom, objInSetFact)
+	}
+
 	uniFact := parser.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: stmt.DefHeader.TypeParams, DomFacts: stmt.DomFacts, ThenFacts: uniFactThen}
 	err = exec.env.NewFact(&uniFact)
 
