@@ -8,7 +8,7 @@ import (
 
 func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, error) {
 	// Case: 全部都是builtin类型：比如int,float。如果传入的压根不包含builtinFc那就返回false
-	ok, err := ver.builtinFcEqual(left, right)
+	ok, err := ver.fcEqualBuiltin(left, right)
 	if err != nil {
 		return false, err
 	}
@@ -111,15 +111,4 @@ func (ver *Verifier) leftAsNumberStrCmp(left, right parser.Fc) (bool, error) {
 	}
 
 	return cmp.CmpNumberBuiltin(numberAsStr, toCmp)
-}
-
-func (ver *Verifier) builtinFcEqual(left, right parser.Fc) (bool, error) {
-	ok, err := ver.leftAsNumberStrCmp(left, right)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-	return false, nil
 }
