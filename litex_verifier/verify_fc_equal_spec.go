@@ -92,23 +92,23 @@ func (ver *Verifier) FcSliceEqual(left []parser.Fc, right []parser.Fc, specMode 
 	return false, nil
 }
 
-func (ver *Verifier) leftAsNumberStrCmp(left, right parser.Fc) (bool, error) {
-	numberAsStr := ""
-	var toCmp parser.Fc = nil
+// func (ver *Verifier) leftAsNumberStrCmp(left, right parser.Fc) (bool, error) {
+// 	numberAsStr := ""
+// 	var toCmp parser.Fc = nil
 
-	leftAsNumberStr, leftIsNumber := parser.IsNumberAtom(left)
-	if leftIsNumber {
-		numberAsStr = leftAsNumberStr
-		toCmp = right
-	} else {
-		rightAsNumberStr, rightIsNumber := parser.IsNumberAtom(right)
-		if rightIsNumber {
-			numberAsStr = rightAsNumberStr
-			toCmp = left
-		} else {
-			return false, nil
-		}
-	}
+// 	leftAsNumberStr, leftIsNumber := parser.IsNumberAtom(left)
+// 	if leftIsNumber {
+// 		numberAsStr = leftAsNumberStr
+// 		toCmp = right
+// 	} else {
+// 		rightAsNumberStr, rightIsNumber := parser.IsNumberAtom(right)
+// 		if rightIsNumber {
+// 			numberAsStr = rightAsNumberStr
+// 			toCmp = left
+// 		} else {
+// 			return false, nil
+// 		}
+// 	}
 
-	return cmp.CmpNumberBuiltin(numberAsStr, toCmp)
-}
+// 	return cmp.CmpNumberBuiltin(numberAsStr, toCmp)
+// }

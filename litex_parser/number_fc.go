@@ -6,9 +6,9 @@ import (
 )
 
 type NumberFc struct {
-	left        *NumberFc
-	optOrNumber string
-	right       *NumberFc
+	Left        *NumberFc
+	OptOrNumber string
+	Right       *NumberFc
 }
 
 func IsNumberFcWithBuiltinInfixOpt(fc Fc) (*NumberFc, bool, error) {

@@ -1,8 +1,37 @@
 package litexcomparator
 
 import (
+	"fmt"
+	parser "golitex/litex_parser"
 	"strings"
 )
+
+// EvaluateNumberFc 计算表达式树，返回字符串形式的结果
+func EvaluateNumberFc(node *parser.NumberFc) string {
+	// 叶子节点
+	if node.Left == nil && node.Right == nil {
+		return node.OptOrNumber
+	}
+
+	leftVal := EvaluateNumberFc(node.Left)
+	rightVal := EvaluateNumberFc(node.Right)
+
+	switch node.OptOrNumber {
+	case "+":
+		return addBigFloat(leftVal, rightVal)
+	case "-":
+		return subBigFloat(leftVal, rightVal)
+	case "*":
+		return mulBigFloat(leftVal, rightVal)
+		// TODO
+		// case "/":
+		// 	return divBigFloat(leftVal, rightVal)
+		// case "^":
+		// return orderBigFloat(leftVal, rightVal)
+	default:
+		panic(fmt.Sprintf("未知运算符: %s", node.OptOrNumber))
+	}
+}
 
 func addBigFloat(a, b string) string {
 	aInt, aFrac := splitNumberToIntPartFracPart(a)
@@ -88,44 +117,167 @@ func padRight(s string, length int, pad byte) string {
 	return s
 }
 
-// CompareBigFloat 比较两个字符串形式的浮点数
-// 返回 -1 if a < b, 0 if a == b, 1 if a > b
+// 去除前导0
+func trimLeftZero(s string) string {
+	for len(s) > 1 && s[0] == '0' {
+		s = s[1:]
+	}
+	return s
+}
+
+// 判断大小：返回 1 if a > b, -1 if a < b, 0 if a==b
 func CompareBigFloat(a, b string) int {
 	aInt, aFrac := splitNumberToIntPartFracPart(a)
 	bInt, bFrac := splitNumberToIntPartFracPart(b)
 
-	// 去除整数部分前导0
-	aInt = strings.TrimLeft(aInt, "0")
-	bInt = strings.TrimLeft(bInt, "0")
+	aInt = trimLeftZero(aInt)
+	bInt = trimLeftZero(bInt)
 
-	// 先比较整数部分长度
-	if len(aInt) < len(bInt) {
-		return -1
-	}
 	if len(aInt) > len(bInt) {
 		return 1
 	}
-
-	// 长度相同，比较具体内容
-	if aInt < bInt {
+	if len(aInt) < len(bInt) {
 		return -1
 	}
 	if aInt > bInt {
 		return 1
 	}
+	if aInt < bInt {
+		return -1
+	}
 
-	// 整数部分相等，比较小数部分
+	// 补齐小数部分长度
+	maxLen := max(len(aFrac), len(bFrac))
+	aFrac = padRight(aFrac, maxLen, '0')
+	bFrac = padRight(bFrac, maxLen, '0')
+
+	if aFrac > bFrac {
+		return 1
+	}
+	if aFrac < bFrac {
+		return -1
+	}
+	return 0
+}
+
+// 字符串大数减法
+func subBigFloat(a, b string) string {
+	if CompareBigFloat(a, b) == -1 {
+		panic("暂不支持负数")
+	}
+
+	aInt, aFrac := splitNumberToIntPartFracPart(a)
+	bInt, bFrac := splitNumberToIntPartFracPart(b)
+
+	// 补齐小数部分长度
 	maxFracLen := max(len(aFrac), len(bFrac))
 	aFrac = padRight(aFrac, maxFracLen, '0')
 	bFrac = padRight(bFrac, maxFracLen, '0')
 
-	if aFrac < bFrac {
-		return -1
-	}
-	if aFrac > bFrac {
-		return 1
+	// 小数部分先减
+	fracRes, borrow := subStrings(aFrac, bFrac, false)
+
+	// 整数部分减（带借位）
+	intRes, _ := subStrings(aInt, bInt, borrow)
+
+	intRes = trimLeftZero(intRes)
+	if intRes == "" {
+		intRes = "0"
 	}
 
-	// 完全相等
-	return 0
+	if fracRes != "" {
+		fracRes = strings.TrimRight(fracRes, "0")
+		if fracRes != "" {
+			return intRes + "." + fracRes
+		}
+	}
+	return intRes
+}
+
+// 字符串减法，a >= b
+func subStrings(a, b string, borrow bool) (string, bool) {
+	maxLen := max(len(a), len(b))
+	a = padLeft(a, maxLen, '0')
+	b = padLeft(b, maxLen, '0')
+
+	res := make([]byte, maxLen)
+	curBorrow := 0
+	if borrow {
+		curBorrow = 1
+	}
+
+	for i := maxLen - 1; i >= 0; i-- {
+		x := int(a[i]-'0') - curBorrow
+		y := int(b[i] - '0')
+		if x < y {
+			x += 10
+			curBorrow = 1
+		} else {
+			curBorrow = 0
+		}
+		res[i] = byte(x-y) + '0'
+	}
+
+	return string(res), curBorrow > 0
+}
+
+// 大数乘法
+func mulBigFloat(a, b string) string {
+	aInt, aFrac := splitNumberToIntPartFracPart(a)
+	bInt, bFrac := splitNumberToIntPartFracPart(b)
+
+	// 先拼接成整数
+	aTotal := aInt + aFrac
+	bTotal := bInt + bFrac
+
+	fracLen := len(aFrac) + len(bFrac)
+
+	// 乘法
+	product := mulStrings(aTotal, bTotal)
+
+	if fracLen > 0 {
+		if len(product) <= fracLen {
+			product = padLeft(product, fracLen+1, '0')
+		}
+		intPart := product[:len(product)-fracLen]
+		fracPart := product[len(product)-fracLen:]
+		fracPart = strings.TrimRight(fracPart, "0")
+		if fracPart == "" {
+			return trimLeftZero(intPart)
+		}
+		return trimLeftZero(intPart) + "." + fracPart
+	}
+	return trimLeftZero(product)
+}
+
+// 字符串乘法
+func mulStrings(a, b string) string {
+	n, m := len(a), len(b)
+	res := make([]int, n+m)
+
+	for i := n - 1; i >= 0; i-- {
+		for j := m - 1; j >= 0; j-- {
+			res[i+j+1] += int(a[i]-'0') * int(b[j]-'0')
+		}
+	}
+
+	// 处理进位
+	for i := len(res) - 1; i > 0; i-- {
+		res[i-1] += res[i] / 10
+		res[i] %= 10
+	}
+
+	var sb strings.Builder
+	leadingZero := true
+	for _, v := range res {
+		if v == 0 && leadingZero {
+			continue
+		}
+		leadingZero = false
+		sb.WriteByte(byte(v) + '0')
+	}
+	if sb.Len() == 0 {
+		return "0"
+	}
+	return sb.String()
 }
