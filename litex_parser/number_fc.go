@@ -43,7 +43,7 @@ func IsNumberFcWithBuiltinInfixOpt(fc Fc) (*NumberFc, bool, error) {
 		return nil, false, nil
 	}
 
-	right, ok, err := IsNumberFcWithBuiltinInfixOpt(asFcFn.CallPipe[0].Params[0])
+	right, ok, err := IsNumberFcWithBuiltinInfixOpt(asFcFn.CallPipe[0].Params[1])
 	if err != nil {
 		return nil, false, err
 	}
