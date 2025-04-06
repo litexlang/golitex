@@ -28,6 +28,8 @@ func (exec *Executor) stmt(stmt parser.Stmt) error {
 		err = exec.defConPropStmt(stmt)
 	case *parser.DefObjStmt:
 		err = exec.defObjStmt(stmt)
+	case *parser.DefConFnStmt:
+		err = exec.defConFnStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -176,5 +178,10 @@ func (exec *Executor) defObjStmt(stmt *parser.DefObjStmt) error {
 		}
 	}
 
+	return nil
+}
+
+func (exec *Executor) defConFnStmt(stmt *parser.DefConFnStmt) error {
+	// TODO
 	return nil
 }
