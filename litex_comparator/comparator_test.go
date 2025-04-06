@@ -17,7 +17,7 @@ func TestFcEval(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		result := addBigFloat(tc.a, tc.b)
+		result, _ := addBigFloat(tc.a, tc.b)
 		fmt.Printf("%s + %s = %s (期望: %s) ", tc.a, tc.b, result, tc.expected)
 		if CompareBigFloat(result, tc.expected) == 0 {
 			fmt.Println("✓")

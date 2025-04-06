@@ -35,8 +35,19 @@ func cmpTwoBuiltinNumberExpressions(left, right parser.Fc) (bool, error) {
 		return false, nil
 	}
 
-	leftAsStr := cmp.EvaluateNumberFc(leftAsNumberFc)
-	rightAsStr := cmp.EvaluateNumberFc(rightAsNumberFc)
+	leftAsStr, err := cmp.EvaluateNumberFc(leftAsNumberFc)
+	if err != nil {
+		return false, err
+	}
+
+	rightAsStr, err := cmp.EvaluateNumberFc(rightAsNumberFc)
+	if err != nil {
+		return false, err
+	}
+
+	if leftAsStr == "" || rightAsStr == "" {
+		return false, nil
+	}
 
 	return cmp.CompareBigFloat(leftAsStr, rightAsStr) == 0, nil
 }

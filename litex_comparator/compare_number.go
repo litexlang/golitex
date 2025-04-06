@@ -1,20 +1,29 @@
 package litexcomparator
 
 import (
+	"errors"
 	"fmt"
 	parser "golitex/litex_parser"
+	"strconv"
 	"strings"
 )
 
-// EvaluateNumberFc 计算表达式树，返回字符串形式的结果
-func EvaluateNumberFc(node *parser.NumberFc) string {
+// EvaluateNumberFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
+func EvaluateNumberFc(node *parser.NumberFc) (string, error) {
 	// 叶子节点
 	if node.Left == nil && node.Right == nil {
-		return node.OptOrNumber
+		return node.OptOrNumber, nil
 	}
 
-	leftVal := EvaluateNumberFc(node.Left)
-	rightVal := EvaluateNumberFc(node.Right)
+	leftVal, err := EvaluateNumberFc(node.Left)
+	if err != nil {
+		return "", err
+	}
+
+	rightVal, err := EvaluateNumberFc(node.Right)
+	if err != nil {
+		return "", err
+	}
 
 	switch node.OptOrNumber {
 	case "+":
@@ -23,17 +32,19 @@ func EvaluateNumberFc(node *parser.NumberFc) string {
 		return subBigFloat(leftVal, rightVal)
 	case "*":
 		return mulBigFloat(leftVal, rightVal)
-		// TODO
-		// case "/":
-		// 	return divBigFloat(leftVal, rightVal)
-		// case "^":
-		// return orderBigFloat(leftVal, rightVal)
+	case "/":
+		return divBigFloat(leftVal, rightVal)
+	case "^":
+		if !isNaturalNumber(rightVal) {
+			return "", errors.New("exponent must be a natural number")
+		}
+		return powBigFloat(leftVal, rightVal)
 	default:
-		panic(fmt.Sprintf("未知运算符: %s", node.OptOrNumber))
+		return "", fmt.Errorf("未知运算符: %s", node.OptOrNumber)
 	}
 }
 
-func addBigFloat(a, b string) string {
+func addBigFloat(a, b string) (string, error) {
 	aInt, aFrac := splitNumberToIntPartFracPart(a)
 	bInt, bFrac := splitNumberToIntPartFracPart(b)
 
@@ -43,7 +54,10 @@ func addBigFloat(a, b string) string {
 	bFrac = padRight(bFrac, maxFracLen, '0')
 
 	// 小数部分相加
-	fracSum, carry := addStrings(aFrac, bFrac, false)
+	fracSum, carry, err := addStrings(aFrac, bFrac, false)
+	if err != nil {
+		return "", err
+	}
 
 	// 去除末尾的0（小数部分）
 	fracSum = strings.TrimRight(fracSum, "0")
@@ -54,7 +68,10 @@ func addBigFloat(a, b string) string {
 	bInt = padLeft(bInt, maxIntLen, '0')
 
 	// 整数部分相加
-	intSum, carry := addStrings(aInt, bInt, carry)
+	intSum, carry, err := addStrings(aInt, bInt, carry)
+	if err != nil {
+		return "", err
+	}
 	if carry {
 		intSum = "1" + intSum
 	}
@@ -64,7 +81,7 @@ func addBigFloat(a, b string) string {
 		result += "." + fracSum
 	}
 
-	return result
+	return result, nil
 }
 
 func splitNumberToIntPartFracPart(s string) (string, string) {
@@ -75,9 +92,9 @@ func splitNumberToIntPartFracPart(s string) (string, string) {
 	return parts[0], parts[1]
 }
 
-func addStrings(a, b string, carry bool) (string, bool) {
+func addStrings(a, b string, carry bool) (string, bool, error) {
 	if len(a) != len(b) {
-		panic("addStrings length mismatch")
+		return "", false, errors.New("addStrings length mismatch")
 	}
 
 	n := len(a)
@@ -93,7 +110,7 @@ func addStrings(a, b string, carry bool) (string, bool) {
 		result[i] = byte(sum%10) + '0'
 	}
 
-	return string(result), c > 0
+	return string(result), c > 0, nil
 }
 
 func max(a, b int) int {
@@ -126,9 +143,10 @@ func trimLeftZero(s string) string {
 }
 
 // 字符串大数减法
-func subBigFloat(a, b string) string {
-	if CompareBigFloat(a, b) == -1 {
-		panic("暂不支持负数")
+func subBigFloat(a, b string) (string, error) {
+	cmp := CompareBigFloat(a, b)
+	if cmp == -1 {
+		return "", errors.New("暂不支持负数")
 	}
 
 	aInt, aFrac := splitNumberToIntPartFracPart(a)
@@ -140,10 +158,16 @@ func subBigFloat(a, b string) string {
 	bFrac = padRight(bFrac, maxFracLen, '0')
 
 	// 小数部分先减
-	fracRes, borrow := subStrings(aFrac, bFrac, false)
+	fracRes, borrow, err := subStrings(aFrac, bFrac, false)
+	if err != nil {
+		return "", err
+	}
 
 	// 整数部分减（带借位）
-	intRes, _ := subStrings(aInt, bInt, borrow)
+	intRes, _, err := subStrings(aInt, bInt, borrow)
+	if err != nil {
+		return "", err
+	}
 
 	intRes = trimLeftZero(intRes)
 	if intRes == "" {
@@ -153,14 +177,14 @@ func subBigFloat(a, b string) string {
 	if fracRes != "" {
 		fracRes = strings.TrimRight(fracRes, "0")
 		if fracRes != "" {
-			return intRes + "." + fracRes
+			return intRes + "." + fracRes, nil
 		}
 	}
-	return intRes
+	return intRes, nil
 }
 
 // 字符串减法，a >= b
-func subStrings(a, b string, borrow bool) (string, bool) {
+func subStrings(a, b string, borrow bool) (string, bool, error) {
 	maxLen := max(len(a), len(b))
 	a = padLeft(a, maxLen, '0')
 	b = padLeft(b, maxLen, '0')
@@ -183,11 +207,11 @@ func subStrings(a, b string, borrow bool) (string, bool) {
 		res[i] = byte(x-y) + '0'
 	}
 
-	return string(res), curBorrow > 0
+	return string(res), curBorrow > 0, nil
 }
 
 // 大数乘法
-func mulBigFloat(a, b string) string {
+func mulBigFloat(a, b string) (string, error) {
 	aInt, aFrac := splitNumberToIntPartFracPart(a)
 	bInt, bFrac := splitNumberToIntPartFracPart(b)
 
@@ -198,7 +222,10 @@ func mulBigFloat(a, b string) string {
 	fracLen := len(aFrac) + len(bFrac)
 
 	// 乘法
-	product := mulStrings(aTotal, bTotal)
+	product, err := mulStrings(aTotal, bTotal)
+	if err != nil {
+		return "", err
+	}
 
 	if fracLen > 0 {
 		if len(product) <= fracLen {
@@ -208,15 +235,15 @@ func mulBigFloat(a, b string) string {
 		fracPart := product[len(product)-fracLen:]
 		fracPart = strings.TrimRight(fracPart, "0")
 		if fracPart == "" {
-			return trimLeftZero(intPart)
+			return trimLeftZero(intPart), nil
 		}
-		return trimLeftZero(intPart) + "." + fracPart
+		return trimLeftZero(intPart) + "." + fracPart, nil
 	}
-	return trimLeftZero(product)
+	return trimLeftZero(product), nil
 }
 
 // 字符串乘法
-func mulStrings(a, b string) string {
+func mulStrings(a, b string) (string, error) {
 	n, m := len(a), len(b)
 	res := make([]int, n+m)
 
@@ -242,9 +269,9 @@ func mulStrings(a, b string) string {
 		sb.WriteByte(byte(v) + '0')
 	}
 	if sb.Len() == 0 {
-		return "0"
+		return "0", nil
 	}
-	return sb.String()
+	return sb.String(), nil
 }
 
 // 判断大小：返回 1 if a > b, -1 if a < b, 0 if a==b
@@ -280,4 +307,180 @@ func CompareBigFloat(a, b string) int {
 		return -1
 	}
 	return 0
+}
+
+// 判断是不是自然数（包含0）
+func isNaturalNumber(s string) bool {
+	// 去掉前导0
+	s = trimLeftZero(s)
+	// 允许 "0"
+	if s == "0" {
+		return true
+	}
+	// 必须是纯数字且没有小数点
+	for _, ch := range s {
+		if ch < '0' || ch > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+// a^b, 其中 b 必须是自然数（已经在外层判断过）
+// 结果长度不超过 200 位（超过返回错误）
+func powBigFloat(a, b string) (string, error) {
+	res := "1"
+	cnt, err := toInt(b)
+	if err != nil {
+		return "", err
+	}
+
+	for i := 0; i < cnt; i++ {
+		res, err = mulBigFloat(res, a)
+		if err != nil {
+			return "", err
+		}
+		if len(res) > 200 {
+			return "", errors.New("powBigFloat: result too long")
+		}
+	}
+	return res, nil
+}
+
+func toInt(s string) (int, error) {
+	s = strings.TrimSpace(s)
+	s = trimLeftZero(s)
+
+	if s == "" {
+		return 0, errors.New("toInt: empty string")
+	}
+
+	if strings.Contains(s, ".") {
+		return 0, errors.New("toInt: float value not allowed")
+	}
+
+	val, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, errors.New("toInt: invalid number")
+	}
+
+	return val, nil
+}
+
+// divBigFloat 大数除法，a除以b，如果能整除则返回精确结果，否则返回错误
+func divBigFloat(a, b string) (string, error) {
+	// 检查除数是否为0
+	if b == "0" || b == "0.0" {
+		return "", errors.New("division by zero")
+	}
+
+	aInt, aFrac := splitNumberToIntPartFracPart(a)
+	bInt, bFrac := splitNumberToIntPartFracPart(b)
+
+	// 将被除数和除数转为整数形式（去掉小数点）
+	aTotal := aInt + aFrac
+	bTotal := bInt + bFrac
+
+	// 计算小数部分的长度差
+	fracLenDiff := len(aFrac) - len(bFrac)
+
+	// 补齐两个数的长度，使它们成为整数
+	maxLen := max(len(aTotal), len(bTotal))
+	aTotal = padLeft(aTotal, maxLen, '0')
+	bTotal = padLeft(bTotal, maxLen, '0')
+
+	// 执行长除法
+	result, remainder, err := longDivision(aTotal, bTotal)
+	if err != nil {
+		return "", err
+	}
+
+	// 检查是否能整除（余数为0）
+	if !isZero(remainder) {
+		return "", nil
+	}
+
+	// 处理小数点的位置
+	if fracLenDiff > 0 {
+		// 需要在结果中插入小数点
+		if len(result) <= fracLenDiff {
+			result = padLeft(result, fracLenDiff+1, '0')
+		}
+		intPart := result[:len(result)-fracLenDiff]
+		fracPart := result[len(result)-fracLenDiff:]
+		fracPart = strings.TrimRight(fracPart, "0")
+		if len(fracPart) > 0 {
+			return intPart + "." + fracPart, nil
+		}
+		return intPart, nil
+	} else if fracLenDiff < 0 {
+		// 需要在结果末尾补0
+		return result + strings.Repeat("0", -fracLenDiff), nil
+	}
+	return result, nil
+}
+
+// longDivision 执行长除法，返回商和余数
+func longDivision(dividend, divisor string) (string, string, error) {
+	if len(dividend) < len(divisor) {
+		return "0", dividend, nil
+	}
+
+	var quotient strings.Builder
+	remainder := dividend[:len(divisor)]
+	dividend = dividend[len(divisor):]
+
+	for {
+		// 计算当前位的商
+		digit := 0
+		currentRem := remainder
+		for ; digit < 9; digit++ {
+			// 尝试减去divisor
+			subRes, borrow, err := subStrings(currentRem, divisor, false)
+			if err != nil {
+				return "", "", err
+			}
+			if borrow {
+				break
+			}
+			currentRem = subRes
+		}
+		quotient.WriteByte(byte(digit) + '0')
+
+		// 更新余数
+		remainder = currentRem
+
+		// 如果被除数已经用完
+		if len(dividend) == 0 {
+			break
+		}
+
+		// 取下一位
+		remainder += string(dividend[0])
+		dividend = dividend[1:]
+	}
+
+	// 去除前导零
+	q := strings.TrimLeft(quotient.String(), "0")
+	if q == "" {
+		q = "0"
+	}
+
+	// 去除余数的前导零
+	r := strings.TrimLeft(remainder, "0")
+	if r == "" {
+		r = "0"
+	}
+
+	return q, r, nil
+}
+
+// isZero 检查字符串表示的数值是否为0
+func isZero(s string) bool {
+	for _, c := range s {
+		if c != '0' {
+			return false
+		}
+	}
+	return true
 }
