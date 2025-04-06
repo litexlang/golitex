@@ -141,3 +141,12 @@ func (env *Env) NewDefObj(stmt *parser.DefObjStmt, pkgName string) error {
 
 	return env.ObjMem.Insert(stmt, pkgName)
 }
+
+func (env *Env) NewDefFn(stmt *parser.DefConFnStmt, pkgName string) error {
+	isDeclared := env.IsDeclared(stmt.DefHeader.Name)
+	if isDeclared {
+		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)
+	}
+
+	return env.FnMem.Insert(stmt, pkgName)
+}
