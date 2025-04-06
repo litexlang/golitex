@@ -182,6 +182,13 @@ func (exec *Executor) defObjStmt(stmt *parser.DefObjStmt) error {
 }
 
 func (exec *Executor) defConFnStmt(stmt *parser.DefConFnStmt) error {
-	// TODO
+	defer exec.appendNewMsg(stmt.String())
+	err := exec.env.NewDefFn(stmt, exec.env.CurPkg)
+	if err != nil {
+		return err
+	}
+
+	// uniFact := parser.UniFactStmt{[]parser.Fc{stmt.DefHeader.Params}}
+
 	return nil
 }
