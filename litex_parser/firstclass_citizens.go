@@ -79,7 +79,7 @@ func IsEqualOpt(f Fc) bool {
 	return ptr.Value == glob.KeywordEqual && ptr.PkgName == ""
 }
 
-func IsNumber(f Fc) (string, bool) {
+func IsNumberAtom(f Fc) (string, bool) {
 	ptr, ok := f.(*FcAtom)
 	if !ok {
 		return "", false

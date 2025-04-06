@@ -96,12 +96,12 @@ func (ver *Verifier) leftAsNumberStrCmp(left, right parser.Fc) (bool, error) {
 	numberAsStr := ""
 	var toCmp parser.Fc = nil
 
-	leftAsNumberStr, leftIsNumber := parser.IsNumber(left)
+	leftAsNumberStr, leftIsNumber := parser.IsNumberAtom(left)
 	if leftIsNumber {
 		numberAsStr = leftAsNumberStr
 		toCmp = right
 	} else {
-		rightAsNumberStr, rightIsNumber := parser.IsNumber(right)
+		rightAsNumberStr, rightIsNumber := parser.IsNumberAtom(right)
 		if rightIsNumber {
 			numberAsStr = rightAsNumberStr
 			toCmp = left
