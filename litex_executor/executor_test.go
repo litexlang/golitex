@@ -546,7 +546,7 @@ func readFile(filePath string) string {
 }
 
 func TestAllFactCode(t *testing.T) {
-	code := readFile("../litex_code_examples/fact.lix")
+	code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
@@ -578,7 +578,7 @@ $q(2)
 }
 
 func TestLastFactCode(t *testing.T) {
-	code := readFile("../litex_code_examples/fact.lix")
+	code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
 	topStmtSlice := parseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:], t)
 	printExecMsg(messages)
