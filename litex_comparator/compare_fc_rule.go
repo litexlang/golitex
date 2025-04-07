@@ -8,7 +8,7 @@ import (
 
 func CmpFcRule(left, right ast.Fc) (bool, error) {
 	// 先验证是不是Number，后验证rule，居然让runtime速度提高了1倍。。。
-	ok, err := FcEqualNumLitExpr(left, right)
+	ok, err := BuiltinFcEqualRule(left, right)
 	if err != nil {
 		return false, err
 	}
@@ -27,7 +27,8 @@ func CmpFcRule(left, right ast.Fc) (bool, error) {
 	return false, nil
 }
 
-func FcEqualNumLitExpr(left, right ast.Fc) (bool, error) {
+// 先确定left，right都是builtin fc，然后按builtin rule来验证他们相等
+func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 	// Case1: 二者都是 Number 上进行+-*/^
 	ok, err := cmpNumLitExpr(left, right)
 	if err != nil {
@@ -42,7 +43,7 @@ func FcEqualNumLitExpr(left, right ast.Fc) (bool, error) {
 
 // 之所以叫 Expr，因为可能含有运算符+-*/这样的
 func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
-	leftAsNumberFc, ok, err := ast.GetNumLitExpr(left)
+	leftAsNumberFc, ok, err := getNumLitExpr(left)
 	if err != nil {
 		return false, err
 	}
@@ -50,7 +51,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	rightAsNumberFc, ok, err := ast.GetNumLitExpr(right)
+	rightAsNumberFc, ok, err := getNumLitExpr(right)
 	if err != nil {
 		return false, err
 	}
@@ -58,7 +59,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	leftAsStr, ok, err := ast.EvalNumLitFc(leftAsNumberFc)
+	leftAsStr, ok, err := evalNumLitFc(leftAsNumberFc)
 	if err != nil {
 		return false, err
 	}
@@ -66,7 +67,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	rightAsStr, ok, err := ast.EvalNumLitFc(rightAsNumberFc)
+	rightAsStr, ok, err := evalNumLitFc(rightAsNumberFc)
 	if err != nil {
 		return false, err
 	}
@@ -78,5 +79,5 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	return ast.CmpBigFloat(leftAsStr, rightAsStr) == 0, nil
+	return CmpBigFloat(leftAsStr, rightAsStr) == 0, nil
 }

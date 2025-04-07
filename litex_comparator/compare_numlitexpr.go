@@ -1,8 +1,9 @@
-package litex_ast
+package litex_comparator
 
 import (
 	"errors"
 	"fmt"
+	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
 	"strconv"
 	"strings"
@@ -14,13 +15,13 @@ type numLitExpr struct {
 	Right       *numLitExpr
 }
 
-func GetNumLitExpr(fc Fc) (*numLitExpr, bool, error) {
-	asStr, ok := IsNumLitFcAtom(fc)
+func getNumLitExpr(fc ast.Fc) (*numLitExpr, bool, error) {
+	asStr, ok := ast.IsNumLitFcAtom(fc)
 	if ok {
 		return &numLitExpr{nil, asStr, nil}, true, nil
 	}
 
-	asFcFn, ok := fc.(*FcFn)
+	asFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
 		return nil, false, fmt.Errorf("")
 	}
@@ -38,7 +39,7 @@ func GetNumLitExpr(fc Fc) (*numLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	left, ok, err := GetNumLitExpr(asFcFn.CallPipe[0].Params[0])
+	left, ok, err := getNumLitExpr(asFcFn.CallPipe[0].Params[0])
 	if err != nil {
 		return nil, false, err
 	}
@@ -46,7 +47,7 @@ func GetNumLitExpr(fc Fc) (*numLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	right, ok, err := GetNumLitExpr(asFcFn.CallPipe[0].Params[1])
+	right, ok, err := getNumLitExpr(asFcFn.CallPipe[0].Params[1])
 	if err != nil {
 		return nil, false, err
 	}
@@ -57,15 +58,15 @@ func GetNumLitExpr(fc Fc) (*numLitExpr, bool, error) {
 	return &numLitExpr{left, opt, right}, true, nil
 }
 
-// EvalNumLitFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
+// evalNumLitFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
 // bool 表示基于现有的litex-rule，虽然说我不能说你对不对，但你至少没犯错，error表示你犯错了，比如1/0
-func EvalNumLitFc(node *numLitExpr) (string, bool, error) {
+func evalNumLitFc(node *numLitExpr) (string, bool, error) {
 	// 叶子节点
 	if node.Left == nil && node.Right == nil {
 		return node.OptOrNumber, true, nil
 	}
 
-	leftVal, ok, err := EvalNumLitFc(node.Left)
+	leftVal, ok, err := evalNumLitFc(node.Left)
 	if err != nil {
 		return "", false, err
 	}
@@ -73,7 +74,7 @@ func EvalNumLitFc(node *numLitExpr) (string, bool, error) {
 		return "", false, nil
 	}
 
-	rightVal, ok, err := EvalNumLitFc(node.Right)
+	rightVal, ok, err := evalNumLitFc(node.Right)
 	if err != nil {
 		return "", false, err
 	}
