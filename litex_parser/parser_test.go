@@ -17,7 +17,7 @@ func TestLexerFromString(t *testing.T) {
 def add(a, b):
     return a + b
 `
-	blocks, err := GetTopLevelStmtSlice(content)
+	blocks, err := getTopLevelStmtSlice(content)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -27,7 +27,7 @@ def add(a, b):
 	}
 
 	// Test invalid syntax
-	_, err = GetTopLevelStmtSlice(content)
+	_, err = getTopLevelStmtSlice(content)
 	if err != nil {
 		t.Fatalf("Expected error for invalid syntax")
 	}
@@ -68,7 +68,7 @@ func TestParseStrStmtBlock(t *testing.T) {
 		Body:   body,
 	}
 
-	parsedBlock, err := TokenizeStmtBlock(&input)
+	parsedBlock, err := tokenizeStmtBlock(&input)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -89,7 +89,7 @@ func TestParseFc(t *testing.T) {
 			t.Fatal(err)
 		}
 		parser := StrSliceCursor{0, tokens}
-		fc, err := parser.parseFcAtomAndFcFnRetAndBracedFc()
+		fc, err := parser.fcAtomAndFcFnRetAndBracedFc()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -114,7 +114,7 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 		}
 		parser := StrSliceCursor{0, tokens}
 
-		fc, err := parser.ParseFc()
+		fc, err := parser.Fc()
 
 		if err != nil {
 			t.Fatal(err)
@@ -126,14 +126,14 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 func ParserTester(code string) ([]ast.Stmt, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
-	slice, err := GetTopLevelStmtSlice(code)
+	slice, err := getTopLevelStmtSlice(code)
 	if err != nil {
 		return nil, err
 	}
 
 	blocks := []TokenBlock{}
 	for _, strBlock := range slice.Body {
-		block, err := TokenizeStmtBlock(&strBlock)
+		block, err := tokenizeStmtBlock(&strBlock)
 		if err != nil {
 			return nil, err
 		}

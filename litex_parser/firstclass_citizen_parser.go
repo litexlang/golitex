@@ -7,13 +7,13 @@ import (
 	"strconv"
 )
 
-func (parser *StrSliceCursor) parseFcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
+func (parser *StrSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 	if parser.is(glob.KeywordLeftParen) {
-		return parser.parseBracedFcExpr()
+		return parser.bracedFcExpr()
 	}
 
 	if parser.curTokenBeginWithNumber() {
-		return parser.parseNumberStr()
+		return parser.numberStr()
 	}
 
 	fcStr, err := parser.fcAtom()
@@ -26,13 +26,13 @@ func (parser *StrSliceCursor) parseFcAtomAndFcFnRetAndBracedFc() (ast.Fc, error)
 	if strAtSecondPosition != glob.KeywordLeftParen {
 		return &fcStr, nil
 	} else {
-		return parser.parseFcFnRetVal(fcStr)
+		return parser.fcFnRetVal(fcStr)
 	}
 }
 
-func (parser *StrSliceCursor) parseBracedFcExpr() (ast.Fc, error) {
+func (parser *StrSliceCursor) bracedFcExpr() (ast.Fc, error) {
 	parser.skip(glob.KeywordLeftParen)
-	fc, err := parser.ParseFc()
+	fc, err := parser.Fc()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -40,8 +40,8 @@ func (parser *StrSliceCursor) parseBracedFcExpr() (ast.Fc, error) {
 	return fc, nil
 }
 
-func (parser *StrSliceCursor) parseFcFnRetVal(optName ast.FcAtom) (*ast.FcFnPipe, error) {
-	typeParamsObjParamsPairs, err := parser.parseTypeParamsObjParamsPairs()
+func (parser *StrSliceCursor) fcFnRetVal(optName ast.FcAtom) (*ast.FcFnPipe, error) {
+	typeParamsObjParamsPairs, err := parser.objSetPairs()
 
 	if err != nil {
 		return nil, err
@@ -51,11 +51,11 @@ func (parser *StrSliceCursor) parseFcFnRetVal(optName ast.FcAtom) (*ast.FcFnPipe
 	// return &ast.FcFnPipe{optName, typeParamsObjParamsPairs}, nil
 }
 
-func (parser *StrSliceCursor) parseTypeParamsObjParamsPairs() ([]*ast.FcFnPipeSeg, error) {
+func (parser *StrSliceCursor) objSetPairs() ([]*ast.FcFnPipeSeg, error) {
 	pairs := []*ast.FcFnPipeSeg{}
 
 	for !parser.ExceedEnd() && (parser.is(glob.KeywordLeftParen)) {
-		objParamsPtr, err := parser.parseBracedFcArr()
+		objParamsPtr, err := parser.bracedFcSlice()
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
@@ -90,12 +90,12 @@ func (parser *StrSliceCursor) fcAtom() (ast.FcAtom, error) {
 	return ast.FcAtom{PkgName: fromPkg, Value: value}, nil
 }
 
-func (parser *StrSliceCursor) ParseFc() (ast.Fc, error) {
-	return parser.parseFcInfixExpr(glob.PrecLowest)
+func (parser *StrSliceCursor) Fc() (ast.Fc, error) {
+	return parser.fcInfixExpr(glob.PrecLowest)
 }
 
-func (parser *StrSliceCursor) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (ast.Fc, error) {
-	left, err := parser.parseFcUnaryExpr()
+func (parser *StrSliceCursor) fcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (ast.Fc, error) {
+	left, err := parser.fcUnaryExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -116,7 +116,7 @@ func (parser *StrSliceCursor) parseFcInfixExpr(currentPrec glob.FcInfixOptPreced
 		}
 
 		parser.skip() // 消耗运算符
-		right, err := parser.parseFcInfixExpr(curPrec)
+		right, err := parser.fcInfixExpr(curPrec)
 		if err != nil {
 			return nil, &parserErr{err, parser}
 		}
@@ -133,7 +133,7 @@ func (parser *StrSliceCursor) parseFcInfixExpr(currentPrec glob.FcInfixOptPreced
 	return left, nil
 }
 
-func (parser *StrSliceCursor) parseFcUnaryExpr() (ast.Fc, error) {
+func (parser *StrSliceCursor) fcUnaryExpr() (ast.Fc, error) {
 	unaryOp, err := parser.currentToken()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -141,7 +141,7 @@ func (parser *StrSliceCursor) parseFcUnaryExpr() (ast.Fc, error) {
 
 	if prec, isUnary := glob.UnaryPrecedence[unaryOp]; isUnary {
 		parser.skip()
-		right, err := parser.parseFcInfixExpr(prec)
+		right, err := parser.fcInfixExpr(prec)
 		if err != nil {
 			return nil, err
 		}
@@ -151,12 +151,12 @@ func (parser *StrSliceCursor) parseFcUnaryExpr() (ast.Fc, error) {
 		}, nil
 		// return ast.MakeFcFnPipe(*ast.MakeFcAtom("", unaryOp), []*ast.FcFnPipeSeg{ast.MakeFcFnPipeSeg([]ast.Fc{right})})
 	} else {
-		return parser.parseFcAtomAndFcFnRetAndBracedFc()
+		return parser.fcAtomAndFcFnRetAndBracedFc()
 	}
 
 }
 
-func (parser *StrSliceCursor) parseNumberStr() (*ast.FcAtom, error) {
+func (parser *StrSliceCursor) numberStr() (*ast.FcAtom, error) {
 	left, err := parser.next()
 
 	if err != nil {
