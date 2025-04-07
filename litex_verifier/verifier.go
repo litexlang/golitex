@@ -5,18 +5,18 @@ import (
 	"fmt"
 	env "golitex/litex_env"
 	glob "golitex/litex_global"
-	parser "golitex/litex_parser"
+	st "golitex/litex_statements"
 )
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
-func (ver *Verifier) FactStmt(stmt parser.FactStmt, state VerState) (bool, error) {
+func (ver *Verifier) FactStmt(stmt st.FactStmt, state VerState) (bool, error) {
 	switch stmt := stmt.(type) {
 	// 只有这里的三大函数+FcEqual+propProp验证，可能读入anyState；也只有这三个函数，用得到 state,isSpec()，其他函数貌似都用不到？
-	case *parser.SpecFactStmt:
+	case *st.SpecFactStmt:
 		return ver.SpecFact(stmt, state)
-	case *parser.CondFactStmt:
+	case *st.CondFactStmt:
 		return ver.CondFact(stmt, state)
-	case *parser.UniFactStmt:
+	case *st.UniFactStmt:
 		return ver.UniFact(stmt, state)
 	default:
 		return false, fmt.Errorf("unexpected")
@@ -42,7 +42,7 @@ func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
 func (ver *Verifier) successNoMsg() {
 }
 
-func (ver *Verifier) newEnv(uniParamsMap map[string]parser.Fc) {
+func (ver *Verifier) newEnv(uniParamsMap map[string]st.Fc) {
 	newEnv := env.NewEnv(ver.env, uniParamsMap, ver.env.CurPkg)
 	ver.env = newEnv
 }
@@ -63,8 +63,8 @@ func (ver *Verifier) unknownWithMsg(format string, args ...any) {
 	ver.unknownMsgEnd(format, args...)
 }
 
-func (ver *Verifier) asConFc(fc parser.Fc) parser.Fc {
-	fcAsAtom, ok := fc.(*parser.FcAtom)
+func (ver *Verifier) asConFc(fc st.Fc) st.Fc {
+	fcAsAtom, ok := fc.(*st.FcAtom)
 	if !ok {
 		return nil
 	}
@@ -95,6 +95,6 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	}
 }
 
-func verifyStageStmtErr(next error, stmt parser.Stmt) *glob.ErrLink {
+func verifyStageStmtErr(next error, stmt st.Stmt) *glob.ErrLink {
 	return glob.NewErrLink(next, "%s\nverify-stage error", stmt.String())
 }

@@ -1,4 +1,4 @@
-package litexparser
+package litexstatements
 
 type Stmt interface {
 	stmt()

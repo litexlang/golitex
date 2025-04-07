@@ -3,9 +3,10 @@ package litexparser
 import (
 	"fmt"
 	glob "golitex/litex_global"
+	st "golitex/litex_statements"
 )
 
-func (stmt *TokenBlock) ParseTopLevelStmt() (*TopStmt, error) {
+func (stmt *TokenBlock) ParseTopLevelStmt() (*st.TopStmt, error) {
 	pub := false
 	if stmt.Header.is(glob.KeywordPub) {
 		stmt.Header.skip()
@@ -17,16 +18,16 @@ func (stmt *TokenBlock) ParseTopLevelStmt() (*TopStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &TopStmt{ret, pub}, nil
+	return &st.TopStmt{ret, pub}, nil
 }
 
-func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
+func (stmt *TokenBlock) ParseStmt() (st.Stmt, error) {
 	cur, err := stmt.Header.currentToken()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	var ret Stmt
+	var ret st.Stmt
 	switch cur {
 	case glob.KeywordInterface:
 		ret, err = stmt.parseDefInterfaceStmt()
@@ -67,7 +68,7 @@ func (stmt *TokenBlock) ParseStmt() (Stmt, error) {
 	return ret, nil
 }
 
-func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
+func (stmt *TokenBlock) parseFactStmt() (st.FactStmt, error) {
 	if stmt.Header.is(glob.KeywordForall) {
 		return stmt.parseForallStmt()
 	} else if stmt.Header.is(glob.KeywordWhen) {
@@ -76,7 +77,7 @@ func (stmt *TokenBlock) parseFactStmt() (FactStmt, error) {
 	return stmt.parseSpecFactStmt()
 }
 
-func (stmt *TokenBlock) parseSpecFactStmt() (*SpecFactStmt, error) {
+func (stmt *TokenBlock) parseSpecFactStmt() (*st.SpecFactStmt, error) {
 	if !stmt.Header.is(glob.KeywordDollar) {
 		return stmt.parseRelaFactStmt()
 	}
@@ -91,7 +92,7 @@ func (stmt *TokenBlock) parseSpecFactStmt() (*SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	params := []Fc{}
+	params := []st.Fc{}
 	err = stmt.Header.skip(glob.KeywordLeftParen)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -113,17 +114,17 @@ func (stmt *TokenBlock) parseSpecFactStmt() (*SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &SpecFactStmt{true, opt, params}, nil
+	return &st.SpecFactStmt{true, opt, params}, nil
 }
 
-func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
+func (stmt *TokenBlock) parseForallStmt() (st.ForallStmt, error) {
 	err := stmt.Header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
 	typeParams := []string{}
-	typeInterfaces := []*FcAtom{}
+	typeInterfaces := []*st.FcAtom{}
 
 	if stmt.Header.is(glob.KeywordLess) {
 		stmt.Header.next()
@@ -138,8 +139,8 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	domainFacts := []FactStmt{}
-	thenFacts := []*SpecFactStmt{}
+	domainFacts := []st.FactStmt{}
+	thenFacts := []*st.SpecFactStmt{}
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordThen) {
 		for i := 0; i < len(stmt.Body)-1; i++ {
@@ -164,15 +165,15 @@ func (stmt *TokenBlock) parseForallStmt() (ForallStmt, error) {
 	}
 
 	if len(typeParams) > 0 {
-		return &GenericUniStmt{typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts}, nil
+		return &st.GenericUniStmt{typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts}, nil
 	} else {
-		return &UniFactStmt{params, paramTypes, domainFacts, thenFacts}, nil
+		return &st.UniFactStmt{params, paramTypes, domainFacts, thenFacts}, nil
 	}
 
 }
 
-func (stmt *TokenBlock) parseBodyFacts() ([]FactStmt, error) {
-	facts := []FactStmt{}
+func (stmt *TokenBlock) parseBodyFacts() ([]st.FactStmt, error) {
+	facts := []st.FactStmt{}
 	for _, f := range stmt.Body {
 		fact, err := f.parseFactStmt()
 		if err != nil {
@@ -184,8 +185,8 @@ func (stmt *TokenBlock) parseBodyFacts() ([]FactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseThenBlockSpecFacts() ([]*SpecFactStmt, error) {
-	facts := []*SpecFactStmt{}
+func (stmt *TokenBlock) parseThenBlockSpecFacts() ([]*st.SpecFactStmt, error) {
+	facts := []*st.SpecFactStmt{}
 	stmt.Header.skip() // skip "then"
 	if err := stmt.Header.testAndSkip(glob.KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -202,8 +203,8 @@ func (stmt *TokenBlock) parseThenBlockSpecFacts() ([]*SpecFactStmt, error) {
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseBlockHeaderBodyFacts(kw string) ([]FactStmt, error) {
-	facts := []FactStmt{}
+func (stmt *TokenBlock) parseBlockHeaderBodyFacts(kw string) ([]st.FactStmt, error) {
+	facts := []st.FactStmt{}
 	stmt.Header.skip(kw)
 	if err := stmt.Header.testAndSkip(glob.KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -220,7 +221,7 @@ func (stmt *TokenBlock) parseBlockHeaderBodyFacts(kw string) ([]FactStmt, error)
 	return facts, nil
 }
 
-func (stmt *TokenBlock) parseDefConPropStmt() (*DefConPropStmt, error) {
+func (stmt *TokenBlock) parseDefConPropStmt() (*st.DefConPropStmt, error) {
 	err := stmt.Header.skip(glob.KeywordProp)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -241,12 +242,12 @@ func (stmt *TokenBlock) parseDefConPropStmt() (*DefConPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &DefConPropStmt{*decl, domFacts, iffFacts}, nil
+	return &st.DefConPropStmt{*decl, domFacts, iffFacts}, nil
 }
 
-func (stmt *TokenBlock) parseBodyTwoFactSections(kw string) ([]FactStmt, []FactStmt, error) {
-	section1Facts := []FactStmt{}
-	section2Facts := []FactStmt{}
+func (stmt *TokenBlock) parseBodyTwoFactSections(kw string) ([]st.FactStmt, []st.FactStmt, error) {
+	section1Facts := []st.FactStmt{}
+	section2Facts := []st.FactStmt{}
 	err := error(nil)
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(kw) {
@@ -274,7 +275,7 @@ func (stmt *TokenBlock) parseBodyTwoFactSections(kw string) ([]FactStmt, []FactS
 	return section1Facts, section2Facts, nil
 }
 
-func (stmt *TokenBlock) parseDefConFnStmt() (*DefConFnStmt, error) {
+func (stmt *TokenBlock) parseDefConFnStmt() (*st.DefConFnStmt, error) {
 	err := stmt.Header.skip(glob.KeywordFn)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -290,8 +291,8 @@ func (stmt *TokenBlock) parseDefConFnStmt() (*DefConFnStmt, error) {
 		return nil, err
 	}
 
-	domFacts := []FactStmt{}
-	thenFacts := []*SpecFactStmt{}
+	domFacts := []st.FactStmt{}
+	thenFacts := []*st.SpecFactStmt{}
 
 	if stmt.Header.is(glob.KeywordColon) {
 		stmt.Header.skip()
@@ -301,17 +302,17 @@ func (stmt *TokenBlock) parseDefConFnStmt() (*DefConFnStmt, error) {
 		}
 	}
 
-	return &DefConFnStmt{*decl, retType, domFacts, thenFacts}, nil
+	return &st.DefConFnStmt{*decl, retType, domFacts, thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
+func (stmt *TokenBlock) parseDefObjStmt() (*st.DefObjStmt, error) {
 	err := stmt.Header.skip(glob.KeywordObj)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
 	objNames := []string{}
-	objSets := []Fc{}
+	objSets := []st.Fc{}
 
 	for !stmt.Header.is(glob.KeywordColon) && !stmt.Header.ExceedEnd() {
 		decl, err := stmt.Header.next()
@@ -332,7 +333,7 @@ func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
 		objSets = append(objSets, tp)
 	}
 
-	facts := []FactStmt{}
+	facts := []st.FactStmt{}
 
 	if !stmt.Header.ExceedEnd() && stmt.Header.is(glob.KeywordColon) {
 		stmt.Header.skip()
@@ -344,10 +345,10 @@ func (stmt *TokenBlock) parseDefObjStmt() (*DefObjStmt, error) {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
-	return &DefObjStmt{objNames, objSets, facts}, nil
+	return &st.DefObjStmt{objNames, objSets, facts}, nil
 }
 
-func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
+func (stmt *TokenBlock) parseClaimStmt() (st.ClaimStmt, error) {
 	stmt.Header.skip()
 	err := error(nil)
 
@@ -355,8 +356,8 @@ func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	toCheck := &[]FactStmt{}
-	proof := &[]Stmt{}
+	toCheck := &[]st.FactStmt{}
+	proof := &[]st.Stmt{}
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
 		if !stmt.Header.is(glob.KeywordProve) && !stmt.Header.is(glob.KeywordProveByContradiction) {
@@ -390,27 +391,27 @@ func (stmt *TokenBlock) parseClaimStmt() (ClaimStmt, error) {
 	}
 
 	if isProve {
-		return &ClaimProveStmt{*toCheck, *proof}, nil
+		return &st.ClaimProveStmt{*toCheck, *proof}, nil
 	} else {
-		return &ClaimProveByContradictStmt{*toCheck, *proof}, nil
+		return &st.ClaimProveByContradictStmt{*toCheck, *proof}, nil
 	}
 }
 
-func (stmt *TokenBlock) parseProveClaimStmt() (*ClaimProveStmt, error) {
+func (stmt *TokenBlock) parseProveClaimStmt() (*st.ClaimProveStmt, error) {
 	innerStmtArr, err := stmt.parseProveBlock()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
-	return &ClaimProveStmt{[]FactStmt{}, innerStmtArr}, nil
+	return &st.ClaimProveStmt{[]st.FactStmt{}, innerStmtArr}, nil
 }
 
-func (stmt *TokenBlock) parseProveBlock() ([]Stmt, error) {
+func (stmt *TokenBlock) parseProveBlock() ([]st.Stmt, error) {
 	stmt.Header.skip(glob.KeywordProve)
 	if err := stmt.Header.testAndSkip(glob.KeywordColon); err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	innerStmtArr := []Stmt{}
+	innerStmtArr := []st.Stmt{}
 	for _, innerStmt := range stmt.Body {
 		curStmt, err := innerStmt.ParseStmt()
 		if err != nil {
@@ -421,17 +422,17 @@ func (stmt *TokenBlock) parseProveBlock() ([]Stmt, error) {
 	return innerStmtArr, nil
 }
 
-func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
+func (stmt *TokenBlock) parseKnowStmt() (*st.KnowStmt, error) {
 	stmt.Header.skip(glob.KeywordKnow)
 
 	if !stmt.Header.is(glob.KeywordColon) {
-		facts := []FactStmt{}
+		facts := []st.FactStmt{}
 		fact, err := stmt.parseFactStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
-		return &KnowStmt{facts}, nil
+		return &st.KnowStmt{facts}, nil
 	}
 
 	if err := stmt.Header.testAndSkip(glob.KeywordColon); err != nil {
@@ -443,10 +444,10 @@ func (stmt *TokenBlock) parseKnowStmt() (*KnowStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &KnowStmt{facts}, nil
+	return &st.KnowStmt{facts}, nil
 }
 
-func (stmt *TokenBlock) parseDefConExistPropStmt() (*DefConExistPropStmt, error) {
+func (stmt *TokenBlock) parseDefConExistPropStmt() (*st.DefConExistPropStmt, error) {
 	err := stmt.Header.skip(glob.KeywordExistProp)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -458,7 +459,7 @@ func (stmt *TokenBlock) parseDefConExistPropStmt() (*DefConExistPropStmt, error)
 	}
 
 	existObjOrFn := []string{}
-	existObjOrFnTypes := []*FcAtom{}
+	existObjOrFnTypes := []*st.FcAtom{}
 
 	for !stmt.Header.is(glob.KeywordColon) && !stmt.Header.ExceedEnd() {
 		decl, err := stmt.Header.next()
@@ -486,10 +487,10 @@ func (stmt *TokenBlock) parseDefConExistPropStmt() (*DefConExistPropStmt, error)
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &DefConExistPropStmt{*decl, existObjOrFn, existObjOrFnTypes, domFacts, thenFacts}, nil
+	return &st.DefConExistPropStmt{*decl, existObjOrFn, existObjOrFnTypes, domFacts, thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
+func (stmt *TokenBlock) parseHaveStmt() (*st.HaveStmt, error) {
 	stmt.Header.skip(glob.KeywordHave)
 	propStmt, err := stmt.parseSpecFactStmt()
 	if err != nil {
@@ -509,10 +510,10 @@ func (stmt *TokenBlock) parseHaveStmt() (*HaveStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &HaveStmt{*propStmt, members}, nil
+	return &st.HaveStmt{*propStmt, members}, nil
 }
 
-func (stmt *TokenBlock) parseRelaFactStmt() (*SpecFactStmt, error) {
+func (stmt *TokenBlock) parseRelaFactStmt() (*st.SpecFactStmt, error) {
 	fc, err := stmt.Header.ParseFc()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -536,7 +537,7 @@ func (stmt *TokenBlock) parseRelaFactStmt() (*SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	params := []Fc{fc, fc2}
+	params := []st.Fc{fc, fc2}
 	for stmt.Header.is(opt) {
 		stmt.Header.skip()
 		fc, err := stmt.Header.ParseFc()
@@ -546,20 +547,20 @@ func (stmt *TokenBlock) parseRelaFactStmt() (*SpecFactStmt, error) {
 		params = append(params, fc)
 	}
 
-	return &SpecFactStmt{true, FcAtom{Value: opt}, params}, nil
+	return &st.SpecFactStmt{true, st.FcAtom{Value: opt}, params}, nil
 }
 
-func (stmt *TokenBlock) parseAxiomStmt() (*AxiomStmt, error) {
+func (stmt *TokenBlock) parseAxiomStmt() (*st.AxiomStmt, error) {
 	stmt.Header.skip(glob.KeywordAxiom)
 	decl, err := stmt.parseDefPropExistStmt()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &AxiomStmt{decl}, nil
+	return &st.AxiomStmt{decl}, nil
 }
 
-func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
+func (stmt *TokenBlock) parseThmStmt() (*st.ThmStmt, error) {
 	err := stmt.Header.skip(glob.KeywordThm)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -586,10 +587,10 @@ func (stmt *TokenBlock) parseThmStmt() (*ThmStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ThmStmt{decl, facts}, nil
+	return &st.ThmStmt{decl, facts}, nil
 }
 
-func (stmt *TokenBlock) parseConditionalStmt() (*CondFactStmt, error) {
+func (stmt *TokenBlock) parseConditionalStmt() (*st.CondFactStmt, error) {
 	err := stmt.Header.skip(glob.KeywordWhen)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -602,8 +603,8 @@ func (stmt *TokenBlock) parseConditionalStmt() (*CondFactStmt, error) {
 		return nil, fmt.Errorf("expect end of line")
 	}
 
-	condFacts := []FactStmt{}
-	thenFacts := []*SpecFactStmt{}
+	condFacts := []st.FactStmt{}
+	thenFacts := []*st.SpecFactStmt{}
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
 		fact, err := stmt.Body[i].parseSpecFactStmt()
@@ -630,18 +631,18 @@ func (stmt *TokenBlock) parseConditionalStmt() (*CondFactStmt, error) {
 		thenFacts = append(thenFacts, fact)
 	}
 
-	return &CondFactStmt{condFacts, thenFacts}, nil
+	return &st.CondFactStmt{condFacts, thenFacts}, nil
 }
 
-func (stmt *TokenBlock) parseDefInterfaceStmt() (*DefInterfaceStmt, error) {
+func (stmt *TokenBlock) parseDefInterfaceStmt() (*st.DefInterfaceStmt, error) {
 	panic("")
 }
 
-func (stmt *TokenBlock) parseDefTypeStmt() (*DefTypeStmt, error) {
+func (stmt *TokenBlock) parseDefTypeStmt() (*st.DefTypeStmt, error) {
 	panic("")
 }
 
-func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
+func (stmt *TokenBlock) parseConDefHeader() (*st.ConDefHeader, error) {
 	name, err := stmt.Header.next()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
@@ -653,7 +654,7 @@ func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
 	}
 
 	params := []string{}
-	typeParams := []Fc{}
+	typeParams := []st.Fc{}
 
 	for !stmt.Header.is(glob.KeywordRightParen) {
 		param, err := stmt.Header.next()
@@ -679,12 +680,12 @@ func (stmt *TokenBlock) parseConDefHeader() (*ConDefHeader, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ConDefHeader{name, params, typeParams}, nil
+	return &st.ConDefHeader{name, params, typeParams}, nil
 }
 
-func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]FactStmt, []*SpecFactStmt, error) {
-	section1Facts := []FactStmt{}
-	section2SpecFacts := []*SpecFactStmt{}
+func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]st.FactStmt, []*st.SpecFactStmt, error) {
+	section1Facts := []st.FactStmt{}
+	section2SpecFacts := []*st.SpecFactStmt{}
 	err := error(nil)
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(kw) {

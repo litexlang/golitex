@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	glob "golitex/litex_global"
-	parser "golitex/litex_parser"
+	st "golitex/litex_statements"
 	"strconv"
 	"strings"
 )
@@ -15,13 +15,13 @@ type NumberFc struct {
 	Right       *NumberFc
 }
 
-func IsNumberFcWithBuiltinInfixOpt(fc parser.Fc) (*NumberFc, bool, error) {
-	asStr, ok := parser.IsNumberAtom(fc)
+func IsNumberFcWithBuiltinInfixOpt(fc st.Fc) (*NumberFc, bool, error) {
+	asStr, ok := st.IsNumberAtom(fc)
 	if ok {
 		return &NumberFc{nil, asStr, nil}, true, nil
 	}
 
-	asFcFn, ok := fc.(*parser.FcFnPipe)
+	asFcFn, ok := fc.(*st.FcFnPipe)
 	if !ok {
 		return nil, false, fmt.Errorf("")
 	}

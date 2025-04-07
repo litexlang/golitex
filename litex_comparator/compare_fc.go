@@ -3,7 +3,7 @@ package litexcomparator
 import (
 	"fmt"
 	mem "golitex/litex_memory"
-	parser "golitex/litex_parser"
+	st "golitex/litex_statements"
 )
 
 func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (int, error) {
@@ -11,16 +11,16 @@ func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (i
 }
 
 // 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
-func CmpFcLiterally(left, right parser.Fc) (int, error) {
+func CmpFcLiterally(left, right st.Fc) (int, error) {
 	typeComp, fcEnum, err := CmpFcType(left, right)
 	if typeComp != 0 || err != nil {
 		return typeComp, err
 	}
 
 	if fcEnum == FcAtomEnum {
-		return cmpFcAtom(left.(*parser.FcAtom), right.(*parser.FcAtom))
+		return cmpFcAtom(left.(*st.FcAtom), right.(*st.FcAtom))
 	} else if fcEnum == FcFnCallPipeEnum {
-		return cmpFcFnCallPipe(left.(*parser.FcFnPipe), right.(*parser.FcFnPipe))
+		return cmpFcFnCallPipe(left.(*st.FcFnPipe), right.(*st.FcFnPipe))
 	}
 
 	return 0, fmt.Errorf("")
@@ -33,12 +33,12 @@ const (
 	FcFnCallPipeEnum FcEnum = 1
 )
 
-func CmpFcType(left, right parser.Fc) (int, FcEnum, error) {
+func CmpFcType(left, right st.Fc) (int, FcEnum, error) {
 	var knownEnum FcEnum
 	switch left.(type) {
-	case *parser.FcAtom:
+	case *st.FcAtom:
 		knownEnum = FcAtomEnum
-	case *parser.FcFnPipe:
+	case *st.FcFnPipe:
 		knownEnum = FcFnCallPipeEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
@@ -47,9 +47,9 @@ func CmpFcType(left, right parser.Fc) (int, FcEnum, error) {
 	// Process right
 	var givenEnum FcEnum
 	switch right.(type) {
-	case *parser.FcAtom:
+	case *st.FcAtom:
 		givenEnum = FcAtomEnum
-	case *parser.FcFnPipe:
+	case *st.FcFnPipe:
 		givenEnum = FcFnCallPipeEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
@@ -58,7 +58,7 @@ func CmpFcType(left, right parser.Fc) (int, FcEnum, error) {
 	return int(knownEnum - givenEnum), knownEnum, nil
 }
 
-func cmpFcAtom(left, right *parser.FcAtom) (int, error) {
+func cmpFcAtom(left, right *st.FcAtom) (int, error) {
 	if len(left.PkgName) != len(right.PkgName) {
 		return len(left.PkgName) - len(right.PkgName), nil
 	}
@@ -82,7 +82,7 @@ func cmpFcAtom(left, right *parser.FcAtom) (int, error) {
 	return 0, nil
 }
 
-func cmpFcFnCallPipe(left, right *parser.FcFnPipe) (int, error) {
+func cmpFcFnCallPipe(left, right *st.FcFnPipe) (int, error) {
 	if comp, err := cmpFcAtom(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}
@@ -100,7 +100,7 @@ func cmpFcFnCallPipe(left, right *parser.FcFnPipe) (int, error) {
 	return 0, nil
 }
 
-func compareFcFnCallPipeSeg(left, right *parser.FcFnPipeSeg) (int, error) {
+func compareFcFnCallPipeSeg(left, right *st.FcFnPipeSeg) (int, error) {
 	if len(left.Params) != len(right.Params) {
 		return len(left.Params) - len(right.Params), nil
 	}

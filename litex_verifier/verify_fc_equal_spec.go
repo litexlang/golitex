@@ -3,10 +3,10 @@ package litexverifier
 import (
 	"fmt"
 	cmp "golitex/litex_comparator"
-	parser "golitex/litex_parser"
+	st "golitex/litex_statements"
 )
 
-func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcEqualSpec(left, right st.Fc, state VerState) (bool, error) {
 	// Case: 全部都是builtin类型：比如int,float。如果传入的压根不包含builtinFc那就返回false
 	ok, err := ver.fcEqualBuiltin(left, right)
 	if err != nil {
@@ -47,7 +47,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, e
 	}
 
 	if fcEnum == cmp.FcFnCallPipeEnum {
-		return ver.fcFnPipeEqual(left.(*parser.FcFnPipe), right.(*parser.FcFnPipe), SpecMsg)
+		return ver.fcFnPipeEqual(left.(*st.FcFnPipe), right.(*st.FcFnPipe), SpecMsg)
 	} else if fcEnum == cmp.FcAtomEnum {
 		return false, nil
 	}
@@ -55,7 +55,7 @@ func (ver *Verifier) fcEqualSpec(left, right parser.Fc, state VerState) (bool, e
 	return false, fmt.Errorf("unexpected")
 }
 
-func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcEqualSpecInSpecMem(left, right st.Fc, state VerState) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		verified, err := ver.FcEqualSpecInSpecMemLiterallyAtEnv(curEnv, left, right, state)
 		if err != nil {
@@ -68,7 +68,7 @@ func (ver *Verifier) fcEqualSpecInSpecMem(left, right parser.Fc, state VerState)
 	return false, nil
 }
 
-func (ver *Verifier) FcSliceEqual(left []parser.Fc, right []parser.Fc, specMode VerState) (bool, error) {
+func (ver *Verifier) FcSliceEqual(left []st.Fc, right []st.Fc, specMode VerState) (bool, error) {
 	if len(left) != len(right) {
 		return false, fmt.Errorf("%v and %v have different length", left, right)
 	}
@@ -92,16 +92,16 @@ func (ver *Verifier) FcSliceEqual(left []parser.Fc, right []parser.Fc, specMode 
 	return false, nil
 }
 
-// func (ver *Verifier) leftAsNumberStrCmp(left, right parser.Fc) (bool, error) {
+// func (ver *Verifier) leftAsNumberStrCmp(left, right st.Fc) (bool, error) {
 // 	numberAsStr := ""
-// 	var toCmp parser.Fc = nil
+// 	var toCmp st.Fc = nil
 
-// 	leftAsNumberStr, leftIsNumber := parser.IsNumberAtom(left)
+// 	leftAsNumberStr, leftIsNumber := st.IsNumberAtom(left)
 // 	if leftIsNumber {
 // 		numberAsStr = leftAsNumberStr
 // 		toCmp = right
 // 	} else {
-// 		rightAsNumberStr, rightIsNumber := parser.IsNumberAtom(right)
+// 		rightAsNumberStr, rightIsNumber := st.IsNumberAtom(right)
 // 		if rightIsNumber {
 // 			numberAsStr = rightAsNumberStr
 // 			toCmp = left
