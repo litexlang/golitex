@@ -100,7 +100,8 @@ func (parser *StrSliceCursor) parseIsExpr(left ast.Fc) (*ast.SpecFactStmt, error
 		return nil, &parserErr{err, parser}
 	}
 
-	return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
+	return ast.MakeSpecFactStmt(true, opt, []ast.Fc{left}), nil
+	// return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
 }
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (ast.DefPropStmt, error) {

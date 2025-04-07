@@ -18,7 +18,8 @@ func (stmt *TokenBlock) ParseTopLevelStmt() (*ast.TopStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ast.TopStmt{ret, pub}, nil
+	// return &ast.TopStmt{ret, pub}, nil
+	return ast.MakeTopStmt(ret, pub), nil
 }
 
 func (stmt *TokenBlock) ParseStmt() (ast.Stmt, error) {
@@ -114,7 +115,8 @@ func (stmt *TokenBlock) parseSpecFactStmt() (*ast.SpecFactStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ast.SpecFactStmt{true, opt, params}, nil
+	// return &ast.SpecFactStmt{true, opt, params}, nil
+	return ast.MakeSpecFactStmt(true, opt, params), nil
 }
 
 func (stmt *TokenBlock) parseForallStmt() (ast.ForallStmt, error) {
@@ -165,9 +167,11 @@ func (stmt *TokenBlock) parseForallStmt() (ast.ForallStmt, error) {
 	}
 
 	if len(typeParams) > 0 {
-		return &ast.GenericUniStmt{typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts}, nil
+		// return &ast.GenericUniStmt{typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts}, nil
+		return ast.MakeGenericUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts), nil
 	} else {
-		return &ast.UniFactStmt{params, paramTypes, domainFacts, thenFacts}, nil
+		// return &ast.UniFactStmt{params, paramTypes, domainFacts, thenFacts}, nil
+		return ast.MakeUniFactStmt(params, paramTypes, domainFacts, thenFacts), nil
 	}
 
 }
@@ -242,7 +246,8 @@ func (stmt *TokenBlock) parseDefConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ast.DefConPropStmt{*decl, domFacts, iffFacts}, nil
+	// return &ast.DefConPropStmt{*decl, domFacts, iffFacts}, nil
+	return ast.MakeDefConPropStmt(*decl, domFacts, iffFacts), nil
 }
 
 func (stmt *TokenBlock) parseBodyTwoFactSections(kw string) ([]ast.FactStmt, []ast.FactStmt, error) {
@@ -302,7 +307,8 @@ func (stmt *TokenBlock) parseDefConFnStmt() (*ast.DefConFnStmt, error) {
 		}
 	}
 
-	return &ast.DefConFnStmt{*decl, retType, domFacts, thenFacts}, nil
+	// return &ast.DefConFnStmt{*decl, retType, domFacts, thenFacts}, nil
+	return ast.MakeDefConFnStmt(*decl, retType, domFacts, thenFacts), nil
 }
 
 func (stmt *TokenBlock) parseDefObjStmt() (*ast.DefObjStmt, error) {
@@ -345,7 +351,8 @@ func (stmt *TokenBlock) parseDefObjStmt() (*ast.DefObjStmt, error) {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
-	return &ast.DefObjStmt{objNames, objSets, facts}, nil
+	// return &ast.DefObjStmt{objNames, objSets, facts}, nil
+	return ast.MakeDefObjStmt(objNames, objSets, facts), nil
 }
 
 func (stmt *TokenBlock) parseClaimStmt() (ast.ClaimStmt, error) {
@@ -391,9 +398,11 @@ func (stmt *TokenBlock) parseClaimStmt() (ast.ClaimStmt, error) {
 	}
 
 	if isProve {
-		return &ast.ClaimProveStmt{*toCheck, *proof}, nil
+		// return &ast.ClaimProveStmt{*toCheck, *proof}, nil
+		return ast.MakeClaimProveStmt(*toCheck, *proof), nil
 	} else {
-		return &ast.ClaimProveByContradictStmt{*toCheck, *proof}, nil
+		// return &ast.ClaimProveByContradictStmt{*toCheck, *proof}, nil
+		return ast.MakeClaimProveByContradictStmt(*toCheck, *proof), nil
 	}
 }
 
@@ -402,7 +411,8 @@ func (stmt *TokenBlock) parseProveClaimStmt() (*ast.ClaimProveStmt, error) {
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
-	return &ast.ClaimProveStmt{[]ast.FactStmt{}, innerStmtArr}, nil
+	// return &ast.ClaimProveStmt{[]ast.FactStmt{}, innerStmtArr}, nil
+	return ast.MakeClaimProveStmt([]ast.FactStmt{}, innerStmtArr), nil
 }
 
 func (stmt *TokenBlock) parseProveBlock() ([]ast.Stmt, error) {
@@ -432,7 +442,8 @@ func (stmt *TokenBlock) parseKnowStmt() (*ast.KnowStmt, error) {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
-		return &ast.KnowStmt{facts}, nil
+		// return &ast.KnowStmt{facts}, nil
+		return ast.MakeKnowStmt(facts), nil
 	}
 
 	if err := stmt.Header.testAndSkip(glob.KeywordColon); err != nil {
@@ -444,7 +455,8 @@ func (stmt *TokenBlock) parseKnowStmt() (*ast.KnowStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ast.KnowStmt{facts}, nil
+	// return &ast.KnowStmt{facts}, nil
+	return ast.MakeKnowStmt(facts), nil
 }
 
 func (stmt *TokenBlock) parseDefConExistPropStmt() (*ast.DefConExistPropStmt, error) {
@@ -487,7 +499,8 @@ func (stmt *TokenBlock) parseDefConExistPropStmt() (*ast.DefConExistPropStmt, er
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ast.DefConExistPropStmt{*decl, existObjOrFn, existObjOrFnTypes, domFacts, thenFacts}, nil
+	// return &ast.DefConExistPropStmt{*decl, existObjOrFn, existObjOrFnTypes, domFacts, thenFacts}, nil
+	return ast.MakeDefConExistPropStmt(*decl, existObjOrFn, existObjOrFnTypes, domFacts, thenFacts), nil
 }
 
 func (stmt *TokenBlock) parseHaveStmt() (*ast.HaveStmt, error) {
@@ -510,7 +523,8 @@ func (stmt *TokenBlock) parseHaveStmt() (*ast.HaveStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ast.HaveStmt{*propStmt, members}, nil
+	// return &ast.HaveStmt{*propStmt, members}, nil
+	return ast.MakeHaveStmt(*propStmt, members), nil
 }
 
 func (stmt *TokenBlock) parseRelaFactStmt() (*ast.SpecFactStmt, error) {
@@ -547,7 +561,8 @@ func (stmt *TokenBlock) parseRelaFactStmt() (*ast.SpecFactStmt, error) {
 		params = append(params, fc)
 	}
 
-	return &ast.SpecFactStmt{true, ast.FcAtom{Value: opt}, params}, nil
+	// return &ast.SpecFactStmt{true, ast.FcAtom{Value: opt}, params}, nil
+	return ast.MakeSpecFactStmt(true, ast.FcAtom{Value: opt}, params), nil
 }
 
 func (stmt *TokenBlock) parseAxiomStmt() (*ast.AxiomStmt, error) {
@@ -557,7 +572,8 @@ func (stmt *TokenBlock) parseAxiomStmt() (*ast.AxiomStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ast.AxiomStmt{decl}, nil
+	// return &ast.AxiomStmt{decl}, nil
+	return ast.MakeAxiomStmt(decl), nil
 }
 
 func (stmt *TokenBlock) parseThmStmt() (*ast.ThmStmt, error) {
@@ -587,7 +603,8 @@ func (stmt *TokenBlock) parseThmStmt() (*ast.ThmStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ast.ThmStmt{decl, facts}, nil
+	// return &ast.ThmStmt{decl, facts}, nil
+	return ast.MakeThmStmt(decl, facts), nil
 }
 
 func (stmt *TokenBlock) parseConditionalStmt() (*ast.CondFactStmt, error) {
@@ -631,7 +648,8 @@ func (stmt *TokenBlock) parseConditionalStmt() (*ast.CondFactStmt, error) {
 		thenFacts = append(thenFacts, fact)
 	}
 
-	return &ast.CondFactStmt{condFacts, thenFacts}, nil
+	// return &ast.CondFactStmt{condFacts, thenFacts}, nil
+	return ast.MakeCondFactStmt(condFacts, thenFacts), nil
 }
 
 func (stmt *TokenBlock) parseDefInterfaceStmt() (*ast.DefInterfaceStmt, error) {
@@ -680,7 +698,8 @@ func (stmt *TokenBlock) parseConDefHeader() (*ast.ConDefHeader, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	return &ast.ConDefHeader{name, params, typeParams}, nil
+	// return &ast.ConDefHeader{name, params, typeParams}, nil
+	return ast.MakeConDefHeader(name, params, typeParams), nil
 }
 
 func (stmt *TokenBlock) parseBodyFactSectionSpecFactSection(kw string) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {

@@ -1,4 +1,4 @@
-package litexstatements
+package litexast
 
 import (
 	"fmt"
@@ -24,6 +24,18 @@ type FcFnPipe struct {
 
 type FcFnPipeSeg struct {
 	Params []Fc
+}
+
+func MakeFcAtom(pkgName string, value string) *FcAtom {
+	return &FcAtom{pkgName, value}
+}
+
+func MakeFcFnPipe(fnHead FcAtom, callPipe []*FcFnPipeSeg) *FcFnPipe {
+	return &FcFnPipe{fnHead, callPipe}
+}
+
+func MakeFcFnPipeSeg(params []Fc) *FcFnPipeSeg {
+	return &FcFnPipeSeg{params}
 }
 
 func FcSliceString(params []Fc) string {
