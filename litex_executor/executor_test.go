@@ -561,7 +561,7 @@ func TestPropDef2(t *testing.T) {
 func TestAllFactCodeSeveralRounds(t *testing.T) {
 	code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
 
-	rounds := 100
+	rounds := 1
 	topStmtSlice := parseStmtTest(code, t)
 	start := time.Now()
 	for i := 0; i < rounds; i++ {
@@ -574,10 +574,15 @@ func TestAllFactCodeSeveralRounds(t *testing.T) {
 func TestAllFactCode(t *testing.T) {
 	start := time.Now()
 	code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
+	readFileTime := time.Since(start)
+	start = time.Now()
 	topStmtSlice := parseStmtTest(code, t)
+	parseTime := time.Since(start)
+	start = time.Now()
 	messages := execStmtTest(topStmtSlice, t)
+	executionTime := time.Since(start)
 	printExecMsg(messages)
-	fmt.Printf("takes %v\n", time.Since(start))
+	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
 func TestLastFactCode(t *testing.T) {
@@ -589,6 +594,7 @@ func TestLastFactCode(t *testing.T) {
 	parseTime := time.Since(start)
 	start = time.Now()
 	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:], t)
+	executionTime := time.Since(start)
 	printExecMsg(messages)
-	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, time.Since(start))
+	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }

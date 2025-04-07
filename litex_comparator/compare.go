@@ -6,7 +6,7 @@ import (
 	ast "golitex/litex_ast"
 )
 
-func CmpFcUsingBuiltin(left, right ast.Fc) (bool, error) {
+func CmpFcBuiltin(left, right ast.Fc) (bool, error) {
 	comp, err := CmpFcLiterally(left, right)
 	if err != nil {
 		return false, err

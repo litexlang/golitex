@@ -76,7 +76,7 @@ func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv *env.Env, 
 
 func cmpSearchNodeKeyValuesLiterally(valuesToBeComped *[]ast.Fc, fcToComp ast.Fc) (bool, error) {
 	for _, equalFc := range *valuesToBeComped {
-		ok, err := cmp.CmpFcUsingBuiltin(equalFc, fcToComp)
+		ok, err := cmp.CmpFcBuiltin(equalFc, fcToComp)
 		if err != nil {
 			return false, err
 		}

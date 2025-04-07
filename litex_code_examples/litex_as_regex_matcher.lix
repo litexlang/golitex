@@ -319,3 +319,11 @@ prove:
 prove:
     know f(1) = 3
     f(1) = 1 + 2
+
+prove:
+    know id(1+2) = 3
+    id(3)=3 // unknown
+    1+2=3
+    id(3) = 3 // unknown
+    id(1+2) = id(3)
+    id(1+2) = 3 // true
