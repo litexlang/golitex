@@ -25,7 +25,7 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 	// 	return true, nil
 	// }
 
-	ok, err := cmp.CmpFcUsingBuiltin(left, right)
+	ok, err := cmp.CmpFcBuiltin(left, right)
 	if err != nil {
 		return false, err
 	}
