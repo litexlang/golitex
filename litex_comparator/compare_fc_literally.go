@@ -7,20 +7,20 @@ import (
 )
 
 func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (int, error) {
-	return CmpFcLiterally(left.FcAsKey, right.FcAsKey)
+	return CmpFcLit(left.FcAsKey, right.FcAsKey)
 }
 
 // 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
-func CmpFcLiterally(left, right ast.Fc) (int, error) {
+func CmpFcLit(left, right ast.Fc) (int, error) {
 	typeComp, fcEnum, err := CmpFcType(left, right)
 	if typeComp != 0 || err != nil {
 		return typeComp, err
 	}
 
 	if fcEnum == FcAtomEnum {
-		return cmpFcAtomLiteral(left.(*ast.FcAtom), right.(*ast.FcAtom))
-	} else if fcEnum == FcFnCallPipeEnum {
-		return cmpFcFnLiteral(left.(*ast.FcFn), right.(*ast.FcFn))
+		return cmpFcAtomLit(left.(*ast.FcAtom), right.(*ast.FcAtom))
+	} else if fcEnum == FcFnEnum {
+		return cmpFcFnLit(left.(*ast.FcFn), right.(*ast.FcFn))
 	}
 
 	return -1, fmt.Errorf("")
@@ -29,8 +29,8 @@ func CmpFcLiterally(left, right ast.Fc) (int, error) {
 type FcEnum uint8
 
 const (
-	FcAtomEnum       FcEnum = 0
-	FcFnCallPipeEnum FcEnum = 1
+	FcAtomEnum FcEnum = 0
+	FcFnEnum   FcEnum = 1
 )
 
 func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
@@ -39,7 +39,7 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 	case *ast.FcAtom:
 		knownEnum = FcAtomEnum
 	case *ast.FcFn:
-		knownEnum = FcFnCallPipeEnum
+		knownEnum = FcFnEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
 	}
@@ -50,7 +50,7 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 	case *ast.FcAtom:
 		givenEnum = FcAtomEnum
 	case *ast.FcFn:
-		givenEnum = FcFnCallPipeEnum
+		givenEnum = FcFnEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
 	}
@@ -58,7 +58,7 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 	return int(knownEnum - givenEnum), knownEnum, nil
 }
 
-func cmpFcAtomLiteral(left, right *ast.FcAtom) (int, error) {
+func cmpFcAtomLit(left, right *ast.FcAtom) (int, error) {
 	if len(left.PkgName) != len(right.PkgName) {
 		return len(left.PkgName) - len(right.PkgName), nil
 	}
@@ -82,8 +82,8 @@ func cmpFcAtomLiteral(left, right *ast.FcAtom) (int, error) {
 	return 0, nil
 }
 
-func cmpFcFnLiteral(left, right *ast.FcFn) (int, error) {
-	if comp, err := cmpFcAtomLiteral(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
+func cmpFcFnLit(left, right *ast.FcFn) (int, error) {
+	if comp, err := cmpFcAtomLit(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}
 
@@ -92,7 +92,7 @@ func cmpFcFnLiteral(left, right *ast.FcFn) (int, error) {
 	}
 
 	for i := 0; i < len(left.CallPipe); i++ {
-		if comp, err := cmpFcFnSegLiteral(left.CallPipe[i], right.CallPipe[i]); comp != 0 || err != nil {
+		if comp, err := cmpFcFnSegLit(left.CallPipe[i], right.CallPipe[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
@@ -100,13 +100,13 @@ func cmpFcFnLiteral(left, right *ast.FcFn) (int, error) {
 	return 0, nil
 }
 
-func cmpFcFnSegLiteral(left, right *ast.FcFnSeg) (int, error) {
+func cmpFcFnSegLit(left, right *ast.FcFnSeg) (int, error) {
 	if len(left.Params) != len(right.Params) {
 		return len(left.Params) - len(right.Params), nil
 	}
 
 	for i := 0; i < len(left.Params); i++ {
-		if comp, err := CmpFcLiterally(left.Params[i], right.Params[i]); comp != 0 || err != nil {
+		if comp, err := CmpFcLit(left.Params[i], right.Params[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}

@@ -58,15 +58,15 @@ func getNumLitExpr(fc ast.Fc) (*numLitExpr, bool, error) {
 	return &numLitExpr{left, opt, right}, true, nil
 }
 
-// evaluateNumLitFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
+// evalNumLitFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
 // bool 表示基于现有的litex-rule，虽然说我不能说你对不对，但你至少没犯错，error表示你犯错了，比如1/0
-func evaluateNumLitFc(node *numLitExpr) (string, bool, error) {
+func evalNumLitFc(node *numLitExpr) (string, bool, error) {
 	// 叶子节点
 	if node.Left == nil && node.Right == nil {
 		return node.OptOrNumber, true, nil
 	}
 
-	leftVal, ok, err := evaluateNumLitFc(node.Left)
+	leftVal, ok, err := evalNumLitFc(node.Left)
 	if err != nil {
 		return "", false, err
 	}
@@ -74,7 +74,7 @@ func evaluateNumLitFc(node *numLitExpr) (string, bool, error) {
 		return "", false, nil
 	}
 
-	rightVal, ok, err := evaluateNumLitFc(node.Right)
+	rightVal, ok, err := evalNumLitFc(node.Right)
 	if err != nil {
 		return "", false, err
 	}

@@ -26,6 +26,11 @@ type FcFnSeg struct {
 	Params []Fc
 }
 
+func IsBuiltinFc(fc Fc) bool {
+	// TODO
+	return false
+}
+
 func NewFcAtom(pkgName string, value string) *FcAtom {
 	return &FcAtom{pkgName, value}
 }

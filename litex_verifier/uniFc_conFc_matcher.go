@@ -62,6 +62,9 @@ func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam a
 func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
 	retMap := map[string][]ast.Fc{}
 
+	// 注意到，如果传入的不是fn，而是atom，那大概率是不能match上的。只有一种例外:
+	// know forall x A: $p(x *(3-2)); $p(1*1) 这时候 3 -2 要能和1对上。为了处理这种极端情况，引入下面这段代码
+
 	conParamAsFcFn, ok := conFuncParam.(*ast.FcFn)
 	if !ok {
 		return nil, false, nil
