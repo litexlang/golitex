@@ -4,6 +4,7 @@ import (
 	"fmt"
 	env "golitex/litex_env"
 	parser "golitex/litex_parser"
+	st "golitex/litex_statements"
 	"math/rand"
 	"os"
 	"slices"
@@ -20,7 +21,7 @@ const (
 	TenMillionRound  = 10000000
 )
 
-func parseStmtTest(code string, t *testing.T) []parser.TopStmt {
+func parseStmtTest(code string, t *testing.T) []st.TopStmt {
 	topStatements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
@@ -28,7 +29,7 @@ func parseStmtTest(code string, t *testing.T) []parser.TopStmt {
 	return topStatements
 }
 
-func execStmtTest(topStmt []parser.TopStmt, t *testing.T) []string {
+func execStmtTest(topStmt []st.TopStmt, t *testing.T) []string {
 	env := env.NewEnv(nil, nil, "")
 	executor := *NewExecutor(env)
 
@@ -98,18 +99,18 @@ func TestVerifier(t *testing.T) {
 	}
 }
 
-func randSpecFact() *parser.SpecFactStmt {
+func randSpecFact() *st.SpecFactStmt {
 	n := rand.Intn(10) + 1
-	params := make([]parser.Fc, n)
+	params := make([]st.Fc, n)
 	for i := 0; i < n; i++ {
 		params[i] = randomFc()
 	}
 
-	stmt := parser.SpecFactStmt{IsTrue: true, PropName: *randFcAtom(), Params: params}
+	stmt := st.SpecFactStmt{IsTrue: true, PropName: *randFcAtom(), Params: params}
 	return &stmt
 }
 
-func randomFc() parser.Fc {
+func randomFc() st.Fc {
 	e := rand.Intn(2)
 	if e == 0 {
 		return randFcAtom()
@@ -118,40 +119,40 @@ func randomFc() parser.Fc {
 	}
 }
 
-func randFcAtom() *parser.FcAtom {
+func randFcAtom() *st.FcAtom {
 	length := rand.Intn(10) + 1
 	bytes := make([]byte, length)
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(rand.Intn(26) + 65)
 	}
-	ret := parser.FcAtom{Value: string(bytes)}
+	ret := st.FcAtom{Value: string(bytes)}
 	return &ret
 }
 
-func randFcFnRetValue() *parser.FcFnPipe {
+func randFcFnRetValue() *st.FcFnPipe {
 	fnName := randFcAtom()
 	round := rand.Intn(3) + 1
-	typeParamObjParamsPairs := []*parser.FcFnPipeSeg{}
+	typeParamObjParamsPairs := []*st.FcFnPipeSeg{}
 	for i := 0; i < round; i++ {
-		typeParamObjParamsPairs = append(typeParamObjParamsPairs, &parser.FcFnPipeSeg{Params: randObjParams()})
+		typeParamObjParamsPairs = append(typeParamObjParamsPairs, &st.FcFnPipeSeg{Params: randObjParams()})
 	}
-	return &parser.FcFnPipe{FnHead: *fnName, CallPipe: typeParamObjParamsPairs}
+	return &st.FcFnPipe{FnHead: *fnName, CallPipe: typeParamObjParamsPairs}
 }
 
-func randObjParams() []parser.Fc {
+func randObjParams() []st.Fc {
 	round := rand.Intn(3) + 1
-	objParams := []parser.Fc{}
+	objParams := []st.Fc{}
 	for i := 0; i < round; i++ {
 		objParams = append(objParams, randFcAtom()) // 这里必须是randFcString不能是randFc，否则会因为内存溢出停掉
 	}
 	return objParams
 }
 
-func randCondStmt() *parser.CondFactStmt {
+func randCondStmt() *st.CondFactStmt {
 	randomNumberOfCondFacts := rand.Intn(3) + 1
 	randomNumberOfThenFacts := rand.Intn(3) + 1
-	condFacts := []parser.FactStmt{}
-	thenFacts := []*parser.SpecFactStmt{}
+	condFacts := []st.FactStmt{}
+	thenFacts := []*st.SpecFactStmt{}
 
 	for i := 0; i < randomNumberOfCondFacts; i++ {
 		condFacts = append(condFacts, randSpecFact())
@@ -161,14 +162,14 @@ func randCondStmt() *parser.CondFactStmt {
 		thenFacts = append(thenFacts, randSpecFact())
 	}
 
-	return &parser.CondFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
+	return &st.CondFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
 }
 
 func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
 	executor := *NewExecutor(env)
-	topStatements := []*parser.TopStmt{}
-	topVerifyStatements := []*parser.TopStmt{}
+	topStatements := []*st.TopStmt{}
+	topVerifyStatements := []*st.TopStmt{}
 
 	// 数量级为 n*log(n)，因为走一遍是log(n), 走 rounds 次差不多就是 n * log(n)
 	rounds := HundredRound
@@ -176,9 +177,9 @@ func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	start := time.Now()
 	for i := 0; i < rounds; i++ {
 		stmt := randSpecFact()
-		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
-		topKnow := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
-		topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+		knowStmt := st.KnowStmt{Facts: []st.FactStmt{stmt}}
+		topKnow := st.TopStmt{Stmt: &knowStmt, IsPub: true}
+		topVerifyStatements = append(topVerifyStatements, &st.TopStmt{Stmt: stmt, IsPub: true})
 		topStatements = append(topStatements, &topKnow)
 	}
 	// takes 3.371321s to generate 1000000 statements
@@ -214,15 +215,15 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
 	executor := *NewExecutor(env)
 	executor.env = env
-	topStatements := []*parser.TopStmt{}
-	topVerifyStatements := []*parser.TopStmt{}
+	topStatements := []*st.TopStmt{}
+	topVerifyStatements := []*st.TopStmt{}
 
 	rounds := HundredRound
 	for i := 0; i < rounds; i++ {
 		stmt := randCondStmt()
-		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
-		topKnow := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
-		topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+		knowStmt := st.KnowStmt{Facts: []st.FactStmt{stmt}}
+		topKnow := st.TopStmt{Stmt: &knowStmt, IsPub: true}
+		topVerifyStatements = append(topVerifyStatements, &st.TopStmt{Stmt: stmt, IsPub: true})
 		topStatements = append(topStatements, &topKnow)
 	}
 
@@ -252,19 +253,19 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
 	executor := *NewExecutor(env)
 	executor.env = env
-	topKnowStatements := []*parser.TopStmt{}
-	topVerifyStatements := []*parser.TopStmt{}
+	topKnowStatements := []*st.TopStmt{}
+	topVerifyStatements := []*st.TopStmt{}
 
 	rounds := HundredRound
 	for i := 0; i < rounds; i++ {
 		stmt := randCondStmt()
-		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
-		topKnow := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
+		knowStmt := st.KnowStmt{Facts: []st.FactStmt{stmt}}
+		topKnow := st.TopStmt{Stmt: &knowStmt, IsPub: true}
 		if i < rounds/2 {
-			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+			topVerifyStatements = append(topVerifyStatements, &st.TopStmt{Stmt: stmt, IsPub: true})
 			topKnowStatements = append(topKnowStatements, &topKnow)
 		} else {
-			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+			topVerifyStatements = append(topVerifyStatements, &st.TopStmt{Stmt: stmt, IsPub: true})
 		}
 	}
 
@@ -296,19 +297,19 @@ func TestEqualFactMemory(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
 	executor := *NewExecutor(env)
 	executor.env = env
-	topKnowStatements := []*parser.TopStmt{}
-	topVerifyStatements := []*parser.TopStmt{}
+	topKnowStatements := []*st.TopStmt{}
+	topVerifyStatements := []*st.TopStmt{}
 
 	rounds := HundredRound
 	for i := 0; i < rounds; i++ {
 		stmt := randEqualFact()
-		knowStmt := parser.KnowStmt{Facts: []parser.FactStmt{stmt}}
-		topKnowStmt := parser.TopStmt{Stmt: &knowStmt, IsPub: true}
+		knowStmt := st.KnowStmt{Facts: []st.FactStmt{stmt}}
+		topKnowStmt := st.TopStmt{Stmt: &knowStmt, IsPub: true}
 		if i < rounds/2 {
-			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+			topVerifyStatements = append(topVerifyStatements, &st.TopStmt{Stmt: stmt, IsPub: true})
 			topKnowStatements = append(topKnowStatements, &topKnowStmt)
 		} else {
-			topVerifyStatements = append(topVerifyStatements, &parser.TopStmt{Stmt: stmt, IsPub: true})
+			topVerifyStatements = append(topVerifyStatements, &st.TopStmt{Stmt: stmt, IsPub: true})
 		}
 	}
 
@@ -351,11 +352,11 @@ func TestEqualFactMemory(t *testing.T) {
 	}
 }
 
-func randEqualFact() *parser.SpecFactStmt {
+func randEqualFact() *st.SpecFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &parser.SpecFactStmt{IsTrue: true, Params: []parser.Fc{left, right}, PropName: parser.FcAtom{PkgName: "", Value: "="}}
+	return &st.SpecFactStmt{IsTrue: true, Params: []st.Fc{left, right}, PropName: st.FcAtom{PkgName: "", Value: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

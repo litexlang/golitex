@@ -1,4 +1,4 @@
-package litexparser
+package litexstatements
 
 import (
 	glob "golitex/litex_global"
@@ -69,8 +69,8 @@ func (f *SpecFactStmt) IsEqualFact() bool {
 }
 
 type ClaimProveByContradictStmt struct {
-	toCheck []FactStmt
-	proof   []Stmt
+	ToCheck []FactStmt
+	Proof   []Stmt
 }
 
 type ClaimProveStmt struct {
@@ -84,7 +84,7 @@ type KnowStmt struct {
 
 type HaveStmt struct {
 	PropStmt SpecFactStmt
-	member   []string
+	Member   []string
 }
 
 // syntax sugar for defining spec prop + claim forall true
@@ -95,7 +95,7 @@ type AxiomStmt struct {
 // syntax sugar for defining spec prop + claim forall true + prove it
 type ThmStmt struct {
 	Decl  DefPropStmt
-	proof []Stmt
+	Proof []Stmt
 }
 
 type CondFactStmt struct {

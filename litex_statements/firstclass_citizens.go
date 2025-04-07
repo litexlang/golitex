@@ -1,4 +1,4 @@
-package litexparser
+package litexstatements
 
 import (
 	"fmt"

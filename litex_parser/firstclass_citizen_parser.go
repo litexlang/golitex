@@ -3,10 +3,11 @@ package litexparser
 import (
 	"fmt"
 	glob "golitex/litex_global"
+	st "golitex/litex_statements"
 	"strconv"
 )
 
-func (parser *StrSliceCursor) parseFcAtomAndFcFnRetAndBracedFc() (Fc, error) {
+func (parser *StrSliceCursor) parseFcAtomAndFcFnRetAndBracedFc() (st.Fc, error) {
 	if parser.is(glob.KeywordLeftParen) {
 		return parser.parseBracedFcExpr()
 	}
@@ -29,7 +30,7 @@ func (parser *StrSliceCursor) parseFcAtomAndFcFnRetAndBracedFc() (Fc, error) {
 	}
 }
 
-func (parser *StrSliceCursor) parseBracedFcExpr() (Fc, error) {
+func (parser *StrSliceCursor) parseBracedFcExpr() (st.Fc, error) {
 	parser.skip(glob.KeywordLeftParen)
 	fc, err := parser.ParseFc()
 	if err != nil {
@@ -39,18 +40,18 @@ func (parser *StrSliceCursor) parseBracedFcExpr() (Fc, error) {
 	return fc, nil
 }
 
-func (parser *StrSliceCursor) parseFcFnRetVal(optName FcAtom) (*FcFnPipe, error) {
+func (parser *StrSliceCursor) parseFcFnRetVal(optName st.FcAtom) (*st.FcFnPipe, error) {
 	typeParamsObjParamsPairs, err := parser.parseTypeParamsObjParamsPairs()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &FcFnPipe{optName, typeParamsObjParamsPairs}, nil
+	return &st.FcFnPipe{optName, typeParamsObjParamsPairs}, nil
 }
 
-func (parser *StrSliceCursor) parseTypeParamsObjParamsPairs() ([]*FcFnPipeSeg, error) {
-	pairs := []*FcFnPipeSeg{}
+func (parser *StrSliceCursor) parseTypeParamsObjParamsPairs() ([]*st.FcFnPipeSeg, error) {
+	pairs := []*st.FcFnPipeSeg{}
 
 	for !parser.ExceedEnd() && (parser.is(glob.KeywordLeftParen)) {
 		objParamsPtr, err := parser.parseBracedFcArr()
@@ -58,16 +59,16 @@ func (parser *StrSliceCursor) parseTypeParamsObjParamsPairs() ([]*FcFnPipeSeg, e
 			return nil, &parserErr{err, parser}
 		}
 
-		pairs = append(pairs, &FcFnPipeSeg{objParamsPtr})
+		pairs = append(pairs, &st.FcFnPipeSeg{objParamsPtr})
 	}
 
 	return pairs, nil
 }
 
-func (parser *StrSliceCursor) parseFcAtom() (FcAtom, error) {
+func (parser *StrSliceCursor) parseFcAtom() (st.FcAtom, error) {
 	value, err := parser.next()
 	if err != nil {
-		return FcAtom{Value: ""}, err
+		return st.FcAtom{Value: ""}, err
 	}
 
 	fromPkg := ""
@@ -75,22 +76,22 @@ func (parser *StrSliceCursor) parseFcAtom() (FcAtom, error) {
 		fromPkg = value
 		err := parser.skip(glob.KeywordColonColon)
 		if err != nil {
-			return FcAtom{Value: ""}, err
+			return st.FcAtom{Value: ""}, err
 		}
 		value, err = parser.next()
 		if err != nil {
-			return FcAtom{Value: ""}, err
+			return st.FcAtom{Value: ""}, err
 		}
 	}
 
-	return FcAtom{PkgName: fromPkg, Value: value}, nil
+	return st.FcAtom{PkgName: fromPkg, Value: value}, nil
 }
 
-func (parser *StrSliceCursor) ParseFc() (Fc, error) {
+func (parser *StrSliceCursor) ParseFc() (st.Fc, error) {
 	return parser.parseFcInfixExpr(glob.PrecLowest)
 }
 
-func (parser *StrSliceCursor) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (Fc, error) {
+func (parser *StrSliceCursor) parseFcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (st.Fc, error) {
 	left, err := parser.parseFcUnaryExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -117,16 +118,16 @@ func (parser *StrSliceCursor) parseFcInfixExpr(currentPrec glob.FcInfixOptPreced
 			return nil, &parserErr{err, parser}
 		}
 
-		left = &FcFnPipe{
-			FcAtom{Value: curToken},
-			[]*FcFnPipeSeg{{[]Fc{left, right}}},
+		left = &st.FcFnPipe{
+			st.FcAtom{Value: curToken},
+			[]*st.FcFnPipeSeg{{[]st.Fc{left, right}}},
 		}
 	}
 
 	return left, nil
 }
 
-func (parser *StrSliceCursor) parseFcUnaryExpr() (Fc, error) {
+func (parser *StrSliceCursor) parseFcUnaryExpr() (st.Fc, error) {
 	unaryOp, err := parser.currentToken()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -138,9 +139,9 @@ func (parser *StrSliceCursor) parseFcUnaryExpr() (Fc, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &FcFnPipe{
-			FcAtom{Value: unaryOp},
-			[]*FcFnPipeSeg{{[]Fc{right}}},
+		return &st.FcFnPipe{
+			st.FcAtom{Value: unaryOp},
+			[]*st.FcFnPipeSeg{{[]st.Fc{right}}},
 		}, nil
 	} else {
 		return parser.parseFcAtomAndFcFnRetAndBracedFc()
@@ -148,11 +149,11 @@ func (parser *StrSliceCursor) parseFcUnaryExpr() (Fc, error) {
 
 }
 
-func (parser *StrSliceCursor) parseNumberStr() (*FcAtom, error) {
+func (parser *StrSliceCursor) parseNumberStr() (*st.FcAtom, error) {
 	left, err := parser.next()
 
 	if err != nil {
-		return &FcAtom{Value: ""}, err
+		return &st.FcAtom{Value: ""}, err
 	}
 
 	// if left[0] == '0' {
@@ -161,25 +162,25 @@ func (parser *StrSliceCursor) parseNumberStr() (*FcAtom, error) {
 
 	_, err = strconv.Atoi(left)
 	if err != nil {
-		return &FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
+		return &st.FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
 	}
 
 	if parser.is(glob.KeywordDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {
-			return &FcAtom{Value: left}, err
+			return &st.FcAtom{Value: left}, err
 		} else {
 			parser.skip()
 			right, err := parser.next()
 
 			if err != nil {
-				return &FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", right)
+				return &st.FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", right)
 			}
 
-			return &FcAtom{Value: left + "." + right}, nil
+			return &st.FcAtom{Value: left + "." + right}, nil
 		}
 	}
 
-	return &FcAtom{Value: left}, nil
+	return &st.FcAtom{Value: left}, nil
 }

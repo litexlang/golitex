@@ -4,7 +4,7 @@ import (
 	cmp "golitex/litex_comparator"
 	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
-	parser "golitex/litex_parser"
+	st "golitex/litex_statements"
 )
 
 type Env struct {
@@ -22,14 +22,14 @@ type Env struct {
 
 	//TODO 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic
 
-	UniParamMap map[string]parser.Fc
+	UniParamMap map[string]st.Fc
 
 	CurPkg string
 }
 
-func NewEnv(parent *Env, uniParamMap map[string]parser.Fc, curPkg string) *Env {
+func NewEnv(parent *Env, uniParamMap map[string]st.Fc, curPkg string) *Env {
 	if uniParamMap == nil {
-		uniParamMap = make(map[string]parser.Fc)
+		uniParamMap = make(map[string]st.Fc)
 	}
 
 	env := &Env{
