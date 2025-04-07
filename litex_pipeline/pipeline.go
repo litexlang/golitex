@@ -1,4 +1,4 @@
-package litexpipeline
+package litex_pipeline
 
 import (
 	env "golitex/litex_env"
