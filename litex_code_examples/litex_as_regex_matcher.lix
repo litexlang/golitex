@@ -333,3 +333,8 @@ prove:
     id(3)=3 // unknown
     //1+2=3
     //id(3) = 3 // unknown
+
+prove:
+    q(1*4+2*f(a)) = q(4+2*f(a))
+    know f(a) = 100
+    q(1*4+2*f(a)) = q(4+2*100)

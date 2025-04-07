@@ -85,26 +85,6 @@ func cmpSearchNodeKeyValuesBuiltin(valuesToBeComped *[]ast.Fc, fcToComp ast.Fc) 
 		if ok {
 			return true, nil
 		}
-
-		// // 用 Builtin的方式去求证，比如know f(1) = 3, 那 f(1) = 1+2 要能验证
-		// ok, err := fcEqualBuiltin(equalFc, fcToComp)
-		// if err != nil {
-		// 	return false, err
-		// }
-		// if ok {
-		// 	return true, nil
-		// }
-
-		// // TODO? 貌似不需要在每个key下面存一个数组；我只要让这些key下面有共同的signal，这些signal一致，就行。
-		// cmpRet, err := cmp.CmpFcLiterally(equalFc, fcToComp) // 只能用直接比较法
-		// // ok, err := ver.fcEqualSpec(*equalFc, toBeCompared) // 这会导致无限循环
-
-		// if err != nil {
-		// 	return false, err
-		// }
-		// if cmpRet == 0 {
-		// 	return true, nil
-		// }
 	}
 
 	return false, nil
