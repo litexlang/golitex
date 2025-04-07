@@ -1,4 +1,4 @@
-package litexcomparator
+package litex_comparator
 
 import (
 	"errors"

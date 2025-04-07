@@ -1,4 +1,4 @@
-package litexmemory
+package litex_memory
 
 import (
 	ast "golitex/litex_ast"

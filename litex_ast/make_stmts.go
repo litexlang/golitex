@@ -1,4 +1,4 @@
-package litexast
+package litex_ast
 
 func NewTopStmt(stmt Stmt, isPub bool) *TopStmt {
 	return &TopStmt{stmt, isPub}

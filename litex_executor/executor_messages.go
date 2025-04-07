@@ -1,4 +1,4 @@
-package litexexecutor
+package litex_executor
 
 func (e *Executor) appendNewMsg(msg string) {
 	e.env.Msgs = append(e.env.Msgs, msg)
