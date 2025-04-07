@@ -58,14 +58,20 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	leftAsStr, err := evaluateNumLitFc(leftAsNumberFc)
+	leftAsStr, ok, err := evaluateNumLitFc(leftAsNumberFc)
 	if err != nil {
 		return false, err
 	}
+	if !ok {
+		return false, nil
+	}
 
-	rightAsStr, err := evaluateNumLitFc(rightAsNumberFc)
+	rightAsStr, ok, err := evaluateNumLitFc(rightAsNumberFc)
 	if err != nil {
 		return false, err
+	}
+	if !ok {
+		return false, nil
 	}
 
 	if leftAsStr == "" || rightAsStr == "" {
