@@ -33,7 +33,7 @@ func (ver *Verifier) matchUniConFc(uniFuncParam ast.Fc, concreteFuncParam ast.Fc
 	switch param := uniFuncParam.(type) {
 	case *ast.FcAtom:
 		return ver.matchAtomUniConFc(param, concreteFuncParam, possibleUniParams)
-	case *ast.FcFnPipe:
+	case *ast.FcFn:
 		return ver.matchFnUniConFc(param, concreteFuncParam, possibleUniParams)
 	default:
 		return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, uniFuncParam.String())
@@ -59,10 +59,10 @@ func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam a
 	return nil, false, nil
 }
 
-func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *ast.FcFnPipe, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
 	retMap := map[string][]ast.Fc{}
 
-	conParamAsFcFn, ok := conFuncParam.(*ast.FcFnPipe)
+	conParamAsFcFn, ok := conFuncParam.(*ast.FcFn)
 	if !ok {
 		return nil, false, nil
 	}

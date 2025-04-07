@@ -17,12 +17,12 @@ type FcAtom struct {
 	Value   string
 }
 
-type FcFnPipe struct {
+type FcFn struct {
 	FnHead   FcAtom
-	CallPipe []*FcFnPipeSeg
+	CallPipe []*FcFnSeg
 }
 
-type FcFnPipeSeg struct {
+type FcFnSeg struct {
 	Params []Fc
 }
 
@@ -30,12 +30,12 @@ func NewFcAtom(pkgName string, value string) *FcAtom {
 	return &FcAtom{pkgName, value}
 }
 
-func NewFcFnPipe(fnHead FcAtom, callPipe []*FcFnPipeSeg) *FcFnPipe {
-	return &FcFnPipe{fnHead, callPipe}
+func NewFcFnPipe(fnHead FcAtom, callPipe []*FcFnSeg) *FcFn {
+	return &FcFn{fnHead, callPipe}
 }
 
-func NewFcFnPipeSeg(params []Fc) *FcFnPipeSeg {
-	return &FcFnPipeSeg{params}
+func NewFcFnPipeSeg(params []Fc) *FcFnSeg {
+	return &FcFnSeg{params}
 }
 
 func FcSliceString(params []Fc) string {
@@ -46,10 +46,10 @@ func FcSliceString(params []Fc) string {
 	return strings.Join(output, ", ")
 }
 
-func (f *FcAtom) fc()                  {}
-func (f *FcFnPipe) fc()                {}
-func (f *FcAtom) GetPkgName() string   { return f.PkgName }
-func (f *FcFnPipe) GetPkgName() string { return f.FnHead.PkgName }
+func (f *FcAtom) fc()                {}
+func (f *FcFn) fc()                  {}
+func (f *FcAtom) GetPkgName() string { return f.PkgName }
+func (f *FcFn) GetPkgName() string   { return f.FnHead.PkgName }
 
 func (f *FcAtom) String() string {
 	if f.PkgName == "" {
@@ -59,7 +59,7 @@ func (f *FcAtom) String() string {
 	}
 }
 
-func (f *FcFnPipe) String() string {
+func (f *FcFn) String() string {
 	outPut := string(f.FnHead.Value)
 
 	if glob.IsBuiltinRelaFn(outPut) {
@@ -91,7 +91,7 @@ func IsEqualOpt(f Fc) bool {
 	return ptr.Value == glob.KeywordEqual && ptr.PkgName == ""
 }
 
-func IsNumberAtom(f Fc) (string, bool) {
+func IsNumLitFcAtom(f Fc) (string, bool) {
 	ptr, ok := f.(*FcAtom)
 	if !ok {
 		return "", false

@@ -6,8 +6,9 @@ import (
 	ast "golitex/litex_ast"
 )
 
-func CmpFcBuiltin(left, right ast.Fc) (bool, error) {
-	ok, err := fcEqualNumber(left, right)
+func CmpFcRule(left, right ast.Fc) (bool, error) {
+	// 先验证是不是Number，后验证rule，居然让runtime速度提高了1倍。。。
+	ok, err := fcEqualNumLitExpr(left, right)
 	if err != nil {
 		return false, err
 	}
@@ -15,27 +16,20 @@ func CmpFcBuiltin(left, right ast.Fc) (bool, error) {
 		return true, nil
 	}
 
-	ok, err = cmpFcAtomLiterallyFcFnBuiltin(left, right)
+	ok, err = cmpFcAtomLitFcFnRule(left, right)
 	if err != nil {
 		return false, err
 	}
 	if ok {
 		return true, nil
 	}
-	// comp, err := CmpFcLiterally(left, right)
-	// if err != nil {
-	// 	return false, err
-	// }
-	// if comp == 0 {
-	// 	return true, nil
-	// }
 
 	return false, nil
 }
 
-func fcEqualNumber(left, right ast.Fc) (bool, error) {
+func fcEqualNumLitExpr(left, right ast.Fc) (bool, error) {
 	// Case1: 二者都是 Number 上进行+-*/^
-	ok, err := cmpTwoBuiltinNumberExpressions(left, right)
+	ok, err := cmpNumLitExpr(left, right)
 	if err != nil {
 		return false, nil
 	}
@@ -46,8 +40,9 @@ func fcEqualNumber(left, right ast.Fc) (bool, error) {
 	return false, nil
 }
 
-func cmpTwoBuiltinNumberExpressions(left, right ast.Fc) (bool, error) {
-	leftAsNumberFc, ok, err := IsNumberFcWithBuiltinInfixOpt(left)
+// 之所以叫 Expr，因为可能含有运算符+-*/这样的
+func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
+	leftAsNumberFc, ok, err := getNumLitExpr(left)
 	if err != nil {
 		return false, err
 	}
@@ -55,7 +50,7 @@ func cmpTwoBuiltinNumberExpressions(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	rightAsNumberFc, ok, err := IsNumberFcWithBuiltinInfixOpt(right)
+	rightAsNumberFc, ok, err := getNumLitExpr(right)
 	if err != nil {
 		return false, err
 	}
@@ -63,12 +58,12 @@ func cmpTwoBuiltinNumberExpressions(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	leftAsStr, err := EvaluateNumberFc(leftAsNumberFc)
+	leftAsStr, err := evaluateNumLitFc(leftAsNumberFc)
 	if err != nil {
 		return false, err
 	}
 
-	rightAsStr, err := EvaluateNumberFc(rightAsNumberFc)
+	rightAsStr, err := evaluateNumLitFc(rightAsNumberFc)
 	if err != nil {
 		return false, err
 	}
@@ -77,5 +72,5 @@ func cmpTwoBuiltinNumberExpressions(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	return CompareBigFloat(leftAsStr, rightAsStr) == 0, nil
+	return cmpBigFloat(leftAsStr, rightAsStr) == 0, nil
 }

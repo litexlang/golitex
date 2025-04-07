@@ -18,9 +18,9 @@ func CmpFcLiterally(left, right ast.Fc) (int, error) {
 	}
 
 	if fcEnum == FcAtomEnum {
-		return cmpFcAtomLiterally(left.(*ast.FcAtom), right.(*ast.FcAtom))
+		return cmpFcAtomLiteral(left.(*ast.FcAtom), right.(*ast.FcAtom))
 	} else if fcEnum == FcFnCallPipeEnum {
-		return cmpFcFnCallPipeLiterally(left.(*ast.FcFnPipe), right.(*ast.FcFnPipe))
+		return cmpFcFnLiteral(left.(*ast.FcFn), right.(*ast.FcFn))
 	}
 
 	return -1, fmt.Errorf("")
@@ -38,7 +38,7 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 	switch left.(type) {
 	case *ast.FcAtom:
 		knownEnum = FcAtomEnum
-	case *ast.FcFnPipe:
+	case *ast.FcFn:
 		knownEnum = FcFnCallPipeEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
@@ -49,7 +49,7 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 	switch right.(type) {
 	case *ast.FcAtom:
 		givenEnum = FcAtomEnum
-	case *ast.FcFnPipe:
+	case *ast.FcFn:
 		givenEnum = FcFnCallPipeEnum
 	default:
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
@@ -58,7 +58,7 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 	return int(knownEnum - givenEnum), knownEnum, nil
 }
 
-func cmpFcAtomLiterally(left, right *ast.FcAtom) (int, error) {
+func cmpFcAtomLiteral(left, right *ast.FcAtom) (int, error) {
 	if len(left.PkgName) != len(right.PkgName) {
 		return len(left.PkgName) - len(right.PkgName), nil
 	}
@@ -82,8 +82,8 @@ func cmpFcAtomLiterally(left, right *ast.FcAtom) (int, error) {
 	return 0, nil
 }
 
-func cmpFcFnCallPipeLiterally(left, right *ast.FcFnPipe) (int, error) {
-	if comp, err := cmpFcAtomLiterally(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
+func cmpFcFnLiteral(left, right *ast.FcFn) (int, error) {
+	if comp, err := cmpFcAtomLiteral(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}
 
@@ -92,7 +92,7 @@ func cmpFcFnCallPipeLiterally(left, right *ast.FcFnPipe) (int, error) {
 	}
 
 	for i := 0; i < len(left.CallPipe); i++ {
-		if comp, err := compareFcFnCallPipeSegLiterally(left.CallPipe[i], right.CallPipe[i]); comp != 0 || err != nil {
+		if comp, err := cmpFcFnSegLiteral(left.CallPipe[i], right.CallPipe[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
@@ -100,7 +100,7 @@ func cmpFcFnCallPipeLiterally(left, right *ast.FcFnPipe) (int, error) {
 	return 0, nil
 }
 
-func compareFcFnCallPipeSegLiterally(left, right *ast.FcFnPipeSeg) (int, error) {
+func cmpFcFnSegLiteral(left, right *ast.FcFnSeg) (int, error) {
 	if len(left.Params) != len(right.Params) {
 		return len(left.Params) - len(right.Params), nil
 	}
