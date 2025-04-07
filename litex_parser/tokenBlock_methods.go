@@ -70,7 +70,8 @@ func splitAndReplaceSemicolons(input string) []string {
 		// 查找行头的空白字符
 		indent := ""
 		for _, char := range line {
-			if char == ' ' || char == '\t' {
+			// if char == ' ' || char == '\t' {
+			if char == ' ' {
 				indent += string(char)
 			} else {
 				break

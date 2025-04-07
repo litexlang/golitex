@@ -558,6 +558,13 @@ $q(2)
 	printExecMsg(messages)
 }
 
+func TestPropDef2(t *testing.T) {
+	code := "prove:\n\tknow:\n\t\t$p(x);$p(y)\n\t$p(y)"
+	topStmtSlice := parseStmtTest(code, t)
+	messages := execStmtTest(topStmtSlice, t)
+	printExecMsg(messages)
+}
+
 func TestLastFactCode(t *testing.T) {
 	code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
 	topStmtSlice := parseStmtTest(code, t)
