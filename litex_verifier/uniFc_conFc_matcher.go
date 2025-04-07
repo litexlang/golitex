@@ -2,17 +2,17 @@ package litexverifier
 
 import (
 	"fmt"
+	ast "golitex/litex_ast"
 	mem "golitex/litex_memory"
-	st "golitex/litex_statements"
 )
 
 // match 函数不需要传入state: 没有any, spec 之分，也不需要打印
-func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact, stmt *st.SpecFactStmt) (map[string][]st.Fc, bool, error) { // 之所以是map[string][]st.Fc而不是 map[string]st.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
+func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact, stmt *ast.SpecFactStmt) (map[string][]ast.Fc, bool, error) { // 之所以是map[string][]ast.Fc而不是 map[string]ast.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
 	if len(stmt.Params) != len(*knownFact.FuncParams) {
 		return nil, false, nil
 	}
 
-	retMap := map[string][]st.Fc{}
+	retMap := map[string][]ast.Fc{}
 
 	for i, uniParam := range *knownFact.FuncParams {
 		matchMap, matched, err := ver.matchUniConFc(uniParam, stmt.Params[i], knownFact.Fact.Params)
@@ -28,23 +28,23 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 	return retMap, true, nil
 }
 
-func (ver *Verifier) matchUniConFc(uniFuncParam st.Fc, concreteFuncParam st.Fc, possibleUniParams []string) (map[string][]st.Fc, bool, error) {
+func (ver *Verifier) matchUniConFc(uniFuncParam ast.Fc, concreteFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
 	// Safe type switching
 	switch param := uniFuncParam.(type) {
-	case *st.FcAtom:
+	case *ast.FcAtom:
 		return ver.matchAtomUniConFc(param, concreteFuncParam, possibleUniParams)
-	case *st.FcFnPipe:
+	case *ast.FcFnPipe:
 		return ver.matchFnUniConFc(param, concreteFuncParam, possibleUniParams)
 	default:
 		return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, uniFuncParam.String())
 	}
 }
 
-func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *st.FcAtom, conFuncParam st.Fc, possibleUniParams []string) (map[string][]st.Fc, bool, error) {
-	retMap := make(map[string][]st.Fc)
+func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+	retMap := make(map[string][]ast.Fc)
 
 	if matchStr, ok := isUniParam(uniFuncFcAtom, possibleUniParams); ok {
-		retMap[matchStr] = []st.Fc{conFuncParam}
+		retMap[matchStr] = []ast.Fc{conFuncParam}
 		return retMap, true, nil
 	}
 
@@ -59,16 +59,16 @@ func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *st.FcAtom, conFuncParam st
 	return nil, false, nil
 }
 
-func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *st.FcFnPipe, conFuncParam st.Fc, possibleUniParams []string) (map[string][]st.Fc, bool, error) {
-	retMap := map[string][]st.Fc{}
+func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *ast.FcFnPipe, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+	retMap := map[string][]ast.Fc{}
 
-	conParamAsFcFn, ok := conFuncParam.(*st.FcFnPipe)
+	conParamAsFcFn, ok := conFuncParam.(*ast.FcFnPipe)
 	if !ok {
 		return nil, false, nil
 	}
 
 	if matchedStr, ok := isUniParam(&uniFuncFcFn.FnHead, possibleUniParams); ok {
-		retMap[matchedStr] = []st.Fc{&conParamAsFcFn.FnHead}
+		retMap[matchedStr] = []ast.Fc{&conParamAsFcFn.FnHead}
 	} else {
 		ok, err := ver.fcEqualSpec(&uniFuncFcFn.FnHead, &conParamAsFcFn.FnHead, SpecNoMsg)
 		if err != nil {
@@ -103,7 +103,7 @@ func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *st.FcFnPipe, conFuncParam st.F
 	return retMap, true, nil
 }
 
-func isUniParam(uniFuncAtom *st.FcAtom, possibleUniParams []string) (string, bool) { // ret: matched possible uniParam string; isMatched?
+func isUniParam(uniFuncAtom *ast.FcAtom, possibleUniParams []string) (string, bool) { // ret: matched possible uniParam string; isMatched?
 	for _, possible := range possibleUniParams {
 		if possible == uniFuncAtom.Value && uniFuncAtom.PkgName == "" {
 			return possible, true
@@ -112,7 +112,7 @@ func isUniParam(uniFuncAtom *st.FcAtom, possibleUniParams []string) (string, boo
 	return "", false
 }
 
-func mergeMatchMaps(from map[string][]st.Fc, to map[string][]st.Fc) {
+func mergeMatchMaps(from map[string][]ast.Fc, to map[string][]ast.Fc) {
 	for key, value := range from {
 		if _, ok := (to)[key]; ok {
 			(to)[key] = append((to)[key], value...)

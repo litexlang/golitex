@@ -2,7 +2,7 @@ package litexparser
 
 import (
 	"fmt"
-	st "golitex/litex_statements"
+	ast "golitex/litex_ast"
 	"strings"
 )
 
@@ -20,7 +20,7 @@ func (e *parseStmtErr) Error() string {
 	}
 }
 
-func ParseSourceCode(code string) ([]st.TopStmt, error) {
+func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 	// 解引用指针以获取实际的字符串内容
 	code = strings.ReplaceAll(code, "\t", "    ")
 
@@ -38,7 +38,7 @@ func ParseSourceCode(code string) ([]st.TopStmt, error) {
 		blocks = append(blocks, *block)
 	}
 
-	ret := []st.TopStmt{}
+	ret := []ast.TopStmt{}
 	for _, block := range blocks {
 		cur, err := block.ParseTopLevelStmt()
 		if err != nil {

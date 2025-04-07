@@ -1,8 +1,6 @@
 package litexmemory
 
-import (
-	st "golitex/litex_statements"
-)
+import ast "golitex/litex_ast"
 
 func NewPropMemory() *PropMem {
 	return &PropMem{map[string]map[string]StoredPropMemDictNode{}}
@@ -15,7 +13,7 @@ func NewObjMemory() *ObjMem {
 	return &ObjMem{map[string]map[string]StoredObjMemDictNode{}}
 }
 
-func (mem *PropMem) GetNode(stmt st.SpecFactStmt) (*StoredPropMemDictNode, bool) {
+func (mem *PropMem) GetNode(stmt ast.SpecFactStmt) (*StoredPropMemDictNode, bool) {
 	pkgMap, pkgExists := mem.Dict[stmt.PropName.PkgName] // 检查 pkgName 是否存在
 	if !pkgExists {
 		return nil, false // 返回零值
@@ -27,7 +25,7 @@ func (mem *PropMem) GetNode(stmt st.SpecFactStmt) (*StoredPropMemDictNode, bool)
 	return &node, true
 }
 
-func (memory *PropMem) Insert(stmt *st.DefConPropStmt, pkgName string) error {
+func (memory *PropMem) Insert(stmt *ast.DefConPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -45,7 +43,7 @@ func (memory *PropMem) Insert(stmt *st.DefConPropStmt, pkgName string) error {
 	return nil
 }
 
-func (memory *ObjMem) Insert(stmt *st.DefObjStmt, pkgName string) error {
+func (memory *ObjMem) Insert(stmt *ast.DefObjStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -63,7 +61,7 @@ func (memory *ObjMem) Insert(stmt *st.DefObjStmt, pkgName string) error {
 	return nil
 }
 
-func (memory *FnMem) Insert(stmt *st.DefConFnStmt, pkgName string) error {
+func (memory *FnMem) Insert(stmt *ast.DefConFnStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {

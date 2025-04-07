@@ -2,7 +2,7 @@ package litexparser
 
 import (
 	"fmt"
-	st "golitex/litex_statements"
+	ast "golitex/litex_ast"
 	"regexp"
 	"runtime"
 	"strings"
@@ -123,7 +123,7 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 	}
 }
 
-func ParserTester(code string) ([]st.Stmt, error) {
+func ParserTester(code string) ([]ast.Stmt, error) {
 	code = strings.ReplaceAll(code, "\t", "    ")
 
 	slice, err := GetTopLevelStmtSlice(code)
@@ -140,7 +140,7 @@ func ParserTester(code string) ([]st.Stmt, error) {
 		blocks = append(blocks, *block)
 	}
 
-	ret := []st.Stmt{}
+	ret := []ast.Stmt{}
 	for _, block := range blocks {
 		cur, err := block.ParseStmt()
 		if err != nil {

@@ -3,8 +3,8 @@ package litexcomparator
 import (
 	"errors"
 	"fmt"
+	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
-	st "golitex/litex_statements"
 	"strconv"
 	"strings"
 )
@@ -15,13 +15,13 @@ type NumberFc struct {
 	Right       *NumberFc
 }
 
-func IsNumberFcWithBuiltinInfixOpt(fc st.Fc) (*NumberFc, bool, error) {
-	asStr, ok := st.IsNumberAtom(fc)
+func IsNumberFcWithBuiltinInfixOpt(fc ast.Fc) (*NumberFc, bool, error) {
+	asStr, ok := ast.IsNumberAtom(fc)
 	if ok {
 		return &NumberFc{nil, asStr, nil}, true, nil
 	}
 
-	asFcFn, ok := fc.(*st.FcFnPipe)
+	asFcFn, ok := fc.(*ast.FcFnPipe)
 	if !ok {
 		return nil, false, fmt.Errorf("")
 	}

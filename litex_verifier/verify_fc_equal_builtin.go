@@ -1,11 +1,11 @@
 package litexverifier
 
 import (
+	ast "golitex/litex_ast"
 	cmp "golitex/litex_comparator"
-	st "golitex/litex_statements"
 )
 
-func (ver *Verifier) fcEqualBuiltin(left, right st.Fc) (bool, error) {
+func (ver *Verifier) fcEqualBuiltin(left, right ast.Fc) (bool, error) {
 	// Case1: 二者都是 Number 上进行+-*/^
 	ok, err := cmpTwoBuiltinNumberExpressions(left, right)
 	if err != nil {
@@ -18,7 +18,7 @@ func (ver *Verifier) fcEqualBuiltin(left, right st.Fc) (bool, error) {
 	return false, nil
 }
 
-func cmpTwoBuiltinNumberExpressions(left, right st.Fc) (bool, error) {
+func cmpTwoBuiltinNumberExpressions(left, right ast.Fc) (bool, error) {
 	leftAsNumberFc, ok, err := cmp.IsNumberFcWithBuiltinInfixOpt(left)
 	if err != nil {
 		return false, err

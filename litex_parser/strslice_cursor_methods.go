@@ -2,12 +2,12 @@ package litexparser
 
 import (
 	"fmt"
+	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
-	st "golitex/litex_statements"
 )
 
-func (parser *StrSliceCursor) parseBracedFcArr() ([]st.Fc, error) {
-	params := []st.Fc{}
+func (parser *StrSliceCursor) parseBracedFcArr() ([]ast.Fc, error) {
+	params := []ast.Fc{}
 	parser.skip(glob.KeywordLeftParen)
 
 	for !parser.is(glob.KeywordRightParen) {
@@ -36,9 +36,9 @@ func (parser *StrSliceCursor) parseBracedFcArr() ([]st.Fc, error) {
 	return params, nil
 }
 
-func (parser *StrSliceCursor) parseParamListInDeclsAndSkipEnd(endWith string) ([]string, []st.Fc, error) {
+func (parser *StrSliceCursor) parseParamListInDeclsAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
 	paramName := []string{}
-	paramTypes := []st.Fc{}
+	paramTypes := []ast.Fc{}
 
 	for !parser.is(endWith) {
 		objName, err := parser.next()
@@ -88,7 +88,7 @@ func (parser *StrSliceCursor) parseStringArrUntilEnd() ([]string, error) {
 	return members, nil
 }
 
-func (parser *StrSliceCursor) parseIsExpr(left st.Fc) (*st.SpecFactStmt, error) {
+func (parser *StrSliceCursor) parseIsExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 	err := parser.skip(glob.KeywordIs)
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -100,10 +100,10 @@ func (parser *StrSliceCursor) parseIsExpr(left st.Fc) (*st.SpecFactStmt, error) 
 		return nil, &parserErr{err, parser}
 	}
 
-	return &st.SpecFactStmt{true, opt, []st.Fc{left}}, nil
+	return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
 }
 
-func (stmt *TokenBlock) parseDefPropExistStmt() (st.DefPropStmt, error) {
+func (stmt *TokenBlock) parseDefPropExistStmt() (ast.DefPropStmt, error) {
 	if stmt.Header.is(glob.KeywordProp) {
 		prop, err := stmt.parseDefConPropStmt()
 		if err != nil {
@@ -121,9 +121,9 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (st.DefPropStmt, error) {
 	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
 }
 
-func (parser *StrSliceCursor) parseTypeListInDeclsAndSkipEnd(endWith string) ([]string, []*st.FcAtom, error) {
+func (parser *StrSliceCursor) parseTypeListInDeclsAndSkipEnd(endWith string) ([]string, []*ast.FcAtom, error) {
 	paramName := []string{}
-	paramTypes := []*st.FcAtom{}
+	paramTypes := []*ast.FcAtom{}
 
 	for !parser.is(endWith) {
 		objName, err := parser.next()
