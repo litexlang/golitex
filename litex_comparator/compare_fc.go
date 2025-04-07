@@ -23,7 +23,7 @@ func CmpFcLiterally(left, right ast.Fc) (int, error) {
 		return cmpFcFnCallPipeLiterally(left.(*ast.FcFnPipe), right.(*ast.FcFnPipe))
 	}
 
-	return 0, fmt.Errorf("")
+	return -1, fmt.Errorf("")
 }
 
 type FcEnum uint8

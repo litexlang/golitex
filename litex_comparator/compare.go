@@ -7,15 +7,22 @@ import (
 )
 
 func CmpFcBuiltin(left, right ast.Fc) (bool, error) {
-	comp, err := CmpFcLiterally(left, right)
+	ok, err := cmpFcAtomLiterallyFcFnBuiltin(left, right)
 	if err != nil {
 		return false, err
 	}
-	if comp == 0 {
+	if ok {
 		return true, nil
 	}
+	// comp, err := CmpFcLiterally(left, right)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if comp == 0 {
+	// 	return true, nil
+	// }
 
-	ok, err := fcEqualNumber(left, right)
+	ok, err = fcEqualNumber(left, right)
 	if err != nil {
 		return false, err
 	}
