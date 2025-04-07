@@ -2,7 +2,6 @@ package litexparser
 
 import (
 	"fmt"
-	"os"
 	"strings"
 )
 
@@ -59,17 +58,6 @@ func (b *strBlock) stringWithIndent(indentLevel int) string {
 	return result
 }
 
-// ParseFile 读取文件并解析为 StmtBlock 结构
-func ParseFile(filePath string) (*TopLevelStmtSlice, error) {
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("无法读取文件: %v", err)
-	}
-
-	s := string(content)
-	return GetTopLevelStmtSlice(s)
-}
-
 func splitAndReplaceSemicolons(input string) []string {
 	// 按行分割字符串
 	lines := strings.Split(input, "\n")
@@ -121,7 +109,10 @@ func splitAndReplaceSemicolons(input string) []string {
 	return transformedLines
 }
 
-func GetTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
+func getTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
+	// 解引用指针以获取实际的字符串内容
+	content = strings.ReplaceAll(content, "\t", "    ")
+
 	// lines := strings.Split((*content), "\n")
 	lines := splitAndReplaceSemicolons(content)
 	blocks, _, err := parseStrBlocks(lines, 0, 0)

@@ -6,12 +6,12 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (parser *StrSliceCursor) parseBracedFcArr() ([]ast.Fc, error) {
+func (parser *StrSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	params := []ast.Fc{}
 	parser.skip(glob.KeywordLeftParen)
 
 	for !parser.is(glob.KeywordRightParen) {
-		fc, err := parser.ParseFc()
+		fc, err := parser.Fc()
 
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -36,7 +36,7 @@ func (parser *StrSliceCursor) parseBracedFcArr() ([]ast.Fc, error) {
 	return params, nil
 }
 
-func (parser *StrSliceCursor) paramListInDeclsAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
+func (parser *StrSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
 	paramName := []string{}
 	paramTypes := []ast.Fc{}
 
@@ -46,7 +46,7 @@ func (parser *StrSliceCursor) paramListInDeclsAndSkipEnd(endWith string) ([]stri
 			return nil, nil, &parserErr{err, parser}
 		}
 
-		tp, err := parser.ParseFc()
+		tp, err := parser.Fc()
 		if err != nil {
 			return nil, nil, &parserErr{err, parser}
 		}
@@ -66,7 +66,7 @@ func (parser *StrSliceCursor) paramListInDeclsAndSkipEnd(endWith string) ([]stri
 	return paramName, paramTypes, nil
 }
 
-func (parser *StrSliceCursor) parseStringArrUntilEnd() ([]string, error) {
+func (parser *StrSliceCursor) stringSliceUntilEnd() ([]string, error) {
 	members := []string{}
 
 	for {
@@ -88,7 +88,7 @@ func (parser *StrSliceCursor) parseStringArrUntilEnd() ([]string, error) {
 	return members, nil
 }
 
-func (parser *StrSliceCursor) parseIsExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
+func (parser *StrSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 	err := parser.skip(glob.KeywordIs)
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -104,7 +104,7 @@ func (parser *StrSliceCursor) parseIsExpr(left ast.Fc) (*ast.SpecFactStmt, error
 	// return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
 }
 
-func (stmt *TokenBlock) parseDefPropExistStmt() (ast.DefPropStmt, error) {
+func (stmt *TokenBlock) defPropExistStmt() (ast.DefPropStmt, error) {
 	if stmt.Header.is(glob.KeywordProp) {
 		prop, err := stmt.defConPropStmt()
 		if err != nil {

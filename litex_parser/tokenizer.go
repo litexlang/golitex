@@ -82,8 +82,8 @@ func (t *tokenizer) tokenizeString() ([]string, error) {
 	return result, nil
 }
 
-// TokenizeStmtBlock 函数保持不变
-func TokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
+// tokenizeStmtBlock 函数保持不变
+func tokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
 	body := []TokenBlock{}
 
 	// 创建一个新的 tokenizer 实例
@@ -97,7 +97,7 @@ func TokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
 
 	// 处理 Body 中的每个元素
 	for _, subBlock := range b.Body {
-		parsedSubBlock, err := TokenizeStmtBlock(&subBlock)
+		parsedSubBlock, err := tokenizeStmtBlock(&subBlock)
 		if err != nil {
 			return nil, err
 		}
