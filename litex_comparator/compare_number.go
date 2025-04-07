@@ -9,19 +9,19 @@ import (
 	"strings"
 )
 
-type NumberFc struct {
-	Left        *NumberFc
+type numLitExpr struct {
+	Left        *numLitExpr
 	OptOrNumber string
-	Right       *NumberFc
+	Right       *numLitExpr
 }
 
-func IsNumberFcWithBuiltinInfixOpt(fc ast.Fc) (*NumberFc, bool, error) {
-	asStr, ok := ast.IsNumberAtom(fc)
+func getNumLitExpr(fc ast.Fc) (*numLitExpr, bool, error) {
+	asStr, ok := ast.IsNumLitFcAtom(fc)
 	if ok {
-		return &NumberFc{nil, asStr, nil}, true, nil
+		return &numLitExpr{nil, asStr, nil}, true, nil
 	}
 
-	asFcFn, ok := fc.(*ast.FcFnPipe)
+	asFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
 		return nil, false, fmt.Errorf("")
 	}
@@ -39,7 +39,7 @@ func IsNumberFcWithBuiltinInfixOpt(fc ast.Fc) (*NumberFc, bool, error) {
 		return nil, false, nil
 	}
 
-	left, ok, err := IsNumberFcWithBuiltinInfixOpt(asFcFn.CallPipe[0].Params[0])
+	left, ok, err := getNumLitExpr(asFcFn.CallPipe[0].Params[0])
 	if err != nil {
 		return nil, false, err
 	}
@@ -47,7 +47,7 @@ func IsNumberFcWithBuiltinInfixOpt(fc ast.Fc) (*NumberFc, bool, error) {
 		return nil, false, nil
 	}
 
-	right, ok, err := IsNumberFcWithBuiltinInfixOpt(asFcFn.CallPipe[0].Params[1])
+	right, ok, err := getNumLitExpr(asFcFn.CallPipe[0].Params[1])
 	if err != nil {
 		return nil, false, err
 	}
@@ -55,22 +55,22 @@ func IsNumberFcWithBuiltinInfixOpt(fc ast.Fc) (*NumberFc, bool, error) {
 		return nil, false, nil
 	}
 
-	return &NumberFc{left, opt, right}, true, nil
+	return &numLitExpr{left, opt, right}, true, nil
 }
 
-// EvaluateNumberFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
-func EvaluateNumberFc(node *NumberFc) (string, error) {
+// evaluateNumLitFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
+func evaluateNumLitFc(node *numLitExpr) (string, error) {
 	// 叶子节点
 	if node.Left == nil && node.Right == nil {
 		return node.OptOrNumber, nil
 	}
 
-	leftVal, err := EvaluateNumberFc(node.Left)
+	leftVal, err := evaluateNumLitFc(node.Left)
 	if err != nil {
 		return "", err
 	}
 
-	rightVal, err := EvaluateNumberFc(node.Right)
+	rightVal, err := evaluateNumLitFc(node.Right)
 	if err != nil {
 		return "", err
 	}
@@ -194,7 +194,7 @@ func trimLeftZero(s string) string {
 
 // 字符串大数减法
 func subBigFloat(a, b string) (string, error) {
-	cmp := CompareBigFloat(a, b)
+	cmp := cmpBigFloat(a, b)
 	if cmp == -1 {
 		return "", errors.New("暂不支持负数")
 	}
@@ -325,7 +325,7 @@ func mulStrings(a, b string) (string, error) {
 }
 
 // 判断大小：返回 1 if a > b, -1 if a < b, 0 if a==b
-func CompareBigFloat(a, b string) int {
+func cmpBigFloat(a, b string) int {
 	aInt, aFrac := splitNumberToIntPartFracPart(a)
 	bInt, bFrac := splitNumberToIntPartFracPart(b)
 
