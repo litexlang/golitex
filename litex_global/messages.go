@@ -9,7 +9,7 @@ func LineHead4Indents(line string, n uint32) string {
 		return line
 	}
 
-	spaces := strings.Repeat("    ", int(n))
+	spaces := strings.Repeat(ScopeIndent, int(n))
 	lines := strings.Split(line, "\n")
 
 	var builder strings.Builder
