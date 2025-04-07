@@ -1,4 +1,4 @@
-package litexstatements
+package litexast
 
 import (
 	glob "golitex/litex_global"
