@@ -1,9 +1,8 @@
-package litex_comparator
+package litex_ast
 
 import (
 	"errors"
 	"fmt"
-	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
 	"strconv"
 	"strings"
@@ -15,13 +14,13 @@ type numLitExpr struct {
 	Right       *numLitExpr
 }
 
-func getNumLitExpr(fc ast.Fc) (*numLitExpr, bool, error) {
-	asStr, ok := ast.IsNumLitFcAtom(fc)
+func GetNumLitExpr(fc Fc) (*numLitExpr, bool, error) {
+	asStr, ok := IsNumLitFcAtom(fc)
 	if ok {
 		return &numLitExpr{nil, asStr, nil}, true, nil
 	}
 
-	asFcFn, ok := fc.(*ast.FcFn)
+	asFcFn, ok := fc.(*FcFn)
 	if !ok {
 		return nil, false, fmt.Errorf("")
 	}
@@ -39,7 +38,7 @@ func getNumLitExpr(fc ast.Fc) (*numLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	left, ok, err := getNumLitExpr(asFcFn.CallPipe[0].Params[0])
+	left, ok, err := GetNumLitExpr(asFcFn.CallPipe[0].Params[0])
 	if err != nil {
 		return nil, false, err
 	}
@@ -47,7 +46,7 @@ func getNumLitExpr(fc ast.Fc) (*numLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	right, ok, err := getNumLitExpr(asFcFn.CallPipe[0].Params[1])
+	right, ok, err := GetNumLitExpr(asFcFn.CallPipe[0].Params[1])
 	if err != nil {
 		return nil, false, err
 	}
@@ -58,15 +57,15 @@ func getNumLitExpr(fc ast.Fc) (*numLitExpr, bool, error) {
 	return &numLitExpr{left, opt, right}, true, nil
 }
 
-// evalNumLitFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
+// EvalNumLitFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
 // bool 表示基于现有的litex-rule，虽然说我不能说你对不对，但你至少没犯错，error表示你犯错了，比如1/0
-func evalNumLitFc(node *numLitExpr) (string, bool, error) {
+func EvalNumLitFc(node *numLitExpr) (string, bool, error) {
 	// 叶子节点
 	if node.Left == nil && node.Right == nil {
 		return node.OptOrNumber, true, nil
 	}
 
-	leftVal, ok, err := evalNumLitFc(node.Left)
+	leftVal, ok, err := EvalNumLitFc(node.Left)
 	if err != nil {
 		return "", false, err
 	}
@@ -74,7 +73,7 @@ func evalNumLitFc(node *numLitExpr) (string, bool, error) {
 		return "", false, nil
 	}
 
-	rightVal, ok, err := evalNumLitFc(node.Right)
+	rightVal, ok, err := EvalNumLitFc(node.Right)
 	if err != nil {
 		return "", false, err
 	}
@@ -201,7 +200,7 @@ func trimLeftZero(s string) string {
 
 // 字符串大数减法
 func subBigFloat(a, b string) (string, bool, error) {
-	cmp := cmpBigFloat(a, b)
+	cmp := CmpBigFloat(a, b)
 	if cmp == -1 {
 		// TODO "暂不支持负数"
 		return "", false, nil
@@ -333,7 +332,7 @@ func mulStrings(a, b string) (string, error) {
 }
 
 // 判断大小：返回 1 if a > b, -1 if a < b, 0 if a==b
-func cmpBigFloat(a, b string) int {
+func CmpBigFloat(a, b string) int {
 	aInt, aFrac := splitNumberToIntPartFracPart(a)
 	bInt, bFrac := splitNumberToIntPartFracPart(b)
 
