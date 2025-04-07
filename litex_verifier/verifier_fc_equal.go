@@ -1,13 +1,13 @@
 package litexverifier
 
 import (
+	ast "golitex/litex_ast"
 	cmp "golitex/litex_comparator"
 	env "golitex/litex_env"
 	memory "golitex/litex_memory"
-	st "golitex/litex_statements"
 )
 
-func (ver *Verifier) FcEqual(left, right st.Fc, state VerState) (bool, error) {
+func (ver *Verifier) FcEqual(left, right ast.Fc, state VerState) (bool, error) {
 	// check whether given left or right is uniParam
 	concreteLeft := ver.asConFc(left)
 	if concreteLeft != nil {
@@ -36,7 +36,7 @@ func (ver *Verifier) FcEqual(left, right st.Fc, state VerState) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnv(curEnv *env.Env, left st.Fc, right st.Fc, state VerState) (bool, error) {
+func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	ok, err := ver.FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv, left, right, state)
 	if err != nil {
 		return false, nil
@@ -54,8 +54,8 @@ func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnv(curEnv *env.Env, left st
 	return false, nil
 }
 
-func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv *env.Env, keyFc st.Fc, fcToComp st.Fc, state VerState) (bool, error) {
-	key := memory.EqualFactMemoryTreeNode{FcAsKey: keyFc, Values: &[]st.Fc{}}
+func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv *env.Env, keyFc ast.Fc, fcToComp ast.Fc, state VerState) (bool, error) {
+	key := memory.EqualFactMemoryTreeNode{FcAsKey: keyFc, Values: &[]ast.Fc{}}
 
 	searchedNode, err := curEnv.EqualFactMem.Mem.TreeSearch(&key)
 
@@ -74,7 +74,7 @@ func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv *env.Env, 
 	return ok, nil
 }
 
-func cmpSearchNodeKeyValuesLiterally(valuesToBeComped *[]st.Fc, fcToComp st.Fc) (bool, error) {
+func cmpSearchNodeKeyValuesLiterally(valuesToBeComped *[]ast.Fc, fcToComp ast.Fc) (bool, error) {
 	for _, equalFc := range *valuesToBeComped {
 		// TODO? 貌似不需要在每个key下面存一个数组；我只要让这些key下面有共同的signal，这些signal一致，就行。
 		cmpRet, err := cmp.CmpFcLiterally(equalFc, fcToComp) // 只能用直接比较法
@@ -90,8 +90,8 @@ func cmpSearchNodeKeyValuesLiterally(valuesToBeComped *[]st.Fc, fcToComp st.Fc) 
 	return false, nil
 }
 
-func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey2(curEnv *env.Env, keyFc st.Fc, fcToComp st.Fc, state VerState) (bool, error) {
-	key := memory.EqualFactMemoryTreeNode{FcAsKey: keyFc, Values: &[]st.Fc{}}
+func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey2(curEnv *env.Env, keyFc ast.Fc, fcToComp ast.Fc, state VerState) (bool, error) {
+	key := memory.EqualFactMemoryTreeNode{FcAsKey: keyFc, Values: &[]ast.Fc{}}
 
 	searchedNode, err := curEnv.EqualFactMem.Mem.TreeSearch(&key)
 
@@ -103,7 +103,7 @@ func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey2(curEnv *env.Env,
 		return false, nil
 	}
 
-	key2 := memory.EqualFactMemoryTreeNode{FcAsKey: fcToComp, Values: &[]st.Fc{}}
+	key2 := memory.EqualFactMemoryTreeNode{FcAsKey: fcToComp, Values: &[]ast.Fc{}}
 
 	searchedNode2, err := curEnv.EqualFactMem.Mem.TreeSearch(&key2)
 

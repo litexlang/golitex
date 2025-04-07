@@ -1,10 +1,8 @@
 package litexverifier
 
-import (
-	st "golitex/litex_statements"
-)
+import ast "golitex/litex_ast"
 
-func (ver *Verifier) CondFact(stmt *st.CondFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) CondFact(stmt *ast.CondFactStmt, state VerState) (bool, error) {
 	ver.newEnv(nil)
 	defer ver.deleteEnvAndRetainMsg() // 万一cond里有condFact，那要保证能回到原来的环境
 

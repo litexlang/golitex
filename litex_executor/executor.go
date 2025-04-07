@@ -2,33 +2,33 @@ package litexexecutor
 
 import (
 	"fmt"
+	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
-	st "golitex/litex_statements"
 	verifier "golitex/litex_verifier"
 	"strings"
 )
 
-func (exec *Executor) TopLevelStmt(stmt *st.TopStmt) error {
+func (exec *Executor) TopLevelStmt(stmt *ast.TopStmt) error {
 	exec.clearMsgAndOutput()
 	return exec.stmt(stmt.Stmt)
 }
 
 // 在子函数里管理msg，即比如现在是TypeStmt，那在处理TypeStmt的地方处理它的string，二不是在这里
-func (exec *Executor) stmt(stmt st.Stmt) error {
+func (exec *Executor) stmt(stmt ast.Stmt) error {
 	var err error = nil
 
 	switch stmt := (stmt).(type) {
-	case st.FactStmt:
+	case ast.FactStmt:
 		err = exec.factStmt(stmt)
-	case *st.KnowStmt:
+	case *ast.KnowStmt:
 		err = exec.knowStmt(stmt)
-	case *st.ClaimProveStmt:
+	case *ast.ClaimProveStmt:
 		err = exec.claimProveStmt(stmt)
-	case *st.DefConPropStmt:
+	case *ast.DefConPropStmt:
 		err = exec.defConPropStmt(stmt)
-	case *st.DefObjStmt:
+	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt)
-	case *st.DefConFnStmt:
+	case *ast.DefConFnStmt:
 		err = exec.defConFnStmt(stmt)
 
 	default:
@@ -42,7 +42,7 @@ func (exec *Executor) stmt(stmt st.Stmt) error {
 	}
 }
 
-func (exec *Executor) knowStmt(stmt *st.KnowStmt) error {
+func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
 	for _, fact := range stmt.Facts {
 		err := exec.env.NewFact(fact)
 		if err != nil {
@@ -54,7 +54,7 @@ func (exec *Executor) knowStmt(stmt *st.KnowStmt) error {
 	return nil
 }
 
-func (exec *Executor) factStmt(stmt st.FactStmt) error {
+func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 	ok, _, err := exec.checkFactStmt(stmt)
 
 	if err != nil {
@@ -70,7 +70,7 @@ func (exec *Executor) factStmt(stmt st.FactStmt) error {
 	return nil
 }
 
-func (exec *Executor) checkFactStmt(stmt st.FactStmt) (bool, *verifier.Verifier, error) {
+func (exec *Executor) checkFactStmt(stmt ast.FactStmt) (bool, *verifier.Verifier, error) {
 	curVerifier := verifier.NewVerifier(exec.env, exec.env.CurPkg)
 	ok, err := curVerifier.FactStmt(stmt, verifier.AnyMsg)
 	if err != nil {
@@ -79,7 +79,7 @@ func (exec *Executor) checkFactStmt(stmt st.FactStmt) (bool, *verifier.Verifier,
 	return ok, curVerifier, err
 }
 
-func (exec *Executor) claimProveStmt(stmt *st.ClaimProveStmt) error {
+func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 	exec.newEnv(exec.env.CurPkg)
 	exec.appendNewMsg(stmt.String())
 
@@ -100,7 +100,7 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 	return strings.Join(exec.env.Msgs, "\n")
 }
 
-func (exec *Executor) defConPropStmt(stmt *st.DefConPropStmt) error {
+func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefConProp(stmt, exec.env.CurPkg)
 	if err != nil {
@@ -109,28 +109,28 @@ func (exec *Executor) defConPropStmt(stmt *st.DefConPropStmt) error {
 
 	// new uni fact
 	// TODO 这里因为我是用 ptr 来实现某个interface的，所以这里非常愚蠢地需要重新变化一下
-	uniFactParamTypes := []st.Fc{}
+	uniFactParamTypes := []ast.Fc{}
 	for _, tp := range stmt.DefHeader.TypeParams {
 		uniFactParamTypes = append(uniFactParamTypes, tp)
 	}
 
-	iffLeadToPropUniFactDomFacts := []st.FactStmt{}
+	iffLeadToPropUniFactDomFacts := []ast.FactStmt{}
 	iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, stmt.DomFacts...)
 
-	iffFacts := []*st.SpecFactStmt{}
+	iffFacts := []*ast.SpecFactStmt{}
 	for _, fact := range stmt.IffFacts {
 		iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, fact)
 		iffFacts = append(iffFacts, fact)
 	}
 
-	specFactParams := []st.Fc{}
+	specFactParams := []ast.Fc{}
 	for _, param := range stmt.DefHeader.Params {
-		specFactParams = append(specFactParams, &st.FcAtom{PkgName: "", Value: param})
+		specFactParams = append(specFactParams, &ast.FcAtom{PkgName: "", Value: param})
 	}
 
-	propAsSpecFact := st.SpecFactStmt{IsTrue: true, PropName: st.FcAtom{PkgName: "", Value: stmt.DefHeader.Name}, Params: specFactParams}
+	propAsSpecFact := ast.SpecFactStmt{IsTrue: true, PropName: ast.FcAtom{PkgName: "", Value: stmt.DefHeader.Name}, Params: specFactParams}
 
-	IffLeadToProp := st.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []*st.SpecFactStmt{&propAsSpecFact}}
+	IffLeadToProp := ast.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []*ast.SpecFactStmt{&propAsSpecFact}}
 
 	err = exec.env.NewFact(&IffLeadToProp)
 	if err != nil {
@@ -139,7 +139,7 @@ func (exec *Executor) defConPropStmt(stmt *st.DefConPropStmt) error {
 
 	domFacts := append(stmt.DomFacts, &propAsSpecFact)
 
-	PropLeadToIff := st.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: domFacts, ThenFacts: iffFacts}
+	PropLeadToIff := ast.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: uniFactParamTypes, DomFacts: domFacts, ThenFacts: iffFacts}
 
 	err = exec.env.NewFact(&PropLeadToIff)
 	if err != nil {
@@ -149,7 +149,7 @@ func (exec *Executor) defConPropStmt(stmt *st.DefConPropStmt) error {
 	return nil
 }
 
-func (exec *Executor) defObjStmt(stmt *st.DefObjStmt) error {
+func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefObj(stmt, exec.env.CurPkg)
 	if err != nil {
@@ -157,13 +157,13 @@ func (exec *Executor) defObjStmt(stmt *st.DefObjStmt) error {
 	}
 
 	for i, objName := range stmt.Objs {
-		objInSetFact := st.SpecFactStmt{
+		objInSetFact := ast.SpecFactStmt{
 			IsTrue: true,
-			PropName: st.FcAtom{
+			PropName: ast.FcAtom{
 				PkgName: "",
 				Value:   glob.KeywordIn,
 			},
-			Params: []st.Fc{&st.FcAtom{PkgName: exec.env.CurPkg, Value: objName}, stmt.ObjSets[i]},
+			Params: []ast.Fc{&ast.FcAtom{PkgName: exec.env.CurPkg, Value: objName}, stmt.ObjSets[i]},
 		}
 		err := exec.env.NewFact(&objInSetFact)
 		if err != nil {
@@ -181,39 +181,39 @@ func (exec *Executor) defObjStmt(stmt *st.DefObjStmt) error {
 	return nil
 }
 
-func (exec *Executor) defConFnStmt(stmt *st.DefConFnStmt) error {
+func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefFn(stmt, exec.env.CurPkg)
 	if err != nil {
 		return err
 	}
 
-	fcFnParams := []st.Fc{}
+	fcFnParams := []ast.Fc{}
 	for _, fc := range stmt.DefHeader.Params {
-		fcFnParams = append(fcFnParams, &st.FcAtom{PkgName: "", Value: fc})
+		fcFnParams = append(fcFnParams, &ast.FcAtom{PkgName: "", Value: fc})
 	}
 
-	fcFn := st.FcFnPipe{FnHead: st.FcAtom{PkgName: exec.env.CurPkg, Value: stmt.DefHeader.Name}, CallPipe: []*st.FcFnPipeSeg{{Params: fcFnParams}}}
+	fcFn := ast.FcFnPipe{FnHead: ast.FcAtom{PkgName: exec.env.CurPkg, Value: stmt.DefHeader.Name}, CallPipe: []*ast.FcFnPipeSeg{{Params: fcFnParams}}}
 
-	retFact := st.SpecFactStmt{IsTrue: true, PropName: st.FcAtom{PkgName: "", Value: glob.KeywordIn}, Params: []st.Fc{&fcFn, stmt.RetType}}
+	retFact := ast.SpecFactStmt{IsTrue: true, PropName: ast.FcAtom{PkgName: "", Value: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetType}}
 
-	uniFactThen := []*st.SpecFactStmt{&retFact}
+	uniFactThen := []*ast.SpecFactStmt{&retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
 
-	uniFactDom := []st.SpecFactStmt{}
+	uniFactDom := []ast.SpecFactStmt{}
 	for i, paramSet := range stmt.DefHeader.TypeParams {
-		objInSetFact := st.SpecFactStmt{
+		objInSetFact := ast.SpecFactStmt{
 			IsTrue: true,
-			PropName: st.FcAtom{
+			PropName: ast.FcAtom{
 				PkgName: "",
 				Value:   glob.KeywordIn,
 			},
-			Params: []st.Fc{&st.FcAtom{PkgName: exec.env.CurPkg, Value: stmt.DefHeader.Params[i]}, paramSet},
+			Params: []ast.Fc{&ast.FcAtom{PkgName: exec.env.CurPkg, Value: stmt.DefHeader.Params[i]}, paramSet},
 		}
 		uniFactDom = append(uniFactDom, objInSetFact)
 	}
 
-	uniFact := st.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: stmt.DefHeader.TypeParams, DomFacts: stmt.DomFacts, ThenFacts: uniFactThen}
+	uniFact := ast.UniFactStmt{Params: stmt.DefHeader.Params, ParamTypes: stmt.DefHeader.TypeParams, DomFacts: stmt.DomFacts, ThenFacts: uniFactThen}
 	err = exec.env.NewFact(&uniFact)
 
 	if err != nil {

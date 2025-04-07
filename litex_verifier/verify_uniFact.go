@@ -2,10 +2,10 @@ package litexverifier
 
 import (
 	"fmt"
-	st "golitex/litex_statements"
+	ast "golitex/litex_ast"
 )
 
-func (ver *Verifier) UniFact(stmt *st.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) UniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	// 默认不允许局部的变量名和外部的变量名冲突了。如果你冲突了，那我报错
 	for _, param := range stmt.Params {
 		ok, err := ver.isDeclared(param)

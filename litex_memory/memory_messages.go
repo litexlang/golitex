@@ -1,11 +1,9 @@
 package litexmemory
 
-import (
-	st "golitex/litex_statements"
-)
+import ast "golitex/litex_ast"
 
-func (fact *StoredSpecFact) String(atom st.FcAtom) string {
-	knownFact := st.SpecFactStmt{IsTrue: fact.IsTrue, PropName: atom, Params: fact.Params}
+func (fact *StoredSpecFact) String(atom ast.FcAtom) string {
+	knownFact := ast.SpecFactStmt{IsTrue: fact.IsTrue, PropName: atom, Params: fact.Params}
 	return knownFact.String()
 }
 

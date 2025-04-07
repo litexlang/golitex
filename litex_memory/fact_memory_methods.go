@@ -1,14 +1,12 @@
 package litexmemory
 
-import (
-	st "golitex/litex_statements"
-)
+import ast "golitex/litex_ast"
 
 func NewSpecFactMemDict() *SpecFactMemDict {
 	return &SpecFactMemDict{map[string]map[string]StoredSpecMemDictNode{}}
 }
 
-func (factMem *SpecFactMemDict) Insert(stmt *st.SpecFactStmt) error {
+func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt) error {
 	pkgMap, pkgExists := factMem.Dict[stmt.PropName.PkgName] // 检查 pkgName 是否存在
 
 	// 如果包不存在，初始化包映射
@@ -34,7 +32,7 @@ func (factMem *SpecFactMemDict) Insert(stmt *st.SpecFactStmt) error {
 	return nil
 }
 
-func (factMem *SpecFactMemDict) GetNode(stmt *st.SpecFactStmt) (*StoredSpecMemDictNode, bool) {
+func (factMem *SpecFactMemDict) GetNode(stmt *ast.SpecFactStmt) (*StoredSpecMemDictNode, bool) {
 	pkgMap, pkgExists := factMem.Dict[stmt.PropName.PkgName] // 检查 pkgName 是否存在
 	if !pkgExists {
 		return nil, false // 返回零值
@@ -50,7 +48,7 @@ func NewCondFactMemDict() *CondFactMemDict {
 	return &CondFactMemDict{map[string]map[string]StoredCondFuncMemDictNode{}}
 }
 
-func (factMem *CondFactMemDict) Insert(condStmt *st.CondFactStmt) error {
+func (factMem *CondFactMemDict) Insert(condStmt *ast.CondFactStmt) error {
 	for _, stmt := range condStmt.ThenFacts {
 		err := factMem.InsertSpecFact(condStmt, stmt)
 		if err != nil {
@@ -60,7 +58,7 @@ func (factMem *CondFactMemDict) Insert(condStmt *st.CondFactStmt) error {
 	return nil
 }
 
-func (factMem *CondFactMemDict) InsertSpecFact(condStmt *st.CondFactStmt, stmt *st.SpecFactStmt) error {
+func (factMem *CondFactMemDict) InsertSpecFact(condStmt *ast.CondFactStmt, stmt *ast.SpecFactStmt) error {
 	// 检查 pkgName 是否存在，不存在则初始化
 	pkgName := stmt.PropName.PkgName
 	optName := stmt.PropName.Value
@@ -84,7 +82,7 @@ func (factMem *CondFactMemDict) InsertSpecFact(condStmt *st.CondFactStmt, stmt *
 	return nil
 }
 
-func (factMem *CondFactMemDict) GetSpecFactNode(stmt *st.SpecFactStmt) (*StoredCondFuncMemDictNode, bool) {
+func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (*StoredCondFuncMemDictNode, bool) {
 	pkgName := stmt.PropName.PkgName
 	optName := stmt.PropName.Value
 
@@ -99,7 +97,7 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *st.SpecFactStmt) (*StoredC
 	}
 }
 
-func (factMem *UniFactMemDict) Insert(fact *st.UniFactStmt) error {
+func (factMem *UniFactMemDict) Insert(fact *ast.UniFactStmt) error {
 	for _, stmt := range fact.ThenFacts {
 		err := factMem.insertSpecFact(fact, stmt)
 		if err != nil {
@@ -109,7 +107,7 @@ func (factMem *UniFactMemDict) Insert(fact *st.UniFactStmt) error {
 	return nil
 }
 
-func (factMem *UniFactMemDict) insertSpecFact(uniStmt *st.UniFactStmt, stmt *st.SpecFactStmt) error {
+func (factMem *UniFactMemDict) insertSpecFact(uniStmt *ast.UniFactStmt, stmt *ast.SpecFactStmt) error {
 	// 检查 pkgName 是否存在，不存在则初始化
 	pkgName := stmt.PropName.PkgName
 	optName := stmt.PropName.Value
@@ -137,7 +135,7 @@ func NewUniFactMemDict() *UniFactMemDict {
 	return &UniFactMemDict{map[string]map[string]StoredUniFuncMemDictNode{}}
 }
 
-func (factMem *UniFactMemDict) GetSpecFactNode(stmt *st.SpecFactStmt) (*StoredUniFuncMemDictNode, bool) {
+func (factMem *UniFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (*StoredUniFuncMemDictNode, bool) {
 	pkgName := stmt.PropName.PkgName
 	optName := stmt.PropName.Value
 

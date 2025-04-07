@@ -2,24 +2,24 @@ package litexmemory
 
 import (
 	"fmt"
+	ast "golitex/litex_ast"
 	mem "golitex/litex_memory"
-	st "golitex/litex_statements"
 )
 
-func (env *Env) NewFact(stmt st.FactStmt) error {
+func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
-	case *st.SpecFactStmt:
+	case *ast.SpecFactStmt:
 		return env.NewSpecFact(f)
-	case *st.CondFactStmt:
+	case *ast.CondFactStmt:
 		return env.NewCondFact(f)
-	case *st.UniFactStmt:
+	case *ast.UniFactStmt:
 		return env.NewUniFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
 }
 
-func (env *Env) NewSpecFact(fact *st.SpecFactStmt) error {
+func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 	if fact.IsEqualFact() {
 		return env.NewEqualFact(fact)
 	}
@@ -31,15 +31,15 @@ func (env *Env) NewSpecFact(fact *st.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) NewEqualFact(stmt *st.SpecFactStmt) error {
+func (env *Env) NewEqualFact(stmt *ast.SpecFactStmt) error {
 	left := &mem.EqualFactMemoryTreeNode{
 		FcAsKey: stmt.Params[0],
-		Values:  &[]st.Fc{stmt.Params[1]},
+		Values:  &[]ast.Fc{stmt.Params[1]},
 	}
 
 	right := &mem.EqualFactMemoryTreeNode{
 		FcAsKey: stmt.Params[1],
-		Values:  &[]st.Fc{stmt.Params[0]},
+		Values:  &[]ast.Fc{stmt.Params[0]},
 	}
 
 	leftSearched, err := env.EqualFactMem.Mem.TreeSearch(left)
@@ -68,7 +68,7 @@ func (env *Env) NewEqualFact(stmt *st.SpecFactStmt) error {
 		right.Values = leftSearched.Key.Values
 		env.EqualFactMem.Mem.Insert(right)
 	} else if leftSearched == nil && rightSearched == nil {
-		equalSlice := &[]st.Fc{stmt.Params[0], stmt.Params[1]}
+		equalSlice := &[]ast.Fc{stmt.Params[0], stmt.Params[1]}
 		env.EqualFactMem.Mem.Insert(left)
 		env.EqualFactMem.Mem.Insert(right)
 		left.Values = equalSlice
@@ -78,7 +78,7 @@ func (env *Env) NewEqualFact(stmt *st.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) NewCondFact(fact *st.CondFactStmt) error {
+func (env *Env) NewCondFact(fact *ast.CondFactStmt) error {
 	err := env.CondFactMem.Insert(fact)
 	if err != nil {
 		return err
@@ -86,7 +86,7 @@ func (env *Env) NewCondFact(fact *st.CondFactStmt) error {
 	return nil
 }
 
-func (env *Env) NewUniFact(fact *st.UniFactStmt) error {
+func (env *Env) NewUniFact(fact *ast.UniFactStmt) error {
 	// return nil
 	err := env.UniFactMem.Insert(fact)
 	if err != nil {
@@ -100,20 +100,20 @@ func (env *Env) IsDeclared(name string) bool {
 	return false
 }
 
-func (env *Env) Declare(stmt st.Stmt, name string) error {
+func (env *Env) Declare(stmt ast.Stmt, name string) error {
 	// TODO: 声明obj，也可能是fn，甚至可能是prop
 	return nil
 }
 
-func (env *Env) IsSpecFactPropCommutative(fact *st.SpecFactStmt) bool {
+func (env *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
 	if len(fact.Params) != 2 {
 		return false
 	}
 	return env.isPropCommutative(&fact.PropName)
 }
 
-func (env *Env) isPropCommutative(opt st.Fc) bool {
-	if st.IsEqualOpt(opt) {
+func (env *Env) isPropCommutative(opt ast.Fc) bool {
+	if ast.IsEqualOpt(opt) {
 		return true
 	}
 
@@ -122,7 +122,7 @@ func (env *Env) isPropCommutative(opt st.Fc) bool {
 	return false
 }
 
-func (env *Env) NewDefConProp(stmt *st.DefConPropStmt, pkgName string) error {
+func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt, pkgName string) error {
 	isDeclared := env.IsDeclared(stmt.DefHeader.Name)
 	if isDeclared {
 		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)
@@ -131,7 +131,7 @@ func (env *Env) NewDefConProp(stmt *st.DefConPropStmt, pkgName string) error {
 	return env.PropMem.Insert(stmt, pkgName)
 }
 
-func (env *Env) NewDefObj(stmt *st.DefObjStmt, pkgName string) error {
+func (env *Env) NewDefObj(stmt *ast.DefObjStmt, pkgName string) error {
 	for _, objName := range stmt.Objs {
 		isDeclared := env.IsDeclared(objName)
 		if isDeclared {
@@ -142,7 +142,7 @@ func (env *Env) NewDefObj(stmt *st.DefObjStmt, pkgName string) error {
 	return env.ObjMem.Insert(stmt, pkgName)
 }
 
-func (env *Env) NewDefFn(stmt *st.DefConFnStmt, pkgName string) error {
+func (env *Env) NewDefFn(stmt *ast.DefConFnStmt, pkgName string) error {
 	isDeclared := env.IsDeclared(stmt.DefHeader.Name)
 	if isDeclared {
 		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)

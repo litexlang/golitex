@@ -2,14 +2,14 @@ package litexverifier
 
 import (
 	"fmt"
+	ast "golitex/litex_ast"
 	env "golitex/litex_env"
 	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
-	st "golitex/litex_statements"
 	"runtime"
 )
 
-func (ver *Verifier) SpecFact(stmt *st.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// TODO 判断一下传入进来的stmt是不是prop prop，就像数学归纳法这种。prop prop的特点是，它是prop，参数列表里也有prop。如果是的话，那就用其他方式来验证
 	isPropProp, err := ver.IsPropProp(stmt, state)
 	if err != nil {
@@ -53,7 +53,7 @@ func (ver *Verifier) SpecFact(stmt *st.SpecFactStmt, state VerState) (bool, erro
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactSpec(stmt *st.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsEqualFact() {
 		// ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state.noMsg())
 		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state)
@@ -98,7 +98,7 @@ func (ver *Verifier) SpecFactSpec(stmt *st.SpecFactStmt, state VerState) (bool, 
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactCond(stmt *st.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) SpecFactCond(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		ok, err := ver.SpecFactCondAtEnv(curEnv, stmt, state)
 		if err != nil {
@@ -111,7 +111,7 @@ func (ver *Verifier) SpecFactCond(stmt *st.SpecFactStmt, state VerState) (bool, 
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *st.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	searched, got := curEnv.CondFactMem.GetSpecFactNode(stmt)
 	if !got {
 		return false, nil
@@ -148,12 +148,12 @@ LoopOverFacts:
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactUni(stmt *st.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// 处理可交换的prop
 	isCom := ver.env.IsSpecFactPropCommutative(stmt)
-	var reverseStmt *st.SpecFactStmt = nil
+	var reverseStmt *ast.SpecFactStmt = nil
 	if isCom {
-		reverseStmt = &st.SpecFactStmt{IsTrue: stmt.IsTrue, PropName: stmt.PropName, Params: []st.Fc{stmt.Params[1], stmt.Params[0]}}
+		reverseStmt = &ast.SpecFactStmt{IsTrue: stmt.IsTrue, PropName: stmt.PropName, Params: []ast.Fc{stmt.Params[1], stmt.Params[0]}}
 	}
 
 	nextState := state.spec()
@@ -181,13 +181,13 @@ func (ver *Verifier) SpecFactUni(stmt *st.SpecFactStmt, state VerState) (bool, e
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *st.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	searched, got := curEnv.UniFactMem.GetSpecFactNode(stmt)
 	if !got {
 		return false, nil
 	}
 
-	// uniConMap := map[string]st.Fc{}
+	// uniConMap := map[string]ast.Fc{}
 	for _, knownFact := range searched.Facts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
 		paramArrMap, ok, err := ver.matchStoredUniConSpecFacts(knownFact, stmt)
@@ -219,8 +219,8 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *st.SpecFactStmt, st
 	return false, nil
 }
 
-func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]st.Fc, state VerState) (map[string]st.Fc, bool, error) {
-	newMap := map[string]st.Fc{}
+func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Fc, state VerState) (map[string]ast.Fc, bool, error) {
+	newMap := map[string]ast.Fc{}
 	for key, value := range paramArrMap {
 		if len(value) == 1 {
 			newMap[key] = value[0]
@@ -244,7 +244,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 }
 
 // 神奇的是，这个函数我不用传涉及到要验证的specFact，因为它的信息全在uniConMap里了，然后只要forall的cond全通过，就行
-func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap map[string]st.Fc, state VerState) (bool, error) {
+func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, uniConMap map[string]ast.Fc, state VerState) (bool, error) {
 	ver.newEnv(uniConMap)
 	defer ver.deleteEnvAndRetainMsg() // 万一condFact也有uniFact的检查,那就会改变env。我需要在此时能返回到原来的env
 
