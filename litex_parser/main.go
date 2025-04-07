@@ -2,13 +2,18 @@ package litexparser
 
 import (
 	ast "golitex/litex_ast"
+	glob "golitex/litex_global"
+	"strings"
 )
 
 func ParseSourceCode(code string) ([]ast.TopStmt, error) {
-	// // 解引用指针以获取实际的字符串内容
-	// code = strings.ReplaceAll(code, "\t", "    ")
+	// code, err := preprocessSourceCode(code)
+	preprocessedCodeLines, err := preprocessSourceCode(code)
+	if err != nil {
+		return []ast.TopStmt{}, nil
+	}
 
-	slice, err := getTopLevelStmtSlice(code)
+	slice, err := getTopLevelStmtSlice(preprocessedCodeLines)
 	if err != nil {
 		return nil, err
 	}
@@ -32,4 +37,10 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 	}
 
 	return ret, nil
+}
+
+func preprocessSourceCode(code string) ([]string, error) {
+	processedCode := strings.ReplaceAll(code, "\t", glob.ScopeIndent)
+	lines := splitAndReplaceSemicolons(processedCode)
+	return lines, nil
 }

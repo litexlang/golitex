@@ -109,12 +109,17 @@ func splitAndReplaceSemicolons(input string) []string {
 	return transformedLines
 }
 
-func getTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
-	// 解引用指针以获取实际的字符串内容
-	content = strings.ReplaceAll(content, "\t", "    ")
+// func getTopLevelStmtSlice(content string) (*TopLevelStmtSlice, error) {
+// 	lines := splitAndReplaceSemicolons(content)
+// 	blocks, _, err := parseStrBlocks(lines, 0, 0)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	// lines := strings.Split((*content), "\n")
-	lines := splitAndReplaceSemicolons(content)
+// 	return &TopLevelStmtSlice{blocks}, err
+// }
+
+func getTopLevelStmtSlice(lines []string) (*TopLevelStmtSlice, error) {
 	blocks, _, err := parseStrBlocks(lines, 0, 0)
 	if err != nil {
 		return nil, err
