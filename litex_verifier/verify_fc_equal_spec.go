@@ -7,8 +7,8 @@ import (
 )
 
 func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, error) {
-	// Case: 全部都是builtin类型：比如int,float。如果传入的压根不包含builtinFc那就返回false
-	ok, err := ver.fcEqualBuiltin(left, right)
+	// Case: 全部都是builtin类型：比如int,float。然后里面可能进行1+2=3这样的验证。如果传入的压根不包含builtinFc那就返回false
+	ok, err := fcEqualBuiltin(left, right)
 	if err != nil {
 		return false, err
 	}
