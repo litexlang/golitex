@@ -1,4 +1,4 @@
-package litexglobal
+package litex_global
 
 var VerifyVarSet = true
 

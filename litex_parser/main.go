@@ -1,4 +1,4 @@
-package litexparser
+package litex_parser
 
 import (
 	ast "golitex/litex_ast"

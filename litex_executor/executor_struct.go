@@ -1,4 +1,4 @@
-package litexexecutor
+package litex_executor
 
 import (
 	env "golitex/litex_env"

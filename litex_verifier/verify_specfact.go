@@ -1,4 +1,4 @@
-package litexverifier
+package litex_verifier
 
 import (
 	"fmt"

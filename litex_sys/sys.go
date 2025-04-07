@@ -1,4 +1,4 @@
-package litexsys
+package litex_sys
 
 import (
 	pipeline "golitex/litex_pipeline"

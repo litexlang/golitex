@@ -1,6 +1,6 @@
 // Basic red black tree.
 
-package litexglobal
+package litex_global
 
 const (
 	RED   = true
