@@ -16,7 +16,7 @@ func (parser *StrSliceCursor) parseFcAtomAndFcFnRetAndBracedFc() (ast.Fc, error)
 		return parser.parseNumberStr()
 	}
 
-	fcStr, err := parser.parseFcAtom()
+	fcStr, err := parser.fcAtom()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -47,7 +47,7 @@ func (parser *StrSliceCursor) parseFcFnRetVal(optName ast.FcAtom) (*ast.FcFnPipe
 		return nil, err
 	}
 
-	return ast.MakeFcFnPipe(optName, typeParamsObjParamsPairs), nil
+	return ast.NewFcFnPipe(optName, typeParamsObjParamsPairs), nil
 	// return &ast.FcFnPipe{optName, typeParamsObjParamsPairs}, nil
 }
 
@@ -62,13 +62,13 @@ func (parser *StrSliceCursor) parseTypeParamsObjParamsPairs() ([]*ast.FcFnPipeSe
 
 		// pairs = append(pairs, {objParamsPtr})
 		// pairs = append(pairs, &ast.FcFnPipeSeg{objParamsPtr})
-		pairs = append(pairs, ast.MakeFcFnPipeSeg(objParamsPtr))
+		pairs = append(pairs, ast.NewFcFnPipeSeg(objParamsPtr))
 	}
 
 	return pairs, nil
 }
 
-func (parser *StrSliceCursor) parseFcAtom() (ast.FcAtom, error) {
+func (parser *StrSliceCursor) fcAtom() (ast.FcAtom, error) {
 	value, err := parser.next()
 	if err != nil {
 		return ast.FcAtom{Value: ""}, err
@@ -121,11 +121,11 @@ func (parser *StrSliceCursor) parseFcInfixExpr(currentPrec glob.FcInfixOptPreced
 			return nil, &parserErr{err, parser}
 		}
 
-		leftHead := ast.MakeFcAtom("", curToken)
+		leftHead := ast.NewFcAtom("", curToken)
 
-		left = ast.MakeFcFnPipe(
+		left = ast.NewFcFnPipe(
 			*leftHead,
-			[]*ast.FcFnPipeSeg{ast.MakeFcFnPipeSeg([]ast.Fc{left, right})},
+			[]*ast.FcFnPipeSeg{ast.NewFcFnPipeSeg([]ast.Fc{left, right})},
 			// []*ast.FcFnPipeSeg{{Params: []ast.Fc{left, right}}},
 		)
 	}

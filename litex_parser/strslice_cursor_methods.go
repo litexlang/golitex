@@ -36,7 +36,7 @@ func (parser *StrSliceCursor) parseBracedFcArr() ([]ast.Fc, error) {
 	return params, nil
 }
 
-func (parser *StrSliceCursor) parseParamListInDeclsAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
+func (parser *StrSliceCursor) paramListInDeclsAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
 	paramName := []string{}
 	paramTypes := []ast.Fc{}
 
@@ -94,25 +94,25 @@ func (parser *StrSliceCursor) parseIsExpr(left ast.Fc) (*ast.SpecFactStmt, error
 		return nil, &parserErr{err, parser}
 	}
 
-	opt, err := parser.parseFcAtom() // get the operator.
+	opt, err := parser.fcAtom() // get the operator.
 
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
 
-	return ast.MakeSpecFactStmt(true, opt, []ast.Fc{left}), nil
+	return ast.NewSpecFactStmt(true, opt, []ast.Fc{left}), nil
 	// return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
 }
 
 func (stmt *TokenBlock) parseDefPropExistStmt() (ast.DefPropStmt, error) {
 	if stmt.Header.is(glob.KeywordProp) {
-		prop, err := stmt.parseDefConPropStmt()
+		prop, err := stmt.defConPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 		return prop, nil
 	} else if stmt.Header.is(glob.KeywordExistProp) {
-		exist, err := stmt.parseDefConExistPropStmt()
+		exist, err := stmt.defConExistPropStmt()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -122,7 +122,7 @@ func (stmt *TokenBlock) parseDefPropExistStmt() (ast.DefPropStmt, error) {
 	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
 }
 
-func (parser *StrSliceCursor) parseTypeListInDeclsAndSkipEnd(endWith string) ([]string, []*ast.FcAtom, error) {
+func (parser *StrSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]string, []*ast.FcAtom, error) {
 	paramName := []string{}
 	paramTypes := []*ast.FcAtom{}
 
@@ -132,7 +132,7 @@ func (parser *StrSliceCursor) parseTypeListInDeclsAndSkipEnd(endWith string) ([]
 			return nil, nil, &parserErr{err, parser}
 		}
 
-		tp, err := parser.parseFcAtom()
+		tp, err := parser.fcAtom()
 		if err != nil {
 			return nil, nil, &parserErr{err, parser}
 		}

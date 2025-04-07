@@ -142,7 +142,7 @@ func ParserTester(code string) ([]ast.Stmt, error) {
 
 	ret := []ast.Stmt{}
 	for _, block := range blocks {
-		cur, err := block.ParseStmt()
+		cur, err := block.Stmt()
 		if err != nil {
 			return nil, err
 		}

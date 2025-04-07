@@ -40,7 +40,7 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 
 	ret := []ast.TopStmt{}
 	for _, block := range blocks {
-		cur, err := block.ParseTopLevelStmt()
+		cur, err := block.TopLevelStmt()
 		if err != nil {
 			return nil, err
 		}

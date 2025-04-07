@@ -149,9 +149,9 @@ func (fact *CondFactStmt) String() string {
 	}
 	return builder.String()
 }
-func (s *GenericUniStmt) String() string { panic("") }
+func (s *GenUniStmt) String() string { panic("") }
 
-func (l *UniFactStmt) String() string {
+func (l *ConUniFactStmt) String() string {
 	var builder strings.Builder
 
 	builder.WriteString("forall ")

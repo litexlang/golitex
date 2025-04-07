@@ -42,14 +42,14 @@ type DefConFnStmt struct {
 	ThenFacts []*SpecFactStmt
 }
 
-type UniFactStmt struct {
+type ConUniFactStmt struct {
 	Params     []string // 它可能也是来自另外一个被share的地方。比如defConFn里面的Params，在被存成facts的时候，整个struct被复制到了这里，但本质上它们共享了一片内存
 	ParamTypes []Fc
 	DomFacts   []FactStmt
 	ThenFacts  []*SpecFactStmt
 }
 
-type GenericUniStmt struct {
+type GenUniStmt struct {
 	TypeParams     []string
 	TypeInterfaces []*FcAtom
 	Params         []string

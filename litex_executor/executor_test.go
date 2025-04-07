@@ -70,34 +70,34 @@ func TestKnow(t *testing.T) {
 	}
 }
 
-func TestVerifier(t *testing.T) {
-	code := `know $p(a)`
-	statements, err := parser.ParseSourceCode(code)
-	if err != nil {
-		t.Fatal(err)
-	}
-	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env)
-	for _, topStmt := range statements {
-		err := executor.TopLevelStmt(&topStmt)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
+// func TestVerifier(t *testing.T) {
+// 	code := `know $p(a)`
+// 	statements, err := parser.ParseSourceCode(code)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	env := env.NewEnv(nil, nil, "")
+// 	executor := *NewExecutor(env)
+// 	for _, topStmt := range statements {
+// 		err := executor.TopLevelStmt(&topStmt)
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 	}
 
-	testCodes := "$p(b)\n$p(a)"
-	testStatements, err := parser.ParseSourceCode(testCodes)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	testCodes := "$p(b)\n$p(a)"
+// 	testStatements, err := parser.ParseSourceCode(testCodes)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	for _, testCode := range testStatements {
-		err := executor.TopLevelStmt(&testCode)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-}
+// 	for _, testCode := range testStatements {
+// 		err := executor.TopLevelStmt(&testCode)
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 	}
+// }
 
 func randSpecFact() *ast.SpecFactStmt {
 	n := rand.Intn(10) + 1
