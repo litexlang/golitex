@@ -338,3 +338,21 @@ prove:
     q(1*4+2*f(a)) = q(4+2*f(a))
     know f(a) = 100
     q(1*4+2*f(a)) = q(4+2*100)
+    
+prove:
+    know:
+        forall x A:
+            $p(x,1)
+    $p(2,3-2)
+
+// ? TODO 不只为何不能理想状态运行
+prove:
+    know forall x A:
+        $p(x *(3-2))
+    $p(x*1) // unknown
+
+    know forall x A:
+        $p(x * 1)
+    
+    $p(x*1)
+

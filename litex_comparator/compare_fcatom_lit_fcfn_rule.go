@@ -12,13 +12,12 @@ func cmpFcAtomLitFcFnRule(left, right ast.Fc) (bool, error) {
 	}
 
 	if fcEnum == FcAtomEnum {
-		cmp, err := cmpFcAtomLiteral(left.(*ast.FcAtom), right.(*ast.FcAtom))
+		cmp, err := cmpFcAtomLit(left.(*ast.FcAtom), right.(*ast.FcAtom))
 		if err != nil {
 			return false, err
 		}
 		return cmp == 0, nil
-	} else if fcEnum == FcFnCallPipeEnum {
-		// cmp, err := cmpFcFnCallPipeLiterally(left.(*ast.FcFnPipe), right.(*ast.FcFnPipe))
+	} else if fcEnum == FcFnEnum {
 		ok, err := cmpFcFnRule(left.(*ast.FcFn), right.(*ast.FcFn))
 		if err != nil {
 			return false, err
@@ -30,7 +29,7 @@ func cmpFcAtomLitFcFnRule(left, right ast.Fc) (bool, error) {
 }
 
 func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
-	if comp, err := cmpFcAtomLiteral(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
+	if comp, err := cmpFcAtomLit(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
 		return comp == 0, err
 	}
 

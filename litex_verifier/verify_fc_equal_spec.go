@@ -54,7 +54,7 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 		return false, nil
 	}
 
-	if fcEnum == cmp.FcFnCallPipeEnum {
+	if fcEnum == cmp.FcFnEnum {
 		return ver.fcFnPipeEqual(left.(*ast.FcFn), right.(*ast.FcFn), SpecMsg)
 	} else if fcEnum == cmp.FcAtomEnum {
 		return false, nil
@@ -65,7 +65,7 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 
 func (ver *Verifier) fcEqualSpecInSpecMem(left, right ast.Fc, state VerState) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		verified, err := ver.FcEqualSpecInSpecMemLiterallyAtEnv(curEnv, left, right, state)
+		verified, err := ver.FcEqualSpecInSpecMemLitAtEnv(curEnv, left, right, state)
 		if err != nil {
 			return false, err
 		}

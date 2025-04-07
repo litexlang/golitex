@@ -58,7 +58,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	leftAsStr, ok, err := evaluateNumLitFc(leftAsNumberFc)
+	leftAsStr, ok, err := evalNumLitFc(leftAsNumberFc)
 	if err != nil {
 		return false, err
 	}
@@ -66,7 +66,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	rightAsStr, ok, err := evaluateNumLitFc(rightAsNumberFc)
+	rightAsStr, ok, err := evalNumLitFc(rightAsNumberFc)
 	if err != nil {
 		return false, err
 	}
