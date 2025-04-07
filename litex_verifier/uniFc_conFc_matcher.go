@@ -3,6 +3,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/litex_ast"
+	cmp "golitex/litex_comparator"
 	mem "golitex/litex_memory"
 )
 
@@ -29,6 +30,18 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 }
 
 func (ver *Verifier) matchUniConFc(uniFuncParam ast.Fc, concreteFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+	// 注意到，如果传入的不是fn，而是atom，那大概率是不能match上的。只有一种例外:
+	// know forall x A: $p(x *(3-2)); $p(1*1) 这时候 3 -2 要能和1对上。而 uniFunc 的对应关系，只是让自由变量去对应，不包括builtinFc的match
+	// 同时，也不能直接去CmpFcRule，因为如果输入的变量的字面量刚好是存着的自由变量的字面量，那恰好相等了，这是不行的。只能是BuiltinFc 之间相等
+	// 为了处理这种情况，引入下面这段代码
+	ok, err := cmp.FcEqualNumLitExpr(uniFuncParam, concreteFuncParam)
+	if err != nil {
+		return nil, false, err
+	}
+	if ok {
+		return make(map[string][]ast.Fc), true, nil
+	}
+
 	// Safe type switching
 	switch param := uniFuncParam.(type) {
 	case *ast.FcAtom:
@@ -61,9 +74,6 @@ func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam a
 
 func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
 	retMap := map[string][]ast.Fc{}
-
-	// 注意到，如果传入的不是fn，而是atom，那大概率是不能match上的。只有一种例外:
-	// know forall x A: $p(x *(3-2)); $p(1*1) 这时候 3 -2 要能和1对上。为了处理这种极端情况，引入下面这段代码
 
 	conParamAsFcFn, ok := conFuncParam.(*ast.FcFn)
 	if !ok {

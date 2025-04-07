@@ -1,4 +1,4 @@
-package litex_comparator
+package litex_ast
 
 import (
 	"fmt"
@@ -19,19 +19,19 @@ func TestFcEval(t *testing.T) {
 	for _, tc := range testCases {
 		result, _, _ := addBigFloat(tc.a, tc.b)
 		fmt.Printf("%s + %s = %s (期望: %s) ", tc.a, tc.b, result, tc.expected)
-		if cmpBigFloat(result, tc.expected) == 0 {
+		if CmpBigFloat(result, tc.expected) == 0 {
 			fmt.Println("✓")
 		} else {
 			fmt.Println("✗")
 		}
 	}
 
-	fmt.Println(cmpBigFloat("1.23", "1.23000"))    // 0
-	fmt.Println(cmpBigFloat("1.23", "1.24"))       // -1
-	fmt.Println(cmpBigFloat("123.456", "123.456")) // 0
-	fmt.Println(cmpBigFloat("123.456", "123.455")) // 1
-	fmt.Println(cmpBigFloat("00001.000", "1"))     // 0
-	fmt.Println(cmpBigFloat("10.00001", "10"))     // 1
-	fmt.Println(cmpBigFloat("9.9999", "10"))       // -1
+	fmt.Println(CmpBigFloat("1.23", "1.23000"))    // 0
+	fmt.Println(CmpBigFloat("1.23", "1.24"))       // -1
+	fmt.Println(CmpBigFloat("123.456", "123.456")) // 0
+	fmt.Println(CmpBigFloat("123.456", "123.455")) // 1
+	fmt.Println(CmpBigFloat("00001.000", "1"))     // 0
+	fmt.Println(CmpBigFloat("10.00001", "10"))     // 1
+	fmt.Println(CmpBigFloat("9.9999", "10"))       // -1
 
 }
