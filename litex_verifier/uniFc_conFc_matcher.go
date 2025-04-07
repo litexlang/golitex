@@ -34,7 +34,7 @@ func (ver *Verifier) matchUniConFc(uniFuncParam ast.Fc, concreteFuncParam ast.Fc
 	// know forall x A: $p(x *(3-2)); $p(1*1) 这时候 3 -2 要能和1对上。而 uniFunc 的对应关系，只是让自由变量去对应，不包括builtinFc的match
 	// 同时，也不能直接去CmpFcRule，因为如果输入的变量的字面量刚好是存着的自由变量的字面量，那恰好相等了，这是不行的。只能是BuiltinFc 之间相等
 	// 为了处理这种情况，引入下面这段代码
-	ok, err := cmp.FcEqualNumLitExpr(uniFuncParam, concreteFuncParam)
+	ok, err := cmp.BuiltinFcEqualRule(uniFuncParam, concreteFuncParam)
 	if err != nil {
 		return nil, false, err
 	}
