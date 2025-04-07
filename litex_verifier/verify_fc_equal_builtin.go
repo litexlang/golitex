@@ -5,7 +5,8 @@ import (
 	cmp "golitex/litex_comparator"
 )
 
-func (ver *Verifier) fcEqualBuiltin(left, right ast.Fc) (bool, error) {
+// func (ver *Verifier) fcEqualBuiltin(left, right ast.Fc) (bool, error) {
+func fcEqualBuiltin(left, right ast.Fc) (bool, error) {
 	// Case1: 二者都是 Number 上进行+-*/^
 	ok, err := cmpTwoBuiltinNumberExpressions(left, right)
 	if err != nil {
