@@ -97,7 +97,7 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (*Stored
 	}
 }
 
-func (factMem *UniFactMemDict) Insert(fact *ast.UniFactStmt) error {
+func (factMem *UniFactMemDict) Insert(fact *ast.ConUniFactStmt) error {
 	for _, stmt := range fact.ThenFacts {
 		err := factMem.insertSpecFact(fact, stmt)
 		if err != nil {
@@ -107,7 +107,7 @@ func (factMem *UniFactMemDict) Insert(fact *ast.UniFactStmt) error {
 	return nil
 }
 
-func (factMem *UniFactMemDict) insertSpecFact(uniStmt *ast.UniFactStmt, stmt *ast.SpecFactStmt) error {
+func (factMem *UniFactMemDict) insertSpecFact(uniStmt *ast.ConUniFactStmt, stmt *ast.SpecFactStmt) error {
 	// 检查 pkgName 是否存在，不存在则初始化
 	pkgName := stmt.PropName.PkgName
 	optName := stmt.PropName.Value

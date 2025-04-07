@@ -12,7 +12,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 		return env.NewSpecFact(f)
 	case *ast.CondFactStmt:
 		return env.NewCondFact(f)
-	case *ast.UniFactStmt:
+	case *ast.ConUniFactStmt:
 		return env.NewUniFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
@@ -86,7 +86,7 @@ func (env *Env) NewCondFact(fact *ast.CondFactStmt) error {
 	return nil
 }
 
-func (env *Env) NewUniFact(fact *ast.UniFactStmt) error {
+func (env *Env) NewUniFact(fact *ast.ConUniFactStmt) error {
 	// return nil
 	err := env.UniFactMem.Insert(fact)
 	if err != nil {
