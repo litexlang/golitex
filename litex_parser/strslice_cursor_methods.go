@@ -11,7 +11,7 @@ func (parser *StrSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	parser.skip(glob.KeySymbolLeftParen)
 
 	for !parser.is(glob.KeySymbolRightParen) {
-		fc, err := parser.Fc()
+		fc, err := parser.rawFc()
 
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -46,7 +46,7 @@ func (parser *StrSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]
 			return nil, nil, &parserErr{err, parser}
 		}
 
-		tp, err := parser.Fc()
+		tp, err := parser.rawFc()
 		if err != nil {
 			return nil, nil, &parserErr{err, parser}
 		}
