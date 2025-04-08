@@ -77,7 +77,7 @@ prove:
                 $p(1)
     $p(1)
                 
- prove:
+prove:
     know:
         when:
             forall x A:
@@ -86,7 +86,9 @@ prove:
                 $p(1)
     $p(1)
 
+
 prove:
+// 怪异的bug：为什么这里会说我 duplicate decl???
     know:
         forall :
             forall x A:
@@ -98,3 +100,4 @@ prove:
             $p(x)    
         
     $ForallXInAPX()
+

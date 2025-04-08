@@ -587,7 +587,7 @@ func TestAllFactCode(t *testing.T) {
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()
-	code := readFile("../litex_code_examples/litex_uniFact.lix")
+	code := readFile("../litex_code_examples/litex_uniFact2.lix")
 	readFileTime := time.Since(start)
 	start = time.Now()
 	topStmtSlice := parseStmtTest(code, t)

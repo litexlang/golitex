@@ -162,7 +162,9 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 		reverseStmt = &ast.SpecFactStmt{IsTrue: stmt.IsTrue, PropName: stmt.PropName, Params: []ast.Fc{stmt.Params[1], stmt.Params[0]}}
 	}
 
-	nextState := state.spec()
+	// nextState := state.spec()
+	// TODO 这里应该取.spec() 吗?
+	nextState := state
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, nextState)
 		if err != nil {
@@ -262,7 +264,9 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 	}
 
 	for _, condFact := range knownStmt.Fact.DomFacts {
-		nextState := state.spec().noMsg()
+		// nextState := state.spec().noMsg()
+		// TODO 这里应该取 spec 吗????
+		nextState := state
 		ok, err := ver.FactStmt(condFact, nextState) // TODO: 这里最好要标注一下是specFact
 		if err != nil {
 			return false, err
