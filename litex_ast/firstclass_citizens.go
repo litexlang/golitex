@@ -93,36 +93,44 @@ func IsEqualOpt(f Fc) bool {
 
 func IsNumLitFcAtom(f Fc) (string, bool) {
 	ptr, ok := f.(*FcAtom)
-	if !ok {
+	if !ok || ptr.Value == "" {
 		return "", false
 	}
 
-	s := ptr.Value
+	if isNumLitStr(ptr.Value) {
+		return ptr.Value, true
+	}
+	return "", false
+}
+
+func isNumLitStr(s string) bool {
 	if s == "" {
-		return "", false
+		return false
 	}
 
-	i := 0
 	hasDigit := false
 	hasDot := false
 
-	for ; i < len(s); i++ {
-		c := s[i]
+	for _, c := range s {
 		if c >= '0' && c <= '9' {
 			hasDigit = true
 		} else if c == '.' {
 			if hasDot { // 不能有多个小数点
-				return "", false
+				return false
 			}
 			hasDot = true
 		} else {
-			return "", false // 非法字符
+			return false // 非法字符
 		}
 	}
 
-	if !hasDigit { // 至少要有一个数字
-		return "", false
+	return hasDigit
+}
+
+func IsBuiltinStr(s string) bool {
+	if isNumLitStr(s) {
+		return true
 	}
 
-	return s, true
+	return false
 }

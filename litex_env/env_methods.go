@@ -3,6 +3,7 @@ package litex_memory
 import (
 	"fmt"
 	ast "golitex/litex_ast"
+	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
 )
 
@@ -95,8 +96,28 @@ func (env *Env) NewUniFact(fact *ast.ConUniFactStmt) error {
 	return nil
 }
 
-func (env *Env) IsDeclared(name string) bool {
-	// TODO: 不允许变量，函数，prop，type，或者任何名冲突
+func (env *Env) IsDeclaredInMainPkgOrBuiltinOrInvalid(name string) bool {
+	if !glob.IsValidName(name) {
+		return true
+	}
+
+	if ast.IsBuiltinStr(name) {
+		return true
+	}
+
+	_, ok := env.ObjMem.Dict[""][name]
+	if ok {
+		return true
+	}
+	_, ok = env.FnMem.Dict[""][name]
+	if ok {
+		return true
+	}
+	_, ok = env.PropMem.Dict[""][name]
+	if ok {
+		return true
+	}
+
 	return false
 }
 
@@ -123,7 +144,7 @@ func (env *Env) isPropCommutative(opt ast.Fc) bool {
 }
 
 func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt, pkgName string) error {
-	isDeclared := env.IsDeclared(stmt.DefHeader.Name)
+	isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(stmt.DefHeader.Name)
 	if isDeclared {
 		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)
 	}
@@ -133,7 +154,7 @@ func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt, pkgName string) error {
 
 func (env *Env) NewDefObj(stmt *ast.DefObjStmt, pkgName string) error {
 	for _, objName := range stmt.Objs {
-		isDeclared := env.IsDeclared(objName)
+		isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(objName)
 		if isDeclared {
 			return fmt.Errorf("%s is already declared", objName)
 		}
@@ -143,7 +164,7 @@ func (env *Env) NewDefObj(stmt *ast.DefObjStmt, pkgName string) error {
 }
 
 func (env *Env) NewDefFn(stmt *ast.DefConFnStmt, pkgName string) error {
-	isDeclared := env.IsDeclared(stmt.DefHeader.Name)
+	isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(stmt.DefHeader.Name)
 	if isDeclared {
 		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)
 	}

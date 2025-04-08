@@ -8,7 +8,8 @@ import (
 func (stmt *KnowStmt) String() string {
 	var builder strings.Builder
 
-	builder.WriteString("know:\n")
+	builder.WriteString(glob.KeywordKnow)
+	builder.WriteByte('\n')
 	if len(stmt.Facts) > 0 {
 		for i := 0; i < len(stmt.Facts)-1; i++ {
 			builder.WriteString(glob.LineHead4Indents(stmt.Facts[i].String(), 1))
@@ -23,7 +24,8 @@ func (stmt *SpecFactStmt) String() string {
 	var builder strings.Builder
 
 	if !stmt.IsTrue {
-		builder.WriteString("not ")
+		builder.WriteString(glob.KeywordNat)
+		builder.WriteByte(' ')
 	}
 
 	if stmt.PropName.PkgName == "" && glob.IsBuiltinSymbol(stmt.PropName.Value) {
