@@ -62,7 +62,7 @@ func AddUniPrefixToFc(fc Fc, uniParams map[string]struct{}) (Fc, error) {
 	fcAsAtom, ok := fc.(*FcAtom)
 	if ok {
 		if fcAsAtom.PkgName == "" {
-			if _, exists := uniParams[fcAsAtom.Value]; exists {
+			if _, exists := uniParams[glob.UniFactParamPrefix+fcAsAtom.Value]; exists {
 				return NewFcAtom("", glob.UniFactParamPrefix+fcAsAtom.Value), nil
 			}
 		}
@@ -76,7 +76,7 @@ func AddUniPrefixToFc(fc Fc, uniParams map[string]struct{}) (Fc, error) {
 
 	newFcFn := FcFn{FcAtom{}, []*FcFnSeg{}}
 	if fcAsFcFn.FnHead.PkgName == "" {
-		if _, exists := uniParams[fcAsFcFn.FnHead.Value]; exists {
+		if _, exists := uniParams[glob.UniFactParamPrefix+fcAsFcFn.FnHead.Value]; exists {
 			return NewFcAtom("", glob.UniFactParamPrefix+fcAsFcFn.FnHead.Value), nil
 		}
 	} else {

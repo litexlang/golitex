@@ -148,6 +148,10 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
+	// 原地把param前面加上prefix
+	for i, param := range params {
+		params[i] = fmt.Sprintf("%s%s", glob.UniFactParamPrefix, param)
+	}
 
 	for _, param := range params {
 		if _, ok := uniParams[param]; ok {

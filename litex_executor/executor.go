@@ -8,11 +8,6 @@ import (
 	"strings"
 )
 
-func (exec *Executor) TopLevelStmt(stmt *ast.TopStmt) error {
-	exec.clearMsgAndOutput()
-	return exec.stmt(stmt.Stmt)
-}
-
 // 在子函数里管理msg，即比如现在是TypeStmt，那在处理TypeStmt的地方处理它的string，二不是在这里
 func (exec *Executor) stmt(stmt ast.Stmt) error {
 	var err error = nil
@@ -40,6 +35,11 @@ func (exec *Executor) stmt(stmt ast.Stmt) error {
 	} else {
 		return nil
 	}
+}
+
+func (exec *Executor) TopLevelStmt(stmt *ast.TopStmt) error {
+	exec.clearMsgAndOutput()
+	return exec.stmt(stmt.Stmt)
 }
 
 func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
