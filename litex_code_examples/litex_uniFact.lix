@@ -77,4 +77,24 @@ prove:
                 $p(1)
     $p(1)
                 
- 
+ prove:
+    know:
+        when:
+            forall x A:
+                $p(x)
+            then:
+                $p(1)
+    $p(1)
+
+prove:
+    know:
+        forall :
+            forall x A:
+                $p(x)
+            then:
+                $ForallXInAPX()
+
+        forall x A:
+            $p(x)    
+        
+    $ForallXInAPX()
