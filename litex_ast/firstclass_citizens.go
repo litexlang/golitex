@@ -62,7 +62,7 @@ func (f *FcAtom) String() string {
 func (f *FcFn) String() string {
 	outPut := string(f.FnHead.Value)
 
-	if glob.IsBuiltinRelaFn(outPut) {
+	if glob.IsKeySymbolRelaFn(outPut) {
 		return fmt.Sprintf("%s %s %s", f.CallPipe[0].Params[0], outPut, f.CallPipe[0].Params[1])
 	}
 
@@ -88,7 +88,7 @@ func IsEqualOpt(f Fc) bool {
 	if !ok {
 		return false
 	}
-	return ptr.Value == glob.KeywordEqual && ptr.PkgName == ""
+	return ptr.Value == glob.KeySymbolEqual && ptr.PkgName == ""
 }
 
 func IsNumLitFcAtom(f Fc) (string, bool) {
@@ -127,10 +127,14 @@ func isNumLitStr(s string) bool {
 	return hasDigit
 }
 
-func IsBuiltinStr(s string) bool {
-	if isNumLitStr(s) {
-		return true
-	}
+// func IsBuiltinStr(s string) bool {
+// 	if glob.IsKeyword(s) {
+// 		return true
+// 	}
 
-	return false
-}
+// 	if isNumLitStr(s) {
+// 		return true
+// 	}
+
+// 	return false
+// }

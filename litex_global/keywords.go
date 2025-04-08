@@ -4,6 +4,7 @@ import "sort"
 
 const ScopeIndent = "    "
 
+// 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
 	KeywordInterface            = "interface"
 	KeywordType                 = "type"
@@ -45,108 +46,9 @@ const (
 	// Builtin Functions
 	KeywordIs = "is"
 	KeywordIn = "in"
-)
 
-const (
-	// Builtin Symbols
-	KeywordColon                  = ":"
-	KeywordLeftBracket            = "["
-	KeywordRightBracket           = "]"
-	KeywordLeftParen              = "("
-	KeywordRightParen             = ")"
-	KeywordComma                  = ","
-	KeywordDollar                 = "$"
-	KeywordEqual                  = "="
-	KeywordSlash                  = "/"
-	KeywordPlus                   = "+"
-	KeywordMinus                  = "-"
-	KeywordStar                   = "*"
-	KeywordCaret                  = "^"
-	KeywordLess                   = "<"
-	KeywordGreater                = ">"
-	KeywordExclaim                = "!"
-	KeywordPipe                   = "|"
-	KeywordTilde                  = "~"
-	KeywordAnd                    = "&"
-	KeywordDot                    = "."
-	KeywordColonColon             = "::"
-	KeywordPlusPlus               = "++"
-	KeywordMinusMinus             = "--"
-	KeywordAndAnd                 = "&&"
-	KeywordPipePipe               = "||"
-	KeywordEqualEqual             = "=="
-	KeywordNotEqual               = "!="
-	KeywordBackslash              = "\\"
-	KeywordQuestion               = "?"
-	KeywordStarStar               = "**"
-	KeywordDoubleQuote            = "\""
-	KeywordSingleQuote            = "'"
-	KeywordBacktick               = "`"
-	KeywordEqualGreaterRightArrow = "=>"
-	KeywordMinusGreaterRightArrow = "->"
-	KeywordSemicolon              = ";"
-	KeywordLeftCurly              = "{"
-	KeywordRightCurly             = "}"
-	KeywordHash                   = "#"
-	KeywordAt                     = "@"
-	//! 每次引入新的Symbol，要往getBuiltinSymbol里加东西
-)
+	// 下面是 内置函数名
 
-var BuiltinSymbolArray = []string{
-	KeywordEqualGreaterRightArrow, // "=>"
-	KeywordMinusGreaterRightArrow, // "->"
-	KeywordColonColon,             // "::"
-	KeywordPlusPlus,               // "++"
-	KeywordMinusMinus,             // "--"
-	KeywordAndAnd,                 // "&&"
-	KeywordPipePipe,               // "||"
-	KeywordEqualEqual,             // "=="
-	KeywordNotEqual,               // "!="
-	KeywordStarStar,               // "**"
-	KeywordColon,                  // ":"
-	KeywordLeftBracket,            // "["
-	KeywordRightBracket,           // "]"
-	KeywordLeftParen,              // "("
-	KeywordRightParen,             // ")"
-	KeywordComma,                  // ","
-	KeywordDollar,                 // "$"
-	KeywordEqual,                  // "="
-	KeywordSlash,                  // "/"
-	KeywordPlus,                   // "+"
-	KeywordMinus,                  // "-"
-	KeywordStar,                   // "*"
-	KeywordCaret,                  // "^"
-	KeywordLess,                   // "<"
-	KeywordGreater,                // ">"
-	KeywordExclaim,                // "!"
-	KeywordPipe,                   // "|"
-	KeywordTilde,                  // "~"
-	KeywordAnd,                    // "&"
-	KeywordDot,                    // "."
-	KeywordBackslash,              // "\\"
-	KeywordQuestion,               // "?"
-	KeywordDoubleQuote,            // "\""
-	KeywordSingleQuote,            // "'"
-	KeywordBacktick,               // "`"
-	KeywordSemicolon,              // ";"
-	KeywordLeftCurly,              // "{"
-	KeywordRightCurly,             // "}"
-	KeywordHash,                   // "#"
-	KeywordAt,                     // "@"
-}
-
-func IsBuiltinSymbol(name string) bool {
-	for _, s := range BuiltinSymbolArray {
-		if s == name {
-			return true
-		}
-	}
-	return false
-}
-
-// Customizable Operators
-
-const (
 	Keyword__Div__          = "__div__"
 	Keyword__Add__          = "__add__"
 	Keyword__Sub__          = "__sub__"
@@ -176,21 +78,120 @@ const (
 	Keyword__EqGT__         = "__eq_gt__"
 )
 
+const (
+	// Builtin Symbols
+	KeySymbolColon                  = ":"
+	KeySymbolLeftBracket            = "["
+	KeySymbolRightBracket           = "]"
+	KeySymbolLeftParen              = "("
+	KeySymbolRightParen             = ")"
+	KeySymbolComma                  = ","
+	KeySymbolDollar                 = "$"
+	KeySymbolEqual                  = "="
+	KeySymbolSlash                  = "/"
+	KeySymbolPlus                   = "+"
+	KeySymbolMinus                  = "-"
+	KeySymbolStar                   = "*"
+	KeySymbolCaret                  = "^"
+	KeySymbolLess                   = "<"
+	KeySymbolGreater                = ">"
+	KeySymbolExclaim                = "!"
+	KeySymbolPipe                   = "|"
+	KeySymbolTilde                  = "~"
+	KeySymbolAnd                    = "&"
+	KeySymbolDot                    = "."
+	KeySymbolColonColon             = "::"
+	KeySymbolPlusPlus               = "++"
+	KeySymbolMinusMinus             = "--"
+	KeySymbolAndAnd                 = "&&"
+	KeySymbolPipePipe               = "||"
+	KeySymbolEqualEqual             = "=="
+	KeySymbolNotEqual               = "!="
+	KeySymbolBackslash              = "\\"
+	KeySymbolQuestion               = "?"
+	KeySymbolStarStar               = "**"
+	KeySymbolDoubleQuote            = "\""
+	KeySymbolSingleQuote            = "'"
+	KeySymbolBacktick               = "`"
+	KeySymbolEqualGreaterRightArrow = "=>"
+	KeySymbolMinusGreaterRightArrow = "->"
+	KeySymbolSemicolon              = ";"
+	KeySymbolLeftCurly              = "{"
+	KeySymbolRightCurly             = "}"
+	KeySymbolHash                   = "#"
+	KeySymbolAt                     = "@"
+	//! 每次引入新的Symbol，要往getBuiltinSymbol里加东西
+)
+
+var KeySymbolSlice = []string{
+	KeySymbolEqualGreaterRightArrow, // "=>"
+	KeySymbolMinusGreaterRightArrow, // "->"
+	KeySymbolColonColon,             // "::"
+	KeySymbolPlusPlus,               // "++"
+	KeySymbolMinusMinus,             // "--"
+	KeySymbolAndAnd,                 // "&&"
+	KeySymbolPipePipe,               // "||"
+	KeySymbolEqualEqual,             // "=="
+	KeySymbolNotEqual,               // "!="
+	KeySymbolStarStar,               // "**"
+	KeySymbolColon,                  // ":"
+	KeySymbolLeftBracket,            // "["
+	KeySymbolRightBracket,           // "]"
+	KeySymbolLeftParen,              // "("
+	KeySymbolRightParen,             // ")"
+	KeySymbolComma,                  // ","
+	KeySymbolDollar,                 // "$"
+	KeySymbolEqual,                  // "="
+	KeySymbolSlash,                  // "/"
+	KeySymbolPlus,                   // "+"
+	KeySymbolMinus,                  // "-"
+	KeySymbolStar,                   // "*"
+	KeySymbolCaret,                  // "^"
+	KeySymbolLess,                   // "<"
+	KeySymbolGreater,                // ">"
+	KeySymbolExclaim,                // "!"
+	KeySymbolPipe,                   // "|"
+	KeySymbolTilde,                  // "~"
+	KeySymbolAnd,                    // "&"
+	KeySymbolDot,                    // "."
+	KeySymbolBackslash,              // "\\"
+	KeySymbolQuestion,               // "?"
+	KeySymbolDoubleQuote,            // "\""
+	KeySymbolSingleQuote,            // "'"
+	KeySymbolBacktick,               // "`"
+	KeySymbolSemicolon,              // ";"
+	KeySymbolLeftCurly,              // "{"
+	KeySymbolRightCurly,             // "}"
+	KeySymbolHash,                   // "#"
+	KeySymbolAt,                     // "@"
+}
+
+func IsKeySymbol(name string) bool {
+	for _, s := range KeySymbolSlice {
+		if s == name {
+			return true
+		}
+	}
+	return false
+}
+
+// Customizable Operators
+
 func GetBuiltinSymbol(inputString string, start int) string {
 	if start < 0 || start >= len(inputString) {
 		return ""
 	}
 
 	// 自定义排序规则，确保较长的符号排在前面
-	sort.Slice(BuiltinSymbolArray, func(i, j int) bool {
-		if len(BuiltinSymbolArray[i]) != len(BuiltinSymbolArray[j]) {
-			return len(BuiltinSymbolArray[i]) > len(BuiltinSymbolArray[j])
+	sort.Slice(KeySymbolSlice, func(i, j int) bool {
+		if len(KeySymbolSlice[i]) != len(KeySymbolSlice[j]) {
+			return len(KeySymbolSlice[i]) > len(KeySymbolSlice[j])
 		}
-		return BuiltinSymbolArray[i] < BuiltinSymbolArray[j]
+		return KeySymbolSlice[i] < KeySymbolSlice[j]
 	})
 
 	// Iterate through keywords and try to match the longest possible
-	for _, keyword := range BuiltinSymbolArray {
+	for _, keyword := range KeySymbolSlice {
 		end := start + len(keyword)
 		if end <= len(inputString) && inputString[start:end] == keyword {
 			return keyword
@@ -201,13 +202,13 @@ func GetBuiltinSymbol(inputString string, start int) string {
 	return ""
 }
 
-func IsBuiltinRelaProp(op string) bool {
+func IsKeySymbolRelaProp(op string) bool {
 	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!=" || op == "in"
 }
 
-func IsBuiltinRelaFn(op string) bool {
+func IsKeySymbolRelaFn(op string) bool {
 	// return op == "+" || op == "-" || op == "*" || op == "/" || op == "^"
-	for key := range PrecedenceMap {
+	for key := range BuiltinOptPrecedenceMap {
 		if op == key {
 			return true
 		}
@@ -215,11 +216,11 @@ func IsBuiltinRelaFn(op string) bool {
 	return false
 }
 
-type FcInfixOptPrecedence int
+type BuiltinOptPrecedence int
 
 // TODO: implement other operators. How logical operators work is also not implemented
 const (
-	PrecLowest         FcInfixOptPrecedence = iota
+	PrecLowest         BuiltinOptPrecedence = iota
 	PrecAssignment                          // =
 	PrecOr                                  // or
 	PrecAnd                                 // and
@@ -231,15 +232,97 @@ const (
 	PrecExponentiation                      // ^
 )
 
-var PrecedenceMap = map[string]FcInfixOptPrecedence{
-	KeywordPlus:  PrecAddition,
-	KeywordMinus: PrecAddition,
-	KeywordStar:  PrecMultiplication,
-	KeywordSlash: PrecMultiplication,
-	KeywordCaret: PrecExponentiation,
+var BuiltinOptPrecedenceMap = map[string]BuiltinOptPrecedence{
+	KeySymbolPlus:  PrecAddition,
+	KeySymbolMinus: PrecAddition,
+	KeySymbolStar:  PrecMultiplication,
+	KeySymbolSlash: PrecMultiplication,
+	KeySymbolCaret: PrecExponentiation,
 }
 
 // All Unary operators have higher Precedence than infix operators
-var UnaryPrecedence = map[string]FcInfixOptPrecedence{
-	KeywordMinus: PrecUnary,
+var UnaryPrecedence = map[string]BuiltinOptPrecedence{
+	KeySymbolMinus: PrecUnary,
+}
+
+var Keywords = []string{
+	// 常规关键字
+	KeywordInterface,
+	KeywordType,
+	KeywordSet,
+	KeywordForall,
+	KeywordWhen,
+	KeywordDom,
+	KeywordThen,
+	KeywordObj,
+	KeywordFn,
+	KeywordProp,
+	KeywordKnow,
+	KeywordExistProp,
+	KeywordHave,
+	KeywordClaim,
+	KeywordProve,
+	KeywordPub,
+	KeywordImport,
+	KeywordPackage,
+	KeywordNot,
+	KeywordImpl,
+	KeywordAs,
+	KeywordAxiom,
+	KeywordProveByContradiction,
+	KeywordThm,
+	KeywordSelf,
+	KeywordIff,
+
+	// 语法糖
+	KeywordCommutative,
+	KeywordAssociative,
+
+	// 内置类型
+	KeywordNat,
+	KeywordInt,
+	KeywordRational,
+	KeywordReal,
+
+	// 内置函数
+	KeywordIs,
+	KeywordIn,
+
+	// 运算符函数
+	Keyword__Div__,
+	Keyword__Add__,
+	Keyword__Sub__,
+	Keyword__Mul__,
+	Keyword__Xor__,
+	Keyword__LT__,
+	Keyword__GT__,
+	Keyword__Exclamation__,
+	Keyword__Or__,
+	Keyword__And__,
+	Keyword__AddAdd__,
+	Keyword__SubSub__,
+	Keyword__AndAnd__,
+	Keyword__PipePipe__,
+	Keyword__EqEq__,
+	Keyword__NE__,
+	Keyword__Pow__,
+	Keyword__LT_EQ__,
+	Keyword__GT_EQ__,
+	Keyword__Union__,
+	Keyword__Intersection__,
+	Keyword__SubsetEq__,
+	Keyword__SupsetEq__,
+	Keyword__Subset__,
+	Keyword__Supset__,
+	Keyword__SubGT__,
+	Keyword__EqGT__,
+}
+
+func IsKeyword(s string) bool {
+	for _, kw := range Keywords {
+		if s == kw {
+			return true
+		}
+	}
+	return false
 }

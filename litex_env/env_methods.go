@@ -96,29 +96,22 @@ func (env *Env) NewUniFact(fact *ast.ConUniFactStmt) error {
 	return nil
 }
 
-func (env *Env) IsDeclaredInMainPkgOrBuiltinOrInvalid(name string) bool {
+func (env *Env) IsDeclaredInMainPkgOrBuiltinOrInvalid(pkgName string, name string) bool {
 	if !glob.IsValidName(name) {
 		return true
 	}
 
-	if ast.IsBuiltinStr(name) {
+	_, ok := env.ObjMem.Dict[pkgName][name]
+	if ok {
 		return true
 	}
+	_, ok = env.FnMem.Dict[pkgName][name]
+	if ok {
+		return true
+	}
+	_, ok = env.PropMem.Dict[pkgName][name]
 
-	_, ok := env.ObjMem.Dict[""][name]
-	if ok {
-		return true
-	}
-	_, ok = env.FnMem.Dict[""][name]
-	if ok {
-		return true
-	}
-	_, ok = env.PropMem.Dict[""][name]
-	if ok {
-		return true
-	}
-
-	return false
+	return ok
 }
 
 func (env *Env) Declare(stmt ast.Stmt, name string) error {
@@ -144,7 +137,7 @@ func (env *Env) isPropCommutative(opt ast.Fc) bool {
 }
 
 func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt, pkgName string) error {
-	isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(stmt.DefHeader.Name)
+	isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(pkgName, stmt.DefHeader.Name)
 	if isDeclared {
 		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)
 	}
@@ -154,7 +147,7 @@ func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt, pkgName string) error {
 
 func (env *Env) NewDefObj(stmt *ast.DefObjStmt, pkgName string) error {
 	for _, objName := range stmt.Objs {
-		isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(objName)
+		isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(pkgName, objName)
 		if isDeclared {
 			return fmt.Errorf("%s is already declared", objName)
 		}
@@ -164,7 +157,7 @@ func (env *Env) NewDefObj(stmt *ast.DefObjStmt, pkgName string) error {
 }
 
 func (env *Env) NewDefFn(stmt *ast.DefConFnStmt, pkgName string) error {
-	isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(stmt.DefHeader.Name)
+	isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(pkgName, stmt.DefHeader.Name)
 	if isDeclared {
 		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)
 	}

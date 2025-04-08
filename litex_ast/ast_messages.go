@@ -28,7 +28,7 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteByte(' ')
 	}
 
-	if stmt.PropName.PkgName == "" && glob.IsBuiltinSymbol(stmt.PropName.Value) {
+	if stmt.PropName.PkgName == "" && glob.IsKeySymbol(stmt.PropName.Value) {
 		builder.WriteString(stmt.Params[0].String())
 		builder.WriteByte(' ')
 		builder.WriteString(stmt.PropName.String())
