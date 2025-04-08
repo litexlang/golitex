@@ -381,5 +381,8 @@ prove:
         then:
             $q(x)
     know $p(x)
+
     $q(1) // true, 因为 $p(x) 被match 了
 
+prove:
+    $q(1)

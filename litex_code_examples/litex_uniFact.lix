@@ -1,0 +1,9 @@
+prove:
+    know forall x A:
+        $p(x)
+        then:
+            $q(x)
+    know $p(x)
+    $q(1)
+    know $p(1)
+    $q(1)
