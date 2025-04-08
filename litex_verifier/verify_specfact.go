@@ -34,7 +34,9 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 	}
 
 	// 必须要spec一下，否则iff的时候，会永远循环下去。同时不能省略state，因为msg信息在里面
-	ok, err = ver.SpecFactCond(stmt, nextState)
+	// TODO 这里应该是 state 还是 uni 呢？？？
+	//  ok, err = ver.SpecFactCond(stmt, nextState)
+	ok, err = ver.SpecFactCond(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -42,7 +44,9 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		return true, nil
 	}
 
-	ok, err = ver.SpecFactUni(stmt, nextState)
+	// TODO 这里应该是 state 还是 uni 呢？？？
+	// ok, err = ver.SpecFactUni(stmt, nextState)
+	ok, err = ver.SpecFactUni(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -120,7 +124,9 @@ func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, 
 LoopOverFacts:
 	for _, knownFact := range searched.Facts {
 		for _, f := range knownFact.Fact.CondFacts {
-			ok, err := ver.FactStmt(f, state.spec())
+			// TODO 应该是 .spec() 吗？
+			// ok, err := ver.FactStmt(f, state.spec())
+			ok, err := ver.FactStmt(f, state)
 			if err != nil {
 				return false, err
 			}
