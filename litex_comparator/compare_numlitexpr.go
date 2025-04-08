@@ -27,7 +27,7 @@ func getNumLitExpr(fc ast.Fc) (*numLitExpr, bool, error) {
 	}
 
 	opt := asFcFn.FnHead.Value
-	if !glob.IsBuiltinRelaFn(opt) {
+	if !glob.IsKeySymbolRelaFn(opt) {
 		return nil, false, nil
 	}
 

@@ -8,7 +8,7 @@ import (
 )
 
 func (parser *StrSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
-	if parser.is(glob.KeywordLeftParen) {
+	if parser.is(glob.KeySymbolLeftParen) {
 		return parser.bracedFcExpr()
 	}
 
@@ -23,7 +23,7 @@ func (parser *StrSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 
 	strAtSecondPosition := parser.strAtCurIndexPlus(0)
 
-	if strAtSecondPosition != glob.KeywordLeftParen {
+	if strAtSecondPosition != glob.KeySymbolLeftParen {
 		return &fcStr, nil
 	} else {
 		return parser.fcFnRetVal(fcStr)
@@ -31,12 +31,12 @@ func (parser *StrSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 }
 
 func (parser *StrSliceCursor) bracedFcExpr() (ast.Fc, error) {
-	parser.skip(glob.KeywordLeftParen)
+	parser.skip(glob.KeySymbolLeftParen)
 	fc, err := parser.Fc()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
-	parser.skip(glob.KeywordRightParen)
+	parser.skip(glob.KeySymbolRightParen)
 	return fc, nil
 }
 
@@ -54,7 +54,7 @@ func (parser *StrSliceCursor) fcFnRetVal(optName ast.FcAtom) (*ast.FcFn, error) 
 func (parser *StrSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
 	pairs := []*ast.FcFnSeg{}
 
-	for !parser.ExceedEnd() && (parser.is(glob.KeywordLeftParen)) {
+	for !parser.ExceedEnd() && (parser.is(glob.KeySymbolLeftParen)) {
 		objParamsPtr, err := parser.bracedFcSlice()
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -75,9 +75,9 @@ func (parser *StrSliceCursor) fcAtom() (ast.FcAtom, error) {
 	}
 
 	fromPkg := ""
-	if parser.is(glob.KeywordColonColon) {
+	if parser.is(glob.KeySymbolColonColon) {
 		fromPkg = value
-		err := parser.skip(glob.KeywordColonColon)
+		err := parser.skip(glob.KeySymbolColonColon)
 		if err != nil {
 			return ast.FcAtom{Value: ""}, err
 		}
@@ -94,7 +94,7 @@ func (parser *StrSliceCursor) Fc() (ast.Fc, error) {
 	return parser.fcInfixExpr(glob.PrecLowest)
 }
 
-func (parser *StrSliceCursor) fcInfixExpr(currentPrec glob.FcInfixOptPrecedence) (ast.Fc, error) {
+func (parser *StrSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
 	left, err := parser.fcUnaryExpr()
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -106,11 +106,11 @@ func (parser *StrSliceCursor) fcInfixExpr(currentPrec glob.FcInfixOptPrecedence)
 			return nil, err // 捕获错误并退出
 		}
 
-		if !glob.IsBuiltinRelaFn(curToken) {
+		if !glob.IsKeySymbolRelaFn(curToken) {
 			break // 不是内置运算符，跳出循环
 		}
 
-		curPrec, isBinary := glob.PrecedenceMap[curToken]
+		curPrec, isBinary := glob.BuiltinOptPrecedenceMap[curToken]
 		if !isBinary || curPrec <= currentPrec {
 			break
 		}
@@ -172,7 +172,7 @@ func (parser *StrSliceCursor) numberStr() (*ast.FcAtom, error) {
 		return &ast.FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
 	}
 
-	if parser.is(glob.KeywordDot) {
+	if parser.is(glob.KeySymbolDot) {
 		// The member after . might be a member or a number
 		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
 		if err != nil {

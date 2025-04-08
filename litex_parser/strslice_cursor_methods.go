@@ -8,9 +8,9 @@ import (
 
 func (parser *StrSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	params := []ast.Fc{}
-	parser.skip(glob.KeywordLeftParen)
+	parser.skip(glob.KeySymbolLeftParen)
 
-	for !parser.is(glob.KeywordRightParen) {
+	for !parser.is(glob.KeySymbolRightParen) {
 		fc, err := parser.Fc()
 
 		if err != nil {
@@ -19,8 +19,8 @@ func (parser *StrSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 
 		params = append(params, fc)
 
-		if !parser.is(glob.KeywordComma) {
-			if !parser.is(glob.KeywordRightParen) {
+		if !parser.is(glob.KeySymbolComma) {
+			if !parser.is(glob.KeySymbolRightParen) {
 				return nil, &parserErr{err, parser}
 			} else {
 				break
@@ -31,7 +31,7 @@ func (parser *StrSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 
 	}
 
-	parser.skip(glob.KeywordRightParen)
+	parser.skip(glob.KeySymbolRightParen)
 
 	return params, nil
 }
@@ -58,7 +58,7 @@ func (parser *StrSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]
 			break
 		}
 
-		if err := parser.testAndSkip(glob.KeywordComma); err != nil {
+		if err := parser.testAndSkip(glob.KeySymbolComma); err != nil {
 			return nil, nil, &parserErr{err, parser}
 		}
 	}
@@ -75,7 +75,7 @@ func (parser *StrSliceCursor) stringSliceUntilEnd() ([]string, error) {
 			return nil, &parserErr{err, parser}
 		}
 		members = append(members, member)
-		if !parser.is(glob.KeywordComma) {
+		if !parser.is(glob.KeySymbolComma) {
 			break
 		}
 		parser.skip()
@@ -144,7 +144,7 @@ func (parser *StrSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]strin
 			break
 		}
 
-		if err := parser.testAndSkip(glob.KeywordComma); err != nil {
+		if err := parser.testAndSkip(glob.KeySymbolComma); err != nil {
 			return nil, nil, &parserErr{err, parser}
 		}
 	}

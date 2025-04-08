@@ -1,7 +1,8 @@
-package litex_global
+package litex_global_test
 
 import (
 	"fmt"
+	glob "golitex/litex_global"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ func TestRedBlackTree(t *testing.T) {
 		return 0, nil
 	}
 
-	tree := NewRedBlackTree(compare)
+	tree := glob.NewRedBlackTree(compare)
 
 	// 插入键
 	keys := []int{10, 20, 30, 15, 25}
@@ -35,4 +36,30 @@ func TestRedBlackTree(t *testing.T) {
 		fmt.Println(key)
 		return nil
 	})
+}
+
+func TestIsValidName(t *testing.T) {
+	tests := []struct {
+		name string
+		want bool
+	}{
+		{"变量", true},
+		{"αβγ", true},
+		{"_name", true},
+		{"name123", true},
+		{"🍎", true},         // emoji
+		{"東京", true},        // 日文
+		{"user@name", true}, // 特殊符号（现在允许）
+		{"123name", false},  // 数字开头
+		{"__secret", false}, // 双下划线开头
+		{"", false},         // 空字符串
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := glob.IsValidName(tt.name); got != tt.want {
+				t.Errorf("IsValidName(%q) = %v, want %v", tt.name, got, tt.want)
+			}
+		})
+	}
 }
