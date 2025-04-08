@@ -1082,24 +1082,24 @@ fn f(x A) B:
 
 func TestForall2(t *testing.T) {
 	code := `
-// know forall x A:
-// 	$p(x)
-// 	forall y A:
-// 		$t(y)
-// 	then:
-// 		$q(x)
-// know $p(x)
-// $q(1) // true, 因为 $p(x) 被match 了
-
-// 报错：因为uniParam重复了
 know forall x A:
 	$p(x)
-	forall x A:
+	forall y A:
 		$t(y)
 	then:
 		$q(x)
 know $p(x)
 $q(1) // true, 因为 $p(x) 被match 了
+
+// 报错：因为uniParam重复了
+// know forall x A:
+// 	$p(x)
+// 	forall x A:
+// 		$t(y)
+// 	then:
+// 		$q(x)
+// know $p(x)
+// $q(1) // true, 因为 $p(x) 被match 了
 `
 
 	statements, err := ParserTester(code)
