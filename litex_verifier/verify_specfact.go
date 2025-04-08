@@ -19,9 +19,38 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		return ver.PropPropFact(stmt, state)
 	}
 
+	// TODO 需要改成spec吗?
+	// nextState := state.spec()
 	nextState := state.spec()
 
 	ok, err := ver.SpecFactSpec(stmt, nextState)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	// TODO 需要改成spec吗? 为了让下面这个能运行，我只能让nextState = state
+	// prove:
+	// know:
+	//     when:
+	//         forall x A:
+	//             $p(x)
+	//         then:
+	//             $ForallXInAPX(2)
+	// know:
+	//     forall x A:
+	//         $p(x)
+	// $ForallXInAPX(2)
+
+	// nextState := state.spec()
+	nextState = state
+
+	// 必须要spec一下，否则iff的时候，会永远循环下去。同时不能省略state，因为msg信息在里面
+	// TODO 这里应该是 state 还是 uni 呢？？？
+	ok, err = ver.SpecFactCond(stmt, nextState)
+	// ok, err = ver.SpecFactCond(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -33,20 +62,25 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		return false, nil
 	}
 
-	// 必须要spec一下，否则iff的时候，会永远循环下去。同时不能省略state，因为msg信息在里面
 	// TODO 这里应该是 state 还是 uni 呢？？？
-	//  ok, err = ver.SpecFactCond(stmt, nextState)
-	ok, err = ver.SpecFactCond(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
 
-	// TODO 这里应该是 state 还是 uni 呢？？？
+	// TODO 需要改成spec吗? 为了下面这种情况，我必须让它是 spec()
+	// prove:
+	// know:
+	//     forall x A:
+	//         $p(x)
+	//         then:
+	//             $q(x)
+	//     forall y A:
+	//         $q(y)
+	//         then:
+	//             $p(y)
+	// $q(1)
+	nextState = state.spec()
+	// nextState = state
+
 	// ok, err = ver.SpecFactUni(stmt, nextState)
-	ok, err = ver.SpecFactUni(stmt, state)
+	ok, err = ver.SpecFactUni(stmt, nextState)
 	if err != nil {
 		return false, err
 	}

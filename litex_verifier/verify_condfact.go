@@ -14,7 +14,10 @@ func (ver *Verifier) CondFact(stmt *ast.CondFactStmt, state VerState) (bool, err
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		ok, err := ver.FactStmt(thenFact, state) // 貌似这里不用把state换成spec，比如用户输入condFact，然后下面的事实都正常运行，只不过需要现知道一下condFacts
+		// TODO 这里应该是 state 还是 uni 呢？？？
+		// nextState := state.spec()
+		nextState := state
+		ok, err := ver.FactStmt(thenFact, nextState) // 貌似这里不用把state换成spec，比如用户输入condFact，然后下面的事实都正常运行，只不过需要现知道一下condFacts
 		if err != nil {
 			return false, err
 		}

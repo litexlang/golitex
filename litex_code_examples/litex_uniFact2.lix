@@ -23,3 +23,81 @@ prove:
             $p(y)    
         
     $ForallXInAPX(2)
+
+
+// 死循环
+prove:
+    know:
+        forall x A:
+            $q(x)
+            then:
+                $q(x)
+    $q(1)
+
+prove:
+    know:
+        forall x A:
+            $p(x)
+            then:
+                $q(x)
+        forall y A:
+            $q(y)
+            then:
+                $p(y)
+    $q(1)
+
+prove:
+    know:
+        when:
+            forall x A:
+                $p(x)
+            then:
+                $ForallXInAPX(2)
+    know:
+        forall x A:
+            $p(x)
+    $ForallXInAPX(2)
+
+
+prove:
+    know:
+        when:
+            forall x A:
+                forall y A:
+                    $p(y)
+                then:
+                    $t(x)
+            then:
+                $ForallXInAPX(2)
+    know:
+        forall x A:
+            forall y A:
+                $p(y)
+            then:
+                $t(x)
+    $ForallXInAPX(2) // unknown 因为验证 forall y A: $p(y) 的时候，不能查看 已知的 forall y A: $p(y), 只能用 spec
+
+// 用一个词语来表达 forall x A: cond => then
+prove:
+    know:
+        when:
+            forall x A:
+                $cond(x)
+                then:
+                    $p(x)
+            then:
+                $x_in_A_all_p()
+        
+        forall y A:
+            $x_in_A_all_p()
+            $cond(y)
+            then:
+                $p(y)
+    
+    when:
+        forall x A:
+            $cond(x)
+            then:
+                $p(x)
+        then:
+            $x_in_A_all_p()
