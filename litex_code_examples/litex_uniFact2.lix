@@ -101,3 +101,21 @@ prove:
                 $p(x)
         then:
             $x_in_A_all_p()
+
+    forall y A:
+        $x_in_A_all_p()
+        $cond(y)
+        then:
+            $p(y)
+
+// 我强烈不建议用户在 forall 的 dom 里写 forall 类型的事实，因为这样的forall是不可能被另外一个事实用来做验证的。你应该给这个forall取个名字。（或者，你应该让这个dom里出现的东西，出现在最外层的for里面。）然后写在forall的dom里面。至少当前版本，因为我还不能给“路过”的事实取一个flag（这很难，因为必须是 同一个事实路过同一个已知事实，才能让flag变化。即使是路过同一个已知事实，可能是不同的事实取路过的，那也不行让flag变化。）
+// 这其实还是让litex不用给超过90%的事实取名了：因为单层的forall，用户是不需要取名的。这让三段论这种还是很容易实现
+
+prove:
+    know:
+        $human(Socrates)
+        forall x S:
+            $human(x)
+            then:
+                $conscious(x)
+    $conscious(Socrates)
