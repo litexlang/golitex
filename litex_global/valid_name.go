@@ -13,6 +13,11 @@ func IsValidName(name string) error {
 		return fmt.Errorf("name cannot start with a number (0-9)")
 	}
 
+	// 开头不能以#
+	if len(name) >= 1 && name[0] == '#' {
+		return fmt.Errorf("name cannot start with #")
+	}
+
 	// 检查不能以双下划线开头
 	if len(name) >= 2 && name[0] == '_' && name[1] == '_' {
 		return fmt.Errorf("name cannot start with double underscore __")

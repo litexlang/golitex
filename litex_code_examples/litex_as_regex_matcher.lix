@@ -350,3 +350,15 @@ prove:
     know forall x A:
         $p(x *(3-2))
     $p(x*1) // true
+
+// 检查
+prove:
+    obj x A
+    obj y B
+    obj x A
+
+prove:
+    obj x A
+    know $p(x)
+    forall x A:
+        $p(x)

@@ -44,8 +44,9 @@ const (
 	KeywordReal     = "real"     // e.g. pi
 
 	// Builtin Functions
-	KeywordIs = "is"
-	KeywordIn = "in"
+	KeywordIs   = "is"
+	KeywordIn   = "in"
+	KeyWordFrac = "frac"
 
 	// 下面是 内置函数名
 
