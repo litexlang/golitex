@@ -264,7 +264,7 @@ func (stmt *TokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 
 	// TODO
 	panic("TODO: 要让 prop 也是 uni")
-	domFacts, iffFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordIff, nil) // 这里的nil有严重问题
+	domFacts, iffFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordIff, map[string]struct{}{}) // 这里的nil有严重问题
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}

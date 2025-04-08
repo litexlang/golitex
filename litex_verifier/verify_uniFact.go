@@ -6,13 +6,14 @@ import (
 )
 
 func (ver *Verifier) UniFact(stmt *ast.ConUniFactStmt, state VerState) (bool, error) {
+	// TODO: 需要在这里know一下 涉及到的变量是 in 某个集合的
 	// 默认不允许局部的变量名和外部的变量名冲突了。如果你冲突了，那我报错
-	for _, param := range stmt.Params {
-		err := ver.env.IsInvalidName(ver.env.CurPkg, param)
-		if err != nil {
-			return false, verifyStageStmtErr(err, stmt)
-		}
-	}
+	// for _, param := range stmt.Params {
+	// err := ver.env.IsInvalidName(ver.env.CurPkg, param)
+	// if err != nil {
+	// 	return false, verifyStageStmtErr(err, stmt)
+	// }
+	// }
 
 	// 在局部环境声明新变量
 	ver.newEnv(nil)
