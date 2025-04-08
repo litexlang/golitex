@@ -1,0 +1,25 @@
+prove:
+    know:
+        forall :
+            forall x A:
+                $p(x)
+            then:
+                $ForallXInAPX()
+
+        forall y A:
+            $p(y)    
+        
+    $ForallXInAPX()
+
+prove:
+    know:
+        forall :
+            forall x A:
+                $p(x)
+            then:
+                $ForallXInAPX(2)
+
+        forall y A:
+            $p(y)    
+        
+    $ForallXInAPX(2)
