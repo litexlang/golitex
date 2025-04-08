@@ -65,7 +65,7 @@ func (s *DefConFnStmt) defMember()        {}
 func (s *DefConPropStmt) defMember()      {}
 func (s *DefConExistPropStmt) defMember() {}
 
-type UniStmt interface {
+type UniFactStmt interface {
 	factStmt()
 	stmt()
 	String() string
