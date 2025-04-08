@@ -59,9 +59,9 @@ func (ver *Verifier) deleteEnvAndRetainMsg() error {
 	}
 }
 
-func (ver *Verifier) unknownWithMsg(format string, args ...any) {
-	ver.unknownMsgEnd(format, args...)
-}
+// func (ver *Verifier) unknownWithMsg(format string, args ...any) {
+// 	ver.unknownMsgEnd(format, args...)
+// }
 
 func (ver *Verifier) asConFc(fc ast.Fc) ast.Fc {
 	fcAsAtom, ok := fc.(*ast.FcAtom)
@@ -74,16 +74,6 @@ func (ver *Verifier) asConFc(fc ast.Fc) ast.Fc {
 	}
 
 	return ver.env.UniParamMap[fcAsAtom.Value]
-}
-
-func (ver *Verifier) isDeclared(fc string) (bool, error) {
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		ok := ver.env.IsDeclaredInMainPkgOrBuiltinOrInvalid("", fc)
-		if ok {
-			return ok, nil
-		}
-	}
-	return false, nil
 }
 
 func (ver *Verifier) newMsgAtParent(s string) error {

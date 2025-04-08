@@ -57,7 +57,7 @@ func TestIsValidName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := glob.IsValidName(tt.name); got != tt.want {
+			if got := glob.IsValidName(tt.name); (got == nil) != tt.want {
 				t.Errorf("IsValidName(%q) = %v, want %v", tt.name, got, tt.want)
 			}
 		})

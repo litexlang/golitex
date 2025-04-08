@@ -96,22 +96,28 @@ func (env *Env) NewUniFact(fact *ast.ConUniFactStmt) error {
 	return nil
 }
 
-func (env *Env) IsDeclaredInMainPkgOrBuiltinOrInvalid(pkgName string, name string) bool {
-	if !glob.IsValidName(name) {
-		return true
+func (env *Env) IsInvalidName(pkgName string, name string) error {
+	err := glob.IsValidName(name)
+	if err != nil {
+		return err
 	}
 
-	_, ok := env.ObjMem.Dict[pkgName][name]
-	if ok {
-		return true
+	for curEnv := env; curEnv != nil; curEnv = curEnv.Parent {
+		_, ok := curEnv.ObjMem.Dict[pkgName][name]
+		if ok {
+			return nameDeclaredMsg(pkgName, name, glob.KeywordObj)
+		}
+		_, ok = curEnv.FnMem.Dict[pkgName][name]
+		if ok {
+			return nameDeclaredMsg(pkgName, name, glob.KeywordFn)
+		}
+		_, ok = curEnv.PropMem.Dict[pkgName][name]
+		if ok {
+			return nameDeclaredMsg(pkgName, name, glob.KeywordProp)
+		}
 	}
-	_, ok = env.FnMem.Dict[pkgName][name]
-	if ok {
-		return true
-	}
-	_, ok = env.PropMem.Dict[pkgName][name]
 
-	return ok
+	return nil
 }
 
 func (env *Env) Declare(stmt ast.Stmt, name string) error {
@@ -137,9 +143,9 @@ func (env *Env) isPropCommutative(opt ast.Fc) bool {
 }
 
 func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt, pkgName string) error {
-	isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(pkgName, stmt.DefHeader.Name)
-	if isDeclared {
-		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)
+	err := env.IsInvalidName(pkgName, stmt.DefHeader.Name)
+	if err != nil {
+		return err
 	}
 
 	return env.PropMem.Insert(stmt, pkgName)
@@ -147,9 +153,9 @@ func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt, pkgName string) error {
 
 func (env *Env) NewDefObj(stmt *ast.DefObjStmt, pkgName string) error {
 	for _, objName := range stmt.Objs {
-		isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(pkgName, objName)
-		if isDeclared {
-			return fmt.Errorf("%s is already declared", objName)
+		err := env.IsInvalidName(pkgName, objName)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -157,9 +163,9 @@ func (env *Env) NewDefObj(stmt *ast.DefObjStmt, pkgName string) error {
 }
 
 func (env *Env) NewDefFn(stmt *ast.DefConFnStmt, pkgName string) error {
-	isDeclared := env.IsDeclaredInMainPkgOrBuiltinOrInvalid(pkgName, stmt.DefHeader.Name)
-	if isDeclared {
-		return fmt.Errorf("%s is already declared", stmt.DefHeader.Name)
+	err := env.IsInvalidName(pkgName, stmt.DefHeader.Name)
+	if err != nil {
+		return err
 	}
 
 	return env.FnMem.Insert(stmt, pkgName)
