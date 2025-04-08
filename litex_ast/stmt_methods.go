@@ -58,11 +58,7 @@ import (
 // 	return false
 // }
 
-func (stmt *SpecFactStmt) AddUniPrefix(uniParams map[string]struct{}) (*SpecFactStmt, error) {
-	panic("")
-}
-
-func addUniPrefixToFc(fc Fc, uniParams map[string]struct{}) (Fc, error) {
+func AddUniPrefixToFc(fc Fc, uniParams map[string]struct{}) (Fc, error) {
 	fcAsAtom, ok := fc.(*FcAtom)
 	if ok {
 		if fcAsAtom.PkgName == "" {
@@ -91,7 +87,7 @@ func addUniPrefixToFc(fc Fc, uniParams map[string]struct{}) (Fc, error) {
 		curSeg := &FcFnSeg{[]Fc{}}
 		newFcFn.CallPipe = append(newFcFn.CallPipe, curSeg)
 		for _, param := range seg.Params {
-			newFc, err := addUniPrefixToFc(param, uniParams)
+			newFc, err := AddUniPrefixToFc(param, uniParams)
 			if err != nil {
 				return nil, fmt.Errorf("invalid fc %s", newFc.String())
 			}

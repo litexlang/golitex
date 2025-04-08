@@ -32,7 +32,7 @@ func (parser *StrSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 
 func (parser *StrSliceCursor) bracedFcExpr() (ast.Fc, error) {
 	parser.skip(glob.KeySymbolLeftParen)
-	fc, err := parser.Fc()
+	fc, err := parser.rawFc()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -90,7 +90,8 @@ func (parser *StrSliceCursor) fcAtom() (ast.FcAtom, error) {
 	return ast.FcAtom{PkgName: fromPkg, Value: value}, nil
 }
 
-func (parser *StrSliceCursor) Fc() (ast.Fc, error) {
+// 不考虑 uniParams
+func (parser *StrSliceCursor) rawFc() (ast.Fc, error) {
 	return parser.fcInfixExpr(glob.PrecLowest)
 }
 
