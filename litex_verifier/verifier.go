@@ -78,7 +78,7 @@ func (ver *Verifier) asConFc(fc ast.Fc) ast.Fc {
 
 func (ver *Verifier) isDeclared(fc string) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		ok := ver.env.IsDeclared(fc)
+		ok := ver.env.IsDeclaredInMainPkgOrBuiltinOrInvalid(fc)
 		if ok {
 			return ok, nil
 		}
