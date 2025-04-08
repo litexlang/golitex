@@ -167,7 +167,7 @@ var KeySymbolSlice = []string{
 	KeySymbolAt,                     // "@"
 }
 
-const UniFactParamInnerPrefix = KeySymbolHash
+const UniFactParamPrefix = KeySymbolHash
 
 func IsKeySymbol(name string) bool {
 	for _, s := range KeySymbolSlice {

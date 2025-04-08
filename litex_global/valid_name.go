@@ -14,7 +14,7 @@ func IsValidName(name string) error {
 	}
 
 	// 开头不能以#
-	if len(name) >= 1 && string(name[0]) == UniFactParamInnerPrefix {
+	if len(name) >= 1 && string(name[0]) == UniFactParamPrefix {
 		return fmt.Errorf("name cannot start with #")
 	}
 
