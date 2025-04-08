@@ -363,6 +363,17 @@ prove:
     forall x A:
         $p(x)
 
+prove:
+    know forall x A:
+        $p(x)
+        forall y A:
+            $t(y)
+        then:
+            $q(x)
+    know $p(x)
+    $q(1) // true, 因为 $p(x) 被match 了
+
+
 // 非常严重的bug
 prove:
     know forall x A:
@@ -371,3 +382,4 @@ prove:
             $q(x)
     know $p(x)
     $q(1) // true, 因为 $p(x) 被match 了
+
