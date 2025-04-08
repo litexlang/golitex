@@ -247,7 +247,7 @@ func parseStrBlocks(lines []string, currentIndent int, startIndex int) ([]strBlo
 	return blocks, i, nil
 }
 
-func getUniParamsInUniFactScopeRecursively(facts []ast.FactStmt, uniParamAtCurrentLevel []string) (map[string]struct{}, error) {
+func getUniParamsInUniFactRecursively(facts []ast.FactStmt, uniParamAtCurrentLevel []string) (map[string]struct{}, error) {
 	uniParamsRecur := make(map[string]struct{})
 	for _, domainFact := range facts {
 		factAsConUni, ok := domainFact.(*ast.ConUniFactStmt)
@@ -276,6 +276,10 @@ func getUniParamsInUniFactScopeRecursively(facts []ast.FactStmt, uniParamAtCurre
 			factAsGenUni.UniParamsRecur = nil // 未来不再有用了，因为我只看最上层的
 			continue
 		}
+	}
+
+	for _, paramAtCurLevel := range uniParamAtCurrentLevel {
+		uniParamsRecur[paramAtCurLevel] = struct{}{}
 	}
 
 	return uniParamsRecur, nil

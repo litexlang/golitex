@@ -166,7 +166,7 @@ func (stmt *TokenBlock) uniStmt() (ast.UniFactStmt, error) {
 		}
 	}
 
-	uniParamsRecur, err := getUniParamsInUniFactScopeRecursively(domainFacts, params)
+	uniParamsRecur, err := getUniParamsInUniFactRecursively(domainFacts, params)
 	if err != nil {
 		return nil, err
 	}
