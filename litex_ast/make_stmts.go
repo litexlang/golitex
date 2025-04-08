@@ -28,12 +28,12 @@ func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, th
 	return &DefConFnStmt{defHeader, retType, domFacts, thenFacts}
 }
 
-func NewUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *ConUniFactStmt {
-	return &ConUniFactStmt{params, paramTypes, domFacts, thenFacts}
+func NewUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt, uniParamsAtScope map[string]struct{}) *ConUniFactStmt {
+	return &ConUniFactStmt{params, paramTypes, domFacts, thenFacts, uniParamsAtScope}
 }
 
-func NewGenericUniStmt(typeParams []string, typeInterfaces []*FcAtom, params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *GenUniStmt {
-	return &GenUniStmt{typeParams, typeInterfaces, params, paramTypes, domFacts, thenFacts}
+func NewGenericUniStmt(typeParams []string, typeInterfaces []*FcAtom, params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt, uniParamsAtScope map[string]struct{}) *GenUniStmt {
+	return &GenUniStmt{typeParams, typeInterfaces, params, paramTypes, domFacts, thenFacts, uniParamsAtScope}
 }
 
 func NewSpecFactStmt(isTrue bool, propName FcAtom, params []Fc) *SpecFactStmt {
