@@ -349,10 +349,4 @@ prove:
 prove:
     know forall x A:
         $p(x *(3-2))
-    $p(x*1) // unknown
-
-    know forall x A:
-        $p(x * 1)
-    
-    $p(x*1)
-
+    $p(x*1) // true

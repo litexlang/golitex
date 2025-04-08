@@ -1,4 +1,4 @@
-package litex_ast
+package litex_comparator
 
 import (
 	"fmt"
