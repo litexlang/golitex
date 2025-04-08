@@ -68,5 +68,13 @@ prove:
             then:
                 $ForallXInAPX()
     $ForallXInAPX()
+
+prove:
+    know:
+        when:
+            $p(1)
+            then:
+                $p(1)
+    $p(1)
                 
  
