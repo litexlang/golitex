@@ -126,15 +126,3 @@ func isNumLitStr(s string) bool {
 
 	return hasDigit
 }
-
-// func IsBuiltinStr(s string) bool {
-// 	if glob.IsKeyword(s) {
-// 		return true
-// 	}
-
-// 	if isNumLitStr(s) {
-// 		return true
-// 	}
-
-// 	return false
-// }
