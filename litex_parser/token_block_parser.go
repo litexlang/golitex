@@ -166,12 +166,16 @@ func (stmt *TokenBlock) forallStmt() (ast.UniStmt, error) {
 		}
 	}
 
+	// for _, domainFact := range domainFacts {
+
+	// }
+
 	if len(typeParams) > 0 {
 		// return &ast.GenericUniStmt{typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts}, nil
-		return ast.NewGenericUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts), nil
+		return ast.NewGenericUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts, nil), nil
 	} else {
 		// return &ast.UniFactStmt{params, paramTypes, domainFacts, thenFacts}, nil
-		return ast.NewUniFactStmt(params, paramTypes, domainFacts, thenFacts), nil
+		return ast.NewUniFactStmt(params, paramTypes, domainFacts, thenFacts, nil), nil
 	}
 
 }
