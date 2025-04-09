@@ -138,3 +138,10 @@ prove:
         $p(1)
         then:
             $q(1)
+
+prove:
+    prop p(x A):
+        $q(x)
+
+    know $p(1)
+    $q(1)
