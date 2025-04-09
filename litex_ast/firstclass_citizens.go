@@ -10,7 +10,7 @@ type Fc interface {
 	fc()
 	String() string
 	GetPkgName() string
-	Instantiate(map[string]Fc) (Fc, error)
+	Instantiate(map[string]Fc) Fc
 }
 
 type FcAtom struct {
