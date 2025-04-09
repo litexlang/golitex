@@ -50,4 +50,24 @@ prove:
             then:
                 $result(1,y)
         then:
-            $p(1)    
+            $p(1)
+
+prove:
+    know:
+        forall x A:
+            $p(x)
+            then:
+                $p(x)
+    $p(1) // unknown. NO IFF DEAD LOCK
+
+prove:
+    know:
+        forall x A:
+            $p(x)
+            then:
+                $q(x)
+        forall x A:
+            $q(x)
+            then:
+                $p(x)
+    $p(1) // unknown. NO IFF DEAD LOCK
