@@ -3,6 +3,8 @@ package litex_parser
 import (
 	"fmt"
 	ast "golitex/litex_ast"
+	setup "golitex/litex_setup"
+	"os"
 	"regexp"
 	"runtime"
 	"strings"
@@ -129,7 +131,7 @@ func ParserTester(code string) ([]ast.Stmt, error) {
 		return nil, err
 	}
 
-	slice, err := getTopLevelStmtSlice(lines)
+	slice, err := chunkStr(lines)
 	if err != nil {
 		return nil, err
 	}
@@ -1109,3 +1111,80 @@ $q(1) // true, 因为 $p(x) 被match 了
 		t.Fatal(err)
 	}
 }
+
+func readFile(filePath string) string {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		panic("")
+	}
+	return string(content)
+}
+
+func TestLexTimeParseTime(t *testing.T) {
+	setup.Setup()
+
+	code := readFile("../litex_code_examples/use_storedUniFact_with_uniFact_as_dom.lix")
+
+	start := time.Now()
+	preprocessedCodeLines, err := preprocessSourceCode(code)
+	if err != nil {
+		panic("")
+	}
+	preprocessTime := time.Since(start)
+
+	start = time.Now()
+	slice, err := chunkStr(preprocessedCodeLines)
+	if err != nil {
+		panic("")
+	}
+	chunkTime := time.Since(start)
+
+	start = time.Now()
+	blocks := []TokenBlock{}
+	for _, strBlock := range slice.Body {
+		block, err := tokenizeStmtBlock(&strBlock)
+		if err != nil {
+			panic("")
+		}
+		blocks = append(blocks, *block)
+	}
+	tokenizeBlockTime := time.Since(start)
+
+	start = time.Now()
+	ret := []ast.TopStmt{}
+	for _, block := range blocks {
+		cur, err := block.TopLevelStmt()
+		if err != nil {
+			panic("")
+		}
+		ret = append(ret, *cur)
+	}
+	parseTime := time.Since(start)
+
+	// 	preprocess 41.25µs
+	// parse 338.917µs
+	fmt.Printf("preprocess %v\ngetStrBlock %v\ntokenize %v\nparse %v\n", preprocessTime, chunkTime, tokenizeBlockTime, parseTime)
+}
+
+// preprocess 21.167µs
+// getStrBlock 17.459µs
+// tokenize 64.917µs
+// parse 77.167µs
+
+// preprocess 33.75µs
+// getStrBlock 5.167µs
+// tokenize 35.25µs
+// parse 66.334µs
+
+// preprocess 56.667µs
+// getStrBlock 5.584µs
+// tokenize 166.25µs
+// parse 66.667µs
+
+// read file takes 38.083µs
+// parsing takes 226.917µs
+// execution takes 79.5µs
+
+// read file takes 34.417µs
+// parsing takes 323.667µs
+// execution takes 82.458µs
