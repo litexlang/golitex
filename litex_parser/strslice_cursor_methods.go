@@ -108,13 +108,13 @@ func (stmt *TokenBlock) defPropExistStmt() (ast.DefPropStmt, error) {
 	if stmt.Header.is(glob.KeywordProp) {
 		prop, err := stmt.defConPropStmt()
 		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
+			return nil, &parseTimeErr{err, *stmt}
 		}
 		return prop, nil
 	} else if stmt.Header.is(glob.KeywordExistProp) {
 		exist, err := stmt.defConExistPropStmt()
 		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
+			return nil, &parseTimeErr{err, *stmt}
 		}
 		return exist, nil
 	}
