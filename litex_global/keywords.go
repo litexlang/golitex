@@ -122,7 +122,7 @@ const (
 	//! 每次引入新的Symbol，要往getBuiltinSymbol里加东西
 )
 
-var OrderedKeySymbolSliceFromBiggestToSmallest = []string{
+var KeySymbolSlice = []string{
 	// 双字符符号（长度 2）
 	KeySymbolAndAnd,                 // "&&"
 	KeySymbolEqualEqual,             // "=="
@@ -171,7 +171,7 @@ var OrderedKeySymbolSliceFromBiggestToSmallest = []string{
 const UniParamPrefix = KeySymbolHash
 
 func IsKeySymbol(name string) bool {
-	for _, s := range OrderedKeySymbolSliceFromBiggestToSmallest {
+	for _, s := range KeySymbolSlice {
 		if s == name {
 			return true
 		}
@@ -331,16 +331,7 @@ func IsKeyword(s string) bool {
 	return false
 }
 
-var symbolSet map[string]bool // 存储所有符号
-
-func InitSymbolSet() {
-	symbolSet = make(map[string]bool)
-	for _, symbol := range OrderedKeySymbolSliceFromBiggestToSmallest {
-		symbolSet[symbol] = true
-	}
-}
-
-func GetBuiltinSymbol(inputString string, start int) string {
+func GetKeySymbol(inputString string, start int) string {
 	if start < 0 || start >= len(inputString) {
 		return ""
 	}

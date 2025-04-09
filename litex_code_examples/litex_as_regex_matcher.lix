@@ -386,3 +386,108 @@ prove:
 
 prove:
     $q(1)
+
+
+prove:
+    know forall x A:
+        $p(x)
+        then:
+            $q(x)
+    know $p(x)
+    $q(1)
+    know $p(1)
+    $q(1)
+
+prove:
+    know forall x A:
+        $p(x)
+
+    forall x A:
+        $p(x)
+
+prove:
+    // 下面这一条是没用的，永远不会有事实和$q(2)match上，因为2不是自由变量
+    know forall x A:
+        $p(x)
+        then:
+            $q(2)
+    
+    know forall x A:
+        $p(x)
+
+    forall x A:
+        $p(x)
+    
+    $q(2) // unknown
+
+    know:
+        when:
+            forall x A:
+                $p(x)
+            then:
+                $q(2)
+
+    when:
+        forall x A:
+            $p(x)
+        then:
+            $q(2)
+    
+    $q(2) // true
+
+prove:
+    // prop ForallXInAPX():
+    //     forall x A:
+    //         $p(x)
+    
+    know:
+        $ForallXInAPX()  // 如果不加$会报什么错呢?
+        when:
+            $ForallXInAPX()
+            then:
+                $q(2)
+        $q(2) // true
+
+prove:
+    know forall x A:
+        $p(x)
+    know:
+        when:
+            forall x A:
+                $p(x)
+            then:
+                $ForallXInAPX()
+    $ForallXInAPX()
+
+prove:
+    know:
+        when:
+            $p(1)
+            then:
+                $p(1)
+    $p(1)
+                
+prove:
+    know:
+        when:
+            forall x A:
+                $p(x)
+            then:
+                $p(1)
+    $p(1)
+
+
+prove:
+// 怪异的bug：为什么这里会说我 duplicate decl???
+    know:
+        forall :
+            forall x A:
+                $p(x)
+            then:
+                $ForallXInAPX()
+
+        forall x A:
+            $p(x)    
+        
+    $ForallXInAPX()
+

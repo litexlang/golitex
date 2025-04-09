@@ -120,7 +120,7 @@ func splitAndReplaceSemicolons(input string) []string {
 // 	return &TopLevelStmtSlice{blocks}, err
 // }
 
-func chunkStr(lines []string) (*topStrBlocks, error) {
+func getTopStrBlocks(lines []string) (*topStrBlocks, error) {
 	blocks, _, err := parseStrBlocks(lines, 0, 0)
 	if err != nil {
 		return nil, err

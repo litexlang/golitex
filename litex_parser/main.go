@@ -13,7 +13,7 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 		return []ast.TopStmt{}, nil
 	}
 
-	slice, err := chunkStr(preprocessedCodeLines)
+	slice, err := getTopStrBlocks(preprocessedCodeLines)
 	if err != nil {
 		return nil, err
 	}
@@ -43,4 +43,9 @@ func preprocessSourceCode(code string) ([]string, error) {
 	processedCode := strings.ReplaceAll(code, "\t", glob.ScopeIndent)
 	lines := splitAndReplaceSemicolons(processedCode)
 	return lines, nil
+}
+
+func SetupAndParseSourceCode(code string) ([]ast.TopStmt, error) {
+	glob.Setup()
+	return ParseSourceCode(code)
 }

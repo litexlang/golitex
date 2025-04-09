@@ -3,7 +3,7 @@ package litex_parser
 import (
 	"fmt"
 	ast "golitex/litex_ast"
-	setup "golitex/litex_setup"
+	glob "golitex/litex_global"
 	"os"
 	"regexp"
 	"runtime"
@@ -131,7 +131,7 @@ func ParserTester(code string) ([]ast.Stmt, error) {
 		return nil, err
 	}
 
-	slice, err := chunkStr(lines)
+	slice, err := getTopStrBlocks(lines)
 	if err != nil {
 		return nil, err
 	}
@@ -467,7 +467,7 @@ func TestRelaFactStmt(t *testing.T) {
 p(a) + 2 < (2 + 3) * 10 + 4 < 100
 10 = p(a) = p(a)
 `
-	statements, err := ParseSourceCode(code)
+	statements, err := SetupAndParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -486,7 +486,7 @@ func TestIsStmt(t *testing.T) {
 1 * ( p(a) + 2 ) is q
 
 `
-	statements, err := ParseSourceCode(code)
+	statements, err := SetupAndParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -1121,7 +1121,7 @@ func readFile(filePath string) string {
 }
 
 func TestLexTimeParseTime(t *testing.T) {
-	setup.Setup()
+	glob.Setup()
 
 	code := readFile("../litex_code_examples/use_storedUniFact_with_uniFact_as_dom.lix")
 
@@ -1133,7 +1133,7 @@ func TestLexTimeParseTime(t *testing.T) {
 	preprocessTime := time.Since(start)
 
 	start = time.Now()
-	slice, err := chunkStr(preprocessedCodeLines)
+	slice, err := getTopStrBlocks(preprocessedCodeLines)
 	if err != nil {
 		panic("")
 	}
@@ -1160,6 +1160,7 @@ func TestLexTimeParseTime(t *testing.T) {
 		ret = append(ret, *cur)
 	}
 	parseTime := time.Since(start)
+	_ = ret
 
 	// 	preprocess 41.25µs
 	// parse 338.917µs
@@ -1188,3 +1189,7 @@ func TestLexTimeParseTime(t *testing.T) {
 // read file takes 34.417µs
 // parsing takes 323.667µs
 // execution takes 82.458µs
+
+// read file takes 37.166µs
+// parsing takes 232.5µs
+// execution takes 89.458µs
