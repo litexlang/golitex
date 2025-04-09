@@ -18,7 +18,7 @@ func (ver *Verifier) FcEqual(left, right ast.Fc, state VerState) (bool, error) {
 		right = concreteRight
 	}
 
-	nextState := state.spec()
+	nextState := state.addRound()
 	ok, err := ver.fcEqualSpec(left, right, nextState)
 	if err != nil {
 		return false, err

@@ -21,7 +21,7 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 
 	// TODO 需要改成spec吗?
 	// nextState := state.spec()
-	nextState := state.spec()
+	nextState := state.addRound()
 
 	ok, err := ver.SpecFactSpec(stmt, nextState)
 	if err != nil {
@@ -76,7 +76,7 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 	//         then:
 	//             $p(y)
 	// $q(1)
-	nextState = state.spec()
+	nextState = state.addRound()
 	// nextState = state
 
 	// ok, err = ver.SpecFactUni(stmt, nextState)
@@ -169,7 +169,7 @@ LoopOverFacts:
 			}
 		}
 
-		verified, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, AnyMsg)
+		verified, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, Round0Msg)
 
 		if err != nil {
 			return false, err
@@ -270,7 +270,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		}
 
 		for i := 1; i < len(value); i++ {
-			ok, err := ver.fcEqualSpec(value[0], value[i], state.spec())
+			ok, err := ver.fcEqualSpec(value[0], value[i], state.addRound())
 			if err != nil {
 				return nil, false, err
 			}

@@ -7,12 +7,16 @@ type VerState uint8
 const (
 	SpecMsg VerState = iota
 	SpecNoMsg
-	AnyMsg
-	AnyNoMsg
+	// AnyMsg
+	// AnyNoMsg
+	Round0Msg
+	Round0NoMsg
+	Round1Msg
+	Round1NoMsg
 )
 
 func (e VerState) requireMsg() bool {
-	if e == SpecMsg || e == AnyMsg {
+	if e == SpecMsg || e == Round0Msg || e == Round1Msg {
 		return true
 	} else {
 		return false
@@ -27,20 +31,29 @@ func (e VerState) isSpec() bool {
 	}
 }
 
-func (e VerState) spec() VerState {
-	if e == AnyMsg {
+func (e VerState) addRound() VerState {
+	switch e {
+	case Round0Msg:
+		return Round1Msg
+	case Round0NoMsg:
+		return Round1NoMsg
+	case Round1Msg:
 		return SpecMsg
-	} else if e == AnyNoMsg {
+	case Round1NoMsg:
 		return SpecNoMsg
+	default:
+		return e
 	}
-	return e
 }
 
-func (e VerState) noMsg() VerState {
-	if e == SpecMsg {
-		return SpecNoMsg
-	} else if e == AnyMsg {
-		return AnyNoMsg
-	}
-	return e
-}
+// func (e VerState) noMsg() VerState {
+// 	switch e {
+// 	case Round0Msg:
+// 		return Round0NoMsg
+// 	case Round1Msg:
+// 		return Round1NoMsg
+// 	case SpecMsg:
+// 		return SpecNoMsg
+// 	}
+// 	return e
+// }
