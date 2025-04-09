@@ -145,3 +145,96 @@ prove:
 
     know $p(1)
     $q(1)
+
+prove:
+    know:
+        forall x A:
+            forall y A:
+                $cond(y)
+                then:
+                    $result(x,y)
+            then:
+                $q(x)
+    
+    know:
+        forall y A:
+            $cond(y)
+            then:
+                $result(1,y)
+    
+    $q(1) // unknown
+
+// prove:
+//     prop p(x B):
+//         forall y A:
+//             $cond(y)
+//             then:
+//                 $result(x,y)
+//     
+//     know:
+//         forall x B:
+//             $p(x)
+//             then:
+//                 $q(x)
+//     
+//         forall y A:
+//             $cond(y)
+//             then:
+//                 $result(1,y)
+// 
+//     $p(1)
+        
+
+prove:
+    know:
+        forall y A:
+            $cond(y)
+            $p(x)
+            then:
+                $result(x,y)
+
+    know:
+        forall x B:
+            $p(x)
+            then:
+                $q(x)
+    
+    know $p(1)
+    
+    forall y A:
+        $cond(y)
+        then:
+            $result(1,y)
+
+
+prove:
+    know:
+        // 定义 p(x) iff forall y: cond(y) => result(x,y)
+        forall x B, y A:
+            $cond(y)
+            $p(x)
+            then:
+                $result(x,y)
+        
+        when:
+            forall x B, y A:
+                $cond(y)
+                then:
+                    $result(x,y)
+            then:
+                $p(x)
+
+    prove:
+        know $p(1)
+        forall y A:
+            $cond(y)
+            then:
+                $result(1,y)
+
+//    when:
+//        forall y A:
+//            $cond(y)
+//            then:
+//                $result(1,y)
+//        then:
+//            $p(1)        

@@ -4,12 +4,12 @@ import (
 	"fmt"
 )
 
-type parseStmtErr struct {
+type parseTimeErr struct {
 	previous error
 	stmt     TokenBlock
 }
 
-func (e *parseStmtErr) Error() string {
+func (e *parseTimeErr) Error() string {
 	curTok, err := e.stmt.Header.currentToken()
 	if err != nil {
 		return fmt.Sprintf("error at %s, column %d: %s", e.stmt.Header.String(), e.stmt.Header.getIndex(), e.previous.Error())
