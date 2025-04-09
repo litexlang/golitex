@@ -261,7 +261,7 @@ func (stmt *TokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	declHeader, err := stmt.conDefHeader()
+	declHeader, uniParams, err := stmt.conDefHeaderWithUniPrefix()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -271,27 +271,11 @@ func (stmt *TokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	for i, param := range declHeader.Params {
-		declHeader.Params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-	}
-
-	uniParams := map[string]struct{}{}
-	for _, param := range declHeader.Params {
-		_, declared := uniParams[param]
-		if declared {
-			return nil, fmt.Errorf("duplicate parameter %s", param)
-		}
-		uniParams[param] = struct{}{}
-	}
-
-	// TODO 暂时不清楚这么干行不行
-	// panic("TODO: 要让 prop 也是 uni")
 	domFacts, iffFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordIff, uniParams)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	// return &ast.DefConPropStmt{*decl, domFacts, iffFacts}, nil
 	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 
@@ -331,7 +315,7 @@ func (stmt *TokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	decl, err := stmt.conDefHeader()
+	decl, uniParams, err := stmt.conDefHeaderWithUniPrefix()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -346,8 +330,7 @@ func (stmt *TokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 
 	if stmt.Header.is(glob.KeySymbolColon) {
 		stmt.Header.skip()
-		panic("TODO 这里要让 uniParam加进来")
-		domFacts, thenFacts, err = stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, nil) // nil是不对的要引入uniParams
+		domFacts, thenFacts, err = stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, uniParams)
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
@@ -511,7 +494,7 @@ func (stmt *TokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	decl, err := stmt.conDefHeader()
+	decl, uniParams, err := stmt.conDefHeaderWithUniPrefix()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -540,9 +523,7 @@ func (stmt *TokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	// TODO: 这里要改成 uni 了
-	panic("TODO: 这里要改成 uni 了")
-	domFacts, thenFacts, err := stmt.parseBodyTwoFactSections(glob.KeywordIff, nil)
+	domFacts, thenFacts, err := stmt.parseBodyTwoFactSections(glob.KeywordIff, uniParams)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -708,15 +689,15 @@ func (stmt *TokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
 	panic("")
 }
 
-func (stmt *TokenBlock) conDefHeader() (*ast.ConDefHeader, error) {
+func (stmt *TokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[string]struct{}, error) {
 	name, err := stmt.Header.next()
 	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
+		return nil, nil, &parseStmtErr{err, *stmt}
 	}
 
 	err = stmt.Header.skip(glob.KeySymbolLeftParen)
 	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
+		return nil, nil, &parseStmtErr{err, *stmt}
 	}
 
 	params := []string{}
@@ -725,13 +706,13 @@ func (stmt *TokenBlock) conDefHeader() (*ast.ConDefHeader, error) {
 	for !stmt.Header.is(glob.KeySymbolRightParen) {
 		param, err := stmt.Header.next()
 		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
+			return nil, nil, &parseStmtErr{err, *stmt}
 		}
 		params = append(params, param)
 
 		typeParam, err := stmt.Header.rawFc()
 		if err != nil {
-			return nil, &parseStmtErr{err, *stmt}
+			return nil, nil, &parseStmtErr{err, *stmt}
 		}
 
 		typeParams = append(typeParams, typeParam)
@@ -743,11 +724,24 @@ func (stmt *TokenBlock) conDefHeader() (*ast.ConDefHeader, error) {
 
 	err = stmt.Header.skip(glob.KeySymbolRightParen)
 	if err != nil {
-		return nil, &parseStmtErr{err, *stmt}
+		return nil, nil, &parseStmtErr{err, *stmt}
+	}
+
+	for i, param := range params {
+		params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
+	}
+
+	uniParams := map[string]struct{}{}
+	for _, param := range params {
+		_, declared := uniParams[param]
+		if declared {
+			return nil, nil, fmt.Errorf("duplicate parameter %s", param)
+		}
+		uniParams[param] = struct{}{}
 	}
 
 	// return &ast.ConDefHeader{name, params, typeParams}, nil
-	return ast.NewConDefHeader(name, params, typeParams), nil
+	return ast.NewConDefHeader(name, params, typeParams), uniParams, nil
 }
 
 func (stmt *TokenBlock) bodyFactSectionSpecFactSection(kw string, uniParams map[string]struct{}) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
