@@ -12,5 +12,5 @@ func (fact *StoredCondSpecFact) String() string {
 }
 
 func (fact *StoredUniSpecFact) String() string {
-	return fact.Fact.String()
+	return fact.UniFact.String()
 }

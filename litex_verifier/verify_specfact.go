@@ -250,10 +250,16 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 		}
 
 		//! 把concrete parameter代入uniParam 对新的事实进行验证
-		ok, err = ver.specFactUniWithUniConMap(&knownFact, uniConMap, state)
+		// ok, err = ver.specFactUniWithUniConMap(&knownFact, uniConMap, state)
+		// if err != nil {
+		// 	return false, err
+		// }
+
+		ok, err = ver.useStoredUniFactToVerifySpecFact(&knownFact, uniConMap, state)
 		if err != nil {
 			return false, err
 		}
+
 		if ok {
 			ver.successWithMsg(stmt.String(), knownFact.String())
 			return true, nil
@@ -294,12 +300,12 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 
 	// 传入的map必须能和所有的uniFact的param一一对应
 	// e.g. 不等号传递性因此不能直接被使用，只能给传递性这个事实取个名字
-	twoSlicesEqual := glob.SlicesEqualUnordered(glob.MapKeys(uniConMap), knownStmt.Fact.Params)
+	twoSlicesEqual := glob.SlicesEqualUnordered(glob.MapKeys(uniConMap), knownStmt.UniFact.Params)
 	if !twoSlicesEqual {
 		return false, nil
 	}
 
-	for _, condFact := range knownStmt.Fact.DomFacts {
+	for _, condFact := range knownStmt.UniFact.DomFacts {
 		// nextState := state.spec().noMsg()
 		// TODO 这里应该取 spec 吗????
 		nextState := state.addRound()

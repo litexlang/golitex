@@ -36,7 +36,7 @@ type CondFactMemDict struct {
 type StoredUniSpecFact struct {
 	IsTrue     bool
 	FuncParams *[]ast.Fc // 和存在Fact里的FuncFact共享slice，只要是共享，那我就用*[]，虽然确实 Fact里的 FuncFact 日后不会改变，且二者再也不相见了
-	Fact       *ast.ConUniFactStmt
+	UniFact    *ast.ConUniFactStmt
 }
 
 type StoredUniFuncMemDictNode struct {

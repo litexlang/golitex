@@ -16,7 +16,7 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 	retMap := map[string][]ast.Fc{}
 
 	for i, uniParam := range *knownFact.FuncParams {
-		matchMap, matched, err := ver.matchUniConFc(uniParam, stmt.Params[i], knownFact.Fact.Params)
+		matchMap, matched, err := ver.matchUniConFc(uniParam, stmt.Params[i], knownFact.UniFact.Params)
 		if err != nil {
 			return nil, false, err
 		}
