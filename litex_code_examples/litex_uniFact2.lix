@@ -119,3 +119,22 @@ prove:
             then:
                 $conscious(x)
     $conscious(Socrates)
+
+prove:
+    know:
+        forall x A:
+            $p(x)
+            then:
+                $q(x)
+        forall x A:
+            $q(x)
+            then:
+                $p(x)
+    when:
+        $q(1)
+        then:
+            $p(1)
+    when:
+        $p(1)
+        then:
+            $q(1)

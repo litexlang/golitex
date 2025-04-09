@@ -153,11 +153,16 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 		params[i] = fmt.Sprintf("%s%s", glob.UniFactParamPrefix, param)
 	}
 
+	newUniParams := map[string]struct{}{}
+	for key := range uniParams {
+		newUniParams[key] = struct{}{}
+	}
+
 	for _, param := range params {
-		if _, ok := uniParams[param]; ok {
+		if _, ok := newUniParams[param]; ok {
 			return nil, fmt.Errorf("duplicate universal parameter in %v and current parameter slice %v", param, params)
 		}
-		uniParams[param] = struct{}{}
+		newUniParams[param] = struct{}{}
 	}
 
 	domainFacts := []ast.FactStmt{}
@@ -165,19 +170,19 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 
 	if stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordThen) {
 		for i := 0; i < len(stmt.Body)-1; i++ {
-			curStmt, err := stmt.Body[i].factStmt(uniParams)
+			curStmt, err := stmt.Body[i].factStmt(newUniParams)
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
 			domainFacts = append(domainFacts, curStmt)
 		}
-		thenFacts, err = stmt.Body[len(stmt.Body)-1].thenBlockSpecFacts(uniParams)
+		thenFacts, err = stmt.Body[len(stmt.Body)-1].thenBlockSpecFacts(newUniParams)
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
 	} else {
 		for i := 0; i < len(stmt.Body); i++ {
-			curStmt, err := stmt.Body[i].specFactStmt(uniParams)
+			curStmt, err := stmt.Body[i].specFactStmt(newUniParams)
 			if err != nil {
 				return nil, &parseStmtErr{err, *stmt}
 			}
