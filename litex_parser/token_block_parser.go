@@ -150,11 +150,15 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 	}
 	// 原地把param前面加上prefix
 	for i, param := range params {
-		params[i] = fmt.Sprintf("%s%s", glob.UniFactParamPrefix, param)
+		params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
 	}
 
 	newUniParams := map[string]struct{}{}
 	for key := range uniParams {
+		_, declared := newUniParams[key]
+		if declared {
+			return nil, fmt.Errorf("duplicate parameter %s", key)
+		}
 		newUniParams[key] = struct{}{}
 	}
 
@@ -257,7 +261,7 @@ func (stmt *TokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	decl, err := stmt.conDefHeader()
+	declHeader, err := stmt.conDefHeader()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -267,15 +271,28 @@ func (stmt *TokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
-	// TODO
-	panic("TODO: 要让 prop 也是 uni")
-	domFacts, iffFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordIff, map[string]struct{}{}) // 这里的nil有严重问题
+	for i, param := range declHeader.Params {
+		declHeader.Params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
+	}
+
+	uniParams := map[string]struct{}{}
+	for _, param := range declHeader.Params {
+		_, declared := uniParams[param]
+		if declared {
+			return nil, fmt.Errorf("duplicate parameter %s", param)
+		}
+		uniParams[param] = struct{}{}
+	}
+
+	// TODO 暂时不清楚这么干行不行
+	// panic("TODO: 要让 prop 也是 uni")
+	domFacts, iffFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordIff, uniParams)
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
 
 	// return &ast.DefConPropStmt{*decl, domFacts, iffFacts}, nil
-	return ast.NewDefConPropStmt(*decl, domFacts, iffFacts), nil
+	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 
 func (stmt *TokenBlock) parseBodyTwoFactSections(kw string, uniParams map[string]struct{}) ([]ast.FactStmt, []ast.FactStmt, error) {
