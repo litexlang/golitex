@@ -28,7 +28,7 @@ func (b *TokenBlock) stringWithIndent(indentLevel int) string {
 	return result
 }
 
-type TopLevelStmtSlice struct {
+type topStrBlocks struct {
 	Body []strBlock
 }
 
@@ -120,13 +120,13 @@ func splitAndReplaceSemicolons(input string) []string {
 // 	return &TopLevelStmtSlice{blocks}, err
 // }
 
-func getTopLevelStmtSlice(lines []string) (*TopLevelStmtSlice, error) {
+func chunkStr(lines []string) (*topStrBlocks, error) {
 	blocks, _, err := parseStrBlocks(lines, 0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TopLevelStmtSlice{blocks}, err
+	return &topStrBlocks{blocks}, err
 }
 
 func parseStrBlocks(lines []string, currentIndent int, startIndex int) ([]strBlock, int, error) {

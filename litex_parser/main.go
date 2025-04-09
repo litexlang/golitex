@@ -13,7 +13,7 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 		return []ast.TopStmt{}, nil
 	}
 
-	slice, err := getTopLevelStmtSlice(preprocessedCodeLines)
+	slice, err := chunkStr(preprocessedCodeLines)
 	if err != nil {
 		return nil, err
 	}

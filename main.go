@@ -6,8 +6,7 @@ import (
 )
 
 func main() {
-	msg, err := litex_sys.ExecFileReturnString("./litex_code_examples/litex_as_regex_matcher.lix")
-	// msg, err := litex_sys.ExecString("a < b")
+	msg, err := litex_sys.ExecFileReturnString("./litex_code_examples/use_storedUniFact_with_uniFact_as_dom.lix")
 	if err != nil {
 		fmt.Println(err.Error())
 	}

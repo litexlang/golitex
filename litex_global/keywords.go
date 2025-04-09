@@ -1,7 +1,5 @@
 package litex_global
 
-import "sort"
-
 const ScopeIndent = "    "
 
 // 每次新增keyword的时候，要记住把它往isKeyword里加
@@ -124,53 +122,56 @@ const (
 	//! 每次引入新的Symbol，要往getBuiltinSymbol里加东西
 )
 
-var KeySymbolSlice = []string{
+var OrderedKeySymbolSliceFromBiggestToSmallest = []string{
+	// 双字符符号（长度 2）
+	KeySymbolAndAnd,                 // "&&"
+	KeySymbolEqualEqual,             // "=="
 	KeySymbolEqualGreaterRightArrow, // "=>"
 	KeySymbolMinusGreaterRightArrow, // "->"
-	KeySymbolColonColon,             // "::"
+	KeySymbolNotEqual,               // "!="
+	KeySymbolPipePipe,               // "||"
 	KeySymbolPlusPlus,               // "++"
 	KeySymbolMinusMinus,             // "--"
-	KeySymbolAndAnd,                 // "&&"
-	KeySymbolPipePipe,               // "||"
-	KeySymbolEqualEqual,             // "=="
-	KeySymbolNotEqual,               // "!="
 	KeySymbolStarStar,               // "**"
-	KeySymbolColon,                  // ":"
-	KeySymbolLeftBracket,            // "["
-	KeySymbolRightBracket,           // "]"
-	KeySymbolLeftParen,              // "("
-	KeySymbolRightParen,             // ")"
-	KeySymbolComma,                  // ","
-	KeySymbolDollar,                 // "$"
-	KeySymbolEqual,                  // "="
-	KeySymbolSlash,                  // "/"
-	KeySymbolPlus,                   // "+"
-	KeySymbolMinus,                  // "-"
-	KeySymbolStar,                   // "*"
-	KeySymbolCaret,                  // "^"
-	KeySymbolLess,                   // "<"
-	KeySymbolGreater,                // ">"
-	KeySymbolExclaim,                // "!"
-	KeySymbolPipe,                   // "|"
-	KeySymbolTilde,                  // "~"
-	KeySymbolAnd,                    // "&"
-	KeySymbolDot,                    // "."
-	KeySymbolBackslash,              // "\\"
-	KeySymbolQuestion,               // "?"
-	KeySymbolDoubleQuote,            // "\""
-	KeySymbolSingleQuote,            // "'"
-	KeySymbolBacktick,               // "`"
-	KeySymbolSemicolon,              // ";"
-	KeySymbolLeftCurly,              // "{"
-	KeySymbolRightCurly,             // "}"
-	KeySymbolHash,                   // "#"
-	KeySymbolAt,                     // "@"
+	KeySymbolColonColon,             // "::"
+
+	// 单字符符号（长度 1）
+	KeySymbolAt,           // "@"
+	KeySymbolBackslash,    // "\\"
+	KeySymbolBacktick,     // "`"
+	KeySymbolCaret,        // "^"
+	KeySymbolColon,        // ":"
+	KeySymbolComma,        // ","
+	KeySymbolDot,          // "."
+	KeySymbolDollar,       // "$"
+	KeySymbolDoubleQuote,  // "\""
+	KeySymbolEqual,        // "="
+	KeySymbolExclaim,      // "!"
+	KeySymbolGreater,      // ">"
+	KeySymbolHash,         // "#"
+	KeySymbolLeftBracket,  // "["
+	KeySymbolLeftCurly,    // "{"
+	KeySymbolLeftParen,    // "("
+	KeySymbolLess,         // "<"
+	KeySymbolMinus,        // "-"
+	KeySymbolPipe,         // "|"
+	KeySymbolPlus,         // "+"
+	KeySymbolQuestion,     // "?"
+	KeySymbolRightBracket, // "]"
+	KeySymbolRightCurly,   // "}"
+	KeySymbolRightParen,   // ")"
+	KeySymbolSemicolon,    // ";"
+	KeySymbolSingleQuote,  // "'"
+	KeySymbolSlash,        // "/"
+	KeySymbolStar,         // "*"
+	KeySymbolTilde,        // "~"
+	KeySymbolAnd,          // "&"
 }
 
 const UniParamPrefix = KeySymbolHash
 
 func IsKeySymbol(name string) bool {
-	for _, s := range KeySymbolSlice {
+	for _, s := range OrderedKeySymbolSliceFromBiggestToSmallest {
 		if s == name {
 			return true
 		}
@@ -180,30 +181,30 @@ func IsKeySymbol(name string) bool {
 
 // Customizable Operators
 
-func GetBuiltinSymbol(inputString string, start int) string {
-	if start < 0 || start >= len(inputString) {
-		return ""
-	}
+// func GetBuiltinSymbol(inputString string, start int) string {
+// 	if start < 0 || start >= len(inputString) {
+// 		return ""
+// 	}
 
-	// 自定义排序规则，确保较长的符号排在前面
-	sort.Slice(KeySymbolSlice, func(i, j int) bool {
-		if len(KeySymbolSlice[i]) != len(KeySymbolSlice[j]) {
-			return len(KeySymbolSlice[i]) > len(KeySymbolSlice[j])
-		}
-		return KeySymbolSlice[i] < KeySymbolSlice[j]
-	})
+// // 自定义排序规则，确保较长的符号排在前面
+// sort.Slice(OrderedKeySymbolSliceFromBiggestToSmallest, func(i, j int) bool {
+// 	if len(OrderedKeySymbolSliceFromBiggestToSmallest[i]) != len(OrderedKeySymbolSliceFromBiggestToSmallest[j]) {
+// 		return len(OrderedKeySymbolSliceFromBiggestToSmallest[i]) > len(OrderedKeySymbolSliceFromBiggestToSmallest[j])
+// 	}
+// 	return OrderedKeySymbolSliceFromBiggestToSmallest[i] < OrderedKeySymbolSliceFromBiggestToSmallest[j]
+// })
 
-	// Iterate through keywords and try to match the longest possible
-	for _, keyword := range KeySymbolSlice {
-		end := start + len(keyword)
-		if end <= len(inputString) && inputString[start:end] == keyword {
-			return keyword
-		}
-	}
+// Iterate through keywords and try to match the longest possible
+// 	for _, keyword := range OrderedKeySymbolSliceFromBiggestToSmallest {
+// 		end := start + len(keyword)
+// 		if end <= len(inputString) && inputString[start:end] == keyword {
+// 			return keyword
+// 		}
+// 	}
 
-	// No match found
-	return ""
-}
+// 	// No match found
+// 	return ""
+// }
 
 func IsKeySymbolRelaProp(op string) bool {
 	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!=" || op == "in"
@@ -328,4 +329,37 @@ func IsKeyword(s string) bool {
 		}
 	}
 	return false
+}
+
+var symbolSet map[string]bool // 存储所有符号
+
+func InitSymbolSet() {
+	symbolSet = make(map[string]bool)
+	for _, symbol := range OrderedKeySymbolSliceFromBiggestToSmallest {
+		symbolSet[symbol] = true
+	}
+}
+
+func GetBuiltinSymbol(inputString string, start int) string {
+	if start < 0 || start >= len(inputString) {
+		return ""
+	}
+
+	// 先检查 2 字符符号
+	if start+2 <= len(inputString) {
+		candidate := inputString[start : start+2]
+		if symbolSet[candidate] {
+			return candidate
+		}
+	}
+
+	// 再检查 1 字符符号
+	if start+1 <= len(inputString) {
+		candidate := inputString[start : start+1]
+		if symbolSet[candidate] {
+			return candidate
+		}
+	}
+
+	return ""
 }
