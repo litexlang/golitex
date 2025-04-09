@@ -94,7 +94,7 @@ func (parser *StrSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 		return nil, &parserErr{err, parser}
 	}
 
-	opt, err := parser.fcAtom() // get the operator.
+	opt, err := parser.rawFcAtom() // get the operator.
 
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -132,7 +132,7 @@ func (parser *StrSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]strin
 			return nil, nil, &parserErr{err, parser}
 		}
 
-		tp, err := parser.fcAtom()
+		tp, err := parser.rawFcAtom()
 		if err != nil {
 			return nil, nil, &parserErr{err, parser}
 		}

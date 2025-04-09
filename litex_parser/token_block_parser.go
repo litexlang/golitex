@@ -89,7 +89,7 @@ func (stmt *TokenBlock) specFactStmt(uniParams map[string]struct{}) (*ast.SpecFa
 	}
 
 	// TODO: 在引入prop_pro后，这里也可能被原地改变
-	propName, err := stmt.Header.fcAtom()
+	propName, err := stmt.Header.rawFcAtom()
 	if err != nil {
 		return nil, &parseStmtErr{err, *stmt}
 	}
@@ -190,15 +190,15 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 		}
 	}
 
-	uniParamsRecur, err := getUniParamsInUniFactRecursively(domainFacts, params)
-	if err != nil {
-		return nil, err
-	}
+	// uniParamsRecur, err := getUniParamsInUniFactRecursively(domainFacts, params)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	if len(typeParams) > 0 {
-		return ast.NewGenericUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts, uniParamsRecur), nil
+		return ast.NewGenericUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts), nil
 	} else {
-		return ast.NewUniFactStmt(params, paramTypes, domainFacts, thenFacts, uniParamsRecur), nil
+		return ast.NewUniFactStmt(params, paramTypes, domainFacts, thenFacts), nil
 	}
 }
 
@@ -507,7 +507,7 @@ func (stmt *TokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}
-		tp, err := stmt.Header.fcAtom()
+		tp, err := stmt.Header.rawFcAtom()
 		if err != nil {
 			return nil, &parseStmtErr{err, *stmt}
 		}

@@ -43,21 +43,21 @@ type DefConFnStmt struct {
 }
 
 type ConUniFactStmt struct {
-	Params         []string // 它可能也是来自另外一个被share的地方。比如defConFn里面的Params，在被存成facts的时候，整个struct被复制到了这里，但本质上它们共享了一片内存
-	ParamTypes     []Fc
-	DomFacts       []FactStmt
-	ThenFacts      []*SpecFactStmt
-	UniParamsRecur map[string]struct{} // TODO 我觉得这个field是不必要的
+	Params     []string // 它可能也是来自另外一个被share的地方。比如defConFn里面的Params，在被存成facts的时候，整个struct被复制到了这里，但本质上它们共享了一片内存
+	ParamTypes []Fc
+	DomFacts   []FactStmt
+	ThenFacts  []*SpecFactStmt
+	// UniParamsRecur map[string]struct{} // TODO 我觉得这个field是不必要的
 }
 
 type GenUniStmt struct {
-	TypeParams       []string
-	TypeInterfaces   []*FcAtom
-	Params           []string
-	ParamTypes       []Fc
-	DomFacts         []FactStmt
-	ThenFacts        []*SpecFactStmt
-	UniParamsAtScope map[string]struct{}
+	TypeParams     []string
+	TypeInterfaces []*FcAtom
+	Params         []string
+	ParamTypes     []Fc
+	DomFacts       []FactStmt
+	ThenFacts      []*SpecFactStmt
+	// UniParamsAtScope map[string]struct{}
 }
 
 type SpecFactStmt struct {
