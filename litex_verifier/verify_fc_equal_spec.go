@@ -34,7 +34,7 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 	}
 
 	// Case: 用已知事实
-	nextState := state.spec()
+	nextState := state.addRound()
 	ok, err = ver.fcEqualSpecInSpecMem(left, right, nextState)
 	if err != nil {
 		return false, err

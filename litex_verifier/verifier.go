@@ -5,7 +5,6 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	env "golitex/litex_env"
-	glob "golitex/litex_global"
 )
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
@@ -85,6 +84,6 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	}
 }
 
-func verifyStageStmtErr(next error, stmt ast.Stmt) *glob.ErrLink {
-	return glob.NewErrLink(next, "%s\nverify-stage error", stmt.String())
-}
+// func verifyStageStmtErr(next error, stmt ast.Stmt) *glob.ErrLink {
+// 	return glob.NewErrLink(next, "%s\nverify-stage error", stmt.String())
+// }
