@@ -21,8 +21,8 @@ const (
 	TenMillionRound  = 10000000
 )
 
-func parseStmtTest(code string, t *testing.T) []ast.TopStmt {
-	topStatements, err := parser.ParseSourceCode(code)
+func setupAndParseStmtTest(code string, t *testing.T) []ast.TopStmt {
+	topStatements, err := parser.SetupAndParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func printExecMsg(messageSlice []string) {
 
 func TestKnow(t *testing.T) {
 	code := `know $p(a)`
-	statements, err := parser.ParseSourceCode(code)
+	statements, err := parser.SetupAndParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -371,7 +371,7 @@ $q(x)
 $p(x)
 $p(y)
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
@@ -393,7 +393,7 @@ $p(z)
 $p(y)
 $p(x)
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
@@ -407,7 +407,7 @@ know:
 
 a < y
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
@@ -424,7 +424,7 @@ know:
 
 x < y
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
@@ -447,7 +447,7 @@ forall x A:
 
 $p(x)
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
@@ -473,7 +473,7 @@ know:
 $p(ha)
 $p(g(x, 100))
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
@@ -485,7 +485,7 @@ know:
 	$p(t(x))
 $p(g(x))
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
@@ -502,7 +502,7 @@ prove:
     know $p(x)
     $p(f(x))
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
@@ -513,7 +513,7 @@ func TestFacts(t *testing.T) {
 know $p(x)
 $p(x)
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
@@ -546,23 +546,22 @@ know:
 
 $q(2)
 `
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
 
 func TestPropDef2(t *testing.T) {
 	code := "prove:\n\tknow:\n\t\t$p(x);$p(y)\n\t$p(y)"
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
 }
 
 func TestAllFactCodeSeveralRounds(t *testing.T) {
 	code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
-
 	rounds := 1
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	start := time.Now()
 	for i := 0; i < rounds; i++ {
 		execStmtTest(topStmtSlice, t)
@@ -576,7 +575,7 @@ func TestAllFactCode(t *testing.T) {
 	code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	parseTime := time.Since(start)
 	start = time.Now()
 	messages := execStmtTest(topStmtSlice, t)
@@ -587,10 +586,14 @@ func TestAllFactCode(t *testing.T) {
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()
-	code := readFile("../litex_code_examples/use_storedUniFact_with_uniFact_as_dom.lix")
+
+	// code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
+	code := readFile("../litex_code_examples/classic_examples/use_storedUniFact_with_uniFact_as_dom.lix")
+	// code := readFile("../litex_code_examples/litex_uniFact.lix")
+
 	readFileTime := time.Since(start)
 	start = time.Now()
-	topStmtSlice := parseStmtTest(code, t)
+	topStmtSlice := setupAndParseStmtTest(code, t)
 	parseTime := time.Since(start)
 	start = time.Now()
 	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:], t)

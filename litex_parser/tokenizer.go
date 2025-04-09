@@ -31,7 +31,7 @@ func (t *tokenizer) nextToken() (string, int, error) {
 		return "", 0, fmt.Errorf("invalid syntax: nested comment block")
 	}
 
-	potentialKeywordSymbol := glob.GetBuiltinSymbol(t.inputString, t.start)
+	potentialKeywordSymbol := glob.GetKeySymbol(t.inputString, t.start)
 	if potentialKeywordSymbol != "" {
 		return potentialKeywordSymbol, t.start + len(potentialKeywordSymbol), nil
 	}
@@ -42,7 +42,7 @@ func (t *tokenizer) nextToken() (string, int, error) {
 
 	buffer := ""
 	for i := t.start; i < len(t.inputString); i++ {
-		if glob.GetBuiltinSymbol(t.inputString, i) != "" || t.inputString[i] == ' ' {
+		if glob.GetKeySymbol(t.inputString, i) != "" || t.inputString[i] == ' ' {
 			break
 		}
 		buffer += string(t.inputString[i])
@@ -65,7 +65,7 @@ func (t *tokenizer) tokenizeString() ([]string, error) {
 				result = append(result, buffer)
 				buffer = ""
 			}
-		} else if glob.GetBuiltinSymbol(input, t.start) != "" {
+		} else if glob.GetKeySymbol(input, t.start) != "" {
 			if buffer != "" {
 				result = append(result, buffer)
 				buffer = ""

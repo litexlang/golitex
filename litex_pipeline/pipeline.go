@@ -8,7 +8,7 @@ import (
 )
 
 func ExecuteCodeAndReturnMessage(code string) (string, error) {
-	msgOfTopStatements, err := ExecuteCodeAndReturnMessageSlice(code)
+	msgOfTopStatements, err := executeCodeAndReturnMessageSlice(code)
 	if err != nil {
 		return "", err
 	}
@@ -16,8 +16,8 @@ func ExecuteCodeAndReturnMessage(code string) (string, error) {
 	return ret, nil
 }
 
-func ExecuteCodeAndReturnMessageSlice(code string) ([]string, error) {
-	topStmtSlice, err := parser.ParseSourceCode(code)
+func executeCodeAndReturnMessageSlice(code string) ([]string, error) {
+	topStmtSlice, err := parser.SetupAndParseSourceCode(code)
 	if err != nil {
 		return nil, err
 	}

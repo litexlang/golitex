@@ -1,94 +1,4 @@
 prove:
-    know forall x A:
-        $p(x)
-        then:
-            $q(x)
-    know $p(x)
-    $q(1)
-    know $p(1)
-    $q(1)
-
-prove:
-    know forall x A:
-        $p(x)
-
-    forall x A:
-        $p(x)
-
-prove:
-    // 下面这一条是没用的，永远不会有事实和$q(2)match上，因为2不是自由变量
-    know forall x A:
-        $p(x)
-        then:
-            $q(2)
-    
-    know forall x A:
-        $p(x)
-
-    forall x A:
-        $p(x)
-    
-    $q(2) // unknown
-
-    know:
-        when:
-            forall x A:
-                $p(x)
-            then:
-                $q(2)
-
-    when:
-        forall x A:
-            $p(x)
-        then:
-            $q(2)
-    
-    $q(2) // true
-
-prove:
-    // prop ForallXInAPX():
-    //     forall x A:
-    //         $p(x)
-    
-    know:
-        $ForallXInAPX()  // 如果不加$会报什么错呢?
-        when:
-            $ForallXInAPX()
-            then:
-                $q(2)
-        $q(2) // true
-
-prove:
-    know forall x A:
-        $p(x)
-    know:
-        when:
-            forall x A:
-                $p(x)
-            then:
-                $ForallXInAPX()
-    $ForallXInAPX()
-
-prove:
-    know:
-        when:
-            $p(1)
-            then:
-                $p(1)
-    $p(1)
-                
-prove:
-    know:
-        when:
-            forall x A:
-                $p(x)
-            then:
-                $p(1)
-    $p(1)
-
-
-prove:
-// 怪异的bug：为什么这里会说我 duplicate decl???
     know:
         forall :
             forall x A:
@@ -96,8 +6,238 @@ prove:
             then:
                 $ForallXInAPX()
 
-        forall x A:
-            $p(x)    
+        forall y A:
+            $p(y)    
         
     $ForallXInAPX()
+
+prove:
+    know:
+        forall :
+            forall x A:
+                $p(x)
+            then:
+                $ForallXInAPX(2)
+
+        forall y A:
+            $p(y)    
+        
+    $ForallXInAPX(2)
+
+
+// 死循环
+prove:
+    know:
+        forall x A:
+            $q(x)
+            then:
+                $q(x)
+    $q(1)
+
+prove:
+    know:
+        forall x A:
+            $p(x)
+            then:
+                $q(x)
+        forall y A:
+            $q(y)
+            then:
+                $p(y)
+    $q(1)
+
+prove:
+    know:
+        when:
+            forall x A:
+                $p(x)
+            then:
+                $ForallXInAPX(2)
+    know:
+        forall x A:
+            $p(x)
+    $ForallXInAPX(2)
+
+
+prove:
+    know:
+        when:
+            forall x A:
+                forall y A:
+                    $p(y)
+                then:
+                    $t(x)
+            then:
+                $ForallXInAPX(2)
+    know:
+        forall x A:
+            forall y A:
+                $p(y)
+            then:
+                $t(x)
+    $ForallXInAPX(2) // unknown 因为验证 forall y A: $p(y) 的时候，不能查看 已知的 forall y A: $p(y), 只能用 spec
+
+// 用一个词语来表达 forall x A: cond => then
+prove:
+    know:
+        when:
+            forall x A:
+                $cond(x)
+                then:
+                    $p(x)
+            then:
+                $x_in_A_all_p()
+        
+        forall y A:
+            $x_in_A_all_p()
+            $cond(y)
+            then:
+                $p(y)
+    
+    when:
+        forall x A:
+            $cond(x)
+            then:
+                $p(x)
+        then:
+            $x_in_A_all_p()
+
+    forall y A:
+        $x_in_A_all_p()
+        $cond(y)
+        then:
+            $p(y)
+
+// 我强烈不建议用户在 forall 的 dom 里写 forall 类型的事实，因为这样的forall是不可能被另外一个事实用来做验证的。你应该给这个forall取个名字。（或者，你应该让这个dom里出现的东西，出现在最外层的for里面。）然后写在forall的dom里面。至少当前版本，因为我还不能给“路过”的事实取一个flag（这很难，因为必须是 同一个事实路过同一个已知事实，才能让flag变化。即使是路过同一个已知事实，可能是不同的事实取路过的，那也不行让flag变化。）
+// 这其实还是让litex不用给超过90%的事实取名了：因为单层的forall，用户是不需要取名的。这让三段论这种还是很容易实现
+
+prove:
+    know:
+        $human(Socrates)
+        forall x S:
+            $human(x)
+            then:
+                $conscious(x)
+    $conscious(Socrates)
+
+prove:
+    know:
+        forall x A:
+            $p(x)
+            then:
+                $q(x)
+        forall x A:
+            $q(x)
+            then:
+                $p(x)
+    when:
+        $q(1)
+        then:
+            $p(1)
+    when:
+        $p(1)
+        then:
+            $q(1)
+
+prove:
+    prop p(x A):
+        $q(x)
+
+    know $p(1)
+    $q(1)
+
+prove:
+    know:
+        forall x A:
+            forall y A:
+                $cond(y)
+                then:
+                    $result(x,y)
+            then:
+                $q(x)
+    
+    know:
+        forall y A:
+            $cond(y)
+            then:
+                $result(1,y)
+    
+    $q(1) // unknown
+
+// prove:
+//     prop p(x B):
+//         forall y A:
+//             $cond(y)
+//             then:
+//                 $result(x,y)
+//     
+//     know:
+//         forall x B:
+//             $p(x)
+//             then:
+//                 $q(x)
+//     
+//         forall y A:
+//             $cond(y)
+//             then:
+//                 $result(1,y)
+// 
+//     $p(1)
+        
+
+prove:
+    know:
+        forall y A:
+            $cond(y)
+            $p(x)
+            then:
+                $result(x,y)
+
+    know:
+        forall x B:
+            $p(x)
+            then:
+                $q(x)
+    
+    know $p(1)
+    
+    forall y A:
+        $cond(y)
+        then:
+            $result(1,y)
+
+
+prove:
+    know:
+        // 定义 p(x) iff forall y: cond(y) => result(x,y)
+        // p(x) => (forall y: cond(y) => result(x,y))
+        forall x B, y A:
+            $cond(y)
+            $p(x)
+            then:
+                $result(x,y)
+        
+        // (forall y: cond(y) => result(x,y)) => p(x)
+        forall x B:
+            forall y A:
+                $cond(y)
+                then:
+                    $result(x,y)
+            then:
+                $p(x)
+
+    prove: // OK
+        know $p(1)
+        forall y A:
+            $cond(y)
+            then:
+                $result(1,y)
+
+    when:
+        forall y A:
+            $cond(y)
+            then:
+                $result(1,y)
+        then:
+            $p(1)        
 
