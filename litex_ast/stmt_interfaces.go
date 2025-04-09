@@ -27,7 +27,7 @@ type FactStmt interface {
 	factStmt()
 	stmt()
 	String() string
-	Instantiate(map[string]Fc) FactStmt
+	Instantiate(map[string]Fc) (FactStmt, error)
 }
 
 // func (r *RelaFactStmt) factStmt()   {}
@@ -71,7 +71,7 @@ type UniFactStmt interface {
 	stmt()
 	String() string
 	forallStmt()
-	Instantiate(map[string]Fc) FactStmt
+	Instantiate(map[string]Fc) (FactStmt, error)
 }
 
 func (s *ConUniFactStmt) forallStmt() {}
