@@ -16,7 +16,7 @@ func (parser *StrSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 		return parser.numberStr()
 	}
 
-	fcStr, err := parser.fcAtom()
+	fcStr, err := parser.rawFcAtom()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
@@ -26,7 +26,7 @@ func (parser *StrSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 	if strAtSecondPosition != glob.KeySymbolLeftParen {
 		return &fcStr, nil
 	} else {
-		return parser.fcFnRetVal(fcStr)
+		return parser.rawFcFn(fcStr)
 	}
 }
 
@@ -40,7 +40,7 @@ func (parser *StrSliceCursor) bracedFcExpr() (ast.Fc, error) {
 	return fc, nil
 }
 
-func (parser *StrSliceCursor) fcFnRetVal(optName ast.FcAtom) (*ast.FcFn, error) {
+func (parser *StrSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
 	typeParamsObjParamsPairs, err := parser.objSetPairs()
 
 	if err != nil {
@@ -68,7 +68,7 @@ func (parser *StrSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
 	return pairs, nil
 }
 
-func (parser *StrSliceCursor) fcAtom() (ast.FcAtom, error) {
+func (parser *StrSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	value, err := parser.next()
 	if err != nil {
 		return ast.FcAtom{Value: ""}, err
