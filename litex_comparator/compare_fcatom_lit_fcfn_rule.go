@@ -33,12 +33,12 @@ func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
 		return comp == 0, err
 	}
 
-	if len(left.CallPipe) != len(right.CallPipe) {
+	if len(left.ParamSegs) != len(right.ParamSegs) {
 		return false, nil
 	}
 
-	for i := 0; i < len(left.CallPipe); i++ {
-		ok, err := cmpFcFnSegRule(left.CallPipe[i], right.CallPipe[i])
+	for i := 0; i < len(left.ParamSegs); i++ {
+		ok, err := cmpFcFnSegRule(left.ParamSegs[i], right.ParamSegs[i])
 		if err != nil {
 			return false, err
 		}

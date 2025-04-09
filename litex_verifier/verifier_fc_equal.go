@@ -9,6 +9,7 @@ import (
 
 func (ver *Verifier) FcEqual(left, right ast.Fc, state VerState) (bool, error) {
 	// check whether given left or right is uniParam
+	//TODO 这两行可能不必要。我要做的是在用uniFact验证的时候，把整个storedFact里面的freeFact直接原地变成新的事实存进去。
 	concreteLeft := ver.asConFc(left)
 	if concreteLeft != nil {
 		left = concreteLeft

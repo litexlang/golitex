@@ -92,17 +92,17 @@ func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast.Fc,
 		}
 	}
 
-	if len(conParamAsFcFn.CallPipe) != len(uniFuncFcFn.CallPipe) {
+	if len(conParamAsFcFn.ParamSegs) != len(uniFuncFcFn.ParamSegs) {
 		return nil, false, nil //? 不清楚应该报错还是说直接返回不对，应该是返回不对
 	}
 
-	for i, uniPipe := range uniFuncFcFn.CallPipe {
-		if len(uniPipe.Params) != len(conParamAsFcFn.CallPipe[i].Params) {
+	for i, uniPipe := range uniFuncFcFn.ParamSegs {
+		if len(uniPipe.Params) != len(conParamAsFcFn.ParamSegs[i].Params) {
 			return nil, false, nil
 		}
 
 		for j, param := range uniPipe.Params {
-			matchMap, ok, err := ver.matchUniConFc(param, conParamAsFcFn.CallPipe[i].Params[j], possibleUniParams)
+			matchMap, ok, err := ver.matchUniConFc(param, conParamAsFcFn.ParamSegs[i].Params[j], possibleUniParams)
 			if err != nil {
 				return nil, false, err
 			}

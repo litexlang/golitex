@@ -147,8 +147,8 @@ func (parser *StrSliceCursor) fcUnaryExpr() (ast.Fc, error) {
 			return nil, err
 		}
 		return &ast.FcFn{
-			FnHead:   ast.FcAtom{Value: unaryOp},
-			CallPipe: []*ast.FcFnSeg{{Params: []ast.Fc{right}}},
+			FnHead:    ast.FcAtom{Value: unaryOp},
+			ParamSegs: []*ast.FcFnSeg{{Params: []ast.Fc{right}}},
 		}, nil
 		// return ast.MakeFcFnPipe(*ast.MakeFcAtom("", unaryOp), []*ast.FcFnPipeSeg{ast.MakeFcFnPipeSeg([]ast.Fc{right})})
 	} else {

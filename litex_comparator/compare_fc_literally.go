@@ -87,12 +87,12 @@ func cmpFcFnLit(left, right *ast.FcFn) (int, error) {
 		return comp, err
 	}
 
-	if len(left.CallPipe) != len(right.CallPipe) {
-		return len(left.CallPipe) - len(right.CallPipe), nil
+	if len(left.ParamSegs) != len(right.ParamSegs) {
+		return len(left.ParamSegs) - len(right.ParamSegs), nil
 	}
 
-	for i := 0; i < len(left.CallPipe); i++ {
-		if comp, err := cmpFcFnSegLit(left.CallPipe[i], right.CallPipe[i]); comp != 0 || err != nil {
+	for i := 0; i < len(left.ParamSegs); i++ {
+		if comp, err := cmpFcFnSegLit(left.ParamSegs[i], right.ParamSegs[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
