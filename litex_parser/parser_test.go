@@ -13,28 +13,6 @@ import (
 	"time"
 )
 
-// // Test given string
-// func TestLexerFromString(t *testing.T) {
-// 	content := `
-// def add(a, b):
-//     return a + b
-// `
-// 	blocks, err := getTopLevelStmtSlice(content)
-// 	if err != nil {
-// 		t.Fatalf(err.Error())
-// 	}
-
-// 	for _, block := range blocks.Body {
-// 		fmt.Println(block.String())
-// 	}
-
-// 	// Test invalid syntax
-// 	_, err = getTopLevelStmtSlice(content)
-// 	if err != nil {
-// 		t.Fatalf("Expected error for invalid syntax")
-// 	}
-// }
-
 func TestSplitString(t *testing.T) {
 	input := []string{"interface (v ):"}
 	for _, s := range input {
@@ -1123,7 +1101,7 @@ func readFile(filePath string) string {
 func TestLexTimeParseTime(t *testing.T) {
 	glob.Setup()
 
-	code := readFile("../litex_code_examples/use_storedUniFact_with_uniFact_as_dom.lix")
+	code := readFile("../litex_code_examples/classic_examples/use_storedUniFact_with_uniFact_as_dom.lix")
 
 	start := time.Now()
 	preprocessedCodeLines, err := preprocessSourceCode(code)
@@ -1162,34 +1140,9 @@ func TestLexTimeParseTime(t *testing.T) {
 	parseTime := time.Since(start)
 	_ = ret
 
-	// 	preprocess 41.25µs
-	// parse 338.917µs
+	// preprocess 47.291µs
+	// getStrBlock 11.25µs
+	// tokenize 74.708µs
+	// parse 89.041µs
 	fmt.Printf("preprocess %v\ngetStrBlock %v\ntokenize %v\nparse %v\n", preprocessTime, chunkTime, tokenizeBlockTime, parseTime)
 }
-
-// preprocess 21.167µs
-// getStrBlock 17.459µs
-// tokenize 64.917µs
-// parse 77.167µs
-
-// preprocess 33.75µs
-// getStrBlock 5.167µs
-// tokenize 35.25µs
-// parse 66.334µs
-
-// preprocess 56.667µs
-// getStrBlock 5.584µs
-// tokenize 166.25µs
-// parse 66.667µs
-
-// read file takes 38.083µs
-// parsing takes 226.917µs
-// execution takes 79.5µs
-
-// read file takes 34.417µs
-// parsing takes 323.667µs
-// execution takes 82.458µs
-
-// read file takes 37.166µs
-// parsing takes 232.5µs
-// execution takes 89.458µs

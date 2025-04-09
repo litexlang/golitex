@@ -819,3 +819,41 @@ litex 0.2 前不加入这个功能
    3. 如果用户在repl写litex的时候，产生了runtime error，那我直接把当前环境全部停掉，让用户rerun整个项目
    4. 不过litex的好处是，上一时刻的env和下一时刻的env其实是分的很开的。我甚至可以每次运行一个新的事实的时候，建立一个新的env，让这个env只管这一次语句的执行
       1. 甚至说我还可以让新的env的执行，如果执行ok了，那就让它merge到上一层env里
+
+25.4.9
+第一个能“逻辑完备”地运行的版本
+下面这个东西能正常运行，而且不会iff死锁。因为我最多找2次forall类型事实，不会互相找
+prove:
+    know:
+        // Define: p(x) iff forall y: cond(y) => result(x,y)
+        
+        // p(x) => (forall y: cond(y) => result(x,y))
+        forall x B, y A:
+            $cond(y)
+            $p(x)
+            then:
+                $result(x,y)
+        
+        // (forall y: cond(y) => result(x,y)) => p(x)
+        forall x B:
+            forall y A:
+                $cond(y)
+                then:
+                    $result(x,y)
+            then:
+                $p(x)
+
+    prove: // OK
+        know $p(1)
+        forall y A:
+            $cond(y)
+            then:
+                $result(1,y)
+
+    when:
+        forall y A:
+            $cond(y)
+            then:
+                $result(1,y)
+        then:
+            $p(1)    
