@@ -20,8 +20,8 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 	}
 
 	// TODO 需要改成spec吗?
-	// nextState := state.spec()
-	nextState := state.addRound()
+	nextState := state
+	// nextState := state.addRound()
 
 	ok, err := ver.SpecFactSpec(stmt, nextState)
 	if err != nil {
@@ -76,8 +76,8 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 	//         then:
 	//             $p(y)
 	// $q(1)
-	nextState = state.addRound()
-	// nextState = state
+	// nextState = state.addRound()
+	nextState = state
 
 	// ok, err = ver.SpecFactUni(stmt, nextState)
 	ok, err = ver.SpecFactUni(stmt, nextState)
@@ -240,6 +240,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 			continue
 		}
 
+		// 防止 两个不相等的参数对应到了同一个自由变量
 		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
 		if err != nil {
 			return false, err
@@ -248,6 +249,7 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 			continue
 		}
 
+		//! 把concrete parameter代入uniParam 对新的事实进行验证
 		ok, err = ver.specFactUniWithUniConMap(&knownFact, uniConMap, state)
 		if err != nil {
 			return false, err
@@ -300,7 +302,7 @@ func (ver *Verifier) specFactUniWithUniConMap(knownStmt *mem.StoredUniSpecFact, 
 	for _, condFact := range knownStmt.Fact.DomFacts {
 		// nextState := state.spec().noMsg()
 		// TODO 这里应该取 spec 吗????
-		nextState := state
+		nextState := state.addRound()
 		ok, err := ver.FactStmt(condFact, nextState) // TODO: 这里最好要标注一下是specFact
 		if err != nil {
 			return false, err

@@ -10,6 +10,7 @@ type Fc interface {
 	fc()
 	String() string
 	GetPkgName() string
+	Instantiate(map[string]Fc) (Fc, error)
 }
 
 type FcAtom struct {
@@ -18,8 +19,8 @@ type FcAtom struct {
 }
 
 type FcFn struct {
-	FnHead   FcAtom
-	CallPipe []*FcFnSeg
+	FnHead    FcAtom
+	ParamSegs []*FcFnSeg
 }
 
 type FcFnSeg struct {
@@ -63,10 +64,10 @@ func (f *FcFn) String() string {
 	outPut := string(f.FnHead.Value)
 
 	if glob.IsKeySymbolRelaFn(outPut) {
-		return fmt.Sprintf("%s %s %s", f.CallPipe[0].Params[0], outPut, f.CallPipe[0].Params[1])
+		return fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
 	}
 
-	for _, pair := range f.CallPipe {
+	for _, pair := range f.ParamSegs {
 		if len(pair.Params) > 0 {
 			outPut += "("
 			for i := 0; i < len(pair.Params)-1; i++ {

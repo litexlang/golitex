@@ -240,3 +240,6 @@ prove:
                 $result(1,y)
         then:
             $p(1)        
+
+prove:
+    
