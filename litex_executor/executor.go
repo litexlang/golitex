@@ -109,8 +109,8 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 	}
 
 	// new uni fact
-	uniFactParamTypes := []ast.Fc{}
-	uniFactParamTypes = append(uniFactParamTypes, stmt.DefHeader.SetParams...)
+	uniFactParamSets := []ast.Fc{}
+	uniFactParamSets = append(uniFactParamSets, stmt.DefHeader.SetParams...)
 
 	iffLeadToPropUniFactDomFacts := []ast.FactStmt{}
 	iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, stmt.DomFacts...)
@@ -128,7 +128,7 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 
 	propAsSpecFact := ast.SpecFactStmt{IsTrue: true, PropName: ast.FcAtom{PkgName: "", Value: stmt.DefHeader.Name}, Params: specFactParams}
 
-	IffLeadToProp := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamTypes, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []*ast.SpecFactStmt{&propAsSpecFact}}
+	IffLeadToProp := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []*ast.SpecFactStmt{&propAsSpecFact}}
 
 	err = exec.env.NewFact(&IffLeadToProp)
 	if err != nil {
@@ -137,7 +137,7 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 
 	domFacts := append(stmt.DomFacts, &propAsSpecFact)
 
-	PropLeadToIff := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamTypes, DomFacts: domFacts, ThenFacts: iffFacts}
+	PropLeadToIff := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: domFacts, ThenFacts: iffFacts}
 
 	err = exec.env.NewFact(&PropLeadToIff)
 	if err != nil {

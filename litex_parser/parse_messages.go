@@ -5,8 +5,8 @@ import (
 	glob "golitex/litex_global"
 )
 
-func thenFactMustSpecMsg(curStmt *TokenBlock, err error) error {
-	startStr := curStmt.Header.strAtIndex(0)
+func thenFactMustSpecMsg(curStmt *tokenBlock, err error) error {
+	startStr := curStmt.header.strAtIndex(0)
 	if startStr == glob.KeywordForall {
 		return &parseTimeErr{fmt.Errorf("then fact in universal fact should only be specific fact and can not be universal fact which starts with %s", glob.KeywordForall), *curStmt}
 	}

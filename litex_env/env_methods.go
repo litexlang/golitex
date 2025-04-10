@@ -56,7 +56,6 @@ func (env *Env) NewEqualFact(stmt *ast.SpecFactStmt) error {
 		if leftSearched == rightSearched {
 			return nil
 		} else {
-			// 合并两个
 			*leftSearched.Key.Values = append(*leftSearched.Key.Values, *rightSearched.Key.Values...)
 			rightSearched.Key.Values = leftSearched.Key.Values
 		}
@@ -88,7 +87,6 @@ func (env *Env) NewCondFact(fact *ast.CondFactStmt) error {
 }
 
 func (env *Env) NewUniFact(fact *ast.ConUniFactStmt) error {
-	// return nil
 	err := env.UniFactMem.Insert(fact)
 	if err != nil {
 		return err

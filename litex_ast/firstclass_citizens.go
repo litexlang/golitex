@@ -116,12 +116,12 @@ func isNumLitStr(s string) bool {
 		if c >= '0' && c <= '9' {
 			hasDigit = true
 		} else if c == '.' {
-			if hasDot { // 不能有多个小数点
+			if hasDot {
 				return false
 			}
 			hasDot = true
 		} else {
-			return false // 非法字符
+			return false
 		}
 	}
 

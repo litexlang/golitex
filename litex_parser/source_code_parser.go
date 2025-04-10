@@ -6,7 +6,7 @@ import (
 
 type parseTimeErr struct {
 	previous error
-	stmt     TokenBlock
+	stmt     tokenBlock
 }
 
 func (e *parseTimeErr) Error() string {
@@ -14,11 +14,11 @@ func (e *parseTimeErr) Error() string {
 	// 安全获取基础位置信息
 	var source, position, tokenInfo string
 
-	source = e.stmt.Header.String()
-	position = fmt.Sprintf("column %d", e.stmt.Header.getIndex())
+	source = e.stmt.header.String()
+	position = fmt.Sprintf("column %d", e.stmt.header.getIndex())
 
 	// 尝试获取当前token（失败不影响主要错误信息）
-	if curTok, err := e.stmt.Header.currentToken(); err == nil {
+	if curTok, err := e.stmt.header.currentToken(); err == nil {
 		tokenInfo = fmt.Sprintf(" at '%s'", curTok)
 	}
 

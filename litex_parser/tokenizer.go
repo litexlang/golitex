@@ -169,8 +169,8 @@ func (t *tokenizerWithScope) tokenizeLine(line string) ([]string, error) {
 }
 
 // parseBlocks 递归解析块结构
-func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]TokenBlock, error) {
-	blocks := []TokenBlock{}
+func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error) {
+	blocks := []tokenBlock{}
 	for t.currentLine < len(t.lines) {
 		line := t.lines[t.currentLine]
 		trimmed := strings.TrimSpace(line)
@@ -205,9 +205,9 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]TokenBlock, error
 				return nil, err
 			}
 
-			block := TokenBlock{
-				Header: strSliceCursor{0, tokens},
-				Body:   []TokenBlock{},
+			block := tokenBlock{
+				header: strSliceCursor{0, tokens},
+				body:   []tokenBlock{},
 			}
 
 			t.currentLine++
@@ -223,7 +223,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]TokenBlock, error
 						if err != nil {
 							return nil, err
 						}
-						block.Body = subBlocks
+						block.body = subBlocks
 					}
 				}
 			}
@@ -241,7 +241,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]TokenBlock, error
 }
 
 // makeTokenBlocks 合并 tokenization 和 scope 解析的入口函数
-func makeTokenBlocks(lines []string) ([]TokenBlock, error) {
+func makeTokenBlocks(lines []string) ([]tokenBlock, error) {
 	t := newTokenizerWithScope(lines)
 	return t.parseBlocks(0)
 }

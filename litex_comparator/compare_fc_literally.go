@@ -44,7 +44,6 @@ func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
 		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
 	}
 
-	// Process right
 	var givenEnum FcEnum
 	switch right.(type) {
 	case *ast.FcAtom:

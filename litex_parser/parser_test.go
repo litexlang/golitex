@@ -30,32 +30,6 @@ func TestSplitString(t *testing.T) {
 	}
 }
 
-// func TestParseStrStmtBlock(t *testing.T) {
-// 	subBody := []strBlock{
-// 		{
-// 			Header: "interface (v ):",
-// 			Body:   nil,
-// 		},
-// 	}
-// 	body := []strBlock{
-// 		{
-// 			Header: "interface (v ):",
-// 			Body:   subBody,
-// 		},
-// 	}
-// 	input := strBlock{
-// 		Header: "interface (v ):",
-// 		Body:   body,
-// 	}
-
-// 	parsedBlock, err := tokenizeStmtBlock(&input)
-// 	if err != nil {
-// 		t.Fatalf(err.Error())
-// 	}
-
-// 	fmt.Println(parsedBlock)
-// }
-
 func TestParseFc(t *testing.T) {
 	strings := []string{
 		"f(a, b)(c, d)",
@@ -232,7 +206,7 @@ forall  x :
 func TestParseDefTypeStmt(t *testing.T) {
 	code :=
 		`
-// type  T2
+type  T2
 type   T:
 	type_member:
 		obj 1 
@@ -447,9 +421,6 @@ p(a) + 2 < (2 + 3) * 10 + 4 < 100
 }
 
 func TestIsStmt(t *testing.T) {
-	// 	3 is p[g](a)
-	// $p[g](a)
-
 	code :=
 		`
 ( p(a) + 2 ) is q
@@ -493,9 +464,6 @@ as( p(a, as(p (a), nat)) , G ) is red
 }
 
 func TestDefPropObj(t *testing.T) {
-	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
-	// 1 is red
-
 	code :=
 		`
 fn ha (g1 , g2 ) :
@@ -515,9 +483,6 @@ prop ha (g1 , g2  ) :
 }
 
 func TestPropObj(t *testing.T) {
-	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
-	// 1 is red
-
 	code :=
 		`
 $p(f, g)
@@ -533,15 +498,8 @@ $p(f, as(g3, prop ))
 }
 
 func TestFnDecl(t *testing.T) {
-	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
-	// 1 is red
-
 	code :=
 		`
-// fn ha  (g1 , g2 , g3 , g4 ) red:  // 不行，因为现在不把返回值直接写在后面
-//    1 is red
-
-		
 fn ha  (g1 , g2 ) :
     1 is red
 	ret is red
@@ -568,9 +526,6 @@ $f(a, b).g.t(a, b)
 }
 
 func TestProofClaim(t *testing.T) {
-	// fn ha [G Group] (g1 G, g2 prop [g Group](t G)) red:
-	// 1 is red
-
 	code :=
 		`
 prove:
@@ -703,7 +658,6 @@ forall <G Group, G2 Group> g G, g2 G2:
 	then:
 		$p(x, y)
 
-// when () $f(g.g1, g2.g2), forall $p() {$p()}  {$p()}
 forall () $p() {$p()}
 `
 
@@ -1090,94 +1044,6 @@ know forall x A:
 		t.Fatal(err)
 	}
 }
-
-// func TestParseStrBlocks(t *testing.T) {
-// 	tests := []struct {
-// 		name     string
-// 		input    []string
-// 		expected []strBlock
-// 	}{
-// 		{
-// 			name: "基础缩进2",
-// 			input: []string{
-// 				"x:",
-// 				"  a",
-// 				"  b",
-// 				"  c:",
-// 				"    d",
-// 			},
-// 			expected: []strBlock{
-// 				{
-// 					Header: "x:",
-// 					Body: []strBlock{
-// 						{Header: "a"},
-// 						{Header: "b"},
-// 						{
-// 							Header: "c:",
-// 							Body: []strBlock{
-// 								{Header: "d"},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			name: "header后缩进1空格",
-// 			input: []string{
-// 				"x:",
-// 				" a",
-// 				" b",
-// 			},
-// 			expected: []strBlock{
-// 				{
-// 					Header: "x:",
-// 					Body: []strBlock{
-// 						{Header: "a"},
-// 						{Header: "b"},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			name: "不规则缩进",
-// 			input: []string{
-// 				"x:",
-// 				"   a",
-// 				"   b",
-// 				"       c:",
-// 				"         d",
-// 			},
-// 			expected: []strBlock{
-// 				{
-// 					Header: "x:",
-// 					Body: []strBlock{
-// 						{Header: "a"},
-// 						{Header: "b"},
-// 						{
-// 							Header: "c:",
-// 							Body: []strBlock{
-// 								{Header: "d"},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			got, _, err := parseStrBlocks(tt.input, 0, 0)
-// 			if err != nil {
-// 				t.Fatalf("unexpected error: %v", err)
-// 			}
-// 			if !reflect.DeepEqual(got, tt.expected) {
-// 				t.Errorf("expected %+v, got %+v", tt.expected, got)
-// 			}
-// 		})
-// 	}
-// }
 
 func TestForall3(t *testing.T) {
 	code := `

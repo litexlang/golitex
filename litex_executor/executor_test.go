@@ -70,35 +70,6 @@ func TestKnow(t *testing.T) {
 	}
 }
 
-// func TestVerifier(t *testing.T) {
-// 	code := `know $p(a)`
-// 	statements, err := parser.ParseSourceCode(code)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	env := env.NewEnv(nil, nil, "")
-// 	executor := *NewExecutor(env)
-// 	for _, topStmt := range statements {
-// 		err := executor.TopLevelStmt(&topStmt)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 	}
-
-// 	testCodes := "$p(b)\n$p(a)"
-// 	testStatements, err := parser.ParseSourceCode(testCodes)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	for _, testCode := range testStatements {
-// 		err := executor.TopLevelStmt(&testCode)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 	}
-// }
-
 func randSpecFact() *ast.SpecFactStmt {
 	n := rand.Intn(10) + 1
 	params := make([]ast.Fc, n)
@@ -143,7 +114,7 @@ func randObjParams() []ast.Fc {
 	round := rand.Intn(3) + 1
 	objParams := []ast.Fc{}
 	for i := 0; i < round; i++ {
-		objParams = append(objParams, randFcAtom()) // 这里必须是randFcString不能是randFc，否则会因为内存溢出停掉
+		objParams = append(objParams, randFcAtom())
 	}
 	return objParams
 }

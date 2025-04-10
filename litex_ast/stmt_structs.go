@@ -47,7 +47,6 @@ type ConUniFactStmt struct {
 	ParamSets []Fc
 	DomFacts  []FactStmt
 	ThenFacts []*SpecFactStmt
-	// UniParamsRecur map[string]struct{} // TODO 我觉得这个field是不必要的
 }
 
 type GenUniStmt struct {
@@ -57,7 +56,6 @@ type GenUniStmt struct {
 	ParamSets      []Fc
 	DomFacts       []FactStmt
 	ThenFacts      []*SpecFactStmt
-	// UniParamsAtScope map[string]struct{}
 }
 
 type SpecFactStmt struct {

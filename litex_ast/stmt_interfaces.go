@@ -29,7 +29,6 @@ type FactStmt interface {
 	Instantiate(map[string]Fc) (FactStmt, error)
 }
 
-// func (r *RelaFactStmt) factStmt()   {}
 func (p *SpecFactStmt) factStmt()   {}
 func (p *CondFactStmt) factStmt()   {}
 func (l *ConUniFactStmt) factStmt() {}
