@@ -1231,7 +1231,7 @@ know forall x A:
 func readFile(filePath string) string {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		panic("")
+		panic(err)
 	}
 	return string(content)
 }
@@ -1244,14 +1244,14 @@ func TestLexTimeParseTime(t *testing.T) {
 	start := time.Now()
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
-		panic("")
+		panic(err)
 	}
 	preprocessTime := time.Since(start)
 
 	start = time.Now()
 	slice, err := getTopStrBlocks(preprocessedCodeLines)
 	if err != nil {
-		panic("")
+		panic(err)
 	}
 	chunkTime := time.Since(start)
 
@@ -1260,7 +1260,7 @@ func TestLexTimeParseTime(t *testing.T) {
 	for _, strBlock := range slice.Body {
 		block, err := tokenizeStmtBlock(&strBlock)
 		if err != nil {
-			panic("")
+			panic(err)
 		}
 		blocks = append(blocks, *block)
 	}

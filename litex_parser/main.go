@@ -10,7 +10,7 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 	// code, err := preprocessSourceCode(code)
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
-		return []ast.TopStmt{}, nil
+		return []ast.TopStmt{}, err
 	}
 
 	slice, err := getTopStrBlocks(preprocessedCodeLines)

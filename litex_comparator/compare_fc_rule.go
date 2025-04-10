@@ -32,7 +32,7 @@ func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 	// Case1: 二者都是 Number 上进行+-*/^
 	ok, err := cmpNumLitExpr(left, right)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	if ok {
 		return true, nil

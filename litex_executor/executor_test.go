@@ -521,7 +521,7 @@ $p(x)
 func readFile(filePath string) string {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		panic("")
+		panic(err)
 	}
 	return string(content)
 }

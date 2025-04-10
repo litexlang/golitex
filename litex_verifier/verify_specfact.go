@@ -6,7 +6,6 @@ import (
 	env "golitex/litex_env"
 	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
-	"runtime"
 )
 
 func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -96,8 +95,9 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		// ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state.noMsg())
 		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state)
 		if err != nil {
-			pc, _, _, _ := runtime.Caller(0)
-			return false, glob.NewErrLinkAtFunc(err, runtime.FuncForPC(pc).Name(), "")
+			return false, err
+			// pc, _, _, _ := runtime.Caller(0)
+			// return false, glob.NewErrLinkAtFunc(err, runtime.FuncForPC(pc).Name(), "")
 		}
 		if state.requireMsg() && ok {
 			ver.successMsgEnd(fmt.Sprintf("%s = %s", stmt.Params[0], stmt.Params[1]), "")
