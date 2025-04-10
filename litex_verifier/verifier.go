@@ -58,10 +58,6 @@ func (ver *Verifier) deleteEnvAndRetainMsg() error {
 	}
 }
 
-// func (ver *Verifier) unknownWithMsg(format string, args ...any) {
-// 	ver.unknownMsgEnd(format, args...)
-// }
-
 func (ver *Verifier) asConFc(fc ast.Fc) ast.Fc {
 	fcAsAtom, ok := fc.(*ast.FcAtom)
 	if !ok {
@@ -83,7 +79,3 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 		return nil
 	}
 }
-
-// func verifyStageStmtErr(next error, stmt ast.Stmt) *glob.ErrLink {
-// 	return glob.NewErrLink(next, "%s\nverify-stage error", stmt.String())
-// }

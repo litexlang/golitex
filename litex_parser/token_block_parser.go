@@ -330,7 +330,6 @@ func (stmt *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 		}
 	}
 
-	// return &ast.DefConFnStmt{*decl, retType, domFacts, thenFacts}, nil
 	return ast.NewDefConFnStmt(*decl, retType, domFacts, thenFacts), nil
 }
 
@@ -374,7 +373,6 @@ func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
-	// return &ast.DefObjStmt{objNames, objSets, facts}, nil
 	return ast.NewDefObjStmt(objNames, objSets, facts), nil
 }
 
@@ -421,10 +419,8 @@ func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
 	}
 
 	if isProve {
-		// return &ast.ClaimProveStmt{*toCheck, *proof}, nil
 		return ast.NewClaimProveStmt(*toCheck, *proof), nil
 	} else {
-		// return &ast.ClaimProveByContradictStmt{*toCheck, *proof}, nil
 		return ast.NewClaimProveByContradictStmt(*toCheck, *proof), nil
 	}
 }
@@ -464,7 +460,6 @@ func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
 			return nil, &parseTimeErr{err, *stmt}
 		}
 		facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
-		// return &ast.KnowStmt{facts}, nil
 		return ast.NewKnowStmt(facts), nil
 	}
 
@@ -477,7 +472,6 @@ func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	// return &ast.KnowStmt{facts}, nil
 	return ast.NewKnowStmt(facts), nil
 }
 
@@ -544,7 +538,6 @@ func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	// return &ast.HaveStmt{*propStmt, members}, nil
 	return ast.NewHaveStmt(*propStmt, members), nil
 }
 
@@ -582,7 +575,6 @@ func (stmt *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		params = append(params, fc)
 	}
 
-	// return &ast.SpecFactStmt{true, ast.FcAtom{Value: opt}, params}, nil
 	return ast.NewSpecFactStmt(true, ast.FcAtom{Value: opt}, params), nil
 }
 
@@ -593,7 +585,6 @@ func (stmt *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	// return &ast.AxiomStmt{decl}, nil
 	return ast.NewAxiomStmt(decl), nil
 }
 
@@ -624,7 +615,6 @@ func (stmt *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	// return &ast.ThmStmt{decl, facts}, nil
 	return ast.NewThmStmt(decl, facts), nil
 }
 
@@ -669,7 +659,6 @@ func (stmt *tokenBlock) condFactStmt(uniParams map[string]int) (*ast.CondFactStm
 		thenFacts = append(thenFacts, fact)
 	}
 
-	// return &ast.CondFactStmt{condFacts, thenFacts}, nil
 	return ast.NewCondFactStmt(condFacts, thenFacts), nil
 }
 
@@ -732,7 +721,6 @@ func (stmt *tokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[stri
 		uniParams[param] = 1
 	}
 
-	// return &ast.ConDefHeader{name, params, typeParams}, nil
 	return ast.NewConDefHeader(name, params, typeParams), uniParams, nil
 }
 
