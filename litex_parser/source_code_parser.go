@@ -10,10 +10,24 @@ type parseTimeErr struct {
 }
 
 func (e *parseTimeErr) Error() string {
-	curTok, err := e.stmt.Header.currentToken()
-	if err != nil {
-		return fmt.Sprintf("error at %s, column %d: %s", e.stmt.Header.String(), e.stmt.Header.getIndex(), e.previous.Error())
-	} else {
-		return fmt.Sprintf("error at %s, column %d, at '%s': %s", e.stmt.Header.String(), e.stmt.Header.getIndex(), curTok, e.previous.Error())
+	if e.previous == nil {
+		return "parseTimeErr: nil error"
 	}
+
+	// 安全获取基础位置信息
+	var source, position, tokenInfo string
+
+	source = e.stmt.Header.String()
+	position = fmt.Sprintf("column %d", e.stmt.Header.getIndex())
+
+	// 尝试获取当前token（失败不影响主要错误信息）
+	if curTok, err := e.stmt.Header.currentToken(); err == nil {
+		tokenInfo = fmt.Sprintf(" at '%s'", curTok)
+	}
+
+	return fmt.Sprintf("parse error at %s, %s%s: %v",
+		source,
+		position,
+		tokenInfo,
+		e.previous)
 }

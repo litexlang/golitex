@@ -4,6 +4,7 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
+	"log"
 	"os"
 	"reflect"
 	"regexp"
@@ -1084,12 +1085,12 @@ know forall x A:
 	$q(x)
 
 
-// know forall x A:
-//   	$p(x)
-//   	forall x A:
-//     	$t(y)
-//     	then:
-//      		$q(x)
+know forall x A:
+  	$p(x)
+  	forall x A:
+    	$t(y)
+    			// then:
+     			// 				$q(x)
 // know $p(x)
 // $q(1) // true, 因为 $p(x) 被match 了
 `
@@ -1245,4 +1246,41 @@ func TestLexTimeParseTime(t *testing.T) {
 	// tokenize 74.708µs
 	// parse 89.041µs
 	fmt.Printf("preprocess %v\ngetStrBlock %v\ntokenize %v\nparse %v\n", preprocessTime, chunkTime, tokenizeBlockTime, parseTime)
+}
+
+func TestForall3(t *testing.T) {
+	code := `
+know forall x A:
+		$p(x)
+		forall y A:
+								$t(y)
+		then:
+			$h(x)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}
+
+func TestForall4(t *testing.T) {
+	code := `
+know forall x A:
+		forall y A:
+								$t(y)
+
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		log.Fatalf("%s", err)
+		t.Fatal(err)
+		// panic(%v", err))
+	}
+
 }

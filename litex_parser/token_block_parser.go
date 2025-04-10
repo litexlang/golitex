@@ -315,7 +315,7 @@ func (stmt *TokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 
 	retType, err := stmt.Header.rawFc()
 	if err != nil {
-		return nil, err
+		return nil, &parseTimeErr{err, *stmt}
 	}
 
 	domFacts := []ast.FactStmt{}
