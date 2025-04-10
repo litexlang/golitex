@@ -3,5 +3,4 @@ forall x A:
     forall x B:
         $p(x)
     then:
-        forall y C:
-            $q(y)
+        $q(x)

@@ -4,6 +4,7 @@ package litex_comparator
 
 import (
 	ast "golitex/litex_ast"
+	glob "golitex/litex_global"
 )
 
 func CmpFcRule(left, right ast.Fc) (bool, error) {
@@ -43,7 +44,7 @@ func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 
 // 之所以叫 Expr，因为可能含有运算符+-*/这样的
 func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
-	leftAsNumberFc, ok, err := getNumLitExpr(left)
+	leftAsNumberFc, ok, err := makeFcIntoNumLitExpr(left)
 	if err != nil {
 		return false, err
 	}
@@ -51,7 +52,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	rightAsNumberFc, ok, err := getNumLitExpr(right)
+	rightAsNumberFc, ok, err := makeFcIntoNumLitExpr(right)
 	if err != nil {
 		return false, err
 	}
@@ -59,7 +60,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	leftAsStr, ok, err := evalNumLitFc(leftAsNumberFc)
+	leftAsStr, ok, err := glob.EvalNumLitExprFc(leftAsNumberFc)
 	if err != nil {
 		return false, err
 	}
@@ -67,7 +68,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	rightAsStr, ok, err := evalNumLitFc(rightAsNumberFc)
+	rightAsStr, ok, err := glob.EvalNumLitExprFc(rightAsNumberFc)
 	if err != nil {
 		return false, err
 	}
@@ -79,5 +80,5 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	return CmpBigFloat(leftAsStr, rightAsStr) == 0, nil
+	return glob.CmpBigFloat(leftAsStr, rightAsStr) == 0, nil
 }
