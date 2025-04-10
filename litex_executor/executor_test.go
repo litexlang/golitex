@@ -586,11 +586,6 @@ func TestAllFactCode(t *testing.T) {
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()
-
-	// code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
-	code := readFile("../litex_code_examples/classic_examples/use_storedUniFact_with_uniFact_as_dom.lix")
-	// code := readFile("../litex_code_examples/litex_uniFact.lix")
-
 	readFileTime := time.Since(start)
 	start = time.Now()
 	topStmtSlice := setupAndParseStmtTest(code, t)
@@ -601,3 +596,5 @@ func TestLastFactCode(t *testing.T) {
 	printExecMsg(messages)
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
+
+var code = readFile("../litex_code_examples/classic_examples/use_storedUniFact_with_uniFact_as_dom.lix")

@@ -3,7 +3,6 @@ package litex_parser
 import (
 	"fmt"
 	ast "golitex/litex_ast"
-	glob "golitex/litex_global"
 	"log"
 	"os"
 	"regexp"
@@ -105,7 +104,6 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 }
 
 func ParserTester(code string) ([]ast.Stmt, error) {
-	glob.Setup()
 
 	lines, err := preprocessSourceCode(code)
 	if err != nil {
@@ -653,7 +651,7 @@ prove:
 forall g , g2:
 	when:
 		$p(x, y)
-		when $f(g.g1, g2.g2) {$p()}
+		when $f(g.g1, g2.g2) {$p()}ÂÂ
 	then:
 	    $p(x, y)
 
@@ -1227,7 +1225,6 @@ func readFile(filePath string) string {
 }
 
 func TestLexTimeParseTime(t *testing.T) {
-	glob.Setup()
 
 	code := readFile("../litex_code_examples/classic_examples/uniFact_parser.lix")
 
