@@ -29,7 +29,7 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 
 	ret := []ast.TopStmt{}
 	for _, block := range blocks {
-		cur, err := block.TopLevelStmt()
+		cur, err := block.TopStmt()
 		if err != nil {
 			return nil, err
 		}

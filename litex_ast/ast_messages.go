@@ -161,12 +161,12 @@ func (l *ConUniFactStmt) String() string {
 		for i := 0; i < len(l.Params)-1; i++ {
 			builder.WriteString(l.Params[i])
 			builder.WriteString(" ")
-			builder.WriteString(l.ParamTypes[i].String())
+			builder.WriteString(l.ParamSets[i].String())
 			builder.WriteString(", ")
 		}
 		builder.WriteString(l.Params[len(l.Params)-1])
 		builder.WriteString(" ")
-		builder.WriteString(l.ParamTypes[len(l.Params)-1].String())
+		builder.WriteString(l.ParamSets[len(l.Params)-1].String())
 	}
 	builder.WriteString(":\n")
 	for _, condFact := range l.DomFacts {
@@ -195,12 +195,12 @@ func (head ConDefHeader) String() string {
 		for i := 0; i < len(head.Params)-1; i++ {
 			builder.WriteString(head.Params[i])
 			builder.WriteString(" ")
-			builder.WriteString(head.TypeParams[i].String())
+			builder.WriteString(head.SetParams[i].String())
 			builder.WriteString(",")
 		}
 		builder.WriteString(head.Params[len(head.Params)-1])
 		builder.WriteString(" ")
-		builder.WriteString(head.TypeParams[len(head.Params)-1].String())
+		builder.WriteString(head.SetParams[len(head.Params)-1].String())
 	}
 
 	builder.WriteString("):")

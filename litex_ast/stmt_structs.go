@@ -28,25 +28,25 @@ type DefConPropStmt struct {
 }
 
 type DefConExistPropStmt struct {
-	DefHeader    ConDefHeader
-	ExistFc      []string
-	ExistFcTypes []*FcAtom
-	DomFacts     []FactStmt
-	ThenFacts    []FactStmt
+	DefHeader   ConDefHeader
+	ExistFc     []string
+	ExistFcSets []*FcAtom
+	DomFacts    []FactStmt
+	ThenFacts   []FactStmt
 }
 
 type DefConFnStmt struct {
 	DefHeader ConDefHeader
-	RetType   Fc
+	RetSet    Fc
 	DomFacts  []FactStmt
 	ThenFacts []*SpecFactStmt
 }
 
 type ConUniFactStmt struct {
-	Params     []string // 它可能也是来自另外一个被share的地方。比如defConFn里面的Params，在被存成facts的时候，整个struct被复制到了这里，但本质上它们共享了一片内存
-	ParamTypes []Fc
-	DomFacts   []FactStmt
-	ThenFacts  []*SpecFactStmt
+	Params    []string // 它可能也是来自另外一个被share的地方。比如defConFn里面的Params，在被存成facts的时候，整个struct被复制到了这里，但本质上它们共享了一片内存
+	ParamSets []Fc
+	DomFacts  []FactStmt
+	ThenFacts []*SpecFactStmt
 	// UniParamsRecur map[string]struct{} // TODO 我觉得这个field是不必要的
 }
 
@@ -54,7 +54,7 @@ type GenUniStmt struct {
 	TypeParams     []string
 	TypeInterfaces []*FcAtom
 	Params         []string
-	ParamTypes     []Fc
+	ParamSets      []Fc
 	DomFacts       []FactStmt
 	ThenFacts      []*SpecFactStmt
 	// UniParamsAtScope map[string]struct{}
@@ -111,7 +111,7 @@ type FcFnDecl struct {
 }
 
 type ConDefHeader struct {
-	Name       string
-	Params     []string
-	TypeParams []Fc
+	Name      string
+	Params    []string
+	SetParams []Fc
 }
