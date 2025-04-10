@@ -18,12 +18,6 @@ type StrSliceCursor struct {
 	slice []string
 }
 
-// strBlock 表示一个未 tokenized 的块
-type strBlock struct {
-	Header string
-	Body   []strBlock
-}
-
 // tokenizerWithScope 合并 tokenization 和 scope 解析
 type tokenizerWithScope struct {
 	lines         []string // 所有行
@@ -142,25 +136,33 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]TokenBlock, error
 
 			block := TokenBlock{
 				Header: StrSliceCursor{0, tokens},
-				Body:   nil,
+				Body:   []TokenBlock{},
 			}
 
 			t.currentLine++
 
 			// 如果以冒号结尾，解析子块
 			if strings.HasSuffix(trimmed, ":") {
-				subBlocks, err := t.parseBlocks(indent + 1)
-				if err != nil {
-					return nil, err
+				// 检查下一行的缩进是否大于当前缩进
+				if t.currentLine < len(t.lines) {
+					nextLine := t.lines[t.currentLine]
+					nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
+					if nextIndent > currentIndent {
+						subBlocks, err := t.parseBlocks(nextIndent)
+						if err != nil {
+							return nil, err
+						}
+						block.Body = subBlocks
+					}
 				}
-				block.Body = subBlocks
 			}
 
 			blocks = append(blocks, block)
 			continue
 		}
 
-		// 缩进不符合预期，跳过
+		// 缩进比当前多但不是以冒号结尾的行，跳过或报错？
+		// 这里可以根据需求决定是跳过还是报错
 		t.currentLine++
 	}
 

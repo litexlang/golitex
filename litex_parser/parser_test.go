@@ -6,7 +6,6 @@ import (
 	glob "golitex/litex_global"
 	"log"
 	"os"
-	"reflect"
 	"regexp"
 	"runtime"
 	"strings"
@@ -32,31 +31,31 @@ func TestSplitString(t *testing.T) {
 	}
 }
 
-func TestParseStrStmtBlock(t *testing.T) {
-	subBody := []strBlock{
-		{
-			Header: "interface (v ):",
-			Body:   nil,
-		},
-	}
-	body := []strBlock{
-		{
-			Header: "interface (v ):",
-			Body:   subBody,
-		},
-	}
-	input := strBlock{
-		Header: "interface (v ):",
-		Body:   body,
-	}
+// func TestParseStrStmtBlock(t *testing.T) {
+// 	subBody := []strBlock{
+// 		{
+// 			Header: "interface (v ):",
+// 			Body:   nil,
+// 		},
+// 	}
+// 	body := []strBlock{
+// 		{
+// 			Header: "interface (v ):",
+// 			Body:   subBody,
+// 		},
+// 	}
+// 	input := strBlock{
+// 		Header: "interface (v ):",
+// 		Body:   body,
+// 	}
 
-	parsedBlock, err := tokenizeStmtBlock(&input)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
+// 	parsedBlock, err := tokenizeStmtBlock(&input)
+// 	if err != nil {
+// 		t.Fatalf(err.Error())
+// 	}
 
-	fmt.Println(parsedBlock)
-}
+// 	fmt.Println(parsedBlock)
+// }
 
 func TestParseFc(t *testing.T) {
 	strings := []string{
@@ -113,18 +112,9 @@ func ParserTester(code string) ([]ast.Stmt, error) {
 		return nil, err
 	}
 
-	slice, err := getTopStrBlocks(lines)
+	blocks, err := makeTokenBlocks(lines)
 	if err != nil {
 		return nil, err
-	}
-
-	blocks := []TokenBlock{}
-	for _, strBlock := range slice.Body {
-		block, err := tokenizeStmtBlock(&strBlock)
-		if err != nil {
-			return nil, err
-		}
-		blocks = append(blocks, *block)
 	}
 
 	ret := []ast.Stmt{}
@@ -1103,93 +1093,93 @@ know forall x A:
 	}
 }
 
-func TestParseStrBlocks(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    []string
-		expected []strBlock
-	}{
-		{
-			name: "基础缩进2",
-			input: []string{
-				"x:",
-				"  a",
-				"  b",
-				"  c:",
-				"    d",
-			},
-			expected: []strBlock{
-				{
-					Header: "x:",
-					Body: []strBlock{
-						{Header: "a"},
-						{Header: "b"},
-						{
-							Header: "c:",
-							Body: []strBlock{
-								{Header: "d"},
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "header后缩进1空格",
-			input: []string{
-				"x:",
-				" a",
-				" b",
-			},
-			expected: []strBlock{
-				{
-					Header: "x:",
-					Body: []strBlock{
-						{Header: "a"},
-						{Header: "b"},
-					},
-				},
-			},
-		},
-		{
-			name: "不规则缩进",
-			input: []string{
-				"x:",
-				"   a",
-				"   b",
-				"       c:",
-				"         d",
-			},
-			expected: []strBlock{
-				{
-					Header: "x:",
-					Body: []strBlock{
-						{Header: "a"},
-						{Header: "b"},
-						{
-							Header: "c:",
-							Body: []strBlock{
-								{Header: "d"},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+// func TestParseStrBlocks(t *testing.T) {
+// 	tests := []struct {
+// 		name     string
+// 		input    []string
+// 		expected []strBlock
+// 	}{
+// 		{
+// 			name: "基础缩进2",
+// 			input: []string{
+// 				"x:",
+// 				"  a",
+// 				"  b",
+// 				"  c:",
+// 				"    d",
+// 			},
+// 			expected: []strBlock{
+// 				{
+// 					Header: "x:",
+// 					Body: []strBlock{
+// 						{Header: "a"},
+// 						{Header: "b"},
+// 						{
+// 							Header: "c:",
+// 							Body: []strBlock{
+// 								{Header: "d"},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 		{
+// 			name: "header后缩进1空格",
+// 			input: []string{
+// 				"x:",
+// 				" a",
+// 				" b",
+// 			},
+// 			expected: []strBlock{
+// 				{
+// 					Header: "x:",
+// 					Body: []strBlock{
+// 						{Header: "a"},
+// 						{Header: "b"},
+// 					},
+// 				},
+// 			},
+// 		},
+// 		{
+// 			name: "不规则缩进",
+// 			input: []string{
+// 				"x:",
+// 				"   a",
+// 				"   b",
+// 				"       c:",
+// 				"         d",
+// 			},
+// 			expected: []strBlock{
+// 				{
+// 					Header: "x:",
+// 					Body: []strBlock{
+// 						{Header: "a"},
+// 						{Header: "b"},
+// 						{
+// 							Header: "c:",
+// 							Body: []strBlock{
+// 								{Header: "d"},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := parseStrBlocks(tt.input, 0, 0)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Errorf("expected %+v, got %+v", tt.expected, got)
-			}
-		})
-	}
-}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			got, _, err := parseStrBlocks(tt.input, 0, 0)
+// 			if err != nil {
+// 				t.Fatalf("unexpected error: %v", err)
+// 			}
+// 			if !reflect.DeepEqual(got, tt.expected) {
+// 				t.Errorf("expected %+v, got %+v", tt.expected, got)
+// 			}
+// 		})
+// 	}
+// }
 
 func TestForall3(t *testing.T) {
 	code := `
@@ -1250,22 +1240,12 @@ func TestLexTimeParseTime(t *testing.T) {
 	}
 	preprocessTime := time.Since(start)
 
-	start = time.Now()
-	slice, err := getTopStrBlocks(preprocessedCodeLines)
+	blocks, err := makeTokenBlocks(preprocessedCodeLines)
+
 	if err != nil {
 		panic(err)
 	}
-	chunkTime := time.Since(start)
 
-	start = time.Now()
-	blocks := []TokenBlock{}
-	for _, strBlock := range slice.Body {
-		block, err := tokenizeStmtBlock(&strBlock)
-		if err != nil {
-			panic(err)
-		}
-		blocks = append(blocks, *block)
-	}
 	tokenizeBlockTime := time.Since(start)
 
 	start = time.Now()
@@ -1287,6 +1267,6 @@ func TestLexTimeParseTime(t *testing.T) {
 	// getStrBlock 11.25µs
 	// tokenize 74.708µs
 	// parse 89.041µs
-	fmt.Printf("preprocess %v\ngetStrBlock %v\ntokenize %v\nparse %v\n", preprocessTime, chunkTime, tokenizeBlockTime, parseTime)
+	fmt.Printf("preprocess %v\nmakeBlock %v\nparse %v\n", preprocessTime, tokenizeBlockTime, parseTime)
 	fmt.Printf("all %v", allTime)
 }

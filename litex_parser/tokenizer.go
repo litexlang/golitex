@@ -83,28 +83,28 @@ func (t *tokenizer) tokenizeString() ([]string, error) {
 }
 
 // tokenizeStmtBlock 函数保持不变
-func tokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
-	body := []TokenBlock{}
+// func tokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
+// 	body := []TokenBlock{}
 
-	// 创建一个新的 tokenizer 实例
-	curTokenizer := newTokenizer(b.Header) // 传递字符串的指针
-	headerPtr, err := curTokenizer.tokenizeString()
-	header := headerPtr
+// 	// 创建一个新的 tokenizer 实例
+// 	curTokenizer := newTokenizer(b.Header) // 传递字符串的指针
+// 	headerPtr, err := curTokenizer.tokenizeString()
+// 	header := headerPtr
 
-	if err != nil || header == nil {
-		return nil, err
-	}
+// 	if err != nil || header == nil {
+// 		return nil, err
+// 	}
 
-	// 处理 Body 中的每个元素
-	for _, subBlock := range b.Body {
-		parsedSubBlock, err := tokenizeStmtBlock(&subBlock)
-		if err != nil {
-			return nil, err
-		}
-		body = append(body, *parsedSubBlock)
-	}
-	return &TokenBlock{
-		Header: StrSliceCursor{0, header},
-		Body:   body,
-	}, nil
-}
+// 	// 处理 Body 中的每个元素
+// 	for _, subBlock := range b.Body {
+// 		parsedSubBlock, err := tokenizeStmtBlock(&subBlock)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		body = append(body, *parsedSubBlock)
+// 	}
+// 	return &TokenBlock{
+// 		Header: StrSliceCursor{0, header},
+// 		Body:   body,
+// 	}, nil
+// }
