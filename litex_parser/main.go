@@ -51,6 +51,5 @@ func preprocessSourceCode(code string) ([]string, error) {
 }
 
 func SetupAndParseSourceCode(code string) ([]ast.TopStmt, error) {
-	glob.Setup()
 	return ParseSourceCode(code)
 }
