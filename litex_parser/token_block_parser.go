@@ -55,7 +55,7 @@ func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordThm:
 		ret, err = stmt.thmStmt()
 	default:
-		ret, err = stmt.factStmt(map[string]int{})
+		ret, err = stmt.factStmt(map[string]int{}, true)
 	}
 
 	if err != nil {
@@ -69,9 +69,9 @@ func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
 	return ret, nil
 }
 
-func (stmt *tokenBlock) factStmt(uniParams map[string]int) (ast.FactStmt, error) {
+func (stmt *tokenBlock) factStmt(uniParams map[string]int, uniFactDom bool) (ast.FactStmt, error) {
 	if stmt.header.is(glob.KeywordForall) {
-		return stmt.uniFactStmt(uniParams)
+		return stmt.uniFactStmt(uniParams, uniFactDom)
 	} else if stmt.header.is(glob.KeywordWhen) {
 		return stmt.condFactStmt(uniParams)
 	}
@@ -125,7 +125,7 @@ func (stmt *tokenBlock) specFactStmt(uniParams map[string]int) (*ast.SpecFactStm
 	return ast.NewSpecFactStmt(true, propName, params), nil
 }
 
-func (stmt *tokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, error) {
+func (stmt *tokenBlock) uniFactStmt(uniParams map[string]int, maxAllowedNestedForall bool) (ast.UniFactStmt, error) {
 	err := stmt.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
@@ -169,11 +169,19 @@ func (stmt *tokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, 
 
 	if stmt.body[len(stmt.body)-1].header.is(glob.KeywordThen) {
 		for i := 0; i < len(stmt.body)-1; i++ {
-			curStmt, err := stmt.body[i].factStmt(newUniParams)
-			if err != nil {
-				return nil, &parseTimeErr{err, *stmt}
+			if maxAllowedNestedForall {
+				curStmt, err := stmt.body[i].factStmt(newUniParams, false)
+				if err != nil {
+					return nil, &parseTimeErr{err, *stmt}
+				}
+				domainFacts = append(domainFacts, curStmt)
+			} else {
+				curStmt, err := stmt.body[i].specFactStmt(newUniParams)
+				if err != nil {
+					return nil, uniDomFactMoreThanOneLayerUniFactErrMsg(err, stmt)
+				}
+				domainFacts = append(domainFacts, curStmt)
 			}
-			domainFacts = append(domainFacts, curStmt)
 		}
 		thenFacts, err = stmt.body[len(stmt.body)-1].thenBlockSpecFacts(newUniParams)
 		if err != nil {
@@ -202,7 +210,7 @@ func (stmt *tokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, 
 func (stmt *tokenBlock) bodyFacts(uniParams map[string]int) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for _, f := range stmt.body {
-		fact, err := f.factStmt(uniParams)
+		fact, err := f.factStmt(uniParams, true)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -239,7 +247,7 @@ func (stmt *tokenBlock) blockHeaderBodyFacts(kw string, uniParams map[string]int
 	}
 
 	for _, curStmt := range stmt.body {
-		fact, err := curStmt.factStmt(uniParams)
+		fact, err := curStmt.factStmt(uniParams, true)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -280,7 +288,7 @@ func (stmt *tokenBlock) bodyTwoFactSections(kw string, uniParams map[string]int)
 
 	if stmt.body[len(stmt.body)-1].header.is(kw) {
 		for i := 0; i < len(stmt.body)-1; i++ {
-			curStmt, err := stmt.body[i].factStmt(uniParams)
+			curStmt, err := stmt.body[i].factStmt(uniParams, true)
 			if err != nil {
 				return nil, nil, &parseTimeErr{err, *stmt}
 			}
@@ -292,7 +300,7 @@ func (stmt *tokenBlock) bodyTwoFactSections(kw string, uniParams map[string]int)
 		}
 	} else {
 		for i := 0; i < len(stmt.body); i++ {
-			curStmt, err := stmt.body[i].factStmt(uniParams)
+			curStmt, err := stmt.body[i].factStmt(uniParams, true)
 			if err != nil {
 				return nil, nil, &parseTimeErr{err, *stmt}
 			}
@@ -389,7 +397,7 @@ func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
 
 	for i := 0; i < len(stmt.body)-1; i++ {
 		if !stmt.header.is(glob.KeywordProve) && !stmt.header.is(glob.KeywordProveByContradiction) {
-			fact, err := stmt.body[i].factStmt(map[string]int{})
+			fact, err := stmt.body[i].factStmt(map[string]int{}, true)
 			if err != nil {
 				return nil, &parseTimeErr{err, *stmt}
 			}
@@ -455,7 +463,7 @@ func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
 
 	if !stmt.header.is(glob.KeySymbolColon) {
 		facts := []ast.FactStmt{}
-		fact, err := stmt.factStmt(map[string]int{})
+		fact, err := stmt.factStmt(map[string]int{}, true)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -635,7 +643,7 @@ func (stmt *tokenBlock) condFactStmt(uniParams map[string]int) (*ast.CondFactStm
 	thenFacts := []*ast.SpecFactStmt{}
 
 	for i := 0; i < len(stmt.body)-1; i++ {
-		fact, err := stmt.body[i].factStmt(uniParams)
+		fact, err := stmt.body[i].factStmt(uniParams, true)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -731,7 +739,7 @@ func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, uniParams map[
 
 	if stmt.body[len(stmt.body)-1].header.is(kw) {
 		for i := 0; i < len(stmt.body)-1; i++ {
-			curStmt, err := stmt.body[i].factStmt(uniParams)
+			curStmt, err := stmt.body[i].factStmt(uniParams, true)
 			if err != nil {
 				return nil, nil, &parseTimeErr{err, *stmt}
 			}
