@@ -5,6 +5,7 @@ import (
 	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
 	"os"
+	"reflect"
 	"regexp"
 	"runtime"
 	"strings"
@@ -104,6 +105,8 @@ func TestParseBuiltinFnRetValue(t *testing.T) {
 }
 
 func ParserTester(code string) ([]ast.Stmt, error) {
+	glob.Setup()
+
 	lines, err := preprocessSourceCode(code)
 	if err != nil {
 		return nil, err
@@ -1031,9 +1034,9 @@ prop q(x A):
 func TestIn(t *testing.T) {
 	code := `
 prove:
-    know:
-		x in A
-    x in A
+    	know:
+				x in A
+    	x in A
 `
 
 	statements, err := ParserTester(code)
@@ -1064,20 +1067,29 @@ func TestForall2(t *testing.T) {
 	code := `
 know forall x A:
 	$p(x)
-	forall y A:
-		$t(y)
-	then:
-		$q(x)
+  	forall y A:
+					$t(y)
+					then:
+		 				$q(x)
+	$q(x)
 know $p(x)
 $q(1) // true, 因为 $p(x) 被match 了
 
-// 报错：因为uniParam重复了
+know forall x A:
+	$p(x)
+  	forall y A:
+					$t(y)
+					then:
+		 				$q(x)
+	$q(x)
+
+
 // know forall x A:
-// 	$p(x)
-// 	forall x A:
-// 		$t(y)
-// 	then:
-// 		$q(x)
+//   	$p(x)
+//   	forall x A:
+//     	$t(y)
+//     	then:
+//      		$q(x)
 // know $p(x)
 // $q(1) // true, 因为 $p(x) 被match 了
 `
@@ -1087,6 +1099,94 @@ $q(1) // true, 因为 $p(x) 被match 了
 		fmt.Printf("%v\n", statements)
 	} else {
 		t.Fatal(err)
+	}
+}
+
+func TestParseStrBlocks(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		expected []strBlock
+	}{
+		{
+			name: "基础缩进2",
+			input: []string{
+				"x:",
+				"  a",
+				"  b",
+				"  c:",
+				"    d",
+			},
+			expected: []strBlock{
+				{
+					Header: "x:",
+					Body: []strBlock{
+						{Header: "a"},
+						{Header: "b"},
+						{
+							Header: "c:",
+							Body: []strBlock{
+								{Header: "d"},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "header后缩进1空格",
+			input: []string{
+				"x:",
+				" a",
+				" b",
+			},
+			expected: []strBlock{
+				{
+					Header: "x:",
+					Body: []strBlock{
+						{Header: "a"},
+						{Header: "b"},
+					},
+				},
+			},
+		},
+		{
+			name: "不规则缩进",
+			input: []string{
+				"x:",
+				"   a",
+				"   b",
+				"       c:",
+				"         d",
+			},
+			expected: []strBlock{
+				{
+					Header: "x:",
+					Body: []strBlock{
+						{Header: "a"},
+						{Header: "b"},
+						{
+							Header: "c:",
+							Body: []strBlock{
+								{Header: "d"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, _, err := parseStrBlocks(tt.input, 0, 0)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !reflect.DeepEqual(got, tt.expected) {
+				t.Errorf("expected %+v, got %+v", tt.expected, got)
+			}
+		})
 	}
 }
 

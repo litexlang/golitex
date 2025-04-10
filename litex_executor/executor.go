@@ -102,7 +102,6 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 
 func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
-
 	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefConProp(stmt, exec.env.CurPkg)
 	if err != nil {
@@ -110,12 +109,8 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 	}
 
 	// new uni fact
-	// TODO 这里因为我是用 ptr 来实现某个interface的，所以这里非常愚蠢地需要重新变化一下
 	uniFactParamTypes := []ast.Fc{}
 	uniFactParamTypes = append(uniFactParamTypes, stmt.DefHeader.SetParams...)
-	// for _, tp := range stmt.DefHeader.TypeParams {
-	// 	uniFactParamTypes = append(uniFactParamTypes, tp)
-	// }
 
 	iffLeadToPropUniFactDomFacts := []ast.FactStmt{}
 	iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, stmt.DomFacts...)
@@ -204,19 +199,6 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 
 	uniFactThen := []*ast.SpecFactStmt{&retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
-
-	// uniFactDom := []ast.SpecFactStmt{}
-	// for i, paramSet := range stmt.DefHeader.TypeParams {
-	// 	objInSetFact := ast.SpecFactStmt{
-	// 		IsTrue: true,
-	// 		PropName: ast.FcAtom{
-	// 			PkgName: "",
-	// 			Value:   glob.KeywordIn,
-	// 		},
-	// 		Params: []ast.Fc{&ast.FcAtom{PkgName: exec.env.CurPkg, Value: stmt.DefHeader.Params[i]}, paramSet},
-	// 	}
-	// 	uniFactDom = append(uniFactDom, objInSetFact)
-	// }
 
 	uniFact := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: stmt.DefHeader.SetParams, DomFacts: stmt.DomFacts, ThenFacts: uniFactThen}
 	err = exec.env.NewFact(&uniFact)
