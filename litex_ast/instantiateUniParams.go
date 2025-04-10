@@ -71,7 +71,7 @@ func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 
 func (stmt *ConUniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
 	newParamTypes := []Fc{}
-	for _, param := range stmt.ParamTypes {
+	for _, param := range stmt.ParamSets {
 		newParam, err := param.Instantiate(uniConMap)
 		if err != nil {
 			return nil, err

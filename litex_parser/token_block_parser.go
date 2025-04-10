@@ -6,7 +6,7 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (stmt *TokenBlock) TopLevelStmt() (*ast.TopStmt, error) {
+func (stmt *TokenBlock) TopStmt() (*ast.TopStmt, error) {
 	pub := false
 	if stmt.Header.is(glob.KeywordPub) {
 		stmt.Header.skip()
@@ -88,7 +88,6 @@ func (stmt *TokenBlock) specFactStmt(uniParams map[string]struct{}) (*ast.SpecFa
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	// TODO: 在引入prop_pro后，这里也可能被原地改变
 	propName, err := stmt.Header.rawFcAtom()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}

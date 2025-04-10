@@ -17,7 +17,7 @@ func (ver *Verifier) useStoredUniFactToVerifySpecFact(knownFact *mem.StoredUniSp
 		return false, fmt.Errorf("")
 	}
 
-	ok, err = ver.insUniFactCond(insKnownUniFactAsUniFact, state)
+	ok, err = ver.instUniFactDomFacts(insKnownUniFactAsUniFact, state)
 	if err != nil {
 		return false, err
 	}
@@ -25,10 +25,17 @@ func (ver *Verifier) useStoredUniFactToVerifySpecFact(knownFact *mem.StoredUniSp
 	return ok, nil
 }
 
-func (ver *Verifier) insUniFactCond(insUniFact *ast.ConUniFactStmt, state VerState) (bool, error) {
-	// TODO 检查是否在对应的集合里
-
+func (ver *Verifier) instUniFactDomFacts(insUniFact *ast.ConUniFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
+
+	ok, err := ver.instUniFactParamsInParamSets(insUniFact, nextState)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
 	for _, fact := range insUniFact.DomFacts {
 		ok, err := ver.FactStmt(fact, nextState)
 		if err != nil {
@@ -39,5 +46,12 @@ func (ver *Verifier) insUniFactCond(insUniFact *ast.ConUniFactStmt, state VerSta
 		}
 	}
 
+	return true, nil
+}
+
+func (ver *Verifier) instUniFactParamsInParamSets(insUniFact *ast.ConUniFactStmt, state VerState) (bool, error) {
+	// TODO
+	// TODO 检查是否在对应的集合里
+	_, _ = insUniFact, state
 	return true, nil
 }
