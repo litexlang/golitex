@@ -815,7 +815,7 @@ litex 0.2 前不加入这个功能
       1. 为什么 Python REPL 不自动回滚？
       2. 性能考虑：记录所有变量修改成本高。
       3. 复杂性：Python 允许任意副作用（如文件操作、网络请求），无法自动回滚。
-      4. 设计哲学：Python 采用 "请求原谅比请求许可更容易"（EAFP） 风格，鼓励显式错误处理。
+      4. 设计哲学：Python 采用 "请求原谅比请求许可更容易"（easier ask for forgiveness then permission） 风格，鼓励显式错误处理。
    3. 如果用户在repl写litex的时候，产生了runtime error，那我直接把当前环境全部停掉，让用户rerun整个项目
    4. 不过litex的好处是，上一时刻的env和下一时刻的env其实是分的很开的。我甚至可以每次运行一个新的事实的时候，建立一个新的env，让这个env只管这一次语句的执行
       1. 甚至说我还可以让新的env的执行，如果执行ok了，那就让它merge到上一层env里

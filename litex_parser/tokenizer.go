@@ -3,6 +3,7 @@ package litex_parser
 import (
 	"fmt"
 	glob "golitex/litex_global"
+	"strings"
 )
 
 // tokenizer 结构体封装了 inputString 和 start
@@ -82,29 +83,165 @@ func (t *tokenizer) tokenizeString() ([]string, error) {
 	return result, nil
 }
 
-// tokenizeStmtBlock 函数保持不变
-// func tokenizeStmtBlock(b *strBlock) (*TokenBlock, error) {
-// 	body := []TokenBlock{}
+// strSliceCursor 表示字符串切片的游标
+type strSliceCursor struct {
+	index int
+	slice []string
+}
 
-// 	// 创建一个新的 tokenizer 实例
-// 	curTokenizer := newTokenizer(b.Header) // 传递字符串的指针
-// 	headerPtr, err := curTokenizer.tokenizeString()
-// 	header := headerPtr
+// tokenizerWithScope 合并 tokenization 和 scope 解析
+type tokenizerWithScope struct {
+	lines         []string // 所有行
+	currentLine   int      // 当前行索引
+	currentIndent int      // 当前缩进级别
+}
 
-// 	if err != nil || header == nil {
-// 		return nil, err
-// 	}
+// newTokenizerWithScope 创建一个新的 tokenizerWithScope 实例
+func newTokenizerWithScope(lines []string) *tokenizerWithScope {
+	return &tokenizerWithScope{
+		lines:         lines,
+		currentLine:   0,
+		currentIndent: 0,
+	}
+}
 
-// 	// 处理 Body 中的每个元素
-// 	for _, subBlock := range b.Body {
-// 		parsedSubBlock, err := tokenizeStmtBlock(&subBlock)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		body = append(body, *parsedSubBlock)
-// 	}
-// 	return &TokenBlock{
-// 		Header: StrSliceCursor{0, header},
-// 		Body:   body,
-// 	}, nil
-// }
+// nextToken 返回当前行的下一个 token
+func (t *tokenizerWithScope) nextToken(line string, start int) (string, int, error) {
+	// 跳过注释
+	if start+1 < len(line) && line[start:start+2] == "//" {
+		return "", len(line), nil
+	}
+	if start+1 < len(line) && line[start:start+2] == "/*" {
+		return "", 0, fmt.Errorf("invalid syntax: nested comment block")
+	}
+
+	// 检查关键字或符号
+	if symbol := glob.GetKeySymbol(line, start); symbol != "" {
+		return symbol, start + len(symbol), nil
+	}
+
+	// 跳过空格
+	if line[start] == ' ' {
+		return "", start + 1, nil
+	}
+
+	// 提取 token
+	buffer := ""
+	for i := start; i < len(line); i++ {
+		if glob.GetKeySymbol(line, i) != "" || line[i] == ' ' {
+			break
+		}
+		buffer += string(line[i])
+	}
+	return buffer, start + len(buffer), nil
+}
+
+// tokenizeLine 将一行 tokenize
+func (t *tokenizerWithScope) tokenizeLine(line string) ([]string, error) {
+	tokens := []string{}
+	buffer := ""
+	start := 0
+	for start < len(line) {
+		token, next, err := t.nextToken(line, start)
+		if err != nil {
+			return nil, err
+		}
+		if token == "" {
+			if buffer != "" {
+				tokens = append(tokens, buffer)
+				buffer = ""
+			}
+		} else if glob.GetKeySymbol(line, start) != "" {
+			if buffer != "" {
+				tokens = append(tokens, buffer)
+				buffer = ""
+			}
+			tokens = append(tokens, token)
+		} else {
+			buffer = token
+		}
+		start = next
+	}
+	if buffer != "" {
+		tokens = append(tokens, buffer)
+	}
+	return tokens, nil
+}
+
+// parseBlocks 递归解析块结构
+func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]TokenBlock, error) {
+	blocks := []TokenBlock{}
+	for t.currentLine < len(t.lines) {
+		line := t.lines[t.currentLine]
+		trimmed := strings.TrimSpace(line)
+
+		// 跳过空行或注释
+		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
+			t.currentLine++
+			continue
+		}
+		if strings.HasPrefix(trimmed, "/*") {
+			t.currentLine++
+			for t.currentLine < len(t.lines) {
+				if strings.Contains(t.lines[t.currentLine], "*/") {
+					t.currentLine++
+					break
+				}
+				t.currentLine++
+			}
+			continue
+		}
+
+		// 计算缩进
+		indent := len(line) - len(strings.TrimLeft(line, " "))
+		if indent < currentIndent {
+			return blocks, nil
+		}
+
+		// 解析当前行
+		if indent == currentIndent {
+			tokens, err := t.tokenizeLine(trimmed)
+			if err != nil {
+				return nil, err
+			}
+
+			block := TokenBlock{
+				Header: strSliceCursor{0, tokens},
+				Body:   []TokenBlock{},
+			}
+
+			t.currentLine++
+
+			// 如果以冒号结尾，解析子块
+			if strings.HasSuffix(trimmed, ":") {
+				// 检查下一行的缩进是否大于当前缩进
+				if t.currentLine < len(t.lines) {
+					nextLine := t.lines[t.currentLine]
+					nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
+					if nextIndent > currentIndent {
+						subBlocks, err := t.parseBlocks(nextIndent)
+						if err != nil {
+							return nil, err
+						}
+						block.Body = subBlocks
+					}
+				}
+			}
+
+			blocks = append(blocks, block)
+			continue
+		}
+
+		// 缩进比当前多但不是以冒号结尾的行，跳过或报错？
+		// 这里可以根据需求决定是跳过还是报错
+		t.currentLine++
+	}
+
+	return blocks, nil
+}
+
+// makeTokenBlocks 合并 tokenization 和 scope 解析的入口函数
+func makeTokenBlocks(lines []string) ([]TokenBlock, error) {
+	t := newTokenizerWithScope(lines)
+	return t.parseBlocks(0)
+}

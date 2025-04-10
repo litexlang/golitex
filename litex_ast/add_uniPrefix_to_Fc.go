@@ -35,11 +35,6 @@ func AddUniPrefixToFc(fc Fc, uniParams map[string]int) (Fc, error) {
 
 	newFcFn := FcFn{FcAtom{}, []*FcFnSeg{}}
 	fcAsFcFn.FnHead = *AddUniPrefixToFcAtom(&fcAsFcFn.FnHead, uniParams)
-	// if FcAtomInUniParams(&fcAsFcFn.FnHead, uniParams) {
-	// 	return NewFcAtom("", glob.UniParamPrefix+fcAsFcFn.FnHead.Value), nil
-	// } else {
-	// 	newFcFn.FnHead = fcAsFcFn.FnHead
-	// }
 
 	for _, seg := range fcAsFcFn.ParamSegs {
 		curSeg := &FcFnSeg{[]Fc{}}
