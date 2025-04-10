@@ -1027,14 +1027,20 @@ know forall x A:
 	$q(x)
 
 
+know :
+	forall x A:
+		$p(x)
+		forall x B:
+			$t(y)
+		then:
+				$p(x)
+
 know forall x A:
-  	$p(x)
-  	forall x A:
-    	$t(y)
-    			// then:
-     			// 				$q(x)
-// know $p(x)
-// $q(1) // true, 因为 $p(x) 被match 了
+		$p(x)
+		forall x B:
+			$t(y, x)
+		then:
+				$p(x)
 `
 
 	statements, err := ParserTester(code)
@@ -1076,8 +1082,6 @@ know forall x A:
 		fmt.Printf("%v\n", statements)
 	} else {
 		log.Fatalf("%s", err)
-		// t.Fatal(err)
-		// panic(%v", err))
 	}
 
 }
@@ -1132,4 +1136,22 @@ func TestLexTimeParseTime(t *testing.T) {
 	// parse 89.041µs
 	fmt.Printf("preprocess %v\nmakeBlock %v\nparse %v\n", preprocessTime, tokenizeBlockTime, parseTime)
 	fmt.Printf("all %v", allTime)
+}
+
+func TestForall5(t *testing.T) {
+	code := `
+know forall x A:
+	$p(x)
+	forall x B:
+		$t(y)
+	then:
+			$p(x)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
 }

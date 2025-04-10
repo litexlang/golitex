@@ -7,8 +7,6 @@ type VerState uint8
 const (
 	SpecMsg VerState = iota
 	SpecNoMsg
-	// AnyMsg
-	// AnyNoMsg
 	Round0Msg
 	Round0NoMsg
 	Round1Msg
@@ -45,15 +43,3 @@ func (e VerState) addRound() VerState {
 		return e
 	}
 }
-
-// func (e VerState) noMsg() VerState {
-// 	switch e {
-// 	case Round0Msg:
-// 		return Round0NoMsg
-// 	case Round1Msg:
-// 		return Round1NoMsg
-// 	case SpecMsg:
-// 		return SpecNoMsg
-// 	}
-// 	return e
-// }
