@@ -1241,6 +1241,8 @@ func TestLexTimeParseTime(t *testing.T) {
 
 	code := readFile("../litex_code_examples/classic_examples/uniFact_parser.lix")
 
+	veryStart := time.Now()
+
 	start := time.Now()
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
@@ -1276,6 +1278,9 @@ func TestLexTimeParseTime(t *testing.T) {
 		ret = append(ret, *cur)
 	}
 	parseTime := time.Since(start)
+
+	allTime := time.Since(veryStart)
+
 	fmt.Println(ret)
 
 	// preprocess 47.291µs
@@ -1283,4 +1288,5 @@ func TestLexTimeParseTime(t *testing.T) {
 	// tokenize 74.708µs
 	// parse 89.041µs
 	fmt.Printf("preprocess %v\ngetStrBlock %v\ntokenize %v\nparse %v\n", preprocessTime, chunkTime, tokenizeBlockTime, parseTime)
+	fmt.Printf("all %v", allTime)
 }
