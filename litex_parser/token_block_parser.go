@@ -93,6 +93,7 @@ func (stmt *TokenBlock) specFactStmt(uniParams map[string]struct{}) (*ast.SpecFa
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
+	propName = *ast.AddUniPrefixToFcAtom(&propName, uniParams)
 
 	params := []ast.Fc{}
 	err = stmt.Header.skip(glob.KeySymbolLeftParen)
@@ -122,11 +123,9 @@ func (stmt *TokenBlock) specFactStmt(uniParams map[string]struct{}) (*ast.SpecFa
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	// return &ast.SpecFactStmt{true, opt, params}, nil
 	return ast.NewSpecFactStmt(true, propName, params), nil
 }
 
-// TODO uniParam 要加入
 func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactStmt, error) {
 	err := stmt.Header.skip(glob.KeywordForall)
 	if err != nil {
@@ -148,7 +147,7 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
-	// 原地把param前面加上prefix
+
 	for i, param := range params {
 		params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
 	}
@@ -193,11 +192,6 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 			thenFacts = append(thenFacts, curStmt)
 		}
 	}
-
-	// uniParamsRecur, err := getUniParamsInUniFactRecursively(domainFacts, params)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	if len(typeParams) > 0 {
 		return ast.NewGenericUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts), nil

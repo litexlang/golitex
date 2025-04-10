@@ -5,15 +5,26 @@ import (
 	glob "golitex/litex_global"
 )
 
+func FcAtomInUniParams(atom *FcAtom, uniParams map[string]struct{}) bool {
+	if atom.PkgName == "" {
+		if _, ok := uniParams[atom.Value]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func AddUniPrefixToFcAtom(atom *FcAtom, uniParams map[string]struct{}) *FcAtom {
+	if FcAtomInUniParams(atom, uniParams) {
+		atom.Value = fmt.Sprintf("%s%s", glob.UniParamPrefix, atom.Value)
+	}
+	return atom
+}
+
 func AddUniPrefixToFc(fc Fc, uniParams map[string]struct{}) (Fc, error) {
 	fcAsAtom, ok := fc.(*FcAtom)
 	if ok {
-		if fcAsAtom.PkgName == "" {
-			if _, exists := uniParams[glob.UniParamPrefix+fcAsAtom.Value]; exists {
-				return NewFcAtom("", glob.UniParamPrefix+fcAsAtom.Value), nil
-			}
-		}
-		return fc, nil
+		return AddUniPrefixToFcAtom(fcAsAtom, uniParams), nil
 	}
 
 	fcAsFcFn, ok := fc.(*FcFn)
@@ -22,10 +33,8 @@ func AddUniPrefixToFc(fc Fc, uniParams map[string]struct{}) (Fc, error) {
 	}
 
 	newFcFn := FcFn{FcAtom{}, []*FcFnSeg{}}
-	if fcAsFcFn.FnHead.PkgName == "" {
-		if _, exists := uniParams[glob.UniParamPrefix+fcAsFcFn.FnHead.Value]; exists {
-			return NewFcAtom("", glob.UniParamPrefix+fcAsFcFn.FnHead.Value), nil
-		}
+	if FcAtomInUniParams(&fcAsFcFn.FnHead, uniParams) {
+		return NewFcAtom("", glob.UniParamPrefix+fcAsFcFn.FnHead.Value), nil
 	} else {
 		newFcFn.FnHead = fcAsFcFn.FnHead
 	}
