@@ -13,19 +13,24 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 		return []ast.TopStmt{}, err
 	}
 
-	slice, err := getTopStrBlocks(preprocessedCodeLines)
+	blocks, err := makeTokenBlocks(preprocessedCodeLines)
 	if err != nil {
 		return nil, err
 	}
 
-	blocks := []TokenBlock{}
-	for _, strBlock := range slice.Body {
-		block, err := tokenizeStmtBlock(&strBlock)
-		if err != nil {
-			return nil, err
-		}
-		blocks = append(blocks, *block)
-	}
+	// slice, err := getTopStrBlocks(preprocessedCodeLines)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// blocks := []TokenBlock{}
+	// for _, strBlock := range slice.Body {
+	// 	block, err := tokenizeStmtBlock(&strBlock)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	blocks = append(blocks, *block)
+	// }
 
 	ret := []ast.TopStmt{}
 	for _, block := range blocks {

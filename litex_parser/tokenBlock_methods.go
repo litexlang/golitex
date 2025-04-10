@@ -33,10 +33,10 @@ type topStrBlocks struct {
 }
 
 // strBlock 结构体表示一个语句块
-type strBlock struct {
-	Header string
-	Body   []strBlock
-}
+// type strBlock struct {
+// 	Header string
+// 	Body   []strBlock
+// }
 
 // const parseIndent = 4
 
@@ -288,24 +288,6 @@ func findNextValidLine(lines []string, startIndex int) (int, error) {
 	}
 	return i, nil
 }
-
-// 解析一个块的 body（缩进检查 + 递归解析）
-// func parseBlockBody(lines []string, currentIndent int, i int, headerLine string) ([]strBlock, int, error) {
-// 	nextLineIndex, err := findNextValidLine(lines, i)
-// 	if err != nil {
-// 		return nil, i, err
-// 	}
-// 	if nextLineIndex >= len(lines) {
-// 		return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", headerLine)
-// 	}
-
-// 	nextIndent := len(lines[nextLineIndex]) - len(strings.TrimLeft(lines[nextLineIndex], " "))
-// 	if nextIndent != currentIndent+parseIndent {
-// 		return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望缩进 %d，实际缩进 %d", headerLine, currentIndent+parseIndent, nextIndent)
-// 	}
-
-// 	return parseStrBlocks(lines, currentIndent+parseIndent, nextLineIndex)
-// }
 
 func parseBlockBody(lines []string, currentIndent int, i int, headerLine string) ([]strBlock, int, error) {
 	nextLineIndex, err := findNextValidLine(lines, i)
