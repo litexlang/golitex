@@ -1,7 +1,6 @@
 package litex_comparator
 
 import (
-	"fmt"
 	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
 )
@@ -14,7 +13,8 @@ func makeFcIntoNumLitExpr(fc ast.Fc) (*glob.NumLitExpr, bool, error) {
 
 	asFcFn, ok := fc.(*ast.FcFn)
 	if !ok {
-		return nil, false, fmt.Errorf("")
+		// is atom
+		return nil, false, nil
 	}
 
 	opt := asFcFn.FnHead.Value

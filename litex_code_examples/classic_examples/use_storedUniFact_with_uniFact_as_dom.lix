@@ -52,6 +52,8 @@ prove:
         then:
             $p(1)
 
+
+
 prove:
     know:
         forall x A:
@@ -71,3 +73,4 @@ prove:
             then:
                 $p(x)
     $p(1) // unknown. NO IFF DEAD LOCK
+
