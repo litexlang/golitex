@@ -184,23 +184,12 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, 
 		for i := 0; i < len(stmt.Body); i++ {
 			// 这里要么是直接parse Spec Fact ，要么是parseFact，然后(*type)成spec。前者好处是，就应该这么干；后者好处是，如果你输入了forall，那我报错可以直接指出问题
 			// Method1
-			// curStmt, err := stmt.Body[i].specFactStmt(newUniParams)
-
-			// Method2
-			curStmt, err := stmt.Body[i].factStmt(newUniParams)
+			curStmt, err := stmt.Body[i].specFactStmt(newUniParams)
 			if err != nil {
-				return nil, &parseTimeErr{err, *stmt}
+				return nil, thenFactMustSpecMsg(&stmt.Body[i], err)
 			}
 
-			curStmtAsSpec, ok := curStmt.(*ast.SpecFactStmt)
-			if !ok {
-				return nil, &parseTimeErr{fmt.Errorf("then facts in a universal fact must be a specific fact. Universal fact(start with %s), conditional fact(start with %s)", glob.KeywordForall, glob.KeywordWhen), *stmt}
-			}
-
-			if err != nil {
-				return nil, &parseTimeErr{err, *stmt}
-			}
-			thenFacts = append(thenFacts, curStmtAsSpec)
+			thenFacts = append(thenFacts, curStmt)
 		}
 	}
 
@@ -234,8 +223,9 @@ func (stmt *TokenBlock) thenBlockSpecFacts(uniParams map[string]int) ([]*ast.Spe
 	for _, curStmt := range stmt.Body {
 		fact, err := curStmt.specFactStmt(uniParams)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, thenFactMustSpecMsg(&curStmt, err)
 		}
+
 		facts = append(facts, fact)
 	}
 

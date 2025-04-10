@@ -10,6 +10,10 @@ type StrSliceCursor struct {
 	slice []string
 }
 
+func (p *StrSliceCursor) strAtIndex(index uint32) string {
+	return p.slice[index]
+}
+
 func (p *StrSliceCursor) strAtCurIndexPlus(plusIndex int) string {
 	i := p.index + plusIndex
 
