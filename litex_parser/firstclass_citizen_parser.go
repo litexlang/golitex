@@ -4,7 +4,6 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
-	"strconv"
 )
 
 func (parser *StrSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
@@ -159,35 +158,41 @@ func (parser *StrSliceCursor) fcUnaryExpr() (ast.Fc, error) {
 
 func (parser *StrSliceCursor) numberStr() (*ast.FcAtom, error) {
 	left, err := parser.next()
-
 	if err != nil {
 		return &ast.FcAtom{Value: ""}, err
 	}
 
-	// if left[0] == '0' {
-	// 	return &FcAtom{OptName: ""}, fmt.Errorf("invalid number, 0 is not allowed in the first position of a number")
-	// }
-
-	_, err = strconv.Atoi(left)
-	if err != nil {
-		return &ast.FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
+	// 检查left是否全是数字
+	for _, c := range left {
+		if c < '0' || c > '9' {
+			return &ast.FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", left)
+		}
 	}
 
 	if parser.is(glob.KeySymbolDot) {
-		// The member after . might be a member or a number
-		_, err := strconv.Atoi(parser.strAtCurIndexPlus(1))
-		if err != nil {
-			return &ast.FcAtom{Value: left}, err
-		} else {
+		// 检查下一个字符是否是数字
+		nextChar := parser.strAtCurIndexPlus(1)
+		if len(nextChar) == 0 {
+			return &ast.FcAtom{Value: left}, nil
+		}
+
+		allDigits := true
+		for _, c := range nextChar {
+			if c < '0' || c > '9' {
+				allDigits = false
+				break
+			}
+		}
+
+		if allDigits {
 			parser.skip()
 			right, err := parser.next()
-
 			if err != nil {
 				return &ast.FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", right)
 			}
-
 			return &ast.FcAtom{Value: left + "." + right}, nil
 		}
+		return &ast.FcAtom{Value: left}, nil
 	}
 
 	return &ast.FcAtom{Value: left}, nil
