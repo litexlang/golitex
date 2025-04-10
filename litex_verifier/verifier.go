@@ -58,19 +58,6 @@ func (ver *Verifier) deleteEnvAndRetainMsg() error {
 	}
 }
 
-func (ver *Verifier) asConFc(fc ast.Fc) ast.Fc {
-	fcAsAtom, ok := fc.(*ast.FcAtom)
-	if !ok {
-		return nil
-	}
-
-	if fcAsAtom.PkgName != "" {
-		return nil
-	}
-
-	return ver.env.UniParamMap[fcAsAtom.Value]
-}
-
 func (ver *Verifier) newMsgAtParent(s string) error {
 	if ver.env.Parent == nil {
 		return fmt.Errorf("no parent env")

@@ -8,18 +8,8 @@ import (
 )
 
 func (ver *Verifier) FcEqual(left, right ast.Fc, state VerState) (bool, error) {
-	// check whether given left or right is uniParam
-	//TODO 这两行可能不必要。我要做的是在用uniFact验证的时候，把整个storedFact里面的freeFact直接原地变成新的事实存进去。
-	concreteLeft := ver.asConFc(left)
-	if concreteLeft != nil {
-		left = concreteLeft
-	}
-	concreteRight := ver.asConFc(right)
-	if concreteRight != nil {
-		right = concreteRight
-	}
-
-	nextState := state.addRound()
+	// nextState := state.addRound()
+	nextState := state
 	ok, err := ver.fcEqualSpec(left, right, nextState)
 	if err != nil {
 		return false, err
@@ -38,7 +28,6 @@ func (ver *Verifier) FcEqual(left, right ast.Fc, state VerState) (bool, error) {
 }
 
 func (ver *Verifier) FcEqualSpecInSpecMemLitAtEnv(curEnv *env.Env, left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	// ok, err := ver.FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv, left, right, state)
 	ok, err := ver.FcEqualSpecUseEnvSpecMemRule(curEnv, left, right, state)
 	if err != nil {
 		return false, err
@@ -46,7 +35,6 @@ func (ver *Verifier) FcEqualSpecInSpecMemLitAtEnv(curEnv *env.Env, left ast.Fc, 
 	if ok {
 		return true, nil
 	}
-	// ok, err = ver.FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv, right, left, state)
 	ok, err = ver.FcEqualSpecUseEnvSpecMemRule(curEnv, right, left, state)
 	if err != nil {
 		return false, err

@@ -21,8 +21,3 @@ func (ver *Verifier) unknownMsgEnd(format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
 	ver.env.Msgs = append(ver.env.Msgs, message)
 }
-
-// func (ver *Verifier) appendMsg(format string, args ...any) {
-// 	message := fmt.Sprintf(format, args...)
-// 	ver.env.Msgs = append(ver.env.Msgs, message)
-// }
