@@ -129,118 +129,254 @@ func getTopStrBlocks(lines []string) (*topStrBlocks, error) {
 	return &topStrBlocks{blocks}, err
 }
 
+// func parseStrBlocks(lines []string, currentIndent int, startIndex int) ([]strBlock, int, error) {
+// 	blocks := []strBlock{}
+// 	i := startIndex
+
+// 	for i < len(lines) {
+// 		line := (lines)[i]
+// 		trimLine := strings.TrimSpace(line)
+
+// 		// 跳过空行
+// 		if trimLine == "" {
+// 			i++
+// 			continue
+// 		}
+
+// 		// 跳过单行注释
+// 		if strings.HasPrefix(trimLine, "//") {
+// 			i++
+// 			continue
+// 		}
+
+// 		// 跳过多行注释
+// 		if strings.HasPrefix(trimLine, "/*") {
+// 			// 找到 */，可能跨越多行
+// 			j := i + 1
+// 			for j < len((lines)) {
+// 				if strings.Contains((lines)[j], "*/") {
+// 					if !strings.HasSuffix(strings.TrimSpace((lines)[j]), "*/") {
+// 						return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", (lines)[j])
+// 					}
+// 					break
+// 				}
+// 				j++
+// 			}
+// 			i = j + 1
+// 			continue
+// 		}
+
+// 		indent := len(line) - len(strings.TrimLeft(line, " "))
+
+// 		// 如果当前行的缩进小于当前块的缩进，返回
+// 		if indent < currentIndent {
+// 			return blocks, i, nil
+// 		}
+
+// 		// 如果当前行的缩进等于当前块的缩进，创建一个新的块
+// 		if indent == currentIndent {
+// 			block := strBlock{
+// 				Header: strings.TrimSpace(line),
+// 				Body:   nil,
+// 			}
+
+// 			// 如果 trimLine 以 : 结尾，检查下一行的缩进
+// 			if strings.HasSuffix(trimLine, ":") {
+// 				i++
+// 				// 找到下一个非空、非注释的行
+// 				nextLineIndex := i
+// 				for nextLineIndex < len((lines)) {
+// 					nextLine := (lines)[nextLineIndex]
+// 					nextTrimLine := strings.TrimSpace(nextLine)
+
+// 					// 跳过空行和注释
+// 					if nextTrimLine == "" || strings.HasPrefix(nextTrimLine, "//") {
+// 						nextLineIndex++
+// 						continue
+// 					}
+
+// 					// 处理多行注释 /* ... */
+// 					if strings.HasPrefix(nextTrimLine, "/*") {
+// 						// 找到注释的结束位置 */
+// 						for nextLineIndex < len((lines)) {
+// 							if strings.Contains((lines)[nextLineIndex], "*/") {
+// 								if !strings.HasSuffix(strings.TrimSpace((lines)[nextLineIndex]), "*/") {
+// 									return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", (lines)[nextLineIndex])
+// 								}
+// 								nextLineIndex++
+// 								break
+// 							}
+// 							nextLineIndex++
+// 						}
+// 						continue
+// 					}
+
+// 					// 检查下一行的缩进是否等于 currentIndent + parseIndent
+// 					nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
+// 					if nextIndent != currentIndent+parseIndent {
+// 						return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望缩进 %d，实际缩进 %d", trimLine, currentIndent+parseIndent, nextIndent)
+// 					}
+
+// 					// 递归解析子块
+// 					subBlocks, nextIndex, err := parseStrBlocks(lines, currentIndent+parseIndent, nextLineIndex)
+// 					if err != nil {
+// 						return nil, i, err
+// 					}
+// 					block.Body = subBlocks
+// 					i = nextIndex
+// 					break
+// 				}
+
+// 				// 如果没有找到有效的下一行，报错
+// 				if nextLineIndex >= len(lines) {
+// 					return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", trimLine)
+// 				}
+// 			} else {
+// 				// 否则，直接跳过该行
+// 				i++
+// 			}
+
+// 			blocks = append(blocks, block)
+// 		} else {
+// 			// 如果缩进不符合预期，跳过该行
+// 			i++
+// 		}
+// 	}
+
+// 	return blocks, i, nil
+// }
+
+// 是否是空行或单行注释
+func isSkippableLine(line string) bool {
+	trimLine := strings.TrimSpace(line)
+	return trimLine == "" || strings.HasPrefix(trimLine, "//")
+}
+
+// 跳过多行注释，返回跳过后的行号
+func skipMultilineComment(lines []string, startIndex int) (int, error) {
+	j := startIndex + 1
+	for j < len(lines) {
+		if strings.Contains(lines[j], "*/") {
+			if !strings.HasSuffix(strings.TrimSpace(lines[j]), "*/") {
+				return 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", lines[j])
+			}
+			return j + 1, nil
+		}
+		j++
+	}
+	return 0, fmt.Errorf("unterminated multi-line comment")
+}
+
+// 查找下一个有效行（跳过空行和注释）
+func findNextValidLine(lines []string, startIndex int) (int, error) {
+	i := startIndex
+	for i < len(lines) {
+		line := lines[i]
+		if isSkippableLine(line) {
+			i++
+			continue
+		}
+		if strings.HasPrefix(strings.TrimSpace(line), "/*") {
+			var err error
+			i, err = skipMultilineComment(lines, i)
+			if err != nil {
+				return 0, err
+			}
+			continue
+		}
+		break
+	}
+	return i, nil
+}
+
+// 解析一个块的 body（缩进检查 + 递归解析）
+// func parseBlockBody(lines []string, currentIndent int, i int, headerLine string) ([]strBlock, int, error) {
+// 	nextLineIndex, err := findNextValidLine(lines, i)
+// 	if err != nil {
+// 		return nil, i, err
+// 	}
+// 	if nextLineIndex >= len(lines) {
+// 		return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", headerLine)
+// 	}
+
+// 	nextIndent := len(lines[nextLineIndex]) - len(strings.TrimLeft(lines[nextLineIndex], " "))
+// 	if nextIndent != currentIndent+parseIndent {
+// 		return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望缩进 %d，实际缩进 %d", headerLine, currentIndent+parseIndent, nextIndent)
+// 	}
+
+// 	return parseStrBlocks(lines, currentIndent+parseIndent, nextLineIndex)
+// }
+
+func parseBlockBody(lines []string, currentIndent int, i int, headerLine string) ([]strBlock, int, error) {
+	nextLineIndex, err := findNextValidLine(lines, i)
+	if err != nil {
+		return nil, i, err
+	}
+	if nextLineIndex >= len(lines) {
+		return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", headerLine)
+	}
+
+	firstLine := lines[nextLineIndex]
+	baseIndent := len(firstLine) - len(strings.TrimLeft(firstLine, " "))
+	if baseIndent <= currentIndent {
+		return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望比 %d 更大，实际 %d", headerLine, currentIndent, baseIndent)
+	}
+
+	// 调用 parseStrBlocks 用 baseIndent 作为当前层级的缩进要求
+	return parseStrBlocks(lines, baseIndent, nextLineIndex)
+}
+
+// 主流程
 func parseStrBlocks(lines []string, currentIndent int, startIndex int) ([]strBlock, int, error) {
 	blocks := []strBlock{}
 	i := startIndex
 
 	for i < len(lines) {
-		line := (lines)[i]
-		trimLine := strings.TrimSpace(line)
+		line := lines[i]
 
-		// 跳过空行
-		if trimLine == "" {
+		if isSkippableLine(line) {
 			i++
 			continue
 		}
 
-		// 跳过单行注释
-		if strings.HasPrefix(trimLine, "//") {
-			i++
-			continue
-		}
-
-		// 跳过多行注释
-		if strings.HasPrefix(trimLine, "/*") {
-			// 找到 */，可能跨越多行
-			j := i + 1
-			for j < len((lines)) {
-				if strings.Contains((lines)[j], "*/") {
-					if !strings.HasSuffix(strings.TrimSpace((lines)[j]), "*/") {
-						return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", (lines)[j])
-					}
-					break
-				}
-				j++
+		if strings.HasPrefix(strings.TrimSpace(line), "/*") {
+			var err error
+			i, err = skipMultilineComment(lines, i)
+			if err != nil {
+				return nil, i, err
 			}
-			i = j + 1
 			continue
 		}
 
 		indent := len(line) - len(strings.TrimLeft(line, " "))
-
-		// 如果当前行的缩进小于当前块的缩进，返回
 		if indent < currentIndent {
 			return blocks, i, nil
 		}
 
-		// 如果当前行的缩进等于当前块的缩进，创建一个新的块
 		if indent == currentIndent {
+			headerLine := strings.TrimSpace(line)
 			block := strBlock{
-				Header: strings.TrimSpace(line),
+				Header: headerLine,
 				Body:   nil,
 			}
 
-			// 如果 trimLine 以 : 结尾，检查下一行的缩进
-			if strings.HasSuffix(trimLine, ":") {
-				i++
-				// 找到下一个非空、非注释的行
-				nextLineIndex := i
-				for nextLineIndex < len((lines)) {
-					nextLine := (lines)[nextLineIndex]
-					nextTrimLine := strings.TrimSpace(nextLine)
+			i++
 
-					// 跳过空行和注释
-					if nextTrimLine == "" || strings.HasPrefix(nextTrimLine, "//") {
-						nextLineIndex++
-						continue
-					}
-
-					// 处理多行注释 /* ... */
-					if strings.HasPrefix(nextTrimLine, "/*") {
-						// 找到注释的结束位置 */
-						for nextLineIndex < len((lines)) {
-							if strings.Contains((lines)[nextLineIndex], "*/") {
-								if !strings.HasSuffix(strings.TrimSpace((lines)[nextLineIndex]), "*/") {
-									return nil, 0, fmt.Errorf("invalid line: a line with */ should end with */:\n%s", (lines)[nextLineIndex])
-								}
-								nextLineIndex++
-								break
-							}
-							nextLineIndex++
-						}
-						continue
-					}
-
-					// 检查下一行的缩进是否等于 currentIndent + parseIndent
-					nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
-					if nextIndent != currentIndent+parseIndent {
-						return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望缩进 %d，实际缩进 %d", trimLine, currentIndent+parseIndent, nextIndent)
-					}
-
-					// 递归解析子块
-					subBlocks, nextIndex, err := parseStrBlocks(lines, currentIndent+parseIndent, nextLineIndex)
-					if err != nil {
-						return nil, i, err
-					}
-					block.Body = subBlocks
-					i = nextIndex
-					break
+			if strings.HasSuffix(headerLine, ":") {
+				body, nextIndex, err := parseBlockBody(lines, currentIndent, i, headerLine)
+				if err != nil {
+					return nil, i, err
 				}
-
-				// 如果没有找到有效的下一行，报错
-				if nextLineIndex >= len(lines) {
-					return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", trimLine)
-				}
-			} else {
-				// 否则，直接跳过该行
-				i++
+				block.Body = body
+				i = nextIndex
 			}
 
 			blocks = append(blocks, block)
-		} else {
-			// 如果缩进不符合预期，跳过该行
-			i++
+			continue
 		}
+
+		// 缩进不符合预期，跳过该行
+		i++
 	}
 
 	return blocks, i, nil
