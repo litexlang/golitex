@@ -4,6 +4,7 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
+	"strings"
 )
 
 func (stmt *TokenBlock) TopStmt() (*ast.TopStmt, error) {
@@ -55,7 +56,7 @@ func (stmt *TokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordThm:
 		ret, err = stmt.thmStmt()
 	default:
-		ret, err = stmt.factStmt(map[string]struct{}{})
+		ret, err = stmt.factStmt(map[string]int{})
 	}
 
 	if err != nil {
@@ -69,7 +70,7 @@ func (stmt *TokenBlock) Stmt() (ast.Stmt, error) {
 	return ret, nil
 }
 
-func (stmt *TokenBlock) factStmt(uniParams map[string]struct{}) (ast.FactStmt, error) {
+func (stmt *TokenBlock) factStmt(uniParams map[string]int) (ast.FactStmt, error) {
 	if stmt.Header.is(glob.KeywordForall) {
 		return stmt.uniFactStmt(uniParams)
 	} else if stmt.Header.is(glob.KeywordWhen) {
@@ -78,7 +79,7 @@ func (stmt *TokenBlock) factStmt(uniParams map[string]struct{}) (ast.FactStmt, e
 	return stmt.specFactStmt(uniParams)
 }
 
-func (stmt *TokenBlock) specFactStmt(uniParams map[string]struct{}) (*ast.SpecFactStmt, error) {
+func (stmt *TokenBlock) specFactStmt(uniParams map[string]int) (*ast.SpecFactStmt, error) {
 	if !stmt.Header.is(glob.KeySymbolDollar) {
 		return stmt.relaFactStmt()
 	}
@@ -125,7 +126,7 @@ func (stmt *TokenBlock) specFactStmt(uniParams map[string]struct{}) (*ast.SpecFa
 	return ast.NewSpecFactStmt(true, propName, params), nil
 }
 
-func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactStmt, error) {
+func (stmt *TokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, error) {
 	err := stmt.Header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
@@ -147,24 +148,21 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	for i, param := range params {
-		params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-	}
-
-	newUniParams := map[string]struct{}{}
+	newUniParams := map[string]int{}
+	// copy uniParams to newUniParams
 	for key := range uniParams {
-		_, declared := newUniParams[key]
-		if declared {
-			return nil, fmt.Errorf("duplicate parameter %s", key)
-		}
-		newUniParams[key] = struct{}{}
+		newUniParams[key] = uniParams[key]
 	}
 
-	for _, param := range params {
-		if _, ok := newUniParams[param]; ok {
-			return nil, fmt.Errorf("duplicate universal parameter in %v and current parameter slice %v", param, params)
+	for i := range params {
+		prefixNum, declared := uniParams[params[i]]
+		if !declared {
+			newUniParams[params[i]] = 1
+			params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, params[i])
+		} else {
+			newUniParams[params[i]] = prefixNum + 1
+			params[i] = strings.Repeat(glob.UniParamPrefix, prefixNum+1) + params[i]
 		}
-		newUniParams[param] = struct{}{}
 	}
 
 	domainFacts := []ast.FactStmt{}
@@ -184,11 +182,25 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 		}
 	} else {
 		for i := 0; i < len(stmt.Body); i++ {
-			curStmt, err := stmt.Body[i].specFactStmt(newUniParams)
+			// 这里要么是直接parse Spec Fact ，要么是parseFact，然后(*type)成spec。前者好处是，就应该这么干；后者好处是，如果你输入了forall，那我报错可以直接指出问题
+			// Method1
+			// curStmt, err := stmt.Body[i].specFactStmt(newUniParams)
+
+			// Method2
+			curStmt, err := stmt.Body[i].factStmt(newUniParams)
 			if err != nil {
 				return nil, &parseTimeErr{err, *stmt}
 			}
-			thenFacts = append(thenFacts, curStmt)
+
+			curStmtAsSpec, ok := curStmt.(*ast.SpecFactStmt)
+			if !ok {
+				return nil, &parseTimeErr{fmt.Errorf("then facts in a universal fact must be a specific fact. Universal fact(start with %s), conditional fact(start with %s)", glob.KeywordForall, glob.KeywordWhen), *stmt}
+			}
+
+			if err != nil {
+				return nil, &parseTimeErr{err, *stmt}
+			}
+			thenFacts = append(thenFacts, curStmtAsSpec)
 		}
 	}
 
@@ -199,7 +211,7 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]struct{}) (ast.UniFactS
 	}
 }
 
-func (stmt *TokenBlock) bodyFacts(uniParams map[string]struct{}) ([]ast.FactStmt, error) {
+func (stmt *TokenBlock) bodyFacts(uniParams map[string]int) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for _, f := range stmt.Body {
 		fact, err := f.factStmt(uniParams)
@@ -212,7 +224,7 @@ func (stmt *TokenBlock) bodyFacts(uniParams map[string]struct{}) ([]ast.FactStmt
 	return facts, nil
 }
 
-func (stmt *TokenBlock) thenBlockSpecFacts(uniParams map[string]struct{}) ([]*ast.SpecFactStmt, error) {
+func (stmt *TokenBlock) thenBlockSpecFacts(uniParams map[string]int) ([]*ast.SpecFactStmt, error) {
 	facts := []*ast.SpecFactStmt{}
 	stmt.Header.skip() // skip "then"
 	if err := stmt.Header.testAndSkip(glob.KeySymbolColon); err != nil {
@@ -230,7 +242,7 @@ func (stmt *TokenBlock) thenBlockSpecFacts(uniParams map[string]struct{}) ([]*as
 	return facts, nil
 }
 
-func (stmt *TokenBlock) blockHeaderBodyFacts(kw string, uniParams map[string]struct{}) ([]ast.FactStmt, error) {
+func (stmt *TokenBlock) blockHeaderBodyFacts(kw string, uniParams map[string]int) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	stmt.Header.skip(kw)
 	if err := stmt.Header.testAndSkip(glob.KeySymbolColon); err != nil {
@@ -272,7 +284,7 @@ func (stmt *TokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 
-func (stmt *TokenBlock) bodyTwoFactSections(kw string, uniParams map[string]struct{}) ([]ast.FactStmt, []ast.FactStmt, error) {
+func (stmt *TokenBlock) bodyTwoFactSections(kw string, uniParams map[string]int) ([]ast.FactStmt, []ast.FactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2Facts := []ast.FactStmt{}
 	err := error(nil)
@@ -365,7 +377,7 @@ func (stmt *TokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 
 	if !stmt.Header.ExceedEnd() && stmt.Header.is(glob.KeySymbolColon) {
 		stmt.Header.skip()
-		facts, err = stmt.bodyFacts(map[string]struct{}{})
+		facts, err = stmt.bodyFacts(map[string]int{})
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -390,7 +402,7 @@ func (stmt *TokenBlock) claimStmt() (ast.ClaimStmt, error) {
 
 	for i := 0; i < len(stmt.Body)-1; i++ {
 		if !stmt.Header.is(glob.KeywordProve) && !stmt.Header.is(glob.KeywordProveByContradiction) {
-			fact, err := stmt.Body[i].factStmt(map[string]struct{}{})
+			fact, err := stmt.Body[i].factStmt(map[string]int{})
 			if err != nil {
 				return nil, &parseTimeErr{err, *stmt}
 			}
@@ -458,7 +470,7 @@ func (stmt *TokenBlock) knowStmt() (*ast.KnowStmt, error) {
 
 	if !stmt.Header.is(glob.KeySymbolColon) {
 		facts := []ast.FactStmt{}
-		fact, err := stmt.factStmt(map[string]struct{}{})
+		fact, err := stmt.factStmt(map[string]int{})
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -471,7 +483,7 @@ func (stmt *TokenBlock) knowStmt() (*ast.KnowStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	facts, err := stmt.bodyFacts(map[string]struct{}{})
+	facts, err := stmt.bodyFacts(map[string]int{})
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -525,7 +537,7 @@ func (stmt *TokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 
 func (stmt *TokenBlock) haveStmt() (*ast.HaveStmt, error) {
 	stmt.Header.skip(glob.KeywordHave)
-	propStmt, err := stmt.specFactStmt(map[string]struct{}{})
+	propStmt, err := stmt.specFactStmt(map[string]int{})
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -627,7 +639,7 @@ func (stmt *TokenBlock) thmStmt() (*ast.ThmStmt, error) {
 	return ast.NewThmStmt(decl, facts), nil
 }
 
-func (stmt *TokenBlock) condFactStmt(uniParams map[string]struct{}) (*ast.CondFactStmt, error) {
+func (stmt *TokenBlock) condFactStmt(uniParams map[string]int) (*ast.CondFactStmt, error) {
 	err := stmt.Header.skip(glob.KeywordWhen)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
@@ -680,7 +692,7 @@ func (stmt *TokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
 	panic("")
 }
 
-func (stmt *TokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[string]struct{}, error) {
+func (stmt *TokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[string]int, error) {
 	name, err := stmt.Header.next()
 	if err != nil {
 		return nil, nil, &parseTimeErr{err, *stmt}
@@ -722,20 +734,20 @@ func (stmt *TokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[stri
 		params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
 	}
 
-	uniParams := map[string]struct{}{}
+	uniParams := map[string]int{}
 	for _, param := range params {
 		_, declared := uniParams[param]
 		if declared {
 			return nil, nil, fmt.Errorf("duplicate parameter %s", param)
 		}
-		uniParams[param] = struct{}{}
+		uniParams[param] = 1
 	}
 
 	// return &ast.ConDefHeader{name, params, typeParams}, nil
 	return ast.NewConDefHeader(name, params, typeParams), uniParams, nil
 }
 
-func (stmt *TokenBlock) bodyFactSectionSpecFactSection(kw string, uniParams map[string]struct{}) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
+func (stmt *TokenBlock) bodyFactSectionSpecFactSection(kw string, uniParams map[string]int) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2SpecFacts := []*ast.SpecFactStmt{}
 	err := error(nil)

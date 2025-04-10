@@ -38,7 +38,7 @@ type strBlock struct {
 	Body   []strBlock
 }
 
-const parseIndent = 4
+// const parseIndent = 4
 
 // String 方法实现 fmt.Stringer 接口
 func (b *strBlock) String() string {
