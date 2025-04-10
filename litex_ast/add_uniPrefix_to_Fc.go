@@ -47,7 +47,7 @@ func AddUniPrefixToFc(fc Fc, uniParams map[string]int) (Fc, error) {
 		for _, param := range seg.Params {
 			newFc, err := AddUniPrefixToFc(param, uniParams)
 			if err != nil {
-				return nil, fmt.Errorf("invalid fc %s", newFc.String())
+				return nil, err
 			}
 			curSeg.Params = append(curSeg.Params, newFc)
 		}
@@ -55,51 +55,3 @@ func AddUniPrefixToFc(fc Fc, uniParams map[string]int) (Fc, error) {
 
 	return &newFcFn, nil
 }
-
-// func AddUniPrefixToFc2(fc Fc, uniParams map[string]int) (Fc, error) {
-// 	fcAsAtom, ok := fc.(*FcAtom)
-// 	if ok {
-// 		return AddUniPrefixToFcAtom(fcAsAtom, uniParams), nil
-// 	}
-
-// 	fcAsFcFn, ok := fc.(*FcFn)
-// 	if !ok {
-// 		return nil, fmt.Errorf("invalid fc %s", fc.String())
-// 	}
-
-// 	newFcFn := FcFn{FcAtom{}, []*FcFnSeg{}}
-// 	if FcAtomInUniParams(&fcAsFcFn.FnHead, uniParams) {
-// 		return NewFcAtom("", glob.UniParamPrefix+fcAsFcFn.FnHead.Value), nil
-// 	} else {
-// 		newFcFn.FnHead = fcAsFcFn.FnHead
-// 	}
-
-// 	for _, seg := range fcAsFcFn.ParamSegs {
-// 		curSeg := &FcFnSeg{[]Fc{}}
-// 		newFcFn.ParamSegs = append(newFcFn.ParamSegs, curSeg)
-// 		for _, param := range seg.Params {
-// 			newFc, err := AddUniPrefixToFc(param, uniParams)
-// 			if err != nil {
-// 				return nil, fmt.Errorf("invalid fc %s", newFc.String())
-// 			}
-// 			curSeg.Params = append(curSeg.Params, newFc)
-// 		}
-// 	}
-
-// 	return &newFcFn, nil
-// }
-
-// func FcAtomInUniParams2(atom *FcAtom, uniParams map[string]int) bool {
-// 	if atom.PkgName == "" {
-// 		_, ok := uniParams[atom.Value]
-// 		return ok
-// 	}
-// 	return false
-// }
-
-// func AddUniPrefixToFcAtom2(atom *FcAtom, uniParams map[string]int) *FcAtom {
-// 	if FcAtomInUniParams2(atom, uniParams) {
-// 		atom.Value = fmt.Sprintf("%s%s", glob.UniParamPrefix, atom.Value)
-// 	}
-// 	return atom
-// }

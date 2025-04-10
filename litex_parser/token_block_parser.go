@@ -19,7 +19,6 @@ func (stmt *TokenBlock) TopStmt() (*ast.TopStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	// return &ast.TopStmt{ret, pub}, nil
 	return ast.NewTopStmt(ret, pub), nil
 }
 

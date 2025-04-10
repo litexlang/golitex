@@ -41,7 +41,7 @@ func (ver *Verifier) FcEqualSpecInSpecMemLitAtEnv(curEnv *env.Env, left ast.Fc, 
 	// ok, err := ver.FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv, left, right, state)
 	ok, err := ver.FcEqualSpecUseEnvSpecMemRule(curEnv, left, right, state)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	if ok {
 		return true, nil
@@ -49,33 +49,13 @@ func (ver *Verifier) FcEqualSpecInSpecMemLitAtEnv(curEnv *env.Env, left ast.Fc, 
 	// ok, err = ver.FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv, right, left, state)
 	ok, err = ver.FcEqualSpecUseEnvSpecMemRule(curEnv, right, left, state)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	if ok {
 		return true, nil
 	}
 	return false, nil
 }
-
-// func (ver *Verifier) FcEqualSpecInSpecMemLiterallyAtEnvWithKey(curEnv *env.Env, keyFc ast.Fc, fcToComp ast.Fc, state VerState) (bool, error) {
-// 	key := memory.EqualFactMemoryTreeNode{FcAsKey: keyFc, Values: &[]ast.Fc{}}
-
-// 	searchedNode, err := curEnv.EqualFactMem.Mem.TreeSearch(&key)
-
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	if searchedNode == nil {
-// 		return false, nil
-// 	}
-
-// 	ok, err := cmpSearchNodeKeyValuesRule(searchedNode.Key.Values, fcToComp)
-// 	if err != nil {
-// 		return false, nil
-// 	}
-// 	return ok, nil
-// }
 
 func cmpSearchNodeKeyValuesRule(valuesToBeComped *[]ast.Fc, fcToComp ast.Fc) (bool, error) {
 	for _, equalFc := range *valuesToBeComped {
