@@ -1271,7 +1271,7 @@ func TestLexTimeParseTime(t *testing.T) {
 	for _, block := range blocks {
 		cur, err := block.TopStmt()
 		if err != nil {
-			panic("")
+			log.Fatalln(err)
 		}
 		ret = append(ret, *cur)
 	}

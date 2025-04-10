@@ -10,9 +10,6 @@ type parseTimeErr struct {
 }
 
 func (e *parseTimeErr) Error() string {
-	if e.previous == nil {
-		return "parseTimeErr: nil error"
-	}
 
 	// 安全获取基础位置信息
 	var source, position, tokenInfo string
@@ -25,9 +22,16 @@ func (e *parseTimeErr) Error() string {
 		tokenInfo = fmt.Sprintf(" at '%s'", curTok)
 	}
 
-	return fmt.Sprintf("parse error at %s, %s%s: %v",
-		source,
-		position,
-		tokenInfo,
-		e.previous)
+	if e.previous == nil {
+		return fmt.Sprintf("parse error at %s, %s%s",
+			source,
+			position,
+			tokenInfo)
+	} else {
+		return fmt.Sprintf("parse error at %s, %s%s: %v",
+			source,
+			position,
+			tokenInfo,
+			e.previous)
+	}
 }
