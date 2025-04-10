@@ -1191,6 +1191,43 @@ func TestParseStrBlocks(t *testing.T) {
 	}
 }
 
+func TestForall3(t *testing.T) {
+	code := `
+know forall x A:
+		$p(x)
+		forall y A:
+								$t(y)
+		then:
+			$h(x)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}
+
+func TestForall4(t *testing.T) {
+	code := `
+know forall x A:
+		forall y A:
+								$t(y)
+
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		log.Fatalf("%s", err)
+		// t.Fatal(err)
+		// panic(%v", err))
+	}
+
+}
+
 func readFile(filePath string) string {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
@@ -1202,7 +1239,7 @@ func readFile(filePath string) string {
 func TestLexTimeParseTime(t *testing.T) {
 	glob.Setup()
 
-	code := readFile("../litex_code_examples/classic_examples/use_storedUniFact_with_uniFact_as_dom.lix")
+	code := readFile("../litex_code_examples/classic_examples/uniFact_parser.lix")
 
 	start := time.Now()
 	preprocessedCodeLines, err := preprocessSourceCode(code)
@@ -1239,48 +1276,11 @@ func TestLexTimeParseTime(t *testing.T) {
 		ret = append(ret, *cur)
 	}
 	parseTime := time.Since(start)
-	_ = ret
+	fmt.Println(ret)
 
 	// preprocess 47.291µs
 	// getStrBlock 11.25µs
 	// tokenize 74.708µs
 	// parse 89.041µs
 	fmt.Printf("preprocess %v\ngetStrBlock %v\ntokenize %v\nparse %v\n", preprocessTime, chunkTime, tokenizeBlockTime, parseTime)
-}
-
-func TestForall3(t *testing.T) {
-	code := `
-know forall x A:
-		$p(x)
-		forall y A:
-								$t(y)
-		then:
-			$h(x)
-`
-
-	statements, err := ParserTester(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		t.Fatal(err)
-	}
-}
-
-func TestForall4(t *testing.T) {
-	code := `
-know forall x A:
-		forall y A:
-								$t(y)
-
-`
-
-	statements, err := ParserTester(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		log.Fatalf("%s", err)
-		t.Fatal(err)
-		// panic(%v", err))
-	}
-
 }
