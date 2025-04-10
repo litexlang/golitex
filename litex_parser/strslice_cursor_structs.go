@@ -5,11 +5,6 @@ import (
 	"strings"
 )
 
-// type StrSliceCursor struct {
-// 	index int
-// 	slice []string
-// }
-
 func (p *strSliceCursor) strAtIndex(index uint32) string {
 	return p.slice[index]
 }
