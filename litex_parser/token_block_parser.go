@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-func (stmt *TokenBlock) TopStmt() (*ast.TopStmt, error) {
+func (stmt *tokenBlock) TopStmt() (*ast.TopStmt, error) {
 	pub := false
-	if stmt.Header.is(glob.KeywordPub) {
-		stmt.Header.skip()
+	if stmt.header.is(glob.KeywordPub) {
+		stmt.header.skip()
 		pub = true
 	}
 
@@ -22,8 +22,8 @@ func (stmt *TokenBlock) TopStmt() (*ast.TopStmt, error) {
 	return ast.NewTopStmt(ret, pub), nil
 }
 
-func (stmt *TokenBlock) Stmt() (ast.Stmt, error) {
-	cur, err := stmt.Header.currentToken()
+func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
+	cur, err := stmt.header.currentToken()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -62,46 +62,46 @@ func (stmt *TokenBlock) Stmt() (ast.Stmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	if !stmt.Header.ExceedEnd() {
+	if !stmt.header.ExceedEnd() {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
 	return ret, nil
 }
 
-func (stmt *TokenBlock) factStmt(uniParams map[string]int) (ast.FactStmt, error) {
-	if stmt.Header.is(glob.KeywordForall) {
+func (stmt *tokenBlock) factStmt(uniParams map[string]int) (ast.FactStmt, error) {
+	if stmt.header.is(glob.KeywordForall) {
 		return stmt.uniFactStmt(uniParams)
-	} else if stmt.Header.is(glob.KeywordWhen) {
+	} else if stmt.header.is(glob.KeywordWhen) {
 		return stmt.condFactStmt(uniParams)
 	}
 	return stmt.specFactStmt(uniParams)
 }
 
-func (stmt *TokenBlock) specFactStmt(uniParams map[string]int) (*ast.SpecFactStmt, error) {
-	if !stmt.Header.is(glob.KeySymbolDollar) {
+func (stmt *tokenBlock) specFactStmt(uniParams map[string]int) (*ast.SpecFactStmt, error) {
+	if !stmt.header.is(glob.KeySymbolDollar) {
 		return stmt.relaFactStmt()
 	}
 
-	err := stmt.Header.skip(glob.KeySymbolDollar)
+	err := stmt.header.skip(glob.KeySymbolDollar)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	propName, err := stmt.Header.rawFcAtom()
+	propName, err := stmt.header.rawFcAtom()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 	propName = *ast.AddUniPrefixToFcAtom(&propName, uniParams)
 
 	params := []ast.Fc{}
-	err = stmt.Header.skip(glob.KeySymbolLeftParen)
+	err = stmt.header.skip(glob.KeySymbolLeftParen)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	for !stmt.Header.is(glob.KeySymbolRightParen) {
-		param, err := stmt.Header.rawFc()
+	for !stmt.header.is(glob.KeySymbolRightParen) {
+		param, err := stmt.header.rawFc()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -112,12 +112,12 @@ func (stmt *TokenBlock) specFactStmt(uniParams map[string]int) (*ast.SpecFactStm
 		}
 
 		params = append(params, param)
-		if stmt.Header.is(glob.KeySymbolComma) {
-			stmt.Header.next()
+		if stmt.header.is(glob.KeySymbolComma) {
+			stmt.header.next()
 		}
 	}
 
-	err = stmt.Header.skip(glob.KeySymbolRightParen)
+	err = stmt.header.skip(glob.KeySymbolRightParen)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -125,8 +125,8 @@ func (stmt *TokenBlock) specFactStmt(uniParams map[string]int) (*ast.SpecFactStm
 	return ast.NewSpecFactStmt(true, propName, params), nil
 }
 
-func (stmt *TokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, error) {
-	err := stmt.Header.skip(glob.KeywordForall)
+func (stmt *tokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, error) {
+	err := stmt.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -134,15 +134,15 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, 
 	typeParams := []string{}
 	typeInterfaces := []*ast.FcAtom{}
 
-	if stmt.Header.is(glob.KeySymbolLess) {
-		stmt.Header.next()
-		typeParams, typeInterfaces, err = stmt.Header.typeListInDeclsAndSkipEnd(glob.KeySymbolGreater)
+	if stmt.header.is(glob.KeySymbolLess) {
+		stmt.header.next()
+		typeParams, typeInterfaces, err = stmt.header.typeListInDeclsAndSkipEnd(glob.KeySymbolGreater)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
 	}
 
-	params, paramTypes, err := stmt.Header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
+	params, paramTypes, err := stmt.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -167,25 +167,25 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, 
 	domainFacts := []ast.FactStmt{}
 	thenFacts := []*ast.SpecFactStmt{}
 
-	if stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordThen) {
-		for i := 0; i < len(stmt.Body)-1; i++ {
-			curStmt, err := stmt.Body[i].factStmt(newUniParams)
+	if stmt.body[len(stmt.body)-1].header.is(glob.KeywordThen) {
+		for i := 0; i < len(stmt.body)-1; i++ {
+			curStmt, err := stmt.body[i].factStmt(newUniParams)
 			if err != nil {
 				return nil, &parseTimeErr{err, *stmt}
 			}
 			domainFacts = append(domainFacts, curStmt)
 		}
-		thenFacts, err = stmt.Body[len(stmt.Body)-1].thenBlockSpecFacts(newUniParams)
+		thenFacts, err = stmt.body[len(stmt.body)-1].thenBlockSpecFacts(newUniParams)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
 	} else {
-		for i := 0; i < len(stmt.Body); i++ {
+		for i := 0; i < len(stmt.body); i++ {
 			// 这里要么是直接parse Spec Fact ，要么是parseFact，然后(*type)成spec。前者好处是，就应该这么干；后者好处是，如果你输入了forall，那我报错可以直接指出问题
 			// Method1
-			curStmt, err := stmt.Body[i].specFactStmt(newUniParams)
+			curStmt, err := stmt.body[i].specFactStmt(newUniParams)
 			if err != nil {
-				return nil, thenFactMustSpecMsg(&stmt.Body[i], err)
+				return nil, thenFactMustSpecMsg(&stmt.body[i], err)
 			}
 
 			thenFacts = append(thenFacts, curStmt)
@@ -199,9 +199,9 @@ func (stmt *TokenBlock) uniFactStmt(uniParams map[string]int) (ast.UniFactStmt, 
 	}
 }
 
-func (stmt *TokenBlock) bodyFacts(uniParams map[string]int) ([]ast.FactStmt, error) {
+func (stmt *tokenBlock) bodyFacts(uniParams map[string]int) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
-	for _, f := range stmt.Body {
+	for _, f := range stmt.body {
 		fact, err := f.factStmt(uniParams)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
@@ -212,14 +212,14 @@ func (stmt *TokenBlock) bodyFacts(uniParams map[string]int) ([]ast.FactStmt, err
 	return facts, nil
 }
 
-func (stmt *TokenBlock) thenBlockSpecFacts(uniParams map[string]int) ([]*ast.SpecFactStmt, error) {
+func (stmt *tokenBlock) thenBlockSpecFacts(uniParams map[string]int) ([]*ast.SpecFactStmt, error) {
 	facts := []*ast.SpecFactStmt{}
-	stmt.Header.skip() // skip "then"
-	if err := stmt.Header.testAndSkip(glob.KeySymbolColon); err != nil {
+	stmt.header.skip() // skip "then"
+	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	for _, curStmt := range stmt.Body {
+	for _, curStmt := range stmt.body {
 		fact, err := curStmt.specFactStmt(uniParams)
 		if err != nil {
 			return nil, thenFactMustSpecMsg(&curStmt, err)
@@ -231,14 +231,14 @@ func (stmt *TokenBlock) thenBlockSpecFacts(uniParams map[string]int) ([]*ast.Spe
 	return facts, nil
 }
 
-func (stmt *TokenBlock) blockHeaderBodyFacts(kw string, uniParams map[string]int) ([]ast.FactStmt, error) {
+func (stmt *tokenBlock) blockHeaderBodyFacts(kw string, uniParams map[string]int) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
-	stmt.Header.skip(kw)
-	if err := stmt.Header.testAndSkip(glob.KeySymbolColon); err != nil {
+	stmt.header.skip(kw)
+	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	for _, curStmt := range stmt.Body {
+	for _, curStmt := range stmt.body {
 		fact, err := curStmt.factStmt(uniParams)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
@@ -249,8 +249,8 @@ func (stmt *TokenBlock) blockHeaderBodyFacts(kw string, uniParams map[string]int
 	return facts, nil
 }
 
-func (stmt *TokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
-	err := stmt.Header.skip(glob.KeywordProp)
+func (stmt *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
+	err := stmt.header.skip(glob.KeywordProp)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -260,7 +260,7 @@ func (stmt *TokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	err = stmt.Header.skip(glob.KeySymbolColon)
+	err = stmt.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -273,26 +273,26 @@ func (stmt *TokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 
-func (stmt *TokenBlock) bodyTwoFactSections(kw string, uniParams map[string]int) ([]ast.FactStmt, []ast.FactStmt, error) {
+func (stmt *tokenBlock) bodyTwoFactSections(kw string, uniParams map[string]int) ([]ast.FactStmt, []ast.FactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2Facts := []ast.FactStmt{}
 	err := error(nil)
 
-	if stmt.Body[len(stmt.Body)-1].Header.is(kw) {
-		for i := 0; i < len(stmt.Body)-1; i++ {
-			curStmt, err := stmt.Body[i].factStmt(uniParams)
+	if stmt.body[len(stmt.body)-1].header.is(kw) {
+		for i := 0; i < len(stmt.body)-1; i++ {
+			curStmt, err := stmt.body[i].factStmt(uniParams)
 			if err != nil {
 				return nil, nil, &parseTimeErr{err, *stmt}
 			}
 			section1Facts = append(section1Facts, curStmt)
 		}
-		section2Facts, err = stmt.Body[len(stmt.Body)-1].blockHeaderBodyFacts(kw, uniParams)
+		section2Facts, err = stmt.body[len(stmt.body)-1].blockHeaderBodyFacts(kw, uniParams)
 		if err != nil {
 			return nil, nil, &parseTimeErr{err, *stmt}
 		}
 	} else {
-		for i := 0; i < len(stmt.Body); i++ {
-			curStmt, err := stmt.Body[i].factStmt(uniParams)
+		for i := 0; i < len(stmt.body); i++ {
+			curStmt, err := stmt.body[i].factStmt(uniParams)
 			if err != nil {
 				return nil, nil, &parseTimeErr{err, *stmt}
 			}
@@ -303,8 +303,8 @@ func (stmt *TokenBlock) bodyTwoFactSections(kw string, uniParams map[string]int)
 	return section1Facts, section2Facts, nil
 }
 
-func (stmt *TokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
-	err := stmt.Header.skip(glob.KeywordFn)
+func (stmt *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
+	err := stmt.header.skip(glob.KeywordFn)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -314,7 +314,7 @@ func (stmt *TokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	retType, err := stmt.Header.rawFc()
+	retType, err := stmt.header.rawFc()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -322,8 +322,8 @@ func (stmt *TokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 	domFacts := []ast.FactStmt{}
 	thenFacts := []*ast.SpecFactStmt{}
 
-	if stmt.Header.is(glob.KeySymbolColon) {
-		stmt.Header.skip()
+	if stmt.header.is(glob.KeySymbolColon) {
+		stmt.header.skip()
 		domFacts, thenFacts, err = stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, uniParams)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
@@ -334,8 +334,8 @@ func (stmt *TokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 	return ast.NewDefConFnStmt(*decl, retType, domFacts, thenFacts), nil
 }
 
-func (stmt *TokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
-	err := stmt.Header.skip(glob.KeywordObj)
+func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
+	err := stmt.header.skip(glob.KeywordObj)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -343,19 +343,19 @@ func (stmt *TokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	objNames := []string{}
 	objSets := []ast.Fc{}
 
-	for !stmt.Header.is(glob.KeySymbolColon) && !stmt.Header.ExceedEnd() {
-		decl, err := stmt.Header.next()
+	for !stmt.header.is(glob.KeySymbolColon) && !stmt.header.ExceedEnd() {
+		decl, err := stmt.header.next()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
-		if stmt.Header.is(glob.KeySymbolComma) {
-			err = stmt.Header.skip(glob.KeySymbolColon)
+		if stmt.header.is(glob.KeySymbolComma) {
+			err = stmt.header.skip(glob.KeySymbolColon)
 			if err != nil {
 				return nil, &parseTimeErr{err, *stmt}
 			}
 		}
 		objNames = append(objNames, decl)
-		tp, err := stmt.Header.rawFc()
+		tp, err := stmt.header.rawFc()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -364,13 +364,13 @@ func (stmt *TokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 
 	facts := []ast.FactStmt{}
 
-	if !stmt.Header.ExceedEnd() && stmt.Header.is(glob.KeySymbolColon) {
-		stmt.Header.skip()
+	if !stmt.header.ExceedEnd() && stmt.header.is(glob.KeySymbolColon) {
+		stmt.header.skip()
 		facts, err = stmt.bodyFacts(map[string]int{})
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
-	} else if !stmt.Header.ExceedEnd() {
+	} else if !stmt.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
@@ -378,20 +378,20 @@ func (stmt *TokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	return ast.NewDefObjStmt(objNames, objSets, facts), nil
 }
 
-func (stmt *TokenBlock) claimStmt() (ast.ClaimStmt, error) {
-	stmt.Header.skip()
+func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
+	stmt.header.skip()
 	err := error(nil)
 
-	if err := stmt.Header.testAndSkip(glob.KeySymbolColon); err != nil {
+	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
 	toCheck := &[]ast.FactStmt{}
 	proof := &[]ast.Stmt{}
 
-	for i := 0; i < len(stmt.Body)-1; i++ {
-		if !stmt.Header.is(glob.KeywordProve) && !stmt.Header.is(glob.KeywordProveByContradiction) {
-			fact, err := stmt.Body[i].factStmt(map[string]int{})
+	for i := 0; i < len(stmt.body)-1; i++ {
+		if !stmt.header.is(glob.KeywordProve) && !stmt.header.is(glob.KeywordProveByContradiction) {
+			fact, err := stmt.body[i].factStmt(map[string]int{})
 			if err != nil {
 				return nil, &parseTimeErr{err, *stmt}
 			}
@@ -400,19 +400,19 @@ func (stmt *TokenBlock) claimStmt() (ast.ClaimStmt, error) {
 	}
 
 	isProve := true
-	if stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordProveByContradiction) {
+	if stmt.body[len(stmt.body)-1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
-	} else if !stmt.Body[len(stmt.Body)-1].Header.is(glob.KeywordProve) {
+	} else if !stmt.body[len(stmt.body)-1].header.is(glob.KeywordProve) {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
 	}
-	stmt.Body[len(stmt.Body)-1].Header.skip()
+	stmt.body[len(stmt.body)-1].header.skip()
 
-	err = stmt.Body[len(stmt.Body)-1].Header.testAndSkip(glob.KeySymbolColon)
+	err = stmt.body[len(stmt.body)-1].header.testAndSkip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	for _, block := range stmt.Body[len(stmt.Body)-1].Body {
+	for _, block := range stmt.body[len(stmt.body)-1].body {
 		curStmt, err := block.Stmt()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
@@ -429,7 +429,7 @@ func (stmt *TokenBlock) claimStmt() (ast.ClaimStmt, error) {
 	}
 }
 
-func (stmt *TokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
+func (stmt *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
 	innerStmtArr, err := stmt.proveBlock()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
@@ -437,14 +437,14 @@ func (stmt *TokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
 	return ast.NewClaimProveStmt([]ast.FactStmt{}, innerStmtArr), nil
 }
 
-func (stmt *TokenBlock) proveBlock() ([]ast.Stmt, error) {
-	stmt.Header.skip(glob.KeywordProve)
-	if err := stmt.Header.testAndSkip(glob.KeySymbolColon); err != nil {
+func (stmt *tokenBlock) proveBlock() ([]ast.Stmt, error) {
+	stmt.header.skip(glob.KeywordProve)
+	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
 	innerStmtArr := []ast.Stmt{}
-	for _, innerStmt := range stmt.Body {
+	for _, innerStmt := range stmt.body {
 		curStmt, err := innerStmt.Stmt()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
@@ -454,10 +454,10 @@ func (stmt *TokenBlock) proveBlock() ([]ast.Stmt, error) {
 	return innerStmtArr, nil
 }
 
-func (stmt *TokenBlock) knowStmt() (*ast.KnowStmt, error) {
-	stmt.Header.skip(glob.KeywordKnow)
+func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
+	stmt.header.skip(glob.KeywordKnow)
 
-	if !stmt.Header.is(glob.KeySymbolColon) {
+	if !stmt.header.is(glob.KeySymbolColon) {
 		facts := []ast.FactStmt{}
 		fact, err := stmt.factStmt(map[string]int{})
 		if err != nil {
@@ -468,7 +468,7 @@ func (stmt *TokenBlock) knowStmt() (*ast.KnowStmt, error) {
 		return ast.NewKnowStmt(facts), nil
 	}
 
-	if err := stmt.Header.testAndSkip(glob.KeySymbolColon); err != nil {
+	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
@@ -481,8 +481,8 @@ func (stmt *TokenBlock) knowStmt() (*ast.KnowStmt, error) {
 	return ast.NewKnowStmt(facts), nil
 }
 
-func (stmt *TokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
-	err := stmt.Header.skip(glob.KeywordExistProp)
+func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
+	err := stmt.header.skip(glob.KeywordExistProp)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -495,23 +495,23 @@ func (stmt *TokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 	existObjOrFn := []string{}
 	existObjOrFnTypes := []*ast.FcAtom{}
 
-	for !stmt.Header.is(glob.KeySymbolColon) && !stmt.Header.ExceedEnd() {
-		decl, err := stmt.Header.next()
+	for !stmt.header.is(glob.KeySymbolColon) && !stmt.header.ExceedEnd() {
+		decl, err := stmt.header.next()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
-		tp, err := stmt.Header.rawFcAtom()
+		tp, err := stmt.header.rawFcAtom()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
 		existObjOrFn = append(existObjOrFn, decl)
 		existObjOrFnTypes = append(existObjOrFnTypes, &tp)
-		if stmt.Header.is(glob.KeySymbolComma) {
-			stmt.Header.skip()
+		if stmt.header.is(glob.KeySymbolComma) {
+			stmt.header.skip()
 		}
 	}
 
-	err = stmt.Header.skip(glob.KeySymbolColon)
+	err = stmt.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -524,22 +524,22 @@ func (stmt *TokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 	return ast.NewDefConExistPropStmt(*decl, existObjOrFn, existObjOrFnTypes, domFacts, thenFacts), nil
 }
 
-func (stmt *TokenBlock) haveStmt() (*ast.HaveStmt, error) {
-	stmt.Header.skip(glob.KeywordHave)
+func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
+	stmt.header.skip(glob.KeywordHave)
 	propStmt, err := stmt.specFactStmt(map[string]int{})
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	if !stmt.Header.is(glob.KeySymbolColon) {
+	if !stmt.header.is(glob.KeySymbolColon) {
 		return nil, fmt.Errorf("expected ':'")
 	}
 
-	if len(stmt.Body) != 1 {
+	if len(stmt.body) != 1 {
 		return nil, fmt.Errorf("expect one string in members")
 	}
 
-	members, err := stmt.Body[0].Header.stringSliceUntilEnd()
+	members, err := stmt.body[0].header.stringSliceUntilEnd()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -548,17 +548,17 @@ func (stmt *TokenBlock) haveStmt() (*ast.HaveStmt, error) {
 	return ast.NewHaveStmt(*propStmt, members), nil
 }
 
-func (stmt *TokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
-	fc, err := stmt.Header.rawFc()
+func (stmt *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
+	fc, err := stmt.header.rawFc()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	if stmt.Header.strAtCurIndexPlus(0) == glob.KeywordIs {
-		return stmt.Header.isExpr(fc)
+	if stmt.header.strAtCurIndexPlus(0) == glob.KeywordIs {
+		return stmt.header.isExpr(fc)
 	}
 
-	opt, err := stmt.Header.next()
+	opt, err := stmt.header.next()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -567,15 +567,15 @@ func (stmt *TokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	fc2, err := stmt.Header.rawFc()
+	fc2, err := stmt.header.rawFc()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
 	params := []ast.Fc{fc, fc2}
-	for stmt.Header.is(opt) {
-		stmt.Header.skip()
-		fc, err := stmt.Header.rawFc()
+	for stmt.header.is(opt) {
+		stmt.header.skip()
+		fc, err := stmt.header.rawFc()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -586,8 +586,8 @@ func (stmt *TokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 	return ast.NewSpecFactStmt(true, ast.FcAtom{Value: opt}, params), nil
 }
 
-func (stmt *TokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
-	stmt.Header.skip(glob.KeywordAxiom)
+func (stmt *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
+	stmt.header.skip(glob.KeywordAxiom)
 	decl, err := stmt.defPropExistStmt()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
@@ -597,29 +597,29 @@ func (stmt *TokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 	return ast.NewAxiomStmt(decl), nil
 }
 
-func (stmt *TokenBlock) thmStmt() (*ast.ThmStmt, error) {
-	err := stmt.Header.skip(glob.KeywordThm)
+func (stmt *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
+	err := stmt.header.skip(glob.KeywordThm)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
-	err = stmt.Header.skip(glob.KeySymbolColon)
+	err = stmt.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
-	if !stmt.Header.ExceedEnd() {
+	if !stmt.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect end of line")
 	}
 
-	if len(stmt.Body) != 2 {
+	if len(stmt.body) != 2 {
 		return nil, fmt.Errorf("expect two statements in thm")
 	}
 
-	decl, err := stmt.Body[0].defPropExistStmt()
+	decl, err := stmt.body[0].defPropExistStmt()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	facts, err := stmt.Body[1].proveBlock()
+	facts, err := stmt.body[1].proveBlock()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -628,41 +628,41 @@ func (stmt *TokenBlock) thmStmt() (*ast.ThmStmt, error) {
 	return ast.NewThmStmt(decl, facts), nil
 }
 
-func (stmt *TokenBlock) condFactStmt(uniParams map[string]int) (*ast.CondFactStmt, error) {
-	err := stmt.Header.skip(glob.KeywordWhen)
+func (stmt *tokenBlock) condFactStmt(uniParams map[string]int) (*ast.CondFactStmt, error) {
+	err := stmt.header.skip(glob.KeywordWhen)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
-	err = stmt.Header.skip(glob.KeySymbolColon)
+	err = stmt.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
-	if !stmt.Header.ExceedEnd() {
+	if !stmt.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect end of line")
 	}
 
 	condFacts := []ast.FactStmt{}
 	thenFacts := []*ast.SpecFactStmt{}
 
-	for i := 0; i < len(stmt.Body)-1; i++ {
-		fact, err := stmt.Body[i].factStmt(uniParams)
+	for i := 0; i < len(stmt.body)-1; i++ {
+		fact, err := stmt.body[i].factStmt(uniParams)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
 		condFacts = append(condFacts, fact)
 	}
 
-	err = stmt.Body[len(stmt.Body)-1].Header.skip(glob.KeywordThen)
+	err = stmt.body[len(stmt.body)-1].header.skip(glob.KeywordThen)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
-	err = stmt.Body[len(stmt.Body)-1].Header.skip(glob.KeySymbolColon)
+	err = stmt.body[len(stmt.body)-1].header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	for i := len(stmt.Body[len(stmt.Body)-1].Body) - 1; i >= 0; i-- {
-		fact, err := stmt.Body[len(stmt.Body)-1].Body[i].specFactStmt(uniParams)
+	for i := len(stmt.body[len(stmt.body)-1].body) - 1; i >= 0; i-- {
+		fact, err := stmt.body[len(stmt.body)-1].body[i].specFactStmt(uniParams)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -673,21 +673,21 @@ func (stmt *TokenBlock) condFactStmt(uniParams map[string]int) (*ast.CondFactStm
 	return ast.NewCondFactStmt(condFacts, thenFacts), nil
 }
 
-func (stmt *TokenBlock) defInterfaceStmt() (*ast.DefInterfaceStmt, error) {
+func (stmt *tokenBlock) defInterfaceStmt() (*ast.DefInterfaceStmt, error) {
 	panic("")
 }
 
-func (stmt *TokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
+func (stmt *tokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
 	panic("")
 }
 
-func (stmt *TokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[string]int, error) {
-	name, err := stmt.Header.next()
+func (stmt *tokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[string]int, error) {
+	name, err := stmt.header.next()
 	if err != nil {
 		return nil, nil, &parseTimeErr{err, *stmt}
 	}
 
-	err = stmt.Header.skip(glob.KeySymbolLeftParen)
+	err = stmt.header.skip(glob.KeySymbolLeftParen)
 	if err != nil {
 		return nil, nil, &parseTimeErr{err, *stmt}
 	}
@@ -695,26 +695,26 @@ func (stmt *TokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[stri
 	params := []string{}
 	typeParams := []ast.Fc{}
 
-	for !stmt.Header.is(glob.KeySymbolRightParen) {
-		param, err := stmt.Header.next()
+	for !stmt.header.is(glob.KeySymbolRightParen) {
+		param, err := stmt.header.next()
 		if err != nil {
 			return nil, nil, &parseTimeErr{err, *stmt}
 		}
 		params = append(params, param)
 
-		typeParam, err := stmt.Header.rawFc()
+		typeParam, err := stmt.header.rawFc()
 		if err != nil {
 			return nil, nil, &parseTimeErr{err, *stmt}
 		}
 
 		typeParams = append(typeParams, typeParam)
 
-		if stmt.Header.is(glob.KeySymbolComma) {
-			stmt.Header.skip()
+		if stmt.header.is(glob.KeySymbolComma) {
+			stmt.header.skip()
 		}
 	}
 
-	err = stmt.Header.skip(glob.KeySymbolRightParen)
+	err = stmt.header.skip(glob.KeySymbolRightParen)
 	if err != nil {
 		return nil, nil, &parseTimeErr{err, *stmt}
 	}
@@ -736,26 +736,26 @@ func (stmt *TokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[stri
 	return ast.NewConDefHeader(name, params, typeParams), uniParams, nil
 }
 
-func (stmt *TokenBlock) bodyFactSectionSpecFactSection(kw string, uniParams map[string]int) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
+func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, uniParams map[string]int) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2SpecFacts := []*ast.SpecFactStmt{}
 	err := error(nil)
 
-	if stmt.Body[len(stmt.Body)-1].Header.is(kw) {
-		for i := 0; i < len(stmt.Body)-1; i++ {
-			curStmt, err := stmt.Body[i].factStmt(uniParams)
+	if stmt.body[len(stmt.body)-1].header.is(kw) {
+		for i := 0; i < len(stmt.body)-1; i++ {
+			curStmt, err := stmt.body[i].factStmt(uniParams)
 			if err != nil {
 				return nil, nil, &parseTimeErr{err, *stmt}
 			}
 			section1Facts = append(section1Facts, curStmt)
 		}
-		section2SpecFacts, err = stmt.Body[len(stmt.Body)-1].thenBlockSpecFacts(uniParams)
+		section2SpecFacts, err = stmt.body[len(stmt.body)-1].thenBlockSpecFacts(uniParams)
 		if err != nil {
 			return nil, nil, &parseTimeErr{err, *stmt}
 		}
 	} else {
-		for i := 0; i < len(stmt.Body); i++ {
-			curStmt, err := stmt.Body[i].specFactStmt(uniParams)
+		for i := 0; i < len(stmt.body); i++ {
+			curStmt, err := stmt.body[i].specFactStmt(uniParams)
 			if err != nil {
 				return nil, nil, &parseTimeErr{err, *stmt}
 			}

@@ -12,10 +12,10 @@ func (stmt *KnowStmt) String() string {
 	builder.WriteByte('\n')
 	if len(stmt.Facts) > 0 {
 		for i := 0; i < len(stmt.Facts)-1; i++ {
-			builder.WriteString(glob.LineHead4Indents(stmt.Facts[i].String(), 1))
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 1))
 			builder.WriteByte('\n')
 		}
-		builder.WriteString(glob.LineHead4Indents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
 	}
 	return builder.String()
 }
@@ -46,10 +46,6 @@ func (stmt *SpecFactStmt) String() string {
 	return builder.String()
 }
 
-// func (stmt *RelaFactStmt) String() string {
-// 	return fmt.Sprintf("%v %v %v", stmt.Params[0].String(), stmt.Opt.String(), stmt.Params[1].String())
-// }
-
 func (stmt *DefObjStmt) String() string {
 	var builder strings.Builder
 
@@ -79,28 +75,17 @@ func (fact *DefConPropStmt) String() string {
 
 	if len(fact.DomFacts) > 0 {
 		builder.WriteString(strOfNonEmptyFactStmtSlice(fact.DomFacts, 1))
-		// // 遍历前 n-1 个元素，每个后面加换行
-		// for i := 0; i < len(fact.DomFacts)-1; i++ {
-		// 	builder.WriteString(glob.LineHead4Indents(fact.DomFacts[i].String(), 1))
-		// 	builder.WriteByte('\n')
-		// }
-		// // 单独处理最后一个元素，不加换行
-		// builder.WriteString(glob.LineHead4Indents(fact.DomFacts[len(fact.DomFacts)-1].String(), 1))
-		// builder.WriteByte('\n')
 	}
 
-	builder.WriteString(glob.LineHead4Indents("iff:", 1))
-	builder.WriteByte('\n') // 把 \n 单独拿出来，否则会让下面一行多空几格子
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
+	builder.WriteByte('\n')
 
 	if len(fact.IffFacts) > 0 {
-		// builder.WriteStr 2))
-		// // 遍历前 n-1 个元素，每个后面加换行
 		for i := 0; i < len(fact.IffFacts)-1; i++ {
-			builder.WriteString(glob.LineHead4Indents(fact.IffFacts[i].String(), 2))
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.IffFacts[i].String(), 2))
 			builder.WriteByte('\n')
 		}
-		// 单独处理最后一个元素，不加换行
-		builder.WriteString(glob.LineHead4Indents(fact.IffFacts[len(fact.IffFacts)-1].String(), 2))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.IffFacts[len(fact.IffFacts)-1].String(), 2))
 	}
 
 	return builder.String()
@@ -116,7 +101,7 @@ func (f *ClaimProveStmt) String() string {
 		panic("TODO")
 	} else {
 		for _, fact := range f.Proofs {
-			builder.WriteString(glob.LineHead4Indents(fact.String(), 1))
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
 			builder.WriteByte('\n')
 		}
 	}
@@ -133,21 +118,18 @@ func (fact *CondFactStmt) String() string {
 	builder.WriteString(glob.KeywordWhen)
 	builder.WriteString(":\n")
 	for _, condFact := range fact.CondFacts {
-		builder.WriteString(glob.LineHead4Indents(condFact.String(), 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(condFact.String(), 1))
 		builder.WriteByte('\n')
 	}
 
-	builder.WriteString(glob.LineHead4Indents("then:", 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents("then:", 1))
 	builder.WriteByte('\n')
 	if len(fact.ThenFacts) > 0 {
-		// builder.WriteString(strOfNonEmptyFactStmtSlice(fact.ThenFacts, 2))
-		// 遍历前 n-1 个元素，每个后面加换行
 		for i := 0; i < len(fact.ThenFacts)-1; i++ {
-			builder.WriteString(glob.LineHead4Indents(fact.ThenFacts[i].String(), 2))
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.ThenFacts[i].String(), 2))
 			builder.WriteByte('\n')
 		}
-		// 单独处理最后一个元素，不加换行
-		builder.WriteString(glob.LineHead4Indents(fact.ThenFacts[len(fact.ThenFacts)-1].String(), 2))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.ThenFacts[len(fact.ThenFacts)-1].String(), 2))
 	}
 	return builder.String()
 }
@@ -170,17 +152,17 @@ func (l *ConUniFactStmt) String() string {
 	}
 	builder.WriteString(":\n")
 	for _, condFact := range l.DomFacts {
-		builder.WriteString(glob.LineHead4Indents(condFact.String(), 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(condFact.String(), 1))
 		builder.WriteByte('\n')
 	}
-	builder.WriteString(glob.LineHead4Indents("then:", 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents("then:", 1))
 	builder.WriteByte('\n')
 	if len(l.ThenFacts) > 0 {
 		for i := 0; i < len(l.ThenFacts)-1; i++ {
-			builder.WriteString(glob.LineHead4Indents(l.ThenFacts[i].String(), 2))
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(l.ThenFacts[i].String(), 2))
 			builder.WriteByte('\n')
 		}
-		builder.WriteString(glob.LineHead4Indents(l.ThenFacts[len(l.ThenFacts)-1].String(), 2))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(l.ThenFacts[len(l.ThenFacts)-1].String(), 2))
 	}
 	return builder.String()
 }
@@ -212,7 +194,8 @@ type Stringer interface {
 	String() string
 }
 
-// 修改后的泛型函数，支持 T 或 *T 只要它们实现 String()
+// 如果不用Generics,直接用 stmtSlice []Stringer，那即使 []T的T对应了Stringer，也不通过，因为golang只能对应 Stringer 和 T，而不能 []Stringer 对应 []T
+// Generics 的另外一个作用是编译时确定，而不是运行时。所以节约了运行开销
 func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string {
 	var builder strings.Builder
 
@@ -220,13 +203,11 @@ func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string
 		return ""
 	}
 
-	// 前 n-1 个元素加换行
 	for i := 0; i < len(stmtSlice)-1; i++ {
-		builder.WriteString(glob.LineHead4Indents(stmtSlice[i].String(), indent))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmtSlice[i].String(), indent))
 		builder.WriteByte('\n')
 	}
-	// 最后一个元素不加换行（但你的代码里仍然加了 \n？）
-	builder.WriteString(glob.LineHead4Indents(stmtSlice[len(stmtSlice)-1].String(), indent))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmtSlice[len(stmtSlice)-1].String(), indent))
 	builder.WriteByte('\n')
 
 	return builder.String()

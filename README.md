@@ -331,6 +331,12 @@ _-- Bjarne Stroustrup__
 
 Litex is significantly influenced by the Go programming language, particularly in its "set=>type=>interface" system, which closely mirrors Go's "struct=>type=>interface" paradigm. Additionally, Litex's function declaration syntax bears a resemblance to Go's. Most importantly, the minimalism design choice of Go strongly resonates with the Litex's inventor.
 
+Inheritance (C++/Java-style) is a poor fit for Litex:
+
+Inflexible – Inheritance hierarchies are rigid, making extension and evolution difficult.
+
+Layer freedom – Users should begin at any abstraction level, not forced from low-level math.
+
 Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope.
 
 The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. This influence is evident in Litex's design, where every statement is treated as an expression a direct nod to Lisp's expressive power. The marvelous "structure and interpretation of computer programs", a book on Lisp, strongly shapes the inventor's view of what programming actually means.
@@ -343,9 +349,11 @@ _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
 
-The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
+The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Peking University, Tsinghua University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
 
-I do this for fun. I have strong belief that there is only a small gap between programming and mathematical reasoning. I also strongly believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes.
+I create Litex for fun: turning invention and implementation into art. This is the first step in transforming the art of mathematics into the art of programming. As Knuth said in his Turing Award lecture: science is logical, systematic, calm; art is aesthetic, creative, anxious. Both math and programming live at this intersection—rigorous yet deeply human.
+
+Therefore, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also strongly believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes.
 
 If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 1500 git commits are all pushed by me), I have no time to implement a complicated one.
 

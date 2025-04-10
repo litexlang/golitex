@@ -104,14 +104,14 @@ func (parser *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 	// return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
 }
 
-func (stmt *TokenBlock) defPropExistStmt() (ast.DefPropStmt, error) {
-	if stmt.Header.is(glob.KeywordProp) {
+func (stmt *tokenBlock) defPropExistStmt() (ast.DefPropStmt, error) {
+	if stmt.header.is(glob.KeywordProp) {
 		prop, err := stmt.defConPropStmt()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
 		return prop, nil
-	} else if stmt.Header.is(glob.KeywordExistProp) {
+	} else if stmt.header.is(glob.KeywordExistProp) {
 		exist, err := stmt.defConExistPropStmt()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}

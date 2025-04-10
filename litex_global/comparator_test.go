@@ -6,7 +6,6 @@ import (
 )
 
 func TestFcEval(t *testing.T) {
-	// 测试用例
 	testCases := []struct {
 		a, b, expected string
 	}{

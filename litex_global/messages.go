@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func LineHead4Indents(line string, n uint32) string {
+func SplitLinesAndAdd4NIndents(line string, n uint32) string {
 	if n == 0 {
 		return line
 	}
