@@ -10,11 +10,11 @@ import (
 // 	slice []string
 // }
 
-func (p *StrSliceCursor) strAtIndex(index uint32) string {
+func (p *strSliceCursor) strAtIndex(index uint32) string {
 	return p.slice[index]
 }
 
-func (p *StrSliceCursor) strAtCurIndexPlus(plusIndex int) string {
+func (p *strSliceCursor) strAtCurIndexPlus(plusIndex int) string {
 	i := p.index + plusIndex
 
 	if i < 0 || i >= len(p.slice) {
@@ -24,26 +24,26 @@ func (p *StrSliceCursor) strAtCurIndexPlus(plusIndex int) string {
 	}
 }
 
-func (p *StrSliceCursor) String() string {
+func (p *strSliceCursor) String() string {
 	return strings.Join(p.slice, " ")
 }
 
-func (p *StrSliceCursor) getIndex() int {
+func (p *strSliceCursor) getIndex() int {
 	return p.index
 }
 
-func (p *StrSliceCursor) getSlice() []string {
+func (p *strSliceCursor) getSlice() []string {
 	return p.slice
 }
 
-func (p *StrSliceCursor) currentToken() (string, error) {
+func (p *strSliceCursor) currentToken() (string, error) {
 	if p.index >= len(p.slice) {
 		return "", fmt.Errorf("unexpected end of slice %v", p.slice)
 	}
 	return p.slice[p.index], nil
 }
 
-func (it *StrSliceCursor) testAndSkip(s string) error {
+func (it *strSliceCursor) testAndSkip(s string) error {
 	if it.index >= len(it.slice) {
 		return fmt.Errorf("unexpected end of slice %v", it.slice)
 	}
@@ -54,7 +54,7 @@ func (it *StrSliceCursor) testAndSkip(s string) error {
 	return fmt.Errorf("expected '%s', but got '%s'", s, it.slice[it.index])
 }
 
-func (it *StrSliceCursor) next() (string, error) {
+func (it *strSliceCursor) next() (string, error) {
 	if it.index >= len(it.slice) {
 		return "", fmt.Errorf("unexpected end of slice %v", it.slice)
 	}
@@ -62,11 +62,11 @@ func (it *StrSliceCursor) next() (string, error) {
 	return it.slice[it.index-1], nil
 }
 
-func (it *StrSliceCursor) is(s string) bool {
+func (it *strSliceCursor) is(s string) bool {
 	return it.index < len(it.slice) && it.slice[it.index] == s
 }
 
-func (it *StrSliceCursor) isAndSkip(expected string) bool {
+func (it *strSliceCursor) isAndSkip(expected string) bool {
 	if it.index < len(it.slice) && it.slice[it.index] == expected {
 		it.index++
 		return true
@@ -75,11 +75,11 @@ func (it *StrSliceCursor) isAndSkip(expected string) bool {
 	}
 }
 
-func (it *StrSliceCursor) ExceedEnd() bool {
+func (it *strSliceCursor) ExceedEnd() bool {
 	return it.index >= len(it.slice)
 }
 
-func (it *StrSliceCursor) skip(expected ...string) error {
+func (it *strSliceCursor) skip(expected ...string) error {
 	if it.index >= len(it.slice) {
 		return fmt.Errorf("unexpected end of slice %v", it.slice)
 	}
@@ -98,7 +98,7 @@ func (it *StrSliceCursor) skip(expected ...string) error {
 	return nil
 }
 
-func (it *StrSliceCursor) curTokenBeginWithNumber() bool {
+func (it *strSliceCursor) curTokenBeginWithNumber() bool {
 	if it.index >= len(it.slice) {
 		return false
 	}
@@ -112,7 +112,7 @@ func (it *StrSliceCursor) curTokenBeginWithNumber() bool {
 
 type parserErr struct {
 	previous error
-	parser   *StrSliceCursor
+	parser   *strSliceCursor
 }
 
 func (e *parserErr) Error() string {

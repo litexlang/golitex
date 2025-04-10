@@ -6,7 +6,7 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (parser *StrSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
+func (parser *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	params := []ast.Fc{}
 	parser.skip(glob.KeySymbolLeftParen)
 
@@ -36,7 +36,7 @@ func (parser *StrSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	return params, nil
 }
 
-func (parser *StrSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
+func (parser *strSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
 	paramName := []string{}
 	paramTypes := []ast.Fc{}
 
@@ -66,7 +66,7 @@ func (parser *StrSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]
 	return paramName, paramTypes, nil
 }
 
-func (parser *StrSliceCursor) stringSliceUntilEnd() ([]string, error) {
+func (parser *strSliceCursor) stringSliceUntilEnd() ([]string, error) {
 	members := []string{}
 
 	for {
@@ -88,7 +88,7 @@ func (parser *StrSliceCursor) stringSliceUntilEnd() ([]string, error) {
 	return members, nil
 }
 
-func (parser *StrSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
+func (parser *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 	err := parser.skip(glob.KeywordIs)
 	if err != nil {
 		return nil, &parserErr{err, parser}
@@ -122,7 +122,7 @@ func (stmt *TokenBlock) defPropExistStmt() (ast.DefPropStmt, error) {
 	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
 }
 
-func (parser *StrSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]string, []*ast.FcAtom, error) {
+func (parser *strSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]string, []*ast.FcAtom, error) {
 	paramName := []string{}
 	paramTypes := []*ast.FcAtom{}
 
