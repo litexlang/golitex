@@ -28,9 +28,9 @@ func (b *TokenBlock) stringWithIndent(indentLevel int) string {
 	return result
 }
 
-type topStrBlocks struct {
-	Body []strBlock
-}
+// type topStrBlocks struct {
+// 	Body []strBlock
+// }
 
 // strBlock 结构体表示一个语句块
 // type strBlock struct {
@@ -41,22 +41,22 @@ type topStrBlocks struct {
 // const parseIndent = 4
 
 // String 方法实现 fmt.Stringer 接口
-func (b *strBlock) String() string {
-	return b.stringWithIndent(0)
-}
+// func (b *strBlock) String() string {
+// 	return b.stringWithIndent(0)
+// }
 
-// stringWithIndent 递归生成带缩进的字符串表示
-func (b *strBlock) stringWithIndent(indentLevel int) string {
-	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
-	result := fmt.Sprintf("%s%s\n", indent, b.Header)
+// // stringWithIndent 递归生成带缩进的字符串表示
+// func (b *strBlock) stringWithIndent(indentLevel int) string {
+// 	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
+// 	result := fmt.Sprintf("%s%s\n", indent, b.Header)
 
-	// 递归处理子块
-	for _, subBlock := range b.Body {
-		result += subBlock.stringWithIndent(indentLevel + 1)
-	}
+// 	// 递归处理子块
+// 	for _, subBlock := range b.Body {
+// 		result += subBlock.stringWithIndent(indentLevel + 1)
+// 	}
 
-	return result
-}
+// 	return result
+// }
 
 func splitAndReplaceSemicolons(input string) []string {
 	// 按行分割字符串
@@ -120,14 +120,14 @@ func splitAndReplaceSemicolons(input string) []string {
 // 	return &TopLevelStmtSlice{blocks}, err
 // }
 
-func getTopStrBlocks(lines []string) (*topStrBlocks, error) {
-	blocks, _, err := parseStrBlocks(lines, 0, 0)
-	if err != nil {
-		return nil, err
-	}
+// func getTopStrBlocks(lines []string) (*topStrBlocks, error) {
+// 	blocks, _, err := parseStrBlocks(lines, 0, 0)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return &topStrBlocks{blocks}, err
-}
+// 	return &topStrBlocks{blocks}, err
+// }
 
 // func parseStrBlocks(lines []string, currentIndent int, startIndex int) ([]strBlock, int, error) {
 // 	blocks := []strBlock{}
@@ -289,77 +289,77 @@ func findNextValidLine(lines []string, startIndex int) (int, error) {
 	return i, nil
 }
 
-func parseBlockBody(lines []string, currentIndent int, i int, headerLine string) ([]strBlock, int, error) {
-	nextLineIndex, err := findNextValidLine(lines, i)
-	if err != nil {
-		return nil, i, err
-	}
-	if nextLineIndex >= len(lines) {
-		return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", headerLine)
-	}
+// func parseBlockBody(lines []string, currentIndent int, i int, headerLine string) ([]strBlock, int, error) {
+// 	nextLineIndex, err := findNextValidLine(lines, i)
+// 	if err != nil {
+// 		return nil, i, err
+// 	}
+// 	if nextLineIndex >= len(lines) {
+// 		return nil, i, fmt.Errorf("错误：'%s' 后缺少缩进的子块", headerLine)
+// 	}
 
-	firstLine := lines[nextLineIndex]
-	baseIndent := len(firstLine) - len(strings.TrimLeft(firstLine, " "))
-	if baseIndent <= currentIndent {
-		return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望比 %d 更大，实际 %d", headerLine, currentIndent, baseIndent)
-	}
+// 	firstLine := lines[nextLineIndex]
+// 	baseIndent := len(firstLine) - len(strings.TrimLeft(firstLine, " "))
+// 	if baseIndent <= currentIndent {
+// 		return nil, i, fmt.Errorf("错误：'%s' 后的行缩进不正确，期望比 %d 更大，实际 %d", headerLine, currentIndent, baseIndent)
+// 	}
 
-	// 调用 parseStrBlocks 用 baseIndent 作为当前层级的缩进要求
-	return parseStrBlocks(lines, baseIndent, nextLineIndex)
-}
+// 	// 调用 parseStrBlocks 用 baseIndent 作为当前层级的缩进要求
+// 	return parseStrBlocks(lines, baseIndent, nextLineIndex)
+// }
 
 // 主流程
-func parseStrBlocks(lines []string, currentIndent int, startIndex int) ([]strBlock, int, error) {
-	blocks := []strBlock{}
-	i := startIndex
+// func parseStrBlocks(lines []string, currentIndent int, startIndex int) ([]strBlock, int, error) {
+// 	blocks := []strBlock{}
+// 	i := startIndex
 
-	for i < len(lines) {
-		line := lines[i]
+// 	for i < len(lines) {
+// 		line := lines[i]
 
-		if isSkippableLine(line) {
-			i++
-			continue
-		}
+// 		if isSkippableLine(line) {
+// 			i++
+// 			continue
+// 		}
 
-		if strings.HasPrefix(strings.TrimSpace(line), "/*") {
-			var err error
-			i, err = skipMultilineComment(lines, i)
-			if err != nil {
-				return nil, i, err
-			}
-			continue
-		}
+// 		if strings.HasPrefix(strings.TrimSpace(line), "/*") {
+// 			var err error
+// 			i, err = skipMultilineComment(lines, i)
+// 			if err != nil {
+// 				return nil, i, err
+// 			}
+// 			continue
+// 		}
 
-		indent := len(line) - len(strings.TrimLeft(line, " "))
-		if indent < currentIndent {
-			return blocks, i, nil
-		}
+// 		indent := len(line) - len(strings.TrimLeft(line, " "))
+// 		if indent < currentIndent {
+// 			return blocks, i, nil
+// 		}
 
-		if indent == currentIndent {
-			headerLine := strings.TrimSpace(line)
-			block := strBlock{
-				Header: headerLine,
-				Body:   nil,
-			}
+// 		if indent == currentIndent {
+// 			headerLine := strings.TrimSpace(line)
+// 			block := strBlock{
+// 				Header: headerLine,
+// 				Body:   nil,
+// 			}
 
-			i++
+// 			i++
 
-			if strings.HasSuffix(headerLine, ":") {
-				body, nextIndex, err := parseBlockBody(lines, currentIndent, i, headerLine)
-				if err != nil {
-					return nil, i, err
-				}
-				block.Body = body
-				i = nextIndex
-			}
+// 			if strings.HasSuffix(headerLine, ":") {
+// 				body, nextIndex, err := parseBlockBody(lines, currentIndent, i, headerLine)
+// 				if err != nil {
+// 					return nil, i, err
+// 				}
+// 				block.Body = body
+// 				i = nextIndex
+// 			}
 
-			blocks = append(blocks, block)
-			continue
-		}
+// 			blocks = append(blocks, block)
+// 			continue
+// 		}
 
-		// 缩进不符合预期，跳过该行
-		i++
-	}
+// 		// 缩进不符合预期，跳过该行
+// 		i++
+// 	}
 
-	return blocks, i, nil
-}
+// 	return blocks, i, nil
+// }
