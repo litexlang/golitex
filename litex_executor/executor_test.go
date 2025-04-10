@@ -572,7 +572,7 @@ func TestAllFactCodeSeveralRounds(t *testing.T) {
 
 func TestAllFactCode(t *testing.T) {
 	start := time.Now()
-	code := readFile("../litex_code_examples/litex_as_regex_matcher.lix")
+	code := readFile("../litex_code_examples/classic_examples/use_storedUniFact_with_uniFact_as_dom.lix")
 	readFileTime := time.Since(start)
 	start = time.Now()
 	topStmtSlice := setupAndParseStmtTest(code, t)
