@@ -24,6 +24,7 @@ func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt) error {
 	}
 
 	// 添加新事实
+
 	node.Facts = append(node.Facts, StoredSpecFact{stmt.IsTrue, stmt.Params})
 
 	// 更新映射中的节点
@@ -94,17 +95,19 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (*Stored
 	if storedFacts, optExists := factMem.SpecFactsDict[pkgName][optName]; !optExists {
 		return &StoredCondFuncMemDictNode{}, false
 	} else {
-		ret := &StoredCondFuncMemDictNode{
-			Facts: []StoredCondSpecFact{},
-		}
+		return &storedFacts, true
 
-		for i := 0; i < len(storedFacts.Facts); i++ {
-			if storedFacts.Facts[i].IsTrue == stmt.IsTrue {
-				ret.Facts = append(ret.Facts, storedFacts.Facts[i])
-			}
-		}
+		// ret := &StoredCondFuncMemDictNode{
+		// 	Facts: []StoredCondSpecFact{},
+		// }
 
-		return ret, true
+		// for i := 0; i < len(storedFacts.Facts); i++ {
+		// 	if storedFacts.Facts[i].IsTrue == stmt.IsTrue {
+		// 		ret.Facts = append(ret.Facts, storedFacts.Facts[i])
+		// 	}
+		// }
+
+		// return ret, true
 	}
 }
 
@@ -157,16 +160,19 @@ func (factMem *UniFactMemDict) GetSpecFactNodeWithTheSameIsTrue(stmt *ast.SpecFa
 	if storedFacts, optExists := factMem.SpecFactsDict[pkgName][optName]; !optExists {
 		return &StoredUniFuncMemDictNode{}, false
 	} else {
-		ret := &StoredUniFuncMemDictNode{
-			Facts: []StoredUniSpecFact{},
-		}
+		return &storedFacts, true
 
-		for i := 0; i < len(storedFacts.Facts); i++ {
-			if storedFacts.Facts[i].IsTrue == stmt.IsTrue {
-				ret.Facts = append(ret.Facts, storedFacts.Facts[i])
-			}
-		}
+		// // TODO 这里是为了暂时处理not的情况。如果之后有了专门存not的地方，那就不要了，直接返回storedFacts 就行
+		// ret := &StoredUniFuncMemDictNode{
+		// 	Facts: []StoredUniSpecFact{},
+		// }
 
-		return ret, true
+		// for i := 0; i < len(storedFacts.Facts); i++ {
+		// 	if storedFacts.Facts[i].IsTrue == stmt.IsTrue {
+		// 		ret.Facts = append(ret.Facts, storedFacts.Facts[i])
+		// 	}
+		// }
+
+		// return ret, true
 	}
 }
