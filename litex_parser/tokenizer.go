@@ -168,74 +168,101 @@ func (t *tokenizerWithScope) tokenizeLine(line string) ([]string, error) {
 	return tokens, nil
 }
 
-// parseBlocks 递归解析块结构
-func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error) {
-	blocks := []tokenBlock{}
+func (t *tokenizerWithScope) skipEmptyAndCommentLines() {
 	for t.currentLine < len(t.lines) {
-		line := t.lines[t.currentLine]
-		trimmed := strings.TrimSpace(line)
-
-		// 跳过空行或注释
+		trimmed := strings.TrimSpace(t.lines[t.currentLine])
 		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
 			t.currentLine++
+		} else {
+			break
+		}
+	}
+}
+
+func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error) {
+	blocks := []tokenBlock{}
+
+	for t.currentLine < len(t.lines) {
+		line := t.lines[t.currentLine]
+
+		// 首先移除行内注释。这里必要：后续逻辑要判断行末是不是: . 不能保留行末的//
+		if idx := strings.Index(line, "//"); idx >= 0 {
+			line = line[:idx]
+		}
+		// 然后进行trim suffix. 这里必要：后续逻辑要判断行末是不是:
+		trimmed := strings.TrimRight(line, " \t\r\n")
+
+		// 跳过空行（纯注释行现在已经被处理为空行）
+		if trimmed == "" {
+			t.currentLine++
 			continue
 		}
-		if strings.HasPrefix(trimmed, "/*") {
-			t.currentLine++
+
+		// 计算当前行的缩进
+		indent := len(line) - len(strings.TrimLeft(line, " "))
+
+		if indent < currentIndent {
+			// 缩进减少，说明当前块结束
+			return blocks, nil
+		}
+
+		if indent > currentIndent {
+			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"", line)
+		}
+
+		// indent == currentIndent:
+		// 判断是否为 header 行（是否以 : 结尾）
+		lineForTokenize := trimmed
+		if strings.HasSuffix(trimmed, ":") {
+			lineForTokenize = trimmed
+		}
+
+		tokens, err := t.tokenizeLine(lineForTokenize)
+		if err != nil {
+			return nil, err
+		}
+
+		block := tokenBlock{
+			header: strSliceCursor{0, tokens},
+			body:   nil,
+		}
+
+		t.currentLine++ // consume this line
+
+		// 判断是否需要解析子 block
+		if strings.HasSuffix(trimmed, ":") {
 			for t.currentLine < len(t.lines) {
-				if strings.Contains(t.lines[t.currentLine], "*/") {
+				nextLine := t.lines[t.currentLine]
+
+				// 同样先处理注释
+				if idx := strings.Index(nextLine, "//"); idx >= 0 {
+					nextLine = nextLine[:idx]
+				}
+				nextTrimmed := strings.TrimSpace(nextLine)
+
+				// 跳过空行
+				if nextTrimmed == "" {
 					t.currentLine++
+					continue
+				}
+
+				nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
+				if nextIndent <= currentIndent {
+					// 没有更深缩进，说明没有子块
 					break
 				}
-				t.currentLine++
-			}
-			continue
-		}
 
-		// 计算缩进
-		indent := len(line) - len(strings.TrimLeft(line, " "))
-		if indent < currentIndent {
-			return blocks, nil
-		} else if indent > currentIndent {
-			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"", line)
-		} else if indent == currentIndent {
-			tokens, err := t.tokenizeLine(trimmed)
-			if err != nil {
-				return nil, err
-			}
-
-			block := tokenBlock{
-				header: strSliceCursor{0, tokens},
-				body:   []tokenBlock{},
-			}
-
-			t.currentLine++
-
-			// 如果以冒号结尾，解析子块
-			if strings.HasSuffix(trimmed, ":") {
-				// 检查下一行的缩进是否大于当前缩进
-				if t.currentLine < len(t.lines) {
-					nextLine := t.lines[t.currentLine]
-					nextIndent := len(nextLine) - len(strings.TrimLeft(nextLine, " "))
-					if nextIndent > currentIndent {
-						subBlocks, err := t.parseBlocks(nextIndent)
-						if err != nil {
-							return nil, err
-						}
-						block.body = subBlocks
-					}
-				} else {
-					return nil, fmt.Errorf("':' opens a new scope. The statement next the line of statement ending with ':' should have indent larger than current indent level")
+				// 有子 block
+				subBlocks, err := t.parseBlocks(nextIndent)
+				if err != nil {
+					return nil, err
 				}
+				block.body = subBlocks
+				break
 			}
-
-			blocks = append(blocks, block)
-			continue
 		}
 
-		// 缩进比当前多但不是以冒号结尾的行，跳过或报错？
-		// 这里可以根据需求决定是跳过还是报错
-		t.currentLine++
+		blocks = append(blocks, block)
 	}
 
 	return blocks, nil
