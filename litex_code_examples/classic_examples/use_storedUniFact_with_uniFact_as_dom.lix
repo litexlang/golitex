@@ -72,3 +72,61 @@ prove:
         then:
             p(1)
 
+prove:
+    know forall x A:
+        p(x)
+        then:
+            Q(x)
+            Q(x)
+
+    know:
+        p(1)
+    
+    Q(1)
+
+# 容斥原理
+prove:      
+    know:
+        forall z obj, A set, B set:
+            in(z, A)
+            then:
+                in(z,union(A, B) )
+
+        forall z obj, A set, B set:
+            in(z, B)
+            then:
+                in(z,union(A, B) )
+    
+        in(x, A)
+        in(y, B)
+
+    in(x, union(A, B))
+    in(y, union(A,B))
+
+    know:
+        forall z obj, A set, B set:
+            in(z, A)
+            in(z, B)
+            then:
+                in(z, intersection(A,B))
+
+        forall z obj, A set, B set:
+            not in(z, A)
+            then:
+                not in(z, intersection(A,B))
+
+        forall z obj, A set, B set:
+            not in(z, B)
+            then:
+                not in(z, intersection(A,B))
+        
+        
+        in(1,B)
+
+    in(1, intersection(A,B)) # known
+
+    know:
+        not in(1, A)
+    
+    in(1, intersection(A,B)) # unknown
+

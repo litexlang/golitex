@@ -1196,10 +1196,7 @@ know forall x A:
 
 func TestIndent(t *testing.T) {
 	code := `
-know forall x A:
-	p(x)
-t(x)
-q(x)
+q(union(A,B))
 `
 
 	statements, err := ParserTester(code)
