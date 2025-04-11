@@ -11,6 +11,10 @@ type tokenBlock struct {
 	body   []tokenBlock
 }
 
+func (b *tokenBlock) setHeaderIndex(index int) {
+	b.header.index = index
+}
+
 func (b *tokenBlock) String() string {
 	return b.stringWithIndent(0)
 }
@@ -27,4 +31,19 @@ func (b *tokenBlock) stringWithIndent(indentLevel int) string {
 	}
 
 	return result
+}
+
+func (b *tokenBlock) isSpecFactNotRelaFact() (bool, error) {
+	curIndex := b.header.index
+	defer b.setHeaderIndex(curIndex)
+
+	_, err := b.header.rawFc()
+	if err != nil {
+		return false, err
+	}
+
+	if b.header.ExceedEnd() {
+		return true, nil
+	}
+	return false, nil
 }
