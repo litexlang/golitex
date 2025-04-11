@@ -1175,14 +1175,31 @@ fn f(x A) B:
 func TestForall6(t *testing.T) {
 	code := `
 know forall x A:
-	$p(x)
+	p(x)
 	forall y B:
 		forall z B:
-			$t(y,z)
+			t(y,z)
 		then:
-			$p(2)
+			p(2)
+		  t(x)
 	then:
-			$p(x)
+			p(x)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}
+
+func TestIndent(t *testing.T) {
+	code := `
+know forall x A:
+	p(x)
+t(x)
+	q(x)
 `
 
 	statements, err := ParserTester(code)

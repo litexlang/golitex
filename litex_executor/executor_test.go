@@ -54,7 +54,7 @@ func printExecMsg(messageSlice []string) {
 }
 
 func TestKnow(t *testing.T) {
-	code := `know $p(a)`
+	code := `know p(a)`
 	statements, err := parser.SetupAndParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
@@ -335,12 +335,12 @@ func TestVerificationUsingEqual(t *testing.T) {
 		`
 know:
 	x = y
-	$p(x)
+	p(x)
 
-$p(z)
-$q(x)
-$p(x)
-$p(y)
+p(z)
+q(x)
+p(x)
+p(y)
 `
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
@@ -352,17 +352,17 @@ func TestCondVerifier(t *testing.T) {
 		`
 know:
 	when:
-		$q(a)
+		q(a)
 		then:
-			$p(x)
+			p(x)
 
 know:
-	$q(a)
+	q(a)
 	x = y
 
-$p(z)
-$p(y)
-$p(x)
+p(z)
+p(y)
+p(x)
 `
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
@@ -404,19 +404,19 @@ func TestForallVerifier(t *testing.T) {
 	code :=
 		`
 forall x A:
-	$p(x)
+	p(x)
 	x = y
 	then:
-		$p(x)
-		$p(y)
+		p(x)
+		p(y)
 
 forall x A:
-	$p(x)
+	p(x)
 	x = y
 	then:
-		$p(b)
+		p(b)
 
-$p(x)
+p(x)
 `
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
@@ -428,21 +428,21 @@ func TestUseForallToCheck(t *testing.T) {
 		`
 know:
 	forall x A:
-		$p(f(x))
+		p(f(x))
 
 know:
 	t = f
 			
-$p(t(x))
-$p(g(x))
-$p(f(x))
+p(t(x))
+p(g(x))
+p(f(x))
 
 know:
 	forall x A:
-		$p(x)
+		p(x)
 
-$p(ha)
-$p(g(x, 100))
+p(ha)
+p(g(x, 100))
 `
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
@@ -453,8 +453,8 @@ func TestEqual(t *testing.T) {
 	code :=
 		`
 know:
-	$p(t(x))
-$p(g(x))
+	p(t(x))
+p(g(x))
 `
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
@@ -466,12 +466,12 @@ func TestProve(t *testing.T) {
 		`
 prove:
     know forall x R:
-        $p(x)
+        p(x)
         then:
-            $p(f(x))
-    $p(f(x))
-    know $p(x)
-    $p(f(x))
+            p(f(x))
+    p(f(x))
+    know p(x)
+    p(f(x))
 `
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
@@ -481,8 +481,8 @@ prove:
 func TestFacts(t *testing.T) {
 	code :=
 		`
-know $p(x)
-$p(x)
+know p(x)
+p(x)
 `
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
@@ -501,21 +501,21 @@ func TestPropDef(t *testing.T) {
 	code :=
 		`
 prop q(x A):
-	$p(x)
+	p(x)
 	iff:
-		$t(x)
+		t(x)
 
 know:
-	$q(1)
-	$p(1)
+	q(1)
+	p(1)
 
-$t(1)
+t(1)
 
 know:
-	$t(2)
-	$p(2)
+	t(2)
+	p(2)
 
-$q(2)
+q(2)
 `
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
@@ -523,7 +523,7 @@ $q(2)
 }
 
 func TestPropDef2(t *testing.T) {
-	code := "prove:\n\tknow:\n\t\t$p(x);$p(y)\n\t$p(y)"
+	code := "prove:\n\tknow:\n\t\tp(x);p(y)\n\tp(y)"
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	messages := execStmtTest(topStmtSlice, t)
 	printExecMsg(messages)
@@ -567,4 +567,4 @@ func TestLastFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../litex_code_examples/classic_examples/def.lix")
+var code = readFile("../litex_code_examples/classic_examples/use_storedUniFact_with_uniFact_as_dom.lix")

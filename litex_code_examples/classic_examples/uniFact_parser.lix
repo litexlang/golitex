@@ -1,6 +1,0 @@
-// forall fact inside forall could have uniParam the same as uniParam as its parent scope
-forall x A:
-    forall x B:
-        $p(x)
-    then:
-        $q(x)
