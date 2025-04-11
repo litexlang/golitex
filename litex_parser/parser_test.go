@@ -1155,3 +1155,19 @@ know forall x A:
 		t.Fatal(err)
 	}
 }
+
+func TestFn(t *testing.T) {
+	code := `
+fn f(x A) B:
+	$dom(x)
+	then:
+		$ret(x)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}
