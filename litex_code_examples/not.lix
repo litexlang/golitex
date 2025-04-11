@@ -1,0 +1,34 @@
+prove:
+    know p(1)
+    p(1)
+
+prove:
+    know not p(1)
+    p(1)
+
+prove:
+    know not p(1)
+    not p(1)
+
+prove:
+    know forall x A:
+        not p(x)
+        then:
+            not q(x)
+    know not p(1)
+    not q(1)
+
+prove:
+    know forall x A:
+        not p(x)
+        then:
+            q(x)
+    when:
+        p(1)
+        then:
+            q(1)
+    
+    when:
+         not p(1)
+         then:
+            not q(1)

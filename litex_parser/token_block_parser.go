@@ -164,7 +164,6 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths nameDepthMap, maxAllowedNestedFor
 	}
 
 	newUniParams := nameDepthMap{}
-	// copy nameDepths to newUniParams
 	for key := range nameDepths {
 		newUniParams[key] = nameDepths[key]
 	}

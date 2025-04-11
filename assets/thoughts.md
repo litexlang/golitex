@@ -859,11 +859,10 @@ prove:
             $p(1)    
 
 4.11
-1. bugs
-   1. relational fact 需要读入 UniParams
-2. improve
+2. add
    1. not
    2. or
+   3. prop_prop
 3. 例子
    1. 容斥原理
    2.  

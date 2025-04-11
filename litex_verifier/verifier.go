@@ -14,16 +14,6 @@ func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 	case *ast.SpecFactStmt:
 		{
 			ok, err := ver.SpecFact(stmt, state)
-			// if !ok {
-			// 	stmt.IsTrue = !stmt.IsTrue
-			// 	ok, err := ver.SpecFact(stmt, state)
-			// 	if ok {
-			// 		fmt.Println("FALSE")
-			// 	}
-			// 	if err != nil {
-			// 		panic("")
-			// 	}
-			// }
 			return ok, err
 		}
 	case *ast.CondFactStmt:
