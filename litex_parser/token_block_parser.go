@@ -101,7 +101,7 @@ func (stmt *tokenBlock) specFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt
 		return nil, err
 	}
 	if !ok {
-		return stmt.relaFactStmt()
+		return stmt.relaFactStmt(nameDepths)
 	}
 
 	propName, err := stmt.header.rawFcAtom()
@@ -565,8 +565,13 @@ func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
 	return ast.NewHaveStmt(*propStmt, members), nil
 }
 
-func (stmt *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
+// relaFact 只支持2个参数的关系
+func (stmt *tokenBlock) relaFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt, error) {
 	fc, err := stmt.header.rawFc()
+	if err != nil {
+		return nil, &parseTimeErr{err, *stmt}
+	}
+	fc, err = ast.AddUniPrefixToFc(fc, nameDepths)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -588,16 +593,12 @@ func (stmt *tokenBlock) relaFactStmt() (*ast.SpecFactStmt, error) {
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
+	fc2, err = ast.AddUniPrefixToFc(fc2, nameDepths)
+	if err != nil {
+		return nil, &parseTimeErr{err, *stmt}
+	}
 
 	params := []ast.Fc{fc, fc2}
-	for stmt.header.is(opt) {
-		stmt.header.skip()
-		fc, err := stmt.header.rawFc()
-		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
-		}
-		params = append(params, fc)
-	}
 
 	return ast.NewSpecFactStmt(true, ast.FcAtom{Value: opt}, params), nil
 }

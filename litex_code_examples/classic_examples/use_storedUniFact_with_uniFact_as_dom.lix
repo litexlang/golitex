@@ -128,7 +128,7 @@ prove:
         in(2, A) // 矛盾以know的形式被引入。此时一些命题可能既对又错1
         in(2 ,B)
     
-    # 既对又错
+    # 既对又错，这是用户引入的，不能说是litex有问题
     in(2, intersection(A,B)) # true
     not in(1, intersection(A,B)) # true
     
