@@ -14,7 +14,10 @@ type StoredSpecFact struct {
 	Params []ast.Fc
 }
 
-type StoredSpecMemDictNode struct{ Facts []StoredSpecFact }
+type StoredSpecMemDictNode struct {
+	Facts    []StoredSpecFact
+	NotFacts []StoredSpecFact
+}
 type SpecFactMemDict struct {
 	Dict map[string]map[string]StoredSpecMemDictNode
 }
@@ -26,7 +29,8 @@ type StoredCondSpecFact struct {
 }
 
 type StoredCondFuncMemDictNode struct {
-	Facts []StoredCondSpecFact
+	Facts    []StoredCondSpecFact
+	NotFacts []StoredCondSpecFact
 }
 
 type CondFactMemDict struct {
@@ -40,7 +44,8 @@ type StoredUniSpecFact struct {
 }
 
 type StoredUniFuncMemDictNode struct {
-	Facts []StoredUniSpecFact
+	Facts    []StoredUniSpecFact
+	NotFacts []StoredUniSpecFact
 }
 
 type UniFactMemDict struct {
