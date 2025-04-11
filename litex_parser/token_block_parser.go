@@ -81,13 +81,21 @@ func (stmt *tokenBlock) factStmt(nameDepths nameDepthMap, uniFactDom bool) (ast.
 }
 
 func (stmt *tokenBlock) specFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt, error) {
-	if !stmt.header.is(glob.KeySymbolDollar) {
-		return stmt.relaFactStmt()
-	}
+	// if !stmt.header.is(glob.KeySymbolDollar) {
+	// 	return stmt.relaFactStmt()
+	// }
 
-	err := stmt.header.skip(glob.KeySymbolDollar)
+	// err := stmt.header.skip(glob.KeySymbolDollar)
+	// if err != nil {
+	// 	return nil, &parseTimeErr{err, *stmt}
+	// }
+
+	ok, err := stmt.isSpecFactNotRelaFact()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, err
+	}
+	if !ok {
+		return stmt.relaFactStmt()
 	}
 
 	propName, err := stmt.header.rawFcAtom()
