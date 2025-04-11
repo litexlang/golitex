@@ -62,6 +62,23 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 	}
 
 	if !ok {
+		if glob.CheckFalse {
+			switch stmt.(type) {
+			case *ast.SpecFactStmt:
+				newStmt := stmt.(*ast.SpecFactStmt).GetReverseFact()
+				ok, _, err := exec.checkFactStmt(newStmt)
+				if err != nil {
+					return err
+				}
+				if ok {
+					exec.appendNewMsg(stmt.String() + "\nis false")
+				}
+			case *ast.ConUniFactStmt:
+				// TODO 这里需要考虑到fact的类型
+			default:
+				// TODO 这里需要考虑到fact的类型
+			}
+		}
 		exec.appendNewMsg(stmt.String() + "\nis unknown")
 	} else {
 		exec.env.NewFact(stmt)

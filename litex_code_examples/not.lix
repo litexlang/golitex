@@ -32,3 +32,20 @@ prove:
          not p(1)
          then:
             not q(1)
+
+prove:    
+    know:
+        forall z obj, A set, B set:
+            in(z, A)
+            in(z, B)
+            then:
+                in(z, intersection(A,B))
+
+        forall z obj, A set, B set:
+            not in(z, A)
+            then:
+                not in(z, intersection(A,B))
+
+        not in(1, A)
+    # not in(1, intersection(A,B))
+    in(1, intersection(A,B))
