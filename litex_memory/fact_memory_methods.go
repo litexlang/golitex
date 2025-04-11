@@ -41,6 +41,7 @@ func (factMem *SpecFactMemDict) GetNode(stmt *ast.SpecFactStmt) (*StoredSpecMemD
 	if !nodeExists {
 		return nil, false // 返回零值
 	}
+
 	return &node, true
 }
 
@@ -90,10 +91,20 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (*Stored
 		return &StoredCondFuncMemDictNode{}, false
 	}
 
-	if ret, optExists := factMem.SpecFactsDict[pkgName][optName]; !optExists {
+	if storedFacts, optExists := factMem.SpecFactsDict[pkgName][optName]; !optExists {
 		return &StoredCondFuncMemDictNode{}, false
 	} else {
-		return &ret, true
+		ret := &StoredCondFuncMemDictNode{
+			Facts: []StoredCondSpecFact{},
+		}
+
+		for i := 0; i < len(storedFacts.Facts); i++ {
+			if storedFacts.Facts[i].IsTrue == stmt.IsTrue {
+				ret.Facts = append(ret.Facts, storedFacts.Facts[i])
+			}
+		}
+
+		return ret, true
 	}
 }
 
@@ -135,7 +146,7 @@ func NewUniFactMemDict() *UniFactMemDict {
 	return &UniFactMemDict{map[string]map[string]StoredUniFuncMemDictNode{}}
 }
 
-func (factMem *UniFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (*StoredUniFuncMemDictNode, bool) {
+func (factMem *UniFactMemDict) GetSpecFactNodeWithTheSameIsTrue(stmt *ast.SpecFactStmt) (*StoredUniFuncMemDictNode, bool) {
 	pkgName := stmt.PropName.PkgName
 	optName := stmt.PropName.Value
 
@@ -143,9 +154,19 @@ func (factMem *UniFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (*StoredU
 		return &StoredUniFuncMemDictNode{}, false
 	}
 
-	if ret, optExists := factMem.SpecFactsDict[pkgName][optName]; !optExists {
+	if storedFacts, optExists := factMem.SpecFactsDict[pkgName][optName]; !optExists {
 		return &StoredUniFuncMemDictNode{}, false
 	} else {
-		return &ret, true
+		ret := &StoredUniFuncMemDictNode{
+			Facts: []StoredUniSpecFact{},
+		}
+
+		for i := 0; i < len(storedFacts.Facts); i++ {
+			if storedFacts.Facts[i].IsTrue == stmt.IsTrue {
+				ret.Facts = append(ret.Facts, storedFacts.Facts[i])
+			}
+		}
+
+		return ret, true
 	}
 }

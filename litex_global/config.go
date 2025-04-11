@@ -1,3 +1,4 @@
 package litex_global
 
-const PreprocessSemicolonAtParseTime = false
+var PreprocessSemicolonAtParseTime = false
+var CheckFalse = true
