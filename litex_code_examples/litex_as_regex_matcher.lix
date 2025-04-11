@@ -487,7 +487,6 @@ prove:
                 ForallXInAPX()
 
         forall x A:
-            p(x)    
+            p(x)
         
     ForallXInAPX()
-

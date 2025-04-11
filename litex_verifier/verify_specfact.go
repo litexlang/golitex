@@ -60,12 +60,12 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		searchedNode, got := curEnv.SpecFactMem.GetNode(stmt)
+		searchedNodeFacts, got := curEnv.SpecFactMem.GetNode(stmt)
 		if !got {
 			continue
 		}
 
-		for _, knownFact := range searchedNode.Facts {
+		for _, knownFact := range searchedNodeFacts {
 			if stmt.IsTrue != knownFact.IsTrue {
 				continue
 			}
@@ -104,13 +104,13 @@ func (ver *Verifier) SpecFactCond(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	searched, got := curEnv.CondFactMem.GetSpecFactNode(stmt)
+	searchedFacts, got := curEnv.CondFactMem.GetSpecFactNode(stmt)
 	if !got {
 		return false, nil
 	}
 
 LoopOverFacts:
-	for _, knownFact := range searched.Facts {
+	for _, knownFact := range searchedFacts {
 		for _, f := range knownFact.Fact.CondFacts {
 			ok, err := ver.FactStmt(f, state)
 			if err != nil {
@@ -174,12 +174,12 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 }
 
 func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	searched, got := curEnv.UniFactMem.GetSpecFactNodeWithTheSameIsTrue(stmt)
+	searchedFacts, got := curEnv.UniFactMem.GetSpecFactNodeWithTheSameIsTrue(stmt)
 	if !got {
 		return false, nil
 	}
 
-	for _, knownFact := range searched.Facts {
+	for _, knownFact := range searchedFacts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
 		paramArrMap, ok, err := ver.matchStoredUniConSpecFacts(knownFact, stmt)
 		if err != nil {

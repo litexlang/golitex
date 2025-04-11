@@ -61,7 +61,9 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 		return err
 	}
 
-	if !ok {
+	if ok {
+		exec.env.NewFact(stmt)
+	} else {
 		if glob.CheckFalse {
 			switch stmt.(type) {
 			case *ast.SpecFactStmt:
@@ -72,16 +74,17 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 				}
 				if ok {
 					exec.appendNewMsg(stmt.String() + "\nis false")
+					return nil
 				}
 			case *ast.ConUniFactStmt:
 				// TODO 这里需要考虑到fact的类型
 			default:
 				// TODO 这里需要考虑到fact的类型
 			}
+			exec.appendNewMsg(stmt.String() + "\nis unknown")
 		}
+
 		exec.appendNewMsg(stmt.String() + "\nis unknown")
-	} else {
-		exec.env.NewFact(stmt)
 	}
 
 	return nil
