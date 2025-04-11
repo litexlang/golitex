@@ -263,7 +263,7 @@ func (stmt *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	declHeader, uniParams, err := stmt.conDefHeaderWithUniPrefix()
+	declHeader, uniParams, err := stmt.conDefHeader()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -317,7 +317,7 @@ func (stmt *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	decl, uniParams, err := stmt.conDefHeaderWithUniPrefix()
+	decl, uniParams, err := stmt.conDefHeader()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -489,7 +489,7 @@ func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	decl, uniParams, err := stmt.conDefHeaderWithUniPrefix()
+	decl, uniParams, err := stmt.conDefHeader()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -678,7 +678,7 @@ func (stmt *tokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
 	panic("")
 }
 
-func (stmt *tokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[string]int, error) {
+func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, map[string]int, error) {
 	name, err := stmt.header.next()
 	if err != nil {
 		return nil, nil, &parseTimeErr{err, *stmt}
@@ -691,13 +691,19 @@ func (stmt *tokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[stri
 
 	params := []string{}
 	typeParams := []ast.Fc{}
+	uniParams := map[string]int{}
 
 	for !stmt.header.is(glob.KeySymbolRightParen) {
 		param, err := stmt.header.next()
 		if err != nil {
 			return nil, nil, &parseTimeErr{err, *stmt}
 		}
-		params = append(params, param)
+
+		_, declared := uniParams[param]
+		if declared {
+			return nil, nil, fmt.Errorf("duplicate parameter %s", param)
+		}
+		uniParams[param] = 1
 
 		typeParam, err := stmt.header.rawFc()
 		if err != nil {
@@ -705,6 +711,8 @@ func (stmt *tokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[stri
 		}
 
 		typeParams = append(typeParams, typeParam)
+		param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
+		params = append(params, param)
 
 		if stmt.header.is(glob.KeySymbolComma) {
 			stmt.header.skip()
@@ -714,19 +722,6 @@ func (stmt *tokenBlock) conDefHeaderWithUniPrefix() (*ast.ConDefHeader, map[stri
 	err = stmt.header.skip(glob.KeySymbolRightParen)
 	if err != nil {
 		return nil, nil, &parseTimeErr{err, *stmt}
-	}
-
-	for i, param := range params {
-		params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-	}
-
-	uniParams := map[string]int{}
-	for _, param := range params {
-		_, declared := uniParams[param]
-		if declared {
-			return nil, nil, fmt.Errorf("duplicate parameter %s", param)
-		}
-		uniParams[param] = 1
 	}
 
 	return ast.NewConDefHeader(name, params, typeParams), uniParams, nil
