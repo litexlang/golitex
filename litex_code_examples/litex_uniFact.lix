@@ -25,7 +25,7 @@ prove:
     ForallXInAPX(2)
 
 
-// 死循环
+# 死循环
 prove:
     know:
         forall x A:
@@ -75,9 +75,9 @@ prove:
                 p(y)
             then:
                 t(x)
-    ForallXInAPX(2) // unknown 因为验证 forall y A: p(y) 的时候，不能查看 已知的 forall y A: p(y), 只能用 spec
+    ForallXInAPX(2) # unknown 因为验证 forall y A: p(y) 的时候，不能查看 已知的 forall y A: p(y), 只能用 spec
 
-// 用一个词语来表达 forall x A: cond => then
+# 用一个词语来表达 forall x A: cond => then
 prove:
     know:
         when:
@@ -108,8 +108,8 @@ prove:
         then:
             p(y)
 
-// 我强烈不建议用户在 forall 的 dom 里写 forall 类型的事实，因为这样的forall是不可能被另外一个事实用来做验证的。你应该给这个forall取个名字。（或者，你应该让这个dom里出现的东西，出现在最外层的for里面。）然后写在forall的dom里面。至少当前版本，因为我还不能给“路过”的事实取一个flag（这很难，因为必须是 同一个事实路过同一个已知事实，才能让flag变化。即使是路过同一个已知事实，可能是不同的事实取路过的，那也不行让flag变化。）
-// 这其实还是让litex不用给超过90%的事实取名了：因为单层的forall，用户是不需要取名的。这让三段论这种还是很容易实现
+# 我强烈不建议用户在 forall 的 dom 里写 forall 类型的事实，因为这样的forall是不可能被另外一个事实用来做验证的。你应该给这个forall取个名字。（或者，你应该让这个dom里出现的东西，出现在最外层的for里面。）然后写在forall的dom里面。至少当前版本，因为我还不能给“路过”的事实取一个flag（这很难，因为必须是 同一个事实路过同一个已知事实，才能让flag变化。即使是路过同一个已知事实，可能是不同的事实取路过的，那也不行让flag变化。）
+# 这其实还是让litex不用给超过90%的事实取名了：因为单层的forall，用户是不需要取名的。这让三段论这种还是很容易实现
 
 prove:
     know:
@@ -162,27 +162,27 @@ prove:
             then:
                 result(1,y)
     
-    q(1) // unknown
+    q(1) # unknown
 
-// prove:
-//     prop p(x B):
-//         forall y A:
-//             cond(y)
-//             then:
-//                 result(x,y)
-//     
-//     know:
-//         forall x B:
-//             p(x)
-//             then:
-//                 q(x)
-//     
-//         forall y A:
-//             cond(y)
-//             then:
-//                 result(1,y)
-// 
-//     p(1)
+# prove:
+#     prop p(x B):
+#         forall y A:
+#             cond(y)
+#             then:
+#                 result(x,y)
+#     
+#     know:
+#         forall x B:
+#             p(x)
+#             then:
+#                 q(x)
+#     
+#         forall y A:
+#             cond(y)
+#             then:
+#                 result(1,y)
+# 
+#     p(1)
         
 
 prove:
@@ -209,15 +209,15 @@ prove:
 
 prove:
     know:
-        // 定义 p(x) iff forall y: cond(y) => result(x,y)
-        // p(x) => (forall y: cond(y) => result(x,y))
+        # 定义 p(x) iff forall y: cond(y) => result(x,y)
+        # p(x) => (forall y: cond(y) => result(x,y))
         forall x B, y A:
             cond(y)
             p(x)
             then:
                 result(x,y)
         
-        // (forall y: cond(y) => result(x,y)) => p(x)
+        # (forall y: cond(y) => result(x,y)) => p(x)
         forall x B:
             forall y A:
                 cond(y)
@@ -226,7 +226,7 @@ prove:
             then:
                 p(x)
 
-    prove: // OK
+    prove: # OK
         know p(1)
         forall y A:
             cond(y)

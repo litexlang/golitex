@@ -27,10 +27,6 @@ func (t *tokenizer) nextToken() (string, int, error) {
 	if t.start+1 < len(t.inputString) && t.inputString[t.start:t.start+2] == "//" {
 		return "", len(t.inputString), nil
 	}
-	// 如果下两个字符是 /*，报错
-	if t.start+1 < len(t.inputString) && t.inputString[t.start:t.start+2] == "/*" {
-		return "", 0, fmt.Errorf("invalid syntax: nested comment block")
-	}
 
 	potentialKeywordSymbol := glob.GetKeySymbol(t.inputString, t.start)
 	if potentialKeywordSymbol != "" {
@@ -111,9 +107,6 @@ func (t *tokenizerWithScope) nextToken(line string, start int) (string, int, err
 	if start+1 < len(line) && line[start:start+2] == "//" {
 		return "", len(line), nil
 	}
-	if start+1 < len(line) && line[start:start+2] == "/*" {
-		return "", 0, fmt.Errorf("invalid syntax: nested comment block")
-	}
 
 	// 检查关键字或符号
 	if symbol := glob.GetKeySymbol(line, start); symbol != "" {
@@ -168,17 +161,6 @@ func (t *tokenizerWithScope) tokenizeLine(line string) ([]string, error) {
 	return tokens, nil
 }
 
-func (t *tokenizerWithScope) skipEmptyAndCommentLines() {
-	for t.currentLine < len(t.lines) {
-		trimmed := strings.TrimSpace(t.lines[t.currentLine])
-		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
-			t.currentLine++
-		} else {
-			break
-		}
-	}
-}
-
 func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error) {
 	blocks := []tokenBlock{}
 
@@ -186,7 +168,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 		line := t.lines[t.currentLine]
 
 		// 首先移除行内注释。这里必要：后续逻辑要判断行末是不是: . 不能保留行末的//
-		if idx := strings.Index(line, "//"); idx >= 0 {
+		if idx := strings.Index(line, "#"); idx >= 0 {
 			line = line[:idx]
 		}
 		// 然后进行trim suffix. 这里必要：后续逻辑要判断行末是不是:

@@ -1,6 +1,6 @@
 prove:
     know:
-        // (forall y: cond(y) => result(x,y)) => p(x)
+        # (forall y: cond(y) => result(x,y)) => p(x)
         forall x B:
             forall y A:
                 cond(y)
@@ -23,7 +23,7 @@ prove:
             p(x)
             then:
                 p(x)
-    p(1) // unknown. NO IFF DEAD LOCK
+    p(1) # unknown. NO IFF DEAD LOCK
 
 prove:
     know:
@@ -35,20 +35,20 @@ prove:
             q(x)
             then:
                 p(x)
-    p(1) // unknown. NO IFF DEAD LOCK
+    p(1) # unknown. NO IFF DEAD LOCK
 
 prove:
     know:
-        // Define: p(x) iff forall y: cond(y) => result(x,y)
+        # Define: p(x) iff forall y: cond(y) => result(x,y)
         
-        // p(x) => (forall y: cond(y) => result(x,y))
+        # p(x) => (forall y: cond(y) => result(x,y))
         forall x B, y A:
             cond(y)
             p(x)
             then:
                 result(x,y)
         
-        // (forall y: cond(y) => result(x,y)) => p(x)
+        # (forall y: cond(y) => result(x,y)) => p(x)
         forall x B:
             forall y A:
                 cond(y)
@@ -57,7 +57,7 @@ prove:
             then:
                 p(x)
 
-    prove: // ok
+    prove: # ok
         know p(1)
         forall y A:
             cond(y)

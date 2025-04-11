@@ -1,19 +1,19 @@
-// 25.4.1
+# 25.4.1
 
-// Most common case
+# Most common case
 prove:
-    p0(a)   // most common specific fact
-    a < b   // most common relational fact
+    p0(a)   # most common specific fact
+    a < b   # most common relational fact
     know:
         p0(a)
         a < b
     p(0)
     p0(a)
-    // a < b
+    # a < b
 
-p0(a) // local scope does not affect global
+p0(a) # local scope does not affect global
 
-// 2 个一样的东西匹配同一位
+# 2 个一样的东西匹配同一位
 prove:
     know:
         forall x A:
@@ -31,7 +31,7 @@ prove:
     know:
         a < b
         b < d
-    a < d // unknown 二元事实搜不到潜在的三元forall事实
+    a < d # unknown 二元事实搜不到潜在的三元forall事实
 
 prove:
     know forall x R:
@@ -101,7 +101,7 @@ prove:
     p(0)
     pp(1)
 
-// 三种事实
+# 三种事实
 prove:
     know:
         p(1)
@@ -118,8 +118,8 @@ prove:
     know:
         forall x R:
             p(f(1)(x))
-//    p(f(2))
-//    p(f(1))
+#    p(f(2))
+#    p(f(1))
     p(f(2)(3))
     p(f(1)(2))
     p(f(1)(g()(2)(4)(h)))
@@ -128,25 +128,25 @@ prove:
         f(1) = k(2)(3)
 
     forall x R:
-    // 网络寻址最长头部匹配原则：litex是最长尾部匹配
-    // 字符串最后的匹配，剩下的是头部（函数）。
-    // 如果最后一位甚至不相等，那就是整个是头部匹配
-    // 头部匹配：要找ip地址：192.168.100.2
-    // 网络里有很多的地址，也以192.168开头，但是有些是最长的192.168.100，然后我就去找100
-        f(1)(x) = k(2)(3)(x) // unknown
+    # 网络寻址最长头部匹配原则：litex是最长尾部匹配
+    # 字符串最后的匹配，剩下的是头部（函数）。
+    # 如果最后一位甚至不相等，那就是整个是头部匹配
+    # 头部匹配：要找ip地址：192.168.100.2
+    # 网络里有很多的地址，也以192.168开头，但是有些是最长的192.168.100，然后我就去找100
+        f(1)(x) = k(2)(3)(x) # unknown
     
     p(f(1)(1))
     f(1)(1) = k(2)(3)(1)
-    p(k(2)(3)(1)) // unknown
+    p(k(2)(3)(1)) # unknown
 
     know:
         f = k(2)
     p(k(2)(1)(2))
 
-// f.m.d
-// f(m)(d)
+# f.m.d
+# f(m)(d)
 
-1 = 1 // 不能打印
+1 = 1 # 不能打印
 a = a 
 
 prove:
@@ -154,11 +154,11 @@ prove:
         a(b)(c) = d(c)(a)
     
     a(b)(c) = d(c)(a)
-    // 先匹配全部；如果不行，那匹配最后一位，如果对上了，那就是head = all - 最后一位；如果匹配全部配不上，最后一位也不行，那就G了。
+    # 先匹配全部；如果不行，那匹配最后一位，如果对上了，那就是head = all - 最后一位；如果匹配全部配不上，最后一位也不行，那就G了。
 
-// pkg::p
-// p
-// pkg.f.m.h().g
+# pkg::p
+# p
+# pkg.f.m.h().g
 
 prove:
     know:
@@ -221,9 +221,9 @@ prove:
             x = a
     know q(b)
 
-    p(b) // unknown
+    p(b) # unknown
     b =x
-    p(b) // true. 因为 = 有交换性，而我确实实现了可交换的符号能在用uniFact验证时用上可交换性，所以只用 b = x，而不是 x = b 就能运行.
+    p(b) # true. 因为 = 有交换性，而我确实实现了可交换的符号能在用uniFact验证时用上可交换性，所以只用 b = x，而不是 x = b 就能运行.
 
 
 prove:
@@ -245,11 +245,11 @@ prove:
             f(x) = g(x)
     
     forall x A, a A:
-        f(x) = g(x) // 必须写一下，因为我在比较的时候，我不会用forall来验证你下面的f(x) = g(x) 。或许未来我会加入这个功能，但不是现在。或者我引入新的prove_fn_equal来做语法糖。但为了这么边缘的功能，加这么大的功能，合理吗
+        f(x) = g(x) # 必须写一下，因为我在比较的时候，我不会用forall来验证你下面的f(x) = g(x) 。或许未来我会加入这个功能，但不是现在。或者我引入新的prove_fn_equal来做语法糖。但为了这么边缘的功能，加这么大的功能，合理吗
         f(x)(a) = g(x)(a)
 
     forall x A, a A, e A:
-        f(x)(a) = g(x)(a) // 必须写一下
+        f(x)(a) = g(x)(a) # 必须写一下
         f(x)(a)(e) = g(x)(a)(e)
 
     forall x A, a A, e A:
@@ -280,10 +280,10 @@ prove:
 
 prove:
     1.2 / 0.3 = 4
-    1 / 0.9 = 3 / 2.7 // 不能让分母不能整除分子
+    1 / 0.9 = 3 / 2.7 # 不能让分母不能整除分子
     1 / 0.9 = 1 / 0.9
     8 ^ 2 = 64
-    16 ^ 1.5 = 64 // 暂时不能让 ^ 里面的东西是小数
+    16 ^ 1.5 = 64 # 暂时不能让 ^ 里面的东西是小数
 
 prove:
     fn f(x nat) nat:
@@ -308,13 +308,13 @@ prove:
     f(1) = 1 + 2
     know q(1)
     f(1) = 1 + 2
-    f(1) = 3 // unknown. 暂时只能验证完了1+2=3之后才能说明这个是对的
+    f(1) = 3 # unknown. 暂时只能验证完了1+2=3之后才能说明这个是对的
     1+2 = 3
-    f(1) = 3 // true
+    f(1) = 3 # true
 
 prove:
     know p(1)
-    p(2-1) // true
+    p(2-1) # true
 
 prove:
     know f(1) = 3
@@ -322,17 +322,17 @@ prove:
 
 prove:
     know id(1+2) = 3
-    id(3)=3 // unknown
+    id(3)=3 # unknown
     1+2=3
-    id(3) = 3 // unknown
+    id(3) = 3 # unknown
     id(1+2) = id(3)
-    id(1+2) = 3 // true
+    id(1+2) = 3 # true
 
 prove:
     know id(1+2) = 3
-    id(3)=3 // unknown
-    //1+2=3
-    //id(3) = 3 // unknown
+    id(3)=3 # unknown
+    #1+2=3
+    #id(3) = 3 # unknown
 
 prove:
     q(1*4+2*f(a)) = q(4+2*f(a))
@@ -345,13 +345,13 @@ prove:
             p(x,1)
     p(2,3-2)
 
-// ? TODO 不只为何不能理想状态运行
+# ? TODO 不只为何不能理想状态运行
 prove:
     know forall x A:
         p(x *(3-2))
-    p(x*1) // true
+    p(x*1) # true
 
-// 检查
+# 检查
 prove:
     obj x A
     obj y B
@@ -371,10 +371,10 @@ prove:
         then:
             q(x)
     know p(x)
-    q(1) // true, 因为 p(x) 被match 了
+    q(1) # true, 因为 p(x) 被match 了
 
 
-// 非常严重的bug
+# 非常严重的bug
 prove:
     know forall x A:
         p(x)
@@ -382,7 +382,7 @@ prove:
             q(x)
     know p(x)
 
-    q(1) // true, 因为 p(x) 被match 了
+    q(1) # true, 因为 p(x) 被match 了
 
 prove:
     q(1)
@@ -406,7 +406,7 @@ prove:
         p(x)
 
 prove:
-    // 下面这一条是没用的，永远不会有事实和q(2)match上，因为2不是自由变量
+    # 下面这一条是没用的，永远不会有事实和q(2)match上，因为2不是自由变量
     know forall x A:
         p(x)
         then:
@@ -418,7 +418,7 @@ prove:
     forall x A:
         p(x)
     
-    q(2) // unknown
+    q(2) # unknown
 
     know:
         when:
@@ -433,20 +433,20 @@ prove:
         then:
             q(2)
     
-    q(2) // true
+    q(2) # true
 
 prove:
-    // prop ForallXInAPX():
-    //     forall x A:
-    //         p(x)
+    # prop ForallXInAPX():
+    #     forall x A:
+    #         p(x)
     
     know:
-        ForallXInAPX()  // 如果不加会报什么错呢?
+        ForallXInAPX()  # 如果不加会报什么错呢?
         when:
             ForallXInAPX()
             then:
                 q(2)
-        q(2) // true
+        q(2) # true
 
 prove:
     know forall x A:
@@ -478,7 +478,7 @@ prove:
 
 
 prove:
-// 怪异的bug：为什么这里会说我 duplicate decl???
+# 怪异的bug：为什么这里会说我 duplicate decl???
     know:
         forall :
             forall x A:
