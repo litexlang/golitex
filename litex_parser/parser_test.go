@@ -1197,7 +1197,7 @@ know forall x A:
 func TestIndent(t *testing.T) {
 	code := `
 forall x A:
-	x in A
+	x larger_than A
 	then:
 		p(x)
 `
