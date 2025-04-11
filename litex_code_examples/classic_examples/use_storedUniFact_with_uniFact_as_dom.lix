@@ -115,18 +115,20 @@ prove:
             then:
                 not in(z, intersection(A,B))
 
-        forall z obj, A set, B set:
-            not in(z, B)
-            then:
-                not in(z, intersection(A,B))
-        
         
         in(1,B)
-
-    in(1, intersection(A,B)) # known
+        in(1, A)
+    in(1, intersection(A,B)) # true
 
     know:
-        not in(1, A)
-    
-    in(1, intersection(A,B)) # unknown
+        not in(2, A)
+    in(1, intersection(A,B)) # false
 
+    know:
+        in(2, A) // 矛盾以know的形式被引入。此时一些命题可能既对又错1
+        in(2 ,B)
+    
+    # 既对又错
+    in(2, intersection(A,B)) # true
+    not in(1, intersection(A,B)) # true
+    
