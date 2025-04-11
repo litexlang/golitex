@@ -1,0 +1,34 @@
+prove:
+    prop Q(x A):
+        $p(x)
+        iff:
+            $q(x)
+    
+    know:
+        $Q(1)
+        $p(1)
+    $q(1) // unknown
+
+    know:
+        $q(2)
+        $p(2)
+    $Q(2)
+
+prove:
+    obj x A:
+        $p(x)
+    $p(x)
+
+prove:
+    fn f(x A) B:
+        $dom(x)
+        then:
+            $p(f(x))
+
+    know:
+        $dom(1)
+        $f(1)
+    $p(f(1))
+    
+
+    

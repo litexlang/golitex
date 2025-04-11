@@ -1,5 +1,3 @@
-// The difference between "check equality of " and "check equality of two expressions in verifier" is that
-
 package litex_comparator
 
 import (
