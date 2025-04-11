@@ -9,7 +9,7 @@ func SplitLinesAndAdd4NIndents(line string, n uint32) string {
 		return line
 	}
 
-	spaces := strings.Repeat(ScopeIndent, int(n))
+	spaces := strings.Repeat(Scope4Indents, int(n))
 	lines := strings.Split(line, "\n")
 
 	var builder strings.Builder

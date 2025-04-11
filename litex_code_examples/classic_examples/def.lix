@@ -7,8 +7,7 @@ prove:
     know:
         $Q(1)
         $p(1)
-    $q(1) // unknown
-
+    $q(1)
     know:
         $q(2)
         $p(2)

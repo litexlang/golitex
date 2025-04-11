@@ -2,6 +2,7 @@ package litex_parser
 
 import (
 	"fmt"
+	glob "golitex/litex_global"
 	"strings"
 )
 
@@ -15,7 +16,7 @@ func (b *tokenBlock) String() string {
 }
 
 func (b *tokenBlock) stringWithIndent(indentLevel int) string {
-	indent := strings.Repeat("  ", indentLevel) // 根据缩进级别生成缩进字符串
+	indent := strings.Repeat(glob.Scope4Indents, indentLevel) // 根据缩进级别生成缩进字符串
 	result := fmt.Sprintf("%s%s\n", indent, strings.Join(b.header.getSlice(), " "))
 
 	// 递归处理子块
