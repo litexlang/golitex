@@ -857,3 +857,8 @@ prove:
                 $result(1,y)
         then:
             $p(1)    
+
+4.11
+1. bugs
+   1. relational fact 需要读入 UniParams
+   2. 

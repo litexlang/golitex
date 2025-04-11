@@ -36,7 +36,7 @@ const (
 	KeywordAssociative = "associative"
 
 	// Builtin Types
-	KeywordNat      = "nat"      // e.g. 0
+	KeywordNatural  = "nat"      // e.g. 0
 	KeywordInt      = "int"      // e.g. -1
 	KeywordRational = "rational" // e.g. -1.1
 	KeywordReal     = "real"     // e.g. pi
@@ -207,7 +207,7 @@ var Keywords = []string{
 	KeywordAssociative,
 
 	// 内置类型
-	KeywordNat,
+	KeywordNatural,
 	KeywordInt,
 	KeywordRational,
 	KeywordReal,

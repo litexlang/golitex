@@ -90,6 +90,12 @@ func (stmt *tokenBlock) specFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt
 	// 	return nil, &parseTimeErr{err, *stmt}
 	// }
 
+	isTrue := true
+	if stmt.header.is(glob.KeywordNot) {
+		stmt.header.skip(glob.KeywordNot)
+		isTrue = false
+	}
+
 	ok, err := stmt.isSpecFactNotRelaFact()
 	if err != nil {
 		return nil, err
@@ -132,7 +138,7 @@ func (stmt *tokenBlock) specFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	return ast.NewSpecFactStmt(true, propName, params), nil
+	return ast.NewSpecFactStmt(isTrue, propName, params), nil
 }
 
 func (stmt *tokenBlock) uniFactStmt(nameDepths nameDepthMap, maxAllowedNestedForall bool) (ast.UniFactStmt, error) {

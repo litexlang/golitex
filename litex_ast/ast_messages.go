@@ -24,7 +24,7 @@ func (stmt *SpecFactStmt) String() string {
 	var builder strings.Builder
 
 	if !stmt.IsTrue {
-		builder.WriteString(glob.KeywordNat)
+		builder.WriteString(glob.KeywordNot)
 		builder.WriteByte(' ')
 	}
 
