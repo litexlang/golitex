@@ -766,3 +766,19 @@ func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths nam
 
 	return section1Facts, section2SpecFacts, nil
 }
+
+// * 我这里可以以这样的逻辑去实现这个函数，本质原因是specFact被当做rawFc去parse是不会报错的
+func (b *tokenBlock) isSpecFactNotRelaFact() (bool, error) {
+	curIndex := b.header.index
+	defer b.setHeaderIndex(curIndex)
+
+	_, err := b.header.rawFc()
+	if err != nil {
+		return false, err
+	}
+
+	if b.header.ExceedEnd() {
+		return true, nil
+	}
+	return false, nil
+}

@@ -196,10 +196,9 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 		indent := len(line) - len(strings.TrimLeft(line, " "))
 		if indent < currentIndent {
 			return blocks, nil
-		}
-
-		// 解析当前行
-		if indent == currentIndent {
+		} else if indent > currentIndent {
+			return nil, fmt.Errorf("incorrect indentation:\n\"%s\"", line)
+		} else if indent == currentIndent {
 			tokens, err := t.tokenizeLine(trimmed)
 			if err != nil {
 				return nil, err
@@ -225,6 +224,8 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 						}
 						block.body = subBlocks
 					}
+				} else {
+					return nil, fmt.Errorf("':' opens a new scope. The statement next the line of statement ending with ':' should have indent larger than current indent level")
 				}
 			}
 

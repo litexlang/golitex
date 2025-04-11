@@ -2,24 +2,24 @@
 
 // Most common case
 prove:
-    $p0(a)   // most common specific fact
+    p0(a)   // most common specific fact
     a < b   // most common relational fact
     know:
-        $p0(a)
+        p0(a)
         a < b
-    $p(0)
-    $p0(a)
+    p(0)
+    p0(a)
     // a < b
 
-$p0(a) // local scope does not affect global
+p0(a) // local scope does not affect global
 
 // 2 个一样的东西匹配同一位
 prove:
     know:
         forall x A:
-            $p1(x,x)
-    $p1(1,1)
-    $p1(1,2)
+            p1(x,x)
+    p1(1,1)
+    p1(1,2)
 
 prove:
     know forall x R, y R, z R:
@@ -35,94 +35,94 @@ prove:
 
 prove:
     know forall x R:
-        $p(x)
+        p(x)
         then:
-            $p(f(x))
-    $p(f(x))
-    know $p(x)
-    $p(f(x))
+            p(f(x))
+    p(f(x))
+    know p(x)
+    p(f(x))
 
 prove:
     know:
         forall x A:
-            $p(f(x))
+            p(f(x))
 
     know:
         t = f
                 
-    $p(t(x))
-    $p(g(x))
-    $p(f(x))
+    p(t(x))
+    p(g(x))
+    p(f(x))
 
     know:
         forall x A:
-            $p(x)
+            p(x)
 
-    $p(ha)
-    $p(g(x, 100))
+    p(ha)
+    p(g(x, 100))
 
 prove:
     know:
         x = y
         f = t
-        $p(f(x))
+        p(f(x))
 
-    $p(t(y))   
+    p(t(y))   
 
 prove:
     know forall x R, f fn:
         x = t
         f = g
         then:
-            $p(f(x))
+            p(f(x))
 
-    $p(k(a))
+    p(k(a))
 
     know:
         a = t
         k = g
-    $p(k(a))
+    p(k(a))
 
 prove:
     know forall x R:
-        $p(x)
+        p(x)
         then:
-            $p(x)
-    $pppp(f(1))
-    $p(0)
-    $p(g(1))
+            p(x)
+    pppp(f(1))
+    p(0)
+    p(g(1))
     know:
-        $p(0)
-    $p(0)
+        p(0)
+    p(0)
 
 prove:
     know forall x R:
-        $p(x)
-    $p(0)
-    $pp(1)
+        p(x)
+    p(0)
+    pp(1)
 
 // 三种事实
 prove:
     know:
-        $p(1)
+        p(1)
         when:
-            $p(2)
+            p(2)
             then:
-                $p(3)
+                p(3)
         forall x R:
-            $p3(x)
-    $p(1)
-    $p(2)
+            p3(x)
+    p(1)
+    p(2)
 
 prove:
     know:
         forall x R:
-            $p(f(1)(x))
-//    $p(f(2))
-//    $p(f(1))
-    $p(f(2)(3))
-    $p(f(1)(2))
-    $p(f(1)(g()(2)(4)(h)))
+            p(f(1)(x))
+//    p(f(2))
+//    p(f(1))
+    p(f(2)(3))
+    p(f(1)(2))
+    p(f(1)(g()(2)(4)(h)))
 
     know:
         f(1) = k(2)(3)
@@ -135,13 +135,13 @@ prove:
     // 网络里有很多的地址，也以192.168开头，但是有些是最长的192.168.100，然后我就去找100
         f(1)(x) = k(2)(3)(x) // unknown
     
-    $p(f(1)(1))
+    p(f(1)(1))
     f(1)(1) = k(2)(3)(1)
-    $p(k(2)(3)(1)) // unknown
+    p(k(2)(3)(1)) // unknown
 
     know:
         f = k(2)
-    $p(k(2)(1)(2))
+    p(k(2)(1)(2))
 
 // f.m.d
 // f(m)(d)
@@ -163,14 +163,14 @@ prove:
 prove:
     know:
         forall x A:
-            $p(x)
+            p(x)
             then:
-                $q(x)
+                q(x)
     
     when:
-        $p(a)
+        p(a)
         then:
-            $q(a)
+            q(a)
         
 prove:
     know sin(2)^2 + cos(2)^2 = 1
@@ -194,14 +194,14 @@ prove:
 
 prove:
     know forall a A:
-        $p(a)
+        p(a)
         then:
-            $q(a)
+            q(a)
             
     when:
-        $p(x)
+        p(x)
         then:
-            $q(x)
+            q(x)
 prove:
     know forall x A, y A, z A:
         (x + y) + z = x + (y + z)
@@ -209,21 +209,21 @@ prove:
     (1+2)+2=1+(2+2)
 
 prove:
-    know $p(x)
-    $p(x)
+    know p(x)
+    p(x)
 
     know y = x
-    $p(y)
+    p(y)
 
     know forall a A:
-        $q(a)
+        q(a)
         then:
             x = a
-    know $q(b)
+    know q(b)
 
-    $p(b) // unknown
+    p(b) // unknown
     b =x
-    $p(b) // true. 因为 = 有交换性，而我确实实现了可交换的符号能在用uniFact验证时用上可交换性，所以只用 b = x，而不是 x = b 就能运行.
+    p(b) // true. 因为 = 有交换性，而我确实实现了可交换的符号能在用uniFact验证时用上可交换性，所以只用 b = x，而不是 x = b 就能运行.
 
 
 prove:
@@ -232,9 +232,9 @@ prove:
 
 prove:
     obj x A:
-        $p(x)
+        p(x)
     x in A
-    $p(x)
+    p(x)
 
 prove:
     forall x A, a A:
@@ -269,14 +269,14 @@ prove:
 
 prove:
     know:
-        $p(2.2)
+        p(2.2)
         a = 3.4
-        $q(2*1.7, 1)
+        q(2*1.7, 1)
     
-    $p(1.1*2)
-    $q(a,1.00)
-    $q(3.4,1.0)
-    $q(a,1.00)
+    p(1.1*2)
+    q(a,1.00)
+    q(3.4,1.0)
+    q(a,1.00)
 
 prove:
     1.2 / 0.3 = 4
@@ -296,25 +296,25 @@ prove:
     
 prove:
     know:
-        $p(1); $p(2); $p(3)
-    $p(1);$p(2);$p(4)
+        p(1); p(2); p(3)
+    p(1);p(2);p(4)
 
 prove:
     fn f(x nat) nat:
-        $q(x)
+        q(x)
         then:
             f(x) = x + 2
 
     f(1) = 1 + 2
-    know $q(1)
+    know q(1)
     f(1) = 1 + 2
     f(1) = 3 // unknown. 暂时只能验证完了1+2=3之后才能说明这个是对的
     1+2 = 3
     f(1) = 3 // true
 
 prove:
-    know $p(1)
-    $p(2-1) // true
+    know p(1)
+    p(2-1) // true
 
 prove:
     know f(1) = 3
@@ -342,14 +342,14 @@ prove:
 prove:
     know:
         forall x A:
-            $p(x,1)
-    $p(2,3-2)
+            p(x,1)
+    p(2,3-2)
 
 // ? TODO 不只为何不能理想状态运行
 prove:
     know forall x A:
-        $p(x *(3-2))
-    $p(x*1) // true
+        p(x *(3-2))
+    p(x*1) // true
 
 // 检查
 prove:
@@ -359,122 +359,122 @@ prove:
 
 prove:
     obj x A
-    know $p(x)
+    know p(x)
     forall x A:
-        $p(x)
+        p(x)
 
 prove:
     know forall x A:
-        $p(x)
+        p(x)
         forall y A:
-            $t(y)
+            t(y)
         then:
-            $q(x)
-    know $p(x)
-    $q(1) // true, 因为 $p(x) 被match 了
+            q(x)
+    know p(x)
+    q(1) // true, 因为 p(x) 被match 了
 
 
 // 非常严重的bug
 prove:
     know forall x A:
-        $p(x)
+        p(x)
         then:
-            $q(x)
-    know $p(x)
+            q(x)
+    know p(x)
 
-    $q(1) // true, 因为 $p(x) 被match 了
+    q(1) // true, 因为 p(x) 被match 了
 
 prove:
-    $q(1)
+    q(1)
 
 
 prove:
     know forall x A:
-        $p(x)
+        p(x)
         then:
-            $q(x)
-    know $p(x)
-    $q(1)
-    know $p(1)
-    $q(1)
+            q(x)
+    know p(x)
+    q(1)
+    know p(1)
+    q(1)
 
 prove:
     know forall x A:
-        $p(x)
+        p(x)
 
     forall x A:
-        $p(x)
+        p(x)
 
 prove:
-    // 下面这一条是没用的，永远不会有事实和$q(2)match上，因为2不是自由变量
+    // 下面这一条是没用的，永远不会有事实和q(2)match上，因为2不是自由变量
     know forall x A:
-        $p(x)
+        p(x)
         then:
-            $q(2)
+            q(2)
     
     know forall x A:
-        $p(x)
+        p(x)
 
     forall x A:
-        $p(x)
+        p(x)
     
-    $q(2) // unknown
+    q(2) // unknown
 
     know:
         when:
             forall x A:
-                $p(x)
+                p(x)
             then:
-                $q(2)
+                q(2)
 
     when:
         forall x A:
-            $p(x)
+            p(x)
         then:
-            $q(2)
+            q(2)
     
-    $q(2) // true
+    q(2) // true
 
 prove:
     // prop ForallXInAPX():
     //     forall x A:
-    //         $p(x)
+    //         p(x)
     
     know:
-        $ForallXInAPX()  // 如果不加$会报什么错呢?
+        ForallXInAPX()  // 如果不加会报什么错呢?
         when:
-            $ForallXInAPX()
+            ForallXInAPX()
             then:
-                $q(2)
-        $q(2) // true
+                q(2)
+        q(2) // true
 
 prove:
     know forall x A:
-        $p(x)
+        p(x)
     know:
         when:
             forall x A:
-                $p(x)
+                p(x)
             then:
-                $ForallXInAPX()
-    $ForallXInAPX()
+                ForallXInAPX()
+    ForallXInAPX()
 
 prove:
     know:
         when:
-            $p(1)
+            p(1)
             then:
-                $p(1)
-    $p(1)
+                p(1)
+    p(1)
                 
 prove:
     know:
         when:
             forall x A:
-                $p(x)
+                p(x)
             then:
-                $p(1)
-    $p(1)
+                p(1)
+    p(1)
 
 
 prove:
@@ -482,12 +482,12 @@ prove:
     know:
         forall :
             forall x A:
-                $p(x)
+                p(x)
             then:
-                $ForallXInAPX()
+                ForallXInAPX()
 
         forall x A:
-            $p(x)    
+            p(x)    
         
-    $ForallXInAPX()
+    ForallXInAPX()
 

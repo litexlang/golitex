@@ -4,18 +4,18 @@
 prove:
     know:
         forall p prop:
-            $p(0)
+            p(0)
             forall n nat:
-                $p(n)
+                p(n)
             then:
-                $math_induction(p)
+                math_induction(p)
         
         forall x nat, p prop:
-            $math_induction(p)
+            math_induction(p)
             then:
-                $p(x)
+                p(x)
 
-    $p(1) // unknown
-    $math_induction(p)
-    $p(1) 
+    p(1) // unknown
+    math_induction(p)
+    p(1) 
 
