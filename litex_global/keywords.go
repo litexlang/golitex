@@ -1,6 +1,6 @@
 package litex_global
 
-const ScopeIndent = "    "
+const Scope4Indents = "    "
 
 // 每次新增keyword的时候，要记住把它往isKeyword里加
 const (

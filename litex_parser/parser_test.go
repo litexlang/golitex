@@ -1171,3 +1171,24 @@ fn f(x A) B:
 		t.Fatal(err)
 	}
 }
+
+func TestForall6(t *testing.T) {
+	code := `
+know forall x A:
+	$p(x)
+	forall y B:
+		forall z B:
+			$t(y,z)
+		then:
+			$p(2)
+	then:
+			$p(x)
+`
+
+	statements, err := ParserTester(code)
+	if err == nil {
+		fmt.Printf("%v\n", statements)
+	} else {
+		t.Fatal(err)
+	}
+}

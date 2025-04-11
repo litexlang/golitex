@@ -31,7 +31,7 @@ func ParseSourceCode(code string) ([]ast.TopStmt, error) {
 }
 
 func preprocessSourceCode(code string) ([]string, error) {
-	processedCode := strings.ReplaceAll(code, "\t", glob.ScopeIndent)
+	processedCode := strings.ReplaceAll(code, "\t", glob.Scope4Indents)
 	lines := splitAndReplaceSemicolons(processedCode)
 	return lines, nil
 }
