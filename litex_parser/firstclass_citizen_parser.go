@@ -47,7 +47,6 @@ func (parser *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
 	}
 
 	return ast.NewFcFnPipe(optName, typeParamsObjParamsPairs), nil
-	// return &ast.FcFnPipe{optName, typeParamsObjParamsPairs}, nil
 }
 
 func (parser *strSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
@@ -59,8 +58,6 @@ func (parser *strSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
 			return nil, &parserErr{err, parser}
 		}
 
-		// pairs = append(pairs, {objParamsPtr})
-		// pairs = append(pairs, &ast.FcFnPipeSeg{objParamsPtr})
 		pairs = append(pairs, ast.NewFcFnPipeSeg(objParamsPtr))
 	}
 
