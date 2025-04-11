@@ -1,6 +1,6 @@
-// 4.10 设计prop_prop的语法
+# 4.10 设计prop_prop的语法
 
-// 有待实现：数学归纳法。 prop_prop
+# 有待实现：数学归纳法。 prop_prop
 prove:
     know:
         forall p prop:
@@ -15,7 +15,7 @@ prove:
             then:
                 p(x)
 
-    p(1) // unknown
+    p(1) # unknown
     math_induction(p)
     p(1) 
 
