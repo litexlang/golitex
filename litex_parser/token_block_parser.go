@@ -585,9 +585,10 @@ func (stmt *tokenBlock) relaFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	if !glob.IsKeySymbolRelaProp(opt) {
-		return nil, &parseTimeErr{err, *stmt}
-	}
+	// 我认为没必要一定是内置的符号，可以是用户自定义的
+	// if !glob.IsKeySymbolRelaProp(opt) {
+	// 	return nil, &parseTimeErr{err, *stmt}
+	// }
 
 	fc2, err := stmt.header.rawFc()
 	if err != nil {
