@@ -1199,7 +1199,7 @@ func TestIndent(t *testing.T) {
 know forall x A:
 	p(x)
 t(x)
-	q(x)
+q(x)
 `
 
 	statements, err := ParserTester(code)

@@ -57,7 +57,7 @@ prove:
             then:
                 p(x)
 
-    prove: // OK
+    prove: // ok
         know p(1)
         forall y A:
             cond(y)
