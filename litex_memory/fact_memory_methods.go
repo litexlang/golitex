@@ -24,8 +24,11 @@ func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt) error {
 	}
 
 	// 添加新事实
-
-	node.Facts = append(node.Facts, StoredSpecFact{stmt.IsTrue, stmt.Params})
+	if stmt.IsTrue {
+		node.Facts = append(node.Facts, StoredSpecFact{stmt.IsTrue, stmt.Params})
+	} else {
+		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt.IsTrue, stmt.Params})
+	}
 
 	// 更新映射中的节点
 	pkgMap[stmt.PropName.Value] = node
@@ -33,7 +36,7 @@ func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (factMem *SpecFactMemDict) GetNode(stmt *ast.SpecFactStmt) (*StoredSpecMemDictNode, bool) {
+func (factMem *SpecFactMemDict) GetNode(stmt *ast.SpecFactStmt) ([]StoredSpecFact, bool) {
 	pkgMap, pkgExists := factMem.Dict[stmt.PropName.PkgName] // 检查 pkgName 是否存在
 	if !pkgExists {
 		return nil, false // 返回零值
@@ -43,7 +46,11 @@ func (factMem *SpecFactMemDict) GetNode(stmt *ast.SpecFactStmt) (*StoredSpecMemD
 		return nil, false // 返回零值
 	}
 
-	return &node, true
+	if stmt.IsTrue {
+		return node.Facts, true
+	} else {
+		return node.NotFacts, true
+	}
 }
 
 func NewCondFactMemDict() *CondFactMemDict {
@@ -77,37 +84,33 @@ func (factMem *CondFactMemDict) InsertSpecFact(condStmt *ast.CondFactStmt, stmt 
 		}
 	}
 
-	node.Facts = append(node.Facts, StoredCondSpecFact{stmt.IsTrue, stmt.Params, condStmt})
+	if stmt.IsTrue {
+		node.Facts = append(node.Facts, StoredCondSpecFact{stmt.IsTrue, stmt.Params, condStmt})
+	} else {
+		node.NotFacts = append(node.NotFacts, StoredCondSpecFact{stmt.IsTrue, stmt.Params, condStmt})
+	}
 
 	// 更新回字典
 	factMem.SpecFactsDict[pkgName][optName] = node
 	return nil
 }
 
-func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (*StoredCondFuncMemDictNode, bool) {
+func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) ([]StoredCondSpecFact, bool) {
 	pkgName := stmt.PropName.PkgName
 	optName := stmt.PropName.Value
 
 	if _, pkgExists := factMem.SpecFactsDict[pkgName]; !pkgExists {
-		return &StoredCondFuncMemDictNode{}, false
+		return []StoredCondSpecFact{}, false
 	}
 
 	if storedFacts, optExists := factMem.SpecFactsDict[pkgName][optName]; !optExists {
-		return &StoredCondFuncMemDictNode{}, false
+		return []StoredCondSpecFact{}, false
 	} else {
-		return &storedFacts, true
-
-		// ret := &StoredCondFuncMemDictNode{
-		// 	Facts: []StoredCondSpecFact{},
-		// }
-
-		// for i := 0; i < len(storedFacts.Facts); i++ {
-		// 	if storedFacts.Facts[i].IsTrue == stmt.IsTrue {
-		// 		ret.Facts = append(ret.Facts, storedFacts.Facts[i])
-		// 	}
-		// }
-
-		// return ret, true
+		if stmt.IsTrue {
+			return storedFacts.Facts, true
+		} else {
+			return storedFacts.NotFacts, true
+		}
 	}
 }
 
@@ -138,7 +141,11 @@ func (factMem *UniFactMemDict) insertSpecFact(uniStmt *ast.ConUniFactStmt, stmt 
 		}
 	}
 
-	node.Facts = append(node.Facts, StoredUniSpecFact{stmt.IsTrue, &stmt.Params, uniStmt})
+	if stmt.IsTrue {
+		node.Facts = append(node.Facts, StoredUniSpecFact{stmt.IsTrue, &stmt.Params, uniStmt})
+	} else {
+		node.NotFacts = append(node.NotFacts, StoredUniSpecFact{stmt.IsTrue, &stmt.Params, uniStmt})
+	}
 
 	// 更新回字典
 	factMem.SpecFactsDict[pkgName][optName] = node
@@ -149,30 +156,21 @@ func NewUniFactMemDict() *UniFactMemDict {
 	return &UniFactMemDict{map[string]map[string]StoredUniFuncMemDictNode{}}
 }
 
-func (factMem *UniFactMemDict) GetSpecFactNodeWithTheSameIsTrue(stmt *ast.SpecFactStmt) (*StoredUniFuncMemDictNode, bool) {
+func (factMem *UniFactMemDict) GetSpecFactNodeWithTheSameIsTrue(stmt *ast.SpecFactStmt) ([]StoredUniSpecFact, bool) {
 	pkgName := stmt.PropName.PkgName
 	optName := stmt.PropName.Value
 
 	if _, pkgExists := factMem.SpecFactsDict[pkgName]; !pkgExists {
-		return &StoredUniFuncMemDictNode{}, false
+		return []StoredUniSpecFact{}, false
 	}
 
 	if storedFacts, optExists := factMem.SpecFactsDict[pkgName][optName]; !optExists {
-		return &StoredUniFuncMemDictNode{}, false
+		return []StoredUniSpecFact{}, false
 	} else {
-		return &storedFacts, true
-
-		// // TODO 这里是为了暂时处理not的情况。如果之后有了专门存not的地方，那就不要了，直接返回storedFacts 就行
-		// ret := &StoredUniFuncMemDictNode{
-		// 	Facts: []StoredUniSpecFact{},
-		// }
-
-		// for i := 0; i < len(storedFacts.Facts); i++ {
-		// 	if storedFacts.Facts[i].IsTrue == stmt.IsTrue {
-		// 		ret.Facts = append(ret.Facts, storedFacts.Facts[i])
-		// 	}
-		// }
-
-		// return ret, true
+		if stmt.IsTrue {
+			return storedFacts.Facts, true
+		} else {
+			return storedFacts.NotFacts, true
+		}
 	}
 }

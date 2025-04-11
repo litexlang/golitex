@@ -47,5 +47,5 @@ prove:
                 not in(z, intersection(A,B))
 
         not in(1, A)
-    # not in(1, intersection(A,B))
+    not in(1, intersection(A,B))
     in(1, intersection(A,B))
