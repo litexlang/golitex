@@ -156,26 +156,40 @@ func (parser *strSliceCursor) fcPrimaryExpr() (ast.Fc, error) {
 	}
 
 	// 处理一元运算符
-	if unaryOp, err := parser.currentToken(); err == nil {
-		if prec, isUnary := glob.UnaryPrecedence[unaryOp]; isUnary {
-			parser.skip()
-			if parser.ExceedEnd() {
-				return nil, fmt.Errorf("unexpected end of input after unary operator")
-			}
-
-			right, err := parser.fcInfixExpr(prec)
-			if err != nil {
-				return nil, err
-			}
-			return &ast.FcFn{
-				FnHead:    ast.FcAtom{Value: unaryOp},
-				ParamSegs: []*ast.FcFnSeg{{Params: []ast.Fc{right}}},
-			}, nil
-		}
+	fc, isUnary, err := parser.unaryOptFc()
+	if err != nil {
+		return nil, err
+	}
+	if isUnary {
+		return fc, nil
 	}
 
 	// 处理基本原子表达式
 	return parser.fcAtomAndFcFnRetAndBracedFc()
+}
+
+func (parser *strSliceCursor) unaryOptFc() (*ast.FcFn, bool, error) {
+	unaryOp, err := parser.currentToken()
+	if err != nil {
+		return nil, false, err
+	}
+
+	parser.skip(unaryOp)
+
+	right, err := parser.fcPrimaryExpr()
+	if err != nil {
+		return nil, false, err
+	}
+
+	if unaryOp == glob.KeySymbolMinus {
+		leftHead := ast.NewFcAtom(glob.BuiltinPrefixOptPkg, glob.KeySymbolMinus)
+		return ast.NewFcFnPipe(
+			*leftHead,
+			[]*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{&ast.FcFn{}, right})},
+		), true, nil
+	}
+
+	return nil, false, fmt.Errorf("unexpected unary operator: %s", unaryOp)
 }
 
 func (parser *strSliceCursor) numberStr() (*ast.FcAtom, error) {
