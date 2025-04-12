@@ -155,38 +155,40 @@ func (parser *strSliceCursor) fcPrimaryExpr() (ast.Fc, error) {
 		return expr, nil
 	}
 
-	// 处理一元运算符
-	fc, isUnary, err := parser.unaryOptFc()
+	return parser.unaryOptFc()
+	// fc, isUnary, err := parser.unaryOptFc()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if isUnary {
+	// 	return fc, nil
+	// }
+
+	// // 处理基本原子表达式
+	// return parser.fcAtomAndFcFnRetAndBracedFc()
+}
+
+func (parser *strSliceCursor) unaryOptFc() (ast.Fc, error) {
+	unaryOp, err := parser.currentToken()
 	if err != nil {
 		return nil, err
 	}
-	if isUnary {
-		return fc, nil
+	if !glob.IsKeySymbolUniFn(unaryOp) {
+		return parser.fcAtomAndFcFnRetAndBracedFc()
+	} else {
+		parser.skip(unaryOp)
+
+		right, err := parser.fcPrimaryExpr()
+		if err != nil {
+			return nil, err
+		}
+
+		leftHead := ast.NewFcAtom(glob.BuiltinUnaryOptPkg, glob.KeySymbolMinus)
+		return ast.NewFcFnPipe(
+			*leftHead,
+			[]*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{right})},
+		), nil
 	}
-
-	// 处理基本原子表达式
-	return parser.fcAtomAndFcFnRetAndBracedFc()
-}
-
-func (parser *strSliceCursor) unaryOptFc() (*ast.FcFn, bool, error) {
-	unaryOp, err := parser.currentToken()
-	if err != nil {
-		return nil, false, err
-	}
-
-	parser.skip(unaryOp)
-
-	right, err := parser.fcPrimaryExpr()
-	if err != nil {
-		return nil, false, err
-	}
-
-	leftHead := ast.NewFcAtom(glob.BuiltinUnaryOptPkg, glob.KeySymbolMinus)
-	return ast.NewFcFnPipe(
-		*leftHead,
-		[]*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{&ast.FcFn{}, right})},
-	), true, nil
-
 }
 
 func (parser *strSliceCursor) numberStr() (*ast.FcAtom, error) {
