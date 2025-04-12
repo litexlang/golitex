@@ -121,6 +121,8 @@ const (
 	KeySymbolRightCurly             = "}"
 	KeySymbolHash                   = "#"
 	KeySymbolAt                     = "@"
+	KeySymbolLargerEqual            = ">="
+	KeySymbolLessEqual              = "<="
 	//! 每次引入新的Symbol，要往getBuiltinSymbol里加东西
 )
 
@@ -329,6 +331,8 @@ func initSymbolSet() map[string]struct{} {
 		KeySymbolStar,         // "*"
 		KeySymbolTilde,        // "~"
 		KeySymbolAnd,          // "&"
+		KeySymbolLargerEqual,  // ">="
+		KeySymbolLessEqual,    // "<="
 	}
 
 	symbolSet := make(map[string]struct{})
