@@ -3,11 +3,10 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/litex_ast"
-	env "golitex/litex_env"
 	glob "golitex/litex_global"
 )
 
-func (ver *Verifier) builtinLogicOptRule(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) builtinLogicOptRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.PropName.PkgName != "" {
 		return false, nil
 	}
@@ -36,5 +35,18 @@ func (ver *Verifier) builtinLogicOptRule(curEnv *env.Env, stmt *ast.SpecFactStmt
 		return false, nil
 	}
 
-	return glob.BuiltinLogicOptOnNumLitExpr(leftNumLitExpr, rightNumLitExpr, stmt.PropName.Value)
+	ok, err = glob.BuiltinLogicOptOnNumLitExpr(leftNumLitExpr, rightNumLitExpr, stmt.PropName.Value)
+
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), "builtin rules")
+		} else {
+			ver.successNoMsg()
+		}
+		return true, nil
+	}
+	return false, nil
 }

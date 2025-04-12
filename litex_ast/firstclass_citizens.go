@@ -60,13 +60,33 @@ func (f *FcAtom) String() string {
 	}
 }
 
-func (f *FcFn) String() string {
-	outPut := string(f.FnHead.Value)
+func isFcFnAndToString(f *FcFn) (bool, string) {
+	if f.FnHead.Value != "" {
+		return false, ""
+	}
 
+	outPut := string(f.FnHead.Value)
 	if glob.IsKeySymbolRelaFn(outPut) {
 		return fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
 	}
 
+}
+
+func (f *FcFn) String() string {
+
+	// if len(f.ParamSegs) == 1 {
+	// 	if len(f.ParamSegs[0].Params) == 1 {
+	// 		if glob.IsKeySymbolRelaFn(outPut) {
+	// 			return fmt.Sprintf("%s %s", outPut, f.ParamSegs[0].Params[0])
+	// 		}
+	// 	}
+	// }
+
+	// if glob.IsKeySymbolRelaFn(outPut) {
+	// 	return fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
+	// }
+
+	outPut := string(f.FnHead.Value)
 	for _, pair := range f.ParamSegs {
 		if len(pair.Params) > 0 {
 			outPut += "("
