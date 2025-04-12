@@ -128,3 +128,27 @@ func compareFractionalParts(a, b string) int {
 
 	return 0 // 完全相等（包括末尾的 0）
 }
+
+func IsNumLitStr(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	hasDigit := false
+	hasDot := false
+
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			hasDigit = true
+		} else if c == '.' {
+			if hasDot {
+				return false
+			}
+			hasDot = true
+		} else {
+			return false
+		}
+	}
+
+	return hasDigit
+}

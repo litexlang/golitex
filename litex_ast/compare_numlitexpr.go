@@ -20,10 +20,13 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	opt := asFcFn.FnHead.Value
-	if !glob.IsKeySymbolRelaFn(opt) {
+	if !asFcFn.FnHead.IsBuiltinInfixOpt() {
 		return nil, false, nil
 	}
+
+	// if !glob.IsKeySymbolRelaFn(opt) {
+	// 	return nil, false, nil
+	// }
 
 	if len(asFcFn.ParamSegs) != 1 {
 		return nil, false, nil
@@ -49,5 +52,6 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
+	opt := asFcFn.FnHead.Value
 	return &glob.NumLitExpr{Left: left, OptOrNumber: opt, Right: right}, true, nil
 }

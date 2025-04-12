@@ -181,15 +181,12 @@ func (parser *strSliceCursor) unaryOptFc() (*ast.FcFn, bool, error) {
 		return nil, false, err
 	}
 
-	if unaryOp == glob.KeySymbolMinus {
-		leftHead := ast.NewFcAtom(glob.BuiltinPrefixOptPkg, glob.KeySymbolMinus)
-		return ast.NewFcFnPipe(
-			*leftHead,
-			[]*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{&ast.FcFn{}, right})},
-		), true, nil
-	}
+	leftHead := ast.NewFcAtom(glob.BuiltinUnaryOptPkg, glob.KeySymbolMinus)
+	return ast.NewFcFnPipe(
+		*leftHead,
+		[]*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{&ast.FcFn{}, right})},
+	), true, nil
 
-	return nil, false, fmt.Errorf("unexpected unary operator: %s", unaryOp)
 }
 
 func (parser *strSliceCursor) numberStr() (*ast.FcAtom, error) {
