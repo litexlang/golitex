@@ -43,7 +43,7 @@ Litex can automatically verify LLM outputs for math problems, providing a reliab
 
 Mathematics and the ability to understand it are built-in capabilities of the human brain. Litex itself is a tool of exquisite innovation. Writing in Litex is enjoyable because it eliminates extra mental burden from the language itself, allowing users to fully immerse themselves in the elegance of mathematics. 
 
-In short, Litex is fundamentally about scaling reasoning with the ever-expanding power of modern computing resources. To stay flexible and free, Litex embrace simplicity, the only way to prepare for the unknown future, as its core design principle.
+In short, Litex is fundamentally an attempt to scale reasoning with the ever-expanding power of modern computing resources. Litex embrace simplicity, the only way to be flexible enough for the unknown future and to maintain conceptual integrity, as its core design principle.
 
 ## Getting Started
 
@@ -328,6 +328,8 @@ By understanding the interplay between programming and math, Litex delivers a se
 _Language design is a curious mixture of grand ideas and fiddly details._
 
 _-- Bjarne Stroustrup__
+
+Litex is a minimalist proof assistant, designed to be simple and intuitive. It draws inspiration from various programming languages, particularly Go, Lisp, Tex, C, Python. The design philosophy emphasizes minimalism, conceptual integrity, and the KISS (Keep It Simple, Stupid) principle.
 
 Litex is significantly influenced by the Go programming language, particularly in its "set=>type=>interface" system, which closely mirrors Go's "struct=>type=>interface" paradigm. Additionally, Litex's function declaration syntax bears a resemblance to Go's. Most importantly, the minimalism design choice of Go strongly resonates with the Litex's inventor.
 
