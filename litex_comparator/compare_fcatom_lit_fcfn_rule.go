@@ -6,18 +6,18 @@ import (
 )
 
 func cmpFcAtomLitFcFnRule(left, right ast.Fc) (bool, error) {
-	typeComp, fcEnum, err := CmpFcType(left, right)
+	typeComp, fcEnum, err := ast.CmpFcType(left, right)
 	if typeComp != 0 || err != nil {
 		return false, err
 	}
 
-	if fcEnum == FcAtomEnum {
+	if fcEnum == ast.FcAtomEnum {
 		cmp, err := cmpFcAtomLit(left.(*ast.FcAtom), right.(*ast.FcAtom))
 		if err != nil {
 			return false, err
 		}
 		return cmp == 0, nil
-	} else if fcEnum == FcFnEnum {
+	} else if fcEnum == ast.FcFnEnum {
 		ok, err := cmpFcFnRule(left.(*ast.FcFn), right.(*ast.FcFn))
 		if err != nil {
 			return false, err

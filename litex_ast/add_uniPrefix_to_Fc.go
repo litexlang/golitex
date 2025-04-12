@@ -6,23 +6,16 @@ import (
 	"strings"
 )
 
-func FcAtomInUniParams(atom *FcAtom, uniParams map[string]int) (int, bool) {
-	if atom.PkgName == "" {
-		if prefixNum, ok := uniParams[atom.Value]; ok {
-			return prefixNum, true
-		}
-	}
-	return 0, false
-}
+type NameDepthMap map[string]int
 
-func AddUniPrefixToFcAtom(atom *FcAtom, uniParams map[string]int) *FcAtom {
-	if prefixNum, ok := FcAtomInUniParams(atom, uniParams); ok {
+func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) *FcAtom {
+	if prefixNum, ok := fcAtomInUniParams(atom, uniParams); ok {
 		atom.Value = strings.Repeat(glob.UniParamPrefix, prefixNum) + atom.Value
 	}
 	return atom
 }
 
-func AddUniPrefixToFc(fc Fc, uniParams map[string]int) (Fc, error) {
+func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 	fcAsAtom, ok := fc.(*FcAtom)
 	if ok {
 		return AddUniPrefixToFcAtom(fcAsAtom, uniParams), nil
@@ -49,4 +42,13 @@ func AddUniPrefixToFc(fc Fc, uniParams map[string]int) (Fc, error) {
 	}
 
 	return &newFcFn, nil
+}
+
+func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {
+	if atom.PkgName == "" {
+		if prefixNum, ok := uniParams[atom.Value]; ok {
+			return prefixNum, true
+		}
+	}
+	return 0, false
 }

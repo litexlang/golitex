@@ -131,7 +131,7 @@ func (env *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
 }
 
 func (env *Env) isPropCommutative(opt ast.Fc) bool {
-	if ast.IsEqualOpt(opt) {
+	if ast.IsEqualOptFc(opt) {
 		return true
 	}
 
