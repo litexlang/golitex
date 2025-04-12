@@ -7,7 +7,7 @@ import (
 )
 
 func (parser *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
-	if parser.is(glob.KeySymbolLeftParen) {
+	if parser.is(glob.KeySymbolLeftBrace) {
 		return parser.bracedFcExpr()
 	}
 
@@ -22,7 +22,7 @@ func (parser *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 
 	strAtSecondPosition := parser.strAtCurIndexPlus(0)
 
-	if strAtSecondPosition != glob.KeySymbolLeftParen {
+	if strAtSecondPosition != glob.KeySymbolLeftBrace {
 		return &fcStr, nil
 	} else {
 		return parser.rawFcFn(fcStr)
@@ -30,12 +30,12 @@ func (parser *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 }
 
 func (parser *strSliceCursor) bracedFcExpr() (ast.Fc, error) {
-	parser.skip(glob.KeySymbolLeftParen)
+	parser.skip(glob.KeySymbolLeftBrace)
 	fc, err := parser.rawFc()
 	if err != nil {
 		return nil, &parserErr{err, parser}
 	}
-	parser.skip(glob.KeySymbolRightParen)
+	parser.skip(glob.KeySymbolRightBrace)
 	return fc, nil
 }
 
@@ -52,7 +52,7 @@ func (parser *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
 func (parser *strSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
 	pairs := []*ast.FcFnSeg{}
 
-	for !parser.ExceedEnd() && (parser.is(glob.KeySymbolLeftParen)) {
+	for !parser.ExceedEnd() && (parser.is(glob.KeySymbolLeftBrace)) {
 		objParamsPtr, err := parser.bracedFcSlice()
 		if err != nil {
 			return nil, &parserErr{err, parser}
@@ -88,6 +88,22 @@ func (parser *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 
 // 不考虑 uniParams
 func (parser *strSliceCursor) rawFc() (ast.Fc, error) {
+	// skip brace
+	if parser.is(glob.KeySymbolLeftBrace) {
+		parser.skip(glob.KeySymbolLeftBrace)
+		fc, err := parser.rawFc()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+		err = parser.skip(glob.KeySymbolRightBrace)
+
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+
+		return fc, nil
+	}
+
 	return parser.fcInfixExpr(glob.PrecLowest)
 }
 
@@ -103,12 +119,12 @@ func (parser *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			return nil, err // 捕获错误并退出
 		}
 
-		if !glob.IsKeySymbolRelaFn(curToken) {
-			break // 不是内置运算符，跳出循环
+		curPrec, isBinary := glob.BuiltinOptPrecedenceMap[curToken]
+		if !isBinary {
+			return nil, fmt.Errorf("unexpected token: \"%s\": it is not an builtin infix operator", curToken)
 		}
 
-		curPrec, isBinary := glob.BuiltinOptPrecedenceMap[curToken]
-		if !isBinary || curPrec <= currentPrec {
+		if curPrec <= currentPrec {
 			break
 		}
 
