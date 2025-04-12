@@ -2,6 +2,8 @@ package litex_global
 
 const Scope4Indents = "    "
 
+const BuiltinPrefixOptPkg = "#"
+
 // 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
 	KeywordInterface            = "interface"
@@ -169,6 +171,7 @@ var BuiltinOptPrecedenceMap = map[string]BuiltinOptPrecedence{
 }
 
 // All Unary operators have higher Precedence than infix operators
+// TODO 未来有其他的unary opt的时候，需要修改 strSliceCursor.unaryOptFc
 var UnaryPrecedence = map[string]BuiltinOptPrecedence{
 	KeySymbolMinus: PrecUnary,
 }
