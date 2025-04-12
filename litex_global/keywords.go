@@ -334,3 +334,14 @@ func initSymbolSet() map[string]struct{} {
 	}
 	return symbolSet
 }
+
+func IsKeySymbolUniParam(name string) bool {
+	_, ok := UnaryPrecedence[name]
+	return ok
+}
+
+func IsKeywordSymbolUnaryAndInfixAtTheSameTime(name string) bool {
+	_, ok := BuiltinOptPrecedenceMap[name]
+	_, ok2 := UnaryPrecedence[name]
+	return ok && ok2
+}

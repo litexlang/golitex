@@ -59,7 +59,7 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return ok, err
 	}
 
-	ok, err := ver.builtinLogicOptRule(ver.env, stmt, state)
+	ok, err := ver.builtinLogicOptRule(stmt, state)
 	if err != nil {
 		return false, err
 	}
