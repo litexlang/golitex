@@ -41,9 +41,9 @@ Litex can automatically verify LLM outputs for math problems, providing a reliab
 
   - **The bridge between symbolic and neural AI**: While neural network AIs dominate machine learning today, we must not overlook symbolic AI's profound contributions. Litex serves as a solid bridge between these two seemingly disparate fields. Integrating verification (searching) into existing AI systems that currently focus only on training (computation) can be a very promising starting point. 
 
-Mathematics and the ability to understand it are built-in capabilities of the human brain . Litex itself is a tool of exquisite innovation. Writing in Litex is enjoyable because it eliminates extra mental burden from the language itself, allowing users to fully immerse themselves in the elegance of mathematics. 
+Mathematics and the ability to understand it are built-in capabilities of the human brain. Litex itself is a tool of exquisite innovation. Writing in Litex is enjoyable because it eliminates extra mental burden from the language itself, allowing users to fully immerse themselves in the elegance of mathematics. 
 
-In short, Litex can transform workflow and collaboration of mathematicians. It boost AI's reasoning with more formal data and a super efficient verifier. The core design principle of Litex is simplicity.
+In short, Litex is fundamentally about scaling reasoning with the ever-expanding power of modern computing resources. To stay flexible and free, Litex embrace simplicity, the only way to prepare for the unknown future, as its core design principle.
 
 ## Getting Started
 
@@ -286,7 +286,7 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 9. Litex vs. Standard Math: Sets (as types) cannot be passed like objects due to their structural roles.
 
 <!-- TODO -->
-<!-- 2. an array of countable numbers of objects of the same type: Array      \[ typeName \]( numberOfObjiables ) -->
+<!-- 2. an array of countable numbers of objects of the same type: Array      \[ typeName \](  ) -->
 
 <!-- 3. Expansion of Polynomials -->
 
