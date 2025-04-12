@@ -1,55 +1,11 @@
 package litex_global
 
 import (
-	"fmt"
 	"strings"
 )
 
-func BuiltinLogicOptOnNumLitExpr(left *NumLitExpr, right *NumLitExpr, builtinLogicOpt string) (bool, error) {
-	leftEvaluated, ok, err := EvalNumLitExprFc(left)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
-
-	rightEvaluated, ok, err := EvalNumLitExprFc(right)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
-
-	// Apply signs based on IsPositive flags
-	if !left.IsPositive {
-		leftEvaluated = "-" + leftEvaluated
-	}
-	if !right.IsPositive {
-		rightEvaluated = "-" + rightEvaluated
-	}
-
-	switch builtinLogicOpt {
-	case ">=":
-		return CompareDecimalStrings(leftEvaluated, rightEvaluated) >= 0, nil
-	case ">":
-		return CompareDecimalStrings(leftEvaluated, rightEvaluated) > 0, nil
-	case "<":
-		return CompareDecimalStrings(leftEvaluated, rightEvaluated) < 0, nil
-	case "<=":
-		return CompareDecimalStrings(leftEvaluated, rightEvaluated) <= 0, nil
-	case "==":
-		return CompareDecimalStrings(leftEvaluated, rightEvaluated) == 0, nil
-	case "!=":
-		return CompareDecimalStrings(leftEvaluated, rightEvaluated) != 0, nil
-	default:
-		return false, fmt.Errorf("unsupported builtin logic opt %s", builtinLogicOpt)
-	}
-}
-
-// CompareDecimalStrings compares two decimal number strings with sign support
-func CompareDecimalStrings(a, b string) int {
+// cmpDecimalStrings compares two decimal number strings with sign support
+func cmpDecimalStrings(a, b string) int {
 	aNegative := strings.HasPrefix(a, "-")
 	bNegative := strings.HasPrefix(b, "-")
 

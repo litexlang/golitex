@@ -6,81 +6,6 @@ import (
 	"strings"
 )
 
-type NumLitExpr struct {
-	IsPositive  bool
-	Left        *NumLitExpr
-	OptOrNumber string
-	Right       *NumLitExpr
-}
-
-// EvalNumLitExprFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
-// bool 表示基于现有的litex-rule，虽然说我不能说你对不对，但你至少没犯错，error表示你犯错了，比如1/0
-func EvalNumLitExprFc(node *NumLitExpr) (string, bool, error) {
-	// Leaf node
-	if node.Left == nil && node.Right == nil {
-		value := node.OptOrNumber
-		if !node.IsPositive {
-			if value == "0" {
-				value = "0"
-			} else {
-				value = "-" + value
-
-			}
-
-		}
-		return value, true, nil
-	}
-
-	leftVal, ok, err := EvalNumLitExprFc(node.Left)
-	if err != nil {
-		return "", false, err
-	}
-	if !ok {
-		return "", false, nil
-	}
-
-	rightVal, ok, err := EvalNumLitExprFc(node.Right)
-	if err != nil {
-		return "", false, err
-	}
-	if !ok {
-		return "", false, nil
-	}
-
-	var result string
-	switch node.OptOrNumber {
-	case "+":
-		result, ok, err = addBigFloat(leftVal, rightVal)
-	case "-":
-		result, ok, err = subBigFloat(leftVal, rightVal)
-	case "*":
-		result, ok, err = mulBigFloat(leftVal, rightVal)
-	case "/":
-		result, ok, err = divBigFloat(leftVal, rightVal)
-	case "^":
-		if !isNaturalNumber(rightVal) {
-			return "", false, errors.New("exponent must be a natural number")
-		}
-		result, ok, err = powBigFloat(leftVal, rightVal)
-	default:
-		return "", false, fmt.Errorf("unknown operator: %s", node.OptOrNumber)
-	}
-
-	if err != nil {
-		return "", false, err
-	}
-	if !ok {
-		return "", false, nil
-	}
-
-	// Apply IsPositive to the result
-	if !node.IsPositive {
-		result = "-" + result
-	}
-
-	return result, true, nil
-}
-
 func addBigFloat(a, b string) (string, bool, error) {
 	// Handle sign combinations
 	aNegative := strings.HasPrefix(a, "-")
@@ -242,7 +167,7 @@ func subBigFloat(a, b string) (string, bool, error) {
 
 // Helper function for subtracting two positive numbers (a >= b)
 func subtractPositiveNumbers(a, b string) (string, bool, error) {
-	cmp := CmpBigFloat(a, b)
+	cmp := cmpBigFloat(a, b)
 
 	// Handle a < b case by swapping and making result negative
 	if cmp == -1 {
@@ -405,61 +330,9 @@ func mulStrings(a, b string) (string, error) {
 	return sb.String(), nil
 }
 
-// // 判断大小：返回 1 if a > b, -1 if a < b, 0 if a==b
-// func CmpBigFloat(a, b string) int {
-// 	aInt, aFrac := splitNumberToIntPartFracPart(a)
-// 	bInt, bFrac := splitNumberToIntPartFracPart(b)
-
-// 	aInt = trimLeftZero(aInt)
-// 	bInt = trimLeftZero(bInt)
-
-// 	if len(aInt) > len(bInt) {
-// 		return 1
-// 	}
-// 	if len(aInt) < len(bInt) {
-// 		return -1
-// 	}
-// 	if aInt > bInt {
-// 		return 1
-// 	}
-// 	if aInt < bInt {
-// 		return -1
-// 	}
-
-// 	// 补齐小数部分长度
-// 	maxLen := max(len(aFrac), len(bFrac))
-// 	aFrac = padRight(aFrac, maxLen, '0')
-// 	bFrac = padRight(bFrac, maxLen, '0')
-
-// 	if aFrac > bFrac {
-// 		return 1
-// 	}
-// 	if aFrac < bFrac {
-// 		return -1
-// 	}
-// 	return 0
-// }
-
-// // 判断是不是自然数（包含0）
-// func isNaturalNumber(s string) bool {
-// 	// 去掉前导0
-// 	s = trimLeftZero(s)
-// 	// 允许 "0"
-// 	if s == "0" {
-// 		return true
-// 	}
-// 	// 必须是纯数字且没有小数点
-// 	for _, ch := range s {
-// 		if ch < '0' || ch > '9' {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
-
-// CmpBigFloat compares two big float numbers considering their signs
+// cmpBigFloat compares two big float numbers considering their signs
 // Returns: 1 if a > b, -1 if a < b, 0 if a == b
-func CmpBigFloat(a, b string) int {
+func cmpBigFloat(a, b string) int {
 	// Handle sign comparison first
 	aNegative := strings.HasPrefix(a, "-")
 	bNegative := strings.HasPrefix(b, "-")
