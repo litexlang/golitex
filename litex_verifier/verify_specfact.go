@@ -59,6 +59,14 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return ok, err
 	}
 
+	ok, err := ver.builtinLogicOptRule(ver.env, stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		searchedNodeFacts, got := curEnv.SpecFactMem.GetNode(stmt)
 		if !got {

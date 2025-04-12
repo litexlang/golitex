@@ -513,3 +513,11 @@ func isZero(s string) bool {
 	}
 	return true
 }
+
+// func BuiltinLogicOptRule() (bool, error) {
+
+// 	switch expression {
+// 	case condition:
+
+// 	}
+// }

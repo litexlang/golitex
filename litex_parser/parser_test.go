@@ -119,7 +119,7 @@ func TestDefConceptStmt(t *testing.T) {
 		prop f(x , y )
 
 	then:
-		$p(x, y)
+		p(x, y)
 		
 `
 	statements, err := ParserTester(code)
@@ -134,27 +134,27 @@ func TestDefPropStmt2(t *testing.T) {
 	code := `
 prop P(g , g2 ):
 	dom:
-    	$f(g.g1, g2.g2)
+    	f(g.g1, g2.g2)
 	then:
-		$f(g.g1, g2.g2)
+		f(g.g1, g2.g2)
 
 prop P(g ,  G2):
-	$f(g.g1, g2.g2)
+	f(g.g1, g2.g2)
 
 axiom prop P(g ,  G2):
 	dom:
-    	$f(g.g1, g2.g2)
+    	f(g.g1, g2.g2)
 	then:
-		$f(g.g1, g2.g2)
+		f(g.g1, g2.g2)
 
 axiom prop P(g , g2 ):
-	$f(g.g1, g2.g2)
+	f(g.g1, g2.g2)
 
 forall x :
 	when:
-    	$f(g.g1, g2.g2)
+    	f(g.g1, g2.g2)
 	then:
-		$f(g.g1, g2.g2)
+		f(g.g1, g2.g2)
 
 
 `
@@ -170,11 +170,11 @@ func TestDefFnStmt(t *testing.T) {
 	code := `
 fn P(g , g2 ) :
 	dom:
-    	$f(g.g1, g2.g2)
+    	f(g.g1, g2.g2)
 	then:
-		$f(g.g1, g2.g2)
+		f(g.g1, g2.g2)
 
-$f(g.g1, g2.g2)
+f(g.g1, g2.g2)
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -186,13 +186,13 @@ $f(g.g1, g2.g2)
 
 func TestFactStatements(t *testing.T) {
 	code := `
-$f(g.g1, g2.g2)
+f(g.g1, g2.g2)
 
 forall  x :
 	when: 
-		$f()
+		f()
 	then:
-		$f(g.g1, g2.g2)
+		f(g.g1, g2.g2)
 	
 `
 	statements, err := ParserTester(code)
@@ -212,14 +212,14 @@ type   T:
 		obj 1 
 		fn P(g , g2 ) :
 			dom:
-				$f(g.g1, g2.g2)
+				f(g.g1, g2.g2)
 			then:
-				$f(g.g1, g2.g2)
+				f(g.g1, g2.g2)
 		prop P(g , g2 ):
 			dom:
-				$f(g.g1, g2.g2)
+				f(g.g1, g2.g2)
 			then:
-				$f(g.g1, g2.g2)
+				f(g.g1, g2.g2)
 		type  T:
 			type_member:
 				obj 3 
@@ -232,23 +232,23 @@ type   T:
 				prop f(x , y )
 
 			know:
-				$p(x, y)
+				p(x, y)
 	
 	instance_member:
 		obj 2 
 		fn P(g, g2 ) :
 			dom:
-				$f(g.g1, g2.g2)
+				f(g.g1, g2.g2)
 			then:
-				$f(g.g1, g2.g2)
+				f(g.g1, g2.g2)
 		prop P(g , g2 ):
 			when:
-				$f(g.g1, g2.g2)
+				f(g.g1, g2.g2)
 			then:
-				$f(g.g1, g2.g2)
+				f(g.g1, g2.g2)
 
 	know:
-		$p(x, y)
+		p(x, y)
 `
 
 	statements, err := ParserTester(code)
@@ -262,16 +262,16 @@ type   T:
 func TestParseFactStmt(t *testing.T) {
 	code :=
 		`
-$p(x, y)
+p(x, y)
 
 forall g , g2  :
-    $p(x, y)
+    p(x, y)
 
 forall g , g2:
 	when:
-		$p(x, y)
+		p(x, y)
 	then:
-	    $p(x, y)
+	    p(x, y)
 		
 		
 `
@@ -289,7 +289,7 @@ func TestParseObjStmt(t *testing.T) {
 		`
 obj g 
 obj g :
-    $p(x, y)
+    p(x, y)
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -305,28 +305,28 @@ func TestParseClaimStmt(t *testing.T) {
 	code :=
 		`
 claim :
-	$p(x, y)
+	p(x, y)
 
 	prove:
-		$p(x, y)
+		p(x, y)
 
 claim :
 	forall  g, g2 :
 		when:
-			$p(x, y)
+			p(x, y)
 		then:
-			$p(x, y)
+			p(x, y)
 	
 
 	prove:
-		$p(x, y)
+		p(x, y)
 
 claim:
-	$p(x, y)
-	$p(x, y)
+	p(x, y)
+	p(x, y)
 		
 	prove:
-		$p(x, y)
+		p(x, y)
 		
 
 `
@@ -343,12 +343,12 @@ func TestKnowStmt(t *testing.T) {
 	code :=
 		`
 know:
-	$p(x, y)
+	p(x, y)
 	forall g , g2 :
 		when:
-			$p(x, y)
+			p(x, y)
 		then:
-			$p(x, y)
+			p(x, y)
 	
 `
 	statements, err := ParserTester(code)
@@ -365,19 +365,19 @@ func TestExistStmt(t *testing.T) {
 		`
 exist_prop P(g1 , g2 ):
 	when:
-		$p(x, y)
+		p(x, y)
 		forall  g , g2 :
 			when:
-				$p(x, y)
+				p(x, y)
 			then:
-				$p(x, y)
+				p(x, y)
 
 	instance_member:
 	    obj 1 
 		fn f(x , y ) 
 
 	then:
-	    $p(x, y)
+	    p(x, y)
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -394,7 +394,7 @@ func TestObjDeclStmt(t *testing.T) {
 obj g1
 
 obj a :
-	$p(a)
+	p(a)
 `
 	statements, err := ParserTester(code)
 	if err == nil {
@@ -485,8 +485,8 @@ prop ha (g1 , g2  ) :
 func TestPropObj(t *testing.T) {
 	code :=
 		`
-$p(f, g)
-$p(f, as(g3, prop ))
+p(f, g)
+p(f, as(g3, prop ))
 `
 
 	statements, err := ParserTester(code)
@@ -506,13 +506,13 @@ fn ha  (g1 , g2 ) :
 
 claim :
 	prove:
-		$p(x, y)
+		p(x, y)
 
 claim:
 	prove_by_contradiction:
-		$p(x, y)
+		p(x, y)
 
-$f(a, b).g.t(a, b)
+f(a, b).g.t(a, b)
 
 
 `
@@ -562,12 +562,12 @@ func TestNamedClaimStmt(t *testing.T) {
 thm: 
 	prop P(g , g2):
 		when:
-			$f(g.g1, g2.g2)
+			f(g.g1, g2.g2)
 		then:
-			$f(g.g1, g2.g2)
+			f(g.g1, g2.g2)
 	prove:
-		$f(g.g1, g2.g2)
-		$f(g.g1, g2.g2)
+		f(g.g1, g2.g2)
+		f(g.g1, g2.g2)
 `
 
 	statements, err := ParserTester(code)
@@ -581,34 +581,34 @@ thm:
 
 func TestInlineIfStmt(t *testing.T) {
 	code := `
-when $f(g.g1, g2.g2), forall $p() {$p()} { $p()}
+when f(g.g1, g2.g2), forall p() {p()} { p()}
 
 forall g :
 	when:
-		$p()
+		p()
 		forall g :
 			when:
-				$q()
+				q()
 			then:
-				$t()
+				t()
 	then:
-		$t()
+		t()
 	
 prop P(g , g2 ):
 	when:
-		when $f(g.g1, g2.g2), when $f(g.g1, g2.g2) {$p()}  {$p()}
+		when f(g.g1, g2.g2), when f(g.g1, g2.g2) {p()}  {p()}
 	then:
-		$p()
+		p()
 prove:
-	when $f(g.g1, g2.g2), forall $p() {$p()}  {$p()}
-	when $f(g.g1, g2.g2) { $p()}
+	when f(g.g1, g2.g2), forall p() {p()}  {p()}
+	when f(g.g1, g2.g2) { p()}
 
 forall g , g2:
 	when:
-		$p(x, y)
-		when $f(g.g1, g2.g2) {$p()}ÂÂ
+		p(x, y)
+		when f(g.g1, g2.g2) {p()}ÂÂ
 	then:
-	    $p(x, y)
+	    p(x, y)
 
 -1 is red
 `
@@ -644,21 +644,21 @@ func TestForall(t *testing.T) {
 	code := `
 forall g G, g2 G2:
 	when:
-		$G(g)
-		$G(g2)
-		$p(x, y)
-		when $f(g.g1, g2.g2) {$p()}
+		G(g)
+		G(g2)
+		p(x, y)
+		when f(g.g1, g2.g2) {p()}
 	then:
-		$p(x, y)
+		p(x, y)
 forall <G Group, G2 Group> g G, g2 G2:
-	$G(g)
-	$G(g2)
-	$p(x, y)
-	when $f(g.g1, g2.g2) {$p()}
+	G(g)
+	G(g2)
+	p(x, y)
+	when f(g.g1, g2.g2) {p()}
 	then:
-		$p(x, y)
+		p(x, y)
 
-forall () $p() {$p()}
+forall () p() {p()}
 `
 
 	statements, err := ParserTester(code)
@@ -750,7 +750,7 @@ func TestNewFnRetValue(t *testing.T) {
 	blocks := strings.Split(input, ".")
 
 	// 定义正则表达式来提取 opt 和 [paras](paras) 对
-	re := regexp.MustCompile(`^([^\[\]]+)((?:\[[^\]]+\]\([^\)]+\))*)$`)
+	re := regexp.MustCompile(`^([^\[\]]+)((?:\[[^\]]+\]\([^\)]+\))*)`)
 
 	for _, block := range blocks {
 		matches := re.FindStringSubmatch(block)
@@ -777,7 +777,7 @@ func TestNewFnRetValue(t *testing.T) {
 
 func TestNewParseFcAtom(t *testing.T) {
 	code := `
-$p(x, y)
+p(x, y)
 a is red
 a.b is red
 a.f() is red
@@ -802,10 +802,10 @@ func TestForallStmt2(t *testing.T) {
 	code := `
 // since for the time being, type system is eliminated
 // forall g G, g2 G2 :
-//    $p(x, y)
+//    p(x, y)
 
 forall g, g2:
-    $p(x, y)
+    p(x, y)
 
 `
 
@@ -821,7 +821,7 @@ forall g, g2:
 func TestFcWithPkgName(t *testing.T) {
 	code := `
 a::b is red::blue
-$p(x, y)(red::blue, g::f(1,2)(3,4))
+p(x, y)(red::blue, g::f(1,2)(3,4))
 `
 
 	statements, err := ParserTester(code)
@@ -836,11 +836,11 @@ $p(x, y)(red::blue, g::f(1,2)(3,4))
 func TestForallStmt3(t *testing.T) {
 	code := `
 forall <G Group, G2 Group> g G, g2 G2:
-	$G(g)
-	$G(g2)
-	$p(x, y)
+	G(g)
+	G(g2)
+	p(x, y)
 	then:
-		$p(x, y)
+		p(x, y)
 `
 
 	statements, err := ParserTester(code)
@@ -855,11 +855,11 @@ forall <G Group, G2 Group> g G, g2 G2:
 func TestForallStmt4(t *testing.T) {
 	code := `
 forall <G Group, G2 Group> g G, g2 G2:
-	$G(g); $G(g2);
-	$G(g); $G(g2);$P(x, y);
-	$p(x, y)
+	G(g); G(g2);
+	G(g); G(g2);P(x, y);
+	p(x, y)
 	then:
-		$p(x, y)
+		p(x, y)
 `
 
 	statements, err := ParserTester(code)
@@ -874,31 +874,31 @@ forall <G Group, G2 Group> g G, g2 G2:
 func TestFnPropExistProp(t *testing.T) {
 	code := `
 fn f(x S, y G) nat:
-	$G(g); $G(g2);
-	$G(g); $G(g2);$P(x, y);
-	$p(x, y)
+	G(g); G(g2);
+	G(g); G(g2);P(x, y);
+	p(x, y)
 	then:
-		$p(x, y)
+		p(x, y)
 
 prop f(x S, y G):
-	$G(g); $G(g2);
-	$G(g); $G(g2);$P(x, y);
-	$p(x, y)
+	G(g); G(g2);
+	G(g); G(g2);P(x, y);
+	p(x, y)
 	then:
-		$p(x, y)
+		p(x, y)
 
 fn at(a nat, b nat) nat:
 	when:
-    	$p(x, y)
-	$Q(x,y)
+    	p(x, y)
+	Q(x,y)
 
 
 exist_prop f(x S, y G) a fn, b S, c G:
-	$G(g); $G(g2);
-	$G(g); $G(g2);$P(x, y);
-	$p(x, y)
+	G(g); G(g2);
+	G(g); G(g2);P(x, y);
+	p(x, y)
 	then:
-		$p(x, y)
+		p(x, y)
 `
 
 	statements, err := ParserTester(code)
@@ -912,7 +912,7 @@ exist_prop f(x S, y G) a fn, b S, c G:
 
 func TestRelaFactStmt2(t *testing.T) {
 	code := `
-$p(x, y)
+p(x, y)
 x < y
 1 = 2
 `
@@ -929,9 +929,9 @@ x < y
 func TestUniFactStmt3(t *testing.T) {
 	code := `
 forall x A:
-	$p(x)
+	p(x)
 	then:
-		$p(x)
+		p(x)
 `
 
 	statements, err := ParserTester(code)
@@ -960,9 +960,9 @@ know:
 func TestProve(t *testing.T) {
 	code := `
 prop q(x A):
-	$p(x)
+	p(x)
 	iff:
-		$t(x)
+		t(x)
 
 `
 
@@ -993,9 +993,9 @@ prove:
 func TestFnDef(t *testing.T) {
 	code := `
 fn f(x A) B:
-	$p(x)
+	p(x)
 	then:
-		$q(f(x))
+		q(f(x))
 `
 
 	statements, err := ParserTester(code)
@@ -1009,38 +1009,38 @@ fn f(x A) B:
 func TestForall2(t *testing.T) {
 	code := `
 know forall x A:
-	$p(x)
+	p(x)
   	forall y A:
-					$t(y)
+					t(y)
 					then:
-		 				$q(x)
-	$q(x)
-know $p(x)
-$q(1) // true, 因为 $p(x) 被match 了
+		 				q(x)
+	q(x)
+know p(x)
+q(1) // true, 因为 p(x) 被match 了
 
 know forall x A:
-	$p(x)
+	p(x)
   	forall y A:
-					$t(y)
+					t(y)
 					then:
-		 				$q(x)
-	$q(x)
+		 				q(x)
+	q(x)
 
 
 know :
 	forall x A:
-		$p(x)
+		p(x)
 		forall x B:
-			$t(y)
+			t(y)
 		then:
-				$p(x)
+				p(x)
 
 know forall x A:
-		$p(x)
+		p(x)
 		forall x B:
-			$t(y, x)
+			t(y, x)
 		then:
-				$p(x)
+				p(x)
 `
 
 	statements, err := ParserTester(code)
@@ -1054,11 +1054,11 @@ know forall x A:
 func TestForall3(t *testing.T) {
 	code := `
 know forall x A:
-		$p(x)
+		p(x)
 		forall y A:
-								$t(y)
+								t(y)
 		then:
-			$h(x)
+			h(x)
 `
 
 	statements, err := ParserTester(code)
@@ -1073,7 +1073,7 @@ func TestForall4(t *testing.T) {
 	code := `
 know forall x A:
 		forall y A:
-								$t(y)
+								t(y)
 
 `
 
@@ -1141,11 +1141,11 @@ func TestLexTimeParseTime(t *testing.T) {
 func TestForall5(t *testing.T) {
 	code := `
 know forall x A:
-	$p(x)
+	p(x)
 	forall x B:
-		$t(y)
+		t(y)
 	then:
-			$p(x)
+			p(x)
 `
 
 	statements, err := ParserTester(code)
@@ -1159,9 +1159,9 @@ know forall x A:
 func TestFn(t *testing.T) {
 	code := `
 fn f(x A) B:
-	$dom(x)
+	dom(x)
 	then:
-		$ret(x)
+		ret(x)
 `
 
 	statements, err := ParserTester(code)
