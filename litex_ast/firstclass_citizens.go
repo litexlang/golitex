@@ -65,11 +65,14 @@ func isFcFnAndToString(f *FcFn) (bool, string) {
 		return false, ""
 	}
 
+	// TODO 如何处理unary?
+
 	outPut := string(f.FnHead.Value)
 	if glob.IsKeySymbolRelaFn(outPut) {
-		return fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
+		return true, fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
 	}
 
+	return false, ""
 }
 
 func (f *FcFn) String() string {
@@ -85,6 +88,10 @@ func (f *FcFn) String() string {
 	// if glob.IsKeySymbolRelaFn(outPut) {
 	// 	return fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
 	// }
+
+	if ok, str := isFcFnAndToString(f); ok {
+		return str
+	}
 
 	outPut := string(f.FnHead.Value)
 	for _, pair := range f.ParamSegs {
