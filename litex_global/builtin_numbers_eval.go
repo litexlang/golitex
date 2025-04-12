@@ -7,6 +7,7 @@ import (
 )
 
 type NumLitExpr struct {
+	IsPositive  bool
 	Left        *NumLitExpr
 	OptOrNumber string
 	Right       *NumLitExpr
