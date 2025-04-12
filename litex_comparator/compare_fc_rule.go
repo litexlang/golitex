@@ -42,7 +42,7 @@ func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 
 // 之所以叫 Expr，因为可能含有运算符+-*/这样的
 func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
-	leftAsNumberFc, ok, err := ast.MakeFcIntoNumLitExpr(left)
+	leftAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(left)
 	if err != nil {
 		return false, err
 	}
@@ -50,7 +50,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	rightAsNumberFc, ok, err := ast.MakeFcIntoNumLitExpr(right)
+	rightAsNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(right)
 	if err != nil {
 		return false, err
 	}
@@ -58,25 +58,5 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	leftAsStr, ok, err := glob.EvalNumLitExprFc(leftAsNumberFc)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
-
-	rightAsStr, ok, err := glob.EvalNumLitExprFc(rightAsNumberFc)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
-
-	if leftAsStr == "" || rightAsStr == "" {
-		return false, nil
-	}
-
-	return glob.CmpBigFloat(leftAsStr, rightAsStr) == 0, nil
+	return glob.NumLitExprEqual(leftAsNumLitExpr, rightAsNumLitExpr)
 }

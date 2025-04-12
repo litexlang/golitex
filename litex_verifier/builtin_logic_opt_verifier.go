@@ -35,7 +35,7 @@ func (ver *Verifier) builtinLogicOptRule(stmt *ast.SpecFactStmt, state VerState)
 		return false, nil
 	}
 
-	ok, err = glob.BuiltinLogicOptOnNumLitExpr(leftNumLitExpr, rightNumLitExpr, stmt.PropName.Value)
+	ok, err = glob.NumLitExprLogicOpt(leftNumLitExpr, rightNumLitExpr, stmt.PropName.Value)
 
 	if err != nil {
 		return false, err

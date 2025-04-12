@@ -7,11 +7,11 @@ import (
 )
 
 func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (int, error) {
-	return CmpFcLit(left.FcAsKey, right.FcAsKey)
+	return cmpFcLit(left.FcAsKey, right.FcAsKey)
 }
 
 // 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
-func CmpFcLit(left, right ast.Fc) (int, error) {
+func cmpFcLit(left, right ast.Fc) (int, error) {
 	typeComp, fcEnum, err := CmpFcType(left, right)
 	if typeComp != 0 || err != nil {
 		return typeComp, err
@@ -105,7 +105,7 @@ func cmpFcFnSegLit(left, right *ast.FcFnSeg) (int, error) {
 	}
 
 	for i := 0; i < len(left.Params); i++ {
-		if comp, err := CmpFcLit(left.Params[i], right.Params[i]); comp != 0 || err != nil {
+		if comp, err := cmpFcLit(left.Params[i], right.Params[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}
