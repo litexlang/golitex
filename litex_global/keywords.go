@@ -2,7 +2,7 @@ package litex_global
 
 const Scope4Indents = "    "
 
-const BuiltinPrefixOptPkg = "#"
+const BuiltinUnaryOptPkg = "#"
 
 // 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
@@ -338,7 +338,7 @@ func initSymbolSet() map[string]struct{} {
 	return symbolSet
 }
 
-func IsKeySymbolUniParam(name string) bool {
+func IsKeySymbolUniFn(name string) bool {
 	_, ok := UnaryPrecedence[name]
 	return ok
 }

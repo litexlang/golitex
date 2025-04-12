@@ -125,32 +125,28 @@ func IsNumLitFcAtom(f Fc) (string, bool) {
 		return "", false
 	}
 
-	if isNumLitStr(ptr.Value) {
+	if glob.IsNumLitStr(ptr.Value) {
 		return ptr.Value, true
 	}
 	return "", false
 }
 
-func isNumLitStr(s string) bool {
-	if s == "" {
+func (f *FcAtom) IsBuiltinInfixOpt() bool {
+	if f.PkgName != "" {
 		return false
 	}
-
-	hasDigit := false
-	hasDot := false
-
-	for _, c := range s {
-		if c >= '0' && c <= '9' {
-			hasDigit = true
-		} else if c == '.' {
-			if hasDot {
-				return false
-			}
-			hasDot = true
-		} else {
-			return false
-		}
+	if glob.IsKeySymbolRelaFn(f.Value) {
+		return true
 	}
+	return false
+}
 
-	return hasDigit
+func (f *FcAtom) IsBuiltinUnaryOpt() bool {
+	if f.PkgName != glob.BuiltinUnaryOptPkg {
+		return false
+	}
+	if glob.IsKeySymbolUniFn(f.Value) {
+		return true
+	}
+	return false
 }
