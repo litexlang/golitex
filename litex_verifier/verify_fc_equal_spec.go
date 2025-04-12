@@ -26,7 +26,7 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 	}
 
 	// Case: 如果left, right都是 FcFn，那一位位比较一下
-	cmpRet, fcEnum, err := cmp.CmpFcType(left, right)
+	cmpRet, fcEnum, err := ast.CmpFcType(left, right)
 	if err != nil {
 		return false, err
 	}
@@ -36,9 +36,9 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 		return false, nil
 	}
 
-	if fcEnum == cmp.FcFnEnum {
+	if fcEnum == ast.FcFnEnum {
 		return ver.fcFnPipeEqual(left.(*ast.FcFn), right.(*ast.FcFn), SpecMsg)
-	} else if fcEnum == cmp.FcAtomEnum {
+	} else if fcEnum == ast.FcAtomEnum {
 		return false, nil
 	}
 

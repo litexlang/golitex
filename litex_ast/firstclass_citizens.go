@@ -13,6 +13,11 @@ type Fc interface {
 	Instantiate(map[string]Fc) (Fc, error)
 }
 
+func (f *FcAtom) fc()                {}
+func (f *FcFn) fc()                  {}
+func (f *FcAtom) GetPkgName() string { return f.PkgName }
+func (f *FcFn) GetPkgName() string   { return f.FnHead.PkgName }
+
 type FcAtom struct {
 	PkgName string
 	Value   string
@@ -25,6 +30,37 @@ type FcFn struct {
 
 type FcFnSeg struct {
 	Params []Fc
+}
+
+type FcEnum uint8
+
+const (
+	FcAtomEnum FcEnum = 0
+	FcFnEnum   FcEnum = 1
+)
+
+func CmpFcType(left, right Fc) (int, FcEnum, error) {
+	var knownEnum FcEnum
+	switch left.(type) {
+	case *FcAtom:
+		knownEnum = FcAtomEnum
+	case *FcFn:
+		knownEnum = FcFnEnum
+	default:
+		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
+	}
+
+	var givenEnum FcEnum
+	switch right.(type) {
+	case *FcAtom:
+		givenEnum = FcAtomEnum
+	case *FcFn:
+		givenEnum = FcFnEnum
+	default:
+		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
+	}
+
+	return int(knownEnum - givenEnum), knownEnum, nil
 }
 
 func NewFcAtom(pkgName string, value string) *FcAtom {
@@ -46,11 +82,6 @@ func FcSliceString(params []Fc) string {
 	}
 	return strings.Join(output, ", ")
 }
-
-func (f *FcAtom) fc()                {}
-func (f *FcFn) fc()                  {}
-func (f *FcAtom) GetPkgName() string { return f.PkgName }
-func (f *FcFn) GetPkgName() string   { return f.FnHead.PkgName }
 
 func (f *FcAtom) String() string {
 	if f.PkgName == "" {
@@ -111,7 +142,7 @@ func (f *FcFn) String() string {
 	return outPut
 }
 
-func IsEqualOpt(f Fc) bool {
+func IsEqualOptFc(f Fc) bool {
 	ptr, ok := f.(*FcAtom)
 	if !ok {
 		return false
@@ -119,7 +150,7 @@ func IsEqualOpt(f Fc) bool {
 	return ptr.Value == glob.KeySymbolEqual && ptr.PkgName == ""
 }
 
-func IsNumLitFcAtom(f Fc) (string, bool) {
+func IsNumLitFcAtomAndRetValueStr(f Fc) (string, bool) {
 	ptr, ok := f.(*FcAtom)
 	if !ok || ptr.Value == "" {
 		return "", false

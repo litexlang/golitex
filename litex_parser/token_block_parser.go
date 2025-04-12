@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-type nameDepthMap map[string]int
-
 func (stmt *tokenBlock) TopStmt() (*ast.TopStmt, error) {
 	pub := false
 	if stmt.header.is(glob.KeywordPub) {
@@ -57,7 +55,7 @@ func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordThm:
 		ret, err = stmt.thmStmt()
 	default:
-		ret, err = stmt.factStmt(nameDepthMap{}, true)
+		ret, err = stmt.factStmt(ast.NameDepthMap{}, true)
 	}
 
 	if err != nil {
@@ -71,7 +69,7 @@ func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
 	return ret, nil
 }
 
-func (stmt *tokenBlock) factStmt(nameDepths nameDepthMap, uniFactDom bool) (ast.FactStmt, error) {
+func (stmt *tokenBlock) factStmt(nameDepths ast.NameDepthMap, uniFactDom bool) (ast.FactStmt, error) {
 	if stmt.header.is(glob.KeywordForall) {
 		return stmt.uniFactStmt(nameDepths, uniFactDom)
 	} else if stmt.header.is(glob.KeywordWhen) {
@@ -80,7 +78,7 @@ func (stmt *tokenBlock) factStmt(nameDepths nameDepthMap, uniFactDom bool) (ast.
 	return stmt.specFactStmt(nameDepths)
 }
 
-func (stmt *tokenBlock) specFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt, error) {
+func (stmt *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
 	// if !stmt.header.is(glob.KeySymbolDollar) {
 	// 	return stmt.relaFactStmt()
 	// }
@@ -141,7 +139,7 @@ func (stmt *tokenBlock) specFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt
 	return ast.NewSpecFactStmt(isTrue, propName, params), nil
 }
 
-func (stmt *tokenBlock) uniFactStmt(nameDepths nameDepthMap, maxAllowedNestedForall bool) (ast.UniFactStmt, error) {
+func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, maxAllowedNestedForall bool) (ast.UniFactStmt, error) {
 	err := stmt.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
@@ -163,7 +161,7 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths nameDepthMap, maxAllowedNestedFor
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	newUniParams := nameDepthMap{}
+	newUniParams := ast.NameDepthMap{}
 	for key := range nameDepths {
 		newUniParams[key] = nameDepths[key]
 	}
@@ -222,7 +220,7 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths nameDepthMap, maxAllowedNestedFor
 	}
 }
 
-func (stmt *tokenBlock) bodyFacts(nameDepths nameDepthMap) ([]ast.FactStmt, error) {
+func (stmt *tokenBlock) bodyFacts(nameDepths ast.NameDepthMap) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	for _, f := range stmt.body {
 		fact, err := f.factStmt(nameDepths, true)
@@ -235,7 +233,7 @@ func (stmt *tokenBlock) bodyFacts(nameDepths nameDepthMap) ([]ast.FactStmt, erro
 	return facts, nil
 }
 
-func (stmt *tokenBlock) thenBlockSpecFacts(nameDepths nameDepthMap) ([]*ast.SpecFactStmt, error) {
+func (stmt *tokenBlock) thenBlockSpecFacts(nameDepths ast.NameDepthMap) ([]*ast.SpecFactStmt, error) {
 	facts := []*ast.SpecFactStmt{}
 	stmt.header.skip() // skip "then"
 	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
@@ -254,7 +252,7 @@ func (stmt *tokenBlock) thenBlockSpecFacts(nameDepths nameDepthMap) ([]*ast.Spec
 	return facts, nil
 }
 
-func (stmt *tokenBlock) blockHeaderBodyFacts(kw string, nameDepths nameDepthMap) ([]ast.FactStmt, error) {
+func (stmt *tokenBlock) blockHeaderBodyFacts(kw string, nameDepths ast.NameDepthMap) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 	stmt.header.skip(kw)
 	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
@@ -296,7 +294,7 @@ func (stmt *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 
-func (stmt *tokenBlock) bodyTwoFactSections(kw string, nameDepths nameDepthMap) ([]ast.FactStmt, []ast.FactStmt, error) {
+func (stmt *tokenBlock) bodyTwoFactSections(kw string, nameDepths ast.NameDepthMap) ([]ast.FactStmt, []ast.FactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2Facts := []ast.FactStmt{}
 	err := error(nil)
@@ -388,7 +386,7 @@ func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 
 	if !stmt.header.ExceedEnd() && stmt.header.is(glob.KeySymbolColon) {
 		stmt.header.skip()
-		facts, err = stmt.bodyFacts(nameDepthMap{})
+		facts, err = stmt.bodyFacts(ast.NameDepthMap{})
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -412,7 +410,7 @@ func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
 
 	for i := 0; i < len(stmt.body)-1; i++ {
 		if !stmt.header.is(glob.KeywordProve) && !stmt.header.is(glob.KeywordProveByContradiction) {
-			fact, err := stmt.body[i].factStmt(nameDepthMap{}, true)
+			fact, err := stmt.body[i].factStmt(ast.NameDepthMap{}, true)
 			if err != nil {
 				return nil, &parseTimeErr{err, *stmt}
 			}
@@ -478,7 +476,7 @@ func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
 
 	if !stmt.header.is(glob.KeySymbolColon) {
 		facts := []ast.FactStmt{}
-		fact, err := stmt.factStmt(nameDepthMap{}, true)
+		fact, err := stmt.factStmt(ast.NameDepthMap{}, true)
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
 		}
@@ -490,7 +488,7 @@ func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	facts, err := stmt.bodyFacts(nameDepthMap{})
+	facts, err := stmt.bodyFacts(ast.NameDepthMap{})
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -543,7 +541,7 @@ func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 
 func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
 	stmt.header.skip(glob.KeywordHave)
-	propStmt, err := stmt.specFactStmt(nameDepthMap{})
+	propStmt, err := stmt.specFactStmt(ast.NameDepthMap{})
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -565,7 +563,7 @@ func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
 }
 
 // relaFact 只支持2个参数的关系
-func (stmt *tokenBlock) relaFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt, error) {
+func (stmt *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
 	fc, err := stmt.header.rawFc()
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
@@ -643,7 +641,7 @@ func (stmt *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
 	return ast.NewThmStmt(decl, facts), nil
 }
 
-func (stmt *tokenBlock) condFactStmt(nameDepths nameDepthMap) (*ast.CondFactStmt, error) {
+func (stmt *tokenBlock) condFactStmt(nameDepths ast.NameDepthMap) (*ast.CondFactStmt, error) {
 	err := stmt.header.skip(glob.KeywordWhen)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
@@ -695,7 +693,7 @@ func (stmt *tokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
 	panic("")
 }
 
-func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, nameDepthMap, error) {
+func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error) {
 	name, err := stmt.header.next()
 	if err != nil {
 		return nil, nil, &parseTimeErr{err, *stmt}
@@ -708,7 +706,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, nameDepthMap, error) 
 
 	params := []string{}
 	typeParams := []ast.Fc{}
-	nameDepths := nameDepthMap{}
+	nameDepths := ast.NameDepthMap{}
 
 	for !stmt.header.is(glob.KeySymbolRightBrace) {
 		param, err := stmt.header.next()
@@ -744,7 +742,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, nameDepthMap, error) 
 	return ast.NewConDefHeader(name, params, typeParams), nameDepths, nil
 }
 
-func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths nameDepthMap) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
+func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast.NameDepthMap) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2SpecFacts := []*ast.SpecFactStmt{}
 	err := error(nil)

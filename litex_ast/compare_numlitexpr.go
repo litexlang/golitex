@@ -9,7 +9,7 @@ func IsFcBuiltinNumLitExpr(left Fc) (*glob.NumLitExpr, bool, error) {
 }
 
 func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
-	asStr, ok := IsNumLitFcAtom(fc)
+	asStr, ok := IsNumLitFcAtomAndRetValueStr(fc)
 	if ok {
 		return &glob.NumLitExpr{IsPositive: true, Left: nil, OptOrNumber: asStr, Right: nil}, true, nil
 	}
