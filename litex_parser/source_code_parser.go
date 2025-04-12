@@ -2,6 +2,7 @@ package litex_parser
 
 import (
 	"fmt"
+	"strings"
 )
 
 type parseTimeErr struct {
@@ -34,4 +35,8 @@ func (e *parseTimeErr) Error() string {
 			tokenInfo,
 			e.previous)
 	}
+}
+
+func (p *strSliceCursor) String() string {
+	return strings.Join(p.slice, " ")
 }

@@ -787,3 +787,21 @@ func (b *tokenBlock) isSpecFactNotRelaFact() (bool, error) {
 	}
 	return false, nil
 }
+
+func (stmt *tokenBlock) defPropExistStmt() (ast.DefPropStmt, error) {
+	if stmt.header.is(glob.KeywordProp) {
+		prop, err := stmt.defConPropStmt()
+		if err != nil {
+			return nil, &parseTimeErr{err, *stmt}
+		}
+		return prop, nil
+	} else if stmt.header.is(glob.KeywordExistProp) {
+		exist, err := stmt.defConExistPropStmt()
+		if err != nil {
+			return nil, &parseTimeErr{err, *stmt}
+		}
+		return exist, nil
+	}
+
+	return nil, fmt.Errorf(`expected keyword "prop" or "exist"`)
+}

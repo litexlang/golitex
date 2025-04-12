@@ -232,3 +232,131 @@ func (parser *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 
 	return &ast.FcAtom{Value: left}, nil
 }
+
+func (parser *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
+	params := []ast.Fc{}
+	parser.skip(glob.KeySymbolLeftBrace)
+
+	for !parser.is(glob.KeySymbolRightBrace) {
+		fc, err := parser.rawFc()
+
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+
+		params = append(params, fc)
+
+		if !parser.is(glob.KeySymbolComma) {
+			if !parser.is(glob.KeySymbolRightBrace) {
+				return nil, &parserErr{err, parser}
+			} else {
+				break
+			}
+		} else {
+			parser.next()
+		}
+
+	}
+
+	parser.skip(glob.KeySymbolRightBrace)
+
+	return params, nil
+}
+
+func (parser *strSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
+	paramName := []string{}
+	paramTypes := []ast.Fc{}
+
+	for !parser.is(endWith) {
+		objName, err := parser.next()
+		if err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
+
+		tp, err := parser.rawFc()
+		if err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
+
+		paramName = append(paramName, objName)
+		paramTypes = append(paramTypes, tp)
+
+		if parser.isAndSkip(endWith) {
+			break
+		}
+
+		if err := parser.testAndSkip(glob.KeySymbolComma); err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
+	}
+
+	return paramName, paramTypes, nil
+}
+
+func (parser *strSliceCursor) stringSliceUntilEnd() ([]string, error) {
+	members := []string{}
+
+	for {
+		member, err := parser.next()
+		if err != nil {
+			return nil, &parserErr{err, parser}
+		}
+		members = append(members, member)
+		if !parser.is(glob.KeySymbolComma) {
+			break
+		}
+		parser.skip()
+	}
+
+	if !parser.ExceedEnd() {
+		return nil, &parserErr{fmt.Errorf("expected comma or end of string array"), parser}
+	}
+
+	return members, nil
+}
+
+func (parser *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
+	err := parser.skip(glob.KeywordIs)
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	opt, err := parser.rawFcAtom() // get the operator.
+
+	if err != nil {
+		return nil, &parserErr{err, parser}
+	}
+
+	return ast.NewSpecFactStmt(true, opt, []ast.Fc{left}), nil
+	// return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
+}
+
+func (parser *strSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]string, []*ast.FcAtom, error) {
+	paramName := []string{}
+	paramTypes := []*ast.FcAtom{}
+
+	for !parser.is(endWith) {
+		objName, err := parser.next()
+		if err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
+
+		tp, err := parser.rawFcAtom()
+		if err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
+
+		paramName = append(paramName, objName)
+		paramTypes = append(paramTypes, &tp)
+
+		if parser.isAndSkip(endWith) {
+			break
+		}
+
+		if err := parser.testAndSkip(glob.KeySymbolComma); err != nil {
+			return nil, nil, &parserErr{err, parser}
+		}
+	}
+
+	return paramName, paramTypes, nil
+}
