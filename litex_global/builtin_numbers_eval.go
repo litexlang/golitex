@@ -20,7 +20,13 @@ func EvalNumLitExprFc(node *NumLitExpr) (string, bool, error) {
 	if node.Left == nil && node.Right == nil {
 		value := node.OptOrNumber
 		if !node.IsPositive {
-			value = "-" + value
+			if value == "0" {
+				value = "0"
+			} else {
+				value = "-" + value
+
+			}
+
 		}
 		return value, true, nil
 	}
@@ -176,12 +182,12 @@ func addStrings(a, b string, carry bool) (string, bool, error) {
 	return string(result), c > 0, nil
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
+// func max(a, b int) int {
+// 	if a > b {
+// 		return a
+// 	}
+// 	return b
+// }
 
 func padLeft(s string, length int, pad byte) string {
 	for len(s) < length {
@@ -205,44 +211,77 @@ func trimLeftZero(s string) string {
 	return s
 }
 
-// 字符串大数减法
+// subBigFloat handles subtraction with proper sign consideration
 func subBigFloat(a, b string) (string, bool, error) {
+	// Handle sign combinations
+	aNegative := strings.HasPrefix(a, "-")
+	bNegative := strings.HasPrefix(b, "-")
+
+	// Case 1: Both positive - normal subtraction
+	if !aNegative && !bNegative {
+		return subtractPositiveNumbers(a, b)
+	}
+
+	// Case 2: Both negative - (-a) - (-b) = -a + b = b - a
+	if aNegative && bNegative {
+		return subtractPositiveNumbers(b[1:], a[1:])
+	}
+
+	// Case 3: First negative, second positive - (-a) - b = -(a + b)
+	if aNegative {
+		sum, ok, err := addBigFloat(a[1:], b)
+		if err != nil || !ok {
+			return "", ok, err
+		}
+		return "-" + sum, true, nil
+	}
+
+	// Case 4: First positive, second negative - a - (-b) = a + b
+	return addBigFloat(a, b[1:])
+}
+
+// Helper function for subtracting two positive numbers (a >= b)
+func subtractPositiveNumbers(a, b string) (string, bool, error) {
 	cmp := CmpBigFloat(a, b)
+
+	// Handle a < b case by swapping and making result negative
 	if cmp == -1 {
-		// TODO "暂不支持负数"
-		return "", false, nil
+		result, ok, err := subtractPositiveNumbers(b, a)
+		if err != nil || !ok {
+			return "", ok, err
+		}
+		return "-" + result, true, nil
 	}
 
 	aInt, aFrac := splitNumberToIntPartFracPart(a)
 	bInt, bFrac := splitNumberToIntPartFracPart(b)
 
-	// 补齐小数部分长度
+	// Align fractional parts
 	maxFracLen := max(len(aFrac), len(bFrac))
 	aFrac = padRight(aFrac, maxFracLen, '0')
 	bFrac = padRight(bFrac, maxFracLen, '0')
 
-	// 小数部分先减
+	// Subtract fractional parts
 	fracRes, borrow, err := subStrings(aFrac, bFrac, false)
 	if err != nil {
 		return "", false, err
 	}
 
-	// 整数部分减（带借位）
+	// Subtract integer parts (with borrow)
 	intRes, _, err := subStrings(aInt, bInt, borrow)
 	if err != nil {
 		return "", false, err
 	}
 
+	// Clean up result
 	intRes = trimLeftZero(intRes)
 	if intRes == "" {
 		intRes = "0"
 	}
 
+	fracRes = strings.TrimRight(fracRes, "0")
 	if fracRes != "" {
-		fracRes = strings.TrimRight(fracRes, "0")
-		if fracRes != "" {
-			return intRes + "." + fracRes, true, nil
-		}
+		return intRes + "." + fracRes, true, nil
 	}
 	return intRes, true, nil
 }
@@ -274,23 +313,40 @@ func subStrings(a, b string, borrow bool) (string, bool, error) {
 	return string(res), curBorrow > 0, nil
 }
 
-// 大数乘法
+// mulBigFloat handles multiplication with proper sign consideration
 func mulBigFloat(a, b string) (string, bool, error) {
-	aInt, aFrac := splitNumberToIntPartFracPart(a)
-	bInt, bFrac := splitNumberToIntPartFracPart(b)
+	// Handle sign combinations
+	aNegative := strings.HasPrefix(a, "-")
+	bNegative := strings.HasPrefix(b, "-")
 
-	// 先拼接成整数
+	// Work with absolute values
+	aAbs := a
+	if aNegative {
+		aAbs = a[1:]
+	}
+	bAbs := b
+	if bNegative {
+		bAbs = b[1:]
+	}
+
+	// Split into integer and fractional parts
+	aInt, aFrac := splitNumberToIntPartFracPart(aAbs)
+	bInt, bFrac := splitNumberToIntPartFracPart(bAbs)
+
+	// Combine into single numbers (removing decimal points)
 	aTotal := aInt + aFrac
 	bTotal := bInt + bFrac
 
+	// Calculate total fractional digits
 	fracLen := len(aFrac) + len(bFrac)
 
-	// 乘法
+	// Perform multiplication
 	product, err := mulStrings(aTotal, bTotal)
 	if err != nil {
 		return "", false, err
 	}
 
+	// Handle decimal point placement
 	if fracLen > 0 {
 		if len(product) <= fracLen {
 			product = padLeft(product, fracLen+1, '0')
@@ -298,12 +354,23 @@ func mulBigFloat(a, b string) (string, bool, error) {
 		intPart := product[:len(product)-fracLen]
 		fracPart := product[len(product)-fracLen:]
 		fracPart = strings.TrimRight(fracPart, "0")
-		if fracPart == "" {
-			return trimLeftZero(intPart), true, nil
+		product = trimLeftZero(intPart)
+		if fracPart != "" {
+			product += "." + fracPart
 		}
-		return trimLeftZero(intPart) + "." + fracPart, true, nil
+	} else {
+		product = trimLeftZero(product)
 	}
-	return trimLeftZero(product), true, nil
+
+	// Determine result sign (negative if exactly one operand was negative)
+	if (aNegative && !bNegative) || (!aNegative && bNegative) {
+		// Only make negative if result isn't zero
+		if product != "0" {
+			product = "-" + product
+		}
+	}
+
+	return product, true, nil
 }
 
 // 字符串乘法
@@ -338,170 +405,301 @@ func mulStrings(a, b string) (string, error) {
 	return sb.String(), nil
 }
 
-// 判断大小：返回 1 if a > b, -1 if a < b, 0 if a==b
+// // 判断大小：返回 1 if a > b, -1 if a < b, 0 if a==b
+// func CmpBigFloat(a, b string) int {
+// 	aInt, aFrac := splitNumberToIntPartFracPart(a)
+// 	bInt, bFrac := splitNumberToIntPartFracPart(b)
+
+// 	aInt = trimLeftZero(aInt)
+// 	bInt = trimLeftZero(bInt)
+
+// 	if len(aInt) > len(bInt) {
+// 		return 1
+// 	}
+// 	if len(aInt) < len(bInt) {
+// 		return -1
+// 	}
+// 	if aInt > bInt {
+// 		return 1
+// 	}
+// 	if aInt < bInt {
+// 		return -1
+// 	}
+
+// 	// 补齐小数部分长度
+// 	maxLen := max(len(aFrac), len(bFrac))
+// 	aFrac = padRight(aFrac, maxLen, '0')
+// 	bFrac = padRight(bFrac, maxLen, '0')
+
+// 	if aFrac > bFrac {
+// 		return 1
+// 	}
+// 	if aFrac < bFrac {
+// 		return -1
+// 	}
+// 	return 0
+// }
+
+// // 判断是不是自然数（包含0）
+// func isNaturalNumber(s string) bool {
+// 	// 去掉前导0
+// 	s = trimLeftZero(s)
+// 	// 允许 "0"
+// 	if s == "0" {
+// 		return true
+// 	}
+// 	// 必须是纯数字且没有小数点
+// 	for _, ch := range s {
+// 		if ch < '0' || ch > '9' {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
+
+// CmpBigFloat compares two big float numbers considering their signs
+// Returns: 1 if a > b, -1 if a < b, 0 if a == b
 func CmpBigFloat(a, b string) int {
-	aInt, aFrac := splitNumberToIntPartFracPart(a)
-	bInt, bFrac := splitNumberToIntPartFracPart(b)
+	// Handle sign comparison first
+	aNegative := strings.HasPrefix(a, "-")
+	bNegative := strings.HasPrefix(b, "-")
 
-	aInt = trimLeftZero(aInt)
-	bInt = trimLeftZero(bInt)
-
-	if len(aInt) > len(bInt) {
-		return 1
-	}
-	if len(aInt) < len(bInt) {
+	// Different signs cases
+	if aNegative && !bNegative {
 		return -1
 	}
-	if aInt > bInt {
+	if !aNegative && bNegative {
 		return 1
 	}
-	if aInt < bInt {
-		return -1
+
+	// Both negative or both positive
+	aAbs := a
+	if aNegative {
+		aAbs = a[1:]
+	}
+	bAbs := b
+	if bNegative {
+		bAbs = b[1:]
 	}
 
-	// 补齐小数部分长度
-	maxLen := max(len(aFrac), len(bFrac))
-	aFrac = padRight(aFrac, maxLen, '0')
-	bFrac = padRight(bFrac, maxLen, '0')
+	// Compare absolute values
+	cmp := compareAbsoluteValues(aAbs, bAbs)
 
-	if aFrac > bFrac {
-		return 1
+	// If both were negative, reverse the comparison result
+	if aNegative && bNegative {
+		return -cmp
 	}
-	if aFrac < bFrac {
-		return -1
-	}
-	return 0
+	return cmp
 }
 
-// 判断是不是自然数（包含0）
+// // compareAbsoluteValues compares the absolute values of two numbers
+// func compareAbsoluteValues(a, b string) int {
+// 	aInt, aFrac := splitNumberToIntPartFracPart(a)
+// 	bInt, bFrac := splitNumberToIntPartFracPart(b)
+
+// 	aInt = trimLeftZero(aInt)
+// 	bInt = trimLeftZero(bInt)
+
+// 	// Compare integer part lengths
+// 	if len(aInt) > len(bInt) {
+// 		return 1
+// 	}
+// 	if len(aInt) < len(bInt) {
+// 		return -1
+// 	}
+
+// 	// Compare integer parts digit by digit
+// 	if aInt > bInt {
+// 		return 1
+// 	}
+// 	if aInt < bInt {
+// 		return -1
+// 	}
+
+// 	// Compare fractional parts
+// 	maxLen := max(len(aFrac), len(bFrac))
+// 	aFrac = padRight(aFrac, maxLen, '0')
+// 	bFrac = padRight(bFrac, maxLen, '0')
+
+// 	if aFrac > bFrac {
+// 		return 1
+// 	}
+// 	if aFrac < bFrac {
+// 		return -1
+// 	}
+// 	return 0
+// }
+
+// isNaturalNumber checks if a string represents a natural number (including 0)
 func isNaturalNumber(s string) bool {
-	// 去掉前导0
-	s = trimLeftZero(s)
-	// 允许 "0"
-	if s == "0" {
-		return true
+	// Handle negative numbers
+	if strings.HasPrefix(s, "-") {
+		return false
 	}
-	// 必须是纯数字且没有小数点
+
+	// Remove leading zeros and check for empty string
+	s = trimLeftZero(s)
+	if s == "" {
+		return false
+	}
+
+	// Check for decimal point
+	if strings.Contains(s, ".") {
+		return false
+	}
+
+	// Check all characters are digits
 	for _, ch := range s {
 		if ch < '0' || ch > '9' {
 			return false
 		}
 	}
+
 	return true
 }
 
-// a^b, 其中 b 必须是自然数（已经在外层判断过）
-// 结果长度不超过 200 位（超过返回错误）
+// powBigFloat calculates a^b where b must be a natural number (handles signs)
 func powBigFloat(a, b string) (string, bool, error) {
-	res := "1"
-	cnt, err := parseNaturalNumber(b)
-	if err != nil {
-		return "", false, err
+	// Handle sign of base
+	aNegative := strings.HasPrefix(a, "-")
+	aAbs := a
+	if aNegative {
+		aAbs = a[1:]
 	}
 
-	for i := 0; i < cnt; i++ {
+	// Parse exponent (already validated as natural number)
+	exponent, err := parseNaturalNumber(b)
+	if err != nil {
+		return "", false, fmt.Errorf("invalid exponent: %v", err)
+	}
+
+	// Handle special cases
+	if exponent == 0 {
+		return "1", true, nil // x^0 = 1 for any x
+	}
+	if aAbs == "0" || aAbs == "0.0" {
+		return "0", true, nil // 0^n = 0
+	}
+
+	result := "1"
+	for i := 0; i < exponent; i++ {
 		var ok bool
-		res, ok, err = mulBigFloat(res, a)
+		result, ok, err = mulBigFloat(result, aAbs)
 		if err != nil {
-			return "", false, err
+			return "", false, fmt.Errorf("multiplication error: %v", err)
 		}
 		if !ok {
 			return "", false, nil
 		}
-		if len(res) > 200 {
-			return "", false, errors.New("powBigFloat: result too long")
+		if len(result) > 200 {
+			return "", false, errors.New("result exceeds 200 digits")
 		}
 	}
-	return res, true, nil
+
+	// Apply sign (negative if base was negative and exponent is odd)
+	if aNegative && exponent%2 == 1 {
+		result = "-" + result
+	}
+
+	return result, true, nil
 }
 
-// parseNaturalNumber 手动解析自然数（不含前导零，不含小数点）
+// parseNaturalNumber validates and parses a natural number string
 func parseNaturalNumber(s string) (int, error) {
 	s = strings.TrimSpace(s)
 	s = trimLeftZero(s)
 
 	if s == "" {
-		return 0, errors.New("parseNaturalNumber: empty string")
+		return 0, errors.New("empty string")
 	}
 
-	if strings.Contains(s, ".") {
-		return 0, errors.New("parseNaturalNumber: float value not allowed")
-	}
-
-	// 检查是否全是数字字符
+	// Check for non-digit characters
 	for _, c := range s {
 		if c < '0' || c > '9' {
-			return 0, errors.New("parseNaturalNumber: invalid number")
+			return 0, fmt.Errorf("invalid character '%c'", c)
 		}
 	}
 
-	// 手动计算数值
+	// Parse with overflow check
 	var num int
 	for _, c := range s {
-		num = num*10 + int(c-'0')
-		// 避免溢出（假设 int 是 32/64 位）
-		if num < 0 {
-			return 0, errors.New("parseNaturalNumber: number too large")
+		digit := int(c - '0')
+		if num > (1<<31-1-digit)/10 { // Check for 32-bit overflow
+			return 0, errors.New("number too large")
 		}
+		num = num*10 + digit
 	}
 
 	return num, nil
 }
 
-// divBigFloat 大数除法，a除以b，如果能整除则返回精确结果，否则返回错误
+// divBigFloat performs exact division (returns error if not divisible)
 func divBigFloat(a, b string) (string, bool, error) {
-	// 检查除数是否为0
-	if b == "0" || b == "0.0" {
+	// Handle signs
+	aNegative := strings.HasPrefix(a, "-")
+	bNegative := strings.HasPrefix(b, "-")
+	aAbs := a
+	if aNegative {
+		aAbs = a[1:]
+	}
+	bAbs := b
+	if bNegative {
+		bAbs = b[1:]
+	}
+
+	// Check for division by zero
+	if isZero(bAbs) {
 		return "", false, errors.New("division by zero")
 	}
 
-	aInt, aFrac := splitNumberToIntPartFracPart(a)
-	bInt, bFrac := splitNumberToIntPartFracPart(b)
-
-	// 将被除数和除数转为整数形式（去掉小数点）
+	// Convert to integer representation
+	aInt, aFrac := splitNumberToIntPartFracPart(aAbs)
+	bInt, bFrac := splitNumberToIntPartFracPart(bAbs)
 	aTotal := aInt + aFrac
 	bTotal := bInt + bFrac
-
-	// 计算小数部分的长度差
 	fracLenDiff := len(aFrac) - len(bFrac)
 
-	// 补齐两个数的长度，使它们成为整数
+	// Normalize lengths
 	maxLen := max(len(aTotal), len(bTotal))
 	aTotal = padLeft(aTotal, maxLen, '0')
 	bTotal = padLeft(bTotal, maxLen, '0')
 
-	// 执行长除法
-	result, remainder, err := longDivision(aTotal, bTotal)
+	// Perform division
+	quotient, remainder, err := longDivision(aTotal, bTotal)
 	if err != nil {
-		return "", false, err
+		return "", false, fmt.Errorf("division error: %v", err)
 	}
 
-	// 检查是否能整除（余数为0）
+	// Check for exact division
 	if !isZero(remainder) {
 		return "", false, nil
 	}
 
-	// 处理小数点的位置
+	// Handle decimal point placement
 	if fracLenDiff > 0 {
-		// 需要在结果中插入小数点
-		if len(result) <= fracLenDiff {
-			result = padLeft(result, fracLenDiff+1, '0')
+		if len(quotient) <= fracLenDiff {
+			quotient = padLeft(quotient, fracLenDiff+1, '0')
 		}
-		intPart := result[:len(result)-fracLenDiff]
-		fracPart := result[len(result)-fracLenDiff:]
-		fracPart = strings.TrimRight(fracPart, "0")
+		intPart := quotient[:len(quotient)-fracLenDiff]
+		fracPart := strings.TrimRight(quotient[len(quotient)-fracLenDiff:], "0")
 		if len(fracPart) > 0 {
-			return intPart + "." + fracPart, true, nil
+			quotient = intPart + "." + fracPart
+		} else {
+			quotient = intPart
 		}
-		return intPart, true, nil
 	} else if fracLenDiff < 0 {
-		// 需要在结果末尾补0
-		return result + strings.Repeat("0", -fracLenDiff), true, nil
+		quotient += strings.Repeat("0", -fracLenDiff)
 	}
-	return result, true, nil
+
+	// Apply sign (negative if signs differ)
+	if (aNegative && !bNegative) || (!aNegative && bNegative) {
+		quotient = "-" + quotient
+	}
+
+	return quotient, true, nil
 }
 
-// longDivision 执行长除法，返回商和余数
+// longDivision performs the actual division algorithm
 func longDivision(dividend, divisor string) (string, string, error) {
 	if len(dividend) < len(divisor) {
 		return "0", dividend, nil
@@ -512,11 +710,10 @@ func longDivision(dividend, divisor string) (string, string, error) {
 	dividend = dividend[len(divisor):]
 
 	for {
-		// 计算当前位的商
+		// Find current digit (0-9)
 		digit := 0
 		currentRem := remainder
-		for ; digit < 9; digit++ {
-			// 尝试减去divisor
+		for digit < 9 {
 			subRes, borrow, err := subStrings(currentRem, divisor, false)
 			if err != nil {
 				return "", "", err
@@ -525,29 +722,25 @@ func longDivision(dividend, divisor string) (string, string, error) {
 				break
 			}
 			currentRem = subRes
+			digit++
 		}
-		quotient.WriteByte(byte(digit) + '0')
 
-		// 更新余数
+		quotient.WriteByte(byte(digit) + '0')
 		remainder = currentRem
 
-		// 如果被除数已经用完
 		if len(dividend) == 0 {
 			break
 		}
 
-		// 取下一位
 		remainder += string(dividend[0])
 		dividend = dividend[1:]
 	}
 
-	// 去除前导零
+	// Clean up results
 	q := strings.TrimLeft(quotient.String(), "0")
 	if q == "" {
 		q = "0"
 	}
-
-	// 去除余数的前导零
 	r := strings.TrimLeft(remainder, "0")
 	if r == "" {
 		r = "0"
@@ -556,15 +749,192 @@ func longDivision(dividend, divisor string) (string, string, error) {
 	return q, r, nil
 }
 
-// isZero 检查字符串表示的数值是否为0
+// isZero checks if a number string represents zero
 func isZero(s string) bool {
+	s = strings.Trim(s, "-")
 	for _, c := range s {
-		if c != '0' {
+		if c != '0' && c != '.' {
 			return false
 		}
 	}
 	return true
 }
+
+// // a^b, 其中 b 必须是自然数（已经在外层判断过）
+// // 结果长度不超过 200 位（超过返回错误）
+// func powBigFloat(a, b string) (string, bool, error) {
+// 	res := "1"
+// 	cnt, err := parseNaturalNumber(b)
+// 	if err != nil {
+// 		return "", false, err
+// 	}
+
+// 	for i := 0; i < cnt; i++ {
+// 		var ok bool
+// 		res, ok, err = mulBigFloat(res, a)
+// 		if err != nil {
+// 			return "", false, err
+// 		}
+// 		if !ok {
+// 			return "", false, nil
+// 		}
+// 		if len(res) > 200 {
+// 			return "", false, errors.New("powBigFloat: result too long")
+// 		}
+// 	}
+// 	return res, true, nil
+// }
+
+// // parseNaturalNumber 手动解析自然数（不含前导零，不含小数点）
+// func parseNaturalNumber(s string) (int, error) {
+// 	s = strings.TrimSpace(s)
+// 	s = trimLeftZero(s)
+
+// 	if s == "" {
+// 		return 0, errors.New("parseNaturalNumber: empty string")
+// 	}
+
+// 	if strings.Contains(s, ".") {
+// 		return 0, errors.New("parseNaturalNumber: float value not allowed")
+// 	}
+
+// 	// 检查是否全是数字字符
+// 	for _, c := range s {
+// 		if c < '0' || c > '9' {
+// 			return 0, errors.New("parseNaturalNumber: invalid number")
+// 		}
+// 	}
+
+// 	// 手动计算数值
+// 	var num int
+// 	for _, c := range s {
+// 		num = num*10 + int(c-'0')
+// 		// 避免溢出（假设 int 是 32/64 位）
+// 		if num < 0 {
+// 			return 0, errors.New("parseNaturalNumber: number too large")
+// 		}
+// 	}
+
+// 	return num, nil
+// }
+
+// // divBigFloat 大数除法，a除以b，如果能整除则返回精确结果，否则返回错误
+// func divBigFloat(a, b string) (string, bool, error) {
+// 	// 检查除数是否为0
+// 	if b == "0" || b == "0.0" {
+// 		return "", false, errors.New("division by zero")
+// 	}
+
+// 	aInt, aFrac := splitNumberToIntPartFracPart(a)
+// 	bInt, bFrac := splitNumberToIntPartFracPart(b)
+
+// 	// 将被除数和除数转为整数形式（去掉小数点）
+// 	aTotal := aInt + aFrac
+// 	bTotal := bInt + bFrac
+
+// 	// 计算小数部分的长度差
+// 	fracLenDiff := len(aFrac) - len(bFrac)
+
+// 	// 补齐两个数的长度，使它们成为整数
+// 	maxLen := max(len(aTotal), len(bTotal))
+// 	aTotal = padLeft(aTotal, maxLen, '0')
+// 	bTotal = padLeft(bTotal, maxLen, '0')
+
+// 	// 执行长除法
+// 	result, remainder, err := longDivision(aTotal, bTotal)
+// 	if err != nil {
+// 		return "", false, err
+// 	}
+
+// 	// 检查是否能整除（余数为0）
+// 	if !isZero(remainder) {
+// 		return "", false, nil
+// 	}
+
+// 	// 处理小数点的位置
+// 	if fracLenDiff > 0 {
+// 		// 需要在结果中插入小数点
+// 		if len(result) <= fracLenDiff {
+// 			result = padLeft(result, fracLenDiff+1, '0')
+// 		}
+// 		intPart := result[:len(result)-fracLenDiff]
+// 		fracPart := result[len(result)-fracLenDiff:]
+// 		fracPart = strings.TrimRight(fracPart, "0")
+// 		if len(fracPart) > 0 {
+// 			return intPart + "." + fracPart, true, nil
+// 		}
+// 		return intPart, true, nil
+// 	} else if fracLenDiff < 0 {
+// 		// 需要在结果末尾补0
+// 		return result + strings.Repeat("0", -fracLenDiff), true, nil
+// 	}
+// 	return result, true, nil
+// }
+
+// // longDivision 执行长除法，返回商和余数
+// func longDivision(dividend, divisor string) (string, string, error) {
+// 	if len(dividend) < len(divisor) {
+// 		return "0", dividend, nil
+// 	}
+
+// 	var quotient strings.Builder
+// 	remainder := dividend[:len(divisor)]
+// 	dividend = dividend[len(divisor):]
+
+// 	for {
+// 		// 计算当前位的商
+// 		digit := 0
+// 		currentRem := remainder
+// 		for ; digit < 9; digit++ {
+// 			// 尝试减去divisor
+// 			subRes, borrow, err := subStrings(currentRem, divisor, false)
+// 			if err != nil {
+// 				return "", "", err
+// 			}
+// 			if borrow {
+// 				break
+// 			}
+// 			currentRem = subRes
+// 		}
+// 		quotient.WriteByte(byte(digit) + '0')
+
+// 		// 更新余数
+// 		remainder = currentRem
+
+// 		// 如果被除数已经用完
+// 		if len(dividend) == 0 {
+// 			break
+// 		}
+
+// 		// 取下一位
+// 		remainder += string(dividend[0])
+// 		dividend = dividend[1:]
+// 	}
+
+// 	// 去除前导零
+// 	q := strings.TrimLeft(quotient.String(), "0")
+// 	if q == "" {
+// 		q = "0"
+// 	}
+
+// 	// 去除余数的前导零
+// 	r := strings.TrimLeft(remainder, "0")
+// 	if r == "" {
+// 		r = "0"
+// 	}
+
+// 	return q, r, nil
+// }
+
+// // isZero 检查字符串表示的数值是否为0
+// func isZero(s string) bool {
+// 	for _, c := range s {
+// 		if c != '0' {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
 
 // func BuiltinLogicOptRule() (bool, error) {
 
