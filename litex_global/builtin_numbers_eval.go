@@ -16,9 +16,13 @@ type NumLitExpr struct {
 // EvalNumLitExprFc 计算表达式树，返回字符串形式的结果。如果发现不符合规定，返回错误
 // bool 表示基于现有的litex-rule，虽然说我不能说你对不对，但你至少没犯错，error表示你犯错了，比如1/0
 func EvalNumLitExprFc(node *NumLitExpr) (string, bool, error) {
-	// 叶子节点
+	// Leaf node
 	if node.Left == nil && node.Right == nil {
-		return node.OptOrNumber, true, nil
+		value := node.OptOrNumber
+		if !node.IsPositive {
+			value = "-" + value
+		}
+		return value, true, nil
 	}
 
 	leftVal, ok, err := EvalNumLitExprFc(node.Left)
@@ -37,49 +41,95 @@ func EvalNumLitExprFc(node *NumLitExpr) (string, bool, error) {
 		return "", false, nil
 	}
 
+	var result string
 	switch node.OptOrNumber {
 	case "+":
-		return addBigFloat(leftVal, rightVal)
+		result, ok, err = addBigFloat(leftVal, rightVal)
 	case "-":
-		return subBigFloat(leftVal, rightVal)
+		result, ok, err = subBigFloat(leftVal, rightVal)
 	case "*":
-		return mulBigFloat(leftVal, rightVal)
+		result, ok, err = mulBigFloat(leftVal, rightVal)
 	case "/":
-		return divBigFloat(leftVal, rightVal)
+		result, ok, err = divBigFloat(leftVal, rightVal)
 	case "^":
 		if !isNaturalNumber(rightVal) {
 			return "", false, errors.New("exponent must be a natural number")
 		}
-		return powBigFloat(leftVal, rightVal)
+		result, ok, err = powBigFloat(leftVal, rightVal)
 	default:
-		return "", false, fmt.Errorf("未知运算符: %s", node.OptOrNumber)
+		return "", false, fmt.Errorf("unknown operator: %s", node.OptOrNumber)
 	}
+
+	if err != nil {
+		return "", false, err
+	}
+	if !ok {
+		return "", false, nil
+	}
+
+	// Apply IsPositive to the result
+	if !node.IsPositive {
+		result = "-" + result
+	}
+
+	return result, true, nil
 }
 
 func addBigFloat(a, b string) (string, bool, error) {
+	// Handle sign combinations
+	aNegative := strings.HasPrefix(a, "-")
+	bNegative := strings.HasPrefix(b, "-")
+
+	// Case 1: Both positive - normal addition
+	if !aNegative && !bNegative {
+		return addPositiveNumbers(a, b)
+	}
+
+	// Case 2: Both negative - add absolute values and make negative
+	if aNegative && bNegative {
+		result, ok, err := addPositiveNumbers(a[1:], b[1:])
+		if err != nil {
+			return "", false, err
+		}
+		if !ok {
+			return "", false, nil
+		}
+		return "-" + result, true, nil
+	}
+
+	// Case 3: One negative, one positive - convert to subtraction
+	if aNegative {
+		return subBigFloat(b, a[1:])
+	}
+	// bNegative
+	return subBigFloat(a, b[1:])
+}
+
+// Helper function for adding two positive numbers
+func addPositiveNumbers(a, b string) (string, bool, error) {
 	aInt, aFrac := splitNumberToIntPartFracPart(a)
 	bInt, bFrac := splitNumberToIntPartFracPart(b)
 
-	// 对齐小数部分长度
+	// Align fractional parts
 	maxFracLen := max(len(aFrac), len(bFrac))
 	aFrac = padRight(aFrac, maxFracLen, '0')
 	bFrac = padRight(bFrac, maxFracLen, '0')
 
-	// 小数部分相加
+	// Add fractional parts
 	fracSum, carry, err := addStrings(aFrac, bFrac, false)
 	if err != nil {
 		return "", false, err
 	}
 
-	// 去除末尾的0（小数部分）
+	// Trim trailing zeros from fractional part
 	fracSum = strings.TrimRight(fracSum, "0")
 
-	// 整数部分对齐
+	// Align integer parts
 	maxIntLen := max(len(aInt), len(bInt))
 	aInt = padLeft(aInt, maxIntLen, '0')
 	bInt = padLeft(bInt, maxIntLen, '0')
 
-	// 整数部分相加
+	// Add integer parts
 	intSum, carry, err := addStrings(aInt, bInt, carry)
 	if err != nil {
 		return "", false, err
@@ -88,6 +138,7 @@ func addBigFloat(a, b string) (string, bool, error) {
 		intSum = "1" + intSum
 	}
 
+	// Construct result
 	result := intSum
 	if len(fracSum) > 0 {
 		result += "." + fracSum
