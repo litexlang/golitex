@@ -8,9 +8,9 @@ import (
 
 func (parser *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	params := []ast.Fc{}
-	parser.skip(glob.KeySymbolLeftParen)
+	parser.skip(glob.KeySymbolLeftBrace)
 
-	for !parser.is(glob.KeySymbolRightParen) {
+	for !parser.is(glob.KeySymbolRightBrace) {
 		fc, err := parser.rawFc()
 
 		if err != nil {
@@ -20,7 +20,7 @@ func (parser *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 		params = append(params, fc)
 
 		if !parser.is(glob.KeySymbolComma) {
-			if !parser.is(glob.KeySymbolRightParen) {
+			if !parser.is(glob.KeySymbolRightBrace) {
 				return nil, &parserErr{err, parser}
 			} else {
 				break
@@ -31,7 +31,7 @@ func (parser *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 
 	}
 
-	parser.skip(glob.KeySymbolRightParen)
+	parser.skip(glob.KeySymbolRightBrace)
 
 	return params, nil
 }

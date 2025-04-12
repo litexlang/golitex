@@ -1,0 +1,3 @@
+prove:
+    (a union b) = (c union d)
+    1 < 2

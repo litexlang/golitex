@@ -111,12 +111,12 @@ func (stmt *tokenBlock) specFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt
 	propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepths)
 
 	params := []ast.Fc{}
-	err = stmt.header.skip(glob.KeySymbolLeftParen)
+	err = stmt.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
 
-	for !stmt.header.is(glob.KeySymbolRightParen) {
+	for !stmt.header.is(glob.KeySymbolRightBrace) {
 		param, err := stmt.header.rawFc()
 		if err != nil {
 			return nil, &parseTimeErr{err, *stmt}
@@ -133,7 +133,7 @@ func (stmt *tokenBlock) specFactStmt(nameDepths nameDepthMap) (*ast.SpecFactStmt
 		}
 	}
 
-	err = stmt.header.skip(glob.KeySymbolRightParen)
+	err = stmt.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
 		return nil, &parseTimeErr{err, *stmt}
 	}
@@ -701,7 +701,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, nameDepthMap, error) 
 		return nil, nil, &parseTimeErr{err, *stmt}
 	}
 
-	err = stmt.header.skip(glob.KeySymbolLeftParen)
+	err = stmt.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
 		return nil, nil, &parseTimeErr{err, *stmt}
 	}
@@ -710,7 +710,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, nameDepthMap, error) 
 	typeParams := []ast.Fc{}
 	nameDepths := nameDepthMap{}
 
-	for !stmt.header.is(glob.KeySymbolRightParen) {
+	for !stmt.header.is(glob.KeySymbolRightBrace) {
 		param, err := stmt.header.next()
 		if err != nil {
 			return nil, nil, &parseTimeErr{err, *stmt}
@@ -736,7 +736,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, nameDepthMap, error) 
 		}
 	}
 
-	err = stmt.header.skip(glob.KeySymbolRightParen)
+	err = stmt.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
 		return nil, nil, &parseTimeErr{err, *stmt}
 	}

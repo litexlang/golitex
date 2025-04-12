@@ -567,4 +567,4 @@ func TestLastFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../litex_code_examples/not.lix")
+var code = readFile("../litex_code_examples/infix_operator.lix")
