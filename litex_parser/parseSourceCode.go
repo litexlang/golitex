@@ -36,10 +36,6 @@ func preprocessSourceCode(code string) ([]string, error) {
 	return lines, nil
 }
 
-func SetupAndParseSourceCode(code string) ([]ast.TopStmt, error) {
-	return ParseSourceCode(code)
-}
-
 func splitAndReplaceSemicolons(input string) []string {
 	// 按行分割字符串
 	lines := strings.Split(input, "\n")

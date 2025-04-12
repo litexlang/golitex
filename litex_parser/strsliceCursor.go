@@ -2,12 +2,17 @@ package litex_parser
 
 import (
 	"fmt"
+	"strings"
 )
 
 // strSliceCursor 表示字符串切片的游标
 type strSliceCursor struct {
 	index int
 	slice []string
+}
+
+func (p *strSliceCursor) String() string {
+	return strings.Join(p.slice, " ")
 }
 
 func (it *strSliceCursor) ExceedEnd() bool {
@@ -104,9 +109,4 @@ func (it *strSliceCursor) curTokenBeginWithNumber() bool {
 	} else {
 		return false
 	}
-}
-
-type parserErr struct {
-	previous error
-	parser   *strSliceCursor
 }

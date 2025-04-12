@@ -17,7 +17,7 @@ func (parser *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 
 	fcStr, err := parser.rawFcAtom()
 	if err != nil {
-		return nil, &parserErr{err, parser}
+		return nil, &strSliceErr{err, parser}
 	}
 
 	strAtSecondPosition := parser.strAtCurIndexPlus(0)
@@ -33,7 +33,7 @@ func (parser *strSliceCursor) bracedFcExpr() (ast.Fc, error) {
 	parser.skip(glob.KeySymbolLeftBrace)
 	fc, err := parser.rawFc()
 	if err != nil {
-		return nil, &parserErr{err, parser}
+		return nil, &strSliceErr{err, parser}
 	}
 	parser.skip(glob.KeySymbolRightBrace)
 	return fc, nil
@@ -55,7 +55,7 @@ func (parser *strSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
 	for !parser.ExceedEnd() && (parser.is(glob.KeySymbolLeftBrace)) {
 		objParamsPtr, err := parser.bracedFcSlice()
 		if err != nil {
-			return nil, &parserErr{err, parser}
+			return nil, &strSliceErr{err, parser}
 		}
 
 		pairs = append(pairs, ast.NewFcFnPipeSeg(objParamsPtr))
@@ -241,14 +241,14 @@ func (parser *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 		fc, err := parser.rawFc()
 
 		if err != nil {
-			return nil, &parserErr{err, parser}
+			return nil, &strSliceErr{err, parser}
 		}
 
 		params = append(params, fc)
 
 		if !parser.is(glob.KeySymbolComma) {
 			if !parser.is(glob.KeySymbolRightBrace) {
-				return nil, &parserErr{err, parser}
+				return nil, &strSliceErr{err, parser}
 			} else {
 				break
 			}
@@ -270,12 +270,12 @@ func (parser *strSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]
 	for !parser.is(endWith) {
 		objName, err := parser.next()
 		if err != nil {
-			return nil, nil, &parserErr{err, parser}
+			return nil, nil, &strSliceErr{err, parser}
 		}
 
 		tp, err := parser.rawFc()
 		if err != nil {
-			return nil, nil, &parserErr{err, parser}
+			return nil, nil, &strSliceErr{err, parser}
 		}
 
 		paramName = append(paramName, objName)
@@ -286,7 +286,7 @@ func (parser *strSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]
 		}
 
 		if err := parser.testAndSkip(glob.KeySymbolComma); err != nil {
-			return nil, nil, &parserErr{err, parser}
+			return nil, nil, &strSliceErr{err, parser}
 		}
 	}
 
@@ -299,7 +299,7 @@ func (parser *strSliceCursor) stringSliceUntilEnd() ([]string, error) {
 	for {
 		member, err := parser.next()
 		if err != nil {
-			return nil, &parserErr{err, parser}
+			return nil, &strSliceErr{err, parser}
 		}
 		members = append(members, member)
 		if !parser.is(glob.KeySymbolComma) {
@@ -309,7 +309,7 @@ func (parser *strSliceCursor) stringSliceUntilEnd() ([]string, error) {
 	}
 
 	if !parser.ExceedEnd() {
-		return nil, &parserErr{fmt.Errorf("expected comma or end of string array"), parser}
+		return nil, &strSliceErr{fmt.Errorf("expected comma or end of string array"), parser}
 	}
 
 	return members, nil
@@ -318,13 +318,13 @@ func (parser *strSliceCursor) stringSliceUntilEnd() ([]string, error) {
 func (parser *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 	err := parser.skip(glob.KeywordIs)
 	if err != nil {
-		return nil, &parserErr{err, parser}
+		return nil, &strSliceErr{err, parser}
 	}
 
 	opt, err := parser.rawFcAtom() // get the operator.
 
 	if err != nil {
-		return nil, &parserErr{err, parser}
+		return nil, &strSliceErr{err, parser}
 	}
 
 	return ast.NewSpecFactStmt(true, opt, []ast.Fc{left}), nil
@@ -338,12 +338,12 @@ func (parser *strSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]strin
 	for !parser.is(endWith) {
 		objName, err := parser.next()
 		if err != nil {
-			return nil, nil, &parserErr{err, parser}
+			return nil, nil, &strSliceErr{err, parser}
 		}
 
 		tp, err := parser.rawFcAtom()
 		if err != nil {
-			return nil, nil, &parserErr{err, parser}
+			return nil, nil, &strSliceErr{err, parser}
 		}
 
 		paramName = append(paramName, objName)
@@ -354,7 +354,7 @@ func (parser *strSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]strin
 		}
 
 		if err := parser.testAndSkip(glob.KeySymbolComma); err != nil {
-			return nil, nil, &parserErr{err, parser}
+			return nil, nil, &strSliceErr{err, parser}
 		}
 	}
 

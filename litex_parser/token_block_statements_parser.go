@@ -16,7 +16,7 @@ func (stmt *tokenBlock) TopStmt() (*ast.TopStmt, error) {
 
 	ret, err := stmt.Stmt()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ast.NewTopStmt(ret, pub), nil
@@ -25,7 +25,7 @@ func (stmt *tokenBlock) TopStmt() (*ast.TopStmt, error) {
 func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
 	cur, err := stmt.header.currentToken()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	var ret ast.Stmt
@@ -59,11 +59,11 @@ func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
 	}
 
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	if !stmt.header.ExceedEnd() {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ret, nil
@@ -104,25 +104,25 @@ func (stmt *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFact
 
 	propName, err := stmt.header.rawFcAtom()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 	propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepths)
 
 	params := []ast.Fc{}
 	err = stmt.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	for !stmt.header.is(glob.KeySymbolRightBrace) {
 		param, err := stmt.header.rawFc()
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 
 		param, err = ast.AddUniPrefixToFc(param, nameDepths)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 
 		params = append(params, param)
@@ -133,7 +133,7 @@ func (stmt *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFact
 
 	err = stmt.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ast.NewSpecFactStmt(isTrue, propName, params), nil
@@ -142,7 +142,7 @@ func (stmt *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFact
 func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, maxAllowedNestedForall bool) (ast.UniFactStmt, error) {
 	err := stmt.header.skip(glob.KeywordForall)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	typeParams := []string{}
@@ -152,13 +152,13 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, maxAllowedNeste
 		stmt.header.next()
 		typeParams, typeInterfaces, err = stmt.header.typeListInDeclsAndSkipEnd(glob.KeySymbolGreater)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 	}
 
 	params, paramTypes, err := stmt.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	newUniParams := ast.NameDepthMap{}
@@ -185,7 +185,7 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, maxAllowedNeste
 			if maxAllowedNestedForall {
 				curStmt, err := stmt.body[i].factStmt(newUniParams, false)
 				if err != nil {
-					return nil, &parseTimeErr{err, *stmt}
+					return nil, &tokenBlockErr{err, *stmt}
 				}
 				domainFacts = append(domainFacts, curStmt)
 			} else {
@@ -198,7 +198,7 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, maxAllowedNeste
 		}
 		thenFacts, err = stmt.body[len(stmt.body)-1].thenBlockSpecFacts(newUniParams)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 	} else {
 		for i := 0; i < len(stmt.body); i++ {
@@ -225,7 +225,7 @@ func (stmt *tokenBlock) bodyFacts(nameDepths ast.NameDepthMap) ([]ast.FactStmt, 
 	for _, f := range stmt.body {
 		fact, err := f.factStmt(nameDepths, true)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		facts = append(facts, fact)
 	}
@@ -237,7 +237,7 @@ func (stmt *tokenBlock) thenBlockSpecFacts(nameDepths ast.NameDepthMap) ([]*ast.
 	facts := []*ast.SpecFactStmt{}
 	stmt.header.skip() // skip "then"
 	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	for _, curStmt := range stmt.body {
@@ -256,13 +256,13 @@ func (stmt *tokenBlock) blockHeaderBodyFacts(kw string, nameDepths ast.NameDepth
 	facts := []ast.FactStmt{}
 	stmt.header.skip(kw)
 	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	for _, curStmt := range stmt.body {
 		fact, err := curStmt.factStmt(nameDepths, true)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		facts = append(facts, fact)
 	}
@@ -273,22 +273,22 @@ func (stmt *tokenBlock) blockHeaderBodyFacts(kw string, nameDepths ast.NameDepth
 func (stmt *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 	err := stmt.header.skip(glob.KeywordProp)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	declHeader, nameDepths, err := stmt.conDefHeader()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	err = stmt.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	domFacts, iffFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordIff, nameDepths)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
@@ -303,19 +303,19 @@ func (stmt *tokenBlock) bodyTwoFactSections(kw string, nameDepths ast.NameDepthM
 		for i := 0; i < len(stmt.body)-1; i++ {
 			curStmt, err := stmt.body[i].factStmt(nameDepths, true)
 			if err != nil {
-				return nil, nil, &parseTimeErr{err, *stmt}
+				return nil, nil, &tokenBlockErr{err, *stmt}
 			}
 			section1Facts = append(section1Facts, curStmt)
 		}
 		section2Facts, err = stmt.body[len(stmt.body)-1].blockHeaderBodyFacts(kw, nameDepths)
 		if err != nil {
-			return nil, nil, &parseTimeErr{err, *stmt}
+			return nil, nil, &tokenBlockErr{err, *stmt}
 		}
 	} else {
 		for i := 0; i < len(stmt.body); i++ {
 			curStmt, err := stmt.body[i].factStmt(nameDepths, true)
 			if err != nil {
-				return nil, nil, &parseTimeErr{err, *stmt}
+				return nil, nil, &tokenBlockErr{err, *stmt}
 			}
 			section2Facts = append(section2Facts, curStmt)
 		}
@@ -327,17 +327,17 @@ func (stmt *tokenBlock) bodyTwoFactSections(kw string, nameDepths ast.NameDepthM
 func (stmt *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 	err := stmt.header.skip(glob.KeywordFn)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	decl, nameDepths, err := stmt.conDefHeader()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	retType, err := stmt.header.rawFc()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	domFacts := []ast.FactStmt{}
@@ -347,7 +347,7 @@ func (stmt *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 		stmt.header.skip()
 		domFacts, thenFacts, err = stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, nameDepths)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 	}
 
@@ -357,7 +357,7 @@ func (stmt *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	err := stmt.header.skip(glob.KeywordObj)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	objNames := []string{}
@@ -366,18 +366,18 @@ func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	for !stmt.header.is(glob.KeySymbolColon) && !stmt.header.ExceedEnd() {
 		decl, err := stmt.header.next()
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		if stmt.header.is(glob.KeySymbolComma) {
 			err = stmt.header.skip(glob.KeySymbolColon)
 			if err != nil {
-				return nil, &parseTimeErr{err, *stmt}
+				return nil, &tokenBlockErr{err, *stmt}
 			}
 		}
 		objNames = append(objNames, decl)
 		tp, err := stmt.header.rawFc()
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		objSets = append(objSets, tp)
 	}
@@ -388,7 +388,7 @@ func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		stmt.header.skip()
 		facts, err = stmt.bodyFacts(ast.NameDepthMap{})
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 	} else if !stmt.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect ':' or end of block")
@@ -402,7 +402,7 @@ func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
 	err := error(nil)
 
 	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	toCheck := &[]ast.FactStmt{}
@@ -412,7 +412,7 @@ func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
 		if !stmt.header.is(glob.KeywordProve) && !stmt.header.is(glob.KeywordProveByContradiction) {
 			fact, err := stmt.body[i].factStmt(ast.NameDepthMap{}, true)
 			if err != nil {
-				return nil, &parseTimeErr{err, *stmt}
+				return nil, &tokenBlockErr{err, *stmt}
 			}
 			*toCheck = append(*toCheck, fact)
 		}
@@ -428,13 +428,13 @@ func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
 
 	err = stmt.body[len(stmt.body)-1].header.testAndSkip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	for _, block := range stmt.body[len(stmt.body)-1].body {
 		curStmt, err := block.Stmt()
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		*proof = append(*proof, curStmt)
 	}
@@ -449,7 +449,7 @@ func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
 func (stmt *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
 	innerStmtArr, err := stmt.proveBlock()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 	return ast.NewClaimProveStmt([]ast.FactStmt{}, innerStmtArr), nil
 }
@@ -457,14 +457,14 @@ func (stmt *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
 func (stmt *tokenBlock) proveBlock() ([]ast.Stmt, error) {
 	stmt.header.skip(glob.KeywordProve)
 	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	innerStmtArr := []ast.Stmt{}
 	for _, innerStmt := range stmt.body {
 		curStmt, err := innerStmt.Stmt()
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
@@ -478,19 +478,19 @@ func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
 		facts := []ast.FactStmt{}
 		fact, err := stmt.factStmt(ast.NameDepthMap{}, true)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
 		return ast.NewKnowStmt(facts), nil
 	}
 
 	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	facts, err := stmt.bodyFacts(ast.NameDepthMap{})
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ast.NewKnowStmt(facts), nil
@@ -499,12 +499,12 @@ func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
 func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 	err := stmt.header.skip(glob.KeywordExistProp)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	decl, nameDepths, err := stmt.conDefHeader()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	existObjOrFn := []string{}
@@ -513,11 +513,11 @@ func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 	for !stmt.header.is(glob.KeySymbolColon) && !stmt.header.ExceedEnd() {
 		decl, err := stmt.header.next()
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		tp, err := stmt.header.rawFcAtom()
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		existObjOrFn = append(existObjOrFn, decl)
 		existObjOrFnTypes = append(existObjOrFnTypes, &tp)
@@ -528,12 +528,12 @@ func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 
 	err = stmt.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	domFacts, thenFacts, err := stmt.bodyTwoFactSections(glob.KeywordIff, nameDepths)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ast.NewDefConExistPropStmt(*decl, existObjOrFn, existObjOrFnTypes, domFacts, thenFacts), nil
@@ -543,7 +543,7 @@ func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
 	stmt.header.skip(glob.KeywordHave)
 	propStmt, err := stmt.specFactStmt(ast.NameDepthMap{})
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	if !stmt.header.is(glob.KeySymbolColon) {
@@ -556,7 +556,7 @@ func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
 
 	members, err := stmt.body[0].header.stringSliceUntilEnd()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ast.NewHaveStmt(*propStmt, members), nil
@@ -566,11 +566,11 @@ func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
 func (stmt *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
 	fc, err := stmt.header.rawFc()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 	fc, err = ast.AddUniPrefixToFc(fc, nameDepths)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	if stmt.header.strAtCurIndexPlus(0) == glob.KeywordIs {
@@ -579,7 +579,7 @@ func (stmt *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFact
 
 	opt, err := stmt.header.next()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	// 我认为没必要一定是内置的符号，可以是用户自定义的
@@ -589,11 +589,11 @@ func (stmt *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFact
 
 	fc2, err := stmt.header.rawFc()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 	fc2, err = ast.AddUniPrefixToFc(fc2, nameDepths)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	params := []ast.Fc{fc, fc2}
@@ -605,7 +605,7 @@ func (stmt *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 	stmt.header.skip(glob.KeywordAxiom)
 	decl, err := stmt.defPropExistStmt()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ast.NewAxiomStmt(decl), nil
@@ -614,11 +614,11 @@ func (stmt *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 func (stmt *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
 	err := stmt.header.skip(glob.KeywordThm)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 	err = stmt.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 	if !stmt.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect end of line")
@@ -630,12 +630,12 @@ func (stmt *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
 
 	decl, err := stmt.body[0].defPropExistStmt()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	facts, err := stmt.body[1].proveBlock()
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ast.NewThmStmt(decl, facts), nil
@@ -644,11 +644,11 @@ func (stmt *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
 func (stmt *tokenBlock) condFactStmt(nameDepths ast.NameDepthMap) (*ast.CondFactStmt, error) {
 	err := stmt.header.skip(glob.KeywordWhen)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 	err = stmt.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 	if !stmt.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect end of line")
@@ -660,24 +660,24 @@ func (stmt *tokenBlock) condFactStmt(nameDepths ast.NameDepthMap) (*ast.CondFact
 	for i := 0; i < len(stmt.body)-1; i++ {
 		fact, err := stmt.body[i].factStmt(nameDepths, true)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		condFacts = append(condFacts, fact)
 	}
 
 	err = stmt.body[len(stmt.body)-1].header.skip(glob.KeywordThen)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 	err = stmt.body[len(stmt.body)-1].header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &parseTimeErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *stmt}
 	}
 
 	for i := len(stmt.body[len(stmt.body)-1].body) - 1; i >= 0; i-- {
 		fact, err := stmt.body[len(stmt.body)-1].body[i].specFactStmt(nameDepths)
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		thenFacts = append(thenFacts, fact)
 	}
@@ -696,12 +696,12 @@ func (stmt *tokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
 func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error) {
 	name, err := stmt.header.next()
 	if err != nil {
-		return nil, nil, &parseTimeErr{err, *stmt}
+		return nil, nil, &tokenBlockErr{err, *stmt}
 	}
 
 	err = stmt.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
-		return nil, nil, &parseTimeErr{err, *stmt}
+		return nil, nil, &tokenBlockErr{err, *stmt}
 	}
 
 	params := []string{}
@@ -711,7 +711,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, err
 	for !stmt.header.is(glob.KeySymbolRightBrace) {
 		param, err := stmt.header.next()
 		if err != nil {
-			return nil, nil, &parseTimeErr{err, *stmt}
+			return nil, nil, &tokenBlockErr{err, *stmt}
 		}
 
 		_, declared := nameDepths[param]
@@ -722,7 +722,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, err
 
 		typeParam, err := stmt.header.rawFc()
 		if err != nil {
-			return nil, nil, &parseTimeErr{err, *stmt}
+			return nil, nil, &tokenBlockErr{err, *stmt}
 		}
 
 		typeParams = append(typeParams, typeParam)
@@ -736,7 +736,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, err
 
 	err = stmt.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
-		return nil, nil, &parseTimeErr{err, *stmt}
+		return nil, nil, &tokenBlockErr{err, *stmt}
 	}
 
 	return ast.NewConDefHeader(name, params, typeParams), nameDepths, nil
@@ -751,19 +751,19 @@ func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast
 		for i := 0; i < len(stmt.body)-1; i++ {
 			curStmt, err := stmt.body[i].factStmt(nameDepths, true)
 			if err != nil {
-				return nil, nil, &parseTimeErr{err, *stmt}
+				return nil, nil, &tokenBlockErr{err, *stmt}
 			}
 			section1Facts = append(section1Facts, curStmt)
 		}
 		section2SpecFacts, err = stmt.body[len(stmt.body)-1].thenBlockSpecFacts(nameDepths)
 		if err != nil {
-			return nil, nil, &parseTimeErr{err, *stmt}
+			return nil, nil, &tokenBlockErr{err, *stmt}
 		}
 	} else {
 		for i := 0; i < len(stmt.body); i++ {
 			curStmt, err := stmt.body[i].specFactStmt(nameDepths)
 			if err != nil {
-				return nil, nil, &parseTimeErr{err, *stmt}
+				return nil, nil, &tokenBlockErr{err, *stmt}
 			}
 			section2SpecFacts = append(section2SpecFacts, curStmt)
 		}
@@ -792,13 +792,13 @@ func (stmt *tokenBlock) defPropExistStmt() (ast.DefPropStmt, error) {
 	if stmt.header.is(glob.KeywordProp) {
 		prop, err := stmt.defConPropStmt()
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		return prop, nil
 	} else if stmt.header.is(glob.KeywordExistProp) {
 		exist, err := stmt.defConExistPropStmt()
 		if err != nil {
-			return nil, &parseTimeErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *stmt}
 		}
 		return exist, nil
 	}
