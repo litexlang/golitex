@@ -20,10 +20,21 @@ func (ver *Verifier) builtinLogicOptRule(curEnv *env.Env, stmt *ast.SpecFactStmt
 		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
 	}
 
-	// switch stmt.PropName.Value {
-	// 	case
-	// }
+	leftNumLitExpr, ok, err := ast.IsFcBuiltinNumLitExpr(stmt.Params[0])
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
 
-	return false, nil
+	rightNumLitExpr, ok, err := ast.IsFcBuiltinNumLitExpr(stmt.Params[1])
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
 
+	return glob.BuiltinLogicOptOnNumLitExpr(leftNumLitExpr, rightNumLitExpr, stmt.PropName.Value)
 }

@@ -42,7 +42,7 @@ func BuiltinFcEqualRule(left, right ast.Fc) (bool, error) {
 
 // 之所以叫 Expr，因为可能含有运算符+-*/这样的
 func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
-	leftAsNumberFc, ok, err := makeFcIntoNumLitExpr(left)
+	leftAsNumberFc, ok, err := ast.MakeFcIntoNumLitExpr(left)
 	if err != nil {
 		return false, err
 	}
@@ -50,7 +50,7 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 		return false, nil
 	}
 
-	rightAsNumberFc, ok, err := makeFcIntoNumLitExpr(right)
+	rightAsNumberFc, ok, err := ast.MakeFcIntoNumLitExpr(right)
 	if err != nil {
 		return false, err
 	}
