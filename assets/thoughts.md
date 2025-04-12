@@ -25,7 +25,7 @@
    2. 函数(运算符) * 既可以作用在数上，也能作用在函数上。比如 f * 2 相当于输入函数f和2，输出函数2f
       1. 正如2可以看成复数，2也能看成函数。2(x) = 2。
    3. 主流编程语言也都支持f(1, 2)(3)(4)这样的写法
-   4. 我认为让 $f 也支持链式返回值貌似，即$f(a)(b)(c)，没意义，因为不清楚$f(a)的返回值是什么：难道也是一个prop吗？那$f(a)这个prop是对的还是错的呢？写成$f(a,b,c)貌似也起到了一样的效果
+   4. 我认为让 f 也支持链式返回值貌似，即f(a)(b)(c)，没意义，因为不清楚f(a)的返回值是什么：难道也是一个prop吗？那f(a)这个prop是对的还是错的呢？写成f(a,b,c)貌似也起到了一样的效果
    5. 函数返回值是prop，这个事情本质上是诡异的。函数返回值是返回来一个符号，符号是不能被运行的。但prop是能被运行的。
    6. 函数是能写在()前面的符号，其他性质和obj是一样的
 
@@ -102,7 +102,7 @@ prop Group(s, idFunc, GroupRingStructOnRealNumbers):
 比如下面这个，如果我能传：集合，id函数，mul函数，那我就舒服多了。
 这里有硬伤：then 里面的表达式，没有涉及到id(mul可以直接得到；s可以从x所在集合得到；id？？？)
 claim factName(s,id,mul):
-    $Group(s, id, mul)
+    Group(s, id, mul)
     then:
         forall x, y:
             x in s, y in s
@@ -120,10 +120,10 @@ type GroupType {
 know forall s:
     s impl GroupType
     then:
-        $Group(s, s::id, s::mul)
+        Group(s, s::id, s::mul)
 
 obj s GroupType // 自动是集合，同时它可以写s::Id, s::mul
-know $Group(s, s::Id, s::mul)
+know Group(s, s::Id, s::mul)
 
 // 于是上述的claim就不需要写成prop格式，能执行局调用了
 forall x,y:
@@ -143,7 +143,7 @@ fn fn_as_group_id(s):
         ret is fn
 
 obj s set:
-    know $Group(s, fn_as_group_mul(s), fn_as_group_id(s))
+    know Group(s, fn_as_group_mul(s), fn_as_group_id(s))
 
 // 或者索性把Group定义成下面的形状
 prop Group(s):
@@ -192,7 +192,7 @@ prop isGroup(s):
             mul(mul(x, y),z) = mul(x,mul(y,z))
 
 // 这时候如何说(s,id,f)是群
-know $isGroup(s), id = Id, f = mul
+know isGroup(s), id = Id, f = mul
 
 
 // 第一种写法更合理
@@ -234,7 +234,7 @@ real impl GroupRingStructOnRealNumbers
 
 难道说我需要把 定义函数的时候的 涉及到的变量的类型加进来？
 
-struct 是对 不同集合，及其上的运算，的pattern的归总。相当于一种简写。因为你也可以每次写相关命题时，都写成 $Group(s, id, mul)。但每次这么写，一方面累，一方面我searcher不太好search。litex的type是对searcher更好search的一种妥协。
+struct 是对 不同集合，及其上的运算，的pattern的归总。相当于一种简写。因为你也可以每次写相关命题时，都写成 Group(s, id, mul)。但每次这么写，一方面累，一方面我searcher不太好search。litex的type是对searcher更好search的一种妥协。
 
 所以本质上type，struct是不必要的。可以用prop和claim模拟出来。但是为了语法糖和让我search更容易（用户不需要给每个事实取个名字），我引入type和struct
 
@@ -251,7 +251,7 @@ forall < s set > x s:
 // 不好
 fn f(x):
     cond:
-        $R(x)
+        R(x)
         x > 1
     ...
 
@@ -321,12 +321,12 @@ prop f< T Struct1, T2 Struct2, T3 Struct3 >(a T, b T2, c T3):
     ...
 
 forall < T Struct1, T2 Struct2, T3 Struct3 > a T, b T2, c T3:
-    $f(a,b,c)
+    f(a,b,c)
 
 obj s set
 obj a s
 //... 这里让 s impl 了 T1, T2, T3，而 T1, T2, T3 又impl Struct1, Struct2, Struct3
-$f(a,a,a) // 这里涉及到的 forall < T Struct1, T2 Struct2, T3 Struct3 > a T, b T2, c T3: 自动定位到了a同时在3个type里，type分别有3个性质，所以能找到
+f(a,a,a) // 这里涉及到的 forall < T Struct1, T2 Struct2, T3 Struct3 > a T, b T2, c T3: 自动定位到了a同时在3个type里，type分别有3个性质，所以能找到
 
 -----
 3.20
@@ -422,7 +422,7 @@ prop P(x S, y S2):
     // ...
 
 exist_prop exist_x_st_P_is_valid(y S2):
-    // ? Todo: exist x in S s.t. $P(x,y)
+    // ? Todo: exist x in S s.t. P(x,y)
 
 set S3 exist_x_st_P_is_valid
 
@@ -468,20 +468,20 @@ f = d
       1. 相等，则OK
       2. 不相等，则确实不可能相等
 
-1. $g(a,b) 是否成立?
-   1. 看看有没有已知的事实$g(c,d)，c和a相等，b和d相等
-   2. 看下有没有h和g等价；如果h和g等价，$h(a,b)成立，那就成立
+1. g(a,b) 是否成立?
+   1. 看看有没有已知的事实g(c,d)，c和a相等，b和d相等
+   2. 看下有没有h和g等价；如果h和g等价，h(a,b)成立，那就成立
       1. 我可能不想引入iff这个关键词；请你全部写成 
         forall x A, y B:
-            $g(x,y) // 这里也可以看到，cond是必要的：否则每次都在外面定义一个集合，太烦了
+            g(x,y) // 这里也可以看到，cond是必要的：否则每次都在外面定义一个集合，太烦了
             then:
-                $h(x,y)
+                h(x,y)
 
         forall x A, y B:
-            $h(x,y)
+            h(x,y)
             then:
-                $g(x,y)
-        然后你先证明$h(a,b)，然后手动说明一下 $g(a,b)
+                g(x,y)
+        然后你先证明h(a,b)，然后手动说明一下 g(a,b)
         或许我可以引入iff这个语法糖，让上面的操作（search）自动进行
 
 3.22
@@ -492,7 +492,7 @@ zzy
    
 know prop fact_about_a_group(s set, id fn, inv fn, __mul__ fn, x s, y s, z s):
     cond:
-        $Group(s,id,inv,fn)
+        Group(s,id,inv,fn)
     then:
         x * y * z = x * (y * z)
 
@@ -519,10 +519,10 @@ know forall n Nat:
     cond:
         n > 0
     then:
-        $exist_nat_less_than(n)
+        exist_nat_less_than(n)
 
-$exist_nat_less_than(100) // As a specific factual expression, it is true.
-have m Nat: $exist_nat_less_than(2)   // Introduce new object, m, to current proof environment
+exist_nat_less_than(100) // As a specific factual expression, it is true.
+have m Nat: exist_nat_less_than(2)   // Introduce new object, m, to current proof environment
 
 exist_nat_less_than(100) = (1 = 1) // 实现这个功能没有意义，同时会混淆=的语义
 
@@ -538,39 +538,39 @@ fn：按集合论的定义，不涉及到prop；但是prop貌似需要？因为�
 2. 如果你允许prop能读入prop，那一些事实的实现会非常容易，比如数学归纳法
 
 prop mathematical_induction(p prop):
-    $p(0)
+    p(0)
     forall n nat:
-        $p(n)
+        p(n)
         then:
-            $p(n+1)
+            p(n+1)
     then:
         forall n nat;
-            $p(n)
+            p(n)
 
 know forall p prop:  // 这里有个怪异的地方：forall我会认为你输入的，都是一个集合里的东西，但是你这里的prop，代表的是一个集合吗？？？需要思考一下会不会导致严重问题
-    $mathematical_induction(p)
+    mathematical_induction(p)
 
 如果说引入新的keyword：
 prop_prop mathematical_induction(p prop):
-    $p(0)
+    p(0)
     forall n nat:
-        $p(n)
+        p(n)
         then:
-            $p(n+1)
+            p(n+1)
     then:
         forall n nat;
-            $p(n)
+            p(n)
 
 know forall_prop  p prop: 
-    $mathematical_induction(p)
+    mathematical_induction(p)
 
 // mathematical induction 也能被当做prop被传到prop prop里
 prop_prop Q(p prop):
     //...
 
-$Q(mathematical_induction)
+Q(mathematical_induction)
 
-思考一下如果我不允许函数和prop的名字冲突，那我$是否必要呢??
+思考一下如果我不允许函数和prop的名字冲突，那我是否必要呢??
 
 25.3.23
 1. 我们litex不像lean一样，先定义群再定义nat。我们可以随时定义任何集合（比如nat），然后说明nat的一些操作impl了群的结构
@@ -740,39 +740,39 @@ prove < G Group::Group > G impl Group::SemiGroup:
 now
 forall x A:
     dom:
-        $p(x)
-        $t(x)
+        p(x)
+        t(x)
     then:
-        $q(x)
+        q(x)
 ?
 forall x A:
     dom:
-        $p(x)
+        p(x)
     when:
-        $t(x)
+        t(x)
     then:
-        $q(x)
+        q(x)
 dom 和 when 分离：一个专门表示定义域，一个表示在定义域基础上，还有额外要求
 写在一起，在语义上，本质上是一样的，但是写一下貌似更分明？还是说确实有语义上的细微不同导致我必须分离他们？
 这样一大好处是，可以引入iff
 forall x A:
     dom:
-        $p(x)
+        p(x)
     when:
-        $t(x)
+        t(x)
     iff:
-        $q(x)
+        q(x)
 2. prop
 prop x A:
-    $p(x)
+    p(x)
     then:
-        $q(x)
+        q(x)
 vs
 prop p(x A):
-    $p(x) // dom
+    p(x) // dom
     iff: // dom 上的额外要求. dom满足时 p(x)则q(x), t(x), q(x) && t(x) 则 p(x)
-        $q(x)
-        $t(x)
+        q(x)
+        t(x)
 3. 如果把forall里加iff，会发生什么
 完整版
 forall x A:
@@ -829,34 +829,34 @@ prove:
         
         // p(x) => (forall y: cond(y) => result(x,y))
         forall x B, y A:
-            $cond(y)
-            $p(x)
+            cond(y)
+            p(x)
             then:
-                $result(x,y)
+                result(x,y)
         
         // (forall y: cond(y) => result(x,y)) => p(x)
         forall x B:
             forall y A:
-                $cond(y)
+                cond(y)
                 then:
-                    $result(x,y)
+                    result(x,y)
             then:
-                $p(x)
+                p(x)
 
     prove: // OK
-        know $p(1)
+        know p(1)
         forall y A:
-            $cond(y)
+            cond(y)
             then:
-                $result(1,y)
+                result(1,y)
 
     when:
         forall y A:
-            $cond(y)
+            cond(y)
             then:
-                $result(1,y)
+                result(1,y)
         then:
-            $p(1)    
+            p(1)    
 
 4.11
 2. add

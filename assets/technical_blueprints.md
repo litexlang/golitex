@@ -70,7 +70,7 @@ forall x Human, y Human:    // declare objects in the universal expression
     cond:
         x.age < y.age   // conditions
     then:
-        $younger(x,y)   // results
+        younger(x,y)   // results
 ```
 
 Different factual expressions have distinct meanings and are processed differently by the Litex interpreter. This means they are verified differently and, when stored in the proof environment, are used in unique ways to prove newly input facts.
@@ -89,7 +89,7 @@ forall x Human, y Human:    // declare objects in the universal expression
     cond:
         x.age < y.age   // conditions
     then:
-        $younger(x,y)   // results
+        younger(x,y)   // results
 
 forall x Human:
     x is self_aware // If there is no further condition, 'cond' and 'then' can be eliminated
@@ -102,13 +102,13 @@ When the user input a universal expression, the interpreter first opens a new pr
 
 Bob is self_aware
 
-$self_aware(Bob)    // equivalent to Bob is self_aware
+self_aware(Bob)    // equivalent to Bob is self_aware
 
 1 < 2
 
-$less_than(1,2) // If a proposition receives more than one argument, you should use $ as prefix for proposition name.
+less_than(1,2) // If a proposition receives more than one argument, you should use  as prefix for proposition name.
 
-$Real.__lt__(1,2) // equivalent to 1 < 2. Notice a type can have propositions as member.
+Real.__lt__(1,2) // equivalent to 1 < 2. Notice a type can have propositions as member.
 ```
 
 When the user inputs a specific expression, the interpreter searches the current proof environment for known facts with the same proposition name. These facts may be specific, conditional, or universal. If the given specific fact exactly matches a known specific fact or satisfies a conditional or universal expression, it is considered true. Otherwise, the specific expression remains unknown.
@@ -117,7 +117,7 @@ There are several different ways to call a specific factual expression:
 
 - If there is only one parameter, you can write parameterName is propositionName
 
-- If there rae more than one parameter, you write $propositionalName(parameters). "$"  has no extra meanings. It is just a symbols used by a user to distinguish between functions and propositions.
+- If there rae more than one parameter, you write propositionalName(parameters). ""  has no extra meanings. It is just a symbols used by a user to distinguish between functions and propositions.
 
 
 #### Existential Factual Expressions
@@ -139,9 +139,9 @@ know forall n Nat:
     then:
         exist_nat_less_than(n)
 
-$exist_nat_less_than(100) // As a specific factual expression, it is true.
+exist_nat_less_than(100) // As a specific factual expression, it is true.
 
-have m Nat: $exist_nat_lss_than(2)   // Introduce new object, m, to current proof environment
+have m Nat: exist_nat_lss_than(2)   // Introduce new object, m, to current proof environment
 ```
 
 Notice when being verified as a specific factual expression, there is no difference between existential factual expressions and ordinary specific expressions. The only difference between existential factual expressions and ordinary specific expressions is, it can be called in "have statement", which is a safe way to introduce new objects in current environment.
@@ -205,7 +205,7 @@ obj Bob Human: // object name is Bob, object type is Human
 
 obj Alice Human // just declare a object, no extra known factual expressions involved
 
-have m Nat: $exist_nat_lss_than(2)
+have m Nat: exist_nat_lss_than(2)
 ``` 
 
 In mathematics, a object is a symbol (often a letter like x,y,z) that represents something that have some factual expressions. Objiables are used in factual expressions.
@@ -349,10 +349,10 @@ Nobody can learn programming just by reading manuals. Practice is the sole crite
     <td style="border: 3px solid black; padding: 8px;">
       <code>axiom mathematical_induction(p prop):</code> <br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;cond:</code> <br>      
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$p(0)</code> <br> 
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;forall (n Nat) $p(n) {$p(n+1)}</code> <br> 
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p(0)</code> <br> 
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;forall (n Nat) p(n) {p(n+1)}</code> <br> 
       <code>&nbsp;&nbsp;&nbsp;&nbsp;then:</code> <br> 
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;forall n Nat {$p(n)}</code> <br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;forall n Nat {p(n)}</code> <br>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
       <code>theorem mathematical_induction {P : Nat → Prop} (base : P 0) (step : ∀ n, P n → P (n + 1)) : ∀ n, P n := by</code> <br>
@@ -398,7 +398,7 @@ _-- Steve Jobs_
 
 Litex is simple to write, easy to read, It facilitates the construction of new structs, the writing of intuitive proofs, and the seamless integration of different Litex codes. It is both enjoyable and efficient to write Litex.
 
-Good writing simplifies math, while poor writing complicates it. Leibniz's calculus notation $\frac{dy}{dx}$ surpassed Newton's $\dot{y}$ for its clarity, just as Arabic numerals (1, 2, 3) outperformed Roman numerals (I, II, III) in simplicity.  Litex’s intuitive, everyday math-based syntax makes formal verification accessible and fluid, advancing reasoning and proof scalability.
+Good writing simplifies math, while poor writing complicates it. Leibniz's calculus notation \frac{dy}{dx} surpassed Newton's \dot{y} for its clarity, just as Arabic numerals (1, 2, 3) outperformed Roman numerals (I, II, III) in simplicity.  Litex’s intuitive, everyday math-based syntax makes formal verification accessible and fluid, advancing reasoning and proof scalability.
 
 ## How is Litex designed as it is.
 
