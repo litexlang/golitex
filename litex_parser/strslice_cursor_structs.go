@@ -2,8 +2,17 @@ package litex_parser
 
 import (
 	"fmt"
-	"strings"
 )
+
+// strSliceCursor 表示字符串切片的游标
+type strSliceCursor struct {
+	index int
+	slice []string
+}
+
+func (it *strSliceCursor) ExceedEnd() bool {
+	return it.index >= len(it.slice)
+}
 
 func (p *strSliceCursor) strAtIndex(index uint32) string {
 	return p.slice[index]
@@ -17,10 +26,6 @@ func (p *strSliceCursor) strAtCurIndexPlus(plusIndex int) string {
 	} else {
 		return p.slice[i]
 	}
-}
-
-func (p *strSliceCursor) String() string {
-	return strings.Join(p.slice, " ")
 }
 
 func (p *strSliceCursor) getIndex() int {
@@ -70,10 +75,6 @@ func (it *strSliceCursor) isAndSkip(expected string) bool {
 	}
 }
 
-func (it *strSliceCursor) ExceedEnd() bool {
-	return it.index >= len(it.slice)
-}
-
 func (it *strSliceCursor) skip(expected ...string) error {
 	if it.index >= len(it.slice) {
 		return fmt.Errorf("unexpected end of slice %v", it.slice)
@@ -108,13 +109,4 @@ func (it *strSliceCursor) curTokenBeginWithNumber() bool {
 type parserErr struct {
 	previous error
 	parser   *strSliceCursor
-}
-
-func (e *parserErr) Error() string {
-	curTok, err := e.parser.currentToken()
-	if err != nil {
-		return fmt.Sprintf("error at %s, column %d: %s", e.parser.String(), e.parser.getIndex(), e.previous.Error())
-	} else {
-		return fmt.Sprintf("error at %s, column %d, at '%s': %s", e.parser.String(), e.parser.getIndex(), curTok, e.previous.Error())
-	}
 }
