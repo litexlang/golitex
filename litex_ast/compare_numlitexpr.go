@@ -1,17 +1,20 @@
-package litex_comparator
+package litex_ast
 
 import (
-	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
 )
 
-func makeFcIntoNumLitExpr(fc ast.Fc) (*glob.NumLitExpr, bool, error) {
-	asStr, ok := ast.IsNumLitFcAtom(fc)
+func IsFcBuiltinNumLitExpr(left Fc) (*glob.NumLitExpr, bool, error) {
+	return MakeFcIntoNumLitExpr(left)
+}
+
+func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
+	asStr, ok := IsNumLitFcAtom(fc)
 	if ok {
 		return &glob.NumLitExpr{Left: nil, OptOrNumber: asStr, Right: nil}, true, nil
 	}
 
-	asFcFn, ok := fc.(*ast.FcFn)
+	asFcFn, ok := fc.(*FcFn)
 	if !ok {
 		// is atom
 		return nil, false, nil
@@ -30,7 +33,7 @@ func makeFcIntoNumLitExpr(fc ast.Fc) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	left, ok, err := makeFcIntoNumLitExpr(asFcFn.ParamSegs[0].Params[0])
+	left, ok, err := MakeFcIntoNumLitExpr(asFcFn.ParamSegs[0].Params[0])
 	if err != nil {
 		return nil, false, err
 	}
@@ -38,7 +41,7 @@ func makeFcIntoNumLitExpr(fc ast.Fc) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	right, ok, err := makeFcIntoNumLitExpr(asFcFn.ParamSegs[0].Params[1])
+	right, ok, err := MakeFcIntoNumLitExpr(asFcFn.ParamSegs[0].Params[1])
 	if err != nil {
 		return nil, false, err
 	}
