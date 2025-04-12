@@ -17,7 +17,7 @@ func ExecuteCodeAndReturnMessage(code string) (string, error) {
 }
 
 func executeCodeAndReturnMessageSlice(code string) ([]string, error) {
-	topStmtSlice, err := parser.SetupAndParseSourceCode(code)
+	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
 		return nil, err
 	}

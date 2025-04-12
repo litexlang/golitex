@@ -347,7 +347,7 @@ func TestRelaFactStmt(t *testing.T) {
 p(a) + 2 < (2 + 3) * 10 + 4 < 100
 10 = p(a) = p(a)
 `
-	statements, err := SetupAndParseSourceCode(code)
+	statements, err := ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -363,7 +363,7 @@ func TestIsStmt(t *testing.T) {
 1 * ( p(a) + 2 ) is q
 
 `
-	statements, err := SetupAndParseSourceCode(code)
+	statements, err := ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {

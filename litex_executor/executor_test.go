@@ -22,7 +22,7 @@ const (
 )
 
 func setupAndParseStmtTest(code string, t *testing.T) []ast.TopStmt {
-	topStatements, err := parser.SetupAndParseSourceCode(code)
+	topStatements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func printExecMsg(messageSlice []string) {
 
 func TestKnow(t *testing.T) {
 	code := `know p(a)`
-	statements, err := parser.SetupAndParseSourceCode(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err != nil {
 		t.Fatal(err)
 	}
