@@ -51,7 +51,9 @@ func TestLexTimeParseTime(t *testing.T) {
 
 	allTime := time.Since(veryStart)
 
-	fmt.Println(ret)
+	for _, topStmt := range ret {
+		fmt.Println(topStmt.String())
+	}
 
 	// preprocess 47.291µs
 	// getStrBlock 11.25µs
