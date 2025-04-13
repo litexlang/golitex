@@ -1,10 +1,9 @@
-package litex_parser
+package litex_parser_test
 
 import (
 	"fmt"
-	ast "golitex/litex_ast"
+	parser "golitex/litex_parser"
 	"log"
-	"os"
 	"regexp"
 	"runtime"
 	"strings"
@@ -12,31 +11,6 @@ import (
 	"testing"
 	"time"
 )
-
-func ParserTester(code string) ([]ast.Stmt, error) {
-
-	lines, err := preprocessSourceCode(code)
-	if err != nil {
-		return nil, err
-	}
-
-	blocks, err := makeTokenBlocks(lines)
-	if err != nil {
-		return nil, err
-	}
-
-	ret := []ast.Stmt{}
-	for _, block := range blocks {
-		cur, err := block.Stmt()
-		if err != nil {
-			return nil, err
-		}
-		ret = append(ret, cur)
-		fmt.Printf("%v\n", cur)
-	}
-
-	return ret, nil
-}
 
 func TestDefConceptStmt(t *testing.T) {
 	code := `interface G :
@@ -58,7 +32,7 @@ func TestDefConceptStmt(t *testing.T) {
 		p(x, y)
 		
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -94,7 +68,7 @@ forall x :
 
 
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -112,7 +86,7 @@ fn P(g , g2 ) :
 
 f(g.g1, g2.g2)
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -131,7 +105,7 @@ forall  x :
 		f(g.g1, g2.g2)
 	
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -187,7 +161,7 @@ type   T:
 		p(x, y)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -211,7 +185,7 @@ forall g , g2:
 		
 		
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -227,7 +201,7 @@ obj g
 obj g :
     p(x, y)
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -266,7 +240,7 @@ claim:
 		
 
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -287,7 +261,7 @@ know:
 			p(x, y)
 	
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -315,7 +289,7 @@ exist_prop P(g1 , g2 ):
 	then:
 	    p(x, y)
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -332,7 +306,7 @@ obj g1
 obj a :
 	p(a)
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -347,7 +321,7 @@ func TestRelaFactStmt(t *testing.T) {
 p(a) + 2 < (2 + 3) * 10 + 4 < 100
 10 = p(a) = p(a)
 `
-	statements, err := ParseSourceCode(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -363,7 +337,7 @@ func TestIsStmt(t *testing.T) {
 1 * ( p(a) + 2 ) is q
 
 `
-	statements, err := ParseSourceCode(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -377,7 +351,7 @@ func TestTypedFcFnRetStmt(t *testing.T) {
 		`
 as(p (a), nat) is red
 `
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -391,7 +365,7 @@ func TestTypedTypeObj(t *testing.T) {
 as( p(a, as(p (a), nat)) , G ) is red
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -410,7 +384,7 @@ prop ha (g1 , g2  ) :
 
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -425,7 +399,7 @@ p(f, g)
 p(f, as(g3, prop ))
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -453,7 +427,7 @@ f(a, b).g.t(a, b)
 
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -468,7 +442,7 @@ prove:
 	1 is red
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -485,7 +459,7 @@ f(t) is red
 
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -506,7 +480,7 @@ thm:
 		f(g.g1, g2.g2)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -549,7 +523,7 @@ forall g , g2:
 -1 is red
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -567,7 +541,7 @@ func TestPrecedence(t *testing.T) {
 a.b.c.d.e.f is red
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -597,7 +571,7 @@ forall <G Group, G2 Group> g G, g2 G2:
 forall () p() {p()}
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -614,7 +588,7 @@ when:
 		Socratic is mortal	
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -629,7 +603,7 @@ f(1,2)(3,v).F(a.b.c(4,5),6) is red
 f(1,2)(3,v).F(a.b.c(4,5),6) is red
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -725,7 +699,7 @@ a.b.c.d()().e.f(z)() is red
 1.2.b()().c.d.e.f() is red
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -745,7 +719,7 @@ forall g, g2:
 
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -760,7 +734,7 @@ a::b is red::blue
 p(x, y)(red::blue, g::f(1,2)(3,4))
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -779,7 +753,7 @@ forall <G Group, G2 Group> g G, g2 G2:
 		p(x, y)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -798,7 +772,7 @@ forall <G Group, G2 Group> g G, g2 G2:
 		p(x, y)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -837,7 +811,7 @@ exist_prop f(x S, y G) a fn, b S, c G:
 		p(x, y)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -853,7 +827,7 @@ x < y
 1 = 2
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -870,7 +844,7 @@ forall x A:
 		p(x)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -884,7 +858,7 @@ know:
 	t = f
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -902,7 +876,7 @@ prop q(x A):
 
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -918,7 +892,7 @@ prove:
     	x in A
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -934,7 +908,7 @@ fn f(x A) B:
 		q(f(x))
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -979,7 +953,7 @@ know forall x A:
 				p(x)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -997,7 +971,7 @@ know forall x A:
 			h(x)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -1013,65 +987,13 @@ know forall x A:
 
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
 		log.Fatalf("%s", err)
 	}
 
-}
-
-func readFile(filePath string) string {
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		panic(err)
-	}
-	return string(content)
-}
-
-func TestLexTimeParseTime(t *testing.T) {
-
-	code := readFile("../litex_code_examples/classic_examples/uniFact_parser.lix")
-
-	veryStart := time.Now()
-
-	start := time.Now()
-	preprocessedCodeLines, err := preprocessSourceCode(code)
-	if err != nil {
-		panic(err)
-	}
-	preprocessTime := time.Since(start)
-
-	blocks, err := makeTokenBlocks(preprocessedCodeLines)
-
-	if err != nil {
-		panic(err)
-	}
-
-	tokenizeBlockTime := time.Since(start)
-
-	start = time.Now()
-	ret := []ast.TopStmt{}
-	for _, block := range blocks {
-		cur, err := block.TopStmt()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		ret = append(ret, *cur)
-	}
-	parseTime := time.Since(start)
-
-	allTime := time.Since(veryStart)
-
-	fmt.Println(ret)
-
-	// preprocess 47.291µs
-	// getStrBlock 11.25µs
-	// tokenize 74.708µs
-	// parse 89.041µs
-	fmt.Printf("preprocess %v\nmakeBlock %v\nparse %v\n", preprocessTime, tokenizeBlockTime, parseTime)
-	fmt.Printf("all %v", allTime)
 }
 
 func TestForall5(t *testing.T) {
@@ -1084,7 +1006,7 @@ know forall x A:
 			p(x)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -1100,7 +1022,7 @@ fn f(x A) B:
 		ret(x)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -1122,7 +1044,7 @@ know forall x A:
 			p(x)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
@@ -1138,7 +1060,7 @@ forall x A:
 		p(x)
 `
 
-	statements, err := ParserTester(code)
+	statements, err := parser.ParseSourceCode(code)
 	if err == nil {
 		fmt.Printf("%v\n", statements)
 	} else {
