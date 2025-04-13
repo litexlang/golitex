@@ -183,7 +183,7 @@ func (parser *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 			return nil, err
 		}
 
-		leftHead := ast.NewFcAtom(glob.BuiltinUnaryOptPkg, glob.KeySymbolMinus)
+		leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
 		return ast.NewFcFnPipe(
 			*leftHead,
 			[]*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{right})},

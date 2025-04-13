@@ -1,9 +1,5 @@
 package litex_global
 
-const Scope4Indents = "    "
-
-const BuiltinUnaryOptPkg = "#"
-
 // 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
 	KeywordInterface            = "interface"
@@ -178,86 +174,92 @@ var UnaryPrecedence = map[string]BuiltinOptPrecedence{
 	KeySymbolMinus: PrecUnary,
 }
 
-var Keywords = []string{
-	// 常规关键字
-	KeywordInterface,
-	KeywordType,
-	KeywordSet,
-	KeywordForall,
-	KeywordWhen,
-	KeywordDom,
-	KeywordThen,
-	KeywordObj,
-	KeywordFn,
-	KeywordProp,
-	KeywordKnow,
-	KeywordExistProp,
-	KeywordHave,
-	KeywordClaim,
-	KeywordProve,
-	KeywordPub,
-	KeywordImport,
-	KeywordPackage,
-	KeywordNot,
-	KeywordImpl,
-	KeywordAs,
-	KeywordAxiom,
-	KeywordProveByContradiction,
-	KeywordThm,
-	// KeywordSelf,
-	KeywordIff,
-
-	// 语法糖
-	KeywordCommutative,
-	KeywordAssociative,
-
-	// 内置类型
-	KeywordNatural,
-	KeywordInt,
-	KeywordRational,
-	KeywordReal,
-
-	// 内置函数
-	KeywordIs,
-	KeywordIn,
-
-	// 运算符函数
-	Keyword__Div__,
-	Keyword__Add__,
-	Keyword__Sub__,
-	Keyword__Mul__,
-	Keyword__Xor__,
-	Keyword__LT__,
-	Keyword__GT__,
-	Keyword__Exclamation__,
-	Keyword__Or__,
-	Keyword__And__,
-	Keyword__AddAdd__,
-	Keyword__SubSub__,
-	Keyword__AndAnd__,
-	Keyword__PipePipe__,
-	Keyword__EqEq__,
-	Keyword__NE__,
-	Keyword__Pow__,
-	Keyword__LT_EQ__,
-	Keyword__GT_EQ__,
-	Keyword__Union__,
-	Keyword__Intersection__,
-	Keyword__SubsetEq__,
-	Keyword__SupsetEq__,
-	Keyword__Subset__,
-	Keyword__Supset__,
-	Keyword__SubGT__,
-	Keyword__EqGT__,
-}
+var keywordsSet map[string]struct{} = initKeywordSet() // 存储所有关键字
 
 func IsKeyword(s string) bool {
-	for _, kw := range Keywords {
-		if s == kw {
-			return true
-		}
+	_, ok := keywordsSet[s]
+	return ok
+}
+
+func initKeywordSet() map[string]struct{} {
+	var Keywords = []string{
+		// 常规关键字
+		KeywordInterface,
+		KeywordType,
+		KeywordSet,
+		KeywordForall,
+		KeywordWhen,
+		KeywordDom,
+		KeywordThen,
+		KeywordObj,
+		KeywordFn,
+		KeywordProp,
+		KeywordKnow,
+		KeywordExistProp,
+		KeywordHave,
+		KeywordClaim,
+		KeywordProve,
+		KeywordPub,
+		KeywordImport,
+		KeywordPackage,
+		KeywordNot,
+		KeywordImpl,
+		KeywordAs,
+		KeywordAxiom,
+		KeywordProveByContradiction,
+		KeywordThm,
+		// KeywordSelf,
+		KeywordIff,
+
+		// 语法糖
+		KeywordCommutative,
+		KeywordAssociative,
+
+		// 内置类型
+		KeywordNatural,
+		KeywordInt,
+		KeywordRational,
+		KeywordReal,
+
+		// 内置函数
+		KeywordIs,
+		KeywordIn,
+
+		// 运算符函数
+		Keyword__Div__,
+		Keyword__Add__,
+		Keyword__Sub__,
+		Keyword__Mul__,
+		Keyword__Xor__,
+		Keyword__LT__,
+		Keyword__GT__,
+		Keyword__Exclamation__,
+		Keyword__Or__,
+		Keyword__And__,
+		Keyword__AddAdd__,
+		Keyword__SubSub__,
+		Keyword__AndAnd__,
+		Keyword__PipePipe__,
+		Keyword__EqEq__,
+		Keyword__NE__,
+		Keyword__Pow__,
+		Keyword__LT_EQ__,
+		Keyword__GT_EQ__,
+		Keyword__Union__,
+		Keyword__Intersection__,
+		Keyword__SubsetEq__,
+		Keyword__SupsetEq__,
+		Keyword__Subset__,
+		Keyword__Supset__,
+		Keyword__SubGT__,
+		Keyword__EqGT__,
 	}
-	return false
+
+	keywordSet := make(map[string]struct{})
+	for _, keyword := range Keywords {
+		keywordSet[keyword] = struct{}{}
+	}
+	return keywordSet
 }
 
 func GetKeySymbol(inputString string, start int) string {

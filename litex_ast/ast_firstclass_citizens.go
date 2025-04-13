@@ -84,7 +84,7 @@ func FcSliceString(params []Fc) string {
 }
 
 func (f *FcAtom) String() string {
-	if f.PkgName == "" {
+	if f.PkgName == glob.EmptyPkgName {
 		return string(f.Value)
 	} else {
 		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Value))
@@ -173,7 +173,7 @@ func (f *FcAtom) IsBuiltinInfixOpt() bool {
 }
 
 func (f *FcAtom) IsBuiltinUnaryOpt() bool {
-	if f.PkgName != glob.BuiltinUnaryOptPkg {
+	if f.PkgName != glob.BuiltinUnaryPkgName {
 		return false
 	}
 	if glob.IsKeySymbolUniFn(f.Value) {
