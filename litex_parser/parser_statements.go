@@ -69,9 +69,9 @@ func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
 	return ret, nil
 }
 
-func (stmt *tokenBlock) factStmt(nameDepths ast.NameDepthMap, uniFactDom bool) (ast.FactStmt, error) {
+func (stmt *tokenBlock) factStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (ast.FactStmt, error) {
 	if stmt.header.is(glob.KeywordForall) {
-		return stmt.uniFactStmt(nameDepths, uniFactDom)
+		return stmt.uniFactStmt(nameDepths, allowUniFactInUniDom)
 	} else if stmt.header.is(glob.KeywordWhen) {
 		return stmt.condFactStmt(nameDepths)
 	}
@@ -177,12 +177,39 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, maxAllowedNeste
 		}
 	}
 
-	domainFacts, thenFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, nameDepths)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
-	}
-	if len(thenFacts) == 0 {
-		return nil, fmt.Errorf("expect then block")
+	domainFacts := []ast.FactStmt{}
+	thenFacts := []*ast.SpecFactStmt{}
+	if stmt.body[len(stmt.body)-1].header.is(glob.KeywordThen) {
+		for i := 0; i < len(stmt.body)-1; i++ {
+			if maxAllowedNestedForall {
+				curStmt, err := stmt.body[i].factStmt(newUniParams, false)
+				if err != nil {
+					return nil, &tokenBlockErr{err, *stmt}
+				}
+				domainFacts = append(domainFacts, curStmt)
+			} else {
+				curStmt, err := stmt.body[i].specFactStmt(newUniParams)
+				if err != nil {
+					return nil, uniDomFactMoreThanOneLayerUniFactErrMsg(err, stmt)
+				}
+				domainFacts = append(domainFacts, curStmt)
+			}
+		}
+		thenFacts, err = stmt.body[len(stmt.body)-1].thenBlockSpecFacts(newUniParams)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *stmt}
+		}
+	} else {
+		for i := 0; i < len(stmt.body); i++ {
+			// 这里要么是直接parse Spec Fact ，要么是parseFact，然后(*type)成spec。前者好处是，就应该这么干；后者好处是，如果你输入了forall，那我报错可以直接指出问题
+			// Method1
+			curStmt, err := stmt.body[i].specFactStmt(newUniParams)
+			if err != nil {
+				return nil, thenFactMustSpecMsg(&stmt.body[i], err)
+			}
+
+			thenFacts = append(thenFacts, curStmt)
+		}
 	}
 
 	if len(typeParams) > 0 {
@@ -262,7 +289,7 @@ func (stmt *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &tokenBlockErr{err, *stmt}
 	}
 
-	domFacts, iffFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordIff, nameDepths)
+	domFacts, iffFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordIff, nameDepths, true)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *stmt}
 	}
@@ -321,7 +348,7 @@ func (stmt *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 
 	if stmt.header.is(glob.KeySymbolColon) {
 		stmt.header.skip()
-		domFacts, thenFacts, err = stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, nameDepths)
+		domFacts, thenFacts, err = stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, nameDepths, true)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *stmt}
 		}
@@ -718,7 +745,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, err
 	return ast.NewConDefHeader(name, params, typeParams), nameDepths, nil
 }
 
-func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast.NameDepthMap) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
+func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2SpecFacts := []*ast.SpecFactStmt{}
 	err := error(nil)
@@ -736,12 +763,23 @@ func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast
 		if err != nil {
 			return nil, nil, &tokenBlockErr{err, *stmt}
 		}
-		for i := 0; i < len(stmt.body[0].body); i++ {
-			curStmt, err := stmt.body[0].body[i].factStmt(nameDepths, true)
-			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *stmt}
+
+		if allowUniFactInUniDom {
+			for i := 0; i < len(stmt.body[0].body); i++ {
+				curStmt, err := stmt.body[0].body[i].factStmt(nameDepths, true)
+				if err != nil {
+					return nil, nil, &tokenBlockErr{err, *stmt}
+				}
+				section1Facts = append(section1Facts, curStmt)
 			}
-			section1Facts = append(section1Facts, curStmt)
+		} else {
+			for i := 0; i < len(stmt.body[0].body); i++ {
+				curStmt, err := stmt.body[0].body[i].specFactStmt(nameDepths)
+				if err != nil {
+					return nil, nil, &tokenBlockErr{err, *stmt}
+				}
+				section1Facts = append(section1Facts, curStmt)
+			}
 		}
 
 		if len(stmt.body) == 1 {
@@ -777,12 +815,22 @@ func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast
 	}
 
 	if stmt.body[len(stmt.body)-1].header.is(kw) {
-		for i := 0; i < len(stmt.body)-1; i++ {
-			curStmt, err := stmt.body[i].factStmt(nameDepths, true)
-			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *stmt}
+		if allowUniFactInUniDom {
+			for i := 0; i < len(stmt.body)-1; i++ {
+				curStmt, err := stmt.body[i].factStmt(nameDepths, true)
+				if err != nil {
+					return nil, nil, &tokenBlockErr{err, *stmt}
+				}
+				section1Facts = append(section1Facts, curStmt)
 			}
-			section1Facts = append(section1Facts, curStmt)
+		} else {
+			for i := 0; i < len(stmt.body)-1; i++ {
+				curStmt, err := stmt.body[i].specFactStmt(nameDepths)
+				if err != nil {
+					return nil, nil, &tokenBlockErr{err, *stmt}
+				}
+				section1Facts = append(section1Facts, curStmt)
+			}
 		}
 		section2SpecFacts, err = stmt.body[len(stmt.body)-1].thenBlockSpecFacts(nameDepths)
 		if err != nil {
