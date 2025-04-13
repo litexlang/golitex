@@ -17,7 +17,7 @@ func readFile(filePath string) string {
 	return string(content)
 }
 
-var code = readFile("../litex_code_examples/parser_test/def.lix")
+var code = readFile("../litex_code_examples/parser_test/uniFact.lix")
 
 func TestLexTimeParseTime(t *testing.T) {
 
