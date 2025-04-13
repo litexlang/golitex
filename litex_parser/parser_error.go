@@ -57,15 +57,6 @@ func (e *tokenBlockErr) Error() string {
 	}
 }
 
-func uniDomFactMoreThanOneLayerUniFactErrMsg(err error, curStmt *tokenBlock) error {
-	startStr := curStmt.header.strAtIndex(0)
-	if startStr == glob.KeywordForall {
-		return &tokenBlockErr{fmt.Errorf("dom fact in universal fact should not be a universal fact with a universal fact as dom fact"), *curStmt}
-	}
-
-	return &tokenBlockErr{err, *curStmt}
-}
-
 func thenFactMustSpecMsg(curStmt *tokenBlock, err error) error {
 	startStr := curStmt.header.strAtIndex(0)
 	if startStr == glob.KeywordForall {

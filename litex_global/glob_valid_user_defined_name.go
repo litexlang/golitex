@@ -1,7 +1,10 @@
 package litex_global
 
-import "fmt"
+import (
+	"fmt"
+)
 
+// TODO: 太简陋了，需要改进： 1. 不能以数字开头 2. 不能是关键字 3. 不能是内置函数名 4. 不能是内置变量名 5. 不能是内置符号名
 func IsValidName(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("name cannot be empty")
@@ -13,21 +16,27 @@ func IsValidName(name string) error {
 		return fmt.Errorf("name cannot start with a number (0-9)")
 	}
 
-	// 开头不能以#
 	if len(name) >= 1 && string(name[0]) == UniParamPrefix {
 		return fmt.Errorf("name cannot start with %s", UniParamPrefix)
 	}
 
-	// 检查不能以双下划线开头
-	if len(name) >= 2 && name[0] == '_' && name[1] == '_' {
-		return fmt.Errorf("name cannot start with double underscore __")
+	if len(name) >= 1 && string(name[0]) == BuiltinUnaryPkgName {
+		return fmt.Errorf("name cannot start with %s", BuiltinUnaryPkgName)
+	}
+
+	if IsKeySymbol(name) {
+		return fmt.Errorf("name cannot be a keyword")
+	}
+
+	if IsKeyword(name) {
+		return fmt.Errorf("name cannot be a keyword")
 	}
 
 	// 允许所有其他UTF-8字符（包括emoji、各种语言字符等
 	// 只需要确保不是空字符串即可（前面已检查）
 
-	// 长度限制（可选）
-	if len(name) > 255 {
+	// 长度限制（可选）: 根据前人经验，不要让任何东西超过255个字符
+	if len(name) > MaxNameLen {
 		return fmt.Errorf("name cannot exceed length 255")
 	}
 
