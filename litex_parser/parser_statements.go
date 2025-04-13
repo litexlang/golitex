@@ -177,40 +177,12 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, maxAllowedNeste
 		}
 	}
 
-	domainFacts := []ast.FactStmt{}
-	thenFacts := []*ast.SpecFactStmt{}
-
-	if stmt.body[len(stmt.body)-1].header.is(glob.KeywordThen) {
-		for i := 0; i < len(stmt.body)-1; i++ {
-			if maxAllowedNestedForall {
-				curStmt, err := stmt.body[i].factStmt(newUniParams, false)
-				if err != nil {
-					return nil, &tokenBlockErr{err, *stmt}
-				}
-				domainFacts = append(domainFacts, curStmt)
-			} else {
-				curStmt, err := stmt.body[i].specFactStmt(newUniParams)
-				if err != nil {
-					return nil, uniDomFactMoreThanOneLayerUniFactErrMsg(err, stmt)
-				}
-				domainFacts = append(domainFacts, curStmt)
-			}
-		}
-		thenFacts, err = stmt.body[len(stmt.body)-1].thenBlockSpecFacts(newUniParams)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
-		}
-	} else {
-		for i := 0; i < len(stmt.body); i++ {
-			// 这里要么是直接parse Spec Fact ，要么是parseFact，然后(*type)成spec。前者好处是，就应该这么干；后者好处是，如果你输入了forall，那我报错可以直接指出问题
-			// Method1
-			curStmt, err := stmt.body[i].specFactStmt(newUniParams)
-			if err != nil {
-				return nil, thenFactMustSpecMsg(&stmt.body[i], err)
-			}
-
-			thenFacts = append(thenFacts, curStmt)
-		}
+	domainFacts, thenFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, nameDepths)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *stmt}
+	}
+	if len(thenFacts) == 0 {
+		return nil, fmt.Errorf("expect then block")
 	}
 
 	if len(typeParams) > 0 {
