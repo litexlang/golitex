@@ -49,7 +49,7 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 
 func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsEqualFact() {
-		ok, err := ver.FcEqual(stmt.Params[0], stmt.Params[1], state)
+		ok, err := ver.fcEqualSpec(stmt.Params[0], stmt.Params[1], state)
 		if err != nil {
 			return false, err
 		}
@@ -59,7 +59,7 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return ok, err
 	}
 
-	ok, err := ver.btLogicOptBtRule(stmt, state)
+	ok, err := ver.btLogicInfixOptBtRule(stmt, state)
 	if err != nil {
 		return false, err
 	}

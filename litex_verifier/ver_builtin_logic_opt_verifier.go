@@ -6,7 +6,7 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (ver *Verifier) btLogicOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.PropName.PkgName != "" {
 		return false, nil
 	}

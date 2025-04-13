@@ -5,28 +5,33 @@ import (
 	ast "golitex/litex_ast"
 	cmp "golitex/litex_comparator"
 	env "golitex/litex_env"
+	glob "golitex/litex_global"
 	memory "golitex/litex_memory"
 )
 
 func (ver *Verifier) FcEqual(left, right ast.Fc, state VerState) (bool, error) {
-	// nextState := state.addRound()
-	nextState := state
-	ok, err := ver.fcEqualSpec(left, right, nextState)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-
-	if state.isSpec() {
-		return false, nil
-	}
-
-	// TODO 用 UniFact ? CondFact?
-
-	return false, nil
+	newSpecFactToCheck := ast.NewSpecFactStmt(true, *ast.NewFcAtom("", glob.KeySymbolEqual), []ast.Fc{left, right})
+	return ver.SpecFact(newSpecFactToCheck, state)
 }
+
+// func (ver *Verifier) FcEqual(left, right ast.Fc, state VerState) (bool, error) {
+// nextState := state
+// ok, err := ver.fcEqualSpec(left, right, nextState)
+// if err != nil {
+// 	return false, err
+// }
+// if ok {
+// 	return true, nil
+// }
+
+// if state.isSpec() {
+// 	return false, nil
+// }
+
+// // TODO 用 UniFact ? CondFact?
+
+// return false, nil
+// }
 
 func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, error) {
 	ok, err := cmp.CmpFcRule(left, right)
