@@ -113,3 +113,7 @@ type ConDefHeader struct {
 	Params    []string
 	SetParams []Fc
 }
+
+func (stmt *SpecFactStmt) GetReverseIsTrueReverseFact() *SpecFactStmt {
+	return NewSpecFactStmt(!stmt.IsTrue, stmt.PropName, stmt.Params)
+}

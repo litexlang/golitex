@@ -9,10 +9,13 @@ func IsFcBuiltinNumLitExpr(left Fc) (*glob.NumLitExpr, bool, error) {
 }
 
 func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
-	asStr, ok := IsNumLitFcAtomAndRetValueStr(fc)
+	// fc is fcAtom
+	asStr, ok := IsNumLitFcAtom(fc)
 	if ok {
 		return &glob.NumLitExpr{IsPositive: true, Left: nil, OptOrNumber: asStr, Right: nil}, true, nil
 	}
+
+	// fc is fcFn
 
 	asFcFn, ok := fc.(*FcFn)
 	if !ok {
