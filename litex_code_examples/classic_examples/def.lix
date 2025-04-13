@@ -1,3 +1,10 @@
+"""
+TODO:
+1. fn, prop, obj 只声明，不定义里面的东西
+
+"""
+
+# define prop
 prove:
     prop Q(x A):
         p(x)
@@ -13,11 +20,13 @@ prove:
         p(2)
     Q(2)
 
+# define obj
 prove:
     obj x A:
         p(x)
     p(x)
 
+# define fn
 prove:
     fn f(x A) B:
         dom(x)
@@ -29,6 +38,14 @@ prove:
         f(1)
     p(f(1))
     
+# define union
+prove:
+    fn union(A set, B set) set:
+        in(x, A)
+        then:
+            in(x, union(A,B))
+    
+    in(x, B)
+    in(x, union(A,B))
 
     
-p(x)

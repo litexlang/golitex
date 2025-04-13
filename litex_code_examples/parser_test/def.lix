@@ -1,0 +1,36 @@
+# prop
+prop Q(x set)
+prop P(x set):
+    in(x, Q)
+    iff:
+        in(x, P)
+prop T(x set):
+    in(x, P)
+    in(x, Q)
+prop R(x set):
+    dom:
+        in(x, P)
+        in(x, Q)
+    iff:
+        in(x, R)
+prop S(x set):
+    dom:
+        in(x, P)
+        in(x, Q)
+
+# fn
+fn f(x set) set
+fn f(x set) set:
+    in(x, Q)
+    then:
+        in(x, f(Q))
+fn f(x set) set:
+    in(x, P)
+fn f(x set) set:
+    dom:
+        in(x, Q)
+    then:
+        in(x, f(Q))
+fn f(x set) set:
+    dom:
+        in(x, P)
