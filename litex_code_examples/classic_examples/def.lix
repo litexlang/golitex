@@ -1,7 +1,7 @@
 """
 TODO:
-1. fn, prop, obj 只声明，不定义里面的东西
-
+25.4.13
+1. fn, prop, obj 只声明，不定义里面的东西 (done)
 """
 
 # define prop

@@ -34,3 +34,8 @@ fn f(x set) set:
 fn f(x set) set:
     dom:
         in(x, P)
+
+# obj
+obj x set:
+    in(x, Q)
+obj x set

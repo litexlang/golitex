@@ -5,6 +5,15 @@ import (
 	"strings"
 )
 
+func (stmt *TopStmt) String() string {
+	var builder strings.Builder
+	if stmt.IsPub {
+		builder.WriteString(glob.KeywordPub)
+	}
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Stmt.String(), 1))
+	return builder.String()
+}
+
 func (stmt *KnowStmt) String() string {
 	var builder strings.Builder
 
@@ -73,13 +82,21 @@ func (fact *DefConPropStmt) String() string {
 	builder.WriteByte('\n')
 
 	if len(fact.DomFacts) > 0 {
-		builder.WriteString(strOfNonEmptyFactStmtSlice(fact.DomFacts, 1))
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
+		builder.WriteByte(':')
+		builder.WriteByte('\n')
+		for i := 0; i < len(fact.DomFacts)-1; i++ {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.DomFacts[i].String(), 2))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.DomFacts[len(fact.DomFacts)-1].String(), 2))
+		builder.WriteByte('\n')
 	}
 
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
-	builder.WriteByte('\n')
-
 	if len(fact.IffFacts) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordIff, 1))
+		builder.WriteByte(':')
+		builder.WriteByte('\n')
 		for i := 0; i < len(fact.IffFacts)-1; i++ {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.IffFacts[i].String(), 2))
 			builder.WriteByte('\n')
@@ -90,7 +107,35 @@ func (fact *DefConPropStmt) String() string {
 	return builder.String()
 }
 func (f *DefConFnStmt) String() string {
-	return ""
+	var builder strings.Builder
+
+	builder.WriteString(f.DefHeader.String())
+	builder.WriteByte('\n')
+
+	if len(f.DomFacts) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
+		builder.WriteByte(':')
+		builder.WriteByte('\n')
+		for i := 0; i < len(f.DomFacts)-1; i++ {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(f.DomFacts[i].String(), 2))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(f.DomFacts[len(f.DomFacts)-1].String(), 2))
+		builder.WriteByte('\n')
+	}
+	if len(f.ThenFacts) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
+		builder.WriteByte(':')
+		builder.WriteByte('\n')
+
+		for i := 0; i < len(f.ThenFacts)-1; i++ {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(f.ThenFacts[i].String(), 2))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(f.ThenFacts[len(f.ThenFacts)-1].String(), 2))
+	}
+
+	return builder.String()
 }
 func (f *ClaimProveStmt) String() string {
 	var builder strings.Builder
