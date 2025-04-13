@@ -8,7 +8,7 @@ import (
 )
 
 // match 函数不需要传入state: 没有any, spec 之分，也不需要打印
-func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact, stmt *ast.SpecFactStmt) (map[string][]ast.Fc, bool, error) { // 之所以是map[string][]ast.Fc而不是 map[string]ast.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
+func (ver *Verifier) matchStoredUniSpecWithSpec(knownFact mem.StoredUniSpecFact, stmt *ast.SpecFactStmt) (map[string][]ast.Fc, bool, error) { // 之所以是map[string][]ast.Fc而不是 map[string]ast.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
 	if len(stmt.Params) != len(*knownFact.FuncParams) {
 		return nil, false, nil
 	}
@@ -16,7 +16,7 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 	retMap := map[string][]ast.Fc{}
 
 	for i, uniParam := range *knownFact.FuncParams {
-		matchMap, matched, err := ver.matchUniConFc(uniParam, stmt.Params[i], knownFact.UniFact.Params)
+		matchMap, matched, err := ver.matchUniFcWithConFc(uniParam, stmt.Params[i], knownFact.UniFact.Params)
 		if err != nil {
 			return nil, false, err
 		}
@@ -29,7 +29,7 @@ func (ver *Verifier) matchStoredUniConSpecFacts(knownFact mem.StoredUniSpecFact,
 	return retMap, true, nil
 }
 
-func (ver *Verifier) matchUniConFc(uniFuncParam ast.Fc, concreteFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) matchUniFcWithConFc(uniFuncParam ast.Fc, concreteFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
 	// 注意到，如果传入的不是fn，而是atom，那大概率是不能match上的。只有一种例外:
 	// know forall x A: $p(x *(3-2)); $p(1*1) 这时候 3 -2 要能和1对上。而 uniFunc 的对应关系，只是让自由变量去对应，不包括builtinFc的match
 	// 同时，也不能直接去CmpFcRule，因为如果输入的变量的字面量刚好是存着的自由变量的字面量，那恰好相等了，这是不行的。只能是BuiltinFc 之间相等
@@ -45,15 +45,15 @@ func (ver *Verifier) matchUniConFc(uniFuncParam ast.Fc, concreteFuncParam ast.Fc
 	// Safe type switching
 	switch param := uniFuncParam.(type) {
 	case *ast.FcAtom:
-		return ver.matchAtomUniConFc(param, concreteFuncParam, possibleUniParams)
+		return ver.matchAtomUniWithConFc(param, concreteFuncParam, possibleUniParams)
 	case *ast.FcFn:
-		return ver.matchFnUniConFc(param, concreteFuncParam, possibleUniParams)
+		return ver.matchFnUniWithConFc(param, concreteFuncParam, possibleUniParams)
 	default:
 		return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, uniFuncParam.String())
 	}
 }
 
-func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) matchAtomUniWithConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
 	retMap := make(map[string][]ast.Fc)
 
 	if matchStr, ok := isUniParam(uniFuncFcAtom, possibleUniParams); ok {
@@ -72,7 +72,7 @@ func (ver *Verifier) matchAtomUniConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam a
 	return nil, false, nil
 }
 
-func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) matchFnUniWithConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
 	retMap := map[string][]ast.Fc{}
 
 	conParamAsFcFn, ok := conFuncParam.(*ast.FcFn)
@@ -102,7 +102,7 @@ func (ver *Verifier) matchFnUniConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast.Fc,
 		}
 
 		for j, param := range uniPipe.Params {
-			matchMap, ok, err := ver.matchUniConFc(param, conParamAsFcFn.ParamSegs[i].Params[j], possibleUniParams)
+			matchMap, ok, err := ver.matchUniFcWithConFc(param, conParamAsFcFn.ParamSegs[i].Params[j], possibleUniParams)
 			if err != nil {
 				return nil, false, err
 			}

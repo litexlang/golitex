@@ -2,9 +2,9 @@ package litex_verifier
 
 import ast "golitex/litex_ast"
 
-func (ver *Verifier) fcFnPipeEqual(left, right *ast.FcFn, state VerState) (bool, error) {
+func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error) {
 	for leftTailLen := 0; leftTailLen <= len(left.ParamSegs); leftTailLen++ {
-		ok, err := ver.fcFnPipeHeadTailEqual(left, right, state, leftTailLen)
+		ok, err := ver.fcFnHeadTailEq(left, right, state, leftTailLen)
 		if err != nil {
 			return false, err
 		}
@@ -15,7 +15,7 @@ func (ver *Verifier) fcFnPipeEqual(left, right *ast.FcFn, state VerState) (bool,
 	return false, nil
 }
 
-func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *ast.FcFn, state VerState, leftTailLen int) (bool, error) {
+func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftTailLen int) (bool, error) {
 	if leftTailLen == 0 { // 必须存在，否则死循环
 		if len(left.ParamSegs) != len(right.ParamSegs) {
 			return false, nil
@@ -36,7 +36,7 @@ func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *ast.FcFn, state VerState
 			}
 
 			for j := 0; j < len(left.ParamSegs[i].Params); j++ {
-				ok, err := ver.FcEqual(left.ParamSegs[i].Params[j], right.ParamSegs[i].Params[j], state)
+				ok, err := ver.fcEqualSpec(left.ParamSegs[i].Params[j], right.ParamSegs[i].Params[j], state)
 				if err != nil {
 					return false, err
 				}
@@ -89,7 +89,7 @@ func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *ast.FcFn, state VerState
 		rightHead = &ast.FcFn{FnHead: right.FnHead, ParamSegs: right.ParamSegs[:rightHeadLen]}
 	}
 
-	ok, err := ver.fcHeadEqual(leftHead, rightHead, leftTails[0].Params, state)
+	ok, err := ver.fcHeadEq(leftHead, rightHead, leftTails[0].Params, state)
 	if err != nil {
 		return false, err
 	}
@@ -100,7 +100,7 @@ func (ver *Verifier) fcFnPipeHeadTailEqual(left, right *ast.FcFn, state VerState
 	return true, nil
 }
 
-func (ver *Verifier) fcHeadEqual(leftHead ast.Fc, rightHead ast.Fc, params []ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcHeadEq(leftHead ast.Fc, rightHead ast.Fc, params []ast.Fc, state VerState) (bool, error) {
 	ok, err := ver.FcEqual(leftHead, rightHead, state)
 	_ = params
 	return ok, err
