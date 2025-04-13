@@ -25,7 +25,7 @@ func (ver *Verifier) btLogicOptBtRule(stmt *ast.SpecFactStmt, state VerState) (b
 }
 
 func (ver *Verifier) btLogicUnaryOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.PropName.PkgName != glob.BuiltinUnaryOptPkg {
+	if stmt.PropName.PkgName != glob.BuiltinUnaryPkgName {
 		return false, nil
 	}
 	_ = state
