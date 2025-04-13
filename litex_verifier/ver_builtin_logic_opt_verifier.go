@@ -6,6 +6,34 @@ import (
 	glob "golitex/litex_global"
 )
 
+func (ver *Verifier) btLogicOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.btLogicUnaryOptBtRule(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+	ok, err = ver.btLogicInfixOptBtRule(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (ver *Verifier) btLogicUnaryOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.PropName.PkgName != glob.BuiltinUnaryOptPkg {
+		return false, nil
+	}
+	_ = state
+
+	// TODO 实现单一的builtin unary rule
+	return false, nil
+}
+
 func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.PropName.PkgName != "" {
 		return false, nil

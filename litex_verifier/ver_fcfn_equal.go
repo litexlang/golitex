@@ -65,7 +65,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 		}
 
 		for j := 0; j < curLen; j++ {
-			ok, err := ver.FcEqual(leftTails[i].Params[j], rightTails[i].Params[j], state)
+			ok, err := ver.fcEqual(leftTails[i].Params[j], rightTails[i].Params[j], state)
 			if err != nil {
 				return false, err
 			}
@@ -101,7 +101,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 }
 
 func (ver *Verifier) fcHeadEq(leftHead ast.Fc, rightHead ast.Fc, params []ast.Fc, state VerState) (bool, error) {
-	ok, err := ver.FcEqual(leftHead, rightHead, state)
+	ok, err := ver.fcEqual(leftHead, rightHead, state)
 	_ = params
 	return ok, err
 

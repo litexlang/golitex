@@ -9,7 +9,7 @@ import (
 	memory "golitex/litex_memory"
 )
 
-func (ver *Verifier) FcEqual(left, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcEqual(left, right ast.Fc, state VerState) (bool, error) {
 	newSpecFactToCheck := ast.NewSpecFactStmt(true, *ast.NewFcAtom("", glob.KeySymbolEqual), []ast.Fc{left, right})
 	return ver.SpecFact(newSpecFactToCheck, state)
 }
@@ -42,9 +42,7 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 		return true, nil
 	}
 
-	// Case: 用已知事实
-	nextState := state.addRound()
-	ok, err = ver.fcEqualSpecInSpecMem(left, right, nextState)
+	ok, err = ver.fcEqualSpecInSpecMem(left, right, state)
 	if err != nil {
 		return false, err
 	}
@@ -59,7 +57,6 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 	}
 
 	if cmpRet != 0 {
-		// ver.unknownNoMsg()
 		return false, nil
 	}
 
