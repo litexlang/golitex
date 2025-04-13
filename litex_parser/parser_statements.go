@@ -281,6 +281,10 @@ func (stmt *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &tokenBlockErr{err, *stmt}
 	}
 
+	if !stmt.header.is(glob.KeySymbolColon) {
+		return ast.NewDefConPropStmt(*declHeader, nil, nil), nil
+	}
+
 	err = stmt.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *stmt}
@@ -746,6 +750,59 @@ func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast
 	section1Facts := []ast.FactStmt{}
 	section2SpecFacts := []*ast.SpecFactStmt{}
 	err := error(nil)
+
+	if len(stmt.body) == 0 {
+		return nil, nil, fmt.Errorf("%v expect body", stmt.header)
+	}
+
+	if stmt.body[0].header.is(glob.KeywordDom) {
+		err = stmt.body[0].header.skip(glob.KeywordDom)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *stmt}
+		}
+		err = stmt.body[0].header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *stmt}
+		}
+		for i := 0; i < len(stmt.body[0].body); i++ {
+			curStmt, err := stmt.body[0].body[i].factStmt(nameDepths, true)
+			if err != nil {
+				return nil, nil, &tokenBlockErr{err, *stmt}
+			}
+			section1Facts = append(section1Facts, curStmt)
+		}
+
+		if len(stmt.body) == 1 {
+			return section1Facts, section2SpecFacts, nil
+		}
+		if !stmt.body[1].header.is(kw) {
+			for i := 1; i < len(stmt.body); i++ {
+				curStmt, err := stmt.body[i].specFactStmt(nameDepths)
+				if err != nil {
+					return nil, nil, &tokenBlockErr{err, *stmt}
+				}
+				section2SpecFacts = append(section2SpecFacts, curStmt)
+			}
+			return section1Facts, section2SpecFacts, nil
+		} else {
+			err = stmt.body[1].header.skip(kw)
+			if err != nil {
+				return nil, nil, &tokenBlockErr{err, *stmt}
+			}
+			err = stmt.body[1].header.skip(glob.KeySymbolColon)
+			if err != nil {
+				return nil, nil, &tokenBlockErr{err, *stmt}
+			}
+			for i := 0; i < len(stmt.body[1].body); i++ {
+				curStmt, err := stmt.body[1].body[i].specFactStmt(nameDepths)
+				if err != nil {
+					return nil, nil, &tokenBlockErr{err, *stmt}
+				}
+				section2SpecFacts = append(section2SpecFacts, curStmt)
+			}
+			return section1Facts, section2SpecFacts, nil
+		}
+	}
 
 	if stmt.body[len(stmt.body)-1].header.is(kw) {
 		for i := 0; i < len(stmt.body)-1; i++ {
