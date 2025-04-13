@@ -6,7 +6,7 @@ import (
 	mem "golitex/litex_memory"
 )
 
-func (ver *Verifier) useStoredUniFactToVerifySpecFact(knownFact *mem.StoredUniSpecFact, uniConMap map[string]ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) specFactUni(knownFact *mem.StoredUniSpecFact, uniConMap map[string]ast.Fc, state VerState) (bool, error) {
 	// 这里貌似不需要对整个uniFact实例化，只要实例化then
 	insKnownUniFact, err := knownFact.UniFact.Instantiate(uniConMap)
 	if err != nil {
@@ -28,14 +28,6 @@ func (ver *Verifier) useStoredUniFactToVerifySpecFact(knownFact *mem.StoredUniSp
 func (ver *Verifier) instUniFactDomFacts(insUniFact *ast.ConUniFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
 
-	ok, err := ver.instUniFactParamsInParamSets(insUniFact, nextState)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
-	}
-
 	for _, fact := range insUniFact.DomFacts {
 		ok, err := ver.FactStmt(fact, nextState)
 		if err != nil {
@@ -46,12 +38,5 @@ func (ver *Verifier) instUniFactDomFacts(insUniFact *ast.ConUniFactStmt, state V
 		}
 	}
 
-	return true, nil
-}
-
-func (ver *Verifier) instUniFactParamsInParamSets(insUniFact *ast.ConUniFactStmt, state VerState) (bool, error) {
-	// TODO
-	// TODO 检查是否在对应的集合里
-	_, _ = insUniFact, state
 	return true, nil
 }

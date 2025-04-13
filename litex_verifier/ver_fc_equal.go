@@ -59,7 +59,7 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 	}
 
 	if fcEnum == ast.FcFnEnum {
-		return ver.fcFnPipeEqual(left.(*ast.FcFn), right.(*ast.FcFn), SpecMsg)
+		return ver.fcFnEq(left.(*ast.FcFn), right.(*ast.FcFn), SpecMsg)
 	} else if fcEnum == ast.FcAtomEnum {
 		return false, nil
 	}
