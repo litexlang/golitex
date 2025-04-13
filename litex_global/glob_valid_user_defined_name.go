@@ -15,7 +15,7 @@ func IsValidName(name string) error {
 
 	// 开头不能以#
 	if len(name) >= 1 && string(name[0]) == UniParamPrefix {
-		return fmt.Errorf("name cannot start with #")
+		return fmt.Errorf("name cannot start with %s", UniParamPrefix)
 	}
 
 	// 检查不能以双下划线开头
