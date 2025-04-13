@@ -59,7 +59,7 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return ok, err
 	}
 
-	ok, err := ver.builtinLogicOptRule(stmt, state)
+	ok, err := ver.btLogicOptBtRule(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -95,6 +95,30 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 			}
 		}
 	}
+	return false, nil
+}
+
+func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerState) (bool, error) {
+	if len(left) != len(right) {
+		return false, fmt.Errorf("%v and %v have different length", left, right)
+	}
+
+	twoSpecFactHaveEqualParams := true
+	for i, knownParam := range left {
+		verified, err := ver.FcEqual(knownParam, right[i], specMode)
+		if err != nil {
+			return false, err
+		}
+		if !verified {
+			twoSpecFactHaveEqualParams = false
+			break
+		}
+	}
+
+	if twoSpecFactHaveEqualParams {
+		return true, nil
+	}
+
 	return false, nil
 }
 

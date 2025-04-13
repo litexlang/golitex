@@ -29,3 +29,7 @@ prove:
         (x + y) * z = x * z + y * z
     -4 * a + 5 * a = (-4+5) * a
     -4 * a + 5 * a = 1 * a
+
+prove:
+    know a = 1
+    a = 1 + 2 -2
