@@ -2,6 +2,24 @@ package litex_memory
 
 import ast "golitex/litex_ast"
 
+type StoredPropMemDictNode struct{ Def *ast.DefConPropStmt }
+
+type PropMem struct {
+	// 之所以是 map[string][string] 而不是 map[string]，因为虽然用户在当前的项目里，始终第一个key是""，但如果我读入了来自其他地方的包，那就是另外一个名字了
+	Dict map[string]map[string]StoredPropMemDictNode
+}
+
+type StoredObjMemDictNode struct{ Def *ast.DefObjStmt }
+type ObjMem struct {
+	Dict map[string]map[string]StoredObjMemDictNode
+}
+
+type FnMem struct {
+	Dict map[string]map[string]StoredFnMemDictNode
+}
+
+type StoredFnMemDictNode struct{ Def *ast.DefConFnStmt }
+
 func NewPropMemory() *PropMem {
 	return &PropMem{map[string]map[string]StoredPropMemDictNode{}}
 }
@@ -11,18 +29,6 @@ func NewFnMemory() *FnMem {
 
 func NewObjMemory() *ObjMem {
 	return &ObjMem{map[string]map[string]StoredObjMemDictNode{}}
-}
-
-func (mem *PropMem) GetNode(stmt ast.SpecFactStmt) (*StoredPropMemDictNode, bool) {
-	pkgMap, pkgExists := mem.Dict[stmt.PropName.PkgName] // 检查 pkgName 是否存在
-	if !pkgExists {
-		return nil, false // 返回零值
-	}
-	node, nodeExists := pkgMap[stmt.PropName.Value] // 检查 value 是否存在
-	if !nodeExists {
-		return nil, false // 返回零值
-	}
-	return &node, true
 }
 
 func (memory *PropMem) Insert(stmt *ast.DefConPropStmt, pkgName string) error {
