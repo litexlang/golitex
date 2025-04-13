@@ -4,6 +4,8 @@ import (
 	env "golitex/litex_env"
 )
 
+// type Executor env.Env
+
 type Executor struct {
 	env *env.Env
 }
