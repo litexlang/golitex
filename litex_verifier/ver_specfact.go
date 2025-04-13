@@ -59,7 +59,7 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return ok, err
 	}
 
-	ok, err := ver.btLogicInfixOptBtRule(stmt, state)
+	ok, err := ver.btLogicOptBtRule(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -105,7 +105,7 @@ func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerSta
 
 	twoSpecFactHaveEqualParams := true
 	for i, knownParam := range left {
-		verified, err := ver.FcEqual(knownParam, right[i], specMode)
+		verified, err := ver.fcEqual(knownParam, right[i], specMode)
 		if err != nil {
 			return false, err
 		}
