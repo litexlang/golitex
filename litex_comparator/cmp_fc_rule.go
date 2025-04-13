@@ -60,3 +60,17 @@ func cmpNumLitExpr(left, right ast.Fc) (bool, error) {
 
 	return glob.NumLitExprEqual(leftAsNumLitExpr, rightAsNumLitExpr)
 }
+
+func SliceFcAllEqualToGivenFcRule(valuesToBeComped *[]ast.Fc, fcToComp ast.Fc) (bool, error) {
+	for _, equalFc := range *valuesToBeComped {
+		ok, err := CmpFcRule(equalFc, fcToComp)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
