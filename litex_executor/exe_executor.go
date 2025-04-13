@@ -33,3 +33,7 @@ func (e *Executor) deleteEnvAndRetainMsg() {
 func (e *Executor) clearMsgAndOutput() {
 	e.env.Msgs = []string{}
 }
+
+func (e *Executor) appendNewMsg(msg string) {
+	e.env.Msgs = append(e.env.Msgs, msg)
+}

@@ -150,7 +150,7 @@ func IsEqualOptFc(f Fc) bool {
 	return ptr.Value == glob.KeySymbolEqual && ptr.PkgName == ""
 }
 
-func IsNumLitFcAtomAndRetValueStr(f Fc) (string, bool) {
+func IsNumLitFcAtom(f Fc) (string, bool) {
 	ptr, ok := f.(*FcAtom)
 	if !ok || ptr.Value == "" {
 		return "", false

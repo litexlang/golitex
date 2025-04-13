@@ -67,7 +67,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 		if glob.CheckFalse {
 			switch stmt := stmt.(type) {
 			case *ast.SpecFactStmt:
-				newStmt := stmt.GetReverseFact()
+				newStmt := stmt.GetReverseIsTrueReverseFact()
 				ok, _, err := exec.checkFactStmt(newStmt)
 				if err != nil {
 					return err
