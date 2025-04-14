@@ -148,7 +148,7 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 				return err
 			}
 			if !ok {
-				exec.appendNewMsg("%v prove failed", fact.String())
+				exec.appendNewMsg("%v prove failed", newFact.String())
 				return nil
 			}
 		}
