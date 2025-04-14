@@ -48,7 +48,7 @@ type SpecFactParams struct {
 	ObjParams []Fc
 }
 
-type DefPropStmt interface {
+type DefPropOrExistPropStmt interface {
 	defPropStmt()
 	stmt()
 }

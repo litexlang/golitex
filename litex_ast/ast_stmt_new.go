@@ -31,8 +31,8 @@ func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []*
 	return &DefConPropStmt{defHeader, domFacts, iffFacts}
 }
 
-func NewDefConExistPropStmt(defHeader ConDefHeader, existFc []string, existFcTypes []*FcAtom, domFacts []FactStmt, thenFacts []FactStmt) *DefConExistPropStmt {
-	return &DefConExistPropStmt{defHeader, existFc, existFcTypes, domFacts, thenFacts}
+func NewDefConExistPropStmt(defHeader ConDefHeader, existFc []string, existFcTypes []*FcAtom, thenFacts []FactStmt) *DefConExistPropStmt {
+	return &DefConExistPropStmt{defHeader, existFc, existFcTypes, thenFacts}
 }
 
 func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *DefConFnStmt {
@@ -63,11 +63,11 @@ func NewHaveStmt(propStmt SpecFactStmt, member []string) *HaveStmt {
 	return &HaveStmt{propStmt, member}
 }
 
-func NewAxiomStmt(decl DefPropStmt) *AxiomStmt {
+func NewAxiomStmt(decl DefPropOrExistPropStmt) *AxiomStmt {
 	return &AxiomStmt{decl}
 }
 
-func NewThmStmt(decl DefPropStmt, proof []Stmt) *ThmStmt {
+func NewThmStmt(decl DefPropOrExistPropStmt, proof []Stmt) *ThmStmt {
 	return &ThmStmt{decl, proof}
 }
 

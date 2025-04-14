@@ -191,10 +191,30 @@ func (f *ClaimProveStmt) String() string {
 		return strings.TrimSpace(builder.String())
 	}
 }
-func (s *DefConExistPropStmt) String() string { panic("") }
-func (s *HaveStmt) String() string            { panic("") }
-func (s *AxiomStmt) String() string           { panic("") }
-func (s *ThmStmt) String() string             { panic("") }
+func (s *DefConExistPropStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordExistProp)
+	builder.WriteByte(' ')
+	builder.WriteString(s.DefHeader.String())
+	for i, objName := range s.ExistFc {
+		builder.WriteString(objName)
+		builder.WriteByte(' ')
+		builder.WriteString(s.ExistFcSets[i].String())
+	}
+	if len(s.ThenFacts) > 0 {
+		builder.WriteString(" :")
+		builder.WriteByte('\n')
+		for i := 0; i < len(s.ThenFacts)-1; i++ {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.ThenFacts[i].String(), 1))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.ThenFacts[len(s.ThenFacts)-1].String(), 1))
+	}
+	return strings.TrimSpace(builder.String())
+}
+func (s *HaveStmt) String() string  { panic("") }
+func (s *AxiomStmt) String() string { panic("") }
+func (s *ThmStmt) String() string   { panic("") }
 func (fact *CondFactStmt) String() string {
 	var builder strings.Builder
 
