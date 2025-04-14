@@ -87,6 +87,8 @@ func (stmt *tokenBlock) factStmt(nameDepths ast.NameDepthMap, allowUniFactInUniD
 		return stmt.uniFactStmt(nameDepths, allowUniFactInUniDom)
 	} else if stmt.header.is(glob.KeywordWhen) {
 		return stmt.condFactStmt(nameDepths)
+	} else if stmt.header.is(glob.KeywordExist) {
+		return stmt.ExistFactStmt(nameDepths)
 	}
 	return stmt.specFactStmt(nameDepths)
 }
@@ -141,6 +143,33 @@ func (stmt *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFact
 	}
 
 	return ast.NewSpecFactStmt(isTrue, propName, params), nil
+}
+
+func (stmt *tokenBlock) ExistFactStmt(nameDepths ast.NameDepthMap) (*ast.ExistFactStmt, error) {
+	err := stmt.header.skip(glob.KeywordExist)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *stmt}
+	}
+
+	specFact, err := stmt.specFactStmt(nameDepths)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *stmt}
+	}
+
+	existFc := []ast.Fc{}
+	for !stmt.header.ExceedEnd() {
+		fc, err := stmt.header.rawFc()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *stmt}
+		}
+		fc, err = ast.AddUniPrefixToFc(fc, nameDepths)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *stmt}
+		}
+		existFc = append(existFc, fc)
+	}
+
+	return ast.NewExistFactStmt(specFact.IsTrue, specFact.PropName, specFact.Params, existFc), nil
 }
 
 func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (ast.UniFactStmt, error) {

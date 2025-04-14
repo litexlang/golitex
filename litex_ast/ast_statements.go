@@ -70,6 +70,13 @@ type SpecFactStmt struct {
 	Params   []Fc
 }
 
+type ExistFactStmt struct {
+	IsTrue   bool
+	PropName FcAtom
+	Params   []Fc
+	ExistFc  []Fc
+}
+
 type ClaimProveStmt struct {
 	IsProve      bool
 	ToCheckFacts []FactStmt

@@ -82,3 +82,7 @@ func NewFcFnDecl(name string, params []string) *FcFnDecl {
 func NewConDefHeader(name string, params []string, typeParams []Fc) *ConDefHeader {
 	return &ConDefHeader{name, params, typeParams}
 }
+
+func NewExistFactStmt(isTrue bool, propName FcAtom, params []Fc, existFc []Fc) *ExistFactStmt {
+	return &ExistFactStmt{isTrue, propName, params, existFc}
+}

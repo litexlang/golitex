@@ -315,3 +315,25 @@ func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string
 
 	return builder.String()
 }
+
+func (s *ExistFactStmt) String() string {
+	var builder strings.Builder
+
+	builder.WriteString(glob.KeywordExist)
+	builder.WriteByte(' ')
+	builder.WriteString(s.PropName.String())
+	builder.WriteByte('(')
+	builder.WriteString(FcSliceString(s.Params))
+	builder.WriteByte(')')
+	builder.WriteByte(' ')
+
+	if len(s.ExistFc) > 0 {
+		for i := 0; i < len(s.ExistFc)-1; i++ {
+			builder.WriteString(s.ExistFc[i].String())
+			builder.WriteByte(' ')
+		}
+		builder.WriteString(s.ExistFc[len(s.ExistFc)-1].String())
+	}
+
+	return builder.String()
+}
