@@ -21,7 +21,7 @@ func (stmt *TopStmt) String() string {
 	if stmt.IsPub {
 		builder.WriteString(glob.KeywordPub)
 	}
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Stmt.String(), 1))
+	builder.WriteString(stmt.Stmt.String())
 	return builder.String()
 }
 
@@ -195,14 +195,39 @@ func (s *DefConExistPropStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordExistProp)
 	builder.WriteByte(' ')
-	builder.WriteString(s.DefHeader.String())
-	for i, objName := range s.ExistFc {
-		builder.WriteString(objName)
+
+	head := s.DefHeader
+	builder.WriteString(head.Name)
+	builder.WriteString("(")
+
+	if len(head.Params) > 0 {
+		for i := 0; i < len(head.Params)-1; i++ {
+			builder.WriteString(head.Params[i])
+			builder.WriteString(" ")
+			builder.WriteString(head.SetParams[i].String())
+			builder.WriteString(",")
+		}
+		builder.WriteString(head.Params[len(head.Params)-1])
+		builder.WriteString(" ")
+		builder.WriteString(head.SetParams[len(head.Params)-1].String())
+	}
+
+	builder.WriteString(") ")
+
+	if len(s.ExistFc) > 0 {
+		for i := 0; i < len(s.ExistFc)-1; i++ {
+			builder.WriteString(s.ExistFc[i])
+			builder.WriteByte(' ')
+			builder.WriteString(s.ExistFcSets[i].String())
+			builder.WriteString(glob.KeySymbolComma)
+			builder.WriteByte(' ')
+		}
+		builder.WriteString(s.ExistFc[len(s.ExistFc)-1])
 		builder.WriteByte(' ')
-		builder.WriteString(s.ExistFcSets[i].String())
+		builder.WriteString(s.ExistFcSets[len(s.ExistFc)-1].String())
 	}
 	if len(s.ThenFacts) > 0 {
-		builder.WriteString(" :")
+		builder.WriteString(":")
 		builder.WriteByte('\n')
 		for i := 0; i < len(s.ThenFacts)-1; i++ {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.ThenFacts[i].String(), 1))
@@ -274,7 +299,7 @@ func (head ConDefHeader) String() string {
 	var builder strings.Builder
 	builder.WriteString("prop ")
 	builder.WriteString(head.Name)
-	builder.WriteString(" (")
+	builder.WriteString("(")
 
 	if len(head.Params) > 0 {
 		for i := 0; i < len(head.Params)-1; i++ {
@@ -321,19 +346,19 @@ func (s *ExistFactStmt) String() string {
 
 	builder.WriteString(glob.KeywordExist)
 	builder.WriteByte(' ')
-	builder.WriteString(s.PropName.String())
-	builder.WriteByte('(')
-	builder.WriteString(FcSliceString(s.Params))
-	builder.WriteByte(')')
-	builder.WriteByte(' ')
 
 	if len(s.ExistFc) > 0 {
 		for i := 0; i < len(s.ExistFc)-1; i++ {
 			builder.WriteString(s.ExistFc[i].String())
+			builder.WriteString(glob.KeySymbolComma)
 			builder.WriteByte(' ')
 		}
 		builder.WriteString(s.ExistFc[len(s.ExistFc)-1].String())
 	}
+
+	builder.WriteString(" ")
+
+	builder.WriteString(s.Fact.String())
 
 	return builder.String()
 }

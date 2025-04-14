@@ -1,5 +1,9 @@
 exist_prop q(x S1) x S2:
     p(x)
 
-exist q(2) x
+exist x q(1)
 
+exist_prop p(x S1) x S2, y S3:
+    p(x)
+
+exist x, y p(2)
