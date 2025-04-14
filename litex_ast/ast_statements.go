@@ -79,12 +79,8 @@ func (f *SpecFactStmt) IsEqualFact() bool {
 	return f.PropName.Value == glob.KeySymbolEqual && f.PropName.PkgName == ""
 }
 
-type ClaimProveByContradictStmt struct {
-	ToCheck []FactStmt
-	Proof   []Stmt
-}
-
 type ClaimProveStmt struct {
+	ProveTrue    bool
 	ToCheckFacts []FactStmt
 	Proofs       []Stmt
 }
