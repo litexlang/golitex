@@ -2,5 +2,4 @@ exist_prop q(x S1) x S2:
     p(x)
 
 exist q(2) x
-construct
-constructor_prop 
+

@@ -151,7 +151,44 @@ func (stmt *tokenBlock) ExistFactStmt(nameDepths ast.NameDepthMap) (*ast.ExistFa
 		return nil, &tokenBlockErr{err, *stmt}
 	}
 
-	specFact, err := stmt.specFactStmt(nameDepths)
+	isTrue := true
+	if stmt.header.is(glob.KeywordNot) {
+		stmt.header.skip(glob.KeywordNot)
+		isTrue = false
+	}
+
+	// exist prop fact 只允许 func fact，不允许 rela fact
+
+	propName, err := stmt.header.rawFcAtom()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *stmt}
+	}
+	propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepths)
+
+	params := []ast.Fc{}
+	err = stmt.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *stmt}
+	}
+
+	for !stmt.header.is(glob.KeySymbolRightBrace) {
+		param, err := stmt.header.rawFc()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *stmt}
+		}
+
+		param, err = ast.AddUniPrefixToFc(param, nameDepths)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *stmt}
+		}
+
+		params = append(params, param)
+		if stmt.header.is(glob.KeySymbolComma) {
+			stmt.header.next()
+		}
+	}
+
+	err = stmt.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *stmt}
 	}
@@ -169,7 +206,7 @@ func (stmt *tokenBlock) ExistFactStmt(nameDepths ast.NameDepthMap) (*ast.ExistFa
 		existFc = append(existFc, fc)
 	}
 
-	return ast.NewExistFactStmt(specFact.IsTrue, specFact.PropName, specFact.Params, existFc), nil
+	return ast.NewExistFactStmt(isTrue, propName, params, existFc), nil
 }
 
 func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (ast.UniFactStmt, error) {
