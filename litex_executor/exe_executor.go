@@ -12,6 +12,7 @@
 package litex_executor
 
 import (
+	"fmt"
 	env "golitex/litex_env"
 )
 
@@ -45,6 +46,6 @@ func (e *Executor) clearMsgAndOutput() {
 	e.env.Msgs = []string{}
 }
 
-func (e *Executor) appendNewMsg(msg string) {
-	e.env.Msgs = append(e.env.Msgs, msg)
+func (e *Executor) appendNewMsg(msg string, str ...any) {
+	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(msg, str...))
 }

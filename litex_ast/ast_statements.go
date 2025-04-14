@@ -11,10 +11,6 @@
 
 package litex_ast
 
-import (
-	glob "golitex/litex_global"
-)
-
 type TopStmt struct {
 	Stmt  Stmt
 	IsPub bool
@@ -75,12 +71,8 @@ type SpecFactStmt struct {
 	Params   []Fc
 }
 
-func (f *SpecFactStmt) IsEqualFact() bool {
-	return f.PropName.Value == glob.KeySymbolEqual && f.PropName.PkgName == ""
-}
-
 type ClaimProveStmt struct {
-	ProveTrue    bool
+	IsProve      bool
 	ToCheckFacts []FactStmt
 	Proofs       []Stmt
 }
@@ -119,8 +111,4 @@ type ConDefHeader struct {
 	Name      string
 	Params    []string
 	SetParams []Fc
-}
-
-func (stmt *SpecFactStmt) GetReverseIsTrueReverseFact() *SpecFactStmt {
-	return NewSpecFactStmt(!stmt.IsTrue, stmt.PropName, stmt.Params)
 }
