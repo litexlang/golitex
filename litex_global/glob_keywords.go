@@ -24,6 +24,7 @@ const (
 	KeywordFn                   = "fn"
 	KeywordProp                 = "prop"
 	KeywordKnow                 = "know"
+	KeywordExist                = "exist"
 	KeywordExistProp            = "exist_prop"
 	KeywordConstructorProp      = "constructor_prop"
 	KeywordHave                 = "have"
@@ -191,6 +192,7 @@ func initKeywordSet() map[string]struct{} {
 		KeywordThm,
 		// KeywordSelf,
 		KeywordIff,
+		KeywordExist,
 
 		// 语法糖
 		KeywordCommutative,
