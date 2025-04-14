@@ -17,41 +17,41 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (parser *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
-	if parser.is(glob.KeySymbolLeftBrace) {
-		return parser.bracedFcExpr()
+func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
+	if cursor.is(glob.KeySymbolLeftBrace) {
+		return cursor.bracedFcExpr()
 	}
 
-	if parser.curTokenBeginWithNumber() {
-		return parser.numberStr()
+	if cursor.curTokenBeginWithNumber() {
+		return cursor.numberStr()
 	}
 
-	fcStr, err := parser.rawFcAtom()
+	fcStr, err := cursor.rawFcAtom()
 	if err != nil {
-		return nil, &strSliceErr{err, parser}
+		return nil, &strSliceErr{err, cursor}
 	}
 
-	strAtSecondPosition := parser.strAtCurIndexPlus(0)
+	strAtSecondPosition := cursor.strAtCurIndexPlus(0)
 
 	if strAtSecondPosition != glob.KeySymbolLeftBrace {
 		return &fcStr, nil
 	} else {
-		return parser.rawFcFn(fcStr)
+		return cursor.rawFcFn(fcStr)
 	}
 }
 
-func (parser *strSliceCursor) bracedFcExpr() (ast.Fc, error) {
-	parser.skip(glob.KeySymbolLeftBrace)
-	fc, err := parser.rawFc()
+func (cursor *strSliceCursor) bracedFcExpr() (ast.Fc, error) {
+	cursor.skip(glob.KeySymbolLeftBrace)
+	fc, err := cursor.rawFc()
 	if err != nil {
-		return nil, &strSliceErr{err, parser}
+		return nil, &strSliceErr{err, cursor}
 	}
-	parser.skip(glob.KeySymbolRightBrace)
+	cursor.skip(glob.KeySymbolRightBrace)
 	return fc, nil
 }
 
-func (parser *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
-	typeParamsObjParamsPairs, err := parser.objSetPairs()
+func (cursor *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
+	typeParamsObjParamsPairs, err := cursor.objSetPairs()
 
 	if err != nil {
 		return nil, err
@@ -60,13 +60,13 @@ func (parser *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
 	return ast.NewFcFnPipe(optName, typeParamsObjParamsPairs), nil
 }
 
-func (parser *strSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
+func (cursor *strSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
 	pairs := []*ast.FcFnSeg{}
 
-	for !parser.ExceedEnd() && (parser.is(glob.KeySymbolLeftBrace)) {
-		objParamsPtr, err := parser.bracedFcSlice()
+	for !cursor.ExceedEnd() && (cursor.is(glob.KeySymbolLeftBrace)) {
+		objParamsPtr, err := cursor.bracedFcSlice()
 		if err != nil {
-			return nil, &strSliceErr{err, parser}
+			return nil, &strSliceErr{err, cursor}
 		}
 
 		pairs = append(pairs, ast.NewFcFnPipeSeg(objParamsPtr))
@@ -75,20 +75,20 @@ func (parser *strSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
 	return pairs, nil
 }
 
-func (parser *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
-	value, err := parser.next()
+func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
+	value, err := cursor.next()
 	if err != nil {
 		return ast.FcAtom{Value: ""}, err
 	}
 
 	fromPkg := ""
-	if parser.is(glob.KeySymbolColonColon) {
+	if cursor.is(glob.KeySymbolColonColon) {
 		fromPkg = value
-		err := parser.skip(glob.KeySymbolColonColon)
+		err := cursor.skip(glob.KeySymbolColonColon)
 		if err != nil {
 			return ast.FcAtom{Value: ""}, err
 		}
-		value, err = parser.next()
+		value, err = cursor.next()
 		if err != nil {
 			return ast.FcAtom{Value: ""}, err
 		}
@@ -97,22 +97,22 @@ func (parser *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	return ast.FcAtom{PkgName: fromPkg, Value: value}, nil
 }
 
-func (parser *strSliceCursor) rawFc() (ast.Fc, error) {
-	expr, err := parser.fcInfixExpr(glob.PrecLowest)
+func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
+	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
 	if err != nil {
 		return nil, err
 	}
 	return expr, nil
 }
 
-func (parser *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
-	left, err := parser.fcPrimaryExpr()
+func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
+	left, err := cursor.fcPrimaryExpr()
 	if err != nil {
 		return nil, err
 	}
 
-	for !parser.ExceedEnd() {
-		curToken, err := parser.currentToken()
+	for !cursor.ExceedEnd() {
+		curToken, err := cursor.currentToken()
 		if err != nil {
 			return nil, fmt.Errorf("unexpected end of input while parsing infix expression")
 		}
@@ -123,8 +123,8 @@ func (parser *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			break
 		}
 
-		parser.skip() // 消耗运算符
-		right, err := parser.fcInfixExpr(curPrec)
+		cursor.skip() // 消耗运算符
+		right, err := cursor.fcInfixExpr(curPrec)
 		if err != nil {
 			return nil, err
 		}
@@ -139,35 +139,35 @@ func (parser *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 	return left, nil
 }
 
-func (parser *strSliceCursor) fcPrimaryExpr() (ast.Fc, error) {
-	if parser.ExceedEnd() {
+func (cursor *strSliceCursor) fcPrimaryExpr() (ast.Fc, error) {
+	if cursor.ExceedEnd() {
 		return nil, fmt.Errorf("unexpected end of input, expected expression")
 	}
 
 	// 处理括号表达式
-	if parser.is(glob.KeySymbolLeftBrace) {
-		parser.skip(glob.KeySymbolLeftBrace)
-		if parser.ExceedEnd() {
+	if cursor.is(glob.KeySymbolLeftBrace) {
+		cursor.skip(glob.KeySymbolLeftBrace)
+		if cursor.ExceedEnd() {
 			return nil, fmt.Errorf("unexpected end of input after '('")
 		}
 
-		expr, err := parser.fcInfixExpr(glob.PrecLowest)
+		expr, err := cursor.fcInfixExpr(glob.PrecLowest)
 		if err != nil {
 			return nil, err
 		}
 
-		if parser.ExceedEnd() {
+		if cursor.ExceedEnd() {
 			return nil, fmt.Errorf("unexpected end of input, expected ')'")
 		}
 
-		if err := parser.skip(glob.KeySymbolRightBrace); err != nil {
+		if err := cursor.skip(glob.KeySymbolRightBrace); err != nil {
 			return nil, fmt.Errorf("expected ')': %v", err)
 		}
 		return expr, nil
 	}
 
-	return parser.unaryOptFc()
-	// fc, isUnary, err := parser.unaryOptFc()
+	return cursor.unaryOptFc()
+	// fc, isUnary, err := cursor.unaryOptFc()
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -176,20 +176,20 @@ func (parser *strSliceCursor) fcPrimaryExpr() (ast.Fc, error) {
 	// }
 
 	// // 处理基本原子表达式
-	// return parser.fcAtomAndFcFnRetAndBracedFc()
+	// return cursor.fcAtomAndFcFnRetAndBracedFc()
 }
 
-func (parser *strSliceCursor) unaryOptFc() (ast.Fc, error) {
-	unaryOp, err := parser.currentToken()
+func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
+	unaryOp, err := cursor.currentToken()
 	if err != nil {
 		return nil, err
 	}
 	if !glob.IsKeySymbolUniFn(unaryOp) {
-		return parser.fcAtomAndFcFnRetAndBracedFc()
+		return cursor.fcAtomAndFcFnRetAndBracedFc()
 	} else {
-		parser.skip(unaryOp)
+		cursor.skip(unaryOp)
 
-		right, err := parser.fcPrimaryExpr()
+		right, err := cursor.fcPrimaryExpr()
 		if err != nil {
 			return nil, err
 		}
@@ -202,8 +202,8 @@ func (parser *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 	}
 }
 
-func (parser *strSliceCursor) numberStr() (*ast.FcAtom, error) {
-	left, err := parser.next()
+func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
+	left, err := cursor.next()
 	if err != nil {
 		return &ast.FcAtom{Value: ""}, err
 	}
@@ -215,9 +215,9 @@ func (parser *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 		}
 	}
 
-	if parser.is(glob.KeySymbolDot) {
+	if cursor.is(glob.KeySymbolDot) {
 		// 检查下一个字符是否是数字
-		nextChar := parser.strAtCurIndexPlus(1)
+		nextChar := cursor.strAtCurIndexPlus(1)
 		if len(nextChar) == 0 {
 			return &ast.FcAtom{Value: left}, nil
 		}
@@ -231,8 +231,8 @@ func (parser *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 		}
 
 		if allDigits {
-			parser.skip()
-			right, err := parser.next()
+			cursor.skip()
+			right, err := cursor.next()
 			if err != nil {
 				return &ast.FcAtom{Value: ""}, fmt.Errorf("invalid number: %s", right)
 			}
@@ -244,130 +244,117 @@ func (parser *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 	return &ast.FcAtom{Value: left}, nil
 }
 
-func (parser *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
+func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	params := []ast.Fc{}
-	parser.skip(glob.KeySymbolLeftBrace)
+	cursor.skip(glob.KeySymbolLeftBrace)
 
-	for !parser.is(glob.KeySymbolRightBrace) {
-		fc, err := parser.rawFc()
+	for !cursor.is(glob.KeySymbolRightBrace) {
+		fc, err := cursor.rawFc()
 
 		if err != nil {
-			return nil, &strSliceErr{err, parser}
+			return nil, &strSliceErr{err, cursor}
 		}
 
 		params = append(params, fc)
 
-		if !parser.is(glob.KeySymbolComma) {
-			if !parser.is(glob.KeySymbolRightBrace) {
-				return nil, &strSliceErr{err, parser}
-			} else {
-				break
-			}
-		} else {
-			parser.next()
-		}
-
+		cursor.skipIfIs(glob.KeySymbolComma)
 	}
 
-	parser.skip(glob.KeySymbolRightBrace)
+	cursor.skip(glob.KeySymbolRightBrace)
 
 	return params, nil
 }
 
-func (parser *strSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
+func (cursor *strSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]string, []ast.Fc, error) {
 	paramName := []string{}
 	paramTypes := []ast.Fc{}
 
-	for !parser.is(endWith) {
-		objName, err := parser.next()
+	for !cursor.is(endWith) {
+		objName, err := cursor.next()
 		if err != nil {
-			return nil, nil, &strSliceErr{err, parser}
+			return nil, nil, &strSliceErr{err, cursor}
 		}
 
-		tp, err := parser.rawFc()
+		tp, err := cursor.rawFc()
 		if err != nil {
-			return nil, nil, &strSliceErr{err, parser}
+			return nil, nil, &strSliceErr{err, cursor}
 		}
 
 		paramName = append(paramName, objName)
 		paramTypes = append(paramTypes, tp)
 
-		if parser.is(glob.KeySymbolComma) {
-			parser.skip(glob.KeySymbolComma)
-		}
+		cursor.skipIfIs(glob.KeySymbolComma)
 	}
 
-	if parser.isAndSkip(endWith) {
+	if cursor.isAndSkip(endWith) {
 		return paramName, paramTypes, nil
 	} else {
-		return nil, nil, &strSliceErr{fmt.Errorf("expected '%s' but got '%s'", endWith, parser.strAtCurIndexPlus(0)), parser}
+		return nil, nil, &strSliceErr{fmt.Errorf("expected '%s' but got '%s'", endWith, cursor.strAtCurIndexPlus(0)), cursor}
 	}
 }
 
-func (parser *strSliceCursor) stringSliceUntilEnd() ([]string, error) {
+func (cursor *strSliceCursor) stringSliceUntilEnd() ([]string, error) {
 	members := []string{}
 
 	for {
-		member, err := parser.next()
+		member, err := cursor.next()
 		if err != nil {
-			return nil, &strSliceErr{err, parser}
+			return nil, &strSliceErr{err, cursor}
 		}
 		members = append(members, member)
-		if !parser.is(glob.KeySymbolComma) {
+		if !cursor.is(glob.KeySymbolComma) {
 			break
 		}
-		parser.skip()
+		cursor.skip()
 	}
 
-	if !parser.ExceedEnd() {
-		return nil, &strSliceErr{fmt.Errorf("expected comma or end of string array"), parser}
+	if !cursor.ExceedEnd() {
+		return nil, &strSliceErr{fmt.Errorf("expected comma or end of string array"), cursor}
 	}
 
 	return members, nil
 }
 
-func (parser *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
-	err := parser.skip(glob.KeywordIs)
+func (cursor *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
+	err := cursor.skip(glob.KeywordIs)
 	if err != nil {
-		return nil, &strSliceErr{err, parser}
+		return nil, &strSliceErr{err, cursor}
 	}
 
-	opt, err := parser.rawFcAtom() // get the operator.
+	opt, err := cursor.rawFcAtom() // get the operator.
 
 	if err != nil {
-		return nil, &strSliceErr{err, parser}
+		return nil, &strSliceErr{err, cursor}
 	}
 
 	return ast.NewSpecFactStmt(true, opt, []ast.Fc{left}), nil
 	// return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
 }
 
-func (parser *strSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]string, []*ast.FcAtom, error) {
+func (cursor *strSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]string, []*ast.FcAtom, error) {
 	paramName := []string{}
 	paramTypes := []*ast.FcAtom{}
 
-	for !parser.is(endWith) {
-		objName, err := parser.next()
+	for !cursor.is(endWith) {
+		objName, err := cursor.next()
 		if err != nil {
-			return nil, nil, &strSliceErr{err, parser}
+			return nil, nil, &strSliceErr{err, cursor}
 		}
 
-		tp, err := parser.rawFcAtom()
+		tp, err := cursor.rawFcAtom()
 		if err != nil {
-			return nil, nil, &strSliceErr{err, parser}
+			return nil, nil, &strSliceErr{err, cursor}
 		}
 
 		paramName = append(paramName, objName)
 		paramTypes = append(paramTypes, &tp)
 
-		if parser.isAndSkip(endWith) {
-			break
-		}
-
-		if err := parser.testAndSkip(glob.KeySymbolComma); err != nil {
-			return nil, nil, &strSliceErr{err, parser}
-		}
+		cursor.skipIfIs(glob.KeySymbolComma)
 	}
 
-	return paramName, paramTypes, nil
+	if cursor.isAndSkip(endWith) {
+		return paramName, paramTypes, nil
+	} else {
+		return nil, nil, &strSliceErr{fmt.Errorf("expected '%s' but got '%s'", endWith, cursor.strAtCurIndexPlus(0)), cursor}
+	}
 }

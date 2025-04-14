@@ -22,100 +22,106 @@ type strSliceCursor struct {
 	slice []string
 }
 
-func (p *strSliceCursor) String() string {
-	return strings.Join(p.slice, " ")
+func (cursor *strSliceCursor) String() string {
+	return strings.Join(cursor.slice, " ")
 }
 
-func (it *strSliceCursor) ExceedEnd() bool {
-	return it.index >= len(it.slice)
+func (cursor *strSliceCursor) ExceedEnd() bool {
+	return cursor.index >= len(cursor.slice)
 }
 
-func (p *strSliceCursor) strAtIndex(index uint32) string {
-	return p.slice[index]
+func (cursor *strSliceCursor) strAtIndex(index uint32) string {
+	return cursor.slice[index]
 }
 
-func (p *strSliceCursor) strAtCurIndexPlus(plusIndex int) string {
-	i := p.index + plusIndex
+func (cursor *strSliceCursor) strAtCurIndexPlus(plusIndex int) string {
+	i := cursor.index + plusIndex
 
-	if i < 0 || i >= len(p.slice) {
+	if i < 0 || i >= len(cursor.slice) {
 		return ""
 	} else {
-		return p.slice[i]
+		return cursor.slice[i]
 	}
 }
 
-func (p *strSliceCursor) getIndex() int {
-	return p.index
+func (cursor *strSliceCursor) getIndex() int {
+	return cursor.index
 }
 
-func (p *strSliceCursor) getSlice() []string {
-	return p.slice
+func (cursor *strSliceCursor) getSlice() []string {
+	return cursor.slice
 }
 
-func (p *strSliceCursor) currentToken() (string, error) {
-	if p.index >= len(p.slice) {
-		return "", fmt.Errorf("unexpected end of slice %v", p.slice)
+func (cursor *strSliceCursor) currentToken() (string, error) {
+	if cursor.index >= len(cursor.slice) {
+		return "", fmt.Errorf("unexpected end of slice %v", cursor.slice)
 	}
-	return p.slice[p.index], nil
+	return cursor.slice[cursor.index], nil
 }
 
-func (it *strSliceCursor) testAndSkip(s string) error {
-	if it.index >= len(it.slice) {
-		return fmt.Errorf("unexpected end of slice %v", it.slice)
+func (cursor *strSliceCursor) testAndSkip(s string) error {
+	if cursor.index >= len(cursor.slice) {
+		return fmt.Errorf("unexpected end of slice %v", cursor.slice)
 	}
-	if it.slice[it.index] == s {
-		it.index++
+	if cursor.slice[cursor.index] == s {
+		cursor.index++
 		return nil
 	}
-	return fmt.Errorf("expected '%s', but got '%s'", s, it.slice[it.index])
+	return fmt.Errorf("expected '%s', but got '%s'", s, cursor.slice[cursor.index])
 }
 
-func (it *strSliceCursor) next() (string, error) {
-	if it.index >= len(it.slice) {
-		return "", fmt.Errorf("unexpected end of slice %v", it.slice)
+func (cursor *strSliceCursor) next() (string, error) {
+	if cursor.index >= len(cursor.slice) {
+		return "", fmt.Errorf("unexpected end of slice %v", cursor.slice)
 	}
-	it.index++
-	return it.slice[it.index-1], nil
+	cursor.index++
+	return cursor.slice[cursor.index-1], nil
 }
 
-func (it *strSliceCursor) is(s string) bool {
-	return it.index < len(it.slice) && it.slice[it.index] == s
+func (cursor *strSliceCursor) is(s string) bool {
+	return cursor.index < len(cursor.slice) && cursor.slice[cursor.index] == s
 }
 
-func (it *strSliceCursor) isAndSkip(expected string) bool {
-	if it.index < len(it.slice) && it.slice[it.index] == expected {
-		it.index++
+func (cursor *strSliceCursor) isAndSkip(expected string) bool {
+	if cursor.index < len(cursor.slice) && cursor.slice[cursor.index] == expected {
+		cursor.index++
 		return true
 	} else {
 		return false
 	}
 }
 
-func (it *strSliceCursor) skip(expected ...string) error {
-	if it.index >= len(it.slice) {
-		return fmt.Errorf("unexpected end of slice %v", it.slice)
+func (cursor *strSliceCursor) skipIfIs(s string) {
+	if cursor.index < len(cursor.slice) && cursor.slice[cursor.index] == s {
+		cursor.index++
+	}
+}
+
+func (cursor *strSliceCursor) skip(expected ...string) error {
+	if cursor.index >= len(cursor.slice) {
+		return fmt.Errorf("unexpected end of slice %v", cursor.slice)
 	}
 
 	if len(expected) == 0 {
-		it.index++
+		cursor.index++
 		return nil
 	}
 
-	if it.slice[it.index] == expected[0] {
-		it.index++
+	if cursor.slice[cursor.index] == expected[0] {
+		cursor.index++
 	} else {
-		return fmt.Errorf("expected '%s', but got '%s'", expected[0], it.slice[it.index])
+		return fmt.Errorf("expected '%s', but got '%s'", expected[0], cursor.slice[cursor.index])
 	}
 
 	return nil
 }
 
-func (it *strSliceCursor) curTokenBeginWithNumber() bool {
-	if it.index >= len(it.slice) {
+func (cursor *strSliceCursor) curTokenBeginWithNumber() bool {
+	if cursor.index >= len(cursor.slice) {
 		return false
 	}
 
-	if it.slice[it.index][0] >= '0' && it.slice[it.index][0] <= '9' {
+	if cursor.slice[cursor.index][0] >= '0' && cursor.slice[cursor.index][0] <= '9' {
 		return true
 	} else {
 		return false
