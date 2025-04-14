@@ -1,0 +1,5 @@
+exist_prop q(x S1) x S2:
+    p(x)
+
+know q(x)
+

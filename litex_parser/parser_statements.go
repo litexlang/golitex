@@ -225,24 +225,6 @@ func (stmt *tokenBlock) thenBlockSpecFacts(nameDepths ast.NameDepthMap) ([]*ast.
 	return facts, nil
 }
 
-func (stmt *tokenBlock) blockHeaderBodyFacts(kw string, nameDepths ast.NameDepthMap) ([]ast.FactStmt, error) {
-	facts := []ast.FactStmt{}
-	stmt.header.skip(kw)
-	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
-	}
-
-	for _, curStmt := range stmt.body {
-		fact, err := curStmt.factStmt(nameDepths, true)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
-		}
-		facts = append(facts, fact)
-	}
-
-	return facts, nil
-}
-
 func (stmt *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 	err := stmt.header.skip(glob.KeywordProp)
 	if err != nil {
@@ -269,36 +251,6 @@ func (stmt *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 	}
 
 	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
-}
-
-func (stmt *tokenBlock) bodyTwoFactSections(kw string, nameDepths ast.NameDepthMap) ([]ast.FactStmt, []ast.FactStmt, error) {
-	section1Facts := []ast.FactStmt{}
-	section2Facts := []ast.FactStmt{}
-	err := error(nil)
-
-	if stmt.body[len(stmt.body)-1].header.is(kw) {
-		for i := 0; i < len(stmt.body)-1; i++ {
-			curStmt, err := stmt.body[i].factStmt(nameDepths, true)
-			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *stmt}
-			}
-			section1Facts = append(section1Facts, curStmt)
-		}
-		section2Facts, err = stmt.body[len(stmt.body)-1].blockHeaderBodyFacts(kw, nameDepths)
-		if err != nil {
-			return nil, nil, &tokenBlockErr{err, *stmt}
-		}
-	} else {
-		for i := 0; i < len(stmt.body); i++ {
-			curStmt, err := stmt.body[i].factStmt(nameDepths, true)
-			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *stmt}
-			}
-			section2Facts = append(section2Facts, curStmt)
-		}
-	}
-
-	return section1Facts, section2Facts, nil
 }
 
 func (stmt *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
@@ -509,12 +461,16 @@ func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 		return nil, &tokenBlockErr{err, *stmt}
 	}
 
-	domFacts, thenFacts, err := stmt.bodyTwoFactSections(glob.KeywordIff, nameDepths)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+	thenFacts := []ast.FactStmt{}
+	for _, bodyFactStmt := range stmt.body {
+		fact, err := bodyFactStmt.factStmt(nameDepths, true)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *stmt}
+		}
+		thenFacts = append(thenFacts, fact)
 	}
 
-	return ast.NewDefConExistPropStmt(*decl, existObjOrFn, existObjOrFnTypes, domFacts, thenFacts), nil
+	return ast.NewDefConExistPropStmt(*decl, existObjOrFn, existObjOrFnTypes, thenFacts), nil
 }
 
 func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
@@ -581,7 +537,7 @@ func (stmt *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFact
 
 func (stmt *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 	stmt.header.skip(glob.KeywordAxiom)
-	decl, err := stmt.defPropExistStmt()
+	decl, err := stmt.defPropOrExistPropStmt()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *stmt}
 	}
@@ -606,7 +562,7 @@ func (stmt *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
 		return nil, fmt.Errorf("expect two statements in thm")
 	}
 
-	decl, err := stmt.body[0].defPropExistStmt()
+	decl, err := stmt.body[0].defPropOrExistPropStmt()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *stmt}
 	}
@@ -858,7 +814,7 @@ func (b *tokenBlock) isSpecFactNotRelaFact() (bool, error) {
 	return false, nil
 }
 
-func (stmt *tokenBlock) defPropExistStmt() (ast.DefPropStmt, error) {
+func (stmt *tokenBlock) defPropOrExistPropStmt() (ast.DefPropOrExistPropStmt, error) {
 	if stmt.header.is(glob.KeywordProp) {
 		prop, err := stmt.defConPropStmt()
 		if err != nil {

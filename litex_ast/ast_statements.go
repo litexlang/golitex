@@ -38,7 +38,6 @@ type DefConExistPropStmt struct {
 	DefHeader   ConDefHeader
 	ExistFc     []string
 	ExistFcSets []*FcAtom
-	DomFacts    []FactStmt
 	ThenFacts   []FactStmt
 }
 
@@ -88,12 +87,12 @@ type HaveStmt struct {
 
 // syntax sugar for defining spec prop + claim forall true
 type AxiomStmt struct {
-	Decl DefPropStmt
+	Decl DefPropOrExistPropStmt
 }
 
 // syntax sugar for defining spec prop + claim forall true + prove it
 type ThmStmt struct {
-	Decl  DefPropStmt
+	Decl  DefPropOrExistPropStmt
 	Proof []Stmt
 }
 
