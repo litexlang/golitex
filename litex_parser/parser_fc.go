@@ -292,16 +292,16 @@ func (parser *strSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]
 		paramName = append(paramName, objName)
 		paramTypes = append(paramTypes, tp)
 
-		if parser.isAndSkip(endWith) {
-			break
-		}
-
-		if err := parser.testAndSkip(glob.KeySymbolComma); err != nil {
-			return nil, nil, &strSliceErr{err, parser}
+		if parser.is(glob.KeySymbolComma) {
+			parser.skip(glob.KeySymbolComma)
 		}
 	}
 
-	return paramName, paramTypes, nil
+	if parser.isAndSkip(endWith) {
+		return paramName, paramTypes, nil
+	} else {
+		return nil, nil, &strSliceErr{fmt.Errorf("expected '%s' but got '%s'", endWith, parser.strAtCurIndexPlus(0)), parser}
+	}
 }
 
 func (parser *strSliceCursor) stringSliceUntilEnd() ([]string, error) {
