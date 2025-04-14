@@ -25,6 +25,7 @@ const (
 	KeywordProp                 = "prop"
 	KeywordKnow                 = "know"
 	KeywordExistProp            = "exist_prop"
+	KeywordConstructorProp      = "constructor_prop"
 	KeywordHave                 = "have"
 	KeywordClaim                = "claim"
 	KeywordProve                = "prove"
@@ -56,34 +57,6 @@ const (
 	KeyWordFrac = "frac"
 
 	// 下面是 内置函数名
-
-	Keyword__Div__          = "__div__"
-	Keyword__Add__          = "__add__"
-	Keyword__Sub__          = "__sub__"
-	Keyword__Mul__          = "__mul__"
-	Keyword__Xor__          = "__xor__"
-	Keyword__LT__           = "__lt__"
-	Keyword__GT__           = "__gt__"
-	Keyword__Exclamation__  = "__exclamation__"
-	Keyword__Or__           = "__or__"
-	Keyword__And__          = "__and__"
-	Keyword__AddAdd__       = "__add_add__"
-	Keyword__SubSub__       = "__sub_sub__"
-	Keyword__AndAnd__       = "__and_and__"
-	Keyword__PipePipe__     = "__pipe_pipe__"
-	Keyword__EqEq__         = "__eq_eq__"
-	Keyword__NE__           = "__ne__"
-	Keyword__Pow__          = "__pow__"
-	Keyword__LT_EQ__        = "__lt_eq__"
-	Keyword__GT_EQ__        = "__gt_eq__"
-	Keyword__Union__        = "__union__"
-	Keyword__Intersection__ = "__intersection__"
-	Keyword__SubsetEq__     = "__subset_eq__"
-	Keyword__SupsetEq__     = "__supset_eq__"
-	Keyword__Subset__       = "__subset__"
-	Keyword__Supset__       = "__supset__"
-	Keyword__SubGT__        = "__sub_gt__"
-	Keyword__EqGT__         = "__eq_gt__"
 )
 
 const (
@@ -203,6 +176,7 @@ func initKeywordSet() map[string]struct{} {
 		KeywordProp,
 		KeywordKnow,
 		KeywordExistProp,
+		KeywordConstructorProp,
 		KeywordHave,
 		KeywordClaim,
 		KeywordProve,
@@ -231,35 +205,6 @@ func initKeywordSet() map[string]struct{} {
 		// 内置函数
 		KeywordIs,
 		KeywordIn,
-
-		// 运算符函数
-		Keyword__Div__,
-		Keyword__Add__,
-		Keyword__Sub__,
-		Keyword__Mul__,
-		Keyword__Xor__,
-		Keyword__LT__,
-		Keyword__GT__,
-		Keyword__Exclamation__,
-		Keyword__Or__,
-		Keyword__And__,
-		Keyword__AddAdd__,
-		Keyword__SubSub__,
-		Keyword__AndAnd__,
-		Keyword__PipePipe__,
-		Keyword__EqEq__,
-		Keyword__NE__,
-		Keyword__Pow__,
-		Keyword__LT_EQ__,
-		Keyword__GT_EQ__,
-		Keyword__Union__,
-		Keyword__Intersection__,
-		Keyword__SubsetEq__,
-		Keyword__SupsetEq__,
-		Keyword__Subset__,
-		Keyword__Supset__,
-		Keyword__SubGT__,
-		Keyword__EqGT__,
 	}
 
 	keywordSet := make(map[string]struct{})
