@@ -150,17 +150,46 @@ func (f *DefConFnStmt) String() string {
 }
 func (f *ClaimProveStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProve)
-	builder.WriteString(":\n")
-	if len(f.ToCheckFacts) != 0 {
-		panic("TODO")
+
+	if len(f.ToCheckFacts) == 0 {
+		if f.IsProve {
+			builder.WriteString(glob.KeywordProve)
+		} else {
+			builder.WriteString(glob.KeywordProveByContradiction)
+		}
+		builder.WriteString(":\n")
+		if len(f.ToCheckFacts) != 0 {
+
+		} else {
+			for _, fact := range f.Proofs {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+				builder.WriteByte('\n')
+			}
+		}
+		return strings.TrimSpace(builder.String())
 	} else {
-		for _, fact := range f.Proofs {
+		builder.WriteString(glob.KeywordClaim)
+		builder.WriteByte(':')
+		builder.WriteByte('\n')
+
+		for _, fact := range f.ToCheckFacts {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
 			builder.WriteByte('\n')
 		}
+
+		if f.IsProve {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+		} else {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProveByContradiction, 1))
+		}
+		builder.WriteByte(':')
+		builder.WriteByte('\n')
+		for _, fact := range f.Proofs {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
+			builder.WriteByte('\n')
+		}
+		return strings.TrimSpace(builder.String())
 	}
-	return strings.TrimSpace(builder.String())
 }
 func (s *DefConExistPropStmt) String() string { panic("") }
 func (s *HaveStmt) String() string            { panic("") }
