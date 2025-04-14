@@ -1,0 +1,53 @@
+prove:
+    know p(1)
+    p(1)
+
+prove_by_contradiction:
+    know p(1)
+    p(1)
+
+prove:
+    know:
+        forall x nat:
+            p(x)
+            then:
+                p(x + 1)
+    know p(0)
+
+    claim:
+        p(2)
+        prove:
+            p(0+1)
+            p(1 + 1)
+    
+# 有点问题
+prove:
+    know:
+        forall x obj, a set, b set:
+            x in a
+            x in b
+            then:
+                x in intersection(a,b)
+
+    know:
+        not x in intersection(a,b)
+        x in a
+    claim:
+        not x in b
+        prove_by_contradiction:
+            x in intersection(a,b)
+    
+prove:
+    know:
+        forall x nat:
+            p(x)
+            then:
+                p(x + 1)
+    know not p(2)
+
+    claim:
+        not p(0)
+        prove_by_contradiction:
+            p(0+1)
+            p(1 + 1)
+            p(2)

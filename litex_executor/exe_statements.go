@@ -116,16 +116,16 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 
 	defer exec.deleteEnvAndRetainMsg()
 
-	// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里。运行方式是，空转这些命题，如果空转出现错误了，比如某变量没定义，那就报错
-
-	for _, curStmt := range stmt.Proofs {
-		err := exec.stmt(curStmt)
-		if err != nil {
-			return err
-		}
-	}
-
 	if stmt.IsProve {
+		for _, curStmt := range stmt.Proofs {
+			err := exec.stmt(curStmt)
+			if err != nil {
+				return err
+			}
+		}
+
+		// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里。运行方式是，空转这些命题，如果空转出现错误了，比如某变量没定义，那就报错
+
 		for _, fact := range stmt.ToCheckFacts {
 			ok, _, err := exec.checkFactStmt(fact)
 			if err != nil {
@@ -136,25 +136,52 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 				return nil
 			}
 		}
+
+		exec.appendNewMsg("%v success", glob.KeywordProve)
+		return nil
+
 	} else {
-		for _, fact := range stmt.ToCheckFacts {
-			// TODO
-			newFact, err := ast.ReverseIsTrue(fact)
+		if len(stmt.ToCheckFacts) != 1 {
+			return fmt.Errorf("prove by contradiction only support one fact")
+		}
+
+		newClaimFact, err := ast.ReverseIsTrue(stmt.ToCheckFacts[0])
+		if err != nil {
+			return err
+		}
+
+		err = exec.env.NewFact(newClaimFact)
+		if err != nil {
+			return err
+		}
+
+		for _, curStmt := range stmt.Proofs {
+			err := exec.stmt(curStmt)
 			if err != nil {
 				return err
 			}
-			ok, _, err := exec.checkFactStmt(newFact)
-			if err != nil {
-				return err
-			}
-			if !ok {
-				exec.appendNewMsg("%v prove failed", newFact.String())
-				return nil
-			}
+		}
+
+		lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(ast.FactStmt)
+		if !ok {
+			return fmt.Errorf("prove by contradiction only support fact")
+		}
+
+		reverseLastFact, err := ast.ReverseIsTrue(lastStmtAsFact)
+		if err != nil {
+			return err
+		}
+
+		ok, _, err = exec.checkFactStmt(reverseLastFact)
+		if err != nil {
+			return err
+		}
+		if ok {
+			exec.appendNewMsg("%v success", glob.KeywordProveByContradiction)
+			return nil
 		}
 	}
 
-	exec.appendNewMsg("prove success")
 	return nil
 }
 
