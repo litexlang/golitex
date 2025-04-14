@@ -375,7 +375,7 @@ func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 }
 
 func (stmt *tokenBlock) claimStmt() (*ast.ClaimProveStmt, error) {
-	stmt.header.skip()
+	stmt.header.skip(glob.KeywordClaim)
 	err := error(nil)
 
 	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
@@ -420,10 +420,10 @@ func (stmt *tokenBlock) claimStmt() (*ast.ClaimProveStmt, error) {
 }
 
 func (stmt *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
-	proveTrue := true
+	isProve := true
 
 	if stmt.header.is(glob.KeywordProveByContradiction) {
-		proveTrue = false
+		isProve = false
 		stmt.header.skip(glob.KeywordProveByContradiction)
 	} else if stmt.header.is(glob.KeywordProve) {
 		stmt.header.skip(glob.KeywordProve)
@@ -442,7 +442,7 @@ func (stmt *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
 		}
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
-	return ast.NewClaimProveStmt(proveTrue, []ast.FactStmt{}, innerStmtArr), nil
+	return ast.NewClaimProveStmt(isProve, []ast.FactStmt{}, innerStmtArr), nil
 }
 
 func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {

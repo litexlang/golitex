@@ -78,7 +78,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 		if glob.CheckFalse {
 			switch stmt := stmt.(type) {
 			case *ast.SpecFactStmt:
-				newStmt := stmt.GetReverseIsTrueReverseFact()
+				newStmt := stmt.ReverseIsTrue()
 				ok, _, err := exec.checkFactStmt(newStmt)
 				if err != nil {
 					return err
@@ -116,6 +116,8 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 
 	defer exec.deleteEnvAndRetainMsg()
 
+	// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里。运行方式是，空转这些命题，如果空转出现错误了，比如某变量没定义，那就报错
+
 	for _, curStmt := range stmt.Proofs {
 		err := exec.stmt(curStmt)
 		if err != nil {
@@ -123,7 +125,36 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 		}
 	}
 
-	// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里
+	if stmt.IsProve {
+		for _, fact := range stmt.ToCheckFacts {
+			ok, _, err := exec.checkFactStmt(fact)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				exec.appendNewMsg("%v prove failed", fact.String())
+				return nil
+			}
+		}
+	} else {
+		for _, fact := range stmt.ToCheckFacts {
+			// TODO
+			newFact, err := ast.ReverseIsTrue(fact)
+			if err != nil {
+				return err
+			}
+			ok, _, err := exec.checkFactStmt(newFact)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				exec.appendNewMsg("%v prove failed", fact.String())
+				return nil
+			}
+		}
+	}
+
+	exec.appendNewMsg("prove success")
 	return nil
 }
 
