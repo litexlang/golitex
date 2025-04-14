@@ -132,9 +132,7 @@ func (stmt *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFact
 		}
 
 		params = append(params, param)
-		if stmt.header.is(glob.KeySymbolComma) {
-			stmt.header.next()
-		}
+		stmt.header.skipIfIs(glob.KeySymbolComma)
 	}
 
 	err = stmt.header.skip(glob.KeySymbolRightBrace)
@@ -162,9 +160,8 @@ func (stmt *tokenBlock) ExistFactStmt(nameDepths ast.NameDepthMap) (*ast.ExistFa
 			return nil, &tokenBlockErr{err, *stmt}
 		}
 		existFc = append(existFc, fc)
-		if stmt.header.is(glob.KeySymbolComma) {
-			stmt.header.skip(glob.KeySymbolComma)
-		} else {
+
+		if !stmt.header.isAndSkip(glob.KeySymbolComma) {
 			break
 		}
 	}
@@ -327,22 +324,19 @@ func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	objSets := []ast.Fc{}
 
 	for !stmt.header.is(glob.KeySymbolColon) && !stmt.header.ExceedEnd() {
-		decl, err := stmt.header.next()
+		objName, err := stmt.header.next()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *stmt}
 		}
-		if stmt.header.is(glob.KeySymbolComma) {
-			err = stmt.header.skip(glob.KeySymbolColon)
-			if err != nil {
-				return nil, &tokenBlockErr{err, *stmt}
-			}
-		}
-		objNames = append(objNames, decl)
+		objNames = append(objNames, objName)
+
 		tp, err := stmt.header.rawFc()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *stmt}
 		}
 		objSets = append(objSets, tp)
+
+		stmt.header.skipIfIs(glob.KeySymbolComma)
 	}
 
 	facts := []ast.FactStmt{}
@@ -487,9 +481,7 @@ func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 		existObjOrFn = append(existObjOrFn, decl)
 		existObjOrFnTypes = append(existObjOrFnTypes, &tp)
 
-		if stmt.header.is(glob.KeySymbolComma) {
-			stmt.header.skip()
-		}
+		stmt.header.skipIfIs(glob.KeySymbolComma)
 	}
 
 	err = stmt.header.skip(glob.KeySymbolColon)
@@ -717,9 +709,7 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, err
 		param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
 		params = append(params, param)
 
-		if stmt.header.is(glob.KeySymbolComma) {
-			stmt.header.skip()
-		}
+		stmt.header.skipIfIs(glob.KeySymbolComma)
 	}
 
 	err = stmt.header.skip(glob.KeySymbolRightBrace)
