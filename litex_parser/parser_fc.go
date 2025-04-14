@@ -293,28 +293,6 @@ func (cursor *strSliceCursor) paramSliceInDeclHeadAndSkipEnd(endWith string) ([]
 	}
 }
 
-func (cursor *strSliceCursor) stringSliceUntilEnd() ([]string, error) {
-	members := []string{}
-
-	for {
-		member, err := cursor.next()
-		if err != nil {
-			return nil, &strSliceErr{err, cursor}
-		}
-		members = append(members, member)
-		if !cursor.is(glob.KeySymbolComma) {
-			break
-		}
-		cursor.skip()
-	}
-
-	if !cursor.ExceedEnd() {
-		return nil, &strSliceErr{fmt.Errorf("expected comma or end of string array"), cursor}
-	}
-
-	return members, nil
-}
-
 func (cursor *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 	err := cursor.skip(glob.KeywordIs)
 	if err != nil {

@@ -18,182 +18,182 @@ import (
 	"strings"
 )
 
-func (stmt *tokenBlock) TopStmt() (*ast.TopStmt, error) {
+func (tb *tokenBlock) TopStmt() (*ast.TopStmt, error) {
 	pub := false
-	if stmt.header.is(glob.KeywordPub) {
-		stmt.header.skip()
+	if tb.header.is(glob.KeywordPub) {
+		tb.header.skip()
 		pub = true
 	}
 
-	ret, err := stmt.Stmt()
+	ret, err := tb.Stmt()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ast.NewTopStmt(ret, pub), nil
 }
 
-func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
-	cur, err := stmt.header.currentToken()
+func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
+	cur, err := tb.header.currentToken()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	var ret ast.Stmt
 	switch cur {
 	case glob.KeywordInterface:
-		ret, err = stmt.defInterfaceStmt()
+		ret, err = tb.defInterfaceStmt()
 	case glob.KeywordType:
-		ret, err = stmt.defTypeStmt()
+		ret, err = tb.defTypeStmt()
 	case glob.KeywordProp:
-		ret, err = stmt.defConPropStmt()
+		ret, err = tb.defConPropStmt()
 	case glob.KeywordExistProp:
-		ret, err = stmt.defConExistPropStmt()
+		ret, err = tb.defConExistPropStmt()
 	case glob.KeywordFn:
-		ret, err = stmt.defConFnStmt()
+		ret, err = tb.defConFnStmt()
 	case glob.KeywordObj:
-		ret, err = stmt.defObjStmt()
+		ret, err = tb.defObjStmt()
 	case glob.KeywordClaim:
-		ret, err = stmt.claimStmt()
+		ret, err = tb.claimStmt()
 	case glob.KeywordProve:
-		ret, err = stmt.proveClaimStmt()
+		ret, err = tb.proveClaimStmt()
 	case glob.KeywordProveByContradiction:
-		ret, err = stmt.proveClaimStmt()
+		ret, err = tb.proveClaimStmt()
 	case glob.KeywordKnow:
-		ret, err = stmt.knowStmt()
+		ret, err = tb.knowStmt()
 	case glob.KeywordHave:
-		ret, err = stmt.haveStmt()
+		ret, err = tb.haveStmt()
 	case glob.KeywordAxiom:
-		ret, err = stmt.axiomStmt()
+		ret, err = tb.axiomStmt()
 	case glob.KeywordThm:
-		ret, err = stmt.thmStmt()
+		ret, err = tb.thmStmt()
 	default:
-		ret, err = stmt.factStmt(ast.NameDepthMap{}, true)
+		ret, err = tb.factStmt(ast.NameDepthMap{}, true)
 	}
 
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if !stmt.header.ExceedEnd() {
-		return nil, &tokenBlockErr{err, *stmt}
+	if !tb.header.ExceedEnd() {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ret, nil
 }
 
-func (stmt *tokenBlock) factStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (ast.FactStmt, error) {
-	if stmt.header.is(glob.KeywordForall) {
-		return stmt.uniFactStmt(nameDepths, allowUniFactInUniDom)
-	} else if stmt.header.is(glob.KeywordWhen) {
-		return stmt.condFactStmt(nameDepths)
-	} else if stmt.header.is(glob.KeywordExist) {
-		return stmt.ExistFactStmt(nameDepths)
+func (tb *tokenBlock) factStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (ast.FactStmt, error) {
+	if tb.header.is(glob.KeywordForall) {
+		return tb.uniFactStmt(nameDepths, allowUniFactInUniDom)
+	} else if tb.header.is(glob.KeywordWhen) {
+		return tb.condFactStmt(nameDepths)
+	} else if tb.header.is(glob.KeywordExist) {
+		return tb.ExistFactStmt(nameDepths)
 	}
-	return stmt.specFactStmt(nameDepths)
+	return tb.specFactStmt(nameDepths)
 }
 
-func (stmt *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
+func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
 	isTrue := true
-	if stmt.header.is(glob.KeywordNot) {
-		stmt.header.skip(glob.KeywordNot)
+	if tb.header.is(glob.KeywordNot) {
+		tb.header.skip(glob.KeywordNot)
 		isTrue = false
 	}
 
-	ok, err := stmt.isSpecFactNotRelaFact()
+	ok, err := tb.isSpecFactNotRelaFact()
 	if err != nil {
 		return nil, err
 	}
 	if !ok {
-		return stmt.relaFactStmt(nameDepths)
+		return tb.relaFactStmt(nameDepths)
 	}
 
-	propName, err := stmt.header.rawFcAtom()
+	propName, err := tb.header.rawFcAtom()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 	propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepths)
 
 	params := []ast.Fc{}
-	err = stmt.header.skip(glob.KeySymbolLeftBrace)
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	for !stmt.header.is(glob.KeySymbolRightBrace) {
-		param, err := stmt.header.rawFc()
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.header.rawFc()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 
 		param, err = ast.AddUniPrefixToFc(param, nameDepths)
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 
 		params = append(params, param)
-		stmt.header.skipIfIs(glob.KeySymbolComma)
+		tb.header.skipIfIs(glob.KeySymbolComma)
 	}
 
-	err = stmt.header.skip(glob.KeySymbolRightBrace)
+	err = tb.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ast.NewSpecFactStmt(isTrue, propName, params), nil
 }
 
-func (stmt *tokenBlock) ExistFactStmt(nameDepths ast.NameDepthMap) (*ast.ExistFactStmt, error) {
-	err := stmt.header.skip(glob.KeywordExist)
+func (tb *tokenBlock) ExistFactStmt(nameDepths ast.NameDepthMap) (*ast.ExistFactStmt, error) {
+	err := tb.header.skip(glob.KeywordExist)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	existFc := []ast.Fc{}
-	for !stmt.header.ExceedEnd() {
-		fc, err := stmt.header.rawFc()
+	for !tb.header.ExceedEnd() {
+		fc, err := tb.header.rawFc()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		fc, err = ast.AddUniPrefixToFc(fc, nameDepths)
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		existFc = append(existFc, fc)
 
-		if !stmt.header.isAndSkip(glob.KeySymbolComma) {
+		if !tb.header.isAndSkip(glob.KeySymbolComma) {
 			break
 		}
 	}
 
-	specFact, err := stmt.specFactStmt(nameDepths)
+	specFact, err := tb.specFactStmt(nameDepths)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ast.NewExistFactStmt(specFact, existFc), nil
 }
 
-func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (ast.UniFactStmt, error) {
-	err := stmt.header.skip(glob.KeywordForall)
+func (tb *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (ast.UniFactStmt, error) {
+	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	typeParams := []string{}
 	typeInterfaces := []*ast.FcAtom{}
 
-	if stmt.header.is(glob.KeySymbolLess) {
-		stmt.header.next()
-		typeParams, typeInterfaces, err = stmt.header.typeListInDeclsAndSkipEnd(glob.KeySymbolGreater)
+	if tb.header.is(glob.KeySymbolLess) {
+		tb.header.next()
+		typeParams, typeInterfaces, err = tb.header.typeListInDeclsAndSkipEnd(glob.KeySymbolGreater)
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 	}
 
-	params, paramTypes, err := stmt.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
+	params, paramTypes, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	newUniParams := ast.NameDepthMap{}
@@ -212,9 +212,9 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, allowUniFactInU
 		}
 	}
 
-	domainFacts, thenFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, newUniParams, allowUniFactInUniDom)
+	domainFacts, thenFacts, err := tb.bodyFactSectionSpecFactSection(glob.KeywordThen, newUniParams, allowUniFactInUniDom)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	if len(typeParams) > 0 {
@@ -224,12 +224,12 @@ func (stmt *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, allowUniFactInU
 	}
 }
 
-func (stmt *tokenBlock) bodyFacts(nameDepths ast.NameDepthMap) ([]ast.FactStmt, error) {
+func (tb *tokenBlock) bodyFacts(nameDepths ast.NameDepthMap) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
-	for _, f := range stmt.body {
+	for _, f := range tb.body {
 		fact, err := f.factStmt(nameDepths, true)
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		facts = append(facts, fact)
 	}
@@ -237,14 +237,14 @@ func (stmt *tokenBlock) bodyFacts(nameDepths ast.NameDepthMap) ([]ast.FactStmt, 
 	return facts, nil
 }
 
-func (stmt *tokenBlock) thenBlockSpecFacts(nameDepths ast.NameDepthMap) ([]*ast.SpecFactStmt, error) {
+func (tb *tokenBlock) thenBlockSpecFacts(nameDepths ast.NameDepthMap) ([]*ast.SpecFactStmt, error) {
 	facts := []*ast.SpecFactStmt{}
-	stmt.header.skip() // skip "then"
-	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+	tb.header.skip() // skip "then"
+	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	for _, curStmt := range stmt.body {
+	for _, curStmt := range tb.body {
 		fact, err := curStmt.specFactStmt(nameDepths)
 		if err != nil {
 			return nil, thenFactMustSpecMsg(&curStmt, err)
@@ -256,146 +256,146 @@ func (stmt *tokenBlock) thenBlockSpecFacts(nameDepths ast.NameDepthMap) ([]*ast.
 	return facts, nil
 }
 
-func (stmt *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
-	err := stmt.header.skip(glob.KeywordProp)
+func (tb *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
+	err := tb.header.skip(glob.KeywordProp)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	declHeader, nameDepths, err := stmt.conDefHeader()
+	declHeader, nameDepths, err := tb.conDefHeader()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if !stmt.header.is(glob.KeySymbolColon) {
+	if !tb.header.is(glob.KeySymbolColon) {
 		return ast.NewDefConPropStmt(*declHeader, nil, nil), nil
 	}
 
-	err = stmt.header.skip(glob.KeySymbolColon)
+	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	domFacts, iffFacts, err := stmt.bodyFactSectionSpecFactSection(glob.KeywordIff, nameDepths, true)
+	domFacts, iffFacts, err := tb.bodyFactSectionSpecFactSection(glob.KeywordIff, nameDepths, true)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 
-func (stmt *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
-	err := stmt.header.skip(glob.KeywordFn)
+func (tb *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
+	err := tb.header.skip(glob.KeywordFn)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	decl, nameDepths, err := stmt.conDefHeader()
+	decl, nameDepths, err := tb.conDefHeader()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	retType, err := stmt.header.rawFc()
+	retType, err := tb.header.rawFc()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	domFacts := []ast.FactStmt{}
 	thenFacts := []*ast.SpecFactStmt{}
 
-	if stmt.header.is(glob.KeySymbolColon) {
-		stmt.header.skip()
-		domFacts, thenFacts, err = stmt.bodyFactSectionSpecFactSection(glob.KeywordThen, nameDepths, true)
+	if tb.header.is(glob.KeySymbolColon) {
+		tb.header.skip()
+		domFacts, thenFacts, err = tb.bodyFactSectionSpecFactSection(glob.KeywordThen, nameDepths, true)
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 	}
 
 	return ast.NewDefConFnStmt(*decl, retType, domFacts, thenFacts), nil
 }
 
-func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
-	err := stmt.header.skip(glob.KeywordObj)
+func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
+	err := tb.header.skip(glob.KeywordObj)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	objNames := []string{}
 	objSets := []ast.Fc{}
 
-	for !stmt.header.is(glob.KeySymbolColon) && !stmt.header.ExceedEnd() {
-		objName, err := stmt.header.next()
+	for !tb.header.is(glob.KeySymbolColon) && !tb.header.ExceedEnd() {
+		objName, err := tb.header.next()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		objNames = append(objNames, objName)
 
-		tp, err := stmt.header.rawFc()
+		tp, err := tb.header.rawFc()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		objSets = append(objSets, tp)
 
-		stmt.header.skipIfIs(glob.KeySymbolComma)
+		tb.header.skipIfIs(glob.KeySymbolComma)
 	}
 
 	facts := []ast.FactStmt{}
 
-	if !stmt.header.ExceedEnd() && stmt.header.is(glob.KeySymbolColon) {
-		stmt.header.skip()
-		facts, err = stmt.bodyFacts(ast.NameDepthMap{})
+	if !tb.header.ExceedEnd() && tb.header.is(glob.KeySymbolColon) {
+		tb.header.skip()
+		facts, err = tb.bodyFacts(ast.NameDepthMap{})
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
-	} else if !stmt.header.ExceedEnd() {
+	} else if !tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
 	return ast.NewDefObjStmt(objNames, objSets, facts), nil
 }
 
-func (stmt *tokenBlock) claimStmt() (*ast.ClaimProveStmt, error) {
-	stmt.header.skip(glob.KeywordClaim)
+func (tb *tokenBlock) claimStmt() (*ast.ClaimProveStmt, error) {
+	tb.header.skip(glob.KeywordClaim)
 	err := error(nil)
 
-	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	toCheck := &[]ast.FactStmt{}
 	proof := &[]ast.Stmt{}
 
-	for i := 0; i < len(stmt.body)-1; i++ {
-		if !stmt.header.is(glob.KeywordProve) && !stmt.header.is(glob.KeywordProveByContradiction) {
-			fact, err := stmt.body[i].factStmt(ast.NameDepthMap{}, true)
+	for i := 0; i < len(tb.body)-1; i++ {
+		if !tb.header.is(glob.KeywordProve) && !tb.header.is(glob.KeywordProveByContradiction) {
+			fact, err := tb.body[i].factStmt(ast.NameDepthMap{}, true)
 			if err != nil {
-				return nil, &tokenBlockErr{err, *stmt}
+				return nil, &tokenBlockErr{err, *tb}
 			}
 			*toCheck = append(*toCheck, fact)
 		}
 	}
 
 	isProve := true
-	if stmt.body[len(stmt.body)-1].header.is(glob.KeywordProveByContradiction) {
+	if tb.body[len(tb.body)-1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
 		// prove_by_contradiction 时不能超过1个checkFact
 		if len(*toCheck) > 1 {
 			return nil, fmt.Errorf("%v expect only one checkFact", glob.KeywordProveByContradiction)
 		}
-	} else if !stmt.body[len(stmt.body)-1].header.is(glob.KeywordProve) {
+	} else if !tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
 	}
-	stmt.body[len(stmt.body)-1].header.skip()
+	tb.body[len(tb.body)-1].header.skip()
 
-	err = stmt.body[len(stmt.body)-1].header.testAndSkip(glob.KeySymbolColon)
+	err = tb.body[len(tb.body)-1].header.testAndSkip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	for _, block := range stmt.body[len(stmt.body)-1].body {
+	for _, block := range tb.body[len(tb.body)-1].body {
 		curStmt, err := block.Stmt()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		*proof = append(*proof, curStmt)
 	}
@@ -403,97 +403,97 @@ func (stmt *tokenBlock) claimStmt() (*ast.ClaimProveStmt, error) {
 	return ast.NewClaimProveStmt(isProve, *toCheck, *proof), nil
 }
 
-func (stmt *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
+func (tb *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
 	isProve := true
 
-	if stmt.header.is(glob.KeywordProveByContradiction) {
+	if tb.header.is(glob.KeywordProveByContradiction) {
 		isProve = false
-		stmt.header.skip(glob.KeywordProveByContradiction)
-	} else if stmt.header.is(glob.KeywordProve) {
-		stmt.header.skip(glob.KeywordProve)
+		tb.header.skip(glob.KeywordProveByContradiction)
+	} else if tb.header.is(glob.KeywordProve) {
+		tb.header.skip(glob.KeywordProve)
 	} else {
 		return nil, fmt.Errorf("expect prove or prove_by_contradiction")
 	}
-	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	innerStmtArr := []ast.Stmt{}
-	for _, innerStmt := range stmt.body {
+	for _, innerStmt := range tb.body {
 		curStmt, err := innerStmt.Stmt()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
 	return ast.NewClaimProveStmt(isProve, []ast.FactStmt{}, innerStmtArr), nil
 }
 
-func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
-	stmt.header.skip(glob.KeywordKnow)
+func (tb *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
+	tb.header.skip(glob.KeywordKnow)
 
-	if !stmt.header.is(glob.KeySymbolColon) {
+	if !tb.header.is(glob.KeySymbolColon) {
 		facts := []ast.FactStmt{}
-		fact, err := stmt.factStmt(ast.NameDepthMap{}, true)
+		fact, err := tb.factStmt(ast.NameDepthMap{}, true)
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		facts = append(facts, fact) // 之所以不能用,让know后面同一行里能有很多很多事实，是因为forall-fact是会换行的
 		return ast.NewKnowStmt(facts), nil
 	}
 
-	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	facts, err := stmt.bodyFacts(ast.NameDepthMap{})
+	facts, err := tb.bodyFacts(ast.NameDepthMap{})
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ast.NewKnowStmt(facts), nil
 }
 
-func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
-	err := stmt.header.skip(glob.KeywordExistProp)
+func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
+	err := tb.header.skip(glob.KeywordExistProp)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	decl, nameDepths, err := stmt.conDefHeader()
+	decl, nameDepths, err := tb.conDefHeader()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	existObjOrFn := []string{}
 	existObjOrFnTypes := []*ast.FcAtom{}
 
-	for !stmt.header.is(glob.KeySymbolColon) && !stmt.header.ExceedEnd() {
-		decl, err := stmt.header.next()
+	for !tb.header.is(glob.KeySymbolColon) && !tb.header.ExceedEnd() {
+		decl, err := tb.header.next()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
-		tp, err := stmt.header.rawFcAtom()
+		tp, err := tb.header.rawFcAtom()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		decl = fmt.Sprintf("%s%s", glob.UniParamPrefix, decl)
 		existObjOrFn = append(existObjOrFn, decl)
 		existObjOrFnTypes = append(existObjOrFnTypes, &tp)
 
-		stmt.header.skipIfIs(glob.KeySymbolComma)
+		tb.header.skipIfIs(glob.KeySymbolComma)
 	}
 
-	err = stmt.header.skip(glob.KeySymbolColon)
+	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	thenFacts := []ast.FactStmt{}
-	for _, bodyFactStmt := range stmt.body {
+	for _, bodyFactStmt := range tb.body {
 		fact, err := bodyFactStmt.factStmt(nameDepths, true)
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		thenFacts = append(thenFacts, fact)
 	}
@@ -501,61 +501,63 @@ func (stmt *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) 
 	return ast.NewDefConExistPropStmt(*decl, existObjOrFn, existObjOrFnTypes, thenFacts), nil
 }
 
-func (stmt *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
-	stmt.header.skip(glob.KeywordHave)
-	propStmt, err := stmt.specFactStmt(ast.NameDepthMap{})
+func (tb *tokenBlock) haveStmt() (*ast.HaveStmt, error) {
+	tb.header.skip(glob.KeywordHave)
+
+	haveObjNames := []string{}
+
+	for !tb.header.ExceedEnd() {
+		objName, err := tb.header.next()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		haveObjNames = append(haveObjNames, objName)
+
+		if !tb.header.isAndSkip(glob.KeySymbolComma) {
+			break
+		}
+	}
+
+	propStmt, err := tb.specFactStmt(ast.NameDepthMap{})
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if !stmt.header.is(glob.KeySymbolColon) {
-		return nil, fmt.Errorf("expected ':'")
-	}
-
-	if len(stmt.body) != 1 {
-		return nil, fmt.Errorf("expect one string in members")
-	}
-
-	members, err := stmt.body[0].header.stringSliceUntilEnd()
-	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
-	}
-
-	return ast.NewHaveStmt(*propStmt, members), nil
+	return ast.NewHaveStmt(*propStmt, haveObjNames), nil
 }
 
 // relaFact 只支持2个参数的关系
-func (stmt *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
-	fc, err := stmt.header.rawFc()
+func (tb *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
+	fc, err := tb.header.rawFc()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 	fc, err = ast.AddUniPrefixToFc(fc, nameDepths)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if stmt.header.strAtCurIndexPlus(0) == glob.KeywordIs {
-		return stmt.header.isExpr(fc)
+	if tb.header.strAtCurIndexPlus(0) == glob.KeywordIs {
+		return tb.header.isExpr(fc)
 	}
 
-	opt, err := stmt.header.next()
+	opt, err := tb.header.next()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	// 我认为没必要一定是内置的符号，可以是用户自定义的
 	// if !glob.IsKeySymbolRelaProp(opt) {
-	// 	return nil, &parseTimeErr{err, *stmt}
+	// 	return nil, &parseTimeErr{err, *tb}
 	// }
 
-	fc2, err := stmt.header.rawFc()
+	fc2, err := tb.header.rawFc()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 	fc2, err = ast.AddUniPrefixToFc(fc2, nameDepths)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	params := []ast.Fc{fc, fc2}
@@ -563,57 +565,57 @@ func (stmt *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFact
 	return ast.NewSpecFactStmt(true, ast.FcAtom{Value: opt}, params), nil
 }
 
-func (stmt *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
-	stmt.header.skip(glob.KeywordAxiom)
-	decl, err := stmt.defPropOrExistPropStmt()
+func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
+	tb.header.skip(glob.KeywordAxiom)
+	decl, err := tb.defPropOrExistPropStmt()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ast.NewAxiomStmt(decl), nil
 }
 
-func (stmt *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
-	err := stmt.header.skip(glob.KeywordThm)
+func (tb *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
+	err := tb.header.skip(glob.KeywordThm)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
-	err = stmt.header.skip(glob.KeySymbolColon)
+	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
-	if !stmt.header.ExceedEnd() {
+	if !tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect end of line")
 	}
 
-	if len(stmt.body) != 2 {
+	if len(tb.body) != 2 {
 		return nil, fmt.Errorf("expect two statements in thm")
 	}
 
-	decl, err := stmt.body[0].defPropOrExistPropStmt()
+	decl, err := tb.body[0].defPropOrExistPropStmt()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	facts, err := stmt.body[1].proveBlock()
+	facts, err := tb.body[1].proveBlock()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ast.NewThmStmt(decl, facts), nil
 }
 
-func (stmt *tokenBlock) proveBlock() ([]ast.Stmt, error) {
-	stmt.header.skip(glob.KeywordProve)
-	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+func (tb *tokenBlock) proveBlock() ([]ast.Stmt, error) {
+	tb.header.skip(glob.KeywordProve)
+	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	innerStmtArr := []ast.Stmt{}
-	for _, innerStmt := range stmt.body {
+	for _, innerStmt := range tb.body {
 		curStmt, err := innerStmt.Stmt()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
@@ -621,43 +623,43 @@ func (stmt *tokenBlock) proveBlock() ([]ast.Stmt, error) {
 	return innerStmtArr, nil
 }
 
-func (stmt *tokenBlock) condFactStmt(nameDepths ast.NameDepthMap) (*ast.CondFactStmt, error) {
-	err := stmt.header.skip(glob.KeywordWhen)
+func (tb *tokenBlock) condFactStmt(nameDepths ast.NameDepthMap) (*ast.CondFactStmt, error) {
+	err := tb.header.skip(glob.KeywordWhen)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
-	err = stmt.header.skip(glob.KeySymbolColon)
+	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
-	if !stmt.header.ExceedEnd() {
+	if !tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect end of line")
 	}
 
 	condFacts := []ast.FactStmt{}
 	thenFacts := []*ast.SpecFactStmt{}
 
-	for i := 0; i < len(stmt.body)-1; i++ {
-		fact, err := stmt.body[i].factStmt(nameDepths, true)
+	for i := 0; i < len(tb.body)-1; i++ {
+		fact, err := tb.body[i].factStmt(nameDepths, true)
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		condFacts = append(condFacts, fact)
 	}
 
-	err = stmt.body[len(stmt.body)-1].header.skip(glob.KeywordThen)
+	err = tb.body[len(tb.body)-1].header.skip(glob.KeywordThen)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
-	err = stmt.body[len(stmt.body)-1].header.skip(glob.KeySymbolColon)
+	err = tb.body[len(tb.body)-1].header.skip(glob.KeySymbolColon)
 	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	for i := len(stmt.body[len(stmt.body)-1].body) - 1; i >= 0; i-- {
-		fact, err := stmt.body[len(stmt.body)-1].body[i].specFactStmt(nameDepths)
+	for i := len(tb.body[len(tb.body)-1].body) - 1; i >= 0; i-- {
+		fact, err := tb.body[len(tb.body)-1].body[i].specFactStmt(nameDepths)
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		thenFacts = append(thenFacts, fact)
 	}
@@ -665,33 +667,33 @@ func (stmt *tokenBlock) condFactStmt(nameDepths ast.NameDepthMap) (*ast.CondFact
 	return ast.NewCondFactStmt(condFacts, thenFacts), nil
 }
 
-func (stmt *tokenBlock) defInterfaceStmt() (*ast.DefInterfaceStmt, error) {
+func (tb *tokenBlock) defInterfaceStmt() (*ast.DefInterfaceStmt, error) {
 	panic("")
 }
 
-func (stmt *tokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
+func (tb *tokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
 	panic("")
 }
 
-func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error) {
-	name, err := stmt.header.next()
+func (tb *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error) {
+	name, err := tb.header.next()
 	if err != nil {
-		return nil, nil, &tokenBlockErr{err, *stmt}
+		return nil, nil, &tokenBlockErr{err, *tb}
 	}
 
-	err = stmt.header.skip(glob.KeySymbolLeftBrace)
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
-		return nil, nil, &tokenBlockErr{err, *stmt}
+		return nil, nil, &tokenBlockErr{err, *tb}
 	}
 
 	params := []string{}
 	typeParams := []ast.Fc{}
 	nameDepths := ast.NameDepthMap{}
 
-	for !stmt.header.is(glob.KeySymbolRightBrace) {
-		param, err := stmt.header.next()
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.header.next()
 		if err != nil {
-			return nil, nil, &tokenBlockErr{err, *stmt}
+			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 
 		_, declared := nameDepths[param]
@@ -700,88 +702,88 @@ func (stmt *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, err
 		}
 		nameDepths[param] = 1
 
-		typeParam, err := stmt.header.rawFc()
+		typeParam, err := tb.header.rawFc()
 		if err != nil {
-			return nil, nil, &tokenBlockErr{err, *stmt}
+			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 
 		typeParams = append(typeParams, typeParam)
 		param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
 		params = append(params, param)
 
-		stmt.header.skipIfIs(glob.KeySymbolComma)
+		tb.header.skipIfIs(glob.KeySymbolComma)
 	}
 
-	err = stmt.header.skip(glob.KeySymbolRightBrace)
+	err = tb.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
-		return nil, nil, &tokenBlockErr{err, *stmt}
+		return nil, nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ast.NewConDefHeader(name, params, typeParams), nameDepths, nil
 }
 
-func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
+func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2SpecFacts := []*ast.SpecFactStmt{}
 	err := error(nil)
 
-	if len(stmt.body) == 0 {
-		return nil, nil, fmt.Errorf("%v expect body", stmt.header)
+	if len(tb.body) == 0 {
+		return nil, nil, fmt.Errorf("%v expect body", tb.header)
 	}
 
-	if stmt.body[0].header.is(glob.KeywordDom) {
-		err = stmt.body[0].header.skip(glob.KeywordDom)
+	if tb.body[0].header.is(glob.KeywordDom) {
+		err = tb.body[0].header.skip(glob.KeywordDom)
 		if err != nil {
-			return nil, nil, &tokenBlockErr{err, *stmt}
+			return nil, nil, &tokenBlockErr{err, *tb}
 		}
-		err = stmt.body[0].header.skip(glob.KeySymbolColon)
+		err = tb.body[0].header.skip(glob.KeySymbolColon)
 		if err != nil {
-			return nil, nil, &tokenBlockErr{err, *stmt}
+			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 
 		if allowUniFactInUniDom {
-			for i := 0; i < len(stmt.body[0].body); i++ {
-				curStmt, err := stmt.body[0].body[i].factStmt(nameDepths, true)
+			for i := 0; i < len(tb.body[0].body); i++ {
+				curStmt, err := tb.body[0].body[i].factStmt(nameDepths, true)
 				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *stmt}
+					return nil, nil, &tokenBlockErr{err, *tb}
 				}
 				section1Facts = append(section1Facts, curStmt)
 			}
 		} else {
-			for i := 0; i < len(stmt.body[0].body); i++ {
-				curStmt, err := stmt.body[0].body[i].specFactStmt(nameDepths)
+			for i := 0; i < len(tb.body[0].body); i++ {
+				curStmt, err := tb.body[0].body[i].specFactStmt(nameDepths)
 				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *stmt}
+					return nil, nil, &tokenBlockErr{err, *tb}
 				}
 				section1Facts = append(section1Facts, curStmt)
 			}
 		}
 
-		if len(stmt.body) == 1 {
+		if len(tb.body) == 1 {
 			return section1Facts, section2SpecFacts, nil
 		}
-		if !stmt.body[1].header.is(kw) {
-			for i := 1; i < len(stmt.body); i++ {
-				curStmt, err := stmt.body[i].specFactStmt(nameDepths)
+		if !tb.body[1].header.is(kw) {
+			for i := 1; i < len(tb.body); i++ {
+				curStmt, err := tb.body[i].specFactStmt(nameDepths)
 				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *stmt}
+					return nil, nil, &tokenBlockErr{err, *tb}
 				}
 				section2SpecFacts = append(section2SpecFacts, curStmt)
 			}
 			return section1Facts, section2SpecFacts, nil
 		} else {
-			err = stmt.body[1].header.skip(kw)
+			err = tb.body[1].header.skip(kw)
 			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *stmt}
+				return nil, nil, &tokenBlockErr{err, *tb}
 			}
-			err = stmt.body[1].header.skip(glob.KeySymbolColon)
+			err = tb.body[1].header.skip(glob.KeySymbolColon)
 			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *stmt}
+				return nil, nil, &tokenBlockErr{err, *tb}
 			}
-			for i := 0; i < len(stmt.body[1].body); i++ {
-				curStmt, err := stmt.body[1].body[i].specFactStmt(nameDepths)
+			for i := 0; i < len(tb.body[1].body); i++ {
+				curStmt, err := tb.body[1].body[i].specFactStmt(nameDepths)
 				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *stmt}
+					return nil, nil, &tokenBlockErr{err, *tb}
 				}
 				section2SpecFacts = append(section2SpecFacts, curStmt)
 			}
@@ -789,33 +791,33 @@ func (stmt *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast
 		}
 	}
 
-	if stmt.body[len(stmt.body)-1].header.is(kw) {
+	if tb.body[len(tb.body)-1].header.is(kw) {
 		if allowUniFactInUniDom {
-			for i := 0; i < len(stmt.body)-1; i++ {
-				curStmt, err := stmt.body[i].factStmt(nameDepths, true)
+			for i := 0; i < len(tb.body)-1; i++ {
+				curStmt, err := tb.body[i].factStmt(nameDepths, true)
 				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *stmt}
+					return nil, nil, &tokenBlockErr{err, *tb}
 				}
 				section1Facts = append(section1Facts, curStmt)
 			}
 		} else {
-			for i := 0; i < len(stmt.body)-1; i++ {
-				curStmt, err := stmt.body[i].specFactStmt(nameDepths)
+			for i := 0; i < len(tb.body)-1; i++ {
+				curStmt, err := tb.body[i].specFactStmt(nameDepths)
 				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *stmt}
+					return nil, nil, &tokenBlockErr{err, *tb}
 				}
 				section1Facts = append(section1Facts, curStmt)
 			}
 		}
-		section2SpecFacts, err = stmt.body[len(stmt.body)-1].thenBlockSpecFacts(nameDepths)
+		section2SpecFacts, err = tb.body[len(tb.body)-1].thenBlockSpecFacts(nameDepths)
 		if err != nil {
-			return nil, nil, &tokenBlockErr{err, *stmt}
+			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 	} else {
-		for i := 0; i < len(stmt.body); i++ {
-			curStmt, err := stmt.body[i].specFactStmt(nameDepths)
+		for i := 0; i < len(tb.body); i++ {
+			curStmt, err := tb.body[i].specFactStmt(nameDepths)
 			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *stmt}
+				return nil, nil, &tokenBlockErr{err, *tb}
 			}
 			section2SpecFacts = append(section2SpecFacts, curStmt)
 		}
@@ -840,17 +842,17 @@ func (b *tokenBlock) isSpecFactNotRelaFact() (bool, error) {
 	return false, nil
 }
 
-func (stmt *tokenBlock) defPropOrExistPropStmt() (ast.DefPropOrExistPropStmt, error) {
-	if stmt.header.is(glob.KeywordProp) {
-		prop, err := stmt.defConPropStmt()
+func (tb *tokenBlock) defPropOrExistPropStmt() (ast.DefPropOrExistPropStmt, error) {
+	if tb.header.is(glob.KeywordProp) {
+		prop, err := tb.defConPropStmt()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		return prop, nil
-	} else if stmt.header.is(glob.KeywordExistProp) {
-		exist, err := stmt.defConExistPropStmt()
+	} else if tb.header.is(glob.KeywordExistProp) {
+		exist, err := tb.defConExistPropStmt()
 		if err != nil {
-			return nil, &tokenBlockErr{err, *stmt}
+			return nil, &tokenBlockErr{err, *tb}
 		}
 		return exist, nil
 	}
