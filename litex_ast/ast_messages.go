@@ -162,11 +162,10 @@ func (f *ClaimProveStmt) String() string {
 	}
 	return strings.TrimSpace(builder.String())
 }
-func (s *DefConExistPropStmt) String() string        { panic("") }
-func (s *HaveStmt) String() string                   { panic("") }
-func (s *ClaimProveByContradictStmt) String() string { panic("") }
-func (s *AxiomStmt) String() string                  { panic("") }
-func (s *ThmStmt) String() string                    { panic("") }
+func (s *DefConExistPropStmt) String() string { panic("") }
+func (s *HaveStmt) String() string            { panic("") }
+func (s *AxiomStmt) String() string           { panic("") }
+func (s *ThmStmt) String() string             { panic("") }
 func (fact *CondFactStmt) String() string {
 	var builder strings.Builder
 

@@ -57,6 +57,8 @@ func (stmt *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = stmt.claimStmt()
 	case glob.KeywordProve:
 		ret, err = stmt.proveClaimStmt()
+	case glob.KeywordProveByContradiction:
+		ret, err = stmt.proveClaimStmt()
 	case glob.KeywordKnow:
 		ret, err = stmt.knowStmt()
 	case glob.KeywordHave:
@@ -372,7 +374,7 @@ func (stmt *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	return ast.NewDefObjStmt(objNames, objSets, facts), nil
 }
 
-func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
+func (stmt *tokenBlock) claimStmt() (*ast.ClaimProveStmt, error) {
 	stmt.header.skip()
 	err := error(nil)
 
@@ -414,23 +416,20 @@ func (stmt *tokenBlock) claimStmt() (ast.ClaimStmt, error) {
 		*proof = append(*proof, curStmt)
 	}
 
-	if isProve {
-		return ast.NewClaimProveStmt(*toCheck, *proof), nil
-	} else {
-		return ast.NewClaimProveByContradictStmt(*toCheck, *proof), nil
-	}
+	return ast.NewClaimProveStmt(isProve, *toCheck, *proof), nil
 }
 
 func (stmt *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
-	innerStmtArr, err := stmt.proveBlock()
-	if err != nil {
-		return nil, &tokenBlockErr{err, *stmt}
-	}
-	return ast.NewClaimProveStmt([]ast.FactStmt{}, innerStmtArr), nil
-}
+	proveTrue := true
 
-func (stmt *tokenBlock) proveBlock() ([]ast.Stmt, error) {
-	stmt.header.skip(glob.KeywordProve)
+	if stmt.header.is(glob.KeywordProveByContradiction) {
+		proveTrue = false
+		stmt.header.skip(glob.KeywordProveByContradiction)
+	} else if stmt.header.is(glob.KeywordProve) {
+		stmt.header.skip(glob.KeywordProve)
+	} else {
+		return nil, fmt.Errorf("expect prove or prove_by_contradiction")
+	}
 	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
 		return nil, &tokenBlockErr{err, *stmt}
 	}
@@ -443,7 +442,7 @@ func (stmt *tokenBlock) proveBlock() ([]ast.Stmt, error) {
 		}
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
-	return innerStmtArr, nil
+	return ast.NewClaimProveStmt(proveTrue, []ast.FactStmt{}, innerStmtArr), nil
 }
 
 func (stmt *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
@@ -614,6 +613,24 @@ func (stmt *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
 	}
 
 	return ast.NewThmStmt(decl, facts), nil
+}
+
+func (stmt *tokenBlock) proveBlock() ([]ast.Stmt, error) {
+	stmt.header.skip(glob.KeywordProve)
+	if err := stmt.header.testAndSkip(glob.KeySymbolColon); err != nil {
+		return nil, &tokenBlockErr{err, *stmt}
+	}
+
+	innerStmtArr := []ast.Stmt{}
+	for _, innerStmt := range stmt.body {
+		curStmt, err := innerStmt.Stmt()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *stmt}
+		}
+		innerStmtArr = append(innerStmtArr, curStmt)
+	}
+
+	return innerStmtArr, nil
 }
 
 func (stmt *tokenBlock) condFactStmt(nameDepths ast.NameDepthMap) (*ast.CondFactStmt, error) {

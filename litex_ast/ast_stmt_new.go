@@ -51,12 +51,8 @@ func NewSpecFactStmt(isTrue bool, propName FcAtom, params []Fc) *SpecFactStmt {
 	return &SpecFactStmt{isTrue, propName, params}
 }
 
-func NewClaimProveByContradictStmt(toCheck []FactStmt, proof []Stmt) *ClaimProveByContradictStmt {
-	return &ClaimProveByContradictStmt{toCheck, proof}
-}
-
-func NewClaimProveStmt(toCheckFacts []FactStmt, proofs []Stmt) *ClaimProveStmt {
-	return &ClaimProveStmt{toCheckFacts, proofs}
+func NewClaimProveStmt(proveTrue bool, toCheckFacts []FactStmt, proofs []Stmt) *ClaimProveStmt {
+	return &ClaimProveStmt{proveTrue, toCheckFacts, proofs}
 }
 
 func NewKnowStmt(facts []FactStmt) *KnowStmt {
