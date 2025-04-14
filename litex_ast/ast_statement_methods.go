@@ -24,6 +24,7 @@ func (f *SpecFactStmt) IsEqualFact() bool {
 	return f.PropName.Value == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinInfixPkgName
 }
 
+// TODO: 目前只支持SpecFact的反转
 func ReverseIsTrue(fact FactStmt) (FactStmt, error) {
 	switch fact := fact.(type) {
 	case *SpecFactStmt:

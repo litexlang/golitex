@@ -398,6 +398,10 @@ func (stmt *tokenBlock) claimStmt() (*ast.ClaimProveStmt, error) {
 	isProve := true
 	if stmt.body[len(stmt.body)-1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
+		// prove_by_contradiction 时不能超过1个checkFact
+		if len(*toCheck) > 1 {
+			return nil, fmt.Errorf("%v expect only one checkFact", glob.KeywordProveByContradiction)
+		}
 	} else if !stmt.body[len(stmt.body)-1].header.is(glob.KeywordProve) {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
 	}

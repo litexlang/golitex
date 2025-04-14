@@ -1,4 +1,0 @@
-prove_by_contradiction:
-    know p(1)
-    p(1)
-    
