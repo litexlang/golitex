@@ -83,6 +83,6 @@ func NewConDefHeader(name string, params []string, typeParams []Fc) *ConDefHeade
 	return &ConDefHeader{name, params, typeParams}
 }
 
-func NewExistFactStmt(isTrue bool, propName FcAtom, params []Fc, existFc []Fc) *ExistFactStmt {
-	return &ExistFactStmt{isTrue, propName, params, existFc}
+func NewExistFactStmt(specFact *SpecFactStmt, existFc []Fc) *ExistFactStmt {
+	return &ExistFactStmt{*specFact, existFc}
 }

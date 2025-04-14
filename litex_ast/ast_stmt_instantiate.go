@@ -81,15 +81,6 @@ func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 }
 
 func (stmt *ExistFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
-	newParams := []Fc{}
-	for _, param := range stmt.Params {
-		newParam, err := param.Instantiate(uniConMap)
-		if err != nil {
-			return nil, err
-		}
-		newParams = append(newParams, newParam)
-	}
-
 	newExistFc := []Fc{}
 	for _, fc := range stmt.ExistFc {
 		newFc, err := fc.Instantiate(uniConMap)
@@ -99,17 +90,17 @@ func (stmt *ExistFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error
 		newExistFc = append(newExistFc, newFc)
 	}
 
-	// 把 PropName 也换了
-	newPropName, err := stmt.PropName.Instantiate(uniConMap)
+	instantiatedFact, err := stmt.Fact.Instantiate(uniConMap)
 	if err != nil {
 		return nil, err
 	}
-	propNameAtom, ok := newPropName.(*FcAtom)
+	// to spec
+	specFact, ok := instantiatedFact.(*SpecFactStmt)
 	if !ok {
-		return nil, errors.New("PropName is not of type *FcAtom")
+		return nil, errors.New("fact is not of type *SpecFactStmt")
 	}
 
-	return NewExistFactStmt(stmt.IsTrue, *propNameAtom, newParams, newExistFc), nil
+	return NewExistFactStmt(specFact, newExistFc), nil
 }
 
 func (stmt *ConUniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {

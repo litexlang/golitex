@@ -71,10 +71,8 @@ type SpecFactStmt struct {
 }
 
 type ExistFactStmt struct {
-	IsTrue   bool
-	PropName FcAtom
-	Params   []Fc
-	ExistFc  []Fc
+	Fact    SpecFactStmt
+	ExistFc []Fc
 }
 
 type ClaimProveStmt struct {
