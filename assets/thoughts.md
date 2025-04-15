@@ -1037,3 +1037,35 @@ fn exp(f R => R, n R):
 ❌ **禁止**仅因语法错误而中断。  
 
 用户定义 `s in s` 或矛盾公理时，你的工具无需干预——逻辑一致性是用户的责任，不是语法处理器的义务。保持简单性和中立性即可。
+
+所以litex的 set 关键词，只是一个语法糖。我根本不是在实现朴素集合论，我只是为朴素集合论的一些结论提供了语法糖。我只实现了部分朴素集合论。像罗素悖论这种我也不帮你检查
+
+语法糖
+
+定义集合: 以定义正数集合为例
+obj s set:
+    s <= R
+    # 下面相当于让s确实等于R+
+    forall x s:
+        x > 0
+    forall x R:
+        x > 0
+        then:
+            x in s
+
+语法糖：更好的定义iff，相当于展开之后就是上面这个
+set s = {x R| p(x)}
+set s {1,2,3} 枚举
+至于多个集合的叉乘，那就是interface了，不是正常的set了？
+我暂时没想好，但用普通函数或许也？
+fn *(A set, B set)set
+fn index(s set, n nat) set
+know forall A set, B set:
+    index(*(A,B), 0) = A
+    index(*(A,B), 1) = B
+fn element_from_product_set(A set, B set, n nat) obj
+know forall A set, B set:
+    element_from_product_set(*(A,B), 0) in A
+    element_from_product_set(*(A,B), 1) in B
+
+只要不考虑集合论里的乱七八糟的东西，我就能很顺畅开展工作。只要考虑集合论里的东西（主要是集合论里 自由和严格 的边界太难把握了，我又不熟悉集合论。只有集合论是 “考验我语言是否准确”的数学分支，其他数学分支我都是直接实现就行）
