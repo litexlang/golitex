@@ -1089,4 +1089,331 @@ theorem one_plus_one_is_three : 1 + 1 = 3 := False.elim false_derived
 
 这里用户也能定义出来 P <=> not P。然后用来证明任何事情
 
-checkpoint: thoughts: why I should never go so fat in set thoery and stick to the fact that litex is just a regular expression matcher. I by default in my language that some set theory facts are true and some are not valid, but not all of them are inherent in my language. User can still on his own define what set1 union set2 means, he can on his define what set1 = set2 means. I do not include anything with mathematical meanings in my language. I just compare symbols like a regular expression matcher. only very small amount of semantics is included: e.g. parameter in fn is checked , which is just syntax sugar (user do not need to write x in s, y in s as function requirement). Litex is a regular expression checker, but it is used in math, so giving users such syntax sugar is reasonable. if fn works like fn f(x,y), it is so flexible that it is hard for users to use. if fn works like fn f(x A, y B), where litex checks whether x is in x and y in is B automatically, is very useful for user, otherwise they just write fn f(x,y): x in A, y in B, and that is tedious.
+checkpoint: thoughts: why I should never go so fat in set thoery and stick to the fact that litex is just a regular expression matcher. I by default in my language that some set theory facts are true and some are not valid, but not all of them are inherent in my language. User can still on his own define what set1 union set2 means, he can on his define what set1 = set2 means. I do not include anything with mathematical meanings in my language. I just compare symbols like a regular expression matcher. only very small amount of semantics is included: e.g. parameter in fn is checked , which is just syntax sugar (user do not need to write x in s, y in s as function requirement). Litex is a regular expression checker, but it is used in math, so giving users such syntax sugar is reasonable. if fn works like fn f(x,y), it is so flexible that it is hard for users to use. if fn works like fn f(x A, y B), where litex checks whether x is in x and y in is B automatically, is very useful for user, otherwise they just write fn f(x,y): x in A, y in B, and that is tedious. 
+
+Fundamentally, 目前为止 that is still not function, because fn f(s set) is also valid, and no function can use set of sets as parameter domain.
+
+还是说我内置一下整个朴素集合论，然后让fn里不能有set作为参数？用户只能以固定的几种方式定义集合？
+比如我送给用户什么是union？
+如何偷懒：我内置的stl里，我定义union，但我不允许用户输入
+
+我之所以不想内置朴素集合论，然后让用户不能自定义朴素集合论，是因为如果我确实想让用户定义有关集合的事实，那他们不可避免要用 prop P(s set), fn f(s set) 这样的东西，而这些都是不被允许的，如果我严格规定“集合的集合不被允许”的话。
+
+你说得很对，这就是这个问题微妙又有趣的地方：  
+**从某种角度来看，Set × Set → Set 确实是以“集合的集合”为输入。**
+
+---
+
+## 🎯 你的核心问题可以这样表达：
+
+> “函数 `f: Set × Set → Set` 的定义域是 Set × Set，  
+> 那 Set × Set 是不是集合？如果是，那它就是所有集合的有序对的集合。  
+> 那岂不是又落入‘集合的集合’、甚至‘全集’的危险地带了吗？”
+
+这正是从“朴素集合论”到“公理化集合论”（如 ZFC）过渡时，人们重点处理的一个核心问题。
+
+---
+
+## 🧩 回答这个问题的关键点在于：
+
+### 1. ❌ “Set”不是一个集合，而是一个**类（class）**
+
+在 ZFC 等现代集合论中，有一个重要的思想：
+> 有些我们想象的“集合”太大了，不能当作集合看待，只能称作**类**（proper class）。
+
+例如：
+
+- 所有集合的“集合” → 不存在。  
+- 但我们可以谈论“所有集合构成的类”，叫做 `V` 或 `Set`，它是一个**类**，**不是**集合。
+
+所以当你写：
+
+```text
+f: Set × Set → Set
+```
+
+这不是说 `f` 的定义域是一个**集合**，而是说：
+
+> `f` 是一个类函数（class function），它在类 `Set × Set` 上有定义。
+
+---
+
+### 2. ✅ 所以 Set × Set 是类 × 类，而不是集合 × 集合
+
+- `Set × Set` 是所有有序对 ⟨A, B⟩，其中 A 和 B 是集合。
+- 这个东西太大，不能作为一个集合来处理（不然就可能构造全集）。
+- 所以它不是 ZFC 中允许的集合，而是一个**类**。
+
+---
+
+### 3. ✅ `union(A, B)` 的合法性
+
+虽然 `Set × Set` 不是集合，但我们依然可以定义函数：
+
+```text
+union: Set × Set → Set
+```
+
+作为一种类函数（class function）。这不违反集合论公理，原因是：
+
+- 对任意具体集合 `A` 和 `B`，可以构造 \(\bigcup \{A, B\}\)，这是一个集合。
+- 虽然 `union` 的“全体图像”不能作为集合来谈（即整个函数图像不是集合），但我们可以对每个输入合法地进行操作。
+
+---
+
+## 🧠 类比理解
+
+你可以想象：
+
+- `Set` 像是一个“超大目录”，我们可以在里面随便拿出两个集合来操作；
+- 但我们不试图把整个 `Set` 目录搬下来（构成集合），因为那样就出问题了。
+
+---
+
+## ✅ 总结一句话：
+
+> 在现代集合论（如 ZFC）中，`Set × Set → Set` 是类函数的描述，  
+> 其中 `Set` 是**类**，不是集合，所以它不违反任何集合构造规则。
+
+---
+
+如果你对“类”是怎么精确定义的、ZFC 是怎么处理这种“超大集合”的，还有兴趣的话，我可以继续带你深入这一块，很有哲学意味也很有逻辑力量。
+
+咱一步步来，把这一坨逻辑、哲学和工程揉在一起整明白。
+
+---
+
+## 🎯 你现在的问题本质是：
+
+> **我们明明要操作集合（比如 union），但集合的集合又不能是集合，那我们咋整？这个系统还能咋写代码？怎么数学上整合得起来？**
+
+---
+
+## 🧰 方法一：ZFC 路线 —— 有限制地构造“集合的集合”
+
+ZFC 集合论整了一个“逐层构造宇宙”的方法。具体来说：
+
+### 1. 它不直接说“Set 是一个集合”，而是说我们有一个类 \( V \)：
+这是所谓的**Von Neumann 宇宙**，分层地构造集合：
+
+- \( V_0 = \emptyset \)
+- \( V_1 = \mathcal{P}(V_0) \)
+- \( V_2 = \mathcal{P}(V_1) \)
+- ...
+- \( V_\alpha = \bigcup_{\beta < \alpha} \mathcal{P}(V_\beta) \)
+
+直到你有整个宇宙 \( V = \bigcup_{\alpha \in \text{Ord}} V_\alpha \)
+
+这就像建一座积木塔：你每一步只允许用前面的积木，不能直接说“我要所有积木”。
+
+---
+
+### 2. 所以 “Set × Set” 不是集合，是类  
+但我们可以定义：
+
+> “对于所有 \( A, B \in V \)，定义 `union(A, B) = A ∪ B`”
+
+这个定义在每个具体 \( A, B \) 上都合法。你可以像写函数那样写下它的定义，**但别想着把这个函数的图像本身作为一个集合。**
+
+我们就这么“擦边球地合法”使用函数，不触发悖论⚖️
+
+---
+
+## 🧰 方法二：类型论路线 —— 直接禁止你犯错
+
+比如在**Martin-Löf Type Theory（MLTT）**或**Homotopy Type Theory（HoTT）**里：
+
+- 类型就是集合。
+- 你不能随便造一个“所有类型的类型”，因为它会**universe polymorphism**地说“Type : Type”是非法的。
+- 所以你有 Type₀ : Type₁ : Type₂ ... 这样一个塔。
+
+每一层都是一个“可构造的集合宇宙”。你只能在合法的层级操作，编译器（proof assistant）不让你搞坏。
+
+> 🧠 换句话说，ZFC 是“你可以作死，但别太离谱”；  
+> MLTT 是“你想作死我都不让你作”。
+
+---
+
+## 🧰 方法三：搞个元语言描述这些操作
+
+这是逻辑和计算机里很重要的手法：
+
+- 虽然 `Set × Set → Set` 不能直接当集合谈，
+- 但我们可以在“元语言”里描述这类函数，例如：
+
+```text
+Def union: Set × Set → Set := λ (A, B), ⋃{A, B}
+```
+
+这个 `Def` 操作，不是在集合论内部构造集合，而是在**元层**定义一个**符号上的操作规则**。
+
+就像你在 Lean/Coq/Isabelle 里写函数定义一样，它其实是告诉系统如何在逻辑框架中解释这个运算，而不是“构造一个集合当函数”。
+
+---
+
+## 🤔 所以这咋整呢？总结一下：
+
+| 路线 | 怎么整 |
+|------|---------|
+| ZFC | 使用类（而非集合）来“看起来”像函数；不能把函数图像当集合。 |
+| Type Theory | 用 type universe hierarchy 限制你定义非法类型。 |
+| 元语言（逻辑框架） | 把函数当元定义，不真的当集合处理。 |
+| 程序员视角 | 你管他是不是集合，反正你可以写 `union(A, B)` 然后它就运行了。 |
+
+---
+
+## 📌 结尾金句：
+
+> 数学是对可构造性保持沉默，逻辑是为沉默编写规则，类型论是直接让你闭嘴不许乱搞😄
+
+你要是愿意我可以帮你用几种不同形式（ZFC、类型论、甚至 Lean、Coq、Agda）把 `union` 函数“写下来”，感受下这三派哲学到底怎么整。你想试哪一派？
+
+啊你问到了整个类型论构架最微妙、最本体论的深水区了——
+
+> **「Universe 的最上层」到底能不能存在？它怎么防止罗素悖论？是不是换汤不换药？**
+
+这真的是**类型论宇宙系统的根本问题之一**，而所有 serious 的 type theory 系统都必须回答它。下面我们详细拆开这个事。
+
+---
+
+## 🧨 背景：罗素悖论的原型
+
+罗素悖论说：
+
+> 设 \( R = \{ x \mid x \not\in x \} \)，问 \( R \in R \) 吗？
+
+如果是 → 那就不属于它自己；  
+如果不是 → 就属于它自己。⛔️ 悖论！
+
+---
+
+## 💡 ZFC 的做法是：
+> 不让你说“所有集合的集合”是集合，而是说它是一个**类（class）**。
+
+---
+
+## 🧠 类型论（MLTT/HoTT）是怎么“这咋整”的呢？
+
+我们先来看：
+
+## 🔺 1. MLTT 的解决方案：**Universe hierarchy**
+
+它说：
+
+```agda
+Type₀ : Type₁ : Type₂ : Type₃ : ...
+```
+
+也就是说：
+
+- `Type₀` 是最底层类型宇宙
+- `Type₁` 是能包含 `Type₀` 的 universe
+- `Type₂` 能包含 `Type₁` ...
+- 没有“最上层”，你永远可以往上升一级
+
+> 🚫 永远禁止你写 `Type : Type`，这就是**Girard’s Paradox**（类型版的罗素悖论）。
+
+🧠 所以这招非常有效——**禁止最上层存在**，你要定义什么都得指定 universe level。
+
+---
+
+## 🤔 那我们还是可以问：
+> “我想要一个最大层 `Type_Ω`，它能包含所有类型，不然我写代码总得加一堆 `{ℓ}` 好麻烦啊…”
+
+那怎么办？答案是：
+
+---
+
+## 🔁 2. Universe polymorphism + cumulative universes（积累宇宙）
+
+现代 proof assistant（如 Lean、Agda、Coq）常用这两招：
+
+### ✅ Universe Polymorphism（宇宙多态）
+
+就像函数泛型那样，比如：
+
+```lean
+def union {u : Universe} (A B : Type u) : Type u
+```
+
+这表示 `union` 可以定义在任何层级上，**不是你非得手动写一个 Type₀ 或 Type₁，系统自动替你升层。**
+
+### ✅ Cumulative Universes（积累式宇宙）
+
+允许：
+
+```lean
+Type₀ ⊆ Type₁ ⊆ Type₂ ...
+```
+
+即：低层 universe 的元素也算作高层 universe 的元素。
+
+这样系统就可以在不违反一致性的前提下，灵活处理“类型的类型”的问题。
+
+---
+
+## 🛡 3. 那能不能有最终宇宙 `Type_max`？系统怎么防止它犯错？
+
+### ❌ 没法有最大层 `Type_max`
+
+因为只要你说：
+
+```lean
+Type_max : Type_max
+```
+
+或者哪怕说：
+
+```lean
+Type_max : Type_something
+```
+
+你就可能犯 Girard’s Paradox，相当于**把类型论搞成集合论 + 自指 → 悖论**
+
+所以现代系统都：
+
+- 不存在最大宇宙
+- 或者就算有 `Type_max`，也不能让你往里套 `Type_max : Type_max`
+- 所以系统始终是**open-ended**，永远可以加一层。
+
+Lean、Agda、Coq 都是用这招躲开罗素悖论的！
+
+---
+
+## 🧠 总结核心思路：
+
+| 问题 | 类型论怎么“这咋整” |
+|------|------------------|
+| 罗素悖论 | 禁止 `Type : Type`，使用无限层级 universe |
+| 想要“所有类型的类型”？ | 定义 `Type u`，让 `u` 是 universe level，多态处理 |
+| 想偷懒不写层级？ | universe polymorphism + cumulative universe |
+| 想有最终一层？ | 不允许，或者让它无法“包含自己” |
+
+---
+
+## 🧩 类比：
+
+- ZFC 像是说：“你不能拿全集当对象。”
+- 类型论说：“你可以无限升阶，但你永远别说‘我是我自己’。”
+
+---
+
+## 🧘‍♂️ 哲学一问（bonus）
+
+你会发现，这背后其实是对“自指性”的深度处理问题：
+
+> “一个系统能否完整地描述自己？”  
+> 响应的是哥德尔不完备性 + 罗素悖论 + 图灵停机问题，统一的答案是——**不能。**
+
+---
+
+如果你想，我可以演示：
+
+- Lean/Agda 里如何自动升 universe
+- 或者展示 Girard’s Paradox 的形式
+- 或者你自己设计个 `Type_omega` 我来帮你证明它不行 😂
+
+要继续试试哪一方向？
+
+**litex 和 lean的一大重要区别：litex允许你引入 {x| x not in x} 这样的集合，但之所以允许，是用户自己引入了它，是用户自己在 litex允许用户想做啥就做啥的时候 犯错了，这种场合litex没检查出你的错误，是吧允许的；但lean更严格，它不让用户这么写。**
+**这样来看，lean似乎更加严格。但lean也因此引入了类型论，这加大了用户认知负担。**
