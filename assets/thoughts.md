@@ -1072,3 +1072,19 @@ know forall A set, B set:
 
 要说严格不严格的话，为什么两个函数的叉乘里面的元素，都能形如 (x,y)? 这里括号()是啥意思？“取”出来是不是用了选择公理？这一些都是很tricky的。
 我的litex，内部默认了一些朴素集合论公理是对的，但也有一些需要用户自己去定义。比如union，intersect这种，就让用户自己去定义里面的意思，甚至两个函数相等的定义是forall互相在in都能是用户自己轻易的。而set和in这样的关键词，是我送给用户的。存在一个集合叫整数集合，这也是我送给用户的。可以说，我自己也不知道我到底哪些公理我默认是对的。哪些公理我没默认，需要用户自定义，然后需要用户自查，我也不清楚。我只知道，用户对了，那就是对，即便用户基于的“对”的默认的事实是有问题的。我只是个正则表达式匹配器。
+
+lean也不能完全避免错误其实
+def RussellParadox : Prop := ¬RussellParadox  -- 定义一个命题，声称自身为假
+
+theorem russell_false : RussellParadox ↔ ¬RussellParadox := by
+  unfold RussellParadox  -- 展开定义
+  simp  -- 直接得到 P ↔ ¬P
+
+-- 导出矛盾
+theorem false_from_russell : False :=
+  iff_not_self RussellParadox ▸ russell_false
+
+-- 可以推出任何命题
+theorem one_plus_one_is_three : 1 + 1 = 3 := False.elim false_derived
+
+这里用户也能定义出来 P <=> not P。
