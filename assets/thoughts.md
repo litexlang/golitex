@@ -1087,4 +1087,6 @@ theorem false_from_russell : False :=
 -- 可以推出任何命题
 theorem one_plus_one_is_three : 1 + 1 = 3 := False.elim false_derived
 
-这里用户也能定义出来 P <=> not P。
+这里用户也能定义出来 P <=> not P。然后用来证明任何事情
+
+checkpoint: thoughts: why I should never go so fat in set thoery and stick to the fact that litex is just a regular expression matcher. I by default in my language that some set theory facts are true and some are not valid, but not all of them are inherent in my language. User can still on his own define what set1 union set2 means, he can on his define what set1 = set2 means. I do not include anything with mathematical meanings in my language. I just compare symbols like a regular expression matcher. only very small amount of semantics is included: e.g. parameter in fn is checked , which is just syntax sugar (user do not need to write x in s, y in s as function requirement). Litex is a regular expression checker, but it is used in math, so giving users such syntax sugar is reasonable. if fn works like fn f(x,y), it is so flexible that it is hard for users to use. if fn works like fn f(x A, y B), where litex checks whether x is in x and y in is B automatically, is very useful for user, otherwise they just write fn f(x,y): x in A, y in B, and that is tedious.
