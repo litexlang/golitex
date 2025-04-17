@@ -1025,6 +1025,8 @@ fn exp(f R => R, n R):
       1. 我之所以不换个其他名字，还是沿用set，fn，是因为便于用户理解。
    2. litex不只是flexible，本质上功能要比lean大，因为我可以很容易的定义任何公理，而lean只能用类型论
       1. litex比最底层的数学公理，还要抽象层低，那就是：litex是正则表达式匹配器。
+9. 证明litex完备性的另外一个办法：证明它能表示所有的proposition逻辑和一阶逻辑。
+   1.  我设计整个litex的时候根本没学过这些”逻辑“相关的内容。我是为了验证完备性才去看一下的
 
 
 语法糖
@@ -1091,6 +1093,8 @@ Fundamentally, 目前为止 that is still not function, because fn f(s set) is a
 **litex 和 lean的一大重要区别：litex允许你引入 {x| x not in x} 这样的集合，但之所以允许，是用户自己引入了它，是用户自己在 litex允许用户想做啥就做啥的时候 犯错了，这种场合litex没检查出你的错误，是吧允许的；但lean更严格，它不让用户这么写。**
 **这样来看，lean似乎更加严格。但lean也因此引入了类型论，这加大了用户认知负担。**
 
+为什么取dom这种功能或许是根本不必要的：这个时候用户在研究朴素集合论的函数这个概念。用户应该自己用litex来创造出函数这个概念，而不是直接拿来litex的fn（litex的fn和朴素集合论的fn不是一个fn；即使litex的fn能表达朴素集合论的fn，用户也应该自己像定义其他集合，其他东西那样，定义一个自己的self_fn，而不是拿我关键词研究）。直接拿litex的关键词研究，根本就是诡异的。你怎么能研究Keyword呢？就像你普通编程语言怎么去执行一个Keyword呢？我可以理解我的某些Keyword和用户平时用到的Keyword很类似，我也鼓励用户充分使用这里的相似，但如果你要研究它的话，请你先定义什么叫self_fn，而不是拿我的fn去研究。
+
 4.17
 1. AtomFact 还缺
    1. exist fact
@@ -1099,6 +1103,7 @@ Fundamentally, 目前为止 that is still not function, because fn f(s set) is a
       1. 可以是用 @ 给forall取名，这样forall 也能有not了
       2. 不一定和现有的specFact长得一样，但如果长的一样的话，那我就不用写新逻辑（match，parse）了
       3. 到底exist是和spec像，还是和forall语法像，是个严重问题。我之前觉得它和spec像，但从逻辑上讲，既然它是forall的逆，那应该和forall像？
+      4. 给forall取名的另外一个好处是，证明的时候，不需要每次运行一遍forall，我可以看下这个forall涉及到的名字是不是已经被证明过了。如果已经证明过了，那就直接ok了，不用总是开个新环境运行了
 2. or
    1. not和or应该和spec分离开来，而不是像现在这样耦合在一起
    2. 即有个placeholder，放or和not
