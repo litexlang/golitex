@@ -1111,3 +1111,10 @@ Fundamentally, 目前为止 that is still not function, because fn f(s set) is a
 3. iff
    1. 我要让forall的then里能放入forall，虽然放入的forall是单层的
    2. 当然，如果我给forall取名的话，我forall里的forall就可以不存在，即整个forall里只有specFact。但这很呆，因为我就是要让用户不需要给forall取名字。这样的话，很多情况下我都要给forall取名字
+
+4.18
+1. 整个litex最容易以不经意的方式引入编译器不报错，但数学上有漏洞的方式，就是引入不存在的集合。我只需要设计语法，确保用户以这样的方式引入集合，那一定不会出错，就ok了。即：有unsafe的引入方式，有safe的引入方式。
+2. 需要用一种给exist，forall命名的方式，即还是要给事实取名（顺便也给specFact）取名。这比直接用prop p() 来代替一个 forall 看起来合理很多，虽然本质上它们是一样的
+3. 要想想怎么call这些named fact
+4. 还要想想如何实现 not，or，要在atomFact外面夹层
+5. 
