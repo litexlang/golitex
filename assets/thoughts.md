@@ -1135,5 +1135,8 @@ Fundamentally, 目前为止 that is still not function, because fn f(s set) is a
 1. prove:
     know:
         a  = 1
-    a * 1 =1
-    
+    a * 1 =1 # unknown
+    a * 1 = 1 * 1
+    a * 1 = 1
+2. 貌似实现了exist和新版的not（or），我就实现一阶逻辑了
+3. 另外需要考虑一下prop_prop咋弄

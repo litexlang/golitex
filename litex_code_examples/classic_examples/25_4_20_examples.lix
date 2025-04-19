@@ -149,3 +149,9 @@ prove:
     diff(y^2)(1) = diff(y^2)(sin(2)^2 + cos(2)^2 )
 
 
+prove:
+    know:
+        a  = 1
+    a * 1 =1 # unknown
+    a * 1 = 1 * 1 # 暂时用户需要手动”对应上“a和1
+    a * 1 = 1
