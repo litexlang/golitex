@@ -12,7 +12,9 @@ _–- George Boole_
 
 Litex is a minimalist proof assistant (formal language). With a predicted "de Bruijn factor" (the ratio of formal to informal proof difficulty) of 0.5–1.5, Litex will transform the mathematical landscape and help build better reasoning AI models.
 
-Since even children grasp math logically and naturally, a formal language for mathematics intuitive and accessible to all can be invented. Litex aims to create such a language. Think about it: there are just 8 keywords in first-order logic (and, or, not, forall, exist, equal, if, then), and most existing mathematical knowledge can be expressed in first-order logic. Making a simple proof assistant is not beyond imagination at all!
+Since even children grasp math logically and naturally, a formal language for mathematics intuitive and accessible to all can be invented. Litex aims to create such a language. 
+
+Think about it: there are just 8 keywords in first-order logic (and, or, not, forall, exist, equal, if, then), and most existing mathematical knowledge can be expressed in first-order logic. You can lay out the meanings and relationships of those keywords in just a few sentences. Making a simple proof assistant is not beyond imagination at all!
 
 Litex is unique in two ways, compared with traditional proof assistants. First, it focuses solely on mathematical verification, whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. Second, Litex is built around common sense rather than sophisticated mathematical theories to help a broader range of people to use formal language. Designed to be as intuitive as Python and LaTeX, Litex offers a minimal learning curve.
 
@@ -23,6 +25,7 @@ Mathematics is fundamentally about abstraction, and computer science is the disc
 ## Why learn Litex?
 
 <!-- TODO: 参考下面这个网站以获得更多数学家的角度，里面有很多数学家对数学的讨论 https://sugaku.net/content/understanding-the-cultural-divide-between-mathematics-and-ai/ -->
+<!-- On the foolishness of "natural language programming". 里面有很多关于形式化语言比自然语言好的观点：litex把数学从不准确，冗余的，不同国家的人互相看不懂，抽象层过多以至于难以追踪的，模块化程度为0，的自然语言，变成了非常准则，无任何冗余，世界通用，抽象层靠常用编程工具变得很追踪，模块化很高以至于人们可以在数学的github上分享 的形式化语言 -->
 
 Litex has the potential to greatly impact both mathematics and AI:
 
