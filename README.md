@@ -12,15 +12,17 @@ _–- George Boole_
 
 Litex is a minimalist proof assistant (formal language). With a predicted "de Bruijn factor" (the ratio of formal to informal proof difficulty) of 0.5–1.5, Litex will transform the mathematical landscape and help build better reasoning AI models.
 
-Since even children grasp math logically and naturally, a formal language for mathematics intuitive and accessible to all can be invented. Litex aims to create such a language. Designed to be as intuitive as Python and LaTeX, Litex offers a minimal learning curve.
+Since even children grasp math logically and naturally, a formal language for mathematics intuitive and accessible to all can be invented. Litex aims to create such a language. Think about it: there are just 8 keywords in first-order logic (and, or, not, forall, exist, equal, if, then), and most existing mathematical knowledge can be expressed in first-order logic. Making a simple proof assistant is not beyond imagination at all!
 
-Litex is unique in two ways, compared with traditional proof assistants. First, it focuses solely on mathematical verification, whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. Second, Litex is built around common sense rather than sophisticated mathematical theories.
+Litex is unique in two ways, compared with traditional proof assistants. First, it focuses solely on mathematical verification, whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. Second, Litex is built around common sense rather than sophisticated mathematical theories to help a broader range of people to use formal language. Designed to be as intuitive as Python and LaTeX, Litex offers a minimal learning curve.
 
 The potential impacts of Litex include: enabling proof verification (including LLM-generated outputs), revolutionizing proof writing and review, facilitating large-scale collaborations, creating datasets for LLM training, and enhancing LLM reasoning capabilities. With its inherently simple syntax, Litex is well-positioned to achieve these goals and attract a growing community of researchers to the world of formal languages.
 
 Mathematics is fundamentally about abstraction, and computer science is the discipline that studies abstraction. At its core, all other impacts of Litex are extensions of this foundational idea. Technically, Litex = math + programming language + data base. The ultimate goal of Litex is to harness programming concepts and tools to tackle challenges in mathematics, making the elegance of math accessible and enjoyable for everyone.
 
 ## Why learn Litex?
+
+<!-- TODO: 参考下面这个网站以获得更多数学家的角度，里面有很多数学家对数学的讨论 https://sugaku.net/content/understanding-the-cultural-divide-between-mathematics-and-ai/ -->
 
 Litex has the potential to greatly impact both mathematics and AI:
 
