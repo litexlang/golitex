@@ -1,0 +1,151 @@
+# 三段论
+prove:
+    know forall x human:
+        x is conscious # conscious(x)
+        
+    # conditional fact
+    when:
+        y is human # 在验证conditional fact时，condition被默认是对的
+        then:
+            y is conscious
+
+    forall: # 发现conditional fact和没有临时变量的forall是等价的
+        y is human
+        then:
+            y is conscious
+        
+    # 直接在当前环境里做验证
+    know:
+        z is human
+
+    z is human
+
+# basic arithmetic
+prove:
+    0+1+2+3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18+19+20+21+22+23+24+25+26+27+28+29+30+31+32+33+34+35+36+37+38+39+40+41+42+43+44+45+46+47+48+49+50+51+52+53+54+55+56+57+58+59+60+61+62+63+64+65+66+67+68+69+70+71+72+73+74+75+76+77+78+79+80+81+82+83+84+85+86+87+88+89+90+91+92+93+94+95+96+97+98+99+100 = 5050 * 2 - 5050 / 1
+
+# define union
+prove:
+    know:
+        forall z obj, A set, B set:
+            in(z, A)
+            then:
+                in(z,union(A, B) )
+
+        forall z obj, A set, B set:
+            in(z, B)
+            then:
+                in(z,union(A, B) )
+
+    prove:
+        know:
+            in(x, A)
+            in(y, B)
+
+        in(x, union(A, B))
+        in(y, union(A,B))
+
+# give a name to a forall fact
+prove:
+    know:
+        # Define: p(x) iff forall y: cond(y) => result(x,y)
+        
+        # p(x) => (forall y: cond(y) => result(x,y))
+        forall x B, y A:
+            cond(y)
+            p(x)
+            then:
+                result(x,y)
+        
+        # (forall y: cond(y) => result(x,y)) => p(x)
+        forall x B:
+            forall y A:
+                cond(y)
+                then:
+                    result(x,y)
+            then:
+                p(x)
+
+    prove: # ok
+        know p(1)
+        forall y A:
+            cond(y)
+            then:
+                result(1,y)
+
+    when:
+        forall y A:
+            cond(y)
+            then:
+                result(1,y)
+        then:
+            p(1)
+    
+# litex 本质是正则表达式处理器
+prove:
+    know:
+        forall x A:
+            p1(x,x)
+    p1(1,1) # true
+    p1(1,2) # unknown
+
+prove:
+    know:
+        forall x A:
+            x = 1
+            then:
+                p(x)
+    know:
+        a = 1
+    
+    p(a)
+    p(2-1)
+
+prove:
+    know forall x R, y R, z R:
+        x < y
+        y < z
+        then:
+            x < z
+
+    know:
+        a < b
+        b < d
+    a < d # unknown 二元事实搜不到潜在的三元forall事实
+
+
+prove:
+    forall x A, a A:
+        f(x)(a) = g(x)(a)
+
+    know:
+        forall x A:
+            f(x) = g(x)
+    
+    forall x A, a A:
+        f(x) = g(x) # 必须写一下，因为我在比较的时候，我不会用forall来验证你下面的f(x) = g(x) 。或许未来我会加入这个功能，但不是现在。或者我引入新的prove_fn_equal来做语法糖。但为了这么边缘的功能，加这么大的功能，合理吗
+        f(x)(a) = g(x)(a)
+
+    forall x A, a A, e A:
+        f(x)(a) = g(x)(a) # 必须写一下
+        f(x)(a)(e) = g(x)(a)(e)
+
+    forall x A, a A, e A:
+        f(x) = g(x)
+        f(x)(a) = g(x)(a)
+        f(x)(a)(e) = g(x)(a)(e)
+
+    f(1)(2)(3) = g(1)(2)(3)
+
+prove:
+    know forall x R:
+        sin(x)^2 + cos(x)^2 = 1
+
+    forall y R, f fn:
+        1 = sin(y)^2 + cos(y)^2
+        diff(f^2)(1) = diff(f^2)(sin(y)^2 + cos(y)^2 )
+            
+    sin(2)^2 + cos(2)^2 = 1
+    diff(y^2)(1) = diff(y^2)(sin(2)^2 + cos(2)^2 )
+
+
