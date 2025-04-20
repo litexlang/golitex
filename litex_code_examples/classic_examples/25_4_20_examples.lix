@@ -155,3 +155,18 @@ prove:
     a * 1 =1 # unknown
     a * 1 = 1 * 1 # 暂时用户需要手动”对应上“a和1
     a * 1 = 1
+
+# prove:
+#     know forall x A:
+#         forall y B:
+#             p(y)
+#         then:
+#             q(x,y)
+#     
+#     know:
+#         p(2) # ???
+#         forall  y B:
+#             p(y)
+#     
+#     q(1,2) # why unknown???
+# 
