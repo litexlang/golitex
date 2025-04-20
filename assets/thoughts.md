@@ -1153,18 +1153,26 @@ Fundamentally, 目前为止 that is still not function, because fn f(s set) is a
 < Fact > 比如fact可以是 specFact和ForallFact
 2. 我发现#貌似是没必要的：我只要在离开当前环境向上查事实的时候，我如果发现我当前环境里声明了x，那我就不再往上找和x相关的事实了
 3. exist
-@fact_name forall parameters # 单行的相当于只给现在这一个取名字
+先只实现@fact_name forall 之后再想想这个语法还能用在其他什么地方
+
+@fact_name forall/exist parameters # 单行的相当于只给现在这一个取名字
 know fact_name
 by fact_name, not exist fact_name
 by not fact_name, exist fact_name
 
-@exist_name exist parameters
+@exist_name exist/forall parameters
 know exist_name
-by exist_name, not exist_name
-by not exist_name, exist_name
+by exist exist_name, not exist_name
+by not exist exist_name, exist_name
+exist_name()
 
-@fact_name:
-    .... 很多事实。这里相当于给很多事实取名字
+@fact_name: # 暂时不实现
+    .... 很多事实。这里相当于给很多事实取名字。但这个时候不允许你not了。你可以用这一长串来by，推理出一个结论
+
+by: 用多个事实证明then里的东西。这还是有搞头的。毕竟lean也是这么干的
+    many facts
+    then:
+        ...
 
 发现named forall 逻辑上等价于 prop p(). 确实是。但named的意义是，它立刻释放里面的东西，而不需要再让用户声明一下  forall ...
 prop p():
@@ -1179,3 +1187,6 @@ exist_prop name(params):
    2. by fact_name: 用指定的fact来检查当前的事实
    3. by fact_name_of_a_forall_fact: 推出 not exist
 5. not 不应该绑定在SpecFact上，而应该是更高一层
+6. set s = {x R| p(x)}
+set s {1,2,3} 枚举
+7. 因为正则表达式匹配太intuitive了。所以没有数学书说明：正则表达式匹配比数学还要抽象层低。其他很多学科也是这样的。
