@@ -14,7 +14,7 @@ Litex is a minimalist proof assistant (formal language). With a predicted "de Br
 
 Since even children grasp math logically and naturally, a formal language for mathematics intuitive and accessible to all can be invented. Litex aims to create such a language. 
 
-Think about it: there are just 8 keywords in first-order logic (and, or, not, forall, exist, equal, if, then), and most existing mathematical knowledge can be expressed in first-order logic. You can lay out the meanings and relationships of those keywords in just a few sentences. Making a simple proof assistant is not beyond imagination at all!
+Think about it: there are just 8 keywords in first-order logic (and, or, not, forall, exist, equal, if, then), and most existing mathematical knowledge can be expressed in first-order logic. You can lay out the meanings and relationships of those keywords in just a few sentences. See? Making a simple proof assistant is not beyond imagination at all!
 
 Litex is unique in two ways, compared with traditional proof assistants. First, it focuses solely on mathematical verification, whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. Second, Litex is built around common sense rather than sophisticated mathematical theories to help a broader range of people to use formal language. Designed to be as intuitive as Python and LaTeX, Litex offers a minimal learning curve.
 
@@ -91,6 +91,8 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
 Consider `Human` as the set of all humans. Using `know`, we establish the axiom: all humans are self-aware. Since Bob is in `Human`, "Bob is self-aware" is inherently true. This reflects the classic paradigm of mathematical reasoning: from universal to specific.
 
 Litex reduces typing by eliminating the need to name or recall individual facts. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. When writing done factual expressions for verification, Litex automatically searches for relevant facts using the proposition name and parameters, akin to a regex-based search in a large database. In this system, facts themselves do not possess names; only propositions (collections of facts to be verified) are named. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
+
+Fundamentally, Litex is a "regex interpreter with customizable rules (via keywords like `forall`) and math-friendly syntax sugar." It operates below set theory, making it intuitive yet powerful—so natural that it's rarely explained in any math textbooks. This simplicity is why Litex is both easy and expressive.
 
 ### Factual Expressions
 
