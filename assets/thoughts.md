@@ -1153,15 +1153,18 @@ Fundamentally, 目前为止 that is still not function, because fn f(s set) is a
 < Fact > 比如fact可以是 specFact和ForallFact
 2. 我发现#貌似是没必要的：我只要在离开当前环境向上查事实的时候，我如果发现我当前环境里声明了x，那我就不再往上找和x相关的事实了
 3. exist
-@fact_name
-forall parameters
-by fact_name, not exist fact_name()
-by not fact_name, exist fact_name()
+@fact_name forall parameters # 单行的相当于只给现在这一个取名字
+know fact_name
+by fact_name, not exist fact_name
+by not fact_name, exist fact_name
 
-@exist_name
-exist parameters
-by exist_name, not exist_name()
-by not exist_name, exist_name()
+@exist_name exist parameters
+know exist_name
+by exist_name, not exist_name
+by not exist_name, exist_name
+
+@fact_name:
+    .... 很多事实。这里相当于给很多事实取名字
 
 发现named forall 逻辑上等价于 prop p(). 确实是。但named的意义是，它立刻释放里面的东西，而不需要再让用户声明一下  forall ...
 prop p():
