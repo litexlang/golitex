@@ -1146,3 +1146,33 @@ Fundamentally, 目前为止 that is still not function, because fn f(s set) is a
       1. 我本周因为生病了，所以睡不着；我思考我到底哪里不对：集合的集合不能表示，那union就不能定义，很难受，不知道问题出在哪了，不知道怎么对“严格”“不严格”做取舍。没想到是我在不知情的情况下碰到了一阶逻辑和二阶逻辑的界限。
       2. 我哪怕之前学过这些，可能也对我没帮助：1. 不知道这些怎么对应到我的语言里 2. 自己发现的，比学习来的，深刻10倍。
 5. 注：垃圾回收器（比如CPython）确定一个内存可以释放的方式是，对一个obj进行reference count。如果count到0，那就释放（类似share_ptr的原理）；但是一个严重问题是，有时候，如果一个obj是互相引用的（比如class里的东西），这就没法用ref count了。所以每过一段时间，遍历一下所有的obj，看下”外部“对现在的存在的东西的引用是否归0。可见子引用是很本质的问题。litex处理iff的方式是，litex最多沿着树找2步，所以不可能循环走n步。
+
+4.20
+1. 给事实取名
+@fact_name
+< Fact > 比如fact可以是 specFact和ForallFact
+2. 我发现#貌似是没必要的：我只要在离开当前环境向上查事实的时候，我如果发现我当前环境里声明了x，那我就不再往上找和x相关的事实了
+3. exist
+@fact_name
+forall parameters
+by fact_name, not exist fact_name()
+by not fact_name, exist fact_name()
+
+@exist_name
+exist parameters
+by exist_name, not exist_name()
+by not exist_name, exist_name()
+
+发现named forall 逻辑上等价于 prop p(). 确实是。但named的意义是，它立刻释放里面的东西，而不需要再让用户声明一下  forall ...
+prop p():
+    forall ...
+
+exist_prop name(params) exist_params:
+    ...
+exist_prop name(params):
+    ...
+4. by
+   1. by not exist_prop: 推出一个Forall
+   2. by fact_name: 用指定的fact来检查当前的事实
+   3. by fact_name_of_a_forall_fact: 推出 not exist
+5. not 不应该绑定在SpecFact上，而应该是更高一层
