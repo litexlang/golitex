@@ -92,7 +92,7 @@ Consider `Human` as the set of all humans. Using `know`, we establish the axiom:
 
 Litex reduces typing by eliminating the need to name or recall individual facts. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. When writing done factual expressions for verification, Litex automatically searches for relevant facts using the proposition name and parameters, akin to a regex-based search in a large database. In this system, facts themselves do not possess names; only propositions (collections of facts to be verified) are named. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
 
-Fundamentally, Litex is a "regex interpreter with customizable rules (via keywords like `forall`) and math-friendly syntax sugar." It operates below set theory, making it intuitive yet powerful—so natural that it's rarely explained in any math textbooks. This simplicity is why Litex is both easy and expressive.
+Fundamentally, Litex is a "regular expression interpreter with customizable rules (via keywords like `forall`) and math-friendly syntax sugar." It operates below set theory, making it intuitive yet powerful—so natural that it's rarely explained in any math textbooks. Just as Lego lets you assemble complex structures from simple pieces, Litex lets you build math from minimal (with just 8 main keywords: forall, exist, not, or, fn, prop, obj, set and several other auxiliary keywords), reusable parts -— no unnecessary complexity, just pure flexibility.
 
 ### Factual Expressions
 
