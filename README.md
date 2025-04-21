@@ -14,7 +14,7 @@ Litex is a minimalist proof assistant (formal language). With a predicted "de Br
 
 Since even children grasp math logically and naturally, a formal language for mathematics intuitive and accessible to all can be invented. Litex aims to create such a language. 
 
-Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you. Technically, it is just a "regular expression interpreter with customizable rules (via keywords like `forall`) and math-friendly syntax sugar." 
+Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you. Technically, it is just a "regular expression interpreter with customizable matching rules (via keywords like `forall`) and math-friendly syntax sugar." 
 
 There are just 8 keywords in first-order logic (and, or, not, forall, exist, equal, if, then), and most existing mathematical knowledge can be expressed in first-order logic. You can lay out the meanings and relationships of those keywords in just a few sentences. See? Making a simple proof assistant is not beyond imagination at all!
 
@@ -94,7 +94,7 @@ Consider `Human` as the set of all humans. Using `know`, we establish the axiom:
 
 Litex reduces typing by eliminating the need to name or recall individual facts. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. When writing done factual expressions for verification, Litex automatically searches for relevant facts using the proposition name and parameters, akin to a regex-based search in a large database. In this system, facts themselves do not possess names; only propositions (collections of facts to be verified) are named. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
 
-That is why Litex is a "regular expression interpreter with customizable rules (via keywords like `forall`) and math-friendly syntax sugar." It operates below any axioms, including set theory (the reason why we can use set theory to derive new facts is that we rely on matching known facts with new fact to be verified), making it intuitive yet powerful—so natural that it's rarely explained in any math textbooks. Just as Lego lets you assemble complex structures from simple pieces, Litex lets you build math from minimal (with just 8 main keywords: forall, exist, not, or, fn, prop, obj, set and several other auxiliary keywords), reusable parts -— no unnecessary complexity, just pure flexibility.
+That is why Litex is a "regular expression interpreter with customizable matching rules (via keywords like `forall`) and math-friendly syntax sugar." It operates below any axioms, including set theory (the reason why we can use set theory to derive new facts is that we rely on matching known facts with new fact to be verified), making it intuitive yet powerful—so natural that it's rarely explained in any math textbooks. Just as Lego lets you assemble complex structures from simple pieces, Litex lets you build math from minimal (with just 8 main keywords: forall, exist, not, or, fn, prop, obj, set and several other auxiliary keywords), reusable parts -— no unnecessary complexity, just pure flexibility.
 
 ### Factual Expressions
 
@@ -344,7 +344,7 @@ The key feature of Litex is its simplicity. Its simplicity stems of its intuitiv
 
 On my(I am Jiachen Shen, the inventor of Litex) journey of inventing Litex, such intuitiveness is a double-edged sword. It's great because I do not need to rely on any textbook or paper to design Litex. It's bad because if I do get stuck, I do not have any textbook or paper to refer to.
 
-Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Afterall, Litex is just a regex-based interpreter with customizable rules and math-friendly syntax sugar. Any existing mathematical axioms can be expressed in Litex. 
+Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Afterall, Litex is just a regex-based interpreter with customizable matching rules and math-friendly syntax sugar. Any existing mathematical axioms can be expressed in Litex. 
 
 Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you.
 

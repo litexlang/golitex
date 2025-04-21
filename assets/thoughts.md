@@ -1194,3 +1194,4 @@ set s {1,2,3} 枚举
 1. $必须要作为FuncFact的前缀，否则就会把 forall x A当做 relational fact
 2. 为什么不能有 not forall 因为我不知道用哪个 exist 去 match 它
 3. 因为 forall 不能有 not，所以只有specFact有not。这样我就能让not跟着specFact走；而exist被设计成和specFact走，所以我能有个field，同时包含not和exist的信息
+4. 想到一个办法让not和exist都跟着specFact走，是很本质的发明。这个发明甚至说非常合理。完美地保持了litex设计观念的一致性：litex一切围绕在能match。为什么不能有 not forall 因为我不知道用哪个 exist 去 match 它。所以不能not forall。
