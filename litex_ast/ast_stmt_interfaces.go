@@ -26,12 +26,12 @@ func (p *SpecFactStmt) stmt()     {}
 func (f *ClaimProveStmt) stmt()   {}
 func (f *KnowStmt) stmt()         {}
 
-// func (s *DefConExistPropStmt) stmt() {}
-func (s *HaveStmt) stmt()     {}
-func (s *AxiomStmt) stmt()    {}
-func (s *ThmStmt) stmt()      {}
-func (s *CondFactStmt) stmt() {}
-func (s *GenUniStmt) stmt()   {}
+func (s *DefConExistPropStmt) stmt() {}
+func (s *HaveStmt) stmt()            {}
+func (s *AxiomStmt) stmt()           {}
+func (s *ThmStmt) stmt()             {}
+func (s *CondFactStmt) stmt()        {}
+func (s *GenUniStmt) stmt()          {}
 
 // func (s *ExistFactStmt) stmt() {}
 
@@ -58,8 +58,8 @@ type DefPropOrExistPropStmt interface {
 	stmt()
 }
 
-// func (s *DefConExistPropStmt) defPropStmt() {}
-func (s *DefConPropStmt) defPropStmt() {}
+func (s *DefConExistPropStmt) defPropStmt() {}
+func (s *DefConPropStmt) defPropStmt()      {}
 
 type DefMember interface {
 	defMember()
@@ -69,7 +69,7 @@ func (s *DefObjStmt) defMember()     {}
 func (s *DefConFnStmt) defMember()   {}
 func (s *DefConPropStmt) defMember() {}
 
-// func (s *DefConExistPropStmt) defMember() {}
+func (s *DefConExistPropStmt) defMember() {}
 
 type UniFactStmt interface {
 	factStmt()
