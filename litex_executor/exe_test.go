@@ -107,7 +107,7 @@ func randFcAtom() *ast.FcAtom {
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(rand.Intn(26) + 65)
 	}
-	ret := ast.FcAtom{Value: string(bytes)}
+	ret := ast.FcAtom{PropName: string(bytes)}
 	return &ret
 }
 
@@ -338,7 +338,7 @@ func randEqualFact() *ast.SpecFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &ast.SpecFactStmt{TypeEnum: ast.TrueAtom, Params: []ast.Fc{left, right}, PropName: ast.FcAtom{PkgName: "", Value: "="}}
+	return &ast.SpecFactStmt{TypeEnum: ast.TrueAtom, Params: []ast.Fc{left, right}, PropName: ast.FcAtom{PkgName: "", PropName: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

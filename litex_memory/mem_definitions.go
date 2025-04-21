@@ -95,3 +95,17 @@ func (memory *FnMem) Insert(stmt *ast.DefConFnStmt, pkgName string) error {
 
 	return nil
 }
+
+func (memory *PropMem) Get(fc ast.FcAtom) (*ast.DefConPropStmt, bool) {
+	pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	if !pkgExists {
+		return nil, false
+	}
+
+	node, nodeExists := pkgMap[fc.PropName]
+	if !nodeExists {
+		return nil, false
+	}
+
+	return node.Def, true
+}

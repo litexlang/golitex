@@ -129,7 +129,7 @@ func (ver *Verifier) matchFnUniWithConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast
 
 func isUniParam(uniFuncAtom *ast.FcAtom, possibleUniParams []string) (string, bool) { // ret: matched possible uniParam string; isMatched?
 	for _, possible := range possibleUniParams {
-		if possible == uniFuncAtom.Value && uniFuncAtom.PkgName == "" {
+		if possible == uniFuncAtom.PropName && uniFuncAtom.PkgName == "" {
 			return possible, true
 		}
 	}

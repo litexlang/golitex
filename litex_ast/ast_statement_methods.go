@@ -30,7 +30,7 @@ func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
 }
 
 func (f *SpecFactStmt) IsEqualFact() bool {
-	return f.PropName.Value == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinInfixPkgName
+	return f.PropName.PropName == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinInfixPkgName
 }
 
 // TODO: 目前只支持SpecFact的反转

@@ -48,13 +48,13 @@ func cmpFcAtomLit(left, right *ast.FcAtom) (int, error) {
 		}
 	}
 
-	if len(left.Value) != len(right.Value) {
-		return len(left.Value) - len(right.Value), nil
+	if len(left.PropName) != len(right.PropName) {
+		return len(left.PropName) - len(right.PropName), nil
 	}
 
-	for i := 0; i < len(left.Value); i++ {
-		if left.Value[i] != right.Value[i] {
-			return int(left.Value[i]) - int(right.Value[i]), nil
+	for i := 0; i < len(left.PropName); i++ {
+		if left.PropName[i] != right.PropName[i] {
+			return int(left.PropName[i]) - int(right.PropName[i]), nil
 		}
 	}
 
