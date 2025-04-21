@@ -98,9 +98,12 @@ func (stmt *DefObjStmt) String() string {
 
 func (c *DefInterfaceStmt) String() string { panic("") }
 func (f *DefTypeStmt) String() string      { panic("") }
-func (fact *DefConPropStmt) String() string {
+
+func DefConPropStmtString(prefix string, fact *DefConPropStmt) string {
 	var builder strings.Builder
 
+	builder.WriteString(prefix)
+	builder.WriteByte(' ')
 	builder.WriteString(fact.DefHeader.String())
 	builder.WriteByte('\n')
 
@@ -128,7 +131,13 @@ func (fact *DefConPropStmt) String() string {
 	}
 
 	return builder.String()
+
 }
+
+func (fact *DefConPropStmt) String() string {
+	return DefConPropStmtString(fmt.Sprintf("%s ", glob.KeywordProp), fact)
+}
+
 func (f *DefConFnStmt) String() string {
 	var builder strings.Builder
 
@@ -205,7 +214,7 @@ func (f *ClaimProveStmt) String() string {
 }
 
 func (s *DefConExistPropStmt) String() string {
-	return conUniFactString(fmt.Sprintf("%s ", glob.KeywordExist), &s.Def)
+	return DefConPropStmtString(fmt.Sprintf("%s ", glob.KeywordExistProp), &s.Def)
 }
 func (s *HaveStmt) String() string  { panic("") }
 func (s *AxiomStmt) String() string { panic("") }
@@ -271,7 +280,6 @@ func (l *ConUniFactStmt) String() string {
 
 func (head ConDefHeader) String() string {
 	var builder strings.Builder
-	builder.WriteString("prop ")
 	builder.WriteString(head.Name)
 	builder.WriteString("(")
 
