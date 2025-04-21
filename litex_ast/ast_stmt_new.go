@@ -31,9 +31,9 @@ func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []*
 	return &DefConPropStmt{defHeader, domFacts, iffFacts}
 }
 
-// func NewDefConExistPropStmt(defHeader ConDefHeader, existFc []string, existFcTypes []*FcAtom, thenFacts []FactStmt) *DefConExistPropStmt {
-// 	return &DefConExistPropStmt{defHeader, existFc, existFcTypes, thenFacts}
-// }
+func NewDefConExistPropStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *DefConExistPropStmt {
+	return &DefConExistPropStmt{*NewUniFactStmt(params, paramTypes, domFacts, thenFacts)}
+}
 
 func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *DefConFnStmt {
 	return &DefConFnStmt{defHeader, retType, domFacts, thenFacts}

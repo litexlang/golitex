@@ -34,12 +34,9 @@ type DefConPropStmt struct {
 	IffFacts  []*SpecFactStmt // 如果输入参数满足dom，满足iff，那就true. 这里必须是spec，因为我需要 know forall x: prop+dom => iffFacts，而iffFacts出现在了then的位置
 }
 
-// type DefConExistPropStmt struct {
-// 	DefHeader   ConDefHeader
-// 	ExistFc     []string
-// 	ExistFcSets []*FcAtom
-// 	ThenFacts   []FactStmt
-// }
+type DefConExistPropStmt struct {
+	Def ConUniFactStmt
+}
 
 type DefConFnStmt struct {
 	DefHeader ConDefHeader

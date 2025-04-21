@@ -12,6 +12,7 @@
 package litex_ast
 
 import (
+	"fmt"
 	glob "golitex/litex_global"
 	"strings"
 )
@@ -192,52 +193,9 @@ func (f *ClaimProveStmt) String() string {
 	}
 }
 
-// func (s *DefConExistPropStmt) String() string {
-// 	var builder strings.Builder
-// 	builder.WriteString(glob.KeywordExistProp)
-// 	builder.WriteByte(' ')
-
-// 	head := s.DefHeader
-// 	builder.WriteString(head.Name)
-// 	builder.WriteString("(")
-
-// 	if len(head.Params) > 0 {
-// 		for i := 0; i < len(head.Params)-1; i++ {
-// 			builder.WriteString(head.Params[i])
-// 			builder.WriteString(" ")
-// 			builder.WriteString(head.SetParams[i].String())
-// 			builder.WriteString(",")
-// 		}
-// 		builder.WriteString(head.Params[len(head.Params)-1])
-// 		builder.WriteString(" ")
-// 		builder.WriteString(head.SetParams[len(head.Params)-1].String())
-// 	}
-
-// 	builder.WriteString(") ")
-
-//		if len(s.ExistFc) > 0 {
-//			for i := 0; i < len(s.ExistFc)-1; i++ {
-//				builder.WriteString(s.ExistFc[i])
-//				builder.WriteByte(' ')
-//				builder.WriteString(s.ExistFcSets[i].String())
-//				builder.WriteString(glob.KeySymbolComma)
-//				builder.WriteByte(' ')
-//			}
-//			builder.WriteString(s.ExistFc[len(s.ExistFc)-1])
-//			builder.WriteByte(' ')
-//			builder.WriteString(s.ExistFcSets[len(s.ExistFc)-1].String())
-//		}
-//		if len(s.ThenFacts) > 0 {
-//			builder.WriteString(":")
-//			builder.WriteByte('\n')
-//			for i := 0; i < len(s.ThenFacts)-1; i++ {
-//				builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.ThenFacts[i].String(), 1))
-//				builder.WriteByte('\n')
-//			}
-//			builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.ThenFacts[len(s.ThenFacts)-1].String(), 1))
-//		}
-//		return strings.TrimSpace(builder.String())
-//	}
+func (s *DefConExistPropStmt) String() string {
+	return conUniFactString(fmt.Sprintf("%s ", glob.KeywordExist), &s.Def)
+}
 func (s *HaveStmt) String() string  { panic("") }
 func (s *AxiomStmt) String() string { panic("") }
 func (s *ThmStmt) String() string   { panic("") }
@@ -264,10 +222,10 @@ func (fact *CondFactStmt) String() string {
 }
 func (s *GenUniStmt) String() string { panic("") }
 
-func (l *ConUniFactStmt) String() string {
+func conUniFactString(prefix string, l *ConUniFactStmt) string {
 	var builder strings.Builder
 
-	builder.WriteString("forall ")
+	builder.WriteString(prefix)
 	if len(l.Params) > 0 {
 		for i := 0; i < len(l.Params)-1; i++ {
 			builder.WriteString(l.Params[i])
@@ -294,6 +252,10 @@ func (l *ConUniFactStmt) String() string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(l.ThenFacts[len(l.ThenFacts)-1].String(), 2))
 	}
 	return builder.String()
+}
+
+func (l *ConUniFactStmt) String() string {
+	return conUniFactString(fmt.Sprintf("%s ", glob.KeywordForall), l)
 }
 
 func (head ConDefHeader) String() string {
