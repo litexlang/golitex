@@ -32,19 +32,19 @@ func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []*
 }
 
 func NewDefConExistPropStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *DefConExistPropStmt {
-	return &DefConExistPropStmt{*NewUniFactStmt(params, paramTypes, domFacts, thenFacts)}
+	return &DefConExistPropStmt{*NewConUniFactStmt(params, paramTypes, domFacts, thenFacts)}
 }
 
 func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *DefConFnStmt {
 	return &DefConFnStmt{defHeader, retType, domFacts, thenFacts}
 }
 
-func NewUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *ConUniFactStmt {
+func NewConUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *ConUniFactStmt {
 	return &ConUniFactStmt{params, paramTypes, domFacts, thenFacts}
 }
 
-func NewGenericUniStmt(typeParams []string, typeInterfaces []*FcAtom, params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *GenUniStmt {
-	return &GenUniStmt{typeParams, typeInterfaces, params, paramTypes, domFacts, thenFacts}
+func NewGenUniStmt(typeParams []string, typeInterfaces []*FcAtom, params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *GenUniStmt {
+	return &GenUniStmt{typeParams, typeInterfaces, *NewConUniFactStmt(params, paramTypes, domFacts, thenFacts)}
 }
 
 func NewSpecFactStmt(isTrue bool, propName FcAtom, params []Fc) *SpecFactStmt {

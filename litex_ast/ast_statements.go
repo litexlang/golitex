@@ -55,10 +55,11 @@ type ConUniFactStmt struct {
 type GenUniStmt struct {
 	TypeParams     []string
 	TypeInterfaces []*FcAtom
-	Params         []string
-	ParamSets      []Fc
-	DomFacts       []FactStmt
-	ThenFacts      []*SpecFactStmt
+	UniFact        ConUniFactStmt
+	// Params         []string
+	// ParamSets      []Fc
+	// DomFacts       []FactStmt
+	// ThenFacts      []*SpecFactStmt
 }
 
 type SpecFactStmt struct {
@@ -112,4 +113,9 @@ type ConDefHeader struct {
 	Name      string
 	Params    []string
 	SetParams []Fc
+}
+
+type OrAndFact struct {
+	IsOr  bool
+	Facts []FactStmt
 }

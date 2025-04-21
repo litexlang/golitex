@@ -32,6 +32,7 @@ func (s *AxiomStmt) stmt()           {}
 func (s *ThmStmt) stmt()             {}
 func (s *CondFactStmt) stmt()        {}
 func (s *GenUniStmt) stmt()          {}
+func (p *OrAndFact) stmt()           {}
 
 // func (s *ExistFactStmt) stmt() {}
 
@@ -46,6 +47,7 @@ func (p *SpecFactStmt) factStmt()   {}
 func (p *CondFactStmt) factStmt()   {}
 func (l *ConUniFactStmt) factStmt() {}
 func (p *GenUniStmt) factStmt()     {}
+func (p *OrAndFact) factStmt()      {}
 
 // func (p *ExistFactStmt) factStmt()  {}
 
