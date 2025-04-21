@@ -21,7 +21,7 @@ type NameDepthMap map[string]int
 
 func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) *FcAtom {
 	if prefixNum, ok := fcAtomInUniParams(atom, uniParams); ok {
-		atom.Value = strings.Repeat(glob.UniParamPrefix, prefixNum) + atom.Value
+		atom.PropName = strings.Repeat(glob.UniParamPrefix, prefixNum) + atom.PropName
 	}
 	return atom
 }
@@ -57,7 +57,7 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 
 func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {
 	if atom.PkgName == glob.EmptyPkgName {
-		if prefixNum, ok := uniParams[atom.Value]; ok {
+		if prefixNum, ok := uniParams[atom.PropName]; ok {
 			return prefixNum, true
 		}
 	}

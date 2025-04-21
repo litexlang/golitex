@@ -35,7 +35,7 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 	}
 
 	if asFcFn.FnHead.IsBuiltinUnaryOpt() {
-		if asFcFn.FnHead.Value == glob.KeySymbolMinus {
+		if asFcFn.FnHead.PropName == glob.KeySymbolMinus {
 			left, ok, err := MakeFcIntoNumLitExpr(asFcFn.ParamSegs[0].Params[0])
 			if err != nil {
 				return nil, false, err
@@ -76,6 +76,6 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	opt := asFcFn.FnHead.Value
+	opt := asFcFn.FnHead.PropName
 	return &glob.NumLitExpr{IsPositive: true, Left: left, OptOrNumber: opt, Right: right}, true, nil
 }

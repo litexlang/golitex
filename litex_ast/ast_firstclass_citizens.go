@@ -30,8 +30,8 @@ func (f *FcAtom) GetPkgName() string { return f.PkgName }
 func (f *FcFn) GetPkgName() string   { return f.FnHead.PkgName }
 
 type FcAtom struct {
-	PkgName string
-	Value   string
+	PkgName  string
+	PropName string
 }
 
 type FcFn struct {
@@ -96,20 +96,20 @@ func FcSliceString(params []Fc) string {
 
 func (f *FcAtom) String() string {
 	if f.PkgName == glob.EmptyPkgName {
-		return string(f.Value)
+		return string(f.PropName)
 	} else {
-		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Value))
+		return fmt.Sprintf("%s::%s", f.PkgName, string(f.PropName))
 	}
 }
 
 func isFcFnAndToString(f *FcFn) (bool, string) {
-	if f.FnHead.Value != "" {
+	if f.FnHead.PropName != "" {
 		return false, ""
 	}
 
 	// TODO 如何处理unary?
 
-	outPut := string(f.FnHead.Value)
+	outPut := string(f.FnHead.PropName)
 	if glob.IsKeySymbolRelaFn(outPut) {
 		return true, fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
 	}
@@ -135,7 +135,7 @@ func (f *FcFn) String() string {
 		return str
 	}
 
-	outPut := string(f.FnHead.Value)
+	outPut := string(f.FnHead.PropName)
 	for _, pair := range f.ParamSegs {
 		if len(pair.Params) > 0 {
 			outPut += "("
@@ -158,17 +158,17 @@ func IsEqualOptFc(f Fc) bool {
 	if !ok {
 		return false
 	}
-	return ptr.Value == glob.KeySymbolEqual && ptr.PkgName == ""
+	return ptr.PropName == glob.KeySymbolEqual && ptr.PkgName == ""
 }
 
 func IsNumLitFcAtom(f Fc) (string, bool) {
 	ptr, ok := f.(*FcAtom)
-	if !ok || ptr.Value == "" {
+	if !ok || ptr.PropName == "" {
 		return "", false
 	}
 
-	if glob.IsNumLitStr(ptr.Value) {
-		return ptr.Value, true
+	if glob.IsNumLitStr(ptr.PropName) {
+		return ptr.PropName, true
 	}
 	return "", false
 }
@@ -177,7 +177,7 @@ func (f *FcAtom) IsBuiltinInfixOpt() bool {
 	if f.PkgName != "" {
 		return false
 	}
-	if glob.IsKeySymbolRelaFn(f.Value) {
+	if glob.IsKeySymbolRelaFn(f.PropName) {
 		return true
 	}
 	return false
@@ -187,7 +187,7 @@ func (f *FcAtom) IsBuiltinUnaryOpt() bool {
 	if f.PkgName != glob.BuiltinUnaryPkgName {
 		return false
 	}
-	if glob.IsKeySymbolUniFn(f.Value) {
+	if glob.IsKeySymbolUniFn(f.PropName) {
 		return true
 	}
 	return false

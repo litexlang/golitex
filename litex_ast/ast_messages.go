@@ -60,7 +60,7 @@ func (stmt *SpecFactStmt) String() string {
 
 	builder.WriteString(glob.FuncFactPrefix)
 
-	if stmt.PropName.PkgName == "" && glob.IsKeySymbol(stmt.PropName.Value) {
+	if stmt.PropName.PkgName == "" && glob.IsKeySymbol(stmt.PropName.PropName) {
 		builder.WriteString(stmt.Params[0].String())
 		builder.WriteByte(' ')
 		builder.WriteString(stmt.PropName.String())

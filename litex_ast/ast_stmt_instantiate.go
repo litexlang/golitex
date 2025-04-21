@@ -15,7 +15,7 @@ import "errors"
 
 func (fc *FcAtom) Instantiate(uniConMap map[string]Fc) (Fc, error) {
 	if fc.PkgName == "" {
-		instance, ok := uniConMap[fc.Value]
+		instance, ok := uniConMap[fc.PropName]
 		if ok {
 			return instance, nil
 		}
