@@ -11,9 +11,17 @@
 # Visit litexlang.org and https://github.com/litexlang/golitex for more information.
 
 
+# 所有文件行数总和
 find . -type f \( -name "*.go" -o -name "*.md" -o -name "*.lix" -o -name "*.sh" \) \
     | xargs wc -l \
     | tee /dev/stderr \
     | tail -1 \
-    | awk '{print "lines:", $1}'; \
-    echo "files: $(find . -type f \( -name "*.go" -o -name "*.md" -o -name "*.lix" -o -name "*.sh" \) | wc -l)"
+    | awk '{print "total lines:", $1}'
+
+# 所有文件数量
+echo "total files: $(find . -type f \( -name "*.go" -o -name "*.md" -o -name "*.lix" -o -name "*.sh" \) | wc -l)"
+
+# 单独统计 .go 文件行数
+echo "go lines: $(find . -type f -name "*.go" | xargs wc -l | tail -1 | awk '{print $1}')"
+
+echo "go files: $(find . -type f -name "*.go" | wc -l)"

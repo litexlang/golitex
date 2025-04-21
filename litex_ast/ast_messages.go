@@ -30,6 +30,7 @@ func (stmt *KnowStmt) String() string {
 	var builder strings.Builder
 
 	builder.WriteString(glob.KeywordKnow)
+	builder.WriteByte(':')
 	builder.WriteByte('\n')
 	if len(stmt.Facts) > 0 {
 		for i := 0; i < len(stmt.Facts)-1; i++ {
@@ -46,11 +47,15 @@ func (stmt *SpecFactStmt) String() string {
 
 	if stmt.TypeEnum == FalseAtom {
 		builder.WriteString(glob.KeywordNot)
+		builder.WriteByte(' ')
 	} else if stmt.TypeEnum == TrueExist {
 		builder.WriteString(glob.KeywordExist)
+		builder.WriteByte(' ')
 	} else if stmt.TypeEnum == FalseExist {
 		builder.WriteString(glob.KeywordNot)
+		builder.WriteByte(' ')
 		builder.WriteString(glob.KeywordExist)
+		builder.WriteByte(' ')
 	}
 
 	builder.WriteString(glob.FuncFactPrefix)

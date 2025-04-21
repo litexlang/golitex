@@ -25,25 +25,6 @@ func (ver *Verifier) fcEqual(left, right ast.Fc, state VerState) (bool, error) {
 	return ver.SpecFact(newSpecFactToCheck, state)
 }
 
-// func (ver *Verifier) FcEqual(left, right ast.Fc, state VerState) (bool, error) {
-// nextState := state
-// ok, err := ver.fcEqualSpec(left, right, nextState)
-// if err != nil {
-// 	return false, err
-// }
-// if ok {
-// 	return true, nil
-// }
-
-// if state.isSpec() {
-// 	return false, nil
-// }
-
-// // TODO 用 UniFact ? CondFact?
-
-// return false, nil
-// }
-
 func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, error) {
 	ok, err := cmp.CmpFcRule(left, right)
 	if err != nil {
