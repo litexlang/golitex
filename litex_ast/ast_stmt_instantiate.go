@@ -167,7 +167,7 @@ func (stmt *GenUniStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
 	return nil, errors.New("TODO: GenUniStmt.Instantiate not implemented")
 }
 
-func (stmt *OrAndFact) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+func (stmt *OrAndFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
 	newOrAnd := NewOrAndFact(stmt.IsOr, []FactStmt{})
 	for _, fact := range stmt.Facts {
 		newFact, err := fact.Instantiate(uniConMap)

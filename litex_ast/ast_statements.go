@@ -115,7 +115,7 @@ type ConDefHeader struct {
 	SetParams []Fc
 }
 
-type OrAndFact struct {
+type OrAndFactStmt struct {
 	IsOr  bool
 	Facts []FactStmt
 }

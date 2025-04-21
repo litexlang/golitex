@@ -326,6 +326,6 @@ func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string
 // 	return builder.String()
 // }
 
-func (stmt *OrAndFact) String() string {
+func (stmt *OrAndFactStmt) String() string {
 	return "TODO: OrAndFact.String()"
 }
