@@ -23,14 +23,13 @@ func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 	switch stmt := stmt.(type) {
 	// 只有这里的三大函数+FcEqual+propProp验证，可能读入anyState；也只有这三个函数，用得到 state,isSpec()，其他函数貌似都用不到？
 	case *ast.SpecFactStmt:
-		{
-			ok, err := ver.SpecFact(stmt, state)
-			return ok, err
-		}
+		return ver.SpecFact(stmt, state)
 	case *ast.CondFactStmt:
 		return ver.CondFact(stmt, state)
 	case *ast.ConUniFactStmt:
 		return ver.UniFact(stmt, state)
+	case *ast.OrAndFactStmt:
+		return ver.OrAndFact(stmt, state)
 	default:
 		return false, fmt.Errorf("unexpected")
 	}
@@ -79,4 +78,45 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 		ver.env.Parent.NewMsg(s)
 		return nil
 	}
+}
+
+func (ver *Verifier) OrAndFact(stmt *ast.OrAndFactStmt, state VerState) (bool, error) {
+	if !stmt.IsOr {
+		for _, fact := range stmt.Facts {
+			ok, err := ver.FactStmt(fact, state)
+			if err != nil {
+				return ver.factDefer(stmt, state, false, err)
+			}
+			if !ok {
+				return ver.factDefer(stmt, state, false, nil)
+			}
+		}
+		return ver.factDefer(stmt, state, true, nil)
+	} else {
+		for _, fact := range stmt.Facts {
+			ok, err := ver.FactStmt(fact, state)
+			if err != nil {
+				return ver.factDefer(stmt, state, false, err)
+			}
+			if ok {
+				return ver.factDefer(stmt, state, true, nil)
+			}
+		}
+		return ver.factDefer(stmt, state, false, nil)
+	}
+}
+
+func (ver *Verifier) factDefer(stmt ast.FactStmt, state VerState, proved bool, err error) (bool, error) {
+	if err != nil {
+		return proved, err
+	}
+
+	if state.requireMsg() {
+		if proved {
+			ver.successWithMsg(stmt.String(), "")
+		} else {
+			ver.unknownMsgEnd(stmt.String(), stmt.String())
+		}
+	}
+	return proved, err
 }
