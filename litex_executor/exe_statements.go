@@ -73,7 +73,10 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 	}
 
 	if ok {
-		exec.env.NewFact(stmt)
+		err := exec.env.NewFact(stmt)
+		if err != nil {
+			return err
+		}
 	} else {
 		if glob.CheckFalse {
 			switch stmt := stmt.(type) {
