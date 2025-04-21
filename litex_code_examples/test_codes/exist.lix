@@ -5,8 +5,8 @@ prove:
     not $p(2)
     know exist $p(x)
     exist $p(x)
-    know not exist $p(y)
-    not exist $p(y)
+    know not exist $p()
+    not exist $p()
 
 prove:
     # forall exist
@@ -15,13 +15,13 @@ prove:
     forall x A:
         exist $p(x)
     know forall y B:
-        not exist $q(y)
+        not exist $q()
     forall y B:
-        not exist $q(y)
+        not exist $q()
     
 prove:
     # the following two statements are equivalent
-    not exist $p(x)
+    not exist $p()
     forall x A:
         # 这里还得添加 p 的定义域
         not $p(x)
@@ -31,3 +31,15 @@ prove:
     know $p(x)
     exist $p(x)
     
+prove:
+    prop p(x set):
+        $dom(x)
+        iff:
+            $q(x)
+
+    know not $p(x)
+    not exist $p()
+
+    know forall x A:
+        not $p(x)    
+    not exist $p()

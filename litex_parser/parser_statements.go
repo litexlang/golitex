@@ -178,6 +178,13 @@ func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactSt
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
+	// not exist 表示 forall，所以Litex的语法让涉及到的参数数量为0
+	if typeEnum == ast.FalseExist {
+		if len(params) != 0 {
+			return nil, fmt.Errorf("exist fact with params is not supported %s", tb.header.String())
+		}
+	}
+
 	return ast.NewSpecFactStmt(typeEnum, propName, params), nil
 }
 
