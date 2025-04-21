@@ -148,12 +148,15 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 			return fmt.Errorf("prove by contradiction only support one fact")
 		}
 
-		newClaimFact, err := ast.ReverseIsTrue(stmt.ToCheckFacts[0])
-		if err != nil {
-			return err
+		// Must be SpecFactStmt
+		specFactStmt, ok := stmt.ToCheckFacts[0].(*ast.SpecFactStmt)
+		if !ok {
+			return fmt.Errorf("prove by contradiction only support spec fact")
 		}
 
-		err = exec.env.NewFact(newClaimFact)
+		newClaimFact := specFactStmt.ReverseIsTrue()
+
+		err := exec.env.NewFact(newClaimFact)
 		if err != nil {
 			return err
 		}
@@ -165,15 +168,12 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 			}
 		}
 
-		lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(ast.FactStmt)
+		lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.SpecFactStmt)
 		if !ok {
 			return fmt.Errorf("prove by contradiction only support fact")
 		}
 
-		reverseLastFact, err := ast.ReverseIsTrue(lastStmtAsFact)
-		if err != nil {
-			return err
-		}
+		reverseLastFact := lastStmtAsFact.ReverseIsTrue()
 
 		ok, _, err = exec.checkFactStmt(reverseLastFact)
 		if err != nil {
