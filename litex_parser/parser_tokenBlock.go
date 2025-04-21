@@ -22,10 +22,6 @@ type tokenBlock struct {
 	body   []tokenBlock
 }
 
-func (b *tokenBlock) setHeaderIndex(index int) {
-	b.header.index = index
-}
-
 func (b *tokenBlock) String() string {
 	return b.stringWithIndent(0)
 }
