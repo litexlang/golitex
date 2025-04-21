@@ -12,7 +12,6 @@
 package litex_ast
 
 import (
-	"fmt"
 	glob "golitex/litex_global"
 )
 
@@ -31,18 +30,4 @@ func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
 
 func (f *SpecFactStmt) IsEqualFact() bool {
 	return f.PropName.PropName == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinInfixPkgName
-}
-
-// TODO: 目前只支持SpecFact的反转
-func ReverseIsTrue(fact FactStmt) (FactStmt, error) {
-	switch fact := fact.(type) {
-	case *SpecFactStmt:
-		return fact.ReverseIsTrue(), nil
-	case *CondFactStmt:
-		return nil, fmt.Errorf("TODO: current version cannot reverse cond fact")
-	case *ConUniFactStmt:
-		return nil, fmt.Errorf("TODO: current version cannot reverse uni fact")
-	default:
-		panic("unknown fact type")
-	}
 }

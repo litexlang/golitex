@@ -14,7 +14,7 @@ Litex is a minimalist proof assistant (formal language). With a predicted "de Br
 
 Since even children grasp math logically and naturally, a formal language for mathematics intuitive and accessible to all can be invented. Litex aims to create such a language. 
 
-Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you. Technically, Litex is just a "regular expression interpreter with customizable rules (via keywords like `forall`) and math-friendly syntax sugar." 
+Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you. Technically, it is just a "regular expression interpreter with customizable rules (via keywords like `forall`) and math-friendly syntax sugar." 
 
 There are just 8 keywords in first-order logic (and, or, not, forall, exist, equal, if, then), and most existing mathematical knowledge can be expressed in first-order logic. You can lay out the meanings and relationships of those keywords in just a few sentences. See? Making a simple proof assistant is not beyond imagination at all!
 
