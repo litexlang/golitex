@@ -80,28 +80,28 @@ func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 	return NewSpecFactStmt(stmt.IsTrue, *propNameAtom, newParams), nil
 }
 
-func (stmt *ExistFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
-	newExistFc := []Fc{}
-	for _, fc := range stmt.ExistFc {
-		newFc, err := fc.Instantiate(uniConMap)
-		if err != nil {
-			return nil, err
-		}
-		newExistFc = append(newExistFc, newFc)
-	}
+// func (stmt *ExistFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+// 	newExistFc := []Fc{}
+// 	for _, fc := range stmt.ExistFc {
+// 		newFc, err := fc.Instantiate(uniConMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newExistFc = append(newExistFc, newFc)
+// 	}
 
-	instantiatedFact, err := stmt.Fact.Instantiate(uniConMap)
-	if err != nil {
-		return nil, err
-	}
-	// to spec
-	specFact, ok := instantiatedFact.(*SpecFactStmt)
-	if !ok {
-		return nil, errors.New("fact is not of type *SpecFactStmt")
-	}
+// 	instantiatedFact, err := stmt.Fact.Instantiate(uniConMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	// to spec
+// 	specFact, ok := instantiatedFact.(*SpecFactStmt)
+// 	if !ok {
+// 		return nil, errors.New("fact is not of type *SpecFactStmt")
+// 	}
 
-	return NewExistFactStmt(specFact, newExistFc), nil
-}
+// 	return NewExistFactStmt(specFact, newExistFc), nil
+// }
 
 func (stmt *ConUniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
 	newParamTypes := []Fc{}

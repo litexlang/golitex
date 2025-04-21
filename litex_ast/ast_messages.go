@@ -191,52 +191,53 @@ func (f *ClaimProveStmt) String() string {
 		return strings.TrimSpace(builder.String())
 	}
 }
-func (s *DefConExistPropStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordExistProp)
-	builder.WriteByte(' ')
 
-	head := s.DefHeader
-	builder.WriteString(head.Name)
-	builder.WriteString("(")
+// func (s *DefConExistPropStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordExistProp)
+// 	builder.WriteByte(' ')
 
-	if len(head.Params) > 0 {
-		for i := 0; i < len(head.Params)-1; i++ {
-			builder.WriteString(head.Params[i])
-			builder.WriteString(" ")
-			builder.WriteString(head.SetParams[i].String())
-			builder.WriteString(",")
-		}
-		builder.WriteString(head.Params[len(head.Params)-1])
-		builder.WriteString(" ")
-		builder.WriteString(head.SetParams[len(head.Params)-1].String())
-	}
+// 	head := s.DefHeader
+// 	builder.WriteString(head.Name)
+// 	builder.WriteString("(")
 
-	builder.WriteString(") ")
+// 	if len(head.Params) > 0 {
+// 		for i := 0; i < len(head.Params)-1; i++ {
+// 			builder.WriteString(head.Params[i])
+// 			builder.WriteString(" ")
+// 			builder.WriteString(head.SetParams[i].String())
+// 			builder.WriteString(",")
+// 		}
+// 		builder.WriteString(head.Params[len(head.Params)-1])
+// 		builder.WriteString(" ")
+// 		builder.WriteString(head.SetParams[len(head.Params)-1].String())
+// 	}
 
-	if len(s.ExistFc) > 0 {
-		for i := 0; i < len(s.ExistFc)-1; i++ {
-			builder.WriteString(s.ExistFc[i])
-			builder.WriteByte(' ')
-			builder.WriteString(s.ExistFcSets[i].String())
-			builder.WriteString(glob.KeySymbolComma)
-			builder.WriteByte(' ')
-		}
-		builder.WriteString(s.ExistFc[len(s.ExistFc)-1])
-		builder.WriteByte(' ')
-		builder.WriteString(s.ExistFcSets[len(s.ExistFc)-1].String())
-	}
-	if len(s.ThenFacts) > 0 {
-		builder.WriteString(":")
-		builder.WriteByte('\n')
-		for i := 0; i < len(s.ThenFacts)-1; i++ {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.ThenFacts[i].String(), 1))
-			builder.WriteByte('\n')
-		}
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.ThenFacts[len(s.ThenFacts)-1].String(), 1))
-	}
-	return strings.TrimSpace(builder.String())
-}
+// 	builder.WriteString(") ")
+
+//		if len(s.ExistFc) > 0 {
+//			for i := 0; i < len(s.ExistFc)-1; i++ {
+//				builder.WriteString(s.ExistFc[i])
+//				builder.WriteByte(' ')
+//				builder.WriteString(s.ExistFcSets[i].String())
+//				builder.WriteString(glob.KeySymbolComma)
+//				builder.WriteByte(' ')
+//			}
+//			builder.WriteString(s.ExistFc[len(s.ExistFc)-1])
+//			builder.WriteByte(' ')
+//			builder.WriteString(s.ExistFcSets[len(s.ExistFc)-1].String())
+//		}
+//		if len(s.ThenFacts) > 0 {
+//			builder.WriteString(":")
+//			builder.WriteByte('\n')
+//			for i := 0; i < len(s.ThenFacts)-1; i++ {
+//				builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.ThenFacts[i].String(), 1))
+//				builder.WriteByte('\n')
+//			}
+//			builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.ThenFacts[len(s.ThenFacts)-1].String(), 1))
+//		}
+//		return strings.TrimSpace(builder.String())
+//	}
 func (s *HaveStmt) String() string  { panic("") }
 func (s *AxiomStmt) String() string { panic("") }
 func (s *ThmStmt) String() string   { panic("") }
@@ -341,24 +342,24 @@ func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string
 	return builder.String()
 }
 
-func (s *ExistFactStmt) String() string {
-	var builder strings.Builder
+// func (s *ExistFactStmt) String() string {
+// 	var builder strings.Builder
 
-	builder.WriteString(glob.KeywordExist)
-	builder.WriteByte(' ')
+// 	builder.WriteString(glob.KeywordExist)
+// 	builder.WriteByte(' ')
 
-	if len(s.ExistFc) > 0 {
-		for i := 0; i < len(s.ExistFc)-1; i++ {
-			builder.WriteString(s.ExistFc[i].String())
-			builder.WriteString(glob.KeySymbolComma)
-			builder.WriteByte(' ')
-		}
-		builder.WriteString(s.ExistFc[len(s.ExistFc)-1].String())
-	}
+// 	if len(s.ExistFc) > 0 {
+// 		for i := 0; i < len(s.ExistFc)-1; i++ {
+// 			builder.WriteString(s.ExistFc[i].String())
+// 			builder.WriteString(glob.KeySymbolComma)
+// 			builder.WriteByte(' ')
+// 		}
+// 		builder.WriteString(s.ExistFc[len(s.ExistFc)-1].String())
+// 	}
 
-	builder.WriteString(" ")
+// 	builder.WriteString(" ")
 
-	builder.WriteString(s.Fact.String())
+// 	builder.WriteString(s.Fact.String())
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
