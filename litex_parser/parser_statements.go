@@ -87,11 +87,39 @@ func (tb *tokenBlock) factStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom
 		return tb.uniFactStmt(nameDepths, allowUniFactInUniDom)
 	} else if tb.header.is(glob.KeywordWhen) {
 		return tb.condFactStmt(nameDepths)
+	} else if tb.header.is(glob.KeywordAnd) || tb.header.is(glob.KeywordOr) {
+		return tb.orAndFactStmt(nameDepths, allowUniFactInUniDom)
 	}
 	// else if tb.header.is(glob.KeywordExist) {
 	// 	return tb.ExistFactStmt(nameDepths)
 	// }
 	return tb.specFactStmt(nameDepths)
+}
+
+func (tb *tokenBlock) orAndFactStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (*ast.OrAndFactStmt, error) {
+	isOr := tb.header.isAndSkip(glob.KeywordOr)
+	if !isOr {
+		err := tb.header.skip(glob.KeywordAnd)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	}
+
+	err := tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	facts := []ast.FactStmt{}
+	for _, factToParse := range tb.body {
+		fact, err := factToParse.factStmt(nameDepths, allowUniFactInUniDom)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		facts = append(facts, fact)
+	}
+
+	return ast.NewOrAndFact(isOr, facts), nil
 }
 
 func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {

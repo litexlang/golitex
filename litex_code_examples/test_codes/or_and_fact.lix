@@ -1,0 +1,5 @@
+prove:
+    know p(x)
+    or:
+        p(x)
+        q(x)

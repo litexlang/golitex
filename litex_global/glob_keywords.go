@@ -11,7 +11,7 @@
 
 package litex_global
 
-// 每次新增keyword的时候，要记住把它往isKeyword里加
+// ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
 	KeywordInterface            = "interface"
 	KeywordType                 = "type"
@@ -41,6 +41,9 @@ const (
 	KeywordThm                  = "thm" // syntax sugar for: prop + prove
 	// KeywordSelf                 = "self" // return value of a function; refer to an instance of the type or set we are defining
 	KeywordIff = "iff"
+
+	KeywordAnd = "and"
+	KeywordOr  = "or"
 
 	// Syntax and Semantics Sugar
 	KeywordCommutative = "commutative"
@@ -197,6 +200,9 @@ func initKeywordSet() map[string]struct{} {
 		// 语法糖
 		KeywordCommutative,
 		KeywordAssociative,
+
+		KeywordAnd,
+		KeywordOr,
 
 		// 内置类型
 		KeywordNatural,
