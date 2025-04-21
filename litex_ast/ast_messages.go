@@ -49,6 +49,8 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteByte(' ')
 	}
 
+	builder.WriteString(glob.FuncFactPrefix)
+
 	if stmt.PropName.PkgName == "" && glob.IsKeySymbol(stmt.PropName.Value) {
 		builder.WriteString(stmt.Params[0].String())
 		builder.WriteByte(' ')
@@ -327,5 +329,25 @@ func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string
 // }
 
 func (stmt *OrAndFactStmt) String() string {
-	return "TODO: OrAndFact.String()"
+	var prefix string
+	if stmt.IsOr {
+		prefix = glob.KeywordOr
+	} else {
+		prefix = glob.KeywordAnd
+	}
+
+	var builder strings.Builder
+	builder.WriteString(prefix)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+
+	if len(stmt.Facts) > 0 {
+		for i := 0; i < len(stmt.Facts)-1; i++ {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 1))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
+	}
+
+	return builder.String()
 }

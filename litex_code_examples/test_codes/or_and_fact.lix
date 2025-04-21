@@ -1,5 +1,5 @@
 prove:
-    know p(x)
+    know $p(x)
     or:
-        p(x)
-        q(x)
+        $p(x)
+        $q(x)
