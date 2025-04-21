@@ -35,7 +35,9 @@ type DefConPropStmt struct {
 }
 
 type DefConExistPropStmt struct {
-	Def DefConPropStmt
+	Def            DefConPropStmt
+	ExistParams    []string
+	ExistParamSets []Fc
 }
 
 type DefConFnStmt struct {

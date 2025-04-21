@@ -302,9 +302,11 @@ func (tb *tokenBlock) thenBlockSpecFacts(nameDepths ast.NameDepthMap) ([]*ast.Sp
 }
 
 func (tb *tokenBlock) defConPropStmt(prefix string) (*ast.DefConPropStmt, error) {
-	err := tb.header.skip(prefix)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
+	if prefix != "" {
+		err := tb.header.skip(prefix)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
 	}
 
 	declHeader, nameDepths, err := tb.conDefHeader()
@@ -825,10 +827,41 @@ func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast.N
 }
 
 func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
-	def, err := tb.defConPropStmt(glob.KeywordExistProp)
+	err := tb.header.skip(glob.KeywordExistProp)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	return ast.NewDefConExistPropStmt(def), nil
+	existParams := []string{}
+	existParamSets := []ast.Fc{}
+
+	for {
+		param, err := tb.header.next()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		existParams = append(existParams, param)
+
+		paramSet, err := tb.header.rawFc()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		existParamSets = append(existParamSets, paramSet)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else {
+			break
+		}
+	}
+
+	def, err := tb.defConPropStmt("")
+
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewDefConExistPropStmt(def, existParams, existParamSets), nil
 }
