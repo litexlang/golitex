@@ -27,6 +27,16 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		return ver.PropPropFact(stmt, state)
 	}
 
+	if stmt.TypeEnum == ast.TrueExist || stmt.TypeEnum == ast.FalseExist {
+		ok, err := ver.ExistPropFact(stmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+
 	ok, err := ver.SpecFactSpec(stmt, state)
 	if err != nil {
 		return false, err

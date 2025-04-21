@@ -19,3 +19,15 @@ prove:
     forall y B:
         not exist $q(y)
     
+prove:
+    # the following two statements are equivalent
+    not exist $p(x)
+    forall x A:
+        # 这里还得添加 p 的定义域
+        not $p(x)
+
+
+prove:
+    know $p(x)
+    exist $p(x)
+    
