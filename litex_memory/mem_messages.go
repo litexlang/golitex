@@ -14,7 +14,7 @@ package litex_memory
 import ast "golitex/litex_ast"
 
 func (fact *StoredSpecFact) String(atom ast.FcAtom) string {
-	knownFact := ast.SpecFactStmt{IsTrue: fact.IsTrue, PropName: atom, Params: fact.Params}
+	knownFact := ast.SpecFactStmt{TypeEnum: fact.TypeEnum, PropName: atom, Params: fact.Params}
 	return knownFact.String()
 }
 

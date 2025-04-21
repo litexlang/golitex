@@ -1,0 +1,4 @@
+forall x a:
+    forall y b:
+        p(x,y)
+

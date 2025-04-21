@@ -17,7 +17,16 @@ import (
 )
 
 func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
-	return NewSpecFactStmt(!stmt.IsTrue, stmt.PropName, stmt.Params)
+	if stmt.TypeEnum == TrueAtom {
+		return NewSpecFactStmt(FalseAtom, stmt.PropName, stmt.Params)
+	} else if stmt.TypeEnum == FalseAtom {
+		return NewSpecFactStmt(TrueAtom, stmt.PropName, stmt.Params)
+	} else if stmt.TypeEnum == TrueExist {
+		return NewSpecFactStmt(FalseExist, stmt.PropName, stmt.Params)
+	} else if stmt.TypeEnum == FalseExist {
+		return NewSpecFactStmt(TrueExist, stmt.PropName, stmt.Params)
+	}
+	panic("unknown spec fact type")
 }
 
 func (f *SpecFactStmt) IsEqualFact() bool {

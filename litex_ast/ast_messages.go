@@ -44,9 +44,13 @@ func (stmt *KnowStmt) String() string {
 func (stmt *SpecFactStmt) String() string {
 	var builder strings.Builder
 
-	if !stmt.IsTrue {
+	if stmt.TypeEnum == FalseAtom {
 		builder.WriteString(glob.KeywordNot)
-		builder.WriteByte(' ')
+	} else if stmt.TypeEnum == TrueExist {
+		builder.WriteString(glob.KeywordExist)
+	} else if stmt.TypeEnum == FalseExist {
+		builder.WriteString(glob.KeywordNot)
+		builder.WriteString(glob.KeywordExist)
 	}
 
 	builder.WriteString(glob.FuncFactPrefix)

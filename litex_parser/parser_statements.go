@@ -123,10 +123,20 @@ func (tb *tokenBlock) orAndFactStmt(nameDepths ast.NameDepthMap, allowUniFactInU
 }
 
 func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
-	isTrue := true
+	typeEnum := ast.TrueAtom
 	if tb.header.is(glob.KeywordNot) {
 		tb.header.skip(glob.KeywordNot)
-		isTrue = false
+		if tb.header.is(glob.KeywordExist) {
+			typeEnum = ast.FalseExist
+		} else {
+			typeEnum = ast.FalseAtom
+		}
+	} else {
+		if tb.header.is(glob.KeywordExist) {
+			typeEnum = ast.TrueExist
+		} else {
+			typeEnum = ast.TrueAtom
+		}
 	}
 
 	ok := tb.header.isAndSkip(glob.FuncFactPrefix)
@@ -166,7 +176,7 @@ func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactSt
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	return ast.NewSpecFactStmt(isTrue, propName, params), nil
+	return ast.NewSpecFactStmt(typeEnum, propName, params), nil
 }
 
 // func (tb *tokenBlock) ExistFactStmt(nameDepths ast.NameDepthMap) (*ast.ExistFactStmt, error) {
@@ -541,7 +551,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactSt
 
 	params := []ast.Fc{fc, fc2}
 
-	return ast.NewSpecFactStmt(true, ast.FcAtom{Value: opt}, params), nil
+	return ast.NewSpecFactStmt(ast.TrueAtom, ast.FcAtom{Value: opt}, params), nil
 }
 
 func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {

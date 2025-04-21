@@ -47,8 +47,8 @@ func NewGenUniStmt(typeParams []string, typeInterfaces []*FcAtom, params []strin
 	return &GenUniStmt{typeParams, typeInterfaces, *NewConUniFactStmt(params, paramTypes, domFacts, thenFacts)}
 }
 
-func NewSpecFactStmt(isTrue bool, propName FcAtom, params []Fc) *SpecFactStmt {
-	return &SpecFactStmt{isTrue, propName, params}
+func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {
+	return &SpecFactStmt{typeEnum, propName, params}
 }
 
 func NewClaimProveStmt(proveTrue bool, toCheckFacts []FactStmt, proofs []Stmt) *ClaimProveStmt {
