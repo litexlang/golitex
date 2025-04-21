@@ -24,6 +24,10 @@ func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool
 
 	var newFact *ast.SpecFactStmt
 	if stmt.TypeEnum == ast.TrueExist {
+		// // 只要已经有一个是成立的，那整个exist就是成立的
+		// if len(stmt.Params) != 0 {
+		// }
+
 		newFact = ast.NewSpecFactStmt(ast.TrueAtom, stmt.PropName, stmt.Params)
 
 		ok, err := ver.SpecFact(newFact, state)
@@ -45,19 +49,7 @@ func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool
 			return false, nil
 		}
 
-		newUniFactUsingIff := ast.NewConUniFactStmt(propDef.DefHeader.Params, propDef.DefHeader.SetParams, propDef.DomFacts, []*ast.SpecFactStmt{})
-
-		for _, fact := range propDef.IffFacts {
-			newUniFactUsingIff.ThenFacts = append(newUniFactUsingIff.ThenFacts, fact.ReverseIsTrue())
-		}
-
-		ok, err := ver.FactStmt(newUniFactUsingIff, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return ver.factDefer(stmt, state, true, nil, newUniFactUsingIff.String())
-		}
+		var err error = nil
 
 		newUniFactUsingItself := ast.NewConUniFactStmt(propDef.DefHeader.Params, propDef.DefHeader.SetParams, propDef.DomFacts, []*ast.SpecFactStmt{ast.NewSpecFactStmt(ast.FalseAtom, stmt.PropName, []ast.Fc{})})
 		for _, param := range propDef.DefHeader.Params {
@@ -70,6 +62,20 @@ func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool
 		}
 		if ok {
 			return ver.factDefer(stmt, state, true, nil, newUniFactUsingItself.String())
+		}
+
+		newUniFactUsingIff := ast.NewConUniFactStmt(propDef.DefHeader.Params, propDef.DefHeader.SetParams, propDef.DomFacts, []*ast.SpecFactStmt{})
+
+		for _, fact := range propDef.IffFacts {
+			newUniFactUsingIff.ThenFacts = append(newUniFactUsingIff.ThenFacts, fact.ReverseIsTrue())
+		}
+
+		ok, err = ver.FactStmt(newUniFactUsingIff, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return ver.factDefer(stmt, state, true, nil, newUniFactUsingIff.String())
 		}
 
 		return false, nil
