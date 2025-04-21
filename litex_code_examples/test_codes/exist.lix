@@ -50,10 +50,13 @@ prove:
         not exist $p()
         exist $p(x)
     
-    // 虽然这在数学上是不可能的，但作为例子试试挺好
+    # 虽然这在数学上是不可能的，但作为例子试试挺好
     $p(x)
-    exist $p()
+    exist $p(?, ?)
     not exist $p()
 
 prove:
-    have $p(x)
+    know exist $p(x,y)
+    exist $p(x,y)
+    
+    
