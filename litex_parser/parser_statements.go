@@ -216,9 +216,9 @@ func (tb *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, allowUniFactInUni
 	}
 
 	if len(typeParams) > 0 {
-		return ast.NewGenericUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts), nil
+		return ast.NewGenUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts), nil
 	} else {
-		return ast.NewUniFactStmt(params, paramTypes, domainFacts, thenFacts), nil
+		return ast.NewConUniFactStmt(params, paramTypes, domainFacts, thenFacts), nil
 	}
 }
 
