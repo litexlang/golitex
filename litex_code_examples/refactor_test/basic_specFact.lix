@@ -1,0 +1,21 @@
+prove:
+    know forall x human:
+        $conscious(x)
+
+    when:
+        shen is human
+        then:
+            $conscious(shen)
+
+prove:
+    2*2*2 = 9 -1
+    know $p(x)
+    $p(x)
+
+prove:    
+    know forall y A:
+        $q(y)
+    $q(1)
+
+2 = 1 * 9 -7
+

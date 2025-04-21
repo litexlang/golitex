@@ -101,10 +101,7 @@ func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactSt
 		isTrue = false
 	}
 
-	ok, err := tb.isSpecFactNotRelaFact()
-	if err != nil {
-		return nil, err
-	}
+	ok := tb.header.isAndSkip(glob.FuncFactPrefix)
 	if !ok {
 		return tb.relaFactStmt(nameDepths)
 	}
@@ -780,21 +777,20 @@ func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast.N
 	return section1Facts, section2SpecFacts, nil
 }
 
-// * 我这里可以以这样的逻辑去实现这个函数，本质原因是specFact被当做rawFc去parse是不会报错的
-func (b *tokenBlock) isSpecFactNotRelaFact() (bool, error) {
-	curIndex := b.header.index
-	defer b.setHeaderIndex(curIndex)
+// func (b *tokenBlock) isSpecFactNotRelaFact() (bool, error) {
+// 	curIndex := b.header.index
+// 	defer b.setHeaderIndex(curIndex)
 
-	_, err := b.header.rawFc()
-	if err != nil {
-		return false, err
-	}
+// 	_, err := b.header.rawFc()
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	if b.header.ExceedEnd() {
-		return true, nil
-	}
-	return false, nil
-}
+// 	if b.header.ExceedEnd() {
+// 		return true, nil
+// 	}
+// 	return false, nil
+// }
 
 func (tb *tokenBlock) defConExistPropStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (*ast.DefConExistPropStmt, error) {
 	err := tb.header.skip(glob.KeywordExistProp)
