@@ -20,6 +20,11 @@ type PropMem struct {
 	Dict map[string]map[string]StoredPropMemDictNode
 }
 
+type StoredExistPropMemDictNode struct{ Def *ast.DefConExistPropStmt }
+type ExistPropMem struct {
+	Dict map[string]map[string]StoredExistPropMemDictNode
+}
+
 type StoredObjMemDictNode struct{ Def *ast.DefObjStmt }
 type ObjMem struct {
 	Dict map[string]map[string]StoredObjMemDictNode
@@ -92,6 +97,23 @@ func (memory *FnMem) Insert(stmt *ast.DefConFnStmt, pkgName string) error {
 	}
 
 	pkgMap[stmt.DefHeader.Name] = node
+
+	return nil
+}
+
+func (memory *ExistPropMem) Insert(stmt *ast.DefConExistPropStmt, pkgName string) error {
+	pkgMap, pkgExists := memory.Dict[pkgName]
+
+	if !pkgExists {
+		memory.Dict[pkgName] = make(map[string]StoredExistPropMemDictNode)
+		pkgMap = memory.Dict[pkgName]
+	}
+
+	node, nodeExists := pkgMap[stmt.Def.DefHeader.Name]
+	if !nodeExists {
+		node = StoredExistPropMemDictNode{stmt}
+	}
+	pkgMap[stmt.Def.DefHeader.Name] = node
 
 	return nil
 }

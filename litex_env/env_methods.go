@@ -186,3 +186,12 @@ func (env *Env) NewDefFn(stmt *ast.DefConFnStmt, pkgName string) error {
 
 	return env.FnMem.Insert(stmt, pkgName)
 }
+
+func (env *Env) NewDefConExistProp(stmt *ast.DefConExistPropStmt, pkgName string) error {
+	err := env.IsInvalidName(pkgName, stmt.Def.DefHeader.Name)
+	if err != nil {
+		return err
+	}
+
+	return env.ExistPropMem.Insert(stmt, pkgName)
+}

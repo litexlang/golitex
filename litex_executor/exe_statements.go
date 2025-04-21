@@ -34,6 +34,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) error {
 		err = exec.defConPropStmt(stmt)
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt)
+	case *ast.DefConExistPropStmt:
+		err = exec.defConExistPropStmt(stmt)
 	case *ast.DefConFnStmt:
 		err = exec.defConFnStmt(stmt)
 
@@ -299,5 +301,15 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 		return err
 	}
 
+	return nil
+}
+
+func (exec *Executor) defConExistPropStmt(stmt *ast.DefConExistPropStmt) error {
+	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
+	defer exec.appendNewMsg(stmt.String())
+	err := exec.env.NewDefConExistProp(stmt, exec.env.CurPkg)
+	if err != nil {
+		return err
+	}
 	return nil
 }
