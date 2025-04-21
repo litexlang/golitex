@@ -937,11 +937,6 @@ fn *(f fn, g fn):
 如果f的定义域比g小，那让用户在小定义域上重新定义一个*，然后让这个小定义域上的结果等于大定义域上的函数，那就OK了
 
 7. 唯一性貌似在lean里是内置的。这进一步说明litex也要内置一下这个。唯一性不是用户能自己用litex做出来的，是送给用户的。
--- 证明 ∃! x, x^2 = 1 ∧ x > 0
-theorem exists_unique_pos_sqrt : ∃! x : ℝ, x^2 = 1 ∧ x > 0 := by
-  refine ⟨1, ⟨by norm_num, fun y (hy : y^2 = 1 ∧ y > 0) => ?_⟩⟩
-  rcases hy with ⟨hy₁, hy₂⟩
-  exact (pow_eq_one_iff hy₂).mp hy₁
 
 8. 如果你要用到某个性质形如”存在xxx，则yyy“，那你最好用interface来表示这一类的东西，而不是用正常的东西表示
    1. 比如 可测集合上的可测函数。那你最好是 涉及到的可测集 impl 可测概念
@@ -1079,7 +1074,7 @@ theorem one_plus_one_is_three : 1 + 1 = 3 := False.elim false_derived
 
 这里用户也能定义出来 P <=> not P。然后用来证明任何事情
 
-checkpoint: thoughts: why I should never go so fat in set thoery and stick to the fact that litex is just a regular expression matcher. I by default in my language that some set theory facts are true and some are not valid, but not all of them are inherent in my language. User can still on his own define what set1 union set2 means, he can on his define what set1 = set2 means. I do not include anything with mathematical meanings in my language. I just compare symbols like a regular expression matcher. only very small amount of semantics is included: e.g. parameter in fn is checked , which is just syntax sugar (user do not need to write x in s, y in s as function requirement). Litex is a regular expression checker, but it is used in math, so giving users such syntax sugar is reasonable. if fn works like fn f(x,y), it is so flexible that it is hard for users to use. if fn works like fn f(x A, y B), where litex checks whether x is in x and y in is B automatically, is very useful for user, otherwise they just write fn f(x,y): x in A, y in B, and that is tedious. 
+checkpoint: thoughts: why I should never go so fat in set theory and stick to the fact that litex is just a regular expression matcher. I by default in my language that some set theory facts are true and some are not valid, but not all of them are inherent in my language. User can still on his own define what set1 union set2 means, he can on his define what set1 = set2 means. I do not include anything with mathematical meanings in my language. I just compare symbols like a regular expression matcher. only very small amount of semantics is included: e.g. parameter in fn is checked , which is just syntax sugar (user do not need to write x in s, y in s as function requirement). Litex is a regular expression checker, but it is used in math, so giving users such syntax sugar is reasonable. if fn works like fn f(x,y), it is so flexible that it is hard for users to use. if fn works like fn f(x A, y B), where litex checks whether x is in x and y in is B automatically, is very useful for user, otherwise they just write fn f(x,y): x in A, y in B, and that is tedious. 
 
 Fundamentally, 目前为止 that is still not function, because fn f(s set) is also valid, and no function can use set of sets as parameter domain.
 
