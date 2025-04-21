@@ -218,7 +218,7 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 		specFactParams = append(specFactParams, &ast.FcAtom{PkgName: "", Value: param})
 	}
 
-	propAsSpecFact := ast.SpecFactStmt{IsTrue: true, PropName: ast.FcAtom{PkgName: "", Value: stmt.DefHeader.Name}, Params: specFactParams}
+	propAsSpecFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Value: stmt.DefHeader.Name}, Params: specFactParams}
 
 	IffLeadToProp := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []*ast.SpecFactStmt{&propAsSpecFact}}
 
@@ -249,7 +249,7 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 
 	for i, objName := range stmt.Objs {
 		objInSetFact := ast.SpecFactStmt{
-			IsTrue: true,
+			TypeEnum: ast.TrueAtom,
 			PropName: ast.FcAtom{
 				PkgName: "",
 				Value:   glob.KeywordIn,
@@ -287,7 +287,7 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 
 	fcFn := ast.FcFn{FnHead: ast.FcAtom{PkgName: exec.env.CurPkg, Value: stmt.DefHeader.Name}, ParamSegs: []*ast.FcFnSeg{{Params: fcFnParams}}}
 
-	retFact := ast.SpecFactStmt{IsTrue: true, PropName: ast.FcAtom{PkgName: "", Value: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
+	retFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Value: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
 
 	uniFactThen := []*ast.SpecFactStmt{&retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)

@@ -21,7 +21,7 @@ import (
 )
 
 func (ver *Verifier) fcEqual(left, right ast.Fc, state VerState) (bool, error) {
-	newSpecFactToCheck := ast.NewSpecFactStmt(true, *ast.NewFcAtom("", glob.KeySymbolEqual), []ast.Fc{left, right})
+	newSpecFactToCheck := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom("", glob.KeySymbolEqual), []ast.Fc{left, right})
 	return ver.SpecFact(newSpecFactToCheck, state)
 }
 

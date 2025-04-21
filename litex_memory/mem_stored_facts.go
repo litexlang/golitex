@@ -17,8 +17,8 @@ import (
 )
 
 type StoredSpecFact struct {
-	IsTrue bool
-	Params []ast.Fc
+	TypeEnum ast.SpecFactEnum
+	Params   []ast.Fc
 }
 
 type StoredSpecMemDictNode struct {
@@ -30,9 +30,9 @@ type SpecFactMemDict struct {
 }
 
 type StoredCondSpecFact struct {
-	IsTrue bool
-	Params []ast.Fc
-	Fact   *ast.CondFactStmt
+	TypeEnum ast.SpecFactEnum
+	Params   []ast.Fc
+	Fact     *ast.CondFactStmt
 }
 
 type StoredCondFuncMemDictNode struct {
@@ -45,7 +45,7 @@ type CondFactMemDict struct {
 }
 
 type StoredUniSpecFact struct {
-	IsTrue     bool
+	TypeEnum   ast.SpecFactEnum
 	FuncParams *[]ast.Fc // 和存在Fact里的FuncFact共享slice，只要是共享，那我就用*[]，虽然确实 Fact里的 FuncFact 日后不会改变，且二者再也不相见了
 	UniFact    *ast.ConUniFactStmt
 }

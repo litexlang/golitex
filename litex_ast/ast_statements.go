@@ -62,8 +62,17 @@ type GenUniStmt struct {
 	// ThenFacts      []*SpecFactStmt
 }
 
+type SpecFactEnum uint8
+
+const (
+	TrueAtom SpecFactEnum = iota
+	FalseAtom
+	TrueExist
+	FalseExist
+)
+
 type SpecFactStmt struct {
-	IsTrue   bool
+	TypeEnum SpecFactEnum
 	PropName FcAtom
 	Params   []Fc
 }

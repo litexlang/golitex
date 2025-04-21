@@ -77,7 +77,7 @@ func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 		return nil, errors.New("PropName is not of type *FcAtom")
 	}
 
-	return NewSpecFactStmt(stmt.IsTrue, *propNameAtom, newParams), nil
+	return NewSpecFactStmt(stmt.TypeEnum, *propNameAtom, newParams), nil
 }
 
 // func (stmt *ExistFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {

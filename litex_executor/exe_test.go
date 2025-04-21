@@ -88,7 +88,7 @@ func randSpecFact() *ast.SpecFactStmt {
 		params[i] = randomFc()
 	}
 
-	stmt := ast.SpecFactStmt{IsTrue: true, PropName: *randFcAtom(), Params: params}
+	stmt := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: *randFcAtom(), Params: params}
 	return &stmt
 }
 
@@ -338,7 +338,7 @@ func randEqualFact() *ast.SpecFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &ast.SpecFactStmt{IsTrue: true, Params: []ast.Fc{left, right}, PropName: ast.FcAtom{PkgName: "", Value: "="}}
+	return &ast.SpecFactStmt{TypeEnum: ast.TrueAtom, Params: []ast.Fc{left, right}, PropName: ast.FcAtom{PkgName: "", Value: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

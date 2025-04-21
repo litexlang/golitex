@@ -85,7 +85,7 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		}
 
 		for _, knownFact := range searchedNodeFacts {
-			if stmt.IsTrue != knownFact.IsTrue {
+			if stmt.TypeEnum != knownFact.TypeEnum {
 				continue
 			}
 
@@ -188,7 +188,7 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 	isCom := ver.env.IsSpecFactPropCommutative(stmt)
 	var reverseStmt *ast.SpecFactStmt = nil
 	if isCom {
-		reverseStmt = &ast.SpecFactStmt{IsTrue: stmt.IsTrue, PropName: stmt.PropName, Params: []ast.Fc{stmt.Params[1], stmt.Params[0]}}
+		reverseStmt = &ast.SpecFactStmt{TypeEnum: stmt.TypeEnum, PropName: stmt.PropName, Params: []ast.Fc{stmt.Params[1], stmt.Params[0]}}
 	}
 
 	nextState := state
