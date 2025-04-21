@@ -1,51 +1,51 @@
 prove:
-    know p(1)
-    p(1)
+    know $p(1)
+    $p(1)
 
 prove:
-    know not p(1)
-    p(1)
+    know not $p(1)
+    $p(1)
 
 prove:
-    know not p(1)
-    not p(1)
-
-prove:
-    know forall x A:
-        not p(x)
-        then:
-            not q(x)
-    know not p(1)
-    not q(1)
+    know not $p(1)
+    not $p(1)
 
 prove:
     know forall x A:
-        not p(x)
+        not $p(x)
         then:
-            q(x)
+            not $q(x)
+    know not $p(1)
+    not $q(1)
+
+prove:
+    know forall x A:
+        not $p(x)
+        then:
+            $q(x)
     when:
-        p(1)
+        $p(1)
         then:
-            q(1)
+            $q(1)
     
     when:
-         not p(1)
+         not $p(1)
          then:
-            not q(1)
+            not $q(1)
 
 prove:    
     know:
         forall z obj, A set, B set:
-            in(z, A)
-            in(z, B)
+            $in(z, A)
+            $in(z, B)
             then:
-                in(z, intersection(A,B))
+                $in(z, intersection(A,B))
 
         forall z obj, A set, B set:
-            not in(z, A)
+            not $in(z, A)
             then:
-                not in(z, intersection(A,B))
+                not $in(z, intersection(A,B))
 
-        not in(1, A)
-    not in(1, intersection(A,B)) // true
-    in(1, intersection(A,B)) // false
+        not $in(1, A)
+    not $in(1, intersection(A,B)) # true
+    $in(1, intersection(A,B)) # false

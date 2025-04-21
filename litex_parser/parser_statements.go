@@ -127,12 +127,14 @@ func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactSt
 	if tb.header.is(glob.KeywordNot) {
 		tb.header.skip(glob.KeywordNot)
 		if tb.header.is(glob.KeywordExist) {
+			tb.header.skip(glob.KeywordExist)
 			typeEnum = ast.FalseExist
 		} else {
 			typeEnum = ast.FalseAtom
 		}
 	} else {
 		if tb.header.is(glob.KeywordExist) {
+			tb.header.skip(glob.KeywordExist)
 			typeEnum = ast.TrueExist
 		} else {
 			typeEnum = ast.TrueAtom

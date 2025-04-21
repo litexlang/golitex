@@ -1,0 +1,9 @@
+prove:
+    know $p(1)
+    $p(1)
+    know not $p(2)
+    not $p(2)
+    know exist $p(x)
+    exist $p(x)
+    know not exist $p(y)
+    not exist $p(y)
