@@ -85,35 +85,35 @@ func (ver *Verifier) OrAndFact(stmt *ast.OrAndFactStmt, state VerState) (bool, e
 		for _, fact := range stmt.Facts {
 			ok, err := ver.FactStmt(fact, state)
 			if err != nil {
-				return ver.factDefer(stmt, state, false, err)
+				return ver.factDefer(stmt, state, false, err, "")
 			}
 			if !ok {
-				return ver.factDefer(stmt, state, false, nil)
+				return ver.factDefer(stmt, state, false, nil, "")
 			}
 		}
-		return ver.factDefer(stmt, state, true, nil)
+		return ver.factDefer(stmt, state, true, nil, "")
 	} else {
 		for _, fact := range stmt.Facts {
 			ok, err := ver.FactStmt(fact, state)
 			if err != nil {
-				return ver.factDefer(stmt, state, false, err)
+				return ver.factDefer(stmt, state, false, err, "")
 			}
 			if ok {
-				return ver.factDefer(stmt, state, true, nil)
+				return ver.factDefer(stmt, state, true, nil, "")
 			}
 		}
-		return ver.factDefer(stmt, state, false, nil)
+		return ver.factDefer(stmt, state, false, nil, "")
 	}
 }
 
-func (ver *Verifier) factDefer(stmt ast.FactStmt, state VerState, proved bool, err error) (bool, error) {
+func (ver *Verifier) factDefer(stmt ast.FactStmt, state VerState, proved bool, err error, proveBy string) (bool, error) {
 	if err != nil {
 		return proved, err
 	}
 
 	if state.requireMsg() {
 		if proved {
-			ver.successWithMsg(stmt.String(), "")
+			ver.successWithMsg(stmt.String(), proveBy)
 		} else {
 			ver.unknownMsgEnd(stmt.String(), stmt.String())
 		}
