@@ -1195,3 +1195,14 @@ set s {1,2,3} 枚举
 2. 为什么不能有 not forall 因为我不知道用哪个 exist 去 match 它
 3. 因为 forall 不能有 not，所以只有specFact有not。这样我就能让not跟着specFact走；而exist被设计成和specFact走，所以我能有个field，同时包含not和exist的信息
 4. 想到一个办法让not和exist都跟着specFact走，是很本质的发明。这个发明甚至说非常合理。完美地保持了litex设计观念的一致性：litex一切围绕在能match。为什么不能有 not forall 因为我不知道用哪个 exist 去 match 它。所以不能not forall。
+5. 
+# 这个表达式同时释放出 p 以及 exist_p。类似C++这定义class的时候，一些函数自动生成.
+exist_prop a A, b B p(x X, y Y): # 可以没有 x X, y Y，用于 not forall
+    dom(a,b,x,y)
+    iff:
+        IFF(a,b,x,y)
+
+exist $p(x ,y) # 表示存在这样的a和b使得 dom(a,b,x,y) 并且 IFF(a,b,x,y)
+exist_p $p(a,b,x,y) # 表示 a,b 就是是让 dom(a,b,x,y) 并且 IFF(a,b,x,y) 成立的a和b；如果这条成立，则立刻让exist $p(x,y)成立
+not exist $p(x,y) # 表示 forall a A, b B, x X, y Y: dom(a,b,x,y) then: not IFF(a,b,x,y)
+not $exist_p(a,b,x,y) # dom(a,b,x,y) 并且 not IFF(a,b,x,y)

@@ -39,3 +39,6 @@ fn f(x set) set:
 obj x set:
     in(x, Q)
 obj x set
+
+prove:
+    # obj exist_x set # error

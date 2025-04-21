@@ -22,9 +22,10 @@ type Env struct {
 	Parent *Env
 	Msgs   []string
 
-	ObjMem  mem.ObjMem
-	PropMem mem.PropMem
-	FnMem   mem.FnMem
+	ObjMem       mem.ObjMem
+	PropMem      mem.PropMem
+	FnMem        mem.FnMem
+	ExistPropMem mem.ExistPropMem
 
 	SpecFactMem  mem.SpecFactMemDict
 	CondFactMem  mem.CondFactMemDict

@@ -22,3 +22,6 @@ const MaxNameLen = 255
 // 在编译时加入prefix的好处：1. 加prefix这个事情是用不到runtime信息的，所以在编译时可以这么干 2. 确实要比运行时方便：运行时很多地方都需要用到prefix，不如在一开始让所有的uniFact全部加上#，而不是“有的时候用#，有时候不用，这样容易错”
 const UniParamPrefix = "*"
 const FuncFactPrefix = "$"
+
+const ExistPropPrefix = "exist_"
+const ExistPropPrefixLen = len(ExistPropPrefix)

@@ -1,5 +1,4 @@
-exist_prop q(x S1):
-    $p(x)
-
-exist_prop p(x S1):
-    $p(x)
+exist_prop a A, b B p(x X, y Y): # 可以没有 x X, y Y，用于 not forall
+    $domP(a,b,x,y)
+    iff:
+        $IFF(a,b,x,y)
