@@ -35,7 +35,7 @@ type DefConPropStmt struct {
 }
 
 type DefConExistPropStmt struct {
-	Def ConUniFactStmt
+	Def DefConPropStmt
 }
 
 type DefConFnStmt struct {
@@ -56,10 +56,6 @@ type GenUniStmt struct {
 	TypeParams     []string
 	TypeInterfaces []*FcAtom
 	UniFact        ConUniFactStmt
-	// Params         []string
-	// ParamSets      []Fc
-	// DomFacts       []FactStmt
-	// ThenFacts      []*SpecFactStmt
 }
 
 type SpecFactEnum uint8
@@ -76,11 +72,6 @@ type SpecFactStmt struct {
 	PropName FcAtom
 	Params   []Fc
 }
-
-// type ExistFactStmt struct {
-// 	Fact    SpecFactStmt
-// 	ExistFc []Fc
-// }
 
 type ClaimProveStmt struct {
 	IsProve      bool

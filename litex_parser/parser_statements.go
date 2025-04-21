@@ -46,9 +46,9 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordType:
 		ret, err = tb.defTypeStmt()
 	case glob.KeywordProp:
-		ret, err = tb.defConPropStmt()
+		ret, err = tb.defConPropStmt(glob.KeywordProp)
 	case glob.KeywordExistProp:
-		ret, err = tb.defConExistPropStmt(ast.NameDepthMap{}, true)
+		ret, err = tb.defConExistPropStmt()
 	case glob.KeywordFn:
 		ret, err = tb.defConFnStmt()
 	case glob.KeywordObj:
@@ -294,8 +294,8 @@ func (tb *tokenBlock) thenBlockSpecFacts(nameDepths ast.NameDepthMap) ([]*ast.Sp
 	return facts, nil
 }
 
-func (tb *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
-	err := tb.header.skip(glob.KeywordProp)
+func (tb *tokenBlock) defConPropStmt(prefix string) (*ast.DefConPropStmt, error) {
+	err := tb.header.skip(prefix)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -558,7 +558,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactSt
 
 func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 	tb.header.skip(glob.KeywordAxiom)
-	decl, err := tb.defConPropStmt()
+	decl, err := tb.defConPropStmt(glob.KeywordProp)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -583,7 +583,7 @@ func (tb *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
 		return nil, fmt.Errorf("expect two statements in thm")
 	}
 
-	decl, err := tb.body[0].defConPropStmt()
+	decl, err := tb.body[0].defConPropStmt(glob.KeywordProp)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -817,52 +817,11 @@ func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepths ast.N
 	return section1Facts, section2SpecFacts, nil
 }
 
-// func (b *tokenBlock) isSpecFactNotRelaFact() (bool, error) {
-// 	curIndex := b.header.index
-// 	defer b.setHeaderIndex(curIndex)
-
-// 	_, err := b.header.rawFc()
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	if b.header.ExceedEnd() {
-// 		return true, nil
-// 	}
-// 	return false, nil
-// }
-
-func (tb *tokenBlock) defConExistPropStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (*ast.DefConExistPropStmt, error) {
-	err := tb.header.skip(glob.KeywordExistProp)
+func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
+	def, err := tb.defConPropStmt(glob.KeywordExistProp)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	params, paramTypes, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	newUniParams := ast.NameDepthMap{}
-	for key := range nameDepths {
-		newUniParams[key] = nameDepths[key]
-	}
-
-	for i := range params {
-		prefixNum, declared := nameDepths[params[i]]
-		if !declared {
-			newUniParams[params[i]] = 1
-			params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, params[i])
-		} else {
-			newUniParams[params[i]] = prefixNum + 1
-			params[i] = strings.Repeat(glob.UniParamPrefix, prefixNum+1) + params[i]
-		}
-	}
-
-	domainFacts, thenFacts, err := tb.bodyFactSectionSpecFactSection(glob.KeywordThen, newUniParams, allowUniFactInUniDom)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	return ast.NewDefConExistPropStmt(params, paramTypes, domainFacts, thenFacts), nil
+	return ast.NewDefConExistPropStmt(def), nil
 }

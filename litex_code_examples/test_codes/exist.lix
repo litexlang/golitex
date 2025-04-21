@@ -7,3 +7,15 @@ prove:
     exist $p(x)
     know not exist $p(y)
     not exist $p(y)
+
+prove:
+    # forall exist
+    know forall x A:
+        exist $p(x)
+    forall x A:
+        exist $p(x)
+    know forall y B:
+        not exist $q(y)
+    forall y B:
+        not exist $q(y)
+    
