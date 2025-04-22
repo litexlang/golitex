@@ -73,3 +73,25 @@ func newEqualFactMem() *mem.EqualFactMem {
 func (e *Env) NewMsg(s string) {
 	e.Msgs = append(e.Msgs, s)
 }
+
+func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefConExistPropStmt, bool) {
+	// recursively search parent envs
+	for env := e; env != nil; env = env.Parent {
+		existProp, ok := env.ExistPropMem.Get(propName)
+		if ok {
+			return existProp, true
+		}
+	}
+	return nil, false
+}
+
+func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefConPropStmt, bool) {
+	// recursively search parent envs
+	for env := e; env != nil; env = env.Parent {
+		prop, ok := env.PropMem.Get(propName)
+		if ok {
+			return prop, true
+		}
+	}
+	return nil, false
+}

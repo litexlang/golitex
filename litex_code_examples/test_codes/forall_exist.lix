@@ -1,0 +1,21 @@
+prove:
+    exist_prop (N nat) Cauchy(seq sequence, epsilon real):
+        epsilon > 0
+        iff:
+            forall n nat, m nat:
+                n > N
+                m > N
+                then:
+                    abs(at(seq, n) - at(seq, m)) < epsilon
+
+    know:
+        forall epsilon real:
+            epsilon > 0
+            then:
+                have 1/epsilon $Cauchy(seq, epsilon)
+
+    forall epsilon real:
+        epsilon > 0
+        then:
+            have 1/epsilon $Cauchy(seq, epsilon)
+            exist $Cauchy(seq, epsilon)
