@@ -40,13 +40,13 @@ func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt) error {
 	} else if stmt.TypeEnum == ast.FalseAtom {
 		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
 	} else if stmt.TypeEnum == ast.TrueExist {
-		node.Facts = append(node.Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.ExistFacts = append(node.ExistFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
 	} else if stmt.TypeEnum == ast.FalseExist {
-		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.NotExistFacts = append(node.NotExistFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
 	} else if stmt.TypeEnum == ast.TrueHave {
-		node.Facts = append(node.Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.HaveFacts = append(node.HaveFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
 	} else if stmt.TypeEnum == ast.FalseHave {
-		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.NotHaveFacts = append(node.NotHaveFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
 	} else {
 		panic("unknown spec fact type")
 	}
@@ -72,13 +72,13 @@ func (factMem *SpecFactMemDict) GetNode(stmt *ast.SpecFactStmt) ([]StoredSpecFac
 	} else if stmt.TypeEnum == ast.FalseAtom {
 		return node.NotFacts, true
 	} else if stmt.TypeEnum == ast.TrueExist {
-		return node.Facts, true
+		return node.ExistFacts, true
 	} else if stmt.TypeEnum == ast.FalseExist {
-		return node.NotFacts, true
+		return node.NotExistFacts, true
 	} else if stmt.TypeEnum == ast.TrueHave {
-		return node.Facts, true
+		return node.HaveFacts, true
 	} else if stmt.TypeEnum == ast.FalseHave {
-		return node.NotFacts, true
+		return node.NotHaveFacts, true
 	} else {
 		panic("unknown spec fact type")
 	}
@@ -120,13 +120,13 @@ func (factMem *CondFactMemDict) InsertSpecFact(condStmt *ast.CondFactStmt, stmt 
 	} else if stmt.TypeEnum == ast.FalseAtom {
 		node.NotFacts = append(node.NotFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
 	} else if stmt.TypeEnum == ast.TrueExist {
-		panic("TODO: trueExist2 not implemented")
+		node.ExistFacts = append(node.ExistFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
 	} else if stmt.TypeEnum == ast.FalseExist {
-		panic("TODO: falseExist2 not implemented")
+		node.NotExistFacts = append(node.NotExistFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
 	} else if stmt.TypeEnum == ast.TrueHave {
-		panic("TODO: trueHave2 not implemented")
+		node.HaveFacts = append(node.HaveFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
 	} else if stmt.TypeEnum == ast.FalseHave {
-		panic("TODO: falseHave2 not implemented")
+		node.NotHaveFacts = append(node.NotHaveFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
 	} else {
 		panic("unknown spec fact type")
 	}
@@ -152,13 +152,13 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) ([]Store
 		} else if stmt.TypeEnum == ast.FalseAtom {
 			return storedFacts.NotFacts, true
 		} else if stmt.TypeEnum == ast.TrueExist {
-			panic("TODO: trueExist2 not implemented")
+			return storedFacts.ExistFacts, true
 		} else if stmt.TypeEnum == ast.FalseExist {
-			panic("TODO: falseExist2 not implemented")
+			return storedFacts.NotExistFacts, true
 		} else if stmt.TypeEnum == ast.TrueHave {
-			panic("TODO: trueHave2 not implemented")
+			return storedFacts.HaveFacts, true
 		} else if stmt.TypeEnum == ast.FalseHave {
-			panic("TODO: falseHave2 not implemented")
+			return storedFacts.NotHaveFacts, true
 		} else {
 			panic("unknown spec fact type")
 		}
@@ -197,13 +197,13 @@ func (factMem *UniFactMemDict) insertSpecFact(uniStmt *ast.ConUniFactStmt, stmt 
 	} else if stmt.TypeEnum == ast.FalseAtom {
 		node.NotFacts = append(node.NotFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
 	} else if stmt.TypeEnum == ast.TrueExist {
-		panic("TODO: trueExist2 not implemented")
+		node.ExistFacts = append(node.ExistFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
 	} else if stmt.TypeEnum == ast.FalseExist {
-		panic("TODO: falseExist2 not implemented")
+		node.NotExistFacts = append(node.NotExistFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
 	} else if stmt.TypeEnum == ast.TrueHave {
-		panic("TODO: trueHave2 not implemented")
+		node.HaveFacts = append(node.HaveFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
 	} else if stmt.TypeEnum == ast.FalseHave {
-		panic("TODO: falseHave2 not implemented")
+		node.NotHaveFacts = append(node.NotHaveFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
 	} else {
 		panic("unknown spec fact type")
 	}
@@ -233,13 +233,13 @@ func (factMem *UniFactMemDict) GetSpecFactNodeWithTheSameIsTrue(stmt *ast.SpecFa
 		} else if stmt.TypeEnum == ast.FalseAtom {
 			return storedFacts.NotFacts, true
 		} else if stmt.TypeEnum == ast.TrueExist {
-			panic("TODO: trueExist2 not implemented")
+			return storedFacts.ExistFacts, true
 		} else if stmt.TypeEnum == ast.FalseExist {
-			panic("TODO: falseExist2 not implemented")
+			return storedFacts.NotExistFacts, true
 		} else if stmt.TypeEnum == ast.TrueHave {
-			panic("TODO: trueHave2 not implemented")
+			return storedFacts.HaveFacts, true
 		} else if stmt.TypeEnum == ast.FalseHave {
-			panic("TODO: falseHave2 not implemented")
+			return storedFacts.NotHaveFacts, true
 		} else {
 			panic("unknown spec fact type")
 		}

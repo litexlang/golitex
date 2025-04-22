@@ -22,8 +22,12 @@ type StoredSpecFact struct {
 }
 
 type StoredSpecMemDictNode struct {
-	Facts    []StoredSpecFact
-	NotFacts []StoredSpecFact
+	Facts         []StoredSpecFact
+	NotFacts      []StoredSpecFact
+	ExistFacts    []StoredSpecFact
+	NotExistFacts []StoredSpecFact
+	HaveFacts     []StoredSpecFact
+	NotHaveFacts  []StoredSpecFact
 }
 type SpecFactMemDict struct {
 	Dict map[string]map[string]StoredSpecMemDictNode
@@ -36,8 +40,12 @@ type StoredCondSpecFact struct {
 }
 
 type StoredCondFuncMemDictNode struct {
-	Facts    []StoredCondSpecFact
-	NotFacts []StoredCondSpecFact
+	Facts         []StoredCondSpecFact
+	NotFacts      []StoredCondSpecFact
+	ExistFacts    []StoredCondSpecFact
+	NotExistFacts []StoredCondSpecFact
+	HaveFacts     []StoredCondSpecFact
+	NotHaveFacts  []StoredCondSpecFact
 }
 
 type CondFactMemDict struct {
@@ -51,8 +59,12 @@ type StoredUniSpecFact struct {
 }
 
 type StoredUniFuncMemDictNode struct {
-	Facts    []StoredUniSpecFact
-	NotFacts []StoredUniSpecFact
+	Facts         []StoredUniSpecFact
+	NotFacts      []StoredUniSpecFact
+	ExistFacts    []StoredUniSpecFact
+	NotExistFacts []StoredUniSpecFact
+	HaveFacts     []StoredUniSpecFact
+	NotHaveFacts  []StoredUniSpecFact
 }
 
 type UniFactMemDict struct {
