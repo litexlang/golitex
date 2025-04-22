@@ -2,3 +2,7 @@ prove:
     have a $p(b)
     exist $q(b)
     $p(a)
+
+prove:
+    not exist $p(a)
+    not have a $p(b)

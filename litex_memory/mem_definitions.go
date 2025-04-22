@@ -135,3 +135,16 @@ func (memory *PropMem) Get(fc ast.FcAtom) (*ast.DefConPropStmt, bool) {
 
 	return node.Def, true
 }
+
+func (memory *ExistPropMem) Get(fc ast.FcAtom) (*ast.DefConExistPropStmt, bool) {
+	pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	if !pkgExists {
+		return nil, false
+	}
+
+	node, nodeExists := pkgMap[fc.PropName]
+	if !nodeExists {
+		return nil, false
+	}
+	return node.Def, true
+}
