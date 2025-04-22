@@ -123,107 +123,25 @@ func (tb *tokenBlock) orAndFactStmt(nameDepths ast.NameDepthMap, allowUniFactInU
 }
 
 func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
-	typeEnum := ast.TrueAtom
+	isTrue := true
 	if tb.header.is(glob.KeywordNot) {
-		tb.header.skip(glob.KeywordNot)
-		if tb.header.is(glob.KeywordExist) {
-			tb.header.skip(glob.KeywordExist)
-			typeEnum = ast.FalseExist
-		} else if tb.header.is(glob.KeywordHave) {
-			tb.header.skip(glob.KeywordHave)
-			typeEnum = ast.FalseHave
-		} else {
-			typeEnum = ast.FalseAtom
-		}
-	} else {
-		if tb.header.is(glob.KeywordExist) {
-			tb.header.skip(glob.KeywordExist)
-			typeEnum = ast.TrueExist
-		} else if tb.header.is(glob.KeywordHave) {
-			tb.header.skip(glob.KeywordHave)
-			typeEnum = ast.TrueHave
-		} else {
-			typeEnum = ast.TrueAtom
-		}
+		isTrue = !isTrue
 	}
 
-	ok := tb.header.isAndSkip(glob.FuncFactPrefix)
-	if !ok {
+	if tb.header.is(glob.KeywordExist) {
+		return tb.existFactStmt(nameDepths, isTrue)
+	}
+
+	if tb.header.is(glob.KeywordHave) {
+		return tb.haveFactStmt(nameDepths, isTrue)
+	}
+
+	if tb.header.is(glob.FuncFactPrefix) {
+		return tb.pureFuncSpecFact(nameDepths)
+	} else {
 		return tb.relaFactStmt(nameDepths)
 	}
-
-	propName, err := tb.header.rawFcAtom()
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-	propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepths)
-
-	params := []ast.Fc{}
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	for !tb.header.is(glob.KeySymbolRightBrace) {
-		param, err := tb.header.rawFc()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-
-		param, err = ast.AddUniPrefixToFc(param, nameDepths)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-
-		params = append(params, param)
-		tb.header.skipIfIs(glob.KeySymbolComma)
-	}
-
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	// not exist 表示 forall，所以Litex的语法让涉及到的参数数量为0
-	if typeEnum == ast.FalseExist {
-		if len(params) != 0 {
-			return nil, fmt.Errorf("exist fact with params is not supported %s", tb.header.String())
-		}
-	}
-
-	return ast.NewSpecFactStmt(typeEnum, propName, params), nil
 }
-
-// func (tb *tokenBlock) ExistFactStmt(nameDepths ast.NameDepthMap) (*ast.ExistFactStmt, error) {
-// 	err := tb.header.skip(glob.KeywordExist)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	existFc := []ast.Fc{}
-// 	for !tb.header.ExceedEnd() {
-// 		fc, err := tb.header.rawFc()
-// 		if err != nil {
-// 			return nil, &tokenBlockErr{err, *tb}
-// 		}
-// 		fc, err = ast.AddUniPrefixToFc(fc, nameDepths)
-// 		if err != nil {
-// 			return nil, &tokenBlockErr{err, *tb}
-// 		}
-// 		existFc = append(existFc, fc)
-
-// 		if !tb.header.isAndSkip(glob.KeySymbolComma) {
-// 			break
-// 		}
-// 	}
-
-// 	specFact, err := tb.specFactStmt(nameDepths)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	return ast.NewExistFactStmt(specFact, existFc), nil
-// }
 
 func (tb *tokenBlock) uniFactStmt(nameDepths ast.NameDepthMap, allowUniFactInUniDom bool) (ast.UniFactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
@@ -870,4 +788,101 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 	}
 
 	return ast.NewDefConExistPropStmt(def, existParams, existParamSets), nil
+}
+
+func (tb *tokenBlock) haveFactStmt(nameDepths ast.NameDepthMap, isTrue bool) (*ast.SpecFactStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	existParams := []ast.Fc{}
+
+	for {
+		param, err := tb.header.rawFc()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		existParams = append(existParams, param)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else {
+			break
+		}
+	}
+
+	pureSpecFact, err := tb.pureFuncSpecFact(nameDepths)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	factParams := []ast.Fc{}
+	factParams = append(factParams, existParams...)
+	factParams = append(factParams, pureSpecFact.Params...)
+
+	if isTrue {
+		return ast.NewSpecFactStmt(ast.TrueHave, pureSpecFact.PropName, factParams), nil
+	} else {
+		return ast.NewSpecFactStmt(ast.FalseHave, pureSpecFact.PropName, factParams), nil
+	}
+}
+
+func (tb *tokenBlock) existFactStmt(nameDepths ast.NameDepthMap, isTrue bool) (*ast.SpecFactStmt, error) {
+	err := tb.header.skip(glob.KeywordExist)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	pureSpecFact, err := tb.pureFuncSpecFact(nameDepths)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if isTrue {
+		return ast.NewSpecFactStmt(ast.TrueExist, pureSpecFact.PropName, pureSpecFact.Params), nil
+	} else {
+		return ast.NewSpecFactStmt(ast.FalseExist, pureSpecFact.PropName, pureSpecFact.Params), nil
+	}
+}
+
+func (tb *tokenBlock) pureFuncSpecFact(nameDepths ast.NameDepthMap) (*ast.SpecFactStmt, error) {
+	ok := tb.header.isAndSkip(glob.FuncFactPrefix)
+	if !ok {
+		return nil, fmt.Errorf("pure func spec fact must start with %s", glob.FuncFactPrefix)
+	}
+
+	propName, err := tb.header.rawFcAtom()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+	propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepths)
+
+	params := []ast.Fc{}
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.header.rawFc()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		param, err = ast.AddUniPrefixToFc(param, nameDepths)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		params = append(params, param)
+		tb.header.skipIfIs(glob.KeySymbolComma)
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewSpecFactStmt(ast.TrueAtom, propName, params), nil
 }
