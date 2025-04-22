@@ -44,7 +44,7 @@ func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
 }
 
 func (f *SpecFactStmt) IsEqualFact() bool {
-	return f.PropName.PropName == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinInfixPkgName
+	return f.PropName.PropName == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinPkgName
 }
 
 func (f *SpecFactStmt) IsExistFact() bool {

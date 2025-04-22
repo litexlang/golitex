@@ -52,6 +52,8 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 		// 知道param里多少是exist param
 		existProp, ok := env.GetExistPropDef(fact.PropName)
 		if !ok {
+			// TODO 应该报错
+			// return nil
 			return fmt.Errorf("exist_prop %s not found", fact.PropName)
 		}
 

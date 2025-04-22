@@ -192,3 +192,5 @@ func (f *FcAtom) IsBuiltinUnaryOpt() bool {
 	}
 	return false
 }
+
+var BuiltinHaveFactExistParamPropParmSepAtom = FcAtom{glob.BuiltinPkgName, glob.BuiltinHaveFactExistParamPropParmSep}
