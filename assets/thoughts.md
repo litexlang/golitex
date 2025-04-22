@@ -1243,4 +1243,4 @@ forall epsilon real:
         have epsilon*2 $Cauchy(seq, epsilon)
         exist $Cauchy(seq, epsilon)
 
-
+3. 基本观念：正如两个在py里的一样的函数，只要不同名，那 func1 == func2 不成立。在litex里，两个形式上一样的forall 也是不能比较的。这导致 注定有一个瞬间，需要用户像使用 exist 那样，给一个forall取名，才能让我的matcher能继续工作.在exist这个地方，让用户引入“给forall取名”这个观念，是合理的，不只是让我实现解释器容易，也是让用户思考起来更容易：用户知道什么时候取名，以及怎么取名，以及怎么用取了名字的forall。

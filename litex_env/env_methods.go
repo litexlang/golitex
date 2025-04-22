@@ -26,14 +26,14 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 		return env.NewCondFact(f)
 	case *ast.ConUniFactStmt:
 		return env.NewUniFact(f)
-	case *ast.OrAndFactStmt:
+	case *ast.LogicExprStmt:
 		return env.NewOrAndFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
 }
 
-func (env *Env) NewOrAndFact(fact *ast.OrAndFactStmt) error {
+func (env *Env) NewOrAndFact(fact *ast.LogicExprStmt) error {
 	// TODO
 	return nil
 }

@@ -112,7 +112,7 @@ type ConDefHeader struct {
 	SetParams []Fc
 }
 
-type OrAndFactStmt struct {
+type LogicExprStmt struct {
 	IsOr  bool
 	Facts []FactStmt
 }
