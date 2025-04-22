@@ -24,5 +24,6 @@ prove:
     know:
         $cond(1,2)
         $result(1,2)
-        
+
     have 1 $p(2)   # 读成：have 1 such that p(2)
+    exist $p(2)
