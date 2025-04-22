@@ -16,5 +16,21 @@ import (
 )
 
 func (ver *Verifier) HavePropFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if state.isSpec() {
+		return false, nil
+	}
+
+	ok, err := ver.useExistPropDefProveHave(stmt, state, stmt.IsTrue())
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerState, proveTrue bool) (bool, error) {
 	return false, nil
 }
