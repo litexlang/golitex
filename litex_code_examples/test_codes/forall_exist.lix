@@ -10,6 +10,7 @@ prove:
         iff:
             not exist $cacuhy_gap(seq, epsilon, N)
             
+            # # equivalent:
             # forall n nat, m nat:
             #     n > N
             #     m > N
