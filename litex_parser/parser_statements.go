@@ -770,7 +770,7 @@ func (tb *tokenBlock) haveFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) (
 
 	existParams := []ast.Fc{}
 
-	for {
+	for !tb.header.is(glob.FuncFactPrefix) {
 		param, err := tb.header.rawFc()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
@@ -779,8 +779,6 @@ func (tb *tokenBlock) haveFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) (
 
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
-		} else {
-			break
 		}
 	}
 
