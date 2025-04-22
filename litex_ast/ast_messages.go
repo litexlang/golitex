@@ -214,7 +214,23 @@ func (f *ClaimProveStmt) String() string {
 }
 
 func (s *DefConExistPropStmt) String() string {
-	return DefConPropStmtString(fmt.Sprintf("%s ", glob.KeywordExistProp), &s.Def)
+	var builder strings.Builder
+
+	builder.WriteString(glob.KeywordExistProp)
+	builder.WriteByte(' ')
+	for i := 0; i < len(s.ExistParams)-1; i++ {
+		builder.WriteString(s.ExistParams[i])
+		builder.WriteString(" ")
+		builder.WriteString(s.ExistParamSets[i].String())
+		builder.WriteString(", ")
+	}
+	builder.WriteString(s.ExistParams[len(s.ExistParams)-1])
+	builder.WriteString(" ")
+	builder.WriteString(s.ExistParamSets[len(s.ExistParams)-1].String())
+
+	builder.WriteString(DefConPropStmtString("", &s.Def))
+
+	return builder.String()
 }
 func (s *HaveStmt) String() string  { panic("") }
 func (s *AxiomStmt) String() string { panic("") }

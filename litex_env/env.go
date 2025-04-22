@@ -48,9 +48,10 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 		Parent: parent,
 		Msgs:   []string{},
 
-		ObjMem:  *mem.NewObjMemory(),
-		PropMem: *mem.NewPropMemory(),
-		FnMem:   *mem.NewFnMemory(),
+		ObjMem:       *mem.NewObjMemory(),
+		PropMem:      *mem.NewPropMemory(),
+		FnMem:        *mem.NewFnMemory(),
+		ExistPropMem: *mem.NewExistPropMemory(),
 
 		SpecFactMem:  *mem.NewSpecFactMemDict(),
 		CondFactMem:  *mem.NewCondFactMemDict(),

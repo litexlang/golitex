@@ -47,6 +47,10 @@ func NewObjMemory() *ObjMem {
 	return &ObjMem{map[string]map[string]StoredObjMemDictNode{}}
 }
 
+func NewExistPropMemory() *ExistPropMem {
+	return &ExistPropMem{map[string]map[string]StoredExistPropMemDictNode{}}
+}
+
 func (memory *PropMem) Insert(stmt *ast.DefConPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
