@@ -1,8 +1,28 @@
+# 普通事实，have事实，exist事实 是相互分离的
 prove:
-    have a $p(b)
-    exist $q(b)
+    know $p(a)
     $p(a)
+    exist $p(a)
+    have $p(a)
+    
+    know exist $p(b)
+    $p(b)
+    exist $p(b)
+    have $p(b)
+
+    know have $p(c)
+    $p(c)
+    have $p(c)
+    exist $p(c)
 
 prove:
-    not exist $p(a)
-    not have a $p(b)
+    exist_prop a A p(x X):
+        $cond(a, x)
+        iff:
+            $result(a,x)
+    
+    know:
+        $cond(1,2)
+        $result(1,2)
+        
+    have 1 $p(2)   # 读成：have 1 such that p(2)

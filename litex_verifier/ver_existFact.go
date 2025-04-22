@@ -34,6 +34,7 @@ func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool
 func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state VerState, proveTrue bool) (bool, error) {
 	propDef, ok := ver.env.ExistPropMem.Get(stmt.PropName)
 	if !ok {
+		// TODO: 如果没声明，应该报错
 		return false, nil
 	}
 
