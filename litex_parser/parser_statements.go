@@ -134,9 +134,25 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 	}
 
 	if tb.header.is(glob.FuncFactPrefix) {
-		return tb.pureFuncSpecFact(nameDepthMap)
+		ret, err := tb.pureFuncSpecFact(nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		if isTrue {
+			return ret, nil
+		} else {
+			return ret.ReverseIsTrue(), nil
+		}
 	} else {
-		return tb.relaFactStmt(nameDepthMap)
+		ret, err := tb.relaFactStmt(nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		if isTrue {
+			return ret, nil
+		} else {
+			return ret.ReverseIsTrue(), nil
+		}
 	}
 }
 
@@ -447,10 +463,9 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// 我认为没必要一定是内置的符号，可以是用户自定义的
-	// if !glob.IsKeySymbolRelaProp(opt) {
-	// 	return nil, &parseTimeErr{err, *tb}
-	// }
+	if !glob.IsKeySymbolRelaProp(opt) {
+		return nil, fmt.Errorf("expect relation prop")
+	}
 
 	fc2, err := tb.header.rawFc()
 	if err != nil {
@@ -459,6 +474,11 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 	fc2, err = ast.AddUniPrefixToFc(fc2, nameDepthMap)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	// 必须到底了
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of line")
 	}
 
 	params := []ast.Fc{fc, fc2}
