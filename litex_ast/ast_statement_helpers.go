@@ -15,6 +15,17 @@ import (
 	glob "golitex/litex_global"
 )
 
+type SpecFactEnum uint8
+
+const (
+	TrueAtom SpecFactEnum = iota
+	FalseAtom
+	TrueExist
+	FalseExist
+	TrueHave
+	FalseHave
+)
+
 func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
 	if stmt.TypeEnum == TrueAtom {
 		return NewSpecFactStmt(FalseAtom, stmt.PropName, stmt.Params)
@@ -24,6 +35,10 @@ func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
 		return NewSpecFactStmt(FalseExist, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == FalseExist {
 		return NewSpecFactStmt(TrueExist, stmt.PropName, stmt.Params)
+	} else if stmt.TypeEnum == TrueHave {
+		return NewSpecFactStmt(FalseHave, stmt.PropName, stmt.Params)
+	} else if stmt.TypeEnum == FalseHave {
+		return NewSpecFactStmt(TrueHave, stmt.PropName, stmt.Params)
 	}
 	panic("unknown spec fact type")
 }

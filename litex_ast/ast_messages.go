@@ -56,6 +56,14 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteByte(' ')
 		builder.WriteString(glob.KeywordExist)
 		builder.WriteByte(' ')
+	} else if stmt.TypeEnum == TrueHave {
+		builder.WriteString(glob.KeywordHave)
+		builder.WriteByte(' ')
+	} else if stmt.TypeEnum == FalseHave {
+		builder.WriteString(glob.KeywordNot)
+		builder.WriteByte(' ')
+		builder.WriteString(glob.KeywordHave)
+		builder.WriteByte(' ')
 	}
 
 	builder.WriteString(glob.FuncFactPrefix)
