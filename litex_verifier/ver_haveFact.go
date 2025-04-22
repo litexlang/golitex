@@ -40,8 +40,12 @@ func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerS
 	}
 
 	freeFixmap := map[string]ast.Fc{}
-	for i, param := range propDef.Def.DefHeader.Params {
+	for i, param := range propDef.ExistParams {
 		freeFixmap[param] = stmt.Params[i]
+	}
+
+	for i := len(propDef.ExistParams); i < len(stmt.Params); i++ {
+		freeFixmap[propDef.Def.DefHeader.Params[i-len(propDef.ExistParams)]] = stmt.Params[i]
 	}
 
 	domFacts := []ast.FactStmt{}
@@ -60,7 +64,7 @@ func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerS
 			return false, err
 		}
 		fixedAsSpecFact := fixed.(*ast.SpecFactStmt)
-		if proveTrue {
+		if !proveTrue {
 			fixedAsSpecFact = fixedAsSpecFact.ReverseIsTrue()
 		}
 		thenFacts = append(thenFacts, fixedAsSpecFact)
@@ -72,7 +76,11 @@ func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerS
 			return false, err
 		}
 		if !ok {
-			return false, fmt.Errorf("dom fact %s is not true", domFact.String())
+			if state.requireMsg() {
+				msg := fmt.Sprintf("dom fact %s is unkown\n", domFact.String())
+				ver.unknownMsgEnd(msg)
+			}
+			return false, nil
 		}
 	}
 
