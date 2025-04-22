@@ -18,16 +18,7 @@ import (
 )
 
 func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	// TODO 判断一下传入进来的stmt是不是prop prop，就像数学归纳法这种。prop prop的特点是，它是prop，参数列表里也有prop。如果是的话，那就用其他方式来验证？不过现在用 uniFact 后，真的还需要这个吗
-	isPropProp, err := ver.IsPropProp(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if isPropProp {
-		return ver.PropPropFact(stmt, state)
-	}
-
-	if stmt.TypeEnum == ast.TrueExist || stmt.TypeEnum == ast.FalseExist {
+	if stmt.IsExistFact() {
 		ok, err := ver.ExistPropFact(stmt, state)
 		if err != nil {
 			return false, err
@@ -37,6 +28,20 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		}
 	}
 
+	if stmt.IsHaveFact() {
+		ok, err := ver.HavePropFact(stmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+
+	return ver.pureSpecFact(stmt, state)
+}
+
+func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	ok, err := ver.SpecFactSpec(stmt, state)
 	if err != nil {
 		return false, err

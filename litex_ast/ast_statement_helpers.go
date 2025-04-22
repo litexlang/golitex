@@ -46,3 +46,11 @@ func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
 func (f *SpecFactStmt) IsEqualFact() bool {
 	return f.PropName.PropName == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinInfixPkgName
 }
+
+func (f *SpecFactStmt) IsExistFact() bool {
+	return f.TypeEnum == TrueExist || f.TypeEnum == FalseExist
+}
+
+func (f *SpecFactStmt) IsHaveFact() bool {
+	return f.TypeEnum == TrueHave || f.TypeEnum == FalseHave
+}
