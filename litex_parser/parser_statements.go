@@ -46,7 +46,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordType:
 		ret, err = tb.defTypeStmt()
 	case glob.KeywordProp:
-		ret, err = tb.defConPropStmt(glob.KeywordProp)
+		ret, err = tb.defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
 	case glob.KeywordExistProp:
 		ret, err = tb.defConExistPropStmt()
 	case glob.KeywordFn:
@@ -222,7 +222,7 @@ func (tb *tokenBlock) thenBlockSpecFacts(nameDepthMap ast.NameDepthMap) ([]*ast.
 	return facts, nil
 }
 
-func (tb *tokenBlock) defConPropStmt(prefix string) (*ast.DefConPropStmt, error) {
+func (tb *tokenBlock) defConPropStmt(prefix string, existParamDepthMap ast.NameDepthMap) (*ast.DefConPropStmt, error) {
 	if prefix != "" {
 		err := tb.header.skip(prefix)
 		if err != nil {
@@ -233,6 +233,11 @@ func (tb *tokenBlock) defConPropStmt(prefix string) (*ast.DefConPropStmt, error)
 	declHeader, nameDepthMap, err := tb.conDefHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	// merge nameDepthMap and nameDepthMap2
+	for key := range existParamDepthMap {
+		nameDepthMap[key] = existParamDepthMap[key]
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
@@ -463,7 +468,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 	tb.header.skip(glob.KeywordAxiom)
-	decl, err := tb.defConPropStmt(glob.KeywordProp)
+	decl, err := tb.defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -488,7 +493,7 @@ func (tb *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
 		return nil, fmt.Errorf("expect two statements in thm")
 	}
 
-	decl, err := tb.body[0].defConPropStmt(glob.KeywordProp)
+	decl, err := tb.body[0].defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -753,7 +758,17 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 		}
 	}
 
-	def, err := tb.defConPropStmt("")
+	nameDepthMap := ast.NameDepthMap{}
+	for _, existParam := range existParams {
+		nameDepthMap[existParam] = 1
+	}
+
+	def, err := tb.defConPropStmt("", nameDepthMap)
+
+	// add prefix to existParams
+	for i := range existParams {
+		existParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, existParams[i])
+	}
 
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
