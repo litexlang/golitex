@@ -13,7 +13,7 @@ package litex_global
 
 const Scope4Indents = "    "
 const EmptyPkgName = ""
-const BuiltinInfixPkgName = ""
+const BuiltinPkgName = ""
 const BuiltinUnaryPkgName = "#"
 const MultiLinesCommentSig = "\"\"\""
 const MaxNameLen = 255
@@ -25,3 +25,4 @@ const FuncFactPrefix = "$"
 
 const ExistPropPrefix = "exist_"
 const ExistPropPrefixLen = len(ExistPropPrefix)
+const BuiltinHaveFactExistParamPropParmSep = ""

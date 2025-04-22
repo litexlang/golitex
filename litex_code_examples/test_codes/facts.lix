@@ -1,0 +1,14 @@
+# specFact
+prove:
+    $p(x)
+    exist $q(x)
+    have x $t(y)
+
+    know:
+        $p(x)
+        exist $q(x)
+        have x $t(y)
+
+    $p(x)
+    exist $q(x)
+    have x $t(y)
