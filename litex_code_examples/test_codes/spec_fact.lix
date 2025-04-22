@@ -16,7 +16,7 @@ prove:
     exist $p(c)
 
 prove:
-    exist_prop a A p(x X):
+    exist_prop (a A) p(x X):
         $cond(a, x)
         iff:
             $result(a,x)

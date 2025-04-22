@@ -736,7 +736,12 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 	existParams := []string{}
 	existParamSets := []ast.Fc{}
 
-	for {
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	for !tb.header.is(glob.KeySymbolRightBrace) {
 		param, err := tb.header.next()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
@@ -753,9 +758,12 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
-		} else {
-			break
 		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	nameDepthMap := ast.NameDepthMap{}

@@ -21,7 +21,7 @@ func (ver *Verifier) HavePropFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return false, nil
 	}
 
-	ok, err := ver.useExistPropDefProveHave(stmt, state, stmt.IsTrue())
+	ok, err := ver.useExistPropDefProveHave(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -32,7 +32,7 @@ func (ver *Verifier) HavePropFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 	return false, nil
 }
 
-func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerState, proveTrue bool) (bool, error) {
+func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	propDef, ok := ver.env.ExistPropMem.Get(stmt.PropName)
 	if !ok {
 		// TODO: 如果没声明，应该报错
@@ -63,8 +63,11 @@ func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerS
 		if err != nil {
 			return false, err
 		}
-		fixedAsSpecFact := fixed.(*ast.SpecFactStmt)
-		if !proveTrue {
+		fixedAsSpecFact, ok := fixed.(*ast.SpecFactStmt)
+		if !ok {
+			return false, fmt.Errorf("instantiate spec fact stmt failed")
+		}
+		if !stmt.IsTrue() {
 			fixedAsSpecFact = fixedAsSpecFact.ReverseIsTrue()
 		}
 		thenFacts = append(thenFacts, fixedAsSpecFact)

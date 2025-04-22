@@ -12,6 +12,7 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/litex_ast"
 )
 
@@ -20,7 +21,7 @@ func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool
 		return false, nil
 	}
 
-	ok, err := ver.useExistPropDefProveExist(stmt, state, stmt.IsTrue())
+	ok, err := ver.useExistPropDefProveExist(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -31,7 +32,11 @@ func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool
 	return false, nil
 }
 
-func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state VerState, proveTrue bool) (bool, error) {
+func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.IsTrue() {
+		return false, nil
+	}
+
 	propDef, ok := ver.env.ExistPropMem.Get(stmt.PropName)
 	if !ok {
 		// TODO: 如果没声明，应该报错
@@ -66,10 +71,11 @@ func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state Ver
 		if err != nil {
 			return false, err
 		}
-		fixedAsSpecFact := fixed.(*ast.SpecFactStmt)
-		if !proveTrue {
-			fixedAsSpecFact = fixedAsSpecFact.ReverseIsTrue()
+		fixedAsSpecFact, ok := fixed.(*ast.SpecFactStmt)
+		if !ok {
+			return false, fmt.Errorf("instantiate spec fact stmt failed")
 		}
+		fixedAsSpecFact = fixedAsSpecFact.ReverseIsTrue()
 		thenFacts = append(thenFacts, fixedAsSpecFact)
 	}
 
