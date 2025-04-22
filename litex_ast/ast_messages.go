@@ -369,7 +369,7 @@ func strOfNonEmptyFactStmtSlice[T Stringer](stmtSlice []T, indent uint32) string
 // 	return builder.String()
 // }
 
-func (stmt *OrAndFactStmt) String() string {
+func (stmt *LogicExprStmt) String() string {
 	var prefix string
 	if stmt.IsOr {
 		prefix = glob.KeywordOr

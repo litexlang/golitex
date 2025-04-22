@@ -92,7 +92,7 @@ func (tb *tokenBlock) factStmt(nameDepthMap ast.NameDepthMap, allowUniFactInUniD
 	return tb.specFactStmt(nameDepthMap)
 }
 
-func (tb *tokenBlock) orAndFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactInUniDom bool) (*ast.OrAndFactStmt, error) {
+func (tb *tokenBlock) orAndFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactInUniDom bool) (*ast.LogicExprStmt, error) {
 	isOr := tb.header.isAndSkip(glob.KeywordOr)
 	if !isOr {
 		err := tb.header.skip(glob.KeywordAnd)

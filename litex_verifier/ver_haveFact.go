@@ -39,18 +39,18 @@ func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerS
 		return false, nil
 	}
 
-	freeFixmap := map[string]ast.Fc{}
+	uniConMap := map[string]ast.Fc{}
 	for i, param := range propDef.ExistParams {
-		freeFixmap[param] = stmt.Params[i]
+		uniConMap[param] = stmt.Params[i]
 	}
 
 	for i := len(propDef.ExistParams); i < len(stmt.Params); i++ {
-		freeFixmap[propDef.Def.DefHeader.Params[i-len(propDef.ExistParams)]] = stmt.Params[i]
+		uniConMap[propDef.Def.DefHeader.Params[i-len(propDef.ExistParams)]] = stmt.Params[i]
 	}
 
 	domFacts := []ast.FactStmt{}
 	for _, fact := range propDef.Def.DomFacts {
-		fixed, err := fact.Instantiate(freeFixmap)
+		fixed, err := fact.Instantiate(uniConMap)
 		if err != nil {
 			return false, err
 		}
@@ -59,7 +59,7 @@ func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerS
 
 	thenFacts := []*ast.SpecFactStmt{}
 	for _, thenFact := range propDef.Def.IffFacts {
-		fixed, err := thenFact.Instantiate(freeFixmap)
+		fixed, err := thenFact.Instantiate(uniConMap)
 		if err != nil {
 			return false, err
 		}
