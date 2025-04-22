@@ -1206,3 +1206,15 @@ exist $p(x ,y) # 表示存在这样的a和b使得 dom(a,b,x,y) 并且 IFF(a,b,x,
 exist_p $p(a,b,x,y) # 表示 a,b 就是是让 dom(a,b,x,y) 并且 IFF(a,b,x,y) 成立的a和b；如果这条成立，则立刻让exist $p(x,y)成立
 not exist $p(x,y) # 表示 forall a A, b B, x X, y Y: dom(a,b,x,y) then: not IFF(a,b,x,y)
 not $exist_p(a,b,x,y) # dom(a,b,x,y) 并且 not IFF(a,b,x,y)
+
+4.22
+1. # 这个表达式同时释放出 p 以及 exist_p。类似C++这定义class的时候，一些函数自动生成.
+exist_prop a A, b B p(x X, y Y): # 可以没有 x X, y Y，用于 not forall
+    dom(a,b,x,y)
+    iff:
+        IFF(a,b,x,y)
+
+exist $p(x ,y) # 表示存在这样的a和b使得 dom(a,b,x,y) 并且 IFF(a,b,x,y)
+have a,b $p(x,y) # 表示 a,b 就是是让 dom(a,b,x,y) 并且 IFF(a,b,x,y) 成立的a和b；如果这条成立，则立刻让exist $p(x,y)成立
+not exist $p(x,y) # 表示 forall a A, b B, x X, y Y: dom(a,b,x,y) then: not IFF(a,b,x,y)
+not have a,b $p(x,y) # dom(a,b,x,y) 并且 not IFF(a,b,x,y)
