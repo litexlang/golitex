@@ -12,7 +12,6 @@
 package litex_verifier
 
 import (
-	"fmt"
 	ast "golitex/litex_ast"
 )
 
@@ -21,15 +20,18 @@ func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool
 		return false, nil
 	}
 
-	if stmt.TypeEnum == ast.TrueExist {
-		return false, nil
+	ok, err := ver.useExistPropDefProveExist(stmt, state, stmt.IsTrue())
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
 	}
 
-	// not exist 表示 forall，所以Litex的语法让涉及到的参数数量为0
-	if len(stmt.Params) != 0 {
-		return false, fmt.Errorf("exist fact with params is not supported %s", stmt.String())
-	}
+	return false, nil
+}
 
+func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state VerState, proveTrue bool) (bool, error) {
 	propDef, ok := ver.env.ExistPropMem.Get(stmt.PropName)
 	if !ok {
 		return false, nil
@@ -64,7 +66,9 @@ func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool
 			return false, err
 		}
 		fixedAsSpecFact := fixed.(*ast.SpecFactStmt)
-		fixedAsSpecFact = fixedAsSpecFact.ReverseIsTrue()
+		if proveTrue {
+			fixedAsSpecFact = fixedAsSpecFact.ReverseIsTrue()
+		}
 		thenFacts = append(thenFacts, fixedAsSpecFact)
 	}
 
@@ -78,7 +82,7 @@ func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool
 		return ver.factDefer(stmt, state, true, nil, newUniFactUsingItself.String())
 	}
 
-	return false, fmt.Errorf("invalid exist fact type: %d", stmt.TypeEnum)
+	return false, nil
 }
 
 // func (ver *Verifier) ExistPropFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
