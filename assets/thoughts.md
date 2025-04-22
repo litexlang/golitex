@@ -1218,3 +1218,29 @@ exist $p(x ,y) # 表示存在这样的a和b使得 dom(a,b,x,y) 并且 IFF(a,b,x,
 have a,b $p(x,y) # 表示 a,b 就是是让 dom(a,b,x,y) 并且 IFF(a,b,x,y) 成立的a和b；如果这条成立，则立刻让exist $p(x,y)成立
 not exist $p(x,y) # 表示 forall a A, b B, x X, y Y: dom(a,b,x,y) then: not IFF(a,b,x,y)
 not have a,b $p(x,y) # dom(a,b,x,y) 并且 not IFF(a,b,x,y)
+
+2. 数列收敛的定义
+forall a sequence, e > 0, exist N, forall n, m > N, |at(a, n) - at(a, m)| < e
+
+exist_prop (N nat) Cauchy(seq sequence, epsilon real):
+    epsilon > 0
+    iff:
+        forall n nat, m nat:
+            n > N
+            m > N
+            then:
+                |at(seq, n) - at(seq, m)| < epsilon
+
+know:
+    forall epsilon real:
+        epsilon > 0
+        then:
+            have epsilon*2 $Cauchy(seq, epsilon)
+
+forall epsilon real:
+    epsilon > 0
+    then:
+        have epsilon*2 $Cauchy(seq, epsilon)
+        exist $Cauchy(seq, epsilon)
+
+

@@ -50,9 +50,9 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 
 	if fact.IsHaveFact() && fact.IsTrue() {
 		// 知道param里多少是exist param
-		existProp, ok := env.ExistPropMem.Get(fact.PropName)
+		existProp, ok := env.GetExistPropDef(fact.PropName)
 		if !ok {
-			return fmt.Errorf("exist prop %s not found", fact.PropName)
+			return fmt.Errorf("exist_prop %s not found", fact.PropName)
 		}
 
 		existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[len(existProp.ExistParams):])
