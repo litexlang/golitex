@@ -129,6 +129,9 @@ func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactSt
 		if tb.header.is(glob.KeywordExist) {
 			tb.header.skip(glob.KeywordExist)
 			typeEnum = ast.FalseExist
+		} else if tb.header.is(glob.KeywordHave) {
+			tb.header.skip(glob.KeywordHave)
+			typeEnum = ast.FalseHave
 		} else {
 			typeEnum = ast.FalseAtom
 		}
@@ -136,6 +139,9 @@ func (tb *tokenBlock) specFactStmt(nameDepths ast.NameDepthMap) (*ast.SpecFactSt
 		if tb.header.is(glob.KeywordExist) {
 			tb.header.skip(glob.KeywordExist)
 			typeEnum = ast.TrueExist
+		} else if tb.header.is(glob.KeywordHave) {
+			tb.header.skip(glob.KeywordHave)
+			typeEnum = ast.TrueHave
 		} else {
 			typeEnum = ast.TrueAtom
 		}

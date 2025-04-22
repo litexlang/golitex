@@ -60,14 +60,9 @@ type GenUniStmt struct {
 	UniFact        ConUniFactStmt
 }
 
-type SpecFactEnum uint8
-
-const (
-	TrueAtom SpecFactEnum = iota
-	FalseAtom
-	TrueExist
-	FalseExist
-)
+func (enum SpecFactEnum) IsTrue() bool {
+	return enum == TrueAtom || enum == TrueExist || enum == TrueHave
+}
 
 type SpecFactStmt struct {
 	TypeEnum SpecFactEnum
