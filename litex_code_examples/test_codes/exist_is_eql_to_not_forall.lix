@@ -1,8 +1,0 @@
-# not forall x : dom: $cond(x) then: $result(x)
-prove:
-    exist_prop (x X) P():
-        $cond(x)
-        iff:
-            $result(x)
-    
-    know exist 1 P() # not forall x : dom: $cond(x) then: $result(x)

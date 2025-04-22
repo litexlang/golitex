@@ -1,12 +1,20 @@
 prove:
+    exist_prop (n nat, m nat) cacuhy_gap(seq sequence, epsilon real, N nat):
+        n > N
+        m > N
+        iff:
+            abs(at(seq, n) - at(seq, m)) < epsilon
+
     exist_prop (N nat) Cauchy(seq sequence, epsilon real):
         epsilon > 0
         iff:
-            forall n nat, m nat:
-                n > N
-                m > N
-                then:
-                    abs(at(seq, n) - at(seq, m)) < epsilon
+            not exist $cacuhy_gap(seq, epsilon, N)
+            
+            # forall n nat, m nat:
+            #     n > N
+            #     m > N
+            #     then:
+            #         abs(at(seq, n) - at(seq, m)) < epsilon
 
     know:
         forall epsilon real:
