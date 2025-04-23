@@ -61,21 +61,22 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) newExistFactPostProcess(fact *ast.SpecFactStmt) error {
-	if fact.TypeEnum == ast.FalseExist {
-		return env.newFalseExistFactPostProcess(fact)
-	} else {
+	if fact.TypeEnum == ast.TrueExist {
 		return nil
+	} else {
+		return env.newFalseExistFactPostProcess(fact)
 	}
 }
 
 func (env *Env) newHaveFactPostProcess(fact *ast.SpecFactStmt) error {
-	if fact.TypeEnum == ast.TrueExist {
+	if fact.TypeEnum == ast.TrueHave {
 		return env.newTrueHaveFactPostProcess(fact)
 	} else {
 		return nil
 	}
 }
 
+// not exist => forall not
 func (env *Env) newFalseExistFactPostProcess(fact *ast.SpecFactStmt) error {
 	conUniFact, err := env.NotExistToForall(fact)
 	if err != nil {
@@ -90,6 +91,7 @@ func (env *Env) newFalseExistFactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
+// have => exist
 func (env *Env) newTrueHaveFactPostProcess(fact *ast.SpecFactStmt) error {
 	sepIndex := fact.HaveSeparatorIndex()
 	if sepIndex == -1 {
@@ -263,11 +265,30 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.ConUniFactStmt, e
 		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
 	}
 
-	thenFacts := []*ast.SpecFactStmt{}
-	for _, thenFact := range existPropDef.Def.IffFacts {
-		reversed := thenFact.ReverseIsTrue()
-		thenFacts = append(thenFacts, reversed)
+	uniConMap := map[string]ast.Fc{}
+	for i, propParam := range existPropDef.Def.DefHeader.Params {
+		uniConMap[propParam] = fact.Params[i]
 	}
 
-	return ast.NewConUniFactStmt(existPropDef.ExistParams, existPropDef.ExistParamSets, existPropDef.Def.DomFacts, thenFacts), nil
+	domFacts := []ast.FactStmt{}
+	for _, domFact := range existPropDef.Def.DomFacts {
+		instantiated, err := domFact.Instantiate(uniConMap)
+		if err != nil {
+			return nil, err
+		}
+		domFacts = append(domFacts, instantiated)
+	}
+
+	thenFacts := []*ast.SpecFactStmt{}
+	for _, thenFact := range existPropDef.Def.IffFacts {
+		// must be then fact
+		reversed := thenFact.ReverseIsTrue()
+		instantiated, err := reversed.Instantiate(uniConMap)
+		if err != nil {
+			return nil, err
+		}
+		thenFacts = append(thenFacts, instantiated.(*ast.SpecFactStmt))
+	}
+
+	return ast.NewConUniFactStmt(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts), nil
 }
