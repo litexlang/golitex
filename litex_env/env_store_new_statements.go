@@ -163,15 +163,15 @@ func (env *Env) IsInvalidName(pkgName string, name string) error {
 	for curEnv := env; curEnv != nil; curEnv = curEnv.Parent {
 		_, ok := curEnv.ObjMem.Dict[pkgName][name]
 		if ok {
-			return nameDeclaredMsg(pkgName, name, glob.KeywordObj)
+			return duplicateDefMsg(pkgName, name, glob.KeywordObj)
 		}
 		_, ok = curEnv.FnMem.Dict[pkgName][name]
 		if ok {
-			return nameDeclaredMsg(pkgName, name, glob.KeywordFn)
+			return duplicateDefMsg(pkgName, name, glob.KeywordFn)
 		}
 		_, ok = curEnv.PropMem.Dict[pkgName][name]
 		if ok {
-			return nameDeclaredMsg(pkgName, name, glob.KeywordProp)
+			return duplicateDefMsg(pkgName, name, glob.KeywordProp)
 		}
 	}
 

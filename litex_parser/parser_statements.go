@@ -270,6 +270,10 @@ func (tb *tokenBlock) defConPropStmt(prefix string, existParamDepthMap ast.NameD
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
+	if len(iffFacts) == 0 {
+		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
+	}
+
 	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 

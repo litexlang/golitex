@@ -1,24 +1,26 @@
+# TODO
+
 prove:
-    know p(1)
-    p(1)
+    know $p(1)
+    $p(1)
 
 prove_by_contradiction:
-    know p(1)
-    p(1)
+    know $p(1)
+    $p(1)
 
 prove:
     know:
         forall x nat:
-            p(x)
+            $p(x)
             then:
-                p(x + 1)
-    know p(0)
+                $p(x + 1)
+    know $p(0)
 
     claim:
-        p(2)
+        $p(2)
         prove:
-            p(0+1)
-            p(1 + 1)
+            $p(0+1)
+            $p(1 + 1)
     
 # 有点问题
 prove:
@@ -40,14 +42,14 @@ prove:
 prove:
     know:
         forall x nat:
-            p(x)
+            $p(x)
             then:
-                p(x + 1)
-    know not p(2)
+                $p(x + 1)
+    know not $p(2)
 
     claim:
-        not p(0)
+        not $p(0)
         prove_by_contradiction:
-            p(0+1)
-            p(1 + 1)
-            p(2)
+            $p(0+1)
+            $p(1 + 1)
+            $p(2)

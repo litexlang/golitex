@@ -1,0 +1,41 @@
+# prop 在引入的时候，自动向环境里添加Forall事实
+prove:
+    prop P(x set):
+        $in(x, Q)
+        iff:
+            $in(x, P2)
+
+    # true
+    when:
+        $P(1)
+        $in(1, Q)
+        then:
+            $in(1, P2)
+
+    # true
+    when:
+        $in(1, P2)
+        $in(1, Q)
+        then:
+            $P(1)
+
+# 不同的prop的格式
+prove:
+    prop P(x set):
+        $in(x, Q)
+        iff:
+            $in(x, P2)
+            
+    prop P2(x set):
+        dom:
+            $in(x, Q)
+        iff:
+            $in(x, P2)
+            
+            
+    prop P3(x set):
+        $in(x, Q)
+            
+
+
+    
