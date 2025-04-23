@@ -428,11 +428,11 @@ func (stmt *HaveObjDefStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHaveObj)
 	builder.WriteString(" ")
-	for i := 0; i < len(stmt.ObjName)-1; i++ {
-		builder.WriteString(stmt.ObjName[i])
+	for i := 0; i < len(stmt.ObjNames)-1; i++ {
+		builder.WriteString(stmt.ObjNames[i])
 		builder.WriteString(", ")
 	}
-	builder.WriteString(stmt.ObjName[len(stmt.ObjName)-1])
+	builder.WriteString(stmt.ObjNames[len(stmt.ObjNames)-1])
 	builder.WriteString(glob.FuncFactPrefix)
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
 	return builder.String()

@@ -33,15 +33,15 @@ func (ver *Verifier) HavePropFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	sepIndex := stmt.HaveSeparatorIndex()
+	if sepIndex == -1 {
+		return false, fmt.Errorf("have fact %s has no separator", stmt.String())
+	}
+
 	propDef, ok := ver.env.GetExistPropDef(stmt.PropName)
 	if !ok {
 		// TODO: 如果没声明，应该报错
 		return false, fmt.Errorf("have fact %s has no definition", stmt.String())
-	}
-
-	sepIndex := stmt.HaveSeparatorIndex()
-	if sepIndex == -1 {
-		return false, fmt.Errorf("have fact %s has no separator", stmt.String())
 	}
 
 	uniConMap := map[string]ast.Fc{}

@@ -34,6 +34,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) error {
 		err = exec.defConPropStmt(stmt)
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt)
+	case *ast.HaveObjDefStmt:
+		err = exec.haveObjDefStmt(stmt)
 	case *ast.DefConExistPropStmt:
 		err = exec.defConExistPropStmt(stmt)
 	case *ast.DefConFnStmt:
@@ -311,5 +313,73 @@ func (exec *Executor) defConExistPropStmt(stmt *ast.DefConExistPropStmt) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (exec *Executor) haveObjDefStmt(stmt *ast.HaveObjDefStmt) error {
+	defer exec.appendNewMsg(stmt.String())
+
+	// check related exist
+	ok, _, err := exec.checkFactStmt(&stmt.Fact)
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		exec.appendNewMsg("%v failed: related exist fact check failed", stmt.String())
+		return nil
+	}
+
+	defExistFact := ast.SpecFactStmt{TypeEnum: ast.TrueExist, PropName: ast.FcAtom{PkgName: "", Name: stmt.Fact.PropName.Name}, Params: stmt.Fact.Params}
+
+	ok, _, err = exec.checkFactStmt(&defExistFact)
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		exec.appendNewMsg("%v failed: related exist fact check failed", stmt.String())
+		return nil
+	}
+
+	// TODO 需要像defObjStmt那样，把objName和objSet都插入到env里
+	propDef, ok := exec.env.GetExistPropDef(stmt.Fact.PropName)
+	if !ok {
+		return fmt.Errorf("have fact %s has no definition", stmt.String())
+	}
+
+	uniConMap := map[string]ast.Fc{}
+	for i := 0; i < len(stmt.ObjNames); i++ {
+		uniConMap[propDef.ExistParams[i]] = &ast.FcAtom{PkgName: exec.env.CurPkg, Name: stmt.ObjNames[i]}
+	}
+
+	for i := 0; i < len(stmt.Fact.Params); i++ {
+		uniConMap[propDef.Def.DefHeader.Params[i]] = stmt.Fact.Params[i]
+	}
+
+	facts := []ast.FactStmt{}
+	for _, fact := range propDef.Def.DomFacts {
+		fixed, err := fact.Instantiate(uniConMap)
+		if err != nil {
+			return err
+		}
+		facts = append(facts, fixed)
+	}
+
+	for _, fact := range propDef.Def.IffFacts {
+		fixed, err := fact.Instantiate(uniConMap)
+		if err != nil {
+			return err
+		}
+		facts = append(facts, fixed)
+	}
+
+	newDefObjStmt := ast.DefObjStmt{Objs: stmt.ObjNames, ObjSets: stmt.Fact.Params, Facts: facts}
+
+	err = exec.env.NewDefObj(&newDefObjStmt, exec.env.CurPkg)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
