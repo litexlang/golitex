@@ -91,7 +91,7 @@ func (env *Env) newFalseExistFactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-// have => exist
+// have(exist ... st ...) => exist
 func (env *Env) newTrueHaveFactPostProcess(fact *ast.SpecFactStmt) error {
 	sepIndex := fact.HaveSeparatorIndex()
 	if sepIndex == -1 {

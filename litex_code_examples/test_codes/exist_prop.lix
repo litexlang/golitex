@@ -1,5 +1,5 @@
 prove:
-    exist_prop (a A, b B) p(x X, y Y): # 可以没有 x X, y Y，用于 not forall
+    exist_prop a A, b B st p(x X, y Y): # 可以没有 x X, y Y，用于 not forall
         $domP(a,b,x,y)
         iff:
             $IFF(a,b,x,y)
@@ -14,7 +14,7 @@ prove:
 
 # have => exist
 prove:
-    exist_prop (a A) P(x X):
+    exist_prop a A st P(x X):
         $p(a,x)
 
     know:
@@ -25,7 +25,7 @@ prove:
 
 # verify have
 prove:
-    exist_prop (a A) P(x X):
+    exist_prop a A st P(x X):
         $p(a,x)
         $q(x)
 
@@ -37,8 +37,7 @@ prove:
 
 # not exist => forall not
 prove:
-    # exist_prop & have
-    exist_prop (a A) P(x X):
+    exist_prop a A st P(x X):
         $p(a,x)
 
     know:

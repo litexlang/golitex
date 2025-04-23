@@ -4,7 +4,7 @@ prove:
     obj x2 set
 
 prove:
-    exist_prop (a A, b B) p(x X, y Y):
+    exist_prop a A, b B st p(x X, y Y):
         $domP(a,b,x,y)
         iff:
             $IFF(a,b,x,y)

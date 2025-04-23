@@ -43,7 +43,7 @@ prove:
 
 # forall not => not exist
 prove:
-    exist_prop (a A) P():
+    exist_prop a A st P():
         $p(a)
 
     know:
@@ -55,7 +55,7 @@ prove:
 
 # not exist => forall not
 prove:
-    exist_prop (a A) P():
+    exist_prop a A st P():
         $p(a)
 
     know not exist $P()

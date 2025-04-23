@@ -766,12 +766,7 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 	existParams := []string{}
 	existParamSets := []ast.Fc{}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	for !tb.header.is(glob.KeySymbolRightBrace) {
+	for !tb.header.is(glob.KeywordSt) {
 		param, err := tb.header.next()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
@@ -791,7 +786,7 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 		}
 	}
 
-	err = tb.header.skip(glob.KeySymbolRightBrace)
+	err = tb.header.skip(glob.KeywordSt)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
