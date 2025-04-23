@@ -34,7 +34,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) error {
 		err = exec.defConPropStmt(stmt)
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt)
-	case *ast.HaveObjDefStmt:
+	case *ast.ExistObjDefStmt:
 		err = exec.haveObjDefStmt(stmt)
 	case *ast.DefConExistPropStmt:
 		err = exec.defConExistPropStmt(stmt)
@@ -316,7 +316,7 @@ func (exec *Executor) defConExistPropStmt(stmt *ast.DefConExistPropStmt) error {
 	return nil
 }
 
-func (exec *Executor) haveObjDefStmt(stmt *ast.HaveObjDefStmt) error {
+func (exec *Executor) haveObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 	defer exec.appendNewMsg(stmt.String())
 
 	existFact := ast.SpecFactStmt{TypeEnum: ast.TrueExist, PropName: ast.FcAtom{PkgName: "", Name: stmt.Fact.PropName.Name}, Params: stmt.Fact.Params}

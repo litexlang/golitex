@@ -4,9 +4,9 @@ prove:
         iff:
             $IFF(a,b,x,y)
 
-    # exist_prop & have_obj
+    # exist_prop & exist_obj
     know exist $p(1,2)
-    have_obj a, b $p(1,2)
+    exist_obj a, b $p(1,2)
 
     exist $p(1,2)
     $domP(a,b,1,2)

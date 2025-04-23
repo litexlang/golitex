@@ -10,7 +10,7 @@ prove:
             $IFF(a,b,x,y)
 
     know exist $p(1,2)
-    have_obj a, b $p(1,2)
+    exist_obj a, b $p(1,2)
     
     exist $p(1,2)
     $domP(a,b,1,2)
