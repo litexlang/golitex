@@ -28,6 +28,7 @@ prove:
     have 1 $p(2)   # 读成：have 1 such that p(2)
     exist $p(2)
 
+# forall => spec fact
 prove:
     know:
         forall x A:
@@ -39,10 +40,57 @@ prove:
             exist $q(x)
     exist $q(a)
 
-prove:
     know:
         forall x A, y B:
             have y $q(x)
     have 1 $q(a)
+
+# not 
+prove:
     know:
+        not exist $p(a)
+    not exist $p(a)
+    not $p(a) # unknown
+    not have 1 $p(a) # unknown
+
+    know:
+        not have 1 $t(a)
+    not have 1 $t(a)
+    not $t(a) # unknown
+    not exist $t(a) # unknown
+
+    know:
+        not $q(a)
+    not $q(a)
+    not have 1 $q(a) # unknown
+    not exist $q(a) # unknown
+
     
+
+# have => exist
+prove:
+    know:
+        have 1 $p(a)
+    exist $p(a)
+
+# forall not => not exist
+prove:
+    exist_prop (a A) P():
+        $p(a)
+
+    know:
+        forall x A:
+            not $p(x)
+    not $p(a)
+
+    not exist $P()
+
+# not exist => forall not
+prove:
+    exist_prop (a A) P():
+        $p(a)
+
+    know not exist $P()
+
+    forall x A:
+        not $p(x)
