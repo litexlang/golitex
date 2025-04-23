@@ -39,13 +39,18 @@ func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerS
 		return false, nil
 	}
 
-	uniConMap := map[string]ast.Fc{}
-	for i, param := range propDef.ExistParams {
-		uniConMap[param] = stmt.Params[i]
+	sepIndex := stmt.HaveSeparatorIndex()
+	if sepIndex == -1 {
+		return false, fmt.Errorf("have fact %s has no separator", stmt.String())
 	}
 
-	for i := len(propDef.ExistParams); i < len(stmt.Params); i++ {
-		uniConMap[propDef.Def.DefHeader.Params[i-len(propDef.ExistParams)]] = stmt.Params[i]
+	uniConMap := map[string]ast.Fc{}
+	for i := 0; i < sepIndex; i++ {
+		uniConMap[propDef.ExistParams[i]] = stmt.Params[i]
+	}
+
+	for i := sepIndex + 1; i < len(stmt.Params); i++ {
+		uniConMap[propDef.Def.DefHeader.Params[i-sepIndex-1]] = stmt.Params[i]
 	}
 
 	domFacts := []ast.FactStmt{}

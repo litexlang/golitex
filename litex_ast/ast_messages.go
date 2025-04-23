@@ -43,6 +43,10 @@ func (stmt *KnowStmt) String() string {
 }
 
 func (stmt *SpecFactStmt) String() string {
+	if stmt.IsHaveFact() {
+		return haveFactString(stmt)
+	}
+
 	var builder strings.Builder
 
 	if stmt.TypeEnum == FalseAtom {
@@ -56,19 +60,10 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteByte(' ')
 		builder.WriteString(glob.KeywordExist)
 		builder.WriteByte(' ')
-	} else if stmt.TypeEnum == TrueHave {
-		builder.WriteString(glob.KeywordHave)
-		builder.WriteByte(' ')
-	} else if stmt.TypeEnum == FalseHave {
-		builder.WriteString(glob.KeywordNot)
-		builder.WriteByte(' ')
-		builder.WriteString(glob.KeywordHave)
-		builder.WriteByte(' ')
 	}
-
 	builder.WriteString(glob.FuncFactPrefix)
 
-	if stmt.PropName.PkgName == "" && glob.IsKeySymbol(stmt.PropName.PropName) {
+	if stmt.PropName.PkgName == "" && glob.IsKeySymbol(stmt.PropName.Name) {
 		builder.WriteString(stmt.Params[0].String())
 		builder.WriteByte(' ')
 		builder.WriteString(stmt.PropName.String())
@@ -83,6 +78,34 @@ func (stmt *SpecFactStmt) String() string {
 	builder.WriteByte(')')
 
 	return builder.String()
+}
+
+func haveFactString(stmt *SpecFactStmt) string {
+	var builder strings.Builder
+	if stmt.TypeEnum == FalseHave {
+		builder.WriteString(glob.KeywordNot)
+		builder.WriteByte(' ')
+	}
+
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteByte(' ')
+	sepIndex := stmt.HaveSeparatorIndex()
+
+	if sepIndex == -1 {
+		return ""
+	} else {
+		for i := 0; i < sepIndex; i++ {
+			builder.WriteString(stmt.Params[i].String())
+			builder.WriteString(" ")
+		}
+
+		builder.WriteString(glob.FuncFactPrefix)
+		builder.WriteString(stmt.PropName.String())
+		builder.WriteByte('(')
+		builder.WriteString(FcSliceString(stmt.Params[sepIndex+1:]))
+		builder.WriteByte(')')
+		return builder.String()
+	}
 }
 
 func (stmt *DefObjStmt) String() string {
@@ -240,7 +263,6 @@ func (s *DefConExistPropStmt) String() string {
 
 	return builder.String()
 }
-func (s *HaveStmt) String() string  { panic("") }
 func (s *AxiomStmt) String() string { panic("") }
 func (s *ThmStmt) String() string   { panic("") }
 func (fact *CondFactStmt) String() string {

@@ -27,7 +27,6 @@ func (f *ClaimProveStmt) stmt()   {}
 func (f *KnowStmt) stmt()         {}
 
 func (s *DefConExistPropStmt) stmt() {}
-func (s *HaveStmt) stmt()            {}
 func (s *AxiomStmt) stmt()           {}
 func (s *ThmStmt) stmt()             {}
 func (s *CondFactStmt) stmt()        {}

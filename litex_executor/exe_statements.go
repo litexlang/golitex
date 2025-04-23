@@ -217,10 +217,10 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 
 	specFactParams := []ast.Fc{}
 	for _, param := range stmt.DefHeader.Params {
-		specFactParams = append(specFactParams, &ast.FcAtom{PkgName: "", PropName: param})
+		specFactParams = append(specFactParams, &ast.FcAtom{PkgName: "", Name: param})
 	}
 
-	propAsSpecFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", PropName: stmt.DefHeader.Name}, Params: specFactParams}
+	propAsSpecFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Name: stmt.DefHeader.Name}, Params: specFactParams}
 
 	IffLeadToProp := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []*ast.SpecFactStmt{&propAsSpecFact}}
 
@@ -253,10 +253,10 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 		objInSetFact := ast.SpecFactStmt{
 			TypeEnum: ast.TrueAtom,
 			PropName: ast.FcAtom{
-				PkgName:  "",
-				PropName: glob.KeywordIn,
+				PkgName: "",
+				Name:    glob.KeywordIn,
 			},
-			Params: []ast.Fc{&ast.FcAtom{PkgName: exec.env.CurPkg, PropName: objName}, stmt.ObjSets[i]},
+			Params: []ast.Fc{&ast.FcAtom{PkgName: exec.env.CurPkg, Name: objName}, stmt.ObjSets[i]},
 		}
 		err := exec.env.NewFact(&objInSetFact)
 		if err != nil {
@@ -284,12 +284,12 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 
 	fcFnParams := []ast.Fc{}
 	for _, fc := range stmt.DefHeader.Params {
-		fcFnParams = append(fcFnParams, &ast.FcAtom{PkgName: "", PropName: fc})
+		fcFnParams = append(fcFnParams, &ast.FcAtom{PkgName: "", Name: fc})
 	}
 
-	fcFn := ast.FcFn{FnHead: ast.FcAtom{PkgName: exec.env.CurPkg, PropName: stmt.DefHeader.Name}, ParamSegs: []*ast.FcFnSeg{{Params: fcFnParams}}}
+	fcFn := ast.FcFn{FnHead: ast.FcAtom{PkgName: exec.env.CurPkg, Name: stmt.DefHeader.Name}, ParamSegs: []*ast.FcFnSeg{{Params: fcFnParams}}}
 
-	retFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", PropName: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
+	retFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
 
 	uniFactThen := []*ast.SpecFactStmt{&retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)

@@ -107,7 +107,7 @@ func randFcAtom() *ast.FcAtom {
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(rand.Intn(26) + 65)
 	}
-	ret := ast.FcAtom{PropName: string(bytes)}
+	ret := ast.FcAtom{Name: string(bytes)}
 	return &ret
 }
 
@@ -338,7 +338,7 @@ func randEqualFact() *ast.SpecFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &ast.SpecFactStmt{TypeEnum: ast.TrueAtom, Params: []ast.Fc{left, right}, PropName: ast.FcAtom{PkgName: "", PropName: "="}}
+	return &ast.SpecFactStmt{TypeEnum: ast.TrueAtom, Params: []ast.Fc{left, right}, PropName: ast.FcAtom{PkgName: "", Name: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {
@@ -565,7 +565,7 @@ func TestAllFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../litex_code_examples/test_codes/facts.lix")
+var code = readFile("../litex_code_examples/test_codes/spec_fact.lix")
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()

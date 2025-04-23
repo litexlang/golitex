@@ -128,7 +128,7 @@ func (memory *PropMem) Get(fc ast.FcAtom) (*ast.DefConPropStmt, bool) {
 		return nil, false
 	}
 
-	node, nodeExists := pkgMap[fc.PropName]
+	node, nodeExists := pkgMap[fc.Name]
 	if !nodeExists {
 		return nil, false
 	}
@@ -142,7 +142,7 @@ func (memory *ExistPropMem) Get(fc ast.FcAtom) (*ast.DefConExistPropStmt, bool) 
 		return nil, false
 	}
 
-	node, nodeExists := pkgMap[fc.PropName]
+	node, nodeExists := pkgMap[fc.Name]
 	if !nodeExists {
 		return nil, false
 	}

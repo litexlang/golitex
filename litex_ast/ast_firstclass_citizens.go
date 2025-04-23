@@ -30,8 +30,8 @@ func (f *FcAtom) GetPkgName() string { return f.PkgName }
 func (f *FcFn) GetPkgName() string   { return f.FnHead.PkgName }
 
 type FcAtom struct {
-	PkgName  string
-	PropName string
+	PkgName string
+	Name    string
 }
 
 type FcFn struct {
@@ -96,20 +96,20 @@ func FcSliceString(params []Fc) string {
 
 func (f *FcAtom) String() string {
 	if f.PkgName == glob.EmptyPkgName {
-		return string(f.PropName)
+		return string(f.Name)
 	} else {
-		return fmt.Sprintf("%s::%s", f.PkgName, string(f.PropName))
+		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Name))
 	}
 }
 
 func isFcFnAndToString(f *FcFn) (bool, string) {
-	if f.FnHead.PropName != "" {
+	if f.FnHead.Name != "" {
 		return false, ""
 	}
 
 	// TODO 如何处理unary?
 
-	outPut := string(f.FnHead.PropName)
+	outPut := string(f.FnHead.Name)
 	if glob.IsKeySymbolRelaFn(outPut) {
 		return true, fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
 	}
@@ -135,7 +135,7 @@ func (f *FcFn) String() string {
 		return str
 	}
 
-	outPut := string(f.FnHead.PropName)
+	outPut := string(f.FnHead.Name)
 	for _, pair := range f.ParamSegs {
 		if len(pair.Params) > 0 {
 			outPut += "("
@@ -158,17 +158,17 @@ func IsEqualOptFc(f Fc) bool {
 	if !ok {
 		return false
 	}
-	return ptr.PropName == glob.KeySymbolEqual && ptr.PkgName == ""
+	return ptr.Name == glob.KeySymbolEqual && ptr.PkgName == ""
 }
 
 func IsNumLitFcAtom(f Fc) (string, bool) {
 	ptr, ok := f.(*FcAtom)
-	if !ok || ptr.PropName == "" {
+	if !ok || ptr.Name == "" {
 		return "", false
 	}
 
-	if glob.IsNumLitStr(ptr.PropName) {
-		return ptr.PropName, true
+	if glob.IsNumLitStr(ptr.Name) {
+		return ptr.Name, true
 	}
 	return "", false
 }
@@ -177,7 +177,7 @@ func (f *FcAtom) IsBuiltinInfixOpt() bool {
 	if f.PkgName != "" {
 		return false
 	}
-	if glob.IsKeySymbolRelaFn(f.PropName) {
+	if glob.IsKeySymbolRelaFn(f.Name) {
 		return true
 	}
 	return false
@@ -187,10 +187,10 @@ func (f *FcAtom) IsBuiltinUnaryOpt() bool {
 	if f.PkgName != glob.BuiltinUnaryPkgName {
 		return false
 	}
-	if glob.IsKeySymbolUniFn(f.PropName) {
+	if glob.IsKeySymbolUniFn(f.Name) {
 		return true
 	}
 	return false
 }
 
-var BuiltinHaveFactExistParamPropParmSepAtom = FcAtom{glob.BuiltinPkgName, glob.BuiltinHaveFactExistParamPropParmSep}
+var BuiltinHaveFactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinPkgName, glob.BuiltinHaveFactExistParamPropParmSep}

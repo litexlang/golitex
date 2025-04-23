@@ -44,7 +44,7 @@ func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
 }
 
 func (f *SpecFactStmt) IsEqualFact() bool {
-	return f.PropName.PropName == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinPkgName
+	return f.PropName.Name == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinPkgName
 }
 
 func (f *SpecFactStmt) IsExistFact() bool {
@@ -57,4 +57,14 @@ func (f *SpecFactStmt) IsHaveFact() bool {
 
 func (f *SpecFactStmt) IsTrue() bool {
 	return f.TypeEnum == TrueAtom || f.TypeEnum == TrueExist || f.TypeEnum == TrueHave
+}
+
+func (f *SpecFactStmt) HaveSeparatorIndex() int {
+	for i, param := range f.Params {
+		paramAsAtom, ok := param.(*FcAtom)
+		if ok && paramAsAtom.PkgName == glob.BuiltinPkgName && paramAsAtom.Name == glob.BuiltinHaveFactExistParamPropParmSep {
+			return i
+		}
+	}
+	return -1
 }
