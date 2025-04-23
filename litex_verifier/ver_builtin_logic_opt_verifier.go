@@ -50,7 +50,7 @@ func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerStat
 		return false, nil
 	}
 
-	if !glob.IsKeySymbolRelaProp(stmt.PropName.PropName) {
+	if !glob.IsKeySymbolRelaProp(stmt.PropName.Name) {
 		return false, nil
 	}
 
@@ -74,7 +74,7 @@ func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerStat
 		return false, nil
 	}
 
-	ok, err = glob.NumLitExprLogicOpt(leftNumLitExpr, rightNumLitExpr, stmt.PropName.PropName)
+	ok, err = glob.NumLitExprLogicOpt(leftNumLitExpr, rightNumLitExpr, stmt.PropName.Name)
 
 	if err != nil {
 		return false, err

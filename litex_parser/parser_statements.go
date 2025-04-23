@@ -483,7 +483,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 	params := []ast.Fc{fc, fc2}
 
-	return ast.NewSpecFactStmt(ast.TrueAtom, ast.FcAtom{PropName: opt}, params), nil
+	return ast.NewSpecFactStmt(ast.TrueAtom, ast.FcAtom{Name: opt}, params), nil
 }
 
 func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
@@ -832,6 +832,7 @@ func (tb *tokenBlock) haveFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) (
 
 	factParams := []ast.Fc{}
 	factParams = append(factParams, existParams...)
+	factParams = append(factParams, ast.BuiltinHaveFactExistParamPropParmSepAtom)
 	factParams = append(factParams, pureSpecFact.Params...)
 
 	if isTrue {

@@ -78,7 +78,7 @@ func (cursor *strSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
 func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	value, err := cursor.next()
 	if err != nil {
-		return ast.FcAtom{PropName: ""}, err
+		return ast.FcAtom{Name: ""}, err
 	}
 
 	fromPkg := ""
@@ -86,15 +86,15 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 		fromPkg = value
 		err := cursor.skip(glob.KeySymbolColonColon)
 		if err != nil {
-			return ast.FcAtom{PropName: ""}, err
+			return ast.FcAtom{Name: ""}, err
 		}
 		value, err = cursor.next()
 		if err != nil {
-			return ast.FcAtom{PropName: ""}, err
+			return ast.FcAtom{Name: ""}, err
 		}
 	}
 
-	return ast.FcAtom{PkgName: fromPkg, PropName: value}, nil
+	return ast.FcAtom{PkgName: fromPkg, Name: value}, nil
 }
 
 func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
@@ -205,13 +205,13 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 	left, err := cursor.next()
 	if err != nil {
-		return &ast.FcAtom{PropName: ""}, err
+		return &ast.FcAtom{Name: ""}, err
 	}
 
 	// 检查left是否全是数字
 	for _, c := range left {
 		if c < '0' || c > '9' {
-			return &ast.FcAtom{PropName: ""}, fmt.Errorf("invalid number: %s", left)
+			return &ast.FcAtom{Name: ""}, fmt.Errorf("invalid number: %s", left)
 		}
 	}
 
@@ -219,7 +219,7 @@ func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 		// 检查下一个字符是否是数字
 		nextChar := cursor.strAtCurIndexPlus(1)
 		if len(nextChar) == 0 {
-			return &ast.FcAtom{PropName: left}, nil
+			return &ast.FcAtom{Name: left}, nil
 		}
 
 		allDigits := true
@@ -234,14 +234,14 @@ func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 			cursor.skip()
 			right, err := cursor.next()
 			if err != nil {
-				return &ast.FcAtom{PropName: ""}, fmt.Errorf("invalid number: %s", right)
+				return &ast.FcAtom{Name: ""}, fmt.Errorf("invalid number: %s", right)
 			}
-			return &ast.FcAtom{PropName: left + "." + right}, nil
+			return &ast.FcAtom{Name: left + "." + right}, nil
 		}
-		return &ast.FcAtom{PropName: left}, nil
+		return &ast.FcAtom{Name: left}, nil
 	}
 
-	return &ast.FcAtom{PropName: left}, nil
+	return &ast.FcAtom{Name: left}, nil
 }
 
 func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {

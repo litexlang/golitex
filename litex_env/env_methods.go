@@ -49,15 +49,12 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 	}
 
 	if fact.IsHaveFact() && fact.IsTrue() {
-		// 知道param里多少是exist param
-		existProp, ok := env.GetExistPropDef(fact.PropName)
-		if !ok {
-			// TODO 应该报错
-			// return nil
-			return fmt.Errorf("exist_prop %s not found", fact.PropName)
+		index := fact.HaveSeparatorIndex()
+		if index == -1 {
+			return fmt.Errorf("have fact %s has no separator", fact.String())
 		}
 
-		existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[len(existProp.ExistParams):])
+		existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[index+1:])
 
 		env.SpecFactMem.Insert(existFact)
 	}
