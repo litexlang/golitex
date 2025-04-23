@@ -70,9 +70,8 @@ func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerS
 		}
 		fixedAsSpecFact, ok := fixed.(*ast.SpecFactStmt)
 		if !ok {
-			// 还是有可能then里不是 specFact的，比如定义可惜收敛；这时候我不报错，我只是让你不能证明 not exist。通常这种时候用法也都是 exist，用不着考虑not exist。你非要考虑not exist,那就用 not exist 来表示 forall，即给forall取个名字
 			return false, nil
-
+			// 还是有可能then里不是 specFact的，比如定义可惜收敛；这时候我不报错，我只是让你不能证明 not exist。通常这种时候用法也都是 exist，用不着考虑not exist。你非要考虑not exist,那就用 not exist 来表示 forall，即给forall取个名字
 			// return false, fmt.Errorf("instantiate spec fact stmt failed")
 		}
 		if !stmt.IsTrue() {
@@ -100,10 +99,14 @@ func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerS
 		if err != nil {
 			return false, err
 		}
-		if ok {
-			return ver.factDefer(stmt, state, true, nil, thenFact.String())
+		if !ok {
+			return false, nil
 		}
 	}
 
-	return false, nil
+	if state.requireMsg() {
+		ver.successMsgEnd(stmt.String(), "")
+	}
+
+	return true, nil
 }

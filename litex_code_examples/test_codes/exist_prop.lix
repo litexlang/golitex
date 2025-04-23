@@ -34,3 +34,15 @@ prove:
             have x $P(y)
     have 1 $P(2)
     exist $P(2)
+
+# verify have
+prove:
+    exist_prop (a A) P(x X):
+        $p(a,x)
+        $q(x)
+
+    know:
+        $p(1,2)
+        $q(2)
+    have 1 $P(2)
+    exist $P(2)
