@@ -90,3 +90,7 @@ func NewConDefHeader(name string, params []string, typeParams []Fc) *ConDefHeade
 func NewOrAndFact(isOr bool, facts []FactStmt) *LogicExprStmt {
 	return &LogicExprStmt{IsOr: isOr, Facts: facts}
 }
+
+func NewHaveObjDefStmt(objNames []string, fact SpecFactStmt) *HaveObjDefStmt {
+	return &HaveObjDefStmt{objNames, fact}
+}

@@ -53,6 +53,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.defConFnStmt()
 	case glob.KeywordObj:
 		ret, err = tb.defObjStmt()
+	case glob.KeywordHaveObj:
+		ret, err = tb.defHaveObjStmt()
 	case glob.KeywordClaim:
 		ret, err = tb.claimStmt()
 	case glob.KeywordProve:
@@ -916,4 +918,32 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 	}
 
 	return ast.NewSpecFactStmt(ast.TrueAtom, propName, params), nil
+}
+
+func (tb *tokenBlock) defHaveObjStmt() (*ast.HaveObjDefStmt, error) {
+	err := tb.header.skip(glob.KeywordHaveObj)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	objNames := []string{}
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	for !tb.header.is(glob.FuncFactPrefix) {
+		objName, err := tb.header.next()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		objNames = append(objNames, objName)
+	}
+
+	fact, err := tb.specFactStmt(ast.NameDepthMap{})
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewHaveObjDefStmt(objNames, *fact), nil
 }

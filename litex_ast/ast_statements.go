@@ -116,3 +116,8 @@ type LogicExprStmt struct {
 	IsOr  bool
 	Facts []FactStmt
 }
+
+type HaveObjDefStmt struct {
+	ObjName []string
+	Fact    SpecFactStmt
+}
