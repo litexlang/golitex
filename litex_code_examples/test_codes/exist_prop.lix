@@ -42,6 +42,7 @@ prove:
         $p(a,x)
 
     know:
-        not $p(a, 2)
-    not exist $P(2)
+        not exist $P(2)
 
+    forall a A:
+        not $p(a, 2)

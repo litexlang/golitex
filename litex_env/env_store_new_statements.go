@@ -256,10 +256,6 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.ConUniFactStmt, e
 		return nil, fmt.Errorf("exist fact must have one parameter")
 	}
 
-	if len(fact.Params) != 0 {
-		return nil, fmt.Errorf("exist fact must have one parameter")
-	}
-
 	existPropDef, ok := env.ExistPropMem.Get(fact.PropName)
 	if !ok {
 		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
@@ -281,7 +277,6 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.ConUniFactStmt, e
 
 	thenFacts := []*ast.SpecFactStmt{}
 	for _, thenFact := range existPropDef.Def.IffFacts {
-		// must be then fact
 		reversed := thenFact.ReverseIsTrue()
 		instantiated, err := reversed.Instantiate(uniConMap)
 		if err != nil {
