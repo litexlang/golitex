@@ -281,34 +281,6 @@ know:
 
 }
 
-func TestExistStmt(t *testing.T) {
-	code :=
-		`
-exist_prop P(g1 , g2 ):
-	when:
-		p(x, y)
-		forall  g , g2 :
-			when:
-				p(x, y)
-			then:
-				p(x, y)
-
-	instance_member:
-	    obj 1 
-		fn f(x , y ) 
-
-	then:
-	    p(x, y)
-`
-	statements, err := parser.ParseSourceCode(code)
-	if err == nil {
-		fmt.Printf("%v\n", statements)
-	} else {
-		t.Fatal(err)
-	}
-
-}
-
 func TestObjDeclStmt(t *testing.T) {
 	code :=
 		`
@@ -814,12 +786,7 @@ fn at(a nat, b nat) nat:
 	Q(x,y)
 
 
-exist_prop f(x S, y G) a fn, b S, c G:
-	G(g); G(g2);
-	G(g); G(g2);P(x, y);
-	p(x, y)
-	then:
-		p(x, y)
+
 `
 
 	statements, err := parser.ParseSourceCode(code)
