@@ -861,15 +861,60 @@ func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) 
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+	if tb.header.is(glob.FuncFactPrefix) {
+		pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
 
-	if isTrue {
-		return ast.NewSpecFactStmt(ast.TrueExist, pureSpecFact.PropName, pureSpecFact.Params), nil
+		if isTrue {
+			return ast.NewSpecFactStmt(ast.TrueExist, pureSpecFact.PropName, pureSpecFact.Params), nil
+		} else {
+			return ast.NewSpecFactStmt(ast.FalseExist, pureSpecFact.PropName, pureSpecFact.Params), nil
+		}
 	} else {
-		return ast.NewSpecFactStmt(ast.FalseExist, pureSpecFact.PropName, pureSpecFact.Params), nil
+		existParams := []ast.Fc{}
+
+		for !tb.header.is(glob.KeywordSt) {
+			param, err := tb.header.rawFc()
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
+			existParams = append(existParams, param)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			}
+		}
+
+		err = tb.header.skip(glob.KeywordSt)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		// add prefix to existParams
+		for i := range existParams {
+			existParams[i], err = ast.AddUniPrefixToFc(existParams[i], nameDepthMap)
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
+		}
+
+		pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		factParams := []ast.Fc{}
+		factParams = append(factParams, existParams...)
+		factParams = append(factParams, ast.BuiltinHaveFactExistParamPropParmSepAtom)
+		factParams = append(factParams, pureSpecFact.Params...)
+
+		if isTrue {
+			return ast.NewSpecFactStmt(ast.TrueHave, pureSpecFact.PropName, factParams), nil
+		} else {
+			return ast.NewSpecFactStmt(ast.FalseHave, pureSpecFact.PropName, factParams), nil
+		}
 	}
 }
 
