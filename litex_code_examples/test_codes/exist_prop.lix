@@ -12,18 +12,6 @@ prove:
     $domP(a,b,1,2)
     $IFF(a,b,1,2)
 
-# not exist => forall not
-prove:
-    # exist_prop & have
-    exist_prop (a A) P(x X):
-        $p(a,x)
-
-    know:
-        forall a A, x X:
-            not $p(a, x)
-    not $p(a, 2)
-    not exist $P(2)
-
 # have => exist
 prove:
     exist_prop (a A) P(x X):
@@ -46,3 +34,14 @@ prove:
         $q(2)
     have 1 $P(2)
     exist $P(2)
+
+# not exist => forall not
+prove:
+    # exist_prop & have
+    exist_prop (a A) P(x X):
+        $p(a,x)
+
+    know:
+        not $p(a, 2)
+    not exist $P(2)
+
