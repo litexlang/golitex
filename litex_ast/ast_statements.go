@@ -112,7 +112,7 @@ type LogicExprStmt struct {
 	Facts []FactStmt
 }
 
-type HaveObjDefStmt struct {
+type ExistObjDefStmt struct {
 	ObjNames []string
 	Fact     SpecFactStmt
 }

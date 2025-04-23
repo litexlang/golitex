@@ -21,7 +21,7 @@ const (
 	KeywordDom                  = "dom" // 必须存在，因为有时候只有要求没then
 	KeywordThen                 = "then"
 	KeywordObj                  = "obj"
-	KeywordHaveObj              = "have_obj"
+	KeywordExistObj             = "exist_obj"
 	KeywordFn                   = "fn"
 	KeywordProp                 = "prop"
 	KeywordKnow                 = "know"
@@ -177,7 +177,7 @@ func initKeywordSet() map[string]struct{} {
 		KeywordDom,
 		KeywordThen,
 		KeywordObj,
-		KeywordHaveObj,
+		KeywordExistObj,
 		KeywordFn,
 		KeywordProp,
 		KeywordKnow,

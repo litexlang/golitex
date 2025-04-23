@@ -87,6 +87,6 @@ func NewOrAndFact(isOr bool, facts []FactStmt) *LogicExprStmt {
 	return &LogicExprStmt{IsOr: isOr, Facts: facts}
 }
 
-func NewHaveObjDefStmt(objNames []string, fact SpecFactStmt) *HaveObjDefStmt {
-	return &HaveObjDefStmt{objNames, fact}
+func NewExistObjDefStmt(objNames []string, fact SpecFactStmt) *ExistObjDefStmt {
+	return &ExistObjDefStmt{objNames, fact}
 }
