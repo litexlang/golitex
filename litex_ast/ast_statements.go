@@ -118,6 +118,6 @@ type LogicExprStmt struct {
 }
 
 type HaveObjDefStmt struct {
-	ObjName []string
-	Fact    SpecFactStmt
+	ObjNames []string
+	Fact     SpecFactStmt
 }
