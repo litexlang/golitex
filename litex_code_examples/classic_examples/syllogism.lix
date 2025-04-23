@@ -1,0 +1,9 @@
+# syllogism (三段论)
+prove:
+    know:
+        $human(Socrates)
+        forall x S:
+            $human(x)
+            then:
+                $conscious(x)
+    $conscious(Socrates)
