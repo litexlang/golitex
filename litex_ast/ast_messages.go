@@ -61,21 +61,28 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteString(glob.KeywordExist)
 		builder.WriteByte(' ')
 	}
-	builder.WriteString(glob.FuncFactPrefix)
 
-	if stmt.PropName.PkgName == "" && glob.IsKeySymbol(stmt.PropName.Name) {
-		builder.WriteString(stmt.Params[0].String())
-		builder.WriteByte(' ')
-		builder.WriteString(stmt.PropName.String())
-		builder.WriteByte(' ')
-		builder.WriteString(stmt.Params[1].String())
-		return builder.String()
+	if stmt.PropName.PkgName == glob.BuiltinPkgName && glob.IsKeySymbol(stmt.PropName.Name) {
+		return relaFactString(stmt)
 	}
 
+	builder.WriteString(glob.FuncFactPrefix)
 	builder.WriteString(stmt.PropName.String())
 	builder.WriteByte('(')
 	builder.WriteString(FcSliceString(stmt.Params))
 	builder.WriteByte(')')
+
+	return builder.String()
+}
+
+func relaFactString(stmt *SpecFactStmt) string {
+	var builder strings.Builder
+
+	builder.WriteString(stmt.Params[0].String())
+	builder.WriteByte(' ')
+	builder.WriteString(stmt.PropName.String())
+	builder.WriteByte(' ')
+	builder.WriteString(stmt.Params[1].String())
 
 	return builder.String()
 }

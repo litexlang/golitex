@@ -12,6 +12,7 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/litex_ast"
 )
 
@@ -39,7 +40,7 @@ func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state Ver
 	propDef, ok := ver.env.GetExistPropDef(stmt.PropName)
 	if !ok {
 		// TODO: 如果没声明，应该报错
-		return false, nil
+		return false, fmt.Errorf("exist fact %s has no definition", stmt.String())
 	}
 
 	var err error = nil
