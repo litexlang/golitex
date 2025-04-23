@@ -49,23 +49,34 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 	}
 
 	// postprocess
-
-	if fact.IsHaveFact() && fact.IsTrue() {
-		return env.newHaveFact(fact)
+	if fact.IsHaveFact() {
+		return env.newHaveFactPostProcess(fact)
 	}
 
-	if fact.IsExistFact() && !fact.IsTrue() {
-		return env.newExistFact(fact)
+	if fact.IsExistFact() {
+		return env.newExistFactPostProcess(fact)
 	}
 
 	return nil
 }
 
-func (env *Env) newExistFact(fact *ast.SpecFactStmt) error {
-	if len(fact.Params) != 0 {
+func (env *Env) newExistFactPostProcess(fact *ast.SpecFactStmt) error {
+	if fact.TypeEnum == ast.FalseExist {
+		return env.newFalseExistFactPostProcess(fact)
+	} else {
 		return nil
 	}
+}
 
+func (env *Env) newHaveFactPostProcess(fact *ast.SpecFactStmt) error {
+	if fact.TypeEnum == ast.TrueExist {
+		return env.newTrueHaveFactPostProcess(fact)
+	} else {
+		return nil
+	}
+}
+
+func (env *Env) newFalseExistFactPostProcess(fact *ast.SpecFactStmt) error {
 	conUniFact, err := env.NotExistToForall(fact)
 	if err != nil {
 		return err
@@ -79,7 +90,7 @@ func (env *Env) newExistFact(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) newHaveFact(fact *ast.SpecFactStmt) error {
+func (env *Env) newTrueHaveFactPostProcess(fact *ast.SpecFactStmt) error {
 	sepIndex := fact.HaveSeparatorIndex()
 	if sepIndex == -1 {
 		return fmt.Errorf("have fact %s has no separator", fact.String())
