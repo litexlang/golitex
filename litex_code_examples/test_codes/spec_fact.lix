@@ -12,8 +12,8 @@ prove:
 
     know:
         forall x A, y B:
-            have y $q(x)
-    have 1 $q(a)
+            exist y st $q(x)
+    exist 1 st $q(a)
 
 # not 
 prove:
@@ -21,24 +21,24 @@ prove:
         not exist $p(a)
     not exist $p(a)
     not $p(a) # unknown
-    not have 1 $p(a) # unknown
+    not exist 1 st $p(a) # unknown
 
     know:
-        not have 1 $t(a)
-    not have 1 $t(a)
+        not exist 1 st $t(a)
+    not exist 1 st $t(a)
     not $t(a) # unknown
     not exist $t(a) # unknown
 
     know:
         not $q(a)
     not $q(a)
-    not have 1 $q(a) # unknown
+    not exist 1 st $q(a) # unknown
     not exist $q(a) # unknown
 
-# have => exist
+# exist st => exist
 prove:
     know:
-        have 1 $p(a)
+        exist 1 st $p(a)
     exist $p(a)
 
 # forall not => not exist

@@ -59,10 +59,6 @@ func NewKnowStmt(facts []FactStmt) *KnowStmt {
 	return &KnowStmt{facts}
 }
 
-func NewHaveStmt(propStmt SpecFactStmt, member []string) *HaveStmt {
-	return &HaveStmt{propStmt, member}
-}
-
 func NewAxiomStmt(decl DefPropOrExistPropStmt) *AxiomStmt {
 	return &AxiomStmt{decl}
 }

@@ -43,10 +43,10 @@ func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt) error {
 		node.ExistFacts = append(node.ExistFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
 	} else if stmt.TypeEnum == ast.FalseExist {
 		node.NotExistFacts = append(node.NotExistFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
-	} else if stmt.TypeEnum == ast.TrueHave {
-		node.HaveFacts = append(node.HaveFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
-	} else if stmt.TypeEnum == ast.FalseHave {
-		node.NotHaveFacts = append(node.NotHaveFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+	} else if stmt.TypeEnum == ast.TrueExist_St {
+		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+	} else if stmt.TypeEnum == ast.FalseExist_St {
+		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
 	} else {
 		panic("unknown spec fact type")
 	}
@@ -75,10 +75,10 @@ func (factMem *SpecFactMemDict) GetNode(stmt *ast.SpecFactStmt) ([]StoredSpecFac
 		return node.ExistFacts, true
 	} else if stmt.TypeEnum == ast.FalseExist {
 		return node.NotExistFacts, true
-	} else if stmt.TypeEnum == ast.TrueHave {
-		return node.HaveFacts, true
-	} else if stmt.TypeEnum == ast.FalseHave {
-		return node.NotHaveFacts, true
+	} else if stmt.TypeEnum == ast.TrueExist_St {
+		return node.Exist_St_Facts, true
+	} else if stmt.TypeEnum == ast.FalseExist_St {
+		return node.NotExist_St_Facts, true
 	} else {
 		panic("unknown spec fact type")
 	}
@@ -123,10 +123,10 @@ func (factMem *CondFactMemDict) InsertSpecFact(condStmt *ast.CondFactStmt, stmt 
 		node.ExistFacts = append(node.ExistFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
 	} else if stmt.TypeEnum == ast.FalseExist {
 		node.NotExistFacts = append(node.NotExistFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
-	} else if stmt.TypeEnum == ast.TrueHave {
-		node.HaveFacts = append(node.HaveFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
-	} else if stmt.TypeEnum == ast.FalseHave {
-		node.NotHaveFacts = append(node.NotHaveFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
+	} else if stmt.TypeEnum == ast.TrueExist_St {
+		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
+	} else if stmt.TypeEnum == ast.FalseExist_St {
+		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
 	} else {
 		panic("unknown spec fact type")
 	}
@@ -155,10 +155,10 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) ([]Store
 			return storedFacts.ExistFacts, true
 		} else if stmt.TypeEnum == ast.FalseExist {
 			return storedFacts.NotExistFacts, true
-		} else if stmt.TypeEnum == ast.TrueHave {
-			return storedFacts.HaveFacts, true
-		} else if stmt.TypeEnum == ast.FalseHave {
-			return storedFacts.NotHaveFacts, true
+		} else if stmt.TypeEnum == ast.TrueExist_St {
+			return storedFacts.Exist_St_Facts, true
+		} else if stmt.TypeEnum == ast.FalseExist_St {
+			return storedFacts.NotExist_St_Facts, true
 		} else {
 			panic("unknown spec fact type")
 		}
@@ -200,10 +200,10 @@ func (factMem *UniFactMemDict) insertSpecFact(uniStmt *ast.ConUniFactStmt, stmt 
 		node.ExistFacts = append(node.ExistFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
 	} else if stmt.TypeEnum == ast.FalseExist {
 		node.NotExistFacts = append(node.NotExistFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
-	} else if stmt.TypeEnum == ast.TrueHave {
-		node.HaveFacts = append(node.HaveFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
-	} else if stmt.TypeEnum == ast.FalseHave {
-		node.NotHaveFacts = append(node.NotHaveFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
+	} else if stmt.TypeEnum == ast.TrueExist_St {
+		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
+	} else if stmt.TypeEnum == ast.FalseExist_St {
+		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
 	} else {
 		panic("unknown spec fact type")
 	}
@@ -236,10 +236,10 @@ func (factMem *UniFactMemDict) GetSpecFactNodeWithTheSameIsTrue(stmt *ast.SpecFa
 			return storedFacts.ExistFacts, true
 		} else if stmt.TypeEnum == ast.FalseExist {
 			return storedFacts.NotExistFacts, true
-		} else if stmt.TypeEnum == ast.TrueHave {
-			return storedFacts.HaveFacts, true
-		} else if stmt.TypeEnum == ast.FalseHave {
-			return storedFacts.NotHaveFacts, true
+		} else if stmt.TypeEnum == ast.TrueExist_St {
+			return storedFacts.Exist_St_Facts, true
+		} else if stmt.TypeEnum == ast.FalseExist_St {
+			return storedFacts.NotExist_St_Facts, true
 		} else {
 			panic("unknown spec fact type")
 		}

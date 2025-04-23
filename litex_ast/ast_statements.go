@@ -61,7 +61,7 @@ type GenUniStmt struct {
 }
 
 func (enum SpecFactEnum) IsTrue() bool {
-	return enum == TrueAtom || enum == TrueExist || enum == TrueHave
+	return enum == TrueAtom || enum == TrueExist || enum == TrueExist_St
 }
 
 type SpecFactStmt struct {
@@ -78,11 +78,6 @@ type ClaimProveStmt struct {
 
 type KnowStmt struct {
 	Facts []FactStmt
-}
-
-type HaveStmt struct {
-	PropStmt SpecFactStmt
-	Member   []string
 }
 
 // syntax sugar for defining spec prop + claim forall true

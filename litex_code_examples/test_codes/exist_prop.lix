@@ -12,7 +12,7 @@ prove:
     $domP(a,b,1,2)
     $IFF(a,b,1,2)
 
-# have => exist
+# exist st => exist
 prove:
     exist_prop a A st P(x X):
         $p(a,x)

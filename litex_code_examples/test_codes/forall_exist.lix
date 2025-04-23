@@ -21,10 +21,10 @@ prove:
         forall epsilon real:
             epsilon > 0
             then:
-                have 1/epsilon $Cauchy(seq, epsilon)
+                exist 1/epsilon st $Cauchy(seq, epsilon)
 
     forall epsilon real:
         epsilon > 0
         then:
-            have 1/epsilon $Cauchy(seq, epsilon)
+            exist 1/epsilon st $Cauchy(seq, epsilon)
             exist $Cauchy(seq, epsilon)

@@ -2,13 +2,13 @@
 prove:
     $p(x)
     exist $q(x)
-    have x $t(y)
+    exist x st $t(y)
 
     know:
         $p(x)
         exist $q(x)
-        have x $t(y)
+        exist x st $t(y)
 
     $p(x)
     exist $q(x)
-    have x $t(y)
+    exist x st $t(y)

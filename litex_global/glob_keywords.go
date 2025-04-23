@@ -29,7 +29,6 @@ const (
 	KeywordSt                   = "st"
 	KeywordExistProp            = "exist_prop"
 	KeywordConstructorProp      = "constructor_prop"
-	KeywordHave                 = "have"
 	KeywordClaim                = "claim"
 	KeywordProve                = "prove"
 	KeywordPub                  = "pub"
@@ -185,7 +184,6 @@ func initKeywordSet() map[string]struct{} {
 		KeywordExistProp,
 		KeywordSt,
 		KeywordConstructorProp,
-		KeywordHave,
 		KeywordClaim,
 		KeywordProve,
 		KeywordPub,

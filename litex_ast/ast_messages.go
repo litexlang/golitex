@@ -43,7 +43,7 @@ func (stmt *KnowStmt) String() string {
 }
 
 func (stmt *SpecFactStmt) String() string {
-	if stmt.IsHaveFact() {
+	if stmt.IsExist_St_Fact() {
 		return haveFactString(stmt)
 	}
 
@@ -89,7 +89,7 @@ func relaFactString(stmt *SpecFactStmt) string {
 
 func haveFactString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
-	if stmt.TypeEnum == FalseHave {
+	if stmt.TypeEnum == FalseExist_St {
 		builder.WriteString(glob.KeywordNot)
 		builder.WriteByte(' ')
 	}
@@ -97,7 +97,7 @@ func haveFactString(stmt *SpecFactStmt) string {
 	builder.WriteString(glob.KeywordExist)
 	builder.WriteByte(' ')
 
-	sepIndex := stmt.HaveSeparatorIndex()
+	sepIndex := stmt.Exist_St_SeparatorIndex()
 	if sepIndex == -1 {
 		return ""
 	} else {
