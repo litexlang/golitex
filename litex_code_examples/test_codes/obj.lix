@@ -1,0 +1,4 @@
+prove:
+    obj x set:
+        $in(x, Q)
+    obj x2 set

@@ -178,6 +178,8 @@ func (fact *DefConPropStmt) String() string {
 
 func (f *DefConFnStmt) String() string {
 	var builder strings.Builder
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(" ")
 
 	builder.WriteString(f.DefHeader.String())
 	builder.WriteByte('\n')
