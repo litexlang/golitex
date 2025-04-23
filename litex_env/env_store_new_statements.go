@@ -54,6 +54,28 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 		return env.newHaveFact(fact)
 	}
 
+	if fact.IsExistFact() && !fact.IsTrue() {
+		return env.newExistFact(fact)
+	}
+
+	return nil
+}
+
+func (env *Env) newExistFact(fact *ast.SpecFactStmt) error {
+	if len(fact.Params) != 0 {
+		return nil
+	}
+
+	conUniFact, err := env.NotExistToForall(fact)
+	if err != nil {
+		return err
+	}
+
+	err = env.UniFactMem.Insert(conUniFact)
+	if err != nil {
+		return fmt.Errorf("exist fact %s has no definition", fact.String())
+	}
+
 	return nil
 }
 
@@ -214,4 +236,27 @@ func (env *Env) NewDefConExistProp(stmt *ast.DefConExistPropStmt, pkgName string
 	}
 
 	return env.ExistPropMem.Insert(stmt, pkgName)
+}
+
+func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.ConUniFactStmt, error) {
+	if fact.TypeEnum != ast.FalseExist {
+		return nil, fmt.Errorf("exist fact must have one parameter")
+	}
+
+	if len(fact.Params) != 0 {
+		return nil, fmt.Errorf("exist fact must have one parameter")
+	}
+
+	existPropDef, ok := env.ExistPropMem.Get(fact.PropName)
+	if !ok {
+		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
+	}
+
+	thenFacts := []*ast.SpecFactStmt{}
+	for _, thenFact := range existPropDef.Def.IffFacts {
+		reversed := thenFact.ReverseIsTrue()
+		thenFacts = append(thenFacts, reversed)
+	}
+
+	return ast.NewConUniFactStmt(existPropDef.ExistParams, existPropDef.ExistParamSets, existPropDef.Def.DomFacts, thenFacts), nil
 }
