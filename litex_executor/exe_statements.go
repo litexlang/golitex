@@ -334,7 +334,7 @@ func (exec *Executor) haveObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 	// TODO 需要像defObjStmt那样，把objName和objSet都插入到env里
 	propDef, ok := exec.env.GetExistPropDef(stmt.Fact.PropName)
 	if !ok {
-		return fmt.Errorf("have fact %s has no definition", stmt.String())
+		return fmt.Errorf("%s has no definition", stmt.String())
 	}
 
 	uniConMap := map[string]ast.Fc{}

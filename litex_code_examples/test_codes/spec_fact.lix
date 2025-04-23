@@ -1,5 +1,8 @@
 # forall => spec fact
 prove:
+    exist_prop a A st q(x X):
+        $q(a, x)
+
     know:
         forall x A:
             $p(x)
@@ -17,11 +20,18 @@ prove:
 
 # not 
 prove:
+    exist_prop a A st p(x X):
+        $q(a, x)
+
     know:
         not exist $p(a)
     not exist $p(a)
     not $p(a) # unknown
     not exist 1 st $p(a) # unknown
+
+prove:
+    exist_prop a A st t(x X):
+        $q(a, x)
 
     know:
         not exist 1 st $t(a)
@@ -29,14 +39,21 @@ prove:
     not $t(a) # unknown
     not exist $t(a) # unknown
 
+prove:
+    exist_prop a A st q(x X):
+        $j(a, x)
+
     know:
-        not $q(a)
-    not $q(a)
+        not $p(a)
+    not $p(a)
     not exist 1 st $q(a) # unknown
     not exist $q(a) # unknown
 
 # exist st => exist
 prove:
+    exist_prop a A st p(x X):
+        $q(a, x)
+
     know:
         exist 1 st $p(a)
     exist $p(a)

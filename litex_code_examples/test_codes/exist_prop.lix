@@ -23,7 +23,7 @@ prove:
     exist 1 st $P(2)
     exist $P(2)
 
-# verify have
+# verify exist st
 prove:
     exist_prop a A st P(x X):
         $p(a,x)

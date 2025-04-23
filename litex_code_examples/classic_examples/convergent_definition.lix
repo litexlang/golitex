@@ -1,5 +1,5 @@
 prove:
-    exist_prop n nat, m nat st cacuhy_gap(seq sequence, epsilon real, N nat):
+    exist_prop n nat, m nat st Cauchy_bound_within_epsilon(seq sequence, epsilon real, N nat):
         n > N
         m > N
         iff:
@@ -8,14 +8,7 @@ prove:
     exist_prop N nat st Cauchy(seq sequence, epsilon real):
         epsilon > 0
         iff:
-            not exist $cacuhy_gap(seq, epsilon, N)
-            
-            # # equivalent:
-            # forall n nat, m nat:
-            #     n > N
-            #     m > N
-            #     then:
-            #         abs(at(seq, n) - at(seq, m)) < epsilon
+            not exist $Cauchy_bound_within_epsilon(seq, epsilon, N)
 
     know:
         forall epsilon real:
