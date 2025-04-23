@@ -449,6 +449,8 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
+
+	// add prefix to fc
 	fc, err = ast.AddUniPrefixToFc(fc, nameDepthMap)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -471,6 +473,8 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
+
+	// add prefix to fc2
 	fc2, err = ast.AddUniPrefixToFc(fc2, nameDepthMap)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -825,6 +829,14 @@ func (tb *tokenBlock) haveFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) (
 		}
 	}
 
+	// add prefix to existParams
+	for i := range existParams {
+		existParams[i], err = ast.AddUniPrefixToFc(existParams[i], nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	}
+
 	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -884,6 +896,7 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 			return nil, &tokenBlockErr{err, *tb}
 		}
 
+		// add prefix to param
 		param, err = ast.AddUniPrefixToFc(param, nameDepthMap)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
