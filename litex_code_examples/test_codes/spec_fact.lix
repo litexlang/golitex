@@ -27,3 +27,22 @@ prove:
 
     have 1 $p(2)   # 读成：have 1 such that p(2)
     exist $p(2)
+
+prove:
+    know:
+        forall x A:
+            $p(x)
+    $p(a)
+
+    know:
+        forall x A:
+            exist $q(x)
+    exist $q(a)
+
+prove:
+    know:
+        forall x A, y B:
+            have y $q(x)
+    have 1 $q(a)
+    know:
+    

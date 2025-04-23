@@ -48,16 +48,24 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
+	// postprocess
+
 	if fact.IsHaveFact() && fact.IsTrue() {
-		index := fact.HaveSeparatorIndex()
-		if index == -1 {
-			return fmt.Errorf("have fact %s has no separator", fact.String())
-		}
-
-		existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[index+1:])
-
-		env.SpecFactMem.Insert(existFact)
+		return env.newHaveFact(fact)
 	}
+
+	return nil
+}
+
+func (env *Env) newHaveFact(fact *ast.SpecFactStmt) error {
+	sepIndex := fact.HaveSeparatorIndex()
+	if sepIndex == -1 {
+		return fmt.Errorf("have fact %s has no separator", fact.String())
+	}
+
+	existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[sepIndex+1:])
+
+	env.SpecFactMem.Insert(existFact)
 
 	return nil
 }
