@@ -927,10 +927,6 @@ func (tb *tokenBlock) defHaveObjStmt() (*ast.HaveObjDefStmt, error) {
 	}
 
 	objNames := []string{}
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
 
 	for !tb.header.is(glob.FuncFactPrefix) {
 		objName, err := tb.header.next()
@@ -938,6 +934,9 @@ func (tb *tokenBlock) defHaveObjStmt() (*ast.HaveObjDefStmt, error) {
 			return nil, &tokenBlockErr{err, *tb}
 		}
 		objNames = append(objNames, objName)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
 	}
 
 	fact, err := tb.specFactStmt(ast.NameDepthMap{})

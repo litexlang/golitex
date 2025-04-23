@@ -319,26 +319,15 @@ func (exec *Executor) defConExistPropStmt(stmt *ast.DefConExistPropStmt) error {
 func (exec *Executor) haveObjDefStmt(stmt *ast.HaveObjDefStmt) error {
 	defer exec.appendNewMsg(stmt.String())
 
-	// check related exist
-	ok, _, err := exec.checkFactStmt(&stmt.Fact)
+	existFact := ast.SpecFactStmt{TypeEnum: ast.TrueExist, PropName: ast.FcAtom{PkgName: "", Name: stmt.Fact.PropName.Name}, Params: stmt.Fact.Params}
+
+	ok, _, err := exec.checkFactStmt(&existFact)
 	if err != nil {
 		return err
 	}
 
 	if !ok {
-		exec.appendNewMsg("%v failed: related exist fact check failed", stmt.String())
-		return nil
-	}
-
-	defExistFact := ast.SpecFactStmt{TypeEnum: ast.TrueExist, PropName: ast.FcAtom{PkgName: "", Name: stmt.Fact.PropName.Name}, Params: stmt.Fact.Params}
-
-	ok, _, err = exec.checkFactStmt(&defExistFact)
-	if err != nil {
-		return err
-	}
-
-	if !ok {
-		exec.appendNewMsg("%v failed: related exist fact check failed", stmt.String())
+		exec.appendNewMsg("%v failed: related exist fact check failed\n", existFact.String())
 		return nil
 	}
 
@@ -376,7 +365,7 @@ func (exec *Executor) haveObjDefStmt(stmt *ast.HaveObjDefStmt) error {
 
 	newDefObjStmt := ast.DefObjStmt{Objs: stmt.ObjNames, ObjSets: stmt.Fact.Params, Facts: facts}
 
-	err = exec.env.NewDefObj(&newDefObjStmt, exec.env.CurPkg)
+	err = exec.defObjStmt(&newDefObjStmt)
 	if err != nil {
 		return err
 	}

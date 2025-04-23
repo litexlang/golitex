@@ -2,3 +2,17 @@ prove:
     obj x set:
         $in(x, Q)
     obj x2 set
+
+prove:
+    exist_prop (a A, b B) p(x X, y Y):
+        $domP(a,b,x,y)
+        iff:
+            $IFF(a,b,x,y)
+
+    know exist $p(1,2)
+    have_obj a, b $p(1,2)
+    
+    exist $p(1,2)
+    $domP(a,b,1,2)
+    $IFF(a,b,1,2)
+
