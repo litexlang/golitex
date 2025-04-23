@@ -1,0 +1,16 @@
+prove:
+    fn f(x set) set
+    fn f2(x set) set:
+        $in(x, Q)
+        then:
+            $in(x, f(Q))
+    fn f3(x set) set:
+        $in(x, P)
+    fn f4(x set) set:
+        dom:
+            $in(x, Q)
+        then:
+            $in(x, f(Q))
+    fn f5(x set) set:
+        dom:
+            $in(x, P)
