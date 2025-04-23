@@ -32,6 +32,7 @@ func (s *ThmStmt) stmt()             {}
 func (s *CondFactStmt) stmt()        {}
 func (s *GenUniStmt) stmt()          {}
 func (p *LogicExprStmt) stmt()       {}
+func (s *HaveObjDefStmt) stmt()      {}
 
 // func (s *ExistFactStmt) stmt() {}
 
