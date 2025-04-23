@@ -1,9 +1,0 @@
-# fn
-
-# obj
-obj x set:
-    in(x, Q)
-obj x set
-
-prove:
-    # obj exist_x set # error
