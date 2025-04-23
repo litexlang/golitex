@@ -1,4 +1,36 @@
-exist_prop a A, b B p(x X, y Y): # 可以没有 x X, y Y，用于 not forall
-    $domP(a,b,x,y)
-    iff:
-        $IFF(a,b,x,y)
+prove:
+    exist_prop (a A, b B) p(x X, y Y): # 可以没有 x X, y Y，用于 not forall
+        $domP(a,b,x,y)
+        iff:
+            $IFF(a,b,x,y)
+
+    # exist_prop & have_obj
+    know exist $p(1,2)
+    have_obj a, b $p(1,2)
+
+    exist $p(1,2)
+    $domP(a,b,1,2)
+    $IFF(a,b,1,2)
+
+# not exist => forall not
+prove:
+    # exist_prop & have
+    exist_prop (a A) P(x X):
+        $p(a,x)
+
+    know:
+        forall a A, x X:
+            not $p(a, x)
+    not $p(a, 2)
+    not exist $P(2)
+
+# have => exist
+prove:
+    exist_prop (a A) P(x X):
+        $p(a,x)
+
+    know:
+        forall x A, y B:
+            have x $P(y)
+    have 1 $P(2)
+    exist $P(2)

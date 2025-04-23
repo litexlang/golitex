@@ -258,16 +258,19 @@ func (s *DefConExistPropStmt) String() string {
 
 	builder.WriteString(glob.KeywordExistProp)
 	builder.WriteByte(' ')
-	for i := 0; i < len(s.ExistParams)-1; i++ {
-		builder.WriteString(s.ExistParams[i])
+	builder.WriteString(glob.KeySymbolLeftBrace)
+	if len(s.ExistParams) > 0 {
+		for i := 0; i < len(s.ExistParams)-1; i++ {
+			builder.WriteString(s.ExistParams[i])
+			builder.WriteString(" ")
+			builder.WriteString(s.ExistParamSets[i].String())
+			builder.WriteString(", ")
+		}
+		builder.WriteString(s.ExistParams[len(s.ExistParams)-1])
 		builder.WriteString(" ")
-		builder.WriteString(s.ExistParamSets[i].String())
-		builder.WriteString(", ")
+		builder.WriteString(s.ExistParamSets[len(s.ExistParams)-1].String())
 	}
-	builder.WriteString(s.ExistParams[len(s.ExistParams)-1])
-	builder.WriteString(" ")
-	builder.WriteString(s.ExistParamSets[len(s.ExistParams)-1].String())
-
+	builder.WriteString(glob.KeySymbolRightBrace)
 	builder.WriteString(DefConPropStmtString("", &s.Def))
 
 	return builder.String()
