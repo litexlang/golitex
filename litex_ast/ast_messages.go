@@ -94,10 +94,10 @@ func haveFactString(stmt *SpecFactStmt) string {
 		builder.WriteByte(' ')
 	}
 
-	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(glob.KeywordExist)
 	builder.WriteByte(' ')
-	sepIndex := stmt.HaveSeparatorIndex()
 
+	sepIndex := stmt.HaveSeparatorIndex()
 	if sepIndex == -1 {
 		return ""
 	} else {
@@ -105,6 +105,9 @@ func haveFactString(stmt *SpecFactStmt) string {
 			builder.WriteString(stmt.Params[i].String())
 			builder.WriteString(" ")
 		}
+
+		builder.WriteString(glob.KeywordSt)
+		builder.WriteString(" ")
 
 		builder.WriteString(glob.FuncFactPrefix)
 		builder.WriteString(stmt.PropName.String())

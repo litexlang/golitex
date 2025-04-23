@@ -19,8 +19,8 @@ prove:
 
     know:
         forall x A, y B:
-            have x $P(y)
-    have 1 $P(2)
+            exist x st $P(y)
+    exist 1 st $P(2)
     exist $P(2)
 
 # verify have
@@ -32,7 +32,7 @@ prove:
     know:
         $p(1,2)
         $q(2)
-    have 1 $P(2)
+    exist 1 st $P(2)
     exist $P(2)
 
 # not exist => forall not
