@@ -22,8 +22,8 @@ const (
 	FalseAtom
 	TrueExist
 	FalseExist
-	TrueHave
-	FalseHave
+	TrueExist_St
+	FalseExist_St
 )
 
 func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
@@ -35,10 +35,10 @@ func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
 		return NewSpecFactStmt(FalseExist, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == FalseExist {
 		return NewSpecFactStmt(TrueExist, stmt.PropName, stmt.Params)
-	} else if stmt.TypeEnum == TrueHave {
-		return NewSpecFactStmt(FalseHave, stmt.PropName, stmt.Params)
-	} else if stmt.TypeEnum == FalseHave {
-		return NewSpecFactStmt(TrueHave, stmt.PropName, stmt.Params)
+	} else if stmt.TypeEnum == TrueExist_St {
+		return NewSpecFactStmt(FalseExist_St, stmt.PropName, stmt.Params)
+	} else if stmt.TypeEnum == FalseExist_St {
+		return NewSpecFactStmt(TrueExist_St, stmt.PropName, stmt.Params)
 	}
 	panic("unknown spec fact type")
 }
@@ -51,18 +51,18 @@ func (f *SpecFactStmt) IsExistFact() bool {
 	return f.TypeEnum == TrueExist || f.TypeEnum == FalseExist
 }
 
-func (f *SpecFactStmt) IsHaveFact() bool {
-	return f.TypeEnum == TrueHave || f.TypeEnum == FalseHave
+func (f *SpecFactStmt) IsExist_St_Fact() bool {
+	return f.TypeEnum == TrueExist_St || f.TypeEnum == FalseExist_St
 }
 
 func (f *SpecFactStmt) IsTrue() bool {
-	return f.TypeEnum == TrueAtom || f.TypeEnum == TrueExist || f.TypeEnum == TrueHave
+	return f.TypeEnum == TrueAtom || f.TypeEnum == TrueExist || f.TypeEnum == TrueExist_St
 }
 
-func (f *SpecFactStmt) HaveSeparatorIndex() int {
+func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
 	for i, param := range f.Params {
 		paramAsAtom, ok := param.(*FcAtom)
-		if ok && paramAsAtom.PkgName == glob.BuiltinPkgName && paramAsAtom.Name == glob.BuiltinHaveFactExistParamPropParmSep {
+		if ok && paramAsAtom.PkgName == glob.BuiltinPkgName && paramAsAtom.Name == glob.BuiltinExist_St_FactExistParamPropParmSep {
 			return i
 		}
 	}

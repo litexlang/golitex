@@ -131,10 +131,6 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		return tb.existFactStmt(nameDepthMap, isTrue)
 	}
 
-	if tb.header.is(glob.KeywordHave) {
-		return tb.haveFactStmt(nameDepthMap, isTrue)
-	}
-
 	if tb.header.is(glob.FuncFactPrefix) {
 		ret, err := tb.pureFuncSpecFact(nameDepthMap)
 		if err != nil {
@@ -810,51 +806,6 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 	return ast.NewDefConExistPropStmt(def, existParams, existParamSets), nil
 }
 
-func (tb *tokenBlock) haveFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) (*ast.SpecFactStmt, error) {
-	err := tb.header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	existParams := []ast.Fc{}
-
-	for !tb.header.is(glob.FuncFactPrefix) {
-		param, err := tb.header.rawFc()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		existParams = append(existParams, param)
-
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
-	}
-
-	// add prefix to existParams
-	for i := range existParams {
-		existParams[i], err = ast.AddUniPrefixToFc(existParams[i], nameDepthMap)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-	}
-
-	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	factParams := []ast.Fc{}
-	factParams = append(factParams, existParams...)
-	factParams = append(factParams, ast.BuiltinHaveFactExistParamPropParmSepAtom)
-	factParams = append(factParams, pureSpecFact.Params...)
-
-	if isTrue {
-		return ast.NewSpecFactStmt(ast.TrueHave, pureSpecFact.PropName, factParams), nil
-	} else {
-		return ast.NewSpecFactStmt(ast.FalseHave, pureSpecFact.PropName, factParams), nil
-	}
-}
-
 func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) (*ast.SpecFactStmt, error) {
 	err := tb.header.skip(glob.KeywordExist)
 	if err != nil {
@@ -907,13 +858,13 @@ func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) 
 
 		factParams := []ast.Fc{}
 		factParams = append(factParams, existParams...)
-		factParams = append(factParams, ast.BuiltinHaveFactExistParamPropParmSepAtom)
+		factParams = append(factParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
 		factParams = append(factParams, pureSpecFact.Params...)
 
 		if isTrue {
-			return ast.NewSpecFactStmt(ast.TrueHave, pureSpecFact.PropName, factParams), nil
+			return ast.NewSpecFactStmt(ast.TrueExist_St, pureSpecFact.PropName, factParams), nil
 		} else {
-			return ast.NewSpecFactStmt(ast.FalseHave, pureSpecFact.PropName, factParams), nil
+			return ast.NewSpecFactStmt(ast.FalseExist_St, pureSpecFact.PropName, factParams), nil
 		}
 	}
 }

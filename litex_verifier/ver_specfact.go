@@ -28,8 +28,8 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		}
 	}
 
-	if stmt.IsHaveFact() {
-		ok, err := ver.HavePropFact(stmt, state)
+	if stmt.IsExist_St_Fact() {
+		ok, err := ver.Exist_St_PropFact(stmt, state)
 		if err != nil {
 			return false, err
 		}

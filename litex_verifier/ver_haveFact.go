@@ -16,12 +16,12 @@ import (
 	ast "golitex/litex_ast"
 )
 
-func (ver *Verifier) HavePropFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) Exist_St_PropFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if state.isSpec() {
 		return false, nil
 	}
 
-	ok, err := ver.useExistPropDefProveHave(stmt, state)
+	ok, err := ver.useExistPropDefProveExist_St(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -32,8 +32,8 @@ func (ver *Verifier) HavePropFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 	return false, nil
 }
 
-func (ver *Verifier) useExistPropDefProveHave(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	sepIndex := stmt.HaveSeparatorIndex()
+func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	sepIndex := stmt.Exist_St_SeparatorIndex()
 	if sepIndex == -1 {
 		return false, fmt.Errorf("have fact %s has no separator", stmt.String())
 	}
