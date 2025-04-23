@@ -95,7 +95,7 @@ func (env *Env) newFalseExistFactPostProcess(fact *ast.SpecFactStmt) error {
 func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	sepIndex := fact.Exist_St_SeparatorIndex()
 	if sepIndex == -1 {
-		return fmt.Errorf("have fact %s has no separator", fact.String())
+		return fmt.Errorf("%s has no separator", fact.String())
 	}
 
 	existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[sepIndex+1:])
