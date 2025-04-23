@@ -1,33 +1,3 @@
-# 普通事实，have事实，exist事实 是相互分离的
-prove:
-    know $p(a)
-    $p(a)
-    exist $p(a)
-    have $p(a)
-    
-    know exist $p(b)
-    $p(b)
-    exist $p(b)
-    have $p(b)
-
-    know have $p(c)
-    $p(c)
-    have $p(c)
-    exist $p(c)
-
-prove:
-    exist_prop (a A) p(x X):
-        $cond(a, x)
-        iff:
-            $result(a,x)
-    
-    know:
-        $cond(1,2)
-        $result(1,2)
-
-    have 1 $p(2)   # 读成：have 1 such that p(2)
-    exist $p(2)
-
 # forall => spec fact
 prove:
     know:
@@ -64,8 +34,6 @@ prove:
     not $q(a)
     not have 1 $q(a) # unknown
     not exist $q(a) # unknown
-
-    
 
 # have => exist
 prove:

@@ -1,7 +1,12 @@
-# TODO:
-# 1. - 同时是unary和infix的opt，这有严重问题：1. 我的现有逻辑在处理builtin opt的时候都只考虑了 infix 的情况， 2. - 有时候是1个参数，有时候是2个，很诡异
+# - as prefix opt
+prove:
+    -1 = -1
+    -1 = 1 -2
+    -1 = 2 -3
+    -1 = 3 -4
+    -1 = 4 -5
 
-
+# +-*/
 prove:
     -1 + 1 = 0
     - 0 =0
@@ -10,26 +15,24 @@ prove:
     (-2) * 3 = -6
     (-3)^2 = 9
 
-
+# < <= > >=
 prove:
     1 < 2
     -2 <= 3
     -9 <= -9
     -2 < -1
 
+# match
 prove:
-    - a = - a + 0
-    know forall x R:
-        x = x + 0
-    - a = - a + 0
-
-    -4 * a + 5 * a = (-4+5) * a
     know forall x R, y R, z R: # 分配率
         x * (y + z) = x * y + x * z
         (x + y) * z = x * z + y * z
-    -4 * a + 5 * a = (-4+5) * a
-    -4 * a + 5 * a = 1 * a
+    -4 * a + 5 * a = (-4+5) * a # match -4 with x, 5 with y, a with z
+    -4 * a + 5 * a = 1 * a # 1 match -4+5
 
+# user input number literal expression can match known literal expression
+# e.g. 3*3 can match 8+1
 prove:
-    know a = 1
-    a = 1 + 2 -2
+    know forall x R:
+        $p(x + 3*3)
+    $p(x + (8+1))
