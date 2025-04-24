@@ -194,7 +194,3 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 
 	return blocks, nil
 }
-
-func isEmptyLine(line string) bool {
-	return strings.TrimSpace(line) == ""
-}
