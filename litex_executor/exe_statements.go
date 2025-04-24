@@ -120,9 +120,23 @@ func (exec *Executor) checkFactStmt(stmt ast.FactStmt) (bool, *verifier.Verifier
 
 func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 	exec.newEnv(exec.env.CurPkg)
-	exec.appendNewMsg(stmt.String())
+	isSuccess := false
 
 	defer func() {
+		if isSuccess {
+			if stmt.IsProve {
+				exec.appendNewMsgAtBegin("%v success\n", glob.KeywordProve)
+			} else {
+				exec.appendNewMsgAtBegin("%v success\n", glob.KeywordProveByContradiction)
+			}
+		} else {
+			if stmt.IsProve {
+				exec.appendNewMsgAtBegin("%v failed\n", glob.KeywordProve)
+			} else {
+				exec.appendNewMsgAtBegin("%v failed\n", glob.KeywordProveByContradiction)
+			}
+		}
+		exec.appendNewMsgAtBegin(stmt.String())
 		exec.deleteEnvAndRetainMsg()
 	}()
 
@@ -142,12 +156,13 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 				return err
 			}
 			if !ok {
-				exec.appendNewMsg("%v prove failed", fact.String())
+				exec.appendNewMsgAtBegin("%v prove failed", fact.String())
 				return nil
 			}
 		}
 
-		exec.appendNewMsg("%v success", glob.KeywordProve)
+		isSuccess = true
+		// exec.appendNewMsg("%v success", glob.KeywordProve)
 		return nil
 
 	} else {
@@ -187,7 +202,8 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 			return err
 		}
 		if ok {
-			exec.appendNewMsg("%v success", glob.KeywordProveByContradiction)
+			isSuccess = true
+			// exec.appendNewMsg("%v success", glob.KeywordProveByContradiction)
 			return nil
 		}
 	}
