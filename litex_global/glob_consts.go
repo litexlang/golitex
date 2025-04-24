@@ -28,3 +28,6 @@ const ExistPropPrefixLen = len(ExistPropPrefix)
 const BuiltinExist_St_FactExistParamPropParmSep = ""
 
 const CommentSig = "#"
+
+// 非常重要
+const EmptyFcFnHead = ""

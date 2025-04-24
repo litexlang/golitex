@@ -19,7 +19,26 @@ import (
 
 func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 	if cursor.is(glob.KeySymbolLeftBrace) {
-		return cursor.bracedFcExpr()
+		left, err := cursor.bracedFcExpr()
+		if err != nil {
+			return nil, err
+		}
+
+		if !cursor.is(glob.KeySymbolLeftBrace) {
+			return left, nil
+		}
+
+		fcFn := ast.NewFcFnPipe(ast.EmptyFcFnHeadAtom, []*ast.FcFnSeg{})
+		fcFn.ParamSegs = append(fcFn.ParamSegs, ast.NewFcFnPipeSeg([]ast.Fc{left}))
+		for cursor.is(glob.KeySymbolLeftBrace) {
+			right, err := cursor.bracedFcExpr()
+			if err != nil {
+				return nil, err
+			}
+			fcFn.ParamSegs = append(fcFn.ParamSegs, ast.NewFcFnPipeSeg([]ast.Fc{right}))
+		}
+		// it is a fcfn with a braced fc as its function name
+		return left, nil
 	}
 
 	if cursor.curTokenBeginWithNumber() {
