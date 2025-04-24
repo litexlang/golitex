@@ -17,6 +17,7 @@ import (
 	glob "golitex/litex_global"
 )
 
+// “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
 func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 	// 处理括号表达式
 	if cursor.is(glob.KeySymbolLeftBrace) {
@@ -71,16 +72,6 @@ func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 	} else {
 		return cursor.rawFcFn(fcStr)
 	}
-}
-
-func (cursor *strSliceCursor) bracedFcExpr() (ast.Fc, error) {
-	cursor.skip(glob.KeySymbolLeftBrace)
-	fc, err := cursor.rawFc()
-	if err != nil {
-		return nil, &strSliceErr{err, cursor}
-	}
-	cursor.skip(glob.KeySymbolRightBrace)
-	return fc, nil
 }
 
 func (cursor *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
