@@ -78,10 +78,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 	}
 
 	if ok {
-		err := exec.env.NewFact(stmt)
-		if err != nil {
-			return err
-		}
+		return exec.env.NewFact(stmt)
 	}
 
 	if glob.CheckFalse {
