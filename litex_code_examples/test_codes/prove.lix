@@ -1,0 +1,22 @@
+prove:
+    know not $p(1)
+    not $p(1)
+
+    claim:
+        not $p(1)
+        prove_by_contradiction:
+            $p(1)
+
+prove:
+    know:
+        forall x nat:
+            $p(x)
+            then:
+                $p(x + 1)
+    know $p(0)
+
+    claim:
+        $p(2)
+        prove:
+            $p(0+1)
+            $p(1 + 1)

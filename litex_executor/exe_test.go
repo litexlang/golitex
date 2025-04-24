@@ -18,6 +18,7 @@ import (
 	parser "golitex/litex_parser"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -565,7 +566,7 @@ func TestAllFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../litex_code_examples/test_codes/forall_facts.lix")
+var code = readFile("../litex_code_examples/test_codes/prove.lix")
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()
@@ -578,4 +579,17 @@ func TestLastFactCode(t *testing.T) {
 	executionTime := time.Since(start)
 	printExecMsg(messages)
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
+}
+
+func TestFilesInFolder(t *testing.T) {
+	files, err := filepath.Glob("../litex_code_examples/test_codes/*.lix")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, file := range files {
+		fmt.Println(file)
+		code := readFile(file)
+		topStmtSlice := setupAndParseStmtTest(code, t)
+		_ = execStmtTest(topStmtSlice, t)
+	}
 }

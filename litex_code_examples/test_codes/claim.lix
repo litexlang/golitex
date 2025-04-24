@@ -1,10 +1,4 @@
-# TODO
-
 prove:
-    know $p(1)
-    $p(1)
-
-prove_by_contradiction:
     know $p(1)
     $p(1)
 
