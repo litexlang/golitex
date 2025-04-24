@@ -57,12 +57,37 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 		return env.newExistFactPostProcess(fact)
 	}
 
-	return env.newPureSpecFactPostProcess(fact)
+	return env.newAtomSpecFactPostProcess(fact)
 }
 
-func (env *Env) newPureSpecFactPostProcess(fact *ast.SpecFactStmt) error {
-	if fact.IsExist_St_Fact() {
-		return env.newExist_St_FactPostProcess(fact)
+func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
+	if fact.TypeEnum == ast.TrueAtom {
+		return env.newTrueAtomSpecFactPostProcess(fact)
+	} else {
+		return nil
+	}
+}
+
+func (env *Env) newTrueAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
+	propDef, ok := env.PropMem.Get(fact.PropName)
+	if !ok {
+		return nil
+
+		// TODO 这里需要考虑prop的定义是否在当前包中
+		// return fmt.Errorf("prop %s has no definition", fact.PropName)
+	}
+
+	uniConMap := map[string]ast.Fc{}
+	for i, propParam := range propDef.DefHeader.Params {
+		uniConMap[propParam] = fact.Params[i]
+	}
+
+	for _, thenFact := range propDef.IffFacts {
+		instantiated, err := thenFact.Instantiate(uniConMap)
+		if err != nil {
+			return err
+		}
+		env.SpecFactMem.Insert(instantiated.(*ast.SpecFactStmt))
 	}
 
 	return nil

@@ -50,5 +50,5 @@ prove:
         a < b
         b < d
         $transitive(a, b, d)
-    $transitive(a, b, d)
+    $transitive(a, b, d) # automatically generated a new fact a < d
     a < d
