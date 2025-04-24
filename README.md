@@ -14,17 +14,15 @@ _–- George Boole_
 
 **Litex stands out from other proof assistants because of its simplicity.** Since even children can reason logically and naturally, a formal language for anyone to reason with both rigor and intuiveness can be invented. Litex is designed to create such a language. 
 
+(First-order logic, with its 8 core keywords (and, or, not, forall, exist, equal, if, then), forms the foundation of all mainstream mathematics. Litex builds on this foundation as a thin layer, implementing a "regular expression interpreter with customizable matching rules and math-friendly syntax sugar". Its simplicity means you can learn it with just common sense.)
+
 Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than **matching** known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you. And in this way Litex helps you build new facts on top of the existing facts with 100% correctness. 
-
-(Technically, Litex is a "regular expression interpreter with customizable matching rules (via keywords like `forall`) and math-friendly syntax sugar." )
-
-<!-- There are just 8 keywords in first-order logic (and, or, not, forall, exist, equal, if, then), and most existing mathematical knowledge can be expressed in first-order logic. You can lay out the meanings and relationships of those keywords in just a few sentences. See? Making a simple proof assistant is not beyond imagination at all! -->
 
 Litex is unique in two ways. First, it focuses solely on mathematical verification, whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. Second, Litex is built around common sense rather than sophisticated mathematical theories to help a broader range of people to use formal language. **Designed to be as intuitive as Python and LaTeX, Litex offers a minimal learning curve.**
 
-**The potential impacts of Litex include: enabling proof verification (including LLM-generated outputs), revolutionizing proof writing and review, facilitating large-scale collaborations, creating datasets for LLM training, and enhancing LLM reasoning capabilities. With its inherently simple syntax, Litex is well-positioned to achieve these goals and attract a growing community of researchers to the world of formal languages.**
+**The potential impacts of Litex include: enabling proof verification (including LLM-generated outputs), revolutionizing proof writing and review, facilitating large-scale collaborations, creating datasets for LLM training, and enhancing LLM reasoning capabilities.** With its inherently simple syntax, Litex is well-positioned to achieve these goals and attract a growing community of researchers to the world of formal languages.
 
-**Mathematics is fundamentally about abstraction, and computer science is the discipline that studies abstraction. The ultimate goal of Litex is to harness programming concepts and tools to tackle challenges in mathematics, making the elegance of math accessible and enjoyable for everyone.**
+**Mathematics is fundamentally about abstraction, and computer science is the discipline that tackles abstraction. The ultimate goal of Litex is to harness programming concepts and tools to tackle challenges in mathematics. It is a brave attempt to scale reasoning with the ever-expanding power of modern computing resources.**
 
 ## Why learn Litex?
 
@@ -52,7 +50,7 @@ Litex can automatically verify LLM outputs for math problems, providing a reliab
 
 Mathematics and the ability to understand it are built-in capabilities of the human brain. Litex itself is a tool of exquisite innovation. Writing in Litex is enjoyable because it eliminates extra mental burden from the language itself, allowing users to fully immerse themselves in the elegance of mathematics. 
 
-In short, Litex is fundamentally an attempt to scale reasoning with the ever-expanding power of modern computing resources. Litex embrace simplicity, the only way to be flexible enough for the unknown future and to maintain conceptual integrity, as its core design principle.
+
 
 ## Getting Started
 
@@ -94,7 +92,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
 
 Consider `Human` as the set of all humans. Using `know`, we establish the axiom: all humans are self-aware. Since Bob is in `Human`, "Bob is self-aware" is inherently true. This reflects the classic paradigm of mathematical reasoning: from universal to specific.
 
-Litex reduces typing by eliminating the need to name or recall individual facts. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. When writing done factual expressions for verification, Litex automatically searches for relevant facts using the proposition name and parameters, akin to a regex-based search in a large database. In this system, facts themselves do not possess names; only propositions (collections of facts to be verified) are named. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
+Litex reduces typing by eliminating the need to name or recall individual facts. For instance, instead of naming an axiom like "axiom self_aware_all," you simply write "know …". When writing done factual expressions for verification, Litex automatically searches for relevant facts using the proposition name and parameters, akin to a regex-based search in a large database. In this system, facts themselves do not possess names; only propositions (collections of facts to be verified) are named. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
 
 That is why Litex is a "regular expression interpreter with customizable matching rules (via keywords like `forall`) and math-friendly syntax sugar." It operates below any axioms, including set theory (the reason why we can use set theory to derive new facts is that we rely on matching known facts with new fact to be verified), making it intuitive yet powerful—so natural that it's rarely explained in any math textbooks. Just as Lego lets you assemble complex structures from simple pieces, Litex lets you build math from minimal (with just 8 main keywords: forall, exist, not, or, fn, prop, obj, set and several other auxiliary keywords), reusable parts -— no unnecessary complexity, just pure flexibility.
 
@@ -146,7 +144,7 @@ forall x Human, y Human:    // declare objects in the universal expression
 Litex supports three types of factual expressions. Once verified or known to be true, they are stored in the fact database for future retrieval for verification of subsequent factual expressions:
 1. Specific (instantiated):
    - `$younger(x, y)` where `$` is followed by the proposition name `younger` and parameters `x, y`.
-   - If there’s only one parameter, it can be written as `parameter is prop name`, like `Bob is young`.
+   - If there's only one parameter, it can be written as `parameter is prop name`, like `Bob is young`.
    - For built-in operators (e.g., `<`), simply write expressions like `1 < 2`.
 2. Conditional: Begins with the keyword `when`.
 3. Universal: Begins with the keyword `forall`.
@@ -281,7 +279,7 @@ Special proof statements include existential proof (proving the existence of obj
 </table>
 
 
-Litex significantly reduces the mental effort to formalize theorems compared to other languages. You don’t need to recall or type keywords like "base," "intro," or "induction." Despite its simplicity, Litex syntax is remarkably powerful and general, reflecting the inherent simplicity of math. The main contribution of Litex is uncovering the inherent simplicity of mathematics and designing an equally simple formal language based on it.
+Litex significantly reduces the mental effort to formalize theorems compared to other languages. You don't need to recall or type keywords like "base," "intro," or "induction." Despite its simplicity, Litex syntax is remarkably powerful and general, reflecting the inherent simplicity of math. The main contribution of Litex is uncovering the inherent simplicity of mathematics and designing an equally simple formal language based on it.
 
 ### Summary
 
@@ -324,13 +322,13 @@ _Common sense is not so common._
 
 _--Voltaire_
 
-Steve Jobs once said, "If you define the problem correctly, you almost have the solution." Litex embodies this by exploring what a “minimalist formal proof assistant” truly means.
+Steve Jobs once said, "If you define the problem correctly, you almost have the solution." Litex embodies this by exploring what a "minimalist formal proof assistant" truly means.
 
 Existing formal languages are complex, even for mathematicians, as they include unrelated functionalities like memory state alterations. Litex, however, focuses solely on verification, excluding general-purpose computation. Its syntax mirrors everyday math, ensuring clarity and simplicity. Litex identifies the few core logical rules governing math—intuitive even to a 5-year-old.
 
 To put it in another way, traditional proof assistant are implemented to prove some hardcore mathematical theories, while Litex is designed to solve practical problems for everyone. Within traditional proof assistants, there is a much smaller and cleaner language akin to Litex struggling to get out.
 
-Litex’s syntax uses just ~20 keywords: `obj`, `fn`, `prop`, `type`, `interface`, `forall`, `cond`, `when`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`,  `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
+Litex's syntax uses just ~20 keywords: `obj`, `fn`, `prop`, `type`, `interface`, `forall`, `cond`, `when`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`,  `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
 
 By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification.
 
@@ -341,6 +339,8 @@ _Language design is a curious mixture of grand ideas and fiddly details._
 _-- Bjarne Stroustrup__
 
 Litex is a minimalist proof assistant, designed to be simple and intuitive. It draws inspiration from various programming languages, particularly Go, Lisp, Tex, C, Python. The design philosophy emphasizes minimalism, conceptual integrity, and the KISS (Keep It Simple, Stupid) principle.
+
+In short, Litex is fundamentally an attempt to scale reasoning with the ever-expanding power of modern computing resources. Litex embrace simplicity, the only way to be flexible enough for the unknown future and to maintain conceptual integrity, as its core design principle.
 
 The key feature of Litex is its simplicity. Its simplicity stems of its intuitiveness. In fact, Litex is so intuitive that people with no math background can understand it. You can learn Litex in 10 minutes. However, its simplicity does not come at the cost of expressiveness.
 
