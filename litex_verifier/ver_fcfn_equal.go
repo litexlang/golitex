@@ -17,6 +17,13 @@ import (
 )
 
 func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error) {
+	if left.IsEmptyHeadFcFn() || right.IsEmptyHeadFcFn() {
+		if state.requireMsg() {
+			ver.env.NewMsg(fmt.Sprintf("TODO: fcFnEq: left is empty, right is empty is not implemented. left: %s, right: %s", left.String(), right.String()))
+		}
+		return false, nil
+	}
+
 	for leftTailLen := 0; leftTailLen <= len(left.ParamSegs); leftTailLen++ {
 		ok, err := ver.fcFnHeadTailEq(left, right, state, leftTailLen)
 		if err != nil {
@@ -30,13 +37,6 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 }
 
 func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftTailLen int) (bool, error) {
-	if left.IsEmptyFcFn() || right.IsEmptyFcFn() {
-		if state.requireMsg() {
-			ver.env.NewMsg(fmt.Sprintf("TODO: fcFnEq: left is empty, right is empty is not implemented. left: %s, right: %s", left.String(), right.String()))
-		}
-		return false, nil
-	}
-
 	if leftTailLen == 0 { // 必须存在，否则死循环
 		return ver.fcFnHeadEqLeftTailLenIs0(left, right, state)
 	}
@@ -81,7 +81,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 		rightHead = &ast.FcFn{FnHead: right.FnHead, ParamSegs: right.ParamSegs[:rightHeadLen]}
 	}
 
-	ok, err := ver.fcHeadEq(leftHead, rightHead, leftTails[0].Params, state)
+	ok, err := ver.fcEqual(leftHead, rightHead, state)
 	if err != nil {
 		return false, err
 	}
@@ -92,34 +92,26 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 	return true, nil
 }
 
-func (ver *Verifier) fcHeadEq(leftHead ast.Fc, rightHead ast.Fc, params []ast.Fc, state VerState) (bool, error) {
-	ok, err := ver.fcEqual(leftHead, rightHead, state)
-	_ = params
-	return ok, err
-
-	// TODO 以后引入新的keyword专门用来证明函数头相等，2个函数在params所在的某domain里，刚好相等? 或者我还是不引入？
-}
-
 func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerState) (bool, error) {
+	// ? 这里应该是fcEqualSpec还是 fcCmpLiterally??
 	if len(left.ParamSegs) != len(right.ParamSegs) {
 		return false, nil
 	}
 
-	for i := 0; i < len(left.ParamSegs); i++ {
-		// ? 这里应该是fcEqualSpec还是 fcCmpLiterally??
-		ok, err := ver.fcEqualSpec(&left.FnHead, &right.FnHead, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
-		}
+	ok, err := ver.fcEqualSpec(&left.FnHead, &right.FnHead, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
 
+	for i := range left.ParamSegs {
 		if len(left.ParamSegs[i].Params) != len(right.ParamSegs[i].Params) {
 			return false, nil
 		}
 
-		for j := 0; j < len(left.ParamSegs[i].Params); j++ {
+		for j := range left.ParamSegs[i].Params {
 			ok, err := ver.fcEqualSpec(left.ParamSegs[i].Params[j], right.ParamSegs[i].Params[j], state)
 			if err != nil {
 				return false, err

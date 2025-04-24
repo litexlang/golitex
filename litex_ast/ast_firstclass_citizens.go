@@ -197,6 +197,6 @@ var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinPkgName,
 
 var EmptyFcFnHeadAtom = FcAtom{glob.BuiltinPkgName, glob.EmptyFcFnHead}
 
-func (fcFn *FcFn) IsEmptyFcFn() bool {
+func (fcFn *FcFn) IsEmptyHeadFcFn() bool {
 	return fcFn.FnHead.PkgName == glob.BuiltinPkgName && fcFn.FnHead.Name == glob.EmptyFcFnHead
 }
