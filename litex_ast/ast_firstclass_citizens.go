@@ -95,7 +95,7 @@ func FcSliceString(params []Fc) string {
 }
 
 func (f *FcAtom) String() string {
-	if f.PkgName == glob.EmptyPkgName {
+	if f.PkgName == glob.BuiltinPkgName {
 		return string(f.Name)
 	} else {
 		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Name))
@@ -196,3 +196,7 @@ func (f *FcAtom) IsBuiltinUnaryOpt() bool {
 var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep}
 
 var EmptyFcFnHeadAtom = FcAtom{glob.BuiltinPkgName, glob.EmptyFcFnHead}
+
+func (fcFn *FcFn) IsEmptyFcFn() bool {
+	return fcFn.FnHead.PkgName == glob.BuiltinPkgName && fcFn.FnHead.Name == glob.EmptyFcFnHead
+}

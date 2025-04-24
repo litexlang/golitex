@@ -18,27 +18,50 @@ import (
 )
 
 func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
+	// if cursor.is(glob.KeySymbolLeftBrace) {
+	// 	left, err := cursor.bracedFcExpr()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	// it is a fcfn with a braced fc as its function name
+	// 	return left, nil
+	// }
+
+	// 处理括号表达式
 	if cursor.is(glob.KeySymbolLeftBrace) {
-		left, err := cursor.bracedFcExpr()
+		cursor.skip(glob.KeySymbolLeftBrace)
+		if cursor.ExceedEnd() {
+			return nil, fmt.Errorf("unexpected end of input after '('")
+		}
+
+		expr, err := cursor.fcInfixExpr(glob.PrecLowest)
 		if err != nil {
 			return nil, err
 		}
 
-		if !cursor.is(glob.KeySymbolLeftBrace) {
-			return left, nil
+		if cursor.ExceedEnd() {
+			return nil, fmt.Errorf("unexpected end of input, expected ')'")
 		}
 
-		fcFn := ast.NewFcFnPipe(ast.EmptyFcFnHeadAtom, []*ast.FcFnSeg{})
-		fcFn.ParamSegs = append(fcFn.ParamSegs, ast.NewFcFnPipeSeg([]ast.Fc{left}))
-		for cursor.is(glob.KeySymbolLeftBrace) {
-			right, err := cursor.bracedFcExpr()
+		if err := cursor.skip(glob.KeySymbolRightBrace); err != nil {
+			return nil, fmt.Errorf("expected ')': %v", err)
+		}
+
+		if !cursor.is(glob.KeySymbolLeftBrace) {
+			return expr, nil
+		}
+
+		fcFn := ast.NewFcFnPipe(ast.EmptyFcFnHeadAtom, []*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{expr})})
+
+		for !cursor.ExceedEnd() && cursor.is(glob.KeySymbolLeftBrace) {
+			fc, err := cursor.rawFc()
 			if err != nil {
 				return nil, err
 			}
-			fcFn.ParamSegs = append(fcFn.ParamSegs, ast.NewFcFnPipeSeg([]ast.Fc{right}))
+			fcFn.ParamSegs = append(fcFn.ParamSegs, ast.NewFcFnPipeSeg([]ast.Fc{fc}))
 		}
-		// it is a fcfn with a braced fc as its function name
-		return left, nil
+
+		return fcFn, nil
 	}
 
 	if cursor.curTokenBeginWithNumber() {
@@ -70,7 +93,7 @@ func (cursor *strSliceCursor) bracedFcExpr() (ast.Fc, error) {
 }
 
 func (cursor *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
-	typeParamsObjParamsPairs, err := cursor.objSetPairs()
+	typeParamsObjParamsPairs, err := cursor.fcFnSegs()
 
 	if err != nil {
 		return nil, err
@@ -79,7 +102,7 @@ func (cursor *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
 	return ast.NewFcFnPipe(optName, typeParamsObjParamsPairs), nil
 }
 
-func (cursor *strSliceCursor) objSetPairs() ([]*ast.FcFnSeg, error) {
+func (cursor *strSliceCursor) fcFnSegs() ([]*ast.FcFnSeg, error) {
 	pairs := []*ast.FcFnSeg{}
 
 	for !cursor.ExceedEnd() && (cursor.is(glob.KeySymbolLeftBrace)) {
@@ -163,39 +186,29 @@ func (cursor *strSliceCursor) fcPrimaryExpr() (ast.Fc, error) {
 		return nil, fmt.Errorf("unexpected end of input, expected expression")
 	}
 
-	// 处理括号表达式
-	if cursor.is(glob.KeySymbolLeftBrace) {
-		cursor.skip(glob.KeySymbolLeftBrace)
-		if cursor.ExceedEnd() {
-			return nil, fmt.Errorf("unexpected end of input after '('")
-		}
+	// // 处理括号表达式
+	// if cursor.is(glob.KeySymbolLeftBrace) {
+	// 	cursor.skip(glob.KeySymbolLeftBrace)
+	// 	if cursor.ExceedEnd() {
+	// 		return nil, fmt.Errorf("unexpected end of input after '('")
+	// 	}
 
-		expr, err := cursor.fcInfixExpr(glob.PrecLowest)
-		if err != nil {
-			return nil, err
-		}
+	// 	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
-		if cursor.ExceedEnd() {
-			return nil, fmt.Errorf("unexpected end of input, expected ')'")
-		}
+	// 	if cursor.ExceedEnd() {
+	// 		return nil, fmt.Errorf("unexpected end of input, expected ')'")
+	// 	}
 
-		if err := cursor.skip(glob.KeySymbolRightBrace); err != nil {
-			return nil, fmt.Errorf("expected ')': %v", err)
-		}
-		return expr, nil
-	}
+	// 	if err := cursor.skip(glob.KeySymbolRightBrace); err != nil {
+	// 		return nil, fmt.Errorf("expected ')': %v", err)
+	// 	}
+	// 	return expr, nil
+	// }
 
 	return cursor.unaryOptFc()
-	// fc, isUnary, err := cursor.unaryOptFc()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if isUnary {
-	// 	return fc, nil
-	// }
-
-	// // 处理基本原子表达式
-	// return cursor.fcAtomAndFcFnRetAndBracedFc()
 }
 
 func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
