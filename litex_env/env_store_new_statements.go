@@ -57,6 +57,14 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 		return env.newExistFactPostProcess(fact)
 	}
 
+	return env.newPureSpecFactPostProcess(fact)
+}
+
+func (env *Env) newPureSpecFactPostProcess(fact *ast.SpecFactStmt) error {
+	if fact.IsExist_St_Fact() {
+		return env.newExist_St_FactPostProcess(fact)
+	}
+
 	return nil
 }
 
