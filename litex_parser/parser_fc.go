@@ -18,15 +18,6 @@ import (
 )
 
 func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
-	// if cursor.is(glob.KeySymbolLeftBrace) {
-	// 	left, err := cursor.bracedFcExpr()
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	// it is a fcfn with a braced fc as its function name
-	// 	return left, nil
-	// }
-
 	// 处理括号表达式
 	if cursor.is(glob.KeySymbolLeftBrace) {
 		cursor.skip(glob.KeySymbolLeftBrace)
