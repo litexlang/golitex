@@ -57,7 +57,7 @@ _Mathematics is nothing more than a game played according to certain simple rule
 
 _-- David Hilbert_
 
-Litex is a language which strikes the right balance between expressiveness and simplicity. The goal in this section is to show the essential elements of the language through examples. To learn more, visit https://github.com/litexlang/golitex . There are already nearly 2000 commits in this Github repo. The official Litex website https://litexlang.org is under development. 
+Litex is a language which strikes the right balance between completeness, strictness, and simplicity. The goal in this section is to show the essential elements of the language through examples. To learn more, visit https://github.com/litexlang/golitex . The official Litex website https://litexlang.org is under development. 
 
 For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions.
 
@@ -72,7 +72,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
   <tr>
     <td style="border: 3px solid black; padding: 8px;">
-      <code>type Human</code> <br><br>
+      <code>set Human</code> <br><br>
       <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
       <code>&nbsp;&nbsp;&nbsp;&nbsp;x is self_aware</code> <br> <br>
       <code>obj Bob Human</code> <br> <br>
