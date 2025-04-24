@@ -56,7 +56,7 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 }
 
 func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {
-	if atom.PkgName == glob.EmptyPkgName {
+	if atom.PkgName == glob.BuiltinPkgName {
 		if prefixNum, ok := uniParams[atom.Name]; ok {
 			return prefixNum, true
 		}
