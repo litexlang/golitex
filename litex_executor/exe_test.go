@@ -51,8 +51,17 @@ func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		// 如果连续两个 \n 则删除一个
+		for i := 0; i < len(executor.env.Msgs)-1; i++ {
+			if executor.env.Msgs[i] == "\n" && executor.env.Msgs[i+1] == "\n" {
+				executor.env.Msgs = append(executor.env.Msgs[:i], executor.env.Msgs[i+1:]...)
+			}
+		}
+
 		messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
 	}
+
 	slices.Reverse(messages)
 	return messages
 }
@@ -566,7 +575,7 @@ func TestAllFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../litex_code_examples/test_codes/claim.lix")
+var code = readFile("../litex_code_examples/test_codes/litex_is_regex_interpreter.lix")
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()

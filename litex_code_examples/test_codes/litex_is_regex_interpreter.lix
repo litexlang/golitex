@@ -1,0 +1,54 @@
+# Match known specific fact with given specific fact
+prove:
+    $p0(a)   # most common specific fact
+    a < b   # most common relational fact
+    know:
+        $p0(a)
+        a < b
+    $p(0) # unknown, because p is not equal to p0
+    $p0(a)
+    a < b
+
+# Match known universal fact with given specific fact
+prove:
+    know:
+        forall x A, y B:
+            $p1(x,y)
+    $p1(1,1)
+    $p1(1,2)
+
+# two parameters match the same parameter in universal fact
+prove:
+    know:
+        forall x A:
+            $p1(x,x)
+    $p1(1,1)
+    $p1(1,2)
+
+# given fact matches then fact in universal fact
+prove:
+    know forall x R, y R, z R:
+        x < y
+        y < z
+        then:
+            x < z
+
+    know:
+        a < b
+        b < d
+
+    a < d # unknown: there are just 2 parameters in the given specific fact, but 3 parameters in the given universal fact
+
+prove:
+    prop transitive(x R, y R, z R):
+        x < y
+        y < z
+        iff:
+            x < z
+
+    know:
+        a < b
+        b < d
+        $transitive(a, b, d)
+    $transitive(a, b, d)
+    a < d

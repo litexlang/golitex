@@ -2,14 +2,14 @@
 
 # Most common case
 prove:
-    p0(a)   # most common specific fact
-    a < b   # most common relational fact
+    $p0(a)   # most common specific fact
+    $a < b   # most common relational fact
     know:
-        p0(a)
+        $p0(a)
         a < b
-    p(0)
-    p0(a)
-    # a < b
+    $p(0) # unknown, because p is not equal to p0
+    $p0(a)
+    a < b
 
 p0(a) # local scope does not affect global
 

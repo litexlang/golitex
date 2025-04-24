@@ -82,29 +82,29 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 		if err != nil {
 			return err
 		}
-	} else {
-		if glob.CheckFalse {
-			switch stmt := stmt.(type) {
-			case *ast.SpecFactStmt:
-				newStmt := stmt.ReverseIsTrue()
-				ok, _, err := exec.checkFactStmt(newStmt)
-				if err != nil {
-					return err
-				}
-				if ok {
-					exec.appendNewMsg(stmt.String() + "\nis false")
-					return nil
-				}
-			case *ast.ConUniFactStmt:
-				// TODO 这里需要考虑到fact的类型
-			default:
-				// TODO 这里需要考虑到fact的类型
-			}
-			exec.appendNewMsg(stmt.String() + "\nis unknown")
-		}
+	}
 
+	if glob.CheckFalse {
+		switch stmt := stmt.(type) {
+		case *ast.SpecFactStmt:
+			newStmt := stmt.ReverseIsTrue()
+			ok, _, err := exec.checkFactStmt(newStmt)
+			if err != nil {
+				return err
+			}
+			if ok {
+				exec.appendNewMsg(stmt.String() + "\nis false")
+				return nil
+			}
+		case *ast.ConUniFactStmt:
+			// TODO 这里需要考虑到fact的类型
+		default:
+			// TODO 这里需要考虑到fact的类型
+		}
 		exec.appendNewMsg(stmt.String() + "\nis unknown")
 	}
+
+	exec.appendNewMsg(stmt.String() + "\nis unknown")
 
 	return nil
 }
@@ -123,18 +123,11 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 	isSuccess := false
 
 	defer func() {
+		exec.appendNewMsg("\n")
 		if isSuccess {
-			if stmt.IsProve {
-				exec.appendNewMsgAtBegin("%v success\n", glob.KeywordProve)
-			} else {
-				exec.appendNewMsgAtBegin("%v success\n", glob.KeywordProveByContradiction)
-			}
+			exec.appendNewMsgAtBegin("is true")
 		} else {
-			if stmt.IsProve {
-				exec.appendNewMsgAtBegin("%v failed\n", glob.KeywordProve)
-			} else {
-				exec.appendNewMsgAtBegin("%v failed\n", glob.KeywordProveByContradiction)
-			}
+			exec.appendNewMsgAtBegin("is unknown")
 		}
 		exec.appendNewMsgAtBegin(stmt.String())
 		exec.deleteEnvAndRetainMsg()
