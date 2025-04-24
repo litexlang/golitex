@@ -12,7 +12,6 @@
 package litex_global
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -69,7 +68,7 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 		result, ok, err = divBigFloat(leftVal, rightVal)
 	case "^":
 		if !isNaturalNumber(rightVal) {
-			return "", false, errors.New("exponent must be a natural number")
+			return "", false, nil
 		}
 		result, ok, err = powBigFloat(leftVal, rightVal)
 	default:
