@@ -478,7 +478,7 @@ prove:
 
 
 prove:
-# 怪异的bug：为什么这里会说我 duplicate decl???
+    # 怪异的bug：为什么这里会说我 duplicate decl???
     know:
         forall :
             forall x A:

@@ -87,7 +87,46 @@ prove:
 # match nested function call
 prove:
     know:
-        forall x A:
-            $p3(f(x)(x))
+        forall x A, y B:
+            $p3(f(x)(y))
 
-    $p3(f(x)(x))
+    $p3(f(1)(2))
+    $p3(f(1)(g(2, 3)))
+    $p3(f(1)(g(2, 3))(4))
+
+# match function name as a parameter
+prove:
+    know forall a A, b B, c C, d D:
+        a(b)(c) = d(c)(a)
+    
+    a2(b2)(c2) = d2(c2)(a2)
+
+# match nested function call
+prove:
+    know:
+        forall x A, y B:
+            f(x) = g(x)(y)
+
+    f(1)(z) = g(1)(2)(z)
+    f(1) = g(1)(2)
+    f(1)(z) = g(1)(2)(z) # 我只帮你用forall检查最后一位的相等，不检查前面的位。前面只能用specFact来检查?
+
+
+prove:
+    know $p(x)
+    $p(x)
+
+    know y = x
+    $p(y)
+
+    know forall a A:
+        $q(a)
+        then:
+            x = a
+    know $q(b)
+
+    $p(b) # unknown
+    b =x
+    $p(b) # true. 因为 = 有交换性，而我确实实现了可交换的符号能在用uniFact验证时用上可交换性，所以只用 b = x，而不是 x = b 就能运行.
+
+
