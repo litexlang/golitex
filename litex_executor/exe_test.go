@@ -69,8 +69,7 @@ func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
 func printExecMsg(messageSlice []string) {
 	for i := len(messageSlice) - 1; i >= 0; i-- {
 		fmt.Println(messageSlice[i])
-		fmt.Println()
-		fmt.Println()
+		// fmt.Println()
 	}
 }
 
@@ -562,6 +561,19 @@ func TestAllFactCodeSeveralRounds(t *testing.T) {
 	fmt.Printf("execution takes %v\n", time.Since(start))
 }
 
+func TestFilesInFolder(t *testing.T) {
+	files, err := filepath.Glob("../litex_code_examples/test_codes/*.lix")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, file := range files {
+		fmt.Println(file)
+		code := readFile(file)
+		topStmtSlice := setupAndParseStmtTest(code, t)
+		_ = execStmtTest(topStmtSlice, t)
+	}
+}
+
 func TestAllFactCode(t *testing.T) {
 	start := time.Now()
 	readFileTime := time.Since(start)
@@ -588,17 +600,4 @@ func TestLastFactCode(t *testing.T) {
 	executionTime := time.Since(start)
 	printExecMsg(messages)
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
-}
-
-func TestFilesInFolder(t *testing.T) {
-	files, err := filepath.Glob("../litex_code_examples/test_codes/*.lix")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, file := range files {
-		fmt.Println(file)
-		code := readFile(file)
-		topStmtSlice := setupAndParseStmtTest(code, t)
-		_ = execStmtTest(topStmtSlice, t)
-	}
 }

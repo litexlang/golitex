@@ -39,6 +39,7 @@ prove:
 
     a < d # unknown: there are just 2 parameters in the given specific fact, but 3 parameters in the given universal fact
 
+# use proposition definition to generate new fact
 prove:
     prop transitive(x R, y R, z R):
         x < y
@@ -49,6 +50,44 @@ prove:
     know:
         a < b
         b < d
-        $transitive(a, b, d)
+        forall x R, y R, z R:
+            $transitive(x, y, z)
+        
     $transitive(a, b, d) # automatically generated a new fact a < d
     a < d
+
+# match return value of function
+prove:
+    know forall x R:
+        $p(x)
+        then:
+            $p(f(x))
+    $p(f(x))
+    know $p(x)
+    $p(f(x))
+    
+# match parameter as a function return value
+prove:
+    know:
+        forall x A:
+            $p(f(x))
+
+    know:
+        t = f
+                
+    $p(t(x))
+
+    know:
+        forall x A:
+            $p2(x)
+
+    $p2(ha)
+    $p2(g(x, 100))
+
+# match nested function call
+prove:
+    know:
+        forall x A:
+            $p3(f(x)(x))
+
+    $p3(f(x)(x))
