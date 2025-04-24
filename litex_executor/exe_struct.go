@@ -49,3 +49,7 @@ func (e *Executor) clearMsgAndOutput() {
 func (e *Executor) appendNewMsg(msg string, str ...any) {
 	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(msg, str...))
 }
+
+func (e *Executor) appendNewMsgAtBegin(msg string, str ...any) {
+	e.env.Msgs = append([]string{fmt.Sprintf(msg, str...)}, e.env.Msgs...)
+}
