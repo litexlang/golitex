@@ -22,6 +22,7 @@ import (
 // 在子函数里管理msg，即比如现在是TypeStmt，那在处理TypeStmt的地方处理它的string，二不是在这里
 func (exec *Executor) stmt(stmt ast.Stmt) error {
 	var err error = nil
+	defer exec.appendNewMsg("\n")
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
@@ -121,7 +122,9 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 	exec.newEnv(exec.env.CurPkg)
 	exec.appendNewMsg(stmt.String())
 
-	defer exec.deleteEnvAndRetainMsg()
+	defer func() {
+		exec.deleteEnvAndRetainMsg()
+	}()
 
 	if stmt.IsProve {
 		for _, curStmt := range stmt.Proofs {

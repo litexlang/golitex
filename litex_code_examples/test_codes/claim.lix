@@ -1,6 +1,11 @@
 prove:
-    know $p(1)
-    $p(1)
+    know not $p(1)
+    not $p(1)
+
+    claim:
+        not $p(1)
+        prove_by_contradiction:
+            $p(1)
 
 prove:
     know:
@@ -15,8 +20,7 @@ prove:
         prove:
             $p(0+1)
             $p(1 + 1)
-    
-# 有点问题
+
 prove:
     know:
         forall x obj, a set, b set:
@@ -32,7 +36,23 @@ prove:
         not x in b
         prove_by_contradiction:
             x in intersection(a,b)
+
+prove:
+    know:
+        forall x nat:
+            $p(x)
+            then:
+                $p(x + 1)
     
+    know $p(1)
+
+    claim:
+        $p(2)
+        $p(3)
+        prove:
+            $p(1+1)
+            $p(2+1)
+
 prove:
     know:
         forall x nat:
