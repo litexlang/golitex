@@ -99,31 +99,31 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 	for t.currentLine < len(t.lines) {
 		line := t.lines[t.currentLine]
 
-		// 如果是 """ 开头的行，说明是注释块，直接跳过好多行，直到"""再次出现的那一行
-		if strings.HasPrefix(line, glob.MultiLinesCommentSig) {
-			t.currentLine++
-			for t.currentLine < len(t.lines) {
-				if strings.HasPrefix(t.lines[t.currentLine], glob.MultiLinesCommentSig) {
-					t.currentLine++
-					break
-				}
-				t.currentLine++
-			}
-			continue
-		}
+		// // 如果是 """ 开头的行，说明是注释块，直接跳过好多行，直到"""再次出现的那一行
+		// if strings.HasPrefix(line, glob.MultiLinesCommentSig) {
+		// 	t.currentLine++
+		// 	for t.currentLine < len(t.lines) {
+		// 		if strings.HasPrefix(t.lines[t.currentLine], glob.MultiLinesCommentSig) {
+		// 			t.currentLine++
+		// 			break
+		// 		}
+		// 		t.currentLine++
+		// 	}
+		// 	continue
+		// }
 
-		// 首先移除行内注释。这里必要：后续逻辑要判断行末是不是: . 不能保留行末的//
-		if idx := strings.Index(line, "#"); idx >= 0 {
-			line = line[:idx]
-		}
-		// 然后进行trim suffix. 这里必要：后续逻辑要判断行末是不是:
-		trimmed := strings.TrimRight(line, " \t\r\n")
+		// // 首先移除行内注释。这里必要：后续逻辑要判断行末是不是: . 不能保留行末的//
+		// if idx := strings.Index(line, "#"); idx >= 0 {
+		// 	line = line[:idx]
+		// }
+		// // 然后进行trim suffix. 这里必要：后续逻辑要判断行末是不是:
+		// trimmed := strings.TrimRight(line, " \t\r\n")
 
-		// 跳过空行（纯注释行现在已经被处理为空行）
-		if trimmed == "" {
-			t.currentLine++
-			continue
-		}
+		// // 跳过空行（纯注释行现在已经被处理为空行）
+		// if isEmptyLine(trimmed) {
+		// 	t.currentLine++
+		// 	continue
+		// }
 
 		// 计算当前行的缩进
 		indent := len(line) - len(strings.TrimLeft(line, " "))
@@ -139,9 +139,9 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 
 		// indent == currentIndent:
 		// 判断是否为 header 行（是否以 : 结尾）
-		lineForTokenize := trimmed
-		if strings.HasSuffix(trimmed, ":") {
-			lineForTokenize = trimmed
+		lineForTokenize := line
+		if strings.HasSuffix(line, ":") {
+			lineForTokenize = line
 		}
 
 		tokens, err := t.tokenizeLine(lineForTokenize)
@@ -157,7 +157,7 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 		t.currentLine++ // consume this line
 
 		// 判断是否需要解析子 block
-		if strings.HasSuffix(trimmed, ":") {
+		if strings.HasSuffix(line, ":") {
 			for t.currentLine < len(t.lines) {
 				nextLine := t.lines[t.currentLine]
 
@@ -193,4 +193,8 @@ func (t *tokenizerWithScope) parseBlocks(currentIndent int) ([]tokenBlock, error
 	}
 
 	return blocks, nil
+}
+
+func isEmptyLine(line string) bool {
+	return strings.TrimSpace(line) == ""
 }

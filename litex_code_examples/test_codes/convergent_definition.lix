@@ -1,0 +1,23 @@
+prove:
+    exist_prop n nat, m nat st Cauchy_bound_within_epsilon(seq sequence, epsilon real, N nat):
+        n > N
+        m > N
+        iff:
+            abs(at(seq, n) - at(seq, m)) < epsilon
+
+    exist_prop N nat st Cauchy(seq sequence, epsilon real):
+        epsilon > 0
+        iff:
+            not exist $Cauchy_bound_within_epsilon(seq, epsilon, N)
+
+    know:
+        forall epsilon real:
+            epsilon > 0
+            then:
+                exist 1/epsilon st $Cauchy(seq, epsilon)
+
+    forall epsilon real:
+        epsilon > 0
+        then:
+            exist 1/epsilon st $Cauchy(seq, epsilon)
+            exist $Cauchy(seq, epsilon)

@@ -26,3 +26,5 @@ const FuncFactPrefix = "$"
 const ExistPropPrefix = "exist_"
 const ExistPropPrefixLen = len(ExistPropPrefix)
 const BuiltinExist_St_FactExistParamPropParmSep = ""
+
+const CommentSig = "#"
