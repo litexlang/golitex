@@ -119,7 +119,7 @@ Functions in Litex are not executed. In the realm of mathematics, a function is 
 Users can think of a function as something that takes parameters that satisfy the condition of fn and combines them to form a new symbol of symbols. It works like struct in C: allows users to group together objects of satisfying certain conditions under a single name. 
 
 ```
-obj Bob Human
+obj Bob Human # declare a object
 
 # specific factual expression
 $self_aware(Bob) # when there is only one parameter, it can be written as parameter is prop name
@@ -127,6 +127,7 @@ Bob is self_aware
 
 fn age(x Human) Nat
 
+# declare a proposition
 prop young(x Human):
     age(x) < 18 # x young iff age(x) < 18
 
@@ -144,21 +145,23 @@ forall x Human, y Human:    # declare objects in the universal expression
         $younger(x,y)   # true
 ```
 
+A **proposition** is a declarative statement that can be proven true or false within a logical system. Any fact is an instance of a proposition.
+
 Litex supports three types of factual expressions. Once verified or known to be true, they are stored in the fact database for future retrieval for verification of subsequent factual expressions:
-1. Specific (instantiated):
+1. Specific: A **specific fact** is a fact that is instantiated with specific values.
    - `$younger(x, y)` where `$` is followed by the proposition name `younger` and parameters `x, y`.
    - If there’s only one parameter, it can be written as `parameter is prop name` (similar to how natural language works), like `Bob is young`.
    - For built-in operators (e.g., `<`), simply write expressions like `1 < 2`.
-2. Conditional: Begins with the keyword `when`.
-3. Universal: Begins with the keyword `forall`.
-Different types of factual expressions are stored, retrieved, verified differently.
+2. Conditional: A **conditional fact** Begins with the keyword `when`, which corresponds to `if ... then ...`.
+3. Universal: A **universal fact** (declared with `forall`) asserts that a property holds for all possible instances of its bound variables within a defined scope.
 
 Every factual expression in Litex yields one of four outcomes:
 1. True: Litex confirms the expression based on known facts.
 2. False: Litex disproves the expression using known facts.
 3. Unknown: Litex cannot determine the truth value due to insufficient information.
 4. Error: The input is invalid (e.g., syntax errors).
-This design mirrors human reasoning when evaluating proofs: confirming correctness, identifying falseness, encountering uncertainty, or spotting input errors.
+
+This design mirrors human reasoning when evaluating proofs: confirming correctness, identifying falseness, encountering uncertainty, or spotting typing errors.
 
 ```
 exist_prop m Nat exist_nat_less_than(n Nat):
@@ -172,9 +175,12 @@ know forall n Nat:
 
 $exist_nat_less_than(100) # As a specific factual expression, it is true.
 exist m Nat st $exist_nat_less_than(2)   # Introduce new object, m, to current proof environment
+
+exist_obj m $exist_nat_less_than(2) # introduce a new object m, and verify it satisfies the existential expression $exist_nat_less_than(2)
+
 ```
 
-One important type of specific factual expression is the existential factual expression. When verified, existential expressions behave identically to ordinary specific expressions. The key distinction lies in their use within a have statement, which provides a safe mechanism to introduce new objects into the current environment.
+One important type of specific factual expression is the existential factual expression. When verified, existential expressions behave identically to ordinary specific expressions. The key distinction lies in 1. the user can use `exist_obj` to bring a new object, whose existance is ensured, into current scope. 2.  the user uses `exist ... st ...` statement to verify the corresponding existential expression.
 
 ### Constructive Expressions
 ```
@@ -197,10 +203,11 @@ impl Group Real: # Real = the set of all real numbers
     0 # 0 implements Group::obj
     __neg__ # Real::__neg__ implements Group::fn
 
-prop Group_is_abelian<G Group>(G set):
+prop Group_is_abelian<G Group>(): # you call it by using $Group_is_abelian(setName)
     forall x G, y G:
-        x * y = y * x
+        x * y = y * x # when given G, * is referred to as Group::__mul__
 
+$Group_is_abelian(Real) # true. * is Real::_add__
 ```
 
 In Litex, a type = set + structure. The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `struct` is a "type of type" or a "set of sets sharing the same structure". `type`s and `struct`s work together to enable abstraction built on abstractions.
