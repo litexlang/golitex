@@ -165,13 +165,13 @@ exist_prop m Nat exist_nat_less_than(n Nat):
     m < n
 
 know forall n Nat:
-    cond:
+    dom:
         n > 0
     then:
         $exist_nat_less_than(n)
 
 $exist_nat_less_than(100) # As a specific factual expression, it is true.
-have m Nat: $exist_nat_less_than(2)   # Introduce new object, m, to current proof environment
+exist m Nat st $exist_nat_less_than(2)   # Introduce new object, m, to current proof environment
 ```
 
 One important type of specific factual expression is the existential factual expression. When verified, existential expressions behave identically to ordinary specific expressions. The key distinction lies in their use within a have statement, which provides a safe mechanism to introduce new objects into the current environment.

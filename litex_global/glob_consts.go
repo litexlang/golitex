@@ -30,5 +30,4 @@ const BuiltinExist_St_FactExistParamPropParmSep = ";"
 
 const CommentSig = "#"
 
-// 非常重要
-const EmptyFcFnHead = "@"
+// const EmptyFcFnHead = "@"
