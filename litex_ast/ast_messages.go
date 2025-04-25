@@ -445,3 +445,35 @@ func (stmt *ExistObjDefStmt) String() string {
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
 	return builder.String()
 }
+
+func (f *FcAtom) String() string {
+	if f.PkgName == glob.BuiltinPkgName {
+		return string(f.Name)
+	} else {
+		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Name))
+	}
+}
+
+func (f *FcFn) String() string {
+	if ok, str := isRelaFcFnAndToString(f); ok {
+		return str
+	}
+
+	var builder strings.Builder
+	builder.WriteString(string(f.FnHead.Name))
+	for _, seg := range f.ParamSegs {
+		if len(seg) > 0 {
+			builder.WriteString("(")
+			for i := 0; i < len(seg)-1; i++ {
+				builder.WriteString(seg[i].String())
+				builder.WriteString(", ")
+			}
+			builder.WriteString(seg[len(seg)-1].String())
+			builder.WriteString(")")
+		} else {
+			builder.WriteString("()")
+		}
+	}
+
+	return builder.String()
+}

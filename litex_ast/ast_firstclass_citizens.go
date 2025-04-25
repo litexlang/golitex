@@ -93,15 +93,7 @@ func FcSliceString(params []Fc) string {
 	return strings.Join(output, ", ")
 }
 
-func (f *FcAtom) String() string {
-	if f.PkgName == glob.BuiltinPkgName {
-		return string(f.Name)
-	} else {
-		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Name))
-	}
-}
-
-func isFcFnAndToString(f *FcFn) (bool, string) {
+func isRelaFcFnAndToString(f *FcFn) (bool, string) {
 	if f.FnHead.Name != "" {
 		return false, ""
 	}
@@ -114,42 +106,6 @@ func isFcFnAndToString(f *FcFn) (bool, string) {
 	}
 
 	return false, ""
-}
-
-func (f *FcFn) String() string {
-
-	// if len(f.ParamSegs) == 1 {
-	// 	if len(f.ParamSegs[0].Params) == 1 {
-	// 		if glob.IsKeySymbolRelaFn(outPut) {
-	// 			return fmt.Sprintf("%s %s", outPut, f.ParamSegs[0].Params[0])
-	// 		}
-	// 	}
-	// }
-
-	// if glob.IsKeySymbolRelaFn(outPut) {
-	// 	return fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
-	// }
-
-	if ok, str := isFcFnAndToString(f); ok {
-		return str
-	}
-
-	outPut := string(f.FnHead.Name)
-	for _, seg := range f.ParamSegs {
-		if len(seg) > 0 {
-			outPut += "("
-			for i := 0; i < len(seg)-1; i++ {
-				outPut += seg[i].String()
-				outPut += ", "
-			}
-			outPut += seg[len(seg)-1].String()
-			outPut += ")"
-		} else {
-			outPut += "()"
-		}
-	}
-
-	return outPut
 }
 
 func IsEqualOptFc(f Fc) bool {
