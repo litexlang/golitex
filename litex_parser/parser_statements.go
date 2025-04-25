@@ -82,19 +82,19 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	return ret, nil
 }
 
-func (tb *tokenBlock) factStmt(nameDepthMap ast.NameDepthMap, allowUniFactInUniDom bool) (ast.FactStmt, error) {
+func (tb *tokenBlock) factStmt(nameDepthMap ast.NameDepthMap, allowFurtherUniFact bool) (ast.FactStmt, error) {
 	if tb.header.is(glob.KeywordForall) {
-		return tb.uniFactStmt(nameDepthMap, allowUniFactInUniDom)
+		return tb.uniFactStmt(nameDepthMap, allowFurtherUniFact)
 	} else if tb.header.is(glob.KeywordWhen) {
 		return tb.condFactStmt(nameDepthMap)
 	} else if tb.header.is(glob.KeywordAnd) || tb.header.is(glob.KeywordOr) {
-		return tb.orAndFactStmt(nameDepthMap, allowUniFactInUniDom)
+		return tb.orAndFactStmt(nameDepthMap, allowFurtherUniFact)
 	}
 
 	return tb.specFactStmt(nameDepthMap)
 }
 
-func (tb *tokenBlock) orAndFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactInUniDom bool) (*ast.LogicExprStmt, error) {
+func (tb *tokenBlock) orAndFactStmt(nameDepthMap ast.NameDepthMap, allowFurtherUniFact bool) (*ast.LogicExprStmt, error) {
 	isOr := tb.header.isAndSkip(glob.KeywordOr)
 	if !isOr {
 		err := tb.header.skip(glob.KeywordAnd)
@@ -110,7 +110,7 @@ func (tb *tokenBlock) orAndFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactI
 
 	facts := []ast.FactStmt{}
 	for _, factToParse := range tb.body {
-		fact, err := factToParse.factStmt(nameDepthMap, allowUniFactInUniDom)
+		fact, err := factToParse.factStmt(nameDepthMap, allowFurtherUniFact)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
@@ -154,7 +154,7 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 	}
 }
 
-func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactInUniDom bool) (ast.UniFactStmt, error) {
+func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, allowFurtherUniFact bool) (ast.UniFactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -192,7 +192,7 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactInU
 		}
 	}
 
-	domainFacts, thenFacts, err := tb.bodyFactSectionFactSection(glob.KeywordThen, newUniParams, allowUniFactInUniDom)
+	domainFacts, thenFacts, err := tb.bodyFactSectionFactSection(glob.KeywordThen, newUniParams, allowFurtherUniFact)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -680,7 +680,7 @@ func (tb *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error
 	return ast.NewConDefHeader(name, params, typeParams), nameDepthMap, nil
 }
 
-func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepthMap ast.NameDepthMap, allowUniFactInUniDom bool) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
+func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepthMap ast.NameDepthMap, allowFurtherUniFact bool) ([]ast.FactStmt, []*ast.SpecFactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2SpecFacts := []*ast.SpecFactStmt{}
 	err := error(nil)
@@ -699,7 +699,7 @@ func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepthMap ast
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 
-		if allowUniFactInUniDom {
+		if allowFurtherUniFact {
 			for i := 0; i < len(tb.body[0].body); i++ {
 				curStmt, err := tb.body[0].body[i].factStmt(nameDepthMap, true)
 				if err != nil {
@@ -750,7 +750,7 @@ func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepthMap ast
 	}
 
 	if tb.body[len(tb.body)-1].header.is(kw) {
-		if allowUniFactInUniDom {
+		if allowFurtherUniFact {
 			for i := 0; i < len(tb.body)-1; i++ {
 				curStmt, err := tb.body[i].factStmt(nameDepthMap, true)
 				if err != nil {
@@ -969,7 +969,7 @@ func (tb *tokenBlock) defExistObjStmt() (*ast.ExistObjDefStmt, error) {
 	return ast.NewExistObjDefStmt(objNames, *fact), nil
 }
 
-func (tb *tokenBlock) bodyFactSectionFactSection(kw string, nameDepthMap ast.NameDepthMap, allowUniFactInUniDom bool) ([]ast.FactStmt, []ast.FactStmt, error) {
+func (tb *tokenBlock) bodyFactSectionFactSection(kw string, nameDepthMap ast.NameDepthMap, allowFurtherUniFact bool) ([]ast.FactStmt, []ast.FactStmt, error) {
 	section1Facts := []ast.FactStmt{}
 	section2Facts := []ast.FactStmt{}
 	err := error(nil)
@@ -988,100 +988,68 @@ func (tb *tokenBlock) bodyFactSectionFactSection(kw string, nameDepthMap ast.Nam
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 
-		if allowUniFactInUniDom {
-			for i := 0; i < len(tb.body[0].body); i++ {
-				curStmt, err := tb.body[0].body[i].factStmt(nameDepthMap, true)
-				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *tb}
-				}
-				section1Facts = append(section1Facts, curStmt)
-			}
-		} else {
-			for i := 0; i < len(tb.body[0].body); i++ {
-				curStmt, err := tb.body[0].body[i].specFactStmt(nameDepthMap)
-				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *tb}
-				}
-				section1Facts = append(section1Facts, curStmt)
-			}
+		section1Facts, err = tb.bodyBlockFacts(nameDepthMap, allowFurtherUniFact)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 
 		if len(tb.body) == 1 {
 			return section1Facts, section2Facts, nil
 		}
-		if !tb.body[1].header.is(kw) {
-			for i := 1; i < len(tb.body); i++ {
-				curStmt, err := tb.body[i].specFactStmt(nameDepthMap)
-				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *tb}
-				}
-				section2Facts = append(section2Facts, curStmt)
-			}
-			return section1Facts, section2Facts, nil
-		} else {
-			err = tb.body[1].header.skip(kw)
-			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *tb}
-			}
-			err = tb.body[1].header.skip(glob.KeySymbolColon)
-			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *tb}
-			}
-			for i := 0; i < len(tb.body[1].body); i++ {
-				curStmt, err := tb.body[1].body[i].specFactStmt(nameDepthMap)
-				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *tb}
-				}
-				section2Facts = append(section2Facts, curStmt)
-			}
-			return section1Facts, section2Facts, nil
+
+		err = tb.body[1].header.skip(kw)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *tb}
 		}
+		err = tb.body[1].header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *tb}
+		}
+		section2Facts, err = tb.body[1].bodyBlockFacts(nameDepthMap, false)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *tb}
+		}
+		return section1Facts, section2Facts, nil
 	}
 
 	if tb.body[len(tb.body)-1].header.is(kw) {
-		if allowUniFactInUniDom {
-			for i := 0; i < len(tb.body)-1; i++ {
-				curStmt, err := tb.body[i].factStmt(nameDepthMap, true)
-				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *tb}
-				}
-				section1Facts = append(section1Facts, curStmt)
-			}
-		} else {
-			for i := 0; i < len(tb.body)-1; i++ {
-				curStmt, err := tb.body[i].specFactStmt(nameDepthMap)
-				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *tb}
-				}
-				section1Facts = append(section1Facts, curStmt)
-			}
+		section1Facts, err = tb.bodyBlockFacts(nameDepthMap, allowFurtherUniFact)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *tb}
 		}
-		section2Facts, err = tb.body[len(tb.body)-1].thenBlockFacts(nameDepthMap)
+		section2Facts, err = tb.body[len(tb.body)-1].bodyBlockFacts(nameDepthMap, false)
 		if err != nil {
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 	} else {
-		for i := 0; i < len(tb.body); i++ {
-			curStmt, err := tb.body[i].specFactStmt(nameDepthMap)
-			if err != nil {
-				return nil, nil, &tokenBlockErr{err, *tb}
-			}
-			section2Facts = append(section2Facts, curStmt)
+		section2Facts, err = tb.bodyBlockFacts(nameDepthMap, false)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 	}
 
 	return section1Facts, section2Facts, nil
 }
 
-func (tb *tokenBlock) thenBlockFacts(nameDepthMap ast.NameDepthMap) ([]ast.FactStmt, error) {
+func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, allowFurtherUniFact bool) ([]ast.FactStmt, error) {
 	facts := []ast.FactStmt{}
 
-	for _, stmt := range tb.body {
-		fact, err := stmt.factStmt(nameDepthMap, false)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
+	if allowFurtherUniFact {
+		for _, stmt := range tb.body {
+			fact, err := stmt.factStmt(nameDepthMap, false) // no longer allow further uniFact
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
+			facts = append(facts, fact)
 		}
-		facts = append(facts, fact)
+	} else {
+		for _, stmt := range tb.body {
+			fact, err := stmt.specFactStmt(nameDepthMap)
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
+			facts = append(facts, fact)
+		}
 	}
 
 	return facts, nil
