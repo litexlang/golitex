@@ -22,7 +22,6 @@ import (
 // 在子函数里管理msg，即比如现在是TypeStmt，那在处理TypeStmt的地方处理它的string，二不是在这里
 func (exec *Executor) stmt(stmt ast.Stmt) error {
 	var err error = nil
-	defer exec.appendNewMsg("\n")
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
@@ -59,6 +58,8 @@ func (exec *Executor) TopLevelStmt(stmt *ast.TopStmt) error {
 }
 
 func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
+	defer exec.appendNewMsg("\n")
+
 	for _, fact := range stmt.Facts {
 		err := exec.env.NewFact(fact)
 		if err != nil {
@@ -71,6 +72,8 @@ func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
 }
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) error {
+	defer exec.appendNewMsg("\n")
+
 	ok, _, err := exec.checkFactStmt(stmt)
 
 	if err != nil {
@@ -122,9 +125,9 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 	defer func() {
 		exec.appendNewMsg("\n")
 		if isSuccess {
-			exec.appendNewMsgAtBegin("is true")
+			exec.appendNewMsgAtBegin("is true\n")
 		} else {
-			exec.appendNewMsgAtBegin("is unknown")
+			exec.appendNewMsgAtBegin("is unknown\n")
 		}
 		exec.appendNewMsgAtBegin(stmt.String())
 		exec.deleteEnvAndRetainMsg()
@@ -206,6 +209,8 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 }
 
 func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
+	defer exec.appendNewMsg("\n")
+
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefConProp(stmt, exec.env.CurPkg)
@@ -254,6 +259,7 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
+	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefObj(stmt, exec.env.CurPkg)
 	if err != nil {
@@ -287,6 +293,7 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 
 func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
+	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefFn(stmt, exec.env.CurPkg)
 	if err != nil {
@@ -317,6 +324,7 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 
 func (exec *Executor) defConExistPropStmt(stmt *ast.DefConExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
+	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 	err := exec.env.NewDefConExistProp(stmt, exec.env.CurPkg)
 	if err != nil {
@@ -326,6 +334,7 @@ func (exec *Executor) defConExistPropStmt(stmt *ast.DefConExistPropStmt) error {
 }
 
 func (exec *Executor) haveObjDefStmt(stmt *ast.ExistObjDefStmt) error {
+	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 
 	existFact := ast.SpecFactStmt{TypeEnum: ast.TrueExist, PropName: ast.FcAtom{PkgName: "", Name: stmt.Fact.PropName.Name}, Params: stmt.Fact.Params}
