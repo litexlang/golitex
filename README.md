@@ -177,45 +177,35 @@ exist m Nat st $exist_nat_less_than(2)   # Introduce new object, m, to current p
 One important type of specific factual expression is the existential factual expression. When verified, existential expressions behave identically to ordinary specific expressions. The key distinction lies in their use within a have statement, which provides a safe mechanism to introduce new objects into the current environment.
 
 ### Constructive Expressions
+```
+interface Group G:
+    fn __mul__(g G, g2 G) G # define *
+    obj I G # define identity
+    fn inv(g G) G  # inverse a given group element
 
-<!-- TODO: THIS SECTION IS OBSOLETE -->
+    iff:
+        forall x G, y G, z G:
+            (x * y) * z = x * (y * z)
+        forall x G:
+            x * G::I = x
+        forall x G:
+            x * G::inv(x) = G::I
+
+# Litex automatically infers the type of G from the context and verifies whether the type satisfies the Group interface, i.e. the given elements and operations satisfy the Group axioms.
+impl Group Real: # Real = the set of all real numbers
+    __add__ # Real::_add__ implements Group::__mul__
+    0 # 0 implements Group::obj
+    __neg__ # Real::__neg__ implements Group::fn
+
+prop Group_is_abelian<G Group>(G set):
+    forall x G, y G:
+        x * y = y * x
 
 ```
-# declare a type
-type Human:
-      member:
-          obj age Nat
 
-# declare a struct
-struct Euclid_Space S:
-    type_member:
-        obj dim Nat
-        fn __add__(v1 S, v2 S) real
-    member:
-        fn __at__(n Nat) Real:
-            cond:
-                 n < S.dim
-    then:
-        forall v1 S, v2 S:
-              forall k Nat:
-                  (v1 + v2)@k = v1@k + v2@k
+In Litex, a type = set + structure. The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `struct` is a "type of type" or a "set of sets sharing the same structure". `type`s and `struct`s work together to enable abstraction built on abstractions.
 
-struct Group G: # suppose G is a group
-    type_member:
-        fn __mul__(g G, g2 G) G # define *
-        obj I G # define identity
-        fn inv() G  # inverse a given group element
-    cond:
-        forall v1 G, v2 G, v3 G: # equivalent to G.__mul__ is associative
-            (v1 * v2) * v3 = v1 * (v2 * v3)
-        forall v G:
-            v * v.inv() = G.I
-            v.inv() * v = G.I
-```
-
-In Litex, a type = set + structure (This is inspired by Niklaus Wirth's "Algorithms + Data Structure = Programs"). The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `struct` is a "type of type" or a "set of sets sharing the same structure". `type`s and `struct`s work together to enable abstraction built on abstractions.
-
-
+(This Design draws inspiration from 2 concepts: 1. Niklaus Wirth's "Algorithms + Data Structure = Programs" and "type = set + structure". 2. The  `interface` + `type` + `struct` type system in GoLang.)
 
 ```
 claim:
@@ -354,6 +344,8 @@ Inheritance (C++/Java-style) is a poor fit for Litex:
 Inflexible – Inheritance hierarchies are rigid, making extension and evolution difficult.
 
 Layer freedom – Users should begin at any abstraction level, not forced from low-level math.
+
+(In fact, GoLang is so well-designed and Litex learns so much from it, that Litex chooses GoLang to implement itself.)
 
 Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope.
 
