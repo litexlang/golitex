@@ -123,11 +123,11 @@ func randFcAtom() *ast.FcAtom {
 func randFcFnRetValue() *ast.FcFn {
 	fnName := randFcAtom()
 	round := rand.Intn(3) + 1
-	typeParamObjParamsPairs := []*ast.FcFnSeg{}
+	params := [][]ast.Fc{}
 	for i := 0; i < round; i++ {
-		typeParamObjParamsPairs = append(typeParamObjParamsPairs, &ast.FcFnSeg{Params: randObjParams()})
+		params = append(params, randObjParams())
 	}
-	return &ast.FcFn{FnHead: *fnName, ParamSegs: typeParamObjParamsPairs}
+	return &ast.FcFn{FnHead: *fnName, ParamSegs: params}
 }
 
 func randObjParams() []ast.Fc {

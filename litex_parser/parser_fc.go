@@ -43,14 +43,14 @@ func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 			return expr, nil
 		}
 
-		fcFn := ast.NewFcFnPipe(ast.EmptyFcFnHeadAtom, []*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{expr})})
+		fcFn := ast.NewFcFnPipe(ast.EmptyFcFnHeadAtom, [][]ast.Fc{{expr}})
 
 		for !cursor.ExceedEnd() && cursor.is(glob.KeySymbolLeftBrace) {
 			fc, err := cursor.rawFc()
 			if err != nil {
 				return nil, err
 			}
-			fcFn.ParamSegs = append(fcFn.ParamSegs, ast.NewFcFnPipeSeg([]ast.Fc{fc}))
+			fcFn.ParamSegs = append(fcFn.ParamSegs, []ast.Fc([]ast.Fc{fc}))
 		}
 
 		return fcFn, nil
@@ -84,8 +84,8 @@ func (cursor *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
 	return ast.NewFcFnPipe(optName, typeParamsObjParamsPairs), nil
 }
 
-func (cursor *strSliceCursor) fcFnSegs() ([]*ast.FcFnSeg, error) {
-	pairs := []*ast.FcFnSeg{}
+func (cursor *strSliceCursor) fcFnSegs() ([][]ast.Fc, error) {
+	params := [][]ast.Fc{}
 
 	for !cursor.ExceedEnd() && (cursor.is(glob.KeySymbolLeftBrace)) {
 		objParamsPtr, err := cursor.bracedFcSlice()
@@ -93,10 +93,10 @@ func (cursor *strSliceCursor) fcFnSegs() ([]*ast.FcFnSeg, error) {
 			return nil, &strSliceErr{err, cursor}
 		}
 
-		pairs = append(pairs, ast.NewFcFnPipeSeg(objParamsPtr))
+		params = append(params, (objParamsPtr))
 	}
 
-	return pairs, nil
+	return params, nil
 }
 
 func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
@@ -156,7 +156,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 		leftHead := ast.NewFcAtom("", curToken)
 		left = ast.NewFcFnPipe(
 			*leftHead,
-			[]*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{left, right})},
+			[][]ast.Fc{{left, right}},
 		)
 	}
 
@@ -211,7 +211,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 		leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
 		return ast.NewFcFnPipe(
 			*leftHead,
-			[]*ast.FcFnSeg{ast.NewFcFnPipeSeg([]ast.Fc{right})},
+			[][]ast.Fc{[]ast.Fc{right}},
 		), nil
 	}
 }

@@ -1,2 +1,1 @@
-(2 * id)(2) is red 
-# REMARK: 必须是 [] 来包裹 expression 形式的 fn name，否则会和 表达式的那个 () 冲突。因为我parse的时候 我会直接以为 (2*id) 是 第一位
+f(1) = 2

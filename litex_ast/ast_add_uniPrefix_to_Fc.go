@@ -37,19 +37,19 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 		return nil, fmt.Errorf("invalid fc %s", fc.String())
 	}
 
-	newFcFn := FcFn{FcAtom{}, []*FcFnSeg{}}
+	newFcFn := FcFn{FcAtom{}, [][]Fc{}}
 	newFcFn.FnHead = *AddUniPrefixToFcAtom(&fcAsFcFn.FnHead, uniParams)
 
 	for _, seg := range fcAsFcFn.ParamSegs {
-		curSeg := &FcFnSeg{[]Fc{}}
-		newFcFn.ParamSegs = append(newFcFn.ParamSegs, curSeg)
-		for _, param := range seg.Params {
+		curSeg := []Fc{}
+		for _, param := range seg {
 			newFc, err := AddUniPrefixToFc(param, uniParams)
 			if err != nil {
 				return nil, err
 			}
-			curSeg.Params = append(curSeg.Params, newFc)
+			curSeg = append(curSeg, newFc)
 		}
+		newFcFn.ParamSegs = append(newFcFn.ParamSegs, curSeg)
 	}
 
 	return &newFcFn, nil

@@ -61,13 +61,13 @@ func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
 	return true, nil
 }
 
-func cmpFcFnSegRule(left, right *ast.FcFnSeg) (bool, error) {
-	if len(left.Params) != len(right.Params) {
+func cmpFcFnSegRule(left, right []ast.Fc) (bool, error) {
+	if len(left) != len(right) {
 		return false, nil
 	}
 
-	for i := 0; i < len(left.Params); i++ {
-		ok, err := CmpFcRule(left.Params[i], right.Params[i])
+	for i := 0; i < len(left); i++ {
+		ok, err := CmpFcRule(left[i], right[i])
 		if err != nil {
 			return false, err
 		}

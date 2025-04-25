@@ -298,7 +298,7 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 		fcFnParams = append(fcFnParams, &ast.FcAtom{PkgName: "", Name: fc})
 	}
 
-	fcFn := ast.FcFn{FnHead: ast.FcAtom{PkgName: exec.env.CurPkg, Name: stmt.DefHeader.Name}, ParamSegs: []*ast.FcFnSeg{{Params: fcFnParams}}}
+	fcFn := ast.FcFn{FnHead: ast.FcAtom{PkgName: exec.env.CurPkg, Name: stmt.DefHeader.Name}, ParamSegs: [][]ast.Fc{fcFnParams}}
 
 	retFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
 
