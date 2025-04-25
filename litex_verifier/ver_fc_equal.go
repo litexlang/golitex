@@ -34,6 +34,9 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 		return true, nil
 	}
 
+	// state = state.addRound()
+
+	// Case: equalSpecMem里找
 	ok, err = ver.fcEqualSpecInSpecMem(left, right, state)
 	if err != nil {
 		return false, err
