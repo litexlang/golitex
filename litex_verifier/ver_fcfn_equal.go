@@ -17,13 +17,6 @@ import (
 )
 
 func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error) {
-	// if left.IsEmptyHeadFcFn() || right.IsEmptyHeadFcFn() {
-	// 	if state.requireMsg() {
-	// 		ver.env.NewMsg(fmt.Sprintf("TODO: fcFnEq: left is empty, right is empty is not implemented. left: %s, right: %s", left.String(), right.String()))
-	// 	}
-	// 	return false, nil
-	// }
-
 	for leftTailLen := 0; leftTailLen <= len(left.ParamSegs); leftTailLen++ {
 		ok, err := ver.fcFnHeadTailEq(left, right, state, leftTailLen)
 		if err != nil {
@@ -37,6 +30,9 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 }
 
 func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftTailLen int) (bool, error) {
+	// 为了不要让 state 失控，在这里添加一层。我也不着地加的有没有道理，反正先在这里乱加一个
+	state = state.addRound()
+
 	if leftTailLen == 0 { // 必须存在，否则死循环
 		return ver.fcFnHeadEqLeftTailLenIs0(left, right, state)
 	}

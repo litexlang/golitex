@@ -464,7 +464,7 @@ func (f *FcFn) String() string {
 	for _, seg := range f.ParamSegs {
 		if len(seg) > 0 {
 			builder.WriteString("(")
-			for i := 0; i < len(seg)-1; i++ {
+			for i := range len(seg) - 1 {
 				builder.WriteString(seg[i].String())
 				builder.WriteString(", ")
 			}

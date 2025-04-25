@@ -17,6 +17,15 @@ import (
 	glob "golitex/litex_global"
 )
 
+// raw 的意思是，不包含 uniFactParamPrefix
+func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
+	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
+	if err != nil {
+		return nil, err
+	}
+	return expr, nil
+}
+
 // “数学”优先级越高，越是底层。所以把括号表达式放在这里处理
 func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 	// 处理括号表达式
@@ -89,14 +98,6 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	return ast.FcAtom{PkgName: fromPkg, Name: value}, nil
 }
 
-func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
-	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
-	if err != nil {
-		return nil, err
-	}
-	return expr, nil
-}
-
 func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {
 	left, err := cursor.fcPrimaryExpr()
 	if err != nil {
@@ -126,6 +127,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			leftHead,
 			[][]ast.Fc{{left, right}},
 		)
+
 	}
 
 	return left, nil
