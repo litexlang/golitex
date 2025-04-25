@@ -47,3 +47,11 @@ prove:
         diff(id^2) = 2 * id
 
     diff(id^2)(2) = (2 * id)(2)
+
+prove:
+    know:
+        forall x R:
+            f(x) = g(x^2)
+    f(2) = g(2^2)
+    f(2)(x) = g(2^2)(x)
+        

@@ -54,3 +54,14 @@ func (e VerState) addRound() VerState {
 		return e
 	}
 }
+
+func (e VerState) toNoMsg() VerState {
+	switch e {
+	case Round0Msg:
+		return Round0NoMsg
+	case Round1Msg:
+		return Round1NoMsg
+	default:
+		return e
+	}
+}
