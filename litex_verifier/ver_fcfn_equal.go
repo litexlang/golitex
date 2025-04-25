@@ -17,6 +17,8 @@ import (
 )
 
 func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error) {
+	state = state.addRound()
+
 	for leftTailLen := 0; leftTailLen <= len(left.ParamSegs); leftTailLen++ {
 		ok, err := ver.fcFnHeadTailEq(left, right, state, leftTailLen)
 		if err != nil {
@@ -31,7 +33,6 @@ func (ver *Verifier) fcFnEq(left, right *ast.FcFn, state VerState) (bool, error)
 
 func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftTailLen int) (bool, error) {
 	// 为了不要让 state 失控，在这里添加一层。我也不着地加的有没有道理，反正先在这里乱加一个
-	state = state.addRound()
 	state = state.toNoMsg()
 
 	if leftTailLen == 0 { // 必须存在，否则死循环
@@ -54,7 +55,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 		}
 
 		for j := 0; j < curLen; j++ {
-			ok, err := ver.fcEqual(leftTails[i][j], rightTails[i][j], state)
+			ok, err := ver.makeFcEqualFactAndVerify(leftTails[i][j], rightTails[i][j], state)
 			if err != nil {
 				return false, err
 			}
@@ -78,7 +79,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 		rightHead = &ast.FcFn{FnHead: right.FnHead, ParamSegs: right.ParamSegs[:rightHeadLen]}
 	}
 
-	ok, err := ver.fcEqual(leftHead, rightHead, state)
+	ok, err := ver.makeFcEqualFactAndVerify(leftHead, rightHead, state)
 	if err != nil {
 		return false, err
 	}
@@ -99,7 +100,7 @@ func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerSt
 		return false, nil
 	}
 
-	ok, err := ver.fcEqualSpec(left.FnHead, right.FnHead, state)
+	ok, err := ver.makeFcEqualFactAndVerify(left.FnHead, right.FnHead, state)
 	if err != nil {
 		return false, err
 	}
@@ -113,7 +114,7 @@ func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerSt
 		}
 
 		for j := range left.ParamSegs[i] {
-			ok, err := ver.fcEqualSpec(left.ParamSegs[i][j], right.ParamSegs[i][j], state)
+			ok, err := ver.makeFcEqualFactAndVerify(left.ParamSegs[i][j], right.ParamSegs[i][j], state)
 			if err != nil {
 				return false, err
 			}
