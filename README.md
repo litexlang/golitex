@@ -278,16 +278,14 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 
 ### Summary
 
-0. Basic Elements: Propositions, objects, and functions, each with a type.
-1. Type: A type = set + structure.
-2. Concept: A set of types sharing the same structure.
-3. Abstraction: Built via the `impl` keyword, defining relationships between types, structs, and structures.
-4. Factual Expressions: Three types—specific (exist, ordinary), conditional, and universal (forall). Litex verifies new facts by searching the fact base and adds them if true.
-5. Proof Methods: Direct proof and proof by contradiction, generating new facts.
-6. Verification: Uses pattern-based matching of known facts, eliminating the need to name every fact.
-7. Generics: Sets as parameters with conditions on types or elements.
-8. Math vs. Programming: Math focuses on search and existence, not execution. Litex types are more expressive than programming types.
-9. Litex vs. Standard Math: Sets (as types) cannot be passed like objects due to their structural roles.
+0. Basic Elements: Propositions, objects, and functions, each belongs to a set.
+1. Interface: A type = set + structure.
+2. Abstraction: Built via the `impl` keyword, defining relationships between types, structs, and structures.
+3. Factual Expressions: Three types—specific (exist, ordinary), conditional, and universal (forall). Litex verifies new facts by searching the fact base and adds them if true.
+4. Proof Methods: Direct proof and proof by contradiction, generating new facts.
+5. Verification: Uses pattern-based matching of known facts, eliminating the need to name every fact.
+6. Math vs Programming: Math focuses on search and existence, not execution. Litex types are more expressive than programming types.
+7. Litex vs. Standard Math: Sets (as types) cannot be passed like objects due to their structural roles.
 
 
 ### Remarks
@@ -329,7 +327,7 @@ Existing formal languages are complex, even for mathematicians, as they include 
 
 To put it in another way, traditional proof assistant are implemented to prove some hardcore mathematical theories, while Litex is designed to solve practical problems for everyone. Within traditional proof assistants, there is a much smaller and cleaner language akin to Litex struggling to get out.
 
-Litex’s syntax uses just ~20 keywords: `obj`, `fn`, `prop`, `type`, `interface`, `forall`, `cond`, `when`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`,  `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
+Litex’s syntax uses just no more than 20 keywords: `obj`, `fn`, `prop`, `type`, `interface`, `forall`, `cond`, `when`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`,  `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
 
 By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification.
 
@@ -383,4 +381,7 @@ If you want to contribute to Litex, you must be able to appreciate its simplicit
 
 There is no doubt that both the AI community and the math community will benefit from Litex. Litex is a highly interdisciplinary projects: programming languages, mathematics, and the AI community. Litex will never succeed without an active community. Feel free to issue your suggestions and ideas to help me improve this open-source project. Your feedback is invaluable.
 
-Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. Visit [the Litex website](https:#litexlang.org) for more information. Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
+Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. Visit [the Litex website](https:#litexlang.org) for more information.
+
+If you're interested in programming language development, open-source maintenance, large-scale software systems, mathematics, formal methods, or LLM reasoning, I'd love to discuss any of these topics with you.
+Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
