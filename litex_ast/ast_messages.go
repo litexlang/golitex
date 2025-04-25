@@ -185,6 +185,13 @@ func (f *DefConFnStmt) String() string {
 	builder.WriteString(" ")
 
 	builder.WriteString(f.DefHeader.String())
+
+	if len(f.DomFacts) == 0 && len(f.ThenFacts) == 0 {
+		ret := builder.String()
+		ret = strings.TrimSuffix(ret, ":")
+		return ret
+	}
+
 	builder.WriteByte('\n')
 
 	if len(f.DomFacts) > 0 {
