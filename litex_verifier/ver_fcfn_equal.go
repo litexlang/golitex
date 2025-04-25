@@ -45,6 +45,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 	leftTails := left.ParamSegs[leftHeadLen:]
 	rightTails := right.ParamSegs[rightHeadLen:]
 
+	curState := state.toNoMsg()
 	for i := 0; i < leftTailLen; i++ {
 		curLen := len(leftTails[i])
 		if curLen != len(rightTails[i]) {
@@ -52,7 +53,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 		}
 
 		for j := 0; j < curLen; j++ {
-			ok, err := ver.makeFcEqualFactAndVerify(leftTails[i][j], rightTails[i][j], state)
+			ok, err := ver.makeFcEqualFactAndVerify(leftTails[i][j], rightTails[i][j], curState)
 			if err != nil {
 				return false, err
 			}
@@ -76,7 +77,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 		rightHead = &ast.FcFn{FnHead: right.FnHead, ParamSegs: right.ParamSegs[:rightHeadLen]}
 	}
 
-	ok, err := ver.makeFcEqualFactAndVerify(leftHead, rightHead, state)
+	ok, err := ver.makeFcEqualFactAndVerify(leftHead, rightHead, curState)
 	if err != nil {
 		return false, err
 	}
@@ -105,13 +106,14 @@ func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerSt
 		return false, nil
 	}
 
+	curState := state.toNoMsg()
 	for i := range left.ParamSegs {
 		if len(left.ParamSegs[i]) != len(right.ParamSegs[i]) {
 			return false, nil
 		}
 
 		for j := range left.ParamSegs[i] {
-			ok, err := ver.makeFcEqualFactAndVerify(left.ParamSegs[i][j], right.ParamSegs[i][j], state)
+			ok, err := ver.makeFcEqualFactAndVerify(left.ParamSegs[i][j], right.ParamSegs[i][j], curState)
 			if err != nil {
 				return false, err
 			}

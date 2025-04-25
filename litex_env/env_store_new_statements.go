@@ -308,14 +308,19 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.ConUniFactStmt, e
 		domFacts = append(domFacts, instantiated)
 	}
 
-	thenFacts := []*ast.SpecFactStmt{}
+	specThenFacts := []*ast.SpecFactStmt{}
 	for _, thenFact := range existPropDef.Def.IffFacts {
 		reversed := thenFact.ReverseIsTrue()
 		instantiated, err := reversed.Instantiate(uniConMap)
 		if err != nil {
 			return nil, err
 		}
-		thenFacts = append(thenFacts, instantiated.(*ast.SpecFactStmt))
+		specThenFacts = append(specThenFacts, instantiated.(*ast.SpecFactStmt))
+	}
+
+	thenFacts := []ast.FactStmt{}
+	for _, specThenFact := range specThenFacts {
+		thenFacts = append(thenFacts, specThenFact)
 	}
 
 	return ast.NewConUniFactStmt(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts), nil

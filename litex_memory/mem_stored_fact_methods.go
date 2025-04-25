@@ -11,7 +11,10 @@
 
 package litex_memory
 
-import ast "golitex/litex_ast"
+import (
+	"fmt"
+	ast "golitex/litex_ast"
+)
 
 func NewSpecFactMemDict() *SpecFactMemDict {
 	return &SpecFactMemDict{map[string]map[string]StoredSpecMemDictNode{}}
@@ -167,9 +170,13 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) ([]Store
 
 func (factMem *UniFactMemDict) Insert(fact *ast.ConUniFactStmt) error {
 	for _, stmt := range fact.ThenFacts {
-		err := factMem.insertSpecFact(fact, stmt)
-		if err != nil {
-			return err
+		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+			err := factMem.insertSpecFact(fact, stmtAsSpecFact)
+			if err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
 		}
 	}
 	return nil
