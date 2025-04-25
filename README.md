@@ -26,6 +26,7 @@ Second, Litex is built around common sense rather than sophisticated mathematica
 
 **Mathematics is fundamentally about abstraction, and computer science is the discipline that tackles abstraction. The ultimate goal of Litex is to harness programming concepts and tools to tackle challenges in mathematics. It is a brave attempt to scale reasoning with the ever-expanding power of modern computing resources.**
 
+(The official Litex website https://litexlang.org is under development.)
 
 <!-- TODO: 参考下面这个网站以获得更多数学家的角度，里面有很多数学家对数学的讨论 https://sugaku.net/content/understanding-the-cultural-divide-between-mathematics-and-ai/ -->
 <!-- On the foolishness of "natural language programming". 里面有很多关于形式化语言比自然语言好的观点：litex把数学从不准确，冗余的，不同国家的人互相看不懂，抽象层过多以至于难以追踪，模块化程度为0，的自然语言，变成了非常准则，无任何冗余，世界通用，抽象层靠常用编程工具变得很追踪，模块化很高以至于人们可以在数学的github上分享 的形式化语言 -->
@@ -57,13 +58,11 @@ _Mathematics is nothing more than a game played according to certain simple rule
 
 _-- David Hilbert_
 
-Litex is a language which strikes the right balance between completeness, strictness, and simplicity. The goal in this section is to show the essential elements of the language through examples. To learn more, visit https://github.com/litexlang/golitex . The official Litex website https://litexlang.org is under development. 
-
-For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions.
+Litex is a language which strikes the right balance between completeness, strictness, and simplicity. The goal in this section is to show the essential elements of the language through examples. For the sake of pragmatism, our aim here is to show the essential elements of the language without getting bogged down in details, rules, and exceptions.
 
 ### First Example
 
-Mathematics is the art of deriving new facts from established ones. To illustrate, consider a syllogism. To highlight the uniqueness and innovation of Litex, I put both Litex and Lean4 code here for comparison.
+Mathematics is the art of deriving new facts from established ones. To illustrate, consider a classical syllogism proposed by Aristotle in his Prior Analytics, which formalizes deductive reasoning as follows:
 
 <table style="border-collapse: collapse; width: 100%;">
   <tr>
@@ -89,11 +88,11 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
   </tr>
 </table>
 
-Consider `Human` as the set of all humans. Using `know`, we establish the axiom: all humans are self-aware. Since Bob is in `Human`, "Bob is self-aware" is inherently true. This reflects the classic paradigm of mathematical reasoning: from universal to specific.
+Consider `Human` as the set of all humans. Using `know`, we establish the fact without the need to be verified by other facts: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is inherently true.
 
-Litex reduces typing by eliminating the need to name or recall individual facts. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. When writing done factual expressions for verification, Litex automatically searches for relevant facts using the proposition name and parameters, akin to a regex-based search in a large database. In this system, facts themselves do not possess names; only propositions (collections of facts to be verified) are named. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
+Notice how Litex requires much less typing than Lean4 even in this simple example. An obvious advantage of Litex is that it reduces typing by eliminating the need to name or recall individual facts. When writing done factual expressions for verification, Litex automatically searches for relevant facts, akin to a regex-based search in a large database. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
 
-That is why Litex is a "regular expression interpreter with customizable matching rules (via keywords like `forall`) and math-friendly syntax sugar." It operates below any axioms, including set theory (the reason why we can use set theory to derive new facts is that we rely on matching known facts with new fact to be verified), making it intuitive yet powerful—so natural that it's rarely explained in any math textbooks. Just as Lego lets you assemble complex structures from simple pieces, Litex lets you build math from minimal (with just 8 main keywords: forall, exist, not, or, fn, prop, obj, set and several other auxiliary keywords), reusable parts -— no unnecessary complexity, just pure flexibility.
+Although this is a simple example, it has already taught us how ANY mathematical facts are derived from known facts. Just as Lego lets you assemble complex structures from simple pieces, Litex lets you build math from minimal (with just 8 main keywords: forall, exist, not, or, fn, prop, obj, set and several other auxiliary keywords), reusable parts -— no unnecessary complexity, just pure flexibility.
 
 ### Factual Expressions
 
