@@ -22,10 +22,13 @@ type Fc interface {
 	String() string
 	GetPkgName() string
 	Instantiate(map[string]Fc) (Fc, error)
+	IsAtom() bool
 }
 
 func (f *FcAtom) fc()                {}
+func (f *FcAtom) IsAtom() bool       { return true }
 func (f *FcFn) fc()                  {}
+func (f *FcFn) IsAtom() bool         { return false }
 func (f *FcAtom) GetPkgName() string { return f.PkgName }
 func (f *FcFn) GetPkgName() string   { return f.FnHead.PkgName }
 
@@ -36,12 +39,12 @@ type FcAtom struct {
 
 type FcFn struct {
 	FnHead    FcAtom
-	ParamSegs []*FcFnSeg
+	ParamSegs [][]Fc
 }
 
-type FcFnSeg struct {
-	Params []Fc
-}
+// type FcFnSeg struct {
+// 	Params []Fc
+// }
 
 type FcEnum uint8
 
@@ -78,12 +81,8 @@ func NewFcAtom(pkgName string, value string) *FcAtom {
 	return &FcAtom{pkgName, value}
 }
 
-func NewFcFnPipe(fnHead FcAtom, callPipe []*FcFnSeg) *FcFn {
+func NewFcFnPipe(fnHead FcAtom, callPipe [][]Fc) *FcFn {
 	return &FcFn{fnHead, callPipe}
-}
-
-func NewFcFnPipeSeg(params []Fc) *FcFnSeg {
-	return &FcFnSeg{params}
 }
 
 func FcSliceString(params []Fc) string {
@@ -111,7 +110,7 @@ func isFcFnAndToString(f *FcFn) (bool, string) {
 
 	outPut := string(f.FnHead.Name)
 	if glob.IsKeySymbolRelaFn(outPut) {
-		return true, fmt.Sprintf("%s %s %s", f.ParamSegs[0].Params[0], outPut, f.ParamSegs[0].Params[1])
+		return true, fmt.Sprintf("%s %s %s", f.ParamSegs[0][0], outPut, f.ParamSegs[0][1])
 	}
 
 	return false, ""
@@ -136,14 +135,14 @@ func (f *FcFn) String() string {
 	}
 
 	outPut := string(f.FnHead.Name)
-	for _, pair := range f.ParamSegs {
-		if len(pair.Params) > 0 {
+	for _, seg := range f.ParamSegs {
+		if len(seg) > 0 {
 			outPut += "("
-			for i := 0; i < len(pair.Params)-1; i++ {
-				outPut += pair.Params[i].String()
+			for i := 0; i < len(seg)-1; i++ {
+				outPut += seg[i].String()
 				outPut += ", "
 			}
-			outPut += pair.Params[len(pair.Params)-1].String()
+			outPut += seg[len(seg)-1].String()
 			outPut += ")"
 		} else {
 			outPut += "()"

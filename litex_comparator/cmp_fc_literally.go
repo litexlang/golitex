@@ -79,13 +79,13 @@ func cmpFcFnLit(left, right *ast.FcFn) (int, error) {
 	return 0, nil
 }
 
-func cmpFcFnSegLit(left, right *ast.FcFnSeg) (int, error) {
-	if len(left.Params) != len(right.Params) {
-		return len(left.Params) - len(right.Params), nil
+func cmpFcFnSegLit(left, right []ast.Fc) (int, error) {
+	if len(left) != len(right) {
+		return len(left) - len(right), nil
 	}
 
-	for i := 0; i < len(left.Params); i++ {
-		if comp, err := cmpFcLit(left.Params[i], right.Params[i]); comp != 0 || err != nil {
+	for i := 0; i < len(left); i++ {
+		if comp, err := cmpFcLit(left[i], right[i]); comp != 0 || err != nil {
 			return comp, err
 		}
 	}

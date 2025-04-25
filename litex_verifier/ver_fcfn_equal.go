@@ -51,13 +51,13 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 	rightTails := right.ParamSegs[rightHeadLen:]
 
 	for i := 0; i < leftTailLen; i++ {
-		curLen := len(leftTails[i].Params)
-		if curLen != len(rightTails[i].Params) {
+		curLen := len(leftTails[i])
+		if curLen != len(rightTails[i]) {
 			return false, nil
 		}
 
 		for j := 0; j < curLen; j++ {
-			ok, err := ver.fcEqual(leftTails[i].Params[j], rightTails[i].Params[j], state)
+			ok, err := ver.fcEqual(leftTails[i][j], rightTails[i][j], state)
 			if err != nil {
 				return false, err
 			}
@@ -107,12 +107,12 @@ func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerSt
 	}
 
 	for i := range left.ParamSegs {
-		if len(left.ParamSegs[i].Params) != len(right.ParamSegs[i].Params) {
+		if len(left.ParamSegs[i]) != len(right.ParamSegs[i]) {
 			return false, nil
 		}
 
-		for j := range left.ParamSegs[i].Params {
-			ok, err := ver.fcEqualSpec(left.ParamSegs[i].Params[j], right.ParamSegs[i].Params[j], state)
+		for j := range left.ParamSegs[i] {
+			ok, err := ver.fcEqualSpec(left.ParamSegs[i][j], right.ParamSegs[i][j], state)
 			if err != nil {
 				return false, err
 			}

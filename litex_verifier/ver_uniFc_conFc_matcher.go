@@ -108,12 +108,12 @@ func (ver *Verifier) matchFnUniWithConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast
 	}
 
 	for i, uniPipe := range uniFuncFcFn.ParamSegs {
-		if len(uniPipe.Params) != len(conParamAsFcFn.ParamSegs[i].Params) {
+		if len(uniPipe) != len(conParamAsFcFn.ParamSegs[i]) {
 			return nil, false, nil
 		}
 
-		for j, param := range uniPipe.Params {
-			matchMap, ok, err := ver.matchUniFcWithConFc(param, conParamAsFcFn.ParamSegs[i].Params[j], possibleUniParams)
+		for j, param := range uniPipe {
+			matchMap, ok, err := ver.matchUniFcWithConFc(param, conParamAsFcFn.ParamSegs[i][j], possibleUniParams)
 			if err != nil {
 				return nil, false, err
 			}
