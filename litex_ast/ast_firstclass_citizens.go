@@ -20,17 +20,18 @@ import (
 type Fc interface {
 	fc()
 	String() string
-	GetPkgName() string
+	// GetPkgName() string
 	Instantiate(map[string]Fc) (Fc, error)
 	IsAtom() bool
 }
 
-func (f *FcAtom) fc()                {}
-func (f *FcAtom) IsAtom() bool       { return true }
-func (f *FcFn) fc()                  {}
-func (f *FcFn) IsAtom() bool         { return false }
-func (f *FcAtom) GetPkgName() string { return f.PkgName }
-func (f *FcFn) GetPkgName() string   { return f.FnHead.PkgName }
+func (f *FcAtom) fc()          {}
+func (f *FcAtom) IsAtom() bool { return true }
+func (f *FcFn) fc()            {}
+func (f *FcFn) IsAtom() bool   { return false }
+
+// func (f *FcAtom) GetPkgName() string { return f.PkgName }
+// func (f *FcFn) GetPkgName() string   { panic("TODO: GetPkgName for FcFn is not implemented") }
 
 type FcAtom struct {
 	PkgName string
@@ -38,7 +39,8 @@ type FcAtom struct {
 }
 
 type FcFn struct {
-	FnHead    FcAtom
+	// FnHead    FcAtom
+	FnHead    Fc
 	ParamSegs [][]Fc
 }
 
@@ -81,7 +83,7 @@ func NewFcAtom(pkgName string, value string) *FcAtom {
 	return &FcAtom{pkgName, value}
 }
 
-func NewFcFnPipe(fnHead FcAtom, callPipe [][]Fc) *FcFn {
+func NewFcFnPipe(fnHead Fc, callPipe [][]Fc) *FcFn {
 	return &FcFn{fnHead, callPipe}
 }
 
@@ -94,13 +96,18 @@ func FcSliceString(params []Fc) string {
 }
 
 func isRelaFcFnAndToString(f *FcFn) (bool, string) {
-	if f.FnHead.Name != "" {
+	ptr, ok := f.FnHead.(*FcAtom)
+	if !ok {
+		return false, ""
+	}
+
+	if ptr.Name != glob.BuiltinEmptyPkgName {
 		return false, ""
 	}
 
 	// TODO 如何处理unary?
 
-	outPut := string(f.FnHead.Name)
+	outPut := string(ptr.Name)
 	if glob.IsKeySymbolRelaFn(outPut) {
 		return true, fmt.Sprintf("%s %s %s", f.ParamSegs[0][0], outPut, f.ParamSegs[0][1])
 	}
@@ -148,7 +155,24 @@ func (f *FcAtom) IsBuiltinUnaryOpt() bool {
 	return false
 }
 
-var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep}
+var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinEmptyPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep}
+
+func IsFcBuiltinUnaryOpt(f Fc) bool {
+	ptr, ok := f.(*FcAtom)
+	if !ok {
+		return false
+	}
+
+	return ptr.PkgName == glob.BuiltinUnaryPkgName && glob.IsBuiltinUnaryOpt(ptr.Name)
+}
+
+func IsFcBuiltinInfixOpt(f Fc) bool {
+	ptr, ok := f.(*FcAtom)
+	if !ok {
+		return false
+	}
+	return ptr.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolRelaFn(ptr.Name)
+}
 
 // var EmptyFcFnHeadAtom = FcAtom{glob.BuiltinPkgName, glob.EmptyFcFnHead}
 

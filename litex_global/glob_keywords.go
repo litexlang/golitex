@@ -316,3 +316,8 @@ func IsKeywordSymbolUnaryAndInfixAtTheSameTime(name string) bool {
 	_, ok2 := UnaryPrecedence[name]
 	return ok && ok2
 }
+
+func IsBuiltinUnaryOpt(name string) bool {
+	_, ok := UnaryPrecedence[name]
+	return ok
+}

@@ -38,11 +38,11 @@ func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 	if strAtSecondPosition != glob.KeySymbolLeftBrace {
 		return &fcStr, nil
 	} else {
-		return cursor.rawFcFn(fcStr)
+		return cursor.rawFcFn(&fcStr)
 	}
 }
 
-func (cursor *strSliceCursor) rawFcFn(optName ast.FcAtom) (*ast.FcFn, error) {
+func (cursor *strSliceCursor) rawFcFn(optName ast.Fc) (*ast.FcFn, error) {
 	typeParamsObjParamsPairs, err := cursor.fcFnSegs()
 
 	if err != nil {
@@ -123,7 +123,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 
 		leftHead := ast.NewFcAtom("", curToken)
 		left = ast.NewFcFnPipe(
-			*leftHead,
+			leftHead,
 			[][]ast.Fc{{left, right}},
 		)
 	}
@@ -178,7 +178,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 
 		leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
 		return ast.NewFcFnPipe(
-			*leftHead,
+			leftHead,
 			[][]ast.Fc{{right}},
 		), nil
 	}
@@ -325,7 +325,7 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 		return nil, fmt.Errorf("unexpected end of input after '('")
 	}
 
-	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
+	head, err := cursor.fcInfixExpr(glob.PrecLowest)
 	if err != nil {
 		return nil, err
 	}
@@ -339,8 +339,18 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 	}
 
 	if !cursor.is(glob.KeySymbolLeftBrace) {
-		return expr, nil
+		return head, nil
 	}
 
-	return nil, fmt.Errorf("TODO: unexpected end of input, expected '('")
+	segs := [][]ast.Fc{}
+
+	for !cursor.ExceedEnd() {
+		seg, err := cursor.bracedFcSlice()
+		if err != nil {
+			return nil, &strSliceErr{err, cursor}
+		}
+		segs = append(segs, seg)
+	}
+
+	return ast.NewFcFnPipe(head, segs), nil
 }

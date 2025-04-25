@@ -40,7 +40,11 @@ func cmpFcAtomLitFcFnRule(left, right ast.Fc) (bool, error) {
 }
 
 func cmpFcFnRule(left, right *ast.FcFn) (bool, error) {
-	if comp, err := cmpFcAtomLit(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
+	// if comp, err := cmpFcAtomLit(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
+	// 	return comp == 0, err
+	// }
+
+	if comp, err := cmpFcLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp == 0, err
 	}
 

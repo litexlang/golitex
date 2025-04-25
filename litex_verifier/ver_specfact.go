@@ -80,7 +80,7 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 			return false, err
 		}
 		if state.requireMsg() && ok {
-			ver.successMsgEnd(fmt.Sprintf("%s = %s", stmt.Params[0], stmt.Params[1]), "")
+			ver.successMsgEnd(fmt.Sprintf("%s = %s", stmt.Params[0].String(), stmt.Params[1].String()), "")
 		}
 		return ok, err
 	}

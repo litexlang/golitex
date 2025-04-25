@@ -127,7 +127,7 @@ func randFcFnRetValue() *ast.FcFn {
 	for i := 0; i < round; i++ {
 		params = append(params, randObjParams())
 	}
-	return &ast.FcFn{FnHead: *fnName, ParamSegs: params}
+	return &ast.FcFn{FnHead: fnName, ParamSegs: params}
 }
 
 func randObjParams() []ast.Fc {

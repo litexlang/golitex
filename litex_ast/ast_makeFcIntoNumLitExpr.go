@@ -34,8 +34,13 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	if asFcFn.FnHead.IsBuiltinUnaryOpt() {
-		if asFcFn.FnHead.Name == glob.KeySymbolMinus {
+	if IsFcBuiltinUnaryOpt(asFcFn.FnHead) {
+		ptr, ok := asFcFn.FnHead.(*FcAtom)
+		if !ok {
+			return nil, false, nil
+		}
+
+		if ptr.Name == glob.KeySymbolMinus {
 			left, ok, err := MakeFcIntoNumLitExpr(asFcFn.ParamSegs[0][0])
 			if err != nil {
 				return nil, false, err
@@ -48,7 +53,7 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 		}
 	}
 
-	if !asFcFn.FnHead.IsBuiltinInfixOpt() {
+	if !IsFcBuiltinInfixOpt(asFcFn.FnHead) {
 		return nil, false, nil
 	}
 
@@ -76,6 +81,10 @@ func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 		return nil, false, nil
 	}
 
-	opt := asFcFn.FnHead.Name
+	ptr, ok := asFcFn.FnHead.(*FcAtom)
+	if !ok {
+		return nil, false, nil
+	}
+	opt := ptr.Name
 	return &glob.NumLitExpr{IsPositive: true, Left: left, OptOrNumber: opt, Right: right}, true, nil
 }
