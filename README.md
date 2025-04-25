@@ -198,7 +198,7 @@ interface Group G:
             x * G::inv(x) = G::I
 
 # Litex automatically infers the type of G from the context and verifies whether the type satisfies the Group interface, i.e. the given elements and operations satisfy the Group axioms.
-impl Group Real: # Real = the set of all real numbers
+type RealAsGroup Real impl Group: # Real = the set of all real numbers. Name RealAsGroup says how Real implements Group.
     __add__ # Real::_add__ implements Group::__mul__
     0 # 0 implements Group::obj
     __neg__ # Real::__neg__ implements Group::fn
@@ -210,35 +210,42 @@ prop Group_is_abelian<G Group>(): # you call it by using $Group_is_abelian(setNa
 $Group_is_abelian(Real) # true. * is Real::_add__
 ```
 
-In Litex, a type = set + structure. The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `struct` is a "type of type" or a "set of sets sharing the same structure". `type`s and `struct`s work together to enable abstraction built on abstractions.
+In Litex, a interface = set + structure. You can think of a interface as a set of sets that share the same structure. For example, the set of all groups is an interface. A set might have different ways to implement an interface (e.g. the set of integers, with normal addition, or with modular addition, all implement the interface of Group), that is why we need to name it. (e.g. RealAsGroup)
 
 (This Design draws inspiration from 2 concepts: 1. Niklaus Wirth's "Algorithms + Data Structure = Programs" and "type = set + structure". 2. The  `interface` + `type` + `struct` type system in GoLang.)
 
 ```
-claim:
-    forall (x Human) {x is self_aware}
-    prove:
-        x is self_aware # if x Human, then x is self_aware immediately
+know:
+    $q(0)
+    forall x nat:
+        $q(x)
+        then:
+            $q(x+1)
+
+    not $p(2)
+    forall x nat:
+        $p(x)
+        then:
+            $p(x+1)
 
 claim:
-    forall (x any) x is not self_aware { x is not Human}
+    $q(2)
     prove_by_contradiction:
-          x is Human  # In this situation, it is true, because we are proving by contradiction
-          x is self_aware # Litex finds that x is both not self_aware and self_aware, which contradicts
+        $q(1)
+        $q(2)
 
-prove_impl Integer Group:
-    Integer.__add__ impl G.__mul__
-    Integer.0 impl G.I
-    forall x Integer:
-        x.negative impl G.member.inv
+claim:
+    $p(0)
+    prove_by_contradiction:
+        $p(1)
+        $p(2)
 
-prove_exist  exist_nat_less_than(100) 99:
-    99 < 100
+prove: # open a local environment and write test codes
+    know Bob is Human
+    Bob is self_aware # true
 ```
 
-Sometimes, we want to prove a fact without letting the lengthy proof process clutter the main environment. In such cases, we use the `claim` keyword, followed by the `prove` keyword to conduct the proof within it. Ultimately, only the main fact proven under the `claim` will remain in the main environment.
-
-Special proof statements include existential proof (proving the existence of objects) and implementation proof (showing a type's structure aligns with another type or struct). Implementation builds relationships (`type impl type`) or abstractions (`type impl struct`).
+Sometimes, we want to prove a fact without letting the lengthy proof process clutter the main environment. In such cases, we use the `claim` keyword, followed by the `prove` keyword to conduct the proof within it. Ultimately, only the main fact proven under the `claim` will remain in the main environment. You can also use `prove` to open a local environment and write test codes, mimicking the behavior of `{}` in traditional programming languages.
 
 ### Another example
 
