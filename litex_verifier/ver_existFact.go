@@ -65,7 +65,7 @@ func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state Ver
 		domFacts = append(domFacts, fixed)
 	}
 
-	thenFacts := []*ast.SpecFactStmt{}
+	specThenFacts := []*ast.SpecFactStmt{}
 	for _, thenFact := range propDef.Def.IffFacts {
 		fixed, err := thenFact.Instantiate(uniConMap)
 		if err != nil {
@@ -78,7 +78,12 @@ func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state Ver
 			// return false, fmt.Errorf("instantiate spec fact stmt failed")
 		}
 		fixedAsSpecFact = fixedAsSpecFact.ReverseIsTrue()
-		thenFacts = append(thenFacts, fixedAsSpecFact)
+		specThenFacts = append(specThenFacts, fixedAsSpecFact)
+	}
+
+	thenFacts := []ast.FactStmt{}
+	for _, fact := range specThenFacts {
+		thenFacts = append(thenFacts, fact)
 	}
 
 	newUniFactUsingItself := ast.NewConUniFactStmt(params, setParams, domFacts, thenFacts)

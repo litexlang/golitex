@@ -225,10 +225,10 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 	iffLeadToPropUniFactDomFacts := []ast.FactStmt{}
 	iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, stmt.DomFacts...)
 
-	iffFacts := []*ast.SpecFactStmt{}
+	specIffFacts := []*ast.SpecFactStmt{}
 	for _, fact := range stmt.IffFacts {
 		iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, fact)
-		iffFacts = append(iffFacts, fact)
+		specIffFacts = append(specIffFacts, fact)
 	}
 
 	specFactParams := []ast.Fc{}
@@ -238,7 +238,7 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 
 	propAsSpecFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Name: stmt.DefHeader.Name}, Params: specFactParams}
 
-	IffLeadToProp := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []*ast.SpecFactStmt{&propAsSpecFact}}
+	IffLeadToProp := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []ast.FactStmt{&propAsSpecFact}}
 
 	err = exec.env.NewFact(&IffLeadToProp)
 	if err != nil {
@@ -247,7 +247,12 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 
 	domFacts := append(stmt.DomFacts, &propAsSpecFact)
 
-	PropLeadToIff := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: domFacts, ThenFacts: iffFacts}
+	thenFacts := []ast.FactStmt{}
+	for _, fact := range specIffFacts {
+		thenFacts = append(thenFacts, fact)
+	}
+
+	PropLeadToIff := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: domFacts, ThenFacts: thenFacts}
 
 	err = exec.env.NewFact(&PropLeadToIff)
 	if err != nil {
@@ -312,7 +317,12 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 	uniFactThen := []*ast.SpecFactStmt{&retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
 
-	uniFact := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: stmt.DefHeader.SetParams, DomFacts: stmt.DomFacts, ThenFacts: uniFactThen}
+	thenFacts := []ast.FactStmt{}
+	for _, fact := range uniFactThen {
+		thenFacts = append(thenFacts, fact)
+	}
+
+	uniFact := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: stmt.DefHeader.SetParams, DomFacts: stmt.DomFacts, ThenFacts: thenFacts}
 	err = exec.env.NewFact(&uniFact)
 
 	if err != nil {

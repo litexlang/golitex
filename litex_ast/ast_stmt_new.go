@@ -39,11 +39,11 @@ func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, th
 	return &DefConFnStmt{defHeader, retType, domFacts, thenFacts}
 }
 
-func NewConUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *ConUniFactStmt {
+func NewConUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt) *ConUniFactStmt {
 	return &ConUniFactStmt{params, paramTypes, domFacts, thenFacts}
 }
 
-func NewGenUniStmt(typeParams []string, typeInterfaces []*FcAtom, params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *GenUniStmt {
+func NewGenUniStmt(typeParams []string, typeInterfaces []*FcAtom, params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt) *GenUniStmt {
 	return &GenUniStmt{typeParams, typeInterfaces, *NewConUniFactStmt(params, paramTypes, domFacts, thenFacts)}
 }
 
