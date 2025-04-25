@@ -94,26 +94,25 @@ Notice how Litex requires much less typing than Lean4 even in this simple exampl
 
 Although this is a simple example, it has already taught us how ANY mathematical facts are derived from known facts. Just as Lego lets you assemble complex structures from simple pieces, Litex lets you build math from minimal (with just 8 main keywords: forall, exist, not, or, fn, prop, obj, set and several other auxiliary keywords), reusable parts -— no unnecessary complexity, just pure flexibility.
 
+Also notice Litex adopts a mixture of Python and GoLang's syntax, making it easy to pick up for users who has some programming experience.
+
 ### Factual Expressions
 
 In Litex, expressions are divided into two types: factual and constructive. Factual expressions declare truths, which Litex verifies, enabling "facts built on facts." Constructive expressions introduce new elements like types, objects, functions, or propositions, on which facts are established.
 
 ```
-obj Bob Human:
-    Bob.age = 10
+obj Alice Human # Declaring a object without giving values to its members is valid.
 
-obj Alice Human // Declaring a object without giving values to its members is valid.
+fn add(a Real, b Real) Real: # self defined a + b
+    add(a, b) = add(b, a)   # properties(facts) about function add
+    add(a, b) = a + b # establish relationship between self-defined function add and built-in function +
 
-fn add(a Real, b Real) Real:
-    then:
-        add(a, b) = add(b, a)   // properties(facts) about function add
-
-prop younger(a Human, b Human):
-    cond:
-        a.age < b.age
+prop less_than(a Real, b Real): # self defined a < b
+    less_than(a, b) = a < b # establish relationship between self-defined proposition less_than and built-in operator <
 ```
 
-Every fact in Litex must be tied to a concrete entity: object (`obj`), function (`fn`), or proposition (`prop`). Users must declare objects before use. Any object must belong to a set.
+Every fact in Litex must be tied to a concrete entity: object (`obj`), function (`fn`), proposition (`prop`). Users must declare objects before use. Any object must belong to a set.
+
 
 Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
 
@@ -213,16 +212,7 @@ struct Group G: // suppose G is a group
 
 In Litex, a type = set + structure (This is inspired by Niklaus Wirth's "Algorithms + Data Structure = Programs"). The set defines possible values, while the structure (operations, special elements, or axioms) adds behaviors or constraints. Structures are defined by specifying `type_member` and `member`. For example, the integers (ℤ) form a type with operations (+, −, ×) and special elements (like 0). A `struct` is a "type of type" or a "set of sets sharing the same structure". `type`s and `struct`s work together to enable abstraction built on abstractions.
 
-<!-- TODO: Interplay of set and type -->
 
-<!-- obj s make_set[Nat]  // 把所有的Nat放到这个叫s的集合里
-obj all_sets make_set[Set] // 把所有集合放到集合里。这在现代集合论里是有问题的，但是litex不会报错，因为obj是一个默认你声明的东西存在的关键词
-
-know forall x *T :
-	x in make_set[T]
-	 -->
-
-<!-- 永远永远永远记住：涉及到集合运算（type运算），先把原来的type的结构消灭掉，把它当做集合。才能进一步在新的集合上构建结构。不要尝试在新结构里保留旧结构-->
 
 ```
 claim:
@@ -291,6 +281,12 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 7. Generics: Sets as parameters with conditions on types or elements.
 8. Math vs. Programming: Math focuses on search and existence, not execution. Litex types are more expressive than programming types.
 9. Litex vs. Standard Math: Sets (as types) cannot be passed like objects due to their structural roles.
+
+
+### Remarks
+Strictly speaking, fn and set in Litex do not carry the exact same meaning as in traditional set theory. For instance, users can define functions (e.g., union) that operate on the "set of all sets"—something prohibited in conventional set theory. Litex allows such constructions but issues warnings when potentially "dangerous" operations are attempted, giving users flexibility while discouraging unsound reasoning.
+
+Fundamentally, Litex is a regex-based interpreter with customizable pattern-matching rules and math-friendly syntactic sugar. It operates below the level of formal mathematical axiom systems (such as ZFC), allowing users to define their own axioms. This design prioritizes expressiveness and adaptability over strict adherence to a specific foundational theory.
 
 <!-- TODO -->
 <!-- 2. an array of countable numbers of objects of the same type: Array      \[ typeName \](  ) -->
