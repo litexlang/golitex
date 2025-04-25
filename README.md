@@ -26,9 +26,9 @@ Second, Litex is built around common sense rather than sophisticated mathematica
 
 **Mathematics is fundamentally about abstraction, and computer science is the discipline that tackles abstraction. The ultimate goal of Litex is to harness programming concepts and tools to tackle challenges in mathematics. It is a brave attempt to scale reasoning with the ever-expanding power of modern computing resources.**
 
-(The official Litex website https://litexlang.org is under development.)
+(The official Litex website https:#litexlang.org is under development.)
 
-<!-- TODO: 参考下面这个网站以获得更多数学家的角度，里面有很多数学家对数学的讨论 https://sugaku.net/content/understanding-the-cultural-divide-between-mathematics-and-ai/ -->
+<!-- TODO: 参考下面这个网站以获得更多数学家的角度，里面有很多数学家对数学的讨论 https:#sugaku.net/content/understanding-the-cultural-divide-between-mathematics-and-ai/ -->
 <!-- On the foolishness of "natural language programming". 里面有很多关于形式化语言比自然语言好的观点：litex把数学从不准确，冗余的，不同国家的人互相看不懂，抽象层过多以至于难以追踪，模块化程度为0，的自然语言，变成了非常准则，无任何冗余，世界通用，抽象层靠常用编程工具变得很追踪，模块化很高以至于人们可以在数学的github上分享 的形式化语言 -->
 
 ## Litex: Bridging Mathematics and AI in the Computational Age
@@ -73,9 +73,9 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
     <td style="border: 3px solid black; padding: 8px;">
       <code>set Human</code> <br><br>
       <code>prop self_aware(x Human)</code> <br><br>      <code>know forall x Human:</code> <br>
-      <code>&nbsp;&nbsp;&nbsp;&nbsp;x is self_aware</code> <br> <br>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;$self_aware(x)</code> <br> <br>
       <code>obj Bob Human</code> <br> <br>
-      <code>Bob is self_aware</code>
+      <code>$self_aware(Bob)</code>
     </td>
     <td style="border: 3px solid black; padding: 8px;">
       <code>def Human := Type</code> <br><br>
@@ -121,27 +121,33 @@ Users can think of a function as something that takes parameters that satisfy th
 ```
 obj Bob Human
 
-// specific factual expression
+# specific factual expression
+$self_aware(Bob) # when there is only one parameter, it can be written as parameter is prop name
 Bob is self_aware
 
-// conditional factual expression
-when:
-    Bob.age = 10    // conditions
-    then:
-        Bob is young    // true
+fn age(x Human) Nat
 
-// universal factual expression
-forall x Human, y Human:    // declare objects in the universal expression
-    cond:
-        x.age < y.age   // conditions
+prop young(x Human):
+    age(x) < 18 # x young iff age(x) < 18
+
+# conditional factual expression
+when:
+    age(Bob) = 10    # conditions
     then:
-        $younger(x,y)   // true
+        Bob is young    # true
+
+# universal factual expression
+forall x Human, y Human:    # declare objects in the universal expression
+    cond:
+        age(x) < age(y)   # conditions
+    then:
+        $younger(x,y)   # true
 ```
 
 Litex supports three types of factual expressions. Once verified or known to be true, they are stored in the fact database for future retrieval for verification of subsequent factual expressions:
 1. Specific (instantiated):
    - `$younger(x, y)` where `$` is followed by the proposition name `younger` and parameters `x, y`.
-   - If there’s only one parameter, it can be written as `parameter is prop name`, like `Bob is young`.
+   - If there’s only one parameter, it can be written as `parameter is prop name` (similar to how natural language works), like `Bob is young`.
    - For built-in operators (e.g., `<`), simply write expressions like `1 < 2`.
 2. Conditional: Begins with the keyword `when`.
 3. Universal: Begins with the keyword `forall`.
@@ -155,11 +161,8 @@ Every factual expression in Litex yields one of four outcomes:
 This design mirrors human reasoning when evaluating proofs: confirming correctness, identifying falseness, encountering uncertainty, or spotting input errors.
 
 ```
-exist_prop exist_nat_less_than(n Nat):
-    have:
-         obj m Nat
-    then:
-        m < n
+exist_prop m Nat exist_nat_less_than(n Nat):
+    m < n
 
 know forall n Nat:
     cond:
@@ -167,8 +170,8 @@ know forall n Nat:
     then:
         $exist_nat_less_than(n)
 
-$exist_nat_less_than(100) // As a specific factual expression, it is true.
-have m Nat: $exist_nat_less_than(2)   // Introduce new object, m, to current proof environment
+$exist_nat_less_than(100) # As a specific factual expression, it is true.
+have m Nat: $exist_nat_less_than(2)   # Introduce new object, m, to current proof environment
 ```
 
 One important type of specific factual expression is the existential factual expression. When verified, existential expressions behave identically to ordinary specific expressions. The key distinction lies in their use within a have statement, which provides a safe mechanism to introduce new objects into the current environment.
@@ -178,12 +181,12 @@ One important type of specific factual expression is the existential factual exp
 <!-- TODO: THIS SECTION IS OBSOLETE -->
 
 ```
-// declare a type
+# declare a type
 type Human:
       member:
           obj age Nat
 
-// declare a struct
+# declare a struct
 struct Euclid_Space S:
     type_member:
         obj dim Nat
@@ -197,13 +200,13 @@ struct Euclid_Space S:
               forall k Nat:
                   (v1 + v2)@k = v1@k + v2@k
 
-struct Group G: // suppose G is a group
+struct Group G: # suppose G is a group
     type_member:
-        fn __mul__(g G, g2 G) G // define *
-        obj I G // define identity
-        fn inv() G  // inverse a given group element
+        fn __mul__(g G, g2 G) G # define *
+        obj I G # define identity
+        fn inv() G  # inverse a given group element
     cond:
-        forall v1 G, v2 G, v3 G: // equivalent to G.__mul__ is associative
+        forall v1 G, v2 G, v3 G: # equivalent to G.__mul__ is associative
             (v1 * v2) * v3 = v1 * (v2 * v3)
         forall v G:
             v * v.inv() = G.I
@@ -218,13 +221,13 @@ In Litex, a type = set + structure (This is inspired by Niklaus Wirth's "Algorit
 claim:
     forall (x Human) {x is self_aware}
     prove:
-        x is self_aware // if x Human, then x is self_aware immediately
+        x is self_aware # if x Human, then x is self_aware immediately
 
 claim:
     forall (x any) x is not self_aware { x is not Human}
     prove_by_contradiction:
-          x is Human  // In this situation, it is true, because we are proving by contradiction
-          x is self_aware // Litex finds that x is both not self_aware and self_aware, which contradicts
+          x is Human  # In this situation, it is true, because we are proving by contradiction
+          x is self_aware # Litex finds that x is both not self_aware and self_aware, which contradicts
 
 prove_impl Integer Group:
     Integer.__add__ impl G.__mul__
@@ -298,11 +301,11 @@ Fundamentally, Litex is a regex-based interpreter with customizable pattern-matc
 <!-- 
 how to represent X is R2, derivate (x,y) by y
 
-// z EuclidSpace, z.dim = 2, z[0] 表示z的第一位
+# z EuclidSpace, z.dim = 2, z[0] 表示z的第一位
 fn f(z EuclidSpace):
-	f(z) = (z@0)^2 + (z@1)^2 // or f(z) = (z[0])^2 + (z[1])^2
-	// 注意到微分几何里，为了让符号不乱，也是像下面这样写的
-	f = (id@0)^2 + (id@1)^2 // 用函数id(z)=z 是绕过z这种具体值，直接把函数看成被操作对象
+	f(z) = (z@0)^2 + (z@1)^2 # or f(z) = (z[0])^2 + (z[1])^2
+	# 注意到微分几何里，为了让符号不乱，也是像下面这样写的
+	f = (id@0)^2 + (id@1)^2 # 用函数id(z)=z 是绕过z这种具体值，直接把函数看成被操作对象
 
 forall z EuclidSpace:
 	d(f, 0)(z) = 2 * (z@0) 
@@ -374,4 +377,4 @@ If you want to contribute to Litex, you must be able to appreciate its simplicit
 
 There is no doubt that both the AI community and the math community will benefit from Litex. Litex is a highly interdisciplinary projects: programming languages, mathematics, and the AI community. Litex will never succeed without an active community. Feel free to issue your suggestions and ideas to help me improve this open-source project. Your feedback is invaluable.
 
-Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. Visit [the Litex website](https://litexlang.org) for more information. Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
+Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. Visit [the Litex website](https:#litexlang.org) for more information. Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
