@@ -72,7 +72,7 @@ func (ver *Verifier) matchAtomUniWithConFc(uniFuncFcAtom *ast.FcAtom, conFuncPar
 		return retMap, true, nil
 	}
 
-	ok, err := ver.fcEqualSpec(uniFuncFcAtom, conFuncParam, SpecNoMsg)
+	ok, err := ver.makeFcEqualFactAndVerify(uniFuncFcAtom, conFuncParam, SpecNoMsg)
 	if err != nil {
 		return nil, false, err
 	}

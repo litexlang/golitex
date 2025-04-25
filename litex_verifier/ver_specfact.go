@@ -38,6 +38,14 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		}
 	}
 
+	// if stmt.IsEqualFact() {
+	// 	ok, err := ver.fcEqual(stmt, state)
+	// 	if err != nil {
+	// 		return false, err
+	// 	}
+	// 	return ok, nil
+	// }
+
 	return ver.pureSpecFact(stmt, state)
 }
 
@@ -131,7 +139,7 @@ func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerSta
 
 	twoSpecFactHaveEqualParams := true
 	for i, knownParam := range left {
-		verified, err := ver.fcEqual(knownParam, right[i], specMode)
+		verified, err := ver.makeFcEqualFactAndVerify(knownParam, right[i], specMode)
 		if err != nil {
 			return false, err
 		}
@@ -279,7 +287,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		}
 
 		for i := 1; i < len(value); i++ {
-			ok, err := ver.fcEqualSpec(value[0], value[i], state.addRound())
+			ok, err := ver.makeFcEqualFactAndVerify(value[0], value[i], state.addRound())
 			if err != nil {
 				return nil, false, err
 			}
