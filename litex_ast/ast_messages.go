@@ -62,7 +62,7 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteByte(' ')
 	}
 
-	if stmt.PropName.PkgName == glob.BuiltinPkgName && glob.IsKeySymbol(stmt.PropName.Name) {
+	if stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbol(stmt.PropName.Name) {
 		return relaFactString(stmt)
 	}
 
@@ -447,7 +447,7 @@ func (stmt *ExistObjDefStmt) String() string {
 }
 
 func (f *FcAtom) String() string {
-	if f.PkgName == glob.BuiltinPkgName {
+	if f.PkgName == glob.BuiltinEmptyPkgName {
 		return string(f.Name)
 	} else {
 		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Name))
@@ -460,7 +460,7 @@ func (f *FcFn) String() string {
 	}
 
 	var builder strings.Builder
-	builder.WriteString(string(f.FnHead.Name))
+	builder.WriteString(f.FnHead.String())
 	for _, seg := range f.ParamSegs {
 		if len(seg) > 0 {
 			builder.WriteString("(")

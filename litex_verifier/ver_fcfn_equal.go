@@ -12,6 +12,7 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/litex_ast"
 )
 
@@ -68,14 +69,14 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 
 	var leftHead ast.Fc
 	if leftHeadLen == 0 {
-		leftHead = &left.FnHead
+		leftHead = left.FnHead
 	} else {
 		leftHead = &ast.FcFn{FnHead: left.FnHead, ParamSegs: left.ParamSegs[:leftHeadLen]}
 	}
 
 	var rightHead ast.Fc
 	if rightHeadLen == 0 {
-		rightHead = &right.FnHead
+		rightHead = right.FnHead
 	} else {
 		rightHead = &ast.FcFn{FnHead: right.FnHead, ParamSegs: right.ParamSegs[:rightHeadLen]}
 	}
@@ -88,6 +89,10 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 		return false, nil
 	}
 
+	if state.requireMsg() {
+		ver.successMsgEnd(fmt.Sprintf("%s = %s", left.String(), right.String()), "")
+	}
+
 	return true, nil
 }
 
@@ -97,7 +102,7 @@ func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerSt
 		return false, nil
 	}
 
-	ok, err := ver.fcEqualSpec(&left.FnHead, &right.FnHead, state)
+	ok, err := ver.fcEqualSpec(left.FnHead, right.FnHead, state)
 	if err != nil {
 		return false, err
 	}

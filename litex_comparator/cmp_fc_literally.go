@@ -62,7 +62,11 @@ func cmpFcAtomLit(left, right *ast.FcAtom) (int, error) {
 }
 
 func cmpFcFnLit(left, right *ast.FcFn) (int, error) {
-	if comp, err := cmpFcAtomLit(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
+	// if comp, err := cmpFcAtomLit(&left.FnHead, &right.FnHead); comp != 0 || err != nil {
+	// 	return comp, err
+	// }
+
+	if comp, err := cmpFcLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
 		return comp, err
 	}
 

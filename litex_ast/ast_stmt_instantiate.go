@@ -24,7 +24,7 @@ func (fc *FcAtom) Instantiate(uniConMap map[string]Fc) (Fc, error) {
 }
 
 func (fc *FcFn) Instantiate(uniConMap map[string]Fc) (Fc, error) {
-	newFc := FcFn{FcAtom{}, [][]Fc{}}
+	newFc := FcFn{&FcAtom{}, [][]Fc{}}
 
 	newHead, err := fc.FnHead.Instantiate(uniConMap)
 	if err != nil {
@@ -32,7 +32,7 @@ func (fc *FcFn) Instantiate(uniConMap map[string]Fc) (Fc, error) {
 	}
 
 	if newHeadAsAtom, ok := newHead.(*FcAtom); ok {
-		newFc.FnHead = *newHeadAsAtom
+		newFc.FnHead = newHeadAsAtom
 	} else {
 		newHeadAsFcFn, ok := newHead.(*FcFn)
 		if !ok {
