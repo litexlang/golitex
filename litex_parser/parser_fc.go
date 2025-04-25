@@ -21,39 +21,7 @@ import (
 func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 	// 处理括号表达式
 	if cursor.is(glob.KeySymbolLeftBrace) {
-		cursor.skip(glob.KeySymbolLeftBrace)
-		if cursor.ExceedEnd() {
-			return nil, fmt.Errorf("unexpected end of input after '('")
-		}
-
-		expr, err := cursor.fcInfixExpr(glob.PrecLowest)
-		if err != nil {
-			return nil, err
-		}
-
-		if cursor.ExceedEnd() {
-			return nil, fmt.Errorf("unexpected end of input, expected ')'")
-		}
-
-		if err := cursor.skip(glob.KeySymbolRightBrace); err != nil {
-			return nil, fmt.Errorf("expected ')': %v", err)
-		}
-
-		if !cursor.is(glob.KeySymbolLeftBrace) {
-			return expr, nil
-		}
-
-		fcFn := ast.NewFcFnPipe(ast.EmptyFcFnHeadAtom, [][]ast.Fc{{expr}})
-
-		for !cursor.ExceedEnd() && cursor.is(glob.KeySymbolLeftBrace) {
-			fc, err := cursor.rawFc()
-			if err != nil {
-				return nil, err
-			}
-			fcFn.ParamSegs = append(fcFn.ParamSegs, []ast.Fc([]ast.Fc{fc}))
-		}
-
-		return fcFn, nil
+		return cursor.bracedExpr()
 	}
 
 	if cursor.curTokenBeginWithNumber() {
@@ -211,7 +179,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 		leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
 		return ast.NewFcFnPipe(
 			*leftHead,
-			[][]ast.Fc{[]ast.Fc{right}},
+			[][]ast.Fc{{right}},
 		), nil
 	}
 }
@@ -349,4 +317,30 @@ func (cursor *strSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]strin
 	} else {
 		return nil, nil, &strSliceErr{fmt.Errorf("expected '%s' but got '%s'", endWith, cursor.strAtCurIndexPlus(0)), cursor}
 	}
+}
+
+func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
+	cursor.skip(glob.KeySymbolLeftBrace)
+	if cursor.ExceedEnd() {
+		return nil, fmt.Errorf("unexpected end of input after '('")
+	}
+
+	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
+	if err != nil {
+		return nil, err
+	}
+
+	if cursor.ExceedEnd() {
+		return nil, fmt.Errorf("unexpected end of input, expected ')'")
+	}
+
+	if err := cursor.skip(glob.KeySymbolRightBrace); err != nil {
+		return nil, fmt.Errorf("expected ')': %v", err)
+	}
+
+	if !cursor.is(glob.KeySymbolLeftBrace) {
+		return expr, nil
+	}
+
+	return nil, fmt.Errorf("TODO: unexpected end of input, expected '('")
 }

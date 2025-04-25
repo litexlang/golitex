@@ -150,8 +150,8 @@ func (f *FcAtom) IsBuiltinUnaryOpt() bool {
 
 var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep}
 
-var EmptyFcFnHeadAtom = FcAtom{glob.BuiltinPkgName, glob.EmptyFcFnHead}
+// var EmptyFcFnHeadAtom = FcAtom{glob.BuiltinPkgName, glob.EmptyFcFnHead}
 
-func (fcFn *FcFn) IsEmptyHeadFcFn() bool {
-	return fcFn.FnHead.PkgName == glob.BuiltinPkgName && fcFn.FnHead.Name == glob.EmptyFcFnHead
-}
+// func (fcFn *FcFn) IsEmptyHeadFcFn() bool {
+// 	return fcFn.FnHead.PkgName == glob.BuiltinPkgName && fcFn.FnHead.Name == glob.EmptyFcFnHead
+// }
