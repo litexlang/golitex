@@ -467,29 +467,60 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if !glob.IsKeySymbolRelaProp(opt) {
+	if opt == glob.KeySymbolBackslash {
+		propName, err := tb.header.rawFcAtom()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		var propNamePtr ast.Fc = &propName
+
+		propNamePtr, err = ast.AddUniPrefixToFc(propNamePtr, nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		propNameAsAtomPtr, ok := propNamePtr.(*ast.FcAtom)
+		if !ok {
+			return nil, fmt.Errorf("expect prop name")
+		}
+		propName = *propNameAsAtomPtr
+
+		fc2, err := tb.header.rawFc()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		fc2, err = ast.AddUniPrefixToFc(fc2, nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		params := []ast.Fc{fc, fc2}
+
+		return ast.NewSpecFactStmt(ast.TrueAtom, propName, params), nil
+	} else if !glob.IsKeySymbolRelaProp(opt) {
 		return nil, fmt.Errorf("expect relation prop")
+	} else {
+		fc2, err := tb.header.rawFc()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		// add prefix to fc2
+		fc2, err = ast.AddUniPrefixToFc(fc2, nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		// 必须到底了
+		if !tb.header.ExceedEnd() {
+			return nil, fmt.Errorf("expect end of line")
+		}
+
+		params := []ast.Fc{fc, fc2}
+
+		return ast.NewSpecFactStmt(ast.TrueAtom, ast.FcAtom{Name: opt}, params), nil
 	}
 
-	fc2, err := tb.header.rawFc()
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	// add prefix to fc2
-	fc2, err = ast.AddUniPrefixToFc(fc2, nameDepthMap)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	// 必须到底了
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of line")
-	}
-
-	params := []ast.Fc{fc, fc2}
-
-	return ast.NewSpecFactStmt(ast.TrueAtom, ast.FcAtom{Name: opt}, params), nil
 }
 
 func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {

@@ -1,0 +1,11 @@
+prove:
+    know:
+        $in(1, nat)
+
+    1 \in nat
+
+prove:
+    know:
+        $yellow(pingpongball)
+
+    pingpongball is yellow
