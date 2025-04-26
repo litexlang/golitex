@@ -193,10 +193,10 @@ interface Group G:
             x * G::inv(x) = G::I
 
 # Litex automatically infers the type of G from the context and verifies whether the type satisfies the Group interface, i.e. the given elements and operations satisfy the Group axioms.
-type RealAsGroup Real impl Group: # Real = the set of all real numbers. Name RealAsGroup says how Real implements Group.
-    __add__ # Real::_add__ implements Group::__mul__
-    0 # 0 implements Group::obj
-    __neg__ # Real::__neg__ implements Group::fn
+
+{Real, __add__, 0, __neg__} impl Group # you can also write it as {Real, __add__, 0, __neg__} impl Group
+
+type RealAsGroup {Real, __add__, 0, __neg__} impl Group: # Real = the set of all real numbers. Name RealAsGroup says how Real implements Group.
 
 prop Group_is_abelian<G Group>(): # you call it by using $Group_is_abelian(setName)
     forall x G, y G:
