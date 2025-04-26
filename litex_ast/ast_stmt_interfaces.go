@@ -34,7 +34,7 @@ func (s *GenUniStmt) stmt()           {}
 func (p *LogicExprStmt) stmt()        {}
 func (s *ExistObjDefStmt) stmt()      {}
 func (s *SetDefSetBuilderStmt) stmt() {}
-func (s *DefSetEnumtmt) stmt()        {}
+func (s *SetDefEnumtmt) stmt()        {}
 
 // func (s *ExistFactStmt) stmt() {}
 
@@ -99,7 +99,8 @@ func (s *SpecFactStmt) propFactStmt() {}
 type SetDefStmt interface {
 	setDefStmt()
 	stmt()
+	String() string
 }
 
 func (s *SetDefSetBuilderStmt) setDefStmt() {}
-func (s *DefSetEnumtmt) setDefStmt()        {}
+func (s *SetDefEnumtmt) setDefStmt()        {}

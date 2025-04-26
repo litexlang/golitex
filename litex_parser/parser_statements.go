@@ -1095,10 +1095,54 @@ func (tb *tokenBlock) defConPropWithSpecIffFacts(prefix string, existParamDepthM
 	return ast.NewExistPropDef(*declHeader, domFacts, iffFacts), nil
 }
 
-func (tb *tokenBlock) defSetEnumtmt() (*ast.DefSetEnumtmt, error) {
+func (tb *tokenBlock) setDefStmt() (ast.SetDefStmt, error) {
 	err := tb.header.skip(glob.KeywordSet)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
-	return nil, nil
+
+	setName, err := tb.header.next()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		err = tb.header.skip(glob.KeySymbolLeftCurly)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		elems := []ast.Fc{}
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			elem, err := tb.header.rawFc()
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
+			elems = append(elems, elem)
+		}
+
+		err = tb.header.skip(glob.KeySymbolRightCurly)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		return ast.NewDefSetEnumtmt(setName, elems), nil
+	} else {
+		parentSet, err := tb.header.rawFc()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		facts, err := tb.bodyBlockFacts(ast.NameDepthMap{}, true, len(tb.body))
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
+		return ast.NewSetDefSetBuilderStmt(setName, parentSet, facts), nil
+	}
 }

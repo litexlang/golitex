@@ -491,3 +491,26 @@ func (f *FcFn) String() string {
 
 	return builder.String()
 }
+
+func (stmt *SetDefSetBuilderStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(stmt.SetName)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ParentSet.String())
+	builder.WriteString(":\n")
+	builder.WriteString(strOfNonEmptyFactStmtSlice(stmt.Facts, 1))
+	return builder.String()
+}
+
+func (stmt *SetDefEnumtmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(stmt.SetName)
+	builder.WriteString(" ")
+	for i := 0; i < len(stmt.Elems)-1; i++ {
+		builder.WriteString(stmt.Elems[i].String())
+		builder.WriteString(", ")
+	}
+	builder.WriteString(stmt.Elems[len(stmt.Elems)-1].String())
+	builder.WriteString("}")
+	return builder.String()
+}

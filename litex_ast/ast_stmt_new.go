@@ -94,3 +94,11 @@ func NewExistObjDefStmt(objNames []string, fact SpecFactStmt) *ExistObjDefStmt {
 func NewExistPropDef(declHeader ConDefHeader, domFacts []FactStmt, iffFacts []*SpecFactStmt) *ExistPropDef {
 	return &ExistPropDef{declHeader, domFacts, iffFacts}
 }
+
+func NewDefSetEnumtmt(setName string, elems []Fc) *SetDefEnumtmt {
+	return &SetDefEnumtmt{setName, elems}
+}
+
+func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {
+	return &SetDefSetBuilderStmt{setName, parentSet, facts}
+}
