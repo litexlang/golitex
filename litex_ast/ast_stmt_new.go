@@ -27,11 +27,11 @@ func NewDefTypeStmt() *DefTypeStmt {
 	return &DefTypeStmt{}
 }
 
-func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []*SpecFactStmt) *DefConPropStmt {
+func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefConPropStmt {
 	return &DefConPropStmt{defHeader, domFacts, iffFacts}
 }
 
-func NewDefConExistPropStmt(def *DefConPropStmt, existParams []string, existParamSets []Fc) *DefConExistPropStmt {
+func NewDefConExistPropStmt(def *DefConPropWithSpecIffFacts, existParams []string, existParamSets []Fc) *DefConExistPropStmt {
 	return &DefConExistPropStmt{*def, existParams, existParamSets}
 }
 

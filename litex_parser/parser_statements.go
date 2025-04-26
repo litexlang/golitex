@@ -263,7 +263,7 @@ func (tb *tokenBlock) defConPropStmt(prefix string, existParamDepthMap ast.NameD
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	domFacts, iffFacts, err := tb.bodyFactSectionSpecFactSection(glob.KeywordIff, nameDepthMap, true)
+	domFacts, iffFacts, err := tb.bodyFactSectionFactSection(glob.KeywordIff, nameDepthMap, true)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -823,7 +823,7 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 		nameDepthMap[existParam] = 1
 	}
 
-	def, err := tb.defConPropStmt("", nameDepthMap)
+	def, err := tb.defConPropWithSpecIffFacts("", nameDepthMap)
 
 	// add prefix to existParams
 	for i := range existParams {
@@ -1064,4 +1064,43 @@ func (cursor *strSliceCursor) skipKwAndColon(kw string) error {
 		return err
 	}
 	return nil
+}
+
+func (tb *tokenBlock) defConPropWithSpecIffFacts(prefix string, existParamDepthMap ast.NameDepthMap) (*ast.DefConPropWithSpecIffFacts, error) {
+	if prefix != "" {
+		err := tb.header.skip(prefix)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	}
+
+	declHeader, nameDepthMap, err := tb.conDefHeader()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	// merge nameDepthMap and nameDepthMap2
+	for key := range existParamDepthMap {
+		nameDepthMap[key] = existParamDepthMap[key]
+	}
+
+	if !tb.header.is(glob.KeySymbolColon) {
+		return &ast.DefConPropWithSpecIffFacts{*declHeader, []ast.FactStmt{}, []*ast.SpecFactStmt{}}, nil
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	domFacts, iffFacts, err := tb.bodyFactSectionSpecFactSection(glob.KeywordIff, nameDepthMap, true)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if len(iffFacts) == 0 {
+		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
+	}
+
+	return &ast.DefConPropWithSpecIffFacts{*declHeader, domFacts, iffFacts}, nil
 }
