@@ -54,7 +54,7 @@ func (cursor *strSliceCursor) getSlice() []string {
 
 func (cursor *strSliceCursor) currentToken() (string, error) {
 	if cursor.index >= len(cursor.slice) {
-		return "", fmt.Errorf("unexpected end of slice %v", cursor.slice)
+		return "", fmt.Errorf("unexpected end of slice %v", strings.Join(cursor.slice, " "))
 	}
 	return cursor.slice[cursor.index], nil
 }

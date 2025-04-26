@@ -997,7 +997,7 @@ func (tb *tokenBlock) bodyFactSectionFactSection(kw string, nameDepthMap ast.Nam
 		if err != nil {
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
-		section2Facts, err = tb.body[1].bodyBlockFacts(nameDepthMap, false, len(tb.body[1].body))
+		section2Facts, err = tb.body[1].bodyBlockFacts(nameDepthMap, allowUniFactAtCurScope, len(tb.body[1].body))
 		if err != nil {
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
@@ -1014,12 +1014,12 @@ func (tb *tokenBlock) bodyFactSectionFactSection(kw string, nameDepthMap ast.Nam
 		if err != nil {
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
-		section2Facts, err = tb.body[len(tb.body)-1].bodyBlockFacts(nameDepthMap, false, len(tb.body[len(tb.body)-1].body))
+		section2Facts, err = tb.body[len(tb.body)-1].bodyBlockFacts(nameDepthMap, allowUniFactAtCurScope, len(tb.body[len(tb.body)-1].body))
 		if err != nil {
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 	} else {
-		section2Facts, err = tb.bodyBlockFacts(nameDepthMap, false, len(tb.body))
+		section2Facts, err = tb.bodyBlockFacts(nameDepthMap, allowUniFactAtCurScope, len(tb.body))
 		if err != nil {
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
