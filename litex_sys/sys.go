@@ -12,18 +12,27 @@
 package litex_sys
 
 import (
+	glob "golitex/litex_global"
 	pipeline "golitex/litex_pipeline"
 	"os"
 )
 
-func ExecFileReturnString(path string) (string, error) {
+func RunFile(path string) (string, glob.SysSignal, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return "", err
+		return "", glob.SysSignalParseError, err
 	}
-	return pipeline.ExecuteCodeAndReturnMessage(string(content))
+	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(string(content))
+	if err != nil {
+		return "", signal, err
+	}
+	return msg, signal, nil
 }
 
-func ExecString(code string) (string, error) {
-	return pipeline.ExecuteCodeAndReturnMessage(code)
+func ExecString(code string) (string, glob.SysSignal, error) {
+	msg, signal, err := pipeline.ExecuteCodeAndReturnMessage(code)
+	if err != nil {
+		return "", signal, err
+	}
+	return msg, signal, nil
 }

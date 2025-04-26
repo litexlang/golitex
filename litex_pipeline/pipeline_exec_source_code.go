@@ -14,23 +14,24 @@ package litex_pipeline
 import (
 	env "golitex/litex_env"
 	exe "golitex/litex_executor"
+	glob "golitex/litex_global"
 	parser "golitex/litex_parser"
 	"strings"
 )
 
-func ExecuteCodeAndReturnMessage(code string) (string, error) {
-	msgOfTopStatements, err := executeCodeAndReturnMessageSlice(code)
+func ExecuteCodeAndReturnMessage(code string) (string, glob.SysSignal, error) {
+	msgOfTopStatements, signal, err := executeCodeAndReturnMessageSlice(code)
 	if err != nil {
-		return "", err
+		return "", signal, err
 	}
 	ret := strings.Join(msgOfTopStatements, "\n\n\n")
-	return ret, nil
+	return ret, signal, nil
 }
 
-func executeCodeAndReturnMessageSlice(code string) ([]string, error) {
+func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, error) {
 	topStmtSlice, err := parser.ParseSourceCode(code)
 	if err != nil {
-		return nil, err
+		return nil, glob.SysSignalParseError, err
 	}
 	curEnv := env.NewEnv(nil, nil, "")
 	executor := *exe.NewExecutor(curEnv)
@@ -40,10 +41,10 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, error) {
 	for _, topStmt := range topStmtSlice {
 		err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
-			return nil, err
+			return nil, glob.SysSignalRuntimeError, err
 		}
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 	}
 
-	return msgOfTopStatements, nil
+	return msgOfTopStatements, glob.SysSignalTrue, nil
 }
