@@ -126,3 +126,8 @@ type ExistObjDefStmt struct {
 	ObjNames []string
 	Fact     SpecFactStmt
 }
+
+type SetDefStmt struct {
+	ObjNames []string
+	Fact     SpecFactStmt
+}
