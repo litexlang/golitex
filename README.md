@@ -360,19 +360,19 @@ The inventor of Litex holds a deep appreciation for Lisp's "everything is a list
 
 Furthermore, Tex's clear distinction between "math expressions" and "plain words" inspired Litex's separation of "factual expressions" from ordinary symbols. Litex also aspires to achieve the same level of ubiquity and utility as Tex, aiming to become a widely adopted daily tool. This ambition is encapsulated in its name: Litex = Lisp + Tex, symbolizing the fusion of Lisp's expressive elegance and Tex's practicality.
 
-## Join the Litex Project
+## Join the Litex Project: Words from the Inventor
 
 _The best way to predict the future is to invent it._
 
 _-- Alan Kay_
 
-The inventor of Litex, Jiachen Shen, is a hacker with a math degree. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Peking University, Tsinghua University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
+I, Jiachen Shen, a hacker and a math enthusiast. I majored in math and self-taught programming. The Litex project is starred by enthusiasts from world-class institutions, including The University of Chicago, Carnegie Mellon University, Peking University, Tsinghua University, Fudan University, Shanghai Jiao Tong University, openMMLab, deepmath.cn etc.
 
-I create Litex for fun: turning invention and implementation into art. This is the first step in transforming the art of mathematics into the art of programming. As Knuth said in his Turing Award lecture: science is logical, systematic, calm; art is aesthetic, creative, anxious. Both math and programming live at this intersection—rigorous yet deeply human.
+A good art is enjoyable to its author happy and be useful to others. This process of inventing Litex makes me happy, and I hope Litex can be useful for both math community and AI community, or even anyone from any field. As Knuth said in his Turing Award lecture: science is logical, systematic, calm; art is aesthetic, creative, anxious. Both math and programming live at this intersection, rigorous yet deeply human.
 
-Therefore, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also strongly believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes.
+Moreover, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes.
 
-If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 1500 git commits are all pushed by me), I have no time to implement a complicated one.
+If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 2000 git commits are all pushed by me), I have no time to implement a complicated one. Keeping it simple yet powerful is the key to its growth and success.
 
 There is no doubt that both the AI community and the math community will benefit from Litex. Litex is a highly interdisciplinary projects: programming languages, mathematics, and the AI community. Litex will never succeed without an active community. Feel free to issue your suggestions and ideas to help me improve this open-source project. Your feedback is invaluable.
 
