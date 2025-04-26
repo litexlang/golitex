@@ -1256,3 +1256,10 @@ forall epsilon real:
     1. 因为claim 的语义是，我claim一个事实，然后我需要用这个事实推出一个结论。
     2. 但最好是，claim 真的开了个环境，整个环境里能定义各种变量之类的，而不是很孤立的，只是开了个新环境来证明，应该是开一个新环境里先放入forall里面的参数，然后进而证明
         1. claim也有两种：一个是以 : 结尾的那种；一个是 claim forall 这样些的；后者会开局部环境并导入变量，前者只是开了个独立环境，哪怕是 claim: forall x x: ... prove: 这种，x也不能出现在prove下面
+4. impl 也是一种 事实，而不是一个 type def 的一部分
+    1. 考虑下面情况：forall f fn => fn, g fn => fn:  {Int, f, g} impl Group
+        这是可能出现的：对于任何取余数的加法运算，在Int上面，都是Group
+    2. 为了让这种 impl 事实 能被 forall export，那我就得让 impl 也做成一种 事实，而不是一个 type def 的一部分
+5. 我的 or, and 类型的事实，不包含 forall，否则整个项目太乱了
+    (not) specFact (pure, exist, impl) => or/and => unifact
+    如果 or下面也能有 forall，那上面这个链条就出问题了。我要存储 unifact 下面的 specFact的时候，我的存储方式也是 uniFact propName 做key，存 specFact 所在的 一层层的 or/and， 最后放在某 uniFact 下面
