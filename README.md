@@ -12,11 +12,11 @@ _–- George Boole_
 
 **Litex is a minimalist proof assistant (formal language). With a predicted "de Bruijn factor" (the ratio of formal to informal proof difficulty) of 0.5–1.5, Litex will transform the mathematical landscape and help build better reasoning AI models.**
 
-**Litex stands out from other proof assistants because of its simplicity.** Since even children can reason logically and naturally, a formal language for anyone to reason with both rigor and intuiveness can be invented. Litex is designed to create such a language. 
-
-**First-order logic, with its 8 core keywords (and, or, not, forall, exist, equal, if, then), forms the foundation of all mainstream mathematics. Litex builds on this foundation as a thin layer, implementing a "regular expression interpreter with customizable matching rules and math-friendly syntax sugar". Its simplicity means you can learn it with just common sense.**
+**Litex stands out from other proof assistants because of its simplicity.** If even children can reason naturally, a formal language that combines rigor and intuition must be possible -- it simply hasn’t been invented yet. Litex is designed to create precisely such a language.
 
 Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than **matching** known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you. And in this way Litex helps you build new facts on top of the existing facts with 100% correctness. 
+
+**Technically, first-order logic, with its 8 core keywords (and, or, not, forall, exist, equal, if, then), forms the foundation of all mainstream mathematics. Litex builds on this foundation as a thin layer, implementing a "regular expression interpreter with customizable matching rules and math-friendly syntax sugar". Its simplicity means you can learn it with just common sense.**
 
 Litex is unique in two ways. First, **Litex is a domain-specific language for mathematical verification. It is not designed to be Turing complete.** Whereas traditional proof assistants are general-purpose programming languages that introduce unrelated complexities. 
 
@@ -24,7 +24,7 @@ Second, Litex is built around common sense rather than sophisticated mathematica
 
 **The potential impacts of Litex include: enabling proof verification (including LLM-generated outputs), revolutionizing proof writing and review, facilitating large-scale collaborations, creating datasets for LLM training, and enhancing LLM reasoning capabilities.** With its inherently simple syntax, Litex is well-positioned to achieve these goals and attract a growing community of researchers to the world of formal languages.
 
-**Mathematics is fundamentally about abstraction, and computer science is the discipline that tackles abstraction. The ultimate goal of Litex is to harness programming concepts and tools to tackle challenges in mathematics. It is a brave attempt to scale reasoning with the ever-expanding power of modern computing resources.**
+**Mathematics is the science of abstraction, while computer science is the discipline that masters it. The ideal of Litex is bridging the two—using programming to solve mathematical challenges and mathematics to enhance AI reasoning. It’s a bold effort to scale reasoning with modern computing power and programming ingenuity.**
 
 (The official Litex website https:#litexlang.org is under development.)
 
@@ -35,19 +35,14 @@ Second, Litex is built around common sense rather than sophisticated mathematica
 
 The mathematics community is experiencing a revolution. After centuries of static methodology, systems like Litex are making the impossible possible:
 
-Mathematically guaranteed correctness eliminating human error
+- Mathematically guaranteed correctness eliminating human error.
+- GitHub-scale collaboration for mathematical research.
+- AI-powered discovery solving thousands of problems simultaneously (as demonstrated by AlphaProof).
 
-GitHub-scale collaboration for mathematical research
-
-AI-powered discovery solving thousands of problems simultaneously (as demonstrated by AlphaProof)
-
-Litex uniquely connects two worlds:
-
-For mathematicians: It automates proof verification while enabling unprecedented collaborative research at scale
-
-For AI development: Its simplicity makes formal mathematics accessible, while providing structured training data and verifiable reward functions
-
-For both fields: It creates a virtuous cycle - AI generates formal mathematics while Litex ensures correctness and produces new training data
+Litex uniquely connects two worlds of mathematics and AI:
+- For mathematicians: It automates proof verification while enabling unprecedented collaborative research at scale.
+- For AI development: Its simplicity makes formal mathematics accessible, while providing structured training data and verifiable reward functions.
+- For both fields: It creates a virtuous cycle - AI generates formal mathematics while Litex ensures correctness and produces new training data.
 
 This synergy heralds a new era where mathematical rigor meets computational power, and human creativity combines with machine precision to push the boundaries of discovery.
 

@@ -36,6 +36,6 @@ prove:
     prop P3(x set):
         $in(x, Q)
             
-
+    prop P4(x set)
 
     

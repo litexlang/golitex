@@ -146,8 +146,14 @@ func DefConPropStmtString(prefix string, fact *DefConPropStmt) string {
 	builder.WriteString(prefix)
 	builder.WriteByte(' ')
 	builder.WriteString(fact.DefHeader.String())
-	builder.WriteByte('\n')
 
+	if len(fact.DomFacts) == 0 && len(fact.IffFacts) == 0 {
+		ret := builder.String()
+		ret = strings.TrimSuffix(ret, ":")
+		return ret
+	}
+
+	builder.WriteByte('\n')
 	if len(fact.DomFacts) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
 		builder.WriteByte(':')
