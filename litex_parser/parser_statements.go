@@ -67,6 +67,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.axiomStmt()
 	case glob.KeywordThm:
 		ret, err = tb.thmStmt()
+	case glob.KeywordSet:
+		ret, err = tb.setDefStmt()
 	default:
 		ret, err = tb.factStmt(ast.NameDepthMap{}, true)
 	}
@@ -1091,4 +1093,12 @@ func (tb *tokenBlock) defConPropWithSpecIffFacts(prefix string, existParamDepthM
 	}
 
 	return ast.NewExistPropDef(*declHeader, domFacts, iffFacts), nil
+}
+
+func (tb *tokenBlock) defSetEnumtmt() (*ast.DefSetEnumtmt, error) {
+	err := tb.header.skip(glob.KeywordSet)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+	return nil, nil
 }

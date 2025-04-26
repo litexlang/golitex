@@ -26,13 +26,15 @@ func (p *SpecFactStmt) stmt()     {}
 func (f *ClaimProveStmt) stmt()   {}
 func (f *KnowStmt) stmt()         {}
 
-func (s *DefConExistPropStmt) stmt() {}
-func (s *AxiomStmt) stmt()           {}
-func (s *ThmStmt) stmt()             {}
-func (s *CondFactStmt) stmt()        {}
-func (s *GenUniStmt) stmt()          {}
-func (p *LogicExprStmt) stmt()       {}
-func (s *ExistObjDefStmt) stmt()     {}
+func (s *DefConExistPropStmt) stmt()  {}
+func (s *AxiomStmt) stmt()            {}
+func (s *ThmStmt) stmt()              {}
+func (s *CondFactStmt) stmt()         {}
+func (s *GenUniStmt) stmt()           {}
+func (p *LogicExprStmt) stmt()        {}
+func (s *ExistObjDefStmt) stmt()      {}
+func (s *SetDefSetBuilderStmt) stmt() {}
+func (s *DefSetEnumtmt) stmt()        {}
 
 // func (s *ExistFactStmt) stmt() {}
 
@@ -94,4 +96,10 @@ type PropFactStmt interface {
 
 func (s *SpecFactStmt) propFactStmt() {}
 
-// func (s *ExistFactStmt) propFactStmt() {}
+type SetDefStmt interface {
+	setDefStmt()
+	stmt()
+}
+
+func (s *SetDefSetBuilderStmt) setDefStmt() {}
+func (s *DefSetEnumtmt) setDefStmt()        {}
