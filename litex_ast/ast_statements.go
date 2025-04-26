@@ -133,7 +133,7 @@ type SetDefSetBuilderStmt struct {
 	Facts     []FactStmt
 }
 
-type DefSetEnumtmt struct {
+type SetDefEnumtmt struct {
 	SetName string
 	Elems   []Fc
 }

@@ -5,7 +5,7 @@ set SetName {1,2}
 
 fn f(x DomSet) ImageSet
 
-exist_prop x DomSet exist_inverse_image(y ImageSet):
+exist_prop x DomSet st exist_inverse_image(y ImageSet):
     f(x) = y
 
 set SetName2 ParentSet:
