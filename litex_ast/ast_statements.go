@@ -127,7 +127,13 @@ type ExistObjDefStmt struct {
 	Fact     SpecFactStmt
 }
 
-type SetDefStmt struct {
-	ObjNames []string
-	Fact     SpecFactStmt
+type SetDefSetBuilderStmt struct {
+	SetName   string
+	ParentSet Fc
+	Facts     []FactStmt
+}
+
+type DefSetEnumtmt struct {
+	SetName string
+	Elems   []Fc
 }
