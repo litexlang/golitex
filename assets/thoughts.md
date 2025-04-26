@@ -1263,3 +1263,26 @@ forall epsilon real:
 5. 我的 or, and 类型的事实，不包含 forall，否则整个项目太乱了
     (not) specFact (pure, exist, impl) => or/and => unifact
     如果 or下面也能有 forall，那上面这个链条就出问题了。我要存储 unifact 下面的 specFact的时候，我的存储方式也是 uniFact propName 做key，存 specFact 所在的 一层层的 or/and， 最后放在某 uniFact 下面
+    另外，or 和 and 在证明的时候需要 取 not，那取 not 只能是 SpecFact了
+6. 存 forall 套 forall
+    know forall x A:
+        dom:
+            $cond(x)
+        then:
+            forall y B:
+                dom:
+                    $cond2(x, y)
+                then:
+                    or:
+                        $p(x,y)
+                        $t(x,y)
+                iff:
+                    $pp(x,y)
+        iff:
+            forall y B:
+                $q(x,y)
+    存储：
+    1. $p(~x, ~y) under or($p(x,y), $t(x,y)) under forall x A, y B: $cond(x), $cond2(x,y), iff: $pp(x,y)
+    2. $pp(~x, ~y) under forall x A, y B: $cond(x), $cond2(x,y), iff: or: $p(x,y), $t(x,y)
+
+    证明 forall + iff 的方式和普通的 forall 也不一样，要把 dom 和 iff 混起来做 条件
