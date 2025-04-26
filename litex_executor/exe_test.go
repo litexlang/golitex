@@ -143,7 +143,7 @@ func randCondStmt() *ast.CondFactStmt {
 	randomNumberOfCondFacts := rand.Intn(3) + 1
 	randomNumberOfThenFacts := rand.Intn(3) + 1
 	condFacts := []ast.FactStmt{}
-	thenFacts := []*ast.SpecFactStmt{}
+	thenFacts := []ast.FactStmt{}
 
 	for i := 0; i < randomNumberOfCondFacts; i++ {
 		condFacts = append(condFacts, randSpecFact())

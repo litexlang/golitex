@@ -13,6 +13,7 @@ package litex_parser
 
 import (
 	"fmt"
+	glob "golitex/litex_global"
 	"strings"
 )
 
@@ -126,4 +127,16 @@ func (cursor *strSliceCursor) curTokenBeginWithNumber() bool {
 	} else {
 		return false
 	}
+}
+
+func (cursor *strSliceCursor) skipKwAndColon(kw string) error {
+	err := cursor.skip(kw)
+	if err != nil {
+		return err
+	}
+	err = cursor.skip(glob.KeySymbolColon)
+	if err != nil {
+		return err
+	}
+	return nil
 }

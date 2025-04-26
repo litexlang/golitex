@@ -35,14 +35,14 @@ type DefConPropStmt struct {
 	IffFacts []FactStmt
 }
 
-type DefConPropWithSpecIffFacts struct {
+type ExistPropDef struct {
 	DefHeader ConDefHeader
 	DomFacts  []FactStmt
 	IffFacts  []*SpecFactStmt
 }
 
 type DefConExistPropStmt struct {
-	Def            DefConPropWithSpecIffFacts
+	Def            ExistPropDef
 	ExistParams    []string
 	ExistParamSets []Fc
 }
@@ -51,7 +51,8 @@ type DefConFnStmt struct {
 	DefHeader ConDefHeader
 	RetSet    Fc
 	DomFacts  []FactStmt
-	ThenFacts []*SpecFactStmt
+	// ThenFacts []*SpecFactStmt
+	ThenFacts []FactStmt
 }
 
 type ConUniFactStmt struct {
@@ -101,7 +102,8 @@ type ThmStmt struct {
 
 type CondFactStmt struct {
 	CondFacts []FactStmt
-	ThenFacts []*SpecFactStmt
+	// ThenFacts []*SpecFactStmt
+	ThenFacts []FactStmt
 }
 
 type FcFnDecl struct {
