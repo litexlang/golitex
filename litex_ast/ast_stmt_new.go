@@ -31,11 +31,11 @@ func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []F
 	return &DefConPropStmt{defHeader, domFacts, iffFacts}
 }
 
-func NewDefConExistPropStmt(def *DefConPropWithSpecIffFacts, existParams []string, existParamSets []Fc) *DefConExistPropStmt {
+func NewDefConExistPropStmt(def *ExistPropDef, existParams []string, existParamSets []Fc) *DefConExistPropStmt {
 	return &DefConExistPropStmt{*def, existParams, existParamSets}
 }
 
-func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, thenFacts []*SpecFactStmt) *DefConFnStmt {
+func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt) *DefConFnStmt {
 	return &DefConFnStmt{defHeader, retType, domFacts, thenFacts}
 }
 
@@ -67,7 +67,7 @@ func NewThmStmt(decl DefPropOrExistPropStmt, proof []Stmt) *ThmStmt {
 	return &ThmStmt{decl, proof}
 }
 
-func NewCondFactStmt(condFacts []FactStmt, thenFacts []*SpecFactStmt) *CondFactStmt {
+func NewCondFactStmt(condFacts []FactStmt, thenFacts []FactStmt) *CondFactStmt {
 	return &CondFactStmt{condFacts, thenFacts}
 }
 
@@ -89,4 +89,8 @@ func NewOrAndFact(isOr bool, facts []FactStmt) *LogicExprStmt {
 
 func NewExistObjDefStmt(objNames []string, fact SpecFactStmt) *ExistObjDefStmt {
 	return &ExistObjDefStmt{objNames, fact}
+}
+
+func NewExistPropDef(declHeader ConDefHeader, domFacts []FactStmt, iffFacts []*SpecFactStmt) *ExistPropDef {
+	return &ExistPropDef{declHeader, domFacts, iffFacts}
 }

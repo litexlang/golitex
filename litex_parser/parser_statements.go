@@ -292,11 +292,11 @@ func (tb *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 	}
 
 	domFacts := []ast.FactStmt{}
-	thenFacts := []*ast.SpecFactStmt{}
+	thenFacts := []ast.FactStmt{}
 
 	if tb.header.is(glob.KeySymbolColon) {
 		tb.header.skip()
-		domFacts, thenFacts, err = tb.bodyFactSectionSpecFactSection(glob.KeywordThen, nameDepthMap, true)
+		domFacts, thenFacts, err = tb.bodyFactSectionFactSection(glob.KeywordThen, nameDepthMap, true)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
@@ -595,7 +595,7 @@ func (tb *tokenBlock) condFactStmt(nameDepthMap ast.NameDepthMap) (*ast.CondFact
 	}
 
 	condFacts := []ast.FactStmt{}
-	thenFacts := []*ast.SpecFactStmt{}
+	thenFacts := []ast.FactStmt{}
 
 	for i := 0; i < len(tb.body)-1; i++ {
 		fact, err := tb.body[i].factStmt(nameDepthMap, true)
@@ -1054,19 +1054,7 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, allowUniFact
 	return facts, nil
 }
 
-func (cursor *strSliceCursor) skipKwAndColon(kw string) error {
-	err := cursor.skip(kw)
-	if err != nil {
-		return err
-	}
-	err = cursor.skip(glob.KeySymbolColon)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (tb *tokenBlock) defConPropWithSpecIffFacts(prefix string, existParamDepthMap ast.NameDepthMap) (*ast.DefConPropWithSpecIffFacts, error) {
+func (tb *tokenBlock) defConPropWithSpecIffFacts(prefix string, existParamDepthMap ast.NameDepthMap) (*ast.ExistPropDef, error) {
 	if prefix != "" {
 		err := tb.header.skip(prefix)
 		if err != nil {
@@ -1085,7 +1073,7 @@ func (tb *tokenBlock) defConPropWithSpecIffFacts(prefix string, existParamDepthM
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return &ast.DefConPropWithSpecIffFacts{*declHeader, []ast.FactStmt{}, []*ast.SpecFactStmt{}}, nil
+		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []*ast.SpecFactStmt{}), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -1102,5 +1090,5 @@ func (tb *tokenBlock) defConPropWithSpecIffFacts(prefix string, existParamDepthM
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	return &ast.DefConPropWithSpecIffFacts{*declHeader, domFacts, iffFacts}, nil
+	return ast.NewExistPropDef(*declHeader, domFacts, iffFacts), nil
 }

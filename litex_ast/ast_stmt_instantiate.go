@@ -148,7 +148,7 @@ func (stmt *CondFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 		newCondFacts = append(newCondFacts, newFact)
 	}
 
-	newThenFacts := []*SpecFactStmt{}
+	newThenFacts := []FactStmt{}
 	for _, fact := range stmt.ThenFacts {
 		newFact, err := fact.Instantiate(uniConMap)
 		if err != nil {

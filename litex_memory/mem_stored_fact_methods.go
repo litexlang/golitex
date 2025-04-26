@@ -93,9 +93,13 @@ func NewCondFactMemDict() *CondFactMemDict {
 
 func (factMem *CondFactMemDict) Insert(condStmt *ast.CondFactStmt) error {
 	for _, stmt := range condStmt.ThenFacts {
-		err := factMem.InsertSpecFact(condStmt, stmt)
-		if err != nil {
-			return err
+		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+			err := factMem.InsertSpecFact(condStmt, stmtAsSpecFact)
+			if err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("TODO: Currently only support spec fact in cond fact, but got: %s", stmt.String())
 		}
 	}
 	return nil

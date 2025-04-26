@@ -309,7 +309,7 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 
 	retFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
 
-	uniFactThen := []*ast.SpecFactStmt{&retFact}
+	uniFactThen := []ast.FactStmt{&retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
 
 	thenFacts := []ast.FactStmt{}
