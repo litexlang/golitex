@@ -225,10 +225,10 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 	iffLeadToPropUniFactDomFacts := []ast.FactStmt{}
 	iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, stmt.DomFacts...)
 
-	specIffFacts := []*ast.SpecFactStmt{}
+	iffFacts := []ast.FactStmt{}
 	for _, fact := range stmt.IffFacts {
 		iffLeadToPropUniFactDomFacts = append(iffLeadToPropUniFactDomFacts, fact)
-		specIffFacts = append(specIffFacts, fact)
+		iffFacts = append(iffFacts, fact)
 	}
 
 	specFactParams := []ast.Fc{}
@@ -240,19 +240,14 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 
 	IffLeadToProp := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: iffLeadToPropUniFactDomFacts, ThenFacts: []ast.FactStmt{&propAsSpecFact}}
 
+	propLeadToIffDomFacts := append(stmt.DomFacts, &propAsSpecFact)
+
+	PropLeadToIff := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: propLeadToIffDomFacts, ThenFacts: iffFacts}
+
 	err = exec.env.NewFact(&IffLeadToProp)
 	if err != nil {
 		return err
 	}
-
-	domFacts := append(stmt.DomFacts, &propAsSpecFact)
-
-	thenFacts := []ast.FactStmt{}
-	for _, fact := range specIffFacts {
-		thenFacts = append(thenFacts, fact)
-	}
-
-	PropLeadToIff := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: uniFactParamSets, DomFacts: domFacts, ThenFacts: thenFacts}
 
 	err = exec.env.NewFact(&PropLeadToIff)
 	if err != nil {

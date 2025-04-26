@@ -287,7 +287,8 @@ func (s *DefConExistPropStmt) String() string {
 	}
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
-	builder.WriteString(DefConPropStmtString("", &s.Def))
+	// builder.WriteString(DefConPropStmtString("", &s.Def))
+	builder.WriteString("TODO: DefConPropStmtString")
 
 	return builder.String()
 }
