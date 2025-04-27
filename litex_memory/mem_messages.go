@@ -17,7 +17,11 @@ package litex_memory
 // }
 
 func (fact *StoredSpecFact) String() string {
-	return fact.Fact.String()
+	if !fact.IsLogicExpr() {
+		return fact.Fact.String()
+	}
+
+	return fact.LogicExpr.String()
 }
 
 func (fact *StoredCondSpecFact) String() string {
