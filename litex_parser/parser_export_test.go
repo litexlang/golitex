@@ -6,7 +6,7 @@
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
-// Original Author: Jiachen Shen (malloc_realloc_calloc@outlook.com)
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
 // Visit litexlang.org and https://github.com/litexlang/golitex for more information.
 
 package litex_parser_test
