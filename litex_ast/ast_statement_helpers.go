@@ -102,3 +102,5 @@ func (stmt *LogicExprStmt) SpecFactIndexPairs(indexes []uint8) ([]SpecFactIndexI
 	}
 	return pairs, nil
 }
+
+var SpecFactUnderNoLogicalExprSig []uint8 = nil

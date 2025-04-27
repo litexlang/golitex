@@ -21,7 +21,7 @@ import (
 func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.NewSpecFact(f)
+		return env.NewSpecFact(f, ast.SpecFactUnderNoLogicalExprSig)
 	case *ast.CondFactStmt:
 		return env.NewCondFact(f)
 	case *ast.ConUniFactStmt:
@@ -39,7 +39,7 @@ func (env *Env) NewLogicExprStmt(fact *ast.LogicExprStmt) error {
 		return err
 	}
 	for _, pair := range specFactIndexesPair {
-		err := env.NewSpecFact(pair.Fact)
+		err := env.NewSpecFact(pair.Fact, pair.Indexes)
 		if err != nil {
 			return err
 		}
@@ -47,12 +47,12 @@ func (env *Env) NewLogicExprStmt(fact *ast.LogicExprStmt) error {
 	return nil
 }
 
-func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
+func (env *Env) NewSpecFact(fact *ast.SpecFactStmt, indexes []uint8) error {
 	if fact.IsEqualFact() {
 		return env.NewEqualFact(fact)
 	}
 
-	err := env.SpecFactMem.Insert(fact)
+	err := env.SpecFactMem.Insert(fact, indexes)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (env *Env) newTrueAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 		if err != nil {
 			return err
 		}
-		env.SpecFactMem.Insert(instantiated.(*ast.SpecFactStmt))
+		env.SpecFactMem.Insert(instantiated.(*ast.SpecFactStmt), ast.SpecFactUnderNoLogicalExprSig)
 	}
 
 	return nil
@@ -142,7 +142,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 
 	existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[sepIndex+1:])
 
-	env.SpecFactMem.Insert(existFact)
+	env.SpecFactMem.Insert(existFact, ast.SpecFactUnderNoLogicalExprSig)
 
 	return nil
 }
