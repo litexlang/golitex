@@ -39,7 +39,7 @@ func (env *Env) NewLogicExprStmt(fact *ast.LogicExprStmt) error {
 		return err
 	}
 	for _, pair := range specFactIndexesPair {
-		err := env.NewSpecFact(pair.Fact, pair.Indexes, nil)
+		err := env.NewSpecFact(pair.Fact, pair.Indexes, fact)
 		if err != nil {
 			return err
 		}
