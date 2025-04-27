@@ -7,7 +7,8 @@
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
-// Visit litexlang.org and https://github.com/litexlang/golitex for more information.
+// Contact the development team: <litexlang@outlook.com>
+// Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
 package litex_verifier
 
@@ -20,13 +21,13 @@ import (
 
 // match 函数不需要传入state: 没有any, spec 之分，也不需要打印
 func (ver *Verifier) matchStoredUniSpecWithSpec(knownFact mem.StoredUniSpecFact, stmt *ast.SpecFactStmt) (map[string][]ast.Fc, bool, error) { // 之所以是map[string][]ast.Fc而不是 map[string]ast.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
-	if len(stmt.Params) != len(*knownFact.FuncParams) {
+	if len(stmt.Params) != len(knownFact.SpecFact.Params) {
 		return nil, false, nil
 	}
 
 	retMap := map[string][]ast.Fc{}
 
-	for i, uniParam := range *knownFact.FuncParams {
+	for i, uniParam := range knownFact.SpecFact.Params {
 		matchMap, matched, err := ver.matchUniFcWithConFc(uniParam, stmt.Params[i], knownFact.UniFact.Params)
 		if err != nil {
 			return nil, false, err

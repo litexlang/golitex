@@ -7,7 +7,8 @@
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
-// Visit litexlang.org and https://github.com/litexlang/golitex for more information.
+// Contact the development team: <litexlang@outlook.com>
+// Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
 package litex_verifier
 

@@ -7,7 +7,8 @@
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
-// Visit litexlang.org and https://github.com/litexlang/golitex for more information.
+// Contact the development team: <litexlang@outlook.com>
+// Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
 package litex_memory
 
@@ -50,9 +51,10 @@ type SpecFactMemDict struct {
 }
 
 type StoredCondSpecFact struct {
-	TypeEnum ast.SpecFactEnum
-	Params   []ast.Fc
-	Fact     *ast.CondFactStmt
+	SpecFact *ast.SpecFactStmt
+	// TypeEnum ast.SpecFactEnum
+	// Params   []ast.Fc
+	Fact *ast.CondFactStmt
 }
 
 type StoredCondSpecFactUnderLogicExpr struct {
@@ -83,9 +85,10 @@ type CondFactMemDict struct {
 }
 
 type StoredUniSpecFact struct {
-	TypeEnum   ast.SpecFactEnum
-	FuncParams *[]ast.Fc // 和存在Fact里的FuncFact共享slice，只要是共享，那我就用*[]，虽然确实 Fact里的 FuncFact 日后不会改变，且二者再也不相见了
-	UniFact    *ast.ConUniFactStmt
+	SpecFact *ast.SpecFactStmt
+	// TypeEnum ast.SpecFactEnum
+	// FuncParams *[]ast.Fc // 和存在Fact里的FuncFact共享slice，只要是共享，那我就用*[]，虽然确实 Fact里的 FuncFact 日后不会改变，且二者再也不相见了
+	UniFact *ast.ConUniFactStmt
 }
 
 type StoredUniSpecFactUnderLogicExpr struct {

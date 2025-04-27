@@ -1,0 +1,20 @@
+prove:
+    know:
+        forall x X:
+            $p(x)
+            then:
+                $q(x)
+    when:
+        $p(a)
+        then:
+            $q(a)
+
+prove:
+    know when:
+        $p(a)
+        then:
+            $q(a)
+    know:
+        $p(a)
+
+    $q(a)

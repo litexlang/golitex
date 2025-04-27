@@ -7,7 +7,8 @@
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
-// Visit litexlang.org and https://github.com/litexlang/golitex for more information.
+// Contact the development team: <litexlang@outlook.com>
+// Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
 // verifier 的方法的命名方式：factType+?UseWhatMemToVerify+?atEnv, 比如 RelaFactSpecAtEnv 就是说 证明 relaFact, 方法是用SpecFact，在当前环境里.
 package litex_verifier
