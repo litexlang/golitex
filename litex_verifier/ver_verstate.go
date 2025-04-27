@@ -65,3 +65,11 @@ func (e VerState) toNoMsg() VerState {
 		return e
 	}
 }
+
+func (e VerState) toSpec() VerState {
+	if e.requireMsg() {
+		return SpecMsg
+	} else {
+		return SpecNoMsg
+	}
+}

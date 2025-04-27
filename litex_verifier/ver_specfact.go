@@ -103,7 +103,7 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		searchedNodeFacts, got := curEnv.SpecFactMem.GetNode(stmt)
+		searchedNodeFacts, searchedNodeFactsUnderLogicExpr, got := curEnv.SpecFactMem.GetNode(stmt)
 		if !got {
 			continue
 		}
@@ -113,24 +113,31 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 				continue
 			}
 
-			if !knownFact.IsLogicExpr() {
-				ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
+			// if !knownFact.IsLogicExpr() {
+			ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
 
-				if err != nil {
-					return false, err
+			if err != nil {
+				return false, err
+			}
+
+			if ok {
+				if state.requireMsg() {
+					ver.successWithMsg(stmt.String(), knownFact.String())
+				} else {
+					ver.successNoMsg()
 				}
 
-				if ok {
-					if state.requireMsg() {
-						ver.successWithMsg(stmt.String(), knownFact.String())
-					} else {
-						ver.successNoMsg()
-					}
+				return true, nil
+			}
+		}
 
-					return true, nil
-				}
-			} else {
-				return ver.SpecFactSpecUnderLogicalExpr(&knownFact, stmt, state)
+		for _, knownFactUnderLogicExpr := range searchedNodeFactsUnderLogicExpr {
+			ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
 			}
 		}
 	}
@@ -307,8 +314,8 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 	return newMap, true, nil
 }
 
-func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *mem.StoredSpecFact, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
+func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *mem.StoredSpecFactUnderLogicExpr, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.FcSliceEqual(knownFact.Fact.Params, stmt.Params, state)
 	if err != nil {
 		return false, err
 	}
@@ -317,8 +324,26 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *mem.StoredSpecFact,
 	}
 
 	currentLayerFact := knownFact.LogicExpr
-	for i := 0; i < len(knownFact.LogicExprIndexes); i++ {
-		factIndex := knownFact.LogicExprIndexes[i]
+	ok, err = ver.verifyLogicExprSteps(knownFact, currentLayerFact, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), knownFact.String())
+	} else {
+		ver.successNoMsg()
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) verifyLogicExprSteps(knownFact *mem.StoredSpecFactUnderLogicExpr, currentLayerFact *ast.LogicExprStmt, state VerState) (bool, error) {
+	for i := 0; i < len(knownFact.Index)-1; i++ {
+		factIndex := knownFact.Index[i]
 		// 如果保存的是and，那and一定是全对的，不用验证
 		if !currentLayerFact.IsOr {
 			continue
@@ -331,7 +356,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *mem.StoredSpecFact,
 			}
 
 			// 需要reverse True
-			ok, err := ver.FactStmt(fact.Reverse(), state.addRound().addRound())
+			ok, err := ver.FactStmt(fact.Reverse(), state.toSpec())
 			if err != nil {
 				return false, err
 			}
@@ -340,19 +365,28 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *mem.StoredSpecFact,
 			}
 		}
 
-		if i == len(knownFact.LogicExprIndexes)-1 {
-			break
-		} else {
-			currentLayerFact = currentLayerFact.Facts[int(factIndex)].(*ast.LogicExprStmt)
+		currentLayerFact = currentLayerFact.Facts[int(factIndex)].(*ast.LogicExprStmt)
+	}
+
+	// 处理最后一步
+	factIndex := knownFact.Index[len(knownFact.Index)-1]
+	if !currentLayerFact.IsOr {
+		return true, nil
+	}
+
+	for i, fact := range currentLayerFact.Facts {
+		if i == int(factIndex) {
+			continue
+		}
+
+		ok, err := ver.FactStmt(fact.Reverse(), state.addRound().addRound())
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
 		}
 	}
 
-	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), knownFact.String())
-	} else {
-		ver.successNoMsg()
-	}
-
 	return true, nil
-
 }
