@@ -12,6 +12,7 @@
 package litex_ast
 
 import (
+	"fmt"
 	glob "golitex/litex_global"
 )
 
@@ -70,26 +71,34 @@ func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
 }
 
 type SpecFactIndexInLogicExprPair struct {
-	fact    *SpecFactStmt
-	indexes []uint8
+	Fact    *SpecFactStmt
+	Indexes []uint8
 }
 
-func (stmt *LogicExprStmt) SpecFactIndexPairs(indexes []uint8) []SpecFactIndexInLogicExprPair {
+func (stmt *LogicExprStmt) SpecFactIndexPairs(indexes []uint8) ([]SpecFactIndexInLogicExprPair, error) {
 	pairs := []SpecFactIndexInLogicExprPair{}
 	for i, fact := range stmt.Facts {
 		if specFact, ok := fact.(*SpecFactStmt); ok {
-			indexes = append(indexes, uint8(i))
-			pairs = append(pairs, SpecFactIndexInLogicExprPair{specFact, indexes})
+			curIndexes := make([]uint8, len(indexes))
+			copy(curIndexes, indexes)
+			curIndexes = append(curIndexes, uint8(i))
+			pairs = append(pairs, SpecFactIndexInLogicExprPair{specFact, curIndexes})
+			continue
 		}
 
 		if logicExpr, ok := fact.(*LogicExprStmt); ok {
-			indexes = append(indexes, uint8(i))
-			currentPairs := logicExpr.SpecFactIndexPairs(indexes)
+			curIndexes := make([]uint8, len(indexes))
+			copy(curIndexes, indexes)
+			currentPairs, err := logicExpr.SpecFactIndexPairs(curIndexes)
+			if err != nil {
+				return nil, err
+			}
 			pairs = append(pairs, currentPairs...)
+			continue
 		}
 	}
 	if len(pairs) > glob.MaxLogicExprStmtIndexesSize {
-		panic("logic expr stmt size too large")
+		return nil, fmt.Errorf("logic expr stmt size too large")
 	}
-	return pairs
+	return pairs, nil
 }
