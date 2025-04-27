@@ -17,9 +17,14 @@ import (
 )
 
 type StoredSpecFact struct {
-	Fact *ast.SpecFactStmt
+	Fact             *ast.SpecFactStmt
+	LogicExprIndexes []uint8
 	// TypeEnum ast.SpecFactEnum
 	// Params   []ast.Fc
+}
+
+func (fact *StoredSpecFact) IsLogicExpr() bool {
+	return fact.LogicExprIndexes != nil
 }
 
 type StoredSpecMemDictNode struct {

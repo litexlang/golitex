@@ -38,17 +38,17 @@ func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt) error {
 	}
 
 	if stmt.TypeEnum == ast.TrueAtom {
-		node.Facts = append(node.Facts, StoredSpecFact{stmt})
+		node.Facts = append(node.Facts, StoredSpecFact{stmt, nil})
 	} else if stmt.TypeEnum == ast.FalseAtom {
-		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt})
+		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt, nil})
 	} else if stmt.TypeEnum == ast.TrueExist {
-		node.ExistFacts = append(node.ExistFacts, StoredSpecFact{stmt})
+		node.ExistFacts = append(node.ExistFacts, StoredSpecFact{stmt, nil})
 	} else if stmt.TypeEnum == ast.FalseExist {
-		node.NotExistFacts = append(node.NotExistFacts, StoredSpecFact{stmt})
+		node.NotExistFacts = append(node.NotExistFacts, StoredSpecFact{stmt, nil})
 	} else if stmt.TypeEnum == ast.TrueExist_St {
-		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredSpecFact{stmt})
+		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredSpecFact{stmt, nil})
 	} else if stmt.TypeEnum == ast.FalseExist_St {
-		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredSpecFact{stmt})
+		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredSpecFact{stmt, nil})
 	} else {
 		panic("unknown spec fact type")
 	}

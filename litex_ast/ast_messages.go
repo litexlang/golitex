@@ -451,7 +451,7 @@ func (stmt *ExistObjDefStmt) String() string {
 	builder.WriteString(glob.KeywordExistObj)
 	builder.WriteString(" ")
 	if len(stmt.ObjNames) > 0 {
-		for i := 0; i < len(stmt.ObjNames)-1; i++ {
+		for i := range len(stmt.ObjNames) - 1 {
 			builder.WriteString(stmt.ObjNames[i])
 			builder.WriteString(", ")
 		}
@@ -508,7 +508,7 @@ func (stmt *SetDefEnumtmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(stmt.SetName)
 	builder.WriteString(" ")
-	for i := 0; i < len(stmt.Elems)-1; i++ {
+	for i := range len(stmt.Elems) - 1 {
 		builder.WriteString(stmt.Elems[i].String())
 		builder.WriteString(", ")
 	}

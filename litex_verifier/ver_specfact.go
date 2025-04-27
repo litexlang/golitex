@@ -112,20 +112,22 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 				continue
 			}
 
-			ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
+			if !knownFact.IsLogicExpr() {
+				ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
 
-			if err != nil {
-				return false, err
-			}
-
-			if ok {
-				if state.requireMsg() {
-					ver.successWithMsg(stmt.String(), knownFact.String())
-				} else {
-					ver.successNoMsg()
+				if err != nil {
+					return false, err
 				}
 
-				return true, nil
+				if ok {
+					if state.requireMsg() {
+						ver.successWithMsg(stmt.String(), knownFact.String())
+					} else {
+						ver.successNoMsg()
+					}
+
+					return true, nil
+				}
 			}
 		}
 	}
