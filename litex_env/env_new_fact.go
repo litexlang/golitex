@@ -27,14 +27,23 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 	case *ast.ConUniFactStmt:
 		return env.NewUniFact(f)
 	case *ast.LogicExprStmt:
-		return env.NewOrAndFact(f)
+		return env.NewLogicExprStmt(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
 }
 
-func (env *Env) NewOrAndFact(fact *ast.LogicExprStmt) error {
-	// TODO
+func (env *Env) NewLogicExprStmt(fact *ast.LogicExprStmt) error {
+	specFactIndexesPair, err := fact.SpecFactIndexPairs([]uint8{})
+	if err != nil {
+		return err
+	}
+	for _, pair := range specFactIndexesPair {
+		err := env.NewSpecFact(pair.Fact)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

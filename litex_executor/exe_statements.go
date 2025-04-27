@@ -15,7 +15,6 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
-	verifier "golitex/litex_verifier"
 	"strings"
 )
 
@@ -69,53 +68,6 @@ func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
 
 	exec.appendNewMsg(stmt.String())
 	return nil
-}
-
-func (exec *Executor) factStmt(stmt ast.FactStmt) error {
-	defer exec.appendNewMsg("\n")
-
-	ok, _, err := exec.checkFactStmt(stmt)
-
-	if err != nil {
-		return err
-	}
-
-	if ok {
-		return exec.env.NewFact(stmt)
-	}
-
-	if glob.CheckFalse {
-		switch stmt := stmt.(type) {
-		case *ast.SpecFactStmt:
-			newStmt := stmt.ReverseIsTrue()
-			ok, _, err := exec.checkFactStmt(newStmt)
-			if err != nil {
-				return err
-			}
-			if ok {
-				exec.appendNewMsg(stmt.String() + "\nis false")
-				return nil
-			}
-		case *ast.ConUniFactStmt:
-			// TODO 这里需要考虑到fact的类型
-		default:
-			// TODO 这里需要考虑到fact的类型
-		}
-		exec.appendNewMsg(stmt.String() + "\nis unknown")
-	}
-
-	exec.appendNewMsg(stmt.String() + "\nis unknown")
-
-	return nil
-}
-
-func (exec *Executor) checkFactStmt(stmt ast.FactStmt) (bool, *verifier.Verifier, error) {
-	curVerifier := verifier.NewVerifier(exec.env, exec.env.CurPkg)
-	ok, err := curVerifier.FactStmt(stmt, verifier.Round0Msg)
-	if err != nil {
-		return false, curVerifier, err
-	}
-	return ok, curVerifier, err
 }
 
 func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
