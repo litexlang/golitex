@@ -55,6 +55,13 @@ type StoredCondSpecFact struct {
 	Fact     *ast.CondFactStmt
 }
 
+type StoredCondSpecFactUnderLogicExpr struct {
+	SpecFact  *ast.SpecFactStmt
+	CondFact  *ast.CondFactStmt
+	Index     []uint8
+	LogicExpr *ast.LogicExprStmt
+}
+
 type StoredCondFuncMemDictNode struct {
 	Facts             []StoredCondSpecFact
 	NotFacts          []StoredCondSpecFact
@@ -62,6 +69,13 @@ type StoredCondFuncMemDictNode struct {
 	NotExistFacts     []StoredCondSpecFact
 	Exist_St_Facts    []StoredCondSpecFact
 	NotExist_St_Facts []StoredCondSpecFact
+
+	FactsUnderLogicExpr             []StoredCondSpecFactUnderLogicExpr
+	NotFactsUnderLogicExpr          []StoredCondSpecFactUnderLogicExpr
+	ExistFactsUnderLogicExpr        []StoredCondSpecFactUnderLogicExpr
+	NotExistFactsUnderLogicExpr     []StoredCondSpecFactUnderLogicExpr
+	Exist_St_FactsUnderLogicExpr    []StoredCondSpecFactUnderLogicExpr
+	NotExist_St_FactsUnderLogicExpr []StoredCondSpecFactUnderLogicExpr
 }
 
 type CondFactMemDict struct {
@@ -74,6 +88,14 @@ type StoredUniSpecFact struct {
 	UniFact    *ast.ConUniFactStmt
 }
 
+type StoredUniSpecFactUnderLogicExpr struct {
+	TypeEnum   ast.SpecFactEnum
+	FuncParams *[]ast.Fc
+	UniFact    *ast.ConUniFactStmt
+	Index      []uint8
+	LogicExpr  *ast.LogicExprStmt
+}
+
 type StoredUniFuncMemDictNode struct {
 	Facts             []StoredUniSpecFact
 	NotFacts          []StoredUniSpecFact
@@ -81,6 +103,13 @@ type StoredUniFuncMemDictNode struct {
 	NotExistFacts     []StoredUniSpecFact
 	Exist_St_Facts    []StoredUniSpecFact
 	NotExist_St_Facts []StoredUniSpecFact
+
+	FactsUnderLogicExpr             []StoredUniSpecFactUnderLogicExpr
+	NotFactsUnderLogicExpr          []StoredUniSpecFactUnderLogicExpr
+	ExistFactsUnderLogicExpr        []StoredUniSpecFactUnderLogicExpr
+	NotExistFactsUnderLogicExpr     []StoredUniSpecFactUnderLogicExpr
+	Exist_St_FactsUnderLogicExpr    []StoredUniSpecFactUnderLogicExpr
+	NotExist_St_FactsUnderLogicExpr []StoredUniSpecFactUnderLogicExpr
 }
 
 type UniFactMemDict struct {

@@ -98,6 +98,11 @@ func (factMem *CondFactMemDict) Insert(condStmt *ast.CondFactStmt) error {
 			if err != nil {
 				return err
 			}
+		} else if stmtAsCondFact, ok := stmt.(*ast.LogicExprStmt); ok {
+			err := factMem.InsertCondFactUnderLogicExpr(condStmt, stmtAsCondFact)
+			if err != nil {
+				return err
+			}
 		} else {
 			return fmt.Errorf("TODO: Currently only support spec fact in cond fact, but got: %s", stmt.String())
 		}
@@ -140,6 +145,52 @@ func (factMem *CondFactMemDict) InsertSpecFact(condStmt *ast.CondFactStmt, stmt 
 
 	// 更新回字典
 	factMem.SpecFactsDict[pkgName][optName] = node
+	return nil
+}
+
+func (factMem *CondFactMemDict) InsertCondFactUnderLogicExpr(condStmt *ast.CondFactStmt, logicExpr *ast.LogicExprStmt) error {
+	pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
+	if err != nil {
+		return err
+	}
+
+	for _, pair := range pairs {
+		stmt := pair.Stmt
+		indexes := pair.Indexes
+
+		pkgMap, pkgExists := factMem.SpecFactsDict[stmt.PropName.PkgName]
+		if !pkgExists {
+			factMem.SpecFactsDict[stmt.PropName.PkgName] = make(map[string]StoredCondFuncMemDictNode)
+			pkgMap = factMem.SpecFactsDict[stmt.PropName.PkgName]
+		}
+
+		node, nodeExists := pkgMap[stmt.PropName.Name]
+		if !nodeExists {
+			node = StoredCondFuncMemDictNode{
+				Facts: []StoredCondSpecFact{},
+			}
+		}
+
+		switch stmt.TypeEnum {
+		case ast.TrueAtom:
+			node.FactsUnderLogicExpr = append(node.FactsUnderLogicExpr, StoredCondSpecFactUnderLogicExpr{stmt, condStmt, indexes, logicExpr})
+		case ast.FalseAtom:
+			node.NotFactsUnderLogicExpr = append(node.NotFactsUnderLogicExpr, StoredCondSpecFactUnderLogicExpr{stmt, condStmt, indexes, logicExpr})
+		case ast.TrueExist:
+			node.ExistFactsUnderLogicExpr = append(node.ExistFactsUnderLogicExpr, StoredCondSpecFactUnderLogicExpr{stmt, condStmt, indexes, logicExpr})
+		case ast.FalseExist:
+			node.NotExistFactsUnderLogicExpr = append(node.NotExistFactsUnderLogicExpr, StoredCondSpecFactUnderLogicExpr{stmt, condStmt, indexes, logicExpr})
+		case ast.TrueExist_St:
+			node.Exist_St_FactsUnderLogicExpr = append(node.Exist_St_FactsUnderLogicExpr, StoredCondSpecFactUnderLogicExpr{stmt, condStmt, indexes, logicExpr})
+		case ast.FalseExist_St:
+			node.NotExist_St_FactsUnderLogicExpr = append(node.NotExist_St_FactsUnderLogicExpr, StoredCondSpecFactUnderLogicExpr{stmt, condStmt, indexes, logicExpr})
+		default:
+			return fmt.Errorf("unknown spec fact type: %s", stmt.String())
+		}
+
+		pkgMap[stmt.PropName.Name] = node
+	}
+
 	return nil
 }
 
