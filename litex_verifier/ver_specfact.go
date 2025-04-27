@@ -15,6 +15,7 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	env "golitex/litex_env"
+	mem "golitex/litex_memory"
 )
 
 func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -128,6 +129,8 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 
 					return true, nil
 				}
+			} else {
+				return ver.SpecFactSpecUnderLogicalExpr(&knownFact, stmt, state)
 			}
 		}
 	}
@@ -302,4 +305,47 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 	}
 
 	return newMap, true, nil
+}
+
+func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *mem.StoredSpecFact, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
+
+	if err != nil {
+		return false, err
+	}
+
+	currentLayerFact := knownFact.LogicExpr
+	for _, factIndex := range knownFact.LogicExprIndexes {
+		factAsLogicExpr, ok := currentLayerFact.Facts[factIndex].(*ast.LogicExprStmt)
+		if !ok {
+			return false, fmt.Errorf("logic expr stmt is not a logic expr stmt")
+		}
+
+		// 如果保存的是and，那and一定是全对的，不用验证
+		if !factAsLogicExpr.IsOr {
+			continue
+		}
+
+		// 如果是or，那只有在其他fact都验证失败的情况下，这个fact才算验证成功
+		ok, err := ver.FactStmt(factAsLogicExpr, state.addRound().addRound())
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), knownFact.String())
+		} else {
+			ver.successNoMsg()
+		}
+
+		return true, nil
+	}
+
+	// TODO: 这里需要处理逻辑表达式
+	return false, nil
 }

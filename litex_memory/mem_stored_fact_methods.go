@@ -20,7 +20,7 @@ func NewSpecFactMemDict() *SpecFactMemDict {
 	return &SpecFactMemDict{map[string]map[string]StoredSpecMemDictNode{}}
 }
 
-func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt, indexes []uint8) error {
+func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt, indexes []uint8, logicExpr *ast.LogicExprStmt) error {
 	pkgMap, pkgExists := factMem.Dict[stmt.PropName.PkgName] // 检查 pkgName 是否存在
 
 	// 如果包不存在，初始化包映射
@@ -38,17 +38,17 @@ func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt, indexes []uint8) 
 	}
 
 	if stmt.TypeEnum == ast.TrueAtom {
-		node.Facts = append(node.Facts, StoredSpecFact{stmt, indexes})
+		node.Facts = append(node.Facts, StoredSpecFact{stmt, indexes, logicExpr})
 	} else if stmt.TypeEnum == ast.FalseAtom {
-		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt, indexes})
+		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt, indexes, logicExpr})
 	} else if stmt.TypeEnum == ast.TrueExist {
-		node.ExistFacts = append(node.ExistFacts, StoredSpecFact{stmt, indexes})
+		node.ExistFacts = append(node.ExistFacts, StoredSpecFact{stmt, indexes, logicExpr})
 	} else if stmt.TypeEnum == ast.FalseExist {
-		node.NotExistFacts = append(node.NotExistFacts, StoredSpecFact{stmt, indexes})
+		node.NotExistFacts = append(node.NotExistFacts, StoredSpecFact{stmt, indexes, logicExpr})
 	} else if stmt.TypeEnum == ast.TrueExist_St {
-		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredSpecFact{stmt, indexes})
+		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredSpecFact{stmt, indexes, logicExpr})
 	} else if stmt.TypeEnum == ast.FalseExist_St {
-		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredSpecFact{stmt, indexes})
+		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredSpecFact{stmt, indexes, logicExpr})
 	} else {
 		panic("unknown spec fact type")
 	}
