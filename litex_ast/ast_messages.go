@@ -441,7 +441,9 @@ func (stmt *LogicExprStmt) String() string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[len(stmt.Facts)-1].String(), 1))
 	}
 
-	return builder.String()
+	ret := builder.String()
+	ret = strings.TrimSuffix(ret, "\n")
+	return ret
 }
 
 func (stmt *ExistObjDefStmt) String() string {

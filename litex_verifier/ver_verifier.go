@@ -115,7 +115,7 @@ func (ver *Verifier) factDefer(stmt ast.FactStmt, state VerState, proved bool, e
 		if proved {
 			ver.successWithMsg(stmt.String(), proveBy)
 		} else {
-			ver.unknownMsgEnd(stmt.String(), stmt.String())
+			ver.unknownMsgEnd(stmt.String())
 		}
 	}
 	return proved, err
