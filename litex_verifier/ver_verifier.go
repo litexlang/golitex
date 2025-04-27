@@ -29,7 +29,7 @@ func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 	case *ast.ConUniFactStmt:
 		return ver.UniFact(stmt, state)
 	case *ast.LogicExprStmt:
-		return ver.OrAndFact(stmt, state)
+		return ver.LogicalExprFact(stmt, state)
 	default:
 		return false, fmt.Errorf("unexpected")
 	}
@@ -80,7 +80,7 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	}
 }
 
-func (ver *Verifier) OrAndFact(stmt *ast.LogicExprStmt, state VerState) (bool, error) {
+func (ver *Verifier) LogicalExprFact(stmt *ast.LogicExprStmt, state VerState) (bool, error) {
 	if !stmt.IsOr {
 		for _, fact := range stmt.Facts {
 			ok, err := ver.FactStmt(fact, state)

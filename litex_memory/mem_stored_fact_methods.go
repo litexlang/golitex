@@ -37,22 +37,38 @@ func (factMem *SpecFactMemDict) Insert(stmt *ast.SpecFactStmt) error {
 		}
 	}
 
-	// 添加新事实
 	if stmt.TypeEnum == ast.TrueAtom {
-		node.Facts = append(node.Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.Facts = append(node.Facts, StoredSpecFact{stmt})
 	} else if stmt.TypeEnum == ast.FalseAtom {
-		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt})
 	} else if stmt.TypeEnum == ast.TrueExist {
-		node.ExistFacts = append(node.ExistFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.ExistFacts = append(node.ExistFacts, StoredSpecFact{stmt})
 	} else if stmt.TypeEnum == ast.FalseExist {
-		node.NotExistFacts = append(node.NotExistFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.NotExistFacts = append(node.NotExistFacts, StoredSpecFact{stmt})
 	} else if stmt.TypeEnum == ast.TrueExist_St {
-		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredSpecFact{stmt})
 	} else if stmt.TypeEnum == ast.FalseExist_St {
-		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredSpecFact{stmt})
 	} else {
 		panic("unknown spec fact type")
 	}
+
+	// 添加新事实
+	// if stmt.TypeEnum == ast.TrueAtom {
+	// 	node.Facts = append(node.Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+	// } else if stmt.TypeEnum == ast.FalseAtom {
+	// 	node.NotFacts = append(node.NotFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+	// } else if stmt.TypeEnum == ast.TrueExist {
+	// 	node.ExistFacts = append(node.ExistFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+	// } else if stmt.TypeEnum == ast.FalseExist {
+	// 	node.NotExistFacts = append(node.NotExistFacts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+	// } else if stmt.TypeEnum == ast.TrueExist_St {
+	// 	node.Exist_St_Facts = append(node.Exist_St_Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+	// } else if stmt.TypeEnum == ast.FalseExist_St {
+	// 	node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredSpecFact{stmt.TypeEnum, stmt.Params})
+	// } else {
+	// 	panic("unknown spec fact type")
+	// }
 
 	// 更新映射中的节点
 	pkgMap[stmt.PropName.Name] = node
@@ -255,4 +271,11 @@ func (factMem *UniFactMemDict) GetSpecFactNodeWithTheSameIsTrue(stmt *ast.SpecFa
 			panic("unknown spec fact type")
 		}
 	}
+}
+
+func (storedFact *StoredSpecFact) Params() []ast.Fc {
+	return storedFact.Fact.Params
+}
+func (storedFact *StoredSpecFact) TypeEnum() ast.SpecFactEnum {
+	return storedFact.Fact.TypeEnum
 }
