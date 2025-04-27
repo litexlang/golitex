@@ -31,3 +31,4 @@ const BuiltinExist_St_FactExistParamPropParmSep = ";"
 const CommentSig = "#"
 
 const FactMaxNumInLogicExpr = 255
+const MaxLogicExprStmtIndexesSize = 255

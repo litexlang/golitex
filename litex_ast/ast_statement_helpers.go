@@ -88,5 +88,8 @@ func (stmt *LogicExprStmt) SpecFactIndexPairs(indexes []uint8) []SpecFactIndexIn
 			pairs = append(pairs, currentPairs...)
 		}
 	}
+	if len(pairs) > glob.MaxLogicExprStmtIndexesSize {
+		panic("logic expr stmt size too large")
+	}
 	return pairs
 }
