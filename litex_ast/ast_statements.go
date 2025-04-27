@@ -119,8 +119,20 @@ type ConDefHeader struct {
 
 type LogicExprStmt struct {
 	IsOr  bool
-	Facts []FactStmt
+	Facts []LogicExprOrSpecFactStmt
 }
+
+type LogicExprOrSpecFactStmt interface {
+	logicExprOrSpecFactStmt()
+	factStmt()
+	stmt()
+	String() string
+	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
+}
+
+func (s *LogicExprStmt) logicExprOrSpecFactStmt() {}
+
+func (s *SpecFactStmt) logicExprOrSpecFactStmt() {}
 
 type ExistObjDefStmt struct {
 	ObjNames []string

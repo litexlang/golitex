@@ -90,13 +90,13 @@ func (tb *tokenBlock) factStmt(nameDepthMap ast.NameDepthMap, allowUniFactAtCurS
 	} else if tb.header.is(glob.KeywordWhen) {
 		return tb.condFactStmt(nameDepthMap)
 	} else if tb.header.is(glob.KeywordAnd) || tb.header.is(glob.KeywordOr) {
-		return tb.orAndFactStmt(nameDepthMap, allowUniFactAtCurScope)
+		return tb.logicExprStmt(nameDepthMap)
 	}
 
 	return tb.specFactStmt(nameDepthMap)
 }
 
-func (tb *tokenBlock) orAndFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactAtCurScope bool) (*ast.LogicExprStmt, error) {
+func (tb *tokenBlock) logicExprStmt(nameDepthMap ast.NameDepthMap) (*ast.LogicExprStmt, error) {
 	isOr := tb.header.isAndSkip(glob.KeywordOr)
 	if !isOr {
 		err := tb.header.skip(glob.KeywordAnd)
@@ -110,9 +110,9 @@ func (tb *tokenBlock) orAndFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactA
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	facts := []ast.FactStmt{}
+	facts := []ast.LogicExprOrSpecFactStmt{}
 	for _, factToParse := range tb.body {
-		fact, err := factToParse.factStmt(nameDepthMap, allowUniFactAtCurScope)
+		fact, err := factToParse.logicExprOrSpecFactStmt(nameDepthMap)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
@@ -137,6 +137,14 @@ func (tb *tokenBlock) orAndFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactA
 	}
 
 	return ast.NewOrAndFact(isOr, facts), nil
+}
+
+func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (ast.LogicExprOrSpecFactStmt, error) {
+	if tb.header.is(glob.KeywordOr) || tb.header.is(glob.KeywordAnd) {
+		return tb.logicExprStmt(nameDepthMap)
+	}
+
+	return tb.specFactStmt(nameDepthMap)
 }
 
 func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
