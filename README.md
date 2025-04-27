@@ -205,7 +205,7 @@ prop Group_is_abelian<G Group>(): # you call it by using $Group_is_abelian(setNa
 $Group_is_abelian(Real) # true. * is Real::_add__
 ```
 
-In Litex, a interface = set + structure. You can think of a interface as a set of sets that share the same structure. For example, the set of all groups is an interface. A set might have different ways to implement an interface (e.g. the set of integers, with normal addition, or with modular addition, all implement the interface of Group), that is why we need to name it. (e.g. RealAsGroup)
+In Litex, a interface = set + structure(functions, objects, propositions bound to the set). You can think of a interface as a set of sets that share the same structure. For example, the set of all groups is an interface. A set might have different ways to implement an interface (e.g. the set of integers, with normal addition, or with modular addition, all implement the interface of Group), that is why we need to name it. (e.g. RealAsGroup)
 
 (This Design draws inspiration from 2 concepts: 1. Niklaus Wirth's "Algorithms + Data Structure = Programs" and "type = set + structure". 2. The  `interface` + `type` + `struct` type system in GoLang.)
 
@@ -334,7 +334,7 @@ _-- Bjarne Stroustrup__
 
 Litex is a minimalist proof assistant, designed to be simple and intuitive. It draws inspiration from various programming languages, particularly Go, Lisp, Tex, C, Python. The design philosophy emphasizes minimalism, conceptual integrity, and the KISS (Keep It Simple, Stupid) principle.
 
-In short, Litex is fundamentally an attempt to scale reasoning with the ever-expanding power of modern computing resources. Litex embrace simplicity, the only way to be flexible enough for the unknown future and to maintain conceptual integrity, as its core design principle.
+In short, Litex is fundamentally an attempt to scale reasoning with the ever-expanding power of modern computing resources, and to introduce a new way of thinking (the way of thinking that is more like programming) about math. Litex embrace simplicity, the only way to be flexible enough for the unknown future and to maintain conceptual integrity, as its core design principle.
 
 The key feature of Litex is its simplicity. Its simplicity stems of its intuitiveness. In fact, Litex is so intuitive that people with no math background can understand it. You can learn Litex in 10 minutes. However, its simplicity does not come at the cost of expressiveness.
 
