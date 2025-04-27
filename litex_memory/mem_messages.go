@@ -11,11 +11,13 @@
 
 package litex_memory
 
-import ast "golitex/litex_ast"
+// func (fact *StoredSpecFact) String(atom ast.FcAtom) string {
+// 	knownFact := ast.SpecFactStmt{TypeEnum: fact.TypeEnum, PropName: atom, Params: fact.Params}
+// 	return knownFact.String()
+// }
 
-func (fact *StoredSpecFact) String(atom ast.FcAtom) string {
-	knownFact := ast.SpecFactStmt{TypeEnum: fact.TypeEnum, PropName: atom, Params: fact.Params}
-	return knownFact.String()
+func (fact *StoredSpecFact) String() string {
+	return fact.Fact.String()
 }
 
 func (fact *StoredCondSpecFact) String() string {

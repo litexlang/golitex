@@ -108,11 +108,11 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		}
 
 		for _, knownFact := range searchedNodeFacts {
-			if stmt.TypeEnum != knownFact.TypeEnum {
+			if stmt.TypeEnum != knownFact.TypeEnum() {
 				continue
 			}
 
-			ok, err := ver.FcSliceEqual(knownFact.Params, stmt.Params, state)
+			ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
 
 			if err != nil {
 				return false, err
@@ -120,7 +120,7 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 
 			if ok {
 				if state.requireMsg() {
-					ver.successWithMsg(stmt.String(), knownFact.String(stmt.PropName))
+					ver.successWithMsg(stmt.String(), knownFact.String())
 				} else {
 					ver.successNoMsg()
 				}

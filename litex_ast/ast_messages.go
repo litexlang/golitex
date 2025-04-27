@@ -434,7 +434,7 @@ func (stmt *LogicExprStmt) String() string {
 	builder.WriteByte('\n')
 
 	if len(stmt.Facts) > 0 {
-		for i := 0; i < len(stmt.Facts)-1; i++ {
+		for i := range len(stmt.Facts) - 1 {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Facts[i].String(), 1))
 			builder.WriteByte('\n')
 		}
