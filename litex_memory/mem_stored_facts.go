@@ -19,6 +19,7 @@ import (
 type StoredSpecFact struct {
 	Fact             *ast.SpecFactStmt
 	LogicExprIndexes []uint8
+	LogicExpr        *ast.LogicExprStmt
 	// TypeEnum ast.SpecFactEnum
 	// Params   []ast.Fc
 }
