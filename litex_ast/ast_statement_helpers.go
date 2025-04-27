@@ -71,7 +71,7 @@ func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
 }
 
 type SpecFactIndexInLogicExprPair struct {
-	Fact    *SpecFactStmt
+	Stmt    *SpecFactStmt
 	Indexes []uint8
 }
 

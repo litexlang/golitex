@@ -17,15 +17,17 @@ import (
 )
 
 type StoredSpecFact struct {
-	Fact             *ast.SpecFactStmt
-	LogicExprIndexes []uint8
-	LogicExpr        *ast.LogicExprStmt
+	Fact *ast.SpecFactStmt
+	// LogicExprIndexes []uint8
+	// LogicExpr        *ast.LogicExprStmt
 	// TypeEnum ast.SpecFactEnum
 	// Params   []ast.Fc
 }
 
-func (fact *StoredSpecFact) IsLogicExpr() bool {
-	return fact.LogicExprIndexes != nil
+type StoredSpecFactUnderLogicExpr struct {
+	Fact      *ast.SpecFactStmt
+	Index     []uint8
+	LogicExpr *ast.LogicExprStmt
 }
 
 type StoredSpecMemDictNode struct {
@@ -35,6 +37,13 @@ type StoredSpecMemDictNode struct {
 	NotExistFacts     []StoredSpecFact
 	Exist_St_Facts    []StoredSpecFact
 	NotExist_St_Facts []StoredSpecFact
+
+	FactsUnderLogicExpr             []StoredSpecFactUnderLogicExpr
+	NotFactsUnderLogicExpr          []StoredSpecFactUnderLogicExpr
+	ExistFactsUnderLogicExpr        []StoredSpecFactUnderLogicExpr
+	NotExistFactsUnderLogicExpr     []StoredSpecFactUnderLogicExpr
+	Exist_St_FactsUnderLogicExpr    []StoredSpecFactUnderLogicExpr
+	NotExist_St_FactsUnderLogicExpr []StoredSpecFactUnderLogicExpr
 }
 type SpecFactMemDict struct {
 	Dict map[string]map[string]StoredSpecMemDictNode

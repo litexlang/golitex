@@ -21,7 +21,7 @@ import (
 func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.NewSpecFact(f, ast.SpecFactUnderNoLogicalExprSig, nil)
+		return env.NewSpecFact(f)
 	case *ast.CondFactStmt:
 		return env.NewCondFact(f)
 	case *ast.ConUniFactStmt:
@@ -34,25 +34,15 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 }
 
 func (env *Env) NewLogicExprStmt(fact *ast.LogicExprStmt) error {
-	specFactIndexesPair, err := fact.SpecFactIndexPairs([]uint8{})
-	if err != nil {
-		return err
-	}
-	for _, pair := range specFactIndexesPair {
-		err := env.NewSpecFact(pair.Fact, pair.Indexes, fact)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return env.SpecFactMem.InsertSpecFactUnderLogicExpr(fact)
 }
 
-func (env *Env) NewSpecFact(fact *ast.SpecFactStmt, indexes []uint8, logicExpr *ast.LogicExprStmt) error {
+func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 	if fact.IsEqualFact() {
 		return env.NewEqualFact(fact)
 	}
 
-	err := env.SpecFactMem.Insert(fact, indexes, logicExpr)
+	err := env.SpecFactMem.InsertSpecFact(fact)
 	if err != nil {
 		return err
 	}
@@ -96,7 +86,12 @@ func (env *Env) newTrueAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 		if err != nil {
 			return err
 		}
-		env.SpecFactMem.Insert(instantiated.(*ast.SpecFactStmt), ast.SpecFactUnderNoLogicalExprSig, nil)
+
+		// TODO: 这里不只插入到SpecFactMem中，还要插入任何mem，因为现在iff非常的复杂，所有情况都行
+		err = env.SpecFactMem.InsertSpecFact(instantiated.(*ast.SpecFactStmt))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -142,7 +137,10 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 
 	existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[sepIndex+1:])
 
-	env.SpecFactMem.Insert(existFact, ast.SpecFactUnderNoLogicalExprSig, nil)
+	err := env.SpecFactMem.InsertSpecFact(existFact)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
