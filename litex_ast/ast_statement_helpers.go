@@ -68,3 +68,25 @@ func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
 	}
 	return -1
 }
+
+type SpecFactIndexInLogicExprPair struct {
+	fact    *SpecFactStmt
+	indexes []uint8
+}
+
+func (stmt *LogicExprStmt) SpecFactIndexPairs(indexes []uint8) []SpecFactIndexInLogicExprPair {
+	pairs := []SpecFactIndexInLogicExprPair{}
+	for i, fact := range stmt.Facts {
+		if specFact, ok := fact.(*SpecFactStmt); ok {
+			indexes = append(indexes, uint8(i))
+			pairs = append(pairs, SpecFactIndexInLogicExprPair{specFact, indexes})
+		}
+
+		if logicExpr, ok := fact.(*LogicExprStmt); ok {
+			indexes = append(indexes, uint8(i))
+			currentPairs := logicExpr.SpecFactIndexPairs(indexes)
+			pairs = append(pairs, currentPairs...)
+		}
+	}
+	return pairs
+}

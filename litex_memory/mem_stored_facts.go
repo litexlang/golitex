@@ -17,8 +17,8 @@ import (
 )
 
 type StoredSpecFact struct {
-	// TypeEnum ast.SpecFactEnum
 	Fact *ast.SpecFactStmt
+	// TypeEnum ast.SpecFactEnum
 	// Params   []ast.Fc
 }
 

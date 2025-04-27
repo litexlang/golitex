@@ -119,6 +119,23 @@ func (tb *tokenBlock) orAndFactStmt(nameDepthMap ast.NameDepthMap, allowUniFactA
 		facts = append(facts, fact)
 	}
 
+	// 用很呆的方式保证只能是 logical expression 或者 specFact
+	for _, fact := range facts {
+		if _, ok := fact.(*ast.SpecFactStmt); ok {
+			continue
+		}
+
+		if _, ok := fact.(*ast.LogicExprStmt); ok {
+			continue
+		}
+
+		return nil, fmt.Errorf("expect logical expression or specFact")
+	}
+
+	if len(facts) > glob.FactMaxNumInLogicExpr {
+		return nil, fmt.Errorf("logic expr has too many facts: %d, expect no more than %d", len(facts), glob.FactMaxNumInLogicExpr)
+	}
+
 	return ast.NewOrAndFact(isOr, facts), nil
 }
 
