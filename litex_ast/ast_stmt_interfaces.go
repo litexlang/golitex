@@ -111,8 +111,23 @@ type LogicExprOrSpecFactStmt interface {
 	stmt()
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
+	Reverse() LogicExprOrSpecFactStmt
 }
 
 func (s *LogicExprStmt) logicExprOrSpecFactStmt() {}
+func (s *SpecFactStmt) logicExprOrSpecFactStmt()  {}
 
-func (s *SpecFactStmt) logicExprOrSpecFactStmt() {}
+func (s *LogicExprStmt) Reverse() LogicExprOrSpecFactStmt {
+	newFacts := make([]LogicExprOrSpecFactStmt, len(s.Facts))
+	for i, fact := range s.Facts {
+		newFacts[i] = fact.Reverse()
+	}
+	return &LogicExprStmt{
+		IsOr:  !s.IsOr,
+		Facts: newFacts,
+	}
+}
+
+func (s *SpecFactStmt) Reverse() LogicExprOrSpecFactStmt {
+	return s.ReverseIsTrue()
+}
