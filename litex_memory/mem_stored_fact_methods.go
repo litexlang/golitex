@@ -7,7 +7,8 @@
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
-// Visit litexlang.org and https://github.com/litexlang/golitex for more information.
+// Contact the development team: <litexlang@outlook.com>
+// Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
 package litex_memory
 
@@ -90,17 +91,17 @@ func (factMem *CondFactMemDict) InsertSpecFact(condStmt *ast.CondFactStmt, stmt 
 
 	switch stmt.TypeEnum {
 	case ast.TrueAtom:
-		node.Facts = append(node.Facts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
+		node.Facts = append(node.Facts, StoredCondSpecFact{stmt, condStmt})
 	case ast.FalseAtom:
-		node.NotFacts = append(node.NotFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
+		node.NotFacts = append(node.NotFacts, StoredCondSpecFact{stmt, condStmt})
 	case ast.TrueExist:
-		node.ExistFacts = append(node.ExistFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
+		node.ExistFacts = append(node.ExistFacts, StoredCondSpecFact{stmt, condStmt})
 	case ast.FalseExist:
-		node.NotExistFacts = append(node.NotExistFacts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
+		node.NotExistFacts = append(node.NotExistFacts, StoredCondSpecFact{stmt, condStmt})
 	case ast.TrueExist_St:
-		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
+		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredCondSpecFact{stmt, condStmt})
 	case ast.FalseExist_St:
-		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredCondSpecFact{stmt.TypeEnum, stmt.Params, condStmt})
+		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredCondSpecFact{stmt, condStmt})
 	default:
 		panic("unknown spec fact type")
 	}
@@ -217,17 +218,17 @@ func (factMem *UniFactMemDict) insertSpecFact(uniStmt *ast.ConUniFactStmt, stmt 
 	}
 
 	if stmt.TypeEnum == ast.TrueAtom {
-		node.Facts = append(node.Facts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
+		node.Facts = append(node.Facts, StoredUniSpecFact{stmt, uniStmt})
 	} else if stmt.TypeEnum == ast.FalseAtom {
-		node.NotFacts = append(node.NotFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
+		node.NotFacts = append(node.NotFacts, StoredUniSpecFact{stmt, uniStmt})
 	} else if stmt.TypeEnum == ast.TrueExist {
-		node.ExistFacts = append(node.ExistFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
+		node.ExistFacts = append(node.ExistFacts, StoredUniSpecFact{stmt, uniStmt})
 	} else if stmt.TypeEnum == ast.FalseExist {
-		node.NotExistFacts = append(node.NotExistFacts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
+		node.NotExistFacts = append(node.NotExistFacts, StoredUniSpecFact{stmt, uniStmt})
 	} else if stmt.TypeEnum == ast.TrueExist_St {
-		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
+		node.Exist_St_Facts = append(node.Exist_St_Facts, StoredUniSpecFact{stmt, uniStmt})
 	} else if stmt.TypeEnum == ast.FalseExist_St {
-		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredUniSpecFact{stmt.TypeEnum, &stmt.Params, uniStmt})
+		node.NotExist_St_Facts = append(node.NotExist_St_Facts, StoredUniSpecFact{stmt, uniStmt})
 	} else {
 		panic("unknown spec fact type")
 	}
