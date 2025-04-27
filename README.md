@@ -379,4 +379,4 @@ There is no doubt that both the AI community and the math community will benefit
 Since Litex is still under development, it's inevitable that today's Litex might be very different than what it is in the future. Visit [the Litex website](https:#litexlang.org) for more information.
 
 If you're interested in programming language development, open-source maintenance, large-scale software systems, mathematics, formal methods, or LLM reasoning, I'd love to discuss any of these topics with you.
-Contact me by litexlang@outlook.com, malloc_realloc_free@outlook.com.
+Contact me by <litexlang@outlook.com>, <malloc_realloc_free@outlook.com>.
