@@ -327,12 +327,19 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *mem.StoredSpecFact,
 		}
 
 		// 如果是or，那只有在其他fact都验证失败的情况下，这个fact才算验证成功
-		ok, err := ver.FactStmt(factAsLogicExpr, state.addRound().addRound())
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			return false, nil
+		for i, fact := range currentLayerFact.Facts {
+			if i == int(factIndex) {
+				continue
+			}
+
+			// 需要reverse True
+			ok, err := ver.FactStmt(fact.Reverse(), state.addRound().addRound())
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
 		}
 	}
 
