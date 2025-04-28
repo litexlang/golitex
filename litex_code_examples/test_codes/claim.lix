@@ -77,13 +77,13 @@ prove:
             then:
                 x + y > x
 
-    know:
+    claim:
         forall x nat:
             exist $larger_than_x(x)
         prove:
-            obj a:
-                a = x + 1
+            #obj a:
+             #   a = x + 1
             x + 1 > x
-            a > x
-            exist a larger_than_x(x)
+            # a > x
+            exist x+1 st $larger_than_x(x)
             

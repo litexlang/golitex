@@ -381,7 +381,7 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	toCheck, err := tb.claimToCheckFact()
+	toCheck, err := tb.body[0].claimToCheckFact()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -484,7 +484,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if opt == glob.KeySymbolBackslash {
+	if opt == glob.RelaPropNamePrefix {
 		propName, err := tb.header.rawFcAtom()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
