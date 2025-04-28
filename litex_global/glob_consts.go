@@ -34,3 +34,4 @@ const FactMaxNumInLogicExpr = 255
 const MaxLogicExprStmtIndexesSize = 255
 
 const RelaPropNamePrefix = "$"
+const RelaFnPrefix = "\\"

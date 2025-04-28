@@ -111,9 +111,31 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			return nil, fmt.Errorf("unexpected end of input while parsing infix expression")
 		}
 
+		if curToken == glob.RelaFnPrefix {
+			cursor.skip() // 消耗curToken
+
+			fn, err := cursor.rawFc()
+			if err != nil {
+				return nil, err
+			}
+
+			right, err := cursor.fcInfixExpr(glob.PrecLowest)
+			if err != nil {
+				return nil, err
+			}
+
+			left = ast.NewFcFnPipe(fn, [][]ast.Fc{{left, right}})
+			break
+		}
+
 		// 检查是否是运算符
 		curPrec, isBinary := glob.BuiltinOptPrecedenceMap[curToken]
-		if !isBinary || curPrec <= currentPrec {
+
+		if !isBinary {
+			break
+		}
+
+		if curPrec <= currentPrec {
 			break
 		}
 
@@ -123,12 +145,11 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			return nil, err
 		}
 
-		leftHead := ast.NewFcAtom("", curToken)
+		leftHead := ast.NewFcAtom(glob.BuiltinEmptyPkgName, curToken)
 		left = ast.NewFcFnPipe(
 			leftHead,
 			[][]ast.Fc{{left, right}},
 		)
-
 	}
 
 	return left, nil
