@@ -132,3 +132,14 @@ func (s *LogicExprStmt) Reverse() LogicExprOrSpecFactStmt {
 func (s *SpecFactStmt) Reverse() LogicExprOrSpecFactStmt {
 	return s.ReverseIsTrue()
 }
+
+type DefStmt interface {
+	defStmt()
+	stmt()
+	String() string
+}
+
+func (s *DefObjStmt) defStmt()          {}
+func (s *DefConFnStmt) defStmt()        {}
+func (s *DefConPropStmt) defStmt()      {}
+func (s *DefConExistPropStmt) defStmt() {}
