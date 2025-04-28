@@ -19,30 +19,26 @@ import (
 )
 
 func (ver *Verifier) btLogicOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.btLogicUnaryOptBtRule(stmt, state)
+	if stmt.IsEqualFact() {
+		ok, err := ver.fcEqualSpec(stmt.Params[0], stmt.Params[1], state)
+		if err != nil {
+			return false, err
+		}
+		if state.requireMsg() && ok {
+			ver.successMsgEnd(fmt.Sprintf("%s = %s", stmt.Params[0].String(), stmt.Params[1].String()), "")
+		}
+		return ok, err
+	}
+
+	// TODO 处理其他的builtin logic infix opt
+
+	ok, err := ver.btLogicInfixOptBtRule(stmt, state)
 	if err != nil {
 		return false, err
 	}
 	if ok {
 		return true, nil
 	}
-	ok, err = ver.btLogicInfixOptBtRule(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
-	return false, nil
-}
-
-func (ver *Verifier) btLogicUnaryOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.PropName.PkgName != glob.BuiltinUnaryPkgName {
-		return false, nil
-	}
-	_ = state
-
-	// TODO 实现单一的builtin unary rule
 	return false, nil
 }
 

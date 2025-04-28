@@ -14,8 +14,6 @@ package litex_memory
 
 import (
 	ast "golitex/litex_ast"
-	cmp "golitex/litex_comparator"
-	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
 )
 
@@ -28,10 +26,10 @@ type Env struct {
 	FnMem        mem.FnMem
 	ExistPropMem mem.ExistPropMem
 
-	SpecFactMem  mem.SpecFactMemDict
-	CondFactMem  mem.CondFactMemDict
-	UniFactMem   mem.UniFactMemDict
-	EqualFactMem mem.EqualFactMem
+	SpecFactMem mem.SpecFactMemDict
+	CondFactMem mem.CondFactMemDict
+	UniFactMem  mem.UniFactMemDict
+	// EqualFactMem mem.EqualFactMem
 
 	//TODO 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic
 
@@ -54,10 +52,10 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 		FnMem:        *mem.NewFnMemory(),
 		ExistPropMem: *mem.NewExistPropMemory(),
 
-		SpecFactMem:  *mem.NewSpecFactMemDict(),
-		CondFactMem:  *mem.NewCondFactMemDict(),
-		UniFactMem:   *mem.NewUniFactMemDict(),
-		EqualFactMem: *newEqualFactMem(),
+		SpecFactMem: *mem.NewSpecFactMemDict(),
+		CondFactMem: *mem.NewCondFactMemDict(),
+		UniFactMem:  *mem.NewUniFactMemDict(),
+		// EqualFactMem: *newEqualFactMem(),
 
 		UniParamMap: uniParamMap,
 
@@ -67,9 +65,9 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 	return env
 }
 
-func newEqualFactMem() *mem.EqualFactMem {
-	return &mem.EqualFactMem{Mem: *glob.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)}
-}
+// func newEqualFactMem() *mem.EqualFactMem {
+// 	return &mem.EqualFactMem{Mem: *glob.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)}
+// }
 
 func (e *Env) NewMsg(s string) {
 	e.Msgs = append(e.Msgs, s)
