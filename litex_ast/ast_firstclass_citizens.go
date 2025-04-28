@@ -31,23 +31,15 @@ func (f *FcAtom) IsAtom() bool { return true }
 func (f *FcFn) fc()            {}
 func (f *FcFn) IsAtom() bool   { return false }
 
-// func (f *FcAtom) GetPkgName() string { return f.PkgName }
-// func (f *FcFn) GetPkgName() string   { panic("TODO: GetPkgName for FcFn is not implemented") }
-
 type FcAtom struct {
 	PkgName string
 	Name    string
 }
 
 type FcFn struct {
-	// FnHead    FcAtom
-	FnHead    Fc
+	FnHead    Fc // 必须是 fc, 而不是 fcAtom，因为函数头可能是另一个函数的返回值
 	ParamSegs [][]Fc
 }
-
-// type FcFnSeg struct {
-// 	Params []Fc
-// }
 
 type FcEnum uint8
 
@@ -145,26 +137,6 @@ func IsNumLitFcAtom(f Fc) (string, bool) {
 	return "", false
 }
 
-func (f *FcAtom) IsBuiltinInfixOpt() bool {
-	if f.PkgName != "" {
-		return false
-	}
-	if glob.IsKeySymbolRelaFn(f.Name) {
-		return true
-	}
-	return false
-}
-
-// func (f *FcAtom) IsBuiltinUnaryOpt() bool {
-// 	if f.PkgName != glob.BuiltinUnaryPkgName {
-// 		return false
-// 	}
-// 	if glob.IsKeySymbolUniFn(f.Name) {
-// 		return true
-// 	}
-// 	return false
-// }
-
 var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinEmptyPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep}
 
 func IsFcBuiltinInfixOpt(f FcFn) bool {
@@ -173,7 +145,7 @@ func IsFcBuiltinInfixOpt(f FcFn) bool {
 		return false
 	}
 
-	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolRelaFn(ptrHeadAsAtom.Name) && len(f.ParamSegs) == 1 && len(f.ParamSegs[0]) == 2
+	return ptrHeadAsAtom.IsBuiltinInfixOpt() && len(f.ParamSegs) == 1 && len(f.ParamSegs[0]) == 2
 }
 
 func IsFcBuiltinUnaryOpt(fc FcFn) bool {
@@ -182,5 +154,13 @@ func IsFcBuiltinUnaryOpt(fc FcFn) bool {
 		return false
 	}
 
-	return glob.IsBuiltinUnaryOpt(fcAsFnHead.Name) && fcAsFnHead.PkgName == glob.BuiltinEmptyPkgName && len(fc.ParamSegs) == 1 && len(fc.ParamSegs[0]) == 1
+	return fcAsFnHead.IsBuiltinUnaryOpt() && len(fc.ParamSegs) == 1 && len(fc.ParamSegs[0]) == 1
+}
+
+func (f *FcAtom) IsBuiltinUnaryOpt() bool {
+	return f.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolUniFn(f.Name)
+}
+
+func (f *FcAtom) IsBuiltinInfixOpt() bool {
+	return f.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolRelaFn(f.Name)
 }

@@ -102,7 +102,6 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 
 func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		// searchedNodeFacts, searchedNodeFactsUnderLogicExpr, got := curEnv.SpecFactMem.GetNode(stmt)
 		nodeNode, got := curEnv.SpecFactMem.GetNode(stmt)
 		if !got {
 			continue
@@ -111,7 +110,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 		searchedNodeFactsUnderLogicExpr := nodeNode.FactsINLogicExpr
 
 		for _, knownFact := range searchedNodeFacts {
-			// ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
+			// TODO: 我确实没想好是否要禁止用户让一个prop下面的fact有变长的参数列表
 			if len(knownFact.Params()) != len(stmt.Params) {
 				continue
 			}
