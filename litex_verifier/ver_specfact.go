@@ -258,12 +258,14 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 }
 
 func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	searchedFacts, got := curEnv.UniFactMem.GetSpecFactNodeWithTheSameIsTrue(stmt)
+	searchedNodeNode, got := curEnv.UniFactMem.GetSpecFactNodeWithTheSameIsTrue(stmt)
 	if !got {
 		return false, nil
 	}
 
-	for _, knownFact := range searchedFacts {
+	searchedSpecFacts := searchedNodeNode.Facts
+
+	for _, knownFact := range searchedSpecFacts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
 		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(knownFact, stmt)
 		if err != nil {
