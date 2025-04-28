@@ -81,10 +81,12 @@ type SpecFactStmt struct {
 }
 
 type ClaimProveStmt struct {
-	IsProve      bool
-	ToCheckFacts []FactStmt
-	Proofs       []Stmt
+	IsProve     bool
+	ToCheckFact FactStmt
+	Proofs      []Stmt
 }
+
+var ClaimStmtEmptyToCheck FactStmt = nil
 
 type KnowStmt struct {
 	Facts []FactStmt

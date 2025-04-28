@@ -21,15 +21,15 @@ type StoredSpecFact struct {
 	Fact *ast.SpecFactStmt
 }
 
-type StoredSpecFactUnderLogicExpr struct {
+type StoredSpecFactInLogicExpr struct {
 	Fact      *ast.SpecFactStmt
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
 }
 
 type StoredSpecMemDictNodeNode struct {
-	Facts               []StoredSpecFact
-	FactsUnderLogicExpr []StoredSpecFactUnderLogicExpr
+	Facts            []StoredSpecFact
+	FactsINLogicExpr []StoredSpecFactInLogicExpr
 }
 type StoredSpecMemDictNode struct {
 	PureFacts         StoredSpecMemDictNodeNode
@@ -49,8 +49,8 @@ type StoredCondSpecFact struct {
 }
 
 type StoredCondFuncMemDictNodeNode struct {
-	Facts               []StoredCondSpecFact
-	FactsUnderLogicExpr []StoredCondSpecFactUnderLogicExpr
+	Facts            []StoredCondSpecFact
+	FactsInLogicExpr []StoredCondSpecFactUnderLogicExpr
 }
 
 type StoredCondSpecFactUnderLogicExpr struct {
@@ -88,8 +88,8 @@ type StoredUniSpecFactUnderLogicExpr struct {
 }
 
 type StoredUniFuncMemDictNodeNode struct {
-	Facts               []StoredUniSpecFact
-	FactsUnderLogicExpr []StoredUniSpecFactUnderLogicExpr
+	Facts            []StoredUniSpecFact
+	FactsInLogicExpr []StoredUniSpecFactUnderLogicExpr
 }
 
 type StoredUniFuncMemDictNode struct {
