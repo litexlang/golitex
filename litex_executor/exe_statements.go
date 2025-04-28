@@ -337,11 +337,16 @@ func (exec *Executor) proveClaimStmt(stmt *ast.ClaimStmt) (bool, error) {
 
 	// TODO: 需要处理forall的情况
 	if asConUniFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
-		ok, _, err := exec.checkFactStmt(asConUniFact)
-		if err != nil {
-			return false, err
+		for _, fact := range asConUniFact.ThenFacts {
+			ok, _, err := exec.checkFactStmt(fact)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
 		}
-		return ok, nil
+		return true, nil
 	}
 
 	return false, fmt.Errorf("unknown claim stmt to check fact type: %T", stmt.ToCheckFact)

@@ -381,7 +381,7 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	toCheck, err := tb.body[0].factStmt(ast.NameDepthMap{}, true)
+	toCheck, err := tb.claimToCheckFact()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -400,12 +400,8 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// TODO：要考虑是不是 unifact，以开个局部环境
-	// _, isToCheckUniFact := toCheck.(*ast.ConUniFactStmt)
-
 	for _, block := range tb.body[1].body {
-		var curStmt ast.Stmt
-		curStmt, err = block.Stmt()
+		curStmt, err := block.Stmt()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
@@ -1163,5 +1159,48 @@ func (tb *tokenBlock) setDefStmt() (ast.SetDefStmt, error) {
 		}
 
 		return ast.NewSetDefSetBuilderStmt(setName, parentSet, facts), nil
+	}
+}
+
+func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {
+	if tb.header.is(glob.KeywordForall) {
+		return tb.uniFactStmtInClaim()
+	} else {
+		return tb.specFactStmt(ast.NameDepthMap{})
+	}
+}
+
+// claim 因为实在太难instantiate了(要让所有的stmt都添加instantiate这个方法，太难了)，所以不能让用户随便命名forall里的参数了，用户只能用不存在的参数名
+func (tb *tokenBlock) uniFactStmtInClaim() (ast.UniFactStmt, error) {
+	err := tb.header.skip(glob.KeywordForall)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	typeParams := []string{}
+	typeInterfaces := []*ast.FcAtom{}
+
+	if tb.header.is(glob.KeySymbolLess) {
+		tb.header.next()
+		typeParams, typeInterfaces, err = tb.header.typeListInDeclsAndSkipEnd(glob.KeySymbolGreater)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	}
+
+	params, paramTypes, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	domainFacts, thenFacts, err := tb.bodyFactSectionFactSection(glob.KeywordThen, ast.NameDepthMap{}, true)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if len(typeParams) > 0 {
+		return ast.NewGenUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts), nil
+	} else {
+		return ast.NewConUniFactStmt(params, paramTypes, domainFacts, thenFacts), nil
 	}
 }
