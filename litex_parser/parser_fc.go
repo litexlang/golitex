@@ -316,34 +316,6 @@ func (cursor *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 	// return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
 }
 
-func (cursor *strSliceCursor) typeListInDeclsAndSkipEnd(endWith string) ([]string, []*ast.FcAtom, error) {
-	paramName := []string{}
-	paramTypes := []*ast.FcAtom{}
-
-	for !cursor.is(endWith) {
-		objName, err := cursor.next()
-		if err != nil {
-			return nil, nil, &strSliceErr{err, cursor}
-		}
-
-		tp, err := cursor.rawFcAtom()
-		if err != nil {
-			return nil, nil, &strSliceErr{err, cursor}
-		}
-
-		paramName = append(paramName, objName)
-		paramTypes = append(paramTypes, &tp)
-
-		cursor.skipIfIs(glob.KeySymbolComma)
-	}
-
-	if cursor.isAndSkip(endWith) {
-		return paramName, paramTypes, nil
-	} else {
-		return nil, nil, &strSliceErr{fmt.Errorf("expected '%s' but got '%s'", endWith, cursor.strAtCurIndexPlus(0)), cursor}
-	}
-}
-
 func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 	cursor.skip(glob.KeySymbolLeftBrace)
 	if cursor.ExceedEnd() {

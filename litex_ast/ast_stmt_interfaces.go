@@ -31,13 +31,10 @@ func (s *DefConExistPropStmt) stmt()  {}
 func (s *AxiomStmt) stmt()            {}
 func (s *ThmStmt) stmt()              {}
 func (s *CondFactStmt) stmt()         {}
-func (s *GenUniStmt) stmt()           {}
 func (p *LogicExprStmt) stmt()        {}
 func (s *ExistObjDefStmt) stmt()      {}
 func (s *SetDefSetBuilderStmt) stmt() {}
 func (s *SetDefEnumtmt) stmt()        {}
-
-// func (s *ExistFactStmt) stmt() {}
 
 type FactStmt interface {
 	factStmt()
@@ -49,10 +46,7 @@ type FactStmt interface {
 func (p *SpecFactStmt) factStmt()   {}
 func (p *CondFactStmt) factStmt()   {}
 func (l *ConUniFactStmt) factStmt() {}
-func (p *GenUniStmt) factStmt()     {}
 func (p *LogicExprStmt) factStmt()  {}
-
-// func (p *ExistFactStmt) factStmt()  {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
@@ -84,9 +78,7 @@ type UniFactStmt interface {
 	Instantiate(map[string]Fc) (FactStmt, error)
 }
 
-func (s *ConUniFactStmt) forallStmt()        {}
-func (s *GenUniStmt) forallStmt()            {}
-func (s *ConUniFactWithIffStmt) forallStmt() {}
+func (s *ConUniFactStmt) forallStmt() {}
 
 type PropFactStmt interface {
 	factStmt()
