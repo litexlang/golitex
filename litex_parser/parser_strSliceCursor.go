@@ -141,3 +141,22 @@ func (cursor *strSliceCursor) skipKwAndColon(kw string) error {
 	}
 	return nil
 }
+
+func (cursor *strSliceCursor) skipAndSkipColonAndAchieveEnd() (string, error) {
+	curToken, err := cursor.currentToken()
+	if err != nil {
+		return "", err
+	}
+	err = cursor.skip()
+	if err != nil {
+		return "", err
+	}
+	err = cursor.skip(glob.KeySymbolColon)
+	if err != nil {
+		return "", err
+	}
+	if cursor.index < len(cursor.slice) {
+		return "", fmt.Errorf("expected end of slice, but got '%s'", cursor.slice[cursor.index])
+	}
+	return curToken, nil
+}
