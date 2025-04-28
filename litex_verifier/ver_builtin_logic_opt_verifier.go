@@ -20,7 +20,7 @@ import (
 
 func (ver *Verifier) btLogicOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsEqualFact() {
-		ok, err := ver.fcEqualSpec(stmt.Params[0], stmt.Params[1], state)
+		ok, err := ver.fcEqualSpec(stmt, state)
 		if err != nil {
 			return false, err
 		}
@@ -47,7 +47,7 @@ func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerStat
 		return false, nil
 	}
 
-	if !glob.IsKeySymbolRelaProp(stmt.PropName.Name) {
+	if !glob.IsBuiltinInfixRelaProp(stmt.PropName.Name) {
 		return false, nil
 	}
 

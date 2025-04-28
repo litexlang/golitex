@@ -117,7 +117,7 @@ func IsKeySymbol(name string) bool {
 	return ok
 }
 
-func IsKeySymbolRelaProp(op string) bool {
+func IsBuiltinInfixRelaProp(op string) bool {
 	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!=" || op == "in"
 }
 

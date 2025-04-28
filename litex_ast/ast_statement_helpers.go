@@ -105,3 +105,7 @@ func (stmt *LogicExprStmt) SpecFactIndexPairs(indexes []uint8) ([]SpecFactIndexI
 }
 
 var SpecFactUnderNoLogicalExprSig []uint8 = nil
+
+func (stmt *SpecFactStmt) IsBuiltinLogicOpt() bool {
+	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name)
+}

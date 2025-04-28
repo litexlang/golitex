@@ -98,6 +98,7 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 		// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里。运行方式是，空转这些命题，如果空转出现错误了，比如某变量没定义，那就报错
 
 		if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
+			isSuccess = true
 			return nil
 		} else {
 			ok, _, err := exec.checkFactStmt(stmt.ToCheckFact)
