@@ -81,9 +81,9 @@ prove:
         forall x nat:
             exist $larger_than_x(x)
         prove:
-            #obj a:
-             #   a = x + 1
+            obj a nat
+            know:
+               a = x + 1
             x + 1 > x
-            # a > x
-            exist x+1 st $larger_than_x(x)
-            
+            a > x
+            exist a st $larger_than_x(x)

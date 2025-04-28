@@ -39,6 +39,15 @@ func (ver *Verifier) btLogicOptBtRule(stmt *ast.SpecFactStmt, state VerState) (b
 	if ok {
 		return true, nil
 	}
+
+	ok, err = ver.specFactUsingMemSpecifically(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
@@ -84,5 +93,6 @@ func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerStat
 		}
 		return true, nil
 	}
+
 	return false, nil
 }
