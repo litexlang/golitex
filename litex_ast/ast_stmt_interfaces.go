@@ -24,7 +24,7 @@ func (c *DefConPropStmt) stmt()   {}
 func (f *DefConFnStmt) stmt()     {}
 func (l *ConUniFactStmt) stmt()   {}
 func (p *SpecFactStmt) stmt()     {}
-func (f *ClaimProveStmt) stmt()   {}
+func (f *ClaimStmt) stmt()        {}
 func (f *KnowStmt) stmt()         {}
 
 func (s *DefConExistPropStmt) stmt()  {}

@@ -226,7 +226,7 @@ func (f *DefConFnStmt) String() string {
 
 	return builder.String()
 }
-func (f *ClaimProveStmt) String() string {
+func (f *ClaimStmt) String() string {
 	var builder strings.Builder
 
 	if (f.ToCheckFact) == nil {
