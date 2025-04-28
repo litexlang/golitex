@@ -31,20 +31,24 @@ type StoredSpecFactUnderLogicExpr struct {
 	LogicExpr *ast.LogicExprStmt
 }
 
+type StoredSpecMemDictNodeNode struct {
+	Facts               []StoredSpecFact
+	FactsUnderLogicExpr []StoredSpecFactUnderLogicExpr
+}
 type StoredSpecMemDictNode struct {
-	Facts             []StoredSpecFact
-	NotFacts          []StoredSpecFact
-	ExistFacts        []StoredSpecFact
-	NotExistFacts     []StoredSpecFact
-	Exist_St_Facts    []StoredSpecFact
-	NotExist_St_Facts []StoredSpecFact
+	PureFacts         StoredSpecMemDictNodeNode
+	NotPureFacts      StoredSpecMemDictNodeNode
+	ExistFacts        StoredSpecMemDictNodeNode
+	NotExistFacts     StoredSpecMemDictNodeNode
+	Exist_St_Facts    StoredSpecMemDictNodeNode
+	NotExist_St_Facts StoredSpecMemDictNodeNode
 
-	FactsUnderLogicExpr             []StoredSpecFactUnderLogicExpr
-	NotFactsUnderLogicExpr          []StoredSpecFactUnderLogicExpr
-	ExistFactsUnderLogicExpr        []StoredSpecFactUnderLogicExpr
-	NotExistFactsUnderLogicExpr     []StoredSpecFactUnderLogicExpr
-	Exist_St_FactsUnderLogicExpr    []StoredSpecFactUnderLogicExpr
-	NotExist_St_FactsUnderLogicExpr []StoredSpecFactUnderLogicExpr
+	// FactsUnderLogicExpr             []StoredSpecFactUnderLogicExpr
+	// NotFactsUnderLogicExpr          []StoredSpecFactUnderLogicExpr
+	// ExistFactsUnderLogicExpr        []StoredSpecFactUnderLogicExpr
+	// NotExistFactsUnderLogicExpr     []StoredSpecFactUnderLogicExpr
+	// Exist_St_FactsUnderLogicExpr    []StoredSpecFactUnderLogicExpr
+	// NotExist_St_FactsUnderLogicExpr []StoredSpecFactUnderLogicExpr
 }
 type SpecFactMemDict struct {
 	Dict map[string]map[string]StoredSpecMemDictNode
@@ -57,6 +61,11 @@ type StoredCondSpecFact struct {
 	Fact *ast.CondFactStmt
 }
 
+type StoredCondFuncMemDictNodeNode struct {
+	Facts               []StoredCondSpecFact
+	FactsUnderLogicExpr []StoredCondSpecFactUnderLogicExpr
+}
+
 type StoredCondSpecFactUnderLogicExpr struct {
 	SpecFact  *ast.SpecFactStmt
 	CondFact  *ast.CondFactStmt
@@ -65,19 +74,26 @@ type StoredCondSpecFactUnderLogicExpr struct {
 }
 
 type StoredCondFuncMemDictNode struct {
-	Facts             []StoredCondSpecFact
-	NotFacts          []StoredCondSpecFact
-	ExistFacts        []StoredCondSpecFact
-	NotExistFacts     []StoredCondSpecFact
-	Exist_St_Facts    []StoredCondSpecFact
-	NotExist_St_Facts []StoredCondSpecFact
+	PureFacts         StoredCondFuncMemDictNodeNode
+	NotPureFacts      StoredCondFuncMemDictNodeNode
+	ExistFacts        StoredCondFuncMemDictNodeNode
+	NotExistFacts     StoredCondFuncMemDictNodeNode
+	Exist_St_Facts    StoredCondFuncMemDictNodeNode
+	NotExist_St_Facts StoredCondFuncMemDictNodeNode
 
-	FactsUnderLogicExpr             []StoredCondSpecFactUnderLogicExpr
-	NotFactsUnderLogicExpr          []StoredCondSpecFactUnderLogicExpr
-	ExistFactsUnderLogicExpr        []StoredCondSpecFactUnderLogicExpr
-	NotExistFactsUnderLogicExpr     []StoredCondSpecFactUnderLogicExpr
-	Exist_St_FactsUnderLogicExpr    []StoredCondSpecFactUnderLogicExpr
-	NotExist_St_FactsUnderLogicExpr []StoredCondSpecFactUnderLogicExpr
+	// Facts             []StoredCondSpecFact
+	// NotFacts          []StoredCondSpecFact
+	// ExistFacts        []StoredCondSpecFact
+	// NotExistFacts     []StoredCondSpecFact
+	// Exist_St_Facts    []StoredCondSpecFact
+	// NotExist_St_Facts []StoredCondSpecFact
+
+	// FactsUnderLogicExpr             []StoredCondSpecFactUnderLogicExpr
+	// NotFactsUnderLogicExpr          []StoredCondSpecFactUnderLogicExpr
+	// ExistFactsUnderLogicExpr        []StoredCondSpecFactUnderLogicExpr
+	// NotExistFactsUnderLogicExpr     []StoredCondSpecFactUnderLogicExpr
+	// Exist_St_FactsUnderLogicExpr    []StoredCondSpecFactUnderLogicExpr
+	// NotExist_St_FactsUnderLogicExpr []StoredCondSpecFactUnderLogicExpr
 }
 
 type CondFactMemDict struct {

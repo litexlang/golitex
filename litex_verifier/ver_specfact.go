@@ -104,10 +104,13 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 	}
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-		searchedNodeFacts, searchedNodeFactsUnderLogicExpr, got := curEnv.SpecFactMem.GetNode(stmt)
+		// searchedNodeFacts, searchedNodeFactsUnderLogicExpr, got := curEnv.SpecFactMem.GetNode(stmt)
+		nodeNode, got := curEnv.SpecFactMem.GetNode(stmt)
 		if !got {
 			continue
 		}
+		searchedNodeFacts := nodeNode.Facts
+		searchedNodeFactsUnderLogicExpr := nodeNode.FactsUnderLogicExpr
 
 		for _, knownFact := range searchedNodeFacts {
 			if stmt.TypeEnum != knownFact.TypeEnum() {
@@ -183,10 +186,12 @@ func (ver *Verifier) SpecFactCond(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	searchedFacts, got := curEnv.CondFactMem.GetSpecFactNode(stmt)
+	searchedNodeNode, got := curEnv.CondFactMem.GetSpecFactNode(stmt)
 	if !got {
 		return false, nil
 	}
+
+	searchedFacts := searchedNodeNode.Facts
 
 LoopOverFacts:
 	for _, knownFact := range searchedFacts {
