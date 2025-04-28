@@ -400,8 +400,12 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
+	// TODO：要考虑是不是 unifact，以开个局部环境
+	// _, isToCheckUniFact := toCheck.(*ast.ConUniFactStmt)
+
 	for _, block := range tb.body[1].body {
-		curStmt, err := block.Stmt()
+		var curStmt ast.Stmt
+		curStmt, err = block.Stmt()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
@@ -768,7 +772,7 @@ func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepthMap ast
 
 	if tb.body[len(tb.body)-1].header.is(kw) {
 		if allowUniFactAtCurScope {
-			for i := 0; i < len(tb.body)-1; i++ {
+			for i := range len(tb.body) - 1 {
 				curStmt, err := tb.body[i].factStmt(nameDepthMap, true)
 				if err != nil {
 					return nil, nil, &tokenBlockErr{err, *tb}
@@ -776,7 +780,7 @@ func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepthMap ast
 				section1Facts = append(section1Facts, curStmt)
 			}
 		} else {
-			for i := 0; i < len(tb.body)-1; i++ {
+			for i := range len(tb.body) - 1 {
 				curStmt, err := tb.body[i].specFactStmt(nameDepthMap)
 				if err != nil {
 					return nil, nil, &tokenBlockErr{err, *tb}
@@ -789,7 +793,7 @@ func (tb *tokenBlock) bodyFactSectionSpecFactSection(kw string, nameDepthMap ast
 			return nil, nil, &tokenBlockErr{err, *tb}
 		}
 	} else {
-		for i := 0; i < len(tb.body); i++ {
+		for i := range tb.body {
 			curStmt, err := tb.body[i].specFactStmt(nameDepthMap)
 			if err != nil {
 				return nil, nil, &tokenBlockErr{err, *tb}
