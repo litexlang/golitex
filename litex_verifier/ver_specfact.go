@@ -15,6 +15,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/litex_ast"
+	cmp "golitex/litex_comparator"
 	env "golitex/litex_env"
 	mem "golitex/litex_memory"
 )
@@ -110,22 +111,28 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 		searchedNodeFactsUnderLogicExpr := nodeNode.FactsINLogicExpr
 
 		for _, knownFact := range searchedNodeFacts {
-			// if !knownFact.IsLogicExpr() {
-			ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
-
-			if err != nil {
-				return false, err
+			// ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
+			if len(knownFact.Params()) != len(stmt.Params) {
+				continue
 			}
 
-			if ok {
-				if state.requireMsg() {
-					ver.successWithMsg(stmt.String(), knownFact.String())
-				} else {
-					ver.successNoMsg()
+			for _, knownParam := range knownFact.Params() {
+				ok, err := cmp.CmpFcRule(knownParam, stmt.Params[0])
+				if err != nil {
+					return false, err
 				}
-
-				return true, nil
+				if !ok {
+					break
+				}
 			}
+
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), knownFact.String())
+			} else {
+				ver.successNoMsg()
+			}
+
+			return true, nil
 		}
 
 		for _, knownFactUnderLogicExpr := range searchedNodeFactsUnderLogicExpr {
