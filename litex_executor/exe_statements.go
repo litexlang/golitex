@@ -301,6 +301,20 @@ func (exec *Executor) existObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 }
 
 func (exec *Executor) proveClaimStmt(stmt *ast.ClaimStmt) (bool, error) {
+	if asUnivFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
+		// 把变量引入，把dom事实引入
+		for _, param := range asUnivFact.Params {
+			// TODO: 这里有严重问题：万一引入的是 fn, prop 那就不是简单引入普通obj了
+			exec.defStmt(&ast.DefObjStmt{Objs: []string{param}, ObjSets: []ast.Fc{&ast.FcAtom{PkgName: exec.env.CurPkg, Name: param}}, Facts: []ast.FactStmt{}})
+		}
+		for _, fact := range asUnivFact.DomFacts {
+			err := exec.env.NewFact(fact)
+			if err != nil {
+				return false, err
+			}
+		}
+	}
+
 	for _, curStmt := range stmt.Proofs {
 		err := exec.stmt(curStmt)
 		if err != nil {
@@ -308,20 +322,28 @@ func (exec *Executor) proveClaimStmt(stmt *ast.ClaimStmt) (bool, error) {
 		}
 	}
 
-	// 写成 prove: ... 这样的事实，是没有toCheckFact的
+	// 写成 prove: ... 这样的事实，是没有toCheckFact的，默认是nil
 	if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
 		return true, nil
 	}
 
-	ok, _, err := exec.checkFactStmt(stmt.ToCheckFact)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
+	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
+		ok, _, err := exec.checkFactStmt(asSpecFact)
+		if err != nil {
+			return false, err
+		}
+		return ok, nil
 	}
 
-	return true, nil
+	if asConUniFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
+		ok, _, err := exec.checkFactStmt(asConUniFact)
+		if err != nil {
+			return false, err
+		}
+		return ok, nil
+	}
+
+	return false, fmt.Errorf("unknown claim stmt to check fact type: %T", stmt.ToCheckFact)
 }
 
 func (exec *Executor) proveByContradictionClaimStmt(stmt *ast.ClaimStmt) (bool, error) {
@@ -365,4 +387,22 @@ func (exec *Executor) proveByContradictionClaimStmt(stmt *ast.ClaimStmt) (bool, 
 	}
 
 	return false, nil
+}
+
+func (exec *Executor) defStmt(stmt ast.DefStmt) error {
+	// TODO：这里需要处理任何可能出现的 Def,包括stmt是个DefObj, DefProp, DefConExistProp, DefConFn, DefConProp. 本函数用于 claim forall x Type. 这里的 Type 可以是 obj, fn, prop, existProp.
+	// 本函数需要处理所有可能的类型，并根据类型调用不同的函数。
+
+	switch stmt := stmt.(type) {
+	case *ast.DefObjStmt:
+		return exec.defObjStmt(stmt)
+	case *ast.DefConFnStmt:
+		return exec.defConFnStmt(stmt)
+	case *ast.DefConPropStmt:
+		return exec.defConPropStmt(stmt)
+	case *ast.DefConExistPropStmt:
+		return exec.defConExistPropStmt(stmt)
+	default:
+		return fmt.Errorf("unknown def stmt type: %T", stmt)
+	}
 }
