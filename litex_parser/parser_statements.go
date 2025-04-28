@@ -1162,32 +1162,23 @@ func (tb *tokenBlock) uniFactStmtInClaim() (ast.UniFactStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	typeParams := []string{}
-	typeInterfaces := []*ast.FcAtom{}
-
-	if tb.header.is(glob.KeySymbolLess) {
-		tb.header.next()
-		typeParams, typeInterfaces, err = tb.header.typeListInDeclsAndSkipEnd(glob.KeySymbolGreater)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-	}
-
 	params, paramTypes, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	domainFacts, thenFacts, err := tb.bodyFactSectionFactSection(glob.KeywordThen, ast.NameDepthMap{}, UniFactDepth1)
+	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(ast.NameDepthMap{}, UniFactDepth1)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if len(typeParams) > 0 {
-		return ast.NewGenUniStmt(typeParams, typeInterfaces, params, paramTypes, domainFacts, thenFacts), nil
+	if len(iffFacts) == 0 {
+		iffFacts = ast.EmptyIffFacts
 	} else {
-		return ast.NewConUniFactStmt(params, paramTypes, domainFacts, thenFacts), nil
+		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
 	}
+
+	return ast.NewConUniFactStmt(params, paramTypes, domainFacts, thenFacts, iffFacts), nil
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
@@ -1203,7 +1194,7 @@ func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUn
 	eachSectionStartWithKw := tb.body[0].header.is(glob.KeywordDom) || tb.body[0].header.is(glob.KeywordThen) || tb.body[0].header.is(glob.KeywordIff)
 
 	if eachSectionStartWithKw {
-		for i := 0; i < len(tb.body); i++ {
+		for i := range tb.body {
 			stmt := tb.body[i]
 			kw, err := stmt.header.skipAndSkipColonAndAchieveEnd()
 			if err != nil {
@@ -1222,9 +1213,7 @@ func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUn
 				iffFacts = append(iffFacts, fact)
 			}
 		}
-	}
-
-	if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
+	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
 		domFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum.addDepth(), len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, &tokenBlockErr{err, *tb}

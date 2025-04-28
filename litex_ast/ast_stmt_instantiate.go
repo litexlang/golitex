@@ -136,7 +136,16 @@ func (stmt *ConUniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, erro
 		newThenFacts = append(newThenFacts, specFact)
 	}
 
-	return NewConUniFactStmt(stmt.Params, newParamTypes, newDomFacts, newThenFacts), nil
+	newIffFacts := []FactStmt{}
+	for _, fact := range stmt.IffFacts {
+		newFact, err := fact.Instantiate(uniConMap)
+		if err != nil {
+			return nil, err
+		}
+		newIffFacts = append(newIffFacts, newFact)
+	}
+
+	return NewConUniFactStmt(stmt.Params, newParamTypes, newDomFacts, newThenFacts, newIffFacts), nil
 }
 
 func (stmt *CondFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
@@ -162,10 +171,6 @@ func (stmt *CondFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 		newThenFacts = append(newThenFacts, specFact)
 	}
 	return NewCondFactStmt(newCondFacts, newThenFacts), nil
-}
-
-func (stmt *GenUniStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
-	return nil, errors.New("TODO: GenUniStmt.Instantiate not implemented")
 }
 
 func (stmt *LogicExprStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {

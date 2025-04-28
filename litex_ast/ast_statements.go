@@ -62,21 +62,10 @@ type ConUniFactStmt struct {
 	DomFacts  []FactStmt
 	// ThenFacts []*SpecFactStmt
 	ThenFacts []FactStmt
-}
-
-type ConUniFactWithIffStmt struct {
-	Params    []string
-	ParamSets []Fc
-	DomFacts  []FactStmt
-	ThenFacts []FactStmt
 	IffFacts  []FactStmt
 }
 
-type GenUniStmt struct {
-	TypeParams     []string
-	TypeInterfaces []*FcAtom
-	UniFact        ConUniFactStmt
-}
+var EmptyIffFacts []FactStmt = nil
 
 func (enum SpecFactEnum) IsTrue() bool {
 	return enum == TrueAtom || enum == TrueExist || enum == TrueExist_St

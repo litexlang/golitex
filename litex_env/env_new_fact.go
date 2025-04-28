@@ -330,5 +330,5 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.ConUniFactStmt, e
 		thenFacts = append(thenFacts, specThenFact)
 	}
 
-	return ast.NewConUniFactStmt(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts), nil
+	return ast.NewConUniFactStmt(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, ast.EmptyIffFacts), nil
 }

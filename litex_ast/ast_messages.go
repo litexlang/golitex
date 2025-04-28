@@ -310,7 +310,6 @@ func (fact *CondFactStmt) String() string {
 	}
 	return builder.String()
 }
-func (s *GenUniStmt) String() string { panic("") }
 
 func conUniFactString(prefix string, l *ConUniFactStmt) string {
 	var builder strings.Builder
