@@ -1,2 +1,4 @@
 prove:
-    1 + 1 =2
+    know:
+        a = b
+    a = b

@@ -24,7 +24,11 @@ func (ver *Verifier) makeFcEqualFactAndVerify(left, right ast.Fc, state VerState
 	return ver.SpecFact(newSpecFactToCheck, state)
 }
 
-func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) fcEqualSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+
+	left := stmt.Params[0]
+	right := stmt.Params[1]
+
 	// Case: 用内置方法直接比较，比如计算字面量都是整数，那可以通过运算来比较
 	ok, err := cmp.CmpFcRule(left, right)
 	if err != nil {
@@ -37,7 +41,7 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 	// state = state.addRound()
 
 	// Case: equalSpecMem里找
-	ok, err = ver.fcEqualSpecInSpecMem(left, right, state)
+	ok, err = ver.fcEqualSpecInSpecMem(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -71,8 +75,10 @@ func (ver *Verifier) fcEqualSpec(left, right ast.Fc, state VerState) (bool, erro
 	return false, fmt.Errorf("unexpected")
 }
 
-func (ver *Verifier) fcEqualSpecInSpecMem(left, right ast.Fc, state VerState) (bool, error) {
-	fact := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
+func (ver *Verifier) fcEqualSpecInSpecMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	left := stmt.Params[0]
+	right := stmt.Params[1]
+	fact := stmt
 	fact2 := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{right, left})
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		verified, err := ver.specFactUsingMemSpecifically(fact, state)

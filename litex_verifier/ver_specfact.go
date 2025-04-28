@@ -76,15 +76,19 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.btLogicOptBtRule(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
+	if stmt.IsBuiltinLogicOpt() {
+		ok, err := ver.btLogicOptBtRule(stmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		} else {
+			return false, nil
+		}
 	}
 
-	ok, err = ver.specFactUsingMemSpecifically(stmt, state)
+	ok, err := ver.specFactUsingMemSpecifically(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -106,10 +110,6 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 		searchedNodeFactsUnderLogicExpr := nodeNode.FactsINLogicExpr
 
 		for _, knownFact := range searchedNodeFacts {
-			if stmt.TypeEnum != knownFact.TypeEnum() {
-				continue
-			}
-
 			// if !knownFact.IsLogicExpr() {
 			ok, err := ver.FcSliceEqual(knownFact.Params(), stmt.Params, state)
 
