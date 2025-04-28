@@ -18,7 +18,7 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (ver *Verifier) btLogicOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) btLogicOptSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsEqualFact() {
 		ok, err := ver.fcEqualSpec(stmt, state)
 		if err != nil {

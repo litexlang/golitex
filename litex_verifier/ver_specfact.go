@@ -78,7 +78,7 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 
 func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsBuiltinLogicOpt() {
-		return ver.btLogicOptBtRule(stmt, state)
+		return ver.btLogicOptSpec(stmt, state)
 	}
 
 	ok, err := ver.specFactUsingMemSpecifically(stmt, state)
