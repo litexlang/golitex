@@ -28,14 +28,14 @@ func (exec *Executor) stmt(stmt ast.Stmt) error {
 		err = exec.factStmt(stmt)
 	case *ast.KnowStmt:
 		err = exec.knowStmt(stmt)
-	case *ast.ClaimProveStmt:
-		err = exec.claimProveStmt(stmt)
+	case *ast.ClaimStmt:
+		err = exec.claimStmt(stmt)
 	case *ast.DefConPropStmt:
 		err = exec.defConPropStmt(stmt)
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt)
 	case *ast.ExistObjDefStmt:
-		err = exec.haveObjDefStmt(stmt)
+		err = exec.existObjDefStmt(stmt)
 	case *ast.DefConExistPropStmt:
 		err = exec.defConExistPropStmt(stmt)
 	case *ast.DefConFnStmt:
@@ -71,7 +71,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
 	return nil
 }
 
-func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
+func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 	exec.newEnv(exec.env.CurPkg)
 	isSuccess := false
 
@@ -88,73 +88,22 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 
 	// TODO: 这里需要优化，因为claim和prove的逻辑是一样的，所以可以合并
 	if stmt.IsProve {
-		for _, curStmt := range stmt.Proofs {
-			err := exec.stmt(curStmt)
-			if err != nil {
-				return err
-			}
+		isSuccess, err := exec.proveClaimStmt(stmt)
+		if err != nil {
+			return err
 		}
-
-		// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里。运行方式是，空转这些命题，如果空转出现错误了，比如某变量没定义，那就报错
-
-		if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
-			isSuccess = true
-			return nil
+		if isSuccess {
+			exec.appendNewMsgAtBegin("is true\n")
 		} else {
-			ok, _, err := exec.checkFactStmt(stmt.ToCheckFact)
-			if err != nil {
-				return err
-			}
-			if !ok {
-				exec.appendNewMsgAtBegin("%v prove failed", stmt.ToCheckFact.String())
-				return nil
-			}
-
-			isSuccess = true
-			// exec.appendNewMsg("%v success", glob.KeywordProve)
-			return nil
+			exec.appendNewMsgAtBegin("is unknown\n")
 		}
-
 	} else {
-		if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
-			return fmt.Errorf("prove by contradiction does not support empty check")
-		}
-
-		// Must be SpecFactStmt
-		specFactStmt, ok := stmt.ToCheckFact.(*ast.SpecFactStmt)
-		if !ok {
-			return fmt.Errorf("prove by contradiction only support spec fact")
-		}
-
-		newClaimFact := specFactStmt.ReverseIsTrue()
-
-		err := exec.env.NewFact(newClaimFact)
+		isSuccess, err := exec.proveByContradictionClaimStmt(stmt)
 		if err != nil {
 			return err
 		}
-
-		for _, curStmt := range stmt.Proofs {
-			err := exec.stmt(curStmt)
-			if err != nil {
-				return err
-			}
-		}
-
-		lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.SpecFactStmt)
-		if !ok {
-			return fmt.Errorf("prove by contradiction only support fact")
-		}
-
-		reverseLastFact := lastStmtAsFact.ReverseIsTrue()
-
-		ok, _, err = exec.checkFactStmt(reverseLastFact)
-		if err != nil {
-			return err
-		}
-		if ok {
-			isSuccess = true
-			// exec.appendNewMsg("%v success", glob.KeywordProveByContradiction)
-			return nil
+		if isSuccess {
+			exec.appendNewMsgAtBegin("is true\n")
 		}
 	}
 
@@ -293,7 +242,7 @@ func (exec *Executor) defConExistPropStmt(stmt *ast.DefConExistPropStmt) error {
 	return nil
 }
 
-func (exec *Executor) haveObjDefStmt(stmt *ast.ExistObjDefStmt) error {
+func (exec *Executor) existObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 
@@ -349,4 +298,71 @@ func (exec *Executor) haveObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 	}
 
 	return nil
+}
+
+func (exec *Executor) proveClaimStmt(stmt *ast.ClaimStmt) (bool, error) {
+	for _, curStmt := range stmt.Proofs {
+		err := exec.stmt(curStmt)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	// 写成 prove: ... 这样的事实，是没有toCheckFact的
+	if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
+		return true, nil
+	}
+
+	ok, _, err := exec.checkFactStmt(stmt.ToCheckFact)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (exec *Executor) proveByContradictionClaimStmt(stmt *ast.ClaimStmt) (bool, error) {
+	if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
+		return false, fmt.Errorf("prove by contradiction does not support empty check")
+	}
+
+	// Must be SpecFactStmt
+	specFactStmt, ok := stmt.ToCheckFact.(*ast.SpecFactStmt)
+	if !ok {
+		return false, fmt.Errorf("prove by contradiction only support spec fact")
+	}
+
+	newClaimFact := specFactStmt.ReverseIsTrue()
+
+	err := exec.env.NewFact(newClaimFact)
+	if err != nil {
+		return false, err
+	}
+
+	for _, curStmt := range stmt.Proofs {
+		err := exec.stmt(curStmt)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.SpecFactStmt)
+	if !ok {
+		return false, fmt.Errorf("prove by contradiction only support fact")
+	}
+
+	reverseLastFact := lastStmtAsFact.ReverseIsTrue()
+
+	ok, _, err = exec.checkFactStmt(reverseLastFact)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
 }

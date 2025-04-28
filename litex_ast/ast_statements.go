@@ -80,7 +80,7 @@ type SpecFactStmt struct {
 	Params   []Fc
 }
 
-type ClaimProveStmt struct {
+type ClaimStmt struct {
 	IsProve     bool
 	ToCheckFact FactStmt
 	Proofs      []Stmt

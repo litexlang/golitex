@@ -47,7 +47,6 @@ prove:
     know $p(1)
 
     claim:
-        $p(2)
         $p(3)
         prove:
             $p(1+1)
@@ -67,3 +66,24 @@ prove:
             $p(0+1)
             $p(1 + 1)
             $p(2)
+
+prove:
+    exist_prop y nat larger_than_x(x nat):
+        y > x
+
+    know:
+        forall x nat, y nat:
+            y > 0
+            then:
+                x + y > x
+
+    know:
+        forall x nat:
+            exist $larger_than_x(x)
+        prove:
+            obj a:
+                a = x + 1
+            x + 1 > x
+            a > x
+            exist a larger_than_x(x)
+            
