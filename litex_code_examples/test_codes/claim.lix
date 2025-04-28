@@ -68,7 +68,7 @@ prove:
             $p(2)
 
 prove:
-    exist_prop y nat larger_than_x(x nat):
+    exist_prop y nat st larger_than_x(x nat):
         y > x
 
     know:

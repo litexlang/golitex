@@ -80,10 +80,6 @@ func NewConDefHeader(name string, params []string, typeParams []Fc) *ConDefHeade
 	return &ConDefHeader{name, params, typeParams}
 }
 
-// func NewExistFactStmt(specFact *SpecFactStmt, existFc []Fc) *ExistFactStmt {
-// 	return &ExistFactStmt{*specFact, existFc}
-// }
-
 func NewOrAndFact(isOr bool, facts []LogicExprOrSpecFactStmt) *LogicExprStmt {
 	return &LogicExprStmt{IsOr: isOr, Facts: facts}
 }

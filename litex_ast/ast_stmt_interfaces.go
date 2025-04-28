@@ -133,6 +133,7 @@ func (s *SpecFactStmt) Reverse() LogicExprOrSpecFactStmt {
 	return s.ReverseIsTrue()
 }
 
+// 用于处理 forall x Type. 这里的 Type 可以是 obj, fn, prop, existProp.
 type DefStmt interface {
 	defStmt()
 	stmt()
