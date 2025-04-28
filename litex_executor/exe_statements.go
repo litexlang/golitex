@@ -86,6 +86,7 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 		exec.deleteEnvAndRetainMsg()
 	}()
 
+	// TODO: 这里需要优化，因为claim和prove的逻辑是一样的，所以可以合并
 	if stmt.IsProve {
 		for _, curStmt := range stmt.Proofs {
 			err := exec.stmt(curStmt)
@@ -96,28 +97,30 @@ func (exec *Executor) claimProveStmt(stmt *ast.ClaimProveStmt) error {
 
 		// TODO 检查claim，并确保claim里的变量都是全局变量。确保了之后，在子环境里检查它后，如果确定对了，那就把这些这些claim释放到大环境里。运行方式是，空转这些命题，如果空转出现错误了，比如某变量没定义，那就报错
 
-		for _, fact := range stmt.ToCheckFacts {
-			ok, _, err := exec.checkFactStmt(fact)
+		if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
+			return nil
+		} else {
+			ok, _, err := exec.checkFactStmt(stmt.ToCheckFact)
 			if err != nil {
 				return err
 			}
 			if !ok {
-				exec.appendNewMsgAtBegin("%v prove failed", fact.String())
+				exec.appendNewMsgAtBegin("%v prove failed", stmt.ToCheckFact.String())
 				return nil
 			}
+
+			isSuccess = true
+			// exec.appendNewMsg("%v success", glob.KeywordProve)
+			return nil
 		}
 
-		isSuccess = true
-		// exec.appendNewMsg("%v success", glob.KeywordProve)
-		return nil
-
 	} else {
-		if len(stmt.ToCheckFacts) != 1 {
-			return fmt.Errorf("prove by contradiction only support one fact")
+		if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
+			return fmt.Errorf("prove by contradiction does not support empty check")
 		}
 
 		// Must be SpecFactStmt
-		specFactStmt, ok := stmt.ToCheckFacts[0].(*ast.SpecFactStmt)
+		specFactStmt, ok := stmt.ToCheckFact.(*ast.SpecFactStmt)
 		if !ok {
 			return fmt.Errorf("prove by contradiction only support spec fact")
 		}
@@ -266,9 +269,7 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
 
 	thenFacts := []ast.FactStmt{}
-	for _, fact := range uniFactThen {
-		thenFacts = append(thenFacts, fact)
-	}
+	thenFacts = append(thenFacts, uniFactThen...)
 
 	uniFact := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: stmt.DefHeader.SetParams, DomFacts: stmt.DomFacts, ThenFacts: thenFacts}
 	err = exec.env.NewFact(&uniFact)

@@ -229,20 +229,16 @@ func (f *DefConFnStmt) String() string {
 func (f *ClaimProveStmt) String() string {
 	var builder strings.Builder
 
-	if len(f.ToCheckFacts) == 0 {
+	if (f.ToCheckFact) == nil {
 		if f.IsProve {
 			builder.WriteString(glob.KeywordProve)
 		} else {
 			builder.WriteString(glob.KeywordProveByContradiction)
 		}
 		builder.WriteString(":\n")
-		if len(f.ToCheckFacts) != 0 {
-
-		} else {
-			for _, fact := range f.Proofs {
-				builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-				builder.WriteByte('\n')
-			}
+		for _, fact := range f.Proofs {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+			builder.WriteByte('\n')
 		}
 		return strings.TrimSpace(builder.String())
 	} else {
@@ -250,10 +246,8 @@ func (f *ClaimProveStmt) String() string {
 		builder.WriteByte(':')
 		builder.WriteByte('\n')
 
-		for _, fact := range f.ToCheckFacts {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-			builder.WriteByte('\n')
-		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(f.ToCheckFact.String(), 1))
+		builder.WriteByte('\n')
 
 		if f.IsProve {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))

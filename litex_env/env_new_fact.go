@@ -35,7 +35,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 }
 
 func (env *Env) NewLogicExprStmt(fact *ast.LogicExprStmt) error {
-	return env.SpecFactMem.InsertSpecFactUnderLogicExpr(fact)
+	return env.SpecFactMem.InsertSpecFactInLogicExpr(fact)
 }
 
 func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {

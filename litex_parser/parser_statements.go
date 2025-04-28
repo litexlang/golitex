@@ -381,37 +381,26 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimProveStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	toCheck := &[]ast.FactStmt{}
+	toCheck, err := tb.body[0].factStmt(ast.NameDepthMap{}, true)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
 	proof := &[]ast.Stmt{}
 
-	for i := 0; i < len(tb.body)-1; i++ {
-		if !tb.header.is(glob.KeywordProve) && !tb.header.is(glob.KeywordProveByContradiction) {
-			fact, err := tb.body[i].factStmt(ast.NameDepthMap{}, true)
-			if err != nil {
-				return nil, &tokenBlockErr{err, *tb}
-			}
-			*toCheck = append(*toCheck, fact)
-		}
-	}
-
 	isProve := true
-	if tb.body[len(tb.body)-1].header.is(glob.KeywordProveByContradiction) {
+	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
 		isProve = false
-		// prove_by_contradiction 时不能超过1个checkFact
-		if len(*toCheck) > 1 {
-			return nil, fmt.Errorf("%v expect only one checkFact", glob.KeywordProveByContradiction)
-		}
-	} else if !tb.body[len(tb.body)-1].header.is(glob.KeywordProve) {
+	} else if !tb.body[1].header.is(glob.KeywordProve) {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
 	}
-	tb.body[len(tb.body)-1].header.skip()
+	tb.body[1].header.skip()
 
-	err = tb.body[len(tb.body)-1].header.testAndSkip(glob.KeySymbolColon)
+	err = tb.body[1].header.testAndSkip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	for _, block := range tb.body[len(tb.body)-1].body {
+	for _, block := range tb.body[1].body {
 		curStmt, err := block.Stmt()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
@@ -419,7 +408,7 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimProveStmt, error) {
 		*proof = append(*proof, curStmt)
 	}
 
-	return ast.NewClaimProveStmt(isProve, *toCheck, *proof), nil
+	return ast.NewClaimProveStmt(isProve, toCheck, *proof), nil
 }
 
 func (tb *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
@@ -445,7 +434,7 @@ func (tb *tokenBlock) proveClaimStmt() (*ast.ClaimProveStmt, error) {
 		}
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
-	return ast.NewClaimProveStmt(isProve, []ast.FactStmt{}, innerStmtArr), nil
+	return ast.NewClaimProveStmt(isProve, ast.ClaimStmtEmptyToCheck, innerStmtArr), nil
 }
 
 func (tb *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
