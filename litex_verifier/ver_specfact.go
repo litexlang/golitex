@@ -40,14 +40,6 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 		}
 	}
 
-	// if stmt.IsEqualFact() {
-	// 	ok, err := ver.fcEqual(stmt, state)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	return ok, nil
-	// }
-
 	return ver.pureSpecFact(stmt, state)
 }
 
@@ -84,17 +76,6 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.IsEqualFact() {
-		ok, err := ver.fcEqualSpec(stmt.Params[0], stmt.Params[1], state)
-		if err != nil {
-			return false, err
-		}
-		if state.requireMsg() && ok {
-			ver.successMsgEnd(fmt.Sprintf("%s = %s", stmt.Params[0].String(), stmt.Params[1].String()), "")
-		}
-		return ok, err
-	}
-
 	ok, err := ver.btLogicOptBtRule(stmt, state)
 	if err != nil {
 		return false, err
@@ -103,6 +84,18 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return true, nil
 	}
 
+	ok, err = ver.specFactUsingMemSpecifically(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		// searchedNodeFacts, searchedNodeFactsUnderLogicExpr, got := curEnv.SpecFactMem.GetNode(stmt)
 		nodeNode, got := curEnv.SpecFactMem.GetNode(stmt)

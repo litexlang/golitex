@@ -15,12 +15,11 @@ package litex_comparator
 import (
 	"fmt"
 	ast "golitex/litex_ast"
-	mem "golitex/litex_memory"
 )
 
-func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (int, error) {
-	return cmpFcLit(left.FcAsKey, right.FcAsKey)
-}
+// func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (int, error) {
+// 	return cmpFcLit(left.FcAsKey, right.FcAsKey)
+// }
 
 // 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
 func cmpFcLit(left, right ast.Fc) (int, error) {

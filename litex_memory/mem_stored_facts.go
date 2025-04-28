@@ -14,7 +14,6 @@ package litex_memory
 
 import (
 	ast "golitex/litex_ast"
-	glob "golitex/litex_global"
 )
 
 type StoredSpecFact struct {
@@ -105,13 +104,13 @@ type UniFactMemDict struct {
 	SpecFactsDict map[string]map[string]StoredUniFuncMemDictNode
 }
 
-type EqualFactMemoryTreeNode struct {
-	FcAsKey ast.Fc
-	// 完全共享的情况，通常是非常本质的情况，比如litex里保存 = 相关的事实的时候，如果 x1, x2, .. xn 都相等，那他们 共享同一片地址，这个地址里存了 [x1, x2 .., xn]。如果我新来一个 y = xm，那x1, x2, … xn, y一起指向 [x1, x2, … xn, y]，即任何 xm 都能 修改 和自己相等的key 所指向的那片地址
-	Values *[]ast.Fc // VERY IMPORTANT: THIS IS PTR TO SLICE, NOT SLICE, Because every owner of this piece of memory can modify it, and this modification is shared between owners (every owner can see this modification).
-	// 如果一个prop没有同时 有传递性(a = b. b = c => a = c)和交换性(know a = b 和 now b =a 等价)，那就不会共享内存。
-}
+// type EqualFactMemoryTreeNode struct {
+// 	FcAsKey ast.Fc
+// 	// 完全共享的情况，通常是非常本质的情况，比如litex里保存 = 相关的事实的时候，如果 x1, x2, .. xn 都相等，那他们 共享同一片地址，这个地址里存了 [x1, x2 .., xn]。如果我新来一个 y = xm，那x1, x2, … xn, y一起指向 [x1, x2, … xn, y]，即任何 xm 都能 修改 和自己相等的key 所指向的那片地址
+// 	Values *[]ast.Fc // VERY IMPORTANT: THIS IS PTR TO SLICE, NOT SLICE, Because every owner of this piece of memory can modify it, and this modification is shared between owners (every owner can see this modification).
+// 	// 如果一个prop没有同时 有传递性(a = b. b = c => a = c)和交换性(know a = b 和 now b =a 等价)，那就不会共享内存。
+// }
 
-type EqualFactMem struct {
-	Mem glob.RedBlackTree[*EqualFactMemoryTreeNode]
-}
+// type EqualFactMem struct {
+// 	Mem glob.RedBlackTree[*EqualFactMemoryTreeNode]
+// }
