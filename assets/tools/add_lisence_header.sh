@@ -16,5 +16,4 @@ addlicense -c "Jiachen Shen" \
   -v \
   -ignore "**/vendor/**" \
   -f ./assets/tools/my_license.txt \
-  -check \
   .

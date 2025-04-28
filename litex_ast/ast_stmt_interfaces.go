@@ -84,8 +84,9 @@ type UniFactStmt interface {
 	Instantiate(map[string]Fc) (FactStmt, error)
 }
 
-func (s *ConUniFactStmt) forallStmt() {}
-func (s *GenUniStmt) forallStmt()     {}
+func (s *ConUniFactStmt) forallStmt()        {}
+func (s *GenUniStmt) forallStmt()            {}
+func (s *ConUniFactWithIffStmt) forallStmt() {}
 
 type PropFactStmt interface {
 	factStmt()
