@@ -2,3 +2,14 @@ prove:
     know:
         a = b
     a = b
+
+    p(b) = p(a)
+
+prove:
+    know:
+        forall x A, y A:
+            p(x) = p(y)
+
+    p(t) = p(a)
+    
+    
