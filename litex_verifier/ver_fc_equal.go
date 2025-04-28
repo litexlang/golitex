@@ -49,10 +49,6 @@ func (ver *Verifier) fcEqualSpec(stmt *ast.SpecFactStmt, state VerState) (bool, 
 		return true, nil
 	}
 
-	if state.isSpec() {
-		return false, nil
-	}
-
 	// Case: 如果left, right都是 FcFn，那一位位比较一下
 	cmpRet, fcEnum, err := ast.CmpFcType(left, right)
 	if err != nil {
@@ -66,7 +62,7 @@ func (ver *Verifier) fcEqualSpec(stmt *ast.SpecFactStmt, state VerState) (bool, 
 	if fcEnum == ast.FcFnEnum {
 		// WARNING:  这里根本不是SpecMsg，而是RoundMsg，所以fcEqualSpec里不能是可能用到非SpecFact的
 		// state = state.addRound()
-		return ver.fcFnEq(left.(*ast.FcFn), right.(*ast.FcFn), state)
+		return ver.fcFnEq(left.(*ast.FcFn), right.(*ast.FcFn), state.toSpec())
 		// return ver.fcFnEq(left.(*ast.FcFn), right.(*ast.FcFn), SpecMsg)
 	} else if fcEnum == ast.FcAtomEnum {
 		return false, nil
