@@ -45,7 +45,7 @@ func (stmt *KnowStmt) String() string {
 
 func (stmt *SpecFactStmt) String() string {
 	if stmt.IsExist_St_Fact() {
-		return haveFactString(stmt)
+		return exist_st_FactString(stmt)
 	}
 
 	var builder strings.Builder
@@ -88,7 +88,7 @@ func relaFactString(stmt *SpecFactStmt) string {
 	return builder.String()
 }
 
-func haveFactString(stmt *SpecFactStmt) string {
+func exist_st_FactString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 	if stmt.TypeEnum == FalseExist_St {
 		builder.WriteString(glob.KeywordNot)
@@ -466,7 +466,7 @@ func (f *FcAtom) String() string {
 }
 
 func (f *FcFn) String() string {
-	if ok, str := isRelaFcFnAndToString(f); ok {
+	if ok, str := hasBuiltinOptAndToString(f); ok {
 		return str
 	}
 

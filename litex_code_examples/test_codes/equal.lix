@@ -12,4 +12,26 @@ prove:
 
     p(t) = p(a)
     
-    
+prove:
+    know:
+        or:
+            a = b
+            a = c
+
+        not a = c
+
+    a = b
+
+prove:
+    know:
+        when:
+            a = b
+            then:
+                p(a) = p(b*2)
+
+        a = b
+
+    p(a) = p(b*2)
+
+prove:
+    -1 + 2 = 1

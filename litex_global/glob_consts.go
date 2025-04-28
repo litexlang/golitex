@@ -16,7 +16,8 @@ const Scope4Indents = "    "
 
 // const EmptyPkgName = ""
 const BuiltinEmptyPkgName = ""
-const BuiltinUnaryPkgName = "#"
+
+// const BuiltinUnaryPkgName = "#"
 const MultiLinesCommentSig = "\"\"\""
 const MaxNameLen = 255
 
