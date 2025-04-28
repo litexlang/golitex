@@ -96,13 +96,22 @@ func FcSliceString(params []Fc) string {
 	return strings.Join(output, ", ")
 }
 
-func isRelaFcFnAndToString(f *FcFn) (bool, string) {
+func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
+
 	ptr, ok := f.FnHead.(*FcAtom)
 	if !ok {
 		return false, ""
 	}
 
-	if ptr.Name != glob.BuiltinEmptyPkgName {
+	if ptr.PkgName == glob.BuiltinEmptyPkgName && ptr.Name == glob.KeySymbolMinus {
+		if len(f.ParamSegs[0]) == 1 {
+			return true, fmt.Sprintf("(%s %s)", ptr.Name, f.ParamSegs[0][0])
+		}
+
+		return true, fmt.Sprintf("(%s %s %s)", f.ParamSegs[0][0], ptr.Name, f.ParamSegs[0][1])
+	}
+
+	if ptr.PkgName != glob.BuiltinEmptyPkgName {
 		return false, ""
 	}
 
@@ -110,7 +119,7 @@ func isRelaFcFnAndToString(f *FcFn) (bool, string) {
 
 	outPut := string(ptr.Name)
 	if glob.IsKeySymbolRelaFn(outPut) {
-		return true, fmt.Sprintf("%s %s %s", f.ParamSegs[0][0], outPut, f.ParamSegs[0][1])
+		return true, fmt.Sprintf("(%s %s %s)", f.ParamSegs[0][0], outPut, f.ParamSegs[0][1])
 	}
 
 	return false, ""
@@ -146,37 +155,32 @@ func (f *FcAtom) IsBuiltinInfixOpt() bool {
 	return false
 }
 
-func (f *FcAtom) IsBuiltinUnaryOpt() bool {
-	if f.PkgName != glob.BuiltinUnaryPkgName {
-		return false
-	}
-	if glob.IsKeySymbolUniFn(f.Name) {
-		return true
-	}
-	return false
-}
+// func (f *FcAtom) IsBuiltinUnaryOpt() bool {
+// 	if f.PkgName != glob.BuiltinUnaryPkgName {
+// 		return false
+// 	}
+// 	if glob.IsKeySymbolUniFn(f.Name) {
+// 		return true
+// 	}
+// 	return false
+// }
 
 var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinEmptyPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep}
 
-func IsFcBuiltinUnaryOpt(f Fc) bool {
-	ptr, ok := f.(*FcAtom)
+func IsFcBuiltinInfixOpt(f FcFn) bool {
+	ptrHeadAsAtom, ok := f.FnHead.(*FcAtom)
 	if !ok {
 		return false
 	}
 
-	return ptr.PkgName == glob.BuiltinUnaryPkgName && glob.IsBuiltinUnaryOpt(ptr.Name)
+	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolRelaFn(ptrHeadAsAtom.Name) && len(f.ParamSegs) == 1 && len(f.ParamSegs[0]) == 2
 }
 
-func IsFcBuiltinInfixOpt(f Fc) bool {
-	ptr, ok := f.(*FcAtom)
+func IsFcBuiltinUnaryOpt(fc FcFn) bool {
+	fcAsFnHead, ok := fc.FnHead.(*FcAtom)
 	if !ok {
 		return false
 	}
-	return ptr.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolRelaFn(ptr.Name)
+
+	return glob.IsBuiltinUnaryOpt(fcAsFnHead.Name) && fcAsFnHead.PkgName == glob.BuiltinEmptyPkgName && len(fc.ParamSegs) == 1 && len(fc.ParamSegs[0]) == 1
 }
-
-// var EmptyFcFnHeadAtom = FcAtom{glob.BuiltinPkgName, glob.EmptyFcFnHead}
-
-// func (fcFn *FcFn) IsEmptyHeadFcFn() bool {
-// 	return fcFn.FnHead.PkgName == glob.BuiltinPkgName && fcFn.FnHead.Name == glob.EmptyFcFnHead
-// }

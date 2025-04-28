@@ -169,7 +169,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !glob.IsKeySymbolUniFn(unaryOp) {
+	if !glob.IsBuiltinUnaryOpt(unaryOp) {
 		return cursor.fcAtomAndFcFnRetAndBracedFc()
 	} else {
 		cursor.skip(unaryOp)
@@ -179,7 +179,8 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 			return nil, err
 		}
 
-		leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
+		// leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
+		leftHead := ast.NewFcAtom(glob.BuiltinEmptyPkgName, unaryOp)
 		return ast.NewFcFnPipe(
 			leftHead,
 			[][]ast.Fc{{right}},

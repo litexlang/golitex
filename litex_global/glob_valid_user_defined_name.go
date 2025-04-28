@@ -32,9 +32,9 @@ func IsValidName(name string) error {
 		return fmt.Errorf("name cannot start with %s", UniParamPrefix)
 	}
 
-	if len(name) >= 1 && string(name[0]) == BuiltinUnaryPkgName {
-		return fmt.Errorf("name cannot start with %s", BuiltinUnaryPkgName)
-	}
+	// if len(name) >= 1 && string(name[0]) == BuiltinUnaryPkgName {
+	// 	return fmt.Errorf("name cannot start with %s", BuiltinUnaryPkgName)
+	// }
 
 	// 开头不能是符号
 	if IsKeySymbol(name) {
