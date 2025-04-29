@@ -1,0 +1,17 @@
+# the most common usage of universal fact: there is no iff
+prove:
+    know:
+        forall x set:
+            $q(x)
+            then:
+                $p(x)
+        
+        $q(1)
+
+    $p(1)
+
+prove:
+    know:
+        forall x nat:
+            x > -1
+    a > -1

@@ -28,7 +28,7 @@ func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 	case *ast.CondFactStmt:
 		return ver.CondFact(stmt, state)
 	case *ast.ConUniFactStmt:
-		return ver.UniFact(stmt, state)
+		return ver.ConUniFact(stmt, state)
 	case *ast.LogicExprStmt:
 		return ver.LogicalExprFact(stmt, state)
 	default:
