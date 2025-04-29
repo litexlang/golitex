@@ -73,7 +73,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
 
 func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 	exec.newEnv(exec.env.CurPkg)
-	var err error = nil
+	err := error(nil)
 	isSuccess := false
 
 	defer func() {
@@ -93,18 +93,10 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 		if err != nil {
 			return err
 		}
-		if isSuccess {
-			exec.appendNewMsgAtBegin("is true\n")
-		} else {
-			exec.appendNewMsgAtBegin("is unknown\n")
-		}
 	} else {
-		isSuccess, err := exec.proveByContradictionClaimStmt(stmt)
+		isSuccess, err = exec.proveByContradictionClaimStmt(stmt)
 		if err != nil {
 			return err
-		}
-		if isSuccess {
-			exec.appendNewMsgAtBegin("is true\n")
 		}
 	}
 
