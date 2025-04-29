@@ -1198,23 +1198,22 @@ func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUn
 	eachSectionStartWithKw := tb.body[0].header.is(glob.KeywordDom) || tb.body[0].header.is(glob.KeywordThen) || tb.body[0].header.is(glob.KeywordIff)
 
 	if eachSectionStartWithKw {
-		for i := range tb.body {
-			stmt := tb.body[i]
+		for _, stmt := range tb.body {
 			kw, err := stmt.header.skipAndSkipColonAndAchieveEnd()
 			if err != nil {
 				return nil, nil, nil, &tokenBlockErr{err, *tb}
 			}
-			fact, err := stmt.factStmt(nameDepthMap, curAllowUniFactEnum.addDepth())
+			facts, err := stmt.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum.addDepth(), len(stmt.body))
 			if err != nil {
 				return nil, nil, nil, &tokenBlockErr{err, *tb}
 			}
 			switch kw {
 			case glob.KeywordDom:
-				domFacts = append(domFacts, fact)
+				domFacts = append(domFacts, facts...)
 			case glob.KeywordThen:
-				thenFacts = append(thenFacts, fact)
+				thenFacts = append(thenFacts, facts...)
 			case glob.KeywordIff:
-				iffFacts = append(iffFacts, fact)
+				iffFacts = append(iffFacts, facts...)
 			}
 		}
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {

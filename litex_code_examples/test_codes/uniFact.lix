@@ -15,3 +15,18 @@ prove:
         forall x nat:
             x > -1
     a > -1
+
+prove:
+    know:
+        forall x nat:
+            dom:
+                $t(x)
+            then:
+                $p(x)
+            iff:
+                $q(x)
+
+        $t(1)
+        $q(1)
+
+    $p(1)

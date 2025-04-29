@@ -316,7 +316,7 @@ func conUniFactString(prefix string, l *ConUniFactStmt) string {
 
 	builder.WriteString(prefix)
 	if len(l.Params) > 0 {
-		for i := 0; i < len(l.Params)-1; i++ {
+		for i := range len(l.Params) - 1 {
 			builder.WriteString(l.Params[i])
 			builder.WriteString(" ")
 			builder.WriteString(l.ParamSets[i].String())
@@ -339,6 +339,17 @@ func conUniFactString(prefix string, l *ConUniFactStmt) string {
 			builder.WriteByte('\n')
 		}
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(l.ThenFacts[len(l.ThenFacts)-1].String(), 2))
+	}
+
+	if l.IffFacts != nil && len(l.IffFacts) > 0 {
+		builder.WriteByte('\n')
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("iff:", 1))
+		builder.WriteByte('\n')
+		for i := 0; i < len(l.IffFacts)-1; i++ {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(l.IffFacts[i].String(), 2))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(l.IffFacts[len(l.IffFacts)-1].String(), 2))
 	}
 	return builder.String()
 }
