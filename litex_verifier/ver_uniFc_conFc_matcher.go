@@ -16,6 +16,7 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	cmp "golitex/litex_comparator"
+	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
 )
 
@@ -28,7 +29,7 @@ func (ver *Verifier) matchStoredUniSpecWithSpec(knownFact mem.StoredUniSpecFact,
 	retMap := map[string][]ast.Fc{}
 
 	for i, uniParam := range knownFact.SpecFact.Params {
-		matchMap, matched, err := ver.matchUniFcWithConFc(uniParam, stmt.Params[i], knownFact.UniFact.Params)
+		matchMap, matched, err := ver.match_FcInFactUnderUniFact_WithConFc(uniParam, stmt.Params[i], knownFact.UniFact.Params)
 		if err != nil {
 			return nil, false, err
 		}
@@ -41,12 +42,13 @@ func (ver *Verifier) matchStoredUniSpecWithSpec(knownFact mem.StoredUniSpecFact,
 	return retMap, true, nil
 }
 
-func (ver *Verifier) matchUniFcWithConFc(uniFuncParam ast.Fc, concreteFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+// paramInFactUnderUniFact 可能是自由的，可能是固定的，反正它来自一个forall下面的某个specFact
+func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact ast.Fc, conFc ast.Fc, uniFactUniParams []string) (map[string][]ast.Fc, bool, error) {
 	// 注意到，如果传入的不是fn，而是atom，那大概率是不能match上的。只有一种例外:
 	// know forall x A: $p(x *(3-2)); $p(1*1) 这时候 3 -2 要能和1对上。而 uniFunc 的对应关系，只是让自由变量去对应，不包括builtinFc的match
 	// 同时，也不能直接去CmpFcRule，因为如果输入的变量的字面量刚好是存着的自由变量的字面量，那恰好相等了，这是不行的。只能是BuiltinFc 之间相等
 	// 为了处理这种情况，引入下面这段代码
-	ok, err := cmp.BuiltinFcEqualRule(uniFuncParam, concreteFuncParam)
+	ok, err := cmp.BuiltinFcEqualRule(fcInFactUnderUniFact, conFc)
 	if err != nil {
 		return nil, false, err
 	}
@@ -55,25 +57,25 @@ func (ver *Verifier) matchUniFcWithConFc(uniFuncParam ast.Fc, concreteFuncParam 
 	}
 
 	// Safe type switching
-	switch param := uniFuncParam.(type) {
+	switch param := fcInFactUnderUniFact.(type) {
 	case *ast.FcAtom:
-		return ver.matchAtomUniWithConFc(param, concreteFuncParam, possibleUniParams)
+		return ver.match_FcAtomInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
 	case *ast.FcFn:
-		return ver.matchFnUniWithConFc(param, concreteFuncParam, possibleUniParams)
+		return ver.match_FcFnInFactUnderUniFact_ConFc(param, conFc, uniFactUniParams)
 	default:
-		return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, uniFuncParam.String())
+		return nil, false, fmt.Errorf("unexpected type %T for parameter %v", param, fcInFactUnderUniFact.String())
 	}
 }
 
-func (ver *Verifier) matchAtomUniWithConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact *ast.FcAtom, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
 	retMap := make(map[string][]ast.Fc)
 
-	if matchStr, ok := isUniParam(uniFuncFcAtom, possibleUniParams); ok {
-		retMap[matchStr] = []ast.Fc{conFuncParam}
+	if matchStr, ok := isUniParam(fcAtomInFactUnderUniFact, uniParams); ok {
+		retMap[matchStr] = []ast.Fc{conFc}
 		return retMap, true, nil
 	}
 
-	ok, err := ver.makeFcEqualFactAndVerify(uniFuncFcAtom, conFuncParam, SpecNoMsg)
+	ok, err := ver.makeFcEqualFactAndVerify(fcAtomInFactUnderUniFact, conFc, SpecNoMsg)
 	if err != nil {
 		return nil, false, err
 	}
@@ -84,35 +86,16 @@ func (ver *Verifier) matchAtomUniWithConFc(uniFuncFcAtom *ast.FcAtom, conFuncPar
 	return nil, false, nil
 }
 
-// func (ver *Verifier) matchAtomUniWithConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
-// 	retMap := make(map[string][]ast.Fc)
-
-// 	if matchStr, ok := isUniParam(uniFuncFcAtom, possibleUniParams); ok {
-// 		retMap[matchStr] = []ast.Fc{conFuncParam}
-// 		return retMap, true, nil
-// 	}
-
-// 	ok, err := ver.makeFcEqualFactAndVerify(uniFuncFcAtom, conFuncParam, SpecNoMsg)
-// 	if err != nil {
-// 		return nil, false, err
-// 	}
-// 	if ok {
-// 		return retMap, true, nil
-// 	}
-
-// 	return nil, false, nil
-// }
-
-func (ver *Verifier) matchFnUniWithConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *ast.FcFn, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
 	retMap := map[string][]ast.Fc{}
 
-	conParamAsFcFn, ok := conFuncParam.(*ast.FcFn)
+	conParamAsFcFn, ok := conFc.(*ast.FcFn)
 	if !ok {
 		return nil, false, nil
 	}
 
 	// match head
-	matchMap, ok, err := ver.matchUniFcWithConFc(uniFuncFcFn.FnHead, conParamAsFcFn.FnHead, possibleUniParams)
+	matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(fcFnUnFactUnderUniFact.FnHead, conParamAsFcFn.FnHead, uniParams)
 	if err != nil {
 		return nil, false, err
 	}
@@ -121,17 +104,17 @@ func (ver *Verifier) matchFnUniWithConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast
 	}
 	mergeMatchMaps(matchMap, retMap)
 
-	if len(conParamAsFcFn.ParamSegs) != len(uniFuncFcFn.ParamSegs) {
+	if len(conParamAsFcFn.ParamSegs) != len(fcFnUnFactUnderUniFact.ParamSegs) {
 		return nil, false, nil //? 不清楚应该报错还是说直接返回不对，应该是返回不对
 	}
 
-	for i, uniPipe := range uniFuncFcFn.ParamSegs {
+	for i, uniPipe := range fcFnUnFactUnderUniFact.ParamSegs {
 		if len(uniPipe) != len(conParamAsFcFn.ParamSegs[i]) {
 			return nil, false, nil
 		}
 
 		for j, param := range uniPipe {
-			matchMap, ok, err := ver.matchUniFcWithConFc(param, conParamAsFcFn.ParamSegs[i][j], possibleUniParams)
+			matchMap, ok, err := ver.match_FcInFactUnderUniFact_WithConFc(param, conParamAsFcFn.ParamSegs[i][j], uniParams)
 			if err != nil {
 				return nil, false, err
 			}
@@ -145,10 +128,10 @@ func (ver *Verifier) matchFnUniWithConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast
 	return retMap, true, nil
 }
 
-func isUniParam(uniFuncAtom *ast.FcAtom, possibleUniParams []string) (string, bool) { // ret: matched possible uniParam string; isMatched?
-	for _, possible := range possibleUniParams {
-		if possible == uniFuncAtom.Name && uniFuncAtom.PkgName == "" {
-			return possible, true
+func isUniParam(fcAtomInFactUnderUniFact *ast.FcAtom, uniParams []string) (string, bool) { // ret: matched possible uniParam string; isMatched?
+	for _, uniParam := range uniParams {
+		if uniParam == fcAtomInFactUnderUniFact.Name && fcAtomInFactUnderUniFact.PkgName == glob.BuiltinEmptyPkgName {
+			return uniParam, true
 		}
 	}
 	return "", false
