@@ -214,6 +214,10 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
+	if len(iffFacts) == 0 {
+		iffFacts = ast.EmptyIffFacts
+	}
+
 	return ast.NewConUniFactStmt(params, paramTypes, domainFacts, thenFacts, iffFacts), nil
 }
 
