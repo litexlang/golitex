@@ -1,1 +1,14 @@
-f(1) = 2
+prove:
+    know:
+        forall x nat:
+            forall y nat:
+                $p(x,y)
+            iff:
+                forall y nat:
+                    $q(x,y)
+            
+        forall x nat, y nat:
+            $p(x,y)
+
+    forall x nat, y nat:
+        $q(x,y)
