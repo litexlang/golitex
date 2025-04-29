@@ -1071,7 +1071,7 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 			}
 		}
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
-		domFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum.addDepth(), len(tb.body)-1)
+		domFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -1080,7 +1080,21 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		thenFacts, err = tb.body[len(tb.body)-1].bodyBlockFacts(nameDepthMap, curAllowUniFactEnum.addDepth(), len(tb.body[len(tb.body)-1].body))
+		thenFacts, err = tb.body[len(tb.body)-1].bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body[len(tb.body)-1].body))
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
+		thenFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body)-1)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		err = tb.body[len(tb.body)-1].header.skipKwAndColon(glob.KeywordIff)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		iffFacts, err = tb.body[len(tb.body)-1].bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body[len(tb.body)-1].body))
 		if err != nil {
 			return nil, nil, nil, err
 		}
