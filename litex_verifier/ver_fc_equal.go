@@ -76,7 +76,10 @@ func (ver *Verifier) fcEqualSpecInSpecMem(stmt *ast.SpecFactStmt, state VerState
 	right := stmt.Params[1]
 	fact := stmt
 	fact2 := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{right, left})
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+
+	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+
+	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		verified, err := ver.specFactUsingMemSpecifically(fact, state)
 		if err != nil {
 			return false, err

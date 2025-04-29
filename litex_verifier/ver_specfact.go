@@ -93,7 +93,8 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		nodeNode, got := curEnv.SpecFactMem.GetNode(stmt)
 		if !got {
 			continue
@@ -164,7 +165,8 @@ func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerSta
 }
 
 func (ver *Verifier) SpecFactCond(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		ok, err := ver.SpecFactCondAtEnv(curEnv, stmt, state)
 		if err != nil {
 			return false, err
@@ -224,7 +226,10 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 	}
 
 	nextState := state
-	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+
+	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+
+	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		ok, err := ver.SpecFactUniAtEnv(curEnv, stmt, nextState)
 		if err != nil {
 			return false, err
