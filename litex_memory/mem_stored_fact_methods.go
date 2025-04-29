@@ -14,7 +14,6 @@ package litex_memory
 
 import (
 	"fmt"
-	"golitex/litex_ast"
 	ast "golitex/litex_ast"
 )
 
@@ -502,7 +501,7 @@ func NewStoredUniFuncMemDictNode() *StoredUniFuncMemDictNode {
 }
 
 func (factMem *UniFactMemDict) mergeOuterInnerUniFactAndInsert(outer *ast.ConUniFactStmt, inner *ast.ConUniFactStmt) error {
-	mergedConUni := litex_ast.MergeOuterInnerUniFacts(outer, inner)
+	mergedConUni := ast.MergeOuterInnerUniFacts(outer, inner)
 	err := factMem.insertSpecFacts(mergedConUni, mergedConUni.ThenFacts)
 	if err != nil {
 		return err
