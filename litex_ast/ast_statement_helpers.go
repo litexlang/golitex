@@ -121,3 +121,11 @@ func (stmt *ConUniFactStmt) NewFactWithIffToThen() *ConUniFactStmt {
 	newConUniFact.DomFacts = append(newConUniFact.DomFacts, stmt.IffFacts...)
 	return newConUniFact
 }
+
+func MergeOuterInnerUniFacts(outer *ConUniFactStmt, inner *ConUniFactStmt) *ConUniFactStmt {
+	newOuter := NewConUniFactStmt(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, EmptyIffFacts)
+	newOuter.Params = append(newOuter.Params, inner.Params...)
+	newOuter.ParamSets = append(newOuter.ParamSets, inner.ParamSets...)
+	newOuter.DomFacts = append(newOuter.DomFacts, inner.DomFacts...)
+	return newOuter
+}

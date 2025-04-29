@@ -29,4 +29,31 @@ prove:
         $t(1)
         $q(1)
 
+        $t(2)
+        $q(2)
+
     $p(1)
+    $p(2)
+
+prove:
+    know:
+        forall x nat:
+            $t(x)
+            $q(x)
+            then:
+                $p(x)
+        
+        forall x nat:
+            $t(x)
+            $p(x)
+            then:
+                $q(x)
+    
+    forall x nat:
+        dom:
+            $t(x)
+        then:
+            $p(x)
+        iff:
+            $q(x)
+
