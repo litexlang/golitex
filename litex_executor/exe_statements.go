@@ -107,36 +107,10 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 			return err
 		}
 	} else if asConUniFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
-		uniConMap := map[string]ast.Fc{}
-		newParams := make([]string, len(asConUniFact.Params))
-
-		for i, param := range asConUniFact.Params {
-			newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-			uniConMap[param] = ast.NewFcAtom(exec.env.CurPkg, newParams[i])
+		newUniFact, err := ast.AddUniPrefixToUniFactWithNoUniPrefix(asConUniFact)
+		if err != nil {
+			return err
 		}
-
-		newParamsSets := asConUniFact.ParamSets
-		newDomFacts := []ast.FactStmt{}
-		newThenFacts := []ast.FactStmt{}
-		newIffFacts := ast.EmptyIffFacts
-
-		for _, fact := range asConUniFact.DomFacts {
-			newFact, err := fact.Instantiate(uniConMap)
-			if err != nil {
-				return err
-			}
-			newDomFacts = append(newDomFacts, newFact)
-		}
-
-		for _, fact := range asConUniFact.ThenFacts {
-			newFact, err := fact.Instantiate(uniConMap)
-			if err != nil {
-				return err
-			}
-			newThenFacts = append(newThenFacts, newFact)
-		}
-
-		newUniFact := ast.NewConUniFactStmt(newParams, newParamsSets, newDomFacts, newThenFacts, newIffFacts)
 
 		err = exec.env.NewFact(newUniFact)
 		if err != nil {
