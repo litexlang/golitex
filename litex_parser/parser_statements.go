@@ -16,7 +16,6 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	glob "golitex/litex_global"
-	"strings"
 )
 
 func (tb *tokenBlock) TopStmt() (*ast.TopStmt, error) {
@@ -186,26 +185,28 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	params, paramTypes, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
+	paramsWithoutUniParamPrefix, paramTypes, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	newUniParams := ast.NameDepthMap{}
-	for key := range nameDepthMap {
-		newUniParams[key] = nameDepthMap[key]
-	}
+	// newUniParams := ast.NameDepthMap{}
+	// for key := range nameDepthMap {
+	// 	newUniParams[key] = nameDepthMap[key]
+	// }
 
-	for i := range params {
-		prefixNum, declared := nameDepthMap[params[i]]
-		if !declared {
-			newUniParams[params[i]] = 1
-			params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, params[i])
-		} else {
-			newUniParams[params[i]] = prefixNum + 1
-			params[i] = strings.Repeat(glob.UniParamPrefix, prefixNum+1) + params[i]
-		}
-	}
+	// for i := range params {
+	// 	prefixNum, declared := nameDepthMap[params[i]]
+	// 	if !declared {
+	// 		newUniParams[params[i]] = 1
+	// 		params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, params[i])
+	// 	} else {
+	// 		newUniParams[params[i]] = prefixNum + 1
+	// 		params[i] = strings.Repeat(glob.UniParamPrefix, prefixNum+1) + params[i]
+	// 	}
+	// }
+
+	paramsWithUniPrefix, newUniParams := ast.AddPrefixToStrParams(paramsWithoutUniParamPrefix, nameDepthMap)
 
 	keywords := map[string]struct{}{
 		glob.KeywordDom:  {},
@@ -222,7 +223,7 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		iffFacts = ast.EmptyIffFacts
 	}
 
-	return ast.NewConUniFactStmt(params, paramTypes, domainFacts, thenFacts, iffFacts), nil
+	return ast.NewConUniFactStmt(paramsWithUniPrefix, paramTypes, domainFacts, thenFacts, iffFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum) ([]ast.FactStmt, error) {
