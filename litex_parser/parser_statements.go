@@ -1040,7 +1040,7 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 	if curAllowUniFactEnum.allowMoreDepth() {
 		for i := 0; i < parseBodyFactNum; i++ {
 			stmt := tb.body[i]
-			fact, err := stmt.factStmt(nameDepthMap, curAllowUniFactEnum.addDepth()) // no longer allow further uniFact
+			fact, err := stmt.factStmt(nameDepthMap, curAllowUniFactEnum) // no longer allow further uniFact
 			if err != nil {
 				return nil, &tokenBlockErr{err, *tb}
 			}
@@ -1203,7 +1203,7 @@ func (tb *tokenBlock) uniFactBodyFacts(nameDepthMap ast.NameDepthMap, curAllowUn
 			if err != nil {
 				return nil, nil, nil, &tokenBlockErr{err, *tb}
 			}
-			facts, err := stmt.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum.addDepth(), len(stmt.body))
+			facts, err := stmt.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(stmt.body))
 			if err != nil {
 				return nil, nil, nil, &tokenBlockErr{err, *tb}
 			}

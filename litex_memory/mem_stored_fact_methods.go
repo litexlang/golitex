@@ -187,18 +187,18 @@ func (factMem *UniFactMemDict) Insert(fact *ast.ConUniFactStmt) error {
 	if fact.IffFacts == nil || len(fact.IffFacts) == 0 {
 		return factMem.insertSpecFacts(fact, fact.ThenFacts)
 	} else {
-		thenToIff := fact.NewFactWithThenToIff()
+		thenToIff := fact.NewUniFactWithThenToIff()
 		err := factMem.insertUniFact(thenToIff, thenToIff.ThenFacts)
 		if err != nil {
 			return err
 		}
-		iffToThen := fact.NewFactWithIffToThen()
+		iffToThen := fact.NewUniFactWithIffToThen()
 		err = factMem.insertUniFact(iffToThen, iffToThen.ThenFacts)
 		if err != nil {
 			return err
 		}
 	}
-	return fmt.Errorf("TODO: Currently only support uni fact with iff fact, but got: %s", fact.String())
+	return nil
 }
 
 func (factMem *UniFactMemDict) insertSpecFact(uniStmt *ast.ConUniFactStmt, stmt *ast.SpecFactStmt) error {
@@ -517,6 +517,8 @@ func (factMem *UniFactMemDict) insertSpecFacts(uniStmt *ast.ConUniFactStmt, then
 			if err != nil {
 				return err
 			}
+		} else {
+			return fmt.Errorf("only support spec fact in uni fact, but got: %s", stmt.String())
 		}
 	}
 
