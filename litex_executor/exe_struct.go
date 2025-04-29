@@ -54,3 +54,28 @@ func (e *Executor) appendNewMsg(msg string, str ...any) {
 func (e *Executor) appendNewMsgAtBegin(msg string, str ...any) {
 	e.env.Msgs = append([]string{fmt.Sprintf(msg, str...)}, e.env.Msgs...)
 }
+
+type ExecutorState uint8
+
+const (
+	ExecutorState_True ExecutorState = iota
+	ExecutorState_Unknown
+	ExecutorState_Error
+	ExecutorState_False
+)
+
+func (e *Executor) IsTrue() ExecutorState {
+	return ExecutorState_True
+}
+
+func (e *Executor) IsUnknown() ExecutorState {
+	return ExecutorState_Unknown
+}
+
+func (e *Executor) IsError() ExecutorState {
+	return ExecutorState_Error
+}
+
+func (e *Executor) IsFalse() ExecutorState {
+	return ExecutorState_False
+}
