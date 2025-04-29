@@ -164,3 +164,16 @@ func (f *FcAtom) IsBuiltinUnaryOpt() bool {
 func (f *FcAtom) IsBuiltinInfixOpt() bool {
 	return f.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolRelaFn(f.Name)
 }
+
+func (f *FcFn) IsBuiltinFcSet() bool {
+	ptrHeadAsAtom, ok := f.FnHead.(*FcAtom)
+	if !ok {
+		return false
+	}
+
+	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && ptrHeadAsAtom.Name == glob.KeywordSet
+}
+
+func IsBuiltinFcSignal(name string) bool {
+	return name == glob.KeywordFn
+}
