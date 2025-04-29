@@ -19,19 +19,29 @@ import (
 )
 
 func (ver *Verifier) btLogicOptSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.IsEqualFact() {
-		ok, err := ver.fcEqualSpec(stmt, state)
-		if err != nil {
+	if stmt.IsPropNameEqual() {
+		// 所有的验证方法都集成在btEqualRule里了，包括用已知的uni，cond来证明。= 和其他事很不一样的
+		return ver.btEqualRule(stmt, state)
+	}
+
+	if stmt.IsPropNameAssociative() {
+		// 如果用内置的验证方法不成立，还是能用后面的方法验证的。
+		if ok, err := ver.btAssociativeRule(stmt, state); err != nil {
 			return false, err
+		} else if ok {
+			return true, nil
 		}
-		if state.requireMsg() && ok {
-			ver.successMsgEnd(fmt.Sprintf("%s = %s", stmt.Params[0].String(), stmt.Params[1].String()), "")
+	}
+
+	if stmt.IsPropNameCommutative() {
+		if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
+			return false, err
+		} else if ok {
+			return true, nil
 		}
-		return ok, err
 	}
 
 	// TODO 处理其他的builtin logic infix opt
-
 	ok, err := ver.btLogicInfixOptBtRule(stmt, state)
 	if err != nil {
 		return false, err
@@ -56,7 +66,29 @@ func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerStat
 		return false, nil
 	}
 
-	if !glob.IsBuiltinInfixRelaProp(stmt.PropName.Name) {
+	if ok, err := ver.btNumberInfixRelaProp(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	if ok, err := ver.btAssociativeRule(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) btNumberInfixRelaProp(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if !glob.IsBuiltinNumberInfixRelaProp(stmt.PropName.Name) {
 		return false, nil
 	}
 
@@ -94,5 +126,17 @@ func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerStat
 		return true, nil
 	}
 
+	return false, nil
+}
+
+func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	// TODO: 处理commutative rule
+	_, _ = stmt, state
+	return false, nil
+}
+
+func (ver *Verifier) btAssociativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	// TODO: 处理associative rule
+	_, _ = stmt, state
 	return false, nil
 }

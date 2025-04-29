@@ -19,9 +19,15 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (ver *Verifier) makeFcEqualFactAndVerify(left, right ast.Fc, state VerState) (bool, error) {
-	newSpecFactToCheck := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
-	return ver.SpecFact(newSpecFactToCheck, state)
+func (ver *Verifier) btEqualRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.fcEqualSpec(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if state.requireMsg() && ok {
+		ver.successMsgEnd(fmt.Sprintf("%s = %s", stmt.Params[0].String(), stmt.Params[1].String()), "")
+	}
+	return ok, err
 }
 
 func (ver *Verifier) fcEqualSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -97,4 +103,9 @@ func (ver *Verifier) fcEqualSpecInSpecMem(stmt *ast.SpecFactStmt, state VerState
 		}
 	}
 	return false, nil
+}
+
+func (ver *Verifier) makeFcEqualFactAndVerify(left, right ast.Fc, state VerState) (bool, error) {
+	newSpecFactToCheck := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
+	return ver.SpecFact(newSpecFactToCheck, state)
 }

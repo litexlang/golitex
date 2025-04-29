@@ -46,7 +46,7 @@ func (stmt *SpecFactStmt) ReverseIsTrue() *SpecFactStmt {
 	panic("unknown spec fact type")
 }
 
-func (f *SpecFactStmt) IsEqualFact() bool {
+func (f *SpecFactStmt) IsPropNameEqual() bool {
 	return f.PropName.Name == glob.KeySymbolEqual && f.PropName.PkgName == glob.BuiltinEmptyPkgName
 }
 
@@ -193,4 +193,12 @@ func IsUniParam(fcAtom *FcAtom) (string, bool) {
 		return fcAtom.Name, true
 	}
 	return "", false
+}
+
+func (stmt *SpecFactStmt) IsPropNameCommutative() bool {
+	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.KeywordCommutative == stmt.PropName.Name
+}
+
+func (stmt *SpecFactStmt) IsPropNameAssociative() bool {
+	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.KeywordAssociative == stmt.PropName.Name
 }
