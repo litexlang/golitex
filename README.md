@@ -235,12 +235,39 @@ claim:
         $p(1)
         $p(2)
 
+know:
+    forall x nat:
+        $p(x)
+    
+    forall x nat:
+        $p(x)
+        then:
+            $q(x)
+
+claim:
+    forall x nat:
+        $q(x)
+    prove:
+        $p(x)
+        $q(x)
+
 prove: # open a local environment and write test codes
     know Bob is Human
     Bob is self_aware # true
 ```
 
-Sometimes, we want to prove a fact without letting the lengthy proof process clutter the main environment. In such cases, we use the `claim` keyword, followed by the `prove` keyword to conduct the proof within it. Ultimately, only the main fact proven under the `claim` will remain in the main environment. You can also use `prove` to open a local environment and write test codes, mimicking the behavior of `{}` in traditional programming languages.
+Sometimes, we want to prove a fact without letting the lengthy proof process clutter the main environment. In such cases, we use the `claim` keyword, followed by the `prove` keyword to conduct the proof within it. Ultimately, only the main fact proven under the `claim` will remain in the main environment. 
+
+As for proving a universal fact, the parameters of the universal fact is passed into the new environment. After the proof, the `known` universal fact is added to the main environment.
+
+You can also use `prove` to open a local environment and write test codes, mimicking the behavior of `{}` in traditional programming languages.
+
+### Useful Language Features
+
+Computer is fundamentally about automating repetitive tasks. Litex is no exception. There are some small but useful features that make Litex more friendly to use.
+
+1. `commutative` and `associative` keywords: These keywords are used to verify the commutative and associative properties of a function. They tell the interpreter to verify the fact in both directions.
+
 
 ### Another example
 
