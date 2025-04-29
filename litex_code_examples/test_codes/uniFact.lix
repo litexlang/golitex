@@ -83,5 +83,27 @@ prove:
                 forall y nat:
                     $q(x,y)
             
-            asdfasf:
-                $p(1)
+
+prove:
+    know:
+        forall x nat:
+            $p(x)
+        
+        forall x nat:
+            $p(x)
+            then:
+                $q(x)
+
+    claim:
+        forall x nat:
+            $q(x)
+        prove:
+            $p(x)
+            $q(x)
+
+    know:
+        $q(1)
+
+    $p(1)
+                
+                

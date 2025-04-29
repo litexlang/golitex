@@ -315,8 +315,8 @@ func (exec *Executor) proveClaimStmtVerify(stmt *ast.ClaimStmt) (bool, error) {
 	// TODO: 以引入新变量的方式去执行，现在注释掉这部分是因为forall现在还需要instantiate
 	if asUnivFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
 		// 把变量引入，把dom事实引入
-		for _, param := range asUnivFact.Params {
-			exec.defStmt(&ast.DefObjStmt{Objs: []string{param}, ObjSets: []ast.Fc{&ast.FcAtom{PkgName: exec.env.CurPkg, Name: param}}, Facts: []ast.FactStmt{}})
+		for i, param := range asUnivFact.Params {
+			exec.defStmt(&ast.DefObjStmt{Objs: []string{param}, ObjSets: []ast.Fc{asUnivFact.ParamSets[i]}, Facts: []ast.FactStmt{}})
 		}
 		for _, fact := range asUnivFact.DomFacts {
 			err := exec.env.NewFact(fact)
