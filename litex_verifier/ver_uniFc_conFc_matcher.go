@@ -84,6 +84,25 @@ func (ver *Verifier) matchAtomUniWithConFc(uniFuncFcAtom *ast.FcAtom, conFuncPar
 	return nil, false, nil
 }
 
+// func (ver *Verifier) matchAtomUniWithConFc(uniFuncFcAtom *ast.FcAtom, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
+// 	retMap := make(map[string][]ast.Fc)
+
+// 	if matchStr, ok := isUniParam(uniFuncFcAtom, possibleUniParams); ok {
+// 		retMap[matchStr] = []ast.Fc{conFuncParam}
+// 		return retMap, true, nil
+// 	}
+
+// 	ok, err := ver.makeFcEqualFactAndVerify(uniFuncFcAtom, conFuncParam, SpecNoMsg)
+// 	if err != nil {
+// 		return nil, false, err
+// 	}
+// 	if ok {
+// 		return retMap, true, nil
+// 	}
+
+// 	return nil, false, nil
+// }
+
 func (ver *Verifier) matchFnUniWithConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast.Fc, possibleUniParams []string) (map[string][]ast.Fc, bool, error) {
 	retMap := map[string][]ast.Fc{}
 
@@ -101,18 +120,6 @@ func (ver *Verifier) matchFnUniWithConFc(uniFuncFcFn *ast.FcFn, conFuncParam ast
 		return nil, false, nil
 	}
 	mergeMatchMaps(matchMap, retMap)
-
-	// if matchedStr, ok := isUniParam(&uniFuncFcFn.FnHead, possibleUniParams); ok {
-	// 	retMap[matchedStr] = []ast.Fc{&conParamAsFcFn.FnHead}
-	// } else {
-	// 	ok, err := ver.fcEqualSpec(&uniFuncFcFn.FnHead, &conParamAsFcFn.FnHead, SpecNoMsg)
-	// 	if err != nil {
-	// 		return nil, false, err
-	// 	}
-	// 	if !ok {
-	// 		return nil, false, nil
-	// 	}
-	// }
 
 	if len(conParamAsFcFn.ParamSegs) != len(uniFuncFcFn.ParamSegs) {
 		return nil, false, nil //? 不清楚应该报错还是说直接返回不对，应该是返回不对
