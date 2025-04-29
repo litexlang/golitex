@@ -38,6 +38,11 @@ func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 		return cursor.numberStr()
 	}
 
+	// 如果是特殊格式的Fc，那需要有
+	if ast.IsBuiltinFcSignal(cursor.strAtCurIndexPlus(0)) {
+		return cursor.specialFc()
+	}
+
 	fcStr, err := cursor.rawFcAtom()
 	if err != nil {
 		return nil, &strSliceErr{err, cursor}
@@ -350,4 +355,21 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 	}
 
 	return ast.NewFcFnPipe(head, segs), nil
+}
+
+func (cursor *strSliceCursor) specialFc() (ast.Fc, error) {
+	curToken, err := cursor.currentToken()
+	if err != nil {
+		return nil, err
+	}
+
+	if curToken == glob.KeywordFn {
+		return cursor.parseFnSet()
+	}
+
+	return nil, fmt.Errorf("invalid special fc: %s", cursor.strAtCurIndexPlus(0))
+}
+
+func (cursor *strSliceCursor) parseFnSet() (ast.Fc, error) {
+	panic("TODO: not implemented")
 }

@@ -1286,3 +1286,7 @@ forall epsilon real:
     2. $pp(~x, ~y) under forall x A, y B: $cond(x), $cond2(x,y), iff: or: $p(x,y), $t(x,y)
 
     证明 forall + iff 的方式和普通的 forall 也不一样，要把 dom 和 iff 混起来做 条件
+
+4.30
+1. 特殊形式的 Fc
+fn(a A, b B: $p(x,y)) => Fc
