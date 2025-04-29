@@ -14,6 +14,7 @@ package litex_memory
 
 import (
 	"fmt"
+	"golitex/litex_ast"
 	ast "golitex/litex_ast"
 )
 
@@ -184,41 +185,20 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (StoredC
 
 func (factMem *UniFactMemDict) Insert(fact *ast.ConUniFactStmt) error {
 	if fact.IffFacts == nil || len(fact.IffFacts) == 0 {
-		for _, stmt := range fact.ThenFacts {
-			if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-				err := factMem.insertSpecFact(fact, stmtAsSpecFact)
-				if err != nil {
-					return err
-				}
-			} else {
-				return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
-			}
-		}
+		return factMem.insertSpecFacts(fact, fact.ThenFacts)
 	} else {
 		thenToIff := fact.NewFactWithThenToIff()
-		for _, stmt := range thenToIff.ThenFacts {
-			if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-				err := factMem.insertSpecFact(thenToIff, stmtAsSpecFact)
-				if err != nil {
-					return err
-				}
-			} else {
-				return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
-			}
+		err := factMem.insertUniFact(thenToIff, thenToIff.ThenFacts)
+		if err != nil {
+			return err
 		}
 		iffToThen := fact.NewFactWithIffToThen()
-		for _, stmt := range iffToThen.ThenFacts {
-			if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-				err := factMem.insertSpecFact(iffToThen, stmtAsSpecFact)
-				if err != nil {
-					return err
-				}
-			} else {
-				return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
-			}
+		err = factMem.insertUniFact(iffToThen, iffToThen.ThenFacts)
+		if err != nil {
+			return err
 		}
 	}
-	return nil
+	return fmt.Errorf("TODO: Currently only support uni fact with iff fact, but got: %s", fact.String())
 }
 
 func (factMem *UniFactMemDict) insertSpecFact(uniStmt *ast.ConUniFactStmt, stmt *ast.SpecFactStmt) error {
@@ -519,4 +499,45 @@ func NewStoredUniFuncMemDictNode() *StoredUniFuncMemDictNode {
 			FactsInLogicExpr: []StoredUniSpecFactUnderLogicExpr{},
 		},
 	}
+}
+
+func (factMem *UniFactMemDict) mergeOuterInnerUniFactAndInsert(outer *ast.ConUniFactStmt, inner *ast.ConUniFactStmt) error {
+	mergedConUni := litex_ast.MergeOuterInnerUniFacts(outer, inner)
+	err := factMem.insertSpecFacts(mergedConUni, mergedConUni.ThenFacts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (factMem *UniFactMemDict) insertSpecFacts(uniStmt *ast.ConUniFactStmt, thenFacts []ast.FactStmt) error {
+	for _, stmt := range thenFacts {
+		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+			err := factMem.insertSpecFact(uniStmt, stmtAsSpecFact)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (factMem *UniFactMemDict) insertUniFact(uniStmt *ast.ConUniFactStmt, thenFacts []ast.FactStmt) error {
+	for _, stmt := range thenFacts {
+		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+			err := factMem.insertSpecFact(uniStmt, stmtAsSpecFact)
+			if err != nil {
+				return err
+			}
+		} else if stmtAsConUniFact, ok := stmt.(*ast.ConUniFactStmt); ok {
+			err := factMem.mergeOuterInnerUniFactAndInsert(uniStmt, stmtAsConUniFact)
+			if err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
+		}
+	}
+	return nil
 }
