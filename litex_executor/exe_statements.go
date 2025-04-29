@@ -101,24 +101,48 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 	}
 
 	// store
-	// if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
-	// 	err = exec.env.NewFact(asSpecFact)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// } else if asConUniFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
-	// 	// ! 非常注意：在claim forall 的时候，我是不对 param 进行instantiate的，所以这里需要对 param 进行instantiate
-	// 	uniConMap := map[string]ast.Fc{}
-	// 	for i := 0; i < len(asConUniFact.Params); i++ {
-	// 		uniConMap[asConUniFact.Params[i]] = &ast.FcAtom{PkgName: exec.env.CurPkg, Name: asConUniFact.Params[i]}
-	// 	}
-	// 	for _, fact := range asConUniFact.DomFacts {
-	// 		fixed, err := fact.Instantiate(uniConMap)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
+	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
+		err = exec.env.NewFact(asSpecFact)
+		if err != nil {
+			return err
+		}
+	} else if asConUniFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
+		uniConMap := map[string]ast.Fc{}
+		newParams := make([]string, len(asConUniFact.Params))
+
+		for i, param := range asConUniFact.Params {
+			newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
+			uniConMap[param] = ast.NewFcAtom(exec.env.CurPkg, newParams[i])
+		}
+
+		newParamsSets := asConUniFact.ParamSets
+		newDomFacts := []ast.FactStmt{}
+		newThenFacts := []ast.FactStmt{}
+		newIffFacts := ast.EmptyIffFacts
+
+		for _, fact := range asConUniFact.DomFacts {
+			newFact, err := fact.Instantiate(uniConMap)
+			if err != nil {
+				return err
+			}
+			newDomFacts = append(newDomFacts, newFact)
+		}
+
+		for _, fact := range asConUniFact.ThenFacts {
+			newFact, err := fact.Instantiate(uniConMap)
+			if err != nil {
+				return err
+			}
+			newThenFacts = append(newThenFacts, newFact)
+		}
+
+		newUniFact := ast.NewConUniFactStmt(newParams, newParamsSets, newDomFacts, newThenFacts, newIffFacts)
+
+		err = exec.env.NewFact(newUniFact)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

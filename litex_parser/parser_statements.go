@@ -206,7 +206,7 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 	// 	}
 	// }
 
-	paramsWithUniPrefix, newUniParams := ast.AddPrefixToStrParams(paramsWithoutUniParamPrefix, nameDepthMap)
+	paramsWithUniPrefix, newUniParams := ast.GetStrParamsWithUniPrefixAndNewDepthMap(paramsWithoutUniParamPrefix, nameDepthMap)
 
 	keywords := map[string]struct{}{
 		glob.KeywordDom:  {},
