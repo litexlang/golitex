@@ -46,7 +46,7 @@ type tokenBlockErr struct {
 func (e *tokenBlockErr) Error() string {
 	var source, position, tokenInfo string
 
-	source = e.stmt.header.String()
+	source = e.stmt.String()
 	position = fmt.Sprintf("column %d", e.stmt.header.getIndex())
 
 	// 尝试获取当前token（失败不影响主要错误信息）
@@ -60,11 +60,11 @@ func (e *tokenBlockErr) Error() string {
 			position,
 			tokenInfo)
 	} else {
-		return fmt.Sprintf("parse error at %s, %s%s: %v",
+		return fmt.Sprintf("parse error at %s, %s%s: %s",
 			source,
 			position,
 			tokenInfo,
-			e.previous)
+			e.previous.Error())
 	}
 }
 

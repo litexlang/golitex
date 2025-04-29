@@ -32,10 +32,6 @@ func (cursor *strSliceCursor) ExceedEnd() bool {
 	return cursor.index >= len(cursor.slice)
 }
 
-// func (cursor *strSliceCursor) strAtIndex(index uint32) string {
-// 	return cursor.slice[index]
-// }
-
 func (cursor *strSliceCursor) strAtCurIndexPlus(plusIndex int) string {
 	i := cursor.index + plusIndex
 
