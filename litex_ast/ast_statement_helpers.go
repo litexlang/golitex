@@ -187,3 +187,10 @@ func AddUniPrefixToUniFactWithNoUniPrefix(asConUniFact *ConUniFactStmt) (*ConUni
 
 	return newUniFact, nil
 }
+
+func IsUniParam(fcAtom *FcAtom) (string, bool) {
+	if strings.HasPrefix(fcAtom.Name, glob.UniParamPrefix) && fcAtom.PkgName == glob.BuiltinEmptyPkgName {
+		return fcAtom.Name, true
+	}
+	return "", false
+}
