@@ -73,6 +73,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
 
 func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 	exec.newEnv(exec.env.CurPkg)
+	var err error = nil
 	isSuccess := false
 
 	defer func() {
@@ -88,7 +89,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 
 	// TODO: 这里需要优化，因为claim和prove的逻辑是一样的，所以可以合并
 	if stmt.IsProve {
-		isSuccess, err := exec.proveClaimStmt(stmt)
+		isSuccess, err = exec.proveClaimStmt(stmt)
 		if err != nil {
 			return err
 		}

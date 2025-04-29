@@ -109,3 +109,15 @@ var SpecFactUnderNoLogicalExprSig []uint8 = nil
 func (stmt *SpecFactStmt) IsBuiltinLogicOpt() bool {
 	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name)
 }
+
+func (stmt *ConUniFactStmt) NewFactWithThenToIff() *ConUniFactStmt {
+	newConUniFact := NewConUniFactStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.IffFacts, EmptyIffFacts)
+	newConUniFact.DomFacts = append(newConUniFact.DomFacts, stmt.ThenFacts...)
+	return newConUniFact
+}
+
+func (stmt *ConUniFactStmt) NewFactWithIffToThen() *ConUniFactStmt {
+	newConUniFact := NewConUniFactStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, EmptyIffFacts)
+	newConUniFact.DomFacts = append(newConUniFact.DomFacts, stmt.IffFacts...)
+	return newConUniFact
+}

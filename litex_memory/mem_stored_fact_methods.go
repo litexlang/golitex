@@ -183,14 +183,39 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (StoredC
 }
 
 func (factMem *UniFactMemDict) Insert(fact *ast.ConUniFactStmt) error {
-	for _, stmt := range fact.ThenFacts {
-		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-			err := factMem.insertSpecFact(fact, stmtAsSpecFact)
-			if err != nil {
-				return err
+	if fact.IffFacts == nil || len(fact.IffFacts) == 0 {
+		for _, stmt := range fact.ThenFacts {
+			if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+				err := factMem.insertSpecFact(fact, stmtAsSpecFact)
+				if err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
 			}
-		} else {
-			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
+		}
+	} else {
+		thenToIff := fact.NewFactWithThenToIff()
+		for _, stmt := range thenToIff.ThenFacts {
+			if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+				err := factMem.insertSpecFact(thenToIff, stmtAsSpecFact)
+				if err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
+			}
+		}
+		iffToThen := fact.NewFactWithIffToThen()
+		for _, stmt := range iffToThen.ThenFacts {
+			if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+				err := factMem.insertSpecFact(iffToThen, stmtAsSpecFact)
+				if err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
+			}
 		}
 	}
 	return nil
