@@ -150,7 +150,7 @@ func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNa
 		}
 	}
 
-	return originalParams, newUniParams
+	return newParams, newUniParams
 }
 
 func AddUniPrefixToUniFactWithNoUniPrefix(asConUniFact *ConUniFactStmt) (*ConUniFactStmt, error) {
