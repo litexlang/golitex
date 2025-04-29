@@ -18,17 +18,17 @@ import (
 	verifier "golitex/litex_verifier"
 )
 
-func (exec *Executor) factStmt(stmt ast.FactStmt) error {
+func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	defer exec.appendNewMsg("\n")
 
 	ok, _, err := exec.checkFactStmt(stmt)
 
 	if err != nil {
-		return err
+		return glob.ExecState_Error, err
 	}
 
 	if ok {
-		return exec.env.NewFact(stmt)
+		return glob.ExecState_True, exec.env.NewFact(stmt)
 	}
 
 	if glob.CheckFalse {
@@ -37,11 +37,11 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 			newStmt := stmt.ReverseIsTrue()
 			ok, _, err := exec.checkFactStmt(newStmt)
 			if err != nil {
-				return err
+				return glob.ExecState_Error, err
 			}
 			if ok {
 				exec.appendNewMsg(stmt.String() + "\nis false")
-				return nil
+				return glob.ExecState_False, nil
 			}
 		case *ast.ConUniFactStmt:
 			// TODO 这里需要考虑到fact的类型
@@ -53,7 +53,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) error {
 
 	exec.appendNewMsg(stmt.String() + "\nis unknown")
 
-	return nil
+	return glob.ExecState_Unknown, nil
 }
 
 func (exec *Executor) checkFactStmt(stmt ast.FactStmt) (bool, *verifier.Verifier, error) {

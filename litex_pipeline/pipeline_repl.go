@@ -127,8 +127,12 @@ func (r *REPL) executeStatements(topStmtSlice []ast.TopStmt) ([]string, error) {
 	if glob.EnvCreationInterval == 0 {
 		// Single environment mode
 		for _, topStmt := range topStmtSlice {
-			if err := executor.TopLevelStmt(&topStmt); err != nil {
+			execState, err := executor.TopLevelStmt(&topStmt)
+			if err != nil {
 				return nil, err
+			}
+			if execState != glob.ExecState_True {
+				return nil, fmt.Errorf("execution failed")
 			}
 			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 		}
@@ -143,11 +147,15 @@ func (r *REPL) executeStatements(topStmtSlice []ast.TopStmt) ([]string, error) {
 				r.lastEnvSwitch = i
 			}
 
-			if err := executor.TopLevelStmt(&topStmt); err != nil {
+			execState, err := executor.TopLevelStmt(&topStmt)
+			if err != nil {
 				// Rollback to last environment checkpoint
 				r.env = env.NewEnv(r.env, r.env.UniParamMap, r.env.CurPkg)
 				r.executor = exe.NewExecutor(r.env)
 				return nil, fmt.Errorf("at statement %d: %w", i+1, err)
+			}
+			if execState != glob.ExecState_True {
+				return nil, fmt.Errorf("execution failed")
 			}
 			msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 		}

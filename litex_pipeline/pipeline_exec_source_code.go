@@ -13,6 +13,7 @@
 package litex_pipeline
 
 import (
+	"fmt"
 	env "golitex/litex_env"
 	exe "golitex/litex_executor"
 	glob "golitex/litex_global"
@@ -40,9 +41,12 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 	msgOfTopStatements := []string{}
 
 	for _, topStmt := range topStmtSlice {
-		err := executor.TopLevelStmt(&topStmt)
+		execState, err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			return nil, glob.SysSignalRuntimeError, err
+		}
+		if execState != glob.ExecState_True {
+			return nil, glob.SysSignalRuntimeError, fmt.Errorf("execution failed")
 		}
 		msgOfTopStatements = append(msgOfTopStatements, executor.GetMsgAsStr0ToEnd())
 	}
