@@ -15,6 +15,7 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/litex_global"
+	"strings"
 )
 
 type SpecFactEnum uint8
@@ -128,4 +129,26 @@ func MergeOuterInnerUniFacts(outer *ConUniFactStmt, inner *ConUniFactStmt) *ConU
 	newOuter.ParamSets = append(newOuter.ParamSets, inner.ParamSets...)
 	newOuter.DomFacts = append(newOuter.DomFacts, inner.DomFacts...)
 	return newOuter
+}
+
+func AddPrefixToStrParams(originalParams []string, originalNameDepthMap NameDepthMap) ([]string, NameDepthMap) {
+	newUniParams := NameDepthMap{}
+	for key := range originalNameDepthMap {
+		newUniParams[key] = originalNameDepthMap[key]
+	}
+
+	newParams := make([]string, len(originalParams))
+
+	for i := range originalParams {
+		prefixNum, declared := originalNameDepthMap[originalParams[i]]
+		if !declared {
+			newUniParams[originalParams[i]] = 1
+			newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, originalParams[i])
+		} else {
+			newUniParams[originalParams[i]] = prefixNum + 1
+			newParams[i] = fmt.Sprintf("%s%s", strings.Repeat(glob.UniParamPrefix, prefixNum+1), originalParams[i])
+		}
+	}
+
+	return originalParams, newUniParams
 }

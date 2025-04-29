@@ -89,16 +89,36 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 
 	// TODO: 这里需要优化，因为claim和prove的逻辑是一样的，所以可以合并
 	if stmt.IsProve {
-		isSuccess, err = exec.proveClaimStmt(stmt)
+		isSuccess, err = exec.proveClaimStmtVerify(stmt)
 		if err != nil {
 			return err
 		}
 	} else {
-		isSuccess, err = exec.proveByContradictionClaimStmt(stmt)
+		isSuccess, err = exec.proveByContradictionClaimStmtVerify(stmt)
 		if err != nil {
 			return err
 		}
 	}
+
+	// store
+	// if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
+	// 	err = exec.env.NewFact(asSpecFact)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// } else if asConUniFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
+	// 	// ! 非常注意：在claim forall 的时候，我是不对 param 进行instantiate的，所以这里需要对 param 进行instantiate
+	// 	uniConMap := map[string]ast.Fc{}
+	// 	for i := 0; i < len(asConUniFact.Params); i++ {
+	// 		uniConMap[asConUniFact.Params[i]] = &ast.FcAtom{PkgName: exec.env.CurPkg, Name: asConUniFact.Params[i]}
+	// 	}
+	// 	for _, fact := range asConUniFact.DomFacts {
+	// 		fixed, err := fact.Instantiate(uniConMap)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
 
 	return nil
 }
@@ -293,7 +313,7 @@ func (exec *Executor) existObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 	return nil
 }
 
-func (exec *Executor) proveClaimStmt(stmt *ast.ClaimStmt) (bool, error) {
+func (exec *Executor) proveClaimStmtVerify(stmt *ast.ClaimStmt) (bool, error) {
 	// TODO: 以引入新变量的方式去执行，现在注释掉这部分是因为forall现在还需要instantiate
 	if asUnivFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
 		// 把变量引入，把dom事实引入
@@ -345,7 +365,7 @@ func (exec *Executor) proveClaimStmt(stmt *ast.ClaimStmt) (bool, error) {
 	return false, fmt.Errorf("unknown claim stmt to check fact type: %T", stmt.ToCheckFact)
 }
 
-func (exec *Executor) proveByContradictionClaimStmt(stmt *ast.ClaimStmt) (bool, error) {
+func (exec *Executor) proveByContradictionClaimStmtVerify(stmt *ast.ClaimStmt) (bool, error) {
 	if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
 		return false, fmt.Errorf("prove by contradiction does not support empty check")
 	}

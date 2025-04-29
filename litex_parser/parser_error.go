@@ -64,14 +64,3 @@ func (e *tokenBlockErr) Error() string {
 			e.previous.Error())
 	}
 }
-
-// func thenFactMustSpecMsg(curStmt *tokenBlock, err error) error {
-// 	startStr := curStmt.header.strAtIndex(0)
-// 	if startStr == glob.KeywordForall {
-// 		return &tokenBlockErr{fmt.Errorf("then fact in universal fact should only be specific fact and can not be universal fact which starts with %s", glob.KeywordForall), *curStmt}
-// 	}
-// 	if startStr == glob.KeywordWhen {
-// 		return &tokenBlockErr{fmt.Errorf("then fact in universal fact should only be specific fact and can not be conditional fact which starts with %s", glob.KeywordWhen), *curStmt}
-// 	}
-// 	return &tokenBlockErr{err, *curStmt}
-// }
