@@ -131,7 +131,7 @@ func MergeOuterInnerUniFacts(outer *ConUniFactStmt, inner *ConUniFactStmt) *ConU
 	return newOuter
 }
 
-func AddPrefixToStrParams(originalParams []string, originalNameDepthMap NameDepthMap) ([]string, NameDepthMap) {
+func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNameDepthMap NameDepthMap) ([]string, NameDepthMap) {
 	newUniParams := NameDepthMap{}
 	for key := range originalNameDepthMap {
 		newUniParams[key] = originalNameDepthMap[key]
