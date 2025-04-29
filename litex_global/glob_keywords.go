@@ -118,7 +118,11 @@ func IsKeySymbol(name string) bool {
 }
 
 func IsBuiltinInfixRelaProp(op string) bool {
-	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!=" || op == "in"
+	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!=" || op == "in" || op == KeywordCommutative || op == KeywordAssociative
+}
+
+func IsBuiltinNumberInfixRelaProp(op string) bool {
+	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!="
 }
 
 func IsKeySymbolRelaFn(op string) bool {
