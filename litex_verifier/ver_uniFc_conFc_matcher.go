@@ -18,6 +18,7 @@ import (
 	cmp "golitex/litex_comparator"
 	glob "golitex/litex_global"
 	mem "golitex/litex_memory"
+	"strings"
 )
 
 // match 函数不需要传入state: 没有any, spec 之分，也不需要打印
@@ -70,8 +71,15 @@ func (ver *Verifier) match_FcInFactUnderUniFact_WithConFc(fcInFactUnderUniFact a
 func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFact *ast.FcAtom, conFc ast.Fc, uniParams []string) (map[string][]ast.Fc, bool, error) {
 	retMap := make(map[string][]ast.Fc)
 
-	if matchStr, ok := isUniParam(fcAtomInFactUnderUniFact, uniParams); ok {
-		retMap[matchStr] = []ast.Fc{conFc}
+	// 不利用查prefix的方式来确定涉及到的param是不是 uni
+	// if matchStr, ok := isUniParam(fcAtomInFactUnderUniFact, uniParams); ok {
+	// 	retMap[matchStr] = []ast.Fc{conFc}
+	// 	return retMap, true, nil
+	// }
+
+	// 利用查prefix的方式来确定涉及到的param是不是 uni
+	if uniParamStr, ok := isUniParam(fcAtomInFactUnderUniFact); ok {
+		retMap[uniParamStr] = []ast.Fc{conFc}
 		return retMap, true, nil
 	}
 
@@ -128,11 +136,20 @@ func (ver *Verifier) match_FcFnInFactUnderUniFact_ConFc(fcFnUnFactUnderUniFact *
 	return retMap, true, nil
 }
 
-func isUniParam(fcAtomInFactUnderUniFact *ast.FcAtom, uniParams []string) (string, bool) { // ret: matched possible uniParam string; isMatched?
-	for _, uniParam := range uniParams {
-		if uniParam == fcAtomInFactUnderUniFact.Name && fcAtomInFactUnderUniFact.PkgName == glob.BuiltinEmptyPkgName {
-			return uniParam, true
-		}
+// 如果不考虑 claim forall, 如果默认所有的 uniFact 的param都是以`开头的，那这里根本不需要传入 uniParams，直接查看这个 fcAtom 的内容是否以`开头就行
+// func isUniParam(fcAtomInFactUnderUniFact *ast.FcAtom, uniParams []string) (string, bool) { // ret: matched possible uniParam string; isMatched?
+// 	for _, uniParam := range uniParams {
+// 		if uniParam == fcAtomInFactUnderUniFact.Name && fcAtomInFactUnderUniFact.PkgName == glob.BuiltinEmptyPkgName {
+// 			return uniParam, true
+// 		}
+// 	}
+// 	return "", false
+// }
+
+// 如果默认所有的 uniFact 的param都是以`开头的，而且里面的所有的事实都是以`开头，那这里根本不需要传入 uniParams，直接查看这个 fcAtom 的内容是否以`开头就行
+func isUniParam(fcAtomInFactUnderUniFact *ast.FcAtom) (string, bool) {
+	if strings.HasPrefix(fcAtomInFactUnderUniFact.Name, glob.UniParamPrefix) && fcAtomInFactUnderUniFact.PkgName == glob.BuiltinEmptyPkgName {
+		return fcAtomInFactUnderUniFact.Name, true
 	}
 	return "", false
 }
