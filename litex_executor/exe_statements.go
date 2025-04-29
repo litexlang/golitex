@@ -20,12 +20,13 @@ import (
 )
 
 // 在子函数里管理msg，即比如现在是TypeStmt，那在处理TypeStmt的地方处理它的string，二不是在这里
-func (exec *Executor) stmt(stmt ast.Stmt) error {
+func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	var err error = nil
+	var execState glob.ExecState = glob.ExecState_True
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
-		err = exec.factStmt(stmt)
+		execState, err = exec.factStmt(stmt)
 	case *ast.KnowStmt:
 		err = exec.knowStmt(stmt)
 	case *ast.ClaimStmt:
@@ -46,13 +47,13 @@ func (exec *Executor) stmt(stmt ast.Stmt) error {
 	}
 
 	if err != nil {
-		return glob.NewErrLink(err, "%s\nexecution error", stmt.String())
+		return glob.ExecState_Error, glob.NewErrLink(err, "%s\nexecution error", stmt.String())
 	} else {
-		return nil
+		return execState, nil
 	}
 }
 
-func (exec *Executor) TopLevelStmt(stmt *ast.TopStmt) error {
+func (exec *Executor) TopLevelStmt(stmt *ast.TopStmt) (glob.ExecState, error) {
 	exec.clearMsgAndOutput()
 	return exec.stmt(stmt.Stmt)
 }
@@ -327,9 +328,12 @@ func (exec *Executor) proveClaimStmtVerify(stmt *ast.ClaimStmt) (bool, error) {
 	}
 
 	for _, curStmt := range stmt.Proofs {
-		err := exec.stmt(curStmt)
+		execState, err := exec.stmt(curStmt)
 		if err != nil {
 			return false, err
+		}
+		if execState != glob.ExecState_True {
+			return false, nil
 		}
 	}
 
@@ -382,9 +386,12 @@ func (exec *Executor) proveByContradictionClaimStmtVerify(stmt *ast.ClaimStmt) (
 	}
 
 	for _, curStmt := range stmt.Proofs {
-		err := exec.stmt(curStmt)
+		execState, err := exec.stmt(curStmt)
 		if err != nil {
 			return false, err
+		}
+		if execState != glob.ExecState_True {
+			return false, nil
 		}
 	}
 

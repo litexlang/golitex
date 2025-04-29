@@ -16,6 +16,7 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	env "golitex/litex_env"
+	glob "golitex/litex_global"
 	parser "golitex/litex_parser"
 	"math/rand"
 	"os"
@@ -48,9 +49,12 @@ func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
 
 	messages := []string{}
 	for _, topStmt := range topStmt {
-		err := executor.TopLevelStmt(&topStmt)
+		execState, err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
 		}
 
 		// 如果连续两个 \n 则删除一个
@@ -83,9 +87,12 @@ func TestKnow(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
 	executor := *NewExecutor(env)
 	for _, topStmt := range statements {
-		err := executor.TopLevelStmt(&topStmt)
+		execState, err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
 		}
 		fmt.Println(executor.env.Msgs)
 	}
@@ -179,9 +186,12 @@ func TestKnowVerifySpecFactSpeed(t *testing.T) {
 
 	start = time.Now()
 	for _, topStmt := range topStatements {
-		err := executor.TopLevelStmt(topStmt)
+		execState, err := executor.TopLevelStmt(topStmt)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
 		}
 	}
 	// 1000 rounds 3.8-4.5ms
@@ -191,9 +201,12 @@ func TestKnowVerifySpecFactSpeed(t *testing.T) {
 
 	start = time.Now()
 	for _, topStmt := range topVerifyStatements {
-		err := executor.TopLevelStmt(topStmt)
+		execState, err := executor.TopLevelStmt(topStmt)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
 		}
 
 	}
@@ -221,9 +234,12 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 
 	start := time.Now()
 	for _, topStmt := range topStatements {
-		err := executor.TopLevelStmt(topStmt)
+		execState, err := executor.TopLevelStmt(topStmt)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
 		}
 	}
 	// 100000 rounds know taken: 1.677706542s
@@ -231,11 +247,13 @@ func TestKnowVerifyCondFactSpeed(t *testing.T) {
 
 	start = time.Now()
 	for _, topStmt := range topVerifyStatements {
-		err := executor.TopLevelStmt(topStmt)
+		execState, err := executor.TopLevelStmt(topStmt)
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
+		}
 	}
 	// 100000 rounds verify taken: 10.808512542s
 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
@@ -263,9 +281,12 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 
 	start := time.Now()
 	for _, topStmt := range topKnowStatements {
-		err := executor.TopLevelStmt(topStmt)
+		execState, err := executor.TopLevelStmt(topStmt)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
 		}
 	}
 	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
@@ -274,10 +295,13 @@ func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
 	notVerifiedCount := 0
 	notVerifiedIndexes := []int{}
 	for i, topStmt := range topVerifyStatements {
-		err := executor.TopLevelStmt(topStmt)
+		execState, err := executor.TopLevelStmt(topStmt)
 		if err != nil {
 			notVerifiedCount++
 			notVerifiedIndexes = append(notVerifiedIndexes, i)
+		}
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
 		}
 	}
 	fmt.Printf("%d statements not verified, %v\n", notVerifiedCount, notVerifiedIndexes)
@@ -307,9 +331,12 @@ func TestEqualFactMemory(t *testing.T) {
 
 	start := time.Now()
 	for _, topStmt := range topKnowStatements {
-		err := executor.TopLevelStmt(topStmt)
+		execState, err := executor.TopLevelStmt(topStmt)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
 		}
 	}
 	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
@@ -318,10 +345,13 @@ func TestEqualFactMemory(t *testing.T) {
 	notVerifiedCount := 0
 	notVerifiedIndexes := []int{}
 	for i, topStmt := range topVerifyStatements {
-		err := executor.TopLevelStmt(topStmt)
+		execState, err := executor.TopLevelStmt(topStmt)
 		if err != nil {
 			notVerifiedCount++
 			notVerifiedIndexes = append(notVerifiedIndexes, i)
+		}
+		if execState != glob.ExecState_True {
+			t.Fatal("execution failed")
 		}
 	}
 	fmt.Printf("%d statements not verified\n", notVerifiedCount)
