@@ -269,3 +269,16 @@ func NewConUniFactStmtWithSetReqPutIntoDom(params []string, paramTypes []Fc, dom
 	}
 	return NewConUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
 }
+
+func IsBuiltinFnName(fc Fc) bool {
+	fcAtom, ok := fc.(*FcAtom)
+	if !ok {
+		return false
+	}
+
+	if fcAtom.PkgName != glob.BuiltinEmptyPkgName {
+		return false
+	}
+
+	return glob.IsBuiltinInfixRelaProp(fcAtom.Name)
+}

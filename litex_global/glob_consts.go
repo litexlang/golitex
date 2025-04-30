@@ -38,4 +38,4 @@ const MaxLogicExprStmtIndexesSize int = 255
 const RelaPropNamePrefix string = "$"
 const RelaFnPrefix string = "\\"
 
-const VerifyFcSatisfySpecFactParaReq bool = false
+const VerifyFcSatisfySpecFactParaReq bool = true

@@ -116,7 +116,7 @@ func IsKeySymbol(name string) bool {
 }
 
 func IsBuiltinInfixRelaProp(op string) bool {
-	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!=" || op == "in" || op == KeywordCommutative || op == KeywordAssociative
+	return op == "=" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=" || op == "in" || op == KeywordCommutative || op == KeywordAssociative
 }
 
 func IsBuiltinNumberInfixRelaProp(op string) bool {

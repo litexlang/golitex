@@ -23,7 +23,8 @@ func (ver *Verifier) FcSatisfySpecFactParaReq(stmt *ast.SpecFactStmt) (bool, err
 	}
 
 	// prop Name
-	if stmt.IsPropNameEqual() {
+	if ast.IsBuiltinFnName(&stmt.PropName) {
+		return true, nil
 	} else if stmt.IsPureFact() {
 		_, ok := ver.env.GetPropDef(stmt.PropName)
 		if !ok {
@@ -69,6 +70,10 @@ func (ver *Verifier) fcAtomSatisfyParaReq(fc *ast.FcAtom) (bool, error) {
 }
 
 func (ver *Verifier) fcAtomDefined(fc *ast.FcAtom) (bool, error) {
+	if _, ok, _ := ast.IsFcBuiltinNumLitExpr(fc); ok {
+		return true, nil
+	}
+
 	if ast.IsBuiltinKwFcAtom(fc) {
 		return true, nil
 	}
@@ -98,6 +103,10 @@ func (ver *Verifier) fcFnSatisfyFnParaReq(fc *ast.FcFn) (bool, error) {
 }
 
 func (ver *Verifier) fcFnDefined(fc *ast.FcFn) (bool, error) {
+	if _, ok, _ := ast.IsFcBuiltinNumLitExpr(fc); ok {
+		return true, nil
+	}
+
 	var ok bool = true
 	var err = error(nil)
 
