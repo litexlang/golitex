@@ -202,3 +202,30 @@ func (stmt *SpecFactStmt) IsPropNameCommutative() bool {
 func (stmt *SpecFactStmt) IsPropNameAssociative() bool {
 	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.KeywordAssociative == stmt.PropName.Name
 }
+
+var notBuiltinKwSet = map[string]struct{}{
+	// 常规关键字
+	glob.KeywordForall:   {},
+	glob.KeywordWhen:     {},
+	glob.KeywordDom:      {},
+	glob.KeywordThen:     {},
+	glob.KeywordExistObj: {},
+	glob.KeywordSt:       {},
+	// glob.KeywordConstructorProp:      {},
+	glob.KeywordClaim:                {},
+	glob.KeywordProve:                {},
+	glob.KeywordPub:                  {},
+	glob.KeywordImport:               {},
+	glob.KeywordPackage:              {},
+	glob.KeywordNot:                  {},
+	glob.KeywordAxiom:                {},
+	glob.KeywordProveByContradiction: {},
+	glob.KeywordThm:                  {},
+	glob.KeywordIff:                  {},
+	glob.KeywordExist:                {},
+}
+
+func IsNotFcAtomName(s string) bool {
+	_, ok := notBuiltinKwSet[s]
+	return ok
+}

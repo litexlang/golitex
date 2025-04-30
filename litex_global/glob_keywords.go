@@ -14,22 +14,22 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
-	KeywordInterface            = "interface"
-	KeywordType                 = "type"
-	KeywordSet                  = "set"
-	KeywordForall               = "forall"
-	KeywordWhen                 = "when"
-	KeywordDom                  = "dom" // 必须存在，因为有时候只有要求没then
-	KeywordThen                 = "then"
-	KeywordObj                  = "obj"
-	KeywordExistObj             = "exist_obj"
-	KeywordFn                   = "fn"
-	KeywordProp                 = "prop"
-	KeywordKnow                 = "know"
-	KeywordExist                = "exist"
-	KeywordSt                   = "st"
-	KeywordExistProp            = "exist_prop"
-	KeywordConstructorProp      = "constructor_prop"
+	KeywordInterface = "interface"
+	KeywordType      = "type"
+	KeywordSet       = "set"
+	KeywordForall    = "forall"
+	KeywordWhen      = "when"
+	KeywordDom       = "dom" // 必须存在，因为有时候只有要求没then
+	KeywordThen      = "then"
+	KeywordObj       = "obj"
+	KeywordExistObj  = "exist_obj"
+	KeywordFn        = "fn"
+	KeywordProp      = "prop"
+	KeywordKnow      = "know"
+	KeywordExist     = "exist"
+	KeywordSt        = "st"
+	KeywordExistProp = "exist_prop"
+	// KeywordConstructorProp      = "constructor_prop"
 	KeywordClaim                = "claim"
 	KeywordProve                = "prove"
 	KeywordPub                  = "pub"
@@ -164,69 +164,56 @@ var UnaryPrecedence = map[string]BuiltinOptPrecedence{
 	KeySymbolMinus: PrecUnary,
 }
 
-var keywordsSet map[string]struct{} = initKeywordSet() // 存储所有关键字
-
 func IsKeyword(s string) bool {
 	_, ok := keywordsSet[s]
 	return ok
 }
 
-func initKeywordSet() map[string]struct{} {
-	var Keywords = []string{
-		// 常规关键字
-		KeywordInterface,
-		KeywordType,
-		KeywordSet,
-		KeywordForall,
-		KeywordWhen,
-		KeywordDom,
-		KeywordThen,
-		KeywordObj,
-		KeywordExistObj,
-		KeywordFn,
-		KeywordProp,
-		KeywordKnow,
-		KeywordExistProp,
-		KeywordSt,
-		KeywordConstructorProp,
-		KeywordClaim,
-		KeywordProve,
-		KeywordPub,
-		KeywordImport,
-		KeywordPackage,
-		KeywordNot,
-		KeywordImpl,
-		KeywordAs,
-		KeywordAxiom,
-		KeywordProveByContradiction,
-		KeywordThm,
-		// KeywordSelf,
-		KeywordIff,
-		KeywordExist,
+var keywordsSet map[string]struct{} = map[string]struct{}{
+	// 常规关键字
+	KeywordSet:       {},
+	KeywordForall:    {},
+	KeywordWhen:      {},
+	KeywordDom:       {},
+	KeywordThen:      {},
+	KeywordObj:       {},
+	KeywordExistObj:  {},
+	KeywordFn:        {},
+	KeywordProp:      {},
+	KeywordKnow:      {},
+	KeywordExistProp: {},
+	KeywordSt:        {},
+	// KeywordConstructorProp:      {},
+	KeywordClaim:                {},
+	KeywordProve:                {},
+	KeywordPub:                  {},
+	KeywordImport:               {},
+	KeywordPackage:              {},
+	KeywordNot:                  {},
+	KeywordImpl:                 {},
+	KeywordAs:                   {},
+	KeywordAxiom:                {},
+	KeywordProveByContradiction: {},
+	KeywordThm:                  {},
+	KeywordIff:                  {},
+	KeywordExist:                {},
 
-		// 语法糖
-		KeywordCommutative,
-		KeywordAssociative,
+	// 语法糖
+	KeywordCommutative: {},
+	KeywordAssociative: {},
 
-		KeywordAnd,
-		KeywordOr,
+	KeywordAnd: {},
+	KeywordOr:  {},
 
-		// 内置类型
-		KeywordNatural,
-		KeywordInt,
-		KeywordRational,
-		KeywordReal,
+	// 内置类型
+	KeywordNatural:  {},
+	KeywordInt:      {},
+	KeywordRational: {},
+	KeywordReal:     {},
 
-		// 内置函数
-		KeywordIs,
-		KeywordIn,
-	}
-
-	keywordSet := make(map[string]struct{})
-	for _, keyword := range Keywords {
-		keywordSet[keyword] = struct{}{}
-	}
-	return keywordSet
+	// 内置函数
+	KeywordIs: {},
+	KeywordIn: {},
 }
 
 func GetKeySymbol(inputString string, start int) string {
@@ -253,62 +240,52 @@ func GetKeySymbol(inputString string, start int) string {
 	return ""
 }
 
-var symbolSet map[string]struct{} = initSymbolSet() // 存储所有符号
+var symbolSet map[string]struct{} = map[string]struct{}{
+	// 双字符符号（长度 2）
+	KeySymbolAndAnd:                 {}, // "&&"
+	KeySymbolEqualEqual:             {}, // "=="
+	KeySymbolEqualGreaterRightArrow: {}, // "=>"
+	KeySymbolMinusGreaterRightArrow: {}, // "->"
+	KeySymbolNotEqual:               {}, // "!="
+	KeySymbolPipePipe:               {}, // "||"
+	KeySymbolPlusPlus:               {}, // "++"
+	KeySymbolMinusMinus:             {}, // "--"
+	KeySymbolStarStar:               {}, // "**"
+	KeySymbolColonColon:             {}, // "::"
 
-func initSymbolSet() map[string]struct{} {
-	var KeySymbolSlice = []string{
-		// 双字符符号（长度 2）
-		KeySymbolAndAnd,                 // "&&"
-		KeySymbolEqualEqual,             // "=="
-		KeySymbolEqualGreaterRightArrow, // "=>"
-		KeySymbolMinusGreaterRightArrow, // "->"
-		KeySymbolNotEqual,               // "!="
-		KeySymbolPipePipe,               // "||"
-		KeySymbolPlusPlus,               // "++"
-		KeySymbolMinusMinus,             // "--"
-		KeySymbolStarStar,               // "**"
-		KeySymbolColonColon,             // "::"
-
-		// 单字符符号（长度 1）
-		KeySymbolAt,           // "@"
-		KeySymbolBackslash,    // "\\"
-		KeySymbolBacktick,     // "`"
-		KeySymbolCaret,        // "^"
-		KeySymbolColon,        // ":"
-		KeySymbolComma,        // ","
-		KeySymbolDot,          // "."
-		KeySymbolDollar,       // "$"
-		KeySymbolDoubleQuote,  // "\""
-		KeySymbolEqual,        // "="
-		KeySymbolExclaim,      // "!"
-		KeySymbolGreater,      // ">"
-		KeySymbolHash,         // "#"
-		KeySymbolLeftBracket,  // "["
-		KeySymbolLeftCurly,    // "{"
-		KeySymbolLeftBrace,    // "("
-		KeySymbolLess,         // "<"
-		KeySymbolMinus,        // "-"
-		KeySymbolPipe,         // "|"
-		KeySymbolPlus,         // "+"
-		KeySymbolQuestion,     // "?"
-		KeySymbolRightBracket, // "]"
-		KeySymbolRightCurly,   // "}"
-		KeySymbolRightBrace,   // ")"
-		KeySymbolSemicolon,    // ";"
-		KeySymbolSingleQuote,  // "'"
-		KeySymbolSlash,        // "/"
-		KeySymbolStar,         // "*"
-		KeySymbolTilde,        // "~"
-		KeySymbolAnd,          // "&"
-		KeySymbolLargerEqual,  // ">="
-		KeySymbolLessEqual,    // "<="
-	}
-
-	symbolSet := make(map[string]struct{})
-	for _, symbol := range KeySymbolSlice {
-		symbolSet[symbol] = struct{}{}
-	}
-	return symbolSet
+	// 单字符符号（长度 1）
+	KeySymbolAt:           {}, // "@"
+	KeySymbolBackslash:    {}, // "\\"
+	KeySymbolBacktick:     {}, // "`"
+	KeySymbolCaret:        {}, // "^"
+	KeySymbolColon:        {}, // ":"
+	KeySymbolComma:        {}, // ","
+	KeySymbolDot:          {}, // "."
+	KeySymbolDollar:       {}, // "$"
+	KeySymbolDoubleQuote:  {}, // "\""
+	KeySymbolEqual:        {}, // "="
+	KeySymbolExclaim:      {}, // "!"
+	KeySymbolGreater:      {}, // ">"
+	KeySymbolHash:         {}, // "#"
+	KeySymbolLeftBracket:  {}, // "["
+	KeySymbolLeftCurly:    {}, // "{"
+	KeySymbolLeftBrace:    {}, // "("
+	KeySymbolLess:         {}, // "<"
+	KeySymbolMinus:        {}, // "-"
+	KeySymbolPipe:         {}, // "|"
+	KeySymbolPlus:         {}, // "+"
+	KeySymbolQuestion:     {}, // "?"
+	KeySymbolRightBracket: {}, // "]"
+	KeySymbolRightCurly:   {}, // "}"
+	KeySymbolRightBrace:   {}, // ")"
+	KeySymbolSemicolon:    {}, // ";"
+	KeySymbolSingleQuote:  {}, // "'"
+	KeySymbolSlash:        {}, // "/"
+	KeySymbolStar:         {}, // "*"
+	KeySymbolTilde:        {}, // "~"
+	KeySymbolAnd:          {}, // "&"
+	KeySymbolLargerEqual:  {}, // ">="
+	KeySymbolLessEqual:    {}, // "<="
 }
 
 func IsKeySymbolUniFn(name string) bool {
