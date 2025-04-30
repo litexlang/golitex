@@ -14,8 +14,26 @@ package litex_verifier
 
 import (
 	ast "golitex/litex_ast"
+	glob "golitex/litex_global"
 )
 
 func (ver *Verifier) FcSatisfySpecFactParaReq(stmt *ast.SpecFactStmt) (bool, error) {
+	if !glob.VerifyFcSatisfySpecFactParaReq {
+		return true, nil
+	}
+
 	return true, nil
+}
+
+func (ver *Verifier) FcSatisfyFnParaReq(fc *ast.Fc) (bool, error) {
+	return true, nil
+}
+
+func (ver *Verifier) FcAtomDefined(fc *ast.FcAtom) (ast.DefStmt, bool, error) {
+	defStmt, ok := ver.env.GetFcAtomDef(fc)
+	if !ok {
+		return nil, false, nil
+	}
+
+	return defStmt, true, nil
 }
