@@ -105,3 +105,40 @@ prove:
         $q(1)
 
     $p(1)
+
+# forall in forall
+prove:
+    know:
+        forall x nat:
+            dom:
+                forall z nat:
+                    $p(x,z)
+            then:
+                forall y nat:
+                    $q(x,y)
+            iff:
+                forall y nat:
+                    $t(x,y)
+
+        forall x nat:
+                $p(x,1)
+
+        forall x nat:
+            $t(x,1)
+
+    forall x nat:
+        $q(x,1)
+        
+# error: no more than 2 layers of forall
+prove:
+    know:
+        forall x nat:
+            dom:
+                forall y nat:
+                    forall z nat:
+                        $p(x,y,z)
+            then:
+                forall y nat:
+                    $q(x,y)
+                    
+                    
