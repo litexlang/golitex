@@ -253,3 +253,19 @@ func IsBuiltinKwFcAtom(fc *FcAtom) bool {
 	}
 	return false
 }
+
+var InFc = NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeywordIn)
+
+func NewConUniFactStmtWithSetReqPutIntoDom(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *ConUniFactStmt {
+	if glob.VerifyFcSatisfySpecFactParaReq {
+		newDomFacts := []FactStmt{}
+		for i, param := range params {
+			atom := NewFcAtom(glob.BuiltinEmptyPkgName, param)
+			specFact := NewSpecFactStmt(TrueAtom, *InFc, []Fc{atom, paramTypes[i]})
+			newDomFacts = append(newDomFacts, specFact)
+		}
+		newConUniFact := NewConUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts)
+		return newConUniFact
+	}
+	return NewConUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
+}
