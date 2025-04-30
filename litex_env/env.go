@@ -97,14 +97,38 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefConPropStmt, bool) {
 
 func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	for env := e; env != nil; env = env.Parent {
-		fcAtom, ok := env.getFcAtomDefAtCurEnv(fcAtomName)
+		fcAtomDef, ok := env.getFcAtomDefAtCurEnv(fcAtomName)
 		if ok {
-			return fcAtom, true
+			return fcAtomDef, true
 		}
 	}
 	return nil, false
 }
 
 func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
+	// Case1: It is a prop
+	prop, ok := e.PropMem.Get(*fcAtomName)
+	if ok {
+		return prop, true
+	}
+
+	// Case2: It is a fn
+	fn, ok := e.FnMem.Get(*fcAtomName)
+	if ok {
+		return fn, true
+	}
+
+	// Case3: It is a exist prop
+	existProp, ok := e.ExistPropMem.Get(*fcAtomName)
+	if ok {
+		return existProp, true
+	}
+
+	// Case4: It is a obj
+	obj, ok := e.ObjMem.Get(*fcAtomName)
+	if ok {
+		return obj, true
+	}
+
 	return nil, false
 }
