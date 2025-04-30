@@ -27,3 +27,5 @@ echo "total files: $(find . -type f \( -name "*.go" -o -name "*.md" -o -name "*.
 echo "go lines: $(find . -type f -name "*.go" | xargs wc -l | tail -1 | awk '{print $1}')"
 
 echo "go files: $(find . -type f -name "*.go" | wc -l)"
+
+echo "fn lines: $(grep -r '^func\b' ./*/*.go | wc -l)"
