@@ -103,7 +103,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 
 	// store
 	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
-		err = exec.env.NewFact(asSpecFact)
+		err = exec.env.Parent.NewFact(asSpecFact)
 		if err != nil {
 			return err
 		}
@@ -113,7 +113,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) error {
 			return err
 		}
 
-		err = exec.env.NewFact(newUniFact)
+		err = exec.env.Parent.NewFact(newUniFact)
 		if err != nil {
 			return err
 		}
