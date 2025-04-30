@@ -25,11 +25,19 @@ func (ver *Verifier) FcSatisfySpecFactParaReq(stmt *ast.SpecFactStmt) (bool, err
 	return true, nil
 }
 
-func (ver *Verifier) FcSatisfyFnParaReq(fc *ast.Fc) (bool, error) {
-	return true, nil
+func (ver *Verifier) FcSatisfyFnParaReq(fc ast.Fc) (bool, error) {
+	if asAtom, ok := fc.(*ast.FcAtom); ok {
+		_, ok = ver.env.GetFcAtomDef(asAtom)
+		if !ok {
+			return false, nil
+		}
+	} else 
+
 }
 
 func (ver *Verifier) FcAtomDefined(fc *ast.FcAtom) (ast.DefStmt, bool, error) {
+	if 
+	
 	defStmt, ok := ver.env.GetFcAtomDef(fc)
 	if !ok {
 		return nil, false, nil

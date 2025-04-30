@@ -149,3 +149,29 @@ func (memory *ExistPropMem) Get(fc ast.FcAtom) (*ast.DefConExistPropStmt, bool) 
 	}
 	return node.Def, true
 }
+
+func (memory *FnMem) Get(fc ast.FcAtom) (*ast.DefConFnStmt, bool) {
+	pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	if !pkgExists {
+		return nil, false
+	}
+
+	node, nodeExists := pkgMap[fc.Name]
+	if !nodeExists {
+		return nil, false
+	}
+	return node.Def, true
+}
+
+func (memory *ObjMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
+	pkgMap, pkgExists := memory.Dict[fc.PkgName]
+	if !pkgExists {
+		return nil, false
+	}
+
+	node, nodeExists := pkgMap[fc.Name]
+	if !nodeExists {
+		return nil, false
+	}
+	return node.Def, true
+}
