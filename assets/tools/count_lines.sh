@@ -28,4 +28,4 @@ echo "go lines: $(find . -type f -name "*.go" | xargs wc -l | tail -1 | awk '{pr
 
 echo "go files: $(find . -type f -name "*.go" | wc -l)"
 
-echo "fn lines: $(grep -r '^func\b' ./*/*.go | wc -l)"
+echo "func lines: $(grep -r '^func\b' ./*/*.go | wc -l)"
