@@ -4,10 +4,9 @@ prove:
 
     know forall x nat:
         $p(x)
-        iff:
+        then:
             $q(x)
 
-    know 1 $in nat
     know $p(1)
     $q(1)
 

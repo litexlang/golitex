@@ -209,6 +209,8 @@ In Litex, a interface = set + structure(functions, objects, propositions bound t
 
 (This Design draws inspiration from 2 concepts: 1. Niklaus Wirth's "Algorithms + Data Structure = Programs" and "type = set + structure". 2. The  `interface` + `type` + `struct` type system in GoLang.)
 
+(I think type system adopted by languages like Lean4 often confuses people, because an object can only belong to one type. However, in math, it is very common to have an object belong to multiple sets.)
+
 ```
 know:
     $q(0)

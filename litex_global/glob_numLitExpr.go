@@ -14,6 +14,7 @@ package litex_global
 
 import (
 	"fmt"
+	"strings"
 )
 
 type NumLitExpr struct {
@@ -34,9 +35,7 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 				value = "0"
 			} else {
 				value = "-" + value
-
 			}
-
 		}
 		return value, true, nil
 	}
@@ -86,6 +85,24 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 	// Apply IsPositive to the result
 	if !node.IsPositive {
 		result = "-" + result
+	}
+
+	// Remove decimal point and trailing zeros if decimal part is all zeros
+	if strings.Contains(result, ".") {
+		parts := strings.Split(result, ".")
+		if len(parts) == 2 {
+			// Check if decimal part is all zeros
+			allZeros := true
+			for _, c := range parts[1] {
+				if c != '0' {
+					allZeros = false
+					break
+				}
+			}
+			if allZeros {
+				result = parts[0]
+			}
+		}
 	}
 
 	return result, true, nil
@@ -156,4 +173,49 @@ func NumLitExprLogicOpt(left *NumLitExpr, right *NumLitExpr, builtinLogicOpt str
 	default:
 		return false, fmt.Errorf("unsupported builtin logic opt %s", builtinLogicOpt)
 	}
+}
+
+// 不能是小数，不能有负号
+func IsNatNumLitExpr(numLitExpr *NumLitExpr) bool {
+	str, ok, err := numLitExpr.evalNumLitExpr()
+	if err != nil {
+		return false
+	}
+	if !ok {
+		return false
+	}
+
+	if strings.Contains(str, ".") {
+		return false
+	}
+
+	if strings.HasPrefix(str, "-") {
+		return false
+	}
+
+	return true
+}
+
+func IsIntegerNumLitExpr(numLitExpr *NumLitExpr) bool {
+	str, ok, err := numLitExpr.evalNumLitExpr()
+	if err != nil {
+		return false
+	}
+	if !ok {
+		return false
+	}
+
+	if strings.Contains(str, ".") {
+		return false
+	}
+
+	return true
+}
+
+func IsRationalNumLitExpr(numLitExpr *NumLitExpr) bool {
+	return true
+}
+
+func IsRealNumLitExpr(numLitExpr *NumLitExpr) bool {
+	return true
 }

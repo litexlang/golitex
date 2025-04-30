@@ -73,6 +73,12 @@ func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerStat
 		return true, nil
 	}
 
+	if ok, err := ver.btInProp(stmt); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
 	if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
 		return false, err
 	} else if ok {
@@ -139,5 +145,41 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 func (ver *Verifier) btAssociativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// TODO: 处理associative rule
 	_, _ = stmt, state
+	return false, nil
+}
+
+func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
+	if !ast.IsInProp(&stmt.PropName) {
+		return false, nil
+	}
+
+	if len(stmt.Params) != 2 {
+		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
+	}
+
+	leftFc, ok, err := ast.IsFcBuiltinNumLitExpr(stmt.Params[0])
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	if ast.IsNatFcAtom(stmt.Params[1]) {
+		return glob.IsNatNumLitExpr(leftFc), nil
+	}
+
+	if ast.IsIntegerFcAtom(stmt.Params[1]) {
+		return glob.IsIntegerNumLitExpr(leftFc), nil
+	}
+
+	if ast.IsRationalFcAtom(stmt.Params[1]) {
+		return glob.IsRationalNumLitExpr(leftFc), nil
+	}
+
+	if ast.IsRealFcAtom(stmt.Params[1]) {
+		return glob.IsRealNumLitExpr(leftFc), nil
+	}
+
 	return false, nil
 }
