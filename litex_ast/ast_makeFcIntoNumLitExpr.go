@@ -16,10 +16,6 @@ import (
 	glob "golitex/litex_global"
 )
 
-func IsFcBuiltinNumLitExpr(left Fc) (*glob.NumLitExpr, bool, error) {
-	return MakeFcIntoNumLitExpr(left)
-}
-
 func MakeFcIntoNumLitExpr(fc Fc) (*glob.NumLitExpr, bool, error) {
 	// fc is fcAtom
 	asStr, ok := IsNumLitFcAtom(fc)

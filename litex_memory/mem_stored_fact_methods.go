@@ -184,15 +184,15 @@ func (factMem *CondFactMemDict) GetSpecFactNode(stmt *ast.SpecFactStmt) (StoredC
 
 func (factMem *UniFactMemDict) Insert(fact *ast.ConUniFactStmt) error {
 	if fact.IffFacts == nil || len(fact.IffFacts) == 0 {
-		return factMem.insertSpecFacts(fact, fact.ThenFacts)
+		return factMem.insertFacts(fact, fact.ThenFacts)
 	} else {
 		thenToIff := fact.NewUniFactWithThenToIff()
-		err := factMem.insertUniFact(thenToIff, thenToIff.ThenFacts)
+		err := factMem.insertFacts(thenToIff, thenToIff.ThenFacts)
 		if err != nil {
 			return err
 		}
 		iffToThen := fact.NewUniFactWithIffToThen()
-		err = factMem.insertUniFact(iffToThen, iffToThen.ThenFacts)
+		err = factMem.insertFacts(iffToThen, iffToThen.ThenFacts)
 		if err != nil {
 			return err
 		}
@@ -502,29 +502,26 @@ func NewStoredUniFuncMemDictNode() *StoredUniFuncMemDictNode {
 
 func (factMem *UniFactMemDict) mergeOuterInnerUniFactAndInsert(outer *ast.ConUniFactStmt, inner *ast.ConUniFactStmt) error {
 	mergedConUni := ast.MergeOuterInnerUniFacts(outer, inner)
-	err := factMem.insertSpecFacts(mergedConUni, mergedConUni.ThenFacts)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (factMem *UniFactMemDict) insertSpecFacts(uniStmt *ast.ConUniFactStmt, thenFacts []ast.FactStmt) error {
-	for _, stmt := range thenFacts {
+	thenFacts := []*ast.SpecFactStmt{}
+	for _, stmt := range mergedConUni.ThenFacts {
 		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-			err := factMem.insertSpecFact(uniStmt, stmtAsSpecFact)
-			if err != nil {
-				return err
-			}
+			thenFacts = append(thenFacts, stmtAsSpecFact)
 		} else {
-			return fmt.Errorf("only support spec fact in uni fact, but got: %s", stmt.String())
+			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
+		}
+	}
+
+	for _, specFact := range thenFacts {
+		err := factMem.insertSpecFact(mergedConUni, specFact)
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func (factMem *UniFactMemDict) insertUniFact(uniStmt *ast.ConUniFactStmt, thenFacts []ast.FactStmt) error {
+func (factMem *UniFactMemDict) insertFacts(uniStmt *ast.ConUniFactStmt, thenFacts []ast.FactStmt) error {
 	for _, stmt := range thenFacts {
 		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
 			err := factMem.insertSpecFact(uniStmt, stmtAsSpecFact)
