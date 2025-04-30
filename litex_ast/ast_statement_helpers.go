@@ -230,7 +230,7 @@ func IsNotFcAtomName(s string) bool {
 	return ok || glob.IsKeySymbol(s)
 }
 
-var BuiltinFcNames = map[string]struct{}{
+var BuiltinKwFcNames = map[string]struct{}{
 	glob.KeywordNatural:   {},
 	glob.KeywordSet:       {},
 	glob.KeywordObj:       {},
@@ -244,7 +244,7 @@ var BuiltinFcNames = map[string]struct{}{
 
 func IsBuiltinKwFcAtom(fc *FcAtom) bool {
 	if fc.PkgName == glob.BuiltinEmptyPkgName {
-		_, ok := BuiltinFcNames[fc.Name]
+		_, ok := BuiltinKwFcNames[fc.Name]
 		return ok
 	}
 	return false
