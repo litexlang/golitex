@@ -371,5 +371,50 @@ func (cursor *strSliceCursor) specialFc() (ast.Fc, error) {
 }
 
 func (cursor *strSliceCursor) parseFnSet() (ast.Fc, error) {
-	panic("TODO: not implemented")
+	err := cursor.skip(glob.KeywordFn)
+	if err != nil {
+		return nil, &strSliceErr{err, cursor}
+	}
+
+	err = cursor.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, &strSliceErr{err, cursor}
+	}
+
+	paramsSets := []ast.Fc{}
+	if !cursor.is(glob.KeySymbolRightBrace) {
+		for {
+			paramSet, err := cursor.rawFc()
+			if err != nil {
+				return nil, &strSliceErr{err, cursor}
+			}
+			paramsSets = append(paramsSets, paramSet)
+
+			// 检查分隔符：必须是 ',' 或 '}'
+			if cursor.is(glob.KeySymbolComma) {
+				cursor.skip(glob.KeySymbolComma)
+				continue // 继续解析下一个 paramSet
+			}
+			if cursor.is(glob.KeySymbolRightBrace) {
+				break // 正常结束
+			}
+			// 既不是逗号也不是右大括号 → 语法错误
+			return nil, &strSliceErr{
+				fmt.Errorf("expected ',' or '}' but got '%s'", cursor.strAtCurIndexPlus(0)),
+				cursor,
+			}
+		}
+	}
+
+	err = cursor.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, &strSliceErr{err, cursor}
+	}
+
+	retSet, err := cursor.rawFc()
+	if err != nil {
+		return nil, &strSliceErr{err, cursor}
+	}
+
+	return ast.NewFcFnPipe(ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeywordFn), [][]ast.Fc{paramsSets, {retSet}}), nil
 }

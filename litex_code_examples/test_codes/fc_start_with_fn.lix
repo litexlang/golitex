@@ -1,0 +1,3 @@
+prove:
+    forall a fn(A, B)C:
+        $p(a,b)

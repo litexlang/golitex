@@ -1289,4 +1289,5 @@ forall epsilon real:
 
 4.30
 1. 特殊形式的 Fc
-fn(a A, b B: $p(x,y)) => Fc
+fn(a A, b B) => Fc
+如果你要对a和b同时取要求,比如a A1, b B1: forall a A1: $p(a,b)，那就请自定义一个B，让这个B = {x B| forall a A1: $p(a,b)}，然后你就可以对a取要求a A1，对b取要求b B了。此时，fn(a A, b B: $p(a,b)) => Fc 就变成了 fn(a A, b B1) => Fc。

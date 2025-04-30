@@ -89,6 +89,9 @@ func FcSliceString(params []Fc) string {
 }
 
 func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
+	if ok, str := isFnSetAndToString(f); ok {
+		return true, str
+	}
 
 	ptr, ok := f.FnHead.(*FcAtom)
 	if !ok {
@@ -171,7 +174,7 @@ func (f *FcFn) IsBuiltinFcSet() bool {
 		return false
 	}
 
-	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && ptrHeadAsAtom.Name == glob.KeywordSet
+	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && ptrHeadAsAtom.Name == glob.KeywordFn
 }
 
 func IsBuiltinFcSignal(name string) bool {
