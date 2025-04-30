@@ -49,9 +49,9 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 			// TODO 这里需要考虑到fact的类型
 		}
 		exec.appendNewMsg(stmt.String() + "\nis unknown")
+	} else {
+		exec.appendNewMsg(stmt.String() + "\nis unknown")
 	}
-
-	exec.appendNewMsg(stmt.String() + "\nis unknown")
 
 	return glob.ExecState_Unknown, nil
 }

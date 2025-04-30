@@ -172,3 +172,5 @@ prove:
         
     forall x nat:
         $q(x,1)
+
+    
