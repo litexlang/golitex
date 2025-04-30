@@ -148,7 +148,7 @@ func (ver *Verifier) btAssociativeRule(stmt *ast.SpecFactStmt, state VerState) (
 	return false, nil
 }
 
-func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) btNumLitInProp(stmt *ast.SpecFactStmt) (bool, error) {
 	if !ast.IsInProp(&stmt.PropName) {
 		return false, nil
 	}
@@ -179,6 +179,18 @@ func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
 
 	if ast.IsRealFcAtom(stmt.Params[1]) {
 		return glob.IsRealNumLitExpr(leftFc), nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
+	ok, err := ver.btNumLitInProp(stmt)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
 	}
 
 	return false, nil
