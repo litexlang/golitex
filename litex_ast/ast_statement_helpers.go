@@ -54,6 +54,10 @@ func (f *SpecFactStmt) IsExistFact() bool {
 	return f.TypeEnum == TrueExist || f.TypeEnum == FalseExist
 }
 
+func (f *SpecFactStmt) IsPureFact() bool {
+	return f.TypeEnum == TrueAtom || f.TypeEnum == FalseAtom
+}
+
 func (f *SpecFactStmt) IsExist_St_Fact() bool {
 	return f.TypeEnum == TrueExist_St || f.TypeEnum == FalseExist_St
 }
