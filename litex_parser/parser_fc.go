@@ -165,28 +165,6 @@ func (cursor *strSliceCursor) fcPrimaryExpr() (ast.Fc, error) {
 		return nil, fmt.Errorf("unexpected end of input, expected expression")
 	}
 
-	// // 处理括号表达式
-	// if cursor.is(glob.KeySymbolLeftBrace) {
-	// 	cursor.skip(glob.KeySymbolLeftBrace)
-	// 	if cursor.ExceedEnd() {
-	// 		return nil, fmt.Errorf("unexpected end of input after '('")
-	// 	}
-
-	// 	expr, err := cursor.fcInfixExpr(glob.PrecLowest)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	if cursor.ExceedEnd() {
-	// 		return nil, fmt.Errorf("unexpected end of input, expected ')'")
-	// 	}
-
-	// 	if err := cursor.skip(glob.KeySymbolRightBrace); err != nil {
-	// 		return nil, fmt.Errorf("expected ')': %v", err)
-	// 	}
-	// 	return expr, nil
-	// }
-
 	return cursor.unaryOptFc()
 }
 
@@ -260,16 +238,27 @@ func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
 	params := []ast.Fc{}
 	cursor.skip(glob.KeySymbolLeftBrace)
 
-	for !cursor.is(glob.KeySymbolRightBrace) {
-		fc, err := cursor.rawFc()
+	if !cursor.is(glob.KeySymbolRightBrace) {
+		for {
+			fc, err := cursor.rawFc()
 
-		if err != nil {
-			return nil, &strSliceErr{err, cursor}
+			if err != nil {
+				return nil, &strSliceErr{err, cursor}
+			}
+
+			params = append(params, fc)
+
+			if cursor.is(glob.KeySymbolComma) {
+				cursor.skip(glob.KeySymbolComma)
+				continue
+			}
+
+			if cursor.is(glob.KeySymbolRightBrace) {
+				break
+			}
+
+			return nil, &strSliceErr{fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, cursor.strAtCurIndexPlus(0)), cursor}
 		}
-
-		params = append(params, fc)
-
-		cursor.skipIfIs(glob.KeySymbolComma)
 	}
 
 	cursor.skip(glob.KeySymbolRightBrace)
@@ -337,7 +326,7 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 	}
 
 	if err := cursor.skip(glob.KeySymbolRightBrace); err != nil {
-		return nil, fmt.Errorf("expected ')': %v", err)
+		return nil, fmt.Errorf("expected '%s': %v", glob.KeySymbolRightBrace, err)
 	}
 
 	if !cursor.is(glob.KeySymbolLeftBrace) {
@@ -400,7 +389,7 @@ func (cursor *strSliceCursor) parseFnSet() (ast.Fc, error) {
 			}
 			// 既不是逗号也不是右大括号 → 语法错误
 			return nil, &strSliceErr{
-				fmt.Errorf("expected ',' or '}' but got '%s'", cursor.strAtCurIndexPlus(0)),
+				fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, cursor.strAtCurIndexPlus(0)),
 				cursor,
 			}
 		}

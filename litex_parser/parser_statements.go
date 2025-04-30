@@ -641,28 +641,39 @@ func (tb *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error
 	typeParams := []ast.Fc{}
 	nameDepthMap := ast.NameDepthMap{}
 
-	for !tb.header.is(glob.KeySymbolRightBrace) {
-		param, err := tb.header.next()
-		if err != nil {
-			return nil, nil, err
+	if !tb.header.is(glob.KeySymbolRightBrace) {
+		for {
+			param, err := tb.header.next()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			_, declared := nameDepthMap[param]
+			if declared {
+				return nil, nil, fmt.Errorf("duplicate parameter %s", param)
+			}
+			nameDepthMap[param] = 1
+
+			typeParam, err := tb.header.rawFc()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			typeParams = append(typeParams, typeParam)
+			param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
+			params = append(params, param)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+
+			if tb.header.is(glob.KeySymbolRightBrace) {
+				break
+			}
+
+			return nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0))
 		}
-
-		_, declared := nameDepthMap[param]
-		if declared {
-			return nil, nil, fmt.Errorf("duplicate parameter %s", param)
-		}
-		nameDepthMap[param] = 1
-
-		typeParam, err := tb.header.rawFc()
-		if err != nil {
-			return nil, nil, err
-		}
-
-		typeParams = append(typeParams, typeParam)
-		param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-		params = append(params, param)
-
-		tb.header.skipIfIs(glob.KeySymbolComma)
 	}
 
 	err = tb.header.skip(glob.KeySymbolRightBrace)
@@ -807,20 +818,32 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	for !tb.header.is(glob.KeySymbolRightBrace) {
-		param, err := tb.header.rawFc()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
+	if !tb.header.is(glob.KeySymbolRightBrace) {
+		for {
+			param, err := tb.header.rawFc()
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
 
-		// add prefix to param
-		param, err = ast.AddUniPrefixToFc(param, nameDepthMap)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
+			// add prefix to param
+			param, err = ast.AddUniPrefixToFc(param, nameDepthMap)
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
 
-		params = append(params, param)
-		tb.header.skipIfIs(glob.KeySymbolComma)
+			params = append(params, param)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+
+			if tb.header.is(glob.KeySymbolRightBrace) {
+				break
+			}
+
+			return nil, fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, tb.header.strAtCurIndexPlus(0))
+		}
 	}
 
 	err = tb.header.skip(glob.KeySymbolRightBrace)
