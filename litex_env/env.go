@@ -94,3 +94,17 @@ func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefConPropStmt, bool) {
 	}
 	return nil, false
 }
+
+func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
+	for env := e; env != nil; env = env.Parent {
+		fcAtom, ok := env.getFcAtomDefAtCurEnv(fcAtomName)
+		if ok {
+			return fcAtom, true
+		}
+	}
+	return nil, false
+}
+
+func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
+	return nil, false
+}
