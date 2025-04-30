@@ -136,6 +136,10 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 		return err
 	}
 
+	if len(stmt.IffFacts) == 0 {
+		return nil
+	}
+
 	// new uni fact
 	uniFactParamSets := []ast.Fc{}
 	uniFactParamSets = append(uniFactParamSets, stmt.DefHeader.SetParams...)
