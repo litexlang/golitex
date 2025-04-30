@@ -32,19 +32,10 @@ func IsValidName(name string) error {
 		return fmt.Errorf("name cannot start with %s", UniParamPrefix)
 	}
 
-	// if len(name) >= 1 && string(name[0]) == BuiltinUnaryPkgName {
-	// 	return fmt.Errorf("name cannot start with %s", BuiltinUnaryPkgName)
-	// }
-
 	// 开头不能是符号
 	if IsKeySymbol(name) {
 		return fmt.Errorf("name cannot start with a symbol")
 	}
-
-	// name 开头不能是 exist_
-	// if len(name) >= ExistPropPrefixLen && string(name[:ExistPropPrefixLen]) == ExistPropPrefix {
-	// 	return fmt.Errorf("name cannot start with %s", ExistPropPrefix)
-	// }
 
 	if IsKeySymbol(name) {
 		return fmt.Errorf("name cannot be a keyword")
