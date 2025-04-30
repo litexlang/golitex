@@ -238,6 +238,8 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 			return true, nil
 		}
 
+		// TODO 万一涉及到的prop名是变量，怎么办？
+
 		// 处理可交换的prop
 		if isCom {
 			ok, err := ver.SpecFactUniAtEnv(curEnv, reverseStmt, nextState)
