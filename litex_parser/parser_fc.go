@@ -101,7 +101,11 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 		}
 	}
 
-	return ast.FcAtom{PkgName: fromPkg, Name: value}, nil
+	if ast.IsNotFcAtomName(value) {
+		return ast.FcAtom{PkgName: fromPkg, Name: value}, nil
+	} else {
+		return ast.FcAtom{PkgName: fromPkg, Name: value}, fmt.Errorf("invalid first citizen: %s", value)
+	}
 }
 
 func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence) (ast.Fc, error) {

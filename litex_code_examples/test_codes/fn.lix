@@ -24,7 +24,7 @@ prove:
 
 prove:
     know:
-        forall f fn:
+        forall f fn()A:
             forall x R:
                 f(x) = x^2
 

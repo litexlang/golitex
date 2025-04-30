@@ -1055,7 +1055,7 @@ func (tb *tokenBlock) uniFactStmtInClaim() (ast.UniFactStmt, error) {
 	return ast.NewConUniFactStmt(params, paramTypes, domainFacts, thenFacts, iffFacts), nil
 }
 
-func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum, defaultNoKwSign string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
+func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
 	domFacts := []ast.FactStmt{}
 	thenFacts := []ast.FactStmt{}
 	iffFacts := []ast.FactStmt{}
@@ -1126,18 +1126,18 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 			return nil, nil, nil, err
 		}
 	} else {
-		if defaultNoKwSign == glob.KeywordThen {
+		if defaultSectionName == glob.KeywordThen {
 			thenFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
-		} else if defaultNoKwSign == glob.KeywordIff {
+		} else if defaultSectionName == glob.KeywordIff {
 			iffFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
 		} else {
-			return nil, nil, nil, fmt.Errorf("expect keyword in uni fact body, but got: %s", defaultNoKwSign)
+			return nil, nil, nil, fmt.Errorf("expect keyword in uni fact body, but got: %s", defaultSectionName)
 		}
 	}
 
