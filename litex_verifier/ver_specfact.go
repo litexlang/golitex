@@ -21,6 +21,14 @@ import (
 )
 
 func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.FcSatisfySpecFactParaReq(stmt)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
 	if stmt.IsExistFact() {
 		ok, err := ver.ExistPropFact(stmt, state)
 		if err != nil {
