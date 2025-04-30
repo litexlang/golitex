@@ -132,7 +132,7 @@ func NumLitExprEqual(leftAsNumLitExpr *NumLitExpr, rightAsNumLitExpr *NumLitExpr
 	return cmpBigFloat(leftAsStr, rightAsStr) == 0, nil
 }
 
-func NumLitExprLogicOpt(left *NumLitExpr, right *NumLitExpr, builtinLogicOpt string) (bool, error) {
+func NumLitExprCompareOpt(left *NumLitExpr, right *NumLitExpr, builtinLogicOpt string) (bool, error) {
 	leftEvaluated, ok, err := (left).evalNumLitExpr()
 	if err != nil {
 		return false, err

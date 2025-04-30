@@ -67,7 +67,7 @@ func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerStat
 		return false, nil
 	}
 
-	if ok, err := ver.btNumberInfixRelaProp(stmt, state); err != nil {
+	if ok, err := ver.btNumberInfixCompareProp(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -94,7 +94,7 @@ func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerStat
 	return false, nil
 }
 
-func (ver *Verifier) btNumberInfixRelaProp(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !glob.IsBuiltinNumberInfixRelaProp(stmt.PropName.Name) {
 		return false, nil
 	}
@@ -103,7 +103,7 @@ func (ver *Verifier) btNumberInfixRelaProp(stmt *ast.SpecFactStmt, state VerStat
 		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
 	}
 
-	leftNumLitExpr, ok, err := ast.IsFcBuiltinNumLitExpr(stmt.Params[0])
+	leftNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
 		return false, err
 	}
@@ -111,7 +111,7 @@ func (ver *Verifier) btNumberInfixRelaProp(stmt *ast.SpecFactStmt, state VerStat
 		return false, nil
 	}
 
-	rightNumLitExpr, ok, err := ast.IsFcBuiltinNumLitExpr(stmt.Params[1])
+	rightNumLitExpr, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[1])
 	if err != nil {
 		return false, err
 	}
@@ -119,7 +119,7 @@ func (ver *Verifier) btNumberInfixRelaProp(stmt *ast.SpecFactStmt, state VerStat
 		return false, nil
 	}
 
-	ok, err = glob.NumLitExprLogicOpt(leftNumLitExpr, rightNumLitExpr, stmt.PropName.Name)
+	ok, err = glob.NumLitExprCompareOpt(leftNumLitExpr, rightNumLitExpr, stmt.PropName.Name)
 
 	if err != nil {
 		return false, err
@@ -157,7 +157,7 @@ func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
 		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
 	}
 
-	leftFc, ok, err := ast.IsFcBuiltinNumLitExpr(stmt.Params[0])
+	leftFc, ok, err := ast.MakeFcIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
 		return false, err
 	}

@@ -70,7 +70,7 @@ func (ver *Verifier) fcAtomSatisfyParaReq(fc *ast.FcAtom) (bool, error) {
 }
 
 func (ver *Verifier) fcAtomDefined(fc *ast.FcAtom) (bool, error) {
-	if _, ok, _ := ast.IsFcBuiltinNumLitExpr(fc); ok {
+	if _, ok, _ := ast.MakeFcIntoNumLitExpr(fc); ok {
 		return true, nil
 	}
 
@@ -103,7 +103,7 @@ func (ver *Verifier) fcFnSatisfyFnParaReq(fc *ast.FcFn) (bool, error) {
 }
 
 func (ver *Verifier) fcFnDefined(fc *ast.FcFn) (bool, error) {
-	if _, ok, _ := ast.IsFcBuiltinNumLitExpr(fc); ok {
+	if _, ok, _ := ast.MakeFcIntoNumLitExpr(fc.FnHead); ok {
 		return true, nil
 	}
 
