@@ -35,10 +35,45 @@ prove:
             $in(y, x)
 
 prove:
-    prop P(x set):
+    fn f(x set) set:
         forall y set:
-            forall z set:
-                $in(y, x)
-                iff:
-                    $in(z, x)
+            $in(y, x)
+        then:
+            $in(y, x)
+
+# prove:
+#     prop P(x set):
+#         forall y set:
+#             forall z set:
+#                 $in(y, x)
+#                 iff:
+#                     $in(z, x)
             
+
+            
+# prove:
+#     fn f(x set) set:
+#         forall y set:
+#             forall z set:
+#                 $in(y, x)
+#                 iff:
+#                     $in(z, x)
+            
+prove:
+    fn f(x set) set:
+        dom:
+            forall y set:
+                $in(y, x)
+        then:
+            forall z set:
+                $in(z, x)
+            
+claim:
+    forall x set:
+        forall y set:
+            $in(y, x)
+    prove:
+        forall y set:
+            $in(y, x)
+        then:
+            $in(y, x)

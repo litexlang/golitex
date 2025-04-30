@@ -999,33 +999,20 @@ func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {
 
 // claim 因为实在太难instantiate了(要让所有的stmt都添加instantiate这个方法，太难了)，所以不能让用户随便命名forall里的参数了，用户只能用不存在的参数名
 func (tb *tokenBlock) uniFactStmtInClaim() (ast.UniFactStmt, error) {
-	err := tb.header.skip(glob.KeywordForall)
+	uniFact, err := tb.uniFactStmt(ast.NameDepthMap{}, UniFactDepth0)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	params, paramTypes, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
+	if uniFact.IffFacts != nil {
+		if len(uniFact.IffFacts) == 0 {
+			uniFact.IffFacts = ast.EmptyIffFacts
+		} else {
+			return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
+		}
 	}
 
-	keywords := map[string]struct{}{
-		glob.KeywordDom:  {},
-		glob.KeywordThen: {},
-	}
-
-	domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(keywords, ast.NameDepthMap{}, UniFactDepth1, glob.KeywordThen)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	if len(iffFacts) == 0 {
-		iffFacts = ast.EmptyIffFacts
-	} else {
-		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
-	}
-
-	return ast.NewConUniFactStmt(params, paramTypes, domainFacts, thenFacts, iffFacts), nil
+	return uniFact, nil
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {
