@@ -264,6 +264,7 @@ func NewConUniFactStmtWithSetReqPutIntoDom(params []string, paramTypes []Fc, dom
 			specFact := NewSpecFactStmt(TrueAtom, *InFc, []Fc{atom, paramTypes[i]})
 			newDomFacts = append(newDomFacts, specFact)
 		}
+		newDomFacts = append(newDomFacts, domFacts...)
 		newConUniFact := NewConUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts)
 		return newConUniFact
 	}
@@ -281,4 +282,40 @@ func IsBuiltinFnName(fc Fc) bool {
 	}
 
 	return glob.IsBuiltinInfixRelaProp(fcAtom.Name)
+}
+
+func IsInProp(fc *FcAtom) bool {
+	return fc.Name == glob.KeywordIn && fc.PkgName == glob.BuiltinEmptyPkgName
+}
+
+func IsNatFcAtom(fc Fc) bool {
+	fcAtom, ok := fc.(*FcAtom)
+	if !ok {
+		return false
+	}
+	return fcAtom.Name == glob.KeywordNatural && fcAtom.PkgName == glob.BuiltinEmptyPkgName
+}
+
+func IsIntegerFcAtom(fc Fc) bool {
+	fcAtom, ok := fc.(*FcAtom)
+	if !ok {
+		return false
+	}
+	return fcAtom.Name == glob.KeywordInt && fcAtom.PkgName == glob.BuiltinEmptyPkgName
+}
+
+func IsRationalFcAtom(fc Fc) bool {
+	fcAtom, ok := fc.(*FcAtom)
+	if !ok {
+		return false
+	}
+	return fcAtom.Name == glob.KeywordRational && fcAtom.PkgName == glob.BuiltinEmptyPkgName
+}
+
+func IsRealFcAtom(fc Fc) bool {
+	fcAtom, ok := fc.(*FcAtom)
+	if !ok {
+		return false
+	}
+	return fcAtom.Name == glob.KeywordReal && fcAtom.PkgName == glob.BuiltinEmptyPkgName
 }
