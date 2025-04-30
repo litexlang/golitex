@@ -203,7 +203,7 @@ func (stmt *SpecFactStmt) IsPropNameAssociative() bool {
 	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.KeywordAssociative == stmt.PropName.Name
 }
 
-var notBuiltinKwSet = map[string]struct{}{
+var notFcAtomNameSet = map[string]struct{}{
 	// 常规关键字
 	glob.KeywordForall:   {},
 	glob.KeywordWhen:     {},
@@ -226,6 +226,6 @@ var notBuiltinKwSet = map[string]struct{}{
 }
 
 func IsNotFcAtomName(s string) bool {
-	_, ok := notBuiltinKwSet[s]
-	return ok
+	_, ok := notFcAtomNameSet[s]
+	return ok || glob.IsKeySymbol(s)
 }

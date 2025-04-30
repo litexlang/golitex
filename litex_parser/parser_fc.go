@@ -101,7 +101,7 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 		}
 	}
 
-	if ast.IsNotFcAtomName(value) {
+	if !ast.IsNotFcAtomName(value) {
 		return ast.FcAtom{PkgName: fromPkg, Name: value}, nil
 	} else {
 		return ast.FcAtom{PkgName: fromPkg, Name: value}, fmt.Errorf("invalid first citizen: %s", value)

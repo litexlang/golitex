@@ -14,8 +14,6 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
-	KeywordInterface = "interface"
-	KeywordType      = "type"
 	KeywordSet       = "set"
 	KeywordForall    = "forall"
 	KeywordWhen      = "when"

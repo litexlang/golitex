@@ -1,0 +1,44 @@
+prove:
+    know:
+        forall x nat:
+            dom:
+                forall z nat:
+                    $p(x,z)
+            then:
+                forall y nat:
+                    $q(x,y)
+            iff:
+                forall y nat:
+                    $t(x,y)
+
+        forall x nat:
+                $p(x,1)
+
+        forall x nat:
+            $t(x,1)
+
+    claim:
+        forall x nat:
+            $q(x,1)
+        prove:
+            $p(x,1)
+            $t(x,1)
+        
+    forall x nat:
+        $q(x,1)
+
+prove:
+    prop P(x set):
+        forall y set:
+            $in(y, x)
+        iff:
+            $in(y, x)
+
+prove:
+    prop P(x set):
+        forall y set:
+            forall z set:
+                $in(y, x)
+                iff:
+                    $in(z, x)
+            
