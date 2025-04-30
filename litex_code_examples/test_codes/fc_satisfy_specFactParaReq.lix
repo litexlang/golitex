@@ -2,10 +2,11 @@ prove:
     prop p(x nat)
     prop q(x nat)
 
-    know forall x nat:
-        $p(x)
-        then:
-            $q(x)
+    know:
+        forall x nat:
+            $p(x)
+            then:
+                $q(x)
 
     know $p(1)
     $q(1)
