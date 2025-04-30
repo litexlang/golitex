@@ -46,3 +46,7 @@ func makeTokenBlocks(lines []string) ([]tokenBlock, error) {
 	t := newTokenizerWithScope(lines)
 	return t.parseBlocks(0)
 }
+
+func (tb *tokenBlock) AtIndexIs(index int, kw string) bool {
+	return tb.header.is(kw)
+}

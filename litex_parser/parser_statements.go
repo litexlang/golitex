@@ -41,10 +41,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 
 	var ret ast.Stmt
 	switch cur {
-	case glob.KeywordInterface:
-		ret, err = tb.defInterfaceStmt()
-	case glob.KeywordType:
-		ret, err = tb.defTypeStmt()
 	case glob.KeywordProp:
 		ret, err = tb.defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
 	case glob.KeywordExistProp:
@@ -146,10 +142,6 @@ func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (as
 }
 
 func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
-	if tb.header.is(glob.KeywordForall) {
-		return nil, &tokenBlockErr{fmt.Errorf("expect specific fact, get %s", tb.header.slice[0]), *tb}
-	}
-
 	isTrue := true
 	if tb.header.is(glob.KeywordNot) {
 		tb.header.skip()
@@ -193,22 +185,6 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
-
-	// newUniParams := ast.NameDepthMap{}
-	// for key := range nameDepthMap {
-	// 	newUniParams[key] = nameDepthMap[key]
-	// }
-
-	// for i := range params {
-	// 	prefixNum, declared := nameDepthMap[params[i]]
-	// 	if !declared {
-	// 		newUniParams[params[i]] = 1
-	// 		params[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, params[i])
-	// 	} else {
-	// 		newUniParams[params[i]] = prefixNum + 1
-	// 		params[i] = strings.Repeat(glob.UniParamPrefix, prefixNum+1) + params[i]
-	// 	}
-	// }
 
 	paramsWithUniPrefix, newUniParams := ast.GetStrParamsWithUniPrefixAndNewDepthMap(paramsWithoutUniParamPrefix, nameDepthMap)
 
@@ -622,14 +598,6 @@ func (tb *tokenBlock) condFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFac
 	return ast.NewCondFactStmt(condFacts, thenFacts), nil
 }
 
-func (tb *tokenBlock) defInterfaceStmt() (*ast.DefInterfaceStmt, error) {
-	panic("")
-}
-
-func (tb *tokenBlock) defTypeStmt() (*ast.DefTypeStmt, error) {
-	panic("")
-}
-
 func (tb *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error) {
 	name, err := tb.header.next()
 	if err != nil {
@@ -898,11 +866,16 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 			facts = append(facts, fact)
 		}
 	} else {
-		for i := 0; i < parseBodyFactNum; i++ {
+		for i := range parseBodyFactNum {
 			stmt := tb.body[i]
+
 			fact, err := stmt.specFactStmt(nameDepthMap)
 			if err != nil {
-				return nil, &tokenBlockErr{err, *tb}
+				if tb.body[i].AtIndexIs(0, glob.KeywordForall) {
+					return nil, fmt.Errorf("expect specific fact: at most 2 layers of universal quantifier is allowed")
+				} else {
+					return nil, &tokenBlockErr{err, *tb}
+				}
 			}
 			facts = append(facts, fact)
 		}
