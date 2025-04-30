@@ -521,3 +521,25 @@ func (stmt *SetDefEnumtmt) String() string {
 	builder.WriteString("}")
 	return builder.String()
 }
+
+func isFnSetAndToString(f *FcFn) (bool, string) {
+	if f.IsBuiltinFcSet() {
+		var builder strings.Builder
+		builder.WriteString(f.FnHead.String())
+		builder.WriteString(" ")
+		builder.WriteString("(")
+		if len(f.ParamSegs[0]) > 0 {
+			for i := range len(f.ParamSegs[0]) - 1 {
+				builder.WriteString(f.ParamSegs[0][i].String())
+				builder.WriteString(", ")
+			}
+			builder.WriteString(f.ParamSegs[0][len(f.ParamSegs[0])-1].String())
+		}
+		builder.WriteString(")")
+		builder.WriteString(" ")
+		builder.WriteString(f.ParamSegs[1][0].String())
+		return true, builder.String()
+	}
+
+	return false, ""
+}
