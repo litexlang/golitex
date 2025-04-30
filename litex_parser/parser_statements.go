@@ -146,6 +146,10 @@ func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (as
 }
 
 func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
+	if tb.header.is(glob.KeywordForall) {
+		return nil, &tokenBlockErr{fmt.Errorf("expect specific fact, get %s", tb.header.slice[0]), *tb}
+	}
+
 	isTrue := true
 	if tb.header.is(glob.KeywordNot) {
 		tb.header.skip()

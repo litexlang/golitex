@@ -1291,3 +1291,9 @@ forall epsilon real:
 1. 特殊形式的 Fc
 fn(a A, b B) => Fc
 如果你要对a和b同时取要求,比如a A1, b B1: forall a A1: $p(a,b)，那就请自定义一个B，让这个B = {x B| forall a A1: $p(a,b)}，然后你就可以对a取要求a A1，对b取要求b B了。此时，fn(a A, b B: $p(a,b)) => Fc 就变成了 fn(a A, b B1) => Fc。
+
+2. 另外一个定义set的方式：是一个函数集
+
+3. 要测试什么东西
+    1. 基础设施
+    	2. forall 套 forall
