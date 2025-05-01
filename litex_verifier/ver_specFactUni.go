@@ -18,6 +18,7 @@ import (
 	mem "golitex/litex_memory"
 )
 
+// state 只能是 Round1 或者 Spec
 func (ver *Verifier) specFactUni(knownFact *mem.StoredUniSpecFact, uniConMap map[string]ast.Fc, state VerState) (bool, error) {
 	// 这里貌似不需要对整个uniFact实例化，只要实例化then
 	insKnownUniFact, err := knownFact.UniFact.Instantiate(uniConMap)
@@ -38,6 +39,19 @@ func (ver *Verifier) specFactUni(knownFact *mem.StoredUniSpecFact, uniConMap map
 }
 
 // * 如果是 dom 是 specfact，那就直接specFactspec，我不继续往下走，以避免n^2的检查；如果dom 是 uni，那如果现在我是 round1，我允许你往下走；我不确定这么干有没有问题。
+// 下面这个 可以被证明
+// prove:
+//
+//	know:
+//	    forall x nat:
+//	        forall y nat:
+//	            $p(x,y)
+//	        then:
+//	            $q(x)
+//	    forall y nat:
+//	        $p(1,y)
+//
+// $q(1)
 func (ver *Verifier) instUniFactDomFacts(insUniFact *ast.ConUniFactStmt, state VerState) (bool, error) {
 	if state.isRound1() {
 		for _, fact := range insUniFact.DomFacts {
