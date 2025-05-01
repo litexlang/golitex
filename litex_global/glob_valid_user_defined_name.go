@@ -14,6 +14,7 @@ package litex_global
 
 import (
 	"fmt"
+	"strings"
 )
 
 // TODO: 太简陋了，需要改进： 1. 不能以数字开头 2. 不能是关键字 3. 不能是内置函数名 4. 不能是内置变量名 5. 不能是内置符号名
@@ -43,6 +44,11 @@ func IsValidName(name string) error {
 
 	if IsKeyword(name) {
 		return fmt.Errorf("name cannot be a keyword")
+	}
+
+	// 不能开头都是 __
+	if strings.HasPrefix(name, OverloadOptPrefix) {
+		return fmt.Errorf("name cannot start with %s", OverloadOptPrefix)
 	}
 
 	// 允许所有其他UTF-8字符（包括emoji、各种语言字符等
