@@ -1317,3 +1317,13 @@ know:
         __nat__eq__ extend __int__eq__
         __nat__ne__ extend __int__ne__
 之后如果遇到了 a * b， a 是 nat，b是 int，那就调用nat的__mul__，因为我要找 extention 等级最高的那个。如果全是 int，那我不会去找 nat 的__mul__ 。 因为 nat 的 __mul__ 的性质，int 都有。
+3. 把 extend 做成 事实是有很多好处的，就类似把 impl 做成 事实一样。
+    因为逻辑上，这确实是一种 ”判断“
+    如果你想让这种 “判断” 被默认成立，用 know 就行
+    impl, extend 这种，是有额外功能的fact，它们相当于语法糖
+    当然，现在我不确定impl是否有意义，因为我直接一个个传东西应该也行
+    prop AbelianGroup(G set, id G, mul fn(G, G) G):
+        $Group(G, id, mul)
+        iff:
+            forall a, b, c G:
+                a \mul b = b \mul a
