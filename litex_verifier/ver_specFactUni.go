@@ -79,7 +79,7 @@ func (ver *Verifier) instUniFactDomFacts(insUniFact *ast.ConUniFactStmt, state V
 		for _, fact := range insUniFact.DomFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if !ok {
-				return false, fmt.Errorf("")
+				return false, nil
 			}
 			ok, err := ver.SpecFactSpec(asSpecFact, state)
 			if err != nil {
