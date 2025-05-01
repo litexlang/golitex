@@ -174,3 +174,20 @@ prove:
         $q(x,1)
 
     
+prove:
+    know:
+        $set_equal_so_elements_belong_to_each_other(a, b)
+        
+    prop set_equal_so_elements_belong_to_each_other(x set, y set):
+        forall z x:
+            z $in y
+        
+        forall z y:
+            z $in x
+
+    forall z a:
+        z $in b
+    
+    forall z b:
+        z $in a
+    
