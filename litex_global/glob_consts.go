@@ -40,3 +40,5 @@ const RelaFnPrefix string = "\\"
 
 // const VerifyFcSatisfySpecFactParaReq bool = true
 const VerifyFcSatisfySpecFactParaReq bool = false
+
+const ProofContinuesWhenUnknown bool = true

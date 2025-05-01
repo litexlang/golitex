@@ -61,13 +61,13 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 
 func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 	if fact.TypeEnum == ast.TrueAtom {
-		return env.newTrueAtomSpecFactPostProcess(fact)
+		return env.newTruePureSpecFactPostProcess(fact)
 	} else {
 		return nil
 	}
 }
 
-func (env *Env) newTrueAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newTruePureSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 	propDef, ok := env.PropMem.Get(fact.PropName)
 	if !ok {
 		return nil
@@ -88,7 +88,8 @@ func (env *Env) newTrueAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 		}
 
 		// TODO: 这里不只插入到SpecFactMem中，还要插入任何mem，因为现在iff非常的复杂，所有情况都行
-		err = env.SpecFactMem.InsertSpecFact(instantiated.(*ast.SpecFactStmt))
+		// err = env.SpecFactMem.InsertSpecFact(instantiated.(*ast.SpecFactStmt))
+		err = env.NewFact(instantiated)
 		if err != nil {
 			return err
 		}

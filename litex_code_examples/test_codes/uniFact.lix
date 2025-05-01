@@ -183,4 +183,13 @@ prove:
             forall z y:
                 z $in x
 
-    $set_equal(a, b)
+    know:
+        $set_equal(a, b)
+
+    forall z a:
+        z $in b
+    
+    forall z b:
+        z $in a
+        
+        
