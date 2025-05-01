@@ -181,12 +181,22 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	paramsWithoutUniParamPrefix, paramTypes, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
+	paramsWithoutUniParamPrefix, paramSetsWithoutPrefix, err := tb.header.paramSliceInDeclHeadAndSkipEnd(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	paramsWithUniPrefix, newUniParams := ast.GetStrParamsWithUniPrefixAndNewDepthMap(paramsWithoutUniParamPrefix, nameDepthMap)
+
+	// 让 paramSet 也包含 uniPrefix
+	paramSetsWithPrefix := []ast.Fc{}
+	for _, paramSetWithoutPrefix := range paramSetsWithoutPrefix {
+		paramSetWithPrefix, err := ast.AddUniPrefixToFc(paramSetWithoutPrefix, nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		paramSetsWithPrefix = append(paramSetsWithPrefix, paramSetWithPrefix)
+	}
 
 	keywords := map[string]struct{}{
 		glob.KeywordDom:  {},
@@ -203,7 +213,7 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		iffFacts = ast.EmptyIffFacts
 	}
 
-	return ast.NewConUniFactStmtWithSetReqPutIntoDom(paramsWithUniPrefix, paramTypes, domainFacts, thenFacts, iffFacts), nil
+	return ast.NewConUniFactStmtWithSetReqPutIntoDom(paramsWithUniPrefix, paramSetsWithPrefix, domainFacts, thenFacts, iffFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum) ([]ast.FactStmt, error) {
@@ -610,7 +620,7 @@ func (tb *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error
 	}
 
 	params := []string{}
-	typeParams := []ast.Fc{}
+	setParams := []ast.Fc{}
 	nameDepthMap := ast.NameDepthMap{}
 
 	if !tb.header.is(glob.KeySymbolRightBrace) {
@@ -631,7 +641,7 @@ func (tb *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error
 				return nil, nil, err
 			}
 
-			typeParams = append(typeParams, typeParam)
+			setParams = append(setParams, typeParam)
 			param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
 			params = append(params, param)
 
@@ -653,7 +663,15 @@ func (tb *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error
 		return nil, nil, err
 	}
 
-	return ast.NewConDefHeader(name, params, typeParams), nameDepthMap, nil
+	// add prefix to typeParams
+	for i := range setParams {
+		setParams[i], err = ast.AddUniPrefixToFc(setParams[i], nameDepthMap)
+		if err != nil {
+			return nil, nil, &tokenBlockErr{err, *tb}
+		}
+	}
+
+	return ast.NewConDefHeader(name, params, setParams), nameDepthMap, nil
 }
 
 func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
