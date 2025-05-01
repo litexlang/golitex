@@ -192,4 +192,15 @@ prove:
     forall z b:
         z $in a
         
+prove:
+    know:
+        forall x nat:
+            forall y nat:
+                $p(x,y)
+            then:
+                $q(x)
         
+        forall y nat:
+            $p(1,y)
+
+    $q(1)
