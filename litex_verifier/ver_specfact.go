@@ -110,6 +110,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 		searchedNodeFacts := nodeNode.Facts
 		searchedNodeFactsUnderLogicExpr := nodeNode.FactsINLogicExpr
 
+	LoopOverFacts:
 		for _, knownFact := range searchedNodeFacts {
 			// TODO: 我确实没想好是否要禁止用户让一个prop下面的fact有变长的参数列表
 			if len(knownFact.Params()) != len(stmt.Params) {
@@ -122,7 +123,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 					return false, err
 				}
 				if !ok {
-					break
+					continue LoopOverFacts
 				}
 			}
 
