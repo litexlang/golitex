@@ -204,3 +204,19 @@ prove:
             $p(1,y)
 
     $q(1)
+
+prove:
+    know:
+        forall x nat:
+            then:
+                forall y nat:
+                    $p(x,y)
+            iff:
+                forall y nat:
+                    $q(x,y)
+
+        forall x nat:
+            $q(1,x)
+        
+    forall y nat:
+        $p(1,y)
