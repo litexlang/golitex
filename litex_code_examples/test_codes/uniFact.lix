@@ -176,9 +176,9 @@ prove:
     
 prove:
     know:
-        $set_equal_so_elements_belong_to_each_other(a, b)
+        $set_equal(a, b)
         
-    prop set_equal_so_elements_belong_to_each_other(x set, y set):
+    prop set_equal(x set, y set):
         forall z x:
             z $in y
         
