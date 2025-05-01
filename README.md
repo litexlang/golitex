@@ -381,9 +381,11 @@ Inflexible – Inheritance hierarchies are rigid, making extension and evolution
 
 Layer freedom – Users should begin at any abstraction level, not forced from low-level math.
 
+Not Intuitive – Inheritance is not intuitive. An object can for sure belong to multiple sets, but in inheritance, an object can only belong to one type (or belong to a fixed part of inheritance hierarchy).
+
 (In fact, GoLang is so well-designed and Litex learns so much from it, that Litex chooses GoLang to implement itself.)
 
-Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope.
+Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope. The C programming language's syntax and semantics significantly influenced Litex's design.
 
 The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. This influence is evident in Litex's design, where every statement is treated as an expression a direct nod to Lisp's expressive power. The marvelous "structure and interpretation of computer programs", a book on Lisp, strongly shapes the inventor's view of what programming actually means.
 
@@ -399,7 +401,7 @@ I, Jiachen Shen, a hacker and a math enthusiast. I majored in math and self-taug
 
 A good art is enjoyable to its author happy and be useful to others. This process of inventing Litex makes me happy, and I hope Litex can be useful for both math community and AI community, or even anyone from any field. As Knuth said in his Turing Award lecture: science is logical, systematic, calm; art is aesthetic, creative, anxious. Both math and programming live at this intersection, rigorous yet deeply human.
 
-Moreover, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes.
+Moreover, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes. The real obstacle dragging me back is not the weakness of my ideas, but the loneliness of this long journey. That is why I am so grateful for any kind of support.
 
 If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 2000 git commits are all pushed by me), I have no time to implement a complicated one. Keeping it simple yet powerful is the key to its growth and success.
 
