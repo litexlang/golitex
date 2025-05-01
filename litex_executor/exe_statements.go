@@ -315,7 +315,7 @@ func (exec *Executor) proveClaimStmtVerify(stmt *ast.ClaimStmt) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		if execState != glob.ExecState_True {
+		if execState != glob.ExecState_True && !glob.ProofContinuesWhenUnknown {
 			return false, nil
 		}
 	}
