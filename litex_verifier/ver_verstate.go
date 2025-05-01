@@ -76,3 +76,11 @@ func (e VerState) toSpec() VerState {
 		return SpecNoMsg
 	}
 }
+
+func (e VerState) isRound1() bool {
+	if e == Round1Msg || e == Round1NoMsg {
+		return true
+	} else {
+		return false
+	}
+}
