@@ -1351,5 +1351,11 @@ prop AbelianGroup(@Group(G, id, mul, inv)): # G, id, mul 必须出现，因为if
             a \mul b = b \mul a
 这里@会自动展开成 G set, id G, mul fn(G, G) G: $IsGroup(G, id, mul, inv)
 
+call 时，用 AbelianGroup(G, id, mul, inv)  就行
+
+相当于用户这么写，然后我编译的时候就把它展开了。
+
+类比C：C中struct其实也是一个”占位“的东西；
+
 这里相当于能在 参数列表里写 specFact + param + set ，能引入 临时变量的感觉
 
