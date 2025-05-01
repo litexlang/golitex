@@ -122,7 +122,7 @@ func (stmt *ConUniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, erro
 		newIffFacts = append(newIffFacts, newFact)
 	}
 
-	return NewConUniFactStmt(stmt.Params, newParamTypes, newDomFacts, newThenFacts, newIffFacts), nil
+	return newConUniFactStmt(stmt.Params, newParamTypes, newDomFacts, newThenFacts, newIffFacts), nil
 }
 
 func (stmt *CondFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {

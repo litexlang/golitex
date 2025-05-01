@@ -87,7 +87,7 @@ func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state Ver
 		thenFacts = append(thenFacts, fact)
 	}
 
-	newUniFactUsingItself := ast.NewConUniFactStmt(params, setParams, domFacts, thenFacts, ast.EmptyIffFacts)
+	newUniFactUsingItself := ast.NewConUniFactStmtWithSetReqPutIntoDom(params, setParams, domFacts, thenFacts, ast.EmptyIffFacts)
 
 	ok, err = ver.FactStmt(newUniFactUsingItself, state)
 	if err != nil {

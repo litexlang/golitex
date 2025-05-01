@@ -40,7 +40,7 @@ func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, th
 	return &DefConFnStmt{defHeader, retType, domFacts, thenFacts}
 }
 
-func NewConUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *ConUniFactStmt {
+func newConUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *ConUniFactStmt {
 	return &ConUniFactStmt{params, paramTypes, domFacts, thenFacts, iffFacts}
 }
 
