@@ -1322,8 +1322,34 @@ know:
     如果你想让这种 “判断” 被默认成立，用 know 就行
     impl, extend 这种，是有额外功能的fact，它们相当于语法糖
     当然，现在我不确定impl是否有意义，因为我直接一个个传东西应该也行
-    prop AbelianGroup(G set, id G, mul fn(G, G) G):
-        $Group(G, id, mul)
+    prop AbelianGroup(G set, id G, mul fn(G, G) G, inv fn(G) G):
+        $Group(G, id, mul, inv)
         iff:
             forall a, b, c G:
                 a \mul b = b \mul a
+4. impl 的这种写法，相当于把 集合+元素+运算符 放在一个 struct里面，放在一起传递；类似于C的struct的效果；而因为我现在语言我不想再添加新的语法，所以我让它们裸奔地出现在参数列表里。
+或者可以加个语法糖
+structure Group(G set, id G, mul fn(G, G) G, inv fn(G) G):
+    $IsGroup(G, id, mul, inv)
+
+prop IsGroup(G set, id G, mul fn(G, G) G, inv fn(G) G):
+    iff:
+        forall a, b, c G:
+            mul(a, mul(b, c)) = mul(mul(a, b), c)
+        
+        forall a G:
+            mul(id, a) = a
+            mul(a, id) = a
+
+        forall a G:
+            mul(a, inv(a)) = id
+            mul(inv(a), a) = id
+
+prop AbelianGroup(@Group(G, id, mul, inv)): # G, id, mul 必须出现，因为iff里面要用
+    iff:
+        forall a, b, c G:
+            a \mul b = b \mul a
+这里@会自动展开成 G set, id G, mul fn(G, G) G: $IsGroup(G, id, mul, inv)
+
+这里相当于能在 参数列表里写 specFact + param + set ，能引入 临时变量的感觉
+
