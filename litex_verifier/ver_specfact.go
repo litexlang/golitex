@@ -271,6 +271,8 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 
 	searchedSpecFacts := searchedNodeNode.Facts
 
+	nextState := state.addRound().toNoMsg()
+
 	for _, knownFact := range searchedSpecFacts {
 		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
 		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(knownFact, stmt)
@@ -290,13 +292,17 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 			continue
 		}
 
-		ok, err = ver.specFactUni(&knownFact, uniConMap, state)
+		ok, err = ver.specFactUni(&knownFact, uniConMap, nextState)
 		if err != nil {
 			return false, err
 		}
 
 		if ok {
-			ver.successWithMsg(stmt.String(), knownFact.String())
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), knownFact.String())
+			} else {
+				ver.successNoMsg()
+			}
 			return true, nil
 		}
 	}

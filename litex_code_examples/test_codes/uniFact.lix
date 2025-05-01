@@ -175,19 +175,12 @@ prove:
 
     
 prove:
-    know:
-        $set_equal(a, b)
-        
     prop set_equal(x set, y set):
-        forall z x:
-            z $in y
+        iff:
+            forall z x:
+                z $in y
         
-        forall z y:
-            z $in x
+            forall z y:
+                z $in x
 
-    forall z a:
-        z $in b
-    
-    forall z b:
-        z $in a
-    
+    $set_equal(a, b)

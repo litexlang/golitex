@@ -62,6 +62,8 @@ func (e VerState) toNoMsg() VerState {
 		return Round0NoMsg
 	case Round1Msg:
 		return Round1NoMsg
+	case SpecMsg:
+		return SpecNoMsg
 	default:
 		return e
 	}
