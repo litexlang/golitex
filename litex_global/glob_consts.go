@@ -42,3 +42,5 @@ const RelaFnPrefix string = "\\"
 const VerifyFcSatisfySpecFactParaReq bool = false
 
 const ProofContinuesWhenUnknown bool = true
+
+const OverloadOptPrefix string = "__"

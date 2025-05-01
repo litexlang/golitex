@@ -1302,3 +1302,18 @@ fn(a A, b B) => Fc
 	1. 但有时候我涉及到的变量的集合，是要写非fc的，比如要传入一个函数，这个函数的dom是xxx，而描述dom的方式是需要用 specFact的，这时候就不能使用常规的fc了
 	2. 方法2: 我传的时候，只是传fn这种，然后在 dom 里详细描述。如果用户没有描述清楚，那就报错
     3. 方法3：我让用户用 inline 的 forall 这种写法来给 fn里面的参数提出要求，但是我实际存的方式是，我只是把fn存成 setfc，然后把对这个 fn的要求，存在dom里面，这样我不需要修改 runtime，我只要parse得好就行
+
+
+5.1
+1. 虽然inheritance 有种种缺陷，但它有一个核心好处：让符号重载变得可能，既子类能自动获得母类的符号重载
+2. litex 里也必须要实现函数符号重载，引入新的关键词 extend
+know:
+    nat extend int: # 基本意义：nat >= int。这是需要验证的。extend是一种特殊的fact。
+        __nat__add__ extend __int__add__  # 这里放入同名的函数（opt）. 这里的意思是 __int__add__ 有的性质，__nat__add__ 保持。
+        __nat__sub__ extend __int__sub__
+        __nat__mul__ extend __int__mul__
+        __nat__div__ extend __int__div__
+        __nat__pow__ extend __int__pow__
+        __nat__eq__ extend __int__eq__
+        __nat__ne__ extend __int__ne__
+之后如果遇到了 a * b， a 是 nat，b是 int，那就调用nat的__mul__，因为我要找 extention 等级最高的那个。如果全是 int，那我不会去找 nat 的__mul__ 。 因为 nat 的 __mul__ 的性质，int 都有。
