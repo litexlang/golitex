@@ -1362,7 +1362,8 @@ call 时，用 AbelianGroup(G, id, mul, inv)  就行
 5.2
 1. 如果 forall 里 出现 prop 也是 传入的，那必须要另加考虑，和现有的整个体系独立开了
 不能让它进入 forall，因为我当前的match方式(通过match 存储的同名事实)，根本不支持 prop 也是自由的。
-如果你要call 这个 事实，那你只能 直接call prop名，然后我
+如果你要call 这个 事实，那你只能 直接call prop名
+我允许你 在 forall的 参数里 传入 prop，但不允许你 在 forall 的里面的什么地方让某个prop 名是 这个 传入 prop名。
 prop p(q prop, t T):
     $q(t)
 $p(t)

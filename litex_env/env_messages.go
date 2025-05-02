@@ -12,7 +12,9 @@
 
 package litex_memory
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func duplicateDefMsg(pkgName string, name string, keyword string) error {
 	if pkgName == "" {
@@ -20,4 +22,9 @@ func duplicateDefMsg(pkgName string, name string, keyword string) error {
 	} else {
 		return fmt.Errorf("duplicate definition of %s in %s package, it is a %s", name, pkgName, keyword)
 	}
+}
+
+func (env *Env) String() string {
+	// TODO
+	return ""
 }
