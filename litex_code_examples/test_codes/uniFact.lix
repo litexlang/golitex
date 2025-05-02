@@ -220,3 +220,13 @@ prove:
         
     forall y nat:
         $p(1,y)
+
+prove:
+    know forall x nat:
+        dom:
+        then:
+            $p(x)
+        iff:
+
+    forall x nat:
+        $p(x)
