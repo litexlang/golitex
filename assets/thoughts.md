@@ -1394,3 +1394,13 @@ prove:
 
     claim forall <Group(G, id, mul, inv)> x G, y G:
         mul(x, y) = mul(y, x)
+
+    forall <Group(G, id, mul, inv)> x G, y G:
+        mul(x, y) = mul(y, x)
+
+如何call一个带<>的forall或者prop？
+
+<Group(R, 0, +, -)>:
+    # 后续的证明。后续的证明时，我会参考所有的涉及到 <Group> 的事实，把 <Group> 展开成 R set, 0 R, + fn(R, R) R, - fn(R) R
+    
+    
