@@ -1423,3 +1423,27 @@ forll < Mathematical_Induction(P) >: # 打开这个环境,就让P绑定 structur
     forall n nat:
         $P(n)
     
+验证、存储、调用 forall p prop, 甚至 forall p prop: forall q prop 这种，还是用 prop 来吧。你真的想验证并释放，必须用 $math_induction(q) 这种。不要尝试用其他的 
+
+prop everything_true_prop(p prop(x X)): # 这个没法以 forall 的形式在环境里释放，因为 p 是不固定的；用户要验证，只能我引用额外的验证方式，来原地验证. 这里的 X 必须是已经定义过了的。如果你想让 X 没被定义过，那就 prop_prop everything_true_prop(X set,p prop(x X)): 这种，X 是自由的
+    forall x X:
+        $p(x)
+
+know $everything_true_prop(p) # 释放 forall x X: $p(x)
+
+know:
+    forall p prop:
+        $everything_true_prop(p)
+
+$everything_true_prop(p) # 用prop的定义来验证
+
+know:
+    forall p prop(x X):
+        dom:
+            $cond(p)
+        then:
+            $everything_true_prop(p)
+
+    know $cond(q)
+
+$everything_true_prop(q)
