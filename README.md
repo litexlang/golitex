@@ -385,7 +385,7 @@ Not Intuitive – Inheritance is not intuitive. An object can for sure belong to
 
 (In fact, GoLang is so well-designed and Litex learns so much from it, that Litex chooses GoLang to implement itself.)
 
-Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope. The C programming language's syntax and semantics significantly influenced Litex's design.
+Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope. The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++.
 
 The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. This influence is evident in Litex's design, where every statement is treated as an expression a direct nod to Lisp's expressive power. The marvelous "structure and interpretation of computer programs", a book on Lisp, strongly shapes the inventor's view of what programming actually means.
 

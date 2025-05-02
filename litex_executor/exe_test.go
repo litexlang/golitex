@@ -53,18 +53,18 @@ func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// if execState != glob.ExecState_True {
-		// 	t.Fatal("execution failed")
-		// }
-
 		// 如果连续两个 \n 则删除一个
-		for i := 0; i < len(executor.env.Msgs)-1; i++ {
+		for i := range len(executor.env.Msgs) - 1 {
 			if executor.env.Msgs[i] == "\n" && executor.env.Msgs[i+1] == "\n" {
 				executor.env.Msgs = append(executor.env.Msgs[:i], executor.env.Msgs[i+1:]...)
 			}
 		}
 
 		messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
+	}
+
+	if printExeEnv {
+		messages = append(messages, executor.env.String())
 	}
 
 	slices.Reverse(messages)
@@ -614,7 +614,9 @@ func TestAllFactCode(t *testing.T) {
 	start = time.Now()
 	messages := execStmtTest(topStmtSlice, t)
 	executionTime := time.Since(start)
-	printExecMsg(messages)
+	if printMsg {
+		printExecMsg(messages)
+	}
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
@@ -629,6 +631,11 @@ func TestLastFactCode(t *testing.T) {
 	start = time.Now()
 	messages := execStmtTest(topStmtSlice[len(topStmtSlice)-1:], t)
 	executionTime := time.Since(start)
-	printExecMsg(messages)
+	if printMsg {
+		printExecMsg(messages)
+	}
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
+
+var printMsg = true
+var printExeEnv = false
