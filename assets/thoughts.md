@@ -1402,5 +1402,24 @@ prove:
 
 <Group(R, 0, +, -)>:
     # 后续的证明。后续的证明时，我会参考所有的涉及到 <Group> 的事实，把 <Group> 展开成 R set, 0 R, + fn(R, R) R, - fn(R) R
-    
+
+本质上litex的大部分语义上的设计，是为了能 match 上 known 和 given
+
+extend 起到了 ”继承“ 的作用，但总是提供单层的 继承，不会有 多层的继承，这让它很好
+
+forall p prop 也能用 这样的 <> 表示了
+
+structure Mathematical_Induction(P prop(n nat)):
+    iff:
+        $P(0)
+        forall n nat:
+            $P(n)
+            then:
+                $P(n+1)
+
+# 之后再这个环境下面的所有的东西，都会调用一下 包含 <Mathematical_Induction()> 相关的事实
+
+forll < Mathematical_Induction(P) >: # 打开这个环境,就让P绑定 structure里的条件，相当于 forall p prop 了
+    forall n nat:
+        $P(n)
     
