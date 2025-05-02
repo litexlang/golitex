@@ -146,52 +146,6 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-// func (env *Env) NewEqualFact(stmt *ast.SpecFactStmt) error {
-// 	left := &mem.EqualFactMemoryTreeNode{
-// 		FcAsKey: stmt.Params[0],
-// 		Values:  &[]ast.Fc{stmt.Params[1]},
-// 	}
-
-// 	right := &mem.EqualFactMemoryTreeNode{
-// 		FcAsKey: stmt.Params[1],
-// 		Values:  &[]ast.Fc{stmt.Params[0]},
-// 	}
-
-// 	leftSearched, err := env.EqualFactMem.Mem.TreeSearch(left)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	rightSearched, err := env.EqualFactMem.Mem.TreeSearch(right)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if leftSearched != nil && rightSearched != nil {
-// 		if leftSearched == rightSearched {
-// 			return nil
-// 		} else {
-// 			*leftSearched.Key.Values = append(*leftSearched.Key.Values, *rightSearched.Key.Values...)
-// 			rightSearched.Key.Values = leftSearched.Key.Values
-// 		}
-// 	} else if leftSearched == nil && rightSearched != nil {
-// 		*rightSearched.Key.Values = append(*rightSearched.Key.Values, stmt.Params[0])
-// 		left.Values = rightSearched.Key.Values
-// 		env.EqualFactMem.Mem.Insert(left) // 让树中有这个key
-// 	} else if leftSearched != nil && rightSearched == nil {
-// 		*leftSearched.Key.Values = append(*leftSearched.Key.Values, stmt.Params[1])
-// 		right.Values = leftSearched.Key.Values
-// 		env.EqualFactMem.Mem.Insert(right)
-// 	} else if leftSearched == nil && rightSearched == nil {
-// 		equalSlice := &[]ast.Fc{stmt.Params[0], stmt.Params[1]}
-// 		env.EqualFactMem.Mem.Insert(left)
-// 		env.EqualFactMem.Mem.Insert(right)
-// 		left.Values = equalSlice
-// 		right.Values = equalSlice
-// 	}
-
-// 	return nil
-// }
-
 func (env *Env) NewCondFact(fact *ast.CondFactStmt) error {
 	err := env.CondFactMem.Insert(fact)
 	if err != nil {
