@@ -1139,5 +1139,63 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 }
 
 func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
-	return nil, nil
+	err := tb.header.skip(glob.KeySymbolLess)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	matcherName, err := tb.header.rawFcAtom()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	params := []ast.Fc{}
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if !tb.header.is(glob.KeySymbolRightBrace) {
+		for {
+			fc, err := tb.header.rawFc()
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
+			params = append(params, fc)
+			if tb.header.is(glob.KeySymbolRightBrace) {
+				break
+			}
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+			return nil, &tokenBlockErr{fmt.Errorf("expect comma or right brace, but got: %s", tb.header.strAtCurIndexPlus(0)), *tb}
+		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.header.skip(glob.KeySymbolGreater)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	body := []ast.Stmt{}
+	for _, stmt := range tb.body {
+		bodyStmt, err := stmt.Stmt()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		body = append(body, bodyStmt)
+	}
+
+	return ast.NewMatcherEnvStmt(&matcherName, params, body), nil
 }

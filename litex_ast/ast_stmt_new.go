@@ -95,3 +95,7 @@ func NewDefSetEnumtmt(setName string, elems []Fc) *SetDefEnumtmt {
 func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {
 	return &SetDefSetBuilderStmt{setName, parentSet, facts}
 }
+
+func NewMatcherEnvStmt(matcherName *FcAtom, params []Fc, body []Stmt) *MatcherEnvStmt {
+	return &MatcherEnvStmt{*matcherName, params, body}
+}
