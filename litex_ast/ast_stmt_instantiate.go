@@ -82,7 +82,7 @@ func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 	return NewSpecFactStmt(stmt.TypeEnum, *propNameAtom, newParams), nil
 }
 
-func (stmt *ConUniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+func (stmt *UniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
 	newParamTypes := []Fc{}
 	for _, param := range stmt.ParamSets {
 		newParam, err := param.Instantiate(uniConMap)

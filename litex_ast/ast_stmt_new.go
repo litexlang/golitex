@@ -20,14 +20,6 @@ func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
 	return &DefObjStmt{objs, objSets, facts}
 }
 
-func NewDefInterfaceStmt() *DefInterfaceStmt {
-	return &DefInterfaceStmt{}
-}
-
-func NewDefTypeStmt() *DefTypeStmt {
-	return &DefTypeStmt{}
-}
-
 func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefConPropStmt {
 	return &DefConPropStmt{defHeader, domFacts, iffFacts}
 }
@@ -40,8 +32,8 @@ func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, th
 	return &DefConFnStmt{defHeader, retType, domFacts, thenFacts}
 }
 
-func newConUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *ConUniFactStmt {
-	return &ConUniFactStmt{params, paramTypes, domFacts, thenFacts, iffFacts}
+func newConUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
+	return &UniFactStmt{params, paramTypes, domFacts, thenFacts, iffFacts}
 }
 
 func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {

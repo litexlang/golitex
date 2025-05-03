@@ -17,15 +17,13 @@ type Stmt interface {
 	String() string
 }
 
-func (stmt *DefObjStmt) stmt()    {}
-func (c *DefInterfaceStmt) stmt() {}
-func (f *DefTypeStmt) stmt()      {}
-func (c *DefConPropStmt) stmt()   {}
-func (f *DefConFnStmt) stmt()     {}
-func (l *ConUniFactStmt) stmt()   {}
-func (p *SpecFactStmt) stmt()     {}
-func (f *ClaimStmt) stmt()        {}
-func (f *KnowStmt) stmt()         {}
+func (stmt *DefObjStmt) stmt()  {}
+func (c *DefConPropStmt) stmt() {}
+func (f *DefConFnStmt) stmt()   {}
+func (l *UniFactStmt) stmt()    {}
+func (p *SpecFactStmt) stmt()   {}
+func (f *ClaimStmt) stmt()      {}
+func (f *KnowStmt) stmt()       {}
 
 func (s *DefConExistPropStmt) stmt() {}
 func (s *AxiomStmt) stmt()           {}
@@ -48,8 +46,8 @@ type FactStmt interface {
 func (p *SpecFactStmt) factStmt() {}
 
 // func (p *CondFactStmt) factStmt()   {}
-func (l *ConUniFactStmt) factStmt() {}
-func (p *LogicExprStmt) factStmt()  {}
+func (l *UniFactStmt) factStmt()   {}
+func (p *LogicExprStmt) factStmt() {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
@@ -72,16 +70,6 @@ func (s *DefConFnStmt) defMember()   {}
 func (s *DefConPropStmt) defMember() {}
 
 func (s *DefConExistPropStmt) defMember() {}
-
-type UniFactStmt interface {
-	factStmt()
-	stmt()
-	String() string
-	forallStmt()
-	Instantiate(map[string]Fc) (FactStmt, error)
-}
-
-func (s *ConUniFactStmt) forallStmt() {}
 
 type PropFactStmt interface {
 	factStmt()

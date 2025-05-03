@@ -138,9 +138,6 @@ func (stmt *DefObjStmt) String() string {
 	return builder.String()
 }
 
-func (c *DefInterfaceStmt) String() string { panic("") }
-func (f *DefTypeStmt) String() string      { panic("") }
-
 func DefConPropStmtString(prefix string, fact *DefConPropStmt) string {
 	var builder strings.Builder
 
@@ -312,7 +309,7 @@ func (s *ThmStmt) String() string   { panic("") }
 // 	return builder.String()
 // }
 
-func conUniFactString(prefix string, l *ConUniFactStmt) string {
+func conUniFactString(prefix string, l *UniFactStmt) string {
 	var builder strings.Builder
 
 	builder.WriteString(prefix)
@@ -355,7 +352,7 @@ func conUniFactString(prefix string, l *ConUniFactStmt) string {
 	return builder.String()
 }
 
-func (l *ConUniFactStmt) String() string {
+func (l *UniFactStmt) String() string {
 	return conUniFactString(fmt.Sprintf("%s ", glob.KeywordForall), l)
 }
 
