@@ -10,26 +10,25 @@
 // Contact the development team: <litexlang@outlook.com>
 // Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
-package litex_memory
+package litex_env
 
 import (
 	ast "golitex/litex_ast"
-	mem "golitex/litex_memory"
 )
 
 type Env struct {
 	Parent *Env
 	Msgs   []string
 
-	ObjMem       mem.ObjMem
-	PropMem      mem.PropMem
-	FnMem        mem.FnMem
-	ExistPropMem mem.ExistPropMem
+	ObjMem       ObjMem
+	PropMem      PropMem
+	FnMem        FnMem
+	ExistPropMem ExistPropMem
 
-	SpecFactMem mem.SpecFactMemDict
-	// CondFactMem mem.CondFactMemDict
-	UniFactMem mem.UniFactMemDict
-	// EqualFactMem mem.EqualFactMem
+	SpecFactMem SpecFactMemDict
+	// CondFactMem CondFactMemDict
+	UniFactMem UniFactMemDict
+	// EqualFactMem EqualFactMem
 
 	//TODO 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic
 
@@ -47,14 +46,14 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 		Parent: parent,
 		Msgs:   []string{},
 
-		ObjMem:       *mem.NewObjMemory(),
-		PropMem:      *mem.NewPropMemory(),
-		FnMem:        *mem.NewFnMemory(),
-		ExistPropMem: *mem.NewExistPropMemory(),
+		ObjMem:       *NewObjMemory(),
+		PropMem:      *NewPropMemory(),
+		FnMem:        *NewFnMemory(),
+		ExistPropMem: *NewExistPropMemory(),
 
-		SpecFactMem: *mem.NewSpecFactMemDict(),
-		// CondFactMem: *mem.NewCondFactMemDict(),
-		UniFactMem: *mem.NewUniFactMemDict(),
+		SpecFactMem: *NewSpecFactMemDict(),
+		// CondFactMem: *NewCondFactMemDict(),
+		UniFactMem: *NewUniFactMemDict(),
 		// EqualFactMem: *newEqualFactMem(),
 
 		UniParamMap: uniParamMap,

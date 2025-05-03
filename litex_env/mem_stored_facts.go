@@ -10,21 +10,4 @@
 // Contact the development team: <litexlang@outlook.com>
 // Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
-package litex_memory
-
-// func (fact *StoredSpecFact) String(atom ast.FcAtom) string {
-// 	knownFact := ast.SpecFactStmt{TypeEnum: fact.TypeEnum, PropName: atom, Params: fact.Params}
-// 	return knownFact.String()
-// }
-
-func (fact *StoredSpecFact) String() string {
-	return fact.Fact.String()
-}
-
-// func (fact *StoredCondSpecFact) String() string {
-// 	return fact.Fact.String()
-// }
-
-func (fact *StoredUniSpecFact) String() string {
-	return fact.UniFact.String()
-}
+package litex_env

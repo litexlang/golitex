@@ -10,7 +10,7 @@
 // Contact the development team: <litexlang@outlook.com>
 // Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
-package litex_memory
+package litex_env
 
 import (
 	"fmt"
@@ -27,4 +27,16 @@ func duplicateDefMsg(pkgName string, name string, keyword string) error {
 func (env *Env) String() string {
 	// TODO
 	return ""
+}
+
+func (fact *StoredSpecFact) String() string {
+	return fact.Fact.String()
+}
+
+// func (fact *StoredCondSpecFact) String() string {
+// 	return fact.Fact.String()
+// }
+
+func (fact *StoredUniSpecFact) String() string {
+	return fact.UniFact.String()
 }
