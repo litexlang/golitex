@@ -34,20 +34,22 @@ type FnMem struct {
 	Dict map[string]map[string]FnMemItem
 }
 
-type StoredSpecFact struct {
+type KnownSpecFact struct {
 	Fact *ast.SpecFactStmt
 }
 
-type StoredSpecFactInLogicExpr struct {
+type KnownSpecFact_InLogicExpr struct {
 	SpecFact  *ast.SpecFactStmt
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
 }
 
 type EnumSpecFactMem struct {
-	Facts            []StoredSpecFact
-	FactsINLogicExpr []StoredSpecFactInLogicExpr
+	Facts            []KnownSpecFact
+	FactsINLogicExpr []KnownSpecFact_InLogicExpr
 }
+
+// 有很多的 spec fact 是没有 exist的，所以应该在1 specFactmem 里就分好 enum，而不是在同名specfact下面分
 type SpecFactMemItem struct {
 	PureFacts         EnumSpecFactMem
 	NotPureFacts      EnumSpecFactMem
@@ -60,12 +62,12 @@ type SpecFactMem struct {
 	Dict map[string]map[string]SpecFactMemItem
 }
 
-type StoredUniSpecFact struct {
+type KnownSpecFact_InUniSpecFact struct {
 	SpecFact *ast.SpecFactStmt
 	UniFact  *ast.ConUniFactStmt
 }
 
-type StoredUniSpecFactUnderLogicExpr struct {
+type KnownSpecFact_InLogicExpr_InUniFact struct {
 	SpecFact  *ast.SpecFactStmt
 	UniFact   *ast.ConUniFactStmt
 	Index     []uint8
@@ -73,8 +75,8 @@ type StoredUniSpecFactUnderLogicExpr struct {
 }
 
 type EnumUniFactMem struct {
-	Facts            []StoredUniSpecFact
-	ParentLogicFacts []StoredUniSpecFactUnderLogicExpr
+	Facts            []KnownSpecFact_InUniSpecFact
+	ParentLogicFacts []KnownSpecFact_InLogicExpr_InUniFact
 }
 
 type UniFactMemItem struct {

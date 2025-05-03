@@ -342,7 +342,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 	return newMap, true, nil
 }
 
-func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.StoredSpecFactInLogicExpr, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	ok, err := ver.FcSliceEqual(knownFact.SpecFact.Params, stmt.Params, state)
 	if err != nil {
 		return false, err
@@ -369,7 +369,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.StoredSpecFactI
 	return true, nil
 }
 
-func (ver *Verifier) verifyLogicExprSteps(knownFact *env.StoredSpecFactInLogicExpr, currentLayerFact *ast.LogicExprStmt, state VerState) (bool, error) {
+func (ver *Verifier) verifyLogicExprSteps(knownFact *env.KnownSpecFact_InLogicExpr, currentLayerFact *ast.LogicExprStmt, state VerState) (bool, error) {
 	for i := 0; i < len(knownFact.Index)-1; i++ {
 		factIndex := knownFact.Index[i]
 		// 如果保存的是and，那and一定是全对的，不用验证

@@ -14,9 +14,9 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
-	KeywordSet       = "set"
-	KeywordForall    = "forall"
-	KeywordWhen      = "when"
+	KeywordSet    = "set"
+	KeywordForall = "forall"
+	// KeywordWhen      = "when"
 	KeywordDom       = "dom" // 必须存在，因为有时候只有要求没then
 	KeywordThen      = "then"
 	KeywordObj       = "obj"
@@ -60,8 +60,57 @@ const (
 	KeywordIn   = "in"
 	KeyWordFrac = "frac"
 
-	// 下面是 内置函数名
+	KeywordExtend = "extend"
 )
+
+var keywordsSet map[string]struct{} = map[string]struct{}{
+	// 常规关键字
+	KeywordSet:    {},
+	KeywordForall: {},
+	// KeywordWhen:      {},
+	KeywordDom:       {},
+	KeywordThen:      {},
+	KeywordObj:       {},
+	KeywordExistObj:  {},
+	KeywordFn:        {},
+	KeywordProp:      {},
+	KeywordKnow:      {},
+	KeywordExistProp: {},
+	KeywordSt:        {},
+	// KeywordConstructorProp:      {},
+	KeywordClaim:                {},
+	KeywordProve:                {},
+	KeywordPub:                  {},
+	KeywordImport:               {},
+	KeywordPackage:              {},
+	KeywordNot:                  {},
+	KeywordImpl:                 {},
+	KeywordAs:                   {},
+	KeywordAxiom:                {},
+	KeywordProveByContradiction: {},
+	KeywordThm:                  {},
+	KeywordIff:                  {},
+	KeywordExist:                {},
+
+	// 语法糖
+	KeywordCommutative: {},
+	KeywordAssociative: {},
+
+	KeywordAnd: {},
+	KeywordOr:  {},
+
+	// 内置类型
+	KeywordNatural:  {},
+	KeywordInt:      {},
+	KeywordRational: {},
+	KeywordReal:     {},
+
+	// 内置函数
+	KeywordIs: {},
+	KeywordIn: {},
+
+	KeywordExtend: {},
+}
 
 const (
 	// Builtin Symbols
@@ -110,134 +159,6 @@ const (
 	//! 每次引入新的Symbol，要往getBuiltinSymbol里加东西
 )
 
-func IsKeySymbol(name string) bool {
-	_, ok := symbolSet[name]
-	return ok
-}
-
-func IsBuiltinInfixRelaProp(op string) bool {
-	return op == "=" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=" || op == "in" || op == KeywordCommutative || op == KeywordAssociative
-}
-
-func IsBuiltinNumberInfixRelaProp(op string) bool {
-	return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "=" || op == "==" || op == "!="
-}
-
-func IsKeySymbolRelaFn(op string) bool {
-	for key := range BuiltinOptPrecedenceMap {
-		if op == key {
-			return true
-		}
-	}
-	return false
-}
-
-type BuiltinOptPrecedence int
-
-// TODO: implement other operators. How logical operators work is also not implemented
-const (
-	PrecLowest         BuiltinOptPrecedence = iota
-	PrecAssignment                          // =
-	PrecOr                                  // or
-	PrecAnd                                 // and
-	PrecEquality                            // == !=
-	PrecComparison                          // < > <= >=
-	PrecAddition                            // + -
-	PrecMultiplication                      // / *
-	PrecUnary                               // - !
-	PrecExponentiation                      // ^
-)
-
-var BuiltinOptPrecedenceMap = map[string]BuiltinOptPrecedence{
-	KeySymbolPlus:  PrecAddition,
-	KeySymbolMinus: PrecAddition,
-	KeySymbolStar:  PrecMultiplication,
-	KeySymbolSlash: PrecMultiplication,
-	KeySymbolCaret: PrecExponentiation,
-}
-
-// All Unary operators have higher Precedence than infix operators
-// TODO 未来有其他的unary opt的时候，需要修改 strSliceCursor.unaryOptFc
-var UnaryPrecedence = map[string]BuiltinOptPrecedence{
-	KeySymbolMinus: PrecUnary,
-}
-
-func IsKeyword(s string) bool {
-	_, ok := keywordsSet[s]
-	return ok
-}
-
-var keywordsSet map[string]struct{} = map[string]struct{}{
-	// 常规关键字
-	KeywordSet:       {},
-	KeywordForall:    {},
-	KeywordWhen:      {},
-	KeywordDom:       {},
-	KeywordThen:      {},
-	KeywordObj:       {},
-	KeywordExistObj:  {},
-	KeywordFn:        {},
-	KeywordProp:      {},
-	KeywordKnow:      {},
-	KeywordExistProp: {},
-	KeywordSt:        {},
-	// KeywordConstructorProp:      {},
-	KeywordClaim:                {},
-	KeywordProve:                {},
-	KeywordPub:                  {},
-	KeywordImport:               {},
-	KeywordPackage:              {},
-	KeywordNot:                  {},
-	KeywordImpl:                 {},
-	KeywordAs:                   {},
-	KeywordAxiom:                {},
-	KeywordProveByContradiction: {},
-	KeywordThm:                  {},
-	KeywordIff:                  {},
-	KeywordExist:                {},
-
-	// 语法糖
-	KeywordCommutative: {},
-	KeywordAssociative: {},
-
-	KeywordAnd: {},
-	KeywordOr:  {},
-
-	// 内置类型
-	KeywordNatural:  {},
-	KeywordInt:      {},
-	KeywordRational: {},
-	KeywordReal:     {},
-
-	// 内置函数
-	KeywordIs: {},
-	KeywordIn: {},
-}
-
-func GetKeySymbol(inputString string, start int) string {
-	if start < 0 || start >= len(inputString) {
-		return ""
-	}
-
-	// 先检查 2 字符符号
-	if start+2 <= len(inputString) {
-		candidate := inputString[start : start+2]
-		if _, ok := symbolSet[candidate]; ok {
-			return candidate
-		}
-	}
-
-	// 再检查 1 字符符号
-	if start+1 <= len(inputString) {
-		candidate := inputString[start : start+1]
-		if _, ok := symbolSet[candidate]; ok {
-			return candidate
-		}
-	}
-
-	return ""
-}
-
 var symbolSet map[string]struct{} = map[string]struct{}{
 	// 双字符符号（长度 2）
 	KeySymbolAndAnd:                 {}, // "&&"
@@ -284,20 +205,4 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolAnd:          {}, // "&"
 	KeySymbolLargerEqual:  {}, // ">="
 	KeySymbolLessEqual:    {}, // "<="
-}
-
-func IsKeySymbolUniFn(name string) bool {
-	_, ok := UnaryPrecedence[name]
-	return ok
-}
-
-func IsKeywordSymbolUnaryAndInfixAtTheSameTime(name string) bool {
-	_, ok := BuiltinOptPrecedenceMap[name]
-	_, ok2 := UnaryPrecedence[name]
-	return ok && ok2
-}
-
-func IsBuiltinUnaryOpt(name string) bool {
-	_, ok := UnaryPrecedence[name]
-	return ok
 }
