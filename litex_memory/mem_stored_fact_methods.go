@@ -524,6 +524,10 @@ func (factMem *UniFactMemDict) mergeOuterInnerUniFactAndInsert(outer *ast.ConUni
 func (factMem *UniFactMemDict) insertFacts(uniStmt *ast.ConUniFactStmt, thenFacts []ast.FactStmt) error {
 	for _, stmt := range thenFacts {
 		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+			// if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
+			// 	return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", stmtAsSpecFact.String())
+			// }
+
 			err := factMem.insertSpecFact(uniStmt, stmtAsSpecFact)
 			if err != nil {
 				return err

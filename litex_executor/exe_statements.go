@@ -142,20 +142,20 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 		return nil
 	}
 
-	propToIff, IffToProp, err := stmt.PropDefToUniFacts()
-	if err != nil {
-		return err
-	}
+	// propToIff, IffToProp, err := stmt.PropDefToUniFacts()
+	// if err != nil {
+	// 	return err
+	// }
 
-	err = exec.env.NewFact(propToIff)
-	if err != nil {
-		return err
-	}
+	// err = exec.env.NewFact(propToIff)
+	// if err != nil {
+	// 	return err
+	// }
 
-	err = exec.env.NewFact(IffToProp)
-	if err != nil {
-		return err
-	}
+	// err = exec.env.NewFact(IffToProp)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
