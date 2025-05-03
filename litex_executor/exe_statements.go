@@ -41,6 +41,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defConExistPropStmt(stmt)
 	case *ast.DefConFnStmt:
 		err = exec.defConFnStmt(stmt)
+	case *ast.MatcherEnvStmt:
+		err = exec.matcherEnvStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -412,4 +414,21 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 	default:
 		return fmt.Errorf("unknown def stmt type: %T", stmt)
 	}
+}
+
+func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) error {
+	defer exec.appendNewMsg("\n")
+	defer exec.appendNewMsg(stmt.String())
+
+	for _, curStmt := range stmt.Body {
+		execState, err := exec.stmt(curStmt)
+		if err != nil {
+			return err
+		}
+		if execState != glob.ExecState_True {
+			return fmt.Errorf("matcher env stmt is not true")
+		}
+	}
+
+	return nil
 }
