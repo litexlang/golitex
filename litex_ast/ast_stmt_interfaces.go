@@ -35,6 +35,7 @@ func (p *LogicExprStmt) stmt()        {}
 func (s *ExistObjDefStmt) stmt()      {}
 func (s *SetDefSetBuilderStmt) stmt() {}
 func (s *SetDefEnumtmt) stmt()        {}
+func (s *MatcherEnvStmt) stmt()       {}
 
 type FactStmt interface {
 	factStmt()
