@@ -49,6 +49,7 @@ prove:
 
     $P(1)
 
+# VERY IMPORTANT: Use prop definition to prove prop prop
 prove:
     prop P(q prop):
         iff:
@@ -58,5 +59,4 @@ prove:
         $q()
 
     $P(q)
-            
             

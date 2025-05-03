@@ -601,6 +601,8 @@ func TestFilesInFolder(t *testing.T) {
 	}
 }
 
+var printMsg = true
+
 func TestAllFactCode(t *testing.T) {
 	start := time.Now()
 	readFileTime := time.Since(start)
@@ -632,5 +634,3 @@ func TestLastFactCode(t *testing.T) {
 	}
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
-
-var printMsg = true
