@@ -421,6 +421,8 @@ func (ver *Verifier) verifyLogicExprSteps(knownFact *mem.StoredSpecFactInLogicEx
 }
 
 func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	nextState := state.toSpec()
+
 	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
 	if !ok {
 		return false, nil
@@ -444,7 +446,7 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 
 	// prove all domFacts are true
 	for _, domFact := range insIffToPropAsUniFact.DomFacts {
-		ok, err := ver.FactStmt(domFact, state)
+		ok, err := ver.FactStmt(domFact, nextState)
 		if err != nil {
 			return false, err
 		}
@@ -452,5 +454,12 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 			return false, nil
 		}
 	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), defStmt.String())
+	} else {
+		ver.successNoMsg()
+	}
+
 	return true, nil
 }

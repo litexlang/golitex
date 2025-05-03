@@ -59,6 +59,17 @@ func (fc *FcFn) Instantiate(uniConMap map[string]Fc) (Fc, error) {
 }
 
 func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+	// 把 PropName 也换了
+	newPropName, err := stmt.PropName.Instantiate(uniConMap)
+	if err != nil {
+		return nil, err
+	}
+
+	propNameAtom, ok := newPropName.(*FcAtom)
+	if !ok {
+		return nil, errors.New("PropName is not of type *FcAtom")
+	}
+
 	newParams := []Fc{}
 	for _, param := range stmt.Params {
 		newParam, err := param.Instantiate(uniConMap)
@@ -66,16 +77,6 @@ func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 			return nil, err
 		}
 		newParams = append(newParams, newParam)
-	}
-
-	// 把 PropName 也换了
-	newPropName, err := stmt.PropName.Instantiate(uniConMap)
-	if err != nil {
-		return nil, err
-	}
-	propNameAtom, ok := newPropName.(*FcAtom)
-	if !ok {
-		return nil, errors.New("PropName is not of type *FcAtom")
 	}
 
 	return NewSpecFactStmt(stmt.TypeEnum, *propNameAtom, newParams), nil
