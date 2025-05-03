@@ -271,3 +271,7 @@ func (defStmt *DefConPropStmt) IffToPropUniFact() *ConUniFactStmt {
 func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 	return strings.HasPrefix(fact.PropName.Name, glob.UniParamPrefix)
 }
+
+var EmptyIffFacts []FactStmt = nil
+
+var ClaimStmtEmptyToCheck FactStmt = nil

@@ -126,30 +126,30 @@ func (stmt *ConUniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, erro
 	return newConUniFactStmt(stmt.Params, newParamTypes, newDomFacts, newThenFacts, newIffFacts), nil
 }
 
-func (stmt *CondFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
-	newCondFacts := []FactStmt{}
-	for _, fact := range stmt.CondFacts {
-		newFact, err := fact.Instantiate(uniConMap)
-		if err != nil {
-			return nil, err
-		}
-		newCondFacts = append(newCondFacts, newFact)
-	}
+// func (stmt *CondFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+// 	newCondFacts := []FactStmt{}
+// 	for _, fact := range stmt.CondFacts {
+// 		newFact, err := fact.Instantiate(uniConMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newCondFacts = append(newCondFacts, newFact)
+// 	}
 
-	newThenFacts := []FactStmt{}
-	for _, fact := range stmt.ThenFacts {
-		newFact, err := fact.Instantiate(uniConMap)
-		if err != nil {
-			return nil, err
-		}
-		specFact, ok := newFact.(*SpecFactStmt)
-		if !ok {
-			return nil, errors.New("ThenFacts must be of type *SpecFactStmt")
-		}
-		newThenFacts = append(newThenFacts, specFact)
-	}
-	return NewCondFactStmt(newCondFacts, newThenFacts), nil
-}
+// 	newThenFacts := []FactStmt{}
+// 	for _, fact := range stmt.ThenFacts {
+// 		newFact, err := fact.Instantiate(uniConMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		specFact, ok := newFact.(*SpecFactStmt)
+// 		if !ok {
+// 			return nil, errors.New("ThenFacts must be of type *SpecFactStmt")
+// 		}
+// 		newThenFacts = append(newThenFacts, specFact)
+// 	}
+// 	return NewCondFactStmt(newCondFacts, newThenFacts), nil
+// }
 
 func (stmt *LogicExprStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
 	newOrAnd := NewOrAndFact(stmt.IsOr, []LogicExprOrSpecFactStmt{})

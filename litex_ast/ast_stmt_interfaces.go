@@ -27,10 +27,11 @@ func (p *SpecFactStmt) stmt()     {}
 func (f *ClaimStmt) stmt()        {}
 func (f *KnowStmt) stmt()         {}
 
-func (s *DefConExistPropStmt) stmt()  {}
-func (s *AxiomStmt) stmt()            {}
-func (s *ThmStmt) stmt()              {}
-func (s *CondFactStmt) stmt()         {}
+func (s *DefConExistPropStmt) stmt() {}
+func (s *AxiomStmt) stmt()           {}
+func (s *ThmStmt) stmt()             {}
+
+// func (s *CondFactStmt) stmt()         {}
 func (p *LogicExprStmt) stmt()        {}
 func (s *ExistObjDefStmt) stmt()      {}
 func (s *SetDefSetBuilderStmt) stmt() {}
@@ -44,8 +45,9 @@ type FactStmt interface {
 	Instantiate(map[string]Fc) (FactStmt, error)
 }
 
-func (p *SpecFactStmt) factStmt()   {}
-func (p *CondFactStmt) factStmt()   {}
+func (p *SpecFactStmt) factStmt() {}
+
+// func (p *CondFactStmt) factStmt()   {}
 func (l *ConUniFactStmt) factStmt() {}
 func (p *LogicExprStmt) factStmt()  {}
 

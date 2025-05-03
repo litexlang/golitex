@@ -22,8 +22,8 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
 		return env.newSpecFact(f)
-	case *ast.CondFactStmt:
-		return env.newCondFact(f)
+	// case *ast.CondFactStmt:
+	// 	return env.newCondFact(f)
 	case *ast.ConUniFactStmt:
 		return env.newConUniFact(f)
 	case *ast.LogicExprStmt:
@@ -146,13 +146,13 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) newCondFact(fact *ast.CondFactStmt) error {
-	err := env.CondFactMem.Insert(fact)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// func (env *Env) newCondFact(fact *ast.CondFactStmt) error {
+// 	err := env.CondFactMem.Insert(fact)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (env *Env) newConUniFact(fact *ast.ConUniFactStmt) error {
 	err := env.UniFactMem.Insert(fact)

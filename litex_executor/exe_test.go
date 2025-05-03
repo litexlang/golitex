@@ -143,22 +143,22 @@ func randObjParams() []ast.Fc {
 	return objParams
 }
 
-func randCondStmt() *ast.CondFactStmt {
-	randomNumberOfCondFacts := rand.Intn(3) + 1
-	randomNumberOfThenFacts := rand.Intn(3) + 1
-	condFacts := []ast.FactStmt{}
-	thenFacts := []ast.FactStmt{}
+// func randCondStmt() *ast.CondFactStmt {
+// 	randomNumberOfCondFacts := rand.Intn(3) + 1
+// 	randomNumberOfThenFacts := rand.Intn(3) + 1
+// 	condFacts := []ast.FactStmt{}
+// 	thenFacts := []ast.FactStmt{}
 
-	for i := 0; i < randomNumberOfCondFacts; i++ {
-		condFacts = append(condFacts, randSpecFact())
-	}
+// 	for i := 0; i < randomNumberOfCondFacts; i++ {
+// 		condFacts = append(condFacts, randSpecFact())
+// 	}
 
-	for i := 0; i < randomNumberOfThenFacts; i++ {
-		thenFacts = append(thenFacts, randSpecFact())
-	}
+// 	for i := 0; i < randomNumberOfThenFacts; i++ {
+// 		thenFacts = append(thenFacts, randSpecFact())
+// 	}
 
-	return &ast.CondFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
-}
+// 	return &ast.CondFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
+// }
 
 func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")
@@ -212,98 +212,98 @@ func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	fmt.Printf("%d rounds verify taken: %v\n", rounds, time.Since(start))
 }
 
-func TestKnowVerifyCondFactSpeed(t *testing.T) {
-	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env)
-	executor.env = env
-	topStatements := []*ast.TopStmt{}
-	topVerifyStatements := []*ast.TopStmt{}
+// func TestKnowVerifyCondFactSpeed(t *testing.T) {
+// 	env := env.NewEnv(nil, nil, "")
+// 	executor := *NewExecutor(env)
+// 	executor.env = env
+// 	topStatements := []*ast.TopStmt{}
+// 	topVerifyStatements := []*ast.TopStmt{}
 
-	rounds := HundredRound
-	for i := 0; i < rounds; i++ {
-		stmt := randCondStmt()
-		knowStmt := ast.KnowStmt{Facts: []ast.FactStmt{stmt}}
-		topKnow := ast.TopStmt{Stmt: &knowStmt, IsPub: true}
-		topVerifyStatements = append(topVerifyStatements, &ast.TopStmt{Stmt: stmt, IsPub: true})
-		topStatements = append(topStatements, &topKnow)
-	}
+// 	rounds := HundredRound
+// 	for i := 0; i < rounds; i++ {
+// 		stmt := randCondStmt()
+// 		knowStmt := ast.KnowStmt{Facts: []ast.FactStmt{stmt}}
+// 		topKnow := ast.TopStmt{Stmt: &knowStmt, IsPub: true}
+// 		topVerifyStatements = append(topVerifyStatements, &ast.TopStmt{Stmt: stmt, IsPub: true})
+// 		topStatements = append(topStatements, &topKnow)
+// 	}
 
-	start := time.Now()
-	for _, topStmt := range topStatements {
-		execState, err := executor.TopLevelStmt(topStmt)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if execState != glob.ExecState_True {
-			t.Fatal("execution failed")
-		}
-	}
-	// 100000 rounds know taken: 1.677706542s
-	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
+// 	start := time.Now()
+// 	for _, topStmt := range topStatements {
+// 		execState, err := executor.TopLevelStmt(topStmt)
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 		if execState != glob.ExecState_True {
+// 			t.Fatal("execution failed")
+// 		}
+// 	}
+// 	// 100000 rounds know taken: 1.677706542s
+// 	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
 
-	start = time.Now()
-	for _, topStmt := range topVerifyStatements {
-		execState, err := executor.TopLevelStmt(topStmt)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if execState != glob.ExecState_True {
-			t.Fatal("execution failed")
-		}
-	}
-	// 100000 rounds verify taken: 10.808512542s
-	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
-}
+// 	start = time.Now()
+// 	for _, topStmt := range topVerifyStatements {
+// 		execState, err := executor.TopLevelStmt(topStmt)
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 		if execState != glob.ExecState_True {
+// 			t.Fatal("execution failed")
+// 		}
+// 	}
+// 	// 100000 rounds verify taken: 10.808512542s
+// 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
+// }
 
-func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
-	env := env.NewEnv(nil, nil, "")
-	executor := *NewExecutor(env)
-	executor.env = env
-	topKnowStatements := []*ast.TopStmt{}
-	topVerifyStatements := []*ast.TopStmt{}
+// func TestIfCondNotKnownThenUnknownIfKnownThenTrue(t *testing.T) {
+// 	env := env.NewEnv(nil, nil, "")
+// 	executor := *NewExecutor(env)
+// 	executor.env = env
+// 	topKnowStatements := []*ast.TopStmt{}
+// 	topVerifyStatements := []*ast.TopStmt{}
 
-	rounds := HundredRound
-	for i := 0; i < rounds; i++ {
-		stmt := randCondStmt()
-		knowStmt := ast.KnowStmt{Facts: []ast.FactStmt{stmt}}
-		topKnow := ast.TopStmt{Stmt: &knowStmt, IsPub: true}
-		if i < rounds/2 {
-			topVerifyStatements = append(topVerifyStatements, &ast.TopStmt{Stmt: stmt, IsPub: true})
-			topKnowStatements = append(topKnowStatements, &topKnow)
-		} else {
-			topVerifyStatements = append(topVerifyStatements, &ast.TopStmt{Stmt: stmt, IsPub: true})
-		}
-	}
+// 	rounds := HundredRound
+// 	for i := 0; i < rounds; i++ {
+// 		stmt := randCondStmt()
+// 		knowStmt := ast.KnowStmt{Facts: []ast.FactStmt{stmt}}
+// 		topKnow := ast.TopStmt{Stmt: &knowStmt, IsPub: true}
+// 		if i < rounds/2 {
+// 			topVerifyStatements = append(topVerifyStatements, &ast.TopStmt{Stmt: stmt, IsPub: true})
+// 			topKnowStatements = append(topKnowStatements, &topKnow)
+// 		} else {
+// 			topVerifyStatements = append(topVerifyStatements, &ast.TopStmt{Stmt: stmt, IsPub: true})
+// 		}
+// 	}
 
-	start := time.Now()
-	for _, topStmt := range topKnowStatements {
-		execState, err := executor.TopLevelStmt(topStmt)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if execState != glob.ExecState_True {
-			t.Fatal("execution failed")
-		}
-	}
-	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
+// 	start := time.Now()
+// 	for _, topStmt := range topKnowStatements {
+// 		execState, err := executor.TopLevelStmt(topStmt)
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 		if execState != glob.ExecState_True {
+// 			t.Fatal("execution failed")
+// 		}
+// 	}
+// 	fmt.Printf("%d round know taken: %v\n", rounds, time.Since(start))
 
-	start = time.Now()
-	notVerifiedCount := 0
-	notVerifiedIndexes := []int{}
-	for i, topStmt := range topVerifyStatements {
-		execState, err := executor.TopLevelStmt(topStmt)
-		if err != nil {
-			notVerifiedCount++
-			notVerifiedIndexes = append(notVerifiedIndexes, i)
-		}
-		if execState != glob.ExecState_True {
-			t.Fatal("execution failed")
-		}
-	}
-	fmt.Printf("%d statements not verified, %v\n", notVerifiedCount, notVerifiedIndexes)
+// 	start = time.Now()
+// 	notVerifiedCount := 0
+// 	notVerifiedIndexes := []int{}
+// 	for i, topStmt := range topVerifyStatements {
+// 		execState, err := executor.TopLevelStmt(topStmt)
+// 		if err != nil {
+// 			notVerifiedCount++
+// 			notVerifiedIndexes = append(notVerifiedIndexes, i)
+// 		}
+// 		if execState != glob.ExecState_True {
+// 			t.Fatal("execution failed")
+// 		}
+// 	}
+// 	fmt.Printf("%d statements not verified, %v\n", notVerifiedCount, notVerifiedIndexes)
 
-	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
-}
+// 	fmt.Printf("%d round verify taken: %v\n", rounds, time.Since(start))
+// }
 
 func TestEqualFactMemory(t *testing.T) {
 	env := env.NewEnv(nil, nil, "")

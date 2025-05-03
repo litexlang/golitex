@@ -61,13 +61,13 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return true, nil
 	}
 
-	ok, err = ver.SpecFactCond(stmt, state)
-	if err != nil {
-		return false, err
-	}
-	if ok {
-		return true, nil
-	}
+	// ok, err = ver.SpecFactCond(stmt, state)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// if ok {
+	// 	return true, nil
+	// }
 
 	if state.isSpec() {
 		return false, nil
@@ -181,58 +181,58 @@ func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerSta
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactCond(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
-	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		ok, err := ver.SpecFactCondAtEnv(curEnv, stmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-	}
-	return false, nil
-}
+// func (ver *Verifier) SpecFactCond(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+// 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+// 		ok, err := ver.SpecFactCondAtEnv(curEnv, stmt, state)
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if ok {
+// 			return true, nil
+// 		}
+// 	}
+// 	return false, nil
+// }
 
-func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	searchedNodeNode, got := curEnv.CondFactMem.GetSpecFactNode(stmt)
-	if !got {
-		return false, nil
-	}
+// func (ver *Verifier) SpecFactCondAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+// 	searchedNodeNode, got := curEnv.CondFactMem.GetSpecFactNode(stmt)
+// 	if !got {
+// 		return false, nil
+// 	}
 
-	searchedFacts := searchedNodeNode.Facts
+// 	searchedFacts := searchedNodeNode.Facts
 
-LoopOverFacts:
-	for _, knownFact := range searchedFacts {
-		for _, f := range knownFact.Fact.CondFacts {
-			ok, err := ver.FactStmt(f, state)
-			if err != nil {
-				return false, err
-			}
-			if !ok {
-				continue LoopOverFacts
-			}
-		}
+// LoopOverFacts:
+// 	for _, knownFact := range searchedFacts {
+// 		for _, f := range knownFact.Fact.CondFacts {
+// 			ok, err := ver.FactStmt(f, state)
+// 			if err != nil {
+// 				return false, err
+// 			}
+// 			if !ok {
+// 				continue LoopOverFacts
+// 			}
+// 		}
 
-		verified, err := ver.FcSliceEqual(knownFact.SpecFact.Params, stmt.Params, Round0Msg)
+// 		verified, err := ver.FcSliceEqual(knownFact.SpecFact.Params, stmt.Params, Round0Msg)
 
-		if err != nil {
-			return false, err
-		}
+// 		if err != nil {
+// 			return false, err
+// 		}
 
-		if verified {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), knownFact.Fact.String())
-			} else {
-				ver.successNoMsg()
-			}
-			return true, nil
-		}
-	}
+// 		if verified {
+// 			if state.requireMsg() {
+// 				ver.successWithMsg(stmt.String(), knownFact.Fact.String())
+// 			} else {
+// 				ver.successNoMsg()
+// 			}
+// 			return true, nil
+// 		}
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// 处理可交换的prop
