@@ -137,3 +137,9 @@ type SetDefEnumtmt struct {
 	SetName string
 	Elems   []Fc
 }
+
+type MatcherEnvStmt struct {
+	MatcherName FcAtom // pkgName::matcherName
+	Params      []Fc
+	Body        []Stmt
+}

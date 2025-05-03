@@ -63,6 +63,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.thmStmt()
 	case glob.KeywordSet:
 		ret, err = tb.setDefStmt()
+	case glob.KeySymbolLess:
+		ret, err = tb.matcherEnvStmt()
 	default:
 		ret, err = tb.factStmt(ast.NameDepthMap{}, UniFactDepth0)
 	}
@@ -875,7 +877,7 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 	facts := []ast.FactStmt{}
 
 	if curAllowUniFactEnum.allowMoreDepth() {
-		for i := 0; i < parseBodyFactNum; i++ {
+		for i := range parseBodyFactNum {
 			stmt := tb.body[i]
 			fact, err := stmt.factStmt(nameDepthMap, curAllowUniFactEnum) // no longer allow further uniFact
 			if err != nil {
@@ -1134,4 +1136,8 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 	}
 
 	return domFacts, thenFacts, iffFacts, nil
+}
+
+func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
+	return nil, nil
 }
