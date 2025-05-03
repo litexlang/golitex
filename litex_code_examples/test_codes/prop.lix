@@ -39,3 +39,16 @@ prove:
     prop P4(x set)
 
     
+prove:
+    prop P(x set):
+        iff:
+            $P2(x)
+    
+    know:
+        $P2(1)
+
+    $P(1)
+
+
+            
+            
