@@ -25,9 +25,9 @@ type Env struct {
 	FnMem        FnMem
 	ExistPropMem ExistPropMem
 
-	SpecFactMem SpecFactMemDict
+	SpecFactMem SpecFactMem
 	// CondFactMem CondFactMemDict
-	UniFactMem UniFactMemDict
+	UniFactMem UniFactMem
 	// EqualFactMem EqualFactMem
 
 	//TODO 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic

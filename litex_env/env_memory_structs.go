@@ -14,53 +14,80 @@ package litex_env
 
 import ast "golitex/litex_ast"
 
-type StoredPropMemDictNode struct{ Def *ast.DefConPropStmt }
-
+type PropMemItem struct{ Def *ast.DefConPropStmt }
 type PropMem struct {
-	// 之所以是 map[string][string] 而不是 map[string]，因为虽然用户在当前的项目里，始终第一个key是""，但如果我读入了来自其他地方的包，那就是另外一个名字了
-	Dict map[string]map[string]StoredPropMemDictNode
+	Dict map[string]map[string]PropMemItem
 }
 
-type StoredExistPropMemDictNode struct{ Def *ast.DefConExistPropStmt }
+type ExistPropMemItem struct{ Def *ast.DefConExistPropStmt }
 type ExistPropMem struct {
-	Dict map[string]map[string]StoredExistPropMemDictNode
+	Dict map[string]map[string]ExistPropMemItem
 }
 
-type StoredObjMemDictNode struct{ Def *ast.DefObjStmt }
+type ObjMemItem struct{ Def *ast.DefObjStmt }
 type ObjMem struct {
-	Dict map[string]map[string]StoredObjMemDictNode
+	Dict map[string]map[string]ObjMemItem
 }
 
+type FnMemItem struct{ Def *ast.DefConFnStmt }
 type FnMem struct {
-	Dict map[string]map[string]StoredFnMemDictNode
+	Dict map[string]map[string]FnMemItem
 }
-
-type StoredFnMemDictNode struct{ Def *ast.DefConFnStmt }
 
 type StoredSpecFact struct {
 	Fact *ast.SpecFactStmt
 }
 
 type StoredSpecFactInLogicExpr struct {
-	Fact      *ast.SpecFactStmt
+	SpecFact  *ast.SpecFactStmt
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
 }
 
-type StoredSpecMemDictNodeNode struct {
+type EnumSpecFactMem struct {
 	Facts            []StoredSpecFact
 	FactsINLogicExpr []StoredSpecFactInLogicExpr
 }
-type StoredSpecMemDictNode struct {
-	PureFacts         StoredSpecMemDictNodeNode
-	NotPureFacts      StoredSpecMemDictNodeNode
-	ExistFacts        StoredSpecMemDictNodeNode
-	NotExistFacts     StoredSpecMemDictNodeNode
-	Exist_St_Facts    StoredSpecMemDictNodeNode
-	NotExist_St_Facts StoredSpecMemDictNodeNode
+type SpecFactMemItem struct {
+	PureFacts         EnumSpecFactMem
+	NotPureFacts      EnumSpecFactMem
+	ExistFacts        EnumSpecFactMem
+	NotExistFacts     EnumSpecFactMem
+	Exist_St_Facts    EnumSpecFactMem
+	NotExist_St_Facts EnumSpecFactMem
 }
-type SpecFactMemDict struct {
-	Dict map[string]map[string]StoredSpecMemDictNode
+type SpecFactMem struct {
+	Dict map[string]map[string]SpecFactMemItem
+}
+
+type StoredUniSpecFact struct {
+	SpecFact *ast.SpecFactStmt
+	UniFact  *ast.ConUniFactStmt
+}
+
+type StoredUniSpecFactUnderLogicExpr struct {
+	SpecFact  *ast.SpecFactStmt
+	UniFact   *ast.ConUniFactStmt
+	Index     []uint8
+	LogicExpr *ast.LogicExprStmt
+}
+
+type EnumUniFactMem struct {
+	Facts            []StoredUniSpecFact
+	ParentLogicFacts []StoredUniSpecFactUnderLogicExpr
+}
+
+type UniFactMemItem struct {
+	PureFacts         EnumUniFactMem
+	NotPureFacts      EnumUniFactMem
+	ExistFacts        EnumUniFactMem
+	NotExistFacts     EnumUniFactMem
+	Exist_St_Facts    EnumUniFactMem
+	NotExist_St_Facts EnumUniFactMem
+}
+
+type UniFactMem struct {
+	SpecFactsDict map[string]map[string]UniFactMemItem
 }
 
 // type StoredCondSpecFact struct {
@@ -92,35 +119,3 @@ type SpecFactMemDict struct {
 // type CondFactMemDict struct {
 // 	SpecFactsDict map[string]map[string]StoredCondFuncMemDictNode
 // }
-
-type StoredUniSpecFact struct {
-	SpecFact *ast.SpecFactStmt
-	// TypeEnum ast.SpecFactEnum
-	// FuncParams *[]ast.Fc // 和存在Fact里的FuncFact共享slice，只要是共享，那我就用*[]，虽然确实 Fact里的 FuncFact 日后不会改变，且二者再也不相见了
-	UniFact *ast.ConUniFactStmt
-}
-
-type StoredUniSpecFactUnderLogicExpr struct {
-	SpecFact  *ast.SpecFactStmt
-	UniFact   *ast.ConUniFactStmt
-	Index     []uint8
-	LogicExpr *ast.LogicExprStmt
-}
-
-type StoredUniFuncMemDictNodeNode struct {
-	Facts            []StoredUniSpecFact
-	FactsInLogicExpr []StoredUniSpecFactUnderLogicExpr
-}
-
-type StoredUniFuncMemDictNode struct {
-	PureFacts         StoredUniFuncMemDictNodeNode
-	NotPureFacts      StoredUniFuncMemDictNodeNode
-	ExistFacts        StoredUniFuncMemDictNodeNode
-	NotExistFacts     StoredUniFuncMemDictNodeNode
-	Exist_St_Facts    StoredUniFuncMemDictNodeNode
-	NotExist_St_Facts StoredUniFuncMemDictNodeNode
-}
-
-type UniFactMemDict struct {
-	SpecFactsDict map[string]map[string]StoredUniFuncMemDictNode
-}

@@ -343,7 +343,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 }
 
 func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.StoredSpecFactInLogicExpr, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.FcSliceEqual(knownFact.Fact.Params, stmt.Params, state)
+	ok, err := ver.FcSliceEqual(knownFact.SpecFact.Params, stmt.Params, state)
 	if err != nil {
 		return false, err
 	}
