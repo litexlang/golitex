@@ -63,13 +63,6 @@ type ConUniFactStmt struct {
 	// ThenFacts []*SpecFactStmt
 	ThenFacts []FactStmt
 	IffFacts  []FactStmt // TODO: 需要注意到，我存储的所有事实，这一项都是空。未来为了节约空间，可以考虑用新的结构体来存储
-
-}
-
-var EmptyIffFacts []FactStmt = nil
-
-func (enum SpecFactEnum) IsTrue() bool {
-	return enum == TrueAtom || enum == TrueExist || enum == TrueExist_St
 }
 
 type SpecFactStmt struct {
@@ -83,8 +76,6 @@ type ClaimStmt struct {
 	ToCheckFact FactStmt
 	Proofs      []Stmt
 }
-
-var ClaimStmtEmptyToCheck FactStmt = nil
 
 type KnowStmt struct {
 	Facts []FactStmt
@@ -101,11 +92,11 @@ type ThmStmt struct {
 	Proof []Stmt
 }
 
-type CondFactStmt struct {
-	CondFacts []FactStmt
-	// ThenFacts []*SpecFactStmt
-	ThenFacts []FactStmt
-}
+// type CondFactStmt struct {
+// 	CondFacts []FactStmt
+// 	// ThenFacts []*SpecFactStmt
+// 	ThenFacts []FactStmt
+// }
 
 type FcFnDecl struct {
 	Name   string

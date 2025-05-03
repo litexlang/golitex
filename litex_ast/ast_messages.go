@@ -289,27 +289,28 @@ func (s *DefConExistPropStmt) String() string {
 }
 func (s *AxiomStmt) String() string { panic("") }
 func (s *ThmStmt) String() string   { panic("") }
-func (fact *CondFactStmt) String() string {
-	var builder strings.Builder
 
-	builder.WriteString(glob.KeywordWhen)
-	builder.WriteString(":\n")
-	for _, condFact := range fact.CondFacts {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(condFact.String(), 1))
-		builder.WriteByte('\n')
-	}
+// func (fact *CondFactStmt) String() string {
+// 	var builder strings.Builder
 
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents("then:", 1))
-	builder.WriteByte('\n')
-	if len(fact.ThenFacts) > 0 {
-		for i := 0; i < len(fact.ThenFacts)-1; i++ {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.ThenFacts[i].String(), 2))
-			builder.WriteByte('\n')
-		}
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.ThenFacts[len(fact.ThenFacts)-1].String(), 2))
-	}
-	return builder.String()
-}
+// 	builder.WriteString(glob.KeywordWhen)
+// 	builder.WriteString(":\n")
+// 	for _, condFact := range fact.CondFacts {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(condFact.String(), 1))
+// 		builder.WriteByte('\n')
+// 	}
+
+// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents("then:", 1))
+// 	builder.WriteByte('\n')
+// 	if len(fact.ThenFacts) > 0 {
+// 		for i := 0; i < len(fact.ThenFacts)-1; i++ {
+// 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.ThenFacts[i].String(), 2))
+// 			builder.WriteByte('\n')
+// 		}
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.ThenFacts[len(fact.ThenFacts)-1].String(), 2))
+// 	}
+// 	return builder.String()
+// }
 
 func conUniFactString(prefix string, l *ConUniFactStmt) string {
 	var builder strings.Builder

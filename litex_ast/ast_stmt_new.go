@@ -64,9 +64,9 @@ func NewThmStmt(decl DefPropOrExistPropStmt, proof []Stmt) *ThmStmt {
 	return &ThmStmt{decl, proof}
 }
 
-func NewCondFactStmt(condFacts []FactStmt, thenFacts []FactStmt) *CondFactStmt {
-	return &CondFactStmt{condFacts, thenFacts}
-}
+// func NewCondFactStmt(condFacts []FactStmt, thenFacts []FactStmt) *CondFactStmt {
+// 	return &CondFactStmt{condFacts, thenFacts}
+// }
 
 func NewFcFnDecl(name string, params []string) *FcFnDecl {
 	return &FcFnDecl{name, params}

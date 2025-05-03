@@ -27,8 +27,8 @@ type Env struct {
 	ExistPropMem mem.ExistPropMem
 
 	SpecFactMem mem.SpecFactMemDict
-	CondFactMem mem.CondFactMemDict
-	UniFactMem  mem.UniFactMemDict
+	// CondFactMem mem.CondFactMemDict
+	UniFactMem mem.UniFactMemDict
 	// EqualFactMem mem.EqualFactMem
 
 	//TODO 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic
@@ -53,8 +53,8 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 		ExistPropMem: *mem.NewExistPropMemory(),
 
 		SpecFactMem: *mem.NewSpecFactMemDict(),
-		CondFactMem: *mem.NewCondFactMemDict(),
-		UniFactMem:  *mem.NewUniFactMemDict(),
+		// CondFactMem: *mem.NewCondFactMemDict(),
+		UniFactMem: *mem.NewUniFactMemDict(),
 		// EqualFactMem: *newEqualFactMem(),
 
 		UniParamMap: uniParamMap,
