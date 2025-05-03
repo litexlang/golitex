@@ -15,11 +15,11 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/litex_ast"
-	mem "golitex/litex_memory"
+	env "golitex/litex_env"
 )
 
 // state 只能是 Round1 或者 Spec
-func (ver *Verifier) specFactUni(knownFact *mem.StoredUniSpecFact, uniConMap map[string]ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) specFactUni(knownFact *env.StoredUniSpecFact, uniConMap map[string]ast.Fc, state VerState) (bool, error) {
 	// 这里貌似不需要对整个uniFact实例化，只要实例化then
 	insKnownUniFact, err := knownFact.UniFact.Instantiate(uniConMap)
 	if err != nil {

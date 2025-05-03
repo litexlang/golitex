@@ -10,11 +10,32 @@
 // Contact the development team: <litexlang@outlook.com>
 // Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
-package litex_memory
+package litex_env
 
-import (
-	ast "golitex/litex_ast"
-)
+import ast "golitex/litex_ast"
+
+type StoredPropMemDictNode struct{ Def *ast.DefConPropStmt }
+
+type PropMem struct {
+	// 之所以是 map[string][string] 而不是 map[string]，因为虽然用户在当前的项目里，始终第一个key是""，但如果我读入了来自其他地方的包，那就是另外一个名字了
+	Dict map[string]map[string]StoredPropMemDictNode
+}
+
+type StoredExistPropMemDictNode struct{ Def *ast.DefConExistPropStmt }
+type ExistPropMem struct {
+	Dict map[string]map[string]StoredExistPropMemDictNode
+}
+
+type StoredObjMemDictNode struct{ Def *ast.DefObjStmt }
+type ObjMem struct {
+	Dict map[string]map[string]StoredObjMemDictNode
+}
+
+type FnMem struct {
+	Dict map[string]map[string]StoredFnMemDictNode
+}
+
+type StoredFnMemDictNode struct{ Def *ast.DefConFnStmt }
 
 type StoredSpecFact struct {
 	Fact *ast.SpecFactStmt

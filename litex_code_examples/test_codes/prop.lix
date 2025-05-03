@@ -6,14 +6,14 @@ prove:
             $in(x, P2)
 
     # true
-    when:
+    forall:
         $P(1)
         $in(1, Q)
         then:
             $in(1, P2)
 
     # true
-    when:
+    forall:
         $in(1, P2)
         $in(1, Q)
         then:

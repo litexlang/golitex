@@ -10,7 +10,7 @@
 // Contact the development team: <litexlang@outlook.com>
 // Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
-package litex_memory
+package litex_env
 
 import (
 	"fmt"

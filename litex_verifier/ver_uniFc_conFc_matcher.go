@@ -16,11 +16,11 @@ import (
 	"fmt"
 	ast "golitex/litex_ast"
 	cmp "golitex/litex_comparator"
-	mem "golitex/litex_memory"
+	env "golitex/litex_env"
 )
 
 // match 函数不需要传入state: 没有any, spec 之分，也不需要打印
-func (ver *Verifier) matchStoredUniSpecWithSpec(knownFact mem.StoredUniSpecFact, stmt *ast.SpecFactStmt) (map[string][]ast.Fc, bool, error) { // 之所以是map[string][]ast.Fc而不是 map[string]ast.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
+func (ver *Verifier) matchStoredUniSpecWithSpec(knownFact env.StoredUniSpecFact, stmt *ast.SpecFactStmt) (map[string][]ast.Fc, bool, error) { // 之所以是map[string][]ast.Fc而不是 map[string]ast.Fc, 因为可能用户输入的是字面量相同，实际意义一样的obj
 	if len(stmt.Params) != len(knownFact.SpecFact.Params) {
 		return nil, false, nil
 	}
