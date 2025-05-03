@@ -49,6 +49,14 @@ prove:
 
     $P(1)
 
+prove:
+    prop P(q prop):
+        iff:
+            $q()
+            
+    know:
+        $q()
 
+    $P(q)
             
             
