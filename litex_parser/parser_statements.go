@@ -177,7 +177,7 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 	}
 }
 
-func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum) (*ast.ConUniFactStmt, error) {
+func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum) (*ast.UniFactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -1022,7 +1022,7 @@ func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {
 }
 
 // claim 因为实在太难instantiate了(要让所有的stmt都添加instantiate这个方法，太难了)，所以不能让用户随便命名forall里的参数了，用户只能用不存在的参数名
-func (tb *tokenBlock) uniFactStmtInClaim() (ast.UniFactStmt, error) {
+func (tb *tokenBlock) uniFactStmtInClaim() (*ast.UniFactStmt, error) {
 	// 不能直接用 uniFact  parse 因为我不能让 body 的 fact 里的 涉及forall param list的时候，我不加 prefix，我只有在 runtime 来加
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {

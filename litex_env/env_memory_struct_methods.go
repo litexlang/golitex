@@ -182,7 +182,7 @@ func (factMem *SpecFactMem) GetNode(stmt *ast.SpecFactStmt) (EnumSpecFactMem, bo
 // 	}
 // }
 
-func (factMem *UniFactMem) Insert(fact *ast.ConUniFactStmt) error {
+func (factMem *UniFactMem) Insert(fact *ast.UniFactStmt) error {
 	if fact.IffFacts == nil || len(fact.IffFacts) == 0 {
 		return factMem.insertFacts(fact, fact.ThenFacts)
 	} else {
@@ -200,7 +200,7 @@ func (factMem *UniFactMem) Insert(fact *ast.ConUniFactStmt) error {
 	return nil
 }
 
-func (factMem *UniFactMem) insertSpecFact(uniStmt *ast.ConUniFactStmt, stmt *ast.SpecFactStmt) error {
+func (factMem *UniFactMem) insertSpecFact(uniStmt *ast.UniFactStmt, stmt *ast.SpecFactStmt) error {
 	// 检查 pkgName 是否存在，不存在则初始化
 	pkgName := stmt.PropName.PkgName
 	optName := stmt.PropName.Name
@@ -236,7 +236,7 @@ func (factMem *UniFactMem) insertSpecFact(uniStmt *ast.ConUniFactStmt, stmt *ast
 	return nil
 }
 
-func (factMem *UniFactMem) InsertCondFactUnderLogicExpr(uniStmt *ast.ConUniFactStmt, logicExpr *ast.LogicExprStmt) error {
+func (factMem *UniFactMem) InsertCondFactUnderLogicExpr(uniStmt *ast.UniFactStmt, logicExpr *ast.LogicExprStmt) error {
 	pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
 	if err != nil {
 		return err
@@ -500,7 +500,7 @@ func NewStoredUniFuncMemDictNode() *UniFactMemItem {
 	}
 }
 
-func (factMem *UniFactMem) mergeOuterInnerUniFactAndInsert(outer *ast.ConUniFactStmt, inner *ast.ConUniFactStmt) error {
+func (factMem *UniFactMem) mergeOuterInnerUniFactAndInsert(outer *ast.UniFactStmt, inner *ast.UniFactStmt) error {
 	mergedConUni := ast.MergeOuterInnerUniFacts(outer, inner)
 	thenFacts := []*ast.SpecFactStmt{}
 	for _, stmt := range mergedConUni.ThenFacts {
@@ -521,7 +521,7 @@ func (factMem *UniFactMem) mergeOuterInnerUniFactAndInsert(outer *ast.ConUniFact
 	return nil
 }
 
-func (factMem *UniFactMem) insertFacts(uniStmt *ast.ConUniFactStmt, thenFacts []ast.FactStmt) error {
+func (factMem *UniFactMem) insertFacts(uniStmt *ast.UniFactStmt, thenFacts []ast.FactStmt) error {
 	for _, stmt := range thenFacts {
 		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
 			if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
@@ -532,7 +532,7 @@ func (factMem *UniFactMem) insertFacts(uniStmt *ast.ConUniFactStmt, thenFacts []
 			if err != nil {
 				return err
 			}
-		} else if stmtAsConUniFact, ok := stmt.(*ast.ConUniFactStmt); ok {
+		} else if stmtAsConUniFact, ok := stmt.(*ast.UniFactStmt); ok {
 			err := factMem.mergeOuterInnerUniFactAndInsert(uniStmt, stmtAsConUniFact)
 			if err != nil {
 				return err

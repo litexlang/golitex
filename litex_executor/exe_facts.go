@@ -47,7 +47,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 				exec.appendNewMsg(stmt.String() + "\nis false")
 				return glob.ExecState_False, nil
 			}
-		case *ast.ConUniFactStmt:
+		case *ast.UniFactStmt:
 			// TODO 这里需要考虑到fact的类型
 		default:
 			// TODO 这里需要考虑到fact的类型

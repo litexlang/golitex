@@ -101,7 +101,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-	} else if asConUniFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
+	} else if asConUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
 		newUniFact, err := ast.AddUniPrefixToUniFactWithNoUniPrefix(asConUniFact)
 		if err != nil {
 			return glob.ExecState_Error, err
@@ -194,7 +194,7 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 	thenFacts := []ast.FactStmt{}
 	thenFacts = append(thenFacts, uniFactThen...)
 
-	uniFact := ast.ConUniFactStmt{Params: stmt.DefHeader.Params, ParamSets: stmt.DefHeader.SetParams, DomFacts: stmt.DomFacts, ThenFacts: thenFacts}
+	uniFact := ast.UniFactStmt{Params: stmt.DefHeader.Params, ParamSets: stmt.DefHeader.SetParams, DomFacts: stmt.DomFacts, ThenFacts: thenFacts}
 	err = exec.env.NewFact(&uniFact)
 
 	if err != nil {
@@ -323,7 +323,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 		exec.deleteEnvAndRetainMsg()
 	}()
 
-	if asUnivFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
+	if asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
 		// 把变量引入，把dom事实引入
 		for i, param := range asUnivFact.Params {
 			exec.defStmt(&ast.DefObjStmt{Objs: []string{param}, ObjSets: []ast.Fc{asUnivFact.ParamSets[i]}, Facts: []ast.FactStmt{}})
@@ -360,7 +360,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 	}
 
 	// TODO: 需要处理forall的情况
-	if asConUniFact, ok := stmt.ToCheckFact.(*ast.ConUniFactStmt); ok {
+	if asConUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
 		for _, fact := range asConUniFact.ThenFacts {
 			ok, _, err := exec.checkFactStmt(fact)
 			if err != nil {

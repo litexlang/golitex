@@ -23,12 +23,6 @@ type DefObjStmt struct {
 	Facts   []FactStmt
 }
 
-type DefInterfaceStmt struct {
-}
-
-type DefTypeStmt struct {
-}
-
 type DefConPropStmt struct {
 	DefHeader ConDefHeader
 	DomFacts  []FactStmt // 如果输入的参数不满足dom，那就是error
@@ -56,7 +50,7 @@ type DefConFnStmt struct {
 	ThenFacts []FactStmt
 }
 
-type ConUniFactStmt struct {
+type UniFactStmt struct {
 	Params    []string // 它可能也是来自另外一个被share的地方。比如defConFn里面的Params，在被存成facts的时候，整个struct被复制到了这里，但本质上它们共享了一片内存
 	ParamSets []Fc
 	DomFacts  []FactStmt

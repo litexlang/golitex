@@ -50,10 +50,10 @@ const (
 	KeywordAssociative = "associative"
 
 	// Builtin Types
-	KeywordNatural  = "nat"      // e.g. 0
-	KeywordInt      = "int"      // e.g. -1
-	KeywordRational = "rational" // e.g. -1.1
-	KeywordReal     = "real"     // e.g. pi
+	KeywordNatural  = "nat"  // e.g. 0
+	KeywordInt      = "int"  // e.g. -1
+	KeywordRational = "rat"  // e.g. -1.1
+	KeywordReal     = "real" // e.g. pi
 
 	// Builtin Functions
 	KeywordIs   = "is"

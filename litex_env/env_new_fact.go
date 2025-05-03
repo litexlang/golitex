@@ -24,7 +24,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 		return env.newSpecFact(f)
 	// case *ast.CondFactStmt:
 	// 	return env.newCondFact(f)
-	case *ast.ConUniFactStmt:
+	case *ast.UniFactStmt:
 		return env.newConUniFact(f)
 	case *ast.LogicExprStmt:
 		return env.newLogicExprStmt(f)
@@ -154,7 +154,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 // 	return nil
 // }
 
-func (env *Env) newConUniFact(fact *ast.ConUniFactStmt) error {
+func (env *Env) newConUniFact(fact *ast.UniFactStmt) error {
 	err := env.UniFactMem.Insert(fact)
 	if err != nil {
 		return err
@@ -246,7 +246,7 @@ func (env *Env) NewDefConExistProp(stmt *ast.DefConExistPropStmt, pkgName string
 	return env.ExistPropMem.Insert(stmt, pkgName)
 }
 
-func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.ConUniFactStmt, error) {
+func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
 	if fact.TypeEnum != ast.FalseExist {
 		return nil, fmt.Errorf("exist fact must have one parameter")
 	}

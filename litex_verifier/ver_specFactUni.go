@@ -25,7 +25,7 @@ func (ver *Verifier) specFactUni(knownFact *env.KnownSpecFact_InUniSpecFact, uni
 	if err != nil {
 		return false, err
 	}
-	insKnownUniFactAsUniFact, ok := insKnownUniFact.(*ast.ConUniFactStmt)
+	insKnownUniFactAsUniFact, ok := insKnownUniFact.(*ast.UniFactStmt)
 	if !ok {
 		return false, fmt.Errorf("")
 	}
@@ -52,7 +52,7 @@ func (ver *Verifier) specFactUni(knownFact *env.KnownSpecFact_InUniSpecFact, uni
 //	        $p(1,y)
 //
 // $q(1)
-func (ver *Verifier) instUniFactDomFacts(insUniFact *ast.ConUniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) instUniFactDomFacts(insUniFact *ast.UniFactStmt, state VerState) (bool, error) {
 	if state.isRound1() {
 		for _, fact := range insUniFact.DomFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)

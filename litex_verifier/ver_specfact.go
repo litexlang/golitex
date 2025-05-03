@@ -92,7 +92,7 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.IsBuiltinLogicOpt() {
+	if stmt.IsBuiltinInfixRelaProp() {
 		return ver.btLogicOptSpec(stmt, state)
 	}
 
@@ -438,7 +438,7 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 	if err != nil {
 		return false, err
 	}
-	insIffToPropAsUniFact, ok := instantiatedIffToProp.(*ast.ConUniFactStmt)
+	insIffToPropAsUniFact, ok := instantiatedIffToProp.(*ast.UniFactStmt)
 	if !ok {
 		return false, fmt.Errorf("instantiatedIffToProp is not a ConUniFactStmt")
 	}

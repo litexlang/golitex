@@ -18,23 +18,23 @@ import (
 	"strings"
 )
 
-func (stmt *SpecFactStmt) IsBuiltinLogicOpt() bool {
+func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
 	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name)
 }
 
-func (stmt *ConUniFactStmt) NewUniFactWithThenToIff() *ConUniFactStmt {
+func (stmt *UniFactStmt) NewUniFactWithThenToIff() *UniFactStmt {
 	newConUniFact := newConUniFactStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.IffFacts, EmptyIffFacts)
 	newConUniFact.DomFacts = append(newConUniFact.DomFacts, stmt.ThenFacts...)
 	return newConUniFact
 }
 
-func (stmt *ConUniFactStmt) NewUniFactWithIffToThen() *ConUniFactStmt {
+func (stmt *UniFactStmt) NewUniFactWithIffToThen() *UniFactStmt {
 	newConUniFact := newConUniFactStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, EmptyIffFacts)
 	newConUniFact.DomFacts = append(newConUniFact.DomFacts, stmt.IffFacts...)
 	return newConUniFact
 }
 
-func MergeOuterInnerUniFacts(outer *ConUniFactStmt, inner *ConUniFactStmt) *ConUniFactStmt {
+func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStmt {
 	newOuter := newConUniFactStmt(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, EmptyIffFacts)
 	newOuter.Params = append(newOuter.Params, inner.Params...)
 	newOuter.ParamSets = append(newOuter.ParamSets, inner.ParamSets...)
@@ -64,7 +64,7 @@ func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNa
 	return newParams, newUniParams
 }
 
-func AddUniPrefixToUniFactWithNoUniPrefix(asConUniFact *ConUniFactStmt) (*ConUniFactStmt, error) {
+func AddUniPrefixToUniFactWithNoUniPrefix(asConUniFact *UniFactStmt) (*UniFactStmt, error) {
 	uniConMap := map[string]Fc{}
 	newParams := make([]string, len(asConUniFact.Params))
 
@@ -163,7 +163,7 @@ func IsBuiltinKwFcAtom(fc *FcAtom) bool {
 
 var InFc = NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeywordIn)
 
-func NewConUniFactStmtWithSetReqPutIntoDom(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *ConUniFactStmt {
+func NewConUniFactStmtWithSetReqPutIntoDom(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
 	if glob.VerifyFcSatisfySpecFactParaReq {
 		newDomFacts := []FactStmt{}
 		for i, param := range params {
@@ -227,7 +227,7 @@ func IsRealFcAtom(fc Fc) bool {
 	return fcAtom.Name == glob.KeywordReal && fcAtom.PkgName == glob.BuiltinEmptyPkgName
 }
 
-func (defStmt *DefConPropStmt) PropDefToUniFacts() (*ConUniFactStmt, *ConUniFactStmt, error) {
+func (defStmt *DefConPropStmt) PropDefToUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
@@ -251,7 +251,7 @@ func (defStmt *DefConPropStmt) PropDefToUniFacts() (*ConUniFactStmt, *ConUniFact
 	return propToIff, IffToProp, nil
 }
 
-func (defStmt *DefConPropStmt) IffToPropUniFact() *ConUniFactStmt {
+func (defStmt *DefConPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))

@@ -17,7 +17,7 @@ import (
 	ast "golitex/litex_ast"
 )
 
-func (ver *Verifier) ConUniFact(stmt *ast.ConUniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) ConUniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	// 在局部环境声明新变量
 	ver.newEnv(nil)
 	defer ver.deleteEnvAndRetainMsg()
@@ -41,7 +41,7 @@ func (ver *Verifier) ConUniFact(stmt *ast.ConUniFactStmt, state VerState) (bool,
 	}
 }
 
-func (ver *Verifier) uniFactWithoutIff(stmt *ast.ConUniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFactWithoutIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
 		ok, err := ver.FactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
@@ -72,7 +72,7 @@ func (ver *Verifier) uniFactWithoutIff(stmt *ast.ConUniFactStmt, state VerState)
 	return true, nil
 }
 
-func (ver *Verifier) uniFactWithIff(stmt *ast.ConUniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFactWithIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	ok, err := ver.uniFactWithIffThenToIff(stmt, state)
 	if err != nil {
 		return false, err
@@ -92,7 +92,7 @@ func (ver *Verifier) uniFactWithIff(stmt *ast.ConUniFactStmt, state VerState) (b
 	return true, nil
 }
 
-func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.ConUniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	ver.newEnv(nil)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.ThenFacts {
@@ -130,7 +130,7 @@ func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.ConUniFactStmt, state Ver
 	return true, nil
 }
 
-func (ver *Verifier) uniFactWithIffToThen(stmt *ast.ConUniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFactWithIffToThen(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	ver.newEnv(nil)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.IffFacts {

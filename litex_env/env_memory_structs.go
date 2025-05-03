@@ -64,12 +64,12 @@ type SpecFactMem struct {
 
 type KnownSpecFact_InUniSpecFact struct {
 	SpecFact *ast.SpecFactStmt
-	UniFact  *ast.ConUniFactStmt
+	UniFact  *ast.UniFactStmt
 }
 
 type KnownSpecFact_InLogicExpr_InUniFact struct {
 	SpecFact  *ast.SpecFactStmt
-	UniFact   *ast.ConUniFactStmt
+	UniFact   *ast.UniFactStmt
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
 }
