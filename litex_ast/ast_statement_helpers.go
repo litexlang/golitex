@@ -268,6 +268,6 @@ func (defStmt *DefConPropStmt) IffToPropUniFact() *ConUniFactStmt {
 	return IffToProp
 }
 
-// func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
-// 	return strings.HasPrefix(fact.PropName.Name, glob.UniParamPrefix)
-// }
+func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
+	return strings.HasPrefix(fact.PropName.Name, glob.UniParamPrefix)
+}

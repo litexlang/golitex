@@ -21,23 +21,23 @@ import (
 func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.NewSpecFact(f)
+		return env.newSpecFact(f)
 	case *ast.CondFactStmt:
-		return env.NewCondFact(f)
+		return env.newCondFact(f)
 	case *ast.ConUniFactStmt:
-		return env.NewConUniFact(f)
+		return env.newConUniFact(f)
 	case *ast.LogicExprStmt:
-		return env.NewLogicExprStmt(f)
+		return env.newLogicExprStmt(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
 }
 
-func (env *Env) NewLogicExprStmt(fact *ast.LogicExprStmt) error {
+func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 	return env.SpecFactMem.InsertSpecFactInLogicExpr(fact)
 }
 
-func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
+func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	// if fact.IsEqualFact() {
 	// 	return env.NewEqualFact(fact)
 	// }
@@ -146,7 +146,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) NewCondFact(fact *ast.CondFactStmt) error {
+func (env *Env) newCondFact(fact *ast.CondFactStmt) error {
 	err := env.CondFactMem.Insert(fact)
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func (env *Env) NewCondFact(fact *ast.CondFactStmt) error {
 	return nil
 }
 
-func (env *Env) NewConUniFact(fact *ast.ConUniFactStmt) error {
+func (env *Env) newConUniFact(fact *ast.ConUniFactStmt) error {
 	err := env.UniFactMem.Insert(fact)
 	if err != nil {
 		return err
