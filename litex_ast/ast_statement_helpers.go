@@ -250,3 +250,20 @@ func (defStmt *DefConPropStmt) PropDefToUniFacts() (*ConUniFactStmt, *ConUniFact
 
 	return propToIff, IffToProp, nil
 }
+
+func (defStmt *DefConPropStmt) IffToPropUniFact() *ConUniFactStmt {
+	propSpecFactParams := []Fc{}
+	for _, param := range defStmt.DefHeader.Params {
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+	}
+
+	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+
+	IffToPropDomFacts := []FactStmt{}
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
+
+	IffToProp := NewConUniFactStmtWithSetReqPutIntoDom(defStmt.DefHeader.Params, defStmt.DefHeader.SetParams, IffToPropDomFacts, []FactStmt{propSpecFact}, EmptyIffFacts)
+
+	return IffToProp
+}

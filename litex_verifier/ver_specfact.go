@@ -73,6 +73,14 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return false, nil
 	}
 
+	ok, err = ver.specFactProveByDefinition(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	ok, err = ver.SpecFactUni(stmt, state)
 	if err != nil {
 		return false, err
@@ -409,5 +417,38 @@ func (ver *Verifier) verifyLogicExprSteps(knownFact *mem.StoredSpecFactInLogicEx
 		}
 	}
 
+	return true, nil
+}
+
+func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
+	if !ok {
+		return false, nil
+	}
+
+	iffToProp := defStmt.IffToPropUniFact()
+	paramArrMap := map[string]ast.Fc{}
+	for i, param := range stmt.Params {
+		paramArrMap[defStmt.DefHeader.Params[i]] = param
+	}
+	instantiatedIffToProp, err := iffToProp.Instantiate(paramArrMap)
+	if err != nil {
+		return false, err
+	}
+	insIffToPropAsUniFact, ok := instantiatedIffToProp.(*ast.ConUniFactStmt)
+	if !ok {
+		return false, nil
+	}
+
+	// prove all domFacts are true
+	for _, domFact := range insIffToPropAsUniFact.DomFacts {
+		ok, err := ver.FactStmt(domFact, state)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
 	return true, nil
 }
