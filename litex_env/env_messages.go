@@ -29,7 +29,7 @@ func (env *Env) String() string {
 	return ""
 }
 
-func (fact *StoredSpecFact) String() string {
+func (fact *KnownSpecFact) String() string {
 	return fact.Fact.String()
 }
 
@@ -37,6 +37,6 @@ func (fact *StoredSpecFact) String() string {
 // 	return fact.Fact.String()
 // }
 
-func (fact *StoredUniSpecFact) String() string {
+func (fact *KnownSpecFact_InUniSpecFact) String() string {
 	return fact.UniFact.String()
 }

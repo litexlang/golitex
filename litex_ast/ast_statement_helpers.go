@@ -116,8 +116,8 @@ func (stmt *SpecFactStmt) IsPropNameAssociative() bool {
 
 var notFcAtomNameSet = map[string]struct{}{
 	// 常规关键字
-	glob.KeywordForall:   {},
-	glob.KeywordWhen:     {},
+	glob.KeywordForall: {},
+	// glob.KeywordWhen:     {},
 	glob.KeywordDom:      {},
 	glob.KeywordThen:     {},
 	glob.KeywordExistObj: {},

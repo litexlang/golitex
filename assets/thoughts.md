@@ -1456,3 +1456,6 @@ $everything_true_prop(q)
 
 <Name(x, y)>:
     ...
+
+2. 把extend做成fact的好处是，我可以 forall ... extend ... 。这样能做到 forall 的能力
+3. structure 也可以做成prop（本质上它就是一个prop），然后任何prop都能出现在 <> 里。它出现的意义无非是 能让我解释器match上
