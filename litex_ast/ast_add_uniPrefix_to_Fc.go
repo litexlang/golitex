@@ -69,3 +69,38 @@ func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {
 	}
 	return 0, false
 }
+
+func AddUniPrefixToUniFactWithNoUniPrefix(asConUniFact *UniFactStmt) (*UniFactStmt, error) {
+	uniConMap := map[string]Fc{}
+	newParams := make([]string, len(asConUniFact.Params))
+
+	for i, param := range asConUniFact.Params {
+		newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
+		uniConMap[param] = NewFcAtom(glob.BuiltinEmptyPkgName, newParams[i])
+	}
+
+	newParamsSets := asConUniFact.ParamSets
+	newDomFacts := []FactStmt{}
+	newThenFacts := []FactStmt{}
+	newIffFacts := EmptyIffFacts
+
+	for _, fact := range asConUniFact.DomFacts {
+		newFact, err := fact.Instantiate(uniConMap)
+		if err != nil {
+			return nil, err
+		}
+		newDomFacts = append(newDomFacts, newFact)
+	}
+
+	for _, fact := range asConUniFact.ThenFacts {
+		newFact, err := fact.Instantiate(uniConMap)
+		if err != nil {
+			return nil, err
+		}
+		newThenFacts = append(newThenFacts, newFact)
+	}
+
+	newUniFact := newConUniFactStmt(newParams, newParamsSets, newDomFacts, newThenFacts, newIffFacts)
+
+	return newUniFact, nil
+}

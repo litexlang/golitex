@@ -1459,3 +1459,5 @@ $everything_true_prop(q)
 
 2. 把extend做成fact的好处是，我可以 forall ... extend ... 。这样能做到 forall 的能力
 3. structure 也可以做成prop（本质上它就是一个prop），然后任何prop都能出现在 <> 里。它出现的意义无非是 能让我解释器match上
+
+REMARK: 我认为类似 ipynb 那样，做lixnb 也是合理的，因为litex是数学语言，可能会有很多伴随的注释。如何让注释和代码混在一起，是值得思考的。
