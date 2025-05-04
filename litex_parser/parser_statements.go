@@ -519,33 +519,27 @@ func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 }
 
 func (tb *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
-	err := tb.header.skip(glob.KeywordThm)
+	decl, err := tb.defPropOrExistPropStmt()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of line")
+		return nil, err
 	}
 
-	if len(tb.body) != 2 {
-		return nil, fmt.Errorf("expect two statements in thm")
-	}
-
-	decl, err := tb.body[0].defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
+	// TODO 需要自动填补 forall
+	proof, err := tb.proveBlock()
 	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
+		return nil, err
 	}
 
-	facts, err := tb.body[1].proveBlock()
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+	return ast.NewThmStmt(decl, proof), nil
+}
 
-	return ast.NewThmStmt(decl, facts), nil
+func (tb *tokenBlock) defPropOrExistPropStmt() (ast.DefPropOrExistPropStmt, error) {
+	if tb.header.is(glob.KeywordProp) {
+		return tb.defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
+	} else if tb.header.is(glob.KeywordExistProp) {
+		return tb.defConExistPropStmt()
+	}
+	return nil, fmt.Errorf("expect prop or exist prop")
 }
 
 func (tb *tokenBlock) proveBlock() ([]ast.Stmt, error) {
@@ -715,7 +709,7 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 		nameDepthMap[existParam] = 1
 	}
 
-	def, err := tb.existDefProp("", nameDepthMap)
+	def, err := tb.existDefProp(nameDepthMap)
 
 	// add prefix to existParams
 	for i := range existParams {
@@ -909,13 +903,13 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 	return facts, nil
 }
 
-func (tb *tokenBlock) existDefProp(prefix string, existParamDepthMap ast.NameDepthMap) (*ast.ExistPropDef, error) {
-	if prefix != "" {
-		err := tb.header.skip(prefix)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-	}
+func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.ExistPropDef, error) {
+	// if prefix != "" {
+	// 	err := tb.header.skip(prefix)
+	// 	if err != nil {
+	// 		return nil, &tokenBlockErr{err, *tb}
+	// 	}
+	// }
 
 	declHeader, nameDepthMap, err := tb.conDefHeader()
 	if err != nil {
