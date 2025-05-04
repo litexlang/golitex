@@ -56,6 +56,7 @@ type SpecFactParams struct {
 type DefPropOrExistPropStmt interface {
 	defPropStmt()
 	stmt()
+	String() string
 }
 
 func (s *DefConExistPropStmt) defPropStmt() {}

@@ -285,7 +285,8 @@ func (s *DefConExistPropStmt) String() string {
 	return builder.String()
 }
 func (s *AxiomStmt) String() string { panic("") }
-func (s *ThmStmt) String() string   { panic("") }
+
+func (s *ThmStmt) String() string { return "" }
 
 // func (fact *CondFactStmt) String() string {
 // 	var builder strings.Builder
