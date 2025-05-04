@@ -149,7 +149,7 @@ func (ver *Verifier) btAssociativeRule(stmt *ast.SpecFactStmt, state VerState) (
 }
 
 func (ver *Verifier) btNumLitInProp(stmt *ast.SpecFactStmt) (bool, error) {
-	if !ast.IsInProp(&stmt.PropName) {
+	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
 		return false, nil
 	}
 

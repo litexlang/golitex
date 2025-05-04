@@ -64,13 +64,6 @@ func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNa
 	return newParams, newUniParams
 }
 
-func IsUniParam(fcAtom *FcAtom) (string, bool) {
-	if strings.HasPrefix(fcAtom.Name, glob.UniParamPrefix) && fcAtom.PkgName == glob.BuiltinEmptyPkgName {
-		return fcAtom.Name, true
-	}
-	return "", false
-}
-
 func (stmt *SpecFactStmt) IsPropNameCommutative() bool {
 	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.KeywordCommutative == stmt.PropName.Name
 }
@@ -79,61 +72,13 @@ func (stmt *SpecFactStmt) IsPropNameAssociative() bool {
 	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.KeywordAssociative == stmt.PropName.Name
 }
 
-var notFcAtomNameSet = map[string]struct{}{
-	// 常规关键字
-	glob.KeywordForall: {},
-	// glob.KeywordWhen:     {},
-	glob.KeywordDom:      {},
-	glob.KeywordThen:     {},
-	glob.KeywordExistObj: {},
-	glob.KeywordSt:       {},
-	// glob.KeywordConstructorProp:      {},
-	glob.KeywordClaim:                {},
-	glob.KeywordProve:                {},
-	glob.KeywordPub:                  {},
-	glob.KeywordImport:               {},
-	glob.KeywordPackage:              {},
-	glob.KeywordNot:                  {},
-	glob.KeywordAxiom:                {},
-	glob.KeywordProveByContradiction: {},
-	glob.KeywordThm:                  {},
-	glob.KeywordIff:                  {},
-	glob.KeywordExist:                {},
-}
-
-func IsNotFcAtomName(s string) bool {
-	_, ok := notFcAtomNameSet[s]
-	return ok || glob.IsKeySymbol(s)
-}
-
-var BuiltinKwFcNames = map[string]struct{}{
-	glob.KeywordNatural:   {},
-	glob.KeywordSet:       {},
-	glob.KeywordObj:       {},
-	glob.KeywordReal:      {},
-	glob.KeywordFn:        {},
-	glob.KeywordProp:      {},
-	glob.KeywordExistProp: {},
-	glob.KeywordInt:       {},
-	glob.KeywordRational:  {},
-}
-
-func IsBuiltinKwFcAtom(fc *FcAtom) bool {
-	if fc.PkgName == glob.BuiltinEmptyPkgName {
-		_, ok := BuiltinKwFcNames[fc.Name]
-		return ok
-	}
-	return false
-}
-
-var InFc = NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeywordIn)
-
 func NewConUniFactStmtWithSetReqPutIntoDom(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
 	if glob.VerifyFcSatisfySpecFactParaReq {
 		newDomFacts := []FactStmt{}
 		for i, param := range params {
 			atom := NewFcAtom(glob.BuiltinEmptyPkgName, param)
-			specFact := NewSpecFactStmt(TrueAtom, *InFc, []Fc{atom, paramTypes[i]})
+			var inFc = NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeywordIn)
+			specFact := NewSpecFactStmt(TrueAtom, *inFc, []Fc{atom, paramTypes[i]})
 			newDomFacts = append(newDomFacts, specFact)
 		}
 		newDomFacts = append(newDomFacts, domFacts...)
@@ -143,21 +88,8 @@ func NewConUniFactStmtWithSetReqPutIntoDom(params []string, paramTypes []Fc, dom
 	return newConUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
 }
 
-func IsBuiltinFnName(fc Fc) bool {
-	fcAtom, ok := fc.(*FcAtom)
-	if !ok {
-		return false
-	}
-
-	if fcAtom.PkgName != glob.BuiltinEmptyPkgName {
-		return false
-	}
-
-	return glob.IsBuiltinInfixRelaProp(fcAtom.Name)
-}
-
-func IsInProp(fc *FcAtom) bool {
-	return fc.Name == glob.KeywordIn && fc.PkgName == glob.BuiltinEmptyPkgName
+func (fc *FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
+	return fc.PkgName == glob.BuiltinEmptyPkgName && fc.Name == kw
 }
 
 func IsNatFcAtom(fc Fc) bool {

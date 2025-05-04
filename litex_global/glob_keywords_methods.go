@@ -108,3 +108,30 @@ func IsBuiltinUnaryOpt(name string) bool {
 	_, ok := UnaryPrecedence[name]
 	return ok
 }
+
+var notFcAtomNameSet = map[string]struct{}{
+	// 常规关键字
+	KeywordForall: {},
+	// KeywordWhen:     {},
+	KeywordDom:      {},
+	KeywordThen:     {},
+	KeywordExistObj: {},
+	KeywordSt:       {},
+	// KeywordConstructorProp:      {},
+	KeywordClaim:                {},
+	KeywordProve:                {},
+	KeywordPub:                  {},
+	KeywordImport:               {},
+	KeywordPackage:              {},
+	KeywordNot:                  {},
+	KeywordAxiom:                {},
+	KeywordProveByContradiction: {},
+	KeywordThm:                  {},
+	KeywordIff:                  {},
+	KeywordExist:                {},
+}
+
+func IsKwThatCanNeverBeFcName(s string) bool {
+	_, ok := notFcAtomNameSet[s]
+	return ok || IsKeySymbol(s)
+}

@@ -38,9 +38,8 @@ func (cursor *strSliceCursor) fcAtomAndFcFnRetAndBracedFc() (ast.Fc, error) {
 		return cursor.numberStr()
 	}
 
-	// 如果是特殊格式的Fc，那需要有
-	if ast.IsBuiltinFcSignal(cursor.strAtCurIndexPlus(0)) {
-		return cursor.specialFc()
+	if cursor.strAtCurIndexPlus(0) == glob.KeywordFn {
+		return cursor.parseFnSet()
 	}
 
 	fcStr, err := cursor.rawFcAtom()
@@ -101,10 +100,10 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 		}
 	}
 
-	if !ast.IsNotFcAtomName(value) {
-		return ast.FcAtom{PkgName: fromPkg, Name: value}, nil
-	} else {
+	if glob.IsKwThatCanNeverBeFcName(value) {
 		return ast.FcAtom{PkgName: fromPkg, Name: value}, fmt.Errorf("invalid first citizen: %s", value)
+	} else {
+		return ast.FcAtom{PkgName: fromPkg, Name: value}, nil
 	}
 }
 

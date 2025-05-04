@@ -23,7 +23,7 @@ func (ver *Verifier) FcSatisfySpecFactParaReq(stmt *ast.SpecFactStmt) (bool, err
 	}
 
 	// prop Name
-	if ast.IsBuiltinFnName(&stmt.PropName) {
+	if ast.IsFcAtomAndHasBuiltinPropName(&stmt.PropName) {
 		return true, nil
 	} else if stmt.IsPureFact() {
 		_, ok := ver.env.GetPropDef(stmt.PropName)
@@ -74,7 +74,7 @@ func (ver *Verifier) fcAtomDefined(fc *ast.FcAtom) (bool, error) {
 		return true, nil
 	}
 
-	if ast.IsBuiltinKwFcAtom(fc) {
+	if ast.HasBuiltinKwName(fc) {
 		return true, nil
 	}
 
