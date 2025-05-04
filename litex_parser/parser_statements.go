@@ -215,7 +215,7 @@ func (tb *tokenBlock) uniFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFact
 		iffFacts = ast.EmptyIffFacts
 	}
 
-	return ast.NewConUniFactStmtWithSetReqPutIntoDom(paramsWithUniPrefix, paramSetsWithPrefix, domainFacts, thenFacts, iffFacts), nil
+	return ast.NewUniFactStmtWithSetReqInDom(paramsWithUniPrefix, paramSetsWithPrefix, domainFacts, thenFacts, iffFacts), nil
 }
 
 func (tb *tokenBlock) bodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum) ([]ast.FactStmt, error) {
@@ -729,6 +729,7 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 	return ast.NewDefConExistPropStmt(def, existParams, existParamSets), nil
 }
 
+// 本质上这个设计是有问题的。exist把 sep 这个奇怪的东西混进param 来了
 func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) (*ast.SpecFactStmt, error) {
 	err := tb.header.skip(glob.KeywordExist)
 	if err != nil {
@@ -1050,7 +1051,7 @@ func (tb *tokenBlock) uniFactStmtInClaim() (*ast.UniFactStmt, error) {
 		return nil, fmt.Errorf("universal fact in claim statement should not have iff facts")
 	}
 
-	return ast.NewConUniFactStmtWithSetReqPutIntoDom(params, paramTypes, domainFacts, thenFacts, iffFacts), nil
+	return ast.NewUniFactStmtWithSetReqInDom(params, paramTypes, domainFacts, thenFacts, iffFacts), nil
 }
 
 func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum, defaultSectionName string) ([]ast.FactStmt, []ast.FactStmt, []ast.FactStmt, error) {

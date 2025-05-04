@@ -11,3 +11,11 @@
 // Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
 package litex_ast
+
+import glob "golitex/litex_global"
+
+var EmptyIffFacts []FactStmt = nil
+
+var ClaimStmtEmptyToCheck FactStmt = nil
+
+var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinEmptyPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep}

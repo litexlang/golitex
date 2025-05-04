@@ -12,6 +12,10 @@
 
 package litex_ast
 
+import (
+	glob "golitex/litex_global"
+)
+
 func NewTopStmt(stmt Stmt, isPub bool) *TopStmt {
 	return &TopStmt{stmt, isPub}
 }
@@ -90,4 +94,20 @@ func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *Se
 
 func NewMatcherEnvStmt(matcherName *FcAtom, params []Fc, body []Stmt) *MatcherEnvStmt {
 	return &MatcherEnvStmt{*matcherName, params, body}
+}
+
+func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
+	if glob.VerifyFcSatisfySpecFactParaReq {
+		newDomFacts := []FactStmt{}
+		for i, param := range params {
+			atom := NewFcAtom(glob.BuiltinEmptyPkgName, param)
+			var inFc = NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeywordIn)
+			specFact := NewSpecFactStmt(TrueAtom, *inFc, []Fc{atom, paramTypes[i]})
+			newDomFacts = append(newDomFacts, specFact)
+		}
+		newDomFacts = append(newDomFacts, domFacts...)
+		newConUniFact := newConUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts)
+		return newConUniFact
+	}
+	return newConUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
 }
