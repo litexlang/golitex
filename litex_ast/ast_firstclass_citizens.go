@@ -41,37 +41,6 @@ type FcFn struct {
 	ParamSegs [][]Fc
 }
 
-type FcEnum uint8
-
-const (
-	FcAtomEnum FcEnum = 0
-	FcFnEnum   FcEnum = 1
-)
-
-func CmpFcType(left, right Fc) (int, FcEnum, error) {
-	var knownEnum FcEnum
-	switch left.(type) {
-	case *FcAtom:
-		knownEnum = FcAtomEnum
-	case *FcFn:
-		knownEnum = FcFnEnum
-	default:
-		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
-	}
-
-	var givenEnum FcEnum
-	switch right.(type) {
-	case *FcAtom:
-		givenEnum = FcAtomEnum
-	case *FcFn:
-		givenEnum = FcFnEnum
-	default:
-		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
-	}
-
-	return int(knownEnum - givenEnum), knownEnum, nil
-}
-
 func NewFcAtom(pkgName string, value string) *FcAtom {
 	return &FcAtom{pkgName, value}
 }

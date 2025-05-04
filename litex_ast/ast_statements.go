@@ -60,7 +60,6 @@ type UniFactStmt struct {
 	Params    []string // 它可能也是来自另外一个被share的地方。比如defConFn里面的Params，在被存成facts的时候，整个struct被复制到了这里，但本质上它们共享了一片内存
 	ParamSets []Fc
 	DomFacts  []FactStmt
-	// ThenFacts []*SpecFactStmt
 	ThenFacts []FactStmt
 	IffFacts  []FactStmt // TODO: 需要注意到，我存储的所有事实，这一项都是空。未来为了节约空间，可以考虑用新的结构体来存储
 }
