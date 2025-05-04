@@ -43,11 +43,11 @@ type FactStmt interface {
 	Instantiate(map[string]Fc) (FactStmt, error)
 }
 
-func (p *SpecFactStmt) factStmt() {}
-
-// func (p *CondFactStmt) factStmt()   {}
+func (p *SpecFactStmt) factStmt()  {}
 func (l *UniFactStmt) factStmt()   {}
 func (p *LogicExprStmt) factStmt() {}
+
+// func (p *CondFactStmt) factStmt()   {}
 
 type SpecFactParams struct {
 	ObjParams []Fc
@@ -60,26 +60,6 @@ type DefPropOrExistPropStmt interface {
 
 func (s *DefConExistPropStmt) defPropStmt() {}
 func (s *DefConPropStmt) defPropStmt()      {}
-
-type DefMember interface {
-	defMember()
-}
-
-func (s *DefObjStmt) defMember()     {}
-func (s *DefConFnStmt) defMember()   {}
-func (s *DefConPropStmt) defMember() {}
-
-func (s *DefConExistPropStmt) defMember() {}
-
-type PropFactStmt interface {
-	factStmt()
-	stmt()
-	String() string
-	Instantiate(map[string]Fc) (FactStmt, error)
-	propFactStmt()
-}
-
-func (s *SpecFactStmt) propFactStmt() {}
 
 type SetDefStmt interface {
 	setDefStmt()
