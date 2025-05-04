@@ -17,20 +17,51 @@ import (
 	ast "golitex/litex_ast"
 )
 
+type FcEnum uint8
+
+const (
+	FcAtomEnum FcEnum = 0
+	FcFnEnum   FcEnum = 1
+)
+
+func CmpFcType(left, right ast.Fc) (int, FcEnum, error) {
+	var knownEnum FcEnum
+	switch left.(type) {
+	case *ast.FcAtom:
+		knownEnum = FcAtomEnum
+	case *ast.FcFn:
+		knownEnum = FcFnEnum
+	default:
+		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", left)
+	}
+
+	var givenEnum FcEnum
+	switch right.(type) {
+	case *ast.FcAtom:
+		givenEnum = FcAtomEnum
+	case *ast.FcFn:
+		givenEnum = FcFnEnum
+	default:
+		return 0, FcAtomEnum, fmt.Errorf("unknown Fc type: %T", right)
+	}
+
+	return int(knownEnum - givenEnum), knownEnum, nil
+}
+
 // func EqualFactMemoryTreeNodeCompare(left, right *mem.EqualFactMemoryTreeNode) (int, error) {
 // 	return cmpFcLit(left.FcAsKey, right.FcAsKey)
 // }
 
 // 注：像1+1=2这种字面量的比较，我在这里不比。我是比完完全全一样的
 func cmpFcLit(left, right ast.Fc) (int, error) {
-	typeComp, fcEnum, err := ast.CmpFcType(left, right)
+	typeComp, fcEnum, err := CmpFcType(left, right)
 	if typeComp != 0 || err != nil {
 		return typeComp, err
 	}
 
-	if fcEnum == ast.FcAtomEnum {
+	if fcEnum == FcAtomEnum {
 		return cmpFcAtomLit(left.(*ast.FcAtom), right.(*ast.FcAtom))
-	} else if fcEnum == ast.FcFnEnum {
+	} else if fcEnum == FcFnEnum {
 		return cmpFcFnLit(left.(*ast.FcFn), right.(*ast.FcFn))
 	}
 

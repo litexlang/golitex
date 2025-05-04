@@ -102,7 +102,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 			return glob.ExecState_Error, err
 		}
 	} else if asConUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
-		newUniFact, err := ast.AddUniPrefixToUniFactWithNoUniPrefix(asConUniFact)
+		newUniFact, err := ast.AddUniPrefixToUniFact(asConUniFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}

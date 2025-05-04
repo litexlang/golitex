@@ -70,7 +70,7 @@ func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {
 	return 0, false
 }
 
-func AddUniPrefixToUniFactWithNoUniPrefix(asConUniFact *UniFactStmt) (*UniFactStmt, error) {
+func AddUniPrefixToUniFact(asConUniFact *UniFactStmt) (*UniFactStmt, error) {
 	uniConMap := map[string]Fc{}
 	newParams := make([]string, len(asConUniFact.Params))
 
