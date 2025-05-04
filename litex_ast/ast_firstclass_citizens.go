@@ -140,8 +140,6 @@ func IsNumLitFcAtom(f Fc) (string, bool) {
 	return "", false
 }
 
-var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinEmptyPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep}
-
 func IsFcBuiltinInfixOpt(f FcFn) bool {
 	ptrHeadAsAtom, ok := f.FnHead.(*FcAtom)
 	if !ok {
