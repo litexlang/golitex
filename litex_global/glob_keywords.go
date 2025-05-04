@@ -206,3 +206,15 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolLargerEqual:  {}, // ">="
 	KeySymbolLessEqual:    {}, // "<="
 }
+
+var BuiltinKwFcNames = map[string]struct{}{
+	KeywordNatural:   {},
+	KeywordSet:       {},
+	KeywordObj:       {},
+	KeywordReal:      {},
+	KeywordFn:        {},
+	KeywordProp:      {},
+	KeywordExistProp: {},
+	KeywordInt:       {},
+	KeywordRational:  {},
+}

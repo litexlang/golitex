@@ -177,6 +177,30 @@ func (f *FcFn) IsBuiltinFcSet() bool {
 	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && ptrHeadAsAtom.Name == glob.KeywordFn
 }
 
-func IsBuiltinFcSignal(name string) bool {
-	return name == glob.KeywordFn
+func IsUniParam(fcAtom *FcAtom) (string, bool) {
+	if strings.HasPrefix(fcAtom.Name, glob.UniParamPrefix) && fcAtom.PkgName == glob.BuiltinEmptyPkgName {
+		return fcAtom.Name, true
+	}
+	return "", false
+}
+
+func HasBuiltinKwName(fc *FcAtom) bool {
+	if fc.PkgName == glob.BuiltinEmptyPkgName {
+		_, ok := glob.BuiltinKwFcNames[fc.Name]
+		return ok
+	}
+	return false
+}
+
+func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
+	fcAtom, ok := fc.(*FcAtom)
+	if !ok {
+		return false
+	}
+
+	if fcAtom.PkgName != glob.BuiltinEmptyPkgName {
+		return false
+	}
+
+	return glob.IsBuiltinInfixRelaProp(fcAtom.Name)
 }
