@@ -80,7 +80,7 @@ func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFa
 	// }
 
 	// 利用查prefix的方式来确定涉及到的param是不是 uni
-	if uniParamStr, ok := ast.IsUniParam(fcAtomInFactUnderUniFact); ok {
+	if uniParamStr, ok := fcAtomInFactUnderUniFact.NameIsUniParam_PkgNameEmpty(); ok {
 		retMap[uniParamStr] = []ast.Fc{conFc}
 		return retMap, true, nil
 	}

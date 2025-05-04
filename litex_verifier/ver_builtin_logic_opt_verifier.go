@@ -165,19 +165,19 @@ func (ver *Verifier) btNumLitInProp(stmt *ast.SpecFactStmt) (bool, error) {
 		return false, nil
 	}
 
-	if ast.IsNatFcAtom(stmt.Params[1]) {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordNatural) {
 		return glob.IsNatNumLitExpr(leftFc), nil
 	}
 
-	if ast.IsIntegerFcAtom(stmt.Params[1]) {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordInt) {
 		return glob.IsIntegerNumLitExpr(leftFc), nil
 	}
 
-	if ast.IsRationalFcAtom(stmt.Params[1]) {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordRational) {
 		return glob.IsRationalNumLitExpr(leftFc), nil
 	}
 
-	if ast.IsRealFcAtom(stmt.Params[1]) {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordReal) {
 		return glob.IsRealNumLitExpr(leftFc), nil
 	}
 
