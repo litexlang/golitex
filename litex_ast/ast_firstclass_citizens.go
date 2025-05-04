@@ -177,16 +177,16 @@ func (f *FcFn) IsBuiltinFcSet() bool {
 	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && ptrHeadAsAtom.Name == glob.KeywordFn
 }
 
-func IsUniParam(fcAtom *FcAtom) (string, bool) {
+func (fcAtom *FcAtom) NameIsUniParam_PkgNameEmpty() (string, bool) {
 	if strings.HasPrefix(fcAtom.Name, glob.UniParamPrefix) && fcAtom.PkgName == glob.BuiltinEmptyPkgName {
 		return fcAtom.Name, true
 	}
 	return "", false
 }
 
-func HasBuiltinKwName(fc *FcAtom) bool {
-	if fc.PkgName == glob.BuiltinEmptyPkgName {
-		_, ok := glob.BuiltinKwFcNames[fc.Name]
+func (fcAtom *FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
+	if fcAtom.PkgName == glob.BuiltinEmptyPkgName {
+		_, ok := glob.BuiltinKwFcNames[fcAtom.Name]
 		return ok
 	}
 	return false
@@ -203,4 +203,16 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 	}
 
 	return glob.IsBuiltinInfixRelaProp(fcAtom.Name)
+}
+
+func (fc *FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
+	return fc.PkgName == glob.BuiltinEmptyPkgName && fc.Name == kw
+}
+
+func IsFcAtom_HasGivenName_EmptyPkgName(fc Fc, kw string) bool {
+	fcAtom, ok := fc.(*FcAtom)
+	if !ok {
+		return false
+	}
+	return fcAtom.HasGivenNameAndEmptyPkgName(kw)
 }

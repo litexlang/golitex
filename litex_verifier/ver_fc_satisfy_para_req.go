@@ -74,7 +74,7 @@ func (ver *Verifier) fcAtomDefined(fc *ast.FcAtom) (bool, error) {
 		return true, nil
 	}
 
-	if ast.HasBuiltinKwName(fc) {
+	if fc.NameIsBuiltinKw_PkgNameEmpty() {
 		return true, nil
 	}
 

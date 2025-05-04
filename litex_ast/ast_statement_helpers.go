@@ -88,41 +88,37 @@ func NewConUniFactStmtWithSetReqPutIntoDom(params []string, paramTypes []Fc, dom
 	return newConUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
 }
 
-func (fc *FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
-	return fc.PkgName == glob.BuiltinEmptyPkgName && fc.Name == kw
-}
+// func IsNatFcAtom(fc Fc) bool {
+// 	fcAtom, ok := fc.(*FcAtom)
+// 	if !ok {
+// 		return false
+// 	}
+// 	return fcAtom.Name == glob.KeywordNatural && fcAtom.PkgName == glob.BuiltinEmptyPkgName
+// }
 
-func IsNatFcAtom(fc Fc) bool {
-	fcAtom, ok := fc.(*FcAtom)
-	if !ok {
-		return false
-	}
-	return fcAtom.Name == glob.KeywordNatural && fcAtom.PkgName == glob.BuiltinEmptyPkgName
-}
+// func IsIntegerFcAtom(fc Fc) bool {
+// 	fcAtom, ok := fc.(*FcAtom)
+// 	if !ok {
+// 		return false
+// 	}
+// 	return fcAtom.Name == glob.KeywordInt && fcAtom.PkgName == glob.BuiltinEmptyPkgName
+// }
 
-func IsIntegerFcAtom(fc Fc) bool {
-	fcAtom, ok := fc.(*FcAtom)
-	if !ok {
-		return false
-	}
-	return fcAtom.Name == glob.KeywordInt && fcAtom.PkgName == glob.BuiltinEmptyPkgName
-}
+// func IsRationalFcAtom(fc Fc) bool {
+// 	fcAtom, ok := fc.(*FcAtom)
+// 	if !ok {
+// 		return false
+// 	}
+// 	return fcAtom.Name == glob.KeywordRational && fcAtom.PkgName == glob.BuiltinEmptyPkgName
+// }
 
-func IsRationalFcAtom(fc Fc) bool {
-	fcAtom, ok := fc.(*FcAtom)
-	if !ok {
-		return false
-	}
-	return fcAtom.Name == glob.KeywordRational && fcAtom.PkgName == glob.BuiltinEmptyPkgName
-}
-
-func IsRealFcAtom(fc Fc) bool {
-	fcAtom, ok := fc.(*FcAtom)
-	if !ok {
-		return false
-	}
-	return fcAtom.Name == glob.KeywordReal && fcAtom.PkgName == glob.BuiltinEmptyPkgName
-}
+// func IsRealFcAtom(fc Fc) bool {
+// 	fcAtom, ok := fc.(*FcAtom)
+// 	if !ok {
+// 		return false
+// 	}
+// 	return fcAtom.Name == glob.KeywordReal && fcAtom.PkgName == glob.BuiltinEmptyPkgName
+// }
 
 func (defStmt *DefConPropStmt) PropDefToUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
