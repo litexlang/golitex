@@ -58,9 +58,9 @@ func FcSliceString(params []Fc) string {
 }
 
 func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
-	if ok, str := isFnSetAndToString(f); ok {
-		return true, str
-	}
+	// if ok, str := isFnSetAndToString(f); ok {
+	// 	return true, str
+	// }
 
 	ptr, ok := f.FnHead.(*FcAtom)
 	if !ok {
@@ -89,14 +89,6 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 	return false, ""
 }
 
-func IsEqualOptFc(f Fc) bool {
-	ptr, ok := f.(*FcAtom)
-	if !ok {
-		return false
-	}
-	return ptr.Name == glob.KeySymbolEqual && ptr.PkgName == ""
-}
-
 func IsNumLitFcAtom(f Fc) (string, bool) {
 	ptr, ok := f.(*FcAtom)
 	if !ok || ptr.Name == "" {
@@ -115,10 +107,10 @@ func IsFcBuiltinInfixOpt(f FcFn) bool {
 		return false
 	}
 
-	return ptrHeadAsAtom.IsBuiltinInfixOpt() && len(f.ParamSegs) == 1 && len(f.ParamSegs[0]) == 2
+	return ptrHeadAsAtom.IsBuiltinRelaFn() && len(f.ParamSegs) == 1 && len(f.ParamSegs[0]) == 2
 }
 
-func IsFcBuiltinUnaryOpt(fc FcFn) bool {
+func IsFcBuiltinUnaryFn(fc FcFn) bool {
 	fcAsFnHead, ok := fc.FnHead.(*FcAtom)
 	if !ok {
 		return false
@@ -128,21 +120,21 @@ func IsFcBuiltinUnaryOpt(fc FcFn) bool {
 }
 
 func (f *FcAtom) IsBuiltinUnaryOpt() bool {
-	return f.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolUniFn(f.Name)
+	return f.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolUnaryFn(f.Name)
 }
 
-func (f *FcAtom) IsBuiltinInfixOpt() bool {
+func (f *FcAtom) IsBuiltinRelaFn() bool {
 	return f.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolRelaFn(f.Name)
 }
 
-func (f *FcFn) IsBuiltinFcSet() bool {
-	ptrHeadAsAtom, ok := f.FnHead.(*FcAtom)
-	if !ok {
-		return false
-	}
+// func (f *FcFn) IsBuiltinFcSet() bool {
+// 	ptrHeadAsAtom, ok := f.FnHead.(*FcAtom)
+// 	if !ok {
+// 		return false
+// 	}
 
-	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && ptrHeadAsAtom.Name == glob.KeywordFn
-}
+// 	return ptrHeadAsAtom.PkgName == glob.BuiltinEmptyPkgName && ptrHeadAsAtom.Name == glob.KeywordFn
+// }
 
 func (fcAtom *FcAtom) NameIsUniParam_PkgNameEmpty() (string, bool) {
 	if strings.HasPrefix(fcAtom.Name, glob.UniParamPrefix) && fcAtom.PkgName == glob.BuiltinEmptyPkgName {

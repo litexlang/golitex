@@ -199,7 +199,7 @@ func (env *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
 }
 
 func (env *Env) isPropCommutative(opt ast.Fc) bool {
-	if ast.IsEqualOptFc(opt) {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(opt, glob.KeySymbolEqual) {
 		return true
 	}
 

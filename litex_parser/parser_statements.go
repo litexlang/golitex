@@ -565,33 +565,6 @@ func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 	return ast.NewAxiomStmt(decl), nil
 }
 
-func (tb *tokenBlock) defPropOrExistPropStmt() (ast.DefPropOrExistPropStmt, error) {
-	if tb.header.is(glob.KeywordProp) {
-		return tb.defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
-	} else if tb.header.is(glob.KeywordExistProp) {
-		return tb.defConExistPropStmt()
-	}
-	return nil, fmt.Errorf("expect prop or exist prop")
-}
-
-func (tb *tokenBlock) proveBlock() ([]ast.Stmt, error) {
-	tb.header.skip(glob.KeywordProve)
-	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	innerStmtArr := []ast.Stmt{}
-	for _, innerStmt := range tb.body {
-		curStmt, err := innerStmt.Stmt()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		innerStmtArr = append(innerStmtArr, curStmt)
-	}
-
-	return innerStmtArr, nil
-}
-
 // func (tb *tokenBlock) condFactStmt(nameDepthMap ast.NameDepthMap, curAllowUniFactEnum AllowUniFactEnum) (*ast.CondFactStmt, error) {
 // 	err := tb.header.skip(glob.KeywordWhen)
 // 	if err != nil {

@@ -349,19 +349,6 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 	return ast.NewFcFnPipe(head, segs), nil
 }
 
-func (cursor *strSliceCursor) specialFc() (ast.Fc, error) {
-	curToken, err := cursor.currentToken()
-	if err != nil {
-		return nil, err
-	}
-
-	if curToken == glob.KeywordFn {
-		return cursor.parseFnSet()
-	}
-
-	return nil, fmt.Errorf("invalid special fc: %s", cursor.strAtCurIndexPlus(0))
-}
-
 func (cursor *strSliceCursor) parseFnSet() (ast.Fc, error) {
 	err := cursor.skip(glob.KeywordFn)
 	if err != nil {
