@@ -49,21 +49,6 @@ type EnumSpecFactMem struct {
 	FactsINLogicExpr []KnownSpecFact_InLogicExpr
 }
 
-// 有很多的 spec fact 是没有 exist的，所以应该在1 specFactmem 里就分好 enum，而不是在同名specfact下面分
-// type SpecFactMemItem struct {
-// 	PureFacts         EnumSpecFactMem
-// 	NotPureFacts      EnumSpecFactMem
-// 	ExistFacts        EnumSpecFactMem
-// 	NotExistFacts     EnumSpecFactMem
-// 	Exist_St_Facts    EnumSpecFactMem
-// 	NotExist_St_Facts EnumSpecFactMem
-// }
-// type SpecFactMem struct {
-// 	Dict map[string]map[string]SpecFactMemItem
-// }
-
-// TDOO 未来定义mapmap + Generics 这个type来节约这里的代码量
-
 type KnownSpecFact_InUniSpecFact struct {
 	SpecFact *ast.SpecFactStmt
 	UniFact  *ast.UniFactStmt
@@ -93,33 +78,3 @@ type UniFactMemItem struct {
 type UniFactMem struct {
 	SpecFactsDict map[string]map[string]UniFactMemItem
 }
-
-// type StoredCondSpecFact struct {
-// 	SpecFact *ast.SpecFactStmt
-// 	Fact     *ast.CondFactStmt
-// }
-
-// type StoredCondFuncMemDictNodeNode struct {
-// 	Facts            []StoredCondSpecFact
-// 	FactsInLogicExpr []StoredCondSpecFactUnderLogicExpr
-// }
-
-// type StoredCondSpecFactUnderLogicExpr struct {
-// 	SpecFact  *ast.SpecFactStmt
-// 	CondFact  *ast.CondFactStmt
-// 	Index     []uint8
-// 	LogicExpr *ast.LogicExprStmt
-// }
-
-// type StoredCondFuncMemDictNode struct {
-// 	PureFacts         StoredCondFuncMemDictNodeNode
-// 	NotPureFacts      StoredCondFuncMemDictNodeNode
-// 	ExistFacts        StoredCondFuncMemDictNodeNode
-// 	NotExistFacts     StoredCondFuncMemDictNodeNode
-// 	Exist_St_Facts    StoredCondFuncMemDictNodeNode
-// 	NotExist_St_Facts StoredCondFuncMemDictNodeNode
-// }
-
-// type CondFactMemDict struct {
-// 	SpecFactsDict map[string]map[string]StoredCondFuncMemDictNode
-// }
