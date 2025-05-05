@@ -508,29 +508,61 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 }
 
+func (tb *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
+	err := tb.header.skip(glob.KeywordThm)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.header.testAndSkip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	decl, err := tb.body[0].defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.body[1].header.skip(glob.KeywordProve)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.body[1].header.testAndSkip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	proof := []ast.Stmt{}
+	for _, block := range tb.body[1].body {
+		curStmt, err := block.Stmt()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		proof = append(proof, curStmt)
+	}
+
+	return ast.NewThmStmt(decl, proof), nil
+}
+
 func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
-	tb.header.skip(glob.KeywordAxiom)
-	decl, err := tb.defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
+	err := tb.header.skip(glob.KeywordAxiom)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.header.testAndSkip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	decl, err := tb.body[0].defConPropStmt(glob.KeywordProp, ast.NameDepthMap{})
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	return ast.NewAxiomStmt(decl), nil
-}
-
-func (tb *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
-	decl, err := tb.defPropOrExistPropStmt()
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO 需要自动填补 forall
-	proof, err := tb.proveBlock()
-	if err != nil {
-		return nil, err
-	}
-
-	return ast.NewThmStmt(decl, proof), nil
 }
 
 func (tb *tokenBlock) defPropOrExistPropStmt() (ast.DefPropOrExistPropStmt, error) {
