@@ -359,35 +359,31 @@ By understanding the interplay between programming and math, Litex delivers a se
 
 _Language design is a curious mixture of grand ideas and fiddly details._
 
-_-- Bjarne Stroustrup__
+_-- Bjarne Stroustrup, inventor of C++_
 
-Litex is a minimalist proof assistant, designed to be simple and intuitive. It draws inspiration from various programming languages, particularly Go, Lisp, Tex, C, Python. The design philosophy emphasizes minimalism, conceptual integrity, and the KISS (Keep It Simple, Stupid) principle.
+Litex is a minimalist proof assistant, designed to be simple and intuitive. It draws inspiration from various programming languages, particularly Go, Lisp, Tex, C, Python. Litex embrace simplicity, the only way to be flexible enough for the unknown future and to maintain conceptual integrity, as its core design principle.
 
-In short, Litex is fundamentally an attempt to scale reasoning with the ever-expanding power of modern computing resources, and to introduce a new way of thinking (the way of thinking that is more like programming) about math. Litex embrace simplicity, the only way to be flexible enough for the unknown future and to maintain conceptual integrity, as its core design principle.
+Litex is an attempt to scale reasoning with the ever-expanding power of modern computing resources, and to introduce a new way of thinking (the way of thinking that is more like programming) about math.
 
-The key feature of Litex is its simplicity. Its simplicity stems of its intuitiveness. In fact, Litex is so intuitive that people with no math background can understand it. You can learn Litex in 10 minutes. However, its simplicity does not come at the cost of expressiveness.
+Technically, Litex is a regex-based interpreter with customizable matching rules and math-friendly syntax sugar. The more you use Litex, the more you will understand what I mean and the more you will love it. You can learn Litex in 10 minutes. However, its simplicity does not come at the cost of expressiveness.
 
-On my(I am Jiachen Shen, the inventor of Litex) journey of inventing Litex, such intuitiveness is a double-edged sword. It's great because I do not need to rely on any textbook or paper to design Litex. It's bad because if I do get stuck, I do not have any textbook or paper to refer to.
+Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Afterall, Litex is just a regex-based interpreter. Any existing mathematical axioms can be expressed in Litex. The user will enjoy freedom and expressiveness that no other proof assistant can offer.
 
-Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Afterall, Litex is just a regex-based interpreter with customizable matching rules and math-friendly syntax sugar. Any existing mathematical axioms can be expressed in Litex. 
+Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing (how such matching works? Fundamentally, just by comparing the words of two facts!). Litex is a computer tool to automate this process and verify your reasoning for you.
 
-Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing. Litex is a computer tool to automate this process and verify your reasoning for you.
-
-Litex is significantly influenced by the Go programming language, particularly in its "set=>type=>interface" system, which closely mirrors Go's "struct=>type=>interface" paradigm. Additionally, Litex's function declaration syntax bears a resemblance to Go's. Most importantly, the minimalism design choice of Go strongly resonates with the Litex's inventor.
+Litex is significantly influenced by the Go programming language. Interfaces in both Go and Litex are pretty simple. No hierarchy, no inheritancee. Additionally, Litex's function declaration syntax bears a resemblance to Go's. Most importantly, the minimalism design choice of Go strongly resonates with the Litex's inventor.
 
 Inheritance (C++/Java-style) is a poor fit for Litex:
 
-Inflexible – Inheritance hierarchies are rigid, making extension and evolution difficult.
+Inflexible – Inheritance hierarchies are rigid, making extension and evolution difficult, which is common in other proof assistants.
 
-Layer freedom – Users should begin at any abstraction level, not forced from low-level math.
+Layer freedom – Users should begin at any abstraction level, not forced from low-level math, which is more aligned with mathematical discovery in real life.
 
 Not Intuitive – Inheritance is not intuitive. An object can for sure belong to multiple sets, but in inheritance, an object can only belong to one type (or belong to a fixed part of inheritance hierarchy).
 
 (In fact, GoLang is so well-designed and Litex learns so much from it, that Litex chooses GoLang to implement itself.)
 
-Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope. The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++.
-
-The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. This influence is evident in Litex's design, where every statement is treated as an expression a direct nod to Lisp's expressive power. The marvelous "structure and interpretation of computer programs", a book on Lisp, strongly shapes the inventor's view of what programming actually means.
+Beyond Go, Litex draws inspiration from other programming languages. For instance, Python's scoping rules have shaped Litex's approach to object and function scope. The C programming language's syntax and semantics significantly influenced Litex's design. Operator overloading behavior is inspired by C++. The inventor of Litex holds a deep appreciation for Lisp's "everything is a list" philosophy, which contributes to the language's conceptual integrity. 
 
 Furthermore, Tex's clear distinction between "math expressions" and "plain words" inspired Litex's separation of "factual expressions" from ordinary symbols. Litex also aspires to achieve the same level of ubiquity and utility as Tex, aiming to become a widely adopted daily tool. This ambition is encapsulated in its name: Litex = Lisp + Tex, symbolizing the fusion of Lisp's expressive elegance and Tex's practicality.
 
@@ -402,6 +398,8 @@ I, Jiachen Shen, a hacker and a math enthusiast. I majored in math and self-taug
 A good art is enjoyable to its author happy and be useful to others. This process of inventing Litex makes me happy, and I hope Litex can be useful for both math community and AI community, or even anyone from any field. As Knuth said in his Turing Award lecture: science is logical, systematic, calm; art is aesthetic, creative, anxious. Both math and programming live at this intersection, rigorous yet deeply human.
 
 Moreover, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes. The real obstacle dragging me back is not the weakness of my ideas, but the loneliness of this long journey. That is why I am so grateful for any kind of support.
+
+On my(I am Jiachen Shen, the inventor of Litex) journey of inventing Litex, its intuitiveness is a double-edged sword. It's great because I do not need to rely on any textbook or paper to design Litex. It's bad because if I do get stuck, I do not have any textbook or paper to refer to. Creativity is a definitely required skill if you want to contribute to Litex.
 
 If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 2000 git commits are all pushed by me), I have no time to implement a complicated one. Keeping it simple yet powerful is the key to its growth and success.
 
