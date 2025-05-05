@@ -121,6 +121,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 				}
 
 				for i, knownParam := range knownFact.Params() {
+					// TODO 这里有个严重的问题：如果等量替换了，那这里因为不字面上一致，就match不上了，应该有个什么地方能既能规避等号陷入无限循环，又能让Spec Equal 能验证
 					ok, err := cmp.CmpFcRule(knownParam, stmt.Params[i])
 					if err != nil {
 						return false, err
