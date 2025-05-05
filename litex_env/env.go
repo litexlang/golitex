@@ -28,7 +28,7 @@ type Env struct {
 	SpecFactMem            SpecFactMem
 	SpecFactInLogicExprMem SpecFactInLogicExprMem
 	// CondFactMem CondFactMemDict
-	UniFactMem UniFactMem
+	SpecFactInUniFactMem SpecFactInUniFactMem
 	// EqualFactMem EqualFactMem
 
 	//TODO 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic
@@ -54,9 +54,7 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 
 		SpecFactMem:            *newSpecFactMemDict(),
 		SpecFactInLogicExprMem: *NewSpecFactInLogicExprMemDict(),
-		// CondFactMem: *NewCondFactMemDict(),
-		UniFactMem: *NewUniFactMemDict(),
-		// EqualFactMem: *newEqualFactMem(),
+		SpecFactInUniFactMem:   *NewSpecFactInUniFactMem(),
 
 		UniParamMap: uniParamMap,
 
@@ -65,10 +63,6 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 
 	return env
 }
-
-// func newEqualFactMem() *mem.EqualFactMem {
-// 	return &mem.EqualFactMem{Mem: *glob.NewRedBlackTree(cmp.EqualFactMemoryTreeNodeCompare)}
-// }
 
 func (e *Env) NewMsg(s string) {
 	e.Msgs = append(e.Msgs, s)

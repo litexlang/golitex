@@ -177,7 +177,7 @@ func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt) error {
 	return nil
 }
 
-type SpecInUniMem struct {
+type SpecFactInUniFactMem struct {
 	PureFacts         map[string]map[string][]KnownSpecFact_InUniSpecFact
 	NotPureFacts      map[string]map[string][]KnownSpecFact_InUniSpecFact
 	ExistFacts        map[string]map[string][]KnownSpecFact_InUniSpecFact
@@ -186,8 +186,8 @@ type SpecInUniMem struct {
 	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InUniSpecFact
 }
 
-func NewSpecInUniMemDict() *SpecInUniMem {
-	return &SpecInUniMem{
+func NewSpecFactInUniFactMem() *SpecFactInUniFactMem {
+	return &SpecFactInUniFactMem{
 		PureFacts:         map[string]map[string][]KnownSpecFact_InUniSpecFact{},
 		NotPureFacts:      map[string]map[string][]KnownSpecFact_InUniSpecFact{},
 		ExistFacts:        map[string]map[string][]KnownSpecFact_InUniSpecFact{},
@@ -197,7 +197,7 @@ func NewSpecInUniMemDict() *SpecInUniMem {
 	}
 }
 
-func (s SpecInUniMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact_InUniSpecFact, error) {
+func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact_InUniSpecFact, error) {
 	switch stmt.TypeEnum {
 	case ast.TrueAtom:
 		return s.PureFacts, nil
@@ -216,7 +216,7 @@ func (s SpecInUniMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[s
 	}
 }
 
-func (s SpecInUniMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact_InUniSpecFact, bool) {
+func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact_InUniSpecFact, bool) {
 	sameEnumFacts, err := s.getSameEnumFacts(stmt)
 	if err != nil {
 		return nil, false
@@ -235,7 +235,7 @@ func (s SpecInUniMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSp
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecInUniMem) NewFact(stmt *ast.UniFactStmt) error {
+func (s SpecFactInUniFactMem) NewFact(stmt *ast.UniFactStmt) error {
 	for _, thenStmt := range stmt.ThenFacts {
 		if stmtAsSpecFact, ok := thenStmt.(*ast.SpecFactStmt); ok {
 			if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
@@ -259,7 +259,7 @@ func (s SpecInUniMem) NewFact(stmt *ast.UniFactStmt) error {
 	return nil
 }
 
-func (s SpecInUniMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) error {
+func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) error {
 	sameEnumFacts, err := s.getSameEnumFacts(stmtAsSpecFact)
 	if err != nil {
 		return err

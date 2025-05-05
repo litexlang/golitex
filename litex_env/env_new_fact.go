@@ -121,7 +121,7 @@ func (env *Env) newFalseExistFactPostProcess(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	err = env.UniFactMem.Insert(conUniFact)
+	err = env.SpecFactInUniFactMem.NewFact(conUniFact)
 	if err != nil {
 		return fmt.Errorf("exist fact %s has no definition", fact.String())
 	}
@@ -155,7 +155,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 // }
 
 func (env *Env) newConUniFact(fact *ast.UniFactStmt) error {
-	err := env.UniFactMem.Insert(fact)
+	err := env.SpecFactInUniFactMem.NewFact(fact)
 	if err != nil {
 		return err
 	}
