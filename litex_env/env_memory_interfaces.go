@@ -12,42 +12,43 @@
 
 package litex_env
 
-// Below are the implementations of FactMem, SamePropFacts, KnownSpecFacts
+import ast "golitex/litex_ast"
 
-// // SpecFact memory
-// type SpecFactMem2 struct {
-// 	PureFacts         SpecMemField
-// 	NotPureFacts      SpecMemField
-// 	ExistFacts        SpecMemField
-// 	NotExistFacts     SpecMemField
-// 	Exist_St_Facts    SpecMemField
-// 	NotExist_St_Facts SpecMemField
-// }
+type SpecFactMem struct {
+	PureFacts         map[string]map[string][]KnownSpecFact
+	NotPureFacts      map[string]map[string][]KnownSpecFact
+	ExistFacts        map[string]map[string][]KnownSpecFact
+	NotExistFacts     map[string]map[string][]KnownSpecFact
+	Exist_St_Facts    map[string]map[string][]KnownSpecFact
+	NotExist_St_Facts map[string]map[string][]KnownSpecFact
+}
 
-// type KnownSpecFacts []KnownSpecFact
+func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) {
+	// 要考虑pkgName和propName是否存在
+	if _, ok := s.PureFacts[stmt.PropName.PkgName]; !ok {
+		s.PureFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+	}
+	if _, ok := s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name]; !ok {
+		s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+	}
+	s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt})
+}
 
-// func (facts KnownSpecFacts) NewFact(stmt *ast.SpecFactStmt) error {
-// 	facts = append(facts, KnownSpecFact{stmt})
-// 	return nil
-// }
+func (s SpecFactMem) GetSameEnum_Pkg_PropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact, bool) {
+	if _, ok := s.PureFacts[stmt.PropName.PkgName]; !ok {
+		return nil, false
+	}
+	if _, ok := s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name]; !ok {
+		return nil, false
+	}
+	return s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name], true
+}
 
-// type SpecMemField map[string]map[string]KnownSpecFacts
-
-// // Spec Fact in Logic Expr memory
-
-// type SpecFactInLogicExprMem2 struct {
-// 	PureFacts         SpecFactInLogicExprMemField
-// 	NotPureFacts      SpecFactInLogicExprMemField
-// 	ExistFacts        SpecFactInLogicExprMemField
-// 	NotExistFacts     SpecFactInLogicExprMemField
-// 	Exist_St_Facts    SpecFactInLogicExprMemField
-// 	NotExist_St_Facts SpecFactInLogicExprMemField
-// }
-
-// type KnownSpecFactInLogicExprs []KnownSpecFact_InLogicExpr
-
-// func (facts KnownSpecFactInLogicExprs) NewFact(stmt *ast.SpecFactStmt) KnownSpecFactInLogicExprs {
-// 	return facts
-// }
-
-// type SpecFactInLogicExprMemField map[string]map[string]KnownSpecFactInLogicExprs
+type SpecFactInLogicExprMem struct {
+	PureFacts         map[string]map[string][]KnownSpecFact_InLogicExpr
+	NotPureFacts      map[string]map[string][]KnownSpecFact_InLogicExpr
+	ExistFacts        map[string]map[string][]KnownSpecFact_InLogicExpr
+	NotExistFacts     map[string]map[string][]KnownSpecFact_InLogicExpr
+	Exist_St_Facts    map[string]map[string][]KnownSpecFact_InLogicExpr
+	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InLogicExpr
+}
