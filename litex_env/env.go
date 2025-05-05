@@ -25,7 +25,8 @@ type Env struct {
 	FnMem        FnMem
 	ExistPropMem ExistPropMem
 
-	SpecFactMem SpecFactMem
+	SpecFactMem            SpecFactMem
+	SpecFactInLogicExprMem SpecFactInLogicExprMem
 	// CondFactMem CondFactMemDict
 	UniFactMem UniFactMem
 	// EqualFactMem EqualFactMem
@@ -51,7 +52,8 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 		FnMem:        *NewFnMemory(),
 		ExistPropMem: *NewExistPropMemory(),
 
-		SpecFactMem: *NewSpecFactMemDict(),
+		SpecFactMem:            *newSpecFactMemDict(),
+		SpecFactInLogicExprMem: *NewSpecFactInLogicExprMemDict(),
 		// CondFactMem: *NewCondFactMemDict(),
 		UniFactMem: *NewUniFactMemDict(),
 		// EqualFactMem: *newEqualFactMem(),

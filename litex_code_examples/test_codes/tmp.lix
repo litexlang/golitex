@@ -16,3 +16,13 @@ prove:
 prove:
     know a = 1
     a = 1
+
+prove:
+    know:
+        or:
+         a = 1
+         b =2 
+        not a = 1
+
+    
+    b = 2

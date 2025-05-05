@@ -34,7 +34,7 @@ func (env *Env) NewFact(stmt ast.FactStmt) error {
 }
 
 func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
-	return env.SpecFactMem.InsertSpecFactInLogicExpr(fact)
+	return env.SpecFactInLogicExprMem.NewFact(fact)
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
@@ -42,7 +42,10 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	// 	return env.NewEqualFact(fact)
 	// }
 
-	env.SpecFactMem.NewFact(fact)
+	err := env.SpecFactMem.NewFact(fact)
+	if err != nil {
+		return err
+	}
 
 	// postprocess
 	if fact.IsExist_St_Fact() {
@@ -135,7 +138,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 
 	existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[sepIndex+1:])
 
-	err := env.SpecFactMem.InsertSpecFact(existFact)
+	err := env.SpecFactMem.NewFact(existFact)
 	if err != nil {
 		return err
 	}

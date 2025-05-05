@@ -110,13 +110,12 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		nodeNode, got := curEnv.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
+		knownSameEnumPkgPropFactsInSpecMem, got := curEnv.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 		if !got {
 			continue
 		}
-		searchedNodeFacts := nodeNode
+		searchedNodeFacts := knownSameEnumPkgPropFactsInSpecMem
 		// TODO 把 用 logic expr 的逻辑独立出来，而不是和 specfact 混一起
-		// searchedNodeFactsUnderLogicExpr := nodeNode.FactsINLogicExpr
 
 	LoopOverFacts:
 		for _, knownFact := range searchedNodeFacts {
@@ -144,15 +143,21 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 			return true, nil
 		}
 
-		// for _, knownFactUnderLogicExpr := range searchedNodeFactsUnderLogicExpr {
-		// 	ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
-		// 	if err != nil {
-		// 		return false, err
-		// 	}
-		// 	if ok {
-		// 		return true, nil
-		// 	}
-		// }
+		KnownSameEnumPkgPropFactsInLogicExpr, got := curEnv.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
+		if !got {
+			continue
+		}
+
+		for _, knownFactUnderLogicExpr := range KnownSameEnumPkgPropFactsInLogicExpr {
+			ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
+			}
+			// }
+		}
 	}
 	return false, nil
 }
