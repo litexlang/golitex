@@ -477,20 +477,20 @@ func (factMem *SpecFactMem) makeEnumSpecFactMem(stmt *ast.SpecFactStmt) ([]Known
 	return factsUnderPropName, nil
 }
 
-func (factMem *SpecFactMem) newSpecFact(stmt *ast.SpecFactStmt) error {
-	enumSpecFactMem, memExist := factMem.GetNode(stmt)
-	if memExist {
-		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
-		return nil
-	} else {
-		enumSpecFactMem, err := factMem.makeEnumSpecFactMem(stmt)
-		if err != nil {
-			return err
-		}
-		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
-		return nil
-	}
-}
+// func (factMem *SpecFactMem) newSpecFact(stmt *ast.SpecFactStmt) error {
+// 	enumSpecFactMem, memExist := factMem.GetNode(stmt)
+// 	if memExist {
+// 		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
+// 		return nil
+// 	} else {
+// 		enumSpecFactMem, err := factMem.makeEnumSpecFactMem(stmt)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
+// 		return nil
+// 	}
+// }
 
 func (factMem *SpecFactMem) InsertSpecFact(stmt *ast.SpecFactStmt) error {
 	enumSpecFactMem, memExist := factMem.GetNode(stmt)

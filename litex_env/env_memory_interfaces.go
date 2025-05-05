@@ -12,21 +12,42 @@
 
 package litex_env
 
-import ast "golitex/litex_ast"
+// Below are the implementations of FactMem, SamePropFacts, KnownSpecFacts
 
-type FactMem interface {
-	GetNode(stmt *ast.SpecFactStmt) (SamePropFacts, bool, error)
-}
+// // SpecFact memory
+// type SpecFactMem2 struct {
+// 	PureFacts         SpecMemField
+// 	NotPureFacts      SpecMemField
+// 	ExistFacts        SpecMemField
+// 	NotExistFacts     SpecMemField
+// 	Exist_St_Facts    SpecMemField
+// 	NotExist_St_Facts SpecMemField
+// }
 
-type SamePropFacts interface {
-	Append(stmt *ast.SpecFactStmt) SamePropFacts
-}
+// type KnownSpecFacts []KnownSpecFact
 
-type FactMemField map[string]map[string]SamePropFacts
+// func (facts KnownSpecFacts) NewFact(stmt *ast.SpecFactStmt) error {
+// 	facts = append(facts, KnownSpecFact{stmt})
+// 	return nil
+// }
 
-type KnownSpecFacts []KnownSpecFact
+// type SpecMemField map[string]map[string]KnownSpecFacts
 
-func (facts KnownSpecFacts) Append(stmt *ast.SpecFactStmt) KnownSpecFacts {
-	facts = append(facts, KnownSpecFact{stmt})
-	return facts
-}
+// // Spec Fact in Logic Expr memory
+
+// type SpecFactInLogicExprMem2 struct {
+// 	PureFacts         SpecFactInLogicExprMemField
+// 	NotPureFacts      SpecFactInLogicExprMemField
+// 	ExistFacts        SpecFactInLogicExprMemField
+// 	NotExistFacts     SpecFactInLogicExprMemField
+// 	Exist_St_Facts    SpecFactInLogicExprMemField
+// 	NotExist_St_Facts SpecFactInLogicExprMemField
+// }
+
+// type KnownSpecFactInLogicExprs []KnownSpecFact_InLogicExpr
+
+// func (facts KnownSpecFactInLogicExprs) NewFact(stmt *ast.SpecFactStmt) KnownSpecFactInLogicExprs {
+// 	return facts
+// }
+
+// type SpecFactInLogicExprMemField map[string]map[string]KnownSpecFactInLogicExprs
