@@ -63,6 +63,7 @@ type EnumSpecFactMem struct {
 // }
 
 // TDOO 未来定义mapmap + Generics 这个type来节约这里的代码量
+
 type SpecFactMem struct {
 	// first map correspond to pkgName, second map correspond to propName
 	PureFacts         map[string]map[string][]KnownSpecFact
