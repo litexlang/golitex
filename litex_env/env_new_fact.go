@@ -42,10 +42,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	// 	return env.NewEqualFact(fact)
 	// }
 
-	err := env.SpecFactMem.InsertSpecFact(fact)
-	if err != nil {
-		return err
-	}
+	env.SpecFactMem.NewFact(fact)
 
 	// postprocess
 	if fact.IsExist_St_Fact() {

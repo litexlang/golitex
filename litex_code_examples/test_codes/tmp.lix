@@ -12,3 +12,7 @@ prove:
 
     forall x nat, y nat:
         $q(x,y)
+
+prove:
+    know a = 1
+    a = 1

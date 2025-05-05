@@ -23,6 +23,49 @@ type SpecFactMem struct {
 	NotExist_St_Facts map[string]map[string][]KnownSpecFact
 }
 
+func NewSpecFactMemDict() *SpecFactMem {
+	return &SpecFactMem{
+		PureFacts:         map[string]map[string][]KnownSpecFact{},
+		NotPureFacts:      map[string]map[string][]KnownSpecFact{},
+		ExistFacts:        map[string]map[string][]KnownSpecFact{},
+		NotExistFacts:     map[string]map[string][]KnownSpecFact{},
+		Exist_St_Facts:    map[string]map[string][]KnownSpecFact{},
+		NotExist_St_Facts: map[string]map[string][]KnownSpecFact{},
+	}
+}
+
+func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact, bool) {
+	var sameEnumFacts map[string]map[string][]KnownSpecFact
+	switch stmt.TypeEnum {
+	case ast.TrueAtom:
+		sameEnumFacts = s.PureFacts
+	case ast.FalseAtom:
+		sameEnumFacts = s.NotPureFacts
+	case ast.TrueExist:
+		sameEnumFacts = s.ExistFacts
+	case ast.FalseExist:
+		sameEnumFacts = s.NotExistFacts
+	case ast.TrueExist_St:
+		sameEnumFacts = s.Exist_St_Facts
+	case ast.FalseExist_St:
+		sameEnumFacts = s.NotExist_St_Facts
+	default:
+		return nil, false
+	}
+
+	sameEnumPkgfacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
+	if !memExist {
+		return nil, false
+	}
+
+	sameEnumPkgPropFacts, memExist := sameEnumPkgfacts[stmt.PropName.Name]
+	if !memExist {
+		return nil, false
+	}
+
+	return sameEnumPkgPropFacts, true
+}
+
 func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) {
 	// 要考虑pkgName和propName是否存在
 	if _, ok := s.PureFacts[stmt.PropName.PkgName]; !ok {
@@ -32,16 +75,6 @@ func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) {
 		s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
 	}
 	s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt})
-}
-
-func (s SpecFactMem) GetSameEnum_Pkg_PropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact, bool) {
-	if _, ok := s.PureFacts[stmt.PropName.PkgName]; !ok {
-		return nil, false
-	}
-	if _, ok := s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name]; !ok {
-		return nil, false
-	}
-	return s.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name], true
 }
 
 type SpecFactInLogicExprMem struct {

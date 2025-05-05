@@ -64,15 +64,6 @@ type EnumSpecFactMem struct {
 
 // TDOO 未来定义mapmap + Generics 这个type来节约这里的代码量
 
-type SpecFactInLogicExprMem struct {
-	PureFacts         map[string]map[string][]KnownSpecFact_InLogicExpr
-	NotPureFacts      map[string]map[string][]KnownSpecFact_InLogicExpr
-	ExistFacts        map[string]map[string][]KnownSpecFact_InLogicExpr
-	NotExistFacts     map[string]map[string][]KnownSpecFact_InLogicExpr
-	Exist_St_Facts    map[string]map[string][]KnownSpecFact_InLogicExpr
-	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InLogicExpr
-}
-
 type KnownSpecFact_InUniSpecFact struct {
 	SpecFact *ast.SpecFactStmt
 	UniFact  *ast.UniFactStmt

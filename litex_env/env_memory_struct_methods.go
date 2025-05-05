@@ -17,17 +17,6 @@ import (
 	ast "golitex/litex_ast"
 )
 
-func NewSpecFactMemDict() *SpecFactMem {
-	return &SpecFactMem{
-		PureFacts:         map[string]map[string][]KnownSpecFact{},
-		NotPureFacts:      map[string]map[string][]KnownSpecFact{},
-		ExistFacts:        map[string]map[string][]KnownSpecFact{},
-		NotExistFacts:     map[string]map[string][]KnownSpecFact{},
-		Exist_St_Facts:    map[string]map[string][]KnownSpecFact{},
-		NotExist_St_Facts: map[string]map[string][]KnownSpecFact{},
-	}
-}
-
 // func (factMem *SpecFactMem) GetNode(stmt *ast.SpecFactStmt) (EnumSpecFactMem, bool) {
 // 	pkgMap, pkgExists := factMem.Dict[stmt.PropName.PkgName] // 检查 pkgName 是否存在
 // 	if !pkgExists {
@@ -56,38 +45,38 @@ func NewSpecFactMemDict() *SpecFactMem {
 // 	}
 // }
 
-func (factMem *SpecFactMem) GetNode(stmt *ast.SpecFactStmt) ([]KnownSpecFact, bool) {
-	var enumSpecFactMemMapMap map[string]map[string][]KnownSpecFact
+// func (factMem *SpecFactMem) GetNode(stmt *ast.SpecFactStmt) ([]KnownSpecFact, bool) {
+// 	var enumSpecFactMemMapMap map[string]map[string][]KnownSpecFact
 
-	switch stmt.TypeEnum {
-	case ast.TrueAtom:
-		enumSpecFactMemMapMap = factMem.PureFacts
-	case ast.FalseAtom:
-		enumSpecFactMemMapMap = factMem.NotPureFacts
-	case ast.TrueExist:
-		enumSpecFactMemMapMap = factMem.ExistFacts
-	case ast.FalseExist:
-		enumSpecFactMemMapMap = factMem.NotExistFacts
-	case ast.TrueExist_St:
-		enumSpecFactMemMapMap = factMem.Exist_St_Facts
-	case ast.FalseExist_St:
-		enumSpecFactMemMapMap = factMem.NotExist_St_Facts
-	default:
-		return nil, false
-	}
+// 	switch stmt.TypeEnum {
+// 	case ast.TrueAtom:
+// 		enumSpecFactMemMapMap = factMem.PureFacts
+// 	case ast.FalseAtom:
+// 		enumSpecFactMemMapMap = factMem.NotPureFacts
+// 	case ast.TrueExist:
+// 		enumSpecFactMemMapMap = factMem.ExistFacts
+// 	case ast.FalseExist:
+// 		enumSpecFactMemMapMap = factMem.NotExistFacts
+// 	case ast.TrueExist_St:
+// 		enumSpecFactMemMapMap = factMem.Exist_St_Facts
+// 	case ast.FalseExist_St:
+// 		enumSpecFactMemMapMap = factMem.NotExist_St_Facts
+// 	default:
+// 		return nil, false
+// 	}
 
-	enumSpecFactMemMap, memMapExist := enumSpecFactMemMapMap[stmt.PropName.PkgName] // 检查 pkgName 是否存在
-	if !memMapExist {
-		return nil, false // 返回零值
-	}
+// 	enumSpecFactMemMap, memMapExist := enumSpecFactMemMapMap[stmt.PropName.PkgName] // 检查 pkgName 是否存在
+// 	if !memMapExist {
+// 		return nil, false // 返回零值
+// 	}
 
-	enumSpecFactMem, memExist := enumSpecFactMemMap[stmt.PropName.Name] // 检查 value 是否存在
-	if !memExist {
-		return nil, false // 返回零值
-	}
+// 	enumSpecFactMem, memExist := enumSpecFactMemMap[stmt.PropName.Name] // 检查 value 是否存在
+// 	if !memExist {
+// 		return nil, false // 返回零值
+// 	}
 
-	return enumSpecFactMem, true
-}
+// 	return enumSpecFactMem, true
+// }
 
 // func NewCondFactMemDict() *CondFactMemDict {
 // 	return &CondFactMemDict{map[string]map[string]StoredCondFuncMemDictNode{}}
@@ -493,7 +482,7 @@ func (factMem *SpecFactMem) makeEnumSpecFactMem(stmt *ast.SpecFactStmt) ([]Known
 // }
 
 func (factMem *SpecFactMem) InsertSpecFact(stmt *ast.SpecFactStmt) error {
-	enumSpecFactMem, memExist := factMem.GetNode(stmt)
+	enumSpecFactMem, memExist := factMem.GetSameEnumPkgPropFacts(stmt)
 	if memExist {
 		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
 		return nil
