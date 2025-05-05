@@ -93,7 +93,7 @@ func GetKeySymbol(inputString string, start int) string {
 	return ""
 }
 
-func IsKeySymbolUniFn(name string) bool {
+func IsKeySymbolUnaryFn(name string) bool {
 	_, ok := UnaryPrecedence[name]
 	return ok
 }
