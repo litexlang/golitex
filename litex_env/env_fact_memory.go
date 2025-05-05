@@ -14,6 +14,7 @@ package litex_env
 
 import (
 	"errors"
+	"fmt"
 	ast "golitex/litex_ast"
 )
 
@@ -196,22 +197,28 @@ func NewSpecInUniMemDict() *SpecInUniMem {
 	}
 }
 
-func (s SpecInUniMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact_InUniSpecFact, bool) {
-	var sameEnumFacts map[string]map[string][]KnownSpecFact_InUniSpecFact
+func (s SpecInUniMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact_InUniSpecFact, error) {
 	switch stmt.TypeEnum {
 	case ast.TrueAtom:
-		sameEnumFacts = s.PureFacts
+		return s.PureFacts, nil
 	case ast.FalseAtom:
-		sameEnumFacts = s.NotPureFacts
+		return s.NotPureFacts, nil
 	case ast.TrueExist:
-		sameEnumFacts = s.ExistFacts
+		return s.ExistFacts, nil
 	case ast.FalseExist:
-		sameEnumFacts = s.NotExistFacts
+		return s.NotExistFacts, nil
 	case ast.TrueExist_St:
-		sameEnumFacts = s.Exist_St_Facts
+		return s.Exist_St_Facts, nil
 	case ast.FalseExist_St:
-		sameEnumFacts = s.NotExist_St_Facts
+		return s.NotExist_St_Facts, nil
 	default:
+		return nil, errors.New("invalid spec fact type")
+	}
+}
+
+func (s SpecInUniMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact_InUniSpecFact, bool) {
+	sameEnumFacts, err := s.getSameEnumFacts(stmt)
+	if err != nil {
 		return nil, false
 	}
 
@@ -226,4 +233,46 @@ func (s SpecInUniMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSp
 	}
 
 	return sameEnumPkgPropFacts, true
+}
+
+func (s SpecInUniMem) NewFact(stmt *ast.UniFactStmt) error {
+	for _, thenStmt := range stmt.ThenFacts {
+		if stmtAsSpecFact, ok := thenStmt.(*ast.SpecFactStmt); ok {
+			if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
+				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", stmtAsSpecFact.String())
+			}
+
+			err := s.insertSpecFact(stmtAsSpecFact, stmt)
+			if err != nil {
+				return err
+			}
+
+		} else if thenStmtAsConUniFact, ok := thenStmt.(*ast.UniFactStmt); ok {
+			err := s.mergeOuterInnerUniFactAndInsert(thenStmtAsConUniFact, stmt)
+			if err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
+		}
+	}
+	return nil
+}
+
+func (s SpecInUniMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) error {
+	sameEnumFacts, err := s.getSameEnumFacts(stmtAsSpecFact)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := sameEnumFacts[stmtAsSpecFact.PropName.PkgName]; !ok {
+		sameEnumFacts[stmtAsSpecFact.PropName.PkgName] = make(map[string][]KnownSpecFact_InUniSpecFact)
+	}
+	if _, ok := sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name]; !ok {
+		sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = []KnownSpecFact_InUniSpecFact{}
+	}
+
+	sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = append(sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name], KnownSpecFact_InUniSpecFact{stmtAsSpecFact, uniFact})
+
+	return nil
 }
