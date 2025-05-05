@@ -19,15 +19,15 @@ import (
 
 func (factMem *UniFactMem) Insert(fact *ast.UniFactStmt) error {
 	if fact.IffFacts == nil || len(fact.IffFacts) == 0 {
-		return factMem.insertFacts(fact, fact.ThenFacts)
+		return factMem.insertFacts(fact)
 	} else {
 		thenToIff := fact.NewUniFactWithThenToIff()
-		err := factMem.insertFacts(thenToIff, thenToIff.ThenFacts)
+		err := factMem.insertFacts(thenToIff)
 		if err != nil {
 			return err
 		}
 		iffToThen := fact.NewUniFactWithIffToThen()
-		err = factMem.insertFacts(iffToThen, iffToThen.ThenFacts)
+		err = factMem.insertFacts(iffToThen)
 		if err != nil {
 			return err
 		}
@@ -210,8 +210,8 @@ func (factMem *UniFactMem) mergeOuterInnerUniFactAndInsert(outer *ast.UniFactStm
 	return nil
 }
 
-func (factMem *UniFactMem) insertFacts(uniStmt *ast.UniFactStmt, thenFacts []ast.FactStmt) error {
-	for _, stmt := range thenFacts {
+func (factMem *UniFactMem) insertFacts(uniStmt *ast.UniFactStmt) error {
+	for _, stmt := range uniStmt.ThenFacts {
 		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
 			if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", stmtAsSpecFact.String())
