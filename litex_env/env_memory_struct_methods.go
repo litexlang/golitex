@@ -210,6 +210,27 @@ func (factMem *UniFactMem) mergeOuterInnerUniFactAndInsert(outer *ast.UniFactStm
 	return nil
 }
 
+func (factMem SpecInUniMem) mergeOuterInnerUniFactAndInsert(outer *ast.UniFactStmt, inner *ast.UniFactStmt) error {
+	mergedConUni := ast.MergeOuterInnerUniFacts(outer, inner)
+	thenFacts := []*ast.SpecFactStmt{}
+	for _, stmt := range mergedConUni.ThenFacts {
+		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+			thenFacts = append(thenFacts, stmtAsSpecFact)
+		} else {
+			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
+		}
+	}
+
+	for _, specFact := range thenFacts {
+		err := factMem.insertSpecFact(specFact, mergedConUni)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (factMem *UniFactMem) insertFacts(uniStmt *ast.UniFactStmt) error {
 	for _, stmt := range uniStmt.ThenFacts {
 		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
