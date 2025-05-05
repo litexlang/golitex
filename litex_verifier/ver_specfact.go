@@ -110,7 +110,7 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
-		nodeNode, got := curEnv.SpecFactMem.GetNode(stmt)
+		nodeNode, got := curEnv.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 		if !got {
 			continue
 		}
@@ -125,8 +125,8 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 				continue
 			}
 
-			for _, knownParam := range knownFact.Params() {
-				ok, err := cmp.CmpFcRule(knownParam, stmt.Params[0])
+			for i, knownParam := range knownFact.Params() {
+				ok, err := cmp.CmpFcRule(knownParam, stmt.Params[i])
 				if err != nil {
 					return false, err
 				}
