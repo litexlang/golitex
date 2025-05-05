@@ -111,53 +111,48 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 	for curEnv := ver.env; curEnv != upMostEnv; curEnv = curEnv.Parent {
 		knownSameEnumPkgPropFactsInSpecMem, got := curEnv.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
-		if !got {
-			continue
-		}
-		searchedNodeFacts := knownSameEnumPkgPropFactsInSpecMem
-		// TODO 把 用 logic expr 的逻辑独立出来，而不是和 specfact 混一起
 
-	LoopOverFacts:
-		for _, knownFact := range searchedNodeFacts {
-			// TODO: 我确实没想好是否要禁止用户让一个prop下面的fact有变长的参数列表
-			if len(knownFact.Params()) != len(stmt.Params) {
-				continue
-			}
-
-			for i, knownParam := range knownFact.Params() {
-				ok, err := cmp.CmpFcRule(knownParam, stmt.Params[i])
-				if err != nil {
-					return false, err
+		if got {
+		LoopOverFacts:
+			for _, knownFact := range knownSameEnumPkgPropFactsInSpecMem {
+				// TODO: 我确实没想好是否要禁止用户让一个prop下面的fact有变长的参数列表
+				if len(knownFact.Params()) != len(stmt.Params) {
+					continue
 				}
-				if !ok {
-					continue LoopOverFacts
+
+				for i, knownParam := range knownFact.Params() {
+					ok, err := cmp.CmpFcRule(knownParam, stmt.Params[i])
+					if err != nil {
+						return false, err
+					}
+					if !ok {
+						continue LoopOverFacts
+					}
 				}
-			}
 
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), knownFact.String())
-			} else {
-				ver.successNoMsg()
-			}
+				if state.requireMsg() {
+					ver.successWithMsg(stmt.String(), knownFact.String())
+				} else {
+					ver.successNoMsg()
+				}
 
-			return true, nil
+				return true, nil
+			}
 		}
 
 		KnownSameEnumPkgPropFactsInLogicExpr, got := curEnv.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
-		if !got {
-			continue
+		if got {
+			for _, knownFactUnderLogicExpr := range KnownSameEnumPkgPropFactsInLogicExpr {
+				ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
+				if err != nil {
+					return false, err
+				}
+				if ok {
+					return true, nil
+				}
+			}
 		}
 
-		for _, knownFactUnderLogicExpr := range KnownSameEnumPkgPropFactsInLogicExpr {
-			ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
-			// }
-		}
 	}
 	return false, nil
 }
@@ -349,16 +344,24 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 }
 
 func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.FcSliceEqual(knownFact.SpecFact.Params, stmt.Params, state)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
+	// ok, err := ver.FcSliceEqual(knownFact.SpecFact.Params, stmt.Params, state)
+
+	if len(knownFact.SpecFact.Params) != len(stmt.Params) {
 		return false, nil
 	}
 
+	for i, knownParam := range knownFact.SpecFact.Params {
+		ok, err := cmp.CmpFcRule(knownParam, stmt.Params[i])
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
 	currentLayerFact := knownFact.LogicExpr
-	ok, err = ver.verifyLogicExprSteps(knownFact, currentLayerFact, state)
+	ok, err := ver.verifyLogicExprSteps(knownFact, currentLayerFact, state)
 	if err != nil {
 		return false, err
 	}
