@@ -274,12 +274,10 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 }
 
 func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	searchedNodeNode, got := curEnv.UniFactMem.GetSpecFactNodeWithTheSameIsTrue(stmt)
+	searchedSpecFacts, got := curEnv.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
 	if !got {
 		return false, nil
 	}
-
-	searchedSpecFacts := searchedNodeNode.Facts
 
 	nextState := state.addRound().toNoMsg()
 
