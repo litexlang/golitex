@@ -392,79 +392,79 @@ func (storedFact *KnownSpecFact) TypeEnum() ast.SpecFactEnum {
 // 	return nil
 // }
 
-func (factMem *SpecFactMem) makeEnumSpecFactMem(stmt *ast.SpecFactStmt) ([]KnownSpecFact, error) {
-	var factsUnderPkgName map[string][]KnownSpecFact
-	var factsUnderPkgNameExist bool
+// func (factMem *SpecFactMem) makeEnumSpecFactMem(stmt *ast.SpecFactStmt) ([]KnownSpecFact, error) {
+// 	var factsUnderPkgName map[string][]KnownSpecFact
+// 	var factsUnderPkgNameExist bool
 
-	switch stmt.TypeEnum {
-	case ast.TrueAtom:
-		factsUnderPkgName, factsUnderPkgNameExist = factMem.PureFacts[stmt.PropName.PkgName]
-	case ast.FalseAtom:
-		factsUnderPkgName, factsUnderPkgNameExist = factMem.NotPureFacts[stmt.PropName.PkgName]
-	case ast.TrueExist:
-		factsUnderPkgName, factsUnderPkgNameExist = factMem.ExistFacts[stmt.PropName.PkgName]
-	case ast.FalseExist:
-		factsUnderPkgName, factsUnderPkgNameExist = factMem.NotExistFacts[stmt.PropName.PkgName]
-	case ast.TrueExist_St:
-		factsUnderPkgName, factsUnderPkgNameExist = factMem.Exist_St_Facts[stmt.PropName.PkgName]
-	case ast.FalseExist_St:
-		factsUnderPkgName, factsUnderPkgNameExist = factMem.NotExist_St_Facts[stmt.PropName.PkgName]
-	default:
-		return nil, fmt.Errorf("unknown spec fact type: %s", stmt.String())
-	}
+// 	switch stmt.TypeEnum {
+// 	case ast.TrueAtom:
+// 		factsUnderPkgName, factsUnderPkgNameExist = factMem.PureFacts[stmt.PropName.PkgName]
+// 	case ast.FalseAtom:
+// 		factsUnderPkgName, factsUnderPkgNameExist = factMem.NotPureFacts[stmt.PropName.PkgName]
+// 	case ast.TrueExist:
+// 		factsUnderPkgName, factsUnderPkgNameExist = factMem.ExistFacts[stmt.PropName.PkgName]
+// 	case ast.FalseExist:
+// 		factsUnderPkgName, factsUnderPkgNameExist = factMem.NotExistFacts[stmt.PropName.PkgName]
+// 	case ast.TrueExist_St:
+// 		factsUnderPkgName, factsUnderPkgNameExist = factMem.Exist_St_Facts[stmt.PropName.PkgName]
+// 	case ast.FalseExist_St:
+// 		factsUnderPkgName, factsUnderPkgNameExist = factMem.NotExist_St_Facts[stmt.PropName.PkgName]
+// 	default:
+// 		return nil, fmt.Errorf("unknown spec fact type: %s", stmt.String())
+// 	}
 
-	if !factsUnderPkgNameExist {
-		switch stmt.TypeEnum {
-		case ast.TrueAtom:
-			factMem.PureFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
-			factMem.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
-			return factMem.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
-		case ast.FalseAtom:
-			factMem.NotPureFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
-			factMem.NotPureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
-			return factMem.NotPureFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
-		case ast.TrueExist:
-			factMem.ExistFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
-			factMem.ExistFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
-			return factMem.ExistFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
-		case ast.FalseExist:
-			factMem.NotExistFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
-			factMem.NotExistFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
-			return factMem.NotExistFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
-		case ast.TrueExist_St:
-			factMem.Exist_St_Facts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
-			factMem.Exist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
-			return factMem.Exist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name], nil
-		case ast.FalseExist_St:
-			factMem.NotExist_St_Facts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
-			factMem.NotExist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
-			return factMem.NotExist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name], nil
-		default:
-			return nil, fmt.Errorf("unknown spec fact type: %s", stmt.String())
-		}
-	}
+// 	if !factsUnderPkgNameExist {
+// 		switch stmt.TypeEnum {
+// 		case ast.TrueAtom:
+// 			factMem.PureFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+// 			factMem.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+// 			return factMem.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
+// 		case ast.FalseAtom:
+// 			factMem.NotPureFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+// 			factMem.NotPureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+// 			return factMem.NotPureFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
+// 		case ast.TrueExist:
+// 			factMem.ExistFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+// 			factMem.ExistFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+// 			return factMem.ExistFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
+// 		case ast.FalseExist:
+// 			factMem.NotExistFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+// 			factMem.NotExistFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+// 			return factMem.NotExistFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
+// 		case ast.TrueExist_St:
+// 			factMem.Exist_St_Facts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+// 			factMem.Exist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+// 			return factMem.Exist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name], nil
+// 		case ast.FalseExist_St:
+// 			factMem.NotExist_St_Facts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+// 			factMem.NotExist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+// 			return factMem.NotExist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name], nil
+// 		default:
+// 			return nil, fmt.Errorf("unknown spec fact type: %s", stmt.String())
+// 		}
+// 	}
 
-	factsUnderPropName, factsUnderPropNameExist := factsUnderPkgName[stmt.PropName.Name]
-	if !factsUnderPropNameExist {
-		switch stmt.TypeEnum {
-		case ast.TrueAtom:
-			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
-		case ast.FalseAtom:
-			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
-		case ast.TrueExist:
-			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
-		case ast.FalseExist:
-			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
-		case ast.TrueExist_St:
-			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
-		case ast.FalseExist_St:
-			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
-		}
-		return factsUnderPkgName[stmt.PropName.Name], nil
-	}
+// 	factsUnderPropName, factsUnderPropNameExist := factsUnderPkgName[stmt.PropName.Name]
+// 	if !factsUnderPropNameExist {
+// 		switch stmt.TypeEnum {
+// 		case ast.TrueAtom:
+// 			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
+// 		case ast.FalseAtom:
+// 			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
+// 		case ast.TrueExist:
+// 			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
+// 		case ast.FalseExist:
+// 			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
+// 		case ast.TrueExist_St:
+// 			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
+// 		case ast.FalseExist_St:
+// 			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
+// 		}
+// 		return factsUnderPkgName[stmt.PropName.Name], nil
+// 	}
 
-	return factsUnderPropName, nil
-}
+// 	return factsUnderPropName, nil
+// }
 
 // func (factMem *SpecFactMem) newSpecFact(stmt *ast.SpecFactStmt) error {
 // 	enumSpecFactMem, memExist := factMem.GetNode(stmt)
@@ -481,43 +481,42 @@ func (factMem *SpecFactMem) makeEnumSpecFactMem(stmt *ast.SpecFactStmt) ([]Known
 // 	}
 // }
 
-func (factMem *SpecFactMem) InsertSpecFact(stmt *ast.SpecFactStmt) error {
-	enumSpecFactMem, memExist := factMem.GetSameEnumPkgPropFacts(stmt)
-	if memExist {
-		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
-		return nil
-	} else {
-		enumSpecFactMem, err := factMem.makeEnumSpecFactMem(stmt)
-		if err != nil {
-			return err
-		}
-		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
-		return nil
-	}
-}
+// func (factMem *SpecFactMem) InsertSpecFact(stmt *ast.SpecFactStmt) error {
+// 	enumSpecFactMem, memExist := factMem.GetSameEnumPkgPropFacts(stmt)
+// 	if memExist {
+// 		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
+// 		return nil
+// 	} else {
+// 		enumSpecFactMem, err := factMem.makeEnumSpecFactMem(stmt)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
+// 		return nil
+// 	}
+// }
 
-func (factMem *SpecFactMem) InsertSpecFactInLogicExpr(logicExpr *ast.LogicExprStmt) error {
-	return nil // TODO 等我把 interface 之类的弄好再说
-	// pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
-	// if err != nil {
-	// 	return err
-	// }
+// func (factMem *SpecFactMem) InsertSpecFactInLogicExpr(logicExpr *ast.LogicExprStmt) error {
+// pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
+// if err != nil {
+// 	return err
+// }
 
-	// for _, pair := range pairs {
-	// 	enumSpecFactMem, memExist := factMem.GetNode(pair.Stmt)
-	// 	if memExist {
-	// 		enumSpecFactMem.FactsINLogicExpr = append(enumSpecFactMem.FactsINLogicExpr, KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr})
-	// 	} else {
-	// 		enumSpecFactMem, err := factMem.makeEnumSpecFactMem(pair.Stmt)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		enumSpecFactMem.FactsINLogicExpr = append(enumSpecFactMem.FactsINLogicExpr, KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr})
-	// 	}
-	// }
+// for _, pair := range pairs {
+// 	enumSpecFactMem, memExist := factMem.GetNode(pair.Stmt)
+// 	if memExist {
+// 		enumSpecFactMem.FactsINLogicExpr = append(enumSpecFactMem.FactsINLogicExpr, KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr})
+// 	} else {
+// 		enumSpecFactMem, err := factMem.makeEnumSpecFactMem(pair.Stmt)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		enumSpecFactMem.FactsINLogicExpr = append(enumSpecFactMem.FactsINLogicExpr, KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr})
+// 	}
+// }
 
-	// return nil
-}
+// return nil
+// }
 
 func (fact *KnownSpecFact_InLogicExpr) String() string {
 	return fact.LogicExpr.String()
