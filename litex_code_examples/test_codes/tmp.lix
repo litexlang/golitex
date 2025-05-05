@@ -26,3 +26,10 @@ prove:
 
     
     b = 2
+
+prove:
+    know:
+        forall x nat:
+            $p(x)
+
+    $p(1)
