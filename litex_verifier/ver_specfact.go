@@ -114,8 +114,9 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 		if !got {
 			continue
 		}
-		searchedNodeFacts := nodeNode.Facts
-		searchedNodeFactsUnderLogicExpr := nodeNode.FactsINLogicExpr
+		searchedNodeFacts := nodeNode
+		// TODO 把 用 logic expr 的逻辑独立出来，而不是和 specfact 混一起
+		// searchedNodeFactsUnderLogicExpr := nodeNode.FactsINLogicExpr
 
 	LoopOverFacts:
 		for _, knownFact := range searchedNodeFacts {
@@ -143,15 +144,15 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 			return true, nil
 		}
 
-		for _, knownFactUnderLogicExpr := range searchedNodeFactsUnderLogicExpr {
-			ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
-		}
+		// for _, knownFactUnderLogicExpr := range searchedNodeFactsUnderLogicExpr {
+		// 	ok, err := ver.SpecFactSpecUnderLogicalExpr(&knownFactUnderLogicExpr, stmt, state)
+		// 	if err != nil {
+		// 		return false, err
+		// 	}
+		// 	if ok {
+		// 		return true, nil
+		// 	}
+		// }
 	}
 	return false, nil
 }
