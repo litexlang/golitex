@@ -19,12 +19,12 @@ import (
 
 func NewSpecFactMemDict() *SpecFactMem {
 	return &SpecFactMem{
-		PureFacts:         map[string]map[string]EnumSpecFactMem{},
-		NotPureFacts:      map[string]map[string]EnumSpecFactMem{},
-		ExistFacts:        map[string]map[string]EnumSpecFactMem{},
-		NotExistFacts:     map[string]map[string]EnumSpecFactMem{},
-		Exist_St_Facts:    map[string]map[string]EnumSpecFactMem{},
-		NotExist_St_Facts: map[string]map[string]EnumSpecFactMem{},
+		PureFacts:         map[string]map[string][]KnownSpecFact{},
+		NotPureFacts:      map[string]map[string][]KnownSpecFact{},
+		ExistFacts:        map[string]map[string][]KnownSpecFact{},
+		NotExistFacts:     map[string]map[string][]KnownSpecFact{},
+		Exist_St_Facts:    map[string]map[string][]KnownSpecFact{},
+		NotExist_St_Facts: map[string]map[string][]KnownSpecFact{},
 	}
 }
 
@@ -56,8 +56,8 @@ func NewSpecFactMemDict() *SpecFactMem {
 // 	}
 // }
 
-func (factMem *SpecFactMem) GetNode(stmt *ast.SpecFactStmt) (EnumSpecFactMem, bool) {
-	var enumSpecFactMemMapMap map[string]map[string]EnumSpecFactMem
+func (factMem *SpecFactMem) GetNode(stmt *ast.SpecFactStmt) ([]KnownSpecFact, bool) {
+	var enumSpecFactMemMapMap map[string]map[string][]KnownSpecFact
 
 	switch stmt.TypeEnum {
 	case ast.TrueAtom:
@@ -73,17 +73,17 @@ func (factMem *SpecFactMem) GetNode(stmt *ast.SpecFactStmt) (EnumSpecFactMem, bo
 	case ast.FalseExist_St:
 		enumSpecFactMemMapMap = factMem.NotExist_St_Facts
 	default:
-		return EnumSpecFactMem{}, false
+		return nil, false
 	}
 
 	enumSpecFactMemMap, memMapExist := enumSpecFactMemMapMap[stmt.PropName.PkgName] // 检查 pkgName 是否存在
 	if !memMapExist {
-		return EnumSpecFactMem{}, false // 返回零值
+		return nil, false // 返回零值
 	}
 
 	enumSpecFactMem, memExist := enumSpecFactMemMap[stmt.PropName.Name] // 检查 value 是否存在
 	if !memExist {
-		return EnumSpecFactMem{}, false // 返回零值
+		return nil, false // 返回零值
 	}
 
 	return enumSpecFactMem, true
@@ -403,8 +403,8 @@ func (storedFact *KnownSpecFact) TypeEnum() ast.SpecFactEnum {
 // 	return nil
 // }
 
-func (factMem *SpecFactMem) makeEnumSpecFactMem(stmt *ast.SpecFactStmt) (EnumSpecFactMem, error) {
-	var factsUnderPkgName map[string]EnumSpecFactMem
+func (factMem *SpecFactMem) makeEnumSpecFactMem(stmt *ast.SpecFactStmt) ([]KnownSpecFact, error) {
+	var factsUnderPkgName map[string][]KnownSpecFact
 	var factsUnderPkgNameExist bool
 
 	switch stmt.TypeEnum {
@@ -421,101 +421,113 @@ func (factMem *SpecFactMem) makeEnumSpecFactMem(stmt *ast.SpecFactStmt) (EnumSpe
 	case ast.FalseExist_St:
 		factsUnderPkgName, factsUnderPkgNameExist = factMem.NotExist_St_Facts[stmt.PropName.PkgName]
 	default:
-		return EnumSpecFactMem{}, fmt.Errorf("unknown spec fact type: %s", stmt.String())
+		return nil, fmt.Errorf("unknown spec fact type: %s", stmt.String())
 	}
 
 	if !factsUnderPkgNameExist {
-		// make it and insert it
-		enumSpecFactMem := EnumSpecFactMem{
-			Facts:            []KnownSpecFact{},
-			FactsINLogicExpr: []KnownSpecFact_InLogicExpr{},
-		}
 		switch stmt.TypeEnum {
 		case ast.TrueAtom:
-			factMem.PureFacts[stmt.PropName.PkgName] = make(map[string]EnumSpecFactMem)
-			factMem.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = enumSpecFactMem
+			factMem.PureFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+			factMem.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+			return factMem.PureFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
 		case ast.FalseAtom:
-			factMem.NotPureFacts[stmt.PropName.PkgName] = make(map[string]EnumSpecFactMem)
-			factMem.NotPureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = enumSpecFactMem
+			factMem.NotPureFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+			factMem.NotPureFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+			return factMem.NotPureFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
 		case ast.TrueExist:
-			factMem.ExistFacts[stmt.PropName.PkgName] = make(map[string]EnumSpecFactMem)
-			factMem.ExistFacts[stmt.PropName.PkgName][stmt.PropName.Name] = enumSpecFactMem
+			factMem.ExistFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+			factMem.ExistFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+			return factMem.ExistFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
 		case ast.FalseExist:
-			factMem.NotExistFacts[stmt.PropName.PkgName] = make(map[string]EnumSpecFactMem)
-			factMem.NotExistFacts[stmt.PropName.PkgName][stmt.PropName.Name] = enumSpecFactMem
+			factMem.NotExistFacts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+			factMem.NotExistFacts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+			return factMem.NotExistFacts[stmt.PropName.PkgName][stmt.PropName.Name], nil
 		case ast.TrueExist_St:
-			factMem.Exist_St_Facts[stmt.PropName.PkgName] = make(map[string]EnumSpecFactMem)
-			factMem.Exist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name] = enumSpecFactMem
+			factMem.Exist_St_Facts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+			factMem.Exist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+			return factMem.Exist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name], nil
 		case ast.FalseExist_St:
-			factMem.NotExist_St_Facts[stmt.PropName.PkgName] = make(map[string]EnumSpecFactMem)
-			factMem.NotExist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name] = enumSpecFactMem
+			factMem.NotExist_St_Facts[stmt.PropName.PkgName] = make(map[string][]KnownSpecFact)
+			factMem.NotExist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name] = []KnownSpecFact{}
+			return factMem.NotExist_St_Facts[stmt.PropName.PkgName][stmt.PropName.Name], nil
 		default:
-			return EnumSpecFactMem{}, fmt.Errorf("unknown spec fact type: %s", stmt.String())
+			return nil, fmt.Errorf("unknown spec fact type: %s", stmt.String())
 		}
-		return enumSpecFactMem, nil
 	}
 
 	factsUnderPropName, factsUnderPropNameExist := factsUnderPkgName[stmt.PropName.Name]
 	if !factsUnderPropNameExist {
-		enumSpecFactMem := EnumSpecFactMem{
-			Facts:            []KnownSpecFact{},
-			FactsINLogicExpr: []KnownSpecFact_InLogicExpr{},
-		}
 		switch stmt.TypeEnum {
 		case ast.TrueAtom:
-			factsUnderPkgName[stmt.PropName.Name] = enumSpecFactMem
+			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
 		case ast.FalseAtom:
-			factsUnderPkgName[stmt.PropName.Name] = enumSpecFactMem
+			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
 		case ast.TrueExist:
-			factsUnderPkgName[stmt.PropName.Name] = enumSpecFactMem
+			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
 		case ast.FalseExist:
-			factsUnderPkgName[stmt.PropName.Name] = enumSpecFactMem
+			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
 		case ast.TrueExist_St:
-			factsUnderPkgName[stmt.PropName.Name] = enumSpecFactMem
+			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
 		case ast.FalseExist_St:
-			factsUnderPkgName[stmt.PropName.Name] = enumSpecFactMem
+			factsUnderPkgName[stmt.PropName.Name] = []KnownSpecFact{}
 		}
-		return enumSpecFactMem, nil
+		return factsUnderPkgName[stmt.PropName.Name], nil
 	}
 
 	return factsUnderPropName, nil
 }
 
-func (factMem *SpecFactMem) InsertSpecFact(stmt *ast.SpecFactStmt) error {
+func (factMem *SpecFactMem) newSpecFact(stmt *ast.SpecFactStmt) error {
 	enumSpecFactMem, memExist := factMem.GetNode(stmt)
 	if memExist {
-		enumSpecFactMem.Facts = append(enumSpecFactMem.Facts, KnownSpecFact{stmt})
+		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
 		return nil
 	} else {
 		enumSpecFactMem, err := factMem.makeEnumSpecFactMem(stmt)
 		if err != nil {
 			return err
 		}
-		enumSpecFactMem.Facts = append(enumSpecFactMem.Facts, KnownSpecFact{stmt})
+		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
+		return nil
+	}
+}
+
+func (factMem *SpecFactMem) InsertSpecFact(stmt *ast.SpecFactStmt) error {
+	enumSpecFactMem, memExist := factMem.GetNode(stmt)
+	if memExist {
+		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
+		return nil
+	} else {
+		enumSpecFactMem, err := factMem.makeEnumSpecFactMem(stmt)
+		if err != nil {
+			return err
+		}
+		enumSpecFactMem = append(enumSpecFactMem, KnownSpecFact{stmt})
 		return nil
 	}
 }
 
 func (factMem *SpecFactMem) InsertSpecFactInLogicExpr(logicExpr *ast.LogicExprStmt) error {
-	pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
-	if err != nil {
-		return err
-	}
+	return nil // TODO 等我把 interface 之类的弄好再说
+	// pairs, err := logicExpr.SpecFactIndexPairs([]uint8{})
+	// if err != nil {
+	// 	return err
+	// }
 
-	for _, pair := range pairs {
-		enumSpecFactMem, memExist := factMem.GetNode(pair.Stmt)
-		if memExist {
-			enumSpecFactMem.FactsINLogicExpr = append(enumSpecFactMem.FactsINLogicExpr, KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr})
-		} else {
-			enumSpecFactMem, err := factMem.makeEnumSpecFactMem(pair.Stmt)
-			if err != nil {
-				return err
-			}
-			enumSpecFactMem.FactsINLogicExpr = append(enumSpecFactMem.FactsINLogicExpr, KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr})
-		}
-	}
+	// for _, pair := range pairs {
+	// 	enumSpecFactMem, memExist := factMem.GetNode(pair.Stmt)
+	// 	if memExist {
+	// 		enumSpecFactMem.FactsINLogicExpr = append(enumSpecFactMem.FactsINLogicExpr, KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr})
+	// 	} else {
+	// 		enumSpecFactMem, err := factMem.makeEnumSpecFactMem(pair.Stmt)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 		enumSpecFactMem.FactsINLogicExpr = append(enumSpecFactMem.FactsINLogicExpr, KnownSpecFact_InLogicExpr{pair.Stmt, pair.Indexes, logicExpr})
+	// 	}
+	// }
 
-	return nil
+	// return nil
 }
 
 func (fact *KnownSpecFact_InLogicExpr) String() string {

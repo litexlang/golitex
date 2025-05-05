@@ -62,14 +62,24 @@ type EnumSpecFactMem struct {
 // 	Dict map[string]map[string]SpecFactMemItem
 // }
 
+// TDOO 未来定义mapmap + Generics 这个type来节约这里的代码量
 type SpecFactMem struct {
 	// first map correspond to pkgName, second map correspond to propName
-	PureFacts         map[string]map[string]EnumSpecFactMem
-	NotPureFacts      map[string]map[string]EnumSpecFactMem
-	ExistFacts        map[string]map[string]EnumSpecFactMem
-	NotExistFacts     map[string]map[string]EnumSpecFactMem
-	Exist_St_Facts    map[string]map[string]EnumSpecFactMem
-	NotExist_St_Facts map[string]map[string]EnumSpecFactMem
+	PureFacts         map[string]map[string][]KnownSpecFact
+	NotPureFacts      map[string]map[string][]KnownSpecFact
+	ExistFacts        map[string]map[string][]KnownSpecFact
+	NotExistFacts     map[string]map[string][]KnownSpecFact
+	Exist_St_Facts    map[string]map[string][]KnownSpecFact
+	NotExist_St_Facts map[string]map[string][]KnownSpecFact
+}
+
+type SpecFactInLogicExprMem struct {
+	PureFacts         map[string]map[string][]KnownSpecFact_InLogicExpr
+	NotPureFacts      map[string]map[string][]KnownSpecFact_InLogicExpr
+	ExistFacts        map[string]map[string][]KnownSpecFact_InLogicExpr
+	NotExistFacts     map[string]map[string][]KnownSpecFact_InLogicExpr
+	Exist_St_Facts    map[string]map[string][]KnownSpecFact_InLogicExpr
+	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InLogicExpr
 }
 
 type KnownSpecFact_InUniSpecFact struct {
