@@ -50,16 +50,26 @@ type EnumSpecFactMem struct {
 }
 
 // 有很多的 spec fact 是没有 exist的，所以应该在1 specFactmem 里就分好 enum，而不是在同名specfact下面分
-type SpecFactMemItem struct {
-	PureFacts         EnumSpecFactMem
-	NotPureFacts      EnumSpecFactMem
-	ExistFacts        EnumSpecFactMem
-	NotExistFacts     EnumSpecFactMem
-	Exist_St_Facts    EnumSpecFactMem
-	NotExist_St_Facts EnumSpecFactMem
-}
+// type SpecFactMemItem struct {
+// 	PureFacts         EnumSpecFactMem
+// 	NotPureFacts      EnumSpecFactMem
+// 	ExistFacts        EnumSpecFactMem
+// 	NotExistFacts     EnumSpecFactMem
+// 	Exist_St_Facts    EnumSpecFactMem
+// 	NotExist_St_Facts EnumSpecFactMem
+// }
+// type SpecFactMem struct {
+// 	Dict map[string]map[string]SpecFactMemItem
+// }
+
 type SpecFactMem struct {
-	Dict map[string]map[string]SpecFactMemItem
+	// first map correspond to pkgName, second map correspond to propName
+	PureFacts         map[string]map[string]EnumSpecFactMem
+	NotPureFacts      map[string]map[string]EnumSpecFactMem
+	ExistFacts        map[string]map[string]EnumSpecFactMem
+	NotExistFacts     map[string]map[string]EnumSpecFactMem
+	Exist_St_Facts    map[string]map[string]EnumSpecFactMem
+	NotExist_St_Facts map[string]map[string]EnumSpecFactMem
 }
 
 type KnownSpecFact_InUniSpecFact struct {
