@@ -29,6 +29,12 @@ type DefObjStmt struct {
 	Facts   []FactStmt
 }
 
+type ConDefHeader struct {
+	Name      string
+	Params    []string
+	SetParams []Fc
+}
+
 type DefConPropStmt struct {
 	DefHeader ConDefHeader
 	DomFacts  []FactStmt // 如果输入的参数不满足dom，那就是error
@@ -101,12 +107,6 @@ type ThmStmt struct {
 type FcFnDecl struct {
 	Name   string
 	Params []string
-}
-
-type ConDefHeader struct {
-	Name      string
-	Params    []string
-	SetParams []Fc
 }
 
 type LogicExprStmt struct {
@@ -236,6 +236,7 @@ func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 }
 
 // 如果用户认定这个定理是公理，那就返回forall anything satisfy dom, prop is true
+// TODO: 有点问题，因为没有突出 iff
 func (defStmt *DefConPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
 	uniFactParams := defStmt.DefHeader.Params
 	uniFactParamSets := defStmt.DefHeader.SetParams
@@ -253,6 +254,7 @@ func (defStmt *DefConPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, err
 	return uniFact, nil
 }
 
+// TODO: 有点问题，因为没有突出 iff
 func (defStmt *DefConExistPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
 	uniParams := defStmt.Def.DefHeader.Params
 	uniParamSets := defStmt.Def.DefHeader.SetParams
@@ -268,4 +270,16 @@ func (defStmt *DefConExistPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt
 	uniFact := NewUniFactStmtWithSetReqInDom(uniParams, uniParamSets, uniDomFacts, existFacts, EmptyIffFacts)
 
 	return uniFact, nil
+}
+
+func (uniFact *UniFactStmt) ToPropFact(propName string) *DefConPropStmt {
+	defHeader := ConDefHeader{
+		Name:      propName,
+		Params:    uniFact.Params,
+		SetParams: uniFact.ParamSets,
+	}
+	domFacts := uniFact.DomFacts
+	iffFacts := uniFact.ThenFacts // Notice here is thenFacts, not iffFacts
+
+	return NewDefConPropStmt(defHeader, domFacts, iffFacts)
 }
