@@ -31,3 +31,15 @@ prove:
     $propName(2)
     $q(2)
     $p(2)
+
+prove:
+    axiom propName:
+        forall x nat:
+            $p(x)
+            then:
+                $q(x)
+
+    know $propName(2)
+
+    $q(2)
+    $p(2)

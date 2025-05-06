@@ -40,3 +40,7 @@ func (fact *KnownSpecFact) String() string {
 func (fact *KnownSpecFact_InUniSpecFact) String() string {
 	return fact.UniFact.String()
 }
+
+func (fact *KnownSpecFact_InLogicExpr) String() string {
+	return fact.LogicExpr.String()
+}

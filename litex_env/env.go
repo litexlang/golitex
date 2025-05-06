@@ -54,9 +54,9 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc) *Env {
 		FnMem:        *NewFnMemory(),
 		ExistPropMem: *NewExistPropMemory(),
 
-		SpecFactMem:            *newSpecFactMemDict(),
-		SpecFactInLogicExprMem: *NewSpecFactInLogicExprMemDict(),
-		SpecFactInUniFactMem:   *NewSpecFactInUniFactMem(),
+		SpecFactMem:            *newSpecFactMem(),
+		SpecFactInLogicExprMem: *NewSpecFactInLogicExprMem(),
+		SpecFactInUniFactMem:   *NewSpecFactInUniFact(),
 
 		EmitWhenSpecFactIsTrueMem: *NewEmitWhenSpecFactIsTrueMem(),
 

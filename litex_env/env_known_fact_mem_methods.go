@@ -18,16 +18,7 @@ import (
 	ast "golitex/litex_ast"
 )
 
-type SpecFactMem struct {
-	PureFacts         map[string]map[string][]KnownSpecFact
-	NotPureFacts      map[string]map[string][]KnownSpecFact
-	ExistFacts        map[string]map[string][]KnownSpecFact
-	NotExistFacts     map[string]map[string][]KnownSpecFact
-	Exist_St_Facts    map[string]map[string][]KnownSpecFact
-	NotExist_St_Facts map[string]map[string][]KnownSpecFact
-}
-
-func newSpecFactMemDict() *SpecFactMem {
+func newSpecFactMem() *SpecFactMem {
 	return &SpecFactMem{
 		PureFacts:         map[string]map[string][]KnownSpecFact{},
 		NotPureFacts:      map[string]map[string][]KnownSpecFact{},
@@ -35,6 +26,39 @@ func newSpecFactMemDict() *SpecFactMem {
 		NotExistFacts:     map[string]map[string][]KnownSpecFact{},
 		Exist_St_Facts:    map[string]map[string][]KnownSpecFact{},
 		NotExist_St_Facts: map[string]map[string][]KnownSpecFact{},
+	}
+}
+
+func NewSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
+	return &SpecFactInLogicExprMem{
+		PureFacts:         map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		NotPureFacts:      map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		ExistFacts:        map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		NotExistFacts:     map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InLogicExpr{},
+	}
+}
+
+func NewSpecFactInUniFact() *SpecFactInUniFactMem {
+	return &SpecFactInUniFactMem{
+		PureFacts:         map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		NotPureFacts:      map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		ExistFacts:        map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		NotExistFacts:     map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+	}
+}
+
+func NewKnownSpecFact_InLogicExpr_InUniFactMem() *KnownSpecFact_InLogicExpr_InUniFactMem {
+	return &KnownSpecFact_InLogicExpr_InUniFactMem{
+		PureFacts:         map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
+		NotPureFacts:      map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
+		ExistFacts:        map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
+		NotExistFacts:     map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
+		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
+		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
 	}
 }
 
@@ -92,26 +116,6 @@ func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) error {
 	sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name] = append(sameEnumFacts[stmt.PropName.PkgName][stmt.PropName.Name], KnownSpecFact{stmt})
 
 	return nil
-}
-
-type SpecFactInLogicExprMem struct {
-	PureFacts         map[string]map[string][]KnownSpecFact_InLogicExpr
-	NotPureFacts      map[string]map[string][]KnownSpecFact_InLogicExpr
-	ExistFacts        map[string]map[string][]KnownSpecFact_InLogicExpr
-	NotExistFacts     map[string]map[string][]KnownSpecFact_InLogicExpr
-	Exist_St_Facts    map[string]map[string][]KnownSpecFact_InLogicExpr
-	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InLogicExpr
-}
-
-func NewSpecFactInLogicExprMemDict() *SpecFactInLogicExprMem {
-	return &SpecFactInLogicExprMem{
-		PureFacts:         map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		NotPureFacts:      map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		ExistFacts:        map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		NotExistFacts:     map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InLogicExpr{},
-	}
 }
 
 func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact_InLogicExpr, error) {
@@ -177,26 +181,6 @@ func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt) error {
 	return nil
 }
 
-type SpecFactInUniFactMem struct {
-	PureFacts         map[string]map[string][]KnownSpecFact_InUniSpecFact
-	NotPureFacts      map[string]map[string][]KnownSpecFact_InUniSpecFact
-	ExistFacts        map[string]map[string][]KnownSpecFact_InUniSpecFact
-	NotExistFacts     map[string]map[string][]KnownSpecFact_InUniSpecFact
-	Exist_St_Facts    map[string]map[string][]KnownSpecFact_InUniSpecFact
-	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InUniSpecFact
-}
-
-func NewSpecFactInUniFactMem() *SpecFactInUniFactMem {
-	return &SpecFactInUniFactMem{
-		PureFacts:         map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		NotPureFacts:      map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		ExistFacts:        map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		NotExistFacts:     map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-	}
-}
-
 func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact_InUniSpecFact, error) {
 	switch stmt.TypeEnum {
 	case ast.TrueAtom:
@@ -235,7 +219,7 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInUniFactMem) NewFact(stmt *ast.UniFactStmt) error {
+func (s SpecFactInUniFactMem) newFact(stmt *ast.UniFactStmt) error {
 	for _, thenStmt := range stmt.ThenFacts {
 		if stmtAsSpecFact, ok := thenStmt.(*ast.SpecFactStmt); ok {
 			if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
@@ -256,6 +240,27 @@ func (s SpecFactInUniFactMem) NewFact(stmt *ast.UniFactStmt) error {
 			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
 		}
 	}
+	return nil
+}
+
+func (factMem SpecFactInUniFactMem) mergeOuterInnerUniFactAndInsert(outer *ast.UniFactStmt, inner *ast.UniFactStmt) error {
+	mergedConUni := ast.MergeOuterInnerUniFacts(outer, inner)
+	thenFacts := []*ast.SpecFactStmt{}
+	for _, stmt := range mergedConUni.ThenFacts {
+		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+			thenFacts = append(thenFacts, stmtAsSpecFact)
+		} else {
+			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
+		}
+	}
+
+	for _, specFact := range thenFacts {
+		err := factMem.insertSpecFact(specFact, mergedConUni)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
