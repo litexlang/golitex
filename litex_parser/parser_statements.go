@@ -676,7 +676,7 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 		nameDepthMap[existParam] = 1
 	}
 
-	def, err := tb.existDefProp(nameDepthMap)
+	def, err := tb.existDefProp(true, nameDepthMap)
 
 	// add prefix to existParams
 	for i := range existParams {
@@ -870,22 +870,17 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 	return facts, nil
 }
 
-func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.ExistPropDef, error) {
-	// if prefix != "" {
-	// 	err := tb.header.skip(prefix)
-	// 	if err != nil {
-	// 		return nil, &tokenBlockErr{err, *tb}
-	// 	}
-	// }
-
-	declHeader, nameDepthMap, err := tb.conDefHeader(true)
+func (tb *tokenBlock) existDefProp(addUniPrefix bool, existParamDepthMap ast.NameDepthMap) (*ast.ExistPropDef, error) {
+	declHeader, nameDepthMap, err := tb.conDefHeader(addUniPrefix)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	// merge nameDepthMap and nameDepthMap2
-	for key := range existParamDepthMap {
-		nameDepthMap[key] = existParamDepthMap[key]
+	if addUniPrefix {
+		for key := range existParamDepthMap {
+			nameDepthMap[key] = existParamDepthMap[key]
+		}
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
@@ -902,9 +897,19 @@ func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.Ex
 		glob.KeywordIff: {},
 	}
 
-	domFacts, _, iffFacts, err := tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
+	var domFacts []ast.FactStmt
+	var iffFacts []ast.FactStmt
+
+	if addUniPrefix {
+		domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	} else {
+		domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, ast.NameDepthMap{}, UniFactDepth1, glob.KeywordIff)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
 	}
 
 	if len(iffFacts) == 0 {
