@@ -1,5 +1,22 @@
 set point
-
 set line
-
 set plane
+
+fn angle(a point, b point, c point) real
+
+prop between(a point, b point, c point)
+prop line_contain_point(l line, p point)
+prop plane_contain_point(p plane, q point)
+prop plane_contain_line(p plane, l line)
+
+fn line(a point, b point):
+    a != b
+    then:
+        $line_contain_point(line(a, b), a)
+        $line_contain_point(line(a, b), b)
+        forall l line:
+            $line_contain_point(l, a)
+            $line_contain_point(l, b)
+            then:
+                l = line(a, b)
+
