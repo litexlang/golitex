@@ -9,14 +9,48 @@ prop line_contain_point(l line, p point)
 prop plane_contain_point(p plane, q point)
 prop plane_contain_line(p plane, l line)
 
-fn line(a point, b point):
+# 存在且只存在，这样的公理，用 fn & know forall 表示
+
+fn line_of(a point, b point) line:
     a != b
     then:
-        $line_contain_point(line(a, b), a)
-        $line_contain_point(line(a, b), b)
-        forall l line:
-            $line_contain_point(l, a)
-            $line_contain_point(l, b)
-            then:
-                l = line(a, b)
+        $line_contain_point(line_of(a, b), a)
+        $line_contain_point(line_of(a, b), b)
 
+# TODO: 让 uniFact 能出现在 fn then 里
+know:
+    forall l line, a point, b point:
+        $line_contain_point(l, a)
+        $line_contain_point(l, b)
+        then:
+            l = line_of(a, b)
+
+exist_prop c point st A1(l line, a point, b point):
+    $line_contain_point(l, a)
+    $line_contain_point(l, b)
+    a != b
+    iff:
+        $line_contain_point(l, c)
+        c != a
+        c != b
+
+fn plain_of(a point, b point, c point) plane:
+    a != b
+    a != c
+    b != c
+    then:
+        $plane_contain_point(plain_of(a, b, c), a)
+        $plane_contain_point(plain_of(a, b, c), b)
+        $plane_contain_point(plain_of(a, b, c), c)
+
+know:
+    forall p plane, a point, b point, c point:
+        $plane_contain_point(p, a)
+        $plane_contain_point(p, b)
+        $plane_contain_point(p, c)
+        a != b
+        a != c
+        b != c
+        iff:
+            p = plain_of(a, b, c)
+            
