@@ -874,6 +874,10 @@ func (tb *tokenBlock) setDefStmt() (ast.SetDefStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
+	if tb.header.ExceedEnd() {
+		return ast.NewSetDefSetBuilderStmt(setName, nil, []ast.FactStmt{}), nil
+	}
+
 	if tb.header.is(glob.KeySymbolLeftCurly) {
 		err = tb.header.skip(glob.KeySymbolLeftCurly)
 		if err != nil {

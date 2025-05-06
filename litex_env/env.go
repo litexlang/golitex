@@ -24,6 +24,7 @@ type Env struct {
 	PropMem      PropMem
 	FnMem        FnMem
 	ExistPropMem ExistPropMem
+	SetMem       SetMem
 
 	SpecFactMem            SpecFactMem
 	SpecFactInLogicExprMem SpecFactInLogicExprMem
