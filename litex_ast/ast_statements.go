@@ -93,18 +93,6 @@ type AxiomStmt struct {
 	Fact UniFactStmt
 }
 
-// // syntax sugar for defining spec prop + claim forall true + prove it
-// type ThmStmt struct {
-// 	Decl   DefPropOrExistPropStmt
-// 	Proofs []Stmt
-// }
-
-// type CondFactStmt struct {
-// 	CondFacts []FactStmt
-// 	// ThenFacts []*SpecFactStmt
-// 	ThenFacts []FactStmt
-// }
-
 type FcFnDecl struct {
 	Name   string
 	Params []string

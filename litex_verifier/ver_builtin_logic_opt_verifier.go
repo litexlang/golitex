@@ -25,6 +25,12 @@ func (ver *Verifier) btLogicOptSpec(stmt *ast.SpecFactStmt, state VerState) (boo
 		return ver.btEqualRule(stmt, state)
 	}
 
+	if ok, err := ver.btInProp(stmt); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
 	if stmt.IsPropNameAssociative() {
 		// 如果用内置的验证方法不成立，还是能用后面的方法验证的。
 		if ok, err := ver.btAssociativeRule(stmt, state); err != nil {
@@ -43,7 +49,7 @@ func (ver *Verifier) btLogicOptSpec(stmt *ast.SpecFactStmt, state VerState) (boo
 	}
 
 	// TODO 处理其他的builtin logic infix opt
-	ok, err := ver.btLogicInfixOptBtRule(stmt, state)
+	ok, err := ver.btNumberLogicRelaOptBtRule(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -62,30 +68,12 @@ func (ver *Verifier) btLogicOptSpec(stmt *ast.SpecFactStmt, state VerState) (boo
 	return false, nil
 }
 
-func (ver *Verifier) btLogicInfixOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) btNumberLogicRelaOptBtRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.PropName.PkgName != "" {
 		return false, nil
 	}
 
 	if ok, err := ver.btNumberInfixCompareProp(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
-	if ok, err := ver.btInProp(stmt); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
-	if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
-		return false, err
-	} else if ok {
-		return true, nil
-	}
-
-	if ok, err := ver.btAssociativeRule(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -148,7 +136,36 @@ func (ver *Verifier) btAssociativeRule(stmt *ast.SpecFactStmt, state VerState) (
 	return false, nil
 }
 
-func (ver *Verifier) btNumLitInProp(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
+	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	// If something is a fn, then it's in fn
+	ok, err = ver.btFnInFnSet(stmt)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.btPropInPropSet(stmt)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt) (bool, error) {
 	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
 		return false, nil
 	}
@@ -161,36 +178,75 @@ func (ver *Verifier) btNumLitInProp(stmt *ast.SpecFactStmt) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if !ok {
-		return false, nil
-	}
+	if ok {
+		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordNatural) {
+			return glob.IsNatNumLitExpr(leftFc), nil
+		}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordNatural) {
-		return glob.IsNatNumLitExpr(leftFc), nil
-	}
+		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordInt) {
+			return glob.IsIntegerNumLitExpr(leftFc), nil
+		}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordInt) {
-		return glob.IsIntegerNumLitExpr(leftFc), nil
-	}
+		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordRational) {
+			return glob.IsRationalNumLitExpr(leftFc), nil
+		}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordRational) {
-		return glob.IsRationalNumLitExpr(leftFc), nil
-	}
-
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordReal) {
-		return glob.IsRealNumLitExpr(leftFc), nil
+		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordReal) {
+			return glob.IsRealNumLitExpr(leftFc), nil
+		}
 	}
 
 	return false, nil
 }
 
-func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
-	ok, err := ver.btNumLitInProp(stmt)
-	if err != nil {
-		return false, err
+func (ver *Verifier) btFnInFnSet(stmt *ast.SpecFactStmt) (bool, error) {
+	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
+		return false, nil
 	}
-	if ok {
-		return true, nil
+
+	if len(stmt.Params) != 2 {
+		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
+	}
+
+	asAtom, ok := stmt.Params[0].(*ast.FcAtom)
+	if !ok {
+		return false, nil
+	}
+
+	curEnv := ver.env
+	for curEnv != nil {
+		_, got := curEnv.FnMem.Get(*asAtom)
+		if got {
+			return true, nil
+		}
+		if got {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) btPropInPropSet(stmt *ast.SpecFactStmt) (bool, error) {
+	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
+		return false, nil
+	}
+
+	if len(stmt.Params) != 2 {
+		return false, fmt.Errorf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params))
+	}
+
+	asAtom, ok := stmt.Params[0].(*ast.FcAtom)
+	if !ok {
+		return false, nil
+	}
+
+	curEnv := ver.env
+	for curEnv != nil {
+		_, got := curEnv.PropMem.Get(*asAtom)
+		if got {
+			return true, nil
+		}
 	}
 
 	return false, nil
