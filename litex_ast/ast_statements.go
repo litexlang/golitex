@@ -272,14 +272,25 @@ func (defStmt *DefConExistPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt
 	return uniFact, nil
 }
 
-func (uniFact *UniFactStmt) ToPropFact(propName string) *DefConPropStmt {
+func (uniFact *UniFactStmt) ToDefPropWith_EmptyDom_UniFactThenAsIff(propName string) *DefConPropStmt {
 	defHeader := ConDefHeader{
 		Name:      propName,
 		Params:    uniFact.Params,
 		SetParams: uniFact.ParamSets,
 	}
-	domFacts := uniFact.DomFacts
-	iffFacts := uniFact.ThenFacts // Notice here is thenFacts, not iffFacts
+	domFacts := []FactStmt{}
+	iffFacts := uniFact.DomFacts // Notice here is thenFacts, not iffFacts
 
 	return NewDefConPropStmt(defHeader, domFacts, iffFacts)
+}
+
+func (defStmt *DefConPropStmt) ToSpecFact() *SpecFactStmt {
+	propSpecFactParams := []Fc{}
+	for _, param := range defStmt.DefHeader.Params {
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+	}
+
+	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+
+	return propSpecFact
 }

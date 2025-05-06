@@ -81,6 +81,8 @@ func (env *Env) newTruePureSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 		uniConMap[propParam] = fact.Params[i]
 	}
 
+	// 这里默认dom都被满足了，所以直接释放iff就行
+
 	for _, thenFact := range propDef.IffFacts {
 		instantiated, err := thenFact.Instantiate(uniConMap)
 		if err != nil {

@@ -45,8 +45,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.matcherEnvStmt(stmt)
 	case *ast.AxiomStmt:
 		err = exec.axiomStmt(stmt)
-	case *ast.ThmStmt:
-		err = exec.thmStmt(stmt)
+	// case *ast.ThmStmt:
+	// 	err = exec.thmStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -121,16 +121,17 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 		}
 
 		if stmt.ClaimName != ast.EmptyClaimName {
-			propDef := asConUniFact.ToPropFact(stmt.ClaimName)
+			propDef := asConUniFact.ToDefPropWith_EmptyDom_UniFactThenAsIff(stmt.ClaimName)
 			err = exec.defConPropStmt(propDef)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
-			uniFact, err := propDef.UniFactWhereDomImplyPropFact()
-			if err != nil {
-				return glob.ExecState_Error, err
-			}
-			err = exec.env.Parent.NewFact(uniFact)
+
+			propSpecFact := propDef.ToSpecFact()
+
+			uniPropImplyClaimThen := ast.NewUniFactStmtWithSetReqInDom(asConUniFact.Params, asConUniFact.ParamSets, []ast.FactStmt{propSpecFact}, asConUniFact.ThenFacts, ast.EmptyIffFacts)
+
+			err = exec.env.Parent.NewFact(uniPropImplyClaimThen)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
@@ -501,46 +502,46 @@ func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
 
 }
 
-func (exec *Executor) thmStmt(stmt *ast.ThmStmt) error {
-	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+// func (exec *Executor) thmStmt(stmt *ast.ThmStmt) error {
+// 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	thmToCheckAsUniFact, err := stmt.Decl.UniFactWhereDomImplyPropFact()
-	if err != nil {
-		return err
-	}
+// 	thmToCheckAsUniFact, err := stmt.Decl.UniFactWhereDomImplyPropFact()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = exec.GetUniFactSettings(thmToCheckAsUniFact)
-	if err != nil {
-		return err
-	}
+// 	err = exec.GetUniFactSettings(thmToCheckAsUniFact)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	execState, err := exec.execProofBlock(stmt.Proofs)
-	if err != nil {
-		return err
-	}
-	if execState != glob.ExecState_True {
-		return fmt.Errorf("thm stmt is not true")
-	}
+// 	execState, err := exec.execProofBlock(stmt.Proofs)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if execState != glob.ExecState_True {
+// 		return fmt.Errorf("thm stmt is not true")
+// 	}
 
-	for _, fact := range thmToCheckAsUniFact.ThenFacts {
-		ok, _, err := exec.checkFactStmt(fact)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return fmt.Errorf("thm stmt is not true")
-		}
-	}
+// 	for _, fact := range thmToCheckAsUniFact.ThenFacts {
+// 		ok, _, err := exec.checkFactStmt(fact)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		if !ok {
+// 			return fmt.Errorf("thm stmt is not true")
+// 		}
+// 	}
 
-	thmToCheckAsUniFactWithUniPrefix, err := ast.AddUniPrefixToUniFact(thmToCheckAsUniFact)
-	if err != nil {
-		return err
-	}
+// 	thmToCheckAsUniFactWithUniPrefix, err := ast.AddUniPrefixToUniFact(thmToCheckAsUniFact)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = exec.env.NewFact(thmToCheckAsUniFactWithUniPrefix)
-	if err != nil {
-		return err
-	}
+// 	err = exec.env.NewFact(thmToCheckAsUniFactWithUniPrefix)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

@@ -126,9 +126,9 @@ var notFcAtomNameSet = map[string]struct{}{
 	KeywordNot:                  {},
 	KeywordAxiom:                {},
 	KeywordProveByContradiction: {},
-	KeywordThm:                  {},
-	KeywordIff:                  {},
-	KeywordExist:                {},
+	// KeywordThm:                  {},
+	KeywordIff:   {},
+	KeywordExist: {},
 }
 
 func IsKwThatCanNeverBeFcName(s string) bool {
