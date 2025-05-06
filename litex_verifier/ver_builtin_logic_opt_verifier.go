@@ -25,7 +25,7 @@ func (ver *Verifier) useBtRulesAndMemSpecifically(stmt *ast.SpecFactStmt, state 
 		return ver.btEqualRule(stmt, state)
 	}
 
-	if ok, err := ver.btInProp(stmt); err != nil {
+	if ok, err := ver.btInProp(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -136,8 +136,8 @@ func (ver *Verifier) btAssociativeRule(stmt *ast.SpecFactStmt, state VerState) (
 	return false, nil
 }
 
-func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
-	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt)
+func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.btLitNumInNatOrIntOrRatOrReal(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -146,7 +146,7 @@ func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
 	}
 
 	// If something is a fn, then it's in fn
-	ok, err = ver.btFnInFnSet(stmt)
+	ok, err = ver.btFnInFnSet(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -154,7 +154,7 @@ func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
 		return true, nil
 	}
 
-	ok, err = ver.btPropInPropSet(stmt)
+	ok, err = ver.btPropInPropSet(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -165,7 +165,18 @@ func (ver *Verifier) btInProp(stmt *ast.SpecFactStmt) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	isSuccess := false
+	defer func() {
+		if isSuccess {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), "builtin rules")
+			} else {
+				ver.successNoMsg()
+			}
+		}
+	}()
+
 	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
 		return false, nil
 	}
@@ -180,26 +191,35 @@ func (ver *Verifier) btLitNumInNatOrIntOrRatOrReal(stmt *ast.SpecFactStmt) (bool
 	}
 	if ok {
 		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordNatural) {
-			return glob.IsNatNumLitExpr(leftFc), nil
+			isSuccess = glob.IsNatNumLitExpr(leftFc)
+			return isSuccess, nil
 		}
 
 		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordInt) {
-			return glob.IsIntegerNumLitExpr(leftFc), nil
+			isSuccess = glob.IsIntegerNumLitExpr(leftFc)
+			return isSuccess, nil
 		}
 
 		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordRational) {
-			return glob.IsRationalNumLitExpr(leftFc), nil
+			isSuccess = glob.IsRationalNumLitExpr(leftFc)
+			return isSuccess, nil
 		}
 
 		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordReal) {
-			return glob.IsRealNumLitExpr(leftFc), nil
+			isSuccess = glob.IsRealNumLitExpr(leftFc)
+			return isSuccess, nil
+		}
+
+		if ast.IsFcAtom_HasGivenName_EmptyPkgName(stmt.Params[1], glob.KeywordReal) {
+			isSuccess = glob.IsRealNumLitExpr(leftFc)
+			return isSuccess, nil
 		}
 	}
 
 	return false, nil
 }
 
-func (ver *Verifier) btFnInFnSet(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) btFnInFnSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
 		return false, nil
 	}
@@ -217,9 +237,11 @@ func (ver *Verifier) btFnInFnSet(stmt *ast.SpecFactStmt) (bool, error) {
 	for curEnv != nil {
 		_, got := curEnv.FnMem.Get(*asAtom)
 		if got {
-			return true, nil
-		}
-		if got {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is a defined %s", asAtom.String(), glob.KeywordFn))
+			} else {
+				ver.successNoMsg()
+			}
 			return true, nil
 		}
 		curEnv = curEnv.Parent
@@ -228,7 +250,7 @@ func (ver *Verifier) btFnInFnSet(stmt *ast.SpecFactStmt) (bool, error) {
 	return false, nil
 }
 
-func (ver *Verifier) btPropInPropSet(stmt *ast.SpecFactStmt) (bool, error) {
+func (ver *Verifier) btPropInPropSet(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !stmt.PropName.HasGivenNameAndEmptyPkgName(glob.KeywordIn) {
 		return false, nil
 	}
@@ -246,6 +268,11 @@ func (ver *Verifier) btPropInPropSet(stmt *ast.SpecFactStmt) (bool, error) {
 	for curEnv != nil {
 		_, got := curEnv.PropMem.Get(*asAtom)
 		if got {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is a defined %s", asAtom.String(), glob.KeywordProp))
+			} else {
+				ver.successNoMsg()
+			}
 			return true, nil
 		}
 		curEnv = curEnv.Parent

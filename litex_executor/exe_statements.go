@@ -425,6 +425,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 
 	// 写成 prove: ... 这样的事实，是没有toCheckFact的，默认是nil
 	if stmt.ToCheckFact == ast.ClaimStmtEmptyToCheck {
+		isSuccess = true
 		return true, nil
 	}
 
@@ -432,6 +433,9 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 		ok, _, err := exec.checkFactStmt(asSpecFact)
 		if err != nil {
 			return false, err
+		}
+		if ok {
+			isSuccess = true
 		}
 		return ok, nil
 	}
@@ -447,6 +451,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 				return false, nil
 			}
 		}
+		isSuccess = true
 		return true, nil
 	}
 
