@@ -1,0 +1,8 @@
+prove:
+    axiom:
+        prop p(x nat):
+            x > 0
+            iff:
+                x > 1
+
+    $p(1)

@@ -45,6 +45,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.matcherEnvStmt(stmt)
 	case *ast.AxiomStmt:
 		err = exec.axiomStmt(stmt)
+	case *ast.ThmStmt:
+		err = exec.thmStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -446,7 +448,7 @@ func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
 			return err
 		}
 
-		knownUniFact, err := axiomPropAsDefPropStmt.AxiomUniFact()
+		knownUniFact, err := axiomPropAsDefPropStmt.UniFactWhereDomImplyPropFact()
 		if err != nil {
 			return err
 		}
@@ -463,7 +465,7 @@ func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
 			return err
 		}
 
-		knownUniFact, err := axiomPropAsDefPropStmt.AxiomUniFact()
+		knownUniFact, err := axiomPropAsDefPropStmt.UniFactWhereDomImplyPropFact()
 		if err != nil {
 			return err
 		}
@@ -476,4 +478,10 @@ func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
 		return nil
 	}
 	return fmt.Errorf("unknown axiom stmt type: %T", stmt.Decl)
+}
+
+func (exec *Executor) thmStmt(stmt *ast.ThmStmt) error {
+	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+
+	return nil
 }
