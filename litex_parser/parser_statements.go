@@ -1185,7 +1185,7 @@ func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	fact, err := tb.uniFactStmt(ast.NameDepthMap{}, UniFactDepth0)
+	fact, err := tb.body[0].uniFactStmt(ast.NameDepthMap{}, UniFactDepth1)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
