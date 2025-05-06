@@ -26,8 +26,9 @@ func (f *ClaimStmt) stmt()      {}
 func (f *KnowStmt) stmt()       {}
 
 func (s *DefConExistPropStmt) stmt() {}
-func (s *AxiomStmt) stmt()           {}
-func (s *ThmStmt) stmt()             {}
+
+// func (s *AxiomStmt) stmt()           {}
+// func (s *ThmStmt) stmt()             {}
 
 // func (s *CondFactStmt) stmt()         {}
 func (p *LogicExprStmt) stmt()        {}
@@ -53,16 +54,16 @@ type SpecFactParams struct {
 	ObjParams []Fc
 }
 
-type DefPropOrExistPropStmt interface {
-	defStmt()
-	defPropStmt()
-	stmt()
-	String() string
-	UniFactWhereDomImplyPropFact() (*UniFactStmt, error)
-}
+// type DefPropOrExistPropStmt interface {
+// 	defStmt()
+// 	defPropStmt()
+// 	stmt()
+// 	String() string
+// 	UniFactWhereDomImplyPropFact() (*UniFactStmt, error)
+// }
 
-func (s *DefConExistPropStmt) defPropStmt() {}
-func (s *DefConPropStmt) defPropStmt()      {}
+// func (s *DefConExistPropStmt) defPropStmt() {}
+// func (s *DefConPropStmt) defPropStmt()      {}
 
 type SetDefStmt interface {
 	setDefStmt()

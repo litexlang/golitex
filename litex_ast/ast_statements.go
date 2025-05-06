@@ -80,23 +80,24 @@ type ClaimStmt struct {
 	IsProve     bool
 	ToCheckFact FactStmt
 	Proofs      []Stmt
-	ClaimName   string
+	ClaimName   string // 有时候有，有时候没有
 }
 
 type KnowStmt struct {
-	Facts []FactStmt
+	Facts     []FactStmt
+	ClaimName string
 }
 
 // syntax sugar for defining spec prop + claim forall true
-type AxiomStmt struct {
-	Decl DefPropOrExistPropStmt
-}
+// type AxiomStmt struct {
+// 	Decl DefPropOrExistPropStmt
+// }
 
-// syntax sugar for defining spec prop + claim forall true + prove it
-type ThmStmt struct {
-	Decl   DefPropOrExistPropStmt
-	Proofs []Stmt
-}
+// // syntax sugar for defining spec prop + claim forall true + prove it
+// type ThmStmt struct {
+// 	Decl   DefPropOrExistPropStmt
+// 	Proofs []Stmt
+// }
 
 // type CondFactStmt struct {
 // 	CondFacts []FactStmt
@@ -237,40 +238,40 @@ func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 
 // 如果用户认定这个定理是公理，那就返回forall anything satisfy dom, prop is true
 // TODO: 有点问题，因为没有突出 iff
-func (defStmt *DefConPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
-	uniFactParams := defStmt.DefHeader.Params
-	uniFactParamSets := defStmt.DefHeader.SetParams
-	uniFactDomFacts := defStmt.DomFacts
+// func (defStmt *DefConPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
+// 	uniFactParams := defStmt.DefHeader.Params
+// 	uniFactParamSets := defStmt.DefHeader.SetParams
+// 	uniFactDomFacts := defStmt.DomFacts
 
-	thenFactParams := []Fc{}
-	for _, param := range uniFactParams {
-		thenFactParams = append(thenFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
-	}
+// 	thenFactParams := []Fc{}
+// 	for _, param := range uniFactParams {
+// 		thenFactParams = append(thenFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+// 	}
 
-	thenFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, thenFactParams)
-	thenFacts := []FactStmt{thenFact}
-	uniFact := NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, uniFactDomFacts, thenFacts, EmptyIffFacts)
+// 	thenFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, thenFactParams)
+// 	thenFacts := []FactStmt{thenFact}
+// 	uniFact := NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, uniFactDomFacts, thenFacts, EmptyIffFacts)
 
-	return uniFact, nil
-}
+// 	return uniFact, nil
+// }
 
-// TODO: 有点问题，因为没有突出 iff
-func (defStmt *DefConExistPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
-	uniParams := defStmt.Def.DefHeader.Params
-	uniParamSets := defStmt.Def.DefHeader.SetParams
-	uniDomFacts := defStmt.Def.DomFacts
+// // TODO: 有点问题，因为没有突出 iff
+// func (defStmt *DefConExistPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
+// 	uniParams := defStmt.Def.DefHeader.Params
+// 	uniParamSets := defStmt.Def.DefHeader.SetParams
+// 	uniDomFacts := defStmt.Def.DomFacts
 
-	thenFactParams := []Fc{}
-	for _, param := range uniParams {
-		thenFactParams = append(thenFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
-	}
+// 	thenFactParams := []Fc{}
+// 	for _, param := range uniParams {
+// 		thenFactParams = append(thenFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+// 	}
 
-	existFact := NewSpecFactStmt(TrueExist, FcAtom{glob.BuiltinEmptyPkgName, defStmt.Def.DefHeader.Name}, thenFactParams)
-	existFacts := []FactStmt{existFact}
-	uniFact := NewUniFactStmtWithSetReqInDom(uniParams, uniParamSets, uniDomFacts, existFacts, EmptyIffFacts)
+// 	existFact := NewSpecFactStmt(TrueExist, FcAtom{glob.BuiltinEmptyPkgName, defStmt.Def.DefHeader.Name}, thenFactParams)
+// 	existFacts := []FactStmt{existFact}
+// 	uniFact := NewUniFactStmtWithSetReqInDom(uniParams, uniParamSets, uniDomFacts, existFacts, EmptyIffFacts)
 
-	return uniFact, nil
-}
+// 	return uniFact, nil
+// }
 
 func (uniFact *UniFactStmt) ToDefPropWith_EmptyDom_UniFactThenAsIff(propName string) *DefConPropStmt {
 	defHeader := ConDefHeader{
