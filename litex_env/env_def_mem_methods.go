@@ -154,16 +154,15 @@ func (memory *ObjMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 }
 
 func (memory *EmitWhenSpecFactIsTrueMem) Insert(pkgName string, propName string, emitWhenSpecFactIsTrue *ast.UniFactStmt) error {
-	pkgMap, pkgExists := memory.Dict[pkgName]
-	if !pkgExists {
+	if _, ok := memory.Dict[pkgName]; !ok {
 		memory.Dict[pkgName] = make(map[string][]EmitWhenSpecFactIsTrueMemItem)
 	}
 
-	if _, ok := pkgMap[propName]; !ok {
-		pkgMap[propName] = []EmitWhenSpecFactIsTrueMemItem{}
+	if _, ok := memory.Dict[pkgName][propName]; !ok {
+		memory.Dict[pkgName][propName] = []EmitWhenSpecFactIsTrueMemItem{}
 	}
 
-	pkgMap[propName] = append(pkgMap[propName], EmitWhenSpecFactIsTrueMemItem{emitWhenSpecFactIsTrue.Params, emitWhenSpecFactIsTrue.DomFacts})
+	memory.Dict[pkgName][propName] = append(memory.Dict[pkgName][propName], EmitWhenSpecFactIsTrueMemItem{emitWhenSpecFactIsTrue.Params, emitWhenSpecFactIsTrue.DomFacts})
 
 	return nil
 }
