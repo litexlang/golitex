@@ -18,7 +18,7 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (ver *Verifier) btLogicOptSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) useBtRulesAndMemSpecifically(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// 存储相等型事实，不需要有一个额外的数据结构来存；但是验证相等性事实的时候，需要用不一样的方式去验证
 	if stmt.IsPropNameEqual() {
 		// 所有的验证方法都集成在btEqualRule里了，包括用已知的uni，cond来证明。= 和其他事很不一样的
@@ -222,6 +222,7 @@ func (ver *Verifier) btFnInFnSet(stmt *ast.SpecFactStmt) (bool, error) {
 		if got {
 			return true, nil
 		}
+		curEnv = curEnv.Parent
 	}
 
 	return false, nil
@@ -247,6 +248,7 @@ func (ver *Verifier) btPropInPropSet(stmt *ast.SpecFactStmt) (bool, error) {
 		if got {
 			return true, nil
 		}
+		curEnv = curEnv.Parent
 	}
 
 	return false, nil

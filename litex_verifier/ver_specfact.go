@@ -86,7 +86,8 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 
 func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if stmt.IsBuiltinInfixRelaProp() {
-		return ver.btLogicOptSpec(stmt, state)
+		// 这里包含了using mem specifically
+		return ver.useBtRulesAndMemSpecifically(stmt, state)
 	}
 
 	ok, err := ver.specFactUsingMemSpecifically(stmt, state)
