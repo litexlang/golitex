@@ -323,27 +323,10 @@ Strictly speaking, fn and set in Litex do not carry the exact same meaning as in
 
 Fundamentally, Litex is a regex-based interpreter with customizable pattern-matching rules and math-friendly syntactic sugar. It operates below the level of formal mathematical axiom systems (such as ZFC), allowing users to define their own axioms. This design prioritizes expressiveness and adaptability over strict adherence to a specific foundational theory.
 
-<!-- TODO -->
-<!-- 2. an array of countable numbers of objects of the same type: Array      \[ typeName \](  ) -->
-
-<!-- 3. Expansion of Polynomials -->
-
-<!-- need to showcase: Litex can let users to begin his proof from any level of abstraction, instead of forcing him to deal with things he does not need to care -->
-
-<!-- 
-how to represent X is R2, derivate (x,y) by y
-
-# z EuclidSpace, z.dim = 2, z[0] 表示z的第一位
-fn f(z EuclidSpace):
-	f(z) = (z@0)^2 + (z@1)^2 # or f(z) = (z[0])^2 + (z[1])^2
-	# 注意到微分几何里，为了让符号不乱，也是像下面这样写的
-	f = (id@0)^2 + (id@1)^2 # 用函数id(z)=z 是绕过z这种具体值，直接把函数看成被操作对象
-
-forall z EuclidSpace:
-	d(f, 0)(z) = 2 * (z@0) 
-    
-d(f, 0) = 2 * (id@0)
-    -->
+<!-- 可以考虑新开一个Section，专门对比lean和litex -->
+<!-- 下面这是lean做勾股定理的代码，非常复杂，非常多的 hierarchy，不能直接像初中生一样不需要任何前置知识就可以理解 -->
+<!-- theorem InnerProductGeometry.norm_sub_sq_eq_norm_sq_add_norm_sq_sub_two_mul_norm_mul_norm_mul_cos_angle{V : Type u_1} [NormedAddCommGroup V] [InnerProductSpace ℝ V] (x y : V) : -->
+<!-- ‖x - y‖ * ‖x - y‖ = ‖x‖ * ‖x‖ + ‖y‖ * ‖y‖ - 2 * ‖x‖ * ‖y‖ * Real.cos (angle x y) -->
 
 ## What makes Litex innovative or novel?
 
@@ -371,7 +354,11 @@ Litex is a minimalist proof assistant, designed to be simple and intuitive. It d
 
 Litex is an attempt to scale reasoning with the ever-expanding power of modern computing resources, and to introduce a new way of thinking (the way of thinking that is more like programming) about math.
 
-Technically, Litex is a regex-based interpreter with customizable matching rules and math-friendly syntax sugar. Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Any existing mathematical axioms can be expressed in Litex. The user will enjoy freedom and expressiveness that no other proof assistant can offer. Also remember, Litex is not Turing Complete, because verification does not require execution or loops (goto statements), which further enhances its expressiveness.
+Technically, Litex is a regex-based interpreter with customizable matching rules and math-friendly syntax sugar. Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Any existing mathematical axioms can be expressed in Litex. 
+
+Also remember, Litex is not Turing Complete, because verification does not require execution or loops (goto statements), which further enhances its expressiveness. In short, the user will enjoy freedom and expressiveness that no other proof assistant can offer. 
+
+(To use Litex effectively, adopt a mindset that prioritizes intuitive over rigid prerequisites: just as children learn math without first mastering axioms, Litex should allow users to work naturally and incrementally, embedding foundational systems only when needed — not as barriers to entry. Also, when the users do feel necessary to implement a new axiom, they can do so in Litex just as if they are writing on a paper.)
 
 The inventor of Litex sees Litex as a regex-based interpreter. Every design choice around Litex categorizes into: 1. how to implement a mathematical reasoning(verification) process as a syntax and semantics sugar for regex matching, 2. what mathematical reasoning process to implement. There are not that many reasoning processes, since first-order logic is enough for most practical math problems, and every reasoning process can be translated into first-order logic.
 
