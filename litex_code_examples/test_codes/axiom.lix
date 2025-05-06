@@ -4,5 +4,10 @@ prove:
             x > 0
             iff:
                 x > 1
+        prop q(x nat):
+            x > 1
+            iff:
+                x > 2
 
     $p(1)
+    $q(1) # unknown
