@@ -18,7 +18,7 @@ import (
 	glob "golitex/litex_global"
 )
 
-func (env *Env) NewFact(stmt ast.FactStmt) error {
+func (env *Env) NewFactWithOutEmit(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
 		return env.NewSpecFact(f)
@@ -88,7 +88,7 @@ func (env *Env) newTruePureSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 
 		// TODO: 这里不只插入到SpecFactMem中，还要插入任何mem，因为现在iff非常的复杂，所有情况都行
 		// err = env.SpecFactMem.InsertSpecFact(instantiated.(*ast.SpecFactStmt))
-		err = env.NewFact(instantiated)
+		err = env.NewFactWithOutEmit(instantiated)
 		if err != nil {
 			return err
 		}
@@ -310,7 +310,9 @@ func (env *Env) NewEmitWhenSpecFactIsTrue(fact *ast.SpecFactStmt) error {
 			}
 
 			for _, thenFact := range instEmitWhenSpecFactIsTrue.(*ast.UniFactStmt).ThenFacts {
-				err = env.NewFact(thenFact)
+				err = env.NewFactWithOutEmit(thenFact)
+				env.NewMsg(`automatically know fact: ` + thenFact.String())
+
 				if err != nil {
 					return err
 				}

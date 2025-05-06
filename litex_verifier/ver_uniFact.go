@@ -28,7 +28,7 @@ func (ver *Verifier) ConUniFact(stmt *ast.UniFactStmt, state VerState) (bool, er
 
 	// know cond facts
 	for _, condFact := range stmt.DomFacts {
-		err := ver.env.NewFact(condFact)
+		err := ver.env.NewFactWithOutEmit(condFact)
 		if err != nil {
 			return false, err
 		}
@@ -56,7 +56,7 @@ func (ver *Verifier) uniFactWithoutIff(stmt *ast.UniFactStmt, state VerState) (b
 		}
 
 		// if true, store it
-		err = ver.env.NewFact(thenFact)
+		err = ver.env.NewFactWithOutEmit(thenFact)
 		if err != nil {
 			return false, err
 		}
@@ -96,7 +96,7 @@ func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.UniFactStmt, state VerSta
 	ver.newEnv(nil)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.ThenFacts {
-		err := ver.env.NewFact(condFact)
+		err := ver.env.NewFactWithOutEmit(condFact)
 		if err != nil {
 			return false, err
 		}
@@ -114,7 +114,7 @@ func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.UniFactStmt, state VerSta
 			return false, nil
 		}
 
-		err = ver.env.NewFact(toCheckFact)
+		err = ver.env.NewFactWithOutEmit(toCheckFact)
 		if err != nil {
 			return false, err
 		}
@@ -134,7 +134,7 @@ func (ver *Verifier) uniFactWithIffToThen(stmt *ast.UniFactStmt, state VerState)
 	ver.newEnv(nil)
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.IffFacts {
-		err := ver.env.NewFact(condFact)
+		err := ver.env.NewFactWithOutEmit(condFact)
 		if err != nil {
 			return false, err
 		}
@@ -152,7 +152,7 @@ func (ver *Verifier) uniFactWithIffToThen(stmt *ast.UniFactStmt, state VerState)
 			return false, nil
 		}
 
-		err = ver.env.NewFact(toCheckFact)
+		err = ver.env.NewFactWithOutEmit(toCheckFact)
 		if err != nil {
 			return false, err
 		}

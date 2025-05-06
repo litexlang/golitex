@@ -273,17 +273,17 @@ func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 // 	return uniFact, nil
 // }
 
-func (uniFact *UniFactStmt) ToDefPropWith_EmptyDom_UniFactThenAsIff(propName string) *DefConPropStmt {
-	defHeader := ConDefHeader{
-		Name:      propName,
-		Params:    uniFact.Params,
-		SetParams: uniFact.ParamSets,
-	}
-	domFacts := []FactStmt{}
-	iffFacts := uniFact.DomFacts // Notice here is thenFacts, not iffFacts
+// func (uniFact *UniFactStmt) ToDefPropWith_EmptyDom_UniFactThenAsIff(propName string) *DefConPropStmt {
+// 	defHeader := ConDefHeader{
+// 		Name:      propName,
+// 		Params:    uniFact.Params,
+// 		SetParams: uniFact.ParamSets,
+// 	}
+// 	domFacts := []FactStmt{}
+// 	iffFacts := uniFact.DomFacts // Notice here is thenFacts, not iffFacts
 
-	return NewDefConPropStmt(defHeader, domFacts, iffFacts)
-}
+// 	return NewDefConPropStmt(defHeader, domFacts, iffFacts)
+// }
 
 func (defStmt *DefConPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
