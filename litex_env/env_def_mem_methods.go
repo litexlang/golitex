@@ -155,19 +155,19 @@ func (memory *ObjMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 
 func (memory *EmitWhenSpecFactIsTrueMem) Insert(pkgName string, propName string, emitWhenSpecFactIsTrue *ast.UniFactStmt) error {
 	if _, ok := memory.Dict[pkgName]; !ok {
-		memory.Dict[pkgName] = make(map[string][]EmitWhenSpecFactIsTrueMemItem)
+		memory.Dict[pkgName] = make(map[string][]ast.UniFactStmt)
 	}
 
 	if _, ok := memory.Dict[pkgName][propName]; !ok {
-		memory.Dict[pkgName][propName] = []EmitWhenSpecFactIsTrueMemItem{}
+		memory.Dict[pkgName][propName] = []ast.UniFactStmt{}
 	}
 
-	memory.Dict[pkgName][propName] = append(memory.Dict[pkgName][propName], EmitWhenSpecFactIsTrueMemItem{emitWhenSpecFactIsTrue.Params, emitWhenSpecFactIsTrue.DomFacts})
+	memory.Dict[pkgName][propName] = append(memory.Dict[pkgName][propName], *emitWhenSpecFactIsTrue)
 
 	return nil
 }
 
-func (memory *EmitWhenSpecFactIsTrueMem) Get(pkgName string, propName string) ([]EmitWhenSpecFactIsTrueMemItem, bool) {
+func (memory *EmitWhenSpecFactIsTrueMem) Get(pkgName string, propName string) ([]ast.UniFactStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 	if !pkgExists {
 		return nil, false

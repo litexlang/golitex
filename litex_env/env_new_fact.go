@@ -21,7 +21,7 @@ import (
 func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.newSpecFact(f)
+		return env.NewSpecFact(f)
 	// case *ast.CondFactStmt:
 	// 	return env.newCondFact(f)
 	case *ast.UniFactStmt:
@@ -37,10 +37,7 @@ func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 	return env.SpecFactInLogicExprMem.NewFact(fact)
 }
 
-func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
-	// if fact.IsEqualFact() {
-	// 	return env.NewEqualFact(fact)
-	// }
+func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 
 	err := env.SpecFactMem.NewFact(fact)
 	if err != nil {
@@ -288,4 +285,40 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 	}
 
 	return ast.NewUniFactStmtWithSetReqInDom(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, ast.EmptyIffFacts), nil
+}
+
+func (env *Env) NewEmitWhenSpecFactIsTrue(fact *ast.SpecFactStmt) error {
+	curEnv := env
+	for curEnv != nil {
+		emitWhenSpecFactIsTrue, ok := curEnv.EmitWhenSpecFactIsTrueMem.Get(ast.EmptyClaimName, fact.PropName.Name)
+
+		if !ok {
+			curEnv = curEnv.Parent
+			continue
+		}
+
+		for _, emitWhenSpecFactIsTrue := range emitWhenSpecFactIsTrue {
+
+			uniConMap := map[string]ast.Fc{}
+			for i, propParam := range emitWhenSpecFactIsTrue.Params {
+				uniConMap[propParam] = fact.Params[i]
+			}
+
+			instEmitWhenSpecFactIsTrue, err := emitWhenSpecFactIsTrue.Instantiate(uniConMap)
+			if err != nil {
+				return err
+			}
+
+			for _, thenFact := range instEmitWhenSpecFactIsTrue.(*ast.UniFactStmt).ThenFacts {
+				err = env.NewFact(thenFact)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		curEnv = curEnv.Parent
+	}
+
+	return nil
 }

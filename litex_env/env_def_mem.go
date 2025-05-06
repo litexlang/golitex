@@ -35,10 +35,5 @@ type FnMem struct {
 }
 
 type EmitWhenSpecFactIsTrueMem struct {
-	Dict map[string]map[string][]EmitWhenSpecFactIsTrueMemItem
-}
-
-type EmitWhenSpecFactIsTrueMemItem struct {
-	Params []string
-	Facts  []ast.FactStmt
+	Dict map[string]map[string][]ast.UniFactStmt
 }
