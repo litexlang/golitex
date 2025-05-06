@@ -57,8 +57,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveClaimStmt()
 	case glob.KeywordKnow:
 		ret, err = tb.knowStmt()
-	// case glob.KeywordAxiom:
-	// 	ret, err = tb.axiomStmt()
+	case glob.KeywordAxiom:
+		ret, err = tb.axiomStmt()
 	// case glob.KeywordThm:
 	// 	ret, err = tb.thmStmt()
 	case glob.KeywordSet:
@@ -424,6 +424,10 @@ func (tb *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
 	tb.header.skip(glob.KeywordKnow)
 
 	if !tb.header.is(glob.KeySymbolColon) {
+		if tb.header.is(glob.KeywordClaim) {
+
+		}
+
 		facts := []ast.FactStmt{}
 		fact, err := tb.factStmt(ast.NameDepthMap{}, UniFactDepth0)
 		if err != nil {
@@ -559,25 +563,6 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 // 	}
 
 // 	return ast.NewThmStmt(decl, proof), nil
-// }
-
-// func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
-// 	err := tb.header.skip(glob.KeywordAxiom)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	err = tb.header.testAndSkip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	decl, err := tb.body[0].defConPropStmt(true)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	return ast.NewAxiomStmt(decl), nil
 // }
 
 // addPrefix 可能不必要，因为没有 axiom 和 thm 了
@@ -1182,4 +1167,28 @@ func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
 	}
 
 	return ast.NewMatcherEnvStmt(&matcherName, params, body), nil
+}
+
+func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
+	err := tb.header.skip(glob.KeywordAxiom)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	name, err := tb.header.next()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.header.testAndSkip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	fact, err := tb.uniFactStmt(ast.NameDepthMap{}, UniFactDepth0)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewAxiomStmt(name, *fact), nil
 }

@@ -28,15 +28,15 @@ const (
 	KeywordSt        = "st"
 	KeywordExistProp = "exist_prop"
 	// KeywordConstructorProp      = "constructor_prop"
-	KeywordClaim   = "claim"
-	KeywordProve   = "prove"
-	KeywordPub     = "pub"
-	KeywordImport  = "import"
-	KeywordPackage = "package"
-	KeywordNot     = "not"
-	KeywordImpl    = "impl"
-	KeywordAs      = "as"
-	// KeywordAxiom                = "axiom" // syntax sugar for: prop + know forall
+	KeywordClaim                = "claim"
+	KeywordProve                = "prove"
+	KeywordPub                  = "pub"
+	KeywordImport               = "import"
+	KeywordPackage              = "package"
+	KeywordNot                  = "not"
+	KeywordImpl                 = "impl"
+	KeywordAs                   = "as"
+	KeywordAxiom                = "axiom" // syntax sugar for: prop + know forall
 	KeywordProveByContradiction = "prove_by_contradiction"
 	// KeywordThm                  = "thm" // syntax sugar for: prop + prove
 	// KeywordSelf                 = "self" // return value of a function; refer to an instance of the type or set we are defining
@@ -78,15 +78,15 @@ var keywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExistProp: {},
 	KeywordSt:        {},
 	// KeywordConstructorProp:      {},
-	KeywordClaim:   {},
-	KeywordProve:   {},
-	KeywordPub:     {},
-	KeywordImport:  {},
-	KeywordPackage: {},
-	KeywordNot:     {},
-	KeywordImpl:    {},
-	KeywordAs:      {},
-	// KeywordAxiom:                {},
+	KeywordClaim:                {},
+	KeywordProve:                {},
+	KeywordPub:                  {},
+	KeywordImport:               {},
+	KeywordPackage:              {},
+	KeywordNot:                  {},
+	KeywordImpl:                 {},
+	KeywordAs:                   {},
+	KeywordAxiom:                {},
 	KeywordProveByContradiction: {},
 	// KeywordThm:                  {},
 	KeywordIff:   {},
