@@ -284,14 +284,15 @@ func (s *DefConExistPropStmt) String() string {
 
 	return builder.String()
 }
-func (s *AxiomStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordAxiom)
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.Decl.String(), 1))
-	return builder.String()
-}
+
+// func (s *AxiomStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordAxiom)
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	builder.WriteByte('\n')
+// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.Decl.String(), 1))
+// 	return builder.String()
+// }
 
 // func (s *ThmStmt) String() string {
 // 	var builder strings.Builder

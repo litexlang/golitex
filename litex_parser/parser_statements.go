@@ -57,8 +57,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveClaimStmt()
 	case glob.KeywordKnow:
 		ret, err = tb.knowStmt()
-	case glob.KeywordAxiom:
-		ret, err = tb.axiomStmt()
+	// case glob.KeywordAxiom:
+	// 	ret, err = tb.axiomStmt()
 	// case glob.KeywordThm:
 	// 	ret, err = tb.thmStmt()
 	case glob.KeywordSet:
@@ -561,25 +561,26 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 // 	return ast.NewThmStmt(decl, proof), nil
 // }
 
-func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
-	err := tb.header.skip(glob.KeywordAxiom)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
+// 	err := tb.header.skip(glob.KeywordAxiom)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	err = tb.header.testAndSkip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	err = tb.header.testAndSkip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	decl, err := tb.body[0].defConPropStmt(true)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	decl, err := tb.body[0].defConPropStmt(true)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	return ast.NewAxiomStmt(decl), nil
-}
+// 	return ast.NewAxiomStmt(decl), nil
+// }
 
+// addPrefix 可能不必要，因为没有 axiom 和 thm 了
 func (tb *tokenBlock) conDefHeader(addPrefix bool) (*ast.ConDefHeader, ast.NameDepthMap, error) {
 	name, err := tb.header.next()
 	if err != nil {

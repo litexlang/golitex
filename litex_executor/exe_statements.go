@@ -43,8 +43,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defConFnStmt(stmt)
 	case *ast.MatcherEnvStmt:
 		err = exec.matcherEnvStmt(stmt)
-	case *ast.AxiomStmt:
-		err = exec.axiomStmt(stmt)
+	// case *ast.AxiomStmt:
+	// 	err = exec.axiomStmt(stmt)
 	// case *ast.ThmStmt:
 	// 	err = exec.thmStmt(stmt)
 
@@ -480,27 +480,27 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 	return false, nil
 }
 
-func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
-	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+// func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
+// 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.defStmt(stmt.Decl)
-	if err != nil {
-		return err
-	}
+// 	err := exec.defStmt(stmt.Decl)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	knownUniFact, err := stmt.Decl.UniFactWhereDomImplyPropFact()
-	if err != nil {
-		return err
-	}
+// 	knownUniFact, err := stmt.Decl.UniFactWhereDomImplyPropFact()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = exec.env.NewFact(knownUniFact)
-	if err != nil {
-		return err
-	}
+// 	err = exec.env.NewFact(knownUniFact)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
+// 	return nil
 
-}
+// }
 
 // func (exec *Executor) thmStmt(stmt *ast.ThmStmt) error {
 // 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
