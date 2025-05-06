@@ -135,6 +135,11 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
+
+			err = exec.env.EmitWhenSpecFactIsTrueMem.Insert(exec.env.CurPkg, propSpecFact.PropName.Name, uniPropImplyClaimThen)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
 		}
 	}
 	return glob.ExecState_True, nil

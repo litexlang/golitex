@@ -35,6 +35,8 @@ type Env struct {
 
 	UniParamMap map[string]ast.Fc
 
+	EmitWhenSpecFactIsTrueMem EmitWhenSpecFactIsTrueMem
+
 	CurPkg string
 }
 
@@ -55,6 +57,8 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 		SpecFactMem:            *newSpecFactMemDict(),
 		SpecFactInLogicExprMem: *NewSpecFactInLogicExprMemDict(),
 		SpecFactInUniFactMem:   *NewSpecFactInUniFactMem(),
+
+		EmitWhenSpecFactIsTrueMem: *NewEmitWhenSpecFactIsTrueMem(),
 
 		UniParamMap: uniParamMap,
 
@@ -126,4 +130,10 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	}
 
 	return nil, false
+}
+
+func NewEmitWhenSpecFactIsTrueMem() *EmitWhenSpecFactIsTrueMem {
+	return &EmitWhenSpecFactIsTrueMem{
+		Dict: make(map[string]map[string][]EmitWhenSpecFactIsTrueMemItem),
+	}
 }
