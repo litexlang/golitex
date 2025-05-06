@@ -43,7 +43,7 @@ type Verifier struct {
 
 func NewVerifier(curEnv *env.Env, pkgName string) *Verifier {
 	if curEnv == nil {
-		return &Verifier{env: env.NewEnv(nil, nil), curPkg: pkgName}
+		return &Verifier{env: env.NewEnv(nil), curPkg: pkgName}
 	} else {
 		return &Verifier{env: curEnv}
 	}
@@ -56,8 +56,8 @@ func (ver *Verifier) successWithMsg(stmtString, storedStmtString string) {
 func (ver *Verifier) successNoMsg() {
 }
 
-func (ver *Verifier) newEnv(uniParamsMap map[string]ast.Fc) {
-	newEnv := env.NewEnv(ver.env, uniParamsMap)
+func (ver *Verifier) newEnv() {
+	newEnv := env.NewEnv(ver.env)
 	ver.env = newEnv
 }
 
