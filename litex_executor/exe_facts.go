@@ -32,6 +32,12 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
+		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
+			err = exec.env.NewEmitWhenSpecFactIsTrue(stmtAsSpecFact)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+		}
 		return glob.ExecState_True, nil
 	}
 

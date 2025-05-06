@@ -134,6 +134,6 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 
 func NewEmitWhenSpecFactIsTrueMem() *EmitWhenSpecFactIsTrueMem {
 	return &EmitWhenSpecFactIsTrueMem{
-		Dict: make(map[string]map[string][]EmitWhenSpecFactIsTrueMemItem),
+		Dict: make(map[string]map[string][]ast.UniFactStmt),
 	}
 }

@@ -40,21 +40,3 @@ type KnownSpecFact_InLogicExpr_InUniFact struct {
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
 }
-
-// type EnumUniFactMem struct {
-// 	Facts            []KnownSpecFact_InUniSpecFact
-// 	ParentLogicFacts []KnownSpecFact_InLogicExpr_InUniFact
-// }
-
-// type UniFactMemItem struct {
-// 	PureFacts         EnumUniFactMem
-// 	NotPureFacts      EnumUniFactMem
-// 	ExistFacts        EnumUniFactMem
-// 	NotExistFacts     EnumUniFactMem
-// 	Exist_St_Facts    EnumUniFactMem
-// 	NotExist_St_Facts EnumUniFactMem
-// }
-
-// type UniFactMem struct {
-// 	SpecFactsDict map[string]map[string]UniFactMemItem
-// }
