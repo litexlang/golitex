@@ -22,12 +22,10 @@ func (env *Env) NewFactWithOutEmit(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
 		return env.NewSpecFact(f)
-	// case *ast.CondFactStmt:
-	// 	return env.newCondFact(f)
-	case *ast.UniFactStmt:
-		return env.newConUniFact(f)
 	case *ast.LogicExprStmt:
 		return env.newLogicExprStmt(f)
+	case *ast.UniFactStmt:
+		return env.newConUniFact(f)
 	default:
 		return fmt.Errorf("unknown fact type: %T", stmt)
 	}
@@ -58,19 +56,18 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 
 func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 	if fact.TypeEnum == ast.TrueAtom {
-		return env.newTruePureSpecFactPostProcess(fact)
+		return env.emit_specFact_DefFacts(fact)
 	} else {
 		return nil
 	}
 }
 
-func (env *Env) newTruePureSpecFactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) emit_specFact_DefFacts(fact *ast.SpecFactStmt) error {
 	propDef, ok := env.PropMem.Get(fact.PropName)
 	if !ok {
-		return nil
-
 		// TODO 这里需要考虑prop的定义是否在当前包中
 		// return fmt.Errorf("prop %s has no definition", fact.PropName)
+		return nil
 	}
 
 	uniConMap := map[string]ast.Fc{}
@@ -78,17 +75,16 @@ func (env *Env) newTruePureSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 		uniConMap[propParam] = fact.Params[i]
 	}
 
-	// 这里默认dom都被满足了，所以直接释放iff就行
-
 	for _, thenFact := range propDef.IffFacts {
 		instantiated, err := thenFact.Instantiate(uniConMap)
 		if err != nil {
 			return err
 		}
 
-		// TODO: 这里不只插入到SpecFactMem中，还要插入任何mem，因为现在iff非常的复杂，所有情况都行
-		// err = env.SpecFactMem.InsertSpecFact(instantiated.(*ast.SpecFactStmt))
 		err = env.NewFactWithOutEmit(instantiated)
+
+		env.NewMsg(fmt.Sprintf(`know fact by prop definition: %s`, instantiated.String()))
+
 		if err != nil {
 			return err
 		}
@@ -120,7 +116,7 @@ func (env *Env) newFalseExistFactPostProcess(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	err = env.SpecFactInUniFactMem.NewFact(conUniFact)
+	err = env.SpecFactInUniFactMem.newFact(conUniFact)
 	if err != nil {
 		return fmt.Errorf("exist fact %s has no definition", fact.String())
 	}
@@ -145,16 +141,8 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-// func (env *Env) newCondFact(fact *ast.CondFactStmt) error {
-// 	err := env.CondFactMem.Insert(fact)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
 func (env *Env) newConUniFact(fact *ast.UniFactStmt) error {
-	err := env.SpecFactInUniFactMem.NewFact(fact)
+	err := env.SpecFactInUniFactMem.newFact(fact)
 	if err != nil {
 		return err
 	}
@@ -182,11 +170,6 @@ func (env *Env) IsInvalidName(name string) error {
 		}
 	}
 
-	return nil
-}
-
-func (env *Env) Declare(stmt ast.Stmt, name string) error {
-	// TODO: 声明obj，也可能是fn，甚至可能是prop
 	return nil
 }
 
@@ -311,7 +294,7 @@ func (env *Env) NewEmitWhenSpecFactIsTrue(fact *ast.SpecFactStmt) error {
 
 			for _, thenFact := range instEmitWhenSpecFactIsTrue.(*ast.UniFactStmt).ThenFacts {
 				err = env.NewFactWithOutEmit(thenFact)
-				env.NewMsg(`automatically know fact: ` + thenFact.String())
+				env.NewMsg(fmt.Sprintf(`know fact by proved claim or axiom: %s`, thenFact.String()))
 
 				if err != nil {
 					return err

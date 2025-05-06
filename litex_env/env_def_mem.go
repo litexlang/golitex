@@ -33,7 +33,3 @@ type FnMemItem struct{ Def *ast.DefConFnStmt }
 type FnMem struct {
 	Dict map[string]map[string]FnMemItem
 }
-
-type EmitWhenSpecFactIsTrueMem struct {
-	Dict map[string]map[string][]ast.UniFactStmt
-}

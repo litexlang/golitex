@@ -73,6 +73,12 @@ func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
 		if err != nil {
 			return err
 		}
+		if stmtAsSpecFact, ok := fact.(*ast.SpecFactStmt); ok {
+			err = exec.env.NewEmitWhenSpecFactIsTrue(stmtAsSpecFact)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	exec.appendNewMsg(stmt.String())
