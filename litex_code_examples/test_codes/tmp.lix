@@ -44,3 +44,15 @@ prove:
     know not $q(1)
     $r(1)
 
+prove:
+    fn f(x nat) nat:
+        $p(x)
+
+    $in(f, fn)
+
+    prop p(x nat):
+        $q(x)
+
+    $in(p, prop)
+
+    

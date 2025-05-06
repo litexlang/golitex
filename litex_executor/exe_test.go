@@ -54,11 +54,16 @@ func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
 			t.Fatal(err)
 		}
 		// 如果连续两个 \n 则删除一个
-		for i := range len(executor.env.Msgs) - 1 {
-			if executor.env.Msgs[i] == "\n" && executor.env.Msgs[i+1] == "\n" {
-				executor.env.Msgs = append(executor.env.Msgs[:i], executor.env.Msgs[i+1:]...)
+		var newMsgs []string
+		for i := 0; i < len(executor.env.Msgs); i++ {
+			if i < len(executor.env.Msgs)-1 && executor.env.Msgs[i] == "\n" && executor.env.Msgs[i+1] == "\n" {
+				newMsgs = append(newMsgs, executor.env.Msgs[i])
+				i++ // Skip the next newline
+			} else {
+				newMsgs = append(newMsgs, executor.env.Msgs[i])
 			}
 		}
+		executor.env.Msgs = newMsgs
 
 		messages = append(messages, strings.Join(executor.env.Msgs, "\n"))
 	}
