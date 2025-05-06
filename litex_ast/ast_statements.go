@@ -235,7 +235,7 @@ func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 }
 
 // 如果用户认定这个定理是公理，那就返回forall anything satisfy dom, prop is true
-func (defStmt *DefConPropStmt) AxiomUniFact() (*UniFactStmt, error) {
+func (defStmt *DefConPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
 	uniFactParams := defStmt.DefHeader.Params
 	uniFactParamSets := defStmt.DefHeader.SetParams
 	uniFactDomFacts := defStmt.DomFacts
@@ -252,7 +252,7 @@ func (defStmt *DefConPropStmt) AxiomUniFact() (*UniFactStmt, error) {
 	return uniFact, nil
 }
 
-func (defStmt *DefConExistPropStmt) AxiomUniFact() (*UniFactStmt, error) {
+func (defStmt *DefConExistPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
 	existParams := defStmt.ExistParams
 	existParamSets := defStmt.ExistParamSets
 	existDomFacts := defStmt.Def.DomFacts
