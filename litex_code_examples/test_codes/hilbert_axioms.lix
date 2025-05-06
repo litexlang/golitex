@@ -4,33 +4,33 @@ set plane
 
 fn angle(a point, b point, c point) real
 
-prop between(a point, b point, c point)
-prop line_contain_point(l line, p point)
-prop plane_contain_point(p plane, q point)
-prop plane_contain_line(p plane, l line)
+prop between(left point, right point, middle point)
+prop point_on_line(p point, l line)
+prop point_on_plane(q point, p plane)
 
 # 存在且只存在，这样的公理，用 fn & know forall 表示
 
 fn line_of(a point, b point) line:
     a != b
     then:
-        $line_contain_point(line_of(a, b), a)
-        $line_contain_point(line_of(a, b), b)
+        $point_on_line(line_of(a, b), a)
+        $point_on_line(line_of(a, b), b)
 
 # TODO: 让 uniFact 能出现在 fn then 里
+# TODO: 让 exist_prop 能有 uniFact ，即使这样它就不能 逆否了
 know:
     forall l line, a point, b point:
-        $line_contain_point(l, a)
-        $line_contain_point(l, b)
+        $point_on_line(a, l)
+        $point_on_line(b, l)
         then:
             l = line_of(a, b)
 
 exist_prop c point st A1(l line, a point, b point):
-    $line_contain_point(l, a)
-    $line_contain_point(l, b)
+    $point_on_line(a, l)
+    $point_on_line(b, l)
     a != b
     iff:
-        $line_contain_point(l, c)
+        $point_on_line(c, l)
         c != a
         c != b
 
@@ -39,18 +39,56 @@ fn plain_of(a point, b point, c point) plane:
     a != c
     b != c
     then:
-        $plane_contain_point(plain_of(a, b, c), a)
-        $plane_contain_point(plain_of(a, b, c), b)
-        $plane_contain_point(plain_of(a, b, c), c)
+        $point_on_plane(a, plain_of(a, b, c))
+        $point_on_plane(b, plain_of(a, b, c))
+        $point_on_plane(c, plain_of(a, b, c))
 
 know:
     forall p plane, a point, b point, c point:
-        $plane_contain_point(p, a)
-        $plane_contain_point(p, b)
-        $plane_contain_point(p, c)
+        $point_on_plane(a, p)
+        $point_on_plane(b, p)
+        $point_on_plane(c, p)
         a != b
         a != c
         b != c
-        iff:
+        then:
             p = plain_of(a, b, c)
-            
+
+prop line_on_plane(l line, p plane):
+    forall x point:
+        $point_on_line(x, l)
+        then:
+            $point_on_plane(x, p)
+    
+know:
+    forall p plane, a point, b point:
+        $point_on_plane(a, p)
+        $point_on_plane(b, p)
+        a != b
+        $line_on_plane(p, line_of(a, b))
+
+exist_prop b point st if_two_planes_both_has_point_then_they_have_another_point_in_common(a point, p plane, q plane):
+    $point_on_plane(a, p)
+    $point_on_plane(a, q)
+    iff:
+        $point_on_plane(b, p)
+        $point_on_plane(b, q)
+        a != b
+
+prop four_points_on_one_plane(a point, b point, c point, d point, p plane):
+    $point_on_plane(a, p)
+    $point_on_plane(b, p)
+    $point_on_plane(c, p)
+    $point_on_plane(d, p)
+    a != b
+    a != c
+    a != d
+    b != c
+    b != d
+    c != d
+
+exist_prop a point, b point, c point, d point st four_points_not_on_one_plane(p plane):
+    not $four_points_on_one_plane(a, b, c, d, p)
+
+forall p plane:
+    $four_points_on_one_plane(p)
