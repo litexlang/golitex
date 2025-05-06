@@ -875,7 +875,7 @@ func (tb *tokenBlock) setDefStmt() (ast.SetDefStmt, error) {
 	}
 
 	if tb.header.ExceedEnd() {
-		return ast.NewSetDefSetBuilderStmt(setName, nil, []ast.FactStmt{}), nil
+		return ast.NewSetDefSetBuilderStmt(setName, ast.EmptyParentSet, []ast.FactStmt{}), nil
 	}
 
 	if tb.header.is(glob.KeySymbolLeftCurly) {

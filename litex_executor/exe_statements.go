@@ -536,5 +536,10 @@ func (exec *Executor) setDefStmt(stmt ast.SetDefStmt) error {
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 
+	err := exec.env.SetMem.Insert(stmt, exec.curPkg)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

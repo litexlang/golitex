@@ -515,16 +515,24 @@ func (f *FcFn) String() string {
 
 func (stmt *SetDefSetBuilderStmt) String() string {
 	var builder strings.Builder
+	builder.WriteString(glob.KeywordSet)
+	builder.WriteString(" ")
 	builder.WriteString(stmt.SetName)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.ParentSet.String())
-	builder.WriteString(":\n")
-	builder.WriteString(strOfNonEmptyFactStmtSlice(stmt.Facts, 1))
+	if stmt.ParentSet != EmptyParentSet {
+		builder.WriteString(stmt.ParentSet.String())
+	}
+	if len(stmt.Facts) > 0 {
+		builder.WriteString(":\n")
+		builder.WriteString(strOfNonEmptyFactStmtSlice(stmt.Facts, 1))
+	}
 	return builder.String()
 }
 
 func (stmt *SetDefEnumtmt) String() string {
 	var builder strings.Builder
+	builder.WriteString(glob.KeywordSet)
+	builder.WriteString(" ")
 	builder.WriteString(stmt.SetName)
 	builder.WriteString(" ")
 	for i := range len(stmt.Elems) - 1 {
