@@ -27,24 +27,12 @@ type Env struct {
 
 	SpecFactMem            SpecFactMem
 	SpecFactInLogicExprMem SpecFactInLogicExprMem
-	// CondFactMem CondFactMemDict
-	SpecFactInUniFactMem SpecFactInUniFactMem
-	// EqualFactMem EqualFactMem
-
-	//TODO 这里必须区分Concrete和Generic. 默认不加前缀的是普通的事实；有Generic前缀的是Generic
-
-	UniParamMap map[string]ast.Fc
+	SpecFactInUniFactMem   SpecFactInUniFactMem
 
 	EmitWhenSpecFactIsTrueMem EmitWhenSpecFactIsTrueMem
-
-	// CurPkg string
 }
 
-func NewEnv(parent *Env, uniParamMap map[string]ast.Fc) *Env {
-	if uniParamMap == nil {
-		uniParamMap = make(map[string]ast.Fc)
-	}
-
+func NewEnv(parent *Env) *Env {
 	env := &Env{
 		Parent: parent,
 		Msgs:   []string{},
@@ -59,10 +47,6 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc) *Env {
 		SpecFactInUniFactMem:   *NewSpecFactInUniFact(),
 
 		EmitWhenSpecFactIsTrueMem: *NewEmitWhenSpecFactIsTrueMem(),
-
-		UniParamMap: uniParamMap,
-
-		// CurPkg: curPkg,
 	}
 
 	return env

@@ -27,14 +27,14 @@ type Executor struct {
 // 如果你传入的是nil，那默认这个exec里的env的curPkg是""
 func NewExecutor(curEnv *env.Env) *Executor {
 	if curEnv == nil {
-		return &Executor{env: env.NewEnv(nil, nil)}
+		return &Executor{env: env.NewEnv(nil)}
 	} else {
 		return &Executor{env: curEnv}
 	}
 }
 
 func (e *Executor) newEnv() {
-	e.env = env.NewEnv(e.env, nil)
+	e.env = env.NewEnv(e.env)
 }
 
 func (e *Executor) deleteEnvAndRetainMsg() {

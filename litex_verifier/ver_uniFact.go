@@ -19,12 +19,10 @@ import (
 
 func (ver *Verifier) ConUniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	// 在局部环境声明新变量
-	ver.newEnv(nil)
+	ver.newEnv()
 	defer ver.deleteEnvAndRetainMsg()
-	for _, param := range stmt.Params {
-		// TODO: 需要在这里know一下 涉及到的变量是 in 某个集合的
-		ver.env.Declare(nil, param)
-	}
+
+	// TODO: 需要在这里know一下 涉及到的变量是 in 某个集合的
 
 	// know cond facts
 	for _, condFact := range stmt.DomFacts {
@@ -93,7 +91,7 @@ func (ver *Verifier) uniFactWithIff(stmt *ast.UniFactStmt, state VerState) (bool
 }
 
 func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.UniFactStmt, state VerState) (bool, error) {
-	ver.newEnv(nil)
+	ver.newEnv()
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.ThenFacts {
 		err := ver.env.NewFactWithOutEmit(condFact)
@@ -131,7 +129,7 @@ func (ver *Verifier) uniFactWithIffThenToIff(stmt *ast.UniFactStmt, state VerSta
 }
 
 func (ver *Verifier) uniFactWithIffToThen(stmt *ast.UniFactStmt, state VerState) (bool, error) {
-	ver.newEnv(nil)
+	ver.newEnv()
 	defer ver.deleteEnvAndRetainMsg()
 	for _, condFact := range stmt.IffFacts {
 		err := ver.env.NewFactWithOutEmit(condFact)

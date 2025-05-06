@@ -35,7 +35,7 @@ func executeCodeAndReturnMessageSlice(code string) ([]string, glob.SysSignal, er
 	if err != nil {
 		return nil, glob.SysSignalParseError, err
 	}
-	curEnv := env.NewEnv(nil, nil)
+	curEnv := env.NewEnv(nil)
 	executor := *exe.NewExecutor(curEnv)
 
 	msgOfTopStatements := []string{}

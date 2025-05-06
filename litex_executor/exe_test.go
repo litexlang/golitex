@@ -44,7 +44,7 @@ func setupAndParseStmtTest(code string, t *testing.T) []ast.TopStmt {
 }
 
 func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
-	env := env.NewEnv(nil, nil)
+	env := env.NewEnv(nil)
 	executor := *NewExecutor(env)
 
 	messages := []string{}
@@ -80,7 +80,7 @@ func TestKnow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	env := env.NewEnv(nil, nil)
+	env := env.NewEnv(nil)
 	executor := *NewExecutor(env)
 	for _, topStmt := range statements {
 		execState, err := executor.TopLevelStmt(&topStmt)
@@ -161,7 +161,7 @@ func randObjParams() []ast.Fc {
 // }
 
 func TestKnowVerifySpecFactSpeed(t *testing.T) {
-	env := env.NewEnv(nil, nil)
+	env := env.NewEnv(nil)
 	executor := *NewExecutor(env)
 	topStatements := []*ast.TopStmt{}
 	topVerifyStatements := []*ast.TopStmt{}
@@ -306,7 +306,7 @@ func TestKnowVerifySpecFactSpeed(t *testing.T) {
 // }
 
 func TestEqualFactMemory(t *testing.T) {
-	env := env.NewEnv(nil, nil)
+	env := env.NewEnv(nil)
 	executor := *NewExecutor(env)
 	executor.env = env
 	topKnowStatements := []*ast.TopStmt{}

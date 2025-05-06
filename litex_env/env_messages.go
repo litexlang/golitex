@@ -33,14 +33,14 @@ func (fact *KnownSpecFact) String() string {
 	return fact.Fact.String()
 }
 
-// func (fact *StoredCondSpecFact) String() string {
-// 	return fact.Fact.String()
-// }
-
 func (fact *KnownSpecFact_InUniSpecFact) String() string {
 	return fact.UniFact.String()
 }
 
 func (fact *KnownSpecFact_InLogicExpr) String() string {
 	return fact.LogicExpr.String()
+}
+
+func (fact *KnownSpecFact_InLogicExpr_InUniFact) String() string {
+	return fact.UniFact.String()
 }

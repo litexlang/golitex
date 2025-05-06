@@ -33,3 +33,13 @@ prove:
             $p(x)
 
     $p(1)
+
+prove:
+    prop p(x nat):
+        or:
+            $q(x)
+            $r(x)
+    
+    know $p(1)
+    know not $q(1)
+    $r(1)

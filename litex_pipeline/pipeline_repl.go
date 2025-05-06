@@ -33,8 +33,10 @@ type REPL struct {
 	// history       []string
 }
 
+const envCreationIntervalForRepl = 5
+
 func NewREPL() *REPL {
-	initialEnv := env.NewEnv(nil, nil)
+	initialEnv := env.NewEnv(nil)
 	return &REPL{
 		env:      initialEnv,
 		executor: exe.NewExecutor(initialEnv),
@@ -124,7 +126,7 @@ func (r *REPL) executeStatements(topStmtSlice []ast.TopStmt) ([]string, error) {
 	curEnv := r.env
 	executor := r.executor
 
-	if glob.EnvCreationInterval == 0 {
+	if envCreationIntervalForRepl == 0 {
 		// Single environment mode
 		for _, topStmt := range topStmtSlice {
 			execState, err := executor.TopLevelStmt(&topStmt)
@@ -138,11 +140,11 @@ func (r *REPL) executeStatements(topStmtSlice []ast.TopStmt) ([]string, error) {
 		}
 	} else {
 		// Environment isolation mode
-		envSwitchThreshold := glob.EnvCreationInterval - 1
+		envSwitchThreshold := envCreationIntervalForRepl - 1
 
 		for i, topStmt := range topStmtSlice {
-			if i%glob.EnvCreationInterval == envSwitchThreshold {
-				curEnv = env.NewEnv(curEnv, curEnv.UniParamMap)
+			if i%envCreationIntervalForRepl == envSwitchThreshold {
+				curEnv = env.NewEnv(curEnv)
 				executor = exe.NewExecutor(curEnv)
 				r.lastEnvSwitch = i
 			}
@@ -150,7 +152,7 @@ func (r *REPL) executeStatements(topStmtSlice []ast.TopStmt) ([]string, error) {
 			execState, err := executor.TopLevelStmt(&topStmt)
 			if err != nil {
 				// Rollback to last environment checkpoint
-				r.env = env.NewEnv(r.env, r.env.UniParamMap)
+				r.env = env.NewEnv(r.env)
 				r.executor = exe.NewExecutor(r.env)
 				return nil, fmt.Errorf("at statement %d: %w", i+1, err)
 			}
