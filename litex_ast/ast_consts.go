@@ -22,3 +22,5 @@ var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinEmptyPkg
 
 var EmptyClaimName = ""
 var EmptyKnowClaimName = ""
+
+var EmptyParentSet Fc = nil
