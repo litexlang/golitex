@@ -1,1 +1,19 @@
 prove:
+    know:
+        forall x set:
+            $q(x)
+            then:
+                $t(x)
+
+    thm:
+        prop p(x set):  
+            $q(x)
+            iff:
+                $t(x)
+        prove:
+            
+    claim propName:
+        forall x set:
+            $q(x)
+            then:
+                $t(x)
