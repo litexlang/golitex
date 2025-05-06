@@ -357,8 +357,20 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 	tb.header.skip(glob.KeywordClaim)
 	err := error(nil)
 
-	if err := tb.header.testAndSkip(glob.KeySymbolColon); err != nil {
-		return nil, &tokenBlockErr{err, *tb}
+	claimName := ast.EmptyClaimName
+
+	if tb.header.is(glob.KeySymbolColon) {
+		tb.header.skip(glob.KeySymbolColon)
+	} else {
+		claimName, err = tb.header.currentToken()
+		if err != nil {
+			return nil, err
+		}
+		tb.header.skip()
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	toCheck, err := tb.body[0].claimToCheckFact()
@@ -388,7 +400,7 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 		*proof = append(*proof, curStmt)
 	}
 
-	return ast.NewClaimProveStmt(isProve, toCheck, *proof), nil
+	return ast.NewClaimProveStmt(isProve, toCheck, *proof, claimName), nil
 }
 
 func (tb *tokenBlock) proveClaimStmt() (*ast.ClaimStmt, error) {
@@ -405,7 +417,7 @@ func (tb *tokenBlock) proveClaimStmt() (*ast.ClaimStmt, error) {
 		}
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
-	return ast.NewClaimProveStmt(true, ast.ClaimStmtEmptyToCheck, innerStmtArr), nil
+	return ast.NewClaimProveStmt(true, ast.ClaimStmtEmptyToCheck, innerStmtArr, ast.EmptyClaimName), nil
 }
 
 func (tb *tokenBlock) knowStmt() (*ast.KnowStmt, error) {

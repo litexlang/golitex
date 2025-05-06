@@ -101,6 +101,10 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 	}
 
 	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
+		if stmt.ClaimName != ast.EmptyClaimName {
+			return glob.ExecState_Error, fmt.Errorf("specific fact in claim should not have claim name, get %s", stmt.ClaimName)
+		}
+
 		err = exec.env.Parent.NewFact(asSpecFact)
 		if err != nil {
 			return glob.ExecState_Error, err
@@ -114,6 +118,10 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 		err = exec.env.Parent.NewFact(newUniFact)
 		if err != nil {
 			return glob.ExecState_Error, err
+		}
+
+		if stmt.ClaimName != ast.EmptyClaimName {
+			// TODO: 定义prop
 		}
 	}
 

@@ -74,6 +74,7 @@ type ClaimStmt struct {
 	IsProve     bool
 	ToCheckFact FactStmt
 	Proofs      []Stmt
+	ClaimName   string
 }
 
 type KnowStmt struct {
