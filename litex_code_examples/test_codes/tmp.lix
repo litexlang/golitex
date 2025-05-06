@@ -43,3 +43,4 @@ prove:
     know $p(1)
     know not $q(1)
     $r(1)
+

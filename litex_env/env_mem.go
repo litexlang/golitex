@@ -38,6 +38,10 @@ type KnownSpecFact struct {
 	Fact *ast.SpecFactStmt
 }
 
+type EmitWhenSpecFactIsTrueMem struct {
+	Dict map[string]map[string][]ast.UniFactStmt // 实际上根本不必要是 UniFact，只要保留 params (为了制作 uniMap), thenFacts (自由事实，为了未来制作 instantiated then facts) 就行
+}
+
 type SpecFactMem struct {
 	PureFacts         map[string]map[string][]KnownSpecFact
 	NotPureFacts      map[string]map[string][]KnownSpecFact
@@ -76,6 +80,8 @@ type SpecFactInUniFactMem struct {
 	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InUniSpecFact
 }
 
+// TODO 相关的功能未实现 ---------------------------
+
 type KnownSpecFact_InLogicExpr_InUniFact struct {
 	SpecFact  *ast.SpecFactStmt
 	UniFact   *ast.UniFactStmt
@@ -83,7 +89,6 @@ type KnownSpecFact_InLogicExpr_InUniFact struct {
 	LogicExpr *ast.LogicExprStmt
 }
 
-// TODO 相关的功能未实现
 type KnownSpecFact_InLogicExpr_InUniFactMem struct {
 	PureFacts         map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact
 	NotPureFacts      map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact
@@ -93,6 +98,4 @@ type KnownSpecFact_InLogicExpr_InUniFactMem struct {
 	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact
 }
 
-type EmitWhenSpecFactIsTrueMem struct {
-	Dict map[string]map[string][]ast.UniFactStmt // 实际上根本不必要是 UniFact，只要保留 params (为了制作 uniMap), thenFacts (自由事实，为了未来制作 instantiated then facts) 就行
-}
+// TODO 相关的功能未实现 ---------------------------

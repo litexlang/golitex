@@ -42,7 +42,7 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	var ret ast.Stmt
 	switch cur {
 	case glob.KeywordProp:
-		ret, err = tb.defConPropStmt(true)
+		ret, err = tb.defConPropStmt()
 	case glob.KeywordExistProp:
 		ret, err = tb.defConExistPropStmt()
 	case glob.KeywordFn:
@@ -231,13 +231,13 @@ func (tb *tokenBlock) bodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEn
 	return facts, nil
 }
 
-func (tb *tokenBlock) defConPropStmt(addUniPrefix bool) (*ast.DefConPropStmt, error) {
+func (tb *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 	err := tb.header.skip(glob.KeywordProp)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	declHeader, nameDepthMap, err := tb.conDefHeader(addUniPrefix)
+	declHeader, nameDepthMap, err := tb.conDefHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -259,16 +259,9 @@ func (tb *tokenBlock) defConPropStmt(addUniPrefix bool) (*ast.DefConPropStmt, er
 	var domFacts []ast.FactStmt
 	var iffFacts []ast.FactStmt
 
-	if addUniPrefix {
-		domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-	} else {
-		domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, ast.NameDepthMap{}, UniFactDepth1, glob.KeywordIff)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
+	domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	if len(iffFacts) == 0 {
@@ -284,7 +277,7 @@ func (tb *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	decl, nameDepthMap, err := tb.conDefHeader(true)
+	decl, nameDepthMap, err := tb.conDefHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -424,9 +417,6 @@ func (tb *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
 	tb.header.skip(glob.KeywordKnow)
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		if tb.header.is(glob.KeywordClaim) {
-
-		}
 
 		facts := []ast.FactStmt{}
 		fact, err := tb.factStmt(ast.NameDepthMap{}, UniFactDepth0)
@@ -527,46 +517,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 }
 
-// func (tb *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
-// 	err := tb.header.skip(glob.KeywordThm)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	err = tb.header.testAndSkip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	decl, err := tb.body[0].defConPropStmt(false)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	err = tb.body[1].header.skip(glob.KeywordProve)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	err = tb.body[1].header.testAndSkip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	proof := []ast.Stmt{}
-// 	for _, block := range tb.body[1].body {
-// 		curStmt, err := block.Stmt()
-// 		if err != nil {
-// 			return nil, &tokenBlockErr{err, *tb}
-// 		}
-// 		proof = append(proof, curStmt)
-// 	}
-
-// 	return ast.NewThmStmt(decl, proof), nil
-// }
-
-// addPrefix 可能不必要，因为没有 axiom 和 thm 了
-func (tb *tokenBlock) conDefHeader(addPrefix bool) (*ast.ConDefHeader, ast.NameDepthMap, error) {
+func (tb *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error) {
 	name, err := tb.header.next()
 	if err != nil {
 		return nil, nil, err
@@ -594,9 +545,7 @@ func (tb *tokenBlock) conDefHeader(addPrefix bool) (*ast.ConDefHeader, ast.NameD
 			}
 			nameDepthMap[param] = 1
 
-			if addPrefix {
-				param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-			}
+			param = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
 
 			params = append(params, param)
 
@@ -605,13 +554,10 @@ func (tb *tokenBlock) conDefHeader(addPrefix bool) (*ast.ConDefHeader, ast.NameD
 				return nil, nil, err
 			}
 
-			if addPrefix {
-				setParam, err = ast.AddUniPrefixToFc(setParam, nameDepthMap)
-				if err != nil {
-					return nil, nil, &tokenBlockErr{err, *tb}
-				}
+			setParam, err = ast.AddUniPrefixToFc(setParam, nameDepthMap)
+			if err != nil {
+				return nil, nil, &tokenBlockErr{err, *tb}
 			}
-
 			setParams = append(setParams, setParam)
 
 			if tb.header.is(glob.KeySymbolComma) {
@@ -674,7 +620,7 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
 		nameDepthMap[existParam] = 1
 	}
 
-	def, err := tb.existDefProp(true, nameDepthMap)
+	def, err := tb.existDefProp(nameDepthMap)
 
 	// add prefix to existParams
 	for i := range existParams {
@@ -852,7 +798,7 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 	} else {
 		for i := range parseBodyFactNum {
 			stmt := tb.body[i]
-
+			// TODO: 未来要能 parse logic expr 不过这样等 mem, exe, ver 都准备好，太累了以后再说
 			fact, err := stmt.specFactStmt(nameDepthMap)
 			if err != nil {
 				if tb.body[i].AtIndexIs(0, glob.KeywordForall) {
@@ -868,17 +814,15 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 	return facts, nil
 }
 
-func (tb *tokenBlock) existDefProp(addUniPrefix bool, existParamDepthMap ast.NameDepthMap) (*ast.ExistPropDef, error) {
-	declHeader, nameDepthMap, err := tb.conDefHeader(addUniPrefix)
+func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.ExistPropDef, error) {
+	declHeader, nameDepthMap, err := tb.conDefHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	// merge nameDepthMap and nameDepthMap2
-	if addUniPrefix {
-		for key := range existParamDepthMap {
-			nameDepthMap[key] = existParamDepthMap[key]
-		}
+	for key := range existParamDepthMap {
+		nameDepthMap[key] = existParamDepthMap[key]
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
@@ -898,16 +842,9 @@ func (tb *tokenBlock) existDefProp(addUniPrefix bool, existParamDepthMap ast.Nam
 	var domFacts []ast.FactStmt
 	var iffFacts []ast.FactStmt
 
-	if addUniPrefix {
-		domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-	} else {
-		domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, ast.NameDepthMap{}, UniFactDepth1, glob.KeywordIff)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
+	domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	if len(iffFacts) == 0 {
