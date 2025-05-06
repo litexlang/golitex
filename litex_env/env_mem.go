@@ -34,6 +34,11 @@ type FnMem struct {
 	Dict map[string]map[string]FnMemItem
 }
 
+type SetMemItem struct{ Def ast.SetDefStmt }
+type SetMem struct {
+	Dict map[string]map[string]SetMemItem
+}
+
 type KnownSpecFact struct {
 	Fact *ast.SpecFactStmt
 }
