@@ -42,6 +42,7 @@ func NewEnv(parent *Env) *Env {
 		PropMem:      *NewPropMemory(),
 		FnMem:        *NewFnMemory(),
 		ExistPropMem: *NewExistPropMemory(),
+		SetMem:       *NewSetMemory(),
 
 		SpecFactMem:            *newSpecFactMem(),
 		SpecFactInLogicExprMem: *NewSpecFactInLogicExprMem(),

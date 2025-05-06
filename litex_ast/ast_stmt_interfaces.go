@@ -70,10 +70,17 @@ type SetDefStmt interface {
 	setDefStmt()
 	stmt()
 	String() string
+	Name() string
 }
 
 func (s *SetDefSetBuilderStmt) setDefStmt() {}
 func (s *SetDefEnumtmt) setDefStmt()        {}
+func (s *SetDefSetBuilderStmt) Name() string {
+	return s.SetName
+}
+func (s *SetDefEnumtmt) Name() string {
+	return s.SetName
+}
 
 type LogicExprOrSpecFactStmt interface {
 	logicExprOrSpecFactStmt()

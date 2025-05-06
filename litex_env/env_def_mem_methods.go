@@ -29,6 +29,10 @@ func NewExistPropMemory() *ExistPropMem {
 	return &ExistPropMem{map[string]map[string]ExistPropMemItem{}}
 }
 
+func NewSetMemory() *SetMem {
+	return &SetMem{map[string]map[string]SetMemItem{}}
+}
+
 func (memory *PropMem) Insert(stmt *ast.DefConPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
@@ -178,4 +182,31 @@ func (memory *EmitWhenSpecFactIsTrueMem) Get(pkgName string, propName string) ([
 		return nil, false
 	}
 	return node, true
+}
+
+func (memory *SetMem) Insert(stmt ast.SetDefStmt, pkgName string) error {
+	if _, ok := memory.Dict[pkgName]; !ok {
+		memory.Dict[pkgName] = make(map[string]SetMemItem)
+	}
+
+	if _, ok := memory.Dict[pkgName][stmt.Name()]; !ok {
+		memory.Dict[pkgName][stmt.Name()] = SetMemItem{stmt}
+	}
+
+	memory.Dict[pkgName][stmt.Name()] = SetMemItem{stmt}
+
+	return nil
+}
+
+func (memory *SetMem) Get(setName string, pkgName string) (ast.SetDefStmt, bool) {
+	pkgMap, pkgExists := memory.Dict[pkgName]
+	if !pkgExists {
+		return nil, false
+	}
+
+	node, nodeExists := pkgMap[setName]
+	if !nodeExists {
+		return nil, false
+	}
+	return node.Def, true
 }

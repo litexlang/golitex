@@ -46,8 +46,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.matcherEnvStmt(stmt)
 	case *ast.AxiomStmt:
 		err = exec.axiomStmt(stmt)
-	case *ast.SetDefSetBuilderStmt:
-		err = exec.setDefSetBuilderStmt(stmt)
+	case ast.SetDefStmt:
+		err = exec.setDefStmt(stmt)
 	// case *ast.ThmStmt:
 	// 	err = exec.thmStmt(stmt)
 
@@ -532,7 +532,7 @@ func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
 	return nil
 }
 
-func (exec *Executor) setDefSetBuilderStmt(stmt *ast.SetDefSetBuilderStmt) error {
+func (exec *Executor) setDefStmt(stmt ast.SetDefStmt) error {
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 
