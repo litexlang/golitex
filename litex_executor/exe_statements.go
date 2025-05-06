@@ -462,94 +462,66 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 
 func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
-	if axiomPropAsDefPropStmt, ok := stmt.Decl.(*ast.DefConPropStmt); ok {
-		err := exec.defConPropStmt(axiomPropAsDefPropStmt)
-		if err != nil {
-			return err
-		}
 
-		knownUniFact, err := axiomPropAsDefPropStmt.UniFactWhereDomImplyPropFact()
-		if err != nil {
-			return err
-		}
-
-		err = exec.env.NewFact(knownUniFact)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	} else if axiomPropAsDefPropStmt, ok := stmt.Decl.(*ast.DefConExistPropStmt); ok {
-		err := exec.defConExistPropStmt(axiomPropAsDefPropStmt)
-		if err != nil {
-			return err
-		}
-
-		knownUniFact, err := axiomPropAsDefPropStmt.UniFactWhereDomImplyPropFact()
-		if err != nil {
-			return err
-		}
-
-		err = exec.env.NewFact(knownUniFact)
-		if err != nil {
-			return err
-		}
-
-		return nil
+	err := exec.defStmt(stmt.Decl)
+	if err != nil {
+		return err
 	}
-	return fmt.Errorf("unknown axiom stmt type: %T", stmt.Decl)
+
+	knownUniFact, err := stmt.Decl.UniFactWhereDomImplyPropFact()
+	if err != nil {
+		return err
+	}
+
+	err = exec.env.NewFact(knownUniFact)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func (exec *Executor) thmStmt(stmt *ast.ThmStmt) error {
 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	if thmToCheck, ok := stmt.Decl.(*ast.DefConPropStmt); ok {
-		thmToCheckAsUniFact, err := thmToCheck.UniFactWhereDomImplyPropFact()
-		if err != nil {
-			return err
-		}
+	thmToCheckAsUniFact, err := stmt.Decl.UniFactWhereDomImplyPropFact()
+	if err != nil {
+		return err
+	}
 
-		err = exec.GetUniFactSettings(thmToCheckAsUniFact)
-		if err != nil {
-			return err
-		}
+	err = exec.GetUniFactSettings(thmToCheckAsUniFact)
+	if err != nil {
+		return err
+	}
 
-		execState, err := exec.execProofBlock(stmt.Proofs)
+	execState, err := exec.execProofBlock(stmt.Proofs)
+	if err != nil {
+		return err
+	}
+	if execState != glob.ExecState_True {
+		return fmt.Errorf("thm stmt is not true")
+	}
+
+	for _, fact := range thmToCheckAsUniFact.ThenFacts {
+		ok, _, err := exec.checkFactStmt(fact)
 		if err != nil {
 			return err
 		}
-		if execState != glob.ExecState_True {
+		if !ok {
 			return fmt.Errorf("thm stmt is not true")
-		}
-
-		for _, fact := range thmToCheckAsUniFact.ThenFacts {
-			ok, _, err := exec.checkFactStmt(fact)
-			if err != nil {
-				return err
-			}
-			if !ok {
-				return fmt.Errorf("thm stmt is not true")
-			}
-		}
-
-		thmToCheckAsUniFactWithUniPrefix, err := ast.AddUniPrefixToUniFact(thmToCheckAsUniFact)
-		if err != nil {
-			return err
-		}
-
-		err = exec.env.NewFact(thmToCheckAsUniFactWithUniPrefix)
-		if err != nil {
-			return err
-		}
-
-		return nil
-
-	} else if thmToCheck, ok := stmt.Decl.(*ast.DefConExistPropStmt); ok {
-		err := exec.defConExistPropStmt(thmToCheck)
-		if err != nil {
-			return err
 		}
 	}
 
-	return fmt.Errorf("unknown thm stmt type: %T", stmt.Decl)
+	thmToCheckAsUniFactWithUniPrefix, err := ast.AddUniPrefixToUniFact(thmToCheckAsUniFact)
+	if err != nil {
+		return err
+	}
+
+	err = exec.env.NewFact(thmToCheckAsUniFactWithUniPrefix)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

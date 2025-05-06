@@ -54,9 +54,11 @@ type SpecFactParams struct {
 }
 
 type DefPropOrExistPropStmt interface {
+	defStmt()
 	defPropStmt()
 	stmt()
 	String() string
+	UniFactWhereDomImplyPropFact() (*UniFactStmt, error)
 }
 
 func (s *DefConExistPropStmt) defPropStmt() {}

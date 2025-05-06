@@ -241,7 +241,7 @@ func (defStmt *DefConPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, err
 	uniFactDomFacts := defStmt.DomFacts
 
 	thenFactParams := []Fc{}
-	for _, param := range defStmt.DefHeader.Params {
+	for _, param := range uniFactParams {
 		thenFactParams = append(thenFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
 	}
 
@@ -253,18 +253,18 @@ func (defStmt *DefConPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, err
 }
 
 func (defStmt *DefConExistPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
-	existParams := defStmt.ExistParams
-	existParamSets := defStmt.ExistParamSets
-	existDomFacts := defStmt.Def.DomFacts
+	uniParams := defStmt.Def.DefHeader.Params
+	uniParamSets := defStmt.Def.DefHeader.SetParams
+	uniDomFacts := defStmt.Def.DomFacts
 
-	existFactParams := []Fc{}
-	for _, param := range existParams {
-		existFactParams = append(existFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+	thenFactParams := []Fc{}
+	for _, param := range uniParams {
+		thenFactParams = append(thenFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
 	}
 
-	existFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.Def.DefHeader.Name}, existFactParams)
+	existFact := NewSpecFactStmt(TrueExist, FcAtom{glob.BuiltinEmptyPkgName, defStmt.Def.DefHeader.Name}, thenFactParams)
 	existFacts := []FactStmt{existFact}
-	uniFact := NewUniFactStmtWithSetReqInDom(existParams, existParamSets, existDomFacts, existFacts, EmptyIffFacts)
+	uniFact := NewUniFactStmtWithSetReqInDom(uniParams, uniParamSets, uniDomFacts, existFacts, EmptyIffFacts)
 
 	return uniFact, nil
 }
