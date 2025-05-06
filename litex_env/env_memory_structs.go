@@ -14,26 +14,6 @@ package litex_env
 
 import ast "golitex/litex_ast"
 
-type PropMemItem struct{ Def *ast.DefConPropStmt }
-type PropMem struct {
-	Dict map[string]map[string]PropMemItem
-}
-
-type ExistPropMemItem struct{ Def *ast.DefConExistPropStmt }
-type ExistPropMem struct {
-	Dict map[string]map[string]ExistPropMemItem
-}
-
-type ObjMemItem struct{ Def *ast.DefObjStmt }
-type ObjMem struct {
-	Dict map[string]map[string]ObjMemItem
-}
-
-type FnMemItem struct{ Def *ast.DefConFnStmt }
-type FnMem struct {
-	Dict map[string]map[string]FnMemItem
-}
-
 type KnownSpecFact struct {
 	Fact *ast.SpecFactStmt
 }

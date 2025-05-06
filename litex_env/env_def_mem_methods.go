@@ -152,3 +152,31 @@ func (memory *ObjMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 	}
 	return node.Def, true
 }
+
+func (memory *EmitWhenSpecFactIsTrueMem) Insert(pkgName string, propName string, emitWhenSpecFactIsTrue *ast.UniFactStmt) error {
+	pkgMap, pkgExists := memory.Dict[pkgName]
+	if !pkgExists {
+		memory.Dict[pkgName] = make(map[string][]EmitWhenSpecFactIsTrueMemItem)
+	}
+
+	if _, ok := pkgMap[propName]; !ok {
+		pkgMap[propName] = []EmitWhenSpecFactIsTrueMemItem{}
+	}
+
+	pkgMap[propName] = append(pkgMap[propName], EmitWhenSpecFactIsTrueMemItem{emitWhenSpecFactIsTrue.Params, emitWhenSpecFactIsTrue.DomFacts})
+
+	return nil
+}
+
+func (memory *EmitWhenSpecFactIsTrueMem) Get(pkgName string, propName string) ([]EmitWhenSpecFactIsTrueMemItem, bool) {
+	pkgMap, pkgExists := memory.Dict[pkgName]
+	if !pkgExists {
+		return nil, false
+	}
+
+	node, nodeExists := pkgMap[propName]
+	if !nodeExists {
+		return nil, false
+	}
+	return node, true
+}
