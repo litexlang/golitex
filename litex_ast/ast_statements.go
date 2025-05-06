@@ -84,14 +84,14 @@ type ClaimStmt struct {
 }
 
 type KnowStmt struct {
-	Facts     []FactStmt
-	ClaimName string
+	Facts []FactStmt
 }
 
 // syntax sugar for defining spec prop + claim forall true
-// type AxiomStmt struct {
-// 	Decl DefPropOrExistPropStmt
-// }
+type AxiomStmt struct {
+	Name string
+	Fact UniFactStmt
+}
 
 // // syntax sugar for defining spec prop + claim forall true + prove it
 // type ThmStmt struct {

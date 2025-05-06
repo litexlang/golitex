@@ -21,3 +21,4 @@ var ClaimStmtEmptyToCheck FactStmt = nil
 var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BuiltinEmptyPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep}
 
 var EmptyClaimName = ""
+var EmptyKnowClaimName = ""

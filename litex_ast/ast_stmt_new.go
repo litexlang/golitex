@@ -48,13 +48,13 @@ func NewClaimProveStmt(proveTrue bool, toCheckFact FactStmt, proofs []Stmt, clai
 	return &ClaimStmt{proveTrue, toCheckFact, proofs, claimName}
 }
 
-func NewKnowStmt(facts []FactStmt, claimName string) *KnowStmt {
-	return &KnowStmt{facts, claimName}
+func NewKnowStmt(facts []FactStmt) *KnowStmt {
+	return &KnowStmt{facts}
 }
 
-// func NewAxiomStmt(decl DefPropOrExistPropStmt) *AxiomStmt {
-// 	return &AxiomStmt{decl}
-// }
+func NewAxiomStmt(name string, fact UniFactStmt) *AxiomStmt {
+	return &AxiomStmt{name, fact}
+}
 
 // func NewThmStmt(decl DefPropOrExistPropStmt, proof []Stmt) *ThmStmt {
 // 	return &ThmStmt{decl, proof}
