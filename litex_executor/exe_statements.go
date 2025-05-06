@@ -136,7 +136,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 				return glob.ExecState_Error, err
 			}
 
-			err = exec.env.EmitWhenSpecFactIsTrueMem.Insert(exec.env.CurPkg, propSpecFact.PropName.Name, uniPropImplyClaimThen)
+			err = exec.env.EmitWhenSpecFactIsTrueMem.Insert(exec.curPkg, propSpecFact.PropName.Name, uniPropImplyClaimThen)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
@@ -154,7 +154,7 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendNewMsg(stmt.String())
-	err := exec.env.NewDefConProp(stmt, exec.env.CurPkg)
+	err := exec.env.NewDefConProp(stmt)
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
-	err := exec.env.NewDefObj(stmt, exec.env.CurPkg)
+	err := exec.env.NewDefObj(stmt)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 				PkgName: "",
 				Name:    glob.KeywordIn,
 			},
-			Params: []ast.Fc{&ast.FcAtom{PkgName: exec.env.CurPkg, Name: objName}, stmt.ObjSets[i]},
+			Params: []ast.Fc{&ast.FcAtom{PkgName: glob.BuiltinEmptyPkgName, Name: objName}, stmt.ObjSets[i]},
 		}
 		err := exec.env.NewFact(&objInSetFact)
 		if err != nil {
@@ -203,7 +203,7 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
-	err := exec.env.NewDefFn(stmt, exec.env.CurPkg)
+	err := exec.env.NewDefFn(stmt)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 		fcFnParams = append(fcFnParams, &ast.FcAtom{PkgName: "", Name: fc})
 	}
 
-	fcFn := ast.FcFn{FnHead: &ast.FcAtom{PkgName: exec.env.CurPkg, Name: stmt.DefHeader.Name}, ParamSegs: [][]ast.Fc{fcFnParams}}
+	fcFn := ast.FcFn{FnHead: &ast.FcAtom{PkgName: glob.BuiltinEmptyPkgName, Name: stmt.DefHeader.Name}, ParamSegs: [][]ast.Fc{fcFnParams}}
 
 	retFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
 
@@ -237,7 +237,7 @@ func (exec *Executor) defConExistPropStmt(stmt *ast.DefConExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
-	err := exec.env.NewDefConExistProp(stmt, exec.env.CurPkg)
+	err := exec.env.NewDefConExistProp(stmt)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func (exec *Executor) existObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 
 	uniConMap := map[string]ast.Fc{}
 	for i := 0; i < len(stmt.ObjNames); i++ {
-		uniConMap[propDef.ExistParams[i]] = &ast.FcAtom{PkgName: exec.env.CurPkg, Name: stmt.ObjNames[i]}
+		uniConMap[propDef.ExistParams[i]] = &ast.FcAtom{PkgName: exec.curPkg, Name: stmt.ObjNames[i]}
 	}
 
 	for i := 0; i < len(stmt.Fact.Params); i++ {
@@ -365,7 +365,7 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
-	exec.newEnv(exec.env.CurPkg)
+	exec.newEnv()
 	isSuccess := false
 
 	defer func() {
@@ -426,7 +426,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 }
 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, error) {
-	exec.newEnv(exec.env.CurPkg)
+	exec.newEnv()
 	isSuccess := false
 
 	defer func() {

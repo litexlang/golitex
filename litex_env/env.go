@@ -37,10 +37,10 @@ type Env struct {
 
 	EmitWhenSpecFactIsTrueMem EmitWhenSpecFactIsTrueMem
 
-	CurPkg string
+	// CurPkg string
 }
 
-func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
+func NewEnv(parent *Env, uniParamMap map[string]ast.Fc) *Env {
 	if uniParamMap == nil {
 		uniParamMap = make(map[string]ast.Fc)
 	}
@@ -62,7 +62,7 @@ func NewEnv(parent *Env, uniParamMap map[string]ast.Fc, curPkg string) *Env {
 
 		UniParamMap: uniParamMap,
 
-		CurPkg: curPkg,
+		// CurPkg: curPkg,
 	}
 
 	return env

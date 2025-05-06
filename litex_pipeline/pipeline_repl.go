@@ -34,7 +34,7 @@ type REPL struct {
 }
 
 func NewREPL() *REPL {
-	initialEnv := env.NewEnv(nil, nil, "")
+	initialEnv := env.NewEnv(nil, nil)
 	return &REPL{
 		env:      initialEnv,
 		executor: exe.NewExecutor(initialEnv),
@@ -142,7 +142,7 @@ func (r *REPL) executeStatements(topStmtSlice []ast.TopStmt) ([]string, error) {
 
 		for i, topStmt := range topStmtSlice {
 			if i%glob.EnvCreationInterval == envSwitchThreshold {
-				curEnv = env.NewEnv(curEnv, curEnv.UniParamMap, curEnv.CurPkg)
+				curEnv = env.NewEnv(curEnv, curEnv.UniParamMap)
 				executor = exe.NewExecutor(curEnv)
 				r.lastEnvSwitch = i
 			}
@@ -150,7 +150,7 @@ func (r *REPL) executeStatements(topStmtSlice []ast.TopStmt) ([]string, error) {
 			execState, err := executor.TopLevelStmt(&topStmt)
 			if err != nil {
 				// Rollback to last environment checkpoint
-				r.env = env.NewEnv(r.env, r.env.UniParamMap, r.env.CurPkg)
+				r.env = env.NewEnv(r.env, r.env.UniParamMap)
 				r.executor = exe.NewExecutor(r.env)
 				return nil, fmt.Errorf("at statement %d: %w", i+1, err)
 			}

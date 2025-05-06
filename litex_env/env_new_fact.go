@@ -164,24 +164,24 @@ func (env *Env) newConUniFact(fact *ast.UniFactStmt) error {
 	return nil
 }
 
-func (env *Env) IsInvalidName(pkgName string, name string) error {
+func (env *Env) IsInvalidName(name string) error {
 	err := glob.IsValidName(name)
 	if err != nil {
 		return err
 	}
 
 	for curEnv := env; curEnv != nil; curEnv = curEnv.Parent {
-		_, ok := curEnv.ObjMem.Dict[pkgName][name]
+		_, ok := curEnv.ObjMem.Dict[ast.EmptyClaimName][name]
 		if ok {
-			return duplicateDefMsg(pkgName, name, glob.KeywordObj)
+			return duplicateDefMsg(ast.EmptyClaimName, name, glob.KeywordObj)
 		}
-		_, ok = curEnv.FnMem.Dict[pkgName][name]
+		_, ok = curEnv.FnMem.Dict[ast.EmptyClaimName][name]
 		if ok {
-			return duplicateDefMsg(pkgName, name, glob.KeywordFn)
+			return duplicateDefMsg(ast.EmptyClaimName, name, glob.KeywordFn)
 		}
-		_, ok = curEnv.PropMem.Dict[pkgName][name]
+		_, ok = curEnv.PropMem.Dict[ast.EmptyClaimName][name]
 		if ok {
-			return duplicateDefMsg(pkgName, name, glob.KeywordProp)
+			return duplicateDefMsg(ast.EmptyClaimName, name, glob.KeywordProp)
 		}
 	}
 
@@ -210,42 +210,42 @@ func (env *Env) isPropCommutative(opt ast.Fc) bool {
 	return false
 }
 
-func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt, pkgName string) error {
-	err := env.IsInvalidName(pkgName, stmt.DefHeader.Name)
+func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt) error {
+	err := env.IsInvalidName(stmt.DefHeader.Name)
 	if err != nil {
 		return err
 	}
 
-	return env.PropMem.Insert(stmt, pkgName)
+	return env.PropMem.Insert(stmt, ast.EmptyClaimName)
 }
 
-func (env *Env) NewDefObj(stmt *ast.DefObjStmt, pkgName string) error {
+func (env *Env) NewDefObj(stmt *ast.DefObjStmt) error {
 	for _, objName := range stmt.Objs {
-		err := env.IsInvalidName(pkgName, objName)
+		err := env.IsInvalidName(objName)
 		if err != nil {
 			return err
 		}
 	}
 
-	return env.ObjMem.Insert(stmt, pkgName)
+	return env.ObjMem.Insert(stmt, ast.EmptyClaimName)
 }
 
-func (env *Env) NewDefFn(stmt *ast.DefConFnStmt, pkgName string) error {
-	err := env.IsInvalidName(pkgName, stmt.DefHeader.Name)
+func (env *Env) NewDefFn(stmt *ast.DefConFnStmt) error {
+	err := env.IsInvalidName(stmt.DefHeader.Name)
 	if err != nil {
 		return err
 	}
 
-	return env.FnMem.Insert(stmt, pkgName)
+	return env.FnMem.Insert(stmt, ast.EmptyClaimName)
 }
 
-func (env *Env) NewDefConExistProp(stmt *ast.DefConExistPropStmt, pkgName string) error {
-	err := env.IsInvalidName(pkgName, stmt.Def.DefHeader.Name)
+func (env *Env) NewDefConExistProp(stmt *ast.DefConExistPropStmt) error {
+	err := env.IsInvalidName(stmt.Def.DefHeader.Name)
 	if err != nil {
 		return err
 	}
 
-	return env.ExistPropMem.Insert(stmt, pkgName)
+	return env.ExistPropMem.Insert(stmt, ast.EmptyClaimName)
 }
 
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
