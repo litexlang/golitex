@@ -121,10 +121,21 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 		}
 
 		if stmt.ClaimName != ast.EmptyClaimName {
-			// TODO: 定义prop
+			propDef := asConUniFact.ToPropFact(stmt.ClaimName)
+			err = exec.defConPropStmt(propDef)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+			uniFact, err := propDef.UniFactWhereDomImplyPropFact()
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
+			err = exec.env.Parent.NewFact(uniFact)
+			if err != nil {
+				return glob.ExecState_Error, err
+			}
 		}
 	}
-
 	return glob.ExecState_True, nil
 }
 
