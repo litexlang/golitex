@@ -43,6 +43,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defConFnStmt(stmt)
 	case *ast.MatcherEnvStmt:
 		err = exec.matcherEnvStmt(stmt)
+	case *ast.AxiomStmt:
+		err = exec.axiomStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -434,4 +436,44 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 	}
 
 	return false, nil
+}
+
+func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
+	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+	if axiomPropAsDefPropStmt, ok := stmt.Decl.(*ast.DefConPropStmt); ok {
+		err := exec.defConPropStmt(axiomPropAsDefPropStmt)
+		if err != nil {
+			return err
+		}
+
+		knownUniFact, err := axiomPropAsDefPropStmt.AxiomUniFact()
+		if err != nil {
+			return err
+		}
+
+		err = exec.env.NewFact(knownUniFact)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	} else if axiomPropAsDefPropStmt, ok := stmt.Decl.(*ast.DefConExistPropStmt); ok {
+		err := exec.defConExistPropStmt(axiomPropAsDefPropStmt)
+		if err != nil {
+			return err
+		}
+
+		knownUniFact, err := axiomPropAsDefPropStmt.AxiomUniFact()
+		if err != nil {
+			return err
+		}
+
+		err = exec.env.NewFact(knownUniFact)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+	return fmt.Errorf("unknown axiom stmt type: %T", stmt.Decl)
 }

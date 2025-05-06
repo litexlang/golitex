@@ -233,3 +233,38 @@ func (defStmt *DefConPropStmt) IffToPropUniFact() *UniFactStmt {
 func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 	return strings.HasPrefix(fact.PropName.Name, glob.UniParamPrefix)
 }
+
+// 如果用户认定这个定理是公理，那就返回forall anything satisfy dom, prop is true
+func (defStmt *DefConPropStmt) AxiomUniFact() (*UniFactStmt, error) {
+	uniFactParams := defStmt.DefHeader.Params
+	uniFactParamSets := defStmt.DefHeader.SetParams
+	uniFactDomFacts := defStmt.DomFacts
+
+	thenFactParams := []Fc{}
+	for _, param := range defStmt.DefHeader.Params {
+		thenFactParams = append(thenFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+	}
+
+	thenFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, thenFactParams)
+	thenFacts := []FactStmt{thenFact}
+	uniFact := NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, uniFactDomFacts, thenFacts, EmptyIffFacts)
+
+	return uniFact, nil
+}
+
+func (defStmt *DefConExistPropStmt) AxiomUniFact() (*UniFactStmt, error) {
+	existParams := defStmt.ExistParams
+	existParamSets := defStmt.ExistParamSets
+	existDomFacts := defStmt.Def.DomFacts
+
+	existFactParams := []Fc{}
+	for _, param := range existParams {
+		existFactParams = append(existFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+	}
+
+	existFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.Def.DefHeader.Name}, existFactParams)
+	existFacts := []FactStmt{existFact}
+	uniFact := NewUniFactStmtWithSetReqInDom(existParams, existParamSets, existDomFacts, existFacts, EmptyIffFacts)
+
+	return uniFact, nil
+}

@@ -225,6 +225,8 @@ know:
         then:
             $p(x+1)
 
+$q(0) # true, because it matches the known specific fact $q(0)
+
 claim:
     $q(2)
     prove_by_contradiction:
@@ -257,6 +259,10 @@ prove: # open a local environment and write test codes
     know Bob is Human
     Bob is self_aware # true
 ```
+
+<!-- 这里有严重的欠缺：我应该说明从know，到match，到验证的全过程，这才是litex的第一性原理，但我readme里居然没怎么呈现 -->
+
+There are 2 ways to prove a fact: using known specific facts or using known universal facts. For example, in the example above, we use the known specific fact `$q(0)` to prove `$q(0)`. Or we can use knwon `forall x human: $mortal(x)`, `Bob \in human` to prove `$mortal(Bob)`.
 
 Sometimes, we want to prove a fact without letting the lengthy proof process clutter the main environment. In such cases, we use the `claim` keyword, followed by the `prove` keyword to conduct the proof within it. Ultimately, only the main fact proven under the `claim` will remain in the main environment. 
 
@@ -365,11 +371,13 @@ Litex is a minimalist proof assistant, designed to be simple and intuitive. It d
 
 Litex is an attempt to scale reasoning with the ever-expanding power of modern computing resources, and to introduce a new way of thinking (the way of thinking that is more like programming) about math.
 
-Technically, Litex is a regex-based interpreter with customizable matching rules and math-friendly syntax sugar. The more you use Litex, the more you will understand what I mean and the more you will love it. You can learn Litex in 10 minutes. However, its simplicity does not come at the cost of expressiveness.
+Technically, Litex is a regex-based interpreter with customizable matching rules and math-friendly syntax sugar. Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Any existing mathematical axioms can be expressed in Litex. The user will enjoy freedom and expressiveness that no other proof assistant can offer. Also remember, Litex is not Turing Complete, because verification does not require execution or loops (goto statements), which further enhances its expressiveness.
 
-Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Afterall, Litex is just a regex-based interpreter. Any existing mathematical axioms can be expressed in Litex. The user will enjoy freedom and expressiveness that no other proof assistant can offer.
+The inventor of Litex sees Litex as a regex-based interpreter. Every design choice around Litex categorizes into: 1. how to implement a mathematical reasoning(verification) process as a syntax and semantics sugar for regex matching, 2. what mathematical reasoning process to implement. There are not that many reasoning processes, since first-order logic is enough for most practical math problems, and every reasoning process can be translated into first-order logic.
 
-Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing (how such matching works? Fundamentally, just by comparing the words of two facts!). Litex is a computer tool to automate this process and verify your reasoning for you.
+Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing (how verification works? Fundamentally, just by comparing the words of two facts and using first-order logic to infer the truth of the new fact). If a known fact (universal or specific) is matched with the new fact, the new fact is proven (See the examples above). If not, the new fact is unknown.
+
+Litex is a computer tool to automate this process and verify your reasoning for you. The more you use Litex, the more you will understand what I mean and the more you will love it. You can learn Litex in 10 minutes. However, its simplicity does not come at the cost of expressiveness.
 
 Litex is significantly influenced by the Go programming language. Interfaces in both Go and Litex are pretty simple. No hierarchy, no inheritancee. Additionally, Litex's function declaration syntax bears a resemblance to Go's. Most importantly, the minimalism design choice of Go strongly resonates with the Litex's inventor.
 
