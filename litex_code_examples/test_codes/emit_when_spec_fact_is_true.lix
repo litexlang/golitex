@@ -1,0 +1,21 @@
+prove:
+    know:
+        forall x nat:
+            $p(x)
+
+        forall x nat:
+            $p(x)
+            then:
+                $q(x)
+
+    claim propName:
+        forall x nat:
+            $q(x)
+
+        prove:
+            $p(x)
+            $q(x)
+
+    $propName(2)
+    $q(2)
+                    

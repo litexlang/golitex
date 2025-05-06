@@ -122,7 +122,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 
 		if stmt.ClaimName != ast.EmptyClaimName {
 			propDef := asConUniFact.ToDefPropWith_EmptyDom_UniFactThenAsIff(stmt.ClaimName)
-			err = exec.defConPropStmt(propDef)
+			err = exec.env.Parent.NewDefConProp(propDef)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
@@ -136,7 +136,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 				return glob.ExecState_Error, err
 			}
 
-			err = exec.env.EmitWhenSpecFactIsTrueMem.Insert(exec.curPkg, propSpecFact.PropName.Name, uniPropImplyClaimThen)
+			err = exec.env.Parent.EmitWhenSpecFactIsTrueMem.Insert(exec.curPkg, propSpecFact.PropName.Name, uniPropImplyClaimThen)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
