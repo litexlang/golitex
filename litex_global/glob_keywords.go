@@ -38,7 +38,7 @@ const (
 	KeywordAs                   = "as"
 	KeywordAxiom                = "axiom" // syntax sugar for: prop + know forall
 	KeywordProveByContradiction = "prove_by_contradiction"
-	KeywordThm                  = "thm" // syntax sugar for: prop + prove
+	// KeywordThm                  = "thm" // syntax sugar for: prop + prove
 	// KeywordSelf                 = "self" // return value of a function; refer to an instance of the type or set we are defining
 	KeywordIff = "iff"
 
@@ -88,9 +88,9 @@ var keywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordAs:                   {},
 	KeywordAxiom:                {},
 	KeywordProveByContradiction: {},
-	KeywordThm:                  {},
-	KeywordIff:                  {},
-	KeywordExist:                {},
+	// KeywordThm:                  {},
+	KeywordIff:   {},
+	KeywordExist: {},
 
 	// 语法糖
 	KeywordCommutative: {},

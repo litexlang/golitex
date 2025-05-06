@@ -59,8 +59,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.knowStmt()
 	case glob.KeywordAxiom:
 		ret, err = tb.axiomStmt()
-	case glob.KeywordThm:
-		ret, err = tb.thmStmt()
+	// case glob.KeywordThm:
+	// 	ret, err = tb.thmStmt()
 	case glob.KeywordSet:
 		ret, err = tb.setDefStmt()
 	case glob.KeySymbolLess:
@@ -523,43 +523,43 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 }
 
-func (tb *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
-	err := tb.header.skip(glob.KeywordThm)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// func (tb *tokenBlock) thmStmt() (*ast.ThmStmt, error) {
+// 	err := tb.header.skip(glob.KeywordThm)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	err = tb.header.testAndSkip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	err = tb.header.testAndSkip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	decl, err := tb.body[0].defConPropStmt(false)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	decl, err := tb.body[0].defConPropStmt(false)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	err = tb.body[1].header.skip(glob.KeywordProve)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	err = tb.body[1].header.skip(glob.KeywordProve)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	err = tb.body[1].header.testAndSkip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
+// 	err = tb.body[1].header.testAndSkip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
 
-	proof := []ast.Stmt{}
-	for _, block := range tb.body[1].body {
-		curStmt, err := block.Stmt()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-		proof = append(proof, curStmt)
-	}
+// 	proof := []ast.Stmt{}
+// 	for _, block := range tb.body[1].body {
+// 		curStmt, err := block.Stmt()
+// 		if err != nil {
+// 			return nil, &tokenBlockErr{err, *tb}
+// 		}
+// 		proof = append(proof, curStmt)
+// 	}
 
-	return ast.NewThmStmt(decl, proof), nil
-}
+// 	return ast.NewThmStmt(decl, proof), nil
+// }
 
 func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 	err := tb.header.skip(glob.KeywordAxiom)
