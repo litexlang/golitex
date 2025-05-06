@@ -87,8 +87,8 @@ type AxiomStmt struct {
 
 // syntax sugar for defining spec prop + claim forall true + prove it
 type ThmStmt struct {
-	Decl  DefPropOrExistPropStmt
-	Proof []Stmt
+	Decl   DefPropOrExistPropStmt
+	Proofs []Stmt
 }
 
 // type CondFactStmt struct {
