@@ -219,20 +219,32 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInUniFactMem) newSpecFactInUniFact(stmt *ast.UniFactStmt) error {
+func (env *Env) storeUniFact(stmt *ast.UniFactStmt) error {
 	for _, thenStmt := range stmt.ThenFacts {
 		if stmtAsSpecFact, ok := thenStmt.(*ast.SpecFactStmt); ok {
 			if stmtAsSpecFact.IsSpecFactNameWithUniPrefix() {
 				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", stmtAsSpecFact.String())
 			}
 
-			err := s.insertSpecFact(stmtAsSpecFact, stmt)
+			err := env.SpecFactInUniFactMem.insertSpecFact(stmtAsSpecFact, stmt)
 			if err != nil {
 				return err
 			}
 
 		} else if thenStmtAsConUniFact, ok := thenStmt.(*ast.UniFactStmt); ok {
-			err := s.mergeOuterInnerUniFactAndInsert(stmt, thenStmtAsConUniFact)
+			mergedConUni := ast.MergeOuterInnerUniFacts(stmt, thenStmtAsConUniFact)
+
+			err := env.storeUniFact(mergedConUni)
+			if err != nil {
+				return err
+			}
+		} else if thenStmtAsLogicExpr, ok := thenStmt.(*ast.LogicExprStmt); ok {
+
+			if thenStmtAsLogicExpr.IsSpecFactNameWithUniPrefix() {
+				return fmt.Errorf("facts in the body of universal fact should not be a free fact, got %s", thenStmtAsLogicExpr.String())
+			}
+
+			err := env.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenStmtAsLogicExpr)
 			if err != nil {
 				return err
 			}
@@ -241,27 +253,7 @@ func (s SpecFactInUniFactMem) newSpecFactInUniFact(stmt *ast.UniFactStmt) error 
 		}
 	}
 	return nil
-}
 
-func (factMem SpecFactInUniFactMem) mergeOuterInnerUniFactAndInsert(outer *ast.UniFactStmt, inner *ast.UniFactStmt) error {
-	mergedConUni := ast.MergeOuterInnerUniFacts(outer, inner)
-	thenFacts := []*ast.SpecFactStmt{}
-	for _, stmt := range mergedConUni.ThenFacts {
-		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
-			thenFacts = append(thenFacts, stmtAsSpecFact)
-		} else {
-			return fmt.Errorf("TODO: mergeOuterInnerUniFactAndInsert Currently only support spec fact in uni fact, but got: %s", stmt.String())
-		}
-	}
-
-	for _, specFact := range thenFacts {
-		err := factMem.insertSpecFact(specFact, mergedConUni)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) error {
