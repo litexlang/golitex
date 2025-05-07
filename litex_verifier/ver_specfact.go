@@ -477,17 +477,12 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 	}
 
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
-	instantiatedIffToProp, err := iffToProp.Instantiate(paramArrMap)
+	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
 		return false, err
 	}
-	insIffToPropAsUniFact, ok := instantiatedIffToProp.(*ast.UniFactStmt)
-	if !ok {
-		return false, fmt.Errorf("instantiatedIffToProp is not a ConUniFactStmt")
-	}
-
 	// prove all domFacts are true
-	for _, domFact := range insIffToPropAsUniFact.DomFacts {
+	for _, domFact := range instantiatedIffToProp.DomFacts {
 		ok, err := ver.FactStmt(domFact, nextState)
 		if err != nil {
 			return false, err
