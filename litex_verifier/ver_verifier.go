@@ -82,6 +82,7 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	}
 }
 
+// TODO: 有严重问题
 func (ver *Verifier) LogicalExprFact(stmt *ast.LogicExprStmt, state VerState) (bool, error) {
 	if !stmt.IsOr {
 		for _, fact := range stmt.Facts {
@@ -95,17 +96,50 @@ func (ver *Verifier) LogicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 		}
 		return ver.factDefer(stmt, state, true, nil, "")
 	} else {
-		for _, fact := range stmt.Facts {
-			ok, err := ver.FactStmt(fact, state)
+		for i := range stmt.Facts {
+			ok, err := ver.proveEachFactInOrExpr(stmt, i, state)
 			if err != nil {
 				return ver.factDefer(stmt, state, false, err, "")
 			}
-			if ok {
-				return ver.factDefer(stmt, state, true, nil, "")
+			if !ok {
+				return ver.factDefer(stmt, state, false, nil, "")
 			}
 		}
-		return ver.factDefer(stmt, state, false, nil, "")
+		return ver.factDefer(stmt, state, true, nil, "")
 	}
+}
+
+func (ver *Verifier) proveEachFactInOrExpr(stmt *ast.LogicExprStmt, index int, state VerState) (bool, error) {
+	ver.newEnv()
+	defer ver.deleteEnvAndRetainMsg()
+
+	// not others are stored to be true
+	for i := range stmt.Facts {
+		if i == index {
+			continue
+		}
+		err := ver.env.NewFactWithOutEmit(stmt.Facts[i].ReverseIsTrue())
+		if err != nil {
+			return false, err
+		}
+	}
+
+	ok, err := ver.FactStmt(stmt.Facts[index], state.toNoMsg())
+	if err != nil {
+		return false, err
+	}
+
+	if !ok {
+		return false, nil
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), stmt.Facts[index].String())
+	} else {
+		ver.unknownMsgEnd(stmt.String())
+	}
+
+	return true, nil
 }
 
 func (ver *Verifier) factDefer(stmt ast.FactStmt, state VerState, proved bool, err error, proveBy string) (bool, error) {
