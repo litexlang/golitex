@@ -1,0 +1,25 @@
+prove:
+    know:
+        or:
+            x = 1
+            x = 2
+            x = 3
+
+        $p(1)
+        $p(2)
+        $p(3)
+
+    prove_in_each_case:
+        or:
+            x = 1
+            x = 2
+            x = 3
+        then:
+            $p(x)
+        prove:
+            $p(x)
+        prove:
+            $p(x)
+        prove:
+            $p(x)
+
