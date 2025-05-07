@@ -230,3 +230,66 @@ prove:
 
     forall x nat:
         $p(x)
+
+prove:
+    forall x nat:
+        $p(x)
+
+    forall x nat:
+        x > 0
+        then:
+            $p(x)
+
+    forall x nat:
+        dom:
+            x > 0
+        then:
+            $p(x)
+        
+    # universal fact的iff 是2组forall-then的语法糖
+    forall x nat:
+        dom:
+            x > 0
+        then:
+            $p(x)
+        iff:
+            $q(x)
+        
+    
+    forall x nat:
+        dom:
+            x > 0
+            $q(x)
+        then:
+            $p(x)
+
+    forall x nat:
+        dom:
+            x > 0
+            $p(x)
+        iff:
+            $q(x)
+
+    # prop 的定义也有iff，它也是语法糖  
+    prop p(x nat):
+        dom:
+            x > 0
+        iff:
+            $q(x)
+        
+    prop p2(x nat):
+        dom:
+            x > 0
+
+    know:
+        forall x nat:
+            x > 0 # 可能要写在 $p2前面，因为要满足p2的定义域
+            $p2(x)
+            then:
+                $q(x)
+
+        forall x nat:
+            x > 0
+            $q(x)
+            then:
+                $p2(x)
