@@ -43,10 +43,10 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 			return fmt.Errorf("prop %s has no definition", fact.PropName)
 		}
 		if len(propDef.DefHeader.Params) != 2 {
-			return fmt.Errorf("prop %s has no two parameters", fact.PropName)
+			return fmt.Errorf("prop %s is supposed to be commutative, but has no %d parameters", fact.PropName, len(propDef.DefHeader.Params))
 		}
 
-		env.CommutativePropMem.Insert(fact.PropName.PkgName, fact.PropName.Name)
+		propDef.IsCommutative = true
 	}
 
 	err := env.SpecFactMem.NewFact(fact)

@@ -281,19 +281,3 @@ func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, u
 
 	return nil
 }
-
-func NewCommutativePropMem() *CommutativePropMem {
-	return &CommutativePropMem{
-		Dict: make(map[string]map[string]struct{}),
-	}
-}
-
-func (s CommutativePropMem) Insert(propName string, param string) {
-	if _, ok := s.Dict[propName]; !ok {
-		s.Dict[propName] = make(map[string]struct{})
-	}
-
-	if _, ok := s.Dict[propName][param]; !ok {
-		s.Dict[propName][param] = struct{}{}
-	}
-}

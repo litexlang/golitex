@@ -104,7 +104,3 @@ type KnownSpecFact_InLogicExpr_InUniFactMem struct {
 }
 
 // TODO 相关的功能未实现 ---------------------------
-
-type CommutativePropMem struct {
-	Dict map[string]map[string]struct{}
-}
