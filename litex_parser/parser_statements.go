@@ -805,8 +805,7 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 	} else {
 		for i := range parseBodyFactNum {
 			stmt := tb.body[i]
-			// TODO: 未来要能 parse logic expr 不过这样等 mem, exe, ver 都准备好，太累了以后再说
-			fact, err := stmt.specFactStmt(nameDepthMap)
+			fact, err := stmt.logicExprOrSpecFactStmt(nameDepthMap)
 			if err != nil {
 				if tb.body[i].AtIndexIs(0, glob.KeywordForall) {
 					return nil, fmt.Errorf("expect specific fact: at most 2 layers of universal quantifier is allowed")
