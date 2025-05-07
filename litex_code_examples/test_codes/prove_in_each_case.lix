@@ -3,6 +3,15 @@ prove:
         or:
             x = 1
             x = 2
+        not x = 1 
+
+    x =2
+
+prove:
+    know:
+        or:
+            x = 1
+            x = 2
             x = 3
 
         $p(1)
@@ -28,6 +37,20 @@ prove:
         or:
             x = 1
             x = 2
-        not x = 1 
+            x = 3
 
-    x =2
+        $p(1)
+        $p(2)
+        $p(3)
+
+# 这也是行的
+    prove_in_each_case:
+        or:
+            x = 1
+            x = 2
+            x = 3
+        then:
+            1 = 1
+        prove:
+        prove:
+        prove:
