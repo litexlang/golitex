@@ -394,6 +394,10 @@ A good art is enjoyable to its author happy and be useful to others. This proces
 
 Moreover, I have strong belief that there is only a small gap between programming and mathematical reasoning. I also believe it does not take "that many" syntax and semantics to formalize ALL math. The more I program this project, the firmer my belief becomes. The real obstacle dragging me back is not the weakness of my ideas, but the loneliness of this long journey. That is why I am so grateful for any kind of support.
 
+Also, intuitiveness of Litex is a double-edged sword. It's great because so when whenever I encounter something hard or impossible to expressive using current version of Litex, it takes usually a few hours to a few days to figure out a solution. That is why implementing Litex successfully is just a matter of time and I have the confidence to implement Litex successfully.
+
+At the same time, there are so many "Too trivial to be noticed" things I have to express so that the user can use Litex easily. I have NO example to follow. I have to find them all by myself.
+
 On my(I am Jiachen Shen, the inventor of Litex) journey of inventing Litex, its intuitiveness is a double-edged sword. It's great because I do not need to rely on any textbook or paper to design Litex. It's bad because if I do get stuck, I do not have any textbook or paper to refer to. Creativity is a definitely required skill if you want to contribute to Litex.
 
 If you want to contribute to Litex, you must be able to appreciate its simplicity. Litex is a very small language. After all, as the only contributor to Litex (at least the first 2000 git commits are all pushed by me), I have no time to implement a complicated one. Keeping it simple yet powerful is the key to its growth and success.

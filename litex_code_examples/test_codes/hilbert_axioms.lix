@@ -74,11 +74,6 @@ exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_pl
     c != d
     $not_on_any_plane(a, b, c, d)
 
-know forall a point, b point, c point, d point, p plane:
-    exist $not_on_any_plane(a, b, c, d)
-    then:
-        $not_on_plane(a, b, c, d, p)
-
 prop not_on_any_plane(a point, b point, c point, d point):
     forall p plane:
         or:
