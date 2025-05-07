@@ -41,6 +41,6 @@ func (fact *KnownSpecFact_InLogicExpr) String() string {
 	return fact.LogicExpr.String()
 }
 
-func (fact *KnownSpecFact_InLogicExpr_InUniFact) String() string {
+func (fact *SpecFact_InLogicExpr_InUniFact) String() string {
 	return fact.UniFact.String()
 }

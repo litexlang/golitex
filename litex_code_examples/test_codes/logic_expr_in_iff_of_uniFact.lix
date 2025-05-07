@@ -1,0 +1,6 @@
+prove:
+    know forall a T, b T:
+        then:
+            or:
+                $p(a,b)
+                $q(a,b)
