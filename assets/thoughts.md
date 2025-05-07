@@ -1521,3 +1521,95 @@ atom => true/false atom => true exist/ false exist => true exist st/ false exist
 本质上
 1. 我一个人开发没力气
 2. 他们都是正则表达式匹配的正则表达式，对我而言没区别。它在数学上啥意思，和我关系不大，我只要能匹配就行。匹配的规则都是统一的，所以没关系。
+
+另外不要小看有st和没有st的exist的事实的设计，非常巧妙；没有st的时候，就不需要每次放两个无意义的占位符在那里了。
+
+prove:
+    know:
+        forall x nat:
+            or:
+                $p(x)
+                $q(x)
+    
+
+        forall x nat:
+            dom:
+                forall y nat:
+                    $q(x, y)
+            $p(x)
+    
+        和 下面这个逻辑上一样，但语义不一样
+
+        下面这么写的话，这个forall是不会帮到我验证的，因为我找不到y
+        forall x nat, y nat:
+            dom:
+                $q(x, y)
+            then:
+                $p(x)    
+        
+        当然我不能让你 forall 套超过2层，因为我搜索的时候是 n^2 量级，3层就是 n^3 了
+
+        golang 的 内部的 interface 从来没超过一层，我的语言也是
+
+prove:
+    forall x nat:
+        $p(x)
+
+    forall x nat:
+        x > 0
+        then:
+            $p(x)
+
+    forall x nat:
+        dom:
+            x > 0
+        then:
+            $p(x)
+        
+    # universal fact的iff 是2组forall-then的语法糖
+    forall x nat:
+        dom:
+            x > 0
+        then:
+            $p(x)
+        iff:
+            $q(x)
+        
+    
+    forall x nat:
+        dom:
+            x > 0
+            $q(x)
+        then:
+            $p(x)
+
+    forall x nat:
+        dom:
+            x > 0
+            $p(x)
+        iff:
+            $q(x)
+
+    # prop 的定义也有iff，它也是语法糖  
+    prop p(x nat):
+        dom:
+            x > 0
+        iff:
+            $q(x)
+        
+    prop p2(x nat):
+        dom:
+            x > 0
+
+    know:
+        forall x nat:
+            x > 0 # 可能要写在 $p2前面，因为要满足p2的定义域
+            $p2(x)
+            then:
+                $q(x)
+
+        forall x nat:
+            x > 0
+            $q(x)
+            then:
+                $p2(x)
