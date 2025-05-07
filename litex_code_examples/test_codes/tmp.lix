@@ -55,4 +55,16 @@ prove:
 
     $in(p, prop)
 
+prove:
+    fn line_of(a point, b point) line:
+        a != b
+        then:
+            $point_on_line(line_of(a, b), a)
+            $point_on_line(line_of(a, b), b)
+            forall l line:
+                $point_on_line(a, l)
+                $point_on_line(b, l)
+                then:
+                    l = line_of(a, b)
+
     

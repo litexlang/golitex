@@ -65,32 +65,20 @@ exist_prop b point st if_two_planes_both_has_point_then_they_have_another_point_
         a != b
 
 
-exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_plane():
+exist_prop a point, b point, c point, d point st exist_four_points_not_on_given_plane(p plane):
+    not $point_on_plane(a, p)
+    not $point_on_plane(b, p)
+    not $point_on_plane(c, p)
+    not $point_on_plane(d, p)
     a != b
     a != c
     a != d
     b != c
     b != d
     c != d
-    $not_on_any_plane(a, b, c, d)
 
-know forall a point, b point, c point, d point, p plane:
-    exist $not_on_any_plane(a, b, c, d)
-    then:
-        $not_on_plane(a, b, c, d, p)
-
-prop not_on_any_plane(a point, b point, c point, d point):
-    forall p plane:
-        or:
-            not $point_on_plane(a, p)
-            not $point_on_plane(b, p)
-            not $point_on_plane(c, p)
-            not $point_on_plane(d, p)
-
-# 上述的 至少存在不
-
-
-know exist $exist_four_points_not_on_any_plane()
+know forall p plane:
+    $exist_four_points_not_on_given_plane(p)
 
 prop between(left point, right point, middle point):
     left != right

@@ -59,4 +59,13 @@ prove:
         $q()
 
     $P(q)
-            
+
+prove:
+    prop p(x nat, y nat):
+        $p(x,y)
+        iff:
+            forall x nat, y nat:
+                then:
+                    $p(y,x)
+                    
+                    
