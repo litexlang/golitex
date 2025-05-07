@@ -39,6 +39,8 @@ func (s *SetDefSetBuilderStmt) stmt() {}
 // func (s *SetDefEnumtmt) stmt()        {}
 func (s *MatcherEnvStmt) stmt() {}
 
+func (s *ProveInEachCaseStmt) stmt() {}
+
 type FactStmt interface {
 	factStmt()
 	stmt()

@@ -63,6 +63,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.setDefStmt()
 	case glob.KeySymbolLess:
 		ret, err = tb.matcherEnvStmt()
+	case glob.KeywordProveInEachCase:
+		ret, err = tb.proveInEachCaseStmt()
 	default:
 		ret, err = tb.factStmt(ast.NameDepthMap{}, UniFactDepth0)
 	}
@@ -1014,7 +1016,7 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 			return nil, nil, nil, err
 		}
 
-		err = tb.body[len(tb.body)-1].header.skipKwAndColon(glob.KeywordThen)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -1028,7 +1030,7 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 			return nil, nil, nil, err
 		}
 
-		err = tb.body[len(tb.body)-1].header.skipKwAndColon(glob.KeywordIff)
+		err = tb.body[len(tb.body)-1].header.skipKwAndColon_ExceedEnd(glob.KeywordIff)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -1139,4 +1141,53 @@ func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 	}
 
 	return ast.NewAxiomStmt(name, *fact), nil
+}
+
+func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
+	err := tb.header.skip(glob.KeywordProveInEachCase)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	orFact, err := tb.body[0].logicExprStmt(ast.NameDepthMap{})
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if orFact.IsOr {
+		return nil, &tokenBlockErr{fmt.Errorf("prove in each case: expect or fact, but got: %s", orFact.String()), *tb}
+	}
+
+	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	thenFacts := []ast.FactStmt{}
+	for _, stmt := range tb.body[1].body {
+		curStmt, err := stmt.factStmt(ast.NameDepthMap{}, UniFactDepth0)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		thenFacts = append(thenFacts, curStmt)
+	}
+
+	proofs := [][]ast.Stmt{}
+	for i := 2; i < len(tb.body); i++ {
+		proof := []ast.Stmt{}
+		for _, stmt := range tb.body[i].body {
+			curStmt, err := stmt.Stmt()
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
+			proof = append(proof, curStmt)
+		}
+		proofs = append(proofs, proof)
+	}
+
+	if len(proofs) != len(orFact.Facts) {
+		return nil, &tokenBlockErr{fmt.Errorf("prove in each case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of facts in the or fact", len(orFact.Facts), len(proofs)), *tb}
+	}
+
+	return ast.NewProveInEachCaseStmt(orFact, thenFacts, proofs), nil
 }

@@ -126,7 +126,7 @@ func (cursor *strSliceCursor) curTokenBeginWithNumber() bool {
 	}
 }
 
-func (cursor *strSliceCursor) skipKwAndColon(kw string) error {
+func (cursor *strSliceCursor) skipKwAndColon_ExceedEnd(kw string) error {
 	err := cursor.skip(kw)
 	if err != nil {
 		return err
@@ -135,7 +135,12 @@ func (cursor *strSliceCursor) skipKwAndColon(kw string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+
+	if cursor.ExceedEnd() {
+		return nil
+	}
+
+	return fmt.Errorf("expected end of slice, but got '%s'", cursor.slice[cursor.index])
 }
 
 func (cursor *strSliceCursor) skipAndSkipColonAndAchieveEnd() (string, error) {
