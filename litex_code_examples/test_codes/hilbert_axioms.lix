@@ -17,7 +17,6 @@ fn line_of(a point, b point) line:
         $point_on_line(line_of(a, b), b)
 
 # TODO: 让 uniFact 能出现在 fn then 里
-# TODO: 让 exist_prop 能有 uniFact ，即使这样它就不能 逆否了
 know:
     forall l line, a point, b point:
         $point_on_line(a, l)
@@ -25,7 +24,7 @@ know:
         then:
             l = line_of(a, b)
 
-exist_prop c point st A1(l line, a point, b point):
+exist_prop c point st a_line_has_more_than_two_points(l line, a point, b point):
     $point_on_line(a, l)
     $point_on_line(b, l)
     a != b
