@@ -88,7 +88,7 @@ type LogicExprOrSpecFactStmt interface {
 	stmt()
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
-	Reverse() LogicExprOrSpecFactStmt
+	ReverseIsTrue() LogicExprOrSpecFactStmt
 	IsSpecFactNameWithUniPrefix() bool
 }
 
@@ -103,10 +103,10 @@ func (s *LogicExprStmt) IsSpecFactNameWithUniPrefix() bool {
 	return false
 }
 
-func (s *LogicExprStmt) Reverse() LogicExprOrSpecFactStmt {
+func (s *LogicExprStmt) ReverseIsTrue() LogicExprOrSpecFactStmt {
 	newFacts := make([]LogicExprOrSpecFactStmt, len(s.Facts))
 	for i, fact := range s.Facts {
-		newFacts[i] = fact.Reverse()
+		newFacts[i] = fact.ReverseIsTrue()
 	}
 	return &LogicExprStmt{
 		IsOr:  !s.IsOr,
@@ -114,8 +114,8 @@ func (s *LogicExprStmt) Reverse() LogicExprOrSpecFactStmt {
 	}
 }
 
-func (s *SpecFactStmt) Reverse() LogicExprOrSpecFactStmt {
-	return s.ReverseIsTrue()
+func (stmt *SpecFactStmt) ReverseIsTrue() LogicExprOrSpecFactStmt {
+	return stmt.ReverseSpecFact()
 }
 
 // 用于处理 forall x Type. 这里的 Type 可以是 obj, fn, prop, existProp.

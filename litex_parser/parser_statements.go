@@ -162,7 +162,7 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		if isTrue {
 			return ret, nil
 		} else {
-			return ret.ReverseIsTrue(), nil
+			return ret.ReverseSpecFact(), nil
 		}
 	} else {
 		ret, err := tb.relaFactStmt(nameDepthMap)
@@ -172,7 +172,7 @@ func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		if isTrue {
 			return ret, nil
 		} else {
-			return ret.ReverseIsTrue(), nil
+			return ret.ReverseSpecFact(), nil
 		}
 	}
 }
@@ -832,7 +832,7 @@ func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.Ex
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []*ast.SpecFactStmt{}), nil
+		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []ast.LogicExprOrSpecFactStmt{}), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -846,27 +846,30 @@ func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.Ex
 	}
 
 	var domFacts []ast.FactStmt
-	var iffFacts []ast.FactStmt
+	var iffFactsAsFactStmts []ast.FactStmt
 
-	domFacts, _, iffFacts, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
+	domFacts, _, iffFactsAsFactStmts, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordIff)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if len(iffFacts) == 0 {
+	if len(iffFactsAsFactStmts) == 0 {
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	iffFactsAsSpecFacts := make([]*ast.SpecFactStmt, len(iffFacts))
-	ok := true
-	for i, fact := range iffFacts {
-		iffFactsAsSpecFacts[i], ok = fact.(*ast.SpecFactStmt)
-		if !ok {
-			return nil, fmt.Errorf("expect spec fact in iff section, but got: %v", fact)
+	iffFactsAsLogicExprOrSpecFacts := make([]ast.LogicExprOrSpecFactStmt, len(iffFactsAsFactStmts))
+
+	for i, fact := range iffFactsAsFactStmts {
+		if specFact, ok := fact.(*ast.SpecFactStmt); ok {
+			iffFactsAsLogicExprOrSpecFacts[i] = specFact
+		} else if logicExprOrSpecFact, ok := fact.(ast.LogicExprOrSpecFactStmt); ok {
+			iffFactsAsLogicExprOrSpecFacts[i] = logicExprOrSpecFact
+		} else {
+			return nil, fmt.Errorf("expect spec fact or logic expr or spec fact in iff section, but got: %v", fact)
 		}
 	}
 
-	return ast.NewExistPropDef(*declHeader, domFacts, iffFactsAsSpecFacts), nil
+	return ast.NewExistPropDef(*declHeader, domFacts, iffFactsAsLogicExprOrSpecFacts), nil
 }
 
 func (tb *tokenBlock) setDefStmt() (ast.SetDefStmt, error) {

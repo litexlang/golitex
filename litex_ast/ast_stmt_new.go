@@ -80,7 +80,7 @@ func NewExistObjDefStmt(objNames []string, fact SpecFactStmt) *ExistObjDefStmt {
 	return &ExistObjDefStmt{objNames, fact}
 }
 
-func NewExistPropDef(declHeader ConDefHeader, domFacts []FactStmt, iffFacts []*SpecFactStmt) *ExistPropDef {
+func NewExistPropDef(declHeader ConDefHeader, domFacts []FactStmt, iffFacts []LogicExprOrSpecFactStmt) *ExistPropDef {
 	return &ExistPropDef{declHeader, domFacts, iffFacts}
 }
 

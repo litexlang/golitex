@@ -76,7 +76,7 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 			// return false, fmt.Errorf("instantiate spec fact stmt failed")
 		}
 		if !stmt.IsTrue() {
-			fixedAsSpecFact = fixedAsSpecFact.ReverseIsTrue()
+			fixedAsSpecFact = fixedAsSpecFact.ReverseSpecFact()
 		}
 		thenFacts = append(thenFacts, fixedAsSpecFact)
 	}
