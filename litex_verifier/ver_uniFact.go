@@ -18,6 +18,10 @@ import (
 )
 
 func (ver *Verifier) ConUniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+	if state.isSpec() {
+		return false, nil
+	}
+
 	// 在局部环境声明新变量
 	ver.newEnv()
 	defer ver.deleteEnvAndRetainMsg()

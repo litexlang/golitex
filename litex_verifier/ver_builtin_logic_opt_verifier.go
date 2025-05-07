@@ -125,8 +125,39 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 }
 
 func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	// TODO: 处理commutative rule
-	_, _ = stmt, state
+	propNameAsAtom, ok := stmt.Params[0].(*ast.FcAtom)
+	if !ok {
+		return false, nil
+	}
+
+	propDef, ok := ver.env.GetPropDef(*propNameAsAtom)
+	if !ok {
+		return false, nil
+	}
+
+	if len(propDef.DefHeader.Params) != 2 {
+		return false, nil
+	}
+
+	uniFactParams := propDef.DefHeader.Params
+	uniFactParamSets := propDef.DefHeader.SetParams
+	domFacts := propDef.DomFacts
+	ThenFact := propDef.ToSpecFact()
+	IffFact, err := ThenFact.ReverseParameterOrder()
+	if err != nil {
+		return false, err
+	}
+
+	uniFact := ast.NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, domFacts, []ast.FactStmt{ThenFact}, []ast.FactStmt{IffFact})
+
+	ok, err = ver.FactStmt(uniFact, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 

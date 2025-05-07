@@ -224,55 +224,6 @@ func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 	return strings.HasPrefix(fact.PropName.Name, glob.UniParamPrefix)
 }
 
-// 如果用户认定这个定理是公理，那就返回forall anything satisfy dom, prop is true
-// TODO: 有点问题，因为没有突出 iff
-// func (defStmt *DefConPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
-// 	uniFactParams := defStmt.DefHeader.Params
-// 	uniFactParamSets := defStmt.DefHeader.SetParams
-// 	uniFactDomFacts := defStmt.DomFacts
-
-// 	thenFactParams := []Fc{}
-// 	for _, param := range uniFactParams {
-// 		thenFactParams = append(thenFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
-// 	}
-
-// 	thenFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, thenFactParams)
-// 	thenFacts := []FactStmt{thenFact}
-// 	uniFact := NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, uniFactDomFacts, thenFacts, EmptyIffFacts)
-
-// 	return uniFact, nil
-// }
-
-// // TODO: 有点问题，因为没有突出 iff
-// func (defStmt *DefConExistPropStmt) UniFactWhereDomImplyPropFact() (*UniFactStmt, error) {
-// 	uniParams := defStmt.Def.DefHeader.Params
-// 	uniParamSets := defStmt.Def.DefHeader.SetParams
-// 	uniDomFacts := defStmt.Def.DomFacts
-
-// 	thenFactParams := []Fc{}
-// 	for _, param := range uniParams {
-// 		thenFactParams = append(thenFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
-// 	}
-
-// 	existFact := NewSpecFactStmt(TrueExist, FcAtom{glob.BuiltinEmptyPkgName, defStmt.Def.DefHeader.Name}, thenFactParams)
-// 	existFacts := []FactStmt{existFact}
-// 	uniFact := NewUniFactStmtWithSetReqInDom(uniParams, uniParamSets, uniDomFacts, existFacts, EmptyIffFacts)
-
-// 	return uniFact, nil
-// }
-
-// func (uniFact *UniFactStmt) ToDefPropWith_EmptyDom_UniFactThenAsIff(propName string) *DefConPropStmt {
-// 	defHeader := ConDefHeader{
-// 		Name:      propName,
-// 		Params:    uniFact.Params,
-// 		SetParams: uniFact.ParamSets,
-// 	}
-// 	domFacts := []FactStmt{}
-// 	iffFacts := uniFact.DomFacts // Notice here is thenFacts, not iffFacts
-
-// 	return NewDefConPropStmt(defHeader, domFacts, iffFacts)
-// }
-
 func (defStmt *DefConPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
@@ -282,4 +233,14 @@ func (defStmt *DefConPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
 
 	return propSpecFact
+}
+
+func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
+	if len(stmt.Params) != 2 {
+		return nil, fmt.Errorf("reverseParameterOrder: expected 2 params, but got %d", len(stmt.Params))
+	}
+
+	newParams := []Fc{stmt.Params[1], stmt.Params[0]}
+
+	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
 }
