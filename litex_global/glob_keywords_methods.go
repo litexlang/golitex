@@ -131,7 +131,8 @@ var notFcAtomNameSet = map[string]struct{}{
 	KeywordExist: {},
 }
 
+// TODO
 func IsKwThatCanNeverBeFcName(s string) bool {
 	_, ok := notFcAtomNameSet[s]
-	return ok || IsKeySymbol(s)
+	return ok
 }

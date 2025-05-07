@@ -184,7 +184,27 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendNewMsg(stmt.String())
+
+	// iff leads to prop
 	err := exec.env.NewDefConProp(stmt)
+	if err != nil {
+		return err
+	}
+
+	// prop leads to iff
+	uniFactParams := stmt.DefHeader.Params
+	uniFactParamSets := stmt.DefHeader.SetParams
+	domFacts := []ast.FactStmt{}
+	domFacts = append(domFacts, stmt.DomFacts...)
+	propAsSpec := stmt.ToSpecFact()
+	domFacts = append(domFacts, propAsSpec)
+
+	newUniFact := ast.NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, domFacts, stmt.IffFacts, ast.EmptyIffFacts)
+
+	err = exec.env.NewFactWithOutEmit(newUniFact)
+
+	exec.appendNewMsg(fmt.Sprintf("know by prop definition:\n%s", newUniFact.String()))
+
 	if err != nil {
 		return err
 	}
@@ -529,6 +549,11 @@ func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
 		return err
 	}
 
+	err = exec.env.NewFactWithOutEmit(&stmt.Fact)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -540,6 +565,5 @@ func (exec *Executor) setDefStmt(stmt ast.SetDefStmt) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
