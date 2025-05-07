@@ -51,6 +51,7 @@ know:
         then:
             p = plain_of(a, b, c)
 
+# TODO: prop 下面能有 forall
 prop line_on_plane(l line, p plane):
     forall x point:
         $point_on_line(x, l)

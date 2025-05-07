@@ -51,14 +51,14 @@ func NewSpecFactInUniFact() *SpecFactInUniFactMem {
 	}
 }
 
-func NewKnownSpecFact_InLogicExpr_InUniFactMem() *KnownSpecFact_InLogicExpr_InUniFactMem {
-	return &KnownSpecFact_InLogicExpr_InUniFactMem{
-		PureFacts:         map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
-		NotPureFacts:      map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
-		ExistFacts:        map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
-		NotExistFacts:     map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
-		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
-		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact{},
+func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
+	return &SpecFact_InLogicExpr_InUniFactMem{
+		PureFacts:         map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		NotPureFacts:      map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		ExistFacts:        map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		NotExistFacts:     map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		Exist_St_Facts:    map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		NotExist_St_Facts: map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
 	}
 }
 
@@ -232,12 +232,12 @@ func (s SpecFactInUniFactMem) newSpecFactInUniFact(stmt *ast.UniFactStmt) error 
 			}
 
 		} else if thenStmtAsConUniFact, ok := thenStmt.(*ast.UniFactStmt); ok {
-			err := s.mergeOuterInnerUniFactAndInsert(thenStmtAsConUniFact, stmt)
+			err := s.mergeOuterInnerUniFactAndInsert(stmt, thenStmtAsConUniFact)
 			if err != nil {
 				return err
 			}
 		} else {
-			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
+			return fmt.Errorf("TODO: newSpecFactInUniFact Currently only support spec fact in uni fact, but got: %s", thenStmt.String())
 		}
 	}
 	return nil
@@ -250,7 +250,7 @@ func (factMem SpecFactInUniFactMem) mergeOuterInnerUniFactAndInsert(outer *ast.U
 		if stmtAsSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
 			thenFacts = append(thenFacts, stmtAsSpecFact)
 		} else {
-			return fmt.Errorf("TODO: Currently only support spec fact in uni fact, but got: %s", stmt.String())
+			return fmt.Errorf("TODO: mergeOuterInnerUniFactAndInsert Currently only support spec fact in uni fact, but got: %s", stmt.String())
 		}
 	}
 
@@ -278,6 +278,69 @@ func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, u
 	}
 
 	sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name] = append(sameEnumFacts[stmtAsSpecFact.PropName.PkgName][stmtAsSpecFact.PropName.Name], KnownSpecFact_InUniSpecFact{stmtAsSpecFact, uniFact})
+
+	return nil
+}
+
+func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]SpecFact_InLogicExpr_InUniFact, error) {
+	switch stmt.TypeEnum {
+	case ast.TrueAtom:
+		return s.PureFacts, nil
+	case ast.FalseAtom:
+		return s.NotPureFacts, nil
+	case ast.TrueExist:
+		return s.ExistFacts, nil
+	case ast.FalseExist:
+		return s.NotExistFacts, nil
+	case ast.TrueExist_St:
+		return s.Exist_St_Facts, nil
+	case ast.FalseExist_St:
+		return s.NotExist_St_Facts, nil
+	default:
+		return nil, errors.New("invalid spec fact type")
+	}
+}
+
+func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]SpecFact_InLogicExpr_InUniFact, bool) {
+	sameEnumFacts, err := s.getSameEnumFacts(stmt)
+	if err != nil {
+		return nil, false
+	}
+
+	sameEnumPkgfacts, memExist := sameEnumFacts[stmt.PropName.PkgName]
+	if !memExist {
+		return nil, false
+	}
+
+	sameEnumPkgPropFacts, memExist := sameEnumPkgfacts[stmt.PropName.Name]
+	if !memExist {
+		return nil, false
+	}
+
+	return sameEnumPkgPropFacts, true
+}
+
+func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.LogicExprStmt) error {
+	pair, err := logicExpr.SpecFactIndexPairs([]uint8{})
+	if err != nil {
+		return err
+	}
+
+	for _, pair := range pair {
+		sameEnumFacts, err := s.getSameEnumFacts(pair.Stmt)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := sameEnumFacts[pair.Stmt.PropName.PkgName]; !ok {
+			sameEnumFacts[pair.Stmt.PropName.PkgName] = make(map[string][]SpecFact_InLogicExpr_InUniFact)
+		}
+		if _, ok := sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name]; !ok {
+			sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = []SpecFact_InLogicExpr_InUniFact{}
+		}
+
+		sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name] = append(sameEnumFacts[pair.Stmt.PropName.PkgName][pair.Stmt.PropName.Name], SpecFact_InLogicExpr_InUniFact{pair.Stmt, uniStmt, pair.Indexes, logicExpr})
+	}
 
 	return nil
 }

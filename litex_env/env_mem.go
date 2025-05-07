@@ -87,20 +87,18 @@ type SpecFactInUniFactMem struct {
 
 // TODO 相关的功能未实现 ---------------------------
 
-type KnownSpecFact_InLogicExpr_InUniFact struct {
+type SpecFact_InLogicExpr_InUniFact struct {
 	SpecFact  *ast.SpecFactStmt
 	UniFact   *ast.UniFactStmt
 	Index     []uint8
 	LogicExpr *ast.LogicExprStmt
 }
 
-type KnownSpecFact_InLogicExpr_InUniFactMem struct {
-	PureFacts         map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact
-	NotPureFacts      map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact
-	ExistFacts        map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact
-	NotExistFacts     map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact
-	Exist_St_Facts    map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact
-	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InLogicExpr_InUniFact
+type SpecFact_InLogicExpr_InUniFactMem struct {
+	PureFacts         map[string]map[string][]SpecFact_InLogicExpr_InUniFact
+	NotPureFacts      map[string]map[string][]SpecFact_InLogicExpr_InUniFact
+	ExistFacts        map[string]map[string][]SpecFact_InLogicExpr_InUniFact
+	NotExistFacts     map[string]map[string][]SpecFact_InLogicExpr_InUniFact
+	Exist_St_Facts    map[string]map[string][]SpecFact_InLogicExpr_InUniFact
+	NotExist_St_Facts map[string]map[string][]SpecFact_InLogicExpr_InUniFact
 }
-
-// TODO 相关的功能未实现 ---------------------------
