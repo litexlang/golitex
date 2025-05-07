@@ -82,13 +82,13 @@ func (s *SetDefEnumtmt) Name() string {
 	return s.SetName
 }
 
-type LogicExprOrSpecFactStmt interface {
+type Reversable_LogicOrSpec_Stmt interface {
 	logicExprOrSpecFactStmt()
 	factStmt()
 	stmt()
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
-	ReverseIsTrue() LogicExprOrSpecFactStmt
+	ReverseIsTrue() Reversable_LogicOrSpec_Stmt
 	IsSpecFactNameWithUniPrefix() bool
 }
 
@@ -103,8 +103,8 @@ func (s *LogicExprStmt) IsSpecFactNameWithUniPrefix() bool {
 	return false
 }
 
-func (s *LogicExprStmt) ReverseIsTrue() LogicExprOrSpecFactStmt {
-	newFacts := make([]LogicExprOrSpecFactStmt, len(s.Facts))
+func (s *LogicExprStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
+	newFacts := make([]Reversable_LogicOrSpec_Stmt, len(s.Facts))
 	for i, fact := range s.Facts {
 		newFacts[i] = fact.ReverseIsTrue()
 	}
@@ -114,7 +114,7 @@ func (s *LogicExprStmt) ReverseIsTrue() LogicExprOrSpecFactStmt {
 	}
 }
 
-func (stmt *SpecFactStmt) ReverseIsTrue() LogicExprOrSpecFactStmt {
+func (stmt *SpecFactStmt) ReverseIsTrue() Reversable_LogicOrSpec_Stmt {
 	return stmt.ReverseSpecFact()
 }
 

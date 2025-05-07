@@ -46,7 +46,7 @@ type ExistPropDef struct {
 	DefHeader ConDefHeader
 	DomFacts  []FactStmt
 	// 必须是 iff，因为 not exist XXX <=> forall not XXX，而 not XXX 要求 XXX 是 spec
-	IffFacts []LogicExprOrSpecFactStmt
+	IffFacts []Reversable_LogicOrSpec_Stmt
 }
 
 type DefConExistPropStmt struct {
@@ -100,7 +100,7 @@ type FcFnDecl struct {
 
 type LogicExprStmt struct {
 	IsOr  bool
-	Facts []LogicExprOrSpecFactStmt
+	Facts []Reversable_LogicOrSpec_Stmt
 }
 
 type ExistObjDefStmt struct {
