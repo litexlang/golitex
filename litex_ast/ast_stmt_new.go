@@ -24,8 +24,8 @@ func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
 	return &DefObjStmt{objs, objSets, facts}
 }
 
-func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefConPropStmt {
-	return &DefConPropStmt{defHeader, domFacts, iffFacts}
+func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []FactStmt, isCommutative bool) *DefConPropStmt {
+	return &DefConPropStmt{defHeader, domFacts, iffFacts, isCommutative}
 }
 
 func NewDefConExistPropStmt(def *ExistPropDef, existParams []string, existParamSets []Fc) *DefConExistPropStmt {

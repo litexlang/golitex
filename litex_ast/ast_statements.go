@@ -36,10 +36,10 @@ type ConDefHeader struct {
 }
 
 type DefConPropStmt struct {
-	DefHeader ConDefHeader
-	DomFacts  []FactStmt // 如果输入的参数不满足dom，那就是error
-	// IffFacts []*SpecFactStmt
-	IffFacts []FactStmt
+	DefHeader     ConDefHeader
+	DomFacts      []FactStmt // 如果输入的参数不满足dom，那就是error
+	IffFacts      []FactStmt
+	IsCommutative bool
 }
 
 type ExistPropDef struct {

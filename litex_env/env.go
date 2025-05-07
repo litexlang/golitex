@@ -32,8 +32,6 @@ type Env struct {
 	SpecFactInUniFactMem   SpecFactInUniFactMem
 
 	EmitWhenSpecFactIsTrueMem EmitWhenSpecFactIsTrueMem
-
-	CommutativePropMem CommutativePropMem
 }
 
 func NewEnv(parent *Env) *Env {
@@ -52,8 +50,6 @@ func NewEnv(parent *Env) *Env {
 		SpecFactInUniFactMem:   *NewSpecFactInUniFact(),
 
 		EmitWhenSpecFactIsTrueMem: *NewEmitWhenSpecFactIsTrueMem(),
-
-		CommutativePropMem: *NewCommutativePropMem(),
 	}
 
 	return env
@@ -136,10 +132,15 @@ func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
 	}
 
 	for env := e; env != nil; env = env.Parent {
-		if _, ok := env.CommutativePropMem.Dict[fact.PropName.PkgName]; ok {
-			if _, ok := env.CommutativePropMem.Dict[fact.PropName.PkgName][fact.PropName.Name]; ok {
-				return true
-			}
+		propDef, ok := env.PropMem.Get(fact.PropName)
+		if !ok {
+			continue
+		}
+
+		if propDef.IsCommutative {
+			return true
+		} else {
+			return false
 		}
 	}
 	return false

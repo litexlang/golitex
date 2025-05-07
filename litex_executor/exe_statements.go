@@ -149,7 +149,7 @@ func (exec *Executor) execNamedForall(propName string, asConUniFact *ast.UniFact
 	domFacts := []ast.FactStmt{}
 	iffFacts := asConUniFact.DomFacts // Notice here is thenFacts, not iffFacts
 
-	propDef := ast.NewDefConPropStmt(defHeader, domFacts, iffFacts)
+	propDef := ast.NewDefConPropStmt(defHeader, domFacts, iffFacts, false)
 
 	err := storeToEnv.NewDefConProp(propDef)
 	if err != nil {

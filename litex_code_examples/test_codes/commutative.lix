@@ -16,5 +16,6 @@ prove:
 
     know:
         $commutative(p)
-    $p(1,2)
+        $p(1,2)
     $p(2,1)
+    $commutative(p)

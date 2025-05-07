@@ -243,7 +243,7 @@ func (tb *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewDefConPropStmt(*declHeader, nil, nil), nil
+		return ast.NewDefConPropStmt(*declHeader, nil, nil, false), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -268,7 +268,7 @@ func (tb *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts), nil
+	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts, false), nil
 }
 
 func (tb *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
