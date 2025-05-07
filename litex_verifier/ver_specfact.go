@@ -209,12 +209,12 @@ func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerSta
 }
 
 func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	// 处理可交换的prop
-	isCom := ver.env.IsSpecFactPropCommutative(stmt)
-	var reverseStmt *ast.SpecFactStmt = nil
-	if isCom {
-		reverseStmt = &ast.SpecFactStmt{TypeEnum: stmt.TypeEnum, PropName: stmt.PropName, Params: []ast.Fc{stmt.Params[1], stmt.Params[0]}}
-	}
+	// // 处理可交换的prop
+	// isCom := ver.env.IsSpecFactPropCommutative(stmt)
+	// var reverseStmt *ast.SpecFactStmt = nil
+	// if isCom {
+	// 	reverseStmt = &ast.SpecFactStmt{TypeEnum: stmt.TypeEnum, PropName: stmt.PropName, Params: []ast.Fc{stmt.Params[1], stmt.Params[0]}}
+	// }
 
 	nextState := state
 
@@ -229,18 +229,16 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 			return true, nil
 		}
 
-		// TODO 万一涉及到的prop名是变量，怎么办？
-
-		// 处理可交换的prop
-		if isCom {
-			ok, err := ver.SpecFactUniAtEnv(curEnv, reverseStmt, nextState)
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				return true, nil
-			}
-		}
+		// // 处理可交换的prop
+		// if isCom {
+		// 	ok, err := ver.SpecFactUniAtEnv(curEnv, reverseStmt, nextState)
+		// 	if err != nil {
+		// 		return false, err
+		// 	}
+		// 	if ok {
+		// 		return true, nil
+		// 	}
+		// }
 	}
 
 	return false, nil
@@ -285,6 +283,47 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 				ver.successNoMsg()
 			}
 			return true, nil
+		}
+	}
+
+	searchedSpecFactsInLogicExpr, got := curEnv.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
+	if got {
+		for _, knownFactUnderLogicExpr := range searchedSpecFactsInLogicExpr {
+			paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(env.KnownSpecFact_InUniSpecFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}, stmt)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				continue
+			}
+
+			// 防止 两个不相等的参数对应到了同一个自由变量
+			uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				continue
+			}
+
+			instaniatedLogicExpr, err := knownFactUnderLogicExpr.LogicExpr.Instantiate(uniConMap)
+			if err != nil {
+				return false, err
+			}
+
+			nextState := state.addRound()
+			ok, err = ver.FactStmt(instaniatedLogicExpr, nextState)
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				if state.requireMsg() {
+					ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())
+				} else {
+					ver.successNoMsg()
+				}
+				return true, nil
+			}
 		}
 	}
 

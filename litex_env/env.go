@@ -27,11 +27,11 @@ type Env struct {
 	ExistPropMem ExistPropMem
 	SetMem       SetMem
 
-	SpecFactMem            SpecFactMem
-	SpecFactInLogicExprMem SpecFactInLogicExprMem
-	SpecFactInUniFactMem   SpecFactInUniFactMem
-
-	EmitWhenSpecFactIsTrueMem EmitWhenSpecFactIsTrueMem
+	SpecFactMem                       SpecFactMem
+	SpecFactInLogicExprMem            SpecFactInLogicExprMem
+	SpecFactInUniFactMem              SpecFactInUniFactMem
+	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
+	EmitWhenSpecFactIsTrueMem         EmitWhenSpecFactIsTrueMem
 }
 
 func NewEnv(parent *Env) *Env {
@@ -45,9 +45,10 @@ func NewEnv(parent *Env) *Env {
 		ExistPropMem: *NewExistPropMemory(),
 		SetMem:       *NewSetMemory(),
 
-		SpecFactMem:            *newSpecFactMem(),
-		SpecFactInLogicExprMem: *NewSpecFactInLogicExprMem(),
-		SpecFactInUniFactMem:   *NewSpecFactInUniFact(),
+		SpecFactMem:                       *newSpecFactMem(),
+		SpecFactInLogicExprMem:            *NewSpecFactInLogicExprMem(),
+		SpecFactInUniFactMem:              *NewSpecFactInUniFact(),
+		SpecFact_InLogicExpr_InUniFactMem: *NewSpecFact_InLogicExpr_InUniFactMem(),
 
 		EmitWhenSpecFactIsTrueMem: *NewEmitWhenSpecFactIsTrueMem(),
 	}
