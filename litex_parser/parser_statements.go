@@ -872,7 +872,7 @@ func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.Ex
 	return ast.NewExistPropDef(*declHeader, domFacts, iffFactsAsLogicExprOrSpecFacts), nil
 }
 
-func (tb *tokenBlock) setDefStmt() (ast.SetDefStmt, error) {
+func (tb *tokenBlock) setDefStmt() (*ast.SetDefSetBuilderStmt, error) {
 	err := tb.header.skip(glob.KeywordSet)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -1189,5 +1189,5 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 		return nil, &tokenBlockErr{fmt.Errorf("prove in each case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of facts in the or fact", len(orFact.Facts), len(proofs)), *tb}
 	}
 
-	return ast.NewProveInEachCaseStmt(orFact, thenFacts, proofs), nil
+	return ast.NewProveInEachCaseStmt(*orFact, thenFacts, proofs), nil
 }
