@@ -4,20 +4,17 @@ set plane
 
 fn angle(a point, b point, c point) real
 
-# find bug: 如果一个prop没有: 那它自动成立了，这是不对的，因为如果是这样，相当于只是申明了，不能说它被定义了
-prop between(left point, right point, middle point)
 prop point_on_line(p point, l line)
 prop point_on_plane(q point, p plane)
 
-# 存在且只存在，这样的公理，用 fn & know forall 表示
-
+# Axioms of "existence and uniqueness" are represented using fn & know forall statements
 fn line_of(a point, b point) line:
     a != b
     then:
         $point_on_line(line_of(a, b), a)
         $point_on_line(line_of(a, b), b)
 
-# TODO: 让 uniFact 能出现在 fn then 里
+# TODO: Allow uniFact to appear in fn then blocks
 know:
     forall l line, a point, b point:
         $point_on_line(a, l)
@@ -87,8 +84,84 @@ prop four_points_on_one_plane(a point, b point, c point, d point, p plane):
     b != d
     c != d
 
-exist_prop a point, b point, c point, d point st four_points_not_on_one_plane(p plane):
+exist_prop a point, b point, c point, d point st exist_four_points_not_on_given_plane(p plane):
     not $four_points_on_one_plane(a, b, c, d, p)
 
 forall p plane:
-    $four_points_on_one_plane(p)
+    $exist_four_points_not_on_given_plane(p)
+
+prop between(left point, right point, middle point):
+    left != right
+    iff:
+        $point_on_line(middle, line_of(left, right))
+
+know forall left point, right point, middle point:
+    $between(left, right, middle)
+    then:
+        $between(right, left, middle)
+
+exist_prop right point st exist_point_right_to_given_two_points(left point, middle point):
+    left != middle
+    iff:
+        $between(left, right, middle)
+
+know forall a point, b point:
+    a != b
+    then:
+        $exist_point_right_to_given_two_points(a, b)
+
+prop no_more_than_one_point_between_three_points_on_line(a point, b point, c point):
+    a != b
+    a != c
+    b != c
+    iff:
+        or:
+            $between(a, b, c)
+            $between(a, c, b)
+            $between(b, a, c)
+            $between(b, c, a)
+            $between(c, a, b)
+            $between(c, b, a)
+
+# TODO: logic expr in forall
+know forall a point, b point, c point:
+    a != b
+    a != c
+    b != c
+    then:
+        $no_more_than_one_point_between_three_points_on_line(a, b, c)
+
+set finite_line
+
+fn finite_line_of(a point, b point) finite_line:
+    dom:
+        a != b
+    then:
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+
+prop commutative_prop intersect_finite_line_and_finite_line(l finite_line, m finite_line)
+
+# prop either_intersect_line_or_another(point a, point b, point c, line l):
+#     a != b
+#     a != c
+#     b != c
+#     not $point_on_line(a, l)
+#     not $point_on_line(b, l)
+#     not $point_on_line(c, l)
+#     $intersect_finite_line_and_finite_line(l, finite_line_of(a, b))
+#     iff:
+#         or:
+#             $intersect_finite_line_and_finite_line(l, finite_line_of(a, c))
+#             $intersect_finite_line_and_finite_line(l, finite_line_of(b, c))
+# 
+# know forall a point, b point, c point, l line:
+#     a != b
+#     a != c
+#     b != c
+#     not $point_on_line(a, l)
+#     not $point_on_line(b, l)
+#     not $point_on_line(c, l)
+#     $intersect_finite_line_and_finite_line(l, finite_line_of(a, c))
+#     then:
+#         $either_intersect_line_or_another(a, b, c, l)

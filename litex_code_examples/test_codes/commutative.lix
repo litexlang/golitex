@@ -25,5 +25,5 @@ prove:
 
     $parallel(l1, l2)
     know:
-        $p(l1, l2)
-    $p(l2, l1)
+        $parallel(l1, l2)
+    $parallel(l2, l1)

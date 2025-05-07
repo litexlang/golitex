@@ -249,6 +249,7 @@ func (tb *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
+		// REMARK: When IFFFacts is empty, we think that there is no iff to verify prop (i.e. you can not use prop def to prove prop), not that prop is true by default
 		return ast.NewDefConPropStmt(*declHeader, nil, nil, isCommutative), nil
 	}
 
