@@ -125,9 +125,17 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 }
 
 func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordCommutative) {
+		return false, nil
+	}
+
 	propNameAsAtom, ok := stmt.Params[0].(*ast.FcAtom)
 	if !ok {
 		return false, nil
+	}
+
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(propNameAsAtom, glob.KeySymbolEqual) {
+		return true, nil
 	}
 
 	propDef, ok := ver.env.GetPropDef(*propNameAsAtom)

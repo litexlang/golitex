@@ -1,0 +1,10 @@
+prove:
+    $commutative(=)
+    prop p(x nat, y nat):
+        x = y
+    forall x nat, y nat:
+        $p(x,y)
+        then:
+            x = y
+            y = x
+            $p(y,x)
