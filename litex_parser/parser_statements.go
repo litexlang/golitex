@@ -909,9 +909,12 @@ func (tb *tokenBlock) setDefStmt() (*ast.SetDefSetBuilderStmt, error) {
 
 		return ast.NewSetDefSetBuilderStmt(setName, ast.EmptyParentSet, []ast.FactStmt{}, elems), nil
 	} else {
-		parentSet, err := tb.header.rawFc()
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
+		var parentSet ast.Fc = nil
+		if !tb.header.is(glob.KeySymbolColon) {
+			parentSet, err = tb.header.rawFc()
+			if err != nil {
+				return nil, &tokenBlockErr{err, *tb}
+			}
 		}
 
 		err = tb.header.skip(glob.KeySymbolColon)
@@ -1144,7 +1147,7 @@ func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
 }
 
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
-	err := tb.header.skip(glob.KeywordProveInEachCase)
+	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveInEachCase)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -1154,16 +1157,16 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if orFact.IsOr {
+	if !orFact.IsOr {
 		return nil, &tokenBlockErr{fmt.Errorf("prove in each case: expect or fact, but got: %s", orFact.String()), *tb}
 	}
 
+	thenFacts := []ast.FactStmt{}
 	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	thenFacts := []ast.FactStmt{}
 	for _, stmt := range tb.body[1].body {
 		curStmt, err := stmt.factStmt(ast.NameDepthMap{}, UniFactDepth0)
 		if err != nil {
@@ -1175,6 +1178,12 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 	proofs := [][]ast.Stmt{}
 	for i := 2; i < len(tb.body); i++ {
 		proof := []ast.Stmt{}
+
+		err = tb.body[i].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+
 		for _, stmt := range tb.body[i].body {
 			curStmt, err := stmt.Stmt()
 			if err != nil {

@@ -53,3 +53,34 @@ prove:
     or:
         $p(x,y)
         $q(x,y)
+
+prove:
+    set s :
+        forall x s:
+            or:
+                x = 1
+                x = 2
+                x = 3
+
+    know:
+        $p(1)
+        $p(2)
+        $p(3)
+
+    claim:
+        forall x s:
+            $p(x)
+        prove:
+            prove_in_each_case:
+                or:
+                    x = 1
+                    x = 2
+                    x = 3
+                then:
+                    $p(x)
+                prove:
+                    $p(1)
+                prove:
+                    $p(2)
+                prove:
+                    $p(3)
