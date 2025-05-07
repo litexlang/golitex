@@ -89,10 +89,19 @@ type LogicExprOrSpecFactStmt interface {
 	String() string
 	Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 	Reverse() LogicExprOrSpecFactStmt
+	IsSpecFactNameWithUniPrefix() bool
 }
 
 func (s *LogicExprStmt) logicExprOrSpecFactStmt() {}
 func (s *SpecFactStmt) logicExprOrSpecFactStmt()  {}
+func (s *LogicExprStmt) IsSpecFactNameWithUniPrefix() bool {
+	for _, fact := range s.Facts {
+		if fact.IsSpecFactNameWithUniPrefix() {
+			return true
+		}
+	}
+	return false
+}
 
 func (s *LogicExprStmt) Reverse() LogicExprOrSpecFactStmt {
 	newFacts := make([]LogicExprOrSpecFactStmt, len(s.Facts))

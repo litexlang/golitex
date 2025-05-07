@@ -245,44 +245,42 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 }
 
 func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	searchedSpecFacts, got := curEnv.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
-	if !got {
-		return false, nil
-	}
-
 	nextState := state.addRound().toNoMsg()
 
-	for _, knownFact := range searchedSpecFacts {
-		// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
-		paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(knownFact, stmt)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			continue
-		}
-
-		// 防止 两个不相等的参数对应到了同一个自由变量
-		uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-			continue
-		}
-
-		ok, err = ver.specFactUni(&knownFact, uniConMap, nextState)
-		if err != nil {
-			return false, err
-		}
-
-		if ok {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), knownFact.String())
-			} else {
-				ver.successNoMsg()
+	searchedSpecFacts, got := curEnv.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
+	if got {
+		for _, knownFact := range searchedSpecFacts {
+			// TODO： 这里要确保搜到的事实的每一位freeObj和concreteObj能对上，然后要记录一下每一位freeObj是哪个concreteObj。还要保证涉及到的Known UniFact的param都被match上了
+			paramArrMap, ok, err := ver.matchStoredUniSpecWithSpec(knownFact, stmt)
+			if err != nil {
+				return false, err
 			}
-			return true, nil
+			if !ok {
+				continue
+			}
+
+			// 防止 两个不相等的参数对应到了同一个自由变量
+			uniConMap, ok, err := ver.ValuesUnderKeyInMatchMapEqualSpec(paramArrMap, state)
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				continue
+			}
+
+			ok, err = ver.specFactUni(&knownFact, uniConMap, nextState)
+			if err != nil {
+				return false, err
+			}
+
+			if ok {
+				if state.requireMsg() {
+					ver.successWithMsg(stmt.String(), knownFact.String())
+				} else {
+					ver.successNoMsg()
+				}
+				return true, nil
+			}
 		}
 	}
 
@@ -310,12 +308,22 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 			if err != nil {
 				return false, err
 			}
+			instaniatedLogicExprAsKnownSpecFact, ok := instaniatedLogicExpr.(*ast.LogicExprStmt)
+			if !ok {
+				return false, fmt.Errorf("instaniatedLogicExpr is not a KnownSpecFact_InLogicExpr")
+			}
 
-			nextState := state.addRound()
-			ok, err = ver.FactStmt(instaniatedLogicExpr, nextState)
+			knownSpecFact_InLogicExpr_InUniFact := env.KnownSpecFact_InLogicExpr{
+				SpecFact:  stmt,
+				Index:     knownFactUnderLogicExpr.Index,
+				LogicExpr: instaniatedLogicExprAsKnownSpecFact,
+			}
+
+			ok, err = ver.SpecFactSpecUnderLogicalExpr(&knownSpecFact_InLogicExpr_InUniFact, stmt, nextState)
 			if err != nil {
 				return false, err
 			}
+
 			if ok {
 				if state.requireMsg() {
 					ver.successWithMsg(stmt.String(), knownFactUnderLogicExpr.String())

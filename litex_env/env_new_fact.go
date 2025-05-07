@@ -144,7 +144,7 @@ func (env *Env) newFalseExistFactPostProcess(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
-	err = env.SpecFactInUniFactMem.newSpecFactInUniFact(conUniFact)
+	err = env.storeUniFact(conUniFact)
 	if err != nil {
 		return fmt.Errorf("exist fact %s has no definition", fact.String())
 	}
@@ -171,7 +171,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 
 func (env *Env) newConUniFact(fact *ast.UniFactStmt) error {
 	// TODO: 现在只能记忆 specFact undef unifact, 理论上要让 logic_expr 也能记忆
-	err := env.SpecFactInUniFactMem.newSpecFactInUniFact(fact)
+	err := env.storeUniFact(fact)
 	if err != nil {
 		return err
 	}
