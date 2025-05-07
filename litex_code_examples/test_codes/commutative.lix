@@ -8,3 +8,13 @@ prove:
             x = y
             y = x
             $p(y,x)
+    $commutative(p)
+
+prove:
+    prop p(x nat, y nat):
+        $q(x,y)
+
+    know:
+        $commutative(p)
+    $p(1,2)
+    $p(2,1)

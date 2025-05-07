@@ -4,6 +4,7 @@ set plane
 
 fn angle(a point, b point, c point) real
 
+# find bug: 如果一个prop没有: 那它自动成立了，这是不对的，因为如果是这样，相当于只是申明了，不能说它被定义了
 prop between(left point, right point, middle point)
 prop point_on_line(p point, l line)
 prop point_on_plane(q point, p plane)

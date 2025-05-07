@@ -36,6 +36,18 @@ func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 }
 
 func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordCommutative) {
+		// 验证它的def确实只有两个元素
+		propDef, ok := env.PropMem.Get(fact.PropName)
+		if !ok {
+			return fmt.Errorf("prop %s has no definition", fact.PropName)
+		}
+		if len(propDef.DefHeader.Params) != 2 {
+			return fmt.Errorf("prop %s has no two parameters", fact.PropName)
+		}
+
+		env.CommutativePropMem.Insert(fact.PropName.PkgName, fact.PropName.Name)
+	}
 
 	err := env.SpecFactMem.NewFact(fact)
 	if err != nil {
@@ -65,7 +77,7 @@ func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 func (env *Env) emit_specFact_DefFacts(fact *ast.SpecFactStmt) error {
 	propDef, ok := env.PropMem.Get(fact.PropName)
 	if !ok {
-		// TODO 这里需要考虑prop的定义是否在当前包中
+		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
 		// return fmt.Errorf("prop %s has no definition", fact.PropName)
 		return nil
 	}
@@ -174,22 +186,22 @@ func (env *Env) IsInvalidName(name string) error {
 	return nil
 }
 
-func (env *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
-	if len(fact.Params) != 2 {
-		return false
-	}
-	return env.isPropCommutative(&fact.PropName)
-}
+// func (env *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
+// 	if len(fact.Params) != 2 {
+// 		return false
+// 	}
+// 	return env.isPropCommutative(&fact.PropName)
+// }
 
-func (env *Env) isPropCommutative(opt ast.Fc) bool {
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(opt, glob.KeySymbolEqual) {
-		return true
-	}
+// func (env *Env) isPropCommutative(opt ast.Fc) bool {
+// 	if ast.IsFcAtom_HasGivenName_EmptyPkgName(opt, glob.KeySymbolEqual) {
+// 		return true
+// 	}
 
-	// TODO
-	_ = opt
-	return false
-}
+// 	// TODO
+// 	_ = opt
+// 	return false
+// }
 
 func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt) error {
 	err := env.IsInvalidName(stmt.DefHeader.Name)

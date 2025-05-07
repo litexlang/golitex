@@ -158,11 +158,16 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 
 	uniFact := ast.NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, domFacts, []ast.FactStmt{ThenFact}, []ast.FactStmt{IffFact})
 
-	ok, err = ver.FactStmt(uniFact, state)
+	ok, err = ver.FactStmt(uniFact, state.toNoMsg())
 	if err != nil {
 		return false, err
 	}
 	if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), fmt.Sprintf("the definition of commutative property: %s is true iff\n%s", stmt.String(), uniFact.String()))
+		} else {
+			ver.successNoMsg()
+		}
 		return true, nil
 	}
 

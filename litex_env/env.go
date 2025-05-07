@@ -14,6 +14,7 @@ package litex_env
 
 import (
 	ast "golitex/litex_ast"
+	glob "golitex/litex_global"
 )
 
 type Env struct {
@@ -31,6 +32,8 @@ type Env struct {
 	SpecFactInUniFactMem   SpecFactInUniFactMem
 
 	EmitWhenSpecFactIsTrueMem EmitWhenSpecFactIsTrueMem
+
+	CommutativePropMem CommutativePropMem
 }
 
 func NewEnv(parent *Env) *Env {
@@ -49,6 +52,8 @@ func NewEnv(parent *Env) *Env {
 		SpecFactInUniFactMem:   *NewSpecFactInUniFact(),
 
 		EmitWhenSpecFactIsTrueMem: *NewEmitWhenSpecFactIsTrueMem(),
+
+		CommutativePropMem: *NewCommutativePropMem(),
 	}
 
 	return env
@@ -122,4 +127,20 @@ func NewEmitWhenSpecFactIsTrueMem() *EmitWhenSpecFactIsTrueMem {
 	return &EmitWhenSpecFactIsTrueMem{
 		Dict: make(map[string]map[string][]ast.UniFactStmt),
 	}
+}
+
+func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
+	// 如果是等号那自动成立
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqual) {
+		return true
+	}
+
+	for env := e; env != nil; env = env.Parent {
+		if _, ok := env.CommutativePropMem.Dict[fact.PropName.PkgName]; ok {
+			if _, ok := env.CommutativePropMem.Dict[fact.PropName.PkgName][fact.PropName.Name]; ok {
+				return true
+			}
+		}
+	}
+	return false
 }
