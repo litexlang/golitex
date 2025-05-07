@@ -17,13 +17,13 @@ type Stmt interface {
 	String() string
 }
 
-func (stmt *DefObjStmt) stmt()  {}
-func (c *DefConPropStmt) stmt() {}
-func (f *DefConFnStmt) stmt()   {}
-func (l *UniFactStmt) stmt()    {}
-func (p *SpecFactStmt) stmt()   {}
-func (f *ClaimStmt) stmt()      {}
-func (f *KnowStmt) stmt()       {}
+func (stmt *DefObjStmt) stmt() {}
+func (c *DefPropStmt) stmt()   {}
+func (f *DefConFnStmt) stmt()  {}
+func (l *UniFactStmt) stmt()   {}
+func (p *SpecFactStmt) stmt()  {}
+func (f *ClaimStmt) stmt()     {}
+func (f *KnowStmt) stmt()      {}
 
 func (s *DefConExistPropStmt) stmt() {}
 
@@ -101,5 +101,5 @@ type DefStmt interface {
 
 func (s *DefObjStmt) defStmt()          {}
 func (s *DefConFnStmt) defStmt()        {}
-func (s *DefConPropStmt) defStmt()      {}
+func (s *DefPropStmt) defStmt()         {}
 func (s *DefConExistPropStmt) defStmt() {}

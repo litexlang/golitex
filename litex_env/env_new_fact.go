@@ -202,7 +202,7 @@ func (env *Env) IsInvalidName(name string) error {
 	return nil
 }
 
-func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt) error {
+func (env *Env) NewDefConProp(stmt *ast.DefPropStmt) error {
 	err := env.IsInvalidName(stmt.DefHeader.Name)
 	if err != nil {
 		return err

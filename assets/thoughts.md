@@ -1461,3 +1461,51 @@ $everything_true_prop(q)
 3. structure 也可以做成prop（本质上它就是一个prop），然后任何prop都能出现在 <> 里。它出现的意义无非是 能让我解释器match上
 
 REMARK: 我认为类似 ipynb 那样，做lixnb 也是合理的，因为litex是数学语言，可能会有很多伴随的注释。如何让注释和代码混在一起，是值得思考的。
+
+5.7
+specific fact => logical expression => universal facct
+sun is red => or: sun is yellow, sun is red => forall x X: or: x is yellow, x is red
+为了让我能match，人为规定，or下面只能有specfact，不能有forall
+因为我必须要让or里面的东西能not:否则很多东西证明不了了
+比如
+know or:
+    x = 1
+    x = 2
+know not x = 1
+x = 2 # true
+
+因为 not forall 我是没法验证的，因为我不知道从哪里找一个obj来，说明 exist obj such that forall 下面的事实都是错的
+
+not forall x ; $p(x) 不能被保存，也不能被验证: 如果要证明 not forall 则相当于找到下面
+exist x not $p(x)
+但因为我是正则表达式匹配器，我不能帮你找到它
+
+exist_prop x X st exist_not_p():
+    not $p(x)
+
+or:
+    exist $exist_not_p() # 相当于not forall 被写成一个 specific了
+
+怎么证明 exist_not_p() 呢？
+
+know: not $p(1)
+
+exist 1 st $exist_not_p() # 1. 它自己成立了 2. exist $exist_not_p() 成立了
+
+这里为什么要有空括号呢，这里的括号是要传参的
+
+exist_prop x nat st $exist_nat_smaller_than(y int):
+    x < y
+
+exist 10 st $exist_nat_smaller_than(100)
+exist 0 st $exist_nat_smaller_than(-1) # unknown
+
+整个系统的设计是为了 1. 正则表达式能匹配上 2. 用户用起来直观
+
+我有6种specific fact
+1. true atom
+2. false atom
+3. true exist
+4. false exist
+5. true exist  st
+6. false exist  st

@@ -32,7 +32,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.knowStmt(stmt)
 	case *ast.ClaimStmt:
 		execState, err = exec.claimStmt(stmt)
-	case *ast.DefConPropStmt:
+	case *ast.DefPropStmt:
 		err = exec.defConPropStmt(stmt)
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt)
@@ -141,7 +141,7 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 
 func (exec *Executor) execNamedForall(propName string, asConUniFact *ast.UniFactStmt, storeToEnv *env.Env) error {
 	// make a uniFact to a propDef. with empty dom, and uniFactThen as iff
-	defHeader := ast.ConDefHeader{
+	defHeader := ast.DefHeader{
 		Name:      propName,
 		Params:    asConUniFact.Params,
 		SetParams: asConUniFact.ParamSets,
@@ -179,7 +179,7 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 	return strings.Join(exec.env.Msgs, "\n")
 }
 
-func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
+func (exec *Executor) defConPropStmt(stmt *ast.DefPropStmt) error {
 	defer exec.appendNewMsg("\n")
 
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
@@ -365,7 +365,7 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 		return exec.defObjStmt(stmt)
 	case *ast.DefConFnStmt:
 		return exec.defConFnStmt(stmt)
-	case *ast.DefConPropStmt:
+	case *ast.DefPropStmt:
 		return exec.defConPropStmt(stmt)
 	case *ast.DefConExistPropStmt:
 		return exec.defConExistPropStmt(stmt)
@@ -561,7 +561,6 @@ func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

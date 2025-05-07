@@ -84,3 +84,17 @@ prove:
                     $p(2)
                 prove:
                     $p(3)
+prove:
+    or:
+        or:
+            or:
+                $p(x)
+                $q(x)
+            or:
+                $p(x)
+                $q(x)
+        and:
+            $p(x)
+            $q(x)
+
+    

@@ -22,11 +22,8 @@ import (
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
 func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 	switch stmt := stmt.(type) {
-	// 只有这里的三大函数+FcEqual+propProp验证，可能读入anyState；也只有这三个函数，用得到 state,isSpec()，其他函数貌似都用不到？
 	case *ast.SpecFactStmt:
 		return ver.SpecFact(stmt, state)
-	// case *ast.CondFactStmt:
-	// 	return ver.CondFact(stmt, state)
 	case *ast.LogicExprStmt:
 		return ver.LogicalExprFact(stmt, state)
 	case *ast.UniFactStmt:

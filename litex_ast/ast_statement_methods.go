@@ -52,7 +52,7 @@ func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNa
 	return newParams, newUniParams
 }
 
-func (defStmt *DefConPropStmt) PropDefToUniFacts() (*UniFactStmt, *UniFactStmt, error) {
+func (defStmt *DefPropStmt) PropDefToUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
@@ -76,7 +76,7 @@ func (defStmt *DefConPropStmt) PropDefToUniFacts() (*UniFactStmt, *UniFactStmt, 
 	return propToIff, IffToProp, nil
 }
 
-func (defStmt *DefConPropStmt) IffToPropUniFact() *UniFactStmt {
+func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
@@ -97,7 +97,7 @@ func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 	return strings.HasPrefix(fact.PropName.Name, glob.UniParamPrefix)
 }
 
-func (defStmt *DefConPropStmt) ToSpecFact() *SpecFactStmt {
+func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))

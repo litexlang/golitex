@@ -231,7 +231,7 @@ func (tb *tokenBlock) bodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEn
 	return facts, nil
 }
 
-func (tb *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
+func (tb *tokenBlock) defConPropStmt() (*ast.DefPropStmt, error) {
 	err := tb.header.skip(glob.KeywordProp)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -524,7 +524,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 }
 
-func (tb *tokenBlock) conDefHeader() (*ast.ConDefHeader, ast.NameDepthMap, error) {
+func (tb *tokenBlock) conDefHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 	name, err := tb.header.next()
 	if err != nil {
 		return nil, nil, err

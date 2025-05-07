@@ -24,15 +24,15 @@ func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
 	return &DefObjStmt{objs, objSets, facts}
 }
 
-func NewDefConPropStmt(defHeader ConDefHeader, domFacts []FactStmt, iffFacts []FactStmt, isCommutative bool) *DefConPropStmt {
-	return &DefConPropStmt{defHeader, domFacts, iffFacts, isCommutative}
+func NewDefConPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt, isCommutative bool) *DefPropStmt {
+	return &DefPropStmt{defHeader, domFacts, iffFacts, isCommutative}
 }
 
 func NewDefConExistPropStmt(def *ExistPropDef, existParams []string, existParamSets []Fc) *DefConExistPropStmt {
 	return &DefConExistPropStmt{*def, existParams, existParamSets}
 }
 
-func NewDefConFnStmt(defHeader ConDefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt) *DefConFnStmt {
+func NewDefConFnStmt(defHeader DefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt) *DefConFnStmt {
 	return &DefConFnStmt{defHeader, retType, domFacts, thenFacts}
 }
 
@@ -68,8 +68,8 @@ func NewFcFnDecl(name string, params []string) *FcFnDecl {
 	return &FcFnDecl{name, params}
 }
 
-func NewConDefHeader(name string, params []string, typeParams []Fc) *ConDefHeader {
-	return &ConDefHeader{name, params, typeParams}
+func NewConDefHeader(name string, params []string, typeParams []Fc) *DefHeader {
+	return &DefHeader{name, params, typeParams}
 }
 
 func NewOrAndFact(isOr bool, facts []Reversable_LogicOrSpec_Stmt) *LogicExprStmt {
@@ -80,7 +80,7 @@ func NewExistObjDefStmt(objNames []string, fact SpecFactStmt) *ExistObjDefStmt {
 	return &ExistObjDefStmt{objNames, fact}
 }
 
-func NewExistPropDef(declHeader ConDefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *ExistPropDef {
+func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *ExistPropDef {
 	return &ExistPropDef{declHeader, domFacts, iffFacts}
 }
 
