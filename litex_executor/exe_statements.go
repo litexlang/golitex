@@ -408,7 +408,12 @@ func (exec *Executor) execProofBlock(proof []ast.Stmt) (glob.ExecState, error) {
 			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return glob.ExecState_Unknown, nil
+			if execState == glob.ExecState_Unknown && glob.ContinueExecutionWhenExecUnknown {
+				exec.appendWarningMsg("unknown fact: %s", curStmt.String())
+				continue
+			} else {
+				return execState, nil
+			}
 		}
 	}
 	return glob.ExecState_True, nil

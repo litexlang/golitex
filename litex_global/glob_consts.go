@@ -44,3 +44,7 @@ const VerifyFcSatisfySpecFactParaReq bool = false
 const ProofContinuesWhenUnknown bool = true
 
 const OverloadOptPrefix string = "__"
+
+const KnowSpecFactByDef = true
+
+const ContinueExecutionWhenExecUnknown bool = true

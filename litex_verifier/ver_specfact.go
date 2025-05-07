@@ -401,10 +401,15 @@ func (ver *Verifier) verifyLogicExprSteps(knownFact *env.KnownSpecFact_InLogicEx
 }
 
 func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	nextState := state.toSpec()
+	nextState := state.addRound()
 
 	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
 	if !ok {
+		return false, nil
+	}
+
+	if len(defStmt.IffFacts) == 0 {
+		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
 		return false, nil
 	}
 
