@@ -23,21 +23,21 @@ type DefObjStmt struct {
 	Facts   []FactStmt
 }
 
-type ConDefHeader struct {
+type DefHeader struct {
 	Name      string
 	Params    []string
 	SetParams []Fc
 }
 
-type DefConPropStmt struct {
-	DefHeader     ConDefHeader
+type DefPropStmt struct {
+	DefHeader     DefHeader
 	DomFacts      []FactStmt // 如果输入的参数不满足dom，那就是error
 	IffFacts      []FactStmt
 	IsCommutative bool
 }
 
 type ExistPropDef struct {
-	DefHeader ConDefHeader
+	DefHeader DefHeader
 	DomFacts  []FactStmt
 	// 必须是 iff，因为 not exist XXX <=> forall not XXX，而 not XXX 要求 XXX 是 spec
 	IffFacts []Reversable_LogicOrSpec_Stmt
@@ -50,7 +50,7 @@ type DefConExistPropStmt struct {
 }
 
 type DefConFnStmt struct {
-	DefHeader ConDefHeader
+	DefHeader DefHeader
 	RetSet    Fc
 	DomFacts  []FactStmt
 	ThenFacts []FactStmt

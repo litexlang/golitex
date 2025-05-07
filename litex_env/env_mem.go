@@ -14,7 +14,7 @@ package litex_env
 
 import ast "golitex/litex_ast"
 
-type PropMemItem struct{ Def *ast.DefConPropStmt }
+type PropMemItem struct{ Def *ast.DefPropStmt }
 type PropMem struct {
 	Dict map[string]map[string]PropMemItem
 }
@@ -84,8 +84,6 @@ type SpecFactInUniFactMem struct {
 	Exist_St_Facts    map[string]map[string][]KnownSpecFact_InUniSpecFact
 	NotExist_St_Facts map[string]map[string][]KnownSpecFact_InUniSpecFact
 }
-
-// TODO 相关的功能未实现 ---------------------------
 
 type SpecFact_InLogicExpr_InUniFact struct {
 	SpecFact  *ast.SpecFactStmt

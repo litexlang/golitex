@@ -71,7 +71,7 @@ func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefConExistPropStmt, bo
 	return nil, false
 }
 
-func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefConPropStmt, bool) {
+func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	// recursively search parent envs
 	for env := e; env != nil; env = env.Parent {
 		prop, ok := env.PropMem.Get(propName)

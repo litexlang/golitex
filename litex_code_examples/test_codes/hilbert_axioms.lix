@@ -8,6 +8,7 @@ prop point_on_line(p point, l line)
 prop point_on_plane(q point, p plane)
 
 # Axioms of "existence and uniqueness" are represented using fn & know forall statements
+# Put definition in wiki pedia beside to show simplicity and directness of litex
 fn line_of(a point, b point) line:
     a != b
     then:

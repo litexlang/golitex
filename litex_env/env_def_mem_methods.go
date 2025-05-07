@@ -33,7 +33,7 @@ func NewSetMemory() *SetMem {
 	return &SetMem{map[string]map[string]SetMemItem{}}
 }
 
-func (memory *PropMem) Insert(stmt *ast.DefConPropStmt, pkgName string) error {
+func (memory *PropMem) Insert(stmt *ast.DefPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -104,7 +104,7 @@ func (memory *ExistPropMem) Insert(stmt *ast.DefConExistPropStmt, pkgName string
 	return nil
 }
 
-func (memory *PropMem) Get(fc ast.FcAtom) (*ast.DefConPropStmt, bool) {
+func (memory *PropMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
