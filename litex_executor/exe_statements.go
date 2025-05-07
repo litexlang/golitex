@@ -576,7 +576,16 @@ func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 }
 
 func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
-	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+	isSuccess := false
+	defer func() {
+		exec.appendNewMsg("\n")
+		if isSuccess {
+			exec.appendNewMsgAtBegin("is true\n")
+		} else {
+			exec.appendNewMsgAtBegin("is unknown\n")
+		}
+		exec.appendNewMsgAtBegin(stmt.String())
+	}()
 
 	// prove orFact is true
 	execState, err := exec.factStmt(&stmt.OrFact)
@@ -597,6 +606,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 		}
 	}
 
+	isSuccess = true
 	return glob.ExecState_True, nil
 }
 
