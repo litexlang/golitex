@@ -34,7 +34,7 @@ type FnMem struct {
 	Dict map[string]map[string]FnMemItem
 }
 
-type SetMemItem struct{ Def ast.SetDefStmt }
+type SetMemItem struct{ Def *ast.SetDefSetBuilderStmt }
 type SetMem struct {
 	Dict map[string]map[string]SetMemItem
 }

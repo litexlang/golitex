@@ -184,21 +184,21 @@ func (memory *EmitWhenSpecFactIsTrueMem) Get(pkgName string, propName string) ([
 	return node, true
 }
 
-func (memory *SetMem) Insert(stmt ast.SetDefStmt, pkgName string) error {
+func (memory *SetMem) Insert(stmt *ast.SetDefSetBuilderStmt, pkgName string) error {
 	if _, ok := memory.Dict[pkgName]; !ok {
 		memory.Dict[pkgName] = make(map[string]SetMemItem)
 	}
 
-	if _, ok := memory.Dict[pkgName][stmt.Name()]; !ok {
-		memory.Dict[pkgName][stmt.Name()] = SetMemItem{stmt}
+	if _, ok := memory.Dict[pkgName][stmt.SetName]; !ok {
+		memory.Dict[pkgName][stmt.SetName] = SetMemItem{stmt}
 	}
 
-	memory.Dict[pkgName][stmt.Name()] = SetMemItem{stmt}
+	memory.Dict[pkgName][stmt.SetName] = SetMemItem{stmt}
 
 	return nil
 }
 
-func (memory *SetMem) Get(setName string, pkgName string) (ast.SetDefStmt, bool) {
+func (memory *SetMem) Get(setName string, pkgName string) (*ast.SetDefSetBuilderStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 	if !pkgExists {
 		return nil, false

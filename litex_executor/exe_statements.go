@@ -46,10 +46,10 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.matcherEnvStmt(stmt)
 	case *ast.AxiomStmt:
 		err = exec.axiomStmt(stmt)
-	case ast.SetDefStmt:
+	case *ast.SetDefSetBuilderStmt:
 		err = exec.setDefStmt(stmt)
-	// case *ast.ThmStmt:
-	// 	err = exec.thmStmt(stmt)
+	case *ast.ProveInEachCaseStmt:
+		err = exec.proveInEachCaseStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -550,8 +550,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 }
 
 func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
-	defer exec.appendNewMsg("\n")
-	defer exec.appendNewMsg(stmt.String())
+	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
 
 	err := exec.execNamedForall(stmt.Name, &stmt.Fact, exec.env)
 	if err != nil {
@@ -566,13 +565,70 @@ func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
 	return nil
 }
 
-func (exec *Executor) setDefStmt(stmt ast.SetDefStmt) error {
-	defer exec.appendNewMsg("\n")
-	defer exec.appendNewMsg(stmt.String())
+func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
+	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
 
 	err := exec.env.SetMem.Insert(stmt, exec.curPkg)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) error {
+	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+
+	// prove orFact is true
+	execState, err := exec.factStmt(&stmt.OrFact)
+	if err != nil {
+		return err
+	}
+	if execState != glob.ExecState_True {
+		return fmt.Errorf("prove in each case: or fact is not true")
+	}
+
+	for i, caseStmt := range stmt.OrFact.Facts {
+		execState, err := exec.execProofBlockForEachCase(caseStmt, stmt.ThenFacts, stmt.Proofs[i])
+		if err != nil {
+			return err
+		}
+		if execState != glob.ExecState_True {
+			return fmt.Errorf("prove in each case: proof is not true")
+		}
+	}
+
+	return nil
+}
+
+func (exec *Executor) execProofBlockForEachCase(caseStmt ast.FactStmt, thenFacts []ast.FactStmt, proof []ast.Stmt) (glob.ExecState, error) {
+	exec.newEnv()
+	defer exec.deleteEnvAndRetainMsg()
+
+	err := exec.env.NewFactWithOutEmit(caseStmt)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	for _, proofStmt := range proof {
+		execState, err := exec.stmt(proofStmt)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if execState != glob.ExecState_True {
+			return glob.ExecState_Error, fmt.Errorf("prove in each case: proof is not true")
+		}
+	}
+
+	// verify thenFacts are true
+	for _, thenFact := range thenFacts {
+		ok, _, err := exec.checkFactStmt(thenFact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+		if !ok {
+			return glob.ExecState_Error, fmt.Errorf("prove in each case: then fact is not true")
+		}
+	}
+
+	return glob.ExecState_True, nil
 }

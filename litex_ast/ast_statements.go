@@ -116,7 +116,7 @@ type MatcherEnvStmt struct {
 }
 
 type ProveInEachCaseStmt struct {
-	OrFact    Reversable_LogicOrSpec_Stmt
+	OrFact    LogicExprStmt
 	ThenFacts []FactStmt
 	Proofs    [][]Stmt
 }

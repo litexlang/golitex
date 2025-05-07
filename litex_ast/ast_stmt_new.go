@@ -116,6 +116,6 @@ func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt, ele
 	return &SetDefSetBuilderStmt{setName, parentSet, facts, elems}
 }
 
-func NewProveInEachCaseStmt(orFact Reversable_LogicOrSpec_Stmt, thenFacts []FactStmt, proofs [][]Stmt) *ProveInEachCaseStmt {
+func NewProveInEachCaseStmt(orFact LogicExprStmt, thenFacts []FactStmt, proofs [][]Stmt) *ProveInEachCaseStmt {
 	return &ProveInEachCaseStmt{orFact, thenFacts, proofs}
 }
