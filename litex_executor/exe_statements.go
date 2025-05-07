@@ -304,12 +304,12 @@ func (exec *Executor) existObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 
 	existFact := ast.SpecFactStmt{TypeEnum: ast.TrueExist, PropName: ast.FcAtom{PkgName: "", Name: stmt.Fact.PropName.Name}, Params: stmt.Fact.Params}
 
-	ok, _, err := exec.checkFactStmt(&existFact)
+	execState, err := exec.factStmt(&existFact)
 	if err != nil {
 		return err
 	}
 
-	if !ok {
+	if execState != glob.ExecState_True {
 		exec.appendNewMsg("%v failed: related exist fact check failed\n", existFact.String())
 		return nil
 	}
@@ -461,24 +461,24 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 	}
 
 	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
-		ok, _, err := exec.checkFactStmt(asSpecFact)
+		execState, err := exec.factStmt(asSpecFact)
 		if err != nil {
 			return false, err
 		}
-		if ok {
+		if execState == glob.ExecState_True {
 			isSuccess = true
 		}
-		return ok, nil
+		return execState == glob.ExecState_True, nil
 	}
 
 	// TODO: 需要处理forall的情况
 	if asConUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
 		for _, fact := range asConUniFact.ThenFacts {
-			ok, _, err := exec.checkFactStmt(fact)
+			execState, err := exec.factStmt(fact)
 			if err != nil {
 				return false, err
 			}
-			if !ok {
+			if execState != glob.ExecState_True {
 				return false, nil
 			}
 		}
@@ -538,11 +538,11 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 
 	reverseLastFact := lastStmtAsFact.ReverseIsTrue()
 
-	ok, _, err = exec.checkFactStmt(reverseLastFact)
+	execState, err := exec.factStmt(reverseLastFact)
 	if err != nil {
 		return false, err
 	}
-	if ok {
+	if execState == glob.ExecState_True {
 		return true, nil
 	}
 
@@ -621,11 +621,11 @@ func (exec *Executor) execProofBlockForEachCase(caseStmt ast.FactStmt, thenFacts
 
 	// verify thenFacts are true
 	for _, thenFact := range thenFacts {
-		ok, _, err := exec.checkFactStmt(thenFact)
+		execState, err := exec.factStmt(thenFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-		if !ok {
+		if execState != glob.ExecState_True {
 			return glob.ExecState_Error, fmt.Errorf("prove in each case: then fact is not true")
 		}
 	}

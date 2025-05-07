@@ -18,11 +18,20 @@ import (
 	verifier "golitex/litex_verifier"
 )
 
+// func (exec *Executor) checkFactStmt(stmt ast.FactStmt) (bool, *verifier.Verifier, error) {
+// 	curVerifier := verifier.NewVerifier(exec.env, exec.curPkg)
+// 	ok, err := curVerifier.FactStmt(stmt, verifier.Round0Msg)
+// 	if err != nil {
+// 		return false, curVerifier, err
+// 	}
+// 	return ok, curVerifier, err
+// }
+
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	defer exec.appendNewMsg("\n")
 
-	ok, _, err := exec.checkFactStmt(stmt)
-
+	curVerifier := verifier.NewVerifier(exec.env, exec.curPkg)
+	ok, err := curVerifier.FactStmt(stmt, verifier.Round0Msg)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
@@ -45,11 +54,11 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 		switch stmt := stmt.(type) {
 		case *ast.SpecFactStmt:
 			newStmt := stmt.ReverseIsTrue()
-			ok, _, err := exec.checkFactStmt(newStmt)
+			execState, err := exec.factStmt(newStmt)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
-			if ok {
+			if execState == glob.ExecState_True {
 				exec.appendNewMsg(stmt.String() + "\nis false")
 				return glob.ExecState_False, nil
 			}
@@ -64,13 +73,4 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	}
 
 	return glob.ExecState_Unknown, nil
-}
-
-func (exec *Executor) checkFactStmt(stmt ast.FactStmt) (bool, *verifier.Verifier, error) {
-	curVerifier := verifier.NewVerifier(exec.env, exec.curPkg)
-	ok, err := curVerifier.FactStmt(stmt, verifier.Round0Msg)
-	if err != nil {
-		return false, curVerifier, err
-	}
-	return ok, curVerifier, err
 }
