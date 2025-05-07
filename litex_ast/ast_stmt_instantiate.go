@@ -143,14 +143,14 @@ func (stmt *UniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) 
 }
 
 func InstantiateLogicExprStmt(stmt *LogicExprStmt, uniConMap map[string]Fc) (*LogicExprStmt, error) {
-	newOrAnd := NewOrAndFact(stmt.IsOr, []LogicExprOrSpecFactStmt{})
+	newOrAnd := NewOrAndFact(stmt.IsOr, []Reversable_LogicOrSpec_Stmt{})
 	for _, fact := range stmt.Facts {
 		newFact, err := fact.Instantiate(uniConMap)
 		if err != nil {
 			return nil, err
 		}
 		// make newFact a LogicExprOrSpecFactStmt
-		newFactAsLogicExprOrSpecFactStmt, ok := newFact.(LogicExprOrSpecFactStmt)
+		newFactAsLogicExprOrSpecFactStmt, ok := newFact.(Reversable_LogicOrSpec_Stmt)
 		if !ok {
 			return nil, errors.New("newFact is not of type LogicExprOrSpecFactStmt")
 		}

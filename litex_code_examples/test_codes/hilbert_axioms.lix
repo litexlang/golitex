@@ -28,6 +28,19 @@ exist_prop c point st a_line_has_more_than_two_points(l line, a point, b point):
         c != a
         c != b
 
+know forall l line, a point, b point:
+    $point_on_line(a, l)
+    $point_on_line(b, l)
+    a != b
+    then:
+        $a_line_has_more_than_two_points(l, a, b)
+
+# 如果能 axiom prop; axiom exist_prop 就好了
+
+#  如果能引入下面的语法糖会更好
+#know forall l line, a point, b point:
+#    $in_dom(a_line_has_more_than_two_points, l, a, b)
+
 fn plain_of(a point, b point, c point) plane:
     a != b
     a != c

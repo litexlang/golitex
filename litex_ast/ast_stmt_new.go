@@ -72,7 +72,7 @@ func NewConDefHeader(name string, params []string, typeParams []Fc) *ConDefHeade
 	return &ConDefHeader{name, params, typeParams}
 }
 
-func NewOrAndFact(isOr bool, facts []LogicExprOrSpecFactStmt) *LogicExprStmt {
+func NewOrAndFact(isOr bool, facts []Reversable_LogicOrSpec_Stmt) *LogicExprStmt {
 	return &LogicExprStmt{IsOr: isOr, Facts: facts}
 }
 
@@ -80,7 +80,7 @@ func NewExistObjDefStmt(objNames []string, fact SpecFactStmt) *ExistObjDefStmt {
 	return &ExistObjDefStmt{objNames, fact}
 }
 
-func NewExistPropDef(declHeader ConDefHeader, domFacts []FactStmt, iffFacts []LogicExprOrSpecFactStmt) *ExistPropDef {
+func NewExistPropDef(declHeader ConDefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *ExistPropDef {
 	return &ExistPropDef{declHeader, domFacts, iffFacts}
 }
 

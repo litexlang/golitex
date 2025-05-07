@@ -59,8 +59,6 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.knowStmt()
 	case glob.KeywordAxiom:
 		ret, err = tb.axiomStmt()
-	// case glob.KeywordThm:
-	// 	ret, err = tb.thmStmt()
 	case glob.KeywordSet:
 		ret, err = tb.setDefStmt()
 	case glob.KeySymbolLess:
@@ -106,7 +104,7 @@ func (tb *tokenBlock) logicExprStmt(nameDepthMap ast.NameDepthMap) (*ast.LogicEx
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	facts := []ast.LogicExprOrSpecFactStmt{}
+	facts := []ast.Reversable_LogicOrSpec_Stmt{}
 	for _, factToParse := range tb.body {
 		fact, err := factToParse.logicExprOrSpecFactStmt(nameDepthMap)
 		if err != nil {
@@ -135,7 +133,7 @@ func (tb *tokenBlock) logicExprStmt(nameDepthMap ast.NameDepthMap) (*ast.LogicEx
 	return ast.NewOrAndFact(isOr, facts), nil
 }
 
-func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (ast.LogicExprOrSpecFactStmt, error) {
+func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (ast.Reversable_LogicOrSpec_Stmt, error) {
 	if tb.header.is(glob.KeywordOr) || tb.header.is(glob.KeywordAnd) {
 		return tb.logicExprStmt(nameDepthMap)
 	}
@@ -832,7 +830,7 @@ func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.Ex
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []ast.LogicExprOrSpecFactStmt{}), nil
+		return ast.NewExistPropDef(*declHeader, []ast.FactStmt{}, []ast.Reversable_LogicOrSpec_Stmt{}), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -857,12 +855,12 @@ func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.Ex
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	iffFactsAsLogicExprOrSpecFacts := make([]ast.LogicExprOrSpecFactStmt, len(iffFactsAsFactStmts))
+	iffFactsAsLogicExprOrSpecFacts := make([]ast.Reversable_LogicOrSpec_Stmt, len(iffFactsAsFactStmts))
 
 	for i, fact := range iffFactsAsFactStmts {
 		if specFact, ok := fact.(*ast.SpecFactStmt); ok {
 			iffFactsAsLogicExprOrSpecFacts[i] = specFact
-		} else if logicExprOrSpecFact, ok := fact.(ast.LogicExprOrSpecFactStmt); ok {
+		} else if logicExprOrSpecFact, ok := fact.(ast.Reversable_LogicOrSpec_Stmt); ok {
 			iffFactsAsLogicExprOrSpecFacts[i] = logicExprOrSpecFact
 		} else {
 			return nil, fmt.Errorf("expect spec fact or logic expr or spec fact in iff section, but got: %v", fact)
