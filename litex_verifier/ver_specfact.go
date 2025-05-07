@@ -422,7 +422,7 @@ func (ver *Verifier) verifyLogicExprSteps(knownFact *env.KnownSpecFact_InLogicEx
 			}
 
 			// 需要reverse True
-			ok, err := ver.FactStmt(fact.Reverse(), state.toSpec())
+			ok, err := ver.FactStmt(fact.ReverseIsTrue(), state.toSpec())
 			if err != nil {
 				return false, err
 			}
@@ -445,7 +445,7 @@ func (ver *Verifier) verifyLogicExprSteps(knownFact *env.KnownSpecFact_InLogicEx
 			continue
 		}
 
-		ok, err := ver.FactStmt(fact.Reverse(), state.addRound().addRound())
+		ok, err := ver.FactStmt(fact.ReverseIsTrue(), state.addRound().addRound())
 		if err != nil {
 			return false, err
 		}
