@@ -35,8 +35,9 @@ func (s *AxiomStmt) stmt() {}
 func (p *LogicExprStmt) stmt()        {}
 func (s *ExistObjDefStmt) stmt()      {}
 func (s *SetDefSetBuilderStmt) stmt() {}
-func (s *SetDefEnumtmt) stmt()        {}
-func (s *MatcherEnvStmt) stmt()       {}
+
+// func (s *SetDefEnumtmt) stmt()        {}
+func (s *MatcherEnvStmt) stmt() {}
 
 type FactStmt interface {
 	factStmt()
@@ -74,13 +75,15 @@ type SetDefStmt interface {
 }
 
 func (s *SetDefSetBuilderStmt) setDefStmt() {}
-func (s *SetDefEnumtmt) setDefStmt()        {}
+
+// func (s *SetDefEnumtmt) setDefStmt()        {}
 func (s *SetDefSetBuilderStmt) Name() string {
 	return s.SetName
 }
-func (s *SetDefEnumtmt) Name() string {
-	return s.SetName
-}
+
+// func (s *SetDefEnumtmt) Name() string {
+// 	return s.SetName
+// }
 
 type Reversable_LogicOrSpec_Stmt interface {
 	logicExprOrSpecFactStmt()

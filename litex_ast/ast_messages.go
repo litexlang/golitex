@@ -529,20 +529,20 @@ func (stmt *SetDefSetBuilderStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *SetDefEnumtmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordSet)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.SetName)
-	builder.WriteString(" ")
-	for i := range len(stmt.Elems) - 1 {
-		builder.WriteString(stmt.Elems[i].String())
-		builder.WriteString(", ")
-	}
-	builder.WriteString(stmt.Elems[len(stmt.Elems)-1].String())
-	builder.WriteString("}")
-	return builder.String()
-}
+// func (stmt *SetDefEnumtmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordSet)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.SetName)
+// 	builder.WriteString(" ")
+// 	for i := range len(stmt.Elems) - 1 {
+// 		builder.WriteString(stmt.Elems[i].String())
+// 		builder.WriteString(", ")
+// 	}
+// 	builder.WriteString(stmt.Elems[len(stmt.Elems)-1].String())
+// 	builder.WriteString("}")
+// 	return builder.String()
+// }
 
 // func isFnSetAndToString(f *FcFn) (bool, string) {
 // 	if f.IsBuiltinFcSet() {
