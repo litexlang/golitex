@@ -590,3 +590,20 @@ func (stmt *MatcherEnvStmt) String() string {
 	}
 	return builder.String()
 }
+
+func (stmt *ProveInEachCaseStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveInEachCase)
+	builder.WriteString(":\n")
+	builder.WriteString(stmt.OrFact.String())
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ThenFacts[0].String(), 2))
+	for i := range len(stmt.Proofs) - 1 {
+		for j := range len(stmt.Proofs[i]) - 1 {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Proofs[i][j].String(), 2))
+			builder.WriteByte('\n')
+		}
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Proofs[i][len(stmt.Proofs[i])-1].String(), 2))
+	}
+	return builder.String()
+}
