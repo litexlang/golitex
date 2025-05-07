@@ -84,13 +84,13 @@ func NewExistPropDef(declHeader ConDefHeader, domFacts []FactStmt, iffFacts []Re
 	return &ExistPropDef{declHeader, domFacts, iffFacts}
 }
 
-func NewDefSetEnumtmt(setName string, elems []Fc) *SetDefEnumtmt {
-	return &SetDefEnumtmt{setName, elems}
-}
+// func NewDefSetEnumtmt(setName string, elems []Fc) *SetDefEnumtmt {
+// 	return &SetDefEnumtmt{setName, elems}
+// }
 
-func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {
-	return &SetDefSetBuilderStmt{setName, parentSet, facts}
-}
+// func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {
+// 	return &SetDefSetBuilderStmt{setName, parentSet, facts}
+// }
 
 func NewMatcherEnvStmt(matcherName *FcAtom, params []Fc, body []Stmt) *MatcherEnvStmt {
 	return &MatcherEnvStmt{*matcherName, params, body}
@@ -110,4 +110,8 @@ func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []
 		return newConUniFact
 	}
 	return newConUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
+}
+
+func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt, elems []Fc) *SetDefSetBuilderStmt {
+	return &SetDefSetBuilderStmt{setName, parentSet, facts, elems}
 }

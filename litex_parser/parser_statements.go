@@ -882,7 +882,7 @@ func (tb *tokenBlock) setDefStmt() (ast.SetDefStmt, error) {
 	}
 
 	if tb.header.ExceedEnd() {
-		return ast.NewSetDefSetBuilderStmt(setName, ast.EmptyParentSet, []ast.FactStmt{}), nil
+		return ast.NewSetDefSetBuilderStmt(setName, ast.EmptyParentSet, []ast.FactStmt{}, ast.EmptyElemsInSetDef), nil
 	}
 
 	if tb.header.is(glob.KeySymbolLeftCurly) {
@@ -905,7 +905,7 @@ func (tb *tokenBlock) setDefStmt() (ast.SetDefStmt, error) {
 			return nil, &tokenBlockErr{err, *tb}
 		}
 
-		return ast.NewDefSetEnumtmt(setName, elems), nil
+		return ast.NewSetDefSetBuilderStmt(setName, ast.EmptyParentSet, []ast.FactStmt{}, elems), nil
 	} else {
 		parentSet, err := tb.header.rawFc()
 		if err != nil {
@@ -922,7 +922,7 @@ func (tb *tokenBlock) setDefStmt() (ast.SetDefStmt, error) {
 			return nil, &tokenBlockErr{err, *tb}
 		}
 
-		return ast.NewSetDefSetBuilderStmt(setName, parentSet, facts), nil
+		return ast.NewSetDefSetBuilderStmt(setName, parentSet, facts, ast.EmptyElemsInSetDef), nil
 	}
 }
 

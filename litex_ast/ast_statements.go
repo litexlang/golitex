@@ -109,14 +109,10 @@ type ExistObjDefStmt struct {
 }
 
 type SetDefSetBuilderStmt struct {
-	SetName   string
-	ParentSet Fc
-	Facts     []FactStmt
-}
-
-type SetDefEnumtmt struct {
-	SetName string
-	Elems   []Fc
+	SetName     string
+	ParentSet   Fc
+	Facts       []FactStmt
+	FiniteItems []Fc // 在 prove forall, prove not exist 的时候用到。这有 setDefEnum型集合，可能正面证明not exist和forall，其他方式不能证明
 }
 
 type MatcherEnvStmt struct {

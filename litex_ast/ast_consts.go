@@ -24,3 +24,4 @@ var EmptyClaimName = ""
 var EmptyKnowClaimName = ""
 
 var EmptyParentSet Fc = nil
+var EmptyElemsInSetDef []Fc = nil
