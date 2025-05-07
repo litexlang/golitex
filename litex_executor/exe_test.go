@@ -623,7 +623,7 @@ func TestAllFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../litex_code_examples/test_codes/logical_expr_stmt.lix")
+var code = readFile("../litex_code_examples/test_codes/prove_in_each_case.lix")
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()

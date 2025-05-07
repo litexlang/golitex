@@ -49,7 +49,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.SetDefSetBuilderStmt:
 		err = exec.setDefStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
-		err = exec.proveInEachCaseStmt(stmt)
+		execState, err = exec.proveInEachCaseStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -575,34 +575,34 @@ func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 	return nil
 }
 
-func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) error {
+func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
 
 	// prove orFact is true
 	execState, err := exec.factStmt(&stmt.OrFact)
 	if err != nil {
-		return err
+		return glob.ExecState_Error, err
 	}
 	if execState != glob.ExecState_True {
-		return fmt.Errorf("prove in each case: or fact is not true")
+		return glob.ExecState_Error, fmt.Errorf("prove in each case: or fact is not true")
 	}
 
 	for i, caseStmt := range stmt.OrFact.Facts {
 		execState, err := exec.execProofBlockForEachCase(caseStmt, stmt.ThenFacts, stmt.Proofs[i])
 		if err != nil {
-			return err
+			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return fmt.Errorf("prove in each case: proof is not true")
+			return execState, nil
 		}
 	}
 
-	return nil
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) execProofBlockForEachCase(caseStmt ast.FactStmt, thenFacts []ast.FactStmt, proof []ast.Stmt) (glob.ExecState, error) {
 	exec.newEnv()
-	defer exec.deleteEnvAndRetainMsg()
+	exec.deleteEnvAndRetainMsg()
 
 	err := exec.env.NewFactWithOutEmit(caseStmt)
 	if err != nil {
@@ -615,7 +615,7 @@ func (exec *Executor) execProofBlockForEachCase(caseStmt ast.FactStmt, thenFacts
 			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return glob.ExecState_Error, fmt.Errorf("prove in each case: proof is not true")
+			return execState, nil
 		}
 	}
 
@@ -626,7 +626,7 @@ func (exec *Executor) execProofBlockForEachCase(caseStmt ast.FactStmt, thenFacts
 			return glob.ExecState_Error, err
 		}
 		if execState != glob.ExecState_True {
-			return glob.ExecState_Error, fmt.Errorf("prove in each case: then fact is not true")
+			return execState, nil
 		}
 	}
 

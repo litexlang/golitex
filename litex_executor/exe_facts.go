@@ -54,11 +54,12 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 		switch stmt := stmt.(type) {
 		case *ast.SpecFactStmt:
 			newStmt := stmt.ReverseIsTrue()
-			execState, err := exec.factStmt(newStmt)
+			curVerifier := verifier.NewVerifier(exec.env, exec.curPkg)
+			ok, err := curVerifier.FactStmt(newStmt, verifier.Round0Msg)
 			if err != nil {
 				return glob.ExecState_Error, err
 			}
-			if execState == glob.ExecState_True {
+			if ok {
 				exec.appendNewMsg(stmt.String() + "\nis false")
 				return glob.ExecState_False, nil
 			}

@@ -17,6 +17,7 @@ import (
 	ast "golitex/litex_ast"
 	cmp "golitex/litex_comparator"
 	env "golitex/litex_env"
+	glob "golitex/litex_global"
 )
 
 func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -153,7 +154,13 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 						return false, err
 					}
 					if !ok {
-						continue LoopOverFacts
+						ok, err := ver.iterateOverEqualFactsAndFindEqual(knownParam, stmt.Params[i])
+						if err != nil {
+							return false, err
+						}
+						if !ok {
+							continue LoopOverFacts
+						}
 					}
 				}
 
@@ -499,4 +506,45 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 	}
 
 	return true, nil
+}
+
+// THIS IS A VERY BAD WAY TO PROVE EQUALITY. I NEED TO STORE FC INTO A RB TREE FOR BETTER PERFORMANCE AND TAKE FULL ADVANTAGE OF Unique Properties of =
+func (ver *Verifier) iterateOverEqualFactsAndFindEqual(left ast.Fc, right ast.Fc) (bool, error) {
+	equalSpecFact := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
+
+	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
+		equalFacts, got := curEnv.SpecFactMem.GetSameEnumPkgPropFacts(equalSpecFact)
+		if got {
+			for _, equalFact := range equalFacts {
+				// left = left, right = right
+
+				ok1, err1 := cmp.CmpFcRule(equalFact.Fact.Params[0], left)
+				if err1 != nil {
+					return false, err1
+				}
+				ok2, err2 := cmp.CmpFcRule(equalFact.Fact.Params[1], right)
+				if err2 != nil {
+					return false, err2
+				}
+				if ok1 && ok2 {
+					return true, nil
+				}
+
+				// left = right, right = left
+				ok1, err1 = cmp.CmpFcRule(equalFact.Fact.Params[0], right)
+				if err1 != nil {
+					return false, err1
+				}
+				ok2, err2 = cmp.CmpFcRule(equalFact.Fact.Params[1], left)
+				if err2 != nil {
+					return false, err2
+				}
+				if ok1 && ok2 {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
 }
