@@ -268,10 +268,20 @@ func (ver *Verifier) SpecFactUniAtEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, s
 				continue
 			}
 
-			ok, err = ver.specFactUni(&knownFact, uniConMap, nextState)
+			insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
 			if err != nil {
 				return false, err
 			}
+
+			ok, err = ver.proveUniFactDomFacts(insKnownUniFact, state)
+			if err != nil {
+				return false, err
+			}
+
+			// ok, err = ver.specFactUni(&knownFact, uniConMap, nextState)
+			// if err != nil {
+			// 	return false, err
+			// }
 
 			if ok {
 				if state.requireMsg() {

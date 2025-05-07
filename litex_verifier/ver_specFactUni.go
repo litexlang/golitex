@@ -15,28 +15,24 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/litex_ast"
-	env "golitex/litex_env"
 )
 
 // state 只能是 Round1 或者 Spec
-func (ver *Verifier) specFactUni(knownFact *env.KnownSpecFact_InUniSpecFact, uniConMap map[string]ast.Fc, state VerState) (bool, error) {
-	// 这里貌似不需要对整个uniFact实例化，只要实例化then
-	insKnownUniFact, err := knownFact.UniFact.Instantiate(uniConMap)
-	if err != nil {
-		return false, err
-	}
-	insKnownUniFactAsUniFact, ok := insKnownUniFact.(*ast.UniFactStmt)
-	if !ok {
-		return false, fmt.Errorf("")
-	}
+// func (ver *Verifier) specFactUni(knownFact *env.KnownSpecFact_InUniSpecFact, uniConMap map[string]ast.Fc, state VerState) (bool, error) {
+// 	// 这里貌似不需要对整个uniFact实例化，只要实例化then
+// 	// insKnownUniFact, err := knownFact.UniFact.Instantiate(uniConMap)
+// 	insKnownUniFact, err := ast.InstantiateUniFact(knownFact.UniFact, uniConMap)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	ok, err = ver.instUniFactDomFacts(insKnownUniFactAsUniFact, state)
-	if err != nil {
-		return false, err
-	}
+// 	ok, err := ver.instUniFactDomFacts(insKnownUniFact, state)
+// 	if err != nil {
+// 		return false, err
+// 	}
 
-	return ok, nil
-}
+// 	return ok, nil
+// }
 
 // * 如果是 dom 是 specfact，那就直接specFactspec，我不继续往下走，以避免n^2的检查；如果dom 是 uni，那如果现在我是 round1，我允许你往下走；我不确定这么干有没有问题。
 // 下面这个 可以被证明
@@ -52,7 +48,7 @@ func (ver *Verifier) specFactUni(knownFact *env.KnownSpecFact_InUniSpecFact, uni
 //	        $p(1,y)
 //
 // $q(1)
-func (ver *Verifier) instUniFactDomFacts(insUniFact *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) proveUniFactDomFacts(insUniFact *ast.UniFactStmt, state VerState) (bool, error) {
 	if state.isRound1() {
 		for _, fact := range insUniFact.DomFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
