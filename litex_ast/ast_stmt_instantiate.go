@@ -14,7 +14,7 @@ package litex_ast
 
 import "errors"
 
-func (fc *FcAtom) Instantiate(uniConMap map[string]Fc) (Fc, error) {
+func InstantiateFcAtom(fc *FcAtom, uniConMap map[string]Fc) (Fc, error) {
 	if fc.PkgName == "" {
 		instance, ok := uniConMap[fc.Name]
 		if ok {
@@ -24,7 +24,11 @@ func (fc *FcAtom) Instantiate(uniConMap map[string]Fc) (Fc, error) {
 	return fc, nil
 }
 
-func (fc *FcFn) Instantiate(uniConMap map[string]Fc) (Fc, error) {
+func (fc *FcAtom) Instantiate(uniConMap map[string]Fc) (Fc, error) {
+	return InstantiateFcAtom(fc, uniConMap)
+}
+
+func InstantiateFcFn(fc *FcFn, uniConMap map[string]Fc) (Fc, error) {
 	newFc := FcFn{&FcAtom{}, [][]Fc{}}
 
 	newHead, err := fc.FnHead.Instantiate(uniConMap)
@@ -58,7 +62,11 @@ func (fc *FcFn) Instantiate(uniConMap map[string]Fc) (Fc, error) {
 	return &newFc, nil
 }
 
-func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+func (fc *FcFn) Instantiate(uniConMap map[string]Fc) (Fc, error) {
+	return InstantiateFcFn(fc, uniConMap)
+}
+
+func InstantiateSpecFact(stmt *SpecFactStmt, uniConMap map[string]Fc) (*SpecFactStmt, error) {
 	// 把 PropName 也换了
 	newPropName, err := stmt.PropName.Instantiate(uniConMap)
 	if err != nil {
@@ -82,7 +90,11 @@ func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error)
 	return NewSpecFactStmt(stmt.TypeEnum, *propNameAtom, newParams), nil
 }
 
-func (stmt *UniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+func (stmt *SpecFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+	return InstantiateSpecFact(stmt, uniConMap)
+}
+
+func InstantiateUniFact(stmt *UniFactStmt, uniConMap map[string]Fc) (*UniFactStmt, error) {
 	newParamTypes := []Fc{}
 	for _, param := range stmt.ParamSets {
 		newParam, err := param.Instantiate(uniConMap)
@@ -126,32 +138,11 @@ func (stmt *UniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) 
 	return newConUniFactStmt(stmt.Params, newParamTypes, newDomFacts, newThenFacts, newIffFacts), nil
 }
 
-// func (stmt *CondFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
-// 	newCondFacts := []FactStmt{}
-// 	for _, fact := range stmt.CondFacts {
-// 		newFact, err := fact.Instantiate(uniConMap)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		newCondFacts = append(newCondFacts, newFact)
-// 	}
+func (stmt *UniFactStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+	return InstantiateUniFact(stmt, uniConMap)
+}
 
-// 	newThenFacts := []FactStmt{}
-// 	for _, fact := range stmt.ThenFacts {
-// 		newFact, err := fact.Instantiate(uniConMap)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		specFact, ok := newFact.(*SpecFactStmt)
-// 		if !ok {
-// 			return nil, errors.New("ThenFacts must be of type *SpecFactStmt")
-// 		}
-// 		newThenFacts = append(newThenFacts, specFact)
-// 	}
-// 	return NewCondFactStmt(newCondFacts, newThenFacts), nil
-// }
-
-func (stmt *LogicExprStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+func InstantiateLogicExprStmt(stmt *LogicExprStmt, uniConMap map[string]Fc) (*LogicExprStmt, error) {
 	newOrAnd := NewOrAndFact(stmt.IsOr, []LogicExprOrSpecFactStmt{})
 	for _, fact := range stmt.Facts {
 		newFact, err := fact.Instantiate(uniConMap)
@@ -167,4 +158,8 @@ func (stmt *LogicExprStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error
 	}
 
 	return newOrAnd, nil
+}
+
+func (stmt *LogicExprStmt) Instantiate(uniConMap map[string]Fc) (FactStmt, error) {
+	return InstantiateLogicExprStmt(stmt, uniConMap)
 }
