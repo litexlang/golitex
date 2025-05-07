@@ -237,13 +237,19 @@ func (tb *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
+	isCommutative := false
+	if tb.header.is(glob.KeywordPropCommutative) {
+		tb.header.skip()
+		isCommutative = true
+	}
+
 	declHeader, nameDepthMap, err := tb.conDefHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
-		return ast.NewDefConPropStmt(*declHeader, nil, nil, false), nil
+		return ast.NewDefConPropStmt(*declHeader, nil, nil, isCommutative), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -268,7 +274,7 @@ func (tb *tokenBlock) defConPropStmt() (*ast.DefConPropStmt, error) {
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts, false), nil
+	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts, isCommutative), nil
 }
 
 func (tb *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {

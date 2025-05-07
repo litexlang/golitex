@@ -1,5 +1,5 @@
 prove:
-    $commutative(=)
+    $commutative_prop(=)
     prop p(x nat, y nat):
         x = y
     forall x nat, y nat:
@@ -8,14 +8,14 @@ prove:
             x = y
             y = x
             $p(y,x)
-    $commutative(p)
+    $commutative_prop(p)
 
 prove:
     prop p(x nat, y nat):
         $q(x,y)
 
     know:
-        $commutative(p)
+        $commutative_prop(p)
         $p(1,2)
     $p(2,1)
-    $commutative(p)
+    $commutative_prop(p)

@@ -46,8 +46,8 @@ const (
 	KeywordOr  = "or"
 
 	// Syntax and Semantics Sugar
-	KeywordCommutative = "commutative"
-	KeywordAssociative = "associative"
+	KeywordPropCommutative = "commutative_prop"
+	KeywordAssociative     = "associative"
 
 	// Builtin Types
 	KeywordNatural  = "nat"  // e.g. 0
@@ -93,8 +93,8 @@ var keywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExist: {},
 
 	// 语法糖
-	KeywordCommutative: {},
-	KeywordAssociative: {},
+	KeywordPropCommutative: {},
+	KeywordAssociative:     {},
 
 	KeywordAnd: {},
 	KeywordOr:  {},
