@@ -1509,3 +1509,15 @@ exist 0 st $exist_nat_smaller_than(-1) # unknown
 4. false exist
 5. true exist  st
 6. false exist  st
+
+这6个为什么是平级的
+
+spec => logic => universal
+为什么我把这6种情况设计成
+atom => true/false atom => true exist/ false exist => true exist st/ false exist st => universal
+或者进一步拆分，或者 更直白的，为啥我要有这个关系，我 exist st 和 普通 exist 和 普通 spec atom 完完全全独立开来工作行吗？
+即我有6个数据结构，而不是写在一个 SpecFact 里 仅仅是 enum 表示不一样，而 data structure 是一样的
+
+本质上
+1. 我一个人开发没力气
+2. 他们都是正则表达式匹配的正则表达式，对我而言没区别。它在数学上啥意思，和我关系不大，我只要能匹配就行。匹配的规则都是统一的，所以没关系。
