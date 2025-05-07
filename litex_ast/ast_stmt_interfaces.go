@@ -52,33 +52,9 @@ func (p *SpecFactStmt) factStmt()  {}
 func (l *UniFactStmt) factStmt()   {}
 func (p *LogicExprStmt) factStmt() {}
 
-// func (p *CondFactStmt) factStmt()   {}
-
 type SpecFactParams struct {
 	ObjParams []Fc
 }
-
-// type DefPropOrExistPropStmt interface {
-// 	defStmt()
-// 	defPropStmt()
-// 	stmt()
-// 	String() string
-// 	UniFactWhereDomImplyPropFact() (*UniFactStmt, error)
-// }
-
-// func (s *DefConExistPropStmt) defPropStmt() {}
-// func (s *DefConPropStmt) defPropStmt()      {}
-
-// func (s *SetDefSetBuilderStmt) setDefStmt() {}
-
-// func (s *SetDefEnumtmt) setDefStmt()        {}
-// func (s *SetDefSetBuilderStmt) Name() string {
-// 	return s.SetName
-// }
-
-// func (s *SetDefEnumtmt) Name() string {
-// 	return s.SetName
-// }
 
 type Reversable_LogicOrSpec_Stmt interface {
 	logicExprOrSpecFactStmt()

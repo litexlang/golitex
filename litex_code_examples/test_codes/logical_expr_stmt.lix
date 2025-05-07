@@ -42,3 +42,14 @@ prove:
         not $p(x,y)
 
     $q(x,y)
+
+# find bug
+prove:
+    know:
+        or:
+            $p(x,y)
+            $q(x,y)
+
+    or:
+        $p(x,y)
+        $q(x,y)
