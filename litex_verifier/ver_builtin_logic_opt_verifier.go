@@ -31,7 +31,7 @@ func (ver *Verifier) useBtRulesAndMemSpecifically(stmt *ast.SpecFactStmt, state 
 		return true, nil
 	}
 
-	if stmt.IsPropNameAssociative() {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordAssociative) {
 		// 如果用内置的验证方法不成立，还是能用后面的方法验证的。
 		if ok, err := ver.btAssociativeRule(stmt, state); err != nil {
 			return false, err
@@ -40,7 +40,7 @@ func (ver *Verifier) useBtRulesAndMemSpecifically(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	if stmt.IsPropNameCommutative() {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordPropCommutative) {
 		if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
 			return false, err
 		} else if ok {
@@ -125,7 +125,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 }
 
 func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordCommutative) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordPropCommutative) {
 		return false, nil
 	}
 
@@ -145,6 +145,15 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 
 	if len(propDef.DefHeader.Params) != 2 {
 		return false, nil
+	}
+
+	if propDef.IsCommutative {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative", stmt.PropName.String()))
+		} else {
+			ver.successNoMsg()
+		}
+		return true, nil
 	}
 
 	uniFactParams := propDef.DefHeader.Params

@@ -171,14 +171,6 @@ func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNa
 	return newParams, newUniParams
 }
 
-func (stmt *SpecFactStmt) IsPropNameCommutative() bool {
-	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.KeywordCommutative == stmt.PropName.Name
-}
-
-func (stmt *SpecFactStmt) IsPropNameAssociative() bool {
-	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.KeywordAssociative == stmt.PropName.Name
-}
-
 func (defStmt *DefConPropStmt) PropDefToUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {

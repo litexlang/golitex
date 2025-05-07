@@ -36,12 +36,22 @@ func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 }
 
 func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordCommutative) {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordPropCommutative) {
 		// 验证它的def确实只有两个元素
-		propDef, ok := env.PropMem.Get(fact.PropName)
+		if len(fact.Params) != 1 {
+			return fmt.Errorf("commutative prop is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
+		}
+
+		propNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
+		if !ok {
+			return fmt.Errorf("commutative prop is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
+		}
+
+		propDef, ok := env.PropMem.Get(*propNameAsAtom)
 		if !ok {
 			return fmt.Errorf("prop %s has no definition", fact.PropName)
 		}
+
 		if len(propDef.DefHeader.Params) != 2 {
 			return fmt.Errorf("prop %s is supposed to be commutative, but has no %d parameters", fact.PropName, len(propDef.DefHeader.Params))
 		}
@@ -185,23 +195,6 @@ func (env *Env) IsInvalidName(name string) error {
 
 	return nil
 }
-
-// func (env *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
-// 	if len(fact.Params) != 2 {
-// 		return false
-// 	}
-// 	return env.isPropCommutative(&fact.PropName)
-// }
-
-// func (env *Env) isPropCommutative(opt ast.Fc) bool {
-// 	if ast.IsFcAtom_HasGivenName_EmptyPkgName(opt, glob.KeySymbolEqual) {
-// 		return true
-// 	}
-
-// 	// TODO
-// 	_ = opt
-// 	return false
-// }
 
 func (env *Env) NewDefConProp(stmt *ast.DefConPropStmt) error {
 	err := env.IsInvalidName(stmt.DefHeader.Name)

@@ -39,6 +39,11 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 			return false, err
 		}
 		if ok {
+			if state.requireMsg() {
+				ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative and %s is true", stmt.PropName.String(), reverseFact.String()))
+			} else {
+				ver.successNoMsg()
+			}
 			return true, nil
 		}
 	}
