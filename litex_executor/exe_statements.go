@@ -192,6 +192,10 @@ func (exec *Executor) defConPropStmt(stmt *ast.DefConPropStmt) error {
 	}
 
 	// prop leads to iff
+	if len(stmt.IffFacts) == 0 {
+		return nil
+	}
+
 	uniFactParams := stmt.DefHeader.Params
 	uniFactParamSets := stmt.DefHeader.SetParams
 	domFacts := []ast.FactStmt{}
