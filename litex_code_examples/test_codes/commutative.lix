@@ -19,3 +19,11 @@ prove:
         $p(1,2)
     $p(2,1)
     $commutative_prop(p)
+
+prove:
+    prop commutative_prop parallel(x line, y line)
+
+    $parallel(l1, l2)
+    know:
+        $p(l1, l2)
+    $p(l2, l1)

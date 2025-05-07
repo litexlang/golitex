@@ -57,6 +57,8 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 		}
 
 		propDef.IsCommutative = true
+
+		return nil
 	}
 
 	err := env.SpecFactMem.NewFact(fact)
@@ -78,7 +80,11 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 
 func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 	if fact.TypeEnum == ast.TrueAtom {
-		return env.emit_specFact_DefFacts(fact)
+		if glob.KnowSpecFactByDef {
+			return env.emit_specFact_DefFacts(fact)
+		} else {
+			return nil
+		}
 	} else {
 		return nil
 	}

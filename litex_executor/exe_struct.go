@@ -55,3 +55,7 @@ func (e *Executor) appendNewMsg(msg string, str ...any) {
 func (e *Executor) appendNewMsgAtBegin(msg string, str ...any) {
 	e.env.Msgs = append([]string{fmt.Sprintf(msg, str...)}, e.env.Msgs...)
 }
+
+func (e *Executor) appendWarningMsg(msg string, str ...any) {
+	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, fmt.Sprintf(msg, str...)))
+}
