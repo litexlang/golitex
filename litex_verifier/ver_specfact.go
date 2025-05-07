@@ -20,6 +20,33 @@ import (
 )
 
 func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if ver.env.IsSpecFactPropCommutative(stmt) {
+		ok, err := ver.specFactWithOutCommutative(stmt, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+
+		reverseFact, err := stmt.ReverseParameterOrder()
+		if err != nil {
+			return false, err
+		}
+
+		ok, err = ver.specFactWithOutCommutative(reverseFact, state)
+		if err != nil {
+			return false, err
+		}
+		if ok {
+			return true, nil
+		}
+	}
+
+	return ver.specFactWithOutCommutative(stmt, state)
+}
+
+func (ver *Verifier) specFactWithOutCommutative(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// if not satisfy para req(dom), return false
 	ok, err := ver.FcSatisfySpecFactParaReq(stmt)
 	if err != nil {
