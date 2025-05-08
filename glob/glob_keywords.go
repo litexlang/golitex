@@ -14,42 +14,36 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
-	KeywordSet    = "set"
-	KeywordForall = "forall"
-	// KeywordWhen      = "when"
-	KeywordDom       = "dom" // 必须存在，因为有时候只有要求没then
-	KeywordThen      = "then"
-	KeywordObj       = "obj"
-	KeywordHave      = "have"
-	KeywordFn        = "fn"
-	KeywordProp      = "prop"
-	KeywordKnow      = "know"
-	KeywordExist     = "exist"
-	KeywordSt        = "st"
-	KeywordExistProp = "exist_prop"
-	// KeywordConstructorProp      = "constructor_prop"
+	KeywordSet                  = "set"
+	KeywordForall               = "forall"
+	KeywordDom                  = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
+	KeywordThen                 = "then"
+	KeywordObj                  = "obj"
+	KeywordHave                 = "have"
+	KeywordFn                   = "fn"
+	KeywordProp                 = "prop"
+	KeywordKnow                 = "know"
+	KeywordExist                = "exist"
+	KeywordSt                   = "st"
+	KeywordExistProp            = "exist_prop"
 	KeywordClaim                = "claim"
 	KeywordProve                = "prove"
 	KeywordPub                  = "pub"
 	KeywordImport               = "import"
 	KeywordPackage              = "package"
 	KeywordNot                  = "not"
-	KeywordImpl                 = "impl"
 	KeywordAs                   = "as"
-	KeywordAxiom                = "axiom" // syntax sugar for: prop + know forall
 	KeywordProveByContradiction = "prove_by_contradiction"
-	KeywordProveInEachCase      = "prove_in_each_case"
-	// KeywordThm                  = "thm" // syntax sugar for: prop + prove
-	// KeywordSelf                 = "self" // return value of a function; refer to an instance of the type or set we are defining
-	KeywordIff = "iff"
+	KeywordProveInEachCase      = "prove_in_each_case" // 必要：和or一起使用
+	KeywordIff                  = "iff"
 
 	KeywordAnd = "and"
 	KeywordOr  = "or"
 
 	// Syntax and Semantics Sugar
-	KeywordPropCommutative = "commutative_prop"
-	KeywordFnCommutative   = "commutative_fn"
-	KeywordFnAssociative   = "associative_fn"
+	KeywordCommutativeProp = "commutative_prop"
+	KeywordCommutativeFn   = "commutative_fn"
+	KeywordAssociativeFn   = "associative_fn"
 
 	// Builtin Types
 	KeywordNatural  = "nat"  // e.g. 0
@@ -58,11 +52,18 @@ const (
 	KeywordReal     = "real" // e.g. pi
 
 	// Builtin Functions
-	KeywordIs   = "is"
-	KeywordIn   = "in"
-	KeyWordFrac = "frac"
+	KeywordIs = "is"
+	KeywordIn = "in"
 
+	KeywordFrac   = "frac"
 	KeywordExtend = "extend"
+
+	// litex version 0.2 的时候可以考虑实现。这样的话fn所在的集合也能像obj一样简单了
+	KeywordFnSet = "fn_set"
+
+	// litex version 0.3 的时候可以考虑实现。这样的话prop, set所在的集合也能像obj一样简单了
+	KeywordPropSet = "prop_set"
+	KeywordSetSet  = "set_set"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -86,9 +87,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordImport:               {},
 	KeywordPackage:              {},
 	KeywordNot:                  {},
-	KeywordImpl:                 {},
 	KeywordAs:                   {},
-	KeywordAxiom:                {},
 	KeywordProveByContradiction: {},
 	KeywordProveInEachCase:      {},
 	// KeywordThm:                  {},
@@ -96,9 +95,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordExist: {},
 
 	// 语法糖
-	KeywordPropCommutative: {},
-	KeywordFnCommutative:   {},
-	KeywordFnAssociative:   {},
+	KeywordCommutativeProp: {},
+	KeywordCommutativeFn:   {},
+	KeywordAssociativeFn:   {},
 
 	KeywordAnd: {},
 	KeywordOr:  {},
@@ -114,6 +113,10 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIn: {},
 
 	KeywordExtend: {},
+	KeywordFnSet:  {},
+
+	KeywordPropSet: {},
+	KeywordSetSet:  {},
 }
 
 const (

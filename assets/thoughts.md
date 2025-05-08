@@ -1638,3 +1638,18 @@ equal 是特殊的spec，但它层级还要更低，因为我在match的时候�
 暂时不清楚如何定义 set of fn with given requirements like {f fn(X)=>Y| f 的 要求}. 等我真的遇到要定义set of fn的时候，再考虑。
 另外证明两个 set 一样，是个问题
 如果我不允许用户在 {x | y}的y里面有forall型事实，而是只能放 spec fact 那就可以直接写了.
+
+set: 能放任何东西；用in来做连接
+fn_set: 只能放fn。能放在 set 出现的地方，表示fn的集合。
+fn_set A fn(X) Y:
+    # : 下面 放对集合的额外要求，相当于 {x T| cond} 的 cond
+    forall y fn A: # 未来fn后面如果没写 fn(x)y ，即第一位不是(，那就认为你fn A后面这个A是fn_set 
+
+fn f A 相当于 直接声明了一个fn叫A，这个 f 的定义域是 X, 值域是 Y (f 无额外的要求；如果你真的想要有额外的要求，那就写在集合X里，不要单独拿出来。事实上我对 fn 的声明里有 dom 这一项，有观望意见；它至多只是一种糖，而不是本质的，因为一般集合论的书写就是不会吧dom额外写出来的； 发现fn的dom是必要，如果 fn_set 这个关键词不存在的话，那如果在定义 fn 的时候，parameter list 里有 fn， 如果此时要对 fn 有要求，那需要借助 dom): 同时它满足 dom. 有点像
+
+set A:
+    cond
+
+obj x A  # 立刻获得 A 的 cond 的所有性质. TODO: 不确定是否要用户一旦声明了之后，A下面的事实直接 以 specfact的格式 emit 出来
+
+

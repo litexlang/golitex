@@ -18,7 +18,7 @@ func IsKeySymbol(name string) bool {
 }
 
 func IsBuiltinInfixRelaProp(op string) bool {
-	return op == "=" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=" || op == "in" || op == KeywordPropCommutative
+	return op == "=" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=" || op == "in" || op == KeywordCommutativeProp
 }
 
 func IsBuiltinNumberInfixRelaProp(op string) bool {
