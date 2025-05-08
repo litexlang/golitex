@@ -1142,30 +1142,6 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 	return ast.NewKnowPropStmt(*prop), nil
 }
 
-// func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
-// 	err := tb.header.skip(glob.KeywordAxiom)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	name, err := tb.header.next()
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	err = tb.header.testAndSkip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	fact, err := tb.body[0].uniFactStmt(ast.NameDepthMap{}, UniFactDepth1)
-// 	if err != nil {
-// 		return nil, &tokenBlockErr{err, *tb}
-// 	}
-
-// 	return ast.NewAxiomStmt(name, *fact), nil
-// }
-
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveInEachCase)
 	if err != nil {

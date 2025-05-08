@@ -24,3 +24,10 @@ prove:
         1 = y
 
     $p(2,y)
+
+prove:
+    know:
+        x = 1
+        y = 1
+
+    x = y
