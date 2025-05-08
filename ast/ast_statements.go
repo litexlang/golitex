@@ -43,13 +43,13 @@ type ExistPropDef struct {
 	IffFacts []Reversable_LogicOrSpec_Stmt
 }
 
-type DefConExistPropStmt struct {
+type DefExistPropStmt struct {
 	Def            ExistPropDef
 	ExistParams    []string
 	ExistParamSets []Fc
 }
 
-type DefConFnStmt struct {
+type DefFnStmt struct {
 	DefHeader DefHeader
 	RetSet    Fc
 	DomFacts  []FactStmt
@@ -82,9 +82,13 @@ type KnowStmt struct {
 }
 
 // syntax sugar for defining spec prop + claim forall true
-type AxiomStmt struct {
-	Name string
-	Fact UniFactStmt
+// type AxiomStmt struct {
+// 	Name string
+// 	Fact UniFactStmt
+// }
+
+type KnowPropStmt struct {
+	Prop DefPropStmt
 }
 
 type FcFnDecl struct {

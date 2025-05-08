@@ -56,9 +56,15 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	case glob.KeywordProve:
 		ret, err = tb.proveClaimStmt()
 	case glob.KeywordKnow:
-		ret, err = tb.knowStmt()
-	case glob.KeywordAxiom:
-		ret, err = tb.axiomStmt()
+		{
+			if tb.TokenAtIndexIs(1, glob.KeywordProp) {
+				ret, err = tb.knowPropStmt()
+			} else {
+				ret, err = tb.knowStmt()
+			}
+		}
+	// case glob.KeywordAxiom:
+	// 	ret, err = tb.axiomStmt()
 	case glob.KeywordSet:
 		ret, err = tb.setDefStmt()
 	case glob.KeySymbolLess:
@@ -278,7 +284,7 @@ func (tb *tokenBlock) defConPropStmt() (*ast.DefPropStmt, error) {
 	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts, isCommutative), nil
 }
 
-func (tb *tokenBlock) defConFnStmt() (*ast.DefConFnStmt, error) {
+func (tb *tokenBlock) defConFnStmt() (*ast.DefFnStmt, error) {
 	err := tb.header.skip(glob.KeywordFn)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -588,7 +594,7 @@ func (tb *tokenBlock) conDefHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 	return ast.NewConDefHeader(name, params, setParams), nameDepthMap, nil
 }
 
-func (tb *tokenBlock) defConExistPropStmt() (*ast.DefConExistPropStmt, error) {
+func (tb *tokenBlock) defConExistPropStmt() (*ast.DefExistPropStmt, error) {
 	err := tb.header.skip(glob.KeywordExistProp)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -807,7 +813,7 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 			stmt := tb.body[i]
 			fact, err := stmt.logicExprOrSpecFactStmt(nameDepthMap)
 			if err != nil {
-				if tb.body[i].AtIndexIs(0, glob.KeywordForall) {
+				if tb.body[i].CurrentTokenIs(glob.KeywordForall) {
 					return nil, fmt.Errorf("expect specific fact: at most 2 layers of universal quantifier is allowed")
 				} else {
 					return nil, &tokenBlockErr{err, *tb}
@@ -1122,29 +1128,43 @@ func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
 	return ast.NewMatcherEnvStmt(&matcherName, params, body), nil
 }
 
-func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
-	err := tb.header.skip(glob.KeywordAxiom)
+func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
+	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordKnow)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	name, err := tb.header.next()
+	prop, err := tb.defConPropStmt()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	err = tb.header.testAndSkip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	fact, err := tb.body[0].uniFactStmt(ast.NameDepthMap{}, UniFactDepth1)
-	if err != nil {
-		return nil, &tokenBlockErr{err, *tb}
-	}
-
-	return ast.NewAxiomStmt(name, *fact), nil
+	return ast.NewKnowPropStmt(*prop), nil
 }
+
+// func (tb *tokenBlock) axiomStmt() (*ast.AxiomStmt, error) {
+// 	err := tb.header.skip(glob.KeywordAxiom)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
+
+// 	name, err := tb.header.next()
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
+
+// 	err = tb.header.testAndSkip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
+
+// 	fact, err := tb.body[0].uniFactStmt(ast.NameDepthMap{}, UniFactDepth1)
+// 	if err != nil {
+// 		return nil, &tokenBlockErr{err, *tb}
+// 	}
+
+// 	return ast.NewAxiomStmt(name, *fact), nil
+// }
 
 func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordProveInEachCase)

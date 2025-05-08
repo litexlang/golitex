@@ -19,15 +19,15 @@ type Stmt interface {
 
 func (stmt *DefObjStmt) stmt() {}
 func (c *DefPropStmt) stmt()   {}
-func (f *DefConFnStmt) stmt()  {}
+func (f *DefFnStmt) stmt()     {}
 func (l *UniFactStmt) stmt()   {}
 func (p *SpecFactStmt) stmt()  {}
 func (f *ClaimStmt) stmt()     {}
 func (f *KnowStmt) stmt()      {}
 
-func (s *DefConExistPropStmt) stmt() {}
+func (s *DefExistPropStmt) stmt() {}
 
-func (s *AxiomStmt) stmt() {}
+// func (s *AxiomStmt) stmt() {}
 
 // func (s *ThmStmt) stmt()             {}
 
@@ -40,6 +40,8 @@ func (s *SetDefSetBuilderStmt) stmt() {}
 func (s *MatcherEnvStmt) stmt() {}
 
 func (s *ProveInEachCaseStmt) stmt() {}
+
+func (s *KnowPropStmt) stmt() {}
 
 type FactStmt interface {
 	factStmt()
@@ -99,7 +101,7 @@ type DefStmt interface {
 	String() string
 }
 
-func (s *DefObjStmt) defStmt()          {}
-func (s *DefConFnStmt) defStmt()        {}
-func (s *DefPropStmt) defStmt()         {}
-func (s *DefConExistPropStmt) defStmt() {}
+func (s *DefObjStmt) defStmt()       {}
+func (s *DefFnStmt) defStmt()        {}
+func (s *DefPropStmt) defStmt()      {}
+func (s *DefExistPropStmt) defStmt() {}
