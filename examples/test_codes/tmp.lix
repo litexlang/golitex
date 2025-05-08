@@ -67,33 +67,15 @@ prove:
                 then:
                     l = line_of(a, b)
 
-    
-prove:
-    know:
-        forall x nat:
-            or:
-                $p(x)
-                $q(x)
-    
 
-        forall x nat:
-            dom:
-                forall y nat:
-                    $q(x, y)
-            $p(x)
-    
-        和 下面这个逻辑上一样，但语义不一样
-
-        下面这么写的话，这个forall是不会帮到我验证的，因为我找不到y
-        forall x nat, y nat:
-            dom:
-                $q(x, y)
-            then:
-                $p(x)    
-        
-        当然我不能让你 forall 套超过2层，因为我搜索的时候是 n^2 量级，3层就是 n^3 了
-
-        golang 的 内部的 interface 从来没超过一层，我的语言也是
 
 prove:
     1 = 1
+
+prove:
+    prop q(x nat, y nat)
+
+    know $commutative_prop(q)
+    know:
+        $q(1, 2)
+    $q(2,1)

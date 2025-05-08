@@ -521,11 +521,11 @@ func (ver *Verifier) iterateOverKnownSpecEqualFactsAndCheck(left ast.Fc, right a
 			for _, equalFact := range equalFacts {
 				// left = left, right = right
 
-				ok1, err1 := ver.fcEqual_Commutative_Associative(equalFact.Fact.Params[0], left)
+				ok1, err1 := ver.fcEqual_Commutative_Associative_CmpRule(equalFact.Fact.Params[0], left)
 				if err1 != nil {
 					return false, err1
 				}
-				ok2, err2 := ver.fcEqual_Commutative_Associative(equalFact.Fact.Params[1], right)
+				ok2, err2 := ver.fcEqual_Commutative_Associative_CmpRule(equalFact.Fact.Params[1], right)
 				if err2 != nil {
 					return false, err2
 				}
@@ -534,11 +534,11 @@ func (ver *Verifier) iterateOverKnownSpecEqualFactsAndCheck(left ast.Fc, right a
 				}
 
 				// left = right, right = left
-				ok1, err1 = ver.fcEqual_Commutative_Associative(equalFact.Fact.Params[0], right)
+				ok1, err1 = ver.fcEqual_Commutative_Associative_CmpRule(equalFact.Fact.Params[0], right)
 				if err1 != nil {
 					return false, err1
 				}
-				ok2, err2 = ver.fcEqual_Commutative_Associative(equalFact.Fact.Params[1], left)
+				ok2, err2 = ver.fcEqual_Commutative_Associative_CmpRule(equalFact.Fact.Params[1], left)
 				if err2 != nil {
 					return false, err2
 				}
@@ -552,7 +552,7 @@ func (ver *Verifier) iterateOverKnownSpecEqualFactsAndCheck(left ast.Fc, right a
 	return false, nil
 }
 
-func (ver *Verifier) fcEqual_Commutative_Associative(left ast.Fc, right ast.Fc) (bool, error) {
+func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right ast.Fc) (bool, error) {
 	ok, err := cmp.CmpFcRule(left, right)
 	if err != nil {
 		return false, err
