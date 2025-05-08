@@ -289,60 +289,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) error {
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 
-	existFact := ast.SpecFactStmt{TypeEnum: ast.TrueExist, PropName: ast.FcAtom{PkgName: "", Name: stmt.Fact.PropName.Name}, Params: stmt.Fact.Params}
-
-	execState, err := exec.factStmt(&existFact)
-	if err != nil {
-		return err
-	}
-
-	if execState != glob.ExecState_True {
-		exec.appendNewMsg("%v failed: related exist fact check failed\n", existFact.String())
-		return nil
-	}
-
-	// TODO 需要像defObjStmt那样，把objName和objSet都插入到env里
-	propDef, ok := exec.env.GetExistPropDef(stmt.Fact.PropName)
-	if !ok {
-		return fmt.Errorf("%s has no definition", stmt.String())
-	}
-
-	uniMap := map[string]ast.Fc{}
-	for i := range stmt.ObjNames {
-		uniMap[propDef.ExistParams[i]] = &ast.FcAtom{PkgName: exec.curPkg, Name: stmt.ObjNames[i]}
-	}
-
-	for i := range stmt.Fact.Params {
-		uniMap[propDef.Def.DefHeader.Params[i]] = stmt.Fact.Params[i]
-	}
-
-	facts := []ast.FactStmt{}
-	for _, fact := range propDef.Def.DomFacts {
-		fixed, err := fact.Instantiate(uniMap)
-		if err != nil {
-			return err
-		}
-		facts = append(facts, fixed)
-	}
-
-	for _, fact := range propDef.Def.IffFacts {
-		fixed, err := fact.Instantiate(uniMap)
-		if err != nil {
-			return err
-		}
-		facts = append(facts, fixed)
-	}
-
-	// newDefObjStmt := ast.DefObjStmt{Objs: stmt.ObjNames, ObjSets: stmt.Fact.Params, Facts: facts}
-
-	// err = exec.defObjStmt(&newDefObjStmt)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// TODO 注意到最后输出的，可能是 obj, fn, prop, existProp, set. 需要不同考虑
-	_ = facts
-
+	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
 	return nil
 }
 

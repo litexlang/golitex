@@ -100,8 +100,8 @@ func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []
 	return newUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
 }
 
-func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt, elems []Fc) *SetDefSetBuilderStmt {
-	return &SetDefSetBuilderStmt{setName, parentSet, facts, elems}
+func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {
+	return &SetDefSetBuilderStmt{setName, parentSet, facts}
 }
 
 func NewProveInEachCaseStmt(orFact LogicExprStmt, thenFacts []FactStmt, proofs [][]Stmt) *ProveInEachCaseStmt {
