@@ -105,7 +105,7 @@ func (ver *Verifier) fcEqualSpecInSpecMem(stmt *ast.SpecFactStmt, state VerState
 	return false, nil
 }
 
-func (ver *Verifier) makeFcEqualFactAndVerify(left, right ast.Fc, state VerState) (bool, error) {
-	newSpecFactToCheck := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
-	return ver.SpecFact(newSpecFactToCheck, state)
-}
+// func (ver *Verifier) makeFcEqualFactAndVerify(left, right ast.Fc, state VerState) (bool, error) {
+// 	newSpecFactToCheck := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
+// 	return ver.SpecFact(newSpecFactToCheck, state)
+// }

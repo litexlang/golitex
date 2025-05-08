@@ -46,15 +46,16 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 	leftTails := left.ParamSegs[leftHeadLen:]
 	rightTails := right.ParamSegs[rightHeadLen:]
 
-	curState := state.toNoMsg()
-	for i := 0; i < leftTailLen; i++ {
+	_ = state.toNoMsg()
+	for i := range leftTailLen {
 		curLen := len(leftTails[i])
 		if curLen != len(rightTails[i]) {
 			return false, nil
 		}
 
-		for j := 0; j < curLen; j++ {
-			ok, err := ver.makeFcEqualFactAndVerify(leftTails[i][j], rightTails[i][j], curState)
+		for j := range curLen {
+			ok, err := ver.iterateOverEqualFactsAndFindEqual(leftTails[i][j], rightTails[i][j])
+			// ok, err := ver.makeFcEqualFactAndVerify(leftTails[i][j], rightTails[i][j], curState)
 			if err != nil {
 				return false, err
 			}
@@ -78,7 +79,8 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 		rightHead = &ast.FcFn{FnHead: right.FnHead, ParamSegs: right.ParamSegs[:rightHeadLen]}
 	}
 
-	ok, err := ver.makeFcEqualFactAndVerify(leftHead, rightHead, curState)
+	// ok, err := ver.makeFcEqualFactAndVerify(leftHead, rightHead, curState)
+	ok, err := ver.iterateOverEqualFactsAndFindEqual(leftHead, rightHead)
 	if err != nil {
 		return false, err
 	}
@@ -99,7 +101,8 @@ func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerSt
 		return false, nil
 	}
 
-	ok, err := ver.makeFcEqualFactAndVerify(left.FnHead, right.FnHead, state)
+	// ok, err := ver.makeFcEqualFactAndVerify(left.FnHead, right.FnHead, state)
+	ok, err := ver.iterateOverEqualFactsAndFindEqual(left.FnHead, right.FnHead)
 	if err != nil {
 		return false, err
 	}
@@ -107,14 +110,15 @@ func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerSt
 		return false, nil
 	}
 
-	curState := state.toNoMsg()
 	for i := range left.ParamSegs {
 		if len(left.ParamSegs[i]) != len(right.ParamSegs[i]) {
 			return false, nil
 		}
 
 		for j := range left.ParamSegs[i] {
-			ok, err := ver.makeFcEqualFactAndVerify(left.ParamSegs[i][j], right.ParamSegs[i][j], curState)
+			// ok, err := ver.makeFcEqualFactAndVerify(left.ParamSegs[i][j], right.ParamSegs[i][j], curState)
+			// 这里相当于强行只能用 specFact 来证明，不能用forall来证；如果是用forall的话，就需要 makeFcEqualFactAndVerify
+			ok, err := ver.iterateOverEqualFactsAndFindEqual(left.ParamSegs[i][j], right.ParamSegs[i][j])
 			if err != nil {
 				return false, err
 			}

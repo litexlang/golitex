@@ -198,29 +198,30 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 	return false, nil
 }
 
-func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerState) (bool, error) {
-	if len(left) != len(right) {
-		return false, fmt.Errorf("%v and %v have different length", left, right)
-	}
+// func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerState) (bool, error) {
+// 	if len(left) != len(right) {
+// 		return false, fmt.Errorf("%v and %v have different length", left, right)
+// 	}
 
-	twoSpecFactHaveEqualParams := true
-	for i, knownParam := range left {
-		verified, err := ver.makeFcEqualFactAndVerify(knownParam, right[i], specMode)
-		if err != nil {
-			return false, err
-		}
-		if !verified {
-			twoSpecFactHaveEqualParams = false
-			break
-		}
-	}
+// 	twoSpecFactHaveEqualParams := true
+// 	for i, knownParam := range left {
+// 		// verified, err := ver.makeFcEqualFactAndVerify(knownParam, right[i], specMode)
+// 		verified, err := ver.iterateOverEqualFactsAndFindEqual(knownParam, right[i])
+// 		if err != nil {
+// 			return false, err
+// 		}
+// 		if !verified {
+// 			twoSpecFactHaveEqualParams = false
+// 			break
+// 		}
+// 	}
 
-	if twoSpecFactHaveEqualParams {
-		return true, nil
-	}
+// 	if twoSpecFactHaveEqualParams {
+// 		return true, nil
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
@@ -353,7 +354,8 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		}
 
 		for i := 1; i < len(value); i++ {
-			ok, err := ver.makeFcEqualFactAndVerify(value[0], value[i], state.addRound())
+			// ok, err := ver.makeFcEqualFactAndVerify(value[0], value[i], state.addRound())
+			ok, err := ver.iterateOverEqualFactsAndFindEqual(value[0], value[i])
 			if err != nil {
 				return nil, false, err
 			}
