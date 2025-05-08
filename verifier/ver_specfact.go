@@ -579,6 +579,22 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 		return true, nil
 	}
 
+	ok, err = ver.leftIsAssociativeAndUseAssociationToCheckEqualRight(left, right)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.leftIsAssociativeAndUseAssociationToCheckEqualRight(right, left)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
 	return false, nil
 }
 
@@ -595,8 +611,34 @@ func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left a
 					return false, nil
 				}
 
-				commutativeLeft := &ast.FcFn{FnHead: leftHeadAsAtom, ParamSegs: [][]ast.Fc{{leftAsFn.ParamSegs[0][1], leftAsFn.ParamSegs[0][0]}}}
+				commutativeLeft, ok := leftAsFn.HasTwoParamsAndSwitchOrder()
+				if !ok {
+					return false, nil
+				}
 				ok, err := cmp.CmpFcRule(commutativeLeft, right)
+				if err != nil {
+					return false, err
+				}
+				if ok {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) leftIsAssociativeAndUseAssociationToCheckEqualRight(left ast.Fc, right ast.Fc) (bool, error) {
+	if leftAsFn, ok := left.(*ast.FcFn); ok {
+		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
+			if ver.env.IsAssociativeFn(*leftHeadAsAtom) {
+				leftAssociated, ok := leftAsFn.HasTwoParams_FirstParamHasTheSameNameAsItself()
+				if !ok {
+					return false, nil
+				}
+
+				ok, err := cmp.CmpFcRule(leftAssociated, right)
 				if err != nil {
 					return false, err
 				}

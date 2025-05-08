@@ -2,3 +2,7 @@ prove:
     know:
         x + 1 = 2
     1 + x =2
+
+    know:
+        a + b = x
+    b + a = x

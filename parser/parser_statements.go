@@ -241,12 +241,6 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	// isCommutative := false
-	// if tb.header.is(glob.KeywordCommutativeProp) {
-	// 	tb.header.skip()
-	// 	isCommutative = true
-	// }
-
 	declHeader, nameDepthMap, err := tb.defHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}

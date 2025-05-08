@@ -175,3 +175,50 @@ func IsFcAtom_HasGivenName_EmptyPkgName(fc Fc, kw string) bool {
 	}
 	return fcAtom.HasGivenNameAndEmptyPkgName(kw)
 }
+
+func (f *FcFn) HasTwoParamsAndSwitchOrder() (*FcFn, bool) {
+	if len(f.ParamSegs) != 1 {
+		return nil, false
+	}
+
+	if len(f.ParamSegs[0]) != 2 {
+		return nil, false
+	}
+
+	return NewFcFnPipe(f.FnHead, [][]Fc{{f.ParamSegs[0][1], f.ParamSegs[0][0]}}), true
+}
+
+func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
+	if len(f.ParamSegs) != 1 {
+		return nil, false
+	}
+
+	if len(f.ParamSegs[0]) != 2 {
+		return nil, false
+	}
+
+	var fHeadAsAtom *FcAtom
+	var ok bool = false
+	fHeadAsAtom, ok = f.FnHead.(*FcAtom)
+	if !ok {
+		return nil, false
+	}
+
+	if leftAsFn, ok := f.ParamSegs[0][0].(*FcFn); ok {
+		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*FcAtom); ok {
+			if leftHeadAsAtom.Name == fHeadAsAtom.Name && leftHeadAsAtom.PkgName == fHeadAsAtom.PkgName {
+				if len(leftAsFn.ParamSegs) != 1 {
+					return nil, false
+				}
+
+				if len(leftAsFn.ParamSegs[0]) != 2 {
+					return nil, false
+				}
+
+				return NewFcFnPipe(f.FnHead, [][]Fc{{leftAsFn.ParamSegs[0][1], leftAsFn.ParamSegs[0][0]}}), true
+			}
+		}
+	}
+
+	return nil, false
+}
