@@ -18,6 +18,7 @@ import (
 	cmp "golitex/litex_comparator"
 	env "golitex/litex_env"
 	glob "golitex/litex_global"
+	"strings"
 )
 
 func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -165,7 +166,13 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 				}
 
 				if state.requireMsg() {
-					ver.successWithMsg(stmt.String(), knownFact.String())
+					var verifiedBy strings.Builder
+					verifiedBy.WriteString(knownFact.String())
+					verifiedBy.WriteString("\n")
+					for i, knownParam := range knownFact.Fact.Params {
+						verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
+					}
+					ver.successWithMsg(stmt.String(), verifiedBy.String())
 				} else {
 					ver.successNoMsg()
 				}
@@ -392,7 +399,13 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 			return false, err
 		}
 		if !ok {
-			return false, nil
+			ok, err := ver.iterateOverEqualFactsAndFindEqual(knownParam, stmt.Params[i])
+			if err != nil {
+				return false, err
+			}
+			if !ok {
+				return false, nil
+			}
 		}
 	}
 

@@ -1,0 +1,5 @@
+prove:
+    know:
+        x = 1
+        $p(x)
+    $p(1)
