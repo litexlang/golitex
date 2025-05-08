@@ -22,7 +22,7 @@ func (ver *Verifier) useBtRulesAndMemSpecifically(stmt *ast.SpecFactStmt, state 
 	// 存储相等型事实，不需要有一个额外的数据结构来存；但是验证相等性事实的时候，需要用不一样的方式去验证
 	if stmt.IsPropNameEqual() {
 		// 所有的验证方法都集成在btEqualRule里了，包括用已知的uni，cond来证明。= 和其他事很不一样的
-		return ver.btEqualRule(stmt, state)
+		return ver.btEqualRule_useSpecMem(stmt, state)
 	}
 
 	if ok, err := ver.btInProp(stmt, state); err != nil {
