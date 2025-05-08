@@ -308,11 +308,11 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) error {
 	}
 
 	uniMap := map[string]ast.Fc{}
-	for i := 0; i < len(stmt.ObjNames); i++ {
+	for i := range stmt.ObjNames {
 		uniMap[propDef.ExistParams[i]] = &ast.FcAtom{PkgName: exec.curPkg, Name: stmt.ObjNames[i]}
 	}
 
-	for i := 0; i < len(stmt.Fact.Params); i++ {
+	for i := range stmt.Fact.Params {
 		uniMap[propDef.Def.DefHeader.Params[i]] = stmt.Fact.Params[i]
 	}
 
