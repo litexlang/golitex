@@ -242,7 +242,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	}
 
 	isCommutative := false
-	if tb.header.is(glob.KeywordPropCommutative) {
+	if tb.header.is(glob.KeywordCommutativeProp) {
 		tb.header.skip()
 		isCommutative = true
 	}

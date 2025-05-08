@@ -31,7 +31,7 @@ func (ver *Verifier) useBtRulesAndMemSpecifically(stmt *ast.SpecFactStmt, state 
 		return true, nil
 	}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordPropCommutative) {
+	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordCommutativeProp) {
 		if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
 			return false, err
 		} else if ok {
@@ -116,7 +116,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state VerS
 }
 
 func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordPropCommutative) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordCommutativeProp) {
 		return false, nil
 	}
 
