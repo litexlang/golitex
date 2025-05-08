@@ -388,6 +388,14 @@ The best to test Litex is by translating "real-world" into Litex. I use Professo
 
 There are many "design balences" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent users including elementary school students or any non-math people, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language and I wish it could have as many users as possible, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
 
+C does not allow operator overloading. The only instances of operator overloading occur with built-in integer and floating-point arithmetic operations (addition, subtraction, multiplication, and division). Since these cases are limited, the compiler handles them by context. C++ and Python are often criticized because, although they allow operator overloading—which appears to increase functionality—it leads to a "readability disaster": readers cannot easily determine which specific operation a symbol like `+` refers to. This becomes particularly problematic in large-scale projects.  
+
+    1. In C++, even the `=` operator can be overloaded.  
+    2. Following the principle of simplicity, Litex aligns with C's design: operator overloading is prohibited. The only exceptions are for basic numeric types (integers, decimals, real numbers, and natural numbers). In all other cases, overloading is forbidden. Additionally, overloading `=` is also disallowed.  
+        1. Without operator overloading, the concept of `extend` or `impl` or `inherit` may also become unnecessary, as its primary purpose is to enable operator overloading.  
+
+(Translation adheres to concise phrasing while preserving technical accuracy.)
+
 ## Join the Litex Project: Words from the Inventor
 
 _The best way to predict the future is to invent it._
