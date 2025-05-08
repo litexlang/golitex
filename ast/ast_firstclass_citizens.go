@@ -45,7 +45,7 @@ func NewFcAtom(pkgName string, value string) *FcAtom {
 	return &FcAtom{pkgName, value}
 }
 
-func NewFcFnPipe(fnHead Fc, callPipe [][]Fc) *FcFn {
+func NewFcFn(fnHead Fc, callPipe [][]Fc) *FcFn {
 	return &FcFn{fnHead, callPipe}
 }
 
@@ -185,7 +185,7 @@ func (f *FcFn) HasTwoParamsAndSwitchOrder() (*FcFn, bool) {
 		return nil, false
 	}
 
-	return NewFcFnPipe(f.FnHead, [][]Fc{{f.ParamSegs[0][1], f.ParamSegs[0][0]}}), true
+	return NewFcFn(f.FnHead, [][]Fc{{f.ParamSegs[0][1], f.ParamSegs[0][0]}}), true
 }
 
 func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
@@ -204,18 +204,20 @@ func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
 		return nil, false
 	}
 
-	if leftAsFn, ok := f.ParamSegs[0][0].(*FcFn); ok {
-		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*FcAtom); ok {
-			if leftHeadAsAtom.Name == fHeadAsAtom.Name && leftHeadAsAtom.PkgName == fHeadAsAtom.PkgName {
-				if len(leftAsFn.ParamSegs) != 1 {
+	if f_firstParam_as_fn, ok := f.ParamSegs[0][0].(*FcFn); ok {
+		if f_firstParam_headAsAtom, ok := f_firstParam_as_fn.FnHead.(*FcAtom); ok {
+			if f_firstParam_headAsAtom.Name == fHeadAsAtom.Name && f_firstParam_headAsAtom.PkgName == fHeadAsAtom.PkgName {
+				if len(f_firstParam_as_fn.ParamSegs) != 1 {
 					return nil, false
 				}
 
-				if len(leftAsFn.ParamSegs[0]) != 2 {
+				if len(f_firstParam_as_fn.ParamSegs[0]) != 2 {
 					return nil, false
 				}
 
-				return NewFcFnPipe(f.FnHead, [][]Fc{{leftAsFn.ParamSegs[0][1], leftAsFn.ParamSegs[0][0]}}), true
+				newRight := NewFcFn(f.FnHead, [][]Fc{{f_firstParam_as_fn.ParamSegs[0][1], f.ParamSegs[0][1]}})
+
+				return NewFcFn(f.FnHead, [][]Fc{{f_firstParam_as_fn.ParamSegs[0][0], newRight}}), true
 			}
 		}
 	}
