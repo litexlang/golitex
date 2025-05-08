@@ -28,12 +28,12 @@ func NewDefConPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []Fact
 	return &DefPropStmt{defHeader, domFacts, iffFacts, isCommutative}
 }
 
-func NewDefConExistPropStmt(def *ExistPropDef, existParams []string, existParamSets []Fc) *DefConExistPropStmt {
-	return &DefConExistPropStmt{*def, existParams, existParamSets}
+func NewDefConExistPropStmt(def *ExistPropDef, existParams []string, existParamSets []Fc) *DefExistPropStmt {
+	return &DefExistPropStmt{*def, existParams, existParamSets}
 }
 
-func NewDefConFnStmt(defHeader DefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt) *DefConFnStmt {
-	return &DefConFnStmt{defHeader, retType, domFacts, thenFacts}
+func NewDefConFnStmt(defHeader DefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt) *DefFnStmt {
+	return &DefFnStmt{defHeader, retType, domFacts, thenFacts}
 }
 
 func newConUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
@@ -52,9 +52,9 @@ func NewKnowStmt(facts []FactStmt) *KnowStmt {
 	return &KnowStmt{facts}
 }
 
-func NewAxiomStmt(name string, fact UniFactStmt) *AxiomStmt {
-	return &AxiomStmt{name, fact}
-}
+// func NewAxiomStmt(name string, fact UniFactStmt) *AxiomStmt {
+// 	return &AxiomStmt{name, fact}
+// }
 
 // func NewThmStmt(decl DefPropOrExistPropStmt, proof []Stmt) *ThmStmt {
 // 	return &ThmStmt{decl, proof}
@@ -118,4 +118,8 @@ func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt, ele
 
 func NewProveInEachCaseStmt(orFact LogicExprStmt, thenFacts []FactStmt, proofs [][]Stmt) *ProveInEachCaseStmt {
 	return &ProveInEachCaseStmt{orFact, thenFacts, proofs}
+}
+
+func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
+	return &KnowPropStmt{prop}
 }

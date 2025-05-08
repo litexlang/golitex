@@ -33,19 +33,21 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.ClaimStmt:
 		execState, err = exec.claimStmt(stmt)
 	case *ast.DefPropStmt:
-		err = exec.defConPropStmt(stmt)
+		err = exec.defPropStmt(stmt)
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt)
 	case *ast.ExistObjDefStmt:
 		err = exec.existObjDefStmt(stmt)
-	case *ast.DefConExistPropStmt:
-		err = exec.defConExistPropStmt(stmt)
-	case *ast.DefConFnStmt:
-		err = exec.defConFnStmt(stmt)
+	case *ast.DefExistPropStmt:
+		err = exec.defExistPropStmt(stmt)
+	case *ast.DefFnStmt:
+		err = exec.defFnStmt(stmt)
 	case *ast.MatcherEnvStmt:
 		err = exec.matcherEnvStmt(stmt)
-	case *ast.AxiomStmt:
-		err = exec.axiomStmt(stmt)
+	// case *ast.AxiomStmt:
+	// 	err = exec.axiomStmt(stmt)
+	case *ast.KnowPropStmt:
+		err = exec.knowPropStmt(stmt)
 	case *ast.SetDefSetBuilderStmt:
 		err = exec.setDefStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
@@ -179,7 +181,7 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 	return strings.Join(exec.env.Msgs, "\n")
 }
 
-func (exec *Executor) defConPropStmt(stmt *ast.DefPropStmt) error {
+func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	defer exec.appendNewMsg("\n")
 
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
@@ -253,7 +255,7 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 	return nil
 }
 
-func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
+func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
@@ -287,7 +289,7 @@ func (exec *Executor) defConFnStmt(stmt *ast.DefConFnStmt) error {
 	return nil
 }
 
-func (exec *Executor) defConExistPropStmt(stmt *ast.DefConExistPropStmt) error {
+func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
@@ -363,12 +365,12 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 	switch stmt := stmt.(type) {
 	case *ast.DefObjStmt:
 		return exec.defObjStmt(stmt)
-	case *ast.DefConFnStmt:
-		return exec.defConFnStmt(stmt)
+	case *ast.DefFnStmt:
+		return exec.defFnStmt(stmt)
 	case *ast.DefPropStmt:
-		return exec.defConPropStmt(stmt)
-	case *ast.DefConExistPropStmt:
-		return exec.defConExistPropStmt(stmt)
+		return exec.defPropStmt(stmt)
+	case *ast.DefExistPropStmt:
+		return exec.defExistPropStmt(stmt)
 	default:
 		return fmt.Errorf("unknown def stmt type: %T", stmt)
 	}
@@ -549,20 +551,20 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 	return false, nil
 }
 
-func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
-	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+// func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
+// 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.execNamedForall(stmt.Name, &stmt.Fact, exec.env)
-	if err != nil {
-		return err
-	}
+// 	err := exec.execNamedForall(stmt.Name, &stmt.Fact, exec.env)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = exec.env.NewFactWithOutEmit(&stmt.Fact)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// 	err = exec.env.NewFactWithOutEmit(&stmt.Fact)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
@@ -640,4 +642,15 @@ func (exec *Executor) execProofBlockForEachCase(caseStmt ast.FactStmt, thenFacts
 	}
 
 	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
+	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+
+	err := exec.defPropStmt(&stmt.Prop)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

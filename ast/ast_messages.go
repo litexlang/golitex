@@ -183,7 +183,7 @@ func (fact *DefPropStmt) String() string {
 	return DefConPropStmtString(fmt.Sprintf("%s ", glob.KeywordProp), fact)
 }
 
-func (f *DefConFnStmt) String() string {
+func (f *DefFnStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
@@ -261,7 +261,7 @@ func (f *ClaimStmt) String() string {
 	}
 }
 
-func (s *DefConExistPropStmt) String() string {
+func (s *DefExistPropStmt) String() string {
 	var builder strings.Builder
 
 	builder.WriteString(glob.KeywordExistProp)
@@ -285,14 +285,14 @@ func (s *DefConExistPropStmt) String() string {
 	return builder.String()
 }
 
-func (s *AxiomStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordAxiom)
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.Fact.String(), 1))
-	return builder.String()
-}
+// func (s *AxiomStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordAxiom)
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	builder.WriteByte('\n')
+// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(s.Fact.String(), 1))
+// 	return builder.String()
+// }
 
 func conUniFactString(prefix string, l *UniFactStmt) string {
 	var builder strings.Builder
@@ -530,4 +530,12 @@ func (stmt *ProveInEachCaseStmt) String() string {
 		}
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
+}
+
+func (stmt *KnowPropStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordKnow)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Prop.String())
+	return builder.String()
 }
