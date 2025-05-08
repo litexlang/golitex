@@ -145,7 +145,7 @@ func (fcAtom *FcAtom) NameIsUniParam_PkgNameEmpty() (string, bool) {
 
 func (fcAtom *FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
 	if fcAtom.PkgName == glob.BuiltinEmptyPkgName {
-		_, ok := glob.BuiltinKwFcNames[fcAtom.Name]
+		_, ok := glob.BuiltinKeywordsSet[fcAtom.Name]
 		return ok
 	}
 	return false

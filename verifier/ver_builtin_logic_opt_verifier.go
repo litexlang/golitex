@@ -31,15 +31,6 @@ func (ver *Verifier) useBtRulesAndMemSpecifically(stmt *ast.SpecFactStmt, state 
 		return true, nil
 	}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordAssociative) {
-		// 如果用内置的验证方法不成立，还是能用后面的方法验证的。
-		if ok, err := ver.btAssociativeRule(stmt, state); err != nil {
-			return false, err
-		} else if ok {
-			return true, nil
-		}
-	}
-
 	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&stmt.PropName, glob.KeywordPropCommutative) {
 		if ok, err := ver.btCommutativeRule(stmt, state); err != nil {
 			return false, err
@@ -180,12 +171,6 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 		return true, nil
 	}
 
-	return false, nil
-}
-
-func (ver *Verifier) btAssociativeRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	// TODO: 处理associative rule
-	_, _ = stmt, state
 	return false, nil
 }
 

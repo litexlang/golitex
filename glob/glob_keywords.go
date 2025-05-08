@@ -48,7 +48,8 @@ const (
 
 	// Syntax and Semantics Sugar
 	KeywordPropCommutative = "commutative_prop"
-	KeywordAssociative     = "associative"
+	KeywordFnCommutative   = "commutative_fn"
+	KeywordFnAssociative   = "associative_fn"
 
 	// Builtin Types
 	KeywordNatural  = "nat"  // e.g. 0
@@ -64,7 +65,7 @@ const (
 	KeywordExtend = "extend"
 )
 
-var keywordsSet map[string]struct{} = map[string]struct{}{
+var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	// 常规关键字
 	KeywordSet:    {},
 	KeywordForall: {},
@@ -96,7 +97,8 @@ var keywordsSet map[string]struct{} = map[string]struct{}{
 
 	// 语法糖
 	KeywordPropCommutative: {},
-	KeywordAssociative:     {},
+	KeywordFnCommutative:   {},
+	KeywordFnAssociative:   {},
 
 	KeywordAnd: {},
 	KeywordOr:  {},
@@ -207,16 +209,4 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolAnd:          {}, // "&"
 	KeySymbolLargerEqual:  {}, // ">="
 	KeySymbolLessEqual:    {}, // "<="
-}
-
-var BuiltinKwFcNames = map[string]struct{}{
-	KeywordNatural:   {},
-	KeywordSet:       {},
-	KeywordObj:       {},
-	KeywordReal:      {},
-	KeywordFn:        {},
-	KeywordProp:      {},
-	KeywordExistProp: {},
-	KeywordInt:       {},
-	KeywordRational:  {},
 }

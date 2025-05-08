@@ -18,7 +18,7 @@ func IsKeySymbol(name string) bool {
 }
 
 func IsBuiltinInfixRelaProp(op string) bool {
-	return op == "=" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=" || op == "in" || op == KeywordPropCommutative || op == KeywordAssociative
+	return op == "=" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=" || op == "in" || op == KeywordPropCommutative
 }
 
 func IsBuiltinNumberInfixRelaProp(op string) bool {
@@ -65,7 +65,7 @@ var UnaryPrecedence = map[string]BuiltinOptPrecedence{
 }
 
 func IsKeyword(s string) bool {
-	_, ok := keywordsSet[s]
+	_, ok := BuiltinKeywordsSet[s]
 	return ok
 }
 

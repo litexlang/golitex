@@ -14,11 +14,11 @@ package main
 
 import (
 	"fmt"
-	litex_sys "golitex/sys"
+	sys "golitex/sys"
 )
 
 func main() {
-	msg, signal, err := litex_sys.RunFile("./litex_code_examples/use_storedUniFact_with_uniFact_as_dom.lix")
+	msg, signal, err := sys.RunFile("./litex_code_examples/use_storedUniFact_with_uniFact_as_dom.lix")
 	if err != nil {
 		fmt.Println(err.Error())
 	}
