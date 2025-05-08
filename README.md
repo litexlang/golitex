@@ -386,7 +386,7 @@ Furthermore, Tex's clear distinction between "math expressions" and "plain words
 
 The best to test Litex is by translating "real-world" into Litex. I use Professor Terrence Tao's Analysis I and II to test Litex. The set theory chapter of Analysis I helps a lot to remind me what functionalities are missing at each stage of implementing Litex.
 
-There are many "design balences" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent users including elementary school students or any non-math people, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
+There are many "design balences" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent users including elementary school students or any non-math people, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language and I wish it could have as many users as possible, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
 
 ## Join the Litex Project: Words from the Inventor
 

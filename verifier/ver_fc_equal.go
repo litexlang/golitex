@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) btEqualRule(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) btEqualRule_useSpecMem(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	ok, err := ver.fcEqualSpec(stmt, state)
 	if err != nil {
 		return false, err
