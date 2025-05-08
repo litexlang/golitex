@@ -115,7 +115,7 @@ func (ver *Verifier) proveEachFactInOrExpr(stmt *ast.LogicExprStmt, index int, s
 		if i == index {
 			continue
 		}
-		err := ver.env.NewFactWithOutEmit(stmt.Facts[i].ReverseIsTrue())
+		err := ver.env.NewFact(stmt.Facts[i].ReverseIsTrue())
 		if err != nil {
 			return false, err
 		}
