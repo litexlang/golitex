@@ -3,3 +3,24 @@ prove:
         x = 1
         $p(x)
     $p(1)
+
+prove:
+    know:
+        or:
+            $p(1)
+            $p(2)
+
+        1 = x
+        not $p(x)
+        2 = y
+
+    $p(y)
+
+prove:
+    know:
+        forall x X:
+            $p(x, 1)
+
+        1 = y
+
+    $p(2,y)
