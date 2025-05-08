@@ -1,13 +1,12 @@
 prove:
-    axiom:
-        prop p(x nat):
-            x > 0
-            iff:
-                x > 1
-        prop q(x nat):
-            x > 1
-            iff:
-                x > 2
+    axiom p:
+        forall x X:
+            dom:
+                $t(x)
+            then:
+                $q(x)
 
+    know:
+        $t(1)
     $p(1)
-    $q(1) # unknown
+    $q(1)
