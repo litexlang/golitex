@@ -1129,7 +1129,7 @@ func (tb *tokenBlock) matcherEnvStmt() (*ast.MatcherEnvStmt, error) {
 }
 
 func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
-	err := tb.header.skipKwAndColon_ExceedEnd(glob.KeywordKnow)
+	err := tb.header.skip(glob.KeywordKnow)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}

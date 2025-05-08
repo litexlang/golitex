@@ -55,5 +55,5 @@ func (tb *tokenBlock) TokenAtIndexIs(index int, kw string) bool {
 	if len(tb.body) <= index {
 		return false
 	}
-	return tb.body[index].CurrentTokenIs(kw)
+	return tb.header.IsTokenAtIndexGivenWord(index, kw)
 }
