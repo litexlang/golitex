@@ -1,2 +1,13 @@
 prove:
-        a+b = b+a
+    know a = b
+    b = a
+
+
+
+prove:
+    prop q(x nat, y nat)
+
+    know $commutative_prop(q)
+    know:
+        $q(1, 2)
+    $q(2,1)
