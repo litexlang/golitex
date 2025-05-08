@@ -388,13 +388,35 @@ The best to test Litex is by translating "real-world" into Litex. I use Professo
 
 There are many "design balences" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent users including elementary school students or any non-math people, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language and I wish it could have as many users as possible, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
 
+### Operator Overloading
+
 C does not allow operator overloading. The only instances of operator overloading occur with built-in integer and floating-point arithmetic operations (addition, subtraction, multiplication, and division). Since these cases are limited, the compiler handles them by context. C++ and Python are often criticized because, although they allow operator overloading—which appears to increase functionality—it leads to a "readability disaster": readers cannot easily determine which specific operation a symbol like `+` refers to. This becomes particularly problematic in large-scale projects.  
 
     1. In C++, even the `=` operator can be overloaded.  
     2. Following the principle of simplicity, Litex aligns with C's design: operator overloading is prohibited. The only exceptions are for basic numeric types (integers, decimals, real numbers, and natural numbers). In all other cases, overloading is forbidden. Additionally, overloading `=` is also disallowed.  
         1. Without operator overloading, the concept of `extend` or `impl` or `inherit` may also become unnecessary, as its primary purpose is to enable operator overloading.  
 
-(Translation adheres to concise phrasing while preserving technical accuracy.)
+Since C has builtin int, float, complex, Litex has nat, rat, real, complex as builtin sets and no others.
+
+### Work in Progresss
+
+Since Litex is (at least for the first 2500 git commits) is a single-man project, I have to do a lot of things by myself. I choose to make it work in a specific domain as top priority instead of making it "has much syntax sugar and features as possible". So in the first 0.01 version, I ignore the following features (these features will be implemented in the future):
+
+1. builtin complex number: syntax, operator overloading
+2. syntax sugar: set S = {a, b, c, ...}, which means
+forall x S:
+    or:
+        x = a
+        x = b
+        x = c
+        ...
+
+know:
+    a in S
+    b in S
+    c in S
+    ...
+
 
 ## Join the Litex Project: Words from the Inventor
 
