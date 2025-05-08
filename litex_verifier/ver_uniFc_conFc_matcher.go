@@ -85,7 +85,7 @@ func (ver *Verifier) match_FcAtomInFactUnderUniFact_ConFc(fcAtomInFactUnderUniFa
 		return retMap, true, nil
 	}
 
-	ok, err := ver.iterateOverEqualFactsAndFindEqual(fcAtomInFactUnderUniFact, conFc)
+	ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(fcAtomInFactUnderUniFact, conFc)
 	// ok, err := ver.makeFcEqualFactAndVerify(fcAtomInFactUnderUniFact, conFc, SpecNoMsg)
 	if err != nil {
 		return nil, false, err

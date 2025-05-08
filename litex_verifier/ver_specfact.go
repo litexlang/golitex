@@ -155,7 +155,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 						return false, err
 					}
 					if !ok {
-						ok, err := ver.iterateOverEqualFactsAndFindEqual(knownParam, stmt.Params[i])
+						ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(knownParam, stmt.Params[i])
 						if err != nil {
 							return false, err
 						}
@@ -355,7 +355,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 
 		for i := 1; i < len(value); i++ {
 			// ok, err := ver.makeFcEqualFactAndVerify(value[0], value[i], state.addRound())
-			ok, err := ver.iterateOverEqualFactsAndFindEqual(value[0], value[i])
+			ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(value[0], value[i])
 			if err != nil {
 				return nil, false, err
 			}
@@ -383,7 +383,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 			return false, err
 		}
 		if !ok {
-			ok, err := ver.iterateOverEqualFactsAndFindEqual(knownParam, stmt.Params[i])
+			ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(knownParam, stmt.Params[i])
 			if err != nil {
 				return false, err
 			}
@@ -512,7 +512,7 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 }
 
 // THIS IS A VERY BAD WAY TO PROVE EQUALITY. I NEED TO STORE FC INTO A RB TREE FOR BETTER PERFORMANCE AND TAKE FULL ADVANTAGE OF Unique Properties of =
-func (ver *Verifier) iterateOverEqualFactsAndFindEqual(left ast.Fc, right ast.Fc) (bool, error) {
+func (ver *Verifier) iterateOverKnownSpecEqualFactsAndCheck(left ast.Fc, right ast.Fc) (bool, error) {
 	equalSpecFact := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {

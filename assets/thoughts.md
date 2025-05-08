@@ -1628,3 +1628,7 @@ out its instructions. The original proposal [1] for the Advice Taker was made
 in November 1958. The main requirement was a programming system for
 manipulating expressions representing formalized declarative and imperative
 sentences so that the Advice Taker system could make deductions.
+
+5.8
+重要：equal => specFact => logic (or,and) => universal
+equal 是特殊的spec，但它层级还要更低，因为我在match的时候，我看到了 $p(x,y)，我就会找 所有形如 $p(x1,x2) 的specFact，然后验证x ?= x1, y ?= x2，即每次验证（match）spec fact 的时候，我都会调用 equal fact，这说明equal是更底层的。

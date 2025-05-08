@@ -115,6 +115,7 @@ type MatcherEnvStmt struct {
 	Body        []Stmt
 }
 
+// 之后可以考虑引入 不是 orfact 来证明，而是如果一个集合元素是有限的，那我也可以prove by case
 type ProveInEachCaseStmt struct {
 	OrFact    LogicExprStmt
 	ThenFacts []FactStmt
