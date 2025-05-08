@@ -1,0 +1,11 @@
+prove:
+    know prop p(x X):
+        dom:
+            $t(x)
+        iff:
+            $q(x)
+
+    know:
+        $t(1)
+    $p(1)
+    $q(1)

@@ -652,5 +652,13 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 		return err
 	}
 
+	thenFacts := []ast.FactStmt{stmt.Prop.ToSpecFact()}
+	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts)
+
+	err = exec.env.NewFactWithOutEmit(knownUniFact)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

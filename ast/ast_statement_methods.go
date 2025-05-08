@@ -52,7 +52,7 @@ func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNa
 	return newParams, newUniParams
 }
 
-func (defStmt *DefPropStmt) PropDefToUniFacts() (*UniFactStmt, *UniFactStmt, error) {
+func (defStmt *DefPropStmt) MakeUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))

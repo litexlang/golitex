@@ -42,6 +42,10 @@ func (cursor *strSliceCursor) strAtCurIndexPlus(plusIndex int) string {
 	}
 }
 
+func (cursor *strSliceCursor) IsTokenAtIndexGivenWord(index int, s string) bool {
+	return index < len(cursor.slice) && cursor.slice[index] == s
+}
+
 func (cursor *strSliceCursor) getIndex() int {
 	return cursor.index
 }
