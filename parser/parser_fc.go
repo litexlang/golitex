@@ -63,7 +63,7 @@ func (cursor *strSliceCursor) rawFcFn(optName ast.Fc) (*ast.FcFn, error) {
 		return nil, err
 	}
 
-	return ast.NewFcFnPipe(optName, typeParamsObjParamsPairs), nil
+	return ast.NewFcFn(optName, typeParamsObjParamsPairs), nil
 }
 
 func (cursor *strSliceCursor) fcFnSegs() ([][]ast.Fc, error) {
@@ -132,7 +132,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 				return nil, err
 			}
 
-			left = ast.NewFcFnPipe(fn, [][]ast.Fc{{left, right}})
+			left = ast.NewFcFn(fn, [][]ast.Fc{{left, right}})
 			break
 		}
 
@@ -154,7 +154,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 		}
 
 		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, curToken)
-		left = ast.NewFcFnPipe(
+		left = ast.NewFcFn(
 			leftHead,
 			[][]ast.Fc{{left, right}},
 		)
@@ -188,7 +188,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 
 		// leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
 		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, unaryOp)
-		return ast.NewFcFnPipe(
+		return ast.NewFcFn(
 			leftHead,
 			[][]ast.Fc{{right}},
 		), nil
@@ -346,7 +346,7 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 		segs = append(segs, seg)
 	}
 
-	return ast.NewFcFnPipe(head, segs), nil
+	return ast.NewFcFn(head, segs), nil
 }
 
 // func (cursor *strSliceCursor) parseFnSet() (ast.Fc, error) {

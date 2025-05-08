@@ -150,7 +150,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 
 				for i, knownParam := range knownFact.Fact.Params {
 					// TODO 这里有个严重的问题：如果等量替换了，那这里因为不字面上一致，就match不上了，应该有个什么地方能既能规避等号陷入无限循环，又能让Spec Equal 能验证
-					ok, err := cmp.CmpFcRule(knownParam, stmt.Params[i])
+					ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i])
 					if err != nil {
 						return false, err
 					}
@@ -378,7 +378,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	for i, knownParam := range knownFact.SpecFact.Params {
-		ok, err := cmp.CmpFcRule(knownParam, stmt.Params[i])
+		ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i])
 		if err != nil {
 			return false, err
 		}
