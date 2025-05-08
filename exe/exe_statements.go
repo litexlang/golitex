@@ -536,21 +536,6 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 	return false, nil
 }
 
-// func (exec *Executor) axiomStmt(stmt *ast.AxiomStmt) error {
-// 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
-
-// 	err := exec.execNamedForall(stmt.Name, &stmt.Fact, exec.env)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = exec.env.NewFactWithOutEmit(&stmt.Fact)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
 func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
 
@@ -582,8 +567,8 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 		return glob.ExecState_Error, fmt.Errorf("prove in each case: or fact is not true")
 	}
 
-	for i, caseStmt := range stmt.OrFact.Facts {
-		execState, err := exec.execProofBlockForEachCase(caseStmt, stmt.ThenFacts, stmt.Proofs[i])
+	for i := range stmt.OrFact.Facts {
+		execState, err := exec.execProofBlockForEachCase(i, stmt)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -596,16 +581,18 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.E
 	return glob.ExecState_True, nil
 }
 
-func (exec *Executor) execProofBlockForEachCase(caseStmt ast.FactStmt, thenFacts []ast.FactStmt, proof []ast.Stmt) (glob.ExecState, error) {
+func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
 	exec.newEnv()
-	exec.deleteEnvAndRetainMsg()
+	defer exec.deleteEnvAndRetainMsg()
+
+	caseStmt := stmt.OrFact.Facts[index]
 
 	err := exec.env.NewFact(caseStmt)
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
 
-	for _, proofStmt := range proof {
+	for _, proofStmt := range stmt.Proofs[index] {
 		execState, err := exec.stmt(proofStmt)
 		if err != nil {
 			return glob.ExecState_Error, err
@@ -616,7 +603,7 @@ func (exec *Executor) execProofBlockForEachCase(caseStmt ast.FactStmt, thenFacts
 	}
 
 	// verify thenFacts are true
-	for _, thenFact := range thenFacts {
+	for _, thenFact := range stmt.ThenFacts {
 		execState, err := exec.factStmt(thenFact)
 		if err != nil {
 			return glob.ExecState_Error, err
