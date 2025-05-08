@@ -223,14 +223,7 @@ func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerSta
 }
 
 func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	// // 处理可交换的prop
-	// isCom := ver.env.IsSpecFactPropCommutative(stmt)
-	// var reverseStmt *ast.SpecFactStmt = nil
-	// if isCom {
-	// 	reverseStmt = &ast.SpecFactStmt{TypeEnum: stmt.TypeEnum, PropName: stmt.PropName, Params: []ast.Fc{stmt.Params[1], stmt.Params[0]}}
-	// }
-
-	nextState := state
+	nextState := state.addRound()
 
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
@@ -242,17 +235,6 @@ func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, 
 		if ok {
 			return true, nil
 		}
-
-		// // 处理可交换的prop
-		// if isCom {
-		// 	ok, err := ver.SpecFactUniAtEnv(curEnv, reverseStmt, nextState)
-		// 	if err != nil {
-		// 		return false, err
-		// 	}
-		// 	if ok {
-		// 		return true, nil
-		// 	}
-		// }
 	}
 
 	return false, nil
@@ -419,7 +401,13 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), knownFact.String())
+		var verifiedBy strings.Builder
+		verifiedBy.WriteString(knownFact.String())
+		verifiedBy.WriteString("\n")
+		for i, knownParam := range knownFact.SpecFact.Params {
+			verifiedBy.WriteString(fmt.Sprintf("%s = %s\n", knownParam, stmt.Params[i]))
+		}
+		ver.successWithMsg(stmt.String(), verifiedBy.String())
 	} else {
 		ver.successNoMsg()
 	}

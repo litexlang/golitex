@@ -17,7 +17,7 @@ import (
 	ast "golitex/litex_ast"
 )
 
-func (ver *Verifier) ConUniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) uniFact(stmt *ast.UniFactStmt, state VerState) (bool, error) {
 	if state.isSpec() {
 		return false, nil
 	}
