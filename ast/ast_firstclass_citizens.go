@@ -67,7 +67,7 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 		return false, ""
 	}
 
-	if ptr.PkgName == glob.BuiltinEmptyPkgName && ptr.Name == glob.KeySymbolMinus {
+	if ptr.PkgName == glob.BtEmptyPkgName && ptr.Name == glob.KeySymbolMinus {
 		if len(f.ParamSegs[0]) == 1 {
 			return true, fmt.Sprintf("(%s %s)", ptr.Name, f.ParamSegs[0][0])
 		}
@@ -75,7 +75,7 @@ func hasBuiltinOptAndToString(f *FcFn) (bool, string) {
 		return true, fmt.Sprintf("(%s %s %s)", f.ParamSegs[0][0], ptr.Name, f.ParamSegs[0][1])
 	}
 
-	if ptr.PkgName != glob.BuiltinEmptyPkgName {
+	if ptr.PkgName != glob.BtEmptyPkgName {
 		return false, ""
 	}
 
@@ -120,11 +120,11 @@ func IsFcBuiltinUnaryFn(fc FcFn) bool {
 }
 
 func (f *FcAtom) IsBuiltinUnaryOpt() bool {
-	return f.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolUnaryFn(f.Name)
+	return f.PkgName == glob.BtEmptyPkgName && glob.IsKeySymbolUnaryFn(f.Name)
 }
 
 func (f *FcAtom) IsBuiltinRelaFn() bool {
-	return f.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbolRelaFn(f.Name)
+	return f.PkgName == glob.BtEmptyPkgName && glob.IsKeySymbolRelaFn(f.Name)
 }
 
 // func (f *FcFn) IsBuiltinFcSet() bool {
@@ -137,14 +137,14 @@ func (f *FcAtom) IsBuiltinRelaFn() bool {
 // }
 
 func (fcAtom *FcAtom) NameIsUniParam_PkgNameEmpty() (string, bool) {
-	if strings.HasPrefix(fcAtom.Name, glob.UniParamPrefix) && fcAtom.PkgName == glob.BuiltinEmptyPkgName {
+	if strings.HasPrefix(fcAtom.Name, glob.UniParamPrefix) && fcAtom.PkgName == glob.BtEmptyPkgName {
 		return fcAtom.Name, true
 	}
 	return "", false
 }
 
 func (fcAtom *FcAtom) NameIsBuiltinKw_PkgNameEmpty() bool {
-	if fcAtom.PkgName == glob.BuiltinEmptyPkgName {
+	if fcAtom.PkgName == glob.BtEmptyPkgName {
 		_, ok := glob.BuiltinKeywordsSet[fcAtom.Name]
 		return ok
 	}
@@ -157,7 +157,7 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 		return false
 	}
 
-	if fcAtom.PkgName != glob.BuiltinEmptyPkgName {
+	if fcAtom.PkgName != glob.BtEmptyPkgName {
 		return false
 	}
 
@@ -165,7 +165,7 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 }
 
 func (fc *FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {
-	return fc.PkgName == glob.BuiltinEmptyPkgName && fc.Name == kw
+	return fc.PkgName == glob.BtEmptyPkgName && fc.Name == kw
 }
 
 func IsFcAtom_HasGivenName_EmptyPkgName(fc Fc, kw string) bool {

@@ -62,7 +62,7 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 }
 
 func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {
-	if atom.PkgName == glob.BuiltinEmptyPkgName {
+	if atom.PkgName == glob.BtEmptyPkgName {
 		if prefixNum, ok := uniParams[atom.Name]; ok {
 			return prefixNum, true
 		}
@@ -70,37 +70,37 @@ func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {
 	return 0, false
 }
 
-func AddUniPrefixToUniFact(asConUniFact *UniFactStmt) (*UniFactStmt, error) {
-	uniConMap := map[string]Fc{}
-	newParams := make([]string, len(asConUniFact.Params))
+func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
+	uniMap := map[string]Fc{}
+	newParams := make([]string, len(asUniFact.Params))
 
-	for i, param := range asConUniFact.Params {
+	for i, param := range asUniFact.Params {
 		newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-		uniConMap[param] = NewFcAtom(glob.BuiltinEmptyPkgName, newParams[i])
+		uniMap[param] = NewFcAtom(glob.BtEmptyPkgName, newParams[i])
 	}
 
-	newParamsSets := asConUniFact.ParamSets
+	newParamsSets := asUniFact.ParamSets
 	newDomFacts := []FactStmt{}
 	newThenFacts := []FactStmt{}
 	newIffFacts := EmptyIffFacts
 
-	for _, fact := range asConUniFact.DomFacts {
-		newFact, err := fact.Instantiate(uniConMap)
+	for _, fact := range asUniFact.DomFacts {
+		newFact, err := fact.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
 		newDomFacts = append(newDomFacts, newFact)
 	}
 
-	for _, fact := range asConUniFact.ThenFacts {
-		newFact, err := fact.Instantiate(uniConMap)
+	for _, fact := range asUniFact.ThenFacts {
+		newFact, err := fact.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
 		}
 		newThenFacts = append(newThenFacts, newFact)
 	}
 
-	newUniFact := newConUniFactStmt(newParams, newParamsSets, newDomFacts, newThenFacts, newIffFacts)
+	newUniFact := newUniFactStmt(newParams, newParamsSets, newDomFacts, newThenFacts, newIffFacts)
 
 	return newUniFact, nil
 }

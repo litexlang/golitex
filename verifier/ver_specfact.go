@@ -513,7 +513,7 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 
 // THIS IS A VERY BAD WAY TO PROVE EQUALITY. I NEED TO STORE FC INTO A RB TREE FOR BETTER PERFORMANCE AND TAKE FULL ADVANTAGE OF Unique Properties of =
 func (ver *Verifier) iterateOverKnownSpecEqualFactsAndCheck(left ast.Fc, right ast.Fc) (bool, error) {
-	equalSpecFact := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
+	equalSpecFact := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		equalFacts, got := curEnv.SpecFactMem.GetSameEnumPkgPropFacts(equalSpecFact)

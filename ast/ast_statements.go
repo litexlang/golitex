@@ -39,7 +39,7 @@ type DefPropStmt struct {
 type ExistPropDef struct {
 	DefHeader DefHeader
 	DomFacts  []FactStmt
-	// 必须是 iff，因为 not exist XXX <=> forall not XXX，而 not XXX 要求 XXX 是 spec
+	// 必须是 iff，因为 not exist XXX <=> forall not XXX，而 not XXX 要求 XXX 是 reversable_logic_or_spec_stmt
 	IffFacts []Reversable_LogicOrSpec_Stmt
 }
 
@@ -74,18 +74,11 @@ type ClaimStmt struct {
 	IsProve     bool
 	ToCheckFact FactStmt
 	Proofs      []Stmt
-	ClaimName   string // 有时候有，有时候没有
 }
 
 type KnowStmt struct {
 	Facts []FactStmt
 }
-
-// syntax sugar for defining spec prop + claim forall true
-// type AxiomStmt struct {
-// 	Name string
-// 	Fact UniFactStmt
-// }
 
 type KnowPropStmt struct {
 	Prop DefPropStmt

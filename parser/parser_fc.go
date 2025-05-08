@@ -153,7 +153,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			return nil, err
 		}
 
-		leftHead := ast.NewFcAtom(glob.BuiltinEmptyPkgName, curToken)
+		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, curToken)
 		left = ast.NewFcFnPipe(
 			leftHead,
 			[][]ast.Fc{{left, right}},
@@ -187,7 +187,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 		}
 
 		// leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
-		leftHead := ast.NewFcAtom(glob.BuiltinEmptyPkgName, unaryOp)
+		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, unaryOp)
 		return ast.NewFcFnPipe(
 			leftHead,
 			[][]ast.Fc{{right}},
