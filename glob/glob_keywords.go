@@ -54,6 +54,9 @@ const (
 	KeywordIs = "is"
 	KeywordIn = "in"
 
+	// Builtin Induction
+	KeywordMathematicalInduction = "mathematical_induction"
+
 	KeywordFrac   = "frac"
 	KeywordExtend = "extend"
 
@@ -111,10 +114,11 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIn: {},
 
 	KeywordExtend: {},
-	KeywordFnSet:  {},
 
-	KeywordPropSet: {},
-	KeywordSetSet:  {},
+	KeywordFnSet:  {},
+	KeywordSetSet: {},
+
+	KeywordMathematicalInduction: {},
 }
 
 const (
