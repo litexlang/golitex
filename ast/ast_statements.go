@@ -94,7 +94,8 @@ type LogicExprStmt struct {
 	Facts []Reversable_LogicOrSpec_Stmt
 }
 
-type ExistObjDefStmt struct {
+// have 是可能引入 fn 和 prop 的
+type HaveStmt struct {
 	ObjNames []string
 	Fact     SpecFactStmt
 }

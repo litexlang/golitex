@@ -64,8 +64,8 @@ func NewOrAndFact(isOr bool, facts []Reversable_LogicOrSpec_Stmt) *LogicExprStmt
 	return &LogicExprStmt{IsOr: isOr, Facts: facts}
 }
 
-func NewExistObjDefStmt(objNames []string, fact SpecFactStmt) *ExistObjDefStmt {
-	return &ExistObjDefStmt{objNames, fact}
+func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveStmt {
+	return &HaveStmt{objNames, fact}
 }
 
 func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *ExistPropDef {

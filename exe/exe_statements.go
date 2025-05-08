@@ -36,8 +36,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defPropStmt(stmt)
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt)
-	case *ast.ExistObjDefStmt:
-		err = exec.existObjDefStmt(stmt)
+	case *ast.HaveStmt:
+		err = exec.haveStmt(stmt)
 	case *ast.DefExistPropStmt:
 		err = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
@@ -285,7 +285,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	return nil
 }
 
-func (exec *Executor) existObjDefStmt(stmt *ast.ExistObjDefStmt) error {
+func (exec *Executor) haveStmt(stmt *ast.HaveStmt) error {
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 
@@ -333,12 +333,15 @@ func (exec *Executor) existObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 		facts = append(facts, fixed)
 	}
 
-	newDefObjStmt := ast.DefObjStmt{Objs: stmt.ObjNames, ObjSets: stmt.Fact.Params, Facts: facts}
+	// newDefObjStmt := ast.DefObjStmt{Objs: stmt.ObjNames, ObjSets: stmt.Fact.Params, Facts: facts}
 
-	err = exec.defObjStmt(&newDefObjStmt)
-	if err != nil {
-		return err
-	}
+	// err = exec.defObjStmt(&newDefObjStmt)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// TODO 注意到最后输出的，可能是 obj, fn, prop, existProp, set. 需要不同考虑
+	_ = facts
 
 	return nil
 }

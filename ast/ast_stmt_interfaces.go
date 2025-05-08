@@ -33,7 +33,7 @@ func (s *DefExistPropStmt) stmt() {}
 
 // func (s *CondFactStmt) stmt()         {}
 func (p *LogicExprStmt) stmt()        {}
-func (s *ExistObjDefStmt) stmt()      {}
+func (s *HaveStmt) stmt()             {}
 func (s *SetDefSetBuilderStmt) stmt() {}
 
 // func (s *SetDefEnumtmt) stmt()        {}
