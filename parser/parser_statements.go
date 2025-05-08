@@ -877,51 +877,29 @@ func (tb *tokenBlock) setDefStmt() (*ast.SetDefSetBuilderStmt, error) {
 	}
 
 	if tb.header.ExceedEnd() {
-		return ast.NewSetDefSetBuilderStmt(setName, ast.EmptyParentSet, []ast.FactStmt{}, ast.EmptyElemsInSetDef), nil
+		return ast.NewSetDefSetBuilderStmt(setName, ast.EmptyParentSet, []ast.FactStmt{}), nil
 	}
 
-	if tb.header.is(glob.KeySymbolLeftCurly) {
-		err = tb.header.skip(glob.KeySymbolLeftCurly)
+	var parentSet ast.Fc = nil
+	if !tb.header.is(glob.KeySymbolColon) {
+		parentSet, err = tb.header.rawFc()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-
-		elems := []ast.Fc{}
-		for !tb.header.is(glob.KeySymbolRightCurly) {
-			elem, err := tb.header.rawFc()
-			if err != nil {
-				return nil, &tokenBlockErr{err, *tb}
-			}
-			elems = append(elems, elem)
-		}
-
-		err = tb.header.skip(glob.KeySymbolRightCurly)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-
-		return ast.NewSetDefSetBuilderStmt(setName, ast.EmptyParentSet, []ast.FactStmt{}, elems), nil
-	} else {
-		var parentSet ast.Fc = nil
-		if !tb.header.is(glob.KeySymbolColon) {
-			parentSet, err = tb.header.rawFc()
-			if err != nil {
-				return nil, &tokenBlockErr{err, *tb}
-			}
-		}
-
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-
-		facts, err := tb.bodyBlockFacts(ast.NameDepthMap{}, UniFactDepth0, len(tb.body))
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-
-		return ast.NewSetDefSetBuilderStmt(setName, parentSet, facts, ast.EmptyElemsInSetDef), nil
 	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	facts, err := tb.bodyBlockFacts(ast.NameDepthMap{}, UniFactDepth0, len(tb.body))
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewSetDefSetBuilderStmt(setName, parentSet, facts), nil
+
 }
 
 func (tb *tokenBlock) claimToCheckFact() (ast.FactStmt, error) {
