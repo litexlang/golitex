@@ -1634,3 +1634,7 @@ sentences so that the Advice Taker system could make deductions.
 equal 是特殊的spec，但它层级还要更低，因为我在match的时候，我看到了 $p(x,y)，我就会找 所有形如 $p(x1,x2) 的specFact，然后验证x ?= x1, y ?= x2，即每次验证（match）spec fact 的时候，我都会调用 equal fact，这说明equal是更底层的。
 
 如果一个logical operator 既有transitivity，又有commutativity，那就可以存成 rb tree，因为可以优化验证速度。最典型的是 = 。而且 = 因为它甚至比 spec Fact 还要底层，所以非常适合 拿出来，放在 特殊的数据结构里
+
+暂时不清楚如何定义 set of fn with given requirements like {f fn(X)=>Y| f 的 要求}. 等我真的遇到要定义set of fn的时候，再考虑。
+另外证明两个 set 一样，是个问题
+如果我不允许用户在 {x | y}的y里面有forall型事实，而是只能放 spec fact 那就可以直接写了.
