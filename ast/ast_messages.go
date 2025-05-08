@@ -63,7 +63,7 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteByte(' ')
 	}
 
-	if stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.IsKeySymbol(stmt.PropName.Name) {
+	if stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsKeySymbol(stmt.PropName.Name) {
 		return relaFactString(stmt)
 	}
 
@@ -138,7 +138,7 @@ func (stmt *DefObjStmt) String() string {
 	return builder.String()
 }
 
-func DefConPropStmtString(prefix string, fact *DefPropStmt) string {
+func DefPropStmtString(prefix string, fact *DefPropStmt) string {
 	var builder strings.Builder
 
 	builder.WriteString(prefix)
@@ -180,7 +180,7 @@ func DefConPropStmtString(prefix string, fact *DefPropStmt) string {
 }
 
 func (fact *DefPropStmt) String() string {
-	return DefConPropStmtString(fmt.Sprintf("%s ", glob.KeywordProp), fact)
+	return DefPropStmtString(fmt.Sprintf("%s ", glob.KeywordProp), fact)
 }
 
 func (f *DefFnStmt) String() string {
@@ -280,7 +280,6 @@ func (s *DefExistPropStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	// builder.WriteString(DefConPropStmtString("", &s.Def))
-	builder.WriteString("TODO: DefConPropStmtString")
 
 	return builder.String()
 }
@@ -294,7 +293,7 @@ func (s *DefExistPropStmt) String() string {
 // 	return builder.String()
 // }
 
-func conUniFactString(prefix string, l *UniFactStmt) string {
+func uniFactString(prefix string, l *UniFactStmt) string {
 	var builder strings.Builder
 
 	builder.WriteString(prefix)
@@ -338,7 +337,7 @@ func conUniFactString(prefix string, l *UniFactStmt) string {
 }
 
 func (l *UniFactStmt) String() string {
-	return conUniFactString(fmt.Sprintf("%s ", glob.KeywordForall), l)
+	return uniFactString(fmt.Sprintf("%s ", glob.KeywordForall), l)
 }
 
 func (head DefHeader) String() string {
@@ -429,7 +428,7 @@ func (stmt *ExistObjDefStmt) String() string {
 }
 
 func (f *FcAtom) String() string {
-	if f.PkgName == glob.BuiltinEmptyPkgName {
+	if f.PkgName == glob.BtEmptyPkgName {
 		return string(f.Name)
 	} else {
 		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Name))

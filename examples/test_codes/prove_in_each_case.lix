@@ -50,7 +50,7 @@ prove:
             x = 2
             x = 3
         then:
-            1 = 1
+            $p(x)
         prove:
         prove:
         prove:

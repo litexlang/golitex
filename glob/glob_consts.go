@@ -15,7 +15,7 @@ package litex_global
 const Scope4Indents string = "    "
 
 // const EmptyPkgName = ""
-const BuiltinEmptyPkgName string = ""
+const BtEmptyPkgName string = ""
 
 // const BuiltinUnaryPkgName = "#"
 const MultiLinesCommentSig string = "\"\"\""

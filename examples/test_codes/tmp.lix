@@ -94,3 +94,6 @@ prove:
         当然我不能让你 forall 套超过2层，因为我搜索的时候是 n^2 量级，3层就是 n^3 了
 
         golang 的 内部的 interface 从来没超过一层，我的语言也是
+
+prove:
+    1 = 1

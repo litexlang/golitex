@@ -148,23 +148,6 @@ func randObjParams() []ast.Fc {
 	return objParams
 }
 
-// func randCondStmt() *ast.CondFactStmt {
-// 	randomNumberOfCondFacts := rand.Intn(3) + 1
-// 	randomNumberOfThenFacts := rand.Intn(3) + 1
-// 	condFacts := []ast.FactStmt{}
-// 	thenFacts := []ast.FactStmt{}
-
-// 	for i := 0; i < randomNumberOfCondFacts; i++ {
-// 		condFacts = append(condFacts, randSpecFact())
-// 	}
-
-// 	for i := 0; i < randomNumberOfThenFacts; i++ {
-// 		thenFacts = append(thenFacts, randSpecFact())
-// 	}
-
-// 	return &ast.CondFactStmt{CondFacts: condFacts, ThenFacts: thenFacts}
-// }
-
 func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	env := env.NewEnv(nil)
 	executor := *NewExecutor(env)
@@ -623,7 +606,7 @@ func TestAllFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../examples/test_codes/know_prop.lix")
+var code = readFile("../examples/test_codes/prove_in_each_case.lix")
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()

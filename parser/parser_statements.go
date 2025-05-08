@@ -42,11 +42,11 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 	var ret ast.Stmt
 	switch cur {
 	case glob.KeywordProp:
-		ret, err = tb.defConPropStmt()
+		ret, err = tb.defPropStmt()
 	case glob.KeywordExistProp:
-		ret, err = tb.defConExistPropStmt()
+		ret, err = tb.defExistPropStmt()
 	case glob.KeywordFn:
-		ret, err = tb.defConFnStmt()
+		ret, err = tb.defFnStmt()
 	case glob.KeywordObj:
 		ret, err = tb.defObjStmt()
 	case glob.KeywordExistObj:
@@ -237,7 +237,7 @@ func (tb *tokenBlock) bodyFacts(nameDepthMap ast.NameDepthMap, curAllowUniFactEn
 	return facts, nil
 }
 
-func (tb *tokenBlock) defConPropStmt() (*ast.DefPropStmt, error) {
+func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	err := tb.header.skip(glob.KeywordProp)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -249,14 +249,14 @@ func (tb *tokenBlock) defConPropStmt() (*ast.DefPropStmt, error) {
 		isCommutative = true
 	}
 
-	declHeader, nameDepthMap, err := tb.conDefHeader()
+	declHeader, nameDepthMap, err := tb.defHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	if !tb.header.is(glob.KeySymbolColon) {
 		// REMARK: When IFFFacts is empty, we think that there is no iff to verify prop (i.e. you can not use prop def to prove prop), not that prop is true by default
-		return ast.NewDefConPropStmt(*declHeader, nil, nil, isCommutative), nil
+		return ast.NewDefPropStmt(*declHeader, nil, nil, isCommutative), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -281,16 +281,16 @@ func (tb *tokenBlock) defConPropStmt() (*ast.DefPropStmt, error) {
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	return ast.NewDefConPropStmt(*declHeader, domFacts, iffFacts, isCommutative), nil
+	return ast.NewDefPropStmt(*declHeader, domFacts, iffFacts, isCommutative), nil
 }
 
-func (tb *tokenBlock) defConFnStmt() (*ast.DefFnStmt, error) {
+func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 	err := tb.header.skip(glob.KeywordFn)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	decl, nameDepthMap, err := tb.conDefHeader()
+	decl, nameDepthMap, err := tb.defHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -316,7 +316,7 @@ func (tb *tokenBlock) defConFnStmt() (*ast.DefFnStmt, error) {
 		}
 	}
 
-	return ast.NewDefConFnStmt(*decl, retType, domFacts, thenFacts), nil
+	return ast.NewDefFnStmt(*decl, retType, domFacts, thenFacts), nil
 }
 
 func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
@@ -363,20 +363,9 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 	tb.header.skip(glob.KeywordClaim)
 	err := error(nil)
 
-	claimName := ast.EmptyClaimName
-
-	if tb.header.is(glob.KeySymbolColon) {
-		tb.header.skip(glob.KeySymbolColon)
-	} else {
-		claimName, err = tb.header.currentToken()
-		if err != nil {
-			return nil, err
-		}
-		tb.header.skip()
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, err
-		}
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	toCheck, err := tb.body[0].claimToCheckFact()
@@ -406,7 +395,7 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 		*proof = append(*proof, curStmt)
 	}
 
-	return ast.NewClaimProveStmt(isProve, toCheck, *proof, claimName), nil
+	return ast.NewClaimProveStmt(isProve, toCheck, *proof), nil
 }
 
 func (tb *tokenBlock) proveClaimStmt() (*ast.ClaimStmt, error) {
@@ -423,7 +412,7 @@ func (tb *tokenBlock) proveClaimStmt() (*ast.ClaimStmt, error) {
 		}
 		innerStmtArr = append(innerStmtArr, curStmt)
 	}
-	return ast.NewClaimProveStmt(true, ast.ClaimStmtEmptyToCheck, innerStmtArr, ast.EmptyClaimName), nil
+	return ast.NewClaimProveStmt(true, ast.ClaimStmtEmptyToCheck, innerStmtArr), nil
 }
 
 func (tb *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
@@ -530,7 +519,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 }
 
-func (tb *tokenBlock) conDefHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
+func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 	name, err := tb.header.next()
 	if err != nil {
 		return nil, nil, err
@@ -591,10 +580,10 @@ func (tb *tokenBlock) conDefHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 		return nil, nil, err
 	}
 
-	return ast.NewConDefHeader(name, params, setParams), nameDepthMap, nil
+	return ast.NewDefHeader(name, params, setParams), nameDepthMap, nil
 }
 
-func (tb *tokenBlock) defConExistPropStmt() (*ast.DefExistPropStmt, error) {
+func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 	err := tb.header.skip(glob.KeywordExistProp)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -644,7 +633,7 @@ func (tb *tokenBlock) defConExistPropStmt() (*ast.DefExistPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	return ast.NewDefConExistPropStmt(def, existParams, existParamSets), nil
+	return ast.NewDefExistPropStmt(def, existParams, existParamSets), nil
 }
 
 // 本质上这个设计是有问题的。exist把 sep 这个奇怪的东西混进param 来了
@@ -827,7 +816,7 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 }
 
 func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.ExistPropDef, error) {
-	declHeader, nameDepthMap, err := tb.conDefHeader()
+	declHeader, nameDepthMap, err := tb.defHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
@@ -1134,7 +1123,7 @@ func (tb *tokenBlock) knowPropStmt() (*ast.KnowPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	prop, err := tb.defConPropStmt()
+	prop, err := tb.defPropStmt()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}

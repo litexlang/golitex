@@ -24,19 +24,19 @@ func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
 	return &DefObjStmt{objs, objSets, facts}
 }
 
-func NewDefConPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt, isCommutative bool) *DefPropStmt {
+func NewDefPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt, isCommutative bool) *DefPropStmt {
 	return &DefPropStmt{defHeader, domFacts, iffFacts, isCommutative}
 }
 
-func NewDefConExistPropStmt(def *ExistPropDef, existParams []string, existParamSets []Fc) *DefExistPropStmt {
+func NewDefExistPropStmt(def *ExistPropDef, existParams []string, existParamSets []Fc) *DefExistPropStmt {
 	return &DefExistPropStmt{*def, existParams, existParamSets}
 }
 
-func NewDefConFnStmt(defHeader DefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt) *DefFnStmt {
+func NewDefFnStmt(defHeader DefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt) *DefFnStmt {
 	return &DefFnStmt{defHeader, retType, domFacts, thenFacts}
 }
 
-func newConUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
+func newUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
 	return &UniFactStmt{params, paramTypes, domFacts, thenFacts, iffFacts}
 }
 
@@ -44,31 +44,19 @@ func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecF
 	return &SpecFactStmt{typeEnum, propName, params}
 }
 
-func NewClaimProveStmt(proveTrue bool, toCheckFact FactStmt, proofs []Stmt, claimName string) *ClaimStmt {
-	return &ClaimStmt{proveTrue, toCheckFact, proofs, claimName}
+func NewClaimProveStmt(proveTrue bool, toCheckFact FactStmt, proofs []Stmt) *ClaimStmt {
+	return &ClaimStmt{proveTrue, toCheckFact, proofs}
 }
 
 func NewKnowStmt(facts []FactStmt) *KnowStmt {
 	return &KnowStmt{facts}
 }
 
-// func NewAxiomStmt(name string, fact UniFactStmt) *AxiomStmt {
-// 	return &AxiomStmt{name, fact}
-// }
-
-// func NewThmStmt(decl DefPropOrExistPropStmt, proof []Stmt) *ThmStmt {
-// 	return &ThmStmt{decl, proof}
-// }
-
-// func NewCondFactStmt(condFacts []FactStmt, thenFacts []FactStmt) *CondFactStmt {
-// 	return &CondFactStmt{condFacts, thenFacts}
-// }
-
 func NewFcFnDecl(name string, params []string) *FcFnDecl {
 	return &FcFnDecl{name, params}
 }
 
-func NewConDefHeader(name string, params []string, typeParams []Fc) *DefHeader {
+func NewDefHeader(name string, params []string, typeParams []Fc) *DefHeader {
 	return &DefHeader{name, params, typeParams}
 }
 
@@ -100,16 +88,16 @@ func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []
 	if glob.VerifyFcSatisfySpecFactParaReq {
 		newDomFacts := []FactStmt{}
 		for i, param := range params {
-			atom := NewFcAtom(glob.BuiltinEmptyPkgName, param)
-			var inFc = NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeywordIn)
+			atom := NewFcAtom(glob.BtEmptyPkgName, param)
+			var inFc = NewFcAtom(glob.BtEmptyPkgName, glob.KeywordIn)
 			specFact := NewSpecFactStmt(TrueAtom, *inFc, []Fc{atom, paramTypes[i]})
 			newDomFacts = append(newDomFacts, specFact)
 		}
 		newDomFacts = append(newDomFacts, domFacts...)
-		newConUniFact := newConUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts)
-		return newConUniFact
+		newUniFact := newUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts)
+		return newUniFact
 	}
-	return newConUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
+	return newUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
 }
 
 func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt, elems []Fc) *SetDefSetBuilderStmt {

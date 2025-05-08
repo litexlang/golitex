@@ -15,7 +15,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/env"
 	glob "golitex/glob"
 	verifier "golitex/verifier"
 	"strings"
@@ -45,8 +44,6 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.defFnStmt(stmt)
 	case *ast.MatcherEnvStmt:
 		err = exec.matcherEnvStmt(stmt)
-	// case *ast.AxiomStmt:
-	// 	err = exec.axiomStmt(stmt)
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
 	case *ast.SetDefSetBuilderStmt:
@@ -146,16 +143,12 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 	}
 
 	if asSpecFact, ok := stmt.ToCheckFact.(*ast.SpecFactStmt); ok {
-		if stmt.ClaimName != ast.EmptyClaimName {
-			return glob.ExecState_Error, fmt.Errorf("specific fact in claim should not have claim name, get %s", stmt.ClaimName)
-		}
-
 		err = exec.env.Parent.NewFact(asSpecFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-	} else if asConUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
-		newUniFact, err := ast.AddUniPrefixToUniFact(asConUniFact)
+	} else if asUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
+		newUniFact, err := ast.AddUniPrefixToUniFact(asUniFact)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -165,50 +158,8 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 			return glob.ExecState_Error, err
 		}
 
-		if stmt.ClaimName != ast.EmptyClaimName {
-			err = exec.execNamedForall(stmt.ClaimName, asConUniFact, exec.env.Parent)
-			if err != nil {
-				return glob.ExecState_Error, err
-			}
-		}
 	}
 	return glob.ExecState_True, nil
-}
-
-func (exec *Executor) execNamedForall(propName string, asConUniFact *ast.UniFactStmt, storeToEnv *env.Env) error {
-	// make a uniFact to a propDef. with empty dom, and uniFactThen as iff
-	defHeader := ast.DefHeader{
-		Name:      propName,
-		Params:    asConUniFact.Params,
-		SetParams: asConUniFact.ParamSets,
-	}
-	domFacts := []ast.FactStmt{}
-	iffFacts := asConUniFact.DomFacts // Notice here is thenFacts, not iffFacts
-
-	propDef := ast.NewDefConPropStmt(defHeader, domFacts, iffFacts, false)
-
-	err := storeToEnv.NewDefConProp(propDef)
-	if err != nil {
-		return err
-	}
-
-	// make a emitWhenSpecFactIsTrue
-	propSpecFact := propDef.ToSpecFact()
-
-	// 本质上只有 thenFact 是被后面用到的
-	uniPropImplyClaimThen := ast.NewUniFactStmtWithSetReqInDom(asConUniFact.Params, asConUniFact.ParamSets, []ast.FactStmt{propSpecFact}, asConUniFact.ThenFacts, ast.EmptyIffFacts)
-
-	err = storeToEnv.NewFact(uniPropImplyClaimThen)
-	if err != nil {
-		return err
-	}
-
-	err = storeToEnv.EmitWhenSpecFactIsTrueMem.Insert(exec.curPkg, propSpecFact.PropName.Name, uniPropImplyClaimThen)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (exec *Executor) GetMsgAsStr0ToEnd() string {
@@ -222,7 +173,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	defer exec.appendNewMsg(stmt.String())
 
 	// iff leads to prop
-	err := exec.env.NewDefConProp(stmt)
+	err := exec.env.NewDefProp(stmt)
 	if err != nil {
 		return err
 	}
@@ -271,7 +222,7 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 				PkgName: "",
 				Name:    glob.KeywordIn,
 			},
-			Params: []ast.Fc{&ast.FcAtom{PkgName: glob.BuiltinEmptyPkgName, Name: objName}, stmt.ObjSets[i]},
+			Params: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: objName}, stmt.ObjSets[i]},
 		}
 		err := exec.env.NewFact(&objInSetFact)
 		if err != nil {
@@ -303,7 +254,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		fcFnParams = append(fcFnParams, &ast.FcAtom{PkgName: "", Name: fc})
 	}
 
-	fcFn := ast.FcFn{FnHead: &ast.FcAtom{PkgName: glob.BuiltinEmptyPkgName, Name: stmt.DefHeader.Name}, ParamSegs: [][]ast.Fc{fcFnParams}}
+	fcFn := ast.FcFn{FnHead: &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: stmt.DefHeader.Name}, ParamSegs: [][]ast.Fc{fcFnParams}}
 
 	retFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
 
@@ -327,7 +278,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
-	err := exec.env.NewDefConExistProp(stmt)
+	err := exec.env.NewDefExistProp(stmt)
 	if err != nil {
 		return err
 	}
@@ -356,18 +307,18 @@ func (exec *Executor) existObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 		return fmt.Errorf("%s has no definition", stmt.String())
 	}
 
-	uniConMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Fc{}
 	for i := 0; i < len(stmt.ObjNames); i++ {
-		uniConMap[propDef.ExistParams[i]] = &ast.FcAtom{PkgName: exec.curPkg, Name: stmt.ObjNames[i]}
+		uniMap[propDef.ExistParams[i]] = &ast.FcAtom{PkgName: exec.curPkg, Name: stmt.ObjNames[i]}
 	}
 
 	for i := 0; i < len(stmt.Fact.Params); i++ {
-		uniConMap[propDef.Def.DefHeader.Params[i]] = stmt.Fact.Params[i]
+		uniMap[propDef.Def.DefHeader.Params[i]] = stmt.Fact.Params[i]
 	}
 
 	facts := []ast.FactStmt{}
 	for _, fact := range propDef.Def.DomFacts {
-		fixed, err := fact.Instantiate(uniConMap)
+		fixed, err := fact.Instantiate(uniMap)
 		if err != nil {
 			return err
 		}
@@ -375,7 +326,7 @@ func (exec *Executor) existObjDefStmt(stmt *ast.ExistObjDefStmt) error {
 	}
 
 	for _, fact := range propDef.Def.IffFacts {
-		fixed, err := fact.Instantiate(uniConMap)
+		fixed, err := fact.Instantiate(uniMap)
 		if err != nil {
 			return err
 		}
@@ -508,8 +459,8 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 	}
 
 	// TODO: 需要处理forall的情况
-	if asConUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
-		for _, fact := range asConUniFact.ThenFacts {
+	if asUniFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt); ok {
+		for _, fact := range asUniFact.ThenFacts {
 			execState, err := exec.factStmt(fact)
 			if err != nil {
 				return false, err

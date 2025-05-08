@@ -7,23 +7,23 @@ import (
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
-	return stmt.PropName.PkgName == glob.BuiltinEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name)
+	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name)
 }
 
 func (stmt *UniFactStmt) NewUniFactWithThenToIff() *UniFactStmt {
-	newConUniFact := newConUniFactStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.IffFacts, EmptyIffFacts)
-	newConUniFact.DomFacts = append(newConUniFact.DomFacts, stmt.ThenFacts...)
-	return newConUniFact
+	newUniFact := newUniFactStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.IffFacts, EmptyIffFacts)
+	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.ThenFacts...)
+	return newUniFact
 }
 
 func (stmt *UniFactStmt) NewUniFactWithIffToThen() *UniFactStmt {
-	newConUniFact := newConUniFactStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, EmptyIffFacts)
-	newConUniFact.DomFacts = append(newConUniFact.DomFacts, stmt.IffFacts...)
-	return newConUniFact
+	newUniFact := newUniFactStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, EmptyIffFacts)
+	newUniFact.DomFacts = append(newUniFact.DomFacts, stmt.IffFacts...)
+	return newUniFact
 }
 
 func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStmt {
-	newOuter := newConUniFactStmt(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, EmptyIffFacts)
+	newOuter := newUniFactStmt(outer.Params, outer.ParamSets, outer.DomFacts, inner.ThenFacts, EmptyIffFacts)
 	newOuter.Params = append(newOuter.Params, inner.Params...)
 	newOuter.ParamSets = append(newOuter.ParamSets, inner.ParamSets...)
 	newOuter.DomFacts = append(newOuter.DomFacts, inner.DomFacts...)
@@ -55,10 +55,10 @@ func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNa
 func (defStmt *DefPropStmt) MakeUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -79,10 +79,10 @@ func (defStmt *DefPropStmt) MakeUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
@@ -100,10 +100,10 @@ func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BuiltinEmptyPkgName, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BuiltinEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
 
 	return propSpecFact
 }
