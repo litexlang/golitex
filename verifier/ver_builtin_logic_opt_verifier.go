@@ -138,7 +138,7 @@ func (ver *Verifier) btCommutativeRule(stmt *ast.SpecFactStmt, state VerState) (
 		return false, nil
 	}
 
-	if _, ok := ver.env.CommutativeProp[propNameAsAtom.PkgName][propNameAsAtom.Name]; ok {
+	if ver.env.IsCommutativeProp(stmt.PropName) {
 		if state.requireMsg() {
 			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative", stmt.PropName.String()))
 		} else {
