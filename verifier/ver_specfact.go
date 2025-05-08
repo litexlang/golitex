@@ -552,6 +552,7 @@ func (ver *Verifier) iterateOverKnownSpecEqualFactsAndCheck(left ast.Fc, right a
 	return false, nil
 }
 
+// 这里需要 recursive 地调用 这个，而不是只是 cmpFcRule
 func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right ast.Fc) (bool, error) {
 	ok, err := cmp.CmpFcRule(left, right)
 	if err != nil {
@@ -559,6 +560,51 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 	}
 	if ok {
 		return true, nil
+	}
+
+	// if left = opt(x,y) and opt is commutative, then left = opt(y,x)
+	ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left, right)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(right, left)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left ast.Fc, right ast.Fc) (bool, error) {
+	if leftAsFn, ok := left.(*ast.FcFn); ok {
+		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
+			if ver.env.IsCommutativeFn(*leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
+				// 判断 ParamSegs 确实长成下面这个样子
+				if len(leftAsFn.ParamSegs) != 1 {
+					return false, nil
+				}
+
+				if len(leftAsFn.ParamSegs[0]) != 2 {
+					return false, nil
+				}
+
+				commutativeLeft := &ast.FcFn{FnHead: leftHeadAsAtom, ParamSegs: [][]ast.Fc{{leftAsFn.ParamSegs[0][1], leftAsFn.ParamSegs[0][0]}}}
+				ok, err := cmp.CmpFcRule(commutativeLeft, right)
+				if err != nil {
+					return false, err
+				}
+				if ok {
+					return true, nil
+				}
+			}
+		}
 	}
 
 	return false, nil
