@@ -241,11 +241,11 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	isCommutative := false
-	if tb.header.is(glob.KeywordCommutativeProp) {
-		tb.header.skip()
-		isCommutative = true
-	}
+	// isCommutative := false
+	// if tb.header.is(glob.KeywordCommutativeProp) {
+	// 	tb.header.skip()
+	// 	isCommutative = true
+	// }
 
 	declHeader, nameDepthMap, err := tb.defHeader()
 	if err != nil {
@@ -254,7 +254,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 
 	if !tb.header.is(glob.KeySymbolColon) {
 		// REMARK: When IFFFacts is empty, we think that there is no iff to verify prop (i.e. you can not use prop def to prove prop), not that prop is true by default
-		return ast.NewDefPropStmt(*declHeader, nil, nil, isCommutative), nil
+		return ast.NewDefPropStmt(*declHeader, nil, nil), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -279,7 +279,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
 	}
 
-	return ast.NewDefPropStmt(*declHeader, domFacts, iffFacts, isCommutative), nil
+	return ast.NewDefPropStmt(*declHeader, domFacts, iffFacts), nil
 }
 
 func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
