@@ -101,9 +101,10 @@ type HaveStmt struct {
 }
 
 type SetDefSetBuilderStmt struct {
-	SetName     string
-	ParentSet   Fc
-	Facts       []FactStmt
+	SetName   string
+	ParentSet Fc
+	Facts     []FactStmt
+	// finiteItems 是语法糖，可以暂时用 know forall x X: or: x = a1 or x = a2 or ... 来表示
 	FiniteItems []Fc // 在 prove forall, prove not exist 的时候用到。这有 setDefEnum型集合，可能正面证明not exist和forall，其他方式不能证明. 为nil时说明它暂时没有具体的有限表示。可能之后要配合其他的语义来赋予这个field值。本质上这个field的操作和我其他的 forall=>specific 的逻辑是不一样的。某种程度上，prove in each case 的语义和这里的”特殊性“是一样的.
 }
 

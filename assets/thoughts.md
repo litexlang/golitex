@@ -1653,3 +1653,39 @@ set A:
 obj x A  # 立刻获得 A 的 cond 的所有性质. TODO: 不确定是否要用户一旦声明了之后，A下面的事实直接 以 specfact的格式 emit 出来
 
 
+在实现 fn_set 前，要让 fn(x)y 能作为 fc 出现在集合的位置上; 然后要能自动验证两个 set 是相等的，相当于 两个集合互为母集
+
+考虑 fn 的 type 怎么来写，即如何约定 fn 的 定义域，值域,估计是要放在 dom: 下面的，取 fn_dom(f), fn_image(f); 这里也能看出来临时的 dom 是很烦人的；如果不考虑临时的dom，只考虑 paramSets ，那就能 按符号来比较 fn 出现的 paramSet 的形状，而不是开个小环境来比较 
+
+
+关于释放：
+forall prop 也能 match: 需要有个新的 memory 能存 这种free prop fact       prove:     know forall p prop, x nat:         $p(x)      $q(1): free prop 是严重违背 litex是正则表达式匹配器这个特点的，不允许这种东西；你真的想释放可，定义的时候可以释放，不要想着用 forall p prop 这种奇怪方法
+
+prop_set 是不必要的
+我引入 prop prop 来和 普通的 prop 不一样。 prop prop 的定义域里可以出现下面这种形状
+prop prop p(q prop(X)) 即里面能有 prop
+prop_set 相当于 {q prop(X)| condition_on_q} 但这是有问题的： condition_on_q 会引入 “对于任意prop” 这样的语义。这是不被允许的： 1. 一阶逻辑不允许这么干 2. 我的匹配器不允许"forall prop" 这种东西。
+prop prop 下面你也不能对q有任何要求，只能q作为 “作用在其他东西上的要求”
+即：
+prop prop p(q prop(nat)):
+    dom:
+        forall x nat:
+            $q(x) # 这可以，因为q作用到其他东西上面
+
+??
+prop prop prop p(q prop prop(nat): dom...) 貌似也行。把 prop prop(nat): dom... 做成一个 prop_prop_set 也行。不过以后再说
+
+下面这个貌似也能做成 prop_set
+prop p(q prop(nat)):
+    dom:
+        forall x nat:
+            $q(x) 
+
+prop_set S prop(nat):
+    forall q S:
+        forall x nat:
+            $q(x)
+
+prop prop p(p S)
+
+这么干貌似也行，不过这里不应该是 forall q S (forall 里不应有prop作为参数)，而是另外找一个keyword来表达同样的意思

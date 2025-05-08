@@ -40,10 +40,9 @@ const (
 	KeywordAnd = "and"
 	KeywordOr  = "or"
 
-	// Syntax and Semantics Sugar
 	KeywordCommutativeProp = "commutative_prop"
 	KeywordCommutativeFn   = "commutative_fn"
-	KeywordAssociativeFn   = "associative_fn"
+	KeywordAssociativeFn   = "associative_fn" // must-have: 否则 1+1+a = 2+a不能验证
 
 	// Builtin Types
 	KeywordNatural  = "nat"  // e.g. 0
@@ -61,9 +60,8 @@ const (
 	// litex version 0.2 的时候可以考虑实现。这样的话fn所在的集合也能像obj一样简单了
 	KeywordFnSet = "fn_set"
 
-	// litex version 0.3 的时候可以考虑实现。这样的话prop, set所在的集合也能像obj一样简单了
-	KeywordPropSet = "prop_set"
-	KeywordSetSet  = "set_set"
+	// litex version 0.3 的时候可以考虑实现。这样的话set所在的集合也能像obj一样简单了
+	KeywordSetSet = "set_set"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
