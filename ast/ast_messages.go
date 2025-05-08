@@ -411,9 +411,9 @@ func (stmt *LogicExprStmt) String() string {
 	return ret
 }
 
-func (stmt *ExistObjDefStmt) String() string {
+func (stmt *HaveStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordExistObj)
+	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
 	if len(stmt.ObjNames) > 0 {
 		for i := range len(stmt.ObjNames) - 1 {

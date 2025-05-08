@@ -1632,3 +1632,5 @@ sentences so that the Advice Taker system could make deductions.
 5.8
 重要：equal => specFact => logic (or,and) => universal
 equal 是特殊的spec，但它层级还要更低，因为我在match的时候，我看到了 $p(x,y)，我就会找 所有形如 $p(x1,x2) 的specFact，然后验证x ?= x1, y ?= x2，即每次验证（match）spec fact 的时候，我都会调用 equal fact，这说明equal是更底层的。
+
+如果一个logical operator 既有transitivity，又有commutativity，那就可以存成 rb tree，因为可以优化验证速度。最典型的是 = 。而且 = 因为它甚至比 spec Fact 还要底层，所以非常适合 拿出来，放在 特殊的数据结构里
