@@ -10,18 +10,16 @@
 // Contact the development team: <litexlang@outlook.com>
 // Visit litexlang.org and https://github.com/litexlang/golitex for more info.
 
-package main
+package litex_verifier
 
 import (
-	"fmt"
-	litex_sys "golitex/sys"
+	ast "golitex/ast"
+	env "golitex/env"
 )
 
-func main() {
-	msg, signal, err := litex_sys.RunFile("./litex_code_examples/use_storedUniFact_with_uniFact_as_dom.lix")
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println(msg)
-	fmt.Println(signal)
+func theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
+	// TODO: 避免找一定不相关的环境：如果所有涉及到的东西是在 底层环境里声明的 那就 没必要往上找了, 最顶层是 nil
+	var ret *env.Env = nil
+	_ = stmt
+	return ret
 }
