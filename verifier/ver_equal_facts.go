@@ -36,7 +36,7 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 	}()
 
 	// Case1: 用内置方法直接比较，比如计算字面量都是整数，那可以通过运算来比较
-	ok, err := ver.fcEqual_Commutative_Associative_CmpRule(left, right)
+	ok, err := ver.fcEqual_Commutative_Associative_CmpRule(left, right, state)
 	if err != nil {
 		return false, err
 	}

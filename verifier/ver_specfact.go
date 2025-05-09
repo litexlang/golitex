@@ -158,7 +158,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 
 				for i, knownParam := range knownFact.Fact.Params {
 					// TODO 这里有个严重的问题：如果等量替换了，那这里因为不字面上一致，就match不上了，应该有个什么地方能既能规避等号陷入无限循环，又能让Spec Equal 能验证
-					ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i])
+					ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i], state)
 					if err != nil {
 						return false, err
 					}
@@ -363,7 +363,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	for i, knownParam := range knownFact.SpecFact.Params {
-		ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i])
+		ok, err := ver.fcEqual_Commutative_Associative_CmpRule(knownParam, stmt.Params[i], state)
 		if err != nil {
 			return false, err
 		}
@@ -498,7 +498,7 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 }
 
 // 这里需要 recursive 地调用 这个，而不是只是 cmpFcRule. 之后再考虑recursive的情况
-func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right ast.Fc) (bool, error) {
+func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
 	ok, err := cmp.CmpFcRule(left, right)
 	if err != nil {
 		return false, err
@@ -508,7 +508,7 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 	}
 
 	// if left = opt(x,y) and opt is commutative, then left = opt(y,x)
-	ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left, right)
+	ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left, right, verState)
 	if err != nil {
 		return false, err
 	}
@@ -516,7 +516,7 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 		return true, nil
 	}
 
-	ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(right, left)
+	ok, err = ver.leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(right, left, verState)
 	if err != nil {
 		return false, err
 	}
@@ -524,7 +524,7 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 		return true, nil
 	}
 
-	ok, err = ver.leftIsAssociativeAndUseAssociationToCheckEqualRight(left, right)
+	ok, err = ver.leftIsAssociative_UseAssociationToCheckEqual(left, right, verState)
 	if err != nil {
 		return false, err
 	}
@@ -532,7 +532,7 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 		return true, nil
 	}
 
-	ok, err = ver.leftIsAssociativeAndUseAssociationToCheckEqualRight(right, left)
+	ok, err = ver.leftIsAssociative_UseAssociationToCheckEqual(right, left, verState)
 	if err != nil {
 		return false, err
 	}
@@ -543,7 +543,7 @@ func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right 
 	return false, nil
 }
 
-func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left ast.Fc, right ast.Fc) (bool, error) {
+func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
 			if ver.env.IsCommutativeFn(*leftHeadAsAtom) { // 暂时认为只能是 atom 形式的opt name 才能判断
@@ -565,6 +565,11 @@ func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left a
 					return false, err
 				}
 				if ok {
+					if verState.requireMsg() {
+						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is commutative", leftHeadAsAtom.String()))
+					} else {
+						ver.successNoMsg()
+					}
 					return true, nil
 				}
 			}
@@ -574,7 +579,7 @@ func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left a
 	return false, nil
 }
 
-func (ver *Verifier) leftIsAssociativeAndUseAssociationToCheckEqualRight(left ast.Fc, right ast.Fc) (bool, error) {
+func (ver *Verifier) leftIsAssociative_UseAssociationToCheckEqual(left ast.Fc, right ast.Fc, verState VerState) (bool, error) {
 	if leftAsFn, ok := left.(*ast.FcFn); ok {
 		if leftHeadAsAtom, ok := leftAsFn.FnHead.(*ast.FcAtom); ok {
 			if ver.env.IsAssociativeFn(*leftHeadAsAtom) {
@@ -588,6 +593,11 @@ func (ver *Verifier) leftIsAssociativeAndUseAssociationToCheckEqualRight(left as
 					return false, err
 				}
 				if ok {
+					if verState.requireMsg() {
+						ver.successWithMsg(fmt.Sprintf("%s = %s", left.String(), right.String()), fmt.Sprintf("%s is associative", leftHeadAsAtom.String()))
+					} else {
+						ver.successNoMsg()
+					}
 					return true, nil
 				}
 			}
