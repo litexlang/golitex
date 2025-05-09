@@ -25,16 +25,21 @@ func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, err
 	if ver.env.IsSpecFactPropCommutative(stmt) {
 		return ver.checkCommutativeSpecFact(stmt, state)
 	} else {
-		return ver.specFactWithOutCommutative(stmt, state)
+		return ver.specFactWithoutUsingPropCommutative(stmt, state)
 	}
 }
 
 func (ver *Verifier) checkCommutativeSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.specFactWithOutCommutative(stmt, state)
+	ok, err := ver.specFactWithoutUsingPropCommutative(stmt, state)
 	if err != nil {
 		return false, err
 	}
 	if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), "")
+		} else {
+			ver.successNoMsg()
+		}
 		return true, nil
 	}
 
@@ -43,7 +48,7 @@ func (ver *Verifier) checkCommutativeSpecFact(stmt *ast.SpecFactStmt, state VerS
 		return false, err
 	}
 
-	ok, err = ver.specFactWithOutCommutative(reverseFact, state)
+	ok, err = ver.specFactWithoutUsingPropCommutative(reverseFact, state)
 	if err != nil {
 		return false, err
 	}
@@ -58,7 +63,7 @@ func (ver *Verifier) checkCommutativeSpecFact(stmt *ast.SpecFactStmt, state VerS
 	return false, nil
 }
 
-func (ver *Verifier) specFactWithOutCommutative(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) specFactWithoutUsingPropCommutative(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	// if not satisfy para req(dom), return false
 	ok, err := ver.FcSatisfySpecFactParaReq(stmt)
 	if err != nil {
