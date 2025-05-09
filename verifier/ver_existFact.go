@@ -47,7 +47,7 @@ func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state Ver
 	var err error = nil
 
 	uniConMap := map[string]ast.Fc{}
-	for i, param := range propDef.Def.DefHeader.Params {
+	for i, param := range propDef.DefBody.DefHeader.Params {
 		uniConMap[param] = stmt.Params[i]
 	}
 
@@ -58,7 +58,7 @@ func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state Ver
 	setParams = append(setParams, propDef.ExistParamSets...)
 
 	domFacts := []ast.FactStmt{}
-	for _, fact := range propDef.Def.DomFacts {
+	for _, fact := range propDef.DefBody.DomFacts {
 		fixed, err := fact.Instantiate(uniConMap)
 		if err != nil {
 			return false, err
@@ -67,7 +67,7 @@ func (ver *Verifier) useExistPropDefProveExist(stmt *ast.SpecFactStmt, state Ver
 	}
 
 	specThenFacts := []*ast.SpecFactStmt{}
-	for _, thenFact := range propDef.Def.IffFacts {
+	for _, thenFact := range propDef.DefBody.IffFacts {
 		fixed, err := thenFact.Instantiate(uniConMap)
 		if err != nil {
 			return false, err

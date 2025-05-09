@@ -95,11 +95,11 @@ func (memory *ExistPropMem) Insert(stmt *ast.DefExistPropStmt, pkgName string) e
 		pkgMap = memory.Dict[pkgName]
 	}
 
-	node, nodeExists := pkgMap[stmt.Def.DefHeader.Name]
+	node, nodeExists := pkgMap[stmt.DefBody.DefHeader.Name]
 	if !nodeExists {
 		node = ExistPropMemItem{stmt}
 	}
-	pkgMap[stmt.Def.DefHeader.Name] = node
+	pkgMap[stmt.DefBody.DefHeader.Name] = node
 
 	return nil
 }

@@ -36,7 +36,7 @@ type DefPropStmt struct {
 	// IsCommutative bool
 }
 
-type ExistPropDef struct {
+type DefExistPropStmtBody struct {
 	DefHeader DefHeader
 	DomFacts  []FactStmt
 	// 必须是 iff，因为 not exist XXX <=> forall not XXX，而 not XXX 要求 XXX 是 reversable_logic_or_spec_stmt
@@ -44,7 +44,7 @@ type ExistPropDef struct {
 }
 
 type DefExistPropStmt struct {
-	Def            ExistPropDef
+	DefBody        DefExistPropStmtBody
 	ExistParams    []string
 	ExistParamSets []Fc
 }

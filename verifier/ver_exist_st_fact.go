@@ -51,11 +51,11 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 	}
 
 	for i := sepIndex + 1; i < len(stmt.Params); i++ {
-		uniConMap[propDef.Def.DefHeader.Params[i-sepIndex-1]] = stmt.Params[i]
+		uniConMap[propDef.DefBody.DefHeader.Params[i-sepIndex-1]] = stmt.Params[i]
 	}
 
 	domFacts := []ast.FactStmt{}
-	for _, fact := range propDef.Def.DomFacts {
+	for _, fact := range propDef.DefBody.DomFacts {
 		fixed, err := fact.Instantiate(uniConMap)
 		if err != nil {
 			return false, err
@@ -64,7 +64,7 @@ func (ver *Verifier) useExistPropDefProveExist_St(stmt *ast.SpecFactStmt, state 
 	}
 
 	thenFacts := []*ast.SpecFactStmt{}
-	for _, thenFact := range propDef.Def.IffFacts {
+	for _, thenFact := range propDef.DefBody.IffFacts {
 		fixed, err := thenFact.Instantiate(uniConMap)
 		if err != nil {
 			return false, err
