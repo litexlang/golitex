@@ -116,13 +116,16 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual) {
-		_ = 1
+	if ok, err := ver.equalFact(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
 	}
 
-	if stmt.IsBuiltinInfixRelaProp() {
-		// 这里包含了using mem specifically
-		return ver.useBtRulesAndMemSpecifically(stmt, state)
+	if ok, err := ver.btPropExceptEqual_Rule_MemSpec(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
 	}
 
 	ok, err := ver.specFactUsingMemSpecifically(stmt, state)
