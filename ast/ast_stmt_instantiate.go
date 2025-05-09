@@ -12,7 +12,9 @@
 
 package litex_ast
 
-import "errors"
+import (
+	"errors"
+)
 
 func InstantiateFcAtom(fc *FcAtom, uniMap map[string]Fc) (Fc, error) {
 	if fc.PkgName == "" {
