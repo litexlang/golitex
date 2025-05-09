@@ -14,7 +14,7 @@ package litex_pipeline
 
 import (
 	"fmt"
-	env "golitex/env"
+	env "golitex/environment"
 	exe "golitex/exe"
 	glob "golitex/glob"
 	parser "golitex/parser"

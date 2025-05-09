@@ -16,7 +16,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/env"
+	env "golitex/environment"
 )
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState

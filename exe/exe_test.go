@@ -15,7 +15,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/env"
+	env "golitex/environment"
 	glob "golitex/glob"
 	parser "golitex/parser"
 	"math/rand"

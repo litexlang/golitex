@@ -16,7 +16,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
-	env "golitex/env"
+	env "golitex/environment"
 	glob "golitex/glob"
 	"strings"
 )
