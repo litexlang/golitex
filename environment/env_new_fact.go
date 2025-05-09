@@ -66,7 +66,8 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 		if err != nil {
 			return err
 		}
-		return nil
+		// TODO 之后不要存到普通的事实所处的地方
+		// return nil
 	}
 
 	err := env.SpecFactMem.NewFact(fact)
@@ -87,7 +88,7 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
-	if fact.TypeEnum == ast.TrueAtom {
+	if fact.TypeEnum == ast.TruePure {
 		if glob.KnowSpecFactByDef {
 			return env.emit_specFact_DefFacts(fact)
 		} else {

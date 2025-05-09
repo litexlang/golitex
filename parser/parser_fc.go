@@ -310,7 +310,7 @@ func (cursor *strSliceCursor) isExpr(left ast.Fc) (*ast.SpecFactStmt, error) {
 		return nil, &strSliceErr{err, cursor}
 	}
 
-	return ast.NewSpecFactStmt(ast.TrueAtom, opt, []ast.Fc{left}), nil
+	return ast.NewSpecFactStmt(ast.TruePure, opt, []ast.Fc{left}), nil
 	// return &ast.SpecFactStmt{true, opt, []ast.Fc{left}}, nil
 }
 

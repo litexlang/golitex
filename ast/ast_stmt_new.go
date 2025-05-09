@@ -90,7 +90,7 @@ func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []
 		for i, param := range params {
 			atom := NewFcAtom(glob.BtEmptyPkgName, param)
 			var inFc = NewFcAtom(glob.BtEmptyPkgName, glob.KeywordIn)
-			specFact := NewSpecFactStmt(TrueAtom, *inFc, []Fc{atom, paramTypes[i]})
+			specFact := NewSpecFactStmt(TruePure, *inFc, []Fc{atom, paramTypes[i]})
 			newDomFacts = append(newDomFacts, specFact)
 		}
 		newDomFacts = append(newDomFacts, domFacts...)

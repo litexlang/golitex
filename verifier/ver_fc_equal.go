@@ -81,7 +81,7 @@ func (ver *Verifier) fcEqualSpecInSpecMem(stmt *ast.SpecFactStmt, state VerState
 	left := stmt.Params[0]
 	right := stmt.Params[1]
 	fact := stmt
-	fact2 := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{right, left})
+	fact2 := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{right, left})
 
 	upMostEnv := theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
