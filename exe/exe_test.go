@@ -569,7 +569,7 @@ func TestAllFactCodeSeveralRounds(t *testing.T) {
 	rounds := 1
 	topStmtSlice := setupAndParseStmtTest(code, t)
 	start := time.Now()
-	for i := 0; i < rounds; i++ {
+	for range rounds {
 		execStmtTest(topStmtSlice, t)
 		// printExecMsg(messages)
 	}
