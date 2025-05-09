@@ -21,7 +21,7 @@ import (
 func (env *Env) NewFact(stmt ast.FactStmt) error {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
-		return env.NewSpecFact(f)
+		return env.newSpecFact(f)
 	case *ast.LogicExprStmt:
 		return env.newLogicExprStmt(f)
 	case *ast.UniFactStmt:
@@ -35,7 +35,7 @@ func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 	return env.SpecFactInLogicExprMem.NewFact(fact)
 }
 
-func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
+func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	if isCommutativeProp, err := env.IsCommutativePropName_StoreIt(fact); isCommutativeProp {
 		return err
 	}
@@ -64,7 +64,7 @@ func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
 func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 	if fact.TypeEnum == ast.TruePure {
 		if glob.KnowSpecFactByDef {
-			return env.emit_specFact_DefFacts(fact)
+			return env.newFactsInSpecFactDef(fact)
 		} else {
 			return nil
 		}
@@ -73,7 +73,7 @@ func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 	}
 }
 
-func (env *Env) emit_specFact_DefFacts(fact *ast.SpecFactStmt) error {
+func (env *Env) newFactsInSpecFactDef(fact *ast.SpecFactStmt) error {
 	propDef, ok := env.PropMem.Get(fact.PropName)
 	if !ok {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
