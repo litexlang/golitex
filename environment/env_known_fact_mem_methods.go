@@ -64,9 +64,9 @@ func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFact
 
 func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact, error) {
 	switch stmt.TypeEnum {
-	case ast.TrueAtom:
+	case ast.TruePure:
 		return s.PureFacts, nil
-	case ast.FalseAtom:
+	case ast.FalsePure:
 		return s.NotPureFacts, nil
 	case ast.TrueExist:
 		return s.ExistFacts, nil
@@ -120,9 +120,9 @@ func (s SpecFactMem) NewFact(stmt *ast.SpecFactStmt) error {
 
 func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact_InLogicExpr, error) {
 	switch stmt.TypeEnum {
-	case ast.TrueAtom:
+	case ast.TruePure:
 		return s.PureFacts, nil
-	case ast.FalseAtom:
+	case ast.FalsePure:
 		return s.NotPureFacts, nil
 	case ast.TrueExist:
 		return s.ExistFacts, nil
@@ -183,9 +183,9 @@ func (s SpecFactInLogicExprMem) NewFact(logicExpr *ast.LogicExprStmt) error {
 
 func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]KnownSpecFact_InUniSpecFact, error) {
 	switch stmt.TypeEnum {
-	case ast.TrueAtom:
+	case ast.TruePure:
 		return s.PureFacts, nil
-	case ast.FalseAtom:
+	case ast.FalsePure:
 		return s.NotPureFacts, nil
 	case ast.TrueExist:
 		return s.ExistFacts, nil
@@ -276,9 +276,9 @@ func (s SpecFactInUniFactMem) insertSpecFact(stmtAsSpecFact *ast.SpecFactStmt, u
 
 func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[string][]SpecFact_InLogicExpr_InUniFact, error) {
 	switch stmt.TypeEnum {
-	case ast.TrueAtom:
+	case ast.TruePure:
 		return s.PureFacts, nil
-	case ast.FalseAtom:
+	case ast.FalsePure:
 		return s.NotPureFacts, nil
 	case ast.TrueExist:
 		return s.ExistFacts, nil

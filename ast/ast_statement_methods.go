@@ -70,7 +70,7 @@ func (defStmt *DefPropStmt) MakeUniFacts() (*UniFactStmt, *UniFactStmt, error) {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -94,7 +94,7 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
@@ -115,7 +115,7 @@ func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TrueAtom, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
 
 	return propSpecFact
 }

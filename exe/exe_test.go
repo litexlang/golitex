@@ -106,7 +106,7 @@ func randSpecFact() *ast.SpecFactStmt {
 		params[i] = randomFc()
 	}
 
-	stmt := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: *randFcAtom(), Params: params}
+	stmt := ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: *randFcAtom(), Params: params}
 	return &stmt
 }
 
@@ -362,7 +362,7 @@ func randEqualFact() *ast.SpecFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return &ast.SpecFactStmt{TypeEnum: ast.TrueAtom, Params: []ast.Fc{left, right}, PropName: ast.FcAtom{PkgName: "", Name: "="}}
+	return &ast.SpecFactStmt{TypeEnum: ast.TruePure, Params: []ast.Fc{left, right}, PropName: ast.FcAtom{PkgName: "", Name: "="}}
 }
 
 func TestVerificationUsingEqual(t *testing.T) {
@@ -606,7 +606,7 @@ func TestAllFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../examples/test_codes/associative_fn.lix")
+var code = readFile("../examples/test_codes/equal_facts.lix")
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()

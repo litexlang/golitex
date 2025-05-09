@@ -17,8 +17,8 @@ import glob "golitex/glob"
 type SpecFactEnum uint8
 
 const (
-	TrueAtom SpecFactEnum = iota
-	FalseAtom
+	TruePure SpecFactEnum = iota
+	FalsePure
 	TrueExist
 	FalseExist
 	TrueExist_St
@@ -26,10 +26,10 @@ const (
 )
 
 func (stmt *SpecFactStmt) ReverseSpecFact() *SpecFactStmt {
-	if stmt.TypeEnum == TrueAtom {
-		return NewSpecFactStmt(FalseAtom, stmt.PropName, stmt.Params)
-	} else if stmt.TypeEnum == FalseAtom {
-		return NewSpecFactStmt(TrueAtom, stmt.PropName, stmt.Params)
+	if stmt.TypeEnum == TruePure {
+		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params)
+	} else if stmt.TypeEnum == FalsePure {
+		return NewSpecFactStmt(TruePure, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == TrueExist {
 		return NewSpecFactStmt(FalseExist, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == FalseExist {
@@ -51,7 +51,7 @@ func (f *SpecFactStmt) IsExistFact() bool {
 }
 
 func (f *SpecFactStmt) IsPureFact() bool {
-	return f.TypeEnum == TrueAtom || f.TypeEnum == FalseAtom
+	return f.TypeEnum == TruePure || f.TypeEnum == FalsePure
 }
 
 func (f *SpecFactStmt) IsExist_St_Fact() bool {
@@ -59,7 +59,7 @@ func (f *SpecFactStmt) IsExist_St_Fact() bool {
 }
 
 func (f *SpecFactStmt) IsTrue() bool {
-	return f.TypeEnum == TrueAtom || f.TypeEnum == TrueExist || f.TypeEnum == TrueExist_St
+	return f.TypeEnum == TruePure || f.TypeEnum == TrueExist || f.TypeEnum == TrueExist_St
 }
 
 func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
@@ -70,4 +70,8 @@ func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
 		}
 	}
 	return -1
+}
+
+func (f *SpecFactStmt) PropNameIsGiven_PkgNameEmpty(name FcAtom, givenName string) bool {
+	return name.PkgName == glob.BtEmptyPkgName && name.Name == givenName
 }

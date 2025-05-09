@@ -23,34 +23,39 @@ import (
 
 func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ver.env.IsSpecFactPropCommutative(stmt) {
-		ok, err := ver.specFactWithOutCommutative(stmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
+		return ver.checkCommutativeSpecFact(stmt, state)
+	} else {
+		return ver.specFactWithOutCommutative(stmt, state)
+	}
+}
 
-		reverseFact, err := stmt.ReverseParameterOrder()
-		if err != nil {
-			return false, err
-		}
-
-		ok, err = ver.specFactWithOutCommutative(reverseFact, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			if state.requireMsg() {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative and %s is true", stmt.PropName.String(), reverseFact.String()))
-			} else {
-				ver.successNoMsg()
-			}
-			return true, nil
-		}
+func (ver *Verifier) checkCommutativeSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	ok, err := ver.specFactWithOutCommutative(stmt, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
 	}
 
-	return ver.specFactWithOutCommutative(stmt, state)
+	reverseFact, err := stmt.ReverseParameterOrder()
+	if err != nil {
+		return false, err
+	}
+
+	ok, err = ver.specFactWithOutCommutative(reverseFact, state)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), fmt.Sprintf("prop %s is commutative and %s is true", stmt.PropName.String(), reverseFact.String()))
+		} else {
+			ver.successNoMsg()
+		}
+		return true, nil
+	}
+	return false, nil
 }
 
 func (ver *Verifier) specFactWithOutCommutative(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -63,27 +68,19 @@ func (ver *Verifier) specFactWithOutCommutative(stmt *ast.SpecFactStmt, state Ve
 		return false, nil
 	}
 
+	if stmt.IsPureFact() {
+		return ver.pureSpecFact(stmt, state)
+	}
+
 	if stmt.IsExistFact() {
-		ok, err := ver.ExistPropFact(stmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
+		return ver.ExistPropFact(stmt, state)
 	}
 
 	if stmt.IsExist_St_Fact() {
-		ok, err := ver.Exist_St_PropFact(stmt, state)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
+		return ver.Exist_St_PropFact(stmt, state)
 	}
 
-	return ver.pureSpecFact(stmt, state)
+	return false, fmt.Errorf("invalid type of stmt")
 }
 
 func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -119,6 +116,10 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual) {
+		_ = 1
+	}
+
 	if stmt.IsBuiltinInfixRelaProp() {
 		// 这里包含了using mem specifically
 		return ver.useBtRulesAndMemSpecifically(stmt, state)
@@ -513,7 +514,16 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 
 // THIS IS A VERY BAD WAY TO PROVE EQUALITY. I NEED TO STORE FC INTO A RB TREE FOR BETTER PERFORMANCE AND TAKE FULL ADVANTAGE OF Unique Properties of =
 func (ver *Verifier) iterateOverKnownSpecEqualFactsAndCheck(left ast.Fc, right ast.Fc) (bool, error) {
-	equalSpecFact := ast.NewSpecFactStmt(ast.TrueAtom, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
+	ok, err := ver.equalByEqualMem(left, right)
+	if err != nil {
+		return false, err
+	}
+	if ok {
+		return true, nil
+	}
+
+	// TODO 之后下面都被删了
+	equalSpecFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
 
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		equalFacts, got := curEnv.SpecFactMem.GetSameEnumPkgPropFacts(equalSpecFact)

@@ -50,7 +50,7 @@ func (stmt *SpecFactStmt) String() string {
 
 	var builder strings.Builder
 
-	if stmt.TypeEnum == FalseAtom {
+	if stmt.TypeEnum == FalsePure {
 		builder.WriteString(glob.KeywordNot)
 		builder.WriteByte(' ')
 	} else if stmt.TypeEnum == TrueExist {

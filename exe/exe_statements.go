@@ -217,7 +217,7 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 
 	for i, objName := range stmt.Objs {
 		objInSetFact := ast.SpecFactStmt{
-			TypeEnum: ast.TrueAtom,
+			TypeEnum: ast.TruePure,
 			PropName: ast.FcAtom{
 				PkgName: "",
 				Name:    glob.KeywordIn,
@@ -256,7 +256,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 
 	fcFn := ast.FcFn{FnHead: &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: stmt.DefHeader.Name}, ParamSegs: [][]ast.Fc{fcFnParams}}
 
-	retFact := ast.SpecFactStmt{TypeEnum: ast.TrueAtom, PropName: ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
+	retFact := ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
 
 	uniFactThen := []ast.FactStmt{&retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)

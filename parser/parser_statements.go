@@ -484,7 +484,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 		params := []ast.Fc{fc, fc2}
 
-		return ast.NewSpecFactStmt(ast.TrueAtom, propName, params), nil
+		return ast.NewSpecFactStmt(ast.TruePure, propName, params), nil
 	} else if !glob.IsBuiltinInfixRelaProp(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else {
@@ -506,7 +506,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 		params := []ast.Fc{fc, fc2}
 
-		return ast.NewSpecFactStmt(ast.TrueAtom, ast.FcAtom{Name: opt}, params), nil
+		return ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{Name: opt}, params), nil
 	}
 
 }
@@ -747,7 +747,7 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	return ast.NewSpecFactStmt(ast.TrueAtom, propName, params), nil
+	return ast.NewSpecFactStmt(ast.TruePure, propName, params), nil
 }
 
 func (tb *tokenBlock) defHaveStmt() (*ast.HaveStmt, error) {

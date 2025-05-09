@@ -61,6 +61,8 @@ func NewEnv(parent *Env) *Env {
 		CommutativeProp: make(map[string]map[string]struct{}),
 		CommutativeFn:   make(map[string]map[string]struct{}),
 		AssociativeFn:   make(map[string]map[string]struct{}),
+
+		EqualMem: make(map[string]*[]ast.Fc),
 	}
 	return env
 }
