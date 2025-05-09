@@ -14,7 +14,7 @@ package litex_executor
 
 import (
 	"fmt"
-	env "golitex/env"
+	env "golitex/environment"
 )
 
 // type Executor env.Env

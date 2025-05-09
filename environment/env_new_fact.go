@@ -298,45 +298,45 @@ func (env *Env) NewEqualFact(fact *ast.SpecFactStmt) error {
 	leftAsStr := fact.Params[0].String()
 	rightAsStr := fact.Params[1].String()
 
-	storedEqualLeftFacts, leftGot := env.EqualMem[leftAsStr]
-	storedEqualRightFacts, rightGot := env.EqualMem[rightAsStr]
+	storedEqualLeftFcs, leftGot := env.EqualMem[leftAsStr]
+	storedEqualRightFcs, rightGot := env.EqualMem[rightAsStr]
 
 	if leftGot && rightGot {
-		if storedEqualLeftFacts == storedEqualRightFacts {
+		if storedEqualLeftFcs == storedEqualRightFcs {
 			return nil
 		} else {
-			newEqualFacts := []ast.Fc{}
-			newEqualFacts = append(newEqualFacts, *storedEqualLeftFacts...)
-			newEqualFacts = append(newEqualFacts, *storedEqualRightFacts...)
-			*storedEqualLeftFacts = newEqualFacts
-			*storedEqualRightFacts = newEqualFacts
+			newEqualFcs := []ast.Fc{}
+			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
+			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
+			*storedEqualLeftFcs = newEqualFcs
+			*storedEqualRightFcs = newEqualFcs
 			return nil
 		}
 	}
 
 	if leftGot && !rightGot {
-		*storedEqualLeftFacts = append(*storedEqualLeftFacts, fact.Params[1])
-		env.EqualMem[rightAsStr] = storedEqualLeftFacts
+		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
+		env.EqualMem[rightAsStr] = storedEqualLeftFcs
 		return nil
 	}
 
 	if !leftGot && rightGot {
-		*storedEqualRightFacts = append(*storedEqualRightFacts, fact.Params[0])
-		env.EqualMem[leftAsStr] = storedEqualRightFacts
+		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
+		env.EqualMem[leftAsStr] = storedEqualRightFcs
 		return nil
 	}
 
 	if !leftGot && !rightGot {
-		newEqualFacts := []ast.Fc{fact.Params[0], fact.Params[1]}
-		env.EqualMem[leftAsStr] = &newEqualFacts
-		env.EqualMem[rightAsStr] = &newEqualFacts
+		newEqualFcs := []ast.Fc{fact.Params[0], fact.Params[1]}
+		env.EqualMem[leftAsStr] = &newEqualFcs
+		env.EqualMem[rightAsStr] = &newEqualFcs
 		return nil
 	}
 
 	return nil
 }
 
-func (env *Env) GetEqualFact(fc ast.Fc) (*[]ast.Fc, bool) {
+func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	fcAsStr := fc.String()
 	facts, ok := env.EqualMem[fcAsStr]
 	return facts, ok

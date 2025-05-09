@@ -14,7 +14,7 @@ package litex_verifier
 
 import (
 	ast "golitex/ast"
-	env "golitex/env"
+	env "golitex/environment"
 )
 
 func theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
