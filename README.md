@@ -418,6 +418,7 @@ know:
     c in S
     ...
 
+3. when there are too many layers of a fcFn (e.g. f()()()()), the interpreter will not be able to check facts that should be checked.
 
 ## Join the Litex Project: Words from the Inventor
 
