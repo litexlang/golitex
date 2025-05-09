@@ -15,7 +15,6 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
-	cmp "golitex/cmp"
 )
 
 func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -53,27 +52,16 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 		return true, nil
 	}
 
-	// Case3: 如果left, right都是 FcFn，那一位位比较一下
-	cmpRet, fcEnum, err := cmp.CmpFcType(left, right)
-	if err != nil {
-		return false, err
-	}
-
-	if cmpRet != 0 {
+	// Case3: 如果left, right都是 FcFn，那一位位比较一下。
+	leftAsFn, ok := left.(*ast.FcFn)
+	if !ok {
 		return false, nil
 	}
-
-	// 总之这里估计是有待提高的
-	if fcEnum == cmp.FcFnEnum {
-		// WARNING:  这里根本不是SpecMsg，而是RoundMsg，所以fcEqualSpec里不能是可能用到非SpecFact的
-		// state = state.addRound()
-		return ver.fcFnEq(left.(*ast.FcFn), right.(*ast.FcFn), state.toSpec())
-		// return ver.fcFnEq(left.(*ast.FcFn), right.(*ast.FcFn), SpecMsg)
-	} else if fcEnum == cmp.FcAtomEnum {
+	rightAsFn, ok := right.(*ast.FcFn)
+	if !ok {
 		return false, nil
 	}
-
-	return false, nil
+	return ver.fcFnEq(leftAsFn, rightAsFn, state.toSpec())
 }
 
 func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
