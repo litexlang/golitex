@@ -56,11 +56,11 @@ const (
 	// litex version 0.3 的时候可以考虑实现。这样的话set所在的集合也能像obj一样简单了
 	KeywordSetSet = "set_set"
 
-	KeywordR = "r" // r as postfix for real number
-	KeywordF = "f" // f as postfix for float number
+	KeywordR = "R" // r as postfix for real number
+	KeywordF = "F" // f as postfix for float number
 	KeywordI = "i" // i for imaginary part of a complex number
-	KeywordN = "n" // n as postfix for natural number
-	KeywordC = "c" // c as postfix for complex number
+	KeywordN = "N" // n as postfix for natural number
+	KeywordC = "C" // c as postfix for complex number
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{

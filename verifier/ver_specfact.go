@@ -692,14 +692,20 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 
 	// propName(n) => propName(n+1)
 	nToNAddOneFact := ast.UniFactStmt{
-		Params:    []string{"n"},
+		Params:    []string{fmt.Sprintf("%sn", glob.UniParamPrefix)},
 		ParamSets: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordNatural}},
-		DomFacts:  []ast.FactStmt{},
+		DomFacts: []ast.FactStmt{
+			&ast.SpecFactStmt{
+				TypeEnum: ast.TruePure,
+				PropName: *propNameAsAtom,
+				Params:   []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sn", glob.UniParamPrefix)}},
+			},
+		},
 		ThenFacts: []ast.FactStmt{
 			&ast.SpecFactStmt{
 				TypeEnum: ast.TruePure,
 				PropName: *propNameAsAtom,
-				Params:   []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: "n+1"}},
+				Params:   []ast.Fc{&ast.FcFn{FnHead: &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeySymbolPlus}, ParamSegs: [][]ast.Fc{{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sn", glob.UniParamPrefix)}, &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: "1"}}}}},
 			},
 		},
 		IffFacts: ast.EmptyIffFacts,
