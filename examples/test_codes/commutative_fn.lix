@@ -26,6 +26,6 @@ prove:
         f(add(1,2)) = f(3)
         g(3+x) = g(4)
 
-    add(2,1) = 3
-    g(add(2,1)+x) = g(3+x)
+    #add(2,1) = 3
+    #g(add(2,1)+x) = g(3+x)
     g(add(2,1)+x) = g(4) # why I need to say g(add(2,1)+x) manuallybefore checking this?

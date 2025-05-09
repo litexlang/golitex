@@ -76,6 +76,7 @@ func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) 
 		}
 
 		if gotLeftEqualFcs {
+			rightAsFn, rightIsFn := right.(*ast.FcFn)
 			for _, equalToLeftFc := range *equalToLeftFcs {
 				ok, err := ver.fcEqual_Commutative_Associative_CmpRule(equalToLeftFc, right, state)
 				if err != nil {
@@ -84,10 +85,23 @@ func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) 
 				if ok {
 					return true, nil
 				}
+
+				leftAsFn, leftIsFn := equalToLeftFc.(*ast.FcFn)
+
+				if leftIsFn && rightIsFn {
+					ok, err := ver.fcFnEq(leftAsFn, rightAsFn, state)
+					if err != nil {
+						return false, err
+					}
+					if ok {
+						return true, nil
+					}
+				}
 			}
 		}
 
 		if gotRightEqualFcs {
+			leftAsFn, leftIsFn := left.(*ast.FcFn)
 			for _, equalToRightFc := range *equalTorightFcs {
 				ok, err := ver.fcEqual_Commutative_Associative_CmpRule(equalToRightFc, left, state)
 				if err != nil {
@@ -95,6 +109,17 @@ func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) 
 				}
 				if ok {
 					return true, nil
+				}
+
+				rightAsFn, rightIsFn := equalToRightFc.(*ast.FcFn)
+				if rightIsFn && leftIsFn {
+					ok, err := ver.fcFnEq(rightAsFn, leftAsFn, state)
+					if err != nil {
+						return false, err
+					}
+					if ok {
+						return true, nil
+					}
 				}
 			}
 		}

@@ -566,6 +566,7 @@ func (ver *Verifier) leftIsCommutativeAndUseCommutedLeftToCheckEqualRight(left a
 					return false, nil
 				}
 				ok, err := cmp.CmpFcRule(commutativeLeft, right)
+				// ok, err := ver.fcEqual(commutativeLeft, right, verState) // 死循环
 				if err != nil {
 					return false, err
 				}
