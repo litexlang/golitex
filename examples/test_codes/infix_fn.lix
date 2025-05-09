@@ -1,0 +1,16 @@
+prove:
+    fn add(a int, b int)int:
+        add(a,b) = a + b
+
+    1 \add 2 = 1 + 2 # equivalent to add(1,2) = 1 + 2
+
+prove:
+    fn add(a int, b int) int
+    know:
+        $commutative_fn(add)
+        add(1,2) = 3
+
+    add(1,2) = add(2,1)
+    add(2,1) = 3
+
+    

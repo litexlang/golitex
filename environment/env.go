@@ -34,8 +34,10 @@ type Env struct {
 	EmitWhenSpecFactIsTrueMem         EmitWhenSpecFactIsTrueMem
 
 	CommutativeProp map[string]map[string]struct{}
-	CommutativeFn   map[string]map[string]struct{}
-	AssociativeFn   map[string]map[string]struct{}
+
+	// 为了让我日子好过，我不允许用户用以 fcFn 形式为fn header的 fn 名来定义 commutative fn
+	CommutativeFn map[string]map[string]struct{}
+	AssociativeFn map[string]map[string]struct{}
 
 	EqualMem map[string]*[]ast.Fc
 }

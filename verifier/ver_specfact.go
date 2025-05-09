@@ -207,31 +207,6 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 	return false, nil
 }
 
-// func (ver *Verifier) FcSliceEqual(left []ast.Fc, right []ast.Fc, specMode VerState) (bool, error) {
-// 	if len(left) != len(right) {
-// 		return false, fmt.Errorf("%v and %v have different length", left, right)
-// 	}
-
-// 	twoSpecFactHaveEqualParams := true
-// 	for i, knownParam := range left {
-// 		// verified, err := ver.makeFcEqualFactAndVerify(knownParam, right[i], specMode)
-// 		verified, err := ver.iterateOverEqualFactsAndFindEqual(knownParam, right[i])
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if !verified {
-// 			twoSpecFactHaveEqualParams = false
-// 			break
-// 		}
-// 	}
-
-// 	if twoSpecFactHaveEqualParams {
-// 		return true, nil
-// 	}
-
-// 	return false, nil
-// }
-
 func (ver *Verifier) SpecFactUni(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	nextState := state.addRound()
 
@@ -521,56 +496,6 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 
 	return true, nil
 }
-
-// THIS IS A VERY BAD WAY TO PROVE EQUALITY. I NEED TO STORE FC INTO A RB TREE FOR BETTER PERFORMANCE AND TAKE FULL ADVANTAGE OF Unique Properties of =
-// func (ver *Verifier) iterateOverKnownSpecEqualFactsAndCheck(left ast.Fc, right ast.Fc) (bool, error) {
-// 	ok, err := ver.equalByEqualMem(left, right)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	if ok {
-// 		return true, nil
-// 	}
-
-// 	// TODO 之后下面都被删了
-// 	equalSpecFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolEqual), []ast.Fc{left, right})
-
-// 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
-// 		equalFacts, got := curEnv.SpecFactMem.GetSameEnumPkgPropFacts(equalSpecFact)
-// 		if got {
-// 			for _, equalFact := range equalFacts {
-// 				// left = left, right = right
-
-// 				ok1, err1 := ver.fcEqual_Commutative_Associative_CmpRule(equalFact.Fact.Params[0], left)
-// 				if err1 != nil {
-// 					return false, err1
-// 				}
-// 				ok2, err2 := ver.fcEqual_Commutative_Associative_CmpRule(equalFact.Fact.Params[1], right)
-// 				if err2 != nil {
-// 					return false, err2
-// 				}
-// 				if ok1 && ok2 {
-// 					return true, nil
-// 				}
-
-// 				// left = right, right = left
-// 				ok1, err1 = ver.fcEqual_Commutative_Associative_CmpRule(equalFact.Fact.Params[0], right)
-// 				if err1 != nil {
-// 					return false, err1
-// 				}
-// 				ok2, err2 = ver.fcEqual_Commutative_Associative_CmpRule(equalFact.Fact.Params[1], left)
-// 				if err2 != nil {
-// 					return false, err2
-// 				}
-// 				if ok1 && ok2 {
-// 					return true, nil
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return false, nil
-// }
 
 // 这里需要 recursive 地调用 这个，而不是只是 cmpFcRule. 之后再考虑recursive的情况
 func (ver *Verifier) fcEqual_Commutative_Associative_CmpRule(left ast.Fc, right ast.Fc) (bool, error) {
