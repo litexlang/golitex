@@ -36,11 +36,15 @@ func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 }
 
 func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
+	if isEqualFact, err := env.IsEqualFact_StoreIt(fact); isEqualFact {
+		return err
+	}
+
 	if isCommutativeProp, err := env.IsCommutativePropName_StoreIt(fact); isCommutativeProp {
 		return err
 	}
 
-	if isEqualFact, err := env.IsEqualFact_StoreIt(fact); isEqualFact {
+	if isMathInductionProp, err := env.IsMathInductionPropName_StoreIt(fact); isMathInductionProp {
 		return err
 	}
 
@@ -346,6 +350,47 @@ func (env *Env) IsCommutativePropName_StoreIt(fact *ast.SpecFactStmt) (bool, err
 	}
 
 	env.InsertCommutativeProp(*propNameAsAtom)
+
+	return true, nil
+}
+
+func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordMathInduction) {
+		return false, nil
+	}
+
+	if len(fact.Params) != 1 {
+		return true, fmt.Errorf("math induction prop is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
+	}
+
+	propNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
+	if !ok {
+		return false, fmt.Errorf("math induction fact %s should have a prop name as parameter, got: %s", fact.String(), fact.Params[0])
+	}
+
+	_, ok = env.GetPropDef(*propNameAsAtom)
+	if !ok {
+		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", fact.String(), propNameAsAtom)
+	}
+
+	knownUniFact := ast.UniFactStmt{
+		Params:    []string{fmt.Sprintf("%sn", glob.UniParamPrefix)},
+		ParamSets: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordNatural}},
+		DomFacts:  []ast.FactStmt{},
+		ThenFacts: []ast.FactStmt{
+			&ast.SpecFactStmt{
+				TypeEnum: ast.TruePure,
+				PropName: *propNameAsAtom,
+				Params:   []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sn", glob.UniParamPrefix)}},
+			},
+		},
+		IffFacts: ast.EmptyIffFacts,
+	}
+
+	err := env.NewFact(&knownUniFact)
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 }

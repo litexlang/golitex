@@ -1,0 +1,14 @@
+prove:
+    prop p(x nat)
+
+    know:
+        $p(0)
+        forall x nat:
+            $p(x)
+            then:
+                $p(x+1)
+
+    $math_induction(p)
+
+    forall n nat:
+        $p(n)
