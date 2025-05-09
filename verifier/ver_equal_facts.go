@@ -15,6 +15,7 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 )
 
 func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -44,22 +45,6 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 		return true, nil
 	}
 
-	// Case2: 如果left, right都是 FcFn，那一位位比较一下。
-	leftAsFn, ok := left.(*ast.FcFn)
-	if ok {
-		rightAsFn, ok := right.(*ast.FcFn)
-		if ok {
-			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.toSpec())
-			if err != nil {
-				return false, err
-			}
-			if ok {
-				isSuccess = true
-				return true, nil
-			}
-		}
-	}
-
 	// Case3: 用Mem里找到和left相等的所有情况，和right匹配；或者反过来
 	if ok, err := ver.equalByEqualMem(left, right, state); err != nil {
 		return false, err
@@ -72,6 +57,22 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 }
 
 func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	// 如果left, right都是 FcFn，那一位位比较一下。
+	leftAsFn, ok := left.(*ast.FcFn)
+	err := error(nil)
+	if ok {
+		rightAsFn, ok := right.(*ast.FcFn)
+		if ok {
+			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.toSpec())
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				return true, nil
+			}
+		}
+	}
+
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		equalToLeftFcs, gotLeftEqualFcs := curEnv.GetEqualFcs(left)
 		equalTorightFcs, gotRightEqualFcs := curEnv.GetEqualFcs(right)
@@ -85,6 +86,10 @@ func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) 
 		if gotLeftEqualFcs {
 			rightAsFn, rightIsFn := right.(*ast.FcFn)
 			for _, equalToLeftFc := range *equalToLeftFcs {
+				if cmp.CmpFcAsStr(equalToLeftFc, left) { // 最一开头已经比较过，这里不需要再比较了
+					continue
+				}
+
 				ok, err := ver.fcEqual_Commutative_Associative_CmpRule(equalToLeftFc, right, state)
 				if err != nil {
 					return false, err
@@ -110,6 +115,10 @@ func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) 
 		if gotRightEqualFcs {
 			leftAsFn, leftIsFn := left.(*ast.FcFn)
 			for _, equalToRightFc := range *equalTorightFcs {
+				if cmp.CmpFcAsStr(equalToRightFc, right) { // 最一开头已经比较过，这里不需要再比较了
+					continue
+				}
+
 				ok, err := ver.fcEqual_Commutative_Associative_CmpRule(equalToRightFc, left, state)
 				if err != nil {
 					return false, err
