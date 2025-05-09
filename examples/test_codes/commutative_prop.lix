@@ -11,3 +11,4 @@ prove:
     know:
         $q(1, 2)
     $q(2,1)
+    $commutative_prop(q)

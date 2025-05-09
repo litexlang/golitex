@@ -46,7 +46,7 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 	}
 
 	// Case2: 用Mem里找
-	if ok, err := ver.equalByEqualMem(left, right); err != nil {
+	if ok, err := ver.equalByEqualMem(left, right, state); err != nil {
 		return false, err
 	} else if ok {
 		isSuccess = true
@@ -76,7 +76,7 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 	return false, nil
 }
 
-func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc) (bool, error) {
+func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		equalToLeftFcs, gotLeftEqualFcs := curEnv.GetEqualFcs(left)
 		equalTorightFcs, gotRightEqualFcs := curEnv.GetEqualFcs(right)
@@ -89,7 +89,7 @@ func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc) (bool, error) {
 
 		if gotLeftEqualFcs {
 			for _, equalToLeftFc := range *equalToLeftFcs {
-				ok, err := cmp.CmpFcRule(equalToLeftFc, right)
+				ok, err := ver.fcEqual_Commutative_Associative_CmpRule(equalToLeftFc, right, state)
 				if err != nil {
 					return false, err
 				}
@@ -101,7 +101,7 @@ func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc) (bool, error) {
 
 		if gotRightEqualFcs {
 			for _, equalToRightFc := range *equalTorightFcs {
-				ok, err := cmp.CmpFcRule(equalToRightFc, left)
+				ok, err := ver.fcEqual_Commutative_Associative_CmpRule(equalToRightFc, left, state)
 				if err != nil {
 					return false, err
 				}
