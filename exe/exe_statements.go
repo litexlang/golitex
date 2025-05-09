@@ -37,7 +37,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.DefObjStmt:
 		err = exec.defObjStmt(stmt)
 	case *ast.HaveStmt:
-		err = exec.haveStmt(stmt)
+		execState, err = exec.haveStmt(stmt)
 	case *ast.DefExistPropStmt:
 		err = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
@@ -285,12 +285,53 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	return nil
 }
 
-func (exec *Executor) haveStmt(stmt *ast.HaveStmt) error {
+func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	defer exec.appendNewMsg("\n")
 	defer exec.appendNewMsg(stmt.String())
 
+	// 检查 SpecFactStmt 是否满足了
+	execState, err := exec.factStmt(&stmt.Fact)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if execState != glob.ExecState_True {
+		exec.appendNewMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
+		return glob.ExecState_Unknown, nil
+	}
+
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
-	return nil
+	exec.appendNewMsg("warning: current version of Litex only support exist obj. if you want to introduce set or fn by the have stmt, you need to use the set or fn stmt to introduce them.")
+
+	// TODO 暂时认为都是obj
+	for _, objName := range stmt.ObjNames {
+		err := exec.env.NewDefObj(&ast.DefObjStmt{Objs: []string{objName}, ObjSets: []ast.Fc{}, Facts: []ast.FactStmt{}})
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+	}
+
+	// TODO 把 exist prop def 里的东西释放出来
+	existPropDef, ok := exec.env.GetExistPropDef(stmt.Fact.PropName)
+	if !ok {
+		return glob.ExecState_Unknown, nil
+	}
+
+	_ = existPropDef
+
+	uniMap := map[string]ast.Fc{}
+	for _, param := range stmt.ObjNames {
+		uniMap[param] = ast.NewFcAtom(glob.BtEmptyPkgName, param)
+	}
+
+	// objNames in those setParams
+
+	// dom of def exist prop is true
+
+	// iff of def exist prop is true
+
+	// TODO 相关的 exist st 事实也成立
+
+	return glob.ExecState_True, nil
 }
 
 func (exec *Executor) defStmt(stmt ast.DefStmt) error {

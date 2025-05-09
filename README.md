@@ -364,9 +364,12 @@ Also remember, Litex is not Turing Complete, because verification does not requi
 
 The inventor of Litex sees Litex as a regex-based interpreter. Every design choice around Litex categorizes into: 1. how to implement a mathematical reasoning(verification) process as a syntax and semantics sugar for regex matching, 2. what mathematical reasoning process to implement. There are not that many reasoning processes, since first-order logic is enough for most practical math problems, and every reasoning process can be translated into first-order logic.
 
+
 Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing (how verification works? Fundamentally, just by comparing the words of two facts and using first-order logic to infer the truth of the new fact). If a known fact (universal or specific) is matched with the new fact, the new fact is proven (See the examples above). If not, the new fact is unknown.
 
 Litex is a computer tool to automate this process and verify your reasoning for you. The more you use Litex, the more you will understand what I mean and the more you will love it. You can learn Litex in 10 minutes. However, its simplicity does not come at the cost of expressiveness.
+
+Litex is intuitive. Math expressions in natural language often map directly to Litex code. However, since mathematical notation is often written loosely, bridging the gap between informal expressions (with omissions) and strict Litex code can take some effort.
 
 Litex is significantly influenced by the GoLang, C and Python. Litex's function declaration syntax bears a resemblance to Go's. Most importantly, the minimalism design choice of Go strongly resonates with the Litex's inventor.
 
