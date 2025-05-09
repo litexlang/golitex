@@ -28,7 +28,7 @@ func NewDefPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStm
 	return &DefPropStmt{defHeader, domFacts, iffFacts}
 }
 
-func NewDefExistPropStmt(def *ExistPropDef, existParams []string, existParamSets []Fc) *DefExistPropStmt {
+func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc) *DefExistPropStmt {
 	return &DefExistPropStmt{*def, existParams, existParamSets}
 }
 
@@ -68,8 +68,8 @@ func NewHaveStmt(objNames []string, fact SpecFactStmt) *HaveStmt {
 	return &HaveStmt{objNames, fact}
 }
 
-func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *ExistPropDef {
-	return &ExistPropDef{declHeader, domFacts, iffFacts}
+func NewExistPropDef(declHeader DefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *DefExistPropStmtBody {
+	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts}
 }
 
 // func NewDefSetEnumtmt(setName string, elems []Fc) *SetDefEnumtmt {
@@ -110,4 +110,8 @@ func NewProveInEachCaseStmt(orFact LogicExprStmt, thenFacts []FactStmt, proofs [
 
 func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
 	return &KnowPropStmt{prop}
+}
+
+func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *DefExistPropStmtBody {
+	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts}
 }

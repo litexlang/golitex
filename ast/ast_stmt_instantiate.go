@@ -163,3 +163,93 @@ func InstantiateLogicExprStmt(stmt *LogicExprStmt, uniMap map[string]Fc) (*Logic
 func (stmt *LogicExprStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
 	return InstantiateLogicExprStmt(stmt, uniMap)
 }
+
+func (defHeader *DefHeader) Instantiate(uniMap map[string]Fc) (*DefHeader, error) {
+	newDefHeader := DefHeader{
+		Name:      defHeader.Name,
+		Params:    defHeader.Params,
+		SetParams: []Fc{},
+	}
+
+	for _, setParam := range defHeader.SetParams {
+		newSetParam, err := setParam.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newDefHeader.SetParams = append(newDefHeader.SetParams, newSetParam)
+	}
+
+	return &newDefHeader, nil
+}
+
+func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Fc) (*DefPropStmt, error) {
+	newDefHeader, err := defPropStmt.DefHeader.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	newDomFacts := []FactStmt{}
+	for _, fact := range defPropStmt.DomFacts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newDomFacts = append(newDomFacts, newFact)
+	}
+
+	newIffFacts := []FactStmt{}
+	for _, fact := range defPropStmt.IffFacts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newIffFacts = append(newIffFacts, newFact)
+	}
+
+	return NewDefPropStmt(*newDefHeader, newDomFacts, newIffFacts), nil
+}
+
+func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Fc) (*DefExistPropStmtBody, error) {
+	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	newDomFacts := []FactStmt{}
+	for _, fact := range stmt.DomFacts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newDomFacts = append(newDomFacts, newFact)
+	}
+
+	newIffFacts := []Reversable_LogicOrSpec_Stmt{}
+	for _, fact := range stmt.IffFacts {
+		newFact, err := fact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newIffFacts = append(newIffFacts, newFact.(Reversable_LogicOrSpec_Stmt))
+	}
+
+	return NewDefExistPropBodyStmt(*newDefHeader, newDomFacts, newIffFacts), nil
+}
+
+func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropStmt, error) {
+	newDefExistPropBody, err := stmt.DefBody.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	newExistParamSets := []Fc{}
+	for _, param := range stmt.ExistParamSets {
+		newParam, err := param.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newExistParamSets = append(newExistParamSets, newParam)
+	}
+
+	return NewDefExistPropStmt(newDefExistPropBody, stmt.ExistParams, newExistParamSets), nil
+}

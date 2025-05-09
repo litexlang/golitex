@@ -215,7 +215,7 @@ func (env *Env) NewDefFn(stmt *ast.DefFnStmt) error {
 }
 
 func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {
-	err := env.IsInvalidName(stmt.Def.DefHeader.Name)
+	err := env.IsInvalidName(stmt.DefBody.DefHeader.Name)
 	if err != nil {
 		return err
 	}
@@ -234,12 +234,12 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 	}
 
 	uniMap := map[string]ast.Fc{}
-	for i, propParam := range existPropDef.Def.DefHeader.Params {
+	for i, propParam := range existPropDef.DefBody.DefHeader.Params {
 		uniMap[propParam] = fact.Params[i]
 	}
 
 	domFacts := []ast.FactStmt{}
-	for _, domFact := range existPropDef.Def.DomFacts {
+	for _, domFact := range existPropDef.DefBody.DomFacts {
 		instantiated, err := domFact.Instantiate(uniMap)
 		if err != nil {
 			return nil, err
@@ -248,7 +248,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 	}
 
 	specThenFacts := []*ast.SpecFactStmt{}
-	for _, thenFact := range existPropDef.Def.IffFacts {
+	for _, thenFact := range existPropDef.DefBody.IffFacts {
 		reversed := thenFact.ReverseIsTrue()
 		instantiated, err := reversed.Instantiate(uniMap)
 		if err != nil {

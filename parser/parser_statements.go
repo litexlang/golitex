@@ -807,7 +807,7 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 	return facts, nil
 }
 
-func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.ExistPropDef, error) {
+func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.DefExistPropStmtBody, error) {
 	declHeader, nameDepthMap, err := tb.defHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
