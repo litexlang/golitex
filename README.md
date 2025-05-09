@@ -1,4 +1,4 @@
-# Litex: A Minimalist Proof Assistant
+# Litex: The Minimalist Proof Assistant
 
 <div align="center">
 <img src="assets/logo.png" alt="The Litex Logo" width="300">
@@ -409,7 +409,9 @@ Since C has builtin int, float, complex, Litex has nat, rat, real, complex as bu
 Since Litex is (at least for the first 2500 git commits) is a single-man project, I have to do a lot of things by myself. I choose to make it work in a specific domain as top priority instead of making it "has much syntax sugar and features as possible". So in the first 0.01 version, I ignore the following features (these features will be implemented in the future):
 
 1. builtin complex number: syntax, operator overloading
+
 2. syntax sugar: set S = {a, b, c, ...}, which means
+
 forall x S:
     or:
         x = a
@@ -424,6 +426,8 @@ know:
     ...
 
 3. when there are too many layers of a fcFn (e.g. f()()()()), the interpreter will not be able to check facts that should be checked.
+
+4. second-order, or high-order logic: I have a nice idea of how to implementing it without breaking the current design and making user feel natural. However, in daily life, all we might need is first-order logic. The only high-logic we might need is mathematical induction. So I make it a keyword instead of a user-defined special case of second-order logic. Before Litex implements high-order logic, the user can use know to verify the facts that should be verified.
 
 ## Join the Litex Project: Words from the Inventor
 

@@ -145,3 +145,7 @@ func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
 func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name) && !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual)
 }
+
+func (stmt *SpecFactStmt) IsMathInductionFact() bool {
+	return stmt.PropName.PkgName == glob.BtEmptyPkgName && stmt.PropName.Name == glob.KeywordMathInduction
+}

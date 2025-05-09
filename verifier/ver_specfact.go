@@ -17,6 +17,7 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	env "golitex/environment"
+	glob "golitex/glob"
 	"strings"
 )
 
@@ -65,6 +66,10 @@ func (ver *Verifier) specFactWithOutCommutative(stmt *ast.SpecFactStmt, state Ve
 	}
 	if !ok {
 		return false, nil
+	}
+
+	if stmt.IsMathInductionFact() {
+		return ver.mathInductionSpecFact(stmt, state)
 	}
 
 	if stmt.IsPureFact() {
@@ -665,4 +670,56 @@ func (ver *Verifier) leftIsAssociativeAndUseAssociationToCheckEqualRight(left as
 	}
 
 	return false, nil
+}
+
+func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if len(stmt.Params) != 1 {
+		return false, fmt.Errorf("math induction fact %s should have exactly one parameter, got: %d", stmt.String(), len(stmt.Params))
+	}
+
+	propNameAsAtom, ok := stmt.Params[0].(*ast.FcAtom)
+	if !ok {
+		return false, fmt.Errorf("math induction fact %s should have a prop name as parameter, got: %s", stmt.String(), stmt.Params[0])
+	}
+
+	_, ok = ver.env.GetPropDef(*propNameAsAtom)
+	if !ok {
+		return false, fmt.Errorf("math induction fact %s should have a prop name that is defined, got: %s", stmt.String(), propNameAsAtom)
+	}
+
+	// propName(0) is true
+	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, *propNameAsAtom, []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: "0"}})
+
+	// propName(n) => propName(n+1)
+	nToNAddOneFact := ast.UniFactStmt{
+		Params:    []string{"n"},
+		ParamSets: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordNatural}},
+		DomFacts:  []ast.FactStmt{},
+		ThenFacts: []ast.FactStmt{
+			&ast.SpecFactStmt{
+				TypeEnum: ast.TruePure,
+				PropName: *propNameAsAtom,
+				Params:   []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: "n+1"}},
+			},
+		},
+		IffFacts: ast.EmptyIffFacts,
+	}
+
+	ok, err := ver.FactStmt(propNameZeroFact, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	ok, err = ver.FactStmt(&nToNAddOneFact, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	return true, nil
 }
