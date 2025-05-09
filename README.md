@@ -395,6 +395,7 @@ C does not allow operator overloading. The only instances of operator overloadin
     1. In C++, even the `=` operator can be overloaded.  
     2. Following the principle of simplicity, Litex aligns with C's design: operator overloading is prohibited. The only exceptions are for basic numeric types (integers, decimals, real numbers, and natural numbers). In all other cases, overloading is forbidden. Additionally, overloading `=` is also disallowed.  
         1. Without operator overloading, the concept of `extend` or `impl` or `inherit` may also become unnecessary, as its primary purpose is to enable operator overloading.  
+        2. Any language that allows operator overloading has a OOP system. There is no "OOP" in math, so Litex does not have OOP.
 
 Since C has builtin int, float, complex, Litex has nat, rat, real, complex as builtin sets and no others.
 

@@ -16,6 +16,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strings"
 )
 
 // raw 的意思是，不包含 uniFactParamPrefix
@@ -87,23 +88,23 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 		return ast.FcAtom{Name: ""}, err
 	}
 
-	fromPkg := ""
-	if cursor.is(glob.KeySymbolColonColon) {
-		fromPkg = value
-		err := cursor.skip(glob.KeySymbolColonColon)
-		if err != nil {
-			return ast.FcAtom{Name: ""}, err
-		}
+	var pkgName strings.Builder
+	for cursor.is(glob.KeySymbolColonColon) {
+		pkgName.WriteString(value)
+		pkgName.WriteString(glob.KeySymbolColonColon)
 		value, err = cursor.next()
 		if err != nil {
 			return ast.FcAtom{Name: ""}, err
 		}
 	}
 
+	pkgNameStr := pkgName.String()
+	pkgNameStr = strings.TrimSuffix(pkgNameStr, glob.KeySymbolColonColon)
+
 	if glob.IsKwThatCanNeverBeFcName(value) {
-		return ast.FcAtom{PkgName: fromPkg, Name: value}, fmt.Errorf("invalid first citizen: %s", value)
+		return ast.FcAtom{PkgName: pkgNameStr, Name: value}, fmt.Errorf("invalid first citizen: %s", value)
 	} else {
-		return ast.FcAtom{PkgName: fromPkg, Name: value}, nil
+		return ast.FcAtom{PkgName: pkgNameStr, Name: value}, nil
 	}
 }
 
