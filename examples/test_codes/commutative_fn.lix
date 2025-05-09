@@ -25,7 +25,10 @@ prove:
         add(1,2) = 3
         f(add(1,2)) = f(3)
         g(3+x) = g(4)
+        t(3+x) = t(4)
 
-    #add(2,1) = 3
-    #g(add(2,1)+x) = g(3+x)
-    g(add(2,1)+x) = g(4) # why I need to say g(add(2,1)+x) manuallybefore checking this?
+    g(add(2,1)+x) = g(3+x)
+
+    3 + 1 = 4
+    t(add(1,2)+1) = t(4)
+    t(add(2,1)+x) = t(add(1,2)+1) # 右侧等于 t(4) = t(3+x) , t(3+x) 有 t(add(2,1)+x) = t(3+x) 所以成立

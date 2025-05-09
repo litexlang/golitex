@@ -17,6 +17,10 @@ import (
 	glob "golitex/glob"
 )
 
+func CmpFcAsStr(left, right ast.Fc) bool {
+	return left.String() == right.String()
+}
+
 func CmpFcRule(left, right ast.Fc) (bool, error) {
 	// 先验证是不是Number，后验证rule，居然让runtime速度提高了1倍。。。
 	ok, err := BuiltinFcEqualRule(left, right)
