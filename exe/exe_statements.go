@@ -316,20 +316,62 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		return glob.ExecState_Unknown, nil
 	}
 
-	_ = existPropDef
-
 	uniMap := map[string]ast.Fc{}
-	for _, param := range stmt.ObjNames {
-		uniMap[param] = ast.NewFcAtom(glob.BtEmptyPkgName, param)
+	paramAsAtoms := []ast.Fc{}
+	for i, param := range existPropDef.DefBody.DefHeader.Params {
+		paramAsAtom := ast.NewFcAtom(glob.BtEmptyPkgName, stmt.ObjNames[i])
+		uniMap[param] = paramAsAtom
+		paramAsAtoms = append(paramAsAtoms, paramAsAtom)
 	}
 
-	// objNames in those setParams
+	instantiatedExistPropDefStmt, err := existPropDef.Instantiate(uniMap)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	// param in param sets is true
+	paramInParamFacts, err := exec.ParamInParamSets(&instantiatedExistPropDefStmt.DefBody.DefHeader)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	for _, paramInParamSet := range paramInParamFacts {
+		err := exec.env.NewFact(&paramInParamSet)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+	}
 
 	// dom of def exist prop is true
+	for _, domFact := range instantiatedExistPropDefStmt.DefBody.DomFacts {
+		err := exec.env.NewFact(domFact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+	}
 
 	// iff of def exist prop is true
+	for _, iffFact := range instantiatedExistPropDefStmt.DefBody.IffFacts {
+		err := exec.env.NewFact(iffFact)
+		if err != nil {
+			return glob.ExecState_Error, err
+		}
+	}
 
 	// TODO 相关的 exist st 事实也成立
+	existStFactParams := []ast.Fc{}
+	existStFactParams = append(existStFactParams, paramAsAtoms...)
+	existStFactParams = append(existStFactParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
+	existStFactParams = append(existStFactParams, stmt.Fact.Params...)
+
+	newExistStFact := ast.SpecFactStmt{
+		TypeEnum: ast.TrueExist_St,
+		PropName: ast.FcAtom{PkgName: exec.curPkg, Name: stmt.Fact.PropName.Name},
+		Params:   existStFactParams,
+	}
+	err = exec.env.NewFact(&newExistStFact)
+	if err != nil {
+		return glob.ExecState_True, nil
+	}
 
 	return glob.ExecState_True, nil
 }

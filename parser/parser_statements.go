@@ -614,7 +614,7 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 		nameDepthMap[existParam] = 1
 	}
 
-	def, err := tb.existDefProp(nameDepthMap)
+	def, err := tb.defExistPropStmtBody(nameDepthMap)
 
 	// add prefix to existParams
 	for i := range existParams {
@@ -807,7 +807,7 @@ func (tb *tokenBlock) bodyBlockFacts(nameDepthMap ast.NameDepthMap, curAllowUniF
 	return facts, nil
 }
 
-func (tb *tokenBlock) existDefProp(existParamDepthMap ast.NameDepthMap) (*ast.DefExistPropStmtBody, error) {
+func (tb *tokenBlock) defExistPropStmtBody(existParamDepthMap ast.NameDepthMap) (*ast.DefExistPropStmtBody, error) {
 	declHeader, nameDepthMap, err := tb.defHeader()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
