@@ -13,27 +13,30 @@
 package litex_verifier
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 )
 
 func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !stmt.IsValidEqualFact() {
+	if ok, err := stmt.IsValidEqualFact(); err != nil {
+		return false, err
+	} else if !ok {
 		return false, nil
 	}
+	return ver.fcEqual(stmt.Params[0], stmt.Params[1], state)
+}
 
+func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	isSuccess := false
 	defer func() {
 		if state.requireMsg() && isSuccess {
-			ver.successMsgEnd(stmt.String(), "")
+			ver.successMsgEnd(fmt.Sprintf("%s = %s", left.String(), right.String()), "")
 		}
 	}()
 
-	left := stmt.Params[0]
-	right := stmt.Params[1]
-
-	// Case: 用内置方法直接比较，比如计算字面量都是整数，那可以通过运算来比较
-	ok, err := cmp.CmpFcRule(left, right)
+	// Case1: 用内置方法直接比较，比如计算字面量都是整数，那可以通过运算来比较
+	ok, err := ver.fcEqual_Commutative_Associative_CmpRule(left, right)
 	if err != nil {
 		return false, err
 	}
@@ -42,7 +45,7 @@ func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 		return true, nil
 	}
 
-	// Case: 用Meme里找
+	// Case2: 用Mem里找
 	if ok, err := ver.equalByEqualMem(left, right); err != nil {
 		return false, err
 	} else if ok {
@@ -50,7 +53,7 @@ func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 		return true, nil
 	}
 
-	// Case: 如果left, right都是 FcFn，那一位位比较一下
+	// Case3: 如果left, right都是 FcFn，那一位位比较一下
 	cmpRet, fcEnum, err := cmp.CmpFcType(left, right)
 	if err != nil {
 		return false, err
@@ -60,6 +63,7 @@ func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 		return false, nil
 	}
 
+	// 总之这里估计是有待提高的
 	if fcEnum == cmp.FcFnEnum {
 		// WARNING:  这里根本不是SpecMsg，而是RoundMsg，所以fcEqualSpec里不能是可能用到非SpecFact的
 		// state = state.addRound()
@@ -69,7 +73,7 @@ func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 		return false, nil
 	}
 
-	return isSuccess, nil
+	return false, nil
 }
 
 func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc) (bool, error) {

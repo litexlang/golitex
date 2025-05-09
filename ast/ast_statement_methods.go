@@ -130,10 +130,18 @@ func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
 	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams), nil
 }
 
-func (stmt *SpecFactStmt) IsValidEqualFact() bool {
-	return stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual) && len(stmt.Params) == 2
+func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
+	if stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual) {
+		if len(stmt.Params) == 2 {
+			return true, nil
+		} else {
+			return false, fmt.Errorf("equal fact %s should have 2 params, but got %d", stmt.String(), len(stmt.Params))
+		}
+	} else {
+		return false, nil
+	}
 }
 
 func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
-	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name) && !stmt.IsValidEqualFact()
+	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name) && !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual)
 }
