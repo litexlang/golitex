@@ -702,9 +702,6 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
-	// if _, ok := nameDepthMap[propName.Name]; ok {
-	// 	return nil, fmt.Errorf("prop name should not be free, got: %s", propName.Name)
-	// }
 
 	propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepthMap)
 

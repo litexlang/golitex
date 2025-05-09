@@ -48,7 +48,7 @@ func (e *Executor) clearMsgAndOutput() {
 	e.env.Msgs = []string{}
 }
 
-func (e *Executor) appendNewMsg(msg string, str ...any) {
+func (e *Executor) appendMsg(msg string, str ...any) {
 	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(msg, str...))
 }
 
@@ -58,4 +58,8 @@ func (e *Executor) appendNewMsgAtBegin(msg string, str ...any) {
 
 func (e *Executor) appendWarningMsg(msg string, str ...any) {
 	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning: %s`, fmt.Sprintf(msg, str...)))
+}
+
+func (e *Executor) appendInternalWarningMsg(msg string, str ...any) {
+	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning (current version of Litex has not implemented some features you might expect): %s`, fmt.Sprintf(msg, str...)))
 }

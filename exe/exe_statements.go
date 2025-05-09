@@ -68,7 +68,7 @@ func (exec *Executor) TopLevelStmt(stmt *ast.TopStmt) (glob.ExecState, error) {
 }
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
-	defer exec.appendNewMsg("\n")
+	defer exec.appendMsg("\n")
 
 	curVerifier := verifier.NewVerifier(exec.env, exec.curPkg)
 	ok, err := curVerifier.FactStmt(stmt, verifier.Round0Msg)
@@ -93,21 +93,21 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 				return glob.ExecState_Error, err
 			}
 			if ok {
-				exec.appendNewMsg(asSpecFact.String() + "\nis false")
+				exec.appendMsg(asSpecFact.String() + "\nis false")
 				return glob.ExecState_False, nil
 			} else {
-				exec.appendNewMsg(stmt.String() + "\nis unknown")
+				exec.appendMsg(stmt.String() + "\nis unknown")
 			}
 		}
 	} else {
-		exec.appendNewMsg(stmt.String() + "\nis unknown")
+		exec.appendMsg(stmt.String() + "\nis unknown")
 	}
 
 	return glob.ExecState_Unknown, nil
 }
 
 func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
-	defer exec.appendNewMsg("\n")
+	defer exec.appendMsg("\n")
 
 	for _, fact := range stmt.Facts {
 		err := exec.env.NewFact(fact)
@@ -116,7 +116,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
 		}
 	}
 
-	exec.appendNewMsg(stmt.String())
+	exec.appendMsg(stmt.String())
 	return nil
 }
 
@@ -167,10 +167,10 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
-	defer exec.appendNewMsg("\n")
+	defer exec.appendMsg("\n")
 
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
-	defer exec.appendNewMsg(stmt.String())
+	defer exec.appendMsg(stmt.String())
 
 	// iff leads to prop
 	err := exec.env.NewDefProp(stmt)
@@ -194,7 +194,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 
 	err = exec.env.NewFact(newUniFact)
 
-	exec.appendNewMsg(fmt.Sprintf("know by prop definition:\n%s", newUniFact.String()))
+	exec.appendMsg(fmt.Sprintf("know by prop definition:\n%s", newUniFact.String()))
 
 	if err != nil {
 		return err
@@ -209,7 +209,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
-	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 	err := exec.env.NewDefObj(stmt)
 	if err != nil {
 		return err
@@ -242,8 +242,8 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
-	defer exec.appendNewMsg("\n")
-	defer exec.appendNewMsg(stmt.String())
+	defer exec.appendMsg("\n")
+	defer exec.appendMsg(stmt.String())
 	err := exec.env.NewDefFn(stmt)
 	if err != nil {
 		return err
@@ -276,8 +276,8 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
-	defer exec.appendNewMsg("\n")
-	defer exec.appendNewMsg(stmt.String())
+	defer exec.appendMsg("\n")
+	defer exec.appendMsg(stmt.String())
 	err := exec.env.NewDefExistProp(stmt)
 	if err != nil {
 		return err
@@ -286,8 +286,8 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) error {
 }
 
 func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
-	defer exec.appendNewMsg("\n")
-	defer exec.appendNewMsg(stmt.String())
+	defer exec.appendMsg("\n")
+	defer exec.appendMsg(stmt.String())
 
 	// 检查 SpecFactStmt 是否满足了
 	execState, err := exec.factStmt(&stmt.Fact)
@@ -295,12 +295,12 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		return glob.ExecState_Error, err
 	}
 	if execState != glob.ExecState_True {
-		exec.appendNewMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
+		exec.appendMsg(fmt.Sprintf("%s is unknown", stmt.Fact.String()))
 		return glob.ExecState_Unknown, nil
 	}
 
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
-	exec.appendNewMsg("warning: current version of Litex only support exist obj. if you want to introduce set or fn by the have stmt, you need to use the set or fn stmt to introduce them.")
+	exec.appendInternalWarningMsg("Litex only support have obj. if you want to introduce set or fn by the have stmt, you need to use the set or fn stmt to introduce them.")
 
 	// TODO 暂时认为都是obj
 	for _, objName := range stmt.ObjNames {
@@ -357,7 +357,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		}
 	}
 
-	// TODO 相关的 exist st 事实也成立
+	// 相关的 exist st 事实也成立
 	existStFactParams := []ast.Fc{}
 	existStFactParams = append(existStFactParams, paramAsAtoms...)
 	existStFactParams = append(existStFactParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
@@ -395,8 +395,8 @@ func (exec *Executor) defStmt(stmt ast.DefStmt) error {
 }
 
 func (exec *Executor) matcherEnvStmt(stmt *ast.MatcherEnvStmt) error {
-	defer exec.appendNewMsg("\n")
-	defer exec.appendNewMsg(stmt.String())
+	defer exec.appendMsg("\n")
+	defer exec.appendMsg(stmt.String())
 
 	for _, curStmt := range stmt.Body {
 		execState, err := exec.stmt(curStmt)
@@ -448,7 +448,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimStmt) (bool, error) {
 	isSuccess := false
 
 	defer func() {
-		exec.appendNewMsg("\n")
+		exec.appendMsg("\n")
 		if isSuccess {
 			exec.appendNewMsgAtBegin("is true\n")
 		} else {
@@ -514,7 +514,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 	isSuccess := false
 
 	defer func() {
-		exec.appendNewMsg("\n")
+		exec.appendMsg("\n")
 		if isSuccess {
 			exec.appendNewMsgAtBegin("is true\n")
 		} else {
@@ -570,7 +570,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 }
 
 func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
-	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
 	err := exec.env.SetMem.Insert(stmt, exec.curPkg)
 	if err != nil {
@@ -582,7 +582,7 @@ func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) (glob.ExecState, error) {
 	isSuccess := false
 	defer func() {
-		exec.appendNewMsg("\n")
+		exec.appendMsg("\n")
 		if isSuccess {
 			exec.appendNewMsgAtBegin("is true\n")
 		} else {
@@ -650,7 +650,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 }
 
 func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
-	defer exec.appendNewMsg(fmt.Sprintf("%s\n", stmt.String()))
+	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
 	err := exec.defPropStmt(&stmt.Prop)
 	if err != nil {
