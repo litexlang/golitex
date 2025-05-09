@@ -44,7 +44,23 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 		return true, nil
 	}
 
-	// Case2: 用Mem里找
+	// Case2: 如果left, right都是 FcFn，那一位位比较一下。
+	leftAsFn, ok := left.(*ast.FcFn)
+	if ok {
+		rightAsFn, ok := right.(*ast.FcFn)
+		if ok {
+			ok, err = ver.fcFnEq(leftAsFn, rightAsFn, state.toSpec())
+			if err != nil {
+				return false, err
+			}
+			if ok {
+				isSuccess = true
+				return true, nil
+			}
+		}
+	}
+
+	// Case3: 用Mem里找到和left相等的所有情况，和right匹配；或者反过来
 	if ok, err := ver.equalByEqualMem(left, right, state); err != nil {
 		return false, err
 	} else if ok {
@@ -52,16 +68,7 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 		return true, nil
 	}
 
-	// Case3: 如果left, right都是 FcFn，那一位位比较一下。
-	leftAsFn, ok := left.(*ast.FcFn)
-	if !ok {
-		return false, nil
-	}
-	rightAsFn, ok := right.(*ast.FcFn)
-	if !ok {
-		return false, nil
-	}
-	return ver.fcFnEq(leftAsFn, rightAsFn, state.toSpec())
+	return false, nil
 }
 
 func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
