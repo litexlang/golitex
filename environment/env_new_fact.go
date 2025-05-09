@@ -36,38 +36,12 @@ func (env *Env) newLogicExprStmt(fact *ast.LogicExprStmt) error {
 }
 
 func (env *Env) NewSpecFact(fact *ast.SpecFactStmt) error {
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordCommutativeProp) {
-		// 验证它的def确实只有两个元素
-		if len(fact.Params) != 1 {
-			return fmt.Errorf("commutative prop is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
-		}
-
-		propNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
-		if !ok {
-			return fmt.Errorf("commutative prop is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
-		}
-
-		propDef, ok := env.PropMem.Get(*propNameAsAtom)
-		if !ok {
-			return fmt.Errorf("prop %s has no definition", fact.PropName)
-		}
-
-		if len(propDef.DefHeader.Params) != 2 {
-			return fmt.Errorf("prop %s is supposed to be commutative, but has no %d parameters", fact.PropName, len(propDef.DefHeader.Params))
-		}
-
-		env.InsertCommutativeProp(*propNameAsAtom)
-
-		return nil
+	if isCommutativeProp, err := env.IsCommutativePropName_StoreIt(fact); isCommutativeProp {
+		return err
 	}
 
-	if ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqual) {
-		err := env.NewEqualFact(fact)
-		if err != nil {
-			return err
-		}
-		// TODO 之后不要存到普通的事实所处的地方
-		// return nil
+	if isEqualFact, err := env.IsEqualFact_StoreIt(fact); isEqualFact {
+		return err
 	}
 
 	err := env.SpecFactMem.NewFact(fact)
@@ -291,9 +265,13 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 	return ast.NewUniFactStmtWithSetReqInDom(existPropDef.ExistParams, existPropDef.ExistParamSets, domFacts, thenFacts, ast.EmptyIffFacts), nil
 }
 
-func (env *Env) NewEqualFact(fact *ast.SpecFactStmt) error {
+func (env *Env) IsEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqual) {
+		return false, nil
+	}
+
 	if len(fact.Params) != 2 {
-		return fmt.Errorf("`=` fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
+		return true, fmt.Errorf("`=` fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
 	}
 
 	leftAsStr := fact.Params[0].String()
@@ -304,41 +282,70 @@ func (env *Env) NewEqualFact(fact *ast.SpecFactStmt) error {
 
 	if leftGot && rightGot {
 		if storedEqualLeftFcs == storedEqualRightFcs {
-			return nil
+			return true, nil
 		} else {
 			newEqualFcs := []ast.Fc{}
 			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
 			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
 			*storedEqualLeftFcs = newEqualFcs
 			*storedEqualRightFcs = newEqualFcs
-			return nil
+			return true, nil
 		}
 	}
 
 	if leftGot && !rightGot {
 		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
 		env.EqualMem[rightAsStr] = storedEqualLeftFcs
-		return nil
+		return true, nil
 	}
 
 	if !leftGot && rightGot {
 		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
 		env.EqualMem[leftAsStr] = storedEqualRightFcs
-		return nil
+		return true, nil
 	}
 
 	if !leftGot && !rightGot {
 		newEqualFcs := []ast.Fc{fact.Params[0], fact.Params[1]}
 		env.EqualMem[leftAsStr] = &newEqualFcs
 		env.EqualMem[rightAsStr] = &newEqualFcs
-		return nil
+		return true, nil
 	}
 
-	return nil
+	return true, nil
 }
 
 func (env *Env) GetEqualFcs(fc ast.Fc) (*[]ast.Fc, bool) {
 	fcAsStr := fc.String()
 	facts, ok := env.EqualMem[fcAsStr]
 	return facts, ok
+}
+
+func (env *Env) IsCommutativePropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordCommutativeProp) {
+		return false, nil
+	}
+
+	// 验证它的def确实只有两个元素
+	if len(fact.Params) != 1 {
+		return true, fmt.Errorf("commutative prop is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
+	}
+
+	propNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
+	if !ok {
+		return true, fmt.Errorf("commutative prop is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
+	}
+
+	propDef, ok := env.PropMem.Get(*propNameAsAtom)
+	if !ok {
+		return true, fmt.Errorf("prop %s has no definition", fact.PropName)
+	}
+
+	if len(propDef.DefHeader.Params) != 2 {
+		return true, fmt.Errorf("prop %s is supposed to be commutative, but has no %d parameters", fact.PropName, len(propDef.DefHeader.Params))
+	}
+
+	env.InsertCommutativeProp(*propNameAsAtom)
+
+	return true, nil
 }
