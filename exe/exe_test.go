@@ -606,7 +606,7 @@ func TestAllFactCode(t *testing.T) {
 	fmt.Printf("read file takes %v\nparsing takes %v\nexecution takes %v\n", readFileTime, parseTime, executionTime)
 }
 
-var code = readFile("../examples/test_codes/math_induction.lix")
+var code = readFile("../examples/test_codes/infix_fn.lix")
 
 func TestLastFactCode(t *testing.T) {
 	start := time.Now()

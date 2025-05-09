@@ -40,11 +40,19 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
+	if isMathInductionProp, err := env.IsMathInductionPropName_StoreIt(fact); isMathInductionProp {
+		return err
+	}
+
 	if isCommutativeProp, err := env.IsCommutativePropName_StoreIt(fact); isCommutativeProp {
 		return err
 	}
 
-	if isMathInductionProp, err := env.IsMathInductionPropName_StoreIt(fact); isMathInductionProp {
+	if isCommutativeFn, err := env.IsCommutativeFnName_StoreIt(fact); isCommutativeFn {
+		return err
+	}
+
+	if isAssociativeFn, err := env.IsAssociativeFnName_StoreIt(fact); isAssociativeFn {
 		return err
 	}
 
@@ -391,6 +399,44 @@ func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 	if err != nil {
 		return false, err
 	}
+
+	return true, nil
+}
+
+func (env *Env) IsCommutativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordCommutativeFn) {
+		return false, nil
+	}
+
+	if len(fact.Params) != 1 {
+		return false, fmt.Errorf("commutative fn is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
+	}
+
+	fnNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
+	if !ok {
+		return false, fmt.Errorf("commutative fn is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
+	}
+
+	env.InsertCommutativeFn(*fnNameAsAtom)
+
+	return true, nil
+}
+
+func (env *Env) IsAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordAssociativeFn) {
+		return false, nil
+	}
+
+	if len(fact.Params) != 1 {
+		return false, fmt.Errorf("associative fn is supposed to have one parameter, but %s has %d parameters", fact.PropName, len(fact.Params))
+	}
+
+	fnNameAsAtom, ok := fact.Params[0].(*ast.FcAtom)
+	if !ok {
+		return false, fmt.Errorf("associative fn is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
+	}
+
+	env.InsertAssociativeFn(*fnNameAsAtom)
 
 	return true, nil
 }
