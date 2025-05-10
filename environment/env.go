@@ -235,3 +235,18 @@ func (e *Env) GetSetDef(set ast.Fc) (*ast.SetDefSetBuilderStmt, bool) {
 	}
 	return nil, false
 }
+
+func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
+	fnAsAtom, isFnAsAtom := fn.(*ast.FcAtom)
+	if !isFnAsAtom {
+		return nil, false
+	}
+
+	for env := e; env != nil; env = env.Parent {
+		fnDef, ok := env.FnMem.Get(*fnAsAtom)
+		if ok {
+			return fnDef, true
+		}
+	}
+	return nil, false
+}
