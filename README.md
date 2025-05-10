@@ -404,6 +404,8 @@ C does not allow operator overloading. The only instances of operator overloadin
 
 Since C has builtin int, float, complex, Litex has nat, rat, real, complex as builtin sets and no others.
 
+In you want to build equivalence between two propositions/functions from different packages, you can use `prop_equavalent` or `fn_equal` to do so, this is handy because two groups might indenpendently derive the same proposition/function, but they all maintain their own package.
+
 ### Work in Progresss
 
 Since Litex is (at least for the first 2500 git commits) is a single-man project, I have to do a lot of things by myself. I choose to make it work in a specific domain as top priority instead of making it "has much syntax sugar and features as possible". So in the first 0.01 version, I ignore the following features (these features will be implemented in the future):

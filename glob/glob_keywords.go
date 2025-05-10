@@ -14,27 +14,29 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
-	KeywordSet       = "set"
-	KeywordForall    = "forall"
-	KeywordDom       = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
-	KeywordThen      = "then"
-	KeywordObj       = "obj"
-	KeywordHave      = "have"
-	KeywordFn        = "fn"
-	KeywordProp      = "prop"
-	KeywordKnow      = "know"
-	KeywordExist     = "exist"
-	KeywordSt        = "st"
-	KeywordExistProp = "exist_prop"
-	KeywordClaim     = "claim"
-	KeywordProve     = "prove"
-	KeywordPub       = "pub"
-	KeywordImport    = "import"
-	KeywordPackage   = "package"
-	KeywordNot       = "not"
-	// KeywordAs                    = "as"
+	KeywordSet                  = "set"
+	KeywordForall               = "forall"
+	KeywordDom                  = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
+	KeywordThen                 = "then"
+	KeywordObj                  = "obj"
+	KeywordHave                 = "have"
+	KeywordFn                   = "fn"
+	KeywordProp                 = "prop"
+	KeywordKnow                 = "know"
+	KeywordExist                = "exist"
+	KeywordSt                   = "st"
+	KeywordExistProp            = "exist_prop"
+	KeywordClaim                = "claim"
+	KeywordProve                = "prove"
+	KeywordPub                  = "pub"
+	KeywordImport               = "import"
+	KeywordPackage              = "package"
+	KeywordNot                  = "not"
 	KeywordProveByContradiction = "prove_by_contradiction"
 	KeywordProveInEachCase      = "prove_in_each_case" // 必要：和or一起使用
+	KeywordSetEqual             = "set_equal"
+	KeywordPropEquavalent       = "prop_equavalent"
+	KeywordFnEqual              = "fn_equal"
 	KeywordIff                  = "iff"
 	KeywordAnd                  = "and"
 	KeywordOr                   = "or"
@@ -49,39 +51,35 @@ const (
 	KeywordIn                   = "in"
 	KeywordMathInduction        = "math_induction"
 	KeywordFrac                 = "frac"
-	KeywordExtend               = "extend"
-
+	KeywordR                    = "R" // r as postfix for real number
+	KeywordF                    = "F" // f as postfix for float number
+	KeywordI                    = "i" // i for imaginary part of a complex number
+	KeywordN                    = "N" // n as postfix for natural number
+	KeywordC                    = "C" // c as postfix for complex number
 	// litex version 0.2 的时候可以考虑实现。这样的话fn所在的集合也能像obj一样简单了
-	KeywordFnSet = "fn_set"
+	// KeywordFnSet = "fn_set"
 	// litex version 0.3 的时候可以考虑实现。这样的话set所在的集合也能像obj一样简单了
-	KeywordSetSet = "set_set"
-
-	KeywordR = "R" // r as postfix for real number
-	KeywordF = "F" // f as postfix for float number
-	KeywordI = "i" // i for imaginary part of a complex number
-	KeywordN = "N" // n as postfix for natural number
-	KeywordC = "C" // c as postfix for complex number
+	// KeywordSetSet = "set_set"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:       {},
-	KeywordForall:    {},
-	KeywordDom:       {},
-	KeywordThen:      {},
-	KeywordObj:       {},
-	KeywordHave:      {},
-	KeywordFn:        {},
-	KeywordProp:      {},
-	KeywordKnow:      {},
-	KeywordExistProp: {},
-	KeywordSt:        {},
-	KeywordClaim:     {},
-	KeywordProve:     {},
-	KeywordPub:       {},
-	KeywordImport:    {},
-	KeywordPackage:   {},
-	KeywordNot:       {},
-	// KeywordAs:                    {},
+	KeywordSet:                  {},
+	KeywordForall:               {},
+	KeywordDom:                  {},
+	KeywordThen:                 {},
+	KeywordObj:                  {},
+	KeywordHave:                 {},
+	KeywordFn:                   {},
+	KeywordProp:                 {},
+	KeywordKnow:                 {},
+	KeywordExistProp:            {},
+	KeywordSt:                   {},
+	KeywordClaim:                {},
+	KeywordProve:                {},
+	KeywordPub:                  {},
+	KeywordImport:               {},
+	KeywordPackage:              {},
+	KeywordNot:                  {},
 	KeywordProveByContradiction: {},
 	KeywordProveInEachCase:      {},
 	KeywordIff:                  {},
@@ -97,16 +95,16 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:                 {},
 	KeywordIs:                   {},
 	KeywordIn:                   {},
-	KeywordExtend:               {},
-	KeywordFnSet:                {},
-	KeywordSetSet:               {},
 	KeywordMathInduction:        {},
-
-	KeywordR: {},
-	KeywordF: {},
-	KeywordI: {},
-	KeywordN: {},
-	KeywordC: {},
+	KeywordFrac:                 {},
+	KeywordSetEqual:             {},
+	KeywordPropEquavalent:       {},
+	KeywordFnEqual:              {},
+	KeywordR:                    {},
+	KeywordF:                    {},
+	KeywordI:                    {},
+	KeywordN:                    {},
+	KeywordC:                    {},
 }
 
 const (
