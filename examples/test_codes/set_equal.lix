@@ -1,0 +1,9 @@
+prove:
+    set a
+    set b
+    know:
+        forall x a:
+            x $in b
+        forall x b:
+            x $in a
+    $set_equal(a,b)

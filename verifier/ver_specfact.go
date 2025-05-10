@@ -125,7 +125,13 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if ok, err := ver.equalFact(stmt, state); err != nil {
+	if ok, err := ver.isEqualFact_Check(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
+	if ok, err := ver.setEqualFact(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -669,4 +675,55 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 	}
 
 	return true, nil
+}
+
+func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeywordSetEqual) {
+		return false, nil
+	}
+
+	if len(stmt.Params) != 2 {
+		return false, fmt.Errorf("set equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
+	}
+
+	leftSet := stmt.Params[0]
+	rightSet := stmt.Params[1]
+
+	// forall x leftSet: x in rightSet
+	uniFactItemsInLeftSetInRightSet := ast.UniFactStmt{
+		Params:    []string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
+		ParamSets: []ast.Fc{leftSet},
+		DomFacts:  []ast.FactStmt{},
+		ThenFacts: []ast.FactStmt{&ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: ast.FcAtom{
+			PkgName: glob.BtEmptyPkgName, Name: glob.KeywordIn},
+			Params: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sx", glob.UniParamPrefix)}, rightSet}}},
+		IffFacts: ast.EmptyIffFacts,
+	}
+
+	ok, err := ver.FactStmt(&uniFactItemsInLeftSetInRightSet, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	// forall x rightSet: x in leftSet
+	uniFactItemsInRightSetInLeftSet := ast.UniFactStmt{
+		Params:    []string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
+		ParamSets: []ast.Fc{rightSet},
+		DomFacts:  []ast.FactStmt{},
+		ThenFacts: []ast.FactStmt{&ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordIn}, Params: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sx", glob.UniParamPrefix)}, leftSet}}},
+		IffFacts:  ast.EmptyIffFacts,
+	}
+
+	ok, err = ver.FactStmt(&uniFactItemsInRightSetInLeftSet, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	return ok, nil
 }
