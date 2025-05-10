@@ -1,0 +1,7 @@
+prove:
+    fn f(a int) int
+    fn g(a int) int
+    know:
+        forall x int:
+            f(x) = g(x)
+            

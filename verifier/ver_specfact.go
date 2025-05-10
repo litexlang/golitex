@@ -137,6 +137,12 @@ func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return true, nil
 	}
 
+	if ok, err := ver.fnEqualFact(stmt, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
 	if ok, err := ver.btPropExceptEqual_Rule_MemSpec(stmt, state); err != nil {
 		return false, err
 	} else if ok {
@@ -754,4 +760,43 @@ func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 	}
 
 	return ok, nil
+}
+
+func (ver *Verifier) fnEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeywordFnEqual) {
+		return false, nil
+	}
+
+	if len(stmt.Params) != 2 {
+		return false, fmt.Errorf("fn equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
+	}
+
+	leftFnDef, ok := ver.env.GetFnDef(stmt.Params[0])
+	if !ok {
+		return false, nil
+	}
+
+	rightFnDef, ok := ver.env.GetFnDef(stmt.Params[1])
+	if !ok {
+		return false, nil
+	}
+
+	// 函数相等，意味着定义域相等，每个元素上的返回值相等
+
+	// 定义域相等
+	// 元素数量相等
+	if len(leftFnDef.DefHeader.Params) != len(rightFnDef.DefHeader.Params) {
+		return false, nil
+	}
+
+	leftToRight := ast.UniFactStmt{
+		Params:    leftFnDef.DefHeader.Params,
+		ParamSets: leftFnDef.DefHeader.SetParams,
+		DomFacts:  leftFnDef.DomFacts,
+		ThenFacts: []ast.FactStmt{},
+		IffFacts:  ast.EmptyIffFacts,
+	}
+	_ = leftToRight
+
+	return false, nil
 }

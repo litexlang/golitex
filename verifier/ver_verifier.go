@@ -17,6 +17,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
 // 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
@@ -155,5 +156,5 @@ func (ver *Verifier) factDefer(stmt ast.FactStmt, state VerState, proved bool, e
 }
 
 func (ver *Verifier) appendInternalWarningMsg(s string, args ...any) {
-	ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf(`warning (current version of Litex has not implemented some features you might expect): %s\n`, fmt.Sprintf(s, args...)))
+	ver.env.Msgs = append(ver.env.Msgs, glob.InternalWarningMsg(s, args...))
 }

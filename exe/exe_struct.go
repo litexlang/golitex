@@ -15,6 +15,7 @@ package litex_executor
 import (
 	"fmt"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
 // type Executor env.Env
@@ -61,5 +62,5 @@ func (e *Executor) appendWarningMsg(msg string, str ...any) {
 }
 
 func (e *Executor) appendInternalWarningMsg(msg string, str ...any) {
-	e.env.Msgs = append(e.env.Msgs, fmt.Sprintf(`warning (current version of Litex has not implemented some features you might expect): %s`, fmt.Sprintf(msg, str...)))
+	e.env.Msgs = append(e.env.Msgs, glob.InternalWarningMsg(msg, str...))
 }

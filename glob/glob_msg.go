@@ -13,6 +13,7 @@
 package litex_global
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -42,4 +43,8 @@ func SplitLinesAndAdd4NIndents(line string, n uint32) string {
 	}
 
 	return builder.String()
+}
+
+func InternalWarningMsg(s string, args ...any) string {
+	return fmt.Sprintf(`warning (current version of Litex has not implemented some features you might expect): %s\n`, fmt.Sprintf(s, args...))
 }
