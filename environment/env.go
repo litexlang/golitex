@@ -220,3 +220,18 @@ func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {
 	}
 	return false
 }
+
+func (e *Env) GetSetDef(set ast.Fc) (*ast.SetDefSetBuilderStmt, bool) {
+	setAsAtom, isSetAsAtom := set.(*ast.FcAtom)
+	if !isSetAsAtom {
+		return nil, false
+	}
+
+	for env := e; env != nil; env = env.Parent {
+		setDef, ok := env.SetMem.Get(setAsAtom.PkgName, setAsAtom.Name)
+		if ok {
+			return setDef, true
+		}
+	}
+	return nil, false
+}

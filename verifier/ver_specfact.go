@@ -689,6 +689,28 @@ func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 	leftSet := stmt.Params[0]
 	rightSet := stmt.Params[1]
 
+	// they are both sets
+	// TODO: Currently can only check a fcAtom as set. If a set is a return value of a fn, current implementation will not work.
+	ver.appendInternalWarningMsg("Currently can only check a fcAtom as set. If a set is a return value of a fn, current implementation will not work.")
+	_, ok := ver.env.GetSetDef(leftSet)
+	if !ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), fmt.Sprintf("left set %s is not a declared set", leftSet.String()))
+		} else {
+			ver.successNoMsg()
+		}
+		return false, nil
+	}
+	_, ok = ver.env.GetSetDef(rightSet)
+	if !ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), fmt.Sprintf("right set %s is not a declared set", rightSet.String()))
+		} else {
+			ver.successNoMsg()
+		}
+		return false, nil
+	}
+
 	// forall x leftSet: x in rightSet
 	uniFactItemsInLeftSetInRightSet := ast.UniFactStmt{
 		Params:    []string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
@@ -723,6 +745,12 @@ func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 	}
 	if !ok {
 		return false, nil
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), "set equal definition")
+	} else {
+		ver.successNoMsg()
 	}
 
 	return ok, nil
