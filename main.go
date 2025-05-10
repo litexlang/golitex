@@ -18,10 +18,10 @@ import (
 )
 
 func main() {
-	msg, signal, err := sys.RunFile("./litex_code_examples/use_storedUniFact_with_uniFact_as_dom.lix")
+	msg, signal, err := sys.RunFile("./examples/compresensive_examples/syllogism.lix")
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	fmt.Println(msg)
+	fmt.Println(sys.BetterMsg(msg))
 	fmt.Println(signal)
 }

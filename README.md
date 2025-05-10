@@ -110,8 +110,9 @@ prop less_than(a Real, b Real): # self defined a < b
 
 Every fact in Litex must be tied to a concrete entity: object (`obj`), function (`fn`), proposition (`prop`). Users must declare objects before use. Any object must belong to a set.
 
-
 Functions in Litex are not executed. In the realm of mathematics, a function is essentially an entity that is eligible to precede a set of parentheses (). It shares similarities with what we refer to as a object, with the distinctive feature being its ability to be positioned before the ().
+
+Another good way of understanding difference between function in Litex or math and function in programming language is that in programming language, even if two functions are of the same logic, they are not equal and it is weird to compare two functions (or function pointers). Only functions with the same name are equal. However, in Litex, two functions can be equal as long as their dom are equal as sets, their value domain are equal as sets, and their value are the same on every element of their dom.
 
 Users can think of a function as something that takes parameters that satisfy the condition of fn and combines them to form a new symbol of symbols. It works like struct in C: allows users to group together objects of satisfying certain conditions under a single name. 
 
@@ -277,6 +278,7 @@ You can also use `prove` to open a local environment and write test codes, mimic
 Computer is fundamentally about automating repetitive tasks. Litex is no exception. There are some small but useful features that make Litex more friendly to use.
 
 1. `commutative` and `associative` keywords: These keywords are used to verify the commutative and associative properties of a function. They tell the interpreter to verify the fact in both directions.
+
 
 
 ### Another example

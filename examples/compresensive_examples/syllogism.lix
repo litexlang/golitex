@@ -1,0 +1,10 @@
+set human
+prop is_self_aware(x human)
+
+know:
+    forall x human:
+        x is self_aware
+
+obj Alice human
+Alice is self_aware
+        
