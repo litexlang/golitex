@@ -54,7 +54,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 
 		for j := range curLen {
 			// ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(leftTails[i][j], rightTails[i][j])
-			ok, err := ver.fcEqual(leftTails[i][j], rightTails[i][j], state)
+			ok, err := ver.fcEqualSpec(leftTails[i][j], rightTails[i][j], state)
 			// ok, err := ver.makeFcEqualFactAndVerify(leftTails[i][j], rightTails[i][j], curState)
 			if err != nil {
 				return false, err
@@ -81,7 +81,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 
 	// ok, err := ver.makeFcEqualFactAndVerify(leftHead, rightHead, curState)
 	// ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(leftHead, rightHead)
-	ok, err := ver.fcEqual(leftHead, rightHead, state)
+	ok, err := ver.fcEqualSpec(leftHead, rightHead, state)
 	if err != nil {
 		return false, err
 	}
@@ -104,7 +104,7 @@ func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerSt
 
 	// ok, err := ver.makeFcEqualFactAndVerify(left.FnHead, right.FnHead, state)
 	// ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(left.FnHead, right.FnHead)
-	ok, err := ver.fcEqual(left.FnHead, right.FnHead, state)
+	ok, err := ver.fcEqualSpec(left.FnHead, right.FnHead, state)
 	if err != nil {
 		return false, err
 	}
@@ -121,7 +121,7 @@ func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerSt
 			// ok, err := ver.makeFcEqualFactAndVerify(left.ParamSegs[i][j], right.ParamSegs[i][j], curState)
 			// 这里相当于强行只能用 specFact 来证明，不能用forall来证；如果是用forall的话，就需要 makeFcEqualFactAndVerify
 			// ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(left.ParamSegs[i][j], right.ParamSegs[i][j])
-			ok, err := ver.fcEqual(left.ParamSegs[i][j], right.ParamSegs[i][j], state)
+			ok, err := ver.fcEqualSpec(left.ParamSegs[i][j], right.ParamSegs[i][j], state)
 			if err != nil {
 				return false, err
 			}
