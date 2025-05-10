@@ -20,8 +20,8 @@ func NewTopStmt(stmt Stmt, isPub bool) *TopStmt {
 	return &TopStmt{stmt, isPub}
 }
 
-func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt) *DefObjStmt {
-	return &DefObjStmt{objs, objSets, facts}
+func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, objInSetsFacts []FactStmt) *DefObjStmt {
+	return &DefObjStmt{objs, objSets, facts, objInSetsFacts}
 }
 
 func NewDefPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStmt) *DefPropStmt {
@@ -56,8 +56,8 @@ func NewFcFnDecl(name string, params []string) *FcFnDecl {
 	return &FcFnDecl{name, params}
 }
 
-func NewDefHeader(name string, params []string, typeParams []Fc) *DefHeader {
-	return &DefHeader{name, params, typeParams}
+func NewDefHeader(name string, params []string, typeParams []Fc, paramInSetsFacts []FactStmt) *DefHeader {
+	return &DefHeader{name, params, typeParams, paramInSetsFacts}
 }
 
 func NewOrAndFact(isOr bool, facts []Reversable_LogicOrSpec_Stmt) *LogicExprStmt {
