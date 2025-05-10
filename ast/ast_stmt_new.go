@@ -28,16 +28,16 @@ func NewDefPropStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []FactStm
 	return &DefPropStmt{defHeader, domFacts, iffFacts}
 }
 
-func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc) *DefExistPropStmt {
-	return &DefExistPropStmt{*def, existParams, existParamSets}
+func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc, existInSetsFacts []FactStmt) *DefExistPropStmt {
+	return &DefExistPropStmt{*def, existParams, existParamSets, existInSetsFacts}
 }
 
-func NewDefFnStmt(defHeader DefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt) *DefFnStmt {
-	return &DefFnStmt{defHeader, retType, domFacts, thenFacts}
+func NewDefFnStmt(defHeader DefHeader, retType Fc, domFacts []FactStmt, thenFacts []FactStmt, retInSetsFacts FactStmt) *DefFnStmt {
+	return &DefFnStmt{defHeader, retType, domFacts, thenFacts, retInSetsFacts}
 }
 
-func newUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
-	return &UniFactStmt{params, paramTypes, domFacts, thenFacts, iffFacts}
+func newUniFactStmt(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
+	return &UniFactStmt{params, paramTypes, domFacts, thenFacts, iffFacts, paramInSetsFacts}
 }
 
 func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc) *SpecFactStmt {
@@ -84,7 +84,7 @@ func NewMatcherEnvStmt(matcherName *FcAtom, params []Fc, body []Stmt) *MatcherEn
 	return &MatcherEnvStmt{*matcherName, params, body}
 }
 
-func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt) *UniFactStmt {
+func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
 	if glob.VerifyFcSatisfySpecFactParaReq {
 		newDomFacts := []FactStmt{}
 		for i, param := range params {
@@ -94,10 +94,10 @@ func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []
 			newDomFacts = append(newDomFacts, specFact)
 		}
 		newDomFacts = append(newDomFacts, domFacts...)
-		newUniFact := newUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts)
+		newUniFact := newUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts, paramInSetsFacts)
 		return newUniFact
 	}
-	return newUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts)
+	return newUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts, paramInSetsFacts)
 }
 
 func NewSetDefSetBuilderStmt(setName string, parentSet Fc, facts []FactStmt) *SetDefSetBuilderStmt {

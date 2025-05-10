@@ -190,7 +190,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	propAsSpec := stmt.ToSpecFact()
 	domFacts = append(domFacts, propAsSpec)
 
-	newUniFact := ast.NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, domFacts, stmt.IffFacts, ast.EmptyIffFacts)
+	newUniFact := ast.NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, domFacts, stmt.IffFacts, ast.EmptyIffFacts, stmt.DefHeader.ParamInSetsFacts)
 
 	err = exec.env.NewFact(newUniFact)
 
@@ -658,7 +658,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	}
 
 	thenFacts := []ast.FactStmt{stmt.Prop.ToSpecFact()}
-	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts)
+	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.SetParams, stmt.Prop.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.Prop.DefHeader.ParamInSetsFacts)
 
 	err = exec.env.NewFact(knownUniFact)
 	if err != nil {

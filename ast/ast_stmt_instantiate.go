@@ -137,7 +137,9 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 		newIffFacts = append(newIffFacts, newFact)
 	}
 
-	return newUniFactStmt(stmt.Params, newParamTypes, newDomFacts, newThenFacts, newIffFacts), nil
+	newParamInSetsFacts := ParamsParamSetsToInFacts(stmt.Params, newParamTypes)
+
+	return newUniFactStmt(stmt.Params, newParamTypes, newDomFacts, newThenFacts, newIffFacts, newParamInSetsFacts), nil
 }
 
 func (stmt *UniFactStmt) Instantiate(uniMap map[string]Fc) (FactStmt, error) {
@@ -253,5 +255,7 @@ func (stmt *DefExistPropStmt) Instantiate(uniMap map[string]Fc) (*DefExistPropSt
 		newExistParamSets = append(newExistParamSets, newParam)
 	}
 
-	return NewDefExistPropStmt(newDefExistPropBody, stmt.ExistParams, newExistParamSets), nil
+	existParamInSetsFacts := ParamsParamSetsToInFacts(stmt.ExistParams, newExistParamSets)
+
+	return NewDefExistPropStmt(newDefExistPropBody, stmt.ExistParams, newExistParamSets, existParamInSetsFacts), nil
 }
