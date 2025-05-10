@@ -16,6 +16,7 @@ import (
 	glob "golitex/glob"
 	pipeline "golitex/pipeline"
 	"os"
+	"strings"
 )
 
 func RunFile(path string) (string, glob.SysSignal, error) {
@@ -36,4 +37,10 @@ func ExecString(code string) (string, glob.SysSignal, error) {
 		return "", signal, err
 	}
 	return msg, signal, nil
+}
+
+func BetterMsg(msg string) string {
+	// 把超过一个的 \n 变成一个 (可能是3个，可能是2个，可能多个)
+	msg = strings.ReplaceAll(msg, "\n\n", "\n")
+	return msg
 }

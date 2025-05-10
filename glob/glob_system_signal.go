@@ -23,5 +23,5 @@ const (
 )
 
 func (s SysSignal) String() string {
-	return []string{"Syntax Error", "Runtime Error", "True", "False", "Unknown"}[s]
+	return []string{"Finished: Syntax Error", "Finished: Runtime Error", "Finished: True", "Finished: False", "Finished: Unknown"}[s]
 }
