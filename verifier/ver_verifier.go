@@ -153,3 +153,7 @@ func (ver *Verifier) factDefer(stmt ast.FactStmt, state VerState, proved bool, e
 	}
 	return proved, err
 }
+
+func (ver *Verifier) appendInternalWarningMsg(s string, args ...any) {
+	ver.env.Msgs = append(ver.env.Msgs, fmt.Sprintf(`warning (current version of Litex has not implemented some features you might expect): %s\n`, fmt.Sprintf(s, args...)))
+}

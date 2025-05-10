@@ -198,7 +198,7 @@ func (memory *SetMem) Insert(stmt *ast.SetDefSetBuilderStmt, pkgName string) err
 	return nil
 }
 
-func (memory *SetMem) Get(setName string, pkgName string) (*ast.SetDefSetBuilderStmt, bool) {
+func (memory *SetMem) Get(pkgName string, setName string) (*ast.SetDefSetBuilderStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 	if !pkgExists {
 		return nil, false
