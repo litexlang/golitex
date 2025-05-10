@@ -56,6 +56,14 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return err
 	}
 
+	if isEqualFn, err := env.IsEqualFnName_StoreIt(fact); isEqualFn {
+		return err
+	}
+
+	if isEqualSet, err := env.IsEqualSetName_StoreIt(fact); isEqualSet {
+		return err
+	}
+
 	err := env.SpecFactMem.NewFact(fact)
 	if err != nil {
 		return err
@@ -71,6 +79,48 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	}
 
 	return env.newAtomSpecFactPostProcess(fact)
+}
+
+func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFactStmt) error {
+	leftAsStr := fact.Params[0].String()
+	rightAsStr := fact.Params[1].String()
+
+	storedEqualLeftFcs, leftGot := mem[leftAsStr]
+	storedEqualRightFcs, rightGot := mem[rightAsStr]
+
+	if leftGot && rightGot {
+		if storedEqualLeftFcs == storedEqualRightFcs {
+			return nil
+		} else {
+			newEqualFcs := []ast.Fc{}
+			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
+			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
+			*storedEqualLeftFcs = newEqualFcs
+			*storedEqualRightFcs = newEqualFcs
+			return nil
+		}
+	}
+
+	if leftGot && !rightGot {
+		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
+		mem[rightAsStr] = storedEqualLeftFcs
+		return nil
+	}
+
+	if !leftGot && rightGot {
+		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
+		mem[leftAsStr] = storedEqualRightFcs
+		return nil
+	}
+
+	if !leftGot && !rightGot {
+		newEqualFcs := []ast.Fc{fact.Params[0], fact.Params[1]}
+		mem[leftAsStr] = &newEqualFcs
+		mem[rightAsStr] = &newEqualFcs
+		return nil
+	}
+
+	return nil
 }
 
 func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
@@ -286,42 +336,9 @@ func (env *Env) IsEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return true, fmt.Errorf("`=` fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
 	}
 
-	leftAsStr := fact.Params[0].String()
-	rightAsStr := fact.Params[1].String()
-
-	storedEqualLeftFcs, leftGot := env.EqualMem[leftAsStr]
-	storedEqualRightFcs, rightGot := env.EqualMem[rightAsStr]
-
-	if leftGot && rightGot {
-		if storedEqualLeftFcs == storedEqualRightFcs {
-			return true, nil
-		} else {
-			newEqualFcs := []ast.Fc{}
-			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
-			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
-			*storedEqualLeftFcs = newEqualFcs
-			*storedEqualRightFcs = newEqualFcs
-			return true, nil
-		}
-	}
-
-	if leftGot && !rightGot {
-		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
-		env.EqualMem[rightAsStr] = storedEqualLeftFcs
-		return true, nil
-	}
-
-	if !leftGot && rightGot {
-		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
-		env.EqualMem[leftAsStr] = storedEqualRightFcs
-		return true, nil
-	}
-
-	if !leftGot && !rightGot {
-		newEqualFcs := []ast.Fc{fact.Params[0], fact.Params[1]}
-		env.EqualMem[leftAsStr] = &newEqualFcs
-		env.EqualMem[rightAsStr] = &newEqualFcs
-		return true, nil
+	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
+	if err != nil {
+		return false, err
 	}
 
 	return true, nil
@@ -437,6 +454,40 @@ func (env *Env) IsAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 	}
 
 	env.InsertAssociativeFn(*fnNameAsAtom)
+
+	return true, nil
+}
+
+func (env *Env) IsEqualFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordFnEqual) {
+		return false, nil
+	}
+
+	if len(fact.Params) != 2 {
+		return false, fmt.Errorf("equal fn is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
+	}
+
+	err := storeCommutativeTransitiveFact(env.EqualFnMem, fact)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (env *Env) IsEqualSetName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordSetEqual) {
+		return false, nil
+	}
+
+	if len(fact.Params) != 2 {
+		return false, fmt.Errorf("equal set is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
+	}
+
+	err := storeCommutativeTransitiveFact(env.EqualSetMem, fact)
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 }

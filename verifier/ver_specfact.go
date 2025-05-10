@@ -854,6 +854,17 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 		leftToRightThenFacts = append(leftToRightThenFacts, instRightDomFact)
 	}
 
+	// 返回值类型一样
+	leftRetSet := leftFnDef.RetSet
+	rightRetSet := rightFnDef.RetSet
+	ok, err := ver.fcEqualSpec(leftRetSet, rightRetSet, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
 	leftToRight := ast.UniFactStmt{
 		Params:    leftFnDef.DefHeader.Params,
 		ParamSets: leftFnDef.DefHeader.SetParams,
@@ -862,7 +873,7 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 		IffFacts:  ast.EmptyIffFacts,
 	}
 
-	ok, err := ver.FactStmt(&leftToRight, state)
+	ok, err = ver.FactStmt(&leftToRight, state)
 	if err != nil {
 		return false, err
 	}
