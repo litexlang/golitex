@@ -39,7 +39,10 @@ type Env struct {
 	CommutativeFn map[string]map[string]struct{}
 	AssociativeFn map[string]map[string]struct{}
 
-	EqualMem map[string]*[]ast.Fc
+	// 考虑多个系统的时候，再引入 map[string]string
+	EqualMem    map[string]*[]ast.Fc
+	EqualFnMem  map[string]*[]ast.Fc
+	EqualSetMem map[string]*[]ast.Fc
 }
 
 func NewEnv(parent *Env) *Env {
