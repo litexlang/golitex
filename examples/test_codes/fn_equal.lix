@@ -4,4 +4,4 @@ prove:
     know:
         forall x int:
             f(x) = g(x)
-            
+    $fn_equal(f,g)   
