@@ -789,14 +789,77 @@ func (ver *Verifier) fnEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, 
 		return false, nil
 	}
 
+	// left to right
+	ok, err := ver.leftFnDomSubsetOfRightFnDom(leftFnDef, rightFnDef, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	// right to left
+	ok, err = ver.leftFnDomSubsetOfRightFnDom(rightFnDef, leftFnDef, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	if state.requireMsg() {
+		ver.successWithMsg(stmt.String(), "fn equal definition")
+	} else {
+		ver.successNoMsg()
+	}
+
+	return true, nil
+}
+
+func (ver *Verifier) leftFnDomSubsetOfRightFnDom(leftFnDef *ast.DefFnStmt, rightFnDef *ast.DefFnStmt, state VerState) (bool, error) {
+	// left to right
+	uniMap_RightParamAsKey_LeftParamAsValue := map[string]ast.Fc{}
+	leftParamAsAtoms := []ast.FcAtom{}
+	for i, rightParam := range rightFnDef.DefHeader.Params {
+		ithLeftParamAsAtom := &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: leftFnDef.DefHeader.Params[i]}
+		uniMap_RightParamAsKey_LeftParamAsValue[rightParam] = ithLeftParamAsAtom
+		leftParamAsAtoms = append(leftParamAsAtoms, *ithLeftParamAsAtom)
+	}
+
+	// set param 里的东西对应上
+	leftToRightThenFacts := []ast.FactStmt{}
+	for i, rightParamSet := range rightFnDef.DefHeader.SetParams {
+		instRightParamSet, err := rightParamSet.Instantiate(uniMap_RightParamAsKey_LeftParamAsValue)
+		if err != nil {
+			return false, err
+		}
+		instInFact := &ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordIn}, Params: []ast.Fc{&leftParamAsAtoms[i], instRightParamSet}}
+		leftToRightThenFacts = append(leftToRightThenFacts, instInFact)
+	}
+
+	// dom 里的东西对应上
+	for _, rightDomFact := range rightFnDef.DomFacts {
+		instRightDomFact, err := rightDomFact.Instantiate(uniMap_RightParamAsKey_LeftParamAsValue)
+		if err != nil {
+			return false, err
+		}
+		leftToRightThenFacts = append(leftToRightThenFacts, instRightDomFact)
+	}
+
 	leftToRight := ast.UniFactStmt{
 		Params:    leftFnDef.DefHeader.Params,
 		ParamSets: leftFnDef.DefHeader.SetParams,
 		DomFacts:  leftFnDef.DomFacts,
-		ThenFacts: []ast.FactStmt{},
+		ThenFacts: leftToRightThenFacts,
 		IffFacts:  ast.EmptyIffFacts,
 	}
-	_ = leftToRight
 
-	return false, nil
+	ok, err := ver.FactStmt(&leftToRight, state)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+	return true, nil
 }
