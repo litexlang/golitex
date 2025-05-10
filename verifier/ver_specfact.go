@@ -169,7 +169,7 @@ func (ver *Verifier) specFactUsingMemSpecifically(stmt *ast.SpecFactStmt, state 
 					}
 					if !ok {
 						// ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(knownParam, stmt.Params[i])
-						ok, err := ver.fcEqual(knownParam, stmt.Params[i], state)
+						ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
 						if err != nil {
 							return false, err
 						}
@@ -345,7 +345,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		for i := 1; i < len(value); i++ {
 			// ok, err := ver.makeFcEqualFactAndVerify(value[0], value[i], state.addRound())
 			// ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(value[0], value[i])
-			ok, err := ver.fcEqual(value[0], value[i], state)
+			ok, err := ver.fcEqualSpec(value[0], value[i], state)
 			if err != nil {
 				return nil, false, err
 			}
@@ -374,7 +374,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 		}
 		if !ok {
 			// ok, err := ver.iterateOverKnownSpecEqualFactsAndCheck(knownParam, stmt.Params[i])
-			ok, err := ver.fcEqual(knownParam, stmt.Params[i], state)
+			ok, err := ver.fcEqualSpec(knownParam, stmt.Params[i], state)
 			if err != nil {
 				return false, err
 			}

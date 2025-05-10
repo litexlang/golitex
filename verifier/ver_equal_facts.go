@@ -15,7 +15,6 @@ package litex_verifier
 import (
 	"fmt"
 	ast "golitex/ast"
-	cmp "golitex/cmp"
 )
 
 func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
@@ -24,10 +23,10 @@ func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 	} else if !ok {
 		return false, nil
 	}
-	return ver.fcEqual(stmt.Params[0], stmt.Params[1], state)
+	return ver.fcEqualSpec(stmt.Params[0], stmt.Params[1], state)
 }
 
-func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
 	isSuccess := false
 	defer func() {
 		if state.requireMsg() && isSuccess {
@@ -35,7 +34,6 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 		}
 	}()
 
-	// Case1: 用内置方法直接比较，比如计算字面量都是整数，那可以通过运算来比较
 	ok, err := ver.fcEqual_Commutative_Associative_CmpRule(left, right, state)
 	if err != nil {
 		return false, err
@@ -45,21 +43,7 @@ func (ver *Verifier) fcEqual(left ast.Fc, right ast.Fc, state VerState) (bool, e
 		return true, nil
 	}
 
-	// Case3: 用Mem里找到和left相等的所有情况，和right匹配；或者反过来
-	if ok, err := ver.equalByEqualMem(left, right, state); err != nil {
-		return false, err
-	} else if ok {
-		isSuccess = true
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	// 如果left, right都是 FcFn，那一位位比较一下。
 	leftAsFn, ok := left.(*ast.FcFn)
-	err := error(nil)
 	if ok {
 		rightAsFn, ok := right.(*ast.FcFn)
 		if ok {
@@ -73,6 +57,17 @@ func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) 
 		}
 	}
 
+	return false, nil
+}
+
+// Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
+func (ver *Verifier) fcEqualSpec(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
+	if ok, err := ver.cmpFc(left, right, state); err != nil {
+		return false, err
+	} else if ok {
+		return true, nil
+	}
+
 	for curEnv := ver.env; curEnv != nil; curEnv = curEnv.Parent {
 		equalToLeftFcs, gotLeftEqualFcs := curEnv.GetEqualFcs(left)
 		equalTorightFcs, gotRightEqualFcs := curEnv.GetEqualFcs(right)
@@ -84,58 +79,31 @@ func (ver *Verifier) equalByEqualMem(left ast.Fc, right ast.Fc, state VerState) 
 		}
 
 		if gotLeftEqualFcs {
-			rightAsFn, rightIsFn := right.(*ast.FcFn)
+			rightAsStr := right.String()
 			for _, equalToLeftFc := range *equalToLeftFcs {
-				if cmp.CmpFcAsStr(equalToLeftFc, left) { // 最一开头已经比较过，这里不需要再比较了
+				if equalToLeftFc.String() == rightAsStr { // 最一开头已经比较过，这里不需要再比较了
 					continue
 				}
 
-				ok, err := ver.fcEqual_Commutative_Associative_CmpRule(equalToLeftFc, right, state)
-				if err != nil {
+				if ok, err := ver.cmpFc(equalToLeftFc, right, state); err != nil {
 					return false, err
-				}
-				if ok {
+				} else if ok {
 					return true, nil
-				}
-
-				leftAsFn, leftIsFn := equalToLeftFc.(*ast.FcFn)
-
-				if leftIsFn && rightIsFn {
-					ok, err := ver.fcFnEq(leftAsFn, rightAsFn, state)
-					if err != nil {
-						return false, err
-					}
-					if ok {
-						return true, nil
-					}
 				}
 			}
 		}
 
 		if gotRightEqualFcs {
-			leftAsFn, leftIsFn := left.(*ast.FcFn)
+			leftAsStr := left.String()
 			for _, equalToRightFc := range *equalTorightFcs {
-				if cmp.CmpFcAsStr(equalToRightFc, right) { // 最一开头已经比较过，这里不需要再比较了
+				if equalToRightFc.String() == leftAsStr { // 最一开头已经比较过，这里不需要再比较了
 					continue
 				}
 
-				ok, err := ver.fcEqual_Commutative_Associative_CmpRule(equalToRightFc, left, state)
-				if err != nil {
+				if ok, err := ver.cmpFc(equalToRightFc, left, state); err != nil {
 					return false, err
-				}
-				if ok {
+				} else if ok {
 					return true, nil
-				}
-
-				rightAsFn, rightIsFn := equalToRightFc.(*ast.FcFn)
-				if rightIsFn && leftIsFn {
-					ok, err := ver.fcFnEq(rightAsFn, leftAsFn, state)
-					if err != nil {
-						return false, err
-					}
-					if ok {
-						return true, nil
-					}
 				}
 			}
 		}
