@@ -348,7 +348,9 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		return nil, fmt.Errorf("expect ':' or end of block")
 	}
 
-	return ast.NewDefObjStmt(objNames, objSets, facts), nil
+	paramInSetsFacts := ast.ParamsParamsetsToInFact(objNames, objSets)
+
+	return ast.NewDefObjStmt(objNames, objSets, facts, paramInSetsFacts), nil
 }
 
 func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
@@ -572,7 +574,9 @@ func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
 		return nil, nil, err
 	}
 
-	return ast.NewDefHeader(name, params, setParams), nameDepthMap, nil
+	paramInSetsFacts := ast.ParamsParamsetsToInFact(params, setParams)
+
+	return ast.NewDefHeader(name, params, setParams, paramInSetsFacts), nameDepthMap, nil
 }
 
 func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
