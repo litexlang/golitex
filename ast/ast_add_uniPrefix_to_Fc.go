@@ -100,7 +100,9 @@ func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
 		newThenFacts = append(newThenFacts, newFact)
 	}
 
-	newUniFact := newUniFactStmt(newParams, newParamsSets, newDomFacts, newThenFacts, newIffFacts)
+	newParamInSetsFacts := ParamsParamSetsToInFacts(asUniFact.Params, asUniFact.ParamSets)
+
+	newUniFact := newUniFactStmt(newParams, newParamsSets, newDomFacts, newThenFacts, newIffFacts, newParamInSetsFacts)
 
 	return newUniFact, nil
 }
