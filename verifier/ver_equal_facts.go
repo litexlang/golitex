@@ -16,7 +16,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) isEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ok, err := stmt.IsValidEqualFact(); err != nil {
 		return false, err
 	} else if !ok {
