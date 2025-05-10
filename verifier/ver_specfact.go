@@ -829,21 +829,11 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 	}
 
 	leftToRightDom := []ast.FactStmt{}
-	for i, leftParamSet := range leftFnDef.DefHeader.SetParams {
-		leftToRightDom = append(leftToRightDom, &ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordIn}, Params: []ast.Fc{leftParamAsFcs[i], leftParamSet}})
-	}
+	leftToRightDom = append(leftToRightDom, leftFnDef.DefHeader.ParamInSetsFacts...)
 	leftToRightDom = append(leftToRightDom, leftFnDef.DomFacts...)
 
-	// set param 里的东西对应上
 	leftToRightThenFacts := []ast.FactStmt{}
-	for i, rightParamSet := range rightFnDef.DefHeader.SetParams {
-		instRightParamSet, err := rightParamSet.Instantiate(uniMap_RightParamAsKey_LeftParamAsValue)
-		if err != nil {
-			return false, err
-		}
-		instInFact := &ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordIn}, Params: []ast.Fc{leftParamAsFcs[i], instRightParamSet}}
-		leftToRightThenFacts = append(leftToRightThenFacts, instInFact)
-	}
+	leftToRightThenFacts = append(leftToRightThenFacts, rightFnDef.DefHeader.ParamInSetsFacts...)
 
 	// dom 里的东西对应上
 	for _, rightDomFact := range rightFnDef.DomFacts {
@@ -865,15 +855,16 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 		return false, nil
 	}
 
-	leftToRight := ast.UniFactStmt{
-		Params:    leftFnDef.DefHeader.Params,
-		ParamSets: leftFnDef.DefHeader.SetParams,
-		DomFacts:  leftToRightDom,
-		ThenFacts: leftToRightThenFacts,
-		IffFacts:  ast.EmptyIffFacts,
-	}
+	leftToRight := ast.NewUniFactStmtWithSetReqInDom(
+		leftFnDef.DefHeader.Params,
+		leftFnDef.DefHeader.SetParams,
+		leftToRightDom,
+		leftToRightThenFacts,
+		ast.EmptyIffFacts,
+		leftFnDef.DefHeader.ParamInSetsFacts,
+	)
 
-	ok, err = ver.FactStmt(&leftToRight, state)
+	ok, err = ver.FactStmt(leftToRight, state)
 	if err != nil {
 		return false, err
 	}
@@ -881,6 +872,7 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 		return false, nil
 	}
 
+	// 返回值时刻相等
 	leftFnNameAsSpecFact := ast.FcFn{
 		FnHead:    &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: leftFnDef.DefHeader.Name},
 		ParamSegs: [][]ast.Fc{leftParamAsFcs},
@@ -891,21 +883,18 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 		ParamSegs: [][]ast.Fc{rightParamAsFcs},
 	}
 
-	leftEqualRight := ast.SpecFactStmt{
-		TypeEnum: ast.TruePure,
-		PropName: ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeySymbolEqual},
-		Params:   []ast.Fc{&leftFnNameAsSpecFact, &rightFnNameAsSpecFact},
-	}
+	leftEqualRight := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeySymbolEqual}, []ast.Fc{&leftFnNameAsSpecFact, &rightFnNameAsSpecFact})
 
-	leftFnAlwaysEqualRightFn := ast.UniFactStmt{
-		Params:    leftFnDef.DefHeader.Params,
-		ParamSets: leftFnDef.DefHeader.SetParams,
-		DomFacts:  leftToRightDom,
-		ThenFacts: []ast.FactStmt{&leftEqualRight},
-		IffFacts:  ast.EmptyIffFacts,
-	}
+	leftFnAlwaysEqualRightFn := ast.NewUniFactStmtWithSetReqInDom(
+		leftFnDef.DefHeader.Params,
+		leftFnDef.DefHeader.SetParams,
+		leftToRightDom,
+		[]ast.FactStmt{leftEqualRight},
+		ast.EmptyIffFacts,
+		leftFnDef.DefHeader.ParamInSetsFacts,
+	)
 
-	ok, err = ver.FactStmt(&leftFnAlwaysEqualRightFn, state)
+	ok, err = ver.FactStmt(leftFnAlwaysEqualRightFn, state)
 	if err != nil {
 		return false, err
 	}

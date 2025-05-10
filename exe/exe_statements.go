@@ -215,16 +215,8 @@ func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
 		return err
 	}
 
-	for i, objName := range stmt.Objs {
-		objInSetFact := ast.SpecFactStmt{
-			TypeEnum: ast.TruePure,
-			PropName: ast.FcAtom{
-				PkgName: "",
-				Name:    glob.KeywordIn,
-			},
-			Params: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: objName}, stmt.ObjSets[i]},
-		}
-		err := exec.env.NewFact(&objInSetFact)
+	for i := range stmt.ParamInSetsFacts {
+		err := exec.env.NewFact(stmt.ParamInSetsFacts[i])
 		if err != nil {
 			return err
 		}
@@ -256,9 +248,9 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 
 	fcFn := ast.FcFn{FnHead: &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: stmt.DefHeader.Name}, ParamSegs: [][]ast.Fc{fcFnParams}}
 
-	retFact := ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, Params: []ast.Fc{&fcFn, stmt.RetSet}}
+	retFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, []ast.Fc{&fcFn, stmt.RetSet})
 
-	uniFactThen := []ast.FactStmt{&retFact}
+	uniFactThen := []ast.FactStmt{retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
 
 	thenFacts := []ast.FactStmt{}
@@ -363,12 +355,8 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	existStFactParams = append(existStFactParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
 	existStFactParams = append(existStFactParams, stmt.Fact.Params...)
 
-	newExistStFact := ast.SpecFactStmt{
-		TypeEnum: ast.TrueExist_St,
-		PropName: ast.FcAtom{PkgName: exec.curPkg, Name: stmt.Fact.PropName.Name},
-		Params:   existStFactParams,
-	}
-	err = exec.env.NewFact(&newExistStFact)
+	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.FcAtom{PkgName: exec.curPkg, Name: stmt.Fact.PropName.Name}, existStFactParams)
+	err = exec.env.NewFact(newExistStFact)
 	if err != nil {
 		return glob.ExecState_True, nil
 	}

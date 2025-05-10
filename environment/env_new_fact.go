@@ -82,6 +82,10 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 }
 
 func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFactStmt) error {
+	if len(fact.Params) != 2 {
+		return fmt.Errorf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
+	}
+
 	leftAsStr := fact.Params[0].String()
 	rightAsStr := fact.Params[1].String()
 

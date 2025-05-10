@@ -106,8 +106,8 @@ func randSpecFact() *ast.SpecFactStmt {
 		params[i] = randomFc()
 	}
 
-	stmt := ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: *randFcAtom(), Params: params}
-	return &stmt
+	stmt := ast.NewSpecFactStmt(ast.TruePure, *randFcAtom(), params)
+	return stmt
 }
 
 func randomFc() ast.Fc {
