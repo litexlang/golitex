@@ -98,6 +98,7 @@ func (ver *Verifier) fcFnHeadTailEq(left, right *ast.FcFn, state VerState, leftT
 
 func (ver *Verifier) fcFnHeadEqLeftTailLenIs0(left, right *ast.FcFn, state VerState) (bool, error) {
 	// ? 这里应该是fcEqualSpec还是 fcCmpLiterally??
+
 	if len(left.ParamSegs) != len(right.ParamSegs) {
 		return false, nil
 	}

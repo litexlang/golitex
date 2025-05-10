@@ -13,7 +13,6 @@
 package litex_verifier
 
 import (
-	"fmt"
 	ast "golitex/ast"
 )
 
@@ -27,19 +26,19 @@ func (ver *Verifier) equalFact(stmt *ast.SpecFactStmt, state VerState) (bool, er
 }
 
 func (ver *Verifier) cmpFc(left ast.Fc, right ast.Fc, state VerState) (bool, error) {
-	isSuccess := false
-	defer func() {
-		if state.requireMsg() && isSuccess {
-			ver.successMsgEnd(fmt.Sprintf("%s = %s", left.String(), right.String()), "")
-		}
-	}()
+	// isSuccess := false
+	// defer func() {
+	// 	if state.requireMsg() && isSuccess {
+	// 		ver.successMsgEnd(fmt.Sprintf("%s = %s", left.String(), right.String()), "")
+	// 	}
+	// }()
 
 	ok, err := ver.fcEqual_Commutative_Associative_CmpRule(left, right, state)
 	if err != nil {
 		return false, err
 	}
 	if ok {
-		isSuccess = true
+		// isSuccess = true
 		return true, nil
 	}
 
