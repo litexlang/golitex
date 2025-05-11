@@ -463,7 +463,7 @@ func (env *Env) IsAssociativeFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error
 }
 
 func (env *Env) IsEqualFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordFnEqual) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqualEqual) {
 		return false, nil
 	}
 
@@ -476,11 +476,16 @@ func (env *Env) IsEqualFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, err
 	}
 
+	err = storeCommutativeTransitiveFact(env.EqualMem, fact)
+	if err != nil {
+		return false, err
+	}
+
 	return true, nil
 }
 
 func (env *Env) IsEqualSetName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordSetEqual) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeySymbolEqualEqual) {
 		return false, nil
 	}
 
@@ -489,6 +494,11 @@ func (env *Env) IsEqualSetName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	}
 
 	err := storeCommutativeTransitiveFact(env.EqualSetMem, fact)
+	if err != nil {
+		return false, err
+	}
+
+	err = storeCommutativeTransitiveFact(env.EqualMem, fact)
 	if err != nil {
 		return false, err
 	}

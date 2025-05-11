@@ -1,6 +1,6 @@
 prove:
     know:
-        $fn_equal(f,g)
+        f == g
 
 prove:
     fn f(a int) int
@@ -8,4 +8,5 @@ prove:
     know:
         forall x int:
             f(x) = g(x)
-    $fn_equal(f,g)   
+    f == g
+    f == g

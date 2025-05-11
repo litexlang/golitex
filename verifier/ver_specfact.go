@@ -684,12 +684,24 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 }
 
 func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeywordSetEqual) {
+	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqualEqualEqual) {
 		return false, nil
 	}
 
 	if len(stmt.Params) != 2 {
 		return false, fmt.Errorf("set equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
+	}
+
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeySymbolEqual}, stmt.Params)
+	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
+		return false, err
+	} else if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), equalFact.String())
+		} else {
+			ver.successNoMsg()
+		}
+		return true, nil
 	}
 
 	leftSet := stmt.Params[0]
@@ -763,12 +775,24 @@ func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 }
 
 func (ver *Verifier) fnEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeywordFnEqual) {
+	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqualEqual) {
 		return false, nil
 	}
 
 	if len(stmt.Params) != 2 {
 		return false, fmt.Errorf("fn equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
+	}
+
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeySymbolEqual}, stmt.Params)
+	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
+		return false, err
+	} else if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), equalFact.String())
+		} else {
+			ver.successNoMsg()
+		}
+		return true, nil
 	}
 
 	leftFnDef, ok := ver.env.GetFnDef(stmt.Params[0])

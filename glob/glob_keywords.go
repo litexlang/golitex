@@ -32,11 +32,9 @@ const (
 	KeywordImport               = "import"
 	KeywordPackage              = "package"
 	KeywordNot                  = "not"
+	KeywordIff                  = "iff"
 	KeywordProveByContradiction = "prove_by_contradiction"
 	KeywordProveInEachCase      = "prove_in_each_case" // 必要：和or一起使用
-	KeywordSetEqual             = "set_equal"          // IT's possible for me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainance and make confusions), so I use a new keyword
-	KeywordFnEqual              = "fn_equal"
-	KeywordIff                  = "iff"
 	KeywordAnd                  = "and"
 	KeywordOr                   = "or"
 	KeywordCommutativeProp      = "commutative_prop"
@@ -96,8 +94,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIn:                   {},
 	KeywordMathInduction:        {},
 	KeywordFrac:                 {},
-	KeywordSetEqual:             {},
-	KeywordFnEqual:              {},
 	KeywordR:                    {},
 	KeywordF:                    {},
 	KeywordI:                    {},
@@ -133,7 +129,6 @@ const (
 	KeySymbolMinusMinus             = "--"
 	KeySymbolAndAnd                 = "&&"
 	KeySymbolPipePipe               = "||"
-	KeySymbolEqualEqual             = "=="
 	KeySymbolNotEqual               = "!="
 	KeySymbolQuestion               = "?"
 	KeySymbolStarStar               = "**"
@@ -149,7 +144,12 @@ const (
 	KeySymbolAt                     = "@"
 	KeySymbolLargerEqual            = ">="
 	KeySymbolLessEqual              = "<="
-	//! 每次引入新的Symbol，要往getBuiltinSymbol里加东西
+	KeySymbolEquivalent             = "<=>"
+	// IT's possible for me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainance and make confusions), so I use a new keyword
+	KeySymbolEqualEqual      = "=="  // check fn equal
+	KeySymbolEqualEqualEqual = "===" // check set equal
+	KeySymbolGreaterGreater  = ">>"
+	KeySymbolLessLess        = "<<"
 )
 
 var symbolSet map[string]struct{} = map[string]struct{}{
@@ -166,36 +166,40 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolColonColon:             {}, // "::"
 
 	// 单字符符号（长度 1）
-	KeySymbolAt:           {}, // "@"
-	KeySymbolBackslash:    {}, // "\\"
-	KeySymbolBacktick:     {}, // "`"
-	KeySymbolCaret:        {}, // "^"
-	KeySymbolColon:        {}, // ":"
-	KeySymbolComma:        {}, // ","
-	KeySymbolDot:          {}, // "."
-	KeySymbolDollar:       {}, // "$"
-	KeySymbolDoubleQuote:  {}, // "\""
-	KeySymbolEqual:        {}, // "="
-	KeySymbolExclaim:      {}, // "!"
-	KeySymbolGreater:      {}, // ">"
-	KeySymbolHash:         {}, // "#"
-	KeySymbolLeftBracket:  {}, // "["
-	KeySymbolLeftCurly:    {}, // "{"
-	KeySymbolLeftBrace:    {}, // "("
-	KeySymbolLess:         {}, // "<"
-	KeySymbolMinus:        {}, // "-"
-	KeySymbolPipe:         {}, // "|"
-	KeySymbolPlus:         {}, // "+"
-	KeySymbolQuestion:     {}, // "?"
-	KeySymbolRightBracket: {}, // "]"
-	KeySymbolRightCurly:   {}, // "}"
-	KeySymbolRightBrace:   {}, // ")"
-	KeySymbolSemicolon:    {}, // ";"
-	KeySymbolSingleQuote:  {}, // "'"
-	KeySymbolSlash:        {}, // "/"
-	KeySymbolStar:         {}, // "*"
-	KeySymbolTilde:        {}, // "~"
-	KeySymbolAnd:          {}, // "&"
-	KeySymbolLargerEqual:  {}, // ">="
-	KeySymbolLessEqual:    {}, // "<="
+	KeySymbolAt:              {}, // "@"
+	KeySymbolBackslash:       {}, // "\\"
+	KeySymbolBacktick:        {}, // "`"
+	KeySymbolCaret:           {}, // "^"
+	KeySymbolColon:           {}, // ":"
+	KeySymbolComma:           {}, // ","
+	KeySymbolDot:             {}, // "."
+	KeySymbolDollar:          {}, // "$"
+	KeySymbolDoubleQuote:     {}, // "\""
+	KeySymbolEqual:           {}, // "="
+	KeySymbolExclaim:         {}, // "!"
+	KeySymbolGreater:         {}, // ">"
+	KeySymbolHash:            {}, // "#"
+	KeySymbolLeftBracket:     {}, // "["
+	KeySymbolLeftCurly:       {}, // "{"
+	KeySymbolLeftBrace:       {}, // "("
+	KeySymbolLess:            {}, // "<"
+	KeySymbolMinus:           {}, // "-"
+	KeySymbolPipe:            {}, // "|"
+	KeySymbolPlus:            {}, // "+"
+	KeySymbolQuestion:        {}, // "?"
+	KeySymbolRightBracket:    {}, // "]"
+	KeySymbolRightCurly:      {}, // "}"
+	KeySymbolRightBrace:      {}, // ")"
+	KeySymbolSemicolon:       {}, // ";"
+	KeySymbolSingleQuote:     {}, // "'"
+	KeySymbolSlash:           {}, // "/"
+	KeySymbolStar:            {}, // "*"
+	KeySymbolTilde:           {}, // "~"
+	KeySymbolAnd:             {}, // "&"
+	KeySymbolLargerEqual:     {}, // ">="
+	KeySymbolLessEqual:       {}, // "<="
+	KeySymbolEquivalent:      {}, // "<=>"
+	KeySymbolEqualEqualEqual: {}, // "==="
+	KeySymbolGreaterGreater:  {}, // ">>"
+	KeySymbolLessLess:        {}, // "<<"
 }
