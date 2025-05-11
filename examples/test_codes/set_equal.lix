@@ -1,4 +1,8 @@
 prove:
+    know:
+        a === b
+
+prove:
     set a
     set b
     know:
@@ -6,8 +10,5 @@ prove:
             x $in b
         forall x b:
             x $in a
-    $set_equal(a,b)
-
-prove:
-    know:
-        $set_equal(a,b)
+    a === b
+    a === b

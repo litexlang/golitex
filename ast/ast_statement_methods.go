@@ -19,7 +19,7 @@ import (
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
-	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name)
+	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
 }
 
 func (stmt *UniFactStmt) NewUniFactWithThenToIff() *UniFactStmt {
@@ -143,7 +143,7 @@ func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
 }
 
 func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
-	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaProp(stmt.PropName.Name) && !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual)
+	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual)
 }
 
 func (stmt *SpecFactStmt) IsMathInductionFact() bool {

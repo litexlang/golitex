@@ -491,7 +491,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 		params := []ast.Fc{fc, fc2}
 
 		return ast.NewSpecFactStmt(ast.TruePure, propName, params), nil
-	} else if !glob.IsBuiltinInfixRelaProp(opt) {
+	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else {
 		fc2, err := tb.header.rawFc()
