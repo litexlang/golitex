@@ -21,11 +21,11 @@ type Env struct {
 	Parent *Env
 	Msgs   []string
 
-	ObjMem       ObjMem
-	PropMem      PropMem
-	FnMem        FnMem
-	ExistPropMem ExistPropMem
-	SetMem       SetMem
+	ObjDefMem       ObjDefMem
+	PropDefMem      PropDefMem
+	FnDefMem        FnDefMem
+	ExistPropDefMem ExistPropDefMem
+	SetDefMem       SetDefMem
 
 	SpecFactMem                       SpecFactMem
 	SpecFactInLogicExprMem            SpecFactInLogicExprMem
@@ -36,13 +36,13 @@ type Env struct {
 	CommutativeProp map[string]map[string]struct{}
 
 	// 为了让我日子好过，我不允许用户用以 fcFn 形式为fn header的 fn 名来定义 commutative fn
+	// TODO 之后改了这条，因为我可以 map[string]struct{} 来表示 commutative fn，string是那个fn的header as string
+	// 本质上我可以让这些事实和 specfact 存储时混在一起，或许这么干也行
 	CommutativeFn map[string]map[string]struct{}
 	AssociativeFn map[string]map[string]struct{}
 
 	// 考虑多个系统的时候，再引入 map[string]string
-	EqualMem    map[string]*[]ast.Fc
-	EqualFnMem  map[string]*[]ast.Fc
-	EqualSetMem map[string]*[]ast.Fc
+	EqualMem map[string]*[]ast.Fc
 }
 
 func NewEnv(parent *Env) *Env {
@@ -50,11 +50,11 @@ func NewEnv(parent *Env) *Env {
 		Parent: parent,
 		Msgs:   []string{},
 
-		ObjMem:       *NewObjMemory(),
-		PropMem:      *NewPropMemory(),
-		FnMem:        *NewFnMemory(),
-		ExistPropMem: *NewExistPropMemory(),
-		SetMem:       *NewSetMemory(),
+		ObjDefMem:       *NewObjMemory(),
+		PropDefMem:      *NewPropMemory(),
+		FnDefMem:        *NewFnMemory(),
+		ExistPropDefMem: *NewExistPropMemory(),
+		SetDefMem:       *NewSetMemory(),
 
 		SpecFactMem:                       *newSpecFactMem(),
 		SpecFactInLogicExprMem:            *NewSpecFactInLogicExprMem(),
@@ -67,9 +67,7 @@ func NewEnv(parent *Env) *Env {
 		CommutativeFn:   make(map[string]map[string]struct{}),
 		AssociativeFn:   make(map[string]map[string]struct{}),
 
-		EqualMem:    make(map[string]*[]ast.Fc),
-		EqualFnMem:  make(map[string]*[]ast.Fc),
-		EqualSetMem: make(map[string]*[]ast.Fc),
+		EqualMem: make(map[string]*[]ast.Fc),
 	}
 	return env
 }
@@ -149,7 +147,7 @@ func (e *Env) NewMsg(s string) {
 func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool) {
 	// recursively search parent envs
 	for env := e; env != nil; env = env.Parent {
-		existProp, ok := env.ExistPropMem.Get(propName)
+		existProp, ok := env.ExistPropDefMem.Get(propName)
 		if ok {
 			return existProp, true
 		}
@@ -160,7 +158,7 @@ func (e *Env) GetExistPropDef(propName ast.FcAtom) (*ast.DefExistPropStmt, bool)
 func (e *Env) GetPropDef(propName ast.FcAtom) (*ast.DefPropStmt, bool) {
 	// recursively search parent envs
 	for env := e; env != nil; env = env.Parent {
-		prop, ok := env.PropMem.Get(propName)
+		prop, ok := env.PropDefMem.Get(propName)
 		if ok {
 			return prop, true
 		}
@@ -180,25 +178,25 @@ func (e *Env) GetFcAtomDef(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 
 func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	// Case1: It is a prop
-	prop, ok := e.PropMem.Get(*fcAtomName)
+	prop, ok := e.PropDefMem.Get(*fcAtomName)
 	if ok {
 		return prop, true
 	}
 
 	// Case2: It is a fn
-	fn, ok := e.FnMem.Get(*fcAtomName)
+	fn, ok := e.FnDefMem.Get(*fcAtomName)
 	if ok {
 		return fn, true
 	}
 
 	// Case3: It is a exist prop
-	existProp, ok := e.ExistPropMem.Get(*fcAtomName)
+	existProp, ok := e.ExistPropDefMem.Get(*fcAtomName)
 	if ok {
 		return existProp, true
 	}
 
 	// Case4: It is a obj
-	obj, ok := e.ObjMem.Get(*fcAtomName)
+	obj, ok := e.ObjDefMem.Get(*fcAtomName)
 	if ok {
 		return obj, true
 	}
@@ -233,7 +231,7 @@ func (e *Env) GetSetDef(set ast.Fc) (*ast.SetDefSetBuilderStmt, bool) {
 	}
 
 	for env := e; env != nil; env = env.Parent {
-		setDef, ok := env.SetMem.Get(setAsAtom.PkgName, setAsAtom.Name)
+		setDef, ok := env.SetDefMem.Get(setAsAtom.PkgName, setAsAtom.Name)
 		if ok {
 			return setDef, true
 		}
@@ -248,7 +246,7 @@ func (e *Env) GetFnDef(fn ast.Fc) (*ast.DefFnStmt, bool) {
 	}
 
 	for env := e; env != nil; env = env.Parent {
-		fnDef, ok := env.FnMem.Get(*fnAsAtom)
+		fnDef, ok := env.FnDefMem.Get(*fnAsAtom)
 		if ok {
 			return fnDef, true
 		}

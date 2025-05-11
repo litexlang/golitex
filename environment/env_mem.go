@@ -15,27 +15,27 @@ package litex_env
 import ast "golitex/ast"
 
 type PropMemItem struct{ Def *ast.DefPropStmt }
-type PropMem struct {
+type PropDefMem struct {
 	Dict map[string]map[string]PropMemItem
 }
 
 type ExistPropMemItem struct{ Def *ast.DefExistPropStmt }
-type ExistPropMem struct {
+type ExistPropDefMem struct {
 	Dict map[string]map[string]ExistPropMemItem
 }
 
 type ObjMemItem struct{ Def *ast.DefObjStmt }
-type ObjMem struct {
+type ObjDefMem struct {
 	Dict map[string]map[string]ObjMemItem
 }
 
 type FnMemItem struct{ Def *ast.DefFnStmt }
-type FnMem struct {
+type FnDefMem struct {
 	Dict map[string]map[string]FnMemItem
 }
 
 type SetMemItem struct{ Def *ast.SetDefSetBuilderStmt }
-type SetMem struct {
+type SetDefMem struct {
 	Dict map[string]map[string]SetMemItem
 }
 
