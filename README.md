@@ -30,6 +30,13 @@ Second, Litex is built around common sense rather than sophisticated mathematica
 
 (You do not need to learn set thoery or first-order logic to use Litex. Just learn by using it! The inventor of Litex also only has a very basic knowledge of set thoery and first-order logic.)
 
+Core values of Litex:
+Simplicity over Complexity: Simple for userers to learn, use, cooperate, and extend. Users can use simple logic components to construct a grand edifice of mathematics.  
+
+Pragmatism over Rigor: It solves the fundamental problems of mathematical reasoning, abstration, with a balance between expressiveness and strictness. No more, no less in terms of features.
+
+For all, not just specialists: Math is for everyone, that is why Litex is for everyone too. Computers are bicycles for minds. May Litex inspire more people to explore and enjoy the formal way of reasoning.
+
 <!-- TODO: 参考下面这个网站以获得更多数学家的角度，里面有很多数学家对数学的讨论 https:#sugaku.net/content/understanding-the-cultural-divide-between-mathematics-and-ai/ -->
 <!-- On the foolishness of "natural language programming". 里面有很多关于形式化语言比自然语言好的观点：litex把数学从不准确，冗余的，不同国家的人互相看不懂，抽象层过多以至于难以追踪，模块化程度为0，的自然语言，变成了非常准则，无任何冗余，世界通用，抽象层靠常用编程工具变得很追踪，模块化很高以至于人们可以在数学的github上分享 的形式化语言 -->
 
