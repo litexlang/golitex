@@ -135,7 +135,7 @@ const (
 	KeySymbolDoubleQuote            = "\""
 	KeySymbolSingleQuote            = "'"
 	KeySymbolBacktick               = "`"
-	KeySymbolEqualGreaterRightArrow = "=>"
+	KeySymbolEqualGreaterEqual      = "=>"
 	KeySymbolMinusGreaterRightArrow = "->"
 	KeySymbolSemicolon              = ";"
 	KeySymbolLeftCurly              = "{"
@@ -156,7 +156,7 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	// 双字符符号（长度 2）
 	KeySymbolAndAnd:                 {}, // "&&"
 	KeySymbolEqualEqual:             {}, // "=="
-	KeySymbolEqualGreaterRightArrow: {}, // "=>"
+	KeySymbolEqualGreaterEqual:      {}, // "=>"
 	KeySymbolMinusGreaterRightArrow: {}, // "->"
 	KeySymbolNotEqual:               {}, // "!="
 	KeySymbolPipePipe:               {}, // "||"

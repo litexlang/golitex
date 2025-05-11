@@ -161,7 +161,7 @@ func IsFcAtomAndHasBuiltinPropName(fc Fc) bool {
 		return false
 	}
 
-	return glob.IsBuiltinInfixRelaProp(fcAtom.Name)
+	return glob.IsBuiltinInfixRelaPropSymbol(fcAtom.Name)
 }
 
 func (fc *FcAtom) HasGivenNameAndEmptyPkgName(kw string) bool {

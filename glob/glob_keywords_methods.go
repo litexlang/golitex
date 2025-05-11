@@ -17,8 +17,8 @@ func IsKeySymbol(name string) bool {
 	return ok
 }
 
-func IsBuiltinInfixRelaProp(op string) bool {
-	return op == "=" || op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=" || op == "in" || op == KeywordCommutativeProp
+func IsBuiltinInfixRelaPropSymbol(op string) bool {
+	return op == KeySymbolEqual || op == KeySymbolLess || op == KeySymbolGreater || op == KeySymbolLessEqual || op == KeySymbolEqualGreaterEqual || op == KeySymbolEqualEqual || op == KeySymbolNotEqual || op == KeySymbolEqualEqualEqual || op == KeySymbolEquivalent || op == KeywordIs
 }
 
 func IsBuiltinNumberInfixRelaProp(op string) bool {
@@ -74,7 +74,15 @@ func GetKeySymbol(inputString string, start int) string {
 		return ""
 	}
 
-	// 先检查 2 字符符号
+	// 先检查 3 字符符号
+	if start+3 <= len(inputString) {
+		candidate := inputString[start : start+3]
+		if _, ok := symbolSet[candidate]; ok {
+			return candidate
+		}
+	}
+
+	// 再检查 2 字符符号
 	if start+2 <= len(inputString) {
 		candidate := inputString[start : start+2]
 		if _, ok := symbolSet[candidate]; ok {
