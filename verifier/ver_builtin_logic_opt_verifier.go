@@ -275,7 +275,7 @@ func (ver *Verifier) btFnInFnSet(stmt *ast.SpecFactStmt, state VerState) (bool, 
 
 	curEnv := ver.env
 	for curEnv != nil {
-		_, got := curEnv.FnMem.Get(*asAtom)
+		_, got := curEnv.FnDefMem.Get(*asAtom)
 		if got {
 			if state.requireMsg() {
 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is a defined %s", asAtom.String(), glob.KeywordFn))
@@ -306,7 +306,7 @@ func (ver *Verifier) btPropInPropSet(stmt *ast.SpecFactStmt, state VerState) (bo
 
 	curEnv := ver.env
 	for curEnv != nil {
-		_, got := curEnv.PropMem.Get(*asAtom)
+		_, got := curEnv.PropDefMem.Get(*asAtom)
 		if got {
 			if state.requireMsg() {
 				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is a defined %s", asAtom.String(), glob.KeywordProp))

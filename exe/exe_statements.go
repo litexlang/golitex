@@ -560,7 +560,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.SetMem.Insert(stmt, exec.curPkg)
+	err := exec.env.SetDefMem.Insert(stmt, exec.curPkg)
 	if err != nil {
 		return err
 	}

@@ -395,6 +395,9 @@ The best to test Litex is by translating "real-world" into Litex. I use Professo
 
 There are many "design balences" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent users including elementary school students or any non-math people, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language and I wish it could have as many users as possible, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
 
+<!-- TODO: 需要说明一下，= 在litex 中，表示符号相同；符号相同是最强的相同。因为符号相同可以直接推出 函数相等(==)，集合相等(===)。 -->
+<!-- TODO：需要进一步说明的是，整个tutor里缺少了 集合 和 普通编程语言的区别；正常编程语言里，类型都是有限个，且类型是不带参数的（不会是某函数的返回值），但litex里可能有无数个集合，集合可以是某函数的返回值,litex 的类型系统总之比正常的语言要灵活很多很多（甚至本质上，in 这个事实用来处理 在xxx 集合这样的事实，它和其他名字的事实是一样的，只不过朴素集合论要求我们每个prop和fn要先对参数做一些 在xxx集合 之类的要求） -->
+
 ### Operator Overloading
 
 C does not allow operator overloading. The only instances of operator overloading occur with built-in integer and floating-point arithmetic operations (addition, subtraction, multiplication, and division). Since these cases are limited, the compiler handles them by context. C++ and Python are often criticized because, although they allow operator overloading—which appears to increase functionality—it leads to a "readability disaster": readers cannot easily determine which specific operation a symbol like `+` refers to. This becomes particularly problematic in large-scale projects.  

@@ -14,26 +14,26 @@ package litex_env
 
 import ast "golitex/ast"
 
-func NewPropMemory() *PropMem {
-	return &PropMem{map[string]map[string]PropMemItem{}}
+func NewPropMemory() *PropDefMem {
+	return &PropDefMem{map[string]map[string]PropMemItem{}}
 }
-func NewFnMemory() *FnMem {
-	return &FnMem{map[string]map[string]FnMemItem{}}
-}
-
-func NewObjMemory() *ObjMem {
-	return &ObjMem{map[string]map[string]ObjMemItem{}}
+func NewFnMemory() *FnDefMem {
+	return &FnDefMem{map[string]map[string]FnMemItem{}}
 }
 
-func NewExistPropMemory() *ExistPropMem {
-	return &ExistPropMem{map[string]map[string]ExistPropMemItem{}}
+func NewObjMemory() *ObjDefMem {
+	return &ObjDefMem{map[string]map[string]ObjMemItem{}}
 }
 
-func NewSetMemory() *SetMem {
-	return &SetMem{map[string]map[string]SetMemItem{}}
+func NewExistPropMemory() *ExistPropDefMem {
+	return &ExistPropDefMem{map[string]map[string]ExistPropMemItem{}}
 }
 
-func (memory *PropMem) Insert(stmt *ast.DefPropStmt, pkgName string) error {
+func NewSetMemory() *SetDefMem {
+	return &SetDefMem{map[string]map[string]SetMemItem{}}
+}
+
+func (memory *PropDefMem) Insert(stmt *ast.DefPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -51,7 +51,7 @@ func (memory *PropMem) Insert(stmt *ast.DefPropStmt, pkgName string) error {
 	return nil
 }
 
-func (memory *ObjMem) Insert(stmt *ast.DefObjStmt, pkgName string) error {
+func (memory *ObjDefMem) Insert(stmt *ast.DefObjStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -69,7 +69,7 @@ func (memory *ObjMem) Insert(stmt *ast.DefObjStmt, pkgName string) error {
 	return nil
 }
 
-func (memory *FnMem) Insert(stmt *ast.DefFnStmt, pkgName string) error {
+func (memory *FnDefMem) Insert(stmt *ast.DefFnStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -87,7 +87,7 @@ func (memory *FnMem) Insert(stmt *ast.DefFnStmt, pkgName string) error {
 	return nil
 }
 
-func (memory *ExistPropMem) Insert(stmt *ast.DefExistPropStmt, pkgName string) error {
+func (memory *ExistPropDefMem) Insert(stmt *ast.DefExistPropStmt, pkgName string) error {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 
 	if !pkgExists {
@@ -104,7 +104,7 @@ func (memory *ExistPropMem) Insert(stmt *ast.DefExistPropStmt, pkgName string) e
 	return nil
 }
 
-func (memory *PropMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
+func (memory *PropDefMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
@@ -118,7 +118,7 @@ func (memory *PropMem) Get(fc ast.FcAtom) (*ast.DefPropStmt, bool) {
 	return node.Def, true
 }
 
-func (memory *ExistPropMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) {
+func (memory *ExistPropDefMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
@@ -131,7 +131,7 @@ func (memory *ExistPropMem) Get(fc ast.FcAtom) (*ast.DefExistPropStmt, bool) {
 	return node.Def, true
 }
 
-func (memory *FnMem) Get(fc ast.FcAtom) (*ast.DefFnStmt, bool) {
+func (memory *FnDefMem) Get(fc ast.FcAtom) (*ast.DefFnStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
@@ -144,7 +144,7 @@ func (memory *FnMem) Get(fc ast.FcAtom) (*ast.DefFnStmt, bool) {
 	return node.Def, true
 }
 
-func (memory *ObjMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
+func (memory *ObjDefMem) Get(fc ast.FcAtom) (*ast.DefObjStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[fc.PkgName]
 	if !pkgExists {
 		return nil, false
@@ -184,7 +184,7 @@ func (memory *EmitWhenSpecFactIsTrueMem) Get(pkgName string, propName string) ([
 	return node, true
 }
 
-func (memory *SetMem) Insert(stmt *ast.SetDefSetBuilderStmt, pkgName string) error {
+func (memory *SetDefMem) Insert(stmt *ast.SetDefSetBuilderStmt, pkgName string) error {
 	if _, ok := memory.Dict[pkgName]; !ok {
 		memory.Dict[pkgName] = make(map[string]SetMemItem)
 	}
@@ -198,7 +198,7 @@ func (memory *SetMem) Insert(stmt *ast.SetDefSetBuilderStmt, pkgName string) err
 	return nil
 }
 
-func (memory *SetMem) Get(pkgName string, setName string) (*ast.SetDefSetBuilderStmt, bool) {
+func (memory *SetDefMem) Get(pkgName string, setName string) (*ast.SetDefSetBuilderStmt, bool) {
 	pkgMap, pkgExists := memory.Dict[pkgName]
 	if !pkgExists {
 		return nil, false

@@ -140,7 +140,7 @@ func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 func (env *Env) newFactsInSpecFactDef(fact *ast.SpecFactStmt) error {
-	propDef, ok := env.PropMem.Get(fact.PropName)
+	propDef, ok := env.PropDefMem.Get(fact.PropName)
 	if !ok {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
 		// return fmt.Errorf("prop %s has no definition", fact.PropName)
@@ -234,15 +234,15 @@ func (env *Env) IsInvalidName(name string) error {
 	}
 
 	for curEnv := env; curEnv != nil; curEnv = curEnv.Parent {
-		_, ok := curEnv.ObjMem.Dict[glob.BtEmptyPkgName][name]
+		_, ok := curEnv.ObjDefMem.Dict[glob.BtEmptyPkgName][name]
 		if ok {
 			return duplicateDefMsg(glob.BtEmptyPkgName, name, glob.KeywordObj)
 		}
-		_, ok = curEnv.FnMem.Dict[glob.BtEmptyPkgName][name]
+		_, ok = curEnv.FnDefMem.Dict[glob.BtEmptyPkgName][name]
 		if ok {
 			return duplicateDefMsg(glob.BtEmptyPkgName, name, glob.KeywordFn)
 		}
-		_, ok = curEnv.PropMem.Dict[glob.BtEmptyPkgName][name]
+		_, ok = curEnv.PropDefMem.Dict[glob.BtEmptyPkgName][name]
 		if ok {
 			return duplicateDefMsg(glob.BtEmptyPkgName, name, glob.KeywordProp)
 		}
@@ -257,7 +257,7 @@ func (env *Env) NewDefProp(stmt *ast.DefPropStmt) error {
 		return err
 	}
 
-	return env.PropMem.Insert(stmt, glob.BtEmptyPkgName)
+	return env.PropDefMem.Insert(stmt, glob.BtEmptyPkgName)
 }
 
 func (env *Env) NewDefObj(stmt *ast.DefObjStmt) error {
@@ -268,7 +268,7 @@ func (env *Env) NewDefObj(stmt *ast.DefObjStmt) error {
 		}
 	}
 
-	return env.ObjMem.Insert(stmt, glob.BtEmptyPkgName)
+	return env.ObjDefMem.Insert(stmt, glob.BtEmptyPkgName)
 }
 
 func (env *Env) NewDefFn(stmt *ast.DefFnStmt) error {
@@ -277,7 +277,7 @@ func (env *Env) NewDefFn(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	return env.FnMem.Insert(stmt, glob.BtEmptyPkgName)
+	return env.FnDefMem.Insert(stmt, glob.BtEmptyPkgName)
 }
 
 func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {
@@ -286,7 +286,7 @@ func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {
 		return err
 	}
 
-	return env.ExistPropMem.Insert(stmt, glob.BtEmptyPkgName)
+	return env.ExistPropDefMem.Insert(stmt, glob.BtEmptyPkgName)
 }
 
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
@@ -294,7 +294,7 @@ func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, erro
 		return nil, fmt.Errorf("exist fact must have one parameter")
 	}
 
-	existPropDef, ok := env.ExistPropMem.Get(fact.PropName)
+	existPropDef, ok := env.ExistPropDefMem.Get(fact.PropName)
 	if !ok {
 		return nil, fmt.Errorf("exist fact %s has no definition", fact.String())
 	}
@@ -369,7 +369,7 @@ func (env *Env) IsCommutativePropName_StoreIt(fact *ast.SpecFactStmt) (bool, err
 		return true, fmt.Errorf("commutative prop is supposed to have one atom parameter, but %s has %s", fact.PropName, fact.Params[0])
 	}
 
-	propDef, ok := env.PropMem.Get(*propNameAsAtom)
+	propDef, ok := env.PropDefMem.Get(*propNameAsAtom)
 	if !ok {
 		return true, fmt.Errorf("prop %s has no definition", fact.PropName)
 	}
@@ -471,12 +471,7 @@ func (env *Env) IsEqualFnName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, fmt.Errorf("equal fn is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
 	}
 
-	err := storeCommutativeTransitiveFact(env.EqualFnMem, fact)
-	if err != nil {
-		return false, err
-	}
-
-	err = storeCommutativeTransitiveFact(env.EqualMem, fact)
+	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
 	if err != nil {
 		return false, err
 	}
@@ -493,12 +488,7 @@ func (env *Env) IsEqualSetName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 		return false, fmt.Errorf("equal set is supposed to have two parameters, but %s has %d parameters", fact.PropName, len(fact.Params))
 	}
 
-	err := storeCommutativeTransitiveFact(env.EqualSetMem, fact)
-	if err != nil {
-		return false, err
-	}
-
-	err = storeCommutativeTransitiveFact(env.EqualMem, fact)
+	err := storeCommutativeTransitiveFact(env.EqualMem, fact)
 	if err != nil {
 		return false, err
 	}
