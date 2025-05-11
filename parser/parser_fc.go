@@ -89,9 +89,8 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	}
 
 	var pkgName strings.Builder
-	for cursor.is(glob.KeySymbolColonColon) {
+	if cursor.is(glob.KeySymbolColonColon) {
 		pkgName.WriteString(value)
-		pkgName.WriteString(glob.KeySymbolColonColon)
 		value, err = cursor.next()
 		if err != nil {
 			return ast.FcAtom{Name: ""}, err
@@ -99,7 +98,6 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	}
 
 	pkgNameStr := pkgName.String()
-	pkgNameStr = strings.TrimSuffix(pkgNameStr, glob.KeySymbolColonColon)
 
 	if glob.IsKwThatCanNeverBeFcName(value) {
 		return ast.FcAtom{PkgName: pkgNameStr, Name: value}, fmt.Errorf("invalid first citizen: %s", value)

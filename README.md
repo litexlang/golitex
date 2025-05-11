@@ -26,16 +26,16 @@ Second, Litex is built around common sense rather than sophisticated mathematica
 
 **Mathematics is the science of abstraction, while computer science is the discipline that masters it. The ideal of Litex is bridging the two—using programming to solve mathematical challenges and mathematics to enhance AI reasoning. It’s a bold effort to scale reasoning with modern computing power and programming ingenuity.**
 
-(The official Litex website https:#litexlang.org is under development.)
-
-(You do not need to learn set thoery or first-order logic to use Litex. Just learn by using it! The inventor of Litex also only has a very basic knowledge of set thoery and first-order logic.)
-
 Core values of Litex:
 Simplicity over Complexity: Simple for userers to learn, use, cooperate, and extend. Users can use simple logic components to construct a grand edifice of mathematics.  
 
 Pragmatism over Rigor: It solves the fundamental problems of mathematical reasoning, abstration, with a balance between expressiveness and strictness. No more, no less in terms of features.
 
-For all, not just specialists: Math is for everyone, that is why Litex is for everyone too. Computers are bicycles for minds. May Litex inspire more people to explore and enjoy the formal way of reasoning.
+Accessibility over exclusivity: Because mathematics belongs to everyone, Litex should too. May it open formal reasoning to all.
+
+(The official Litex website https:#litexlang.org is under development.)
+
+(You do not need to learn set thoery or first-order logic to use Litex. Just learn by using it! The inventor of Litex also only has a very basic knowledge of set thoery and first-order logic.)
 
 <!-- TODO: 参考下面这个网站以获得更多数学家的角度，里面有很多数学家对数学的讨论 https:#sugaku.net/content/understanding-the-cultural-divide-between-mathematics-and-ai/ -->
 <!-- On the foolishness of "natural language programming". 里面有很多关于形式化语言比自然语言好的观点：litex把数学从不准确，冗余的，不同国家的人互相看不懂，抽象层过多以至于难以追踪，模块化程度为0，的自然语言，变成了非常准则，无任何冗余，世界通用，抽象层靠常用编程工具变得很追踪，模块化很高以至于人们可以在数学的github上分享 的形式化语言 -->
@@ -94,7 +94,7 @@ Mathematics is the art of deriving new facts from established ones. To illustrat
 
 Consider `Human` as the set of all humans. Using `know`, we establish the fact without the need to be verified by other facts: all humans are self-aware. Since Bob is in the set of `Human`, "Bob is self-aware" is inherently true.
 
-Notice how Litex requires much less typing than Lean4 even in this simple example. An obvious advantage of Litex is that it reduces typing by eliminating the need to name or recall individual facts. When writing done factual expressions for verification, Litex automatically searches for relevant facts, akin to a regex-based search in a large database. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
+Notice how Litex requires much less typing than Lean4 even in this simple example. An obvious advantage of Litex is that it reduces typing by eliminating the need to name or recall individual facts. When writing done factual expressions for verification, Litex automatically searches for relevant facts, akin to a regular expression search in a large database. For instance, instead of naming an axiom like “axiom self_aware_all,” you simply write “know …”. This approach significantly reduces the cognitive load and enhances efficiency in handling complex logical structures.
 
 Although this is a simple example, it has already taught us how ANY mathematical facts are derived from known facts. Just as Lego lets you assemble complex structures from simple pieces, Litex lets you build math from minimal (with just 8 main keywords: forall, exist, not, or, fn, prop, obj, set and several other auxiliary keywords), reusable parts -— no unnecessary complexity, just pure flexibility.
 
@@ -332,7 +332,7 @@ Litex significantly reduces the mental effort to formalize theorems compared to 
 ### Remarks
 Strictly speaking, fn and set in Litex do not carry the exact same meaning as in traditional set theory. For instance, users can define functions (e.g., union) that operate on the "set of all sets"—something prohibited in conventional set theory. Litex allows such constructions but issues warnings when potentially "dangerous" operations are attempted, giving users flexibility while discouraging unsound reasoning.
 
-Fundamentally, Litex is a regex-based interpreter with customizable pattern-matching rules and math-friendly syntactic sugar. It operates below the level of formal mathematical axiom systems (such as ZFC), allowing users to define their own axioms. This design prioritizes expressiveness and adaptability over strict adherence to a specific foundational theory.
+Fundamentally, Litex is a regex-based(without recursion) finder with customizable pattern-matching rules and math-friendly syntactic sugar. It operates below the level of formal mathematical axiom systems (such as ZFC), allowing users to define their own axioms. This design prioritizes expressiveness and adaptability over strict adherence to a specific foundational theory.
 
 <!-- 可以考虑新开一个Section，专门对比lean和litex -->
 <!-- 下面这是lean做勾股定理的代码，非常复杂，非常多的 hierarchy，不能直接像初中生一样不需要任何前置知识就可以理解 -->
@@ -365,13 +365,13 @@ Litex is a minimalist proof assistant, designed to be simple and intuitive. It d
 
 Litex is an attempt to scale reasoning with the ever-expanding power of modern computing resources, and to introduce a new way of thinking (the way of thinking that is more like programming) about math.
 
-Technically, Litex is a regex-based interpreter with customizable matching rules and math-friendly syntax sugar. Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Any existing mathematical axioms can be expressed in Litex. 
+Technically, Litex is a regex-based(without recursion) finder with customizable matching rules and math-friendly syntax sugar. Litex has a lower abstraction level below any existing mathematical axioms, including ZFC. Any existing mathematical axioms can be expressed in Litex. 
 
 Also remember, Litex is not Turing Complete, because verification does not require execution or loops (goto statements), which further enhances its expressiveness. In short, the user will enjoy freedom and expressiveness that no other proof assistant can offer. 
 
 (To use Litex effectively, adopt a mindset that prioritizes intuitive over rigid prerequisites: just as children learn math without first mastering axioms, Litex should allow users to work naturally and incrementally, embedding foundational systems only when needed — not as barriers to entry. Also, when the users do feel necessary to implement a new axiom, they can do so in Litex just as if they are writing on a paper.)
 
-The inventor of Litex sees Litex as a regex-based interpreter. Every design choice around Litex categorizes into: 1. how to implement a mathematical reasoning(verification) process as a syntax and semantics sugar for regex matching, 2. what mathematical reasoning process to implement. There are not that many reasoning processes, since first-order logic is enough for most practical math problems, and every reasoning process can be translated into first-order logic.
+The inventor of Litex sees Litex as a regex-based(without recursion) finder. Every design choice around Litex categorizes into: 1. how to implement a mathematical reasoning(verification) process as a syntax and semantics sugar for regex matching, 2. what mathematical reasoning process to implement. There are not that many reasoning processes, since first-order logic is enough for most practical math problems, and every reasoning process can be translated into first-order logic.
 
 
 Think this way: When you verify a piece of proof in your brain, what you are doing is nothing more than matching known facts with the facts you are now writing (how verification works? Fundamentally, just by comparing the words of two facts and using first-order logic to infer the truth of the new fact). If a known fact (universal or specific) is matched with the new fact, the new fact is proven (See the examples above). If not, the new fact is unknown.
@@ -401,6 +401,13 @@ Furthermore, Tex's clear distinction between "math expressions" and "plain words
 The best to test Litex is by translating "real-world" into Litex. I use Professor Terrence Tao's Analysis I and II to test Litex. The set theory chapter of Analysis I helps a lot to remind me what functionalities are missing at each stage of implementing Litex.
 
 There are many "design balences" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent users including elementary school students or any non-math people, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language and I wish it could have as many users as possible, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
+
+Turing Machine = Tape (0/1 flip) + Comparator + Pointer.
+
+The pointer moves along the tape, making it Turing-complete. But the comparator only needs pattern matching (mechanical, non-recursive—no loops required). If the pattern is recursive, delegate to another Turing machine. This new machine’s comparator may also be recursive—repeat as needed. Eventually, a loop-free comparator decides everything.
+
+This mirrors the difference between general-purpose languages (Turing-complete, often via a VM-implemented Turing machine) and Litex: one must be complete, the other doesn’t.
+
 
 <!-- TODO: 需要说明一下，= 在litex 中，表示符号相同；符号相同是最强的相同。因为符号相同可以直接推出 函数相等(==)，集合相等(===)。 -->
 <!-- TODO：需要进一步说明的是，整个tutor里缺少了 集合 和 普通编程语言的区别；正常编程语言里，类型都是有限个，且类型是不带参数的（不会是某函数的返回值），但litex里可能有无数个集合，集合可以是某函数的返回值,litex 的类型系统总之比正常的语言要灵活很多很多（甚至本质上，in 这个事实用来处理 在xxx 集合这样的事实，它和其他名字的事实是一样的，只不过朴素集合论要求我们每个prop和fn要先对参数做一些 在xxx集合 之类的要求） -->
