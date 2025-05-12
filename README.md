@@ -26,14 +26,14 @@ Second, Litex is built around common sense rather than sophisticated mathematica
 
 **The potential impacts of Litex include: enabling proof verification (including LLM-generated outputs), revolutionizing proof writing and review, facilitating large-scale collaborations, creating datasets for LLM training, and enhancing LLM reasoning capabilities.** With its inherently simple syntax, Litex is well-positioned to achieve these goals and attract a growing community of researchers to the world of formal languages.
 
-**Mathematics is the science of abstraction, while computer science is the discipline that masters it. The ideal of Litex is bridging the two—using programming to solve mathematical challenges and mathematics to enhance AI reasoning. It’s a bold effort to scale reasoning with modern computing power and programming ingenuity.**
+**Mathematics is the science of abstraction, while computer science is the discipline that masters it. Litex helps users easily divide and conquer mathematical problems, just like how it helps programmers to tackle software complexity since the beginning of information age. It’s a bold effort to scale mathematical reasoning with modern computing power and software engineering.**
 
 Core values of Litex:
-Simplicity over Complexity: Simple for userers to learn, use, cooperate, and extend. Users can use simple logic components to construct a grand edifice of mathematics.  
+Simplicity over Complexity: Litex is simple for users to learn, use, cooperate, and extend. Users can use simple logic components to construct a grand edifice of mathematics.  
 
-Pragmatism over Rigor: It solves the fundamental problems of mathematical reasoning, abstration, with a balance between expressiveness and strictness. No more, no less in terms of features.
+Pragmatism over Rigor: Litex helps users to divide and conquer mathematical problems, with an elegant balance between expressiveness and strictness. No more, no less in terms of features.
 
-Accessibility over exclusivity: Because mathematics belongs to everyone, Litex should too. May it open formal reasoning to all.
+For everyone, not just specialists: Because mathematics is for everyone, Litex should too. May it open formal reasoning to all.
 
 (The official Litex website https:#litexlang.org is under development.)
 
