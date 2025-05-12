@@ -29,9 +29,9 @@ Second, Litex is built around common sense rather than sophisticated mathematica
 **Mathematics is the science of abstraction, while computer science is the discipline that masters it. Litex helps users easily divide and conquer mathematical problems, just like how it helps programmers to tackle software complexity since the beginning of information age. It’s a bold effort to scale mathematical reasoning with modern computing power and software engineering.**
 
 Core values of Litex:
-Simplicity over Complexity: Litex is simple for users to learn, use, cooperate, and extend. Users can use simple logic components to construct a grand edifice of mathematics.  
+Simplicity over Complexity: Litex is simple for users to learn, use, cooperate, and extend. No more, no less in terms of features.
 
-Pragmatism over Rigor: Litex helps users to divide and conquer mathematical problems, with an elegant balance between expressiveness and strictness. No more, no less in terms of features.
+Pragmatism over Rigor: Litex helps users to divide and conquer mathematical problems, with an elegant balance between expressiveness and strictness. It is all about getting things done.
 
 For everyone, not just specialists: Because mathematics is for everyone, Litex should too. May it open formal reasoning to all.
 
@@ -356,6 +356,10 @@ To put it in another way, traditional proof assistant are implemented to prove s
 Litex’s syntax uses just no more than 20 keywords: `obj`, `fn`, `prop`, `type`, `interface`, `forall`, `cond`, `when`, `then`, `exist`, `have`, `prove`, `prove_by_contradiction`,  `claim`, and `know`. Every expression yields one of 4 outputs: `true`, `false`, `unknown`, or `error`.This design ensures a smooth learning curve.
 
 By understanding the interplay between programming and math, Litex delivers a seamless, minimal, and complete experience tailored to mathematical verification.
+
+<!-- 需要突出自然数的不一样之处：像1,2,3 这种变量，直接全部送给了用户；然后他们的字面量上的计算验证，比如 x +  x = 2 * x ，直接就验证了，这种验证方法，不是用户能在litex里定义出来的，是内置的（从litex这个只读图灵机到 真正的图灵机)。这里和克罗内克的 自然数是上帝的创造，其他都是推论很相关，都是突出自然数的不一样之处。 -->
+
+<!-- 需要提醒用户：forall 能表达 when-then，同时 when p then q 甚至能用 or(not(p), q) 表达。 -->
 
 ## Key Design Choices
 
