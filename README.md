@@ -39,6 +39,15 @@ For everyone, not just specialists: Because mathematics is for everyone, Litex s
 
 (You do not need to learn set thoery or first-order logic to use Litex. Just learn by using it! The inventor of Litex also only has a very basic knowledge of set thoery and first-order logic.)
 
+<!-- C is quirky, flawed, and an enormous success. -->
+
+While Litex is young and may face criticism for its quirkiness and flaws, its true value lies in its vision. Traditional Turing-complete languages like C, Python, and JavaScript power our software-driven civilization. Yet, we know far less about languages designed for reasoning—like math, which doesn’t require Turing-completeness.  
+
+Mathematics underpins our civilization, and Litex could revolutionize how we formalize it. Intriguingly, early computing pioneers didn’t just use machines for calculation but also for proof. Litex carries forward that legacy, bridging computation and mathematical reasoning.
+
+<!-- Jeremy Avigard : Mathematics formal turn 里提到的，最早计算机先驱就是用计算机来证明数学定理的。 -->
+
+
 <!-- TODO: 参考下面这个网站以获得更多数学家的角度，里面有很多数学家对数学的讨论 https:#sugaku.net/content/understanding-the-cultural-divide-between-mathematics-and-ai/ -->
 <!-- On the foolishness of "natural language programming". 里面有很多关于形式化语言比自然语言好的观点：litex把数学从不准确，冗余的，不同国家的人互相看不懂，抽象层过多以至于难以追踪，模块化程度为0，的自然语言，变成了非常准则，无任何冗余，世界通用，抽象层靠常用编程工具变得很追踪，模块化很高以至于人们可以在数学的github上分享 的形式化语言 -->
 
