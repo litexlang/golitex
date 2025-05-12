@@ -20,7 +20,6 @@ import (
 	"strings"
 )
 
-// 在子函数里管理msg，即比如现在是TypeStmt，那在处理TypeStmt的地方处理它的string，二不是在这里
 func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	var err error = nil
 	var execState glob.ExecState = glob.ExecState_True
@@ -121,7 +120,6 @@ func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
 }
 
 func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
-	// TODO: 这里需要优化，因为claim和prove的逻辑是一样的，所以可以合并
 	isSuccess := false
 	var err error = nil
 
@@ -137,7 +135,6 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 		}
 	}
 
-	// store
 	if !isSuccess {
 		return glob.ExecState_Unknown, nil
 	}
@@ -157,7 +154,6 @@ func (exec *Executor) claimStmt(stmt *ast.ClaimStmt) (glob.ExecState, error) {
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-
 	}
 	return glob.ExecState_True, nil
 }
@@ -168,11 +164,8 @@ func (exec *Executor) GetMsgAsStr0ToEnd() string {
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	defer exec.appendMsg("\n")
-
-	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendMsg(stmt.String())
 
-	// iff leads to prop
 	err := exec.env.NewDefProp(stmt)
 	if err != nil {
 		return err
@@ -183,22 +176,25 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 		return nil
 	}
 
-	uniFactParams := stmt.DefHeader.Params
-	uniFactParamSets := stmt.DefHeader.SetParams
-	domFacts := []ast.FactStmt{}
-	domFacts = append(domFacts, stmt.DomFacts...)
-	propAsSpec := stmt.ToSpecFact()
-	domFacts = append(domFacts, propAsSpec)
+	propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
+	if err != nil {
+		return err
+	}
 
-	newUniFact := ast.NewUniFactStmtWithSetReqInDom(uniFactParams, uniFactParamSets, domFacts, stmt.IffFacts, ast.EmptyIffFacts, stmt.DefHeader.ParamInSetsFacts)
+	err = exec.env.NewFact(propToIff)
 
-	err = exec.env.NewFact(newUniFact)
-
-	exec.appendMsg(fmt.Sprintf("know by prop definition:\n%s", newUniFact.String()))
+	exec.appendMsg(fmt.Sprintf("know by prop definition:\n%s\n", propToIff.String()))
 
 	if err != nil {
 		return err
 	}
+
+	err = exec.env.NewFact(iffToProp)
+	if err != nil {
+		return err
+	}
+
+	exec.appendMsg(fmt.Sprintf("know by prop definition:\n%s\n", iffToProp.String()))
 
 	if len(stmt.IffFacts) == 0 {
 		return nil
