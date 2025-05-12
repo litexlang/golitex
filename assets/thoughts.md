@@ -1738,4 +1738,5 @@ REMARK:
 
 5.12
 package managment system: 不能有包里套包。如果包a需要引用包b，包b引用包c，那需要让包显式地引用包c；即如果说整个包在一个folder里面，而folder下面有一个folder里全是reference pkg，那本质上这个 reference pkg 里的folder都和 当前这个包的folder的其他文件是平级的。这样用户调用其他包里的东西就更容易，同时我 xxx::yyy就够了，不需要xxx:yyy:zzz。
-litex是一个超级fancy的read-only turing machine
+litex是一个超级fancy的read-only turing machine。这里严重问题是， Read-only turing machine 是 context-free 的不能有*。那我必须要能“数数”，以让 x + x = 2 * x 成立（单纯的context-free的图灵机不能数数，所以需要一个context-sensitive的图灵机来数数）。那我就要人工引入 $is_string(setName) 来 判断是不是一个东西是环；如果是环，那我可以帮你计算 2 * x = x + x （验证方式：帮你按字典序排列，然后按string比较）
+字典序排列这个还是很本质的：可以考虑只要是实数（复数）加减乘除 如果涉及到纯 数字，那就直接计算出来，而不要一直是 2 + 2 这种形式到处乱飞

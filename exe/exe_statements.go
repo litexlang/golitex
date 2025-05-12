@@ -204,7 +204,6 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 }
 
 func (exec *Executor) defObjStmt(stmt *ast.DefObjStmt) error {
-	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 	err := exec.env.NewDefObj(stmt)
 	if err != nil {
