@@ -1740,3 +1740,73 @@ REMARK:
 package managment system: 不能有包里套包。如果包a需要引用包b，包b引用包c，那需要让包显式地引用包c；即如果说整个包在一个folder里面，而folder下面有一个folder里全是reference pkg，那本质上这个 reference pkg 里的folder都和 当前这个包的folder的其他文件是平级的。这样用户调用其他包里的东西就更容易，同时我 xxx::yyy就够了，不需要xxx:yyy:zzz。
 litex是一个超级fancy的read-only turing machine。这里严重问题是， Read-only turing machine 是 context-free 的不能有*。那我必须要能“数数”，以让 x + x = 2 * x 成立（单纯的context-free的图灵机不能数数，所以需要一个context-sensitive的图灵机来数数）。那我就要人工引入 $is_string(setName) 来 判断是不是一个东西是环；如果是环，那我可以帮你计算 2 * x = x + x （验证方式：帮你按字典序排列，然后按string比较）
 字典序排列这个还是很本质的：可以考虑只要是实数（复数）加减乘除 如果涉及到纯 数字，那就直接计算出来，而不要一直是 2 + 2 这种形式到处乱飞，让它以4出现。某种程度上这就解决了“数数”的问题.
+
+% 我还没引入
+
+我意识到 x + x = 2 * x 貌似还没建立联系: 或许我在做任何有关 实数或者说复数的加减法的时候，我要人为地 重排一下，然后按 字典序去排列一下. 这样的另外一大好处是，我 存事实的时候，我直接存化简了的东西，而不是 保存 $p(2+2*1) 然后每次都运算一下 $p(4) 和 $p(2+2*1) 的比较
+另外一个是 x * x = x^2 
+数数：主要是枚举：现在没法证明，未来可能也没法证明，forall x in nat: x < 10 then or: x = 0, x = 1, x =2 , … x =9，因为不能从 < 10 推理出来是 0 到 9，除非我 引入新语法
+可见 涉及到数数的事实，很多，很杂，我不知道怎么处理完备。也许引入一个新语义一下全部解决了，也可能一直没法一下解决，就和现在的只读图灵机打架，因为只读图灵机不改变新信息，而数数是需要不断改变counter的信息的
+
+可能这要的递归法可以写成
+know forall x nat, n nat:
+    y < n + 1
+    iff:
+        or:
+            y = n
+            y < n
+
+know forall x nat:
+    x < 1
+    iff:
+        x = 0
+
+know forall x nat, n nat:
+    x < n + 1
+    not x < n
+    then:
+        x = n
+
+know forall x nat:
+    not x = 0
+    then:
+        x > 0
+
+此时
+claim:
+    forall x nat:
+        x < 2
+        then:
+            or:
+                x = 0
+                x = 1
+    prove:
+        forall x nat: // true
+            x < 1 + 1
+            iff:
+                or:
+                    x = 1
+                    x < 1
+
+        # fact1
+        forall x nat: // true
+            x < 1 + 1
+            not x = 1
+            then:
+                x < 1 
+                x = 0
+
+        # fact2
+        forall x nat:
+            x < 2
+            not x = 0 
+            then:
+                x > 0
+                x = 1
+
+        forall x nat:
+            x < 2
+            then:
+                or:
+                    x = 0 # 它不对时，fact2 成立
+                    x = 1 # 它不对时，fact1 成立 
