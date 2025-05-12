@@ -1,4 +1,4 @@
-# Litex: The Minimalist Proof Assistant
+# Litex: A Simple Proof Assistant and Formal Language
 
 <div align="center">
 <img src="assets/logo.png" alt="The Litex Logo" width="300">
