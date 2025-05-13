@@ -1,0 +1,26 @@
+set point
+set line
+set plane
+
+fn angle(a point, b point, c point) real
+
+prop point_on_line(p point, l line)
+prop point_on_plane(q point, p plane)
+
+fn line_of(a point, b point) line:
+    a != b
+    then:
+        $point_on_line(line_of(a, b), a)
+        $point_on_line(line_of(a, b), b)
+        forall l line:
+            $point_on_line(a, l)
+            $point_on_line(b, l)
+            then:
+                l = line_of(a, b)
+
+prove:
+    obj a point, b point, l line:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+    l = line_of(a, b)

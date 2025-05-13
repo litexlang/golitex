@@ -61,11 +61,13 @@ func InstantiateFcFn(fc *FcFn, uniMap map[string]Fc) (Fc, error) {
 		newFc.ParamSegs = append(newFc.ParamSegs, newSeg)
 	}
 
-	newAs, err := fc.As.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
+	if fc.As != nil {
+		newAs, err := fc.As.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFc.As = newAs
 	}
-	newFc.As = newAs
 
 	return &newFc, nil
 }

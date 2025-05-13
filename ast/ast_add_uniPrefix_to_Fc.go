@@ -20,17 +20,26 @@ import (
 
 type NameDepthMap map[string]int
 
-func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) *FcAtom {
+func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) (*FcAtom, error) {
 	if prefixNum, ok := fcAtomInUniParams(atom, uniParams); ok {
 		atom.Name = strings.Repeat(glob.UniParamPrefix, prefixNum) + atom.Name
 	}
-	return atom
+
+	if atom.As != nil {
+		newAs, err := AddUniPrefixToFc(atom.As, uniParams)
+		if err != nil {
+			return nil, err
+		}
+		atom.As = newAs
+	}
+
+	return atom, nil
 }
 
 func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 	fcAsAtom, ok := fc.(*FcAtom)
 	if ok {
-		return AddUniPrefixToFcAtom(fcAsAtom, uniParams), nil
+		return AddUniPrefixToFcAtom(fcAsAtom, uniParams)
 	}
 
 	fcAsFcFn, ok := fc.(*FcFn)
@@ -58,11 +67,13 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 		newFcFn.ParamSegs = append(newFcFn.ParamSegs, curSeg)
 	}
 
-	newAs, err := AddUniPrefixToFc(fcAsFcFn.As, uniParams)
-	if err != nil {
-		return nil, err
+	if fcAsFcFn.As != nil {
+		newAs, err := AddUniPrefixToFc(fcAsFcFn.As, uniParams)
+		if err != nil {
+			return nil, err
+		}
+		newFcFn.As = newAs
 	}
-	newFcFn.As = newAs
 
 	return &newFcFn, nil
 }
