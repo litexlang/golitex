@@ -18,12 +18,10 @@ var EmptyIffFacts []FactStmt = nil
 
 var ClaimStmtEmptyToCheck FactStmt = nil
 
-var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.BtEmptyPkgName, glob.BuiltinExist_St_FactExistParamPropParmSep, nil}
+var BuiltinExist_St_FactExistParamPropParmSepAtom = &FcAtom{glob.EmptyPkg, glob.BuiltinExist_St_FactExistParamPropParmSep, nil}
 
 var EmptyKnowClaimName = ""
 
 var EmptyParentSet Fc = nil
 
-// var EmptyElemsInSetDef []Fc = nil
-
-var EmptyFcAtom = *NewFcAtom(glob.BtEmptyPkgName, "", nil)
+var EmptyFcAtom = *NewFcAtom(glob.EmptyPkg, "", nil)

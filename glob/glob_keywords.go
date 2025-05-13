@@ -49,6 +49,7 @@ const (
 	KeywordMathInduction        = "math_induction"
 	KeywordFrac                 = "frac"
 	KeywordAs                   = "as"
+	KeywordId                   = "id"
 	// litex version 0.2 的时候可以考虑实现。这样的话fn所在的集合也能像obj一样简单了
 	// KeywordFnSet = "fn_set"
 	// litex version 0.3 的时候可以考虑实现。这样的话set所在的集合也能像obj一样简单了
@@ -91,6 +92,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordMathInduction:        {},
 	KeywordFrac:                 {},
 	KeywordAs:                   {},
+	KeywordId:                   {},
 }
 
 const (

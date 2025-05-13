@@ -35,13 +35,12 @@ func (ver *Verifier) FactStmt(stmt ast.FactStmt, state VerState) (bool, error) {
 }
 
 type Verifier struct {
-	env    *env.Env
-	curPkg string
+	env *env.Env
 }
 
-func NewVerifier(curEnv *env.Env, pkgName string) *Verifier {
+func NewVerifier(curEnv *env.Env) *Verifier {
 	if curEnv == nil {
-		return &Verifier{env: env.NewEnv(nil), curPkg: pkgName}
+		return &Verifier{env: env.NewEnv(nil)}
 	} else {
 		return &Verifier{env: curEnv}
 	}

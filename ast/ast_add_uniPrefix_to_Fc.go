@@ -68,7 +68,7 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 }
 
 func fcAtomInUniParams(atom *FcAtom, uniParams NameDepthMap) (int, bool) {
-	if atom.PkgName == glob.BtEmptyPkgName {
+	if atom.PkgName == glob.EmptyPkg {
 		if prefixNum, ok := uniParams[atom.Name]; ok {
 			return prefixNum, true
 		}
@@ -82,7 +82,7 @@ func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
 
 	for i, param := range asUniFact.Params {
 		newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-		uniMap[param] = NewFcAtom(glob.BtEmptyPkgName, newParams[i], nil)
+		uniMap[param] = NewFcAtom(glob.EmptyPkg, newParams[i], nil)
 	}
 
 	newParamsSets := asUniFact.ParamSets

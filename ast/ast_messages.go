@@ -63,7 +63,7 @@ func (stmt *SpecFactStmt) String() string {
 		builder.WriteByte(' ')
 	}
 
-	if stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsKeySymbol(stmt.PropName.Name) {
+	if stmt.PropName.PkgName == glob.EmptyPkg && glob.IsKeySymbol(stmt.PropName.Name) {
 		return relaFactString(stmt)
 	}
 
@@ -428,7 +428,7 @@ func (stmt *HaveStmt) String() string {
 }
 
 func (f *FcAtom) String() string {
-	if f.PkgName == glob.BtEmptyPkgName {
+	if f.PkgName == glob.EmptyPkg {
 		return string(f.Name)
 	} else {
 		return fmt.Sprintf("%s::%s", f.PkgName, string(f.Name))

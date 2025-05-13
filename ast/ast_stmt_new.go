@@ -88,8 +88,8 @@ func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []
 	if glob.VerifyFcSatisfySpecFactParaReq {
 		newDomFacts := []FactStmt{}
 		for i, param := range params {
-			atom := NewFcAtom(glob.BtEmptyPkgName, param, nil)
-			var inFc = NewFcAtom(glob.BtEmptyPkgName, glob.KeywordIn, nil)
+			atom := NewFcAtom(glob.EmptyPkg, param, nil)
+			var inFc = NewFcAtom(glob.EmptyPkg, glob.KeywordIn, nil)
 			specFact := NewSpecFactStmt(TruePure, *inFc, []Fc{atom, paramTypes[i]})
 			newDomFacts = append(newDomFacts, specFact)
 		}
@@ -117,5 +117,5 @@ func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts 
 }
 
 func NewFcAtomWithName(name string) *FcAtom {
-	return NewFcAtom(glob.BtEmptyPkgName, name, nil)
+	return NewFcAtom(glob.EmptyPkg, name, nil)
 }

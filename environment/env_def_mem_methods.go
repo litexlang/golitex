@@ -12,7 +12,10 @@
 
 package litex_env
 
-import ast "golitex/ast"
+import (
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
 
 func NewPropMemory() *PropDefMem {
 	return &PropDefMem{map[string]map[string]PropMemItem{}}
@@ -184,16 +187,16 @@ func (memory *EmitWhenSpecFactIsTrueMem) Get(pkgName string, propName string) ([
 	return node, true
 }
 
-func (memory *SetDefMem) Insert(stmt *ast.SetDefSetBuilderStmt, pkgName string) error {
-	if _, ok := memory.Dict[pkgName]; !ok {
-		memory.Dict[pkgName] = make(map[string]SetMemItem)
+func (memory *SetDefMem) Insert(stmt *ast.SetDefSetBuilderStmt) error {
+	if _, ok := memory.Dict[glob.EmptyPkg]; !ok {
+		memory.Dict[glob.EmptyPkg] = make(map[string]SetMemItem)
 	}
 
-	if _, ok := memory.Dict[pkgName][stmt.SetName]; !ok {
-		memory.Dict[pkgName][stmt.SetName] = SetMemItem{stmt}
+	if _, ok := memory.Dict[glob.EmptyPkg][stmt.SetName]; !ok {
+		memory.Dict[glob.EmptyPkg][stmt.SetName] = SetMemItem{stmt}
 	}
 
-	memory.Dict[pkgName][stmt.SetName] = SetMemItem{stmt}
+	memory.Dict[glob.EmptyPkg][stmt.SetName] = SetMemItem{stmt}
 
 	return nil
 }
