@@ -21,8 +21,7 @@ import (
 // type Executor env.Env
 
 type Executor struct {
-	env    *env.Env
-	curPkg string // 在多pkg模式下才有用。并行地执行玩引用的包里的东西后，合并所有的环境的时候，把那个环境里的 pkgName = "" 的东西，全部替换成当前 curPkg 下面的东西
+	env *env.Env
 }
 
 // 如果你传入的是nil，那默认这个exec里的env的curPkg是""

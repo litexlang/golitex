@@ -43,7 +43,7 @@ func (stmt *SpecFactStmt) ReverseSpecFact() *SpecFactStmt {
 }
 
 func (f *SpecFactStmt) IsPropNameEqual() bool {
-	return f.PropName.Name == glob.KeySymbolEqual && f.PropName.PkgName == glob.BtEmptyPkgName
+	return f.PropName.Name == glob.KeySymbolEqual && f.PropName.PkgName == glob.EmptyPkg
 }
 
 func (f *SpecFactStmt) IsExistFact() bool {
@@ -65,7 +65,7 @@ func (f *SpecFactStmt) IsTrue() bool {
 func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
 	for i, param := range f.Params {
 		paramAsAtom, ok := param.(*FcAtom)
-		if ok && paramAsAtom.PkgName == glob.BtEmptyPkgName && paramAsAtom.Name == glob.BuiltinExist_St_FactExistParamPropParmSep {
+		if ok && paramAsAtom.PkgName == glob.EmptyPkg && paramAsAtom.Name == glob.BuiltinExist_St_FactExistParamPropParmSep {
 			return i
 		}
 	}
@@ -73,5 +73,5 @@ func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {
 }
 
 func (f *SpecFactStmt) PropNameIsGiven_PkgNameEmpty(name FcAtom, givenName string) bool {
-	return name.PkgName == glob.BtEmptyPkgName && name.Name == givenName
+	return name.PkgName == glob.EmptyPkg && name.Name == givenName
 }

@@ -19,7 +19,7 @@ import (
 )
 
 func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
-	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
+	return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name)
 }
 
 func (stmt *UniFactStmt) NewUniFactWithThenToIff() *UniFactStmt {
@@ -67,10 +67,10 @@ func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNa
 func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param, nil))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param, nil))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name, nil}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, defStmt.DefHeader.Name, nil}, propSpecFactParams)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -91,10 +91,10 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param, nil))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param, nil))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name, nil}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, defStmt.DefHeader.Name, nil}, propSpecFactParams)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
@@ -112,10 +112,10 @@ func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param, nil))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param, nil))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name, nil}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, defStmt.DefHeader.Name, nil}, propSpecFactParams)
 
 	return propSpecFact
 }
@@ -143,11 +143,11 @@ func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
 }
 
 func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
-	return stmt.PropName.PkgName == glob.BtEmptyPkgName && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual)
+	return stmt.PropName.PkgName == glob.EmptyPkg && glob.IsBuiltinInfixRelaPropSymbol(stmt.PropName.Name) && !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqual)
 }
 
 func (stmt *SpecFactStmt) IsMathInductionFact() bool {
-	return stmt.PropName.PkgName == glob.BtEmptyPkgName && stmt.PropName.Name == glob.KeywordMathInduction
+	return stmt.PropName.PkgName == glob.EmptyPkg && stmt.PropName.Name == glob.KeywordMathInduction
 }
 
 func ParamsParamSetsToInFacts(params []string, paramSets []Fc) []FactStmt {
@@ -159,5 +159,5 @@ func ParamsParamSetsToInFacts(params []string, paramSets []Fc) []FactStmt {
 }
 
 func ParamParamSetToInFact(param string, paramSet Fc) FactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, glob.KeywordIn, nil}, []Fc{NewFcAtom(glob.BtEmptyPkgName, param, nil), paramSet})
+	return NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, glob.KeywordIn, nil}, []Fc{NewFcAtom(glob.EmptyPkg, param, nil), paramSet})
 }

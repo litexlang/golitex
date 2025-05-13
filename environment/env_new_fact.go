@@ -234,17 +234,17 @@ func (env *Env) IsInvalidName(name string) error {
 	}
 
 	for curEnv := env; curEnv != nil; curEnv = curEnv.Parent {
-		_, ok := curEnv.ObjDefMem.Dict[glob.BtEmptyPkgName][name]
+		_, ok := curEnv.ObjDefMem.Dict[glob.EmptyPkg][name]
 		if ok {
-			return duplicateDefMsg(glob.BtEmptyPkgName, name, glob.KeywordObj)
+			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordObj)
 		}
-		_, ok = curEnv.FnDefMem.Dict[glob.BtEmptyPkgName][name]
+		_, ok = curEnv.FnDefMem.Dict[glob.EmptyPkg][name]
 		if ok {
-			return duplicateDefMsg(glob.BtEmptyPkgName, name, glob.KeywordFn)
+			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordFn)
 		}
-		_, ok = curEnv.PropDefMem.Dict[glob.BtEmptyPkgName][name]
+		_, ok = curEnv.PropDefMem.Dict[glob.EmptyPkg][name]
 		if ok {
-			return duplicateDefMsg(glob.BtEmptyPkgName, name, glob.KeywordProp)
+			return duplicateDefMsg(glob.EmptyPkg, name, glob.KeywordProp)
 		}
 	}
 
@@ -257,7 +257,7 @@ func (env *Env) NewDefProp(stmt *ast.DefPropStmt) error {
 		return err
 	}
 
-	return env.PropDefMem.Insert(stmt, glob.BtEmptyPkgName)
+	return env.PropDefMem.Insert(stmt, glob.EmptyPkg)
 }
 
 func (env *Env) NewDefObj(stmt *ast.DefObjStmt) error {
@@ -268,7 +268,7 @@ func (env *Env) NewDefObj(stmt *ast.DefObjStmt) error {
 		}
 	}
 
-	return env.ObjDefMem.Insert(stmt, glob.BtEmptyPkgName)
+	return env.ObjDefMem.Insert(stmt, glob.EmptyPkg)
 }
 
 func (env *Env) NewDefFn(stmt *ast.DefFnStmt) error {
@@ -277,7 +277,7 @@ func (env *Env) NewDefFn(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	return env.FnDefMem.Insert(stmt, glob.BtEmptyPkgName)
+	return env.FnDefMem.Insert(stmt, glob.EmptyPkg)
 }
 
 func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {
@@ -286,7 +286,7 @@ func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {
 		return err
 	}
 
-	return env.ExistPropDefMem.Insert(stmt, glob.BtEmptyPkgName)
+	return env.ExistPropDefMem.Insert(stmt, glob.EmptyPkg)
 }
 
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {

@@ -69,7 +69,7 @@ func (exec *Executor) TopLevelStmt(stmt *ast.TopStmt) (glob.ExecState, error) {
 func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	defer exec.appendMsg("\n")
 
-	curVerifier := verifier.NewVerifier(exec.env, exec.curPkg)
+	curVerifier := verifier.NewVerifier(exec.env)
 	ok, err := curVerifier.FactStmt(stmt, verifier.Round0Msg)
 	if err != nil {
 		return glob.ExecState_Error, err
@@ -86,7 +86,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	if glob.CheckFalse {
 		if asSpecFact, ok := stmt.(*ast.SpecFactStmt); ok {
 			newStmt := asSpecFact.ReverseIsTrue()
-			curVerifier := verifier.NewVerifier(exec.env, exec.curPkg)
+			curVerifier := verifier.NewVerifier(exec.env)
 			ok, err := curVerifier.FactStmt(newStmt, verifier.Round0Msg)
 			if err != nil {
 				return glob.ExecState_Error, err
@@ -350,7 +350,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	existStFactParams = append(existStFactParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
 	existStFactParams = append(existStFactParams, stmt.Fact.Params...)
 
-	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, *ast.NewFcAtom(exec.curPkg, stmt.Fact.PropName.Name, nil), existStFactParams)
+	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, *ast.NewFcAtomWithName(stmt.Fact.PropName.Name), existStFactParams)
 	err = exec.env.NewFact(newExistStFact)
 	if err != nil {
 		return glob.ExecState_True, nil
@@ -555,7 +555,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimStmt) (bool, 
 func (exec *Executor) setDefStmt(stmt *ast.SetDefSetBuilderStmt) error {
 	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
 
-	err := exec.env.SetDefMem.Insert(stmt, exec.curPkg)
+	err := exec.env.SetDefMem.Insert(stmt)
 	if err != nil {
 		return err
 	}
