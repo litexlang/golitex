@@ -57,10 +57,11 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveClaimStmt()
 	case glob.KeywordKnow:
 		{
+			// 考虑让 know exist 也能进来
 			if tb.TokenAtIndexIs(1, glob.KeywordProp) {
 				ret, err = tb.knowPropStmt()
 			} else {
-				ret, err = tb.knowStmt()
+				ret, err = tb.knowFactStmt()
 			}
 		}
 	case glob.KeywordSet:
@@ -413,7 +414,7 @@ func (tb *tokenBlock) proveClaimStmt() (*ast.ClaimStmt, error) {
 	return ast.NewClaimProveStmt(true, ast.ClaimStmtEmptyToCheck, innerStmtArr), nil
 }
 
-func (tb *tokenBlock) knowStmt() (*ast.KnowStmt, error) {
+func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 	tb.header.skip(glob.KeywordKnow)
 
 	if !tb.header.is(glob.KeySymbolColon) {

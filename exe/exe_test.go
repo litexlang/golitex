@@ -160,7 +160,7 @@ func TestKnowVerifySpecFactSpeed(t *testing.T) {
 	start := time.Now()
 	for i := 0; i < rounds; i++ {
 		stmt := randSpecFact()
-		knowStmt := ast.KnowStmt{Facts: []ast.FactStmt{stmt}}
+		knowStmt := ast.KnowFactStmt{Facts: []ast.FactStmt{stmt}}
 		topKnow := ast.TopStmt{Stmt: &knowStmt, IsPub: true}
 		topVerifyStatements = append(topVerifyStatements, &ast.TopStmt{Stmt: stmt, IsPub: true})
 		topStatements = append(topStatements, &topKnow)
@@ -303,7 +303,7 @@ func TestEqualFactMemory(t *testing.T) {
 	rounds := HundredRound
 	for i := 0; i < rounds; i++ {
 		stmt := randEqualFact()
-		knowStmt := ast.KnowStmt{Facts: []ast.FactStmt{stmt}}
+		knowStmt := ast.KnowFactStmt{Facts: []ast.FactStmt{stmt}}
 		topKnowStmt := ast.TopStmt{Stmt: &knowStmt, IsPub: true}
 		if i < rounds/2 {
 			topVerifyStatements = append(topVerifyStatements, &ast.TopStmt{Stmt: stmt, IsPub: true})

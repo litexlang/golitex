@@ -96,9 +96,6 @@ prop not_on_any_plane(a point, b point, c point, d point):
             not $point_on_plane(c, p)
             not $point_on_plane(d, p)
 
-# 上述的 至少存在不
-
-
 know exist $exist_four_points_not_on_any_plane()
 
 prop between(left point, right point, middle point):

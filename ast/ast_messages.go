@@ -27,7 +27,7 @@ func (stmt *TopStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *KnowStmt) String() string {
+func (stmt *KnowFactStmt) String() string {
 	var builder strings.Builder
 
 	builder.WriteString(glob.KeywordKnow)
@@ -422,6 +422,7 @@ func (stmt *HaveStmt) String() string {
 		}
 		builder.WriteString(stmt.ObjNames[len(stmt.ObjNames)-1])
 	}
+	builder.WriteByte(' ')
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
 

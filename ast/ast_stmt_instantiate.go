@@ -129,11 +129,7 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Fc) (*UniFactStmt, 
 		if err != nil {
 			return nil, err
 		}
-		specFact, ok := newFact.(*SpecFactStmt)
-		if !ok {
-			return nil, errors.New("ThenFacts must be of type *SpecFactStmt")
-		}
-		newThenFacts = append(newThenFacts, specFact)
+		newThenFacts = append(newThenFacts, newFact)
 	}
 
 	newIffFacts := []FactStmt{}

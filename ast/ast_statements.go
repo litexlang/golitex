@@ -81,7 +81,7 @@ type ClaimStmt struct {
 	Proofs      []Stmt
 }
 
-type KnowStmt struct {
+type KnowFactStmt struct {
 	Facts []FactStmt
 }
 

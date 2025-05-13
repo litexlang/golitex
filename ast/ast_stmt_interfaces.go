@@ -23,7 +23,7 @@ func (f *DefFnStmt) stmt()     {}
 func (l *UniFactStmt) stmt()   {}
 func (p *SpecFactStmt) stmt()  {}
 func (f *ClaimStmt) stmt()     {}
-func (f *KnowStmt) stmt()      {}
+func (f *KnowFactStmt) stmt()  {}
 
 func (s *DefExistPropStmt) stmt() {}
 

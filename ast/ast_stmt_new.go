@@ -48,8 +48,8 @@ func NewClaimProveStmt(proveTrue bool, toCheckFact FactStmt, proofs []Stmt) *Cla
 	return &ClaimStmt{proveTrue, toCheckFact, proofs}
 }
 
-func NewKnowStmt(facts []FactStmt) *KnowStmt {
-	return &KnowStmt{facts}
+func NewKnowStmt(facts []FactStmt) *KnowFactStmt {
+	return &KnowFactStmt{facts}
 }
 
 func NewFcFnDecl(name string, params []string) *FcFnDecl {
