@@ -404,13 +404,13 @@ func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, e
 
 	knownUniFact := ast.UniFactStmt{
 		Params:    []string{fmt.Sprintf("%sn", glob.UniParamPrefix)},
-		ParamSets: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordNatural}},
+		ParamSets: []ast.Fc{ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeywordNatural, nil)},
 		DomFacts:  []ast.FactStmt{},
 		ThenFacts: []ast.FactStmt{
 			&ast.SpecFactStmt{
 				TypeEnum: ast.TruePure,
 				PropName: *propNameAsAtom,
-				Params:   []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sn", glob.UniParamPrefix)}},
+				Params:   []ast.Fc{ast.NewFcAtom(glob.BtEmptyPkgName, fmt.Sprintf("%sn", glob.UniParamPrefix), nil)},
 			},
 		},
 		IffFacts: ast.EmptyIffFacts,

@@ -236,14 +236,14 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 		return err
 	}
 
-	fcFnParams := []ast.Fc{}
+	fcParamsAsFcSlice := []ast.Fc{}
 	for _, fc := range stmt.DefHeader.Params {
-		fcFnParams = append(fcFnParams, &ast.FcAtom{PkgName: "", Name: fc})
+		fcParamsAsFcSlice = append(fcParamsAsFcSlice, ast.NewFcAtom(glob.BtEmptyPkgName, fc, nil))
 	}
 
-	fcFn := ast.FcFn{FnHead: &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: stmt.DefHeader.Name}, ParamSegs: [][]ast.Fc{fcFnParams}}
+	fcFn := ast.FcFn{FnHead: ast.NewFcAtom(glob.BtEmptyPkgName, stmt.DefHeader.Name, nil), ParamSegs: [][]ast.Fc{fcParamsAsFcSlice}}
 
-	retFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{PkgName: "", Name: glob.KeywordIn}, []ast.Fc{&fcFn, stmt.RetSet})
+	retFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeywordIn, nil), []ast.Fc{&fcFn, stmt.RetSet})
 
 	uniFactThen := []ast.FactStmt{retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
@@ -350,7 +350,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	existStFactParams = append(existStFactParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
 	existStFactParams = append(existStFactParams, stmt.Fact.Params...)
 
-	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.FcAtom{PkgName: exec.curPkg, Name: stmt.Fact.PropName.Name}, existStFactParams)
+	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, *ast.NewFcAtom(exec.curPkg, stmt.Fact.PropName.Name, nil), existStFactParams)
 	err = exec.env.NewFact(newExistStFact)
 	if err != nil {
 		return glob.ExecState_True, nil
