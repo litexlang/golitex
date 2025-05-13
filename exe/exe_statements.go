@@ -334,6 +334,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
+		exec.appendMsg(fmt.Sprintf("know by %s %s definition:\n%s\n", glob.KeywordExistProp, &stmt.Fact.PropName, domFact.String()))
 	}
 
 	// iff of def exist prop is true
@@ -342,6 +343,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
+		exec.appendMsg(fmt.Sprintf("know by %s %s definition:\n%s\n", glob.KeywordExistProp, &stmt.Fact.PropName, iffFact.String()))
 	}
 
 	// 相关的 exist st 事实也成立

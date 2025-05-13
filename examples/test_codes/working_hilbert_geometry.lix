@@ -52,3 +52,61 @@ prove:
     have c st $a_line_has_more_than_two_points(l,a,b)
 
     $point_on_line(c,l)
+
+fn plain_of(a point, b point, c point) plane:
+    a != b
+    a != c
+    b != c
+    then:
+        $point_on_plane(a, plain_of(a, b, c))
+        $point_on_plane(b, plain_of(a, b, c))
+        $point_on_plane(c, plain_of(a, b, c))
+        forall p plane:
+            $point_on_plane(a, p)
+            $point_on_plane(b, p)
+            $point_on_plane(c, p)
+            then:
+                p = plain_of(a, b, c)
+
+prove:
+    obj a point, b point, c point, p plane:
+        a != b
+        a != c
+        b != c
+        $point_on_plane(a, p)
+        $point_on_plane(b, p)
+        $point_on_plane(c, p)
+
+    forall p2 plane:
+        $point_on_plane(a, p2)
+        $point_on_plane(b, p2)
+        $point_on_plane(c, p2)
+        then:
+            p2 = plain_of(a, b, c)
+
+prop line_on_plane(l line, p plane):
+    forall x point:
+        $point_on_line(x, l)
+        then:
+            $point_on_plane(x, p)
+
+know:
+    forall p plane, a point, b point:
+        $point_on_plane(a, p)
+        $point_on_plane(b, p)
+        a != b
+        $point_on_line(p, line_of(a, b))
+
+know prop point_on_line_line_on_plane_then_point_on_plane(a point, l line, p plane):
+    $point_on_line(a, l)
+    $line_on_plane(l, p)
+    iff:
+        $point_on_plane(a, p)
+
+prove:
+    obj a point, b point, c point, l line, p plane:
+        $point_on_line(a, l)
+        $line_on_plane(l, p)
+    
+    $point_on_line_line_on_plane_then_point_on_plane(a, l, p)
+    $point_on_plane(a,p)
