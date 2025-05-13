@@ -422,6 +422,7 @@ func (stmt *HaveStmt) String() string {
 		}
 		builder.WriteString(stmt.ObjNames[len(stmt.ObjNames)-1])
 	}
+	builder.WriteString(glob.KeywordSt)
 
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
 	return builder.String()
