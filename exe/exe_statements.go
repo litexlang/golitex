@@ -172,7 +172,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) error {
 	}
 
 	// prop leads to iff
-	if len(stmt.IffFacts) == 0 {
+	if stmt.IffFacts == nil || len(stmt.IffFacts) == 0 {
 		return nil
 	}
 

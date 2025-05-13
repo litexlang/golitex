@@ -140,3 +140,13 @@ prove:
                 not $point_on_plane(b, p)
                 not $point_on_plane(c, p)
                 not $point_on_plane(d, p)
+
+prop between(left point, right point, middle point):
+    dom:
+        left != right
+
+know:
+    forall left point, right point, middle point:
+        left != right
+        then:
+            $point_on_line(middle, line_of(left, right))

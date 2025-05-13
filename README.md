@@ -417,14 +417,13 @@ Furthermore, Tex's clear distinction between "math expressions" and "plain words
 
 The best to test Litex is by translating "real-world" into Litex. I use Professor Terrence Tao's Analysis I and II to test Litex. The set theory chapter of Analysis I helps a lot to remind me what functionalities are missing at each stage of implementing Litex.
 
+The user can divide the problem into indenpent tasks and store them in different packages to make execution faster.
+
 There are many "design balences" in Litex. Math is so common that anybody has some basic knowledge of it. On the other hand, some branch of math can be so hard that only experts can understand. So there is a very huge gap between two groups of Litex users: innocent users including elementary school students or any non-math people, and math experts. What they want Litex to be is different. Since Litex is a pragmatic language and I wish it could have as many users as possible, any time I encounter those "hard choices", I always put the innocent group of users' demand first.
 
-Turing Machine = Tape (0/1 flip) + Comparator + Pointer.
+Litex is fundamentally a read-only Turing machine. Once any fact is stored, it can not be removed or changed. The amount of data stored in memory is in porpotion to the amount of code that the user write. Such design makes Litex align with everyday math.
 
-The pointer moves along the tape, making it Turing-complete. But the comparator only needs pattern matching (mechanical, non-recursive—no loops required). If the pattern is recursive, delegate to another Turing machine. This new machine’s comparator may also be recursive—repeat as needed. Eventually, a loop-free comparator decides everything.
-
-This mirrors the difference between general-purpose languages (Turing-complete, often via a VM-implemented Turing machine) and Litex: one must be complete, the other doesn’t.
-
+A key advantage of a read-only Turing machine is that mathematical expressions, being highly structured, can be efficiently stored in SQL or an intermediate representation (IR). This makes the transition from **Litex 1 to Litex 2** seamless—**Litex 1** remains valuable by encoding facts into SQL/IR, while **Litex 2** loads and processes them, ensuring backward compatibility and a smooth migration without discarding existing work.  
 
 <!-- TODO: 需要说明一下，= 在litex 中，表示符号相同；符号相同是最强的相同。因为符号相同可以直接推出 函数相等(==)，集合相等(===)。 -->
 <!-- TODO：需要进一步说明的是，整个tutor里缺少了 集合 和 普通编程语言的区别；正常编程语言里，类型都是有限个，且类型是不带参数的（不会是某函数的返回值），但litex里可能有无数个集合，集合可以是某函数的返回值,litex 的类型系统总之比正常的语言要灵活很多很多（甚至本质上，in 这个事实用来处理 在xxx 集合这样的事实，它和其他名字的事实是一样的，只不过朴素集合论要求我们每个prop和fn要先对参数做一些 在xxx集合 之类的要求） -->

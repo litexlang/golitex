@@ -69,3 +69,7 @@ prove:
                     $p(y,x)
                     
                     
+prove:
+    prop between(left point, right point, middle point):
+        dom:
+            left != right
