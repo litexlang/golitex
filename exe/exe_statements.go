@@ -306,7 +306,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	uniMap := map[string]ast.Fc{}
 	paramAsAtoms := []ast.Fc{}
 	for i, param := range existPropDef.DefBody.DefHeader.Params {
-		paramAsAtom := ast.NewFcAtom(glob.BtEmptyPkgName, stmt.ObjNames[i])
+		paramAsAtom := ast.NewFcAtom(glob.BtEmptyPkgName, stmt.ObjNames[i], nil)
 		uniMap[param] = paramAsAtom
 		paramAsAtoms = append(paramAsAtoms, paramAsAtom)
 	}

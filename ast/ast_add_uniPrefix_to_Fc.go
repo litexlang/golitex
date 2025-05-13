@@ -38,7 +38,7 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 		return nil, fmt.Errorf("invalid fc %s", fc.String())
 	}
 
-	newFcFn := FcFn{&FcAtom{}, [][]Fc{}}
+	newFcFn := FcFn{&FcAtom{}, [][]Fc{}, nil}
 	var err error = nil
 
 	newFcFn.FnHead, err = AddUniPrefixToFc(fcAsFcFn.FnHead, uniParams)
@@ -58,6 +58,12 @@ func AddUniPrefixToFc(fc Fc, uniParams NameDepthMap) (Fc, error) {
 		newFcFn.ParamSegs = append(newFcFn.ParamSegs, curSeg)
 	}
 
+	newAs, err := AddUniPrefixToFc(fcAsFcFn.As, uniParams)
+	if err != nil {
+		return nil, err
+	}
+	newFcFn.As = newAs
+
 	return &newFcFn, nil
 }
 
@@ -76,7 +82,7 @@ func AddUniPrefixToUniFact(asUniFact *UniFactStmt) (*UniFactStmt, error) {
 
 	for i, param := range asUniFact.Params {
 		newParams[i] = fmt.Sprintf("%s%s", glob.UniParamPrefix, param)
-		uniMap[param] = NewFcAtom(glob.BtEmptyPkgName, newParams[i])
+		uniMap[param] = NewFcAtom(glob.BtEmptyPkgName, newParams[i], nil)
 	}
 
 	newParamsSets := asUniFact.ParamSets

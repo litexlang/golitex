@@ -34,19 +34,21 @@ func (f *FcFn) IsAtom() bool   { return false }
 type FcAtom struct {
 	PkgName string
 	Name    string
+	As      Fc
 }
 
 type FcFn struct {
 	FnHead    Fc // 必须是 fc, 而不是 fcAtom，因为函数头可能是另一个函数的返回值
 	ParamSegs [][]Fc
+	As        Fc
 }
 
-func NewFcAtom(pkgName string, value string) *FcAtom {
-	return &FcAtom{pkgName, value}
+func NewFcAtom(pkgName string, value string, as Fc) *FcAtom {
+	return &FcAtom{pkgName, value, as}
 }
 
-func NewFcFn(fnHead Fc, callPipe [][]Fc) *FcFn {
-	return &FcFn{fnHead, callPipe}
+func NewFcFn(fnHead Fc, callPipe [][]Fc, as Fc) *FcFn {
+	return &FcFn{fnHead, callPipe, as}
 }
 
 func FcSliceString(params []Fc) string {
@@ -185,7 +187,7 @@ func (f *FcFn) HasTwoParamsAndSwitchOrder() (*FcFn, bool) {
 		return nil, false
 	}
 
-	return NewFcFn(f.FnHead, [][]Fc{{f.ParamSegs[0][1], f.ParamSegs[0][0]}}), true
+	return NewFcFn(f.FnHead, [][]Fc{{f.ParamSegs[0][1], f.ParamSegs[0][0]}}, f.As), true
 }
 
 func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
@@ -215,9 +217,9 @@ func (f *FcFn) HasTwoParams_FirstParamHasTheSameNameAsItself() (*FcFn, bool) {
 					return nil, false
 				}
 
-				newRight := NewFcFn(f.FnHead, [][]Fc{{f_firstParam_as_fn.ParamSegs[0][1], f.ParamSegs[0][1]}})
+				newRight := NewFcFn(f.FnHead, [][]Fc{{f_firstParam_as_fn.ParamSegs[0][1], f.ParamSegs[0][1]}}, f.As)
 
-				return NewFcFn(f.FnHead, [][]Fc{{f_firstParam_as_fn.ParamSegs[0][0], newRight}}), true
+				return NewFcFn(f.FnHead, [][]Fc{{f_firstParam_as_fn.ParamSegs[0][0], newRight}}, f.As), true
 			}
 		}
 	}

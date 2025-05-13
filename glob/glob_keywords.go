@@ -48,11 +48,7 @@ const (
 	KeywordIn                   = "in"
 	KeywordMathInduction        = "math_induction"
 	KeywordFrac                 = "frac"
-	KeywordR                    = "R" // r as postfix for real number
-	KeywordF                    = "F" // f as postfix for float number
-	KeywordI                    = "i" // i for imaginary part of a complex number
-	KeywordN                    = "N" // n as postfix for natural number
-	KeywordC                    = "C" // c as postfix for complex number
+	KeywordAs                   = "as"
 	// litex version 0.2 的时候可以考虑实现。这样的话fn所在的集合也能像obj一样简单了
 	// KeywordFnSet = "fn_set"
 	// litex version 0.3 的时候可以考虑实现。这样的话set所在的集合也能像obj一样简单了
@@ -94,11 +90,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIn:                   {},
 	KeywordMathInduction:        {},
 	KeywordFrac:                 {},
-	KeywordR:                    {},
-	KeywordF:                    {},
-	KeywordI:                    {},
-	KeywordN:                    {},
-	KeywordC:                    {},
+	KeywordAs:                   {},
 }
 
 const (

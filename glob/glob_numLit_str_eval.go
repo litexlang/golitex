@@ -637,9 +637,7 @@ func longDivision(dividend, divisor string) (string, string, error) {
 // isZero checks if a number string represents zero
 func isZero(s string) bool {
 	// Handle negative numbers
-	if strings.HasPrefix(s, "-") {
-		s = s[1:]
-	}
+	s = strings.TrimLeft(s, "-")
 
 	// Check if all remaining characters are zeros or decimal points
 	for _, c := range s {
