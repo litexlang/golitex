@@ -1,13 +1,10 @@
 prove:
-    exist_prop a A, b B st p(x X, y Y):
-        $domP(a,b,x,y)
+    exist_prop d point st a_line_has_more_than_two_points(l line, a point, b point):
         iff:
-            $IFF(a,b,x,y)
+            $point_on_line(d, l)
 
-    know exist $p(1,2)
-    exist_obj a, b $p(1,2)
-    
-    exist $p(1,2)
-    $domP(a,b,1,2)
-    $IFF(a,b,1,2)
+    know $a_line_has_more_than_two_points(l,a,b)
 
+    have c st $a_line_has_more_than_two_points(l,a,b)
+
+    $point_on_line(c,l)

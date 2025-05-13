@@ -311,6 +311,10 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 		ExistParamsAtoms = append(ExistParamsAtoms, paramAsAtom)
 	}
 
+	for i, param := range existPropDef.DefBody.DefHeader.Params {
+		uniMap[param] = stmt.Fact.Params[i]
+	}
+
 	instantiatedExistPropDefStmt, err := existPropDef.Instantiate(uniMap)
 	if err != nil {
 		return glob.ExecState_Error, err
