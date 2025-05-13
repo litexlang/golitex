@@ -35,7 +35,6 @@ const (
 	KeywordIff                  = "iff"
 	KeywordProveByContradiction = "prove_by_contradiction"
 	KeywordProveInEachCase      = "prove_in_each_case" // 必要：和or一起使用
-	KeywordProveCase            = "prove_case"
 	KeywordAnd                  = "and"
 	KeywordOr                   = "or"
 	KeywordCommutativeProp      = "commutative_prop"
@@ -80,7 +79,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordNot:                  {},
 	KeywordProveByContradiction: {},
 	KeywordProveInEachCase:      {},
-	KeywordProveCase:            {},
 	KeywordIff:                  {},
 	KeywordExist:                {},
 	KeywordCommutativeProp:      {},
