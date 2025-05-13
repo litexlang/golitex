@@ -97,4 +97,92 @@ prove:
             $p(x)
             $q(x)
 
+prove:
+    know:
+        or:
+            or:
+                $p(x)
+                $q(x)
+            $t(x)
     
+    prove_in_each_case:
+        or:
+            or:
+                $p(x)
+                $q(x)
+            $t(x)
+        then:
+            or:
+                $p(x)
+                $q(x)
+                $t(x)
+        prove:
+            know:
+                or:
+                    $p(x)
+                    $q(x)
+                    $t(x)
+        prove:
+            know:
+                or:
+                    $p(x)
+                    $q(x)
+                    $t(x)
+
+# unknown
+prove:
+    know:
+        or:
+            or:
+                $p(x)
+                $q(x)
+            $t(x)
+    
+    or:
+        or:
+            $p(x)
+            $q(x)
+        $t(x)
+    
+    
+prove:
+    prop A(x X):
+        iff:
+            or:
+                $p(x)
+                $q(x)
+    know:
+        or:
+            $A(x)
+            $t(x)
+    
+    or:
+        $A(x)
+        $t(x)
+    
+    prove_in_each_case:
+        or:
+            $A(x)
+            $t(x)
+        then:
+            or:
+                $p(x)
+                $q(x)
+                $t(x)
+        prove:
+            $A(x)
+            or:
+                $p(x)
+                $q(x)
+        prove:
+            $t(x)
+
+prove:
+    know:
+        or:
+            $p(1)
+            $p(2)
+    or:
+        $p(1)
+        $p(2)
+        $p(3)
