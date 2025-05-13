@@ -72,3 +72,27 @@ prove:
 prove:
     1 = 1
 
+prove:
+    know prop line_intersect_finite_line_then_line_intersect_line(a point, b point, c point, l line):
+        dom:
+            a != b
+            a != c
+            b != c
+            $line_intersect_finite_line(a, b, l)
+        iff:
+            or:
+                $line_intersect_finite_line(a , c, l)
+                $line_intersect_finite_line(b , c, l)
+
+    prove:
+        obj a point, b point, c point, l line:
+            a != b
+            a != c
+            b != c
+            $line_intersect_finite_line(a, b, l)
+
+        $line_intersect_finite_line_then_line_intersect_line(a, b, c, l)
+
+        know not $line_intersect_finite_line(a, c, l)
+        $line_intersect_finite_line(b, c, l)
+
