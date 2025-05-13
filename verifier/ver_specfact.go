@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) SpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) specFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ver.env.IsSpecFactPropCommutative(stmt) {
 		return ver.checkCommutativeSpecFact(stmt, state)
 	} else {
