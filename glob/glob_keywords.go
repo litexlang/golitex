@@ -35,6 +35,7 @@ const (
 	KeywordIff                  = "iff"
 	KeywordProveByContradiction = "prove_by_contradiction"
 	KeywordProveInEachCase      = "prove_in_each_case" // 必要：和or一起使用
+	KeywordProveCase            = "prove_case"
 	KeywordAnd                  = "and"
 	KeywordOr                   = "or"
 	KeywordCommutativeProp      = "commutative_prop"
@@ -79,6 +80,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordNot:                  {},
 	KeywordProveByContradiction: {},
 	KeywordProveInEachCase:      {},
+	KeywordProveCase:            {},
 	KeywordIff:                  {},
 	KeywordExist:                {},
 	KeywordCommutativeProp:      {},
@@ -145,7 +147,7 @@ const (
 	KeySymbolLargerEqual            = ">="
 	KeySymbolLessEqual              = "<="
 	KeySymbolEquivalent             = "<=>"
-	// IT's possible for me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainance and make confusions), so I use a new keyword
+	// IT's possible fpor me to overload the meaning of "=" to mean "set equal", but I don't want to do that(I do not want to overload the meaning of "=" too much, which can be very tiring for future maintainance and make confusions), so I use a new keyword
 	KeySymbolEqualEqual      = "=="  // check fn equal
 	KeySymbolEqualEqualEqual = "===" // check set equal
 	KeySymbolGreaterGreater  = ">>"

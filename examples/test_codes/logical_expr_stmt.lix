@@ -198,10 +198,21 @@ prove:
 prove:
     know:
         or:
-            $p(t)
-            $q(t)
+            $p(x)
+            $q(x)
 
-    or:
-        $p(t)
-        $q(t)
-        $k(t)
+    prove_in_each_case:
+            or:
+                    $p(x)
+                    $q(x)
+            then:
+                # 证明or有点问题
+                or:
+                    $p(x)
+                    $q(x)
+                    $t(x)
+            prove:
+                $p(x)
+            prove:
+                $q(x)
+    # 本质遇到的问题是，如果说现在这个and-or 式子可以写成 F(p1,p2,p3,p4...,pm) 而我们发现 G(p1,p2,p3,p4...,pn) => F(p1,p2,p3,p4...) , 那么我们就可以证明这个式子是true
