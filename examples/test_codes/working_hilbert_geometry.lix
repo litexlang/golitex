@@ -110,3 +110,33 @@ prove:
     
     $point_on_line_line_on_plane_then_point_on_plane(a, l, p)
     $point_on_plane(a,p)
+
+exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_plane():
+    a != b
+    a != c
+    a != d
+    b != c
+    b != d
+    c != d
+    $not_on_any_plane(a, b, c, d)
+
+prop not_on_any_plane(a point, b point, c point, d point):
+    forall p plane:
+        or:
+            not $point_on_plane(a, p)
+            not $point_on_plane(b, p)
+            not $point_on_plane(c, p)
+            not $point_on_plane(d, p)
+
+know $exist_four_points_not_on_any_plane()
+
+prove:
+    have a , b , c , d  st $exist_four_points_not_on_any_plane()
+    $not_on_any_plane(a, b, c, d)
+
+    forall p plane:
+            or:
+                not $point_on_plane(a, p)
+                not $point_on_plane(b, p)
+                not $point_on_plane(c, p)
+                not $point_on_plane(d, p)

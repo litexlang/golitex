@@ -27,7 +27,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
 		execState, err = exec.factStmt(stmt)
-	case *ast.KnowStmt:
+	case *ast.KnowFactStmt:
 		err = exec.knowStmt(stmt)
 	case *ast.ClaimStmt:
 		execState, err = exec.claimStmt(stmt)
@@ -105,7 +105,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	return glob.ExecState_Unknown, nil
 }
 
-func (exec *Executor) knowStmt(stmt *ast.KnowStmt) error {
+func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
 	defer exec.appendMsg("\n")
 
 	for _, fact := range stmt.Facts {
@@ -357,6 +357,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	if err != nil {
 		return glob.ExecState_True, nil
 	}
+	exec.appendMsg(fmt.Sprintf("know by %s %s definition:\n%s\n", glob.KeywordExistProp, &stmt.Fact.PropName, newExistStFact.String()))
 
 	return glob.ExecState_True, nil
 }
