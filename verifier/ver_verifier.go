@@ -80,7 +80,7 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 	}
 }
 
-// TODO: 有严重问题
+// 这里可能有严重的问题：这里的复杂度是n!上升的。我不能让用户有太深的
 func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (bool, error) {
 	if !stmt.IsOr {
 		for _, fact := range stmt.Facts {
@@ -94,6 +94,10 @@ func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 		}
 		return ver.factDefer(stmt, state, true, nil, "")
 	} else {
+		if len(stmt.Facts) > 5 {
+			return false, fmt.Errorf("logic expr has too many facts: %d, expect no more than %d", len(stmt.Facts), glob.FactMaxNumInLogicExpr)
+		}
+
 		totalIndexes := []int{}
 		for i := range stmt.Facts {
 			totalIndexes = append(totalIndexes, i)
@@ -102,6 +106,7 @@ func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 
 		// iterate all subsets of totalIndexes
 		for i := range totoalSubsetOfIndexes {
+
 			for j := range totalIndexes {
 				if i == 0 && j == 0 {
 					continue
@@ -165,39 +170,6 @@ func (ver *Verifier) whenFactsNotTrueThenOtherPartOfLogicalExprIsTrue(notTrueFac
 	} else {
 		return false, nil
 	}
-}
-
-func (ver *Verifier) proveEachFactInOrExpr(stmt *ast.LogicExprStmt, index int, state VerState) (bool, error) {
-	ver.newEnv()
-	defer ver.deleteEnvAndRetainMsg()
-
-	// not others are stored to be true
-	for i := range stmt.Facts {
-		if i == index {
-			continue
-		}
-		err := ver.env.NewFact(stmt.Facts[i].ReverseIsTrue())
-		if err != nil {
-			return false, err
-		}
-	}
-
-	ok, err := ver.FactStmt(stmt.Facts[index], state.toNoMsg())
-	if err != nil {
-		return false, err
-	}
-
-	if !ok {
-		return false, nil
-	}
-
-	if state.requireMsg() {
-		ver.successWithMsg(stmt.String(), stmt.Facts[index].String())
-	} else {
-		ver.unknownMsgEnd(stmt.String())
-	}
-
-	return true, nil
 }
 
 func (ver *Verifier) factDefer(stmt ast.FactStmt, state VerState, proved bool, err error, proveBy string) (bool, error) {
