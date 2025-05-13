@@ -93,7 +93,7 @@ func (cursor *strSliceCursor) fcFnSegs() ([][]ast.Fc, error) {
 func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	value, err := cursor.next()
 	if err != nil {
-		return ast.FcAtom{Name: ""}, err
+		return *ast.NewFcAtom(glob.BtEmptyPkgName, "", nil), err
 	}
 
 	var pkgName strings.Builder
@@ -101,16 +101,16 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 		pkgName.WriteString(value)
 		value, err = cursor.next()
 		if err != nil {
-			return ast.FcAtom{Name: ""}, err
+			return *ast.NewFcAtom(glob.BtEmptyPkgName, "", nil), err
 		}
 	}
 
 	pkgNameStr := pkgName.String()
 
 	if glob.IsKwThatCanNeverBeFcName(value) {
-		return ast.FcAtom{PkgName: pkgNameStr, Name: value}, fmt.Errorf("invalid first citizen: %s", value)
+		return *ast.NewFcAtom(pkgNameStr, value, nil), fmt.Errorf("invalid first citizen: %s", value)
 	} else {
-		return ast.FcAtom{PkgName: pkgNameStr, Name: value}, nil
+		return *ast.NewFcAtom(pkgNameStr, value, nil), nil
 	}
 }
 
@@ -207,13 +207,13 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 	left, err := cursor.next()
 	if err != nil {
-		return &ast.FcAtom{Name: ""}, err
+		return &ast.EmptyFcAtom, err
 	}
 
 	// 检查left是否全是数字
 	for _, c := range left {
 		if c < '0' || c > '9' {
-			return &ast.FcAtom{Name: ""}, fmt.Errorf("invalid number: %s", left)
+			return &ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", left)
 		}
 	}
 
@@ -221,7 +221,7 @@ func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 		// 检查下一个字符是否是数字
 		nextChar := cursor.strAtCurIndexPlus(1)
 		if len(nextChar) == 0 {
-			return &ast.FcAtom{Name: left}, nil
+			return ast.NewFcAtom(glob.BtEmptyPkgName, left, nil), nil
 		}
 
 		allDigits := true
@@ -236,14 +236,14 @@ func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 			cursor.skip()
 			right, err := cursor.next()
 			if err != nil {
-				return &ast.FcAtom{Name: ""}, fmt.Errorf("invalid number: %s", right)
+				return &ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", right)
 			}
-			return &ast.FcAtom{Name: left + "." + right}, nil
+			return ast.NewFcAtom(glob.BtEmptyPkgName, left+"."+right, nil), nil
 		}
-		return &ast.FcAtom{Name: left}, nil
+		return ast.NewFcAtom(glob.BtEmptyPkgName, left, nil), nil
 	}
 
-	return &ast.FcAtom{Name: left}, nil
+	return ast.NewFcAtom(glob.BtEmptyPkgName, left, nil), nil
 }
 
 func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {

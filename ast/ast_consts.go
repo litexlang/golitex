@@ -25,3 +25,5 @@ var EmptyKnowClaimName = ""
 var EmptyParentSet Fc = nil
 
 // var EmptyElemsInSetDef []Fc = nil
+
+var EmptyFcAtom = *NewFcAtom(glob.BtEmptyPkgName, "", nil)

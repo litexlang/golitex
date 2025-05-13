@@ -641,24 +641,24 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 	}
 
 	// propName(0) is true
-	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, *propNameAsAtom, []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: "0"}})
+	propNameZeroFact := ast.NewSpecFactStmt(ast.TruePure, *propNameAsAtom, []ast.Fc{ast.NewFcAtom(glob.BtEmptyPkgName, "0", nil)})
 
 	// propName(n) => propName(n+1)
 	nToNAddOneFact := ast.UniFactStmt{
 		Params:    []string{fmt.Sprintf("%sn", glob.UniParamPrefix)},
-		ParamSets: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordNatural}},
+		ParamSets: []ast.Fc{ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeywordNatural, nil)},
 		DomFacts: []ast.FactStmt{
 			&ast.SpecFactStmt{
 				TypeEnum: ast.TruePure,
 				PropName: *propNameAsAtom,
-				Params:   []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sn", glob.UniParamPrefix)}},
+				Params:   []ast.Fc{ast.NewFcAtom(glob.BtEmptyPkgName, fmt.Sprintf("%sn", glob.UniParamPrefix), nil)},
 			},
 		},
 		ThenFacts: []ast.FactStmt{
 			&ast.SpecFactStmt{
 				TypeEnum: ast.TruePure,
 				PropName: *propNameAsAtom,
-				Params:   []ast.Fc{&ast.FcFn{FnHead: &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeySymbolPlus}, ParamSegs: [][]ast.Fc{{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sn", glob.UniParamPrefix)}, &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: "1"}}}}},
+				Params:   []ast.Fc{&ast.FcFn{FnHead: ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolPlus, nil), ParamSegs: [][]ast.Fc{{ast.NewFcAtom(glob.BtEmptyPkgName, fmt.Sprintf("%sn", glob.UniParamPrefix), nil), ast.NewFcAtom(glob.BtEmptyPkgName, "1", nil)}}}},
 			},
 		},
 		IffFacts: ast.EmptyIffFacts,
@@ -692,7 +692,7 @@ func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return false, fmt.Errorf("set equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
 	}
 
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeySymbolEqual}, stmt.Params)
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolEqual, nil), stmt.Params)
 	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
 		return false, err
 	} else if ok {
@@ -734,10 +734,8 @@ func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 		Params:    []string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
 		ParamSets: []ast.Fc{leftSet},
 		DomFacts:  []ast.FactStmt{},
-		ThenFacts: []ast.FactStmt{&ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: ast.FcAtom{
-			PkgName: glob.BtEmptyPkgName, Name: glob.KeywordIn},
-			Params: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sx", glob.UniParamPrefix)}, rightSet}}},
-		IffFacts: ast.EmptyIffFacts,
+		ThenFacts: []ast.FactStmt{&ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeywordIn, nil), Params: []ast.Fc{ast.NewFcAtom(glob.BtEmptyPkgName, fmt.Sprintf("%sx", glob.UniParamPrefix), nil), rightSet}}},
+		IffFacts:  ast.EmptyIffFacts,
 	}
 
 	ok, err := ver.FactStmt(&uniFactItemsInLeftSetInRightSet, state)
@@ -753,7 +751,7 @@ func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 		Params:    []string{fmt.Sprintf("%sx", glob.UniParamPrefix)},
 		ParamSets: []ast.Fc{rightSet},
 		DomFacts:  []ast.FactStmt{},
-		ThenFacts: []ast.FactStmt{&ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeywordIn}, Params: []ast.Fc{&ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: fmt.Sprintf("%sx", glob.UniParamPrefix)}, leftSet}}},
+		ThenFacts: []ast.FactStmt{&ast.SpecFactStmt{TypeEnum: ast.TruePure, PropName: *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeywordIn, nil), Params: []ast.Fc{ast.NewFcAtom(glob.BtEmptyPkgName, fmt.Sprintf("%sx", glob.UniParamPrefix), nil), leftSet}}},
 		IffFacts:  ast.EmptyIffFacts,
 	}
 
@@ -783,7 +781,7 @@ func (ver *Verifier) fnEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, 
 		return false, fmt.Errorf("fn equal fact %s should have exactly two parameters, got: %d", stmt.String(), len(stmt.Params))
 	}
 
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeySymbolEqual}, stmt.Params)
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolEqual, nil), stmt.Params)
 	if ok, err := ver.isEqualFact_Check(equalFact, state); err != nil {
 		return false, err
 	} else if ok {
@@ -846,10 +844,10 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 	leftParamAsFcs := []ast.Fc{}
 	rightParamAsFcs := []ast.Fc{}
 	for i, rightParam := range rightFnDef.DefHeader.Params {
-		ithLeftParamAsAtom := &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: leftFnDef.DefHeader.Params[i]}
+		ithLeftParamAsAtom := ast.NewFcAtom(glob.BtEmptyPkgName, leftFnDef.DefHeader.Params[i], nil)
 		uniMap_RightParamAsKey_LeftParamAsValue[rightParam] = ithLeftParamAsAtom
 		leftParamAsFcs = append(leftParamAsFcs, ithLeftParamAsAtom)
-		rightParamAsFcs = append(rightParamAsFcs, &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: rightParam})
+		rightParamAsFcs = append(rightParamAsFcs, ast.NewFcAtom(glob.BtEmptyPkgName, rightParam, nil))
 	}
 
 	leftToRightDom := []ast.FactStmt{}
@@ -898,16 +896,16 @@ func (ver *Verifier) leftFnAlwaysEqualToRight(leftFnDef *ast.DefFnStmt, rightFnD
 
 	// 返回值时刻相等
 	leftFnNameAsSpecFact := ast.FcFn{
-		FnHead:    &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: leftFnDef.DefHeader.Name},
+		FnHead:    ast.NewFcAtom(glob.BtEmptyPkgName, leftFnDef.DefHeader.Name, nil),
 		ParamSegs: [][]ast.Fc{leftParamAsFcs},
 	}
 
 	rightFnNameAsSpecFact := ast.FcFn{
-		FnHead:    &ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: rightFnDef.DefHeader.Name},
+		FnHead:    ast.NewFcAtom(glob.BtEmptyPkgName, rightFnDef.DefHeader.Name, nil),
 		ParamSegs: [][]ast.Fc{rightParamAsFcs},
 	}
 
-	leftEqualRight := ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{PkgName: glob.BtEmptyPkgName, Name: glob.KeySymbolEqual}, []ast.Fc{&leftFnNameAsSpecFact, &rightFnNameAsSpecFact})
+	leftEqualRight := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeySymbolEqual, nil), []ast.Fc{&leftFnNameAsSpecFact, &rightFnNameAsSpecFact})
 
 	leftFnAlwaysEqualRightFn := ast.NewUniFactStmtWithSetReqInDom(
 		leftFnDef.DefHeader.Params,

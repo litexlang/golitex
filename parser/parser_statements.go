@@ -512,7 +512,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 		params := []ast.Fc{fc, fc2}
 
-		return ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom{Name: opt}, params), nil
+		return ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, opt, nil), params), nil
 	}
 
 }
