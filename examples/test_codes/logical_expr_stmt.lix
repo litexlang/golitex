@@ -174,15 +174,34 @@ prove:
             or:
                 $p(x)
                 $q(x)
+            prove_in_each_case:
+                or:
+                    $p(x)
+                    $q(x)
+                then:
+                    or:
+                        $p(x)
+                        $q(x)
+                        $t(x)
+                prove:
+                    $p(x)
+                prove:
+                    $q(x)
+            or:
+                $p(x)
+                $q(x)
+                $t(x)
+                
         prove:
             $t(x)
 
 prove:
     know:
         or:
-            $p(1)
-            $p(2)
+            $p(t)
+            $q(t)
+
     or:
-        $p(1)
-        $p(2)
-        $p(3)
+        $p(t)
+        $q(t)
+        $k(t)
