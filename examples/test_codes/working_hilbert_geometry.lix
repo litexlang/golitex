@@ -1,11 +1,23 @@
+# Litex 代码示例：希尔伯特几何公理系统
+
+# 希尔伯特的公理系统由六种基本符号组成。其中，有三种基本对象：点、直线（简称“线”）、平面（简称“面”）；以及三种基本关系：
+
+# 夹（betweenness）：一种联系点的三元关系；
+# 落（lies on）/含（containment）：一组三种二元关系，分别联系点与直线、点与平面，以及平面与直线；
+# 同（congruence）：一组两种二元关系，分别联系两条线段或两个角，均以中缀符号 ≅ 表示。
+# 上面提到的线段、角，以及更多诸如三角形之类的概念，均可在点线面的基本对象上，运用夹与含这两种基本关系加以定义。下面所列出的公理中，除非特别声明，所有提及的对象都是互异的。
+
 set point
 set line
 set plane
 
-fn angle(a point, b point, c point) real
-
 prop point_on_line(p point, l line)
 prop point_on_plane(q point, p plane)
+prop line_on_plane(l line, p plane)
+
+# 1. 所在型定理
+
+# 1. 给定任意两点 A、B，存在一条直线 a 同时包含其二者。这记作 AB=a 或 BA=a。 除了“a 包含 A 与 B”，也可以用其他方式表述，例如：“A 是 a 上的点”“a 穿过了 A 与 B”“a 连接了 A 与 B”。 若点 A 同时落于两条直线 a 与 b 上，也可以说“直线 a 与 b 有公共点 A”。
 
 fn line_of(a point, b point) line:
     a != b
@@ -24,6 +36,20 @@ prove:
         $point_on_line(a, l)
         $point_on_line(b, l)
     l = line_of(a, b)
+
+
+# Tips: prove 表示开一个局部环境，下面的所有内容不会对大环境有影响，用途是让用户做一些小测试
+
+# 2. 给定任意两点 A、B，最多只存在一条直线同时包含其二者。这也是说，若对于相异两点 B、C，同时有 AB=a 与 AC=a，那么有 BC=a。
+
+know forall l line, a point, b point:
+    a != b
+    $point_on_line(a, l)
+    $point_on_line(b, l)
+    then:
+        $a_line_has_more_than_two_points(l, a, b)
+
+# 3.1 一条直线上至少存在两个点
 
 exist_prop c point st a_line_has_more_than_two_points(l line, a point, b point):
     a != b
@@ -53,6 +79,30 @@ prove:
 
     $point_on_line(c,l)
 
+# 3.2 至少存在不共线的三个点
+
+exist_prop c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
+    a != b
+    iff:
+        not $point_on_line(c, line_of(a, b))
+
+know forall a point, b point:
+    a != b
+    then:
+        $exist_one_point_not_on_the_same_line_with_two_points(a, b)
+
+prove:
+    obj a point, b point:
+        a != b
+    $exist_one_point_not_on_the_same_line_with_two_points(a, b)
+    have c st $exist_one_point_not_on_the_same_line_with_two_points(a, b)
+
+# Tip: 用户有义务让代码更易读，以便在社区中分享并让自己更好管理项目。最好的方式就是取名取的合适到位。长一些的命名是有益的，这样能用名字就说清楚所有的信息，也更符合人们阅读自然语言的习惯。用户不必担心打字太多，因为大部分的IDE在你输入名字的头几位时，就会提示或补全剩下的名字。
+
+# 4. 对于任意不共线三点 A、B、C，存在一同时包含其三者的平面 α。这记作 ABC=α。 亦可说是“A、B、C 落于 α 上”“A、B、C 是 α 上的点”。
+
+# 5. 对于任意不共线三点 A、B、C，最多只存在一个平面同时包含其三者。
+
 fn plain_of(a point, b point, c point) plane:
     a != b
     a != c
@@ -68,48 +118,55 @@ fn plain_of(a point, b point, c point) plane:
             then:
                 p = plain_of(a, b, c)
 
-prove:
-    obj a point, b point, c point, p plane:
-        a != b
-        a != c
-        b != c
-        $point_on_plane(a, p)
-        $point_on_plane(b, p)
-        $point_on_plane(c, p)
+# Tip: 存在唯一用fn（函数）表示
 
-    forall p2 plane:
-        $point_on_plane(a, p2)
-        $point_on_plane(b, p2)
-        $point_on_plane(c, p2)
-        then:
-            p2 = plain_of(a, b, c)
-
-prop line_on_plane(l line, p plane):
-    forall x point:
-        $point_on_line(x, l)
-        then:
-            $point_on_plane(x, p)
+# 6. 若在直线 a 上的两点 A、B 同时落于平面 α 上，那么 a 上的任意点均落于 α 上。又说“直线 a 落于平面 α 上”。
 
 know:
     forall p plane, a point, b point:
         $point_on_plane(a, p)
         $point_on_plane(b, p)
         a != b
-        $point_on_line(p, line_of(a, b))
+        then:
+            $point_on_line(p, line_of(a, b))
 
-know prop point_on_line_line_on_plane_then_point_on_plane(a point, l line, p plane):
-    $point_on_line(a, l)
-    $line_on_plane(l, p)
-    iff:
-        $point_on_plane(a, p)
+know prop two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        then:
+            $line_on_plane(l, p)
 
 prove:
-    obj a point, b point, c point, l line, p plane:
-        $point_on_line(a, l)
-        $line_on_plane(l, p)
-    
-    $point_on_line_line_on_plane_then_point_on_plane(a, l, p)
-    $point_on_plane(a,p)
+    obj a point, b point, p plane:
+        $point_on_plane(a, p)
+        $point_on_plane(b, p)
+        a != b
+    $point_on_line(p, line_of(a, b))
+
+# 7. 若平面 α、β 均包含点 A，那么它们至少共同包含另一点 B。
+
+exist_prop b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
+    $point_on_plane(a, p)
+    $point_on_plane(a, q)
+    iff:
+        $point_on_plane(b, p)
+
+know forall a point, p plane, q plane:
+    $point_on_plane(a, p)
+    $point_on_plane(a, q)
+    then:
+        $two_planes_have_one_common_point_then_they_have_another_common_point(a, p, q)
+
+prove:
+    obj a point, p plane, q plane:
+        $point_on_plane(a, p)
+        $point_on_plane(a, q)
+    $two_planes_have_one_common_point_then_they_have_another_common_point(a, p, q)
+    have b st $two_planes_have_one_common_point_then_they_have_another_common_point(a, p, q)
+    $point_on_plane(b, p)
+
+# 8. 至少存在不共面的四个点。
 
 exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_plane():
     a != b
@@ -120,6 +177,8 @@ exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_pl
     c != d
     $not_on_any_plane(a, b, c, d)
 
+know $exist_four_points_not_on_any_plane()
+
 prop not_on_any_plane(a point, b point, c point, d point):
     forall p plane:
         or:
@@ -127,8 +186,6 @@ prop not_on_any_plane(a point, b point, c point, d point):
             not $point_on_plane(b, p)
             not $point_on_plane(c, p)
             not $point_on_plane(d, p)
-
-know $exist_four_points_not_on_any_plane()
 
 prove:
     have a , b , c , d  st $exist_four_points_not_on_any_plane()
@@ -141,23 +198,47 @@ prove:
                 not $point_on_plane(c, p)
                 not $point_on_plane(d, p)
 
+# 2. 顺序型定理
+
+# 1. 对于互异三点 A、B、C，若 B 夹在 A、C 间，则 B 亦夹在 C、A 间，且存在一条直线同时包含 A、B、C。
+
 prop between(left point, right point, middle point):
     dom:
         left != right
 
-know:
-    forall left point, right point, middle point:
-        left != right
-        $between(left, right, middle)
-        then:
-            $point_on_line(middle, line_of(left, right))
+exist_prop l line st exist_line_through_three_points(a point, b point, c point):
+    a != b
+    a != c
+    b != c
+    iff:
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        $point_on_line(c, l)
+
+know forall left point, right point, middle point:
+    left != right
+    $between(left, right, middle)
+    then:
+        $between(right, left, middle)
+        $exist_line_through_three_points(left, right, middle)
 
 prove:
     obj left point, right point, middle point:
         left != right
         $between(left, right, middle)
 
-    $between(left, right, middle)
+    $between(right, left, middle)
+    $exist_line_through_three_points(left, right, middle)
+
+    have l st $exist_line_through_three_points(left, right, middle)
+    $point_on_line(left, l)
+    $point_on_line(right, l)
+    $point_on_line(middle, l)
+
+# tip: 如果一个prop里面的参数数量是2，那不只可以写成 $propName(a,b) 还能写成 a $propName b
+# tip: 如果一个fn里面的参数数量是2，那不只可以写成 fn(a,b) 还能写成 a \fn b
+
+# 2. 对于互异两点 A、C，至少存在一点 B 落于直线 AC 上，使得 C 夹在 A、B 之间。
 
 exist_prop right point st exist_point_right_to_given_two_points(left point, middle point):
     left != middle
@@ -179,7 +260,9 @@ prove:
 
     $between(a, right, b)
 
-prop no_more_than_one_point_between_three_points_on_line(a point, b point, c point):
+# 3. 直线上的任意三点最多只能有一个夹在其余两者之间。
+
+know prop no_more_than_one_point_between_three_points_on_line(a point, b point, c point):
     a != b
     a != c
     b != c
@@ -191,3 +274,77 @@ prop no_more_than_one_point_between_three_points_on_line(a point, b point, c poi
             $between(b, c, a)
             $between(c, a, b)
             $between(c, b, a)
+
+prove:
+    obj a point, b point, c point:
+        a != b
+        a != c
+        b != c
+
+    $no_more_than_one_point_between_three_points_on_line(a, b, c)
+
+    know:
+        not $between(a, b, c)
+        not $between(a, c, b)
+        not $between(b, a, c)
+        not $between(b, c, a)
+        not $between(c, a, b)
+    
+    $between(c, b, a)
+
+
+# tip: know prop 是语法糖：同时定义了prop，并让所有满足prop的参数都满足prop
+
+# 4. 给定三点 A、B、C 与平面 ABC 上不穿过三点中任意一个的直线 α，若 α 穿过线段 AB，则其必然同时穿过线段 AC 或 BC 其中之一。（Pasch 公理​（英语））
+
+set finite_line
+
+fn finite_line_of(a point, b point) finite_line:
+    a != b
+    then:
+        $point_on_line(a, finite_line_of(a, b))
+        $point_on_line(b, finite_line_of(a, b))
+
+prop line_intersect_finite_line(a point, b point, l line):
+    dom:
+        a != b
+
+know forall a point, b point, l line:
+    a != b
+    $line_intersect_finite_line(a, b, l)
+    then:
+        $line_intersect_finite_line(b, a, l)
+
+prop line_intersect_line(a point, b point, l line):
+    dom:
+        a != b
+        l != finite_line_of(a, b)
+
+know forall a point, b point, l line:
+    a != b
+    $line_intersect_line(a, b, l)
+    then:
+        $line_intersect_line(b, a, l)
+
+know prop line_intersect_finite_line_then_line_intersect_line(a point, b point, c point, l line):
+    dom:
+        a != b
+        a != c
+        b != c
+        $line_intersect_finite_line(a, b, l)
+    iff:
+        or:
+            $line_intersect_finite_line(a , c, l)
+            $line_intersect_finite_line(b , c, l)
+
+prove:
+    obj a point, b point, c point, l line:
+        a != b
+        a != c
+        b != c
+        $line_intersect_finite_line(a, b, l)
+
+    $line_intersect_finite_line_then_line_intersect_line(a, b, c, l)
+
+    know not $line_intersect_finite_line(a, c, l)
+    $line_intersect_finite_line(b, c, l)
