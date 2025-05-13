@@ -713,7 +713,12 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepthMap)
+	// propName = *ast.AddUniPrefixToFcAtom(&propName, nameDepthMap)
+	prefixedPropName, err := ast.AddUniPrefixToFcAtom(&propName, nameDepthMap)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+	propName = *prefixedPropName
 
 	params := []ast.Fc{}
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
