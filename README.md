@@ -423,7 +423,7 @@ There are many "design balences" in Litex. Math is so common that anybody has so
 
 Litex is fundamentally a read-only Turing machine. Once any fact is stored, it can not be removed or changed. The amount of data stored in memory is in porpotion to the amount of code that the user write. Such design makes Litex align with everyday math.
 
-A key advantage of a read-only Turing machine is that mathematical expressions, being highly structured, can be efficiently stored in SQL or an intermediate representation (IR). This makes the transition from **Litex 1 to Litex 2** seamless—**Litex 1** remains valuable by encoding facts into SQL/IR, while **Litex 2** loads and processes them, ensuring backward compatibility and a smooth migration without discarding existing work.  
+A key advantage of a read-only Turing machine is that mathematical expressions, being highly structured, can be efficiently stored in SQL or an intermediate representation (IR). This makes the transition from **Litex 1 to Litex 2** seamless—**Litex 1** remains valuable by encoding facts into SQL/IR, while **Litex 2** loads and processes them, ensuring backward compatibility and a smooth migration without discarding existing work. (Actually, I am sure translating IR to Litex and vice versa is easy and straightforward.)
 
 <!-- TODO: 需要说明一下，= 在litex 中，表示符号相同；符号相同是最强的相同。因为符号相同可以直接推出 函数相等(==)，集合相等(===)。 -->
 <!-- TODO：需要进一步说明的是，整个tutor里缺少了 集合 和 普通编程语言的区别；正常编程语言里，类型都是有限个，且类型是不带参数的（不会是某函数的返回值），但litex里可能有无数个集合，集合可以是某函数的返回值,litex 的类型系统总之比正常的语言要灵活很多很多（甚至本质上，in 这个事实用来处理 在xxx 集合这样的事实，它和其他名字的事实是一样的，只不过朴素集合论要求我们每个prop和fn要先对参数做一些 在xxx集合 之类的要求） -->

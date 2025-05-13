@@ -49,4 +49,4 @@ const KnowSpecFactByDef = true
 
 const ContinueExecutionWhenExecUnknown bool = true
 
-const MaxLogicExprFactsNum int = 5
+const MaxLogicExprFactsNum int = 8
