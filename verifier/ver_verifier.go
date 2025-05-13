@@ -82,6 +82,10 @@ func (ver *Verifier) newMsgAtParent(s string) error {
 
 // 这里可能有严重的问题：这里的复杂度是n!上升的。我不能让用户有太深的
 func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (bool, error) {
+	if len(stmt.Facts) > glob.MaxLogicExprFactsNum {
+		return false, fmt.Errorf("logic expr has too many facts: %d, expect no more than %d", len(stmt.Facts), glob.MaxLogicExprFactsNum)
+	}
+
 	if !stmt.IsOr {
 		for _, fact := range stmt.Facts {
 			ok, err := ver.FactStmt(fact, state)
@@ -94,10 +98,6 @@ func (ver *Verifier) logicalExprFact(stmt *ast.LogicExprStmt, state VerState) (b
 		}
 		return ver.factDefer(stmt, state, true, nil, "")
 	} else {
-		if len(stmt.Facts) > 5 {
-			return false, fmt.Errorf("logic expr has too many facts: %d, expect no more than %d", len(stmt.Facts), glob.FactMaxNumInLogicExpr)
-		}
-
 		totalIndexes := []int{}
 		for i := range stmt.Facts {
 			totalIndexes = append(totalIndexes, i)

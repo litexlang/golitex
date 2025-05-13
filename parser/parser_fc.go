@@ -25,6 +25,14 @@ func (cursor *strSliceCursor) rawFc() (ast.Fc, error) {
 	if err != nil {
 		return nil, err
 	}
+	if cursor.is(glob.KeywordAs) {
+		cursor.skip(glob.KeywordAs)
+		as, err := cursor.rawFc()
+		if err != nil {
+			return nil, err
+		}
+		return ast.NewFcFn(expr, nil, as), nil
+	}
 	return expr, nil
 }
 
@@ -64,7 +72,7 @@ func (cursor *strSliceCursor) rawFcFn(optName ast.Fc) (*ast.FcFn, error) {
 		return nil, err
 	}
 
-	return ast.NewFcFn(optName, typeParamsObjParamsPairs), nil
+	return ast.NewFcFn(optName, typeParamsObjParamsPairs, nil), nil
 }
 
 func (cursor *strSliceCursor) fcFnSegs() ([][]ast.Fc, error) {
@@ -131,7 +139,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 				return nil, err
 			}
 
-			left = ast.NewFcFn(fn, [][]ast.Fc{{left, right}})
+			left = ast.NewFcFn(fn, [][]ast.Fc{{left, right}}, nil)
 			break
 		}
 
@@ -152,10 +160,11 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			return nil, err
 		}
 
-		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, curToken)
+		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, curToken, nil)
 		left = ast.NewFcFn(
 			leftHead,
 			[][]ast.Fc{{left, right}},
+			nil,
 		)
 	}
 
@@ -186,10 +195,11 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 		}
 
 		// leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
-		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, unaryOp)
+		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, unaryOp, nil)
 		return ast.NewFcFn(
 			leftHead,
 			[][]ast.Fc{{right}},
+			nil,
 		), nil
 	}
 }
@@ -345,7 +355,7 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 		segs = append(segs, seg)
 	}
 
-	return ast.NewFcFn(head, segs), nil
+	return ast.NewFcFn(head, segs, nil), nil
 }
 
 // func (cursor *strSliceCursor) parseFnSet() (ast.Fc, error) {

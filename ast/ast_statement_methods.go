@@ -67,10 +67,10 @@ func GetStrParamsWithUniPrefixAndNewDepthMap(originalParams []string, originalNa
 func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param, nil))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name, nil}, propSpecFactParams)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -91,10 +91,10 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param, nil))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name, nil}, propSpecFactParams)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
@@ -112,10 +112,10 @@ func (fact *SpecFactStmt) IsSpecFactNameWithUniPrefix() bool {
 func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	propSpecFactParams := []Fc{}
 	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param))
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.BtEmptyPkgName, param, nil))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name}, propSpecFactParams)
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, defStmt.DefHeader.Name, nil}, propSpecFactParams)
 
 	return propSpecFact
 }
@@ -159,5 +159,5 @@ func ParamsParamSetsToInFacts(params []string, paramSets []Fc) []FactStmt {
 }
 
 func ParamParamSetToInFact(param string, paramSet Fc) FactStmt {
-	return NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, glob.KeywordIn}, []Fc{NewFcAtom(glob.BtEmptyPkgName, param), paramSet})
+	return NewSpecFactStmt(TruePure, FcAtom{glob.BtEmptyPkgName, glob.KeywordIn, nil}, []Fc{NewFcAtom(glob.BtEmptyPkgName, param, nil), paramSet})
 }

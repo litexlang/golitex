@@ -56,6 +56,10 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 		return "", false, nil
 	}
 
+	// 如果 leftVal 和 rightVal 有超过一个-，那把多余的去掉
+	leftVal = simplifyMinusSigns(leftVal)
+	rightVal = simplifyMinusSigns(rightVal)
+
 	var result string
 	switch node.OptOrNumber {
 	case KeySymbolPlus:
@@ -220,4 +224,26 @@ func IsRationalNumLitExpr(numLitExpr *NumLitExpr) bool {
 
 func IsRealNumLitExpr(numLitExpr *NumLitExpr) bool {
 	return true
+}
+
+// simplifyMinusSigns 处理字符串中可能存在的多个负号，返回化简后的结果
+func simplifyMinusSigns(val string) string {
+	if !strings.HasPrefix(val, "-") {
+		return val
+	}
+
+	// 计算负号的个数
+	minusCount := 0
+	for _, c := range val {
+		if c == '-' {
+			minusCount++
+		}
+	}
+
+	// 如果负号个数是偶数，结果为正；如果是奇数，结果为负
+	if minusCount%2 == 0 {
+		return strings.TrimLeft(val, "-")
+	} else {
+		return "-" + strings.TrimLeft(val, "-")
+	}
 }
