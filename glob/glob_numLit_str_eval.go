@@ -704,9 +704,18 @@ func modBigFloat(a, b string) (string, bool, error) {
 			// b is negative → result sign is opposite of a
 			if aNegative {
 				// a is negative → result is positive
-				// (no change, remainder is already positive)
+				remainder = "-" + remainder
 			} else {
 				// a is positive → result is negative
+				remainder = "-" + remainder
+				var ok bool = false
+				remainder, ok, err = addBigFloat(remainder, bAbs)
+				if err != nil {
+					return "", false, fmt.Errorf("modulo adjustment error: %v", err)
+				}
+				if !ok {
+					return "", false, nil
+				}
 				remainder = "-" + remainder
 			}
 		} else {
@@ -714,6 +723,14 @@ func modBigFloat(a, b string) (string, bool, error) {
 			if aNegative {
 				// a is negative → result is negative
 				remainder = "-" + remainder
+				var ok bool = false
+				remainder, ok, err = addBigFloat(remainder, bAbs)
+				if err != nil {
+					return "", false, fmt.Errorf("modulo adjustment error: %v", err)
+				}
+				if !ok {
+					return "", false, nil
+				}
 			}
 		}
 	}
