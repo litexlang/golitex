@@ -129,6 +129,17 @@ prove:
                     $q(x)
                     $t(x)
 
+prove:
+    know:
+        or:
+            $p(x)
+            $q(x)
+
+    or:
+        $p(x)
+        $q(x)
+        $t(x)
+
 # unknown
 prove:
     know:
@@ -142,67 +153,9 @@ prove:
         or:
             $p(x)
             $q(x)
-        $t(x)
-    
-    
-prove:
-    prop A(x X):
-        iff:
-            or:
-                $p(x)
-                $q(x)
-    know:
-        or:
-            $A(x)
-            $t(x)
-    
-    or:
-        $A(x)
-        $t(x)
-    
-    prove_in_each_case:
-        or:
-            $A(x)
-            $t(x)
-        then:
-            or:
-                $p(x)
-                $q(x)
-                $t(x)
-        prove:
-            $A(x)
-            or:
-                $p(x)
-                $q(x)
-            prove_in_each_case:
-                or:
-                    $p(x)
-                    $q(x)
-                then:
-                    or:
-                        $p(x)
-                        $q(x)
-                        $t(x)
-                prove:
-                    $p(x)
-                prove:
-                    $q(x)
-            or:
-                $p(x)
-                $q(x)
-                $t(x)
-                
-        prove:
-            $t(x)
-
-prove:
-    know:
-        or:
-            $p(x)
-            $q(x)
+        $t(x)    
 
     or:
         $p(x)
         $q(x)
         $t(x)
-    # 本质遇到的问题是，如果说现在这个and-or 式子可以写成 F(p1,p2,p3,p4...,pm) 而我们发现 G(p1,p2,p3,p4...,pn) => F(p1,p2,p3,p4...) , 那么我们就可以证明这个式子是true
