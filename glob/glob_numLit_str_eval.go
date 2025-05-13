@@ -636,11 +636,87 @@ func longDivision(dividend, divisor string) (string, string, error) {
 
 // isZero checks if a number string represents zero
 func isZero(s string) bool {
-	s = strings.Trim(s, "-")
+	// Handle negative numbers
+	if strings.HasPrefix(s, "-") {
+		s = s[1:]
+	}
+
+	// Check if all remaining characters are zeros or decimal points
 	for _, c := range s {
 		if c != '0' && c != '.' {
 			return false
 		}
 	}
 	return true
+}
+
+// modBigFloat performs modulo operation (a % b) for integers only
+func modBigFloat(a, b string) (string, bool, error) {
+	// Handle signs
+	aNegative := strings.HasPrefix(a, "-")
+	bNegative := strings.HasPrefix(b, "-")
+	aAbs := a
+	if aNegative {
+		aAbs = a[1:]
+	}
+	bAbs := b
+	if bNegative {
+		bAbs = b[1:]
+	}
+
+	// Check for division by zero
+	if isZero(bAbs) {
+		return "", false, errors.New("modulo by zero")
+	}
+
+	// Check if numbers are integers
+	aInt, aFrac := splitNumberToIntPartFracPart(aAbs)
+	bInt, bFrac := splitNumberToIntPartFracPart(bAbs)
+
+	if aFrac != "" || bFrac != "" {
+		return "", false, errors.New("modulo operation only supports integers")
+	}
+
+	// Normalize lengths for long division
+	maxLen := max(len(aInt), len(bInt))
+	aTotal := padLeft(aInt, maxLen, '0')
+	bTotal := padLeft(bInt, maxLen, '0')
+
+	// Perform long division to get remainder
+	_, remainder, err := longDivision(aTotal, bTotal)
+	if err != nil {
+		return "", false, fmt.Errorf("modulo error: %v", err)
+	}
+
+	// Clean up remainder (remove leading zeros)
+	remainder = trimLeftZero(remainder)
+	if remainder == "" {
+		remainder = "0"
+	}
+
+	// Handle sign of the result:
+	// 1. If remainder is 0, sign doesn't matter (return "0")
+	// 2. If remainder is non-zero:
+	//    - If b is positive, result has same sign as a.
+	//    - If b is negative, result has opposite sign of a.
+	if remainder != "0" {
+		if bNegative {
+			// b is negative → result sign is opposite of a
+			if aNegative {
+				// a is negative → result is positive
+				// (no change, remainder is already positive)
+			} else {
+				// a is positive → result is negative
+				remainder = "-" + remainder
+			}
+		} else {
+			// b is positive → result sign matches a
+			if aNegative {
+				// a is negative → result is negative
+				remainder = "-" + remainder
+			}
+		}
+	}
+
+	return remainder, true, nil
 }

@@ -41,6 +41,8 @@ For everyone, not just specialists: Because mathematics is for everyone, Litex s
 
 <!-- C is quirky, flawed, and an enormous success. -->
 
+<!-- 本段讲的像是商务人士放大几百倍吹嘘自己的项目一样 -->
+
 While Litex is young and may face criticism for its quirkiness and flaws, its true value lies in its vision. Traditional Turing-complete languages like C, Python, and JavaScript power our software-driven civilization. Yet, we know far less about languages designed for reasoning—like math, which doesn’t require Turing-completeness.  
 
 Mathematics underpins our civilization, and Litex could revolutionize how we formalize it. Intriguingly, early computing pioneers didn’t just use machines for calculation but also for proof. Litex carries forward that legacy, bridging computation and mathematical reasoning.

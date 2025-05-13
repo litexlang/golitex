@@ -71,6 +71,8 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 			return "", false, nil
 		}
 		result, ok, err = powBigFloat(leftVal, rightVal)
+	case "%":
+		result, ok, err = modBigFloat(leftVal, rightVal)
 	default:
 		return "", false, fmt.Errorf("unknown operator: %s", node.OptOrNumber)
 	}
