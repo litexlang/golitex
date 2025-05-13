@@ -131,6 +131,13 @@ know:
         then:
             $point_on_line(p, line_of(a, b))
 
+know prop two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        then:
+            $line_on_plane(l, p)
+
 prove:
     obj a point, b point, p plane:
         $point_on_plane(a, p)
@@ -138,4 +145,96 @@ prove:
         a != b
     $point_on_line(p, line_of(a, b))
 
-# 7. 若在平面 α 上的两点 A、B 同时落于直线 a 上，那么 α 上的任意点均落于 a 上。又说“平面 α 落于直线 a 上”。
+# 7. 若平面 α、β 均包含点 A，那么它们至少共同包含另一点 B。
+
+exist_prop b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
+    $point_on_plane(a, p)
+    $point_on_plane(a, q)
+    iff:
+        $point_on_plane(b, p)
+
+know forall a point, p plane, q plane:
+    $point_on_plane(a, p)
+    $point_on_plane(a, q)
+    then:
+        $two_planes_have_one_common_point_then_they_have_another_common_point(a, p, q)
+
+prove:
+    obj a point, p plane, q plane:
+        $point_on_plane(a, p)
+        $point_on_plane(a, q)
+    $two_planes_have_one_common_point_then_they_have_another_common_point(a, p, q)
+    have b st $two_planes_have_one_common_point_then_they_have_another_common_point(a, p, q)
+    $point_on_plane(b, p)
+
+# 8. 至少存在不共面的四个点。
+
+exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_plane():
+    a != b
+    a != c
+    a != d
+    b != c
+    b != d
+    c != d
+    $not_on_any_plane(a, b, c, d)
+
+know $exist_four_points_not_on_any_plane()
+
+prop not_on_any_plane(a point, b point, c point, d point):
+    forall p plane:
+        or:
+            not $point_on_plane(a, p)
+            not $point_on_plane(b, p)
+            not $point_on_plane(c, p)
+            not $point_on_plane(d, p)
+
+prove:
+    have a , b , c , d  st $exist_four_points_not_on_any_plane()
+    $not_on_any_plane(a, b, c, d)
+
+    forall p plane:
+            or:
+                not $point_on_plane(a, p)
+                not $point_on_plane(b, p)
+                not $point_on_plane(c, p)
+                not $point_on_plane(d, p)
+
+# 2. 顺序型定理
+
+# 1. 对于互异三点 A、B、C，若 B 夹在 A、C 间，则 B 亦夹在 C、A 间，且存在一条直线同时包含 A、B、C。
+
+prop between(left point, right point, middle point):
+    dom:
+        left != right
+
+exist_prop l line st exist_line_through_three_points(a point, b point, c point):
+    a != b
+    a != c
+    b != c
+    iff:
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        $point_on_line(c, l)
+
+know forall left point, right point, middle point:
+    left != right
+    $between(left, right, middle)
+    then:
+        $between(right, left, middle)
+        $exist_line_through_three_points(left, right, middle)
+
+prove:
+    obj left point, right point, middle point:
+        left != right
+        $between(left, right, middle)
+
+    $between(right, left, middle)
+    $exist_line_through_three_points(left, right, middle)
+
+    have l st $exist_line_through_three_points(left, right, middle)
+    $point_on_line(left, l)
+    $point_on_line(right, l)
+    $point_on_line(middle, l)
+
+# tip: 如果一个prop里面的参数数量是2，那不只可以写成 $propName(a,b) 还能写成 a $propName b
+# tip: 如果一个fn里面的参数数量是2，那不只可以写成 fn(a,b) 还能写成 a \fn b
