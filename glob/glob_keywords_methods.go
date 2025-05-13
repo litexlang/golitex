@@ -48,14 +48,16 @@ const (
 	PrecMultiplication                      // / *
 	PrecUnary                               // - !
 	PrecExponentiation                      // ^
+	PrecModulo                              // %
 )
 
 var BuiltinOptPrecedenceMap = map[string]BuiltinOptPrecedence{
-	KeySymbolPlus:  PrecAddition,
-	KeySymbolMinus: PrecAddition,
-	KeySymbolStar:  PrecMultiplication,
-	KeySymbolSlash: PrecMultiplication,
-	KeySymbolCaret: PrecExponentiation,
+	KeySymbolPlus:    PrecAddition,
+	KeySymbolMinus:   PrecAddition,
+	KeySymbolStar:    PrecMultiplication,
+	KeySymbolSlash:   PrecMultiplication,
+	KeySymbolCaret:   PrecExponentiation,
+	KeySymbolPercent: PrecModulo,
 }
 
 // All Unary operators have higher Precedence than infix operators

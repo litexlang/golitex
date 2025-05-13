@@ -150,6 +150,7 @@ const (
 	KeySymbolEqualEqualEqual = "===" // check set equal
 	KeySymbolGreaterGreater  = ">>"
 	KeySymbolLessLess        = "<<"
+	KeySymbolPercent         = "%"
 )
 
 var symbolSet map[string]struct{} = map[string]struct{}{
@@ -202,4 +203,5 @@ var symbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolEqualEqualEqual: {}, // "==="
 	KeySymbolGreaterGreater:  {}, // ">>"
 	KeySymbolLessLess:        {}, // "<<"
+	KeySymbolPercent:         {}, // "%"
 }
