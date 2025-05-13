@@ -115,3 +115,7 @@ func NewKnowPropStmt(prop DefPropStmt) *KnowPropStmt {
 func NewDefExistPropBodyStmt(defHeader DefHeader, domFacts []FactStmt, iffFacts []Reversable_LogicOrSpec_Stmt) *DefExistPropStmtBody {
 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts}
 }
+
+func NewFcAtomWithName(name string) *FcAtom {
+	return NewFcAtom(glob.BtEmptyPkgName, name, nil)
+}

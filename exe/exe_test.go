@@ -125,7 +125,7 @@ func randFcAtom() *ast.FcAtom {
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(rand.Intn(26) + 65)
 	}
-	ret := ast.NewFcAtom(glob.BtEmptyPkgName, string(bytes), nil)
+	ret := ast.NewFcAtomWithName(string(bytes))
 	return ret
 }
 
@@ -362,7 +362,7 @@ func randEqualFact() *ast.SpecFactStmt {
 	left := randomFc()
 	right := randomFc()
 
-	return ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, "=", nil), []ast.Fc{left, right})
+	return ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeySymbolEqual), []ast.Fc{left, right})
 }
 
 func TestVerificationUsingEqual(t *testing.T) {

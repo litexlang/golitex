@@ -10,7 +10,7 @@ func (exec *Executor) ParamInParamSets(stmt *ast.DefHeader) ([]ast.SpecFactStmt,
 
 	for i, param := range stmt.Params {
 		paramAsAtom := ast.NewFcAtom(exec.curPkg, param, nil)
-		specFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeywordIn, nil), []ast.Fc{paramAsAtom, stmt.SetParams[i]})
+		specFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{paramAsAtom, stmt.SetParams[i]})
 		ret = append(ret, *specFact)
 	}
 

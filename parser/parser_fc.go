@@ -93,7 +93,7 @@ func (cursor *strSliceCursor) fcFnSegs() ([][]ast.Fc, error) {
 func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 	value, err := cursor.next()
 	if err != nil {
-		return *ast.NewFcAtom(glob.BtEmptyPkgName, "", nil), err
+		return *ast.NewFcAtomWithName(""), err
 	}
 
 	var pkgName strings.Builder
@@ -101,7 +101,7 @@ func (cursor *strSliceCursor) rawFcAtom() (ast.FcAtom, error) {
 		pkgName.WriteString(value)
 		value, err = cursor.next()
 		if err != nil {
-			return *ast.NewFcAtom(glob.BtEmptyPkgName, "", nil), err
+			return *ast.NewFcAtomWithName(""), err
 		}
 	}
 
@@ -160,7 +160,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			return nil, err
 		}
 
-		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, curToken, nil)
+		leftHead := ast.NewFcAtomWithName(curToken)
 		left = ast.NewFcFn(
 			leftHead,
 			[][]ast.Fc{{left, right}},
@@ -194,8 +194,7 @@ func (cursor *strSliceCursor) unaryOptFc() (ast.Fc, error) {
 			return nil, err
 		}
 
-		// leftHead := ast.NewFcAtom(glob.BuiltinUnaryPkgName, glob.KeySymbolMinus)
-		leftHead := ast.NewFcAtom(glob.BtEmptyPkgName, unaryOp, nil)
+		leftHead := ast.NewFcAtomWithName(unaryOp)
 		return ast.NewFcFn(
 			leftHead,
 			[][]ast.Fc{{right}},
@@ -221,7 +220,7 @@ func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 		// 检查下一个字符是否是数字
 		nextChar := cursor.strAtCurIndexPlus(1)
 		if len(nextChar) == 0 {
-			return ast.NewFcAtom(glob.BtEmptyPkgName, left, nil), nil
+			return ast.NewFcAtomWithName(left), nil
 		}
 
 		allDigits := true
@@ -238,12 +237,12 @@ func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 			if err != nil {
 				return &ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", right)
 			}
-			return ast.NewFcAtom(glob.BtEmptyPkgName, left+"."+right, nil), nil
+			return ast.NewFcAtomWithName(left + "." + right), nil
 		}
-		return ast.NewFcAtom(glob.BtEmptyPkgName, left, nil), nil
+		return ast.NewFcAtomWithName(left), nil
 	}
 
-	return ast.NewFcAtom(glob.BtEmptyPkgName, left, nil), nil
+	return ast.NewFcAtomWithName(left), nil
 }
 
 func (cursor *strSliceCursor) bracedFcSlice() ([]ast.Fc, error) {
@@ -357,52 +356,3 @@ func (cursor *strSliceCursor) bracedExpr() (ast.Fc, error) {
 
 	return ast.NewFcFn(head, segs, nil), nil
 }
-
-// func (cursor *strSliceCursor) parseFnSet() (ast.Fc, error) {
-// 	err := cursor.skip(glob.KeywordFn)
-// 	if err != nil {
-// 		return nil, &strSliceErr{err, cursor}
-// 	}
-
-// 	err = cursor.skip(glob.KeySymbolLeftBrace)
-// 	if err != nil {
-// 		return nil, &strSliceErr{err, cursor}
-// 	}
-
-// 	paramsSets := []ast.Fc{}
-// 	if !cursor.is(glob.KeySymbolRightBrace) {
-// 		for {
-// 			paramSet, err := cursor.rawFc()
-// 			if err != nil {
-// 				return nil, &strSliceErr{err, cursor}
-// 			}
-// 			paramsSets = append(paramsSets, paramSet)
-
-// 			// 检查分隔符：必须是 ',' 或 '}'
-// 			if cursor.is(glob.KeySymbolComma) {
-// 				cursor.skip(glob.KeySymbolComma)
-// 				continue // 继续解析下一个 paramSet
-// 			}
-// 			if cursor.is(glob.KeySymbolRightBrace) {
-// 				break // 正常结束
-// 			}
-// 			// 既不是逗号也不是右大括号 → 语法错误
-// 			return nil, &strSliceErr{
-// 				fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeySymbolRightBrace, cursor.strAtCurIndexPlus(0)),
-// 				cursor,
-// 			}
-// 		}
-// 	}
-
-// 	err = cursor.skip(glob.KeySymbolRightBrace)
-// 	if err != nil {
-// 		return nil, &strSliceErr{err, cursor}
-// 	}
-
-// 	retSet, err := cursor.rawFc()
-// 	if err != nil {
-// 		return nil, &strSliceErr{err, cursor}
-// 	}
-
-// 	return ast.NewFcFnPipe(ast.NewFcAtom(glob.BuiltinEmptyPkgName, glob.KeywordFn), [][]ast.Fc{paramsSets, {retSet}}), nil
-// }
