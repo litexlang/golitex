@@ -68,7 +68,7 @@ know:
         $point_on_plane(a, p)
         $point_on_plane(b, p)
         a != b
-        $line_on_plane(p, line_of(a, b))
+        $point_on_line(p, line_of(a, b))
 
 exist_prop b point st if_two_planes_both_has_point_then_they_have_another_point_in_common(a point, p plane, q plane):
     $point_on_plane(a, p)
