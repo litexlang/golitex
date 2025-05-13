@@ -304,11 +304,11 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	}
 
 	uniMap := map[string]ast.Fc{}
-	paramAsAtoms := []ast.Fc{}
-	for i, param := range existPropDef.DefBody.DefHeader.Params {
+	ExistParamsAtoms := []ast.Fc{}
+	for i, param := range existPropDef.ExistParams {
 		paramAsAtom := ast.NewFcAtomWithName(stmt.ObjNames[i])
 		uniMap[param] = paramAsAtom
-		paramAsAtoms = append(paramAsAtoms, paramAsAtom)
+		ExistParamsAtoms = append(ExistParamsAtoms, paramAsAtom)
 	}
 
 	instantiatedExistPropDefStmt, err := existPropDef.Instantiate(uniMap)
@@ -317,12 +317,8 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	}
 
 	// param in param sets is true
-	paramInParamFacts, err := exec.ParamInParamSets(&instantiatedExistPropDefStmt.DefBody.DefHeader)
-	if err != nil {
-		return glob.ExecState_Error, err
-	}
-	for _, paramInParamSet := range paramInParamFacts {
-		err := exec.env.NewFact(&paramInParamSet)
+	for _, paramInParamSet := range instantiatedExistPropDefStmt.ExistInSetsFacts {
+		err := exec.env.NewFact(paramInParamSet)
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
@@ -346,7 +342,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 
 	// 相关的 exist st 事实也成立
 	existStFactParams := []ast.Fc{}
-	existStFactParams = append(existStFactParams, paramAsAtoms...)
+	existStFactParams = append(existStFactParams, ExistParamsAtoms...)
 	existStFactParams = append(existStFactParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
 	existStFactParams = append(existStFactParams, stmt.Fact.Params...)
 

@@ -24,3 +24,31 @@ prove:
         $point_on_line(a, l)
         $point_on_line(b, l)
     l = line_of(a, b)
+
+exist_prop c point st a_line_has_more_than_two_points(l line, a point, b point):
+    a != b
+    $point_on_line(a, l)
+    $point_on_line(b, l)
+    iff:
+        $point_on_line(c, l)
+        c != a
+        c != b
+
+know forall l line, a point, b point:
+    a != b
+    $point_on_line(a, l)
+    $point_on_line(b, l)
+    then:
+        $a_line_has_more_than_two_points(l, a, b)
+
+prove:
+    obj a point, b point, l line:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+
+    $a_line_has_more_than_two_points(l,a,b)
+
+    have c st $a_line_has_more_than_two_points(l,a,b)
+
+    $point_on_line(c,l)

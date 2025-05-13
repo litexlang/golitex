@@ -770,7 +770,7 @@ func (tb *tokenBlock) defHaveStmt() (*ast.HaveStmt, error) {
 
 	objNames := []string{}
 
-	for !tb.header.is(glob.FuncFactPrefix) {
+	for !tb.header.is(glob.KeywordSt) {
 		objName, err := tb.header.next()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
@@ -779,6 +779,11 @@ func (tb *tokenBlock) defHaveStmt() (*ast.HaveStmt, error) {
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 		}
+	}
+
+	err = tb.header.skip(glob.KeywordSt)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
 	}
 
 	fact, err := tb.specFactStmt(ast.NameDepthMap{})
