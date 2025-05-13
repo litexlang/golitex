@@ -150,7 +150,7 @@ const (
 	KeySymbolEqualEqualEqual = "===" // check set equal
 	KeySymbolGreaterGreater  = ">>"
 	KeySymbolLessLess        = "<<"
-	KeySymbolPercent         = "%"
+	KeySymbolPercent         = "%" // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
 )
 
 var symbolSet map[string]struct{} = map[string]struct{}{

@@ -58,20 +58,20 @@ func (node *NumLitExpr) evalNumLitExpr() (string, bool, error) {
 
 	var result string
 	switch node.OptOrNumber {
-	case "+":
+	case KeySymbolPlus:
 		result, ok, err = addBigFloat(leftVal, rightVal)
-	case "-":
+	case KeySymbolMinus:
 		result, ok, err = subBigFloat(leftVal, rightVal)
-	case "*":
+	case KeySymbolStar:
 		result, ok, err = mulBigFloat(leftVal, rightVal)
-	case "/":
+	case KeySymbolSlash:
 		result, ok, err = divBigFloat(leftVal, rightVal)
-	case "^":
+	case KeySymbolCaret:
 		if !isNaturalNumber(rightVal) {
 			return "", false, nil
 		}
 		result, ok, err = powBigFloat(leftVal, rightVal)
-	case "%":
+	case KeySymbolPercent:
 		result, ok, err = modBigFloat(leftVal, rightVal)
 	default:
 		return "", false, fmt.Errorf("unknown operator: %s", node.OptOrNumber)

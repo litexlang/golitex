@@ -1810,3 +1810,19 @@ claim:
                 or:
                     x = 0 # 它不对时，fact2 成立
                     x = 1 # 它不对时，fact1 成立 
+
+5.13
+prove:
+    know:
+        or:
+            or:
+                $p(x)
+                $q(x)
+            $t(x)
+    
+    or:
+        or:
+            $p(x)
+            $q(x)
+        $t(x)
+不知为啥不工作
