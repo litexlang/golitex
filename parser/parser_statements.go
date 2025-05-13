@@ -273,7 +273,7 @@ func (tb *tokenBlock) defPropStmt() (*ast.DefPropStmt, error) {
 	}
 
 	if len(iffFacts) == 0 {
-		return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
+		iffFacts = ast.EmptyIffFacts
 	}
 
 	return ast.NewDefPropStmt(*declHeader, domFacts, iffFacts), nil

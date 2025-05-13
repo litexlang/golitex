@@ -100,7 +100,9 @@ know exist $exist_four_points_not_on_any_plane()
 
 prop between(left point, right point, middle point):
     left != right
-    iff:
+
+know:
+    forall left point, right point, middle point:
         $point_on_line(middle, line_of(left, right))
 
 know forall left point, right point, middle point:
