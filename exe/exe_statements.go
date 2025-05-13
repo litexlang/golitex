@@ -238,12 +238,12 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) error {
 
 	fcParamsAsFcSlice := []ast.Fc{}
 	for _, fc := range stmt.DefHeader.Params {
-		fcParamsAsFcSlice = append(fcParamsAsFcSlice, ast.NewFcAtom(glob.BtEmptyPkgName, fc, nil))
+		fcParamsAsFcSlice = append(fcParamsAsFcSlice, ast.NewFcAtomWithName(fc))
 	}
 
-	fcFn := ast.FcFn{FnHead: ast.NewFcAtom(glob.BtEmptyPkgName, stmt.DefHeader.Name, nil), ParamSegs: [][]ast.Fc{fcParamsAsFcSlice}}
+	fcFn := ast.FcFn{FnHead: ast.NewFcAtomWithName(stmt.DefHeader.Name), ParamSegs: [][]ast.Fc{fcParamsAsFcSlice}}
 
-	retFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtom(glob.BtEmptyPkgName, glob.KeywordIn, nil), []ast.Fc{&fcFn, stmt.RetSet})
+	retFact := ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(glob.KeywordIn), []ast.Fc{&fcFn, stmt.RetSet})
 
 	uniFactThen := []ast.FactStmt{retFact}
 	uniFactThen = append(uniFactThen, stmt.ThenFacts...)
@@ -306,7 +306,7 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	uniMap := map[string]ast.Fc{}
 	paramAsAtoms := []ast.Fc{}
 	for i, param := range existPropDef.DefBody.DefHeader.Params {
-		paramAsAtom := ast.NewFcAtom(glob.BtEmptyPkgName, stmt.ObjNames[i], nil)
+		paramAsAtom := ast.NewFcAtomWithName(stmt.ObjNames[i])
 		uniMap[param] = paramAsAtom
 		paramAsAtoms = append(paramAsAtoms, paramAsAtom)
 	}
