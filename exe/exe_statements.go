@@ -28,7 +28,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case ast.FactStmt:
 		execState, err = exec.factStmt(stmt)
 	case *ast.KnowFactStmt:
-		err = exec.knowStmt(stmt)
+		err = exec.knowFactStmt(stmt)
 	case *ast.ClaimStmt:
 		execState, err = exec.claimStmt(stmt)
 	case *ast.DefPropStmt:
@@ -105,7 +105,8 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) (glob.ExecState, error) {
 	return glob.ExecState_Unknown, nil
 }
 
-func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) error {
+// TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
+func (exec *Executor) knowFactStmt(stmt *ast.KnowFactStmt) error {
 	defer exec.appendMsg("\n")
 
 	for _, fact := range stmt.Facts {

@@ -148,5 +148,46 @@ prop between(left point, right point, middle point):
 know:
     forall left point, right point, middle point:
         left != right
+        $between(left, right, middle)
         then:
             $point_on_line(middle, line_of(left, right))
+
+prove:
+    obj left point, right point, middle point:
+        left != right
+        $between(left, right, middle)
+
+    $between(left, right, middle)
+
+exist_prop right point st exist_point_right_to_given_two_points(left point, middle point):
+    left != middle
+    iff:
+        $between(left, right, middle)
+
+know forall a point, b point:
+    a != b
+    then:
+        $exist_point_right_to_given_two_points(a, b)
+
+prove:
+    obj a point, b point:
+        a != b
+
+    $exist_point_right_to_given_two_points(a, b)
+
+    have right point st $exist_point_right_to_given_two_points(a, b)
+
+    $between(a, right, b)
+
+prop no_more_than_one_point_between_three_points_on_line(a point, b point, c point):
+    a != b
+    a != c
+    b != c
+    iff:
+        or:
+            $between(a, b, c)
+            $between(a, c, b)
+            $between(b, a, c)
+            $between(b, c, a)
+            $between(c, a, b)
+            $between(c, b, a)
