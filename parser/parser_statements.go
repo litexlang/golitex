@@ -727,7 +727,7 @@ func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) 
 func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
 	ok := tb.header.isAndSkip(glob.FuncFactPrefix)
 	if !ok {
-		return nil, fmt.Errorf("pure func spec fact must start with %s", glob.FuncFactPrefix)
+		return nil, fmt.Errorf("specific fact in functional form must start with %s", glob.FuncFactPrefix)
 	}
 
 	propName, err := tb.header.rawFcAtom()

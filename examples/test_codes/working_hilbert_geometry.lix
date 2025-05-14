@@ -352,6 +352,8 @@ prove:
 # 等同型定理
 
 # 1. 若点 A、B 在直线 a 上且点 A' 在直线 a' 上（可与 a 相同），总可以在 a' 上关于 A' 的任意一侧找到点 B'，使得线段 AB 与 A'B' 等同。这记作 AB ≅ A'B'。 每条线段均与其自身等同，也就是说 AB ≅ AB。（自反性） 此公理就是在说，给定任意线段，可以将其“摆”在任意直线上的任意点的任意一侧。
+# 1. If A, B are two points on a line a, and if A′ is a point upon the same or another line a′, then, upon a given side of A′ on the straight line a′, we can always find a point B′ so that the segment AB is congruent to the segment A′B′. We indicate this relation by writing AB ≅ A′B′. Every segment is congruent to itself; that is, we always have AB ≅ AB.
+# We can state the above axiom briefly by saying that every segment can be laid off upon a given side of a given point of a given straight line in at least one way.
 
 prop finite_line_equal(l1 finite_line, l2 finite_line)
 
@@ -614,3 +616,32 @@ prove:
     have l2 st $exist_one_and_only_one_line_through_point_not_intersect_line(a, l)
     $point_on_line(a, l2)
     $parallel(l, l2)
+
+# 5. 连续型公理
+
+# 1. 令 AB、CD 为任意两条线段，总存在一数 n，使得从 A 出发沿射线 AB 连续构造的 n 条与 CD 等同的线段会经过 B。（阿基米德公理）
+
+set direction
+
+fn direction_of_two_points(a point, b point) direction:
+    dom:
+        a != b
+
+fn finite_line_of_direction_and_length(a point, d direction, n real) finite_line:
+    dom:
+        n > 0
+
+know exist_prop n real st exist_finite_line_of_direction_and_length(a point, d direction, l finite_line):
+    $finite_line_equal(finite_line_of_direction_and_length(a, d, n), l)
+
+prove:
+    obj a point, d direction, l finite_line
+
+    $exist_finite_line_of_direction_and_length(a, d, l)
+    have n st $exist_finite_line_of_direction_and_length(a, d, l)
+    $finite_line_equal(finite_line_of_direction_and_length(a, d, n), l)
+
+# 2. 欲从既有直线上的点构造新的直线，使得其仍然满足原先元素之间的关系且符合公理一到三以及四-1，这样的尝试是不可能的。（直线完备性公理）
+# 2. Axiom of line completeness: An extension (An extended line from a line that already exists, usually used in geometry) of a set of points on a line with its order and congruence relations that would preserve the relations existing among the original elements as well as the fundamental properties of line order and congruence that follows from Axioms I-III and from V-1 is impossible.
+
+# TODO
