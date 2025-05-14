@@ -1,11 +1,27 @@
 # Litex 代码示例：希尔伯特几何公理系统
 
+# Below is the Hilbert axioms written in Litex code, along with a one-to-one correspondence with the definitions from Wikipedia.
+
+# Read more about Hilbert's geometry axioms: https://en.wikipedia.org/wiki/Hilbert%27s_axioms .
+
 # 希尔伯特的公理系统由六种基本符号组成。其中，有三种基本对象：点、直线（简称“线”）、平面（简称“面”）；以及三种基本关系：
 
 # 夹（betweenness）：一种联系点的三元关系；
 # 落（lies on）/含（containment）：一组三种二元关系，分别联系点与直线、点与平面，以及平面与直线；
 # 同（congruence）：一组两种二元关系，分别联系两条线段或两个角，均以中缀符号 ≅ 表示。
 # 上面提到的线段、角，以及更多诸如三角形之类的概念，均可在点线面的基本对象上，运用夹与含这两种基本关系加以定义。下面所列出的公理中，除非特别声明，所有提及的对象都是互异的。
+
+# Hilbert's axiom system is constructed with six primitive notions: three primitive terms:[5]
+# point;
+# line;
+# plane;
+# and three primitive relations:[6]
+# Betweenness, a ternary relation linking points;
+
+# Betweenness, a ternary relation linking points;
+# Lies on (Containment), three binary relations, one linking points and straight lines, one linking points and planes, and one linking straight lines and planes;
+# Congruence, two binary relations, one linking line segments and one linking angles, each denoted by an infix ≅.
+# Line segments, angles, and triangles may each be defined in terms of points and straight lines, using the relations of betweenness and containment. All points, straight lines, and planes in the following axioms are distinct unless otherwise stated.
 
 set point
 set line
@@ -16,8 +32,10 @@ prop point_on_plane(q point, p plane)
 prop line_on_plane(l line, p plane)
 
 # 1. 所在型定理
+# 1. Incidence
 
 # 1. 给定任意两点 A、B，存在一条直线 a 同时包含其二者。这记作 AB=a 或 BA=a。 除了“a 包含 A 与 B”，也可以用其他方式表述，例如：“A 是 a 上的点”“a 穿过了 A 与 B”“a 连接了 A 与 B”。 若点 A 同时落于两条直线 a 与 b 上，也可以说“直线 a 与 b 有公共点 A”。
+# 1. For every two points A and B there exists a line a that contains them both. We write AB = a or BA = a. Instead of "contains", we may also employ other forms of expression; for example, we may say "A lies upon a", "A is a point of a", "a goes through A and through B", "a joins A to B", etc. If A lies upon a and at the same time upon another line b, we make use also of the expression: "The lines a and b have the point A in common", etc.
 
 fn line_of(a point, b point) line:
     a != b
@@ -41,6 +59,7 @@ prove:
 # Tips: prove 表示开一个局部环境，下面的所有内容不会对大环境有影响，用途是让用户做一些小测试
 
 # 2. 给定任意两点 A、B，最多只存在一条直线同时包含其二者。这也是说，若对于相异两点 B、C，同时有 AB=a 与 AC=a，那么有 BC=a。
+# 2. For every two points there exists no more than one line that contains them both; consequently, if AB = a and AC = a, where B ≠ C, then also BC = a.
 
 know forall l line, a point, b point:
     a != b
@@ -49,7 +68,8 @@ know forall l line, a point, b point:
     then:
         $a_line_has_more_than_two_points(l, a, b)
 
-# 3.1 一条直线上至少存在两个点
+# 3.1 There exist at least two points on a line. 
+# 3.1 A line contains at least two points.
 
 exist_prop c point st a_line_has_more_than_two_points(l line, a point, b point):
     a != b
@@ -80,6 +100,7 @@ prove:
     $point_on_line(c,l)
 
 # 3.2 至少存在不共线的三个点
+# 3.2 There exist at least three points that do not lie on the same line.
 
 exist_prop c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
     a != b
@@ -100,8 +121,10 @@ prove:
 # Tip: 用户有义务让代码更易读，以便在社区中分享并让自己更好管理项目。最好的方式就是取名取的合适到位。长一些的命名是有益的，这样能用名字就说清楚所有的信息，也更符合人们阅读自然语言的习惯。用户不必担心打字太多，因为大部分的IDE在你输入名字的头几位时，就会提示或补全剩下的名字。
 
 # 4. 对于任意不共线三点 A、B、C，存在一同时包含其三者的平面 α。这记作 ABC=α。 亦可说是“A、B、C 落于 α 上”“A、B、C 是 α 上的点”。
+# 4. For every three points A, B, C not situated on the same line there exists a plane α that contains all of them. For every plane there exists a point which lies on it. We write ABC = α. We employ also the expressions: "A, B, C lie in α"; "A, B, C are points of α", etc.
 
 # 5. 对于任意不共线三点 A、B、C，最多只存在一个平面同时包含其三者。
+# 5. For every three points A, B, C which do not lie in the same line, there exists no more than one plane that contains them all.
 
 fn plain_of(a point, b point, c point) plane:
     a != b
@@ -121,6 +144,7 @@ fn plain_of(a point, b point, c point) plane:
 # Tip: 存在唯一用fn（函数）表示
 
 # 6. 若在直线 a 上的两点 A、B 同时落于平面 α 上，那么 a 上的任意点均落于 α 上。又说“直线 a 落于平面 α 上”。
+# 6. If two points A, B of a line a lie in a plane α, then every point of a lies in α. In this case we say: "The line a lies in the plane α", etc.
 
 know:
     forall p plane, a point, b point:
@@ -145,6 +169,7 @@ prove:
     $point_on_line(p, line_of(a, b))
 
 # 7. 若平面 α、β 均包含点 A，那么它们至少共同包含另一点 B。
+# 7. If two planes α, β have a point A in common, then they have at least a second point B in common.
 
 exist_prop b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
     $point_on_plane(a, p)
@@ -167,6 +192,7 @@ prove:
     $point_on_plane(b, p)
 
 # 8. 至少存在不共面的四个点。
+# 8. There exist at least four points not lying in a plane.
 
 exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_plane():
     a != b
@@ -199,8 +225,10 @@ prove:
                 not $point_on_plane(d, p)
 
 # 2. 顺序型定理
+# 2. Order
 
 # 1. 对于互异三点 A、B、C，若 B 夹在 A、C 间，则 B 亦夹在 C、A 间，且存在一条直线同时包含 A、B、C。
+# 1. If a point B lies between points A and C, B is also between C and A, and there exists a line containing the distinct points A, B, C.
 
 prop between(left point, right point, middle point):
     dom:
@@ -239,6 +267,7 @@ prove:
 # tip: 如果一个fn里面的参数数量是2，那不只可以写成 fn(a,b) 还能写成 a \fn b
 
 # 2. 对于互异两点 A、C，至少存在一点 B 落于直线 AC 上，使得 C 夹在 A、B 之间。
+# 2. If A and C are two points, then there exists at least one point B on the line AC such that C lies between A and B.
 
 exist_prop right point st exist_point_right_to_given_two_points(left point, middle point):
     left != middle
@@ -261,6 +290,7 @@ prove:
     $between(a, right, b)
 
 # 3. 直线上的任意三点最多只能有一个夹在其余两者之间。
+# 3. Of any three points situated on a line, there is no more than one which lies between the other two.
 
 know prop no_more_than_one_point_between_three_points_on_line(a point, b point, c point):
     a != b
@@ -296,6 +326,7 @@ prove:
 # tip: know prop 是语法糖：同时定义了prop，并让所有满足prop的参数都满足prop
 
 # 4. 给定三点 A、B、C 与平面 ABC 上不穿过三点中任意一个的直线 α，若 α 穿过线段 AB，则其必然同时穿过线段 AC 或 BC 其中之一。（Pasch 公理​（英语））
+# 4. Pasch's Axiom: Let A, B, C be three points not lying in the same line and let a be a line lying in the plane ABC and not passing through any of the points A, B, C. Then, if the line a passes through a point of the segment AB, it will also pass through either a point of the segment BC or a point of the segment AC.
 
 set finite_line
 
@@ -349,7 +380,8 @@ prove:
     know not $line_intersect_finite_line(a, c, l)
     $line_intersect_finite_line(b, c, l)
 
-# 等同型定理
+# 3. 等同型定理
+# 3. Congruence
 
 # 1. 若点 A、B 在直线 a 上且点 A' 在直线 a' 上（可与 a 相同），总可以在 a' 上关于 A' 的任意一侧找到点 B'，使得线段 AB 与 A'B' 等同。这记作 AB ≅ A'B'。 每条线段均与其自身等同，也就是说 AB ≅ AB。（自反性） 此公理就是在说，给定任意线段，可以将其“摆”在任意直线上的任意点的任意一侧。
 # 1. If A, B are two points on a line a, and if A′ is a point upon the same or another line a′, then, upon a given side of A′ on the straight line a′, we can always find a point B′ so that the segment AB is congruent to the segment A′B′. We indicate this relation by writing AB ≅ A′B′. Every segment is congruent to itself; that is, we always have AB ≅ AB.
@@ -410,6 +442,8 @@ prove:
 
 
 # 2. 若线段 AB 同时与线段 A'B'、A''B'' 等同，那么 A'B' 亦等同于 A''B''。（传递性）
+# 2. If a segment AB is congruent to the segment A′B′ and also to the segment A″B″, then the segment A′B′ is congruent to the segment A″B″; that is, if AB ≅ A′B′ and AB ≅ A″B″, then A′B′ ≅ A″B″.
+
 know prop finite_line_equal_transitive(l1 finite_line, l2 finite_line, l3 finite_line):
     dom:
         $finite_line_equal(l1, l2)
@@ -425,6 +459,7 @@ prove:
     $finite_line_equal(l1, l3)
 
 # 3. 令 AB、BC 为同一直线上仅共点于 B 的两条线段，以及 A'B'、B'C' 为另一直线（可与前同）上仅共点于 B' 的两条线段；若 AB ≅ A'B' 且 BC ≅ B'C'ou，则 AC ≅ A'C'。
+# 3. Let AB and BC be two segments of a line a which have no points in common aside from the point B, and, furthermore, let A′B′ and B′C′ be two segments of the same or of another line a′ having, likewise, no point other than B′ in common. Then, if AB ≅ A′B′ and BC ≅ B′C′, we have AC ≅ A′C′.
 
 prop on_one_line(a point, b point, c point):
     a != b
@@ -465,6 +500,7 @@ prove:
     $finite_line_equal(finite_line_of(a, c), finite_line_of(a2, c2))
 
 # 4. 令 ∠(h,k) 为一角。给定一端点 O' 的射线 h' 以及其一侧的半平面 α'，α' 上存在且仅存在一条射线 k' 使得 ∠(h,k) 或 ∠(k,h) 与 ∠(h',k') 等同。这记作 ∠(h,k) ≅ ∠(h',k')。
+# 4. Let an angle ∠ (h,k) be given in the plane α and let a line a′ be given in a plane α′. Suppose also that, in the plane α′, a definite side of the straight line a′ be assigned. Denote by h′ a ray of the straight line a′ emanating from a point O′ of this line. Then in the plane α′ there is one and only one ray k′ such that the angle ∠ (h, k), or ∠ (k, h), is congruent to the angle ∠ (h′, k′) and at the same time all interior points of the angle ∠ (h′, k′) lie upon the given side of a′. We express this relation by means of the notation ∠ (h, k) ≅ ∠ (h′, k′).
 
 set ray
 set half_plane
@@ -507,6 +543,7 @@ prove:
     $angle_equal(angle_of_two_rays(a, r1, r2), ang)
 
 # 5. 若角 ∠(h,k) 等同于角 ∠(h',k')，且 ∠(h',k') 等同于角 ∠(h'',k'')，那么 ∠(h,k) 等同于 ∠(h'',k'')。（传递性）
+# 5. If the angle ∠ (h, k) is congruent to the angle ∠ (h′, k′) and to the angle ∠ (h″, k″), then the angle ∠ (h′, k′) is congruent to the angle ∠ (h″, k″); that is to say, if ∠ (h, k) ≅ ∠ (h′, k′) and ∠ (h, k) ≅ ∠ (h″, k″), then ∠ (h′, k′) ≅ ∠ (h″, k″).
 
 know prop angle_equal_transitive(ang1 angle, ang2 angle, ang3 angle):
     dom:
@@ -526,6 +563,7 @@ prove:
     $angle_equal(ang1, ang3)
 
 # 6. 若在三角形 ABC 与 A'B'C' 中有 AB ≅ A'B'、AC ≅ A'C'、∠BAC ≅ ∠B'A'C'，那么可以得到 ∠ABC ≅ ∠A'B'C'（替换字母即可知 ∠ACB ≅ ∠A'C'B' 亦成立）。
+# 6. If, in the two triangles ABC and A′B′C′ the congruences AB ≅ A′B′, AC ≅ A′C′, ∠BAC ≅ ∠B′A′C′ hold, then the congruence ∠ABC ≅ ∠A′B′C′ holds (and, by a change of notation, it follows that ∠ACB ≅ ∠A′C′B′ also holds).
 
 set triangle
 
@@ -584,8 +622,10 @@ prove:
     $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a2, b2, c2))
 
 # 4. 平行型定理
+# 4. Parallel
 
 # 1. 对于直线 a 与其外一点 A，其二者所确定的平面内至多有一条直线经过 A 而不与 a 相交。（欧几里得公理）
+# 1. Playfair's axiom:[9] Let a be any line and A a point not on it. Then there is at most one line in the plane, determined by a and A, that passes through A and does not intersect a.
 
 prop parallel(l1 line, l2 line):
     forall x point:
@@ -618,8 +658,10 @@ prove:
     $parallel(l, l2)
 
 # 5. 连续型公理
+# 5. Continuity
 
 # 1. 令 AB、CD 为任意两条线段，总存在一数 n，使得从 A 出发沿射线 AB 连续构造的 n 条与 CD 等同的线段会经过 B。（阿基米德公理）
+# 2. Axiom of Archimedes: If AB and CD are any segments then there exists a number n such that n segments CD constructed contiguously from A, along the ray from A through B, will pass beyond the point B.
 
 set direction
 
