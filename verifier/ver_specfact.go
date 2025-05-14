@@ -110,6 +110,11 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return false, err
 	}
 	if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), "definition")
+		} else {
+			ver.successNoMsg()
+		}
 		return true, nil
 	}
 

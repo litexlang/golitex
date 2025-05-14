@@ -27,6 +27,11 @@ func (ver *Verifier) Exist_St_PropFact(stmt *ast.SpecFactStmt, state VerState) (
 		return false, err
 	}
 	if ok {
+		if state.requireMsg() {
+			ver.successWithMsg(stmt.String(), "definition")
+		} else {
+			ver.successNoMsg()
+		}
 		return true, nil
 	}
 
