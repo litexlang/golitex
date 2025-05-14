@@ -17,7 +17,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) Exist_St_PropFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) exist_st_Fact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if state.isSpec() {
 		return false, nil
 	}

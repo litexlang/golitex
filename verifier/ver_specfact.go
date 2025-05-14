@@ -82,18 +82,18 @@ func (ver *Verifier) specFactWithoutUsingPropCommutative(stmt *ast.SpecFactStmt,
 	}
 
 	if stmt.IsExistFact() {
-		return ver.ExistPropFact(stmt, state)
+		return ver.existFact(stmt, state)
 	}
 
 	if stmt.IsExist_St_Fact() {
-		return ver.Exist_St_PropFact(stmt, state)
+		return ver.exist_st_Fact(stmt, state)
 	}
 
 	return false, fmt.Errorf("invalid type of stmt")
 }
 
 func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
-	ok, err := ver.SpecFactSpec(stmt, state)
+	ok, err := ver.specFactSpec(stmt, state)
 	if err != nil {
 		return false, err
 	}
@@ -129,7 +129,7 @@ func (ver *Verifier) pureSpecFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 	return false, nil
 }
 
-func (ver *Verifier) SpecFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) specFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if ok, err := ver.isEqualFact_Check(stmt, state); err != nil {
 		return false, err
 	} else if ok {
@@ -478,6 +478,7 @@ func (ver *Verifier) specFactProveByDefinition(stmt *ast.SpecFactStmt, state Ver
 
 	defStmt, ok := ver.env.GetPropDef(stmt.PropName)
 	if !ok {
+		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return false, nil
 	}
 
