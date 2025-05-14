@@ -78,7 +78,7 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 	// 	return env.newExistFactPostProcess(fact)
 	// }
 
-	return env.newAtomSpecFactPostProcess(fact)
+	return env.newNotExistSt_SpecFactPostProcess(fact)
 }
 
 func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFactStmt) error {
@@ -127,19 +127,37 @@ func storeCommutativeTransitiveFact(mem map[string]*[]ast.Fc, fact *ast.SpecFact
 	return nil
 }
 
-func (env *Env) newAtomSpecFactPostProcess(fact *ast.SpecFactStmt) error {
-	if fact.TypeEnum == ast.TruePure {
-		if glob.KnowSpecFactByDef {
-			return env.newFactsInSpecFactDef(fact)
-		} else {
-			return nil
+func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error {
+	_, ok := env.GetPropDef(fact.PropName)
+
+	if ok {
+		if fact.TypeEnum == ast.TruePure {
+			if glob.KnowSpecFactByDef {
+				return env.newTrueSpecFact_EmitFactsKnownByDef(fact)
+			} else {
+				return nil
+			}
 		}
-	} else {
 		return nil
 	}
+
+	_, ok = env.GetExistPropDef(fact.PropName)
+	if ok {
+		if fact.TypeEnum == ast.TruePure {
+			return nil
+		} else {
+			if glob.KnowSpecFactByDef {
+				return env.newFalseExistFact_EmitEquivelentUniFact(fact)
+			} else {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("unknown prop %s", fact.PropName)
 }
 
-func (env *Env) newFactsInSpecFactDef(fact *ast.SpecFactStmt) error {
+func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) error {
 	propDef, ok := env.GetPropDef(fact.PropName)
 	if !ok {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
@@ -187,7 +205,7 @@ func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 }
 
 // not exist => forall not
-func (env *Env) newFalseExistFactPostProcess(fact *ast.SpecFactStmt) error {
+func (env *Env) newFalseExistFact_EmitEquivelentUniFact(fact *ast.SpecFactStmt) error {
 	uniFact, err := env.NotExistToForall(fact)
 	if err != nil {
 		return err
