@@ -41,8 +41,9 @@ func (s *MatcherEnvStmt) stmt() {}
 
 func (s *ProveInEachCaseStmt) stmt() {}
 
-func (s *KnowPropStmt) stmt() {}
-func (s *ProveOrStmt) stmt()  {}
+func (s *KnowPropStmt) stmt()      {}
+func (s *KnowExistPropStmt) stmt() {}
+func (s *ProveOrStmt) stmt()       {}
 
 type FactStmt interface {
 	factStmt()

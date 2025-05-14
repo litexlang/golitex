@@ -1185,7 +1185,7 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	indexes := []int{}
+	indexes := map[int]struct{}{}
 	for !tb.header.is(glob.KeySymbolColon) {
 		curToken, err := tb.header.getAndSkip("")
 		if err != nil {
@@ -1196,7 +1196,7 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
-		indexes = append(indexes, curIndex)
+		indexes[curIndex] = struct{}{}
 	}
 
 	if len(indexes) == 0 {

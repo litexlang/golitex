@@ -120,6 +120,17 @@ func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
 	return propSpecFact
 }
 
+func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
+	propSpecFactParams := []Fc{}
+	for _, param := range defStmt.DefBody.DefHeader.Params {
+		propSpecFactParams = append(propSpecFactParams, NewFcAtom(glob.EmptyPkg, param, nil))
+	}
+
+	propSpecFact := NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, defStmt.DefBody.DefHeader.Name, nil}, propSpecFactParams)
+
+	return propSpecFact
+}
+
 func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
 	if len(stmt.Params) != 2 {
 		return nil, fmt.Errorf("reverseParameterOrder: expected 2 params, but got %d", len(stmt.Params))

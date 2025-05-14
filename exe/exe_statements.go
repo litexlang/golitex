@@ -45,6 +45,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.matcherEnvStmt(stmt)
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
+	case *ast.KnowExistPropStmt:
+		execState, err = exec.knowExistPropStmt(stmt)
 	case *ast.SetDefSetBuilderStmt:
 		err = exec.setDefStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
@@ -633,6 +635,25 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 		if execState != glob.ExecState_True {
 			return execState, nil
 		}
+	}
+
+	return glob.ExecState_True, nil
+}
+
+func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecState, error) {
+	defer exec.appendMsg(fmt.Sprintf("%s\n", stmt.String()))
+
+	err := exec.defExistPropStmt(&stmt.ExistProp)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+
+	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
+	knownUniFact := ast.NewUniFactStmtWithSetReqInDom(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.SetParams, stmt.ExistProp.DefBody.DomFacts, thenFacts, ast.EmptyIffFacts, stmt.ExistProp.DefBody.DefHeader.ParamInSetsFacts)
+
+	err = exec.env.NewFact(knownUniFact)
+	if err != nil {
+		return glob.ExecState_Error, err
 	}
 
 	return glob.ExecState_True, nil
