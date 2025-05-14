@@ -58,9 +58,10 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.proveClaimStmt()
 	case glob.KeywordKnow:
 		{
-			// 考虑让 know exist 也能进来
-			if tb.TokenAtIndexIs(1, glob.KeywordProp) {
+			if tb.TokenAtHeaderIndexIs(1, glob.KeywordProp) {
 				ret, err = tb.knowPropStmt()
+			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordExistProp) {
+				ret, err = tb.knowExistPropStmt()
 			} else {
 				ret, err = tb.knowFactStmt()
 			}
@@ -1238,4 +1239,18 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 	}
 
 	return ast.NewProveOrStmt(indexes, *orFact, proofs), nil
+}
+
+func (tb *tokenBlock) knowExistPropStmt() (*ast.KnowExistPropStmt, error) {
+	err := tb.header.skip(glob.KeywordKnow)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	existProp, err := tb.defExistPropStmt()
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	return ast.NewKnowExistPropStmt(*existProp), nil
 }

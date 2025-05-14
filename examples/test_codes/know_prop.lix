@@ -17,4 +17,12 @@ prove:
         iff:
             $q(x)
             
-            
+prove:
+    know exist_prop x nat st p(y nat):
+        iff:
+            $t(x,y)
+
+    $p(2)
+    have y  st $p(2)
+    $t(y,2)
+

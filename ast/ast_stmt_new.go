@@ -123,3 +123,7 @@ func NewFcAtomWithName(name string) *FcAtom {
 func NewProveOrStmt(indexes map[int]struct{}, orFact LogicExprStmt, proofs []Stmt) *ProveOrStmt {
 	return &ProveOrStmt{indexes, orFact, proofs}
 }
+
+func NewKnowExistPropStmt(existProp DefExistPropStmt) *KnowExistPropStmt {
+	return &KnowExistPropStmt{existProp}
+}

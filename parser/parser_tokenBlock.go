@@ -51,8 +51,8 @@ func (tb *tokenBlock) CurrentTokenIs(kw string) bool {
 	return tb.header.is(kw)
 }
 
-func (tb *tokenBlock) TokenAtIndexIs(index int, kw string) bool {
-	if len(tb.body) <= index {
+func (tb *tokenBlock) TokenAtHeaderIndexIs(index int, kw string) bool {
+	if len(tb.header.slice) <= index {
 		return false
 	}
 	return tb.header.IsTokenAtIndexGivenWord(index, kw)
