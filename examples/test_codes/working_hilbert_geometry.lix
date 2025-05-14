@@ -461,3 +461,45 @@ prove:
 
     $addition_keeps_equal_of_finite_lines(a, b, c, a2, b2, c2)
     $finite_line_equal(finite_line_of(a, c), finite_line_of(a2, c2))
+
+# 4. 令 ∠(h,k) 为一角。给定一端点 O' 的射线 h' 以及其一侧的半平面 α'，α' 上存在且仅存在一条射线 k' 使得 ∠(h,k) 或 ∠(k,h) 与 ∠(h',k') 等同。这记作 ∠(h,k) ≅ ∠(h',k')。
+
+set ray
+set half_plane
+set angle
+
+prop point_on_ray(a point, r ray)
+
+fn ray_with_end_point_and_direction(a point, r ray) ray:
+    dom:
+        $point_on_ray(a, r)
+
+prop half_plane_left_to_ray(a point, r ray, p half_plane):
+    dom:
+        $point_on_ray(a, r)
+
+prop half_plane_to_ray(a point, r ray, p half_plane):
+    dom:
+        $point_on_ray(a, r)
+
+fn angle_of_two_rays(a point, r1 ray, r2 ray) angle:
+    $point_on_ray(a, r1)
+    $point_on_ray(a, r2)
+
+know exist_prop r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a point, r1 ray, p half_plane, ang angle):
+    dom:
+        $point_on_ray(a, r1)
+        $half_plane_to_ray(a, r1, p)
+    iff:    
+        angle_of_two_rays(a, r1, r2) = ang
+
+prove:
+    obj a point, r1 ray, p half_plane, ang angle:
+        $point_on_ray(a, r1)
+        $half_plane_to_ray(a, r1, p)
+
+    $exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a, r1, p, ang)
+    have r2  st $exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a, r1, p, ang)
+    angle_of_two_rays(a, r1, r2) = ang
+
+# 5. 

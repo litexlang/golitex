@@ -345,6 +345,10 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 		tb.header.skipIfIs(glob.KeySymbolComma)
 	}
 
+	if len(objNames) == 0 {
+		return nil, fmt.Errorf("expect at least one object")
+	}
+
 	facts := []ast.FactStmt{}
 
 	if !tb.header.ExceedEnd() && tb.header.is(glob.KeySymbolColon) {
