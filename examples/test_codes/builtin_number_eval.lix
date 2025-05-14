@@ -8,3 +8,9 @@ prove:
 
 prove:
     2 %  2 = 0
+
+prove:
+    1 $in real
+    1 $in nat
+    1 $in int
+    1 $in rat

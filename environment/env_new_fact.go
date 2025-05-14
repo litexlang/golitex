@@ -154,7 +154,11 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error 
 		}
 	}
 
-	return fmt.Errorf("unknown prop %s", fact.PropName)
+	if fact.IsBuiltinInfixRelaProp() {
+		return nil
+	} else {
+		return fmt.Errorf("unknown prop %s", fact.PropName)
+	}
 }
 
 func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) error {
