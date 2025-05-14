@@ -147,7 +147,7 @@ func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 }
 
 func (stmt *SpecFactStmt) IsMathInductionFact() bool {
-	return stmt.PropName.PkgName == glob.EmptyPkg && stmt.PropName.Name == glob.KeywordMathInduction
+	return stmt.PropName.PkgName == glob.EmptyPkg && stmt.PropName.Name == glob.KeywordInduction
 }
 
 func ParamsParamSetsToInFacts(params []string, paramSets []Fc) []FactStmt {

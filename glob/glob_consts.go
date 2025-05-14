@@ -50,3 +50,5 @@ const KnowSpecFactByDef = true
 const ContinueExecutionWhenExecUnknown bool = true
 
 const MaxLogicExprFactsNum int = 8
+
+const IdPostfix = "id"

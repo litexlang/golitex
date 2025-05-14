@@ -1423,7 +1423,7 @@ forll < Mathematical_Induction(P) >: # 打开这个环境,就让P绑定 structur
     forall n nat:
         $P(n)
     
-验证、存储、调用 forall p prop, 甚至 forall p prop: forall q prop 这种，还是用 prop 来吧。你真的想验证并释放，必须用 $math_induction(q) 这种。不要尝试用其他的 
+验证、存储、调用 forall p prop, 甚至 forall p prop: forall q prop 这种，还是用 prop 来吧。你真的想验证并释放，必须用 $induction(q) 这种。不要尝试用其他的 
 
 prop everything_true_prop(p prop(x X)): # 这个没法以 forall 的形式在环境里释放，因为 p 是不固定的；用户要验证，只能我引用额外的验证方式，来原地验证. 这里的 X 必须是已经定义过了的。如果你想让 X 没被定义过，那就 prop_prop everything_true_prop(X set,p prop(x X)): 这种，X 是自由的
     forall x X:
@@ -1847,7 +1847,7 @@ fn setName_id(x setName):
 
 用 forall x nat, n positive_nat:
     x + (n - 1) * x = n * x
-能让用户一步步地推导出 x + x = 2 * x, x + x + x = 3 * x, … 但因为用户的code是有限长的，不可能以litex的代码的形式写完所有的 n 的情况，所以这里litex是只读图灵完备，而不是图灵完备的劣势就出来了。(这其实是能用 math_induction 来解决的，但数有几个x这种事情，没法解决，只能引入其他语法了)
+能让用户一步步地推导出 x + x = 2 * x, x + x + x = 3 * x, … 但因为用户的code是有限长的，不可能以litex的代码的形式写完所有的 n 的情况，所以这里litex是只读图灵完备，而不是图灵完备的劣势就出来了。(这其实是能用 induction 来解决的，但数有几个x这种事情，没法解决，只能引入其他语法了)
 相当于图灵完备的语言，我迭代的时候，整个内存不会越来越膨胀，因为我是在同一个地方修改。而如果只读，那只能一个数，对应一条指令，内存越来越满，很麻烦。
 
 我需要有一个接口让用户能 迭代地去做操作。 这样的好处是很多很多的，我一下能验证很多的东西了
@@ -1859,3 +1859,5 @@ fn setName_id(x setName):
 1. prove inductively 内部循环 每次只走一步，不保存之前所有的结果只利用现在的情况。相当于每一步按特定的pattern生成证明过程，然后用数学归纳法一路往下走
 
 2. prove or 读入indexes，这些(or indexes ）是false，然后证明剩下的
+
+3. 本质上 litex 的类型系统 和普通的类型系统的区别是，用户可能一下引入无数个类型；每个东西可能在不同的集合里；不同名的类型可能是相等的（只要互相包含）

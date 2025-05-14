@@ -123,3 +123,9 @@ type ProveInEachCaseStmt struct {
 	ThenFacts []FactStmt
 	Proofs    [][]Stmt
 }
+
+type ProveOrStmt struct {
+	Indexes []int
+	OrFacts Reversable_LogicOrSpec_Stmt
+	Proofs  []Stmt
+}
