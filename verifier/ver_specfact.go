@@ -136,13 +136,13 @@ func (ver *Verifier) specFactSpec(stmt *ast.SpecFactStmt, state VerState) (bool,
 		return true, nil
 	}
 
-	if ok, err := ver.setEqualFact(stmt, state); err != nil {
+	if ok, err := ver.isSetEqualFact_Check(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
 	}
 
-	if ok, err := ver.fnEqualFact(stmt, state); err != nil {
+	if ok, err := ver.isFnEqualFact_Check(stmt, state); err != nil {
 		return false, err
 	} else if ok {
 		return true, nil
@@ -687,7 +687,7 @@ func (ver *Verifier) mathInductionSpecFact(stmt *ast.SpecFactStmt, state VerStat
 	return true, nil
 }
 
-func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) isSetEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqualEqualEqual) {
 		return false, nil
 	}
@@ -776,7 +776,7 @@ func (ver *Verifier) setEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool,
 	return ok, nil
 }
 
-func (ver *Verifier) fnEqualFact(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
+func (ver *Verifier) isFnEqualFact_Check(stmt *ast.SpecFactStmt, state VerState) (bool, error) {
 	if !stmt.PropNameIsGiven_PkgNameEmpty(stmt.PropName, glob.KeySymbolEqualEqual) {
 		return false, nil
 	}

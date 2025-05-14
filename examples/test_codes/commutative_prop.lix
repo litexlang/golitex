@@ -12,3 +12,11 @@ prove:
         $q(1, 2)
     $q(2,1)
     $commutative_prop(q)
+
+prove:
+    know:
+        b != c
+    
+    c != b
+    not b = c
+    not c = b

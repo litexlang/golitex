@@ -446,6 +446,8 @@ func (tb *tokenBlock) knowFactStmt() (*ast.KnowFactStmt, error) {
 
 // relaFact 只支持2个参数的关系
 func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
+	var ret *ast.SpecFactStmt
+
 	fc, err := tb.header.rawFc()
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
@@ -495,7 +497,7 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 		params := []ast.Fc{fc, fc2}
 
-		return ast.NewSpecFactStmt(ast.TruePure, propName, params), nil
+		ret = ast.NewSpecFactStmt(ast.TruePure, propName, params)
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
 	} else {
@@ -517,9 +519,16 @@ func (tb *tokenBlock) relaFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFact
 
 		params := []ast.Fc{fc, fc2}
 
-		return ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(opt), params), nil
+		ret = ast.NewSpecFactStmt(ast.TruePure, *ast.NewFcAtomWithName(opt), params)
 	}
 
+	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
+	if ret.PropNameIsGiven_PkgNameEmpty(ret.PropName, glob.KeySymbolNotEqual) {
+		ret.TypeEnum = ast.FalsePure
+		ret.PropName = *ast.NewFcAtom(glob.EmptyPkg, glob.KeySymbolEqual, nil)
+	}
+
+	return ret, nil
 }
 
 func (tb *tokenBlock) defHeader() (*ast.DefHeader, ast.NameDepthMap, error) {
@@ -769,12 +778,6 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 	}
 
 	ret := ast.NewSpecFactStmt(ast.TruePure, propName, params)
-
-	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-	if ret.PropNameIsGiven_PkgNameEmpty(ret.PropName, glob.KeySymbolNotEqual) {
-		ret.TypeEnum = ast.FalsePure
-		ret.PropName = *ast.NewFcAtom(glob.EmptyPkg, glob.KeySymbolEqual, nil)
-	}
 
 	return ret, nil
 }
