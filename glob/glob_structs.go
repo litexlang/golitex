@@ -12,16 +12,16 @@
 
 package litex_global
 
-type Mem[T any] map[string]map[string]T
+type Map2D[T any] map[string]map[string]T
 
-func (m Mem[T]) Set(key1, key2 string, value T) {
+func (m Map2D[T]) Set(key1, key2 string, value T) {
 	if _, ok := m[key1]; !ok {
 		m[key1] = make(map[string]T)
 	}
 	m[key1][key2] = value
 }
 
-func (m Mem[T]) Get(key1, key2 string) (T, bool) {
+func (m Map2D[T]) Get(key1, key2 string) (T, bool) {
 	if innerMap, ok := m[key1]; ok {
 		if val, ok := innerMap[key2]; ok {
 			return val, true
