@@ -30,17 +30,19 @@ func (ver *Verifier) FcSatisfySpecFactParaReq(stmt *ast.SpecFactStmt) (bool, err
 		if !ok {
 			return false, nil
 		}
-	} else if stmt.IsExistFact() {
-		_, ok := ver.env.GetExistPropDef(stmt.PropName)
-		if !ok {
-			return false, nil
-		}
 	} else if stmt.IsExist_St_Fact() {
 		_, ok := ver.env.GetExistPropDef(stmt.PropName)
 		if !ok {
 			return false, nil
 		}
 	}
+
+	// else if stmt.IsExistFact() {
+	// 	_, ok := ver.env.GetExistPropDef(stmt.PropName)
+	// 	if !ok {
+	// 		return false, nil
+	// 	}
+	// }
 
 	// fc
 	for _, param := range stmt.Params {

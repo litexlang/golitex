@@ -81,9 +81,9 @@ func (ver *Verifier) specFactWithoutUsingPropCommutative(stmt *ast.SpecFactStmt,
 		return ver.pureSpecFact(stmt, state)
 	}
 
-	if stmt.IsExistFact() {
-		return ver.existFact(stmt, state)
-	}
+	// if stmt.IsExistFact() {
+	// 	return ver.existFact(stmt, state)
+	// }
 
 	if stmt.IsExist_St_Fact() {
 		return ver.exist_st_Fact(stmt, state)

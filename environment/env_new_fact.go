@@ -74,9 +74,9 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) error {
 		return env.newExist_St_FactPostProcess(fact)
 	}
 
-	if fact.IsExistFact() {
-		return env.newExistFactPostProcess(fact)
-	}
+	// if fact.IsExistFact() {
+	// 	return env.newExistFactPostProcess(fact)
+	// }
 
 	return env.newAtomSpecFactPostProcess(fact)
 }
@@ -170,13 +170,13 @@ func (env *Env) newFactsInSpecFactDef(fact *ast.SpecFactStmt) error {
 	return nil
 }
 
-func (env *Env) newExistFactPostProcess(fact *ast.SpecFactStmt) error {
-	if fact.TypeEnum == ast.TrueExist {
-		return nil
-	} else {
-		return env.newFalseExistFactPostProcess(fact)
-	}
-}
+// func (env *Env) newExistFactPostProcess(fact *ast.SpecFactStmt) error {
+// 	if fact.TypeEnum == ast.TrueExist {
+// 		return nil
+// 	} else {
+// 		return env.newFalseExistFactPostProcess(fact)
+// 	}
+// }
 
 func (env *Env) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 	if fact.TypeEnum == ast.TrueExist_St {
@@ -208,7 +208,7 @@ func (env *Env) newTrueExist_St_FactPostProcess(fact *ast.SpecFactStmt) error {
 		return fmt.Errorf("%s has no separator", fact.String())
 	}
 
-	existFact := ast.NewSpecFactStmt(ast.TrueExist, fact.PropName, fact.Params[sepIndex+1:])
+	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, fact.Params[sepIndex+1:])
 
 	err := env.SpecFactMem.NewFact(existFact)
 	if err != nil {
@@ -290,9 +290,9 @@ func (env *Env) NewDefExistProp(stmt *ast.DefExistPropStmt) error {
 }
 
 func (env *Env) NotExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, error) {
-	if fact.TypeEnum != ast.FalseExist {
-		return nil, fmt.Errorf("exist fact must have one parameter")
-	}
+	// if fact.TypeEnum != ast.FalseExist {
+	// 	return nil, fmt.Errorf("exist fact must have one parameter")
+	// }
 
 	existPropDef, ok := env.ExistPropDefMem.Get(fact.PropName)
 	if !ok {

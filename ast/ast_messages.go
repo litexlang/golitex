@@ -54,15 +54,16 @@ func (stmt *SpecFactStmt) String() string {
 	if stmt.TypeEnum == FalsePure {
 		builder.WriteString(glob.KeywordNot)
 		builder.WriteByte(' ')
-	} else if stmt.TypeEnum == TrueExist {
-		builder.WriteString(glob.KeywordExist)
-		builder.WriteByte(' ')
-	} else if stmt.TypeEnum == FalseExist {
-		builder.WriteString(glob.KeywordNot)
-		builder.WriteByte(' ')
-		builder.WriteString(glob.KeywordExist)
-		builder.WriteByte(' ')
 	}
+	// else if stmt.TypeEnum == TrueExist {
+	// 	builder.WriteString(glob.KeywordExist)
+	// 	builder.WriteByte(' ')
+	// } else if stmt.TypeEnum == FalseExist {
+	// 	builder.WriteString(glob.KeywordNot)
+	// 	builder.WriteByte(' ')
+	// 	builder.WriteString(glob.KeywordExist)
+	// 	builder.WriteByte(' ')
+	// }
 
 	if stmt.PropName.PkgName == glob.EmptyPkg && glob.IsKeySymbol(stmt.PropName.Name) {
 		return relaFactString(stmt)

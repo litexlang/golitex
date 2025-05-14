@@ -20,10 +20,10 @@ import (
 
 func newSpecFactMem() *SpecFactMem {
 	return &SpecFactMem{
-		PureFacts:         map[string]map[string][]KnownSpecFact{},
-		NotPureFacts:      map[string]map[string][]KnownSpecFact{},
-		ExistFacts:        map[string]map[string][]KnownSpecFact{},
-		NotExistFacts:     map[string]map[string][]KnownSpecFact{},
+		PureFacts:    map[string]map[string][]KnownSpecFact{},
+		NotPureFacts: map[string]map[string][]KnownSpecFact{},
+		// ExistFacts:        map[string]map[string][]KnownSpecFact{},
+		// NotExistFacts:     map[string]map[string][]KnownSpecFact{},
 		Exist_St_Facts:    map[string]map[string][]KnownSpecFact{},
 		NotExist_St_Facts: map[string]map[string][]KnownSpecFact{},
 	}
@@ -31,10 +31,10 @@ func newSpecFactMem() *SpecFactMem {
 
 func NewSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
 	return &SpecFactInLogicExprMem{
-		PureFacts:         map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		NotPureFacts:      map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		ExistFacts:        map[string]map[string][]KnownSpecFact_InLogicExpr{},
-		NotExistFacts:     map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		PureFacts:    map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		NotPureFacts: map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		// ExistFacts:        map[string]map[string][]KnownSpecFact_InLogicExpr{},
+		// NotExistFacts:     map[string]map[string][]KnownSpecFact_InLogicExpr{},
 		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InLogicExpr{},
 		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InLogicExpr{},
 	}
@@ -42,10 +42,10 @@ func NewSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
 
 func NewSpecFactInUniFact() *SpecFactInUniFactMem {
 	return &SpecFactInUniFactMem{
-		PureFacts:         map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		NotPureFacts:      map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		ExistFacts:        map[string]map[string][]KnownSpecFact_InUniSpecFact{},
-		NotExistFacts:     map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		PureFacts:    map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		NotPureFacts: map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		// ExistFacts:        map[string]map[string][]KnownSpecFact_InUniSpecFact{},
+		// NotExistFacts:     map[string]map[string][]KnownSpecFact_InUniSpecFact{},
 		Exist_St_Facts:    map[string]map[string][]KnownSpecFact_InUniSpecFact{},
 		NotExist_St_Facts: map[string]map[string][]KnownSpecFact_InUniSpecFact{},
 	}
@@ -53,10 +53,10 @@ func NewSpecFactInUniFact() *SpecFactInUniFactMem {
 
 func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
 	return &SpecFact_InLogicExpr_InUniFactMem{
-		PureFacts:         map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		NotPureFacts:      map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		ExistFacts:        map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
-		NotExistFacts:     map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		PureFacts:    map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		NotPureFacts: map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		// ExistFacts:        map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
+		// NotExistFacts:     map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
 		Exist_St_Facts:    map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
 		NotExist_St_Facts: map[string]map[string][]SpecFact_InLogicExpr_InUniFact{},
 	}
@@ -68,10 +68,10 @@ func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string]map[st
 		return s.PureFacts, nil
 	case ast.FalsePure:
 		return s.NotPureFacts, nil
-	case ast.TrueExist:
-		return s.ExistFacts, nil
-	case ast.FalseExist:
-		return s.NotExistFacts, nil
+	// case ast.TrueExist:
+	// 	return s.ExistFacts, nil
+	// case ast.FalseExist:
+	// 	return s.NotExistFacts, nil
 	case ast.TrueExist_St:
 		return s.Exist_St_Facts, nil
 	case ast.FalseExist_St:
@@ -124,10 +124,10 @@ func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[st
 		return s.PureFacts, nil
 	case ast.FalsePure:
 		return s.NotPureFacts, nil
-	case ast.TrueExist:
-		return s.ExistFacts, nil
-	case ast.FalseExist:
-		return s.NotExistFacts, nil
+	// case ast.TrueExist:
+	// 	return s.ExistFacts, nil
+	// case ast.FalseExist:
+	// 	return s.NotExistFacts, nil
 	case ast.TrueExist_St:
 		return s.Exist_St_Facts, nil
 	case ast.FalseExist_St:
@@ -187,10 +187,10 @@ func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[stri
 		return s.PureFacts, nil
 	case ast.FalsePure:
 		return s.NotPureFacts, nil
-	case ast.TrueExist:
-		return s.ExistFacts, nil
-	case ast.FalseExist:
-		return s.NotExistFacts, nil
+	// case ast.TrueExist:
+	// 	return s.ExistFacts, nil
+	// case ast.FalseExist:
+	// 	return s.NotExistFacts, nil
 	case ast.TrueExist_St:
 		return s.Exist_St_Facts, nil
 	case ast.FalseExist_St:
@@ -280,10 +280,10 @@ func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactSt
 		return s.PureFacts, nil
 	case ast.FalsePure:
 		return s.NotPureFacts, nil
-	case ast.TrueExist:
-		return s.ExistFacts, nil
-	case ast.FalseExist:
-		return s.NotExistFacts, nil
+	// case ast.TrueExist:
+	// 	return s.ExistFacts, nil
+	// case ast.FalseExist:
+	// 	return s.NotExistFacts, nil
 	case ast.TrueExist_St:
 		return s.Exist_St_Facts, nil
 	case ast.FalseExist_St:
