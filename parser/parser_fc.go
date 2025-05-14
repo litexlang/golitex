@@ -127,7 +127,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 		}
 
 		if curToken == glob.RelaFnPrefix {
-			cursor.skip() // 消耗curToken
+			cursor.skip("") // 消耗curToken
 
 			fn, err := cursor.rawFc()
 			if err != nil {
@@ -154,7 +154,7 @@ func (cursor *strSliceCursor) fcInfixExpr(currentPrec glob.BuiltinOptPrecedence)
 			break
 		}
 
-		cursor.skip() // 消耗运算符
+		cursor.skip("") // 消耗运算符
 		right, err := cursor.fcInfixExpr(curPrec)
 		if err != nil {
 			return nil, err
@@ -232,7 +232,7 @@ func (cursor *strSliceCursor) numberStr() (*ast.FcAtom, error) {
 		}
 
 		if allDigits {
-			cursor.skip()
+			cursor.skip("")
 			right, err := cursor.next()
 			if err != nil {
 				return &ast.EmptyFcAtom, fmt.Errorf("invalid number: %s", right)

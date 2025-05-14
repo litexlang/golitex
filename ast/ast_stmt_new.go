@@ -120,6 +120,6 @@ func NewFcAtomWithName(name string) *FcAtom {
 	return NewFcAtom(glob.EmptyPkg, name, nil)
 }
 
-func NewProveOrStmt(indexes []int, orFact Reversable_LogicOrSpec_Stmt, proofs []Stmt) *ProveOrStmt {
+func NewProveOrStmt(indexes map[int]struct{}, orFact LogicExprStmt, proofs []Stmt) *ProveOrStmt {
 	return &ProveOrStmt{indexes, orFact, proofs}
 }

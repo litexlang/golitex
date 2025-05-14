@@ -99,42 +99,42 @@ func (cursor *strSliceCursor) skipIfIs(s string) {
 	}
 }
 
-func (cursor *strSliceCursor) skip(expected ...string) error {
+func (cursor *strSliceCursor) skip(expected string) error {
 	if cursor.index >= len(cursor.slice) {
 		return fmt.Errorf("unexpected end of slice %v", cursor.slice)
 	}
 
-	if len(expected) == 0 {
+	if expected == "" {
 		cursor.index++
 		return nil
 	}
 
-	if cursor.slice[cursor.index] == expected[0] {
+	if cursor.slice[cursor.index] == expected {
 		cursor.index++
 	} else {
-		return fmt.Errorf("expected '%s', but got '%s'", expected[0], cursor.slice[cursor.index])
+		return fmt.Errorf("expected '%s', but got '%s'", expected, cursor.slice[cursor.index])
 	}
 
 	return nil
 }
 
-func (cursor *strSliceCursor) getAndSkip(expected ...string) (string, error) {
+func (cursor *strSliceCursor) getAndSkip(expected string) (string, error) {
 	if cursor.index >= len(cursor.slice) {
 		return "", fmt.Errorf("unexpected end of slice %v", cursor.slice)
 	}
 
 	curToken := cursor.slice[cursor.index]
 
-	if len(expected) == 0 {
+	if expected == "" {
 		cursor.index++
 		return curToken, nil
 	}
 
-	if cursor.slice[cursor.index] == expected[0] {
+	if cursor.slice[cursor.index] == expected {
 		cursor.index++
 		return curToken, nil
 	} else {
-		return "", fmt.Errorf("expected '%s', but got '%s'", expected[0], cursor.slice[cursor.index])
+		return "", fmt.Errorf("expected '%s', but got '%s'", expected, cursor.slice[cursor.index])
 	}
 }
 
@@ -172,7 +172,7 @@ func (cursor *strSliceCursor) skipAndSkipColonAndAchieveEnd() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = cursor.skip()
+	err = cursor.skip("")
 	if err != nil {
 		return "", err
 	}
