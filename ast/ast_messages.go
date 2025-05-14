@@ -97,7 +97,7 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 	if sepIndex == -1 {
 		return ""
 	} else {
-		for i := 0; i < sepIndex; i++ {
+		for i := range sepIndex {
 			builder.WriteString(stmt.Params[i].String())
 			builder.WriteString(" ")
 		}
