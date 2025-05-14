@@ -43,6 +43,7 @@ type Env struct {
 
 	// 考虑多个系统的时候，再引入 map[string]string
 	EqualMem map[string]*[]ast.Fc
+	// EqualMem map[string]map[string]*[]ast.Fc
 }
 
 func NewEnv(parent *Env) *Env {
