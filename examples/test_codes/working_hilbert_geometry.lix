@@ -256,7 +256,7 @@ prove:
 
     $exist_point_right_to_given_two_points(a, b)
 
-    have right point st $exist_point_right_to_given_two_points(a, b)
+    have right  st $exist_point_right_to_given_two_points(a, b)
 
     $between(a, right, b)
 
@@ -421,3 +421,43 @@ prove:
         $finite_line_equal(l2, l3)
     $finite_line_equal_transitive(l1, l2, l3)
     $finite_line_equal(l1, l3)
+
+# 3. 令 AB、BC 为同一直线上仅共点于 B 的两条线段，以及 A'B'、B'C' 为另一直线（可与前同）上仅共点于 B' 的两条线段；若 AB ≅ A'B' 且 BC ≅ B'C'ou，则 AC ≅ A'C'。
+
+prop on_one_line(a point, b point, c point):
+    a != b
+    a != c
+    b != c
+    iff:
+        $point_on_line(a, line_of(b, c))
+
+know:
+    forall a point, b point, c point:
+        a != b
+        a != c
+        b != c
+        $on_one_line(a, b, c)
+        then:
+            $on_one_line(a, c, b)
+            $on_one_line(b, a, c)
+            $on_one_line(b, c, a)
+            $on_one_line(c, a, b)
+            $on_one_line(c, b, a)
+
+know prop addition_keeps_equal_of_finite_lines(a point, b point, c point, a2 point, b2 point, c2 point):
+    $on_one_line(a, b, c)
+    $on_one_line(a2, b2, c2)
+    $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
+    $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
+    iff:
+        $finite_line_equal(finite_line_of(a, c), finite_line_of(a2, c2))
+
+prove:
+    obj a point, b point, c point, a2 point, b2 point, c2 point:
+        $on_one_line(a, b, c)
+        $on_one_line(a2, b2, c2)
+        $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
+        $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
+
+    $addition_keeps_equal_of_finite_lines(a, b, c, a2, b2, c2)
+    $finite_line_equal(finite_line_of(a, c), finite_line_of(a2, c2))

@@ -294,18 +294,22 @@ func (exec *Executor) haveStmt(stmt *ast.HaveStmt) (glob.ExecState, error) {
 	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
 	exec.appendInternalWarningMsg("Litex only support have obj. if you want to introduce set or fn by the have stmt, you need to use the set or fn stmt to introduce them.")
 
+	// TODO 把 exist prop def 里的东西释放出来
+	existPropDef, ok := exec.env.GetExistPropDef(stmt.Fact.PropName)
+	if !ok {
+		return glob.ExecState_Unknown, nil
+	}
+
+	if len(existPropDef.ExistParams) != len(stmt.ObjNames) {
+		return glob.ExecState_Error, fmt.Errorf("exist prop def params number not equal to have stmt obj names number. expect %d, but got %d", len(existPropDef.ExistParams), len(stmt.ObjNames))
+	}
+
 	// TODO 暂时认为都是obj
 	for _, objName := range stmt.ObjNames {
 		err := exec.env.NewDefObj(&ast.DefObjStmt{Objs: []string{objName}, ObjSets: []ast.Fc{}, Facts: []ast.FactStmt{}})
 		if err != nil {
 			return glob.ExecState_Error, err
 		}
-	}
-
-	// TODO 把 exist prop def 里的东西释放出来
-	existPropDef, ok := exec.env.GetExistPropDef(stmt.Fact.PropName)
-	if !ok {
-		return glob.ExecState_Unknown, nil
 	}
 
 	uniMap := map[string]ast.Fc{}

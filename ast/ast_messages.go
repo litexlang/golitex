@@ -118,10 +118,16 @@ func (stmt *DefObjStmt) String() string {
 	var builder strings.Builder
 
 	builder.WriteString("obj ")
-	for i, objName := range stmt.Objs {
-		builder.WriteString(objName)
-		builder.WriteByte(' ')
-		builder.WriteString(stmt.ObjSets[i].String())
+	if len(stmt.Objs) > 0 {
+		for i := range len(stmt.Objs) - 1 {
+			builder.WriteString(stmt.Objs[i])
+			builder.WriteString(" ")
+			builder.WriteString(stmt.ObjSets[i].String())
+			builder.WriteString(", ")
+		}
+		builder.WriteString(stmt.Objs[len(stmt.Objs)-1])
+		builder.WriteString(" ")
+		builder.WriteString(stmt.ObjSets[len(stmt.Objs)-1].String())
 	}
 
 	if len(stmt.Facts) > 0 {
