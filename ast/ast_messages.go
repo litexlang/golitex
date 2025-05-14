@@ -546,13 +546,12 @@ func (stmt *KnowPropStmt) String() string {
 func (stmt *ProveOrStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveOr)
-	for i := range len(stmt.Indexes) - 1 {
-		builder.WriteString(strconv.Itoa(stmt.Indexes[i]))
+	for index := range stmt.Indexes {
+		builder.WriteString(strconv.Itoa(index))
 		builder.WriteString(", ")
 	}
-	builder.WriteString(strconv.Itoa(stmt.Indexes[len(stmt.Indexes)-1]))
 	builder.WriteString(":\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.OrFacts.String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.OrFact.String(), 1))
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
 	builder.WriteByte(':')

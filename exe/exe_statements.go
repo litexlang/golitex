@@ -49,6 +49,8 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 		err = exec.setDefStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
 		execState, err = exec.proveInEachCaseStmt(stmt)
+	case *ast.ProveOrStmt:
+		execState, err = exec.proveOrStmt(stmt)
 
 	default:
 		err = fmt.Errorf("unknown statement type: %T", stmt)
@@ -653,4 +655,28 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) error {
 	}
 
 	return nil
+}
+
+func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error) {
+	isSuccess := false
+	defer func() {
+		exec.appendMsg("\n")
+		if isSuccess {
+			exec.appendNewMsgAtBegin("is true\n")
+		} else {
+			exec.appendNewMsgAtBegin("is unknown\n")
+		}
+		exec.appendNewMsgAtBegin(stmt.String())
+	}()
+
+	ver := verifier.NewVerifier(exec.env)
+	ok, err := ver.WhenFactsNotTrueThenOtherPartOfLogicalExprIsTrue(stmt.Indexes, &stmt.OrFact, verifier.Round0Msg)
+	if err != nil {
+		return glob.ExecState_Error, err
+	}
+	if !ok {
+		return glob.ExecState_Error, fmt.Errorf("prove or: or fact is not true")
+	}
+
+	return glob.ExecState_True, nil
 }

@@ -22,7 +22,7 @@ import (
 func (tb *tokenBlock) TopStmt() (*ast.TopStmt, error) {
 	pub := false
 	if tb.header.is(glob.KeywordPub) {
-		tb.header.skip()
+		tb.header.skip("")
 		pub = true
 	}
 
@@ -154,7 +154,7 @@ func (tb *tokenBlock) logicExprOrSpecFactStmt(nameDepthMap ast.NameDepthMap) (as
 func (tb *tokenBlock) specFactStmt(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
 	isTrue := true
 	if tb.header.is(glob.KeywordNot) {
-		tb.header.skip()
+		tb.header.skip("")
 		isTrue = !isTrue
 	}
 
@@ -307,7 +307,7 @@ func (tb *tokenBlock) defFnStmt() (*ast.DefFnStmt, error) {
 			glob.KeywordThen: {},
 		}
 
-		tb.header.skip()
+		tb.header.skip("")
 		domFacts, thenFacts, _, err = tb.uniFactBodyFacts(keywords, nameDepthMap, UniFactDepth1, glob.KeywordThen)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
@@ -347,7 +347,7 @@ func (tb *tokenBlock) defObjStmt() (*ast.DefObjStmt, error) {
 	facts := []ast.FactStmt{}
 
 	if !tb.header.ExceedEnd() && tb.header.is(glob.KeySymbolColon) {
-		tb.header.skip()
+		tb.header.skip("")
 		facts, err = tb.bodyFacts(ast.NameDepthMap{}, UniFactDepth0)
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
@@ -382,7 +382,7 @@ func (tb *tokenBlock) claimStmt() (*ast.ClaimStmt, error) {
 	} else if !tb.body[1].header.is(glob.KeywordProve) {
 		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
 	}
-	tb.body[1].header.skip()
+	tb.body[1].header.skip("")
 
 	err = tb.body[1].header.testAndSkip(glob.KeySymbolColon)
 	if err != nil {
@@ -1187,7 +1187,7 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 
 	indexes := []int{}
 	for !tb.header.is(glob.KeySymbolColon) {
-		curToken, err := tb.header.getAndSkip()
+		curToken, err := tb.header.getAndSkip("")
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
@@ -1199,15 +1199,22 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 		indexes = append(indexes, curIndex)
 	}
 
+	if len(indexes) == 0 {
+		return nil, &tokenBlockErr{fmt.Errorf("prove or: expect indexes, but got empty"), *tb}
+	}
+
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	var orFact ast.Reversable_LogicOrSpec_Stmt
-	orFact, err = tb.body[0].logicExprOrSpecFactStmt(ast.NameDepthMap{})
+	orFact, err := tb.body[0].logicExprStmt(ast.NameDepthMap{})
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	if !orFact.IsOr {
+		return nil, &tokenBlockErr{fmt.Errorf("prove or: expect or fact, but got: %s", orFact.String()), *tb}
 	}
 
 	err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
@@ -1224,9 +1231,11 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 
-	if len(indexes) == 0 {
-		return nil, &tokenBlockErr{fmt.Errorf("prove or: expect indexes, but got empty"), *tb}
+	for index := range indexes {
+		if index < 0 || index >= len(orFact.Facts) {
+			return nil, &tokenBlockErr{fmt.Errorf("prove or: index out of range: %d", index), *tb}
+		}
 	}
 
-	return ast.NewProveOrStmt(indexes, orFact, proofs), nil
+	return ast.NewProveOrStmt(indexes, *orFact, proofs), nil
 }
