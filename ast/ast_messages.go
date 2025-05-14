@@ -546,6 +546,7 @@ func (stmt *KnowPropStmt) String() string {
 func (stmt *ProveOrStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveOr)
+	builder.WriteString(" ")
 	for index := range stmt.Indexes {
 		builder.WriteString(strconv.Itoa(index))
 		builder.WriteString(", ")
