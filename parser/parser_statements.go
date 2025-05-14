@@ -617,6 +617,10 @@ func (tb *tokenBlock) defExistPropStmt() (*ast.DefExistPropStmt, error) {
 		}
 	}
 
+	if len(existParams) == 0 {
+		return nil, fmt.Errorf("expect at least one parameter")
+	}
+
 	err = tb.header.skip(glob.KeywordSt)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
