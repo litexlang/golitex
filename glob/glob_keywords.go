@@ -127,7 +127,7 @@ const (
 	KeySymbolMinusMinus             = "--"
 	KeySymbolAndAnd                 = "&&"
 	KeySymbolPipePipe               = "||"
-	KeySymbolNotEqual               = "!="
+	KeySymbolNotEqual               = "!=" // 在parse就立刻变成 not =，exec里没有对它的处理
 	KeySymbolQuestion               = "?"
 	KeySymbolStarStar               = "**"
 	KeySymbolDoubleQuote            = "\""

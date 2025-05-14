@@ -46,6 +46,7 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
 	case *ast.KnowExistPropStmt:
+		_, err = exec.knowExistPropStmt(stmt)
 	case *ast.SetDefSetBuilderStmt:
 		err = exec.setDefStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
@@ -654,6 +655,8 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) (glob.ExecS
 	if err != nil {
 		return glob.ExecState_Error, err
 	}
+
+	exec.appendMsg(fmt.Sprintf("know by %s definition:\n%s\n", stmt.ExistProp.DefBody.DefHeader.Name, knownUniFact.String()))
 
 	return glob.ExecState_True, nil
 }

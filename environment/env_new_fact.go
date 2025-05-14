@@ -159,6 +159,7 @@ func (env *Env) newNotExistSt_SpecFactPostProcess(fact *ast.SpecFactStmt) error 
 	} else {
 		return fmt.Errorf("unknown prop %s", fact.PropName)
 	}
+
 }
 
 func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) error {
@@ -182,7 +183,7 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 
 		err = env.NewFact(instantiated)
 
-		env.NewMsg(fmt.Sprintf(`know by prop definition: %s`, instantiated.String()))
+		env.NewMsg(fmt.Sprintf(`know by prop definition:\n %s`, instantiated.String()))
 
 		if err != nil {
 			return err

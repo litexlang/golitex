@@ -376,20 +376,12 @@ know forall a point, b point:
             $point_right_of_point(a, b)
 
 know exist_prop a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
-    dom:
         a != b
-        $point_on_line(a, l)
-        $point_on_line(b, l)
-    iff:
         $point_left_of_point(a, b)
         $finite_line_equal(finite_line_of(a, b), l)
 
 know exist_prop a point st exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
-    dom:
         a != b
-        $point_on_line(a, l)
-        $point_on_line(b, l)
-    iff:
         $point_right_of_point(a, b)
         $finite_line_equal(finite_line_of(a, b), l)
 
@@ -397,3 +389,35 @@ know:
     $commutative_prop(finite_line_equal)
     $commutative_fn(line_of)
     $commutative_fn(finite_line_of)
+
+prove:
+    obj middle point, l finite_line
+
+    $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+    have right  st $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+    $point_right_of_point(right, middle)
+    $finite_line_equal(finite_line_of(middle, right), l)
+
+    $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+    have left  st $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+    $point_left_of_point(left, middle)
+    $finite_line_equal(finite_line_of(left, middle), l)
+
+    $finite_line_equal(finite_line_of(left, middle), l)
+    
+
+
+# 2. 若线段 AB 同时与线段 A'B'、A''B'' 等同，那么 A'B' 亦等同于 A''B''。（传递性）
+know prop finite_line_equal_transitive(l1 finite_line, l2 finite_line, l3 finite_line):
+    dom:
+        $finite_line_equal(l1, l2)
+        $finite_line_equal(l2, l3)
+    iff:
+        $finite_line_equal(l1, l3)
+
+prove:
+    obj l1 finite_line, l2 finite_line, l3 finite_line:
+        $finite_line_equal(l1, l2)
+        $finite_line_equal(l2, l3)
+    $finite_line_equal_transitive(l1, l2, l3)
+    $finite_line_equal(l1, l3)
