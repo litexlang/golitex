@@ -16,6 +16,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strconv"
 )
 
 func (tb *tokenBlock) TopStmt() (*ast.TopStmt, error) {
@@ -70,6 +71,8 @@ func (tb *tokenBlock) Stmt() (ast.Stmt, error) {
 		ret, err = tb.matcherEnvStmt()
 	case glob.KeywordProveInEachCase:
 		ret, err = tb.proveInEachCaseStmt()
+	case glob.KeywordProveOr:
+		ret, err = tb.proveOrStmt()
 	default:
 		ret, err = tb.factStmt(ast.NameDepthMap{}, UniFactDepth0)
 	}
@@ -1174,4 +1177,56 @@ func (tb *tokenBlock) proveInEachCaseStmt() (*ast.ProveInEachCaseStmt, error) {
 	}
 
 	return ast.NewProveInEachCaseStmt(*orFact, thenFacts, proofs), nil
+}
+
+func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
+	err := tb.header.skip(glob.KeywordProveOr)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	indexes := []int{}
+	for !tb.header.is(glob.KeySymbolColon) {
+		curToken, err := tb.header.getAndSkip()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		// to int
+		curIndex, err := strconv.Atoi(curToken)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		indexes = append(indexes, curIndex)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	var orFact ast.Reversable_LogicOrSpec_Stmt
+	orFact, err = tb.body[0].logicExprOrSpecFactStmt(ast.NameDepthMap{})
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	proofs := []ast.Stmt{}
+	for _, stmt := range tb.body[1].body {
+		curStmt, err := stmt.Stmt()
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+		proofs = append(proofs, curStmt)
+	}
+
+	if len(indexes) == 0 {
+		return nil, &tokenBlockErr{fmt.Errorf("prove or: expect indexes, but got empty"), *tb}
+	}
+
+	return ast.NewProveOrStmt(indexes, orFact, proofs), nil
 }

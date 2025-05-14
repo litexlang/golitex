@@ -15,6 +15,7 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
+	"strconv"
 	"strings"
 )
 
@@ -540,4 +541,25 @@ func (stmt *KnowPropStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Prop.String())
 	return builder.String()
+}
+
+func (stmt *ProveOrStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveOr)
+	for i := range len(stmt.Indexes) - 1 {
+		builder.WriteString(strconv.Itoa(stmt.Indexes[i]))
+		builder.WriteString(", ")
+	}
+	builder.WriteString(strconv.Itoa(stmt.Indexes[len(stmt.Indexes)-1]))
+	builder.WriteString(":\n")
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.OrFacts.String(), 1))
+	builder.WriteByte('\n')
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+	builder.WriteByte(':')
+	builder.WriteByte('\n')
+	for i := range len(stmt.Proofs) - 1 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Proofs[i].String(), 2))
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSuffix(builder.String(), "\n")
 }

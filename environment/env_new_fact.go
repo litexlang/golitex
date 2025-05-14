@@ -384,7 +384,7 @@ func (env *Env) IsCommutativePropName_StoreIt(fact *ast.SpecFactStmt) (bool, err
 }
 
 func (env *Env) IsMathInductionPropName_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
-	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordMathInduction) {
+	if !ast.IsFcAtom_HasGivenName_EmptyPkgName(&fact.PropName, glob.KeywordInduction) {
 		return false, nil
 	}
 

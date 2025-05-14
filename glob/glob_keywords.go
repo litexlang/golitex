@@ -46,10 +46,13 @@ const (
 	KeywordReal                 = "real"           // e.g. pi
 	KeywordIs                   = "is"
 	KeywordIn                   = "in"
-	KeywordMathInduction        = "math_induction"
+	KeywordInduction            = "induction"
 	KeywordFrac                 = "frac"
 	KeywordAs                   = "as"
-	KeywordId                   = "id"
+	KeywordProveInductively     = "prove_inductively"
+	KeywordProveOr              = "prove_or"
+
+	// 用户用不到的keyword，但litex内部会用
 	// litex version 0.2 的时候可以考虑实现。这样的话fn所在的集合也能像obj一样简单了
 	// KeywordFnSet = "fn_set"
 	// litex version 0.3 的时候可以考虑实现。这样的话set所在的集合也能像obj一样简单了
@@ -89,10 +92,11 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReal:                 {},
 	KeywordIs:                   {},
 	KeywordIn:                   {},
-	KeywordMathInduction:        {},
+	KeywordInduction:            {},
 	KeywordFrac:                 {},
 	KeywordAs:                   {},
-	KeywordId:                   {},
+	KeywordProveInductively:     {},
+	KeywordProveOr:              {},
 }
 
 const (

@@ -118,6 +118,26 @@ func (cursor *strSliceCursor) skip(expected ...string) error {
 	return nil
 }
 
+func (cursor *strSliceCursor) getAndSkip(expected ...string) (string, error) {
+	if cursor.index >= len(cursor.slice) {
+		return "", fmt.Errorf("unexpected end of slice %v", cursor.slice)
+	}
+
+	curToken := cursor.slice[cursor.index]
+
+	if len(expected) == 0 {
+		cursor.index++
+		return curToken, nil
+	}
+
+	if cursor.slice[cursor.index] == expected[0] {
+		cursor.index++
+		return curToken, nil
+	} else {
+		return "", fmt.Errorf("expected '%s', but got '%s'", expected[0], cursor.slice[cursor.index])
+	}
+}
+
 func (cursor *strSliceCursor) curTokenBeginWithNumber() bool {
 	if cursor.index >= len(cursor.slice) {
 		return false
