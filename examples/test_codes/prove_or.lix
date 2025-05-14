@@ -1,0 +1,17 @@
+prove:
+    know:
+        forall:
+            not $p(1)
+            not $p(2)
+            not $p(3)
+            then:
+                $p(4)
+
+    prove_or 0 1 2:
+        or:
+            $p(1)
+            $p(2)
+            $p(3)
+            $p(4)
+        prove:
+            $p(4)

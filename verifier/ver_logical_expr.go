@@ -93,14 +93,14 @@ func (ver *Verifier) WhenFactsNotTrueThenOtherPartOfLogicalExprIsTrue(notTrueFac
 
 	if len(newOrFacts) == 0 {
 		return false, nil
-	} else if len(newOrFacts)+1 < len(stmt.Facts) {
-		ok, err := ver.logicalExprFact(ast.NewOrAndFact(true, newOrFacts), state)
+	} else if len(newOrFacts) == 1 {
+		ok, err := ver.FactStmt(newOrFacts[0], state)
 		if err != nil {
 			return false, err
 		}
 		return ok, nil
-	} else if len(newOrFacts)+1 == len(stmt.Facts) {
-		ok, err := ver.FactStmt(newOrFacts[0], state)
+	} else if len(newOrFacts) > 1 {
+		ok, err := ver.logicalExprFact(ast.NewOrAndFact(true, newOrFacts), state)
 		if err != nil {
 			return false, err
 		}

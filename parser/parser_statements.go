@@ -1218,7 +1218,7 @@ func (tb *tokenBlock) proveOrStmt() (*ast.ProveOrStmt, error) {
 		return nil, &tokenBlockErr{fmt.Errorf("prove or: expect or fact, but got: %s", orFact.String()), *tb}
 	}
 
-	err = tb.body[0].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
+	err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordProve)
 	if err != nil {
 		return nil, &tokenBlockErr{err, *tb}
 	}

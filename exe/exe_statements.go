@@ -46,7 +46,6 @@ func (exec *Executor) stmt(stmt ast.Stmt) (glob.ExecState, error) {
 	case *ast.KnowPropStmt:
 		err = exec.knowPropStmt(stmt)
 	case *ast.KnowExistPropStmt:
-		execState, err = exec.knowExistPropStmt(stmt)
 	case *ast.SetDefSetBuilderStmt:
 		err = exec.setDefStmt(stmt)
 	case *ast.ProveInEachCaseStmt:
@@ -696,7 +695,7 @@ func (exec *Executor) proveOrStmt(stmt *ast.ProveOrStmt) (glob.ExecState, error)
 		return glob.ExecState_Error, err
 	}
 	if !ok {
-		return glob.ExecState_Error, fmt.Errorf("prove or: or fact is not true")
+		return glob.ExecState_Unknown, nil
 	}
 
 	return glob.ExecState_True, nil
