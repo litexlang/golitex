@@ -486,12 +486,14 @@ fn angle_of_two_rays(a point, r1 ray, r2 ray) angle:
     $point_on_ray(a, r1)
     $point_on_ray(a, r2)
 
+prop angle_equal(ang1 angle, ang2 angle)
+
 know exist_prop r2 ray st exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a point, r1 ray, p half_plane, ang angle):
     dom:
         $point_on_ray(a, r1)
         $half_plane_to_ray(a, r1, p)
     iff:    
-        angle_of_two_rays(a, r1, r2) = ang
+        $angle_equal(angle_of_two_rays(a, r1, r2), ang)
 
 prove:
     obj a point, r1 ray, p half_plane, ang angle:
@@ -500,6 +502,83 @@ prove:
 
     $exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a, r1, p, ang)
     have r2  st $exist_a_ray_with_the_same_angel_with_given_ray_and_half_plane(a, r1, p, ang)
-    angle_of_two_rays(a, r1, r2) = ang
+    $angle_equal(angle_of_two_rays(a, r1, r2), ang)
 
-# 5. 
+# 5. 若角 ∠(h,k) 等同于角 ∠(h',k')，且 ∠(h',k') 等同于角 ∠(h'',k'')，那么 ∠(h,k) 等同于 ∠(h'',k'')。（传递性）
+
+know prop angle_equal_transitive(ang1 angle, ang2 angle, ang3 angle):
+    dom:
+        $angle_equal(ang1, ang2)
+        $angle_equal(ang2, ang3)
+    iff:
+        $angle_equal(ang1, ang3)
+
+know:
+    $commutative_prop(angle_equal)
+
+prove:
+    obj ang1 angle, ang2 angle, ang3 angle:
+        $angle_equal(ang1, ang2)
+        $angle_equal(ang2, ang3)
+    $angle_equal_transitive(ang1, ang2, ang3)
+    $angle_equal(ang1, ang3)
+
+# 6. 若在三角形 ABC 与 A'B'C' 中有 AB ≅ A'B'、AC ≅ A'C'、∠BAC ≅ ∠B'A'C'，那么可以得到 ∠ABC ≅ ∠A'B'C'（替换字母即可知 ∠ACB ≅ ∠A'C'B' 亦成立）。
+
+set triangle
+
+fn triangle_of_points(a point, b point, c point) triangle:
+    dom:
+        a != b
+        a != c
+        b != c
+
+prop triangle_equal(t1 triangle, t2 triangle)
+
+fn angle_of_points(a point, b point, c point) angle:
+    dom:
+        a != b
+        a != c
+        b != c
+
+know forall a point, b point, c point:
+    a != b
+    a != c
+    b != c
+    then:
+        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, b, c))
+        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a, c, b))
+        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, a, c))
+        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(b, c, a))
+        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, a, b))
+        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(c, b, a))
+
+know prop triangle_equal_by_two_sides_and_included_angle_equal(a point, b point, c point, a2 point, b2 point, c2 point):
+    dom:
+        a != b
+        a != c
+        b != c
+        a2 != b2
+        a2 != c2
+        b2 != c2
+        $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
+        $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
+        $angle_equal(angle_of_points(a, b, c), angle_of_points(a2, b2, c2))
+    iff:
+        $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a2, b2, c2))
+prove:
+    obj a point, b point, c point, a2 point, b2 point, c2 point:
+        a != b
+        a != c
+        b != c
+        a2 != b2
+        a2 != c2
+        b2 != c2
+        $finite_line_equal(finite_line_of(a, b), finite_line_of(a2, b2))
+        $finite_line_equal(finite_line_of(b, c), finite_line_of(b2, c2))
+        $angle_equal(angle_of_points(a, b, c), angle_of_points(a2, b2, c2))
+
+    $triangle_equal_by_two_sides_and_included_angle_equal(a, b, c, a2, b2, c2)
+    $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a2, b2, c2))
+
+
