@@ -348,3 +348,52 @@ prove:
 
     know not $line_intersect_finite_line(a, c, l)
     $line_intersect_finite_line(b, c, l)
+
+# 等同型定理
+
+# 1. 若点 A、B 在直线 a 上且点 A' 在直线 a' 上（可与 a 相同），总可以在 a' 上关于 A' 的任意一侧找到点 B'，使得线段 AB 与 A'B' 等同。这记作 AB ≅ A'B'。 每条线段均与其自身等同，也就是说 AB ≅ AB。（自反性） 此公理就是在说，给定任意线段，可以将其“摆”在任意直线上的任意点的任意一侧。
+
+prop finite_line_equal(l1 finite_line, l2 finite_line)
+
+know forall l1 finite_line, l2 finite_line:
+    l1 = l2
+    then:
+        $finite_line_equal(l1, l2)
+
+prop point_left_of_point(a point, b point):
+    dom:
+        a != b
+
+prop point_right_of_point(a point, b point):
+    dom:
+        a != b
+
+know forall a point, b point:
+    a != b
+    then:
+        or:
+            $point_left_of_point(a, b)
+            $point_right_of_point(a, b)
+
+know exist_prop a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
+    dom:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+    iff:
+        $point_left_of_point(a, b)
+        $finite_line_equal(finite_line_of(a, b), l)
+
+know exist_prop a point st exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
+    dom:
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+    iff:
+        $point_right_of_point(a, b)
+        $finite_line_equal(finite_line_of(a, b), l)
+
+know:
+    $commutative_prop(finite_line_equal)
+    $commutative_fn(line_of)
+    $commutative_fn(finite_line_of)
