@@ -19,8 +19,8 @@ type SpecFactEnum uint8
 const (
 	TruePure SpecFactEnum = iota
 	FalsePure
-	TrueExist
-	FalseExist
+	// TrueExist
+	// FalseExist
 	TrueExist_St
 	FalseExist_St
 )
@@ -30,10 +30,10 @@ func (stmt *SpecFactStmt) ReverseSpecFact() *SpecFactStmt {
 		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == FalsePure {
 		return NewSpecFactStmt(TruePure, stmt.PropName, stmt.Params)
-	} else if stmt.TypeEnum == TrueExist {
-		return NewSpecFactStmt(FalseExist, stmt.PropName, stmt.Params)
-	} else if stmt.TypeEnum == FalseExist {
-		return NewSpecFactStmt(TrueExist, stmt.PropName, stmt.Params)
+		// } else if stmt.TypeEnum == TrueExist {
+		// 	return NewSpecFactStmt(FalseExist, stmt.PropName, stmt.Params)
+		// } else if stmt.TypeEnum == FalseExist {
+		// 	return NewSpecFactStmt(TrueExist, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == TrueExist_St {
 		return NewSpecFactStmt(FalseExist_St, stmt.PropName, stmt.Params)
 	} else if stmt.TypeEnum == FalseExist_St {
@@ -46,9 +46,9 @@ func (f *SpecFactStmt) IsPropNameEqual() bool {
 	return f.PropName.Name == glob.KeySymbolEqual && f.PropName.PkgName == glob.EmptyPkg
 }
 
-func (f *SpecFactStmt) IsExistFact() bool {
-	return f.TypeEnum == TrueExist || f.TypeEnum == FalseExist
-}
+// func (f *SpecFactStmt) IsExistFact() bool {
+// 	return f.TypeEnum == TrueExist || f.TypeEnum == FalseExist
+// }
 
 func (f *SpecFactStmt) IsPureFact() bool {
 	return f.TypeEnum == TruePure || f.TypeEnum == FalsePure
@@ -59,7 +59,8 @@ func (f *SpecFactStmt) IsExist_St_Fact() bool {
 }
 
 func (f *SpecFactStmt) IsTrue() bool {
-	return f.TypeEnum == TruePure || f.TypeEnum == TrueExist || f.TypeEnum == TrueExist_St
+	// return f.TypeEnum == TruePure || f.TypeEnum == TrueExist || f.TypeEnum == TrueExist_St
+	return f.TypeEnum == TruePure || f.TypeEnum == TrueExist_St
 }
 
 func (f *SpecFactStmt) Exist_St_SeparatorIndex() int {

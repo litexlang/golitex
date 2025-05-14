@@ -654,61 +654,61 @@ func (tb *tokenBlock) existFactStmt(nameDepthMap ast.NameDepthMap, isTrue bool) 
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	if tb.header.is(glob.FuncFactPrefix) {
-		pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
+	// if tb.header.is(glob.FuncFactPrefix) {
+	// 	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
+	// 	if err != nil {
+	// 		return nil, &tokenBlockErr{err, *tb}
+	// 	}
+
+	// 	if isTrue {
+	// 		return ast.NewSpecFactStmt(ast.TrueExist, pureSpecFact.PropName, pureSpecFact.Params), nil
+	// 	} else {
+	// 		return ast.NewSpecFactStmt(ast.FalseExist, pureSpecFact.PropName, pureSpecFact.Params), nil
+	// 	}
+	// } else {
+	existParams := []ast.Fc{}
+
+	for !tb.header.is(glob.KeywordSt) {
+		param, err := tb.header.rawFc()
 		if err != nil {
 			return nil, &tokenBlockErr{err, *tb}
 		}
+		existParams = append(existParams, param)
 
-		if isTrue {
-			return ast.NewSpecFactStmt(ast.TrueExist, pureSpecFact.PropName, pureSpecFact.Params), nil
-		} else {
-			return ast.NewSpecFactStmt(ast.FalseExist, pureSpecFact.PropName, pureSpecFact.Params), nil
-		}
-	} else {
-		existParams := []ast.Fc{}
-
-		for !tb.header.is(glob.KeywordSt) {
-			param, err := tb.header.rawFc()
-			if err != nil {
-				return nil, &tokenBlockErr{err, *tb}
-			}
-			existParams = append(existParams, param)
-
-			if tb.header.is(glob.KeySymbolComma) {
-				tb.header.skip(glob.KeySymbolComma)
-			}
-		}
-
-		err = tb.header.skip(glob.KeywordSt)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-
-		// add prefix to existParams
-		for i := range existParams {
-			existParams[i], err = ast.AddUniPrefixToFc(existParams[i], nameDepthMap)
-			if err != nil {
-				return nil, &tokenBlockErr{err, *tb}
-			}
-		}
-
-		pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
-		if err != nil {
-			return nil, &tokenBlockErr{err, *tb}
-		}
-
-		factParams := []ast.Fc{}
-		factParams = append(factParams, existParams...)
-		factParams = append(factParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
-		factParams = append(factParams, pureSpecFact.Params...)
-
-		if isTrue {
-			return ast.NewSpecFactStmt(ast.TrueExist_St, pureSpecFact.PropName, factParams), nil
-		} else {
-			return ast.NewSpecFactStmt(ast.FalseExist_St, pureSpecFact.PropName, factParams), nil
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
 		}
 	}
+
+	err = tb.header.skip(glob.KeywordSt)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	// add prefix to existParams
+	for i := range existParams {
+		existParams[i], err = ast.AddUniPrefixToFc(existParams[i], nameDepthMap)
+		if err != nil {
+			return nil, &tokenBlockErr{err, *tb}
+		}
+	}
+
+	pureSpecFact, err := tb.pureFuncSpecFact(nameDepthMap)
+	if err != nil {
+		return nil, &tokenBlockErr{err, *tb}
+	}
+
+	factParams := []ast.Fc{}
+	factParams = append(factParams, existParams...)
+	factParams = append(factParams, ast.BuiltinExist_St_FactExistParamPropParmSepAtom)
+	factParams = append(factParams, pureSpecFact.Params...)
+
+	if isTrue {
+		return ast.NewSpecFactStmt(ast.TrueExist_St, pureSpecFact.PropName, factParams), nil
+	} else {
+		return ast.NewSpecFactStmt(ast.FalseExist_St, pureSpecFact.PropName, factParams), nil
+	}
+	// }
 }
 
 func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.SpecFactStmt, error) {
