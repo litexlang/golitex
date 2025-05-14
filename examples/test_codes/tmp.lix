@@ -96,3 +96,11 @@ prove:
         know not $line_intersect_finite_line(a, c, l)
         $line_intersect_finite_line(b, c, l)
 
+prove:
+    know exist_prop a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
+        a != b
+        $point_left_of_point(a, b)
+        $finite_line_equal(finite_line_of(a, b), l)
+
+    $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
+
