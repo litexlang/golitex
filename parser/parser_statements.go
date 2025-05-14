@@ -768,7 +768,15 @@ func (tb *tokenBlock) pureFuncSpecFact(nameDepthMap ast.NameDepthMap) (*ast.Spec
 		return nil, &tokenBlockErr{err, *tb}
 	}
 
-	return ast.NewSpecFactStmt(ast.TruePure, propName, params), nil
+	ret := ast.NewSpecFactStmt(ast.TruePure, propName, params)
+
+	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
+	if ret.PropNameIsGiven_PkgNameEmpty(ret.PropName, glob.KeySymbolNotEqual) {
+		ret.TypeEnum = ast.FalsePure
+		ret.PropName = *ast.NewFcAtom(glob.EmptyPkg, glob.KeySymbolEqual, nil)
+	}
+
+	return ret, nil
 }
 
 func (tb *tokenBlock) defHaveStmt() (*ast.HaveStmt, error) {
