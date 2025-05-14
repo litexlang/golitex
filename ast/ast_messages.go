@@ -47,38 +47,31 @@ func (stmt *KnowFactStmt) String() string {
 func (stmt *SpecFactStmt) String() string {
 	if stmt.IsExist_St_Fact() {
 		return exist_st_FactString(stmt)
+	} else {
+		return pureFactString(stmt)
 	}
+}
 
+func pureFactString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
 	if stmt.TypeEnum == FalsePure {
 		builder.WriteString(glob.KeywordNot)
 		builder.WriteByte(' ')
 	}
-	// else if stmt.TypeEnum == TrueExist {
-	// 	builder.WriteString(glob.KeywordExist)
-	// 	builder.WriteByte(' ')
-	// } else if stmt.TypeEnum == FalseExist {
-	// 	builder.WriteString(glob.KeywordNot)
-	// 	builder.WriteByte(' ')
-	// 	builder.WriteString(glob.KeywordExist)
-	// 	builder.WriteByte(' ')
-	// }
-
 	if stmt.PropName.PkgName == glob.EmptyPkg && glob.IsKeySymbol(stmt.PropName.Name) {
-		return relaFactString(stmt)
+		builder.WriteString(relaFactWithoutNotString(stmt))
+	} else {
+		builder.WriteString(glob.FuncFactPrefix)
+		builder.WriteString(stmt.PropName.String())
+		builder.WriteByte('(')
+		builder.WriteString(FcSliceString(stmt.Params))
+		builder.WriteByte(')')
 	}
-
-	builder.WriteString(glob.FuncFactPrefix)
-	builder.WriteString(stmt.PropName.String())
-	builder.WriteByte('(')
-	builder.WriteString(FcSliceString(stmt.Params))
-	builder.WriteByte(')')
-
 	return builder.String()
 }
 
-func relaFactString(stmt *SpecFactStmt) string {
+func relaFactWithoutNotString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
 	builder.WriteString(stmt.Params[0].String())
