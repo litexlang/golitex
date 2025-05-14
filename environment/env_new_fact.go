@@ -183,7 +183,7 @@ func (env *Env) newTrueSpecFact_EmitFactsKnownByDef(fact *ast.SpecFactStmt) erro
 
 		err = env.NewFact(instantiated)
 
-		env.NewMsg(fmt.Sprintf(`know by prop definition:\n %s`, instantiated.String()))
+		env.NewMsg(fmt.Sprintf("know by prop definition:\n %s", instantiated.String()))
 
 		if err != nil {
 			return err
@@ -360,7 +360,7 @@ func (env *Env) IsEqualFact_StoreIt(fact *ast.SpecFactStmt) (bool, error) {
 	}
 
 	if len(fact.Params) != 2 {
-		return true, fmt.Errorf("`=` fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
+		return true, fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact.String())
 	}
 
 	err := storeCommutativeTransitiveFact(env.EqualMem, fact)

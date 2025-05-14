@@ -581,4 +581,36 @@ prove:
     $triangle_equal_by_two_sides_and_included_angle_equal(a, b, c, a2, b2, c2)
     $triangle_equal(triangle_of_points(a, b, c), triangle_of_points(a2, b2, c2))
 
+# 4. 平行型定理
 
+# 1. 对于直线 a 与其外一点 A，其二者所确定的平面内至多有一条直线经过 A 而不与 a 相交。（欧几里得公理）
+
+prop parallel(l1 line, l2 line):
+    forall x point:
+        $point_on_line1_then_not_on_line2(x, l1, l2)
+    
+    forall x point:
+        $point_on_line1_then_not_on_line2(x, l2, l1)
+
+
+prop point_on_line1_then_not_on_line2(a point, l1 line, l2 line):
+    dom:
+        $point_on_line(a, l1)
+    iff:
+        not $point_on_line(a, l2)
+
+know exist_prop l2 line st exist_one_and_only_one_line_through_point_not_intersect_line(a point, l line):
+    dom:
+        not $point_on_line(a, l)
+    iff:
+        $point_on_line(a, l2)
+        $parallel(l, l2)
+
+prove:
+    obj a point, l line:
+        not $point_on_line(a, l)
+
+    $exist_one_and_only_one_line_through_point_not_intersect_line(a, l)
+    have l2 st $exist_one_and_only_one_line_through_point_not_intersect_line(a, l)
+    $point_on_line(a, l2)
+    $parallel(l, l2)
