@@ -686,4 +686,4 @@ prove:
 # 2. 欲从既有直线上的点构造新的直线，使得其仍然满足原先元素之间的关系且符合公理一到三以及四-1，这样的尝试是不可能的。（直线完备性公理）
 # 2. Axiom of line completeness: An extension (An extended line from a line that already exists, usually used in geometry) of a set of points on a line with its order and congruence relations that would preserve the relations existing among the original elements as well as the fundamental properties of line order and congruence that follows from Axioms I-III and from V-1 is impossible.
 
-# TODO
+# TODO: 即使是自然语言理解，我也不知道这个定理在做什么。形式化我更不会了。
