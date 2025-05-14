@@ -129,3 +129,7 @@ type ProveOrStmt struct {
 	OrFact  LogicExprStmt
 	Proofs  []Stmt
 }
+
+type KnowExistPropStmt struct {
+	ExistProp DefExistPropStmt
+}

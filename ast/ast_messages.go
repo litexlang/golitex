@@ -562,3 +562,11 @@ func (stmt *ProveOrStmt) String() string {
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
+
+func (stmt *KnowExistPropStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordKnow)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ExistProp.String())
+	return builder.String()
+}

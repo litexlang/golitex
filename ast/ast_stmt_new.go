@@ -85,18 +85,18 @@ func NewMatcherEnvStmt(matcherName *FcAtom, params []Fc, body []Stmt) *MatcherEn
 }
 
 func NewUniFactStmtWithSetReqInDom(params []string, paramTypes []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, paramInSetsFacts []FactStmt) *UniFactStmt {
-	if glob.VerifyFcSatisfySpecFactParaReq {
-		newDomFacts := []FactStmt{}
-		for i, param := range params {
-			atom := NewFcAtom(glob.EmptyPkg, param, nil)
-			var inFc = NewFcAtom(glob.EmptyPkg, glob.KeywordIn, nil)
-			specFact := NewSpecFactStmt(TruePure, *inFc, []Fc{atom, paramTypes[i]})
-			newDomFacts = append(newDomFacts, specFact)
-		}
-		newDomFacts = append(newDomFacts, domFacts...)
-		newUniFact := newUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts, paramInSetsFacts)
-		return newUniFact
-	}
+	// if glob.VerifyFcSatisfySpecFactParaReq {
+	// 	newDomFacts := []FactStmt{}
+	// 	for i, param := range params {
+	// 		atom := NewFcAtom(glob.EmptyPkg, param, nil)
+	// 		var inFc = NewFcAtom(glob.EmptyPkg, glob.KeywordIn, nil)
+	// 		specFact := NewSpecFactStmt(TruePure, *inFc, []Fc{atom, paramTypes[i]})
+	// 		newDomFacts = append(newDomFacts, specFact)
+	// 	}
+	// 	newDomFacts = append(newDomFacts, domFacts...)
+	// 	newUniFact := newUniFactStmt(params, paramTypes, newDomFacts, thenFacts, iffFacts, paramInSetsFacts)
+	// 	return newUniFact
+	// }
 	return newUniFactStmt(params, paramTypes, domFacts, thenFacts, iffFacts, paramInSetsFacts)
 }
 
