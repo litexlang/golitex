@@ -104,3 +104,12 @@ prove:
 
     $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
 
+prove:
+    prop parallel(l1 line, l2 line):
+        forall x point:
+            $point_on_line1_then_not_on_line2(x, l1, l2)
+        
+        forall x point:
+            $point_on_line1_then_not_on_line2(x, l2, l1)
+
+    $commutative_prop(parallel)
