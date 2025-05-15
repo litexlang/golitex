@@ -48,3 +48,7 @@ func SplitLinesAndAdd4NIndents(line string, n uint32) string {
 func InternalWarningMsg(s string, args ...any) string {
 	return fmt.Sprintf("Interalnal Warning:\n%s\n\n", fmt.Sprintf(s, args...))
 }
+
+func WarningMsg(s string, args ...any) string {
+	return fmt.Sprintf("Warning:\n%s\n\n", fmt.Sprintf(s, args...))
+}
