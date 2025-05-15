@@ -88,18 +88,12 @@ prove:
 
     $point_on_line(b, l)
 
-# 3.2 至少存在不共线的三个点
 # 3.2 There exist at least three points that do not lie on the same line.
 
-exist_prop c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
+know exist_prop c point st exist_one_point_not_on_the_same_line_with_two_points(a point, b point):
     a != b
     iff:
         not $point_on_line(c, line_of(a, b))
-
-know forall a point, b point:
-    a != b
-    then:
-        $exist_one_point_not_on_the_same_line_with_two_points(a, b)
 
 prove:
     obj a point, b point:
@@ -107,12 +101,12 @@ prove:
     $exist_one_point_not_on_the_same_line_with_two_points(a, b)
     have c st $exist_one_point_not_on_the_same_line_with_two_points(a, b)
 
-# Tip: 用户有义务让代码更易读，以便在社区中分享并让自己更好管理项目。最好的方式就是取名取的合适到位。长一些的命名是有益的，这样能用名字就说清楚所有的信息，也更符合人们阅读自然语言的习惯。用户不必担心打字太多，因为大部分的IDE在你输入名字的头几位时，就会提示或补全剩下的名字。
+# Tip: It's a good and essential habit to name everything properly. I recommend you to use long names which contains all the information in the name. Do not worry about typing, because most IDEs will prompt or complete the rest of the name when you type the first few characters.
 
-# 4. 对于任意不共线三点 A、B、C，存在一同时包含其三者的平面 α。这记作 ABC=α。 亦可说是“A、B、C 落于 α 上”“A、B、C 是 α 上的点”。
+# Tip: know prop, know exist_prop is a syntax sugar for making that prop(exist_prop) as an axiom.
+
 # 4. For every three points A, B, C not situated on the same line there exists a plane α that contains all of them. For every plane there exists a point which lies on it. We write ABC = α. We employ also the expressions: "A, B, C lie in α"; "A, B, C are points of α", etc.
 
-# 5. 对于任意不共线三点 A、B、C，最多只存在一个平面同时包含其三者。
 # 5. For every three points A, B, C which do not lie in the same line, there exists no more than one plane that contains them all.
 
 fn plain_of(a point, b point, c point) plane:
@@ -130,32 +124,28 @@ fn plain_of(a point, b point, c point) plane:
             then:
                 p = plain_of(a, b, c)
 
-# Tip: 存在唯一用fn（函数）表示
+# Tip: axiom with uniqueness and existence can be written as a function.
 
-# 6. 若在直线 a 上的两点 A、B 同时落于平面 α 上，那么 a 上的任意点均落于 α 上。又说“直线 a 落于平面 α 上”。
 # 6. If two points A, B of a line a lie in a plane α, then every point of a lies in α. In this case we say: "The line a lies in the plane α", etc.
-
-know:
-    forall p plane, a point, b point:
-        $point_on_plane(a, p)
-        $point_on_plane(b, p)
-        a != b
-        then:
-            $point_on_line(p, line_of(a, b))
 
 know prop two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
         a != b
         $point_on_line(a, l)
         $point_on_line(b, l)
-        then:
+        $point_on_plane(a, p)
+        $point_on_plane(b, p)
+        iff:
             $line_on_plane(l, p)
 
 prove:
-    obj a point, b point, p plane:
+    obj a point, b point, l line, p plane:
+        a != b
         $point_on_plane(a, p)
         $point_on_plane(b, p)
-        a != b
-    $point_on_line(p, line_of(a, b))
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+    $two_points_on_line_then_line_on_plane(a, b, l, p)
+    $line_on_plane(l, p)
 
 # 7. 若平面 α、β 均包含点 A，那么它们至少共同包含另一点 B。
 # 7. If two planes α, β have a point A in common, then they have at least a second point B in common.
