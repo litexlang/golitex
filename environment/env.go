@@ -33,13 +33,13 @@ type Env struct {
 	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
 	EmitWhenSpecFactIsTrueMem         EmitWhenSpecFactIsTrueMem
 
-	CommutativeProp map[string]map[string]struct{}
+	CommutativeProp glob.Map2D[struct{}]
 
 	// 为了让我日子好过，我不允许用户用以 fcFn 形式为fn header的 fn 名来定义 commutative fn
 	// TODO 之后改了这条，因为我可以 map[string]struct{} 来表示 commutative fn，string是那个fn的header as string
 	// 本质上我可以让这些事实和 specfact 存储时混在一起，或许这么干也行
-	CommutativeFn map[string]map[string]struct{}
-	AssociativeFn map[string]map[string]struct{}
+	CommutativeFn glob.Map2D[struct{}]
+	AssociativeFn glob.Map2D[struct{}]
 
 	// 考虑多个系统的时候，再引入 map[string]string
 	EqualMem map[string]*[]ast.Fc
@@ -57,15 +57,15 @@ func NewEnv(parent *Env) *Env {
 		SetDefMem:       *NewSetMemory(),
 
 		SpecFactMem:                       *newSpecFactMem(),
-		SpecFactInLogicExprMem:            *NewSpecFactInLogicExprMem(),
-		SpecFactInUniFactMem:              *NewSpecFactInUniFact(),
-		SpecFact_InLogicExpr_InUniFactMem: *NewSpecFact_InLogicExpr_InUniFactMem(),
+		SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
+		SpecFactInUniFactMem:              *newSpecFactInUniFact(),
+		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
 
-		EmitWhenSpecFactIsTrueMem: *NewEmitWhenSpecFactIsTrueMem(),
+		EmitWhenSpecFactIsTrueMem: *newEmitWhenSpecFactIsTrueMem(),
 
-		CommutativeProp: make(map[string]map[string]struct{}),
-		CommutativeFn:   make(map[string]map[string]struct{}),
-		AssociativeFn:   make(map[string]map[string]struct{}),
+		CommutativeProp: make(glob.Map2D[struct{}]),
+		CommutativeFn:   make(glob.Map2D[struct{}]),
+		AssociativeFn:   make(glob.Map2D[struct{}]),
 
 		EqualMem: make(map[string]*[]ast.Fc),
 	}
@@ -202,12 +202,6 @@ func (e *Env) getFcAtomDefAtCurEnv(fcAtomName *ast.FcAtom) (ast.DefStmt, bool) {
 	}
 
 	return nil, false
-}
-
-func NewEmitWhenSpecFactIsTrueMem() *EmitWhenSpecFactIsTrueMem {
-	return &EmitWhenSpecFactIsTrueMem{
-		Dict: make(map[string]map[string][]ast.UniFactStmt),
-	}
 }
 
 func (e *Env) IsSpecFactPropCommutative(fact *ast.SpecFactStmt) bool {

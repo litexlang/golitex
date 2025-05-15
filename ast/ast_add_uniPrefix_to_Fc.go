@@ -21,6 +21,10 @@ import (
 type NameDepthMap map[string]int
 
 func AddUniPrefixToFcAtom(atom *FcAtom, uniParams NameDepthMap) (*FcAtom, error) {
+	if atom == nil {
+		return nil, nil
+	}
+
 	if prefixNum, ok := fcAtomInUniParams(atom, uniParams); ok {
 		atom.Name = strings.Repeat(glob.UniParamPrefix, prefixNum) + atom.Name
 	}

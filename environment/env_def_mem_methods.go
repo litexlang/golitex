@@ -18,22 +18,22 @@ import (
 )
 
 func NewPropMemory() *PropDefMem {
-	return &PropDefMem{map[string]map[string]PropMemItem{}}
+	return &PropDefMem{make(glob.Map2D[PropMemItem])}
 }
 func NewFnMemory() *FnDefMem {
-	return &FnDefMem{map[string]map[string]FnMemItem{}}
+	return &FnDefMem{make(glob.Map2D[FnMemItem])}
 }
 
 func NewObjMemory() *ObjDefMem {
-	return &ObjDefMem{map[string]map[string]ObjMemItem{}}
+	return &ObjDefMem{make(glob.Map2D[ObjMemItem])}
 }
 
 func NewExistPropMemory() *ExistPropDefMem {
-	return &ExistPropDefMem{map[string]map[string]ExistPropMemItem{}}
+	return &ExistPropDefMem{make(glob.Map2D[ExistPropMemItem])}
 }
 
 func NewSetMemory() *SetDefMem {
-	return &SetDefMem{map[string]map[string]SetMemItem{}}
+	return &SetDefMem{make(glob.Map2D[SetMemItem])}
 }
 
 func (memory *PropDefMem) Insert(stmt *ast.DefPropStmt, pkgName string) error {
