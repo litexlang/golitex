@@ -378,6 +378,8 @@ _Language design is a curious mixture of grand ideas and fiddly details._
 
 _-- Bjarne Stroustrup, inventor of C++_
 
+<!-- 这里需要加一些：what is litex and what is not. 比如 litex is not using math to help programming, instead it is using programming to help math. -->
+
 Litex is a minimalist proof assistant, designed to be simple and intuitive. It draws inspiration from various programming languages, particularly Go, Lisp, Tex, C, Python. Litex embrace simplicity, the only way to be flexible enough for the unknown future and to maintain conceptual integrity, as its core design principle.
 
 Litex is an attempt to scale reasoning with the ever-expanding power of modern computing resources, and to introduce a new way of thinking (the way of thinking that is more like programming) about math.

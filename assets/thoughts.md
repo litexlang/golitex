@@ -1881,3 +1881,15 @@ fn setName_id(x setName):
 如果太严格，会抑制数学发现，因为强迫用户一上来就从最抽象，最底层的数学出发思考问题。这是不符合人的直观的。
 
 无类型也不会导致bug：因为我们可以在用户写完code时，默认出现的所有无类型的prop里的参数dom，是所有的出现在code里的东西的集合的并。
+
+甚至 mathematics for computer science 这本书里，对proposition的定义是
+
+Definition. A proposition is a statement (communication) that is either true or false.
+
+这里可以看到，压根没有什么集合出来，只要是个能输出true或false的表达式，都是proposition。
+
+另外无类型其实是用起来很舒服的，比如py js 都是无类型的
+
+有一个用户接受带有类型的litex，就有10个用户接受无类型的litex。因为用户根本想不到他们要关心类型论
+
+相当于，我给你一个名字，比如 id （这是函数），比如 equal （这是prop），每个不同的集合上对它的理解可以不一样。比如 id 作用在 集合A 上，就有 ... 的性质；作用在 B 上就有 ... 的性质。本质上这些事实是互相独立的，除非用户自己引入一些奇怪的事实把它们联系起来，否则我会认为它们就是独立的。只要是独立的，他们互相之间的验证也不影响我，实质上虽然同名，但其实无所谓，不影响严格性。

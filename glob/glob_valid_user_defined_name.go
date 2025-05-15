@@ -57,8 +57,8 @@ func IsValidName(name string) error {
 		return fmt.Errorf("identifier name cannot be a reserved keyword or symbol")
 	}
 
-	if strings.HasSuffix(name, IdPostfix) {
-		return fmt.Errorf("identifier name cannot end with '%s'", IdPostfix)
+	if strings.HasSuffix(name, KeywordId) {
+		return fmt.Errorf("identifier name cannot end with '%s'", KeywordId)
 	}
 
 	return nil
