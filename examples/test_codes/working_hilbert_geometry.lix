@@ -340,36 +340,35 @@ prove:
 
 prop finite_line_equal(l1 finite_line, l2 finite_line)
 
-know forall l1 finite_line, l2 finite_line:
-    l1 = l2
-    then:
-        $finite_line_equal(l1, l2)
-
-prop point_left_of_point(a point, b point):
+prop point_left_to_point_on_one_line(a point, b point, l line):
     dom:
         a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
 
-prop point_right_of_point(a point, b point):
+prop point_left_point_on_one_line(a point, b point, l line):
     dom:
         a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
 
-# TODO: The user can add relationships between $between, $point_left_of_point, $point_right_of_point, by himself.
-
-know forall a point, b point:
+know forall a point, b point, l line:
+    a != b
+    $point_on_line(a, l)
+    $point_on_line(b, l)
     then:
         or:
-            a = b
-            $point_left_of_point(a, b)
-            $point_right_of_point(a, b)
+            $point_left_to_point_on_one_line(a, b, l)
+            $point_left_point_on_one_line(a, b, l)
 
 know exist_prop a point st exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
         a != b
-        $point_left_of_point(a, b)
+        $point_left_to_point_on_one_line(a, b, l)
         $finite_line_equal(finite_line_of(a, b), l)
 
 know exist_prop a point st exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(b point, l finite_line):
         a != b
-        $point_right_of_point(a, b)
+        $point_left_point_on_one_line(a, b, l)
         $finite_line_equal(finite_line_of(a, b), l)
 
 know:
@@ -382,19 +381,19 @@ prove:
 
     $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
     have right  st $exist_point_right_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-    $point_right_of_point(right, middle)
+    $point_left_point_on_one_line(right, middle)
     $finite_line_equal(finite_line_of(middle, right), l)
 
     $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
     have left  st $exist_point_left_to_point_with_finite_line_equal_to_given_finite_line(middle, l)
-    $point_left_of_point(left, middle)
+    $point_left_to_point_on_one_line(left, middle)
     $finite_line_equal(finite_line_of(left, middle), l)
 
     $finite_line_equal(finite_line_of(left, middle), l)
-    
+
+# TODO: The user can add relationships between $between, $point_left_to_point_on_one_line, $point_left_point_on_one_line, by himself. 
 
 
-# 2. 若线段 AB 同时与线段 A'B'、A''B'' 等同，那么 A'B' 亦等同于 A''B''。（传递性）
 # 2. If a segment AB is congruent to the segment A′B′ and also to the segment A″B″, then the segment A′B′ is congruent to the segment A″B″; that is, if AB ≅ A′B′ and AB ≅ A″B″, then A′B′ ≅ A″B″.
 
 know prop finite_line_equal_transitive(l1 finite_line, l2 finite_line, l3 finite_line):
@@ -411,7 +410,6 @@ prove:
     $finite_line_equal_transitive(l1, l2, l3)
     $finite_line_equal(l1, l3)
 
-# 3. 令 AB、BC 为同一直线上仅共点于 B 的两条线段，以及 A'B'、B'C' 为另一直线（可与前同）上仅共点于 B' 的两条线段；若 AB ≅ A'B' 且 BC ≅ B'C'ou，则 AC ≅ A'C'。
 # 3. Let AB and BC be two segments of a line a which have no points in common aside from the point B, and, furthermore, let A′B′ and B′C′ be two segments of the same or of another line a′ having, likewise, no point other than B′ in common. Then, if AB ≅ A′B′ and BC ≅ B′C′, we have AC ≅ A′C′.
 
 prop on_one_line(a point, b point, c point):
@@ -421,6 +419,7 @@ prop on_one_line(a point, b point, c point):
     iff:
         $point_on_line(a, line_of(b, c))
 
+# This fact could be proved by other axioms, but I know it anyway.
 know:
     forall a point, b point, c point:
         a != b
@@ -452,7 +451,6 @@ prove:
     $addition_keeps_equal_of_finite_lines(a, b, c, a2, b2, c2)
     $finite_line_equal(finite_line_of(a, c), finite_line_of(a2, c2))
 
-# 4. 令 ∠(h,k) 为一角。给定一端点 O' 的射线 h' 以及其一侧的半平面 α'，α' 上存在且仅存在一条射线 k' 使得 ∠(h,k) 或 ∠(k,h) 与 ∠(h',k') 等同。这记作 ∠(h,k) ≅ ∠(h',k')。
 # 4. Let an angle ∠ (h,k) be given in the plane α and let a line a′ be given in a plane α′. Suppose also that, in the plane α′, a definite side of the straight line a′ be assigned. Denote by h′ a ray of the straight line a′ emanating from a point O′ of this line. Then in the plane α′ there is one and only one ray k′ such that the angle ∠ (h, k), or ∠ (k, h), is congruent to the angle ∠ (h′, k′) and at the same time all interior points of the angle ∠ (h′, k′) lie upon the given side of a′. We express this relation by means of the notation ∠ (h, k) ≅ ∠ (h′, k′).
 
 set ray
