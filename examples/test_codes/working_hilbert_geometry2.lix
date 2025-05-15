@@ -81,7 +81,7 @@ know prop two_points_on_line_then_line_on_plane(a point, b point, l line, p plan
         $point_on_line(b, l)
         $point_on_plane(a, p)
         $point_on_plane(b, p)
-        then:
+        iff:
             $line_on_plane(l, p)
 
 prove:
@@ -93,3 +93,57 @@ prove:
         $point_on_line(b, l)
     $two_points_on_line_then_line_on_plane(a, b, l, p)
     $line_on_plane(l, p)
+
+
+prop between(left point, right point, middle point):
+    dom:
+        left != right
+
+know forall left point, right point, middle point:
+    left != right
+    $between(left, right, middle)
+    then:
+        $between(right, left, middle)
+
+know exist_prop l line st exist_line_through_three_points(a point, b point, c point):
+    a != b
+    $between(a, b, c)
+    iff:
+        a != c
+        b != c
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        $point_on_line(c, l)
+
+prove:
+    obj left point, right point, middle point:
+        left != right
+        $between(left, right, middle)
+
+    $between(right, left, middle)
+    $exist_line_through_three_points(left, right, middle)
+
+    have l st $exist_line_through_three_points(left, right, middle)
+    $point_on_line(left, l)
+    $point_on_line(right, l)
+    $point_on_line(middle, l)
+
+exist_prop right point st exist_point_right_to_given_two_points(left point, middle point):
+    left != middle
+    iff:
+        $between(left, right, middle)
+
+know forall a point, b point:
+    a != b
+    then:
+        $exist_point_right_to_given_two_points(a, b)
+
+prove:
+    obj a point, b point:
+        a != b
+
+    $exist_point_right_to_given_two_points(a, b)
+
+    have right  st $exist_point_right_to_given_two_points(a, b)
+
+    $between(a, right, b)

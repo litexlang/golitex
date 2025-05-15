@@ -49,10 +49,16 @@ func execStmtTest(topStmt []ast.TopStmt, t *testing.T) []string {
 
 	messages := []string{}
 	for _, topStmt := range topStmt {
-		_, err := executor.TopLevelStmt(&topStmt)
+		execState, err := executor.TopLevelStmt(&topStmt)
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		if execState != glob.ExecState_True && !glob.ContinueExecutionWhenExecUnknown {
+			fmt.Printf("\nexecution not true:\n%s\n", topStmt.String())
+			break
+		}
+
 		// 如果连续两个 \n 则删除一个
 		var newMsgs []string
 		for i := 0; i < len(executor.env.Msgs); i++ {

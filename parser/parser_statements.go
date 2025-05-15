@@ -969,6 +969,10 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 			}
 		}
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
+		if _, ok := keywords[glob.KeywordThen]; !ok {
+			return nil, nil, nil, fmt.Errorf("%s is not expected here", glob.KeywordThen)
+		}
+
 		domFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
@@ -983,6 +987,10 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 			return nil, nil, nil, err
 		}
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeywordIff) {
+		if _, ok := keywords[glob.KeywordIff]; !ok {
+			return nil, nil, nil, fmt.Errorf("%s is not expected here", glob.KeywordIff)
+		}
+
 		thenFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
@@ -998,17 +1006,25 @@ func (tb *tokenBlock) uniFactBodyFacts(keywords map[string]struct{}, nameDepthMa
 		}
 	} else {
 		if defaultSectionName == glob.KeywordThen {
+			if _, ok := keywords[glob.KeywordThen]; !ok {
+				return nil, nil, nil, fmt.Errorf("%s is not expected here", glob.KeywordThen)
+			}
+
 			thenFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
 		} else if defaultSectionName == glob.KeywordIff {
+			if _, ok := keywords[glob.KeywordIff]; !ok {
+				return nil, nil, nil, fmt.Errorf("%s is not expected here", glob.KeywordIff)
+			}
+
 			iffFacts, err = tb.bodyBlockFacts(nameDepthMap, curAllowUniFactEnum, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
 		} else {
-			return nil, nil, nil, fmt.Errorf("expect keyword in uni fact body, but got: %s", defaultSectionName)
+			return nil, nil, nil, fmt.Errorf("%s is not expected here", defaultSectionName)
 		}
 	}
 
