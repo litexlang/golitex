@@ -47,7 +47,7 @@ const OverloadOptPrefix string = "__"
 
 const KnowSpecFactByDef = true
 
-const ContinueExecutionWhenExecUnknown bool = true
+const ContinueExecutionWhenExecUnknown bool = false
 
 const MaxLogicExprFactsNum int = 8
 

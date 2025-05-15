@@ -112,4 +112,60 @@ prove:
         forall x point:
             $point_on_line1_then_not_on_line2(x, l2, l1)
 
-    $commutative_prop(parallel)
+
+prove:
+    prop point_on_plane(a point, p plane)
+    prop line_on_plane(l line, p plane)
+    prop point_on_line(a point, l line)
+
+    know prop two_points_on_line_then_line_on_plane(a point, b point, l line, p plane):
+        a != b
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        $point_on_plane(a, p)
+        $point_on_plane(b, p)
+        iff:
+            $line_on_plane(l, p)
+
+    prove:
+        obj a point, b point, l line, p plane:
+            a != b
+            $point_on_plane(a, p)
+            $point_on_plane(b, p)
+            $point_on_line(a, l)
+            $point_on_line(b, l)
+        $two_points_on_line_then_line_on_plane(a, b, l, p)
+        $line_on_plane(l, p)
+
+prove:
+    exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_plane():
+        a != b
+        a != c
+        a != d
+        b != c
+        b != d
+        c != d
+        $not_on_any_plane(a, b, c, d)
+
+    know $exist_four_points_not_on_any_plane()
+
+    prop not_on_any_plane(a point, b point, c point, d point):
+        forall p plane:
+            or:
+                not $point_on_plane(a, p)
+                not $point_on_plane(b, p)
+                not $point_on_plane(c, p)
+                not $point_on_plane(d, p)
+
+    prop point_on_plane(a point, p plane)
+
+    prove:
+        have a , b , c , d  st $exist_four_points_not_on_any_plane()
+        $not_on_any_plane(a, b, c, d)
+
+        forall p plane:
+                or:
+                    not $point_on_plane(a, p)
+                    not $point_on_plane(b, p)
+                    not $point_on_plane(c, p)
+                    not $point_on_plane(d, p)

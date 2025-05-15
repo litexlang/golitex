@@ -147,20 +147,13 @@ prove:
     $two_points_on_line_then_line_on_plane(a, b, l, p)
     $line_on_plane(l, p)
 
-# 7. 若平面 α、β 均包含点 A，那么它们至少共同包含另一点 B。
 # 7. If two planes α, β have a point A in common, then they have at least a second point B in common.
 
-exist_prop b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
+know exist_prop b point st two_planes_have_one_common_point_then_they_have_another_common_point(a point, p plane, q plane):
     $point_on_plane(a, p)
     $point_on_plane(a, q)
     iff:
         $point_on_plane(b, p)
-
-know forall a point, p plane, q plane:
-    $point_on_plane(a, p)
-    $point_on_plane(a, q)
-    then:
-        $two_planes_have_one_common_point_then_they_have_another_common_point(a, p, q)
 
 prove:
     obj a point, p plane, q plane:
@@ -170,7 +163,6 @@ prove:
     have b st $two_planes_have_one_common_point_then_they_have_another_common_point(a, p, q)
     $point_on_plane(b, p)
 
-# 8. 至少存在不共面的四个点。
 # 8. There exist at least four points not lying in a plane.
 
 exist_prop a point, b point, c point, d point st exist_four_points_not_on_any_plane():
@@ -203,31 +195,29 @@ prove:
                 not $point_on_plane(c, p)
                 not $point_on_plane(d, p)
 
-# 2. 顺序型定理
 # 2. Order
 
-# 1. 对于互异三点 A、B、C，若 B 夹在 A、C 间，则 B 亦夹在 C、A 间，且存在一条直线同时包含 A、B、C。
 # 1. If a point B lies between points A and C, B is also between C and A, and there exists a line containing the distinct points A, B, C.
 
 prop between(left point, right point, middle point):
     dom:
         left != right
 
-exist_prop l line st exist_line_through_three_points(a point, b point, c point):
-    a != b
-    a != c
-    b != c
-    iff:
-        $point_on_line(a, l)
-        $point_on_line(b, l)
-        $point_on_line(c, l)
-
 know forall left point, right point, middle point:
     left != right
     $between(left, right, middle)
     then:
         $between(right, left, middle)
-        $exist_line_through_three_points(left, right, middle)
+
+know exist_prop l line st exist_line_through_three_points(a point, b point, c point):
+    a != b
+    $between(a, b, c)
+    iff:
+        a != c
+        b != c
+        $point_on_line(a, l)
+        $point_on_line(b, l)
+        $point_on_line(c, l)
 
 prove:
     obj left point, right point, middle point:
@@ -242,10 +232,6 @@ prove:
     $point_on_line(right, l)
     $point_on_line(middle, l)
 
-# tip: 如果一个prop里面的参数数量是2，那不只可以写成 $propName(a,b) 还能写成 a $propName b
-# tip: 如果一个fn里面的参数数量是2，那不只可以写成 fn(a,b) 还能写成 a \fn b
-
-# 2. 对于互异两点 A、C，至少存在一点 B 落于直线 AC 上，使得 C 夹在 A、B 之间。
 # 2. If A and C are two points, then there exists at least one point B on the line AC such that C lies between A and B.
 
 exist_prop right point st exist_point_right_to_given_two_points(left point, middle point):
