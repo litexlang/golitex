@@ -160,13 +160,13 @@ func (stmt *SpecFactStmt) IsMathInductionFact() bool {
 	return stmt.PropName.PkgName == glob.EmptyPkg && stmt.PropName.Name == glob.KeywordInduction
 }
 
-func ParamsParamSetsToInFacts(params []string, paramSets []Fc) []FactStmt {
-	facts := []FactStmt{}
-	for i := range params {
-		facts = append(facts, ParamParamSetToInFact(params[i], paramSets[i]))
-	}
-	return facts
-}
+// func ParamsParamSetsToInFacts(params []string, paramSets []Fc) []FactStmt {
+// 	facts := []FactStmt{}
+// 	for i := range params {
+// 		facts = append(facts, ParamParamSetToInFact(params[i], paramSets[i]))
+// 	}
+// 	return facts
+// }
 
 func ParamParamSetToInFact(param string, paramSet Fc) FactStmt {
 	return NewSpecFactStmt(TruePure, FcAtom{glob.EmptyPkg, glob.KeywordIn, nil}, []Fc{NewFcAtom(glob.EmptyPkg, param, nil), paramSet})
